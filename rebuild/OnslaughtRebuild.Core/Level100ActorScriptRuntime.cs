@@ -1012,6 +1012,13 @@ public sealed class Level100ActorScriptRuntime
                 _actors.SetScript(scriptActor, scriptName);
                 Attach(scriptActor, scriptName);
                 return NativeResult.Void;
+            case 49: // GetPos
+                return new NativeResult(
+                    InvokePositionNative(
+                        command,
+                        RequireContext(execution).AsActorId(),
+                        arguments),
+                    WaitRequest.None);
             case 82: // Retreat
                 RequireArguments(command, arguments, 0);
                 EmitCommand(RequireContext(execution).AsActorId(), Level100ActorScriptCommandKind.Retreat);
@@ -1031,9 +1038,51 @@ public sealed class Level100ActorScriptRuntime
                 RequireArguments(command, arguments, 0);
                 _ = RequireContext(execution);
                 return new NativeResult(Level100ScriptValue.Boolean(_playerInJetMode), WaitRequest.None);
+            case 135: // SetPos
+                _ = InvokePositionNative(
+                    command,
+                    RequireContext(execution).AsActorId(),
+                    arguments);
+                return NativeResult.Void;
             default:
                 throw new InvalidOperationException(
                     $"Native call {command} is outside the exact Level 100 actor-program set.");
+        }
+    }
+
+    /// <summary>
+    /// Implements the bounded Mission-native position contract shared by the
+    /// script dispatcher and focused parity tests. Retail safe-copy evidence
+    /// proves that SetPos makes an immediate GetPos equal to its position
+    /// argument; it does not prove an orientation, velocity, collision, or
+    /// persistence change, so those pose fields are deliberately preserved.
+    /// </summary>
+    internal Level100ScriptValue InvokePositionNative(
+        int command,
+        Level100ActorId receiver,
+        IReadOnlyList<Level100ScriptValue> arguments)
+    {
+        switch (command)
+        {
+            case 49: // GetPos
+                RequireArguments(command, arguments, 0);
+                return Level100ScriptValue.Position(
+                    _actors.GetPose(receiver).PositionMillimeters);
+            case 135: // SetPos
+                RequireArguments(command, arguments, 1);
+                Level100ActorPoseSnapshot pose = _actors.GetPose(receiver);
+                _actors.SetPose(
+                    receiver,
+                    pose with
+                    {
+                        PositionMillimeters = arguments[0].AsPositionMillimeters(),
+                    });
+                return Level100ScriptValue.Integer(0);
+            default:
+                throw new ArgumentOutOfRangeException(
+                    nameof(command),
+                    command,
+                    "Expected Mission native GetPos or SetPos.");
         }
     }
 

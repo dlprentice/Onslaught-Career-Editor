@@ -390,6 +390,14 @@ internal readonly record struct Level100ScriptValue(
     internal static Level100ScriptValue ExternalThing(uint thingTypeMask) =>
         new(Level100ScriptValueType.Thing, 0, unchecked((int)thingTypeMask), 0, null);
 
+    internal static Level100ScriptValue Position(SimVector3 positionMillimeters) =>
+        new(
+            Level100ScriptValueType.Position,
+            BitConverter.SingleToInt32Bits(positionMillimeters.X / 1_000.0f),
+            BitConverter.SingleToInt32Bits(positionMillimeters.Y / 1_000.0f),
+            BitConverter.SingleToInt32Bits(positionMillimeters.Z / 1_000.0f),
+            null);
+
     internal int AsInteger() => Type switch
     {
         Level100ScriptValueType.Integer or Level100ScriptValueType.Boolean => Scalar,
@@ -422,6 +430,35 @@ internal readonly record struct Level100ScriptValue(
         Type == Level100ScriptValueType.Thing && Scalar > 0
             ? new Level100ActorId(Scalar)
             : throw new InvalidOperationException("Expected a resolved actor reference.");
+
+    internal SimVector3 AsPositionMillimeters()
+    {
+        if (Type != Level100ScriptValueType.Position)
+        {
+            throw new InvalidOperationException($"Expected position value, got {Type}.");
+        }
+
+        return new SimVector3(
+            ToMillimeters(Scalar),
+            ToMillimeters(ComponentY),
+            ToMillimeters(ComponentZ));
+    }
+
+    private static int ToMillimeters(int bits)
+    {
+        float value = BitConverter.Int32BitsToSingle(bits);
+        double millimeters = value * 1_000.0;
+        if (!float.IsFinite(value) ||
+            millimeters < int.MinValue ||
+            millimeters > int.MaxValue)
+        {
+            throw new InvalidOperationException("Position component is outside the finite Core range.");
+        }
+
+        return checked((int)Math.Round(
+            millimeters,
+            MidpointRounding.AwayFromZero));
+    }
 
     internal Level100ScriptValueSnapshot Snapshot =>
         new(Type, Scalar, ComponentY, ComponentZ, Text);

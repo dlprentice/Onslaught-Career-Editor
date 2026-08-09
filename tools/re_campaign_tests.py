@@ -5732,5 +5732,2008 @@ class CampaignRecoveryGeneration11Tests(unittest.TestCase):
                     self.assertNotEqual(0, completed.returncode)
                     self.assertIn(expected, completed.stderr)
 
+
+class CampaignRecoveryGeneration12DamageWritesTests(unittest.TestCase):
+    AUTHORITY_RECEIPT_BYTES = 8456
+    AUTHORITY_RECEIPT_SHA256 = (
+        "c3531b495084ec73fc2b76a70be3409ca120448ba6831cbfa96a70866e182cba"
+    )
+    AUTHORITY_AUTHOR_SHA256 = (
+        "c8f2a9160fc5c0e650680e9efdb6e3c4fef1177abfda2aaf787c92cfb475dbeb"
+    )
+    AUTHORITY_BOOTSTRAP_SHA256 = (
+        "98b453b84bb4d312691f38e59a3a662d990963f3fdfac28f7e72ea1c1376562b"
+    )
+    AUTHORITY_REDUCER_ID = (
+        "1bcd8b1bff0bd9182872c221df8060aff8da263a89d94052ede2e80127812385"
+    )
+    AUTHORITY_READY_SHA256 = {
+        "generation-12-level521-damage-hit-writes-v1": (
+            "9d2b903d451cb62fd6fb599b915dd57a0e6f313e610a348022fabf26ee265747"
+        ),
+        "generation-12-level521-damage-hit-writes-replica-v1": (
+            "0635f8bb828cc4bb1f325bb2fc50d385597a38a999d91d3af3ff38dfb86c9319"
+        ),
+    }
+    OUTPUT_SHA256 = {
+        "campaign-functions.tsv": "f129dcb3f894cb3822fb320e7627b487a345b1c7b64183c4a79d87b9d764a516",
+        "campaign-residuals.tsv": "30d390b75a9984efc6bebedf5ddb00412326d36e51d2c9f3c1883032dd25ef49",
+        "campaign-questions.tsv": "86f1d48e2f92950926a3acfe7b3c4219ad778e3b2e19c627202b7053f5866782",
+        "campaign-scenarios.tsv": "35a84fad46065d1317e48b41c66889a1dd12327077766423693b8839be857542",
+        "campaign-levers.tsv": "fa337d96cfe7b6eca266b44aa39deded516e3a8cc02979a31671b449c66e3cdc",
+        "campaign-contracts.tsv": "da9e8cbc0afe26a6d83cd68e6cab289d17a12f7a3818bf1dc2da193aca6a23da",
+        "campaign-adjudications.tsv": "b31ed77711ebcde4cd878cf9e846fa065c2f1def0e7c135d7650dd3e465e16b5",
+        "campaign-supersessions.tsv": "7569852a3fe9aea25a4fcc4f6d17b6d9d81ff658f644b007bda1f50ae55559cb",
+    }
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        repo = Path(__file__).resolve().parent.parent
+        base = repo / "local-lab/re-campaign-incident-recovery-20260808-v1"
+        cls.parent = base / "generation-11-gen73-claims-resealed-v2"
+        cls.generation = base / "generation-12-level521-damage-hit-writes-v1"
+        cls.replica = base / "generation-12-level521-damage-hit-writes-replica-v1"
+        cls.authority = base / "generation-12-level521-damage-hit-writes-authority.ready.json"
+        cls.proof = repo / campaign.LEVEL521_DAMAGE_WRITES_PROOF_RELATIVE
+        if not (cls.parent / "campaign.ready.json").is_file():
+            raise unittest.SkipTest("maintainer-local canonical Gen11 prerequisite is unavailable")
+        for root, label in (
+            (cls.proof, "Level 521 Damage/Hit proof"),
+            (cls.generation, "canonical Generation 12"),
+            (cls.replica, "replicated Generation 12"),
+        ):
+            ready_name = "proof.ready.json" if root == cls.proof else "campaign.ready.json"
+            if not (root / ready_name).is_file():
+                raise AssertionError(f"required {label} is missing: {root}")
+        if not cls.authority.is_file():
+            raise AssertionError(f"required Generation 12 authority receipt is missing: {cls.authority}")
+
+    @classmethod
+    def authority_verify(cls, root: Path) -> subprocess.CompletedProcess:
+        expected_ready = cls.AUTHORITY_READY_SHA256.get(root.name)
+        if expected_ready is None:
+            raise AssertionError(f"root is not an externally selected Gen12 copy: {root}")
+        repo = Path(__file__).resolve().parent.parent
+        bootstrap = Path(__file__).resolve().parent / "re_campaign_frozen_bootstrap.py"
+        environment = os.environ.copy()
+        environment["BEA_REPO_ROOT"] = os.fspath(repo)
+        environment["PYTHONDONTWRITEBYTECODE"] = "1"
+        return subprocess.run(
+            [
+                os.fspath(Path(os.sys.executable)),
+                "-I",
+                "-B",
+                os.fspath(bootstrap),
+                "--campaign",
+                os.fspath(root),
+                "--mode",
+                "full",
+                "--expected-ready-sha256",
+                expected_ready,
+                "--expected-reducer-id",
+                cls.AUTHORITY_REDUCER_ID,
+            ],
+            cwd=repo,
+            env=environment,
+            capture_output=True,
+            text=True,
+            timeout=900,
+            check=False,
+        )
+
+    @staticmethod
+    def frozen_verify(root: Path, *, replay: bool = False) -> subprocess.CompletedProcess:
+        return CampaignRecoveryGeneration8Tests.frozen_verify(root, replay=replay)
+
+    @staticmethod
+    def reducer_files(root: Path) -> dict[str, bytes]:
+        return CampaignRecoveryGeneration9Tests.reducer_files(root)
+
+    @staticmethod
+    def write_ready(root: Path, receipt: dict) -> None:
+        (root / "campaign.ready.json").write_text(
+            json.dumps(receipt, indent=2) + "\n", encoding="utf-8"
+        )
+
+    def test_two_independent_builds_are_deterministic_and_fully_replay(self) -> None:
+        for name, digest in self.OUTPUT_SHA256.items():
+            self.assertEqual(digest, campaign.coverage.sha256_of(self.generation / name))
+            self.assertEqual(
+                (self.generation / name).read_bytes(),
+                (self.replica / name).read_bytes(),
+                name,
+            )
+        self.assertEqual(self.reducer_files(self.generation), self.reducer_files(self.replica))
+        normalized = []
+        for root in (self.generation, self.replica):
+            completed = self.authority_verify(root)
+            self.assertEqual(0, completed.returncode, completed.stderr)
+            self.assertIn("CAMPAIGN_VERIFIED", completed.stdout)
+            receipt = json.loads((root / "campaign.ready.json").read_text(encoding="utf-8"))
+            self.assertEqual(12, receipt["generation"])
+            self.assertEqual(
+                campaign.LEVEL521_DAMAGE_WRITES_EXPECTED_GENERATION12_COUNTS,
+                receipt["counts"],
+            )
+            self.assertEqual(campaign.LEVEL521_DAMAGE_WRITES_ADVANCE_KIND, receipt["advance"]["kind"])
+            self.assertEqual(campaign.LEVEL521_DAMAGE_WRITES_ADVANCE_SCHEMA, receipt["advance"]["schema"])
+            self.assertEqual("DW-073a47ed96f6d5a4", receipt["advance"]["observationId"])
+            receipt["generatedAtUtc"] = "<generated>"
+            for stamp in receipt["outputs"].values():
+                stamp["lastWriteUtc"] = "<write>"
+            normalized.append(receipt)
+        self.assertEqual(normalized[0], normalized[1])
+
+    def test_external_authority_receipt_selects_only_canonical_generation12(self) -> None:
+        repo = Path(__file__).resolve().parent.parent
+        author = repo / "tools/re_level521_damage_writes_authority.py"
+        bootstrap = repo / "tools/re_campaign_frozen_bootstrap.py"
+        self.assertEqual(self.AUTHORITY_RECEIPT_BYTES, self.authority.stat().st_size)
+        self.assertEqual(
+            self.AUTHORITY_RECEIPT_SHA256,
+            campaign.coverage.sha256_of(self.authority),
+        )
+        receipt = json.loads(self.authority.read_text(encoding="utf-8"))
+        self.assertEqual("bea.re.level521-damage-hit-generation12-authority.v1", receipt["schema"])
+        self.assertEqual("READY", receipt["verdict"])
+        self.assertEqual("FULL_REPLAY_CAMPAIGN_AUTHORITY", receipt["authorityClass"])
+        self.assertEqual(
+            "FULL_CAMPAIGN_REDUCER_REPLAY_NOT_GAME_TTD_OR_GHIDRA_REPLAY",
+            receipt["replayScope"],
+        )
+        self.assertEqual(str(self.generation.resolve()), receipt["canonical"]["absolutePath"])
+        self.assertEqual(str(self.replica.resolve()), receipt["replica"]["absolutePath"])
+        self.assertEqual(
+            "REPRODUCTION_ONLY_NOT_AUTHORITY_SELECTOR", receipt["replica"]["role"]
+        )
+        self.assertEqual(str(self.generation.resolve()), receipt["selectionRule"]["requiredAbsolutePath"])
+        self.assertEqual(self.AUTHORITY_READY_SHA256, receipt["selectionRule"]["literalReadySha256ByRoot"])
+        self.assertEqual(self.AUTHORITY_REDUCER_ID, receipt["selectionRule"]["requiredReducerId"])
+        self.assertEqual("FULL", receipt["selectionRule"]["requiredMode"])
+        self.assertEqual(
+            "9b3769c503f003b34d3915047be28c24036567f260de1933591f0254d992686d",
+            receipt["parent"]["readySha256"],
+        )
+        self.assertEqual(
+            "2594d78d7ec6b4908ecfba9509122fedbe1959ff0e5eeaceb6d1164ae758238c",
+            receipt["parent"]["authorityReceiptSha256"],
+        )
+        self.assertEqual(campaign.LEVEL521_DAMAGE_WRITES_PROOF_READY_SHA256, receipt["proof"]["readySha256"])
+        self.assertEqual(campaign.LEVEL521_DAMAGE_WRITES_PROOF_AUTHOR_SHA256, receipt["proof"]["authorSha256"])
+        self.assertEqual(campaign.LEVEL521_DAMAGE_WRITES_EXPECTED_GENERATION12_COUNTS, receipt["counts"])
+        self.assertEqual(self.OUTPUT_SHA256, {name: stamp["sha256"] for name, stamp in receipt["outputs"].items()})
+        self.assertEqual(13, receipt["limitations"]["nextValidGeneration"])
+        self.assertFalse(receipt["limitations"]["liveGhidraMutation"])
+        self.assertEqual(self.AUTHORITY_AUTHOR_SHA256, campaign.coverage.sha256_of(author))
+        self.assertEqual(self.AUTHORITY_AUTHOR_SHA256, receipt["author"]["sha256"])
+        self.assertEqual(self.AUTHORITY_BOOTSTRAP_SHA256, campaign.coverage.sha256_of(bootstrap))
+        self.assertEqual(
+            self.AUTHORITY_BOOTSTRAP_SHA256,
+            receipt["frozenOwners"]["preImportLauncher"]["sha256"],
+        )
+        for root_name, section in (
+            (self.generation.name, "canonicalLiteralPinnedFullReplay"),
+            (self.replica.name, "replicaLiteralPinnedFullReplay"),
+        ):
+            replay = receipt["verification"][section]
+            self.assertEqual(0, replay["exitCode"])
+            self.assertEqual("CAMPAIGN_VERIFIED", replay["marker"])
+            self.assertEqual(
+                self.AUTHORITY_READY_SHA256[root_name],
+                replay["command"][replay["command"].index("--expected-ready-sha256") + 1],
+            )
+            self.assertEqual(
+                self.AUTHORITY_REDUCER_ID,
+                replay["command"][replay["command"].index("--expected-reducer-id") + 1],
+            )
+            self.assertEqual(bootstrap.resolve(), Path(replay["command"][3]).resolve())
+
+    def test_exact_two_row_contract_and_partial_parity_advance(self) -> None:
+        parent_functions = {
+            row["entityKey"]: row
+            for row in campaign._read_tsv(self.parent / "campaign-functions.tsv")
+        }
+        functions = {
+            row["entityKey"]: row
+            for row in campaign._read_tsv(self.generation / "campaign-functions.tsv")
+        }
+        parent_contracts = {
+            row["contractId"]: row
+            for row in campaign._read_tsv(self.parent / "campaign-contracts.tsv")
+        }
+        contracts = {
+            row["contractId"]: row
+            for row in campaign._read_tsv(self.generation / "campaign-contracts.tsv")
+        }
+        changed_functions = {
+            key for key in functions if functions[key] != parent_functions[key]
+        }
+        changed_contracts = {
+            key for key in contracts if contracts[key] != parent_contracts[key]
+        }
+        specs = campaign._level521_damage_writes_specs()
+        self.assertEqual(
+            {str(spec["entityKey"]) for spec in specs.values()}, changed_functions
+        )
+        self.assertEqual(
+            {str(spec["contractId"]) for spec in specs.values()}, changed_contracts
+        )
+        damage = contracts["C-62b3c956518ff9a5"]
+        hit = contracts["C-2f608ec63fd10347"]
+        self.assertEqual("CBattleEngine__Damage", damage["currentName"])
+        self.assertIn("+0x100 mShields", damage["writes"])
+        self.assertIn("+0xFC mEnergy", damage["writes"])
+        self.assertIn("across five gaps", damage["failureModes"])
+        self.assertEqual("PARTIAL_CONTRACT", damage["rebuildState"])
+        self.assertEqual(
+            "OnslaughtRebuild.Core.Level100PlayerDamage.Apply",
+            damage["rebuildImplementation"],
+        )
+        self.assertEqual("CBattleEngine__Hit", hit["currentName"])
+        self.assertIn("seven watched fields", hit["writes"])
+        self.assertIn("all other memory is outside this control", hit["writes"])
+        self.assertEqual("NOT_READY", hit["rebuildState"])
+        self.assertNotIn("MAINTAINER_GHIDRA_SEMANTIC_PROMOTED", functions[specs["0x0040a890"]["entityKey"]]["evidenceStates"])
+        for name in (
+            "campaign-residuals.tsv",
+            "campaign-scenarios.tsv",
+            "campaign-levers.tsv",
+            "campaign-supersessions.tsv",
+        ):
+            self.assertEqual((self.parent / name).read_bytes(), (self.generation / name).read_bytes(), name)
+
+    def test_exact_questions_adjudications_and_proof_boundary(self) -> None:
+        parent_questions = {
+            row["questionId"]: row
+            for row in campaign._read_tsv(self.parent / "campaign-questions.tsv")
+        }
+        questions = {
+            row["questionId"]: row
+            for row in campaign._read_tsv(self.generation / "campaign-questions.tsv")
+        }
+        self.assertEqual(
+            {"Q-dc20c0ae0488b9f1", "Q-f786eb45230f7d43"},
+            set(questions) - set(parent_questions),
+        )
+        for parent, successor in (
+            ("Q-c3a67dd02f317206", "Q-dc20c0ae0488b9f1"),
+            ("Q-657753f5f004e39b", "Q-f786eb45230f7d43"),
+        ):
+            self.assertEqual("CLOSED_SURVIVED", questions[parent]["state"])
+            self.assertEqual("OPEN", questions[successor]["state"])
+            self.assertEqual(parent, questions[successor]["parentQuestionId"])
+        parent_adjudications = {
+            row["adjudicationId"]
+            for row in campaign._read_tsv(self.parent / "campaign-adjudications.tsv")
+        }
+        adjudications = campaign._read_tsv(self.generation / "campaign-adjudications.tsv")
+        fresh = [row for row in adjudications if row["adjudicationId"] not in parent_adjudications]
+        self.assertEqual({"A-2b0389d42d79a795", "A-e1aa3cc450894a11"}, {row["adjudicationId"] for row in fresh})
+        self.assertTrue(all(row["semanticPromotionApplied"] == "True" for row in fresh))
+        self.assertTrue(all(row["overlayReadySha256"] == campaign.LEVEL521_DAMAGE_WRITES_PROOF_READY_SHA256 for row in fresh))
+        self.assertEqual(
+            campaign.LEVEL521_DAMAGE_WRITES_PROOF_READY_SHA256,
+            campaign.coverage.sha256_of(self.proof / "proof.ready.json"),
+        )
+
+    def test_frozen_integrity_rejects_metadata_row_and_link_laundering(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            forged = Path(temporary) / "forged"
+            shutil.copytree(self.generation, forged)
+            ready_path = forged / "campaign.ready.json"
+            original = json.loads(ready_path.read_text(encoding="utf-8"))
+
+            def rejected(mutator, expected: str) -> None:
+                receipt = json.loads(json.dumps(original))
+                mutator(receipt)
+                self.write_ready(forged, receipt)
+                completed = self.frozen_verify(forged)
+                self.assertNotEqual(0, completed.returncode)
+                self.assertIn(expected, completed.stderr)
+
+            rejected(lambda value: value.update({"advance": None}), "exact Level 521 Damage/Hit advance")
+            rejected(lambda value: value["advance"].update({"kind": "TTD_DATA_WRITE_GUESS"}), "exact Level 521 Damage/Hit advance")
+            rejected(lambda value: value.update({"generatedAtUtc": "not-a-time"}), "invalid timestamp")
+            rejected(lambda value: value.update({"sourceSnapshot": {}}), "source snapshot differs")
+            rejected(lambda value: value.update({"policies": []}), "policies differ")
+            rejected(lambda value: value["outputs"].update({"extra.tsv": {}}), "output set differs")
+
+        with tempfile.TemporaryDirectory() as temporary:
+            forged = Path(temporary) / "forged"
+            shutil.copytree(self.generation, forged)
+            contracts_path = forged / "campaign-contracts.tsv"
+            contracts = campaign._read_tsv(contracts_path)
+            damage = next(row for row in contracts if row["contractId"] == "C-62b3c956518ff9a5")
+            damage["writes"] = "ALL DAMAGE WRITES ARE PROVED"
+            campaign._write_tsv(contracts_path, campaign.CONTRACT_COLUMNS, contracts)
+            ready = json.loads((forged / "campaign.ready.json").read_text(encoding="utf-8"))
+            ready["outputs"]["campaign-contracts.tsv"] = {
+                **campaign.coverage.file_stamp(contracts_path),
+                "path": "campaign-contracts.tsv",
+            }
+            self.write_ready(forged, ready)
+            completed = self.frozen_verify(forged)
+            self.assertNotEqual(0, completed.returncode)
+            self.assertIn("campaign rows differ", completed.stderr)
+
+        for relative, expected in (
+            (Path("campaign.ready.json"), "campaign READY is not a plain single-link file"),
+            (Path("campaign-functions.tsv"), "output has multiple hard links: campaign-functions.tsv"),
+        ):
+            with self.subTest(relative=relative.as_posix()):
+                with tempfile.TemporaryDirectory() as temporary:
+                    forged = Path(temporary) / "forged"
+                    shutil.copytree(self.generation, forged)
+                    target = forged / relative
+                    anchor = Path(temporary) / (relative.name + ".anchor")
+                    shutil.copy2(target, anchor)
+                    target.unlink()
+                    os.link(anchor, target)
+                    completed = self.frozen_verify(forged)
+                    self.assertNotEqual(0, completed.returncode)
+                    self.assertIn(expected, completed.stderr)
+
+
+class CampaignRecoveryGeneration13ApplyDamageTests(unittest.TestCase):
+    AUTHORITY_RECEIPT_BYTES = 8873
+    AUTHORITY_RECEIPT_SHA256 = (
+        "772f65ba5210c6d022bff64aefb6523a563ed1b8c3ab53eb87aef8dfe4b1944d"
+    )
+    AUTHORITY_AUTHOR_SHA256 = (
+        "71acd049a65404f7ba0248e4583fae8e47b7b9c64dcd6a1b621b273afa6bd8ea"
+    )
+    AUTHORITY_BOOTSTRAP_SHA256 = (
+        "98b453b84bb4d312691f38e59a3a662d990963f3fdfac28f7e72ea1c1376562b"
+    )
+    AUTHORITY_REDUCER_ID = (
+        "988e0660634b6fa59b2018a96545cdf84666e2c219c7a7ac89809c4ef99fac2e"
+    )
+    AUTHORITY_READY_SHA256 = {
+        "generation-13-applydamage-primary-reproof-v1": (
+            "8436a5a99145f6910cd147bdb419a0efbfb071fcf16d8f42ec330182a97df63e"
+        ),
+        "generation-13-applydamage-primary-reproof-replica-v1": (
+            "a6af8a9345107caabe0b2241ee306e6efbb5113552082935a287fe0b495c4c4c"
+        ),
+    }
+    OUTPUT_SHA256 = {
+        "campaign-functions.tsv": "eeb992ab962308b97834f314675521bb82064f50d37ca57f40ff6ad5c54a4534",
+        "campaign-residuals.tsv": "30d390b75a9984efc6bebedf5ddb00412326d36e51d2c9f3c1883032dd25ef49",
+        "campaign-questions.tsv": "d4bfeae6720aad38e8508ec6b868ba55715dfd317d1cffba00b1f74049dffb0c",
+        "campaign-scenarios.tsv": "35a84fad46065d1317e48b41c66889a1dd12327077766423693b8839be857542",
+        "campaign-levers.tsv": "fa337d96cfe7b6eca266b44aa39deded516e3a8cc02979a31671b449c66e3cdc",
+        "campaign-contracts.tsv": "b27ea5a153833cda4fbeaae9a2f93a65312e64e956e72e01c57055f794713392",
+        "campaign-adjudications.tsv": "0e5dc2d203a123231eacc7a4b629b77259bfd48429951c4ed514ede459d7e59c",
+        "campaign-supersessions.tsv": "7569852a3fe9aea25a4fcc4f6d17b6d9d81ff658f644b007bda1f50ae55559cb",
+    }
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        repo = Path(__file__).resolve().parent.parent
+        base = repo / "local-lab/re-campaign-incident-recovery-20260808-v1"
+        cls.parent = base / "generation-12-level521-damage-hit-writes-v1"
+        cls.generation = base / "generation-13-applydamage-primary-reproof-v1"
+        cls.replica = base / "generation-13-applydamage-primary-reproof-replica-v1"
+        cls.authority = base / "generation-13-applydamage-primary-reproof-authority.ready.json"
+        cls.proof = repo / campaign.APPLYDAMAGE_REPROOF_RELATIVE
+        if not (cls.parent / "campaign.ready.json").is_file():
+            raise unittest.SkipTest("maintainer-local canonical Gen12 prerequisite is unavailable")
+        for root, label in (
+            (cls.proof, "ApplyDamage reproof"),
+            (cls.generation, "canonical Generation 13"),
+            (cls.replica, "replicated Generation 13"),
+        ):
+            ready_name = "proof.ready.json" if root == cls.proof else "campaign.ready.json"
+            if not (root / ready_name).is_file():
+                raise AssertionError(f"required {label} is missing: {root}")
+
+    @classmethod
+    def authority_verify(cls, root: Path) -> subprocess.CompletedProcess:
+        expected_ready = cls.AUTHORITY_READY_SHA256.get(root.name)
+        if expected_ready is None:
+            raise AssertionError(f"root is not an externally selected Gen13 copy: {root}")
+        repo = Path(__file__).resolve().parent.parent
+        bootstrap = Path(__file__).resolve().parent / "re_campaign_frozen_bootstrap.py"
+        environment = os.environ.copy()
+        environment["BEA_REPO_ROOT"] = os.fspath(repo)
+        environment["PYTHONDONTWRITEBYTECODE"] = "1"
+        return subprocess.run(
+            [
+                os.fspath(Path(os.sys.executable)),
+                "-I",
+                "-B",
+                os.fspath(bootstrap),
+                "--campaign",
+                os.fspath(root),
+                "--mode",
+                "full",
+                "--expected-ready-sha256",
+                expected_ready,
+                "--expected-reducer-id",
+                cls.AUTHORITY_REDUCER_ID,
+            ],
+            cwd=repo,
+            env=environment,
+            capture_output=True,
+            text=True,
+            timeout=900,
+            check=False,
+        )
+
+    @staticmethod
+    def frozen_verify(root: Path, *, replay: bool = False) -> subprocess.CompletedProcess:
+        return CampaignRecoveryGeneration8Tests.frozen_verify(root, replay=replay)
+
+    @staticmethod
+    def reducer_files(root: Path) -> dict[str, bytes]:
+        return CampaignRecoveryGeneration9Tests.reducer_files(root)
+
+    @staticmethod
+    def write_ready(root: Path, receipt: dict) -> None:
+        (root / "campaign.ready.json").write_text(
+            json.dumps(receipt, indent=2) + "\n", encoding="utf-8"
+        )
+
+    def test_two_independent_builds_are_deterministic_and_fully_replay(self) -> None:
+        for name, digest in self.OUTPUT_SHA256.items():
+            self.assertEqual(digest, campaign.coverage.sha256_of(self.generation / name))
+            self.assertEqual(
+                (self.generation / name).read_bytes(),
+                (self.replica / name).read_bytes(),
+                name,
+            )
+        self.assertEqual(self.reducer_files(self.generation), self.reducer_files(self.replica))
+        normalized = []
+        for root in (self.generation, self.replica):
+            completed = self.authority_verify(root)
+            self.assertEqual(0, completed.returncode, completed.stderr)
+            self.assertIn("CAMPAIGN_VERIFIED", completed.stdout)
+            receipt = json.loads((root / "campaign.ready.json").read_text(encoding="utf-8"))
+            self.assertEqual(13, receipt["generation"])
+            self.assertEqual(
+                campaign.APPLYDAMAGE_REPROOF_EXPECTED_GENERATION13_COUNTS,
+                receipt["counts"],
+            )
+            self.assertEqual(campaign.APPLYDAMAGE_REPROOF_ADVANCE_KIND, receipt["advance"]["kind"])
+            self.assertEqual(campaign.APPLYDAMAGE_REPROOF_ADVANCE_SCHEMA, receipt["advance"]["schema"])
+            self.assertEqual("AD-211e63bf8c1437ac", receipt["advance"]["observationId"])
+            receipt["generatedAtUtc"] = "<generated>"
+            for stamp in receipt["outputs"].values():
+                stamp["lastWriteUtc"] = "<write>"
+            normalized.append(receipt)
+        self.assertEqual(normalized[0], normalized[1])
+
+    def test_exact_bounded_contract_questions_and_parity_mapping(self) -> None:
+        parent_functions = {
+            row["entityKey"]: row
+            for row in campaign._read_tsv(self.parent / "campaign-functions.tsv")
+        }
+        functions = {
+            row["entityKey"]: row
+            for row in campaign._read_tsv(self.generation / "campaign-functions.tsv")
+        }
+        parent_contracts = {
+            row["contractId"]: row
+            for row in campaign._read_tsv(self.parent / "campaign-contracts.tsv")
+        }
+        contracts = {
+            row["contractId"]: row
+            for row in campaign._read_tsv(self.generation / "campaign-contracts.tsv")
+        }
+        self.assertEqual(
+            {campaign.applydamage_reproof.ENTITY_KEY},
+            {key for key in functions if functions[key] != parent_functions[key]},
+        )
+        self.assertEqual(
+            {campaign.applydamage_reproof.CONTRACT_ID},
+            {key for key in contracts if contracts[key] != parent_contracts[key]},
+        )
+        function = functions[campaign.applydamage_reproof.ENTITY_KEY]
+        contract = contracts[campaign.applydamage_reproof.CONTRACT_ID]
+        self.assertEqual("C2_BOUNDED_RUNTIME", function["semanticGrade"])
+        self.assertEqual("BOUNDED_CONTRACT", function["resolutionState"])
+        self.assertEqual("C2_BOUNDED_RUNTIME", contract["semanticGrade"])
+        self.assertEqual("BOUNDED_CONTRACT_ADVANCED", contract["contractState"])
+        self.assertEqual("SURVIVED", contract["refuterVerdict"])
+        self.assertIn("0x3BA3D70B->0xC479FFAE", contract["writes"])
+        self.assertIn("0x00000000->0x00000000", contract["writes"])
+        self.assertIn("withholds association", contract["returns"])
+        self.assertIn("positive-shield absorption", contract["failureModes"])
+        self.assertEqual("PARTIAL_CONTRACT", contract["rebuildState"])
+        self.assertEqual(
+            "OnslaughtRebuild.Core.Level100DestructionState.ApplyRoundHit",
+            contract["rebuildImplementation"],
+        )
+        for name in (
+            "campaign-residuals.tsv",
+            "campaign-scenarios.tsv",
+            "campaign-levers.tsv",
+            "campaign-supersessions.tsv",
+        ):
+            self.assertEqual((self.parent / name).read_bytes(), (self.generation / name).read_bytes(), name)
+
+        parent_questions = {
+            row["questionId"]: row
+            for row in campaign._read_tsv(self.parent / "campaign-questions.tsv")
+        }
+        questions = {
+            row["questionId"]: row
+            for row in campaign._read_tsv(self.generation / "campaign-questions.tsv")
+        }
+        expected_successors = {"Q-c82daeb2bd82e5ac", "Q-694f9ecf56cd917f"}
+        self.assertEqual(expected_successors, set(questions) - set(parent_questions))
+        self.assertEqual("CLOSED_SURVIVED", questions["Q-178b10ce57ab15db"]["state"])
+        for successor in expected_successors:
+            self.assertEqual("OPEN", questions[successor]["state"])
+            self.assertEqual("Q-178b10ce57ab15db", questions[successor]["parentQuestionId"])
+            self.assertIn(successor, contract["questionIds"].split(";"))
+        parent_adjudications = {
+            row["adjudicationId"]
+            for row in campaign._read_tsv(self.parent / "campaign-adjudications.tsv")
+        }
+        fresh = [
+            row
+            for row in campaign._read_tsv(self.generation / "campaign-adjudications.tsv")
+            if row["adjudicationId"] not in parent_adjudications
+        ]
+        self.assertEqual(["A-40616e3ffc00936a"], [row["adjudicationId"] for row in fresh])
+        self.assertEqual("True", fresh[0]["semanticPromotionApplied"])
+        self.assertEqual(campaign.APPLYDAMAGE_REPROOF_READY_SHA256, fresh[0]["overlayReadySha256"])
+
+    def test_frozen_integrity_rejects_strength_metadata_row_and_link_laundering(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            forged = Path(temporary) / "forged"
+            shutil.copytree(self.generation, forged)
+            original = json.loads((forged / "campaign.ready.json").read_text(encoding="utf-8"))
+
+            def rejected(mutator, expected: str) -> None:
+                receipt = json.loads(json.dumps(original))
+                mutator(receipt)
+                self.write_ready(forged, receipt)
+                completed = self.frozen_verify(forged)
+                self.assertNotEqual(0, completed.returncode)
+                self.assertIn(expected, completed.stderr)
+
+            rejected(lambda value: value.update({"advance": None}), "exact ApplyDamage reproof advance")
+            rejected(
+                lambda value: value["advance"]["promotion"].update({"gradeTo": "C3_ALL_PATHS"}),
+                "ApplyDamage reproof advance receipt differs",
+            )
+            rejected(lambda value: value.update({"generatedAtUtc": "not-a-time"}), "invalid timestamp")
+            rejected(lambda value: value.update({"policies": []}), "policies differ")
+
+        with tempfile.TemporaryDirectory() as temporary:
+            forged = Path(temporary) / "forged"
+            shutil.copytree(self.generation, forged)
+            contracts_path = forged / "campaign-contracts.tsv"
+            contracts = campaign._read_tsv(contracts_path)
+            target = next(
+                row
+                for row in contracts
+                if row["contractId"] == campaign.applydamage_reproof.CONTRACT_ID
+            )
+            target["writes"] = "POSITIVE SHIELD ABSORPTION AND ALL PATHS PROVED"
+            campaign._write_tsv(contracts_path, campaign.CONTRACT_COLUMNS, contracts)
+            ready = json.loads((forged / "campaign.ready.json").read_text(encoding="utf-8"))
+            ready["outputs"]["campaign-contracts.tsv"] = {
+                **campaign.coverage.file_stamp(contracts_path),
+                "path": "campaign-contracts.tsv",
+            }
+            self.write_ready(forged, ready)
+            completed = self.frozen_verify(forged)
+            self.assertNotEqual(0, completed.returncode)
+            self.assertIn("ApplyDamage reproof campaign rows differ", completed.stderr)
+
+        for relative, expected in (
+            (Path("campaign.ready.json"), "campaign READY is not a plain single-link file"),
+            (Path("campaign-functions.tsv"), "output has multiple hard links: campaign-functions.tsv"),
+        ):
+            with self.subTest(relative=relative.as_posix()):
+                with tempfile.TemporaryDirectory() as temporary:
+                    forged = Path(temporary) / "forged"
+                    shutil.copytree(self.generation, forged)
+                    target = forged / relative
+                    anchor = Path(temporary) / (relative.name + ".anchor")
+                    shutil.copy2(target, anchor)
+                    target.unlink()
+                    os.link(anchor, target)
+                    completed = self.frozen_verify(forged)
+                    self.assertNotEqual(0, completed.returncode)
+                    self.assertIn(expected, completed.stderr)
+
+    def test_external_authority_receipt_selects_only_canonical_generation13(self) -> None:
+        if not self.authority.is_file():
+            self.fail(f"required Generation 13 authority receipt is missing: {self.authority}")
+        repo = Path(__file__).resolve().parent.parent
+        author = repo / "tools/re_applydamage_primary_campaign_authority.py"
+        bootstrap = repo / "tools/re_campaign_frozen_bootstrap.py"
+        self.assertEqual(self.AUTHORITY_RECEIPT_BYTES, self.authority.stat().st_size)
+        self.assertEqual(
+            self.AUTHORITY_RECEIPT_SHA256,
+            campaign.coverage.sha256_of(self.authority),
+        )
+        receipt = json.loads(self.authority.read_text(encoding="utf-8"))
+        self.assertEqual("bea.re.cunit-applydamage-generation13-authority.v1", receipt["schema"])
+        self.assertEqual("READY", receipt["verdict"])
+        self.assertEqual("FULL_REPLAY_CAMPAIGN_AUTHORITY", receipt["authorityClass"])
+        self.assertEqual("FULL_CAMPAIGN_REDUCER_REPLAY_NOT_GAME_TTD_OR_GHIDRA_REPLAY", receipt["replayScope"])
+        self.assertEqual(str(self.generation.resolve()), receipt["canonical"]["absolutePath"])
+        self.assertEqual(str(self.replica.resolve()), receipt["replica"]["absolutePath"])
+        self.assertEqual("REPRODUCTION_ONLY_NOT_AUTHORITY_SELECTOR", receipt["replica"]["role"])
+        self.assertEqual(str(self.generation.resolve()), receipt["selectionRule"]["requiredAbsolutePath"])
+        self.assertEqual(self.AUTHORITY_READY_SHA256, receipt["selectionRule"]["literalReadySha256ByRoot"])
+        self.assertEqual(self.AUTHORITY_REDUCER_ID, receipt["selectionRule"]["requiredReducerId"])
+        self.assertEqual("FULL", receipt["selectionRule"]["requiredMode"])
+        self.assertEqual(campaign.APPLYDAMAGE_REPROOF_PARENT_READY_SHA256, receipt["parent"]["readySha256"])
+        self.assertEqual(campaign.APPLYDAMAGE_REPROOF_PARENT_REDUCER_ID, receipt["parent"]["reducerId"])
+        self.assertEqual(campaign.APPLYDAMAGE_REPROOF_READY_SHA256, receipt["proof"]["readySha256"])
+        self.assertEqual(campaign.APPLYDAMAGE_REPROOF_AUTHOR_SHA256, receipt["proof"]["authorSha256"])
+        self.assertEqual(campaign.APPLYDAMAGE_REPROOF_EXPECTED_GENERATION13_COUNTS, receipt["counts"])
+        self.assertEqual(self.OUTPUT_SHA256, {name: stamp["sha256"] for name, stamp in receipt["outputs"].items()})
+        self.assertEqual(14, receipt["limitations"]["nextValidGeneration"])
+        self.assertFalse(receipt["limitations"]["liveGhidraMutation"])
+        self.assertFalse(receipt["claimBoundary"]["positiveShieldAbsorptionProved"])
+        self.assertEqual("WITHHELD_RECORDED_GAP", receipt["claimBoundary"]["returnAssociation"])
+        self.assertEqual(self.AUTHORITY_AUTHOR_SHA256, campaign.coverage.sha256_of(author))
+        self.assertEqual(self.AUTHORITY_AUTHOR_SHA256, receipt["author"]["sha256"])
+        self.assertEqual(self.AUTHORITY_BOOTSTRAP_SHA256, campaign.coverage.sha256_of(bootstrap))
+        self.assertEqual(self.AUTHORITY_BOOTSTRAP_SHA256, receipt["frozenOwners"]["preImportLauncher"]["sha256"])
+        for root_name, section in (
+            (self.generation.name, "canonicalLiteralPinnedFullReplay"),
+            (self.replica.name, "replicaLiteralPinnedFullReplay"),
+        ):
+            replay = receipt["verification"][section]
+            self.assertEqual(0, replay["exitCode"])
+            self.assertEqual("CAMPAIGN_VERIFIED", replay["marker"])
+            self.assertEqual(
+                self.AUTHORITY_READY_SHA256[root_name],
+                replay["command"][replay["command"].index("--expected-ready-sha256") + 1],
+            )
+            self.assertEqual(
+                self.AUTHORITY_REDUCER_ID,
+                replay["command"][replay["command"].index("--expected-reducer-id") + 1],
+            )
+
+
+class CampaignRecoveryGeneration14TokenArchiveTests(unittest.TestCase):
+    AUTHORITY_RECEIPT_BYTES = 8215
+    AUTHORITY_RECEIPT_SHA256 = (
+        "83a5544bdde805762b01983171c336826ea62a8b2dd8be94109bef959560ff72"
+    )
+    AUTHORITY_AUTHOR_SHA256 = (
+        "0d1056c4dc4b49408f0dcb39c4e38c80be99ce8db8bf304a3ed998dc51f043b9"
+    )
+    AUTHORITY_BOOTSTRAP_SHA256 = (
+        "98b453b84bb4d312691f38e59a3a662d990963f3fdfac28f7e72ea1c1376562b"
+    )
+    AUTHORITY_REDUCER_ID = (
+        "ec58dc9ec399d719677c5ab98ab0ac2efe60d8138c4f2c829f3e5930a946dec2"
+    )
+    AUTHORITY_READY_SHA256 = {
+        "generation-14-tokenarchive-dispatch-reproof-v1": (
+            "9864424def44034a5a5e9a68814ce111076182ad7ea898c9d0040d888c92f32b"
+        ),
+        "generation-14-tokenarchive-dispatch-reproof-replica-v1": (
+            "4f834364ebd9f39e02a4a1781180d79b95ededda3f8d6f6aaac0845bfb8d8a01"
+        ),
+    }
+    OUTPUT_SHA256 = {
+        "campaign-functions.tsv": "eeb992ab962308b97834f314675521bb82064f50d37ca57f40ff6ad5c54a4534",
+        "campaign-residuals.tsv": "b0611722b49bbebbb666bce2c51d534e30ac7ad561d43daa594f5c40fcfdb1c3",
+        "campaign-questions.tsv": "49e3987f4bfa1996838d62823c2d8cc74f26e82843099fadbd055ef52cf4b40d",
+        "campaign-scenarios.tsv": "35a84fad46065d1317e48b41c66889a1dd12327077766423693b8839be857542",
+        "campaign-levers.tsv": "fa337d96cfe7b6eca266b44aa39deded516e3a8cc02979a31671b449c66e3cdc",
+        "campaign-contracts.tsv": "7d5cefef1a6c18fdac8cbe9fa46ea119a6e6d47528f1a5743d9124c22c12a4f8",
+        "campaign-adjudications.tsv": "de317f245b8c3c0e71002a82f73f2dbcc08284cee7c9cddd84c30e8777da7994",
+        "campaign-supersessions.tsv": "7569852a3fe9aea25a4fcc4f6d17b6d9d81ff658f644b007bda1f50ae55559cb",
+    }
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        repo = Path(__file__).resolve().parent.parent
+        base = repo / "local-lab/re-campaign-incident-recovery-20260808-v1"
+        cls.parent = base / "generation-13-applydamage-primary-reproof-v1"
+        cls.generation = base / "generation-14-tokenarchive-dispatch-reproof-v1"
+        cls.replica = base / "generation-14-tokenarchive-dispatch-reproof-replica-v1"
+        cls.authority = base / "generation-14-tokenarchive-dispatch-reproof-authority.ready.json"
+        cls.proof = repo / campaign.TOKENARCHIVE_DISPATCH_PROOF_RELATIVE
+        if not (cls.parent / "campaign.ready.json").is_file():
+            raise unittest.SkipTest("maintainer-local canonical Gen13 prerequisite is unavailable")
+        for root, label in (
+            (cls.proof, "TokenArchive dispatch proof"),
+            (cls.generation, "canonical Generation 14"),
+            (cls.replica, "replicated Generation 14"),
+        ):
+            ready_name = "proof.ready.json" if root == cls.proof else "campaign.ready.json"
+            if not (root / ready_name).is_file():
+                raise AssertionError(f"required {label} is missing: {root}")
+
+    @classmethod
+    def authority_verify(cls, root: Path) -> subprocess.CompletedProcess:
+        expected_ready = cls.AUTHORITY_READY_SHA256.get(root.name)
+        if expected_ready is None:
+            raise AssertionError(f"root is not an externally selected Gen14 copy: {root}")
+        repo = Path(__file__).resolve().parent.parent
+        bootstrap = Path(__file__).resolve().parent / "re_campaign_frozen_bootstrap.py"
+        environment = os.environ.copy()
+        environment["BEA_REPO_ROOT"] = os.fspath(repo)
+        environment["PYTHONDONTWRITEBYTECODE"] = "1"
+        return subprocess.run(
+            [
+                os.fspath(Path(os.sys.executable)),
+                "-I",
+                "-B",
+                os.fspath(bootstrap),
+                "--campaign",
+                os.fspath(root),
+                "--mode",
+                "full",
+                "--expected-ready-sha256",
+                expected_ready,
+                "--expected-reducer-id",
+                cls.AUTHORITY_REDUCER_ID,
+            ],
+            cwd=repo,
+            env=environment,
+            capture_output=True,
+            text=True,
+            timeout=900,
+            check=False,
+        )
+
+    @staticmethod
+    def frozen_verify(root: Path, *, replay: bool = False) -> subprocess.CompletedProcess:
+        return CampaignRecoveryGeneration8Tests.frozen_verify(root, replay=replay)
+
+    @staticmethod
+    def reducer_files(root: Path) -> dict[str, bytes]:
+        return CampaignRecoveryGeneration9Tests.reducer_files(root)
+
+    @staticmethod
+    def write_ready(root: Path, receipt: dict) -> None:
+        (root / "campaign.ready.json").write_text(
+            json.dumps(receipt, indent=2) + "\n", encoding="utf-8"
+        )
+
+    def test_two_independent_builds_are_deterministic_and_fully_replay(self) -> None:
+        for name, digest in self.OUTPUT_SHA256.items():
+            self.assertEqual(digest, campaign.coverage.sha256_of(self.generation / name))
+            self.assertEqual(
+                (self.generation / name).read_bytes(),
+                (self.replica / name).read_bytes(),
+                name,
+            )
+        self.assertEqual(self.reducer_files(self.generation), self.reducer_files(self.replica))
+        self.assertEqual(20, len(self.reducer_files(self.generation)))
+        normalized = []
+        for root in (self.generation, self.replica):
+            completed = self.authority_verify(root)
+            self.assertEqual(0, completed.returncode, completed.stderr)
+            self.assertIn("CAMPAIGN_VERIFIED", completed.stdout)
+            receipt = json.loads((root / "campaign.ready.json").read_text(encoding="utf-8"))
+            self.assertEqual(14, receipt["generation"])
+            self.assertEqual(
+                campaign.TOKENARCHIVE_DISPATCH_EXPECTED_GENERATION14_COUNTS,
+                receipt["counts"],
+            )
+            self.assertEqual(campaign.TOKENARCHIVE_DISPATCH_ADVANCE_KIND, receipt["advance"]["kind"])
+            self.assertEqual(campaign.TOKENARCHIVE_DISPATCH_ADVANCE_SCHEMA, receipt["advance"]["schema"])
+            self.assertEqual("TD-489e2736dd47aa51", receipt["advance"]["proofId"])
+            receipt["generatedAtUtc"] = "<generated>"
+            for stamp in receipt["outputs"].values():
+                stamp["lastWriteUtc"] = "<write>"
+            normalized.append(receipt)
+        self.assertEqual(normalized[0], normalized[1])
+
+    def test_exact_nonsemantic_residual_delta_and_proof_binding(self) -> None:
+        parent_rows = {
+            row["entityKey"]: row
+            for row in campaign._read_tsv(self.parent / "campaign-residuals.tsv")
+        }
+        rows = {
+            row["entityKey"]: row
+            for row in campaign._read_tsv(self.generation / "campaign-residuals.tsv")
+        }
+        key = campaign.tokenarchive_reproof.ENTITY_KEY
+        self.assertEqual({key}, {item for item in rows if rows[item] != parent_rows[item]})
+        self.assertEqual("DATA", rows[key]["classification"])
+        self.assertEqual("TERMINAL_DATA", rows[key]["terminalState"])
+        self.assertEqual(
+            "STATIC_CONSUMER_BOUND_DISPATCH_TABLE_PARTITION",
+            rows[key]["classificationVerdict"],
+        )
+        parent_questions = {
+            row["questionId"]: row
+            for row in campaign._read_tsv(self.parent / "campaign-questions.tsv")
+        }
+        questions = {
+            row["questionId"]: row
+            for row in campaign._read_tsv(self.generation / "campaign-questions.tsv")
+        }
+        question_id = campaign.tokenarchive_reproof.QUESTION_ID
+        self.assertEqual({question_id}, {item for item in questions if questions[item] != parent_questions[item]})
+        self.assertEqual("CLOSED_SURVIVED", questions[question_id]["state"])
+        self.assertEqual(set(), set(questions) - set(parent_questions))
+        parent_adjudications = {
+            row["adjudicationId"]
+            for row in campaign._read_tsv(self.parent / "campaign-adjudications.tsv")
+        }
+        fresh = [
+            row
+            for row in campaign._read_tsv(self.generation / "campaign-adjudications.tsv")
+            if row["adjudicationId"] not in parent_adjudications
+        ]
+        self.assertEqual(["A-6c8984dc61c86b0d"], [row["adjudicationId"] for row in fresh])
+        self.assertEqual("False", fresh[0]["semanticPromotionApplied"])
+        self.assertEqual(campaign.TOKENARCHIVE_DISPATCH_PROOF_READY_SHA256, fresh[0]["overlayReadySha256"])
+        for name in (
+            "campaign-functions.tsv",
+            "campaign-scenarios.tsv",
+            "campaign-levers.tsv",
+            "campaign-supersessions.tsv",
+        ):
+            self.assertEqual((self.parent / name).read_bytes(), (self.generation / name).read_bytes(), name)
+
+    def test_frozen_integrity_rejects_advance_row_and_link_laundering(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            forged = Path(temporary) / "forged"
+            shutil.copytree(self.generation, forged)
+            original = json.loads((forged / "campaign.ready.json").read_text(encoding="utf-8"))
+
+            def rejected(mutator, expected: str) -> None:
+                receipt = json.loads(json.dumps(original))
+                mutator(receipt)
+                self.write_ready(forged, receipt)
+                completed = self.frozen_verify(forged)
+                self.assertNotEqual(0, completed.returncode)
+                self.assertIn(expected, completed.stderr)
+
+            rejected(
+                lambda value: value.update({"advance": None}),
+                "Generation 13 recovery child is not the exact TokenArchive dispatch reproof advance",
+            )
+            rejected(
+                lambda value: value["advance"]["promotion"].update({"classification": "CODE"}),
+                "TokenArchive dispatch advance receipt differs",
+            )
+            rejected(lambda value: value.update({"generatedAtUtc": "not-a-time"}), "invalid timestamp")
+
+        with tempfile.TemporaryDirectory() as temporary:
+            forged = Path(temporary) / "forged"
+            shutil.copytree(self.generation, forged)
+            residuals_path = forged / "campaign-residuals.tsv"
+            residuals = campaign._read_tsv(residuals_path)
+            target = next(
+                row
+                for row in residuals
+                if row["entityKey"] == campaign.tokenarchive_reproof.ENTITY_KEY
+            )
+            target["classification"] = "CODE"
+            campaign._write_tsv(residuals_path, campaign.RESIDUAL_COLUMNS, residuals)
+            ready = json.loads((forged / "campaign.ready.json").read_text(encoding="utf-8"))
+            ready["outputs"]["campaign-residuals.tsv"] = {
+                **campaign.coverage.file_stamp(residuals_path),
+                "path": "campaign-residuals.tsv",
+            }
+            self.write_ready(forged, ready)
+            completed = self.frozen_verify(forged)
+            self.assertNotEqual(0, completed.returncode)
+            self.assertIn("TokenArchive dispatch campaign rows differ", completed.stderr)
+
+        for relative, expected in (
+            (Path("campaign.ready.json"), "campaign READY is not a plain single-link file"),
+            (Path("campaign-residuals.tsv"), "output has multiple hard links: campaign-residuals.tsv"),
+        ):
+            with self.subTest(relative=relative.as_posix()):
+                with tempfile.TemporaryDirectory() as temporary:
+                    forged = Path(temporary) / "forged"
+                    shutil.copytree(self.generation, forged)
+                    target = forged / relative
+                    anchor = Path(temporary) / (relative.name + ".anchor")
+                    shutil.copy2(target, anchor)
+                    target.unlink()
+                    os.link(anchor, target)
+                    completed = self.frozen_verify(forged)
+                    self.assertNotEqual(0, completed.returncode)
+                    self.assertIn(expected, completed.stderr)
+
+    def test_external_authority_receipt_selects_only_canonical_generation14(self) -> None:
+        if not self.authority.is_file():
+            self.fail(f"required Generation 14 authority receipt is missing: {self.authority}")
+        repo = Path(__file__).resolve().parent.parent
+        author = repo / "tools/re_tokenarchive_dispatch_campaign_authority.py"
+        bootstrap = repo / "tools/re_campaign_frozen_bootstrap.py"
+        self.assertEqual(self.AUTHORITY_RECEIPT_BYTES, self.authority.stat().st_size)
+        self.assertEqual(self.AUTHORITY_RECEIPT_SHA256, campaign.coverage.sha256_of(self.authority))
+        receipt = json.loads(self.authority.read_text(encoding="utf-8"))
+        self.assertEqual("bea.re.tokenarchive-dispatch-generation14-authority.v1", receipt["schema"])
+        self.assertEqual("READY", receipt["verdict"])
+        self.assertEqual("FULL_REPLAY_CAMPAIGN_AUTHORITY", receipt["authorityClass"])
+        self.assertEqual("FULL_CAMPAIGN_REDUCER_REPLAY_NOT_GAME_TTD_OR_GHIDRA_REPLAY", receipt["replayScope"])
+        self.assertEqual(str(self.generation.resolve()), receipt["canonical"]["absolutePath"])
+        self.assertEqual(str(self.replica.resolve()), receipt["replica"]["absolutePath"])
+        self.assertEqual("REPRODUCTION_ONLY_NOT_AUTHORITY_SELECTOR", receipt["replica"]["role"])
+        self.assertEqual(str(self.generation.resolve()), receipt["selectionRule"]["requiredAbsolutePath"])
+        self.assertEqual(self.AUTHORITY_READY_SHA256, receipt["selectionRule"]["literalReadySha256ByRoot"])
+        self.assertEqual(self.AUTHORITY_REDUCER_ID, receipt["selectionRule"]["requiredReducerId"])
+        self.assertEqual(campaign.TOKENARCHIVE_DISPATCH_PARENT_READY_SHA256, receipt["parent"]["readySha256"])
+        self.assertEqual(campaign.TOKENARCHIVE_DISPATCH_PROOF_READY_SHA256, receipt["proof"]["readySha256"])
+        self.assertEqual(campaign.TOKENARCHIVE_DISPATCH_EXPECTED_GENERATION14_COUNTS, receipt["counts"])
+        self.assertEqual(self.OUTPUT_SHA256, {name: stamp["sha256"] for name, stamp in receipt["outputs"].items()})
+        self.assertEqual(15, receipt["limitations"]["nextValidGeneration"])
+        self.assertFalse(receipt["limitations"]["liveGhidraMutation"])
+        self.assertEqual(self.AUTHORITY_AUTHOR_SHA256, campaign.coverage.sha256_of(author))
+        self.assertEqual(self.AUTHORITY_AUTHOR_SHA256, receipt["author"]["sha256"])
+        self.assertEqual(self.AUTHORITY_BOOTSTRAP_SHA256, campaign.coverage.sha256_of(bootstrap))
+        self.assertEqual(self.AUTHORITY_BOOTSTRAP_SHA256, receipt["frozenOwners"]["preImportLauncher"]["sha256"])
+
+
+class CampaignRecoveryGeneration15MissionNativeSetPosTests(unittest.TestCase):
+    AUTHORITY_RECEIPT_BYTES = 9769
+    AUTHORITY_RECEIPT_SHA256 = (
+        "9fc1bf4eadd3ba654b80397c540515dba47022ce5905215851737673dc977ceb"
+    )
+    AUTHORITY_AUTHOR_SHA256 = (
+        "fb2561583c0f6652243932c9088b40481a2ff6918b70fd0eef92170fa310f0ce"
+    )
+    AUTHORITY_BOOTSTRAP_SHA256 = (
+        "98b453b84bb4d312691f38e59a3a662d990963f3fdfac28f7e72ea1c1376562b"
+    )
+    AUTHORITY_REDUCER_ID = (
+        "16ecb8974a7cd229015b2a5e0fd4f445d5f763d79aa2d667462324aa9e4ddfe9"
+    )
+    AUTHORITY_READY_SHA256 = {
+        "generation-15-mission-native-setpos-reproof-v2": (
+            "629b32daf62f7c85e4819a024e0ade705be5548960d81cc320b636afa53e58a7"
+        ),
+        "generation-15-mission-native-setpos-reproof-replica-v2": (
+            "3dc9d0f848bc78f1d587030fe95f21283441800f161c599df87e9bec4857c4d1"
+        ),
+    }
+    OUTPUT_SHA256 = {
+        "campaign-functions.tsv": "5139617ef08e09bd316bae150dde6cadb499733bdea071df8765df34d69fcead",
+        "campaign-residuals.tsv": "6aaa5da3917079de3a172fb24b7de2b3ba99f1bc05ad40c4c427fcaa76d55ab6",
+        "campaign-questions.tsv": "f9a88ede7b7930ea32b43456d9c2d301c0078a63cb934752b6e41013b1cd8198",
+        "campaign-scenarios.tsv": "35a84fad46065d1317e48b41c66889a1dd12327077766423693b8839be857542",
+        "campaign-levers.tsv": "fa337d96cfe7b6eca266b44aa39deded516e3a8cc02979a31671b449c66e3cdc",
+        "campaign-contracts.tsv": "33ee92294f764e2aab8c45329983f02ca02be45c46ce699f6b93cffe87872643",
+        "campaign-adjudications.tsv": "512cf71273e9f8e45c55231e6a27a287d8fba4980a54dae45ba1645cdcf31a4b",
+        "campaign-supersessions.tsv": "4da539b16248ae9f5abfe5aa61845d9ec96351605060b8b05f16abb7353b008e",
+    }
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        repo = Path(__file__).resolve().parent.parent
+        base = repo / "local-lab/re-campaign-incident-recovery-20260808-v1"
+        cls.parent = base / "generation-14-tokenarchive-dispatch-reproof-v1"
+        cls.generation = base / "generation-15-mission-native-setpos-reproof-v2"
+        cls.replica = base / "generation-15-mission-native-setpos-reproof-replica-v2"
+        cls.authority = base / "generation-15-mission-native-setpos-reproof-authority.ready.json"
+        cls.proof = repo / campaign.MISSION_NATIVE_SETPOS_PROOF_RELATIVE
+        if not (cls.parent / "campaign.ready.json").is_file():
+            raise unittest.SkipTest("maintainer-local canonical Gen14 prerequisite is unavailable")
+        for root, ready_name, label in (
+            (cls.proof, "proof.ready.json", "SetPos boundary proof"),
+            (cls.generation, "campaign.ready.json", "canonical Generation 15"),
+            (cls.replica, "campaign.ready.json", "replicated Generation 15"),
+        ):
+            if not (root / ready_name).is_file():
+                raise AssertionError(f"required {label} is missing: {root}")
+        if not cls.authority.is_file():
+            raise AssertionError(f"required Generation 15 authority is missing: {cls.authority}")
+
+    @classmethod
+    def authority_verify(cls, root: Path) -> subprocess.CompletedProcess:
+        expected_ready = cls.AUTHORITY_READY_SHA256.get(root.name)
+        if expected_ready is None:
+            raise AssertionError(f"root is not an externally selected Gen15 copy: {root}")
+        repo = Path(__file__).resolve().parent.parent
+        bootstrap = Path(__file__).resolve().parent / "re_campaign_frozen_bootstrap.py"
+        environment = os.environ.copy()
+        environment["BEA_REPO_ROOT"] = os.fspath(repo)
+        environment["PYTHONDONTWRITEBYTECODE"] = "1"
+        return subprocess.run(
+            [
+                os.fspath(Path(os.sys.executable)),
+                "-I",
+                "-B",
+                os.fspath(bootstrap),
+                "--campaign",
+                os.fspath(root),
+                "--mode",
+                "full",
+                "--expected-ready-sha256",
+                expected_ready,
+                "--expected-reducer-id",
+                cls.AUTHORITY_REDUCER_ID,
+            ],
+            cwd=repo,
+            env=environment,
+            capture_output=True,
+            text=True,
+            timeout=900,
+            check=False,
+        )
+
+    @staticmethod
+    def frozen_verify(root: Path, *, replay: bool = False) -> subprocess.CompletedProcess:
+        return CampaignRecoveryGeneration8Tests.frozen_verify(root, replay=replay)
+
+    @staticmethod
+    def reducer_files(root: Path) -> dict[str, bytes]:
+        return CampaignRecoveryGeneration9Tests.reducer_files(root)
+
+    @staticmethod
+    def write_ready(root: Path, receipt: dict) -> None:
+        (root / "campaign.ready.json").write_text(
+            json.dumps(receipt, indent=2) + "\n", encoding="utf-8"
+        )
+
+    def test_two_independent_builds_are_deterministic_and_fully_replay(self) -> None:
+        for name, digest in self.OUTPUT_SHA256.items():
+            self.assertEqual(digest, campaign.coverage.sha256_of(self.generation / name))
+            self.assertEqual(
+                (self.generation / name).read_bytes(),
+                (self.replica / name).read_bytes(),
+                name,
+            )
+        self.assertEqual(self.reducer_files(self.generation), self.reducer_files(self.replica))
+        self.assertEqual(23, len(self.reducer_files(self.generation)))
+        normalized = []
+        for root in (self.generation, self.replica):
+            completed = self.authority_verify(root)
+            self.assertEqual(0, completed.returncode, completed.stderr)
+            self.assertIn("CAMPAIGN_VERIFIED", completed.stdout)
+            receipt = json.loads((root / "campaign.ready.json").read_text(encoding="utf-8"))
+            self.assertEqual(15, receipt["generation"])
+            self.assertEqual(
+                campaign.MISSION_NATIVE_SETPOS_EXPECTED_GENERATION15_COUNTS,
+                receipt["counts"],
+            )
+            self.assertEqual(campaign.MISSION_NATIVE_SETPOS_ADVANCE_KIND, receipt["advance"]["kind"])
+            self.assertEqual(campaign.MISSION_NATIVE_SETPOS_ADVANCE_SCHEMA, receipt["advance"]["schema"])
+            self.assertEqual("SP-279860c25156b65d", receipt["advance"]["promotionId"])
+            receipt["generatedAtUtc"] = "<generated>"
+            for output in receipt["outputs"].values():
+                output["lastWriteUtc"] = "<write>"
+            normalized.append(receipt)
+        self.assertEqual(normalized[0], normalized[1])
+
+    def test_exact_partition_boundary_contract_and_question_delta(self) -> None:
+        old_entity = campaign.mission_setpos_reproof.OLD_ENTITY
+        old_contract = campaign.mission_setpos_reproof.OLD_CONTRACT
+        new_entity = campaign.mission_setpos_reproof.NEW_ENTITY
+        new_contract = campaign.mission_setpos_reproof.NEW_CONTRACT
+        parent_functions = {
+            row["entityKey"]: row
+            for row in campaign._read_tsv(self.parent / "campaign-functions.tsv")
+        }
+        functions = {
+            row["entityKey"]: row
+            for row in campaign._read_tsv(self.generation / "campaign-functions.tsv")
+        }
+        self.assertEqual({new_entity}, set(functions) - set(parent_functions))
+        self.assertTrue(all(functions[key] == row for key, row in parent_functions.items()))
+        self.assertEqual("IScript__SetPos", functions[new_entity]["currentName"])
+        self.assertEqual("C1_CANDIDATE_PARTIAL", functions[new_entity]["semanticGrade"])
+        self.assertEqual("42", functions[new_entity]["bodyBytes"])
+
+        parent_residuals = {
+            row["entityKey"]: row
+            for row in campaign._read_tsv(self.parent / "campaign-residuals.tsv")
+        }
+        residuals = {
+            row["entityKey"]: row
+            for row in campaign._read_tsv(self.generation / "campaign-residuals.tsv")
+        }
+        specimen = campaign.mission_setpos_reproof.SPECIMEN_SHA256
+        expected_children = {
+            f"TEXT_RESIDUAL:{specimen}:0x00536C61-0x00536C70",
+            f"TEXT_RESIDUAL:{specimen}:0x00536C9A-0x00536CA0",
+        }
+        self.assertEqual({old_entity}, set(parent_residuals) - set(residuals))
+        self.assertEqual(expected_children, set(residuals) - set(parent_residuals))
+        for key in expected_children:
+            self.assertEqual("PADDING", residuals[key]["classification"])
+            self.assertEqual("TERMINAL_PADDING", residuals[key]["terminalState"])
+
+        parent_contracts = {
+            row["contractId"]: row
+            for row in campaign._read_tsv(self.parent / "campaign-contracts.tsv")
+        }
+        contracts = {
+            row["contractId"]: row
+            for row in campaign._read_tsv(self.generation / "campaign-contracts.tsv")
+        }
+        self.assertEqual({old_contract}, set(parent_contracts) - set(contracts))
+        self.assertEqual(3, len(set(contracts) - set(parent_contracts)))
+        self.assertEqual(new_entity, contracts[new_contract]["entityKey"])
+        self.assertEqual("CANDIDATE_NEEDS_REFUTER", contracts[new_contract]["contractState"])
+        self.assertEqual("UNSCORED", contracts[new_contract]["runtimeVerdict"])
+
+        parent_questions = {
+            row["questionId"]: row
+            for row in campaign._read_tsv(self.parent / "campaign-questions.tsv")
+        }
+        questions = {
+            row["questionId"]: row
+            for row in campaign._read_tsv(self.generation / "campaign-questions.tsv")
+        }
+        changed = {
+            key for key in parent_questions if questions[key] != parent_questions[key]
+        }
+        self.assertEqual(
+            {
+                campaign.mission_setpos_reproof.RESIDUAL_QUESTION,
+                campaign.mission_setpos_reproof.CANDIDATE_QUESTION,
+            },
+            changed,
+        )
+        self.assertEqual(
+            {campaign.mission_setpos_reproof.SUCCESSOR_QUESTION},
+            set(questions) - set(parent_questions),
+        )
+        self.assertTrue(all(questions[key]["state"] == "CLOSED_SURVIVED" for key in changed))
+        successor = questions[campaign.mission_setpos_reproof.SUCCESSOR_QUESTION]
+        self.assertEqual("OPEN", successor["state"])
+        self.assertEqual(campaign.mission_setpos_reproof.CANDIDATE_QUESTION, successor["parentQuestionId"])
+
+        parent_adjudications = {
+            row["adjudicationId"]
+            for row in campaign._read_tsv(self.parent / "campaign-adjudications.tsv")
+        }
+        fresh_adjudications = [
+            row
+            for row in campaign._read_tsv(self.generation / "campaign-adjudications.tsv")
+            if row["adjudicationId"] not in parent_adjudications
+        ]
+        self.assertEqual(
+            ["A-78f0343e9f41235c", "A-88a1cc899a6a5975"],
+            sorted(row["adjudicationId"] for row in fresh_adjudications),
+        )
+        self.assertTrue(all(row["semanticPromotionApplied"] == "False" for row in fresh_adjudications))
+        self.assertEqual(
+            (self.parent / "campaign-scenarios.tsv").read_bytes(),
+            (self.generation / "campaign-scenarios.tsv").read_bytes(),
+        )
+        self.assertEqual(
+            (self.parent / "campaign-levers.tsv").read_bytes(),
+            (self.generation / "campaign-levers.tsv").read_bytes(),
+        )
+
+    def test_frozen_integrity_rejects_metadata_row_and_link_laundering(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            forged = Path(temporary) / "forged"
+            shutil.copytree(self.generation, forged)
+            original = json.loads((forged / "campaign.ready.json").read_text(encoding="utf-8"))
+
+            def rejected(mutator, expected: str) -> None:
+                receipt = json.loads(json.dumps(original))
+                mutator(receipt)
+                self.write_ready(forged, receipt)
+                completed = self.frozen_verify(forged)
+                self.assertNotEqual(0, completed.returncode)
+                self.assertIn(expected, completed.stderr)
+
+            rejected(
+                lambda value: value.update({"advance": None}),
+                "Generation 14 recovery child is not the exact Mission-native SetPos advance",
+            )
+            rejected(
+                lambda value: value["advance"]["function"].update({"runtimeVerdict": "MEASURED"}),
+                "Mission-native SetPos advance receipt differs",
+            )
+            rejected(lambda value: value.update({"generatedAtUtc": "not-a-time"}), "invalid timestamp")
+
+        with tempfile.TemporaryDirectory() as temporary:
+            forged = Path(temporary) / "forged"
+            shutil.copytree(self.generation, forged)
+            path = forged / "campaign-functions.tsv"
+            rows = campaign._read_tsv(path)
+            target = next(
+                row
+                for row in rows
+                if row["entityKey"] == campaign.mission_setpos_reproof.NEW_ENTITY
+            )
+            target["semanticGrade"] = "C2_BOUNDED_RUNTIME"
+            campaign._write_tsv(path, campaign.FUNCTION_COLUMNS, rows)
+            ready = json.loads((forged / "campaign.ready.json").read_text(encoding="utf-8"))
+            ready["outputs"]["campaign-functions.tsv"] = {
+                **campaign.coverage.file_stamp(path),
+                "path": "campaign-functions.tsv",
+            }
+            self.write_ready(forged, ready)
+            completed = self.frozen_verify(forged)
+            self.assertNotEqual(0, completed.returncode)
+            self.assertIn("Mission-native SetPos campaign rows differ", completed.stderr)
+
+        for relative, expected in (
+            (Path("campaign.ready.json"), "campaign READY is not a plain single-link file"),
+            (Path("campaign-functions.tsv"), "output has multiple hard links: campaign-functions.tsv"),
+        ):
+            with self.subTest(relative=relative.as_posix()):
+                with tempfile.TemporaryDirectory() as temporary:
+                    forged = Path(temporary) / "forged"
+                    shutil.copytree(self.generation, forged)
+                    target = forged / relative
+                    anchor = Path(temporary) / (relative.name + ".anchor")
+                    shutil.copy2(target, anchor)
+                    target.unlink()
+                    os.link(anchor, target)
+                    completed = self.frozen_verify(forged)
+                    self.assertNotEqual(0, completed.returncode)
+                    self.assertIn(expected, completed.stderr)
+
+    def test_external_authority_receipt_selects_only_canonical_generation15(self) -> None:
+        repo = Path(__file__).resolve().parent.parent
+        author = repo / "tools/re_mission_native_setpos_campaign_authority.py"
+        bootstrap = repo / "tools/re_campaign_frozen_bootstrap.py"
+        self.assertEqual(self.AUTHORITY_RECEIPT_BYTES, self.authority.stat().st_size)
+        self.assertEqual(self.AUTHORITY_RECEIPT_SHA256, campaign.coverage.sha256_of(self.authority))
+        receipt = json.loads(self.authority.read_text(encoding="utf-8"))
+        self.assertEqual("bea.re.mission-native-setpos-generation15-authority.v1", receipt["schema"])
+        self.assertEqual("READY", receipt["verdict"])
+        self.assertEqual("FULL_REPLAY_CAMPAIGN_AUTHORITY", receipt["authorityClass"])
+        self.assertEqual("FULL_CAMPAIGN_REDUCER_REPLAY_NOT_GAME_TTD_OR_GHIDRA_REPLAY", receipt["replayScope"])
+        self.assertEqual(str(self.generation.resolve()), receipt["canonical"]["absolutePath"])
+        self.assertEqual(str(self.replica.resolve()), receipt["replica"]["absolutePath"])
+        self.assertEqual("REPRODUCTION_ONLY_NOT_AUTHORITY_SELECTOR", receipt["replica"]["role"])
+        self.assertEqual(str(self.generation.resolve()), receipt["selectionRule"]["requiredAbsolutePath"])
+        self.assertEqual(self.AUTHORITY_READY_SHA256, receipt["selectionRule"]["literalReadySha256ByRoot"])
+        self.assertEqual(self.AUTHORITY_REDUCER_ID, receipt["selectionRule"]["requiredReducerId"])
+        self.assertEqual(campaign.MISSION_NATIVE_SETPOS_PARENT_READY_SHA256, receipt["parent"]["readySha256"])
+        self.assertEqual(campaign.MISSION_NATIVE_SETPOS_PROOF_READY_SHA256, receipt["proof"]["readySha256"])
+        self.assertEqual(campaign.MISSION_NATIVE_SETPOS_GHIDRA_LIVE_SHA256, receipt["ghidraPromotion"]["liveAuthoritySha256"])
+        self.assertEqual(campaign.MISSION_NATIVE_SETPOS_EXPECTED_GENERATION15_COUNTS, receipt["counts"])
+        self.assertEqual(self.OUTPUT_SHA256, {name: stamp["sha256"] for name, stamp in receipt["outputs"].items()})
+        self.assertEqual("C1_STATIC", receipt["claimBoundary"]["semanticGradeCeiling"])
+        self.assertEqual("UNSCORED", receipt["claimBoundary"]["runtimeVerdict"])
+        self.assertTrue(receipt["claimBoundary"]["liveGhidraMutation"])
+        self.assertEqual(0, receipt["claimBoundary"]["executableBytesChanged"])
+        self.assertEqual(16, receipt["limitations"]["nextValidGeneration"])
+        self.assertEqual("OPEN", receipt["limitations"]["runtimeVectorValues"])
+        self.assertEqual(self.AUTHORITY_AUTHOR_SHA256, campaign.coverage.sha256_of(author))
+        self.assertEqual(self.AUTHORITY_AUTHOR_SHA256, receipt["author"]["sha256"])
+        self.assertEqual(self.AUTHORITY_BOOTSTRAP_SHA256, campaign.coverage.sha256_of(bootstrap))
+        self.assertEqual(self.AUTHORITY_BOOTSTRAP_SHA256, receipt["frozenOwners"]["preImportLauncher"]["sha256"])
+        for root_name, section in (
+            (self.generation.name, "canonicalLiteralPinnedFullReplay"),
+            (self.replica.name, "replicaLiteralPinnedFullReplay"),
+        ):
+            replay = receipt["verification"][section]
+            self.assertEqual(0, replay["exitCode"])
+            self.assertEqual("CAMPAIGN_VERIFIED", replay["marker"])
+            self.assertEqual(
+                self.AUTHORITY_READY_SHA256[root_name],
+                replay["command"][replay["command"].index("--expected-ready-sha256") + 1],
+            )
+            self.assertEqual(
+                self.AUTHORITY_REDUCER_ID,
+                replay["command"][replay["command"].index("--expected-reducer-id") + 1],
+            )
+
+
+class CampaignRecoveryGeneration16MissionNativeSetPosRuntimeTests(unittest.TestCase):
+    AUTHORITY_RECEIPT_BYTES = 11420
+    AUTHORITY_RECEIPT_SHA256 = (
+        "1d04fef865c510cacd4c545999367d88c214b0ffe5a7bc4eac68e50d185a6981"
+    )
+    AUTHORITY_AUTHOR_BYTES = 21804
+    AUTHORITY_AUTHOR_SHA256 = (
+        "d48bd7759b7e8bf4bcd26c4e92c100fe221e94dff0f0523752c5a31fda7257a6"
+    )
+    AUTHORITY_BOOTSTRAP_SHA256 = (
+        "98b453b84bb4d312691f38e59a3a662d990963f3fdfac28f7e72ea1c1376562b"
+    )
+    AUTHORITY_REDUCER_ID = (
+        "453fdb4df7233c6d3f8be04a6ba67b3762982bc4513ca4990b46f01141d55db0"
+    )
+    AUTHORITY_READY_SHA256 = {
+        "generation-16-mission-native-setpos-runtime-v1": (
+            "97493a76de550f5ae35074e285e39a561d9a323219741a42ac2ff25643cdc880"
+        ),
+        "generation-16-mission-native-setpos-runtime-replica-v1": (
+            "69de7a0fe8f7abe74a345fbccc4abfdbd0cff77d4cae281dab581f6b1afe436f"
+        ),
+    }
+    OUTPUT_SHA256 = {
+        "campaign-functions.tsv": "3b18ea14d343b7522085c1147bdc8fe252e8caa9467d17b08ec2902992d77039",
+        "campaign-residuals.tsv": "6aaa5da3917079de3a172fb24b7de2b3ba99f1bc05ad40c4c427fcaa76d55ab6",
+        "campaign-questions.tsv": "339050838d6b391ff8d7f8037befe26bfb67082fddbb92d3708ab5a8c461e2bc",
+        "campaign-scenarios.tsv": "35a84fad46065d1317e48b41c66889a1dd12327077766423693b8839be857542",
+        "campaign-levers.tsv": "fa337d96cfe7b6eca266b44aa39deded516e3a8cc02979a31671b449c66e3cdc",
+        "campaign-contracts.tsv": "40fe17bceb5f3365b0076b0f17f38b137e61dfe0cea9a3361d29db3b23f5bdf7",
+        "campaign-adjudications.tsv": "ec838904fe3c1563c484c924cd6858f07c93f34a6ec79e907db43d1e99c4247b",
+        "campaign-supersessions.tsv": "4da539b16248ae9f5abfe5aa61845d9ec96351605060b8b05f16abb7353b008e",
+    }
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        repo = Path(__file__).resolve().parent.parent
+        base = repo / "local-lab/re-campaign-incident-recovery-20260808-v1"
+        cls.parent = base / "generation-15-mission-native-setpos-reproof-v2"
+        cls.generation = base / "generation-16-mission-native-setpos-runtime-v1"
+        cls.replica = base / "generation-16-mission-native-setpos-runtime-replica-v1"
+        cls.authority = base / "generation-16-mission-native-setpos-runtime-authority.ready.json"
+        cls.proof = repo / campaign.MISSION_NATIVE_SETPOS_RUNTIME_PROOF_RELATIVE
+        if not (cls.parent / "campaign.ready.json").is_file():
+            raise unittest.SkipTest(
+                "maintainer-local canonical Gen15 prerequisite is unavailable"
+            )
+        for root, ready_name, label in (
+            (cls.proof, campaign.mission_setpos_runtime.READY_NAME, "SetPos runtime proof"),
+            (cls.generation, "campaign.ready.json", "canonical Generation 16"),
+            (cls.replica, "campaign.ready.json", "replicated Generation 16"),
+        ):
+            if not (root / ready_name).is_file():
+                raise AssertionError(f"required {label} is missing: {root}")
+        if not cls.authority.is_file():
+            raise AssertionError(
+                f"required Generation 16 authority is missing: {cls.authority}"
+            )
+
+    @classmethod
+    def authority_verify(cls, root: Path) -> subprocess.CompletedProcess:
+        expected_ready = cls.AUTHORITY_READY_SHA256.get(root.name)
+        if expected_ready is None:
+            raise AssertionError(f"root is not an externally selected Gen16 copy: {root}")
+        repo = Path(__file__).resolve().parent.parent
+        bootstrap = Path(__file__).resolve().parent / "re_campaign_frozen_bootstrap.py"
+        environment = os.environ.copy()
+        environment["BEA_REPO_ROOT"] = os.fspath(repo)
+        environment["PYTHONDONTWRITEBYTECODE"] = "1"
+        return subprocess.run(
+            [
+                os.fspath(Path(os.sys.executable)),
+                "-I",
+                "-B",
+                os.fspath(bootstrap),
+                "--campaign",
+                os.fspath(root),
+                "--mode",
+                "full",
+                "--expected-ready-sha256",
+                expected_ready,
+                "--expected-reducer-id",
+                cls.AUTHORITY_REDUCER_ID,
+            ],
+            cwd=repo,
+            env=environment,
+            capture_output=True,
+            text=True,
+            timeout=1200,
+            check=False,
+        )
+
+    @staticmethod
+    def frozen_verify(root: Path) -> subprocess.CompletedProcess:
+        return CampaignRecoveryGeneration8Tests.frozen_verify(root, replay=False)
+
+    @staticmethod
+    def reducer_files(root: Path) -> dict[str, bytes]:
+        return CampaignRecoveryGeneration9Tests.reducer_files(root)
+
+    @staticmethod
+    def write_ready(root: Path, receipt: dict) -> None:
+        (root / "campaign.ready.json").write_text(
+            json.dumps(receipt, indent=2) + "\n", encoding="utf-8"
+        )
+
+    def test_two_independent_builds_are_deterministic_and_fully_replay(self) -> None:
+        for name, digest in self.OUTPUT_SHA256.items():
+            self.assertEqual(digest, campaign.coverage.sha256_of(self.generation / name))
+            self.assertEqual(
+                (self.generation / name).read_bytes(),
+                (self.replica / name).read_bytes(),
+                name,
+            )
+        self.assertEqual(
+            self.reducer_files(self.generation), self.reducer_files(self.replica)
+        )
+        self.assertEqual(27, len(self.reducer_files(self.generation)))
+        normalized = []
+        for root in (self.generation, self.replica):
+            completed = self.authority_verify(root)
+            self.assertEqual(0, completed.returncode, completed.stderr)
+            self.assertIn("CAMPAIGN_VERIFIED", completed.stdout)
+            receipt = json.loads(
+                (root / "campaign.ready.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(16, receipt["generation"])
+            self.assertEqual(
+                campaign.MISSION_NATIVE_SETPOS_RUNTIME_EXPECTED_GENERATION16_COUNTS,
+                receipt["counts"],
+            )
+            self.assertEqual(
+                campaign.MISSION_NATIVE_SETPOS_RUNTIME_ADVANCE_KIND,
+                receipt["advance"]["kind"],
+            )
+            self.assertEqual(
+                campaign.MISSION_NATIVE_SETPOS_RUNTIME_ADVANCE_SCHEMA,
+                receipt["advance"]["schema"],
+            )
+            self.assertEqual("SPR-0d5dfdddd2921cf3", receipt["advance"]["observationId"])
+            receipt["generatedAtUtc"] = "<generated>"
+            for output in receipt["outputs"].values():
+                output["lastWriteUtc"] = "<write>"
+            normalized.append(receipt)
+        self.assertEqual(normalized[0], normalized[1])
+
+    def test_exact_runtime_contract_question_and_rebuild_delta(self) -> None:
+        entity = campaign.mission_setpos_runtime.ENTITY_KEY
+        contract_id = campaign.mission_setpos_runtime.CONTRACT_ID
+        parent_question_id = campaign.mission_setpos_runtime.OPEN_QUESTION_ID
+        parent_functions = {
+            row["entityKey"]: row
+            for row in campaign._read_tsv(self.parent / "campaign-functions.tsv")
+        }
+        functions = {
+            row["entityKey"]: row
+            for row in campaign._read_tsv(self.generation / "campaign-functions.tsv")
+        }
+        changed_functions = {
+            key for key in functions if functions[key] != parent_functions[key]
+        }
+        self.assertEqual({entity}, changed_functions)
+        self.assertEqual("C2_BOUNDED_RUNTIME", functions[entity]["semanticGrade"])
+        self.assertEqual("BOUNDED_CONTRACT", functions[entity]["resolutionState"])
+        self.assertIn(
+            "MISSION_NATIVE_SETPOS_RUNTIME_REPLICATED",
+            functions[entity]["evidenceStates"].split(";"),
+        )
+
+        parent_contracts = {
+            row["contractId"]: row
+            for row in campaign._read_tsv(self.parent / "campaign-contracts.tsv")
+        }
+        contracts = {
+            row["contractId"]: row
+            for row in campaign._read_tsv(self.generation / "campaign-contracts.tsv")
+        }
+        changed_contracts = {
+            key for key in contracts if contracts[key] != parent_contracts[key]
+        }
+        self.assertEqual({contract_id}, changed_contracts)
+        contract = contracts[contract_id]
+        self.assertEqual("BOUNDED_CONTRACT_ADVANCED", contract["contractState"])
+        self.assertEqual("C2_BOUNDED_RUNTIME", contract["semanticGrade"])
+        self.assertEqual("MEASURED_BOUNDED_PATH", contract["runtimeVerdict"])
+        self.assertEqual("SURVIVED", contract["refuterVerdict"])
+        self.assertEqual("PARTIAL_CONTRACT", contract["rebuildState"])
+        self.assertIn("InvokePositionNative", contract["rebuildImplementation"])
+        self.assertIn(
+            campaign.MISSION_NATIVE_SETPOS_RUNTIME_PROOF_READY_SHA256,
+            contract["evidenceRefs"],
+        )
+
+        parent_questions = {
+            row["questionId"]: row
+            for row in campaign._read_tsv(self.parent / "campaign-questions.tsv")
+        }
+        questions = {
+            row["questionId"]: row
+            for row in campaign._read_tsv(self.generation / "campaign-questions.tsv")
+        }
+        self.assertEqual(
+            {parent_question_id},
+            {key for key in parent_questions if questions[key] != parent_questions[key]},
+        )
+        successor_ids = set(questions) - set(parent_questions)
+        self.assertEqual(
+            {"Q-02e7898ea7e64827", "Q-7b98e7f342645af1", "Q-aab3970a82afdd73"},
+            successor_ids,
+        )
+        self.assertEqual("CLOSED_SURVIVED", questions[parent_question_id]["state"])
+        for question_id in successor_ids:
+            self.assertEqual("OPEN", questions[question_id]["state"])
+            self.assertEqual(parent_question_id, questions[question_id]["parentQuestionId"])
+            self.assertIn(question_id, contract["questionIds"].split(";"))
+
+        parent_adjudications = {
+            row["adjudicationId"]
+            for row in campaign._read_tsv(self.parent / "campaign-adjudications.tsv")
+        }
+        fresh = [
+            row
+            for row in campaign._read_tsv(
+                self.generation / "campaign-adjudications.tsv"
+            )
+            if row["adjudicationId"] not in parent_adjudications
+        ]
+        self.assertEqual(["A-16e165488adae1af"], [row["adjudicationId"] for row in fresh])
+        self.assertEqual("True", fresh[0]["semanticPromotionApplied"])
+        self.assertEqual(parent_question_id, fresh[0]["questionIdsAddressed"])
+        for name in ("campaign-residuals.tsv", "campaign-scenarios.tsv", "campaign-levers.tsv", "campaign-supersessions.tsv"):
+            self.assertEqual(
+                (self.parent / name).read_bytes(),
+                (self.generation / name).read_bytes(),
+                name,
+            )
+
+    def test_frozen_integrity_rejects_metadata_and_row_laundering(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            forged = Path(temporary) / "forged"
+            shutil.copytree(self.generation, forged)
+            original = json.loads(
+                (forged / "campaign.ready.json").read_text(encoding="utf-8")
+            )
+
+            def rejected(mutator, expected: str) -> None:
+                receipt = json.loads(json.dumps(original))
+                mutator(receipt)
+                self.write_ready(forged, receipt)
+                completed = self.frozen_verify(forged)
+                self.assertNotEqual(0, completed.returncode)
+                self.assertIn(expected, completed.stderr)
+
+            rejected(
+                lambda value: value.update({"advance": None}),
+                "Generation 15 recovery child is not the exact Mission-native SetPos runtime advance",
+            )
+            rejected(
+                lambda value: value["advance"]["promotion"].update(
+                    {"gradeTo": "C1_CANDIDATE_PARTIAL"}
+                ),
+                "Mission-native SetPos runtime advance receipt differs",
+            )
+            rejected(
+                lambda value: value.update({"generatedAtUtc": "not-a-time"}),
+                "invalid timestamp",
+            )
+
+        with tempfile.TemporaryDirectory() as temporary:
+            forged = Path(temporary) / "forged"
+            shutil.copytree(self.generation, forged)
+            path = forged / "campaign-contracts.tsv"
+            rows = campaign._read_tsv(path)
+            target = next(
+                row
+                for row in rows
+                if row["contractId"] == campaign.mission_setpos_runtime.CONTRACT_ID
+            )
+            target["writes"] = "forged complete write set"
+            campaign._write_tsv(path, campaign.CONTRACT_COLUMNS, rows)
+            ready = json.loads(
+                (forged / "campaign.ready.json").read_text(encoding="utf-8")
+            )
+            ready["outputs"]["campaign-contracts.tsv"] = {
+                **campaign.coverage.file_stamp(path),
+                "path": "campaign-contracts.tsv",
+            }
+            self.write_ready(forged, ready)
+            completed = self.frozen_verify(forged)
+            self.assertNotEqual(0, completed.returncode)
+            self.assertIn("Mission-native SetPos runtime campaign rows differ", completed.stderr)
+
+    def test_external_authority_receipt_selects_only_canonical_generation16(self) -> None:
+        repo = Path(__file__).resolve().parent.parent
+        author = repo / "tools/re_mission_native_setpos_runtime_campaign_authority.py"
+        bootstrap = repo / "tools/re_campaign_frozen_bootstrap.py"
+        self.assertEqual(self.AUTHORITY_RECEIPT_BYTES, self.authority.stat().st_size)
+        self.assertEqual(
+            self.AUTHORITY_RECEIPT_SHA256,
+            campaign.coverage.sha256_of(self.authority),
+        )
+        self.assertEqual(self.AUTHORITY_AUTHOR_BYTES, author.stat().st_size)
+        self.assertEqual(
+            self.AUTHORITY_AUTHOR_SHA256, campaign.coverage.sha256_of(author)
+        )
+        receipt = json.loads(self.authority.read_text(encoding="utf-8"))
+        self.assertEqual(
+            "bea.re.mission-native-setpos-generation16-authority.v1",
+            receipt["schema"],
+        )
+        self.assertEqual("READY", receipt["verdict"])
+        self.assertEqual("FULL_REPLAY_CAMPAIGN_AUTHORITY", receipt["authorityClass"])
+        self.assertEqual(
+            "FULL_CAMPAIGN_REDUCER_REPLAY_NOT_GAME_TTD_OR_GHIDRA_REPLAY",
+            receipt["replayScope"],
+        )
+        self.assertEqual(str(self.generation.resolve()), receipt["canonical"]["absolutePath"])
+        self.assertEqual(str(self.replica.resolve()), receipt["replica"]["absolutePath"])
+        self.assertEqual(
+            "REPRODUCTION_ONLY_NOT_AUTHORITY_SELECTOR", receipt["replica"]["role"]
+        )
+        self.assertEqual(
+            str(self.generation.resolve()),
+            receipt["selectionRule"]["requiredAbsolutePath"],
+        )
+        self.assertEqual(
+            self.AUTHORITY_READY_SHA256,
+            receipt["selectionRule"]["literalReadySha256ByRoot"],
+        )
+        self.assertEqual(
+            self.AUTHORITY_REDUCER_ID,
+            receipt["selectionRule"]["requiredReducerId"],
+        )
+        self.assertEqual(
+            campaign.MISSION_NATIVE_SETPOS_RUNTIME_PARENT_READY_SHA256,
+            receipt["parent"]["readySha256"],
+        )
+        self.assertEqual(
+            campaign.MISSION_NATIVE_SETPOS_RUNTIME_PARENT_AUTHORITY_SHA256,
+            receipt["parent"]["authorityReceiptSha256"],
+        )
+        self.assertEqual(
+            campaign.MISSION_NATIVE_SETPOS_RUNTIME_PROOF_READY_SHA256,
+            receipt["proof"]["readySha256"],
+        )
+        self.assertEqual(
+            campaign.MISSION_NATIVE_SETPOS_RUNTIME_EXPECTED_GENERATION16_COUNTS,
+            receipt["counts"],
+        )
+        self.assertEqual(
+            self.OUTPUT_SHA256,
+            {name: stamp["sha256"] for name, stamp in receipt["outputs"].items()},
+        )
+        boundary = receipt["claimBoundary"]
+        self.assertEqual("C2_BOUNDED_RUNTIME", boundary["semanticGrade"])
+        self.assertTrue(boundary["scriptVisiblePositionCopy"])
+        self.assertFalse(boundary["completeInternalWriteSet"])
+        self.assertFalse(boundary["liveGhidraMutation"])
+        self.assertEqual("PARTIAL_CONTRACT", boundary["rebuildState"])
+        self.assertEqual(17, receipt["limitations"]["nextValidGeneration"])
+        self.assertEqual("OPEN", receipt["limitations"]["internalWriteSet"])
+        self.assertEqual(self.AUTHORITY_AUTHOR_SHA256, receipt["author"]["sha256"])
+        self.assertEqual(
+            self.AUTHORITY_BOOTSTRAP_SHA256,
+            campaign.coverage.sha256_of(bootstrap),
+        )
+        self.assertEqual(
+            self.AUTHORITY_BOOTSTRAP_SHA256,
+            receipt["frozenOwners"]["preImportLauncher"]["sha256"],
+        )
+        self.assertEqual(0, receipt["rebuild"]["focusedParity"]["exitCode"])
+        self.assertEqual("Passed!", receipt["rebuild"]["focusedParity"]["marker"])
+        for root_name, section in (
+            (self.generation.name, "canonicalLiteralPinnedFullReplay"),
+            (self.replica.name, "replicaLiteralPinnedFullReplay"),
+        ):
+            replay = receipt["verification"][section]
+            self.assertEqual(0, replay["exitCode"])
+            self.assertEqual("CAMPAIGN_VERIFIED", replay["marker"])
+            self.assertEqual(
+                self.AUTHORITY_READY_SHA256[root_name],
+                replay["command"][
+                    replay["command"].index("--expected-ready-sha256") + 1
+                ],
+            )
+            self.assertEqual(
+                self.AUTHORITY_REDUCER_ID,
+                replay["command"][
+                    replay["command"].index("--expected-reducer-id") + 1
+                ],
+            )
+
+
+class CampaignRecoveryGeneration17LockHitBoundedContractTests(unittest.TestCase):
+    AUTHORITY_RECEIPT_BYTES = 9956
+    AUTHORITY_RECEIPT_SHA256 = (
+        "c37aae056dc2f04d946db69d4e13d276dbc11d1a52976c97657af0a5549b00cb"
+    )
+    AUTHORITY_AUTHOR_BYTES = 20346
+    AUTHORITY_AUTHOR_SHA256 = (
+        "dee3d92a93e192ce5cb04b46a0946e10fb056894ce835ad0689b5181bfe5ae1a"
+    )
+    AUTHORITY_BOOTSTRAP_SHA256 = (
+        "98b453b84bb4d312691f38e59a3a662d990963f3fdfac28f7e72ea1c1376562b"
+    )
+    AUTHORITY_REDUCER_ID = (
+        "fbb343d629fa12a641aced04db88b59e5270e1f45990d9d203284302f8761621"
+    )
+    AUTHORITY_READY_SHA256 = {
+        "generation-17-lockhit-bounded-contract-v1": (
+            "6d794905d6fc5daea11f99b781cf8eb7740765e749c784d02507d43436b801a2"
+        ),
+        "generation-17-lockhit-bounded-contract-replica-v1": (
+            "dcef22def1e4190fd32366637654587202635c185f0088ca39d883168bba7ba6"
+        ),
+    }
+    OUTPUT_SHA256 = {
+        "campaign-functions.tsv": "50970af530be6cf9885de7af33cede59f8ed80f2f98bf6541ec4239a77db1bd2",
+        "campaign-residuals.tsv": "6aaa5da3917079de3a172fb24b7de2b3ba99f1bc05ad40c4c427fcaa76d55ab6",
+        "campaign-questions.tsv": "e86ead4f97a94182750a522c9cf44d0664108dec3b81678c28be14531213a3b0",
+        "campaign-scenarios.tsv": "35a84fad46065d1317e48b41c66889a1dd12327077766423693b8839be857542",
+        "campaign-levers.tsv": "fa337d96cfe7b6eca266b44aa39deded516e3a8cc02979a31671b449c66e3cdc",
+        "campaign-contracts.tsv": "166358f44a0e1bad7c29b541d3602fa722f8b57c7b70aee28ace6e247c89e1c1",
+        "campaign-adjudications.tsv": "ec23e0831400085e456b386ab190116700de6cae43da4f6bde071df9a8cb4770",
+        "campaign-supersessions.tsv": "4da539b16248ae9f5abfe5aa61845d9ec96351605060b8b05f16abb7353b008e",
+    }
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        repo = Path(__file__).resolve().parent.parent
+        base = repo / "local-lab/re-campaign-incident-recovery-20260808-v1"
+        cls.parent = base / "generation-16-mission-native-setpos-runtime-v1"
+        cls.generation = base / "generation-17-lockhit-bounded-contract-v1"
+        cls.replica = base / "generation-17-lockhit-bounded-contract-replica-v1"
+        cls.authority = base / "generation-17-lockhit-bounded-contract-authority.ready.json"
+        cls.proof = repo / campaign.LOCKHIT_BOUNDED_PROOF_RELATIVE
+        if not (cls.parent / "campaign.ready.json").is_file():
+            raise unittest.SkipTest(
+                "maintainer-local canonical Gen16 prerequisite is unavailable"
+            )
+        for root, ready_name, label in (
+            (cls.proof, campaign.lockhit_contract.READY_NAME, "LockHit bounded proof"),
+            (cls.generation, "campaign.ready.json", "canonical Generation 17"),
+            (cls.replica, "campaign.ready.json", "replicated Generation 17"),
+        ):
+            if not (root / ready_name).is_file():
+                raise AssertionError(f"required {label} is missing: {root}")
+        if not cls.authority.is_file():
+            raise AssertionError(
+                f"required Generation 17 authority is missing: {cls.authority}"
+            )
+
+    @classmethod
+    def authority_verify(cls, root: Path) -> subprocess.CompletedProcess:
+        expected_ready = cls.AUTHORITY_READY_SHA256.get(root.name)
+        if expected_ready is None:
+            raise AssertionError(f"root is not an externally selected Gen17 copy: {root}")
+        repo = Path(__file__).resolve().parent.parent
+        bootstrap = Path(__file__).resolve().parent / "re_campaign_frozen_bootstrap.py"
+        environment = os.environ.copy()
+        environment["BEA_REPO_ROOT"] = os.fspath(repo)
+        environment["PYTHONDONTWRITEBYTECODE"] = "1"
+        return subprocess.run(
+            [
+                os.fspath(Path(os.sys.executable)),
+                "-I",
+                "-B",
+                os.fspath(bootstrap),
+                "--campaign",
+                os.fspath(root),
+                "--mode",
+                "full",
+                "--expected-ready-sha256",
+                expected_ready,
+                "--expected-reducer-id",
+                cls.AUTHORITY_REDUCER_ID,
+            ],
+            cwd=repo,
+            env=environment,
+            capture_output=True,
+            text=True,
+            timeout=1200,
+            check=False,
+        )
+
+    @staticmethod
+    def frozen_verify(root: Path) -> subprocess.CompletedProcess:
+        return CampaignRecoveryGeneration8Tests.frozen_verify(root, replay=False)
+
+    @staticmethod
+    def reducer_files(root: Path) -> dict[str, bytes]:
+        return CampaignRecoveryGeneration9Tests.reducer_files(root)
+
+    @staticmethod
+    def write_ready(root: Path, receipt: dict) -> None:
+        (root / "campaign.ready.json").write_text(
+            json.dumps(receipt, indent=2) + "\n", encoding="utf-8"
+        )
+
+    def test_two_independent_builds_are_deterministic_and_fully_replay(self) -> None:
+        for name, digest in self.OUTPUT_SHA256.items():
+            self.assertEqual(digest, campaign.coverage.sha256_of(self.generation / name))
+            self.assertEqual(
+                (self.generation / name).read_bytes(),
+                (self.replica / name).read_bytes(),
+                name,
+            )
+        self.assertEqual(
+            self.reducer_files(self.generation), self.reducer_files(self.replica)
+        )
+        for root in (self.generation, self.replica):
+            completed = self.authority_verify(root)
+            self.assertEqual(0, completed.returncode, completed.stderr)
+            self.assertIn("CAMPAIGN_VERIFIED", completed.stdout)
+        normalized = []
+        for root in (self.generation, self.replica):
+            receipt = json.loads(
+                (root / "campaign.ready.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(17, receipt["generation"])
+            self.assertEqual(
+                campaign.LOCKHIT_BOUNDED_ADVANCE_KIND, receipt["advance"]["kind"]
+            )
+            self.assertEqual(
+                campaign.LOCKHIT_BOUNDED_ADVANCE_SCHEMA,
+                receipt["advance"]["schema"],
+            )
+            self.assertEqual("LHC-997ec4a9b32a80a8", receipt["advance"]["observationId"])
+            receipt["generatedAtUtc"] = "<generated>"
+            for output in receipt["outputs"].values():
+                output["lastWriteUtc"] = "<write>"
+            normalized.append(receipt)
+        self.assertEqual(normalized[0], normalized[1])
+
+    def test_exact_bounded_contract_delta_preserves_open_paths(self) -> None:
+        entity = campaign.lockhit_contract.LOCKHIT_ENTITY
+        contract_id = campaign.lockhit_contract.LOCKHIT_CONTRACT
+        parent_question_id = campaign.lockhit_contract.LOCKHIT_QUESTION
+        parent_functions = {
+            row["entityKey"]: row
+            for row in campaign._read_tsv(self.parent / "campaign-functions.tsv")
+        }
+        functions = {
+            row["entityKey"]: row
+            for row in campaign._read_tsv(self.generation / "campaign-functions.tsv")
+        }
+        self.assertEqual(
+            {entity},
+            {key for key in functions if functions[key] != parent_functions[key]},
+        )
+        self.assertEqual("C2_BOUNDED_RUNTIME", functions[entity]["semanticGrade"])
+        self.assertEqual("BOUNDED_CONTRACT", functions[entity]["resolutionState"])
+
+        parent_contracts = {
+            row["contractId"]: row
+            for row in campaign._read_tsv(self.parent / "campaign-contracts.tsv")
+        }
+        contracts = {
+            row["contractId"]: row
+            for row in campaign._read_tsv(self.generation / "campaign-contracts.tsv")
+        }
+        self.assertEqual(
+            {contract_id},
+            {key for key in contracts if contracts[key] != parent_contracts[key]},
+        )
+        contract = contracts[contract_id]
+        self.assertEqual("C2_BOUNDED_RUNTIME", contract["semanticGrade"])
+        self.assertEqual("MEASURED_BOUNDED_PATH", contract["runtimeVerdict"])
+        self.assertEqual("SURVIVED", contract["refuterVerdict"])
+        self.assertEqual("NOT_READY", contract["rebuildState"])
+        self.assertIn("null, not-found, and multi-node behavior remain open", contract["failureModes"])
+        self.assertIn(campaign.LOCKHIT_BOUNDED_PROOF_READY_SHA256, contract["evidenceRefs"])
+
+        parent_questions = {
+            row["questionId"]: row
+            for row in campaign._read_tsv(self.parent / "campaign-questions.tsv")
+        }
+        questions = {
+            row["questionId"]: row
+            for row in campaign._read_tsv(self.generation / "campaign-questions.tsv")
+        }
+        self.assertEqual(
+            {parent_question_id},
+            {key for key in parent_questions if questions[key] != parent_questions[key]},
+        )
+        successor_ids = set(questions) - set(parent_questions)
+        self.assertEqual(
+            {
+                "Q-2e152f6c1ad74504",
+                "Q-b4838b78fddb5be6",
+                "Q-560e644e27958b87",
+                "Q-b0230a2ddfa473a1",
+            },
+            successor_ids,
+        )
+        self.assertEqual("CLOSED_SURVIVED", questions[parent_question_id]["state"])
+        for question_id in successor_ids:
+            self.assertEqual("OPEN", questions[question_id]["state"])
+            self.assertEqual(parent_question_id, questions[question_id]["parentQuestionId"])
+            self.assertIn(question_id, contract["questionIds"].split(";"))
+
+        parent_adjudications = {
+            row["adjudicationId"]
+            for row in campaign._read_tsv(self.parent / "campaign-adjudications.tsv")
+        }
+        fresh = [
+            row
+            for row in campaign._read_tsv(self.generation / "campaign-adjudications.tsv")
+            if row["adjudicationId"] not in parent_adjudications
+        ]
+        self.assertEqual(["A-9d0865b13dd319ef"], [row["adjudicationId"] for row in fresh])
+        self.assertEqual("True", fresh[0]["semanticPromotionApplied"])
+        for name in (
+            "campaign-residuals.tsv",
+            "campaign-scenarios.tsv",
+            "campaign-levers.tsv",
+            "campaign-supersessions.tsv",
+        ):
+            self.assertEqual(
+                (self.parent / name).read_bytes(),
+                (self.generation / name).read_bytes(),
+                name,
+            )
+
+    def test_integrity_and_external_authority_reject_overclaim_selection(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            forged = Path(temporary) / "forged"
+            shutil.copytree(self.generation, forged)
+            original = json.loads(
+                (forged / "campaign.ready.json").read_text(encoding="utf-8")
+            )
+
+            def rejected(mutator, expected: str) -> None:
+                receipt = json.loads(json.dumps(original))
+                mutator(receipt)
+                self.write_ready(forged, receipt)
+                completed = self.frozen_verify(forged)
+                self.assertNotEqual(0, completed.returncode)
+                self.assertIn(expected, completed.stderr)
+
+            rejected(
+                lambda value: value.update({"advance": None}),
+                "Generation 16 recovery child is not the exact LockHit bounded-contract advance",
+            )
+            rejected(
+                lambda value: value["advance"].update(
+                    {"independentGameplayReplications": 1}
+                ),
+                "LockHit bounded-contract advance receipt differs",
+            )
+            rejected(
+                lambda value: value.update({"generatedAtUtc": "not-a-time"}),
+                "invalid timestamp",
+            )
+
+        repo = Path(__file__).resolve().parent.parent
+        author = repo / "tools/re_lockhit_bounded_campaign_authority.py"
+        bootstrap = repo / "tools/re_campaign_frozen_bootstrap.py"
+        self.assertEqual(self.AUTHORITY_RECEIPT_BYTES, self.authority.stat().st_size)
+        self.assertEqual(
+            self.AUTHORITY_RECEIPT_SHA256, campaign.coverage.sha256_of(self.authority)
+        )
+        self.assertEqual(self.AUTHORITY_AUTHOR_BYTES, author.stat().st_size)
+        self.assertEqual(
+            self.AUTHORITY_AUTHOR_SHA256, campaign.coverage.sha256_of(author)
+        )
+        receipt = json.loads(self.authority.read_text(encoding="utf-8"))
+        self.assertEqual("READY", receipt["verdict"])
+        self.assertEqual("FULL_REPLAY_CAMPAIGN_AUTHORITY", receipt["authorityClass"])
+        self.assertEqual(str(self.generation.resolve()), receipt["canonical"]["absolutePath"])
+        self.assertEqual(
+            "REPRODUCTION_ONLY_NOT_AUTHORITY_SELECTOR", receipt["replica"]["role"]
+        )
+        self.assertEqual(
+            str(self.generation.resolve()), receipt["selectionRule"]["requiredAbsolutePath"]
+        )
+        self.assertEqual(
+            self.AUTHORITY_READY_SHA256,
+            receipt["selectionRule"]["literalReadySha256ByRoot"],
+        )
+        self.assertEqual(
+            self.AUTHORITY_REDUCER_ID, receipt["selectionRule"]["requiredReducerId"]
+        )
+        self.assertEqual(
+            campaign.LOCKHIT_BOUNDED_PARENT_AUTHORITY_SHA256,
+            receipt["parent"]["authorityReceiptSha256"],
+        )
+        self.assertEqual(
+            campaign.LOCKHIT_BOUNDED_PROOF_READY_SHA256,
+            receipt["proof"]["readySha256"],
+        )
+        self.assertEqual(self.OUTPUT_SHA256, {
+            name: stamp["sha256"] for name, stamp in receipt["outputs"].items()
+        })
+        boundary = receipt["claimBoundary"]
+        self.assertEqual("C2_BOUNDED_RUNTIME", boundary["semanticGrade"])
+        self.assertFalse(boundary["independentGameplayReplication"])
+        self.assertFalse(boundary["globalFreeHeadDirectlyWatched"])
+        self.assertEqual("OPEN", boundary["nullNotFoundMultiNodePaths"])
+        self.assertEqual("NOT_READY", boundary["rebuildState"])
+        self.assertEqual(18, receipt["limitations"]["nextValidGeneration"])
+        self.assertEqual(self.AUTHORITY_AUTHOR_SHA256, receipt["author"]["sha256"])
+        self.assertEqual(
+            self.AUTHORITY_BOOTSTRAP_SHA256, campaign.coverage.sha256_of(bootstrap)
+        )
+        self.assertEqual(
+            self.AUTHORITY_BOOTSTRAP_SHA256,
+            receipt["frozenOwners"]["preImportLauncher"]["sha256"],
+        )
+        for root_name, section in (
+            (self.generation.name, "canonicalLiteralPinnedFullReplay"),
+            (self.replica.name, "replicaLiteralPinnedFullReplay"),
+        ):
+            replay = receipt["verification"][section]
+            self.assertEqual(0, replay["exitCode"])
+            self.assertEqual("CAMPAIGN_VERIFIED", replay["marker"])
+            self.assertEqual(
+                self.AUTHORITY_READY_SHA256[root_name],
+                replay["command"][replay["command"].index("--expected-ready-sha256") + 1],
+            )
+
+
 if __name__ == "__main__":
     raise SystemExit(0 if unittest.main(verbosity=2, exit=False).result.wasSuccessful() else 1)

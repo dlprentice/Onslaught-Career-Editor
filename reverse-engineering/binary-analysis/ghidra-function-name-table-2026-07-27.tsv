@@ -12,10 +12,10 @@
 #           (gitignored; this file is the promoted 4-column projection of it)
 # Reproduced: an independent export of the same database (inv-LIVE1-functions.tsv)
 #           agrees with it on all 7555 names, 0 differences.
-# AHEAD OF THE TRACKED SNAPSHOT: reverse-engineering/ghidra/ is dated 2026-07-18 and
-#           deliberately lags the live project, so this table will disagree with it.
-#           That is intended -- staleness is measured against current truth, not
-#           against the last promote.
+# DATED PROJECTION: reverse-engineering/ghidra/ was promoted from the 8,125-function
+#           live project on 2026-08-09. This 7,555-row table remains the historical
+#           2026-07-27 name index used by its owning documentation check; it is no
+#           longer a current database projection.
 # Columns : address, name, bodyMin, bodyMax (hex). 67 functions have
 #           non-contiguous bodies, so bodyMin..bodyMax over-covers for those;
 #           6 of the 7555 spans overlap their predecessor.

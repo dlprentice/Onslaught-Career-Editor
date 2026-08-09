@@ -1,7 +1,7 @@
 # Retail function and behavior contracts
 
 Status: active contract-system front door
-Last updated: 2026-08-08
+Last updated: 2026-08-09
 Summary: how Battle Engine Aquila contract evidence is graded, located,
 refuted, promoted, and carried into the rebuild. Current replay authority is
 selected only by `developer_state.json` → `current_re_authority`.
@@ -45,7 +45,7 @@ chain that ordinarily precedes it.
 | --- | --- |
 | Current per-function and per-residual contract accounting | The named immutable campaign generation: `campaign-contracts.tsv` joined with its function, residual, question, adjudication, and supersession ledgers, `campaign.ready.json`, and frozen `_reducer` |
 | Detailed controlled-runtime observation | The hash-bound scenario bundle and its real receipts, manifests, markers, controls, and refuter output under `local-lab/` |
-| Existing-trace call/entry/raw-return observation | Hash-bound `bea-ttd-call-context.v3` JSONL bundles produced by [`tools/Invoke-TtdCallContext.ps1`](tools/Invoke-TtdCallContext.ps1); pending/active associations clear across conservative global barriers (including ContextSwitch today), raw returns remain visible as orphans, and only same-epoch ordinary returns may link. Raw registers/stack bytes are untyped. A proposed schema-v4 soft-ContextSwitch refinement (map no-op + barrier-kind ledger; Unrecorded/Large/continuity stay hard) requires a new schema id, new `association_policy` string, and fresh replay—not reinterpretation of v3. Design owner: `local-lab/SCHEMA-V4-CALL-CONTEXT-DESIGN-2026-08-04.md` (hypothesis until implemented). |
+| Existing-trace call/entry/raw-return observation | Hash-bound `bea-ttd-call-context.v3` JSONL bundles produced by the frozen historical [`tools/Invoke-TtdCallContext.ps1`](tools/Invoke-TtdCallContext.ps1); active bounded long-replay work uses [`tools/Invoke-TtdCallContextV2.ps1`](tools/Invoke-TtdCallContextV2.ps1), while the original bytes remain unchanged for historical Gen10 replay. Pending/active associations clear across conservative global barriers (including ContextSwitch today), raw returns remain visible as orphans, and only same-epoch ordinary returns may link. Raw registers/stack bytes are untyped. A proposed schema-v4 soft-ContextSwitch refinement (map no-op + barrier-kind ledger; Unrecorded/Large/continuity stay hard) requires a new schema id, new `association_policy` string, and fresh replay—not reinterpretation of v3. Design owner: `local-lab/SCHEMA-V4-CALL-CONTEXT-DESIGN-2026-08-04.md` (hypothesis until implemented). |
 | Existing-trace field-write transition | Source-bound `bea.ttd.data-writes.v3` JSONL/receipt/manifest/`READY` bundles produced by [`tools/Invoke-TtdDataWrites.ps1`](tools/Invoke-TtdDataWrites.ps1); a positive contract requires an exact replay window, sequence-sourced ordered Overwrite/Write chain, explicit counts, and zero gaps/breaks, while a zero-write claim is only a bounded no-callback witness |
 | Static address/body evidence | [`reverse-engineering/binary-analysis/`](reverse-engineering/binary-analysis/_index.md), current read-only exports, pristine bytes, and the reviewed Ghidra owner |
 | Source-informed architecture or intent | Pinned source plus [`reverse-engineering/source-code/stuart-source-synthesis.md`](reverse-engineering/source-code/stuart-source-synthesis.md); never retail behavior by itself |
@@ -57,17 +57,29 @@ chain that ordinarily precedes it.
 it. Candidate overlays and agent reports are inputs, not campaign authority,
 until the reducer admits them through a new verified generation.
 
-**Current complete-RE authority (2026-08-08):** do not treat historical
+**Current complete-RE authority (2026-08-09):** do not treat historical
 Generation 10 or candidate Generation 73 as the live replay parent. Read
-`developer_state.json` → `current_re_authority`. Canonical Generation 11 has
-8,124 functions, 14,241 contracts, 216 `C1_CANDIDATE_PARTIAL` functions, four
-`C2_BOUNDED_RUNTIME` functions, 7,904 opaque functions, 20 open residuals, and
-zero `REBUILD_READY` contracts. Its exact READY is `9b3769c5…2686d`; frozen
-reducer `e88c9739…6993`. Generation 73 is a projection oracle only. The closure
-keeps seven wrappers name-only/opaque, keeps ApplyDamage at C1 with an
-`UNSCORED` refuter, rejects its C2 proposal, and leaves NearClone unchanged.
-C1 remains partial evidence, not dual-runtime C2, rebuild parity, or bulk Ghidra
-rename authority. The next valid campaign generation is 12.
+`developer_state.json` → `current_re_authority`. Canonical Generation 17 has
+8,125 functions, 14,243 contracts, 215 `C1_CANDIDATE_PARTIAL` functions, seven
+`C2_BOUNDED_RUNTIME` functions, 7,903 opaque functions, 18 open residuals, and
+zero `REBUILD_READY` contracts. Its exact READY is `6d794905…01a2`; frozen
+reducer `fbb343d6…1621`. Generation 73 is a projection oracle only. Generation
+14 closed one residual as the consumer-bound TokenArchive dispatch-data
+partition. Generation 15 replaces another 63-byte police-open residual with
+15 NOP bytes, the exact 42-byte/17-instruction Mission-native
+`IScript__SetPos`, and 6 NOP bytes. Generation 16 then advances SetPos from C1
+to a bounded C2 for two replicated script-visible position-copy roundtrips and
+adds a partial rebuild implementation. Its internal write set, broader
+receiver/vector matrix, side effects, persistence, and failure behavior remain open.
+Generation 17 adds only the retained non-null, sole-matching-node
+`CBattleEngine::LockHit` removal path as bounded C2. Null, absent, multi-node,
+global-free-head, destructor, return, target-identity, and rebuild questions stay
+explicitly open.
+The separately read-back live Ghidra ceremony added the SetPos function name,
+signature, and comment without changing executable bytes, instructions, data,
+or references. The bounded ApplyDamage C2 remains one replicated 1,000-damage,
+zero-shield entry/write path, not an all-path law. The next valid campaign
+generation is 18.
 
 **Historical Gen10 immutable admission (2026-08-04):** READY SHA-256
 `b349f0b2895849ba320b0b0b783c60a98794d01f375d57d9a04bbe4a5aebabb2`,

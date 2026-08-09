@@ -22,7 +22,7 @@ RECORDER = ROOT / "tools" / "ttd_record.ps1"
 WRAPPER = ROOT / "tools" / "Record-GameMoment.ps1"
 QUERY = ROOT / "tools" / "ttd_query.ps1"
 COVERAGE_WRAPPER = ROOT / "tools" / "Invoke-TtdExecCoverage.ps1"
-CALL_CONTEXT_WRAPPER = ROOT / "tools" / "Invoke-TtdCallContext.ps1"
+CALL_CONTEXT_WRAPPER = ROOT / "tools" / "Invoke-TtdCallContextV2.ps1"
 DATA_WRITES_WRAPPER = ROOT / "tools" / "Invoke-TtdDataWrites.ps1"
 CAMPAIGN = ROOT / "tools" / "Invoke-TtdCoverageCampaign.ps1"
 COLLECTOR_SOURCE = (
@@ -1427,6 +1427,20 @@ class TtdCallContextRelationshipTests(unittest.TestCase):
         self.assertEqual(0, accepted.returncode, accepted.stdout + accepted.stderr)
         accepted_result = json.loads(accepted.stdout.strip().splitlines()[-1])
         self.assertTrue(accepted_result["replayComplete"])
+
+        # TTD's long-replay instruction/step counters are known to stop
+        # advancing. Call/return callbacks remain independently counted and the
+        # collector deliberately permits them to exceed those quarantined
+        # counters, bounded by the configured replay-step capacity. This is the
+        # shape reproduced by the natural Level 521 ApplyDamage trace.
+        stalled_counters = self.replay_boundary_fixture()
+        stalled_counters["summary"]["call_return_callbacks"] = "43072740"
+        stalled_counters["summary"]["instructions_executed"] = "136541"
+        stalled_counters["summary"]["steps_executed"] = "136542"
+        accepted = self.run_replay_boundary_guard(stalled_counters)
+        self.assertEqual(0, accepted.returncode, accepted.stdout + accepted.stderr)
+        accepted_result = json.loads(accepted.stdout.strip().splitlines()[-1])
+        self.assertEqual(43072740, accepted_result["callReturnCallbacks"])
 
         wrong_stop = self.replay_boundary_fixture()
         wrong_stop["summary"]["stop_reason"] = "Position"

@@ -372,6 +372,46 @@ public sealed class Level100DestructionContactTests
     }
 
     [Fact]
+    public void ApplyDamageTraceVectorPreservesExactOverkillBits()
+    {
+        // Existing-trace reproof a0bd86d8... observes CUnit__ApplyDamage at
+        // 0x004F9A90 store life 0x3BA3D70B -> 0xC479FFAE for amount
+        // 0x447A0000 (1000.0f). The actor's shield was already zero, so this
+        // pins the whole-body life arithmetic and terminal edge only; it does
+        // not claim positive-shield absorption.
+        Level100ContactDefinition tank =
+            Level100ContactCatalog.Instance.GetDefinition("Target Tank");
+        var state = new Level100DestructionState(203, tank);
+        Level100DestructionSnapshot baseline = state.CaptureSnapshot();
+        state.Restore(new Level100DestructionSnapshot(
+            baseline.ActorId,
+            baseline.DefinitionName,
+            currentLifeBits: 0x3BA3D70Bu,
+            terminal: false,
+            belowHalfReported: false,
+            baseline.InitialHealthBits.ToArray(),
+            baseline.CurrentHealthBits.ToArray(),
+            baseline.PartActivity.ToArray()));
+        var events = new Level100DestructionEvent[
+            Level100DestructionState.MaximumEventsPerHit];
+
+        int count = state.ApplyRoundHit(
+            Hit(203, 0),
+            damageBits: 0x447A0000u,
+            events);
+
+        Assert.Equal(0xC479FFAEu, state.CurrentLifeBits);
+        Assert.True(state.Terminal);
+        Assert.Contains(
+            events.AsSpan(0, count).ToArray(),
+            item => item.Kind == Level100DestructionEventKind.SegmentDamaged &&
+                item.RemainingHealthBits == 0xC479FFAEu);
+        Assert.Contains(
+            events.AsSpan(0, count).ToArray(),
+            item => item.Kind == Level100DestructionEventKind.Terminal);
+    }
+
+    [Fact]
     public void RuntimeConsumesRegistryPoseAndReportsReleasedLifecycleFacts()
     {
         Level100ActorDefinitionSet definitions = Level100TestActorDefinitions.Create();

@@ -1,26 +1,39 @@
-# Battle Engine Aquila's 8,124-function Ghidra corpus is deeply mapped, not atom-complete
+# Battle Engine Aquila's 8,125-function Ghidra corpus is deeply mapped, not atom-complete
 
 Status: active canonical synthesis of the current executable-analysis state; raw
 machine exports remain the address-level evidence behind this human-readable
 master
-Last updated: 2026-08-08 (post-loss Gen11 authority; live Ghidra unchanged)
-Verdict: **The verified maintainer database now contains 8,124 function
+Last updated: 2026-08-09 (Gen17 authority; LockHit single-node path bounded)
+Verdict: **The verified maintainer database now contains 8,125 function
 boundaries after two prospective, backed-up, scratch-reproduced promotions: 515
 previous residual entries, then 14 exact console-callback-region boundaries.
-Canonical recovered Generation 11 accounts for those functions plus 6,117 exact residual entities,
-1,767,100 body bytes, and 162,017 still-unmapped executable bytes. The 14 new
+Canonical Generation 17 accounts for those functions plus 6,118 exact residual entities,
+1,767,142 body bytes, and 161,975 still-unmapped executable bytes. The 14 new
 functions remain deliberately opaque; 15 interstitial ranges / 107 bytes are
 terminally proven NOP padding. A third authorized operation corrected five
 same-range target-lock names/signatures/comments without changing that boundary
-inventory or advancing a behavioral grade. Boundary accounting has advanced materially, but
-semantics remain the hard problem: 14,021 of 14,241 contract rows are `C0_OPAQUE`,
-216 are `C1_CANDIDATE_PARTIAL`, four are `C2_BOUNDED_RUNTIME`, and none is
+inventory. A fourth, separately backed-up and scratch-reproduced operation
+promoted the same-boundary Damage/Hit names, void prototypes, and evidence
+comments at `0x0040A890` and `0x00407350`; its separate readback again preserved
+all boundaries and bodies. A fifth backed-up, two-replica operation
+then added four structural labels and five bounded plate comments around
+`CTokenArchive::ReadNextToken`'s exact dispatch data while preserving all 132
+pre-existing data units, every function, and every reference. Boundary
+accounting has advanced again through a sixth gated operation: the exact
+42-byte/17-instruction Mission-native `IScript__SetPos` function was added with
+its name, signature, and comment, between 15-byte and 6-byte NOP ranges, while
+executable bytes, instructions, data, and references stayed unchanged.
+Semantics remain the hard problem: 14,021 of 14,243 contract rows are `C0_OPAQUE`,
+215 are `C1_CANDIDATE_PARTIAL`, seven are `C2_BOUNDED_RUNTIME`, and none is
 rebuild-ready. The authored Mission
-`Damage` chain plus three raw Level 521 call-context contracts have crossed a
-bounded runtime gate. This file is the integrated narrative and queue, not a
+`Damage` chain, three Level 521 call-context contracts, and one separately
+re-proved zero-shield ApplyDamage path, and the replicated script-visible SetPos
+position-copy path plus one non-null sole-node `CBattleEngine::LockHit` removal
+path have crossed bounded runtime gates. This
+file is the integrated narrative and queue, not a
 claim that those gaps are solved.**
 Evidence: MEASURED — the pristine specimen, verified live-promotion POST
-readback, authoritative recovered-generation-11 campaign bundle, tracked Ghidra snapshot,
+readback, authoritative Generation-17 campaign bundle, tracked Ghidra snapshot,
 function-note/fullpass corpus, pinned source, finite shipped registries,
 copied-runtime probes, and the existing TTD corpus. SOURCE-backed and INFERRED
 claims are labelled where they carry less authority than shipped bytes or
@@ -38,27 +51,31 @@ not establish its Steam depot identity.
 
 ---
 
-## Current complete-RE replay authority (2026-08-08) — read this first
+## Current complete-RE replay authority (2026-08-09) — read this first
 
 The campaign census below this pointer is a historical Generation-10
-snapshot. Current authority is canonical recovered Generation **11**, selected
+snapshot. Current authority is canonical Generation **17**, selected
 only by `developer_state.json` → `current_re_authority`:
 
-| Metric | Canonical Gen11 |
+| Metric | Canonical Gen17 |
 |--------|------------------|
-| Functions | 8,124 (= C1 216 + C2 4 + function semantic OPAQUE 7,904) |
-| Grades | **C1=216**, **C2=4**, contract C0_OPAQUE **14021**; REBUILD_READY **0** |
-| OPEN residual | **20** police holds |
+| Functions | 8,125 (= C1 215 + C2 7 + function semantic OPAQUE 7,903) |
+| Grades | **C1=215**, **C2=7**, contract C0_OPAQUE **14021**; REBUILD_READY **0** |
+| OPEN residual | **18** police holds |
 | complete_RE | **false** |
-| READY / reducer | `9b3769c5…2686d` / `e88c9739…6993` |
-| Campaign | `local-lab/re-campaign-incident-recovery-20260808-v1/generation-11-gen73-claims-resealed-v2/` |
-| Next valid generation | **12** |
+| READY / reducer | `6d794905…01a2` / `fbb343d6…1621` |
+| Campaign | `local-lab/re-campaign-incident-recovery-20260808-v1/generation-17-lockhit-bounded-contract-v1/` |
+| Next valid generation | **18** |
 
 The Generation-10 blocks that follow are historical records, not the live tip.
 Their durable engineering content (atlas, registries, safety doctrine,
 superseded-claims appendix) is retained. Candidate Generation 73 is now an
 explicit projection oracle only; its admissible fields were resealed onto the
-post-loss lineage claim by claim.
+post-loss lineage claim by claim. Gen12 through Gen17 then add only the bounded
+Damage/Hit and zero-shield ApplyDamage observations plus the exact TokenArchive
+dispatch-data partition, Mission-native SetPos boundary/static contract, and
+its bounded script-visible position-copy runtime/rebuild claim, and LockHit's
+single-node removal path described above.
 
 ---
 
@@ -74,7 +91,7 @@ until their derived percentages are regenerated against the live tip.
 | Authoritative campaign | `local-lab/ttd-call-context-level521-impact-generation10-20260804-v1/generation-10-ttd-call-context-observation-v2`; READY SHA-256 `b349f0b2895849ba320b0b0b783c60a98794d01f375d57d9a04bbe4a5aebabb2`; frozen reducer ID `7dfa4015aad676bfeb22977adf3aadcddac49ba31fa8203a63a32f76d941f5d9` |
 | Live maintainer Ghidra | 8,124 functions after 529 exact boundary-only promotions plus five same-range target-lock semantic corrections; POST fileset SHA-256 `f803cd83217df76ab7fc6c6928f44312b8fc6a2ba92affe21f5184afa2780702` |
 | Remaining executable accounting | 6,117 residuals; 162,017 unmapped executable bytes; exact function bodies cover 1,767,100 bytes / 91.6015% of `.text` |
-| Contract reality | Gen10 snapshot: 14,237 `C0_OPAQUE` rows and four `C2_BOUNDED_RUNTIME` rows: Mission `Damage @ 0x005348C0` plus raw Level 521 `0x004D8AE0`, `Damage @ 0x0040A890`, and `Hit @ 0x00407350`; zero rebuild-ready contracts. **Canonical Gen11: C1=216, C2=4, contract C0_OPAQUE=14021, REBUILD_READY=0.** |
+| Contract reality | Gen10 snapshot: 14,237 `C0_OPAQUE` rows and four `C2_BOUNDED_RUNTIME` rows: Mission `Damage @ 0x005348C0` plus raw Level 521 `0x004D8AE0`, `Damage @ 0x0040A890`, and `Hit @ 0x00407350`; zero rebuild-ready contracts. **Canonical Gen17: C1=215, C2=7, contract C0_OPAQUE=14021, REBUILD_READY=0.** The fifth C2 is the bounded zero-shield ApplyDamage reproof; the sixth is SetPos's script-visible position-copy path; the seventh is LockHit's single-node removal path. None is an all-path law; Gen14's TokenArchive advance remains structural data proof. |
 | Runtime console census | A replicated 16-byte disposable logger bridge realizes 31 commands and 56 CVars on Level 100; static registration contains 32/59, with `fmv_play` and three debris CVars absent on that path. READY SHA-256 `ec6755c4c9c23fcae07b112cb0f7f8d243420b7faaaaa5f675be225066618297` |
 | Latest exact partition | The retired residual `[0x004295BC,0x00429BC0)` is now exactly replaced by 14 opaque functions / 1,433 code bytes and 15 terminal NOP-padding residuals / 107 bytes. No callback name, signature, ABI, behavior, or rebuild claim was promoted. |
 | TTD corpus | 75 traces / 497.31 GiB. Coverage exists for 73 traces, but 65 traces remain coverage-only and there is no normalized corpus-wide call/return/receiver/argument ledger |
@@ -183,25 +200,25 @@ forward or for a clearly dated comparison.
 | Question | Current exact answer |
 | --- | --- |
 | Static retail specimen | 2,506,752-byte x86 PE, SHA-256 `74154bfa…e7750`; D3D9 retail build |
-| Latest verified live readback | 8,124 functions; 515-boundary and 14-boundary promotions plus five same-range target-lock semantic corrections recorded in Generation 9 and carried unchanged by Generation 10; latest POST fileset `f803cd83…0702` |
-| Current live function inventory | 8,124 rows; TSV SHA-256 `e7ffc76b6073cf9f96c057ded436e24958596d9d14162e89f3e2d1007b620950` |
+| Latest verified live readback | 8,125 functions after the prior 529-boundary campaigns plus the separately gated Mission-native `IScript__SetPos` boundary; latest TSV SHA-256 `f05259cda1c5d956098062220d6e3aada9bff4a61896a77c8fc153826691f9d0` |
+| Current live function inventory | 8,125 rows; byte-identical to the promoted tracked snapshot and verified D: disaster-recovery copy |
 | Dated semantic/name-table baseline | 7,555 functions; 3,181,359-byte TSV; SHA-256 `45cba656…0a462` |
-| Current distinct function names | 8,116; eight names occur at two addresses |
-| Explicit `FUN_*` names | 933 |
+| Current distinct function names | 8,117; eight names occur at two addresses |
+| Explicit `FUN_*` names | 932 |
 | MSVC `Unwind@*` funclets | 1,179 |
 | Thunks | 100 |
-| Functions with plate comments | 6,947 |
-| Functions without a plate comment | 1,177 |
-| Functions with at least one tag | 5,919 |
-| Current human-namable denominator | 6,945, excluding the 1,179 compiler EH funclets |
+| Functions with plate comments | 6,951 |
+| Functions without a plate comment | 1,174 |
+| Functions with at least one tag | 5,923 |
+| Current human-namable denominator | 6,946, excluding the 1,179 compiler EH funclets |
 | Dated pinned-source grader's three-cohort weak/unsupported naming residual | 1,867 / 6,376 = 29.3% against the 7,555-row baseline |
 | RTTI vtable target coverage | 2,127 / 2,127 targets are current function starts |
 | Fullpass population | 6,411 functions reviewed in W001–W018 |
-| Current functions never in that dated fullpass | 1,713 / 8,124 = 21.1% |
+| Current functions never in that dated fullpass | 1,714 / 8,125 = 21.1% |
 | Dated clear identity coverage in the 322 function notes | 1,027 / 7,555 = 13.594% |
 | Dated exact entry-address mention in those notes | 1,285 / 7,555 = 17.009% |
 | MissionScript native registry | 144 / 144 names and 144 distinct handlers recovered |
-| Mission handlers absent as Ghidra functions | 86 |
+| Mission handlers absent as Ghidra functions | 45 / 144 (exact registry-pointer join against the 2026-08-09 inventory) |
 | PhysicsScript corpus | 777 statements; every used value id closes against its factory |
 | Level 100 unit-factory calls in the valid TTD trace | 33 = 28 structures + 2 ambient aircraft + 3 Target Tanks |
 | Current honest conclusion | Broad architectural recovery; deep islands of exact semantics; substantial address-level work remains |
@@ -233,33 +250,30 @@ own the durable specimen warning.
 
 | Store | Exact state | Correct use |
 | --- | --- | --- |
-| Tracked project | `reverse-engineering/ghidra/BEA.gpr` + `BEA.rep/`; snapshot 2026-07-18; 19 payload files, 177,064,839 bytes; reviewed with Ghidra 12.0.3 | Distributable reviewed snapshot; may lag current work |
+| Tracked project | `reverse-engineering/ghidra/BEA.gpr` + `BEA.rep/`; snapshot 2026-08-09; 19 payload files, 186,485,637 bytes; reviewed with Ghidra 12.1.2 | Current distributable snapshot; exact at promotion time |
 | Tracked Program objects | `BEA.exe` and `BEA_Widescreen.exe` | Do not silently assume an export came from the unpatched baseline Program |
 | Live maintainer project | `C:\Users\david\Ghidra\Projects`, active Ghidra 12.1.2 | Current working database; mutation requires separate authority |
-| Latest live readback | `local-lab/ghidra-from-trace-2026-07-28/inv-AFTER-functions.tsv` | Current function metadata used by this document |
-| Promoted tracked name table | `reverse-engineering/binary-analysis/ghidra-function-name-table-2026-07-27.tsv`, 7,555 rows, SHA-256 `2dfe0b97…f0b84` | Durable address/name table, one rename behind live |
+| Latest live readback | `local-lab/ghidra-mission-native-setpos-live-promotion-20260809-v1/runs/live-inventory/functions.tsv` | Current 8,125-row function metadata used by this document |
+| Promoted tracked name table | `reverse-engineering/binary-analysis/ghidra-function-name-table-2026-07-27.tsv`, 7,555 rows, SHA-256 `2dfe0b97…f0b84` | Dated projection; the tracked database now supersedes it as current state |
 | Fullpass discovery corpus | `reverse-engineering/binary-analysis/ghidra-fullpass-findings/` | Dated 6,411-function reviews; never a live name oracle |
 | Function-note corpus | `reverse-engineering/binary-analysis/functions/` | Deep sparse semantic notes; not complete population coverage |
 
 Fresh read-only exports in this research pass remove an important ambiguity:
 
-- The tracked snapshot contains exactly 6,411 functions, 546,729 instructions,
-  48,581 defined-data items, 3,922,085 undefined-data items, and 5,223
-  user-defined symbols. Its exported function TSV has SHA-256
-  `8BBB7444893E174F36CBC0766D4CD8F0B965CFEC4E8C55B944C100E71BF381D9`.
-- Its 6,411 address/name pairs are exactly the W001–W018 population.
+- The tracked snapshot contains exactly 8,125 functions, 549,872 instructions,
+  48,585 defined-data items, 3,912,345 undefined-data items, and 6,005
+  user-defined non-function symbols. Its reviewed project inventory is 19 files /
+  186,485,637 bytes with digest `6ad611d2…105b2`.
+- It is byte-identical to the source-stable 2026-08-09 live copy and the
+  independently opened/read-back D: disaster-recovery copy. The 6,411
+  W001–W018 addresses remain a dated reviewed subset, not the snapshot total.
 - All 91 accepted rows in the July 13 reviewed-correction plan match their
   corrected name, full signature, and full comment in the tracked snapshot.
   The rejected `0x004dac90` row matches its retained current values. The July
   13 corrections are therefore demonstrably present in the tracked snapshot.
-- The current live export is byte-identical to the July 28 saved readback:
-  SHA-256 `45CBA656E73DAB3E1033256F2B6B7B5BCA08E4FE34FD5D1CC401B34F53D0A462`.
-  There has been no later live-database drift.
-- Relative to the tracked snapshot, live adds 1,144 functions and removes none.
-  Across their common 6,411 addresses there are no body-range, byte-count,
-  instruction-count, ABI, parameter-count, or boundary differences. There are
-  370 name/signature-string differences, one `nameSource` difference, at least
-  1,175 changed comment lengths, and 793 changed tag sets.
+- The current live export and promoted tracked snapshot agree at promotion time.
+  Later live mutations must repeat the backup/scratch/readback/promotion gate;
+  this statement is not a promise that future working state can never move.
 
 The tracked name table differs from the latest live readback at one known row:
 `0x00536cd0 FUN_00536cd0` became `IScript__SpawnThing` on 2026-07-28. The
@@ -2596,8 +2610,8 @@ the old and new statements are not presented as coequal truth.
 | --- | --- |
 | The `E143…` capture executable is pristine | False; it is pristine plus the force-windowed patch |
 | The Ghidra project is never tracked | False as a general statement; `reverse-engineering/ghidra/` is the reviewed tracked exception. Live DBs, backups, and alternates remain untracked. |
-| The current function population is 5,771, 6,411, or 6,969 | Historical counts; current live is 7,555 |
-| The tracked Ghidra snapshot contains current 7,555-function truth | False; tracked snapshot is 6,411, while the tracked name projection is 7,555 and one rename behind live |
+| The current function population is 5,771, 6,411, 6,969, or 7,555 | Historical counts; current live and tracked snapshot are 8,125 |
+| The tracked Ghidra snapshot contains only the 6,411-function fullpass state | False after the separately authorized 2026-08-09 promotion; it now contains the exact 8,125-function live state at promotion time |
 | Current `.text` function coverage is 79.8% | Unknown; 79.8268% is the old 6,411-body baseline |
 | Twenty-five fullpass name drifts are unexplained | False after joining both map stores; all 370 are attributed |
 | `SpawnThing` reduced the residual to 1,866 | False; fresh current grader remains 1,867 / 6,376 |
@@ -2663,7 +2677,7 @@ to understand the current verdicts in this master.
 
 | Area | Path |
 | --- | --- |
-| Current live Ghidra readback | `local-lab/ghidra-from-trace-2026-07-28/inv-AFTER-functions.tsv` |
+| Current live Ghidra readback | `local-lab/ghidra-mission-native-setpos-live-promotion-20260809-v1/runs/live-inventory/functions.tsv` |
 | Trace-to-Ghidra apply/readback | `local-lab/GHIDRA-FROM-TRACE-2026-07-28.md` |
 | 144 native table | `local-lab/ghidra-from-trace-2026-07-28/script-native-table-144.tsv` |
 | Current grader artifacts | `local-lab/re-ledger/` |

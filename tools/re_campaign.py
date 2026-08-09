@@ -29,6 +29,12 @@ from pathlib import Path
 import re_coverage_ledger as coverage
 import ghidra_project_backup as ghidra_backup
 import re_gen73_reseal as gen73_reseal
+import re_level521_damage_writes as level521_writes
+import re_applydamage_primary_reproof as applydamage_reproof
+import re_tokenarchive_dispatch_reproof as tokenarchive_reproof
+import re_mission_native_setpos_reproof as mission_setpos_reproof
+import re_mission_native_setpos_runtime as mission_setpos_runtime
+import re_lockhit_bounded_contract as lockhit_contract
 
 _FROZEN_LOCAL_LAB = Path(__file__).resolve().parent.parent / "local-lab"
 if (_FROZEN_LOCAL_LAB / "aya_roundtrip.py").is_file():
@@ -108,6 +114,36 @@ TTD_CALL_CONTEXT_RECOVERY_ADVANCE_SCHEMA = (
 GEN73_RESEAL_RECOVERY_ADVANCE_KIND = "GEN73_CLAIM_RESEAL_POST_LOSS_RECOVERY"
 GEN73_RESEAL_RECOVERY_ADVANCE_SCHEMA = (
     "bea.re.gen73-claim-reseal-recovery-advance.v1"
+)
+LEVEL521_DAMAGE_WRITES_ADVANCE_KIND = "TTD_DAMAGE_HIT_FIELD_WRITES"
+LEVEL521_DAMAGE_WRITES_ADVANCE_SCHEMA = (
+    "bea.re.ttd-damage-hit-field-writes-advance.v1"
+)
+APPLYDAMAGE_REPROOF_ADVANCE_KIND = "TTD_CUNIT_APPLYDAMAGE_PRIMARY_REPROOF"
+APPLYDAMAGE_REPROOF_ADVANCE_SCHEMA = (
+    "bea.re.ttd-cunit-applydamage-primary-reproof-advance.v1"
+)
+TOKENARCHIVE_DISPATCH_ADVANCE_KIND = (
+    "STATIC_TOKENARCHIVE_READNEXTTOKEN_DISPATCH_TABLE_REPROOF"
+)
+TOKENARCHIVE_DISPATCH_ADVANCE_SCHEMA = (
+    "bea.re.static-tokenarchive-readnexttoken-dispatch-table-reproof-advance.v1"
+)
+MISSION_NATIVE_SETPOS_ADVANCE_KIND = (
+    "MISSION_NATIVE_SETPOS_BOUNDARY_AND_STATIC_CONTRACT_REPROOF"
+)
+MISSION_NATIVE_SETPOS_ADVANCE_SCHEMA = (
+    "bea.re.mission-native-setpos-boundary-static-contract-reproof-advance.v1"
+)
+MISSION_NATIVE_SETPOS_RUNTIME_ADVANCE_KIND = (
+    "MISSION_NATIVE_SETPOS_BOUNDED_RUNTIME_CONTRACT"
+)
+MISSION_NATIVE_SETPOS_RUNTIME_ADVANCE_SCHEMA = (
+    "bea.re.mission-native-setpos-bounded-runtime-contract-advance.v1"
+)
+LOCKHIT_BOUNDED_ADVANCE_KIND = "TTD_CBATTLEENGINE_LOCKHIT_BOUNDED_CONTRACT"
+LOCKHIT_BOUNDED_ADVANCE_SCHEMA = (
+    "bea.re.ttd-cbattleengine-lockhit-bounded-contract-advance.v1"
 )
 TTD_CALL_CONTEXT_PROOF_SCHEMA = "bea-level521-impact-schema3-proof.v2"
 TTD_CALL_CONTEXT_PARENT_RELATIVE = (
@@ -201,6 +237,258 @@ GEN73_RESEAL_CLOSURE_READY_BYTES = 48533
 GEN73_RESEAL_CLOSURE_READY_SHA256 = (
     "94d7a9eb380752671fdc5d5a152e1491bc6d4e4c87c225b8a1c385e39d0323e0"
 )
+LEVEL521_DAMAGE_WRITES_PARENT_RELATIVE = (
+    Path("local-lab/re-campaign-incident-recovery-20260808-v1")
+    / "generation-11-gen73-claims-resealed-v2"
+)
+LEVEL521_DAMAGE_WRITES_PARENT_READY_SHA256 = (
+    "9b3769c503f003b34d3915047be28c24036567f260de1933591f0254d992686d"
+)
+LEVEL521_DAMAGE_WRITES_PARENT_REDUCER_ID = (
+    "e88c973967a0458f500ff2cc1508d417b60487a4886703c4bd3dcfd197246993"
+)
+LEVEL521_DAMAGE_WRITES_PARENT_COUNTS = {
+    "functions": 8124,
+    "residuals": 6117,
+    "questions": 15241,
+    "scenarios": 72,
+    "levers": 915,
+    "contracts": 14241,
+    "adjudications": 6088,
+    "supersessions": 584,
+}
+LEVEL521_DAMAGE_WRITES_PROOF_RELATIVE = Path(
+    "local-lab/level521-damage-hit-write-proof-20260808-v2"
+)
+LEVEL521_DAMAGE_WRITES_PROOF_READY_BYTES = 2529
+LEVEL521_DAMAGE_WRITES_PROOF_READY_SHA256 = (
+    "ffb2e0b8692ddada364a829d52a158841e5d800742c49bd2a1710b2af135869a"
+)
+LEVEL521_DAMAGE_WRITES_PROOF_AUTHOR_SHA256 = (
+    "8e8c22d3dbb31c7464ad47c211a5179d773aabd9dd665aa4960ee7aa7a0b47e9"
+)
+LEVEL521_DAMAGE_WRITES_EXPECTED_GENERATION12_COUNTS = {
+    **LEVEL521_DAMAGE_WRITES_PARENT_COUNTS,
+    "questions": 15243,
+    "adjudications": 6090,
+}
+APPLYDAMAGE_REPROOF_PARENT_RELATIVE = (
+    Path("local-lab/re-campaign-incident-recovery-20260808-v1")
+    / "generation-12-level521-damage-hit-writes-v1"
+)
+APPLYDAMAGE_REPROOF_PARENT_READY_SHA256 = (
+    "9d2b903d451cb62fd6fb599b915dd57a0e6f313e610a348022fabf26ee265747"
+)
+APPLYDAMAGE_REPROOF_PARENT_REDUCER_ID = (
+    "1bcd8b1bff0bd9182872c221df8060aff8da263a89d94052ede2e80127812385"
+)
+APPLYDAMAGE_REPROOF_PARENT_COUNTS = dict(
+    LEVEL521_DAMAGE_WRITES_EXPECTED_GENERATION12_COUNTS
+)
+APPLYDAMAGE_REPROOF_PARENT_AUTHORITY_SHA256 = (
+    "c3531b495084ec73fc2b76a70be3409ca120448ba6831cbfa96a70866e182cba"
+)
+APPLYDAMAGE_REPROOF_RELATIVE = Path(
+    "local-lab/applydamage-primary-ttd-reproof-20260809-v1"
+)
+APPLYDAMAGE_REPROOF_READY_BYTES = 13435
+APPLYDAMAGE_REPROOF_READY_SHA256 = (
+    "a0bd86d8fa72cd12ec635f304ef21fabf5a5b18cd0ea408ad3639a734c39dcea"
+)
+APPLYDAMAGE_REPROOF_AUTHOR_BYTES = 29854
+APPLYDAMAGE_REPROOF_AUTHOR_SHA256 = (
+    "c6268bf93e85f72ee285c4bc7e935dc36d60d036ffdb4cd3dc2fbae4c8e45e79"
+)
+APPLYDAMAGE_REPROOF_PARITY_TEST_SHA256 = (
+    "edd40e88c322573aa9a5b76962e5e63141aebaf89e28ad65dd4740b7f9f15aea"
+)
+APPLYDAMAGE_REPROOF_PARITY_OWNER_SHA256 = (
+    "ed77c351616d34228e093b0659e431f5e4748264d8dd2331c2ebf48916e4fad9"
+)
+APPLYDAMAGE_REPROOF_EXPECTED_GENERATION13_COUNTS = {
+    **APPLYDAMAGE_REPROOF_PARENT_COUNTS,
+    "questions": 15245,
+    "adjudications": 6091,
+}
+TOKENARCHIVE_DISPATCH_PARENT_RELATIVE = (
+    Path("local-lab/re-campaign-incident-recovery-20260808-v1")
+    / "generation-13-applydamage-primary-reproof-v1"
+)
+TOKENARCHIVE_DISPATCH_PARENT_READY_SHA256 = (
+    "8436a5a99145f6910cd147bdb419a0efbfb071fcf16d8f42ec330182a97df63e"
+)
+TOKENARCHIVE_DISPATCH_PARENT_REDUCER_ID = (
+    "988e0660634b6fa59b2018a96545cdf84666e2c219c7a7ac89809c4ef99fac2e"
+)
+TOKENARCHIVE_DISPATCH_PARENT_AUTHORITY_SHA256 = (
+    "772f65ba5210c6d022bff64aefb6523a563ed1b8c3ab53eb87aef8dfe4b1944d"
+)
+TOKENARCHIVE_DISPATCH_PARENT_COUNTS = dict(
+    APPLYDAMAGE_REPROOF_EXPECTED_GENERATION13_COUNTS
+)
+TOKENARCHIVE_DISPATCH_PROOF_RELATIVE = Path(
+    "local-lab/tokenarchive-dispatch-table-reproof-20260809-v1"
+)
+TOKENARCHIVE_DISPATCH_PROOF_READY_BYTES = 11257
+TOKENARCHIVE_DISPATCH_PROOF_READY_SHA256 = (
+    "182d302e45ff42b389b54c85f92576864f9ef9dc30887ee5fc6db86b307faf7f"
+)
+TOKENARCHIVE_DISPATCH_PROOF_AUTHOR_BYTES = 27014
+TOKENARCHIVE_DISPATCH_PROOF_AUTHOR_SHA256 = (
+    "9fa0a7bce82f234991843aa0047d4f33aeeb9342cf9397887b87572eb3c5d55e"
+)
+TOKENARCHIVE_DISPATCH_EXPECTED_GENERATION14_COUNTS = {
+    **TOKENARCHIVE_DISPATCH_PARENT_COUNTS,
+    "adjudications": 6092,
+}
+MISSION_NATIVE_SETPOS_PARENT_RELATIVE = (
+    Path("local-lab/re-campaign-incident-recovery-20260808-v1")
+    / "generation-14-tokenarchive-dispatch-reproof-v1"
+)
+MISSION_NATIVE_SETPOS_PARENT_READY_BYTES = 16930
+MISSION_NATIVE_SETPOS_PARENT_READY_SHA256 = (
+    "9864424def44034a5a5e9a68814ce111076182ad7ea898c9d0040d888c92f32b"
+)
+MISSION_NATIVE_SETPOS_PARENT_REDUCER_ID = (
+    "ec58dc9ec399d719677c5ab98ab0ac2efe60d8138c4f2c829f3e5930a946dec2"
+)
+MISSION_NATIVE_SETPOS_PARENT_AUTHORITY_SHA256 = (
+    "83a5544bdde805762b01983171c336826ea62a8b2dd8be94109bef959560ff72"
+)
+MISSION_NATIVE_SETPOS_PARENT_COUNTS = dict(
+    TOKENARCHIVE_DISPATCH_EXPECTED_GENERATION14_COUNTS
+)
+MISSION_NATIVE_SETPOS_PROOF_RELATIVE = Path(
+    "local-lab/mission-native-setpos-boundary-reproof-20260809-v1"
+)
+MISSION_NATIVE_SETPOS_PROOF_READY_BYTES = 12100
+MISSION_NATIVE_SETPOS_PROOF_READY_SHA256 = (
+    "7fca2c1e960166603ece107c112217ea674e6c2d898622594432817a803a0a7d"
+)
+MISSION_NATIVE_SETPOS_PROOF_AUTHOR_BYTES = 28402
+MISSION_NATIVE_SETPOS_PROOF_AUTHOR_SHA256 = (
+    "97cbc606a0c3a537e1a19234c7f2b3e9a304ed4e75fcff80f5c0e2739f0c43c9"
+)
+MISSION_NATIVE_SETPOS_GHIDRA_RELATIVE = Path(
+    "local-lab/ghidra-mission-native-setpos-live-promotion-20260809-v1"
+)
+MISSION_NATIVE_SETPOS_GHIDRA_SCRATCH_BYTES = 15680
+MISSION_NATIVE_SETPOS_GHIDRA_SCRATCH_SHA256 = (
+    "35bb58e3111124b8ad934d561850fe5e517ebfc80af0c51ba9dcadfb86976491"
+)
+MISSION_NATIVE_SETPOS_GHIDRA_LIVE_BYTES = 6782
+MISSION_NATIVE_SETPOS_GHIDRA_LIVE_SHA256 = (
+    "e64be82f360203fd2864450c5b3bd2d0a46441b9120eb79c8c423c3fe1ca0340"
+)
+MISSION_NATIVE_SETPOS_GHIDRA_OWNER_BYTES = 39516
+MISSION_NATIVE_SETPOS_GHIDRA_OWNER_SHA256 = (
+    "0c2b703bed6ad1060d6297cf8b81af6f9d74f5406b95919598930cc04124d66f"
+)
+MISSION_NATIVE_SETPOS_GHIDRA_TOOL_BYTES = 38069
+MISSION_NATIVE_SETPOS_GHIDRA_TOOL_SHA256 = (
+    "f42d1e29d99e79eee5b9720f1f58a51b04ed50c06b84b8d0900114b0689bf602"
+)
+MISSION_NATIVE_SETPOS_EXPECTED_GENERATION15_COUNTS = {
+    **MISSION_NATIVE_SETPOS_PARENT_COUNTS,
+    "functions": 8125,
+    "residuals": 6118,
+    "questions": 15246,
+    "contracts": 14243,
+    "adjudications": 6094,
+    "supersessions": 588,
+}
+MISSION_NATIVE_SETPOS_RUNTIME_PARENT_RELATIVE = (
+    Path("local-lab/re-campaign-incident-recovery-20260808-v1")
+    / "generation-15-mission-native-setpos-reproof-v2"
+)
+MISSION_NATIVE_SETPOS_RUNTIME_PARENT_READY_BYTES = 23623
+MISSION_NATIVE_SETPOS_RUNTIME_PARENT_READY_SHA256 = (
+    "629b32daf62f7c85e4819a024e0ade705be5548960d81cc320b636afa53e58a7"
+)
+MISSION_NATIVE_SETPOS_RUNTIME_PARENT_REDUCER_ID = (
+    "16ecb8974a7cd229015b2a5e0fd4f445d5f763d79aa2d667462324aa9e4ddfe9"
+)
+MISSION_NATIVE_SETPOS_RUNTIME_PARENT_AUTHORITY_BYTES = 9769
+MISSION_NATIVE_SETPOS_RUNTIME_PARENT_AUTHORITY_SHA256 = (
+    "9fc1bf4eadd3ba654b80397c540515dba47022ce5905215851737673dc977ceb"
+)
+MISSION_NATIVE_SETPOS_RUNTIME_PARENT_AUTHORITY_RELATIVE = (
+    Path("local-lab/re-campaign-incident-recovery-20260808-v1")
+    / "generation-15-mission-native-setpos-reproof-authority.ready.json"
+)
+MISSION_NATIVE_SETPOS_RUNTIME_PARENT_COUNTS = dict(
+    MISSION_NATIVE_SETPOS_EXPECTED_GENERATION15_COUNTS
+)
+MISSION_NATIVE_SETPOS_RUNTIME_PROOF_RELATIVE = Path(
+    "local-lab/mission-native-setpos-runtime-20260809-v1"
+)
+MISSION_NATIVE_SETPOS_RUNTIME_PROOF_READY_BYTES = 25125
+MISSION_NATIVE_SETPOS_RUNTIME_PROOF_READY_SHA256 = (
+    "40826e7e204bac8f9db1e64f7efb59e501f73401c58a48f051ac36244e7f22e0"
+)
+MISSION_NATIVE_SETPOS_RUNTIME_PROOF_AUTHOR_BYTES = 32251
+MISSION_NATIVE_SETPOS_RUNTIME_PROOF_AUTHOR_SHA256 = (
+    "8ee653ff31c42c011e5d25c49ec7acb0dd1c61b8d86b5f052f813624f44a2680"
+)
+MISSION_NATIVE_SETPOS_RUNTIME_PARITY_OWNER_BYTES = 54331
+MISSION_NATIVE_SETPOS_RUNTIME_PARITY_OWNER_SHA256 = (
+    "3ff10d190e286ae7a3d9ff29c1d91578e64ace45c3f94af879dace82c100743b"
+)
+MISSION_NATIVE_SETPOS_RUNTIME_PARITY_VALUE_BYTES = 19296
+MISSION_NATIVE_SETPOS_RUNTIME_PARITY_VALUE_SHA256 = (
+    "8318c0b785fe95d0a824c656f4b722e02083c830d6a924a8b72439ba4987ddb3"
+)
+MISSION_NATIVE_SETPOS_RUNTIME_PARITY_TEST_BYTES = 26448
+MISSION_NATIVE_SETPOS_RUNTIME_PARITY_TEST_SHA256 = (
+    "ba96fae772bd1ae54e47057515fe5c0b4181c2af1802b82d70406ad8c9ad09c8"
+)
+MISSION_NATIVE_SETPOS_RUNTIME_EXPECTED_GENERATION16_COUNTS = {
+    **MISSION_NATIVE_SETPOS_RUNTIME_PARENT_COUNTS,
+    "questions": 15249,
+    "adjudications": 6095,
+}
+LOCKHIT_BOUNDED_PARENT_RELATIVE = (
+    Path("local-lab/re-campaign-incident-recovery-20260808-v1")
+    / "generation-16-mission-native-setpos-runtime-v1"
+)
+LOCKHIT_BOUNDED_PARENT_READY_BYTES = 20363
+LOCKHIT_BOUNDED_PARENT_READY_SHA256 = (
+    "97493a76de550f5ae35074e285e39a561d9a323219741a42ac2ff25643cdc880"
+)
+LOCKHIT_BOUNDED_PARENT_REDUCER_ID = (
+    "453fdb4df7233c6d3f8be04a6ba67b3762982bc4513ca4990b46f01141d55db0"
+)
+LOCKHIT_BOUNDED_PARENT_AUTHORITY_RELATIVE = (
+    Path("local-lab/re-campaign-incident-recovery-20260808-v1")
+    / "generation-16-mission-native-setpos-runtime-authority.ready.json"
+)
+LOCKHIT_BOUNDED_PARENT_AUTHORITY_BYTES = 11420
+LOCKHIT_BOUNDED_PARENT_AUTHORITY_SHA256 = (
+    "1d04fef865c510cacd4c545999367d88c214b0ffe5a7bc4eac68e50d185a6981"
+)
+LOCKHIT_BOUNDED_PARENT_COUNTS = dict(
+    MISSION_NATIVE_SETPOS_RUNTIME_EXPECTED_GENERATION16_COUNTS
+)
+LOCKHIT_BOUNDED_PROOF_RELATIVE = Path(
+    "local-lab/lockhit-bounded-contract-reproof-20260809-v1"
+)
+LOCKHIT_BOUNDED_PROOF_READY_BYTES = 2693
+LOCKHIT_BOUNDED_PROOF_READY_SHA256 = (
+    "aeb60bd5565872579fd58a2a557a1b466ca81a89e06dcf0a2cce632fa7448739"
+)
+LOCKHIT_BOUNDED_PROOF_OBSERVATION_BYTES = 22013
+LOCKHIT_BOUNDED_PROOF_OBSERVATION_SHA256 = (
+    "a9ffb3babd37eb8a15ccc56f9a710219aaf002fc741c3980d621774f707a8a8b"
+)
+LOCKHIT_BOUNDED_PROOF_AUTHOR_BYTES = 55073
+LOCKHIT_BOUNDED_PROOF_AUTHOR_SHA256 = (
+    "84cb66a4fc318fec37ad2f1e0645982a7cc29131019bc0d333028b484d5509b7"
+)
+LOCKHIT_BOUNDED_EXPECTED_GENERATION17_COUNTS = {
+    **LOCKHIT_BOUNDED_PARENT_COUNTS,
+    "questions": 15253,
+    "adjudications": 6096,
+}
 ATOMIC14_PARENT_READY_SHA256 = (
     "2160bf4963c07742cb4dd1aafb45e5d7caff74222381e01570d93fc9aafdde99"
 )
@@ -597,6 +885,7 @@ def _reducer_sources() -> list[tuple[str, str, Path]]:
         if (_FROZEN_LOCAL_LAB / "aya_roundtrip.py").is_file()
         else REPO_ROOT / "local-lab"
     )
+    owner_root = Path(__file__).resolve().parents[1]
     return [
         ("campaign", "_reducer/tools/re_campaign.py", Path(__file__).resolve()),
         (
@@ -618,6 +907,74 @@ def _reducer_sources() -> list[tuple[str, str, Path]]:
             "gen73-reseal",
             "_reducer/tools/re_gen73_reseal.py",
             Path(gen73_reseal.__file__).resolve(),
+        ),
+        (
+            "level521-damage-writes",
+            "_reducer/tools/re_level521_damage_writes.py",
+            Path(level521_writes.__file__).resolve(),
+        ),
+        (
+            "applydamage-primary-reproof",
+            "_reducer/tools/re_applydamage_primary_reproof.py",
+            Path(applydamage_reproof.__file__).resolve(),
+        ),
+        (
+            "tokenarchive-dispatch-reproof",
+            "_reducer/tools/re_tokenarchive_dispatch_reproof.py",
+            Path(tokenarchive_reproof.__file__).resolve(),
+        ),
+        (
+            "mission-native-setpos-reproof",
+            "_reducer/tools/re_mission_native_setpos_reproof.py",
+            Path(mission_setpos_reproof.__file__).resolve(),
+        ),
+        (
+            "mission-native-setpos-runtime-proof",
+            "_reducer/tools/re_mission_native_setpos_runtime.py",
+            Path(mission_setpos_runtime.__file__).resolve(),
+        ),
+        (
+            "lockhit-bounded-contract-proof",
+            "_reducer/tools/re_lockhit_bounded_contract.py",
+            Path(lockhit_contract.__file__).resolve(),
+        ),
+        (
+            "mission-native-setpos-ghidra-authority",
+            "_reducer/tools/ghidra_mission_native_setpos_promotion_authority.py",
+            Path(__file__).resolve().with_name(
+                "ghidra_mission_native_setpos_promotion_authority.py"
+            ),
+        ),
+        (
+            "mission-native-setpos-ghidra-tool",
+            "_reducer/tools/GhidraApplyMissionNativeSetPos.java",
+            Path(__file__).resolve().with_name("GhidraApplyMissionNativeSetPos.java"),
+        ),
+        (
+            "applydamage-parity-owner",
+            "_reducer/rebuild/OnslaughtRebuild.Core/Level100Destruction.cs",
+            owner_root / "rebuild/OnslaughtRebuild.Core/Level100Destruction.cs",
+        ),
+        (
+            "applydamage-parity-test",
+            "_reducer/rebuild/OnslaughtRebuild.Core.Tests/Level100DestructionContactTests.cs",
+            owner_root
+            / "rebuild/OnslaughtRebuild.Core.Tests/Level100DestructionContactTests.cs",
+        ),
+        (
+            "mission-native-setpos-parity-owner",
+            "_reducer/rebuild/OnslaughtRebuild.Core/Level100ActorScriptRuntime.cs",
+            owner_root / "rebuild/OnslaughtRebuild.Core/Level100ActorScriptRuntime.cs",
+        ),
+        (
+            "mission-native-setpos-parity-value",
+            "_reducer/rebuild/OnslaughtRebuild.Core/Level100MissionProgram.cs",
+            owner_root / "rebuild/OnslaughtRebuild.Core/Level100MissionProgram.cs",
+        ),
+        (
+            "mission-native-setpos-parity-test",
+            "_reducer/rebuild/OnslaughtRebuild.Core.Tests/Level100MissionTests.cs",
+            owner_root / "rebuild/OnslaughtRebuild.Core.Tests/Level100MissionTests.cs",
         ),
         (
             "probe-selector",
@@ -1833,12 +2190,379 @@ def _validate_campaign_relations(
     partition_context = _partition_relation_context(receipt)
     current_advance = receipt.get("advance")
     reseal_context = None
+    tokenarchive_context = None
+    setpos_context = None
     if _integer(receipt.get("generation"), -1) == 11 or (
         isinstance(current_advance, dict)
         and current_advance.get("kind") == GEN73_RESEAL_RECOVERY_ADVANCE_KIND
     ):
         reseal_context = _validate_gen73_reseal_advance_relation(
             rows, receipt, current_advance, campaign_root=campaign_root
+        )
+    generation12_recovery_lineage = bool(
+        _integer(receipt.get("generation"), -1) == 12
+        and partition_context is not None
+        and partition_context.get("advanceKind")
+        == GHIDRA_PARTITION_RECOVERY_ADVANCE_KIND
+    )
+    if generation12_recovery_lineage and (
+        not isinstance(current_advance, dict)
+        or current_advance.get("kind") != LEVEL521_DAMAGE_WRITES_ADVANCE_KIND
+        or current_advance.get("schema") != LEVEL521_DAMAGE_WRITES_ADVANCE_SCHEMA
+        or current_advance.get("branchId") != GHIDRA_PARTITION_RECOVERY_LINEAGE_ID
+    ):
+        raise CampaignError(
+            "Generation 11 recovery child is not the exact Level 521 Damage/Hit advance"
+        )
+    if (
+        isinstance(current_advance, dict)
+        and current_advance.get("kind") == LEVEL521_DAMAGE_WRITES_ADVANCE_KIND
+        and (
+            partition_context is None
+            or partition_context.get("advanceKind")
+            != GHIDRA_PARTITION_RECOVERY_ADVANCE_KIND
+        )
+    ):
+        raise CampaignError(
+            "Level 521 Damage/Hit advance lacks exact recovery partition ancestry"
+        )
+    if generation12_recovery_lineage or (
+        isinstance(current_advance, dict)
+        and current_advance.get("kind") == LEVEL521_DAMAGE_WRITES_ADVANCE_KIND
+    ):
+        _validate_level521_damage_writes_advance_relation(
+            rows,
+            receipt,
+            current_advance,
+            campaign_root=campaign_root,
+        )
+        # Gen12 inherits all 6,082 narrowly nonsemantic residual adjudications
+        # and all canonical supersessions from Gen11.  Validate their exact
+        # canonical owner, then carry only that relation context forward.
+        gen11_root = (REPO_ROOT / LEVEL521_DAMAGE_WRITES_PARENT_RELATIVE).resolve()
+        gen11_receipt = _runtime_json(
+            gen11_root / "campaign.ready.json",
+            "Level 521 Damage/Hit inherited Gen11 reseal",
+        )
+        reseal_context = _validate_gen73_reseal_advance_relation(
+            _campaign_rows_from_root(gen11_root),
+            gen11_receipt,
+            gen11_receipt.get("advance"),
+            campaign_root=None,
+        )
+    generation13_recovery_lineage = bool(
+        _integer(receipt.get("generation"), -1) == 13
+        and partition_context is not None
+        and partition_context.get("advanceKind")
+        == GHIDRA_PARTITION_RECOVERY_ADVANCE_KIND
+    )
+    if generation13_recovery_lineage and (
+        not isinstance(current_advance, dict)
+        or current_advance.get("kind") != APPLYDAMAGE_REPROOF_ADVANCE_KIND
+        or current_advance.get("schema") != APPLYDAMAGE_REPROOF_ADVANCE_SCHEMA
+        or current_advance.get("branchId") != GHIDRA_PARTITION_RECOVERY_LINEAGE_ID
+    ):
+        raise CampaignError(
+            "Generation 12 recovery child is not the exact ApplyDamage reproof advance"
+        )
+    if (
+        isinstance(current_advance, dict)
+        and current_advance.get("kind") == APPLYDAMAGE_REPROOF_ADVANCE_KIND
+        and (
+            partition_context is None
+            or partition_context.get("advanceKind")
+            != GHIDRA_PARTITION_RECOVERY_ADVANCE_KIND
+        )
+    ):
+        raise CampaignError("ApplyDamage reproof advance lacks exact recovery ancestry")
+    if generation13_recovery_lineage or (
+        isinstance(current_advance, dict)
+        and current_advance.get("kind") == APPLYDAMAGE_REPROOF_ADVANCE_KIND
+    ):
+        _validate_applydamage_reproof_advance_relation(
+            rows,
+            receipt,
+            current_advance,
+            campaign_root=campaign_root,
+        )
+        gen11_root = (REPO_ROOT / LEVEL521_DAMAGE_WRITES_PARENT_RELATIVE).resolve()
+        gen11_receipt = _runtime_json(
+            gen11_root / "campaign.ready.json",
+            "ApplyDamage reproof inherited Gen11 reseal",
+        )
+        reseal_context = _validate_gen73_reseal_advance_relation(
+            _campaign_rows_from_root(gen11_root),
+            gen11_receipt,
+            gen11_receipt.get("advance"),
+            campaign_root=None,
+        )
+    generation14_recovery_lineage = bool(
+        _integer(receipt.get("generation"), -1) == 14
+        and partition_context is not None
+        and partition_context.get("advanceKind")
+        == GHIDRA_PARTITION_RECOVERY_ADVANCE_KIND
+    )
+    if generation14_recovery_lineage and (
+        not isinstance(current_advance, dict)
+        or current_advance.get("kind") != TOKENARCHIVE_DISPATCH_ADVANCE_KIND
+        or current_advance.get("schema") != TOKENARCHIVE_DISPATCH_ADVANCE_SCHEMA
+        or current_advance.get("branchId") != GHIDRA_PARTITION_RECOVERY_LINEAGE_ID
+    ):
+        raise CampaignError(
+            "Generation 13 recovery child is not the exact TokenArchive dispatch reproof advance"
+        )
+    if (
+        isinstance(current_advance, dict)
+        and current_advance.get("kind") == TOKENARCHIVE_DISPATCH_ADVANCE_KIND
+        and (
+            partition_context is None
+            or partition_context.get("advanceKind")
+            != GHIDRA_PARTITION_RECOVERY_ADVANCE_KIND
+        )
+    ):
+        raise CampaignError(
+            "TokenArchive dispatch reproof advance lacks exact recovery ancestry"
+        )
+    if generation14_recovery_lineage or (
+        isinstance(current_advance, dict)
+        and current_advance.get("kind") == TOKENARCHIVE_DISPATCH_ADVANCE_KIND
+    ):
+        tokenarchive_context = _validate_tokenarchive_dispatch_advance_relation(
+            rows,
+            receipt,
+            current_advance,
+            campaign_root=campaign_root,
+        )
+        gen11_root = (REPO_ROOT / LEVEL521_DAMAGE_WRITES_PARENT_RELATIVE).resolve()
+        gen11_receipt = _runtime_json(
+            gen11_root / "campaign.ready.json",
+            "TokenArchive dispatch inherited Gen11 reseal",
+        )
+        reseal_context = _validate_gen73_reseal_advance_relation(
+            _campaign_rows_from_root(gen11_root),
+            gen11_receipt,
+            gen11_receipt.get("advance"),
+            campaign_root=None,
+        )
+    generation15_recovery_lineage = bool(
+        _integer(receipt.get("generation"), -1) == 15
+        and partition_context is not None
+        and partition_context.get("advanceKind")
+        == GHIDRA_PARTITION_RECOVERY_ADVANCE_KIND
+    )
+    if generation15_recovery_lineage and (
+        not isinstance(current_advance, dict)
+        or current_advance.get("kind") != MISSION_NATIVE_SETPOS_ADVANCE_KIND
+        or current_advance.get("schema") != MISSION_NATIVE_SETPOS_ADVANCE_SCHEMA
+        or current_advance.get("branchId") != GHIDRA_PARTITION_RECOVERY_LINEAGE_ID
+    ):
+        raise CampaignError(
+            "Generation 14 recovery child is not the exact Mission-native SetPos advance"
+        )
+    if (
+        isinstance(current_advance, dict)
+        and current_advance.get("kind") == MISSION_NATIVE_SETPOS_ADVANCE_KIND
+        and (
+            partition_context is None
+            or partition_context.get("advanceKind")
+            != GHIDRA_PARTITION_RECOVERY_ADVANCE_KIND
+        )
+    ):
+        raise CampaignError(
+            "Mission-native SetPos advance lacks exact recovery ancestry"
+        )
+    if generation15_recovery_lineage or (
+        isinstance(current_advance, dict)
+        and current_advance.get("kind") == MISSION_NATIVE_SETPOS_ADVANCE_KIND
+    ):
+        setpos_context = _validate_mission_native_setpos_advance_relation(
+            rows,
+            receipt,
+            current_advance,
+            campaign_root=campaign_root,
+        )
+        gen14_root = (REPO_ROOT / MISSION_NATIVE_SETPOS_PARENT_RELATIVE).resolve()
+        gen14_receipt = _runtime_json(
+            gen14_root / "campaign.ready.json",
+            "Mission-native SetPos inherited Gen14 TokenArchive advance",
+        )
+        tokenarchive_context = _validate_tokenarchive_dispatch_advance_relation(
+            _campaign_rows_from_root(gen14_root),
+            gen14_receipt,
+            gen14_receipt.get("advance"),
+            campaign_root=None,
+        )
+        gen11_root = (REPO_ROOT / LEVEL521_DAMAGE_WRITES_PARENT_RELATIVE).resolve()
+        gen11_receipt = _runtime_json(
+            gen11_root / "campaign.ready.json",
+            "Mission-native SetPos inherited Gen11 reseal",
+        )
+        reseal_context = _validate_gen73_reseal_advance_relation(
+            _campaign_rows_from_root(gen11_root),
+            gen11_receipt,
+            gen11_receipt.get("advance"),
+            campaign_root=None,
+        )
+    generation16_recovery_lineage = bool(
+        _integer(receipt.get("generation"), -1) == 16
+        and partition_context is not None
+        and partition_context.get("advanceKind")
+        == GHIDRA_PARTITION_RECOVERY_ADVANCE_KIND
+    )
+    if generation16_recovery_lineage and (
+        not isinstance(current_advance, dict)
+        or current_advance.get("kind")
+        != MISSION_NATIVE_SETPOS_RUNTIME_ADVANCE_KIND
+        or current_advance.get("schema")
+        != MISSION_NATIVE_SETPOS_RUNTIME_ADVANCE_SCHEMA
+        or current_advance.get("branchId")
+        != GHIDRA_PARTITION_RECOVERY_LINEAGE_ID
+    ):
+        raise CampaignError(
+            "Generation 15 recovery child is not the exact Mission-native SetPos runtime advance"
+        )
+    if (
+        isinstance(current_advance, dict)
+        and current_advance.get("kind")
+        == MISSION_NATIVE_SETPOS_RUNTIME_ADVANCE_KIND
+        and (
+            partition_context is None
+            or partition_context.get("advanceKind")
+            != GHIDRA_PARTITION_RECOVERY_ADVANCE_KIND
+        )
+    ):
+        raise CampaignError(
+            "Mission-native SetPos runtime advance lacks exact recovery ancestry"
+        )
+    if generation16_recovery_lineage or (
+        isinstance(current_advance, dict)
+        and current_advance.get("kind")
+        == MISSION_NATIVE_SETPOS_RUNTIME_ADVANCE_KIND
+    ):
+        _validate_mission_native_setpos_runtime_advance_relation(
+            rows,
+            receipt,
+            current_advance,
+            campaign_root=campaign_root,
+        )
+        gen15_root = (
+            REPO_ROOT / MISSION_NATIVE_SETPOS_RUNTIME_PARENT_RELATIVE
+        ).resolve()
+        gen15_receipt = _runtime_json(
+            gen15_root / "campaign.ready.json",
+            "Mission-native SetPos runtime inherited Gen15 advance",
+        )
+        setpos_context = _validate_mission_native_setpos_advance_relation(
+            _campaign_rows_from_root(gen15_root),
+            gen15_receipt,
+            gen15_receipt.get("advance"),
+            campaign_root=None,
+        )
+        gen14_root = (REPO_ROOT / MISSION_NATIVE_SETPOS_PARENT_RELATIVE).resolve()
+        gen14_receipt = _runtime_json(
+            gen14_root / "campaign.ready.json",
+            "Mission-native SetPos runtime inherited Gen14 TokenArchive advance",
+        )
+        tokenarchive_context = _validate_tokenarchive_dispatch_advance_relation(
+            _campaign_rows_from_root(gen14_root),
+            gen14_receipt,
+            gen14_receipt.get("advance"),
+            campaign_root=None,
+        )
+        gen11_root = (REPO_ROOT / LEVEL521_DAMAGE_WRITES_PARENT_RELATIVE).resolve()
+        gen11_receipt = _runtime_json(
+            gen11_root / "campaign.ready.json",
+            "Mission-native SetPos runtime inherited Gen11 reseal",
+        )
+        reseal_context = _validate_gen73_reseal_advance_relation(
+            _campaign_rows_from_root(gen11_root),
+            gen11_receipt,
+            gen11_receipt.get("advance"),
+            campaign_root=None,
+        )
+    generation17_recovery_lineage = bool(
+        _integer(receipt.get("generation"), -1) == 17
+        and partition_context is not None
+        and partition_context.get("advanceKind")
+        == GHIDRA_PARTITION_RECOVERY_ADVANCE_KIND
+    )
+    if generation17_recovery_lineage and (
+        not isinstance(current_advance, dict)
+        or current_advance.get("kind") != LOCKHIT_BOUNDED_ADVANCE_KIND
+        or current_advance.get("schema") != LOCKHIT_BOUNDED_ADVANCE_SCHEMA
+        or current_advance.get("branchId")
+        != GHIDRA_PARTITION_RECOVERY_LINEAGE_ID
+    ):
+        raise CampaignError(
+            "Generation 16 recovery child is not the exact LockHit bounded-contract advance"
+        )
+    if (
+        isinstance(current_advance, dict)
+        and current_advance.get("kind") == LOCKHIT_BOUNDED_ADVANCE_KIND
+        and (
+            partition_context is None
+            or partition_context.get("advanceKind")
+            != GHIDRA_PARTITION_RECOVERY_ADVANCE_KIND
+        )
+    ):
+        raise CampaignError(
+            "LockHit bounded-contract advance lacks exact recovery ancestry"
+        )
+    if generation17_recovery_lineage or (
+        isinstance(current_advance, dict)
+        and current_advance.get("kind") == LOCKHIT_BOUNDED_ADVANCE_KIND
+    ):
+        _validate_lockhit_bounded_advance_relation(
+            rows,
+            receipt,
+            current_advance,
+            campaign_root=campaign_root,
+        )
+        gen16_root = (REPO_ROOT / LOCKHIT_BOUNDED_PARENT_RELATIVE).resolve()
+        gen16_receipt = _runtime_json(
+            gen16_root / "campaign.ready.json",
+            "LockHit bounded-contract inherited Gen16 advance",
+        )
+        _validate_mission_native_setpos_runtime_advance_relation(
+            _campaign_rows_from_root(gen16_root),
+            gen16_receipt,
+            gen16_receipt.get("advance"),
+            campaign_root=None,
+        )
+        gen15_root = (
+            REPO_ROOT / MISSION_NATIVE_SETPOS_RUNTIME_PARENT_RELATIVE
+        ).resolve()
+        gen15_receipt = _runtime_json(
+            gen15_root / "campaign.ready.json",
+            "LockHit bounded-contract inherited Gen15 advance",
+        )
+        setpos_context = _validate_mission_native_setpos_advance_relation(
+            _campaign_rows_from_root(gen15_root),
+            gen15_receipt,
+            gen15_receipt.get("advance"),
+            campaign_root=None,
+        )
+        gen14_root = (REPO_ROOT / MISSION_NATIVE_SETPOS_PARENT_RELATIVE).resolve()
+        gen14_receipt = _runtime_json(
+            gen14_root / "campaign.ready.json",
+            "LockHit bounded-contract inherited Gen14 TokenArchive advance",
+        )
+        tokenarchive_context = _validate_tokenarchive_dispatch_advance_relation(
+            _campaign_rows_from_root(gen14_root),
+            gen14_receipt,
+            gen14_receipt.get("advance"),
+            campaign_root=None,
+        )
+        gen11_root = (REPO_ROOT / LEVEL521_DAMAGE_WRITES_PARENT_RELATIVE).resolve()
+        gen11_receipt = _runtime_json(
+            gen11_root / "campaign.ready.json",
+            "LockHit bounded-contract inherited Gen11 reseal",
+        )
+        reseal_context = _validate_gen73_reseal_advance_relation(
+            _campaign_rows_from_root(gen11_root),
+            gen11_receipt,
+            gen11_receipt.get("advance"),
+            campaign_root=None,
         )
     generation9_recovery_lineage = bool(
         _integer(receipt.get("generation"), -1) == 9
@@ -2047,9 +2771,23 @@ def _validate_campaign_relations(
             reseal_context is not None
             and adjudication_id in reseal_context["adjudicationIds"]
         )
+        tokenarchive_residual_adjudication = bool(
+            tokenarchive_context is not None
+            and adjudication_id in tokenarchive_context["adjudicationIds"]
+        )
+        setpos_partition_adjudication = bool(
+            setpos_context is not None
+            and adjudication_id == setpos_context["partitionAdjudicationId"]
+        )
+        setpos_nonsemantic_adjudication = bool(
+            setpos_context is not None
+            and adjudication_id in setpos_context["nonsemanticAdjudicationIds"]
+        )
         contract = (
             partition_context["retiredContract"]
             if partition_adjudication
+            else setpos_context["retiredContract"]
+            if setpos_partition_adjudication
             else contract_by_id.get(str(adjudication.get("baseContractId", "")))
         )
         if contract is None or adjudication.get("entityKey") != contract.get("entityKey"):
@@ -2068,7 +2806,12 @@ def _validate_campaign_relations(
         semantic_promotion = _bool(adjudication.get("semanticPromotionApplied"))
         semantic_flag_valid = (
             verdict == "SURVIVED" and not semantic_promotion
-            if partition_adjudication or reseal_residual_adjudication
+            if (
+                partition_adjudication
+                or reseal_residual_adjudication
+                or tokenarchive_residual_adjudication
+                or setpos_nonsemantic_adjudication
+            )
             else semantic_promotion == (verdict == "SURVIVED")
         )
         if not semantic_flag_valid:
@@ -2307,6 +3050,16 @@ def _validate_campaign_relations(
                     f"function {new} evidenceStates",
                 )
             )
+        elif kind == MISSION_NATIVE_SETPOS_ADVANCE_KIND:
+            expected_setpos_supersession = (
+                setpos_context["supersessionRows"].get(supersession_id)
+                if setpos_context is not None
+                else None
+            )
+            kind_valid = bool(
+                expected_setpos_supersession is not None
+                and supersession == expected_setpos_supersession
+            )
         elif kind in GHIDRA_PARTITION_ADVANCE_KINDS:
             function = function_by_entity.get(new)
             residual = residual_by_entity.get(new)
@@ -2433,7 +3186,11 @@ def _validate_campaign_relations(
     for old, grouped in supersessions_by_old.items():
         kinds = {str(row.get("kind", "")) for row in grouped}
         if len(grouped) > 1 and not (
-            len(kinds) == 1 and kinds.issubset(GHIDRA_PARTITION_ADVANCE_KINDS)
+            len(kinds) == 1
+            and (
+                kinds.issubset(GHIDRA_PARTITION_ADVANCE_KINDS)
+                or kinds == {MISSION_NATIVE_SETPOS_ADVANCE_KIND}
+            )
         ):
             raise CampaignError(
                 f"campaign supersessions repeat an old entity outside exact partition: {old}"
@@ -3011,6 +3768,526 @@ def _verify_gen73_reseal_parent_campaign(root: Path) -> dict:
         raise CampaignError("Gen73 reseal parent rows disagree with READY")
     verified = dict(receipt)
     verified["_carryBridge"] = "EXACT_FROZEN_GENERATION10R_REPLAY"
+    return verified
+
+
+def _verify_level521_damage_writes_parent_campaign(root: Path) -> dict:
+    """Require exact canonical Gen11 and replay it through its frozen owner."""
+
+    raw = Path(os.path.abspath(root))
+    expected = (REPO_ROOT / LEVEL521_DAMAGE_WRITES_PARENT_RELATIVE).resolve()
+    try:
+        resolved = ghidra_backup.resolve_plain_path(
+            raw, "Level 521 Damage/Hit canonical Gen11 parent", strict=True
+        )
+    except (ghidra_backup.BackupError, OSError) as exc:
+        raise CampaignError(
+            f"Level 521 Damage/Hit parent path is not plain: {exc}"
+        ) from exc
+    if resolved != expected:
+        raise CampaignError("Level 521 Damage/Hit parent is not exact canonical Gen11")
+    ready_path = resolved / "campaign.ready.json"
+    try:
+        plain_ready = ghidra_backup.resolve_plain_path(
+            ready_path, "Level 521 Damage/Hit parent READY", strict=True
+        )
+    except (ghidra_backup.BackupError, OSError) as exc:
+        raise CampaignError(
+            f"Level 521 Damage/Hit parent READY is not plain: {exc}"
+        ) from exc
+    if (
+        plain_ready.stat().st_nlink != 1
+        or coverage.sha256_of(plain_ready)
+        != LEVEL521_DAMAGE_WRITES_PARENT_READY_SHA256
+    ):
+        raise CampaignError(
+            "Level 521 Damage/Hit parent READY is absent, linked, or changed"
+        )
+    receipt = _runtime_json(plain_ready, "Level 521 Damage/Hit canonical Gen11 parent")
+    reducer = _runtime_mapping(
+        receipt.get("reducer"), "Level 521 Damage/Hit parent reducer"
+    )
+    advance = _runtime_mapping(
+        receipt.get("advance"), "Level 521 Damage/Hit parent advance"
+    )
+    if (
+        receipt.get("schema") != SCHEMA
+        or _integer(receipt.get("generation"), -1) != 11
+        or receipt.get("counts") != LEVEL521_DAMAGE_WRITES_PARENT_COUNTS
+        or reducer.get("id") != LEVEL521_DAMAGE_WRITES_PARENT_REDUCER_ID
+        or advance.get("kind") != GEN73_RESEAL_RECOVERY_ADVANCE_KIND
+        or advance.get("schema") != GEN73_RESEAL_RECOVERY_ADVANCE_SCHEMA
+        or advance.get("branchId") != GHIDRA_PARTITION_RECOVERY_LINEAGE_ID
+    ):
+        raise CampaignError("Level 521 Damage/Hit canonical Gen11 identity is unsupported")
+    try:
+        completed = _run_frozen_campaign_verifier(
+            resolved,
+            replay=True,
+            timeout=900,
+            expected_ready_sha256=LEVEL521_DAMAGE_WRITES_PARENT_READY_SHA256,
+            expected_reducer_id=LEVEL521_DAMAGE_WRITES_PARENT_REDUCER_ID,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise CampaignError("Level 521 Damage/Hit parent frozen verifier timed out") from exc
+    if completed.returncode != 0 or "CAMPAIGN_VERIFIED" not in completed.stdout:
+        raise CampaignError(
+            "Level 521 Damage/Hit parent failed its frozen verifier: "
+            f"exit={completed.returncode} stderr={completed.stderr.strip()!r}"
+        )
+    rows = _campaign_rows_from_root(resolved)
+    if {name: len(value) for name, value in rows.items()} != receipt.get("counts"):
+        raise CampaignError("Level 521 Damage/Hit parent rows disagree with READY")
+    verified = dict(receipt)
+    verified["_carryBridge"] = "EXACT_FROZEN_GENERATION11_REPLAY"
+    return verified
+
+
+def _verify_applydamage_reproof_parent_campaign(root: Path) -> dict:
+    """Require exact canonical Gen12 and replay it through its frozen owner."""
+
+    raw = Path(os.path.abspath(root))
+    expected = (REPO_ROOT / APPLYDAMAGE_REPROOF_PARENT_RELATIVE).resolve()
+    try:
+        resolved = ghidra_backup.resolve_plain_path(
+            raw, "ApplyDamage reproof canonical Gen12 parent", strict=True
+        )
+    except (ghidra_backup.BackupError, OSError) as exc:
+        raise CampaignError(f"ApplyDamage reproof parent path is not plain: {exc}") from exc
+    if resolved != expected:
+        raise CampaignError("ApplyDamage reproof parent is not exact canonical Gen12")
+    ready_path = resolved / "campaign.ready.json"
+    try:
+        plain_ready = ghidra_backup.resolve_plain_path(
+            ready_path, "ApplyDamage reproof parent READY", strict=True
+        )
+    except (ghidra_backup.BackupError, OSError) as exc:
+        raise CampaignError(f"ApplyDamage reproof parent READY is not plain: {exc}") from exc
+    if (
+        plain_ready.stat().st_nlink != 1
+        or coverage.sha256_of(plain_ready) != APPLYDAMAGE_REPROOF_PARENT_READY_SHA256
+    ):
+        raise CampaignError("ApplyDamage reproof parent READY is absent, linked, or changed")
+    receipt = _runtime_json(plain_ready, "ApplyDamage reproof canonical Gen12 parent")
+    reducer = _runtime_mapping(receipt.get("reducer"), "ApplyDamage reproof parent reducer")
+    advance = _runtime_mapping(receipt.get("advance"), "ApplyDamage reproof parent advance")
+    if (
+        receipt.get("schema") != SCHEMA
+        or _integer(receipt.get("generation"), -1) != 12
+        or receipt.get("counts") != APPLYDAMAGE_REPROOF_PARENT_COUNTS
+        or reducer.get("id") != APPLYDAMAGE_REPROOF_PARENT_REDUCER_ID
+        or advance.get("kind") != LEVEL521_DAMAGE_WRITES_ADVANCE_KIND
+        or advance.get("schema") != LEVEL521_DAMAGE_WRITES_ADVANCE_SCHEMA
+        or advance.get("branchId") != GHIDRA_PARTITION_RECOVERY_LINEAGE_ID
+    ):
+        raise CampaignError("ApplyDamage reproof canonical Gen12 identity is unsupported")
+    try:
+        completed = _run_frozen_campaign_verifier(
+            resolved,
+            replay=True,
+            timeout=900,
+            expected_ready_sha256=APPLYDAMAGE_REPROOF_PARENT_READY_SHA256,
+            expected_reducer_id=APPLYDAMAGE_REPROOF_PARENT_REDUCER_ID,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise CampaignError("ApplyDamage reproof parent frozen verifier timed out") from exc
+    if completed.returncode != 0 or "CAMPAIGN_VERIFIED" not in completed.stdout:
+        raise CampaignError(
+            "ApplyDamage reproof parent failed its frozen verifier: "
+            f"exit={completed.returncode} stderr={completed.stderr.strip()!r}"
+        )
+    rows = _campaign_rows_from_root(resolved)
+    if {name: len(value) for name, value in rows.items()} != receipt.get("counts"):
+        raise CampaignError("ApplyDamage reproof parent rows disagree with READY")
+    verified = dict(receipt)
+    verified["_carryBridge"] = "EXACT_FROZEN_GENERATION12_REPLAY"
+    return verified
+
+
+def _verify_tokenarchive_dispatch_parent_campaign(root: Path) -> dict:
+    """Require exact canonical Gen13 and replay it through its frozen owner."""
+
+    raw = Path(os.path.abspath(root))
+    expected = (REPO_ROOT / TOKENARCHIVE_DISPATCH_PARENT_RELATIVE).resolve()
+    try:
+        resolved = ghidra_backup.resolve_plain_path(
+            raw, "TokenArchive dispatch canonical Gen13 parent", strict=True
+        )
+    except (ghidra_backup.BackupError, OSError) as exc:
+        raise CampaignError(
+            f"TokenArchive dispatch parent path is not plain: {exc}"
+        ) from exc
+    if resolved != expected:
+        raise CampaignError(
+            "TokenArchive dispatch parent is not exact canonical Gen13"
+        )
+    ready_path = resolved / "campaign.ready.json"
+    try:
+        plain_ready = ghidra_backup.resolve_plain_path(
+            ready_path, "TokenArchive dispatch parent READY", strict=True
+        )
+    except (ghidra_backup.BackupError, OSError) as exc:
+        raise CampaignError(
+            f"TokenArchive dispatch parent READY is not plain: {exc}"
+        ) from exc
+    if (
+        plain_ready.stat().st_nlink != 1
+        or plain_ready.stat().st_size != 17_270
+        or coverage.sha256_of(plain_ready)
+        != TOKENARCHIVE_DISPATCH_PARENT_READY_SHA256
+    ):
+        raise CampaignError(
+            "TokenArchive dispatch parent READY is absent, linked, or changed"
+        )
+    receipt = _runtime_json(
+        plain_ready, "TokenArchive dispatch canonical Gen13 parent"
+    )
+    reducer = _runtime_mapping(
+        receipt.get("reducer"), "TokenArchive dispatch parent reducer"
+    )
+    advance = _runtime_mapping(
+        receipt.get("advance"), "TokenArchive dispatch parent advance"
+    )
+    if (
+        receipt.get("schema") != SCHEMA
+        or _integer(receipt.get("generation"), -1) != 13
+        or receipt.get("counts") != TOKENARCHIVE_DISPATCH_PARENT_COUNTS
+        or reducer.get("id") != TOKENARCHIVE_DISPATCH_PARENT_REDUCER_ID
+        or advance.get("kind") != APPLYDAMAGE_REPROOF_ADVANCE_KIND
+        or advance.get("schema") != APPLYDAMAGE_REPROOF_ADVANCE_SCHEMA
+        or advance.get("branchId") != GHIDRA_PARTITION_RECOVERY_LINEAGE_ID
+    ):
+        raise CampaignError(
+            "TokenArchive dispatch canonical Gen13 identity is unsupported"
+        )
+    try:
+        completed = _run_frozen_campaign_verifier(
+            resolved,
+            replay=True,
+            timeout=900,
+            expected_ready_sha256=TOKENARCHIVE_DISPATCH_PARENT_READY_SHA256,
+            expected_reducer_id=TOKENARCHIVE_DISPATCH_PARENT_REDUCER_ID,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise CampaignError(
+            "TokenArchive dispatch parent frozen verifier timed out"
+        ) from exc
+    if completed.returncode != 0 or "CAMPAIGN_VERIFIED" not in completed.stdout:
+        raise CampaignError(
+            "TokenArchive dispatch parent failed its frozen verifier: "
+            f"exit={completed.returncode} stderr={completed.stderr.strip()!r}"
+        )
+    rows = _campaign_rows_from_root(resolved)
+    if {name: len(value) for name, value in rows.items()} != receipt.get("counts"):
+        raise CampaignError(
+            "TokenArchive dispatch parent rows disagree with READY"
+        )
+    verified = dict(receipt)
+    verified["_carryBridge"] = "EXACT_FROZEN_GENERATION13_REPLAY"
+    return verified
+
+
+def _verify_mission_native_setpos_parent_campaign(root: Path) -> dict:
+    """Require exact canonical Gen14 and replay it through its frozen owner."""
+
+    raw = Path(os.path.abspath(root))
+    expected = (REPO_ROOT / MISSION_NATIVE_SETPOS_PARENT_RELATIVE).resolve()
+    try:
+        resolved = ghidra_backup.resolve_plain_path(
+            raw, "Mission-native SetPos canonical Gen14 parent", strict=True
+        )
+    except (ghidra_backup.BackupError, OSError) as exc:
+        raise CampaignError(
+            f"Mission-native SetPos parent path is not plain: {exc}"
+        ) from exc
+    if resolved != expected:
+        raise CampaignError(
+            "Mission-native SetPos parent is not exact canonical Gen14"
+        )
+    ready_path = resolved / "campaign.ready.json"
+    try:
+        plain_ready = ghidra_backup.resolve_plain_path(
+            ready_path, "Mission-native SetPos parent READY", strict=True
+        )
+    except (ghidra_backup.BackupError, OSError) as exc:
+        raise CampaignError(
+            f"Mission-native SetPos parent READY is not plain: {exc}"
+        ) from exc
+    if (
+        plain_ready.stat().st_nlink != 1
+        or plain_ready.stat().st_size != MISSION_NATIVE_SETPOS_PARENT_READY_BYTES
+        or coverage.sha256_of(plain_ready)
+        != MISSION_NATIVE_SETPOS_PARENT_READY_SHA256
+    ):
+        raise CampaignError(
+            "Mission-native SetPos parent READY is absent, linked, or changed"
+        )
+    receipt = _runtime_json(
+        plain_ready, "Mission-native SetPos canonical Gen14 parent"
+    )
+    reducer = _runtime_mapping(
+        receipt.get("reducer"), "Mission-native SetPos parent reducer"
+    )
+    advance = _runtime_mapping(
+        receipt.get("advance"), "Mission-native SetPos parent advance"
+    )
+    if (
+        receipt.get("schema") != SCHEMA
+        or _integer(receipt.get("generation"), -1) != 14
+        or receipt.get("counts") != MISSION_NATIVE_SETPOS_PARENT_COUNTS
+        or reducer.get("id") != MISSION_NATIVE_SETPOS_PARENT_REDUCER_ID
+        or advance.get("kind") != TOKENARCHIVE_DISPATCH_ADVANCE_KIND
+        or advance.get("schema") != TOKENARCHIVE_DISPATCH_ADVANCE_SCHEMA
+        or advance.get("branchId") != GHIDRA_PARTITION_RECOVERY_LINEAGE_ID
+    ):
+        raise CampaignError(
+            "Mission-native SetPos canonical Gen14 identity is unsupported"
+        )
+    try:
+        completed = _run_frozen_campaign_verifier(
+            resolved,
+            replay=True,
+            timeout=900,
+            expected_ready_sha256=MISSION_NATIVE_SETPOS_PARENT_READY_SHA256,
+            expected_reducer_id=MISSION_NATIVE_SETPOS_PARENT_REDUCER_ID,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise CampaignError(
+            "Mission-native SetPos parent frozen verifier timed out"
+        ) from exc
+    if completed.returncode != 0 or "CAMPAIGN_VERIFIED" not in completed.stdout:
+        raise CampaignError(
+            "Mission-native SetPos parent failed its frozen verifier: "
+            f"exit={completed.returncode} stderr={completed.stderr.strip()!r}"
+        )
+    rows = _campaign_rows_from_root(resolved)
+    if {name: len(value) for name, value in rows.items()} != receipt.get("counts"):
+        raise CampaignError(
+            "Mission-native SetPos parent rows disagree with READY"
+        )
+    verified = dict(receipt)
+    verified["_carryBridge"] = "EXACT_FROZEN_GENERATION14_REPLAY"
+    return verified
+
+
+def _verify_mission_native_setpos_runtime_parent_campaign(root: Path) -> dict:
+    """Require exact canonical Gen15 and replay it through its frozen owner."""
+
+    raw = Path(os.path.abspath(root))
+    expected = (REPO_ROOT / MISSION_NATIVE_SETPOS_RUNTIME_PARENT_RELATIVE).resolve()
+    try:
+        resolved = ghidra_backup.resolve_plain_path(
+            raw, "Mission-native SetPos runtime canonical Gen15 parent", strict=True
+        )
+    except (ghidra_backup.BackupError, OSError) as exc:
+        raise CampaignError(
+            f"Mission-native SetPos runtime parent path is not plain: {exc}"
+        ) from exc
+    if resolved != expected:
+        raise CampaignError(
+            "Mission-native SetPos runtime parent is not exact canonical Gen15"
+        )
+    ready_path = resolved / "campaign.ready.json"
+    authority_path = (
+        REPO_ROOT / MISSION_NATIVE_SETPOS_RUNTIME_PARENT_AUTHORITY_RELATIVE
+    )
+    try:
+        plain_ready = ghidra_backup.resolve_plain_path(
+            ready_path, "Mission-native SetPos runtime parent READY", strict=True
+        )
+        plain_authority = ghidra_backup.resolve_plain_path(
+            authority_path,
+            "Mission-native SetPos runtime parent authority",
+            strict=True,
+        )
+    except (ghidra_backup.BackupError, OSError) as exc:
+        raise CampaignError(
+            f"Mission-native SetPos runtime parent evidence is not plain: {exc}"
+        ) from exc
+    if (
+        plain_ready.stat().st_nlink != 1
+        or plain_ready.stat().st_size
+        != MISSION_NATIVE_SETPOS_RUNTIME_PARENT_READY_BYTES
+        or coverage.sha256_of(plain_ready)
+        != MISSION_NATIVE_SETPOS_RUNTIME_PARENT_READY_SHA256
+        or plain_authority.stat().st_nlink != 1
+        or plain_authority.stat().st_size
+        != MISSION_NATIVE_SETPOS_RUNTIME_PARENT_AUTHORITY_BYTES
+        or coverage.sha256_of(plain_authority)
+        != MISSION_NATIVE_SETPOS_RUNTIME_PARENT_AUTHORITY_SHA256
+    ):
+        raise CampaignError(
+            "Mission-native SetPos runtime parent READY or authority changed"
+        )
+    receipt = _runtime_json(
+        plain_ready, "Mission-native SetPos runtime canonical Gen15 parent"
+    )
+    authority = _runtime_json(
+        plain_authority, "Mission-native SetPos runtime parent authority"
+    )
+    reducer = _runtime_mapping(
+        receipt.get("reducer"), "Mission-native SetPos runtime parent reducer"
+    )
+    advance = _runtime_mapping(
+        receipt.get("advance"), "Mission-native SetPos runtime parent advance"
+    )
+    canonical = _runtime_mapping(
+        authority.get("canonical"), "Mission-native SetPos runtime parent selection"
+    )
+    if (
+        receipt.get("schema") != SCHEMA
+        or _integer(receipt.get("generation"), -1) != 15
+        or receipt.get("counts") != MISSION_NATIVE_SETPOS_RUNTIME_PARENT_COUNTS
+        or reducer.get("id") != MISSION_NATIVE_SETPOS_RUNTIME_PARENT_REDUCER_ID
+        or advance.get("kind") != MISSION_NATIVE_SETPOS_ADVANCE_KIND
+        or advance.get("schema") != MISSION_NATIVE_SETPOS_ADVANCE_SCHEMA
+        or advance.get("branchId") != GHIDRA_PARTITION_RECOVERY_LINEAGE_ID
+        or authority.get("schema")
+        != "bea.re.mission-native-setpos-generation15-authority.v1"
+        or authority.get("verdict") != "READY"
+        or authority.get("authorityClass") != "FULL_REPLAY_CAMPAIGN_AUTHORITY"
+        or authority.get("lineageId") != GHIDRA_PARTITION_RECOVERY_LINEAGE_ID
+        or canonical.get("absolutePath") != str(expected)
+        or canonical.get("ready", {}).get("sha256")
+        != MISSION_NATIVE_SETPOS_RUNTIME_PARENT_READY_SHA256
+        or canonical.get("reducerId")
+        != MISSION_NATIVE_SETPOS_RUNTIME_PARENT_REDUCER_ID
+    ):
+        raise CampaignError(
+            "Mission-native SetPos runtime canonical Gen15 identity is unsupported"
+        )
+    try:
+        completed = _run_frozen_campaign_verifier(
+            resolved,
+            replay=True,
+            timeout=1200,
+            expected_ready_sha256=MISSION_NATIVE_SETPOS_RUNTIME_PARENT_READY_SHA256,
+            expected_reducer_id=MISSION_NATIVE_SETPOS_RUNTIME_PARENT_REDUCER_ID,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise CampaignError(
+            "Mission-native SetPos runtime parent frozen verifier timed out"
+        ) from exc
+    if completed.returncode != 0 or "CAMPAIGN_VERIFIED" not in completed.stdout:
+        raise CampaignError(
+            "Mission-native SetPos runtime parent failed its frozen verifier: "
+            f"exit={completed.returncode} stderr={completed.stderr.strip()!r}"
+        )
+    rows = _campaign_rows_from_root(resolved)
+    if {name: len(value) for name, value in rows.items()} != receipt.get("counts"):
+        raise CampaignError(
+            "Mission-native SetPos runtime parent rows disagree with READY"
+        )
+    verified = dict(receipt)
+    verified["_carryBridge"] = "EXACT_FROZEN_GENERATION15_REPLAY"
+    return verified
+
+
+def _verify_lockhit_bounded_parent_campaign(root: Path) -> dict:
+    """Require exact canonical Gen16 and replay it through its frozen owner."""
+
+    raw = Path(os.path.abspath(root))
+    expected = (REPO_ROOT / LOCKHIT_BOUNDED_PARENT_RELATIVE).resolve()
+    try:
+        resolved = ghidra_backup.resolve_plain_path(
+            raw, "LockHit bounded-contract canonical Gen16 parent", strict=True
+        )
+    except (ghidra_backup.BackupError, OSError) as exc:
+        raise CampaignError(
+            f"LockHit bounded-contract parent path is not plain: {exc}"
+        ) from exc
+    if resolved != expected:
+        raise CampaignError(
+            "LockHit bounded-contract parent is not exact canonical Gen16"
+        )
+    ready_path = resolved / "campaign.ready.json"
+    authority_path = REPO_ROOT / LOCKHIT_BOUNDED_PARENT_AUTHORITY_RELATIVE
+    try:
+        plain_ready = ghidra_backup.resolve_plain_path(
+            ready_path, "LockHit bounded-contract parent READY", strict=True
+        )
+        plain_authority = ghidra_backup.resolve_plain_path(
+            authority_path,
+            "LockHit bounded-contract parent authority",
+            strict=True,
+        )
+    except (ghidra_backup.BackupError, OSError) as exc:
+        raise CampaignError(
+            f"LockHit bounded-contract parent evidence is not plain: {exc}"
+        ) from exc
+    if (
+        plain_ready.stat().st_nlink != 1
+        or plain_ready.stat().st_size != LOCKHIT_BOUNDED_PARENT_READY_BYTES
+        or coverage.sha256_of(plain_ready) != LOCKHIT_BOUNDED_PARENT_READY_SHA256
+        or plain_authority.stat().st_nlink != 1
+        or plain_authority.stat().st_size
+        != LOCKHIT_BOUNDED_PARENT_AUTHORITY_BYTES
+        or coverage.sha256_of(plain_authority)
+        != LOCKHIT_BOUNDED_PARENT_AUTHORITY_SHA256
+    ):
+        raise CampaignError(
+            "LockHit bounded-contract parent READY or authority changed"
+        )
+    receipt = _runtime_json(
+        plain_ready, "LockHit bounded-contract canonical Gen16 parent"
+    )
+    authority = _runtime_json(
+        plain_authority, "LockHit bounded-contract parent authority"
+    )
+    reducer = _runtime_mapping(
+        receipt.get("reducer"), "LockHit bounded-contract parent reducer"
+    )
+    advance = _runtime_mapping(
+        receipt.get("advance"), "LockHit bounded-contract parent advance"
+    )
+    canonical = _runtime_mapping(
+        authority.get("canonical"), "LockHit bounded-contract parent selection"
+    )
+    if (
+        receipt.get("schema") != SCHEMA
+        or _integer(receipt.get("generation"), -1) != 16
+        or receipt.get("counts") != LOCKHIT_BOUNDED_PARENT_COUNTS
+        or reducer.get("id") != LOCKHIT_BOUNDED_PARENT_REDUCER_ID
+        or advance.get("kind") != MISSION_NATIVE_SETPOS_RUNTIME_ADVANCE_KIND
+        or advance.get("schema") != MISSION_NATIVE_SETPOS_RUNTIME_ADVANCE_SCHEMA
+        or advance.get("branchId") != GHIDRA_PARTITION_RECOVERY_LINEAGE_ID
+        or authority.get("schema")
+        != "bea.re.mission-native-setpos-generation16-authority.v1"
+        or authority.get("verdict") != "READY"
+        or authority.get("authorityClass") != "FULL_REPLAY_CAMPAIGN_AUTHORITY"
+        or authority.get("lineageId") != GHIDRA_PARTITION_RECOVERY_LINEAGE_ID
+        or canonical.get("absolutePath") != str(expected)
+        or canonical.get("ready", {}).get("sha256")
+        != LOCKHIT_BOUNDED_PARENT_READY_SHA256
+        or canonical.get("reducerId") != LOCKHIT_BOUNDED_PARENT_REDUCER_ID
+    ):
+        raise CampaignError(
+            "LockHit bounded-contract canonical Gen16 identity is unsupported"
+        )
+    try:
+        completed = _run_frozen_campaign_verifier(
+            resolved,
+            replay=True,
+            timeout=1200,
+            expected_ready_sha256=LOCKHIT_BOUNDED_PARENT_READY_SHA256,
+            expected_reducer_id=LOCKHIT_BOUNDED_PARENT_REDUCER_ID,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise CampaignError(
+            "LockHit bounded-contract parent frozen verifier timed out"
+        ) from exc
+    if completed.returncode != 0 or "CAMPAIGN_VERIFIED" not in completed.stdout:
+        raise CampaignError(
+            "LockHit bounded-contract parent failed its frozen verifier: "
+            f"exit={completed.returncode} stderr={completed.stderr.strip()!r}"
+        )
+    rows = _campaign_rows_from_root(resolved)
+    if {name: len(value) for name, value in rows.items()} != receipt.get("counts"):
+        raise CampaignError(
+            "LockHit bounded-contract parent rows disagree with READY"
+        )
+    verified = dict(receipt)
+    verified["_carryBridge"] = "EXACT_FROZEN_GENERATION16_REPLAY"
     return verified
 
 
@@ -3655,6 +4932,32 @@ def _replay_campaign_generation(campaign: Path, receipt: dict) -> None:
                 )
             elif kind == GEN73_RESEAL_RECOVERY_ADVANCE_KIND:
                 parent_receipt = _verify_gen73_reseal_parent_campaign(parent_path)
+            elif kind == LEVEL521_DAMAGE_WRITES_ADVANCE_KIND:
+                parent_receipt = _verify_level521_damage_writes_parent_campaign(
+                    parent_path
+                )
+            elif kind == APPLYDAMAGE_REPROOF_ADVANCE_KIND:
+                parent_receipt = _verify_applydamage_reproof_parent_campaign(
+                    parent_path
+                )
+            elif kind == TOKENARCHIVE_DISPATCH_ADVANCE_KIND:
+                parent_receipt = _verify_tokenarchive_dispatch_parent_campaign(
+                    parent_path
+                )
+            elif kind == MISSION_NATIVE_SETPOS_ADVANCE_KIND:
+                parent_receipt = _verify_mission_native_setpos_parent_campaign(
+                    parent_path
+                )
+            elif kind == MISSION_NATIVE_SETPOS_RUNTIME_ADVANCE_KIND:
+                parent_receipt = (
+                    _verify_mission_native_setpos_runtime_parent_campaign(
+                        parent_path
+                    )
+                )
+            elif kind == LOCKHIT_BOUNDED_ADVANCE_KIND:
+                parent_receipt = _verify_lockhit_bounded_parent_campaign(
+                    parent_path
+                )
             elif kind == TTD_CALL_CONTEXT_ADVANCE_KIND:
                 parent_receipt = _verify_ttd_call_context_parent_campaign(
                     parent_path
@@ -3908,6 +5211,119 @@ def _replay_campaign_generation(campaign: Path, receipt: dict) -> None:
                     _self_check=False,
                     _verified_parent_receipt=parent_receipt,
                 )
+            elif kind == LEVEL521_DAMAGE_WRITES_ADVANCE_KIND:
+                if advance.get("schema") != LEVEL521_DAMAGE_WRITES_ADVANCE_SCHEMA:
+                    raise CampaignError(
+                        "Level 521 Damage/Hit campaign advance schema is unsupported"
+                    )
+                proof_spec = _runtime_mapping(
+                    advance.get("proof"), "Level 521 Damage/Hit proof"
+                )
+                proof_root = _resolve_repo_or_absolute(
+                    proof_spec.get("root"), "Level 521 Damage/Hit proof root"
+                )
+                advance_level521_damage_writes(
+                    parent_path,
+                    proof_root,
+                    replay,
+                    _self_check=False,
+                    _verified_parent_receipt=parent_receipt,
+                )
+            elif kind == APPLYDAMAGE_REPROOF_ADVANCE_KIND:
+                if advance.get("schema") != APPLYDAMAGE_REPROOF_ADVANCE_SCHEMA:
+                    raise CampaignError(
+                        "ApplyDamage reproof campaign advance schema is unsupported"
+                    )
+                proof_spec = _runtime_mapping(
+                    advance.get("proof"), "ApplyDamage reproof proof"
+                )
+                proof_root = _resolve_repo_or_absolute(
+                    proof_spec.get("root"), "ApplyDamage reproof proof root"
+                )
+                advance_applydamage_reproof(
+                    parent_path,
+                    proof_root,
+                    replay,
+                    _self_check=False,
+                    _verified_parent_receipt=parent_receipt,
+                )
+            elif kind == TOKENARCHIVE_DISPATCH_ADVANCE_KIND:
+                if advance.get("schema") != TOKENARCHIVE_DISPATCH_ADVANCE_SCHEMA:
+                    raise CampaignError(
+                        "TokenArchive dispatch campaign advance schema is unsupported"
+                    )
+                proof_spec = _runtime_mapping(
+                    advance.get("proof"), "TokenArchive dispatch proof"
+                )
+                proof_root = _resolve_repo_or_absolute(
+                    proof_spec.get("root"), "TokenArchive dispatch proof root"
+                )
+                advance_tokenarchive_dispatch_reproof(
+                    parent_path,
+                    proof_root,
+                    replay,
+                    _self_check=False,
+                    _verified_parent_receipt=parent_receipt,
+                )
+            elif kind == MISSION_NATIVE_SETPOS_ADVANCE_KIND:
+                if advance.get("schema") != MISSION_NATIVE_SETPOS_ADVANCE_SCHEMA:
+                    raise CampaignError(
+                        "Mission-native SetPos campaign advance schema is unsupported"
+                    )
+                proof_spec = _runtime_mapping(
+                    advance.get("proof"), "Mission-native SetPos proof"
+                )
+                proof_root = _resolve_repo_or_absolute(
+                    proof_spec.get("root"), "Mission-native SetPos proof root"
+                )
+                advance_mission_native_setpos_reproof(
+                    parent_path,
+                    proof_root,
+                    replay,
+                    _self_check=False,
+                    _verified_parent_receipt=parent_receipt,
+                )
+            elif kind == MISSION_NATIVE_SETPOS_RUNTIME_ADVANCE_KIND:
+                if (
+                    advance.get("schema")
+                    != MISSION_NATIVE_SETPOS_RUNTIME_ADVANCE_SCHEMA
+                ):
+                    raise CampaignError(
+                        "Mission-native SetPos runtime campaign advance schema is unsupported"
+                    )
+                proof_spec = _runtime_mapping(
+                    advance.get("proof"), "Mission-native SetPos runtime proof"
+                )
+                proof_root = _resolve_repo_or_absolute(
+                    proof_spec.get("root"),
+                    "Mission-native SetPos runtime proof root",
+                )
+                advance_mission_native_setpos_runtime(
+                    parent_path,
+                    proof_root,
+                    replay,
+                    _self_check=False,
+                    _verified_parent_receipt=parent_receipt,
+                )
+            elif kind == LOCKHIT_BOUNDED_ADVANCE_KIND:
+                if advance.get("schema") != LOCKHIT_BOUNDED_ADVANCE_SCHEMA:
+                    raise CampaignError(
+                        "LockHit bounded-contract campaign advance schema is unsupported"
+                    )
+                proof_spec = _runtime_mapping(
+                    advance.get("proof"), "LockHit bounded-contract proof"
+                )
+                proof_root = _resolve_repo_or_absolute(
+                    proof_spec.get("root"),
+                    "LockHit bounded-contract proof root",
+                )
+                advance_lockhit_bounded_contract(
+                    parent_path,
+                    proof_root,
+                    replay,
+                    _self_check=False,
+                    _verified_parent_receipt=parent_receipt,
+                )
             elif kind == TTD_CALL_CONTEXT_RECOVERY_ADVANCE_KIND:
                 if advance.get("schema") != TTD_CALL_CONTEXT_RECOVERY_ADVANCE_SCHEMA:
                     raise CampaignError(
@@ -4023,8 +5439,12 @@ def verify(campaign: Path, *, _replay_generation: bool = True) -> dict:
                 len(grouped) > 1
                 and not (
                     len({row.get("kind") for row in grouped}) == 1
-                    and {row.get("kind") for row in grouped}.issubset(
-                        GHIDRA_PARTITION_ADVANCE_KINDS
+                    and (
+                        {row.get("kind") for row in grouped}.issubset(
+                            GHIDRA_PARTITION_ADVANCE_KINDS
+                        )
+                        or {row.get("kind") for row in grouped}
+                        == {MISSION_NATIVE_SETPOS_ADVANCE_KIND}
                     )
                 )
             )
@@ -15195,6 +16615,5629 @@ def advance_gen73_reseal_recovery(
         raise
 
 
+def _level521_damage_writes_policies() -> list[str]:
+    return [
+        "Only CBattleEngine::Damage at 0x0040A890 and CBattleEngine::Hit at 0x00407350 change.",
+        "Retail names and void __thiscall prototypes are source-correlated to exact pristine vtable slots and body identities.",
+        "Damage writes are bounded to one replicated witnessed-write invocation; Hit zero writes are bounded to seven watched fields in one gap-free invocation.",
+        "The 14 GiB trace remains receipt-hash-bound and actual-size-checked; this advance records no trace and does not rehash it.",
+        "The Damage rebuild mapping is PARTIAL_CONTRACT, not REBUILD_READY; 21 focused tests include the exact retained Level 521 witness.",
+        "No Ghidra mutation, range change, slot-39 identity, ApplyDamage promotion, or universal behavioral law is admitted.",
+    ]
+
+
+def _level521_damage_writes_specs() -> dict[str, dict[str, object]]:
+    return {
+        "0x0040a890": {
+            "entityKey": (
+                "CODE:74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750:"
+                "VA=0x0040a890:RANGES=bb7ad6db94943e1277f3036ffcd260b626115df2abd24670e57fcb80ba2bb244"
+            ),
+            "contractId": "C-62b3c956518ff9a5",
+            "parentQuestionId": "Q-c3a67dd02f317206",
+            "priorName": "CBattleEngine__VFunc_40_0040a890",
+            "name": "CBattleEngine__Damage",
+            "successor": {
+                "questionType": "EXECUTED_FUNCTION_CONTRACT",
+                "priority": 1,
+                "score": 917.0,
+                "requiresElevation": False,
+                "recommendedInstrument": (
+                    "EXISTING_TRACE_BRANCH_MATRIX_THEN_AUTHORED_SAFE_COPY_DAMAGE_PROBE"
+                ),
+                "question": (
+                    "Which retail predicates and write/side-effect variants govern death, "
+                    "repair, god mode, shield-disabled, non-walker, and alternate-amount "
+                    "CBattleEngine::Damage paths beyond the one Level 521 invocation?"
+                ),
+                "cheapestFalsifier": (
+                    "A second retained invocation or minimal safe-copy scenario contradicts "
+                    "the witnessed writer PCs, field roles, or source-predicted branch ordering."
+                ),
+                "source": "level521-damage-hit-write-proof-v2",
+                "currentOwner": "recursive-re-campaign",
+            },
+            "functionEvidence": (
+                "SOURCE_CORRELATED_RETAIL_VTABLE_IDENTITY;"
+                "TTD_REPLICATED_WITNESSED_DATA_WRITES;REBUILD_PARITY_MAPPED"
+            ),
+            "receiver": (
+                "CBattleEngine* this; observed receiver 0x079B9750 with ESI=EDI at all five write boundaries"
+            ),
+            "inputs": (
+                "source-correlated retail __thiscall ABI: float amount=0.05f (0x3D4CCCCD); "
+                "CThing* source=0x07A30830; BOOL damageShields=TRUE; int meshPartNo=-1"
+            ),
+            "returns": (
+                "void under the source-correlated retail ABI; the orphan raw EDX:EAX boundary is register residue, not a typed return"
+            ),
+            "writes": (
+                "one replicated invocation, in order: +0x100 mShields 4.939967155->4.890967369 at 0x0040A944; "
+                "+0x2F8 mAugValue 2.939999819->2.988999844 at 0x0040A969; "
+                "+0xF8 mLife 23.443531036->23.442531586 at 0x0040A9C6; "
+                "+0x2D4 mLastDamageTime 109.950004578->116.400001526 at 0x0040A9F1; "
+                "+0xFC mEnergy 4.939967155->4.890967369 at 0x0040AABA; "
+                "+0x2FC mAugActive and +0x15C mVulnerable were zero-write controls"
+            ),
+            "sideEffects": (
+                "witnessed write order is shields, augment charge, life, last-damage time, then walker energy mirroring post-shields; five nontrivial gaps remain explicit"
+            ),
+            "preconditions": (
+                "natural Level 521 take-4; receiver 0x079B9750; amount 0.05; damageShields TRUE; meshPartNo -1; inclusive 0x14B569:0x6F2..0x14B571:0x78"
+            ),
+            "failureModes": (
+                "death, repair, god mode, alternate amount/source/class, shield-disabled paths, linked return association, and behavior across five gaps remain unproved"
+            ),
+            "remaining": (
+                "branch predicates; death/repair/god-mode behavior; alternate amounts and classes; effects outside seven watched fields; behavior across gaps; full rebuild parity"
+            ),
+        },
+        "0x00407350": {
+            "entityKey": (
+                "CODE:74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750:"
+                "VA=0x00407350:RANGES=1a0755c4837fed137b5c71d5a64c8318c45d535980eed6ff29c31142bb803879"
+            ),
+            "contractId": "C-2f608ec63fd10347",
+            "parentQuestionId": "Q-657753f5f004e39b",
+            "priorName": "CBattleEngine__VFunc_39_00407350",
+            "name": "CBattleEngine__Hit",
+            "successor": {
+                "questionType": "EXECUTED_FUNCTION_CONTRACT",
+                "priority": 2,
+                "score": 380.0,
+                "requiresElevation": False,
+                "recommendedInstrument": (
+                    "EXISTING_TTD_MULTI_INVOCATION_WRITE_SET_THEN_AUTHORED_COLLISION_PROBE"
+                ),
+                "question": (
+                    "Which memory writes, callbacks, and collision side effects occur on "
+                    "alternate CBattleEngine::Hit paths beyond the exact seven-field zero-write "
+                    "control, and does released ordering match Stuart source?"
+                ),
+                "cheapestFalsifier": (
+                    "Another retained invocation or minimal collision probe finds a watched-field "
+                    "write or callback ordering incompatible with the bounded Hit contract."
+                ),
+                "source": "level521-damage-hit-write-proof-v2",
+                "currentOwner": "recursive-re-campaign",
+            },
+            "functionEvidence": (
+                "SOURCE_CORRELATED_RETAIL_VTABLE_IDENTITY;"
+                "TTD_GAP_FREE_SEVEN_FIELD_ZERO_WRITE_CONTROL"
+            ),
+            "receiver": "CBattleEngine* this; observed receiver 0x079B9750",
+            "inputs": (
+                "source-correlated retail __thiscall ABI: CThing* otherThing=0x07A30830; CCollisionReport* report=0x001AF2CC"
+            ),
+            "returns": (
+                "void under the source-correlated retail ABI; linked raw EDX:EAX values are register residue, not a semantic return"
+            ),
+            "writes": (
+                "one exact gap-free invocation wrote none of the seven watched fields: mLife, mEnergy, mShields, mLastDamageTime, mAugValue, mAugActive, mVulnerable; all other memory is outside this control"
+            ),
+            "sideEffects": (
+                "gap-free call/entry/ordinary-return envelope from 0x004268DE with no callbacks on the seven field watchpoints"
+            ),
+            "preconditions": (
+                "natural Level 521 take-4; receiver 0x079B9750; inclusive 0x14B654:0x264..0x14B654:0x29C; one selected invocation"
+            ),
+            "failureModes": (
+                "alternate collision paths, writes outside seven watched fields, callback effects, exceptions, and behavior outside the exact window remain unproved"
+            ),
+            "remaining": (
+                "complete write set; collision/callback ordering; alternate paths and failure behavior; behavior outside the exact invocation; rebuild owner and parity"
+            ),
+        },
+    }
+
+
+def _level521_damage_writes_adjudication_id(
+    contract_id: str, question_id: str
+) -> str:
+    return "A-" + _sha256_text(
+        "|".join(
+            (
+                LEVEL521_DAMAGE_WRITES_PARENT_READY_SHA256,
+                LEVEL521_DAMAGE_WRITES_PROOF_READY_SHA256,
+                contract_id,
+                question_id,
+                "SURVIVED",
+            )
+        )
+    )[:16]
+
+
+def _validate_level521_damage_writes_proof(proof_root: Path) -> dict:
+    raw = Path(os.path.abspath(proof_root))
+    expected = (REPO_ROOT / LEVEL521_DAMAGE_WRITES_PROOF_RELATIVE).resolve()
+    try:
+        plain = ghidra_backup.resolve_plain_path(
+            raw, "Level 521 Damage/Hit proof root", strict=True
+        )
+    except (ghidra_backup.BackupError, OSError) as exc:
+        raise CampaignError(f"Level 521 Damage/Hit proof root is not plain: {exc}") from exc
+    if plain != expected:
+        raise CampaignError("Level 521 Damage/Hit proof is not the reviewed immutable root")
+    expected_files = {
+        "author.py",
+        "observation.json",
+        "parity.stdout.txt",
+        "parity.stderr.txt",
+        "proof.ready.json",
+    }
+    actual_files = {
+        path.relative_to(plain).as_posix()
+        for path in plain.rglob("*")
+        if path.is_file()
+    }
+    if actual_files != expected_files:
+        raise CampaignError("Level 521 Damage/Hit proof file set differs")
+    for relative in sorted(expected_files):
+        try:
+            path = ghidra_backup.resolve_plain_path(
+                plain / relative, f"Level 521 Damage/Hit proof {relative}", strict=True
+            )
+        except (ghidra_backup.BackupError, OSError) as exc:
+            raise CampaignError(
+                f"Level 521 Damage/Hit proof file is not plain: {relative}: {exc}"
+            ) from exc
+        if path.stat().st_nlink != 1:
+            raise CampaignError(
+                f"Level 521 Damage/Hit proof file has multiple hard links: {relative}"
+            )
+    ready_path = plain / "proof.ready.json"
+    ready_stamp = coverage.file_stamp(ready_path)
+    if (
+        ready_stamp["bytes"] != LEVEL521_DAMAGE_WRITES_PROOF_READY_BYTES
+        or ready_stamp["sha256"] != LEVEL521_DAMAGE_WRITES_PROOF_READY_SHA256
+        or coverage.sha256_of(plain / "author.py")
+        != LEVEL521_DAMAGE_WRITES_PROOF_AUTHOR_SHA256
+    ):
+        raise CampaignError("Level 521 Damage/Hit proof identity differs")
+    try:
+        receipt = level521_writes.verify(REPO_ROOT, plain)
+    except (level521_writes.ProofError, OSError, subprocess.SubprocessError) as exc:
+        raise CampaignError(f"Level 521 Damage/Hit proof does not rederive: {exc}") from exc
+    if (
+        receipt.get("schema") != level521_writes.PROOF_SCHEMA
+        or receipt.get("verdict") != "SURVIVED"
+        or receipt.get("parent", {}).get("ready", {}).get("sha256")
+        != LEVEL521_DAMAGE_WRITES_PARENT_READY_SHA256
+    ):
+        raise CampaignError("Level 521 Damage/Hit proof claim boundary differs")
+    return receipt
+
+
+def _level521_damage_writes_delta(
+    before: dict[str, list[dict[str, str]]],
+    after: dict[str, list[dict[str, str]]],
+) -> dict[str, object]:
+    for name in ("residuals", "scenarios", "levers", "supersessions"):
+        if before[name] != after[name]:
+            raise CampaignError(
+                f"Level 521 Damage/Hit advance changed unrelated {name}"
+            )
+
+    def keyed(items: list[dict[str, str]], field: str) -> dict[str, dict[str, str]]:
+        result = {row[field]: row for row in items}
+        if len(result) != len(items):
+            raise CampaignError(f"Level 521 Damage/Hit delta duplicates {field}")
+        return result
+
+    function_before = keyed(before["functions"], "entityKey")
+    function_after = keyed(after["functions"], "entityKey")
+    contract_before = keyed(before["contracts"], "contractId")
+    contract_after = keyed(after["contracts"], "contractId")
+    question_before = keyed(before["questions"], "questionId")
+    question_after = keyed(after["questions"], "questionId")
+    adjudication_before = keyed(before["adjudications"], "adjudicationId")
+    adjudication_after = keyed(after["adjudications"], "adjudicationId")
+    if (
+        set(function_before) != set(function_after)
+        or set(contract_before) != set(contract_after)
+        or not set(question_before) <= set(question_after)
+        or not set(adjudication_before) <= set(adjudication_after)
+    ):
+        raise CampaignError("Level 521 Damage/Hit advance changed entity identities")
+
+    target_entities = {
+        str(spec["entityKey"]) for spec in _level521_damage_writes_specs().values()
+    }
+    target_contracts = {
+        str(spec["contractId"]) for spec in _level521_damage_writes_specs().values()
+    }
+    function_changes = {
+        entity: sorted(
+            field for field in FUNCTION_COLUMNS if prior[field] != function_after[entity][field]
+        )
+        for entity, prior in function_before.items()
+        if prior != function_after[entity]
+    }
+    contract_changes = {
+        contract_id: sorted(
+            field
+            for field in CONTRACT_COLUMNS
+            if prior[field] != contract_after[contract_id][field]
+        )
+        for contract_id, prior in contract_before.items()
+        if prior != contract_after[contract_id]
+    }
+    if set(function_changes) != target_entities or set(contract_changes) != target_contracts:
+        raise CampaignError("Level 521 Damage/Hit delta population differs")
+    function_allowed = {
+        "currentName",
+        "nameClass",
+        "evidenceStates",
+        "lever",
+        "cheapestFalsifier",
+        "lastMeasurementDate",
+    }
+    contract_allowed = {
+        "currentName",
+        "receiver",
+        "inputs",
+        "returns",
+        "writes",
+        "sideEffects",
+        "preconditions",
+        "failureModes",
+        "authorVerdict",
+        "runtimeVerdict",
+        "questionIds",
+        "evidenceRefs",
+        "cheapestFalsifier",
+        "rebuildOwner",
+        "rebuildImplementation",
+        "parityTests",
+        "rebuildState",
+        "remainingUncertainty",
+        "lastMeasurementDate",
+    }
+    if any(set(fields) - function_allowed for fields in function_changes.values()):
+        raise CampaignError("Level 521 Damage/Hit function delta exceeds its whitelist")
+    if any(set(fields) - contract_allowed for fields in contract_changes.values()):
+        raise CampaignError("Level 521 Damage/Hit contract delta exceeds its whitelist")
+
+    modified_questions = {
+        question_id: sorted(
+            field
+            for field in QUESTION_COLUMNS
+            if prior[field] != question_after[question_id][field]
+        )
+        for question_id, prior in question_before.items()
+        if prior != question_after[question_id]
+    }
+    parent_questions = {
+        str(spec["parentQuestionId"])
+        for spec in _level521_damage_writes_specs().values()
+    }
+    if set(modified_questions) != parent_questions or any(
+        set(fields)
+        - {"state", "attemptCount", "lastOutcome", "lastMeasurementDate"}
+        for fields in modified_questions.values()
+    ):
+        raise CampaignError("Level 521 Damage/Hit parent-question delta differs")
+    added_questions = sorted(set(question_after) - set(question_before))
+    added_adjudications = sorted(set(adjudication_after) - set(adjudication_before))
+    if len(added_questions) != 2 or len(added_adjudications) != 2:
+        raise CampaignError("Level 521 Damage/Hit successor/adjudication census differs")
+    return {
+        "functionRowsChanged": function_changes,
+        "contractRowsChanged": contract_changes,
+        "questionRowsChanged": modified_questions,
+        "questionIdsAdded": added_questions,
+        "adjudicationIdsAdded": added_adjudications,
+        "unchangedLedgers": ["residuals", "scenarios", "levers", "supersessions"],
+        "namesChanged": 2,
+        "rangesChanged": 0,
+        "witnessedWritesProved": 5,
+        "supersessionsAdded": 0,
+        "rebuildMappingsChanged": 1,
+    }
+
+
+def _level521_damage_writes_rows_and_advance(
+    campaign: Path, proof_root: Path, base_receipt: dict
+) -> tuple[dict[str, list[dict[str, str]]], dict]:
+    expected_parent = (REPO_ROOT / LEVEL521_DAMAGE_WRITES_PARENT_RELATIVE).resolve()
+    if campaign.resolve() != expected_parent:
+        raise CampaignError("Level 521 Damage/Hit advance does not use canonical Gen11")
+    if (
+        base_receipt.get("generation") != 11
+        or base_receipt.get("counts") != LEVEL521_DAMAGE_WRITES_PARENT_COUNTS
+        or base_receipt.get("reducer", {}).get("id")
+        != LEVEL521_DAMAGE_WRITES_PARENT_REDUCER_ID
+    ):
+        raise CampaignError("Level 521 Damage/Hit parent receipt differs")
+    proof_receipt = _validate_level521_damage_writes_proof(proof_root)
+    before = _campaign_rows_from_root(campaign)
+    rows = json.loads(json.dumps(before))
+    functions = {row["entityKey"]: row for row in rows["functions"]}
+    contracts = {row["contractId"]: row for row in rows["contracts"]}
+    questions = {row["questionId"]: row for row in rows["questions"]}
+    specs = _level521_damage_writes_specs()
+    measured_at = level521_writes.MEASURED_AT_UTC
+    measured_date = measured_at[:10]
+    proof_root_relative = LEVEL521_DAMAGE_WRITES_PROOF_RELATIVE.as_posix()
+    evidence_refs = [
+        f"{proof_root_relative}/proof.ready.json#sha256={LEVEL521_DAMAGE_WRITES_PROOF_READY_SHA256}",
+        f"{proof_root_relative}/author.py#sha256={LEVEL521_DAMAGE_WRITES_PROOF_AUTHOR_SHA256}",
+        f"{proof_root_relative}/observation.json#sha256={proof_receipt['observation']['sha256']}",
+        f"{proof_root_relative}/parity.stdout.txt#sha256={proof_receipt['parity']['stdout']['sha256']}",
+        "references/Onslaught/BattleEngine.cpp#sha256=138a18d10ad6aa3cb95211d3a1c7e2a14aaaaaf58210ad0d06abff55f2b33d31",
+        "references/Onslaught/BattleEngine.h#sha256=84c88f5526e951389683e1fb132f70d7f1935139e582c8d9a8d41b2b6b516ccd",
+        "rebuild/OnslaughtRebuild.Core/Level100PlayerDamage.cs#sha256=a9ed7758d722d4925f7d954511bb1a7bc6c0e3cc5a1454778ddcb734ffd874ad",
+        "rebuild/OnslaughtRebuild.Core.Tests/Level100PlayerDamageTests.cs#sha256=7cfc42678c32a2f47aa6a581e4a47083849fff376e3f052be1285272aa4bdb80",
+    ]
+    evidence_hashes = [reference.rsplit("#sha256=", 1)[1] for reference in evidence_refs]
+    promotions: list[dict[str, object]] = []
+    for entry_va in ("0x0040a890", "0x00407350"):
+        spec = specs[entry_va]
+        entity = str(spec["entityKey"])
+        contract_id = str(spec["contractId"])
+        parent_question_id = str(spec["parentQuestionId"])
+        function = functions.get(entity)
+        contract = contracts.get(contract_id)
+        parent_question = questions.get(parent_question_id)
+        if (
+            function is None
+            or contract is None
+            or parent_question is None
+            or function.get("entryVa") != entry_va
+            or function.get("currentName") != spec["priorName"]
+            or function.get("semanticGrade") != "C2_BOUNDED_RUNTIME"
+            or contract.get("entityKey") != entity
+            or contract.get("currentName") != spec["priorName"]
+            or contract.get("semanticGrade") != "C2_BOUNDED_RUNTIME"
+            or parent_question.get("state") != "OPEN"
+            or parent_question.get("entityKey") != entity
+            or parent_question_id
+            not in _state_values(
+                contract.get("questionIds"), f"Level 521 contract {contract_id} questions"
+            )
+        ):
+            raise CampaignError(f"Level 521 Damage/Hit parent row differs: {entry_va}")
+        successor = _successor_question(
+            dict(spec["successor"]),
+            entity_key=entity,
+            parents=[parent_question],
+            history=[row for row in rows["questions"] if row["entityKey"] == entity],
+            generation=12,
+            measured_at=measured_at,
+        )
+        parent_question["state"] = "CLOSED_SURVIVED"
+        parent_question["attemptCount"] = _integer(
+            parent_question.get("attemptCount"), 0
+        ) + 1
+        parent_question["lastOutcome"] = "SURVIVED"
+        parent_question["lastMeasurementDate"] = measured_at
+        rows["questions"].append(successor)
+        questions[successor["questionId"]] = successor
+
+        function["currentName"] = str(spec["name"])
+        function["nameClass"] = "NAMED"
+        for state in str(spec["functionEvidence"]).split(";"):
+            function["evidenceStates"] = _append_state(
+                function["evidenceStates"], state
+            )
+        function["lever"] = successor["recommendedInstrument"]
+        function["cheapestFalsifier"] = successor["cheapestFalsifier"]
+        function["lastMeasurementDate"] = measured_date
+
+        contract["currentName"] = str(spec["name"])
+        for field in (
+            "receiver",
+            "inputs",
+            "returns",
+            "writes",
+            "sideEffects",
+            "preconditions",
+            "failureModes",
+        ):
+            contract[field] = str(spec[field])
+        contract["authorVerdict"] = "SOURCE_CORRELATED_STATIC_ABI_AND_REPLICATED_RUNTIME"
+        contract["runtimeVerdict"] = (
+            "REPLICATED_WITNESSED_WRITES_MEASURED"
+            if entry_va == "0x0040a890"
+            else "REPLICATED_GAP_FREE_SEVEN_FIELD_ZERO_WRITE_CONTROL"
+        )
+        contract["refuterVerdict"] = "SURVIVED"
+        contract["questionIds"] = _append_state(
+            contract["questionIds"], successor["questionId"]
+        )
+        for reference in evidence_refs:
+            contract["evidenceRefs"] = _append_state(
+                contract["evidenceRefs"], reference
+            )
+        contract["cheapestFalsifier"] = successor["cheapestFalsifier"]
+        contract["remainingUncertainty"] = str(spec["remaining"])
+        contract["lastMeasurementDate"] = measured_date
+        if entry_va == "0x0040a890":
+            contract["rebuildOwner"] = (
+                "rebuild/OnslaughtRebuild.Core/Level100PlayerDamage.cs"
+            )
+            contract["rebuildImplementation"] = (
+                "OnslaughtRebuild.Core.Level100PlayerDamage.Apply"
+            )
+            contract["parityTests"] = (
+                "rebuild/OnslaughtRebuild.Core.Tests/Level100PlayerDamageTests.cs::"
+                "Apply_ProjectsTheObservedLevel521FiftyMilliWitnessAtCoreResolution"
+            )
+            contract["rebuildState"] = "PARTIAL_CONTRACT"
+        elif (
+            contract["rebuildOwner"] != "UNASSIGNED"
+            or contract["rebuildImplementation"] != "UNMAPPED"
+            or contract["parityTests"] != "UNMAPPED"
+            or contract["rebuildState"] != "NOT_READY"
+        ):
+            raise CampaignError("Level 521 Hit crossed an unsupported rebuild boundary")
+
+        adjudication_id = _level521_damage_writes_adjudication_id(
+            contract_id, parent_question_id
+        )
+        if any(
+            row.get("adjudicationId") == adjudication_id
+            for row in rows["adjudications"]
+        ):
+            raise CampaignError("Level 521 Damage/Hit adjudication already exists")
+        rows["adjudications"].append(
+            {
+                "adjudicationId": adjudication_id,
+                "baseContractId": contract_id,
+                "entityKey": entity,
+                "overlaySchema": level521_writes.PROOF_SCHEMA,
+                "overlayReadySha256": LEVEL521_DAMAGE_WRITES_PROOF_READY_SHA256,
+                "questionIdsAddressed": parent_question_id,
+                "refuterVerdict": "SURVIVED",
+                "refuterEvidenceSha256": ";".join(evidence_hashes),
+                "semanticPromotionApplied": True,
+                "terminalState": "",
+                "successorQuestionIds": successor["questionId"],
+                "remainingUncertainty": contract["remainingUncertainty"],
+                "measuredAtUtc": measured_at,
+            }
+        )
+        promotions.append(
+            {
+                "entryVa": entry_va,
+                "entityKey": entity,
+                "contractId": contract_id,
+                "currentName": spec["name"],
+                "parentQuestionId": parent_question_id,
+                "successorQuestionId": successor["questionId"],
+                "adjudicationId": adjudication_id,
+            }
+        )
+
+    # TSV publication stringifies every scalar.  Normalize before deriving the
+    # delta so the in-memory replay and a fresh parse have one exact shape.
+    rows = {
+        name: [
+            {
+                field: value if isinstance(value, str) else str(value)
+                for field, value in row.items()
+            }
+            for row in values
+        ]
+        for name, values in rows.items()
+    }
+    counts = {name: len(value) for name, value in rows.items()}
+    if counts != LEVEL521_DAMAGE_WRITES_EXPECTED_GENERATION12_COUNTS:
+        raise CampaignError(f"Level 521 Damage/Hit output counts differ: {counts}")
+    delta = _level521_damage_writes_delta(before, rows)
+    proof_ready_stamp = coverage.file_stamp(
+        (REPO_ROOT / LEVEL521_DAMAGE_WRITES_PROOF_RELATIVE) / "proof.ready.json"
+    )
+    advance = {
+        "kind": LEVEL521_DAMAGE_WRITES_ADVANCE_KIND,
+        "schema": LEVEL521_DAMAGE_WRITES_ADVANCE_SCHEMA,
+        "branchId": GHIDRA_PARTITION_RECOVERY_LINEAGE_ID,
+        "observationId": "DW-"
+        + _sha256_text(
+            "|".join(
+                (
+                    LEVEL521_DAMAGE_WRITES_PARENT_READY_SHA256,
+                    LEVEL521_DAMAGE_WRITES_PROOF_READY_SHA256,
+                    LEVEL521_DAMAGE_WRITES_ADVANCE_KIND,
+                )
+            )
+        )[:16],
+        "verdict": "SURVIVED",
+        "proof": {
+            "root": LEVEL521_DAMAGE_WRITES_PROOF_RELATIVE.as_posix(),
+            "ready": {**proof_ready_stamp, "path": "proof.ready.json"},
+            "schema": level521_writes.PROOF_SCHEMA,
+            "authorSha256": LEVEL521_DAMAGE_WRITES_PROOF_AUTHOR_SHA256,
+        },
+        "measuredAtUtc": measured_at,
+        "traceDisposition": (
+            "BOUND_RECEIPT_HASH_AND_ACTUAL_SIZE_VERIFIED_NOT_REHASHED"
+        ),
+        "promotions": promotions,
+        "delta": delta,
+        "questionsClosed": 2,
+        "questionsAdded": 2,
+        "adjudicationsAdded": 2,
+        "namesChanged": 2,
+        "witnessedWritesProved": 5,
+        "rebuildMapping": {
+            "contractId": "C-62b3c956518ff9a5",
+            "state": "PARTIAL_CONTRACT",
+            "focusedTestsPassed": 21,
+        },
+        "semanticLimitations": [
+            "Damage is witnessed-write evidence with five nontrivial gaps, not a gap-free all-path contract.",
+            "Hit proves zero writes only to seven watched fields in one exact gap-free invocation.",
+            "The source-correlated void ABI does not turn raw EAX/EDX residue into a semantic return.",
+            "Death, repair, god mode, alternate inputs/classes, unobserved memory, and failure paths remain open.",
+            "The Godot mapping is PARTIAL_CONTRACT and is not REBUILD_READY.",
+            "No Ghidra project was mutated by this advance.",
+        ],
+    }
+    return rows, advance
+
+
+def _validate_level521_damage_writes_receipt_envelope(
+    rows: dict[str, list[dict[str, str]]], receipt: dict, campaign_root: Path
+) -> None:
+    expected_top_level = {
+        "schema",
+        "reducer",
+        "generatedAtUtc",
+        "generation",
+        "parentCampaign",
+        "sourceSnapshot",
+        "advance",
+        "counts",
+        "questionTypes",
+        "policies",
+        "outputs",
+    }
+    if set(receipt) != expected_top_level:
+        raise CampaignError("Level 521 Damage/Hit READY shape differs")
+    _parse_utc_timestamp(
+        str(receipt.get("generatedAtUtc", "")), "Level 521 Damage/Hit generation"
+    )
+    parent_root = (REPO_ROOT / LEVEL521_DAMAGE_WRITES_PARENT_RELATIVE).resolve()
+    parent_receipt = _runtime_json(
+        parent_root / "campaign.ready.json", "Level 521 Damage/Hit parent"
+    )
+    if not _same_json(receipt.get("sourceSnapshot"), parent_receipt.get("sourceSnapshot")):
+        raise CampaignError("Level 521 Damage/Hit source snapshot differs")
+    if receipt.get("questionTypes") != dict(
+        Counter(row["questionType"] for row in rows["questions"])
+    ):
+        raise CampaignError("Level 521 Damage/Hit question types differ")
+    if receipt.get("policies") != _level521_damage_writes_policies():
+        raise CampaignError("Level 521 Damage/Hit policies differ")
+    outputs = _runtime_mapping(
+        receipt.get("outputs"), "Level 521 Damage/Hit outputs"
+    )
+    if set(outputs) != set(OUTPUTS):
+        raise CampaignError("Level 521 Damage/Hit output set differs")
+    raw_root = Path(os.path.abspath(campaign_root))
+    try:
+        plain_root = ghidra_backup.resolve_plain_path(
+            raw_root, "Level 521 Damage/Hit campaign root", strict=True
+        )
+    except (ghidra_backup.BackupError, OSError) as exc:
+        raise CampaignError(
+            f"Level 521 Damage/Hit campaign root is not plain: {exc}"
+        ) from exc
+    if plain_root != raw_root:
+        raise CampaignError("Level 521 Damage/Hit campaign root aliases another path")
+    authority_files: list[tuple[str, Path]] = []
+    for label, path in [
+        ("campaign READY", plain_root / "campaign.ready.json"),
+        *[
+            (
+                f"reducer {path.relative_to(plain_root / '_reducer').as_posix()}",
+                path,
+            )
+            for path in (plain_root / "_reducer").rglob("*")
+            if path.is_file()
+        ],
+    ]:
+        try:
+            plain = ghidra_backup.resolve_plain_path(
+                path, f"Level 521 Damage/Hit {label}", strict=True
+            )
+        except (ghidra_backup.BackupError, OSError) as exc:
+            raise CampaignError(
+                f"Level 521 Damage/Hit {label} is not plain: {exc}"
+            ) from exc
+        if plain.stat().st_nlink != 1:
+            raise CampaignError(
+                f"Level 521 Damage/Hit {label} has multiple hard links"
+            )
+        authority_files.append((label, plain))
+    output_files: list[tuple[str, Path]] = []
+    for name in OUTPUTS:
+        stamp = _runtime_mapping(
+            outputs.get(name), f"Level 521 Damage/Hit output {name}"
+        )
+        if set(stamp) != {"path", "bytes", "sha256", "lastWriteUtc"}:
+            raise CampaignError(
+                f"Level 521 Damage/Hit output stamp shape differs: {name}"
+            )
+        if stamp.get("path") != name:
+            raise CampaignError(f"Level 521 Damage/Hit output path differs: {name}")
+        _parse_utc_timestamp(
+            str(stamp.get("lastWriteUtc", "")), f"Level 521 Damage/Hit output {name}"
+        )
+        try:
+            path = ghidra_backup.resolve_plain_path(
+                plain_root / name, f"Level 521 Damage/Hit output {name}", strict=True
+            )
+        except (ghidra_backup.BackupError, OSError) as exc:
+            raise CampaignError(
+                f"Level 521 Damage/Hit output is not plain: {name}: {exc}"
+            ) from exc
+        if path.stat().st_nlink != 1:
+            raise CampaignError(
+                f"Level 521 Damage/Hit output has multiple hard links: {name}"
+            )
+        if {**coverage.file_stamp(path), "path": name} != stamp:
+            raise CampaignError(f"Level 521 Damage/Hit output stamp differs: {name}")
+        try:
+            if os.path.samefile(path, parent_root / name):
+                raise CampaignError(
+                    f"Level 521 Damage/Hit output aliases canonical Gen11: {name}"
+                )
+        except OSError as exc:
+            raise CampaignError(
+                f"Level 521 Damage/Hit output identity cannot be read: {exc}"
+            ) from exc
+        output_files.append((name, path))
+    _require_disjoint_evidence_files(
+        output_files, "Level 521 Damage/Hit outputs"
+    )
+    _require_disjoint_evidence_files(
+        authority_files + output_files, "Level 521 Damage/Hit authority files"
+    )
+
+
+def _validate_level521_damage_writes_advance_relation(
+    rows: dict[str, list[dict[str, str]]],
+    receipt: dict,
+    advance: object,
+    *,
+    campaign_root: Path | None,
+) -> dict[str, object]:
+    if not isinstance(advance, dict):
+        raise CampaignError("Level 521 Damage/Hit advance is absent")
+    parent = _runtime_mapping(
+        receipt.get("parentCampaign"), "Level 521 Damage/Hit parent"
+    )
+    parent_root = _resolve_repo_or_absolute(
+        parent.get("path"), "Level 521 Damage/Hit parent path"
+    )
+    expected_parent = (REPO_ROOT / LEVEL521_DAMAGE_WRITES_PARENT_RELATIVE).resolve()
+    parent_ready = _runtime_mapping(
+        parent.get("ready"), "Level 521 Damage/Hit parent READY"
+    )
+    if (
+        _integer(receipt.get("generation"), -1) != 12
+        or parent_root != expected_parent
+        or parent_ready.get("path") != "campaign.ready.json"
+        or parent_ready.get("sha256") != LEVEL521_DAMAGE_WRITES_PARENT_READY_SHA256
+        or advance.get("kind") != LEVEL521_DAMAGE_WRITES_ADVANCE_KIND
+        or advance.get("schema") != LEVEL521_DAMAGE_WRITES_ADVANCE_SCHEMA
+        or advance.get("branchId") != GHIDRA_PARTITION_RECOVERY_LINEAGE_ID
+    ):
+        raise CampaignError("Level 521 Damage/Hit generation identity differs")
+    base_receipt = _runtime_json(
+        expected_parent / "campaign.ready.json", "Level 521 Damage/Hit exact parent"
+    )
+    expected_rows, expected_advance = _level521_damage_writes_rows_and_advance(
+        expected_parent,
+        REPO_ROOT / LEVEL521_DAMAGE_WRITES_PROOF_RELATIVE,
+        base_receipt,
+    )
+    if not _same_json(rows, expected_rows):
+        raise CampaignError("Level 521 Damage/Hit campaign rows differ")
+    if not _same_json(advance, expected_advance):
+        raise CampaignError("Level 521 Damage/Hit advance receipt differs")
+    if receipt.get("counts") != LEVEL521_DAMAGE_WRITES_EXPECTED_GENERATION12_COUNTS:
+        raise CampaignError("Level 521 Damage/Hit READY counts differ")
+    if campaign_root is not None:
+        _validate_level521_damage_writes_receipt_envelope(
+            rows, receipt, campaign_root
+        )
+    return {
+        "adjudicationIds": {
+            row["adjudicationId"] for row in expected_rows["adjudications"]
+        }
+        - {
+            row["adjudicationId"]
+            for row in _campaign_rows_from_root(expected_parent)["adjudications"]
+        },
+        "advance": expected_advance,
+    }
+
+
+def advance_level521_damage_writes(
+    campaign: Path,
+    proof_root: Path,
+    out: Path,
+    *,
+    _self_check: bool = True,
+    _verified_parent_receipt: dict | None = None,
+) -> dict:
+    """Publish the bounded Damage/Hit write and partial parity advance."""
+
+    if out.exists():
+        raise CampaignError(f"refusing existing Level 521 Damage/Hit destination: {out}")
+    base_receipt = (
+        _verified_parent_receipt
+        if _verified_parent_receipt is not None
+        else _verify_level521_damage_writes_parent_campaign(campaign)
+    )
+    rows, advance = _level521_damage_writes_rows_and_advance(
+        campaign, proof_root, base_receipt
+    )
+    output_rows = {
+        "campaign-functions.tsv": (FUNCTION_COLUMNS, rows["functions"]),
+        "campaign-residuals.tsv": (RESIDUAL_COLUMNS, rows["residuals"]),
+        "campaign-questions.tsv": (QUESTION_COLUMNS, rows["questions"]),
+        "campaign-scenarios.tsv": (SCENARIO_COLUMNS, rows["scenarios"]),
+        "campaign-levers.tsv": (LEVER_COLUMNS, rows["levers"]),
+        "campaign-contracts.tsv": (CONTRACT_COLUMNS, rows["contracts"]),
+        "campaign-adjudications.tsv": (ADJUDICATION_COLUMNS, rows["adjudications"]),
+        "campaign-supersessions.tsv": (SUPERSESSION_COLUMNS, rows["supersessions"]),
+    }
+    base_ready = coverage.file_stamp(campaign / "campaign.ready.json")
+    out.parent.mkdir(parents=True, exist_ok=True)
+    stage = Path(tempfile.mkdtemp(prefix=f".{out.name}.", dir=out.parent))
+    try:
+        for name, (columns, output) in output_rows.items():
+            _write_tsv(stage / name, columns, output)
+        reducer = _publish_reducer(stage)
+        receipt = {
+            "schema": SCHEMA,
+            "reducer": reducer,
+            "generatedAtUtc": datetime.now(timezone.utc).isoformat(),
+            "generation": 12,
+            "parentCampaign": {
+                "path": str(campaign.resolve()),
+                "ready": {**base_ready, "path": "campaign.ready.json"},
+            },
+            "sourceSnapshot": base_receipt["sourceSnapshot"],
+            "advance": advance,
+            "counts": {name: len(value) for name, value in rows.items()},
+            "questionTypes": dict(
+                Counter(row["questionType"] for row in rows["questions"])
+            ),
+            "policies": _level521_damage_writes_policies(),
+            "outputs": {
+                name: {**coverage.file_stamp(stage / name), "path": name}
+                for name in OUTPUTS
+            },
+        }
+        (stage / "campaign.ready.json").write_text(
+            json.dumps(receipt, indent=2) + "\n", encoding="utf-8"
+        )
+        if _self_check:
+            verify(stage)
+        os.replace(stage, out)
+        return receipt
+    except Exception:
+        shutil.rmtree(stage, ignore_errors=True)
+        raise
+
+
+def _applydamage_reproof_policies() -> list[str]:
+    return [
+        "Only CUnit::ApplyDamage at 0x004F9A90 and its exact contract/question frontier change.",
+        "The promotion is bounded to one replicated authored 1000.0-damage invocation with exact call-entry state and two exact field-store pairs.",
+        "The life store proves 0x3BA3D70B to 0xC479FFAE; the shield store proves only 0.0 over 0.0 and cannot establish positive-shield absorption.",
+        "A recorded replay gap withholds call/return association, death-call ordering, and any universal all-path behavior.",
+        "The retained 24 GiB trace remains dual-receipt-hash-bound and actual-size-checked; this advance records no trace and does not rehash it.",
+        "The Godot mapping is PARTIAL_CONTRACT with one exact overkill-vector parity test, not REBUILD_READY.",
+        "No executable or Ghidra mutation is performed by this campaign advance.",
+    ]
+
+
+def _applydamage_reproof_successor_specs() -> list[dict[str, object]]:
+    return [
+        {
+            "questionType": "EXECUTED_FUNCTION_CONTRACT",
+            "priority": 1,
+            "score": 980.0,
+            "requiresElevation": False,
+            "recommendedInstrument": (
+                "EXISTING_TRACE_SHIELD_STATE_SEARCH_THEN_AUTHORED_SAFE_COPY_SHIELD_MATRIX"
+            ),
+            "question": (
+                "How does retail CUnit::ApplyDamage transform positive shields and life for "
+                "applyShields TRUE versus FALSE, including the exact exhaustion boundary?"
+            ),
+            "cheapestFalsifier": (
+                "A retained positive-shield invocation or minimal safe-copy shield matrix "
+                "contradicts the proposed +0x100 shield and +0xF8 life ordering or values."
+            ),
+            "source": "applydamage-primary-ttd-reproof-v1",
+            "currentOwner": "recursive-re-campaign",
+        },
+        {
+            "questionType": "EXECUTED_FUNCTION_CONTRACT",
+            "priority": 2,
+            "score": 860.0,
+            "requiresElevation": False,
+            "recommendedInstrument": (
+                "EXISTING_TRACE_CALL_EDGE_MATRIX_THEN_MINIMAL_DEATH_AND_HEALING_PROBE"
+            ),
+            "question": (
+                "Which segment, healing, message/effect, and death-virtual paths follow "
+                "CUnit::ApplyDamage, and what exact return association survives without a replay gap?"
+            ),
+            "cheapestFalsifier": (
+                "A gap-free retained invocation or minimal death/healing probe disproves the "
+                "bounded store set, path ordering, or source-correlated void ABI."
+            ),
+            "source": "applydamage-primary-ttd-reproof-v1",
+            "currentOwner": "recursive-re-campaign",
+        },
+    ]
+
+
+def _applydamage_reproof_adjudication_id() -> str:
+    return "A-" + _sha256_text(
+        "|".join(
+            (
+                APPLYDAMAGE_REPROOF_PARENT_READY_SHA256,
+                APPLYDAMAGE_REPROOF_READY_SHA256,
+                applydamage_reproof.CONTRACT_ID,
+                applydamage_reproof.QUESTION_ID,
+                "SURVIVED",
+            )
+        )
+    )[:16]
+
+
+def _validate_applydamage_reproof(proof_root: Path) -> dict:
+    raw = Path(os.path.abspath(proof_root))
+    expected = (REPO_ROOT / APPLYDAMAGE_REPROOF_RELATIVE).resolve()
+    try:
+        plain = ghidra_backup.resolve_plain_path(
+            raw, "ApplyDamage reproof root", strict=True
+        )
+    except (ghidra_backup.BackupError, OSError) as exc:
+        raise CampaignError(f"ApplyDamage reproof root is not plain: {exc}") from exc
+    if plain != expected:
+        raise CampaignError("ApplyDamage reproof is not the reviewed immutable root")
+    ready_path = plain / applydamage_reproof.READY_NAME
+    owner_root = Path(__file__).resolve().parents[1]
+    author_path = Path(applydamage_reproof.__file__).resolve()
+    parity_test = (
+        owner_root
+        / "rebuild/OnslaughtRebuild.Core.Tests/Level100DestructionContactTests.cs"
+    )
+    parity_owner = owner_root / "rebuild/OnslaughtRebuild.Core/Level100Destruction.cs"
+    for label, path in (
+        ("READY", ready_path),
+        ("author", author_path),
+        ("parity test", parity_test),
+        ("parity owner", parity_owner),
+    ):
+        try:
+            resolved = ghidra_backup.resolve_plain_path(
+                path, f"ApplyDamage reproof {label}", strict=True
+            )
+        except (ghidra_backup.BackupError, OSError) as exc:
+            raise CampaignError(f"ApplyDamage reproof {label} is not plain: {exc}") from exc
+        if resolved.stat().st_nlink != 1:
+            raise CampaignError(f"ApplyDamage reproof {label} has multiple hard links")
+    if (
+        ready_path.stat().st_size != APPLYDAMAGE_REPROOF_READY_BYTES
+        or coverage.sha256_of(ready_path) != APPLYDAMAGE_REPROOF_READY_SHA256
+        or author_path.stat().st_size != APPLYDAMAGE_REPROOF_AUTHOR_BYTES
+        or coverage.sha256_of(author_path) != APPLYDAMAGE_REPROOF_AUTHOR_SHA256
+        or coverage.sha256_of(parity_test) != APPLYDAMAGE_REPROOF_PARITY_TEST_SHA256
+        or coverage.sha256_of(parity_owner) != APPLYDAMAGE_REPROOF_PARITY_OWNER_SHA256
+    ):
+        raise CampaignError("ApplyDamage reproof or parity identity differs")
+    receipt = _runtime_json(ready_path, "ApplyDamage reproof READY")
+    try:
+        derived = applydamage_reproof.derive(REPO_ROOT)
+        generated = str(receipt.get("generatedAtUtc", ""))
+        if not generated.endswith("Z"):
+            raise ValueError("proof timestamp is not UTC")
+        datetime.fromisoformat(generated[:-1] + "+00:00")
+        stable_receipt = dict(receipt)
+        del stable_receipt["generatedAtUtc"]
+        # The frozen reducer carries the exact author at
+        # _reducer/tools/re_applydamage_primary_reproof.py.  The historical
+        # proof recorded its source checkout path; normalize only that path,
+        # while requiring the exact byte/hash identity above.
+        derived["author"] = dict(derived["author"])
+        derived["author"]["path"] = "tools/re_applydamage_primary_reproof.py"
+        if stable_receipt != derived:
+            raise ValueError("proof content differs from independently rederived evidence")
+    except (
+        applydamage_reproof.ProofError,
+        KeyError,
+        ValueError,
+        OSError,
+        struct.error,
+    ) as exc:
+        raise CampaignError(f"ApplyDamage reproof does not independently rederive: {exc}") from exc
+    if (
+        receipt.get("schema") != applydamage_reproof.SCHEMA
+        or receipt.get("verdict") != "PASS"
+        or receipt.get("claim") != applydamage_reproof.CLAIM
+        or receipt.get("parent")
+        != {
+            "generation": 12,
+            "readySha256": APPLYDAMAGE_REPROOF_PARENT_READY_SHA256,
+            "reducerId": APPLYDAMAGE_REPROOF_PARENT_REDUCER_ID,
+            "authorityReceiptSha256": APPLYDAMAGE_REPROOF_PARENT_AUTHORITY_SHA256,
+        }
+        or receipt.get("entity", {}).get("entityKey") != applydamage_reproof.ENTITY_KEY
+        or receipt.get("entity", {}).get("contractId") != applydamage_reproof.CONTRACT_ID
+        or receipt.get("entity", {}).get("questionId") != applydamage_reproof.QUESTION_ID
+        or receipt.get("adjudication", {}).get("semanticGrade")
+        != "C2_BOUNDED_RUNTIME"
+        or receipt.get("adjudication", {}).get("refuterVerdict") != "SURVIVED"
+        or receipt.get("callContext", {}).get("returnAssociation")
+        != "WITHHELD_RECORDED_GAP"
+        or receipt.get("writes", {}).get("gapFree") is not False
+        or receipt.get("writes", {}).get("shields", {}).get("beforeBits")
+        != "0x00000000"
+        or receipt.get("writes", {}).get("shields", {}).get("afterBits")
+        != "0x00000000"
+        or receipt.get("writes", {}).get("life", {}).get("beforeBits")
+        != "0x3ba3d70b"
+        or receipt.get("writes", {}).get("life", {}).get("afterBits")
+        != "0xc479ffae"
+    ):
+        raise CampaignError("ApplyDamage reproof claim boundary differs")
+    return receipt
+
+
+def _applydamage_reproof_delta(
+    before: dict[str, list[dict[str, str]]],
+    after: dict[str, list[dict[str, str]]],
+) -> dict[str, object]:
+    for name in ("residuals", "scenarios", "levers", "supersessions"):
+        if before[name] != after[name]:
+            raise CampaignError(f"ApplyDamage reproof changed unrelated {name}")
+
+    def keyed(items: list[dict[str, str]], field: str) -> dict[str, dict[str, str]]:
+        result = {row[field]: row for row in items}
+        if len(result) != len(items):
+            raise CampaignError(f"ApplyDamage reproof delta duplicates {field}")
+        return result
+
+    function_before = keyed(before["functions"], "entityKey")
+    function_after = keyed(after["functions"], "entityKey")
+    contract_before = keyed(before["contracts"], "contractId")
+    contract_after = keyed(after["contracts"], "contractId")
+    question_before = keyed(before["questions"], "questionId")
+    question_after = keyed(after["questions"], "questionId")
+    adjudication_before = keyed(before["adjudications"], "adjudicationId")
+    adjudication_after = keyed(after["adjudications"], "adjudicationId")
+    if (
+        set(function_before) != set(function_after)
+        or set(contract_before) != set(contract_after)
+        or not set(question_before) <= set(question_after)
+        or not set(adjudication_before) <= set(adjudication_after)
+    ):
+        raise CampaignError("ApplyDamage reproof changed entity identities")
+    function_changes = {
+        entity: sorted(
+            field
+            for field in FUNCTION_COLUMNS
+            if prior[field] != function_after[entity][field]
+        )
+        for entity, prior in function_before.items()
+        if prior != function_after[entity]
+    }
+    contract_changes = {
+        contract_id: sorted(
+            field
+            for field in CONTRACT_COLUMNS
+            if prior[field] != contract_after[contract_id][field]
+        )
+        for contract_id, prior in contract_before.items()
+        if prior != contract_after[contract_id]
+    }
+    if set(function_changes) != {applydamage_reproof.ENTITY_KEY}:
+        raise CampaignError("ApplyDamage reproof function delta population differs")
+    if set(contract_changes) != {applydamage_reproof.CONTRACT_ID}:
+        raise CampaignError("ApplyDamage reproof contract delta population differs")
+    function_allowed = {
+        "evidenceStates",
+        "resolutionState",
+        "semanticGrade",
+        "lever",
+        "cheapestFalsifier",
+        "lastMeasurementDate",
+    }
+    contract_allowed = {
+        "contractState",
+        "semanticGrade",
+        "receiver",
+        "inputs",
+        "returns",
+        "writes",
+        "sideEffects",
+        "preconditions",
+        "failureModes",
+        "authorVerdict",
+        "runtimeVerdict",
+        "refuterVerdict",
+        "questionIds",
+        "evidenceRefs",
+        "cheapestFalsifier",
+        "rebuildOwner",
+        "rebuildImplementation",
+        "parityTests",
+        "rebuildState",
+        "remainingUncertainty",
+        "lastMeasurementDate",
+    }
+    if set(next(iter(function_changes.values()))) - function_allowed:
+        raise CampaignError("ApplyDamage reproof function delta exceeds its whitelist")
+    if set(next(iter(contract_changes.values()))) - contract_allowed:
+        raise CampaignError("ApplyDamage reproof contract delta exceeds its whitelist")
+    modified_questions = {
+        question_id: sorted(
+            field
+            for field in QUESTION_COLUMNS
+            if prior[field] != question_after[question_id][field]
+        )
+        for question_id, prior in question_before.items()
+        if prior != question_after[question_id]
+    }
+    if set(modified_questions) != {applydamage_reproof.QUESTION_ID} or (
+        set(next(iter(modified_questions.values())))
+        - {"state", "attemptCount", "lastOutcome", "lastMeasurementDate"}
+    ):
+        raise CampaignError("ApplyDamage reproof parent-question delta differs")
+    added_questions = sorted(set(question_after) - set(question_before))
+    added_adjudications = sorted(set(adjudication_after) - set(adjudication_before))
+    if len(added_questions) != 2 or added_adjudications != [
+        _applydamage_reproof_adjudication_id()
+    ]:
+        raise CampaignError("ApplyDamage reproof successor/adjudication census differs")
+    return {
+        "functionRowsChanged": function_changes,
+        "contractRowsChanged": contract_changes,
+        "questionRowsChanged": modified_questions,
+        "questionIdsAdded": added_questions,
+        "adjudicationIdsAdded": added_adjudications,
+        "unchangedLedgers": ["residuals", "scenarios", "levers", "supersessions"],
+        "namesChanged": 0,
+        "rangesChanged": 0,
+        "witnessedWritesProved": 2,
+        "zeroWriteControlsProved": 1,
+        "supersessionsAdded": 0,
+        "rebuildMappingsChanged": 1,
+    }
+
+
+def _applydamage_reproof_rows_and_advance(
+    campaign: Path, proof_root: Path, base_receipt: dict
+) -> tuple[dict[str, list[dict[str, str]]], dict]:
+    expected_parent = (REPO_ROOT / APPLYDAMAGE_REPROOF_PARENT_RELATIVE).resolve()
+    if campaign.resolve() != expected_parent:
+        raise CampaignError("ApplyDamage reproof does not use canonical Gen12")
+    if (
+        base_receipt.get("generation") != 12
+        or base_receipt.get("counts") != APPLYDAMAGE_REPROOF_PARENT_COUNTS
+        or base_receipt.get("reducer", {}).get("id")
+        != APPLYDAMAGE_REPROOF_PARENT_REDUCER_ID
+    ):
+        raise CampaignError("ApplyDamage reproof parent receipt differs")
+    proof_receipt = _validate_applydamage_reproof(proof_root)
+    before = _campaign_rows_from_root(campaign)
+    rows = json.loads(json.dumps(before))
+    functions = {row["entityKey"]: row for row in rows["functions"]}
+    contracts = {row["contractId"]: row for row in rows["contracts"]}
+    questions = {row["questionId"]: row for row in rows["questions"]}
+    function = functions.get(applydamage_reproof.ENTITY_KEY)
+    contract = contracts.get(applydamage_reproof.CONTRACT_ID)
+    parent_question = questions.get(applydamage_reproof.QUESTION_ID)
+    if (
+        function is None
+        or contract is None
+        or parent_question is None
+        or function.get("entryVa") != "0x004f9a90"
+        or function.get("currentName") != "CUnit__ApplyDamage"
+        or function.get("resolutionState") != "CANDIDATE_CONTRACT"
+        or function.get("semanticGrade") != "C1_CANDIDATE_PARTIAL"
+        or contract.get("entityKey") != applydamage_reproof.ENTITY_KEY
+        or contract.get("currentName") != "CUnit__ApplyDamage"
+        or contract.get("contractState") != "CANDIDATE_NEEDS_REFUTER"
+        or contract.get("semanticGrade") != "C1_CANDIDATE_PARTIAL"
+        or contract.get("refuterVerdict") != "UNSCORED"
+        or parent_question.get("state") != "OPEN"
+        or parent_question.get("entityKey") != applydamage_reproof.ENTITY_KEY
+        or applydamage_reproof.QUESTION_ID
+        not in _state_values(
+            contract.get("questionIds"), "ApplyDamage reproof contract questions"
+        )
+    ):
+        raise CampaignError("ApplyDamage reproof parent row differs")
+    measured_at = str(proof_receipt["generatedAtUtc"])
+    measured_date = measured_at[:10]
+    history = [
+        row
+        for row in rows["questions"]
+        if row["entityKey"] == applydamage_reproof.ENTITY_KEY
+    ]
+    successors = [
+        _successor_question(
+            spec,
+            entity_key=applydamage_reproof.ENTITY_KEY,
+            parents=[parent_question],
+            history=history,
+            generation=13,
+            measured_at=measured_at,
+        )
+        for spec in _applydamage_reproof_successor_specs()
+    ]
+    if len({row["questionId"] for row in successors}) != 2:
+        raise CampaignError("ApplyDamage reproof successor identities collide")
+    parent_question["state"] = "CLOSED_SURVIVED"
+    parent_question["attemptCount"] = _integer(parent_question.get("attemptCount"), 0) + 1
+    parent_question["lastOutcome"] = "SURVIVED"
+    parent_question["lastMeasurementDate"] = measured_at
+    rows["questions"].extend(successors)
+
+    function["evidenceStates"] = _append_state(
+        function["evidenceStates"], "TTD_APPLYDAMAGE_CALL_ENTRY_REPLICATED"
+    )
+    function["evidenceStates"] = _append_state(
+        function["evidenceStates"], "TTD_APPLYDAMAGE_LIFE_SHIELD_WRITES_REPLICATED"
+    )
+    function["evidenceStates"] = _append_state(
+        function["evidenceStates"], "REBUILD_PARITY_MAPPED"
+    )
+    function["resolutionState"] = "BOUNDED_CONTRACT"
+    function["semanticGrade"] = "C2_BOUNDED_RUNTIME"
+    function["lever"] = successors[0]["recommendedInstrument"]
+    function["cheapestFalsifier"] = successors[0]["cheapestFalsifier"]
+    function["lastMeasurementDate"] = measured_date
+
+    proof_relative = APPLYDAMAGE_REPROOF_RELATIVE.as_posix()
+    inputs = proof_receipt["inputs"]
+    evidence_refs = [
+        f"{proof_relative}/proof.ready.json#sha256={APPLYDAMAGE_REPROOF_READY_SHA256}",
+        f"tools/re_applydamage_primary_reproof.py#sha256={APPLYDAMAGE_REPROOF_AUTHOR_SHA256}",
+        f"{proof_relative}/call-run-a-v2/call-context.jsonl#sha256={inputs['call-run-a-v2/call-context.jsonl']['sha256']}",
+        f"{proof_relative}/call-run-b/call-context.jsonl#sha256={inputs['call-run-b/call-context.jsonl']['sha256']}",
+        f"{proof_relative}/writes-run-a-closed/data-writes.jsonl#sha256={inputs['writes-run-a-closed/data-writes.jsonl']['sha256']}",
+        f"{proof_relative}/writes-run-b-closed/data-writes.jsonl#sha256={inputs['writes-run-b-closed/data-writes.jsonl']['sha256']}",
+        f"{proof_relative}/writes-poison-life-two/receipt.json#sha256={inputs['writes-poison-life-two/receipt.json']['sha256']}",
+        "local-lab/ghidra-damage-hit-semantic-live-promotion-20260809-v1/runs-v2/live-post-inventory/functions.tsv#sha256=075165bae3616dda0adf534625db612990daee9974b3fc85429d3b5b408ee979",
+        f"rebuild/OnslaughtRebuild.Core/Level100Destruction.cs#sha256={APPLYDAMAGE_REPROOF_PARITY_OWNER_SHA256}",
+        f"rebuild/OnslaughtRebuild.Core.Tests/Level100DestructionContactTests.cs#sha256={APPLYDAMAGE_REPROOF_PARITY_TEST_SHA256}",
+    ]
+    contract["contractState"] = "BOUNDED_CONTRACT_ADVANCED"
+    contract["semanticGrade"] = "C2_BOUNDED_RUNTIME"
+    contract["receiver"] = (
+        "CUnit* this; replicated receiver 0x080DC630 with vtable 0x005E24DC"
+    )
+    contract["inputs"] = (
+        "replicated entry stack/register state: damage_amount=1000.0f (0x447A0000); "
+        "damage_source=0x080E1A10; apply_shields=1; mesh_part_index=-1"
+    )
+    contract["returns"] = (
+        "void under the live Ghidra/static __thiscall prototype; a recorded kernel gap "
+        "withholds association of raw ret 0x10 at 0x004FA4A7 to the selected invocation"
+    )
+    contract["writes"] = (
+        "one replicated authored path: +0x100 shields 0x00000000->0x00000000 at "
+        "0x004F9E50 (store-zero control), then +0xF8 life "
+        "0x3BA3D70B->0xC479FFAE at 0x004F9E6E; vtable +0x0 is a zero-write control"
+    )
+    contract["sideEffects"] = (
+        "the bounded writer range is exactly [0x004F9A90,0x004FA4AA); the life result is "
+        "negative and reproduced by the Godot overkill vector, but death virtual/message/effect "
+        "ordering lies across the replay gap and remains unproved"
+    )
+    contract["preconditions"] = (
+        "retained authored Level 100 damage-script trace; receiver shields already zero; "
+        "apply_shields TRUE; mesh part -1; exact entry at 0x195B5C:0x99"
+    )
+    contract["failureModes"] = (
+        "positive-shield absorption, apply_shields FALSE, healing, segment selection, "
+        "gap-free return pairing, messages/effects, death virtuals, and alternate classes are open"
+    )
+    contract["authorVerdict"] = "SUPPORTED_BY_STATIC_AND_REPLICATED_TTD"
+    contract["runtimeVerdict"] = "MEASURED_BOUNDED_PATH"
+    contract["refuterVerdict"] = "SURVIVED"
+    for successor in successors:
+        contract["questionIds"] = _append_state(
+            contract["questionIds"], successor["questionId"]
+        )
+    for reference in evidence_refs:
+        contract["evidenceRefs"] = _append_state(contract["evidenceRefs"], reference)
+    contract["cheapestFalsifier"] = successors[0]["cheapestFalsifier"]
+    contract["rebuildOwner"] = "rebuild/OnslaughtRebuild.Core/Level100Destruction.cs"
+    contract["rebuildImplementation"] = (
+        "OnslaughtRebuild.Core.Level100DestructionState.ApplyRoundHit"
+    )
+    contract["parityTests"] = (
+        "rebuild/OnslaughtRebuild.Core.Tests/Level100DestructionContactTests.cs::"
+        "ApplyDamageTraceVectorPreservesExactOverkillBits"
+    )
+    contract["rebuildState"] = "PARTIAL_CONTRACT"
+    contract["remainingUncertainty"] = "; ".join(proof_receipt["limitations"][:4])
+    contract["lastMeasurementDate"] = measured_date
+
+    adjudication_id = _applydamage_reproof_adjudication_id()
+    if any(
+        row.get("adjudicationId") == adjudication_id for row in rows["adjudications"]
+    ):
+        raise CampaignError("ApplyDamage reproof adjudication already exists")
+    evidence_hashes = [reference.rsplit("#sha256=", 1)[1] for reference in evidence_refs]
+    rows["adjudications"].append(
+        {
+            "adjudicationId": adjudication_id,
+            "baseContractId": applydamage_reproof.CONTRACT_ID,
+            "entityKey": applydamage_reproof.ENTITY_KEY,
+            "overlaySchema": applydamage_reproof.SCHEMA,
+            "overlayReadySha256": APPLYDAMAGE_REPROOF_READY_SHA256,
+            "questionIdsAddressed": applydamage_reproof.QUESTION_ID,
+            "refuterVerdict": "SURVIVED",
+            "refuterEvidenceSha256": ";".join(evidence_hashes),
+            "semanticPromotionApplied": True,
+            "terminalState": "",
+            "successorQuestionIds": ";".join(
+                row["questionId"] for row in successors
+            ),
+            "remainingUncertainty": contract["remainingUncertainty"],
+            "measuredAtUtc": measured_at,
+        }
+    )
+    rows = {
+        name: [
+            {
+                field: value if isinstance(value, str) else str(value)
+                for field, value in row.items()
+            }
+            for row in values
+        ]
+        for name, values in rows.items()
+    }
+    counts = {name: len(value) for name, value in rows.items()}
+    if counts != APPLYDAMAGE_REPROOF_EXPECTED_GENERATION13_COUNTS:
+        raise CampaignError(f"ApplyDamage reproof output counts differ: {counts}")
+    delta = _applydamage_reproof_delta(before, rows)
+    proof_ready_stamp = coverage.file_stamp(
+        (REPO_ROOT / APPLYDAMAGE_REPROOF_RELATIVE) / "proof.ready.json"
+    )
+    successor_ids = [row["questionId"] for row in successors]
+    advance = {
+        "kind": APPLYDAMAGE_REPROOF_ADVANCE_KIND,
+        "schema": APPLYDAMAGE_REPROOF_ADVANCE_SCHEMA,
+        "branchId": GHIDRA_PARTITION_RECOVERY_LINEAGE_ID,
+        "observationId": "AD-"
+        + _sha256_text(
+            "|".join(
+                (
+                    APPLYDAMAGE_REPROOF_PARENT_READY_SHA256,
+                    APPLYDAMAGE_REPROOF_READY_SHA256,
+                    APPLYDAMAGE_REPROOF_ADVANCE_KIND,
+                )
+            )
+        )[:16],
+        "verdict": "SURVIVED",
+        "proof": {
+            "root": APPLYDAMAGE_REPROOF_RELATIVE.as_posix(),
+            "ready": {**proof_ready_stamp, "path": "proof.ready.json"},
+            "schema": applydamage_reproof.SCHEMA,
+            "author": {
+                "path": "tools/re_applydamage_primary_reproof.py",
+                "bytes": APPLYDAMAGE_REPROOF_AUTHOR_BYTES,
+                "sha256": APPLYDAMAGE_REPROOF_AUTHOR_SHA256,
+            },
+        },
+        "measuredAtUtc": measured_at,
+        "traceDisposition": (
+            "DUAL_WRAPPER_HASH_BOUND_AND_ACTUAL_SIZE_VERIFIED_NOT_REHASHED"
+        ),
+        "promotion": {
+            "entryVa": "0x004f9a90",
+            "entityKey": applydamage_reproof.ENTITY_KEY,
+            "contractId": applydamage_reproof.CONTRACT_ID,
+            "currentName": "CUnit__ApplyDamage",
+            "parentQuestionId": applydamage_reproof.QUESTION_ID,
+            "successorQuestionIds": successor_ids,
+            "adjudicationId": adjudication_id,
+            "gradeFrom": "C1_CANDIDATE_PARTIAL",
+            "gradeTo": "C2_BOUNDED_RUNTIME",
+        },
+        "delta": delta,
+        "questionsClosed": 1,
+        "questionsAdded": 2,
+        "adjudicationsAdded": 1,
+        "namesChanged": 0,
+        "witnessedWritesProved": 2,
+        "zeroWriteControlsProved": 1,
+        "rebuildMapping": {
+            "contractId": applydamage_reproof.CONTRACT_ID,
+            "state": "PARTIAL_CONTRACT",
+            "focusedTestsPassed": 1,
+        },
+        "liveGhidraDisposition": (
+            "EXISTING_NAME_AND_PROTOTYPE_CORROBORATED_NO_MUTATION"
+        ),
+        "semanticLimitations": list(proof_receipt["limitations"]),
+    }
+    return rows, advance
+
+
+def _validate_applydamage_reproof_receipt_envelope(
+    rows: dict[str, list[dict[str, str]]], receipt: dict, campaign_root: Path
+) -> None:
+    expected_top_level = {
+        "schema",
+        "reducer",
+        "generatedAtUtc",
+        "generation",
+        "parentCampaign",
+        "sourceSnapshot",
+        "advance",
+        "counts",
+        "questionTypes",
+        "policies",
+        "outputs",
+    }
+    if set(receipt) != expected_top_level:
+        raise CampaignError("ApplyDamage reproof READY shape differs")
+    _parse_utc_timestamp(
+        str(receipt.get("generatedAtUtc", "")), "ApplyDamage reproof generation"
+    )
+    parent_root = (REPO_ROOT / APPLYDAMAGE_REPROOF_PARENT_RELATIVE).resolve()
+    parent_receipt = _runtime_json(
+        parent_root / "campaign.ready.json", "ApplyDamage reproof parent"
+    )
+    if not _same_json(receipt.get("sourceSnapshot"), parent_receipt.get("sourceSnapshot")):
+        raise CampaignError("ApplyDamage reproof source snapshot differs")
+    if receipt.get("questionTypes") != dict(
+        Counter(row["questionType"] for row in rows["questions"])
+    ):
+        raise CampaignError("ApplyDamage reproof question types differ")
+    if receipt.get("policies") != _applydamage_reproof_policies():
+        raise CampaignError("ApplyDamage reproof policies differ")
+    outputs = _runtime_mapping(receipt.get("outputs"), "ApplyDamage reproof outputs")
+    if set(outputs) != set(OUTPUTS):
+        raise CampaignError("ApplyDamage reproof output set differs")
+    raw_root = Path(os.path.abspath(campaign_root))
+    try:
+        plain_root = ghidra_backup.resolve_plain_path(
+            raw_root, "ApplyDamage reproof campaign root", strict=True
+        )
+    except (ghidra_backup.BackupError, OSError) as exc:
+        raise CampaignError(f"ApplyDamage reproof campaign root is not plain: {exc}") from exc
+    if plain_root != raw_root:
+        raise CampaignError("ApplyDamage reproof campaign root aliases another path")
+    authority_files: list[tuple[str, Path]] = []
+    for label, path in [
+        ("campaign READY", plain_root / "campaign.ready.json"),
+        *[
+            (f"reducer {path.relative_to(plain_root / '_reducer').as_posix()}", path)
+            for path in (plain_root / "_reducer").rglob("*")
+            if path.is_file()
+        ],
+    ]:
+        try:
+            plain = ghidra_backup.resolve_plain_path(
+                path, f"ApplyDamage reproof {label}", strict=True
+            )
+        except (ghidra_backup.BackupError, OSError) as exc:
+            raise CampaignError(f"ApplyDamage reproof {label} is not plain: {exc}") from exc
+        if plain.stat().st_nlink != 1:
+            raise CampaignError(f"ApplyDamage reproof {label} has multiple hard links")
+        authority_files.append((label, plain))
+    output_files: list[tuple[str, Path]] = []
+    for name in OUTPUTS:
+        stamp = _runtime_mapping(outputs.get(name), f"ApplyDamage reproof output {name}")
+        if set(stamp) != {"path", "bytes", "sha256", "lastWriteUtc"}:
+            raise CampaignError(f"ApplyDamage reproof output stamp shape differs: {name}")
+        if stamp.get("path") != name:
+            raise CampaignError(f"ApplyDamage reproof output path differs: {name}")
+        _parse_utc_timestamp(
+            str(stamp.get("lastWriteUtc", "")), f"ApplyDamage reproof output {name}"
+        )
+        try:
+            path = ghidra_backup.resolve_plain_path(
+                plain_root / name, f"ApplyDamage reproof output {name}", strict=True
+            )
+        except (ghidra_backup.BackupError, OSError) as exc:
+            raise CampaignError(f"ApplyDamage reproof output is not plain: {name}: {exc}") from exc
+        if path.stat().st_nlink != 1:
+            raise CampaignError(f"ApplyDamage reproof output has multiple hard links: {name}")
+        if {**coverage.file_stamp(path), "path": name} != stamp:
+            raise CampaignError(f"ApplyDamage reproof output stamp differs: {name}")
+        try:
+            if os.path.samefile(path, parent_root / name):
+                raise CampaignError(f"ApplyDamage reproof output aliases canonical Gen12: {name}")
+        except OSError as exc:
+            raise CampaignError(f"ApplyDamage reproof output identity cannot be read: {exc}") from exc
+        output_files.append((name, path))
+    _require_disjoint_evidence_files(output_files, "ApplyDamage reproof outputs")
+    _require_disjoint_evidence_files(
+        authority_files + output_files, "ApplyDamage reproof authority files"
+    )
+
+
+def _validate_applydamage_reproof_advance_relation(
+    rows: dict[str, list[dict[str, str]]],
+    receipt: dict,
+    advance: object,
+    *,
+    campaign_root: Path | None,
+) -> dict[str, object]:
+    if not isinstance(advance, dict):
+        raise CampaignError("ApplyDamage reproof advance is absent")
+    parent = _runtime_mapping(receipt.get("parentCampaign"), "ApplyDamage reproof parent")
+    parent_root = _resolve_repo_or_absolute(
+        parent.get("path"), "ApplyDamage reproof parent path"
+    )
+    expected_parent = (REPO_ROOT / APPLYDAMAGE_REPROOF_PARENT_RELATIVE).resolve()
+    parent_ready = _runtime_mapping(
+        parent.get("ready"), "ApplyDamage reproof parent READY"
+    )
+    if (
+        _integer(receipt.get("generation"), -1) != 13
+        or parent_root != expected_parent
+        or parent_ready.get("path") != "campaign.ready.json"
+        or parent_ready.get("sha256") != APPLYDAMAGE_REPROOF_PARENT_READY_SHA256
+        or advance.get("kind") != APPLYDAMAGE_REPROOF_ADVANCE_KIND
+        or advance.get("schema") != APPLYDAMAGE_REPROOF_ADVANCE_SCHEMA
+        or advance.get("branchId") != GHIDRA_PARTITION_RECOVERY_LINEAGE_ID
+    ):
+        raise CampaignError("ApplyDamage reproof generation identity differs")
+    base_receipt = _runtime_json(
+        expected_parent / "campaign.ready.json", "ApplyDamage reproof exact parent"
+    )
+    expected_rows, expected_advance = _applydamage_reproof_rows_and_advance(
+        expected_parent,
+        REPO_ROOT / APPLYDAMAGE_REPROOF_RELATIVE,
+        base_receipt,
+    )
+    if not _same_json(rows, expected_rows):
+        raise CampaignError("ApplyDamage reproof campaign rows differ")
+    if not _same_json(advance, expected_advance):
+        raise CampaignError("ApplyDamage reproof advance receipt differs")
+    if receipt.get("counts") != APPLYDAMAGE_REPROOF_EXPECTED_GENERATION13_COUNTS:
+        raise CampaignError("ApplyDamage reproof READY counts differ")
+    if campaign_root is not None:
+        _validate_applydamage_reproof_receipt_envelope(rows, receipt, campaign_root)
+    return {
+        "adjudicationIds": {_applydamage_reproof_adjudication_id()},
+        "advance": expected_advance,
+    }
+
+
+def advance_applydamage_reproof(
+    campaign: Path,
+    proof_root: Path,
+    out: Path,
+    *,
+    _self_check: bool = True,
+    _verified_parent_receipt: dict | None = None,
+) -> dict:
+    """Publish the bounded ApplyDamage C2 and partial parity advance."""
+
+    if out.exists():
+        raise CampaignError(f"refusing existing ApplyDamage reproof destination: {out}")
+    base_receipt = (
+        _verified_parent_receipt
+        if _verified_parent_receipt is not None
+        else _verify_applydamage_reproof_parent_campaign(campaign)
+    )
+    rows, advance = _applydamage_reproof_rows_and_advance(
+        campaign, proof_root, base_receipt
+    )
+    output_rows = {
+        "campaign-functions.tsv": (FUNCTION_COLUMNS, rows["functions"]),
+        "campaign-residuals.tsv": (RESIDUAL_COLUMNS, rows["residuals"]),
+        "campaign-questions.tsv": (QUESTION_COLUMNS, rows["questions"]),
+        "campaign-scenarios.tsv": (SCENARIO_COLUMNS, rows["scenarios"]),
+        "campaign-levers.tsv": (LEVER_COLUMNS, rows["levers"]),
+        "campaign-contracts.tsv": (CONTRACT_COLUMNS, rows["contracts"]),
+        "campaign-adjudications.tsv": (ADJUDICATION_COLUMNS, rows["adjudications"]),
+        "campaign-supersessions.tsv": (SUPERSESSION_COLUMNS, rows["supersessions"]),
+    }
+    base_ready = coverage.file_stamp(campaign / "campaign.ready.json")
+    out.parent.mkdir(parents=True, exist_ok=True)
+    stage = Path(tempfile.mkdtemp(prefix=f".{out.name}.", dir=out.parent))
+    try:
+        for name, (columns, output) in output_rows.items():
+            _write_tsv(stage / name, columns, output)
+        reducer = _publish_reducer(stage)
+        receipt = {
+            "schema": SCHEMA,
+            "reducer": reducer,
+            "generatedAtUtc": datetime.now(timezone.utc).isoformat(),
+            "generation": 13,
+            "parentCampaign": {
+                "path": str(campaign.resolve()),
+                "ready": {**base_ready, "path": "campaign.ready.json"},
+            },
+            "sourceSnapshot": base_receipt["sourceSnapshot"],
+            "advance": advance,
+            "counts": {name: len(value) for name, value in rows.items()},
+            "questionTypes": dict(
+                Counter(row["questionType"] for row in rows["questions"])
+            ),
+            "policies": _applydamage_reproof_policies(),
+            "outputs": {
+                name: {**coverage.file_stamp(stage / name), "path": name}
+                for name in OUTPUTS
+            },
+        }
+        (stage / "campaign.ready.json").write_text(
+            json.dumps(receipt, indent=2) + "\n", encoding="utf-8"
+        )
+        if _self_check:
+            verify(stage)
+        os.replace(stage, out)
+        return receipt
+    except Exception:
+        shutil.rmtree(stage, ignore_errors=True)
+        raise
+
+
+def _tokenarchive_dispatch_policies() -> list[str]:
+    return [
+        "Only the open 0x004F5AC5..0x004F5B70 residual, its existing contract/question, and one nonsemantic adjudication may change.",
+        "The 171 bytes are covered exactly by a 3-byte align NOP, seven 32-bit ReadNextToken dispatch pointers, a 125-byte index table, and fifteen trailing NOPs.",
+        "The consumer proof is bounded to the exact INC/CMP 0x7C/index-load/computed-jump sequence and the exact Ghidra reference graph.",
+        "The earlier 28-byte small-table claim remains police-refuted; it is not reused as authority for the 125-byte remainder.",
+        "No function, name, signature, runtime contract, rebuild mapping, executable, trace, or Ghidra project changes in this campaign advance.",
+    ]
+
+
+def _tokenarchive_dispatch_adjudication_id() -> str:
+    return "A-" + _sha256_text(
+        "|".join(
+            (
+                TOKENARCHIVE_DISPATCH_PARENT_READY_SHA256,
+                TOKENARCHIVE_DISPATCH_PROOF_READY_SHA256,
+                tokenarchive_reproof.CONTRACT_ID,
+                tokenarchive_reproof.QUESTION_ID,
+                "SURVIVED",
+                "TERMINAL_DATA",
+            )
+        )
+    )[:16]
+
+
+def _validate_tokenarchive_dispatch_reproof(proof_root: Path) -> dict:
+    raw = Path(os.path.abspath(proof_root))
+    expected = (REPO_ROOT / TOKENARCHIVE_DISPATCH_PROOF_RELATIVE).resolve()
+    try:
+        plain = ghidra_backup.resolve_plain_path(
+            raw, "TokenArchive dispatch reproof root", strict=True
+        )
+    except (ghidra_backup.BackupError, OSError) as exc:
+        raise CampaignError(
+            f"TokenArchive dispatch reproof root is not plain: {exc}"
+        ) from exc
+    if plain != expected:
+        raise CampaignError(
+            "TokenArchive dispatch reproof is not the reviewed immutable root"
+        )
+    ready_path = plain / tokenarchive_reproof.READY_NAME
+    author_path = Path(tokenarchive_reproof.__file__).resolve()
+    for label, path in (("READY", ready_path), ("author", author_path)):
+        try:
+            resolved = ghidra_backup.resolve_plain_path(
+                path, f"TokenArchive dispatch reproof {label}", strict=True
+            )
+        except (ghidra_backup.BackupError, OSError) as exc:
+            raise CampaignError(
+                f"TokenArchive dispatch reproof {label} is not plain: {exc}"
+            ) from exc
+        if resolved.stat().st_nlink != 1:
+            raise CampaignError(
+                f"TokenArchive dispatch reproof {label} has multiple hard links"
+            )
+    if (
+        ready_path.stat().st_size != TOKENARCHIVE_DISPATCH_PROOF_READY_BYTES
+        or coverage.sha256_of(ready_path)
+        != TOKENARCHIVE_DISPATCH_PROOF_READY_SHA256
+        or author_path.stat().st_size != TOKENARCHIVE_DISPATCH_PROOF_AUTHOR_BYTES
+        or coverage.sha256_of(author_path)
+        != TOKENARCHIVE_DISPATCH_PROOF_AUTHOR_SHA256
+    ):
+        raise CampaignError(
+            "TokenArchive dispatch reproof READY or author identity differs"
+        )
+    receipt = _runtime_json(ready_path, "TokenArchive dispatch reproof READY")
+    try:
+        derived = tokenarchive_reproof.derive(REPO_ROOT)
+        generated = str(receipt.get("generatedAtUtc", ""))
+        if not generated.endswith("Z"):
+            raise ValueError("proof timestamp is not UTC")
+        datetime.fromisoformat(generated[:-1] + "+00:00")
+        stable_receipt = dict(receipt)
+        del stable_receipt["generatedAtUtc"]
+        derived["author"] = dict(derived["author"])
+        derived["author"]["path"] = "tools/re_tokenarchive_dispatch_reproof.py"
+        if stable_receipt != derived:
+            raise ValueError(
+                "proof content differs from independently rederived evidence"
+            )
+    except (
+        tokenarchive_reproof.ProofError,
+        KeyError,
+        IndexError,
+        ValueError,
+        OSError,
+        struct.error,
+    ) as exc:
+        raise CampaignError(
+            f"TokenArchive dispatch reproof does not independently rederive: {exc}"
+        ) from exc
+    partition = receipt.get("partition", {})
+    spans = partition.get("partition") if isinstance(partition, dict) else None
+    if (
+        receipt.get("schema") != tokenarchive_reproof.SCHEMA
+        or receipt.get("verdict") != "PASS"
+        or receipt.get("claim") != tokenarchive_reproof.CLAIM
+        or receipt.get("parent")
+        != {
+            "generation": 13,
+            "readySha256": TOKENARCHIVE_DISPATCH_PARENT_READY_SHA256,
+            "reducerId": TOKENARCHIVE_DISPATCH_PARENT_REDUCER_ID,
+            "authorityReceiptSha256": TOKENARCHIVE_DISPATCH_PARENT_AUTHORITY_SHA256,
+            "frontier": {
+                "entityKey": tokenarchive_reproof.ENTITY_KEY,
+                "contractId": tokenarchive_reproof.CONTRACT_ID,
+                "questionId": tokenarchive_reproof.QUESTION_ID,
+                "classification": "AMBIGUOUS",
+                "state": "OPEN_CLASSIFICATION",
+            },
+        }
+        or receipt.get("entity", {}).get("entityKey")
+        != tokenarchive_reproof.ENTITY_KEY
+        or receipt.get("entity", {}).get("contractId")
+        != tokenarchive_reproof.CONTRACT_ID
+        or receipt.get("entity", {}).get("questionId")
+        != tokenarchive_reproof.QUESTION_ID
+        or not isinstance(spans, list)
+        or [row.get("bytes") for row in spans] != [3, 28, 125, 15]
+        or sum(int(row.get("bytes", -1)) for row in spans) != 171
+        or partition.get("dispatchTargets")
+        != [f"0x{value:08x}" for value in tokenarchive_reproof.POINTER_TARGETS]
+        or partition.get("indexValueCounts")
+        != {str(key): value for key, value in tokenarchive_reproof.INDEX_COUNTS.items()}
+        or receipt.get("ghidra", {}).get("pointerSlotReferences") != 7
+        or receipt.get("ghidra", {}).get("computedJumpTargets") != 7
+        or receipt.get("ghidra", {}).get("tableInstructionsAbsent") is not True
+        or receipt.get("historicalDisposition", {}).get("disposition")
+        != "REFUTED_BY_POLICE_SMALL_TABLE_BULK_INDEX"
+        or receipt.get("adjudication", {}).get("terminalState")
+        != "TERMINAL_DATA"
+        or receipt.get("adjudication", {}).get("refuterVerdict") != "SURVIVED"
+        or receipt.get("adjudication", {}).get("semanticPromotionApplied") is not False
+    ):
+        raise CampaignError("TokenArchive dispatch reproof claim boundary differs")
+    return receipt
+
+
+def _tokenarchive_dispatch_delta(
+    before: dict[str, list[dict[str, str]]],
+    after: dict[str, list[dict[str, str]]],
+) -> dict[str, object]:
+    for name in ("functions", "scenarios", "levers", "supersessions"):
+        if before[name] != after[name]:
+            raise CampaignError(
+                f"TokenArchive dispatch reproof changed unrelated {name}"
+            )
+
+    def keyed(
+        items: list[dict[str, str]], field: str
+    ) -> dict[str, dict[str, str]]:
+        result = {row[field]: row for row in items}
+        if len(result) != len(items):
+            raise CampaignError(
+                f"TokenArchive dispatch delta duplicates {field}"
+            )
+        return result
+
+    residual_before = keyed(before["residuals"], "entityKey")
+    residual_after = keyed(after["residuals"], "entityKey")
+    contract_before = keyed(before["contracts"], "contractId")
+    contract_after = keyed(after["contracts"], "contractId")
+    question_before = keyed(before["questions"], "questionId")
+    question_after = keyed(after["questions"], "questionId")
+    adjudication_before = keyed(before["adjudications"], "adjudicationId")
+    adjudication_after = keyed(after["adjudications"], "adjudicationId")
+    if (
+        set(residual_before) != set(residual_after)
+        or set(contract_before) != set(contract_after)
+        or set(question_before) != set(question_after)
+        or not set(adjudication_before) <= set(adjudication_after)
+    ):
+        raise CampaignError(
+            "TokenArchive dispatch reproof changed entity identities"
+        )
+    residual_changes = {
+        entity: sorted(
+            field
+            for field in RESIDUAL_COLUMNS
+            if prior[field] != residual_after[entity][field]
+        )
+        for entity, prior in residual_before.items()
+        if prior != residual_after[entity]
+    }
+    contract_changes = {
+        contract_id: sorted(
+            field
+            for field in CONTRACT_COLUMNS
+            if prior[field] != contract_after[contract_id][field]
+        )
+        for contract_id, prior in contract_before.items()
+        if prior != contract_after[contract_id]
+    }
+    question_changes = {
+        question_id: sorted(
+            field
+            for field in QUESTION_COLUMNS
+            if prior[field] != question_after[question_id][field]
+        )
+        for question_id, prior in question_before.items()
+        if prior != question_after[question_id]
+    }
+    if set(residual_changes) != {tokenarchive_reproof.ENTITY_KEY}:
+        raise CampaignError(
+            "TokenArchive dispatch residual delta population differs"
+        )
+    if set(contract_changes) != {tokenarchive_reproof.CONTRACT_ID}:
+        raise CampaignError(
+            "TokenArchive dispatch contract delta population differs"
+        )
+    if set(question_changes) != {tokenarchive_reproof.QUESTION_ID}:
+        raise CampaignError(
+            "TokenArchive dispatch question delta population differs"
+        )
+    residual_allowed = {
+        "classification",
+        "classificationVerdict",
+        "terminalState",
+        "bytePattern",
+        "campaignState",
+        "lever",
+        "cheapestFalsifier",
+        "lastMeasurementDate",
+    }
+    contract_allowed = {
+        "contractState",
+        "authorVerdict",
+        "refuterVerdict",
+        "evidenceRefs",
+        "cheapestFalsifier",
+        "remainingUncertainty",
+        "lastMeasurementDate",
+    }
+    question_allowed = {
+        "state",
+        "attemptCount",
+        "lastOutcome",
+        "lastMeasurementDate",
+    }
+    if set(next(iter(residual_changes.values()))) - residual_allowed:
+        raise CampaignError(
+            "TokenArchive dispatch residual delta exceeds its whitelist"
+        )
+    if set(next(iter(contract_changes.values()))) - contract_allowed:
+        raise CampaignError(
+            "TokenArchive dispatch contract delta exceeds its whitelist"
+        )
+    if set(next(iter(question_changes.values()))) - question_allowed:
+        raise CampaignError(
+            "TokenArchive dispatch question delta exceeds its whitelist"
+        )
+    added_adjudications = sorted(
+        set(adjudication_after) - set(adjudication_before)
+    )
+    if added_adjudications != [_tokenarchive_dispatch_adjudication_id()]:
+        raise CampaignError(
+            "TokenArchive dispatch adjudication census differs"
+        )
+    return {
+        "residualRowsChanged": residual_changes,
+        "contractRowsChanged": contract_changes,
+        "questionRowsChanged": question_changes,
+        "adjudicationIdsAdded": added_adjudications,
+        "unchangedLedgers": [
+            "functions",
+            "scenarios",
+            "levers",
+            "supersessions",
+        ],
+        "namesChanged": 0,
+        "rangesChanged": 0,
+        "questionsAdded": 0,
+        "supersessionsAdded": 0,
+        "openResidualsClosed": 1,
+        "exactPartitionBytes": 171,
+        "dataBytes": 153,
+        "alignmentBytes": 18,
+    }
+
+
+def _tokenarchive_dispatch_rows_and_advance(
+    campaign: Path, proof_root: Path, base_receipt: dict
+) -> tuple[dict[str, list[dict[str, str]]], dict]:
+    expected_parent = (
+        REPO_ROOT / TOKENARCHIVE_DISPATCH_PARENT_RELATIVE
+    ).resolve()
+    if campaign.resolve() != expected_parent:
+        raise CampaignError(
+            "TokenArchive dispatch reproof does not use canonical Gen13"
+        )
+    if (
+        base_receipt.get("generation") != 13
+        or base_receipt.get("counts") != TOKENARCHIVE_DISPATCH_PARENT_COUNTS
+        or base_receipt.get("reducer", {}).get("id")
+        != TOKENARCHIVE_DISPATCH_PARENT_REDUCER_ID
+    ):
+        raise CampaignError(
+            "TokenArchive dispatch reproof parent receipt differs"
+        )
+    proof_receipt = _validate_tokenarchive_dispatch_reproof(proof_root)
+    before = _campaign_rows_from_root(campaign)
+    rows = json.loads(json.dumps(before))
+    residuals = {row["entityKey"]: row for row in rows["residuals"]}
+    contracts = {row["contractId"]: row for row in rows["contracts"]}
+    questions = {row["questionId"]: row for row in rows["questions"]}
+    residual = residuals.get(tokenarchive_reproof.ENTITY_KEY)
+    contract = contracts.get(tokenarchive_reproof.CONTRACT_ID)
+    question = questions.get(tokenarchive_reproof.QUESTION_ID)
+    if (
+        residual is None
+        or contract is None
+        or question is None
+        or residual.get("startVa") != "0x004f5ac5"
+        or residual.get("endVa") != "0x004f5b70"
+        or residual.get("bytes") != "171"
+        or residual.get("classification") != "AMBIGUOUS"
+        or residual.get("classificationVerdict") != "UNSCORED"
+        or residual.get("terminalState") != "OPEN_CLASSIFICATION"
+        or residual.get("campaignState") != "OPEN_DARK_RESIDUAL"
+        or residual.get("questionIds") != tokenarchive_reproof.QUESTION_ID
+        or contract.get("entityKey") != tokenarchive_reproof.ENTITY_KEY
+        or contract.get("contractState") != "OPEN_CLASSIFICATION"
+        or contract.get("semanticGrade") != "C0_OPAQUE"
+        or contract.get("authorVerdict") != "UNSCORED"
+        or contract.get("refuterVerdict") != "UNSCORED"
+        or contract.get("questionIds") != tokenarchive_reproof.QUESTION_ID
+        or question.get("entityKey") != tokenarchive_reproof.ENTITY_KEY
+        or question.get("state") != "OPEN"
+        or question.get("attemptCount") != "0"
+        or question.get("lastOutcome") != "UNSCORED"
+    ):
+        raise CampaignError(
+            "TokenArchive dispatch reproof parent frontier differs"
+        )
+    measured_at = str(proof_receipt["generatedAtUtc"])
+    measured_date = measured_at[:10]
+    falsifier = (
+        "Any pristine-byte mismatch; consumer bound other than 0x7C; index value "
+        "outside 0..6; pointer target outside ReadNextToken or not an instruction "
+        "start; Ghidra reference/body-boundary mismatch; or executable flow into "
+        "the two alignment spans."
+    )
+    residual["classification"] = "DATA"
+    residual["classificationVerdict"] = (
+        "STATIC_CONSUMER_BOUND_DISPATCH_TABLE_PARTITION"
+    )
+    residual["terminalState"] = "TERMINAL_DATA"
+    residual["bytePattern"] = "DATA_TABLE_BYTES"
+    residual["campaignState"] = "TERMINAL_DATA"
+    residual["lever"] = "NONE"
+    residual["cheapestFalsifier"] = falsifier
+    residual["lastMeasurementDate"] = measured_date
+
+    question["state"] = "CLOSED_SURVIVED"
+    question["attemptCount"] = "1"
+    question["lastOutcome"] = "SURVIVED"
+    question["lastMeasurementDate"] = measured_at
+
+    proof_relative = TOKENARCHIVE_DISPATCH_PROOF_RELATIVE.as_posix()
+    inputs = proof_receipt["inputs"]
+    evidence_refs = [
+        f"{proof_relative}/proof.ready.json#sha256={TOKENARCHIVE_DISPATCH_PROOF_READY_SHA256}",
+        f"tools/re_tokenarchive_dispatch_reproof.py#sha256={TOKENARCHIVE_DISPATCH_PROOF_AUTHOR_SHA256}",
+        f"local-lab/safe-copy-bea-pristine/BEA.exe.original.backup#sha256={tokenarchive_reproof.SPECIMEN_SHA256}",
+        f"{proof_relative}/ghidra-readonly/instructions.tsv#sha256={inputs['local-lab/tokenarchive-dispatch-table-reproof-20260809-v1/ghidra-readonly/instructions.tsv']['sha256']}",
+        f"{proof_relative}/ghidra-readonly/xrefs.tsv#sha256={inputs['local-lab/tokenarchive-dispatch-table-reproof-20260809-v1/ghidra-readonly/xrefs.tsv']['sha256']}",
+        "local-lab/open-residual-gen23-small-table-20260805-v1/FORMAL-PACK.json#sha256=b3c1b12deb722b0a10e67cdd2cd64c5727aa85691419b224a79affd2e6f8f872",
+        "local-lab/re-campaign-incident-recovery-20260808-v1/gen73-claim-closure-v1/police-dispositions.tsv#sha256=83720df93d8a808e8083ffb276f51dcf034b5bfd4992b7bd832acf6182d9a701",
+        "local-lab/ghidra-damage-hit-semantic-live-promotion-20260809-v1/backups/post-live/backup_manifest.json#sha256=7a2797143f306c528f2ef6ef45701abd5b253d12900eca5d5528c61f57bcad8b",
+    ]
+    contract["contractState"] = "TERMINAL_DATA"
+    contract["authorVerdict"] = (
+        "SUPPORTED_BY_PRISTINE_BYTES_AND_GHIDRA_XREFS"
+    )
+    contract["refuterVerdict"] = "SURVIVED"
+    for reference in evidence_refs:
+        contract["evidenceRefs"] = _append_state(
+            contract["evidenceRefs"], reference
+        )
+    contract["cheapestFalsifier"] = falsifier
+    contract["remainingUncertainty"] = (
+        "The exact 153 data bytes belong to CTokenArchive::ReadNextToken and "
+        "the exact 18 remaining bytes are alignment; semantic names for index "
+        "categories 0..6 and runtime frequency remain unknown. This is data "
+        "classification, not a function or REBUILD_READY behavior claim."
+    )
+    contract["lastMeasurementDate"] = measured_date
+
+    adjudication_id = _tokenarchive_dispatch_adjudication_id()
+    if any(
+        row.get("adjudicationId") == adjudication_id
+        for row in rows["adjudications"]
+    ):
+        raise CampaignError(
+            "TokenArchive dispatch adjudication already exists"
+        )
+    evidence_hashes = [
+        TOKENARCHIVE_DISPATCH_PROOF_READY_SHA256,
+        TOKENARCHIVE_DISPATCH_PROOF_AUTHOR_SHA256,
+        tokenarchive_reproof.WHOLE_SHA256,
+        tokenarchive_reproof.POINTER_SHA256,
+        tokenarchive_reproof.INDEX_SHA256,
+        inputs[
+            "local-lab/tokenarchive-dispatch-table-reproof-20260809-v1/ghidra-readonly/instructions.tsv"
+        ]["sha256"],
+        inputs[
+            "local-lab/tokenarchive-dispatch-table-reproof-20260809-v1/ghidra-readonly/xrefs.tsv"
+        ]["sha256"],
+    ]
+    rows["adjudications"].append(
+        {
+            "adjudicationId": adjudication_id,
+            "baseContractId": tokenarchive_reproof.CONTRACT_ID,
+            "entityKey": tokenarchive_reproof.ENTITY_KEY,
+            "overlaySchema": tokenarchive_reproof.SCHEMA,
+            "overlayReadySha256": TOKENARCHIVE_DISPATCH_PROOF_READY_SHA256,
+            "questionIdsAddressed": tokenarchive_reproof.QUESTION_ID,
+            "refuterVerdict": "SURVIVED",
+            "refuterEvidenceSha256": ";".join(evidence_hashes),
+            "semanticPromotionApplied": False,
+            "terminalState": "TERMINAL_DATA",
+            "successorQuestionIds": "",
+            "remainingUncertainty": contract["remainingUncertainty"],
+            "measuredAtUtc": measured_at,
+        }
+    )
+    rows = {
+        name: [
+            {
+                field: value if isinstance(value, str) else str(value)
+                for field, value in row.items()
+            }
+            for row in values
+        ]
+        for name, values in rows.items()
+    }
+    counts = {name: len(value) for name, value in rows.items()}
+    if counts != TOKENARCHIVE_DISPATCH_EXPECTED_GENERATION14_COUNTS:
+        raise CampaignError(
+            f"TokenArchive dispatch output counts differ: {counts}"
+        )
+    delta = _tokenarchive_dispatch_delta(before, rows)
+    proof_ready_stamp = coverage.file_stamp(
+        (REPO_ROOT / TOKENARCHIVE_DISPATCH_PROOF_RELATIVE)
+        / tokenarchive_reproof.READY_NAME
+    )
+    advance = {
+        "kind": TOKENARCHIVE_DISPATCH_ADVANCE_KIND,
+        "schema": TOKENARCHIVE_DISPATCH_ADVANCE_SCHEMA,
+        "branchId": GHIDRA_PARTITION_RECOVERY_LINEAGE_ID,
+        "proofId": "TD-"
+        + _sha256_text(
+            "|".join(
+                (
+                    TOKENARCHIVE_DISPATCH_PARENT_READY_SHA256,
+                    TOKENARCHIVE_DISPATCH_PROOF_READY_SHA256,
+                    TOKENARCHIVE_DISPATCH_ADVANCE_KIND,
+                )
+            )
+        )[:16],
+        "verdict": "SURVIVED",
+        "proof": {
+            "root": TOKENARCHIVE_DISPATCH_PROOF_RELATIVE.as_posix(),
+            "ready": {
+                **proof_ready_stamp,
+                "path": tokenarchive_reproof.READY_NAME,
+            },
+            "schema": tokenarchive_reproof.SCHEMA,
+            "author": {
+                "path": "tools/re_tokenarchive_dispatch_reproof.py",
+                "bytes": TOKENARCHIVE_DISPATCH_PROOF_AUTHOR_BYTES,
+                "sha256": TOKENARCHIVE_DISPATCH_PROOF_AUTHOR_SHA256,
+            },
+        },
+        "measuredAtUtc": measured_at,
+        "promotion": {
+            "entityKey": tokenarchive_reproof.ENTITY_KEY,
+            "contractId": tokenarchive_reproof.CONTRACT_ID,
+            "questionId": tokenarchive_reproof.QUESTION_ID,
+            "classification": "DATA",
+            "classificationVerdict": (
+                "STATIC_CONSUMER_BOUND_DISPATCH_TABLE_PARTITION"
+            ),
+            "terminalState": "TERMINAL_DATA",
+            "adjudicationId": adjudication_id,
+            "semanticPromotionApplied": False,
+            "wholeBytes": 171,
+            "dispatchPointerBytes": 28,
+            "indexBytes": 125,
+            "alignmentBytes": 18,
+            "pointerTargets": 7,
+            "indexMax": 6,
+        },
+        "historicalDisposition": proof_receipt["historicalDisposition"],
+        "delta": delta,
+        "limitations": proof_receipt["limitations"],
+    }
+    return rows, advance
+
+
+def _validate_tokenarchive_dispatch_receipt_envelope(
+    rows: dict[str, list[dict[str, str]]],
+    receipt: dict,
+    campaign_root: Path,
+) -> None:
+    expected_top = {
+        "schema",
+        "reducer",
+        "generatedAtUtc",
+        "generation",
+        "parentCampaign",
+        "sourceSnapshot",
+        "advance",
+        "counts",
+        "questionTypes",
+        "policies",
+        "outputs",
+    }
+    if set(receipt) != expected_top:
+        raise CampaignError(
+            "TokenArchive dispatch READY shape differs"
+        )
+    _parse_utc_timestamp(
+        str(receipt.get("generatedAtUtc", "")),
+        "TokenArchive dispatch generation",
+    )
+    parent_root = (
+        REPO_ROOT / TOKENARCHIVE_DISPATCH_PARENT_RELATIVE
+    ).resolve()
+    parent_receipt = _runtime_json(
+        parent_root / "campaign.ready.json",
+        "TokenArchive dispatch parent",
+    )
+    if not _same_json(
+        receipt.get("sourceSnapshot"), parent_receipt.get("sourceSnapshot")
+    ):
+        raise CampaignError(
+            "TokenArchive dispatch source snapshot differs"
+        )
+    if receipt.get("questionTypes") != dict(
+        Counter(row["questionType"] for row in rows["questions"])
+    ):
+        raise CampaignError(
+            "TokenArchive dispatch question types differ"
+        )
+    if receipt.get("policies") != _tokenarchive_dispatch_policies():
+        raise CampaignError(
+            "TokenArchive dispatch policies differ"
+        )
+    outputs = _runtime_mapping(
+        receipt.get("outputs"), "TokenArchive dispatch outputs"
+    )
+    if set(outputs) != set(OUTPUTS):
+        raise CampaignError(
+            "TokenArchive dispatch output set differs"
+        )
+    raw_root = Path(os.path.abspath(campaign_root))
+    try:
+        plain_root = ghidra_backup.resolve_plain_path(
+            raw_root, "TokenArchive dispatch campaign root", strict=True
+        )
+    except (ghidra_backup.BackupError, OSError) as exc:
+        raise CampaignError(
+            f"TokenArchive dispatch campaign root is not plain: {exc}"
+        ) from exc
+    if plain_root != raw_root:
+        raise CampaignError(
+            "TokenArchive dispatch campaign root aliases another path"
+        )
+    authority_files: list[tuple[str, Path]] = []
+    for label, path in [
+        ("campaign READY", plain_root / "campaign.ready.json"),
+        *[
+            (
+                f"reducer {path.relative_to(plain_root / '_reducer').as_posix()}",
+                path,
+            )
+            for path in (plain_root / "_reducer").rglob("*")
+            if path.is_file()
+        ],
+    ]:
+        try:
+            plain = ghidra_backup.resolve_plain_path(
+                path, f"TokenArchive dispatch {label}", strict=True
+            )
+        except (ghidra_backup.BackupError, OSError) as exc:
+            raise CampaignError(
+                f"TokenArchive dispatch {label} is not plain: {exc}"
+            ) from exc
+        if plain.stat().st_nlink != 1:
+            raise CampaignError(
+                f"TokenArchive dispatch {label} has multiple hard links"
+            )
+        authority_files.append((label, plain))
+    output_files: list[tuple[str, Path]] = []
+    for name in OUTPUTS:
+        output_stamp = _runtime_mapping(
+            outputs.get(name), f"TokenArchive dispatch output {name}"
+        )
+        if set(output_stamp) != {
+            "path",
+            "bytes",
+            "sha256",
+            "lastWriteUtc",
+        }:
+            raise CampaignError(
+                f"TokenArchive dispatch output stamp shape differs: {name}"
+            )
+        if output_stamp.get("path") != name:
+            raise CampaignError(
+                f"TokenArchive dispatch output path differs: {name}"
+            )
+        _parse_utc_timestamp(
+            str(output_stamp.get("lastWriteUtc", "")),
+            f"TokenArchive dispatch output {name}",
+        )
+        try:
+            path = ghidra_backup.resolve_plain_path(
+                plain_root / name,
+                f"TokenArchive dispatch output {name}",
+                strict=True,
+            )
+        except (ghidra_backup.BackupError, OSError) as exc:
+            raise CampaignError(
+                f"TokenArchive dispatch output is not plain: {name}: {exc}"
+            ) from exc
+        if path.stat().st_nlink != 1:
+            raise CampaignError(
+                f"TokenArchive dispatch output has multiple hard links: {name}"
+            )
+        if {**coverage.file_stamp(path), "path": name} != output_stamp:
+            raise CampaignError(
+                f"TokenArchive dispatch output stamp differs: {name}"
+            )
+        try:
+            if os.path.samefile(path, parent_root / name):
+                raise CampaignError(
+                    f"TokenArchive dispatch output aliases canonical Gen13: {name}"
+                )
+        except OSError as exc:
+            raise CampaignError(
+                f"TokenArchive dispatch output identity cannot be read: {exc}"
+            ) from exc
+        output_files.append((name, path))
+    _require_disjoint_evidence_files(
+        output_files, "TokenArchive dispatch outputs"
+    )
+    _require_disjoint_evidence_files(
+        authority_files + output_files,
+        "TokenArchive dispatch authority files",
+    )
+
+
+def _validate_tokenarchive_dispatch_advance_relation(
+    rows: dict[str, list[dict[str, str]]],
+    receipt: dict,
+    advance: object,
+    *,
+    campaign_root: Path | None,
+) -> dict[str, object]:
+    if not isinstance(advance, dict):
+        raise CampaignError(
+            "TokenArchive dispatch reproof advance is absent"
+        )
+    parent = _runtime_mapping(
+        receipt.get("parentCampaign"), "TokenArchive dispatch parent"
+    )
+    parent_root = _resolve_repo_or_absolute(
+        parent.get("path"), "TokenArchive dispatch parent path"
+    )
+    expected_parent = (
+        REPO_ROOT / TOKENARCHIVE_DISPATCH_PARENT_RELATIVE
+    ).resolve()
+    parent_ready = _runtime_mapping(
+        parent.get("ready"), "TokenArchive dispatch parent READY"
+    )
+    if (
+        _integer(receipt.get("generation"), -1) != 14
+        or parent_root != expected_parent
+        or parent_ready.get("path") != "campaign.ready.json"
+        or parent_ready.get("sha256")
+        != TOKENARCHIVE_DISPATCH_PARENT_READY_SHA256
+        or advance.get("kind") != TOKENARCHIVE_DISPATCH_ADVANCE_KIND
+        or advance.get("schema") != TOKENARCHIVE_DISPATCH_ADVANCE_SCHEMA
+        or advance.get("branchId") != GHIDRA_PARTITION_RECOVERY_LINEAGE_ID
+    ):
+        raise CampaignError(
+            "TokenArchive dispatch generation identity differs"
+        )
+    base_receipt = _runtime_json(
+        expected_parent / "campaign.ready.json",
+        "TokenArchive dispatch exact parent",
+    )
+    expected_rows, expected_advance = _tokenarchive_dispatch_rows_and_advance(
+        expected_parent,
+        REPO_ROOT / TOKENARCHIVE_DISPATCH_PROOF_RELATIVE,
+        base_receipt,
+    )
+    if not _same_json(rows, expected_rows):
+        raise CampaignError(
+            "TokenArchive dispatch campaign rows differ"
+        )
+    if not _same_json(advance, expected_advance):
+        raise CampaignError(
+            "TokenArchive dispatch advance receipt differs"
+        )
+    if (
+        receipt.get("counts")
+        != TOKENARCHIVE_DISPATCH_EXPECTED_GENERATION14_COUNTS
+    ):
+        raise CampaignError(
+            "TokenArchive dispatch READY counts differ"
+        )
+    if campaign_root is not None:
+        _validate_tokenarchive_dispatch_receipt_envelope(
+            rows, receipt, campaign_root
+        )
+    return {
+        "adjudicationIds": {_tokenarchive_dispatch_adjudication_id()},
+        "advance": expected_advance,
+    }
+
+
+def advance_tokenarchive_dispatch_reproof(
+    campaign: Path,
+    proof_root: Path,
+    out: Path,
+    *,
+    _self_check: bool = True,
+    _verified_parent_receipt: dict | None = None,
+) -> dict:
+    """Publish the exact ReadNextToken dispatch-table residual closure."""
+
+    if out.exists():
+        raise CampaignError(
+            f"refusing existing TokenArchive dispatch destination: {out}"
+        )
+    base_receipt = (
+        _verified_parent_receipt
+        if _verified_parent_receipt is not None
+        else _verify_tokenarchive_dispatch_parent_campaign(campaign)
+    )
+    rows, advance = _tokenarchive_dispatch_rows_and_advance(
+        campaign, proof_root, base_receipt
+    )
+    output_rows = {
+        "campaign-functions.tsv": (FUNCTION_COLUMNS, rows["functions"]),
+        "campaign-residuals.tsv": (RESIDUAL_COLUMNS, rows["residuals"]),
+        "campaign-questions.tsv": (QUESTION_COLUMNS, rows["questions"]),
+        "campaign-scenarios.tsv": (SCENARIO_COLUMNS, rows["scenarios"]),
+        "campaign-levers.tsv": (LEVER_COLUMNS, rows["levers"]),
+        "campaign-contracts.tsv": (CONTRACT_COLUMNS, rows["contracts"]),
+        "campaign-adjudications.tsv": (
+            ADJUDICATION_COLUMNS,
+            rows["adjudications"],
+        ),
+        "campaign-supersessions.tsv": (
+            SUPERSESSION_COLUMNS,
+            rows["supersessions"],
+        ),
+    }
+    base_ready = coverage.file_stamp(campaign / "campaign.ready.json")
+    out.parent.mkdir(parents=True, exist_ok=True)
+    stage = Path(
+        tempfile.mkdtemp(prefix=f".{out.name}.", dir=out.parent)
+    )
+    try:
+        for name, (columns, output) in output_rows.items():
+            _write_tsv(stage / name, columns, output)
+        reducer = _publish_reducer(stage)
+        receipt = {
+            "schema": SCHEMA,
+            "reducer": reducer,
+            "generatedAtUtc": datetime.now(timezone.utc).isoformat(),
+            "generation": 14,
+            "parentCampaign": {
+                "path": str(campaign.resolve()),
+                "ready": {**base_ready, "path": "campaign.ready.json"},
+            },
+            "sourceSnapshot": base_receipt["sourceSnapshot"],
+            "advance": advance,
+            "counts": {name: len(value) for name, value in rows.items()},
+            "questionTypes": dict(
+                Counter(row["questionType"] for row in rows["questions"])
+            ),
+            "policies": _tokenarchive_dispatch_policies(),
+            "outputs": {
+                name: {
+                    **coverage.file_stamp(stage / name),
+                    "path": name,
+                }
+                for name in OUTPUTS
+            },
+        }
+        (stage / "campaign.ready.json").write_text(
+            json.dumps(receipt, indent=2) + "\n", encoding="utf-8"
+        )
+        if _self_check:
+            verify(stage)
+        os.replace(stage, out)
+        return receipt
+    except Exception:
+        shutil.rmtree(stage, ignore_errors=True)
+        raise
+
+
+def _mission_native_setpos_policies() -> list[str]:
+    return [
+        "The exact Gen14 residual 0x00536C61..0x00536CA0 is retired only through one disjoint 15-byte NOP / 42-byte function / 6-byte NOP partition.",
+        "The shipped SetPos registry binding, unique initializer reference, pristine body, two scratch replicas, two rollback controls, one live apply, and one separate readback are all exact-pinned.",
+        "The new function is bounded to C1_CANDIDATE_PARTIAL: static evidence proves the ordered virtual-call shape but not runtime vector values or delegated target writes.",
+        "The historical residual-classification and native-boundary questions close; one new function-contract question remains open for an authored safe-copy roundtrip.",
+        "The two NOP children are terminal padding with no behavior question; the retired residual and code-candidate identities are preserved only through hash-bound supersessions.",
+        "No executable byte, instruction, data-unit, or reference changed; the live Ghidra promotion added exactly one function, name, signature, and plate comment after verified before/after backups.",
+    ]
+
+
+def _mission_native_setpos_partition_adjudication_id() -> str:
+    return "A-" + _sha256_text(
+        "|".join(
+            (
+                MISSION_NATIVE_SETPOS_PARENT_READY_SHA256,
+                MISSION_NATIVE_SETPOS_PROOF_READY_SHA256,
+                MISSION_NATIVE_SETPOS_GHIDRA_LIVE_SHA256,
+                mission_setpos_reproof.OLD_CONTRACT,
+                mission_setpos_reproof.RESIDUAL_QUESTION,
+                "SURVIVED",
+                "TERMINAL_EXACT_PARTITION",
+            )
+        )
+    )[:16]
+
+
+def _mission_native_setpos_boundary_adjudication_id() -> str:
+    return "A-" + _sha256_text(
+        "|".join(
+            (
+                MISSION_NATIVE_SETPOS_PARENT_READY_SHA256,
+                MISSION_NATIVE_SETPOS_PROOF_READY_SHA256,
+                MISSION_NATIVE_SETPOS_GHIDRA_LIVE_SHA256,
+                mission_setpos_reproof.NEW_CONTRACT,
+                mission_setpos_reproof.CANDIDATE_QUESTION,
+                "SURVIVED",
+                "FUNCTION_BOUNDARY_C1_STATIC",
+            )
+        )
+    )[:16]
+
+
+def _validate_mission_native_setpos_inputs(proof_root: Path) -> dict[str, object]:
+    raw = Path(os.path.abspath(proof_root))
+    expected = (REPO_ROOT / MISSION_NATIVE_SETPOS_PROOF_RELATIVE).resolve()
+    try:
+        plain = ghidra_backup.resolve_plain_path(
+            raw, "Mission-native SetPos proof root", strict=True
+        )
+    except (ghidra_backup.BackupError, OSError) as exc:
+        raise CampaignError(
+            f"Mission-native SetPos proof root is not plain: {exc}"
+        ) from exc
+    if plain != expected:
+        raise CampaignError(
+            "Mission-native SetPos proof is not the reviewed immutable root"
+        )
+    ready_path = plain / mission_setpos_reproof.READY_NAME
+    author_path = Path(mission_setpos_reproof.__file__).resolve()
+    ghidra_owner_path = Path(__file__).resolve().with_name(
+        "ghidra_mission_native_setpos_promotion_authority.py"
+    )
+    ghidra_tool_path = Path(__file__).resolve().with_name(
+        "GhidraApplyMissionNativeSetPos.java"
+    )
+    scratch_path = (
+        REPO_ROOT
+        / MISSION_NATIVE_SETPOS_GHIDRA_RELATIVE
+        / "promotion/scratch-authority-v2.ready.json"
+    )
+    live_path = (
+        REPO_ROOT
+        / MISSION_NATIVE_SETPOS_GHIDRA_RELATIVE
+        / "promotion/promotion.ready.json"
+    )
+    for label, path in (
+        ("proof READY", ready_path),
+        ("proof author", author_path),
+        ("Ghidra authority author", ghidra_owner_path),
+        ("Ghidra Java tool", ghidra_tool_path),
+        ("Ghidra scratch authority", scratch_path),
+        ("Ghidra live authority", live_path),
+    ):
+        try:
+            resolved = ghidra_backup.resolve_plain_path(
+                path, f"Mission-native SetPos {label}", strict=True
+            )
+        except (ghidra_backup.BackupError, OSError) as exc:
+            raise CampaignError(
+                f"Mission-native SetPos {label} is not plain: {exc}"
+            ) from exc
+        if resolved.stat().st_nlink != 1:
+            raise CampaignError(
+                f"Mission-native SetPos {label} has multiple hard links"
+            )
+    exact_files = (
+        (
+            ready_path,
+            MISSION_NATIVE_SETPOS_PROOF_READY_BYTES,
+            MISSION_NATIVE_SETPOS_PROOF_READY_SHA256,
+        ),
+        (
+            author_path,
+            MISSION_NATIVE_SETPOS_PROOF_AUTHOR_BYTES,
+            MISSION_NATIVE_SETPOS_PROOF_AUTHOR_SHA256,
+        ),
+        (
+            ghidra_owner_path,
+            MISSION_NATIVE_SETPOS_GHIDRA_OWNER_BYTES,
+            MISSION_NATIVE_SETPOS_GHIDRA_OWNER_SHA256,
+        ),
+        (
+            ghidra_tool_path,
+            MISSION_NATIVE_SETPOS_GHIDRA_TOOL_BYTES,
+            MISSION_NATIVE_SETPOS_GHIDRA_TOOL_SHA256,
+        ),
+        (
+            scratch_path,
+            MISSION_NATIVE_SETPOS_GHIDRA_SCRATCH_BYTES,
+            MISSION_NATIVE_SETPOS_GHIDRA_SCRATCH_SHA256,
+        ),
+        (
+            live_path,
+            MISSION_NATIVE_SETPOS_GHIDRA_LIVE_BYTES,
+            MISSION_NATIVE_SETPOS_GHIDRA_LIVE_SHA256,
+        ),
+    )
+    if any(
+        path.stat().st_size != expected_bytes
+        or coverage.sha256_of(path) != expected_sha
+        for path, expected_bytes, expected_sha in exact_files
+    ):
+        raise CampaignError(
+            "Mission-native SetPos proof or Ghidra authority identity differs"
+        )
+    proof = _runtime_json(ready_path, "Mission-native SetPos proof READY")
+    try:
+        derived = mission_setpos_reproof.derive(REPO_ROOT)
+        generated = str(proof.get("generatedAtUtc", ""))
+        if not generated.endswith("Z"):
+            raise ValueError("proof timestamp is not UTC")
+        datetime.fromisoformat(generated[:-1] + "+00:00")
+        stable_proof = dict(proof)
+        del stable_proof["generatedAtUtc"]
+        derived["author"] = dict(derived["author"])
+        derived["author"]["path"] = "tools/re_mission_native_setpos_reproof.py"
+        if stable_proof != derived:
+            raise ValueError(
+                "proof content differs from independently rederived evidence"
+            )
+    except (
+        mission_setpos_reproof.ProofError,
+        KeyError,
+        IndexError,
+        ValueError,
+        OSError,
+        struct.error,
+    ) as exc:
+        raise CampaignError(
+            f"Mission-native SetPos proof does not independently rederive: {exc}"
+        ) from exc
+    parent = proof.get("parent")
+    adjudication = proof.get("adjudication")
+    static_proof = proof.get("staticProof")
+    if (
+        proof.get("schema") != mission_setpos_reproof.SCHEMA
+        or proof.get("verdict") != "PASS"
+        or proof.get("claim") != mission_setpos_reproof.CLAIM
+        or not isinstance(parent, dict)
+        or parent.get("generation") != 14
+        or parent.get("readySha256")
+        != MISSION_NATIVE_SETPOS_PARENT_READY_SHA256
+        or parent.get("reducerId") != MISSION_NATIVE_SETPOS_PARENT_REDUCER_ID
+        or parent.get("authorityReceiptSha256")
+        != MISSION_NATIVE_SETPOS_PARENT_AUTHORITY_SHA256
+        or not isinstance(adjudication, dict)
+        or adjudication.get("oldEntityKey") != mission_setpos_reproof.OLD_ENTITY
+        or adjudication.get("newFunctionEntityKey")
+        != mission_setpos_reproof.NEW_ENTITY
+        or adjudication.get("newFunctionContractId")
+        != mission_setpos_reproof.NEW_CONTRACT
+        or adjudication.get("questionsAddressed")
+        != [
+            mission_setpos_reproof.RESIDUAL_QUESTION,
+            mission_setpos_reproof.CANDIDATE_QUESTION,
+        ]
+        or adjudication.get("successorQuestionId")
+        != mission_setpos_reproof.SUCCESSOR_QUESTION
+        or adjudication.get("successorQuestionType") != "FUNCTION_CONTRACT"
+        or adjudication.get("newName") != "IScript__SetPos"
+        or adjudication.get("nativeShippedName") != "SetPos"
+        or adjudication.get("semanticGradeCeiling") != "C1_STATIC"
+        or adjudication.get("semanticPromotionApplied") is not False
+        or not isinstance(static_proof, dict)
+        or [row.get("bytes") for row in static_proof.get("partition", [])]
+        != [15, 42, 6]
+        or static_proof.get("instructionCount") != 17
+        or static_proof.get("calleeCleanupBytes") != 12
+    ):
+        raise CampaignError("Mission-native SetPos proof claim boundary differs")
+
+    scratch = _runtime_json(
+        scratch_path, "Mission-native SetPos Ghidra scratch authority"
+    )
+    live = _runtime_json(live_path, "Mission-native SetPos Ghidra live authority")
+    expected_author = {
+        "path": "tools/ghidra_mission_native_setpos_promotion_authority.py",
+        "bytes": MISSION_NATIVE_SETPOS_GHIDRA_OWNER_BYTES,
+        "sha256": MISSION_NATIVE_SETPOS_GHIDRA_OWNER_SHA256,
+    }
+    expected_tool = {
+        "path": "tools/GhidraApplyMissionNativeSetPos.java",
+        "bytes": MISSION_NATIVE_SETPOS_GHIDRA_TOOL_BYTES,
+        "sha256": MISSION_NATIVE_SETPOS_GHIDRA_TOOL_SHA256,
+    }
+    if (
+        scratch.get("schema")
+        != "bea.ghidra.mission-native-setpos-promotion-authority.v1"
+        or scratch.get("phase") != "SCRATCH_AUTHORITY"
+        or scratch.get("verdict") != "READY"
+        or scratch.get("claim")
+        != "ONE_MISSION_NATIVE_SETPOS_FUNCTION_AUTHORIZED_FOR_ONE_LIVE_APPLY"
+        or scratch.get("author") != expected_author
+        or scratch.get("inputs", {}).get("tool") != expected_tool
+        or scratch.get("delta", {}).get("functionEntry") != "0x00536c70"
+        or scratch.get("delta", {}).get("functionsAdded") != 1
+        or scratch.get("delta", {}).get("bodyBytes") != 42
+        or scratch.get("delta", {}).get("bodyInstructions") != 17
+        or scratch.get("delta", {}).get("leadingNopBytes") != 15
+        or scratch.get("delta", {}).get("trailingNopBytes") != 6
+        or scratch.get("delta", {}).get("bytesChanged") != 0
+        or scratch.get("delta", {}).get("instructionsChanged") != 0
+        or scratch.get("delta", {}).get("dataUnitsChanged") != 0
+        or scratch.get("delta", {}).get("referencesChanged") != 0
+        or live.get("schema")
+        != "bea.ghidra.mission-native-setpos-promotion-authority.v1"
+        or live.get("phase") != "LIVE_PROMOTED"
+        or live.get("verdict") != "READY"
+        or live.get("claim")
+        != "MISSION_NATIVE_SETPOS_PROMOTED_AND_SEPARATELY_READ_BACK"
+        or live.get("author") != expected_author
+        or live.get("tool") != expected_tool
+        or live.get("scratchAuthority")
+        != {
+            "path": (
+                MISSION_NATIVE_SETPOS_GHIDRA_RELATIVE
+                / "promotion/scratch-authority-v2.ready.json"
+            ).as_posix(),
+            "bytes": MISSION_NATIVE_SETPOS_GHIDRA_SCRATCH_BYTES,
+            "sha256": MISSION_NATIVE_SETPOS_GHIDRA_SCRATCH_SHA256,
+        }
+        or live.get("result")
+        != {
+            "bodyBytes": 42,
+            "bodyInstructions": 17,
+            "bytesChanged": 0,
+            "dataUnitsChanged": 0,
+            "functionEntry": "0x00536c70",
+            "functionName": "IScript__SetPos",
+            "functionsAdded": 1,
+            "instructionsChanged": 0,
+            "recoverablePostBackupPassed": True,
+            "recoverablePreBackupPassed": True,
+            "referencesChanged": 0,
+            "separateReadbackPassed": True,
+        }
+    ):
+        raise CampaignError(
+            "Mission-native SetPos Ghidra promotion claim boundary differs"
+        )
+    proof_time = _parse_utc_timestamp(
+        str(proof.get("generatedAtUtc", "")), "Mission-native SetPos proof"
+    )
+    scratch_time = _parse_utc_timestamp(
+        str(scratch.get("generatedAtUtc", "")),
+        "Mission-native SetPos scratch authority",
+    )
+    live_time = _parse_utc_timestamp(
+        str(live.get("generatedAtUtc", "")),
+        "Mission-native SetPos live authority",
+    )
+    if not proof_time < scratch_time < live_time:
+        raise CampaignError(
+            "Mission-native SetPos proof/scratch/live chronology differs"
+        )
+    return {
+        "proof": proof,
+        "proofStamp": {
+            **coverage.file_stamp(ready_path),
+            "path": mission_setpos_reproof.READY_NAME,
+        },
+        "scratch": scratch,
+        "scratchStamp": {
+            **coverage.file_stamp(scratch_path),
+            "path": str(scratch_path.resolve()),
+        },
+        "live": live,
+        "liveStamp": {
+            **coverage.file_stamp(live_path),
+            "path": str(live_path.resolve()),
+        },
+        "measuredAtUtc": str(live.get("generatedAtUtc")),
+    }
+
+
+def _mission_native_setpos_delta(
+    before: dict[str, list[dict[str, str]]],
+    after: dict[str, list[dict[str, str]]],
+    partition_adjudication_id: str,
+    boundary_adjudication_id: str,
+    supersession_ids: list[str],
+) -> dict[str, object]:
+    if before["scenarios"] != after["scenarios"] or before["levers"] != after["levers"]:
+        raise CampaignError(
+            "Mission-native SetPos advance changed scenario or lever ledgers"
+        )
+
+    def keyed(items: list[dict[str, str]], field: str) -> dict[str, dict[str, str]]:
+        result = {row[field]: row for row in items}
+        if len(result) != len(items):
+            raise CampaignError(
+                f"Mission-native SetPos delta duplicates {field}"
+            )
+        return result
+
+    function_before = keyed(before["functions"], "entityKey")
+    function_after = keyed(after["functions"], "entityKey")
+    residual_before = keyed(before["residuals"], "entityKey")
+    residual_after = keyed(after["residuals"], "entityKey")
+    question_before = keyed(before["questions"], "questionId")
+    question_after = keyed(after["questions"], "questionId")
+    contract_before = keyed(before["contracts"], "contractId")
+    contract_after = keyed(after["contracts"], "contractId")
+    adjudication_before = keyed(before["adjudications"], "adjudicationId")
+    adjudication_after = keyed(after["adjudications"], "adjudicationId")
+    supersession_before = keyed(before["supersessions"], "supersessionId")
+    supersession_after = keyed(after["supersessions"], "supersessionId")
+
+    prefix_entity = _residual_key(
+        mission_setpos_reproof.SPECIMEN_SHA256,
+        f"0x{mission_setpos_reproof.RESIDUAL_START:08x}",
+        f"0x{mission_setpos_reproof.FUNCTION_START:08x}",
+    )
+    suffix_entity = _residual_key(
+        mission_setpos_reproof.SPECIMEN_SHA256,
+        f"0x{mission_setpos_reproof.FUNCTION_END:08x}",
+        f"0x{mission_setpos_reproof.RESIDUAL_END:08x}",
+    )
+    expected_added_contracts = {
+        mission_setpos_reproof.NEW_CONTRACT,
+        _contract_id(prefix_entity),
+        _contract_id(suffix_entity),
+    }
+    if (
+        set(function_after) - set(function_before)
+        != {mission_setpos_reproof.NEW_ENTITY}
+        or set(function_before) - set(function_after)
+        or any(function_after[key] != value for key, value in function_before.items())
+        or set(residual_before) - set(residual_after)
+        != {mission_setpos_reproof.OLD_ENTITY}
+        or set(residual_after) - set(residual_before) != {prefix_entity, suffix_entity}
+        or any(
+            residual_after[key] != value
+            for key, value in residual_before.items()
+            if key != mission_setpos_reproof.OLD_ENTITY
+        )
+        or set(contract_before) - set(contract_after)
+        != {mission_setpos_reproof.OLD_CONTRACT}
+        or set(contract_after) - set(contract_before) != expected_added_contracts
+        or any(
+            contract_after[key] != value
+            for key, value in contract_before.items()
+            if key != mission_setpos_reproof.OLD_CONTRACT
+        )
+        or set(question_after) - set(question_before)
+        != {mission_setpos_reproof.SUCCESSOR_QUESTION}
+        or set(question_before) - set(question_after)
+        or {
+            key
+            for key, value in question_before.items()
+            if question_after[key] != value
+        }
+        != {
+            mission_setpos_reproof.RESIDUAL_QUESTION,
+            mission_setpos_reproof.CANDIDATE_QUESTION,
+        }
+        or set(adjudication_after) - set(adjudication_before)
+        != {partition_adjudication_id, boundary_adjudication_id}
+        or set(adjudication_before) - set(adjudication_after)
+        or any(
+            adjudication_after[key] != value
+            for key, value in adjudication_before.items()
+        )
+        or set(supersession_after) - set(supersession_before)
+        != set(supersession_ids)
+        or set(supersession_before) - set(supersession_after)
+        or any(
+            supersession_after[key] != value
+            for key, value in supersession_before.items()
+        )
+    ):
+        raise CampaignError(
+            "Mission-native SetPos advance changed rows outside its exact partition"
+        )
+    question_changes = {
+        question_id: sorted(
+            field
+            for field in QUESTION_COLUMNS
+            if question_before[question_id][field]
+            != question_after[question_id][field]
+        )
+        for question_id in (
+            mission_setpos_reproof.RESIDUAL_QUESTION,
+            mission_setpos_reproof.CANDIDATE_QUESTION,
+        )
+    }
+    return {
+        "functionEntityAdded": mission_setpos_reproof.NEW_ENTITY,
+        "residualEntityRemoved": mission_setpos_reproof.OLD_ENTITY,
+        "residualEntitiesAdded": [prefix_entity, suffix_entity],
+        "contractIdRemoved": mission_setpos_reproof.OLD_CONTRACT,
+        "contractIdsAdded": sorted(expected_added_contracts),
+        "questionRowsChanged": question_changes,
+        "questionIdAdded": mission_setpos_reproof.SUCCESSOR_QUESTION,
+        "adjudicationIdsAdded": [
+            partition_adjudication_id,
+            boundary_adjudication_id,
+        ],
+        "supersessionIdsAdded": supersession_ids,
+        "unchangedLedgers": ["scenarios", "levers"],
+        "partitionBytes": 63,
+        "functionBytes": 42,
+        "paddingBytes": 21,
+        "functionsAdded": 1,
+        "namesAdded": 1,
+        "openQuestionsClosed": 2,
+        "openQuestionsAdded": 1,
+        "semanticGradeCeiling": "C1_STATIC",
+        "liveGhidraMutation": True,
+        "executableBytesChanged": 0,
+    }
+
+
+def _mission_native_setpos_rows_and_advance(
+    campaign: Path,
+    proof_root: Path,
+    base_receipt: dict,
+) -> tuple[dict[str, list[dict[str, str]]], dict[str, object]]:
+    expected_parent = (REPO_ROOT / MISSION_NATIVE_SETPOS_PARENT_RELATIVE).resolve()
+    if campaign.resolve() != expected_parent:
+        raise CampaignError(
+            "Mission-native SetPos row builder requires exact canonical Gen14"
+        )
+    reducer = _runtime_mapping(
+        base_receipt.get("reducer"), "Mission-native SetPos parent reducer"
+    )
+    if (
+        _integer(base_receipt.get("generation"), -1) != 14
+        or base_receipt.get("counts") != MISSION_NATIVE_SETPOS_PARENT_COUNTS
+        or reducer.get("id") != MISSION_NATIVE_SETPOS_PARENT_REDUCER_ID
+    ):
+        raise CampaignError("Mission-native SetPos parent receipt differs")
+    validated = _validate_mission_native_setpos_inputs(proof_root)
+    rows = _campaign_rows_from_root(campaign)
+    before = json.loads(json.dumps(rows))
+    measured_at = str(validated["measuredAtUtc"])
+    measured_date = measured_at[:10]
+
+    def one(
+        items: list[dict[str, str]], field: str, value: str, label: str
+    ) -> dict[str, str]:
+        matches = [row for row in items if row.get(field) == value]
+        if len(matches) != 1:
+            raise CampaignError(
+                f"Mission-native SetPos {label} is absent or ambiguous"
+            )
+        return matches[0]
+
+    retired_residual = dict(
+        one(
+            rows["residuals"],
+            "entityKey",
+            mission_setpos_reproof.OLD_ENTITY,
+            "retired residual",
+        )
+    )
+    retired_contract = dict(
+        one(
+            rows["contracts"],
+            "contractId",
+            mission_setpos_reproof.OLD_CONTRACT,
+            "retired residual contract",
+        )
+    )
+    residual_question = one(
+        rows["questions"],
+        "questionId",
+        mission_setpos_reproof.RESIDUAL_QUESTION,
+        "residual question",
+    )
+    candidate_question = one(
+        rows["questions"],
+        "questionId",
+        mission_setpos_reproof.CANDIDATE_QUESTION,
+        "native-boundary question",
+    )
+    if (
+        retired_residual.get("startVa") != "0x00536c61"
+        or retired_residual.get("endVa") != "0x00536ca0"
+        or retired_residual.get("bytes") != "63"
+        or retired_residual.get("terminalState") != "OPEN_CLASSIFICATION"
+        or retired_residual.get("questionIds")
+        != mission_setpos_reproof.RESIDUAL_QUESTION
+        or retired_contract.get("entityKey") != mission_setpos_reproof.OLD_ENTITY
+        or retired_contract.get("contractState") != "OPEN_CLASSIFICATION"
+        or retired_contract.get("questionIds")
+        != mission_setpos_reproof.RESIDUAL_QUESTION
+        or residual_question.get("entityKey") != mission_setpos_reproof.OLD_ENTITY
+        or residual_question.get("state") != "OPEN"
+        or candidate_question.get("entityKey")
+        != mission_setpos_reproof.CANDIDATE_ENTITY
+        or candidate_question.get("questionType") != "NATIVE_BOUNDARY"
+        or candidate_question.get("state") != "OPEN"
+    ):
+        raise CampaignError(
+            "Mission-native SetPos Gen14 frontier shape differs"
+        )
+
+    proof_relative = MISSION_NATIVE_SETPOS_PROOF_RELATIVE.as_posix()
+    ghidra_relative = MISSION_NATIVE_SETPOS_GHIDRA_RELATIVE.as_posix()
+    hashed_evidence_refs = [
+        f"{proof_relative}/proof.ready.json#sha256={MISSION_NATIVE_SETPOS_PROOF_READY_SHA256}",
+        f"tools/re_mission_native_setpos_reproof.py#sha256={MISSION_NATIVE_SETPOS_PROOF_AUTHOR_SHA256}",
+        f"{ghidra_relative}/promotion/scratch-authority-v2.ready.json#sha256={MISSION_NATIVE_SETPOS_GHIDRA_SCRATCH_SHA256}",
+        f"{ghidra_relative}/promotion/promotion.ready.json#sha256={MISSION_NATIVE_SETPOS_GHIDRA_LIVE_SHA256}",
+        f"tools/ghidra_mission_native_setpos_promotion_authority.py#sha256={MISSION_NATIVE_SETPOS_GHIDRA_OWNER_SHA256}",
+        f"tools/GhidraApplyMissionNativeSetPos.java#sha256={MISSION_NATIVE_SETPOS_GHIDRA_TOOL_SHA256}",
+        f"local-lab/safe-copy-bea-pristine/BEA.exe.original.backup#sha256={mission_setpos_reproof.SPECIMEN_SHA256}",
+        "local-lab/ghidra-from-trace-2026-07-28/script-native-table-144.tsv#sha256=42027af22e1d4a0611bf7286fd1ea0df17adf01f7bf54ad5a2196f8484f40d86",
+        f"{proof_relative}/ghidra-readonly/instructions.tsv#sha256=33f022bee40ade1dcd3b96287a091cebafd2a3db46fb9bbbb6f9c16d3562e6d0",
+        f"{proof_relative}/ghidra-readonly/xrefs.tsv#sha256=d4051e952d09d3e846fdb0afe4888214002fa243a25d710f9d3531fe9027a528",
+        "references/Onslaught/thing.h#sha256=cf0c15e24869d57ab354251f465aee6dc1780c6f7c557fec27d081d71a46e8fe",
+    ]
+    evidence_refs = ";".join(hashed_evidence_refs)
+    evidence_hashes = [
+        MISSION_NATIVE_SETPOS_PROOF_READY_SHA256,
+        MISSION_NATIVE_SETPOS_PROOF_AUTHOR_SHA256,
+        MISSION_NATIVE_SETPOS_GHIDRA_SCRATCH_SHA256,
+        MISSION_NATIVE_SETPOS_GHIDRA_LIVE_SHA256,
+        MISSION_NATIVE_SETPOS_GHIDRA_OWNER_SHA256,
+        MISSION_NATIVE_SETPOS_GHIDRA_TOOL_SHA256,
+        mission_setpos_reproof.SPECIMEN_SHA256,
+        mission_setpos_reproof.PREFIX_SHA256,
+        mission_setpos_reproof.BODY_SHA256,
+        mission_setpos_reproof.SUFFIX_SHA256,
+        mission_setpos_reproof.RANGE_SHA256,
+    ]
+    runtime_falsifier = (
+        "On a disposable authored Mission copy, GetPos -> SetPos(exact finite vector) "
+        "-> GetPos fails to reproduce that vector twice, or gate-off/stock/wrong-"
+        "expectation controls produce the same sentinel transition."
+    )
+    padding_falsifier = (
+        "Any non-NOP byte, instruction/function membership, incoming flow/reference, "
+        "or overlap contradicts terminal padding classification."
+    )
+
+    prefix_entity = _residual_key(
+        mission_setpos_reproof.SPECIMEN_SHA256,
+        "0x00536c61",
+        "0x00536c70",
+    )
+    suffix_entity = _residual_key(
+        mission_setpos_reproof.SPECIMEN_SHA256,
+        "0x00536c9a",
+        "0x00536ca0",
+    )
+    children = [
+        (0x00536C61, 0x00536C70, prefix_entity, "PADDING"),
+        (
+            mission_setpos_reproof.FUNCTION_START,
+            mission_setpos_reproof.FUNCTION_END,
+            mission_setpos_reproof.NEW_ENTITY,
+            "FUNCTION",
+        ),
+        (0x00536C9A, 0x00536CA0, suffix_entity, "PADDING"),
+    ]
+
+    rows["residuals"] = [
+        row
+        for row in rows["residuals"]
+        if row["entityKey"] != mission_setpos_reproof.OLD_ENTITY
+    ]
+    rows["contracts"] = [
+        row
+        for row in rows["contracts"]
+        if row["contractId"] != mission_setpos_reproof.OLD_CONTRACT
+    ]
+    padding_rows = [
+        {
+            "entityKey": prefix_entity,
+            "startVa": "0x00536c61",
+            "endVa": "0x00536c70",
+            "bytes": 15,
+            "observedBytes": 0,
+            "observationState": "DARK",
+            "classification": "PADDING",
+            "classificationVerdict": "FORMAL_STATIC_PROOF_SURVIVED",
+            "terminalState": "TERMINAL_PADDING",
+            "bytePattern": "PADDING_LIKE_BYTES",
+            "prevFunc": "GetPos",
+            "nextFunc": "IScript__SetPos",
+            "campaignState": "TERMINAL_PADDING",
+            "lever": "NONE",
+            "requiresElevation": False,
+            "cheapestFalsifier": padding_falsifier,
+            "questionIds": "",
+            "lastMeasurementDate": measured_date,
+        },
+        {
+            "entityKey": suffix_entity,
+            "startVa": "0x00536c9a",
+            "endVa": "0x00536ca0",
+            "bytes": 6,
+            "observedBytes": 0,
+            "observationState": "DARK",
+            "classification": "PADDING",
+            "classificationVerdict": "FORMAL_STATIC_PROOF_SURVIVED",
+            "terminalState": "TERMINAL_PADDING",
+            "bytePattern": "PADDING_LIKE_BYTES",
+            "prevFunc": "IScript__SetPos",
+            "nextFunc": "IScript__TriggerHitEffect",
+            "campaignState": "TERMINAL_PADDING",
+            "lever": "NONE",
+            "requiresElevation": False,
+            "cheapestFalsifier": padding_falsifier,
+            "questionIds": "",
+            "lastMeasurementDate": measured_date,
+        },
+    ]
+    rows["residuals"].extend(padding_rows)
+    rows["residuals"].sort(key=lambda row: int(str(row["startVa"]), 16))
+
+    new_function = {
+        "entityKey": mission_setpos_reproof.NEW_ENTITY,
+        "entryVa": "0x00536c70",
+        "entryRva": "0x00136c70",
+        "currentName": "IScript__SetPos",
+        "nativeShippedName": "SetPos",
+        "nativeRegistryStatus": "FUNCTION_PROMOTED_LIVE_BOUNDARY_ONLY",
+        "bodyRangesRva": "0x136c70-0x136c9a",
+        "bodyRangeSetSha256": mission_setpos_reproof.RANGE_SHA256,
+        "bodyBytes": 42,
+        "executionState": "DARK",
+        "observedBytes": 0,
+        "nameClass": "NAMED",
+        "understoodTier": "U2_ADDRESS_CITED",
+        "reachClass": "SCRIPT_VM",
+        "evidenceStates": (
+            "BASELINE_STATIC;ANALYST_METADATA_ONLY;"
+            "MAINTAINER_GHIDRA_BOUNDARY_PROMOTED;CAMPAIGN_NATIVE_NAME_ALIGNED;"
+            "CAMPAIGN_C1_STATIC_PROOF"
+        ),
+        "resolutionState": "CANDIDATE_CONTRACT",
+        "semanticGrade": "C1_CANDIDATE_PARTIAL",
+        "campaignState": "OPEN_DARK",
+        "lever": "script-native-scenario",
+        "leverConfidence": "PLAUSIBLE",
+        "requiresElevation": True,
+        "cheapestFalsifier": runtime_falsifier,
+        "lastMeasurementDate": measured_date,
+    }
+    rows["functions"].append(new_function)
+    rows["functions"].sort(key=lambda row: int(str(row["entryVa"]), 16))
+
+    residual_question.update(
+        {
+            "state": "CLOSED_SURVIVED",
+            "attemptCount": _integer(residual_question.get("attemptCount"), 0) + 1,
+            "lastOutcome": "SURVIVED",
+            "lastMeasurementDate": measured_at,
+        }
+    )
+    candidate_question.update(
+        {
+            "entityKey": mission_setpos_reproof.NEW_ENTITY,
+            "state": "CLOSED_SURVIVED",
+            "attemptCount": _integer(candidate_question.get("attemptCount"), 0) + 1,
+            "lastOutcome": "SURVIVED",
+            "lastMeasurementDate": measured_at,
+        }
+    )
+    successor_question = {
+        "questionId": mission_setpos_reproof.SUCCESSOR_QUESTION,
+        "questionType": "FUNCTION_CONTRACT",
+        "entityKey": mission_setpos_reproof.NEW_ENTITY,
+        "priority": 1,
+        "score": 865.0,
+        "state": "OPEN",
+        "requiresElevation": True,
+        "recommendedInstrument": "AUTHORED_SAFE_COPY_MISSION_LOGGER_ROUNDTRIP",
+        "question": (
+            "What exact runtime vector, receiver, delegated write, return, and "
+            "failure behavior define Mission native SetPos?"
+        ),
+        "cheapestFalsifier": runtime_falsifier,
+        "source": "mission-native-setpos-boundary-reproof",
+        "currentOwner": "recursive-re-campaign",
+        "generation": 15,
+        "attemptCount": 0,
+        "parentQuestionId": mission_setpos_reproof.CANDIDATE_QUESTION,
+        "lastOutcome": "PENDING",
+        "lastMeasurementDate": measured_at,
+    }
+    if any(
+        row.get("questionId") == mission_setpos_reproof.SUCCESSOR_QUESTION
+        for row in rows["questions"]
+    ):
+        raise CampaignError(
+            "Mission-native SetPos successor question already exists"
+        )
+    rows["questions"].append(successor_question)
+
+    function_contract = {
+        "contractId": mission_setpos_reproof.NEW_CONTRACT,
+        "entityKey": mission_setpos_reproof.NEW_ENTITY,
+        "entityKind": "FUNCTION",
+        "entryVa": "0x00536c70",
+        "currentName": "IScript__SetPos",
+        "nativeShippedName": "SetPos",
+        "contractState": "CANDIDATE_NEEDS_REFUTER",
+        "semanticGrade": "C1_CANDIDATE_PARTIAL",
+        "receiver": "__thiscall IScript-like this; target object dereferenced from this+0x10",
+        "inputs": (
+            "stack[0]=script-value pointer dereferenced to a virtual vector producer; "
+            "stack[1..2]=callee-cleaned slots not read directly by this body"
+        ),
+        "returns": "no typed return claim; RET 0x0C proves cleanup of three stack slots",
+        "writes": (
+            "delegated through target vtable+0x50 using one 16-byte stack temporary; "
+            "target fields remain runtime-unknown"
+        ),
+        "sideEffects": (
+            "first input vtable+0x44 fills a 16-byte temporary, then the target "
+            "object vtable+0x50 consumes that same temporary"
+        ),
+        "preconditions": (
+            "valid this, this+0x10 target object, first stack argument, and both vtables"
+        ),
+        "failureModes": (
+            "no local branch or null guard is present; invalid pointers/virtual targets "
+            "remain unmeasured"
+        ),
+        "authorVerdict": "SUPPORTED_BY_PRISTINE_BYTES_REGISTRY_AND_STATIC_CALL_SHAPE",
+        "runtimeVerdict": "UNSCORED",
+        "refuterVerdict": "UNSCORED",
+        "questionIds": ";".join(
+            sorted(
+                (
+                    mission_setpos_reproof.CANDIDATE_QUESTION,
+                    mission_setpos_reproof.SUCCESSOR_QUESTION,
+                )
+            )
+        ),
+        "evidenceRefs": evidence_refs + ";CAMPAIGN_NATIVE_NAME_ALIGNED;CAMPAIGN_C1_STATIC_PROOF",
+        "cheapestFalsifier": runtime_falsifier,
+        "rebuildOwner": "rebuild/OnslaughtRebuild.Core/Level100ActorRegistry.cs:1071",
+        "rebuildImplementation": "Level100ActorRegistry.SetPose (architectural candidate only)",
+        "parityTests": "rebuild/OnslaughtRebuild.Core.Tests/Level100ActorRegistryTests.cs",
+        "rebuildState": "NOT_READY",
+        "remainingUncertainty": (
+            "runtime vector values; target-side field writes; return convention beyond "
+            "callee cleanup; null/error behavior; retail-to-rebuild parity"
+        ),
+        "supersedesEntityKeys": ";".join(
+            sorted(
+                (
+                    mission_setpos_reproof.OLD_ENTITY,
+                    mission_setpos_reproof.CANDIDATE_ENTITY,
+                )
+            )
+        ),
+        "lastMeasurementDate": measured_date,
+    }
+    padding_contracts = []
+    for residual in padding_rows:
+        padding_contracts.append(
+            {
+                "contractId": _contract_id(str(residual["entityKey"])),
+                "entityKey": residual["entityKey"],
+                "entityKind": "TEXT_RESIDUAL",
+                "entryVa": residual["startVa"],
+                "currentName": "<unmapped .text residual>",
+                "nativeShippedName": "",
+                "contractState": "TERMINAL_PADDING",
+                "semanticGrade": "C0_OPAQUE",
+                "receiver": "UNKNOWN",
+                "inputs": "UNKNOWN",
+                "returns": "UNKNOWN",
+                "writes": "UNKNOWN",
+                "sideEffects": "UNKNOWN",
+                "preconditions": "UNKNOWN",
+                "failureModes": "UNKNOWN",
+                "authorVerdict": "STATIC_FORMAL_PROOF",
+                "runtimeVerdict": "UNSCORED",
+                "refuterVerdict": "SURVIVED",
+                "questionIds": "",
+                "evidenceRefs": evidence_refs,
+                "cheapestFalsifier": padding_falsifier,
+                "rebuildOwner": "UNASSIGNED",
+                "rebuildImplementation": "UNMAPPED",
+                "parityTests": "UNMAPPED",
+                "rebuildState": "NOT_READY",
+                "remainingUncertainty": (
+                    "No behavior contract is claimed; this exact range is NOP alignment padding."
+                ),
+                "supersedesEntityKeys": mission_setpos_reproof.OLD_ENTITY,
+                "lastMeasurementDate": measured_date,
+            }
+        )
+    contract_by_entity = {row["entityKey"]: row for row in rows["contracts"]}
+    contract_by_entity[mission_setpos_reproof.NEW_ENTITY] = function_contract
+    for contract in padding_contracts:
+        contract_by_entity[str(contract["entityKey"])] = contract
+    rows["contracts"] = [
+        contract_by_entity[row["entityKey"]] for row in rows["functions"]
+    ] + [contract_by_entity[row["entityKey"]] for row in rows["residuals"]]
+
+    partition_adjudication_id = _mission_native_setpos_partition_adjudication_id()
+    boundary_adjudication_id = _mission_native_setpos_boundary_adjudication_id()
+    if any(
+        row.get("adjudicationId")
+        in {partition_adjudication_id, boundary_adjudication_id}
+        for row in rows["adjudications"]
+    ):
+        raise CampaignError(
+            "Mission-native SetPos adjudication already exists"
+        )
+    rows["adjudications"].extend(
+        [
+            {
+                "adjudicationId": partition_adjudication_id,
+                "baseContractId": mission_setpos_reproof.OLD_CONTRACT,
+                "entityKey": mission_setpos_reproof.OLD_ENTITY,
+                "overlaySchema": MISSION_NATIVE_SETPOS_ADVANCE_SCHEMA,
+                "overlayReadySha256": MISSION_NATIVE_SETPOS_PROOF_READY_SHA256,
+                "questionIdsAddressed": mission_setpos_reproof.RESIDUAL_QUESTION,
+                "refuterVerdict": "SURVIVED",
+                "refuterEvidenceSha256": ";".join(evidence_hashes),
+                "semanticPromotionApplied": False,
+                "terminalState": "TERMINAL_EXACT_PARTITION",
+                "successorQuestionIds": "",
+                "remainingUncertainty": (
+                    "The 63-byte residual is completely partitioned; the new "
+                    "function's runtime contract remains open."
+                ),
+                "measuredAtUtc": measured_at,
+            },
+            {
+                "adjudicationId": boundary_adjudication_id,
+                "baseContractId": mission_setpos_reproof.NEW_CONTRACT,
+                "entityKey": mission_setpos_reproof.NEW_ENTITY,
+                "overlaySchema": MISSION_NATIVE_SETPOS_ADVANCE_SCHEMA,
+                "overlayReadySha256": MISSION_NATIVE_SETPOS_PROOF_READY_SHA256,
+                "questionIdsAddressed": mission_setpos_reproof.CANDIDATE_QUESTION,
+                "refuterVerdict": "SURVIVED",
+                "refuterEvidenceSha256": ";".join(evidence_hashes),
+                "semanticPromotionApplied": False,
+                "terminalState": "FUNCTION_BOUNDARY_C1_STATIC",
+                "successorQuestionIds": mission_setpos_reproof.SUCCESSOR_QUESTION,
+                "remainingUncertainty": function_contract["remainingUncertainty"],
+                "measuredAtUtc": measured_at,
+            },
+        ]
+    )
+
+    supersession_specs = [
+        (mission_setpos_reproof.OLD_ENTITY, prefix_entity, MISSION_NATIVE_SETPOS_ADVANCE_KIND),
+        (
+            mission_setpos_reproof.OLD_ENTITY,
+            mission_setpos_reproof.NEW_ENTITY,
+            MISSION_NATIVE_SETPOS_ADVANCE_KIND,
+        ),
+        (mission_setpos_reproof.OLD_ENTITY, suffix_entity, MISSION_NATIVE_SETPOS_ADVANCE_KIND),
+        (
+            mission_setpos_reproof.CANDIDATE_ENTITY,
+            mission_setpos_reproof.NEW_ENTITY,
+            GHIDRA_ADVANCE_KIND,
+        ),
+    ]
+    existing_supersessions = {
+        row["supersessionId"] for row in rows["supersessions"]
+    }
+    supersession_ids: list[str] = []
+    for old_entity, new_entity, kind in supersession_specs:
+        supersession_id = "S-" + _sha256_text(
+            old_entity + "|" + new_entity
+        )[:16]
+        if supersession_id in existing_supersessions:
+            raise CampaignError(
+                f"Mission-native SetPos supersession already exists: {supersession_id}"
+            )
+        rows["supersessions"].append(
+            {
+                "supersessionId": supersession_id,
+                "oldEntityKey": old_entity,
+                "newEntityKey": new_entity,
+                "kind": kind,
+                "verdict": "SURVIVED",
+                "evidenceRefs": evidence_refs,
+                "measuredAtUtc": measured_at,
+            }
+        )
+        existing_supersessions.add(supersession_id)
+        supersession_ids.append(supersession_id)
+
+    rows = {
+        name: [
+            {
+                field: value if isinstance(value, str) else str(value)
+                for field, value in row.items()
+            }
+            for row in values
+        ]
+        for name, values in rows.items()
+    }
+    counts = {name: len(value) for name, value in rows.items()}
+    if counts != MISSION_NATIVE_SETPOS_EXPECTED_GENERATION15_COUNTS:
+        raise CampaignError(
+            f"Mission-native SetPos output counts differ: {counts}"
+        )
+    delta = _mission_native_setpos_delta(
+        before,
+        rows,
+        partition_adjudication_id,
+        boundary_adjudication_id,
+        supersession_ids,
+    )
+    proof_stamp = validated["proofStamp"]
+    scratch_stamp = validated["scratchStamp"]
+    live_stamp = validated["liveStamp"]
+    advance = {
+        "kind": MISSION_NATIVE_SETPOS_ADVANCE_KIND,
+        "schema": MISSION_NATIVE_SETPOS_ADVANCE_SCHEMA,
+        "branchId": GHIDRA_PARTITION_RECOVERY_LINEAGE_ID,
+        "promotionId": "SP-"
+        + _sha256_text(
+            "|".join(
+                (
+                    MISSION_NATIVE_SETPOS_PARENT_READY_SHA256,
+                    MISSION_NATIVE_SETPOS_PROOF_READY_SHA256,
+                    MISSION_NATIVE_SETPOS_GHIDRA_LIVE_SHA256,
+                    MISSION_NATIVE_SETPOS_ADVANCE_KIND,
+                )
+            )
+        )[:16],
+        "verdict": "SURVIVED",
+        "proof": {
+            "root": MISSION_NATIVE_SETPOS_PROOF_RELATIVE.as_posix(),
+            "ready": proof_stamp,
+            "schema": mission_setpos_reproof.SCHEMA,
+            "author": {
+                "path": "tools/re_mission_native_setpos_reproof.py",
+                "bytes": MISSION_NATIVE_SETPOS_PROOF_AUTHOR_BYTES,
+                "sha256": MISSION_NATIVE_SETPOS_PROOF_AUTHOR_SHA256,
+            },
+        },
+        "ghidraPromotion": {
+            "root": MISSION_NATIVE_SETPOS_GHIDRA_RELATIVE.as_posix(),
+            "scratchAuthority": scratch_stamp,
+            "liveAuthority": live_stamp,
+            "owner": {
+                "path": "tools/ghidra_mission_native_setpos_promotion_authority.py",
+                "bytes": MISSION_NATIVE_SETPOS_GHIDRA_OWNER_BYTES,
+                "sha256": MISSION_NATIVE_SETPOS_GHIDRA_OWNER_SHA256,
+            },
+            "tool": {
+                "path": "tools/GhidraApplyMissionNativeSetPos.java",
+                "bytes": MISSION_NATIVE_SETPOS_GHIDRA_TOOL_BYTES,
+                "sha256": MISSION_NATIVE_SETPOS_GHIDRA_TOOL_SHA256,
+            },
+            "scope": "ONE_LIVE_FUNCTION_NAME_SIGNATURE_COMMENT_NO_BINARY_CHANGE",
+        },
+        "measuredAtUtc": measured_at,
+        "retiredSubject": {
+            "residual": retired_residual,
+            "contract": retired_contract,
+        },
+        "partition": {
+            "parentStartVa": "0x00536c61",
+            "parentEndVa": "0x00536ca0",
+            "parentBytes": 63,
+            "functionCount": 1,
+            "functionBytes": 42,
+            "paddingCount": 2,
+            "paddingBytes": 21,
+            "children": [
+                {
+                    "startVa": f"0x{start:08x}",
+                    "endVa": f"0x{end:08x}",
+                    "entityKey": entity,
+                    "kind": kind,
+                }
+                for start, end, entity, kind in children
+            ],
+        },
+        "function": {
+            "entityKey": mission_setpos_reproof.NEW_ENTITY,
+            "contractId": mission_setpos_reproof.NEW_CONTRACT,
+            "name": "IScript__SetPos",
+            "nativeShippedName": "SetPos",
+            "bodyBytes": 42,
+            "instructionCount": 17,
+            "bodySha256": mission_setpos_reproof.BODY_SHA256,
+            "bodyRangeSetSha256": mission_setpos_reproof.RANGE_SHA256,
+            "semanticGrade": "C1_CANDIDATE_PARTIAL",
+            "semanticGradeCeiling": "C1_STATIC",
+            "runtimeVerdict": "UNSCORED",
+            "semanticPromotionApplied": False,
+        },
+        "adjudications": {
+            "partition": partition_adjudication_id,
+            "boundary": boundary_adjudication_id,
+        },
+        "questions": {
+            "closed": [
+                mission_setpos_reproof.RESIDUAL_QUESTION,
+                mission_setpos_reproof.CANDIDATE_QUESTION,
+            ],
+            "opened": [mission_setpos_reproof.SUCCESSOR_QUESTION],
+        },
+        "delta": delta,
+        "limitations": validated["proof"]["limitations"],
+    }
+    return rows, advance
+
+
+def _validate_mission_native_setpos_receipt_envelope(
+    rows: dict[str, list[dict[str, str]]],
+    receipt: dict,
+    campaign_root: Path,
+) -> None:
+    expected_top = {
+        "schema",
+        "reducer",
+        "generatedAtUtc",
+        "generation",
+        "parentCampaign",
+        "sourceSnapshot",
+        "advance",
+        "counts",
+        "questionTypes",
+        "policies",
+        "outputs",
+    }
+    if set(receipt) != expected_top:
+        raise CampaignError("Mission-native SetPos READY shape differs")
+    _parse_utc_timestamp(
+        str(receipt.get("generatedAtUtc", "")),
+        "Mission-native SetPos generation",
+    )
+    parent_root = (REPO_ROOT / MISSION_NATIVE_SETPOS_PARENT_RELATIVE).resolve()
+    parent_receipt = _runtime_json(
+        parent_root / "campaign.ready.json", "Mission-native SetPos parent"
+    )
+    if not _same_json(
+        receipt.get("sourceSnapshot"), parent_receipt.get("sourceSnapshot")
+    ):
+        raise CampaignError("Mission-native SetPos source snapshot differs")
+    if receipt.get("questionTypes") != dict(
+        Counter(row["questionType"] for row in rows["questions"])
+    ):
+        raise CampaignError("Mission-native SetPos question types differ")
+    if receipt.get("policies") != _mission_native_setpos_policies():
+        raise CampaignError("Mission-native SetPos policies differ")
+    outputs = _runtime_mapping(
+        receipt.get("outputs"), "Mission-native SetPos outputs"
+    )
+    if set(outputs) != set(OUTPUTS):
+        raise CampaignError("Mission-native SetPos output set differs")
+    raw_root = Path(os.path.abspath(campaign_root))
+    try:
+        plain_root = ghidra_backup.resolve_plain_path(
+            raw_root, "Mission-native SetPos campaign root", strict=True
+        )
+    except (ghidra_backup.BackupError, OSError) as exc:
+        raise CampaignError(
+            f"Mission-native SetPos campaign root is not plain: {exc}"
+        ) from exc
+    if plain_root != raw_root:
+        raise CampaignError(
+            "Mission-native SetPos campaign root aliases another path"
+        )
+    authority_files: list[tuple[str, Path]] = []
+    for label, path in [
+        ("campaign READY", plain_root / "campaign.ready.json"),
+        *[
+            (
+                f"reducer {path.relative_to(plain_root / '_reducer').as_posix()}",
+                path,
+            )
+            for path in (plain_root / "_reducer").rglob("*")
+            if path.is_file()
+        ],
+    ]:
+        try:
+            plain = ghidra_backup.resolve_plain_path(
+                path, f"Mission-native SetPos {label}", strict=True
+            )
+        except (ghidra_backup.BackupError, OSError) as exc:
+            raise CampaignError(
+                f"Mission-native SetPos {label} is not plain: {exc}"
+            ) from exc
+        if plain.stat().st_nlink != 1:
+            raise CampaignError(
+                f"Mission-native SetPos {label} has multiple hard links"
+            )
+        authority_files.append((label, plain))
+    output_files: list[tuple[str, Path]] = []
+    for name in OUTPUTS:
+        stamp = _runtime_mapping(
+            outputs.get(name), f"Mission-native SetPos output {name}"
+        )
+        if set(stamp) != {"path", "bytes", "sha256", "lastWriteUtc"}:
+            raise CampaignError(
+                f"Mission-native SetPos output stamp shape differs: {name}"
+            )
+        if stamp.get("path") != name:
+            raise CampaignError(
+                f"Mission-native SetPos output path differs: {name}"
+            )
+        _parse_utc_timestamp(
+            str(stamp.get("lastWriteUtc", "")),
+            f"Mission-native SetPos output {name}",
+        )
+        try:
+            path = ghidra_backup.resolve_plain_path(
+                plain_root / name,
+                f"Mission-native SetPos output {name}",
+                strict=True,
+            )
+        except (ghidra_backup.BackupError, OSError) as exc:
+            raise CampaignError(
+                f"Mission-native SetPos output is not plain: {name}: {exc}"
+            ) from exc
+        if path.stat().st_nlink != 1:
+            raise CampaignError(
+                f"Mission-native SetPos output has multiple hard links: {name}"
+            )
+        if {**coverage.file_stamp(path), "path": name} != stamp:
+            raise CampaignError(
+                f"Mission-native SetPos output stamp differs: {name}"
+            )
+        try:
+            if os.path.samefile(path, parent_root / name):
+                raise CampaignError(
+                    f"Mission-native SetPos output aliases canonical Gen14: {name}"
+                )
+        except OSError as exc:
+            raise CampaignError(
+                f"Mission-native SetPos output identity cannot be read: {exc}"
+            ) from exc
+        output_files.append((name, path))
+    _require_disjoint_evidence_files(
+        output_files, "Mission-native SetPos outputs"
+    )
+    _require_disjoint_evidence_files(
+        authority_files + output_files,
+        "Mission-native SetPos authority files",
+    )
+
+
+def _validate_mission_native_setpos_advance_relation(
+    rows: dict[str, list[dict[str, str]]],
+    receipt: dict,
+    advance: object,
+    *,
+    campaign_root: Path | None,
+) -> dict[str, object]:
+    if not isinstance(advance, dict):
+        raise CampaignError("Mission-native SetPos advance is absent")
+    parent = _runtime_mapping(
+        receipt.get("parentCampaign"), "Mission-native SetPos parent"
+    )
+    parent_root = _resolve_repo_or_absolute(
+        parent.get("path"), "Mission-native SetPos parent path"
+    )
+    expected_parent = (REPO_ROOT / MISSION_NATIVE_SETPOS_PARENT_RELATIVE).resolve()
+    parent_ready = _runtime_mapping(
+        parent.get("ready"), "Mission-native SetPos parent READY"
+    )
+    if (
+        _integer(receipt.get("generation"), -1) != 15
+        or parent_root != expected_parent
+        or parent_ready.get("path") != "campaign.ready.json"
+        or parent_ready.get("bytes") != MISSION_NATIVE_SETPOS_PARENT_READY_BYTES
+        or parent_ready.get("sha256")
+        != MISSION_NATIVE_SETPOS_PARENT_READY_SHA256
+        or advance.get("kind") != MISSION_NATIVE_SETPOS_ADVANCE_KIND
+        or advance.get("schema") != MISSION_NATIVE_SETPOS_ADVANCE_SCHEMA
+        or advance.get("branchId") != GHIDRA_PARTITION_RECOVERY_LINEAGE_ID
+    ):
+        raise CampaignError(
+            "Mission-native SetPos generation identity differs"
+        )
+    base_receipt = _runtime_json(
+        expected_parent / "campaign.ready.json",
+        "Mission-native SetPos exact parent",
+    )
+    expected_rows, expected_advance = _mission_native_setpos_rows_and_advance(
+        expected_parent,
+        REPO_ROOT / MISSION_NATIVE_SETPOS_PROOF_RELATIVE,
+        base_receipt,
+    )
+    if not _same_json(rows, expected_rows):
+        raise CampaignError("Mission-native SetPos campaign rows differ")
+    if not _same_json(advance, expected_advance):
+        raise CampaignError("Mission-native SetPos advance receipt differs")
+    if receipt.get("counts") != MISSION_NATIVE_SETPOS_EXPECTED_GENERATION15_COUNTS:
+        raise CampaignError("Mission-native SetPos READY counts differ")
+    if campaign_root is not None:
+        _validate_mission_native_setpos_receipt_envelope(
+            rows, receipt, campaign_root
+        )
+    supersession_rows = {
+        row["supersessionId"]: row
+        for row in expected_rows["supersessions"]
+        if row["supersessionId"]
+        in set(expected_advance["delta"]["supersessionIdsAdded"])
+    }
+    return {
+        "advance": expected_advance,
+        "partitionAdjudicationId": expected_advance["adjudications"]["partition"],
+        "boundaryAdjudicationId": expected_advance["adjudications"]["boundary"],
+        "nonsemanticAdjudicationIds": {
+            expected_advance["adjudications"]["partition"],
+            expected_advance["adjudications"]["boundary"],
+        },
+        "retiredContract": expected_advance["retiredSubject"]["contract"],
+        "successorQuestionId": mission_setpos_reproof.SUCCESSOR_QUESTION,
+        "supersessionRows": supersession_rows,
+    }
+
+
+def advance_mission_native_setpos_reproof(
+    campaign: Path,
+    proof_root: Path,
+    out: Path,
+    *,
+    _self_check: bool = True,
+    _verified_parent_receipt: dict | None = None,
+) -> dict:
+    """Publish the exact Mission-native SetPos boundary/static-contract advance."""
+
+    if out.exists():
+        raise CampaignError(
+            f"refusing existing Mission-native SetPos destination: {out}"
+        )
+    base_receipt = (
+        _verified_parent_receipt
+        if _verified_parent_receipt is not None
+        else _verify_mission_native_setpos_parent_campaign(campaign)
+    )
+    rows, advance = _mission_native_setpos_rows_and_advance(
+        campaign, proof_root, base_receipt
+    )
+    output_rows = {
+        "campaign-functions.tsv": (FUNCTION_COLUMNS, rows["functions"]),
+        "campaign-residuals.tsv": (RESIDUAL_COLUMNS, rows["residuals"]),
+        "campaign-questions.tsv": (QUESTION_COLUMNS, rows["questions"]),
+        "campaign-scenarios.tsv": (SCENARIO_COLUMNS, rows["scenarios"]),
+        "campaign-levers.tsv": (LEVER_COLUMNS, rows["levers"]),
+        "campaign-contracts.tsv": (CONTRACT_COLUMNS, rows["contracts"]),
+        "campaign-adjudications.tsv": (
+            ADJUDICATION_COLUMNS,
+            rows["adjudications"],
+        ),
+        "campaign-supersessions.tsv": (
+            SUPERSESSION_COLUMNS,
+            rows["supersessions"],
+        ),
+    }
+    base_ready = coverage.file_stamp(campaign / "campaign.ready.json")
+    out.parent.mkdir(parents=True, exist_ok=True)
+    stage = Path(
+        tempfile.mkdtemp(prefix=f".{out.name}.", dir=out.parent)
+    )
+    try:
+        for name, (columns, output) in output_rows.items():
+            _write_tsv(stage / name, columns, output)
+        reducer = _publish_reducer(stage)
+        receipt = {
+            "schema": SCHEMA,
+            "reducer": reducer,
+            "generatedAtUtc": datetime.now(timezone.utc).isoformat(),
+            "generation": 15,
+            "parentCampaign": {
+                "path": str(campaign.resolve()),
+                "ready": {**base_ready, "path": "campaign.ready.json"},
+            },
+            "sourceSnapshot": base_receipt["sourceSnapshot"],
+            "advance": advance,
+            "counts": {name: len(value) for name, value in rows.items()},
+            "questionTypes": dict(
+                Counter(row["questionType"] for row in rows["questions"])
+            ),
+            "policies": _mission_native_setpos_policies(),
+            "outputs": {
+                name: {
+                    **coverage.file_stamp(stage / name),
+                    "path": name,
+                }
+                for name in OUTPUTS
+            },
+        }
+        (stage / "campaign.ready.json").write_text(
+            json.dumps(receipt, indent=2) + "\n", encoding="utf-8"
+        )
+        if _self_check:
+            verify(stage)
+        os.replace(stage, out)
+        return receipt
+    except Exception:
+        shutil.rmtree(stage, ignore_errors=True)
+        raise
+
+
+def _mission_native_setpos_runtime_policies() -> list[str]:
+    return [
+        "Only the exact Gen15 IScript__SetPos function, contract, and open runtime-contract question change.",
+        "Two independently staged treatment runs must reproduce the exact source, target-before, and immediate target-after vectors.",
+        "The matched no-call control must preserve the target, the stock arm must contain no experiment nonce, and the logger-disabled arm must produce no probe log.",
+        "The result is bounded to one forced finite-vector Level 100 Setup path on disposable copies; it is not a natural shipped call or universal SetPos contract.",
+        "Immediate script-visible GetPos equality does not establish the internal write set, orientation, collision, physics, navigation, persistence, or invalid-receiver behavior.",
+        "The Godot mapping is PARTIAL_CONTRACT and preserves unproved pose fields; it is not REBUILD_READY.",
+        "The existing Gen15 live Ghidra boundary promotion is corroborating identity evidence; this advance performs no Ghidra, executable, installed-game, or trace mutation.",
+    ]
+
+
+def _mission_native_setpos_runtime_successor_specs() -> list[dict[str, object]]:
+    return [
+        {
+            "questionType": "EXECUTED_FUNCTION_CONTRACT",
+            "priority": 1,
+            "score": 940.0,
+            "requiresElevation": False,
+            "recommendedInstrument": "AUTHORED_SAFE_COPY_SETPOS_RECEIVER_AND_VECTOR_MATRIX",
+            "question": (
+                "Does Mission-native SetPos preserve exact GetPos roundtrips across other "
+                "receivers, finite vectors, signs, magnitudes, and repeated calls?"
+            ),
+            "cheapestFalsifier": (
+                "A replicated safe-copy receiver/vector matrix produces a different immediate "
+                "GetPos value, rounding rule, or receiver selection."
+            ),
+            "source": "mission-native-setpos-runtime-proof-v1",
+            "currentOwner": "recursive-re-campaign",
+        },
+        {
+            "questionType": "EXECUTED_FUNCTION_CONTRACT",
+            "priority": 2,
+            "score": 900.0,
+            "requiresElevation": True,
+            "recommendedInstrument": "SHORT_TTD_SETPOS_WRITESET_AND_SIDE_EFFECT_WATCH",
+            "question": (
+                "What exact internal fields and downstream orientation, collision, physics, "
+                "navigation, and persistence state change during Mission-native SetPos?"
+            ),
+            "cheapestFalsifier": (
+                "A short gap-free SetPos trace or exact write watch shows state outside the "
+                "position projection or a different ordering than the bounded rebuild mapping."
+            ),
+            "source": "mission-native-setpos-runtime-proof-v1",
+            "currentOwner": "recursive-re-campaign",
+        },
+        {
+            "questionType": "EXECUTED_FUNCTION_CONTRACT",
+            "priority": 3,
+            "score": 820.0,
+            "requiresElevation": False,
+            "recommendedInstrument": "AUTHORED_SAFE_COPY_SETPOS_FAILURE_MATRIX",
+            "question": (
+                "What are the null, missing, dead, wrong-type, and non-finite argument failure "
+                "semantics of Mission-native SetPos?"
+            ),
+            "cheapestFalsifier": (
+                "A preregistered safe-copy failure matrix returns, logs, or mutates state in a "
+                "way inconsistent with the static no-local-guard shape."
+            ),
+            "source": "mission-native-setpos-runtime-proof-v1",
+            "currentOwner": "recursive-re-campaign",
+        },
+    ]
+
+
+def _mission_native_setpos_runtime_adjudication_id() -> str:
+    return "A-" + _sha256_text(
+        "|".join(
+            (
+                MISSION_NATIVE_SETPOS_RUNTIME_PARENT_READY_SHA256,
+                MISSION_NATIVE_SETPOS_RUNTIME_PROOF_READY_SHA256,
+                mission_setpos_runtime.CONTRACT_ID,
+                mission_setpos_runtime.OPEN_QUESTION_ID,
+                "SURVIVED",
+            )
+        )
+    )[:16]
+
+
+def _validate_mission_native_setpos_runtime_proof(proof_root: Path) -> dict:
+    raw = Path(os.path.abspath(proof_root))
+    expected = (REPO_ROOT / MISSION_NATIVE_SETPOS_RUNTIME_PROOF_RELATIVE).resolve()
+    try:
+        plain = ghidra_backup.resolve_plain_path(
+            raw, "Mission-native SetPos runtime proof root", strict=True
+        )
+    except (ghidra_backup.BackupError, OSError) as exc:
+        raise CampaignError(
+            f"Mission-native SetPos runtime proof root is not plain: {exc}"
+        ) from exc
+    if plain != expected:
+        raise CampaignError(
+            "Mission-native SetPos runtime proof is not the reviewed immutable root"
+        )
+    owner_root = Path(__file__).resolve().parents[1]
+    ready_path = plain / mission_setpos_runtime.READY_NAME
+    author_path = Path(mission_setpos_runtime.__file__).resolve()
+    parity_owner = (
+        owner_root / "rebuild/OnslaughtRebuild.Core/Level100ActorScriptRuntime.cs"
+    )
+    parity_value = (
+        owner_root / "rebuild/OnslaughtRebuild.Core/Level100MissionProgram.cs"
+    )
+    parity_test = (
+        owner_root / "rebuild/OnslaughtRebuild.Core.Tests/Level100MissionTests.cs"
+    )
+    expected_files = (
+        (
+            "READY",
+            ready_path,
+            MISSION_NATIVE_SETPOS_RUNTIME_PROOF_READY_BYTES,
+            MISSION_NATIVE_SETPOS_RUNTIME_PROOF_READY_SHA256,
+        ),
+        (
+            "author",
+            author_path,
+            MISSION_NATIVE_SETPOS_RUNTIME_PROOF_AUTHOR_BYTES,
+            MISSION_NATIVE_SETPOS_RUNTIME_PROOF_AUTHOR_SHA256,
+        ),
+        (
+            "parity owner",
+            parity_owner,
+            MISSION_NATIVE_SETPOS_RUNTIME_PARITY_OWNER_BYTES,
+            MISSION_NATIVE_SETPOS_RUNTIME_PARITY_OWNER_SHA256,
+        ),
+        (
+            "parity value",
+            parity_value,
+            MISSION_NATIVE_SETPOS_RUNTIME_PARITY_VALUE_BYTES,
+            MISSION_NATIVE_SETPOS_RUNTIME_PARITY_VALUE_SHA256,
+        ),
+        (
+            "parity test",
+            parity_test,
+            MISSION_NATIVE_SETPOS_RUNTIME_PARITY_TEST_BYTES,
+            MISSION_NATIVE_SETPOS_RUNTIME_PARITY_TEST_SHA256,
+        ),
+    )
+    for label, path, expected_bytes, expected_sha256 in expected_files:
+        try:
+            resolved = ghidra_backup.resolve_plain_path(
+                path, f"Mission-native SetPos runtime {label}", strict=True
+            )
+        except (ghidra_backup.BackupError, OSError) as exc:
+            raise CampaignError(
+                f"Mission-native SetPos runtime {label} is not plain: {exc}"
+            ) from exc
+        if (
+            resolved.stat().st_nlink != 1
+            or resolved.stat().st_size != expected_bytes
+            or coverage.sha256_of(resolved) != expected_sha256
+        ):
+            raise CampaignError(
+                f"Mission-native SetPos runtime {label} identity differs"
+            )
+    receipt = _runtime_json(
+        ready_path, "Mission-native SetPos runtime proof READY"
+    )
+    try:
+        generated = str(receipt.get("generatedAtUtc", ""))
+        derived = mission_setpos_runtime.derive(REPO_ROOT, generated)
+        derived["tools"] = dict(derived["tools"])
+        author = dict(
+            derived["tools"]["tools/re_mission_native_setpos_runtime.py"]
+        )
+        author["path"] = "tools/re_mission_native_setpos_runtime.py"
+        derived["tools"]["tools/re_mission_native_setpos_runtime.py"] = author
+        if receipt != derived:
+            raise ValueError("proof content differs from independent derivation")
+        mission_setpos_runtime.selftest(REPO_ROOT)
+    except (
+        mission_setpos_runtime.ProofError,
+        KeyError,
+        ValueError,
+        OSError,
+    ) as exc:
+        raise CampaignError(
+            f"Mission-native SetPos runtime proof does not rederive: {exc}"
+        ) from exc
+    result = _runtime_mapping(
+        receipt.get("result"), "Mission-native SetPos runtime result"
+    )
+    relations = _runtime_mapping(
+        receipt.get("relations"), "Mission-native SetPos runtime relations"
+    )
+    if (
+        receipt.get("schema") != mission_setpos_runtime.SCHEMA
+        or receipt.get("verdict") != "READY"
+        or receipt.get("claim") != mission_setpos_runtime.CLAIM
+        or receipt.get("specimenSha256") != mission_setpos_runtime.SPECIMEN_SHA256
+        or receipt.get("entity", {}).get("entityKey")
+        != mission_setpos_runtime.ENTITY_KEY
+        or receipt.get("entity", {}).get("contractId")
+        != mission_setpos_runtime.CONTRACT_ID
+        or receipt.get("entity", {}).get("questionAddressed")
+        != mission_setpos_runtime.OPEN_QUESTION_ID
+        or result.get("evidenceGrade") != "C2_BOUNDED_RUNTIME"
+        or result.get("contractDisposition")
+        != "ADMIT_BOUNDED_RUNTIME_PATH_KEEP_BROADER_BEHAVIOR_OPEN"
+        or result.get("replications") != 2
+        or result.get("controls") != 3
+        or relations.get("immediateTargetReadbackEqualsSuppliedSourcePosition")
+        is not True
+        or relations.get("noCallControlUnchanged") is not True
+        or relations.get("loggerDisabledLogAbsent") is not True
+        or relations.get("stockNoncesAbsent") is not True
+        or receipt.get("upstream", {}).get(
+            "local-lab/re-campaign-incident-recovery-20260808-v1/"
+            "generation-15-mission-native-setpos-reproof-v2/campaign.ready.json",
+            {},
+        ).get("sha256") != MISSION_NATIVE_SETPOS_RUNTIME_PARENT_READY_SHA256
+        or receipt.get("upstream", {}).get(
+            "local-lab/re-campaign-incident-recovery-20260808-v1/"
+            "generation-15-mission-native-setpos-reproof-authority.ready.json",
+            {},
+        ).get("sha256") != MISSION_NATIVE_SETPOS_RUNTIME_PARENT_AUTHORITY_SHA256
+    ):
+        raise CampaignError("Mission-native SetPos runtime proof boundary differs")
+    return receipt
+
+
+def _mission_native_setpos_runtime_delta(
+    before: dict[str, list[dict[str, str]]],
+    after: dict[str, list[dict[str, str]]],
+) -> dict[str, object]:
+    for name in ("residuals", "scenarios", "levers", "supersessions"):
+        if before[name] != after[name]:
+            raise CampaignError(
+                f"Mission-native SetPos runtime changed unrelated {name}"
+            )
+
+    def keyed(items: list[dict[str, str]], field: str) -> dict[str, dict[str, str]]:
+        result = {row[field]: row for row in items}
+        if len(result) != len(items):
+            raise CampaignError(
+                f"Mission-native SetPos runtime delta duplicates {field}"
+            )
+        return result
+
+    function_before = keyed(before["functions"], "entityKey")
+    function_after = keyed(after["functions"], "entityKey")
+    contract_before = keyed(before["contracts"], "contractId")
+    contract_after = keyed(after["contracts"], "contractId")
+    question_before = keyed(before["questions"], "questionId")
+    question_after = keyed(after["questions"], "questionId")
+    adjudication_before = keyed(before["adjudications"], "adjudicationId")
+    adjudication_after = keyed(after["adjudications"], "adjudicationId")
+    if (
+        set(function_before) != set(function_after)
+        or set(contract_before) != set(contract_after)
+        or not set(question_before) <= set(question_after)
+        or not set(adjudication_before) <= set(adjudication_after)
+    ):
+        raise CampaignError(
+            "Mission-native SetPos runtime changed entity identities"
+        )
+    function_changes = {
+        entity: sorted(
+            field
+            for field in FUNCTION_COLUMNS
+            if prior[field] != function_after[entity][field]
+        )
+        for entity, prior in function_before.items()
+        if prior != function_after[entity]
+    }
+    contract_changes = {
+        contract_id: sorted(
+            field
+            for field in CONTRACT_COLUMNS
+            if prior[field] != contract_after[contract_id][field]
+        )
+        for contract_id, prior in contract_before.items()
+        if prior != contract_after[contract_id]
+    }
+    if set(function_changes) != {mission_setpos_runtime.ENTITY_KEY}:
+        raise CampaignError(
+            "Mission-native SetPos runtime function delta population differs"
+        )
+    if set(contract_changes) != {mission_setpos_runtime.CONTRACT_ID}:
+        raise CampaignError(
+            "Mission-native SetPos runtime contract delta population differs"
+        )
+    function_allowed = {
+        "evidenceStates",
+        "resolutionState",
+        "semanticGrade",
+        "lever",
+        "cheapestFalsifier",
+        "lastMeasurementDate",
+    }
+    contract_allowed = {
+        "contractState",
+        "semanticGrade",
+        "receiver",
+        "inputs",
+        "returns",
+        "writes",
+        "sideEffects",
+        "preconditions",
+        "failureModes",
+        "authorVerdict",
+        "runtimeVerdict",
+        "refuterVerdict",
+        "questionIds",
+        "evidenceRefs",
+        "cheapestFalsifier",
+        "rebuildOwner",
+        "rebuildImplementation",
+        "parityTests",
+        "rebuildState",
+        "remainingUncertainty",
+        "lastMeasurementDate",
+    }
+    if set(next(iter(function_changes.values()))) - function_allowed:
+        raise CampaignError(
+            "Mission-native SetPos runtime function delta exceeds its whitelist"
+        )
+    if set(next(iter(contract_changes.values()))) - contract_allowed:
+        raise CampaignError(
+            "Mission-native SetPos runtime contract delta exceeds its whitelist"
+        )
+    modified_questions = {
+        question_id: sorted(
+            field
+            for field in QUESTION_COLUMNS
+            if prior[field] != question_after[question_id][field]
+        )
+        for question_id, prior in question_before.items()
+        if prior != question_after[question_id]
+    }
+    if set(modified_questions) != {mission_setpos_runtime.OPEN_QUESTION_ID} or (
+        set(next(iter(modified_questions.values())))
+        - {"state", "attemptCount", "lastOutcome", "lastMeasurementDate"}
+    ):
+        raise CampaignError(
+            "Mission-native SetPos runtime parent-question delta differs"
+        )
+    added_questions = sorted(set(question_after) - set(question_before))
+    added_adjudications = sorted(set(adjudication_after) - set(adjudication_before))
+    if len(added_questions) != 3 or added_adjudications != [
+        _mission_native_setpos_runtime_adjudication_id()
+    ]:
+        raise CampaignError(
+            "Mission-native SetPos runtime successor/adjudication census differs"
+        )
+    return {
+        "functionRowsChanged": function_changes,
+        "contractRowsChanged": contract_changes,
+        "questionRowsChanged": modified_questions,
+        "questionIdsAdded": added_questions,
+        "adjudicationIdsAdded": added_adjudications,
+        "unchangedLedgers": ["residuals", "scenarios", "levers", "supersessions"],
+        "namesChanged": 0,
+        "rangesChanged": 0,
+        "runtimeTreatmentsProved": 2,
+        "runtimeControlsProved": 3,
+        "supersessionsAdded": 0,
+        "rebuildMappingsChanged": 1,
+    }
+
+
+def _mission_native_setpos_runtime_rows_and_advance(
+    campaign: Path, proof_root: Path, base_receipt: dict
+) -> tuple[dict[str, list[dict[str, str]]], dict]:
+    expected_parent = (
+        REPO_ROOT / MISSION_NATIVE_SETPOS_RUNTIME_PARENT_RELATIVE
+    ).resolve()
+    if campaign.resolve() != expected_parent:
+        raise CampaignError(
+            "Mission-native SetPos runtime advance does not use canonical Gen15"
+        )
+    if (
+        base_receipt.get("generation") != 15
+        or base_receipt.get("counts")
+        != MISSION_NATIVE_SETPOS_RUNTIME_PARENT_COUNTS
+        or base_receipt.get("reducer", {}).get("id")
+        != MISSION_NATIVE_SETPOS_RUNTIME_PARENT_REDUCER_ID
+    ):
+        raise CampaignError("Mission-native SetPos runtime parent receipt differs")
+    proof_receipt = _validate_mission_native_setpos_runtime_proof(proof_root)
+    before = _campaign_rows_from_root(campaign)
+    rows = json.loads(json.dumps(before))
+    functions = {row["entityKey"]: row for row in rows["functions"]}
+    contracts = {row["contractId"]: row for row in rows["contracts"]}
+    questions = {row["questionId"]: row for row in rows["questions"]}
+    function = functions.get(mission_setpos_runtime.ENTITY_KEY)
+    contract = contracts.get(mission_setpos_runtime.CONTRACT_ID)
+    parent_question = questions.get(mission_setpos_runtime.OPEN_QUESTION_ID)
+    if (
+        function is None
+        or contract is None
+        or parent_question is None
+        or function.get("entryVa") != "0x00536c70"
+        or function.get("currentName") != "IScript__SetPos"
+        or function.get("resolutionState") != "CANDIDATE_CONTRACT"
+        or function.get("semanticGrade") != "C1_CANDIDATE_PARTIAL"
+        or contract.get("entityKey") != mission_setpos_runtime.ENTITY_KEY
+        or contract.get("currentName") != "IScript__SetPos"
+        or contract.get("contractState") != "CANDIDATE_NEEDS_REFUTER"
+        or contract.get("semanticGrade") != "C1_CANDIDATE_PARTIAL"
+        or contract.get("runtimeVerdict") != "UNSCORED"
+        or contract.get("refuterVerdict") != "UNSCORED"
+        or parent_question.get("state") != "OPEN"
+        or parent_question.get("entityKey") != mission_setpos_runtime.ENTITY_KEY
+        or mission_setpos_runtime.OPEN_QUESTION_ID
+        not in _state_values(
+            contract.get("questionIds"),
+            "Mission-native SetPos runtime contract questions",
+        )
+    ):
+        raise CampaignError("Mission-native SetPos runtime parent row differs")
+    measured_at = str(proof_receipt["generatedAtUtc"])
+    measured_date = measured_at[:10]
+    history = [
+        row
+        for row in rows["questions"]
+        if row["entityKey"] == mission_setpos_runtime.ENTITY_KEY
+    ]
+    successors = [
+        _successor_question(
+            spec,
+            entity_key=mission_setpos_runtime.ENTITY_KEY,
+            parents=[parent_question],
+            history=history,
+            generation=16,
+            measured_at=measured_at,
+        )
+        for spec in _mission_native_setpos_runtime_successor_specs()
+    ]
+    if len({row["questionId"] for row in successors}) != 3:
+        raise CampaignError(
+            "Mission-native SetPos runtime successor identities collide"
+        )
+    parent_question["state"] = "CLOSED_SURVIVED"
+    parent_question["attemptCount"] = (
+        _integer(parent_question.get("attemptCount"), 0) + 1
+    )
+    parent_question["lastOutcome"] = "SURVIVED"
+    parent_question["lastMeasurementDate"] = measured_at
+    rows["questions"].extend(successors)
+
+    for state in (
+        "MISSION_NATIVE_SETPOS_RUNTIME_REPLICATED",
+        "MISSION_NATIVE_SETPOS_MATCHED_NO_CALL_CONTROL",
+        "REBUILD_PARITY_MAPPED",
+    ):
+        function["evidenceStates"] = _append_state(
+            function["evidenceStates"], state
+        )
+    function["resolutionState"] = "BOUNDED_CONTRACT"
+    function["semanticGrade"] = "C2_BOUNDED_RUNTIME"
+    function["lever"] = successors[0]["recommendedInstrument"]
+    function["cheapestFalsifier"] = successors[0]["cheapestFalsifier"]
+    function["lastMeasurementDate"] = measured_date
+
+    proof_relative = MISSION_NATIVE_SETPOS_RUNTIME_PROOF_RELATIVE.as_posix()
+    inputs = proof_receipt["inputs"]
+
+    def proof_ref(relative: str) -> str:
+        stamp = _runtime_mapping(
+            inputs.get(relative), f"Mission-native SetPos runtime input {relative}"
+        )
+        return f"{stamp['path']}#sha256={stamp['sha256']}"
+
+    evidence_refs = [
+        f"{proof_relative}/{mission_setpos_runtime.READY_NAME}#sha256={MISSION_NATIVE_SETPOS_RUNTIME_PROOF_READY_SHA256}",
+        f"tools/re_mission_native_setpos_runtime.py#sha256={MISSION_NATIVE_SETPOS_RUNTIME_PROOF_AUTHOR_SHA256}",
+        proof_ref(
+            "run-receipts/mission-setpos-treatment-r1-20260809-072757/receipt.json"
+        ),
+        proof_ref(
+            "run-receipts/mission-setpos-treatment-r1-20260809-072757/artefacts/probe.log"
+        ),
+        proof_ref(
+            "run-receipts/mission-setpos-treatment-r2-20260809-072837/receipt.json"
+        ),
+        proof_ref(
+            "run-receipts/mission-setpos-treatment-r2-20260809-072837/artefacts/probe.log"
+        ),
+        proof_ref(
+            "run-receipts/mission-setpos-no-call-control-20260809-072915/receipt.json"
+        ),
+        proof_ref(
+            "run-receipts/mission-setpos-no-call-control-20260809-072915/artefacts/probe.log"
+        ),
+        proof_ref(
+            "run-receipts/mission-setpos-stock-control-20260809-072954/receipt.json"
+        ),
+        proof_ref(
+            "run-receipts/mission-setpos-gate0-control-20260809-073059/receipt.json"
+        ),
+        f"local-lab/mission-native-setpos-boundary-reproof-20260809-v1/proof.ready.json#sha256={MISSION_NATIVE_SETPOS_PROOF_READY_SHA256}",
+        f"local-lab/ghidra-mission-native-setpos-live-promotion-20260809-v1/promotion/promotion.ready.json#sha256={MISSION_NATIVE_SETPOS_GHIDRA_LIVE_SHA256}",
+        f"rebuild/OnslaughtRebuild.Core/Level100ActorScriptRuntime.cs#sha256={MISSION_NATIVE_SETPOS_RUNTIME_PARITY_OWNER_SHA256}",
+        f"rebuild/OnslaughtRebuild.Core/Level100MissionProgram.cs#sha256={MISSION_NATIVE_SETPOS_RUNTIME_PARITY_VALUE_SHA256}",
+        f"rebuild/OnslaughtRebuild.Core.Tests/Level100MissionTests.cs#sha256={MISSION_NATIVE_SETPOS_RUNTIME_PARITY_TEST_SHA256}",
+    ]
+    result = _runtime_mapping(
+        proof_receipt.get("result"), "Mission-native SetPos runtime result"
+    )
+    contract["contractState"] = "BOUNDED_CONTRACT_ADVANCED"
+    contract["semanticGrade"] = "C2_BOUNDED_RUNTIME"
+    contract["receiver"] = (
+        "Mission script receiver resolved as Turret 02 in the forced Level 100 Setup path"
+    )
+    contract["inputs"] = str(result["inputs"])
+    contract["returns"] = str(result["returns"])
+    contract["writes"] = str(result["writes"])
+    contract["sideEffects"] = (
+        "two independent treatment runs immediately read back the supplied source "
+        "position through GetPos; the matched no-call target stays unchanged"
+    )
+    contract["preconditions"] = (
+        "disposable safe-copy runtime; forced generated Level 100 Setup script; valid "
+        "Turret 01 source, Turret 02 receiver, and one finite CPositionDataType argument"
+    )
+    contract["failureModes"] = (
+        "other receivers/vectors, float-bit precision beyond four decimal places, null/dead/"
+        "wrong-type/non-finite inputs, internal write set, and later persistence remain open"
+    )
+    contract["authorVerdict"] = "SUPPORTED_BY_STATIC_AND_REPLICATED_RUNTIME"
+    contract["runtimeVerdict"] = "MEASURED_BOUNDED_PATH"
+    contract["refuterVerdict"] = "SURVIVED"
+    for successor in successors:
+        contract["questionIds"] = _append_state(
+            contract["questionIds"], successor["questionId"]
+        )
+    for reference in evidence_refs:
+        contract["evidenceRefs"] = _append_state(
+            contract["evidenceRefs"], reference
+        )
+    contract["cheapestFalsifier"] = successors[0]["cheapestFalsifier"]
+    contract["rebuildOwner"] = (
+        "rebuild/OnslaughtRebuild.Core/Level100ActorScriptRuntime.cs"
+    )
+    contract["rebuildImplementation"] = (
+        "Level100ActorScriptRuntime.InvokePositionNative plus "
+        "Level100ScriptValue.Position/AsPositionMillimeters"
+    )
+    contract["parityTests"] = (
+        "rebuild/OnslaughtRebuild.Core.Tests/Level100MissionTests.cs::"
+        "MissionNativeSetPos_CopiesGetPosPositionAndPreservesOtherPoseState"
+    )
+    contract["rebuildState"] = "PARTIAL_CONTRACT"
+    contract["remainingUncertainty"] = "; ".join(proof_receipt["limitations"][:4])
+    contract["lastMeasurementDate"] = measured_date
+
+    adjudication_id = _mission_native_setpos_runtime_adjudication_id()
+    if any(
+        row.get("adjudicationId") == adjudication_id
+        for row in rows["adjudications"]
+    ):
+        raise CampaignError(
+            "Mission-native SetPos runtime adjudication already exists"
+        )
+    evidence_hashes = list(
+        dict.fromkeys(
+            reference.rsplit("#sha256=", 1)[1]
+            for reference in evidence_refs
+        )
+    )
+    rows["adjudications"].append(
+        {
+            "adjudicationId": adjudication_id,
+            "baseContractId": mission_setpos_runtime.CONTRACT_ID,
+            "entityKey": mission_setpos_runtime.ENTITY_KEY,
+            "overlaySchema": mission_setpos_runtime.SCHEMA,
+            "overlayReadySha256": MISSION_NATIVE_SETPOS_RUNTIME_PROOF_READY_SHA256,
+            "questionIdsAddressed": mission_setpos_runtime.OPEN_QUESTION_ID,
+            "refuterVerdict": "SURVIVED",
+            "refuterEvidenceSha256": ";".join(evidence_hashes),
+            "semanticPromotionApplied": True,
+            "terminalState": "",
+            "successorQuestionIds": ";".join(
+                row["questionId"] for row in successors
+            ),
+            "remainingUncertainty": contract["remainingUncertainty"],
+            "measuredAtUtc": measured_at,
+        }
+    )
+    rows = {
+        name: [
+            {
+                field: value if isinstance(value, str) else str(value)
+                for field, value in row.items()
+            }
+            for row in values
+        ]
+        for name, values in rows.items()
+    }
+    counts = {name: len(value) for name, value in rows.items()}
+    if counts != MISSION_NATIVE_SETPOS_RUNTIME_EXPECTED_GENERATION16_COUNTS:
+        raise CampaignError(
+            f"Mission-native SetPos runtime output counts differ: {counts}"
+        )
+    delta = _mission_native_setpos_runtime_delta(before, rows)
+    proof_ready_stamp = coverage.file_stamp(
+        (REPO_ROOT / MISSION_NATIVE_SETPOS_RUNTIME_PROOF_RELATIVE)
+        / mission_setpos_runtime.READY_NAME
+    )
+    successor_ids = [row["questionId"] for row in successors]
+    advance = {
+        "kind": MISSION_NATIVE_SETPOS_RUNTIME_ADVANCE_KIND,
+        "schema": MISSION_NATIVE_SETPOS_RUNTIME_ADVANCE_SCHEMA,
+        "branchId": GHIDRA_PARTITION_RECOVERY_LINEAGE_ID,
+        "observationId": "SPR-"
+        + _sha256_text(
+            "|".join(
+                (
+                    MISSION_NATIVE_SETPOS_RUNTIME_PARENT_READY_SHA256,
+                    MISSION_NATIVE_SETPOS_RUNTIME_PROOF_READY_SHA256,
+                    MISSION_NATIVE_SETPOS_RUNTIME_ADVANCE_KIND,
+                )
+            )
+        )[:16],
+        "verdict": "SURVIVED",
+        "proof": {
+            "root": MISSION_NATIVE_SETPOS_RUNTIME_PROOF_RELATIVE.as_posix(),
+            "ready": {
+                **proof_ready_stamp,
+                "path": mission_setpos_runtime.READY_NAME,
+            },
+            "schema": mission_setpos_runtime.SCHEMA,
+            "author": {
+                "path": "tools/re_mission_native_setpos_runtime.py",
+                "bytes": MISSION_NATIVE_SETPOS_RUNTIME_PROOF_AUTHOR_BYTES,
+                "sha256": MISSION_NATIVE_SETPOS_RUNTIME_PROOF_AUTHOR_SHA256,
+            },
+        },
+        "measuredAtUtc": measured_at,
+        "experimentDisposition": (
+            "AUTHORED_SAFE_COPY_REPLICATED_TREATMENT_AND_MATCHED_CONTROLS_NO_TTD"
+        ),
+        "promotion": {
+            "entryVa": "0x00536c70",
+            "entityKey": mission_setpos_runtime.ENTITY_KEY,
+            "contractId": mission_setpos_runtime.CONTRACT_ID,
+            "currentName": "IScript__SetPos",
+            "parentQuestionId": mission_setpos_runtime.OPEN_QUESTION_ID,
+            "successorQuestionIds": successor_ids,
+            "adjudicationId": adjudication_id,
+            "gradeFrom": "C1_CANDIDATE_PARTIAL",
+            "gradeTo": "C2_BOUNDED_RUNTIME",
+        },
+        "delta": delta,
+        "questionsClosed": 1,
+        "questionsAdded": 3,
+        "adjudicationsAdded": 1,
+        "namesChanged": 0,
+        "runtimeTreatmentsProved": 2,
+        "runtimeControlsProved": 3,
+        "rebuildMapping": {
+            "contractId": mission_setpos_runtime.CONTRACT_ID,
+            "state": "PARTIAL_CONTRACT",
+            "focusedTestsPassed": 1,
+            "owner": {
+                "path": "rebuild/OnslaughtRebuild.Core/Level100ActorScriptRuntime.cs",
+                "bytes": MISSION_NATIVE_SETPOS_RUNTIME_PARITY_OWNER_BYTES,
+                "sha256": MISSION_NATIVE_SETPOS_RUNTIME_PARITY_OWNER_SHA256,
+            },
+            "value": {
+                "path": "rebuild/OnslaughtRebuild.Core/Level100MissionProgram.cs",
+                "bytes": MISSION_NATIVE_SETPOS_RUNTIME_PARITY_VALUE_BYTES,
+                "sha256": MISSION_NATIVE_SETPOS_RUNTIME_PARITY_VALUE_SHA256,
+            },
+            "test": {
+                "path": "rebuild/OnslaughtRebuild.Core.Tests/Level100MissionTests.cs",
+                "bytes": MISSION_NATIVE_SETPOS_RUNTIME_PARITY_TEST_BYTES,
+                "sha256": MISSION_NATIVE_SETPOS_RUNTIME_PARITY_TEST_SHA256,
+            },
+        },
+        "liveGhidraDisposition": (
+            "EXISTING_GEN15_BOUNDARY_PROMOTION_CORROBORATED_NO_NEW_MUTATION"
+        ),
+        "semanticLimitations": list(proof_receipt["limitations"]),
+    }
+    return rows, advance
+
+
+def _validate_mission_native_setpos_runtime_receipt_envelope(
+    rows: dict[str, list[dict[str, str]]], receipt: dict, campaign_root: Path
+) -> None:
+    expected_top_level = {
+        "schema",
+        "reducer",
+        "generatedAtUtc",
+        "generation",
+        "parentCampaign",
+        "sourceSnapshot",
+        "advance",
+        "counts",
+        "questionTypes",
+        "policies",
+        "outputs",
+    }
+    if set(receipt) != expected_top_level:
+        raise CampaignError("Mission-native SetPos runtime READY shape differs")
+    _parse_utc_timestamp(
+        str(receipt.get("generatedAtUtc", "")),
+        "Mission-native SetPos runtime generation",
+    )
+    parent_root = (
+        REPO_ROOT / MISSION_NATIVE_SETPOS_RUNTIME_PARENT_RELATIVE
+    ).resolve()
+    parent_receipt = _runtime_json(
+        parent_root / "campaign.ready.json",
+        "Mission-native SetPos runtime parent",
+    )
+    if not _same_json(
+        receipt.get("sourceSnapshot"), parent_receipt.get("sourceSnapshot")
+    ):
+        raise CampaignError("Mission-native SetPos runtime source snapshot differs")
+    if receipt.get("questionTypes") != dict(
+        Counter(row["questionType"] for row in rows["questions"])
+    ):
+        raise CampaignError("Mission-native SetPos runtime question types differ")
+    if receipt.get("policies") != _mission_native_setpos_runtime_policies():
+        raise CampaignError("Mission-native SetPos runtime policies differ")
+    outputs = _runtime_mapping(
+        receipt.get("outputs"), "Mission-native SetPos runtime outputs"
+    )
+    if set(outputs) != set(OUTPUTS):
+        raise CampaignError("Mission-native SetPos runtime output set differs")
+    raw_root = Path(os.path.abspath(campaign_root))
+    try:
+        plain_root = ghidra_backup.resolve_plain_path(
+            raw_root, "Mission-native SetPos runtime campaign root", strict=True
+        )
+    except (ghidra_backup.BackupError, OSError) as exc:
+        raise CampaignError(
+            f"Mission-native SetPos runtime campaign root is not plain: {exc}"
+        ) from exc
+    if plain_root != raw_root:
+        raise CampaignError(
+            "Mission-native SetPos runtime campaign root aliases another path"
+        )
+    authority_files: list[tuple[str, Path]] = []
+    for label, path in [
+        ("campaign READY", plain_root / "campaign.ready.json"),
+        *[
+            (
+                f"reducer {path.relative_to(plain_root / '_reducer').as_posix()}",
+                path,
+            )
+            for path in (plain_root / "_reducer").rglob("*")
+            if path.is_file()
+        ],
+    ]:
+        try:
+            plain = ghidra_backup.resolve_plain_path(
+                path, f"Mission-native SetPos runtime {label}", strict=True
+            )
+        except (ghidra_backup.BackupError, OSError) as exc:
+            raise CampaignError(
+                f"Mission-native SetPos runtime {label} is not plain: {exc}"
+            ) from exc
+        if plain.stat().st_nlink != 1:
+            raise CampaignError(
+                f"Mission-native SetPos runtime {label} has multiple hard links"
+            )
+        authority_files.append((label, plain))
+    output_files: list[tuple[str, Path]] = []
+    for name in OUTPUTS:
+        stamp = _runtime_mapping(
+            outputs.get(name), f"Mission-native SetPos runtime output {name}"
+        )
+        if set(stamp) != {"path", "bytes", "sha256", "lastWriteUtc"}:
+            raise CampaignError(
+                f"Mission-native SetPos runtime output stamp shape differs: {name}"
+            )
+        if stamp.get("path") != name:
+            raise CampaignError(
+                f"Mission-native SetPos runtime output path differs: {name}"
+            )
+        _parse_utc_timestamp(
+            str(stamp.get("lastWriteUtc", "")),
+            f"Mission-native SetPos runtime output {name}",
+        )
+        try:
+            path = ghidra_backup.resolve_plain_path(
+                plain_root / name,
+                f"Mission-native SetPos runtime output {name}",
+                strict=True,
+            )
+        except (ghidra_backup.BackupError, OSError) as exc:
+            raise CampaignError(
+                f"Mission-native SetPos runtime output is not plain: {name}: {exc}"
+            ) from exc
+        if path.stat().st_nlink != 1:
+            raise CampaignError(
+                f"Mission-native SetPos runtime output has multiple hard links: {name}"
+            )
+        if {**coverage.file_stamp(path), "path": name} != stamp:
+            raise CampaignError(
+                f"Mission-native SetPos runtime output stamp differs: {name}"
+            )
+        try:
+            if os.path.samefile(path, parent_root / name):
+                raise CampaignError(
+                    f"Mission-native SetPos runtime output aliases canonical Gen15: {name}"
+                )
+        except OSError as exc:
+            raise CampaignError(
+                f"Mission-native SetPos runtime output identity cannot be read: {exc}"
+            ) from exc
+        output_files.append((name, path))
+    _require_disjoint_evidence_files(
+        output_files, "Mission-native SetPos runtime outputs"
+    )
+    _require_disjoint_evidence_files(
+        authority_files + output_files,
+        "Mission-native SetPos runtime authority files",
+    )
+
+
+def _validate_mission_native_setpos_runtime_advance_relation(
+    rows: dict[str, list[dict[str, str]]],
+    receipt: dict,
+    advance: object,
+    *,
+    campaign_root: Path | None,
+) -> dict[str, object]:
+    if not isinstance(advance, dict):
+        raise CampaignError("Mission-native SetPos runtime advance is absent")
+    parent = _runtime_mapping(
+        receipt.get("parentCampaign"), "Mission-native SetPos runtime parent"
+    )
+    parent_root = _resolve_repo_or_absolute(
+        parent.get("path"), "Mission-native SetPos runtime parent path"
+    )
+    expected_parent = (
+        REPO_ROOT / MISSION_NATIVE_SETPOS_RUNTIME_PARENT_RELATIVE
+    ).resolve()
+    parent_ready = _runtime_mapping(
+        parent.get("ready"), "Mission-native SetPos runtime parent READY"
+    )
+    if (
+        _integer(receipt.get("generation"), -1) != 16
+        or parent_root != expected_parent
+        or parent_ready.get("path") != "campaign.ready.json"
+        or parent_ready.get("bytes")
+        != MISSION_NATIVE_SETPOS_RUNTIME_PARENT_READY_BYTES
+        or parent_ready.get("sha256")
+        != MISSION_NATIVE_SETPOS_RUNTIME_PARENT_READY_SHA256
+        or advance.get("kind") != MISSION_NATIVE_SETPOS_RUNTIME_ADVANCE_KIND
+        or advance.get("schema") != MISSION_NATIVE_SETPOS_RUNTIME_ADVANCE_SCHEMA
+        or advance.get("branchId") != GHIDRA_PARTITION_RECOVERY_LINEAGE_ID
+    ):
+        raise CampaignError(
+            "Mission-native SetPos runtime generation identity differs"
+        )
+    base_receipt = _runtime_json(
+        expected_parent / "campaign.ready.json",
+        "Mission-native SetPos runtime exact parent",
+    )
+    expected_rows, expected_advance = (
+        _mission_native_setpos_runtime_rows_and_advance(
+            expected_parent,
+            REPO_ROOT / MISSION_NATIVE_SETPOS_RUNTIME_PROOF_RELATIVE,
+            base_receipt,
+        )
+    )
+    if not _same_json(rows, expected_rows):
+        raise CampaignError("Mission-native SetPos runtime campaign rows differ")
+    if not _same_json(advance, expected_advance):
+        raise CampaignError("Mission-native SetPos runtime advance receipt differs")
+    if (
+        receipt.get("counts")
+        != MISSION_NATIVE_SETPOS_RUNTIME_EXPECTED_GENERATION16_COUNTS
+    ):
+        raise CampaignError("Mission-native SetPos runtime READY counts differ")
+    if campaign_root is not None:
+        _validate_mission_native_setpos_runtime_receipt_envelope(
+            rows, receipt, campaign_root
+        )
+    return {
+        "adjudicationIds": {_mission_native_setpos_runtime_adjudication_id()},
+        "advance": expected_advance,
+    }
+
+
+def advance_mission_native_setpos_runtime(
+    campaign: Path,
+    proof_root: Path,
+    out: Path,
+    *,
+    _self_check: bool = True,
+    _verified_parent_receipt: dict | None = None,
+) -> dict:
+    """Publish the replicated bounded Mission-native SetPos runtime contract."""
+
+    if out.exists():
+        raise CampaignError(
+            f"refusing existing Mission-native SetPos runtime destination: {out}"
+        )
+    base_receipt = (
+        _verified_parent_receipt
+        if _verified_parent_receipt is not None
+        else _verify_mission_native_setpos_runtime_parent_campaign(campaign)
+    )
+    rows, advance = _mission_native_setpos_runtime_rows_and_advance(
+        campaign, proof_root, base_receipt
+    )
+    output_rows = {
+        "campaign-functions.tsv": (FUNCTION_COLUMNS, rows["functions"]),
+        "campaign-residuals.tsv": (RESIDUAL_COLUMNS, rows["residuals"]),
+        "campaign-questions.tsv": (QUESTION_COLUMNS, rows["questions"]),
+        "campaign-scenarios.tsv": (SCENARIO_COLUMNS, rows["scenarios"]),
+        "campaign-levers.tsv": (LEVER_COLUMNS, rows["levers"]),
+        "campaign-contracts.tsv": (CONTRACT_COLUMNS, rows["contracts"]),
+        "campaign-adjudications.tsv": (
+            ADJUDICATION_COLUMNS,
+            rows["adjudications"],
+        ),
+        "campaign-supersessions.tsv": (
+            SUPERSESSION_COLUMNS,
+            rows["supersessions"],
+        ),
+    }
+    base_ready = coverage.file_stamp(campaign / "campaign.ready.json")
+    out.parent.mkdir(parents=True, exist_ok=True)
+    stage = Path(tempfile.mkdtemp(prefix=f".{out.name}.", dir=out.parent))
+    try:
+        for name, (columns, output) in output_rows.items():
+            _write_tsv(stage / name, columns, output)
+        reducer = _publish_reducer(stage)
+        receipt = {
+            "schema": SCHEMA,
+            "reducer": reducer,
+            "generatedAtUtc": datetime.now(timezone.utc).isoformat(),
+            "generation": 16,
+            "parentCampaign": {
+                "path": str(campaign.resolve()),
+                "ready": {**base_ready, "path": "campaign.ready.json"},
+            },
+            "sourceSnapshot": base_receipt["sourceSnapshot"],
+            "advance": advance,
+            "counts": {name: len(value) for name, value in rows.items()},
+            "questionTypes": dict(
+                Counter(row["questionType"] for row in rows["questions"])
+            ),
+            "policies": _mission_native_setpos_runtime_policies(),
+            "outputs": {
+                name: {**coverage.file_stamp(stage / name), "path": name}
+                for name in OUTPUTS
+            },
+        }
+        (stage / "campaign.ready.json").write_text(
+            json.dumps(receipt, indent=2) + "\n", encoding="utf-8"
+        )
+        if _self_check:
+            verify(stage)
+        os.replace(stage, out)
+        return receipt
+    except Exception:
+        shutil.rmtree(stage, ignore_errors=True)
+        raise
+
+
+def _lockhit_bounded_policies() -> list[str]:
+    return [
+        "Only the exact Gen16 CBattleEngine__LockHit function, contract, and open executed-function question change.",
+        "The admitted runtime evidence is three deterministic reductions of one immutable TTD write event plus two deterministic call-context reductions of that same trace, not independent gameplay replication.",
+        "The proved path has one non-null target and one matching fired-lock node; null, not-found, and multi-node behavior remain open.",
+        "The write window proves the ordered iterator, head, tail, removed-node-next, and size transitions; a gap-free static join reaches the global free-head store without directly watching that global.",
+        "Payload destruction/free and the selected LockHit invocation's full return remain unobserved and may not be inferred from Stuart source alone.",
+        "The existing target-lock live Ghidra promotion corroborates the exact name, boundary, signature, and bounded comment; this generation performs no new Ghidra or executable mutation.",
+        "The reconstruction has no proven fired-lock container owner yet, so this contract remains NOT_READY for rebuild rather than inventing a parity mapping.",
+    ]
+
+
+def _lockhit_bounded_successor_specs() -> list[dict[str, object]]:
+    return [
+        {
+            "questionType": "EXECUTED_FUNCTION_CONTRACT",
+            "priority": 1,
+            "score": 960.0,
+            "requiresElevation": False,
+            "recommendedInstrument": "LOCKHIT_NULL_NOT_FOUND_MULTI_NODE_MATRIX",
+            "question": (
+                "What exact no-op, first-match, ordering, and container semantics does "
+                "CBattleEngine__LockHit use for null, absent, and multi-node inputs?"
+            ),
+            "cheapestFalsifier": (
+                "A preregistered static plus disposable-copy matrix finds a null/absent "
+                "mutation, a non-first matching removal, or container ordering different "
+                "from the single-node bounded contract."
+            ),
+            "source": "lockhit-bounded-contract-proof-v1",
+            "currentOwner": "recursive-re-campaign",
+        },
+        {
+            "questionType": "EXECUTED_FUNCTION_CONTRACT",
+            "priority": 2,
+            "score": 920.0,
+            "requiresElevation": True,
+            "recommendedInstrument": "SHORT_TTD_LOCKHIT_GLOBAL_FREE_HEAD_WATCH",
+            "question": (
+                "Does the executed CSPtrSet removal write the removed node into global "
+                "free-list head 0x0083d130 exactly after linking node+4 to its prior value?"
+            ),
+            "cheapestFalsifier": (
+                "A short gap-free watch of node+4 and 0x0083d130 shows a different prior "
+                "head, ordering, value, or intervening write."
+            ),
+            "source": "lockhit-bounded-contract-proof-v1",
+            "currentOwner": "recursive-re-campaign",
+        },
+        {
+            "questionType": "EXECUTED_FUNCTION_CONTRACT",
+            "priority": 3,
+            "score": 900.0,
+            "requiresElevation": True,
+            "recommendedInstrument": "SHORT_TTD_LOCKHIT_DESTRUCTOR_AND_FULL_RETURN",
+            "question": (
+                "What payload destructor/free operations and return path follow the observed "
+                "node unlink inside CBattleEngine__LockHit?"
+            ),
+            "cheapestFalsifier": (
+                "A gap-free continuation from the retained remove window through the selected "
+                "LockHit return shows no payload deletion, a different destructor, or additional writes."
+            ),
+            "source": "lockhit-bounded-contract-proof-v1",
+            "currentOwner": "recursive-re-campaign",
+        },
+        {
+            "questionType": "EXECUTED_FUNCTION_CONTRACT",
+            "priority": 4,
+            "score": 860.0,
+            "requiresElevation": False,
+            "recommendedInstrument": "AUTHORED_SAFE_COPY_LOCKHIT_IDENTITY_REPLICATION",
+            "question": (
+                "Does an independently authored gameplay event reproduce the LockHit contract, "
+                "and what exact unit/faction/model identity does the target pointer represent?"
+            ),
+            "cheapestFalsifier": (
+                "A preregistered disposable-copy event with independently identified receiver "
+                "and target fails to reproduce the same list transition or identifies a different object class."
+            ),
+            "source": "lockhit-bounded-contract-proof-v1",
+            "currentOwner": "recursive-re-campaign",
+        },
+    ]
+
+
+def _lockhit_bounded_adjudication_id() -> str:
+    return "A-" + _sha256_text(
+        "|".join(
+            (
+                LOCKHIT_BOUNDED_PARENT_READY_SHA256,
+                LOCKHIT_BOUNDED_PROOF_READY_SHA256,
+                lockhit_contract.LOCKHIT_CONTRACT,
+                lockhit_contract.LOCKHIT_QUESTION,
+                "SURVIVED",
+            )
+        )
+    )[:16]
+
+
+def _validate_lockhit_bounded_proof(
+    proof_root: Path,
+) -> tuple[dict, dict]:
+    raw = Path(os.path.abspath(proof_root))
+    expected = (REPO_ROOT / LOCKHIT_BOUNDED_PROOF_RELATIVE).resolve()
+    try:
+        plain = ghidra_backup.resolve_plain_path(
+            raw, "LockHit bounded-contract proof root", strict=True
+        )
+    except (ghidra_backup.BackupError, OSError) as exc:
+        raise CampaignError(
+            f"LockHit bounded-contract proof root is not plain: {exc}"
+        ) from exc
+    if plain != expected:
+        raise CampaignError(
+            "LockHit bounded-contract proof is not the reviewed immutable root"
+        )
+    ready_path = plain / lockhit_contract.READY_NAME
+    observation_path = plain / lockhit_contract.OBSERVATION_NAME
+    frozen_author = plain / "author.py"
+    executing_author = Path(lockhit_contract.__file__).resolve()
+    expected_files = (
+        (
+            "READY",
+            ready_path,
+            LOCKHIT_BOUNDED_PROOF_READY_BYTES,
+            LOCKHIT_BOUNDED_PROOF_READY_SHA256,
+        ),
+        (
+            "observation",
+            observation_path,
+            LOCKHIT_BOUNDED_PROOF_OBSERVATION_BYTES,
+            LOCKHIT_BOUNDED_PROOF_OBSERVATION_SHA256,
+        ),
+        (
+            "frozen author",
+            frozen_author,
+            LOCKHIT_BOUNDED_PROOF_AUTHOR_BYTES,
+            LOCKHIT_BOUNDED_PROOF_AUTHOR_SHA256,
+        ),
+        (
+            "executing author",
+            executing_author,
+            LOCKHIT_BOUNDED_PROOF_AUTHOR_BYTES,
+            LOCKHIT_BOUNDED_PROOF_AUTHOR_SHA256,
+        ),
+    )
+    checked: list[tuple[str, Path]] = []
+    for label, path, expected_bytes, expected_sha256 in expected_files:
+        try:
+            resolved = ghidra_backup.resolve_plain_path(
+                path, f"LockHit bounded-contract {label}", strict=True
+            )
+        except (ghidra_backup.BackupError, OSError) as exc:
+            raise CampaignError(
+                f"LockHit bounded-contract {label} is not plain: {exc}"
+            ) from exc
+        if (
+            resolved.stat().st_nlink != 1
+            or resolved.stat().st_size != expected_bytes
+            or coverage.sha256_of(resolved) != expected_sha256
+        ):
+            raise CampaignError(
+                f"LockHit bounded-contract {label} identity differs"
+            )
+        checked.append((label, resolved))
+    _require_disjoint_evidence_files(
+        checked, "LockHit bounded-contract proof files"
+    )
+    try:
+        receipt = lockhit_contract.verify(REPO_ROOT, plain)
+    except (lockhit_contract.ProofError, OSError, KeyError, ValueError) as exc:
+        raise CampaignError(
+            f"LockHit bounded-contract proof does not rederive: {exc}"
+        ) from exc
+    observation = _runtime_json(
+        observation_path, "LockHit bounded-contract observation"
+    )
+    parent = _runtime_mapping(
+        receipt.get("parent"), "LockHit bounded-contract proof parent"
+    )
+    contract = _runtime_mapping(
+        observation.get("contract"), "LockHit bounded-contract proof contract"
+    )
+    boundary = _runtime_mapping(
+        observation.get("claimBoundary"),
+        "LockHit bounded-contract claim boundary",
+    )
+    data = _runtime_mapping(
+        observation.get("dataWrites"), "LockHit bounded-contract data writes"
+    )
+    calls = _runtime_mapping(
+        observation.get("callContext"), "LockHit bounded-contract call context"
+    )
+    ghidra = _runtime_mapping(
+        observation.get("ghidra"), "LockHit bounded-contract Ghidra evidence"
+    )
+    if (
+        receipt.get("schema") != lockhit_contract.PROOF_SCHEMA
+        or receipt.get("verdict") != "SURVIVED"
+        or receipt.get("claim")
+        != "LOCKHIT_ONE_NODE_REMOVAL_BOUNDED_CONTRACT"
+        or parent.get("path") != LOCKHIT_BOUNDED_PARENT_RELATIVE.as_posix()
+        or parent.get("ready", {}).get("sha256")
+        != LOCKHIT_BOUNDED_PARENT_READY_SHA256
+        or parent.get("reducerId") != LOCKHIT_BOUNDED_PARENT_REDUCER_ID
+        or contract.get("entityKey") != lockhit_contract.LOCKHIT_ENTITY
+        or contract.get("contractId") != lockhit_contract.LOCKHIT_CONTRACT
+        or contract.get("questionId") != lockhit_contract.LOCKHIT_QUESTION
+        or contract.get("grade") != "C2_BOUNDED_RUNTIME"
+        or contract.get("runtimeVerdict") != "MEASURED_BOUNDED_PATH"
+        or contract.get("refuterVerdict") != "SURVIVED"
+        or boundary != lockhit_contract.EXPECTED_BOUNDARY
+        or data.get("gapFree") is not True
+        or data.get("replicas") != 3
+        or data.get("independentGameplayReplicas") is not False
+        or calls.get("callEntryReplicated") is not True
+        or calls.get("selectedInvocationReturnObserved") is not False
+        or calls.get("replicas") != 2
+        or ghidra.get("liveMutationRequiredForThisContract") is not False
+        or receipt.get("selftest", {}).get("count") != 9
+    ):
+        raise CampaignError("LockHit bounded-contract proof boundary differs")
+    return receipt, observation
+
+
+def _lockhit_bounded_delta(
+    before: dict[str, list[dict[str, str]]],
+    after: dict[str, list[dict[str, str]]],
+) -> dict[str, object]:
+    for name in ("residuals", "scenarios", "levers", "supersessions"):
+        if before[name] != after[name]:
+            raise CampaignError(
+                f"LockHit bounded-contract advance changed unrelated {name}"
+            )
+
+    def keyed(items: list[dict[str, str]], field: str) -> dict[str, dict[str, str]]:
+        result = {row[field]: row for row in items}
+        if len(result) != len(items):
+            raise CampaignError(
+                f"LockHit bounded-contract delta duplicates {field}"
+            )
+        return result
+
+    function_before = keyed(before["functions"], "entityKey")
+    function_after = keyed(after["functions"], "entityKey")
+    contract_before = keyed(before["contracts"], "contractId")
+    contract_after = keyed(after["contracts"], "contractId")
+    question_before = keyed(before["questions"], "questionId")
+    question_after = keyed(after["questions"], "questionId")
+    adjudication_before = keyed(before["adjudications"], "adjudicationId")
+    adjudication_after = keyed(after["adjudications"], "adjudicationId")
+    if (
+        set(function_before) != set(function_after)
+        or set(contract_before) != set(contract_after)
+        or not set(question_before) <= set(question_after)
+        or not set(adjudication_before) <= set(adjudication_after)
+    ):
+        raise CampaignError(
+            "LockHit bounded-contract advance changed entity identities"
+        )
+    function_changes = {
+        entity: sorted(
+            field
+            for field in FUNCTION_COLUMNS
+            if prior[field] != function_after[entity][field]
+        )
+        for entity, prior in function_before.items()
+        if prior != function_after[entity]
+    }
+    contract_changes = {
+        contract_id: sorted(
+            field
+            for field in CONTRACT_COLUMNS
+            if prior[field] != contract_after[contract_id][field]
+        )
+        for contract_id, prior in contract_before.items()
+        if prior != contract_after[contract_id]
+    }
+    if set(function_changes) != {lockhit_contract.LOCKHIT_ENTITY}:
+        raise CampaignError(
+            "LockHit bounded-contract function delta population differs"
+        )
+    if set(contract_changes) != {lockhit_contract.LOCKHIT_CONTRACT}:
+        raise CampaignError(
+            "LockHit bounded-contract contract delta population differs"
+        )
+    function_allowed = {
+        "evidenceStates",
+        "resolutionState",
+        "semanticGrade",
+        "lever",
+        "cheapestFalsifier",
+        "lastMeasurementDate",
+    }
+    contract_allowed = {
+        "contractState",
+        "semanticGrade",
+        "receiver",
+        "inputs",
+        "returns",
+        "writes",
+        "sideEffects",
+        "preconditions",
+        "failureModes",
+        "authorVerdict",
+        "runtimeVerdict",
+        "refuterVerdict",
+        "questionIds",
+        "evidenceRefs",
+        "cheapestFalsifier",
+        "remainingUncertainty",
+        "lastMeasurementDate",
+    }
+    if set(next(iter(function_changes.values()))) - function_allowed:
+        raise CampaignError(
+            "LockHit bounded-contract function delta exceeds its whitelist"
+        )
+    if set(next(iter(contract_changes.values()))) - contract_allowed:
+        raise CampaignError(
+            "LockHit bounded-contract contract delta exceeds its whitelist"
+        )
+    modified_questions = {
+        question_id: sorted(
+            field
+            for field in QUESTION_COLUMNS
+            if prior[field] != question_after[question_id][field]
+        )
+        for question_id, prior in question_before.items()
+        if prior != question_after[question_id]
+    }
+    if set(modified_questions) != {lockhit_contract.LOCKHIT_QUESTION} or (
+        set(next(iter(modified_questions.values())))
+        - {"state", "attemptCount", "lastOutcome", "lastMeasurementDate"}
+    ):
+        raise CampaignError(
+            "LockHit bounded-contract parent-question delta differs"
+        )
+    added_questions = sorted(set(question_after) - set(question_before))
+    added_adjudications = sorted(set(adjudication_after) - set(adjudication_before))
+    if len(added_questions) != 4 or added_adjudications != [
+        _lockhit_bounded_adjudication_id()
+    ]:
+        raise CampaignError(
+            "LockHit bounded-contract successor/adjudication census differs"
+        )
+    return {
+        "functionRowsChanged": function_changes,
+        "contractRowsChanged": contract_changes,
+        "questionRowsChanged": modified_questions,
+        "questionIdsAdded": added_questions,
+        "adjudicationIdsAdded": added_adjudications,
+        "unchangedLedgers": ["residuals", "scenarios", "levers", "supersessions"],
+        "namesChanged": 0,
+        "rangesChanged": 0,
+        "runtimeWriteReplaysProved": 3,
+        "runtimeCallContextReplaysProved": 2,
+        "independentGameplayReplications": 0,
+        "supersessionsAdded": 0,
+        "rebuildMappingsChanged": 0,
+    }
+
+
+def _lockhit_bounded_rows_and_advance(
+    campaign: Path, proof_root: Path, base_receipt: dict
+) -> tuple[dict[str, list[dict[str, str]]], dict]:
+    expected_parent = (REPO_ROOT / LOCKHIT_BOUNDED_PARENT_RELATIVE).resolve()
+    if campaign.resolve() != expected_parent:
+        raise CampaignError(
+            "LockHit bounded-contract advance does not use canonical Gen16"
+        )
+    if (
+        base_receipt.get("generation") != 16
+        or base_receipt.get("counts") != LOCKHIT_BOUNDED_PARENT_COUNTS
+        or base_receipt.get("reducer", {}).get("id")
+        != LOCKHIT_BOUNDED_PARENT_REDUCER_ID
+    ):
+        raise CampaignError("LockHit bounded-contract parent receipt differs")
+    proof_receipt, observation = _validate_lockhit_bounded_proof(proof_root)
+    before = _campaign_rows_from_root(campaign)
+    rows = json.loads(json.dumps(before))
+    functions = {row["entityKey"]: row for row in rows["functions"]}
+    contracts = {row["contractId"]: row for row in rows["contracts"]}
+    questions = {row["questionId"]: row for row in rows["questions"]}
+    function = functions.get(lockhit_contract.LOCKHIT_ENTITY)
+    contract = contracts.get(lockhit_contract.LOCKHIT_CONTRACT)
+    parent_question = questions.get(lockhit_contract.LOCKHIT_QUESTION)
+    if (
+        function is None
+        or contract is None
+        or parent_question is None
+        or function.get("entryVa") != "0x00407140"
+        or function.get("currentName") != "CBattleEngine__LockHit"
+        or function.get("resolutionState") != "OPEN_JOIN"
+        or function.get("semanticGrade") != "OPAQUE"
+        or contract.get("entityKey") != lockhit_contract.LOCKHIT_ENTITY
+        or contract.get("currentName") != "CBattleEngine__LockHit"
+        or contract.get("contractState") != "OPEN"
+        or contract.get("semanticGrade") != "C0_OPAQUE"
+        or contract.get("runtimeVerdict") != "UNSCORED"
+        or contract.get("refuterVerdict") != "UNSCORED"
+        or contract.get("rebuildOwner") != "UNASSIGNED"
+        or contract.get("rebuildImplementation") != "UNMAPPED"
+        or contract.get("parityTests") != "UNMAPPED"
+        or contract.get("rebuildState") != "NOT_READY"
+        or parent_question.get("state") != "OPEN"
+        or parent_question.get("entityKey") != lockhit_contract.LOCKHIT_ENTITY
+        or lockhit_contract.LOCKHIT_QUESTION
+        not in _state_values(
+            contract.get("questionIds"),
+            "LockHit bounded-contract parent questions",
+        )
+    ):
+        raise CampaignError("LockHit bounded-contract parent row differs")
+    measured_at = str(proof_receipt["generatedAtUtc"])
+    measured_date = measured_at[:10]
+    history = [
+        row
+        for row in rows["questions"]
+        if row["entityKey"] == lockhit_contract.LOCKHIT_ENTITY
+    ]
+    successors = [
+        _successor_question(
+            spec,
+            entity_key=lockhit_contract.LOCKHIT_ENTITY,
+            parents=[parent_question],
+            history=history,
+            generation=17,
+            measured_at=measured_at,
+        )
+        for spec in _lockhit_bounded_successor_specs()
+    ]
+    if len({row["questionId"] for row in successors}) != 4:
+        raise CampaignError("LockHit bounded-contract successor identities collide")
+    parent_question["state"] = "CLOSED_SURVIVED"
+    parent_question["attemptCount"] = (
+        _integer(parent_question.get("attemptCount"), 0) + 1
+    )
+    parent_question["lastOutcome"] = "SURVIVED"
+    parent_question["lastMeasurementDate"] = measured_at
+    rows["questions"].extend(successors)
+
+    for state in (
+        "LOCKHIT_ONE_NODE_REMOVAL_MEASURED",
+        "LOCKHIT_GAP_FREE_WRITE_CHAIN",
+        "LOCKHIT_CALL_ENTRY_REPLICATED",
+        "LOCKHIT_STATIC_SOURCE_JOIN",
+    ):
+        function["evidenceStates"] = _append_state(
+            function["evidenceStates"], state
+        )
+    function["resolutionState"] = "BOUNDED_CONTRACT"
+    function["semanticGrade"] = "C2_BOUNDED_RUNTIME"
+    function["lever"] = successors[0]["recommendedInstrument"]
+    function["cheapestFalsifier"] = successors[0]["cheapestFalsifier"]
+    function["lastMeasurementDate"] = measured_date
+
+    proof_relative = LOCKHIT_BOUNDED_PROOF_RELATIVE.as_posix()
+    inputs = _runtime_mapping(
+        observation.get("inputs"), "LockHit bounded-contract proof inputs"
+    )
+
+    def proof_ref(relative: str) -> str:
+        stamp = _runtime_mapping(
+            inputs.get(relative), f"LockHit bounded-contract input {relative}"
+        )
+        return f"{stamp['path']}#sha256={stamp['sha256']}"
+
+    evidence_refs = [
+        f"{proof_relative}/{lockhit_contract.READY_NAME}#sha256={LOCKHIT_BOUNDED_PROOF_READY_SHA256}",
+        f"{proof_relative}/{lockhit_contract.OBSERVATION_NAME}#sha256={LOCKHIT_BOUNDED_PROOF_OBSERVATION_SHA256}",
+        f"tools/re_lockhit_bounded_contract.py#sha256={LOCKHIT_BOUNDED_PROOF_AUTHOR_SHA256}",
+        proof_ref(
+            "local-lab/ttd-data-writes-level521-lockhit-removal-20260803-v1/"
+            "run-e-v3-source-bound/READY"
+        ),
+        proof_ref(
+            "local-lab/ttd-data-writes-level521-lockhit-removal-20260803-v1/"
+            "run-e-v3-source-bound/receipt.json"
+        ),
+        proof_ref(
+            "local-lab/ttd-data-writes-level521-lockhit-removal-20260803-v1/"
+            "run-e-v3-source-bound/data-writes.jsonl"
+        ),
+        proof_ref(
+            "local-lab/ttd-call-context-level521-target-lock-20260803-v3/"
+            "run-a/call-context.jsonl"
+        ),
+        proof_ref(
+            "local-lab/ttd-call-context-level521-target-lock-20260803-v3/"
+            "run-b/call-context.jsonl"
+        ),
+        proof_ref("references/Onslaught/BattleEngine.cpp"),
+        proof_ref("references/Onslaught/BattleEngine.h"),
+        proof_ref(
+            "local-lab/ghidra-target-lock-semantic-live-promotion-20260804-v2/"
+            "promotion/promotion.ready.json"
+        ),
+        proof_ref(
+            "local-lab/ghidra-target-lock-semantic-live-promotion-20260804-v2/"
+            "promotion/runs/live-post-inventory/functions.tsv"
+        ),
+        proof_ref("local-lab/safe-copy-bea-pristine/BEA.exe.original.backup"),
+    ]
+    proved_contract = _runtime_mapping(
+        observation.get("contract"), "LockHit bounded-contract proof contract"
+    )
+    contract["contractState"] = "BOUNDED_CONTRACT_ADVANCED"
+    contract["semanticGrade"] = "C2_BOUNDED_RUNTIME"
+    for field in (
+        "receiver",
+        "inputs",
+        "returns",
+        "writes",
+        "sideEffects",
+        "preconditions",
+        "failureModes",
+        "authorVerdict",
+        "runtimeVerdict",
+        "refuterVerdict",
+    ):
+        contract[field] = str(proved_contract[field])
+    for successor in successors:
+        contract["questionIds"] = _append_state(
+            contract["questionIds"], successor["questionId"]
+        )
+    for reference in evidence_refs:
+        contract["evidenceRefs"] = _append_state(
+            contract["evidenceRefs"], reference
+        )
+    contract["cheapestFalsifier"] = successors[0]["cheapestFalsifier"]
+    contract["remainingUncertainty"] = "; ".join(proof_receipt["limitations"][1:])
+    contract["lastMeasurementDate"] = measured_date
+
+    adjudication_id = _lockhit_bounded_adjudication_id()
+    if any(
+        row.get("adjudicationId") == adjudication_id
+        for row in rows["adjudications"]
+    ):
+        raise CampaignError("LockHit bounded-contract adjudication already exists")
+    evidence_hashes = list(
+        dict.fromkeys(
+            reference.rsplit("#sha256=", 1)[1]
+            for reference in evidence_refs
+        )
+    )
+    rows["adjudications"].append(
+        {
+            "adjudicationId": adjudication_id,
+            "baseContractId": lockhit_contract.LOCKHIT_CONTRACT,
+            "entityKey": lockhit_contract.LOCKHIT_ENTITY,
+            "overlaySchema": lockhit_contract.PROOF_SCHEMA,
+            "overlayReadySha256": LOCKHIT_BOUNDED_PROOF_READY_SHA256,
+            "questionIdsAddressed": lockhit_contract.LOCKHIT_QUESTION,
+            "refuterVerdict": "SURVIVED",
+            "refuterEvidenceSha256": ";".join(evidence_hashes),
+            "semanticPromotionApplied": True,
+            "terminalState": "",
+            "successorQuestionIds": ";".join(
+                row["questionId"] for row in successors
+            ),
+            "remainingUncertainty": contract["remainingUncertainty"],
+            "measuredAtUtc": measured_at,
+        }
+    )
+    rows = {
+        name: [
+            {
+                field: value if isinstance(value, str) else str(value)
+                for field, value in row.items()
+            }
+            for row in values
+        ]
+        for name, values in rows.items()
+    }
+    counts = {name: len(value) for name, value in rows.items()}
+    if counts != LOCKHIT_BOUNDED_EXPECTED_GENERATION17_COUNTS:
+        raise CampaignError(
+            f"LockHit bounded-contract output counts differ: {counts}"
+        )
+    delta = _lockhit_bounded_delta(before, rows)
+    proof_ready_stamp = coverage.file_stamp(
+        (REPO_ROOT / LOCKHIT_BOUNDED_PROOF_RELATIVE)
+        / lockhit_contract.READY_NAME
+    )
+    successor_ids = [row["questionId"] for row in successors]
+    trace = _runtime_mapping(
+        observation.get("trace"), "LockHit bounded-contract trace"
+    )
+    advance = {
+        "kind": LOCKHIT_BOUNDED_ADVANCE_KIND,
+        "schema": LOCKHIT_BOUNDED_ADVANCE_SCHEMA,
+        "branchId": GHIDRA_PARTITION_RECOVERY_LINEAGE_ID,
+        "observationId": "LHC-"
+        + _sha256_text(
+            "|".join(
+                (
+                    LOCKHIT_BOUNDED_PARENT_READY_SHA256,
+                    LOCKHIT_BOUNDED_PROOF_READY_SHA256,
+                    LOCKHIT_BOUNDED_ADVANCE_KIND,
+                )
+            )
+        )[:16],
+        "verdict": "SURVIVED",
+        "proof": {
+            "root": LOCKHIT_BOUNDED_PROOF_RELATIVE.as_posix(),
+            "ready": {
+                **proof_ready_stamp,
+                "path": lockhit_contract.READY_NAME,
+            },
+            "schema": lockhit_contract.PROOF_SCHEMA,
+            "author": {
+                "path": "tools/re_lockhit_bounded_contract.py",
+                "bytes": LOCKHIT_BOUNDED_PROOF_AUTHOR_BYTES,
+                "sha256": LOCKHIT_BOUNDED_PROOF_AUTHOR_SHA256,
+            },
+            "observation": {
+                "path": lockhit_contract.OBSERVATION_NAME,
+                "bytes": LOCKHIT_BOUNDED_PROOF_OBSERVATION_BYTES,
+                "sha256": LOCKHIT_BOUNDED_PROOF_OBSERVATION_SHA256,
+            },
+        },
+        "measuredAtUtc": measured_at,
+        "experimentDisposition": (
+            "RETAINED_IMMUTABLE_TTD_EVENT_REDUCED_REPEATEDLY_AND_JOINED_TO_"
+            "PRISTINE_STATIC_SOURCE_AND_EXISTING_GHIDRA_IDENTITY"
+        ),
+        "promotion": {
+            "entryVa": "0x00407140",
+            "entityKey": lockhit_contract.LOCKHIT_ENTITY,
+            "contractId": lockhit_contract.LOCKHIT_CONTRACT,
+            "currentName": "CBattleEngine__LockHit",
+            "parentQuestionId": lockhit_contract.LOCKHIT_QUESTION,
+            "successorQuestionIds": successor_ids,
+            "adjudicationId": adjudication_id,
+            "gradeFrom": "C0_OPAQUE",
+            "gradeTo": "C2_BOUNDED_RUNTIME",
+        },
+        "delta": delta,
+        "questionsClosed": 1,
+        "questionsAdded": 4,
+        "adjudicationsAdded": 1,
+        "namesChanged": 0,
+        "runtimeWriteReplaysProved": 3,
+        "runtimeCallContextReplaysProved": 2,
+        "independentGameplayReplications": 0,
+        "traceDisposition": {
+            "path": trace.get("path"),
+            "bytes": trace.get("bytes"),
+            "receiptSha256": trace.get("receiptSha256"),
+            "actualSizeVerified": True,
+            "actualHashRecomputed": False,
+        },
+        "rebuildMapping": {
+            "contractId": lockhit_contract.LOCKHIT_CONTRACT,
+            "state": "NOT_READY",
+            "owner": "UNASSIGNED",
+            "implementation": "UNMAPPED",
+            "tests": "UNMAPPED",
+            "reason": (
+                "the rebuild has no evidence-bound CBattleEngine fired-lock container owner"
+            ),
+        },
+        "liveGhidraDisposition": (
+            "EXISTING_TARGET_LOCK_SEMANTIC_PROMOTION_CORROBORATED_NO_NEW_MUTATION"
+        ),
+        "semanticLimitations": list(proof_receipt["limitations"]),
+    }
+    return rows, advance
+
+
+def _validate_lockhit_bounded_receipt_envelope(
+    rows: dict[str, list[dict[str, str]]], receipt: dict, campaign_root: Path
+) -> None:
+    expected_top_level = {
+        "schema",
+        "reducer",
+        "generatedAtUtc",
+        "generation",
+        "parentCampaign",
+        "sourceSnapshot",
+        "advance",
+        "counts",
+        "questionTypes",
+        "policies",
+        "outputs",
+    }
+    if set(receipt) != expected_top_level:
+        raise CampaignError("LockHit bounded-contract READY shape differs")
+    _parse_utc_timestamp(
+        str(receipt.get("generatedAtUtc", "")),
+        "LockHit bounded-contract generation",
+    )
+    parent_root = (REPO_ROOT / LOCKHIT_BOUNDED_PARENT_RELATIVE).resolve()
+    parent_receipt = _runtime_json(
+        parent_root / "campaign.ready.json",
+        "LockHit bounded-contract parent",
+    )
+    if not _same_json(
+        receipt.get("sourceSnapshot"), parent_receipt.get("sourceSnapshot")
+    ):
+        raise CampaignError("LockHit bounded-contract source snapshot differs")
+    if receipt.get("questionTypes") != dict(
+        Counter(row["questionType"] for row in rows["questions"])
+    ):
+        raise CampaignError("LockHit bounded-contract question types differ")
+    if receipt.get("policies") != _lockhit_bounded_policies():
+        raise CampaignError("LockHit bounded-contract policies differ")
+    outputs = _runtime_mapping(
+        receipt.get("outputs"), "LockHit bounded-contract outputs"
+    )
+    if set(outputs) != set(OUTPUTS):
+        raise CampaignError("LockHit bounded-contract output set differs")
+    raw_root = Path(os.path.abspath(campaign_root))
+    try:
+        plain_root = ghidra_backup.resolve_plain_path(
+            raw_root, "LockHit bounded-contract campaign root", strict=True
+        )
+    except (ghidra_backup.BackupError, OSError) as exc:
+        raise CampaignError(
+            f"LockHit bounded-contract campaign root is not plain: {exc}"
+        ) from exc
+    if plain_root != raw_root:
+        raise CampaignError(
+            "LockHit bounded-contract campaign root aliases another path"
+        )
+    authority_files: list[tuple[str, Path]] = []
+    for label, path in [
+        ("campaign READY", plain_root / "campaign.ready.json"),
+        *[
+            (
+                f"reducer {path.relative_to(plain_root / '_reducer').as_posix()}",
+                path,
+            )
+            for path in (plain_root / "_reducer").rglob("*")
+            if path.is_file()
+        ],
+    ]:
+        try:
+            plain = ghidra_backup.resolve_plain_path(
+                path, f"LockHit bounded-contract {label}", strict=True
+            )
+        except (ghidra_backup.BackupError, OSError) as exc:
+            raise CampaignError(
+                f"LockHit bounded-contract {label} is not plain: {exc}"
+            ) from exc
+        if plain.stat().st_nlink != 1:
+            raise CampaignError(
+                f"LockHit bounded-contract {label} has multiple hard links"
+            )
+        authority_files.append((label, plain))
+    output_files: list[tuple[str, Path]] = []
+    for name in OUTPUTS:
+        stamp = _runtime_mapping(
+            outputs.get(name), f"LockHit bounded-contract output {name}"
+        )
+        if set(stamp) != {"path", "bytes", "sha256", "lastWriteUtc"}:
+            raise CampaignError(
+                f"LockHit bounded-contract output stamp shape differs: {name}"
+            )
+        if stamp.get("path") != name:
+            raise CampaignError(
+                f"LockHit bounded-contract output path differs: {name}"
+            )
+        _parse_utc_timestamp(
+            str(stamp.get("lastWriteUtc", "")),
+            f"LockHit bounded-contract output {name}",
+        )
+        try:
+            path = ghidra_backup.resolve_plain_path(
+                plain_root / name,
+                f"LockHit bounded-contract output {name}",
+                strict=True,
+            )
+        except (ghidra_backup.BackupError, OSError) as exc:
+            raise CampaignError(
+                f"LockHit bounded-contract output is not plain: {name}: {exc}"
+            ) from exc
+        if path.stat().st_nlink != 1:
+            raise CampaignError(
+                f"LockHit bounded-contract output has multiple hard links: {name}"
+            )
+        if {**coverage.file_stamp(path), "path": name} != stamp:
+            raise CampaignError(
+                f"LockHit bounded-contract output stamp differs: {name}"
+            )
+        try:
+            if os.path.samefile(path, parent_root / name):
+                raise CampaignError(
+                    f"LockHit bounded-contract output aliases canonical Gen16: {name}"
+                )
+        except OSError as exc:
+            raise CampaignError(
+                f"LockHit bounded-contract output identity cannot be read: {exc}"
+            ) from exc
+        output_files.append((name, path))
+    _require_disjoint_evidence_files(
+        output_files, "LockHit bounded-contract outputs"
+    )
+    _require_disjoint_evidence_files(
+        authority_files + output_files,
+        "LockHit bounded-contract authority files",
+    )
+
+
+def _validate_lockhit_bounded_advance_relation(
+    rows: dict[str, list[dict[str, str]]],
+    receipt: dict,
+    advance: object,
+    *,
+    campaign_root: Path | None,
+) -> dict[str, object]:
+    if not isinstance(advance, dict):
+        raise CampaignError("LockHit bounded-contract advance is absent")
+    parent = _runtime_mapping(
+        receipt.get("parentCampaign"), "LockHit bounded-contract parent"
+    )
+    parent_root = _resolve_repo_or_absolute(
+        parent.get("path"), "LockHit bounded-contract parent path"
+    )
+    expected_parent = (REPO_ROOT / LOCKHIT_BOUNDED_PARENT_RELATIVE).resolve()
+    parent_ready = _runtime_mapping(
+        parent.get("ready"), "LockHit bounded-contract parent READY"
+    )
+    if (
+        _integer(receipt.get("generation"), -1) != 17
+        or parent_root != expected_parent
+        or parent_ready.get("path") != "campaign.ready.json"
+        or parent_ready.get("bytes") != LOCKHIT_BOUNDED_PARENT_READY_BYTES
+        or parent_ready.get("sha256") != LOCKHIT_BOUNDED_PARENT_READY_SHA256
+        or advance.get("kind") != LOCKHIT_BOUNDED_ADVANCE_KIND
+        or advance.get("schema") != LOCKHIT_BOUNDED_ADVANCE_SCHEMA
+        or advance.get("branchId") != GHIDRA_PARTITION_RECOVERY_LINEAGE_ID
+    ):
+        raise CampaignError("LockHit bounded-contract generation identity differs")
+    base_receipt = _runtime_json(
+        expected_parent / "campaign.ready.json",
+        "LockHit bounded-contract exact parent",
+    )
+    expected_rows, expected_advance = _lockhit_bounded_rows_and_advance(
+        expected_parent,
+        REPO_ROOT / LOCKHIT_BOUNDED_PROOF_RELATIVE,
+        base_receipt,
+    )
+    if not _same_json(rows, expected_rows):
+        raise CampaignError("LockHit bounded-contract campaign rows differ")
+    if not _same_json(advance, expected_advance):
+        raise CampaignError("LockHit bounded-contract advance receipt differs")
+    if receipt.get("counts") != LOCKHIT_BOUNDED_EXPECTED_GENERATION17_COUNTS:
+        raise CampaignError("LockHit bounded-contract READY counts differ")
+    if campaign_root is not None:
+        _validate_lockhit_bounded_receipt_envelope(rows, receipt, campaign_root)
+    return {
+        "adjudicationIds": {_lockhit_bounded_adjudication_id()},
+        "advance": expected_advance,
+    }
+
+
+def advance_lockhit_bounded_contract(
+    campaign: Path,
+    proof_root: Path,
+    out: Path,
+    *,
+    _self_check: bool = True,
+    _verified_parent_receipt: dict | None = None,
+) -> dict:
+    """Publish the bounded one-node CBattleEngine::LockHit contract."""
+
+    if out.exists():
+        raise CampaignError(
+            f"refusing existing LockHit bounded-contract destination: {out}"
+        )
+    base_receipt = (
+        _verified_parent_receipt
+        if _verified_parent_receipt is not None
+        else _verify_lockhit_bounded_parent_campaign(campaign)
+    )
+    rows, advance = _lockhit_bounded_rows_and_advance(
+        campaign, proof_root, base_receipt
+    )
+    output_rows = {
+        "campaign-functions.tsv": (FUNCTION_COLUMNS, rows["functions"]),
+        "campaign-residuals.tsv": (RESIDUAL_COLUMNS, rows["residuals"]),
+        "campaign-questions.tsv": (QUESTION_COLUMNS, rows["questions"]),
+        "campaign-scenarios.tsv": (SCENARIO_COLUMNS, rows["scenarios"]),
+        "campaign-levers.tsv": (LEVER_COLUMNS, rows["levers"]),
+        "campaign-contracts.tsv": (CONTRACT_COLUMNS, rows["contracts"]),
+        "campaign-adjudications.tsv": (
+            ADJUDICATION_COLUMNS,
+            rows["adjudications"],
+        ),
+        "campaign-supersessions.tsv": (
+            SUPERSESSION_COLUMNS,
+            rows["supersessions"],
+        ),
+    }
+    base_ready = coverage.file_stamp(campaign / "campaign.ready.json")
+    out.parent.mkdir(parents=True, exist_ok=True)
+    stage = Path(tempfile.mkdtemp(prefix=f".{out.name}.", dir=out.parent))
+    try:
+        for name, (columns, output) in output_rows.items():
+            _write_tsv(stage / name, columns, output)
+        reducer = _publish_reducer(stage)
+        receipt = {
+            "schema": SCHEMA,
+            "reducer": reducer,
+            "generatedAtUtc": datetime.now(timezone.utc).isoformat(),
+            "generation": 17,
+            "parentCampaign": {
+                "path": str(campaign.resolve()),
+                "ready": {**base_ready, "path": "campaign.ready.json"},
+            },
+            "sourceSnapshot": base_receipt["sourceSnapshot"],
+            "advance": advance,
+            "counts": {name: len(value) for name, value in rows.items()},
+            "questionTypes": dict(
+                Counter(row["questionType"] for row in rows["questions"])
+            ),
+            "policies": _lockhit_bounded_policies(),
+            "outputs": {
+                name: {**coverage.file_stamp(stage / name), "path": name}
+                for name in OUTPUTS
+            },
+        }
+        (stage / "campaign.ready.json").write_text(
+            json.dumps(receipt, indent=2) + "\n", encoding="utf-8"
+        )
+        if _self_check:
+            verify(stage)
+        os.replace(stage, out)
+        return receipt
+    except Exception:
+        shutil.rmtree(stage, ignore_errors=True)
+        raise
+
+
 def advance_runtime_contract(
     campaign: Path,
     overlay: Path,
@@ -15847,6 +22890,78 @@ def main(argv: list[str] | None = None) -> int:
     advance_reseal_parser.add_argument("--closure", type=Path, required=True)
     advance_reseal_parser.add_argument("--out", type=Path, required=True)
 
+    advance_damage_writes_parser = commands.add_parser(
+        "advance-level521-damage-writes",
+        help=(
+            "admit the exact replicated Level 521 Damage/Hit field-write proof, "
+            "source-correlated ABI, and partial Godot parity mapping"
+        ),
+    )
+    advance_damage_writes_parser.add_argument(
+        "--campaign", type=Path, required=True
+    )
+    advance_damage_writes_parser.add_argument("--proof", type=Path, required=True)
+    advance_damage_writes_parser.add_argument("--out", type=Path, required=True)
+
+    advance_applydamage_parser = commands.add_parser(
+        "advance-applydamage-reproof",
+        help=(
+            "admit the exact replicated CUnit::ApplyDamage entry/write proof "
+            "as a bounded C2 contract with partial Godot parity"
+        ),
+    )
+    advance_applydamage_parser.add_argument("--campaign", type=Path, required=True)
+    advance_applydamage_parser.add_argument("--proof", type=Path, required=True)
+    advance_applydamage_parser.add_argument("--out", type=Path, required=True)
+
+    advance_tokenarchive_parser = commands.add_parser(
+        "advance-tokenarchive-dispatch-reproof",
+        help=(
+            "admit the exact ReadNextToken pointer/index/alignment partition "
+            "and close its police-open residual as static data"
+        ),
+    )
+    advance_tokenarchive_parser.add_argument(
+        "--campaign", type=Path, required=True
+    )
+    advance_tokenarchive_parser.add_argument("--proof", type=Path, required=True)
+    advance_tokenarchive_parser.add_argument("--out", type=Path, required=True)
+
+    advance_setpos_parser = commands.add_parser(
+        "advance-mission-native-setpos-reproof",
+        help=(
+            "admit the exact Mission-native SetPos NOP/function partition, "
+            "bounded static contract, and separately read-back live Ghidra promotion"
+        ),
+    )
+    advance_setpos_parser.add_argument("--campaign", type=Path, required=True)
+    advance_setpos_parser.add_argument("--proof", type=Path, required=True)
+    advance_setpos_parser.add_argument("--out", type=Path, required=True)
+
+    advance_setpos_runtime_parser = commands.add_parser(
+        "advance-mission-native-setpos-runtime",
+        help=(
+            "admit the replicated authored-safe-copy Mission-native SetPos "
+            "roundtrip as a bounded C2 contract with partial Godot parity"
+        ),
+    )
+    advance_setpos_runtime_parser.add_argument(
+        "--campaign", type=Path, required=True
+    )
+    advance_setpos_runtime_parser.add_argument("--proof", type=Path, required=True)
+    advance_setpos_runtime_parser.add_argument("--out", type=Path, required=True)
+
+    advance_lockhit_parser = commands.add_parser(
+        "advance-lockhit-bounded-contract",
+        help=(
+            "admit the retained one-node CBattleEngine::LockHit removal event "
+            "as a bounded C2 contract while keeping unobserved paths open"
+        ),
+    )
+    advance_lockhit_parser.add_argument("--campaign", type=Path, required=True)
+    advance_lockhit_parser.add_argument("--proof", type=Path, required=True)
+    advance_lockhit_parser.add_argument("--out", type=Path, required=True)
+
     args = parser.parse_args(argv)
     try:
         if args.command == "seed":
@@ -16012,6 +23127,68 @@ def main(argv: list[str] | None = None) -> int:
             print(
                 f"CAMPAIGN_GEN73_RESEAL_RECOVERED generation={receipt['generation']} "
                 f"claims={receipt['advance']['newAdjudications']['count']} "
+                f"out={args.out}"
+            )
+            return 0
+        if args.command == "advance-level521-damage-writes":
+            receipt = advance_level521_damage_writes(
+                args.campaign, args.proof, args.out
+            )
+            print(
+                f"CAMPAIGN_LEVEL521_DAMAGE_WRITES_ADVANCED generation={receipt['generation']} "
+                f"writes={receipt['advance']['witnessedWritesProved']} "
+                f"out={args.out}"
+            )
+            return 0
+        if args.command == "advance-applydamage-reproof":
+            receipt = advance_applydamage_reproof(
+                args.campaign, args.proof, args.out
+            )
+            print(
+                f"CAMPAIGN_APPLYDAMAGE_REPROOF_ADVANCED generation={receipt['generation']} "
+                f"grade={receipt['advance']['promotion']['gradeTo']} "
+                f"out={args.out}"
+            )
+            return 0
+        if args.command == "advance-tokenarchive-dispatch-reproof":
+            receipt = advance_tokenarchive_dispatch_reproof(
+                args.campaign, args.proof, args.out
+            )
+            print(
+                f"CAMPAIGN_TOKENARCHIVE_DISPATCH_ADVANCED generation={receipt['generation']} "
+                f"terminal={receipt['advance']['promotion']['terminalState']} "
+                f"out={args.out}"
+            )
+            return 0
+        if args.command == "advance-mission-native-setpos-reproof":
+            receipt = advance_mission_native_setpos_reproof(
+                args.campaign, args.proof, args.out
+            )
+            print(
+                f"CAMPAIGN_MISSION_NATIVE_SETPOS_ADVANCED generation={receipt['generation']} "
+                f"function={receipt['advance']['function']['entityKey']} "
+                f"out={args.out}"
+            )
+            return 0
+        if args.command == "advance-mission-native-setpos-runtime":
+            receipt = advance_mission_native_setpos_runtime(
+                args.campaign, args.proof, args.out
+            )
+            print(
+                "CAMPAIGN_MISSION_NATIVE_SETPOS_RUNTIME_ADVANCED "
+                f"generation={receipt['generation']} "
+                f"grade={receipt['advance']['promotion']['gradeTo']} "
+                f"out={args.out}"
+            )
+            return 0
+        if args.command == "advance-lockhit-bounded-contract":
+            receipt = advance_lockhit_bounded_contract(
+                args.campaign, args.proof, args.out
+            )
+            print(
+                "CAMPAIGN_LOCKHIT_BOUNDED_CONTRACT_ADVANCED "
+                f"generation={receipt['generation']} "
+                f"grade={receipt['advance']['promotion']['gradeTo']} "
                 f"out={args.out}"
             )
             return 0

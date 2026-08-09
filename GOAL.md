@@ -17,7 +17,7 @@
 > Godot rebuild, and the WinUI 3 app are coequal outcomes. A current goal chooses
 > focus, not standing rank. See [Revision history](#revision-history).
 >
-> Last updated: 2026-08-08. Current measured status belongs in
+> Last updated: 2026-08-09. Current measured status belongs in
 > [`CURRENT_CAPABILITIES.md`](CURRENT_CAPABILITIES.md) and
 > [`developer_state.json`](developer_state.json) (routing key
 > `current_re_authority`). Generation 73 is retained only as the exact
@@ -160,19 +160,23 @@ this standing campaign complete.
 
 Standing complete-RE progress is **not** the Gen10 handoff below and is no
 longer selected from the damaged Generation-73 candidate chain. Read
-`developer_state.json` → `current_re_authority`. As of 2026-08-08 the exact
-post-loss authority is canonical Generation 11 at
-`local-lab/re-campaign-incident-recovery-20260808-v1/generation-11-gen73-claims-resealed-v2/`:
-READY SHA-256 `9b3769c503f003b34d3915047be28c24036567f260de1933591f0254d992686d`,
+`developer_state.json` → `current_re_authority`. As of 2026-08-09 the exact
+authority is canonical Generation 17 at
+`local-lab/re-campaign-incident-recovery-20260808-v1/generation-17-lockhit-bounded-contract-v1/`:
+READY SHA-256 `6d794905d6fc5daea11f99b781cf8eb7740765e749c784d02507d43436b801a2`,
 frozen reducer ID
-`e88c973967a0458f500ff2cc1508d417b60487a4886703c4bd3dcfd197246993`,
+`fbb343d629fa12a641aced04db88b59e5270e1f45990d9d203284302f8761621`,
 and external authority receipt SHA-256
-`2594d78d7ec6b4908ecfba9509122fedbe1959ff0e5eeaceb6d1164ae758238c`.
+`c37aae056dc2f04d946db69d4e13d276dbc11d1a52976c97657af0a5549b00cb`.
 Its independent replica is reproduction-only. Generation 73 supplied a
-field-level projection oracle; every candidate claim was readmitted, rejected,
-or quarantined without making it a parent. The campaign remains incomplete and
-the next valid campaign generation is 12. Ghidra mutation still requires its
-separate promotion gate and authority.
+field-level projection oracle; Generations 12 through 17 then admitted bounded
+Damage/Hit field-write contracts, one replicated zero-shield ApplyDamage
+contract, the exact consumer-bound TokenArchive dispatch-table partition, and
+the exact Mission-native SetPos boundary plus its replicated script-visible
+position-copy contract and partial rebuild mapping, plus LockHit's retained
+single-node removal path, without broadening them beyond their evidence. The
+campaign remains incomplete and the next valid campaign generation is 18. Ghidra mutation still requires
+its separate promotion gate and authority.
 
 ## Historical atomic handoff boundary (2026-08-04 / Generation 10)
 

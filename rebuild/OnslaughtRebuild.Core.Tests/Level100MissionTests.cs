@@ -16,6 +16,48 @@ public sealed class Level100MissionTests
         new(Introduction: true, PulseCannon: true, VulcanCannon: true, StatusBars: true);
 
     [Fact]
+    public void MissionNativeSetPos_CopiesGetPosPositionAndPreservesOtherPoseState()
+    {
+        Level100ActorDefinitionSet definitions = Level100TestActorDefinitions.Create();
+        var actors = new Level100ActorRegistry(definitions);
+        Level100ActorId player = actors.GetThingRef("Player 1")!.Value;
+        Level100ActorId source = actors.GetThingRef("Turret 01")!.Value;
+        Level100ActorId target = actors.GetThingRef("Turret 02")!.Value;
+        var runtime = new Level100ActorScriptRuntime(actors, player);
+
+        Level100ActorPoseSnapshot sourcePose = actors.GetPose(source);
+        Level100ActorPoseSnapshot targetBefore = actors.GetPose(target);
+        Level100ScriptValue position = runtime.InvokePositionNative(
+            49,
+            source,
+            Array.Empty<Level100ScriptValue>());
+
+        _ = runtime.InvokePositionNative(135, target, [position]);
+
+        Level100ActorPoseSnapshot targetAfter = actors.GetPose(target);
+        Level100ScriptValue readback = runtime.InvokePositionNative(
+            49,
+            target,
+            Array.Empty<Level100ScriptValue>());
+        Assert.Equal(sourcePose.PositionMillimeters, targetAfter.PositionMillimeters);
+        Assert.Equal(position.Snapshot, readback.Snapshot);
+        Assert.Equal(targetBefore.BasisFloatBits, targetAfter.BasisFloatBits);
+        Assert.Equal(
+            targetBefore.LinearVelocityMillimetersPerTick,
+            targetAfter.LinearVelocityMillimetersPerTick);
+        Assert.Equal(
+            targetBefore.AngularVelocityMicroRadiansPerTick,
+            targetAfter.AngularVelocityMicroRadiansPerTick);
+
+        Assert.Throws<InvalidOperationException>(() =>
+            runtime.InvokePositionNative(
+                135,
+                target,
+                [Level100ScriptValue.Integer(1)]));
+        Assert.Equal(targetAfter, actors.GetPose(target));
+    }
+
+    [Fact]
     public void ReleasedPrograms_InitializeAgainstOneCanonicalActorRegistry()
     {
         Level100ActorDefinitionSet definitions = Level100TestActorDefinitions.Create();

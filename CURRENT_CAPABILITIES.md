@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-08-08. RE authority block refreshed to recovered Gen11
+Last updated: 2026-08-09. RE authority block refreshed to canonical Gen17
 (`current_re_authority`; candidate Gen73 is projection-oracle only). Primary WinUI
 navigation was rechecked 2026-08-03 against the live shell (includes Cheats).
 The 2026-08-01 shell, appearance, Lore, Media, and four-run Level 100 reviews
@@ -638,32 +638,49 @@ Read [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md) before changing this lane.
 
 ## Reverse engineering and proof campaign
 
-**Current replay authority (2026-08-08):** read `developer_state.json` →
+**Current replay authority (2026-08-09):** read `developer_state.json` →
 `current_re_authority` before quoting generation or grade counts. Do not select
 the historical Gen10 or candidate Gen73 roots by generation number, ledger
 equality, or self-derived pins.
 
-| Metric | Canonical recovered Gen11 |
+| Metric | Canonical Gen17 |
 | --- | ---: |
-| Authority generation | **11** (lineage `incident-20260806-recovery-v1`) |
-| Functions | **8124** |
-| C1_CANDIDATE_PARTIAL | **216** |
-| C2_BOUNDED_RUNTIME | **4** |
-| function_semantic OPAQUE | **7904** |
-| contract_C0_OPAQUE | **14021** (second opacity axis) |
-| OPEN residual | **20** |
+| Authority generation | **17** (lineage `incident-20260806-recovery-v1`) |
+| Functions | **8125** |
+| C1_CANDIDATE_PARTIAL | **215** |
+| C2_BOUNDED_RUNTIME | **7** |
+| function_semantic OPAQUE | **7903** |
+| contract_C0_OPAQUE | **14022** (second opacity axis) |
+| OPEN residual | **18** |
 | REBUILD_READY | **0** |
 | complete_RE | **false** |
-| READY / reducer | `9b3769c5…2686d` / `e88c9739…6993` |
-| Next valid generation | **12** |
+| READY / reducer | `6d794905…01a2` / `fbb343d6…1621` |
+| Next valid generation | **18** |
 
-The post-loss closure accounts for every Generation-73 candidate delta without
+Generation 11's post-loss closure accounts for every Generation-73 candidate delta without
 making that candidate a parent. It readmits 935 names, 216 bounded C1 claims,
-and 6,082 residual terminalizations; preserves 20 police-open residuals; keeps
-seven wrappers name-only/opaque; retains ApplyDamage at C1; rejects its C2; and
-quarantines the unsupported NearClone claim. C1 is a partial contract, not
-dual-runtime C2 or rebuild parity. Further reviewer use is situational under
-`reverse-engineering/REVIEW-PROTOCOL.md`, not a fixed model matrix.
+and 6,082 residual terminalizations; preserved 20 police-open residuals, seven
+name-only wrappers, and the unsupported NearClone quarantine. Generation 12
+then admitted bounded Damage/Hit field-write contracts; Generation 13 advanced
+ApplyDamage from C1 to C2 only for its replicated 1,000-damage zero-shield path
+and mapped the exact overkill vector to one focused rebuild test. Generation 14
+then closed one of those residuals as the exact consumer-bound dispatch-data
+partition adjacent to `CTokenArchive::ReadNextToken`. Generation 15 closes a
+second residual by proving the exact Mission-native `IScript__SetPos` function
+between two NOP ranges, leaving 18 open. Its separate live Ghidra promotion
+added one name/signature/comment with a distinct readback while preserving the
+executable bytes, instructions, data units, and references. Generation 16
+advances that same SetPos entity to bounded C2 after two independently staged
+GetPos → SetPos → GetPos treatments and three controls, and carries the observed
+position-copy behavior into a focused partial rebuild implementation/test. The
+complete internal write set, other receivers/vectors, side effects, persistence,
+and failure paths remain open. Generation 17 then admits only one non-null,
+sole-matching-node `CBattleEngine::LockHit` removal path from retained evidence;
+null, absent, multi-node, free-head, destructor, return, identity, and rebuild
+questions remain open. Positive
+shields, return pairing, death/effect ordering, and alternate paths remain open.
+Further reviewer use is situational under `reverse-engineering/REVIEW-PROTOCOL.md`,
+not a fixed model matrix.
 
 **Historical Gen10 instruments (still true as capabilities, not tip census):**
 
@@ -684,13 +701,16 @@ corrections. `StartDie` remained open/opaque at that handoff. The independent
 data-write lane has one refuter-survived semantic result: a Level 521 `LockHit`
 invocation removed the supplied target's sole fired-lock node through five exact
 ordered field transitions. These are instrument capabilities and historical
-admissions. Canonical Gen11 retains the four independently supported C2 rows;
-the fifth candidate ApplyDamage C2 claim was rejected.
+admissions. Canonical Gen17 retains those four C2 rows, separately re-proves a
+narrower fifth ApplyDamage C2 from intact TTD wrappers, and adds the bounded
+SetPos roundtrip as a sixth and LockHit's single-node removal path as a seventh;
+it does not revive the rejected historical package,
+claim positive-shield behavior, or broaden SetPos beyond the observed path.
 
 These instruments do not infer function boundaries, C++ receivers, argument or
 return types, semantics, or parity. Static/source/RTTI evidence supplied joins
 for early data-write plates. Focused player-damage / Level 521 successor work
-remains an open runtime front alongside the next impact-ranked Generation-12
+remains an open runtime front alongside the next impact-ranked Generation-18
 contract/rebuild advance. There is
 not yet a normalized corpus-wide semantic ledger, and no new trace is justified
 until existing evidence plus these instruments cannot answer a preregistered

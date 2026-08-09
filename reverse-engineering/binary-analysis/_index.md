@@ -62,7 +62,7 @@ claim that every function is semantically correct.
 | Findings | [`ghidra-fullpass-findings/`](ghidra-fullpass-findings/) | Discovery (W001–W018) |
 | Lab | `local-lab/ghidra-fullpass-2026-07-23/` (not git) | Ops: queues, dual QC, apply logs; closeout 2026-07-25 |
 | Live DB | Maintainer Ghidra Projects (machine-local) | Applied corrections when authorized |
-| Tracked snapshot | [`../ghidra/`](../ghidra/README.md) (2026-07-18) | Distributable snapshot; live maintainer DB may be ahead |
+| Tracked snapshot | [`../ghidra/`](../ghidra/README.md) (2026-08-09) | Distributable snapshot; exact to the verified live state at promotion time |
 
 A wave path such as `ghidra-fullpass-findings/W001/primary/A01.md` is not proof
 that the live database or the tracked `ghidra/` snapshot was mutated. Mutation

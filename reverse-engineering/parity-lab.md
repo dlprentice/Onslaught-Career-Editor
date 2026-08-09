@@ -6,7 +6,7 @@ capture bundles, calibrated Stuart/BSim matching, an authored Mission logger,
 and verified campaign ratchets are implemented; corpus-wide semantic joins,
 repeated action campaigns, and rebuild-ready semantic promotion remain open
 
-Last updated: 2026-08-08 (post-loss Gen11 authority; Gen10/Gen73 demoted)
+Last updated: 2026-08-09 (Gen13 authority; Gen10/Gen73 remain non-current)
 
 Verdict: Battle Engine Aquila no longer needs to be approached as 8,124 isolated
 decompiler functions plus an unbounded dark tail. A specimen-bound pipeline can
@@ -49,24 +49,35 @@ not establish its Steam depot identity.
 
 ---
 
-## Current complete-RE replay authority (2026-08-08) — read first
+## Current complete-RE replay authority (2026-08-09) — read first
 
 Current authority is **not** the Gen10 block below or candidate Gen73. Re-read
-`developer_state.json` → `current_re_authority`. Canonical recovered Gen11 has
-functions=**8124**, C1=**216**, C2=**4**, function semantic OPAQUE=**7904**,
-contract C0_OPAQUE=**14021**, OPEN residual=**20**, complete_RE=**false**, and
-REBUILD_READY=**0**. Its READY is `9b3769c5…2686d`; reducer
-`e88c9739…6993`. Generation 73 is projection-oracle evidence only. Seven
-wrappers remain name-only/opaque; ApplyDamage remains C1 with an UNSCORED
-refuter; its C2 is rejected; NearClone remains unchanged. The next valid
-campaign generation is 12. C1 PE evidence is not C2 runtime proof or parity.
+`developer_state.json` → `current_re_authority`. Canonical Gen17 has
+functions=**8125**, C1=**215**, C2=**7**, function semantic OPAQUE=**7903**,
+contract C0_OPAQUE=**14021**, OPEN residual=**18**, complete_RE=**false**, and
+REBUILD_READY=**0**. Its READY is `6d794905…01a2`; reducer
+`fbb343d6…1621`. Generation 73 is projection-oracle evidence only. Seven
+wrappers remain name-only/opaque and NearClone remains unchanged. ApplyDamage
+is now C2 only for one replicated 1,000-damage zero-shield path with an exact
+overkill parity vector; positive-shield behavior and other paths remain open.
+Gen14 also proves the exact adjacent TokenArchive dispatch-data partition and
+retires one residual without assigning the seven category meanings. Gen15
+proves the exact Mission-native `IScript__SetPos` boundary and static call shape.
+Gen16 advances only two replicated script-visible position-copy roundtrips to
+bounded C2 and a partial rebuild mapping; complete writes, side effects, broader
+inputs, and failures remain open. Gen17 adds only LockHit's measured non-null,
+sole-node removal path; all other list paths and rebuild ownership remain open.
+The next valid campaign generation is 18. C1 PE evidence is not C2 runtime
+proof or parity, and bounded C2 is not rebuild-ready.
 
 ## Historical recursive-campaign snapshot (2026-08-04, Generation 10)
 
 - Generation 10 was the machine-local range/contract admission then: 8,124 functions,
   6,117 residuals, 162,017 unmapped executable bytes, 14,241 contracts, and 584
   exact supersessions. At that handoff four contracts were `C2_BOUNDED_RUNTIME`
-  (canonical Gen11 retains those same **four**). None is rebuild-ready. Generation 9's five target-lock
+   (canonical Gen17 retains those **four**, adds the separately re-proved
+   zero-shield ApplyDamage path as a fifth, and the bounded SetPos position-copy
+   path as a sixth, and LockHit's single-node removal path as a seventh). None is rebuild-ready. Generation 9's five target-lock
   changes remain same-range metadata/evidence corrections; Generation 10
   separately admitted three bounded Level 521 call-context contracts.
 - A replicated disposable bridge redirected only the four `ShowCmds`/`ShowVars`

@@ -1,10 +1,10 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-08-08
+Last updated: 2026-08-09
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
-Current replay authority is recovered Generation 11 via
+Current replay authority is Generation 17 via
 `developer_state.json` → `current_re_authority`; Generation 73 is a projection
 oracle only, and the Generation-10 block below is historical.
 
@@ -58,20 +58,32 @@ Further down this page, past the authority block: the patch recipes, the
 per-subsystem static contracts, the 2026-05-26 review cohort, the lane
 reference and runbooks, and the retail → Core translation policies.
 
-## Current complete-RE replay authority — machine-local evidence (2026-08-08)
+## Current complete-RE replay authority — machine-local evidence (2026-08-09)
 
-The tracked Ghidra snapshot and 2026-07 name ledgers deliberately lag current
-campaign work. Select the exact authority recorded in `developer_state.json` →
-`current_re_authority`: canonical Generation 11 at
-`local-lab/re-campaign-incident-recovery-20260808-v1/generation-11-gen73-claims-resealed-v2/`,
-READY `9b3769c503f003b34d3915047be28c24036567f260de1933591f0254d992686d`,
-frozen reducer `e88c973967a0458f500ff2cc1508d417b60487a4886703c4bd3dcfd197246993`,
-external selector `2594d78d…238c`. It contains 8,124 functions, 216 C1, four
-C2, 7,904 opaque functions, 20 open residuals, and no rebuild-ready contract.
-Its independent replica is reproduction-only. Generation 73 is retained only
-as the exact field-level oracle named by closure READY `94d7a9eb…323e0`; it is
-never a parent or authority. The next valid campaign generation is 12. Model
-review is situational and harness-agnostic under `REVIEW-PROTOCOL.md`.
+The tracked Ghidra snapshot was refreshed from live on 2026-08-09; the dated
+2026-07 name ledgers still lag current work. Select campaign authority from `developer_state.json` →
+`current_re_authority`: canonical Generation 17 at
+`local-lab/re-campaign-incident-recovery-20260808-v1/generation-17-lockhit-bounded-contract-v1/`,
+READY `6d794905d6fc5daea11f99b781cf8eb7740765e749c784d02507d43436b801a2`,
+frozen reducer `fbb343d629fa12a641aced04db88b59e5270e1f45990d9d203284302f8761621`,
+external selector `c37aae05…b00cb`. It contains 8,125 functions, 215 C1, seven
+bounded C2, 7,903 opaque functions, 18 open residuals, and no rebuild-ready
+contract. Generation 12 admitted bounded `CBattleEngine::Damage`/`Hit` field
+writes and a partial rebuild mapping; Generation 13 admitted one replicated
+zero-shield `CUnit::ApplyDamage` entry/write contract and its exact overkill
+parity vector; Generation 14 closes one exact residual as the adjacent
+`CTokenArchive::ReadNextToken` dispatch-data partition without naming its seven
+categories; Generation 15 closes another by proving the exact Mission-native
+`IScript__SetPos` boundary and C1 static call shape. Generation 16 advances only
+two replicated script-visible SetPos position-copy roundtrips to bounded C2 and
+a partial rebuild mapping; its complete writes, side effects, broader inputs,
+and failure behavior remain open. Generation 17 admits only LockHit's retained
+non-null, sole-matching-node removal path; its other list paths, free-head,
+destructor, return, identity, and rebuild questions remain open. Positive-shield absorption, raw return
+pairing, death/effect ordering, full TokenArchive parser behavior, and other paths remain open. The independent replica is
+reproduction-only. Generation 73 remains a projection oracle, never a parent or
+authority. The next valid campaign generation is 18. Model review is
+situational and harness-agnostic under `REVIEW-PROTOCOL.md`.
 
 ## Historical Gen10 dual-authority / TTD admission (2026-08-04)
 
@@ -264,9 +276,9 @@ being recovered**, which is exactly the trap this metric sets.
 
 *(Added 2026-07-27. The per-ledger figures below are dated snapshots against the
 **6,969**-function inventory and are quoted as those ledgers state them; they
-are not the current figure. The tracked `ghidra/` snapshot is the reviewed
-6,411-function state and deliberately lags the live DB. The current 7,555-row
-name projection, live/snapshot distinction, and mutation-wave reconciliation
+are not the current figure. The tracked `ghidra/` snapshot was promoted to the
+8,125-function live state on 2026-08-09; the 7,555-row name projection remains a
+dated table. Historical live/snapshot distinction and mutation-wave reconciliation
 are tracked in [`ghidra-functions.md`](ghidra-functions.md); bulky working
 exports remain ignored under `local-lab/`.)*
 
@@ -407,7 +419,7 @@ Current per-function notes live under
 | Discovery findings | [`binary-analysis/ghidra-fullpass-findings/`](binary-analysis/ghidra-fullpass-findings/) | Tracked wave reviews (W001–W018) |
 | Correction ops | `local-lab/ghidra-fullpass-2026-07-23/` (gitignored) | Queues, dual QC, apply logs; closeout 2026-07-25 |
 | Live applied DB | Maintainer Ghidra Projects (machine-local) | Working database that may receive dual-cleared applies |
-| Tracked snapshot | [`ghidra/`](ghidra/README.md) (snapshot date 2026-07-18) | Distributable reviewed snapshot; may lag the live maintainer DB |
+| Tracked snapshot | [`ghidra/`](ghidra/README.md) (snapshot date 2026-08-09) | Distributable reviewed snapshot; exact to the verified live state at promotion time |
 
 Host install paths, headless entry, and local project layout:
 [`ghidra/README.md`](ghidra/README.md). Expedition overlays stay under ignored
