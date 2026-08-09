@@ -78,10 +78,7 @@ public sealed class Simulation
     private int _twinVulcanReloadTicksRemaining;
     private int _level100OpeningTicksRemaining;
     private bool _level100FlightEnabled;
-    private bool _level100PulseCannonEnabled;
-    private bool _level100VulcanCannonEnabled;
-    private bool _level100MechVulcanCannonEnabled;
-    private bool _level100MissilePodEnabled;
+    private readonly Level100PlayerWeaponRuntime _level100PlayerWeapons = new();
     private int _level100HudEmphasisMask;
     private bool _walkerToJetUsesTakeoffLift;
     private bool _walkerToJetLiftApplied;
@@ -600,23 +597,7 @@ public sealed class Simulation
 
     private void ApplyWeaponAvailability(Level100WeaponAvailabilityChanged weapon)
     {
-        switch (weapon.Weapon)
-        {
-            case Level100MissionWeapon.PulseCannonPod:
-                _level100PulseCannonEnabled = weapon.Enabled;
-                break;
-            case Level100MissionWeapon.MechTwinVulcanCannon:
-                _level100VulcanCannonEnabled = weapon.Enabled;
-                break;
-            case Level100MissionWeapon.MechVulcanCannon:
-                _level100MechVulcanCannonEnabled = weapon.Enabled;
-                break;
-            case Level100MissionWeapon.MissilePod:
-                _level100MissilePodEnabled = weapon.Enabled;
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(weapon));
-        }
+        _level100PlayerWeapons.SetActive(weapon.Weapon, weapon.Enabled);
     }
 
     private void ApplyHudEmphasis(Level100HudEmphasisChanged emphasis)
@@ -2841,11 +2822,29 @@ public sealed class Simulation
 
         if (_mode == VehicleMode.Jet)
         {
-            // Blaster's JetPart owns Mech Vulcan Cannon followed by Spread
-            // Pod. Stuart's ResetConfiguration selects slot zero and jet fire
-            // never routes through the walker-only primary Pulse Cannon.
-            if (!_level100MechVulcanCannonEnabled ||
-                _fireCooldownTicksRemaining != 0)
+            Level100MissionWeapon selected =
+                _level100PlayerWeapons.GetCurrentWeapon(VehicleMode.Jet);
+            if (!_level100PlayerWeapons.IsActive(selected))
+            {
+                return;
+            }
+
+            // Missile Pod selection is now represented exactly, but its
+            // released launch/round law is not. Do not synthesize a shot.
+            if (selected == Level100MissionWeapon.MissilePod)
+            {
+                return;
+            }
+            if (selected != Level100MissionWeapon.MechVulcanCannon)
+            {
+                throw new InvalidOperationException(
+                    $"Unsupported Level 100 jet weapon {selected}.");
+            }
+
+            // Aquila Prototype's JetPart owns Mech Vulcan Cannon followed by Missile
+            // Pod. ResetConfiguration selects slot zero and jet fire never
+            // routes through the walker-only primary Pulse Cannon.
+            if (_fireCooldownTicksRemaining != 0)
             {
                 return;
             }
@@ -2882,7 +2881,14 @@ public sealed class Simulation
             return;
         }
 
-        if (_level100PulseCannonEnabled)
+        Level100MissionWeapon walkerSelected =
+            _level100PlayerWeapons.GetCurrentWeapon(VehicleMode.Walker);
+        if (!_level100PlayerWeapons.IsActive(walkerSelected))
+        {
+            return;
+        }
+
+        if (walkerSelected == Level100MissionWeapon.PulseCannonPod)
         {
             if (_fireCooldownTicksRemaining != 0 ||
                 _energy < SimulationConstants.FireEnergyCost)
@@ -2913,8 +2919,12 @@ public sealed class Simulation
         // offsets are established, and inventing either would be an unproven
         // behaviour claim. The volley therefore leaves the one evidenced
         // BattleEngine emitter along the aim ray.
-        if (!_level100VulcanCannonEnabled ||
-            _twinVulcanReloadTicksRemaining > 0 ||
+        if (walkerSelected != Level100MissionWeapon.MechTwinVulcanCannon)
+        {
+            throw new InvalidOperationException(
+                $"Unsupported Level 100 walker weapon {walkerSelected}.");
+        }
+        if (_twinVulcanReloadTicksRemaining > 0 ||
             _energy < SimulationConstants.TwinVulcanFireEnergyCost)
         {
             return;
@@ -3116,10 +3126,7 @@ public sealed class Simulation
         // for the same reason; the released `init()` disables it explicitly on
         // the first tick, so the observable start state is unchanged there.
         _level100FlightEnabled = true;
-        _level100PulseCannonEnabled = true;
-        _level100VulcanCannonEnabled = true;
-        _level100MechVulcanCannonEnabled = true;
-        _level100MissilePodEnabled = true;
+        _level100PlayerWeapons.ResetConfiguration();
         _level100HudEmphasisMask = 0;
         _walkerToJetUsesTakeoffLift = false;
         _walkerToJetLiftApplied = false;
@@ -3238,13 +3245,16 @@ public sealed class Simulation
             _jetGroundedSlowTicks,
             _jetStallTicks,
             _fireCooldownTicksRemaining,
+            _twinVulcanReloadTicksRemaining,
             _level100OpeningTicksRemaining,
             player.Active,
             _level100FlightEnabled,
-            _level100PulseCannonEnabled,
-            _level100VulcanCannonEnabled,
-            _level100MechVulcanCannonEnabled,
-            _level100MissilePodEnabled,
+            _level100PlayerWeapons.IsActive(Level100MissionWeapon.PulseCannonPod),
+            _level100PlayerWeapons.IsActive(Level100MissionWeapon.MechTwinVulcanCannon),
+            _level100PlayerWeapons.IsActive(Level100MissionWeapon.MechVulcanCannon),
+            _level100PlayerWeapons.IsActive(Level100MissionWeapon.MissilePod),
+            _level100PlayerWeapons.WalkerSelectedWeapon,
+            _level100PlayerWeapons.JetSelectedWeapon,
             _level100HudEmphasisMask,
             _level100Mission.Snapshot,
             Array.AsReadOnly(_level100MissionEvents.ToArray()),

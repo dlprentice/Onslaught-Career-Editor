@@ -224,7 +224,10 @@ function Test-FirstFlightSmokeEvidence {
     #      alone on 2026-07-31 it did NOT move this hash - the tape's probe
     #      points are all on entries the two tables agree about - so this is
     #      #154's move with #161 riding along, not a sum of two.
-    Assert-SmokeValue 'stateHash' 'e41f55ff98b7d6e7b17a5c85e443533c46147dc81d2b0188ea56bbd89277dc16' $report.stateHash
+    # StateHasher v35 adds the selected Walker/Jet slots and Twin Vulcan
+    # reload countdown. The in-process canonical tape independently measures
+    # this exact structural repin; the native smoke remains the host check.
+    Assert-SmokeValue 'stateHash' '897c1115209377f8ec1d1ce79224f655f433b6d06fab01ca505ef85ee92ba8ce' $report.stateHash
     Assert-SmokeValue 'targetsDestroyed' 0 $report.targetsDestroyed
     Assert-SmokeValue 'mode' 'Walker' $report.mode
     Assert-SmokeValue 'level100OpeningTicksRemaining' 0 $report.level100OpeningTicksRemaining

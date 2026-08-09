@@ -24,6 +24,11 @@ public static class StateHasher
         using (var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true))
         {
             writer.Write(s_magic);
+            // 35: added the Walker and Jet selected-weapon slots plus the Twin
+            // Vulcan reload countdown. Active flags alone cannot reconstruct
+            // selection because enabling a weapon does not steal the current
+            // slot; the reload countdown changes whether the next Fire acts.
+            //
             // 34: added canonical Aquila augment charge/active state and the
             // ordered per-tick player-damage stream. This replaces direct hull
             // subtraction with the released shield/augment damage boundary;
@@ -55,7 +60,7 @@ public static class StateHasher
             // 31: added the ordered Level100WeaponFireEvents stream. Every
             // hashed tick gains its four-byte count, so this bump moves every
             // pinned hash regardless of whether a weapon fires.
-            writer.Write(34);
+            writer.Write(35);
             writer.Write(state.Tick);
             writer.Write(state.Seed);
             writer.Write(state.InitialLevel100TutorialProgress.Introduction);
@@ -120,6 +125,7 @@ public static class StateHasher
             writer.Write(state.JetGroundedSlowTicks);
             writer.Write(state.JetStallTicks);
             writer.Write(state.FireCooldownTicksRemaining);
+            writer.Write(state.TwinVulcanReloadTicksRemaining);
             writer.Write(state.Level100OpeningTicksRemaining);
             writer.Write(state.Level100PlayerActive);
             writer.Write(state.Level100FlightEnabled);
@@ -127,6 +133,8 @@ public static class StateHasher
             writer.Write(state.Level100VulcanCannonEnabled);
             writer.Write(state.Level100MechVulcanCannonEnabled);
             writer.Write(state.Level100MissilePodEnabled);
+            writer.Write((int)state.Level100WalkerSelectedWeapon);
+            writer.Write((int)state.Level100JetSelectedWeapon);
             writer.Write(state.Level100HudEmphasisMask);
             WriteLevel100Mission(writer, state.Level100Mission);
             WriteLevel100Events(writer, state.Level100MissionEvents);

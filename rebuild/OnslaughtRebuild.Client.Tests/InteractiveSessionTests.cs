@@ -1779,8 +1779,12 @@ public sealed class InteractiveSessionTests
         // navigation objective. The native report agrees field for field:
         // tick 2148, thirteen delivered messages, four objective markers, nine
         // target visuals, and the whole retail-geometry block are all unchanged.
+        // MOVED 2026-08-09 by StateHasher v35. The selected Walker/Jet slots
+        // and Twin Vulcan reload countdown are future-affecting state, so they
+        // are now serialized. This scenario still ends on Pulse Cannon / Mech
+        // Vulcan with reload zero; the gameplay assertions above are unchanged.
         Assert.Equal(
-            "e41f55ff98b7d6e7b17a5c85e443533c46147dc81d2b0188ea56bbd89277dc16",
+            "897c1115209377f8ec1d1ce79224f655f433b6d06fab01ca505ef85ee92ba8ce",
             StateHasher.ComputeHex(session.CurrentSnapshot));
     }
 

@@ -253,7 +253,9 @@ public enum SimActions : ushort
     /// <summary>
     /// <c>BUTTON_MECH_CHANGE_WEAPON</c> <c>0x14</c>, shipped row 12
     /// (<c>active=1</c>, mouse device <c>0x10</c> code 2). DECLARED, NOT
-    /// IMPLEMENTED: Core has no selected-weapon state.
+    /// IMPLEMENTED: Core now preserves the selected Walker and Jet slots, but
+    /// changing them would expose the still-unimplemented Missile Pod launch
+    /// law and charge/store eligibility gate.
     /// <see cref="SimInput.Validate"/> rejects it.
     /// </summary>
     ChangeWeapon = 1 << 6,
@@ -535,6 +537,7 @@ public sealed record WorldSnapshot(
     int JetGroundedSlowTicks,
     int JetStallTicks,
     int FireCooldownTicksRemaining,
+    int TwinVulcanReloadTicksRemaining,
     int Level100OpeningTicksRemaining,
     bool Level100PlayerActive,
     bool Level100FlightEnabled,
@@ -542,6 +545,8 @@ public sealed record WorldSnapshot(
     bool Level100VulcanCannonEnabled,
     bool Level100MechVulcanCannonEnabled,
     bool Level100MissilePodEnabled,
+    Level100MissionWeapon Level100WalkerSelectedWeapon,
+    Level100MissionWeapon Level100JetSelectedWeapon,
     int Level100HudEmphasisMask,
     Level100MissionSnapshot Level100Mission,
     IReadOnlyList<Level100MissionEvent> Level100MissionEvents,
