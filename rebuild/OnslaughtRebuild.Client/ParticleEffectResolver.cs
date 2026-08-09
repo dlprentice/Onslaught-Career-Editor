@@ -13,8 +13,8 @@ namespace OnslaughtRebuild.Client;
 /// a <see cref="ParticleDescriptorType.Mesh"/> fragment, a
 /// <see cref="ParticleDescriptorType.Trail"/>, a
 /// <see cref="ParticleDescriptorType.Mover"/>, a
-/// <see cref="ParticleDescriptorType.Volume"/>, or a
-/// <see cref="ParticleDescriptorType.ParamFunction"/> modifier - the resolver
+/// <see cref="ParticleDescriptorType.PMesh"/>, or a
+/// <see cref="ParticleDescriptorType.Function"/> modifier - the resolver
 /// records it in <see cref="ParticleEffectPlan.Unimplemented"/> and drops it.
 /// It never substitutes a plausible number.</para>
 /// </summary>
@@ -25,7 +25,7 @@ public static class ParticleEffectResolver
     /// and <c>Anim_Speed</c> are all denominated in these.
     ///
     /// <para>MEASURED: all 46 shipped
-    /// <see cref="ParticleDescriptorType.ParamFunction"/> records author
+    /// <see cref="ParticleDescriptorType.Function"/> records author
     /// <c>Gameturn_Scale 20.000000</c>, and the released simulation's base
     /// cadence is independently established at 20 Hz
     /// (<c>rebuild/PROVENANCE.md</c>: "observes it at the exact 20 Hz base
@@ -220,10 +220,10 @@ public static class ParticleEffectResolver
                     case ParticleDescriptorType.Timeline:
                         VisitTimeline(descriptor, path, startTurn);
                         break;
-                    case ParticleDescriptorType.Random:
+                    case ParticleDescriptorType.Selector:
                         VisitRandom(descriptor, path, startTurn, emitter);
                         break;
-                    case ParticleDescriptorType.System:
+                    case ParticleDescriptorType.FoR:
                         VisitSystem(descriptor, path, startTurn);
                         break;
                     default:
@@ -531,7 +531,7 @@ public static class ParticleEffectResolver
                     emitter.FloatWithModifier("Initial_Velocity_Y").Value,
                     emitter.FloatWithModifier("Initial_Velocity_Z").Value),
                 OutwardVelocity: emitter.FloatWithModifier("Outward_Velocity").Value,
-                VelocityRandomness: emitter.FloatWithModifier("Velocity_Randomness").Value);
+                VelocityRandomness: emitter.RetailDirectFloat("Velocity_Randomness"));
 
             Visit(child, $"{path} > {childName}", startTurn, context);
         }

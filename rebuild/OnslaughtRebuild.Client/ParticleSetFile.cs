@@ -13,13 +13,14 @@ namespace OnslaughtRebuild.Client;
 /// (<c>MainSet.par</c> sha256 <c>a51fe441…</c>, <c>Frontend.par</c> sha256
 /// <c>01a4c73d…</c>, <c>ModelViewer.par</c> sha256 <c>32d85d1f…</c>, read from
 /// <c>local-lab/safe-copy-bea-pristine/data/ParticleSets/</c>): 1,479
-/// descriptors across exactly these twelve type ids. Type id <c>3</c> is not
-/// used by any shipped descriptor, so the enum deliberately has a hole there
-/// rather than inventing a name for it.</para>
+/// descriptors across twelve instantiated type ids. Type id <c>3</c> is not
+/// used by the shipped corpus, but retail's exact factory and RTTI identify it
+/// as <c>CPDModifier</c>, so it is retained as a proven dormant type.</para>
 ///
-/// <para>The names are INFERRED from each type's field set and from how the
-/// records reference one another. They are labels for our own code; the file
-/// itself carries only the integer.</para>
+/// <para>The names are now bound to the retail RTTI owners and factory switch
+/// at <c>0x004CC020</c>. The exact thirteen loader bodies and all accepted token
+/// ids are rederived by <c>tools/re_tokenarchive_parser_contract.py</c>. Type 3
+/// is a real <c>CPDModifier</c> even though no shipped descriptor uses it.</para>
 /// </summary>
 public enum ParticleDescriptorType
 {
@@ -29,11 +30,14 @@ public enum ParticleDescriptorType
     /// <summary>Type 2, 338 records. Emits another descriptor over time.</summary>
     Emitter = 2,
 
+    /// <summary>Type 3. Retail <c>CPDModifier</c>; dormant in the shipped corpus.</summary>
+    Modifier = 3,
+
     /// <summary>
     /// Type 4, 40 records. Four weighted alternatives
     /// (<c>Particle_Descriptor_0..3</c> with <c>Probability_0..3</c>).
     /// </summary>
-    Random = 4,
+    Selector = 4,
 
     /// <summary>Type 5, 97 records. A start/transition/end RGB ramp.</summary>
     ColourRange = 5,
@@ -57,16 +61,138 @@ public enum ParticleDescriptorType
     /// Type 10, 46 records. A parametric curve used as a modifier on any
     /// <c>float + modifier</c> field.
     /// </summary>
-    ParamFunction = 10,
+    Function = 10,
 
     /// <summary>Type 11, 13 records. A rigid mesh fragment (debris).</summary>
     Mesh = 11,
 
     /// <summary>Type 12, 24 records. An <c>Initial</c>/<c>Death</c>/<c>Mover</c> triple.</summary>
-    System = 12,
+    FoR = 12,
 
     /// <summary>Type 13, 67 records. A cylinder/sphere shell volume.</summary>
-    Volume = 13,
+    PMesh = 13,
+}
+
+/// <summary>The seven parse actions in retail's 125-byte token-kind table.</summary>
+public enum RetailParticleTokenParseKind
+{
+    Unrecognized = -1,
+    InvalidOrUnknown = 0,
+    MarkerNoValue = 1,
+    DirectFloat = 2,
+    DirectInt = 3,
+    RawRemainderString = 4,
+    FloatWithOptionalReference = 5,
+    ReferenceName = 6,
+}
+
+/// <summary>
+/// Specimen-bound identities used by retail's particle archive reader.
+/// The reconstruction's lossless file parser stays permissive; callers use
+/// this class when they need exact retail acceptance or loader ownership.
+/// </summary>
+public static class RetailParticleTokenContract
+{
+    /// <summary>Returns the retail parser action for one exact token name.</summary>
+    public static bool TryGetParseKind(
+        string tokenName,
+        out RetailParticleTokenParseKind kind)
+    {
+        kind = tokenName switch
+        {
+            "ParticleSystemEd_File_(C)2000_Lost_Toys_Ltd" or
+            "*****************************************************************" =>
+                RetailParticleTokenParseKind.MarkerNoValue,
+
+            "File_Version" or "Final_Radius" or "Anim_Speed" or
+            "Velocity_Damp" or "Life_Pct" or "Velocity_Randomness" or
+            "Transition_Point" or "RandomSX" or "RandomSY" or "RandomSZ" or
+            "Width" or "Start_Width" or "Wiggle_Factor" or "Disperse_Rate" or
+            "SegmentLength" or "Yaw" or "Pitch" or "Roll" or
+            "Angular_Momentum" => RetailParticleTokenParseKind.DirectFloat,
+
+            "Num_Particle_Descriptors" or "Particle_Descriptor_Type" or
+            "Gravity" or "Bounce" or "Fade_Col" or "Blend_Mode" or
+            "Texture_Number" or "Axis_Aligned" or "Anim_Type" or "End_Frame" or
+            "Texture_Size" or "Random_Start_Frame" or "2D" or "Life" or
+            "Transmit_Life" or "Transmit_FoR" or "Interpolated_Emission" or
+            "Pass_Num_Particles" or "Probability_0" or "Probability_1" or
+            "Probability_2" or "Probability_3" or "Use_End" or
+            "Use_Transition" or "Num_Entries" or "Time" or "Type" or
+            "Ring_Axis" or "Hemisphere" or "Num_Particles" or "Hollow" or
+            "Num_Points" or "Taper_Start" or "Width_With_Life" or
+            "Fade_Point" or "Use_Segment_Length" or "Manual_Wiggle_Enabled" or
+            "Flat" or "Param_Function" or "Clip" or "Value_Type" or
+            "Offset_Gameturn" or "Auto_Centre" or "Cylinder_NumPtsAxial" or
+            "Cylinder_NumPtsRadial" or "Sphere_NumPtsAx" or
+            "Sphere_NumPtsRad" => RetailParticleTokenParseKind.DirectInt,
+
+            "Particle_Descriptor_Name" or "Texture" or "Mesh" =>
+                RetailParticleTokenParseKind.RawRemainderString,
+
+            "Radius" or "Length" or "Emit_Per_Turn" or "Initial_Velocity_X" or
+            "Initial_Velocity_Y" or "Initial_Velocity_Z" or
+            "Transmit_Velocity" or "Outward_Velocity" or "Start_Red" or
+            "Start_Green" or "Start_Blue" or "End_Red" or "End_Green" or
+            "End_Blue" or "Transition_Red" or "Transition_Green" or
+            "Transition_Blue" or "Wiggle_Length" or "Yaw_Length" or
+            "GravityPC" or "Param_A" or "Param_B" or "Param_C" or "Param_D" or
+            "Gameturn_Scale" or "Tile_U" or "Tile_V" or "Scroll_U" or
+            "Scroll_V" or "Cylinder_Radius" or "Cylinder_Radius2" or
+            "Cylinder_Length" or "Sphere_RadiusTime" or
+            "Sphere_Latitude_Start" or "Sphere_Latitude_End" or
+            "Sphere_Longitude_Start" or "Sphere_Longitude_End" =>
+                RetailParticleTokenParseKind.FloatWithOptionalReference,
+
+            "Modifier" or "Colour_Range" or "Particle_Descriptor" or "Shape" or
+            "Mover" or "Particle_Descriptor_0" or "Particle_Descriptor_1" or
+            "Particle_Descriptor_2" or "Particle_Descriptor_3" or
+            "Yaw_Function" or "Pitch_Function" or "Roll_Function" or
+            "Impact_Spawnee" or "Initial" or "Death" or "Colour_Range2" =>
+                RetailParticleTokenParseKind.ReferenceName,
+
+            _ => RetailParticleTokenParseKind.Unrecognized,
+        };
+        return kind != RetailParticleTokenParseKind.Unrecognized;
+    }
+
+    /// <summary>Returns the exact retail RTTI class selected for a type id.</summary>
+    public static string DescriptorClassName(int typeId) => typeId switch
+    {
+        1 => "CPDSimpleSprite",
+        2 => "CPDEmitter",
+        3 => "CPDModifier",
+        4 => "CPDSelector",
+        5 => "CPDColourRange",
+        6 => "CPDTimeline",
+        7 => "CPDShape",
+        8 => "CPDTrail",
+        9 => "CPDMover",
+        10 => "CPDFunction",
+        11 => "CPDMesh",
+        12 => "CPDFoR",
+        13 => "CPDPMesh",
+        _ => throw new InvalidDataException($"Retail has no particle descriptor type {typeId}."),
+    };
+
+    /// <summary>Returns the exact retail token-loader entry for a type id.</summary>
+    public static uint DescriptorLoaderAddress(int typeId) => typeId switch
+    {
+        1 => 0x004C05C0,
+        2 => 0x004C1810,
+        3 => 0x004C20C0,
+        4 => 0x004C2130,
+        5 => 0x004C2300,
+        6 => 0x004C24C0,
+        7 => 0x004C2B70,
+        8 => 0x004C3120,
+        9 => 0x004C4420,
+        10 => 0x004C4840,
+        11 => 0x004C4B00,
+        12 => 0x004C5330,
+        13 => 0x004C5730,
+        _ => throw new InvalidDataException($"Retail has no particle descriptor type {typeId}."),
+    };
 }
 
 /// <summary>
@@ -164,9 +290,24 @@ public sealed class ParticleDescriptor
         float.Parse(Require(key), NumberStyles.Float, CultureInfo.InvariantCulture);
 
     /// <summary>
-    /// Reads a <c>float + modifier</c> field. The corpus authors 5,166 of
+    /// Reads the numeric prefix exactly like retail's direct-float token arm.
+    /// That arm uses one <c>%f</c> conversion and ignores a trailing field.
+    /// This matters for <c>Velocity_Randomness</c>: the writer emits an optional
+    /// modifier name, but the reader classifies it as a direct float and leaves
+    /// the prior reference index stale.
+    /// </summary>
+    public float RetailDirectFloat(string key)
+    {
+        string raw = Require(key);
+        int space = raw.IndexOf(' ');
+        ReadOnlySpan<char> value = space < 0 ? raw.AsSpan() : raw.AsSpan(0, space);
+        return float.Parse(value, NumberStyles.Float, CultureInfo.InvariantCulture);
+    }
+
+    /// <summary>
+    /// Reads a <c>float + modifier</c> field. The corpus authors 5,034 of
     /// these; the modifier is either the literal <c>NONE</c> or the name of a
-    /// <see cref="ParticleDescriptorType.ParamFunction"/> descriptor, and those
+    /// <see cref="ParticleDescriptorType.Function"/> descriptor, and those
     /// names contain spaces, so the split is on the FIRST space only.
     /// </summary>
     public (float Value, string? Modifier) FloatWithModifier(string key)

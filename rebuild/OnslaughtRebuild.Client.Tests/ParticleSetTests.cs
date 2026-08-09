@@ -167,8 +167,8 @@ public sealed class ParticleSetTests
         Assert.Equal(1_479, corpusDescriptors);
         Assert.Equal(corpusDescriptors, corpusByType.Values.Sum());
 
-        // Twelve record types, with a deliberate hole at 3 - no shipped
-        // descriptor uses it, so ParticleDescriptorType does not name it.
+        // Twelve record types are authored. Retail's type 3 CPDModifier is now
+        // statically proven, but no shipped descriptor instantiates it.
         Assert.Equal(
             new Dictionary<int, int>
             {
@@ -187,6 +187,167 @@ public sealed class ParticleSetTests
             },
             corpusByType);
         Assert.DoesNotContain(3, corpusByType.Keys);
+        Assert.True(Enum.IsDefined(ParticleDescriptorType.Modifier));
+    }
+
+    /// <summary>
+    /// The pristine executable contains 124 case-sensitive token names and one
+    /// 125-byte parse-kind table. This recomputes the distinct shipped keys
+    /// from all three files and requires every one to land in that exact retail
+    /// partition. Unknown mod fields remain losslessly parseable, but they are
+    /// not silently described as retail-recognized tokens.
+    /// </summary>
+    [Fact]
+    public void RetailTokenTableCoversEveryShippedKeyExactly()
+    {
+        HashSet<string> tokenNames = new(StringComparer.Ordinal)
+        {
+            "ParticleSystemEd_File_(C)2000_Lost_Toys_Ltd",
+            "File_Version",
+            "Num_Particle_Descriptors",
+            "Particle_Descriptor_Type",
+            "Particle_Descriptor_Name",
+            ParticleSetFile.RecordSeparator,
+        };
+
+        foreach ((string name, _, _, _) in ShippedCorpus)
+        {
+            ParticleSetFile set = ParticleSetFile.Parse(
+                File.ReadAllBytes(Locate($"{ParticleSetDirectory}/{name}")));
+            foreach (ParticleDescriptor descriptor in set.Descriptors)
+            {
+                foreach (ParticleField field in descriptor.Fields)
+                {
+                    tokenNames.Add(field.Key);
+                }
+            }
+        }
+
+        Dictionary<RetailParticleTokenParseKind, int> byKind = [];
+        foreach (string tokenName in tokenNames)
+        {
+            Assert.True(
+                RetailParticleTokenContract.TryGetParseKind(tokenName, out var kind),
+                $"Shipped token '{tokenName}' is absent from the retail registry.");
+            byKind[kind] = byKind.GetValueOrDefault(kind) + 1;
+        }
+
+        Assert.Equal(124, tokenNames.Count);
+        Assert.Equal(
+            new Dictionary<RetailParticleTokenParseKind, int>
+            {
+                [RetailParticleTokenParseKind.MarkerNoValue] = 2,
+                [RetailParticleTokenParseKind.DirectFloat] = 19,
+                [RetailParticleTokenParseKind.DirectInt] = 47,
+                [RetailParticleTokenParseKind.RawRemainderString] = 3,
+                [RetailParticleTokenParseKind.FloatWithOptionalReference] = 37,
+                [RetailParticleTokenParseKind.ReferenceName] = 16,
+            },
+            byKind);
+        Assert.False(RetailParticleTokenContract.TryGetParseKind(
+            "Future_Modded_Field", out var unknown));
+        Assert.Equal(RetailParticleTokenParseKind.Unrecognized, unknown);
+    }
+
+    /// <summary>Factory type ids bind to exact retail RTTI loaders.</summary>
+    [Fact]
+    public void RetailDescriptorFactoryCoversAllThirteenTypes()
+    {
+        (string ClassName, uint Loader)[] expected =
+        [
+            ("CPDSimpleSprite", 0x004C05C0),
+            ("CPDEmitter", 0x004C1810),
+            ("CPDModifier", 0x004C20C0),
+            ("CPDSelector", 0x004C2130),
+            ("CPDColourRange", 0x004C2300),
+            ("CPDTimeline", 0x004C24C0),
+            ("CPDShape", 0x004C2B70),
+            ("CPDTrail", 0x004C3120),
+            ("CPDMover", 0x004C4420),
+            ("CPDFunction", 0x004C4840),
+            ("CPDMesh", 0x004C4B00),
+            ("CPDFoR", 0x004C5330),
+            ("CPDPMesh", 0x004C5730),
+        ];
+
+        for (int typeId = 1; typeId <= expected.Length; typeId++)
+        {
+            Assert.Equal(
+                expected[typeId - 1].ClassName,
+                RetailParticleTokenContract.DescriptorClassName(typeId));
+            Assert.Equal(
+                expected[typeId - 1].Loader,
+                RetailParticleTokenContract.DescriptorLoaderAddress(typeId));
+            Assert.True(Enum.IsDefined((ParticleDescriptorType)typeId));
+        }
+    }
+
+    /// <summary>
+    /// Retail's writer treats Velocity_Randomness as float-plus-reference, but
+    /// its reader's token table classifies it as a direct float. Every shipped
+    /// emitter masks the defect by placing it immediately after
+    /// Initial_Velocity_Z with the same NONE-or-missing suffix.
+    /// </summary>
+    [Fact]
+    public void VelocityRandomnessPinsTheMaskedRetailReaderDefect()
+    {
+        Assert.True(RetailParticleTokenContract.TryGetParseKind(
+            "Initial_Velocity_Z", out var priorKind));
+        Assert.True(RetailParticleTokenContract.TryGetParseKind(
+            "Velocity_Randomness", out var velocityKind));
+        Assert.Equal(RetailParticleTokenParseKind.FloatWithOptionalReference, priorKind);
+        Assert.Equal(RetailParticleTokenParseKind.DirectFloat, velocityKind);
+
+        int emitters = 0;
+        int noneSuffixes = 0;
+        int missingSuffixes = 0;
+        foreach ((string name, _, _, _) in ShippedCorpus)
+        {
+            ParticleSetFile set = ParticleSetFile.Parse(
+                File.ReadAllBytes(Locate($"{ParticleSetDirectory}/{name}")));
+            foreach (ParticleDescriptor emitter in set.Descriptors.Where(
+                descriptor => descriptor.Type == ParticleDescriptorType.Emitter))
+            {
+                int velocityIndex = -1;
+                for (int index = 0; index < emitter.Fields.Count; index++)
+                {
+                    if (emitter.Fields[index].Key == "Velocity_Randomness")
+                    {
+                        velocityIndex = index;
+                        break;
+                    }
+                }
+
+                Assert.True(velocityIndex > 0);
+                ParticleField prior = emitter.Fields[velocityIndex - 1];
+                ParticleField velocity = emitter.Fields[velocityIndex];
+                Assert.Equal("Initial_Velocity_Z", prior.Key);
+                Assert.NotNull(prior.Value);
+                Assert.NotNull(velocity.Value);
+
+                string priorSuffix = Suffix(prior.Value!);
+                string velocitySuffix = Suffix(velocity.Value!);
+                Assert.Equal(priorSuffix, velocitySuffix);
+                Assert.True(priorSuffix is "NONE" or "");
+                Assert.Equal(
+                    emitter.FloatWithModifier("Velocity_Randomness").Value,
+                    emitter.RetailDirectFloat("Velocity_Randomness"));
+
+                emitters++;
+                if (velocitySuffix == "NONE")
+                {
+                    noneSuffixes++;
+                }
+                else
+                {
+                    missingSuffixes++;
+                }
+            }
+        }
+
+        Assert.Equal(338, emitters);
+        Assert.Equal(336, noneSuffixes);
+        Assert.Equal(2, missingSuffixes);
     }
 
     /// <summary>
@@ -521,6 +682,12 @@ public sealed class ParticleSetTests
     }
 
     private static byte[] ReadMainSet() => File.ReadAllBytes(Locate(MainSetRelativePath));
+
+    private static string Suffix(string value)
+    {
+        int space = value.IndexOf(' ');
+        return space < 0 ? "" : value[(space + 1)..];
+    }
 
     private static string Locate(string repositoryRelativePath)
     {
