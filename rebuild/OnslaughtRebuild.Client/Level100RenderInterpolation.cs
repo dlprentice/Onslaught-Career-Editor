@@ -31,6 +31,7 @@ public static class Level100RenderInterpolation
     public const float TeleportMeters = 10f;
 
     private const float OrthonormalTolerance = 1e-3f;
+    private const float QuaternionLinearTolerance = 0.9995f;
 
     public static Level100RenderVector3 Lerp(
         Level100RenderVector3 previous,
@@ -139,18 +140,36 @@ public static class Level100RenderInterpolation
 
         (float px, float py, float pz, float pw) = ToQuaternion(previous);
         (float cx, float cy, float cz, float cw) = ToQuaternion(current);
-        if ((px * cx) + (py * cy) + (pz * cz) + (pw * cw) < 0f)
+        float dot = (px * cx) + (py * cy) + (pz * cz) + (pw * cw);
+        if (dot < 0f)
         {
             cx = -cx;
             cy = -cy;
             cz = -cz;
             cw = -cw;
+            dot = -dot;
         }
 
-        float x = px + ((cx - px) * alpha);
-        float y = py + ((cy - py) * alpha);
-        float z = pz + ((cz - pz) * alpha);
-        float w = pw + ((cw - pw) * alpha);
+        float previousWeight;
+        float currentWeight;
+        dot = Math.Clamp(dot, -1f, 1f);
+        if (dot > QuaternionLinearTolerance)
+        {
+            previousWeight = 1f - alpha;
+            currentWeight = alpha;
+        }
+        else
+        {
+            float angle = MathF.Acos(dot);
+            float inverseSin = 1f / MathF.Sin(angle);
+            previousWeight = MathF.Sin((1f - alpha) * angle) * inverseSin;
+            currentWeight = MathF.Sin(alpha * angle) * inverseSin;
+        }
+
+        float x = (px * previousWeight) + (cx * currentWeight);
+        float y = (py * previousWeight) + (cy * currentWeight);
+        float z = (pz * previousWeight) + (cz * currentWeight);
+        float w = (pw * previousWeight) + (cw * currentWeight);
         float length = MathF.Sqrt((x * x) + (y * y) + (z * z) + (w * w));
         if (length <= 0f || !float.IsFinite(length))
         {

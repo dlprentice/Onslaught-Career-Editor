@@ -444,6 +444,13 @@ poses. The current Level 100 walker, jet, and cockpit callers supply integral
 frames, so the separate `0x004B24D0` adjuster/round/wrap path remains explicitly
 unmodeled rather than being guessed into this API.
 
+Steam `Math__InterpolateVec4ByRatio` at `0x00577EAA` separately establishes a
+shortest-sign, sine-weighted spherical interpolation law for unit four-vectors.
+The presentation-only proper-rotation path now uses that law, retaining its
+near-parallel normalized-linear and non-orthonormal componentwise fallbacks.
+The static body does not yet prove that this exact retail helper owned every
+actor-render interpolation caller, so that wider call-path identity remains open.
+
 One fresh no-input control and two uninterrupted copied-retail repetitions used
 the same three-second idle, twelve-second forward hold, and fifteen-second rest
 over the authored Level 100 slope. Both active runs repeated the exact start

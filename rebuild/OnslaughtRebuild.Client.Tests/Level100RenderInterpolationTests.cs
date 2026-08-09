@@ -71,6 +71,17 @@ public sealed class Level100RenderInterpolationTests
     }
 
     [Fact]
+    public void TargetOrientationUsesSphericalRatherThanLinearQuaternionWeights()
+    {
+        Level100RenderBasis3 quarter = Level100RenderInterpolation.InterpolateBasis(
+            YawBasis(0f),
+            YawBasis(2f * MathF.PI / 3f),
+            0.25f);
+
+        AssertBasisEqual(YawBasis(MathF.PI / 6f), quarter);
+    }
+
+    [Fact]
     public void SpawnDespawnAndTeleportSuppressInterpolation()
     {
         Level100TargetVisualDescriptor previous = Target(
