@@ -3,7 +3,7 @@
 Status: active canonical synthesis of the current executable-analysis state; raw
 machine exports remain the address-level evidence behind this human-readable
 master
-Last updated: 2026-08-09 (Gen19 authority; Weapon41, CGame51, and CBattleEngine51 hypothesis passes complete)
+Last updated: 2026-08-09 (Gen19 authority; five bulk static-hypothesis cohorts complete)
 Verdict: **The verified live and tracked databases now contain 8,136 function
 boundaries. The latest backed-up batch added eleven exact Mission-native
 boundaries and shipped registry names, including `IScript__UnsetObjective`,
@@ -22,6 +22,19 @@ position-copy path plus one non-null sole-node `CBattleEngine::LockHit` removal
 path have crossed bounded runtime gates. This
 file is the integrated narrative and queue, not a
 claim that those gaps are solved.**
+
+Evidence: MEASURED — the pristine specimen, verified live-promotion POST
+readback, authoritative Generation-19 campaign bundle, tracked Ghidra snapshot,
+function-note/fullpass corpus, pinned source, finite shipped registries,
+copied-runtime probes, and the existing TTD corpus. SOURCE-backed and INFERRED
+claims are labelled where they carry less authority than shipped bytes or
+controlled runtime observation.
+Specimen: `BEA.exe.original.backup`, 2,506,752 bytes, MD5
+`3b456964020070efe696d2cc09464a55`, SHA-256
+`74154BFAE14DDC8ECB87A0766F5BC381C7B7F1AB334ED7A753040EDA1E1E7750`
+(`local-lab/safe-copy-bea-pristine/`, read-only). Runtime observations name the
+separate force-windowed copied target and hash when used. The installed retail
+executable is locally patched and is never the static specimen.
 
 A separate noncanonical scratch pass now covers all 41 paired JetPart/WalkerPart
 weapon-state bodies (6,941 exact body bytes): 38 previously opaque rows have
@@ -45,23 +58,25 @@ The third pass covers 51 `CBattleEngine` lifecycle, movement, targeting, lock,
 morph, cloak, and weapon-routing bodies (26,590 exact body bytes). It advances
 43 opaque rows to bounded C1-static hypotheses and repairs or confirms eight
 prior C1 rows. Eight names are proposed for correction, while seven retail-only
-rows are deliberately not equated to source. Together Weapon41, CGame51, and
-CBattleEngine51 advance 132 formerly opaque functions without a new capture or
-live-Ghidra mutation. The next bulk selector is the roughly 124-row `CUnit`
-cohort, not another single-function promotion lane.
+rows are deliberately not equated to source.
 
-Evidence: MEASURED — the pristine specimen, verified live-promotion POST
-readback, authoritative Generation-19 campaign bundle, tracked Ghidra snapshot,
-function-note/fullpass corpus, pinned source, finite shipped registries,
-copied-runtime probes, and the existing TTD corpus. SOURCE-backed and INFERRED
-claims are labelled where they carry less authority than shipped bytes or
-controlled runtime observation.
-Specimen: `BEA.exe.original.backup`, 2,506,752 bytes, MD5
-`3b456964020070efe696d2cc09464a55`, SHA-256
-`74154BFAE14DDC8ECB87A0766F5BC381C7B7F1AB334ED7A753040EDA1E1E7750`
-(`local-lab/safe-copy-bea-pristine/`, read-only). Runtime observations name the
-separate force-windowed copied target and hash when used. The installed retail
-executable is locally patched and is never the static specimen.
+Two more bulk passes cover 58 `CUnit` rows and 65 `CActor`/`CController`/
+`CPlayer`/`CPCController` rows. CUnit58 advances 40 opaque rows and repairs 17
+prior C1 rows while preserving `CUnit__ApplyDamage` at its existing C2 grade;
+the absent Stuart `Unit.cpp`/`Unit.h` prevents a source-equivalence claim.
+PlayerControlActor65 advances all 65 opaque rows, with 63 source-architecture
+joins and two retail-only POV helpers. Across all five cohorts, 237 formerly
+opaque functions now have bounded C1-static hypotheses and 28 prior C1 rows
+are repaired or confirmed.
+
+These are not paper-only queues: the 102 CGame/CBattleEngine rows and a second
+122-row CUnit/Player batch were applied to the disposable `HYP__` Ghidra
+project and read back in separate processes. The second batch changed exactly
+122 target names/comments plus one automatic default-named thunk following its
+renamed target; `ApplyDamage` was excluded and no other function or program
+metric changed except the aggregate comment digest. Live/tracked Ghidra remains
+untouched by all five semantic passes. The next selector is another disjoint
+50-plus cohort, not another single-function promotion lane.
 
 “Baseline” here means the repository-designated unpatched retail specimen. It
 is pristine only relative to the project's patch catalog; this research does

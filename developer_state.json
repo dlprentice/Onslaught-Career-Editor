@@ -11,7 +11,7 @@
     "ghidraRule": "Use HYP__ names on disposable projects freely in bulk. Canonical/live Ghidra changes are cohort promotions of at least 10 related functions unless a single change repairs corruption or unlocks the batch.",
     "toolingRule": "Reuse existing exporters, reducers, and batch mutators. A new authority owner is justified only by a current canonical mutation that existing owners cannot safely express.",
     "loopBreaker": "If two consecutive work blocks do not change a function, contract, residual, question, hypothesis, or rebuild-parity count, stop the lane immediately and select a broader or cheaper instrument.",
-    "scoreboard": "Bulk hypothesis overlay: 932/932 live FUN_* rows named HYP__ on an isolated project, zero unrelated function changes. Semantic frontier: 108/108 nonstructural functions carry explicit hypothesis-only roles, I/O/effects, confidence, and cheapest falsifiers in scratch Ghidra (54 script-native + 53 RTTI/virtual + 1 CRT near-clone), with 108/108 fresh readback. Mission cohort: 11/11 exact registry-linked boundaries and shipped names promoted to live and tracked Ghidra in one batch; function count 8,125 -> 8,136, existing function rows changed 0. Weapon-state cohort: 41/41 JetPart/WalkerPart bodies, 6,941 bytes; 38 OPAQUE rows now have bounded C1_STATIC hypotheses, 3 prior C1 rows are repaired, 13 misleading names are corrected or narrowed, and the rebuild consumes 10 contracts fully plus 4 partially through deterministic player-weapon selection state. CGame cohort: 51/51 lifecycle/control bodies, 22,256 bytes, 51 OPAQUE -> bounded C1_STATIC hypotheses, 0 renames, 1 stale comment repair; its retail/source divergence corrected the rebuild loss countdown from 5 seconds to 2 seconds. CBattleEngine cohort: 51/51 lifecycle/movement/targeting/weapon-routing bodies, 26,590 bytes; 43 OPAQUE -> bounded C1_STATIC hypotheses, 8 prior C1 rows repaired or confirmed, 8 proposed name corrections, and seven retail-only rows remain explicitly source-unequated. The three bulk static cohorts therefore advance 132 previously opaque functions without new capture or live-Ghidra mutation."
+    "scoreboard": "Bulk hypothesis overlay: 932/932 live FUN_* rows named HYP__ on an isolated project, zero unrelated function changes. Semantic frontier: 108/108 nonstructural functions carry explicit hypothesis-only roles, I/O/effects, confidence, and cheapest falsifiers in scratch Ghidra (54 script-native + 53 RTTI/virtual + 1 CRT near-clone), with 108/108 fresh readback. Mission cohort: 11/11 exact registry-linked boundaries and shipped names promoted to live and tracked Ghidra in one batch; function count 8,125 -> 8,136, existing function rows changed 0. Weapon41, CGame51, CBattleEngine51, CUnit58 and PlayerControlActor65 now cover 266 exact bodies: 237 formerly opaque functions have bounded C1_STATIC hypotheses, 28 prior C1 rows were repaired or confirmed, and ApplyDamage's existing C2 row was preserved without reinterpretation. The rebuild consumes 10 Weapon41 contracts fully plus 4 partially, and CGame51's retail/source divergence corrected the loss countdown from 5 seconds to 2 seconds. Scratch Ghidra has read back the 102 CGame/CBattleEngine rows and a second 122-row CUnit/Player batch; the latter changed only those 122 target names/comments plus one automatic default-named thunk following its renamed target. These hypothesis-only batches did not touch live or tracked Ghidra."
   },
   "current_re_authority": {
     "authorityClass": "FULL_REPLAY_CAMPAIGN_AUTHORITY",
@@ -117,6 +117,28 @@
         "resultSummary": "51/51 exact CBattleEngine lifecycle/movement/targeting/lock/morph/cloak/weapon-routing bodies; 26,590 exact body bytes; 43 OPAQUE -> bounded C1_STATIC hypotheses; 8 existing C1 rows repaired or confirmed; 8 proposed renames; 44 source-architecture joins plus seven explicitly RETAIL_ONLY rows; runtime outcomes, callee internals and C2 remain open",
         "rebuildCorrection": "CGame51's pristine CGame__DeclareLevelLost body overturned the pinned source's 5-second value: Level100MissionTiming now uses the retail 2-second failure countdown, with a focused player-death/water-loss test; the separate 15-second death pause/fade path remains open"
       },
+      "cgameBattleScratchBatch": {
+        "functions": "local-lab/ghidra-cgame-cbattle102-scratch-20260809-v1/functions.tsv; 7110054 bytes; SHA-256 fac73d989afd528f2bb8118209e609f840c07d88619274d7cb1242c6ffb98605",
+        "readback": "local-lab/ghidra-cgame-cbattle102-scratch-20260809-v1/readback.tsv; 107879 bytes; SHA-256 efdc06846d4e8d3a1563d0476f142b72e998fd7bf79a6e8c246658f9f38a4424",
+        "result": "102/102 intended CGame/CBattleEngine rows received HYP__ names and bounded comments; exactly those 102 function rows changed, with no body, boundary, type, parameter, frame, thunk, tag, byte, instruction, data, or reference change"
+      },
+      "cunitCohort": {
+        "contracts": "local-lab/ghidra-cunit58-static-20260809-v1/contracts.tsv; 59855 bytes; SHA-256 1e3caae1825707d31961ceebae01073c6d6707030066f91aba4c00dfb09e7928",
+        "report": "local-lab/ghidra-cunit58-static-20260809-v1/REPORT.md; 4080 bytes; SHA-256 2aedcd0515aa4981ac9f49662e0b8c1b26ab6635ea585001f0cd8ed6a7c5bdcc",
+        "result": "local-lab/ghidra-cunit58-static-20260809-v1/result.json; 3747 bytes; SHA-256 b6b6b6472610398b018a9766a163d8f735511e33c98df91ba056d0ec476219ba",
+        "resultSummary": "58 exact CUnit rows / 17,109 body bytes / 5,436 instructions / 710 xrefs; 40 OPAQUE -> C1_STATIC, 17 prior C1 rows repaired or confirmed, ApplyDamage preserved at C2, four rows remain runtime-dark, and no absent Unit.cpp/Unit.h source-equivalence claim is made"
+      },
+      "playerControlActorCohort": {
+        "contracts": "local-lab/ghidra-playercontrol65-static-20260809-v1/contracts.tsv; 59848 bytes; SHA-256 3e9031b3fe71928c866e986cc7625603d5d91dbcd75df9a1a324f0eb4f4b796c",
+        "report": "local-lab/ghidra-playercontrol65-static-20260809-v1/REPORT.md; 5536 bytes; SHA-256 ac3c2943ec89614c5e57af0723a032d10c501dce4c90b2308e35517aecb08083",
+        "result": "local-lab/ghidra-playercontrol65-static-20260809-v1/result.json; 6155 bytes; SHA-256 b1420af5ecbbcca8b90e9a1dd6f64deab565099b9917513b2e72633b674ea5a0",
+        "resultSummary": "65 exact CActor/CController/CPlayer/CPCController rows / 10,369 body bytes; all 65 OPAQUE -> C1_STATIC, 11 proposed name repairs, 63 source-architecture joins and two explicitly retail-only POV helpers; runtime/C2 and rebuild parity remain open"
+      },
+      "cunitPlayerScratchBatch": {
+        "functions": "local-lab/ghidra-cunit58-playercontrol65-scratch-20260809-v1/functions.tsv; 7111731 bytes; SHA-256 06f91aef5dc813b598a0a37285203005287d831711e2b3e0815ed3074d550328",
+        "readback": "local-lab/ghidra-cunit58-playercontrol65-scratch-20260809-v1/readback.tsv; 154932 bytes; SHA-256 453fd7b95745906325ea71db9c945976821d5f72872ee7155a34261a80cf01dc",
+        "result": "57 CUnit C1 rows plus 65 Player/Controller/Actor rows received explicit HYP__ names/comments in one disposable-project batch; ApplyDamage's C2 row was excluded; exact readback found 122 target-row changes plus one automatic DEFAULT-named thunk rename following CActor__DeclareInWater, with no other function or program metric change except the aggregate comment digest"
+      },
       "result": {
         "literalFunBefore": 932,
         "literalFunAfter": 0,
@@ -130,35 +152,35 @@
         "semanticC1Candidate": 14,
         "semanticC2Bounded": 1
       },
-      "nextQueue": "Weapon41, CGame51 and CBattleEngine51 are complete, totaling 132 formerly opaque functions advanced to bounded C1_STATIC hypotheses; 11 more prior C1 rows were repaired or confirmed. The next bulk selector is the exact CUnit cohort (about 124 rows / 26 KiB in the current Gen19 join), using existing dated decompiles and pinned Unit source; the selector audit must choose the whole cohort or a coherent 50+ subset before writing output."
+      "nextQueue": "Weapon41, CGame51, CBattleEngine51, CUnit58 and PlayerControlActor65 are complete, totaling 237 formerly opaque functions advanced to bounded C1_STATIC hypotheses and 28 prior C1 rows repaired or confirmed. ApplyDamage remains the preserved C2 exception. The active evidence cohort is the exact 50-row IScript bridge: 48 OPAQUE rows plus two existing C1 candidates, selected by unchanged address/name joins against dated W009/W010 evidence. The active reconstruction slice is the exact 11-contract CController/CPCController input-state adapter. No single-function lane is open."
     },
     "rankedNextFrontiers": [
       {
         "rank": 1,
-        "question": "Resolve the primary CBattleEngine lifecycle/movement/targeting/lock/morph/cloak/player-routing block as one 51-function static-contract cohort.",
-        "existingEvidence": "Canonical Gen19 joins all 51 exact entries selected from W001/W008 by current-name prefix CBattleEngine__; existing evidence covers 51 decompiles, 7,667 instruction rows and 79 xrefs, with 43 OPAQUE and 8 existing C1 rows across 26,590 body bytes. Pinned BattleEngine.cpp/h supplies architecture for 44 rows; seven retail-static/layout hypotheses remain narrowly labelled.",
-        "instrument": "Reuse the current scratch inventory and dated W001/W008 decompile, instruction and xref exports; join exact bodies to pristine bytes and pinned BattleEngine source, then emit one bounded 51-row hypothesis ledger without new capture or live mutation.",
-        "gate": "Require 51 exact body/range joins, explicit receiver/caller/callee/field effects and cheapest falsifiers, no source attribution for the seven retail-only hypotheses, C1_STATIC at most, and no runtime/callee-internal/morph-result/targeting-outcome overclaim.",
-        "reconstructionOwner": "Existing Simulation movement, targeting, weapon routing, damage and mode-transition owners; map only contracts with an obvious current owner.",
-        "why": "It can advance 43 opaque contracts and repair or confirm eight C1 rows in one high-rebuild-value pass with complete existing static evidence and no new tooling."
+        "question": "Resolve the exact 50-function IScript bridge as one static-contract cohort.",
+        "existingEvidence": "Canonical Generation 19 and the latest scratch inventory join 50 unchanged IScript__ entries selected from dated W009/W010 metadata. The cohort covers 8,147 body bytes, 50 decompiles / 98,932 bytes, 2,612 instructions and 56 real xrefs plus one explicit no-xref destructor sentinel. It contains 48 OPAQUE and two C1_CANDIDATE_PARTIAL rows; 23 are executed and 27 remain runtime-dark.",
+        "instrument": "Reuse the existing campaign, scratch inventory, W009/W010 decompiles, instructions and xrefs to emit one 50-row static-contract ledger and cheapest-falsifier queue. No capture, bespoke authority tool, or live Ghidra mutation.",
+        "gate": "Require 50 exact address/name/body joins, visible inputs/returns/writes/call order, explicit execution state and uncertainty, C1_STATIC at most, and no source/runtime/callee-internal success overclaim.",
+        "reconstructionOwner": "Existing Level100Mission and Level100ActorScriptRuntime owners where a contract maps cleanly; leave unmatched script bridges unmapped.",
+        "why": "It advances up to 48 opaque contracts in one pass and directly strengthens the retail-to-rebuild script bridge without creating another one-function lane."
       },
       {
         "rank": 2,
-        "question": "Extend CBattleEngine::LockHit from its admitted single-node path into null, absent, and multi-node behavior.",
-        "existingEvidence": "Generation 17 proves the non-null sole-matching-node unlink path and retains four explicit successors. Stuart source and pristine pseudocode expose the likely branch/list shape, while the current trace owns only one event.",
-        "instrument": "First derive a hypothesis matrix from the exact decompile, xrefs, list helpers, and Stuart source; then use the smallest disposable-copy or short retained-trace probe needed to discriminate only the unresolved branches.",
-        "gate": "Label every decompiler inference as provisional until a byte/source/runtime join supports it; reject branch-order, first-match, global-head, destructor, and return overclaims independently.",
-        "reconstructionOwner": "UNASSIGNED until the retail fired-lock container owner and semantics are evidence-bound",
-        "why": "It applies a hypothesis-first workflow to a high-value contract without weakening the authority boundary."
+        "question": "Carry the exact 11-contract CController/CPCController input-state adapter into the existing interactive-client owner.",
+        "existingEvidence": "Eight adjacent CController contracts cover Flush, DoMappings, mapped values, target access, action dispatch, target push/pop and vibration; the complete CPC triad adds GetJoyButtonOnce/On/Release. Seven are partially represented and four remain absent in InteractiveSession.",
+        "instrument": "Keep the existing InteractiveInput, SimInput, pending fields and Simulation.Step path; make supported buttons follow explicit once/on/release transitions in the current sampling and action assembly. Do not create a mapping framework or controller-target abstraction.",
+        "gate": "Use only focused InteractiveSession tests for press-hold-release-repress, repeated On versus one-shot Once, release-before-tick, and pause/resume stale-edge rejection. Leave target-stack and vibration explicitly unmapped.",
+        "reconstructionOwner": "rebuild/OnslaughtRebuild.Client/InteractiveSession.cs and existing InteractiveSessionTests.cs",
+        "why": "It moves 11 related contracts through one existing owner and one test seam while deliberately avoiding the absent generic retail controller framework."
       },
       {
         "rank": 3,
-        "question": "Exercise the remaining CTokenArchive::ReadNextToken runtime and error-path questions without overstating the Generation 18 static contract.",
-        "existingEvidence": "Generation 18 accounts for every shipped token name and parse-index entry, all 141 direct writer-call encodings, the exact 13 descriptor factory/RTTI/loader mappings, and the shipped ParticleSets corpus. Runtime allocation, malformed input, named token 32, overflow behavior, and complete downstream object effects remain explicitly open.",
-        "instrument": "Build the smallest copied-runtime corpus probe that isolates one open parser branch at a time, beginning with named token 32 and malformed/overflow controls, while retaining exact static expectations from the v7 proof.",
-        "gate": "Require deterministic positive, negative, malformed, and capacity controls; bind exact input bytes and output carriers; reject scan-count, allocation, alias, and error-path overclaims independently; advance beyond C1 only for reproduced bounded behavior.",
-        "reconstructionOwner": "rebuild/OnslaughtRebuild.Client/ParticleSetFile.cs and focused ParticleSetTests.cs",
-        "why": "It converts the strongest remaining static parser uncertainties into narrowly measured runtime contracts while preserving the honest C1 boundary."
+        "question": "Select and process the next disjoint 50-or-more-function evidence cohort after IScript50.",
+        "existingEvidence": "The dated fullpass metadata/decompile/instruction/xref waves and the exact latest scratch inventory already support deterministic address-based cohort selection. The five completed cohorts demonstrate that 40-65 related functions can be reviewed and read back without new capture or live mutation.",
+        "instrument": "Rank remaining class/system prefixes by opaque-count movement, exact body joins, evidence completeness and reconstruction leverage; choose one selector before opening any individual function investigation.",
+        "gate": "At least 50 exact disjoint functions, a countable opaque-to-C1 movement target, complete existing static evidence for the claimed boundary, and one lightweight ledger/report/result set. If no 50-row coherent cohort exists, use the largest coherent set above 25 rather than falling back to a single function.",
+        "reconstructionOwner": "Assigned only after the cohort contract map identifies an existing coherent owner",
+        "why": "This keeps the throughput constraint durable and prevents the queue from collapsing back into bespoke one-function promotion work."
       }
     ],
     "limitations": "Generation 19 remains the campaign authority and partitions the 19-byte UnsetObjective residual into exact 3-byte NOP / 13-byte function / 3-byte NOP children. Its IScript__UnsetObjective contract is C1_CANDIDATE_PARTIAL; runtime/refuter verdicts remain UNSCORED, runtime replays are zero, opaque retail callee 0x004E5BD0 remains open, and the rebuild mapping remains PARTIAL_CONTRACT. Separately, live and tracked Ghidra now contain 8,136 functions after a strictly structural eleven-function Mission-native batch; those live names/comments do not upgrade campaign semantic grades. The historical Atomic14 a504 receipt remains lost and explicitly unsubstituted."
