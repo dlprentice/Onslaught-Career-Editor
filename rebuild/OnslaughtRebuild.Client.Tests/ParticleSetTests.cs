@@ -739,25 +739,57 @@ public sealed class ParticleSetTests
     }
 
     [Fact]
-    public void PulseBoltTrailKeepsFiveAuthoredSimulationSamples()
+    public void PlayerProjectileTrailsUseAuthoredSimulationSamples()
     {
-        ParticleDescriptor descriptor = ParticleSetFile
-            .Parse(ReadMainSet())
-            .Require("Pulse Bolt Trail");
-        Assert.Equal(ParticleDescriptorType.Trail, descriptor.Type);
-        Assert.Equal(5, descriptor.Int("Num_Points"));
-        Assert.Equal(0.08f, descriptor.Float("Start_Width"));
-        Assert.Equal(0, descriptor.Int("Blend_Mode"));
-        Assert.Equal(-2, descriptor.Int("Life"));
-        Assert.True(Level100ProjectileTrailHistory.UsesAuthoredPulseTrail(
+        ParticleSetFile set = ParticleSetFile.Parse(ReadMainSet());
+        ParticleDescriptor pulse = set.Require("Pulse Bolt Trail");
+        Assert.Equal(ParticleDescriptorType.Trail, pulse.Type);
+        Assert.Equal(5, pulse.Int("Num_Points"));
+        Assert.Equal(0.08f, pulse.Float("Start_Width"));
+        Assert.Equal(0, pulse.Int("Blend_Mode"));
+        Assert.Equal(-2, pulse.Int("Life"));
+
+        ParticleDescriptor vulcan = set.Require("Mech Bullet");
+        Assert.Equal(ParticleDescriptorType.Trail, vulcan.Type);
+        Assert.True(
+            vulcan.Raw("Texture")?.EndsWith(
+                @"Particle\Bullet.tga",
+                StringComparison.OrdinalIgnoreCase) == true);
+        Assert.Equal(0, vulcan.Int("Blend_Mode"));
+        Assert.Equal(0.02f, vulcan.Float("Width"));
+        Assert.Equal(0.02f, vulcan.Float("Start_Width"));
+        Assert.Equal(3, vulcan.Int("Num_Points"));
+        Assert.Equal(-2, vulcan.Int("Life"));
+
+        Assert.True(Level100ProjectileTrailHistory.UsesAuthoredTrail(
             Level100ProjectileKind.MechPulseBoltMedium));
-        Assert.False(Level100ProjectileTrailHistory.UsesAuthoredPulseTrail(
+        Assert.True(Level100ProjectileTrailHistory.UsesAuthoredTrail(
             Level100ProjectileKind.MechBullet));
-        Assert.False(Level100ProjectileTrailHistory.UsesAuthoredPulseTrail(
+        Assert.True(Level100ProjectileTrailHistory.UsesAuthoredTrail(
             Level100ProjectileKind.MechAirBullet));
+        Assert.False(Level100ProjectileTrailHistory.UsesAuthoredTrail(
+            Level100ProjectileKind.None));
+        Assert.Equal(5, Level100ProjectileTrailHistory.AuthoredPointCount(
+            Level100ProjectileKind.MechPulseBoltMedium));
+        Assert.Equal(3, Level100ProjectileTrailHistory.AuthoredPointCount(
+            Level100ProjectileKind.MechBullet));
+        Assert.Equal(3, Level100ProjectileTrailHistory.AuthoredPointCount(
+            Level100ProjectileKind.MechAirBullet));
+        Assert.Equal(
+            SimulationConstants.ProjectileLifetimeTicks,
+            Level100ProjectileTrailHistory.AuthoredLifetimeTicks(
+                Level100ProjectileKind.MechPulseBoltMedium));
+        Assert.Equal(
+            SimulationConstants.MechBulletLifetimeTicks,
+            Level100ProjectileTrailHistory.AuthoredLifetimeTicks(
+                Level100ProjectileKind.MechBullet));
+        Assert.Equal(
+            SimulationConstants.MechAirBulletLifetimeTicks,
+            Level100ProjectileTrailHistory.AuthoredLifetimeTicks(
+                Level100ProjectileKind.MechAirBullet));
 
         var history = new Level100ProjectileTrailHistory(
-            descriptor.Int("Num_Points"),
+            pulse.Int("Num_Points"),
             SimulationConstants.ProjectileLifetimeTicks);
         var velocity = new Level100RenderVector3(1f, 0f, 0f);
         history.Advance(
@@ -780,14 +812,29 @@ public sealed class ParticleSetTests
         Assert.Equal(5.5f, rendered[^1].X);
         Assert.Equal(6f, history.Points[^1].X);
 
+        var vulcanHistory = new Level100ProjectileTrailHistory(
+            vulcan.Int("Num_Points"),
+            SimulationConstants.MechBulletLifetimeTicks);
+        vulcanHistory.Advance(
+            new Level100RenderVector3(1f, 0f, 0f),
+            velocity,
+            SimulationConstants.MechBulletLifetimeTicks - 1);
+        vulcanHistory.Advance(
+            new Level100RenderVector3(4f, 0f, 0f),
+            velocity,
+            SimulationConstants.MechBulletLifetimeTicks - 4);
+        Assert.Equal(
+            [2f, 3f, 4f],
+            vulcanHistory.Points.Select(point => point.X).ToArray());
+
         string source = File.ReadAllText(Locate(
             "rebuild/OnslaughtRebuild.Godot/FirstFlightWorldView.cs"));
         Assert.Contains(
-            "private const int PulseBoltTrailPointCount = 5;",
+            "private const float PulseBoltTrailWidthMeters = 0.08f;",
             source,
             StringComparison.Ordinal);
         Assert.Contains(
-            "private const float PulseBoltTrailWidthMeters = 0.08f;",
+            "private const float VulcanBulletTrailWidthMeters = 0.02f;",
             source,
             StringComparison.Ordinal);
 
@@ -797,8 +844,28 @@ public sealed class ParticleSetTests
             "private void BuildPulseCannonPresentation()");
         Assert.Contains("trailHistory.Advance(", update, StringComparison.Ordinal);
         Assert.Contains(
-            "Level100ProjectileTrailHistory.UsesAuthoredPulseTrail(\n" +
-                "                        projectile.Kind)",
+            "Level100ProjectileTrailHistory.UsesAuthoredTrail(projectile.Kind)",
+            update,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "CreatePulseBoltVisual(projectile.Id)",
+            update,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "CreateVulcanBulletVisual(projectile.Id)",
+            update,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "Level100ProjectileTrailHistory.AuthoredPointCount(projectile.Kind)",
+            update,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "Level100ProjectileTrailHistory.AuthoredLifetimeTicks(projectile.Kind)",
+            update,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "projectile.Kind == Level100ProjectileKind.MechPulseBoltMedium &&\n" +
+                "                    _pendingPulseCannonMuzzleFlashes > 0",
             update,
             StringComparison.Ordinal);
         Assert.DoesNotContain(
@@ -811,25 +878,54 @@ public sealed class ParticleSetTests
             "trailHistory.WithRenderedHead(rendered.Position)",
             update,
             StringComparison.Ordinal);
+        Assert.Contains(
+            "ProjectileTrailWidthMeters(projectile.Kind)",
+            update,
+            StringComparison.Ordinal);
         Assert.Contains("_projectileTrails.Remove(id);", update, StringComparison.Ordinal);
 
-        string visual = RequireSection(
+        string pulseVisual = RequireSection(
             source,
             "private Node3D CreatePulseBoltVisual(",
+            "private Node3D CreateVulcanBulletVisual(");
+        Assert.Contains("PulseBoltSprite", pulseVisual, StringComparison.Ordinal);
+        Assert.Contains("PulseBoltHalo", pulseVisual, StringComparison.Ordinal);
+        Assert.Contains("PulseBoltEnergyTrail", pulseVisual, StringComparison.Ordinal);
+        Assert.Contains("_pulseBoltTrailMaterial", pulseVisual, StringComparison.Ordinal);
+
+        string vulcanVisual = RequireSection(
+            source,
+            "private Node3D CreateVulcanBulletVisual(",
+            "private void UpdateProjectileTrail(");
+        Assert.Contains("_vulcanBulletTrailMaterial", vulcanVisual, StringComparison.Ordinal);
+        Assert.DoesNotContain("PulseBoltSprite", vulcanVisual, StringComparison.Ordinal);
+        Assert.DoesNotContain("PulseBoltHalo", vulcanVisual, StringComparison.Ordinal);
+        Assert.DoesNotContain("PulseBoltEnergyTrail", vulcanVisual, StringComparison.Ordinal);
+
+        string trailUpdater = RequireSection(
+            source,
+            "private void UpdateProjectileTrail(",
             "private static StandardMaterial3D CreatePulseParticleMaterial(");
-        Assert.Contains("Mesh.PrimitiveType.TriangleStrip", visual, StringComparison.Ordinal);
+        Assert.Contains("Mesh.PrimitiveType.TriangleStrip", trailUpdater, StringComparison.Ordinal);
         Assert.Contains(
-            "PulseBoltTrailWidthMeters * 0.5f",
-            visual,
+            "widthMeters * 0.5f",
+            trailUpdater,
             StringComparison.Ordinal);
-        Assert.Contains("surface.AddVertex", visual, StringComparison.Ordinal);
+        Assert.Contains("surface.AddVertex", trailUpdater, StringComparison.Ordinal);
+
+        string materializer = File.ReadAllText(Locate(
+            "rebuild/tools/materialize_retail_assets.py"));
         Assert.Contains(
-            "if (hasAuthoredPulseTrail)",
-            visual,
+            "Level100/Textures/vulcan-bullet-trail.texture.aya",
+            materializer,
             StringComparison.Ordinal);
         Assert.Contains(
-            "VisualPrimitives.CreateBox(",
-            visual,
+            "Particle%Bullet.tga(0)R5G6B5.aya",
+            materializer,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "42da4484967f48958e71c9529435306c284fbbc36fc1f7a6ca2befc1eac2f01c",
+            materializer,
             StringComparison.Ordinal);
     }
 

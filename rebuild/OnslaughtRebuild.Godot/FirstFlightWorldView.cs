@@ -9,8 +9,8 @@ namespace OnslaughtRebuild.GodotClient;
 public sealed partial class FirstFlightWorldView : Node3D
 {
     private const float UnitsToMeters = 0.001f;
-    private const int PulseBoltTrailPointCount = 5;
     private const float PulseBoltTrailWidthMeters = 0.08f;
+    private const float VulcanBulletTrailWidthMeters = 0.02f;
     private const float RetailWalkerCenterOfGravityHeight =
         Level100Terrain.WalkerCenterOfGravityMillimeters * UnitsToMeters;
     // 2*atan(0.75), from the released binary rather than from fitting.
@@ -155,6 +155,7 @@ public sealed partial class FirstFlightWorldView : Node3D
     private StandardMaterial3D _pulseBoltTrailMaterial = null!;
     private StandardMaterial3D _pulseBoltHaloMaterial = null!;
     private StandardMaterial3D _pulseBoltEnergyTrailMaterial = null!;
+    private StandardMaterial3D _vulcanBulletTrailMaterial = null!;
     private Texture2D _pulseCannonMuzzleFlashTexture = null!;
     private Texture2D _pulseImpactAnimatedTexture = null!;
     private Texture2D _pulseImpactShockwaveTexture = null!;
@@ -992,23 +993,30 @@ public sealed partial class FirstFlightWorldView : Node3D
             activeIds.Add(projectile.Id);
             if (!_projectiles.TryGetValue(projectile.Id, out Node3D? visual))
             {
-                bool hasAuthoredPulseTrail =
-                    Level100ProjectileTrailHistory.UsesAuthoredPulseTrail(
-                        projectile.Kind);
-                visual = CreatePulseBoltVisual(
-                    projectile.Id,
-                    hasAuthoredPulseTrail);
+                if (!Level100ProjectileTrailHistory.UsesAuthoredTrail(projectile.Kind))
+                {
+                    throw new InvalidDataException(
+                        $"Core exposed unsupported projectile kind {projectile.Kind}.");
+                }
+                visual = projectile.Kind switch
+                {
+                    Level100ProjectileKind.MechPulseBoltMedium =>
+                        CreatePulseBoltVisual(projectile.Id),
+                    Level100ProjectileKind.MechBullet or
+                        Level100ProjectileKind.MechAirBullet =>
+                        CreateVulcanBulletVisual(projectile.Id),
+                    _ => throw new InvalidDataException(
+                        $"Core exposed unsupported projectile kind {projectile.Kind}."),
+                };
                 AddChild(visual);
                 _projectiles.Add(projectile.Id, visual);
-                if (hasAuthoredPulseTrail)
-                {
-                    _projectileTrails.Add(
-                        projectile.Id,
-                        new Level100ProjectileTrailHistory(
-                            PulseBoltTrailPointCount,
-                            SimulationConstants.ProjectileLifetimeTicks));
-                }
-                if (_pendingPulseCannonMuzzleFlashes > 0)
+                _projectileTrails.Add(
+                    projectile.Id,
+                    new Level100ProjectileTrailHistory(
+                        Level100ProjectileTrailHistory.AuthoredPointCount(projectile.Kind),
+                        Level100ProjectileTrailHistory.AuthoredLifetimeTicks(projectile.Kind)));
+                if (projectile.Kind == Level100ProjectileKind.MechPulseBoltMedium &&
+                    _pendingPulseCannonMuzzleFlashes > 0)
                 {
                     SpawnPulseCannonMuzzleFlash(
                         ToPulseLaunchWorld(projectile),
@@ -1044,10 +1052,11 @@ public sealed partial class FirstFlightWorldView : Node3D
                     ToRenderVector(ToWorld(projectile)),
                     ToTrailVelocity(projectile),
                     projectile.RemainingTicks);
-                UpdatePulseBoltTrail(
-                    visual.GetNode<MeshInstance3D>("PulseBoltTrail"),
+                UpdateProjectileTrail(
+                    visual.GetNode<MeshInstance3D>("ProjectileTrail"),
                     trailHistory.WithRenderedHead(rendered.Position),
-                    visual.GlobalTransform.AffineInverse());
+                    visual.GlobalTransform.AffineInverse(),
+                    ProjectileTrailWidthMeters(projectile.Kind));
             }
         }
 
@@ -1075,6 +1084,11 @@ public sealed partial class FirstFlightWorldView : Node3D
             64,
             64,
             CuratedAyaTextureLoader.Compression.Dxt1);
+        Texture2D vulcanBulletTrail = CuratedAyaTextureLoader.Load(
+            "res://Assets/Level100/Textures/vulcan-bullet-trail.texture.aya",
+            64,
+            64,
+            CuratedAyaTextureLoader.Compression.Dxt1);
         Texture2D halo = CuratedAyaTextureLoader.Load(
             "res://Assets/Level100/Textures/mech-pulse-medium-halo.texture.aya",
             64,
@@ -1093,6 +1107,10 @@ public sealed partial class FirstFlightWorldView : Node3D
             trail,
             billboard: false,
             tint: new Color(0.5f, 0.5f, 0.5f));
+        _vulcanBulletTrailMaterial = CreatePulseParticleMaterial(
+            vulcanBulletTrail,
+            billboard: false,
+            tint: Colors.White);
         _pulseBoltHaloMaterial = CreatePulseParticleMaterial(
             halo,
             billboard: true,
@@ -1586,7 +1604,7 @@ public sealed partial class FirstFlightWorldView : Node3D
             durationSeconds);
     }
 
-    private Node3D CreatePulseBoltVisual(int id, bool hasAuthoredPulseTrail)
+    private Node3D CreatePulseBoltVisual(int id)
     {
         var root = new Node3D { Name = $"RetailPulseBolt{id}" };
         root.AddChild(new MeshInstance3D
@@ -1608,31 +1626,32 @@ public sealed partial class FirstFlightWorldView : Node3D
             new Vector3(0f, 0f, 0.1f),
             _pulseBoltEnergyTrailMaterial,
             new Vector3(90f, 0f, 0f)));
-        if (hasAuthoredPulseTrail)
+        root.AddChild(new MeshInstance3D
         {
-            root.AddChild(new MeshInstance3D
-            {
-                Name = "PulseBoltTrail",
-                MaterialOverride = _pulseBoltTrailMaterial,
-                Visible = false,
-            });
-        }
-        else
-        {
-            float trailLength = SimulationConstants.ProjectileSpeedPerTick / 1_000f;
-            root.AddChild(VisualPrimitives.CreateBox(
-                "PulseBoltTrail",
-                new Vector3(0.08f, 0.08f, trailLength),
-                new Vector3(0f, 0f, trailLength * 0.5f),
-                _pulseBoltTrailMaterial));
-        }
+            Name = "ProjectileTrail",
+            MaterialOverride = _pulseBoltTrailMaterial,
+            Visible = false,
+        });
         return root;
     }
 
-    private void UpdatePulseBoltTrail(
+    private Node3D CreateVulcanBulletVisual(int id)
+    {
+        var root = new Node3D { Name = $"RetailVulcanBullet{id}" };
+        root.AddChild(new MeshInstance3D
+        {
+            Name = "ProjectileTrail",
+            MaterialOverride = _vulcanBulletTrailMaterial,
+            Visible = false,
+        });
+        return root;
+    }
+
+    private void UpdateProjectileTrail(
         MeshInstance3D trail,
         IReadOnlyList<Level100RenderVector3> points,
-        Transform3D worldToProjectile)
+        Transform3D worldToProjectile,
+        float widthMeters)
     {
         if (points.Count < 2)
         {
@@ -1642,7 +1661,7 @@ public sealed partial class FirstFlightWorldView : Node3D
 
         var surface = new SurfaceTool();
         surface.Begin(Mesh.PrimitiveType.TriangleStrip);
-        float halfWidth = PulseBoltTrailWidthMeters * 0.5f;
+        float halfWidth = widthMeters * 0.5f;
         for (int index = 0; index < points.Count; index++)
         {
             Vector3 point = ToGlobal(ToGodotVector(points[index]));
@@ -1678,6 +1697,15 @@ public sealed partial class FirstFlightWorldView : Node3D
         trail.Mesh = surface.Commit();
         trail.Visible = true;
     }
+
+    private static float ProjectileTrailWidthMeters(Level100ProjectileKind kind) =>
+        kind switch
+        {
+            Level100ProjectileKind.MechPulseBoltMedium => PulseBoltTrailWidthMeters,
+            Level100ProjectileKind.MechBullet or
+                Level100ProjectileKind.MechAirBullet => VulcanBulletTrailWidthMeters,
+            _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
+        };
 
     private static StandardMaterial3D CreatePulseParticleMaterial(
         Texture2D texture,

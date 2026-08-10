@@ -5,7 +5,7 @@ using OnslaughtRebuild.Core;
 namespace OnslaughtRebuild.Client;
 
 /// <summary>
-/// The render-space state of a single pulse bolt: its world position and the
+/// The render-space state of a single projectile: its world position and the
 /// unnormalised direction its trail points along.
 /// </summary>
 public readonly record struct Level100ProjectileVisualState(
@@ -43,8 +43,29 @@ public sealed class Level100ProjectileTrailHistory
 
     public IReadOnlyList<Level100RenderVector3> Points => _points;
 
-    public static bool UsesAuthoredPulseTrail(Level100ProjectileKind kind) =>
-        kind == Level100ProjectileKind.MechPulseBoltMedium;
+    public static bool UsesAuthoredTrail(Level100ProjectileKind kind) =>
+        kind is Level100ProjectileKind.MechPulseBoltMedium or
+            Level100ProjectileKind.MechBullet or
+            Level100ProjectileKind.MechAirBullet;
+
+    public static int AuthoredPointCount(Level100ProjectileKind kind) => kind switch
+    {
+        Level100ProjectileKind.MechPulseBoltMedium => 5,
+        Level100ProjectileKind.MechBullet or
+            Level100ProjectileKind.MechAirBullet => 3,
+        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
+    };
+
+    public static int AuthoredLifetimeTicks(Level100ProjectileKind kind) => kind switch
+    {
+        Level100ProjectileKind.MechPulseBoltMedium =>
+            SimulationConstants.ProjectileLifetimeTicks,
+        Level100ProjectileKind.MechBullet =>
+            SimulationConstants.MechBulletLifetimeTicks,
+        Level100ProjectileKind.MechAirBullet =>
+            SimulationConstants.MechAirBulletLifetimeTicks,
+        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
+    };
 
     public void Advance(
         Level100RenderVector3 current,

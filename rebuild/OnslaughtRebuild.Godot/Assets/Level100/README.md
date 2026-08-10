@@ -3,7 +3,7 @@
 This directory owns the ignored local released heightfield,
 macro/detail/cloud-shadow terrain inputs, cube-25 sky, four close-pine meshes,
 three training target meshes, the two ambient aircraft meshes,
-nine Pulse Cannon/target-destruction
+eleven player-projectile/target-destruction
 effect textures, 26 exact mission effects, the tutorial music selection, and all
 51 English character messages in the accepted Level 100 mission table. The
 three shared front-end effects retain the startup lane's `Assets/Frontend` paths. Run
@@ -60,6 +60,7 @@ bit-identical retail collision geometry.
 | `Textures/material-overlay-a8trust5.texture.aya` | Released 128×128 `meshtex%a8trust5.tga(0)A8R8G8B8.aya` Warehouse material overlay stage *(row added 2026-07-28 — see below)* | `4CCDE973F9741C110A82F350E102F1A12C566FF3D3B1B4F5426F2BBF536BE843` |
 | `Textures/pulse-bolt-blue-spark.texture.aya` | Exact released 64×64 DXT2 `Particle%Blue Spark 2.tga(0)A4R4G4B4.aya` Pulse Bolt sprite | `B3730B1E9D7713910E0DE4BD0CB0DCFEFCB9CEB8F6402D50681A524ADC0DCB08` |
 | `Textures/pulse-bolt-blue-trail.texture.aya` | Exact released 64×64 DXT1 `Particle%Blue Trail.tga(0)R5G6B5.aya` Pulse Bolt trail | `2B4BC5CF8902D7EA8452F1068AC8F11514C8238A733CA33AAD7D6D0667688A63` |
+| `Textures/vulcan-bullet-trail.texture.aya` | Exact released 64×64 DXT1 `Particle%Bullet.tga(0)R5G6B5.aya` Walker/Jet Vulcan round trail | `42DA4484967F48958E71C9529435306C284FBBC36FC1F7A6CA2BEFC1EAC2F01C` |
 | `Textures/mech-pulse-medium-halo.texture.aya` | Exact released 64×64 DXT1 `Particle%Halo.tga(0)R5G6B5.aya` medium-round halo | `CDE6EFC90DC7958C5BDA425A04486E277BEB85A7F1C33FB9074F369E92D58EDB` |
 | `Textures/mech-pulse-medium-energy-trail.texture.aya` | Exact released 64×64 DXT1 `Particle%Energy Trail.tga(0)R5G6B5.aya` medium-round energy core | `64EDDC6B147C67886F41EF4D2BCC2A0606B453B01E4D93B9962F10CC07ABA92E` |
 | `Textures/pulse-impact-animated-blob.texture.aya` | Exact released 256×256 DXT2 `alparticle4` impact/smoke animation | `74085B280199E20B765640CFC3E417E6DA0FCBFB25384E129858A32F5DEB995D` |
