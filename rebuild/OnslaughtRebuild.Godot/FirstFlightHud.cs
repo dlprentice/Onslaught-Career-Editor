@@ -1972,6 +1972,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
 
         public bool IsReady =>
             assets.ForsetiIcon.GetSize() == new Vector2I(64, 64) &&
+            assets.BattleLineMarker.GetSize() == new Vector2I(16, 16) &&
             assets.RadarOutline.GetSize() == new Vector2I(128, 128) &&
             assets.WeaponOutline.GetSize() == new Vector2I(128, 128) &&
             assets.BattleLineOutline.GetSize() == new Vector2I(128, 128) &&
@@ -2018,10 +2019,59 @@ public sealed partial class FirstFlightHud : CanvasLayer
             BeginDesignSpace();
             DrawInstrumentOutlines(snapshot, hud);
             DrawDynamicCompass(snapshot, hud);
+            DrawBattleLineInfluence(hud);
             DrawBattleLineOutline(snapshot, hud);
             DrawForsetiIcon();
             DrawWorldMarkerReticles(snapshot, hud);
             EndDesignSpace();
+        }
+
+        /// <summary>
+        /// Provisional node view of Level 100's populated influence map. The
+        /// authored node positions and signed values are real; the compact
+        /// normalization and equal-weight actor accumulation are navigation
+        /// hypotheses, not the retail terrain-triangulated interior.
+        /// </summary>
+        private void DrawBattleLineInfluence(Level100HudSnapshot hud)
+        {
+            if (_socket != Level100HudLowerRightSocket.InfluenceOverlay ||
+                !hud.BattleLine.HasInfluenceValues ||
+                hud.BattleLine.InfluencePermille.Count != Level100HudInfluenceMap.Nodes.Count)
+            {
+                return;
+            }
+
+            IReadOnlyList<Level100HudInfluenceNode> nodes = Level100HudInfluenceMap.Nodes;
+            int minimumX = nodes.Min(node => node.Position.X);
+            int maximumX = nodes.Max(node => node.Position.X);
+            int minimumZ = nodes.Min(node => node.Position.Z);
+            int maximumZ = nodes.Max(node => node.Position.Z);
+            Rect2 instrument = BattleLineInstrumentRect();
+            Vector2 center = instrument.Position + new Vector2(49.08f, 48.46f);
+            const float span = 55f;
+            Vector2 markerHalfSize = assets.BattleLineMarker.GetSize() * 0.5f;
+
+            for (int index = 0; index < nodes.Count; index++)
+            {
+                Level100HudInfluenceNode node = nodes[index];
+                float x = center.X +
+                    ((((float)node.Position.X - minimumX) / (maximumX - minimumX) - 0.5f) * span);
+                float y = center.Y +
+                    ((0.5f - ((float)node.Position.Z - minimumZ) / (maximumZ - minimumZ)) * span);
+                short value = hud.BattleLine.InfluencePermille[index];
+                Color tint = value switch
+                {
+                    > 0 => RetailColor(0xff5050afu),
+                    < 0 => RetailColor(0xffaf0808u),
+                    _ => RetailColor(0xff606060u),
+                };
+                tint.A = 0.35f + (0.65f * MathF.Abs(value) / 1_000f);
+                DrawTextureRect(
+                    assets.BattleLineMarker,
+                    new Rect2(new Vector2(x, y) - markerHalfSize, assets.BattleLineMarker.GetSize()),
+                    false,
+                    tint);
+            }
         }
 
         /// <summary>
@@ -2055,11 +2105,9 @@ public sealed partial class FirstFlightHud : CanvasLayer
         /// </para>
         /// <para>
         /// UNVERIFIED AGAINST PIXELS, and it cannot be: this state occurs on
-        /// ZERO of the 183 pinned retail frames (see
-        /// <see cref="Level100HudBattleLineSnapshot.Unavailable"/>), so nothing
+        /// ZERO of the 183 pinned retail frames, so nothing
         /// here - placement, blend or premultiplication - has a retail frame to
-        /// be checked against. Level 100's producer reports
-        /// <see cref="Level100HudInfluenceMapState.Unknown"/> and never reaches
+        /// be checked against. Level 100's populated projection never reaches
         /// this draw; it exists so the recovered third row is implemented rather
         /// than merely described.
         /// </para>

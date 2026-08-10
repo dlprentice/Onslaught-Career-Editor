@@ -14,6 +14,7 @@ public sealed record Level100ActorCommandIntentSnapshot(
     Level100ActorId ActorId,
     int AiState,
     int Allegiance,
+    bool HasAllegianceOverride,
     Level100ActorCommandIntent Intent,
     Level100ActorId? TargetActorId,
     string? WaypointPath,
@@ -86,6 +87,7 @@ public sealed partial class Level100ActorMechanics
         internal required Level100ActorId ActorId { get; init; }
         internal int AiState { get; set; }
         internal int Allegiance { get; set; }
+        internal bool HasAllegianceOverride { get; set; }
         internal Level100ActorCommandIntent Intent { get; set; }
         internal Level100ActorId? TargetActorId { get; set; }
         internal string? WaypointPath { get; set; }
@@ -212,8 +214,12 @@ public sealed partial class Level100ActorMechanics
                     RequireState(command).AiState = command.Scalar;
                     break;
                 case Level100ActorScriptCommandKind.SetAllegiance:
-                    RequireState(command).Allegiance = command.Scalar;
+                {
+                    ActorState state = RequireState(command);
+                    state.Allegiance = command.Scalar;
+                    state.HasAllegianceOverride = true;
                     break;
+                }
                 case Level100ActorScriptCommandKind.Attack:
                     BeginAttack(command);
                     break;
@@ -1060,6 +1066,7 @@ public sealed partial class Level100ActorMechanics
             state.ActorId,
             state.AiState,
             state.Allegiance,
+            state.HasAllegianceOverride,
             state.Intent,
             state.TargetActorId,
             state.WaypointPath,
@@ -1074,6 +1081,7 @@ public sealed partial class Level100ActorMechanics
             ActorId = source.ActorId,
             AiState = source.AiState,
             Allegiance = source.Allegiance,
+            HasAllegianceOverride = source.HasAllegianceOverride,
             Intent = source.Intent,
             TargetActorId = source.TargetActorId,
             WaypointPath = source.WaypointPath,

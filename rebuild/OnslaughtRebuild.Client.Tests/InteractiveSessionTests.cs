@@ -1840,9 +1840,14 @@ public sealed class InteractiveSessionTests
         // gesture history and live dash countdown are future-affecting state,
         // so all seven values are now serialized. The firing-range assertions
         // above remain the consequential gate for this smoke path.
+        // MOVED 2026-08-10 by StateHasher v38. Actor mechanics now records
+        // whether SetAllegiance actually executed, because Friendly is both
+        // released value zero and the default on state created by unrelated
+        // AI/waypoint commands. The trajectory assertions above are unchanged.
+        string finalStateHash = StateHasher.ComputeHex(session.CurrentSnapshot);
         Assert.Equal(
-            "1bd823fa5cd7196f0f4893ddbaab5825d66c6d9a8ed61ebd634934a271e1af86",
-            StateHasher.ComputeHex(session.CurrentSnapshot));
+            "778342068ac405fcc52a7694ec61527cfbcebcf7d0c5754ec150b706e8b0f5b0",
+            finalStateHash);
     }
 
     private static InteractiveSession RunInteractiveSequence()

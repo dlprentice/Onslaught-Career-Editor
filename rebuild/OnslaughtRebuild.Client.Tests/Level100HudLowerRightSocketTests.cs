@@ -72,11 +72,8 @@ public sealed class Level100HudLowerRightSocketTests
     }
 
     /// <summary>
-    /// Unknown is not Empty. Core does not model
-    /// <c>CInfluenceMapManager</c>, and the 183 pinned retail frames show the
-    /// influence overlay on 20 of them and the Forseti icon on none, so a
-    /// client that answered "empty" would draw a sprite retail never shows in
-    /// Level 100.
+    /// Unknown is not Empty. Callers without level-specific evidence must not
+    /// guess: the wrong answer can select a different visible socket page.
     /// </summary>
     [Fact]
     public void AnUnknownInfluenceListDrawsNeitherRatherThanGuessing()
@@ -89,7 +86,7 @@ public sealed class Level100HudLowerRightSocketTests
     }
 
     [Fact]
-    public void Level100ReportsTheInfluenceListAsUnknownRatherThanEmpty()
+    public void AnUnavailableSnapshotReportsUnknownRatherThanEmpty()
     {
         Assert.Equal(
             Level100HudInfluenceMapState.Unknown,

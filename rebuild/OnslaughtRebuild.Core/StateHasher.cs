@@ -24,6 +24,11 @@ public static class StateHasher
         using (var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true))
         {
             writer.Write(s_magic);
+            // 38: records whether SetAllegiance actually executed. Allegiance 0
+            // is Friendly, but it is also the default value on actor state that
+            // an unrelated AI/waypoint command creates, so the value alone
+            // cannot reconstruct the presentation-visible override.
+            //
             // 37: added the Walker opposite-flick gesture history and live dash
             // countdown. All seven fields change whether later input starts or
             // remains locked in the released 15-update dash lifecycle.
@@ -67,7 +72,7 @@ public static class StateHasher
             // 31: added the ordered Level100WeaponFireEvents stream. Every
             // hashed tick gains its four-byte count, so this bump moves every
             // pinned hash regardless of whether a weapon fires.
-            writer.Write(37);
+            writer.Write(38);
             writer.Write(state.Tick);
             writer.Write(state.Seed);
             writer.Write(state.InitialLevel100TutorialProgress.Introduction);
@@ -295,6 +300,7 @@ public static class StateHasher
             writer.Write(actor.ActorId.Value);
             writer.Write(actor.AiState);
             writer.Write(actor.Allegiance);
+            writer.Write(actor.HasAllegianceOverride);
             writer.Write((int)actor.Intent);
             WriteNullableActorId(writer, actor.TargetActorId);
             WriteNullableString(writer, actor.WaypointPath);

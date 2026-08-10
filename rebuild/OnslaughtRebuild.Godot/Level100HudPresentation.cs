@@ -406,11 +406,10 @@ public sealed record Level100HudMessageDeliverySnapshot(
 /// </summary>
 /// <remarks>
 /// <c>CInfluenceMapManager__IsEmpty</c> (<c>0x0048c2d0</c>) is
-/// <c>return *(int *)(this + 0x14) &lt; 1</c> - a list count. Core does not model
-/// that manager at all, so this reconstruction cannot report either answer for
-/// Level 100 and says so rather than defaulting to <see cref="Empty"/>. See
-/// <see cref="Level100HudLowerRightSocketLaw"/> for why the difference is not
-/// cosmetic.
+/// <c>return *(int *)(this + 0x14) &lt; 1</c> - a list count. Level 100's authored
+/// BSWD nodes and the overlay seen in 20 pinned frames establish
+/// <see cref="Populated"/> for this level. <see cref="Unknown"/> remains distinct
+/// from <see cref="Empty"/> for callers without that level-specific evidence.
 /// </remarks>
 public enum Level100HudInfluenceMapState
 {
@@ -494,8 +493,8 @@ public sealed record Level100HudBattleLineSnapshot(
     Level100HudInfluenceMapState InfluenceMap)
 {
     /// <summary>
-    /// No influence magnitudes AND no answer about whether the released
-    /// manager holds any maps.
+    /// No influence magnitudes and no answer about whether a released manager
+    /// holds any maps. Level 100's projection no longer uses this fallback.
     /// </summary>
     /// <remarks>
     /// Reporting <see cref="Level100HudInfluenceMapState.Empty"/> here would be
@@ -773,8 +772,96 @@ public sealed class Level100HudPresentationState
             Array.AsReadOnly(_deliveredMessages.ToArray()),
             Array.AsReadOnly(Array.Empty<Level100HudHelpPrompt>()),
             Array.AsReadOnly(_deliveredHelp.ToArray()),
-            Level100HudBattleLineSnapshot.Unavailable,
+            ProjectBattleLine(snapshot),
             terminal);
+    }
+
+    /// <summary>
+    /// Presentation-only Level 100 influence estimate over the exact authored
+    /// BSWD nodes. Retail's target law at <c>0x0048c3b0</c> is the signed
+    /// friendly-minus-enemy ratio; equal contribution by each nearby live actor
+    /// is deliberately provisional until the per-unit accumulator is recovered.
+    /// </summary>
+    private Level100HudBattleLineSnapshot ProjectBattleLine(WorldSnapshot snapshot)
+    {
+        Dictionary<int, int> commandedAllegiance = snapshot.Level100ActorMechanics.Actors
+            .Where(actor => actor.HasAllegianceOverride)
+            .GroupBy(actor => actor.ActorId.Value)
+            .ToDictionary(group => group.Key, group => group.Last().Allegiance);
+        Level100ActorSnapshot[] actors = snapshot.Level100Actors.Actors
+            .Where(actor =>
+                actor.Active &&
+                actor.Lifecycle != Level100ActorLifecycle.Destroyed &&
+                !actor.Trigger.HasValue)
+            .ToArray();
+
+        IReadOnlyList<Level100HudInfluenceNode> nodes = Level100HudInfluenceMap.Nodes;
+        int[] friendlyByNode = new int[nodes.Count];
+        int[] enemyByNode = new int[nodes.Count];
+        for (int nodeIndex = 0; nodeIndex < nodes.Count; nodeIndex++)
+        {
+            Level100HudInfluenceNode node = nodes[nodeIndex];
+            long radiusSquared = (long)node.RadiusMillimeters * node.RadiusMillimeters;
+            foreach (Level100ActorSnapshot actor in actors)
+            {
+                SimVector3 position = actor.Pose.PositionMillimeters;
+                long deltaX = (long)position.X - node.Position.X;
+                long deltaZ = (long)position.Z - node.Position.Z;
+                if ((deltaX * deltaX) + (deltaZ * deltaZ) > radiusSquared)
+                {
+                    continue;
+                }
+
+                switch (ResolveAllegiance(actor, commandedAllegiance))
+                {
+                    case Level100HudAllegiance.Friendly:
+                        friendlyByNode[nodeIndex]++;
+                        break;
+                    case Level100HudAllegiance.Enemy:
+                        enemyByNode[nodeIndex]++;
+                        break;
+                }
+            }
+        }
+
+        short[] influence = nodes
+            .Select((node, nodeIndex) =>
+            {
+                int friendly = friendlyByNode[nodeIndex];
+                int enemy = enemyByNode[nodeIndex];
+                int total = friendly + enemy;
+                if (total > 0)
+                {
+                    return (short)(((friendly - enemy) * 1_000) / total);
+                }
+
+                int neighborFriendly = 0;
+                int neighborEnemy = 0;
+                foreach (Level100HudInfluenceLink link in Level100HudInfluenceMap.Links)
+                {
+                    int neighborIndex = link.FirstNodeId == node.Id
+                        ? link.SecondNodeId
+                        : link.SecondNodeId == node.Id
+                            ? link.FirstNodeId
+                            : -1;
+                    if (neighborIndex >= 0)
+                    {
+                        neighborFriendly += friendlyByNode[neighborIndex];
+                        neighborEnemy += enemyByNode[neighborIndex];
+                    }
+                }
+
+                // Retail's zero-local-total arm chooses enemy only for a strict
+                // neighboring enemy majority; ties and no-neighbor influence
+                // resolve friendly. Smoothing toward this target remains open.
+                return (short)(neighborEnemy > neighborFriendly ? -1_000 : 1_000);
+            })
+            .ToArray();
+
+        return new Level100HudBattleLineSnapshot(
+            HasInfluenceValues: true,
+            Array.AsReadOnly(influence),
+            Level100HudInfluenceMapState.Populated);
     }
 
     /// <summary>
@@ -797,6 +884,7 @@ public sealed class Level100HudPresentationState
     private Level100HudContactSnapshot[] ProjectContacts(WorldSnapshot snapshot)
     {
         Dictionary<int, int> commandedAllegiance = snapshot.Level100ActorMechanics.Actors
+            .Where(actor => actor.HasAllegianceOverride)
             .GroupBy(actor => actor.ActorId.Value)
             .ToDictionary(group => group.Key, group => group.Last().Allegiance);
 
@@ -818,12 +906,9 @@ public sealed class Level100HudPresentationState
             Level100ScannerPlacement placement =
                 Level100ScannerProjection.Place(deltaX, deltaZ, yaw);
 
-            int allegiance =
-                commandedAllegiance.TryGetValue(actor.ActorId.Value, out int commanded)
-                    ? commanded
-                    : _authoredAllegiance.TryGetValue(actor.DefinitionIdentity, out int authored)
-                        ? authored
-                        : (int)Level100HudAllegiance.Neutral;
+            Level100HudAllegiance allegiance = ResolveAllegiance(
+                actor,
+                commandedAllegiance);
 
             contacts.Add(new Level100HudContactSnapshot(
                 actor.ActorId.Value,
@@ -831,9 +916,7 @@ public sealed class Level100HudPresentationState
                 new SimVector2(
                     actor.Pose.LinearVelocityMillimetersPerTick.X,
                     actor.Pose.LinearVelocityMillimetersPerTick.Z),
-                Enum.IsDefined((Level100HudAllegiance)allegiance)
-                    ? (Level100HudAllegiance)allegiance
-                    : Level100HudAllegiance.Neutral,
+                allegiance,
                 // Medium is retail's DEFAULT blob, not a guess.
                 // CHud__LoadTextures (0x00481650) binds
                 // hud\ScannerBlobSmall/Medium/Large/RepairPad to CHud slots
@@ -851,6 +934,20 @@ public sealed class Level100HudPresentationState
         }
 
         return [.. contacts];
+    }
+
+    private Level100HudAllegiance ResolveAllegiance(
+        Level100ActorSnapshot actor,
+        IReadOnlyDictionary<int, int> commandedAllegiance)
+    {
+        int allegiance = commandedAllegiance.TryGetValue(actor.ActorId.Value, out int commanded)
+            ? commanded
+            : _authoredAllegiance.TryGetValue(actor.DefinitionIdentity, out int authored)
+                ? authored
+                : (int)Level100HudAllegiance.Neutral;
+        return Enum.IsDefined((Level100HudAllegiance)allegiance)
+            ? (Level100HudAllegiance)allegiance
+            : Level100HudAllegiance.Neutral;
     }
 
     private static Level100HudSpeaker ParseSpeaker(int speakerId)

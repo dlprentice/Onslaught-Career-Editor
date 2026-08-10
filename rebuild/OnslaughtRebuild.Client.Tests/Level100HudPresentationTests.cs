@@ -179,7 +179,9 @@ public sealed class Level100HudPresentationTests
         Assert.Equal(Level100HudWeapon.PulseCannon, hud.Weapon.SelectedWeapon);
         Assert.Null(hud.Weapon.PulseHeatPermille);
         Assert.Null(hud.Weapon.VulcanAmmo);
-        Assert.False(hud.BattleLine.HasInfluenceValues);
+        Assert.True(hud.BattleLine.HasInfluenceValues);
+        Assert.Equal(Level100HudInfluenceMapState.Populated, hud.BattleLine.InfluenceMap);
+        Assert.Equal(Level100HudInfluenceMap.Nodes.Count, hud.BattleLine.InfluencePermille.Count);
 
         Level100ActorId removedObjective = canonicalObjectives[0].ActorId;
         FrameAdvanceResult destruction = session.AdvanceFrameTicks(
@@ -199,6 +201,134 @@ public sealed class Level100HudPresentationTests
             requestedMessages.AddRange(
                 frame.Level100MissionEvents.OfType<Level100MessageRequested>());
         }
+    }
+
+    [Fact]
+    public void ProjectionPublishesSignedNodeInfluenceAndSelectsTheUnobscuredOverlay()
+    {
+        var session = new InteractiveSession(
+            Seed,
+            Level100TestActorDefinitions.Create());
+        WorldSnapshot baseline = session.CurrentSnapshot;
+        Level100ActorSnapshot[] contributors = baseline.Level100Actors.Actors
+            .Where(actor =>
+                actor.Active &&
+                actor.Lifecycle != Level100ActorLifecycle.Destroyed &&
+                !actor.Trigger.HasValue)
+            .DistinctBy(actor => actor.DefinitionIdentity)
+            .Take(2)
+            .ToArray();
+        Assert.Equal(2, contributors.Length);
+
+        Level100HudInfluenceNode node = Level100HudInfluenceMap.Nodes[0];
+        Level100ActorSnapshot friendly = contributors[0] with
+        {
+            Pose = contributors[0].Pose with
+            {
+                PositionMillimeters = new SimVector3(node.Position.X, 0, node.Position.Z),
+            },
+        };
+        Level100ActorSnapshot enemyFarAway = contributors[1] with
+        {
+            Pose = contributors[1].Pose with
+            {
+                PositionMillimeters = new SimVector3(1_000_000, 0, 1_000_000),
+            },
+        };
+        var allegiance = new Dictionary<string, int>(StringComparer.Ordinal)
+        {
+            [friendly.DefinitionIdentity] = (int)Level100HudAllegiance.Friendly,
+            [enemyFarAway.DefinitionIdentity] = (int)Level100HudAllegiance.Enemy,
+        };
+        var presentation = new Level100HudPresentationState(allegiance);
+        WorldSnapshot friendlyOnly = baseline with
+        {
+            Level100Actors = baseline.Level100Actors with
+            {
+                Actors = Array.AsReadOnly(new[] { friendly, enemyFarAway }),
+            },
+        };
+
+        Level100HudSnapshot first = presentation.Project(friendlyOnly, default);
+        Assert.True(first.BattleLine.HasInfluenceValues);
+        Assert.Equal(Level100HudInfluenceMapState.Populated, first.BattleLine.InfluenceMap);
+        Assert.Equal(Level100HudInfluenceMap.Nodes.Count, first.BattleLine.InfluencePermille.Count);
+        Assert.Equal(1_000, first.BattleLine.InfluencePermille[0]);
+        Assert.Equal(
+            Level100HudLowerRightSocket.InfluenceOverlay,
+            Level100HudLowerRightSocketLaw.Select(
+                messageBoxHoldsActiveMessage: false,
+                first.BattleLine.InfluenceMap));
+
+        Level100ActorSnapshot enemyAtNode = enemyFarAway with
+        {
+            Pose = enemyFarAway.Pose with
+            {
+                PositionMillimeters = new SimVector3(node.Position.X, 0, node.Position.Z),
+            },
+        };
+        WorldSnapshot contested = friendlyOnly with
+        {
+            Level100Actors = friendlyOnly.Level100Actors with
+            {
+                Actors = Array.AsReadOnly(new[] { friendly, enemyAtNode }),
+            },
+        };
+        Level100HudSnapshot second = presentation.Project(contested, default);
+        Assert.Equal(0, second.BattleLine.InfluencePermille[0]);
+        Assert.NotEqual(
+            first.BattleLine.InfluencePermille[0],
+            second.BattleLine.InfluencePermille[0]);
+
+        Level100ActorSnapshot friendlyFarAway = friendly with
+        {
+            Pose = friendly.Pose with
+            {
+                PositionMillimeters = new SimVector3(1_000_000, 0, 1_000_000),
+            },
+        };
+        var unrelatedCommandState = new Level100ActorCommandIntentSnapshot(
+            enemyAtNode.ActorId,
+            AiState: 2,
+            Allegiance: (int)Level100HudAllegiance.Friendly,
+            HasAllegianceOverride: false,
+            Level100ActorCommandIntent.Stopped,
+            TargetActorId: null,
+            WaypointPath: null,
+            WaypointPointIndex: 0,
+            WaypointCommandScalar: 0,
+            WaitForWaypointCompletion: false,
+            GroundFullGuideBaseTickPhase: 0);
+        WorldSnapshot authoredEnemy = contested with
+        {
+            Level100Actors = contested.Level100Actors with
+            {
+                Actors = Array.AsReadOnly(new[] { friendlyFarAway, enemyAtNode }),
+            },
+            Level100ActorMechanics = contested.Level100ActorMechanics with
+            {
+                Actors = Array.AsReadOnly(new[] { unrelatedCommandState }),
+            },
+        };
+        Level100HudSnapshot third = presentation.Project(authoredEnemy, default);
+        Assert.Equal(-1_000, third.BattleLine.InfluencePermille[0]);
+        Assert.Equal(
+            -1_000,
+            third.BattleLine.InfluencePermille[
+                Level100HudInfluenceMap.Nodes.Single(item => item.Id == 9).Id]);
+
+        WorldSnapshot explicitFriendly = authoredEnemy with
+        {
+            Level100ActorMechanics = authoredEnemy.Level100ActorMechanics with
+            {
+                Actors = Array.AsReadOnly(new[]
+                {
+                    unrelatedCommandState with { HasAllegianceOverride = true },
+                }),
+            },
+        };
+        Level100HudSnapshot fourth = presentation.Project(explicitFriendly, default);
+        Assert.Equal(1_000, fourth.BattleLine.InfluencePermille[0]);
     }
 
     [Theory]

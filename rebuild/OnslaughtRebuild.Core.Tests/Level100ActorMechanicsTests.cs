@@ -257,6 +257,7 @@ public sealed class Level100ActorMechanicsTests
             Assert.Single(mechanics.Snapshot.Actors);
         Assert.Equal(3, attacking.AiState);
         Assert.Equal(2, attacking.Allegiance);
+        Assert.True(attacking.HasAllegianceOverride);
         Assert.Equal(
             Level100ActorCommandIntent.Attacking,
             attacking.Intent);

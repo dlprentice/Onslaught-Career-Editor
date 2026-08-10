@@ -11,7 +11,7 @@
     "ghidraRule": "Use HYP__ names on disposable projects freely in bulk. Canonical/live Ghidra changes are cohort promotions of at least 10 related functions unless a single change repairs corruption or unlocks the batch.",
     "toolingRule": "Reuse existing exporters, reducers, and batch mutators. A new authority owner is justified only by a current canonical mutation that existing owners cannot safely express.",
     "loopBreaker": "If two consecutive work blocks do not change a function, contract, residual, question, hypothesis, or rebuild-parity count, stop the lane immediately and select a broader or cheaper instrument.",
-    "scoreboardCurrent20260810": "This supersedes the older narrative scoreboard below. Thirty-seven disjoint major static cohorts cover 4,701 exact functions: 4,658 formerly opaque rows now have bounded C1_STATIC hypotheses, 42 prior C1 rows were repaired or confirmed, and ApplyDamage remains the preserved C2 exception. 3,244 Generation-19 OPAQUE rows remain. The latest sealed disposable project is data-content110: 8,136 total functions, 4,418 HYP names, exactly 110 target rows changed, zero non-target/body/structural drift. The active rebuild slice implements six recovered Walker opposite-flick dash contracts with exact 25x trigger acceleration, strict sub-0.2-second window, 15-update input lock, final-four-update speed cap, and StateHasher v37. No single-function lane or bespoke authority build is active.",
+    "scoreboardCurrent20260810": "This supersedes the older narrative scoreboard below. Forty-one disjoint major static cohorts cover 5,133 exact functions: 5,090 formerly opaque rows now have bounded C1_STATIC hypotheses, 42 prior C1 rows were repaired or confirmed, and ApplyDamage remains the preserved C2 exception. 2,812 Generation-19 OPAQUE rows remain. The latest sealed disposable project is cinematic-camera101: 8,136 total functions, 5,286 HYP names, exactly 101 target rows changed, zero non-target/body/structural drift. The bounded nine-contract Level-100 battleline slice now changes the visible influence-overlay path from absent to a clearly labelled 13-node reconstruction; no single-function lane or bespoke authority build is active.",
     "scoreboard": "Bulk hypothesis overlay: 932/932 live FUN_* rows named HYP__ on an isolated project, zero unrelated function changes. Semantic frontier: 108/108 nonstructural functions carry explicit hypothesis-only roles, I/O/effects, confidence, and cheapest falsifiers in scratch Ghidra (54 script-native + 53 RTTI/virtual + 1 CRT near-clone), with 108/108 fresh readback. Mission cohort: 11/11 exact registry-linked boundaries and shipped names promoted to live and tracked Ghidra in one batch; function count 8,125 -> 8,136, existing function rows changed 0. Twenty-four disjoint major static cohorts now cover 2,864 exact bodies: 2,821 formerly opaque functions have bounded C1_STATIC hypotheses, 42 prior C1 rows were repaired or confirmed, and ApplyDamage's existing C2 row was preserved without reinterpretation. This leaves 5,081 Generation-19 opaque functions. The rebuild consumes 10 Weapon41 contracts fully plus 4 partially, CGame51 corrected the loss countdown from source's 5 seconds to retail's 2 seconds and now renders all four retained countdown overlays (Victory plus three Defeat reasons) instead of 0/4, the CController/CPCController slice corrected gun input from repeated held Fire to one retail BUTTON_RELEASE edge, CMeshPart retail evidence corrected fractional pose orientation from quaternion slerp to nine-component matrix interpolation, CDXEngine evidence replaced a 0.002-world-unit shoreline lift with retail's index-4 projection-depth bias law, Math51 replaced normalized quaternion lerp with the retail sine-weighted spherical law for proper render rotations, CDXTexture89 now keeps the cursor's stored DXT2 format separate from its measured eight-level RGBA8 upload representation, FrontEndCareer123 replaces the fixed Level-100 configuration page state with the one authored Aquila Prototype row, and the selected-weapon projection now exposes three retained Pulse/Vulcan icon identities while keeping Missile, ammo, heat and charge open. Focused owner tests and the Godot build pass. Thirteen completed disposable Ghidra batches have read back 102 CGame/CBattleEngine rows, 122 CUnit/Player rows, 120 IScript/World rows, 167 CMeshPart/CDXEngine/CEngine rows, 105 CFastVB/Math rows, 242 CDXTexture/CTexture rows, 221 CDXTexture115/CFastVB106 rows, 272 CFastVB149/FrontEndCareer123 rows, a 539-row Structural539 comment-only pass, 342 CRT rows, 174 remaining CDXTexture rows, 144 JmpThunk/DynInit comments, and 160 residual CFastVB/CTexture rows. The latest batch retained all 8,136 functions, advanced disposable HYP names 2,852 -> 3,012, changed exactly its 160 target name/comment rows, changed zero non-target/body/structural rows, and changed only the aggregate comment digest across 29 program metrics. None touched live or tracked Ghidra."
   },
   "current_re_authority": {
@@ -83,10 +83,10 @@
     },
     "activeHypothesisOverlay": {
       "status": "NONCANONICAL_SCRATCH_ONLY_NEVER_SYNC_TO_LIVE",
-      "projectPath": "local-lab/ghidra-data-content110-scratch-20260810-v1/project",
+      "projectPath": "local-lab/ghidra-cinematic-camera101-scratch-20260810-v1/project",
       "sourceCampaign": "Generation 19 campaign-functions.tsv joined by exact entry/body identity, then advanced only through disposable HYP__ batches with separate-process full-inventory readback",
       "hypothesisLedger": "local-lab/ghidra-bulk-hypothesis-overlay-20260809-v1/function-hypotheses.tsv; 350150 bytes; SHA-256 39208135c5d7a0a5378b7dfc9f7a7557f736f8f852ab2c4882c5af13d69a2441",
-      "readback": "local-lab/ghidra-data-content110-scratch-20260810-v1/functions.tsv; 7164157 bytes; SHA-256 40998d02a1d75b7265a6ae9d1f7fd702af71cc53cb24d888ed9068a831a37ba4",
+      "readback": "local-lab/ghidra-cinematic-camera101-scratch-20260810-v1/functions.tsv; 7178243 bytes; SHA-256 bce69902a20e6b533934efa2c29898ac0088983210d5b8d9ae4af2280ce6a8b8",
       "semanticFrontier": {
         "nativeHypotheses": "local-lab/ghidra-bulk-hypothesis-overlay-20260809-v1/frontier-108-evidence/native-hypotheses.tsv; 11053 bytes; SHA-256 a13b094d734dca01178ba2cb8a94c01687a2441fc6ad1a100845c9d980494729",
         "rttiAndNearCloneHypotheses": "local-lab/ghidra-bulk-hypothesis-overlay-20260809-v1/frontier-108-evidence/rtti-nearclone-hypotheses.tsv; 10973 bytes; SHA-256 9e05bed6cd408804871ac4c3d509c5ac15a3e3c97a9a424327523090500599d7",
@@ -136,6 +136,12 @@
         "resultSummary": "Core now retains the Walker input history needed for the released opposite-flick gesture, uses the strict less-than-four-tick 0.2-second window, applies the 25x trigger acceleration, locks movement input for the 15-update dash lifecycle, keeps 0.7 friction if ground contact is lost, and restores the normal speed cap only while the entry countdown is below five. The seed-1 backward-to-forward trigger moves from 21.954 mm/tick to the exact reconstructed (-831,1485), 1701.701 mm/tick path; StateHasher v37 binds all seven future-affecting gesture/countdown fields.",
         "validation": "The exact dash lifecycle plus existing Walker forward/strafe checks pass 3/3; the canonical 2,148-tick client smoke passes with its v37 hash 1bd823fa5cd7196f0f4893ddbaab5825d66c6d9a8ed61ebd634934a271e1af86. An independent read-only audit found and closed the right-dash residual-roll subtraction edge.",
         "open": "Analog 0.9/0.8 threshold values below full axis, dash audio, selected-weapon charge loss, zoom-out timer semantics, and the special-move transform/fire gates remain open; augment charge is explicitly unrelated."
+      },
+      "battleLineInfluenceRebuild": {
+        "contracts": ["0x0048B620", "0x0048C3B0", "0x00414CB0", "0x0053A390", "0x0053A5E0", "0x0053AA40", "0x0053ABE0", "0x0053B470", "0x0053B5F0"],
+        "resultSummary": "Level 100 now projects the exact 13 authored BSWD influence nodes as a populated map, applies the recovered signed friendly-minus-enemy target ratio to active nearby actors, selects the influence-overlay socket whenever no message obscures it, and renders 13 additive node markers inside the existing lower-right instrument. This changes the path from zero visible overlays while retail showed one in 20/183 pinned frames.",
+        "validation": "The focused producer/socket/smoke group passes 10/10, the actor-mechanics owner passes 5/5, and the Godot C# project builds with zero warnings and zero errors. The focused projection moves one node +1000 -> 0 -> -1000, proves the retail zero-local neighbor-majority fallback, and distinguishes an unrelated default Friendly value from an explicit SetAllegiance override. StateHasher v38 binds that override bit; the canonical smoke retains its consequential state at hash 778342068ac405fcc52a7694ec61527cfbcebcf7d0c5754ec150b706e8b0f5b0.",
+        "open": "Equal per-actor contribution, node-to-instrument normalization and marker presentation are explicit hypotheses. Retail's exact unit weights/categories, smoothing cadence, heightmap, continuously triangulated terrain interior, projection/pulse/colors and pixel parity remain open; no BSWD links are drawn as invented lines."
       },
       "cgameBattleScratchBatch": {
         "functions": "local-lab/ghidra-cgame-cbattle102-scratch-20260809-v1/functions.tsv; 7110054 bytes; SHA-256 fac73d989afd528f2bb8118209e609f840c07d88619274d7cb1242c6ffb98605",
@@ -395,6 +401,34 @@
         "scratchInput": "local-lab/ghidra-spatial-navigation133-static-20260810-v1/disposable-comment-input-v1/spatial-navigation133.tsv; 536780 bytes; SHA-256 2a002c0b05f48313b877fa0906c1cbb9f1433977bec7a623639f09cc15d246ae",
         "resultSummary": "133 exact navigation/map/waypoint/guidance, vector/matrix/transform and geometry/volume/triangulation bodies / 32,937 pristine bytes; all OPAQUE -> bounded C1_STATIC. Twelve tuple-incomplete rows remain OPAQUE; duplicate Vec3__NormalizeInPlace display names are disambiguated only in disposable HYP names."
       },
+      "runtimeLifetime103Cohort": {
+        "contracts": "local-lab/ghidra-runtime-lifetime103-static-20260810-v1/contracts.tsv; 425176 bytes; SHA-256 57b105507bbaba1698096bd13196de19e58d35524a7434a694caece2a72525a4",
+        "report": "local-lab/ghidra-runtime-lifetime103-static-20260810-v1/REPORT.md; 2851 bytes; SHA-256 60b479e631d893c8b7ae06832d3da6ee4f2e23fba2c22263ce8debfc19970fc7",
+        "result": "local-lab/ghidra-runtime-lifetime103-static-20260810-v1/result.json; 14832 bytes; SHA-256 05721fdd28ab08d6fbc12341c48bb50b002ef45506852e3535af06452844aa4d",
+        "scratchInput": "local-lab/ghidra-runtime-lifetime103-static-20260810-v1/disposable-comment-input-v1/runtime-lifetime103.tsv; 404248 bytes; SHA-256 81b7f560a0541c62a79cdda2bdd8052aa08446f252014fbd108d6f7de3990e80",
+        "resultSummary": "103 exact memory/allocation, ownership/monitoring and event/message bodies / 32,616 pristine bytes; all OPAQUE -> bounded C1_STATIC while retaining 47 COVERED, 36 PARTIAL and 20 DARK execution states. Three unsupported CMessage rows remain OPAQUE."
+      },
+      "pcShellInput123Cohort": {
+        "contracts": "local-lab/ghidra-pc-shell-input123-static-20260810-v1/contracts.tsv; 519605 bytes; SHA-256 895926ad7cb6f0b3d09f880199e095c960a2e17d5ab08f26bc495f6549b2e427",
+        "report": "local-lab/ghidra-pc-shell-input123-static-20260810-v1/REPORT.md; 2968 bytes; SHA-256 b3a37c590808355b0eba54e828608828f69385e337d9142ead99f51cb21b2352",
+        "result": "local-lab/ghidra-pc-shell-input123-static-20260810-v1/result.json; 21206 bytes; SHA-256 3f3c831c1e598a33085bd6d18debd547da7ae93962516ad2b055f2bcade5b6e7",
+        "scratchInput": "local-lab/ghidra-pc-shell-input123-static-20260810-v1/disposable-comment-input-v1/pc-shell-input123.tsv; 491904 bytes; SHA-256 2a8d27611fdb1451b1c25b24841290cdcd922a747b9d1871f4490645d7e5747f",
+        "resultSummary": "123 exact PC input/control/device, platform/startup/game-shell and support bodies / 40,707 pristine bytes; all OPAQUE -> bounded C1_STATIC while retaining 44 COVERED, 50 PARTIAL and 29 DARK execution states. One DECOMPILE_FAILED and nine missing-tuple boundary rows remain OPAQUE."
+      },
+      "cinematicCamera101Cohort": {
+        "contracts": "local-lab/ghidra-cinematic-camera101-static-20260810-v1/contracts.tsv; 411242 bytes; SHA-256 e7b6f8e7637d629dc972748cf4ed686fdb19862bd65616488f74e3e84cf8985b",
+        "report": "local-lab/ghidra-cinematic-camera101-static-20260810-v1/REPORT.md; 2863 bytes; SHA-256 cd7fc97d2c2a0aef36e30bf59a12c7e62bffe4d699e0b0ac2b69b49bcb6590f1",
+        "result": "local-lab/ghidra-cinematic-camera101-static-20260810-v1/result.json; 32342 bytes; SHA-256 75e47fcf5d77c3d8e0b29b464c60cab1a28c95f950155c0eb81c963f86ffd425",
+        "scratchInput": "local-lab/ghidra-cinematic-camera101-static-20260810-v1/disposable-comment-input-v1/cinematic-camera101.tsv; 389798 bytes; SHA-256 2eb03b780e6698a59b61b571a5e66f558d2a9b30a891bb40d9eed5e32f16b9c6",
+        "resultSummary": "101 exact cutscene/animation/media, camera/motion and presentation/atmosphere bodies / 20,381 pristine bytes; all OPAQUE -> bounded C1_STATIC while retaining 39 COVERED, 11 PARTIAL and 51 DARK execution states. Thirty-nine unsupported boundary rows remain OPAQUE."
+      },
+      "runtimeDispatch105Cohort": {
+        "contracts": "local-lab/ghidra-runtime-dispatch105-static-20260810-v1/contracts.tsv; 366202 bytes; SHA-256 47a7cbe58047be7c3fc485e8500bfee9d83423ff96525bc4339fbeabd8416325",
+        "report": "local-lab/ghidra-runtime-dispatch105-static-20260810-v1/REPORT.md; 2876 bytes; SHA-256 cd743d6ddb8742f184b3b1b9f31e610df89d91467de8603848eea46310f25ff2",
+        "result": "local-lab/ghidra-runtime-dispatch105-static-20260810-v1/result.json; 32787 bytes; SHA-256 869a724baa252ad9ce0b9d80abc011fc14e5b9a3d3f3060aa100644d5246ac29",
+        "scratchInput": "local-lab/ghidra-runtime-dispatch105-static-20260810-v1/disposable-comment-input-v1/runtime-dispatch105.tsv; 342503 bytes; SHA-256 d11f0eab283d441dd4dbbb7f75dd945eb00c24ff329be35c95576e126130c77a",
+        "resultSummary": "105 exact CRT/SEH/type-info/COM, shared virtual dispatch/unit-animation and callback/container bodies / 9,796 pristine bytes; all OPAQUE -> bounded C1_STATIC while retaining 50 COVERED, 26 PARTIAL and 29 DARK execution states. Thirty-six unsupported boundary rows remain OPAQUE."
+      },
       "cmeshCdxEngineScratchBatch": {
         "mutationPlan": "local-lab/ghidra-cmesh55-cdxengine59-cengine53-scratch-20260809-v1/mutation-plan.tsv; 236955 bytes; SHA-256 1cd0628c95b531985fd17cf509dcadcae5dd748b977e1888f154579b8939b83d",
         "functions": "local-lab/ghidra-cmesh55-cdxengine59-cengine53-scratch-20260809-v1/functions.tsv; 7115809 bytes; SHA-256 949cae708ca85d0e76e90522700b82d450b43a075417a11e5587da47df73d348",
@@ -566,6 +600,42 @@
         "readback": "local-lab/ghidra-data-content110-scratch-20260810-v1/readback.tsv; 421022 bytes; SHA-256 9406dfca0a620cd2fab1c63fc12986d75e199ff311396e2550e99495af854e81",
         "resultSummary": "110/110 exact data/content targets renamed/commented and separately read back; 8,136 functions retained, HYP names advanced 4,308 -> 4,418, exactly 110 target rows changed, and zero non-target/body/add/remove/structural drift."
       },
+      "renderGeometry266ScratchBatch": {
+        "functions": "local-lab/ghidra-render-geometry266-scratch-20260810-v1/functions.tsv; 7168419 bytes; SHA-256 ef54ebe82293d28a0cee88b4f4fa0b34b1987277500c136ce2827cd5924b063b",
+        "program": "local-lab/ghidra-render-geometry266-scratch-20260810-v1/program.tsv; 1267 bytes; SHA-256 3c0ec15bf3df3ebc68020d12acca2f199c4c88cc2e4362fa92883bad193c8137",
+        "readback": "local-lab/ghidra-render-geometry266-scratch-20260810-v1/readback.tsv; 1244397 bytes; SHA-256 5c972261eec0745a66135fd4123e1e78b31950a00dbebecbbd61f334fc3f94aa",
+        "resultSummary": "266/266 exact render/geometry targets renamed/commented and separately read back; 8,136 functions retained, HYP names advanced 4,418 -> 4,684, exactly 266 target rows changed, and zero non-target/body/add/remove/structural drift."
+      },
+      "visualEffects2d142ScratchBatch": {
+        "functions": "local-lab/ghidra-visual-effects2d142-scratch-20260810-v1/functions.tsv; 7170699 bytes; SHA-256 a1492cb1cb608b1218dabb52d1828dea4e8c739addebe718ca5d2efd2870dd18",
+        "program": "local-lab/ghidra-visual-effects2d142-scratch-20260810-v1/program.tsv; 1267 bytes; SHA-256 236204dc0844bba2aa378459d3ed0a0dbfb9e0632bcd78d510f092864087b64c",
+        "readback": "local-lab/ghidra-visual-effects2d142-scratch-20260810-v1/readback.tsv; 651336 bytes; SHA-256 0acb789c135cc7ed22acf472e80d6454c4976a3d9db3851ea6ef41664b6812a0",
+        "resultSummary": "142/142 exact visual/effects/2D targets renamed/commented and separately read back; 8,136 functions retained, HYP names advanced 4,684 -> 4,826, exactly 142 target rows changed, and zero non-target/body/add/remove/structural drift."
+      },
+      "spatialNavigation133ScratchBatch": {
+        "functions": "local-lab/ghidra-spatial-navigation133-scratch-20260810-v1/functions.tsv; 7172898 bytes; SHA-256 0b0df5e21ca4ed19160b1373b36f63192224255e0d56faf24354ade882a8dd14",
+        "program": "local-lab/ghidra-spatial-navigation133-scratch-20260810-v1/program.tsv; 1267 bytes; SHA-256 5e2b33b6c27d4b6cb991327a61f5087feddcb2d1843bdbc38868d36d85ea9b6a",
+        "readback": "local-lab/ghidra-spatial-navigation133-scratch-20260810-v1/readback.tsv; 544631 bytes; SHA-256 012f4da2db43a440411a80e9eefa3d327f8f58d324b9e8c2380d9909ae12a24c",
+        "resultSummary": "133/133 exact spatial/navigation targets renamed/commented and separately read back; 8,136 functions retained, HYP names advanced 4,826 -> 4,959, exactly 133 target rows changed, and zero non-target/body/add/remove/structural drift."
+      },
+      "runtimeLifetime103ScratchBatch": {
+        "functions": "local-lab/ghidra-runtime-lifetime103-scratch-20260810-v1/functions.tsv; 7174615 bytes; SHA-256 32d82062fee53b7aab2476e794a4980996d09b70995da2145ecc619a4b1ed7f8",
+        "program": "local-lab/ghidra-runtime-lifetime103-scratch-20260810-v1/program.tsv; 1267 bytes; SHA-256 c56cfbf9ac67e2c5f043e3b3cc263f0afc4bd9134f914dcbac451fcd04c0839b",
+        "readback": "local-lab/ghidra-runtime-lifetime103-scratch-20260810-v1/readback.tsv; 409935 bytes; SHA-256 bdd8d568eb79e9a86b64630633e9d6b0794a5cfa0e8e4cd6f427a024e2e0d5c8",
+        "resultSummary": "103/103 exact runtime/lifetime targets renamed/commented and separately read back; 8,136 functions retained, HYP names advanced 4,959 -> 5,062, exactly 103 target rows changed, and zero non-target/body/add/remove/structural drift; one DEFAULT thunk promotion stayed inside the planned set."
+      },
+      "pcShellInput123ScratchBatch": {
+        "functions": "local-lab/ghidra-pc-shell-input123-scratch-20260810-v1/functions.tsv; 7176618 bytes; SHA-256 8a7fec0a8639916008ac1e2f99526901b9b4f9b81d2d79ca520b0e93890df713",
+        "program": "local-lab/ghidra-pc-shell-input123-scratch-20260810-v1/program.tsv; 1267 bytes; SHA-256 6cb31545dce2b3735ecfbdd0232c4304fe7e7aa5fbba9ffd4a3b6be3dec66266",
+        "readback": "local-lab/ghidra-pc-shell-input123-scratch-20260810-v1/readback.tsv; 498157 bytes; SHA-256 fe651afb985285d56ac66cd6c305fa2de5e8b03d50ea252b51f882e7638f8fc8",
+        "resultSummary": "123/123 exact PC shell/input targets renamed/commented and separately read back; 8,136 functions retained, HYP names advanced 5,062 -> 5,185, exactly 123 target rows changed, zero non-target/body/add/remove/structural drift, and six planned symbol-source promotions accounted for exactly."
+      },
+      "cinematicCamera101ScratchBatch": {
+        "functions": "local-lab/ghidra-cinematic-camera101-scratch-20260810-v1/functions.tsv; 7178243 bytes; SHA-256 bce69902a20e6b533934efa2c29898ac0088983210d5b8d9ae4af2280ce6a8b8",
+        "program": "local-lab/ghidra-cinematic-camera101-scratch-20260810-v1/program.tsv; 1267 bytes; SHA-256 c9a2b85d75ad8ea7b0b2402d0b14f50a70277cd86276bef1d9a0c906ed2ffd9f",
+        "readback": "local-lab/ghidra-cinematic-camera101-scratch-20260810-v1/readback.tsv; 395236 bytes; SHA-256 de49eb54a5547fd8d7db7f115ee8a2825f4bc2ae21bc9e2f792ee8d50ef06e38",
+        "resultSummary": "101/101 exact cinematic/camera targets renamed/commented and separately read back; 8,136 functions retained, HYP names advanced 5,185 -> 5,286, exactly 101 target rows changed, zero non-target/body/add/remove/structural drift, and one planned DEFAULT symbol-source promotion accounted for exactly."
+      },
       "result": {
         "literalFunBefore": 932,
         "literalFunAfter": 0,
@@ -579,13 +649,13 @@
         "semanticC1Candidate": 14,
         "semanticC2Bounded": 1
       },
-      "nextQueue": "Thirty-seven disjoint major static cohorts are complete, totaling 4,701 exact bodies, 4,658 formerly opaque functions advanced to bounded C1_STATIC hypotheses, and 42 prior C1 rows repaired or confirmed. ApplyDamage remains the preserved C2 exception; 3,244 Generation-19 opaque functions remain. Data-content110 is exact in disposable Ghidra at 4,418 HYP names, render-geometry266 is the active scratch batch, the next >=100-function static cohort is running, and the six-contract Walker opposite-flick dash is implemented and focused-green. No single-function lane is open."
+      "nextQueue": "Forty-one disjoint major static cohorts are complete, totaling 5,133 exact bodies, 5,090 formerly opaque functions advanced to bounded C1_STATIC hypotheses, and 42 prior C1 rows repaired or confirmed. ApplyDamage remains the preserved C2 exception; 2,812 Generation-19 opaque functions remain. Cinematic-camera101 is exact in disposable Ghidra at 5,286 HYP names, runtime-dispatch105 is the active scratch batch, the next >=100-function static cohort is running, and the next rebuild slice must again close 5-10 coherent contracts around a reproduced current mismatch. No single-function lane is open."
     },
     "rankedNextFrontiers": [
       {
         "rank": 1,
         "question": "Select and complete the next exact disjoint 100-or-more-function static cohort.",
-        "existingEvidence": "Thirty-seven completed cohorts demonstrate deterministic address/body joins and bounded static contracts from the existing Gen19 inventory, pristine/formal template proofs, and dated metadata/decompile/instruction/xref waves without new capture; selection continues against the remaining 3,244 opaque functions.",
+        "existingEvidence": "Forty-one completed cohorts demonstrate deterministic address/body joins and bounded static contracts from the existing Gen19 inventory, pristine/formal template proofs, and dated metadata/decompile/instruction/xref waves without new capture; selection continues against the remaining 2,812 opaque functions.",
         "instrument": "Rank unused class/system prefixes by opaque-count movement, evidence completeness and reconstruction leverage, then emit one ignored contracts/report/result/input set from the chosen selector.",
         "gate": "At least 100 exact disjoint functions, complete existing evidence for every claimed boundary, visible I/O/writes/order, honest execution-state retention, C1_STATIC at most, and no runtime/source/rebuild overclaim.",
         "reconstructionOwner": "Assign only after the cohort map identifies an existing coherent owner.",
