@@ -852,9 +852,12 @@ Its five-entry particle descriptor references four unique textures:
 Blue Spark 2, Blue Trail, Halo, and Energy Trail. The presentation uses those
 exact archives with the descriptor's `0.25`-unit primary sprite radius,
 `0.3`-unit halo radius, `0.25`-unit energy-trail radius, and `0.08`-unit trail
-start width. The current ribbon spans one Core movement tick; the released
-five-point trail history, emitted secondary sprite, pulsation, color ranges,
-scrolling, and lifetimes are not yet reproduced.
+start width. The Pulse ribbon now retains five fixed-step positions and
+reconstructs simulation updates skipped between rendered frames. Both Vulcan
+rounds use the distinct released three-point `Bullet.tga` trail at `0.02`
+total width instead of inheriting the Pulse sprites. Exact strip joins, caps,
+UV scrolling, the emitted secondary sprite, pulsation, color evolution, and
+pixel parity remain open.
 
 The exact released `data/ParticleSets/MainSet.par` (SHA-256
 `A51FE4419B55E1AF132E31C6B3CD8133C937745D8F4AB691EB5A0D81017DED06`)
@@ -928,9 +931,9 @@ retained hierarchy through the deterministic projection and applies the
 evidenced per-segment health and terminal rules. Godot presents Pulse impacts
 and terminal destruction from ordered typed Core events, including events from
 intermediate steps in a rendered frame. It does not yet hide detached segments
-or present rubble/debris. Unmeasured mesh-part damage multipliers, the three
-Target Truck contact/destruction volumes, and Vulcan firing are not
-implemented. Static targets and dynamically spawned Target Trucks are keyed by
+or present rubble/debris. Unmeasured mesh-part damage multipliers, the exact
+Target Truck trajectory/arrival law, and Vulcan muzzle/impact presentation
+remain open. Static targets and dynamically spawned Target Trucks are keyed by
 canonical actor ID, select the exact visual through the actor definition/mesh
 binding, and consume the canonical full pose on every rendered frame rather
 than retaining authored static positions.
