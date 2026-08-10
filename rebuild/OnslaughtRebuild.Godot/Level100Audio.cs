@@ -554,6 +554,10 @@ public sealed partial class Level100Audio : Node3D
                 Level100DestructionEffectKind.None => null,
                 Level100DestructionEffectKind.PulseImpact =>
                     Level100EffectCue.PulseImpact,
+                // The released `Mech Bullet Hit` explosion record carries no
+                // CExplosionSound field. Its direct visual sprite is consumed
+                // by FirstFlightWorldView without inventing an impact sample.
+                Level100DestructionEffectKind.VulcanImpact => null,
                 Level100DestructionEffectKind.TargetDestroyed =>
                     Level100EffectCue.TargetOrTrainerDestroyed,
                 Level100DestructionEffectKind.DroneDestroyed =>

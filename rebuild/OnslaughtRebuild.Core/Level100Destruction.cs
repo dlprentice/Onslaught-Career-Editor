@@ -9,6 +9,7 @@ public enum Level100DestructionEventKind : byte
     SegmentDetached = 2,
     ActiveSubtreeBelowHalf = 3,
     Terminal = 4,
+    VulcanImpact = 5,
 }
 
 public enum Level100DestructionEffectKind : byte
@@ -18,6 +19,7 @@ public enum Level100DestructionEffectKind : byte
     TargetDestroyed = 2,
     FacilityDestroyed = 3,
     DroneDestroyed = 4,
+    VulcanImpact = 5,
 }
 
 public readonly record struct Level100DestructionEvent(
@@ -214,6 +216,7 @@ public sealed class Level100DestructionRuntime
             end,
             Level100ContactMechanics.PulseRadiusMillimeters,
             Level100DestructionState.PulseDamageBits,
+            Level100DestructionEffectKind.PulseImpact,
             out hit);
 
     /// <summary>
@@ -224,6 +227,7 @@ public sealed class Level100DestructionRuntime
         SimVector3 end,
         int contactRadiusMillimeters,
         uint damageBits,
+        Level100DestructionEffectKind impactEffectKind,
         out Level100ContactHit hit)
     {
         SynchronizeActors(requireInitialState: false);
@@ -285,7 +289,9 @@ public sealed class Level100DestructionRuntime
                 hit.ActorId,
                 out Level100DestructionState? destruction))
         {
-            _events.Add(Level100DestructionState.CreatePulseImpactEvent(hit));
+            _events.Add(Level100DestructionState.CreateRoundImpactEvent(
+                hit,
+                impactEffectKind));
             if (hit.ActorId != 0 &&
                 _registry.GetActor(new Level100ActorId(hit.ActorId))
                     .ScriptName is not null)
@@ -312,6 +318,7 @@ public sealed class Level100DestructionRuntime
         int eventCount = destruction.ApplyRoundHit(
             hit,
             damageBits,
+            impactEffectKind,
             _hitEvents);
         for (int index = 0; index < eventCount; index++)
         {
@@ -655,7 +662,11 @@ public sealed class Level100DestructionState
     public int ApplyPulseHit(
         in Level100ContactHit hit,
         Span<Level100DestructionEvent> events) =>
-        ApplyRoundHit(hit, PulseDamageBits, events);
+        ApplyRoundHit(
+            hit,
+            PulseDamageBits,
+            Level100DestructionEffectKind.PulseImpact,
+            events);
 
     /// <summary>
     /// Applies a named round's damage to a factual narrowphase hit. The caller
@@ -664,6 +675,7 @@ public sealed class Level100DestructionState
     public int ApplyRoundHit(
         in Level100ContactHit hit,
         uint damageBits,
+        Level100DestructionEffectKind impactEffectKind,
         Span<Level100DestructionEvent> events)
     {
         if (hit.ActorId != ActorId)
@@ -686,7 +698,7 @@ public sealed class Level100DestructionState
         }
 
         var writer = new EventWriter(events);
-        writer.Add(CreatePulseImpactEvent(hit));
+        writer.Add(CreateRoundImpactEvent(hit, impactEffectKind));
 
         if (_terminal)
         {
@@ -704,15 +716,29 @@ public sealed class Level100DestructionState
         return writer.Count;
     }
 
-    internal static Level100DestructionEvent CreatePulseImpactEvent(
-        in Level100ContactHit hit)
-        => new(
-            Level100DestructionEventKind.PulseImpact,
-            Level100DestructionEffectKind.PulseImpact,
+    internal static Level100DestructionEvent CreateRoundImpactEvent(
+        in Level100ContactHit hit,
+        Level100DestructionEffectKind effectKind)
+    {
+        Level100DestructionEventKind eventKind = effectKind switch
+        {
+            Level100DestructionEffectKind.PulseImpact =>
+                Level100DestructionEventKind.PulseImpact,
+            Level100DestructionEffectKind.VulcanImpact =>
+                Level100DestructionEventKind.VulcanImpact,
+            _ => throw new ArgumentOutOfRangeException(
+                nameof(effectKind),
+                effectKind,
+                "A round contact requires a released impact effect."),
+        };
+        return new Level100DestructionEvent(
+            eventKind,
+            effectKind,
             hit.ActorId,
             hit.PartIndex,
             0,
             hit.SurfacePoint);
+    }
 
     public Level100DestructionSnapshot CaptureSnapshot()
     {

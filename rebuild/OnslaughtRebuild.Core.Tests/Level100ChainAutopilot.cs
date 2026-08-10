@@ -475,7 +475,9 @@ internal sealed class Level100ChainAutopilot
             WorldSnapshot next = _host.Step(NextInput(state));
             foreach (Level100DestructionEvent destruction in next.Level100DestructionEvents)
             {
-                if (destruction.Kind != Level100DestructionEventKind.PulseImpact)
+                if (destruction.Kind is not (
+                        Level100DestructionEventKind.PulseImpact or
+                        Level100DestructionEventKind.VulcanImpact))
                 {
                     continue;
                 }

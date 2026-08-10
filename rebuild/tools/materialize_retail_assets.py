@@ -452,6 +452,7 @@ DIRECT_ASSETS = (
     (GODOT_ASSETS / "Level100/Textures/vulcan-bullet-trail.texture.aya", "data/resources/dxtntextures/Particle%Bullet.tga(0)R5G6B5.aya", "42da4484967f48958e71c9529435306c284fbbc36fc1f7a6ca2befc1eac2f01c"),
     (GODOT_ASSETS / "Level100/Textures/pulse-impact-animated-blob.texture.aya", "data/resources/dxtntextures/Particle%alparticle4.tga(0)A4R4G4B4.aya", "74085b280199e20b765640cfc3e417e6da0fcbfb25384e129858a32f5deb995d"),
     (GODOT_ASSETS / "Level100/Textures/pulse-impact-shockwave.texture.aya", "data/resources/dxtntextures/Particle%1telep.tga(0)R5G6B5.aya", "e92efc3f5adfa347e6b50f1e3d20af4c6800d76853a2126d71237dfefeea9f10"),
+    (GODOT_ASSETS / "Level100/Textures/vulcan-impact-spark.texture.aya", "data/resources/dxtntextures/Particle%alparticle2.tga(0)R5G6B5.aya", "95c15d4269ffea56e7be13ac7fb64a71a999cce2b9417cb73ce9c7313cef4389"),
     (GODOT_ASSETS / "Level100/Textures/target-tank-explosion-animated.texture.aya", "data/resources/dxtntextures/Particle%alparticle6.tga(0)R5G6B5.aya", "3c8fc30ad4923c56c3735caab5661a3f176eb661eaa678093870f51de4204c9e"),
     (GODOT_ASSETS / "Level100/Textures/target-tank-explosion-fireball.texture.aya", "data/resources/dxtntextures/Particle%fireball.tga(0)A4R4G4B4.aya", "e6c166669e351632a90b41c74782967923c78fc8be644a1e8948d356806b23ed"),
     (GODOT_ASSETS / "Level100/Textures/target-tank.texture.aya", "data/resources/dxtntextures/meshtex%f_pulsetank_training.tga(0)A1R5G5B5.aya", "97ddd1e18e45b19e249e91e881d773d80d36768a2cd48f6549a769c2559a7b7e"),
@@ -2738,6 +2739,22 @@ def _level100_contact_asset(
         )
     ):
         raise RuntimeError("Level 100 medium pulse contact contract changed")
+
+    vulcan_round_names = ("Mech Bullet", "Mech Air Bullet")
+    vulcan_hit_name = "Mech Bullet Hit"
+    vulcan_hit_fields = physics[(6, vulcan_hit_name)]
+    if (
+        any(
+            _definition_string(physics[(4, name)], 9) != vulcan_hit_name
+            for name in vulcan_round_names
+        )
+        or _definition_string(vulcan_hit_fields, 5) !=
+            "Bullet Ground Hit Effect"
+        or _definition_string(vulcan_hit_fields, 7) !=
+            "Mech Bullet Hit Unit Effect"
+        or 10 in vulcan_hit_fields
+    ):
+        raise RuntimeError("Level 100 Vulcan impact contract changed")
 
     document = {
         "definitionCount": len(definitions),

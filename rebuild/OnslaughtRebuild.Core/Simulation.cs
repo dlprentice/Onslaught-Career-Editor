@@ -150,6 +150,56 @@ public sealed class Simulation
         _level100Actors.Activate(zone.ActorId);
     }
 
+    /// <summary>
+    /// Causal-probe seam for the two released Vulcan round kinds. It queues one
+    /// round across a caller-supplied contact segment; the next normal
+    /// <see cref="Step"/> still owns movement, contact selection, impact-kind
+    /// routing, event production and removal.
+    /// </summary>
+    /// <remarks>
+    /// No shipped path calls this. The seam exists so the production
+    /// <c>UpdateProjectiles</c> kind switch can be falsified without replacing
+    /// it with a manually injected destruction effect.
+    /// </remarks>
+    internal void QueueVulcanRoundForContactMeasurement(
+        Level100ProjectileKind kind,
+        SimVector3 start,
+        SimVector3 end)
+    {
+        uint damageBits = kind switch
+        {
+            Level100ProjectileKind.MechBullet =>
+                Level100DestructionState.MechBulletDamageBits,
+            Level100ProjectileKind.MechAirBullet =>
+                SimulationConstants.MechAirBulletDamageBits,
+            _ => throw new ArgumentOutOfRangeException(
+                nameof(kind),
+                "The Vulcan contact probe accepts only released Vulcan rounds."),
+        };
+        if (start == end)
+        {
+            throw new ArgumentException(
+                "The Vulcan contact probe requires a non-empty sweep.",
+                nameof(end));
+        }
+
+        _projectiles.Add(new MutableProjectile
+        {
+            Id = _nextProjectileId++,
+            Kind = kind,
+            Position = new SimVector2(start.X, start.Z),
+            Velocity = new SimVector2(
+                checked(end.X - start.X),
+                checked(end.Z - start.Z)),
+            ElevationMillimeters = start.Y,
+            VerticalVelocityMillimetersPerTick = checked(end.Y - start.Y),
+            RemainingTicks = 2,
+            ContactRadiusMillimeters =
+                Level100ContactMechanics.PulseRadiusMillimeters,
+            DamageBits = damageBits,
+        });
+    }
+
     public WorldSnapshot Step(
         SimInput input,
         IReadOnlyList<Level100SimulationFact>? level100Facts = null)
@@ -3265,11 +3315,23 @@ public sealed class Simulation
             projectile.ElevationMillimeters = end.Y;
             projectile.RemainingTicks--;
 
+            Level100DestructionEffectKind impactEffectKind = projectile.Kind switch
+            {
+                Level100ProjectileKind.MechPulseBoltMedium =>
+                    Level100DestructionEffectKind.PulseImpact,
+                Level100ProjectileKind.MechBullet or
+                    Level100ProjectileKind.MechAirBullet =>
+                    Level100DestructionEffectKind.VulcanImpact,
+                _ => throw new InvalidDataException(
+                    $"Projectile {projectile.Id} has unsupported impact kind " +
+                    $"{projectile.Kind}."),
+            };
             bool hit = _level100Destruction.TryApplyRoundSweep(
                 start,
                 end,
                 projectile.ContactRadiusMillimeters,
                 projectile.DamageBits,
+                impactEffectKind,
                 out _);
             if (hit)
             {

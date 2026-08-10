@@ -159,6 +159,7 @@ public sealed partial class FirstFlightWorldView : Node3D
     private Texture2D _pulseCannonMuzzleFlashTexture = null!;
     private Texture2D _pulseImpactAnimatedTexture = null!;
     private Texture2D _pulseImpactShockwaveTexture = null!;
+    private Texture2D _vulcanImpactSparkTexture = null!;
     private Texture2D _effectFlashMediumTexture = null!;
     private Texture2D _targetTankExplosionAnimatedTexture = null!;
     private Texture2D _targetTankExplosionFireballTexture = null!;
@@ -322,6 +323,9 @@ public sealed partial class FirstFlightWorldView : Node3D
                     break;
                 case Level100DestructionEffectKind.PulseImpact:
                     SpawnPulseImpact(position, item.ActorId, tick);
+                    break;
+                case Level100DestructionEffectKind.VulcanImpact:
+                    SpawnVulcanImpact(position, item.ActorId, tick);
                     break;
                 case Level100DestructionEffectKind.TargetDestroyed:
                     SpawnTargetTankDestruction(position, item.ActorId);
@@ -1129,6 +1133,11 @@ public sealed partial class FirstFlightWorldView : Node3D
             128,
             128,
             CuratedAyaTextureLoader.Compression.Dxt1);
+        _vulcanImpactSparkTexture = CuratedAyaTextureLoader.Load(
+            "res://Assets/Level100/Textures/vulcan-impact-spark.texture.aya",
+            256,
+            256,
+            CuratedAyaTextureLoader.Compression.Dxt1);
         _effectFlashMediumTexture = CuratedAyaTextureLoader.Load(
             "res://Assets/Level100/Textures/effect-flash-medium.texture.aya",
             128,
@@ -1202,6 +1211,27 @@ public sealed partial class FirstFlightWorldView : Node3D
             blastSphere,
             _particlePresentationSeconds,
             0.5d);
+    }
+
+    private void SpawnVulcanImpact(Vector3 position, int targetId, int tick)
+    {
+        // `Mech Bullet Hit Unit Effect` schedules `Spark Anim Sprite` at Time 0.
+        // The direct sprite is alparticle2.tga, additive, Radius 0.3 -> 1.0,
+        // Life 5 turns, Texture_Size 2, cells 11..15, PlayOnce at 0.8
+        // cells/turn. The two sibling emitter branches remain deliberately open.
+        Node3D root = CreateTimedEffect(
+            $"VulcanImpact{targetId}-{tick}",
+            position,
+            0.25d);
+        MeshInstance3D spark = CreateEffectSprite(
+            "VulcanImpactSpark",
+            _vulcanImpactSparkTexture,
+            0.3f,
+            columns: 4,
+            rows: 4);
+        root.AddChild(spark);
+        AnimateVulcanImpactSpark(root, spark);
+        AnimateScale(spark, 1f, 10f / 3f, 0.25d);
     }
 
     private void SpawnTargetTankDestruction(Vector3 position, int targetId)
@@ -1425,6 +1455,38 @@ public sealed partial class FirstFlightWorldView : Node3D
             {
                 tween.TweenInterval(frameIntervalSeconds);
             }
+        }
+    }
+
+    private static void AnimateVulcanImpactSpark(
+        Node root,
+        MeshInstance3D spark)
+    {
+        const int startCell = 11;
+        const int endCell = 15;
+        const int columns = 4;
+        const int rows = 4;
+        const double cellsPerTurn = 0.8d;
+        double cellIntervalSeconds =
+            1d / (cellsPerTurn * SimulationConstants.TicksPerSecond);
+        var material = (StandardMaterial3D)spark.MaterialOverride;
+        material.Uv1Offset = new Vector3(
+            (startCell % columns) / (float)columns,
+            (startCell / columns) / (float)rows,
+            0f);
+
+        Tween tween = root.CreateTween();
+        for (int cell = startCell + 1; cell <= endCell; cell++)
+        {
+            int capturedCell = cell;
+            tween.TweenInterval(cellIntervalSeconds);
+            tween.TweenCallback(Callable.From(() =>
+            {
+                material.Uv1Offset = new Vector3(
+                    (capturedCell % columns) / (float)columns,
+                    (capturedCell / columns) / (float)rows,
+                    0f);
+            }));
         }
     }
 

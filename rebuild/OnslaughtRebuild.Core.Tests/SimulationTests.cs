@@ -1247,6 +1247,54 @@ public sealed class SimulationTests
         }
     }
 
+    [Theory]
+    [InlineData(Level100ProjectileKind.MechBullet, false)]
+    [InlineData(Level100ProjectileKind.MechBullet, true)]
+    [InlineData(Level100ProjectileKind.MechAirBullet, false)]
+    [InlineData(Level100ProjectileKind.MechAirBullet, true)]
+    public void VulcanRoundsSelectTheirImpactKindThroughProductionProjectileUpdate(
+        Level100ProjectileKind projectileKind,
+        bool hitMesh)
+    {
+        var simulation = new Simulation(
+            0x100u,
+            Level100TestActorDefinitions.Create());
+        Level100ActorSnapshot target = simulation.Snapshot.Level100Actors.Actors
+            .Single(actor => actor.Name == "Target Tank 2");
+        SimVector3 start;
+        SimVector3 end;
+        int expectedActorId;
+        if (hitMesh)
+        {
+            SimVector3 position = target.Pose.PositionMillimeters;
+            start = position with { Y = position.Y + 2_000 };
+            end = position with { Y = position.Y - 1_000 };
+            expectedActorId = target.ActorId.Value;
+        }
+        else
+        {
+            start = new SimVector3(0, 2_000, 0);
+            end = new SimVector3(0, -2_000, 0);
+            expectedActorId = 0;
+        }
+
+        simulation.QueueVulcanRoundForContactMeasurement(
+            projectileKind,
+            start,
+            end);
+        WorldSnapshot result = simulation.Step(SimInput.Idle);
+
+        Level100DestructionEvent impact = Assert.Single(
+            result.Level100DestructionEvents,
+            item => item.Kind == Level100DestructionEventKind.VulcanImpact);
+        Assert.Equal(Level100DestructionEventKind.VulcanImpact, impact.Kind);
+        Assert.Equal(
+            Level100DestructionEffectKind.VulcanImpact,
+            impact.EffectKind);
+        Assert.Equal(expectedActorId, impact.ActorId);
+        Assert.Empty(result.Projectiles);
+    }
+
     [Fact]
     public void PitchedPulseRound_FollowsViewPitchWithoutInventingVerticalTargetHits()
     {

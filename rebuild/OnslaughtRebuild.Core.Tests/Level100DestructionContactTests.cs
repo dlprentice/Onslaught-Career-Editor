@@ -354,7 +354,11 @@ public sealed class Level100DestructionContactTests
         Level100ContactHit hit = Hit(202, 0);
         Assert.Equal(0x40C00000u, tank.MaximumLifeBits);
 
-        int zeroCount = state.ApplyRoundHit(hit, tank.MaximumLifeBits, events);
+        int zeroCount = state.ApplyRoundHit(
+            hit,
+            tank.MaximumLifeBits,
+            Level100DestructionEffectKind.PulseImpact,
+            events);
 
         Assert.Equal(0x00000000u, state.CurrentLifeBits);
         Assert.False(state.Terminal);
@@ -362,7 +366,11 @@ public sealed class Level100DestructionContactTests
             events.AsSpan(0, zeroCount).ToArray(),
             item => item.Kind == Level100DestructionEventKind.Terminal);
 
-        int negativeCount = state.ApplyRoundHit(hit, 0x3F800000u, events);
+        int negativeCount = state.ApplyRoundHit(
+            hit,
+            0x3F800000u,
+            Level100DestructionEffectKind.PulseImpact,
+            events);
 
         Assert.Equal(0xBF800000u, state.CurrentLifeBits);
         Assert.True(state.Terminal);
@@ -398,6 +406,7 @@ public sealed class Level100DestructionContactTests
         int count = state.ApplyRoundHit(
             Hit(203, 0),
             damageBits: 0x447A0000u,
+            Level100DestructionEffectKind.PulseImpact,
             events);
 
         Assert.Equal(0xC479FFAEu, state.CurrentLifeBits);
@@ -560,6 +569,24 @@ public sealed class Level100DestructionContactTests
         Assert.Equal(before.NextFactSequence, after.NextFactSequence);
         Assert.Equal(before.Actors.ToArray(), after.Actors.ToArray());
         Assert.Equal(before.PendingFacts.ToArray(), after.PendingFacts.ToArray());
+
+        var vulcanRuntime = new Level100DestructionRuntime(
+            new Level100ActorRegistry(definitions));
+        Assert.True(vulcanRuntime.TryApplyRoundSweep(
+            new SimVector3(0, 2_000, 0),
+            new SimVector3(0, -2_000, 0),
+            Level100ContactMechanics.PulseRadiusMillimeters,
+            Level100DestructionState.MechBulletDamageBits,
+            Level100DestructionEffectKind.VulcanImpact,
+            out _));
+        Level100DestructionEvent vulcanImpact =
+            Assert.Single(vulcanRuntime.Events);
+        Assert.Equal(
+            Level100DestructionEventKind.VulcanImpact,
+            vulcanImpact.Kind);
+        Assert.Equal(
+            Level100DestructionEffectKind.VulcanImpact,
+            vulcanImpact.EffectKind);
     }
 
     [Fact]

@@ -65,6 +65,7 @@ bit-identical retail collision geometry.
 | `Textures/mech-pulse-medium-energy-trail.texture.aya` | Exact released 64×64 DXT1 `Particle%Energy Trail.tga(0)R5G6B5.aya` medium-round energy core | `64EDDC6B147C67886F41EF4D2BCC2A0606B453B01E4D93B9962F10CC07ABA92E` |
 | `Textures/pulse-impact-animated-blob.texture.aya` | Exact released 256×256 DXT2 `alparticle4` impact/smoke animation | `74085B280199E20B765640CFC3E417E6DA0FCBFB25384E129858A32F5DEB995D` |
 | `Textures/pulse-impact-shockwave.texture.aya` | Exact released 128×128 DXT1 `1telep` medium Pulse Bolt shockwave | `E92EFC3F5ADFA347E6B50F1E3D20AF4C6800D76853A2126D71237DFEFEEA9F10` |
+| `Textures/vulcan-impact-spark.texture.aya` | Exact released 256×256 DXT1 `alparticle2` Vulcan unit-impact spark atlas | `95C15D4269FFEA56E7BE13AC7FB64A71A999CCE2B9417CB73CE9C7313CEF4389` |
 | `Textures/effect-flash-medium.texture.aya` | Exact released 128×128 DXT1 `sun2` medium impact flash | `D7FBFCB4EDB2167FEDC0A467D4501C9BBC2F6A2852C7873DAEC3953E6F518F5C` |
 | `Textures/particle-alparticle5-additive.texture.aya` | Exact released 128×128 DXT2 `alparticle5` Pulse Cannon muzzle-flash atlas | `5004B8C6A688B82605F870E60D4ED32A32203B4371F1AEC72155FEF1619A5FA0` |
 | `Textures/target-tank-explosion-animated.texture.aya` | Exact released 256×256 DXT1 `alparticle6` medium explosion animation | `3C8FC30AD4923C56C3735CAAB5661A3F176EB661EAA678093870F51DE4204C9E` |

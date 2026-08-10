@@ -691,6 +691,131 @@ public sealed class ParticleSetTests
     }
 
     [Fact]
+    public void VulcanRoundImpactUsesAuthoredDirectSpark()
+    {
+        ParticleSetFile set = ParticleSetFile.Parse(ReadMainSet());
+        ParticleDescriptor timeline = set.Require("Mech Bullet Hit Unit Effect");
+        Assert.Equal(ParticleDescriptorType.Timeline, timeline.Type);
+        IReadOnlyList<string> entries = timeline.RawAll("Particle_Descriptor");
+        IReadOnlyList<string> times = timeline.RawAll("Time");
+        int sparkIndex = entries.ToList().IndexOf("Spark Anim Sprite");
+        Assert.True(sparkIndex >= 0);
+        Assert.Equal("0", times[sparkIndex]);
+
+        ParticleEffectPlan plan = ParticleEffectResolver.Resolve(
+            set,
+            "Mech Bullet Hit Unit Effect");
+        ParticleSpriteLayer spark = Single(plan, "Spark Anim Sprite");
+        Assert.Equal(new[] { 0 }, spark.StartTurns);
+        Assert.Equal("alparticle2.tga", spark.TextureName);
+        Assert.Equal(0, spark.BlendMode);
+        Assert.Equal(0.3f, spark.StartRadius);
+        Assert.Equal(1f, spark.FinalRadius);
+        Assert.Equal(5, spark.LifeTurns);
+        Assert.Equal(4, spark.AtlasColumns);
+        Assert.Equal(ParticleAnimationMode.PlayOnce, spark.AnimationMode);
+        Assert.Equal(11, spark.StartCell);
+        Assert.Equal(15, spark.EndCell);
+        Assert.Equal(0.8f, spark.AnimationCellsPerTurn);
+        ParticleEffectPlan groundPlan = ParticleEffectResolver.Resolve(
+            set,
+            "Bullet Ground Hit Effect");
+        ParticleSpriteLayer groundSpark = Single(groundPlan, "Spark Anim Sprite");
+        Assert.Equal(new[] { 0 }, groundSpark.StartTurns);
+        Assert.Equal(spark.TextureName, groundSpark.TextureName);
+        Assert.Equal(spark.StartCell, groundSpark.StartCell);
+        Assert.Equal(spark.EndCell, groundSpark.EndCell);
+
+        string simulationSource = File.ReadAllText(Locate(
+            "rebuild/OnslaughtRebuild.Core/Simulation.cs"));
+        string projectileUpdate = RequireSection(
+            simulationSource,
+            "private void UpdateProjectiles()",
+            "private void ResetDynamicState()");
+        Assert.Contains("projectile.Kind switch", projectileUpdate, StringComparison.Ordinal);
+        Assert.Contains(
+            "Level100ProjectileKind.MechPulseBoltMedium =>",
+            projectileUpdate,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "Level100ProjectileKind.MechBullet or",
+            projectileUpdate,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "Level100ProjectileKind.MechAirBullet =>",
+            projectileUpdate,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "Level100DestructionEffectKind.VulcanImpact",
+            projectileUpdate,
+            StringComparison.Ordinal);
+
+        string worldSource = File.ReadAllText(Locate(
+            "rebuild/OnslaughtRebuild.Godot/FirstFlightWorldView.cs"));
+        string eventSwitch = RequireSection(
+            worldSource,
+            "public void ConsumeLevel100DestructionEvents(",
+            "public void ConsumeLevel100WeaponFireEvents(");
+        Assert.Contains(
+            "case Level100DestructionEffectKind.VulcanImpact:",
+            eventSwitch,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "SpawnVulcanImpact(position, item.ActorId, tick);",
+            eventSwitch,
+            StringComparison.Ordinal);
+
+        string spawn = RequireSection(
+            worldSource,
+            "private void SpawnVulcanImpact(",
+            "private void SpawnTargetTankDestruction(");
+        Assert.Contains("position,\n            0.25d);", spawn, StringComparison.Ordinal);
+        Assert.Matches(
+            @"CreateEffectSprite\(\s*""VulcanImpactSpark"",\s*" +
+            @"_vulcanImpactSparkTexture,\s*0\.3f,\s*" +
+            @"columns:\s*4,\s*rows:\s*4\);",
+            spawn);
+        Assert.Contains(
+            "AnimateVulcanImpactSpark(root, spark);",
+            spawn,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "AnimateScale(spark, 1f, 10f / 3f, 0.25d);",
+            spawn,
+            StringComparison.Ordinal);
+
+        string animation = RequireSection(
+            worldSource,
+            "private static void AnimateVulcanImpactSpark(",
+            "private static void AnimatePulseCannonMuzzleFlash(");
+        Assert.Contains("const int startCell = 11;", animation, StringComparison.Ordinal);
+        Assert.Contains("const int endCell = 15;", animation, StringComparison.Ordinal);
+        Assert.Contains(
+            "const double cellsPerTurn = 0.8d;",
+            animation,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "cellsPerTurn * SimulationConstants.TicksPerSecond",
+            animation,
+            StringComparison.Ordinal);
+        Assert.Contains("cell <= endCell", animation, StringComparison.Ordinal);
+
+        string materializer = File.ReadAllText(Locate(
+            "rebuild/tools/materialize_retail_assets.py"));
+        Assert.Contains(
+            "Particle%alparticle2.tga(0)R5G6B5.aya\", \"95c15d4269ffea56e7be13ac7fb64a71a999cce2b9417cb73ce9c7313cef4389\"",
+            materializer,
+            StringComparison.Ordinal);
+
+        string audioSource = File.ReadAllText(Locate(
+            "rebuild/OnslaughtRebuild.Godot/Level100Audio.cs"));
+        Assert.Contains(
+            "Level100DestructionEffectKind.VulcanImpact => null",
+            audioSource,
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void PulseBoltMaterialsUseAuthoredBirthColours()
     {
         ParticleSetFile set = ParticleSetFile.Parse(ReadMainSet());

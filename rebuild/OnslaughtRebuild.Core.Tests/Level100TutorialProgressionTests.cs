@@ -305,6 +305,7 @@ public sealed class Level100TutorialProgressionTests
                 end,
                 Level100ContactMechanics.PulseRadiusMillimeters,
                 Level100DestructionState.MechBulletDamageBits,
+                Level100DestructionEffectKind.VulcanImpact,
                 out Level100ContactHit hit));
             Assert.Equal(truckId.Value, hit.ActorId);
             Assert.Equal(Level100ContactSurfaceKind.Mesh, hit.SurfaceKind);
@@ -360,7 +361,11 @@ public sealed class Level100TutorialProgressionTests
         int hits = 0;
         while (!state.Terminal && hits < 10_000)
         {
-            state.ApplyRoundHit(hit, damageBits, events);
+            state.ApplyRoundHit(
+                hit,
+                damageBits,
+                Level100DestructionEffectKind.VulcanImpact,
+                events);
             hits++;
         }
 
@@ -499,6 +504,7 @@ public sealed class Level100TutorialProgressionTests
                 end,
                 Level100ContactMechanics.PulseRadiusMillimeters,
                 Level100DestructionState.MechBulletDamageBits,
+                Level100DestructionEffectKind.VulcanImpact,
                 out Level100ContactHit hit));
             Assert.Equal(droneId.Value, hit.ActorId);
             Assert.Equal(Level100ContactSurfaceKind.Mesh, hit.SurfaceKind);
@@ -624,7 +630,11 @@ public sealed class Level100TutorialProgressionTests
         int hits = 0;
         while (!state.Terminal && hits < 10_000)
         {
-            state.ApplyRoundHit(hit, damageBits, events);
+            state.ApplyRoundHit(
+                hit,
+                damageBits,
+                Level100DestructionEffectKind.VulcanImpact,
+                events);
             hits++;
         }
 
@@ -722,7 +732,9 @@ internal sealed class Level100PlayerDriver
             WorldSnapshot next = _simulation.Step(NextInput(state));
             foreach (Level100DestructionEvent destruction in next.Level100DestructionEvents)
             {
-                if (destruction.Kind != Level100DestructionEventKind.PulseImpact)
+                if (destruction.Kind is not (
+                        Level100DestructionEventKind.PulseImpact or
+                        Level100DestructionEventKind.VulcanImpact))
                 {
                     continue;
                 }
