@@ -95,6 +95,15 @@ public static class SimulationConstants
     public const int WalkerDashAccelerationMultiplier = 25;
     public const int WalkerDashRollVelocityMicroRadPerTick = 80_000;
     public const int WalkerDashInitialHistoryTicks = 10 * TicksPerSecond;
+    // BattleEngine.cpp:1871-1884. While grounded in Walker state, HandleSounds
+    // accumulates the full velocity magnitude, rolls once on strict >1.5,
+    // counts those rollovers, then plays `BE Hydraulics 02` on a later strict
+    // <0.01 stop only when the count is >5. Core velocity is millimetres per
+    // the same released 20 Hz tick, so this is a unit conversion only; there
+    // is no cadence scaling.
+    public const int WalkerSoundTravelRolloverMillimeters = 1_500;
+    public const int WalkerSoundStoppedSpeedMillimetersPerTick = 10;
+    public const int WalkerSoundMinimumRolloverCount = 5;
     // Canonical Steam CMCMech state at the authored Level 100 start supplies
     // these four body-local Footbase offsets in the released controller order:
     // front-left, front-right, rear-left, rear-right. Two uninterrupted slope

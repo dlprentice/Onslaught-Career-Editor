@@ -248,6 +248,23 @@ public sealed class Level100AudioCatalogTests
     }
 
     [Fact]
+    public void WalkerHydraulicsEventUsesTheReleasedAquilaCue()
+    {
+        Level100AudioCueRecipe cue = Level100AudioCatalog.GetEffect(
+            Level100EffectCue.AquilaHydraulics);
+        Assert.Equal("res://Assets/Aquila/SoundEffects/hydraulics.wav", cue.ResourcePath);
+        Assert.False(cue.Looping);
+
+        string consume = MethodBody(
+            ReadGodotSource("Level100Audio.cs"),
+            "public void ConsumeAquilaFlightEvents(");
+        AssertOccursInOrder(
+            consume,
+            "case AquilaFlightEvents.WalkerHydraulicsRequested:",
+            "PlayOnAquila(Level100EffectCue.AquilaHydraulics);");
+    }
+
+    [Fact]
     public void DeathTerminalFeedsTheRecoveredMixBeforeTheNominalPause()
     {
         string game = ReadGodotSource("FirstFlightGame.cs");

@@ -37,6 +37,7 @@ public enum AquilaFlightEvents : ushort
     GroundImpactDamageThresholdCrossed = 1 << 8,
     WaterFailureStarted = 1 << 9,
     JetWeaponFireRequested = 1 << 10,
+    WalkerHydraulicsRequested = 1 << 11,
 }
 
 public sealed record AquilaFlightEvent(
@@ -542,6 +543,8 @@ public sealed record WorldSnapshot(
     int WalkerLastHardForwardTick,
     int WalkerLastHardBackwardTick,
     int WalkerDashTicksRemaining,
+    int WalkerSoundTravelMillimeters,
+    int WalkerSoundRolloverCount,
     int Energy,
     int Shield,
     int Hull,

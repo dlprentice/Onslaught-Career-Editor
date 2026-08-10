@@ -368,6 +368,66 @@ public sealed class InteractiveSessionTests
     }
 
     [Fact]
+    public void WalkerTravelThenSettleRequestsOneHydraulicsCue()
+    {
+        InteractiveSession session = CreatePlayingSession(1);
+        session.ObserveInput(new InteractiveInput(0, 1, false, false, false));
+        for (int tick = 0; tick < 80; tick++)
+        {
+            FrameAdvanceResult moving = session.AdvanceFrameTicks(OneCoreStepTicks);
+            Assert.DoesNotContain(
+                moving.AquilaFlightEvents,
+                item => item.Kind ==
+                    AquilaFlightEvents.WalkerHydraulicsRequested);
+        }
+
+        WorldSnapshot rolling = session.CurrentSnapshot;
+        Assert.True(
+            rolling.WalkerSoundRolloverCount >
+                SimulationConstants.WalkerSoundMinimumRolloverCount);
+        string rollingHash = StateHasher.ComputeHex(rolling);
+        Assert.NotEqual(
+            rollingHash,
+            StateHasher.ComputeHex(rolling with
+            {
+                WalkerSoundTravelMillimeters =
+                    rolling.WalkerSoundTravelMillimeters + 1,
+            }));
+        Assert.NotEqual(
+            rollingHash,
+            StateHasher.ComputeHex(rolling with
+            {
+                WalkerSoundRolloverCount = rolling.WalkerSoundRolloverCount + 1,
+            }));
+
+        session.ObserveInput(InteractiveInput.Idle);
+        FrameAdvanceResult settled = default;
+        bool requested = false;
+        for (int tick = 0; tick < 20; tick++)
+        {
+            settled = session.AdvanceFrameTicks(OneCoreStepTicks);
+            if (settled.AquilaFlightEvents.Any(item =>
+                    item.Kind ==
+                        AquilaFlightEvents.WalkerHydraulicsRequested))
+            {
+                requested = true;
+                break;
+            }
+        }
+
+        Assert.True(requested, "Walker never reached the strict settled-speed edge.");
+        AquilaFlightEvent hydraulics = Assert.Single(
+            settled.AquilaFlightEvents,
+            item => item.Kind ==
+                AquilaFlightEvents.WalkerHydraulicsRequested);
+        Assert.Equal(VehicleMode.Walker, hydraulics.Mode);
+        Assert.Equal(0, settled.CurrentSnapshot.WalkerSoundRolloverCount);
+        Assert.DoesNotContain(
+            session.AdvanceFrameTicks(OneCoreStepTicks).AquilaFlightEvents,
+            item => item.Kind == AquilaFlightEvents.WalkerHydraulicsRequested);
+    }
+
+    [Fact]
     public void LookY_HeldPitchesTheBattleEngineThroughTheClientAdapter()
     {
         InteractiveSession session = CreatePlayingSession(1);
@@ -1851,9 +1911,13 @@ public sealed class InteractiveSessionTests
         // MOVED 2026-08-10 by StateHasher v39. Every live projectile now
         // carries its released round identity so presentation can distinguish
         // the Pulse Bolt's five-point trail from both Vulcan bullet records.
+        // MOVED 2026-08-10 by StateHasher v40. Walker travel remainder and
+        // rollover count decide whether a later strict stop requests the
+        // released hydraulic-settle cue, so both future-affecting fields are
+        // serialized. The firing-range assertions remain unchanged.
         string finalStateHash = StateHasher.ComputeHex(session.CurrentSnapshot);
         Assert.Equal(
-            "8c7015024e2067bcc6ef0b3245a8205cd2057c8d17268295680affde2b65107f",
+            "ef439a4b3cfdba0ef10fddb05f98d887ed6bbc6cd7fb02bef3a9bedf3c3845a1",
             finalStateHash);
     }
 

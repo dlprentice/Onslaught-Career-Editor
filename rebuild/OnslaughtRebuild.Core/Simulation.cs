@@ -77,6 +77,8 @@ public sealed class Simulation
     private int _walkerLastHardForwardTick;
     private int _walkerLastHardBackwardTick;
     private int _walkerDashTicksRemaining;
+    private int _walkerSoundTravelMillimeters;
+    private int _walkerSoundRolloverCount;
     private int _zoomPermille;
     private int _desiredZoomPermille;
     private int _energy;
@@ -247,6 +249,7 @@ public sealed class Simulation
         TryToggleMode(playerInput);
         UpdateZoom(playerInput);
         UpdateMovement(playerInput);
+        UpdateWalkerHydraulicCue();
         UpdateWalkerFeet();
         UpdateLevel100TriggerActors();
         UpdateResources(playerPartMoveStarted);
@@ -1038,6 +1041,41 @@ public sealed class Simulation
         }
 
         UpdateJetMovement(input);
+    }
+
+    private void UpdateWalkerHydraulicCue()
+    {
+        if (!_playerOnGround ||
+            _mode != VehicleMode.Walker ||
+            _transition != VehicleTransition.None)
+        {
+            _walkerSoundRolloverCount = 0;
+            return;
+        }
+
+        int speedMillimetersPerTick = Magnitude3D(
+            PlayerVelocity.X,
+            PlayerVerticalVelocityMillimetersPerTick,
+            PlayerVelocity.Z);
+        _walkerSoundTravelMillimeters += speedMillimetersPerTick;
+        if (_walkerSoundTravelMillimeters >
+            SimulationConstants.WalkerSoundTravelRolloverMillimeters)
+        {
+            _walkerSoundTravelMillimeters -=
+                SimulationConstants.WalkerSoundTravelRolloverMillimeters;
+            _walkerSoundRolloverCount++;
+        }
+
+        if (speedMillimetersPerTick <
+            SimulationConstants.WalkerSoundStoppedSpeedMillimetersPerTick)
+        {
+            if (_walkerSoundRolloverCount >
+                SimulationConstants.WalkerSoundMinimumRolloverCount)
+            {
+                EmitFlightEvent(AquilaFlightEvents.WalkerHydraulicsRequested);
+            }
+            _walkerSoundRolloverCount = 0;
+        }
     }
 
     private void ApplyWalkerLandingJets(SimInput input)
@@ -3278,6 +3316,8 @@ public sealed class Simulation
         _walkerLastHardForwardTick = initialHardMoveTick;
         _walkerLastHardBackwardTick = initialHardMoveTick;
         _walkerDashTicksRemaining = 0;
+        _walkerSoundTravelMillimeters = 0;
+        _walkerSoundRolloverCount = 0;
         _zoomPermille = SimulationConstants.ZoomOutPermille;
         _desiredZoomPermille = SimulationConstants.ZoomOutPermille;
         _energy = SimulationConstants.MaximumEnergy;
@@ -3448,6 +3488,8 @@ public sealed class Simulation
             _walkerLastHardForwardTick,
             _walkerLastHardBackwardTick,
             _walkerDashTicksRemaining,
+            _walkerSoundTravelMillimeters,
+            _walkerSoundRolloverCount,
             _energy,
             _shield,
             player.Health,

@@ -24,6 +24,10 @@ public static class StateHasher
         using (var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true))
         {
             writer.Write(s_magic);
+            // 40: records the Walker travel remainder and rollover count that
+            // determine whether a later strict stop requests the released
+            // hydraulic-settle cue.
+            //
             // 39: records the released round identity carried by each live
             // projectile. Pulse, Walker Vulcan, and Jet Vulcan overlap in
             // remaining lifetime, so their presentation contract cannot be
@@ -77,7 +81,7 @@ public static class StateHasher
             // 31: added the ordered Level100WeaponFireEvents stream. Every
             // hashed tick gains its four-byte count, so this bump moves every
             // pinned hash regardless of whether a weapon fires.
-            writer.Write(39);
+            writer.Write(40);
             writer.Write(state.Tick);
             writer.Write(state.Seed);
             writer.Write(state.InitialLevel100TutorialProgress.Introduction);
@@ -122,6 +126,8 @@ public static class StateHasher
             writer.Write(state.WalkerLastHardForwardTick);
             writer.Write(state.WalkerLastHardBackwardTick);
             writer.Write(state.WalkerDashTicksRemaining);
+            writer.Write(state.WalkerSoundTravelMillimeters);
+            writer.Write(state.WalkerSoundRolloverCount);
             writer.Write(state.Energy);
             writer.Write(state.Shield);
             writer.Write(state.Hull);

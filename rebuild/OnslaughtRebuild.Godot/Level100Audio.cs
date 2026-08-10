@@ -401,6 +401,9 @@ public sealed partial class Level100Audio : Node3D
                     when flightEvent.Mode == VehicleMode.Walker:
                     FadeOutAquilaFlightLoop();
                     break;
+                case AquilaFlightEvents.WalkerHydraulicsRequested:
+                    PlayOnAquila(Level100EffectCue.AquilaHydraulics);
+                    break;
             }
         }
     }
