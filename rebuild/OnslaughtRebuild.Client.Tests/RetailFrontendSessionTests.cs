@@ -40,6 +40,8 @@ public sealed class RetailFrontendSessionTests
 
         Assert.Equal(RetailFrontendSignal.Level100LaunchRequested, frontend.Confirm());
         Assert.Equal(RetailFrontendScreen.Loading, frontend.Screen);
+        Assert.Equal(0, frontend.SelectedConfigurationIndex);
+        Assert.Equal("Aquila Prototype", frontend.SelectedConfiguration.AuthoredName);
         Assert.True(frontend.ConsumeLevel100LaunchRequest());
         Assert.False(frontend.ConsumeLevel100LaunchRequest());
 
@@ -155,6 +157,22 @@ public sealed class RetailFrontendSessionTests
 
         Assert.Equal(RetailFrontendSignal.PageChanged, frontend.Confirm());
         Assert.Equal(RetailFrontendScreen.SelectConfiguration, frontend.Screen);
+
+        Assert.Equal(1, frontend.ConfigurationCount);
+        RetailFrontendBattleEngineConfiguration configuration = frontend.SelectedConfiguration;
+        Assert.Equal(0, frontend.SelectedConfigurationIndex);
+        Assert.Same(configuration, frontend.SelectedConfiguration);
+        Assert.Equal(3, configuration.CatalogRecordIndex);
+        Assert.Equal("Aquila Prototype", configuration.AuthoredName);
+        Assert.Equal("BE:A Unit-00 'Prototype'", configuration.DisplayName);
+        Assert.Equal("Pulse Cannon Pod", configuration.WalkerPrimary.AuthoredName);
+        Assert.Equal("Mech Twin Vulcan Cannon", configuration.WalkerSecondary.AuthoredName);
+        Assert.Equal("Mech Vulcan Cannon", configuration.JetPrimary.AuthoredName);
+        Assert.Equal("Missile Pod", configuration.JetSecondary.AuthoredName);
+        Assert.False(frontend.MovePrevious());
+        Assert.False(frontend.MoveNext());
+        Assert.False(frontend.SelectConfigurationIndex(-1));
+        Assert.False(frontend.SelectConfigurationIndex(1));
 
         // Back retraces the same chain one page at a time.
         Assert.Equal(RetailFrontendSignal.PageChanged, frontend.Back());

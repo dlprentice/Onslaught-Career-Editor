@@ -134,7 +134,18 @@ Level 100 session/world. The `RetailFrontendScreen` enum in
 `rebuild/OnslaughtRebuild.Client/RetailFrontendSession.cs` is authoritative for
 that list; re-read it rather than quoting this sentence. `--skipfmv`, smoke,
 and capture modes suppress the reconstructed video sequences. Their Bink audio
-streams are not decoded, so video playback is currently silent. Steam's
+streams are not decoded, so video playback is currently silent.
+
+The Level-100 configuration page now owns the one row named by the released
+`WorldHeaders.dat`: page-list index 0 selects `Aquila Prototype`, catalog record
+3, with authored Walker keys `Pulse Cannon Pod` / `Mech Twin Vulcan Cannon` and
+Jet keys `Mech Vulcan Cannon` / `Missile Pod`. The owner deliberately keeps
+those data keys separate from the shorter strings visible in the pristine
+frame. This is the released one-row projection only; generic configuration
+loading, localization lookup, property ratings, pips/icons, live preview, input
+timing/sound, and pixel parity remain open.
+
+Steam's
 `-skipfmv` flag at
 `CLIParams__ParseCommandLine` (`0x00423BC0`) skips that movie but still reaches
 the click page. That page's Steam handlers at `0x0051B660`/`0x0051B6B0` accept

@@ -41,6 +41,24 @@ public sealed class RetailFrontendSession
     /// </summary>
     private static readonly string[] NoCareers = [];
 
+    // Level 100's WorldHeaders record names exactly one configuration, so its
+    // page-list index is 0; Aquila Prototype is separately catalog record 3 in
+    // data/battle engine configurations.dat. The
+    // shorter display strings are independently visible in the pristine
+    // SELECT CONFIGURATION frame. Keeping both prevents UI text from being
+    // mistaken for the underlying weapon-record names.
+    private static readonly RetailFrontendBattleEngineConfiguration[] Level100Configurations =
+    [
+        new(
+            CatalogRecordIndex: 3,
+            AuthoredName: "Aquila Prototype",
+            DisplayName: "BE:A Unit-00 'Prototype'",
+            WalkerPrimary: new("Pulse Cannon Pod", "Pulse Cannon"),
+            WalkerSecondary: new("Mech Twin Vulcan Cannon", "Vulcan Cannon"),
+            JetPrimary: new("Mech Vulcan Cannon", "Vulcan Cannon"),
+            JetSecondary: new("Missile Pod", "Micro Missiles")),
+    ];
+
     /// <summary>
     /// Default game name offered by the page. Retail's pristine 640x480
     /// FEP_DEVSELECT capture shows "BEA 1" pre-filled and highlighted in the
@@ -54,6 +72,7 @@ public sealed class RetailFrontendSession
 
     private bool _level100LaunchPending;
     private string _gameName = DefaultGameName;
+    private int _selectedConfigurationIndex;
 
     public RetailFrontendScreen Screen { get; private set; } = RetailFrontendScreen.ClickToStart;
 
@@ -72,6 +91,14 @@ public sealed class RetailFrontendSession
     public RetailFrontendMenuItem SelectedMainItem => MainMenuItems[SelectedMainIndex];
 
     public IReadOnlyList<RetailFrontendMenuItem> Items => MainMenuItems;
+
+    /// <summary>Number of exact released Level-100 configuration rows.</summary>
+    public int ConfigurationCount => Level100Configurations.Length;
+
+    public int SelectedConfigurationIndex => _selectedConfigurationIndex;
+
+    public RetailFrontendBattleEngineConfiguration SelectedConfiguration =>
+        Level100Configurations[_selectedConfigurationIndex];
 
     public RetailFrontendMenuItemKind? UnavailableSelection { get; private set; }
 
@@ -148,6 +175,11 @@ public sealed class RetailFrontendSession
             return SelectCareerIndex(SelectedCareerIndex - 1);
         }
 
+        if (Screen == RetailFrontendScreen.SelectConfiguration)
+        {
+            return SelectConfigurationIndex(_selectedConfigurationIndex - 1);
+        }
+
         if (Screen != RetailFrontendScreen.MainMenu || SelectedMainIndex == 0)
         {
             return false;
@@ -174,6 +206,11 @@ public sealed class RetailFrontendSession
         if (Screen == RetailFrontendScreen.DevSelect)
         {
             return SelectCareerIndex(SelectedCareerIndex + 1);
+        }
+
+        if (Screen == RetailFrontendScreen.SelectConfiguration)
+        {
+            return SelectConfigurationIndex(_selectedConfigurationIndex + 1);
         }
 
         if (Screen != RetailFrontendScreen.MainMenu || SelectedMainIndex == MainMenuItems.Length - 1)
@@ -211,6 +248,20 @@ public sealed class RetailFrontendSession
         }
 
         SelectedQuitConfirmIndex = index;
+        return true;
+    }
+
+    public bool SelectConfigurationIndex(int index)
+    {
+        if (Screen != RetailFrontendScreen.SelectConfiguration ||
+            index < 0 ||
+            index >= Level100Configurations.Length ||
+            index == _selectedConfigurationIndex)
+        {
+            return false;
+        }
+
+        _selectedConfigurationIndex = index;
         return true;
     }
 
@@ -285,6 +336,7 @@ public sealed class RetailFrontendSession
                 return RetailFrontendSignal.PageChanged;
 
             case RetailFrontendScreen.MissionBriefing:
+                _selectedConfigurationIndex = 0;
                 Screen = RetailFrontendScreen.SelectConfiguration;
                 return RetailFrontendSignal.PageChanged;
 
@@ -469,6 +521,7 @@ public sealed class RetailFrontendSession
         SelectedQuitConfirmIndex = 0;
         UnavailableSelection = null;
         SelectedCareerIndex = -1;
+        _selectedConfigurationIndex = 0;
         _gameName = DefaultGameName;
         _level100LaunchPending = false;
         // Leaving the level ends CGame's restart loop. The next entry runs
@@ -480,6 +533,19 @@ public sealed class RetailFrontendSession
         Screen = RetailFrontendScreen.MainMenu;
     }
 }
+
+public sealed record RetailFrontendWeaponConfiguration(
+    string AuthoredName,
+    string DisplayName);
+
+public sealed record RetailFrontendBattleEngineConfiguration(
+    int CatalogRecordIndex,
+    string AuthoredName,
+    string DisplayName,
+    RetailFrontendWeaponConfiguration WalkerPrimary,
+    RetailFrontendWeaponConfiguration WalkerSecondary,
+    RetailFrontendWeaponConfiguration JetPrimary,
+    RetailFrontendWeaponConfiguration JetSecondary);
 
 public enum RetailFrontendScreen
 {

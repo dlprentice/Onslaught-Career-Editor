@@ -248,7 +248,6 @@ public sealed partial class RetailFrontendFlow : Control
     // See DrawMissionBriefing / DrawSelectConfiguration for the method per element.
     private const string MissionBriefingTitle = "MISSION BRIEFING";
     private const string SelectConfigurationTitle = "SELECT CONFIGURATION";
-    private const string ConfigurationUnitName = "BE:A Unit-00 'Prototype'";
     private const float HeaderBarCenterX = 390f;
     private const float HeaderTitleTop = 65f;
     private const float BriefingLevelNameLeft = 178.5f;
@@ -310,17 +309,6 @@ public sealed partial class RetailFrontendFlow : Control
         "",
         "Listen to her advice and try to",
         "keep Colonel Kramer happy.",
-    ];
-
-    /// <summary>Per-mode weapon rows: label and whether it heads a mode block.</summary>
-    private static readonly (string Text, bool IsModeHeader)[] ConfigurationWalkerRows =
-    [
-        ("Walker Mode", true), ("Pulse Cannon", false), ("Vulcan Cannon", false),
-    ];
-
-    private static readonly (string Text, bool IsModeHeader)[] ConfigurationJetRows =
-    [
-        ("Jet Mode", true), ("Vulcan Cannon", false), ("Micro Missiles", false),
     ];
 
     private static readonly Color ReleasedTitleText = RetailColor(0xff7f7f7f);
@@ -2445,33 +2433,53 @@ public sealed partial class RetailFrontendFlow : Control
     /// </summary>
     private void DrawSelectConfiguration()
     {
+        RetailFrontendBattleEngineConfiguration configuration = _session.SelectedConfiguration;
+
         DrawBriefingStage();
         DrawHeaderBarTitle(SelectConfigurationTitle);
 
         DrawFont22Text(
-            ConfigurationUnitName,
+            configuration.DisplayName,
             new Vector2(ConfigurationUnitLeft, ConfigurationUnitTop),
             1f,
             1f,
             ReleasedTitleText);
 
-        DrawConfigurationRows(ConfigurationWalkerRows, ConfigurationWalkerTop);
-        DrawConfigurationRows(ConfigurationJetRows, ConfigurationJetTop);
+        DrawConfigurationRows(
+            "Walker Mode",
+            configuration.WalkerPrimary,
+            configuration.WalkerSecondary,
+            ConfigurationWalkerTop);
+        DrawConfigurationRows(
+            "Jet Mode",
+            configuration.JetPrimary,
+            configuration.JetSecondary,
+            ConfigurationJetTop);
 
         DrawPageChevrons();
     }
 
-    private void DrawConfigurationRows((string Text, bool IsModeHeader)[] rows, float top)
+    private void DrawConfigurationRows(
+        string modeName,
+        RetailFrontendWeaponConfiguration primary,
+        RetailFrontendWeaponConfiguration secondary,
+        float top)
     {
-        for (int index = 0; index < rows.Length; index++)
-        {
-            (string text, bool isModeHeader) = rows[index];
-            DrawText(
-                text,
-                new Vector2(ConfigurationRowLeft, top + (index * ConfigurationRowPitch)),
-                1f,
-                isModeHeader ? ConfigurationModeText : ReleasedTitleText);
-        }
+        DrawText(
+            modeName,
+            new Vector2(ConfigurationRowLeft, top),
+            1f,
+            ConfigurationModeText);
+        DrawText(
+            primary.DisplayName,
+            new Vector2(ConfigurationRowLeft, top + ConfigurationRowPitch),
+            1f,
+            ReleasedTitleText);
+        DrawText(
+            secondary.DisplayName,
+            new Vector2(ConfigurationRowLeft, top + (2f * ConfigurationRowPitch)),
+            1f,
+            ReleasedTitleText);
     }
 
     /// <summary>

@@ -3,7 +3,7 @@
 Status: active canonical synthesis of the current executable-analysis state; raw
 machine exports remain the address-level evidence behind this human-readable
 master
-Last updated: 2026-08-09 (Gen19 authority; nineteen bulk static-hypothesis cohorts complete)
+Last updated: 2026-08-09 (Gen19 authority; twenty bulk static-hypothesis cohorts complete)
 Verdict: **The verified live and tracked databases now contain 8,136 function
 boundaries. The latest backed-up batch added eleven exact Mission-native
 boundaries and shipped registry names, including `IScript__UnsetObjective`,
@@ -97,11 +97,14 @@ all retaining their covered execution class. The identity-shaped template has
 a material caveat: it seeds nine 3x3 lanes but reads stack offsets `+0x0C`,
 `+0x1C`, and `+0x2C` without first writing them, then copies those ambient
 values into the 48-byte destination. It is therefore a bounded initialization
-shape, not proof of a fully initialized 48-byte identity matrix. Across all
-nineteen cohorts, 1,932 exact bodies are now bounded: 1,889 formerly opaque
+shape, not proof of a fully initialized 48-byte identity matrix. CRT342 then
+adds 342 exact named runtime-helper bodies while keeping exact CRT release and
+source symbols, hidden register/stack/x87/SEH ABI, floating-point exceptional
+state, OS/process effects, runtime causality, and rebuild parity open. Across
+all twenty cohorts, 2,274 exact bodies are now bounded: 2,231 formerly opaque
 functions have C1-static hypotheses and 42 prior C1 rows are repaired or
 confirmed, while ApplyDamage retains its pre-existing C2 contract. This leaves
-6,013 Generation-19 opaque functions.
+5,671 Generation-19 opaque functions.
 
 These are not paper-only queues: the 102 CGame/CBattleEngine rows and a second
 122-row CUnit/Player batch were applied to the disposable `HYP__` Ghidra
@@ -109,7 +112,7 @@ project and read back in separate processes. The second batch changed exactly
 122 target names/comments plus one automatic default-named thunk following its
 renamed target; `ApplyDamage` was excluded and no other function or program
 metric changed except the aggregate comment digest. Live/tracked Ghidra remains
-untouched by all nineteen semantic passes. The combined IScript50/World70 batch is
+untouched by all twenty semantic passes. The combined IScript50/World70 batch is
 also complete in disposable Ghidra: exactly its 120 target rows changed, all
 120 names/comments read back, no rows were added or removed, and no non-target
 function or program metric changed except the aggregate comment digest. The
