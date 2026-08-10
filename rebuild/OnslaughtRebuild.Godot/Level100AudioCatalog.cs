@@ -545,11 +545,44 @@ public static class Level100AudioCatalog
 
     /// <summary>
     /// <c>event-&gt;mSubVolume = 1;</c> for an event started with no fade,
-    /// <c>references/Onslaught/SoundManager.cpp:486-487</c>. This adapter does
-    /// not implement <c>FadeTo</c>/<c>FadeAllSamples</c>, so every event it
-    /// starts is an unfaded one.
+    /// <c>references/Onslaught/SoundManager.cpp:486-487</c>. Most adapter-owned
+    /// events remain unfaded; the Aquila flight loop uses the bounded signed
+    /// step below.
     /// </summary>
     public const float RetailUnfadedSubVolume = 1f;
+
+    /// <summary>
+    /// The Level 100 Aquila flight loop's signed <c>FadeTo</c> step. Retail
+    /// starts the loop at zero with <c>+0.02f</c>, and landing changes the same
+    /// event to <c>-0.02f</c> toward zero. <c>UpdateStatus</c> advances it once
+    /// per released 20 Hz update and clamps only after crossing the target, so
+    /// float accumulation completes either edge on update 51 rather than 50.
+    /// </summary>
+    public const float RetailFlightLoopFadeStep = 0.02f;
+
+    public static float AdvanceRetailFlightLoopSubVolume(
+        float current,
+        float target,
+        float signedStep,
+        out bool crossedTarget)
+    {
+        if (!float.IsFinite(current) ||
+            !float.IsFinite(target) ||
+            current is < 0f or > 1f ||
+            target is < 0f or > 1f ||
+            MathF.Abs(signedStep) != RetailFlightLoopFadeStep)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(current),
+                "Flight-loop fades require bounded subvolumes and the exact signed retail step.");
+        }
+
+        float next = current + signedStep;
+        crossedTarget = signedStep > 0f
+            ? next > target
+            : next < target;
+        return crossedTarget ? target : next;
+    }
 
     /// <summary>
     /// <c>CSoundManager::GetVolumeForPos</c>,

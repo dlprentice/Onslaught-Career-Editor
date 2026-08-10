@@ -603,6 +603,87 @@ public sealed class Level100AudioCatalogTests
         Assert.Equal(17.0f, engineDb - weaponDb, 3);
     }
 
+    [Fact]
+    public void AquilaFlightLoopFade_UsesTheReleasedSignedStepAndAdapterPath()
+    {
+        float fadeIn = 0f;
+        float fadeOut = 1f;
+        bool fadeInComplete = false;
+        bool fadeOutComplete = false;
+        for (int update = 0; update < 50; update++)
+        {
+            fadeIn = Level100AudioCatalog.AdvanceRetailFlightLoopSubVolume(
+                fadeIn,
+                1f,
+                Level100AudioCatalog.RetailFlightLoopFadeStep,
+                out fadeInComplete);
+            fadeOut = Level100AudioCatalog.AdvanceRetailFlightLoopSubVolume(
+                fadeOut,
+                0f,
+                -Level100AudioCatalog.RetailFlightLoopFadeStep,
+                out fadeOutComplete);
+            Assert.False(fadeInComplete);
+            Assert.False(fadeOutComplete);
+        }
+
+        Assert.True(fadeIn < 1f);
+        Assert.True(fadeOut > 0f);
+        fadeIn = Level100AudioCatalog.AdvanceRetailFlightLoopSubVolume(
+            fadeIn,
+            1f,
+            Level100AudioCatalog.RetailFlightLoopFadeStep,
+            out fadeInComplete);
+        fadeOut = Level100AudioCatalog.AdvanceRetailFlightLoopSubVolume(
+            fadeOut,
+            0f,
+            -Level100AudioCatalog.RetailFlightLoopFadeStep,
+            out fadeOutComplete);
+        Assert.True(fadeInComplete);
+        Assert.True(fadeOutComplete);
+        Assert.Equal(1f, fadeIn);
+        Assert.Equal(0f, fadeOut);
+
+        float reversed = 0f;
+        for (int update = 0; update < 10; update++)
+        {
+            reversed = Level100AudioCatalog.AdvanceRetailFlightLoopSubVolume(
+                reversed,
+                1f,
+                Level100AudioCatalog.RetailFlightLoopFadeStep,
+                out bool crossed);
+            Assert.False(crossed);
+        }
+        for (int update = 0; update < 10; update++)
+        {
+            reversed = Level100AudioCatalog.AdvanceRetailFlightLoopSubVolume(
+                reversed,
+                0f,
+                -Level100AudioCatalog.RetailFlightLoopFadeStep,
+                out bool crossed);
+            Assert.False(crossed);
+        }
+        Assert.Equal(0f, reversed);
+        reversed = Level100AudioCatalog.AdvanceRetailFlightLoopSubVolume(
+            reversed,
+            0f,
+            -Level100AudioCatalog.RetailFlightLoopFadeStep,
+            out bool reversalComplete);
+        Assert.True(reversalComplete);
+        Assert.Equal(0f, reversed);
+
+        string audio = ReadGodotSource("Level100Audio.cs");
+        Assert.Contains(
+            "AdvanceAquilaFlightLoopFade(delta);",
+            audio,
+            StringComparison.Ordinal);
+        Assert.Contains("initialSubVolume: 0f", audio, StringComparison.Ordinal);
+        Assert.Equal(2, CountOccurrences(audio, "FadeOutAquilaFlightLoop();"));
+        Assert.Contains(
+            "ReferenceEquals(player, _aquilaFlightLoop)",
+            audio,
+            StringComparison.Ordinal);
+    }
+
     // LAW 2. CSoundManager::GetVolumeForPos,
     // references/Onslaught/SoundManager.cpp:437-442, with FAR_SOUND 50 from
     // references/Onslaught/SoundManager.h:21. Linear from 100 at the listener

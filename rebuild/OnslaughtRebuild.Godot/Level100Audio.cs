@@ -12,6 +12,9 @@ namespace OnslaughtRebuild.GodotClient;
 // queue/mix/pause behavior, presentation pitch/volume, and stream lifetime.
 public sealed partial class Level100Audio : Node3D
 {
+    private const double RetailSoundUpdateSeconds =
+        1d / SimulationConstants.RetailTicksPerSecond;
+
     // Retail CMessageBox__AdvanceRevealAndScheduleNextTick (0x004b8020) schedules
     // the message-completion event 0xbba with the immediate float constant
     // 0x3e99999a = 0.30f. That is six ticks of the released 0.05 s event-manager
@@ -55,6 +58,10 @@ public sealed partial class Level100Audio : Node3D
     private Node3D? _aquila;
     private Level100ActorId? _aquilaActorId;
     private AudioStreamPlayer3D? _aquilaFlightLoop;
+    private float _aquilaFlightLoopSubVolume;
+    private float _aquilaFlightLoopTargetSubVolume;
+    private float _aquilaFlightLoopFadeStep;
+    private double _aquilaFlightLoopFadeAccumulatorSeconds;
     private AudioStreamPlayer3D? _aquilaWarningLoop;
     private AquilaWarningAudioState _aquilaWarningState;
     private AudioStreamPlayer3D? _trainerLoop;
@@ -188,6 +195,8 @@ public sealed partial class Level100Audio : Node3D
             return;
         }
 
+        AdvanceAquilaFlightLoopFade(delta);
+
         // CSoundManager::UpdateStatus recomputes GetVolumeForPos and re-Fades
         // every live ST_FOLLOW* event on every update
         // (references/Onslaught/SoundManager.cpp:1361-1370), so the listener
@@ -272,7 +281,7 @@ public sealed partial class Level100Audio : Node3D
             return;
         }
 
-        StopLoop(ref _aquilaFlightLoop);
+        StopAquilaFlightLoop();
         StopLoop(ref _aquilaWarningLoop);
         _aquilaWarningState = AquilaWarningAudioState.Normal;
         ReleaseAquilaBinding();
@@ -316,23 +325,13 @@ public sealed partial class Level100Audio : Node3D
                     aquila,
                     "RetailAquilaTakeoff",
                     Level100AudioCatalog.GetAquilaTransition(cue));
-                SetSpecificLoop(
-                    ref _aquilaFlightLoop,
-                    aquila,
-                    "RetailAquilaInFlightLoop",
-                    Level100AudioCatalog.GetAquilaTransition(AquilaTransitionCue.InFlight),
-                    active: true);
+                FadeInAquilaFlightLoop(aquila);
                 break;
             case AquilaTransitionCue.InFlight:
-                SetSpecificLoop(
-                    ref _aquilaFlightLoop,
-                    aquila,
-                    "RetailAquilaInFlightLoop",
-                    Level100AudioCatalog.GetAquilaTransition(cue),
-                    active: true);
+                FadeInAquilaFlightLoop(aquila);
                 break;
             case AquilaTransitionCue.Landing:
-                StopLoop(ref _aquilaFlightLoop);
+                FadeOutAquilaFlightLoop();
                 PlayAttached(
                     aquila,
                     "RetailAquilaLanding",
@@ -343,7 +342,14 @@ public sealed partial class Level100Audio : Node3D
         }
     }
 
-    public void StopAquilaFlightLoop() => StopLoop(ref _aquilaFlightLoop);
+    public void StopAquilaFlightLoop()
+    {
+        StopLoop(ref _aquilaFlightLoop);
+        _aquilaFlightLoopSubVolume = 0f;
+        _aquilaFlightLoopTargetSubVolume = 0f;
+        _aquilaFlightLoopFadeStep = 0f;
+        _aquilaFlightLoopFadeAccumulatorSeconds = 0d;
+    }
 
     public void ConsumeAquilaFlightEvents(
         IReadOnlyList<AquilaFlightEvent> events)
@@ -365,7 +371,7 @@ public sealed partial class Level100Audio : Node3D
                     break;
                 case AquilaFlightEvents.TransformCompleted
                     when flightEvent.Mode == VehicleMode.Walker:
-                    StopAquilaFlightLoop();
+                    FadeOutAquilaFlightLoop();
                     break;
             }
         }
@@ -699,7 +705,7 @@ public sealed partial class Level100Audio : Node3D
         _terminalBaseVolumes.Clear();
         StopAndFree(_gameplayOneShots);
         _gameplayBaseVolumes.Clear();
-        StopLoop(ref _aquilaFlightLoop);
+        StopAquilaFlightLoop();
         StopLoop(ref _aquilaWarningLoop);
         StopLoop(ref _trainerLoop);
         StopLoop(ref _transportLoop);
@@ -803,7 +809,8 @@ public sealed partial class Level100Audio : Node3D
         Node3D owner,
         string name,
         Level100AudioCueRecipe spec,
-        bool active)
+        bool active,
+        float initialSubVolume = Level100AudioCatalog.RetailUnfadedSubVolume)
     {
         ArgumentNullException.ThrowIfNull(owner);
         if (!active)
@@ -841,9 +848,102 @@ public sealed partial class Level100Audio : Node3D
         _gameplayBaseVolumes.Add(player, spec.LinearVolume);
         owner.AddChild(player);
         player.VolumeDb =
-            SpatialVolumeDb(spec.LinearVolume, ListenerDistance(player));
+            SpatialVolumeDb(
+                spec.LinearVolume,
+                ListenerDistance(player),
+                initialSubVolume);
         player.Play();
         player.StreamPaused = _gameplayPaused;
+    }
+
+    private void FadeInAquilaFlightLoop(Node3D owner)
+    {
+        bool continuing =
+            IsPlaying(_aquilaFlightLoop) &&
+            _aquilaFlightLoop!.GetParent() == owner;
+        Level100AudioCueRecipe spec =
+            Level100AudioCatalog.GetAquilaTransition(AquilaTransitionCue.InFlight);
+        SetSpecificLoop(
+            ref _aquilaFlightLoop,
+            owner,
+            "RetailAquilaInFlightLoop",
+            spec,
+            active: true,
+            initialSubVolume: 0f);
+
+        if (!continuing)
+        {
+            _aquilaFlightLoopSubVolume = 0f;
+            _aquilaFlightLoopFadeAccumulatorSeconds = 0d;
+        }
+        _aquilaFlightLoopTargetSubVolume =
+            Level100AudioCatalog.RetailUnfadedSubVolume;
+        _aquilaFlightLoopFadeStep =
+            Level100AudioCatalog.RetailFlightLoopFadeStep;
+        ApplyAquilaFlightLoopVolume(spec.LinearVolume);
+    }
+
+    private void FadeOutAquilaFlightLoop()
+    {
+        if (IsPlaying(_aquilaFlightLoop))
+        {
+            _aquilaFlightLoopTargetSubVolume = 0f;
+            _aquilaFlightLoopFadeStep =
+                -Level100AudioCatalog.RetailFlightLoopFadeStep;
+        }
+    }
+
+    private void AdvanceAquilaFlightLoopFade(double delta)
+    {
+        if (!double.IsFinite(delta) ||
+            delta <= 0d ||
+            !IsPlaying(_aquilaFlightLoop) ||
+            _aquilaFlightLoopFadeStep == 0f)
+        {
+            return;
+        }
+
+        _aquilaFlightLoopFadeAccumulatorSeconds += delta;
+        while (_aquilaFlightLoopFadeAccumulatorSeconds >= RetailSoundUpdateSeconds &&
+               _aquilaFlightLoopFadeStep != 0f)
+        {
+            _aquilaFlightLoopFadeAccumulatorSeconds -= RetailSoundUpdateSeconds;
+            _aquilaFlightLoopSubVolume =
+                Level100AudioCatalog.AdvanceRetailFlightLoopSubVolume(
+                    _aquilaFlightLoopSubVolume,
+                    _aquilaFlightLoopTargetSubVolume,
+                    _aquilaFlightLoopFadeStep,
+                    out bool crossedTarget);
+            if (crossedTarget)
+            {
+                _aquilaFlightLoopFadeStep = 0f;
+                _aquilaFlightLoopFadeAccumulatorSeconds = 0d;
+                if (_aquilaFlightLoopTargetSubVolume == 0f)
+                {
+                    StopAquilaFlightLoop();
+                    return;
+                }
+            }
+        }
+
+        if (_gameplayBaseVolumes.TryGetValue(
+            _aquilaFlightLoop!,
+            out float baseVolume))
+        {
+            ApplyAquilaFlightLoopVolume(baseVolume);
+        }
+    }
+
+    private void ApplyAquilaFlightLoopVolume(float baseVolume)
+    {
+        if (GodotObject.IsInstanceValid(_aquilaFlightLoop) &&
+            _aquilaFlightLoop!.IsInsideTree())
+        {
+            _aquilaFlightLoop.VolumeDb = SpatialVolumeDb(
+                baseVolume,
+                ListenerDistance(_aquilaFlightLoop),
+                _aquilaFlightLoopSubVolume);
+        }
     }
 
     private AudioStream GetEventStream(Level100AudioCueRecipe spec)
@@ -1010,11 +1110,14 @@ public sealed partial class Level100Audio : Node3D
     // references/Onslaught/SoundManager.cpp:437-442). Retail recomputes it on
     // every update for every ST_FOLLOW* event (SoundManager.cpp:1360-1370), so
     // _Process does the same here.
-    private float SpatialVolumeDb(float baseVolume, float distanceUnits) =>
+    private float SpatialVolumeDb(
+        float baseVolume,
+        float distanceUnits,
+        float subVolume = Level100AudioCatalog.RetailUnfadedSubVolume) =>
         Level100AudioCatalog.RetailVolumeDb(
             Level100AudioCatalog.RetailSourceVolumeForDistance(distanceUnits),
             baseVolume,
-            Level100AudioCatalog.RetailUnfadedSubVolume,
+            subVolume,
             _soundOptionMix,
             _gameplayMix);
 
@@ -1038,7 +1141,13 @@ public sealed partial class Level100Audio : Node3D
         {
             if (GodotObject.IsInstanceValid(player) && player.IsInsideTree())
             {
-                player.VolumeDb = SpatialVolumeDb(baseVolume, ListenerDistance(player));
+                float subVolume = ReferenceEquals(player, _aquilaFlightLoop)
+                    ? _aquilaFlightLoopSubVolume
+                    : Level100AudioCatalog.RetailUnfadedSubVolume;
+                player.VolumeDb = SpatialVolumeDb(
+                    baseVolume,
+                    ListenerDistance(player),
+                    subVolume);
             }
         }
     }
