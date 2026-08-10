@@ -1182,6 +1182,7 @@ public sealed partial class FirstFlightGame : Node3D
         ConsumeLevel100MissionEvents(result.Level100MissionEvents);
         _audio.ConsumeAquilaFlightEvents(result.AquilaFlightEvents);
         _audio.ConsumeLevel100WeaponFireEvents(result.Level100WeaponFireEvents);
+        _world.ConsumeLevel100WeaponFireEvents(result.Level100WeaponFireEvents);
         _audio.SetAquilaFlightPitch(
             result.CurrentSnapshot.JetThrusterPermille / 1_000f);
         _world.ConsumeLevel100DestructionEvents(

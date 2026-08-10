@@ -65,6 +65,7 @@ bit-identical retail collision geometry.
 | `Textures/pulse-impact-animated-blob.texture.aya` | Exact released 256×256 DXT2 `alparticle4` impact/smoke animation | `74085B280199E20B765640CFC3E417E6DA0FCBFB25384E129858A32F5DEB995D` |
 | `Textures/pulse-impact-shockwave.texture.aya` | Exact released 128×128 DXT1 `1telep` medium Pulse Bolt shockwave | `E92EFC3F5ADFA347E6B50F1E3D20AF4C6800D76853A2126D71237DFEFEEA9F10` |
 | `Textures/effect-flash-medium.texture.aya` | Exact released 128×128 DXT1 `sun2` medium impact flash | `D7FBFCB4EDB2167FEDC0A467D4501C9BBC2F6A2852C7873DAEC3953E6F518F5C` |
+| `Textures/particle-alparticle5-additive.texture.aya` | Exact released 128×128 DXT2 `alparticle5` Pulse Cannon muzzle-flash atlas | `5004B8C6A688B82605F870E60D4ED32A32203B4371F1AEC72155FEF1619A5FA0` |
 | `Textures/target-tank-explosion-animated.texture.aya` | Exact released 256×256 DXT1 `alparticle6` medium explosion animation | `3C8FC30AD4923C56C3735CAAB5661A3F176EB661EAA678093870F51DE4204C9E` |
 | `Textures/target-tank-explosion-fireball.texture.aya` | Exact released 256×256 DXT2 `fireball` target-destruction layer | `E6C166669E351632A90B41C74782967923C78FC8BE644A1E8948D356806B23ED` |
 | `Sky/cube25-cent.texture.aya` | Released 512×512 cube-25 center DXT1 texture | `1AAD6CC8F85B6BB7CCBB8D2C7B0E6AA31722A9ADBDE5A3F19B248430CA83469E` |
@@ -215,10 +216,10 @@ verbatim, so it needs **no new texture**. `m_f_lifter.msh.aya` names
 is `lifter02` — and emits two groups against the same Chrome3 reflection, which
 is already materialized as `StaticWorld/Textures/meshtex-chrome3.texture.aya`.
 
-Two further texture files present on disk — `particle-alparticle5-additive` and
-`particle-fireball-additive` — are deliberately **not** added here. They exist
-only in an uncommitted working tree, so they are not yet materialized inputs of
-the tracked producer, and they belong to the lane that owns them.
+`particle-alparticle5-additive` is now an ordinary `DIRECT_ASSETS` retention for
+the released Pulse Cannon muzzle flash. `particle-fireball-additive` is not a
+second producer output: its exact retail source is already retained above as
+`target-tank-explosion-fireball.texture.aya`.
 
 ## Complete Level 100 audio contract
 

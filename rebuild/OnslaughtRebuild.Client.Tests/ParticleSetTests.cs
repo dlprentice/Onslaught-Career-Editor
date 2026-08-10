@@ -596,6 +596,136 @@ public sealed class ParticleSetTests
         Assert.Equal((0.5f, 1f, 1f), cyan.Start);
         Assert.Equal((0.5f, 1f, 1f), cyan.End);
         Assert.False(cyan.UseTransition);
+
+        string gameSource = File.ReadAllText(Locate(
+            "rebuild/OnslaughtRebuild.Godot/FirstFlightGame.cs"));
+        string frameEvents = RequireSection(
+            gameSource,
+            "private void ConsumeFrameEvents(FrameAdvanceResult result)",
+            "private void RunFocusLossHandlerSmokeProbe()");
+        Assert.Contains(
+            "_world.ConsumeLevel100WeaponFireEvents(result.Level100WeaponFireEvents);",
+            frameEvents,
+            StringComparison.Ordinal);
+
+        string worldSource = File.ReadAllText(Locate(
+            "rebuild/OnslaughtRebuild.Godot/FirstFlightWorldView.cs"));
+        string fireEvents = RequireSection(
+            worldSource,
+            "public void ConsumeLevel100WeaponFireEvents(",
+            "private void BuildEnvironment()");
+        Assert.Contains(
+            "if (item.Weapon == Level100PlayerWeapon.PulseCannonPod)",
+            fireEvents,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "_pendingPulseCannonMuzzleFlashes++;",
+            fireEvents,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "MechTwinVulcanCannon",
+            fireEvents,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "MechVulcanCannon",
+            fireEvents,
+            StringComparison.Ordinal);
+
+        string projectileUpdate = RequireSection(
+            worldSource,
+            "private void UpdateProjectiles(",
+            "private void BuildPulseCannonPresentation()");
+        int newProjectileBranch = projectileUpdate.IndexOf(
+            "if (!_projectiles.TryGetValue(projectile.Id, out Node3D? visual))",
+            StringComparison.Ordinal);
+        int muzzleFlashSpawn = projectileUpdate.IndexOf(
+            "SpawnPulseCannonMuzzleFlash(",
+            StringComparison.Ordinal);
+        int priorStateJoin = projectileUpdate.IndexOf(
+            "Level100ProjectileVisualState? prior",
+            StringComparison.Ordinal);
+        Assert.True(newProjectileBranch >= 0);
+        Assert.InRange(muzzleFlashSpawn, newProjectileBranch + 1, priorStateJoin - 1);
+        Assert.Contains(
+            "ToPulseLaunchWorld(projectile)",
+            projectileUpdate,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "_pendingPulseCannonMuzzleFlashes--;",
+            projectileUpdate,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "_pendingPulseCannonMuzzleFlashes = 0;",
+            projectileUpdate,
+            StringComparison.Ordinal);
+
+        string presentation = RequireSection(
+            worldSource,
+            "private void BuildPulseCannonPresentation()",
+            "private void SpawnPulseCannonMuzzleFlash(");
+        Assert.Contains(
+            "particle-alparticle5-additive.texture.aya",
+            presentation,
+            StringComparison.Ordinal);
+
+        string spawn = RequireSection(
+            worldSource,
+            "private void SpawnPulseCannonMuzzleFlash(",
+            "private void SpawnPulseImpact(");
+        Assert.Contains("CreateTimedEffect(", spawn, StringComparison.Ordinal);
+        Assert.Contains("0.5d);", spawn, StringComparison.Ordinal);
+        Assert.Contains("_pulseCannonMuzzleFlashTexture", spawn, StringComparison.Ordinal);
+        Assert.Contains("0.3f", spawn, StringComparison.Ordinal);
+        Assert.Contains("columns: 4", spawn, StringComparison.Ordinal);
+        Assert.Contains("rows: 4", spawn, StringComparison.Ordinal);
+        Assert.Contains(
+            "new Color(0.5f, 1f, 1f, 1f)",
+            spawn,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "AnimateScale(flash, 1f, 5f, 0.5d);",
+            spawn,
+            StringComparison.Ordinal);
+
+        string animation = RequireSection(
+            worldSource,
+            "private static void AnimatePulseCannonMuzzleFlash(",
+            "private static void AnimateAtlas(");
+        Assert.Contains("const int startCell = 1;", animation, StringComparison.Ordinal);
+        Assert.Contains("const int endCell = 15;", animation, StringComparison.Ordinal);
+        Assert.Contains("const double cellsPerTurn = 1.4d;", animation, StringComparison.Ordinal);
+        Assert.Contains(
+            "cellsPerTurn * SimulationConstants.TicksPerSecond",
+            animation,
+            StringComparison.Ordinal);
+
+        string launchPosition = RequireSection(
+            worldSource,
+            "private static Vector3 ToPulseLaunchWorld(",
+            "private static Vector3 ToSpawnWorld(");
+        Assert.Contains(
+            "SimulationConstants.ProjectileLifetimeTicks - projectile.RemainingTicks",
+            launchPosition,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "projectile.Velocity.X * elapsedTicks",
+            launchPosition,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "projectile.VerticalVelocityMillimetersPerTick * elapsedTicks",
+            launchPosition,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "projectile.Velocity.Z * elapsedTicks",
+            launchPosition,
+            StringComparison.Ordinal);
+
+        string materializer = File.ReadAllText(Locate(
+            "rebuild/tools/materialize_retail_assets.py"));
+        Assert.Contains(
+            "Particle%alparticle5.tga(0)A4R4G4B4.aya\", \"5004b8c6a688b82605f870e60d4ed32a32203b4371f1aec72155fef1619a5fa0\"",
+            materializer,
+            StringComparison.Ordinal);
     }
 
     /// <summary>
@@ -703,6 +833,15 @@ public sealed class ParticleSetTests
     {
         int space = value.IndexOf(' ');
         return space < 0 ? "" : value[(space + 1)..];
+    }
+
+    private static string RequireSection(string source, string start, string end)
+    {
+        int startIndex = source.IndexOf(start, StringComparison.Ordinal);
+        Assert.True(startIndex >= 0, $"Source section start '{start}' is missing.");
+        int endIndex = source.IndexOf(end, startIndex + start.Length, StringComparison.Ordinal);
+        Assert.True(endIndex > startIndex, $"Source section end '{end}' is missing.");
+        return source[startIndex..endIndex];
     }
 
     private static string Locate(string repositoryRelativePath)

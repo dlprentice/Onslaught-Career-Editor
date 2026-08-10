@@ -2,7 +2,7 @@
 
 Status: active canonical three-source synthesis; the three input masters and
 their line-level evidence remain the owning detail
-Last updated: 2026-08-09
+Last updated: 2026-08-10
 Verdict: **The installed corpus, the project's repo-designated unpatched executable
 baseline, and pinned Stuart source describe one recognizable engine lineage
 from three different sides,
@@ -30,7 +30,7 @@ different hashes and are identified separately below.
 
 ---
 
-## Current complete-RE replay authority (2026-08-09) — read this first
+## Current complete-RE replay authority (2026-08-10) — read this first
 
 **Do not treat historical Gen10 or candidate Gen73 as current authority.** The
 exact selector is `developer_state.json` → `current_re_authority`; its external
@@ -45,7 +45,7 @@ pins.
 | OPEN residual | **17** police holds; Gen14 closed TokenArchive dispatch data, Gen15 proved `IScript__SetPos` plus its two NOP neighbors, and Gen19 proves the UnsetObjective 3/13/3 partition |
 | complete_RE | **false** |
 | Candidate-chain disposition | Gen73 is `PROJECTION_ORACLE_ONLY`; all 7,294 source adjudications and 145,973 changed fields are closed by `94d7a9eb…323e0` |
-| Immediate RE front | Twenty-one disjoint bulk static passes now cover 2,448 exact bodies: 2,405 formerly opaque functions have bounded C1_STATIC hypotheses and 42 prior C1 rows are repaired or confirmed, while ApplyDamage remains C2; 5,497 Generation-19 opaque functions remain. CRT342 and CDXTexture174 add 516 exact bodies while explicitly leaving exact source symbols/ownership, hidden ABI, floating-point exceptional state, runtime codec/resource effects, and parity open. Structural539's completed comment-only disposable batch separately read back all 539 targets with zero collateral drift. The rebuild consumes 10 Weapon41 contracts fully and 4 partially; CGame corrected the loss countdown from source's 5 seconds to retail's 2 seconds; controller input uses the retail gun-release edge; the walker loader now component-linearly interpolates all nine retail `HORI` values; the water owner now carries retail's index-4 `0.00014` projection-depth bias law instead of a `0.002` world-space shoreline lift; the proper-rotation render path now uses Math51's retail sine-weighted spherical law; the cursor distinguishes stored DXT2 from measured RGBA8 upload; and the configuration page now carries the one authored Level-100 Aquila Prototype row. Focused tests and the Godot build pass. Localized configuration output, ratings, icons, live preview, pixel-level bias sign, and direct retail-helper-to-render ownership remain open. CRT342 is in scratch readback; the active static lane is the remaining JmpThunk/DynInit structural block. |
+| Immediate RE front | Fifty-one disjoint bulk static passes cover 7,761 exact bodies: 7,718 formerly opaque functions have bounded C1_STATIC hypotheses and 42 prior C1 rows are repaired or confirmed, while ApplyDamage remains C2; 184 Generation-19 opaque functions remain. After the complete export-evidence census fell below 100 eligible rows, Tier 4 switched instruments to exact current body/ranges plus gapless pinned Capstone 5.0.7 decoding of pristine bytes, retaining every missing metadata/decompile/export/xref component and making no source/runtime/parity claim. The 98-row named ceiling is now exact in disposable Ghidra through 7,825 HYP names with zero collateral drift, exhausting that instrument and forcing a formal/RTTI/vtable/reference/source change for the residual 184. The rebuild now also carries the recovered message-to-voice lead, Warehouse direct flash, and the Pulse Cannon muzzle flash with multi-tick launch-position rewind; focused checks, Godot build, and bounded review pass. |
 | Ghidra apply | The latest authorized live operation added eleven exact Mission-native boundaries and shipped registry names in one batch, with fact-only comments and no signatures/contracts. Fresh readback changed 8,125 → 8,136 functions and zero existing function rows, bytes, instructions, data, or references; READY `a78b8640…b9919`, POST functions `38b86d40…57c86`, POST program `46f59a47…87180` |
 
 The frozen three-master hashes later in this document remain the correct inputs

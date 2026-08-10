@@ -151,11 +151,13 @@ public sealed partial class FirstFlightWorldView : Node3D
     private StandardMaterial3D _pulseBoltTrailMaterial = null!;
     private StandardMaterial3D _pulseBoltHaloMaterial = null!;
     private StandardMaterial3D _pulseBoltEnergyTrailMaterial = null!;
+    private Texture2D _pulseCannonMuzzleFlashTexture = null!;
     private Texture2D _pulseImpactAnimatedTexture = null!;
     private Texture2D _pulseImpactShockwaveTexture = null!;
     private Texture2D _effectFlashMediumTexture = null!;
     private Texture2D _targetTankExplosionAnimatedTexture = null!;
     private Texture2D _targetTankExplosionFireballTexture = null!;
+    private int _pendingPulseCannonMuzzleFlashes;
     private float _particlePresentationSeconds;
     private float _walkerToJetVisualElapsed = float.PositiveInfinity;
     private float _jetToWalkerVisualElapsed = float.PositiveInfinity;
@@ -326,6 +328,19 @@ public sealed partial class FirstFlightWorldView : Node3D
                     throw new InvalidDataException(
                         $"Core exposed unknown Level 100 destruction effect " +
                         $"{item.EffectKind}.");
+            }
+        }
+    }
+
+    public void ConsumeLevel100WeaponFireEvents(
+        IReadOnlyList<Level100WeaponFireEvent> events)
+    {
+        ArgumentNullException.ThrowIfNull(events);
+        foreach (Level100WeaponFireEvent item in events)
+        {
+            if (item.Weapon == Level100PlayerWeapon.PulseCannonPod)
+            {
+                _pendingPulseCannonMuzzleFlashes++;
             }
         }
     }
@@ -973,6 +988,13 @@ public sealed partial class FirstFlightWorldView : Node3D
                 visual = CreatePulseBoltVisual(projectile.Id);
                 AddChild(visual);
                 _projectiles.Add(projectile.Id, visual);
+                if (_pendingPulseCannonMuzzleFlashes > 0)
+                {
+                    SpawnPulseCannonMuzzleFlash(
+                        ToPulseLaunchWorld(projectile),
+                        projectile.Id);
+                    _pendingPulseCannonMuzzleFlashes--;
+                }
             }
 
             Level100ProjectileVisualState? prior =
@@ -995,6 +1017,11 @@ public sealed partial class FirstFlightWorldView : Node3D
                 visual.LookAt(visual.Position + direction.Normalized(), Vector3.Up);
             }
         }
+
+        // A released round can hit inside an aggregated frame and therefore
+        // leave no projectile in the current snapshot. Do not attach that
+        // unmatched flash to a later Vulcan round.
+        _pendingPulseCannonMuzzleFlashes = 0;
 
         foreach (int id in _projectiles.Keys.Where(id => !activeIds.Contains(id)).ToArray())
         {
@@ -1045,6 +1072,10 @@ public sealed partial class FirstFlightWorldView : Node3D
             128,
             128,
             CuratedAyaTextureLoader.Compression.Dxt1);
+        _pulseCannonMuzzleFlashTexture = CuratedAyaTextureLoader.Load(
+            "res://Assets/Level100/Textures/particle-alparticle5-additive.texture.aya",
+            128,
+            128);
         _targetTankExplosionAnimatedTexture = CuratedAyaTextureLoader.Load(
             "res://Assets/Level100/Textures/target-tank-explosion-animated.texture.aya",
             256,
@@ -1054,6 +1085,25 @@ public sealed partial class FirstFlightWorldView : Node3D
             "res://Assets/Level100/Textures/target-tank-explosion-fireball.texture.aya",
             256,
             256);
+    }
+
+    private void SpawnPulseCannonMuzzleFlash(Vector3 position, int projectileId)
+    {
+        Node3D root = CreateTimedEffect(
+            $"PulseCannonMuzzleFlash{projectileId}",
+            position,
+            0.5d);
+        MeshInstance3D flash = CreateEffectSprite(
+            "PulseCannonMuzzleFlash",
+            _pulseCannonMuzzleFlashTexture,
+            0.3f,
+            columns: 4,
+            rows: 4);
+        var material = (StandardMaterial3D)flash.MaterialOverride;
+        material.AlbedoColor = new Color(0.5f, 1f, 1f, 1f);
+        root.AddChild(flash);
+        AnimatePulseCannonMuzzleFlash(root, flash);
+        AnimateScale(flash, 1f, 5f, 0.5d);
     }
 
     private void SpawnPulseImpact(Vector3 position, int targetId, int tick)
@@ -1257,6 +1307,38 @@ public sealed partial class FirstFlightWorldView : Node3D
         }
     }
 
+    private static void AnimatePulseCannonMuzzleFlash(
+        Node root,
+        MeshInstance3D flash)
+    {
+        const int startCell = 1;
+        const int endCell = 15;
+        const int columns = 4;
+        const int rows = 4;
+        const double cellsPerTurn = 1.4d;
+        double cellIntervalSeconds =
+            1d / (cellsPerTurn * SimulationConstants.TicksPerSecond);
+        var material = (StandardMaterial3D)flash.MaterialOverride;
+        material.Uv1Offset = new Vector3(
+            (startCell % columns) / (float)columns,
+            (startCell / columns) / (float)rows,
+            0f);
+
+        Tween tween = root.CreateTween();
+        for (int cell = startCell + 1; cell <= endCell; cell++)
+        {
+            int capturedCell = cell;
+            tween.TweenInterval(cellIntervalSeconds);
+            tween.TweenCallback(Callable.From(() =>
+            {
+                material.Uv1Offset = new Vector3(
+                    (capturedCell % columns) / (float)columns,
+                    (capturedCell / columns) / (float)rows,
+                    0f);
+            }));
+        }
+    }
+
     private static void AnimateAtlas(
         Node root,
         MeshInstance3D sprite,
@@ -1382,6 +1464,20 @@ public sealed partial class FirstFlightWorldView : Node3D
                 projectile.Velocity.X,
                 projectile.VerticalVelocityMillimetersPerTick,
                 -projectile.Velocity.Z));
+
+    private static Vector3 ToPulseLaunchWorld(ProjectileSnapshot projectile)
+    {
+        int elapsedTicks =
+            SimulationConstants.ProjectileLifetimeTicks - projectile.RemainingTicks;
+        return new Vector3(
+            (projectile.Position.X - (projectile.Velocity.X * elapsedTicks)) *
+                UnitsToMeters,
+            (projectile.ElevationMillimeters -
+                (projectile.VerticalVelocityMillimetersPerTick * elapsedTicks)) *
+                UnitsToMeters,
+            -(projectile.Position.Z - (projectile.Velocity.Z * elapsedTicks)) *
+                UnitsToMeters);
+    }
 
     private static Vector3 ToSpawnWorld(ProjectileSnapshot projectile)
     {

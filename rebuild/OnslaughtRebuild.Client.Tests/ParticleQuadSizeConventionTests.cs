@@ -144,6 +144,7 @@ public sealed class ParticleQuadSizeConventionTests
             ["ExplosionAnimatedSprite"] = "Explosion Anim Sprite Medium",
             ["ExplosionFireball"] = "Fire Sprite Damped 2",
             ["FacilityFlash"] = "Flash Building",
+            ["PulseCannonMuzzleFlash"] = "Pulse Cannon Muzzle Flash",
         };
 
         string source = ReadGodotSource("FirstFlightWorldView.cs");
