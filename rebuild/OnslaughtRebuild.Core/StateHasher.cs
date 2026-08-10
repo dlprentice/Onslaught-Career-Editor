@@ -24,6 +24,11 @@ public static class StateHasher
         using (var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true))
         {
             writer.Write(s_magic);
+            // 39: records the released round identity carried by each live
+            // projectile. Pulse, Walker Vulcan, and Jet Vulcan overlap in
+            // remaining lifetime, so their presentation contract cannot be
+            // reconstructed from the old projectile fields.
+            //
             // 38: records whether SetAllegiance actually executed. Allegiance 0
             // is Friendly, but it is also the default value on actor state that
             // an unrelated AI/waypoint command creates, so the value alone
@@ -72,7 +77,7 @@ public static class StateHasher
             // 31: added the ordered Level100WeaponFireEvents stream. Every
             // hashed tick gains its four-byte count, so this bump moves every
             // pinned hash regardless of whether a weapon fires.
-            writer.Write(38);
+            writer.Write(39);
             writer.Write(state.Tick);
             writer.Write(state.Seed);
             writer.Write(state.InitialLevel100TutorialProgress.Introduction);
@@ -183,6 +188,7 @@ public static class StateHasher
             foreach (ProjectileSnapshot projectile in projectiles)
             {
                 writer.Write(projectile.Id);
+                writer.Write((byte)projectile.Kind);
                 WriteVector(writer, projectile.Position);
                 WriteVector(writer, projectile.Velocity);
                 writer.Write(projectile.ElevationMillimeters);

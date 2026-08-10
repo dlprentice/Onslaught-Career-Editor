@@ -1848,9 +1848,12 @@ public sealed class InteractiveSessionTests
         // CRoundLifeSpan 6.0. All four released shots are still live in the
         // final snapshot instead of expiring at the old contradicted 27-tick
         // placeholder; the firing-range and waypoint assertions are unchanged.
+        // MOVED 2026-08-10 by StateHasher v39. Every live projectile now
+        // carries its released round identity so presentation can distinguish
+        // the Pulse Bolt's five-point trail from both Vulcan bullet records.
         string finalStateHash = StateHasher.ComputeHex(session.CurrentSnapshot);
         Assert.Equal(
-            "e2d58b207ed85ae333956646b2c83f313825fc6e76383158a0fe1b046b1132da",
+            "8c7015024e2067bcc6ef0b3245a8205cd2057c8d17268295680affde2b65107f",
             finalStateHash);
     }
 

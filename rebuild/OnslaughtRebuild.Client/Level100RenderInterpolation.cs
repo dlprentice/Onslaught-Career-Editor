@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+using OnslaughtRebuild.Core;
+
 namespace OnslaughtRebuild.Client;
 
 /// <summary>
@@ -9,6 +11,110 @@ namespace OnslaughtRebuild.Client;
 public readonly record struct Level100ProjectileVisualState(
     Level100RenderVector3 Position,
     Level100RenderVector3 Direction);
+
+/// <summary>
+/// Presentation-only fixed-step position history for one projectile trail.
+/// Missing renderer frames are reconstructed from the projectile's fixed
+/// velocity and remaining lifetime, so authored history depth does not vary
+/// with display frame rate.
+/// </summary>
+public sealed class Level100ProjectileTrailHistory
+{
+    private readonly int _capacity;
+    private readonly int _lifetimeTicks;
+    private readonly List<Level100RenderVector3> _points = [];
+    private int? _lastRemainingTicks;
+
+    public Level100ProjectileTrailHistory(int capacity, int lifetimeTicks)
+    {
+        if (capacity < 1)
+        {
+            throw new ArgumentOutOfRangeException(nameof(capacity));
+        }
+
+        if (lifetimeTicks < 1)
+        {
+            throw new ArgumentOutOfRangeException(nameof(lifetimeTicks));
+        }
+
+        _capacity = capacity;
+        _lifetimeTicks = lifetimeTicks;
+    }
+
+    public IReadOnlyList<Level100RenderVector3> Points => _points;
+
+    public static bool UsesAuthoredPulseTrail(Level100ProjectileKind kind) =>
+        kind == Level100ProjectileKind.MechPulseBoltMedium;
+
+    public void Advance(
+        Level100RenderVector3 current,
+        Level100RenderVector3 velocityPerTick,
+        int remainingTicks)
+    {
+        if (remainingTicks < 0 || remainingTicks > _lifetimeTicks)
+        {
+            throw new ArgumentOutOfRangeException(nameof(remainingTicks));
+        }
+
+        if (_lastRemainingTicks is null ||
+            remainingTicks > _lastRemainingTicks.Value)
+        {
+            _points.Clear();
+            int elapsedTicks = _lifetimeTicks - remainingTicks;
+            AppendRecentSamples(current, velocityPerTick, elapsedTicks + 1);
+        }
+        else if (remainingTicks == _lastRemainingTicks.Value)
+        {
+            _points[^1] = current;
+        }
+        else
+        {
+            int elapsedTicks = _lastRemainingTicks.Value - remainingTicks;
+            AppendRecentSamples(current, velocityPerTick, elapsedTicks);
+        }
+
+        _lastRemainingTicks = remainingTicks;
+    }
+
+    public Level100RenderVector3[] WithRenderedHead(
+        Level100RenderVector3 renderedHead)
+    {
+        if (_points.Count == 0)
+        {
+            return [renderedHead];
+        }
+
+        Level100RenderVector3[] result = _points.ToArray();
+        result[^1] = renderedHead;
+        return result;
+    }
+
+    private void AppendRecentSamples(
+        Level100RenderVector3 current,
+        Level100RenderVector3 velocityPerTick,
+        int sampleCount)
+    {
+        int oldestOffset = Math.Min(sampleCount, _capacity) - 1;
+        for (int ticksBeforeCurrent = oldestOffset;
+             ticksBeforeCurrent >= 0;
+             ticksBeforeCurrent--)
+        {
+            Add(new Level100RenderVector3(
+                current.X - (velocityPerTick.X * ticksBeforeCurrent),
+                current.Y - (velocityPerTick.Y * ticksBeforeCurrent),
+                current.Z - (velocityPerTick.Z * ticksBeforeCurrent)));
+        }
+    }
+
+    private void Add(Level100RenderVector3 point)
+    {
+        _points.Add(point);
+        if (_points.Count > _capacity)
+        {
+            _points.RemoveAt(0);
+        }
+    }
+}
 
 /// <summary>
 /// Presentation-only interpolation of rendered entities between two fixed-rate

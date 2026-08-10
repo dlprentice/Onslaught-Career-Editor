@@ -10,6 +10,7 @@ public sealed class Simulation
         // enter the actor runtime only as the released external Ammunition
         // type mask carried by a hit fact.
         public required int Id { get; init; }
+        public required Level100ProjectileKind Kind { get; init; }
         public SimVector2 Position { get; set; }
         public required SimVector2 Velocity { get; init; }
         public int ElevationMillimeters { get; set; }
@@ -3069,6 +3070,7 @@ public sealed class Simulation
                  round++)
             {
                 LaunchWalkerRound(
+                    Level100ProjectileKind.MechAirBullet,
                     SimulationConstants.MechAirBulletSpeedPerTick,
                     SimulationConstants.MechAirBulletLifetimeTicks,
                     Level100ContactMechanics.PulseRadiusMillimeters,
@@ -3098,6 +3100,7 @@ public sealed class Simulation
             // it takes the shipped default of 1 and one release is one round.
             EmitWeaponFireEvent(Level100PlayerWeapon.PulseCannonPod, 1);
             LaunchWalkerRound(
+                Level100ProjectileKind.MechPulseBoltMedium,
                 SimulationConstants.ProjectileSpeedPerTick,
                 SimulationConstants.ProjectileLifetimeTicks,
                 Level100ContactMechanics.PulseRadiusMillimeters,
@@ -3135,6 +3138,7 @@ public sealed class Simulation
         for (int round = 0; round < SimulationConstants.TwinVulcanVolleySize; round++)
         {
             LaunchWalkerRound(
+                Level100ProjectileKind.MechBullet,
                 SimulationConstants.MechBulletSpeedPerTick,
                 SimulationConstants.MechBulletLifetimeTicks,
                 Level100ContactMechanics.PulseRadiusMillimeters,
@@ -3148,6 +3152,7 @@ public sealed class Simulation
     /// the pulse's.
     /// </summary>
     private void LaunchWalkerRound(
+        Level100ProjectileKind kind,
         int speedPerTick,
         int lifetimeTicks,
         int contactRadiusMillimeters,
@@ -3188,6 +3193,7 @@ public sealed class Simulation
         _projectiles.Add(new MutableProjectile
         {
             Id = _nextProjectileId++,
+            Kind = kind,
             Position = new SimVector2(
                 playerPosition.X + emitterOffsetX,
                 playerPosition.Z + emitterOffsetZ),
@@ -3392,6 +3398,7 @@ public sealed class Simulation
             .OrderBy(projectile => projectile.Id)
             .Select(projectile => new ProjectileSnapshot(
                 projectile.Id,
+                projectile.Kind,
                 projectile.Position,
                 projectile.Velocity,
                 projectile.ElevationMillimeters,

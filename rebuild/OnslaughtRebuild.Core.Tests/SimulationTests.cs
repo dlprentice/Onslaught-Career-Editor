@@ -1184,6 +1184,11 @@ public sealed class SimulationTests
 
         WorldSnapshot pulseFirst = pulse.Step(new SimInput(0, 0, SimActions.Fire));
         AssertWeaponFire(pulseFirst, Level100PlayerWeapon.PulseCannonPod, 1);
+        Assert.All(
+            pulseFirst.Projectiles,
+            projectile => Assert.Equal(
+                Level100ProjectileKind.MechPulseBoltMedium,
+                projectile.Kind));
         Assert.Equal(2, pulseFirst.FireCooldownTicksRemaining);
         WorldSnapshot pulseBlocked = pulse.Step(new SimInput(0, 0, SimActions.Fire));
         Assert.Empty(pulseBlocked.Level100WeaponFireEvents);
@@ -1209,6 +1214,11 @@ public sealed class SimulationTests
             jetFirst,
             Level100PlayerWeapon.MechVulcanCannon,
             SimulationConstants.MechVulcanVolleySize);
+        Assert.All(
+            jetFirst.Projectiles,
+            projectile => Assert.Equal(
+                Level100ProjectileKind.MechAirBullet,
+                projectile.Kind));
         Assert.Equal(1, jetFirst.FireCooldownTicksRemaining);
         WorldSnapshot jetSecond = jet.Step(new SimInput(0, 0, SimActions.Fire));
         AssertWeaponFire(
@@ -1241,6 +1251,7 @@ public sealed class SimulationTests
 
         WorldSnapshot fired = simulation.Step(new SimInput(0, 0, SimActions.Fire));
         ProjectileSnapshot projectile = Assert.Single(fired.Projectiles);
+        Assert.Equal(Level100ProjectileKind.MechPulseBoltMedium, projectile.Kind);
         Assert.Equal(120, SimulationConstants.ProjectileLifetimeTicks);
         Assert.Equal(119, projectile.RemainingTicks);
         Assert.InRange(fired.FacingPitchMicroRad, -1_000_000, -800_000);

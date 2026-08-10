@@ -9,6 +9,8 @@ namespace OnslaughtRebuild.GodotClient;
 public sealed partial class FirstFlightWorldView : Node3D
 {
     private const float UnitsToMeters = 0.001f;
+    private const int PulseBoltTrailPointCount = 5;
+    private const float PulseBoltTrailWidthMeters = 0.08f;
     private const float RetailWalkerCenterOfGravityHeight =
         Level100Terrain.WalkerCenterOfGravityMillimeters * UnitsToMeters;
     // 2*atan(0.75), from the released binary rather than from fitting.
@@ -124,6 +126,8 @@ public sealed partial class FirstFlightWorldView : Node3D
         new Vector3(-0.02999347f, -0.01164191f, 0.99948227f));
 
     private readonly Dictionary<int, Node3D> _projectiles = [];
+    private readonly Dictionary<int, Level100ProjectileTrailHistory>
+        _projectileTrails = [];
     private readonly Dictionary<Level100TargetVisualBinding, Mesh>
         _level100TargetAssets = [];
     private readonly Dictionary<Level100ActorId, Level100TargetVisual>
@@ -985,9 +989,22 @@ public sealed partial class FirstFlightWorldView : Node3D
             activeIds.Add(projectile.Id);
             if (!_projectiles.TryGetValue(projectile.Id, out Node3D? visual))
             {
-                visual = CreatePulseBoltVisual(projectile.Id);
+                bool hasAuthoredPulseTrail =
+                    Level100ProjectileTrailHistory.UsesAuthoredPulseTrail(
+                        projectile.Kind);
+                visual = CreatePulseBoltVisual(
+                    projectile.Id,
+                    hasAuthoredPulseTrail);
                 AddChild(visual);
                 _projectiles.Add(projectile.Id, visual);
+                if (hasAuthoredPulseTrail)
+                {
+                    _projectileTrails.Add(
+                        projectile.Id,
+                        new Level100ProjectileTrailHistory(
+                            PulseBoltTrailPointCount,
+                            SimulationConstants.ProjectileLifetimeTicks));
+                }
                 if (_pendingPulseCannonMuzzleFlashes > 0)
                 {
                     SpawnPulseCannonMuzzleFlash(
@@ -1016,6 +1033,19 @@ public sealed partial class FirstFlightWorldView : Node3D
             {
                 visual.LookAt(visual.Position + direction.Normalized(), Vector3.Up);
             }
+            if (_projectileTrails.TryGetValue(
+                    projectile.Id,
+                    out Level100ProjectileTrailHistory? trailHistory))
+            {
+                trailHistory.Advance(
+                    ToRenderVector(ToWorld(projectile)),
+                    ToTrailVelocity(projectile),
+                    projectile.RemainingTicks);
+                UpdatePulseBoltTrail(
+                    visual.GetNode<MeshInstance3D>("PulseBoltTrail"),
+                    trailHistory.WithRenderedHead(rendered.Position),
+                    visual.GlobalTransform.AffineInverse());
+            }
         }
 
         // A released round can hit inside an aggregated frame and therefore
@@ -1027,6 +1057,7 @@ public sealed partial class FirstFlightWorldView : Node3D
         {
             _projectiles[id].QueueFree();
             _projectiles.Remove(id);
+            _projectileTrails.Remove(id);
         }
     }
 
@@ -1525,7 +1556,7 @@ public sealed partial class FirstFlightWorldView : Node3D
             durationSeconds);
     }
 
-    private Node3D CreatePulseBoltVisual(int id)
+    private Node3D CreatePulseBoltVisual(int id, bool hasAuthoredPulseTrail)
     {
         var root = new Node3D { Name = $"RetailPulseBolt{id}" };
         root.AddChild(new MeshInstance3D
@@ -1547,13 +1578,75 @@ public sealed partial class FirstFlightWorldView : Node3D
             new Vector3(0f, 0f, 0.1f),
             _pulseBoltEnergyTrailMaterial,
             new Vector3(90f, 0f, 0f)));
-        float trailLength = SimulationConstants.ProjectileSpeedPerTick / 1_000f;
-        root.AddChild(VisualPrimitives.CreateBox(
-            "PulseBoltTrail",
-            new Vector3(0.08f, 0.08f, trailLength),
-            new Vector3(0f, 0f, trailLength * 0.5f),
-            _pulseBoltTrailMaterial));
+        if (hasAuthoredPulseTrail)
+        {
+            root.AddChild(new MeshInstance3D
+            {
+                Name = "PulseBoltTrail",
+                MaterialOverride = _pulseBoltTrailMaterial,
+                Visible = false,
+            });
+        }
+        else
+        {
+            float trailLength = SimulationConstants.ProjectileSpeedPerTick / 1_000f;
+            root.AddChild(VisualPrimitives.CreateBox(
+                "PulseBoltTrail",
+                new Vector3(0.08f, 0.08f, trailLength),
+                new Vector3(0f, 0f, trailLength * 0.5f),
+                _pulseBoltTrailMaterial));
+        }
         return root;
+    }
+
+    private void UpdatePulseBoltTrail(
+        MeshInstance3D trail,
+        IReadOnlyList<Level100RenderVector3> points,
+        Transform3D worldToProjectile)
+    {
+        if (points.Count < 2)
+        {
+            trail.Visible = false;
+            return;
+        }
+
+        var surface = new SurfaceTool();
+        surface.Begin(Mesh.PrimitiveType.TriangleStrip);
+        float halfWidth = PulseBoltTrailWidthMeters * 0.5f;
+        for (int index = 0; index < points.Count; index++)
+        {
+            Vector3 point = ToGlobal(ToGodotVector(points[index]));
+            Vector3 neighbour = index + 1 < points.Count
+                ? ToGlobal(ToGodotVector(points[index + 1]))
+                : ToGlobal(ToGodotVector(points[index - 1]));
+            Vector3 direction = index + 1 < points.Count
+                ? neighbour - point
+                : point - neighbour;
+            if (direction.IsZeroApprox())
+            {
+                direction = Vector3.Forward;
+            }
+
+            Vector3 side = direction.Cross(_camera.GlobalPosition - point);
+            if (side.IsZeroApprox())
+            {
+                side = direction.Cross(Vector3.Up);
+            }
+            if (side.IsZeroApprox())
+            {
+                side = Vector3.Right;
+            }
+            side = side.Normalized() * halfWidth;
+
+            float u = index / (float)(points.Count - 1);
+            surface.SetUV(new Vector2(u, 0f));
+            surface.AddVertex(worldToProjectile * (point - side));
+            surface.SetUV(new Vector2(u, 1f));
+            surface.AddVertex(worldToProjectile * (point + side));
+        }
+
+        trail.Mesh = surface.Commit();
+        trail.Visible = true;
     }
 
     private static StandardMaterial3D CreatePulseParticleMaterial(
@@ -1607,6 +1700,13 @@ public sealed partial class FirstFlightWorldView : Node3D
 
     private static Level100RenderVector3 ToRenderVector(Vector3 vector) =>
         new(vector.X, vector.Y, vector.Z);
+
+    private static Level100RenderVector3 ToTrailVelocity(
+        ProjectileSnapshot projectile) =>
+        new(
+            projectile.Velocity.X * UnitsToMeters,
+            projectile.VerticalVelocityMillimetersPerTick * UnitsToMeters,
+            -projectile.Velocity.Z * UnitsToMeters);
 
     private static Level100ProjectileVisualState ToVisualState(
         ProjectileSnapshot projectile,

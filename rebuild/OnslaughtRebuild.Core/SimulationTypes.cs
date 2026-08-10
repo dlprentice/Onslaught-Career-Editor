@@ -393,8 +393,23 @@ public sealed record TargetSnapshot(
     bool IsActive,
     Level100ActorPoseSnapshot Pose);
 
+/// <summary>
+/// The released round record represented by a projectile. Presentation needs
+/// this identity because the Pulse Bolt owns a five-point particle trail while
+/// the two Vulcan rounds do not; remaining lifetime cannot distinguish them
+/// during the Pulse Bolt's final second.
+/// </summary>
+public enum Level100ProjectileKind : byte
+{
+    None = 0,
+    MechPulseBoltMedium = 1,
+    MechBullet = 2,
+    MechAirBullet = 3,
+}
+
 public sealed record ProjectileSnapshot(
     int Id,
+    Level100ProjectileKind Kind,
     SimVector2 Position,
     SimVector2 Velocity,
     int ElevationMillimeters,

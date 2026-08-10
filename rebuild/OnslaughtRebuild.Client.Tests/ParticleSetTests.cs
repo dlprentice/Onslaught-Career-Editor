@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using OnslaughtRebuild.Client;
+using OnslaughtRebuild.Core;
 
 namespace OnslaughtRebuild.Client.Tests;
 
@@ -716,6 +717,101 @@ public sealed class ParticleSetTests
             Assert.Equal(value, range.FloatWithModifier("Start_Green").Value);
             Assert.Equal(value, range.FloatWithModifier("Start_Blue").Value);
         }
+    }
+
+    [Fact]
+    public void PulseBoltTrailKeepsFiveAuthoredSimulationSamples()
+    {
+        ParticleDescriptor descriptor = ParticleSetFile
+            .Parse(ReadMainSet())
+            .Require("Pulse Bolt Trail");
+        Assert.Equal(ParticleDescriptorType.Trail, descriptor.Type);
+        Assert.Equal(5, descriptor.Int("Num_Points"));
+        Assert.Equal(0.08f, descriptor.Float("Start_Width"));
+        Assert.Equal(0, descriptor.Int("Blend_Mode"));
+        Assert.Equal(-2, descriptor.Int("Life"));
+        Assert.True(Level100ProjectileTrailHistory.UsesAuthoredPulseTrail(
+            Level100ProjectileKind.MechPulseBoltMedium));
+        Assert.False(Level100ProjectileTrailHistory.UsesAuthoredPulseTrail(
+            Level100ProjectileKind.MechBullet));
+        Assert.False(Level100ProjectileTrailHistory.UsesAuthoredPulseTrail(
+            Level100ProjectileKind.MechAirBullet));
+
+        var history = new Level100ProjectileTrailHistory(
+            descriptor.Int("Num_Points"),
+            SimulationConstants.ProjectileLifetimeTicks);
+        var velocity = new Level100RenderVector3(1f, 0f, 0f);
+        history.Advance(
+            new Level100RenderVector3(1f, 0f, 0f),
+            velocity,
+            SimulationConstants.ProjectileLifetimeTicks - 1);
+        // Skip four renderer-visible snapshots. The history must recover their
+        // fixed-step positions instead of stretching one frame-dependent span.
+        history.Advance(
+            new Level100RenderVector3(6f, 0f, 0f),
+            velocity,
+            SimulationConstants.ProjectileLifetimeTicks - 6);
+
+        Assert.Equal(
+            [2f, 3f, 4f, 5f, 6f],
+            history.Points.Select(point => point.X).ToArray());
+        Level100RenderVector3[] rendered = history.WithRenderedHead(
+            new Level100RenderVector3(5.5f, 0f, 0f));
+        Assert.Equal(5, rendered.Length);
+        Assert.Equal(5.5f, rendered[^1].X);
+        Assert.Equal(6f, history.Points[^1].X);
+
+        string source = File.ReadAllText(Locate(
+            "rebuild/OnslaughtRebuild.Godot/FirstFlightWorldView.cs"));
+        Assert.Contains(
+            "private const int PulseBoltTrailPointCount = 5;",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "private const float PulseBoltTrailWidthMeters = 0.08f;",
+            source,
+            StringComparison.Ordinal);
+
+        string update = RequireSection(
+            source,
+            "private void UpdateProjectiles(",
+            "private void BuildPulseCannonPresentation()");
+        Assert.Contains("trailHistory.Advance(", update, StringComparison.Ordinal);
+        Assert.Contains(
+            "Level100ProjectileTrailHistory.UsesAuthoredPulseTrail(\n" +
+                "                        projectile.Kind)",
+            update,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "projectile.RemainingTicks >",
+            update,
+            StringComparison.Ordinal);
+        Assert.Contains("ToTrailVelocity(projectile)", update, StringComparison.Ordinal);
+        Assert.Contains("projectile.RemainingTicks", update, StringComparison.Ordinal);
+        Assert.Contains(
+            "trailHistory.WithRenderedHead(rendered.Position)",
+            update,
+            StringComparison.Ordinal);
+        Assert.Contains("_projectileTrails.Remove(id);", update, StringComparison.Ordinal);
+
+        string visual = RequireSection(
+            source,
+            "private Node3D CreatePulseBoltVisual(",
+            "private static StandardMaterial3D CreatePulseParticleMaterial(");
+        Assert.Contains("Mesh.PrimitiveType.TriangleStrip", visual, StringComparison.Ordinal);
+        Assert.Contains(
+            "PulseBoltTrailWidthMeters * 0.5f",
+            visual,
+            StringComparison.Ordinal);
+        Assert.Contains("surface.AddVertex", visual, StringComparison.Ordinal);
+        Assert.Contains(
+            "if (hasAuthoredPulseTrail)",
+            visual,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "VisualPrimitives.CreateBox(",
+            visual,
+            StringComparison.Ordinal);
     }
 
     /// <summary>
