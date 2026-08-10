@@ -81,6 +81,20 @@ public static class SimulationConstants
     public const int WalkerVelocityRetentionDenominator = 10_000;
     // mMaxWalkVelocity 0.15 verbatim (BattleEngineWalkerPart.cpp:417).
     public const int WalkerMaximumSpeedPerTick = 150;
+    // BattleEngineWalkerPart.cpp:30-35,119-304,361-429. A hard input in one
+    // direction followed by its opposite within a strict 0.2-second window
+    // multiplies that opposite acceleration by 25 and locks movement input for
+    // 15 released updates. Core's current input seam is digital, so the exact
+    // 0.9/0.8 analog threshold behavior remains open while the shipped full-axis
+    // gesture and lifecycle are represented without floating-point state.
+    public const int WalkerDashStartPermille = 900;
+    public const int WalkerDashEndPermille = 800;
+    public const int WalkerDashWindowTicks = TicksPerSecond / 5;
+    public const int WalkerDashLengthTicks = 15;
+    public const int WalkerDashFrictionThresholdTicks = 5;
+    public const int WalkerDashAccelerationMultiplier = 25;
+    public const int WalkerDashRollVelocityMicroRadPerTick = 80_000;
+    public const int WalkerDashInitialHistoryTicks = 10 * TicksPerSecond;
     // Canonical Steam CMCMech state at the authored Level 100 start supplies
     // these four body-local Footbase offsets in the released controller order:
     // front-left, front-right, rear-left, rear-right. Two uninterrupted slope

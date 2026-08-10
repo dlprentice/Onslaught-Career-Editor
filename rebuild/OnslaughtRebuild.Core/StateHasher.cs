@@ -24,6 +24,10 @@ public static class StateHasher
         using (var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true))
         {
             writer.Write(s_magic);
+            // 37: added the Walker opposite-flick gesture history and live dash
+            // countdown. All seven fields change whether later input starts or
+            // remains locked in the released 15-update dash lifecycle.
+            //
             // 36: added current and desired zoom. Desired zoom changes future
             // easing even when the current projection is momentarily equal.
             //
@@ -63,7 +67,7 @@ public static class StateHasher
             // 31: added the ordered Level100WeaponFireEvents stream. Every
             // hashed tick gains its four-byte count, so this bump moves every
             // pinned hash regardless of whether a weapon fires.
-            writer.Write(36);
+            writer.Write(37);
             writer.Write(state.Tick);
             writer.Write(state.Seed);
             writer.Write(state.InitialLevel100TutorialProgress.Introduction);
@@ -101,6 +105,13 @@ public static class StateHasher
             writer.Write(state.WalkerPitchVelocityMicroRadPerTick);
             writer.Write(state.BodyRollMicroRad);
             writer.Write(state.RollVelocityMicroRadPerTick);
+            writer.Write(state.WalkerLastMoveXPermille);
+            writer.Write(state.WalkerLastMoveZPermille);
+            writer.Write(state.WalkerLastHardLeftTick);
+            writer.Write(state.WalkerLastHardRightTick);
+            writer.Write(state.WalkerLastHardForwardTick);
+            writer.Write(state.WalkerLastHardBackwardTick);
+            writer.Write(state.WalkerDashTicksRemaining);
             writer.Write(state.Energy);
             writer.Write(state.Shield);
             writer.Write(state.Hull);

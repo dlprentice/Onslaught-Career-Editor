@@ -1836,8 +1836,12 @@ public sealed class InteractiveSessionTests
         // affect the projection/look law and future easing, so both are
         // serialized. This tape never zooms and ends at 1000/1000; the moved
         // hash is structural and the gameplay assertions above are unchanged.
+        // MOVED 2026-08-10 by StateHasher v37. The Walker opposite-flick
+        // gesture history and live dash countdown are future-affecting state,
+        // so all seven values are now serialized. The firing-range assertions
+        // above remain the consequential gate for this smoke path.
         Assert.Equal(
-            "997c20348dd9c4cbd7d59011060aa1c18e2906d912bba0e035671e60fe3bb1e5",
+            "1bd823fa5cd7196f0f4893ddbaab5825d66c6d9a8ed61ebd634934a271e1af86",
             StateHasher.ComputeHex(session.CurrentSnapshot));
     }
 

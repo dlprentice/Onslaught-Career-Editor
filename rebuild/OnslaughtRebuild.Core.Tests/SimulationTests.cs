@@ -375,6 +375,54 @@ public sealed class SimulationTests
     }
 
     [Fact]
+    public void WalkerOppositeFlick_TriggersRetailDashAndLocksInputForItsLifecycle()
+    {
+        Simulation simulation = CreatePlayingSimulation();
+
+        WorldSnapshot backward = simulation.Step(new SimInput(0, -1));
+        Assert.Equal(new SimVector2(34, -61), backward.PlayerVelocity);
+
+        WorldSnapshot triggered = simulation.Step(new SimInput(0, 1));
+        Assert.Equal(new SimVector2(-831, 1_485), triggered.PlayerVelocity);
+        Assert.Equal(14, triggered.WalkerDashTicksRemaining);
+
+        for (int remaining = 13; remaining >= 0; remaining--)
+        {
+            WorldSnapshot locked = simulation.Step(new SimInput(0, -1));
+            Assert.Equal(remaining, locked.WalkerDashTicksRemaining);
+            Assert.True(locked.PlayerVelocity.X < 0);
+            Assert.True(locked.PlayerVelocity.Z > 0);
+        }
+
+        WorldSnapshot released = simulation.Step(new SimInput(0, -1));
+        Assert.Equal(-1_000, released.WalkerLastMoveZPermille);
+        Assert.Equal(released.Tick, released.WalkerLastHardBackwardTick);
+
+        // The retail lateral pair is asymmetric: left assigns +0.08 roll
+        // velocity, while right subtracts 0.08 from whatever residual remains.
+        var lateral = CreatePlayingSimulation();
+        lateral.Step(new SimInput(1, 0));
+        WorldSnapshot leftDash = lateral.Step(new SimInput(-1, 0));
+        Assert.Equal(
+            SimulationConstants.WalkerDashRollVelocityMicroRadPerTick,
+            leftDash.RollVelocityMicroRadPerTick);
+        while (lateral.Snapshot.WalkerDashTicksRemaining > 0)
+        {
+            lateral.Step(SimInput.Idle);
+        }
+        lateral.Step(SimInput.Idle);
+        WorldSnapshot hardLeft = lateral.Step(new SimInput(-1, 0));
+        int expectedRightRoll =
+            (int)((long)hardLeft.RollVelocityMicroRadPerTick *
+                SimulationConstants.WalkerYawRetentionNumerator /
+                SimulationConstants.WalkerYawRetentionDenominator) -
+            SimulationConstants.WalkerDashRollVelocityMicroRadPerTick;
+        WorldSnapshot rightDash = lateral.Step(new SimInput(1, 0));
+        Assert.Equal(14, rightDash.WalkerDashTicksRemaining);
+        Assert.Equal(expectedRightRoll, rightDash.RollVelocityMicroRadPerTick);
+    }
+
+    [Fact]
     public void WalkerLook_AcceleratesBodyYawAndCoastsAfterRelease()
     {
         Simulation simulation = CreatePlayingSimulation();

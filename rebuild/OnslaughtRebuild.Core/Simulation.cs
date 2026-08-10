@@ -69,6 +69,13 @@ public sealed class Simulation
     private int _walkerPitchVelocityMicroRadPerTick;
     private int _bodyRollMicroRad;
     private int _rollVelocityMicroRadPerTick;
+    private int _walkerLastMoveXPermille;
+    private int _walkerLastMoveZPermille;
+    private int _walkerLastHardLeftTick;
+    private int _walkerLastHardRightTick;
+    private int _walkerLastHardForwardTick;
+    private int _walkerLastHardBackwardTick;
+    private int _walkerDashTicksRemaining;
     private int _zoomPermille;
     private int _desiredZoomPermille;
     private int _energy;
@@ -1122,9 +1129,27 @@ public sealed class Simulation
         SimVector2 playerVelocity = PlayerVelocity;
         int velocityX = playerVelocity.X;
         int velocityZ = playerVelocity.Z;
-        int verticalVelocity =
-            PlayerVerticalVelocityMillimetersPerTick -
-            SimulationConstants.WalkerGravityPerTick;
+        int verticalVelocity = PlayerVerticalVelocityMillimetersPerTick;
+        if (_walkerDashTicksRemaining > 0)
+        {
+            // CBattleEngineWalkerPart::Move retains the complete velocity while
+            // a dash is live even after ground contact is lost. Its speed cap
+            // returns only for the final four updates.
+            velocityX = RetainWalkerVelocity(velocityX);
+            velocityZ = RetainWalkerVelocity(velocityZ);
+            verticalVelocity = RetainWalkerVelocity(verticalVelocity);
+            if (_walkerDashTicksRemaining <
+                SimulationConstants.WalkerDashFrictionThresholdTicks)
+            {
+                SimVector2 horizontal = ClampMagnitude(
+                    new SimVector2(velocityX, velocityZ),
+                    SimulationConstants.WalkerMaximumSpeedPerTick);
+                velocityX = horizontal.X;
+                velocityZ = horizontal.Z;
+            }
+            _walkerDashTicksRemaining--;
+        }
+        verticalVelocity -= SimulationConstants.WalkerGravityPerTick;
         ApplyLevel100FlightLimits(ref velocityX, ref velocityZ, ref verticalVelocity);
         CommitFlightMovement(velocityX, velocityZ, verticalVelocity);
     }
@@ -1741,24 +1766,57 @@ public sealed class Simulation
 
     private void UpdateWalkerMovement(SimInput input)
     {
-        SimVector2 acceleration = ProjectWalkerInput(
-            input,
-            SimulationConstants.WalkerAccelerationPerTick);
+        SimVector2 acceleration = ResolveWalkerAcceleration(input);
         var velocity = new SimVector2(
             RetainWalkerVelocity(PlayerVelocity.X) + acceleration.X,
             RetainWalkerVelocity(PlayerVelocity.Z) + acceleration.Z);
-        MoveWalker(ClampMagnitude(velocity, SimulationConstants.WalkerMaximumSpeedPerTick));
+        if (_walkerDashTicksRemaining <
+            SimulationConstants.WalkerDashFrictionThresholdTicks)
+        {
+            velocity = ClampMagnitude(
+                velocity,
+                SimulationConstants.WalkerMaximumSpeedPerTick);
+        }
+        MoveWalker(velocity);
+        if (_walkerDashTicksRemaining > 0)
+        {
+            _walkerDashTicksRemaining--;
+        }
     }
 
-    private static int RetainWalkerVelocity(int velocity) =>
-        (int)((long)velocity * SimulationConstants.WalkerVelocityRetentionNumerator /
-            SimulationConstants.WalkerVelocityRetentionDenominator);
-
-    private SimVector2 ProjectWalkerInput(SimInput input, int acceleration)
+    private SimVector2 ResolveWalkerAcceleration(SimInput input)
     {
-        int localX = input.MoveX * acceleration;
-        int localZ = input.MoveZ * acceleration;
-        if (input.MoveX != 0 && input.MoveZ != 0)
+        if (_walkerDashTicksRemaining > 0)
+        {
+            return SimVector2.Zero;
+        }
+
+        int moveXPermille = input.MoveX * 1_000;
+        int moveZPermille = input.MoveZ * 1_000;
+        bool dashForwardOrBackward = ObserveWalkerForwardGesture(moveZPermille);
+        int localX = input.MoveX * SimulationConstants.WalkerAccelerationPerTick;
+        int localZ = input.MoveZ * SimulationConstants.WalkerAccelerationPerTick;
+        bool dashLeftOrRight = false;
+
+        // Retail receives the longitudinal button callbacks before the lateral
+        // callbacks. Once a longitudinal dash starts, the lateral callback
+        // returns at its mDoingDashCount gate and does not alter its history.
+        if (dashForwardOrBackward)
+        {
+            localX = 0;
+            localZ *= SimulationConstants.WalkerDashAccelerationMultiplier;
+        }
+        else
+        {
+            dashLeftOrRight = ObserveWalkerStrafeGesture(moveXPermille);
+            if (dashLeftOrRight)
+            {
+                localX *= SimulationConstants.WalkerDashAccelerationMultiplier;
+            }
+        }
+
+        if (!dashForwardOrBackward && !dashLeftOrRight &&
+            input.MoveX != 0 && input.MoveZ != 0)
         {
             localX = localX * 181 / 256;
             localZ = localZ * 181 / 256;
@@ -1769,6 +1827,95 @@ public sealed class Simulation
             DivideRoundNearest(((long)localX * cos) - ((long)localZ * sin), FixedTrigScale),
             DivideRoundNearest(((long)localX * sin) + ((long)localZ * cos), FixedTrigScale));
     }
+
+    private bool ObserveWalkerForwardGesture(int movePermille)
+    {
+        bool hardForward =
+            _walkerLastMoveZPermille < SimulationConstants.WalkerDashStartPermille &&
+            movePermille > SimulationConstants.WalkerDashStartPermille;
+        bool forwardEdge =
+            _walkerLastMoveZPermille < SimulationConstants.WalkerDashEndPermille &&
+            movePermille > SimulationConstants.WalkerDashEndPermille;
+        bool hardBackward =
+            _walkerLastMoveZPermille > -SimulationConstants.WalkerDashStartPermille &&
+            movePermille < -SimulationConstants.WalkerDashStartPermille;
+        bool backwardEdge =
+            _walkerLastMoveZPermille > -SimulationConstants.WalkerDashEndPermille &&
+            movePermille < -SimulationConstants.WalkerDashEndPermille;
+
+        if (hardForward)
+        {
+            _walkerLastHardForwardTick = _tick;
+        }
+        if (hardBackward)
+        {
+            _walkerLastHardBackwardTick = _tick;
+        }
+
+        bool dash =
+            (forwardEdge && WalkerDashWindowContains(_walkerLastHardBackwardTick)) ||
+            (backwardEdge && WalkerDashWindowContains(_walkerLastHardForwardTick));
+        _walkerLastMoveZPermille = movePermille;
+        if (dash)
+        {
+            _walkerDashTicksRemaining = SimulationConstants.WalkerDashLengthTicks;
+        }
+        return dash;
+    }
+
+    private bool ObserveWalkerStrafeGesture(int movePermille)
+    {
+        bool hardRight =
+            _walkerLastMoveXPermille < SimulationConstants.WalkerDashStartPermille &&
+            movePermille > SimulationConstants.WalkerDashStartPermille;
+        bool rightEdge =
+            _walkerLastMoveXPermille < SimulationConstants.WalkerDashEndPermille &&
+            movePermille > SimulationConstants.WalkerDashEndPermille;
+        bool hardLeft =
+            _walkerLastMoveXPermille > -SimulationConstants.WalkerDashStartPermille &&
+            movePermille < -SimulationConstants.WalkerDashStartPermille;
+        bool leftEdge =
+            _walkerLastMoveXPermille > -SimulationConstants.WalkerDashEndPermille &&
+            movePermille < -SimulationConstants.WalkerDashEndPermille;
+
+        if (hardRight)
+        {
+            _walkerLastHardRightTick = _tick;
+        }
+        if (hardLeft)
+        {
+            _walkerLastHardLeftTick = _tick;
+        }
+
+        bool dashRight = rightEdge && WalkerDashWindowContains(_walkerLastHardLeftTick);
+        bool dashLeft = leftEdge && WalkerDashWindowContains(_walkerLastHardRightTick);
+        _walkerLastMoveXPermille = movePermille;
+        if (dashRight || dashLeft)
+        {
+            _walkerDashTicksRemaining = SimulationConstants.WalkerDashLengthTicks;
+            if (dashLeft)
+            {
+                _rollVelocityMicroRadPerTick =
+                    SimulationConstants.WalkerDashRollVelocityMicroRadPerTick;
+            }
+            else
+            {
+                // Retail's lateral pair is intentionally asymmetric: left
+                // assigns +0.08, while right subtracts 0.08 from residual roll.
+                _rollVelocityMicroRadPerTick -=
+                    SimulationConstants.WalkerDashRollVelocityMicroRadPerTick;
+            }
+            return true;
+        }
+        return false;
+    }
+
+    private bool WalkerDashWindowContains(int hardMoveTick) =>
+        hardMoveTick > _tick - SimulationConstants.WalkerDashWindowTicks;
+
+    private static int RetainWalkerVelocity(int velocity) =>
+        (int)((long)velocity * SimulationConstants.WalkerVelocityRetentionNumerator /
+            SimulationConstants.WalkerVelocityRetentionDenominator);
 
     private const int FixedTrigScale = 1 << 30;
     private const int HalfPiMicroRad = 1_570_796;
@@ -3102,6 +3249,15 @@ public sealed class Simulation
         _walkerPitchVelocityMicroRadPerTick = 0;
         _bodyRollMicroRad = 0;
         _rollVelocityMicroRadPerTick = 0;
+        _walkerLastMoveXPermille = 0;
+        _walkerLastMoveZPermille = 0;
+        int initialHardMoveTick =
+            _tick - SimulationConstants.WalkerDashInitialHistoryTicks;
+        _walkerLastHardLeftTick = initialHardMoveTick;
+        _walkerLastHardRightTick = initialHardMoveTick;
+        _walkerLastHardForwardTick = initialHardMoveTick;
+        _walkerLastHardBackwardTick = initialHardMoveTick;
+        _walkerDashTicksRemaining = 0;
         _zoomPermille = SimulationConstants.ZoomOutPermille;
         _desiredZoomPermille = SimulationConstants.ZoomOutPermille;
         _energy = SimulationConstants.MaximumEnergy;
@@ -3264,6 +3420,13 @@ public sealed class Simulation
             _walkerPitchVelocityMicroRadPerTick,
             _bodyRollMicroRad,
             _rollVelocityMicroRadPerTick,
+            _walkerLastMoveXPermille,
+            _walkerLastMoveZPermille,
+            _walkerLastHardLeftTick,
+            _walkerLastHardRightTick,
+            _walkerLastHardForwardTick,
+            _walkerLastHardBackwardTick,
+            _walkerDashTicksRemaining,
             _energy,
             _shield,
             player.Health,
