@@ -141,9 +141,11 @@ public sealed class ParticleQuadSizeConventionTests
         {
             ["BlueAnimatedBlob"] = "Blue Anim Blob Large Sprite",
             ["FlashMedium"] = "Flash Medium",
+            ["VulcanImpactSpark"] = "Spark Anim Sprite",
             ["ExplosionAnimatedSprite"] = "Explosion Anim Sprite Medium",
             ["ExplosionFireball"] = "Fire Sprite Damped 2",
             ["DroneFlash"] = "Flash",
+            ["DroneFireball"] = "Fire Sprite Damped 2",
             ["TargetTankFlash"] = "Flash",
             ["FacilityFlash"] = "Flash Building",
             ["FacilityFireball"] = "Fire Sprite Damped Long",
@@ -158,9 +160,12 @@ public sealed class ParticleQuadSizeConventionTests
             source);
         Assert.Matches(
             @"(?s)private void SpawnTargetDroneDestruction\(Vector3 position, int droneId\).*?" +
-            @"CreateTimedEffect\(\s*\$""TargetDroneDestruction\{droneId\}"",\s*position,\s*0\.25d\).*?" +
+            @"CreateTimedEffect\(\s*\$""TargetDroneDestruction\{droneId\}"",\s*position,\s*1\.5d\).*?" +
             @"CreateEffectSprite\(\s*""DroneFlash"",\s*_effectFlashMediumTexture,\s*5f\).*?" +
-            @"AnimateScale\(flash,\s*1f,\s*0f,\s*0\.25d\);",
+            @"AnimateScale\(flash,\s*1f,\s*0f,\s*0\.25d\);.*?" +
+            @"CreateEffectSprite\(\s*""DroneFireball"",\s*_targetTankExplosionFireballTexture,\s*1f,\s*columns:\s*4,\s*rows:\s*4\).*?" +
+            @"AnimateLoopingFireball\(root,\s*fireball,\s*lifeTurns:\s*30\);.*?" +
+            @"AnimateScale\(fireball,\s*1f,\s*0\.5f,\s*1\.5d\);",
             source);
         Assert.Matches(
             @"case\s+Level100DestructionEffectKind\.FacilityDestroyed:\s*" +
@@ -193,6 +198,32 @@ public sealed class ParticleQuadSizeConventionTests
         Assert.Equal(5, droneFlash.Int("Life"));
         Assert.Equal(0, droneFlash.Int("Texture_Number"));
         Assert.Equal(4, droneFlash.Int("Texture_Size"));
+
+        ParticleDescriptor droneExplosion = set.Require("Drone Explosion Effect");
+        IReadOnlyList<string> droneEntries = droneExplosion.RawAll("Particle_Descriptor");
+        IReadOnlyList<string> droneTimes = droneExplosion.RawAll("Time");
+        int droneEmitterIndex = droneEntries.ToList().IndexOf("Drone Explosion Emitter");
+        Assert.True(droneEmitterIndex >= 0);
+        Assert.Equal("0", droneTimes[droneEmitterIndex]);
+
+        ParticleDescriptor droneEmitter = set.Require("Drone Explosion Emitter");
+        Assert.Equal("Fire Sprite Damped 2", droneEmitter.Reference("Particle_Descriptor"));
+
+        ParticleDescriptor droneFireball = set.Require("Fire Sprite Damped 2");
+        Assert.Equal(1f, droneFireball.FloatWithModifier("Radius").Value);
+        Assert.Equal(0.5f, droneFireball.Float("Final_Radius"));
+        Assert.Equal(30, droneFireball.Int("Life"));
+        Assert.Equal(0, droneFireball.Int("Blend_Mode"));
+        Assert.EndsWith(
+            "fireball.tga",
+            droneFireball.Raw("Texture")!,
+            StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(0, droneFireball.Int("Texture_Number"));
+        Assert.Equal(2, droneFireball.Int("Texture_Size"));
+        Assert.Equal(2, droneFireball.Int("Anim_Type"));
+        Assert.Equal(11, droneFireball.Int("End_Frame"));
+        Assert.Equal(0.5f, droneFireball.Float("Anim_Speed"));
+        Assert.Equal(1, droneFireball.Int("Random_Start_Frame"));
 
         ParticleDescriptor facilityFireball = set.Require("Fire Sprite Damped Long");
         Assert.Equal(0.5f, facilityFireball.FloatWithModifier("Radius").Value);

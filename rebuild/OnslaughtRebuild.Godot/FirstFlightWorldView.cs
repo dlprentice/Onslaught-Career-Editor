@@ -1279,7 +1279,7 @@ public sealed partial class FirstFlightWorldView : Node3D
         Node3D root = CreateTimedEffect(
             $"TargetDroneDestruction{droneId}",
             position,
-            0.25d);
+            1.5d);
         // `Drone Explosion Effect` dispatches `Flash` directly at Time 0.
         // That retained sprite is sun2.tga, Radius 5, Final_Radius 0 and Life
         // 5 released 20 Hz turns. Its debris/emitter multiplicity, placement,
@@ -1290,6 +1290,22 @@ public sealed partial class FirstFlightWorldView : Node3D
             5f);
         root.AddChild(flash);
         AnimateScale(flash, 1f, 0f, 0.25d);
+
+        // `Drone Explosion Emitter` is the other Time-0 branch retained by
+        // `Drone Explosion Effect`. One explicitly representative
+        // `Fire Sprite Damped 2` preserves its bright tail: additive
+        // fireball.tga, Radius 1.0 -> 0.5, Life 30 turns = 1.5 s, and
+        // random-start looping cells 0..11 at 0.5 cells/turn. The emitter's
+        // decreasing multiplicity, shape, placement and velocity remain open.
+        MeshInstance3D fireball = CreateEffectSprite(
+            "DroneFireball",
+            _targetTankExplosionFireballTexture,
+            1f,
+            columns: 4,
+            rows: 4);
+        root.AddChild(fireball);
+        AnimateLoopingFireball(root, fireball, lifeTurns: 30);
+        AnimateScale(fireball, 1f, 0.5f, 1.5d);
     }
 
     private void SpawnFacilityDestruction(Vector3 position, int facilityId)
