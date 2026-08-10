@@ -1346,11 +1346,10 @@ public sealed partial class FirstFlightHud : CanvasLayer
         /// drew no right-hand bar at all.
         /// </para>
         /// <para>
-        /// NOT REACHABLE TODAY, and that is a Core gap rather than a HUD one:
-        /// <c>Level100HudPresentationState.Project</c> reports
-        /// <c>SelectedWeapon: null</c>, so neither bar is drawn. The overheat
-        /// flash tint is retained unmeasured - retail's overheat state never
-        /// occurs in the captured timeline.
+        /// The selected Pulse/Vulcan identity now reaches this owner, but the
+        /// resource bars remain absent because heat, ammo and charge are still
+        /// unprojected. The overheat flash tint is retained unmeasured -
+        /// retail's overheat state never occurs in the captured timeline.
         /// </para>
         /// </remarks>
         private void DrawWeaponResource(

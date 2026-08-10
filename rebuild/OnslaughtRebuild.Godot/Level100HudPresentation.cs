@@ -718,8 +718,23 @@ public sealed class Level100HudPresentationState
         bool vulcanEnabled =
             mission.TwinVulcanAvailability == Level100MissionWeaponAvailability.Enabled ||
             mission.MechVulcanAvailability == Level100MissionWeaponAvailability.Enabled;
+        Level100MissionWeapon selectedMissionWeapon = snapshot.Mode switch
+        {
+            VehicleMode.Walker => snapshot.Level100WalkerSelectedWeapon,
+            VehicleMode.Jet => snapshot.Level100JetSelectedWeapon,
+            _ => throw new ArgumentOutOfRangeException(nameof(snapshot.Mode)),
+        };
+        Level100HudWeapon? selectedWeapon = selectedMissionWeapon switch
+        {
+            Level100MissionWeapon.PulseCannonPod => Level100HudWeapon.PulseCannon,
+            Level100MissionWeapon.MechTwinVulcanCannon or
+                Level100MissionWeapon.MechVulcanCannon => Level100HudWeapon.VulcanCannon,
+            // The retained HUD set has no independently identified Missile Pod icon.
+            Level100MissionWeapon.MissilePod => null,
+            _ => null,
+        };
         var weapon = new Level100HudWeaponSnapshot(
-            SelectedWeapon: null,
+            SelectedWeapon: selectedWeapon,
             pulseEnabled,
             vulcanEnabled,
             SelectionPanelVisible: null,

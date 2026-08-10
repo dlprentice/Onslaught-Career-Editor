@@ -176,7 +176,7 @@ public sealed class Level100HudPresentationTests
         Assert.Empty(hud.Threats);
         Assert.Empty(hud.DamageFlashes);
         Assert.Null(hud.Target);
-        Assert.Null(hud.Weapon.SelectedWeapon);
+        Assert.Equal(Level100HudWeapon.PulseCannon, hud.Weapon.SelectedWeapon);
         Assert.Null(hud.Weapon.PulseHeatPermille);
         Assert.Null(hud.Weapon.VulcanAmmo);
         Assert.False(hud.BattleLine.HasInfluenceValues);
@@ -199,6 +199,47 @@ public sealed class Level100HudPresentationTests
             requestedMessages.AddRange(
                 frame.Level100MissionEvents.OfType<Level100MessageRequested>());
         }
+    }
+
+    [Theory]
+    [InlineData(
+        VehicleMode.Walker,
+        Level100MissionWeapon.PulseCannonPod,
+        Level100HudWeapon.PulseCannon)]
+    [InlineData(
+        VehicleMode.Walker,
+        Level100MissionWeapon.MechTwinVulcanCannon,
+        Level100HudWeapon.VulcanCannon)]
+    [InlineData(
+        VehicleMode.Jet,
+        Level100MissionWeapon.MechVulcanCannon,
+        Level100HudWeapon.VulcanCannon)]
+    [InlineData(VehicleMode.Jet, Level100MissionWeapon.MissilePod, null)]
+    public void ProjectionUsesTheCurrentModeSelectedWeaponForRetainedHudIcons(
+        VehicleMode mode,
+        Level100MissionWeapon selectedMissionWeapon,
+        Level100HudWeapon? expectedHudWeapon)
+    {
+        var session = new InteractiveSession(
+            Seed,
+            Level100TestActorDefinitions.Create());
+        WorldSnapshot baseline = session.CurrentSnapshot;
+        WorldSnapshot snapshot = baseline with
+        {
+            Mode = mode,
+            Level100WalkerSelectedWeapon = mode == VehicleMode.Walker
+                ? selectedMissionWeapon
+                : baseline.Level100WalkerSelectedWeapon,
+            Level100JetSelectedWeapon = mode == VehicleMode.Jet
+                ? selectedMissionWeapon
+                : baseline.Level100JetSelectedWeapon,
+        };
+
+        Level100HudSnapshot hud = new Level100HudPresentationState().Project(
+            snapshot,
+            default);
+
+        Assert.Equal(expectedHudWeapon, hud.Weapon.SelectedWeapon);
     }
 
     [Fact]

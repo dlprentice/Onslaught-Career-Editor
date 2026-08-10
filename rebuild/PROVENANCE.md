@@ -709,8 +709,10 @@ its ordered events supply message and help delivery. The canonical actor
 registry supplies active objective identities and full three-dimensional poses.
 The Godot projection preserves emitted collection order and retains typed
 actor IDs plus full three-dimensional objective positions until the renderer's
-final horizontal projection. It leaves selected
-weapon, selection-panel state, weapon resources, classified contacts, threats,
+final horizontal projection. Core's current Walker/Jet selection now feeds the
+retained Pulse/Vulcan HUD icon identities; Missile Pod remains absent because
+its exact HUD icon is not independently identified. It leaves selection-panel
+state, weapon resources, classified contacts, threats,
 damage flashes, target prediction, active-help lifetime, and influence values
 absent until their mechanics owners exist. The HUD does not draw a parallel
 terminal/result screen, and this frontend does not own mission outcome handoff.
