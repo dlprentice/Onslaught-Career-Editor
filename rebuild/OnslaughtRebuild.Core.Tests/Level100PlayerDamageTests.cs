@@ -317,6 +317,77 @@ public sealed class Level100PlayerDamageTests
         {
             Level100PlayerDamageEvents = Array.Empty<Level100PlayerDamageEvent>(),
         }));
+        Assert.Empty(state.Level100DamageFlashes);
+    }
+
+    [Fact]
+    public void ActorRoundDamage_RetainsTheReleasedDirectionalFlashListAndExpiryLaw()
+    {
+        Simulation simulation = CreatePlayingSimulation();
+        WorldSnapshot before = simulation.Snapshot;
+        Level100ActorSnapshot player = Player(before);
+        Level100ActorId ownerActorId = before.Level100Actors.Actors
+            .First(actor => actor.ActorId != player.ActorId)
+            .ActorId;
+        var source = new SimVector3(
+            player.Pose.PositionMillimeters.X + 1_000,
+            player.Pose.PositionMillimeters.Y,
+            player.Pose.PositionMillimeters.Z);
+
+        for (int hit = 0; hit < 16; hit++)
+        {
+            simulation.QueueActorRoundImpactForMeasurement(
+                ownerActorId,
+                Level100ActorRoundKind.Blaster,
+                source);
+        }
+
+        WorldSnapshot damaged = simulation.Step(SimInput.Idle);
+
+        Assert.Equal(16, damaged.Level100PlayerDamageEvents.Count);
+        Assert.All(
+            damaged.Level100PlayerDamageEvents,
+            damage => Assert.Equal(Level100PlayerDamageSource.ActorRound, damage.Source));
+        Assert.Equal(
+            SimulationConstants.Level100DamageFlashCapacity,
+            damaged.Level100DamageFlashes.Count);
+        Assert.All(
+            damaged.Level100DamageFlashes,
+            flash =>
+            {
+                // Source is +X from the player. Retail stores current yaw minus
+                // the source yaw, so 509830 - (-pi/2) = 2080626 microradians.
+                Assert.Equal(2_080_626, flash.RelativeYawMicroRad);
+                Assert.Equal(damaged.Tick, flash.StartTick);
+            });
+
+        string hash = StateHasher.ComputeHex(damaged);
+        Assert.NotEqual(hash, StateHasher.ComputeHex(damaged with
+        {
+            Level100DamageFlashes = Array.Empty<Level100DamageFlashSnapshot>(),
+        }));
+
+        WorldSnapshot atZeroIntensity = damaged;
+        for (int tick = 0;
+             tick < SimulationConstants.Level100DamageFlashLifetimeTicks;
+             tick++)
+        {
+            atZeroIntensity = simulation.Step(SimInput.Idle);
+        }
+
+        // The render intensity is now zero, but strict start+2s<now means the
+        // retained list has not removed an entry yet.
+        Assert.Equal(
+            SimulationConstants.Level100DamageFlashCapacity,
+            atZeroIntensity.Level100DamageFlashes.Count);
+        Assert.Equal(
+            damaged.Tick + SimulationConstants.Level100DamageFlashLifetimeTicks,
+            atZeroIntensity.Tick);
+
+        WorldSnapshot firstCleanup = simulation.Step(SimInput.Idle);
+        Assert.Equal(
+            SimulationConstants.Level100DamageFlashCapacity - 1,
+            firstCleanup.Level100DamageFlashes.Count);
     }
 
     [Theory]

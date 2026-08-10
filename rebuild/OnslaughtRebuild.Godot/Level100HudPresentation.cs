@@ -771,7 +771,7 @@ public sealed class Level100HudPresentationState
             Array.AsReadOnly(ProjectContacts(snapshot)),
             Array.AsReadOnly(objectives),
             Array.AsReadOnly(Array.Empty<Level100HudThreatSnapshot>()),
-            Array.AsReadOnly(Array.Empty<Level100HudDamageFlashSnapshot>()),
+            Array.AsReadOnly(ProjectDamageFlashes(snapshot)),
             Target: null,
             activeDelivery,
             Array.AsReadOnly(emphasizedParts),
@@ -781,6 +781,15 @@ public sealed class Level100HudPresentationState
             ProjectBattleLine(snapshot),
             terminal);
     }
+
+    private static Level100HudDamageFlashSnapshot[] ProjectDamageFlashes(
+        WorldSnapshot snapshot) => snapshot.Level100DamageFlashes
+            .Select(flash => new Level100HudDamageFlashSnapshot(
+                flash.RelativeYawMicroRad,
+                SimulationConstants.Level100DamageFlashLifetimeTicks -
+                    (snapshot.Tick - flash.StartTick)))
+            .Where(flash => flash.TicksRemaining > 0)
+            .ToArray();
 
     /// <summary>
     /// Presentation-only Level 100 influence estimate over the exact authored

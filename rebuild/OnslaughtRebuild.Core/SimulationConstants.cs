@@ -104,6 +104,13 @@ public static class SimulationConstants
     public const int WalkerSoundTravelRolloverMillimeters = 1_500;
     public const int WalkerSoundStoppedSpeedMillimetersPerTick = 10;
     public const int WalkerSoundMinimumRolloverCount = 5;
+    // BattleEngine.cpp:3468-3498 and retail CBattleEngine::Damage at
+    // 0x0040A890. Damage(source) appends only while the list size is <15;
+    // ProcessDamageFlashes removes at most one entry per update after the
+    // strict start+2.0<now boundary. CDXCompass::Render at 0x00427210 uses the
+    // same 2.0-second age to drive the retained compass sprite to black.
+    public const int Level100DamageFlashCapacity = 15;
+    public const int Level100DamageFlashLifetimeTicks = 2 * TicksPerSecond;
     // Canonical Steam CMCMech state at the authored Level 100 start supplies
     // these four body-local Footbase offsets in the released controller order:
     // front-left, front-right, rear-left, rear-right. Two uninterrupted slope

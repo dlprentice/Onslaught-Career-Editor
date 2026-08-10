@@ -218,6 +218,39 @@ public sealed class Level100HudBlendEvidenceTests
             Regex.Matches(HudSource, @"render_mode\s+blend_add,\s*unshaded"));
     }
 
+    [Fact]
+    public void DamageFlashUsesTheReleasedAdditiveRgbFadeAndCompassGeometry()
+    {
+        int glowStart = HudSource.IndexOf(
+            "private sealed partial class RetailHudGlowLayer",
+            StringComparison.Ordinal);
+        int textStart = HudSource.IndexOf(
+            "private sealed partial class RetailHudTextLayer",
+            glowStart,
+            StringComparison.Ordinal);
+        int methodStart = HudSource.IndexOf(
+            "private void DrawDamageFlashes",
+            glowStart,
+            StringComparison.Ordinal);
+        int methodEnd = HudSource.IndexOf(
+            "// bar-line is DXT1",
+            methodStart,
+            StringComparison.Ordinal);
+        Assert.True(glowStart >= 0 && methodStart > glowStart && methodEnd > methodStart);
+        Assert.True(methodEnd < textStart, "Damage flashes left the additive HUD layer.");
+
+        string method = HudSource[methodStart..methodEnd];
+        Assert.Contains(
+            "SimulationConstants.Level100DamageFlashLifetimeTicks",
+            method,
+            StringComparison.Ordinal);
+        Assert.Contains("* CompassDamageRadius", method, StringComparison.Ordinal);
+        Assert.Contains("new Vector2(128f, 32f)", method, StringComparison.Ordinal);
+        Assert.Contains("new Color(fade, fade, fade, 1f)", method, StringComparison.Ordinal);
+        Assert.DoesNotContain("new Color(1f, 1f, 1f, alpha)", method, StringComparison.Ordinal);
+        Assert.Contains("CompassDamageRadius = 96f", HudSource, StringComparison.Ordinal);
+    }
+
     /// <summary>
     /// Pins the lower-right battleline instrument's composition to the bytes a
     /// device-level read of the safe copy produced, so a later "the portrait

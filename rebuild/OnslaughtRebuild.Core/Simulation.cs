@@ -61,6 +61,7 @@ public sealed class Simulation
     private readonly List<AquilaFlightEvent> _flightEvents = [];
     private readonly List<Level100WeaponFireEvent> _weaponFireEvents = [];
     private readonly List<Level100PlayerDamageEvent> _playerDamageEvents = [];
+    private readonly List<Level100DamageFlashSnapshot> _damageFlashes = [];
     private sbyte _facingX;
     private sbyte _facingZ;
     // Continuous body yaw (0 = +Z) and its retail-observed inertial step.
@@ -200,6 +201,27 @@ public sealed class Simulation
         });
     }
 
+    /// <summary>
+    /// Causal-probe seam for one released actor-round impact on the player.
+    /// It bypasses only the round's flight to contact; the next normal
+    /// <see cref="Step"/> owns the production damage and flash path.
+    /// </summary>
+    internal void QueueActorRoundImpactForMeasurement(
+        Level100ActorId ownerActorId,
+        Level100ActorRoundKind kind,
+        SimVector3 sourcePositionMillimeters)
+    {
+        _ = _level100Actors.GetActor(ownerActorId);
+        Level100ActorRoundData round = Level100ActorArmament.Round(kind);
+        _level100ActorMechanics.QueueActorRoundImpactForMeasurement(
+            new Level100ActorRoundImpact(
+                _level100PlayerActorId,
+                ownerActorId,
+                kind,
+                sourcePositionMillimeters,
+                round.IncomingDamageMilliLife));
+    }
+
     public WorldSnapshot Step(
         SimInput input,
         IReadOnlyList<Level100SimulationFact>? level100Facts = null)
@@ -251,6 +273,7 @@ public sealed class Simulation
             return CreateSnapshot();
         }
 
+        ProcessLevel100DamageFlashes();
         AdvanceLevel100ActorMechanics();
         bool playerPartMoveStarted =
             _level100Actors.GetLifecycle(_level100PlayerActorId) ==
@@ -844,11 +867,44 @@ public sealed class Simulation
                 Level100PlayerDamageSource.ActorRound,
                 out bool impactRequestsDeath))
             {
+                AddLevel100DamageFlash(impact.SourcePositionMillimeters);
                 _level100Mission.ReportPlayerHitDuringEvasion();
                 CompleteLevel100PlayerDamageDeath(impactRequestsDeath);
             }
 
             PumpLevel100EventBus();
+        }
+    }
+
+    private void AddLevel100DamageFlash(SimVector3 sourcePositionMillimeters)
+    {
+        if (_damageFlashes.Count >= SimulationConstants.Level100DamageFlashCapacity)
+        {
+            return;
+        }
+
+        Level100ActorSnapshot player = _level100Actors.GetActor(_level100PlayerActorId);
+        long deltaX = (long)sourcePositionMillimeters.X -
+            player.Pose.PositionMillimeters.X;
+        long deltaZ = (long)sourcePositionMillimeters.Z -
+            player.Pose.PositionMillimeters.Z;
+        int sourceYaw = FixedAtan2(-deltaX, deltaZ);
+        _damageFlashes.Add(new Level100DamageFlashSnapshot(
+            NormalizeMicroRad(_facingYawMicroRad - sourceYaw),
+            _tick));
+    }
+
+    private void ProcessLevel100DamageFlashes()
+    {
+        for (int index = 0; index < _damageFlashes.Count; index++)
+        {
+            Level100DamageFlashSnapshot flash = _damageFlashes[index];
+            if (flash.StartTick + SimulationConstants.Level100DamageFlashLifetimeTicks <
+                _tick)
+            {
+                _damageFlashes.RemoveAt(index);
+                break;
+            }
         }
     }
 
@@ -2072,6 +2128,48 @@ public sealed class Simulation
         }
 
         return ((int)y * resultSign, (int)x * resultSign);
+    }
+
+    private static int FixedAtan2(long y, long x)
+    {
+        if (x == 0)
+        {
+            return y switch
+            {
+                > 0 => HalfPiMicroRad,
+                < 0 => -HalfPiMicroRad,
+                _ => 0,
+            };
+        }
+
+        int angle = 0;
+        if (x < 0)
+        {
+            bool upperHalf = y >= 0;
+            x = -x;
+            y = -y;
+            angle = upperHalf ? PiMicroRad : -PiMicroRad;
+        }
+
+        ReadOnlySpan<int> angles = CordicAnglesMicroRad;
+        for (int index = 0; index < angles.Length; index++)
+        {
+            long previousX = x;
+            if (y > 0)
+            {
+                x += y >> index;
+                y -= previousX >> index;
+                angle += angles[index];
+            }
+            else if (y < 0)
+            {
+                x -= y >> index;
+                y += previousX >> index;
+                angle -= angles[index];
+            }
+        }
+
+        return NormalizeMicroRad(angle);
     }
 
     private readonly record struct FixedBodyBasis(
@@ -3364,6 +3462,7 @@ public sealed class Simulation
         _flightEvents.Clear();
         _weaponFireEvents.Clear();
         _playerDamageEvents.Clear();
+        _damageFlashes.Clear();
         _facingYawMicroRad = SimulationConstants.Level100PlayerStartYawMicroRad;
         QuantizeFacingFromYaw();
         _walkerYawVelocityMicroRadPerTick = 0;
@@ -3560,6 +3659,7 @@ public sealed class Simulation
             _augmentCharge,
             _augmentActive,
             Array.AsReadOnly(_playerDamageEvents.ToArray()),
+            Array.AsReadOnly(_damageFlashes.ToArray()),
             _transformTicksRemaining,
             _walkerToJetUsesTakeoffLift,
             _walkerToJetLiftApplied,

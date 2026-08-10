@@ -503,6 +503,15 @@ public sealed record Level100PlayerDamageEvent(
     int LifeDamageMilliLife,
     bool RequestsDeath);
 
+/// <summary>
+/// One retained retail damage-source direction. <paramref name="StartTick"/>
+/// is state, not a derived remaining lifetime: retail keeps the timestamp and
+/// removes only one strictly expired list entry per update.
+/// </summary>
+public sealed record Level100DamageFlashSnapshot(
+    int RelativeYawMicroRad,
+    int StartTick);
+
 public sealed record Level100TriggerActorSnapshot(
     Level100MissionTrigger Trigger,
     SimVector2 Position,
@@ -552,6 +561,7 @@ public sealed record WorldSnapshot(
     int AugmentCharge,
     bool AugmentActive,
     IReadOnlyList<Level100PlayerDamageEvent> Level100PlayerDamageEvents,
+    IReadOnlyList<Level100DamageFlashSnapshot> Level100DamageFlashes,
     int TransformTicksRemaining,
     bool WalkerToJetUsesTakeoffLift,
     bool WalkerToJetLiftApplied,

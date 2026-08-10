@@ -331,6 +331,37 @@ public sealed class Level100HudPresentationTests
         Assert.Equal(1_000, fourth.BattleLine.InfluencePermille[0]);
     }
 
+    [Fact]
+    public void ProjectionPublishesOnlyPositiveIntensityDamageFlashesInListOrder()
+    {
+        var session = new InteractiveSession(
+            Seed,
+            Level100TestActorDefinitions.Create());
+        WorldSnapshot snapshot = session.CurrentSnapshot with
+        {
+            Tick = 100,
+            Level100DamageFlashes = Array.AsReadOnly(new[]
+            {
+                new Level100DamageFlashSnapshot(111_000, 100),
+                new Level100DamageFlashSnapshot(-222_000, 61),
+                new Level100DamageFlashSnapshot(333_000, 60),
+            }),
+        };
+
+        Level100HudSnapshot hud =
+            new Level100HudPresentationState().Project(snapshot, default);
+
+        Assert.Equal(2, hud.DamageFlashes.Count);
+        Assert.Equal(
+            new Level100HudDamageFlashSnapshot(
+                111_000,
+                SimulationConstants.Level100DamageFlashLifetimeTicks),
+            hud.DamageFlashes[0]);
+        Assert.Equal(
+            new Level100HudDamageFlashSnapshot(-222_000, 1),
+            hud.DamageFlashes[1]);
+    }
+
     [Theory]
     [InlineData(
         VehicleMode.Walker,

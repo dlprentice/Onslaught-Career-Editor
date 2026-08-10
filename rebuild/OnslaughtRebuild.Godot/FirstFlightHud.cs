@@ -2420,7 +2420,11 @@ public sealed partial class FirstFlightHud : CanvasLayer
             foreach (Level100HudDamageFlashSnapshot flash in hud.DamageFlashes)
             {
                 float angle = flash.RelativeYawMicroRad / 1_000_000f;
-                float alpha = Math.Clamp(flash.TicksRemaining / 60f, 0f, 1f);
+                float fade = Math.Clamp(
+                    flash.TicksRemaining /
+                        (float)SimulationConstants.Level100DamageFlashLifetimeTicks,
+                    0f,
+                    1f);
                 Vector2 position = center +
                     new Vector2(Mathf.Sin(angle), -Mathf.Cos(angle)) * CompassDamageRadius;
                 DrawCenteredRotated(
@@ -2428,7 +2432,9 @@ public sealed partial class FirstFlightHud : CanvasLayer
                     position,
                     new Vector2(128f, 32f),
                     angle,
-                    new Color(1f, 1f, 1f, alpha));
+                    // Retail keeps diffuse alpha opaque and fades RGB under
+                    // the compass ONE/ONE pass.
+                    new Color(fade, fade, fade, 1f));
             }
         }
 

@@ -84,6 +84,18 @@ public sealed partial class Level100ActorMechanics
         return Array.AsReadOnly(drained);
     }
 
+    /// <summary>
+    /// Causal-probe seam for the Battle Engine damage consumer. The next
+    /// normal <see cref="Simulation.Step"/> still owns hit dispatch, shield
+    /// damage, directional-flash creation, death handling and event order.
+    /// </summary>
+    internal void QueueActorRoundImpactForMeasurement(
+        Level100ActorRoundImpact impact)
+    {
+        ArgumentNullException.ThrowIfNull(impact);
+        _actorRoundImpacts.Add(impact);
+    }
+
     private IReadOnlyList<Level100ActorWeaponSnapshot> SnapshotActorWeapons() =>
         Array.AsReadOnly(_actorWeapons
             .OrderBy(weapon => weapon.ActorId.Value)
@@ -699,6 +711,7 @@ public sealed partial class Level100ActorMechanics
             round.TargetActorId,
             round.OwnerActorId,
             round.Kind,
+            end,
             data.IncomingDamageMilliLife));
         return true;
     }

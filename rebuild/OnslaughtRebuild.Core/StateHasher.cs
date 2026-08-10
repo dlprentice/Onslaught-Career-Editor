@@ -24,6 +24,10 @@ public static class StateHasher
         using (var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true))
         {
             writer.Write(s_magic);
+            // 41: records the retained directional damage-flash list. Its
+            // timestamp and order affect future strict one-per-update expiry,
+            // so a per-tick presentation event cannot reconstruct this state.
+            //
             // 40: records the Walker travel remainder and rollover count that
             // determine whether a later strict stop requests the released
             // hydraulic-settle cue.
@@ -81,7 +85,7 @@ public static class StateHasher
             // 31: added the ordered Level100WeaponFireEvents stream. Every
             // hashed tick gains its four-byte count, so this bump moves every
             // pinned hash regardless of whether a weapon fires.
-            writer.Write(40);
+            writer.Write(41);
             writer.Write(state.Tick);
             writer.Write(state.Seed);
             writer.Write(state.InitialLevel100TutorialProgress.Introduction);
@@ -142,6 +146,12 @@ public static class StateHasher
                 writer.Write(damage.ShieldAbsorbedMilliLife);
                 writer.Write(damage.LifeDamageMilliLife);
                 writer.Write(damage.RequestsDeath);
+            }
+            writer.Write(state.Level100DamageFlashes.Count);
+            foreach (Level100DamageFlashSnapshot flash in state.Level100DamageFlashes)
+            {
+                writer.Write(flash.RelativeYawMicroRad);
+                writer.Write(flash.StartTick);
             }
             writer.Write(state.TransformTicksRemaining);
             writer.Write(state.WalkerToJetUsesTakeoffLift);

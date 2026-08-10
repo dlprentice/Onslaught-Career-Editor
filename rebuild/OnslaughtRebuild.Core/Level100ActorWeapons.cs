@@ -50,6 +50,7 @@ public sealed record Level100ActorRoundImpact(
     Level100ActorId TargetActorId,
     Level100ActorId OwnerActorId,
     Level100ActorRoundKind Kind,
+    SimVector3 SourcePositionMillimeters,
     int IncomingDamageMilliLife);
 
 /// <summary>

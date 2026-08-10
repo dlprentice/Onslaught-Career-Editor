@@ -725,11 +725,18 @@ The Godot projection preserves emitted collection order and retains typed
 actor IDs plus full three-dimensional objective positions until the renderer's
 final horizontal projection. Core's current Walker/Jet selection now feeds the
 retained Pulse/Vulcan HUD icon identities; Missile Pod remains absent because
-its exact HUD icon is not independently identified. It leaves selection-panel
-state, weapon resources, classified contacts, threats,
-damage flashes, target prediction, active-help lifetime, and influence values
-absent until their mechanics owners exist. The HUD does not draw a parallel
-frontend result screen, and the frontend does not own mission outcome handoff.
+its exact HUD icon is not independently identified. Successful actor-round
+damage now preserves the released source-relative yaw, 15-entry cap, two-second
+lifetime, and strict one-expired-entry-per-update list law. The Godot compass
+projects only positive-intensity entries and draws the exact retained 128x32
+sprite at the single-player 96-pixel radius, fading opaque grayscale RGB under
+the ONE/ONE pass as retail does. External damage facts and water skim carry no
+source object and deliberately create no directional flash. It leaves
+selection-panel state, weapon resources, threats, target prediction, and
+active-help lifetime absent until their mechanics owners exist; the current
+node-influence reconstruction remains explicitly provisional. The HUD does not
+draw a parallel frontend result screen, and the frontend does not own mission
+outcome handoff.
 During Core's existing terminal countdown only, the in-level HUD now reproduces
 the retail black darkener, Victory/Defeat title, and the three retained Level
 100 loss-reason strings. Objective/status rows, fade-out/menu transfer,

@@ -1915,9 +1915,14 @@ public sealed class InteractiveSessionTests
         // rollover count decide whether a later strict stop requests the
         // released hydraulic-settle cue, so both future-affecting fields are
         // serialized. The firing-range assertions remain unchanged.
+        // MOVED 2026-08-10 by StateHasher v41. The retained directional
+        // damage-flash list carries yaw and start tick because list order and
+        // strict one-per-update expiry affect future state. This smoke receives
+        // no actor-round damage, so its gameplay assertions are unchanged; its
+        // canonical byte stream gains the empty-list count plus the version.
         string finalStateHash = StateHasher.ComputeHex(session.CurrentSnapshot);
         Assert.Equal(
-            "ef439a4b3cfdba0ef10fddb05f98d887ed6bbc6cd7fb02bef3a9bedf3c3845a1",
+            "dcad266595405161bc51632389caec9f4c54711c2db8c0860294c95a65320bbf",
             finalStateHash);
     }
 
