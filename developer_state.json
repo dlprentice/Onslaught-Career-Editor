@@ -6,12 +6,12 @@
   "current_re_execution_policy": {
     "reason": "The 2026-08-09 UnsetObjective lane spent hours optimizing promotion ceremony around one function. This block prevents that failure mode from recurring.",
     "singleFunctionLimit": "Thirty minutes. At the limit, record the best bounded hypothesis/open question and move the function into a cohort; continue alone only for a newly reproduced corruption or data-loss risk.",
-    "workInProgressLimit": "One evidence cohort and one noncanonical exploration lane. Do not open parallel bespoke function ceremonies.",
-    "minimumMaterialBlock": "Each completed work block must change at least one measured count and should cover at least 10 function boundaries/contracts or 50 hypothesis rows. If it cannot, rescope before continuing.",
+    "workInProgressLimit": "At most one bulk static cohort, one disposable-Ghidra batch, and one rebuild-map/parity slice at a time. Parallel subagents fill those three distinct owners; no per-function lane or duplicate review lane stays open.",
+    "minimumMaterialBlock": "Each completed static-RE block must change a measured count and target at least 100 disjoint functions. A rebuild block consumes a coherent 5-to-10-contract slice only when it reproduces a current mismatch. The only smaller exception is a reproduced corruption/data-loss risk or an exact blocker for the active bulk batch.",
     "ghidraRule": "Use HYP__ names on disposable projects freely in bulk. Canonical/live Ghidra changes are cohort promotions of at least 10 related functions unless a single change repairs corruption or unlocks the batch.",
     "toolingRule": "Reuse existing exporters, reducers, and batch mutators. A new authority owner is justified only by a current canonical mutation that existing owners cannot safely express.",
     "loopBreaker": "If two consecutive work blocks do not change a function, contract, residual, question, hypothesis, or rebuild-parity count, stop the lane immediately and select a broader or cheaper instrument.",
-    "scoreboard": "Bulk hypothesis overlay: 932/932 live FUN_* rows named HYP__ on an isolated project, zero unrelated function changes. Semantic frontier: 108/108 nonstructural functions carry explicit hypothesis-only roles, I/O/effects, confidence, and cheapest falsifiers in scratch Ghidra (54 script-native + 53 RTTI/virtual + 1 CRT near-clone), with 108/108 fresh readback. Mission cohort: 11/11 exact registry-linked boundaries and shipped names promoted to live and tracked Ghidra in one batch; function count 8,125 -> 8,136, existing function rows changed 0. Seventeen disjoint major static cohorts through CFastVB149 now cover 1,270 exact bodies: 1,227 formerly opaque functions have bounded C1_STATIC hypotheses, 42 prior C1 rows were repaired or confirmed, and ApplyDamage's existing C2 row was preserved without reinterpretation. The rebuild consumes 10 Weapon41 contracts fully plus 4 partially, CGame51 corrected the loss countdown from source's 5 seconds to retail's 2 seconds, the CController/CPCController slice corrected gun input from repeated held Fire to one retail BUTTON_RELEASE edge, CMeshPart retail evidence corrected fractional pose orientation from quaternion slerp to nine-component matrix interpolation, CDXEngine evidence replaced a 0.002-world-unit shoreline lift with retail's index-4 projection-depth bias law, Math51 replaced normalized quaternion lerp with the retail sine-weighted spherical law for proper render rotations, and CDXTexture89 now keeps the cursor's stored DXT2 format separate from its measured eight-level RGBA8 upload representation. Focused tests, Godot build, and native smoke pass. Six completed disposable Ghidra batches have read back 102 CGame/CBattleEngine rows, 122 CUnit/Player rows, 120 IScript/World rows, 167 CMeshPart/CDXEngine/CEngine rows, 105 CFastVB/Math rows, and 242 CDXTexture/CTexture rows. The latest completed batch changed exactly its 242 targets, changed zero non-target rows, added or removed no functions, and changed no program metric except the aggregate comment digest. A separate 221-row CDXTexture115/CFastVB106 disposable batch is in progress from that exact post project. None touched live or tracked Ghidra."
+    "scoreboard": "Bulk hypothesis overlay: 932/932 live FUN_* rows named HYP__ on an isolated project, zero unrelated function changes. Semantic frontier: 108/108 nonstructural functions carry explicit hypothesis-only roles, I/O/effects, confidence, and cheapest falsifiers in scratch Ghidra (54 script-native + 53 RTTI/virtual + 1 CRT near-clone), with 108/108 fresh readback. Mission cohort: 11/11 exact registry-linked boundaries and shipped names promoted to live and tracked Ghidra in one batch; function count 8,125 -> 8,136, existing function rows changed 0. Eighteen disjoint major static cohorts through FrontEndCareer123 now cover 1,393 exact bodies: 1,350 formerly opaque functions have bounded C1_STATIC hypotheses, 42 prior C1 rows were repaired or confirmed, and ApplyDamage's existing C2 row was preserved without reinterpretation. The rebuild consumes 10 Weapon41 contracts fully plus 4 partially, CGame51 corrected the loss countdown from source's 5 seconds to retail's 2 seconds, the CController/CPCController slice corrected gun input from repeated held Fire to one retail BUTTON_RELEASE edge, CMeshPart retail evidence corrected fractional pose orientation from quaternion slerp to nine-component matrix interpolation, CDXEngine evidence replaced a 0.002-world-unit shoreline lift with retail's index-4 projection-depth bias law, Math51 replaced normalized quaternion lerp with the retail sine-weighted spherical law for proper render rotations, and CDXTexture89 now keeps the cursor's stored DXT2 format separate from its measured eight-level RGBA8 upload representation. Focused tests, Godot build, and native smoke pass. Seven completed disposable Ghidra batches have read back 102 CGame/CBattleEngine rows, 122 CUnit/Player rows, 120 IScript/World rows, 167 CMeshPart/CDXEngine/CEngine rows, 105 CFastVB/Math rows, 242 CDXTexture/CTexture rows, and 221 CDXTexture115/CFastVB106 rows. The latest completed batch changed exactly its 221 targets, changed zero non-target rows, added or removed no functions, retained 8,136 functions, and changed no program metric except the aggregate comment digest. None touched live or tracked Ghidra."
   },
   "current_re_authority": {
     "authorityClass": "FULL_REPLAY_CAMPAIGN_AUTHORITY",
@@ -82,10 +82,10 @@
     },
     "activeHypothesisOverlay": {
       "status": "NONCANONICAL_SCRATCH_ONLY_NEVER_SYNC_TO_LIVE",
-      "projectPath": "local-lab/ghidra-cdxtexture89-ctexture153-scratch-20260809-v1/project",
+      "projectPath": "local-lab/ghidra-cdxtexture115-cfastvb106-scratch-20260809-v1/project",
       "sourceCampaign": "Generation 19 campaign-functions.tsv joined by exact entry/body identity, then advanced only through disposable HYP__ batches with separate-process full-inventory readback",
       "hypothesisLedger": "local-lab/ghidra-bulk-hypothesis-overlay-20260809-v1/function-hypotheses.tsv; 350150 bytes; SHA-256 39208135c5d7a0a5378b7dfc9f7a7557f736f8f852ab2c4882c5af13d69a2441",
-      "readback": "local-lab/ghidra-cdxtexture89-ctexture153-scratch-20260809-v1/functions.tsv; 7121366 bytes; SHA-256 0614f88a85c232397de4267dfbbebfaceb8fb996280bb63786ca193a304ec70b",
+      "readback": "local-lab/ghidra-cdxtexture115-cfastvb106-scratch-20260809-v1/functions.tsv; 7124983 bytes; SHA-256 c14d2c199428a82125bcf0622f2e07fa3041048d6ff9186dff9dbcb6272d666c",
       "semanticFrontier": {
         "nativeHypotheses": "local-lab/ghidra-bulk-hypothesis-overlay-20260809-v1/frontier-108-evidence/native-hypotheses.tsv; 11053 bytes; SHA-256 a13b094d734dca01178ba2cb8a94c01687a2441fc6ad1a100845c9d980494729",
         "rttiAndNearCloneHypotheses": "local-lab/ghidra-bulk-hypothesis-overlay-20260809-v1/frontier-108-evidence/rtti-nearclone-hypotheses.tsv; 10973 bytes; SHA-256 9e05bed6cd408804871ac4c3d509c5ac15a3e3c97a9a424327523090500599d7",
@@ -223,7 +223,8 @@
         "report": "local-lab/ghidra-cfastvb106-static-20260809-v1/REPORT.md; 4303 bytes; SHA-256 d6c7387375b91fe0f20a3c54e2c3bbe12787bd5c2deced740827c5de234cef93",
         "result": "local-lab/ghidra-cfastvb106-static-20260809-v1/result.json; 6106 bytes; SHA-256 0d58a773306f5206db7410f7316c1943c0f2687a24a02704e12d1eda4706a20d",
         "scratchInput": "local-lab/ghidra-cfastvb106-static-20260809-v1/disposable-batch-input-v1/cfastvb106.tsv; 178452 bytes; SHA-256 9710ef9af253e155ef0f2b0128dcb88d5276e604e28e9657af1579cd751b3d7b",
-        "resultSummary": "106 exact CFastVB W013 rows / 19,792 body bytes / 6,324 instructions / 254 inbound xrefs; all 106 OPAQUE -> C1_STATIC while retaining 14 COVERED, 8 PARTIAL and 84 DARK execution states; 16 phantom trailing parameters were removed and hidden-register/immediate-RET boundaries remain explicit"
+        "resultSummary": "106 exact CFastVB W013 rows / 19,792 body bytes / 6,324 instructions / 254 inbound xrefs; all 106 OPAQUE -> C1_STATIC while retaining 14 COVERED, 8 PARTIAL and 84 DARK execution states; 16 phantom trailing parameters were removed and hidden-register/immediate-RET boundaries remain explicit",
+        "rebuildMap": "local-lab/ghidra-cfastvb106-static-20260809-v1/rebuild-map.tsv; 25711 bytes; SHA-256 923110079b903fd28867463de9c7689ec81151b3e83e82f0f689804b99ab67bb; 0 IMPLEMENTED / 7 PARTIAL / 99 UNMAPPED; no port selected because no current mismatch was reproduced"
       },
       "cFastVb149Cohort": {
         "contracts": "local-lab/ghidra-cfastvb149-static-20260809-v1/contracts.tsv; 303206 bytes; SHA-256 2366868ed1884a14e1894a4da9a2d8bc812a8ac4ce541e57fce55e5e7acd4288",
@@ -231,6 +232,13 @@
         "result": "local-lab/ghidra-cfastvb149-static-20260809-v1/result.json; 9045 bytes; SHA-256 3a9e9dbea389a8c090e310a1bd916a7519a01fe5f6a96edbe250b09822ae5d3b",
         "scratchInput": "local-lab/ghidra-cfastvb149-static-20260809-v1/disposable-batch-input-v1/cfastvb149.tsv; 291856 bytes; SHA-256 9716af2c44aa109f2ba08322d3120beac07d3ad1238d4d469794e0178f817255",
         "resultSummary": "149 exact CFastVB W014 SIMD/math/dispatch rows / 53,785 body bytes / 15,019 instructions / 298 inbound xrefs; all 149 OPAQUE -> C1_STATIC while retaining 2 COVERED, 3 PARTIAL and 144 DARK execution states; 79 medium-confidence custom ABI/boundary rows remain explicit and no rename is proposed"
+      },
+      "frontEndCareer123Cohort": {
+        "contracts": "local-lab/ghidra-frontendcareer123-static-20260809-v1/contracts.tsv; 247849 bytes; SHA-256 fe8604cb00cb231048acc3886fe2ed46f045d7f778755b003cfe3ac49a018714",
+        "report": "local-lab/ghidra-frontendcareer123-static-20260809-v1/REPORT.md; 6253 bytes; SHA-256 2737263ba88a35bb1c33f594234addbb70fdcb97a959305f731f3e7b6f72da30",
+        "result": "local-lab/ghidra-frontendcareer123-static-20260809-v1/result.json; 10329 bytes; SHA-256 cd627d64d2e31643672ea9880532c9e0eedb99b40749a012cfce19331c7f03de",
+        "scratchInput": "local-lab/ghidra-frontendcareer123-static-20260809-v1/disposable-batch-input-v1/frontendcareer123.tsv; 247818 bytes; SHA-256 e67a1fd7c0cee481d14c8bfc33fb845a3d0fa638c898069f17c79be9197ecc79",
+        "resultSummary": "123 exact CFrontEnd/CFEPMultiplayerStart/CCareer/CFEPBEConfig rows / 62,029 body bytes / 18,651 instructions / 1,145 inbound xrefs; all 123 OPAQUE -> C1_STATIC while retaining 38 COVERED, 54 PARTIAL and 31 DARK execution states; 109 HIGH and 14 MEDIUM confidence, no rename proposed, absent multiplayer/config source kept explicit"
       },
       "cmeshCdxEngineScratchBatch": {
         "mutationPlan": "local-lab/ghidra-cmesh55-cdxengine59-cengine53-scratch-20260809-v1/mutation-plan.tsv; 236955 bytes; SHA-256 1cd0628c95b531985fd17cf509dcadcae5dd748b977e1888f154579b8939b83d",
@@ -259,6 +267,15 @@
         "result": "local-lab/ghidra-cdxtexture89-ctexture153-scratch-20260809-v1/result.json; 5646 bytes; SHA-256 702eb45372bfa3041c2b18497072d3f3b79d83828935c037b972809ce46c5a46",
         "resultSummary": "242/242 exact CDXTexture89 plus CTexture153 targets renamed/commented and independently read back; 242 target rows changed, zero non-target rows, zero added/removed rows, exact structural inventory retained, HYP__ count 1601 -> 1843, and only the aggregate comment digest changed across 29 program metrics"
       },
+      "cdxTexture115CFastVb106ScratchBatch": {
+        "mutationPlan": "local-lab/ghidra-cdxtexture115-cfastvb106-scratch-20260809-v1/mutation-plan.tsv; 371754 bytes; SHA-256 549e5e903ea2ed901675c73dc2c0d43ca33d501fd3f4106ffcddd34106138561",
+        "functions": "local-lab/ghidra-cdxtexture115-cfastvb106-scratch-20260809-v1/functions.tsv; 7124983 bytes; SHA-256 c14d2c199428a82125bcf0622f2e07fa3041048d6ff9186dff9dbcb6272d666c",
+        "program": "local-lab/ghidra-cdxtexture115-cfastvb106-scratch-20260809-v1/program.tsv; 1267 bytes; SHA-256 82e9eb00c48fce8cec72c589562f4ff50a5cb842a6b8f5fac031b7c8a9d1762a",
+        "readback": "local-lab/ghidra-cdxtexture115-cfastvb106-scratch-20260809-v1/readback.tsv; 387896 bytes; SHA-256 62b6a4db10a4c0daceb2adb4d7306955e5ecff52366fc1dbafb5912f05632e7f",
+        "report": "local-lab/ghidra-cdxtexture115-cfastvb106-scratch-20260809-v1/REPORT.md; 3265 bytes; SHA-256 58196a21610a2390c0863af3c298a33636800d2f50a43bd3347a62c05fb7cb6c",
+        "result": "local-lab/ghidra-cdxtexture115-cfastvb106-scratch-20260809-v1/result.json; 8598 bytes; SHA-256 4160bda995ff48890875fd5ca9db0d14bf9bcc3b921946477ed6e823301974cb",
+        "resultSummary": "221/221 exact CDXTexture115 plus CFastVB106 targets renamed/commented and independently read back; 8,136 functions retained, exact changed-target set 221, zero non-target/add/remove/structural drift, HYP__ count 1843 -> 2064, and only commentsSha256 changed across 29 program metrics; one pre-existing proposed-name collision was address-suffixed without changing its contract"
+      },
       "result": {
         "literalFunBefore": 932,
         "literalFunAfter": 0,
@@ -272,13 +289,13 @@
         "semanticC1Candidate": 14,
         "semanticC2Bounded": 1
       },
-      "nextQueue": "Seventeen disjoint major static cohorts are complete, totaling 1,270 exact bodies, 1,227 formerly opaque functions advanced to bounded C1_STATIC hypotheses, and 42 prior C1 rows repaired or confirmed. ApplyDamage remains the preserved C2 exception. CFastVB149 adds 149 exact SIMD/math/dispatch bodies while retaining 144 runtime-dark states. The CDXTexture89/CTexture153 disposable-Ghidra batch passed exact 242-target readback with zero collateral row or structural drift; a fresh-clone 221-row CDXTexture115/CFastVB106 batch is in progress from that exact post project. The next exact disjoint >=100-function static selector is being completed from already-exported evidence; completed cohorts continue to map into coherent rebuild owners. No single-function lane is open."
+      "nextQueue": "Eighteen disjoint major static cohorts are complete, totaling 1,393 exact bodies, 1,350 formerly opaque functions advanced to bounded C1_STATIC hypotheses, and 42 prior C1 rows repaired or confirmed. ApplyDamage remains the preserved C2 exception. FrontEndCareer123 adds 123 exact frontend, multiplayer-start, career and BE-config bodies while retaining 31 runtime-dark states. The 221-row CDXTexture115/CFastVB106 disposable-Ghidra batch passed exact fresh-process readback with zero collateral or structural drift; a 272-row CFastVB149/FrontEndCareer123 successor batch is in progress from that exact post project. A 539-row zeroing/identity-template cohort is being mechanically gated against existing body evidence; it must rotate to a >=200 alternative if those inputs cannot prove direct writes. No single-function lane is open."
     },
     "rankedNextFrontiers": [
       {
         "rank": 1,
         "question": "Select and complete the next exact disjoint 100-or-more-function static cohort.",
-        "existingEvidence": "Seventeen completed cohorts demonstrate deterministic address/body joins and bounded static contracts from the existing Gen19 inventory and dated metadata/decompile/instruction/xref waves without new capture; the successor >=100-function selector is being completed from the same dated evidence.",
+        "existingEvidence": "Eighteen completed cohorts demonstrate deterministic address/body joins and bounded static contracts from the existing Gen19 inventory and dated metadata/decompile/instruction/xref waves without new capture; a 539-row structural-template selector is being gated from existing exact bodies and the reviewed hypothesis overlay.",
         "instrument": "Rank unused class/system prefixes by opaque-count movement, evidence completeness and reconstruction leverage, then emit one ignored contracts/report/result/input set from the chosen selector.",
         "gate": "At least 100 exact disjoint functions, complete existing evidence for every claimed boundary, visible I/O/writes/order, honest execution-state retention, C1_STATIC at most, and no runtime/source/rebuild overclaim.",
         "reconstructionOwner": "Assign only after the cohort map identifies an existing coherent owner.",
@@ -287,7 +304,7 @@
       {
         "rank": 2,
         "question": "Map completed cohorts to coherent rebuild owners and land only consequential parity slices.",
-        "existingEvidence": "The seventeen cohort ledgers now contain exact retail-body contracts and cheapest falsifiers, while rebuild maps separate implemented, partial, and unmapped rows.",
+        "existingEvidence": "The eighteen cohort ledgers now contain exact retail-body contracts and cheapest falsifiers, while rebuild maps separate implemented, partial, and unmapped rows.",
         "instrument": "Choose a 5-to-10-contract slice owned by one existing subsystem, reproduce one concrete mismatch or exact parity claim, and run the smallest focused test that can falsify it.",
         "gate": "The patch consumes an exact bounded retail contract, keeps unresolved transitive behavior open, changes a measurable rebuild mapping count, and passes its focused owner test.",
         "reconstructionOwner": "The existing owner selected by each cohort rebuild map; do not create a framework to house a single mapping.",
