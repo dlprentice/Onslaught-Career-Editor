@@ -320,6 +320,7 @@ public sealed partial class FirstFlightWorldView : Node3D
                     SpawnTargetTankDestruction(position, item.ActorId);
                     break;
                 case Level100DestructionEffectKind.FacilityDestroyed:
+                    SpawnFacilityDestruction(position, item.ActorId);
                     break;
                 default:
                     throw new InvalidDataException(
@@ -1119,6 +1120,24 @@ public sealed partial class FirstFlightWorldView : Node3D
         root.AddChild(fireball);
         AnimateAtlas(root, fireball, frames: 16, columns: 4, rows: 4, 1.5d);
         AnimateScale(fireball, 1f, 0.5f, 1.5d);
+    }
+
+    private void SpawnFacilityDestruction(Vector3 position, int facilityId)
+    {
+        Node3D root = CreateTimedEffect(
+            $"FacilityDestruction{facilityId}",
+            position,
+            0.3d);
+        // `Flash Building`: direct Time-0 entry in Muspell Building Explosion
+        // Effect. Radius 3, Final_Radius 0, Life 6 released 20 Hz turns = 0.30 s,
+        // Texture_Size 4 (one cell), sun2.tga. The sibling debris/smoke/fireball
+        // emitters remain open rather than being approximated here.
+        MeshInstance3D flash = CreateEffectSprite(
+            "FacilityFlash",
+            _effectFlashMediumTexture,
+            3f);
+        root.AddChild(flash);
+        AnimateScale(flash, 1f, 0f, 0.3d);
     }
 
     private Node3D CreateTimedEffect(string name, Vector3 position, double lifetimeSeconds)

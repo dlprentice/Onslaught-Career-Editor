@@ -143,9 +143,20 @@ public sealed class ParticleQuadSizeConventionTests
             ["FlashMedium"] = "Flash Medium",
             ["ExplosionAnimatedSprite"] = "Explosion Anim Sprite Medium",
             ["ExplosionFireball"] = "Fire Sprite Damped 2",
+            ["FacilityFlash"] = "Flash Building",
         };
 
         string source = ReadGodotSource("FirstFlightWorldView.cs");
+        Assert.Matches(
+            @"case\s+Level100DestructionEffectKind\.FacilityDestroyed:\s*" +
+            @"SpawnFacilityDestruction\(position,\s*item\.ActorId\);\s*break;",
+            source);
+        Assert.Matches(
+            @"(?s)private void SpawnFacilityDestruction\(Vector3 position, int facilityId\).*?" +
+            @"CreateTimedEffect\(\s*\$""FacilityDestruction\{facilityId\}"",\s*position,\s*0\.3d\).*?" +
+            @"CreateEffectSprite\(\s*""FacilityFlash"",\s*_effectFlashMediumTexture,\s*3f\).*?" +
+            @"AnimateScale\(flash,\s*1f,\s*0f,\s*0\.3d\);",
+            source);
 
         // The owner is used, and the raw multiplication is not re-inlined.
         Assert.Contains(
