@@ -178,13 +178,26 @@ public sealed class Simulation
         bool skippedThePanThisTick = _level100OpeningTicksRemaining > 0 &&
             input.HasAction(SimActions.SkipPanning);
 
-        AdvanceOpeningCamera(input);
-        SyncLevel100PlayerState();
-        _level100ActorScripts.AdvanceTick();
+        // Scripted loss pauses immediately. Player-death/water loss keeps the
+        // world live through the nominal 15-second terminal clock, but the
+        // update that consumes its final tick is already the PAUSE_GAME update
+        // and must not advance actor scripts or world mechanics.
+        bool gameplayPausesThisTick = _level100Mission.GameplayPausesOnNextTick;
+        if (!gameplayPausesThisTick)
+        {
+            AdvanceOpeningCamera(input);
+            SyncLevel100PlayerState();
+            _level100ActorScripts.AdvanceTick();
+        }
         PumpLevel100EventBus();
         _level100Mission.AdvanceTick(PlayerHull);
         PumpLevel100EventBus();
         ApplyLevel100Facts(level100Facts);
+        if (_level100Mission.GameplayPaused)
+        {
+            return CreateSnapshot();
+        }
+
         AdvanceLevel100ActorMechanics();
         bool playerPartMoveStarted =
             _level100Actors.GetLifecycle(_level100PlayerActorId) ==

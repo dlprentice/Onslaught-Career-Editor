@@ -174,6 +174,17 @@ public sealed class Level100Mission
 
     public Level100MissionOutcome Outcome => _outcome;
 
+    internal bool GameplayPaused => Level100MissionTiming.GameplayPaused(
+        _outcome,
+        _failureReason,
+        _terminalTicksRemaining);
+
+    internal bool GameplayPausesOnNextTick =>
+        Level100MissionTiming.GameplayPausesOnNextTick(
+            _outcome,
+            _failureReason,
+            _terminalTicksRemaining);
+
     /// <summary>
     /// <c>CGame::StartPlayingState</c>
     /// (<c>references/Onslaught/game.cpp:3025-3031</c>): the game leaves
@@ -956,7 +967,7 @@ public sealed class Level100Mission
         _failureReason = reason;
         _failureTextId = failureTextId;
         _terminalState = Level100MissionTerminalState.FailureCountdown;
-        _terminalTicksRemaining = Level100MissionTiming.FailureCountdownTicks;
+        _terminalTicksRemaining = Level100MissionTiming.FailureTerminalTicks(reason);
         _events.Add(new Level100MissionOutcomeDeclared(
             _tick,
             _outcome,
@@ -994,7 +1005,7 @@ public sealed class Level100Mission
         }
         else if (_outcome == Level100MissionOutcome.Lost &&
                  _terminalTicksRemaining ==
-                 Level100MissionTiming.FailureCountdownTicks -
+                 Level100MissionTiming.FailureTerminalTicks(_failureReason) -
                  Level100MissionTiming.FailureMenuDelayTicks)
         {
             _terminalState = Level100MissionTerminalState.FailureMenuReady;

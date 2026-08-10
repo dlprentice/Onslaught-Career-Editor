@@ -542,7 +542,11 @@ public sealed partial class FirstFlightGame : Node3D
     private void ResumeFromAuthenticPause()
     {
         _session.SetAuthenticMenuPaused(false);
-        _audio.SetGameplayPaused(false);
+        Level100MissionSnapshot mission = _session.CurrentSnapshot.Level100Mission;
+        _audio.SetGameplayPaused(Level100MissionTiming.GameplayPaused(
+            mission.Outcome,
+            mission.FailureReason,
+            mission.TerminalTicksRemaining));
         _pauseView.Close();
         UpdateGameplayCursorMode();
     }
@@ -1199,6 +1203,15 @@ public sealed partial class FirstFlightGame : Node3D
             result.CurrentSnapshot.Tick);
         _audio.ConsumeLevel100DestructionEvents(
             result.Level100DestructionEvents);
+        Level100MissionSnapshot mission = result.CurrentSnapshot.Level100Mission;
+        _audio.SetGameplayMix(Level100MissionTiming.GameplayMix(
+            mission.Outcome,
+            mission.FailureReason,
+            mission.TerminalTicksRemaining));
+        _audio.SetGameplayPaused(Level100MissionTiming.GameplayPaused(
+            mission.Outcome,
+            mission.FailureReason,
+            mission.TerminalTicksRemaining));
     }
 
     private void RunFocusLossHandlerSmokeProbe()

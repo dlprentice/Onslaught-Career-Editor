@@ -1120,6 +1120,61 @@ public sealed class SimulationTests
             Level100MissionTerminalState.FailureCountdownElapsed,
             first.Snapshot.Level100Mission.TerminalState);
         Assert.Equal(0, first.Snapshot.Level100Mission.TerminalTicksRemaining);
+
+        Simulation death = CreatePlayingSimulation();
+        WorldSnapshot declared = death.Step(
+            SimInput.Idle,
+            [new Level100PlayerDeathFact()]);
+        Assert.Equal(Level100MissionFailureReason.PlayerDeath,
+            declared.Level100Mission.FailureReason);
+        Assert.Equal(
+            Level100MissionTiming.DeathPauseDelayTicks,
+            declared.Level100Mission.TerminalTicksRemaining);
+        Assert.Equal(0x3f800000, MixBits(declared));
+
+        int actorScriptTickAtDeclaration = declared.Level100ActorScripts.Tick;
+        WorldSnapshot advancing = declared;
+        for (int elapsed = 1;
+             elapsed < Level100MissionTiming.DeathPauseDelayTicks;
+             elapsed++)
+        {
+            advancing = death.Step(SimInput.Idle);
+            Assert.Equal(
+                actorScriptTickAtDeclaration + elapsed,
+                advancing.Level100ActorScripts.Tick);
+            if (elapsed == 1)
+            {
+                Assert.Equal(0x3f7f3b64, MixBits(advancing));
+            }
+            if (elapsed == Level100MissionTiming.FailureMenuDelayTicks)
+            {
+                Assert.Equal(
+                    Level100MissionTerminalState.FailureMenuReady,
+                    advancing.Level100Mission.TerminalState);
+            }
+        }
+
+        Assert.Equal(1, advancing.Level100Mission.TerminalTicksRemaining);
+        WorldSnapshot paused = death.Step(SimInput.Idle);
+        Assert.Equal(0, paused.Level100Mission.TerminalTicksRemaining);
+        Assert.Equal(
+            Level100MissionTerminalState.FailureCountdownElapsed,
+            paused.Level100Mission.TerminalState);
+        Assert.Equal(
+            actorScriptTickAtDeclaration +
+                Level100MissionTiming.DeathPauseDelayTicks - 1,
+            paused.Level100ActorScripts.Tick);
+        Assert.Equal(0x3dcccb3b, MixBits(paused));
+
+        WorldSnapshot held = death.Step(SimInput.Idle);
+        Assert.Equal(paused.Level100ActorScripts.Tick, held.Level100ActorScripts.Tick);
+        Assert.Equal(0x3dcccb3b, MixBits(held));
+
+        static int MixBits(WorldSnapshot snapshot) => BitConverter.SingleToInt32Bits(
+            Level100MissionTiming.GameplayMix(
+                snapshot.Level100Mission.Outcome,
+                snapshot.Level100Mission.FailureReason,
+                snapshot.Level100Mission.TerminalTicksRemaining));
     }
 
     [Fact]
@@ -1397,11 +1452,13 @@ public sealed class SimulationTests
         Assert.Equal(
             Level100MissionTiming.FailureCountdownTicks,
             snapshot.Level100Mission.TerminalTicksRemaining);
+        int actorScriptTickAtLoss = snapshot.Level100ActorScripts.Tick;
         for (int tick = 0; tick < Level100MissionTiming.FailureCountdownTicks; tick++)
         {
             snapshot = simulation.Step(SimInput.Idle);
             hashes.Add(StateHasher.ComputeHex(snapshot));
         }
+        Assert.Equal(actorScriptTickAtLoss, snapshot.Level100ActorScripts.Tick);
 
         return new DeterministicSimulationTape(snapshot, hashes.AsReadOnly());
     }

@@ -586,7 +586,7 @@ public sealed class Level100MissionTests
         Assert.True(death.ReportPlayerDeath());
         Assert.False(death.ReportWaterLoss());
         Assert.Equal(Level100MissionFailureReason.PlayerDeath, death.Snapshot.FailureReason);
-        Assert.Equal(2 * SimulationConstants.TicksPerSecond,
+        Assert.Equal(Level100MissionTiming.DeathPauseDelayTicks,
             death.Snapshot.TerminalTicksRemaining);
 
         var waterActors = new Level100ActorRegistry(definitions);
@@ -597,7 +597,7 @@ public sealed class Level100MissionTests
         Assert.True(water.ReportWaterLoss());
         Assert.False(water.SubmitInput(Level100MissionInput.BrokeTutorial));
         Assert.Equal(Level100MissionFailureReason.WaterLoss, water.Snapshot.FailureReason);
-        Assert.Equal(2 * SimulationConstants.TicksPerSecond,
+        Assert.Equal(Level100MissionTiming.DeathPauseDelayTicks,
             water.Snapshot.TerminalTicksRemaining);
     }
 }

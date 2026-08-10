@@ -378,11 +378,13 @@ public sealed class Level100HudPresentationTests
         Level100MissionTerminalState.None,
         Level100MissionFailureReason.None,
         0,
+        0,
         false)]
     [InlineData(
         Level100MissionOutcome.Won,
         Level100MissionTerminalState.SuccessCountdown,
         Level100MissionFailureReason.None,
+        100,
         100,
         true)]
     [InlineData(
@@ -390,29 +392,41 @@ public sealed class Level100HudPresentationTests
         Level100MissionTerminalState.FrontEndHandoffReady,
         Level100MissionFailureReason.None,
         0,
+        0,
         false)]
     [InlineData(
         Level100MissionOutcome.Lost,
         Level100MissionTerminalState.FailureCountdown,
         Level100MissionFailureReason.TutorialBroken,
         40,
+        40,
         true)]
     [InlineData(
         Level100MissionOutcome.Lost,
         Level100MissionTerminalState.FailureMenuReady,
         Level100MissionFailureReason.PlayerDeath,
+        290,
         30,
         true)]
     [InlineData(
         Level100MissionOutcome.Lost,
         Level100MissionTerminalState.FailureCountdown,
         Level100MissionFailureReason.WaterLoss,
+        261,
         1,
         true)]
     [InlineData(
         Level100MissionOutcome.Lost,
+        Level100MissionTerminalState.FailureMenuReady,
+        Level100MissionFailureReason.WaterLoss,
+        260,
+        0,
+        false)]
+    [InlineData(
+        Level100MissionOutcome.Lost,
         Level100MissionTerminalState.FailureCountdownElapsed,
         Level100MissionFailureReason.WaterLoss,
+        0,
         0,
         false)]
     public void ProjectionExposesRetailTerminalOverlayOnlyWhileCountdownRemains(
@@ -420,6 +434,7 @@ public sealed class Level100HudPresentationTests
         Level100MissionTerminalState terminalState,
         Level100MissionFailureReason failureReason,
         int ticksRemaining,
+        int expectedOverlayTicksRemaining,
         bool expectedVisible)
     {
         var session = new InteractiveSession(
@@ -443,7 +458,7 @@ public sealed class Level100HudPresentationTests
         Assert.Equal(expectedVisible, terminal.Visible);
         Assert.Equal(outcome, terminal.Outcome);
         Assert.Equal(failureReason, terminal.FailureReason);
-        Assert.Equal(ticksRemaining, terminal.TicksRemaining);
+        Assert.Equal(expectedOverlayTicksRemaining, terminal.TicksRemaining);
     }
 
     [Fact]

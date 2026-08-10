@@ -248,6 +248,45 @@ public sealed class Level100AudioCatalogTests
     }
 
     [Fact]
+    public void DeathTerminalFeedsTheRecoveredMixBeforeTheNominalPause()
+    {
+        string game = ReadGodotSource("FirstFlightGame.cs");
+        string consume = MethodBody(
+            game,
+            "private void ConsumeFrameEvents(FrameAdvanceResult result)");
+
+        AssertOccursInOrder(
+            consume,
+            "_audio.SetGameplayMix(Level100MissionTiming.GameplayMix(",
+            "mission.Outcome,",
+            "mission.FailureReason,",
+            "mission.TerminalTicksRemaining));",
+            "_audio.SetGameplayPaused(Level100MissionTiming.GameplayPaused(",
+            "mission.Outcome,",
+            "mission.FailureReason,",
+            "mission.TerminalTicksRemaining));");
+        Assert.Equal(1, CountOccurrences(consume, "_audio.SetGameplayMix("));
+        Assert.Equal(1, CountOccurrences(consume, "_audio.SetGameplayPaused("));
+        Assert.DoesNotContain("OpenAuthenticPauseMenu", consume, StringComparison.Ordinal);
+
+        string resume = MethodBody(
+            game,
+            "private void ResumeFromAuthenticPause()");
+        AssertOccursInOrder(
+            resume,
+            "_session.SetAuthenticMenuPaused(false);",
+            "Level100MissionSnapshot mission = _session.CurrentSnapshot.Level100Mission;",
+            "_audio.SetGameplayPaused(Level100MissionTiming.GameplayPaused(",
+            "mission.Outcome,",
+            "mission.FailureReason,",
+            "mission.TerminalTicksRemaining));");
+        Assert.DoesNotContain(
+            "_audio.SetGameplayPaused(false)",
+            resume,
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void SharedCueRecipes_UseCanonicalRetailRecordsAndAssets()
     {
         Level100AudioCueRecipe pulseImpact =

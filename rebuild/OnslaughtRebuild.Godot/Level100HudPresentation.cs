@@ -753,12 +753,18 @@ public sealed class Level100HudPresentationState
         Level100HudPart[] emphasizedParts = Enum.GetValues<Level100HudPart>()
             .Where(part => (snapshot.Level100HudEmphasisMask & (1 << (int)part)) != 0)
             .ToArray();
+        int terminalOverlayTicksRemaining =
+            mission.Outcome == Level100MissionOutcome.Lost
+                ? Level100MissionTiming.FailureOverlayTicksRemaining(
+                    mission.FailureReason,
+                    mission.TerminalTicksRemaining)
+                : mission.TerminalTicksRemaining;
         var terminal = new Level100HudTerminalSnapshot(
             Visible: mission.Outcome != Level100MissionOutcome.Running &&
-                mission.TerminalTicksRemaining > 0,
+                terminalOverlayTicksRemaining > 0,
             mission.Outcome,
             mission.FailureReason,
-            mission.TerminalTicksRemaining);
+            terminalOverlayTicksRemaining);
 
         return new Level100HudSnapshot(
             weapon,

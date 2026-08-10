@@ -24,6 +24,83 @@ public static class Level100MissionTiming
     // divergence rather than a source-port choice.
     public const int FailureCountdownTicks = 2 * SimulationConstants.TicksPerSecond;
     public const int FailureMenuDelayTicks = SimulationConstants.TicksPerSecond / 2;
+    // CGame::DeclareLevelLost schedules PAUSE_GAME 15 seconds after a
+    // player-death loss and starts CONTINUE_FADE_OUT_GAME_SOUNDS on the next
+    // released frame. The static evidence proves the duration, not whether the
+    // strict event-time comparison lands on nominal update 300 or 301; Core
+    // uses the established 20 Hz nominal projection and keeps that edge open.
+    public const int DeathPauseDelayTicks = 15 * SimulationConstants.TicksPerSecond;
+    public const float DeathGameplayFadeStep = 0.003f;
+
+    public static int FailureTerminalTicks(Level100MissionFailureReason reason) => reason switch
+    {
+        Level100MissionFailureReason.TutorialBroken => FailureCountdownTicks,
+        Level100MissionFailureReason.PlayerDeath or
+            Level100MissionFailureReason.WaterLoss => DeathPauseDelayTicks,
+        _ => throw new ArgumentOutOfRangeException(nameof(reason)),
+    };
+
+    public static int FailureOverlayTicksRemaining(
+        Level100MissionFailureReason reason,
+        int terminalTicksRemaining)
+    {
+        if (terminalTicksRemaining < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(terminalTicksRemaining));
+        }
+
+        int terminalTicks = FailureTerminalTicks(reason);
+        return Math.Clamp(
+            terminalTicksRemaining - (terminalTicks - FailureCountdownTicks),
+            0,
+            FailureCountdownTicks);
+    }
+
+    public static bool GameplayPaused(
+        Level100MissionOutcome outcome,
+        Level100MissionFailureReason reason,
+        int terminalTicksRemaining) =>
+        outcome == Level100MissionOutcome.Lost &&
+        (reason == Level100MissionFailureReason.TutorialBroken ||
+         (reason is (Level100MissionFailureReason.PlayerDeath or
+             Level100MissionFailureReason.WaterLoss) &&
+          terminalTicksRemaining == 0));
+
+    internal static bool GameplayPausesOnNextTick(
+        Level100MissionOutcome outcome,
+        Level100MissionFailureReason reason,
+        int terminalTicksRemaining) =>
+        GameplayPaused(outcome, reason, terminalTicksRemaining) ||
+        (outcome == Level100MissionOutcome.Lost &&
+         reason is (Level100MissionFailureReason.PlayerDeath or
+             Level100MissionFailureReason.WaterLoss) &&
+         terminalTicksRemaining == 1);
+
+    public static float GameplayMix(
+        Level100MissionOutcome outcome,
+        Level100MissionFailureReason reason,
+        int terminalTicksRemaining)
+    {
+        if (outcome != Level100MissionOutcome.Lost ||
+            reason is not (Level100MissionFailureReason.PlayerDeath or
+                Level100MissionFailureReason.WaterLoss))
+        {
+            return 1f;
+        }
+
+        int elapsedTicks = Math.Clamp(
+            DeathPauseDelayTicks - terminalTicksRemaining,
+            0,
+            DeathPauseDelayTicks);
+        float mix = 1f;
+        for (int tick = 0; tick < elapsedTicks; tick++)
+        {
+            // Preserve the released repeated float32 subtraction. Computing
+            // 1 - elapsed*step produces different bits at the pause boundary.
+            mix -= DeathGameplayFadeStep;
+        }
+        return mix;
+    }
 
     public static SimVector2 TriggerPosition(Level100MissionTrigger trigger) => trigger switch
     {
