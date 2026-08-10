@@ -551,6 +551,117 @@ public sealed class ParticleSetTests
         Assert.Equal(32, fire.InstanceCount);
     }
 
+    [Fact]
+    public void TargetTankExplosionUsesAuthoredSpriteTimingAndAtlasLaws()
+    {
+        ParticleSetFile set = ParticleSetFile.Parse(ReadMainSet());
+        ParticleDescriptor timeline = set.Require("Tank Explosion Medium");
+        Assert.Equal(ParticleDescriptorType.Timeline, timeline.Type);
+        IReadOnlyList<string> entries = timeline.RawAll("Particle_Descriptor");
+        IReadOnlyList<string> times = timeline.RawAll("Time");
+        int directSpriteIndex = entries.ToList().IndexOf("Explosion Anim Sprite Medium");
+        Assert.True(directSpriteIndex >= 0);
+        Assert.Equal("5", times[directSpriteIndex]);
+
+        ParticleEffectPlan plan = ParticleEffectResolver.Resolve(
+            set,
+            "Tank Explosion Medium");
+        ParticleSpriteLayer direct = Single(plan, "Explosion Anim Sprite Medium");
+        Assert.Equal(new[] { 5 }, direct.StartTurns);
+        Assert.Equal(ParticleAnimationMode.PlayOnce, direct.AnimationMode);
+        Assert.Equal(0, direct.StartCell);
+        Assert.Equal(7, direct.EndCell);
+        Assert.Equal(0.7f, direct.AnimationCellsPerTurn);
+        Assert.Equal(10, direct.LifeTurns);
+        Assert.Equal(1.5f, direct.StartRadius);
+        Assert.Equal(1.3f, direct.FinalRadius);
+
+        ParticleSpriteLayer fireball = Single(plan, "Fire Sprite Damped 2");
+        Assert.Equal(ParticleAnimationMode.Loop, fireball.AnimationMode);
+        Assert.True(fireball.RandomStartCell);
+        Assert.Equal(0, fireball.StartCell);
+        Assert.Equal(11, fireball.EndCell);
+        Assert.Equal(0.5f, fireball.AnimationCellsPerTurn);
+        Assert.Equal(30, fireball.LifeTurns);
+        Assert.Equal(1f, fireball.StartRadius);
+        Assert.Equal(0.5f, fireball.FinalRadius);
+
+        string worldSource = File.ReadAllText(Locate(
+            "rebuild/OnslaughtRebuild.Godot/FirstFlightWorldView.cs"));
+        string spawn = RequireSection(
+            worldSource,
+            "private void SpawnTargetTankDestruction(",
+            "private void SpawnFacilityDestruction(");
+        Assert.Contains("position, 1.5d);", spawn, StringComparison.Ordinal);
+        Assert.Contains(
+            "AnimateTargetTankDelayedExplosion(root, animatedExplosion);",
+            spawn,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "AnimateTargetTankFireball(root, fireball);",
+            spawn,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "AnimateScale(fireball, 1f, 0.5f, 1.5d);",
+            spawn,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain("AnimateAtlas(", spawn, StringComparison.Ordinal);
+        Assert.DoesNotContain("frames: 16", spawn, StringComparison.Ordinal);
+
+        string delayed = RequireSection(
+            worldSource,
+            "private static void AnimateTargetTankDelayedExplosion(",
+            "private static void AnimateTargetTankFireball(");
+        Assert.Contains("const int startCell = 0;", delayed, StringComparison.Ordinal);
+        Assert.Contains("const int endCell = 7;", delayed, StringComparison.Ordinal);
+        Assert.Contains("const double cellsPerTurn = 0.7d;", delayed, StringComparison.Ordinal);
+        Assert.Contains("const double lifeSeconds = 0.5d;", delayed, StringComparison.Ordinal);
+        Assert.Contains(
+            "5d / SimulationConstants.TicksPerSecond",
+            delayed,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "1d / (cellsPerTurn * SimulationConstants.TicksPerSecond)",
+            delayed,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "atlasTween.TweenInterval(startDelaySeconds);",
+            delayed,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "scaleTween.TweenInterval(startDelaySeconds);",
+            delayed,
+            StringComparison.Ordinal);
+        Assert.Contains("cell <= endCell", delayed, StringComparison.Ordinal);
+        Assert.Contains("sprite.Visible = false;", delayed, StringComparison.Ordinal);
+        Assert.Contains("sprite.Visible = true;", delayed, StringComparison.Ordinal);
+        Assert.Contains(
+            "Vector3.One * (1.3f / 1.5f)",
+            delayed,
+            StringComparison.Ordinal);
+
+        string looping = RequireSection(
+            worldSource,
+            "private static void AnimateTargetTankFireball(",
+            "private static void AnimateScale(");
+        Assert.Contains("const int startCell = 0;", looping, StringComparison.Ordinal);
+        Assert.Contains("const int endCell = 11;", looping, StringComparison.Ordinal);
+        Assert.Contains("const int lifeTurns = 30;", looping, StringComparison.Ordinal);
+        Assert.Contains("const double cellsPerTurn = 0.5d;", looping, StringComparison.Ordinal);
+        Assert.Contains("GD.Randi() % (uint)cellCount", looping, StringComparison.Ordinal);
+        Assert.Contains("lifeTurns * cellsPerTurn", looping, StringComparison.Ordinal);
+        Assert.Contains("step <= frameAdvances", looping, StringComparison.Ordinal);
+        Assert.Contains("% cellCount", looping, StringComparison.Ordinal);
+        Assert.Contains(
+            "tween.TweenInterval(cellIntervalSeconds);",
+            looping,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "cellsPerTurn * SimulationConstants.TicksPerSecond",
+            looping,
+            StringComparison.Ordinal);
+    }
+
     /// <summary>
     /// Hole 2. Every shot the player fires has an authored muzzle flash.
     /// <c>default physics.dat</c> binds it at the weapon mode

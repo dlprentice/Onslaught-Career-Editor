@@ -1144,9 +1144,11 @@ public sealed partial class FirstFlightWorldView : Node3D
 
     private void SpawnTargetTankDestruction(Vector3 position, int targetId)
     {
-        Node3D root = CreateTimedEffect($"TargetTankDestruction{targetId}", position, 1.55d);
+        Node3D root = CreateTimedEffect($"TargetTankDestruction{targetId}", position, 1.5d);
         // `Explosion Anim Sprite Medium`: Radius 1.5, Final_Radius 1.3,
-        // Life 10 turns = 0.5 s, End_Frame 7 (8 cells), Texture_Size 2.
+        // Life 10 turns = 0.5 s, End_Frame 7 (8 cells), Texture_Size 2,
+        // PlayOnce at 0.7 cells/turn. Tank Explosion Medium schedules it at
+        // Time 5, so this direct layer remains hidden for the first 0.25 s.
         MeshInstance3D animatedExplosion = CreateEffectSprite(
             "ExplosionAnimatedSprite",
             _targetTankExplosionAnimatedTexture,
@@ -1154,13 +1156,12 @@ public sealed partial class FirstFlightWorldView : Node3D
             columns: 4,
             rows: 4);
         root.AddChild(animatedExplosion);
-        AnimateAtlas(root, animatedExplosion, frames: 8, columns: 4, rows: 4, 0.5d);
-        AnimateScale(animatedExplosion, 1f, 1.3f / 1.5f, 0.5d);
+        AnimateTargetTankDelayedExplosion(root, animatedExplosion);
 
         // `Fire Sprite Damped 2`: Radius 1.0, Final_Radius 0.5,
-        // Life 30 turns = 1.5 s, Texture_Size 2, fireball.tga. NOT settled: the
-        // 16 frames below overrun the record's End_Frame 11 (12 cells). That is
-        // an animation-range question, not a size one, and is left as found.
+        // Life 30 turns = 1.5 s, Texture_Size 2, fireball.tga. It loops only
+        // cells 0..11 at 0.5 cells/turn from one authored random start; cells
+        // 12..15 are deliberately blank and are not part of this sprite.
         MeshInstance3D fireball = CreateEffectSprite(
             "ExplosionFireball",
             _targetTankExplosionFireballTexture,
@@ -1168,7 +1169,7 @@ public sealed partial class FirstFlightWorldView : Node3D
             columns: 4,
             rows: 4);
         root.AddChild(fireball);
-        AnimateAtlas(root, fireball, frames: 16, columns: 4, rows: 4, 1.5d);
+        AnimateTargetTankFireball(root, fireball);
         AnimateScale(fireball, 1f, 0.5f, 1.5d);
     }
 
@@ -1339,28 +1340,92 @@ public sealed partial class FirstFlightWorldView : Node3D
         }
     }
 
-    private static void AnimateAtlas(
+    private static void AnimateTargetTankDelayedExplosion(
         Node root,
-        MeshInstance3D sprite,
-        int frames,
-        int columns,
-        int rows,
-        double durationSeconds)
+        MeshInstance3D sprite)
     {
+        const int startCell = 0;
+        const int endCell = 7;
+        const int columns = 4;
+        const int rows = 4;
+        const double cellsPerTurn = 0.7d;
+        const double lifeSeconds = 0.5d;
+        double startDelaySeconds = 5d / SimulationConstants.TicksPerSecond;
+        double cellIntervalSeconds =
+            1d / (cellsPerTurn * SimulationConstants.TicksPerSecond);
         var material = (StandardMaterial3D)sprite.MaterialOverride;
-        Tween tween = root.CreateTween();
-        double frameDuration = durationSeconds / frames;
-        for (int frame = 0; frame < frames; frame++)
+        material.Uv1Offset = new Vector3(
+            (startCell % columns) / (float)columns,
+            (startCell / columns) / (float)rows,
+            0f);
+        sprite.Visible = false;
+        sprite.Scale = Vector3.One;
+
+        Tween atlasTween = root.CreateTween();
+        atlasTween.TweenInterval(startDelaySeconds);
+        atlasTween.TweenCallback(Callable.From(() =>
         {
-            int capturedFrame = frame;
+            sprite.Visible = true;
+        }));
+        for (int cell = startCell + 1; cell <= endCell; cell++)
+        {
+            int capturedCell = cell;
+            atlasTween.TweenInterval(cellIntervalSeconds);
+            atlasTween.TweenCallback(Callable.From(() =>
+            {
+                material.Uv1Offset = new Vector3(
+                    (capturedCell % columns) / (float)columns,
+                    (capturedCell / columns) / (float)rows,
+                    0f);
+            }));
+        }
+
+        Tween scaleTween = root.CreateTween();
+        scaleTween.TweenInterval(startDelaySeconds);
+        scaleTween.TweenProperty(
+            sprite,
+            new NodePath("scale"),
+            Vector3.One * (1.3f / 1.5f),
+            lifeSeconds);
+        scaleTween.TweenCallback(Callable.From(() =>
+        {
+            sprite.Visible = false;
+        }));
+    }
+
+    private static void AnimateTargetTankFireball(
+        Node root,
+        MeshInstance3D sprite)
+    {
+        const int startCell = 0;
+        const int endCell = 11;
+        const int columns = 4;
+        const int rows = 4;
+        const int lifeTurns = 30;
+        const double cellsPerTurn = 0.5d;
+        int cellCount = endCell - startCell + 1;
+        int initialCell = startCell + (int)(GD.Randi() % (uint)cellCount);
+        double cellIntervalSeconds =
+            1d / (cellsPerTurn * SimulationConstants.TicksPerSecond);
+        int frameAdvances = (int)(lifeTurns * cellsPerTurn);
+        var material = (StandardMaterial3D)sprite.MaterialOverride;
+        material.Uv1Offset = new Vector3(
+            (initialCell % columns) / (float)columns,
+            (initialCell / columns) / (float)rows,
+            0f);
+
+        Tween tween = root.CreateTween();
+        for (int step = 1; step <= frameAdvances; step++)
+        {
+            int capturedCell = startCell + ((initialCell - startCell + step) % cellCount);
+            tween.TweenInterval(cellIntervalSeconds);
             tween.TweenCallback(Callable.From(() =>
             {
                 material.Uv1Offset = new Vector3(
-                    (capturedFrame % columns) / (float)columns,
-                    (capturedFrame / columns) / (float)rows,
+                    (capturedCell % columns) / (float)columns,
+                    (capturedCell / columns) / (float)rows,
                     0f);
             }));
-            tween.TweenInterval(frameDuration);
         }
     }
 
