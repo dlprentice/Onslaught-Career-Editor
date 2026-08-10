@@ -141,10 +141,15 @@ all 272 names/comments matched fresh-process readback, 8,136 functions remained,
 zero non-target/add/remove/structural drift occurred, and only the aggregate
 comment digest changed. Its post inventory is `5bfbb05b…29c9` under
 `local-lab/ghidra-cfastvb149-frontendcareer123-scratch-20260809-v1/`, with
-2,336 browsable `HYP__` names. The next evidence selector remains an exact
-disjoint cohort of at least 100 functions, not a per-function lane; the active
-bulk census targets at least 200 remaining opaque functions while the
-Structural539 comments advance through disposable readback.
+2,336 browsable `HYP__` names. Structural539's subsequent comment-only batch is
+also complete: all 539 existing `HYP__` names were retained, all 539 bounded
+comments matched a separate-process readback, 8,136 functions and 2,336 HYP
+names remained, zero non-target/name/signature/body/structural rows changed,
+and only the comment count and aggregate comment digest changed at program
+level. Its post inventory is `d5083379…7e07` under
+`local-lab/ghidra-zero-identity539-scratch-20260809-v1/`. The next evidence
+selectors remain exact bulk cohorts rather than per-function lanes: CRT342 and
+a disjoint CDXTexture174 pass are active.
 
 “Baseline” here means the repository-designated unpatched retail specimen. It
 is pristine only relative to the project's patch catalog; this research does
