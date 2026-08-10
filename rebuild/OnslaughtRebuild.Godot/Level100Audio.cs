@@ -15,6 +15,12 @@ public sealed partial class Level100Audio : Node3D
     private const double RetailSoundUpdateSeconds =
         1d / SimulationConstants.RetailTicksPerSecond;
 
+    // CMessageBox__TryAdvanceQueuedMessage (0x004b7b80) promotes the portrait
+    // and text state, then schedules event 0xbbc with immediate 0x3e4ccccd =
+    // 0.20f. CMessageBox__StartVoiceOrFallbackTextReveal runs from that later
+    // event, so voice begins four released 20 Hz ticks after activation.
+    private const double RetailCharacterMessageVoiceLeadSeconds = 0.2d;
+
     // Retail CMessageBox__AdvanceRevealAndScheduleNextTick (0x004b8020) schedules
     // the message-completion event 0xbba with the immediate float constant
     // 0x3e99999a = 0.30f. That is six ticks of the released 0.05 s event-manager
@@ -70,6 +76,7 @@ public sealed partial class Level100Audio : Node3D
     private int? _activeCharacterSpeakerId;
     private int? _activeCharacterMessageId;
     private double _activeCharacterMessageLengthSeconds;
+    private double _characterMessageVoiceLeadSecondsRemaining;
     private double _characterMessageHandoffSecondsRemaining;
     // Retail's AUTHORED out-of-box option volumes, not full scale. Corrected
     // 2026-07-27 from 1f/1f under GOAL.md's defaults rule; the reconstruction's
@@ -205,9 +212,23 @@ public sealed partial class Level100Audio : Node3D
         // flyby, the transport - stuck at its first frame's level.
         UpdateSpatialAttenuation();
 
-        if (_characterMessageHandoffSecondsRemaining <= 0d ||
-            !double.IsFinite(delta) ||
-            delta <= 0d)
+        if (!double.IsFinite(delta) || delta <= 0d)
+        {
+            return;
+        }
+
+        if (_characterMessageVoiceLeadSecondsRemaining > 0d)
+        {
+            _characterMessageVoiceLeadSecondsRemaining -= delta;
+            if (_characterMessageVoiceLeadSecondsRemaining <= 0d)
+            {
+                _characterMessageVoiceLeadSecondsRemaining = 0d;
+                StartNextCharacterMessage();
+            }
+            return;
+        }
+
+        if (_characterMessageHandoffSecondsRemaining <= 0d)
         {
             return;
         }
@@ -216,7 +237,8 @@ public sealed partial class Level100Audio : Node3D
         if (_characterMessageHandoffSecondsRemaining <= 0d)
         {
             _characterMessageHandoffSecondsRemaining = 0d;
-            StartNextCharacterMessage();
+            _characterMessageVoiceLeadSecondsRemaining =
+                RetailCharacterMessageVoiceLeadSeconds;
         }
     }
 
@@ -637,9 +659,12 @@ public sealed partial class Level100Audio : Node3D
     public void QueueCharacterMessage(int speakerId, int messageId)
     {
         _queuedCharacterMessages.Enqueue(speakerId, messageId);
-        if (!_tutorialVoice.Playing && _characterMessageHandoffSecondsRemaining <= 0d)
+        if (!_tutorialVoice.Playing &&
+            _characterMessageHandoffSecondsRemaining <= 0d &&
+            _characterMessageVoiceLeadSecondsRemaining <= 0d)
         {
-            StartNextCharacterMessage();
+            _characterMessageVoiceLeadSecondsRemaining =
+                RetailCharacterMessageVoiceLeadSeconds;
         }
     }
 
@@ -649,6 +674,7 @@ public sealed partial class Level100Audio : Node3D
         _activeCharacterSpeakerId = null;
         _activeCharacterMessageId = null;
         _activeCharacterMessageLengthSeconds = 0d;
+        _characterMessageVoiceLeadSecondsRemaining = 0d;
         _characterMessageHandoffSecondsRemaining = 0d;
         _tutorialVoice.Stop();
         _tutorialVoice.Stream = null;
@@ -1005,6 +1031,7 @@ public sealed partial class Level100Audio : Node3D
 
     private void StartNextCharacterMessage()
     {
+        _characterMessageVoiceLeadSecondsRemaining = 0d;
         if (!_queuedCharacterMessages.TryDequeue(
             out Level100QueuedCharacterMessage queuedMessage))
         {

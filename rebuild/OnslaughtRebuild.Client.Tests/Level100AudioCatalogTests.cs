@@ -99,6 +99,71 @@ public sealed class Level100AudioCatalogTests
     }
 
     [Fact]
+    public void CharacterMessageVoiceStartsAfterTheReleasedActivationLead()
+    {
+        string audio = ReadGodotSource("Level100Audio.cs");
+        Assert.Contains(
+            "RetailCharacterMessageVoiceLeadSeconds = 0.2d;",
+            audio,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "RetailCharacterMessageHandoffSeconds = 0.3d;",
+            audio,
+            StringComparison.Ordinal);
+
+        int processStart = audio.IndexOf(
+            "public override void _Process(double delta)",
+            StringComparison.Ordinal);
+        int processEnd = audio.IndexOf(
+            "public void StartTutorialMusic()",
+            processStart,
+            StringComparison.Ordinal);
+        string process = audio[processStart..processEnd];
+        AssertOccursInOrder(
+            process,
+            "if (_gameplayPaused)",
+            "_characterMessageVoiceLeadSecondsRemaining -= delta;",
+            "if (_characterMessageVoiceLeadSecondsRemaining <= 0d)",
+            "_characterMessageVoiceLeadSecondsRemaining = 0d;",
+            "StartNextCharacterMessage();");
+        Assert.Equal(1, CountOccurrences(process, "StartNextCharacterMessage();"));
+        AssertOccursInOrder(
+            process,
+            "_characterMessageHandoffSecondsRemaining -= delta;",
+            "if (_characterMessageHandoffSecondsRemaining <= 0d)",
+            "_characterMessageHandoffSecondsRemaining = 0d;",
+            "_characterMessageVoiceLeadSecondsRemaining =",
+            "RetailCharacterMessageVoiceLeadSeconds;");
+
+        int queueStart = audio.IndexOf(
+            "public void QueueCharacterMessage(int speakerId, int messageId)",
+            StringComparison.Ordinal);
+        int queueEnd = audio.IndexOf(
+            "public void StopCharacterMessages()",
+            queueStart,
+            StringComparison.Ordinal);
+        string queue = audio[queueStart..queueEnd];
+        AssertOccursInOrder(
+            queue,
+            "_characterMessageVoiceLeadSecondsRemaining =",
+            "RetailCharacterMessageVoiceLeadSeconds;");
+        Assert.DoesNotContain("StartNextCharacterMessage();", queue, StringComparison.Ordinal);
+
+        string stop = audio[queueEnd..audio.IndexOf(
+            "public void SetMasterSoundOption(float optionValue)",
+            queueEnd,
+            StringComparison.Ordinal)];
+        Assert.Contains(
+            "_characterMessageVoiceLeadSecondsRemaining = 0d;",
+            stop,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "_characterMessageVoiceLeadSecondsRemaining = 0d;",
+            MethodBody(audio, "private void StartNextCharacterMessage()"),
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void SharedCueRecipes_UseCanonicalRetailRecordsAndAssets()
     {
         Level100AudioCueRecipe pulseImpact =
