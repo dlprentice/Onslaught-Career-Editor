@@ -144,6 +144,7 @@ public sealed class ParticleQuadSizeConventionTests
             ["ExplosionAnimatedSprite"] = "Explosion Anim Sprite Medium",
             ["ExplosionFireball"] = "Fire Sprite Damped 2",
             ["FacilityFlash"] = "Flash Building",
+            ["FacilityFireball"] = "Fire Sprite Damped Long",
             ["PulseCannonMuzzleFlash"] = "Pulse Cannon Muzzle Flash",
         };
 
@@ -154,9 +155,12 @@ public sealed class ParticleQuadSizeConventionTests
             source);
         Assert.Matches(
             @"(?s)private void SpawnFacilityDestruction\(Vector3 position, int facilityId\).*?" +
-            @"CreateTimedEffect\(\s*\$""FacilityDestruction\{facilityId\}"",\s*position,\s*0\.3d\).*?" +
+            @"CreateTimedEffect\(\s*\$""FacilityDestruction\{facilityId\}"",\s*position,\s*3d\).*?" +
             @"CreateEffectSprite\(\s*""FacilityFlash"",\s*_effectFlashMediumTexture,\s*3f\).*?" +
-            @"AnimateScale\(flash,\s*1f,\s*0f,\s*0\.3d\);",
+            @"AnimateScale\(flash,\s*1f,\s*0f,\s*0\.3d\);.*?" +
+            @"CreateEffectSprite\(\s*""FacilityFireball"",\s*_targetTankExplosionFireballTexture,\s*0\.5f,\s*columns:\s*4,\s*rows:\s*4\).*?" +
+            @"AnimateFacilityFireball\(root,\s*fireball\);.*?" +
+            @"AnimateScale\(fireball,\s*1f,\s*4f,\s*3d\);",
             source);
 
         // The owner is used, and the raw multiplication is not re-inlined.
@@ -166,6 +170,35 @@ public sealed class ParticleQuadSizeConventionTests
             StringComparison.Ordinal);
 
         ParticleSetFile set = ParticleSetFile.Parse(File.ReadAllBytes(Locate(MainSetRelativePath)));
+        ParticleDescriptor facilityFireball = set.Require("Fire Sprite Damped Long");
+        Assert.Equal(0.5f, facilityFireball.FloatWithModifier("Radius").Value);
+        Assert.Equal(2f, facilityFireball.Float("Final_Radius"));
+        Assert.Equal(60, facilityFireball.Int("Life"));
+        Assert.Equal(0, facilityFireball.Int("Texture_Number"));
+        Assert.Equal(11, facilityFireball.Int("End_Frame"));
+        Assert.Equal(2, facilityFireball.Int("Anim_Type"));
+        Assert.Equal(0.5f, facilityFireball.Float("Anim_Speed"));
+        Assert.Equal(1, facilityFireball.Int("Random_Start_Frame"));
+
+        Assert.Contains(
+            "AnimateLoopingFireball(root, sprite, lifeTurns: 60);",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains("const int startCell = 0;", source, StringComparison.Ordinal);
+        Assert.Contains("const int endCell = 11;", source, StringComparison.Ordinal);
+        Assert.Contains("const double cellsPerTurn = 0.5d;", source, StringComparison.Ordinal);
+        Assert.Contains("GD.Randi() % (uint)cellCount", source, StringComparison.Ordinal);
+        Assert.Contains("lifeTurns * cellsPerTurn", source, StringComparison.Ordinal);
+        Assert.Contains("step <= frameAdvances", source, StringComparison.Ordinal);
+        Assert.Contains("% cellCount", source, StringComparison.Ordinal);
+        Assert.Contains(
+            "1d / (cellsPerTurn * SimulationConstants.TicksPerSecond)",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "tween.TweenInterval(cellIntervalSeconds);",
+            source,
+            StringComparison.Ordinal);
 
         MatchCollection sites = Regex.Matches(
             source,

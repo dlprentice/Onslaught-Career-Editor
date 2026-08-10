@@ -1178,17 +1178,31 @@ public sealed partial class FirstFlightWorldView : Node3D
         Node3D root = CreateTimedEffect(
             $"FacilityDestruction{facilityId}",
             position,
-            0.3d);
+            3d);
         // `Flash Building`: direct Time-0 entry in Muspell Building Explosion
         // Effect. Radius 3, Final_Radius 0, Life 6 released 20 Hz turns = 0.30 s,
-        // Texture_Size 4 (one cell), sun2.tga. The sibling debris/smoke/fireball
-        // emitters remain open rather than being approximated here.
+        // Texture_Size 4 (one cell), sun2.tga.
         MeshInstance3D flash = CreateEffectSprite(
             "FacilityFlash",
             _effectFlashMediumTexture,
             3f);
         root.AddChild(flash);
         AnimateScale(flash, 1f, 0f, 0.3d);
+
+        // `Fire Sprite Damped Long`: one explicitly representative billboard
+        // from the authored Time-0 Muspell Building Explosion Emitter. Radius
+        // 0.5 -> 2.0, Life 60 turns = 3.0 s, random-start looping cells 0..11
+        // at 0.5 cells/turn. The emitter's unresolved decreasing multiplicity,
+        // placement and velocity laws remain open rather than being invented.
+        MeshInstance3D fireball = CreateEffectSprite(
+            "FacilityFireball",
+            _targetTankExplosionFireballTexture,
+            0.5f,
+            columns: 4,
+            rows: 4);
+        root.AddChild(fireball);
+        AnimateFacilityFireball(root, fireball);
+        AnimateScale(fireball, 1f, 4f, 3d);
     }
 
     private Node3D CreateTimedEffect(string name, Vector3 position, double lifetimeSeconds)
@@ -1395,13 +1409,23 @@ public sealed partial class FirstFlightWorldView : Node3D
 
     private static void AnimateTargetTankFireball(
         Node root,
-        MeshInstance3D sprite)
+        MeshInstance3D sprite) =>
+        AnimateLoopingFireball(root, sprite, lifeTurns: 30);
+
+    private static void AnimateFacilityFireball(
+        Node root,
+        MeshInstance3D sprite) =>
+        AnimateLoopingFireball(root, sprite, lifeTurns: 60);
+
+    private static void AnimateLoopingFireball(
+        Node root,
+        MeshInstance3D sprite,
+        int lifeTurns)
     {
         const int startCell = 0;
         const int endCell = 11;
         const int columns = 4;
         const int rows = 4;
-        const int lifeTurns = 30;
         const double cellsPerTurn = 0.5d;
         int cellCount = endCell - startCell + 1;
         int initialCell = startCell + (int)(GD.Randi() % (uint)cellCount);

@@ -640,13 +640,21 @@ public sealed class ParticleSetTests
             delayed,
             StringComparison.Ordinal);
 
-        string looping = RequireSection(
+        string loopingWrappers = RequireSection(
             worldSource,
             "private static void AnimateTargetTankFireball(",
+            "private static void AnimateLoopingFireball(");
+        Assert.Contains(
+            "AnimateLoopingFireball(root, sprite, lifeTurns: 30);",
+            loopingWrappers,
+            StringComparison.Ordinal);
+
+        string looping = RequireSection(
+            worldSource,
+            "private static void AnimateLoopingFireball(",
             "private static void AnimateScale(");
         Assert.Contains("const int startCell = 0;", looping, StringComparison.Ordinal);
         Assert.Contains("const int endCell = 11;", looping, StringComparison.Ordinal);
-        Assert.Contains("const int lifeTurns = 30;", looping, StringComparison.Ordinal);
         Assert.Contains("const double cellsPerTurn = 0.5d;", looping, StringComparison.Ordinal);
         Assert.Contains("GD.Randi() % (uint)cellCount", looping, StringComparison.Ordinal);
         Assert.Contains("lifeTurns * cellsPerTurn", looping, StringComparison.Ordinal);
