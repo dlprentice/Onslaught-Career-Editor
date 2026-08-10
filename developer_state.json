@@ -186,6 +186,12 @@
         "validation": "One focused existing-suite fact parses the three named Colour_Range records and their RGB starts, proves the primary spark authors NONE, binds all four material call sites and requires the common factory to apply tint to albedo and emission.",
         "open": "Colour evolution/end values, Pulsate Slow, exact five-point trail history, emitted secondary sprite, PMesh scroll/lifetime and pixel-level blend energy remain open."
       },
+      "pulseRoundLifetimeRebuild": {
+        "contracts": ["0x004301E0", "0x00430330", "0x00430410", "0x004D8410", "0x004D9EF0", "0x004DB150", "0x004DB630"],
+        "resultSummary": "Core's Pulse round lifetime now comes from Mech Pulse Bolt Medium's exact CRoundLifeSpan 6.0 instead of the explicitly contradicted 27-tick placeholder. At the released 20 Hz cadence a miss remains live for 120 updates / 6 seconds and can travel 210 metres rather than disappearing after 1.35 seconds / 47.25 metres.",
+        "validation": "The existing upward guaranteed-miss fact proves the fired snapshot begins at 119 remaining ticks after its first update, survives every value through one, disappears exactly at zero on update 120, and still does not invent a vertical target hit.",
+        "open": "Sub-tick event scheduling, timeout explosion semantics and the separate Pulse reload-time mismatch remain open; the reload owner is shared with other weapon branches and is not changed here."
+      },
       "targetTankSpriteTimingRebuild": {
         "contracts": ["0x004C04C0", "0x004C07F0", "0x004C0940", "0x004C5C50", "0x004C5D50", "0x004C78B0", "0x004C7950", "0x004CB210"],
         "resultSummary": "The two existing Tank Explosion Medium billboards now follow their authored timing and atlas laws. Explosion Anim Sprite Medium stays hidden for the timeline's first five turns, then plays cells 0..7 once at 0.7 cells/turn while scaling 1.5 -> 1.3 over its 0.50-second life. The representative Fire Sprite Damped 2 begins on a random cell, loops only cells 0..11 at 0.5 cells/turn for 30 turns, and no longer traverses the four authored-blank cells 12..15.",

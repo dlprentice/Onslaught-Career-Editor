@@ -1135,6 +1135,8 @@ public sealed class SimulationTests
 
         WorldSnapshot fired = simulation.Step(new SimInput(0, 0, SimActions.Fire));
         ProjectileSnapshot projectile = Assert.Single(fired.Projectiles);
+        Assert.Equal(120, SimulationConstants.ProjectileLifetimeTicks);
+        Assert.Equal(119, projectile.RemainingTicks);
         Assert.InRange(fired.FacingPitchMicroRad, -1_000_000, -800_000);
         Assert.True(projectile.VerticalVelocityMillimetersPerTick > 0);
         long speedSquared =
@@ -1178,13 +1180,16 @@ public sealed class SimulationTests
 
         int firstElevation = projectile.ElevationMillimeters;
         projectile = Assert.Single(simulation.Step(SimInput.Idle).Projectiles);
+        Assert.Equal(118, projectile.RemainingTicks);
         Assert.Equal(
             firstElevation + projectile.VerticalVelocityMillimetersPerTick,
             projectile.ElevationMillimeters);
-        for (int tick = 0; tick < SimulationConstants.ProjectileLifetimeTicks; tick++)
+        for (int remaining = 117; remaining >= 1; remaining--)
         {
-            simulation.Step(SimInput.Idle);
+            projectile = Assert.Single(simulation.Step(SimInput.Idle).Projectiles);
+            Assert.Equal(remaining, projectile.RemainingTicks);
         }
+        Assert.Empty(simulation.Step(SimInput.Idle).Projectiles);
 
         Assert.Equal(
             SimulationConstants.Level100TargetTankLife,

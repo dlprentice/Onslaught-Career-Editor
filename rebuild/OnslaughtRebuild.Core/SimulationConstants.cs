@@ -625,18 +625,10 @@ public static class SimulationConstants
     // units per released 20 Hz update. Core is now at that rate, so 1.75 units
     // per tick is the shipped figure verbatim; it was 1_167 at 30 Hz.
     public const int ProjectileSpeedPerTick = 1_750;
-    // 1.333 s, converted as a duration.
-    //
-    // UNKNOWN PROVENANCE, AND NOW CONTRADICTED BY A BYTE. The round the above
-    // weaponmode fires is `Mech Pulse Bolt Medium` @0xAC16 of the same
-    // physics.dat, carrying CRoundVelocity 35.0 (0x420C0000 @0xAC3D - which is
-    // what identifies it, against the measured 1.75 x 20 Hz) and
-    // CRoundLifeSpan 6.0 (0x40C00000 @0xAC5D), i.e. 120 ticks, not 27.
-    //
-    // NOT ADOPTED HERE, for the same attribution reason as FireCooldownTicks.
-    // A 4.5x longer round life changes what a missed shot can still reach and
-    // adds live rounds to the hashed state. Filed as a follow-up.
-    public const int ProjectileLifetimeTicks = 27;
+    // The round the above weaponmode fires is `Mech Pulse Bolt Medium`
+    // @0xAC16 of the same physics.dat. Its CRoundLifeSpan is exactly 6.0
+    // (0x40C00000 @0xAC5D), or 120 released 20 Hz updates.
+    public const int ProjectileLifetimeTicks = 6 * TicksPerSecond;
     // Mech Twin Vulcan Cannon, read out of data/default physics.dat
     // (sha256 e1fb3ded...b1a2321e1d6a9ba1542c74ada14, 175,603 bytes, 777
     // statements) with the value-id map established in
