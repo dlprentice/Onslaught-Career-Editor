@@ -248,12 +248,18 @@ public sealed class Level100AudioCatalogTests
     }
 
     [Fact]
-    public void WalkerHydraulicsEventUsesTheReleasedAquilaCue()
+    public void WalkerMovementEventsUseTheReleasedAquilaCues()
     {
-        Level100AudioCueRecipe cue = Level100AudioCatalog.GetEffect(
+        Level100AudioCueRecipe hydraulics = Level100AudioCatalog.GetEffect(
             Level100EffectCue.AquilaHydraulics);
-        Assert.Equal("res://Assets/Aquila/SoundEffects/hydraulics.wav", cue.ResourcePath);
-        Assert.False(cue.Looping);
+        Assert.Equal(
+            "res://Assets/Aquila/SoundEffects/hydraulics.wav",
+            hydraulics.ResourcePath);
+        Assert.False(hydraulics.Looping);
+        Level100AudioCueRecipe dash = Level100AudioCatalog.GetEffect(
+            Level100EffectCue.AquilaStrafe);
+        Assert.Equal("res://Assets/Aquila/SoundEffects/strafe.wav", dash.ResourcePath);
+        Assert.False(dash.Looping);
 
         string consume = MethodBody(
             ReadGodotSource("Level100Audio.cs"),
@@ -262,6 +268,10 @@ public sealed class Level100AudioCatalogTests
             consume,
             "case AquilaFlightEvents.WalkerHydraulicsRequested:",
             "PlayOnAquila(Level100EffectCue.AquilaHydraulics);");
+        AssertOccursInOrder(
+            consume,
+            "case AquilaFlightEvents.WalkerDashRequested:",
+            "PlayOnAquila(Level100EffectCue.AquilaStrafe);");
     }
 
     [Fact]

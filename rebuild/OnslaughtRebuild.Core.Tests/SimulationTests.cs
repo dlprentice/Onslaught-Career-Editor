@@ -385,6 +385,9 @@ public sealed class SimulationTests
         WorldSnapshot triggered = simulation.Step(new SimInput(0, 1));
         Assert.Equal(new SimVector2(-831, 1_485), triggered.PlayerVelocity);
         Assert.Equal(14, triggered.WalkerDashTicksRemaining);
+        Assert.Single(
+            triggered.AquilaFlightEventLog,
+            item => item.Kind == AquilaFlightEvents.WalkerDashRequested);
 
         simulation.GrantFlightLegForMeasurement(Level100MissionTrigger.TargetZone2);
         WorldSnapshot morphRejected = simulation.Step(
@@ -415,6 +418,9 @@ public sealed class SimulationTests
         Assert.Equal(
             SimulationConstants.WalkerDashRollVelocityMicroRadPerTick,
             leftDash.RollVelocityMicroRadPerTick);
+        Assert.Single(
+            leftDash.AquilaFlightEventLog,
+            item => item.Kind == AquilaFlightEvents.WalkerDashRequested);
         while (lateral.Snapshot.WalkerDashTicksRemaining > 0)
         {
             lateral.Step(SimInput.Idle);
@@ -429,6 +435,9 @@ public sealed class SimulationTests
         WorldSnapshot rightDash = lateral.Step(new SimInput(1, 0));
         Assert.Equal(14, rightDash.WalkerDashTicksRemaining);
         Assert.Equal(expectedRightRoll, rightDash.RollVelocityMicroRadPerTick);
+        Assert.Single(
+            rightDash.AquilaFlightEventLog,
+            item => item.Kind == AquilaFlightEvents.WalkerDashRequested);
     }
 
     [Fact]

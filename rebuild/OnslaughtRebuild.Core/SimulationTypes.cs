@@ -38,6 +38,7 @@ public enum AquilaFlightEvents : ushort
     WaterFailureStarted = 1 << 9,
     JetWeaponFireRequested = 1 << 10,
     WalkerHydraulicsRequested = 1 << 11,
+    WalkerDashRequested = 1 << 12,
 }
 
 public sealed record AquilaFlightEvent(

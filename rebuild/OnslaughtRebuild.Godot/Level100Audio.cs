@@ -404,6 +404,9 @@ public sealed partial class Level100Audio : Node3D
                 case AquilaFlightEvents.WalkerHydraulicsRequested:
                     PlayOnAquila(Level100EffectCue.AquilaHydraulics);
                     break;
+                case AquilaFlightEvents.WalkerDashRequested:
+                    PlayOnAquila(Level100EffectCue.AquilaStrafe);
+                    break;
             }
         }
     }

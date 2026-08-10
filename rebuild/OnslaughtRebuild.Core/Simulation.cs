@@ -1856,6 +1856,7 @@ public sealed class Simulation
         // returns at its mDoingDashCount gate and does not alter its history.
         if (dashForwardOrBackward)
         {
+            EmitFlightEvent(AquilaFlightEvents.WalkerDashRequested);
             localX = 0;
             localZ *= SimulationConstants.WalkerDashAccelerationMultiplier;
         }
@@ -1864,6 +1865,7 @@ public sealed class Simulation
             dashLeftOrRight = ObserveWalkerStrafeGesture(moveXPermille);
             if (dashLeftOrRight)
             {
+                EmitFlightEvent(AquilaFlightEvents.WalkerDashRequested);
                 localX *= SimulationConstants.WalkerDashAccelerationMultiplier;
             }
         }
