@@ -1178,7 +1178,7 @@ public sealed partial class FirstFlightWorldView : Node3D
         Node3D root = CreateTimedEffect(
             $"FacilityDestruction{facilityId}",
             position,
-            3d);
+            15d);
         // `Flash Building`: direct Time-0 entry in Muspell Building Explosion
         // Effect. Radius 3, Final_Radius 0, Life 6 released 20 Hz turns = 0.30 s,
         // Texture_Size 4 (one cell), sun2.tga.
@@ -1203,6 +1203,23 @@ public sealed partial class FirstFlightWorldView : Node3D
         root.AddChild(fireball);
         AnimateFacilityFireball(root, fireball);
         AnimateScale(fireball, 1f, 4f, 3d);
+
+        // `Smoke Sprite Anim Large Building`: the single Time-0 smoke emitted
+        // by Building Smoke Emitter. It is an alpha-blended 4x4 alparticle4
+        // billboard, radius 3 -> 2, random-start looping cells 0..14 at 0.5
+        // cells/turn for 300 turns = 15 seconds. Shape placement, velocity
+        // randomness and Fade_Col/Life_Pct colour behavior remain open.
+        MeshInstance3D smoke = CreateEffectSprite(
+            "FacilitySmoke",
+            _pulseImpactAnimatedTexture,
+            3f,
+            columns: 4,
+            rows: 4);
+        ((StandardMaterial3D)smoke.MaterialOverride).BlendMode =
+            BaseMaterial3D.BlendModeEnum.Mix;
+        root.AddChild(smoke);
+        AnimateFacilitySmoke(root, smoke);
+        AnimateScale(smoke, 1f, 2f / 3f, 15d);
     }
 
     private Node3D CreateTimedEffect(string name, Vector3 position, double lifetimeSeconds)
@@ -1426,6 +1443,41 @@ public sealed partial class FirstFlightWorldView : Node3D
         const int endCell = 11;
         const int columns = 4;
         const int rows = 4;
+        const double cellsPerTurn = 0.5d;
+        int cellCount = endCell - startCell + 1;
+        int initialCell = startCell + (int)(GD.Randi() % (uint)cellCount);
+        double cellIntervalSeconds =
+            1d / (cellsPerTurn * SimulationConstants.TicksPerSecond);
+        int frameAdvances = (int)(lifeTurns * cellsPerTurn);
+        var material = (StandardMaterial3D)sprite.MaterialOverride;
+        material.Uv1Offset = new Vector3(
+            (initialCell % columns) / (float)columns,
+            (initialCell / columns) / (float)rows,
+            0f);
+
+        Tween tween = root.CreateTween();
+        for (int step = 1; step <= frameAdvances; step++)
+        {
+            int capturedCell = startCell + ((initialCell - startCell + step) % cellCount);
+            tween.TweenInterval(cellIntervalSeconds);
+            tween.TweenCallback(Callable.From(() =>
+            {
+                material.Uv1Offset = new Vector3(
+                    (capturedCell % columns) / (float)columns,
+                    (capturedCell / columns) / (float)rows,
+                    0f);
+            }));
+        }
+        tween.TweenCallback(Callable.From(() => sprite.Visible = false));
+    }
+
+    private static void AnimateFacilitySmoke(Node root, MeshInstance3D sprite)
+    {
+        const int startCell = 0;
+        const int endCell = 14;
+        const int columns = 4;
+        const int rows = 4;
+        const int lifeTurns = 300;
         const double cellsPerTurn = 0.5d;
         int cellCount = endCell - startCell + 1;
         int initialCell = startCell + (int)(GD.Randi() % (uint)cellCount);

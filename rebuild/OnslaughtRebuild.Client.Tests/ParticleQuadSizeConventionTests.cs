@@ -145,6 +145,7 @@ public sealed class ParticleQuadSizeConventionTests
             ["ExplosionFireball"] = "Fire Sprite Damped 2",
             ["FacilityFlash"] = "Flash Building",
             ["FacilityFireball"] = "Fire Sprite Damped Long",
+            ["FacilitySmoke"] = "Smoke Sprite Anim Large Building",
             ["PulseCannonMuzzleFlash"] = "Pulse Cannon Muzzle Flash",
         };
 
@@ -155,12 +156,16 @@ public sealed class ParticleQuadSizeConventionTests
             source);
         Assert.Matches(
             @"(?s)private void SpawnFacilityDestruction\(Vector3 position, int facilityId\).*?" +
-            @"CreateTimedEffect\(\s*\$""FacilityDestruction\{facilityId\}"",\s*position,\s*3d\).*?" +
+            @"CreateTimedEffect\(\s*\$""FacilityDestruction\{facilityId\}"",\s*position,\s*15d\).*?" +
             @"CreateEffectSprite\(\s*""FacilityFlash"",\s*_effectFlashMediumTexture,\s*3f\).*?" +
             @"AnimateScale\(flash,\s*1f,\s*0f,\s*0\.3d\);.*?" +
             @"CreateEffectSprite\(\s*""FacilityFireball"",\s*_targetTankExplosionFireballTexture,\s*0\.5f,\s*columns:\s*4,\s*rows:\s*4\).*?" +
             @"AnimateFacilityFireball\(root,\s*fireball\);.*?" +
-            @"AnimateScale\(fireball,\s*1f,\s*4f,\s*3d\);",
+            @"AnimateScale\(fireball,\s*1f,\s*4f,\s*3d\);.*?" +
+            @"CreateEffectSprite\(\s*""FacilitySmoke"",\s*_pulseImpactAnimatedTexture,\s*3f,\s*columns:\s*4,\s*rows:\s*4\).*?" +
+            @"BlendMode\s*=\s*BaseMaterial3D\.BlendModeEnum\.Mix;.*?" +
+            @"AnimateFacilitySmoke\(root,\s*smoke\);.*?" +
+            @"AnimateScale\(smoke,\s*1f,\s*2f / 3f,\s*15d\);",
             source);
 
         // The owner is used, and the raw multiplication is not re-inlined.
@@ -180,6 +185,18 @@ public sealed class ParticleQuadSizeConventionTests
         Assert.Equal(0.5f, facilityFireball.Float("Anim_Speed"));
         Assert.Equal(1, facilityFireball.Int("Random_Start_Frame"));
 
+        ParticleDescriptor facilitySmoke = set.Require("Smoke Sprite Anim Large Building");
+        Assert.Equal(3f, facilitySmoke.FloatWithModifier("Radius").Value);
+        Assert.Equal(2f, facilitySmoke.Float("Final_Radius"));
+        Assert.Equal(300, facilitySmoke.Int("Life"));
+        Assert.Equal(1, facilitySmoke.Int("Blend_Mode"));
+        Assert.Equal(2, facilitySmoke.Int("Texture_Size"));
+        Assert.Equal(0, facilitySmoke.Int("Texture_Number"));
+        Assert.Equal(14, facilitySmoke.Int("End_Frame"));
+        Assert.Equal(2, facilitySmoke.Int("Anim_Type"));
+        Assert.Equal(0.5f, facilitySmoke.Float("Anim_Speed"));
+        Assert.Equal(1, facilitySmoke.Int("Random_Start_Frame"));
+
         Assert.Contains(
             "AnimateLoopingFireball(root, sprite, lifeTurns: 60);",
             source,
@@ -197,6 +214,28 @@ public sealed class ParticleQuadSizeConventionTests
             StringComparison.Ordinal);
         Assert.Contains(
             "tween.TweenInterval(cellIntervalSeconds);",
+            source,
+            StringComparison.Ordinal);
+        string smokeAnimation = source[
+            source.IndexOf("private static void AnimateFacilitySmoke(", StringComparison.Ordinal)..
+            source.IndexOf("private static void AnimateScale(", StringComparison.Ordinal)];
+        Assert.Contains("const int startCell = 0;", smokeAnimation, StringComparison.Ordinal);
+        Assert.Contains("const int endCell = 14;", smokeAnimation, StringComparison.Ordinal);
+        Assert.Contains("const int lifeTurns = 300;", smokeAnimation, StringComparison.Ordinal);
+        Assert.Contains("const double cellsPerTurn = 0.5d;", smokeAnimation, StringComparison.Ordinal);
+        Assert.Contains("GD.Randi() % (uint)cellCount", smokeAnimation, StringComparison.Ordinal);
+        Assert.Contains("step <= frameAdvances", smokeAnimation, StringComparison.Ordinal);
+        Assert.Contains("% cellCount", smokeAnimation, StringComparison.Ordinal);
+        Assert.Contains(
+            "cellsPerTurn * SimulationConstants.TicksPerSecond",
+            smokeAnimation,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "tween.TweenInterval(cellIntervalSeconds);",
+            smokeAnimation,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "tween.TweenCallback(Callable.From(() => sprite.Visible = false));",
             source,
             StringComparison.Ordinal);
 
