@@ -3,7 +3,7 @@
 Status: active canonical synthesis of the current executable-analysis state; raw
 machine exports remain the address-level evidence behind this human-readable
 master
-Last updated: 2026-08-09 (Gen19 authority; eighteen bulk static-hypothesis cohorts complete)
+Last updated: 2026-08-09 (Gen19 authority; nineteen bulk static-hypothesis cohorts complete)
 Verdict: **The verified live and tracked databases now contain 8,136 function
 boundaries. The latest backed-up batch added eleven exact Mission-native
 boundaries and shipped registry names, including `IScript__UnsetObjective`,
@@ -91,9 +91,17 @@ boundary-sensitive rows remain medium confidence and no rename is proposed.
 FrontEndCareer123 adds 123 exact frontend, multiplayer-start, career, and
 BE-config bodies, retaining 38 covered, 54 partial, and 31 dark states; all 123
 were formerly opaque and absent multiplayer/config source remains explicit.
-Across all eighteen cohorts, 1,393 exact bodies are now bounded: 1,350 formerly
-opaque functions have C1-static hypotheses and 42 prior C1 rows are repaired or
-confirmed, while ApplyDamage retains its pre-existing C2 contract.
+Structural539 then closes a much larger mechanically bounded block: 283
+`ZeroDwords3` and 256 `InitIdentityMat` pristine bodies, all formerly opaque and
+all retaining their covered execution class. The identity-shaped template has
+a material caveat: it seeds nine 3x3 lanes but reads stack offsets `+0x0C`,
+`+0x1C`, and `+0x2C` without first writing them, then copies those ambient
+values into the 48-byte destination. It is therefore a bounded initialization
+shape, not proof of a fully initialized 48-byte identity matrix. Across all
+nineteen cohorts, 1,932 exact bodies are now bounded: 1,889 formerly opaque
+functions have C1-static hypotheses and 42 prior C1 rows are repaired or
+confirmed, while ApplyDamage retains its pre-existing C2 contract. This leaves
+6,013 Generation-19 opaque functions.
 
 These are not paper-only queues: the 102 CGame/CBattleEngine rows and a second
 122-row CUnit/Player batch were applied to the disposable `HYP__` Ghidra
@@ -101,7 +109,7 @@ project and read back in separate processes. The second batch changed exactly
 122 target names/comments plus one automatic default-named thunk following its
 renamed target; `ApplyDamage` was excluded and no other function or program
 metric changed except the aggregate comment digest. Live/tracked Ghidra remains
-untouched by all eighteen semantic passes. The combined IScript50/World70 batch is
+untouched by all nineteen semantic passes. The combined IScript50/World70 batch is
 also complete in disposable Ghidra: exactly its 120 target rows changed, all
 120 names/comments read back, no rows were added or removed, and no non-target
 function or program metric changed except the aggregate comment digest. The
@@ -127,10 +135,16 @@ CDXTexture115/CFastVB106 batch is complete too: all 221 planned rows changed,
 all names/comments matched fresh-process readback, 8,136 functions remained,
 zero non-target/add/remove/structural drift occurred, and only the aggregate
 comment digest changed. Its post inventory is `c14d2c19…666c` under
-`local-lab/ghidra-cdxtexture115-cfastvb106-scratch-20260809-v1/`. The next
-evidence selector remains an exact disjoint cohort of at least 100 functions,
-not a per-function lane; 539 zeroing/identity templates are being mechanically
-gated from existing body evidence while a 272-row disposable successor runs.
+`local-lab/ghidra-cdxtexture115-cfastvb106-scratch-20260809-v1/`. The subsequent
+CFastVB149/FrontEndCareer123 batch is complete too: exactly 272 targets changed,
+all 272 names/comments matched fresh-process readback, 8,136 functions remained,
+zero non-target/add/remove/structural drift occurred, and only the aggregate
+comment digest changed. Its post inventory is `5bfbb05b…29c9` under
+`local-lab/ghidra-cfastvb149-frontendcareer123-scratch-20260809-v1/`, with
+2,336 browsable `HYP__` names. The next evidence selector remains an exact
+disjoint cohort of at least 100 functions, not a per-function lane; the active
+bulk census targets at least 200 remaining opaque functions while the
+Structural539 comments advance through disposable readback.
 
 “Baseline” here means the repository-designated unpatched retail specimen. It
 is pristine only relative to the project's patch catalog; this research does
@@ -165,8 +179,9 @@ its bounded script-visible position-copy runtime/rebuild claim, and LockHit's
 single-node removal path described above, plus the exact static TokenArchive
 parser/corpus/factory/direct-writer contract admitted at C1 with runtime and
 refuter verdicts still open, followed by the exact UnsetObjective 3/13/3
-partition and C1 static wrapper contract. The latter is campaign authority but
-has not yet been written to live Ghidra.
+partition and C1 static wrapper contract. Its exact boundary and shipped name
+are now in live/tracked Ghidra as part of the eleven-function Mission-native
+batch, while the semantic grade remains solely a Generation-19 campaign claim.
 
 ---
 
