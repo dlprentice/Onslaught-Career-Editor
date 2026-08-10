@@ -255,10 +255,34 @@ public sealed class Level100WaterEnvelopeTests
         // wave contribution.
         Assert.DoesNotContain("blend_add", source, StringComparison.Ordinal);
 
-        // No opaque tint-constant slab on the water. #E8E8FF and the 0xc0
-        // alpha test have no RE citation, and the pass wrote B = 255 where
-        // retail's hard water maximum is 253 with zero all-channel whites.
-        Assert.DoesNotContain("sun_reflection_color", source, StringComparison.Ordinal);
+        // RenderMainPass now settles the bounded sun-glint subpass that the
+        // earlier uncited full-slab attempt was missing: two transformed
+        // reflection samples plus the blob, SELECT/ADD/ADD alpha, 0xC0 test,
+        // one #E8E8FF quad, camera-height-relative 6/2/8 geometry, and bias 6.
+        Assert.Equal(
+            2,
+            source.Split(
+                "texture(sun_reflection_texture",
+                StringSplitOptions.None).Length - 1);
+        Assert.Contains("texture(sun_blob_texture, UV)", source, StringComparison.Ordinal);
+        Assert.Contains("varying vec2 sun_reflection_coordinates;", source, StringComparison.Ordinal);
+        Assert.Contains("(sun_reflection_coordinates.x * 0.1)", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("(UV.x * 0.1)", source, StringComparison.Ordinal);
+        Assert.Contains("reflection_a.a + reflection_b.a + blob.a", source, StringComparison.Ordinal);
+        Assert.Contains("glint_alpha < (192.0 / 255.0)", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("glint_alpha <=", source, StringComparison.Ordinal);
+        Assert.Contains("vec3(232.0 / 255.0, 232.0 / 255.0, 1.0)", source, StringComparison.Ordinal);
+        Assert.Contains("private const float SunGlintCenterHeightScale = 6f;", source, StringComparison.Ordinal);
+        Assert.Contains("private const float SunGlintHalfWidthHeightScale = 2f;", source, StringComparison.Ordinal);
+        Assert.Contains("private const float SunGlintHalfLengthHeightScale = 8f;", source, StringComparison.Ordinal);
+        Assert.Contains("private const int SunGlintDepthBiasIndex = 6;", source, StringComparison.Ordinal);
+        Assert.Contains("SunGlintDepthBiasIndex * RetailDepthBiasScale", source, StringComparison.Ordinal);
+        Assert.Contains(
+            "_sunGlintMaterial.SetShaderParameter(\"glint_phase\", _causticPhase)",
+            source,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain("SunGlintPhaseRadiansPerSecond", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("cameraHeight > 0f", source, StringComparison.Ordinal);
 
         // CDXSurf requests projection depth-bias index 4 while drawing the
         // authored shoreline. Retail's cardid value is 0.00014, and

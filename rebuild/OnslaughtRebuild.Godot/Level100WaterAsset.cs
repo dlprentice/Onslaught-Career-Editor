@@ -23,15 +23,23 @@ internal sealed class Level100WaterAsset
     private const int SurfaceSourceLength = 18_572;
     private const float RetailDepthBiasScale = 0.00014f;
     private const int ShorelineDepthBiasIndex = 4;
+    private const int SunGlintDepthBiasIndex = 6;
     private const float CausticPhaseRadiansPerSecond = 1f;
     private const float WaveScrollPerSecond = 0.06f;
+    private const float SunGlintCenterHeightScale = 6f;
+    private const float SunGlintHalfWidthHeightScale = 2f;
+    private const float SunGlintHalfLengthHeightScale = 8f;
 
     private static Shader? _gridShader;
     private static Shader? _shorelinePrimaryShader;
+    private static Shader? _sunGlintShader;
 
     private readonly MeshInstance3D _grid;
     private readonly ShaderMaterial _gridMaterial;
     private readonly ShaderMaterial _shorelinePrimaryMaterial;
+    private readonly MeshInstance3D _sunGlint;
+    private readonly ShaderMaterial _sunGlintMaterial;
+    private readonly Vector3 _sunGlintOffsetDirection;
     private readonly float _waterHeight;
     private float _causticPhase;
     private float _mainWaveScroll;
@@ -180,9 +188,66 @@ internal sealed class Level100WaterAsset
         }
         """;
 
+    private const string SunGlintShaderCode = """
+        shader_type spatial;
+        render_mode unshaded, blend_mix, depth_draw_opaque, cull_disabled;
+
+        uniform sampler2D sun_reflection_texture : filter_linear_mipmap, repeat_enable;
+        uniform sampler2D sun_blob_texture : filter_linear_mipmap, repeat_enable;
+        uniform float glint_phase;
+        uniform float projection_depth_bias;
+        uniform vec2 retail_origin;
+        varying vec2 sun_reflection_coordinates;
+
+        vec3 retail_output(vec3 color) {
+            if (OUTPUT_IS_SRGB) {
+                return color;
+            }
+            vec3 low = color / 12.92;
+            vec3 high = pow((color + vec3(0.055)) / 1.055, vec3(2.4));
+            return mix(low, high, step(vec3(0.04045), color));
+        }
+
+        void vertex() {
+            vec3 world_position = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+            sun_reflection_coordinates = vec2(
+                world_position.x + retail_origin.x,
+                retail_origin.y - world_position.z);
+            POSITION = PROJECTION_MATRIX * MODELVIEW_MATRIX * vec4(VERTEX, 1.0);
+            POSITION.z += projection_depth_bias * POSITION.w;
+        }
+
+        void fragment() {
+            vec2 reflection_a_uv = vec2(
+                (sun_reflection_coordinates.x * 0.1) + (sun_reflection_coordinates.y * 0.03),
+                (sun_reflection_coordinates.x * 0.03) - (sun_reflection_coordinates.y * 0.1));
+            reflection_a_uv += vec2(sin(glint_phase), cos(glint_phase)) * 0.1;
+
+            float second_phase = glint_phase + 3.14159265359;
+            vec2 reflection_b_uv = vec2(
+                (sun_reflection_coordinates.x * 0.03) + (sun_reflection_coordinates.y * 0.1),
+                (sun_reflection_coordinates.x * 0.1) - (sun_reflection_coordinates.y * 0.03));
+            reflection_b_uv += vec2(sin(second_phase), cos(second_phase)) * 0.1;
+
+            vec4 reflection_a = texture(sun_reflection_texture, reflection_a_uv);
+            vec4 reflection_b = texture(sun_reflection_texture, reflection_b_uv);
+            vec4 blob = texture(sun_blob_texture, UV);
+
+            // Retail stages 0..2 use SELECTARG1, ADD, ADD for alpha, then
+            // D3DCMP_GREATEREQUAL against alpha ref 0xC0. The colour path selects
+            // the retained Level-100 texture-factor value #E8E8FF.
+            float glint_alpha = min(reflection_a.a + reflection_b.a + blob.a, 1.0);
+            if (glint_alpha < (192.0 / 255.0)) {
+                discard;
+            }
+            ALBEDO = retail_output(vec3(232.0 / 255.0, 232.0 / 255.0, 1.0));
+            ALPHA = 1.0;
+        }
+        """;
+
     // REMOVED 2026-07-25: an additive (`SRCALPHA`/`ONE`) second draw of the
-    // whole shoreline mesh, and an alpha-tested opaque `#E8E8FF` sun-glint
-    // quad. Both were uncited models, and both are falsified by retail pixels:
+    // whole shoreline mesh and an uncited flat sun-glint slab. The additive
+    // shoreline model remains falsified by retail pixels:
     //
     //  * The additive overlay re-applied `water-waves` — the only water texture
     //    with a hue — on top of a primary pass that already consumed it, so the
@@ -194,26 +259,21 @@ internal sealed class Level100WaterAsset
     //    (`DXSurf.cpp.md:25,55`) enter the *same* function with the same bound
     //    render state and differ only in its `validated_mode` byte, so they
     //    cannot be a modulate pass plus an additive pass.
-    //  * The sun-glint quad wrote `sun_reflection_color` straight to ALBEDO
-    //    with ALPHA forced to 1.0, i.e. an opaque (232,232,255) slab. Neither
-    //    `#E8E8FF` nor the `0xc0` alpha test appears anywhere in
-    //    `reverse-engineering/`. Measured: pixels within +-10 of (232,232,255)
-    //    inside the retail open-sea box (300,150)-(560,240) at the four
-    //    matched offsets t0+2/256/499/749 ms number **8** out of 93,600; the
-    //    reconstruction produced **13,139**, with B = 255 where retail's
-    //    hard maximum over 180,000 sampled water pixels is 253 and no pixel
-    //    reaches 250 on all three channels.
-    //
-    // The water sun glint is therefore OPEN, not implemented: `water-sun-blob`
-    // (RGB 0-206, alpha 20-130) and `water-sun-reflection` (RGB == alpha,
-    // 26-75) are still materialized and still passed to Create, but no stage
-    // chain for them is evidenced. Do not substitute another invented one.
+    // The recovered RenderMainPass range 0x0055C3ED..0x0055CAAD now supplies
+    // the missing sun-glint chain: sunreflect on stages 0/1, sunblob on stage 2,
+    // SELECT/ADD/ADD alpha, 0xC0 alpha ref, #E8E8FF texture factor, index-6
+    // projection bias, and one camera-height-relative quad. That bounded pass
+    // is implemented below; its sampler edge behavior and pixel identity remain
+    // open rather than reviving the discarded full-slab model.
 
     private Level100WaterAsset(
         Node3D root,
         MeshInstance3D grid,
         ShaderMaterial gridMaterial,
         ShaderMaterial shorelinePrimaryMaterial,
+        MeshInstance3D sunGlint,
+        ShaderMaterial sunGlintMaterial,
+        Vector3 sunGlintOffsetDirection,
         float waterHeight,
         int shorelineTriangleCount)
     {
@@ -221,6 +281,9 @@ internal sealed class Level100WaterAsset
         _grid = grid;
         _gridMaterial = gridMaterial;
         _shorelinePrimaryMaterial = shorelinePrimaryMaterial;
+        _sunGlint = sunGlint;
+        _sunGlintMaterial = sunGlintMaterial;
+        _sunGlintOffsetDirection = sunGlintOffsetDirection;
         _waterHeight = waterHeight;
         ShorelineTriangleCount = shorelineTriangleCount;
     }
@@ -238,10 +301,6 @@ internal sealed class Level100WaterAsset
         Texture2D reflection,
         Texture2D caustic,
         Texture2D waves,
-        // Materialized and validated by the caller, but not consumed: the water
-        // sun glint has no evidenced stage chain. See the note above the
-        // constructor. Kept on the signature so the assets stay loaded and the
-        // gap stays visible rather than silently disappearing.
         Texture2D sunBlob,
         Texture2D sunReflection,
         string surfaceResourcePath,
@@ -307,11 +366,45 @@ internal sealed class Level100WaterAsset
         };
         root.AddChild(shoreline);
 
+        var sunGlintMaterial = new ShaderMaterial
+        {
+            Shader = _sunGlintShader ??= new Shader { Code = SunGlintShaderCode },
+        };
+        sunGlintMaterial.SetShaderParameter("sun_reflection_texture", sunReflection);
+        sunGlintMaterial.SetShaderParameter("sun_blob_texture", sunBlob);
+        sunGlintMaterial.SetShaderParameter("glint_phase", 0f);
+        sunGlintMaterial.SetShaderParameter("retail_origin", new Vector2(
+            Level100HeightFieldAsset.PlayerStartX,
+            Level100HeightFieldAsset.PlayerStartZ));
+        sunGlintMaterial.SetShaderParameter(
+            "projection_depth_bias",
+            SunGlintDepthBiasIndex * RetailDepthBiasScale);
+        sunGlintMaterial.RenderPriority = 2;
+        var sunGlint = new MeshInstance3D
+        {
+            Name = "RetailCameraRelativeWaterSunGlint",
+            Mesh = BuildSunGlintMesh(),
+            MaterialOverride = sunGlintMaterial,
+            CastShadow = GeometryInstance3D.ShadowCastingSetting.Off,
+        };
+        root.AddChild(sunGlint);
+
+        Vector3 horizontalSun = new(
+            terrain.SunPosition.X,
+            0f,
+            -terrain.SunPosition.Y);
+        Vector3 sunGlintOffsetDirection = horizontalSun.LengthSquared() > 0f
+            ? -horizontalSun.Normalized()
+            : Vector3.Forward;
+
         return new Level100WaterAsset(
             root,
             grid,
             gridMaterial,
             shorelineMaterial,
+            sunGlint,
+            sunGlintMaterial,
+            sunGlintOffsetDirection,
             terrain.WaterRelativeHeight,
             SurfaceSegmentCount * 4);
     }
@@ -341,8 +434,43 @@ internal sealed class Level100WaterAsset
         _gridMaterial.SetShaderParameter("caustic_phase", _causticPhase);
         _shorelinePrimaryMaterial.SetShaderParameter("caustic_phase", _causticPhase);
         _shorelinePrimaryMaterial.SetShaderParameter("main_wave_scroll", _mainWaveScroll);
+        _sunGlintMaterial.SetShaderParameter("glint_phase", _causticPhase);
 
         _grid.Position = new Vector3(cameraPosition.X, _waterHeight, cameraPosition.Z);
+
+        float cameraHeight = cameraPosition.Y - _waterHeight;
+        Vector3 center = new(cameraPosition.X, _waterHeight, cameraPosition.Z);
+        center += _sunGlintOffsetDirection *
+            (cameraHeight * SunGlintCenterHeightScale);
+        _sunGlint.Position = center;
+        _sunGlint.Rotation = new Vector3(
+            0f,
+            Mathf.Atan2(_sunGlintOffsetDirection.X, _sunGlintOffsetDirection.Z),
+            0f);
+        _sunGlint.Scale = new Vector3(
+            cameraHeight * SunGlintHalfWidthHeightScale,
+            1f,
+            cameraHeight * SunGlintHalfLengthHeightScale);
+    }
+
+    private static ArrayMesh BuildSunGlintMesh()
+    {
+        Vector3[] vertices =
+        [
+            new(-1f, 0f, -1f),
+            new(1f, 0f, -1f),
+            new(-1f, 0f, 1f),
+            new(1f, 0f, 1f),
+        ];
+        Vector2[] uvs =
+        [
+            new(0f, 0f),
+            new(1f, 0f),
+            new(0f, 1f),
+            new(1f, 1f),
+        ];
+        Color[] colors = Enumerable.Repeat(Colors.White, vertices.Length).ToArray();
+        return BuildMeshSurface(vertices, colors, uvs, [0, 2, 1, 1, 2, 3]);
     }
 
     private static ArrayMesh BuildGridMesh()

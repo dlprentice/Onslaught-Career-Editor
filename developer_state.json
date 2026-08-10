@@ -7,11 +7,11 @@
     "reason": "The 2026-08-09 UnsetObjective lane spent hours optimizing promotion ceremony around one function. This block prevents that failure mode from recurring.",
     "singleFunctionLimit": "Thirty minutes. At the limit, record the best bounded hypothesis/open question and move the function into a cohort; continue alone only for a newly reproduced corruption or data-loss risk.",
     "workInProgressLimit": "At most one bulk static cohort, one disposable-Ghidra batch, and one rebuild-map/parity slice at a time. Parallel subagents fill those three distinct owners; no per-function lane or duplicate review lane stays open.",
-    "minimumMaterialBlock": "Each completed static-RE block must change a measured count and target at least 100 disjoint functions. A rebuild block consumes a coherent 5-to-10-contract slice only when it reproduces a current mismatch. The only smaller exception is a reproduced corruption/data-loss risk or an exact blocker for the active bulk batch.",
+    "minimumMaterialBlock": "Each completed static-RE block must change a measured count and target at least 100 disjoint functions while the active evidence tier contains that many eligible rows. If a complete residual census proves the tier ceiling is below 100, take its largest coherent subset, record the ceiling, and switch instruments instead of weakening evidence or idling. A rebuild block consumes a coherent 5-to-10-contract slice only when it reproduces a current mismatch. The only smaller exception is a reproduced corruption/data-loss risk or an exact blocker for the active bulk batch.",
     "ghidraRule": "Use HYP__ names on disposable projects freely in bulk. Canonical/live Ghidra changes are cohort promotions of at least 10 related functions unless a single change repairs corruption or unlocks the batch.",
     "toolingRule": "Reuse existing exporters, reducers, and batch mutators. A new authority owner is justified only by a current canonical mutation that existing owners cannot safely express.",
     "loopBreaker": "If two consecutive work blocks do not change a function, contract, residual, question, hypothesis, or rebuild-parity count, stop the lane immediately and select a broader or cheaper instrument.",
-    "scoreboardCurrent20260810": "This supersedes the older narrative scoreboard below. Forty-one disjoint major static cohorts cover 5,133 exact functions: 5,090 formerly opaque rows now have bounded C1_STATIC hypotheses, 42 prior C1 rows were repaired or confirmed, and ApplyDamage remains the preserved C2 exception. 2,812 Generation-19 OPAQUE rows remain. The latest sealed disposable project is cinematic-camera101: 8,136 total functions, 5,286 HYP names, exactly 101 target rows changed, zero non-target/body/structural drift. The bounded nine-contract Level-100 battleline slice now changes the visible influence-overlay path from absent to a clearly labelled 13-node reconstruction; no single-function lane or bespoke authority build is active.",
+    "scoreboardCurrent20260810": "This supersedes the older narrative scoreboard below. Forty-five disjoint major static cohorts cover 5,672 exact functions: 5,629 formerly opaque rows now have bounded C1_STATIC hypotheses, 42 prior C1 rows were repaired or confirmed, and ApplyDamage remains the preserved C2 exception. 2,273 Generation-19 OPAQUE rows remain. The latest sealed disposable project is render-presentation80: 8,136 total functions, 5,695 HYP names, exactly 80 target rows changed, zero non-target/body/structural drift; gameplay-tier2-235 is applying next. The next evidence tier has 1,512 eligible rows and requires exact current address/body identity plus same-wave usable metadata/comment, one successful decompile and complete instructions while explicitly recording historical-name and xref gaps; its first coherent 235-row gameplay block is sealed. The six-contract Level-100 water-glint slice is implemented and focused checks pass; no single-function lane or bespoke authority build is active.",
     "scoreboard": "Bulk hypothesis overlay: 932/932 live FUN_* rows named HYP__ on an isolated project, zero unrelated function changes. Semantic frontier: 108/108 nonstructural functions carry explicit hypothesis-only roles, I/O/effects, confidence, and cheapest falsifiers in scratch Ghidra (54 script-native + 53 RTTI/virtual + 1 CRT near-clone), with 108/108 fresh readback. Mission cohort: 11/11 exact registry-linked boundaries and shipped names promoted to live and tracked Ghidra in one batch; function count 8,125 -> 8,136, existing function rows changed 0. Twenty-four disjoint major static cohorts now cover 2,864 exact bodies: 2,821 formerly opaque functions have bounded C1_STATIC hypotheses, 42 prior C1 rows were repaired or confirmed, and ApplyDamage's existing C2 row was preserved without reinterpretation. This leaves 5,081 Generation-19 opaque functions. The rebuild consumes 10 Weapon41 contracts fully plus 4 partially, CGame51 corrected the loss countdown from source's 5 seconds to retail's 2 seconds and now renders all four retained countdown overlays (Victory plus three Defeat reasons) instead of 0/4, the CController/CPCController slice corrected gun input from repeated held Fire to one retail BUTTON_RELEASE edge, CMeshPart retail evidence corrected fractional pose orientation from quaternion slerp to nine-component matrix interpolation, CDXEngine evidence replaced a 0.002-world-unit shoreline lift with retail's index-4 projection-depth bias law, Math51 replaced normalized quaternion lerp with the retail sine-weighted spherical law for proper render rotations, CDXTexture89 now keeps the cursor's stored DXT2 format separate from its measured eight-level RGBA8 upload representation, FrontEndCareer123 replaces the fixed Level-100 configuration page state with the one authored Aquila Prototype row, and the selected-weapon projection now exposes three retained Pulse/Vulcan icon identities while keeping Missile, ammo, heat and charge open. Focused owner tests and the Godot build pass. Thirteen completed disposable Ghidra batches have read back 102 CGame/CBattleEngine rows, 122 CUnit/Player rows, 120 IScript/World rows, 167 CMeshPart/CDXEngine/CEngine rows, 105 CFastVB/Math rows, 242 CDXTexture/CTexture rows, 221 CDXTexture115/CFastVB106 rows, 272 CFastVB149/FrontEndCareer123 rows, a 539-row Structural539 comment-only pass, 342 CRT rows, 174 remaining CDXTexture rows, 144 JmpThunk/DynInit comments, and 160 residual CFastVB/CTexture rows. The latest batch retained all 8,136 functions, advanced disposable HYP names 2,852 -> 3,012, changed exactly its 160 target name/comment rows, changed zero non-target/body/structural rows, and changed only the aggregate comment digest across 29 program metrics. None touched live or tracked Ghidra."
   },
   "current_re_authority": {
@@ -83,10 +83,10 @@
     },
     "activeHypothesisOverlay": {
       "status": "NONCANONICAL_SCRATCH_ONLY_NEVER_SYNC_TO_LIVE",
-      "projectPath": "local-lab/ghidra-cinematic-camera101-scratch-20260810-v1/project",
+      "projectPath": "local-lab/ghidra-render-presentation80-scratch-20260810-v1/project",
       "sourceCampaign": "Generation 19 campaign-functions.tsv joined by exact entry/body identity, then advanced only through disposable HYP__ batches with separate-process full-inventory readback",
       "hypothesisLedger": "local-lab/ghidra-bulk-hypothesis-overlay-20260809-v1/function-hypotheses.tsv; 350150 bytes; SHA-256 39208135c5d7a0a5378b7dfc9f7a7557f736f8f852ab2c4882c5af13d69a2441",
-      "readback": "local-lab/ghidra-cinematic-camera101-scratch-20260810-v1/functions.tsv; 7178243 bytes; SHA-256 bce69902a20e6b533934efa2c29898ac0088983210d5b8d9ae4af2280ce6a8b8",
+      "readback": "local-lab/ghidra-render-presentation80-scratch-20260810-v1/functions.tsv; 7185219 bytes; SHA-256 4a71567cb2e63fe4fc8783d745e2a76bc940f76614976f7f03577a5047a8001a",
       "semanticFrontier": {
         "nativeHypotheses": "local-lab/ghidra-bulk-hypothesis-overlay-20260809-v1/frontier-108-evidence/native-hypotheses.tsv; 11053 bytes; SHA-256 a13b094d734dca01178ba2cb8a94c01687a2441fc6ad1a100845c9d980494729",
         "rttiAndNearCloneHypotheses": "local-lab/ghidra-bulk-hypothesis-overlay-20260809-v1/frontier-108-evidence/rtti-nearclone-hypotheses.tsv; 10973 bytes; SHA-256 9e05bed6cd408804871ac4c3d509c5ac15a3e3c97a9a424327523090500599d7",
@@ -142,6 +142,12 @@
         "resultSummary": "Level 100 now projects the exact 13 authored BSWD influence nodes as a populated map, applies the recovered signed friendly-minus-enemy target ratio to active nearby actors, selects the influence-overlay socket whenever no message obscures it, and renders 13 additive node markers inside the existing lower-right instrument. This changes the path from zero visible overlays while retail showed one in 20/183 pinned frames.",
         "validation": "The focused producer/socket/smoke group passes 10/10, the actor-mechanics owner passes 5/5, and the Godot C# project builds with zero warnings and zero errors. The focused projection moves one node +1000 -> 0 -> -1000, proves the retail zero-local neighbor-majority fallback, and distinguishes an unrelated default Friendly value from an explicit SetAllegiance override. StateHasher v38 binds that override bit; the canonical smoke retains its consequential state at hash 778342068ac405fcc52a7694ec61527cfbcebcf7d0c5754ec150b706e8b0f5b0.",
         "open": "Equal per-actor contribution, node-to-instrument normalization and marker presentation are explicit hypotheses. Retail's exact unit weights/categories, smoothing cadence, heightmap, continuously triangulated terrain interior, projection/pulse/colors and pixel parity remain open; no BSWD links are drawn as invented lines."
+      },
+      "waterSunGlintRebuild": {
+        "contracts": ["0x00440AD0", "0x0055B230", "0x0055B330", "0x0055B440", "0x0055B660", "0x0055B6C0"],
+        "resultSummary": "The existing Level100WaterAsset owner now consumes the retained sun-reflection and sun-blob textures in the recovered camera-relative glint subpass: two animated world-coordinate reflection samples, one normalized-UV blob sample, SELECT/ADD/ADD alpha, D3DCMP_GREATEREQUAL at ref 0xC0, opaque #E8E8FF output, index-6 projection bias, and signed camera-height-relative 6/2/8 quad geometry. The glint shares the retail water phase and submits without an invented above-water visibility gate.",
+        "validation": "The existing focused water-envelope fact passes and the Godot C# project builds with zero warnings and zero errors. Independent bounded review found and closed four concrete static defects: the separate glint clock, above-water gate, alpha-equality comparator, and TEX2 coordinate-set split.",
+        "open": "Sampler edge behavior and pixel identity, alternate water variants and validation retries, exact reversed-Z pixel sign, multiplayer/advanced shader behavior, and the separate late shoreline pass remain open."
       },
       "cgameBattleScratchBatch": {
         "functions": "local-lab/ghidra-cgame-cbattle102-scratch-20260809-v1/functions.tsv; 7110054 bytes; SHA-256 fac73d989afd528f2bb8118209e609f840c07d88619274d7cb1242c6ffb98605",
@@ -429,6 +435,34 @@
         "scratchInput": "local-lab/ghidra-runtime-dispatch105-static-20260810-v1/disposable-comment-input-v1/runtime-dispatch105.tsv; 342503 bytes; SHA-256 d11f0eab283d441dd4dbbb7f75dd945eb00c24ff329be35c95576e126130c77a",
         "resultSummary": "105 exact CRT/SEH/type-info/COM, shared virtual dispatch/unit-animation and callback/container bodies / 9,796 pristine bytes; all OPAQUE -> bounded C1_STATIC while retaining 50 COVERED, 26 PARTIAL and 29 DARK execution states. Thirty-six unsupported boundary rows remain OPAQUE."
       },
+      "gameplayActors116Cohort": {
+        "contracts": "local-lab/ghidra-gameplay-actors116-static-20260810-v1/contracts.tsv; 479674 bytes; SHA-256 25199eda252559c73ee093e4b32d5592479e9d89c6405f7c82cbd3c98085eb44",
+        "report": "local-lab/ghidra-gameplay-actors116-static-20260810-v1/REPORT.md; 2767 bytes; SHA-256 66e49c3dab25f87da6baa3b7fff6c9e40e384a0e4bbe8a8e7530c4d9762bd587",
+        "result": "local-lab/ghidra-gameplay-actors116-static-20260810-v1/result.json; 66972 bytes; SHA-256 909f05e7020ca7c70acf5b19d2bb54b0d2af846b9153e1a6e8037a7df123aa45",
+        "scratchInput": "local-lab/ghidra-gameplay-actors116-static-20260810-v1/disposable-comment-input-v1/gameplay-actors116.tsv; 452602 bytes; SHA-256 6dff5ff2f539e82e4de0927cb7a542e70db8068aa9bfec304b91b2fb9110b321",
+        "resultSummary": "116 exact gameplay initialization/component/trigger plus unit/AI/guide/target bodies / 26,961 pristine bytes; all OPAQUE -> bounded C1_STATIC while retaining 38 COVERED, 42 PARTIAL and 36 DARK execution states. 113 tuple-incomplete boundary rows remain OPAQUE."
+      },
+      "dataCodecVm108Cohort": {
+        "contracts": "local-lab/ghidra-data-codec-vm108-static-20260810-v1/contracts.tsv; 411533 bytes; SHA-256 93db045a3dfb81652eb5bf1e47d4f3e3fc77646cca31ee2a3569cd565e947ebe",
+        "report": "local-lab/ghidra-data-codec-vm108-static-20260810-v1/REPORT.md; 2858 bytes; SHA-256 849ee2079a29311e6f277a9b231d92f5746c63572dae5e04fad0e1515dad0f4b",
+        "result": "local-lab/ghidra-data-codec-vm108-static-20260810-v1/result.json; 18787 bytes; SHA-256 b1dfd00784990f35f9850372875661ce99b9e61563286d259d78b6884dfdef70",
+        "scratchInput": "local-lab/ghidra-data-codec-vm108-static-20260810-v1/disposable-comment-input-v1/data-codec-vm108.tsv; 387167 bytes; SHA-256 53cebde974cfb92f7539fa23572d68466aae403b9a30c407c1bc2a909bae7e76",
+        "resultSummary": "108 exact codec/container, archive/tree/text/file-I/O and console/command-VM bodies / 13,766 pristine bytes; all OPAQUE -> bounded C1_STATIC while retaining 58 COVERED, 17 PARTIAL and 33 DARK execution states. Seven unsupported VM slots remain OPAQUE."
+      },
+      "renderPresentation80Cohort": {
+        "contracts": "local-lab/ghidra-render-presentation80-static-20260810-v1/contracts.tsv; 342475 bytes; SHA-256 f145ef0a513c5406c194af25db0c70b9cb966b925f3f6e585a18f795e428ec87",
+        "report": "local-lab/ghidra-render-presentation80-static-20260810-v1/REPORT.md; 2939 bytes; SHA-256 63c0608a1c180b7bcbc5ea973ee02a0709b8f14c2e4345992803c7c120f7aeea",
+        "result": "local-lab/ghidra-render-presentation80-static-20260810-v1/result.json; 54925 bytes; SHA-256 427d18d5afb67d584f4a34b27fd09707099107a028a016073dba2cbcf73709b4",
+        "scratchInput": "local-lab/ghidra-render-presentation80-static-20260810-v1/disposable-comment-input-v1/render-presentation80.tsv; 323206 bytes; SHA-256 2c993b415e79d6bac855e270c59c56da546b4fc05a8f96676884a85c29372440",
+        "resultSummary": "The complete full-tuple residual census contained only 92 eligible rows globally. Its largest coherent safe block advances 80 exact render/terrain/particle/device, cockpit/HUD/presentation and render-support bodies / 24,144 pristine bytes from OPAQUE to bounded C1_STATIC while retaining 29 COVERED, 16 PARTIAL and 35 DARK execution states. Twelve heterogeneous full-tuple rows remain outside this cohort."
+      },
+      "gameplayTier2_235Cohort": {
+        "contracts": "local-lab/ghidra-gameplay-tier2-235-static-20260810-v1/contracts.tsv; 1089949 bytes; SHA-256 1e641db13654a8bdf39b0f94956044527060ec3ec56011d9847640fe74461d9e",
+        "report": "local-lab/ghidra-gameplay-tier2-235-static-20260810-v1/REPORT.md; 3080 bytes; SHA-256 ebea0ca8b6b6644307ba1ab68f9fc8594a69756fbb548e19bb65befd0e0feb9d",
+        "result": "local-lab/ghidra-gameplay-tier2-235-static-20260810-v1/result.json; 280874 bytes; SHA-256 e6b3bbca6008c02c97e0c0c914cc0ec370b080d7c8aacec86a8fa5602e9b3b1e",
+        "scratchInput": "local-lab/ghidra-gameplay-tier2-235-static-20260810-v1/disposable-comment-input-v1/gameplay-tier2-235.tsv; 1006268 bytes; SHA-256 e60a241b25be227dac7f494268acb89670398e74b9e0295c5555e0ef73bf9c2b",
+        "resultSummary": "The explicitly bounded second evidence tier contains 1,512 of the 2,508 residual opaque rows. Its first and largest coherent gameplay block advances 235 exact unit/component/AI, actor/spawner and typed-component/feature/explosion/hazard bodies / 34,527 pristine bytes from OPAQUE to C1_STATIC. All 235 rows explicitly retain historical metadata/decompile/instruction-name disagreement and absence of current-name inbound xrefs rather than laundering those gaps into identity proof."
+      },
       "cmeshCdxEngineScratchBatch": {
         "mutationPlan": "local-lab/ghidra-cmesh55-cdxengine59-cengine53-scratch-20260809-v1/mutation-plan.tsv; 236955 bytes; SHA-256 1cd0628c95b531985fd17cf509dcadcae5dd748b977e1888f154579b8939b83d",
         "functions": "local-lab/ghidra-cmesh55-cdxengine59-cengine53-scratch-20260809-v1/functions.tsv; 7115809 bytes; SHA-256 949cae708ca85d0e76e90522700b82d450b43a075417a11e5587da47df73d348",
@@ -636,6 +670,30 @@
         "readback": "local-lab/ghidra-cinematic-camera101-scratch-20260810-v1/readback.tsv; 395236 bytes; SHA-256 de49eb54a5547fd8d7db7f115ee8a2825f4bc2ae21bc9e2f792ee8d50ef06e38",
         "resultSummary": "101/101 exact cinematic/camera targets renamed/commented and separately read back; 8,136 functions retained, HYP names advanced 5,185 -> 5,286, exactly 101 target rows changed, zero non-target/body/add/remove/structural drift, and one planned DEFAULT symbol-source promotion accounted for exactly."
       },
+      "runtimeDispatch105ScratchBatch": {
+        "functions": "local-lab/ghidra-runtime-dispatch105-scratch-20260810-v1/functions.tsv; 7180182 bytes; SHA-256 b4404fa93ba5bbc39905ea191d20b87d1d2e60d97d6fa9f082b19d258d829a58",
+        "program": "local-lab/ghidra-runtime-dispatch105-scratch-20260810-v1/program.tsv; 1267 bytes; SHA-256 87ea2712b572f848de97da42e1a19c21803d6b5a72b5190ae21a6a7a1d4cb0a7",
+        "readback": "local-lab/ghidra-runtime-dispatch105-scratch-20260810-v1/readback.tsv; 348112 bytes; SHA-256 20251a3d0b5393fa726a6caf89ce0e1f6d60dbd9e35e613689a667b807e2b5e4",
+        "resultSummary": "105/105 exact runtime/dispatch targets renamed/commented and separately read back; 8,136 functions retained, HYP names advanced 5,286 -> 5,391, exactly 105 target rows changed, zero non-target/body/add/remove/structural drift, and 45 planned ANALYSIS symbol-source promotions accounted for exactly."
+      },
+      "gameplayActors116ScratchBatch": {
+        "functions": "local-lab/ghidra-gameplay-actors116-scratch-20260810-v1/functions.tsv; 7182041 bytes; SHA-256 b1305ca6f2e3d8f56a1be87edb24baeb8009740c96bd426b54e73fa7a9469f4d",
+        "program": "local-lab/ghidra-gameplay-actors116-scratch-20260810-v1/program.tsv; 1267 bytes; SHA-256 abdaba46b880ee1c0db7f2e5902bf9c1d0833b9d8b8ca98148d56cfa1da07712",
+        "readback": "local-lab/ghidra-gameplay-actors116-scratch-20260810-v1/readback.tsv; 458599 bytes; SHA-256 5972422f716f04789625752dfedfdd5e8b0b182c418853c88828b28485fd8f4d",
+        "resultSummary": "116/116 exact gameplay/actor targets renamed/commented and separately read back; 8,136 functions retained, HYP names advanced 5,391 -> 5,507, exactly 116 target rows changed, and zero non-target/body/add/remove/structural drift."
+      },
+      "dataCodecVm108ScratchBatch": {
+        "functions": "local-lab/ghidra-data-codec-vm108-scratch-20260810-v1/functions.tsv; 7183927 bytes; SHA-256 ae07938e766cfd22b76e8049dbe4bc5bceea2acbb86e712a2024c025c57ba199",
+        "program": "local-lab/ghidra-data-codec-vm108-scratch-20260810-v1/program.tsv; 1267 bytes; SHA-256 fc7a1228d5d2df1fff145630e5893610335b94159c7a5990fdd2a7c1a0677da2",
+        "readback": "local-lab/ghidra-data-codec-vm108-scratch-20260810-v1/readback.tsv; 392623 bytes; SHA-256 208cfbdb51a9709a3b12666d34a4b64ac3974ee10d213c372f28085f911a7ad8",
+        "resultSummary": "108/108 exact data/codec/VM targets renamed/commented and separately read back; 8,136 functions retained, HYP names advanced 5,507 -> 5,615, exactly 108 target rows changed, zero non-target/body/add/remove/structural drift, and 26 planned DEFAULT symbol-source promotions accounted for exactly."
+      },
+      "renderPresentation80ScratchBatch": {
+        "functions": "local-lab/ghidra-render-presentation80-scratch-20260810-v1/functions.tsv; 7185219 bytes; SHA-256 4a71567cb2e63fe4fc8783d745e2a76bc940f76614976f7f03577a5047a8001a",
+        "program": "local-lab/ghidra-render-presentation80-scratch-20260810-v1/program.tsv; 1267 bytes; SHA-256 a131e00ef9cebe51255b615b949e46df597a2661ab793db9bfa3502533086fec",
+        "readback": "local-lab/ghidra-render-presentation80-scratch-20260810-v1/readback.tsv; 327344 bytes; SHA-256 552075c700f50d449d227e432d255c08e3bf24ee289511e2b2fd938efe1b6a36",
+        "resultSummary": "80/80 exact renderer/presentation targets renamed/commented and separately read back; 8,136 functions retained, HYP names advanced 5,615 -> 5,695, exactly 80 target rows changed, zero non-target/body/add/remove/structural drift, and one ANALYSIS plus one DEFAULT symbol-source promotion accounted for exactly."
+      },
       "result": {
         "literalFunBefore": 932,
         "literalFunAfter": 0,
@@ -649,22 +707,22 @@
         "semanticC1Candidate": 14,
         "semanticC2Bounded": 1
       },
-      "nextQueue": "Forty-one disjoint major static cohorts are complete, totaling 5,133 exact bodies, 5,090 formerly opaque functions advanced to bounded C1_STATIC hypotheses, and 42 prior C1 rows repaired or confirmed. ApplyDamage remains the preserved C2 exception; 2,812 Generation-19 opaque functions remain. Cinematic-camera101 is exact in disposable Ghidra at 5,286 HYP names, runtime-dispatch105 is the active scratch batch, the next >=100-function static cohort is running, and the next rebuild slice must again close 5-10 coherent contracts around a reproduced current mismatch. No single-function lane is open."
+      "nextQueue": "Forty-five disjoint major static cohorts are complete, totaling 5,672 exact bodies, 5,629 formerly opaque functions advanced to bounded C1_STATIC hypotheses, and 42 prior C1 rows repaired or confirmed. ApplyDamage remains the preserved C2 exception; 2,273 Generation-19 opaque functions remain. Render-presentation80 is exact in disposable Ghidra at 5,695 HYP names and gameplay-tier2-235 is applying next. The active second-tier census has 1,277 eligible rows remaining after the first coherent gameplay block and must retain every historical-name/xref gap explicitly. The six-contract water sun-glint subpass is implemented; select the next 5-to-10-contract reproduced mismatch. No single-function lane is open."
     },
     "rankedNextFrontiers": [
       {
         "rank": 1,
-        "question": "Select and complete the next exact disjoint 100-or-more-function static cohort.",
-        "existingEvidence": "Forty-one completed cohorts demonstrate deterministic address/body joins and bounded static contracts from the existing Gen19 inventory, pristine/formal template proofs, and dated metadata/decompile/instruction/xref waves without new capture; selection continues against the remaining 2,812 opaque functions.",
-        "instrument": "Rank unused class/system prefixes by opaque-count movement, evidence completeness and reconstruction leverage, then emit one ignored contracts/report/result/input set from the chosen selector.",
-        "gate": "At least 100 exact disjoint functions, complete existing evidence for every claimed boundary, visible I/O/writes/order, honest execution-state retention, C1_STATIC at most, and no runtime/source/rebuild overclaim.",
+        "question": "Move the residual census to the next explicit evidence tier after exhausting the full-tuple tier.",
+        "existingEvidence": "Forty-five completed cohorts demonstrate deterministic address/body joins and bounded static contracts from the existing Gen19 inventory, pristine/formal template proofs, and dated evidence waves. The complete full-tuple census found only 92 eligible rows and render-presentation80 consumed its largest coherent subset. The explicitly bounded second tier contains 1,512 eligible residuals; gameplay-tier2-235 sealed its first coherent block with every historical-name and xref gap labelled, leaving 1,277 tier-eligible and 2,273 opaque rows overall.",
+        "instrument": "Census exact current address/body joins that retain successful decompile and instructions plus usable metadata/comment even when the historical name differs or inbound xrefs are absent. Group a coherent large cohort and record the precise missing gate components per row.",
+        "gate": "Exact disjoint current body identity, successful body-complete decompile/instructions, explicit evidence-tier and missing-component labels, visible I/O/writes/order, honest execution-state retention, C1_STATIC at most, and no current-name/source/runtime/rebuild-equivalence overclaim.",
         "reconstructionOwner": "Assign only after the cohort map identifies an existing coherent owner.",
-        "why": "This keeps the durable 100-function throughput floor and prevents a return to bespoke one-function work."
+        "why": "This changes instruments at the measured noise floor and keeps bulk count movement without inventing authority or returning to one-function ceremony."
       },
       {
         "rank": 2,
         "question": "Map completed cohorts to coherent rebuild owners and land only consequential parity slices.",
-        "existingEvidence": "The twenty-eight cohort ledgers now contain exact retail-body contracts and cheapest falsifiers, while rebuild maps separate implemented, partial, and unmapped rows.",
+        "existingEvidence": "The forty-five cohort ledgers now contain exact retail-body contracts and cheapest falsifiers, while rebuild maps separate implemented, partial, and unmapped rows.",
         "instrument": "Choose a 5-to-10-contract slice owned by one existing subsystem, reproduce one concrete mismatch or exact parity claim, and run the smallest focused test that can falsify it.",
         "gate": "The patch consumes an exact bounded retail contract, keeps unresolved transitive behavior open, changes a measurable rebuild mapping count, and passes its focused owner test.",
         "reconstructionOwner": "The existing owner selected by each cohort rebuild map; do not create a framework to house a single mapping.",
