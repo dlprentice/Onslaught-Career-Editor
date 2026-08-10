@@ -322,6 +322,17 @@ public sealed class Level100AudioCatalogTests
             Level100AudioCatalog.GetEffect(Level100EffectCue.DroneDestroyed);
         Assert.Equal(108, pulseImpact.RetailSoundRecord);
         Assert.Equal(pulseImpact, droneDestroyed);
+        string destructionConsumer = MethodBody(
+            ReadGodotSource("Level100Audio.cs"),
+            "public void ConsumeLevel100DestructionEvents(");
+        Assert.Contains(
+            "Level100DestructionEffectKind.DroneDestroyed =>",
+            destructionConsumer,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "Level100EffectCue.DroneDestroyed",
+            destructionConsumer,
+            StringComparison.Ordinal);
 
         Level100AudioCueRecipe vulcan =
             Level100AudioCatalog.GetEffect(Level100EffectCue.VulcanCannonFire);

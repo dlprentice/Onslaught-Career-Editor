@@ -143,6 +143,8 @@ public sealed class ParticleQuadSizeConventionTests
             ["FlashMedium"] = "Flash Medium",
             ["ExplosionAnimatedSprite"] = "Explosion Anim Sprite Medium",
             ["ExplosionFireball"] = "Fire Sprite Damped 2",
+            ["DroneFlash"] = "Flash",
+            ["TargetTankFlash"] = "Flash",
             ["FacilityFlash"] = "Flash Building",
             ["FacilityFireball"] = "Fire Sprite Damped Long",
             ["FacilitySmoke"] = "Smoke Sprite Anim Large Building",
@@ -150,6 +152,16 @@ public sealed class ParticleQuadSizeConventionTests
         };
 
         string source = ReadGodotSource("FirstFlightWorldView.cs");
+        Assert.Matches(
+            @"case\s+Level100DestructionEffectKind\.DroneDestroyed:\s*" +
+            @"SpawnTargetDroneDestruction\(position,\s*item\.ActorId\);\s*break;",
+            source);
+        Assert.Matches(
+            @"(?s)private void SpawnTargetDroneDestruction\(Vector3 position, int droneId\).*?" +
+            @"CreateTimedEffect\(\s*\$""TargetDroneDestruction\{droneId\}"",\s*position,\s*0\.25d\).*?" +
+            @"CreateEffectSprite\(\s*""DroneFlash"",\s*_effectFlashMediumTexture,\s*5f\).*?" +
+            @"AnimateScale\(flash,\s*1f,\s*0f,\s*0\.25d\);",
+            source);
         Assert.Matches(
             @"case\s+Level100DestructionEffectKind\.FacilityDestroyed:\s*" +
             @"SpawnFacilityDestruction\(position,\s*item\.ActorId\);\s*break;",
@@ -175,6 +187,13 @@ public sealed class ParticleQuadSizeConventionTests
             StringComparison.Ordinal);
 
         ParticleSetFile set = ParticleSetFile.Parse(File.ReadAllBytes(Locate(MainSetRelativePath)));
+        ParticleDescriptor droneFlash = set.Require("Flash");
+        Assert.Equal(5f, droneFlash.FloatWithModifier("Radius").Value);
+        Assert.Equal(0f, droneFlash.Float("Final_Radius"));
+        Assert.Equal(5, droneFlash.Int("Life"));
+        Assert.Equal(0, droneFlash.Int("Texture_Number"));
+        Assert.Equal(4, droneFlash.Int("Texture_Size"));
+
         ParticleDescriptor facilityFireball = set.Require("Fire Sprite Damped Long");
         Assert.Equal(0.5f, facilityFireball.FloatWithModifier("Radius").Value);
         Assert.Equal(2f, facilityFireball.Float("Final_Radius"));

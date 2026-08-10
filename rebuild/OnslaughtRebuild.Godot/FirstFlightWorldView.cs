@@ -325,6 +325,9 @@ public sealed partial class FirstFlightWorldView : Node3D
                 case Level100DestructionEffectKind.TargetDestroyed:
                     SpawnTargetTankDestruction(position, item.ActorId);
                     break;
+                case Level100DestructionEffectKind.DroneDestroyed:
+                    SpawnTargetDroneDestruction(position, item.ActorId);
+                    break;
                 case Level100DestructionEffectKind.FacilityDestroyed:
                     SpawnFacilityDestruction(position, item.ActorId);
                     break;
@@ -1186,6 +1189,15 @@ public sealed partial class FirstFlightWorldView : Node3D
     private void SpawnTargetTankDestruction(Vector3 position, int targetId)
     {
         Node3D root = CreateTimedEffect($"TargetTankDestruction{targetId}", position, 1.5d);
+        // `Tank Explosion Medium` dispatches the shared `Flash` sprite at Time
+        // 0: sun2.tga, Radius 5, Final_Radius 0 and Life 5 turns (0.25 s).
+        MeshInstance3D flash = CreateEffectSprite(
+            "TargetTankFlash",
+            _effectFlashMediumTexture,
+            5f);
+        root.AddChild(flash);
+        AnimateScale(flash, 1f, 0f, 0.25d);
+
         // `Explosion Anim Sprite Medium`: Radius 1.5, Final_Radius 1.3,
         // Life 10 turns = 0.5 s, End_Frame 7 (8 cells), Texture_Size 2,
         // PlayOnce at 0.7 cells/turn. Tank Explosion Medium schedules it at
@@ -1212,6 +1224,24 @@ public sealed partial class FirstFlightWorldView : Node3D
         root.AddChild(fireball);
         AnimateTargetTankFireball(root, fireball);
         AnimateScale(fireball, 1f, 0.5f, 1.5d);
+    }
+
+    private void SpawnTargetDroneDestruction(Vector3 position, int droneId)
+    {
+        Node3D root = CreateTimedEffect(
+            $"TargetDroneDestruction{droneId}",
+            position,
+            0.25d);
+        // `Drone Explosion Effect` dispatches `Flash` directly at Time 0.
+        // That retained sprite is sun2.tga, Radius 5, Final_Radius 0 and Life
+        // 5 released 20 Hz turns. Its debris/emitter multiplicity, placement,
+        // velocity and colour evolution remain open rather than being guessed.
+        MeshInstance3D flash = CreateEffectSprite(
+            "DroneFlash",
+            _effectFlashMediumTexture,
+            5f);
+        root.AddChild(flash);
+        AnimateScale(flash, 1f, 0f, 0.25d);
     }
 
     private void SpawnFacilityDestruction(Vector3 position, int facilityId)

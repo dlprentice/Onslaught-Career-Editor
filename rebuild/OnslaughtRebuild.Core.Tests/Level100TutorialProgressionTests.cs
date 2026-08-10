@@ -520,7 +520,8 @@ public sealed class Level100TutorialProgressionTests
         Assert.Contains(
             runtime.Events,
             item => item.ActorId == droneId.Value &&
-                item.Kind == Level100DestructionEventKind.Terminal);
+                item.Kind == Level100DestructionEventKind.Terminal &&
+                item.EffectKind == Level100DestructionEffectKind.DroneDestroyed);
     }
 
     /// <summary>

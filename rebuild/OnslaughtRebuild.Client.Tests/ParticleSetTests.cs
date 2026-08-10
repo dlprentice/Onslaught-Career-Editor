@@ -560,6 +560,9 @@ public sealed class ParticleSetTests
         Assert.Equal(ParticleDescriptorType.Timeline, timeline.Type);
         IReadOnlyList<string> entries = timeline.RawAll("Particle_Descriptor");
         IReadOnlyList<string> times = timeline.RawAll("Time");
+        int flashIndex = entries.ToList().IndexOf("Flash");
+        Assert.True(flashIndex >= 0);
+        Assert.Equal("0", times[flashIndex]);
         int directSpriteIndex = entries.ToList().IndexOf("Explosion Anim Sprite Medium");
         Assert.True(directSpriteIndex >= 0);
         Assert.Equal("5", times[directSpriteIndex]);
@@ -567,6 +570,14 @@ public sealed class ParticleSetTests
         ParticleEffectPlan plan = ParticleEffectResolver.Resolve(
             set,
             "Tank Explosion Medium");
+        ParticleSpriteLayer flash = Single(plan, "Flash");
+        Assert.Equal(new[] { 0 }, flash.StartTurns);
+        Assert.Equal("sun2.tga", flash.TextureName);
+        Assert.Equal(5, flash.LifeTurns);
+        Assert.Equal(5f, flash.StartRadius);
+        Assert.Equal(0f, flash.FinalRadius);
+        Assert.Equal(1, flash.AtlasColumns);
+
         ParticleSpriteLayer direct = Single(plan, "Explosion Anim Sprite Medium");
         Assert.Equal(new[] { 5 }, direct.StartTurns);
         Assert.Equal(ParticleAnimationMode.PlayOnce, direct.AnimationMode);
@@ -592,8 +603,16 @@ public sealed class ParticleSetTests
         string spawn = RequireSection(
             worldSource,
             "private void SpawnTargetTankDestruction(",
-            "private void SpawnFacilityDestruction(");
+            "private void SpawnTargetDroneDestruction(");
         Assert.Contains("position, 1.5d);", spawn, StringComparison.Ordinal);
+        Assert.Matches(
+            @"CreateEffectSprite\(\s*""TargetTankFlash"",\s*" +
+            @"_effectFlashMediumTexture,\s*5f\);",
+            spawn);
+        Assert.Contains(
+            "AnimateScale(flash, 1f, 0f, 0.25d);",
+            spawn,
+            StringComparison.Ordinal);
         Assert.Contains(
             "AnimateTargetTankDelayedExplosion(root, animatedExplosion);",
             spawn,

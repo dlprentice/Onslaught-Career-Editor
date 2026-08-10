@@ -556,6 +556,8 @@ public sealed partial class Level100Audio : Node3D
                     Level100EffectCue.PulseImpact,
                 Level100DestructionEffectKind.TargetDestroyed =>
                     Level100EffectCue.TargetOrTrainerDestroyed,
+                Level100DestructionEffectKind.DroneDestroyed =>
+                    Level100EffectCue.DroneDestroyed,
                 Level100DestructionEffectKind.FacilityDestroyed =>
                     Level100EffectCue.FacilityDestroyed,
                 _ => throw new InvalidDataException(
