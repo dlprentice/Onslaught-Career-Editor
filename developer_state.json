@@ -312,6 +312,13 @@
         "scratchInput": "local-lab/ghidra-terrain-collision101-static-20260810-v1/disposable-comment-input-v1/terrain-collision101.tsv; 411920 bytes; SHA-256 b7656ea8e77c50201b13636a21a7aa48d80e50bdc1561515bb542ccf969e54bc",
         "resultSummary": "101 exact terrain/collision/destruction bodies / 37,086 pristine body bytes across CDXLandscape, CLandscapeTexture, CHeightField, CMeshCollisionVolume, CDestructableSegmentsController and bounded motion/HLCollision helpers; all OPAQUE -> bounded C1_STATIC while retaining 31 COVERED, 49 PARTIAL and 21 DARK execution states. Four unresolved landscape VFuncs remain OPAQUE; runtime collision causality, mutable terrain outcomes and rebuild parity remain open."
       },
+      "missionScript111Cohort": {
+        "contracts": "local-lab/ghidra-mission-script111-static-20260810-v1/contracts.tsv; 439960 bytes; SHA-256 93f1f56750eb8e7787ac738907e67d921e9f281bb726f09f9e3e1fd669099ed1",
+        "report": "local-lab/ghidra-mission-script111-static-20260810-v1/REPORT.md; 3033 bytes; SHA-256 a8ae9db2d797558321414d0cf44c5fdb6967c38735e78be775cc948760309040",
+        "result": "local-lab/ghidra-mission-script111-static-20260810-v1/result.json; 13059 bytes; SHA-256 79df857bf905244524b14ea443d715f294bc9090f1518aedcce97fbdc00ac4e2",
+        "scratchInput": "local-lab/ghidra-mission-script111-static-20260810-v1/disposable-comment-input-v1/mission-script111.tsv; 409526 bytes; SHA-256 4d0a0eff3727be3b260c05b5b28519320057329d2d7b783d8c3aeabf8e879ce2",
+        "resultSummary": "111 exact mission-script/VM/statement/event bodies / 26,242 pristine body bytes across 20 coherent owners; all OPAQUE -> bounded C1_STATIC while retaining 37 COVERED, 53 PARTIAL and 21 DARK execution states. Three MissionScript lifecycle candidates remain OPAQUE; interpreter semantics beyond visible control/data flow, runtime causality and rebuild parity remain open."
+      },
       "cmeshCdxEngineScratchBatch": {
         "mutationPlan": "local-lab/ghidra-cmesh55-cdxengine59-cengine53-scratch-20260809-v1/mutation-plan.tsv; 236955 bytes; SHA-256 1cd0628c95b531985fd17cf509dcadcae5dd748b977e1888f154579b8939b83d",
         "functions": "local-lab/ghidra-cmesh55-cdxengine59-cengine53-scratch-20260809-v1/functions.tsv; 7115809 bytes; SHA-256 949cae708ca85d0e76e90522700b82d450b43a075417a11e5587da47df73d348",
@@ -430,13 +437,13 @@
         "semanticC1Candidate": 14,
         "semanticC2Bounded": 1
       },
-      "nextQueue": "Twenty-seven disjoint major static cohorts are complete, totaling 3,180 exact bodies, 3,137 formerly opaque functions advanced to bounded C1_STATIC hypotheses, and 42 prior C1 rows repaired or confirmed. ApplyDamage remains the preserved C2 exception; 4,765 Generation-19 opaque functions remain. Audio112 is exact in disposable Ghidra at 3,235 HYP names, UI/HUD103 is the active scratch batch, terrain/collision101 follows it, and the nine-contract retail zoom chain is landed in the existing Core/client/Godot owners. No single-function lane is open."
+      "nextQueue": "Twenty-eight disjoint major static cohorts are complete, totaling 3,291 exact bodies, 3,248 formerly opaque functions advanced to bounded C1_STATIC hypotheses, and 42 prior C1 rows repaired or confirmed. ApplyDamage remains the preserved C2 exception; 4,654 Generation-19 opaque functions remain. Audio112 is exact in disposable Ghidra at 3,235 HYP names, UI/HUD103 is the active scratch batch, terrain/collision101 and mission-script111 follow it, and the nine-contract retail zoom chain is landed. No single-function lane is open."
     },
     "rankedNextFrontiers": [
       {
         "rank": 1,
         "question": "Select and complete the next exact disjoint 100-or-more-function static cohort.",
-        "existingEvidence": "Twenty-seven completed cohorts demonstrate deterministic address/body joins and bounded static contracts from the existing Gen19 inventory, pristine/formal template proofs, and dated metadata/decompile/instruction/xref waves without new capture; selection continues against the remaining 4,765 opaque functions.",
+        "existingEvidence": "Twenty-eight completed cohorts demonstrate deterministic address/body joins and bounded static contracts from the existing Gen19 inventory, pristine/formal template proofs, and dated metadata/decompile/instruction/xref waves without new capture; selection continues against the remaining 4,654 opaque functions.",
         "instrument": "Rank unused class/system prefixes by opaque-count movement, evidence completeness and reconstruction leverage, then emit one ignored contracts/report/result/input set from the chosen selector.",
         "gate": "At least 100 exact disjoint functions, complete existing evidence for every claimed boundary, visible I/O/writes/order, honest execution-state retention, C1_STATIC at most, and no runtime/source/rebuild overclaim.",
         "reconstructionOwner": "Assign only after the cohort map identifies an existing coherent owner.",
@@ -445,7 +452,7 @@
       {
         "rank": 2,
         "question": "Map completed cohorts to coherent rebuild owners and land only consequential parity slices.",
-        "existingEvidence": "The twenty-seven cohort ledgers now contain exact retail-body contracts and cheapest falsifiers, while rebuild maps separate implemented, partial, and unmapped rows.",
+        "existingEvidence": "The twenty-eight cohort ledgers now contain exact retail-body contracts and cheapest falsifiers, while rebuild maps separate implemented, partial, and unmapped rows.",
         "instrument": "Choose a 5-to-10-contract slice owned by one existing subsystem, reproduce one concrete mismatch or exact parity claim, and run the smallest focused test that can falsify it.",
         "gate": "The patch consumes an exact bounded retail contract, keeps unresolved transitive behavior open, changes a measurable rebuild mapping count, and passes its focused owner test.",
         "reconstructionOwner": "The existing owner selected by each cohort rebuild map; do not create a framework to house a single mapping.",
