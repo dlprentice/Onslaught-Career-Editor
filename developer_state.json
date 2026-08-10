@@ -136,7 +136,13 @@
         "contracts": ["0x00412BC0", "0x00412D80", "0x00412F70", "0x00413160", "0x00413360", "0x00413760"],
         "resultSummary": "Core now retains the Walker input history needed for the released opposite-flick gesture, uses the strict less-than-four-tick 0.2-second window, applies the 25x trigger acceleration, locks movement input for the 15-update dash lifecycle, keeps 0.7 friction if ground contact is lost, and restores the normal speed cap only while the entry countdown is below five. The seed-1 backward-to-forward trigger moves from 21.954 mm/tick to the exact reconstructed (-831,1485), 1701.701 mm/tick path; StateHasher v37 binds all seven future-affecting gesture/countdown fields.",
         "validation": "The exact dash lifecycle plus existing Walker forward/strafe checks pass 3/3; the canonical 2,148-tick client smoke passes with its v37 hash 1bd823fa5cd7196f0f4893ddbaab5825d66c6d9a8ed61ebd634934a271e1af86. An independent read-only audit found and closed the right-dash residual-roll subtraction edge.",
-        "open": "Analog 0.9/0.8 threshold values below full axis, dash audio, selected-weapon charge loss, zoom-out timer semantics, and the special-move transform/fire gates remain open; augment charge is explicitly unrelated."
+        "open": "Analog 0.9/0.8 threshold values below full axis, dash audio, selected-weapon charge loss, zoom-out timer semantics, the dash fire gate and the separate jet special-air-move transform gate remain open; augment charge is explicitly unrelated."
+      },
+      "walkerDashMorphGateRebuild": {
+        "contracts": ["0x0040A580", "0x004135D0", "0x00412D80", "0x00412F70", "0x00413160", "0x00413360", "0x00413760"],
+        "resultSummary": "Walker-to-jet morph now rejects while the already-modeled walker dash counter is positive, matching CBattleEngine::Morph's GetIsDoingSpecialWalkerMove guard. The rejected toggle retains Walker mode, emits the existing TransformRejected event and consumes the same locked movement update as any other input during the dash.",
+        "validation": "The existing opposite-flick lifecycle fact now proves a flight-enabled toggle at 14 remaining dash ticks is rejected and the counter advances to 13 before completing its normal locked-input lifecycle.",
+        "open": "Retail also checks a separate jet special-air-move state before jet-to-walker morph; Core has no corresponding modeled state, so that half remains explicit rather than invented."
       },
       "battleLineInfluenceRebuild": {
         "contracts": ["0x0048B620", "0x0048C3B0", "0x00414CB0", "0x0053A390", "0x0053A5E0", "0x0053AA40", "0x0053ABE0", "0x0053B470", "0x0053B5F0"],

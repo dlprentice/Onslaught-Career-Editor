@@ -386,7 +386,16 @@ public sealed class SimulationTests
         Assert.Equal(new SimVector2(-831, 1_485), triggered.PlayerVelocity);
         Assert.Equal(14, triggered.WalkerDashTicksRemaining);
 
-        for (int remaining = 13; remaining >= 0; remaining--)
+        simulation.GrantFlightLegForMeasurement(Level100MissionTrigger.TargetZone2);
+        WorldSnapshot morphRejected = simulation.Step(
+            new SimInput(0, 0, SimActions.ToggleMode));
+        Assert.Equal(VehicleTransition.None, morphRejected.Transition);
+        Assert.Equal(13, morphRejected.WalkerDashTicksRemaining);
+        Assert.Contains(
+            morphRejected.AquilaFlightEventLog,
+            item => item.Kind == AquilaFlightEvents.TransformRejected);
+
+        for (int remaining = 12; remaining >= 0; remaining--)
         {
             WorldSnapshot locked = simulation.Step(new SimInput(0, -1));
             Assert.Equal(remaining, locked.WalkerDashTicksRemaining);

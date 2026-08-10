@@ -890,7 +890,8 @@ public sealed class Simulation
         if (_mode == VehicleMode.Walker)
         {
             if (!_level100FlightEnabled ||
-                _energy < SimulationConstants.TransformEnergyThreshold)
+                _energy < SimulationConstants.TransformEnergyThreshold ||
+                _walkerDashTicksRemaining > 0)
             {
                 EmitFlightEvent(AquilaFlightEvents.TransformRejected);
                 return;
