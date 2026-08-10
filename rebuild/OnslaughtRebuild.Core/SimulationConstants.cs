@@ -431,6 +431,14 @@ public static class SimulationConstants
     public const int WalkerPitchInputMicroRadPerTick = 8_547;
     public const int WalkerPitchRetentionNumerator = WalkerYawRetentionNumerator;
     public const int WalkerPitchRetentionDenominator = WalkerYawRetentionDenominator;
+    // Retail CBattleEngine starts current/old/desired zoom at 1.0. The two
+    // normal-weapon actions set desired zoom to 0.4 or 1.0, and Move approaches
+    // it by exactly 0.1 per 20 Hz update. ZoomModifier is the identity, so the
+    // same value scales both look input and the projection near-plane extent.
+    public const int ZoomScale = 1_000;
+    public const int ZoomOutPermille = ZoomScale;
+    public const int ZoomInPermille = 400;
+    public const int ZoomStepPermillePerTick = 100;
     // Two uninterrupted copied-retail repetitions at the authored Level 100
     // start stabilized at these absolute endpoints. They remain evidence
     // anchors while the source-derived terrain-relative limiter is used; they

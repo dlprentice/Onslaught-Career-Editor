@@ -293,6 +293,23 @@ public sealed partial class FirstFlightGame : Node3D
             return;
         }
 
+        if (inputEvent is InputEventMouseButton wheel && wheel.Pressed)
+        {
+            if (wheel.ButtonIndex == MouseButton.WheelDown)
+            {
+                _session.QueueZoomIn();
+                GetViewport().SetInputAsHandled();
+                return;
+            }
+
+            if (wheel.ButtonIndex == MouseButton.WheelUp)
+            {
+                _session.QueueZoomOut();
+                GetViewport().SetInputAsHandled();
+                return;
+            }
+        }
+
         // The shipped controller table maps BUTTON_MECH_FIRE_GUN_POD as
         // BUTTON_RELEASE. Queue the falling edge so a complete press/release
         // between two fixed-step samples is not lost. ObserveInput independently

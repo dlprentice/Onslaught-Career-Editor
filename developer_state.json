@@ -118,6 +118,12 @@
         "resultSummary": "51/51 exact CBattleEngine lifecycle/movement/targeting/lock/morph/cloak/weapon-routing bodies; 26,590 exact body bytes; 43 OPAQUE -> bounded C1_STATIC hypotheses; 8 existing C1 rows repaired or confirmed; 8 proposed renames; 44 source-architecture joins plus seven explicitly RETAIL_ONLY rows; runtime outcomes, callee internals and C2 remain open",
         "rebuildCorrection": "The existing Core selected Walker/Jet weapon state now reaches Level100HudPresentation and the retained Pulse/Vulcan icon mapping for Pulse Cannon Pod, Mech Twin Vulcan Cannon and Mech Vulcan Cannon. Four focused mode/selection cases pass. Missile icon identity, ammo, heat, overheat, charge, energy-store flags, localized names and manual cycling remain open; this is a bounded selected-state/icon projection, not completion of the eight-query retail slice."
       },
+      "retailZoomRebuild": {
+        "contracts": ["0x0042E4D0", "0x004D3110", "0x00404DD0", "0x004081C0", "0x00409E80", "0x00409E90", "0x00409EC0", "0x0040A580", "0x00550B10"],
+        "resultSummary": "The existing Core/client/Godot chain now implements the released Level-100 normal-weapon zoom law: current and desired 1000 at reset, wheel-down desired 400, wheel-up desired 1000, 100-per-20-Hz-tick easing, current-zoom look scaling, morph-forced zoom-out, and interpolated frustum consumption. Jet wheel input is a no-op because the two Level-100 jet weapons omit zoom mode 1. StateHasher v36 binds current and desired zoom.",
+        "validation": "SimulationTests plus Level100SkipPanningTests 53/53; InteractiveSessionTests 42/42; Godot build 0 warnings / 0 errors; canonical smoke hash structurally repinned to 997c20348dd9c4cbd7d59011060aa1c18e2906d912bba0e035671e60fe3bb1e5.",
+        "open": "Charge zoom mode 2, exact retail float32 intermediary bits, weapon-cycle/augment zoom-mode changes, multiplayer aspect behavior and pixel-scored runtime projection remain open."
+      },
       "cgameBattleScratchBatch": {
         "functions": "local-lab/ghidra-cgame-cbattle102-scratch-20260809-v1/functions.tsv; 7110054 bytes; SHA-256 fac73d989afd528f2bb8118209e609f840c07d88619274d7cb1242c6ffb98605",
         "readback": "local-lab/ghidra-cgame-cbattle102-scratch-20260809-v1/readback.tsv; 107879 bytes; SHA-256 efdc06846d4e8d3a1563d0476f142b72e998fd7bf79a6e8c246658f9f38a4424",
@@ -285,6 +291,27 @@
         "scratchInput": "local-lab/ghidra-unit-entity-squad112-static-20260810-v1/disposable-comment-input-v1/unit-entity-squad112.tsv; 412838 bytes; SHA-256 feff044b5eefc023a10909ea32bc3a6f086dd1c77ece48c87a63000a5ce11415",
         "resultSummary": "112 exact gameplay/entity bodies / 32,554 pristine body bytes: 31 CUnitAI, 17 CUnit, 28 CThing, 14 CComplexThing and 22 CSquadNormal rows, all OPAQUE -> bounded C1_STATIC while retaining 25 COVERED, 57 PARTIAL and 30 DARK execution states. All 112 have exact current identity/body/range plus same-wave metadata/decompile/instruction/xref and pristine-byte coverage; 58 same-prefix rows lacking that complete tuple remain OPAQUE."
       },
+      "audioPlayback112Cohort": {
+        "contracts": "local-lab/ghidra-audio-playback112-static-20260810-v1/contracts.tsv; 418956 bytes; SHA-256 baf24e0b85356009214eca8fb253f754afdff479f9fdef6aab4b158e61c7755a",
+        "report": "local-lab/ghidra-audio-playback112-static-20260810-v1/REPORT.md; 3484 bytes; SHA-256 9716c5c533fb5b8567afb5391ecddcfefae98232737f57c74b2ebe85f00b95ad",
+        "result": "local-lab/ghidra-audio-playback112-static-20260810-v1/result.json; 15227 bytes; SHA-256 8381e55e408ec8baefd5c91bbe2644b6677903f690d4d2266210f6ceae0baa31",
+        "scratchInput": "local-lab/ghidra-audio-playback112-static-20260810-v1/disposable-comment-input-v1/audio112.tsv; 388728 bytes; SHA-256 b5a9eb61a6b9591437343d2022471a20363a2e37c2ad76af7ed164d6341db2a9",
+        "resultSummary": "112 exact audio playback/streaming bodies / 24,005 pristine body bytes across CSoundManager, CPCSoundManager, CMusic, CWaveSoundRead, COggFileRead, PCPlatform async-music and bounded mixer/sample/event helpers; all OPAQUE -> bounded C1_STATIC while retaining 34 COVERED, 57 PARTIAL and 21 DARK execution states. Ten incomplete or conflicting candidates remain OPAQUE; codec/runtime/audio-output causality and rebuild parity remain open."
+      },
+      "uiHud103Cohort": {
+        "contracts": "local-lab/ghidra-ui-hud103-static-20260810-v1/contracts.tsv; 430188 bytes; SHA-256 698e925fc44998a591f7f84134935ab791d29f0da049abe7a346513bc0531c64",
+        "report": "local-lab/ghidra-ui-hud103-static-20260810-v1/REPORT.md; 2865 bytes; SHA-256 92074703ec4a8ba343e19940114c9cdb10628b0e1261122b86fe5767ee66fb96",
+        "result": "local-lab/ghidra-ui-hud103-static-20260810-v1/result.json; 11381 bytes; SHA-256 afb0840e714a02f0f2ca773dbbc7f66b7b5495acad2074b9c9605515f4ae5507",
+        "scratchInput": "local-lab/ghidra-ui-hud103-static-20260810-v1/disposable-comment-input-v1/ui-hud103.tsv; 403252 bytes; SHA-256 67065b259259c306304ec434f1889fcec457c7593eefb158e7ba43d9013648e6",
+        "resultSummary": "103 exact UI/HUD bodies / 51,636 pristine body bytes: 31 CConsole, 23 CHud, 20 CMenuItem, 16 CMessageBox and 13 CPauseMenu rows, all OPAQUE -> bounded C1_STATIC while retaining 26 COVERED, 49 PARTIAL and 28 DARK execution states. Three unresolved VFunc candidates remain OPAQUE; runtime pixels, localization, input timing and rebuild parity remain open."
+      },
+      "terrainCollision101Cohort": {
+        "contracts": "local-lab/ghidra-terrain-collision101-static-20260810-v1/contracts.tsv; 440766 bytes; SHA-256 106aaee607bebd7bd2707546cb20670c8bbbac7bf845040a50614dd4d98dc575",
+        "report": "local-lab/ghidra-terrain-collision101-static-20260810-v1/REPORT.md; 3008 bytes; SHA-256 24fca26287c23ead15b1079c2cff4e4e8f4d58eadecc36c2d9b60a7ff25a2b5a",
+        "result": "local-lab/ghidra-terrain-collision101-static-20260810-v1/result.json; 15009 bytes; SHA-256 d120facfaa483486a46ebebd76bbd979521de7da775cb838d71649ab6329515a",
+        "scratchInput": "local-lab/ghidra-terrain-collision101-static-20260810-v1/disposable-comment-input-v1/terrain-collision101.tsv; 411920 bytes; SHA-256 b7656ea8e77c50201b13636a21a7aa48d80e50bdc1561515bb542ccf969e54bc",
+        "resultSummary": "101 exact terrain/collision/destruction bodies / 37,086 pristine body bytes across CDXLandscape, CLandscapeTexture, CHeightField, CMeshCollisionVolume, CDestructableSegmentsController and bounded motion/HLCollision helpers; all OPAQUE -> bounded C1_STATIC while retaining 31 COVERED, 49 PARTIAL and 21 DARK execution states. Four unresolved landscape VFuncs remain OPAQUE; runtime collision causality, mutable terrain outcomes and rebuild parity remain open."
+      },
       "cmeshCdxEngineScratchBatch": {
         "mutationPlan": "local-lab/ghidra-cmesh55-cdxengine59-cengine53-scratch-20260809-v1/mutation-plan.tsv; 236955 bytes; SHA-256 1cd0628c95b531985fd17cf509dcadcae5dd748b977e1888f154579b8939b83d",
         "functions": "local-lab/ghidra-cmesh55-cdxengine59-cengine53-scratch-20260809-v1/functions.tsv; 7115809 bytes; SHA-256 949cae708ca85d0e76e90522700b82d450b43a075417a11e5587da47df73d348",
@@ -387,13 +414,13 @@
         "semanticC1Candidate": 14,
         "semanticC2Bounded": 1
       },
-      "nextQueue": "Twenty-four disjoint major static cohorts are complete, totaling 2,864 exact bodies, 2,821 formerly opaque functions advanced to bounded C1_STATIC hypotheses, and 42 prior C1 rows repaired or confirmed. ApplyDamage remains the preserved C2 exception; 5,081 Generation-19 opaque functions remain. The 112-row UnitAI/Unit/Thing/ComplexThing/SquadNormal cohort is the active disposable batch, a coherent >=100-row audio cohort is being tested against exact evidence, and both the selected-weapon HUD and four-variant CGame countdown overlay are landed while the next 5-to-10-contract rebuild slice is ranked. No single-function lane is open."
+      "nextQueue": "Twenty-seven disjoint major static cohorts are complete, totaling 3,180 exact bodies, 3,137 formerly opaque functions advanced to bounded C1_STATIC hypotheses, and 42 prior C1 rows repaired or confirmed. ApplyDamage remains the preserved C2 exception; 4,765 Generation-19 opaque functions remain. The audio112 disposable batch is active, UI/HUD103 and terrain/collision101 are queued behind it, and the nine-contract retail zoom chain is landed in the existing Core/client/Godot owners. No single-function lane is open."
     },
     "rankedNextFrontiers": [
       {
         "rank": 1,
         "question": "Select and complete the next exact disjoint 100-or-more-function static cohort.",
-        "existingEvidence": "Twenty-four completed cohorts demonstrate deterministic address/body joins and bounded static contracts from the existing Gen19 inventory, pristine/formal template proofs, and dated metadata/decompile/instruction/xref waves without new capture; an audio-system cohort is being tested against the remaining 5,081 opaque functions.",
+        "existingEvidence": "Twenty-seven completed cohorts demonstrate deterministic address/body joins and bounded static contracts from the existing Gen19 inventory, pristine/formal template proofs, and dated metadata/decompile/instruction/xref waves without new capture; selection continues against the remaining 4,765 opaque functions.",
         "instrument": "Rank unused class/system prefixes by opaque-count movement, evidence completeness and reconstruction leverage, then emit one ignored contracts/report/result/input set from the chosen selector.",
         "gate": "At least 100 exact disjoint functions, complete existing evidence for every claimed boundary, visible I/O/writes/order, honest execution-state retention, C1_STATIC at most, and no runtime/source/rebuild overclaim.",
         "reconstructionOwner": "Assign only after the cohort map identifies an existing coherent owner.",
@@ -402,7 +429,7 @@
       {
         "rank": 2,
         "question": "Map completed cohorts to coherent rebuild owners and land only consequential parity slices.",
-        "existingEvidence": "The twenty-four cohort ledgers now contain exact retail-body contracts and cheapest falsifiers, while rebuild maps separate implemented, partial, and unmapped rows.",
+        "existingEvidence": "The twenty-seven cohort ledgers now contain exact retail-body contracts and cheapest falsifiers, while rebuild maps separate implemented, partial, and unmapped rows.",
         "instrument": "Choose a 5-to-10-contract slice owned by one existing subsystem, reproduce one concrete mismatch or exact parity claim, and run the smallest focused test that can falsify it.",
         "gate": "The patch consumes an exact bounded retail contract, keeps unresolved transitive behavior open, changes a measurable rebuild mapping count, and passes its focused owner test.",
         "reconstructionOwner": "The existing owner selected by each cohort rebuild map; do not create a framework to house a single mapping.",

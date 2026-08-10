@@ -279,6 +279,11 @@ public sealed partial class FirstFlightWorldView : Node3D
         UpdatePlayerShape(current, ShowHud);
         UpdateLevel100Targets(previous, current, interpolationAlpha);
         UpdateProjectiles(previous, current, interpolationAlpha);
+        float zoom = Mathf.Lerp(
+            previous.ZoomPermille,
+            current.ZoomPermille,
+            interpolationAlpha) / SimulationConstants.ZoomScale;
+        _camera.Size = 2f * _camera.Near * RetailTanVerticalHalfFov * zoom;
         UpdateCamera(
             playerPosition,
             playerYaw,

@@ -69,6 +69,8 @@ public sealed class Simulation
     private int _walkerPitchVelocityMicroRadPerTick;
     private int _bodyRollMicroRad;
     private int _rollVelocityMicroRadPerTick;
+    private int _zoomPermille;
+    private int _desiredZoomPermille;
     private int _energy;
     private int _shield;
     private int _augmentCharge;
@@ -222,6 +224,7 @@ public sealed class Simulation
         }
 
         TryToggleMode(playerInput);
+        UpdateZoom(playerInput);
         UpdateMovement(playerInput);
         UpdateWalkerFeet();
         UpdateLevel100TriggerActors();
@@ -890,6 +893,7 @@ public sealed class Simulation
                 _playerOnGround ||
                 _ticksSinceGroundContact < SimulationConstants.RecentGroundContactTicks;
             _walkerToJetLiftApplied = false;
+            _desiredZoomPermille = SimulationConstants.ZoomOutPermille;
             _transition = VehicleTransition.WalkerToJet;
             _transformTicksRemaining = _walkerToJetUsesTakeoffLift
                 ? SimulationConstants.WalkerToJetTransitionTicks
@@ -909,10 +913,44 @@ public sealed class Simulation
         }
 
         _transition = VehicleTransition.JetToWalker;
+        _desiredZoomPermille = SimulationConstants.ZoomOutPermille;
         _transformTicksRemaining = SimulationConstants.JetToWalkerTransitionTicks;
         _jetGroundedSlowTicks = 0;
         _jetStallTicks = 0;
         EmitFlightEvent(AquilaFlightEvents.JetToWalkerStarted);
+    }
+
+    private void UpdateZoom(SimInput input)
+    {
+        // The pristine default physics.dat (175,603 bytes, sha256
+        // e1fb3dedbeb29b4b4151da2c8cbbdc940b716b1a2321e1d6a9ba1542c74ada14)
+        // gives both selectable Level-100 walker weapons zoom mode 1 at +0x08.
+        // Jet weapons omit it, so wheel actions are ignored outside a settled
+        // walker state. Charge zoom mode 2 remains deliberately open.
+        if (_mode == VehicleMode.Walker && _transition == VehicleTransition.None)
+        {
+            if (input.HasAction(SimActions.ZoomIn))
+            {
+                _desiredZoomPermille = SimulationConstants.ZoomInPermille;
+            }
+            else if (input.HasAction(SimActions.ZoomOut))
+            {
+                _desiredZoomPermille = SimulationConstants.ZoomOutPermille;
+            }
+        }
+
+        if (_zoomPermille < _desiredZoomPermille)
+        {
+            _zoomPermille = Math.Min(
+                _zoomPermille + SimulationConstants.ZoomStepPermillePerTick,
+                _desiredZoomPermille);
+        }
+        else if (_zoomPermille > _desiredZoomPermille)
+        {
+            _zoomPermille = Math.Max(
+                _zoomPermille - SimulationConstants.ZoomStepPermillePerTick,
+                _desiredZoomPermille);
+        }
     }
 
     private void AdvanceTransition()
@@ -1446,17 +1484,17 @@ public sealed class Simulation
         int lookYPermille = ResolveLookInputPermille(input.LookY, input.LookYAnalogPermille);
         _walkerYawVelocityMicroRadPerTick =
             RetainAngularVelocity(_walkerYawVelocityMicroRadPerTick) +
-            ScaleLookInput(
+            ScaleZoomedLookInput(
                 SimulationConstants.JetYawInputMicroRadPerTick,
                 lookXPermille * ratePermille / 1_000);
         _walkerPitchVelocityMicroRadPerTick =
             RetainAngularVelocity(_walkerPitchVelocityMicroRadPerTick) +
-            ScaleLookInput(
+            ScaleZoomedLookInput(
                 SimulationConstants.JetPitchInputMicroRadPerTick,
                 lookYPermille * ratePermille / 1_000);
         _rollVelocityMicroRadPerTick =
             RetainAngularVelocity(_rollVelocityMicroRadPerTick) +
-            ScaleLookInput(
+            ScaleZoomedLookInput(
                 SimulationConstants.JetRollInputMicroRadPerTick,
                 lookXPermille * ratePermille / 1_000);
 
@@ -1598,7 +1636,7 @@ public sealed class Simulation
             (int)((long)_walkerYawVelocityMicroRadPerTick *
                 SimulationConstants.WalkerYawRetentionNumerator /
                 SimulationConstants.WalkerYawRetentionDenominator) +
-            ScaleLookInput(
+            ScaleZoomedLookInput(
                 SimulationConstants.WalkerYawInputMicroRadPerTick,
                 inputPermille);
         _facingYawMicroRad = NormalizeMicroRad(
@@ -1611,7 +1649,7 @@ public sealed class Simulation
         int inputPermille = ResolveLookInputPermille(lookY, analogPermille);
         _walkerPitchVelocityMicroRadPerTick =
             RetainAngularVelocity(_walkerPitchVelocityMicroRadPerTick) +
-            ScaleLookInput(
+            ScaleZoomedLookInput(
                 SimulationConstants.WalkerPitchInputMicroRadPerTick,
                 inputPermille);
         ApplyWalkerTerrainPitchLimit();
@@ -1696,13 +1734,10 @@ public sealed class Simulation
         LookAxisResponse.Apply(
             Math.Clamp((digital * 1_000) + analog, -1_000, 1_000));
 
-    private static int ScaleLookInput(int fullScale, int inputPermille)
-    {
-        long scaled = (long)fullScale * inputPermille;
-        return (int)(scaled >= 0
-            ? (scaled + 500) / 1_000
-            : (scaled - 500) / 1_000);
-    }
+    private int ScaleZoomedLookInput(int fullScale, int inputPermille) =>
+        DivideRoundNearest(
+            (long)fullScale * inputPermille * _zoomPermille,
+            (long)SimulationConstants.ZoomScale * 1_000);
 
     private void UpdateWalkerMovement(SimInput input)
     {
@@ -3067,6 +3102,8 @@ public sealed class Simulation
         _walkerPitchVelocityMicroRadPerTick = 0;
         _bodyRollMicroRad = 0;
         _rollVelocityMicroRadPerTick = 0;
+        _zoomPermille = SimulationConstants.ZoomOutPermille;
+        _desiredZoomPermille = SimulationConstants.ZoomOutPermille;
         _energy = SimulationConstants.MaximumEnergy;
         _shield = SimulationConstants.MaximumShield;
         _augmentCharge = 0;
@@ -3255,6 +3292,8 @@ public sealed class Simulation
             _level100PlayerWeapons.IsActive(Level100MissionWeapon.MissilePod),
             _level100PlayerWeapons.WalkerSelectedWeapon,
             _level100PlayerWeapons.JetSelectedWeapon,
+            _zoomPermille,
+            _desiredZoomPermille,
             _level100HudEmphasisMask,
             _level100Mission.Snapshot,
             Array.AsReadOnly(_level100MissionEvents.ToArray()),

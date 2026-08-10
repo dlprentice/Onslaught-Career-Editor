@@ -111,6 +111,8 @@ public sealed class InteractiveSession
     private bool _resetEdgePending;
     private bool _firePulsePending;
     private bool _skipPanningEdgePending;
+    private bool _zoomInEdgePending;
+    private bool _zoomOutEdgePending;
     private sbyte _movementPulseX;
     private sbyte _movementPulseZ;
     private sbyte _lookPulseX;
@@ -166,6 +168,8 @@ public sealed class InteractiveSession
         _resetEdgePending ||
         _firePulsePending ||
         _skipPanningEdgePending ||
+        _zoomInEdgePending ||
+        _zoomOutEdgePending ||
         _movementPulseX != 0 ||
         _movementPulseZ != 0 ||
         _lookPulseX != 0 ||
@@ -278,6 +282,28 @@ public sealed class InteractiveSession
         _firePulsePending = true;
     }
 
+    public void QueueZoomIn()
+    {
+        if (IsPaused || _inputSuspendedUntilReleased)
+        {
+            return;
+        }
+
+        _zoomOutEdgePending = false;
+        _zoomInEdgePending = true;
+    }
+
+    public void QueueZoomOut()
+    {
+        if (IsPaused || _inputSuspendedUntilReleased)
+        {
+            return;
+        }
+
+        _zoomInEdgePending = false;
+        _zoomOutEdgePending = true;
+    }
+
     public void QueueMovementPulse(sbyte moveX, sbyte moveZ)
     {
         new SimInput(moveX, moveZ).Validate();
@@ -366,6 +392,8 @@ public sealed class InteractiveSession
         _resetEdgePending = false;
         _firePulsePending = false;
         _skipPanningEdgePending = false;
+        _zoomInEdgePending = false;
+        _zoomOutEdgePending = false;
         _movementPulseX = 0;
         _movementPulseZ = 0;
         _lookPulseX = 0;
@@ -526,6 +554,16 @@ public sealed class InteractiveSession
                     actions |= SimActions.SkipPanning;
                 }
 
+                if (_zoomInEdgePending)
+                {
+                    actions |= SimActions.ZoomIn;
+                }
+
+                if (_zoomOutEdgePending)
+                {
+                    actions |= SimActions.ZoomOut;
+                }
+
                 if (_firePulsePending)
                 {
                     _firePulseEdgesConsumed++;
@@ -540,6 +578,8 @@ public sealed class InteractiveSession
                 _resetEdgePending = false;
                 _firePulsePending = false;
                 _skipPanningEdgePending = false;
+                _zoomInEdgePending = false;
+                _zoomOutEdgePending = false;
                 _movementPulseX = 0;
                 _movementPulseZ = 0;
                 _lookPulseX = 0;

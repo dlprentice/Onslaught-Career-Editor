@@ -556,6 +556,20 @@ surfaces at that frame. Godot's camera child uses a bounded 6 cm depth and 1 cm
 vertical presentation adjustment selected against the clean retail frame and
 near-plane path; that adapter offset is not claimed as a retail model value.
 
+The attached-view zoom chain is now bounded across controller/player routing,
+Battle Engine initialization/move/zoom/morph, and the projection consumer at
+`0x0042E4D0`, `0x004D3110`, `0x00404DD0`, `0x004081C0`,
+`0x00409E80`–`0x00409EC0`, `0x0040A580`, and `0x00550B10`. Retail initializes
+current and desired zoom to `1.0`, normal-weapon Zoom In selects `0.4`, Zoom Out
+selects `1.0`, and each 20 Hz move approaches the target by `0.1`; morphing
+forces the desired value back to `1.0`. Level 100's two walker weapons carry
+the normal zoom mode while its two jet weapons do not. Core retains that law as
+`1000/400/100` fixed-point state, scales look input by current zoom, and the
+Godot frustum consumes the interpolated value. Mouse Wheel Down/Up route to the
+two shipped actions. Charge zoom mode `2`, exact float32 intermediary bits,
+weapon-cycle/augment zoom changes, multiplayer aspect handling, and pixel-scored
+runtime projection remain open.
+
 A no-input control and two uninterrupted repetitions then bound attached-view
 aim at the same authored start. `Look Up`, `Look Down`, and `Look Left` were
 bound only through each copied `defaultoptions.bea`; launch used

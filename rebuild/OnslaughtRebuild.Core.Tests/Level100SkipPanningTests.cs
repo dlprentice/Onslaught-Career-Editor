@@ -456,8 +456,6 @@ public sealed class Level100SkipPanningTests
                  {
                      SimActions.ChargeWeapon,
                      SimActions.ChangeWeapon,
-                     SimActions.ZoomIn,
-                     SimActions.ZoomOut,
                      SimActions.Cloak,
                  })
         {

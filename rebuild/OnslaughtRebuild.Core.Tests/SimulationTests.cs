@@ -17,6 +17,71 @@ public sealed class SimulationTests
             new Simulation(0, Level100TestActorDefinitions.Create()));
     }
 
+    [Fact]
+    public void RetailZoom_EasesLookAndProjectionScaleAndMorphForcesZoomOut()
+    {
+        Simulation simulation = CreatePlayingSimulation();
+
+        Assert.Equal(SimulationConstants.ZoomOutPermille, simulation.Snapshot.ZoomPermille);
+        Assert.Equal(
+            SimulationConstants.ZoomOutPermille,
+            simulation.Snapshot.DesiredZoomPermille);
+
+        int[] zoomInSteps = [900, 800, 700, 600, 500, 400];
+        for (int index = 0; index < zoomInSteps.Length; index++)
+        {
+            WorldSnapshot state = simulation.Step(new SimInput(
+                0,
+                0,
+                index == 0 ? SimActions.ZoomIn : SimActions.None));
+            Assert.Equal(zoomInSteps[index], state.ZoomPermille);
+            Assert.Equal(SimulationConstants.ZoomInPermille, state.DesiredZoomPermille);
+        }
+
+        WorldSnapshot looked = simulation.Step(new SimInput(0, 0, LookX: 1));
+        Assert.Equal(9_067, looked.WalkerYawVelocityMicroRadPerTick);
+
+        WorldSnapshot zoomingOut = simulation.Step(
+            new SimInput(0, 0, SimActions.ZoomOut));
+        Assert.Equal(500, zoomingOut.ZoomPermille);
+        Assert.Equal(SimulationConstants.ZoomOutPermille, zoomingOut.DesiredZoomPermille);
+        for (int tick = 0; tick < 5; tick++)
+        {
+            zoomingOut = simulation.Step(SimInput.Idle);
+        }
+        Assert.Equal(SimulationConstants.ZoomOutPermille, zoomingOut.ZoomPermille);
+
+        simulation.Step(new SimInput(0, 0, SimActions.ZoomIn));
+        for (int tick = 0; tick < 5; tick++)
+        {
+            simulation.Step(SimInput.Idle);
+        }
+        Assert.Equal(SimulationConstants.ZoomInPermille, simulation.Snapshot.ZoomPermille);
+
+        simulation.GrantFlightLegForMeasurement(Level100MissionTrigger.TargetZone2);
+        WorldSnapshot morphing = simulation.Step(
+            new SimInput(0, 0, SimActions.ToggleMode));
+        Assert.Equal(VehicleTransition.WalkerToJet, morphing.Transition);
+        Assert.Equal(SimulationConstants.ZoomOutPermille, morphing.DesiredZoomPermille);
+        Assert.Equal(500, morphing.ZoomPermille);
+
+        for (int tick = 0;
+             simulation.Snapshot.Mode != VehicleMode.Jet ||
+                 simulation.Snapshot.Transition != VehicleTransition.None;
+             tick++)
+        {
+            Assert.True(tick < 100, "Walker-to-jet morph did not complete.");
+            simulation.Step(SimInput.Idle);
+        }
+
+        WorldSnapshot jetZoomAttempt = simulation.Step(
+            new SimInput(0, 0, SimActions.ZoomIn));
+        Assert.Equal(SimulationConstants.ZoomOutPermille, jetZoomAttempt.ZoomPermille);
+        Assert.Equal(
+            SimulationConstants.ZoomOutPermille,
+            jetZoomAttempt.DesiredZoomPermille);
+    }
+
     [Theory]
     [InlineData(73_904, 62_272, -11_153)]
     [InlineData(73_895, 62_287, -11_161)]

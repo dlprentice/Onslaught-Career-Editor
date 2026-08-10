@@ -137,6 +137,28 @@ public sealed class InteractiveSessionTests
     }
 
     [Fact]
+    public void ZoomWheelEdge_ReachesCoreOnceAndContinuesTheRetailEase()
+    {
+        InteractiveSession session = CreatePlayingSession();
+
+        session.QueueZoomIn();
+        Assert.True(session.HasHeldOrPendingInput);
+        FrameAdvanceResult first = session.AdvanceFrameTicks(OneCoreStepTicks);
+
+        Assert.Equal(900, first.CurrentSnapshot.ZoomPermille);
+        Assert.Equal(
+            SimulationConstants.ZoomInPermille,
+            first.CurrentSnapshot.DesiredZoomPermille);
+        Assert.False(session.HasHeldOrPendingInput);
+
+        FrameAdvanceResult second = session.AdvanceFrameTicks(OneCoreStepTicks);
+        Assert.Equal(800, second.CurrentSnapshot.ZoomPermille);
+        Assert.Equal(
+            SimulationConstants.ZoomInPermille,
+            second.CurrentSnapshot.DesiredZoomPermille);
+    }
+
+    [Fact]
     public void GunAction_FiresOnceOnReleaseAndDoesNotRepeatWhileHeld()
     {
         InteractiveSession session = CreatePlayingSession();
@@ -1810,8 +1832,12 @@ public sealed class InteractiveSessionTests
         // while the client had sent SimActions.Fire on every held tick. The
         // same four physical holds now produce exactly four falling edges; the
         // asserted mission/target outcome above is unchanged.
+        // MOVED 2026-08-10 by StateHasher v36. Current and desired zoom now
+        // affect the projection/look law and future easing, so both are
+        // serialized. This tape never zooms and ends at 1000/1000; the moved
+        // hash is structural and the gameplay assertions above are unchanged.
         Assert.Equal(
-            "419e7995112303527ec38274e8f08e44f349d7da44f5edefc9ee77cae8fb5271",
+            "997c20348dd9c4cbd7d59011060aa1c18e2906d912bba0e035671e60fe3bb1e5",
             StateHasher.ComputeHex(session.CurrentSnapshot));
     }
 

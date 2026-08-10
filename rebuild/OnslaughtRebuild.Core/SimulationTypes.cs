@@ -262,16 +262,15 @@ public enum SimActions : ushort
 
     /// <summary>
     /// <c>BUTTON_MECH_CHANGE_ZOOM_IN</c> <c>0x10</c>, shipped row 13
-    /// (<c>active=1</c>, mouse device <c>0x10</c> code 4). DECLARED, NOT
-    /// IMPLEMENTED: zoom is a projection term with no Core state.
-    /// <see cref="SimInput.Validate"/> rejects it.
+    /// (<c>active=1</c>, mouse device <c>0x10</c> code 4). For Level 100's
+    /// normal walker weapons this sets desired zoom to <c>0.4</c>.
     /// </summary>
     ZoomIn = 1 << 7,
 
     /// <summary>
     /// <c>BUTTON_MECH_CHANGE_ZOOM_OUT</c> <c>0x11</c>, shipped row 14
-    /// (<c>active=1</c>, mouse device <c>0x10</c> code 3). DECLARED, NOT
-    /// IMPLEMENTED. <see cref="SimInput.Validate"/> rejects it.
+    /// (<c>active=1</c>, mouse device <c>0x10</c> code 3). For Level 100's
+    /// normal walker weapons this sets desired zoom to <c>1.0</c>.
     /// </summary>
     ZoomOut = 1 << 8,
 
@@ -379,7 +378,9 @@ public readonly record struct SimInput(
         SimActions.Fire |
         SimActions.Reset |
         SimActions.LandingJets |
-        SimActions.SkipPanning;
+        SimActions.SkipPanning |
+        SimActions.ZoomIn |
+        SimActions.ZoomOut;
 }
 
 public sealed record TargetSnapshot(
@@ -547,6 +548,8 @@ public sealed record WorldSnapshot(
     bool Level100MissilePodEnabled,
     Level100MissionWeapon Level100WalkerSelectedWeapon,
     Level100MissionWeapon Level100JetSelectedWeapon,
+    int ZoomPermille,
+    int DesiredZoomPermille,
     int Level100HudEmphasisMask,
     Level100MissionSnapshot Level100Mission,
     IReadOnlyList<Level100MissionEvent> Level100MissionEvents,
