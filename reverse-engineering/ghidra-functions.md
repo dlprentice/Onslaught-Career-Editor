@@ -3,7 +3,7 @@
 Status: active canonical synthesis of the current executable-analysis state; raw
 machine exports remain the address-level evidence behind this human-readable
 master
-Last updated: 2026-08-09 (Gen19 authority; sixteen bulk static-hypothesis cohorts complete)
+Last updated: 2026-08-09 (Gen19 authority; seventeen bulk static-hypothesis cohorts complete)
 Verdict: **The verified live and tracked databases now contain 8,136 function
 boundaries. The latest backed-up batch added eleven exact Mission-native
 boundaries and shipped registry names, including `IScript__UnsetObjective`,
@@ -85,8 +85,10 @@ missing inputs restored, and 14 locked prototypes remain explicit. CDXTexture115
 then advances 115 more exact codec/resource bodies while retaining
 11 covered, eight partial, and 96 dark states; CFastVB106 advances another 106
 exact utility/container/codec bodies while retaining 14 covered, eight partial,
-and 84 dark states. Across all sixteen cohorts, 1,121 exact bodies are now
-bounded: 1,078 formerly opaque functions have C1-static
+and 84 dark states. CFastVB149 adds 149 exact W014 SIMD/math/dispatch bodies,
+retaining two covered, three partial, and 144 dark states; 79 custom-ABI or
+boundary-sensitive rows remain medium confidence and no rename is proposed.
+Across all seventeen cohorts, 1,270 exact bodies are now bounded: 1,227 formerly opaque functions have C1-static
 hypotheses and 42 prior C1 rows are repaired or confirmed, while ApplyDamage
 retains its pre-existing C2 contract.
 
@@ -96,7 +98,7 @@ project and read back in separate processes. The second batch changed exactly
 122 target names/comments plus one automatic default-named thunk following its
 renamed target; `ApplyDamage` was excluded and no other function or program
 metric changed except the aggregate comment digest. Live/tracked Ghidra remains
-untouched by all sixteen semantic passes. The combined IScript50/World70 batch is
+untouched by all seventeen semantic passes. The combined IScript50/World70 batch is
 also complete in disposable Ghidra: exactly its 120 target rows changed, all
 120 names/comments read back, no rows were added or removed, and no non-target
 function or program metric changed except the aggregate comment digest. The
