@@ -187,6 +187,64 @@ public sealed class Level100AudioCatalogTests
             AquilaWarningAudioState.EnergyLow).Looping);
         Assert.True(Level100AudioCatalog.GetAquilaWarning(
             AquilaWarningAudioState.HullCritical).Looping);
+
+        string audio = ReadGodotSource("Level100Audio.cs");
+        string warningState = MethodBody(
+            audio,
+            "public void SetAquilaWarningState(AquilaWarningAudioState state)");
+        AssertOccursInOrder(
+            warningState,
+            "if (state == AquilaWarningAudioState.Normal)",
+            "_aquilaWarningLoopTargetSubVolume = 0f;",
+            "_aquilaWarningLoopFadeStep =",
+            "-Level100AudioCatalog.RetailFlightLoopFadeStep;",
+            "_aquilaWarningLoopState == state",
+            "StopAquilaWarningLoop();",
+            "SetSpecificLoop(");
+        Assert.Equal(1, CountOccurrences(warningState, "StopAquilaWarningLoop();"));
+        string normalizedWarningState = warningState.Replace(
+            "\r\n",
+            "\n",
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "if (IsPlaying(_aquilaWarningLoop) &&\n" +
+            "            _aquilaWarningLoopState == state)\n" +
+            "        {\n" +
+            "            return;\n" +
+            "        }",
+            normalizedWarningState,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "_aquilaWarningLoopState = state;",
+            warningState,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "_aquilaWarningLoopState = AquilaWarningAudioState.Normal;",
+            MethodBody(audio, "private void StopAquilaWarningLoop()"),
+            StringComparison.Ordinal);
+
+        string warningFade = MethodBody(
+            audio,
+            "private void AdvanceAquilaWarningLoopFade(double delta)");
+        Assert.Contains("RetailSoundUpdateSeconds", warningFade, StringComparison.Ordinal);
+        Assert.Contains(
+            "Level100AudioCatalog.AdvanceRetailFlightLoopSubVolume(",
+            warningFade,
+            StringComparison.Ordinal);
+        AssertOccursInOrder(
+            warningFade,
+            "out bool crossedTarget",
+            "if (crossedTarget)",
+            "if (_aquilaWarningLoopTargetSubVolume == 0f)",
+            "StopAquilaWarningLoop();");
+        Assert.Contains(
+            "AdvanceAquilaWarningLoopFade(delta);",
+            MethodBody(audio, "public override void _Process(double delta)"),
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "ReferenceEquals(player, _aquilaWarningLoop)",
+            MethodBody(audio, "private void UpdateSpatialAttenuation()"),
+            StringComparison.Ordinal);
     }
 
     [Fact]

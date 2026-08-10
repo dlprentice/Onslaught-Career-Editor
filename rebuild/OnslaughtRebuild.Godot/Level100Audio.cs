@@ -70,6 +70,11 @@ public sealed partial class Level100Audio : Node3D
     private double _aquilaFlightLoopFadeAccumulatorSeconds;
     private AudioStreamPlayer3D? _aquilaWarningLoop;
     private AquilaWarningAudioState _aquilaWarningState;
+    private float _aquilaWarningLoopSubVolume;
+    private float _aquilaWarningLoopTargetSubVolume;
+    private float _aquilaWarningLoopFadeStep;
+    private double _aquilaWarningLoopFadeAccumulatorSeconds;
+    private AquilaWarningAudioState _aquilaWarningLoopState;
     private AudioStreamPlayer3D? _trainerLoop;
     private AudioStreamPlayer3D? _transportLoop;
     private AudioStreamPlayer3D? _repairPadIdleLoop;
@@ -203,6 +208,7 @@ public sealed partial class Level100Audio : Node3D
         }
 
         AdvanceAquilaFlightLoopFade(delta);
+        AdvanceAquilaWarningLoopFade(delta);
 
         // CSoundManager::UpdateStatus recomputes GetVolumeForPos and re-Fades
         // every live ST_FOLLOW* event on every update
@@ -304,7 +310,7 @@ public sealed partial class Level100Audio : Node3D
         }
 
         StopAquilaFlightLoop();
-        StopLoop(ref _aquilaWarningLoop);
+        StopAquilaWarningLoop();
         _aquilaWarningState = AquilaWarningAudioState.Normal;
         ReleaseAquilaBinding();
         _aquilaActorId = actorId;
@@ -463,12 +469,32 @@ public sealed partial class Level100Audio : Node3D
         }
 
         _aquilaWarningState = state;
-        StopLoop(ref _aquilaWarningLoop);
         if (state == AquilaWarningAudioState.Normal)
+        {
+            if (IsPlaying(_aquilaWarningLoop))
+            {
+                _aquilaWarningLoopTargetSubVolume = 0f;
+                _aquilaWarningLoopFadeStep =
+                    -Level100AudioCatalog.RetailFlightLoopFadeStep;
+            }
+            return;
+        }
+
+        // IsEffectPlaying remains true while FadeTo is active. If the same
+        // warning condition returns during its recovery tail, retail lets that
+        // event finish fading and starts a fresh event only after it stops.
+        // Switching to the other warning still takes the hard replacement path
+        // below.
+        if (IsPlaying(_aquilaWarningLoop) &&
+            _aquilaWarningLoopState == state)
         {
             return;
         }
 
+        // Retail replaces one warning with the other immediately. Only the
+        // transition from a live warning back to Normal uses FadeTo(..., 0,
+        // 0.02); do not smear HullCritical <-> EnergyLow together.
+        StopAquilaWarningLoop();
         Node3D aquila = _aquila ??
             throw new InvalidOperationException("The Level 100 Aquila audio owner is not bound.");
         SetSpecificLoop(
@@ -479,6 +505,13 @@ public sealed partial class Level100Audio : Node3D
                 : "RetailAquilaHullCriticalLoop",
             Level100AudioCatalog.GetAquilaWarning(state),
             active: true);
+        _aquilaWarningLoopSubVolume =
+            Level100AudioCatalog.RetailUnfadedSubVolume;
+        _aquilaWarningLoopTargetSubVolume =
+            Level100AudioCatalog.RetailUnfadedSubVolume;
+        _aquilaWarningLoopFadeStep = 0f;
+        _aquilaWarningLoopFadeAccumulatorSeconds = 0d;
+        _aquilaWarningLoopState = state;
     }
 
     public void PlayOnAquila(Level100EffectCue cue)
@@ -732,7 +765,7 @@ public sealed partial class Level100Audio : Node3D
         StopAndFree(_gameplayOneShots);
         _gameplayBaseVolumes.Clear();
         StopAquilaFlightLoop();
-        StopLoop(ref _aquilaWarningLoop);
+        StopAquilaWarningLoop();
         StopLoop(ref _trainerLoop);
         StopLoop(ref _transportLoop);
         StopLoop(ref _repairPadIdleLoop);
@@ -972,6 +1005,59 @@ public sealed partial class Level100Audio : Node3D
         }
     }
 
+    private void AdvanceAquilaWarningLoopFade(double delta)
+    {
+        if (!double.IsFinite(delta) ||
+            delta <= 0d ||
+            !IsPlaying(_aquilaWarningLoop) ||
+            _aquilaWarningLoopFadeStep == 0f)
+        {
+            return;
+        }
+
+        _aquilaWarningLoopFadeAccumulatorSeconds += delta;
+        while (_aquilaWarningLoopFadeAccumulatorSeconds >= RetailSoundUpdateSeconds &&
+               _aquilaWarningLoopFadeStep != 0f)
+        {
+            _aquilaWarningLoopFadeAccumulatorSeconds -= RetailSoundUpdateSeconds;
+            _aquilaWarningLoopSubVolume =
+                Level100AudioCatalog.AdvanceRetailFlightLoopSubVolume(
+                    _aquilaWarningLoopSubVolume,
+                    _aquilaWarningLoopTargetSubVolume,
+                    _aquilaWarningLoopFadeStep,
+                    out bool crossedTarget);
+            if (crossedTarget)
+            {
+                _aquilaWarningLoopFadeStep = 0f;
+                _aquilaWarningLoopFadeAccumulatorSeconds = 0d;
+                if (_aquilaWarningLoopTargetSubVolume == 0f)
+                {
+                    StopAquilaWarningLoop();
+                    return;
+                }
+            }
+        }
+
+        if (_gameplayBaseVolumes.TryGetValue(
+            _aquilaWarningLoop!,
+            out float baseVolume))
+        {
+            ApplyAquilaWarningLoopVolume(baseVolume);
+        }
+    }
+
+    private void ApplyAquilaWarningLoopVolume(float baseVolume)
+    {
+        if (GodotObject.IsInstanceValid(_aquilaWarningLoop) &&
+            _aquilaWarningLoop!.IsInsideTree())
+        {
+            _aquilaWarningLoop.VolumeDb = SpatialVolumeDb(
+                baseVolume,
+                ListenerDistance(_aquilaWarningLoop),
+                _aquilaWarningLoopSubVolume);
+        }
+    }
+
     private AudioStream GetEventStream(Level100AudioCueRecipe spec)
     {
         if (!_pcmStreams.TryGetValue(spec.ResourcePath, out AudioStream? stream))
@@ -1170,7 +1256,9 @@ public sealed partial class Level100Audio : Node3D
             {
                 float subVolume = ReferenceEquals(player, _aquilaFlightLoop)
                     ? _aquilaFlightLoopSubVolume
-                    : Level100AudioCatalog.RetailUnfadedSubVolume;
+                    : ReferenceEquals(player, _aquilaWarningLoop)
+                        ? _aquilaWarningLoopSubVolume
+                        : Level100AudioCatalog.RetailUnfadedSubVolume;
                 player.VolumeDb = SpatialVolumeDb(
                     baseVolume,
                     ListenerDistance(player),
@@ -1303,6 +1391,16 @@ public sealed partial class Level100Audio : Node3D
             player.QueueFree();
         }
         player = null;
+    }
+
+    private void StopAquilaWarningLoop()
+    {
+        StopLoop(ref _aquilaWarningLoop);
+        _aquilaWarningLoopSubVolume = 0f;
+        _aquilaWarningLoopTargetSubVolume = 0f;
+        _aquilaWarningLoopFadeStep = 0f;
+        _aquilaWarningLoopFadeAccumulatorSeconds = 0d;
+        _aquilaWarningLoopState = AquilaWarningAudioState.Normal;
     }
 
     private static bool IsPlaying(AudioStreamPlayer3D? player) =>
