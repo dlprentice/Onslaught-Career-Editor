@@ -532,7 +532,14 @@ public sealed record Level100HudSnapshot(
     IReadOnlyList<Level100HudMessageDeliverySnapshot> DeliveredMessages,
     IReadOnlyList<Level100HudHelpPrompt> ActiveHelp,
     IReadOnlyList<Level100HudHelpPrompt> DeliveredHelp,
-    Level100HudBattleLineSnapshot BattleLine);
+    Level100HudBattleLineSnapshot BattleLine,
+    Level100HudTerminalSnapshot Terminal);
+
+public sealed record Level100HudTerminalSnapshot(
+    bool Visible,
+    Level100MissionOutcome Outcome,
+    Level100MissionFailureReason FailureReason,
+    int TicksRemaining);
 
 public sealed record Level100HudInfluenceNode(
     int Id,
@@ -747,6 +754,12 @@ public sealed class Level100HudPresentationState
         Level100HudPart[] emphasizedParts = Enum.GetValues<Level100HudPart>()
             .Where(part => (snapshot.Level100HudEmphasisMask & (1 << (int)part)) != 0)
             .ToArray();
+        var terminal = new Level100HudTerminalSnapshot(
+            Visible: mission.Outcome != Level100MissionOutcome.Running &&
+                mission.TerminalTicksRemaining > 0,
+            mission.Outcome,
+            mission.FailureReason,
+            mission.TerminalTicksRemaining);
 
         return new Level100HudSnapshot(
             weapon,
@@ -760,7 +773,8 @@ public sealed class Level100HudPresentationState
             Array.AsReadOnly(_deliveredMessages.ToArray()),
             Array.AsReadOnly(Array.Empty<Level100HudHelpPrompt>()),
             Array.AsReadOnly(_deliveredHelp.ToArray()),
-            Level100HudBattleLineSnapshot.Unavailable);
+            Level100HudBattleLineSnapshot.Unavailable,
+            terminal);
     }
 
     /// <summary>

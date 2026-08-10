@@ -88,7 +88,7 @@ LEVEL100_ENGLISH_DAT = LEVEL100_MISSION_DATA_ROOT / "english.dat"
 LEVEL100_ENGLISH_DAT_SHA256 = ENGLISH_LANGUAGE_TABLE_SHA256
 LEVEL100_HUD_MANIFEST = LEVEL100_MISSION_DATA_ROOT / "level100-hud-events.json"
 LEVEL100_HUD_MANIFEST_SHA256 = (
-    "3e1992bc9d8ac8033f23a8f5894eddba60279a4a8348b1a319f28ee9c5b7b6d7"
+    "af0b389df897ab8f1404edf35280f3eac10e53ad0c064457f4df97b6ff4335d1"
 )
 FRONTEND_LOCALIZATION = GODOT_ASSETS / "Frontend/english.json"
 FRONTEND_LOCALIZATION_SHA256 = (
@@ -1047,6 +1047,8 @@ def _materialize_level100_hud_manifest(stage: Path) -> str:
 
     terminal_strings: dict[str, dict[str, object]] = {}
     for key, symbol in (
+        ("victory", "FETX_VICTORY"),
+        ("defeat", "FETX_DEFEAT"),
         ("missionComplete", "IG_MISSION_COMPLETE"),
         ("retry", "GI_RETRY"),
         ("back", "GI_BACK"),
@@ -1070,7 +1072,7 @@ def _materialize_level100_hud_manifest(stage: Path) -> str:
         "help": help_messages,
         "messages": messages,
         "playCharEvents": native_play_events,
-        "schemaVersion": "onslaught.level100-hud-events.v3",
+        "schemaVersion": "onslaught.level100-hud-events.v4",
         "sources": {
             "englishDatSha256": _sha256(english_dat),
             "englishSourceSha256": _sha256(english_source_path.read_bytes()),

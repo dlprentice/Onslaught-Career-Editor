@@ -242,6 +242,80 @@ public sealed class Level100HudPresentationTests
         Assert.Equal(expectedHudWeapon, hud.Weapon.SelectedWeapon);
     }
 
+    [Theory]
+    [InlineData(
+        Level100MissionOutcome.Running,
+        Level100MissionTerminalState.None,
+        Level100MissionFailureReason.None,
+        0,
+        false)]
+    [InlineData(
+        Level100MissionOutcome.Won,
+        Level100MissionTerminalState.SuccessCountdown,
+        Level100MissionFailureReason.None,
+        100,
+        true)]
+    [InlineData(
+        Level100MissionOutcome.Won,
+        Level100MissionTerminalState.FrontEndHandoffReady,
+        Level100MissionFailureReason.None,
+        0,
+        false)]
+    [InlineData(
+        Level100MissionOutcome.Lost,
+        Level100MissionTerminalState.FailureCountdown,
+        Level100MissionFailureReason.TutorialBroken,
+        40,
+        true)]
+    [InlineData(
+        Level100MissionOutcome.Lost,
+        Level100MissionTerminalState.FailureMenuReady,
+        Level100MissionFailureReason.PlayerDeath,
+        30,
+        true)]
+    [InlineData(
+        Level100MissionOutcome.Lost,
+        Level100MissionTerminalState.FailureCountdown,
+        Level100MissionFailureReason.WaterLoss,
+        1,
+        true)]
+    [InlineData(
+        Level100MissionOutcome.Lost,
+        Level100MissionTerminalState.FailureCountdownElapsed,
+        Level100MissionFailureReason.WaterLoss,
+        0,
+        false)]
+    public void ProjectionExposesRetailTerminalOverlayOnlyWhileCountdownRemains(
+        Level100MissionOutcome outcome,
+        Level100MissionTerminalState terminalState,
+        Level100MissionFailureReason failureReason,
+        int ticksRemaining,
+        bool expectedVisible)
+    {
+        var session = new InteractiveSession(
+            Seed,
+            Level100TestActorDefinitions.Create());
+        WorldSnapshot baseline = session.CurrentSnapshot;
+        WorldSnapshot snapshot = baseline with
+        {
+            Level100Mission = baseline.Level100Mission with
+            {
+                Outcome = outcome,
+                TerminalState = terminalState,
+                FailureReason = failureReason,
+                TerminalTicksRemaining = ticksRemaining,
+            },
+        };
+
+        Level100HudTerminalSnapshot terminal =
+            new Level100HudPresentationState().Project(snapshot, default).Terminal;
+
+        Assert.Equal(expectedVisible, terminal.Visible);
+        Assert.Equal(outcome, terminal.Outcome);
+        Assert.Equal(failureReason, terminal.FailureReason);
+        Assert.Equal(ticksRemaining, terminal.TicksRemaining);
+    }
+
     [Fact]
     public void ProjectionPreservesRepeatedHelpAndIgnoresPlaybackIdentity()
     {

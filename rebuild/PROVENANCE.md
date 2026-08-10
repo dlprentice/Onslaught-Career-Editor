@@ -715,7 +715,11 @@ its exact HUD icon is not independently identified. It leaves selection-panel
 state, weapon resources, classified contacts, threats,
 damage flashes, target prediction, active-help lifetime, and influence values
 absent until their mechanics owners exist. The HUD does not draw a parallel
-terminal/result screen, and this frontend does not own mission outcome handoff.
+frontend result screen, and the frontend does not own mission outcome handoff.
+During Core's existing terminal countdown only, the in-level HUD now reproduces
+the retail black darkener, Victory/Defeat title, and the three retained Level
+100 loss-reason strings. Objective/status rows, fade-out/menu transfer,
+debriefing, progression, save effects, and runtime pixel parity remain open.
 This is an ownership boundary, not a claim that every released HUD value or
 render pass is complete.
 Steam's exact dynamically written 16-bit ring pixels and exact portrait RNG

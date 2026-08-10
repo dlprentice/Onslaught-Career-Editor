@@ -2485,6 +2485,12 @@ public sealed partial class FirstFlightHud : CanvasLayer
         private string[] _messageWindow = [];
         private Level100HudHelpDefinition[] _activeHelp = [];
         private Level100HudWeaponSnapshot _weapon = Level100HudWeaponSnapshot.Unavailable;
+        private Level100HudTerminalSnapshot _terminal = new(
+            Visible: false,
+            Level100MissionOutcome.Running,
+            Level100MissionFailureReason.None,
+            TicksRemaining: 0);
+        private int _terminalDarkenerAlpha;
 
         public RetailHudTextLayer(
             Texture2D fontAtlas,
@@ -2546,6 +2552,14 @@ public sealed partial class FirstFlightHud : CanvasLayer
             DeliveredMessageCount = hud.DeliveredMessages.Count;
             DeliveredHelpCount = hud.DeliveredHelp.Count;
             _weapon = hud.Weapon;
+            bool enteringTerminal = hud.Terminal.Visible &&
+                (!_terminal.Visible ||
+                 _terminal.Outcome != hud.Terminal.Outcome ||
+                 _terminal.FailureReason != hud.Terminal.FailureReason);
+            _terminal = hud.Terminal;
+            _terminalDarkenerAlpha = hud.Terminal.Visible
+                ? Math.Min(0xa0, (enteringTerminal ? 0 : _terminalDarkenerAlpha) + 0x10)
+                : 0;
             QueueRedraw();
         }
 
@@ -2559,7 +2573,51 @@ public sealed partial class FirstFlightHud : CanvasLayer
             DrawMessageWindow();
             DrawHelpPrompts();
             DrawWeaponAmmo();
+            DrawTerminalOverlay();
             EndDesignSpace();
+        }
+
+        private void DrawTerminalOverlay()
+        {
+            if (!_terminal.Visible)
+            {
+                return;
+            }
+
+            DrawRect(
+                new Rect2(0f, 0f, DesignWidth, DesignHeight),
+                new Color(0f, 0f, 0f, _terminalDarkenerAlpha / 255f));
+
+            string title = _terminal.Outcome switch
+            {
+                Level100MissionOutcome.Won => _catalog.TerminalStrings.Victory,
+                Level100MissionOutcome.Lost => _catalog.TerminalStrings.Defeat,
+                _ => throw new InvalidDataException(
+                    "A visible Level 100 terminal overlay has no terminal outcome."),
+            };
+            DrawTextLine(
+                title,
+                (DesignWidth - MeasureText(title, _largeGlyphWidths)) * 0.5f,
+                50f,
+                _largeFontAtlas,
+                _largeGlyphWidths,
+                LargeGlyphCellSize,
+                drawShadow: true,
+                clip: null);
+
+            if (_terminal.Outcome != Level100MissionOutcome.Lost)
+            {
+                return;
+            }
+
+            float top = 90f;
+            string reason = _catalog.TerminalStrings.GetFailureReason(
+                _terminal.FailureReason);
+            foreach (string line in WrapIntoLines(reason, 500f))
+            {
+                DrawTextLine(line, 65f, top);
+                top += 16f;
+            }
         }
 
         private void DrawMessageWindow()

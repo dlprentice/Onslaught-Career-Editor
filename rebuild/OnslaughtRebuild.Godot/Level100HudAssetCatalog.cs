@@ -19,6 +19,8 @@ public sealed record Level100HudHelpDefinition(
     string Text);
 
 public sealed record Level100HudTerminalStrings(
+    string Victory,
+    string Defeat,
     string MissionComplete,
     string Retry,
     string Back,
@@ -58,8 +60,8 @@ public sealed class Level100HudAssetCatalog
     private const string ResourcePath =
         "res://Assets/Level100/MissionData/level100-hud-events.json";
     private const string ExpectedSha256 =
-        "3e1992bc9d8ac8033f23a8f5894eddba60279a4a8348b1a319f28ee9c5b7b6d7";
-    private const string ExpectedSchema = "onslaught.level100-hud-events.v3";
+        "af0b389df897ab8f1404edf35280f3eac10e53ad0c064457f4df97b6ff4335d1";
+    private const string ExpectedSchema = "onslaught.level100-hud-events.v4";
     private const string ExpectedLevelScriptSha256 =
         "d51f8864564b5bde872092ec822df5af49daac16563f500719135f1a8c6c04a4";
     private const string ExpectedEnglishSourceSha256 =
@@ -158,6 +160,14 @@ public sealed class Level100HudAssetCatalog
         }
 
         Level100HudTerminalStrings terminalStrings = new(
+            RequireTerminalString(
+                manifest.TerminalStrings.Victory,
+                8_959_659,
+                "FETX_VICTORY"),
+            RequireTerminalString(
+                manifest.TerminalStrings.Defeat,
+                4_141_956,
+                "FETX_DEFEAT"),
             RequireTerminalString(
                 manifest.TerminalStrings.MissionComplete,
                 1_036_010_335,
@@ -366,6 +376,12 @@ public sealed class Level100HudAssetCatalog
 
     private sealed class HudTerminalStrings
     {
+        [JsonPropertyName("victory")]
+        public HudTerminalString Victory { get; init; } = new();
+
+        [JsonPropertyName("defeat")]
+        public HudTerminalString Defeat { get; init; } = new();
+
         [JsonPropertyName("missionComplete")]
         public HudTerminalString MissionComplete { get; init; } = new();
 
