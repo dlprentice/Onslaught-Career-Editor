@@ -178,10 +178,44 @@ public sealed class Level100HudBlendEvidenceTests
     }
 
     [Fact]
-    public void TheAdditiveLayerIsTheOnlyLayerThatDeclaresAnAddBlendMode()
+    public void EveryHudLayerAppliesTheRetailPostModulateAlphaTestAndOnlyGlowAdds()
     {
+        (string fourCc, int width, int height, byte[] body) =
+            ReadPage("crosshair-secondary");
+        Assert.Equal("DXT2", fourCc);
+
+        int alphaNibbleOneTexels = 0;
+        int topMipBlocks = (width / 4) * (height / 4);
+        for (int block = 0; block < topMipBlocks; block++)
+        {
+            ulong alphaNibbles = BinaryPrimitives.ReadUInt64LittleEndian(
+                body.AsSpan(block * 16, 8));
+            for (int texel = 0; texel < 16; texel++)
+            {
+                if (((alphaNibbles >> (texel * 4)) & 0xfu) == 1u)
+                {
+                    alphaNibbleOneTexels++;
+                }
+            }
+        }
+
+        // At RetailCrosshairFaint alpha 0.3412 these become 5.8/255 after
+        // modulation: below ALPHAREF 8, despite the source texel being 17/255.
+        Assert.Equal(20, alphaNibbleOneTexels);
+        Assert.Contains("COLOR.a < (8.0 / 255.0)", HudSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("COLOR.a <=", HudSource, StringComparison.Ordinal);
+        Assert.Equal(
+            2,
+            Regex.Matches(
+                HudSource,
+                @"CreateReleasedAlphaTestMaterial\(additive:\s*false\)").Count);
         Assert.Single(
-            Regex.Matches(HudSource, @"BlendMode\s*=\s*CanvasItemMaterial\.BlendModeEnum\.Add"));
+            Regex.Matches(
+                HudSource,
+                @"CreateReleasedAlphaTestMaterial\(additive:\s*true\)"));
+        Assert.Single(Regex.Matches(HudSource, @"render_mode\s+blend_mix,\s*unshaded"));
+        Assert.Single(
+            Regex.Matches(HudSource, @"render_mode\s+blend_add,\s*unshaded"));
     }
 
     /// <summary>

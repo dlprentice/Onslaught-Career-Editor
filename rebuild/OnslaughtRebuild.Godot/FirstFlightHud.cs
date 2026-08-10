@@ -66,6 +66,31 @@ public sealed partial class FirstFlightHud : CanvasLayer
     internal const float MessageNoiseAlphaWithoutPortrait = 112f / 255f;
     internal const int MessageNoisePhaseCount = 16;
 
+    private const string ReleasedAlphaTestBlendMixShaderCode = """
+        shader_type canvas_item;
+        render_mode blend_mix, unshaded;
+
+        void fragment() {
+            if (COLOR.a < (8.0 / 255.0)) {
+                discard;
+            }
+        }
+        """;
+
+    private const string ReleasedAlphaTestBlendAddShaderCode = """
+        shader_type canvas_item;
+        render_mode blend_add, unshaded;
+
+        void fragment() {
+            if (COLOR.a < (8.0 / 255.0)) {
+                discard;
+            }
+        }
+        """;
+
+    private static Shader? _releasedAlphaTestBlendMixShader;
+    private static Shader? _releasedAlphaTestBlendAddShader;
+
     /// <summary>
     /// The additive diffuse both weapon-outline arc shells carry, #AE8E6E. Read
     /// off the device as the MODULATE2X quad diffuse 0xFF574737 on in-level draws
@@ -464,13 +489,12 @@ public sealed partial class FirstFlightHud : CanvasLayer
 
     /// <summary>
     /// Retail's <c>D3DRS_ALPHATESTENABLE = TRUE</c>,
-    /// <c>ALPHAFUNC = GREATEREQUAL</c>, <c>ALPHAREF = 0x8</c>, applied to the
-    /// font atlases.
+    /// <c>ALPHAFUNC = GREATEREQUAL</c>, <c>ALPHAREF = 0x8</c>.
     /// </summary>
     /// <remarks>
     /// <para>
     /// Measured 2026-07-27: <b>every</b> one of the 74 in-level HUD draws runs
-    /// that alpha test, and this renderer runs none. It is not bookkeeping -
+    /// that alpha test. It is not bookkeeping -
     /// <c>font-13ps</c> alone carries 603 texels with alpha 1..7, the glyph
     /// anti-aliasing fringe, which retail discards and this client composited.
     /// </para>
@@ -482,10 +506,11 @@ public sealed partial class FirstFlightHud : CanvasLayer
     /// because both text draws carry a diffuse alpha of 0xFF (shadow
     /// 0xFF000000, glyph 0xFFFFFFFF) and the glyph blit is 1:1 under
     /// TextureFilterEnum.Nearest, so no interpolated alpha is ever produced.
-    /// The remaining HUD pages are NOT alpha-tested by this client; doing that
-    /// faithfully needs the test on the modulated alpha, i.e. a discard in a
-    /// canvas shader, and it is recorded as unimplemented rather than
-    /// approximated.
+    /// <see cref="CreateReleasedAlphaTestMaterial(bool)"/> now performs the
+    /// general test on post-modulate alpha for all three HUD layers. This exact
+    /// font pre-cut remains because glyph widths are also measured on the CPU
+    /// atlas and the released full-alpha text draws make the bake equivalent;
+    /// the layer shader is still the final draw-time gate.
     /// </para>
     /// </remarks>
     private static Texture2D ApplyReleasedAlphaTest(Texture2D atlas)
@@ -508,6 +533,20 @@ public sealed partial class FirstFlightHud : CanvasLayer
         }
 
         return ImageTexture.CreateFromImage(image);
+    }
+
+    private static ShaderMaterial CreateReleasedAlphaTestMaterial(bool additive)
+    {
+        Shader shader = additive
+            ? _releasedAlphaTestBlendAddShader ??= new Shader
+            {
+                Code = ReleasedAlphaTestBlendAddShaderCode,
+            }
+            : _releasedAlphaTestBlendMixShader ??= new Shader
+            {
+                Code = ReleasedAlphaTestBlendMixShaderCode,
+            };
+        return new ShaderMaterial { Shader = shader };
     }
 
     private static Texture2D[] LoadPortraitSet(string speaker) =>
@@ -1116,6 +1155,11 @@ public sealed partial class FirstFlightHud : CanvasLayer
             _hud?.BattleLine is Level100HudBattleLineSnapshot battleLine &&
             battleLine.HasInfluenceValues &&
             battleLine.InfluencePermille.Count == Level100HudInfluenceMap.Nodes.Count;
+
+        public override void _Ready()
+        {
+            Material = CreateReleasedAlphaTestMaterial(additive: false);
+        }
 
         public void SetState(
             WorldSnapshot snapshot,
@@ -1988,10 +2032,7 @@ public sealed partial class FirstFlightHud : CanvasLayer
 
         public override void _Ready()
         {
-            Material = new CanvasItemMaterial
-            {
-                BlendMode = CanvasItemMaterial.BlendModeEnum.Add,
-            };
+            Material = CreateReleasedAlphaTestMaterial(additive: true);
         }
 
         public void SetState(
@@ -2565,6 +2606,11 @@ public sealed partial class FirstFlightHud : CanvasLayer
             _glyphWidths.Length == 96 &&
             _largeFontAtlas.GetSize() == new Vector2I(512, 512) &&
             _largeGlyphWidths.Length == 96;
+
+        public override void _Ready()
+        {
+            Material = CreateReleasedAlphaTestMaterial(additive: false);
+        }
 
         public int DeliveredMessageCount { get; private set; }
         public int DeliveredHelpCount { get; private set; }
