@@ -189,8 +189,14 @@
       "pulseRoundLifetimeRebuild": {
         "contracts": ["0x004301E0", "0x00430330", "0x00430410", "0x004D8410", "0x004D9EF0", "0x004DB150", "0x004DB630"],
         "resultSummary": "Core's Pulse round lifetime now comes from Mech Pulse Bolt Medium's exact CRoundLifeSpan 6.0 instead of the explicitly contradicted 27-tick placeholder. At the released 20 Hz cadence a miss remains live for 120 updates / 6 seconds and can travel 210 metres rather than disappearing after 1.35 seconds / 47.25 metres.",
-        "validation": "The existing upward guaranteed-miss fact proves the fired snapshot begins at 119 remaining ticks after its first update, survives every value through one, disappears exactly at zero on update 120, and still does not invent a vertical target hit.",
-        "open": "Sub-tick event scheduling, timeout explosion semantics and the separate Pulse reload-time mismatch remain open; the reload owner is shared with other weapon branches and is not changed here."
+        "validation": "The existing upward guaranteed-miss fact proves the fired snapshot begins at 119 remaining ticks after its first update, survives every value through one, disappears exactly at zero on update 120, and still does not invent a vertical target hit. The canonical client smoke retains four legitimately live final rounds and is repinned to e2d58b207ed85ae333956646b2c83f313825fc6e76383158a0fe1b046b1132da with all gameplay assertions unchanged.",
+        "open": "Sub-tick event scheduling and timeout explosion semantics remain open."
+      },
+      "playerWeaponReloadCadenceRebuild": {
+        "contracts": ["0x0042FC70", "0x0042FDC0", "0x004365F0", "0x004370A0", "0x00505E00", "0x00506930", "0x005069F0"],
+        "resultSummary": "The lowest-charge Pulse Cannon and jet Mech Vulcan no longer share an invented four-tick reload. Their existing fire producer now uses each authored mode value: Pulse 0.10 seconds / two 20-Hz updates and jet Vulcan 0.05 seconds / one update, yielding 10 Pulse releases or 20 two-round jet volleys per second when input is supplied each tick.",
+        "validation": "One focused Simulation fact binds both producer branches to their weapon-fire event identity, volley count and exact cooldown snapshots: Pulse fires on N and N+2 but not N+1; jet Vulcan fires on consecutive ticks.",
+        "open": "Charged Pulse modes, held-input repeat semantics, per-weapon cooldown persistence during manual switching, energy costs, muzzle sequences, inaccuracy and predictive lead remain open."
       },
       "targetTankSpriteTimingRebuild": {
         "contracts": ["0x004C04C0", "0x004C07F0", "0x004C0940", "0x004C5C50", "0x004C5D50", "0x004C78B0", "0x004C7950", "0x004CB210"],

@@ -1844,9 +1844,13 @@ public sealed class InteractiveSessionTests
         // whether SetAllegiance actually executed, because Friendly is both
         // released value zero and the default on state created by unrelated
         // AI/waypoint commands. The trajectory assertions above are unchanged.
+        // MOVED 2026-08-10 by the exact Mech Pulse Bolt Medium
+        // CRoundLifeSpan 6.0. All four released shots are still live in the
+        // final snapshot instead of expiring at the old contradicted 27-tick
+        // placeholder; the firing-range and waypoint assertions are unchanged.
         string finalStateHash = StateHasher.ComputeHex(session.CurrentSnapshot);
         Assert.Equal(
-            "778342068ac405fcc52a7694ec61527cfbcebcf7d0c5754ec150b706e8b0f5b0",
+            "e2d58b207ed85ae333956646b2c83f313825fc6e76383158a0fe1b046b1132da",
             finalStateHash);
     }
 

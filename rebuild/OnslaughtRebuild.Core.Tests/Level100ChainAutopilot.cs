@@ -2156,8 +2156,8 @@ internal sealed class Level100ChainAutopilot
 
             // The break does not stop the guns. The nose sweeps across the
             // wave while it turns, and a volley taken on the way past costs
-            // nothing: SimActions.Fire is gated by FireCooldownTicks and no
-            // energy, so a shot that is on the target is free whatever the
+            // nothing: SimActions.Fire is gated by MechVulcanReloadTicks and
+            // no energy, so a shot that is on the target is free whatever the
             // aeroplane is doing.
             return new SimInput(
                 (sbyte)WaveTwoCrab(state),
@@ -2240,8 +2240,8 @@ internal sealed class Level100ChainAutopilot
     /// <summary>
     /// Pull the trigger whenever the reticle is genuinely on a drone, whatever
     /// the aeroplane is doing. The `Mech Air Bullet` costs no energy and the
-    /// cadence is gated by <c>FireCooldownTicks</c>, so a shot taken while the
-    /// nose sweeps past during a missile break is free.
+    /// cadence is gated by <c>MechVulcanReloadTicks</c>, so a shot taken while
+    /// the nose sweeps past during a missile break is free.
     /// </summary>
     private static SimActions WaveTwoFireGate(
         WorldSnapshot state,

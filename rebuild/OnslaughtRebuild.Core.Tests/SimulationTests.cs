@@ -1123,6 +1123,57 @@ public sealed class SimulationTests
     }
 
     [Fact]
+    public void PlayerWeaponReloadsUseAuthoredPerModeCadence()
+    {
+        Simulation pulse = CreateFiringRangeExerciseSimulation();
+
+        WorldSnapshot pulseFirst = pulse.Step(new SimInput(0, 0, SimActions.Fire));
+        AssertWeaponFire(pulseFirst, Level100PlayerWeapon.PulseCannonPod, 1);
+        Assert.Equal(2, pulseFirst.FireCooldownTicksRemaining);
+        WorldSnapshot pulseBlocked = pulse.Step(new SimInput(0, 0, SimActions.Fire));
+        Assert.Empty(pulseBlocked.Level100WeaponFireEvents);
+        Assert.Equal(1, pulseBlocked.FireCooldownTicksRemaining);
+        WorldSnapshot pulseSecond = pulse.Step(new SimInput(0, 0, SimActions.Fire));
+        AssertWeaponFire(pulseSecond, Level100PlayerWeapon.PulseCannonPod, 1);
+        Assert.Equal(2, pulseSecond.FireCooldownTicksRemaining);
+
+        Simulation jet = CreatePlayingSimulation();
+        jet.GrantFlightLegForMeasurement(Level100MissionTrigger.TargetZone2);
+        jet.Step(new SimInput(0, 0, SimActions.ToggleMode));
+        for (int tick = 0;
+             jet.Snapshot.Mode != VehicleMode.Jet ||
+                 jet.Snapshot.Transition != VehicleTransition.None;
+             tick++)
+        {
+            Assert.True(tick < 100, "Walker-to-jet morph did not complete.");
+            jet.Step(SimInput.Idle);
+        }
+
+        WorldSnapshot jetFirst = jet.Step(new SimInput(0, 0, SimActions.Fire));
+        AssertWeaponFire(
+            jetFirst,
+            Level100PlayerWeapon.MechVulcanCannon,
+            SimulationConstants.MechVulcanVolleySize);
+        Assert.Equal(1, jetFirst.FireCooldownTicksRemaining);
+        WorldSnapshot jetSecond = jet.Step(new SimInput(0, 0, SimActions.Fire));
+        AssertWeaponFire(
+            jetSecond,
+            Level100PlayerWeapon.MechVulcanCannon,
+            SimulationConstants.MechVulcanVolleySize);
+        Assert.Equal(1, jetSecond.FireCooldownTicksRemaining);
+
+        static void AssertWeaponFire(
+            WorldSnapshot snapshot,
+            Level100PlayerWeapon weapon,
+            int roundCount)
+        {
+            Level100WeaponFireEvent fired = Assert.Single(snapshot.Level100WeaponFireEvents);
+            Assert.Equal(weapon, fired.Weapon);
+            Assert.Equal(roundCount, fired.RoundCount);
+        }
+    }
+
+    [Fact]
     public void PitchedPulseRound_FollowsViewPitchWithoutInventingVerticalTargetHits()
     {
         Simulation simulation = CreateFiringRangeExerciseSimulation();

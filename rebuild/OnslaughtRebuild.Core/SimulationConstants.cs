@@ -604,21 +604,13 @@ public static class SimulationConstants
     // retail energy unit), so one Core energy unit is 1000 micro-retail.
     public const int MicroRetailEnergyPerCoreEnergyUnit = 1_000;
     public const int FireEnergyCost = 30;
-    // 0.2 s, converted as a duration.
-    //
-    // UNKNOWN PROVENANCE, AND NOW CONTRADICTED BY A BYTE. Measured 2026-07-31:
+    // Measured 2026-07-31:
     // weapon `Pulse Cannon Pod` @0x17463 of data/default physics.dat (sha256
     // e1fb3dedbeb29b4b4151da2c8cbbdc940b716b1a2321e1d6a9ba1542c74ada14,
     // 175,603 bytes) resolves charge level 0 to weaponmode
     // `Mech Pulse Cannon Charged` @0x134E3, whose CWeaponReloadTime is 0.1 s
-    // (0x3DCCCCCD @0x1351D) - half of Core's 0.2 s, i.e. 2 ticks not 4. The
-    // same decoder reproduces the already-cited Twin Vulcan 0.05 exactly.
-    //
-    // NOT ADOPTED HERE. Doubling the player's rate of fire is a behaviour
-    // change of a different kind from a rate conversion and would make the
-    // moved goldens unattributable. Filed as a follow-up with the evidence
-    // above.
-    public const int FireCooldownTicks = 4;
+    // (0x3DCCCCCD @0x1351D), exactly two released 20 Hz updates.
+    public const int PulseCannonReloadTicks = 2;
     // Fresh copied-Steam Level 100 runs independently repeated four
     // lowest-charge Pulse Cannon rounds against each of the three training
     // tanks. Every round carried definition speed 35 and moved exactly 1.75

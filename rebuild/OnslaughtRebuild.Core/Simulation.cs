@@ -3038,7 +3038,7 @@ public sealed class Simulation
             EmitWeaponFireEvent(
                 Level100PlayerWeapon.MechVulcanCannon,
                 SimulationConstants.MechVulcanVolleySize);
-            _fireCooldownTicksRemaining = SimulationConstants.FireCooldownTicks;
+            _fireCooldownTicksRemaining = SimulationConstants.MechVulcanReloadTicks;
 
             // The jet weapon now actually launches. Until this change the jet
             // branch emitted a presentation event and nothing else, so the
@@ -3080,7 +3080,7 @@ public sealed class Simulation
             }
 
             _energy -= SimulationConstants.FireEnergyCost;
-            _fireCooldownTicksRemaining = SimulationConstants.FireCooldownTicks;
+            _fireCooldownTicksRemaining = SimulationConstants.PulseCannonReloadTicks;
             // `Mech Pulse Cannon Charged` carries no CWeaponVolleySize node, so
             // it takes the shipped default of 1 and one release is one round.
             EmitWeaponFireEvent(Level100PlayerWeapon.PulseCannonPod, 1);
