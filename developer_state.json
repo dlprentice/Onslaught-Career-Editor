@@ -82,10 +82,10 @@
     },
     "activeHypothesisOverlay": {
       "status": "NONCANONICAL_SCRATCH_ONLY_NEVER_SYNC_TO_LIVE",
-      "projectPath": "local-lab/ghidra-cfastvb79-ctexture81-scratch-20260810-v1/project",
+      "projectPath": "local-lab/ghidra-audio-playback112-scratch-20260810-v1/project",
       "sourceCampaign": "Generation 19 campaign-functions.tsv joined by exact entry/body identity, then advanced only through disposable HYP__ batches with separate-process full-inventory readback",
       "hypothesisLedger": "local-lab/ghidra-bulk-hypothesis-overlay-20260809-v1/function-hypotheses.tsv; 350150 bytes; SHA-256 39208135c5d7a0a5378b7dfc9f7a7557f736f8f852ab2c4882c5af13d69a2441",
-      "readback": "local-lab/ghidra-cfastvb79-ctexture81-scratch-20260810-v1/functions-final.tsv; 7141603 bytes; SHA-256 0a6d80eadee5078d9559668370779cf4350b41015dc7a1c9dbac2b766c4ccc93",
+      "readback": "local-lab/ghidra-audio-playback112-scratch-20260810-v1/functions.tsv; 7145187 bytes; SHA-256 d347aec307bddf265db28acb9f10eddc2676b65488d5705c90861db4e74da386",
       "semanticFrontier": {
         "nativeHypotheses": "local-lab/ghidra-bulk-hypothesis-overlay-20260809-v1/frontier-108-evidence/native-hypotheses.tsv; 11053 bytes; SHA-256 a13b094d734dca01178ba2cb8a94c01687a2441fc6ad1a100845c9d980494729",
         "rttiAndNearCloneHypotheses": "local-lab/ghidra-bulk-hypothesis-overlay-20260809-v1/frontier-108-evidence/rtti-nearclone-hypotheses.tsv; 10973 bytes; SHA-256 9e05bed6cd408804871ac4c3d509c5ac15a3e3c97a9a424327523090500599d7",
@@ -401,6 +401,22 @@
         "result": "local-lab/ghidra-cfastvb79-ctexture81-scratch-20260810-v1/result.json; 5895 bytes; SHA-256 8ef83fa797265c24dfd05ed26bcf6cec1879286a8e689c16900527c162f1289f",
         "resultSummary": "160/160 exact residual CFastVB/CTexture names and comments independently read back; 8,136 functions retained, HYP names advanced 2,852 -> 3,012, exact changed-target set 160, and zero non-target/body/add/remove/structural drift. One Windows display path containing an escaped backslash-t sequence was mechanically normalized to forward slashes with the existing importer and then freshly read back; no semantic claim or tooling changed."
       },
+      "unitEntitySquad112ScratchBatch": {
+        "functions": "local-lab/ghidra-unit-entity-squad112-scratch-20260810-v1/functions.tsv; 7143394 bytes; SHA-256 97462e5caf7557386c06ac4a1d008091ca5f767c9323898ad1545f25295d7eb3",
+        "program": "local-lab/ghidra-unit-entity-squad112-scratch-20260810-v1/program.tsv; 1267 bytes; SHA-256 24e55e16bc2f36b2ed3364a3198bea058e8f72fba4884076d79e17f99ba3e4eb",
+        "readback": "local-lab/ghidra-unit-entity-squad112-scratch-20260810-v1/readback.tsv; 418231 bytes; SHA-256 a28d7a701fdaef532f350b2c17f6c6d79f75d8d7542f58b7a717332e0001249f",
+        "report": "local-lab/ghidra-unit-entity-squad112-scratch-20260810-v1/REPORT.md; 2222 bytes; SHA-256 1e55ef336845f0a657f9a2a3626faafa68c8598e42087e529ab4ea671828fa29",
+        "result": "local-lab/ghidra-unit-entity-squad112-scratch-20260810-v1/result.json; 5244 bytes; SHA-256 9d6dd2405fe49c92855d1c0e3a5d43956b4ceed4960bac3c99f06335d312105a",
+        "resultSummary": "112/112 exact UnitAI/Unit/Thing/ComplexThing/SquadNormal targets renamed/commented and independently read back; 8,136 functions retained, HYP names advanced 3,012 -> 3,124, exact changed-target set 112, and zero non-target/body/add/remove/structural drift."
+      },
+      "audioPlayback112ScratchBatch": {
+        "functions": "local-lab/ghidra-audio-playback112-scratch-20260810-v1/functions.tsv; 7145187 bytes; SHA-256 d347aec307bddf265db28acb9f10eddc2676b65488d5705c90861db4e74da386",
+        "program": "local-lab/ghidra-audio-playback112-scratch-20260810-v1/program.tsv; 1267 bytes; SHA-256 88b07a427f66076e052753e40e54a942a091ab22718936883e0fb7240455176e",
+        "readback": "local-lab/ghidra-audio-playback112-scratch-20260810-v1/readback.tsv; 395602 bytes; SHA-256 2e08cdca48b3298bbe6e9469d1a9ca2cd2e7df644f3f5c5783b47219040b8045",
+        "report": "local-lab/ghidra-audio-playback112-scratch-20260810-v1/REPORT.md; 2579 bytes; SHA-256 54fd88adacd9e89fd9ee4502702059caef1d70f1dfad37446a425b089274aba7",
+        "result": "local-lab/ghidra-audio-playback112-scratch-20260810-v1/result.json; 6042 bytes; SHA-256 cfd39a94c7f027a48e2deea364db1d7fdc17fa0a8c892ea072d062300ae9e17c",
+        "resultSummary": "112/112 exact audio targets independently read back; 111 HYP renames plus 112 comments changed exactly 112 target rows, zero non-target/body/add/remove/structural drift, 8,136 functions retained, and HYP names advanced 3,124 -> 3,235. PCPlatform__ResetAsyncMusicStream remained comment-only because its DEFAULT thunk aliases the same symbol; the rejected 113-row attempt is preserved inside the ignored lane."
+      },
       "result": {
         "literalFunBefore": 932,
         "literalFunAfter": 0,
@@ -414,7 +430,7 @@
         "semanticC1Candidate": 14,
         "semanticC2Bounded": 1
       },
-      "nextQueue": "Twenty-seven disjoint major static cohorts are complete, totaling 3,180 exact bodies, 3,137 formerly opaque functions advanced to bounded C1_STATIC hypotheses, and 42 prior C1 rows repaired or confirmed. ApplyDamage remains the preserved C2 exception; 4,765 Generation-19 opaque functions remain. The audio112 disposable batch is active, UI/HUD103 and terrain/collision101 are queued behind it, and the nine-contract retail zoom chain is landed in the existing Core/client/Godot owners. No single-function lane is open."
+      "nextQueue": "Twenty-seven disjoint major static cohorts are complete, totaling 3,180 exact bodies, 3,137 formerly opaque functions advanced to bounded C1_STATIC hypotheses, and 42 prior C1 rows repaired or confirmed. ApplyDamage remains the preserved C2 exception; 4,765 Generation-19 opaque functions remain. Audio112 is exact in disposable Ghidra at 3,235 HYP names, UI/HUD103 is the active scratch batch, terrain/collision101 follows it, and the nine-contract retail zoom chain is landed in the existing Core/client/Godot owners. No single-function lane is open."
     },
     "rankedNextFrontiers": [
       {
