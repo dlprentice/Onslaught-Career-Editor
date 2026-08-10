@@ -78,6 +78,8 @@ public sealed partial class Level100Audio : Node3D
     private AudioStreamPlayer3D? _trainerLoop;
     private AudioStreamPlayer3D? _transportLoop;
     private AudioStreamPlayer3D? _repairPadIdleLoop;
+    private int? _hostileEnvironmentMissionStartTick;
+    private int _lastHostileEnvironmentContactTick;
     private int? _activeCharacterSpeakerId;
     private int? _activeCharacterMessageId;
     private double _activeCharacterMessageLengthSeconds;
@@ -380,9 +382,28 @@ public sealed partial class Level100Audio : Node3D
     }
 
     public void ConsumeAquilaFlightEvents(
-        IReadOnlyList<AquilaFlightEvent> events)
+        IReadOnlyList<AquilaFlightEvent> events,
+        int simulationTick,
+        int missionTick)
     {
         ArgumentNullException.ThrowIfNull(events);
+        if (missionTick < 0 || missionTick > simulationTick)
+        {
+            throw new ArgumentOutOfRangeException(nameof(missionTick));
+        }
+
+        // SimActions.Reset deliberately keeps Simulation.Tick monotonic while
+        // replacing Level100Mission with a fresh tick-zero instance. Their
+        // difference is therefore the current mission's time-zero point and
+        // reproduces CBattleEngine's constructor value of 0 without adding
+        // presentation timing to Core state.
+        int missionStartTick = checked(simulationTick - missionTick);
+        if (_hostileEnvironmentMissionStartTick != missionStartTick)
+        {
+            _hostileEnvironmentMissionStartTick = missionStartTick;
+            _lastHostileEnvironmentContactTick = missionStartTick;
+        }
+
         foreach (AquilaFlightEvent flightEvent in events)
         {
             switch (flightEvent.Kind)
@@ -406,6 +427,14 @@ public sealed partial class Level100Audio : Node3D
                     break;
                 case AquilaFlightEvents.WalkerDashRequested:
                     PlayOnAquila(Level100EffectCue.AquilaStrafe);
+                    break;
+                case AquilaFlightEvents.WaterSkim:
+                    if (Level100AudioCatalog.ObserveHostileEnvironmentContact(
+                        flightEvent.Tick,
+                        ref _lastHostileEnvironmentContactTick))
+                    {
+                        PlayTerminalCue(Level100TerminalCue.HostileEnvironment);
+                    }
                     break;
             }
         }
@@ -781,6 +810,8 @@ public sealed partial class Level100Audio : Node3D
         StopLoop(ref _trainerLoop);
         StopLoop(ref _transportLoop);
         StopLoop(ref _repairPadIdleLoop);
+        _hostileEnvironmentMissionStartTick = null;
+        _lastHostileEnvironmentContactTick = 0;
         _aquilaWarningState = AquilaWarningAudioState.Normal;
         _gameplayMix = 1f;
         _gameplayPaused = false;

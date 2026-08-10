@@ -1193,7 +1193,10 @@ public sealed partial class FirstFlightGame : Node3D
                     ? AquilaWarningAudioState.EnergyLow
                     : AquilaWarningAudioState.Normal);
         ConsumeLevel100MissionEvents(result.Level100MissionEvents);
-        _audio.ConsumeAquilaFlightEvents(result.AquilaFlightEvents);
+        _audio.ConsumeAquilaFlightEvents(
+            result.AquilaFlightEvents,
+            result.CurrentSnapshot.Tick,
+            result.CurrentSnapshot.Level100Mission.Tick);
         _audio.ConsumeLevel100WeaponFireEvents(result.Level100WeaponFireEvents);
         _world.ConsumeLevel100WeaponFireEvents(result.Level100WeaponFireEvents);
         _audio.SetAquilaFlightPitch(

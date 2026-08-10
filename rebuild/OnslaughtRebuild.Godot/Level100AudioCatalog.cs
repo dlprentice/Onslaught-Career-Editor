@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 using System.Collections.ObjectModel;
+using OnslaughtRebuild.Core;
 
 namespace OnslaughtRebuild.GodotClient;
 
@@ -104,6 +105,34 @@ public readonly record struct Level100MusicRecipe(
 //   `pitch += (rand() % variance) / 100`.
 public static class Level100AudioCatalog
 {
+    /// <summary>
+    /// <c>CBattleEngine::HostileEnvironment</c> uses a strict
+    /// <c>current - previous &gt; 5.0f</c> gate, then stores the current time on
+    /// both the played and suppressed paths. At the released 20 Hz clock, a
+    /// 100-tick gap is still suppressed and 101 ticks is the first eligible
+    /// contact.
+    /// </summary>
+    public const int RetailHostileEnvironmentQuietTicks =
+        5 * SimulationConstants.RetailTicksPerSecond;
+
+    public static bool ObserveHostileEnvironmentContact(
+        int currentTick,
+        ref int previousContactTick)
+    {
+        if (currentTick < previousContactTick)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(currentTick),
+                "Hostile-environment contacts must remain tick ordered.");
+        }
+
+        bool shouldPlay =
+            (long)currentTick - previousContactTick >
+            RetailHostileEnvironmentQuietTicks;
+        previousContactTick = currentTick;
+        return shouldPlay;
+    }
+
     public const float RetailRadioMessageVolume = 0.42f;
     public const float RetailHudMessageVolume = 0.45f;
     public const float RetailDefaultEffectVolume = 0.70f;

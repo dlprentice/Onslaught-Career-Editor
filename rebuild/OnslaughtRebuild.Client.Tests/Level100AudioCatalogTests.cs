@@ -275,6 +275,71 @@ public sealed class Level100AudioCatalogTests
     }
 
     [Fact]
+    public void WaterSkimUsesTheReleasedStrictHostileEnvironmentQuietGap()
+    {
+        Assert.Equal(100, Level100AudioCatalog.RetailHostileEnvironmentQuietTicks);
+
+        int firstContact = 0;
+        Assert.False(Level100AudioCatalog.ObserveHostileEnvironmentContact(
+            100,
+            ref firstContact));
+        Assert.Equal(100, firstContact);
+
+        firstContact = 0;
+        Assert.True(Level100AudioCatalog.ObserveHostileEnvironmentContact(
+            101,
+            ref firstContact));
+        Assert.Equal(101, firstContact);
+
+        // Every contact restamps the gate. A continuous contact suppresses,
+        // an exactly-five-second gap still suppresses and restamps, and only
+        // the following 101-tick quiet gap clears.
+        Assert.False(Level100AudioCatalog.ObserveHostileEnvironmentContact(
+            102,
+            ref firstContact));
+        Assert.False(Level100AudioCatalog.ObserveHostileEnvironmentContact(
+            202,
+            ref firstContact));
+        Assert.Equal(202, firstContact);
+        Assert.True(Level100AudioCatalog.ObserveHostileEnvironmentContact(
+            303,
+            ref firstContact));
+
+        Level100AudioCueRecipe cue = Level100AudioCatalog.GetTerminal(
+            Level100TerminalCue.HostileEnvironment);
+        Assert.Equal(57, cue.RetailSoundRecord);
+        Assert.Equal(
+            "res://Assets/Level100/SoundEffects/terminal-hostile-environment.wav",
+            cue.ResourcePath);
+        Assert.False(cue.Looping);
+
+        string audio = ReadGodotSource("Level100Audio.cs");
+        string consume = MethodBody(audio, "public void ConsumeAquilaFlightEvents(");
+        AssertOccursInOrder(
+            consume,
+            "int missionStartTick = checked(simulationTick - missionTick);",
+            "_lastHostileEnvironmentContactTick = missionStartTick;",
+            "case AquilaFlightEvents.WaterSkim:",
+            "Level100AudioCatalog.ObserveHostileEnvironmentContact(",
+            "ref _lastHostileEnvironmentContactTick",
+            "PlayTerminalCue(Level100TerminalCue.HostileEnvironment);");
+        AssertOccursInOrder(
+            MethodBody(audio, "public void StopGameplaySamples()"),
+            "_hostileEnvironmentMissionStartTick = null;",
+            "_lastHostileEnvironmentContactTick = 0;");
+
+        string frame = MethodBody(
+            ReadGodotSource("FirstFlightGame.cs"),
+            "private void ConsumeFrameEvents(FrameAdvanceResult result)");
+        AssertOccursInOrder(
+            frame,
+            "_audio.ConsumeAquilaFlightEvents(",
+            "result.AquilaFlightEvents,",
+            "result.CurrentSnapshot.Tick,",
+            "result.CurrentSnapshot.Level100Mission.Tick);");
+    }
+
+    [Fact]
     public void DeathTerminalFeedsTheRecoveredMixBeforeTheNominalPause()
     {
         string game = ReadGodotSource("FirstFlightGame.cs");
