@@ -180,6 +180,12 @@
         "validation": "The two existing focused particle facts pass 2/2 and the Godot C# project builds with zero warnings and zero errors. The source/asset fact pins event forwarding, Pulse-only filtering, new-projectile consumption, unmatched-event reset, exact retained texture path/hash, atlas/lifetime/radius/colour/scale/cell law, and the lifetime-minus-remaining launch rewind. Independent bounded review found and closed the aggregated-frame launch-coordinate defect before returning GO.",
         "open": "Fade_Col interpolation, exact parent-follow versus world-static behavior, same-tick-impact projectiles absent from the final snapshot, Twin/Jet Vulcan muzzle flashes, rare heterogeneous multi-step event/projectile pairing, and pixel blend parity remain open."
       },
+      "pulseBoltBirthColoursRebuild": {
+        "contracts": ["0x004C05C0", "0x004C1810", "0x004C2300", "0x004C24C0", "0x004C3120", "0x004C4840", "0x004C5730"],
+        "resultSummary": "The retained medium Pulse Bolt layers no longer share an invented white material. Their birth colours now come from the exact MainSet descriptors: white primary spark, 0.5-grey five-point trail, 0.25-grey halo and 0.3-grey energy trail. Each tint reaches both albedo and emission so the unshaded additive material has no untinted contribution.",
+        "validation": "One focused existing-suite fact parses the three named Colour_Range records and their RGB starts, proves the primary spark authors NONE, binds all four material call sites and requires the common factory to apply tint to albedo and emission.",
+        "open": "Colour evolution/end values, Pulsate Slow, exact five-point trail history, emitted secondary sprite, PMesh scroll/lifetime and pixel-level blend energy remain open."
+      },
       "targetTankSpriteTimingRebuild": {
         "contracts": ["0x004C04C0", "0x004C07F0", "0x004C0940", "0x004C5C50", "0x004C5D50", "0x004C78B0", "0x004C7950", "0x004CB210"],
         "resultSummary": "The two existing Tank Explosion Medium billboards now follow their authored timing and atlas laws. Explosion Anim Sprite Medium stays hidden for the timeline's first five turns, then plays cells 0..7 once at 0.7 cells/turn while scaling 1.5 -> 1.3 over its 0.50-second life. The representative Fire Sprite Damped 2 begins on a random cell, loops only cells 0..11 at 0.5 cells/turn for 30 turns, and no longer traverses the four authored-blank cells 12..15.",

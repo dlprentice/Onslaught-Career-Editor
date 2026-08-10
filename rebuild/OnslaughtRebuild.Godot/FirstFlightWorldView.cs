@@ -1051,12 +1051,22 @@ public sealed partial class FirstFlightWorldView : Node3D
             64,
             64,
             CuratedAyaTextureLoader.Compression.Dxt1);
-        _pulseBoltSparkMaterial = CreatePulseParticleMaterial(spark, billboard: true);
-        _pulseBoltTrailMaterial = CreatePulseParticleMaterial(trail, billboard: false);
-        _pulseBoltHaloMaterial = CreatePulseParticleMaterial(halo, billboard: true);
+        _pulseBoltSparkMaterial = CreatePulseParticleMaterial(
+            spark,
+            billboard: true,
+            tint: Colors.White);
+        _pulseBoltTrailMaterial = CreatePulseParticleMaterial(
+            trail,
+            billboard: false,
+            tint: new Color(0.5f, 0.5f, 0.5f));
+        _pulseBoltHaloMaterial = CreatePulseParticleMaterial(
+            halo,
+            billboard: true,
+            tint: new Color(0.25f, 0.25f, 0.25f));
         _pulseBoltEnergyTrailMaterial = CreatePulseParticleMaterial(
             energyTrail,
-            billboard: false);
+            billboard: false,
+            tint: new Color(0.3f, 0.3f, 0.3f));
 
         _pulseImpactAnimatedTexture = CuratedAyaTextureLoader.Load(
             "res://Assets/Level100/Textures/pulse-impact-animated-blob.texture.aya",
@@ -1548,11 +1558,13 @@ public sealed partial class FirstFlightWorldView : Node3D
 
     private static StandardMaterial3D CreatePulseParticleMaterial(
         Texture2D texture,
-        bool billboard)
+        bool billboard,
+        Color tint)
     {
         return new StandardMaterial3D
         {
             AlbedoTexture = texture,
+            AlbedoColor = tint,
             ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
             CullMode = BaseMaterial3D.CullModeEnum.Disabled,
             Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
@@ -1561,7 +1573,7 @@ public sealed partial class FirstFlightWorldView : Node3D
                 ? BaseMaterial3D.BillboardModeEnum.Enabled
                 : BaseMaterial3D.BillboardModeEnum.Disabled,
             EmissionEnabled = true,
-            Emission = Colors.White,
+            Emission = tint,
             EmissionTexture = texture,
             EmissionEnergyMultiplier = 1f,
         };

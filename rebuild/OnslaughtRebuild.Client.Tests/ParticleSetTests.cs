@@ -670,6 +670,54 @@ public sealed class ParticleSetTests
             StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void PulseBoltMaterialsUseAuthoredBirthColours()
+    {
+        ParticleSetFile set = ParticleSetFile.Parse(ReadMainSet());
+
+        AssertBirthColour("Pulse Bolt Trail", "Mid Grey To Black", 0.5f);
+        AssertBirthColour(
+            "Mech Pulse Bolt Sprite Medium 2",
+            "Feint Grey To Black Delayed",
+            0.25f);
+        AssertBirthColour("Mech Pulse Trail Medium", "Faint grey to black", 0.3f);
+        Assert.Null(set.Require("Mech Pulse Bolt Sprite Medium").Reference("Colour_Range"));
+
+        string source = File.ReadAllText(Locate(
+            "rebuild/OnslaughtRebuild.Godot/FirstFlightWorldView.cs"));
+        string presentation = RequireSection(
+            source,
+            "private void BuildPulseCannonPresentation()",
+            "private void SpawnPulseCannonMuzzleFlash(");
+        Assert.Contains("spark,\n            billboard: true,\n            tint: Colors.White", presentation);
+        Assert.Contains(
+            "trail,\n            billboard: false,\n            tint: new Color(0.5f, 0.5f, 0.5f)",
+            presentation);
+        Assert.Contains(
+            "halo,\n            billboard: true,\n            tint: new Color(0.25f, 0.25f, 0.25f)",
+            presentation);
+        Assert.Contains(
+            "energyTrail,\n            billboard: false,\n            tint: new Color(0.3f, 0.3f, 0.3f)",
+            presentation);
+
+        string factory = RequireSection(
+            source,
+            "private static StandardMaterial3D CreatePulseParticleMaterial(",
+            "private static StandardMaterial3D CreateEffectMaterial(");
+        Assert.Contains("AlbedoColor = tint", factory, StringComparison.Ordinal);
+        Assert.Contains("Emission = tint", factory, StringComparison.Ordinal);
+
+        void AssertBirthColour(string descriptorName, string rangeName, float value)
+        {
+            ParticleDescriptor descriptor = set.Require(descriptorName);
+            Assert.Equal(rangeName, descriptor.Reference("Colour_Range"));
+            ParticleDescriptor range = set.Require(rangeName);
+            Assert.Equal(value, range.FloatWithModifier("Start_Red").Value);
+            Assert.Equal(value, range.FloatWithModifier("Start_Green").Value);
+            Assert.Equal(value, range.FloatWithModifier("Start_Blue").Value);
+        }
+    }
+
     /// <summary>
     /// Hole 2. Every shot the player fires has an authored muzzle flash.
     /// <c>default physics.dat</c> binds it at the weapon mode
