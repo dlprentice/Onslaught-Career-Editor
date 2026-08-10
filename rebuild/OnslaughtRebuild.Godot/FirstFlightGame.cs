@@ -1179,6 +1179,15 @@ public sealed partial class FirstFlightGame : Node3D
     private void ConsumeFrameEvents(FrameAdvanceResult result)
     {
         _audio.UpdateAquilaPose(result.CurrentSnapshot.Level100Actors);
+        // BattleEngine.cpp:1763-1815 checks the absolute hull warning first,
+        // then the energy warning, using strict comparisons in retail units.
+        // Core stores both values in thousandths of those units.
+        _audio.SetAquilaWarningState(
+            result.CurrentSnapshot.Hull < 7_000
+                ? AquilaWarningAudioState.HullCritical
+                : result.CurrentSnapshot.Energy < 2_000
+                    ? AquilaWarningAudioState.EnergyLow
+                    : AquilaWarningAudioState.Normal);
         ConsumeLevel100MissionEvents(result.Level100MissionEvents);
         _audio.ConsumeAquilaFlightEvents(result.AquilaFlightEvents);
         _audio.ConsumeLevel100WeaponFireEvents(result.Level100WeaponFireEvents);

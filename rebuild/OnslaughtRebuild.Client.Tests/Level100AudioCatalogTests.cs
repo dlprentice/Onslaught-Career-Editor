@@ -164,6 +164,32 @@ public sealed class Level100AudioCatalogTests
     }
 
     [Fact]
+    public void AquilaWarningLoopsFollowTheReleasedHullFirstThresholdLaw()
+    {
+        string game = ReadGodotSource("FirstFlightGame.cs");
+        string consume = MethodBody(
+            game,
+            "private void ConsumeFrameEvents(FrameAdvanceResult result)");
+
+        AssertOccursInOrder(
+            consume,
+            "_audio.UpdateAquilaPose(result.CurrentSnapshot.Level100Actors);",
+            "_audio.SetAquilaWarningState(",
+            "result.CurrentSnapshot.Hull < 7_000",
+            "AquilaWarningAudioState.HullCritical",
+            "result.CurrentSnapshot.Energy < 2_000",
+            "AquilaWarningAudioState.EnergyLow",
+            "AquilaWarningAudioState.Normal");
+        Assert.Equal(1, CountOccurrences(consume, "_audio.SetAquilaWarningState("));
+        Assert.DoesNotContain("Hull <= 7_000", consume, StringComparison.Ordinal);
+        Assert.DoesNotContain("Energy <= 2_000", consume, StringComparison.Ordinal);
+        Assert.True(Level100AudioCatalog.GetAquilaWarning(
+            AquilaWarningAudioState.EnergyLow).Looping);
+        Assert.True(Level100AudioCatalog.GetAquilaWarning(
+            AquilaWarningAudioState.HullCritical).Looping);
+    }
+
+    [Fact]
     public void SharedCueRecipes_UseCanonicalRetailRecordsAndAssets()
     {
         Level100AudioCueRecipe pulseImpact =
