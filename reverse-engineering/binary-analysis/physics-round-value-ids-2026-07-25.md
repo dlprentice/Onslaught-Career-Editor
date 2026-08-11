@@ -164,7 +164,7 @@ off that pointer line up with the table above:
 
 The strict `CRound` vtable at `0x005DE82C`, the matching inherited slots in
 `CMissile` at `0x005E3BA4`, and the retained `CThing`/`CComplexThing`/`CActor`
-virtual declaration order resolve twelve formerly generic slots as one coherent
+virtual declaration order resolve fifteen formerly generic slots as one coherent
 runtime surface. The names below identify the inherited virtual operation; they
 do not assert that the stripped retail linker retained an original symbol.
 
@@ -172,6 +172,9 @@ do not assert that the stripped retail linker retained an original symbol.
 | ---: | --- | --- | ---: | --- |
 | 0 | `0x004D9910` -> `0x004D97F0` | `CRound__HandleEvent` | 1,078 | Switches on `event+4`: 4000 creates/schedules the configured launch path, 4001 updates impact state and conditionally dies, 4002 spawns the configured projectile then clears `+0x120` and dies, 4003 selects/synchronizes the target reader; other events delegate to `CActor::HandleEvent`. |
 | 2 | `0x004D8DC0` -> `0x004D8CA0` | `CRound__Shutdown` | 121 | Removes optional grid-of-fear/reader registrations, clears the particle/effect link and active reader, then delegates to `CComplexThing::Shutdown`. |
+| 7 | `0x004D8290` -> `0x004D8170` | `CRound__GetClassNameString` | 6 | Returns the literal class string `CRound`; the independently linked demo returns the same string from its relocated address. |
+| 15 | `0x004D82A0` -> `0x004D8180` | `CRound__GetMaxVelocity` | 43 | Calls the round's gravity virtual; returns `160.0f` when gravity is nonzero, otherwise returns configured `CRoundVelocity` from `roundConfig+0x2c`. |
+| 16 | `0x004D8AC0` -> `0x004D89A0` | `CRound__GetRadius` | 28 | Returns `CRoundRadius + CRoundVelocity * 0.05f * 0.5f`: the authored radius plus half of one established 20 Hz movement step. |
 | 38 | `0x004D8320` -> `0x004D8200` | `CRound__SetThingType` | 15 | Stores the caller mask OR `0x80000007`, retaining the inherited thing/complex-thing/actor bits plus the ammunition bit. |
 | 43 | `0x004D8340` -> `0x004D8220` | `CRound__GetSoundMaterial` | 13 | Returns `roundConfig+0x80`, the independently resolved `CRoundSoundMaterial` field. |
 | 44 | `0x004D82E0` -> `0x004D81C0` | `CRound__ClipToGround` | 63 | Returns true when bounce or gravity is nonzero, or turn rate is positive; otherwise false. |
@@ -198,6 +201,9 @@ Retail body SHA-256 pins, in the table's address order:
 ```text
 004d9910 d54da932205b40f631e650c2f3902faa230f69c1efe029c428aff1305cff2c2b
 004d8dc0 6115be53ac54c0be415084c24c4b40bf6b8c8e68b67f2f2e96e28feeeaeb45ed
+004d8290 b255442129093c839144a11c6315d0c555714f692cb71fd92c9342397bdf8b6d
+004d82a0 ba0fab8d92af843dba3b9c5f1211ddd201ec160e393f36a42458602847c13b4d
+004d8ac0 c986f432cbada785b922a589cef8b7ed95fe96df48d1cb41090a06326e6e9382
 004d8320 6ecb411d5107118adc9f1069e90032b6493f6678cd462e47928f644174622d98
 004d8340 3f59723d13c058fc8da764b0c39e4e3724e16109ceec8b0b8d9720d03aa46e2b
 004d82e0 e43a75c9c1a2cdb47bb5429f5d7a125e40bc2916ae9a7efee9502459ffd475eb

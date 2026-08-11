@@ -2955,8 +2955,8 @@ address	name	bodyMin	bodyMax
 0x004d8040	CRocket__VFunc_22_CreateBigRocketEngineEffects	0x004d8040	0x004d80b0
 0x004d80c0	CRocket__VFunc_23_004d80c0	0x004d80c0	0x004d80e8
 0x004d81e0	CRound__ctor	0x004d81e0	0x004d8283
-0x004d8290	CRound__VFunc_7_004d8290	0x004d8290	0x004d8295
-0x004d82a0	VFuncSlot_15_004d82a0	0x004d82a0	0x004d82ca
+0x004d8290	CRound__GetClassNameString	0x004d8290	0x004d8295
+0x004d82a0	CRound__GetMaxVelocity	0x004d82a0	0x004d82ca
 0x004d82d0	CRound__BounceFactor	0x004d82d0	0x004d82d9
 0x004d82e0	CRound__ClipToGround	0x004d82e0	0x004d831e
 0x004d8320	CRound__SetThingType	0x004d8320	0x004d832e
@@ -2967,7 +2967,7 @@ address	name	bodyMin	bodyMax
 0x004d8410	CRound__Init	0x004d8410	0x004d8a46
 0x004d8a50	CCollisionSeekingRound__scalar_deleting_dtor	0x004d8a50	0x004d8a6f
 0x004d8a70	CCollisionSeekingRound__ShutdownMonitorAndDestruct	0x004d8a70	0x004d8abb
-0x004d8ac0	VFuncSlot_16_004d8ac0	0x004d8ac0	0x004d8adb
+0x004d8ac0	CRound__GetRadius	0x004d8ac0	0x004d8adb
 0x004d8ae0	CRound__Hit	0x004d8ae0	0x004d8dbd
 0x004d8dc0	CRound__Shutdown	0x004d8dc0	0x004d8e38
 0x004d8e40	CRound__Move	0x004d8e40	0x004d9904
