@@ -122,14 +122,18 @@ joined static/source proof now names `0x004D8AE0` as `CRound__Hit`, types its
 `void __thiscall (CRound*, CThing*, CCollisionReport*)` ABI, records its direct
 writes, and proves the observed non-null-report target-Damage arm carries
 `CRoundDamage`. This is still a conditional bounded contract: the contrasting
-invocation's rejecting gate, later same-receiver explosion damage, and rebuild parity remain
-open. The connected static pass also identifies `0x0044BF10` as
+invocation's rejecting gate and rebuild parity remain open. The connected
+static pass also identifies `0x0044BF10` as
 `CExplosion__Hit`, recovers its radial `CExplosionDamage` slot-40 dispatch,
 names `0x0044C0F0` as `CExplosion__Move`, and corrects factory `0x0050FF10` to
 `CWorldPhysicsManager__CreateExplosion`. The exact mode-3 impact helper now
 closes the round-to-factory edge by resolving `CRoundExplosion`, creating the
-object, and invoking `CExplosion__Init`; subsequent world collision and
-same-receiver additive damage remain open. Owner:
+object, and invoking `CExplosion__Init`. Its immediate `CThing` collision
+registration allocates `CCSPersistentThing`, preserves ready bit `0x400`, scans
+neighbor MapWho sectors synchronously, and reaches owner slot-39 `Hit` through
+the shared collision response. For the tutorial's surviving target this closes
+the conditional `0.8 + 1.0 = 1.8` same-receiver path; exact second-call mesh
+part, other collision gates, and expanding-radius timing remain open. Owner:
 [`cround-hit-damage-path-2026-08-10.md`](reverse-engineering/binary-analysis/cround-hit-damage-path-2026-08-10.md).
 
 The connected factory-caller census then corrects all 22 containing functions

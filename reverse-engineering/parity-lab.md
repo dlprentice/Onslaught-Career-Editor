@@ -1654,9 +1654,12 @@ admission. It independently names `0x004D8AE0` as `CRound::Hit`, fixes its
 shows why the early null-report branch is not a valid damage path: the report
 is dereferenced at `0x004D8CBC`. It also recovers the separate
 `CExplosion::Hit` radial-damage producer and radius update/factory identities.
-The exact mode-3 impact switch closes configured explosion creation while
-leaving later same-receiver collision/addition open. Full predicates, direct writes,
-and remaining limits are in
+The exact mode-3 impact switch closes configured explosion creation. The
+inherited `CThing` initialization path now additionally closes immediate
+`CCSPersistentThing` registration, ready-gated MapWho scanning, pair dispatch,
+and the shared response call into the explosion's slot-39 `Hit`, yielding the
+conditional tutorial same-receiver `0.8 + 1.0 = 1.8` composition. Full
+predicates, direct writes, and remaining limits are in
 [`cround-hit-damage-path-2026-08-10.md`](binary-analysis/cround-hit-damage-path-2026-08-10.md).
 
 Three controls define the failure surface:

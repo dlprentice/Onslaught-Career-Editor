@@ -21,7 +21,7 @@ withdrawn label can tell it was corrected and not lost.
 | `0x00425a10` | `CCollisionSeekingInfantryBloke__CheckMountStateOrCollisionFlags` | `CCollisionSeekingInfantryBloke__CheckCollisionFlagsWithDeadSideBranch` | same class; suffix re-read |
 | `0x004261be` | `CCollisionSeekingRound__Init` | `CCollisionSeekingThing__Init` | class prefix moved; suffix unchanged |
 | `0x0042627a` | `CCollisionSeekingRound__Init` | `CCollisionSeekingThing__Init` | class prefix moved; suffix unchanged |
-| `0x004264a0` | `CCollisionSeekingRound__ResolveRoundCollisionResponse` | `CCollisionSeekingThing__ResolveRoundCollisionResponse` | class prefix moved; suffix unchanged |
+| `0x004264a0` | `CCollisionSeekingRound__ResolveRoundCollisionResponse` | `CCollisionSeekingThing__ResolveCollisionResponse` | shared base owner and non-round-specific response recovered |
 | `0x00426920` | `CCollisionSeekingRound__ComputeScaledMapCellChebyshevDistance` | `CCollisionSeekingThing__ComputeScaledMapCellChebyshevDistance` | class prefix moved; suffix unchanged |
 | `0x00426ad3` | `CCollisionSeekingRound__CreateEffect` | `CCSRay__CreateEffect` | class prefix moved; suffix unchanged |
 
@@ -29,6 +29,15 @@ Where a row's **suffix** moved rather than only its class prefix, the behavioura
 text beside it in this note was written for the old name. This sweep corrected
 names against the export and re-derived no behaviour, so read any such gloss as
 unverified against the new name until it is re-measured.
+
+The 2026-08-11 round/explosion collision join supersedes the active meaning of
+that row and additionally identifies `0x00426900` as
+`CCSPersistentThing__CheckCollisionFlags` and `0x004269b0` as
+`CCSPersistentThing__Init`. Strict RTTI fixes their slots; the pinned
+`CThing::InitCollisionSeekingThing` source fixes the persistent owner; and the
+retail bodies recover immediate neighbor scanning and shared owner-`Hit`
+dispatch. Historical Wave1059 labels below remain a record of what that older
+pass saved, not the current semantic boundary.
 
 ---
 

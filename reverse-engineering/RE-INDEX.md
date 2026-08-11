@@ -238,9 +238,14 @@ Current local boundaries that materially change the discovery lane:
   document recovers `CExplosion::Hit`/`Move`, the radial `CExplosionDamage`
   formula, and `CWorldPhysicsManager::CreateExplosion`; PC-demo twins preserve
   the instruction laws after relocation normalization. The exact mode-3 helper
-  closes configured round-to-explosion creation. Later same-receiver collision,
-  the contrasting invocation's rejecting gate, and rebuild parity remain open;
-  live Ghidra promotion is separate.
+  closes configured round-to-explosion creation. The inherited `CThing` init,
+  `CCSPersistentThing` ready gate, 3x3 MapWho scan, pair dispatcher, and shared
+  collision-response slot now close the synchronous small-explosion path back
+  into `CExplosion::Hit`. For the surviving tutorial Target Drone this joins
+  direct `0.8` and radial `1.0` as the measured conditional same-receiver `1.8`.
+  The contrasting invocation's rejecting gate, exact second mesh part,
+  expanding-radius timing, and rebuild parity remain open; live Ghidra
+  promotion is separate.
 - **2026-08-10 recursive caller correction:** the exact direct-xref census for
   `CWorldPhysicsManager::CreateExplosion` contains 24 calls: two in the
   recovered `CRound` switch and 22 bounded function callers. Joined

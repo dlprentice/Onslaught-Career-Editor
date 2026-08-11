@@ -251,8 +251,11 @@ Gen10 alone proved. The connected pass names `CExplosion__Hit`,
 `CWorldPhysicsManager__CreateExplosion`, with their exact radial damage/radius
 progression laws and independent PC-demo instruction matches. The recovered
 mode-3 round-impact switch reads `CRoundExplosion`, resolves its registered
-definition, calls that factory, and dispatches `CExplosion__Init`; only the
-later world-collision/same-receiver damage edge remains open. See
+definition, calls that factory, and dispatches `CExplosion__Init`. The
+inherited `CThing` initializer, persistent collision component, immediate
+MapWho scan, pair dispatcher, and shared slot-6 response now close the
+synchronous small-explosion edge back into `CExplosion__Hit`, including the
+tutorial's conditional same-receiver `0.8 + 1.0 = 1.8` path. See
 [`cround-hit-damage-path-2026-08-10.md`](binary-analysis/cround-hit-damage-path-2026-08-10.md).
 The live Ghidra rename/type/comment remains a separate scratch-first operation.
 
@@ -798,12 +801,11 @@ algorithm evidence; it is not a substitute for the Steam binary.
 The apparent library region above `0x00555000` is mixed application, compiler,
 CRT, codec, math, and rendering code. It is not a clean authorship boundary.
 
-### RTTI conflict queue: all 27 current rows
+### RTTI conflict queue: all 26 current rows
 
 | Address | Current name | Resolved RTTI owner |
 | --- | --- | --- |
 | `0x00404110` | `CAnimal__SetThingTypeMask80000001` | `CComplexThing` |
-| `0x00426900` | `CCollisionSeekingRound__CheckCollisionFlags` | `CCollisionSeekingThing` |
 | `0x00426a00` | `CCollisionSeekingRound__ProcessMapWhoCollisionSweep` | `CCSPersistentThing` |
 | `0x00426a20` | `CCollisionSeekingRound__MarkDelayedCollisionReady` | `CCSPersistentThing` |
 | `0x004439c0` | `CDestroyableSegment__SharedVFunc_08_HandleChildBreak` | `CDestroyableExtraSegment` |

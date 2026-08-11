@@ -2,6 +2,11 @@
 
 Status: active, bounded static contract
 Last updated: 2026-08-10
+Evidence: MEASURED — pristine direct-call xrefs, exact function bodies,
+configuration-field adapters, and strict RTTI/vtable owners; UNKNOWN — runtime
+reachability and downstream effects outside the bounded callers.
+Verdict: `0x0050FF10` is the explosion factory, and all 24 direct calls are
+accounted for without retaining the disproved pickup interpretation.
 Specimen: pristine Steam `BEA.exe`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 

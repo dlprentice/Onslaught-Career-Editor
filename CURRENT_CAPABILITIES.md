@@ -722,9 +722,14 @@ The same pass recovers `CExplosion::Hit`'s named radial-damage formula and
 `CExplosion::Move`'s radius progression, and corrects the misnamed explosion
 factory at `0x0050FF10`. The recovered mode-3 impact switch now proves that
 `CRound::Hit` resolves `CRoundExplosion`, creates the object, and calls
-`CExplosion::Init`; later same-receiver collision/addition, one contrasting
-gate outcome, and rebuild parity remain open. This advances semantic understanding without retroactively
-claiming that the Gen10 runtime instrument inferred the name or types.
+`CExplosion::Init`. The inherited `CThing` path now also proves immediate
+`CCSPersistentThing` registration, ready-gated neighbor scanning, pair dispatch,
+and the shared response callback into `CExplosion::Hit`. This closes the
+conditional tutorial `0.8 + 1.0 = 1.8` same-receiver composition. One
+contrasting gate outcome, the second call's exact mesh part, expanding-radius
+timing, and rebuild parity remain open. This advances semantic understanding
+without retroactively claiming that the Gen10 runtime instrument inferred the
+name or types.
 
 The direct factory census now removes the same stale pickup interpretation from
 all 22 containing functions. Three exact profile adapters identify unit,

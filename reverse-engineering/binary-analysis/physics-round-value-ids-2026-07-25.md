@@ -302,11 +302,12 @@ That is the released rate/damage/spread evidence the P0 item was waiting on.
 strong indication the inaccuracy unit is radians; the Mech Pulse Cannon's
 `0.008726646` is `0.5°` on the same reading.
 
-### 6.2 The `0.8 + 1.0 = 1.8` hypothesis: creation chain confirmed; receiver sum open
+### 6.2 The `0.8 + 1.0 = 1.8` chain: conditional same-receiver path closed
 
-Status: **retail `CRound::Hit` now creates the configured `CExplosion`, and
-`CExplosion::Hit` proves the second damage consumer; whether the expanding
-explosion later damages the same receiver and adds both values remains open.**
+Status: **retail `CRound::Hit` creates the configured `CExplosion`; the small
+explosion registers and scans synchronously during initialization, reaches
+`CExplosion::Hit` on the surviving original receiver when the explicit filters
+pass, and composes the two authored values.**
 
 What changed:
 
@@ -346,26 +347,29 @@ ordinal in `DAT_008553F8`, calls
 `CWorldPhysicsManager::CreateExplosion` at `0x004DA521`, and invokes the new
 object's slot-9 `CExplosion::Init` at `0x004DA670`.
 
-What is still missing is the same-receiver composition rule. Static creation
-does not by itself prove that the expanding object later collides with the
-originally struck body/part or that both slot-40 calls add on that hit. Thus
-`0.8 + 1.0 = 1.8` remains the best surviving model for the measured tutorial
-direct hit, now with an exact creation chain rather than only two matching
-arithmetic producers.
+The post-factory edge is now resolved too. Mode 3 constructs a source-shaped
+`CExplosionInitThing` with `mColType = kCollideThing`, null `mAttachedTo`, and
+false `mUseAttachedRadius`. `CExplosion::Init` therefore does not ignore the
+original target by attachment identity. It installs a passive immediate
+collision configuration and, for `R <= 3`, makes the full configured radius
+live before inherited `CThing::Init` runs.
 
-Two things would settle it, either alone:
+`CThing::InitCollisionSeekingThing` allocates `CCSPersistentThing`; its slot-3
+initializer retains ready bit `0x400` because `mStartCollideOnNextFrame` is
+false and immediately scans the surrounding 3x3 MapWho sectors. The pair
+dispatcher handles an existing overlap synchronously. Persistent slot 6 then
+resolves the pair and invokes owner slot 39 (`Hit`) on both sides, one of which
+is the new `CExplosion`. For tutorial radius `0.5`, the target-surface distance
+clamps to zero and the radial arm supplies the full `1.0` when the mutual
+thing-flag and smart/allegiance filters pass. The Target Drone remains alive
+after direct `0.8` against life `1.0`; the prior measured direct loss of `1.8`
+independently corroborates that its released path passes those filters.
 
-1. **Static.** Follow the initialized `CExplosion` into world/collision
-   registration and prove whether the original impact receiver/part is included
-   in its first radius sweep. The round-to-factory edge itself is closed.
-2. **Controlled runtime, and it is a sharp test.** The Twin Vulcan pair is
-   `0.08 + 0.001`. The sum model predicts a direct Mech Bullet hit removes
-   `0.081`; round-only predicts `0.08`; explosion-only predicts `0.001`. Those
-   are separated by three orders of magnitude, so even a coarse hit-count
-   measurement against a known-life target discriminates them. `Mech Pulse Bolt
-   Small` is a second control in the other direction: `CRoundDamage 1.5` with
-   `CExplosionDamage 0.0`, so sum and round-only agree there and explosion-only
-   predicts zero damage.
+The Twin Vulcan pair remains a useful optional runtime corroborator:
+`0.08 + 0.001` predicts `0.081`, while round-only predicts `0.08` and
+explosion-only predicts `0.001`. It is no longer needed to discover the static
+same-receiver dispatch mechanism. `Mech Pulse Bolt Small` remains a control in
+the other direction: `CRoundDamage 1.5` with `CExplosionDamage 0.0`.
 
 Note also that `Mech Pulse Bolt Small` is **not** the tutorial round, despite
 `Mech Pulse Cannon` (the mode that fires it) having a very similar name. Any
@@ -373,9 +377,10 @@ future measurement must go through `Pulse Cannon Pod`.
 
 ## 7. What I could not resolve
 
-- **The round-plus-explosion damage arithmetic.** Section 6.2. Both individual
-  consumers, the factory creation edge, and formulas are proved; their later
-  same-receiver collision/order relationship is not.
+- **The second damage call's exact mesh part and runtime trace.** Section 6.2
+  closes the static same-receiver order for immediate small explosions. A
+  copied-runtime trace would corroborate both slot-40 calls and identify the
+  precise per-part report selection; expanding `R > 3` timing remains separate.
 - **Units for non-time scalars.** Seconds is established for time via the
   20 Hz/1.75 datum, and radians is strongly indicated for `CWeaponInaccuracy`
   by the exact 0.4°/0.5° values, but no measurement pins `CRoundDamage`,
@@ -425,5 +430,7 @@ runtime damage resolution except for the separately joined direct
 `CRound::Hit` dispatch cited in Section 6.2, unit systems beyond the two noted,
 gameplay outcomes, or rebuild parity. Section 6.1's 20 Hz / units-per-second result
 rests on a previously recorded controlled copied-runtime measurement, cited
-inline. Section 6.2 proves the direct round term and configured explosion
-creation; the later same-receiver additive outcome remains a hypothesis.
+inline. Section 6.2 proves the direct round term, configured explosion creation,
+immediate collision registration, and conditional same-receiver additive path;
+it does not generalize through failed filters, expanding-radius timing, or
+rebuild parity.
