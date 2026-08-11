@@ -45,7 +45,11 @@
 
 - **Lost Toys Website** (archived): https://web.archive.org/web/20030622111235/http://www.losttoys.com/
 - **Post-Mortem** (GDM April 2003): https://ia600907.us.archive.org/33/items/GDM_April_2003/GDM_April_2003.pdf
-- **GDC Europe 2002**: "Cross Platform Console Development" PowerPoint (found by David via Internet Archive, March 2025)
+- **GDC Europe 2002**: "Cross Platform Console Development" PowerPoint (found
+  by David via Internet Archive, March 2025); exact source identity and
+  technical synthesis are now indexed in
+  [`DEVELOPMENT_SOURCE_INDEX.md`](../DEVELOPMENT_SOURCE_INDEX.md) and
+  [`ENGINE_ARCHITECTURE.md`](../ENGINE_ARCHITECTURE.md)
 - **vandal_117's gold save**: Legitimate all-S-rank career file shared Sept 12, 2025
 - **Xbox disc dump** (archive.org): https://archive.org/download/BattleEngineAquila_USA_redump_51263
 

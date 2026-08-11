@@ -1,7 +1,7 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-08-09
+Last updated: 2026-08-11
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
 Current replay authority is Generation 19 via
@@ -38,6 +38,10 @@ re-running the grader that produced it.
 
 | Area | Canonical entry point |
 | --- | --- |
+| First-party development sources | [Development source index](DEVELOPMENT_SOURCE_INDEX.md) |
+| Build/dump identity and equivalence | [Build and dump matrix](BUILD_AND_DUMP_MATRIX.md) |
+| Cross-platform engine architecture | [GDC deck / binary synthesis](ENGINE_ARCHITECTURE.md) |
+| PC demo versus retail | [Build and virtual-target comparison](DEMO_VS_RETAIL.md) |
 | Cross-source synthesis | [Data/source/executable delta](delta.md) |
 | Agentic parity and function discovery | [Parity lab](parity-lab.md) |
 | Function and behavior contract system | [Contract front door](../CONTRACTS.md) |
