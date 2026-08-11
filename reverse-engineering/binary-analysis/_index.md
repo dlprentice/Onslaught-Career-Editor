@@ -31,6 +31,11 @@ the document it links.
   identical strict RTTI/vtable structure pairs every virtual target; 2,123
   instruction streams have zero normalized differences and four frontend/FMV
   comparisons remain explicit divergences
+- [`CUnit` primary virtual-interface semantic crosswalk](cunit-primary-vtable-semantics-2026-08-11.md)
+  and its [46-slot table](cunit-primary-vtable-semantics-2026-08-11.tsv) — uses
+  the demo twin, pinned source overrides, and typed callsites to replace field
+  labels with 21 source/callsite meanings while leaving absent historical names
+  explicitly open
 - **Current name state — the three grading ledgers, newest last:**
   - [2026-07-25](name-grading-ledger-2026-07-25.md) — first grading; the 332-row
     RTTI re-prefix wave. Two of its figures are superseded; see its banner.
