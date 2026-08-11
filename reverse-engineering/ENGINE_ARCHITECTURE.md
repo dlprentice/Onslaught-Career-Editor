@@ -190,6 +190,15 @@ vtables, 11,777 placements, and 2,127 paired virtual targets, with 2,123
 zero-normalized instruction streams. See
 [`DEMO_VS_RETAIL.md`](DEMO_VS_RETAIL.md).
 
+The changed-body side now exposes a concrete distribution-policy seam too.
+The [FMV/startup lineage report](binary-analysis/pc-demo-retail-fmv-startup-lineage-2026-08-11.md)
+shows that the demo executable is initialized as playable-demo, probes for
+French data to select American English, carries an extra per-playback FMV skip
+field, and calls a demo-only publisher movie. Retail turns playable-demo into
+an opt-in launch state, removes the FMV field and guards, and temporarily
+selects demo loading resources when that state is active. Shared class
+structure therefore coexists with deliberate product/build policy changes.
+
 The deck also treats Xbox TRCs and PlayStation TCRs as separate production
 schedules and requirements. Platform-specific input, startup, save, display,
 and error-handling differences may therefore be certification work rather than

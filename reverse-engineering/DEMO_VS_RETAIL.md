@@ -5,12 +5,14 @@ Last updated: 2026-08-11
 Evidence: MEASURED — exact executable/archive hashes, independently recounted
 MSVC RTTI/vtables, a 2,127-target virtual census, and a conservative 8,086-row
 cross-build function-address map; UNKNOWN — normalized constant values, 50
-retail functions without a demo address, runtime behavior, and the 65
+retail functions without a demo address, runtime behavior, and 60 of the 65
 address-mapped bodies not shown normalized-identical below.
 Verdict: the PC demo is a distinct build with a structurally identical virtual
 class surface. Across virtual and non-virtual code, 8,021 of 8,136 retail
 functions have a normalized-identical demo body and 65 more have an
-independently fixed demo entry but a different or incompletely bounded body.
+independently fixed demo entry but a different or initially incompletely
+bounded body. Five startup/FMV bodies are now independently bounded and
+semantically resolved; 60 remain in that queue.
 Specimen: pristine PC retail `BEA.exe`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`;
 PC demo `BEA.exe`, SHA-256
@@ -160,7 +162,7 @@ Known high-value pairs include:
 These pairs corroborate the current retail address/body identities; they do
 not replace the retail specimen as patch or runtime authority.
 
-## Four retained strict-vtable divergences
+## Four strict-vtable divergences
 
 The only nonzero comparisons in the independently bounded 2,127-target strict
 vtable census are:
@@ -172,10 +174,17 @@ vtable census are:
 | `0x0051B840 -> 0x0051BB10` | `CFEPIntro__VFunc_5_0051b840` | 1,577 B / 446 instructions | 257 instructions / 743 bytes |
 | `0x0053F190 -> 0x0053F7A0` | `CDXFMV__VFunc_11_0053f190` | 949 B / 267 instructions | 164 instructions / 549 bytes |
 
-All four are marked `full_demo_decode=false`. The demo side is a bounded
-fixed-offset comparison, not an independently recovered demo function body.
-They are real differences in that window, but their complete demo CFG/body
-must be recovered before making a whole-function change claim.
+All four were marked `full_demo_decode=false` by the original vtable census.
+That label remains an accurate description of that instrument: its demo side
+was a fixed-offset window, not an independently recovered demo function body.
+
+A second instrument has since recovered complete demo bodies for the two FMV
+rows and three related startup functions. The
+[FMV/startup lineage report](binary-analysis/pc-demo-retail-fmv-startup-lineage-2026-08-11.md)
+resolves the removed per-playback skip field and guards, demo-only language
+fallback, initialized playable-demo state, publisher FMV, and retail-only
+demo-loading transaction. The debriefing and frontend-intro rows still require
+independent whole-function recovery.
 
 The concentration in debriefing, intro, and FMV/frontend code is a useful
 build-lineage signal. It is not evidence that gameplay is globally identical.
@@ -189,9 +198,10 @@ in one of the 8,021 exact rows must also explain why the independently linked
 demo preserves that shape.
 
 The earlier `CUnit`, `CBattleEngine`, `CThing`, `CComplexThing`, `CActor`, PC
-controller, PC music, and PC shell semantic cohorts have now used that oracle.
-The next cross-build work should change instruments again: independently bound
-the 65 address-only bodies, then use calls, exception metadata, strings,
+controller, PC music, PC shell, and FMV/startup semantic cohorts have now used
+that oracle. The next cross-build work should change instruments again:
+independently bound the remaining 60 address-only bodies, then use calls,
+exception metadata, strings,
 retained source, and platform builds on the 50 address-unmapped rows. Repeating the
 same normalized-signature search would only fit the remaining ambiguity.
 
@@ -210,8 +220,8 @@ Open boundaries remain:
 
 - normalized immediate/displacement values and the objects they address;
 - non-instruction bytes in multi-range bodies;
-- independent demo body/CFG recovery for the 65 address-mapped changed or
-  incompletely bounded targets;
+- independent demo body/CFG and semantic recovery for the 60 address-mapped
+  changed or incompletely bounded targets not closed by the FMV/startup report;
 - demo entry recovery for the remaining 50 retail functions;
 - asset/configuration differences and their behavioral consequences;
 - runtime equivalence, source equivalence, and rebuild parity.

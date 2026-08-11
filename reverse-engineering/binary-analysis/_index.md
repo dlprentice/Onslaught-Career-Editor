@@ -35,6 +35,11 @@ the document it links.
   — 8,086 independently mapped demo entries; 8,021 normalized-identical body
   streams covering 1,702,495 retail bytes and 512,925 instructions, with 65
   changed/unbounded bodies and 50 address-unmapped functions kept explicit
+- [PC demo/retail FMV and startup lineage](pc-demo-retail-fmv-startup-lineage-2026-08-11.md)
+  and its [5-function table](pc-demo-retail-fmv-startup-lineage-2026-08-11.tsv)
+  — independently bounds five changed bodies and recovers the demo-only
+  per-playback skip field, American-English fallback, initialized playable-demo
+  state and publisher FMV plus retail's demo-loading adaptation
 - [`CUnit` primary virtual-interface semantic crosswalk](cunit-primary-vtable-semantics-2026-08-11.md)
   and its [46-slot table](cunit-primary-vtable-semantics-2026-08-11.tsv) — uses
   the demo twin, pinned source overrides, and typed callsites to replace field
