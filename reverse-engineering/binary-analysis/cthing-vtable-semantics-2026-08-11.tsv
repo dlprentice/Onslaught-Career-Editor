@@ -1,0 +1,32 @@
+retail_va	demo_va	retail_current_name	semantic_label	abi_placement	body_bytes	instruction_count	raw_diff_instruction_count	normalized_diff_instruction_count	semantic_status	evidence_boundary
+0x00401400	0x00401410	CThing__ForwardField28Slot18OrFallbackFloat_00401400	CThing::GetRenderRadius	secondary-render:8	19	7	1	0	SOURCE_INLINE	Adjusted secondary this reaches mRenderThing; forwards GetRTRadius or returns 1.0f exactly as source
+0x00401420	0x00401470	CThing__GetCueFactorFromRenderThing	CThing::GetCueFactor	primary:13	18	7	1	0	SOURCE_INLINE	Returns render-thing cue factor or exact 0.0001f fallback
+0x00401440	0x00401490	CThing__GetRenderRadiusFromRenderThing	CThing::GetRadius	primary:16	19	7	1	0	SOURCE_INLINE	Forwards render-thing radius or returns zero; old label confused it with secondary GetRenderRadius
+0x00401460	0x004014b0	CThing__MakeVisible	CThing::MakeVisible	primary:32	5	2	0	0	SOURCE_INLINE	Clears TF_INVISIBLE in the source flags field
+0x00401470	0x004014c0	CThing__MakeInvisible	CThing::MakeInvisible	primary:33	5	2	0	0	SOURCE_INLINE	Sets TF_INVISIBLE in the source flags field
+0x00401490	0x004014e0	CThing__Damage_NoOp	CThing::Damage	primary:40	3	1	0	0	SOURCE_INLINE	Base virtual is intentionally empty; subclasses own damage behavior
+0x004014b0	0x00405fa0	CThing__GravityDefault	CThing::Gravity	primary:45	7	2	1	0	SOURCE_INLINE	Returns exact source default 0.01f
+0x004040a0	0x004040c0	CThing__CopyVector14ToOut_004040a0	CThing::GetRenderPos / GetRenderStartPos / GetRenderEndPos	secondary-render:0,9,10	36	14	0	0	SOURCE_FOLDED	Adjusted secondary this copies mPos; three identical source methods share one body
+0x0043e9c0	0x0043ea50	CThing__CopyGlobal0066ea10Block10ToOut_0043e9c0	CThing::GetVelocity	primary:27	44	11	4	0	SOURCE_INLINE	Copies the global zero FVector returned by the base virtual
+0x0043e9f0	0x00401440	CThing__GetRenderPos	CThing::GetSoundPos / CThing::GetOldPos	primary:3,30	36	14	0	0	SOURCE_FOLDED	Both source methods return mPos by value and compile to one primary-this body
+0x004bfa00	0x004bf910	CThing__CopyGlobal829dd0Block30ToOut_004bfa00	CThing::GetRenderOrientation	secondary-render:1	25	10	1	0	SOURCE_INLINE	Copies the global identity FMatrix through the render-facing interface
+0x004bfa20	0x004bf930	CThing__CopyGlobal829dd0Block30ToOut_004bfa20	CThing::GetSoundOrientation	primary:4	25	10	1	0	SOURCE_INLINE	Copies the global identity FMatrix returned to the audible interface
+0x004bfa40	0x004bf950	CThing__CopyGlobal829dd0Block30ToOut_004bfa40	CThing::GetOldOrientation	primary:31	25	10	1	0	SOURCE_INLINE	Copies the global identity FMatrix returned by the base movement interface
+0x004f3460	0x004f34e0	CThing__GetClassNameString_004f3460	CThing::GetClassName	primary:7	6	2	1	0	SOURCE_MACRO	Returns the exact CThing class string emitted by the source class macro
+0x004f3470	0x004f34f0	CThing__SetThingTypeMaskOr1_004f3470	CThing::SetThingType	primary:38	12	4	0	0	SOURCE_INLINE	Stores input OR THING_TYPE_THING exactly as source
+0x004f3480	0x004f3500	CThing__scalar_deleting_dtor	CThing::~CThing [scalar deleting wrapper]	primary:1	32	11	2	0	RTTI_ABI	MSVC deleting-destructor wrapper around the source destructor
+0x004f34a0	0x004f3520	CThing__Init	CThing::Init	primary:9	301	106	8	0	SOURCE_BODY	Render/collision initialization ground-water clipping activation and WORLD insertion match source order
+0x004f35d0	0x004f3650	CThing__InitRenderThing	CThing::InitRenderThing	primary:34	38	17	1	0	SOURCE_BODY	Creates the render thing from class ID and this pointer
+0x004f3600	0x004f3680	CThing__Shutdown	CThing::Shutdown	primary:2	53	20	5	0	SOURCE_BODY	Removes world/big-list membership shuts down monitor then deletes this
+0x004f36d0	0x004f3750	CThing__Render	CThing::Render	primary:36	61	23	1	0	SOURCE_BODY	Invisible/objective/dont-render gates and render dispatch match pinned source
+0x004f3710	0x004f3790	CThing__RenderImposter	CThing::RenderImposter	primary:37	21	9	0	0	SOURCE_BODY	Requires render thing and no TF_DONT_RENDER then dispatches imposter render
+0x004f3730	0x004f37b0	CThing__HandleEvent	CThing::HandleEvent	primary:0	39	12	0	0	SOURCE_BODY	Dispatches SHUTDOWN and START_DIE_PROCESS else delegates to CMonitor
+0x004f3760	0x004f37e0	CThing__AddShutdownEvent_004f3760	CThing::AddShutdownEvent	primary:14	52	18	1	0	SOURCE_BODY	One-shot TF_DECLARED_SHUTDOWN gate and next-frame start-of-frame event match source
+0x004f37a0	0x004f3820	CThing__StartDieProcess_004f37a0	CThing::StartDieProcess	primary:50	28	11	0	0	SOURCE_BODY	Sets TF_DYING once schedules shutdown and returns exact success predicate
+0x004f3940	0x004f39c0	CThing__GetBoundingRadius	CThing::GetBoundingRadius	primary:17	41	20	0	0	SOURCE_BODY	Uses render bounding-box radius when present else virtual GetRadius fallback
+0x004f39c0	0x004f3a40	CThing__InitCollisionSeekingThing	CThing::InitCollisionSeekingThing	primary:35	137	42	8	0	SOURCE_BODY	Collision-seeking allocation mesh downgrade owner binding and initialization match source
+0x004f3c50	0x004f3cd0	CThing__StickToGround	CThing::StickToGround	primary:18	33	12	3	0	SOURCE_BODY	Sets position Z from map collision then updates render position
+0x004f3cb0	0x004f3d30	CThing__MoveTo	CThing::MoveTo	primary:19	46	17	1	0	SOURCE_BODY	Copies the input position then updates the render thing
+0x004f3ce0	0x004f3d60	CThing__Teleport	CThing::Teleport	primary:20	44	19	0	0	SOURCE_BODY	Copies position before dispatching MoveTo so old/current position converge as source notes
+0x004f3d20	0x004f3da0	CThing__ForwardField28Slot10OrNull_004f3d20	render-interface slot 21 property forward	secondary-render:21	15	7	0	0	STATIC_DESCRIPTIVE	Adjusted this forwards mRenderThing virtual slot 4 or returns null; retained source does not safely identify the historical interface name
+0x004f3d30	0x004f3db0	CThing__DrawDebugStuff3d	CThing::DrawDebugStuff3d	primary:52	175	55	7	0	SOURCE_BODY	Builds an identity-world radius cuboid and draws it with the outline texture as source

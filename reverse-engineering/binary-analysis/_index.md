@@ -41,6 +41,10 @@ the document it links.
   resolves every uniquely owned Battle Engine target against the pinned source
   and independently linked demo, including render-interface, movement, weapon,
   damage, collision, and terminal-event identities
+- [`CThing` base-interface semantic crosswalk](cthing-vtable-semantics-2026-08-11.md)
+  and its [31-target table](cthing-vtable-semantics-2026-08-11.tsv) — recovers
+  the primary/audible and secondary/render ABI spine inherited by actors,
+  units, squads, projectiles, triggers, and level-script objects
 - **Current name state — the three grading ledgers, newest last:**
   - [2026-07-25](name-grading-ledger-2026-07-25.md) — first grading; the 332-row
     RTTI re-prefix wave. Two of its figures are superseded; see its banner.
