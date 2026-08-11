@@ -73,8 +73,12 @@ The pristine PC executable contains the following exact ASCII remnants:
 
 This is the strongest direct architecture join: generic and PC-specific source
 owners survive beside the same interface/sample vocabulary shown in the deck.
-The current 8,136-function inventory separately contains 34
-`CSoundManager__*` and 20 `CPCSoundManager__*` bounded static envelopes.
+All 34 shared `CSoundManager__*` production bodies are now semantically
+crosswalked against retained source and normalized-identical demo twins in the
+[`CSoundManager` report](binary-analysis/csoundmanager-shared-semantics-2026-08-11.md).
+They prove the 256-event pool, shared sample/effect and spatial policy, and
+calls into the PC backend for device and channel operations. The inventory also
+contains 20 `CPCSoundManager__*` device-side bodies.
 
 The slide spellings `CXBOXSoundManager`, `SSoundEvent`, `GetSoundEvent`,
 `ShouldIBePlaying`, and `DevicePlay` were not found as exact ASCII in the

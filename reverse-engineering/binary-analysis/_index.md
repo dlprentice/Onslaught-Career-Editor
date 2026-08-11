@@ -79,6 +79,11 @@ the document it links.
   playlist ordering, selection, fades, finished-track policy, and released
   source divergences: OGG-only discovery, the compiled random-mode assignment,
   linear `volume * 127`, and the corrected `DeviceChangeTrack` identity
+- [`CSoundManager` shared audio-policy semantic crosswalk](csoundmanager-shared-semantics-2026-08-11.md)
+  and its [34-function table](csoundmanager-shared-semantics-2026-08-11.tsv) —
+  recovers the production 256-event pool, sample/effect selection, spatial and
+  volume policy, 75% channel arbitration, fades, pitch, pause/stop, language
+  XAP reload, and device-loss path against source, demo, and the GDC deck
 - [`PCLTShell` virtual-interface semantic crosswalk](pcltshell-vtable-semantics-2026-08-11.md)
   and its [8-target table](pcltshell-vtable-semantics-2026-08-11.tsv) — resolves
   the released Direct3D device lifecycle, pause, capability filter, and Windows
