@@ -78,6 +78,11 @@ the document it links.
   recovers the one-off and per-attempt initialization, run, restart, teardown,
   and exact quit-code propagation boundaries from retail calls, retained source,
   and independently linked demo bodies
+- [Event-manager scheduler semantic crosswalk](event-manager-scheduler-semantics-2026-08-11.md)
+  and its [14-function table](event-manager-scheduler-semantics-2026-08-11.tsv)
+  — recovers the fixed 20 Hz clock, 200-by-3 ring, sorted overflow queue,
+  20,000-record pool, strict due-time edge, callback reuse, and cleanup order;
+  every released body has a normalized-identical demo twin
 - **Current name state — the three grading ledgers, newest last:**
   - [2026-07-25](name-grading-ledger-2026-07-25.md) — first grading; the 332-row
     RTTI re-prefix wave. Two of its figures are superseded; see its banner.
