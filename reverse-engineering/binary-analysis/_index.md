@@ -61,6 +61,11 @@ the document it links.
   and its [15-target table](cpccontroller-vtable-semantics-2026-08-11.tsv) —
   recovers the PC joystick, keyboard, POV, and controller-recording adapter at
   the shared/platform-specific engine boundary described by Lost Toys
+- [`CController` shared mapping/dispatch semantic crosswalk](controller-shared-semantics-2026-08-11.md)
+  and its [17-function table](controller-shared-semantics-2026-08-11.tsv) —
+  recovers the released 47-row two-bank mapper, mouse and wheel extensions,
+  repeat/deadzone laws, monitored control stack, inactivity policy, and exact
+  divergences from the retained controller source
 - [Controller-to-player/game event spine](controller-player-game-event-spine-2026-08-11.md)
   and its [10-target table](controller-player-game-event-spine-2026-08-11.tsv)
   — follows normalized input through shared mapping into player actions and
