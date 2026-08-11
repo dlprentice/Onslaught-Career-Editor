@@ -127,6 +127,14 @@ recovers all 25 current `CDXMemBuffer`/`CDXMemoryManager` bodies against source
 and demo, including Win32/zlib/CRC file buffering and the 129-type/four-heap PC
 allocation router. Console heap and file implementations remain separate.
 
+The [frontend persistence crosswalk](binary-analysis/frontend-save-load-semantics-2026-08-11.md)
+makes another platform seam exact. Shared `CFEPLoadGame`/`CFEPSaveGame` page
+policy survives, but PC retail replaces the source `MEMORYCARD` calls with
+`PCPlatform` storage queries and `.bes` file I/O, compares save names without
+case, and uses a six-entry obfuscated cheat-name table rather than the source's
+four plaintext names. All fifteen bodies are normalized-identical in the PC
+demo; console storage/error behavior remains a separate comparison.
+
 ### Building example
 
 The deck's sound example names `CBuilding`; PC retail contains exact

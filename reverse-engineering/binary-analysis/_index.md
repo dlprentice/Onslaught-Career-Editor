@@ -94,6 +94,11 @@ the document it links.
   released 1 MiB-aligned buffering, raw/zlib block I/O and CRC sidecars, 129
   typed allocation routes, four PC heaps, allocation headers, OOM policy, and
   retained-source divergences
+- [Frontend save/load and PC persistence semantic crosswalk](frontend-save-load-semantics-2026-08-11.md)
+  and its [15-function table](frontend-save-load-semantics-2026-08-11.tsv) —
+  recovers the PC file-backed load/save transaction, overwrite and storage
+  recovery policy, case-insensitive save identity, and the six-entry released
+  XOR-obfuscated cheat-name gate against retained source and the PC demo
 - [`CTokenArchive` particle grammar and reference semantic crosswalk](tokenarchive-semantics-2026-08-11.md)
   and its [12-function table](tokenarchive-semantics-2026-08-11.tsv) — recovers
   the 124-token/six-shape parser, fixed deferred-reference workspace,
