@@ -69,6 +69,11 @@ the document it links.
   and its [8-target table](cpcmusic-vtable-semantics-2026-08-11.tsv) — recovers
   the shared playlist/PC async-stream boundary, directory enumeration, exact
   volume conversion, and corrects `0x004BB450` to `DeviceChangeTrack`
+- [`CMusic` shared-policy semantic crosswalk](cmusic-shared-semantics-2026-08-11.md)
+  and its [11-function table](cmusic-shared-semantics-2026-08-11.tsv) — recovers
+  playlist ordering, selection, fades, finished-track policy, and released
+  source divergences: OGG-only discovery, the compiled random-mode assignment,
+  linear `volume * 127`, and the corrected `DeviceChangeTrack` identity
 - [`PCLTShell` virtual-interface semantic crosswalk](pcltshell-vtable-semantics-2026-08-11.md)
   and its [8-target table](pcltshell-vtable-semantics-2026-08-11.tsv) — resolves
   the released Direct3D device lifecycle, pause, capability filter, and Windows
