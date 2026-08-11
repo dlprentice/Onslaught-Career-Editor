@@ -3,6 +3,8 @@
 > Date: 2026-07-25. Scope: what the previously unnamed value ids in
 > `data/default physics.dat` Round and WeaponMode records mean, and which
 > record offset each one writes.
+> Updated 2026-08-11 with the recovered `CRound` primary virtual surface and
+> an independently linked PC-demo code comparison.
 >
 > Every row below is backed by bytes: an RTTI type descriptor read out of the
 > pristine Steam binary, the vtable slot that descriptor sits in front of, the
@@ -157,6 +159,56 @@ off that pointer line up with the table above:
   (`CRoundTreeCollision`), `+0x8c` (`CRoundRadius`), `+0x98` (`CRoundLength`),
   `+0x58` (`CRoundGridOfFear`). Every one of those is a flag/scalar in the
   table above and is used flag-like or scalar-like accordingly.
+
+### 3.2 `CRound` primary virtual surface
+
+The strict `CRound` vtable at `0x005DE82C`, the matching inherited slots in
+`CMissile` at `0x005E3BA4`, and the retained `CThing`/`CComplexThing`/`CActor`
+virtual declaration order resolve twelve formerly generic slots as one coherent
+runtime surface. The names below identify the inherited virtual operation; they
+do not assert that the stripped retail linker retained an original symbol.
+
+| slot | retail -> PC demo | resolved operation | bytes | bounded retail contract |
+| ---: | --- | --- | ---: | --- |
+| 0 | `0x004D9910` -> `0x004D97F0` | `CRound__HandleEvent` | 1,078 | Switches on `event+4`: 4000 creates/schedules the configured launch path, 4001 updates impact state and conditionally dies, 4002 spawns the configured projectile then clears `+0x120` and dies, 4003 selects/synchronizes the target reader; other events delegate to `CActor::HandleEvent`. |
+| 2 | `0x004D8DC0` -> `0x004D8CA0` | `CRound__Shutdown` | 121 | Removes optional grid-of-fear/reader registrations, clears the particle/effect link and active reader, then delegates to `CComplexThing::Shutdown`. |
+| 38 | `0x004D8320` -> `0x004D8200` | `CRound__SetThingType` | 15 | Stores the caller mask OR `0x80000007`, retaining the inherited thing/complex-thing/actor bits plus the ammunition bit. |
+| 43 | `0x004D8340` -> `0x004D8220` | `CRound__GetSoundMaterial` | 13 | Returns `roundConfig+0x80`, the independently resolved `CRoundSoundMaterial` field. |
+| 44 | `0x004D82E0` -> `0x004D81C0` | `CRound__ClipToGround` | 63 | Returns true when bounce or gravity is nonzero, or turn rate is positive; otherwise false. |
+| 45 | `0x004DB600` -> `0x004DB4E0` | `CRound__Gravity` | 40 | Returns zero for the active torpedo-state branch; otherwise returns `CRoundGravity * 0.025f`. |
+| 47 | `0x004D82D0` -> `0x004D81B0` | `CRound__BounceFactor` | 10 | Returns `roundConfig+0x30` (`CRoundBounce`). |
+| 49 | `0x004D8330` -> `0x004D8210` | `CRound__CanGoUnderWater` | 10 | Returns `roundConfig+0x5c` (`CRoundUnderWater`). |
+| 50 | `0x004DB130` -> `0x004DB010` | `CRound__StartDieProcess` | 18 | Delegates to `CComplexThing::StartDieProcess` only while `this+0x120` is clear; otherwise returns false. |
+| 66 | `0x004D8E40` -> `0x004D8D20` | `CRound__Move` | 2,757 | Owns per-tick beam/round movement, target-relative and velocity/config branches, transform-history updates, effect transforms, reader cleanup, and contact/lifetime dispatch. Individual branch semantics remain bounded to the visible fields and callees. |
+| 68 | `0x004D9DD0` -> `0x004D9CB0` | `CRound__DeclareOnGround` | 282 | Bouncing rounds delegate to `CActor::DeclareOnGround`; a non-bouncing, non-fire round traces/corrects the ground contact, applies effect mode 1, then enters the virtual death path. |
+| 69 | `0x004D9EF0` -> `0x004D9DD0` | `CRound__DeclareInWater` | 60 | Arms the projectile/trail link and updates the `+0xd0` timestamp; when neither underwater nor torpedo behavior is configured, applies effect mode 2 then enters the virtual death path. |
+
+The independent input is the 2,510,848-byte PC demo `BEA.exe`, SHA-256
+`d8637dd755b21c720c0cb8f71923f94d2a04a184d90f5343c2e868ce8606e5c2`;
+the retail baseline remains
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+For all twelve bodies, complete x86-32 decoding produced the same instruction
+count, offsets, sizes, mnemonics, register forms, relative branches, and literal
+constant shapes. Normalizing only relocated address/displacement encodings left
+zero instruction differences. The demo thus independently corroborates the
+entire interface, not just a shared RTTI label.
+
+Retail body SHA-256 pins, in the table's address order:
+
+```text
+004d9910 d54da932205b40f631e650c2f3902faa230f69c1efe029c428aff1305cff2c2b
+004d8dc0 6115be53ac54c0be415084c24c4b40bf6b8c8e68b67f2f2e96e28feeeaeb45ed
+004d8320 6ecb411d5107118adc9f1069e90032b6493f6678cd462e47928f644174622d98
+004d8340 3f59723d13c058fc8da764b0c39e4e3724e16109ceec8b0b8d9720d03aa46e2b
+004d82e0 e43a75c9c1a2cdb47bb5429f5d7a125e40bc2916ae9a7efee9502459ffd475eb
+004db600 7f549e893dcde13ddd86f75f080144f76b173910a0d4dea4153b0007134bb967
+004d82d0 768a01e896e2198144e55e39b47aa9bcd771e8fd6dc1f1eb9dd8c2ec61e47732
+004d8330 c53cb3534a10d96d95d69e776931bb1e999f75ce32548c4a7e17faa8d897e6e5
+004db130 7e2fbd18483548889909606c71d115fa6f162daa4fc9e0232939af06655cb1f6
+004d8e40 819f5211e6e246292a3f0a9bbfa60b712711d7c8ded288d26e08734a88071638
+004d9dd0 bdd3b27c15a77fe7a964a5c37fa3b055b3eb7c449c7f0944d2eeba7f504421f9
+004d9ef0 cca25281f2ca91e693706e799be2672bd435992e7ed85329ba1f41bda019aacb
+```
 
 ## 4. Weapon-mode value ids (statement tag 3, factory `0x00435010`)
 
@@ -396,8 +448,6 @@ future measurement must go through `Pulse Cannon Pod`.
   no-op `0x004014c0`, so the class exists and is named but applies nothing to
   the explosion record in this build. Not a failure to resolve — a real
   negative.
-- **`CRound__VFunc_47` returns `config+0x30`** (`CRoundBounce`) as a float;
-  I did not chase what the caller does with it.
 - Unit (`Type2`, 69 ids), spawner (`Type6`), feature, hazard, component,
   seek, behaviour, alligence, navmap and state factories were resolved to RTTI
   class names as part of the closure check but their record offsets were not
@@ -423,14 +473,14 @@ ignored lab path `local-lab/physics-value-ids-2026-07-25/`.
 ## Claim boundary
 
 Sections 3–5 are static findings: RTTI type descriptors, vtable slot contents,
-and apply-body writes in the pristine Steam `BEA.exe`, cross-checked for
-completeness against the shipped `default physics.dat`. They establish class
-identity and which record offset each class writes. They do not establish
-runtime damage resolution except for the separately joined direct
-`CRound::Hit` dispatch cited in Section 6.2, unit systems beyond the two noted,
-gameplay outcomes, or rebuild parity. Section 6.1's 20 Hz / units-per-second result
-rests on a previously recorded controlled copied-runtime measurement, cited
-inline. Section 6.2 proves the direct round term, configured explosion creation,
-immediate collision registration, and conditional same-receiver additive path;
-it does not generalize through failed filters, expanding-radius timing, or
-rebuild parity.
+source-interface order, apply-body writes in the pristine Steam `BEA.exe`, and
+the separately linked PC-demo comparison, cross-checked for completeness against
+the shipped `default physics.dat`. They establish class/interface identity,
+visible control flow, and which record offsets the named accessors consume. They
+do not establish every runtime branch, unit systems beyond the two noted,
+gameplay outcomes, or rebuild parity. Section 6.1's 20 Hz / units-per-second
+result rests on a previously recorded controlled copied-runtime measurement,
+cited inline. Section 6.2 proves the direct round term, configured explosion
+creation, immediate collision registration, and conditional same-receiver
+additive path; it does not generalize through failed filters, expanding-radius
+timing, or rebuild parity.
