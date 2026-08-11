@@ -94,6 +94,11 @@ the document it links.
   released 1 MiB-aligned buffering, raw/zlib block I/O and CRC sidecars, 129
   typed allocation routes, four PC heaps, allocation headers, OOM policy, and
   retained-source divergences
+- [`CTokenArchive` particle grammar and reference semantic crosswalk](tokenarchive-semantics-2026-08-11.md)
+  and its [12-function table](tokenarchive-semantics-2026-08-11.tsv) — recovers
+  the 124-token/six-shape parser, fixed deferred-reference workspace,
+  case-insensitive particle-name resolver, thirteen descriptor loaders, one
+  shipped-corpus-masked asymmetry, and five compiled formatter-only stubs
 - [`PCLTShell` virtual-interface semantic crosswalk](pcltshell-vtable-semantics-2026-08-11.md)
   and its [8-target table](pcltshell-vtable-semantics-2026-08-11.tsv) — resolves
   the released Direct3D device lifecycle, pause, capability filter, and Windows

@@ -113,6 +113,14 @@ subsystems: `Camera.cpp`, collision-seeking owners, `MemoryManager.cpp`,
 `MeshCollisionVolume.cpp`, `ParticleDescriptor.cpp`, `ParticleManager.cpp`,
 `ParticleSet.cpp`, `TokenArchive.cpp`, and `DXParticleTexture.cpp`.
 
+The [`CTokenArchive` semantic crosswalk](binary-analysis/tokenarchive-semantics-2026-08-11.md)
+now makes that particle-data boundary concrete: the released PC parser has 124
+named tokens, six successful value shapes, a fixed deferred-reference
+workspace, thirteen descriptor loaders, and case-insensitive name resolution.
+All twelve parser/resolver/formatter bodies have normalized-identical PC demo
+twins. The five compiled `Write*` helpers only format and discard local lines,
+so they are not evidence of a working retail serializer.
+
 The deck's file-access and memory-management services now have a concrete PC
 crosswalk too: the [memory/I/O report](binary-analysis/pc-memory-io-semantics-2026-08-11.md)
 recovers all 25 current `CDXMemBuffer`/`CDXMemoryManager` bodies against source
