@@ -17,6 +17,7 @@ selected by the user.
 | [`grade-system.md`](grade-system.md) | Ranking floats and grade calculation |
 | [`goodies-system.md`](goodies-system.md) | Displayable Goodie slots and states |
 | [`kill-tracking.md`](kill-tracking.md) | Lower-24-bit counters and metadata preservation |
+| [`../binary-analysis/career-save-format-semantics-2026-08-11.md`](../binary-analysis/career-save-format-semantics-2026-08-11.md) | Released serializer/load modes, dynamic size law, and demo cross-build proof |
 
 ## Quick layout
 
@@ -40,6 +41,8 @@ applied by the retail boot path for `defaultoptions.bea`, but skipped by the
 career-load path. Preserve them unless intentionally editing that format.
 
 Static retail evidence is summarized in
-[`../binary-analysis/save-options-static-review-2026-05-26.md`](../binary-analysis/save-options-static-review-2026-05-26.md).
+[`../binary-analysis/save-options-static-review-2026-05-26.md`](../binary-analysis/save-options-static-review-2026-05-26.md),
+with the complete serializer semantics and PC-demo twin comparison in the
+[`CCareer` crosswalk](../binary-analysis/career-save-format-semantics-2026-08-11.md).
 Stuart's source informs structures and logic but is not the retail on-disk
 authority.

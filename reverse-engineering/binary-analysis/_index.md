@@ -104,6 +104,11 @@ the document it links.
   — corrects the owning class and method identities, recovers the one-card
   filename-backed slot model, enumeration/create/read/write/delete laws, and
   two exact CRT stream-lifetime defects shared with the PC demo
+- [`CCareer` released PC save-format semantic crosswalk](career-save-format-semantics-2026-08-11.md)
+  and its [8-function table](career-save-format-semantics-2026-08-11.tsv) —
+  recovers the dynamic size law, the two serializer variants, career versus
+  default-options load modes, the 0x56-byte options tail, and the packed D3D
+  profile key against retained source and normalized-identical demo bodies
 - [`CTokenArchive` particle grammar and reference semantic crosswalk](tokenarchive-semantics-2026-08-11.md)
   and its [12-function table](tokenarchive-semantics-2026-08-11.tsv) — recovers
   the 124-token/six-shape parser, fixed deferred-reference workspace,

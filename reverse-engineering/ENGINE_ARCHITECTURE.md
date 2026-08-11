@@ -144,6 +144,14 @@ enumeration positions; read/write/delete use the converted filename. The
 retained PC header's no-op bodies are therefore earlier stubs, not retail-PC
 behavior.
 
+The layer above that adapter is also exact. The
+[`CCareer` save-format crosswalk](binary-analysis/career-save-format-semantics-2026-08-11.md)
+recovers the released PC version plus fixed-career dump, dynamic active-control
+records, 0x56-byte hardware/options tail, and the `0x2514 + 0x20*N` size law.
+Normal career loads preserve current audio settings and skip applying the
+embedded PC options, while the default-options path applies them. All eight
+bodies are normalized-identical in the independently linked PC demo.
+
 ### Building example
 
 The deck's sound example names `CBuilding`; PC retail contains exact
