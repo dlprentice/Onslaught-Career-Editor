@@ -99,6 +99,11 @@ the document it links.
   recovers the PC file-backed load/save transaction, overwrite and storage
   recovery policy, case-insensitive save identity, and the six-entry released
   XOR-obfuscated cheat-name gate against retained source and the PC demo
+- [`CPCMemoryCard` released PC save-backend semantic crosswalk](cpcmemorycard-pc-save-backend-semantics-2026-08-11.md)
+  and its [11-function table](cpcmemorycard-pc-save-backend-semantics-2026-08-11.tsv)
+  — corrects the owning class and method identities, recovers the one-card
+  filename-backed slot model, enumeration/create/read/write/delete laws, and
+  two exact CRT stream-lifetime defects shared with the PC demo
 - [`CTokenArchive` particle grammar and reference semantic crosswalk](tokenarchive-semantics-2026-08-11.md)
   and its [12-function table](tokenarchive-semantics-2026-08-11.tsv) — recovers
   the 124-token/six-shape parser, fixed deferred-reference workspace,

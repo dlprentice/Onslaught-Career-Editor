@@ -74,6 +74,9 @@ manager free path.
 This confirms a clean service boundary: the retained shared flow calls
 `MEMORYCARD.ReadSave`, while the PC executable performs the same policy through
 `PCPlatform__ReadSaveFile` and PC storage queries.
+The concrete implementation and its corrected `CPCMemoryCard` ownership are
+recovered in the
+[`CPCMemoryCard` PC save-backend crosswalk](cpcmemorycard-pc-save-backend-semantics-2026-08-11.md).
 
 ## Save transaction
 

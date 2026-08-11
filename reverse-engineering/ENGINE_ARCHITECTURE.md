@@ -135,6 +135,15 @@ case, and uses a six-entry obfuscated cheat-name table rather than the source's
 four plaintext names. All fifteen bodies are normalized-identical in the PC
 demo; console storage/error behavior remains a separate comparison.
 
+The lower adapter is now recovered too. The
+[`CPCMemoryCard` backend crosswalk](binary-analysis/cpcmemorycard-pc-save-backend-semantics-2026-08-11.md)
+shows that the apparent `PCPlatform` helpers are the shipped implementation of
+the retained card interface: one permanently present pseudo-card, fake maximum
+capacity, and name-backed `savegames\\*.bes` files. Slot numbers are only raw
+enumeration positions; read/write/delete use the converted filename. The
+retained PC header's no-op bodies are therefore earlier stubs, not retail-PC
+behavior.
+
 ### Building example
 
 The deck's sound example names `CBuilding`; PC retail contains exact
