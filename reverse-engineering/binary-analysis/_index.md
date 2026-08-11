@@ -45,6 +45,10 @@ the document it links.
   recovers the demo-only publisher-surface draw and dedicated demo-main
   debrief route, retail's playable-demo quit/result path, and the shared
   86-texture loader's one edition-specific substitution
+- [PC demo/retail shell and FMV lineage](pc-demo-retail-shell-fmv-lineage-2026-08-11.md)
+  and its [3-function table](pc-demo-retail-shell-fmv-lineage-2026-08-11.tsv) —
+  bounds demo's separate 500-byte startup-movie helper, publisher insertion on
+  all startup/attract paths, and language-selected promotional shutdown request
 - [`CUnit` primary virtual-interface semantic crosswalk](cunit-primary-vtable-semantics-2026-08-11.md)
   and its [46-slot table](cunit-primary-vtable-semantics-2026-08-11.tsv) — uses
   the demo twin, pinned source overrides, and typed callsites to replace field

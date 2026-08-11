@@ -210,6 +210,15 @@ routes demo to `FEP_DEMOMAIN` while retail playable-demo writes a frontend
 quit/result sentinel. The shared frontend page architecture therefore carries
 small, deliberate distribution-specific resource and navigation policy.
 
+The
+[shell/FMV lineage report](binary-analysis/pc-demo-retail-shell-fmv-lineage-2026-08-11.md)
+shows how that policy is packaged. Demo shell initialization factors movie
+selection into a separate helper, while retail keeps the sequence inline. Demo
+adds the publisher movie to every startup/attract path and adds a language-gated
+promotional movie request before the otherwise shared teardown. The frontend,
+FMV wrapper, text-language state, and shell lifecycle remain stable subsystem
+owners even where distribution policy and function factoring differ.
+
 The deck also treats Xbox TRCs and PlayStation TCRs as separate production
 schedules and requirements. Platform-specific input, startup, save, display,
 and error-handling differences may therefore be certification work rather than
