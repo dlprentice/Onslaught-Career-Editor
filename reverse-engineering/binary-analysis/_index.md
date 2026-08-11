@@ -31,6 +31,10 @@ the document it links.
   identical strict RTTI/vtable structure pairs every virtual target; 2,123
   instruction streams have zero normalized differences and four frontend/FMV
   comparisons remain explicit divergences
+- [PC demo/retail whole-function map](pc-demo-retail-function-map-2026-08-11.tsv)
+  — 8,086 independently mapped demo entries; 8,021 normalized-identical body
+  streams covering 1,702,495 retail bytes and 512,925 instructions, with 65
+  changed/unbounded bodies and 50 address-unmapped functions kept explicit
 - [`CUnit` primary virtual-interface semantic crosswalk](cunit-primary-vtable-semantics-2026-08-11.md)
   and its [46-slot table](cunit-primary-vtable-semantics-2026-08-11.tsv) — uses
   the demo twin, pinned source overrides, and typed callsites to replace field

@@ -3,13 +3,14 @@
 Status: active, measured cross-build evidence
 Last updated: 2026-08-11
 Evidence: MEASURED — exact executable/archive hashes, independently recounted
-MSVC RTTI/vtables, and a 2,127-target instruction census; UNKNOWN — normalized
-constant values, non-virtual functions outside the pairing, runtime behavior,
-and the four incompletely bounded demo bodies listed below.
+MSVC RTTI/vtables, a 2,127-target virtual census, and a conservative 8,086-row
+cross-build function-address map; UNKNOWN — normalized constant values, 50
+retail functions without a demo address, runtime behavior, and the 65
+address-mapped bodies not shown normalized-identical below.
 Verdict: the PC demo is a distinct build with a structurally identical virtual
-class surface; 2,123 of 2,127 paired virtual targets retain the same normalized
-instruction encoding shape, while four frontend/FMV targets are demonstrably
-different in the bounded comparison.
+class surface. Across virtual and non-virtual code, 8,021 of 8,136 retail
+functions have a normalized-identical demo body and 65 more have an
+independently fixed demo entry but a different or incompletely bounded body.
 Specimen: pristine PC retail `BEA.exe`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`;
 PC demo `BEA.exe`, SHA-256
@@ -88,6 +89,64 @@ corroborates control and instruction shape across a broad, distinct build. It
 does **not** prove that the removed constants point to equivalent objects or
 that runtime behavior is identical.
 
+## Whole-function address expansion
+
+The strict vtable pairs are also relocation anchors. A sequence of conservative
+passes extended them to ordinary functions without assigning semantics from
+proximity alone:
+
+1. A non-virtual body was tried at `retail + delta` only when the nearest lower
+   and upper structurally paired functions had the same local delta.
+2. Changed-delta intervals were searched for one unique full normalized body
+   signature inside their paired-anchor bounds.
+3. Short bodies were accepted only when one candidate remained between two
+   already accepted neighbors.
+4. Corresponding direct `CALL`/`JMP` operands in accepted caller pairs propagated
+   another three rounds of callee identities.
+5. The expanded anchor set was replayed to convergence across local relocation
+   regions and the continuous compiler-unwind suffix.
+6. A global call-edge and body-overlap audit refuted three weak short-body
+   matches. Unanimous call targets corrected them. Strict RTTI then displaced
+   one remaining interior-suffix match for `CFMV__VFunc_3_004656e0`.
+7. The one clean compiler-unwind delta transition was decoded on both sides;
+   214 additional bodies survived exact instruction-shape comparison, while
+   the ambiguous non-unwind transition candidates stayed out.
+8. Same-relative `.rdata`/`.data` function pointers were accepted only when a
+   36-byte normalized context matched in both images. A final direct-transfer
+   replay then reached its fixed point.
+
+The 8,021 normalized-identical rows have unique retail and demo entries. Their
+contiguous body-overlap graph is also identical: the sole nested-entry pair is
+present on both sides, with no demo-only or retail-only overlap.
+
+The resulting mechanical map is
+[`binary-analysis/pc-demo-retail-function-map-2026-08-11.tsv`](binary-analysis/pc-demo-retail-function-map-2026-08-11.tsv),
+1,314,885 bytes, SHA-256
+`cdb26380bb6b29e82edd601bb95dfc215f62813d925e2f4c4c78452a7af7c68a`.
+
+| Whole-function result | Count |
+| --- | ---: |
+| Retail functions | 8,136 |
+| Independently mapped demo entries | 8,086 |
+| Normalized-identical body streams | 8,021 |
+| Address mapped, body changed or incompletely bounded | 65 |
+| No demo entry yet recovered | 50 |
+| Normalized-identical retail body bytes | 1,702,495 |
+| Normalized-identical retail instructions | 512,925 |
+
+The 65 address-only/different rows are the four strict-vtable divergences below,
+60 entries independently fixed by unanimous corresponding direct transfers,
+and one isolated compiler-unwind entry fixed by its equal-delta neighbors.
+For example, corresponding direct callers select demo entry `0x004F0110` for
+`0x004F00E0 CLTShell__ShutdownRuntimeAndReleaseResources`, while the retail body
+matches only a later demo suffix. Address identity and body equivalence are
+therefore separate columns in the map.
+
+This is cross-build corroboration, not a semantic grade increase by itself.
+Encoded immediates and displacements remain masked, and an identical compiler
+shape does not establish equal data, side effects, runtime reach, source text,
+or reconstruction parity.
+
 Known high-value pairs include:
 
 | Retail | Demo | Bounded identity |
@@ -101,9 +160,10 @@ Known high-value pairs include:
 These pairs corroborate the current retail address/body identities; they do
 not replace the retail specimen as patch or runtime authority.
 
-## Four retained divergences
+## Four retained strict-vtable divergences
 
-The only nonzero normalized comparisons are:
+The only nonzero comparisons in the independently bounded 2,127-target strict
+vtable census are:
 
 | Retail -> demo | Retail name | Retail body | Normalized differences |
 | --- | --- | ---: | ---: |
@@ -122,17 +182,18 @@ build-lineage signal. It is not evidence that gameplay is globally identical.
 
 ## What this changes for the RE campaign
 
-The demo is now an independent refuter and address-translation oracle for the
-virtual surface. A retail interpretation that requires a changed opcode,
-branch shape, or instruction layout in one of the 2,123 exact pairs must also
-explain why the distinct demo build preserves the original shape.
+The demo is now an independent refuter and address-translation oracle for most
+of the executable, not only the virtual surface. A retail interpretation that
+requires a changed opcode, register form, branch shape, or instruction layout
+in one of the 8,021 exact rows must also explain why the independently linked
+demo preserves that shape.
 
-The best next semantic cohort is the bounded `CUnit` owner set: 64 targets,
-16,492 retail body bytes, 5,087 instructions, and 1,730 vtable placements.
-Forty contain raw address differences across 447 instructions, yet all 64 have
-zero normalized differences. That is a coherent place to resolve field and
-callee identities using both builds, source, data, and current reconstruction
-owners without repeating static-C1 accounting.
+The earlier `CUnit`, `CBattleEngine`, `CThing`, `CComplexThing`, `CActor`, PC
+controller, PC music, and PC shell semantic cohorts have now used that oracle.
+The next cross-build work should change instruments again: independently bound
+the 65 address-only bodies, then use calls, exception metadata, strings,
+retained source, and platform builds on the 50 address-unmapped rows. Repeating the
+same normalized-signature search would only fit the remaining ambiguity.
 
 ## Reproduction and limits
 
@@ -149,7 +210,8 @@ Open boundaries remain:
 
 - normalized immediate/displacement values and the objects they address;
 - non-instruction bytes in multi-range bodies;
-- non-virtual functions outside the strict RTTI pairing;
-- independent demo body/CFG recovery for the four divergent targets;
+- independent demo body/CFG recovery for the 65 address-mapped changed or
+  incompletely bounded targets;
+- demo entry recovery for the remaining 50 retail functions;
 - asset/configuration differences and their behavioral consequences;
 - runtime equivalence, source equivalence, and rebuild parity.
