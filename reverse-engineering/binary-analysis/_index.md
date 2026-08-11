@@ -36,6 +36,11 @@ the document it links.
   the demo twin, pinned source overrides, and typed callsites to replace field
   labels with 21 source/callsite meanings while leaving absent historical names
   explicitly open
+- [`CBattleEngine` virtual-interface semantic crosswalk](cbattleengine-vtable-semantics-2026-08-11.md)
+  and its [37-target table](cbattleengine-vtable-semantics-2026-08-11.tsv) —
+  resolves every uniquely owned Battle Engine target against the pinned source
+  and independently linked demo, including render-interface, movement, weapon,
+  damage, collision, and terminal-event identities
 - **Current name state — the three grading ledgers, newest last:**
   - [2026-07-25](name-grading-ledger-2026-07-25.md) — first grading; the 332-row
     RTTI re-prefix wave. Two of its figures are superseded; see its banner.
