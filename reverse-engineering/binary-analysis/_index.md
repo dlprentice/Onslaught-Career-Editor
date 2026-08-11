@@ -65,6 +65,10 @@ the document it links.
   and its [8-target table](cpcmusic-vtable-semantics-2026-08-11.tsv) — recovers
   the shared playlist/PC async-stream boundary, directory enumeration, exact
   volume conversion, and corrects `0x004BB450` to `DeviceChangeTrack`
+- [`PCLTShell` virtual-interface semantic crosswalk](pcltshell-vtable-semantics-2026-08-11.md)
+  and its [8-target table](pcltshell-vtable-semantics-2026-08-11.tsv) — resolves
+  the released Direct3D device lifecycle, pause, capability filter, and Windows
+  message bridge against the retained earlier shell source and PC demo twin
 - **Current name state — the three grading ledgers, newest last:**
   - [2026-07-25](name-grading-ledger-2026-07-25.md) — first grading; the 332-row
     RTTI re-prefix wave. Two of its figures are superseded; see its banner.
