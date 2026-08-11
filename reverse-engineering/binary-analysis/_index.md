@@ -45,6 +45,10 @@ the document it links.
   and its [31-target table](cthing-vtable-semantics-2026-08-11.tsv) — recovers
   the primary/audible and secondary/render ABI spine inherited by actors,
   units, squads, projectiles, triggers, and level-script objects
+- [`CComplexThing` virtual-interface semantic crosswalk](ccomplexthing-vtable-semantics-2026-08-11.md)
+  and its [22-target table](ccomplexthing-vtable-semantics-2026-08-11.tsv) —
+  adds the source-backed orientation, animation, name, motion-controller, and
+  mission-script layer used by higher gameplay classes
 - **Current name state — the three grading ledgers, newest last:**
   - [2026-07-25](name-grading-ledger-2026-07-25.md) — first grading; the 332-row
     RTTI re-prefix wave. Two of its figures are superseded; see its banner.
