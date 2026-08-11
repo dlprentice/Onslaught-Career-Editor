@@ -302,10 +302,11 @@ That is the released rate/damage/spread evidence the P0 item was waiting on.
 strong indication the inaccuracy unit is radians; the Mech Pulse Cannon's
 `0.008726646` is `0.5°` on the same reading.
 
-### 6.2 The `0.8 + 1.0 = 1.8` hypothesis: strengthened, not confirmed
+### 6.2 The `0.8 + 1.0 = 1.8` hypothesis: creation chain confirmed; receiver sum open
 
-Status: **still open, but no longer a two-point fit, and the two competing
-single-term models are killed.**
+Status: **retail `CRound::Hit` now creates the configured `CExplosion`, and
+`CExplosion::Hit` proves the second damage consumer; whether the expanding
+explosion later damages the same receiver and adds both values remains open.**
 
 What changed:
 
@@ -323,19 +324,40 @@ What changed:
   - round damage to the struck part + explosion damage to the body → predicts
     1.8 direct and 1.0 glancing. **Both measurements survive.**
 
-What is still missing: I did not find the code that reads round record `+0x1c`
-*as damage*. Of the eighteen `CRound__*` functions in the database, only two
-read `config+0x1c`, and both use it as a `< 0.0` targeting gate, not as a
-damage magnitude. So the addition itself is unproven; the sum model is
-currently the only survivor of three, which is not the same as being right.
+Resolved on 2026-08-10: [`CRound::Hit @ 0x004D8AE0`](cround-hit-damage-path-2026-08-10.md)
+loads `roundData+0x1C` at `0x004D8CE3` and passes it as the first argument to
+the struck thing's slot-40 `Damage` call at `0x004D8CEF`. The joined
+RTTI/apply-body table identifies that field as `CRoundDamage`; two replicated
+Level-521 observations preserve the same callsite and raw `0.05f` carrier.
+This kills the old concern that no round-damage consumer had been located.
+
+The same 2026-08-10 pass resolves the explosion consumer. `CExplosion::Hit`
+at `0x0044BF10` reads configured `CExplosionDamage` from `config+0x38` and
+dispatches target slot-40 `Damage` with radial falloff. For radius `R`,
+effective distance `d`, damage `D`, and explosion time `T`, retail computes
+`((R-d)*D)/R` when `R <= 3`, otherwise
+`((R-d)*(D/T))/R`. The body is independently instruction-identical in the
+distinct PC demo after relocation normalization.
+
+The missing factory join is now resolved. `CRound::Hit` passes mode `3` to
+`CRound::ProcessImpactExplosionAndEffects`; jump-table mode 3 reaches
+`0x004DA502`, reads `CRoundExplosion` from `roundData+0x08`, resolves its
+ordinal in `DAT_008553F8`, calls
+`CWorldPhysicsManager::CreateExplosion` at `0x004DA521`, and invokes the new
+object's slot-9 `CExplosion::Init` at `0x004DA670`.
+
+What is still missing is the same-receiver composition rule. Static creation
+does not by itself prove that the expanding object later collides with the
+originally struck body/part or that both slot-40 calls add on that hit. Thus
+`0.8 + 1.0 = 1.8` remains the best surviving model for the measured tutorial
+direct hit, now with an exact creation chain rather than only two matching
+arithmetic producers.
 
 Two things would settle it, either alone:
 
-1. **Static.** Locate the consumer of round record `+0x1c` and explosion record
-   `+0x38` on the collision/damage path. The projectile is created by
-   `CWorldPhysicsManager__CreateProjectile(config)` from
-   `CRound__SpawnConfiguredProjectile` (`0x004db150`); the damage application
-   lives downstream of that, outside the `CRound__` name prefix.
+1. **Static.** Follow the initialized `CExplosion` into world/collision
+   registration and prove whether the original impact receiver/part is included
+   in its first radius sweep. The round-to-factory edge itself is closed.
 2. **Controlled runtime, and it is a sharp test.** The Twin Vulcan pair is
    `0.08 + 0.001`. The sum model predicts a direct Mech Bullet hit removes
    `0.081`; round-only predicts `0.08`; explosion-only predicts `0.001`. Those
@@ -351,8 +373,9 @@ future measurement must go through `Pulse Cannon Pod`.
 
 ## 7. What I could not resolve
 
-- **The damage-application arithmetic.** Section 6.2. Named fields, unproven
-  combination rule.
+- **The round-plus-explosion damage arithmetic.** Section 6.2. Both individual
+  consumers, the factory creation edge, and formulas are proved; their later
+  same-receiver collision/order relationship is not.
 - **Units for non-time scalars.** Seconds is established for time via the
   20 Hz/1.75 datum, and radians is strongly indicated for `CWeaponInaccuracy`
   by the exact 0.4°/0.5° values, but no measurement pins `CRoundDamage`,
@@ -398,7 +421,9 @@ Sections 3–5 are static findings: RTTI type descriptors, vtable slot contents,
 and apply-body writes in the pristine Steam `BEA.exe`, cross-checked for
 completeness against the shipped `default physics.dat`. They establish class
 identity and which record offset each class writes. They do not establish
-runtime damage resolution, unit systems beyond the two noted, gameplay
-outcomes, or rebuild parity. Section 6.1's 20 Hz / units-per-second result
+runtime damage resolution except for the separately joined direct
+`CRound::Hit` dispatch cited in Section 6.2, unit systems beyond the two noted,
+gameplay outcomes, or rebuild parity. Section 6.1's 20 Hz / units-per-second result
 rests on a previously recorded controlled copied-runtime measurement, cited
-inline. Section 6.2 is explicitly not a proof.
+inline. Section 6.2 proves the direct round term and configured explosion
+creation; the later same-receiver additive outcome remains a hypothesis.

@@ -89,6 +89,7 @@ evidence lives under the ignored lab’s apply logs when present.
 - [The default render-state block `0x004EB1E0` — re-derived from bytes](d3d-default-render-state-block-2026-07-27.md)
 - [Half-pixel pixel-centre offset corrected in the projection](pixel-centre-projection-offset-applied-2026-07-26.md)
 - [CMSH `CPOS`/`CORI` identity](cmsh-cpos-cori-identity-2026-07-25.md)
+- [`CRound::Hit`, `CExplosion::Hit`, and their separate damage paths](cround-hit-damage-path-2026-08-10.md)
 - [Local multiplayer evidence boundary](local-multiplayer-static-runtime-contract.md)
 
 Focused patch notes remain beside the binary evidence they depend on. Applied

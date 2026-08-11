@@ -117,6 +117,21 @@ questions close `SURVIVED` and three narrower successors remain open.
 `StartDie @ 0x0040BFD0` remains `OPEN / C0_OPAQUE`, and no rebuild mapping,
 parity result, name, range, or supersession changes.
 
+**2026-08-10 successor evidence:** Gen10 itself remains immutable, but the
+joined static/source proof now names `0x004D8AE0` as `CRound__Hit`, types its
+`void __thiscall (CRound*, CThing*, CCollisionReport*)` ABI, records its direct
+writes, and proves the observed non-null-report target-Damage arm carries
+`CRoundDamage`. This is still a conditional bounded contract: the contrasting
+invocation's rejecting gate, later same-receiver explosion damage, and rebuild parity remain
+open. The connected static pass also identifies `0x0044BF10` as
+`CExplosion__Hit`, recovers its radial `CExplosionDamage` slot-40 dispatch,
+names `0x0044C0F0` as `CExplosion__Move`, and corrects factory `0x0050FF10` to
+`CWorldPhysicsManager__CreateExplosion`. The exact mode-3 impact helper now
+closes the round-to-factory edge by resolving `CRoundExplosion`, creating the
+object, and invoking `CExplosion__Init`; subsequent world collision and
+same-receiver additive damage remain open. Owner:
+[`cround-hit-damage-path-2026-08-10.md`](reverse-engineering/binary-analysis/cround-hit-damage-path-2026-08-10.md).
+
 ## Grade and state lifecycle
 
 The campaign uses a deliberately strict progression:

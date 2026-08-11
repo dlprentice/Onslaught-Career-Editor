@@ -228,6 +228,19 @@ Current local boundaries that materially change the discovery lane:
   questions, and advances only `0x004D8AE0`, `0x0040A890`, and `0x00407350` to
   `C2_BOUNDED_RUNTIME`. `StartDie` remains `OPEN / C0_OPAQUE`; no name, range,
   rebuild mapping, parity result, or supersession changed.
+- **2026-08-10 successor join:** the historical Gen10 observation remains
+  unchanged, but exact bytes, strict RTTI/vtables, source virtual order, the
+  raw round-field map, and both runtime replicas now identify `0x004D8AE0` as
+  [`CRound::Hit`](binary-analysis/cround-hit-damage-path-2026-08-10.md), with
+  `void __thiscall (CRound*, CThing*, CCollisionReport*)` ABI and a bounded
+  direct `CRoundDamage` dispatch. The early null-report branch is not a safe
+  damage path because the report is dereferenced at `0x004D8CBC`. The same
+  document recovers `CExplosion::Hit`/`Move`, the radial `CExplosionDamage`
+  formula, and `CWorldPhysicsManager::CreateExplosion`; PC-demo twins preserve
+  the instruction laws after relocation normalization. The exact mode-3 helper
+  closes configured round-to-explosion creation. Later same-receiver collision,
+  the contrasting invocation's rejecting gate, and rebuild parity remain open;
+  live Ghidra promotion is separate.
 - The separate exact-window data-write lane has a source-bound,
   independently-refuted first semantic plate. In one Level 521
   `CBattleEngine::LockHit @ 0x00407140` invocation, five ordered field

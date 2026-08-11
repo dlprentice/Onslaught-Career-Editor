@@ -715,6 +715,17 @@ SetPos roundtrip as a sixth and LockHit's single-node removal path as a seventh;
 it does not revive the rejected historical package,
 claim positive-shield behavior, or broaden SetPos beyond the observed path.
 
+A 2026-08-10 recursive static/source join now identifies the former raw
+slot-39 function `0x004D8AE0` as `CRound::Hit`, recovers its ABI and direct
+writes, and connects named `CRoundDamage` to the observed target-Damage call.
+The same pass recovers `CExplosion::Hit`'s named radial-damage formula and
+`CExplosion::Move`'s radius progression, and corrects the misnamed explosion
+factory at `0x0050FF10`. The recovered mode-3 impact switch now proves that
+`CRound::Hit` resolves `CRoundExplosion`, creates the object, and calls
+`CExplosion::Init`; later same-receiver collision/addition, one contrasting
+gate outcome, and rebuild parity remain open. This advances semantic understanding without retroactively
+claiming that the Gen10 runtime instrument inferred the name or types.
+
 These instruments do not infer function boundaries, C++ receivers, argument or
 return types, semantics, or parity. Static/source/RTTI evidence supplied joins
 for early data-write plates. Focused player-damage / Level 521 successor work

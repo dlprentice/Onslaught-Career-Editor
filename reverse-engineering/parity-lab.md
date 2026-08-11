@@ -1647,6 +1647,18 @@ or a supersession. The frozen reducer reruns both replicas and the hardened
 proof; same-length target/caller/raw-return/backlink poisons and a re-hashed
 fabricated write all fail.
 
+The 2026-08-10 static/source successor does not alter that historical
+admission. It independently names `0x004D8AE0` as `CRound::Hit`, fixes its
+`void __thiscall (CRound*, CThing*, CCollisionReport*)` ABI, and joins
+`roundData+0x1C` to the observed target-Damage call as `CRoundDamage`. It also
+shows why the early null-report branch is not a valid damage path: the report
+is dereferenced at `0x004D8CBC`. It also recovers the separate
+`CExplosion::Hit` radial-damage producer and radius update/factory identities.
+The exact mode-3 impact switch closes configured explosion creation while
+leaving later same-receiver collision/addition open. Full predicates, direct writes,
+and remaining limits are in
+[`cround-hit-damage-path-2026-08-10.md`](binary-analysis/cround-hit-damage-path-2026-08-10.md).
+
 Three controls define the failure surface:
 
 - an event limit of two sets `truncated`, exits `10`, writes `BLOCKED`, and emits

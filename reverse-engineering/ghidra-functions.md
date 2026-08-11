@@ -241,6 +241,21 @@ zero-event annotation but remains `OPEN / C0_OPAQUE`. The proof READY is
 `7d784a6741c791677fa0083390c53424c0102ef9e7b5edca419eb23a97921765`;
 the campaign creates three changed successor questions and no supersession.
 
+A dated successor analysis now identifies `0x004D8AE0` as `CRound__Hit` and
+recovers its two-argument `void __thiscall` ABI, direct writes, named
+`CRoundDamage`/rearm/beam/fire fields, and conditional target-Damage dispatch.
+That result joins static bytes, strict RTTI/vtables, pinned source order, raw
+field mappings, and the unchanged Gen10 replicas; it does not reinterpret what
+Gen10 alone proved. The connected pass names `CExplosion__Hit`,
+`CExplosion__Move`, and the formerly misnamed
+`CWorldPhysicsManager__CreateExplosion`, with their exact radial damage/radius
+progression laws and independent PC-demo instruction matches. The recovered
+mode-3 round-impact switch reads `CRoundExplosion`, resolves its registered
+definition, calls that factory, and dispatches `CExplosion__Init`; only the
+later world-collision/same-receiver damage edge remains open. See
+[`cround-hit-damage-path-2026-08-10.md`](binary-analysis/cround-hit-damage-path-2026-08-10.md).
+The live Ghidra rename/type/comment remains a separate scratch-first operation.
+
 The console bridge is authored instrumentation. It proves the named derivative
 can transport the runtime registry; it does not prove unmodified retail routes
 `ShowCmds`/`ShowVars` to the file logger or that each callback's behavior is
