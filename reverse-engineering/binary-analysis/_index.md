@@ -57,6 +57,10 @@ the document it links.
   and its [15-target table](cpccontroller-vtable-semantics-2026-08-11.tsv) —
   recovers the PC joystick, keyboard, POV, and controller-recording adapter at
   the shared/platform-specific engine boundary described by Lost Toys
+- [Controller-to-player/game event spine](controller-player-game-event-spine-2026-08-11.md)
+  and its [10-target table](controller-player-game-event-spine-2026-08-11.tsv)
+  — follows normalized input through shared mapping into player actions and
+  game/debug/event dispatch, including the released death-audio fade event
 - **Current name state — the three grading ledgers, newest last:**
   - [2026-07-25](name-grading-ledger-2026-07-25.md) — first grading; the 332-row
     RTTI re-prefix wave. Two of its figures are superseded; see its banner.
