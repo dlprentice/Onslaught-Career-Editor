@@ -77,8 +77,11 @@ All 34 shared `CSoundManager__*` production bodies are now semantically
 crosswalked against retained source and normalized-identical demo twins in the
 [`CSoundManager` report](binary-analysis/csoundmanager-shared-semantics-2026-08-11.md).
 They prove the 256-event pool, shared sample/effect and spatial policy, and
-calls into the PC backend for device and channel operations. The inventory also
-contains 20 `CPCSoundManager__*` device-side bodies.
+calls into the PC backend for device and channel operations. All 20
+`CPCSoundManager__*` device-side bodies are now independently crosswalked in the
+[`CPCSoundManager` report](binary-analysis/cpcsoundmanager-backend-semantics-2026-08-11.md),
+including DirectSound enumeration/buffers, the 64-slot channel table, IMA ADPCM
+decode, quality conversion, playback, and listener updates.
 
 The slide spellings `CXBOXSoundManager`, `SSoundEvent`, `GetSoundEvent`,
 `ShouldIBePlaying`, and `DevicePlay` were not found as exact ASCII in the

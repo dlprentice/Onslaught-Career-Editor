@@ -84,6 +84,11 @@ the document it links.
   recovers the production 256-event pool, sample/effect selection, spatial and
   volume policy, 75% channel arbitration, fades, pitch, pause/stop, language
   XAP reload, and device-loss path against source, demo, and the GDC deck
+- [`CPCSoundManager` DirectSound-backend semantic crosswalk](cpcsoundmanager-backend-semantics-2026-08-11.md)
+  and its [20-function table](cpcsoundmanager-backend-semantics-2026-08-11.tsv)
+  — recovers device enumeration, 64 channel slots, IMA ADPCM decode, three
+  output-quality conversions, DirectSound buffer lifecycle, playback, 3D
+  listener updates, and the exact shared/platform boundary
 - [`PCLTShell` virtual-interface semantic crosswalk](pcltshell-vtable-semantics-2026-08-11.md)
   and its [8-target table](pcltshell-vtable-semantics-2026-08-11.tsv) — resolves
   the released Direct3D device lifecycle, pause, capability filter, and Windows
