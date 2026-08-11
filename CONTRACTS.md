@@ -132,6 +132,14 @@ object, and invoking `CExplosion__Init`; subsequent world collision and
 same-receiver additive damage remain open. Owner:
 [`cround-hit-damage-path-2026-08-10.md`](reverse-engineering/binary-analysis/cround-hit-damage-path-2026-08-10.md).
 
+The connected factory-caller census then corrects all 22 containing functions
+that still inherited the old pickup interpretation. Exact adapters bind unit
+profile fields `+0xE8/+0xEC/+0xF0` to unit/small/stomp explosions, and strict
+RTTI binds the virtual owners/slots. Those rows advance to bounded C1 creation
+and initialization contracts; runtime reachability and downstream effects do
+not. Owner:
+[`cexplosion-factory-callers-2026-08-10.md`](reverse-engineering/binary-analysis/cexplosion-factory-callers-2026-08-10.md).
+
 ## Grade and state lifecycle
 
 The campaign uses a deliberately strict progression:

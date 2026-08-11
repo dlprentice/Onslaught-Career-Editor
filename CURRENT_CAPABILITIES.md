@@ -726,6 +726,15 @@ factory at `0x0050FF10`. The recovered mode-3 impact switch now proves that
 gate outcome, and rebuild parity remain open. This advances semantic understanding without retroactively
 claiming that the Gen10 runtime instrument inferred the name or types.
 
+The direct factory census now removes the same stale pickup interpretation from
+all 22 containing functions. Three exact profile adapters identify unit,
+small-unit, and stomp explosion fields; strict RTTI supplies virtual owners and
+slots. The corrected family includes building/infantry/tentacle death
+explosions, boat/dropship/boss/sentinel/simple-building small explosions,
+mech/Warspite/ThunderHead stomp explosions, feature and rocket explosions, and
+the Gill-M claw activation explosion. Static creation/initialization is proved;
+mission reachability, later damage/effects, and rebuild parity remain open.
+
 These instruments do not infer function boundaries, C++ receivers, argument or
 return types, semantics, or parity. Static/source/RTTI evidence supplied joins
 for early data-write plates. Focused player-damage / Level 521 successor work

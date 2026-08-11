@@ -241,6 +241,15 @@ Current local boundaries that materially change the discovery lane:
   closes configured round-to-explosion creation. Later same-receiver collision,
   the contrasting invocation's rejecting gate, and rebuild parity remain open;
   live Ghidra promotion is separate.
+- **2026-08-10 recursive caller correction:** the exact direct-xref census for
+  `CWorldPhysicsManager::CreateExplosion` contains 24 calls: two in the
+  recovered `CRound` switch and 22 bounded function callers. Joined
+  configuration adapters identify `CUnitExplosion`, `CUnitSmallExplosion`, and
+  `CUnitStompExplosion`; strict RTTI fixes the virtual owners and slots. This
+  disproves the remaining pickup labels across unit death, small/stomp
+  explosion, feature, rocket, and Gill-M activation paths. The corrected table
+  and evidence boundary are in
+  [`cexplosion-factory-callers-2026-08-10.md`](binary-analysis/cexplosion-factory-callers-2026-08-10.md).
 - The separate exact-window data-write lane has a source-bound,
   independently-refuted first semantic plate. In one Level 521
   `CBattleEngine::LockHit @ 0x00407140` invocation, five ordered field

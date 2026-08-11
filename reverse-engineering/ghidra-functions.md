@@ -256,6 +256,17 @@ later world-collision/same-receiver damage edge remains open. See
 [`cround-hit-damage-path-2026-08-10.md`](binary-analysis/cround-hit-damage-path-2026-08-10.md).
 The live Ghidra rename/type/comment remains a separate scratch-first operation.
 
+The next recursive pass enumerates all 24 direct calls to that corrected
+factory. Two are the recovered `CRound` switch-gap calls; the remaining 22 are
+function callers. Static field adapters identify the unit-profile explosion
+fields at `+0xE8/+0xEC/+0xF0`, and strict RTTI identifies their shared and
+overridden slots. Consequently the former pickup/drop-pickup names in this
+family are corrected to bounded unit, small, stomp, feature, rocket, and
+Gill-M explosion roles. See
+[`cexplosion-factory-callers-2026-08-10.md`](binary-analysis/cexplosion-factory-callers-2026-08-10.md).
+These are tracked semantic/name-table corrections; promotion into the live or
+canonical Ghidra project remains a separate operation.
+
 The console bridge is authored instrumentation. It proves the named derivative
 can transport the runtime registry; it does not prove unmodified retail routes
 `ShowCmds`/`ShowVars` to the file logger or that each callback's behavior is
