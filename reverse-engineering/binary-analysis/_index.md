@@ -61,6 +61,10 @@ the document it links.
   and its [10-target table](controller-player-game-event-spine-2026-08-11.tsv)
   — follows normalized input through shared mapping into player actions and
   game/debug/event dispatch, including the released death-audio fade event
+- [`CPCMusic` platform-interface semantic crosswalk](cpcmusic-vtable-semantics-2026-08-11.md)
+  and its [8-target table](cpcmusic-vtable-semantics-2026-08-11.tsv) — recovers
+  the shared playlist/PC async-stream boundary, directory enumeration, exact
+  volume conversion, and corrects `0x004BB450` to `DeviceChangeTrack`
 - **Current name state — the three grading ledgers, newest last:**
   - [2026-07-25](name-grading-ledger-2026-07-25.md) — first grading; the 332-row
     RTTI re-prefix wave. Two of its figures are superseded; see its banner.

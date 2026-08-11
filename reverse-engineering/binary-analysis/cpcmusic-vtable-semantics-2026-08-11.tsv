@@ -1,0 +1,9 @@
+retail_va	demo_va	retail_current_name	semantic_label	abi_placement	body_bytes	instruction_count	raw_diff_instruction_count	normalized_diff_instruction_count	semantic_status	evidence_boundary
+0x004bb450	0x004bb360	CMusic__Play	CMusic::DeviceChangeTrack	primary:7	56	23	0	0	SOURCE_BODY	Pinned Music.cpp body: stop active stream, copy set volume to current and target, set device volume, play filename, mark playing; current saved name is wrong
+0x00515320	0x005153c0	CPCMusic__InitMusicPlaylist	CPCMusic::DeviceInitialise	primary:0	22	8	3	0	SOURCE_ABI_BINARY_BODY	Initialises the PC async music stream then adds data\\music through the shared playlist owner
+0x00515340	0x005153e0	CPCMusic__ShutdownAsyncMusicStream	CPCMusic::DeviceShutdown	primary:1	5	1	1	0	SOURCE_ABI_BINARY_BODY	Tail-jumps to the PC async music-stream shutdown routine
+0x00515350	0x005153f0	CPCMusic__VFunc_2_00515350	CPCMusic::DevicePlay	primary:2	14	5	1	0	SOURCE_ABI_BINARY_BODY	Forwards the filename argument to the PC async music-stream play routine
+0x00515360	0x00515400	PCPlatform__ResetAsyncMusicStream	CPCMusic::DeviceStop	primary:3	5	1	1	0	SOURCE_ABI_BINARY_BODY	Tail-jumps to the PC async music-stream reset/stop routine
+0x00515370	0x00515410	CPCMusic__VFunc_5_00515370	CPCMusic::DeviceSetVolume	primary:5	23	7	2	0	SOURCE_ABI_BINARY_BODY	Converts integer volume with exact float32 1/127 scalar at 0x005E4978 then updates async music volume
+0x00515390	0x00515430	CPCMusic__VFunc_4_00515390	CPCMusic::DeviceGetTrackFinished	primary:4	8	3	1	0	SOURCE_ABI_BINARY_BODY	Zero-extends and returns async stream completion byte at 0x0089BEAC
+0x005153a0	0x00515440	CPCMusic__VFunc_6_005153a0	CPCMusic::DeviceAddDirectoryExtsToPlaylist	primary:6	267	97	7	0	SOURCE_ABI_BINARY_BODY	Enumerates dir\\*.ext with Win32 find APIs, formats dir\\filename, adds each result through CMusic::AddToPlayList, then closes the search handle
