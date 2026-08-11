@@ -88,6 +88,15 @@ or references. The bounded ApplyDamage C2 remains one replicated 1,000-damage,
 zero-shield entry/write path, not an all-path law. The next valid campaign
 generation is 20.
 
+Separately, the reviewed 2026-08-11
+[`function-c1-closure-2026-08-11.tsv`](reverse-engineering/binary-analysis/function-c1-closure-2026-08-11.tsv)
+accounts for all 8,136 current Ghidra functions: 8,129 have at least a bounded
+static C1 envelope and seven retain bounded C2 runtime grades, leaving zero
+static `OPAQUE` rows. This does not mutate the Generation-19 replay lineage or
+promote any contract to `REBUILD_READY`; it closes function-envelope accounting
+only. Original symbols, full semantics, runtime causality, source equivalence,
+and reconstruction parity remain separate proof obligations.
+
 **Historical Gen10 immutable admission (2026-08-04):** READY SHA-256
 `b349f0b2895849ba320b0b0b783c60a98794d01f375d57d9a04bbe4a5aebabb2`,
 frozen reducer ID

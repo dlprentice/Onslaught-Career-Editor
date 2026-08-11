@@ -96,6 +96,17 @@ reproduction-only. Generation 73 remains a projection oracle, never a parent or
 authority. The next valid campaign generation is 20. Model review is
 situational and harness-agnostic under `REVIEW-PROTOCOL.md`.
 
+**Current static-envelope closure (2026-08-11):** the reviewed
+[`function-c1-closure-2026-08-11.tsv`](binary-analysis/function-c1-closure-2026-08-11.tsv)
+accounts for the current 8,136-function inventory at 8,129 bounded C1 and seven
+bounded C2 functions, with zero static `OPAQUE` rows. It joins 53 disjoint
+sealed receipts covering 7,945 functions, ten post-Gen19 Mission-native
+boundaries, and 181 pre-existing C1/C2 rows. This is a distinct authority for
+static-envelope accounting; Generation 19 remains the immutable replay owner
+for its admitted runtime evidence and READY/reducer lineage. See the
+[closure report](binary-analysis/function-c1-closure-2026-08-11.md) for exact
+hashes and limits.
+
 ## Historical Gen10 dual-authority / TTD admission (2026-08-04)
 
 Generation 10 remains a valid **historical frozen-integrity**

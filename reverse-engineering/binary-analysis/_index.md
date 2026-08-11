@@ -1,7 +1,7 @@
 # Binary Analysis
 
 Status: living index for `reverse-engineering/binary-analysis/`
-Last updated: 2026-07-28
+Last updated: 2026-08-11
 Summary: front door to the static and byte-level evidence for the Steam
 `BEA.exe`. Names the current naming authority, the specimen baseline, and the
 per-system contracts. Makes no claim of its own — every claim below belongs to
@@ -22,6 +22,10 @@ the document it links.
   binary the reference captures came from, and why it matters
 - [RE coverage baseline](re-coverage-baseline-2026-07-25.md) — the 6,411 → 6,969
   inventory growth and the byte-level verifier
+- [Full 8,136-function static-C1 closure](function-c1-closure-2026-08-11.md) —
+  the reviewed per-row crosswalk from 53 sealed static receipts, the ten
+  post-Gen19 Mission natives, and the pre-existing bounded C1/C2 set; static
+  envelope closure only, not runtime or source parity
 - **Current name state — the three grading ledgers, newest last:**
   - [2026-07-25](name-grading-ledger-2026-07-25.md) — first grading; the 332-row
     RTTI re-prefix wave. Two of its figures are superseded; see its banner.

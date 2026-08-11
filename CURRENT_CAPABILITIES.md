@@ -657,6 +657,14 @@ equality, or self-derived pins.
 | READY / reducer | `f83dbb6e…ab9a` / `151acbe5…f3e2` |
 | Next valid generation | **20** |
 
+**Tracked static-envelope closure (2026-08-11):** the separate reviewed
+[`function-c1-closure-2026-08-11.tsv`](reverse-engineering/binary-analysis/function-c1-closure-2026-08-11.tsv)
+accounts for the current 8,136-function inventory as **8,129 C1**, **7 C2**,
+and **0 static OPAQUE**. It is the current authority for minimum per-function
+static envelopes. The table above remains the immutable Generation-19 replay
+authority for its admitted runtime/campaign claims; neither count implies
+`REBUILD_READY` or complete semantic parity.
+
 Generation 11's post-loss closure accounts for every Generation-73 candidate delta without
 making that candidate a parent. It readmits 935 names, 216 bounded C1 claims,
 and 6,082 residual terminalizations; preserved 20 police-open residuals, seven
