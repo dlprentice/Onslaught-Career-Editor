@@ -29,8 +29,8 @@ the document it links.
 - [PC demo/retail virtual-target comparison](../DEMO_VS_RETAIL.md) and its
   [2,127-row address map](pc-demo-retail-virtual-target-map-2026-08-11.tsv) —
   identical strict RTTI/vtable structure pairs every virtual target; 2,123
-  instruction streams have zero normalized differences and four frontend/FMV
-  comparisons remain explicit divergences
+  instruction streams have zero normalized differences and all four original
+  frontend/FMV divergences now have independently bounded semantic explanations
 - [PC demo/retail whole-function map](pc-demo-retail-function-map-2026-08-11.tsv)
   — 8,086 independently mapped demo entries; 8,021 normalized-identical body
   streams covering 1,702,495 retail bytes and 512,925 instructions, with 65
@@ -40,6 +40,11 @@ the document it links.
   — independently bounds five changed bodies and recovers the demo-only
   per-playback skip field, American-English fallback, initialized playable-demo
   state and publisher FMV plus retail's demo-loading adaptation
+- [PC demo/retail frontend lineage](pc-demo-retail-frontend-lineage-2026-08-11.md)
+  and its [3-function table](pc-demo-retail-frontend-lineage-2026-08-11.tsv) —
+  recovers the demo-only publisher-surface draw and dedicated demo-main
+  debrief route, retail's playable-demo quit/result path, and the shared
+  86-texture loader's one edition-specific substitution
 - [`CUnit` primary virtual-interface semantic crosswalk](cunit-primary-vtable-semantics-2026-08-11.md)
   and its [46-slot table](cunit-primary-vtable-semantics-2026-08-11.tsv) — uses
   the demo twin, pinned source overrides, and typed callsites to replace field

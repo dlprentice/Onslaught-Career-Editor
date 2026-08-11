@@ -199,6 +199,17 @@ an opt-in launch state, removes the FMV field and guards, and temporarily
 selects demo loading resources when that state is active. Shared class
 structure therefore coexists with deliberate product/build policy changes.
 
+The paired
+[frontend lineage report](binary-analysis/pc-demo-retail-frontend-lineage-2026-08-11.md)
+closes that producer/consumer chain. Both builds retain the same 86-entry
+shared-texture loader shape, but demo substitutes `fe_publisher.tga` at one
+stable frontend-data offset and its `CFEPIntro::Render` conditionally submits
+that surface. Retail loads `fe_infogrames.tga` at the corresponding offset but
+does not submit it from the bounded intro renderer. Debrief completion likewise
+routes demo to `FEP_DEMOMAIN` while retail playable-demo writes a frontend
+quit/result sentinel. The shared frontend page architecture therefore carries
+small, deliberate distribution-specific resource and navigation policy.
+
 The deck also treats Xbox TRCs and PlayStation TCRs as separate production
 schedules and requirements. Platform-specific input, startup, save, display,
 and error-handling differences may therefore be certification work rather than
