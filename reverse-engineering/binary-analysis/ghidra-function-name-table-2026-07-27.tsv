@@ -1397,8 +1397,8 @@ address	name	bodyMin	bodyMax
 0x0044c0f0	CExplosion__Move	0x0044c0f0	0x0044c13e
 0x0044c140	CAnimal__HandleEvent3000Dispatch	0x0044c140	0x0044c15f
 0x0044c160	CExplosion__GetRadius	0x0044c160	0x0044c166
-0x0044c170	CExplosion__VFunc_67_0044c170	0x0044c170	0x0044c179
-0x0044c180	CExplosion__VFunc_38_0044c180	0x0044c180	0x0044c1b5
+0x0044c170	CExplosion__GetConfiguredDamage	0x0044c170	0x0044c179
+0x0044c180	CExplosion__SetThingType	0x0044c180	0x0044c1b5
 0x0044c1c0	CMesh__DeserializeTripletDwords	0x0044c1c0	0x0044c20a
 0x0044c210	CMesh__DeserializeNineDwords	0x0044c210	0x0044c2d8
 0x0044c2e0	FUN_0044c2e0	0x0044c2e0	0x0044c2fe

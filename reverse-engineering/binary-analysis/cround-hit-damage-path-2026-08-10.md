@@ -262,6 +262,33 @@ uses the same mutual-filter/pair-dispatch machinery. This closes the static
 immediate-versus-delayed readiness design without claiming an exact observed
 runtime event cadence.
 
+## Remaining `CExplosion` virtual tail
+
+The two short virtuals adjacent to `GetRadius`, `Hit`, and `Move` are now
+resolved at the same bounded static level:
+
+- slot 67 `0x0044C170` is `CExplosion::GetConfiguredDamage`. Its complete
+  10-byte/three-instruction body loads the configuration pointer at
+  `this+0x84`, returns the float at `config+0x38`, and performs no write or
+  call. The raw explosion field table independently identifies `+0x38` as
+  `CExplosionDamage`. The body SHA-256 is
+  `31b08b4ea68950894c92bf97bbba0b87722e6d2e32de1fd0dbe321c064f457cc`.
+- inherited slot 38 `0x0044C180` is `CExplosion::SetThingType`. The pinned
+  `CThing` source fixes slot 38 as `SetThingType(ULONG)`, while strict RTTI
+  places this override at that slot in `CExplosion`. The complete 54-byte,
+  14-instruction body ORs the caller mask with `0x01000000`; when the joined
+  configured damage is strictly greater than `3.0f`, it also ORs
+  `0x00200000` (`THING_TYPE_CAN_DESTROY_TREES`), then stores the inherited
+  base mask `0x80000001` plus those bits at `this+0x34`. The
+  `0x01000000` bit is also the exact type excluded from an explosion's
+  collision-seeking mask, and the tree collision body tests the same bit on
+  its other thing; its source enum token remains unclaimed. The body SHA-256
+  is `fb5debd84f7db05a5b16dcb80da7b33143b8a2a22f18d5d253d4f2c8e139a531`.
+
+This closes the visible accessor/type-classification contracts without
+claiming an original declaration for the class-specific slot 67 name or a
+runtime observation of the greater-than-three tree-destruction branch.
+
 For `Mech Pulse Hit Medium`, authored `R = 0.5` is already live during that
 scan. Its radius accessor returns the configured maximum radius at
 `this+0x80`; after subtracting the struck target's radius,
