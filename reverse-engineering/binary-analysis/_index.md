@@ -49,6 +49,10 @@ the document it links.
   and its [3-function table](pc-demo-retail-shell-fmv-lineage-2026-08-11.tsv) —
   bounds demo's separate 500-byte startup-movie helper, publisher insertion on
   all startup/attract paths, and language-selected promotional shutdown request
+- [PC demo/retail text-core lineage](pc-demo-retail-text-core-lineage-2026-08-11.md)
+  and its [2-function table](pc-demo-retail-text-core-lineage-2026-08-11.tsv) —
+  resolves two conservative multi-range false negatives as normalized-identical
+  code, including every language literal and body-relative switch target
 - [`CUnit` primary virtual-interface semantic crosswalk](cunit-primary-vtable-semantics-2026-08-11.md)
   and its [46-slot table](cunit-primary-vtable-semantics-2026-08-11.tsv) — uses
   the demo twin, pinned source overrides, and typed callsites to replace field

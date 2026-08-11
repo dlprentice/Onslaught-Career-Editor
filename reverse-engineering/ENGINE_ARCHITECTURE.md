@@ -219,6 +219,12 @@ promotional movie request before the otherwise shared teardown. The frontend,
 FMV wrapper, text-language state, and shell lifecycle remain stable subsystem
 owners even where distribution policy and function factoring differ.
 
+The [text-core lineage report](binary-analysis/pc-demo-retail-text-core-lineage-2026-08-11.md)
+sharpens that boundary: `CText::Init` is instruction-for-instruction preserved
+across demo and retail, including language names, path formats, version parsing,
+and switch targets. The distribution-specific American-English behavior enters
+through the command-line/global producer; it is not a fork of the text parser.
+
 The deck also treats Xbox TRCs and PlayStation TCRs as separate production
 schedules and requirements. Platform-specific input, startup, save, display,
 and error-handling differences may therefore be certification work rather than

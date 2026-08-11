@@ -5,14 +5,15 @@ Last updated: 2026-08-11
 Evidence: MEASURED — exact executable/archive hashes, independently recounted
 MSVC RTTI/vtables, a 2,127-target virtual census, and a conservative 8,086-row
 cross-build function-address map; UNKNOWN — normalized constant values, 50
-retail functions without a demo address, runtime behavior, and 54 of the 65
+retail functions without a demo address, runtime behavior, and 52 of the 65
 address-mapped bodies not shown normalized-identical below.
 Verdict: the PC demo is a distinct build with a structurally identical virtual
 class surface. Across virtual and non-virtual code, 8,021 of 8,136 retail
 functions have a normalized-identical demo body and 65 more have an
 independently fixed demo entry but a different or initially incompletely
-bounded body. Eleven startup, frontend, and shell-lifecycle bodies are now
-independently bounded and semantically resolved; 54 remain in that queue.
+bounded body. Thirteen startup, frontend, shell-lifecycle, and text-core rows
+are now independently bounded and semantically resolved; 52 remain in that
+queue.
 Specimen: pristine PC retail `BEA.exe`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`;
 PC demo `BEA.exe`, SHA-256
@@ -199,6 +200,14 @@ all startup/attract paths, and requests one of two language-selected promotional
 movies before shutdown. Retail retains inline startup policy and no promotional
 shutdown call.
 
+The
+[text-core lineage report](binary-analysis/pc-demo-retail-text-core-lineage-2026-08-11.md)
+also resolves two conservative false negatives. `CText::Init` and the localized
+fatal wrapper each have two Ghidra body ranges, so the original single-range
+mapper abstained. Direct range-for-range decoding proves zero normalized
+instruction differences, identical language literals, and identical
+body-relative switch targets.
+
 The concentration in debriefing, intro, and FMV/frontend code is a useful
 build-lineage signal. It is not evidence that gameplay is globally identical.
 
@@ -213,7 +222,7 @@ demo preserves that shape.
 The earlier `CUnit`, `CBattleEngine`, `CThing`, `CComplexThing`, `CActor`, PC
 controller, PC music, PC shell, FMV/startup, and frontend semantic cohorts have
 now used that oracle. The next cross-build work should change instruments
-again: independently bound the remaining 54 address-only bodies, then use calls,
+again: independently bound the remaining 52 address-only bodies, then use calls,
 exception metadata, strings,
 retained source, and platform builds on the 50 address-unmapped rows. Repeating the
 same normalized-signature search would only fit the remaining ambiguity.
@@ -233,9 +242,9 @@ Open boundaries remain:
 
 - normalized immediate/displacement values and the objects they address;
 - non-instruction bytes in multi-range bodies;
-- independent demo body/CFG and semantic recovery for the 54 address-mapped
+- independent demo body/CFG and semantic recovery for the 52 address-mapped
   changed or incompletely bounded targets not closed by the FMV/startup and
-  frontend/shell reports;
+  frontend/shell/text-core reports;
 - demo entry recovery for the remaining 50 retail functions;
 - asset/configuration differences and their behavioral consequences;
 - runtime equivalence, source equivalence, and rebuild parity.
