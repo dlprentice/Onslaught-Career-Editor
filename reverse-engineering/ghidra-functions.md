@@ -801,13 +801,11 @@ algorithm evidence; it is not a substitute for the Steam binary.
 The apparent library region above `0x00555000` is mixed application, compiler,
 CRT, codec, math, and rendering code. It is not a clean authorship boundary.
 
-### RTTI conflict queue: all 26 current rows
+### RTTI conflict queue: all 24 current rows
 
 | Address | Current name | Resolved RTTI owner |
 | --- | --- | --- |
 | `0x00404110` | `CAnimal__SetThingTypeMask80000001` | `CComplexThing` |
-| `0x00426a00` | `CCollisionSeekingRound__ProcessMapWhoCollisionSweep` | `CCSPersistentThing` |
-| `0x00426a20` | `CCollisionSeekingRound__MarkDelayedCollisionReady` | `CCSPersistentThing` |
 | `0x004439c0` | `CDestroyableSegment__SharedVFunc_08_HandleChildBreak` | `CDestroyableExtraSegment` |
 | `0x00447b50` | `CActor__SetFieldD0ToNow_00402010` | `CDropship` |
 | `0x004599a0` | `CFEPMultiplayerStart__SubObj8848__Init` | `CFEPE3LevelSelect` |

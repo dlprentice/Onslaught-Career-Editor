@@ -230,7 +230,9 @@ persistent-component slots:
 
 | Slot | Retail target | Recovered contract |
 |---:|---:|---|
+| 0 | `0x00426A20` | `CCSPersistentThing::HandleEvent`; event 3000 restores ready bit `0x400` |
 | 3 | `0x004269B0` | `CCSPersistentThing::Init` |
+| 5 | `0x00426A00` | previous/current MapWho-sector sweep bridge |
 | 6 | `0x004264A0` | shared collision response and owner `Hit` dispatch |
 | 8 | `0x00426900` | mutual thing-flag filter |
 
@@ -247,6 +249,18 @@ the current component's slot 6. The shared slot-6 body requires ready bit
 `0x400`, resolves the collision volumes, and terminally calls owner slot 39
 (`Hit`) on both participating `CThing` objects. One of those owners is the new
 `CExplosion`, so its side is exactly `CExplosion::Hit`.
+
+The alternate lifecycle is now bounded as well. When
+`mStartCollideOnNextFrame` is true, `CCSPersistentThing::Init` clears bit
+`0x400` and schedules event number 3000 after the initializer's
+`mTimeBeforeStart` (`NEXT_FRAME`, `-1.0f`, by default in the pinned source).
+`CCSPersistentThing::HandleEvent @ 0x00426A20` restores the bit only for that
+event number. Its slot-5 bridge at `0x00426A00` forwards subsequent
+previous/current sector changes to `CHLCollisionDetector::ProcessMapWhoCollisionSweep`,
+which visits only newly entered 3x3 MapWho cells across descending layers and
+uses the same mutual-filter/pair-dispatch machinery. This closes the static
+immediate-versus-delayed readiness design without claiming an exact observed
+runtime event cadence.
 
 For `Mech Pulse Hit Medium`, authored `R = 0.5` is already live during that
 scan. Its radius accessor returns the configured maximum radius at
