@@ -89,6 +89,11 @@ the document it links.
   — recovers device enumeration, 64 channel slots, IMA ADPCM decode, three
   output-quality conversions, DirectSound buffer lifecycle, playback, 3D
   listener updates, and the exact shared/platform boundary
+- [PC memory-buffer and typed-allocation semantic crosswalk](pc-memory-io-semantics-2026-08-11.md)
+  and its [25-function table](pc-memory-io-semantics-2026-08-11.tsv) — recovers
+  released 1 MiB-aligned buffering, raw/zlib block I/O and CRC sidecars, 129
+  typed allocation routes, four PC heaps, allocation headers, OOM policy, and
+  retained-source divergences
 - [`PCLTShell` virtual-interface semantic crosswalk](pcltshell-vtable-semantics-2026-08-11.md)
   and its [8-target table](pcltshell-vtable-semantics-2026-08-11.tsv) — resolves
   the released Direct3D device lifecycle, pause, capability filter, and Windows

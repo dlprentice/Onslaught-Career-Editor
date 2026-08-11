@@ -113,6 +113,12 @@ subsystems: `Camera.cpp`, collision-seeking owners, `MemoryManager.cpp`,
 `MeshCollisionVolume.cpp`, `ParticleDescriptor.cpp`, `ParticleManager.cpp`,
 `ParticleSet.cpp`, `TokenArchive.cpp`, and `DXParticleTexture.cpp`.
 
+The deck's file-access and memory-management services now have a concrete PC
+crosswalk too: the [memory/I/O report](binary-analysis/pc-memory-io-semantics-2026-08-11.md)
+recovers all 25 current `CDXMemBuffer`/`CDXMemoryManager` bodies against source
+and demo, including Win32/zlib/CRC file buffering and the 129-type/four-heap PC
+allocation router. Console heap and file implementations remain separate.
+
 ### Building example
 
 The deck's sound example names `CBuilding`; PC retail contains exact
