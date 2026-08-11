@@ -49,6 +49,10 @@ the document it links.
   and its [22-target table](ccomplexthing-vtable-semantics-2026-08-11.tsv) —
   adds the source-backed orientation, animation, name, motion-controller, and
   mission-script layer used by higher gameplay classes
+- [`CActor` virtual-interface semantic crosswalk](cactor-vtable-semantics-2026-08-11.md)
+  and its [18-target table](cactor-vtable-semantics-2026-08-11.tsv) — recovers
+  the movement scheduler, pose integration/interpolation, contact timestamps,
+  teleport, and velocity-stop layer inherited by moving gameplay objects
 - **Current name state — the three grading ledgers, newest last:**
   - [2026-07-25](name-grading-ledger-2026-07-25.md) — first grading; the 332-row
     RTTI re-prefix wave. Two of its figures are superseded; see its banner.
