@@ -210,6 +210,37 @@ Retail body SHA-256 pins, in the table's address order:
 004d9ef0 cca25281f2ca91e693706e799be2672bd435992e7ed85329ba1f41bda019aacb
 ```
 
+### 3.3 Construction, targeting, and launch helpers
+
+The same class/data join closes thirteen adjacent lifecycle and launch bodies.
+Unlike the inherited virtual names in Section 3.2, some helper names here are
+descriptive semantic labels recovered from their callers and visible state
+changes rather than claimed original source symbols.
+
+| retail -> PC demo | function | bytes | bounded contract |
+| --- | --- | ---: | --- |
+| `0x004D81E0` -> `0x004D80C0` | `CRound__ctor` | 164 | Constructs the complex/actor bases, installs the `CRound` primary/render tables, links the effect handle, stores round data at `+0xf0`, seeds time/state fields, and clears reader/launch fields. |
+| `0x004D8350` -> `0x004D8230` | `CRound__scalar_deleting_dtor` | 32 | Calls the teardown body, conditionally frees on deleting-destructor flag bit 0, and returns the receiver. |
+| `0x004D8370` -> `0x004D8250` | `CRound__ShutdownAndDetachReaders` | 151 | Detaches both reader cells, removes the particle/effect owner link, then destroys the actor base. |
+| `0x004D8410` -> `0x004D82F0` | `CRound__Init` | 1,591 | Copies round-init aim/data fields, selects beam versus ordinary collision setup, initializes `CActor`, schedules event 4000, registers optional fear-grid tracking, and starts target selection. |
+| `0x004D8A50` -> `0x004D8930` | `CCollisionSeekingRound__scalar_deleting_dtor` | 32 | Runs the collision-seeking-round teardown and conditionally frees the object. |
+| `0x004DAAB0` -> `0x004DA990` | `CRound__SetTargetReaderIfAllowed` | 159 | Gates target assignment on seek/negative-damage configuration, optionally removes the old reader, binds the new reader, and updates the global tracked-round set. |
+| `0x004DAB50` -> `0x004DAA30` | `CRound__RemoveActiveReaderById` | 77 | Removes owner-monitor/global-set registrations and clears the active target reader. |
+| `0x004DABA0` -> `0x004DAA80` | `CRound__FindNearbyHostileWithinProjectileRadius` | 240 | Scans MapWho within `CRoundJumpRange`, rejects the current target and flag-ineligible entries, and returns the first candidate whose center lies inside the configured radius. |
+| `0x004DAC90` -> `0x004DAB70` | `CRound__SelectBestTargetReaderAndSyncAimState` | 852 | Scores eligible readers in round-local aim space, applies seek-angle/polarity and allegiance gates, binds the best reader, writes aim state, and schedules event 4003. |
+| `0x004DAFF0` -> `0x004DAED0` | `FearGridTrackedObject__LookupFearWeightByArchetype` | 152 | Matches the tracked object's round-data name against the preset list and returns entry scalar `+0x34`, otherwise zero/default. |
+| `0x004DB090` -> `0x004DAF70` | `CRound__GetPresetScalarByConfigName` | 152 | Performs the parallel name lookup and returns entry scalar `+0x38`, otherwise zero/default. |
+| `0x004DB150` -> `0x004DB030` | `CRound__SpawnConfiguredProjectile` | 1,185 | Chooses a nearby target or randomized ground point, creates the configured projectile, builds its round-init payload, and dispatches its init virtual. |
+| `0x004DB630` -> `0x004DB510` | `CRound__ArmProjectileAndSpawnTrailEffect` | 541 | For the unarmed torpedo branch, marks launch state, clamps height, normalizes/scales velocity from `CRoundSpeed`, replaces the effect link, creates the configured trail, and synchronizes its transform/time. |
+
+All thirteen independently linked demo bodies again decode with identical
+instruction boundaries, mnemonics, operands after relocation normalization,
+and zero normalized differences. Exact retail ranges and body SHA-256 values
+are retained in
+`local-lab/console-output-topology-v2-ready/inputs/ghidra-body-ranges.tsv`;
+the bounded decompiles are in W006/W007 under
+`local-lab/ghidra-fullpass-2026-07-23/exports/`.
+
 ## 4. Weapon-mode value ids (statement tag 3, factory `0x00435010`)
 
 Record size `0xc0`. Record name at `+0x30`.
