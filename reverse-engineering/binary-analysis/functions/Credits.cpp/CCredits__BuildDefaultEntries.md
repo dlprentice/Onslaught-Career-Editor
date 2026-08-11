@@ -7,7 +7,7 @@
 
 ## Summary
 
-Builds the static credits-entry table used by the renderer. The function writes a long sequence of rows into global storage (`DAT_00896ca8..DAT_0089754c`) containing section/type values, localized text IDs, raw string pointers, and style fields.
+Builds the static credits-entry table used by the renderer. The retail function writes 222 complete 16-byte rows into global storage (`0x00896ca8..0x00897a87`) containing section values, localized text IDs or raw string pointers, and style fields.
 
 ## Behavioral Notes
 
@@ -15,6 +15,12 @@ Builds the static credits-entry table used by the renderer. The function writes 
   - `CCredits__WriteEntry_TextId` (`0x00519ff0`) for numeric text-ID rows.
   - `CCredits__WriteEntry_String` (`0x0051a010`) for direct string-pointer rows.
 - Final row appears to be a terminator-like entry (`FUN_00519ff0(3, 0, 3)` at the end of the builder stream).
+- Static evaluation of every store and helper call confirms the row shapes as
+  `{section,text_id,0,style}` and `{section,-1,text_pointer,style}`.
+- The PC demo body at `0x00518c90` builds 247 rows. Its only logical edit is a
+  25-row insertion at demo indices 92–116; all 222 retail rows remain in the
+  same order and with the same values. See the
+  [cross-build table report](../../pc-demo-retail-credits-localization-lineage-2026-08-11.md).
 
 ## Evidence
 
