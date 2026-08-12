@@ -3,17 +3,16 @@
 Status: active, measured cross-build evidence
 Last updated: 2026-08-11
 Evidence: MEASURED — exact executable/archive hashes, independently recounted
-MSVC RTTI/vtables, a 2,127-target virtual census, and a conservative 8,086-row
-cross-build function-address map; UNKNOWN — normalized constant values, 50
-retail functions without a demo address, runtime behavior, and 50 of the 65
-address-mapped bodies not shown normalized-identical below.
+MSVC RTTI/vtables, a 2,127-target virtual census, a conservative 8,086-row
+cross-build function-address map, and exact multi-range replay; UNKNOWN —
+normalized constant values, 50 retail functions without a demo address,
+runtime behavior, and 10 address-mapped bodies not yet resolved.
 Verdict: the PC demo is a distinct build with a structurally identical virtual
-class surface. Across virtual and non-virtual code, 8,021 of 8,136 retail
-functions have a normalized-identical demo body and 65 more have an
-independently fixed demo entry but a different or initially incompletely
-bounded body. Fifteen startup, frontend, shell-lifecycle, text-core, credits,
-and hard-coded-localization rows are now independently bounded and semantically
-resolved; 50 remain in that queue.
+class surface. Across virtual and non-virtual code, 8,063 of 8,136 retail
+functions have a complete normalized-identical demo instruction stream. Another
+13 have independently bounded semantic lineage differences, leaving only 10 of
+8,086 mapped entries unresolved. Fifty retail functions still lack a demo
+entry.
 Specimen: pristine PC retail `BEA.exe`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`;
 PC demo `BEA.exe`, SHA-256
@@ -118,9 +117,12 @@ proximity alone:
    36-byte normalized context matched in both images. A final direct-transfer
    replay then reached its fixed point.
 
-The 8,021 normalized-identical rows have unique retail and demo entries. Their
-contiguous body-overlap graph is also identical: the sole nested-entry pair is
-present on both sides, with no demo-only or retail-only overlap.
+The original 8,021 normalized-identical rows have unique retail and demo
+entries. Their contiguous body-overlap graph is also identical: the sole
+nested-entry pair is present on both sides, with no demo-only or retail-only
+overlap. Exact non-contiguous replay subsequently adds 42 multi-range rows: the
+two text-core functions described below and the forty-row
+[multi-range closure](binary-analysis/pc-demo-retail-multirange-closure-2026-08-11.md).
 
 The resulting mechanical map is
 [`binary-analysis/pc-demo-retail-function-map-2026-08-11.tsv`](binary-analysis/pc-demo-retail-function-map-2026-08-11.tsv),
@@ -131,15 +133,20 @@ The resulting mechanical map is
 | --- | ---: |
 | Retail functions | 8,136 |
 | Independently mapped demo entries | 8,086 |
-| Normalized-identical body streams | 8,021 |
-| Address mapped, body changed or incompletely bounded | 65 |
+| Original single-range normalized-identical body streams | 8,021 |
+| Multi-range normalized-identical corrections | 42 |
+| Semantically resolved non-identical bodies | 13 |
+| Address mapped, still changed or incompletely bounded | 10 |
 | No demo entry yet recovered | 50 |
-| Normalized-identical retail body bytes | 1,702,495 |
-| Normalized-identical retail instructions | 512,925 |
+| Normalized-identical retail body bytes | 1,727,968 |
+| Normalized-identical retail instructions | 520,718 |
 
-The 65 address-only/different rows are the four strict-vtable divergences below,
-60 entries independently fixed by unanimous corresponding direct transfers,
-and one isolated compiler-unwind entry fixed by its equal-delta neighbors.
+The original 65 address-only/different rows were the four strict-vtable
+divergences below, 60 entries independently fixed by unanimous corresponding
+direct transfers, and one isolated compiler-unwind entry fixed by its
+equal-delta neighbors. Forty-two were multi-range comparison false negatives;
+13 have edition-specific behavior accounted for by the reports below; ten are
+still unresolved.
 For example, corresponding direct callers select demo entry `0x004F0110` for
 `0x004F00E0 CLTShell__ShutdownRuntimeAndReleaseResources`, while the retail body
 matches only a later demo suffix. Address identity and body equivalence are
@@ -225,16 +232,16 @@ build-lineage signal. It is not evidence that gameplay is globally identical.
 The demo is now an independent refuter and address-translation oracle for most
 of the executable, not only the virtual surface. A retail interpretation that
 requires a changed opcode, register form, branch shape, or instruction layout
-in one of the 8,021 exact rows must also explain why the independently linked
+in one of the 8,063 exact rows must also explain why the independently linked
 demo preserves that shape.
 
 The earlier `CUnit`, `CBattleEngine`, `CThing`, `CComplexThing`, `CActor`, PC
 controller, PC music, PC shell, FMV/startup, and frontend semantic cohorts have
 now used that oracle. The next cross-build work should change instruments
-again: independently bound the remaining 50 address-only bodies, then use calls,
-exception metadata, strings,
-retained source, and platform builds on the 50 address-unmapped rows. Repeating the
-same normalized-signature search would only fit the remaining ambiguity.
+again: semantically recover the remaining ten address-mapped bodies, then use
+calls, exception metadata, strings, retained source, and platform builds on the
+50 address-unmapped rows. Repeating the same normalized-signature search would
+only fit the remaining ambiguity.
 
 ## Reproduction and limits
 
@@ -250,10 +257,8 @@ has SHA-256
 Open boundaries remain:
 
 - normalized immediate/displacement values and the objects they address;
-- non-instruction bytes in multi-range bodies;
-- independent demo body/CFG and semantic recovery for the 50 address-mapped
-  changed or incompletely bounded targets not closed by the FMV/startup and
-  frontend/shell/text-core/credits-localization reports;
+- semantic recovery for the ten address-mapped changed or incompletely bounded
+  targets not closed by the existing lineage reports and multi-range replay;
 - demo entry recovery for the remaining 50 retail functions;
 - asset/configuration differences and their behavioral consequences;
 - runtime equivalence, source equivalence, and rebuild parity.
