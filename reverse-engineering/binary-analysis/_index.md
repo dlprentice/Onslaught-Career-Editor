@@ -32,9 +32,10 @@ the document it links.
   instruction streams have zero normalized differences and all four original
   frontend/FMV divergences now have independently bounded semantic explanations
 - [PC demo/retail whole-function map](pc-demo-retail-function-map-2026-08-11.tsv)
-  — 8,086 independently mapped demo entries; 8,021 normalized-identical body
-  streams covering 1,702,495 retail bytes and 512,925 instructions, with 65
-  changed/unbounded bodies and 50 address-unmapped functions kept explicit
+  — immutable first-pass snapshot with 8,086 independently mapped demo entries;
+  8,021 normalized-identical body streams covering 1,702,495 retail bytes and
+  512,925 instructions, with its original 65 changed/unbounded bodies and 50
+  address-unmapped functions kept explicit
 - [PC demo/retail FMV and startup lineage](pc-demo-retail-fmv-startup-lineage-2026-08-11.md)
   and its [5-function table](pc-demo-retail-fmv-startup-lineage-2026-08-11.tsv)
   — independently bounds five changed bodies and recovers the demo-only
@@ -58,6 +59,13 @@ the document it links.
   — resolves the factory's instruction-accounting false negative, proves the
   same 27-case dispatch contract in both builds, and replaces all eight
   remaining opcode-class placeholders while keeping their runtime effects open
+- [PC demo/retail CRT/FPU gapless closure and address propagation](pc-demo-retail-gapless-closure-2026-08-11.md),
+  its [nine-body table](pc-demo-retail-crt-fpu-gapless-closure-2026-08-11.tsv),
+  [six propagated address pairs](pc-demo-retail-propagated-address-additions-2026-08-11.tsv),
+  and [44-row remaining frontier](pc-demo-retail-address-unmapped-frontier-2026-08-11.tsv)
+  — resolves the final mapped comparison false negatives, explicitly corrects
+  two stale FPU helper contracts, and leaves the 8,136-function partition at
+  8,079 normalized-identical, 13 semantically bounded, and 44 address-unmapped
 - [`CUnit` primary virtual-interface semantic crosswalk](cunit-primary-vtable-semantics-2026-08-11.md)
   and its [46-slot table](cunit-primary-vtable-semantics-2026-08-11.tsv) — uses
   the demo twin, pinned source overrides, and typed callsites to replace field

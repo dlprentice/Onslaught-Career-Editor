@@ -112,14 +112,15 @@ for its admitted runtime evidence and READY/reducer lineage. See the
 hashes and limits.
 
 **Current PC demo/retail frontier (2026-08-11):** the conservative 8,086-entry
-address map plus exact second-pass reports now account for 8,064
-normalized-identical bodies and 13 bounded semantic divergences. The
-[`CAsmInstruction__SpawnFromOpcode` lineage](binary-analysis/pc-demo-retail-asm-instruction-lineage-2026-08-11.md)
-closes its `not_compared` row as a gapless 400-instruction match and fixes all
-27 opcode cases to paired strict RTTI classes/slot-0 executors. Nine
-address-mapped CRT/FPU bodies and 50 address-unmapped retail functions remain;
-see [`DEMO_VS_RETAIL.md`](DEMO_VS_RETAIL.md) for the exact accounting and proof
-boundaries.
+address map plus exact second-pass reports and caller propagation now account
+for 8,079 normalized-identical bodies and 13 bounded semantic divergences. The
+[gapless CRT/FPU closure](binary-analysis/pc-demo-retail-gapless-closure-2026-08-11.md)
+resolves the final nine mapped false negatives, corrects two stale FPU helper
+plates, and recovers six more exact address pairs. All 8,092 mapped entries are
+accounted for; the tracked
+[44-row address frontier](binary-analysis/pc-demo-retail-address-unmapped-frontier-2026-08-11.tsv)
+now owns the remaining queue. See [`DEMO_VS_RETAIL.md`](DEMO_VS_RETAIL.md) for
+the exact accounting and proof boundaries.
 
 ## Historical Gen10 dual-authority / TTD admission (2026-08-04)
 

@@ -666,13 +666,15 @@ authority for its admitted runtime/campaign claims; neither count implies
 `REBUILD_READY` or complete semantic parity.
 
 **PC demo/retail function frontier (2026-08-11):** exact second-pass reports
-now account for **8,064 normalized-identical bodies** and **13 bounded semantic
-divergences** among 8,086 mapped retail functions. The
-[`CAsmInstruction__SpawnFromOpcode` lineage](reverse-engineering/binary-analysis/pc-demo-retail-asm-instruction-lineage-2026-08-11.md)
-closes one `not_compared` row as a gapless 400-instruction match and fixes all
-27 serialized opcode cases to paired strict RTTI classes and slot-0 executors.
-Nine mapped CRT/FPU bodies and 50 address-unmapped retail functions remain;
-runtime, source, and rebuild equivalence remain separate proof.
+now account for **8,079 normalized-identical bodies** and **13 bounded semantic
+divergences** among 8,092 mapped retail functions. The
+[gapless CRT/FPU closure](reverse-engineering/binary-analysis/pc-demo-retail-gapless-closure-2026-08-11.md)
+resolves the final nine mapped false negatives, supersedes two stale FPU helper
+plates, and propagates six additional normalized-identical address pairs. No
+mapped body remains unresolved; the
+[44-row frontier](reverse-engineering/binary-analysis/pc-demo-retail-address-unmapped-frontier-2026-08-11.tsv)
+owns the remaining address-recovery queue. Runtime, source, and rebuild
+equivalence remain separate proof.
 
 Generation 11's post-loss closure accounts for every Generation-73 candidate delta without
 making that candidate a parent. It readmits 935 names, 216 bounded C1 claims,

@@ -79,3 +79,12 @@ retain dark execution state, structural-only identity, hidden-ABI uncertainty,
 or a cheapest falsifier. Work after this milestone should deepen coherent
 systems toward semantic C1/C2 and reconstruction parity rather than repeat the
 function-accounting pass.
+
+Post-closure correction: rows `0x00562C76` and `0x00562C99` retain
+`CRT__GetFpuControlWord` and `CRT__ReturnVoid` only as the names present in the
+dated inventory. The later
+[gapless CRT/FPU closure](pc-demo-retail-gapless-closure-2026-08-11.md)
+confirms that both semantic plates are false: the first is a two-argument
+masked x87 control-word updater returning the prior word, and the second is a
+one-argument flag-driven x87 side-effect helper. That report is the current
+static semantic authority for those two entries.
