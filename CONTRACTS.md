@@ -57,13 +57,13 @@ chain that ordinarily precedes it.
 it. Candidate overlays and agent reports are inputs, not campaign authority,
 until the reducer admits them through a new verified generation.
 
-**Current complete-RE authority (2026-08-09):** do not treat historical
+**Current complete-RE authority (2026-08-12):** do not treat historical
 Generation 10 or candidate Generation 73 as the live replay parent. Read
-`developer_state.json` → `current_re_authority`. Canonical Generation 19 has
-8,126 functions, 14,245 contracts, 217 `C1_CANDIDATE_PARTIAL` functions, seven
-`C2_BOUNDED_RUNTIME` functions, 7,902 opaque functions, 17 open residuals, and
-zero `REBUILD_READY` contracts. Its exact READY is `f83dbb6e…ab9a`; frozen
-reducer `151acbe5…f3e2`. Generation 73 is a projection oracle only. Generation
+`developer_state.json` → `current_re_authority`. Canonical Generation 20 has
+8,126 functions, 14,245 contracts, 217 `C1_CANDIDATE_PARTIAL` functions, eight
+`C2_BOUNDED_RUNTIME` functions, 7,901 opaque functions, 17 open residuals, and
+zero `REBUILD_READY` contracts. Its exact READY is `13326fed…4ea`; frozen
+reducer `6e577791…7fe`. Generation 73 is a projection oracle only. Generation
 14 closed one residual as the consumer-bound TokenArchive dispatch-data
 partition. Generation 15 replaces another 63-byte police-open residual with
 15 NOP bytes, the exact 42-byte/17-instruction Mission-native
@@ -82,20 +82,29 @@ Generation 19 adds only the exact UnsetObjective 3-byte NOP / 13-byte wrapper /
 3-byte NOP partition and its C1 static conditional-call/bit-clear contract.
 Opaque callee `0x004E5BD0`, runtime/HUD/lifetime behavior, and complete rebuild
 parity remain open; live Ghidra is unchanged.
+Generation 20 adds only a bounded C2 carrier contract for ten retained
+`CExplosion` internal slot-40 calls across three existing TTD sessions: all
+forward the source object as `this`, shield `1`, and part `-1`; eight use the
+small-damage arm and two use the large-damage arm. The observed receivers are
+six `CUnit`, two `CTree`, and two `CBattleEngine` calls. Entry, returned value,
+writes, full dispatch envelope, and segmented mesh-part behavior remain open;
+this is not Warehouse proof or an all-path explosion law.
 The separately read-back live Ghidra ceremony added the SetPos function name,
 signature, and comment without changing executable bytes, instructions, data,
 or references. The bounded ApplyDamage C2 remains one replicated 1,000-damage,
 zero-shield entry/write path, not an all-path law. The next valid campaign
-generation is 20.
+generation is 21.
 
 Separately, the reviewed 2026-08-11
 [`function-c1-closure-2026-08-11.tsv`](reverse-engineering/binary-analysis/function-c1-closure-2026-08-11.tsv)
 accounts for all 8,136 current Ghidra functions: 8,129 have at least a bounded
 static C1 envelope and seven retain bounded C2 runtime grades, leaving zero
-static `OPAQUE` rows. This does not mutate the Generation-19 replay lineage or
-promote any contract to `REBUILD_READY`; it closes function-envelope accounting
-only. Original symbols, full semantics, runtime causality, source equivalence,
-and reconstruction parity remain separate proof obligations.
+static `OPAQUE` rows. Those are the closure file's dated grades; Generation 20
+separately advances `CExplosion` as the eighth campaign C2. The static closure
+does not replace or broaden the Generation-20 replay authority or promote any
+contract to `REBUILD_READY`; it closes function-envelope accounting only.
+Original symbols, full semantics, runtime causality, source equivalence, and
+reconstruction parity remain separate proof obligations.
 
 **Historical Gen10 immutable admission (2026-08-04):** READY SHA-256
 `b349f0b2895849ba320b0b0b783c60a98794d01f375d57d9a04bbe4a5aebabb2`,

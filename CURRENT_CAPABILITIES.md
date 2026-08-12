@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-08-09. RE authority block refreshed to canonical Gen19
+Last updated: 2026-08-12. RE authority block refreshed to canonical Gen20
 (`current_re_authority`; candidate Gen73 is projection-oracle only). Primary WinUI
 navigation was rechecked 2026-08-03 against the live shell (includes Cheats).
 The 2026-08-01 shell, appearance, Lore, Media, and four-run Level 100 reviews
@@ -638,31 +638,31 @@ Read [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md) before changing this lane.
 
 ## Reverse engineering and proof campaign
 
-**Current replay authority (2026-08-09):** read `developer_state.json` →
+**Current replay authority (2026-08-12):** read `developer_state.json` →
 `current_re_authority` before quoting generation or grade counts. Do not select
 the historical Gen10 or candidate Gen73 roots by generation number, ledger
 equality, or self-derived pins.
 
-| Metric | Canonical Gen19 |
+| Metric | Canonical Gen20 |
 | --- | ---: |
-| Authority generation | **19** (lineage `incident-20260806-recovery-v1`) |
+| Authority generation | **20** (lineage `incident-20260806-recovery-v1`) |
 | Functions | **8126** |
 | C1_CANDIDATE_PARTIAL | **217** |
-| C2_BOUNDED_RUNTIME | **7** |
-| function_semantic OPAQUE | **7902** |
-| contract_C0_OPAQUE | **14021** (second opacity axis) |
+| C2_BOUNDED_RUNTIME | **8** |
+| function_semantic OPAQUE | **7901** |
+| contract_C0_OPAQUE | **14020** (second opacity axis) |
 | OPEN residual | **17** |
 | REBUILD_READY | **0** |
 | complete_RE | **false** |
-| READY / reducer | `f83dbb6e…ab9a` / `151acbe5…f3e2` |
-| Next valid generation | **20** |
+| READY / reducer | `13326fed…44ea` / `6e577791…c7fe` |
+| Next valid generation | **21** |
 
 **Tracked static-envelope closure (2026-08-11):** the separate reviewed
 [`function-c1-closure-2026-08-11.tsv`](reverse-engineering/binary-analysis/function-c1-closure-2026-08-11.tsv)
 accounts for the current 8,136-function inventory as **8,129 C1**, **7 C2**,
 and **0 static OPAQUE**. It is the current authority for minimum per-function
-static envelopes. The table above remains the immutable Generation-19 replay
-authority for its admitted runtime/campaign claims; neither count implies
+static envelopes. Canonical Generation 20 remains the immutable replay
+authority for admitted runtime/campaign claims; neither count implies
 `REBUILD_READY` or complete semantic parity.
 
 **PC demo/retail function frontier (2026-08-12):** exact and semantic
@@ -714,7 +714,17 @@ overflow and named-token-32 paths remain open, and the rebuild is still partial.
 Generation 19 adds the exact UnsetObjective 3-byte NOP / 13-byte wrapper /
 3-byte NOP partition and a C1 static conditional-call/bit-clear contract.
 Retail runtime, opaque callee `0x004E5BD0`, HUD/lifetime behavior, and complete
-rebuild parity remain open; live Ghidra is unchanged.
+rebuild parity remain open; live Ghidra is unchanged. Generation 20 then
+advances only `CExplosion__VFunc_39_0044bf10` to a refuter-survived bounded C2
+internal slot-40 carrier contract. Ten calls from three independent retained
+TTD sessions cover both damage arms and six `CUnit`, two `CTree`, and two
+`CBattleEngine` targets. All ten carry source equal to the explosion object,
+`applyShields=1`, and mesh part `-1`; six paired `CUnit` calls refute reuse of
+direct parts `8/0/1/0/0/8`. A poisoned expected-seven-`CUnit` control correctly
+fails and publishes no READY. The function name remains address-suffixed;
+entry, return, owned writes, nonnegative parts, controller-bearing segmented
+receivers, Warehouse identity, and universal behavior remain open. The rebuild
+mapping remains `PARTIAL_CONTRACT`, with no Ghidra or executable mutation.
 Further reviewer use is situational under `reverse-engineering/REVIEW-PROTOCOL.md`,
 not a fixed model matrix.
 
@@ -737,9 +747,10 @@ corrections. `StartDie` remained open/opaque at that handoff. The independent
 data-write lane has one refuter-survived semantic result: a Level 521 `LockHit`
 invocation removed the supplied target's sole fired-lock node through five exact
 ordered field transitions. These are instrument capabilities and historical
-admissions. Canonical Gen19 retains those four C2 rows, separately re-proves a
+admissions. Canonical Gen20 retains those four C2 rows, separately re-proves a
 narrower fifth ApplyDamage C2 from intact TTD wrappers, and adds the bounded
-SetPos roundtrip as a sixth and LockHit's single-node removal path as a seventh;
+SetPos roundtrip as a sixth, LockHit's single-node removal path as a seventh,
+and the bounded CExplosion internal carrier as an eighth;
 it does not revive the rejected historical package,
 claim positive-shield behavior, or broaden SetPos beyond the observed path.
 
@@ -755,7 +766,10 @@ factory at `0x0050FF10`. The recovered mode-3 impact switch now proves that
 and the shared response callback into `CExplosion::Hit`. This closes the
 conditional tutorial `0.8 + 1.0 = 1.8` same-receiver composition. One
 contrasting gate outcome, the second call's exact mesh part, expanding-radius
-timing, and broader rebuild parity remain open. The Level 100 reconstruction
+timing, and broader rebuild parity remain open. Generation 20 independently
+joins ten retained internal calls to the two pristine call sites and proves the
+observed source/shield/part carrier without promoting the function's shipped
+name or claiming its entry/return/write envelope. The Level 100 reconstruction
 now preserves the two ordered whole-body stores for Target Tank/Drone rather
 than one aggregate subtraction; focused tests pin `6.0 -> 5.2 -> 4.2` and the
 terminal `-0.2 -> -1.2` pair through the production client envelope. Warehouse
@@ -776,11 +790,11 @@ mission reachability, later damage/effects, and rebuild parity remain open.
 These instruments do not infer function boundaries, C++ receivers, argument or
 return types, semantics, or parity. Static/source/RTTI evidence supplied joins
 for early data-write plates. Focused player-damage / Level 521 successor work
-remains an open runtime front alongside the next impact-ranked Generation-20
+remains an open runtime front alongside the next impact-ranked Generation-21
 contract/rebuild advance. There is
 not yet a normalized corpus-wide semantic ledger, and no new trace is justified
 until existing evidence plus these instruments cannot answer a preregistered
-question. The next campaign generation is 20.
+question. The next campaign generation is 21.
 
 ## Evidence boundary
 

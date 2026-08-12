@@ -135,6 +135,75 @@ def read_functions(path: Path) -> list[dict[str, str]]:
     return rows
 
 
+def resolve_lineage_id(receipt: dict[str, Any]) -> str:
+    """Resolve an inherited branch identity through exact parent READY stamps."""
+    current = receipt
+    visited: set[Path] = set()
+    while True:
+        advance = current.get("advance")
+        if isinstance(advance, dict) and advance.get("branchId"):
+            branch_id = advance["branchId"]
+            if not isinstance(branch_id, str) or not branch_id.strip():
+                raise ExportError("campaign branchId is invalid")
+            return branch_id
+
+        parent = current.get("parentCampaign")
+        if parent is None:
+            return "historical-main"
+        parent = mapping(parent, "campaign parentCampaign")
+        parent_root_value = parent.get("path")
+        if not isinstance(parent_root_value, str) or not parent_root_value:
+            raise ExportError("campaign parentCampaign path is invalid")
+        parent_root = Path(parent_root_value)
+        if not parent_root.is_absolute():
+            parent_root = REPO / parent_root
+        parent_root = Path(os.path.abspath(parent_root))
+
+        ready_stamp = mapping(parent.get("ready"), "campaign parent READY stamp")
+        ready_name = ready_stamp.get("path")
+        expected_bytes = ready_stamp.get("bytes")
+        expected_sha256 = ready_stamp.get("sha256")
+        if (
+            not isinstance(ready_name, str)
+            or not ready_name
+            or not isinstance(expected_bytes, int)
+            or expected_bytes <= 0
+            or not isinstance(expected_sha256, str)
+            or len(expected_sha256) != 64
+        ):
+            raise ExportError("campaign parent READY stamp is invalid")
+        ready_path = Path(ready_name)
+        if not ready_path.is_absolute():
+            ready_path = parent_root / ready_path
+        ready_path = Path(os.path.abspath(ready_path))
+        try:
+            ready_path.relative_to(parent_root)
+        except ValueError as exc:
+            raise ExportError("campaign parent READY escapes its campaign root") from exc
+        if ready_path in visited:
+            raise ExportError("campaign parent lineage contains a cycle")
+        visited.add(ready_path)
+        if not ready_path.is_file():
+            raise ExportError(f"campaign parent READY is missing: {ready_path}")
+        if ready_path.stat().st_size != expected_bytes:
+            raise ExportError("campaign parent READY byte count differs from its stamp")
+        if sha256_path(ready_path) != expected_sha256:
+            raise ExportError("campaign parent READY digest differs from its stamp")
+        parent_receipt = mapping(
+            json.loads(ready_path.read_text(encoding="utf-8")),
+            "campaign parent READY",
+        )
+        child_generation = current.get("generation")
+        parent_generation = parent_receipt.get("generation")
+        if (
+            not isinstance(child_generation, int)
+            or not isinstance(parent_generation, int)
+            or parent_generation != child_generation - 1
+        ):
+            raise ExportError("campaign parent generation is not the direct predecessor")
+        current = parent_receipt
+
+
 def build(
     campaign_root: Path,
     *,
@@ -163,12 +232,7 @@ def build(
         raise ExportError("campaign generation is invalid")
     if not isinstance(generated_at, str) or "T" not in generated_at:
         raise ExportError("campaign READY generatedAtUtc is invalid")
-    advance = receipt.get("advance")
-    lineage_id = (
-        str(advance.get("branchId"))
-        if isinstance(advance, dict) and advance.get("branchId")
-        else "historical-main"
-    )
+    lineage_id = resolve_lineage_id(receipt)
     functions = read_functions(campaign_root / "campaign-functions.tsv")
     rows: list[dict[str, str]] = []
     for function in functions:

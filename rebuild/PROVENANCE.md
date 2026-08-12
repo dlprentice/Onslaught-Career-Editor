@@ -811,6 +811,16 @@ hit stores approximately `-0.2` before the explosion leaves exact
 pins their production client envelope. The exact second-call mesh part remains
 unresolved for segmented targets, so the Warehouse path continues to consume
 only its independently observed aggregate outcome.
+Generation 20 adds a narrower retained-trace check on the retail carrier: ten
+internal slot-40 calls across three independent TTD sessions cover both
+`CExplosion::Hit` damage arms and carry source equal to the explosion object,
+`applyShields=1`, and mesh part `-1` in every observed call. Six same-receiver
+`CUnit` pairs use direct parts `8/0/1/0/0/8` but explosion part `-1`, refuting
+direct-part reuse for those pairs. No observed receiver is the Warehouse or a
+controller-bearing segmented target, and the function entry, return, owned
+writes, nonnegative-part path, and universal behavior remain open. The campaign
+therefore keeps this reconstruction mapping `PARTIAL_CONTRACT`; it does not
+broaden the Warehouse implementation or claim engine-wide explosion parity.
 `CUnit__ApplyDamage` (`0x004F9A90`) receives the mesh-part index and
 `CUnit__MarkDestroyedAndCleanupLinks` (`0x004FD140`) owns the removal, so Core
 does not generalize the unmeasured part multiplier. It consumes only the

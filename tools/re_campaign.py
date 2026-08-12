@@ -37,6 +37,7 @@ import re_mission_native_setpos_runtime as mission_setpos_runtime
 import re_lockhit_bounded_contract as lockhit_contract
 import re_tokenarchive_parser_contract as tokenarchive_parser_contract
 import re_mission_native_unsetobjective_reproof as mission_unsetobjective_reproof
+import re_cexplosion_hit_runtime as cexplosion_hit_runtime
 
 _FROZEN_LOCAL_LAB = Path(__file__).resolve().parent.parent / "local-lab"
 if (_FROZEN_LOCAL_LAB / "aya_roundtrip.py").is_file():
@@ -607,6 +608,28 @@ MISSION_NATIVE_UNSETOBJECTIVE_EXPECTED_GENERATION19_COUNTS = {
     "adjudications": 6099,
     "supersessions": 592,
 }
+CEXPLOSION_HIT_RUNTIME_PARENT_RELATIVE = (
+    Path("local-lab/re-campaign-incident-recovery-20260808-v1")
+    / "generation-19-mission-native-unsetobjective-reproof-v1"
+)
+CEXPLOSION_HIT_RUNTIME_PARENT_READY_BYTES = 27833
+CEXPLOSION_HIT_RUNTIME_PARENT_READY_SHA256 = (
+    "f83dbb6eddaa16deed5f2a2460d393dc4525a63ae243b6cac0c656056b69ab9a"
+)
+CEXPLOSION_HIT_RUNTIME_PARENT_REDUCER_ID = (
+    "151acbe5c1571dca2c53c68dd79281cf20c69af609523d54f25953643dcff3e2"
+)
+CEXPLOSION_HIT_RUNTIME_PARENT_AUTHORITY_RELATIVE = (
+    Path("local-lab/re-campaign-incident-recovery-20260808-v1")
+    / "generation-19-mission-native-unsetobjective-reproof-authority.ready.json"
+)
+CEXPLOSION_HIT_RUNTIME_PARENT_AUTHORITY_BYTES = 12562
+CEXPLOSION_HIT_RUNTIME_PARENT_AUTHORITY_SHA256 = (
+    "72c22f029cd2f845c853dfbf2f5746062eed85ccc11d0291b531051c1e432360"
+)
+CEXPLOSION_HIT_RUNTIME_PARENT_COUNTS = dict(
+    MISSION_NATIVE_UNSETOBJECTIVE_EXPECTED_GENERATION19_COUNTS
+)
 ATOMIC14_PARENT_READY_SHA256 = (
     "2160bf4963c07742cb4dd1aafb45e5d7caff74222381e01570d93fc9aafdde99"
 )
@@ -1080,6 +1103,11 @@ def _reducer_sources() -> list[tuple[str, str, Path]]:
             "mission-native-unsetobjective-reproof",
             "_reducer/tools/re_mission_native_unsetobjective_reproof.py",
             Path(mission_unsetobjective_reproof.__file__).resolve(),
+        ),
+        (
+            "cexplosion-hit-runtime-proof",
+            "_reducer/tools/re_cexplosion_hit_runtime.py",
+            Path(cexplosion_hit_runtime.__file__).resolve(),
         ),
         (
             "mission-native-unsetobjective-instruction-exporter",
@@ -2386,6 +2414,7 @@ def _validate_campaign_relations(
     tokenarchive_context = None
     setpos_context = None
     unsetobjective_context = None
+    inherited_nonsemantic_adjudication_ids: set[str] = set()
     if _integer(receipt.get("generation"), -1) == 11 or (
         isinstance(current_advance, dict)
         and current_advance.get("kind") == GEN73_RESEAL_RECOVERY_ADVANCE_KIND
@@ -2971,6 +3000,147 @@ def _validate_campaign_relations(
             gen11_receipt.get("advance"),
             campaign_root=None,
         )
+    generation20_cexplosion_runtime_lineage = bool(
+        _integer(receipt.get("generation"), -1) == 20
+        and isinstance(current_advance, dict)
+        and current_advance.get("kind") == RUNTIME_ADVANCE_KIND
+    )
+    if generation20_cexplosion_runtime_lineage:
+        if current_advance.get("schema") != RUNTIME_ADVANCE_SCHEMA:
+            raise CampaignError(
+                "Generation 20 CExplosion::Hit runtime advance schema differs"
+            )
+        parent = _runtime_mapping(
+            receipt.get("parentCampaign"),
+            "Generation 20 CExplosion::Hit runtime parent",
+        )
+        parent_path = _resolve_repo_or_absolute(
+            parent.get("path"), "Generation 20 CExplosion::Hit runtime parent"
+        )
+        parent_ready = _runtime_mapping(
+            parent.get("ready"),
+            "Generation 20 CExplosion::Hit runtime parent READY",
+        )
+        expected_parent = (
+            REPO_ROOT / CEXPLOSION_HIT_RUNTIME_PARENT_RELATIVE
+        ).resolve()
+        if (
+            parent_path != expected_parent
+            or parent_ready.get("bytes")
+            != CEXPLOSION_HIT_RUNTIME_PARENT_READY_BYTES
+            or parent_ready.get("sha256")
+            != CEXPLOSION_HIT_RUNTIME_PARENT_READY_SHA256
+        ):
+            raise CampaignError(
+                "Generation 20 CExplosion::Hit runtime advance lacks exact Gen19 ancestry"
+            )
+        _require_file_stamp(
+            expected_parent / "campaign.ready.json",
+            parent_ready,
+            "Generation 20 CExplosion::Hit runtime parent READY",
+        )
+        gen19_receipt = _runtime_json(
+            expected_parent / "campaign.ready.json",
+            "Generation 20 CExplosion::Hit inherited Gen19 advance",
+        )
+        if (
+            gen19_receipt.get("schema") != SCHEMA
+            or _integer(gen19_receipt.get("generation"), -1) != 19
+            or gen19_receipt.get("counts")
+            != CEXPLOSION_HIT_RUNTIME_PARENT_COUNTS
+            or gen19_receipt.get("reducer", {}).get("id")
+            != CEXPLOSION_HIT_RUNTIME_PARENT_REDUCER_ID
+        ):
+            raise CampaignError(
+                "Generation 20 CExplosion::Hit inherited Gen19 identity differs"
+            )
+        for output_name in OUTPUTS:
+            output_stamp = _runtime_mapping(
+                gen19_receipt.get("outputs", {}).get(output_name),
+                f"Generation 20 CExplosion::Hit inherited {output_name}",
+            )
+            _require_file_stamp(
+                expected_parent / output_name,
+                output_stamp,
+                f"Generation 20 CExplosion::Hit inherited {output_name}",
+            )
+        authority_path = (
+            REPO_ROOT / CEXPLOSION_HIT_RUNTIME_PARENT_AUTHORITY_RELATIVE
+        )
+        authority_stamp = coverage.file_stamp(authority_path)
+        if (
+            authority_stamp["bytes"]
+            != CEXPLOSION_HIT_RUNTIME_PARENT_AUTHORITY_BYTES
+            or authority_stamp["sha256"]
+            != CEXPLOSION_HIT_RUNTIME_PARENT_AUTHORITY_SHA256
+        ):
+            raise CampaignError(
+                "Generation 20 CExplosion::Hit inherited Gen19 authority differs"
+            )
+        inherited_rows = _campaign_rows_from_root(expected_parent)
+        inherited_adjudications = inherited_rows["adjudications"]
+        inherited_supersessions = inherited_rows["supersessions"]
+        inherited_nonsemantic_adjudication_ids = {
+            row["adjudicationId"]
+            for row in inherited_adjudications
+            if row.get("refuterVerdict") == "SURVIVED"
+            and not _bool(row.get("semanticPromotionApplied"))
+        }
+
+        def inherited_boundary_context(kind: str, schema: str) -> dict[str, object]:
+            scoped_adjudications = [
+                row
+                for row in inherited_adjudications
+                if row.get("overlaySchema") == schema
+            ]
+            partition_rows = [
+                row
+                for row in scoped_adjudications
+                if row.get("terminalState") == "TERMINAL_EXACT_PARTITION"
+            ]
+            scoped_supersessions = {
+                row["supersessionId"]: row
+                for row in inherited_supersessions
+                if row.get("kind") == kind
+            }
+            if (
+                len(scoped_adjudications) != 2
+                or len(partition_rows) != 1
+                or not scoped_supersessions
+            ):
+                raise CampaignError(
+                    f"Generation 20 inherited {kind} relation context differs"
+                )
+            partition_row = partition_rows[0]
+            return {
+                "partitionAdjudicationId": partition_row["adjudicationId"],
+                "nonsemanticAdjudicationIds": {
+                    row["adjudicationId"] for row in scoped_adjudications
+                },
+                "retiredContract": {
+                    "contractId": partition_row["baseContractId"],
+                    "entityKey": partition_row["entityKey"],
+                    "questionIds": partition_row["questionIdsAddressed"],
+                },
+                "supersessionRows": scoped_supersessions,
+            }
+
+        setpos_context = inherited_boundary_context(
+            MISSION_NATIVE_SETPOS_ADVANCE_KIND,
+            MISSION_NATIVE_SETPOS_ADVANCE_SCHEMA,
+        )
+        unsetobjective_context = inherited_boundary_context(
+            MISSION_NATIVE_UNSETOBJECTIVE_ADVANCE_KIND,
+            MISSION_NATIVE_UNSETOBJECTIVE_ADVANCE_SCHEMA,
+        )
+        reseal_context = {
+            "adjudicationIds": set(),
+            "supersessionIds": {
+                row["supersessionId"]
+                for row in inherited_supersessions
+                if row.get("kind") in GHIDRA_PARTITION_ADVANCE_KINDS
+            },
+        }
     generation9_recovery_lineage = bool(
         _integer(receipt.get("generation"), -1) == 9
         and partition_context is not None
@@ -3231,6 +3401,7 @@ def _validate_campaign_relations(
                 or tokenarchive_residual_adjudication
                 or setpos_nonsemantic_adjudication
                 or unsetobjective_nonsemantic_adjudication
+                or adjudication_id in inherited_nonsemantic_adjudication_ids
             )
             else semantic_promotion == (verdict == "SURVIVED")
         )
@@ -4945,6 +5116,164 @@ def _verify_mission_native_unsetobjective_parent_campaign(root: Path) -> dict:
     return verified
 
 
+def _verify_cexplosion_hit_runtime_parent_campaign(root: Path) -> dict:
+    """Carry exact Gen19 through its full-replay authority and frozen integrity.
+
+    Gen19's authority records literal-pinned canonical and replica full replays.
+    A later rebuild parity change deliberately changed a historical proof input,
+    so replaying that older dependency through the live tree is no longer a
+    valid migration gate.  The carry therefore requires the exact authority
+    receipt and independently revalidates the immutable frozen reducer bundle.
+    """
+
+    raw = Path(os.path.abspath(root))
+    expected = (REPO_ROOT / CEXPLOSION_HIT_RUNTIME_PARENT_RELATIVE).resolve()
+    try:
+        resolved = ghidra_backup.resolve_plain_path(
+            raw, "CExplosion::Hit runtime canonical Gen19 parent", strict=True
+        )
+    except (ghidra_backup.BackupError, OSError) as exc:
+        raise CampaignError(
+            f"CExplosion::Hit runtime parent path is not plain: {exc}"
+        ) from exc
+    if resolved != expected:
+        raise CampaignError(
+            "CExplosion::Hit runtime parent is not exact canonical Gen19"
+        )
+    ready_path = resolved / "campaign.ready.json"
+    authority_path = REPO_ROOT / CEXPLOSION_HIT_RUNTIME_PARENT_AUTHORITY_RELATIVE
+    try:
+        plain_ready = ghidra_backup.resolve_plain_path(
+            ready_path, "CExplosion::Hit runtime parent READY", strict=True
+        )
+        plain_authority = ghidra_backup.resolve_plain_path(
+            authority_path,
+            "CExplosion::Hit runtime parent authority",
+            strict=True,
+        )
+    except (ghidra_backup.BackupError, OSError) as exc:
+        raise CampaignError(
+            f"CExplosion::Hit runtime parent evidence is not plain: {exc}"
+        ) from exc
+    if (
+        plain_ready.stat().st_nlink != 1
+        or plain_ready.stat().st_size != CEXPLOSION_HIT_RUNTIME_PARENT_READY_BYTES
+        or coverage.sha256_of(plain_ready)
+        != CEXPLOSION_HIT_RUNTIME_PARENT_READY_SHA256
+        or plain_authority.stat().st_nlink != 1
+        or plain_authority.stat().st_size
+        != CEXPLOSION_HIT_RUNTIME_PARENT_AUTHORITY_BYTES
+        or coverage.sha256_of(plain_authority)
+        != CEXPLOSION_HIT_RUNTIME_PARENT_AUTHORITY_SHA256
+    ):
+        raise CampaignError(
+            "CExplosion::Hit runtime parent READY or authority changed"
+        )
+    receipt = _runtime_json(
+        plain_ready, "CExplosion::Hit runtime canonical Gen19 parent"
+    )
+    authority = _runtime_json(
+        plain_authority, "CExplosion::Hit runtime parent authority"
+    )
+    reducer = _runtime_mapping(
+        receipt.get("reducer"), "CExplosion::Hit runtime parent reducer"
+    )
+    advance = _runtime_mapping(
+        receipt.get("advance"), "CExplosion::Hit runtime parent advance"
+    )
+    canonical = _runtime_mapping(
+        authority.get("canonical"),
+        "CExplosion::Hit runtime parent selection",
+    )
+    verification = _runtime_mapping(
+        authority.get("verification"),
+        "CExplosion::Hit runtime parent authority verification",
+    )
+    canonical_replay = _runtime_mapping(
+        verification.get("canonicalLiteralPinnedFullReplay"),
+        "CExplosion::Hit runtime parent authority canonical replay",
+    )
+    determinism = _runtime_mapping(
+        authority.get("determinism"),
+        "CExplosion::Hit runtime parent authority determinism",
+    )
+    selection = _runtime_mapping(
+        authority.get("selectionRule"),
+        "CExplosion::Hit runtime parent authority selection rule",
+    )
+    if (
+        receipt.get("schema") != SCHEMA
+        or _integer(receipt.get("generation"), -1) != 19
+        or receipt.get("counts") != CEXPLOSION_HIT_RUNTIME_PARENT_COUNTS
+        or reducer.get("id") != CEXPLOSION_HIT_RUNTIME_PARENT_REDUCER_ID
+        or advance.get("kind") != MISSION_NATIVE_UNSETOBJECTIVE_ADVANCE_KIND
+        or advance.get("schema") != MISSION_NATIVE_UNSETOBJECTIVE_ADVANCE_SCHEMA
+        or advance.get("branchId") != GHIDRA_PARTITION_RECOVERY_LINEAGE_ID
+        or authority.get("schema")
+        != "bea.re.mission-native-unsetobjective-generation19-authority.v1"
+        or authority.get("verdict") != "READY"
+        or authority.get("authorityClass")
+        != "FULL_REPLAY_CAMPAIGN_AUTHORITY"
+        or authority.get("lineageId") != GHIDRA_PARTITION_RECOVERY_LINEAGE_ID
+        or canonical.get("absolutePath") != str(expected)
+        or canonical.get("ready", {}).get("sha256")
+        != CEXPLOSION_HIT_RUNTIME_PARENT_READY_SHA256
+        or canonical.get("reducerId")
+        != CEXPLOSION_HIT_RUNTIME_PARENT_REDUCER_ID
+        or authority.get("counts") != CEXPLOSION_HIT_RUNTIME_PARENT_COUNTS
+        or canonical_replay.get("exitCode") != 0
+        or canonical_replay.get("marker") != "CAMPAIGN_VERIFIED"
+        or determinism.get("allEightLedgersByteIdentical") is not True
+        or determinism.get("allThirtyNineReducerFilesByteIdentical") is not True
+        or determinism.get("normalizedReadyReceiptsEqual") is not True
+        or selection.get("requiredAbsolutePath") != str(expected)
+        or selection.get("requiredReducerId")
+        != CEXPLOSION_HIT_RUNTIME_PARENT_REDUCER_ID
+        or selection.get("requiredMode") != "FULL"
+    ):
+        raise CampaignError(
+            "CExplosion::Hit runtime canonical Gen19 identity is unsupported"
+        )
+    try:
+        completed = _run_frozen_campaign_verifier(
+            resolved,
+            replay=False,
+            timeout=180,
+            expected_ready_sha256=CEXPLOSION_HIT_RUNTIME_PARENT_READY_SHA256,
+            expected_reducer_id=CEXPLOSION_HIT_RUNTIME_PARENT_REDUCER_ID,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise CampaignError(
+            "CExplosion::Hit runtime parent frozen verifier timed out"
+        ) from exc
+    expected_marker = "FROZEN_CAMPAIGN_INTEGRITY_VERIFIED bea.re.campaign.v5 19"
+    if completed.returncode != 0 or expected_marker not in completed.stdout:
+        raise CampaignError(
+            "CExplosion::Hit runtime parent failed its frozen verifier: "
+            f"exit={completed.returncode} stderr={completed.stderr.strip()!r}"
+        )
+    rows = _campaign_rows_from_root(resolved)
+    if {name: len(value) for name, value in rows.items()} != receipt.get("counts"):
+        raise CampaignError(
+            "CExplosion::Hit runtime parent rows disagree with READY"
+        )
+    verified = dict(receipt)
+    verified["_carryBridge"] = (
+        "EXACT_FULL_REPLAY_AUTHORITY_BACKED_FROZEN_GENERATION19_INTEGRITY"
+    )
+    return verified
+
+
+def _verify_runtime_contract_parent_campaign(root: Path) -> dict:
+    """Use the one explicit frozen bridge needed by the runtime lane."""
+
+    if Path(os.path.abspath(root)) == (
+        REPO_ROOT / CEXPLOSION_HIT_RUNTIME_PARENT_RELATIVE
+    ).resolve():
+        return _verify_cexplosion_hit_runtime_parent_campaign(root)
+    return verify(root)
+
+
 def _question_has_progress(row: dict[str, str]) -> bool:
     return (
         row.get("state") != "OPEN"
@@ -5621,6 +5950,10 @@ def _replay_campaign_generation(campaign: Path, receipt: dict) -> None:
                     _verify_mission_native_unsetobjective_parent_campaign(
                         parent_path
                     )
+                )
+            elif kind == RUNTIME_ADVANCE_KIND:
+                parent_receipt = _verify_runtime_contract_parent_campaign(
+                    parent_path
                 )
             elif kind == TTD_CALL_CONTEXT_ADVANCE_KIND:
                 parent_receipt = _verify_ttd_call_context_parent_campaign(
@@ -8140,7 +8473,9 @@ def import_runtime_contract(campaign: Path, contract_path: Path, out: Path) -> d
         raise
 
 
-def verify_runtime_contract_overlay(out: Path) -> dict:
+def verify_runtime_contract_overlay(
+    out: Path, *, _verified_source_receipt: dict | None = None
+) -> dict:
     receipt_path = out / "runtime-contracts.ready.json"
     try:
         receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
@@ -8159,7 +8494,20 @@ def verify_runtime_contract_overlay(out: Path) -> dict:
         or actual_source_ready["sha256"] != source_ready.get("sha256")
     ):
         raise CampaignError("runtime-contract overlay source campaign READY has changed")
-    verify(source_path)
+    verified_source = (
+        _verified_source_receipt
+        if _verified_source_receipt is not None
+        else _verify_runtime_contract_parent_campaign(source_path)
+    )
+    disk_source = _runtime_json(
+        source_path / "campaign.ready.json", "runtime-contract overlay source READY"
+    )
+    normalized_source = dict(verified_source)
+    normalized_source.pop("_carryBridge", None)
+    if not _same_json(normalized_source, disk_source):
+        raise CampaignError(
+            "runtime-contract overlay verified source receipt names another campaign"
+        )
 
     input_stamp = _runtime_mapping(receipt.get("inputContract"), "overlay inputContract")
     input_path = Path(str(input_stamp.get("path", ""))).resolve()
@@ -25226,9 +25574,11 @@ def advance_runtime_contract(
     base_receipt = (
         _verified_parent_receipt
         if _verified_parent_receipt is not None
-        else verify(campaign)
+        else _verify_runtime_contract_parent_campaign(campaign)
     )
-    overlay_receipt = verify_runtime_contract_overlay(overlay)
+    overlay_receipt = verify_runtime_contract_overlay(
+        overlay, _verified_source_receipt=base_receipt
+    )
     if out.exists():
         raise CampaignError(f"refusing existing advanced-campaign destination: {out}")
     adjudication = _runtime_json(adjudication_path, "runtime adjudication")

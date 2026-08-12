@@ -118,6 +118,36 @@ class EvidenceRegisterExportTests(unittest.TestCase):
                 out.write_text(text.replace("Example", "Stale"), encoding="utf-8")
                 self.assertEqual(10, exporter.main([*argv, "--check"]))
 
+    def test_generic_advance_inherits_hash_pinned_parent_lineage(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            parent = Path(td) / "parent"
+            write_fixture(parent)
+            parent_ready = parent / "campaign.ready.json"
+
+            child = Path(td) / "child"
+            _child_sha, reducer_id = write_fixture(child)
+            child_ready = child / "campaign.ready.json"
+            receipt = json.loads(child_ready.read_text(encoding="utf-8"))
+            receipt["generation"] = 12
+            receipt["advance"] = {"kind": "RUNTIME_CONTRACT_ADJUDICATION"}
+            receipt["parentCampaign"] = {
+                "path": str(parent),
+                "ready": {
+                    "path": "campaign.ready.json",
+                    "bytes": parent_ready.stat().st_size,
+                    "sha256": hashlib.sha256(parent_ready.read_bytes()).hexdigest(),
+                },
+            }
+            child_ready.write_text(json.dumps(receipt, indent=2) + "\n", encoding="utf-8")
+            child_sha = hashlib.sha256(child_ready.read_bytes()).hexdigest()
+            with patch.object(exporter, "verify_full_replay"):
+                result = exporter.build(
+                    child,
+                    expected_ready_sha256=child_sha,
+                    expected_reducer_id=reducer_id,
+                )
+            self.assertEqual("incident-20260806-recovery-v1", result["lineageId"])
+
     def test_header_only_check_is_portable_and_detects_stale_authority(self) -> None:
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)

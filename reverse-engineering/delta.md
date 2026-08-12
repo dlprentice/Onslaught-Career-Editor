@@ -30,7 +30,7 @@ different hashes and are identified separately below.
 
 ---
 
-## Current complete-RE replay authority (2026-08-10) — read this first
+## Current complete-RE replay authority (2026-08-12) — read this first
 
 **Do not treat historical Gen10 or candidate Gen73 as current authority.** The
 exact selector is `developer_state.json` → `current_re_authority`; its external
@@ -39,13 +39,13 @@ pins.
 
 | Surface | Canonical recovered state |
 | --- | --- |
-| Authority generation | **19**, lineage `incident-20260806-recovery-v1`; READY `f83dbb6e…ab9a`, reducer `151acbe5…f3e2` |
-| Function ledger | 8,126 functions under `local-lab/re-campaign-incident-recovery-20260808-v1/generation-19-mission-native-unsetobjective-reproof-v1/` |
-| Grades | **C1=217**, **C2=7**, function semantic **OPAQUE=7902**; contract `C0_OPAQUE=14021`; REBUILD_READY **0** |
-| OPEN residual | **17** police holds; Gen14 closed TokenArchive dispatch data, Gen15 proved `IScript__SetPos` plus its two NOP neighbors, and Gen19 proves the UnsetObjective 3/13/3 partition |
+| Authority generation | **20**, lineage `incident-20260806-recovery-v1`; READY `13326fed…4ea`, reducer `6e577791…7fe` |
+| Function ledger | 8,126 functions under `local-lab/re-campaign-incident-recovery-20260808-v1/generation-20-cexplosion-hit-runtime-v1/` |
+| Grades | **C1=217**, **C2=8**, function semantic **OPAQUE=7901**; contract `C0_OPAQUE=14020`; REBUILD_READY **0** |
+| OPEN residual | **17** police holds; Gen14 closed TokenArchive dispatch data, Gen15 proved `IScript__SetPos` plus its two NOP neighbors, Gen19 proves the UnsetObjective 3/13/3 partition, and Gen20 changes no residual |
 | complete_RE | **false** |
 | Candidate-chain disposition | Gen73 is `PROJECTION_ORACLE_ONLY`; all 7,294 source adjudications and 145,973 changed fields are closed by `94d7a9eb…323e0` |
-| Immediate RE front | Fifty-three disjoint bulk static passes cover 7,945 exact bodies: 7,902 formerly opaque functions now have bounded C1_STATIC hypotheses, 42 prior C1 rows are repaired or confirmed, and ApplyDamage remains C2. Generation-19 OPAQUE count is zero. A complete 184-row residual census switched instruments to formal packs, strict RTTI/vtables, address-joined refs, strings/debug strings, registries, retained-source tokens and pristine decode: 167 exact functions / 407 slot placements advanced through strict vtable membership, then the final 17 advanced together through visible pristine instruction envelopes with row-specific falsifiers. The 46,657-byte HResultToString envelope is explicitly not represented as one original source routine. The final exact disposable project retains 8,136 functions and has 7,968 HYP names, all 7,945 cohort entries C1_STATIC-or-better, and zero collateral/body/structural/alias drift. Static closure is not runtime/source/parity closure; the active front is now coherent 5-to-10-contract rebuild slices and the cheapest runtime falsifiers for consequential open behavior. |
+| Immediate RE front | Fifty-three disjoint bulk static passes cover 7,945 exact bodies: 7,902 formerly opaque functions now have bounded C1_STATIC hypotheses, 42 prior C1 rows are repaired or confirmed, and ApplyDamage remains C2. The tracked static-closure OPAQUE count is zero; the campaign ledger separately retains 7,901 semantic OPAQUE rows. A complete 184-row residual census switched instruments to formal packs, strict RTTI/vtables, address-joined refs, strings/debug strings, registries, retained-source tokens and pristine decode: 167 exact functions / 407 slot placements advanced through strict vtable membership, then the final 17 advanced together through visible pristine instruction envelopes with row-specific falsifiers. The 46,657-byte HResultToString envelope is explicitly not represented as one original source routine. The final exact disposable project retains 8,136 functions and has 7,968 HYP names, all 7,945 cohort entries C1_STATIC-or-better, and zero collateral/body/structural/alias drift. Gen20 additionally bounds ten retained `CExplosion` slot-40 carrier calls but leaves entry, writes, returns, the full envelope, and segmented mesh-part behavior open. Static closure is not runtime/source/parity closure; the active front is now coherent 5-to-10-contract rebuild slices and the cheapest runtime falsifiers for consequential open behavior. |
 | Ghidra apply | The latest authorized live operation added eleven exact Mission-native boundaries and shipped registry names in one batch, with fact-only comments and no signatures/contracts. Fresh readback changed 8,125 → 8,136 functions and zero existing function rows, bytes, instructions, data, or references; READY `a78b8640…b9919`, POST functions `38b86d40…57c86`, POST program `46f59a47…87180` |
 
 The frozen three-master hashes later in this document remain the correct inputs

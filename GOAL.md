@@ -160,26 +160,29 @@ this standing campaign complete.
 
 Standing complete-RE progress is **not** the Gen10 handoff below and is no
 longer selected from the damaged Generation-73 candidate chain. Read
-`developer_state.json` → `current_re_authority`. As of 2026-08-09 the exact
-authority is canonical Generation 19 at
-`local-lab/re-campaign-incident-recovery-20260808-v1/generation-19-mission-native-unsetobjective-reproof-v1/`:
-READY SHA-256 `f83dbb6eddaa16deed5f2a2460d393dc4525a63ae243b6cac0c656056b69ab9a`,
+`developer_state.json` → `current_re_authority`. As of 2026-08-12 the exact
+authority is canonical Generation 20 at
+`local-lab/re-campaign-incident-recovery-20260808-v1/generation-20-cexplosion-hit-runtime-v1/`:
+READY SHA-256 `13326fed25845e2351a2c68b57afe1bf2593786d2feb5f9e7d045fb7120a44ea`,
 frozen reducer ID
-`151acbe5c1571dca2c53c68dd79281cf20c69af609523d54f25953643dcff3e2`,
+`6e5777916ec5c7b94cdf6db727873bef589a14fec3bfac7ea4d895afda59c7fe`,
 and external authority receipt SHA-256
-`72c22f029cd2f845c853dfbf2f5746062eed85ccc11d0291b531051c1e432360`.
+`268b13a12de25fe5d6a648f17dd72699a441f968d8fef1d3d632c79b8edfccf1`.
 Its independent replica is reproduction-only. Generation 73 supplied a
-field-level projection oracle; Generations 12 through 19 then admitted bounded
+field-level projection oracle; Generations 12 through 20 then admitted bounded
 Damage/Hit field-write contracts, one replicated zero-shield ApplyDamage
 contract, the exact consumer-bound TokenArchive dispatch-table partition, and
 the exact Mission-native SetPos boundary plus its replicated script-visible
 position-copy contract and partial rebuild mapping, LockHit's retained
 single-node removal path, and an exact static TokenArchive parser/corpus/factory
 contract at C1, then the exact Mission-native UnsetObjective 3/13/3 partition
-and C1 static wrapper contract without broadening them beyond their evidence.
-The campaign remains incomplete and the next valid campaign generation is 20.
-Generation 19 made no live Ghidra mutation; that still requires its separate
-promotion gate and authority.
+and C1 static wrapper contract without broadening them beyond their evidence,
+then ten bounded retained-trace `CExplosion` internal slot-40 carrier calls.
+The explosion entry, writes, returns, full dispatch envelope, and segmented
+mesh-part behavior remain open. The campaign remains incomplete and the next
+valid campaign generation is 21. Generation 20 made no live Ghidra mutation;
+the address-suffixed `CExplosion` name and any semantic promotion still require
+a separate promotion gate and authority.
 
 ## Historical atomic handoff boundary (2026-08-04 / Generation 10)
 

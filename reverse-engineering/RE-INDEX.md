@@ -1,10 +1,10 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-08-11
+Last updated: 2026-08-12
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
-Current replay authority is Generation 19 via
+Current replay authority is Generation 20 via
 `developer_state.json` → `current_re_authority`; Generation 73 is a projection
 oracle only, and the Generation-10 block below is historical.
 
@@ -62,16 +62,16 @@ Further down this page, past the authority block: the patch recipes, the
 per-subsystem static contracts, the 2026-05-26 review cohort, the lane
 reference and runbooks, and the retail → Core translation policies.
 
-## Current complete-RE replay authority — machine-local evidence (2026-08-09)
+## Current complete-RE replay authority — machine-local evidence (2026-08-12)
 
 The tracked Ghidra snapshot was refreshed from live on 2026-08-09; the dated
-2026-07 name ledgers still lag current work. Select campaign authority from `developer_state.json` →
-`current_re_authority`: canonical Generation 19 at
-`local-lab/re-campaign-incident-recovery-20260808-v1/generation-19-mission-native-unsetobjective-reproof-v1/`,
-READY `f83dbb6eddaa16deed5f2a2460d393dc4525a63ae243b6cac0c656056b69ab9a`,
-frozen reducer `151acbe5c1571dca2c53c68dd79281cf20c69af609523d54f25953643dcff3e2`,
-external selector `72c22f02…2360`. It contains 8,126 functions, 217 C1,
-seven bounded C2, 7,902 opaque functions, 17 open residuals, and no rebuild-ready
+2026-07 name ledgers still lag current work. Select campaign authority from
+`developer_state.json` → `current_re_authority`: canonical Generation 20 at
+`local-lab/re-campaign-incident-recovery-20260808-v1/generation-20-cexplosion-hit-runtime-v1/`,
+READY `13326fed25845e2351a2c68b57afe1bf2593786d2feb5f9e7d045fb7120a44ea`,
+frozen reducer `6e5777916ec5c7b94cdf6db727873bef589a14fec3bfac7ea4d895afda59c7fe`,
+external selector `268b13a1…fccf1`. It contains 8,126 functions, 217 C1,
+eight bounded C2, 7,901 opaque functions, 17 open residuals, and no rebuild-ready
 contract. Generation 12 admitted bounded `CBattleEngine::Damage`/`Hit` field
 writes and a partial rebuild mapping; Generation 13 admitted one replicated
 zero-shield `CUnit::ApplyDamage` entry/write contract and its exact overkill
@@ -95,9 +95,19 @@ Mission-native UnsetObjective residual as exact 3-byte NOP / 13-byte wrapper /
 3-byte NOP children and admits only the wrapper's C1 static call/bit-clear
 contract. Runtime, HUD/lifetime behavior, and opaque callee `0x004E5BD0`
 remain open; its rebuild mapping is also `PARTIAL_CONTRACT`, and it made no live
-Ghidra mutation. The independent replica is
-reproduction-only. Generation 73 remains a projection oracle, never a parent or
-authority. The next valid campaign generation is 20. Model review is
+Ghidra mutation. Generation 20 advances the still-address-suffixed
+`CExplosion__VFunc_39_0044bf10` only to a refuter-survived C2 bounded internal
+slot-40 carrier contract. Ten calls across three independent retained TTD
+sessions cover both damage arms and six `CUnit`, two `CTree`, and two
+`CBattleEngine` receivers. Every observed call carried the explosion object as
+source, `applyShields=1`, and mesh part `-1`; six paired `CUnit` calls refute
+reuse of direct parts `8/0/1/0/0/8`. A deliberately poisoned expected-seven-
+`CUnit` control exits 10 and publishes no READY. Entry, return, owned writes,
+nonnegative parts, controller-bearing segmented receivers, Warehouse identity,
+and universal behavior remain open. The rebuild mapping stays
+`PARTIAL_CONTRACT`; no Ghidra or executable mutation occurred. The independent
+replica is reproduction-only. Generation 73 remains a projection oracle, never
+a parent or authority. The next valid campaign generation is 21. Model review is
 situational and harness-agnostic under `REVIEW-PROTOCOL.md`.
 
 **Current static-envelope closure (2026-08-11):** the reviewed
@@ -106,7 +116,7 @@ accounts for the current 8,136-function inventory at 8,129 bounded C1 and seven
 bounded C2 functions, with zero static `OPAQUE` rows. It joins 53 disjoint
 sealed receipts covering 7,945 functions, ten post-Gen19 Mission-native
 boundaries, and 181 pre-existing C1/C2 rows. This is a distinct authority for
-static-envelope accounting; Generation 19 remains the immutable replay owner
+static-envelope accounting; Generation 20 remains the immutable replay owner
 for its admitted runtime evidence and READY/reducer lineage. See the
 [closure report](binary-analysis/function-c1-closure-2026-08-11.md) for exact
 hashes and limits.

@@ -157,6 +157,45 @@ selected mesh part (or `-1`). `0x0044C0F0` advances current radius by
 queues event `3000` for the next frame. Its demo twin `0x0044C170` is also
 instruction-identical after a single relocated global reference.
 
+### Retained-trace slot-40 carrier proof (2026-08-12)
+
+Three independent retained TTD call-context sessions now join the two pristine
+internal call sites to ten concrete target dispatches. Eight small-arm calls
+leave `0x0044C08E`; two large-arm calls leave `0x0044C061`. The receivers are
+six `CUnit`, two `CTree`, and two `CBattleEngine` instances. In every observed
+call, the source stack argument equals the current `CExplosion*`,
+`applyShields=1`, and `meshPartIndex=-1`. Eight callee returns validate; the two
+large-arm returns remain raw orphans. The small arm carries float bits
+`0x3F000000`; the two observed large-arm values are `0x3C9429EE` and
+`0x3BD92866`.
+
+Six `CUnit` observations pair a preceding direct round call with the explosion
+call on the same receiver. Their direct mesh parts are `8, 0, 1, 0, 0, 8`,
+while all six explosion calls carry `-1`. That refutes reuse of the direct-hit
+part for these pairs. A deliberately poisoned replay changed only the expected
+`CUnit` count from six to seven: it preserved the event projection, exited 10,
+failed its expectations/pairing/collector gates, and published no READY. This
+is the negative instrument control, not positive carrier evidence.
+
+The exact proof is
+`local-lab/cexplosion-hit-existing-trace-20260812-v1/proof-v1/proof.ready.json`
+(25,043 bytes, SHA-256
+`ec7c4bcec3f11357de5afb8482179f67e030623bce38374be0afe8bf82620b66`).
+Generation 20 admits the result as `C2_BOUNDED_RUNTIME` only after a 16-rule
+probe refuter survived. Its canonical READY is
+`13326fed25845e2351a2c68b57afe1bf2593786d2feb5f9e7d045fb7120a44ea`;
+the full-replay selector is 15,037 bytes / SHA-256
+`268b13a12de25fe5d6a648f17dd72699a441f968d8fef1d3d632c79b8edfccf1`.
+The campaign keeps the address-suffixed
+`CExplosion__VFunc_39_0044bf10` name and a `PARTIAL_CONTRACT` rebuild mapping.
+
+This is a bounded internal-call carrier proof, not a complete
+`CExplosion::Hit` envelope. It does not observe the function entry, its return,
+owned writes, a nonnegative explosion part, a controller-bearing segmented
+receiver, or the Level 100 Warehouse. The multi-gigabyte traces are bound by
+their retained wrapper hashes and current sizes rather than rehashed by this
+proof. No game, trace, Ghidra project, or executable was mutated.
+
 The existing function named `CWorldPhysicsManager__CreatePickup` at
 `0x0050FF10` is not a pickup factory. Its success path allocates exactly
 `0x94` bytes, calls `CComplexThing`'s base constructor, clears `+0x90`, and
@@ -341,8 +380,9 @@ invocation; the precise per-part collision-record layout and second-call mesh
 part; targets rejected by the explicit flag/smart/allegiance gates; expanding
 `R > 3` timing; behavior outside the captured runtime window; and segmented or
 general rebuild parity outside the mapped Level 100 whole-body medium-pulse
-path. A copied-runtime trace of both slot-40 calls would corroborate the now
-closed static order, but is no longer required to discover the dispatch path.
+path. The retained traces now prove the bounded internal source/shield/part
+carrier at both slot-40 call sites; they do not close the entry/return/write
+envelope or the segmented-receiver path.
 The pinned
 Stuart source is architectural/name evidence, not proof that its full body is
 byte-equivalent to the retail PC implementation.
