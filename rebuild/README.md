@@ -317,11 +317,17 @@ targets, temporary player deactivation, and Pulse Cannon-only activation. The
 client uses the exact seventeen retained English lines and voices through its
 Vulcan handoff. A no-fire control and fresh isolated copied-runtime runs then
 established the first charge bucket, definition speed `35`, `1.75`-unit released
-update, life `6`, direct-hit damage `1.8`, and four-shot objective removal for
-each of the three training tanks; one separate glancing hit removed `1.0`.
+update, life `6`, total direct-contact damage `1.8`, and four-shot objective
+removal for each of the three training tanks; one separate glancing hit removed
+`1.0`. Pristine control flow and exact physics records split that `1.8` into
+ordered `CRoundDamage 0.8` and immediate `CExplosionDamage 1.0` calls. Core
+retains both whole-body stores for Target Tank/Drone instead of collapsing them
+into one subtraction.
 Two isolated Warehouse repetitions then required twelve normal hits along one
 fixed center-aim attack line before terminal objective removal and the same
-Pulse-to-Vulcan gate. Core deliberately implements only those demonstrated
+Pulse-to-Vulcan gate. The explosion call's segmented mesh part remains unknown,
+so Warehouse deliberately retains that observed aggregate rather than assuming
+both calls select the direct-hit segment. Core implements only those bounded
 paths. Godot removes each completed model and radar marker and presents retained
 shot, hit, tank-destruction, text, voice, and primary particle layers.
 Water reproduces the fixed-function path active on the supported Steam specimen:

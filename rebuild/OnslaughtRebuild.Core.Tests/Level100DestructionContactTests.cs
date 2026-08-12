@@ -332,6 +332,13 @@ public sealed class Level100DestructionContactTests
 
         Assert.True(state.Terminal);
         Assert.Equal(0xBF99999Au, state.CurrentLifeBits);
+        Assert.Equal(
+            new[] { 0xBE4CCCD4u, 0xBF99999Au },
+            events.AsSpan(0, count)
+                .ToArray()
+                .Where(item =>
+                    item.Kind == Level100DestructionEventKind.SegmentDamaged)
+                .Select(item => item.RemainingHealthBits));
         Assert.Contains(
             events.AsSpan(0, count).ToArray(),
             item => item.Kind == Level100DestructionEventKind.PulseImpact &&
@@ -341,6 +348,60 @@ public sealed class Level100DestructionContactTests
             item => item.Kind == Level100DestructionEventKind.Terminal &&
                 item.EffectKind ==
                     Level100DestructionEffectKind.TargetDestroyed);
+    }
+
+    [Fact]
+    public void PulseHitPreservesDirectThenExplosionDamageOrder()
+    {
+        // Retail CRound::Hit 0x004D8AE0 first sends the configured 0.8
+        // CRoundDamage through target slot 40. Its mode-3 impact path then
+        // creates the configured immediate-radius explosion, whose Hit at
+        // 0x0044BF10 sends 1.0 through the same receiver. The old Core path
+        // collapsed those calls into one synthetic 1.8 subtraction and lost
+        // the observable intermediate life state.
+        Level100ContactDefinition tank =
+            Level100ContactCatalog.Instance.GetDefinition("Target Tank");
+        var state = new Level100DestructionState(204, tank);
+        var events = new Level100DestructionEvent[
+            Level100DestructionState.MaximumEventsPerHit];
+
+        int count = state.ApplyPulseHit(Hit(204, 0), events);
+
+        Assert.Equal(0x40866666u, state.CurrentLifeBits);
+        Assert.Equal(
+            new[] { 0x40A66666u, 0x40866666u },
+            events.AsSpan(0, count)
+                .ToArray()
+                .Where(item =>
+                    item.Kind == Level100DestructionEventKind.SegmentDamaged)
+                .Select(item => item.RemainingHealthBits));
+    }
+
+    [Fact]
+    public void PulseHitDestroysTargetDroneOnlyAfterExplosionStage()
+    {
+        Level100ContactDefinition drone =
+            Level100ContactCatalog.Instance.GetDefinition("Target Drone");
+        var state = new Level100DestructionState(205, drone);
+        var events = new Level100DestructionEvent[
+            Level100DestructionState.MaximumEventsPerHit];
+
+        int count = state.ApplyPulseHit(Hit(205, 0), events);
+
+        Assert.True(state.Terminal);
+        Assert.Equal(0xBF4CCCCDu, state.CurrentLifeBits);
+        Assert.Equal(
+            new[] { 0x3E4CCCCCu, 0xBF4CCCCDu },
+            events.AsSpan(0, count)
+                .ToArray()
+                .Where(item =>
+                    item.Kind == Level100DestructionEventKind.SegmentDamaged)
+                .Select(item => item.RemainingHealthBits));
+        Assert.Contains(
+            events.AsSpan(0, count).ToArray(),
+            item => item.Kind == Level100DestructionEventKind.Terminal &&
+                item.EffectKind ==
+                    Level100DestructionEffectKind.DroneDestroyed);
     }
 
     [Fact]

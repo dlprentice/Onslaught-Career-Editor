@@ -280,9 +280,13 @@ Current local boundaries that materially change the discovery lane:
   collision-response slot now close the synchronous small-explosion path back
   into `CExplosion::Hit`. For the surviving tutorial Target Drone this joins
   direct `0.8` and radial `1.0` as the measured conditional same-receiver `1.8`.
-  The contrasting invocation's rejecting gate, exact second mesh part,
-  expanding-radius timing, and rebuild parity remain open; live Ghidra
-  promotion is separate.
+  Core now preserves those as two ordered whole-body damage stores for Target
+  Tank/Drone, including `6.0 -> 5.2 -> 4.2` and the terminal
+  `-0.2 -> -1.2` pair, with focused Core and client-envelope tests. Warehouse
+  retains its observed aggregate because the explosion call's exact segmented
+  mesh part is still unknown. The contrasting invocation's rejecting gate,
+  segmented second mesh part, expanding-radius timing, and broader rebuild
+  parity remain open; live Ghidra promotion is separate.
 - **2026-08-10 recursive caller correction:** the exact direct-xref census for
   `CWorldPhysicsManager::CreateExplosion` contains 24 calls: two in the
   recovered `CRound` switch and 22 bounded function callers. Joined

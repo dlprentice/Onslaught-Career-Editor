@@ -359,7 +359,7 @@ four objective pointers, temporary player deactivation, and Pulse Cannon-only
 activation. A no-fire control and fresh isolated copied-runtime runs then
 established the same bounded lifecycle for each of the three training tanks:
 first active charge bucket `10`, round speed `35`, movement `1.75` per released
-20 Hz update, starting life `6`, direct-hit damage `1.8`, and
+20 Hz update, starting life `6`, direct-contact total damage `1.8`, and
 destruction/objective removal on shot four; one separate glancing hit removed
 `1.0`. Two further isolated repetitions then removed the Warehouse objective
 after exactly twelve normal hits along one fixed center-aim attack line and
@@ -755,9 +755,14 @@ factory at `0x0050FF10`. The recovered mode-3 impact switch now proves that
 and the shared response callback into `CExplosion::Hit`. This closes the
 conditional tutorial `0.8 + 1.0 = 1.8` same-receiver composition. One
 contrasting gate outcome, the second call's exact mesh part, expanding-radius
-timing, and rebuild parity remain open. This advances semantic understanding
-without retroactively claiming that the Gen10 runtime instrument inferred the
-name or types.
+timing, and broader rebuild parity remain open. The Level 100 reconstruction
+now preserves the two ordered whole-body stores for Target Tank/Drone rather
+than one aggregate subtraction; focused tests pin `6.0 -> 5.2 -> 4.2` and the
+terminal `-0.2 -> -1.2` pair through the production client envelope. Warehouse
+still uses its independently observed aggregate because the explosion call's
+segmented mesh part is unresolved. This advances semantic understanding and a
+bounded rebuild path without retroactively claiming that the Gen10 runtime
+instrument inferred the name or types.
 
 The direct factory census now removes the same stale pickup interpretation from
 all 22 containing functions. Three exact profile adapters identify unit,

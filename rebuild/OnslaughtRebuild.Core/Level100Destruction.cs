@@ -217,6 +217,7 @@ public sealed class Level100DestructionRuntime
             Level100ContactMechanics.PulseRadiusMillimeters,
             Level100DestructionState.PulseDamageBits,
             Level100DestructionEffectKind.PulseImpact,
+            preservePulseDamageStages: true,
             out hit);
 
     /// <summary>
@@ -228,6 +229,23 @@ public sealed class Level100DestructionRuntime
         int contactRadiusMillimeters,
         uint damageBits,
         Level100DestructionEffectKind impactEffectKind,
+        out Level100ContactHit hit) =>
+        TryApplyRoundSweep(
+            start,
+            end,
+            contactRadiusMillimeters,
+            damageBits,
+            impactEffectKind,
+            preservePulseDamageStages: false,
+            out hit);
+
+    private bool TryApplyRoundSweep(
+        SimVector3 start,
+        SimVector3 end,
+        int contactRadiusMillimeters,
+        uint damageBits,
+        Level100DestructionEffectKind impactEffectKind,
+        bool preservePulseDamageStages,
         out Level100ContactHit hit)
     {
         SynchronizeActors(requireInitialState: false);
@@ -315,11 +333,13 @@ public sealed class Level100DestructionRuntime
             return true;
         }
 
-        int eventCount = destruction.ApplyRoundHit(
-            hit,
-            damageBits,
-            impactEffectKind,
-            _hitEvents);
+        int eventCount = preservePulseDamageStages
+            ? destruction.ApplyPulseHit(hit, _hitEvents)
+            : destruction.ApplyRoundHit(
+                hit,
+                damageBits,
+                impactEffectKind,
+                _hitEvents);
         for (int index = 0; index < eventCount; index++)
         {
             _events.Add(_hitEvents[index]);
@@ -498,15 +518,28 @@ public sealed class Level100DestructionRuntime
 /// </summary>
 public sealed class Level100DestructionState
 {
+    public const uint PulseDirectDamageBits = 0x3F4CCCCD;
+    public const uint PulseExplosionDamageBits = 0x3F800000;
+
+    /// <summary>
+    /// Exact aggregate of the medium pulse's direct <c>0.8</c> round damage
+    /// and immediate-radius <c>1.0</c> explosion damage. Retail sends these as
+    /// two ordered slot-40 calls; this aggregate remains the bounded Warehouse
+    /// fallback until the explosion call's segmented mesh-part identity is
+    /// measured.
+    /// </summary>
     public const uint PulseDamageBits = 0x3FE66666;
     /// <summary>
     /// Mech Bullet applies the same round-damage + explosion-damage sum that
     /// the measured 1.8 medium-pulse value decomposes into: byte-read
     /// <c>CRoundDamage 0.08</c> on <c>Mech Bullet</c> plus
     /// <c>CExplosionDamage 0.001</c> on <c>Mech Bullet Hit</c>. The addition
-    /// rule itself is the only survivor of the three candidate models against
-    /// the two recorded pulse measurements (direct 1.8, glancing 1.0) and is
-    /// not independently proven; see
+    /// order is now statically closed for configured direct-round plus
+    /// immediate-explosion hits by the CRound/CExplosion chain. Runtime
+    /// reachability of both stages for Mech Bullet, its exact second mesh part,
+    /// and its gates remain unobserved. The aggregate was originally selected
+    /// as the only survivor of three candidate models against the two recorded
+    /// pulse contact measurements (total 1.8, glancing 1.0); see
     /// reverse-engineering/binary-analysis/physics-round-value-ids-2026-07-25.md
     /// section 6.2. Level 100 progression is insensitive to the ambiguity: a
     /// 6.0-life Target Tank takes 75 bullets under the sum model (0.081) and
@@ -661,12 +694,42 @@ public sealed class Level100DestructionState
     /// </summary>
     public int ApplyPulseHit(
         in Level100ContactHit hit,
-        Span<Level100DestructionEvent> events) =>
-        ApplyRoundHit(
+        Span<Level100DestructionEvent> events)
+    {
+        // The exact second-call mesh part remains unresolved for segmented
+        // facilities. Preserve the independently observed Warehouse aggregate
+        // rather than asserting that its explosion damages the direct-hit
+        // segment. Whole-body Target Tank/Drone life is independent of that
+        // part identity, so the two proved retail calls can be retained here.
+        if (!IsWholeBodyLife(_definition.Kind))
+        {
+            return ApplyRoundHit(
+                hit,
+                PulseDamageBits,
+                Level100DestructionEffectKind.PulseImpact,
+                events);
+        }
+
+        ValidateRoundHit(hit, events);
+        var writer = new EventWriter(events);
+        writer.Add(CreateRoundImpactEvent(
             hit,
-            PulseDamageBits,
-            Level100DestructionEffectKind.PulseImpact,
-            events);
+            Level100DestructionEffectKind.PulseImpact));
+        if (_terminal)
+        {
+            return writer.Count;
+        }
+
+        // CRound::Hit 0x004D8AE0 sends CRoundDamage first. Its mode-3 impact
+        // path then creates an already-live small explosion, and
+        // CExplosion::Hit 0x0044BF10 synchronously sends CExplosionDamage to
+        // the same receiver. Keep both stored remainders: on the terminal
+        // fourth Target Tank hit retail retains -0.2 before the explosion and
+        // -1.2 afterward rather than replacing the pair with one 1.8 call.
+        ApplyWholeBodyDamage(hit, PulseDirectDamageBits, ref writer);
+        ApplyWholeBodyDamage(hit, PulseExplosionDamageBits, ref writer);
+        return writer.Count;
+    }
 
     /// <summary>
     /// Applies a named round's damage to a factual narrowphase hit. The caller
@@ -676,6 +739,31 @@ public sealed class Level100DestructionState
         in Level100ContactHit hit,
         uint damageBits,
         Level100DestructionEffectKind impactEffectKind,
+        Span<Level100DestructionEvent> events)
+    {
+        ValidateRoundHit(hit, events);
+
+        var writer = new EventWriter(events);
+        writer.Add(CreateRoundImpactEvent(hit, impactEffectKind));
+
+        if (_terminal)
+        {
+            return writer.Count;
+        }
+
+        if (IsWholeBodyLife(_definition.Kind))
+        {
+            ApplyWholeBodyDamage(hit, damageBits, ref writer);
+        }
+        else
+        {
+            ApplyWarehouseDamage(hit, damageBits, ref writer);
+        }
+        return writer.Count;
+    }
+
+    private void ValidateRoundHit(
+        in Level100ContactHit hit,
         Span<Level100DestructionEvent> events)
     {
         if (hit.ActorId != ActorId)
@@ -696,24 +784,6 @@ public sealed class Level100DestructionState
                 $"At least {MaximumEventsPerHit} event slots are required.",
                 nameof(events));
         }
-
-        var writer = new EventWriter(events);
-        writer.Add(CreateRoundImpactEvent(hit, impactEffectKind));
-
-        if (_terminal)
-        {
-            return writer.Count;
-        }
-
-        if (IsWholeBodyLife(_definition.Kind))
-        {
-            ApplyTargetTankDamage(hit, damageBits, ref writer);
-        }
-        else
-        {
-            ApplyWarehouseDamage(hit, damageBits, ref writer);
-        }
-        return writer.Count;
     }
 
     internal static Level100DestructionEvent CreateRoundImpactEvent(
@@ -814,7 +884,7 @@ public sealed class Level100DestructionState
         kind is Level100DefinitionKind.TargetTank or
             Level100DefinitionKind.TargetDrone;
 
-    private void ApplyTargetTankDamage(
+    private void ApplyWholeBodyDamage(
         in Level100ContactHit hit,
         uint damageBits,
         ref EventWriter writer)

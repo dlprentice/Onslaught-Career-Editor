@@ -3424,13 +3424,16 @@ public sealed class Simulation
                     $"Projectile {projectile.Id} has unsupported impact kind " +
                     $"{projectile.Kind}."),
             };
-            bool hit = _level100Destruction.TryApplyRoundSweep(
-                start,
-                end,
-                projectile.ContactRadiusMillimeters,
-                projectile.DamageBits,
-                impactEffectKind,
-                out _);
+            bool hit = projectile.Kind ==
+                Level100ProjectileKind.MechPulseBoltMedium
+                ? _level100Destruction.TryApplyPulseSweep(start, end, out _)
+                : _level100Destruction.TryApplyRoundSweep(
+                    start,
+                    end,
+                    projectile.ContactRadiusMillimeters,
+                    projectile.DamageBits,
+                    impactEffectKind,
+                    out _);
             if (hit)
             {
                 DrainAndDispatchLevel100ActorFacts();

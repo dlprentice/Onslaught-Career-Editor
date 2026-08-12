@@ -842,9 +842,11 @@ life `6` and no shield; direct mesh hits repeated the exact
 target from Steam's objective set on shot four. One separate glancing mesh-part
 hit removed `1.0`. The released damage call receives a mesh-part index, so the
 differing multiplier is not generalized. Core represents only the demonstrated
-direct-hit path: speed `1750` millimetres per 20 Hz tick, `1.8` life per hit,
-the retained mesh's rounded `1.45`-unit horizontal bound, and independent
-four-hit removal for the three tanks. A same-return capture of released
+direct-contact path: speed `1750` millimetres per 20 Hz tick, ordered `0.8`
+round and `1.0` immediate-explosion whole-body stores, the retained mesh's
+rounded `1.45`-unit horizontal bound, and independent four-hit removal for the
+three tanks. The exact explosion mesh-part carrier for segmented targets remains
+open. A same-return capture of released
 `CBattleEngine::GetLaunchPosition` resolved cockpit emitter `Gun` index 1 to
 `-0.005619` right, `+0.080066` forward, and `+0.259300` up in the live
 BattleEngine basis; Core consumes the rounded millimetre transform. The

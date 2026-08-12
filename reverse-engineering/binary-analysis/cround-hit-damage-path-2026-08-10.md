@@ -1,14 +1,15 @@
 # `CRound::Hit`, configured explosion creation, and `CExplosion::Hit`
 
 Status: active, bounded semantic contract
-Last updated: 2026-08-11
+Last updated: 2026-08-12
 Evidence: MEASURED — pristine retail bytes, strict RTTI/vtables, exact data
 records, dated static exports, replicated runtime carriers, and independent
 PC-demo normalized bodies; SOURCE — pinned `CThing`/init layouts and virtual
 order; UNKNOWN — the narrowed gates listed below.
 Verdict: the conditional direct-round plus synchronous small-explosion damage
-chain is closed through the same receiver; exact second-call mesh part,
-expanding-radius timing, and rebuild parity remain open.
+chain is closed through the same receiver, and its whole-body Level 100 path is
+mapped into the reconstruction with focused parity tests; exact segmented
+second-call mesh part, expanding-radius timing, and broader parity remain open.
 Specimen: pristine Steam `BEA.exe`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
@@ -301,14 +302,46 @@ retail chain is the conditional same-receiver composition `0.8 + 1.0 = 1.8`,
 not two disconnected arithmetic candidates. The exact mesh-part selected by
 the second call is still a narrower open question.
 
+## Bounded reconstruction mapping
+
+The pre-mapping Core path passed aggregate `PulseDamageBits = 1.8` through one
+`ApplyRoundHit` call. That reproduced the final Target Tank life but erased the
+proved intermediate store: a first hit went directly from `6.0` to `4.2`
+instead of retaining the retail-ordered `6.0 -> 5.2 -> 4.2`. The focused
+falsifier `PulseHitPreservesDirectThenExplosionDamageOrder` failed against that
+collapsed model with one `SegmentDamaged` event where two were required.
+
+`rebuild/OnslaughtRebuild.Core/Level100Destruction.cs` now owns the bounded
+mapping:
+
+- `PulseDirectDamageBits = 0x3F4CCCCD` and
+  `PulseExplosionDamageBits = 0x3F800000` remain separate;
+- `ApplyPulseHit` sends those values in retail order for whole-body Target Tank
+  and Target Drone life;
+- the fourth Target Tank hit retains the two exact stored remainders
+  `0xBE4CCCD4` (about `-0.2`) and `0xBF99999A` (`-1.2`), including the terminal
+  transition between them; and
+- `Simulation.UpdateProjectiles` routes `MechPulseBoltMedium` through that
+  pulse-specific owner rather than the generic one-damage round path.
+
+`Level100DestructionContactTests` pins the first and terminal damage pairs, and
+`InteractiveSessionTests.FrameDestructionEvents_AggregateTheReleaseTickInOrder`
+pins the production client envelope. The exact explosion mesh-part carrier is
+still not known for segmented facilities. Warehouse therefore deliberately
+keeps the independently observed aggregate `1.8` path instead of asserting
+that both retail calls damage the direct-hit segment. This is a bounded
+whole-body reconstruction mapping, not engine-wide `CRound`/`CExplosion`
+parity or a segmented-damage closure.
+
 ## Remaining evidence boundary
 
 Still unresolved are the source names of instance fields `this+0xE8`, `+0xEC`,
 `+0x11C`, and `+0x124`; which exact gate rejected the contrasting runtime
 invocation; the precise per-part collision-record layout and second-call mesh
 part; targets rejected by the explicit flag/smart/allegiance gates; expanding
-`R > 3` timing; behavior outside the captured runtime window; and rebuild
-parity. A copied-runtime trace of both slot-40 calls would corroborate the now
+`R > 3` timing; behavior outside the captured runtime window; and segmented or
+general rebuild parity outside the mapped Level 100 whole-body medium-pulse
+path. A copied-runtime trace of both slot-40 calls would corroborate the now
 closed static order, but is no longer required to discover the dispatch path.
 The pinned
 Stuart source is architectural/name evidence, not proof that its full body is

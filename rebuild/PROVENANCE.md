@@ -800,6 +800,17 @@ definition speed `35` and exact movement magnitude `1.75` per 20 Hz update.
 Each tank began at life `6` with no shield. Direct mesh hits repeated
 `6 → 4.2 → 2.4 → 0.6 → -1.2`; each target set its destroyed bit and left the
 objective set on shot four. One separate glancing mesh-part hit removed `1.0`.
+Pristine `CRound::Hit` (`0x004D8AE0`) sends the configured `0.8` round damage
+first, then its mode-3 impact path creates an already-live small explosion;
+`CExplosion::Hit` (`0x0044BF10`) synchronously sends the configured `1.0`
+damage through the same receiver. Core therefore retains two whole-body stores
+per normal pulse: the first hit is `6.0 → 5.2 → 4.2`, and the terminal fourth
+hit stores approximately `-0.2` before the explosion leaves exact
+`0xBF99999A` (`-1.2`). `Level100DestructionContactTests` pins both pairs, while
+`InteractiveSessionTests.FrameDestructionEvents_AggregateTheReleaseTickInOrder`
+pins their production client envelope. The exact second-call mesh part remains
+unresolved for segmented targets, so the Warehouse path continues to consume
+only its independently observed aggregate outcome.
 `CUnit__ApplyDamage` (`0x004F9A90`) receives the mesh-part index and
 `CUnit__MarkDestroyedAndCleanupLinks` (`0x004FD140`) owns the removal, so Core
 does not generalize the unmeasured part multiplier. It consumes only the

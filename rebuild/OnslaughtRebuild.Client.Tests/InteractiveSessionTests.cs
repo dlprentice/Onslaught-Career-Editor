@@ -1041,6 +1041,7 @@ public sealed class InteractiveSessionTests
             {
                 Level100DestructionEventKind.PulseImpact,
                 Level100DestructionEventKind.SegmentDamaged,
+                Level100DestructionEventKind.SegmentDamaged,
             },
             targetEvents.Select(item => item.Kind));
         Assert.All(
@@ -1049,13 +1050,17 @@ public sealed class InteractiveSessionTests
             item => Assert.Equal(
                 Level100DestructionEffectKind.PulseImpact,
                 item.EffectKind));
-        float pulseDamage =
-            BitConverter.UInt32BitsToSingle(Level100DestructionState.PulseDamageBits);
-        float afterFirstHit = 6f - pulseDamage;
+        float directDamage = BitConverter.UInt32BitsToSingle(
+            Level100DestructionState.PulseDirectDamageBits);
+        float explosionDamage = BitConverter.UInt32BitsToSingle(
+            Level100DestructionState.PulseExplosionDamageBits);
+        float afterDirectHit = 6f - directDamage;
+        float afterExplosionHit = afterDirectHit - explosionDamage;
         Assert.Equal(
             new[]
             {
-                BitConverter.SingleToUInt32Bits(afterFirstHit),
+                BitConverter.SingleToUInt32Bits(afterDirectHit),
+                BitConverter.SingleToUInt32Bits(afterExplosionHit),
             },
             targetEvents
                 .Where(item => item.Kind == Level100DestructionEventKind.SegmentDamaged)
