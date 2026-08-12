@@ -178,11 +178,18 @@ turns the near-retail Issue-11 build into an operational oracle. Independent
 decode, scratch repair, canonical apply/readback, and restored-POST readback
 prove 1,166 instruction-local source mappings in each isolated Xbox project,
 with 425 exact PC/Xbox coordinates covering 93 presently known PC functions.
-The 95 repaired instruction sites changed neither Xbox function inventory.
-These are source-coordinate seeds only—not whole-function equivalence, semantic
-contracts, final function denominators, or reconstruction parity. The Xbox
-projects and backups remain machine-local; the tracked Ghidra snapshot remains
-the synchronized PC-retail database.
+The 95 repaired instruction sites changed neither Xbox function inventory. The
+subsequent
+[function-correlation checkpoint](binary-analysis/xbox-anchor-function-correlation-2026-08-12.md)
+places 1,065 anchors in 379 one-to-one current Issue-11/US-retail function pairs
+with zero ambiguous components; 101 anchors are uncontained in both current
+inventories. Complete section censuses put 6,723 functions per build in mixed
+`.text` and 2,218/2,219 in 14 named SDK/middleware sections, with the sole count
+delta in `DSOUND`. These are bounded current-inventory and layout facts—not
+original source boundaries, whole-function equivalence, semantic contracts,
+final function denominators, or reconstruction parity. The Xbox projects and
+backups remain machine-local; the tracked Ghidra snapshot remains the
+synchronized PC-retail database.
 
 ## Historical Gen10 dual-authority / TTD admission (2026-08-04)
 

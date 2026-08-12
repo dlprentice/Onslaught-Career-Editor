@@ -116,6 +116,11 @@ US retail carries the same PDB signature at age 3. Their 1,166 unique shared
 source coordinates are now installed in isolated, restore-tested Ghidra
 projects; see the
 [Xbox source-line/Ghidra checkpoint](binary-analysis/xbox-source-line-anchor-ghidra-2026-08-12.md).
+The read-only
+[function-correlation successor](binary-analysis/xbox-anchor-function-correlation-2026-08-12.md)
+places 1,065 anchors into 379 one-to-one current function pairs and accounts for
+all current functions by XBE section. It isolates 14 named SDK/middleware
+sections but deliberately leaves the 6,723-function `.text` region mixed.
 
 ## Container rules and open work
 
@@ -132,7 +137,8 @@ projects; see the
   container/member identity.
 
 The smallest high-value successors are filesystem manifests for PC demo versus
-retail and PS2 Europe versus USA; XDK/game-code separation and containing-
-function correlation in the two new Xbox Ghidra projects; ELF structure and
-string analysis; and tracked promotion of the already locally identified
-Issue-7 XDVDFS/XBE measurements plus its full filesystem census.
+retail and PS2 Europe versus USA; control-flow adjudication of the 101 Xbox
+anchors outside current function bodies and ownership separation within mixed
+`.text`; ELF structure and string analysis; and tracked promotion of the already
+locally identified Issue-7 XDVDFS/XBE measurements plus its full filesystem
+census.

@@ -100,7 +100,7 @@ trees and requires their 19 files / 186,485,637 bytes / inventory SHA-256
 `b7767b108256c0ff71c033094b25e3f2308ef7d00f007854e0068b9307f3adb4`
 to remain exact.
 
-## Repository boundary and next falsifier
+## Repository boundary and successor
 
 The two Xbox projects remain ignored under
 `local-lab/xbox-sparse-symbol-ghidra-20260812-v1/ghidra-projects/`. They are not
@@ -109,8 +109,12 @@ the synchronized PC-retail project. The Xbox project bytes, their backups, and
 raw anchor tables remain machine-local retail-derived evidence; this document
 promotes only the reviewed measurements and their exact receipt identity.
 
-The next bounded step is a read-only join from each source coordinate to its
-containing Issue-11 and US-retail Ghidra functions, followed by one-to-one and
-ambiguous-component accounting. XDK 4627 code must be separated before any
-game-function identity is transferred. A source coordinate can seed Version
-Tracking; it cannot authorize an automatic whole-function rename.
+The read-only containing-function join and complete XBE-section census are now
+closed by the
+[Xbox source-anchor function correlation checkpoint](xbox-anchor-function-correlation-2026-08-12.md).
+It proves 379 one-to-one pairs in the pinned current inventories, with 378
+strict translated current-boundary pairs, one bounded anchor-partition-only
+pair, zero ambiguous components, and 101 anchors uncontained in both builds.
+It also isolates 14 named SDK/middleware sections while retaining `.text` as a
+mixed-ownership frontier. A source coordinate can seed Version Tracking; it
+still cannot authorize an automatic whole-function rename or semantic transfer.

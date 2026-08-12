@@ -207,9 +207,13 @@ presently known PC functions. Ninety-five Ghidra instruction sites were repaired
 through scratch/apply/readback and fresh PRE/POST recovery gates without changing
 either Xbox function inventory. The two Xbox projects and their backups remain
 machine-local retail-derived evidence; the tracked PC-retail Ghidra snapshot is
-still the single repository database owner. Whole-function correspondence,
-XDK/game-code separation, semantic transfer, and final platform function counts
-remain open.
+still the single repository database owner. A read-only successor now places
+1,065 anchors into 379 one-to-one current Xbox function pairs with zero
+ambiguous components and leaves 101 symmetrically uncontained. Complete section
+censuses isolate 14 named SDK/middleware sections but retain all 6,723 functions
+in `.text` as a mixed-ownership frontier. Original source boundaries, complete
+`.text` ownership separation, whole-body or semantic transfer, runtime parity,
+and final platform function counts remain open.
 
 ## Historical atomic handoff boundary (2026-08-04 / Generation 10)
 
