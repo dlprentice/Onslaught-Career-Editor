@@ -1,20 +1,21 @@
 # PC demo versus PC retail
 
 Status: active, measured cross-build evidence
-Last updated: 2026-08-11
+Last updated: 2026-08-12
 Evidence: MEASURED — exact executable/archive hashes, independently recounted
 MSVC RTTI/vtables, a 2,127-target virtual census, a conservative 8,086-row
 cross-build function-address map, and exact multi-range, opcode-factory, and
 gapless CRT/FPU, caller-propagation, equal-delta body-union, and whole-demo
-exact-fingerprint replay; UNKNOWN — normalized constant values outside the
-explicitly checked cohorts, four retail functions without a demo address, and
-runtime/source/rebuild equivalence.
+exact-fingerprint replay, plus final source/call/metadata frontier closure;
+UNKNOWN — normalized constant values outside the explicitly checked cohorts
+and runtime/source/rebuild equivalence.
 Verdict: the PC demo is a distinct build with a structurally identical virtual
 class surface. Across virtual and non-virtual code, 8,119 of 8,136 retail
 functions have a complete normalized-identical demo instruction stream. Another
-13 have independently bounded semantic lineage differences. All 8,132 mapped
-entries are therefore accounted for; four retail functions still lack a demo
-entry.
+16 have independently bounded semantic lineage differences. One compiler-EH
+cleanup package is proven retail-only because its parent controls-screen block
+and metadata are absent from the demo. All 8,135 retail functions with a demo
+counterpart are mapped; zero rows remain address-unresolved.
 Specimen: pristine PC retail `BEA.exe`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`;
 PC demo `BEA.exe`, SHA-256
@@ -140,7 +141,8 @@ the map and the narrower exact closure reports is:
 | Newly propagated demo entries | 6 |
 | Equal-delta body-union demo entries | 29 |
 | Exact-fingerprint demo entries | 11 |
-| Current mapped demo entries | 8,132 |
+| Final divergent demo entries | 3 |
+| Current mapped demo entries | 8,135 |
 | Original single-range normalized-identical body streams | 8,021 |
 | Multi-range normalized-identical corrections | 42 |
 | Opcode-factory normalized-identical correction | 1 |
@@ -148,9 +150,10 @@ the map and the narrower exact closure reports is:
 | Propagated normalized-identical additions | 6 |
 | Equal-delta normalized-identical additions | 29 |
 | Exact-fingerprint normalized-identical additions | 11 |
-| Semantically resolved non-identical bodies | 13 |
+| Semantically resolved non-identical bodies | 16 |
+| Proven retail-only compiler-EH packages | 1 |
 | Address mapped, still changed or incompletely bounded | 0 |
-| No demo entry yet recovered | 4 |
+| Address-unresolved rows | 0 |
 | Prior legacy Ghidra address-set byte aggregate | 1,731,102 |
 | New equal-delta legacy / corrected instruction bytes | 11,085 / 11,096 |
 | Exact-fingerprint complete body bytes / instructions | 1,884 / 545 |
@@ -167,8 +170,10 @@ divergences below, 60 entries independently fixed by unanimous corresponding
 direct transfers, and one isolated compiler-unwind entry fixed by its
 equal-delta neighbors. Fifty-two were comparison false negatives: 42
 multi-range bodies, the linearly re-decoded opcode factory, and nine x87 bodies
-whose Ghidra rows folded `WAIT` prefixes. Thirteen have edition-specific
-behavior accounted for by the reports below; no mapped row remains unresolved.
+whose Ghidra rows folded `WAIT` prefixes. Thirteen initially mapped rows have
+edition-specific behavior accounted for by the reports below; the terminal
+frontier adds three more bounded divergences, and no mapped row remains
+unresolved.
 Replaying corresponding transfers from the newly closed callers then recovers
 six of the former 50 address-unmapped entries. Equal-delta neighbor nomination,
 followed by complete corrected-body and operand audits, recovers another 29. A
@@ -280,7 +285,19 @@ caller/code-pointer, unique-callee, and ordered raw-block evidence, and
 classifies all 17 changed operand pairs. Its independent replay passes across
 1,884 body bytes and 545 instructions. The current
 [four-row frontier](binary-analysis/pc-demo-retail-address-unmapped-frontier-after-exact-fingerprint-2026-08-11.tsv)
-is the remaining address-recovery queue.
+is the exact queue at that checkpoint.
+
+The
+[final function frontier closure](binary-analysis/pc-demo-retail-final-frontier-closure-2026-08-12.md)
+then assigns all four rows a terminal state. `con_fmv_play`,
+`CGame::ShutdownRestartLoop`, and `CGame::RestartLoopRunLevel` receive bounded
+demo entries through complete bodies, mapped call sequences, paired strings and
+callers, and retained-source ownership. The final unwind funclet is not forced
+onto one of 59 generic matches: its parent controls-screen block, exact
+32-byte compiler package, and one `FuncInfo` record are all absent from the
+demo, whose mapped neighboring code and metadata become adjacent. The address
+frontier is therefore closed with one proven retail-only package rather than a
+fabricated demo address.
 
 The
 [credits/localization lineage report](binary-analysis/pc-demo-retail-credits-localization-lineage-2026-08-11.md)
@@ -304,11 +321,9 @@ demo preserves that shape.
 
 The earlier `CUnit`, `CBattleEngine`, `CThing`, `CComplexThing`, `CActor`, PC
 controller, PC music, PC shell, FMV/startup, and frontend semantic cohorts have
-now used that oracle. The next cross-build work should change instruments
-again: use constants, strings, exception/unwind metadata, retained-source or
-library fingerprints, platform builds, and newly proved corresponding callers
-on the four address-unmapped rows. Repeating the same normalized-signature or
-generic call-propagation pass would only fit the remaining ambiguity.
+now used that oracle. The function-address frontier no longer owns a queue. Any
+next cross-build work should target unresolved semantics, constants, runtime
+causality, or reconstruction mismatches rather than repeat address recovery.
 
 ## Reproduction and limits
 
@@ -324,6 +339,6 @@ has SHA-256
 Open boundaries remain:
 
 - normalized immediate/displacement values and the objects they address;
-- demo entry recovery for the remaining four retail functions;
+- runtime meaning for normalized constants outside the audited cohorts;
 - asset/configuration differences and their behavioral consequences;
 - runtime equivalence, source equivalence, and rebuild parity.

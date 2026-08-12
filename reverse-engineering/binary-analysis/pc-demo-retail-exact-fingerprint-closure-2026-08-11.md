@@ -12,6 +12,13 @@ exact demo entry. The complete 8,136-function partition is 8,119
 normalized-identical bodies, 13 bounded semantic divergences, and four
 address-unmapped functions. All 8,132 mapped entries are accounted for.
 
+Later accounting: the
+[final function frontier closure](pc-demo-retail-final-frontier-closure-2026-08-12.md)
+maps three of these four rows as bounded semantic divergences and proves the
+fourth is a retail-only compiler-EH package. The 8,119 / 13 / 4 partition below
+remains the exact result of this checkpoint; current address-unresolved count is
+zero.
+
 Specimen: pristine PC retail `BEA.exe`, 2,506,752 bytes, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`;
 PC demo `BEA.exe`, 2,510,848 bytes, SHA-256

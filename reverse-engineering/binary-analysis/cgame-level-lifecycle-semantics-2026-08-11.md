@@ -4,8 +4,9 @@ Status: active, bounded semantic recovery
 Last updated: 2026-08-11
 Evidence: MEASURED — pristine retail bodies, direct calls, state writes, strings,
 and three normalized-identical demo twins plus one independently fixed demo
-entry; SOURCE — pinned `game.cpp`, `game.h`, and `Platform.h`; UNKNOWN — exact
-source-revision identity, two remaining demo entries, and runtime failure paths.
+entry plus two semantically bounded demo bodies; SOURCE — pinned `game.cpp`,
+`game.h`, and `Platform.h`; UNKNOWN — exact source-revision identity and runtime
+failure paths.
 Verdict: the complete six-function level/restart lifecycle has recovered source
 identities, ownership boundaries, return codes, and bounded released behavior.
 
@@ -19,8 +20,8 @@ PC demo `BEA.exe`, SHA-256
 The six released bodies cover 4,570 bytes and 1,204 decoded instructions. Their
 machine-readable crosswalk is
 [`cgame-level-lifecycle-semantics-2026-08-11.tsv`](cgame-level-lifecycle-semantics-2026-08-11.tsv).
-That 2,225-byte table has SHA-256
-`307edbb0a49faae3e35f63ee0271a48ac007e544f64a98f1d3772d0b396208fd`.
+That 2,434-byte table has SHA-256
+`24e345dc64f0eb81eef53f1f853bc25ca8df12fb3da7a48b8b65a6404c52d781`.
 
 The retained source functions begin at `references/Onslaught/game.cpp:246`,
 `:292`, `:414`, `:530`, `:1260`, and `:1573`. That file is 103,727 bytes,
@@ -81,6 +82,12 @@ the source-level partition. `Init`, `InitRestartLoop`, and `Shutdown` also have
 independently linked demo bodies with zero normalized instruction differences.
 Corresponding callers fix demo `RunLevel` at `0x0046E120`, although that later
 demo body is deliberately retained as address-only rather than declared equal.
+The later
+[final frontier closure](pc-demo-retail-final-frontier-closure-2026-08-12.md)
+then fixes demo `ShutdownRestartLoop @ 0x0046CAA0` and
+`RestartLoopRunLevel @ 0x0046DC40`. The shutdown pair preserves all 33 direct
+calls; the runner pair preserves all 38 demo calls as an ordered retail
+subsequence and bounds the removed retail-only controls-screen/cleanup block.
 
 ## Released PC differences and limits
 
@@ -96,7 +103,7 @@ The pristine decompiles are retained locally under
 `local-lab/ghidra-fullpass-2026-07-23/exports/W004/decompile/`; the direct-call
 owner is
 `local-lab/console-callback-atomic14-post-campaign-20260803-v1/post-direct-calls.tsv`.
-Two demo entries (`ShutdownRestartLoop` and `RestartLoopRunLevel`) remain
-unrecovered, and `RunLevel` still needs an independently bounded demo CFG.
+All six demo entries are now recovered; `RunLevel` still needs an independently
+bounded complete demo CFG beyond its exact 26-target direct-call sequence.
 Actual disc/read failures, allocation failures, demo timeout behavior, and
 platform-specific PS2/Xbox branches remain runtime or cross-platform questions.

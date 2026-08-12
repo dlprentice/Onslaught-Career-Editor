@@ -665,9 +665,10 @@ static envelopes. The table above remains the immutable Generation-19 replay
 authority for its admitted runtime/campaign claims; neither count implies
 `REBUILD_READY` or complete semantic parity.
 
-**PC demo/retail function frontier (2026-08-11):** exact second-pass reports
-now account for **8,119 normalized-identical bodies** and **13 bounded semantic
-divergences** among 8,132 mapped retail functions. The
+**PC demo/retail function frontier (2026-08-12):** exact and semantic
+second-pass reports now account for **8,119 normalized-identical bodies**,
+**16 bounded semantic divergences**, and **one proven retail-only compiler-EH
+package**. The
 [gapless CRT/FPU closure](reverse-engineering/binary-analysis/pc-demo-retail-gapless-closure-2026-08-11.md)
 resolves the final nine mapped false negatives, supersedes two stale FPU helper
 plates, and propagates six additional normalized-identical address pairs. The
@@ -676,10 +677,13 @@ adds 29 pairs after complete corrected-body and encoded-operand audits and
 identifies six dated Ghidra body sets that omit 11 instruction bytes. The
 [exact-fingerprint closure](reverse-engineering/binary-analysis/pc-demo-retail-exact-fingerprint-closure-2026-08-11.md)
 then adds 11 pairs after a complete demo-text scan, changed-operand audit, and
-independent replay. No mapped body remains unresolved; the
-[four-row frontier](reverse-engineering/binary-analysis/pc-demo-retail-address-unmapped-frontier-after-exact-fingerprint-2026-08-11.tsv)
-owns the remaining address-recovery queue. Runtime, source, and rebuild
-equivalence remain separate proof.
+independent replay. The
+[final frontier closure](reverse-engineering/binary-analysis/pc-demo-retail-final-frontier-closure-2026-08-12.md)
+recovers three bounded divergent entries and proves the last row is a
+retail-only controls-screen cleanup package through ordered code/EH metadata.
+All 8,135 retail functions that have a demo counterpart are mapped, and **zero
+address-unresolved rows remain**. Runtime, source, and rebuild equivalence
+remain separate proof.
 
 Generation 11's post-loss closure accounts for every Generation-73 candidate delta without
 making that candidate a parent. It readmits 935 names, 216 bounded C1 claims,
