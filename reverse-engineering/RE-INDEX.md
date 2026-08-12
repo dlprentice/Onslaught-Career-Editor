@@ -172,6 +172,18 @@ for, and zero retail rows remain address-unresolved. See
 [`DEMO_VS_RETAIL.md`](DEMO_VS_RETAIL.md) for the exact accounting and proof
 boundaries.
 
+**Current Xbox sparse-symbol checkpoint (2026-08-12):** the
+[source-line/Ghidra promotion](binary-analysis/xbox-source-line-anchor-ghidra-2026-08-12.md)
+turns the near-retail Issue-11 build into an operational oracle. Independent
+decode, scratch repair, canonical apply/readback, and restored-POST readback
+prove 1,166 instruction-local source mappings in each isolated Xbox project,
+with 425 exact PC/Xbox coordinates covering 93 presently known PC functions.
+The 95 repaired instruction sites changed neither Xbox function inventory.
+These are source-coordinate seeds only—not whole-function equivalence, semantic
+contracts, final function denominators, or reconstruction parity. The Xbox
+projects and backups remain machine-local; the tracked Ghidra snapshot remains
+the synchronized PC-retail database.
+
 ## Historical Gen10 dual-authority / TTD admission (2026-08-04)
 
 Generation 10 remains a valid **historical frozen-integrity**

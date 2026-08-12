@@ -1,7 +1,7 @@
 # Binary Analysis
 
 Status: living index for `reverse-engineering/binary-analysis/`
-Last updated: 2026-08-11
+Last updated: 2026-08-12
 Summary: front door to the static and byte-level evidence for the Steam
 `BEA.exe`. Names the current naming authority, the specimen baseline, and the
 per-system contracts. Makes no claim of its own — every claim below belongs to
@@ -26,6 +26,11 @@ the document it links.
   the reviewed per-row crosswalk from 53 sealed static receipts, the ten
   post-Gen19 Mission natives, and the pre-existing bounded C1/C2 set; static
   envelope closure only, not runtime or source parity
+- [Xbox source-line anchors in isolated Ghidra](xbox-source-line-anchor-ghidra-2026-08-12.md)
+  — 1,166 independently decoded Issue-11/US-retail source-coordinate pairs
+  applied and restore-read back in each isolated project, plus 425 exact
+  PC/Xbox seeds over 93 presently known PC functions; instruction-local only,
+  not function equivalence or a final function denominator
 - [PC demo/retail virtual-target comparison](../DEMO_VS_RETAIL.md) and its
   [2,127-row address map](pc-demo-retail-virtual-target-map-2026-08-11.tsv) —
   identical strict RTTI/vtable structure pairs every virtual target; 2,123

@@ -1,12 +1,12 @@
 # Build and dump matrix
 
 Status: active, bounded archive identity census
-Last updated: 2026-08-11
+Last updated: 2026-08-12
 Evidence: MEASURED — local SHA-256, streamed member SHA-256, container
-signatures, PE headers, ZIP central-directory data, and one normalized Xbox
+signatures, PE/XBE headers, ZIP central-directory data, one normalized Xbox
 path/size manifest; SOURCE METADATA — explicitly labelled where local SHA-256
-was not measured; UNKNOWN — ISO/CHD normalization, unparsed Xbox DVD9 game
-partitions, and archives not yet fully streamed.
+was not measured; UNKNOWN — ISO/CHD normalization, a tracked full Issue-7
+XDVDFS content census, and archives not yet fully streamed.
 Verdict: the archive already collapses several apparent releases into exact
 duplicates while preserving real PC demo, PS2 regional, and Xbox regional
 build differences. Container identity and logical-content identity remain
@@ -43,7 +43,7 @@ group IDs.
 | Xbox | Europe/Korea/USA extracted games | Same 3,823 normalized paths and 3,029,379,235 uncompressed bytes | Structure equal; every regional `Default.xbe` is distinct |
 | Xbox | Korea versus USA extracted games | Only `default.xbe` differs by ZIP path/length/CRC screen | High-confidence triage, not a 3,822-file cryptographic equality claim |
 | Xbox | Europe versus Korea/USA | XBE plus four `.aya` resources and `24.bik` differ | All six differing paths were SHA-256 checked where recorded |
-| Xbox | Two magazine demo DVD9 images | Distinct Archive.org SHA-1 metadata | XDVDFS BEA payloads remain unparsed |
+| Xbox | Two magazine demo DVD9 images | Distinct Archive.org SHA-1 metadata | Issue-11's XDVDFS BEA payload is now parsed; Issue 7 remains outside this census |
 
 ## PC findings
 
@@ -108,20 +108,31 @@ language samples are exact across all three regions.
 This makes Korea-versus-USA XBE code the cheapest regional comparison: data is
 held constant to the strongest currently measured boundary.
 
+The January Issue-11 carrier is no longer wholly unparsed. Its XDVDFS game
+partition supplied a 2,973,696-byte XBE, SHA-256
+`ac07835e4b8cf38312e672cb7dc17f28a732abbc05a5e4f1760aaa78a5377ed9`,
+with US-retail version `v1.00.16 - 23 August 2002` and PDB key `3D63DBEB4`.
+US retail carries the same PDB signature at age 3. Their 1,166 unique shared
+source coordinates are now installed in isolated, restore-tested Ghidra
+projects; see the
+[Xbox source-line/Ghidra checkpoint](binary-analysis/xbox-source-line-anchor-ghidra-2026-08-12.md).
+
 ## Container rules and open work
 
 - Equal inner hashes do not make outer ZIP/7z containers identical.
 - Equal normalized path/size/CRC data is strong triage evidence, not SHA-256
   identity.
 - `NOT_MEASURED` is an explicit unknown, never a wildcard or zero hash.
-- Xbox DVD9 `CD001` may describe the DVD-video partition and does not parse the
-  XDVDFS game partition.
+- Xbox DVD9 `CD001` may describe the DVD-video partition and does not itself
+  parse XDVDFS. Issue 11 required an XDVDFS-aware read; Issue 7 remains open in
+  this tracked census.
 - Password-protected Windows packages remain unopened; credentials were not
   copied into the evidence package.
 - Filename, uploader, region, or compressed-size claims never override measured
   container/member identity.
 
 The smallest high-value successors are filesystem manifests for PC demo versus
-retail, PS2 Europe versus USA, and Xbox regional extracted builds; XBE/ELF
-structure and string analysis; and read-only XDVDFS extraction of the two demo
-DVD9 payloads.
+retail and PS2 Europe versus USA; XDK/game-code separation and containing-
+function correlation in the two new Xbox Ghidra projects; ELF structure and
+string analysis; and tracked promotion of the already locally identified
+Issue-7 XDVDFS/XBE measurements plus its full filesystem census.

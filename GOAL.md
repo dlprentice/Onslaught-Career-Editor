@@ -200,6 +200,17 @@ backup, replica, rollback, adverse-control, readback, and restore gates; no
 name, signature, boundary, executable-byte, instruction, data, symbol, or
 reference mutation occurred.
 
+A separate Xbox sparse-symbol lane is also now safely promoted: isolated
+Issue-11 and US-retail Ghidra projects contain 1,166 independently decoded
+instruction-local source mappings apiece, with 425 exact PC/Xbox seeds over 93
+presently known PC functions. Ninety-five Ghidra instruction sites were repaired
+through scratch/apply/readback and fresh PRE/POST recovery gates without changing
+either Xbox function inventory. The two Xbox projects and their backups remain
+machine-local retail-derived evidence; the tracked PC-retail Ghidra snapshot is
+still the single repository database owner. Whole-function correspondence,
+XDK/game-code separation, semantic transfer, and final platform function counts
+remain open.
+
 ## Historical atomic handoff boundary (2026-08-04 / Generation 10)
 
 The temporary 2026-08-04 handoff objective stopped at campaign Generation 10,
