@@ -211,9 +211,15 @@ still the single repository database owner. A read-only successor now places
 1,065 anchors into 379 one-to-one current Xbox function pairs with zero
 ambiguous components and leaves 101 symmetrically uncontained. Complete section
 censuses isolate 14 named SDK/middleware sections but retain all 6,723 functions
-in `.text` as a mixed-ownership frontier. Original source boundaries, complete
-`.text` ownership separation, whole-body or semantic transfer, runtime parity,
-and final platform function counts remain open.
+in `.text` as a mixed-ownership frontier. A second read-only successor resolves
+the 101 sites into the same 88 loose-instruction anchor partitions in both Xbox
+builds and independently verifies 2,803 decoded instructions. The 12 PC-linked
+sites touch 11 compiler unwind funclets and one ordinary `CMapTex` function;
+the latter has only a 10-byte non-terminal Xbox fragment. This changes zero PC
+function boundaries, semantic contracts, or reconstruction mappings. Original
+source boundaries, complete `.text` ownership separation, whole-body or
+semantic transfer, runtime parity, and final platform function counts remain
+open.
 
 ## Historical atomic handoff boundary (2026-08-04 / Generation 10)
 

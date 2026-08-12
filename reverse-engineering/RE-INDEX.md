@@ -185,11 +185,16 @@ places 1,065 anchors in 379 one-to-one current Issue-11/US-retail function pairs
 with zero ambiguous components; 101 anchors are uncontained in both current
 inventories. Complete section censuses put 6,723 functions per build in mixed
 `.text` and 2,218/2,219 in 14 named SDK/middleware sections, with the sole count
-delta in `DSOUND`. These are bounded current-inventory and layout facts—not
-original source boundaries, whole-function equivalence, semantic contracts,
-final function denominators, or reconstruction parity. The Xbox projects and
-backups remain machine-local; the tracked Ghidra snapshot remains the
-synchronized PC-retail database.
+delta in `DSOUND`. Its read-only boundary successor resolves the 101 sites into
+the same 88 loose-instruction anchor partitions in both builds and independently
+decodes all 2,803 instructions. Only 12 sites intersect current PC functions:
+11 compiler unwind funclets and one ordinary `CMapTex` function whose Xbox
+evidence is only a 10-byte non-terminal fragment. No PC boundary, semantic
+contract, or reconstruction mapping changed. These are bounded current-
+inventory and layout facts—not original source boundaries, whole-function
+equivalence, final function denominators, or reconstruction parity. The Xbox
+projects and backups remain machine-local; the tracked Ghidra snapshot remains
+the synchronized PC-retail database.
 
 ## Historical Gen10 dual-authority / TTD admission (2026-08-04)
 

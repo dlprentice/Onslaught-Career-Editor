@@ -8,6 +8,9 @@ function-to-XBE-section censuses, and byte-identical replay from independently
 restored POST-backup projects; UNKNOWN — original source function boundaries,
 whole-body equivalence, semantics, runtime behavior, complete ownership within
 mixed `.text`, final function denominators, and reconstruction parity.
+Specimen: pristine PC retail `BEA.exe`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`;
+Issue-11 and US-retail Xbox identities are listed below.
 Verdict: 1,065 anchors are contained by current Ghidra functions in both Xbox
 builds and form 379 one-to-one Issue-11/US-retail function pairs with zero
 ambiguous components. The other 101 anchors are outside current function bodies
@@ -66,10 +69,41 @@ shape agree. The two retained anchors move by different deltas, so the pair is
 kept at `ONE_TO_ONE_ANCHOR_PARTITION` rather than being promoted to the stricter
 boundary grade.
 
-The 101 symmetrically uncontained coordinates remain a separate function-
-discovery queue. They prove exact mapped instruction sites, not 101 additional
-functions. A control-flow and boundary instrument must decide whether any are
-missing functions, fragments, or another kind of compiler artifact.
+The 101 symmetrically uncontained coordinates prove exact mapped instruction
+sites, not 101 additional functions. The bounded successor census below closes
+their immediate listing-level question without promoting any boundary.
+
+## Uncontained-anchor boundary successor
+
+A read-only listing census expands each uncontained anchor to the maximal
+byte-contiguous sequence of currently decoded instructions outside every
+current function body. Both Xbox builds partition the same 101 coordinates
+into the same 88 source-coordinate groups: 86 one-anchor islands, one
+two-anchor island, and one 13-anchor island. The groups are current-listing
+facts, not original functions; a terminal instruction can occur before an
+anchor inside the same byte-contiguous island.
+
+The canonical exports contain 1,378 Issue-11 instructions and 1,425 US-retail
+instructions. All 2,803 instruction addresses and byte strings agree with the
+pinned virtual images and an independent Capstone x86 decode. The two builds'
+88 anchor partitions agree exactly. Eight islands in each build have incoming
+external flow references to nine distinct sites. This incoming-flow count must
+not be confused with outgoing calls or non-flow metadata references, both of
+which occur elsewhere in the census.
+
+Only 12 of the 101 coordinates are contained by current PC functions. Eleven
+of those PC functions are already classified compiler unwind funclets. The
+sole ordinary current PC function is
+`HYP__CMapTex__LoadMixerTextureSet` at `0x004914B0-0x004915C2`; its
+`maptex.cpp:151` counterpart is only a two-instruction, 10-byte non-terminal
+loose fragment in each Xbox build, with no incoming external flow and no
+outgoing external flow. That is insufficient to transfer an Xbox boundary,
+name, or semantic contract to PC.
+
+Consequently this successor changes the PC function inventory by zero, closes
+zero PC semantic contracts, and closes zero reconstruction mappings. Its
+countable value is a cross-platform guardrail: source-coordinate equality does
+not license automatic Xbox-to-PC boundary or semantic promotion.
 
 ## Complete XBE-section census
 
@@ -159,15 +193,28 @@ needed. Any later Version Tracking, function creation, rename, signature, or
 comment promotion still requires a fresh recoverable backup and the normal
 scratch/apply/readback/refutation gate.
 
+The successor census also ran read-only against the canonical projects and the
+independently restored POST-backup copies. All ten canonical/restored exports
+were byte-identical, and both restored project trees had zero manifest changes.
+The independent reducer then reproduced its three outputs byte-for-byte on a
+second pass. Its fail-closed owner is
+`local-lab/xbox-sparse-symbol-ghidra-20260812-v1/uncontained-boundaries/xbox-uncontained-anchor-boundaries.ready.json`,
+10,103 bytes, SHA-256
+`3a22ea2daacc32edb3738879f0500629a465a8992dae545652eaa226f34666b1`.
+Two consecutive seal runs produced identical bytes. No Ghidra mutation occurred,
+so the verified existing POST backups remain the recovery owners and no new
+backup was necessary.
+
 ## Next falsifiers
 
-1. Adjudicate the 101 symmetrically uncontained anchors with control-flow and
-   boundary evidence before creating any function.
-2. Use XDK/library signatures and exact cross-build evidence to partition the
+1. Use XDK/library signatures and exact cross-build evidence to partition the
    unanchored mixed `.text` remainder; do not relabel all 6,723 rows as game
    code.
-3. Seed a bounded Version Tracking session from the 379 one-to-one pairs and
+2. Seed a bounded Version Tracking session from the 379 one-to-one pairs and
    the 81 three-platform pairs, retaining ambiguous or raw-different bodies as
    explicit refuters rather than automatic matches.
+3. Revisit one of the 88 loose islands only when a concrete PC-retail question
+   selects it and supplies additional boundary evidence; the listing census
+   alone does not justify function creation.
 4. Transfer a name or contract only after the enclosing body, callers/callees,
    state effects, failure behavior, and cheapest falsifier independently pass.
