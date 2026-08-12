@@ -666,16 +666,18 @@ authority for its admitted runtime/campaign claims; neither count implies
 `REBUILD_READY` or complete semantic parity.
 
 **PC demo/retail function frontier (2026-08-11):** exact second-pass reports
-now account for **8,108 normalized-identical bodies** and **13 bounded semantic
-divergences** among 8,121 mapped retail functions. The
+now account for **8,119 normalized-identical bodies** and **13 bounded semantic
+divergences** among 8,132 mapped retail functions. The
 [gapless CRT/FPU closure](reverse-engineering/binary-analysis/pc-demo-retail-gapless-closure-2026-08-11.md)
 resolves the final nine mapped false negatives, supersedes two stale FPU helper
 plates, and propagates six additional normalized-identical address pairs. The
 [equal-delta closure](reverse-engineering/binary-analysis/pc-demo-retail-equal-delta-closure-2026-08-11.md)
 adds 29 pairs after complete corrected-body and encoded-operand audits and
-identifies six dated Ghidra body sets that omit 11 instruction bytes. No mapped
-body remains unresolved; the
-[15-row frontier](reverse-engineering/binary-analysis/pc-demo-retail-address-unmapped-frontier-after-equal-delta-2026-08-11.tsv)
+identifies six dated Ghidra body sets that omit 11 instruction bytes. The
+[exact-fingerprint closure](reverse-engineering/binary-analysis/pc-demo-retail-exact-fingerprint-closure-2026-08-11.md)
+then adds 11 pairs after a complete demo-text scan, changed-operand audit, and
+independent replay. No mapped body remains unresolved; the
+[four-row frontier](reverse-engineering/binary-analysis/pc-demo-retail-address-unmapped-frontier-after-exact-fingerprint-2026-08-11.tsv)
 owns the remaining address-recovery queue. Runtime, source, and rebuild
 equivalence remain separate proof.
 

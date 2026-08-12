@@ -1,0 +1,5 @@
+retail_va	current_name	range_method	corrected_body_bytes	exact_candidate_count	exact_scan_status	cheapest_next_instrument
+0x004655d0	con_fmv_play	FROZEN_INSTRUCTION_UNION	110	0	NO_EXACT_NORMALIZED_CANDIDATE	command registration/string pointer alignment and edition-specific CFG
+0x0046ca70	CGame__ShutdownRestartLoop	FROZEN_INSTRUCTION_UNION	696	0	NO_EXACT_NORMALIZED_CANDIDATE	source-guided CGame lifecycle call-sequence alignment
+0x0046dc30	CGame__RestartLoopRunLevel	FROZEN_INSTRUCTION_UNION	1531	0	NO_EXACT_NORMALIZED_CANDIDATE	source-guided CGame lifecycle call-sequence alignment
+0x005d2930	Unwind@005d2930	FROZEN_INSTRUCTION_UNION	11	59	AMBIGUOUS_GENERIC_EXACT_CANDIDATES	MSVC exception metadata and owning-parent funclet alignment

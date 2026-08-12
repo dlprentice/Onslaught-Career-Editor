@@ -112,18 +112,22 @@ for its admitted runtime evidence and READY/reducer lineage. See the
 hashes and limits.
 
 **Current PC demo/retail frontier (2026-08-11):** the conservative 8,086-entry
-address map plus exact second-pass reports, caller propagation, and equal-delta
-body-union audit now account for 8,108 normalized-identical bodies and 13
-bounded semantic divergences. The
+address map plus exact second-pass reports, caller propagation, equal-delta
+body-union audit, and whole-demo fingerprint scan now account for 8,119
+normalized-identical bodies and 13 bounded semantic divergences. The
 [gapless CRT/FPU closure](binary-analysis/pc-demo-retail-gapless-closure-2026-08-11.md)
 resolves the final nine mapped false negatives, corrects two stale FPU helper
 plates, and recovers six more exact address pairs. The subsequent
 [equal-delta closure](binary-analysis/pc-demo-retail-equal-delta-closure-2026-08-11.md)
 accepts 29 further pairs only after complete corrected-body and encoded-operand
-audits. All 8,121 mapped entries are accounted for; the tracked
-[15-row address frontier](binary-analysis/pc-demo-retail-address-unmapped-frontier-after-equal-delta-2026-08-11.tsv)
-now owns the remaining queue. See [`DEMO_VS_RETAIL.md`](DEMO_VS_RETAIL.md) for
-the exact accounting and proof boundaries.
+audits. The subsequent
+[exact-fingerprint closure](binary-analysis/pc-demo-retail-exact-fingerprint-closure-2026-08-11.md)
+maps 11 more entries through global exact-body, mapped-caller, unique-callee,
+and ordered-block evidence with an independent replay. All 8,132 mapped entries
+are accounted for; the tracked
+[four-row address frontier](binary-analysis/pc-demo-retail-address-unmapped-frontier-after-exact-fingerprint-2026-08-11.tsv)
+owns the remaining queue. See [`DEMO_VS_RETAIL.md`](DEMO_VS_RETAIL.md) for the
+exact accounting and proof boundaries.
 
 ## Historical Gen10 dual-authority / TTD admission (2026-08-04)
 

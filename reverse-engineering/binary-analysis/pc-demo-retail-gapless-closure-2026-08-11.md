@@ -21,9 +21,11 @@ PC demo `BEA.exe`, 2,510,848 bytes, SHA-256
 
 Later accounting: the
 [equal-delta frontier closure](pc-demo-retail-equal-delta-closure-2026-08-11.md)
-subsequently maps 29 of these 44 rows and leaves 15 address-unmapped. The
-8,079 / 13 / 44 partition below remains the exact result of this checkpoint,
-not current final accounting.
+subsequently maps 29 of these 44 rows, and the later
+[exact-fingerprint frontier closure](pc-demo-retail-exact-fingerprint-closure-2026-08-11.md)
+maps another 11, leaving four address-unmapped. The 8,079 / 13 / 44 partition
+below remains the exact result of this checkpoint, not current final
+accounting.
 
 The machine-readable results are:
 

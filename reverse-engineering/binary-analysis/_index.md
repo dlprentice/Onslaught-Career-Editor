@@ -68,11 +68,17 @@ the document it links.
   partition
 - [PC demo/retail equal-delta frontier closure](pc-demo-retail-equal-delta-closure-2026-08-11.md),
   its [29 exact address/body pairs](pc-demo-retail-equal-delta-closure-2026-08-11.tsv),
-  and [15-row current frontier](pc-demo-retail-address-unmapped-frontier-after-equal-delta-2026-08-11.tsv)
+  and [15-row checkpoint frontier](pc-demo-retail-address-unmapped-frontier-after-equal-delta-2026-08-11.tsv)
   — accepts equal-delta neighbors only after complete corrected-body and
   483-row operand audits, identifies six legacy body-range omissions, and
-  leaves the current partition at 8,108 normalized-identical, 13 semantically
+  leaves that checkpoint at 8,108 normalized-identical, 13 semantically
   bounded, and 15 address-unmapped
+- [PC demo/retail exact-fingerprint frontier closure](pc-demo-retail-exact-fingerprint-closure-2026-08-11.md),
+  its [11 exact address/body pairs](pc-demo-retail-exact-fingerprint-closure-2026-08-11.tsv),
+  and [four-row current frontier](pc-demo-retail-address-unmapped-frontier-after-exact-fingerprint-2026-08-11.tsv)
+  — scans the complete demo text, resolves generic shapes through mapped
+  caller/target and ordered-block evidence, independently replays every pair,
+  and leaves the current partition at 8,119 / 13 / 4
 - [`CUnit` primary virtual-interface semantic crosswalk](cunit-primary-vtable-semantics-2026-08-11.md)
   and its [46-slot table](cunit-primary-vtable-semantics-2026-08-11.tsv) — uses
   the demo twin, pinned source overrides, and typed callsites to replace field

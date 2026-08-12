@@ -12,6 +12,12 @@ normalized-identical complete body union. The complete 8,136-function
 partition is now 8,108 normalized-identical bodies, 13 bounded semantic
 divergences, and 15 address-unmapped functions.
 
+Later accounting: the
+[exact-fingerprint frontier closure](pc-demo-retail-exact-fingerprint-closure-2026-08-11.md)
+subsequently maps 11 of these 15 rows and leaves four address-unmapped. The
+8,108 / 13 / 15 partition below remains the exact result of this checkpoint,
+not current final accounting.
+
 Specimen: pristine PC retail `BEA.exe`, 2,506,752 bytes, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`;
 PC demo `BEA.exe`, 2,510,848 bytes, SHA-256
