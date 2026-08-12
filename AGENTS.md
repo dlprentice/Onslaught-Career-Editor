@@ -1,9 +1,8 @@
 # Onslaught Toolkit
 
 Status: active — authoritative contributor contract for this repository.
-Last updated: 2026-08-08 (reviewer use is situational and harness-agnostic;
-native subagents are the default, external models are selected when their
-different perspective justifies the cost).
+Last updated: 2026-08-12 (execution shape and reviewer use are situational,
+optional, and harness-agnostic; one primary integration owner coordinates).
 Summary: the mission, evidence boundaries, safety rules, and smallest set of
 routes every contributor needs before working on Battle Engine Aquila.
 
@@ -167,9 +166,12 @@ Also:
 - Preserve unrelated and pre-existing work, especially in a dirty tree. Make
   the smallest coherent change that closes the observed contract; do not widen
   into adjacent cleanup or new machinery without evidence that it is needed.
-- Delegate bounded reading, searching, measuring, porting, and adversarial
-  review when it materially protects context or shortens independent work.
-  Keep adjudication, integration, commits, and public claims with one owner.
+- Choose single-agent or coordinated multi-agent execution situationally from
+  the task's scope, consequence, separability, and available independent work.
+  Delegation and external consultation are optional; no model, role pair,
+  reviewer count, or matrix is a standing requirement. When additional lanes
+  are useful, keep them bounded and keep coordination, adjudication, integration,
+  commits, mutations, and public claims with one primary owner.
 - A subagent report is data, not authority. Reproduce load-bearing conclusions,
   and verify background reviewers actually reached a working state; a spawn
   receipt alone is not a liveness oracle.
@@ -178,7 +180,7 @@ Also:
   `local-lab/`, confirm real work and clean exit, reproduce consequential claims,
   and budget concurrent heavy processes. Never send a hosted reviewer secrets or
   private/raw retail material beyond the user's explicit scope. The standing
-  situational model selection, harness-agnostic native-subagent rule,
+  optional situational model selection and harness-agnostic reviewer rule,
   campaign-review guidance, gauntlet loop, and invocation/resource rules are owned by
   [`reverse-engineering/REVIEW-PROTOCOL.md`](reverse-engineering/REVIEW-PROTOCOL.md)
   — read it before launching external reviews, and change it there rather than

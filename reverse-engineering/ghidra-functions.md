@@ -5,11 +5,12 @@ machine exports remain the address-level evidence behind this human-readable
 master
 Last updated: 2026-08-12 (Gen23 authority; tracked static closure complete)
 Verdict: **The verified live and tracked databases now contain 8,136 function
-boundaries. The latest backed-up batch added eleven exact Mission-native
-boundaries and shipped registry names, including `IScript__UnsetObjective`,
-with fresh-process readback proving zero changes to the other 8,125 function
-rows, executable bytes, instructions, data, or references. It added fact-only
-comments but no signatures or behavior contracts. Canonical Generation 23
+boundaries. The latest backed-up correction repaired five collision-component
+shared-base implementation identities, with fresh-process readback proving zero
+changes to the other 8,131 function rows, executable bytes, instructions, data,
+or references. It changed names, self-describing displayed signatures, bounded
+comments, and stale/required tags but promoted no runtime behavior contract.
+Canonical Generation 23
 remains the separate semantic authority at 8,126 campaign functions plus 6,119
 exact residual entities; live structural navigation is therefore ahead of the
 campaign without silently upgrading any semantic grade.
@@ -342,13 +343,13 @@ loads, interprets, simulates, and renders that corpus.
 
 ### Current authority in one sentence
 
-Use canonical recovered Generation 11 for current campaign function/residual and
-contract state, its verified live-POST/partition ancestors for Ghidra state, the
-unpatched baseline image for bytes and shipped tables, RTTI/source
-strings for identity evidence, controlled copied-runtime work for behavior, and
-this document for the reviewed synthesis and open queue. Use the 2026-07-28
-7,555-row table only for semantic fields that the current reducer explicitly carried
-forward or for a clearly dated comparison.
+Use canonical Generation 23 for campaign function/residual and contract state,
+the separately verified 2026-08-12 collision-component live POST and tracked
+snapshot for current Ghidra state, the unpatched baseline image for bytes and
+shipped tables, RTTI/source strings for identity evidence, controlled copied-
+runtime work for behavior, and this document for the reviewed synthesis and
+open queue. Use the 2026-07-27 7,555-row table only for a clearly dated
+comparison.
 
 ### Master map
 
@@ -424,11 +425,12 @@ own the durable specimen warning.
 
 | Store | Exact state | Correct use |
 | --- | --- | --- |
-| Tracked project | `reverse-engineering/ghidra/BEA.gpr` + `BEA.rep/`; snapshot 2026-08-12; 19 payload files, 186,485,637 bytes; reviewed with Ghidra 12.1.2 | Current distributable snapshot; exact at promotion time |
+| Tracked project | `reverse-engineering/ghidra/BEA.gpr` + `BEA.rep/`; snapshot 2026-08-12; 19 payload files, 186,502,021 bytes; reviewed with Ghidra 12.1.2 | Current distributable snapshot; exact at promotion time |
 | Tracked Program objects | `BEA.exe` and `BEA_Widescreen.exe` | Do not silently assume an export came from the unpatched baseline Program |
 | Live maintainer project | `C:\Users\david\Ghidra\Projects`, active Ghidra 12.1.2 | Current working database; mutation requires separate authority |
-| Latest live readback | `local-lab/ghidra-cround-handle-event-arm-effects-live-promotion-20260812-v1/runs/live-post-inventory/functions.tsv` | Current 8,136-row internal-function metadata; 8,136 is the current discovered census, not a final ceiling |
-| Promoted tracked name table | `reverse-engineering/binary-analysis/ghidra-function-name-table-2026-07-27.tsv`, 7,555 rows, SHA-256 `2dfe0b97…f0b84` | Dated projection; the tracked database now supersedes it as current state |
+| Latest live readback | `local-lab/ghidra-collision-component-identity-live-promotion-20260812-v1/runs/live-readback/functions.tsv`, SHA-256 `8261d681…7fc` | Current 8,136-row internal-function metadata; 8,136 is the current discovered census, not a final ceiling |
+| Current tracked name table | `reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-12.tsv`, 8,136 rows, SHA-256 `a6f10251…193f` | Deterministic projection of the separately read-back live database |
+| Dated tracked name table | `reverse-engineering/binary-analysis/ghidra-function-name-table-2026-07-27.tsv`, 7,555 rows, SHA-256 `2dfe0b97…f0b84` | Historical projection retained for its original checker history and pinned receipts |
 | Fullpass discovery corpus | `reverse-engineering/binary-analysis/ghidra-fullpass-findings/` | Dated 6,411-function reviews; never a live name oracle |
 | Function-note corpus | `reverse-engineering/binary-analysis/functions/` | Deep sparse semantic notes; not complete population coverage |
 
@@ -437,8 +439,8 @@ Fresh read-only exports in this research pass remove an important ambiguity:
 - The tracked snapshot contains exactly 8,136 functions, 549,872 instructions,
   48,585 defined-data items, 3,912,345 undefined-data items, and 6,016
   user-defined symbols. Its reviewed project inventory is 19 files /
-  186,485,637 bytes with digest `b7767b10…adb4`. Ghidra's aggregate function
-  count is 8,349 because it also includes 213 external/import functions; the
+  186,502,021 bytes with digest `83330f4e…70bb`. Ghidra's aggregate function
+  count is 8,360 because it also includes 224 external/import functions; the
   8,136 figure is the internal listing census, not a claim that discovery is
   permanently complete.
 - It is byte-identical to the source-stable 2026-08-12 live copy and the
@@ -451,19 +453,16 @@ Fresh read-only exports in this research pass remove an important ambiguity:
 - The current live export and promoted tracked snapshot agree at promotion time.
   Later live mutations must repeat the backup/scratch/readback/promotion gate;
   this statement is not a promise that future working state can never move.
-- The latest promotion changed exactly twelve function comments to retain the
-  Generation 23 bounded CRound arm-effects evidence. Full-inventory comparison
-  found zero name, signature, boundary, instruction, data, symbol, reference, or
-  non-target metadata changes.
+- The latest promotion changed exactly five collision-component names,
+  self-describing displayed signatures, bounded comments, and tag sets.
+  Full-inventory comparison found zero boundary, instruction, program-byte,
+  data-unit, reference, non-target function-row, or unrelated program-metric
+  changes.
 
-The tracked name table is a dated projection and now differs from the latest
-live readback at multiple subsequently promoted rows, including the eleven
-Mission-native boundaries added in the current batch. That batch changed the
-function count from 8,125 to 8,136, added exactly those eleven rows, removed
-none, and changed zero pre-existing function rows. Program-wide counts changed
-only as expected: user-defined symbols 6,005 → 6,016, default-other symbols
-61,693 → 61,682, and comments 9,100 → 9,111; all other exported metrics were
-unchanged.
+The current tracked name table exactly projects the latest live readback. The
+earlier Mission-native batch changed the function count from 8,125 to 8,136 by
+adding eleven exact registry-linked boundaries; the current collision correction
+added or removed no function and changed exactly five pre-existing rows.
 
 The historical `BEA_Widescreen.exe` Program corresponds to a 2,506,752-byte
 patched image described as SHA-256
@@ -478,14 +477,15 @@ The current Ghidra program report contains:
 
 | Metric | Value |
 | --- | ---: |
-| Functions | 7,555 |
-| Listing instructions | 549,864 |
-| Defined data items | 48,586 |
-| Undefined data items | 3,912,368 |
-| User-defined symbols | 5,999 |
+| Internal functions | 8,136 |
+| Aggregate functions, including external/import | 8,360 |
+| Listing instructions | 549,872 |
+| Defined data items | 48,585 |
+| Undefined data items | 3,912,345 |
+| User-defined symbols | 6,016 |
 | Analysis symbols | 18,006 |
 | Imported symbols | 907 |
-| Other/default symbols | 61,692 |
+| Other/default symbols | 61,682 |
 | Relocations | 0 |
 
 Memory blocks:
@@ -503,18 +503,18 @@ The older coverage calculation uses the PE `.text` virtual-size denominator
 1,929,117, not the mapped block's page-rounded 1,929,216. Do not mix those two
 denominators.
 
-The function inventory's summed memberships are 1,704,494 body bytes and
-519,698 function-owned instruction rows. Ghidra's program report counts 549,864
+The function inventory's summed memberships are 1,767,416 body bytes and
+532,244 function-owned instruction rows. Ghidra's program report counts 549,872
 listing instructions. None of those three figures is a fresh exact `.text`
 coverage percentage: function bodies can be fragmented or overlap, listing
-instructions include code outside functions, and the current 7,555-function
+instructions include code outside functions, and the current 8,136-function
 population has not been re-exported through the old byte-coverage proof.
 
 Body topology is:
 
 | Body ranges per function | Functions |
 | ---: | ---: |
-| 1 contiguous range | 7,488 |
+| 1 contiguous range | 8,069 |
 | 2 ranges | 53 |
 | 3 ranges | 12 |
 | 21 ranges | 2 |
@@ -526,9 +526,9 @@ Metadata-source and calling-convention distributions:
 
 | Dimension | Exact current distribution |
 | --- | --- |
-| Name source | USER_DEFINED 5,918; ANALYSIS 1,230; DEFAULT 406; IMPORTED 1 |
-| Signature source | USER_DEFINED 6,394; ANALYSIS 1,139; IMPORTED 22 |
-| Calling convention | `__thiscall` 2,777; `__cdecl` 1,949; `__fastcall` 1,391; `__stdcall` 1,088; unknown 350 |
+| Name source | USER_DEFINED 5,931; ANALYSIS 1,230; DEFAULT 974; IMPORTED 1 |
+| Signature source | USER_DEFINED 6,400; ANALYSIS 1,136; DEFAULT 578; IMPORTED 22 |
+| Calling convention | `__thiscall` 2,779; `__cdecl` 1,950; `__fastcall` 1,390; `__stdcall` 1,088; unknown 929 |
 
 ### Six duplicate current names
 
@@ -2834,7 +2834,7 @@ to understand the current verdicts in this master.
 | RE evidence contract | [`reverse-engineering/RE-INDEX.md`](RE-INDEX.md) |
 | Tracked Ghidra snapshot | [`reverse-engineering/ghidra/README.md`](ghidra/README.md) |
 | Binary-analysis index | [`reverse-engineering/binary-analysis/_index.md`](binary-analysis/_index.md) |
-| Current tracked name projection | [`ghidra-function-name-table-2026-07-27.tsv`](binary-analysis/ghidra-function-name-table-2026-07-27.tsv) |
+| Current tracked name projection | [`ghidra-function-name-table-2026-08-12.tsv`](binary-analysis/ghidra-function-name-table-2026-08-12.tsv) |
 | July 13 reviewed plan | [`ghidra-reviewed-correction-plan-2026-07-13.json`](binary-analysis/ghidra-reviewed-correction-plan-2026-07-13.json) |
 | July 13 closeout | [`ghidra-full-reaudit-closeout-2026-07-13.md`](binary-analysis/ghidra-full-reaudit-closeout-2026-07-13.md) |
 | Fullpass corpus | [`ghidra-fullpass-findings/README.md`](binary-analysis/ghidra-fullpass-findings/README.md) |

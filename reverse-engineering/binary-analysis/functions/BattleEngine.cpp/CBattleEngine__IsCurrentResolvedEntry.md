@@ -1,9 +1,9 @@
-# CBattleEngine__IsExpectedCurrentWeapon
+# CBattleEngine__DisplayLock
 
 > Source File: `references/Onslaught/BattleEngine.cpp` | Binary: BEA.exe (the Ghidra database's specimen, SHA-256 `74154bfa…`)
 > Address: `0x00407310`
-> Status: name corrected 2026-07-28; the supporting read-back below predates the rename
-> Last updated: 2026-07-28
+> Status: source identity promoted in Ghidra 2026-08-04
+> Last updated: 2026-08-12
 > The **filename** is retained at the withdrawn name so historical links resolve.
 
 ## Name corrections — 2026-07-28
@@ -13,9 +13,20 @@ Superseded in place against `ghidra-function-name-table-2026-07-27.tsv`, the
 grade, and the limits of what a corrected name does and does not establish, are
 stated once at [the area index](../_index.md#the-name-corrections-of-2026-07-28).
 
-| Address | Superseded label | Current name | Correction |
+| Address | Superseded label | 2026-07-28 intermediate label (historical) | Correction |
 | --- | --- | --- | --- |
 | `0x00407310` | `CBattleEngine__IsCurrentResolvedEntry` | `CBattleEngine__IsExpectedCurrentWeapon` | same class; suffix re-read |
+
+## Source-identity promotion — 2026-08-04
+
+The later backed-up, scratch-reproduced, independently refuted and separately
+read-back target-lock promotion proves this range as
+`CBattleEngine__DisplayLock`. Its live promotion READY is
+`local-lab/ghidra-target-lock-semantic-live-promotion-20260804-v2/promotion/promotion.ready.json`,
+SHA-256
+`77f635e552b7a2dd8425af012204f8172eadcb1de8ecdb02a30e2c12ff9b9945`.
+The July comparator interpretation below is retained as historical analysis and
+is superseded; it is not the current function contract.
 
 **The rename invalidates part of this note's own supporting argument, and that is
 said here rather than left for a reader to notice.** The "Summary" section below
@@ -26,11 +37,7 @@ three signals — the two neighbouring symbols and the `ret 0x4` evidence — ar
 untouched and still support a **one-stack-argument boolean comparator**; what
 they never established is what the compared thing *is*.
 
-- **MEASURED:** the current symbol is `CBattleEngine__IsExpectedCurrentWeapon`.
-- **UNKNOWN:** whether the compared entry is a weapon. `entry` and `weapon` are
-  different claims and this note contains evidence for neither. What would settle
-  it: the type of the argument at the call sites, which requires the type
-  propagation the database does not currently carry.
+- **MEASURED:** the current symbol is `CBattleEngine__DisplayLock`.
 
 ---
 
@@ -42,7 +49,9 @@ they never established is what the compared thing *is*.
 
 ## Summary
 
-Small comparator helper that checks whether the current resolved entry matches a supplied entry.
+Historical July interpretation: a small comparator helper. The August 4
+source-identity promotion supersedes that description with the bounded
+`CBattleEngine::DisplayLock` contract.
 
 The current decompile read-back supports the name with these token-level signals:
 

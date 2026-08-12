@@ -99,3 +99,23 @@ table remains the exact reviewed projection of the dated Ghidra bodies and
 receipts. For byte-complete comparison, the later report's corrected unions
 supersede only those six range sizes. No live or tracked Ghidra mutation was
 made.
+
+Post-closure HUD identity correction: this table retains the names present in
+its dated inventory for `0x00482050`, `0x00487BC0`, and `0x00488090`. The later
+[HUD source-identity correction](hud-source-identity-correction-2026-08-12.md)
+proves the bounded identities `CHud__SwitchInOverlay`, `CHud__Render`, and
+`CHud__RenderOverlay` respectively and records their separately gated Ghidra
+promotion. The static-C1 accounting rows and body ranges remain valid; only
+those three saved labels are superseded.
+
+Post-closure collision-component identity correction: this table likewise
+retains its dated labels at `0x004263f0`, `0x004264a0`, `0x004269b0`,
+`0x00426a00`, and `0x00426a20`. The later
+[collision-component implementation-identity correction](collision-component-identity-correction-2026-08-12.md)
+proves and promotes the shared-base labels
+`CCollisionSeekingThing__dtor_base`,
+`CCollisionSeekingThing__ResolveCollisionResponse`,
+`CCSPersistentThing__Init`,
+`CCSPersistentThing__ProcessMapWhoCollisionSweep`, and
+`CCSPersistentThing__HandleEvent`. The static-C1 accounting rows and exact body
+sets remain valid; only the dated identity metadata is superseded.

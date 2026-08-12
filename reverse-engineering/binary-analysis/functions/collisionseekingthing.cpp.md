@@ -4,6 +4,16 @@
 > **2026-07-13 live correction closeout:** `0x00425a10` → `CCollisionSeekingInfantryBloke__CheckCollisionFlagsWithDeadSideBranch` (was `CCollisionSeekingInfantryBloke__CheckSideCompatibleOrCollisionFlags`). Current live Ghidra reflects confirmed rows only; older conflicting text below is superseded only where confirmed. Use the [closeout](../ghidra-full-reaudit-closeout-2026-07-13.md); final per-address decisions and exact before/after metadata are in `reverse-engineering/binary-analysis/ghidra-reviewed-correction-plan-2026-07-13.json`.
 <!-- ghidra-full-reaudit-20260713:end -->
 
+> **2026-08-12 live promotion closeout:** the five bounded implementation
+> identities at `0x004263f0`, `0x004264a0`, `0x004269b0`, `0x00426a00`, and
+> `0x00426a20` were reproduced in isolated Ghidra projects, rollback-tested,
+> promoted into the PRE-backed-up live project, separately read back, copied to
+> a verified POST backup, and refreshed into the byte-identical tracked
+> snapshot. See the
+> [collision-component identity correction](../collision-component-identity-correction-2026-08-12.md).
+> This closes shared base implementation identity only; folded derived aliases,
+> exact runtime behavior, layouts, and rebuild parity remain open.
+
 > Source File: collisionseekingthing.cpp | Binary: BEA.exe
 > Debug Path: 0x006246d8 (`[maintainer-local-source-export-root]\collisionseekingthing.cpp`)
 
@@ -86,7 +96,10 @@ filters, or rebuild parity.
 
 ## Current Status
 
-Wave 322 (2026-05-11) supersedes the earlier stub wording. The retail database does not yet have a standalone fully mapped `collisionseekingthing.cpp` function family, but the debug-path string is now tied to concrete allocation contexts inside the recovered `CCollisionSeekingRound` cluster.
+Wave 322 (2026-05-11) superseded the earlier stub wording. Later hierarchy,
+source, cross-build, and retail-body work now bounds the shared base lifecycle;
+it still does not constitute a complete standalone mapping of every function
+historically built from `collisionseekingthing.cpp`.
 
 Wave1059 (`collision-seeking-round-tail-review-wave1059`, `wave1059-readback-verified`) saved function-tag normalization for the collision-seeking round tail and context rows after fresh read-back. Its historical owner labels for `0x004263f0`, `0x00426a00`, and `0x00426a20` are superseded by the hierarchy-backed lifecycle above. The pass saved `131` tags across fourteen rows with no rename, signature, comment, boundary, or executable-byte change. Queue closure remains `6246/6246 = 100.00%`; Wave911 focused progress advances to `812/1408 = 57.67%`; expanded static surface progress advances to `1140/1509 = 75.55%`; top-500 coverage remains `500/500 = 100.00%`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260601-195206_post_wave1059_collision_seeking_round_tail_review_verified`, `19` files, `174689159` bytes, `DiffCount=0`, `HashDiffCount=0`.
 
@@ -121,7 +134,7 @@ The `CollisionSeekingRound.cpp` page now records the saved Wave 322 names/signat
 - `0x00425b50` `CCollisionSeekingRound__InitCollisionLineAndSound`
 - `0x00425c60` `CCollisionSeekingRound__FilterCollisionCandidateByTrajectory`
 - `0x00425e30` `CCollisionSeekingRound__UpdatePrimarySeekerLeadVector`
-- `0x00426370` `CCollisionSeekingRound__ReplacePrimarySeekerAndRefreshOffset`
+- `0x00426370` `CCollisionSeekingThing__ReplacePrimarySeekerAndRefreshOffset`
 - `0x004264a0` `CCollisionSeekingThing__ResolveCollisionResponse`
 - `0x00426920` `CCollisionSeekingThing__ComputeScaledMapCellChebyshevDistance`
 - `0x00426a00` `CCSPersistentThing__ProcessMapWhoCollisionSweep`

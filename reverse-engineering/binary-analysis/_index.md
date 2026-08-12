@@ -26,6 +26,10 @@ the document it links.
   the reviewed per-row crosswalk from 53 sealed static receipts, the ten
   post-Gen19 Mission natives, and the pre-existing bounded C1/C2 set; static
   envelope closure only, not runtime or source parity
+- [Collision-component implementation-identity correction](collision-component-identity-correction-2026-08-12.md)
+  — promotes five hierarchy/source/cross-build-backed shared-base identities
+  through the backed-up live and tracked Ghidra gates; folded aliases, runtime
+  behavior, layouts, and rebuild parity remain open
 - [Xbox source-line anchors in isolated Ghidra](xbox-source-line-anchor-ghidra-2026-08-12.md)
   — 1,166 independently decoded Issue-11/US-retail source-coordinate pairs
   applied and restore-read back in each isolated project, plus 425 exact
@@ -206,11 +210,12 @@ the document it links.
 > ([07-27](name-grading-ledger-2026-07-27-demotion2.md)). The ledgers, not the
 > closeout, are the current record of which names are demoted.
 >
-> *Deliberately not restated as a single total here.* The tracked
-> [`ghidra-function-name-table-2026-07-27.tsv`](ghidra-function-name-table-2026-07-27.tsv)
-> is the dated current address-to-name export and the mechanical checker's
-> authority. Read that table rather than copying its moving inventory count into
-> another document.
+> The tracked
+> [`ghidra-function-name-table-2026-08-12.tsv`](ghidra-function-name-table-2026-08-12.tsv)
+> is the current 8,136-row address-to-name projection and the mechanical
+> checker's authority. The July table remains a dated 7,555-row artifact for
+> its original checks and pinned receipts. The current count is a discovered
+> census, not a permanent ceiling.
 
 The closeout and per-address plan supersede older saved names where they
 conflict. Static accounting does not prove runtime behavior, exact layouts,

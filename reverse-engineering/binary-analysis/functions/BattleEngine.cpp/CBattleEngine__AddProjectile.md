@@ -1,9 +1,9 @@
-# CBattleEngine__AddTrackedActiveReader
+# CBattleEngine__StartLock
 
 > Source File: `references/Onslaught/BattleEngine.cpp` | Binary: BEA.exe (the Ghidra database's specimen, SHA-256 `74154bfa…`)
 > Address: `0x00406fc0`
-> Status: name corrected 2026-07-28; source identity still hypothesis-only
-> Last updated: 2026-07-28
+> Status: source identity promoted in Ghidra 2026-08-04
+> Last updated: 2026-08-12
 > The **filename** is retained at the withdrawn name so historical links and
 > exports remain resolvable. A filename here is a research label, not a claim.
 
@@ -14,9 +14,21 @@ Superseded in place against `ghidra-function-name-table-2026-07-27.tsv`, the
 grade, and the limits of what a corrected name does and does not establish, are
 stated once at [the area index](../_index.md#the-name-corrections-of-2026-07-28).
 
-| Address | Superseded label | Current name | Correction |
+| Address | Superseded label | 2026-07-28 intermediate label (historical) | Correction |
 | --- | --- | --- | --- |
 | `0x00406fc0` | `CBattleEngine__AddProjectile` | `CBattleEngine__AddTrackedActiveReader` | same class; suffix re-read |
+
+## Source-identity promotion — 2026-08-04
+
+The later backed-up, scratch-reproduced, independently refuted and separately
+read-back target-lock promotion supersedes the July descriptive label with
+`CBattleEngine__StartLock`, without changing this function's range. Its live
+promotion READY is
+`local-lab/ghidra-target-lock-semantic-live-promotion-20260804-v2/promotion/promotion.ready.json`,
+SHA-256
+`77f635e552b7a2dd8425af012204f8172eadcb1de8ecdb02a30e2c12ff9b9945`.
+This proves the bounded source-method identity and saved metadata, not all-path
+runtime behavior or rebuild parity.
 
 Three places carried the withdrawn label until 2026-07-28: the H1, the
 `Saved Ghidra name` line below, and the function name inside the saved-signature
@@ -30,8 +42,8 @@ rename.
 Recorded rather than smoothed over, because a reader could otherwise take the new
 Ghidra label as having displaced the source candidate.
 
-- **MEASURED (database):** the 2026-07-27 export names `0x00406fc0`
-  `CBattleEngine__AddTrackedActiveReader`.
+- **MEASURED (database):** the current 2026-08-12 export names `0x00406fc0`
+  `CBattleEngine__StartLock`.
 - **SOURCE:** `references/Onslaught/BattleEngine.h:142` declares
   `void CBattleEngine::StartLock(CUnit*, float, BOOL=FALSE)` and
   `references/Onslaught/BattleEngine.cpp:801` defines it. Its body, at
@@ -42,29 +54,24 @@ Ghidra label as having displaced the source candidate.
   matches the saved signature below argument for argument. The Ghidra label
   describes the same act — the appended `CLockInfo` holds a reader set by
   `SetReader` — in different words.
-- **UNKNOWN:** whether `0x00406fc0` *is* `CBattleEngine::StartLock`. The
-  correspondence above is between this note's own decompile-derived description
-  and the pinned source; **no byte-level identification was made**, and no
-  reviewed retail rename has been applied. What would settle it: a byte or
-  call-graph comparison of `0x00406fc0` against the compiled shape of
-  `StartLock`, bounded to the function extent and read from the pristine
-  specimen.
+- **MEASURED:** the later target-lock proof completed the bounded byte,
+  call-graph, source, scratch, refuter, and promotion join for this identity.
 
 ---
 
 ## Status
 
-- Saved Ghidra name: `CBattleEngine__AddTrackedActiveReader` (was
-  `CBattleEngine__AddProjectile` until 2026-07-28)
+- Saved Ghidra name: `CBattleEngine__StartLock` (after the intermediate July
+  label `CBattleEngine__AddTrackedActiveReader`)
 - Current static semantic role: lock-entry creation, not projectile spawning
-- Source candidate: `CBattleEngine::StartLock`
-- Source candidate status: `hypothesis-only`; no reviewed retail rename was applied
+- Source identity: `CBattleEngine::StartLock`
+- Source identity status: bounded and promoted; complete runtime behavior remains open
 - Runtime behavior proof: not established
 
 ## Saved Signature
 
 ```c
-void __thiscall CBattleEngine__AddTrackedActiveReader(
+void __thiscall CBattleEngine__StartLock(
     void * this,
     void * target,
     float lockTime,

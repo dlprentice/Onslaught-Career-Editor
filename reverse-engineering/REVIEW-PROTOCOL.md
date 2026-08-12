@@ -1,7 +1,7 @@
 # Review protocol
 
 Status: active — situational, harness-agnostic reviewer guidance
-Last updated: 2026-08-08
+Last updated: 2026-08-12
 Summary: how to obtain useful independent review without turning a model matrix
 into authority or a mandatory ceremony.
 Evidence: MEASURED — maintainer direction and observed reviewer-harness behavior
@@ -24,18 +24,23 @@ receipt, failed control, stale reducer, identity mismatch, or unproved claim.
 
 ## Harness-agnostic selection
 
-The active harness owns integration and normally uses its own native subagents
-first. Codex uses Codex subagents, Claude Code uses Claude subagents, Grok uses
-Grok subagents, and OpenCode uses its native agents. Do not launch a redundant
-external copy merely to recreate the model already leading the work.
+The primary integration owner chooses single-agent or coordinated multi-agent
+execution situationally from the task's scope, consequence, separability, and
+available independent work. Delegation and external consultation are optional;
+no reviewer is automatically required. When reviewer use is useful, the active
+harness owns integration and ordinarily uses its own native subagents before
+adding an external copy merely to recreate the model already doing the work.
+Codex uses Codex subagents, Claude Code uses Claude subagents, Grok uses Grok
+subagents, and OpenCode uses its native agents. Every additional lane reports to
+the primary integration owner; no reviewer becomes the project lead or final
+authority.
 
-Use fresh normal and adversarial contexts when their different jobs materially
-reduce risk. Both are strongly advised for consequential evidence admission,
-mutation, recovery, or verifier design, but they are not compulsory cells for
-every generation or ordinary change. One strong independent critic can be
-enough when exact tests and receipts already dominate the decision; additional
-models are warranted when the problem is broad, ambiguous, or vulnerable to a
-shared blind spot.
+Fresh normal and adversarial contexts may be useful when their different jobs
+materially reduce risk, but neither role is compulsory for a generation or
+ordinary change. One strong independent critic can be enough when exact tests
+and receipts already dominate the decision; additional models are optional and
+selected only when the problem is broad, ambiguous, or vulnerable to a shared
+blind spot.
 
 The builder does not self-grade. A native adversarial subagent is independent
 review data only when it receives the real artifacts and a fresh brief rather
@@ -51,11 +56,11 @@ These are available choices, not a required ranking or invocation checklist:
 | Native subagents | Fast repository-grounded measurement, normal and adversarial checks, parallel bounded reading | Use the active harness's strongest suitable setting |
 | Claude Opus 5 | Long-form architecture, recovery, cross-system synthesis, difficult adversarial review | `max` for highest-impact work; `medium` for faster secondary review |
 | DeepSeek V4 Flash | Substantial independent architecture/refutation and bounded high-volume analysis | `max` |
-| Grok 4.5 | Quick alternate angle, challenge, triage, and focused checks | `high` |
+| Grok 4.6 | Independent RE synthesis, adversarial review, public-source research, and focused checks | `xhigh` |
 
 Opus 5 Max is the preferred external long-form reviewer when the question is
 important enough to justify its latency. Opus 5 Medium is useful when turnaround
-matters. Grok 4.5 High is a fast additional view, not intrinsically more
+matters. Grok 4.6 XHigh is a strong independent view, not intrinsically more
 authoritative than the active agent or its native subagents. DeepSeek V4 Flash
 Max can provide a substantial independent review, but its report is still only
 a hypothesis until reproduced.
@@ -95,10 +100,29 @@ Use `--effort medium` for the faster lane. Background runs must have a trusted
 project, preserved stdin/prompt and stdout/stderr, and enough time for real tool
 work. Plan permission is appropriate for read-only reviews.
 
-Grok uses model `grok-4.5` with `--reasoning-effort high`. Run one Grok review
-at a time unless the maintainer explicitly changes that resource rule. Give it
-strict no-write instructions and preserve its complete output; use it for quick
-independent angles rather than as an authority shortcut.
+Grok uses model `grok-4.6` with `--reasoning-effort xhigh` and `--no-plan`.
+Run one primary Grok review session at a time unless resource evidence supports
+a different bound. Grok-native subagents and public web research are optional
+capabilities when they materially strengthen the review; Grok remains a
+coordinated reviewer beneath the primary integration owner. Keep every local
+lane read-only unless one explicit scratch/report output is authorized. Preserve
+the exact prompt, complete direct output, model/effort, timing, exit status,
+session ID, and any cited public sources under `local-lab/`. Never disclose
+credentials, raw retail payloads, decompiler bodies, or material beyond the
+approved scope. Treat Grok and all of its subagents as review input, not
+authority.
+
+Current headless shape (verify with `grok models` and `grok --help` before use):
+
+`grok --cwd <repo> --model grok-4.6 --reasoning-effort xhigh --no-plan --permission-mode dontAsk --tools Read,Glob,Grep,WebSearch,WebFetch,Task,TaskOutput --max-turns 100 --output-format plain --session-id <uuid> --prompt-file <prompt>`
+
+Remove `WebSearch,WebFetch` or `Task,TaskOutput` when the review does not need
+web research or Grok-native subagents. Keep write/edit/shell tools absent for a
+read-only review. Give the outer process up to 3,600 seconds (one hour) because
+Grok 4.6 XHigh may spend substantial time reasoning and coordinating its native
+subagents. Poll often enough to distinguish live work from authentication,
+permission, transport, or process failure; the one-hour allowance does not make
+a stalled session valid evidence.
 
 ## Campaign and gauntlet work
 

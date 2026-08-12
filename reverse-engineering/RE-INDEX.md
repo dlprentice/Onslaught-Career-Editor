@@ -64,8 +64,9 @@ reference and runbooks, and the retail → Core translation policies.
 
 ## Current complete-RE replay authority — machine-local evidence (2026-08-12)
 
-The tracked Ghidra snapshot was refreshed from live on 2026-08-12; the dated
-2026-07 name ledgers still lag current work. Select campaign authority from
+The tracked Ghidra snapshot was refreshed from the verified collision-component
+live POST on 2026-08-12; the dated 2026-07 name ledgers still lag current work.
+Select campaign authority from
 `developer_state.json` → `current_re_authority`: canonical Generation 23 at
 `local-lab/re-campaign-incident-recovery-20260808-v1/generation-23-cround-handle-event-arm-effects-v1/`,
 READY `4471fdfe105340ad06c2ad28d945eb05e9bc94f002110888b164581ccf1a93fc`,
@@ -418,11 +419,11 @@ being recovered**, which is exactly the trap this metric sets.
 
 *(Added 2026-07-27. The per-ledger figures below are dated snapshots against the
 **6,969**-function inventory and are quoted as those ledgers state them; they
-are not the current figure. The tracked `ghidra/` snapshot was promoted to the
-8,136-function live state on 2026-08-09; the 7,555-row name projection remains a
-dated table. Historical live/snapshot distinction and mutation-wave reconciliation
-are tracked in [`ghidra-functions.md`](ghidra-functions.md); bulky working
-exports remain ignored under `local-lab/`.)*
+are not the current figure. The tracked `ghidra/` snapshot now has a separately
+read-back 8,136-row name projection dated 2026-08-12; the July 7,555-row table
+remains a dated artifact. Historical live/snapshot distinction and mutation-
+wave reconciliation are tracked in [`ghidra-functions.md`](ghidra-functions.md);
+bulky working exports remain ignored under `local-lab/`.)*
 
 ### Specimen, coverage, and symbol ground truth
 
@@ -630,6 +631,8 @@ flat inventory.
 | Render/resource bridge | [render-resource-bridge-static-contract.md](binary-analysis/render-resource-bridge-static-contract.md) |
 | Texture decode | [texture-resource-decode-static-contract.md](binary-analysis/texture-resource-decode-static-contract.md) |
 | HUD and frontend overlay | [hud-frontend-overlay-static-contract.md](binary-analysis/hud-frontend-overlay-static-contract.md) |
+| HUD source-method identity correction | [hud-source-identity-correction-2026-08-12.md](binary-analysis/hud-source-identity-correction-2026-08-12.md) |
+| Collision-component implementation-identity correction | [collision-component-identity-correction-2026-08-12.md](binary-analysis/collision-component-identity-correction-2026-08-12.md) |
 | Destroyable segments | [destroyable-segments-static-contract.md](binary-analysis/destroyable-segments-static-contract.md) |
 | Units, movement, weapons | [unit-battleengine-gameplay-static-contract.md](binary-analysis/unit-battleengine-gameplay-static-contract.md) |
 | Local multiplayer | [local-multiplayer-static-runtime-contract.md](binary-analysis/local-multiplayer-static-runtime-contract.md) |
@@ -642,8 +645,10 @@ Machine-readable siblings, for consumers that should not be parsing prose:
 - [First-flight camera/movement/morph contract](binary-analysis/first-flight-camera-movement-morph-contract-candidate.v1.json)
   — a **candidate**, as its own filename says; not an accepted contract.
 - [Retail specimen manifest](binary-analysis/retail-specimen-manifest-2026-03-14.json)
+- [2026-08-12 function name table](binary-analysis/ghidra-function-name-table-2026-08-12.tsv)
+  — the current 8,136-row address-to-name authority.
 - [2026-07-27 function name table](binary-analysis/ghidra-function-name-table-2026-07-27.tsv)
-  — the newer address-to-name authority.
+  — dated 7,555-row provenance retained for its pinned consumers.
 
 The MissionScript **command-descriptor** schema that used to sit beside these
 was deleted in `981c3379`; the 144-entry native registry it duplicated now lives

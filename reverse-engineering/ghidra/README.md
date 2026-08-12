@@ -9,30 +9,31 @@ owner; local working copies and historical backups remain untracked.
 - Imported Steam specimen SHA-256:
   `74154BFAE14DDC8ECB87A0766F5BC381C7B7F1AB334ED7A753040EDA1E1E7750`
 - Imported specimen MD5: `3b456964020070efe696d2cc09464a55`
-- Project payload: 19 files, 186,485,637 bytes
+- Project payload: 19 files, 186,502,021 bytes
 - Canonical `sha256<TAB>bytes<TAB>path` inventory SHA-256:
-  `b7767b108256c0ff71c033094b25e3f2308ef7d00f007854e0068b9307f3adb4`
+  `83330f4eae490686932d6b06fb6826019fb5e578b3b99ebee6cca7bf69cd70bb`
 
 **Promotion note:** this snapshot was refreshed from the source-stable live
-maintainer project after the Generation 23 CRound arm-effects comment package
-passed exact PRE validation, two independent persistent scratch replicas, two
-rollback probes, an evidence-path adverse control, separate-process live
-readback, and full 8,136-function inventory comparison. Exactly twelve function
-comments changed; function boundaries, names, signatures, instructions, data,
-symbols, and references did not. These comments preserve the proof's bounded
-scope: five selected invocations in two sealed sessions, with only default/3000
-and event 4003 gap-free. External effects, event 2000, event 4002, CMissile
-placement, field meanings, source spelling, and direct rebuild parity remain
-open.
+maintainer project after the five-function collision-component implementation-
+identity correction passed exact PRE validation, two independent persistent
+scratch replicas, two rollback probes, separate-process readback, and full
+8,136-function inventory comparison. Exactly five names, displayed signatures,
+comments, and tag sets changed. Function boundaries, instructions, program
+bytes, data units, and references did not. The evidence owns bounded shared-base
+implementation identity only; folded derived aliases, complete runtime
+behavior, layouts, source-body equality, and reconstruction parity remain open.
+See
+[`collision-component-identity-correction-2026-08-12.md`](../binary-analysis/collision-component-identity-correction-2026-08-12.md).
 
 The 19-file tree is byte-identical to the independently restored/read-only-
 opened D: disaster-recovery copy made on 2026-08-12. Future live work can make
 the snapshot lag again; each refresh remains a separately authorized promotion.
 The ignored live-promotion and tracked-restore receipts are respectively
-`local-lab/ghidra-cround-handle-event-arm-effects-live-promotion-20260812-v1/live-promotion-v2.ready.json`
-(5,323 bytes, SHA-256 `6009a379eeb5c7506a9c1a30f6312e695b74a0a0779161e86f76c76637fc4811`)
-and `local-lab/ghidra-cround-handle-event-arm-effects-live-promotion-20260812-v1/tracked-snapshot-restore.ready.json`
-(5,971 bytes, SHA-256 `d687fc821b0f674e46337c436f67c02a2adc344c5cd5a85b1e83519b21475e5f`).
+`local-lab/ghidra-collision-component-identity-live-promotion-20260812-v1/live-promotion.ready.json`
+(8,008 bytes, SHA-256 `b2a19bae9c420f1b2e12b2ff20d516c3031fa2fe09105ec92475cf6832635246`)
+and
+`local-lab/ghidra-collision-component-identity-live-promotion-20260812-v1/tracked-snapshot-restore.ready.json`
+(5,965 bytes, SHA-256 `26514c374373012618334adfde814e4ec4dc2a45e492ca2d4f7b184497933811`).
 
 Related (not this folder):
 
@@ -69,7 +70,7 @@ the user overrides them:
 | Headless entry | `...\support\analyzeHeadless.bat` |
 | Prior install archive | `D:\GhidraArchives\` (12.0.3 retained there; do not delete) |
 | Working/maintainer project | `C:\Users\david\Ghidra\Projects` (`BEA.gpr` / `BEA.rep`) |
-| Verified off-volume recovery | `D:\BEA-Ghidra-Backups\2026-08-12-cround-handle-event-gen23-post-live\` (exact current POST snapshot; independently copied and read-only reopened) |
+| Verified off-volume recovery | `D:\BEA-Ghidra-Backups\2026-08-12-collision-component-identity-post-live\` (exact current POST snapshot; independently copied and read-only reopened) |
 | Xbox Issue-11 POST recovery | `D:\BEA-Ghidra-Backups\2026-08-12-xbox-sparse-symbol-post-anchors-issue11\` (exact isolated project; restored semantic readback passed) |
 | Xbox US-retail POST recovery | `D:\BEA-Ghidra-Backups\2026-08-12-xbox-sparse-symbol-post-anchors-us-retail\` (exact isolated project; restored semantic readback passed) |
 | User settings | `%APPDATA%\ghidra\ghidra_12.1.2_PUBLIC` |

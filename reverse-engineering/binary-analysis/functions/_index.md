@@ -51,9 +51,12 @@ Naming authority, as a dated chain, newest last:
 | 2026-07-25 | [name-grading ledger](../name-grading-ledger-2026-07-25.md) | the grading instrument, the RTTI re-prefix wave, and the 0x08-byte incident |
 | 2026-07-26 | [name-grading ledger](../name-grading-ledger-2026-07-26.md) | the grader corrections, the 13-rename wave, and the first demotion (`0x0048c300`) |
 | 2026-07-27 | [second demotion ledger](../name-grading-ledger-2026-07-27-demotion2.md) | the second demotion (`0x005386d0`), re-measured from the pristine specimen |
-| 2026-07-27 | `ghidra-function-name-table-2026-07-27.tsv` | **the current address → symbol resolution authority** |
+| 2026-07-27 | `ghidra-function-name-table-2026-07-27.tsv` | historical 7,555-row projection retained for its dated checks and pinned receipts |
+| 2026-08-12 | [HUD source-identity correction](../hud-source-identity-correction-2026-08-12.md) | proves and promotes the three corrected HUD identities |
+| 2026-08-12 | [Collision-component implementation-identity correction](../collision-component-identity-correction-2026-08-12.md) | proves and promotes five shared-base implementation identities |
+| 2026-08-12 | `ghidra-function-name-table-2026-08-12.tsv` | **the current 8,136-row address → symbol resolution authority** |
 
-The mechanical check against that last row is
+The mechanical check against the current last row is
 `tools/re_function_doc_names_check.py`. The table is tracked; the checker
 abstains with exit 2 only when its required repository inputs cannot be read.
 "I could not look" is not "I found no problem".
