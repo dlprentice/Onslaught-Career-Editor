@@ -4,28 +4,35 @@
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; local working copies and historical backups remain untracked.
 
-- Snapshot date: 2026-08-09
+- Snapshot date: 2026-08-12
 - Ghidra lineage used for the latest review: 12.1.2
 - Imported Steam specimen SHA-256:
   `74154BFAE14DDC8ECB87A0766F5BC381C7B7F1AB334ED7A753040EDA1E1E7750`
 - Imported specimen MD5: `3b456964020070efe696d2cc09464a55`
 - Project payload: 19 files, 186,485,637 bytes
 - Canonical `sha256<TAB>bytes<TAB>path` inventory SHA-256:
-  `9aacd7d0dad41879229aab2cf73918d28208a0ad29df9748c4412264ef475c74`
+  `b7767b108256c0ff71c033094b25e3f2308ef7d00f007854e0068b9307f3adb4`
 
-**Promotion note:** this snapshot was refreshed from a source-stable copy of the
-live maintainer project after the backed-up, scratch-reproduced, separately
-read-back TokenArchive metadata, Mission-native `IScript__SetPos`, and the
-eleven-function Mission-native boundary/name cohort ending in
-`IScript__SetLightningDensity`. The current snapshot contains 8,136 functions;
-the cohort added only exact boundaries, shipped registry names, and fact-only
-comments, with no signature or behavior-contract promotion.
-The 19-file tree is byte-identical to the independently verified D: disaster-
-recovery copy made on 2026-08-09. Future live work can make the snapshot lag
-again; each refresh remains a separately authorized promotion.
-The ignored read-only restore receipt is
-`local-lab/ghidra-tracked-snapshot-cohort11-promotion-20260809-v1/tracked-snapshot-restore.ready.json`
-(5,931 bytes, SHA-256 `44035be354c93c2e81cbedd049885e946309c20f8c9682d9874eb97caaaf2518`).
+**Promotion note:** this snapshot was refreshed from the source-stable live
+maintainer project after the Generation 23 CRound arm-effects comment package
+passed exact PRE validation, two independent persistent scratch replicas, two
+rollback probes, an evidence-path adverse control, separate-process live
+readback, and full 8,136-function inventory comparison. Exactly twelve function
+comments changed; function boundaries, names, signatures, instructions, data,
+symbols, and references did not. These comments preserve the proof's bounded
+scope: five selected invocations in two sealed sessions, with only default/3000
+and event 4003 gap-free. External effects, event 2000, event 4002, CMissile
+placement, field meanings, source spelling, and direct rebuild parity remain
+open.
+
+The 19-file tree is byte-identical to the independently restored/read-only-
+opened D: disaster-recovery copy made on 2026-08-12. Future live work can make
+the snapshot lag again; each refresh remains a separately authorized promotion.
+The ignored live-promotion and tracked-restore receipts are respectively
+`local-lab/ghidra-cround-handle-event-arm-effects-live-promotion-20260812-v1/live-promotion-v2.ready.json`
+(5,323 bytes, SHA-256 `6009a379eeb5c7506a9c1a30f6312e695b74a0a0779161e86f76c76637fc4811`)
+and `local-lab/ghidra-cround-handle-event-arm-effects-live-promotion-20260812-v1/tracked-snapshot-restore.ready.json`
+(5,971 bytes, SHA-256 `d687fc821b0f674e46337c436f67c02a2adc344c5cd5a85b1e83519b21475e5f`).
 
 Related (not this folder):
 
@@ -60,7 +67,7 @@ the user overrides them:
 | Headless entry | `...\support\analyzeHeadless.bat` |
 | Prior install archive | `D:\GhidraArchives\` (12.0.3 retained there; do not delete) |
 | Working/maintainer project | `C:\Users\david\Ghidra\Projects` (`BEA.gpr` / `BEA.rep`) |
-| Verified off-volume recovery | `D:\BEA-Ghidra-Backups\2026-08-09-post-recovery\` (including the exact current eleven-function POST snapshot plus retained read-only restore drill) |
+| Verified off-volume recovery | `D:\BEA-Ghidra-Backups\2026-08-12-cround-handle-event-gen23-post-live\` (exact current POST snapshot; independently copied and read-only reopened) |
 | User settings | `%APPDATA%\ghidra\ghidra_12.1.2_PUBLIC` |
 
 Expedition overlays (RO clones, wave exports, ops state, correction ledgers)

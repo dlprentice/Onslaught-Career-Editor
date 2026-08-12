@@ -241,8 +241,8 @@ No percentage between these rows is meaningful. In particular:
 | Force-windowed trace image | SHA-256 `E1436EF7E0AD9CCBDDD43AAACA952F6E84D4B1A282835CEAD745EFCFC32FADF4` | Baseline plus one four-byte startup patch; all other bytes match baseline and remain usable as static evidence, while every runtime observation stays derivative/path-scoped |
 | Installed-tree aggregate | manifest digest `3D8AA45FB6792B605B5A29915E4256C5D2AFECEDE92AEF6CE8780FEA6A10212D` | Complete row census from a stable but non-atomic live traversal, not a filesystem snapshot or Steam depot manifest |
 | Stuart source | commit `5352A81CDB838B145A57F7FEBC5D9FC4B0129EBB` | Exact source pin, incomplete and not independently buildable |
-| Tracked Ghidra snapshot | 8,136 functions; 19 files / 186,485,637 bytes; inventory `9aacd7d0…5c74` | Reviewed distributable database snapshot, exact to live at the latest 2026-08-09 promotion |
-| Live Ghidra database | 8,136 functions | Current maintainer state; separately backed up on C: and D: and read back before snapshot promotion |
+| Tracked Ghidra snapshot | 8,136 currently discovered internal functions; 19 files / 186,485,637 bytes; inventory `b7767b10…adb4` | Reviewed distributable database snapshot, exact to live at the latest 2026-08-12 promotion; 8,136 is a current census, not a final ceiling |
+| Live Ghidra database | 8,136 currently discovered internal functions plus 213 external/import functions in Ghidra's aggregate count | Current maintainer state; separately read back and restore-tested from the 2026-08-12 D: backup before snapshot promotion |
 | Reconstruction state | Assertions frozen inside `source-code/stuart-source-synthesis.md` SHA-256 `57C2C02E...B7B45` | Reported snapshot only; no root-repository commit plus dirty-content fingerprint was frozen, so remeasure code before making a present-tense implementation claim |
 
 This identity split is the first atom-level rule. Any claim without its specimen

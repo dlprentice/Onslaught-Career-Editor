@@ -161,15 +161,15 @@ this standing campaign complete.
 Standing complete-RE progress is **not** the Gen10 handoff below and is no
 longer selected from the damaged Generation-73 candidate chain. Read
 `developer_state.json` → `current_re_authority`. As of 2026-08-12 the exact
-authority is canonical Generation 22 at
-`local-lab/re-campaign-incident-recovery-20260808-v1/generation-22-cround-handle-event-runtime-v1/`:
-READY SHA-256 `a0c8d3fb8d31f36e03b417b179bbe2f2c99f6dd47700e0f0ad2e8fad5feeac90`,
+authority is canonical Generation 23 at
+`local-lab/re-campaign-incident-recovery-20260808-v1/generation-23-cround-handle-event-arm-effects-v1/`:
+READY SHA-256 `4471fdfe105340ad06c2ad28d945eb05e9bc94f002110888b164581ccf1a93fc`,
 frozen reducer ID
 `a757bc51cd8302cf0e889c7db72ca58f9d865597b250371444d8c2285537db09`,
 and external authority receipt SHA-256
-`86b3fb12b18622dd837eb5e92b9f7ed8ecb7452c125f27bdca9d2fa98efab5b0`.
+`12509207913b0116a94c923da7fe163c47de226b7733538baea54eb31df73ba8`.
 Its independent replica is reproduction-only. Generation 73 supplied a
-field-level projection oracle; Generations 12 through 22 then admitted bounded
+field-level projection oracle; Generations 12 through 23 then admitted bounded
 Damage/Hit field-write contracts, one replicated zero-shield ApplyDamage
 contract, the exact consumer-bound TokenArchive dispatch-table partition, and
 the exact Mission-native SetPos boundary plus its replicated script-visible
@@ -187,12 +187,18 @@ original source spelling, and full rebuild parity remain open. Generation 22
 additionally admits only 2,555 strict-`CRound` slot-0 call-entry-arm paths across
 retained Level 521 and independent Level 512 recordings, with receiver/event-
 pointer continuity and exactly one selected arm per invocation. Event 4002 and
-`CMissile`-style placement were not observed; arm writes, callees, ordering,
-transitive effects, original source spelling, and direct rebuild event-routing
-parity remain open. The campaign remains incomplete and the next valid campaign
-generation is 23. Generation 22 made no live Ghidra, executable, or rebuild
-mutation; `VFuncSlot_00_004d9910` remains unchanged and any source-name
-promotion still requires a separate gate and authority.
+`CMissile`-style placement were not observed. Generation 23 deepens that same
+bounded slot-0 contract with 84 exact receiver-write pairs across five selected
+invocations, retaining per-window continuity gaps and rejecting a universal
+event-4000 sequence because the two sessions differ in writers, values, and
+order. External effects, event 2000, event 4002, field meanings, broader
+populations, original source spelling, and direct rebuild parity remain open.
+The campaign remains incomplete and the next valid campaign generation is 24.
+The saved `VFuncSlot_00_004d9910` name and grade remain unchanged. The bounded
+addenda were appended to twelve exact live/tracked Ghidra comments only after
+backup, replica, rollback, adverse-control, readback, and restore gates; no
+name, signature, boundary, executable-byte, instruction, data, symbol, or
+reference mutation occurred.
 
 ## Historical atomic handoff boundary (2026-08-04 / Generation 10)
 

@@ -4,7 +4,7 @@ Status: active — the RE evidence front door
 Last updated: 2026-08-12
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
-Current replay authority is Generation 22 via
+Current replay authority is Generation 23 via
 `developer_state.json` → `current_re_authority`; Generation 73 is a projection
 oracle only, and the Generation-10 block below is historical.
 
@@ -64,13 +64,13 @@ reference and runbooks, and the retail → Core translation policies.
 
 ## Current complete-RE replay authority — machine-local evidence (2026-08-12)
 
-The tracked Ghidra snapshot was refreshed from live on 2026-08-09; the dated
+The tracked Ghidra snapshot was refreshed from live on 2026-08-12; the dated
 2026-07 name ledgers still lag current work. Select campaign authority from
-`developer_state.json` → `current_re_authority`: canonical Generation 22 at
-`local-lab/re-campaign-incident-recovery-20260808-v1/generation-22-cround-handle-event-runtime-v1/`,
-READY `a0c8d3fb8d31f36e03b417b179bbe2f2c99f6dd47700e0f0ad2e8fad5feeac90`,
+`developer_state.json` → `current_re_authority`: canonical Generation 23 at
+`local-lab/re-campaign-incident-recovery-20260808-v1/generation-23-cround-handle-event-arm-effects-v1/`,
+READY `4471fdfe105340ad06c2ad28d945eb05e9bc94f002110888b164581ccf1a93fc`,
 frozen reducer `a757bc51cd8302cf0e889c7db72ca58f9d865597b250371444d8c2285537db09`,
-external selector `86b3fb12…ab5b0`. It contains 8,126 functions, 217 C1,
+external selector `12509207…3ba8`. It contains 8,126 functions, 217 C1,
 ten bounded C2, 7,899 opaque functions, 17 open residuals, and no rebuild-ready
 contract. Generation 12 admitted bounded `CBattleEngine::Damage`/`Hit` field
 writes and a partial rebuild mapping; Generation 13 admitted one replicated
@@ -124,8 +124,19 @@ gap-free returns and 583 raw orphans. Event 4002 and `CMissile`-style placement
 were not observed. Arm writes, callees, ordering, transitive effects, source
 spelling, and direct rebuild event-routing parity remain open. Its rebuild
 mapping stays `PARTIAL_CONTRACT`; no rebuild, Ghidra, or executable mutation
-occurred. Generation 73 remains a projection oracle, never a parent or
-authority. The next valid campaign generation is 23. Model review is
+occurred. Generation 23 deepens that same bounded contract with 84 exact
+receiver-write pairs across five preselected invocations. Default/3000 and
+event 4003 are gap-free; event 4001 and the Level 521/512 event-4000 windows
+retain their exact continuity-gap ledgers. The two event-4000 sessions share
+eleven receiver offsets but differ in writers, values, and order, so no
+universal sequence is claimed. External effects, event 2000, event 4002,
+`CMissile` placement, field meanings, broader populations, source spelling,
+and direct rebuild parity remain open. Twelve existing live Ghidra comments
+now retain only these bounded addenda after replica, rollback, adverse-control,
+readback, backup-restore, and tracked-snapshot-restore gates; names,
+signatures, boundaries, executable bytes, instructions, data, symbols, and
+references did not change. Generation 73 remains a projection oracle, never a
+parent or authority. The next valid campaign generation is 24. Model review is
 situational and harness-agnostic under `REVIEW-PROTOCOL.md`.
 
 **Current static-envelope closure (2026-08-11):** the reviewed
@@ -134,7 +145,7 @@ accounts for the current 8,136-function inventory at 8,129 bounded C1 and seven
 bounded C2 functions, with zero static `OPAQUE` rows. It joins 53 disjoint
 sealed receipts covering 7,945 functions, ten post-Gen19 Mission-native
 boundaries, and 181 pre-existing C1/C2 rows. This is a distinct authority for
-static-envelope accounting; Generation 22 remains the immutable replay owner
+static-envelope accounting; Generation 23 remains the immutable replay owner
 for its admitted runtime evidence and READY/reducer lineage. See the
 [closure report](binary-analysis/function-c1-closure-2026-08-11.md) for exact
 hashes and limits.
