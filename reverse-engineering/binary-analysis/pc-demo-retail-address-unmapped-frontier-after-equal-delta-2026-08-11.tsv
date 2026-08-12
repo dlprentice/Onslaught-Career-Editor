@@ -1,0 +1,16 @@
+retail_va	current_name	range_method	legacy_body_bytes	corrected_body_bytes	equal_delta_candidate	equal_delta_status	call_proposal_status	cheapest_next_instrument
+0x004655d0	con_fmv_play	FROZEN_INSTRUCTION_UNION	110	110		NO_EQUAL_DELTA_BRACKET	NO_PROPOSAL	source/library fingerprint, constants/strings, or corrected control-flow graph alignment
+0x0046ca70	CGame__ShutdownRestartLoop	FROZEN_INSTRUCTION_UNION	696	696		NO_EQUAL_DELTA_BRACKET	NO_PROPOSAL	source/library fingerprint, constants/strings, or corrected control-flow graph alignment
+0x0046dc30	CGame__RestartLoopRunLevel	FROZEN_INSTRUCTION_UNION	1531	1531		NO_EQUAL_DELTA_BRACKET	NO_PROPOSAL	source/library fingerprint, constants/strings, or corrected control-flow graph alignment
+0x00528b20	CTweakInt_SetNumViewpoints__ctor	FROZEN_INSTRUCTION_UNION	45	45		NO_EQUAL_DELTA_BRACKET	NO_PROPOSAL	source/library fingerprint, constants/strings, or corrected control-flow graph alignment
+0x00541110	JmpThunk_00466290	TRACKED_CONTIGUOUS_POSTSNAPSHOT	10	10		NO_EQUAL_DELTA_BRACKET	NO_PROPOSAL	source/library fingerprint, constants/strings, or corrected control-flow graph alignment
+0x00550830	JmpThunk_004530a0_00550830	TRACKED_CONTIGUOUS_POSTSNAPSHOT	10	10		NO_EQUAL_DELTA_BRACKET	NO_PROPOSAL	source/library fingerprint, constants/strings, or corrected control-flow graph alignment
+0x00564fd6	FirstCall_CRT__FlushAllFileStreamsByMode_00564fd6	TRACKED_CONTIGUOUS_POSTSNAPSHOT	9	9		NO_EQUAL_DELTA_BRACKET	NO_PROPOSAL	source/library fingerprint, constants/strings, or corrected control-flow graph alignment
+0x00564fdf	CRT__FlushAllFileStreamsByMode	FROZEN_INSTRUCTION_UNION	164	164		NO_EQUAL_DELTA_BRACKET	NO_PROPOSAL	source/library fingerprint, constants/strings, or corrected control-flow graph alignment
+0x005a1889	CFastVB__DispatchOp_NormalizeVec3_005a1889	FROZEN_INSTRUCTION_UNION	240	240		NO_EQUAL_DELTA_BRACKET	NO_PROPOSAL	source/library fingerprint, constants/strings, or corrected control-flow graph alignment
+0x005a1979	CFastVB__DispatchOp_NormalizeVec4_005a1979	FROZEN_INSTRUCTION_UNION	277	277		NO_EQUAL_DELTA_BRACKET	NO_PROPOSAL	source/library fingerprint, constants/strings, or corrected control-flow graph alignment
+0x005a2ee9	CFastVB__DispatchOp_Determinant4x4_005a2ee9	FROZEN_INSTRUCTION_UNION	267	267		NO_EQUAL_DELTA_BRACKET	NO_PROPOSAL	source/library fingerprint, constants/strings, or corrected control-flow graph alignment
+0x005a32d4	CFastVB__DispatchOp_MultiplyMatrix4x4_005a32d4	FROZEN_INSTRUCTION_UNION	564	564		NO_EQUAL_DELTA_BRACKET	NO_PROPOSAL	source/library fingerprint, constants/strings, or corrected control-flow graph alignment
+0x005a38c0	CFastVB__DispatchOp_TransformVec4ArrayByMatrix4	FROZEN_INSTRUCTION_UNION	149	149		NO_EQUAL_DELTA_BRACKET	NO_PROPOSAL	source/library fingerprint, constants/strings, or corrected control-flow graph alignment
+0x005a3980	CFastVB__DispatchOp_TransformVec4ArrayByMatrix4_Alt_005a3980	FROZEN_INSTRUCTION_UNION	149	149		NO_EQUAL_DELTA_BRACKET	NO_PROPOSAL	source/library fingerprint, constants/strings, or corrected control-flow graph alignment
+0x005d2930	Unwind@005d2930	FROZEN_INSTRUCTION_UNION	11	11		NO_EQUAL_DELTA_BRACKET	NO_PROPOSAL	source/library fingerprint, constants/strings, or corrected control-flow graph alignment

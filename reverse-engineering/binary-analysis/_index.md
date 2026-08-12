@@ -62,10 +62,17 @@ the document it links.
 - [PC demo/retail CRT/FPU gapless closure and address propagation](pc-demo-retail-gapless-closure-2026-08-11.md),
   its [nine-body table](pc-demo-retail-crt-fpu-gapless-closure-2026-08-11.tsv),
   [six propagated address pairs](pc-demo-retail-propagated-address-additions-2026-08-11.tsv),
-  and [44-row remaining frontier](pc-demo-retail-address-unmapped-frontier-2026-08-11.tsv)
+  and [44-row post-gapless frontier](pc-demo-retail-address-unmapped-frontier-2026-08-11.tsv)
   — resolves the final mapped comparison false negatives, explicitly corrects
-  two stale FPU helper contracts, and leaves the 8,136-function partition at
-  8,079 normalized-identical, 13 semantically bounded, and 44 address-unmapped
+  two stale FPU helper contracts, and records that checkpoint's 8,079 / 13 / 44
+  partition
+- [PC demo/retail equal-delta frontier closure](pc-demo-retail-equal-delta-closure-2026-08-11.md),
+  its [29 exact address/body pairs](pc-demo-retail-equal-delta-closure-2026-08-11.tsv),
+  and [15-row current frontier](pc-demo-retail-address-unmapped-frontier-after-equal-delta-2026-08-11.tsv)
+  — accepts equal-delta neighbors only after complete corrected-body and
+  483-row operand audits, identifies six legacy body-range omissions, and
+  leaves the current partition at 8,108 normalized-identical, 13 semantically
+  bounded, and 15 address-unmapped
 - [`CUnit` primary virtual-interface semantic crosswalk](cunit-primary-vtable-semantics-2026-08-11.md)
   and its [46-slot table](cunit-primary-vtable-semantics-2026-08-11.tsv) — uses
   the demo twin, pinned source overrides, and typed callsites to replace field

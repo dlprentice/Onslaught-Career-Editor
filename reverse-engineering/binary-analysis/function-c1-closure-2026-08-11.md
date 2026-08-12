@@ -88,3 +88,14 @@ confirms that both semantic plates are false: the first is a two-argument
 masked x87 control-word updater returning the prior word, and the second is a
 one-argument flag-driven x87 side-effect helper. That report is the current
 static semantic authority for those two entries.
+
+Post-closure body-range correction: the later
+[equal-delta frontier closure](pc-demo-retail-equal-delta-closure-2026-08-11.md)
+proves that six dated Ghidra body address sets omit 11 bytes owned by complete
+instructions. `0x004AC4A0` omits one byte inside a four-byte `LEA`; five math
+bodies at `0x005771DD`, `0x0057726D`, `0x005775C3`, `0x00577A3E`, and
+`0x00577EAA` each omit the two operand bytes of a terminal `RET imm16`. This
+table remains the exact reviewed projection of the dated Ghidra bodies and
+receipts. For byte-complete comparison, the later report's corrected unions
+supersede only those six range sizes. No live or tracked Ghidra mutation was
+made.

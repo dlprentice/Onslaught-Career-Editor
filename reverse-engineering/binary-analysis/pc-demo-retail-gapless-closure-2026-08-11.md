@@ -9,15 +9,21 @@ runtime floating-point behavior, exact CRT/source identity, and reconstruction
 parity.
 Verdict: the nine address-mapped CRT/FPU rows that the original census could
 not compare are normalized-identical retail/demo bodies. Their newly usable
-call edges recover six more normalized-identical demo entries. The complete
-8,136-function partition is now 8,079 normalized-identical bodies, 13 bounded
-semantic divergences, and 44 address-unmapped functions; no address-mapped body
-remains unresolved.
+call edges recover six more normalized-identical demo entries. At this
+checkpoint, the complete 8,136-function partition is 8,079
+normalized-identical bodies, 13 bounded semantic divergences, and 44
+address-unmapped functions; no address-mapped body remains unresolved.
 
 Specimen: pristine PC retail `BEA.exe`, 2,506,752 bytes, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`;
 PC demo `BEA.exe`, 2,510,848 bytes, SHA-256
 `d8637dd755b21c720c0cb8f71923f94d2a04a184d90f5343c2e868ce8606e5c2`.
+
+Later accounting: the
+[equal-delta frontier closure](pc-demo-retail-equal-delta-closure-2026-08-11.md)
+subsequently maps 29 of these 44 rows and leaves 15 address-unmapped. The
+8,079 / 13 / 44 partition below remains the exact result of this checkpoint,
+not current final accounting.
 
 The machine-readable results are:
 

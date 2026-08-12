@@ -5,14 +5,15 @@ Last updated: 2026-08-11
 Evidence: MEASURED — exact executable/archive hashes, independently recounted
 MSVC RTTI/vtables, a 2,127-target virtual census, a conservative 8,086-row
 cross-build function-address map, and exact multi-range, opcode-factory, and
-gapless CRT/FPU/caller-propagation replay; UNKNOWN — normalized constant values
-outside the explicitly checked cohorts, 44 retail functions without a demo
+gapless CRT/FPU, caller-propagation, and equal-delta body-union replay; UNKNOWN
+— normalized constant values outside the explicitly checked cohorts, 15 retail
+functions without a demo
 address, and runtime/source/rebuild equivalence.
 Verdict: the PC demo is a distinct build with a structurally identical virtual
-class surface. Across virtual and non-virtual code, 8,079 of 8,136 retail
+class surface. Across virtual and non-virtual code, 8,108 of 8,136 retail
 functions have a complete normalized-identical demo instruction stream. Another
-13 have independently bounded semantic lineage differences. All 8,092 mapped
-entries are therefore accounted for; 44 retail functions still lack a demo
+13 have independently bounded semantic lineage differences. All 8,121 mapped
+entries are therefore accounted for; 15 retail functions still lack a demo
 entry.
 Specimen: pristine PC retail `BEA.exe`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`;
@@ -137,17 +138,26 @@ the map and the narrower exact closure reports is:
 | Retail functions | 8,136 |
 | Entries in the original conservative address map | 8,086 |
 | Newly propagated demo entries | 6 |
-| Current mapped demo entries | 8,092 |
+| Equal-delta body-union demo entries | 29 |
+| Current mapped demo entries | 8,121 |
 | Original single-range normalized-identical body streams | 8,021 |
 | Multi-range normalized-identical corrections | 42 |
 | Opcode-factory normalized-identical correction | 1 |
 | CRT/FPU `WAIT`-aware normalized-identical corrections | 9 |
 | Propagated normalized-identical additions | 6 |
+| Equal-delta normalized-identical additions | 29 |
 | Semantically resolved non-identical bodies | 13 |
 | Address mapped, still changed or incompletely bounded | 0 |
-| No demo entry yet recovered | 44 |
-| Normalized-identical retail body bytes | 1,731,102 |
-| Normalized-identical retail instructions | 521,721 |
+| No demo entry yet recovered | 15 |
+| Prior legacy Ghidra address-set byte aggregate | 1,731,102 |
+| New equal-delta legacy / corrected instruction bytes | 11,085 / 11,096 |
+| Normalized-identical retail instructions | 525,184 |
+
+The 1,731,102-byte value is the dated Ghidra address-set aggregate from the
+prior checkpoint, not a corpus-wide audited instruction-byte union. The
+equal-delta pass found six bodies whose address sets omit 11 bytes owned by
+complete instructions, so this document does not manufacture a corrected
+whole-corpus byte total.
 
 The original 65 address-only/different rows were the four strict-vtable
 divergences below, 60 entries independently fixed by unanimous corresponding
@@ -157,7 +167,8 @@ multi-range bodies, the linearly re-decoded opcode factory, and nine x87 bodies
 whose Ghidra rows folded `WAIT` prefixes. Thirteen have edition-specific
 behavior accounted for by the reports below; no mapped row remains unresolved.
 Replaying corresponding transfers from the newly closed callers then recovers
-six of the former 50 address-unmapped entries.
+six of the former 50 address-unmapped entries. Equal-delta neighbor nomination,
+followed by complete corrected-body and operand audits, recovers another 29.
 For example, corresponding direct callers select demo entry `0x004F0110` for
 `0x004F00E0 CLTShell__ShutdownRuntimeAndReleaseResources`, while the retail body
 matches only a later demo suffix. Address identity and body equivalence are
@@ -245,8 +256,18 @@ instructions per build with zero normalized differences; eleven separate
 the false `CRT__GetFpuControlWord(void)` and `CRT__ReturnVoid(void)` semantic
 plates, checks all 21 changed absolute-reference pairs, and uses the now-usable
 call edges to recover six more exact demo entries. The tracked
-[44-row frontier](binary-analysis/pc-demo-retail-address-unmapped-frontier-2026-08-11.tsv)
-is the complete remaining address-recovery queue.
+[44-row post-gapless frontier](binary-analysis/pc-demo-retail-address-unmapped-frontier-2026-08-11.tsv)
+is the exact queue at that checkpoint.
+
+The
+[equal-delta frontier closure](binary-analysis/pc-demo-retail-equal-delta-closure-2026-08-11.md)
+then maps 29 of those rows. All 3,463 paired instructions have zero normalized
+differences, and a complete 483-row changed-operand audit closes every encoded
+reference, including one 103,347-byte equal `.rdata` window and three bounded
+indexed jump tables. It also identifies six legacy Ghidra body sets that omit
+11 instruction bytes. The current
+[15-row frontier](binary-analysis/pc-demo-retail-address-unmapped-frontier-after-equal-delta-2026-08-11.tsv)
+is the remaining address-recovery queue.
 
 The
 [credits/localization lineage report](binary-analysis/pc-demo-retail-credits-localization-lineage-2026-08-11.md)
@@ -265,7 +286,7 @@ build-lineage signal. It is not evidence that gameplay is globally identical.
 The demo is now an independent refuter and address-translation oracle for most
 of the executable, not only the virtual surface. A retail interpretation that
 requires a changed opcode, register form, branch shape, or instruction layout
-in one of the 8,079 exact rows must also explain why the independently linked
+in one of the 8,108 exact rows must also explain why the independently linked
 demo preserves that shape.
 
 The earlier `CUnit`, `CBattleEngine`, `CThing`, `CComplexThing`, `CActor`, PC
@@ -273,7 +294,7 @@ controller, PC music, PC shell, FMV/startup, and frontend semantic cohorts have
 now used that oracle. The next cross-build work should change instruments
 again: use constants, strings, exception/unwind metadata, retained-source or
 library fingerprints, platform builds, and newly proved corresponding callers
-on the 44 address-unmapped rows. Repeating the same normalized-signature or
+on the 15 address-unmapped rows. Repeating the same normalized-signature or
 generic call-propagation pass would only fit the remaining ambiguity.
 
 ## Reproduction and limits
@@ -290,6 +311,6 @@ has SHA-256
 Open boundaries remain:
 
 - normalized immediate/displacement values and the objects they address;
-- demo entry recovery for the remaining 44 retail functions;
+- demo entry recovery for the remaining 15 retail functions;
 - asset/configuration differences and their behavioral consequences;
 - runtime equivalence, source equivalence, and rebuild parity.
