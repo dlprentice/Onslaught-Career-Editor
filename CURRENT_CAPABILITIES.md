@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-08-12. RE authority block refreshed to canonical Gen20
+Last updated: 2026-08-12. RE authority block refreshed to canonical Gen21
 (`current_re_authority`; candidate Gen73 is projection-oracle only). Primary WinUI
 navigation was rechecked 2026-08-03 against the live shell (includes Cheats).
 The 2026-08-01 shell, appearance, Lore, Media, and four-run Level 100 reviews
@@ -643,25 +643,25 @@ Read [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md) before changing this lane.
 the historical Gen10 or candidate Gen73 roots by generation number, ledger
 equality, or self-derived pins.
 
-| Metric | Canonical Gen20 |
+| Metric | Canonical Gen21 |
 | --- | ---: |
-| Authority generation | **20** (lineage `incident-20260806-recovery-v1`) |
+| Authority generation | **21** (lineage `incident-20260806-recovery-v1`) |
 | Functions | **8126** |
 | C1_CANDIDATE_PARTIAL | **217** |
-| C2_BOUNDED_RUNTIME | **8** |
-| function_semantic OPAQUE | **7901** |
-| contract_C0_OPAQUE | **14020** (second opacity axis) |
+| C2_BOUNDED_RUNTIME | **9** |
+| function_semantic OPAQUE | **7900** |
+| contract_C0_OPAQUE | **14019** (second opacity axis) |
 | OPEN residual | **17** |
 | REBUILD_READY | **0** |
 | complete_RE | **false** |
-| READY / reducer | `13326fed…44ea` / `6e577791…c7fe` |
-| Next valid generation | **21** |
+| READY / reducer | `9699d0b5…0158` / `b67132c2…f95e` |
+| Next valid generation | **22** |
 
 **Tracked static-envelope closure (2026-08-11):** the separate reviewed
 [`function-c1-closure-2026-08-11.tsv`](reverse-engineering/binary-analysis/function-c1-closure-2026-08-11.tsv)
 accounts for the current 8,136-function inventory as **8,129 C1**, **7 C2**,
 and **0 static OPAQUE**. It is the current authority for minimum per-function
-static envelopes. Canonical Generation 20 remains the immutable replay
+static envelopes. Canonical Generation 21 remains the immutable replay
 authority for admitted runtime/campaign claims; neither count implies
 `REBUILD_READY` or complete semantic parity.
 
@@ -725,6 +725,17 @@ fails and publishes no READY. The function name remains address-suffixed;
 entry, return, owned writes, nonnegative parts, controller-bearing segmented
 receivers, Warehouse identity, and universal behavior remain open. The rebuild
 mapping remains `PARTIAL_CONTRACT`, with no Ghidra or executable mutation.
+Generation 21 then advances only `VFuncSlot_66_004d8e40` to a
+refuter-survived bounded C2 placement/call-envelope contract. Retained Level
+522 and Level 741 traces supply 7,513 call-entry pairs, all through strict
+`CRound` vtable `0x005DE82C` with receiver continuity; 7,204 returns are
+gap-free and 309 are raw orphans. No `CMissile`-style vtable `0x005E3BA4`
+appears. The exact retail/demo body pair remains structurally identical, but
+receiver writes, branch ordering, full contact/lifetime/effect behavior,
+`CMissile` placement, original source spelling, and full parity remain open.
+The existing `AdvanceActorRounds` / `SteerSeekingRound` owner and focused
+Forseti homing test therefore remain `PARTIAL_CONTRACT`; no rebuild or Ghidra
+mutation was made.
 Further reviewer use is situational under `reverse-engineering/REVIEW-PROTOCOL.md`,
 not a fixed model matrix.
 
@@ -747,10 +758,11 @@ corrections. `StartDie` remained open/opaque at that handoff. The independent
 data-write lane has one refuter-survived semantic result: a Level 521 `LockHit`
 invocation removed the supplied target's sole fired-lock node through five exact
 ordered field transitions. These are instrument capabilities and historical
-admissions. Canonical Gen20 retains those four C2 rows, separately re-proves a
+admissions. Canonical Gen21 retains those four C2 rows, separately re-proves a
 narrower fifth ApplyDamage C2 from intact TTD wrappers, and adds the bounded
 SetPos roundtrip as a sixth, LockHit's single-node removal path as a seventh,
-and the bounded CExplosion internal carrier as an eighth;
+the bounded CExplosion internal carrier as an eighth, and the strict-`CRound`
+slot-66 placement/call envelope as a ninth;
 it does not revive the rejected historical package,
 claim positive-shield behavior, or broaden SetPos beyond the observed path.
 
@@ -769,7 +781,9 @@ contrasting gate outcome, the second call's exact mesh part, expanding-radius
 timing, and broader rebuild parity remain open. Generation 20 independently
 joins ten retained internal calls to the two pristine call sites and proves the
 observed source/shield/part carrier without promoting the function's shipped
-name or claiming its entry/return/write envelope. The Level 100 reconstruction
+name or claiming its entry/return/write envelope. Generation 21 independently
+joins 7,513 strict-`CRound` calls to slot 66 while leaving its writes, branches,
+shared `CMissile` placement, and complete Move behavior open. The Level 100 reconstruction
 now preserves the two ordered whole-body stores for Target Tank/Drone rather
 than one aggregate subtraction; focused tests pin `6.0 -> 5.2 -> 4.2` and the
 terminal `-0.2 -> -1.2` pair through the production client envelope. Warehouse

@@ -797,6 +797,17 @@ A no-fire control and fresh isolated copied-runtime runs then followed each of
 the three Target Tank pointers, player-owned round list, and objective set. Four
 releases at the first active charge bucket (`10`) created normal rounds with
 definition speed `35` and exact movement magnitude `1.75` per 20 Hz update.
+Generation 21 separately binds the shared retail slot-66 body at `0x004D8E40`
+to observed strict-`CRound` dispatch. Retained Level 522 and Level 741 traces
+contain 7,513 call-entry pairs through vtable `0x005DE82C`; the receiver is
+continuous in every pair, 7,204 returns are gap-free, and 309 raw returns are
+honestly orphaned across trace barriers. No `CMissile`-style vtable
+`0x005E3BA4` call was observed. This corroborates the placement and call
+envelope used by `AdvanceActorRounds` / `SteerSeekingRound`, while leaving
+receiver writes, branch ordering, complete contact/lifetime/effect behavior,
+the shared `CMissile` placement, and source spelling open. The focused
+`ForsetiMissile_HomesOnAMovingTarget` test passes, but the mapping remains
+`PARTIAL_CONTRACT`; no reconstruction behavior changed for this admission.
 Each tank began at life `6` with no shield. Direct mesh hits repeated
 `6 → 4.2 → 2.4 → 0.6 → -1.2`; each target set its destroyed bit and left the
 objective set on shot four. One separate glancing mesh-part hit removed `1.0`.

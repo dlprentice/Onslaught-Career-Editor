@@ -3,8 +3,9 @@
 > Date: 2026-07-25. Scope: what the previously unnamed value ids in
 > `data/default physics.dat` Round and WeaponMode records mean, and which
 > record offset each one writes.
-> Updated 2026-08-11 with the recovered `CRound` primary virtual surface and
-> an independently linked PC-demo code comparison.
+> Updated 2026-08-12 with the recovered `CRound` primary virtual surface, an
+> independently linked PC-demo code comparison, and the bounded Generation-21
+> strict-`CRound` slot-66 runtime placement.
 >
 > Every row below is backed by bytes: an RTTI type descriptor read out of the
 > pristine Steam binary, the vtable slot that descriptor sits in front of, the
@@ -215,6 +216,28 @@ Retail body SHA-256 pins, in the table's address order:
 004d9dd0 bdd3b27c15a77fe7a964a5c37fa3b055b3eb7c449c7f0944d2eeba7f504421f9
 004d9ef0 cca25281f2ca91e693706e799be2672bd435992e7ed85329ba1f41bda019aacb
 ```
+
+### 3.2.1 Generation-21 slot-66 runtime placement
+
+Two retained retail trace sessions independently reach `0x004D8E40` through
+the inherited actor slot-66 dispatcher at `0x00401AEA`. Level 522 contributes
+231 call-entry pairs over 21 session-local receivers; Level 741 contributes
+7,282 over 50 session-local receivers. All 7,513 calls use strict `CRound`
+vtable `0x005DE82C`, with call `ECX=ESI` continuing unchanged into entry
+`ECX/ESI`. All 7,513 raw callbacks land at the function's `RET` at
+`0x004D9904`; 7,204 form gap-free return envelopes and 309 remain raw orphans
+across trace-continuity barriers. No call uses the shared `CMissile`-style
+vtable `0x005E3BA4`.
+
+Discovery and exact replay projections agree for both sessions. A poisoned
+Level-522 replay requiring 232 calls against the unchanged 231-call event
+stream exits 10, fails the expectation/pairing/collector gates, and publishes
+no READY. The proof therefore promotes only the observed strict-`CRound`
+placement and receiver-preserving call envelope. It does not measure receiver
+writes, discriminate internal branches, establish a semantic return value,
+observe `CMissile` placement, prove the shipped source spelling, or claim full
+Move/contact/lifetime/effect behavior. Generation 21 retains the saved campaign
+name `VFuncSlot_66_004d8e40`; no live Ghidra or executable mutation occurred.
 
 ### 3.3 Construction, targeting, and launch helpers
 

@@ -17,7 +17,7 @@
 > Godot rebuild, and the WinUI 3 app are coequal outcomes. A current goal chooses
 > focus, not standing rank. See [Revision history](#revision-history).
 >
-> Last updated: 2026-08-09. Current measured status belongs in
+> Last updated: 2026-08-12. Current measured status belongs in
 > [`CURRENT_CAPABILITIES.md`](CURRENT_CAPABILITIES.md) and
 > [`developer_state.json`](developer_state.json) (routing key
 > `current_re_authority`). Generation 73 is retained only as the exact
@@ -161,15 +161,15 @@ this standing campaign complete.
 Standing complete-RE progress is **not** the Gen10 handoff below and is no
 longer selected from the damaged Generation-73 candidate chain. Read
 `developer_state.json` → `current_re_authority`. As of 2026-08-12 the exact
-authority is canonical Generation 20 at
-`local-lab/re-campaign-incident-recovery-20260808-v1/generation-20-cexplosion-hit-runtime-v1/`:
-READY SHA-256 `13326fed25845e2351a2c68b57afe1bf2593786d2feb5f9e7d045fb7120a44ea`,
+authority is canonical Generation 21 at
+`local-lab/re-campaign-incident-recovery-20260808-v1/generation-21-cround-move-runtime-v1/`:
+READY SHA-256 `9699d0b55dc19c3dc88ba94341e0e76c000a8835d749e9d307ed063a2cb50158`,
 frozen reducer ID
-`6e5777916ec5c7b94cdf6db727873bef589a14fec3bfac7ea4d895afda59c7fe`,
+`b67132c21e683c4566cc3938275ef98b68c20a7d4759f91ab1fc0eea3f74f95e`,
 and external authority receipt SHA-256
-`268b13a12de25fe5d6a648f17dd72699a441f968d8fef1d3d632c79b8edfccf1`.
+`331db4093dd7f94e7a2d8d50dedc21dc814d98d1ac2d937b493994d6740c6a96`.
 Its independent replica is reproduction-only. Generation 73 supplied a
-field-level projection oracle; Generations 12 through 20 then admitted bounded
+field-level projection oracle; Generations 12 through 21 then admitted bounded
 Damage/Hit field-write contracts, one replicated zero-shield ApplyDamage
 contract, the exact consumer-bound TokenArchive dispatch-table partition, and
 the exact Mission-native SetPos boundary plus its replicated script-visible
@@ -179,10 +179,14 @@ contract at C1, then the exact Mission-native UnsetObjective 3/13/3 partition
 and C1 static wrapper contract without broadening them beyond their evidence,
 then ten bounded retained-trace `CExplosion` internal slot-40 carrier calls.
 The explosion entry, writes, returns, full dispatch envelope, and segmented
-mesh-part behavior remain open. The campaign remains incomplete and the next
-valid campaign generation is 21. Generation 20 made no live Ghidra mutation;
-the address-suffixed `CExplosion` name and any semantic promotion still require
-a separate promotion gate and authority.
+mesh-part behavior remain open. Generation 21 additionally admits only 7,513
+strict-`CRound` slot-66 call-entry envelopes across two retained traces, with
+7,204 gap-free returns and 309 raw orphan returns. No `CMissile`-style receiver
+was observed; receiver writes, branch ordering, complete Move behavior,
+original source spelling, and full rebuild parity remain open. The campaign
+remains incomplete and the next valid campaign generation is 22. Generation 21
+made no live Ghidra mutation; `VFuncSlot_66_004d8e40` remains unchanged and any
+source-name promotion still requires a separate gate and authority.
 
 ## Historical atomic handoff boundary (2026-08-04 / Generation 10)
 
