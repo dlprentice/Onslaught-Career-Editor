@@ -37,9 +37,9 @@ unverified against the new name until it is re-measured.
 
 ## Overview
 
-Part of the retail MissionScript bytecode VM. Wave574 extends the Wave573 factory/head cleanup with saved Ghidra read-back for the adjacent opcode executor and bool-result cluster. Wave863 hardened the important MissionScript bytecode VM operator vfuncs for PLUS, MINUS, MULTIPLY, DIVIDE, and CMP. The current evidence is static retail-binary evidence only: the current Stuart source snapshot does not include a matching `MissionScript/AsmInstruction.cpp` body, so no source identity or runtime behavior is claimed.
+Part of the retail MissionScript bytecode VM. Wave574 extends the Wave573 factory/head cleanup with saved Ghidra read-back for the adjacent opcode executor and bool-result cluster. Wave863 hardened the important MissionScript bytecode VM operator vfuncs for PLUS, MINUS, MULTIPLY, DIVIDE, and CMP. A 2026-08-11 cross-build replay independently bounds the complete factory and all 27 strict-RTTI instruction-class/slot-0 selections in pristine retail and the distinct PC demo. The current Stuart source snapshot still does not include a matching `MissionScript/AsmInstruction.cpp` body, so no source identity or runtime behavior is claimed.
 
-**Status: ACTIVE STATIC READ-BACK - partial function coverage.**
+**Status: ACTIVE STATIC READ-BACK - complete factory/class inventory; partial executor-behavior coverage.**
 
 ## Debug Path Location
 
@@ -79,8 +79,11 @@ Runtime command effects and exact arity remain separate proof.
 The retained `missionscript-vm-datatype-opcode-schema.v1.json` accounts for the
 finite static MissionScript opcode inventory around
 `CAsmInstruction__SpawnFromOpcode` and `CInstructionOP_CALL__ExecuteCall`.
-Runtime opcode behavior and exact instruction/object layouts remain separate
-proof.
+The [PC demo/retail factory lineage](../pc-demo-retail-asm-instruction-lineage-2026-08-11.md)
+now fixes every opcode `0x00..0x1a` to one strict RTTI instruction class and
+its slot-0 executor in both builds. Eight executor effects remain explicitly
+open; runtime opcode behavior and exact instruction/object layouts remain
+separate proof.
 
 ## Wave863 Static Read-Back
 
@@ -99,12 +102,12 @@ Exact anchors: `0x0052e180 CInstructionOP_PLUS__VFunc_00_0052e180`, `0x0052e1d0 
 ## Notes
 
 - `CAsmInstruction__SpawnFromOpcode` is called by `CScriptObjectCode__CScriptObjectCode` after reading an opcode from a `CDXMemBuffer`.
-- The factory switch covers opcode values through `0x1a`; `missionscript-vm-datatype-opcode-schema.v1.json` preserves the proven executor/shared no-op cases separately from `UNPROMOTED_*` opcode cases, so several opcode vtable slots and `LAB_` placeholders remain intentionally open.
+- The factory switch covers opcode values through `0x1a`; `missionscript-vm-datatype-opcode-schema.v1.json` now preserves all 27 strict RTTI class and slot-0 executor identities. The eight formerly `UNPROMOTED_*` cases have exact static identities but intentionally retain open runtime effects.
 - The next raw queue head after Wave863 is `0x0052ff30 ScriptCommandRegistry__InitBuiltins`.
 - Related docs: `DataType.cpp.md`, `EventFunction.cpp.md`, `ScriptObjectCode.cpp.md`, and `reverse-engineering/quick-reference/msl-commands.md`.
 
 ## Open Work
 
 1. Treat `missionscript-vm-datatype-opcode-schema.v1.json` as the static schema handoff for factory/type/opcode accounting.
-2. Recover remaining opcode vtable slot labels conservatively, only where xrefs/decompile/vtable evidence justify the name.
-3. Keep runtime MissionScript behavior separate from this static Ghidra read-back until copied-profile runtime proof exists.
+2. Recover the runtime effects of `POP`, `REMOVE_TOP`, `JMPNE`, `JMP`, `GETTOP`, `POINTER`, `CALLLOCAL`, and `PUSHPC` without weakening their already exact class/slot identities.
+3. Keep runtime MissionScript behavior separate from this static Ghidra and cross-build read-back until copied-profile runtime proof exists.

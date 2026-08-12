@@ -111,6 +111,16 @@ for its admitted runtime evidence and READY/reducer lineage. See the
 [closure report](binary-analysis/function-c1-closure-2026-08-11.md) for exact
 hashes and limits.
 
+**Current PC demo/retail frontier (2026-08-11):** the conservative 8,086-entry
+address map plus exact second-pass reports now account for 8,064
+normalized-identical bodies and 13 bounded semantic divergences. The
+[`CAsmInstruction__SpawnFromOpcode` lineage](binary-analysis/pc-demo-retail-asm-instruction-lineage-2026-08-11.md)
+closes its `not_compared` row as a gapless 400-instruction match and fixes all
+27 opcode cases to paired strict RTTI classes/slot-0 executors. Nine
+address-mapped CRT/FPU bodies and 50 address-unmapped retail functions remain;
+see [`DEMO_VS_RETAIL.md`](DEMO_VS_RETAIL.md) for the exact accounting and proof
+boundaries.
+
 ## Historical Gen10 dual-authority / TTD admission (2026-08-04)
 
 Generation 10 remains a valid **historical frozen-integrity**

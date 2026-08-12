@@ -17,6 +17,9 @@ current sources.
   `FollowWaypoint`-through-`IsOverWater` names and handlers.
 - [`missionscript-vm-datatype-opcode-schema.v1.json`](missionscript-vm-datatype-opcode-schema.v1.json)
   records the bounded opcode, datatype, and VM inventory.
+- The [PC demo/retail opcode-factory lineage](pc-demo-retail-asm-instruction-lineage-2026-08-11.md)
+  independently fixes all 27 factory cases to paired strict RTTI instruction
+  classes and slot-0 executors while keeping eight runtime effects open.
 - [`functions/IScript.cpp.md`](functions/IScript.cpp.md),
   [`functions/ScriptObjectCode.cpp.md`](functions/ScriptObjectCode.cpp.md), and
   [`functions/EventFunction.cpp.md`](functions/EventFunction.cpp.md) retain
@@ -31,7 +34,7 @@ current sources.
 | Surface | Bounded static contract |
 | --- | --- |
 | Command registry | `ScriptCommandRegistry__InitBuiltins` associates known command names with descriptor slots and handler entries. Exact descriptor field layout and arity remain incomplete. |
-| VM dispatch | `CAsmInstruction__SpawnFromOpcode` creates instruction families; `CDataType__CreateFromType` creates datatype families; `CScriptObjectCode__Run` and `CAsmInstruction__ExecuteCall` form the interpreter/call spine. |
+| VM dispatch | `CAsmInstruction__SpawnFromOpcode` creates 27 exact strict-RTTI instruction families for serialized opcodes `0x00..0x1a`; `CDataType__CreateFromType` creates datatype families; `CScriptObjectCode__Run` and `CInstructionOP_CALL__ExecuteCall` form the interpreter/call spine. Eight executor effects remain open. |
 | Event lifecycle | `IScript__ScheduleEvent` → `CScriptEventNB__PostEvent` → `CEventFunction__Execute` → `CScriptObjectCode__CallEventDirect` is the static event path. |
 | Script loading | `CMissionScriptObjectCode__StartLoadAsync` and `CMissionScriptObjectCode__LoadAsync` load script object code through a `CDXMemBuffer`; packed-versus-loose source selection remains a runtime question. |
 | Object bridge | `GetThingRef` and `SpawnThing` bridge scripts to world/thing/spawner systems; corpus name matches do not prove runtime object identity or spawning. |

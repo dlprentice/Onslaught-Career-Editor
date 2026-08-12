@@ -665,6 +665,15 @@ static envelopes. The table above remains the immutable Generation-19 replay
 authority for its admitted runtime/campaign claims; neither count implies
 `REBUILD_READY` or complete semantic parity.
 
+**PC demo/retail function frontier (2026-08-11):** exact second-pass reports
+now account for **8,064 normalized-identical bodies** and **13 bounded semantic
+divergences** among 8,086 mapped retail functions. The
+[`CAsmInstruction__SpawnFromOpcode` lineage](reverse-engineering/binary-analysis/pc-demo-retail-asm-instruction-lineage-2026-08-11.md)
+closes one `not_compared` row as a gapless 400-instruction match and fixes all
+27 serialized opcode cases to paired strict RTTI classes and slot-0 executors.
+Nine mapped CRT/FPU bodies and 50 address-unmapped retail functions remain;
+runtime, source, and rebuild equivalence remain separate proof.
+
 Generation 11's post-loss closure accounts for every Generation-73 candidate delta without
 making that candidate a parent. It readmits 935 names, 216 bounded C1 claims,
 and 6,082 residual terminalizations; preserved 20 police-open residuals, seven

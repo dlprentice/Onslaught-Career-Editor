@@ -7,8 +7,10 @@
       "Wave574",
       "Wave575",
       "Wave587",
-      "Wave1189"
+      "Wave1189",
+      "PCDemoRetailAsmInstruction20260811"
     ],
+    "crossBuildReport": "pc-demo-retail-asm-instruction-lineage-2026-08-11.md",
     "runtimeExecution": false,
     "ghidraMutation": false,
     "schemaPurpose": "static independent-interpreter planning, not runtime proof"
@@ -38,8 +40,10 @@
     "instructionAllocationBytes": 12,
     "attributeRead": "second dword from bytecode_reader stored at instruction+0x04",
     "unknownOpcodeBehavior": "prints fatal unknown-instruction diagnostic and returns null",
-    "provenExecutorCases": 19,
-    "unpromotedCases": 8
+    "identifiedExecutorCases": 27,
+    "staticEffectBoundedExecutorCases": 19,
+    "staticEffectOpenExecutorCases": 8,
+    "unpromotedCases": 0
   },
   "opcodeCases": [
     {
@@ -96,16 +100,17 @@
     },
     {
       "opcode": 6,
-      "label": "UNPROMOTED_06",
+      "label": "POP",
       "vtable": "0x005e4ce0",
-      "executor": null,
-      "status": "vtable-pointer-observed-no-function-at-pointer"
+      "executor": "CInstructionOP_POP__VFunc_0_0052e2f0",
+      "executorAddress": "0x0052e2f0",
+      "status": "strict-rtti-class-and-slot0-observed-runtime-effect-open"
     },
     {
       "opcode": 7,
       "label": "OR",
       "vtable": "0x005e4cd0",
-      "executor": "CAsmInstruction__ExecuteOr",
+      "executor": "CInstructionOP_OR__ExecuteOr",
       "executorAddress": "0x0052e4d0",
       "stackEffect": "pop2-bool-or-push1"
     },
@@ -113,7 +118,7 @@
       "opcode": 8,
       "label": "AND",
       "vtable": "0x005e4cc0",
-      "executor": "CAsmInstruction__ExecuteAnd",
+      "executor": "CInstructionOP_AND__ExecuteAnd",
       "executorAddress": "0x0052e580",
       "stackEffect": "pop2-bool-and-push1"
     },
@@ -121,7 +126,7 @@
       "opcode": 9,
       "label": "GREATER_THAN",
       "vtable": "0x005e4cb0",
-      "executor": "CAsmInstruction__ExecuteGreaterThan",
+      "executor": "CInstructionOP_GREAT_THAN__ExecuteGreaterThan",
       "executorAddress": "0x0052e630",
       "datatypeSlot": "+0x24",
       "stackEffect": "pop2-compare-push-bool"
@@ -130,7 +135,7 @@
       "opcode": 10,
       "label": "LESS_THAN",
       "vtable": "0x005e4ca0",
-      "executor": "CAsmInstruction__ExecuteLessThan",
+      "executor": "CInstructionOP_LESS_THAN__ExecuteLessThan",
       "executorAddress": "0x0052e6d0",
       "datatypeSlot": "+0x20",
       "stackEffect": "pop2-compare-push-bool"
@@ -139,7 +144,7 @@
       "opcode": 11,
       "label": "GREATER_OR_EQUAL",
       "vtable": "0x005e4c90",
-      "executor": "CAsmInstruction__ExecuteGreaterOrEqual",
+      "executor": "CInstructionOP_GREAT_EQ_THAN__ExecuteGreaterOrEqual",
       "executorAddress": "0x0052e770",
       "datatypeSlot": "+0x2c",
       "stackEffect": "pop2-compare-push-bool"
@@ -148,7 +153,7 @@
       "opcode": 12,
       "label": "LESS_OR_EQUAL",
       "vtable": "0x005e4c80",
-      "executor": "CAsmInstruction__ExecuteLessOrEqual",
+      "executor": "CInstructionOP_LESS_EQ_THAN__ExecuteLessOrEqual",
       "executorAddress": "0x0052e810",
       "datatypeSlot": "+0x28",
       "stackEffect": "pop2-compare-push-bool"
@@ -163,10 +168,11 @@
     },
     {
       "opcode": 14,
-      "label": "UNPROMOTED_0E",
+      "label": "REMOVE_TOP",
       "vtable": "0x005e4c60",
-      "executor": null,
-      "status": "vtable-pointer-observed-no-function-at-pointer"
+      "executor": "CInstructionOP_REMOVE_TOP__VFunc_0_0052e320",
+      "executorAddress": "0x0052e320",
+      "status": "strict-rtti-class-and-slot0-observed-runtime-effect-open"
     },
     {
       "opcode": 15,
@@ -181,7 +187,7 @@
       "opcode": 16,
       "label": "COMPARE_EQUAL",
       "vtable": "0x005e4c40",
-      "executor": "CAsmInstruction__ExecuteCompareEqual",
+      "executor": "CInstructionOP_CMPB__ExecuteCompareEqual",
       "executorAddress": "0x0052e380",
       "datatypeSlot": "+0x18",
       "stackEffect": "pop2-compare-push-bool"
@@ -190,17 +196,18 @@
       "opcode": 17,
       "label": "COMPARE_NOT_EQUAL",
       "vtable": "0x005e4c30",
-      "executor": "CAsmInstruction__ExecuteCompareNotEqual",
+      "executor": "CInstructionOP_CMPNEB__ExecuteCompareNotEqual",
       "executorAddress": "0x0052e8b0",
       "datatypeSlot": "+0x1c",
       "stackEffect": "pop2-compare-push-bool"
     },
     {
       "opcode": 18,
-      "label": "UNPROMOTED_12",
+      "label": "JMPNE",
       "vtable": "0x005e4c20",
-      "executor": null,
-      "status": "vtable-pointer-observed-no-function-at-pointer"
+      "executor": "CInstructionOP_JMPNE__VFunc_0_0052e990",
+      "executorAddress": "0x0052e990",
+      "status": "strict-rtti-class-and-slot0-observed-runtime-effect-open"
     },
     {
       "opcode": 19,
@@ -212,30 +219,33 @@
     },
     {
       "opcode": 20,
-      "label": "UNPROMOTED_14",
+      "label": "JMP",
       "vtable": "0x005e4c00",
-      "executor": null,
-      "status": "vtable-pointer-observed-no-function-at-pointer"
+      "executor": "CInstructionOP_JMP__VFunc_0_0052e9b0",
+      "executorAddress": "0x0052e9b0",
+      "status": "strict-rtti-class-and-slot0-observed-runtime-effect-open"
     },
     {
       "opcode": 21,
-      "label": "UNPROMOTED_15",
+      "label": "GETTOP",
       "vtable": "0x005e4bf0",
-      "executor": null,
-      "status": "vtable-pointer-observed-no-function-at-pointer"
+      "executor": "CInstructionOP_GETTOP__VFunc_0_0052e9c0",
+      "executorAddress": "0x0052e9c0",
+      "status": "strict-rtti-class-and-slot0-observed-runtime-effect-open"
     },
     {
       "opcode": 22,
-      "label": "UNPROMOTED_16",
+      "label": "POINTER",
       "vtable": "0x005e4be0",
-      "executor": null,
-      "status": "vtable-pointer-observed-no-function-at-pointer"
+      "executor": "CInstructionOP_POINTER__VFunc_0_0052ea10",
+      "executorAddress": "0x0052ea10",
+      "status": "strict-rtti-class-and-slot0-observed-runtime-effect-open"
     },
     {
       "opcode": 23,
       "label": "POP_OR_STOP",
       "vtable": "0x005e4bd0",
-      "executor": "CAsmInstruction__ExecutePop",
+      "executor": "CInstructionOP_RETURN__ExecutePop",
       "executorAddress": "0x0052e0f0",
       "stackEffect": "pop1-set-ip/status; VM loop also treats opcode 0x17 as stop candidate"
     },
@@ -243,23 +253,25 @@
       "opcode": 24,
       "label": "CALL",
       "vtable": "0x005e4bc0",
-      "executor": "CAsmInstruction__ExecuteCall",
+      "executor": "CInstructionOP_CALL__ExecuteCall",
       "executorAddress": "0x0052ea40",
       "stackEffect": "pop arguments-dispatch-descriptor-push result"
     },
     {
       "opcode": 25,
-      "label": "UNPROMOTED_19",
+      "label": "CALLLOCAL",
       "vtable": "0x005e4bb0",
-      "executor": null,
-      "status": "vtable-pointer-observed-no-function-at-pointer"
+      "executor": "CInstructionOP_CALLLOCAL__VFunc_0_0052ec40",
+      "executorAddress": "0x0052ec40",
+      "status": "strict-rtti-class-and-slot0-observed-runtime-effect-open"
     },
     {
       "opcode": 26,
-      "label": "UNPROMOTED_1A",
+      "label": "PUSHPC",
       "vtable": "0x005e4ba0",
-      "executor": null,
-      "status": "vtable-pointer-observed-no-function-at-pointer"
+      "executor": "CInstructionOP_PUSHPC__VFunc_0_0052e0a0",
+      "executorAddress": "0x0052e0a0",
+      "status": "strict-rtti-class-and-slot0-observed-runtime-effect-open"
     }
   ],
   "datatypeFactory": {
@@ -432,6 +444,8 @@
   },
   "claims": [
     "The saved opcode factory has 27 serialized opcode cases, 0x00 through 0x1a.",
+    "All 27 opcode cases have exact strict-RTTI instruction-class and slot-0 executor identities; eight executor behaviors remain open.",
+    "The PC demo and pristine retail factories preserve the same normalized instruction/control shape, jump-table order, allocation arguments, attribute offset, instruction classes, mapped callees, and unknown-opcode diagnostic/null path.",
     "The saved datatype factory has 6 serialized datatype cases, 1 through 6.",
     "The saved VM run loop dispatches instruction vtable slot 0 and observes opcode 0x17 as the stop candidate when call depth is not positive.",
     "The saved CALL executor bridges opcode execution to the 0x0064ce20 command descriptor table, its handler field at +0x30, and the 0x0089c300 scratch argument array."

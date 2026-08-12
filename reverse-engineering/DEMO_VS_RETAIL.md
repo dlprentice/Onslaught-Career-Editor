@@ -4,13 +4,14 @@ Status: active, measured cross-build evidence
 Last updated: 2026-08-11
 Evidence: MEASURED — exact executable/archive hashes, independently recounted
 MSVC RTTI/vtables, a 2,127-target virtual census, a conservative 8,086-row
-cross-build function-address map, and exact multi-range replay; UNKNOWN —
+cross-build function-address map, and exact multi-range/opcode-factory replay;
+UNKNOWN —
 normalized constant values, 50 retail functions without a demo address,
-runtime behavior, and 10 address-mapped bodies not yet resolved.
+runtime behavior, and nine address-mapped CRT/FPU bodies not yet resolved.
 Verdict: the PC demo is a distinct build with a structurally identical virtual
-class surface. Across virtual and non-virtual code, 8,063 of 8,136 retail
+class surface. Across virtual and non-virtual code, 8,064 of 8,136 retail
 functions have a complete normalized-identical demo instruction stream. Another
-13 have independently bounded semantic lineage differences, leaving only 10 of
+13 have independently bounded semantic lineage differences, leaving only nine of
 8,086 mapped entries unresolved. Fifty retail functions still lack a demo
 entry.
 Specimen: pristine PC retail `BEA.exe`, SHA-256
@@ -135,18 +136,20 @@ The resulting mechanical map is
 | Independently mapped demo entries | 8,086 |
 | Original single-range normalized-identical body streams | 8,021 |
 | Multi-range normalized-identical corrections | 42 |
+| Opcode-factory normalized-identical correction | 1 |
 | Semantically resolved non-identical bodies | 13 |
-| Address mapped, still changed or incompletely bounded | 10 |
+| Address mapped, still changed or incompletely bounded | 9 |
 | No demo entry yet recovered | 50 |
-| Normalized-identical retail body bytes | 1,727,968 |
-| Normalized-identical retail instructions | 520,718 |
+| Normalized-identical retail body bytes | 1,729,265 |
+| Normalized-identical retail instructions | 521,118 |
 
 The original 65 address-only/different rows were the four strict-vtable
 divergences below, 60 entries independently fixed by unanimous corresponding
 direct transfers, and one isolated compiler-unwind entry fixed by its
-equal-delta neighbors. Forty-two were multi-range comparison false negatives;
-13 have edition-specific behavior accounted for by the reports below; ten are
-still unresolved.
+equal-delta neighbors. Forty-three were comparison false negatives: 42
+multi-range bodies plus the linearly re-decoded opcode factory. Thirteen have
+edition-specific behavior accounted for by the reports below; nine are still
+unresolved.
 For example, corresponding direct callers select demo entry `0x004F0110` for
 `0x004F00E0 CLTShell__ShutdownRuntimeAndReleaseResources`, while the retail body
 matches only a later demo suffix. Address identity and body equivalence are
@@ -216,6 +219,17 @@ instruction differences, identical language literals, and identical
 body-relative switch targets.
 
 The
+[MissionScript opcode-factory lineage report](binary-analysis/pc-demo-retail-asm-instruction-lineage-2026-08-11.md)
+resolves one more conservative false negative. The original map retained
+`CAsmInstruction__SpawnFromOpcode` as `not_compared` because its 401 exported
+Ghidra instruction rows do not form one gapless linear stream around the final
+case. Fresh complete decode proves 400 equal relative instructions, all 27
+jump-table targets, and the same strict-RTTI instruction class and slot-0
+executor for every opcode `0x00..0x1a`. This also replaces the schema's eight
+remaining `UNPROMOTED_*` class placeholders without claiming their runtime
+effects.
+
+The
 [credits/localization lineage report](binary-analysis/pc-demo-retail-credits-localization-lineage-2026-08-11.md)
 then resolves two large changed table builders logically rather than masking
 their constants. The demo inserts 25 credits rows while retaining all 222
@@ -232,16 +246,16 @@ build-lineage signal. It is not evidence that gameplay is globally identical.
 The demo is now an independent refuter and address-translation oracle for most
 of the executable, not only the virtual surface. A retail interpretation that
 requires a changed opcode, register form, branch shape, or instruction layout
-in one of the 8,063 exact rows must also explain why the independently linked
+in one of the 8,064 exact rows must also explain why the independently linked
 demo preserves that shape.
 
 The earlier `CUnit`, `CBattleEngine`, `CThing`, `CComplexThing`, `CActor`, PC
 controller, PC music, PC shell, FMV/startup, and frontend semantic cohorts have
 now used that oracle. The next cross-build work should change instruments
-again: semantically recover the remaining ten address-mapped bodies, then use
-calls, exception metadata, strings, retained source, and platform builds on the
-50 address-unmapped rows. Repeating the same normalized-signature search would
-only fit the remaining ambiguity.
+again: recover the remaining nine address-mapped CRT/FPU bodies through x87 and
+control-word semantics, then use calls, exception metadata, strings, retained
+source, and platform builds on the 50 address-unmapped rows. Repeating the same
+normalized-signature search would only fit the remaining ambiguity.
 
 ## Reproduction and limits
 
@@ -257,8 +271,8 @@ has SHA-256
 Open boundaries remain:
 
 - normalized immediate/displacement values and the objects they address;
-- semantic recovery for the ten address-mapped changed or incompletely bounded
-  targets not closed by the existing lineage reports and multi-range replay;
+- semantic recovery for the nine address-mapped CRT/FPU targets not closed by
+  the existing lineage reports, opcode-factory replay, and multi-range replay;
 - demo entry recovery for the remaining 50 retail functions;
 - asset/configuration differences and their behavioral consequences;
 - runtime equivalence, source equivalence, and rebuild parity.

@@ -1166,7 +1166,10 @@ that class remains unproved; this is why the current grader places it in
 
 There are 27 serialized instruction classes/vtables and 26 distinct slot-0
 executor addresses because NOP and LABEL share the no-op stub. All 27 targets
-now exist as functions. The older JSON's eight “unpromoted” cases are stale.
+now exist as functions. The tracked JSON schema now mirrors every exact class
+and slot-0 identity; the eight formerly unpromoted executor effects remain
+open. Independent [PC demo/retail factory replay](binary-analysis/pc-demo-retail-asm-instruction-lineage-2026-08-11.md)
+preserves the same complete dispatch table in both builds.
 
 | Op | RTTI instruction class | Vtable | Slot-0 executor | Current Ghidra name |
 | ---: | --- | --- | --- | --- |

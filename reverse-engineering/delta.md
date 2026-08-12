@@ -803,7 +803,10 @@ its tag, terrain, script, actor, and media shape against Level 100.
   24 current-name/binding disagreements, and 86 handler addresses with no
   Function object.
 - All 27 opcode vtable targets now have function entries; NOP and LABEL share
-  the no-op executor.
+  the no-op executor. Exact paired retail/demo decode plus strict RTTI now fixes
+  every case to its instruction class and slot-0 executor; eight executor
+  effects remain open in the
+  [opcode-factory lineage](binary-analysis/pc-demo-retail-asm-instruction-lineage-2026-08-11.md).
 - The six data types are int, float, string, bool, thing pointer, and position.
   Type-5 token-to-pointer resolution and position field `+0x10` remain open.
 - Runtime state offsets, stack/running/IP/abort/call-depth fields, and the
