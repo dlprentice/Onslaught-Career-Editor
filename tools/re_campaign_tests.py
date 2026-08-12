@@ -755,6 +755,30 @@ def make_rebuild_ready_decision(root: Path) -> tuple[dict, dict[str, str], str]:
 
 
 class CampaignTests(unittest.TestCase):
+    def test_survived_nonsemantic_adjudications_remain_nonsemantic(self) -> None:
+        rows = [
+            {
+                "adjudicationId": "A-padding",
+                "refuterVerdict": "SURVIVED",
+                "semanticPromotionApplied": "False",
+            },
+            {
+                "adjudicationId": "A-semantic",
+                "refuterVerdict": "SURVIVED",
+                "semanticPromotionApplied": "True",
+            },
+            {
+                "adjudicationId": "A-refuted",
+                "refuterVerdict": "REFUTED",
+                "semanticPromotionApplied": "False",
+            },
+        ]
+
+        self.assertEqual(
+            {"A-padding"},
+            campaign._survived_nonsemantic_adjudication_ids(rows),
+        )
+
     def test_seed_publishes_eight_bound_ledgers_and_a_ready_receipt(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-08-12. RE authority block refreshed to canonical Gen21
+Last updated: 2026-08-12. RE authority block refreshed to canonical Gen22
 (`current_re_authority`; candidate Gen73 is projection-oracle only). Primary WinUI
 navigation was rechecked 2026-08-03 against the live shell (includes Cheats).
 The 2026-08-01 shell, appearance, Lore, Media, and four-run Level 100 reviews
@@ -643,25 +643,25 @@ Read [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md) before changing this lane.
 the historical Gen10 or candidate Gen73 roots by generation number, ledger
 equality, or self-derived pins.
 
-| Metric | Canonical Gen21 |
+| Metric | Canonical Gen22 |
 | --- | ---: |
-| Authority generation | **21** (lineage `incident-20260806-recovery-v1`) |
+| Authority generation | **22** (lineage `incident-20260806-recovery-v1`) |
 | Functions | **8126** |
 | C1_CANDIDATE_PARTIAL | **217** |
-| C2_BOUNDED_RUNTIME | **9** |
-| function_semantic OPAQUE | **7900** |
-| contract_C0_OPAQUE | **14019** (second opacity axis) |
+| C2_BOUNDED_RUNTIME | **10** |
+| function_semantic OPAQUE | **7899** |
+| contract_C0_OPAQUE | **14018** (second opacity axis) |
 | OPEN residual | **17** |
 | REBUILD_READY | **0** |
 | complete_RE | **false** |
-| READY / reducer | `9699d0b5…0158` / `b67132c2…f95e` |
-| Next valid generation | **22** |
+| READY / reducer | `a0c8d3fb…eac90` / `a757bc51…db09` |
+| Next valid generation | **23** |
 
 **Tracked static-envelope closure (2026-08-11):** the separate reviewed
 [`function-c1-closure-2026-08-11.tsv`](reverse-engineering/binary-analysis/function-c1-closure-2026-08-11.tsv)
 accounts for the current 8,136-function inventory as **8,129 C1**, **7 C2**,
 and **0 static OPAQUE**. It is the current authority for minimum per-function
-static envelopes. Canonical Generation 21 remains the immutable replay
+static envelopes. Canonical Generation 22 remains the immutable replay
 authority for admitted runtime/campaign claims; neither count implies
 `REBUILD_READY` or complete semantic parity.
 
@@ -736,6 +736,18 @@ receiver writes, branch ordering, full contact/lifetime/effect behavior,
 The existing `AdvanceActorRounds` / `SteerSeekingRound` owner and focused
 Forseti homing test therefore remain `PARTIAL_CONTRACT`; no rebuild or Ghidra
 mutation was made.
+Generation 22 then advances only `VFuncSlot_00_004d9910` to a refuter-survived
+bounded C2 strict-`CRound` event-routing envelope. Retained Level 521 and
+independent Level 512 recordings yield 2,555 call-entry-arm paths through
+dispatcher `0x0044B68A`, all using vtable `0x005DE82C`, with receiver and event-
+pointer continuity and exactly one selected arm per invocation. The observed
+IDs are 2000=167, 3000=2,190, 4000=120, 4001=3, and 4003=75; 1,972 returns are
+gap-free and 583 are raw orphans. Event 4002 and `CMissile`-style placement were
+not observed. Arm writes, callees, ordering, transitive effects, source
+spelling, and direct rebuild event-routing parity remain open. The nearest
+`AdvanceActorRounds` owner has no explicit retail event queue or direct routing
+test, so the mapping remains `PARTIAL_CONTRACT`; no rebuild, Ghidra, or
+executable mutation was made.
 Further reviewer use is situational under `reverse-engineering/REVIEW-PROTOCOL.md`,
 not a fixed model matrix.
 
@@ -758,11 +770,12 @@ corrections. `StartDie` remained open/opaque at that handoff. The independent
 data-write lane has one refuter-survived semantic result: a Level 521 `LockHit`
 invocation removed the supplied target's sole fired-lock node through five exact
 ordered field transitions. These are instrument capabilities and historical
-admissions. Canonical Gen21 retains those four C2 rows, separately re-proves a
+admissions. Canonical Gen22 retains those four C2 rows, separately re-proves a
 narrower fifth ApplyDamage C2 from intact TTD wrappers, and adds the bounded
 SetPos roundtrip as a sixth, LockHit's single-node removal path as a seventh,
 the bounded CExplosion internal carrier as an eighth, and the strict-`CRound`
-slot-66 placement/call envelope as a ninth;
+slot-66 placement/call envelope as a ninth, then the strict-`CRound` slot-0
+event-routing envelope as a tenth;
 it does not revive the rejected historical package,
 claim positive-shield behavior, or broaden SetPos beyond the observed path.
 
@@ -783,7 +796,11 @@ joins ten retained internal calls to the two pristine call sites and proves the
 observed source/shield/part carrier without promoting the function's shipped
 name or claiming its entry/return/write envelope. Generation 21 independently
 joins 7,513 strict-`CRound` calls to slot 66 while leaving its writes, branches,
-shared `CMissile` placement, and complete Move behavior open. The Level 100 reconstruction
+shared `CMissile` placement, and complete Move behavior open. Generation 22
+independently joins 2,555 strict-`CRound` calls to slot 0 and exactly one selected
+event arm per invocation while leaving arm writes/effects, event 4002, shared
+`CMissile` placement, source spelling, and direct rebuild event routing open.
+The Level 100 reconstruction
 now preserves the two ordered whole-body stores for Target Tank/Drone rather
 than one aggregate subtraction; focused tests pin `6.0 -> 5.2 -> 4.2` and the
 terminal `-0.2 -> -1.2` pair through the production client envelope. Warehouse
@@ -804,11 +821,11 @@ mission reachability, later damage/effects, and rebuild parity remain open.
 These instruments do not infer function boundaries, C++ receivers, argument or
 return types, semantics, or parity. Static/source/RTTI evidence supplied joins
 for early data-write plates. Focused player-damage / Level 521 successor work
-remains an open runtime front alongside the next impact-ranked Generation-21
+remains an open runtime front alongside the next impact-ranked Generation-22
 contract/rebuild advance. There is
 not yet a normalized corpus-wide semantic ledger, and no new trace is justified
 until existing evidence plus these instruments cannot answer a preregistered
-question. The next campaign generation is 21.
+question. The next campaign generation is 23.
 
 ## Evidence boundary
 

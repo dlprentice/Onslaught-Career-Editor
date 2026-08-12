@@ -808,6 +808,18 @@ receiver writes, branch ordering, complete contact/lifetime/effect behavior,
 the shared `CMissile` placement, and source spelling open. The focused
 `ForsetiMissile_HomesOnAMovingTarget` test passes, but the mapping remains
 `PARTIAL_CONTRACT`; no reconstruction behavior changed for this admission.
+Generation 22 separately binds the shared retail slot-0 body at `0x004D9910`
+to an observed strict-`CRound` event-routing envelope. Retained Level 521 and
+independent Level 512 recordings contain 2,555 call-entry-arm paths through
+dispatcher `0x0044B68A` and vtable `0x005DE82C`, with receiver/event-pointer
+continuity and exactly one selected arm per invocation. Event 4002 and the
+shared `CMissile` placement were not observed; arm writes, callees, ordering,
+transitive effects, source spelling, and complete subclass behavior remain
+open. The nearest reconstruction owner is `AdvanceActorRounds`, which has no
+explicit retail event queue or direct event-routing parity test. The focused
+`ActorArmament_IsCanonicalReplayState` nearest-owner test passes, but the
+mapping remains `PARTIAL_CONTRACT`; this admission changes no reconstruction
+behavior.
 Each tank began at life `6` with no shield. Direct mesh hits repeated
 `6 → 4.2 → 2.4 → 0.6 → -1.2`; each target set its destroyed bit and left the
 objective set on shot four. One separate glancing mesh-part hit removed `1.0`.

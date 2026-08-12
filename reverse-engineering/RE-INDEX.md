@@ -4,7 +4,7 @@ Status: active — the RE evidence front door
 Last updated: 2026-08-12
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
-Current replay authority is Generation 21 via
+Current replay authority is Generation 22 via
 `developer_state.json` → `current_re_authority`; Generation 73 is a projection
 oracle only, and the Generation-10 block below is historical.
 
@@ -66,12 +66,12 @@ reference and runbooks, and the retail → Core translation policies.
 
 The tracked Ghidra snapshot was refreshed from live on 2026-08-09; the dated
 2026-07 name ledgers still lag current work. Select campaign authority from
-`developer_state.json` → `current_re_authority`: canonical Generation 21 at
-`local-lab/re-campaign-incident-recovery-20260808-v1/generation-21-cround-move-runtime-v1/`,
-READY `9699d0b55dc19c3dc88ba94341e0e76c000a8835d749e9d307ed063a2cb50158`,
-frozen reducer `b67132c21e683c4566cc3938275ef98b68c20a7d4759f91ab1fc0eea3f74f95e`,
-external selector `331db409…6a96`. It contains 8,126 functions, 217 C1,
-nine bounded C2, 7,900 opaque functions, 17 open residuals, and no rebuild-ready
+`developer_state.json` → `current_re_authority`: canonical Generation 22 at
+`local-lab/re-campaign-incident-recovery-20260808-v1/generation-22-cround-handle-event-runtime-v1/`,
+READY `a0c8d3fb8d31f36e03b417b179bbe2f2c99f6dd47700e0f0ad2e8fad5feeac90`,
+frozen reducer `a757bc51cd8302cf0e889c7db72ca58f9d865597b250371444d8c2285537db09`,
+external selector `86b3fb12…ab5b0`. It contains 8,126 functions, 217 C1,
+ten bounded C2, 7,899 opaque functions, 17 open residuals, and no rebuild-ready
 contract. Generation 12 admitted bounded `CBattleEngine::Damage`/`Hit` field
 writes and a partial rebuild mapping; Generation 13 admitted one replicated
 zero-shield `CUnit::ApplyDamage` entry/write contract and its exact overkill
@@ -114,8 +114,18 @@ and 309 raw orphan returns. No `CMissile`-style receiver was observed. Writes,
 branch ordering, complete contact/lifetime/effect behavior, shared-`CMissile`
 placement, original source spelling, and full rebuild parity remain open. Its
 rebuild mapping stays `PARTIAL_CONTRACT`; no Ghidra or executable mutation
+occurred. Generation 22 advances only `VFuncSlot_00_004d9910` to a refuter-
+survived C2 bounded strict-`CRound` event-routing envelope. Retained Level 521
+and independent Level 512 recordings yield 2,555 call-entry-arm paths through
+dispatcher `0x0044B68A` and vtable `0x005DE82C`; receiver/event-pointer
+continuity holds and exactly one arm is selected per invocation. The observed
+IDs are 2000=167, 3000=2,190, 4000=120, 4001=3, and 4003=75, with 1,972
+gap-free returns and 583 raw orphans. Event 4002 and `CMissile`-style placement
+were not observed. Arm writes, callees, ordering, transitive effects, source
+spelling, and direct rebuild event-routing parity remain open. Its rebuild
+mapping stays `PARTIAL_CONTRACT`; no rebuild, Ghidra, or executable mutation
 occurred. Generation 73 remains a projection oracle, never a parent or
-authority. The next valid campaign generation is 22. Model review is
+authority. The next valid campaign generation is 23. Model review is
 situational and harness-agnostic under `REVIEW-PROTOCOL.md`.
 
 **Current static-envelope closure (2026-08-11):** the reviewed
@@ -124,7 +134,7 @@ accounts for the current 8,136-function inventory at 8,129 bounded C1 and seven
 bounded C2 functions, with zero static `OPAQUE` rows. It joins 53 disjoint
 sealed receipts covering 7,945 functions, ten post-Gen19 Mission-native
 boundaries, and 181 pre-existing C1/C2 rows. This is a distinct authority for
-static-envelope accounting; Generation 21 remains the immutable replay owner
+static-envelope accounting; Generation 22 remains the immutable replay owner
 for its admitted runtime evidence and READY/reducer lineage. See the
 [closure report](binary-analysis/function-c1-closure-2026-08-11.md) for exact
 hashes and limits.

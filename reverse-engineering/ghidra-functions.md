@@ -3,29 +3,30 @@
 Status: active canonical synthesis of the current executable-analysis state; raw
 machine exports remain the address-level evidence behind this human-readable
 master
-Last updated: 2026-08-12 (Gen21 authority; tracked static closure complete)
+Last updated: 2026-08-12 (Gen22 authority; tracked static closure complete)
 Verdict: **The verified live and tracked databases now contain 8,136 function
 boundaries. The latest backed-up batch added eleven exact Mission-native
 boundaries and shipped registry names, including `IScript__UnsetObjective`,
 with fresh-process readback proving zero changes to the other 8,125 function
 rows, executable bytes, instructions, data, or references. It added fact-only
-comments but no signatures or behavior contracts. Canonical Generation 21
+comments but no signatures or behavior contracts. Canonical Generation 22
 remains the separate semantic authority at 8,126 campaign functions plus 6,119
 exact residual entities; live structural navigation is therefore ahead of the
 campaign without silently upgrading any semantic grade.
-Semantics remain the hard problem: 14,019 of 14,245 contract rows are `C0_OPAQUE`,
-217 are `C1_CANDIDATE_PARTIAL`, nine are `C2_BOUNDED_RUNTIME`, and none is
+Semantics remain the hard problem: 14,018 of 14,245 contract rows are `C0_OPAQUE`,
+217 are `C1_CANDIDATE_PARTIAL`, ten are `C2_BOUNDED_RUNTIME`, and none is
 rebuild-ready. The authored Mission
 `Damage` chain, three Level 521 call-context contracts, and one separately
 re-proved zero-shield ApplyDamage path, and the replicated script-visible SetPos
 position-copy path plus one non-null sole-node `CBattleEngine::LockHit` removal
-path, ten retained-trace `CExplosion` internal slot-40 carrier calls, and 7,513
-strict-`CRound` slot-66 call-entry pairs have crossed bounded runtime gates. This
+path, ten retained-trace `CExplosion` internal slot-40 carrier calls, 7,513
+strict-`CRound` slot-66 call-entry pairs, and 2,555 strict-`CRound` slot-0
+call-entry-arm paths have crossed bounded runtime gates. This
 file is the integrated narrative and queue, not a
 claim that those gaps are solved.**
 
 Evidence: MEASURED — the pristine specimen, verified live-promotion POST
-readback, authoritative Generation-20 campaign bundle, tracked Ghidra snapshot,
+readback, authoritative Generation-22 campaign bundle, tracked Ghidra snapshot,
 function-note/fullpass corpus, pinned source, finite shipped registries,
 copied-runtime probes, and the existing TTD corpus. SOURCE-backed and INFERRED
 claims are labelled where they carry less authority than shipped bytes or
@@ -167,24 +168,24 @@ not establish its Steam depot identity.
 ## Current complete-RE replay authority (2026-08-12) — read this first
 
 The campaign census below this pointer is a historical Generation-10
-snapshot. Current authority is canonical Generation **21**, selected
+snapshot. Current authority is canonical Generation **22**, selected
 only by `developer_state.json` → `current_re_authority`:
 
-| Metric | Canonical Gen21 |
+| Metric | Canonical Gen22 |
 |--------|------------------|
-| Functions | 8,126 (= C1 217 + C2 9 + function semantic OPAQUE 7,900) |
-| Grades | **C1=217**, **C2=9**, contract C0_OPAQUE **14019**; REBUILD_READY **0** |
+| Functions | 8,126 (= C1 217 + C2 10 + function semantic OPAQUE 7,899) |
+| Grades | **C1=217**, **C2=10**, contract C0_OPAQUE **14018**; REBUILD_READY **0** |
 | OPEN residual | **17** police holds |
 | complete_RE | **false** |
-| READY / reducer | `9699d0b5…0158` / `b67132c2…f95e` |
-| Campaign | `local-lab/re-campaign-incident-recovery-20260808-v1/generation-21-cround-move-runtime-v1/` |
-| Next valid generation | **22** |
+| READY / reducer | `a0c8d3fb…eac90` / `a757bc51…db09` |
+| Campaign | `local-lab/re-campaign-incident-recovery-20260808-v1/generation-22-cround-handle-event-runtime-v1/` |
+| Next valid generation | **23** |
 
 The Generation-10 blocks that follow are historical records, not the live tip.
 Their durable engineering content (atlas, registries, safety doctrine,
 superseded-claims appendix) is retained. Candidate Generation 73 is now an
 explicit projection oracle only; its admissible fields were resealed onto the
-post-loss lineage claim by claim. Gen12 through Gen21 then add only the bounded
+post-loss lineage claim by claim. Gen12 through Gen22 then add only the bounded
 Damage/Hit and zero-shield ApplyDamage observations plus the exact TokenArchive
 dispatch-data partition, Mission-native SetPos boundary/static contract, and
 its bounded script-visible position-copy runtime/rebuild claim, and LockHit's
@@ -202,7 +203,14 @@ returns, 309 raw orphan returns, and no observed `CMissile`-style receiver.
 Receiver writes, branch ordering, full Move behavior, shared-`CMissile`
 placement, and original source spelling remain open. The saved function name
 stays `VFuncSlot_66_004d8e40`, and neither Generation 20 nor 21 made a live
-Ghidra mutation; their semantic grades are solely campaign claims.
+Ghidra mutation; their semantic grades are solely campaign claims. Generation
+22 then adds the bounded strict-`CRound` event-routing envelope for slot 0 at
+`0x004D9910`: 2,555 call-entry-arm paths, exactly one selected arm per observed
+invocation, 1,972 gap-free returns, 583 raw orphan returns, and no observed
+event-4002 or `CMissile`-style placement. Arm writes, callees, ordering,
+transitive effects, source spelling, and direct rebuild event routing remain
+open. The saved function name stays `VFuncSlot_00_004d9910`, and Generation 22
+made no live Ghidra, executable, or rebuild mutation.
 
 ---
 

@@ -39,6 +39,7 @@ import re_tokenarchive_parser_contract as tokenarchive_parser_contract
 import re_mission_native_unsetobjective_reproof as mission_unsetobjective_reproof
 import re_cexplosion_hit_runtime as cexplosion_hit_runtime
 import re_cround_move_runtime as cround_move_runtime
+import re_cround_handle_event_runtime as cround_handle_event_runtime
 
 _FROZEN_LOCAL_LAB = Path(__file__).resolve().parent.parent / "local-lab"
 if (_FROZEN_LOCAL_LAB / "aya_roundtrip.py").is_file():
@@ -660,6 +661,35 @@ CROUND_MOVE_RUNTIME_PARENT_COUNTS = {
     "adjudications": 6100,
     "supersessions": 592,
 }
+CROUND_HANDLE_EVENT_RUNTIME_PARENT_RELATIVE = (
+    Path("local-lab/re-campaign-incident-recovery-20260808-v1")
+    / "generation-21-cround-move-runtime-v1"
+)
+CROUND_HANDLE_EVENT_RUNTIME_PARENT_READY_BYTES = 20310
+CROUND_HANDLE_EVENT_RUNTIME_PARENT_READY_SHA256 = (
+    "9699d0b55dc19c3dc88ba94341e0e76c000a8835d749e9d307ed063a2cb50158"
+)
+CROUND_HANDLE_EVENT_RUNTIME_PARENT_REDUCER_ID = (
+    "b67132c21e683c4566cc3938275ef98b68c20a7d4759f91ab1fc0eea3f74f95e"
+)
+CROUND_HANDLE_EVENT_RUNTIME_PARENT_AUTHORITY_RELATIVE = (
+    Path("local-lab/re-campaign-incident-recovery-20260808-v1")
+    / "generation-21-cround-move-runtime-authority.ready.json"
+)
+CROUND_HANDLE_EVENT_RUNTIME_PARENT_AUTHORITY_BYTES = 14948
+CROUND_HANDLE_EVENT_RUNTIME_PARENT_AUTHORITY_SHA256 = (
+    "331db4093dd7f94e7a2d8d50dedc21dc814d98d1ac2d937b493994d6740c6a96"
+)
+CROUND_HANDLE_EVENT_RUNTIME_PARENT_COUNTS = {
+    "functions": 8126,
+    "residuals": 6119,
+    "questions": 15259,
+    "scenarios": 72,
+    "levers": 915,
+    "contracts": 14245,
+    "adjudications": 6101,
+    "supersessions": 592,
+}
 ATOMIC14_PARENT_READY_SHA256 = (
     "2160bf4963c07742cb4dd1aafb45e5d7caff74222381e01570d93fc9aafdde99"
 )
@@ -1145,6 +1175,11 @@ def _reducer_sources() -> list[tuple[str, str, Path]]:
             Path(cround_move_runtime.__file__).resolve(),
         ),
         (
+            "cround-handle-event-runtime-proof",
+            "_reducer/tools/re_cround_handle_event_runtime.py",
+            Path(cround_handle_event_runtime.__file__).resolve(),
+        ),
+        (
             "mission-native-unsetobjective-instruction-exporter",
             "_reducer/tools/ExportInstructionsAroundAddresses.java",
             Path(__file__).resolve().with_name(
@@ -1532,6 +1567,17 @@ def _write_tsv(
 
 def _bool(value: object) -> bool:
     return str(value).lower() == "true"
+
+
+def _survived_nonsemantic_adjudication_ids(
+    rows: list[dict[str, str]],
+) -> set[str]:
+    return {
+        row["adjudicationId"]
+        for row in rows
+        if row.get("refuterVerdict") == "SURVIVED"
+        and not _bool(row.get("semanticPromotionApplied"))
+    }
 
 
 def _integer(value: object, default: int = 0) -> int:
@@ -3127,12 +3173,9 @@ def _validate_campaign_relations(
         inherited_rows = _campaign_rows_from_root(expected_parent)
         inherited_adjudications = inherited_rows["adjudications"]
         inherited_supersessions = inherited_rows["supersessions"]
-        inherited_nonsemantic_adjudication_ids = {
-            row["adjudicationId"]
-            for row in inherited_adjudications
-            if row.get("refuterVerdict") == "SURVIVED"
-            and not _bool(row.get("semanticPromotionApplied"))
-        }
+        inherited_nonsemantic_adjudication_ids = (
+            _survived_nonsemantic_adjudication_ids(inherited_adjudications)
+        )
 
         def inherited_boundary_context(kind: str, schema: str) -> dict[str, object]:
             scoped_adjudications = [
@@ -3244,12 +3287,9 @@ def _validate_campaign_relations(
         inherited_rows = _campaign_rows_from_root(expected_parent)
         inherited_adjudications = inherited_rows["adjudications"]
         inherited_supersessions = inherited_rows["supersessions"]
-        inherited_nonsemantic_adjudication_ids = {
-            row["adjudicationId"]
-            for row in inherited_adjudications
-            if row.get("refuterVerdict") == "SURVIVED"
-            and not _bool(row.get("semanticPromotionApplied"))
-        }
+        inherited_nonsemantic_adjudication_ids = (
+            _survived_nonsemantic_adjudication_ids(inherited_adjudications)
+        )
 
         def inherited_gen20_boundary_context(
             kind: str, schema: str
@@ -3296,6 +3336,105 @@ def _validate_campaign_relations(
             MISSION_NATIVE_SETPOS_ADVANCE_SCHEMA,
         )
         unsetobjective_context = inherited_gen20_boundary_context(
+            MISSION_NATIVE_UNSETOBJECTIVE_ADVANCE_KIND,
+            MISSION_NATIVE_UNSETOBJECTIVE_ADVANCE_SCHEMA,
+        )
+        reseal_context = {
+            "adjudicationIds": set(),
+            "supersessionIds": {
+                row["supersessionId"]
+                for row in inherited_supersessions
+                if row.get("kind") in GHIDRA_PARTITION_ADVANCE_KINDS
+            },
+        }
+    post_generation21_runtime_lineage = bool(
+        _integer(receipt.get("generation"), -1) >= 22
+        and isinstance(current_advance, dict)
+        and current_advance.get("kind") == RUNTIME_ADVANCE_KIND
+    )
+    if post_generation21_runtime_lineage:
+        if current_advance.get("schema") != RUNTIME_ADVANCE_SCHEMA:
+            raise CampaignError("post-Generation-21 runtime advance schema differs")
+        parent = _runtime_mapping(
+            receipt.get("parentCampaign"),
+            "post-Generation-21 runtime parent",
+        )
+        parent_path = _resolve_repo_or_absolute(
+            parent.get("path"), "post-Generation-21 runtime parent"
+        )
+        parent_ready = _runtime_mapping(
+            parent.get("ready"),
+            "post-Generation-21 runtime parent READY",
+        )
+        _require_file_stamp(
+            parent_path / "campaign.ready.json",
+            parent_ready,
+            "post-Generation-21 runtime parent READY",
+        )
+        parent_receipt = _runtime_json(
+            parent_path / "campaign.ready.json",
+            "post-Generation-21 runtime parent receipt",
+        )
+        if (
+            parent_receipt.get("schema") != SCHEMA
+            or _integer(parent_receipt.get("generation"), -1)
+            != _integer(receipt.get("generation"), -1) - 1
+        ):
+            raise CampaignError(
+                "post-Generation-21 runtime advance lacks its direct parent generation"
+            )
+        inherited_rows = _campaign_rows_from_root(parent_path)
+        inherited_adjudications = inherited_rows["adjudications"]
+        inherited_supersessions = inherited_rows["supersessions"]
+        inherited_nonsemantic_adjudication_ids = (
+            _survived_nonsemantic_adjudication_ids(inherited_adjudications)
+        )
+
+        def inherited_post_gen21_boundary_context(
+            kind: str, schema: str
+        ) -> dict[str, object]:
+            scoped_adjudications = [
+                row
+                for row in inherited_adjudications
+                if row.get("overlaySchema") == schema
+            ]
+            partition_rows = [
+                row
+                for row in scoped_adjudications
+                if row.get("terminalState") == "TERMINAL_EXACT_PARTITION"
+            ]
+            scoped_supersessions = {
+                row["supersessionId"]: row
+                for row in inherited_supersessions
+                if row.get("kind") == kind
+            }
+            if (
+                len(scoped_adjudications) != 2
+                or len(partition_rows) != 1
+                or not scoped_supersessions
+            ):
+                raise CampaignError(
+                    f"post-Generation-21 inherited {kind} relation context differs"
+                )
+            partition_row = partition_rows[0]
+            return {
+                "partitionAdjudicationId": partition_row["adjudicationId"],
+                "nonsemanticAdjudicationIds": {
+                    row["adjudicationId"] for row in scoped_adjudications
+                },
+                "retiredContract": {
+                    "contractId": partition_row["baseContractId"],
+                    "entityKey": partition_row["entityKey"],
+                    "questionIds": partition_row["questionIdsAddressed"],
+                },
+                "supersessionRows": scoped_supersessions,
+            }
+
+        setpos_context = inherited_post_gen21_boundary_context(
+            MISSION_NATIVE_SETPOS_ADVANCE_KIND,
+            MISSION_NATIVE_SETPOS_ADVANCE_SCHEMA,
+        )
+        unsetobjective_context = inherited_post_gen21_boundary_context(
             MISSION_NATIVE_UNSETOBJECTIVE_ADVANCE_KIND,
             MISSION_NATIVE_UNSETOBJECTIVE_ADVANCE_SCHEMA,
         )
@@ -5586,9 +5725,186 @@ def _verify_cround_move_runtime_parent_campaign(root: Path) -> dict:
     return verified
 
 
+def _verify_cround_handle_event_runtime_parent_campaign(root: Path) -> dict:
+    """Carry exact Gen21 through its full-replay authority and frozen integrity."""
+
+    raw = Path(os.path.abspath(root))
+    expected = (
+        REPO_ROOT / CROUND_HANDLE_EVENT_RUNTIME_PARENT_RELATIVE
+    ).resolve()
+    try:
+        resolved = ghidra_backup.resolve_plain_path(
+            raw, "CRound HandleEvent runtime canonical Gen21 parent", strict=True
+        )
+    except (ghidra_backup.BackupError, OSError) as exc:
+        raise CampaignError(
+            f"CRound HandleEvent runtime parent path is not plain: {exc}"
+        ) from exc
+    if resolved != expected:
+        raise CampaignError(
+            "CRound HandleEvent runtime parent is not exact canonical Gen21"
+        )
+    ready_path = resolved / "campaign.ready.json"
+    authority_path = (
+        REPO_ROOT / CROUND_HANDLE_EVENT_RUNTIME_PARENT_AUTHORITY_RELATIVE
+    )
+    try:
+        plain_ready = ghidra_backup.resolve_plain_path(
+            ready_path, "CRound HandleEvent runtime parent READY", strict=True
+        )
+        plain_authority = ghidra_backup.resolve_plain_path(
+            authority_path,
+            "CRound HandleEvent runtime parent authority",
+            strict=True,
+        )
+    except (ghidra_backup.BackupError, OSError) as exc:
+        raise CampaignError(
+            f"CRound HandleEvent runtime parent evidence is not plain: {exc}"
+        ) from exc
+    if (
+        plain_ready.stat().st_nlink != 1
+        or plain_ready.stat().st_size
+        != CROUND_HANDLE_EVENT_RUNTIME_PARENT_READY_BYTES
+        or coverage.sha256_of(plain_ready)
+        != CROUND_HANDLE_EVENT_RUNTIME_PARENT_READY_SHA256
+        or plain_authority.stat().st_nlink != 1
+        or plain_authority.stat().st_size
+        != CROUND_HANDLE_EVENT_RUNTIME_PARENT_AUTHORITY_BYTES
+        or coverage.sha256_of(plain_authority)
+        != CROUND_HANDLE_EVENT_RUNTIME_PARENT_AUTHORITY_SHA256
+    ):
+        raise CampaignError(
+            "CRound HandleEvent runtime parent READY or authority changed"
+        )
+    receipt = _runtime_json(
+        plain_ready, "CRound HandleEvent runtime canonical Gen21 parent"
+    )
+    authority = _runtime_json(
+        plain_authority, "CRound HandleEvent runtime parent authority"
+    )
+    reducer = _runtime_mapping(
+        receipt.get("reducer"), "CRound HandleEvent runtime parent reducer"
+    )
+    advance = _runtime_mapping(
+        receipt.get("advance"), "CRound HandleEvent runtime parent advance"
+    )
+    canonical = _runtime_mapping(
+        authority.get("canonical"), "CRound HandleEvent runtime parent selection"
+    )
+    verification = _runtime_mapping(
+        authority.get("verification"),
+        "CRound HandleEvent runtime parent authority verification",
+    )
+    canonical_replay = _runtime_mapping(
+        verification.get("canonicalLiteralPinnedFullReplay"),
+        "CRound HandleEvent runtime parent authority canonical replay",
+    )
+    replica_replay = _runtime_mapping(
+        verification.get("replicaLiteralPinnedFullReplay"),
+        "CRound HandleEvent runtime parent authority replica replay",
+    )
+    determinism = _runtime_mapping(
+        authority.get("determinism"),
+        "CRound HandleEvent runtime parent authority determinism",
+    )
+    selection = _runtime_mapping(
+        authority.get("selectionRule"),
+        "CRound HandleEvent runtime parent authority selection rule",
+    )
+    if (
+        receipt.get("schema") != SCHEMA
+        or _integer(receipt.get("generation"), -1) != 21
+        or receipt.get("counts") != CROUND_HANDLE_EVENT_RUNTIME_PARENT_COUNTS
+        or reducer.get("id") != CROUND_HANDLE_EVENT_RUNTIME_PARENT_REDUCER_ID
+        or advance.get("kind") != RUNTIME_ADVANCE_KIND
+        or advance.get("schema") != RUNTIME_ADVANCE_SCHEMA
+        or authority.get("schema")
+        != "bea.re.cround-move-generation21-authority.v1"
+        or authority.get("verdict") != "READY"
+        or authority.get("authorityClass")
+        != "FULL_REPLAY_CAMPAIGN_AUTHORITY"
+        or authority.get("lineageId") != GHIDRA_PARTITION_RECOVERY_LINEAGE_ID
+        or canonical.get("absolutePath") != str(expected)
+        or canonical.get("ready", {}).get("sha256")
+        != CROUND_HANDLE_EVENT_RUNTIME_PARENT_READY_SHA256
+        or canonical.get("reducerId")
+        != CROUND_HANDLE_EVENT_RUNTIME_PARENT_REDUCER_ID
+        or canonical.get("generation") != 21
+        or canonical.get("kind") != RUNTIME_ADVANCE_KIND
+        or authority.get("counts") != CROUND_HANDLE_EVENT_RUNTIME_PARENT_COUNTS
+        or canonical_replay.get("exitCode") != 0
+        or canonical_replay.get("marker") != "CAMPAIGN_VERIFIED"
+        or replica_replay.get("exitCode") != 0
+        or replica_replay.get("marker") != "CAMPAIGN_VERIFIED"
+        or determinism.get("allEightLedgersByteIdentical") is not True
+        or determinism.get("allFortyThreeReducerFilesByteIdentical") is not True
+        or determinism.get("normalizedReadyReceiptsEqual") is not True
+        or selection.get("requiredAbsolutePath") != str(expected)
+        or selection.get("requiredReducerId")
+        != CROUND_HANDLE_EVENT_RUNTIME_PARENT_REDUCER_ID
+        or selection.get("requiredMode") != "FULL"
+    ):
+        raise CampaignError(
+            "CRound HandleEvent runtime canonical Gen21 identity is unsupported"
+        )
+    for output_name in OUTPUTS:
+        output_stamp = _runtime_mapping(
+            receipt.get("outputs", {}).get(output_name),
+            f"CRound HandleEvent runtime parent {output_name}",
+        )
+        _require_file_stamp(
+            resolved / output_name,
+            output_stamp,
+            f"CRound HandleEvent runtime parent {output_name}",
+        )
+        authority_stamp = _runtime_mapping(
+            authority.get("outputs", {}).get(output_name),
+            f"CRound HandleEvent runtime authority {output_name}",
+        )
+        if (
+            authority_stamp.get("bytes") != output_stamp.get("bytes")
+            or authority_stamp.get("sha256") != output_stamp.get("sha256")
+        ):
+            raise CampaignError(
+                f"CRound HandleEvent runtime authority output differs: {output_name}"
+            )
+    try:
+        completed = _run_frozen_campaign_verifier(
+            resolved,
+            replay=False,
+            timeout=180,
+            expected_ready_sha256=CROUND_HANDLE_EVENT_RUNTIME_PARENT_READY_SHA256,
+            expected_reducer_id=CROUND_HANDLE_EVENT_RUNTIME_PARENT_REDUCER_ID,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise CampaignError(
+            "CRound HandleEvent runtime parent frozen verifier timed out"
+        ) from exc
+    expected_marker = "FROZEN_CAMPAIGN_INTEGRITY_VERIFIED bea.re.campaign.v5 21"
+    if completed.returncode != 0 or expected_marker not in completed.stdout:
+        raise CampaignError(
+            "CRound HandleEvent runtime parent failed its frozen verifier: "
+            f"exit={completed.returncode} stderr={completed.stderr.strip()!r}"
+        )
+    rows = _campaign_rows_from_root(resolved)
+    if {name: len(value) for name, value in rows.items()} != receipt.get("counts"):
+        raise CampaignError(
+            "CRound HandleEvent runtime parent rows disagree with READY"
+        )
+    verified = dict(receipt)
+    verified["_carryBridge"] = (
+        "EXACT_FULL_REPLAY_AUTHORITY_BACKED_FROZEN_GENERATION21_INTEGRITY"
+    )
+    return verified
+
+
 def _verify_runtime_contract_parent_campaign(root: Path) -> dict:
     """Use the one explicit frozen bridge needed by the runtime lane."""
 
+    if Path(os.path.abspath(root)) == (
+        REPO_ROOT / CROUND_HANDLE_EVENT_RUNTIME_PARENT_RELATIVE
+    ).resolve():
+        return _verify_cround_handle_event_runtime_parent_campaign(root)
     if Path(os.path.abspath(root)) == (
         REPO_ROOT / CROUND_MOVE_RUNTIME_PARENT_RELATIVE
     ).resolve():

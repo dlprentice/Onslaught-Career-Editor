@@ -239,6 +239,30 @@ observe `CMissile` placement, prove the shipped source spelling, or claim full
 Move/contact/lifetime/effect behavior. Generation 21 retains the saved campaign
 name `VFuncSlot_66_004d8e40`; no live Ghidra or executable mutation occurred.
 
+### 3.2.2 Generation-22 slot-0 runtime routing
+
+Two retained retail recordings independently reach `0x004D9910` through the
+slot-0 caller at `0x0044B68A`. Level 521 contributes 2,531 call-entry-arm paths
+over 40 session-local receivers and 412 session-local event pointers; the
+independent Level 512 holdout contributes 24 paths over six receivers and 18
+event pointers. All 2,555 calls use strict `CRound` vtable `0x005DE82C`, preserve
+the receiver and event pointer into entry, and select exactly one arm. The
+aggregate event IDs are 2000=167, 3000=2,190, 4000=120, 4001=3, and 4003=75.
+The 4000/4001/4003 cases land at `0x004D9A54`, `0x004D997E`, and `0x004D9951`;
+the 2000/3000 observations take the default arm at `0x004D9D23`. The static
+4002 arm at `0x004D995E` was not observed.
+
+All 2,555 raw callbacks reach the sole `RET 4` at `0x004D9D43`; 1,972 form
+gap-free return envelopes and 583 remain raw orphans across trace-continuity
+barriers. Discovery and exact projections agree for both recordings. A poisoned
+Level-521 replay requiring 2,532 calls against its unchanged 2,531-call stream
+exits 10 and publishes no READY. The proof therefore promotes only the observed
+strict-`CRound` event-routing envelope. It does not establish arm writes,
+callees, ordering, transitive effects, event-4002 runtime, `CMissile` placement,
+original source spelling, or direct rebuild event-routing parity. Generation 22
+retains the saved campaign name `VFuncSlot_00_004d9910`; no rebuild, live Ghidra,
+or executable mutation occurred.
+
 ### 3.3 Construction, targeting, and launch helpers
 
 The same class/data join closes thirteen adjacent lifecycle and launch bodies.

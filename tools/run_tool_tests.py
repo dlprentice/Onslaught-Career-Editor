@@ -62,6 +62,7 @@ SUITES: tuple[tuple[str, ...], ...] = (
     ("tools/re_applydamage_primary_reproof_tests.py",),
     ("tools/re_cexplosion_hit_runtime_tests.py",),
     ("tools/re_cround_move_runtime_tests.py",),
+    ("tools/re_cround_handle_event_runtime_tests.py",),
     ("tools/re_tokenarchive_dispatch_reproof_tests.py",),
     ("tools/re_mission_native_setpos_reproof_tests.py",),
     ("tools/re_text_residual_boundary_tests.py",),

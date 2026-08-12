@@ -59,11 +59,11 @@ until the reducer admits them through a new verified generation.
 
 **Current complete-RE authority (2026-08-12):** do not treat historical
 Generation 10 or candidate Generation 73 as the live replay parent. Read
-`developer_state.json` → `current_re_authority`. Canonical Generation 21 has
-8,126 functions, 14,245 contracts, 217 `C1_CANDIDATE_PARTIAL` functions, nine
-`C2_BOUNDED_RUNTIME` functions, 7,900 opaque functions, 17 open residuals, and
-zero `REBUILD_READY` contracts. Its exact READY is `9699d0b5…0158`; frozen
-reducer `b67132c2…f95e`. Generation 73 is a projection oracle only. Generation
+`developer_state.json` → `current_re_authority`. Canonical Generation 22 has
+8,126 functions, 14,245 contracts, 217 `C1_CANDIDATE_PARTIAL` functions, ten
+`C2_BOUNDED_RUNTIME` functions, 7,899 opaque functions, 17 open residuals, and
+zero `REBUILD_READY` contracts. Its exact READY is `a0c8d3fb…eac90`; frozen
+reducer `a757bc51…db09`. Generation 73 is a projection oracle only. Generation
 14 closed one residual as the consumer-bound TokenArchive dispatch-data
 partition. Generation 15 replaces another 63-byte police-open residual with
 15 NOP bytes, the exact 42-byte/17-instruction Mission-native
@@ -98,21 +98,33 @@ and 309 are honest raw orphans. No `CMissile`-style receiver was observed.
 Receiver writes, branch ordering, contact/lifetime/effect behavior, the shared
 `CMissile` placement, original source spelling, and full rebuild parity remain
 open. A 232-call poison against the 231-call Level 522 trace exits 10 and
-publishes no READY. The next valid campaign generation is 22.
+publishes no READY.
+Generation 22 advances only the still-address-suffixed slot-0 body at
+`0x004D9910` to bounded C2 for its observed strict-`CRound` event-routing
+envelope. Retained Level 521 and independent Level 512 recordings provide
+2,555 call-entry-arm paths through dispatcher `0x0044B68A` and vtable
+`0x005DE82C`; receiver and event-pointer continuity hold, and exactly one
+statically enumerated arm is selected per invocation. The observations include
+event IDs 2000=167, 3000=2,190, 4000=120, 4001=3, and 4003=75, with 1,972
+gap-free returns and 583 raw orphans. Event 4002 and the shared `CMissile`
+placement were not observed. Arm writes, callees, ordering, transitive effects,
+source spelling, and direct rebuild event-routing parity remain open. A
+2,532-call poison against the unchanged 2,531-call Level 521 stream exits 10
+and publishes no READY. The next valid campaign generation is 23.
 The separately read-back live Ghidra ceremony added the SetPos function name,
 signature, and comment without changing executable bytes, instructions, data,
 or references. The bounded ApplyDamage C2 remains one replicated 1,000-damage,
-zero-shield entry/write path, not an all-path law. The next valid campaign
-generation is 21.
+zero-shield entry/write path, not an all-path law.
 
 Separately, the reviewed 2026-08-11
 [`function-c1-closure-2026-08-11.tsv`](reverse-engineering/binary-analysis/function-c1-closure-2026-08-11.tsv)
 accounts for all 8,136 current Ghidra functions: 8,129 have at least a bounded
 static C1 envelope and seven retain bounded C2 runtime grades, leaving zero
-static `OPAQUE` rows. Those are the closure file's dated grades; Generation 21
-retains `CExplosion` as the eighth campaign C2 and advances the strict-`CRound`
-slot-66 call envelope as the ninth. The static closure does not replace or
-broaden the Generation-21 replay authority or promote any
+static `OPAQUE` rows. Those are the closure file's dated grades; Generation 22
+retains `CExplosion` as the eighth campaign C2 and the strict-`CRound` slot-66
+call envelope as the ninth, then advances the strict-`CRound` slot-0 event-
+routing envelope as the tenth. The static closure does not replace or broaden
+the Generation-22 replay authority or promote any
 contract to `REBUILD_READY`; it closes function-envelope accounting only.
 Original symbols, full semantics, runtime causality, source equivalence, and
 reconstruction parity remain separate proof obligations.
