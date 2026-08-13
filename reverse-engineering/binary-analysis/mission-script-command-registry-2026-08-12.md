@@ -86,6 +86,51 @@ accessor serving both. Unresolved.
 **Posture: the recovered pairing is validated; the naming promotion is not
 cleared.** It waits on those adjudications and on the full Ghidra gate.
 
+## The 23 adjudications, resolved
+
+They fall into three classes, and only one is a rename candidate.
+
+**Class 1 — the existing name is the real C++ identity; do not rename (2).**
+Indices 114 and 115 are registered `Goto3PointPanCamera` and
+`Goto4PointPanCamera`, while Ghidra calls them `IScript__Create3PointPanCamera`
+and `IScript__Create4PointPanCamera`. Their bodies carry the shipped strings
+`FATAL ERROR: null thing passed to 'Create3PointPanCamera'` and its 4-point
+counterpart. The game's own error text names the C++ function `Create…`; the
+registry names the script command `Goto…`. Both are right about different things,
+and adopting the registry string here would destroy a shipped-symbol identity.
+This proves from the binary — not from caution — that a registry string is a
+script-facing command name rather than a C++ symbol.
+
+**Class 2 — the existing name is factually wrong about behaviour (5).** Five
+handlers named `IScript__PlaySound*` play no sound. Their callees are
+`CText__GetStringById`, `CMessage__ctor_base` and
+`CMessageBox__InsertQueuedMessageSortedAndMaybeAdvance`: they build a localized
+message and queue it. The two `…Wait` variants add
+`CEventManager__GetNextFreeEvent` and `CScheduledEvent__Set`.
+
+| Idx | Registry command | Current Ghidra name |
+| ---: | --- | --- |
+| 17 | `AddMessage` | `IScript__PlaySound` |
+| 28 | `PlayCharMessage` | `IScript__PlaySoundWithCallback` |
+| 36 | `PlayCharMessageWait` | `IScript__PlaySoundWithFade` |
+| 90 | `PlayPCharMessage` | `IScript__PlaySoundWithPriority` |
+| 91 | `PlayPCharMessageWait` | `IScript__PlaySoundWithFadeAndPriority` |
+
+`WithCallback`, `WithFade` and `WithPriority` describe a mechanism that is not in
+these bodies. This is a defect in the canonical database of the same class the
+HUD source-identity correction fixed, and it holds independently of whether the
+registry names are adopted.
+
+**Class 3 — descriptive placeholder the registry supersedes (16).** `GetX/GetY/
+GetZ` over `GetVectorX/Y/Z`, `Magnitude` over `GetVectorLength`,
+`IsNumberBetween` over `CheckValueInRange`, `EnableWeapon`/`DisableWeapon` over
+`SetThingValueViaVFunc198/19C_FromArg`, and similar. `GetVariable` wraps
+`CWorld__GetWorldTextSlotTimerValue`, so only the wrapper is at issue and the
+callee keeps its name.
+
+Consequently a blanket adoption of all 54 registry names would have been wrong.
+Promotion must be per-row and must keep the two naming systems distinct.
+
 ## A named dormant capability
 
 Exactly one handler is the shared no-op, and its command is **`SetSpeed`**. The
