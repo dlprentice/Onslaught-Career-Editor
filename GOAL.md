@@ -288,9 +288,14 @@ narrowing the mandate; the completion test and every clause above are unchanged.
 2. **Four HUD names describing the wrong subsystem** — targets 0, 3, 4, 5. The
    binary names none of them, so this needs a naming-convention decision before
    any promotion.
-3. **307 real-named undocumented functions** carrying a source coordinate,
-   ranked per file in `pc-native-source-coordinates-2026-08-12.md`; `IScript.cpp`
-   (23) and `CPhysicsScriptStatements.h/.cpp` (18/15) lead.
+3. **Documentation coverage — the "307" figure is withdrawn as mismeasured.**
+   That audit read one `Address:` per document and missed every table row.
+   Recounted across all addresses in all 1,056 `reverse-engineering/` documents:
+   of 323 real-named coordinate-covered functions, **318 are mentioned somewhere
+   and 5 are not**. Neither bound is useful on its own — "mentioned" is not
+   "contracted", and the original measurement never defined which it tested.
+   Before any documentation work, **define what counts as documented**; the real
+   figure lies between 5 and 307.
 4. **Generation 24**, if still wanted, parented strictly on Generation 23 and
    respecting the route-order correction above.
 

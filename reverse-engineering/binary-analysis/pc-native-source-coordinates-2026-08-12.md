@@ -71,6 +71,25 @@ value with vtable `0x005E4EA4`, and returns `ret 0xc`. Each has zero direct
 callers and exactly one pointer reference, which is the shape of a Mission-native
 registry entry. No name is proposed here.
 
+> **WITHDRAWN 2026-08-12 — the section below is measured wrong, by about sixty
+> times.** Its audit read a single `Address:` field from the first 2,000
+> characters of each document. Function documents list many addresses in tables —
+> `functions/IScript.cpp.md` alone carries 45 rows — so almost every documented
+> function was counted as undocumented.
+>
+> Recounting every address in all 1,056 documents under `reverse-engineering/`:
+> of the **323** real-named coordinate-covered functions, **318 are mentioned in
+> some tracked document and 5 are not**. The claimed frontier of 307 is not
+> 307; the floor is 5.
+>
+> Neither number is the useful one. "Mentioned somewhere" is a weaker bar than
+> "has a written contract", and the original measurement never defined which it
+> was testing — which is the actual defect. A real coverage figure needs that
+> definition first, and lies somewhere between 5 and 307.
+>
+> The ranking by source file below is unaffected in shape but its absolute counts
+> inherit the same error. Do not quote them.
+
 ## Documentation debt, ranked — and the frontier is smaller than it looked
 
 Crossing the coordinates against the tracked function-doc tree turns an
