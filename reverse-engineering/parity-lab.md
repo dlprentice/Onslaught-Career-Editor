@@ -2756,7 +2756,7 @@ Maintain separate ledgers.
 | Discovered-entry lower bound | saved rows | at least 8,170 |
 | Exact saved-body geometry | functions passing range invariants / saved rows | 8,170 / 8,170 |
 | Literal default names | `FUN_*` / saved rows | 966 / 8,170 |
-| Static function envelopes | closed saved rows / discovered lower bound | 8,136 / at least 8,170; 34 outside the dated closure |
+| Static function envelopes | closed saved rows / discovered lower bound | 8,170 / at least 8,170; sealed 8,136-row table plus reviewed 34-row addendum |
 | Campaign semantics above OPAQUE | C1 + C2 / Gen23 rows | 227 / 8,126 |
 | Mission handler boundaries | saved structurally bounded handler starts / registry | 144 / 144; creation complete |
 | `.text` ownership | exact owned executable bytes / 1,929,117 | `UNKNOWN` pending fresh pass |

@@ -8,8 +8,10 @@ UNKNOWN — the semantic, runtime, source-equivalence, and rebuild gaps retained
 per row.
 Verdict: all 8,136 functions in this sealed population have at least a bounded
 static C1 envelope. The 34 functions promoted on 2026-08-13 are outside this
-table, so the verdict no longer spans the current 8,170-function census; this
-settles dated accounting, not complete semantic or reconstruction parity.
+table. A separately reviewed 34-row addendum now extends bounded static-envelope
+coverage across the current 8,170-function census without rewriting this sealed
+artifact; this report itself settles dated accounting, not complete semantic or
+reconstruction parity.
 Specimen: pristine PC `BEA.exe`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
@@ -73,10 +75,13 @@ as provenance only; they do not replace reviewed tracked names.
 
 ## Authority boundary
 
-This projection is the current authority for the narrow question, “does every
-known function have at least a bounded static C1 envelope?” It does not rewrite
-the immutable Generation-19 campaign replay, which remains the authority for
-its admitted runtime observations, residual history, and READY/reducer pins.
+This projection is the sealed authority for its dated 8,136-row question. The
+separate
+[34-function static-contract addendum](mission-script-registry-new-function-static-contracts-2026-08-13.md)
+is the current extension: together they answer yes for all 8,170 saved rows at
+the bounded-static level. Neither rewrites the immutable campaign replay, which
+remains the authority for its admitted runtime observations, residual history,
+and READY/reducer pins.
 
 Static C1 closure does **not** mean original source recovered, exact symbol or
 prototype proven, every path understood, runtime causality observed, source

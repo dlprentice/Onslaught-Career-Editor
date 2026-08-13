@@ -1,7 +1,7 @@
 # Binary Analysis
 
 Status: living index for `reverse-engineering/binary-analysis/`
-Last updated: 2026-08-12
+Last updated: 2026-08-13
 Summary: front door to the static and byte-level evidence for the Steam
 `BEA.exe`. Names the current naming authority, the specimen baseline, and the
 per-system contracts. Makes no claim of its own — every claim below belongs to
@@ -26,6 +26,10 @@ the document it links.
   the reviewed per-row crosswalk from 53 sealed static receipts, the ten
   post-Gen19 Mission natives, and the pre-existing bounded C1/C2 set; static
   envelope closure only, not runtime or source parity
+- [Current 34-function Mission-registry static-contract addendum](mission-script-registry-new-function-static-contracts-2026-08-13.md)
+  — extends bounded static-envelope coverage from the sealed 8,136-row table to
+  all 8,170 currently saved functions without changing Generation 23 or Ghidra
+  metadata
 - [Collision-component implementation-identity correction](collision-component-identity-correction-2026-08-12.md)
   — promotes five hierarchy/source/cross-build-backed shared-base identities
   through the backed-up live and tracked Ghidra gates; folded aliases, runtime

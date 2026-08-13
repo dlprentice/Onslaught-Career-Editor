@@ -17,7 +17,7 @@
 > Godot rebuild, and the WinUI 3 app are coequal outcomes. A current goal chooses
 > focus, not standing rank. See [Revision history](#revision-history).
 >
-> Last updated: 2026-08-12. Current measured status belongs in
+> Last updated: 2026-08-13. Current measured status belongs in
 > [`CURRENT_CAPABILITIES.md`](CURRENT_CAPABILITIES.md) and
 > [`developer_state.json`](developer_state.json) (routing key
 > `current_re_authority`). Generation 73 is retained only as the exact
@@ -281,7 +281,10 @@ narrowing the mandate; the completion test and every clause above are unchanged.
   project were proved as callable boundaries, admitted by one backed-up live
   Ghidra ceremony, separately read back, and synchronized to the tracked
   snapshot. The current structural census is 8,170; the new default-metadata
-  functions remain outside the dated static-closure and demo-map tables.
+  functions remain outside the dated static-closure and demo-map tables. A
+  separate reviewed addendum now gives all 34 bounded static C1 contracts and
+  falsifiers, extending static-envelope coverage to every saved row without
+  changing Generation 23 or Ghidra metadata.
 
 **Active frontier, in priority order:**
 
@@ -295,10 +298,11 @@ narrowing the mandate; the completion test and every clause above are unchanged.
    Keep the frozen 2026-08-12 name table for its pinned consumers and advance
    only the new 2026-08-13 projection and current checker.
 2. **Name the 34 newly admitted registry handlers in a separate cohort.** Their
-   boundaries are now structural fact, but their default names/comments remain
-   unchanged and they are not part of the exact 75-row existing-entry manifest.
-   Use the registry only as Tier-2 script vocabulary; do not imply C++ symbols,
-   signatures, or behavior.
+   boundaries and bounded static contracts are now tracked, but their default
+   names/comments remain unchanged and they are not part of the exact 75-row
+   existing-entry manifest. Use the registry only as Tier-2 script vocabulary;
+   preserve each row's explicit unknowns and do not imply C++ symbols,
+   signatures, runtime reachability, or reconstruction parity.
 3. **Repair `0x0050FF10` separately.** Replace the stale pickup identity with
    `CWorldPhysicsManager__CreateExplosion` and the proved caller-cleaned
    one-index signature/comment. This is a one-row corruption repair with

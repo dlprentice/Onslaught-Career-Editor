@@ -1,7 +1,7 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-08-12
+Last updated: 2026-08-13
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
 Current replay authority is Generation 23 via
@@ -155,8 +155,14 @@ hashes and limits.
 [Mission-registry boundary promotion](binary-analysis/mission-script-registry-boundary-live-promotion-2026-08-13.md)
 added exactly 34 default-metadata callable entries, taking saved live and
 tracked Ghidra from 8,136 to **8,170 internal functions**. The new functions
-are outside both the dated static closure and the demo map; no semantic grade,
-name, signature, or runtime contract follows from their admission.
+remain outside both the dated static-closure TSV and the demo map; no semantic
+grade, name, signature, or runtime contract followed from boundary admission.
+The later reviewed
+[34-function static-contract addendum](binary-analysis/mission-script-registry-new-function-static-contracts-2026-08-13.md)
+now gives each one a bounded `C1_CANDIDATE_PARTIAL` envelope and falsifier, so
+the dated closure plus that addendum cover all 8,170 saved rows at C1-or-better.
+Generation 23 and all live Ghidra metadata remain unchanged by that semantic
+pass.
 
 **Dated PC demo/retail frontier (2026-08-12, 8,136-function population):** the conservative 8,086-entry
 address map plus exact second-pass reports, caller propagation, equal-delta
@@ -192,9 +198,11 @@ those 88 unnamed entries. Exactly one command,
 `SetSpeed`, is bound to the shared no-op — registered but unimplemented on this
 path. It independently confirms three names the PC-native coordinate instrument
 reached by an unrelated route. A registry string is the script-facing command
-name for a slot, **not** a recovered C++ symbol; no signature, contract or
-semantics follows from it. Only the 34 boundaries were promoted to Ghidra;
-their names and all registry metadata remain separate future ceremonies.
+name for a slot, **not** a recovered C++ symbol; no signature or semantics
+follows from the registry alone. The separately reviewed 34-function addendum
+now records only the operations visible in those exact instruction bodies.
+Only the boundaries were promoted to Ghidra; their names and all registry
+metadata remain separate future ceremonies.
 
 **PC-native source coordinates (2026-08-12):** the shipped PC executable passes
 `__FILE__` and `__LINE__` to its debug allocator, so the image names its own

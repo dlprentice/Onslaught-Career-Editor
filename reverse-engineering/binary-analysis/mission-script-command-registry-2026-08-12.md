@@ -377,7 +377,10 @@ interior. Two byte-identical replays and the exact rows are preserved under
 created exactly those 34 default-metadata Function objects and changed no
 pre-existing row or other program metric. This establishes boundaries and the
 8,170 lower bound only—not original names, signatures, semantics, or a final
-inventory ceiling.
+inventory ceiling. The later
+[34-function static-contract addendum](mission-script-registry-new-function-static-contracts-2026-08-13.md)
+then supplies bounded instruction-visible C1 envelopes and per-row falsifiers;
+it does not turn registry vocabulary into C++ symbols or add runtime evidence.
 
 **This registry report itself made and authorizes no Ghidra mutation.** The
 separate boundary owner authorized the completed structure-only ceremony.

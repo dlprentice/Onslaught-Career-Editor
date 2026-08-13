@@ -10,6 +10,10 @@ MissionScript registry-linked callable entries with default metadata, with
 fresh-process readback proving zero changes to the other 8,136 function rows,
 executable bytes, instructions, data, references, comments, or signatures. It
 promoted no runtime behavior contract.
+The subsequent reviewed 34-row static addendum supplies bounded
+`C1_CANDIDATE_PARTIAL` envelopes and falsifiers without changing Ghidra, so the
+current static-accounting projection is 8,163 C1 plus seven C2 across all 8,170
+saved rows. This is not the campaign-grade scoreboard below.
 Canonical Generation 23
 remains the separate semantic authority at 8,126 campaign functions plus 6,119
 exact residual entities; live structural navigation is therefore ahead of the
@@ -2904,12 +2908,12 @@ address-keyed gaps:
 
 ```text
 8,170 saved function bodies in the current structural census (not a ceiling)
-dated 8,136-row static closure plus 34 current default-metadata, ungraded rows
+dated 8,136-row static closure plus a reviewed 34-row C1-static addendum
 75 existing registry entries awaiting reviewed Tier-2 normalization
 34 newly created registry entries awaiting their separate Tier-2 metadata cohort
 one separately proved CreateExplosion identity/signature repair
 four refuted HUD labels awaiting convention-safe replacements
-new 34-function static-envelope and campaign admission work
+34-function campaign/runtime admission remains separate from static closure
 7,899 Gen23 functions still semantically OPAQUE
 bounded runtime questions with explicit falsifiers
 ```
