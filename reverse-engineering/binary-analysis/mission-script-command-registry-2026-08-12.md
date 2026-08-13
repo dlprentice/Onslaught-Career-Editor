@@ -242,8 +242,30 @@ stores rather than on inferred call windows:
    `this+0x14 = WcsLen(text) * [0x005DC6AC] + [0x005D8604]` — a linear reveal
    time. Those two shipped floats are the cheapest next measurement.
 
-Establishing which of the seven slots each of the five natives fills is now a
-bounded mechanical read, and it is the remaining blocker on renaming any of them.
+Mapping which slots each native fills was then attempted with call boundaries
+honoured — each intervening `call` consuming its own callee-popped pushes, named
+callees giving an exact count from their `ret imm`. It reaches **three of the
+seven** before hitting an indirect virtual call whose consumption cannot be
+resolved, and stops there rather than guessing:
+
+| Native | Ctor args 1–3 |
+| --- | --- |
+| `AddMessage` | **`0x0089C328`**, `ebx`, `eax` |
+| `PlayCharMessage` | `ebx`, `ebp`, `eax` |
+| `PlayPCharMessage` | `ebx`, `ebp`, `eax` |
+| `PlayCharMessageWait` | `ecx`, `eax`, `eax` |
+| `PlayPCharMessageWait` | `ecx`, `eax`, `eax` |
+
+Three things follow. `AddMessage` alone passes a **fixed global** as argument
+one where every `…CharMessage` form passes a register — the clearest structural
+distinction found so far. The plain and `Wait` forms have visibly different
+argument shapes. And **`Char` and `PChar` are indistinguishable across all three
+resolved arguments**, which independently supports withdrawing `WithPriority`:
+whatever separates them lies in arguments four to seven, unreached.
+
+That partial map is the current state. Renaming any of the five still requires
+the remaining four slots, and reaching them requires resolving the indirect call
+targets rather than assuming their arity.
 
 **Class 3 — descriptive placeholder the registry supersedes (16).** `GetX/GetY/
 GetZ` over `GetVectorX/Y/Z`, `Magnitude` over `GetVectorLength`,
