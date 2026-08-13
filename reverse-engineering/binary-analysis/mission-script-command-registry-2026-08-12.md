@@ -215,6 +215,36 @@ these bodies. This is a defect in the canonical database of the same class the
 HUD source-identity correction fixed, and it holds independently of whether the
 registry names are adopted.
 
+### `CMessage__ctor_base` recovered — and it settles the voice question
+
+`0x004B6E50`, 191 bytes, `ret 0x1c` — **seven stack arguments** plus `this`.
+Each is stored to a fixed field, and two are decisive:
+
+| Arg slot | Stored to | Role |
+| --- | --- | --- |
+| `[esp+0x24]` | `this+0x18` | — |
+| `[esp+0x28]` | `this+0x0C` | **the wide message text** — also passed to `WcsLen` |
+| `[esp+0x2C]` | `this+0x10` | — |
+| `[esp+0x30]` | `this+0x20` | — |
+| `[esp+0x34]` | — | **optional audio reader**: if non-zero, `CGenericActiveReader__SetReader` runs and `this+0x38` is set to 1 |
+| `[esp+0x38]` | `this+0x28` | — |
+| `[esp+0x3C]` | `this+0x2C` | — |
+
+Two facts follow, and unlike the three withdrawn readings above these rest on
+stores rather than on inferred call windows:
+
+1. **A message carries an optional voice stream directly.** Argument five is a
+   reader handle; when supplied, the constructor installs it and raises a
+   has-voice flag at `this+0x38`. This is the concrete mechanism behind the
+   corrected Class 2 note — the audio is attached at construction, not looked up
+   later.
+2. **Display duration is computed from text length.**
+   `this+0x14 = WcsLen(text) * [0x005DC6AC] + [0x005D8604]` — a linear reveal
+   time. Those two shipped floats are the cheapest next measurement.
+
+Establishing which of the seven slots each of the five natives fills is now a
+bounded mechanical read, and it is the remaining blocker on renaming any of them.
+
 **Class 3 — descriptive placeholder the registry supersedes (16).** `GetX/GetY/
 GetZ` over `GetVectorX/Y/Z`, `Magnitude` over `GetVectorLength`,
 `IsNumberBetween` over `CheckValueInRange`, `EnableWeapon`/`DisableWeapon` over
