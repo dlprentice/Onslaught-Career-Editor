@@ -9,29 +9,38 @@ owner; local working copies and historical backups remain untracked.
 - Imported Steam specimen SHA-256:
   `74154BFAE14DDC8ECB87A0766F5BC381C7B7F1AB334ED7A753040EDA1E1E7750`
 - Imported specimen MD5: `3b456964020070efe696d2cc09464a55`
-- Project payload: 19 files, 186,551,173 bytes
+- Project payload: 19 files, 186,665,861 bytes
 - Canonical `sha256<TAB>bytes<TAB>path` inventory SHA-256:
-  `682950bbb57b2658d8cbbe1894bfac66902392e5fff91513f85b4592532137a0`
+  `b0635c394c57ddbc7ccbe8f239c2fec811e445bffca7d813e1d562c0d350c6ef`
 
 **Promotion note:** this snapshot was refreshed from the source-stable live
-maintainer project after 34 MissionScript registry-linked callable boundaries
-passed exact PRE validation, two independent persistent scratch replicas, two
-rollback probes, one live apply, separate-process full-inventory readback, and
-POST restore. Internal functions advanced 8,136→8,170; instructions, program
-bytes, data units, references, comments, signatures, and every pre-existing
-function row remained unchanged. The new rows intentionally retain default
-metadata. See the
-[`live-promotion report`](../binary-analysis/mission-script-registry-boundary-live-promotion-2026-08-13.md).
+maintainer project after 75 reviewed MissionScript registry entries passed exact
+PRE validation, two independent persistent scratch replicas, two adverse
+rollback/compensation probes, one live apply, separate-process full-inventory
+readback, and POST restore. The operation normalized 54 former defaults, five
+message identities, and 16 descriptive names to shipped Tier-2 command
+vocabulary. Internal functions remain 8,170; all bodies, instructions, ABI and
+storage metadata, program bytes, data units, references, and 8,095 non-target
+function rows remained unchanged. The 34 entries created by the preceding
+boundary ceremony intentionally retain default metadata. See the
+[`vocabulary live-promotion report`](../binary-analysis/mission-script-registry-vocabulary-live-promotion-2026-08-13.md),
+its
+[`scratch owner`](../binary-analysis/mission-script-registry-vocabulary-normalization-2026-08-13.md),
+and the preceding
+[`boundary live-promotion report`](../binary-analysis/mission-script-registry-boundary-live-promotion-2026-08-13.md).
 
 The 19-file tree is byte-identical to the independently restored/read-only-
 opened D: disaster-recovery copy made on 2026-08-13. Future live work can make
 the snapshot lag again; each refresh remains a separately authorized promotion.
-The ignored live-promotion and tracked-restore receipts are respectively
-`local-lab/ghidra-mission-registry-boundary-live-promotion-20260813-v1/live-promotion.ready.json`
-(9,956 bytes, SHA-256 `363a57afda96560b214c01e3a75422702ae6ac2cdeb89ed2d069231414722322`)
+The current ignored live readback and tracked-restore receipts are respectively
+`local-lab/ghidra-mission-registry-vocabulary-live-promotion-20260813-v1/runs/live-readback/vocabulary.ready.json`
+(2,461 bytes, SHA-256 `e19d69331969718a4c0832c6155a556769a66fdc49feda8e74e8e139d5a07232`)
 and
-`local-lab/ghidra-mission-registry-boundary-live-promotion-20260813-v1/tracked-snapshot-restore.ready.json`
-(5,961 bytes, SHA-256 `d79325e4d092d8abdb92f0a62d7635d80ad30034b86aa14d247aa3ac815ca8fc`).
+`local-lab/ghidra-mission-registry-vocabulary-live-promotion-20260813-v1/tracked-snapshot-restore.ready.json`
+(5,945 bytes, SHA-256 `3e87b1d7fc2665c6c04b78b2cffa69889e9815d928b99dc0e28fa87122d61470`).
+The aggregate authority receipt is
+`local-lab/ghidra-mission-registry-vocabulary-live-authority-20260813-v1/live-promotion.ready.json`
+(27,617 bytes, SHA-256 `702f1781d36065f2e6ff643799dc83e6095ded54b8bce22baef3db2ffc25219f`).
 
 Related (not this folder):
 
@@ -68,7 +77,7 @@ the user overrides them:
 | Headless entry | `...\support\analyzeHeadless.bat` |
 | Prior install archive | `D:\GhidraArchives\` (12.0.3 retained there; do not delete) |
 | Working/maintainer project | `C:\Users\david\Ghidra\Projects` (`BEA.gpr` / `BEA.rep`) |
-| Verified off-volume recovery | `D:\BEA-Ghidra-Backups\2026-08-13-mission-registry-boundaries-post-live\` (exact current POST snapshot; independently copied and read-only reopened) |
+| Verified off-volume recovery | `D:\BEA-Ghidra-Backups\2026-08-13-mission-registry-vocabulary-post-live\` (exact current POST snapshot; independently copied and read-only reopened) |
 | Xbox Issue-11 POST recovery | `D:\BEA-Ghidra-Backups\2026-08-12-xbox-sparse-symbol-post-anchors-issue11\` (exact isolated project; restored semantic readback passed) |
 | Xbox US-retail POST recovery | `D:\BEA-Ghidra-Backups\2026-08-12-xbox-sparse-symbol-post-anchors-us-retail\` (exact isolated project; restored semantic readback passed) |
 | User settings | `%APPDATA%\ghidra\ghidra_12.1.2_PUBLIC` |

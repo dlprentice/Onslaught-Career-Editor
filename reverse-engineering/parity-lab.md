@@ -238,7 +238,7 @@ The current layers must remain separate:
 | Additional proved boundaries still outside Ghidra | 0 | The 34 decoded, pairwise-disjoint entries now exist with default metadata |
 | Defensible discovered census/lower bound | **8,170** | Not a final ceiling |
 | MSVC exception/unwind funclets in saved Ghidra | 1,179 | Compiler machinery; not gameplay-semantic closure |
-| Literal `FUN_<address>` names in saved Ghidra | 966 | Includes the 34 newly created default names; the 75-row name ceremony remains separate |
+| Literal `FUN_<address>` names in saved Ghidra | 912 | Includes the 34 newly created default names after the separate 75-row existing-entry ceremony completed |
 | Static-envelope closure | 8,136 rows: 8,129 C1 + 7 C2 | Dated table; does not include the 34 promoted entries |
 | Canonical campaign | 8,126 rows: 217 C1 + 10 C2 + 7,899 OPAQUE | Gen23 semantic/runtime authority |
 | Mission native registry | 144 unique names / 144 unique handlers | Finite shipped registry |
@@ -247,7 +247,7 @@ The current layers must remain separate:
 
 The saved-name projection is
 `reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-13.tsv`
-(8,170 rows; SHA-256 `19312b42…b5bf`). The independent missing-boundary proof
+(8,170 rows; SHA-256 `f7f987b5…fa51e`). The independent missing-boundary proof
 is under `local-lab/mission-registry-missing-functions-20260813-v1/` and
 reproduces byte-identically. Older 7,555-row and 86-missing figures below are
 historical measurements only, not current planning denominators.
@@ -256,10 +256,10 @@ This correction illustrates why the pipeline binds every result to an inventory
 hash. A queue generated against one inventory cannot silently become current.
 
 The important conclusion is that “rename every `FUN_*` function” remains too
-narrow: 966 current defaults are only a naming state; the 34 proved callable
-starts now exist only as default-metadata Ghidra Function objects, and thousands of descriptive or
+narrow: 912 current defaults are only a naming state; the 34 proved callable
+starts remain default-metadata Ghidra Function objects, and thousands of descriptive or
 hypothesis names still require evidence appropriate to their claim. The
-Mission cohort itself separates boundary creation from a later 75-row Tier-2
+Mission cohort separates boundary creation from the completed 75-row Tier-2
 normalization so structural discovery cannot silently become semantic naming.
 
 The parity lab therefore ranks literal `FUN_*`, provisional vfuncs, invented
@@ -2657,7 +2657,7 @@ Strong:
 
 Open or concerning:
 
-- 966 saved entries retain literal default names, while Gen23 still has 7,899
+- 912 saved entries retain literal default names, while Gen23 still has 7,899
   semantically OPAQUE rows;
 - the 34 new Mission boundaries now have a separate bounded static-contract
   addendum but remain outside immutable Gen23 campaign semantics;
@@ -2756,7 +2756,7 @@ Maintain separate ledgers.
 | Saved Ghidra inventory | exported rows / exact 2026-08-13 readback | 8,170 / 8,170 |
 | Discovered-entry lower bound | saved rows | at least 8,170 |
 | Exact saved-body geometry | functions passing range invariants / saved rows | 8,170 / 8,170 |
-| Literal default names | `FUN_*` / saved rows | 966 / 8,170 |
+| Literal default names | `FUN_*` / saved rows | 912 / 8,170 |
 | Static function envelopes | closed saved rows / discovered lower bound | 8,170 / at least 8,170; sealed 8,136-row table plus reviewed 34-row addendum |
 | Campaign semantics above OPAQUE | C1 + C2 / Gen23 rows | 227 / 8,126 |
 | Mission handler boundaries | saved structurally bounded handler starts / registry | 144 / 144; creation complete |
@@ -2888,7 +2888,7 @@ This milestone validates the pipeline, not DOWN behavior repeatability.
   callable-body proof;
 - [x] those 34 boundaries pass the live Ghidra creation/readback ceremony;
 - [x] all 75 current-entry name normalizations are adjudicated read-only;
-- [ ] those 75 names pass their separate live Ghidra ceremony;
+- [x] those 75 names pass their separate live Ghidra ceremony;
 - [ ] authored-use priority regenerated from exact 733-file corpus;
 - [ ] at least one runtime scenario per supported semantic family;
 - [ ] aliases and intentionally unreachable rows explicit.
@@ -3247,7 +3247,7 @@ The remaining function problem is now mechanically approachable:
 
 - 8,170 saved functions have exact body geometry, including 34 callable starts
   admitted from independent bounded CFG/body proof;
-- 966 saved entries retain literal defaults, while 7,899 Gen23 functions remain
+- 912 saved entries retain literal defaults, while 7,899 Gen23 functions remain
   semantically OPAQUE;
 - cheap differential coverage has already reduced one 16,794-start action run
   to eight leading functions;

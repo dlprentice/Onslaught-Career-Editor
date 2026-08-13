@@ -665,8 +665,9 @@ equality, or self-derived pins.
 accounts for its dated 8,136-function population as **8,129 C1**, **7 C2**,
 and **0 static OPAQUE**. The current saved structural census is **8,170** after
 the verified [34-boundary promotion](reverse-engineering/binary-analysis/mission-script-registry-boundary-live-promotion-2026-08-13.md);
-those 34 functions are outside the static-closure table and remain ungraded at
-that layer. Canonical Generation 23 remains the immutable replay
+those 34 functions are outside the frozen table but now carry separately
+reviewed `C1_CANDIDATE_PARTIAL` static contracts. Joined current static
+accounting is **8,163 C1 + 7 C2**. Canonical Generation 23 remains the immutable replay
 authority for admitted runtime/campaign claims; neither count implies
 `REBUILD_READY` or complete semantic parity.
 

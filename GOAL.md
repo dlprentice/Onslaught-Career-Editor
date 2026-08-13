@@ -261,8 +261,9 @@ progress, not completion.
 
 ### Current frontier
 
-Updated 2026-08-13 after the 34-boundary live promotion. Recording what closed is not
-narrowing the mandate; the completion test and every clause above are unchanged.
+Updated 2026-08-13 after the 75-row MissionScript vocabulary promotion. Recording
+what closed is not narrowing the mandate; the completion test and every clause
+above are unchanged.
 
 **Closed this session — do not re-derive:**
 
@@ -290,60 +291,47 @@ narrowing the mandate; the completion test and every clause above are unchanged.
   with zero overlap. The remaining 158,188 bytes are listing-partitioned and
   expose five current-function jump fragments plus high-yield code-shaped gaps;
   this is structural accounting, not a final function census or semantic score.
+- The 75-row existing-entry MissionScript normalization passed its complete
+  scratch/live/backup/readback gate and is synchronized to tracked Ghidra: 54
+  former defaults, five message-name corrections, and 16 Tier-3-to-Tier-2
+  supersessions. These are script-facing registry names, not recovered original
+  C++ symbols, and no ABI or semantic grade changed.
+- Documentation coverage for the 170 previously uncovered coordinate-instrument
+  functions is closed: 29 unique functions across five per-file documents and
+  141 unique functions represented by 148 rows in
+  `functions/coordinate-long-tail.md`. This closes measured coverage, not
+  behavior contracts. The instrument is factory-biased and its 827 functions
+  are not a random sample of the then-current 8,136; `monitor.h`/`Monitor.h` are
+  one file the image spells two ways; and the per-file ranking counts coordinate
+  rows rather than functions.
+
+  Superseded history of this item is retained because it corrected itself
+  twice. The first audit read one `Address:` per document and missed table rows.
+  Recounting every address across 1,056 `reverse-engineering/` documents found
+  318 of 323 real-named coordinate-covered functions mentioned and five not
+  mentioned, but a mention was not a contract. Under the final stated
+  definition—dedicated function note or table row with a purpose cell—the
+  pre-remediation split was 26 contracted, 127 tabled, 153 documented, and 170
+  undocumented. The corrected leading gaps were `MeshPart.cpp` 32,
+  `BattleEngineDataManager.cpp` 31, `WorldPhysicsManager.cpp` 21, `oids.cpp` 20,
+  and `mesh.cpp` 19.
 
 **Active frontier, in priority order:**
 
-1. **The 75-row MissionScript registry normalization.** This is one
-   evidence-coherent metadata cohort: 54 default `FUN_*` handlers, the five
-   message-name corrections at `0x00537410`, `0x00537500`, `0x005375F0`,
-   `0x005377E0`, and `0x005378E0`, and 16 descriptive Tier-3 names that lose to
-   shipped Tier-2 command vocabulary. Registry names are script-facing slot
-   names, not recovered original C++ symbols. Preserve every ABI/signature and
-   bounded mechanism fact; add no behavior claim merely from the registry.
-   Keep the frozen 2026-08-12 name table for its pinned consumers and advance
-   only the new 2026-08-13 projection and current checker.
-2. **Name the 34 newly admitted registry handlers in a separate cohort.** Their
+1. **Name the 34 newly admitted registry handlers in a separate cohort.** Their
    boundaries and bounded static contracts are now tracked, but their default
-   names/comments remain unchanged and they are not part of the exact 75-row
-   existing-entry manifest. Use the registry only as Tier-2 script vocabulary;
+   names/comments remain unchanged and they were not part of the completed
+   75-row existing-entry manifest. Use the registry only as Tier-2 script vocabulary;
    preserve each row's explicit unknowns and do not imply C++ symbols,
    signatures, runtime reachability, or reconstruction parity.
-3. **Repair `0x0050FF10` separately.** Replace the stale pickup identity with
+2. **Repair `0x0050FF10` separately.** Replace the stale pickup identity with
    `CWorldPhysicsManager__CreateExplosion` and the proved caller-cleaned
    one-index signature/comment. This is a one-row corruption repair with
    different evidence and must not be folded into the registry ceremony.
-4. **Four HUD names describing the wrong subsystem** — targets 0, 3, 4, 5. The
+3. **Four HUD names describing the wrong subsystem** — targets 0, 3, 4, 5. The
    binary names none of them, so this needs a naming-convention decision before
    any promotion.
-5. **CLOSED 2026-08-12 — documentation coverage.** All 170 functions the
-   coordinate instrument covers that lacked documentation now carry at least a
-   measured row: 29 unique functions across five per-file documents (`MeshPart.cpp`,
-   `BattleEngineDataManager.cpp`, `WorldPhysicsManager.cpp`, `mesh.cpp`,
-   `ParticleSet.cpp`) and 141 unique functions represented by 148 function/file
-   rows in the mechanically generated `functions/coordinate-long-tail.md`,
-   spanning 93 files.
-   **Coverage is what closed, not understanding** — those rows are tabled
-   measured facts, not behaviour contracts, and the documents say so. Three
-   caveats are recorded with them: the instrument is factory-biased and its 827
-   functions are not a random sample of the then-current 8,136;
-   `monitor.h`/`Monitor.h` are
-   one file the image spells two ways; and the per-file ranking counts
-   coordinate rows rather than functions.
-
-   Superseded history of this item, kept because it corrected itself twice:
-   That audit read one `Address:` per document and missed every table row.
-   Recounted across all addresses in all 1,056 `reverse-engineering/` documents:
-   of 323 real-named coordinate-covered functions, **318 are mentioned somewhere
-   and 5 are not**. Neither bound is useful on its own — "mentioned" is not
-   "contracted", and the original measurement never defined which it tested.
-   Now re-measured against a stated definition — documented means a dedicated
-   function note or a table row carrying a purpose cell, not a bare mention.
-   Of 323: 26 contracted, 127 tabled, **153 documented, 170 undocumented**.
-   Corrected ranking: `MeshPart.cpp` 32, `BattleEngineDataManager.cpp` 31,
-   `WorldPhysicsManager.cpp` 21, `oids.cpp` 20, `mesh.cpp` 19. The broken figure
-   pointed at the mission-script VM; the real gap is mesh, particle and
-   data-manager code.
-6. **Generation 24**, if still wanted, parented strictly on Generation 23 and
+4. **Generation 24**, if still wanted, parented strictly on Generation 23 and
    respecting the route-order correction above.
 
 Rank from current evidence; a reproduced contradiction outranks this list.
@@ -372,6 +360,11 @@ Rank from current evidence; a reproduced contradiction outranks this list.
   registry vocabulary normalization from the one-row explosion-factory repair;
   neither structural admission nor re-ranking changes the standing completion
   test.
+- **2026-08-13 — existing registry vocabulary normalized.** The separate
+  75-row metadata cohort passed scratch and live gates with verified PRE/POST
+  recovery, exact readback, and tracked-snapshot synchronization. The frontier
+  now starts with the 34 newly created default-metadata handlers, while the
+  one-row explosion-factory repair remains a distinct corruption correction.
 
 ---
 

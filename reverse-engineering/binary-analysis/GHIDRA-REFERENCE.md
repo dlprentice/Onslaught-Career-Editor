@@ -30,9 +30,10 @@ layouts, or behaviors are proven.
 > [2026-07-27](name-grading-ledger-2026-07-27-demotion2.md).
 >
 > Later waves raised the saved live/tracked inventory to 8,136 functions by
-> 2026-08-12. The verified 2026-08-13 Mission-registry promotion admitted 34
-> additional callable starts as default-metadata Function objects, so the
-> current saved census and lower bound are 8,170, not a ceiling. The current
+> 2026-08-12. The first verified 2026-08-13 Mission-registry promotion admitted
+> 34 additional callable starts as default-metadata Function objects; the later
+> separate ceremony normalized 75 reviewed existing-entry names/comments/tags.
+> The current saved census and lower bound are 8,170, not a ceiling. The current
 > 8,170-row projection and live-state
 > receipts are reconciled in
 > [`../../../ghidra-functions.md`](../ghidra-functions.md); the 6,411- and

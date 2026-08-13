@@ -1,7 +1,7 @@
 # Retail function and behavior contracts
 
 Status: active contract-system front door
-Last updated: 2026-08-12
+Last updated: 2026-08-13
 Summary: how Battle Engine Aquila contract evidence is graded, located,
 refuted, promoted, and carried into the rebuild. Current replay authority is
 selected only by `developer_state.json` → `current_re_authority`.
@@ -126,8 +126,11 @@ accounts for the 8,136 functions saved when it was sealed: 8,129 have at least
 a bounded static C1 envelope and seven retain bounded C2 runtime grades,
 leaving zero static `OPAQUE` rows in that dated population. The verified
 2026-08-13 Mission-registry boundary promotion raised the current structural
-census to 8,170; its 34 default-metadata functions remain outside this closure.
-Those are the closure file's dated grades; Generation 23
+census to 8,170; its 34 functions remain outside that frozen table, while the
+separate reviewed static-contract addendum grades all 34 as bounded
+`C1_CANDIDATE_PARTIAL`. Joined current static accounting is therefore 8,163 C1
+plus seven C2. Those are distinct from the closure file's dated grades;
+Generation 23
 retains `CExplosion` as the eighth campaign C2 and the strict-`CRound` slot-66
 call envelope as the ninth, then advances the strict-`CRound` slot-0 event-
 routing envelope as the tenth. The static closure does not replace or broaden

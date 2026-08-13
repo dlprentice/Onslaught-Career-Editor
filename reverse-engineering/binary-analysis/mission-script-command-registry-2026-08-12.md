@@ -9,11 +9,12 @@ pairs, joined to the current tracked Ghidra name projection; UNKNOWN — every
 handler signature, argument contract, side effect and runtime behaviour, none of
 which this recovery addresses.
 Verdict: 144 script commands are paired one-to-one with 144 unique handler
-addresses by the game's own data. All 144 now resolve to saved function entries
-after a separate verified ceremony promoted the 34 formerly absent callable
-boundaries with default metadata, raising the defensible census/lower bound to
-8,170. This report still proves registry vocabulary only, not C++ symbols,
-signatures, semantics, or a final ceiling.
+addresses by the game's own data. All 144 now resolve to saved function entries.
+The 75 reviewed existing-entry names have passed a separate backed-up live
+metadata ceremony; the 34 entries created by the earlier boundary ceremony
+still retain default names. The structural census/lower bound remains 8,170.
+This report still proves registry vocabulary only, not C++ symbols, signatures,
+semantics, or a final ceiling.
 Specimen: pristine PC retail `BEA.exe`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
@@ -66,7 +67,7 @@ stores left on an untracked register**.
 | Unique handler pointers | 144 |
 | Handlers resolving to a saved function entry | 144 |
 | Callable handler entries absent from the current function census | 0 |
-| Handlers on current default `FUN_` names | 88 |
+| Handlers on current default `FUN_` names | 34 |
 | Handlers on the shared no-op | 1 |
 
 The 144 count independently matches the 144-slot native table reached from the
@@ -86,7 +87,7 @@ Unlike the PC/Xbox coordinate pair — which share a signal and must not be cite
 as mutual corroboration — these two channels are genuinely independent: one reads
 debug-allocator arguments, the other reads a registrar's stores.
 
-## Refutation, and why the 54 names are not cleared for promotion
+## Refutation, and why the 54 names required a separate promotion
 
 Three checks were run before any promotion was contemplated.
 
@@ -117,10 +118,10 @@ The sharpest was `GetVariable` against
 apparent conflict: `GetVariable` is the script-facing wrapper vocabulary, while
 the narrower world-timer name remains the visible callee mechanism.
 
-**Posture: the recovered pairing and all 23 disagreements are adjudicated.** A
+**Posture: the recovered pairing and all 23 disagreements are adjudicated.** The
 75-row current-entry normalization cohort (54 default names plus 21
-supersessions) has survived read-only review; live promotion still requires the
-full Ghidra gate.
+supersessions) subsequently passed the full live Ghidra gate. This changes
+navigation metadata, not the evidence grade of any handler.
 
 ## The 23 adjudications, resolved
 
@@ -197,17 +198,19 @@ script-facing command name rather than a C++ symbol.
 > nothing in `PlayCharMessage` registers a callback. `WithPriority` is
 > **plausibly right**. That is a smaller correction than the one this section
 > originally claimed, and the parameter at `[vtable+0x30]` should be identified
-> before any of the five is renamed.
+> before the five-row promotion is attempted. That promotion is now complete;
+> this paragraph remains the pre-promotion reasoning record.
 
-**Class 2 — the registry vocabulary supersedes five descriptive names (5).**
-Five handlers named `IScript__PlaySound*` call no sound routine directly. Their
+**Class 2 — the registry vocabulary superseded five descriptive names (5).**
+Before promotion, five handlers named `IScript__PlaySound*` called no sound
+routine directly. Their
 callees are
 `CText__GetStringById`, `CMessage__ctor_base` and
 `CMessageBox__InsertQueuedMessageSortedAndMaybeAdvance`: they build a localized
 message and queue it. The two `…Wait` variants add
 `CEventManager__GetNextFreeEvent` and `CScheduledEvent__Set`.
 
-| Idx | Registry command | Current Ghidra name |
+| Idx | Registry command | Pre-promotion Ghidra name (2026-08-12) |
 | ---: | --- | --- |
 | 17 | `AddMessage` | `IScript__PlaySound` |
 | 28 | `PlayCharMessage` | `IScript__PlaySoundWithCallback` |
@@ -346,8 +349,8 @@ callee keeps its name.
 Consequently a blanket replacement of all 23 differing descriptive labels
 would have been wrong: 21 lose to the registry vocabulary, while the two pan-
 camera rows retain stronger shipped Tier-1 self-identities. The separate 54-row
-default-name cohort has no such conflict. Promotion must still be per-row and
-must keep script-facing Tier-2 names distinct from recovered C++ identities.
+default-name cohort has no such conflict. The completed per-row promotion keeps
+script-facing Tier-2 names distinct from recovered C++ identities.
 
 ## A named dormant capability
 
@@ -383,9 +386,13 @@ then supplies bounded instruction-visible C1 envelopes and per-row falsifiers;
 it does not turn registry vocabulary into C++ symbols or add runtime evidence.
 
 **This registry report itself made and authorizes no Ghidra mutation.** The
-separate boundary owner authorized the completed structure-only ceremony.
-Promoting any registry-facing names still requires the full gate in
-[`reverse-engineering/ghidra/README.md`](../ghidra/README.md). The mechanical
-owner and its receipts are machine-local under
-`local-lab/mission-native-registry-20260812-v1/`; the recovered pairing is
+separate boundary owner authorized the completed structure-only ceremony, and
+the separate
+[vocabulary owner](mission-script-registry-vocabulary-normalization-2026-08-13.md)
+bounded the completed 75-row metadata ceremony, whose exact result is in the
+[live-promotion report](mission-script-registry-vocabulary-live-promotion-2026-08-13.md).
+The 34 newer entries remain a
+distinct future naming/comment cohort. The mechanical discovery owner and its
+receipts are machine-local under `local-lab/mission-native-registry-20260812-v1/`;
+the recovered pairing is
 [`mission-script-command-registry-2026-08-12.tsv`](mission-script-command-registry-2026-08-12.tsv).

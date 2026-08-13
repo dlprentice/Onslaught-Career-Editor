@@ -36,9 +36,9 @@
     "rebuildCorrections": "The audit fixed the manifest suffix that had prevented the broad gate from running, implemented the released ChangeWeapon edge through Core, CommandTape v4, Client and both shipped default inputs (middle mouse and Semicolon), expanded the Level-100 driver safety corridor to the selected round's complete reach, and corrected the cold-start adapter so semantic Fire release edges use QueueFirePulse instead of being reinterpreted as held physical input. It also removed brittle timing-accident assertions and closed capture-test and link-safety false-green paths.",
     "level100Cluster": "local-lab/level100-post-adapter-cluster-20260813-v1/cluster.trx; 58,916 bytes; SHA-256 064745a7b9ac76b2aa5851b8bf83bfe36ee09c94166bf97c622c450c40bea06b. All 15 tests passed. Direct returning-player path: Won t6855/hull15868. Cold client and pointer-quantised direct control are byte-for-byte trajectory-equal at Won t9899/hull14163/state hash 17c8cb7c...ed405. Unquantised direct control wins t8636/hull9800. Fixed and adverse ferry arms both win 20/20, while only the adverse arm produces 20/20 above-tier Target-Zone-4 hand-offs.",
     "fullRebuildGate": "local-lab/full-rebuild-post-claude-audit-20260813-v1 completed with exit 0 on 2026-08-13. Core 218/218 passed in 27m54s; Client 472 passed with two expected capture-dependent skips; CMSH static preview 73/73 passed; Godot toolchain 12/12 passed. stdout.log is 4,222 bytes / SHA-256 2f7a65ad7f1665cdbfc72287351cd245b618a9afa8282d4745c6938c4a9ce521; stderr.log is 178 bytes / SHA-256 2101a3818ea3296bcbc73c02417251b328434681276c14d00189456b16dbb096 and contains only the Python unittest progress/summary.",
-    "ghidraIntegrity": "The backed-up live promotion admitted 34 registry-proved callable boundaries with default metadata only: 8,136 -> 8,170 functions, zero changes to pre-existing function rows, instructions, data, references, comments, signatures, bytes, or non-target symbols. Live, tracked, and the restore-tested D: POST backup are exact 19-file / 186,551,173-byte twins; db.18608.gbf is 68,141,056 bytes / SHA-256 5f18f79d6eff16d6819c7dcaa7e70eac21a342aee66de211e4243eb2a1d33692. The authoritative receipt is local-lab/ghidra-mission-registry-boundary-live-promotion-20260813-v1/live-promotion.ready.json, 9,956 bytes / SHA-256 363a57afda96560b214c01e3a75422702ae6ac2cdeb89ed2d069231414722322.",
+    "ghidraIntegrity": "The latest backed-up live promotion normalized 75 reviewed MissionScript registry entries without changing the 8,170-function structural census, bodies, instructions, ABI/storage metadata, data, references, executable bytes, or non-target rows. Live, tracked, and the restore-tested D: POST backup are exact 19-file / 186,665,861-byte twins at canonical inventory SHA-256 b0635c394c57ddbc7ccbe8f239c2fec811e445bffca7d813e1d562c0d350c6ef; db.18609.gbf is 68,222,976 bytes / SHA-256 a002cfb6c8d52390c0e49e7357627e305f27dff198c72f284daa732e91506d0e. Separate live readback functions are 7,086,689 bytes / SHA-256 da9f20a5ae3de150546e5b103bd9914e1a4ec7492bbafe5d35c4cc79b46d4756; the current name projection is 502,868 bytes / SHA-256 f7f987b55730fb074d8b1fe31998553a9b94432dea31b1134f6a207defdfa51e. Aggregate authority: local-lab/ghidra-mission-registry-vocabulary-live-authority-20260813-v1/live-promotion.ready.json, 27,617 bytes / SHA-256 702f1781d36065f2e6ff643799dc83e6095ded54b8bce22baef3db2ffc25219f.",
     "externalResearchBoundary": "The 2026-08-13 DeepSeek/Grok pass is closed as bounded context. Locally reproduced facts add a 36-basename PS2 provenance roster and confirm that measured BEA specimens expose no usable PDB/MAP/COFF/DWARF/STABS payload; this is corpus-bounded negative evidence, not proof over unopened or passworded media. It changes neither Generation 23, the 8,170-function lower bound, nor the primary PC/rebuild lane.",
-    "remainingFrontier": "The Generation-19-through-current audit, 34-row static admission, and exact current .text body-ownership accounting are published. Keep three distinct live-Ghidra ceremonies: the reviewed 75-row current-entry Mission registry vocabulary normalization, the 34 newly created entries' Tier-2 name/comment metadata cohort using the already bounded contracts, and the one-row CreateExplosion corruption repair. The 158,188-byte .text gap now supplies separate jump-fragment/body-repair and code-shaped boundary queues. No frozen 2026-08-12 projection or historical one-shot launcher is to be repinned in place."
+    "remainingFrontier": "The Generation-19-through-current audit, 34-row static admission, exact current .text body-ownership accounting, and 75-row existing-entry Mission registry vocabulary normalization are published. Keep the 34 newly created entries' Tier-2 name/comment metadata cohort and the one-row CreateExplosion corruption repair as distinct future live-Ghidra ceremonies. The 158,188-byte .text gap supplies separate jump-fragment/body-repair and code-shaped boundary queues. No frozen 2026-08-12 projection or historical one-shot launcher is to be repinned in place."
   },
   "current_re_authority": {
     "authorityClass": "FULL_REPLAY_CAMPAIGN_AUTHORITY",
@@ -88,35 +88,41 @@
       "croundHandleEventArmEffectsCampaign": "local-lab/re-campaign-incident-recovery-20260808-v1/generation-23-cround-handle-event-arm-effects-authority.ready.json; 10522 bytes; SHA-256 12509207913b0116a94c923da7fe163c47de226b7733538baea54eb31df73ba8; literal-pinned canonical and reproduction-only replica full Generation-23 replays with exact authority-backed Generation-22 carry",
       "croundHandleEventArmEffectsLiveGhidra": "local-lab/ghidra-cround-handle-event-arm-effects-live-promotion-20260812-v1/live-promotion-v2.ready.json; 5323 bytes; SHA-256 6009a379eeb5c7506a9c1a30f6312e695b74a0a0779161e86f76c76637fc4811; historical exact twelve-comment promotion, zero name/signature/boundary/byte/data/reference drift, restore-tested PRE/POST backups",
       "collisionComponentIdentityLiveGhidra": "local-lab/ghidra-collision-component-identity-live-promotion-20260812-v1/live-promotion.ready.json; 8008 bytes; SHA-256 b2a19bae9c420f1b2e12b2ff20d516c3031fa2fe09105ec92475cf6832635246; historical exact five-row identity promotion, zero boundary/instruction/program-byte/data/reference/non-target drift, restore-tested PRE/POST backups",
-      "missionRegistryBoundaryLiveGhidra": "local-lab/ghidra-mission-registry-boundary-live-promotion-20260813-v1/live-promotion.ready.json; 9956 bytes; SHA-256 363a57afda96560b214c01e3a75422702ae6ac2cdeb89ed2d069231414722322; current exact 34-boundary promotion, zero change to the 8136 pre-existing rows or to instructions/data/references/comments, restore-tested PRE/POST backups, tracked snapshot exact to live",
+      "missionRegistryBoundaryLiveGhidra": "local-lab/ghidra-mission-registry-boundary-live-promotion-20260813-v1/live-promotion.ready.json; 9956 bytes; SHA-256 363a57afda96560b214c01e3a75422702ae6ac2cdeb89ed2d069231414722322; historical exact 34-boundary structural parent, zero change to the 8136 pre-existing rows or to instructions/data/references/comments, restore-tested PRE/POST backups",
+      "missionRegistryVocabularyLiveGhidra": "local-lab/ghidra-mission-registry-vocabulary-live-promotion-20260813-v1/runs/live-readback/vocabulary.ready.json; 2461 bytes; SHA-256 e19d69331969718a4c0832c6155a556769a66fdc49feda8e74e8e139d5a07232; latest exact 75-row metadata readback, 8095 non-target rows and all body/instruction/ABI/storage/program collateral exact, restore-tested PRE/POST backups, tracked snapshot exact to live",
       "tokenArchiveLiveGhidra": "local-lab/ghidra-tokenarchive-dispatch-live-promotion-20260809-v1/promotion/promotion.ready.json; 6072 bytes; SHA-256 8ca256ec03e36aa27c4f25720ce6882fc1ece3d91d408a4097b2740e239ec632; exact 4 labels + 5 comments, no boundary/data/reference change",
       "irrecoverableHistoricalIdentity": "Atomic14 formal-proof.ready.json: 23028 bytes / a504c24b1eab555da8a01fc56d91561d3147a508dd3f906b0ac41e97697a83e6; explicitly not reconstructed or substituted. Gen3/Gen4 READY receipts remain archival losses and are not current replay dependencies."
     },
     "latestLiveGhidraState": {
-      "promotionReady": "local-lab/ghidra-mission-registry-boundary-live-promotion-20260813-v1/live-promotion.ready.json",
-      "promotionReadyBytes": 9956,
-      "promotionReadySha256": "363a57afda96560b214c01e3a75422702ae6ac2cdeb89ed2d069231414722322",
-      "postFunctionsBytes": 7082637,
-      "postFunctionsSha256": "8aa8b4468f463053d25084de86bec2a701ed1064c13f77fd47d16f9dda6cf259",
+      "promotionReadback": "local-lab/ghidra-mission-registry-vocabulary-live-promotion-20260813-v1/runs/live-readback/vocabulary.ready.json",
+      "promotionReadbackBytes": 2461,
+      "promotionReadbackSha256": "e19d69331969718a4c0832c6155a556769a66fdc49feda8e74e8e139d5a07232",
+      "aggregateAuthority": "local-lab/ghidra-mission-registry-vocabulary-live-authority-20260813-v1/live-promotion.ready.json; 27617 bytes; SHA-256 702f1781d36065f2e6ff643799dc83e6095ded54b8bce22baef3db2ffc25219f",
+      "postFunctionsBytes": 7086689,
+      "postFunctionsSha256": "da9f20a5ae3de150546e5b103bd9914e1a4ec7492bbafe5d35c4cc79b46d4756",
       "postProgramBytes": 1267,
-      "postProgramSha256": "cb4c2194e30e074e443779d9b42587072568f104fc76f671d40757af7b106075",
-      "postBackupManifestSha256": "bf90378e8196bdda63055b818e7dcb269cacab4bdbc9c5798f45b4dc3a521fe7",
-      "postRestoreReceiptSha256": "736bcbc2c0824240865010a3c70338288ca3e2018eee94e0d3b389fd727ba87b",
-      "offVolumeBackupRoot": "D:\\BEA-Ghidra-Backups\\2026-08-13-mission-registry-boundaries-post-live",
-      "offVolumePostManifestSha256": "bf90378e8196bdda63055b818e7dcb269cacab4bdbc9c5798f45b4dc3a521fe7",
-      "offVolumeRestoreReceiptSha256": "736bcbc2c0824240865010a3c70338288ca3e2018eee94e0d3b389fd727ba87b",
+      "postProgramSha256": "c29aa646da238babd81b2bd1206e3c0d6f853d74f2aca237bbb008c64be52f87",
+      "postBackupManifestSha256": "81e9e15bda6ab8cb3faf027725d6eac8cf0d16e1f26cc4df891ac0799ce632d1",
+      "postRestoreReceiptSha256": "1fde14015dc9a55132d3b5b93452a93e8c1b0ff2a0cfee603f37eedab82f9ebd",
+      "offVolumeBackupRoot": "D:\\BEA-Ghidra-Backups\\2026-08-13-mission-registry-vocabulary-post-live",
+      "offVolumePostManifestSha256": "81e9e15bda6ab8cb3faf027725d6eac8cf0d16e1f26cc4df891ac0799ce632d1",
+      "offVolumeRestoreReceiptSha256": "1fde14015dc9a55132d3b5b93452a93e8c1b0ff2a0cfee603f37eedab82f9ebd",
       "offVolumeReadOnlyRestorePassed": true,
-      "trackedSnapshotInventorySha256": "682950bbb57b2658d8cbbe1894bfac66902392e5fff91513f85b4592532137a0",
-      "trackedSnapshotRestoreReceipt": "local-lab/ghidra-mission-registry-boundary-live-promotion-20260813-v1/tracked-snapshot-restore.ready.json; 5961 bytes; SHA-256 d79325e4d092d8abdb92f0a62d7635d80ad30034b86aa14d247aa3ac815ca8fc",
-      "addressManifest": "reverse-engineering/binary-analysis/mission-script-registry-missing-function-boundaries-2026-08-13.tsv; 34 exact half-open ranges",
-      "functionNames": "Ghidra default FUN_* metadata only; script-facing names remain a separate ceremony",
-      "functionsAdded": 34,
-      "existingFunctionRowsChanged": 0,
+      "trackedSnapshotFiles": 19,
+      "trackedSnapshotBytes": 186665861,
+      "trackedSnapshotInventorySha256": "b0635c394c57ddbc7ccbe8f239c2fec811e445bffca7d813e1d562c0d350c6ef",
+      "trackedSnapshotRestoreReceipt": "local-lab/ghidra-mission-registry-vocabulary-live-promotion-20260813-v1/tracked-snapshot-restore.ready.json; 5945 bytes; SHA-256 3e87b1d7fc2665c6c04b78b2cffa69889e9815d928b99dc0e28fa87122d61470",
+      "currentNameProjection": "reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-13.tsv; 8170 rows; 502868 bytes; SHA-256 f7f987b55730fb074d8b1fe31998553a9b94432dea31b1134f6a207defdfa51e",
+      "mutationManifest": "reverse-engineering/binary-analysis/mission-script-registry-vocabulary-normalization-2026-08-13.tsv; 75 exact existing-entry metadata rows",
+      "functionNames": "Seventy-five reviewed existing entries carry Tier-2 script-facing registry names; the 34 newly created registry handlers retain default FUN_* metadata",
+      "functionsAdded": 0,
+      "targetFunctionRowsChanged": 75,
+      "nonTargetFunctionRowsChanged": 0,
       "functionCount": 8170,
       "liveMutationApplied": true,
       "trackedSnapshotSynchronized": true,
       "recoveryMutation": false,
-      "claimBoundary": "Thirty-four registry-proved callable boundaries were created with default metadata. The 8,136 pre-existing function rows, executable bytes, instructions, data units, references, comments, signatures, and non-target symbols were unchanged. Original C++ names, script-facing name promotion, signatures, semantics, runtime behavior, cross-build mapping, reconstruction parity, and the final inventory ceiling remain open."
+      "claimBoundary": "Seventy-five reviewed existing MissionScript handler entries changed only in allowed name/rendered-signature/comment/tag metadata. All 8,095 non-target rows, body geometry and bytes, instructions, ABI and storage metadata, data units, references, executable memory, and the structural function count were unchanged. Registry vocabulary is Tier-2 script-facing evidence, not original C++ identity or new semantic/runtime/reconstruction evidence."
     },
     "activeHypothesisOverlay": {
       "status": "NONCANONICAL_SCRATCH_ONLY_NEVER_SYNC_TO_LIVE",
@@ -1006,7 +1012,7 @@
         "semanticC1Candidate": 14,
         "semanticC2Bounded": 1
       },
-      "nextQueue": "Fifty-three disjoint major static cohorts close the sealed 8,136-row crosswalk at zero static OPAQUE, and the reviewed 34-row addendum now extends bounded C1-static coverage to every row in the current 8,170-function census. Keep the reviewed 75-row registry vocabulary normalization, the 34-row new-entry metadata cohort, and the one-row CreateExplosion repair as distinct ceremonies. Then use the distinct PC demo and coherent system slices as semantic refuters and drive proved contracts into existing rebuild owners through reproduced 5-to-10-contract mismatches. Static and normalized-shape closure are not runtime/source/parity closure."
+      "nextQueue": "Fifty-three disjoint major static cohorts close the sealed 8,136-row crosswalk at zero static OPAQUE, and the reviewed 34-row addendum extends bounded C1-static coverage to every row in the current 8,170-function census. The 75-row existing-entry registry vocabulary ceremony is complete. Keep the 34-row new-entry metadata cohort and the one-row CreateExplosion repair distinct, then use the PC demo and coherent system slices as semantic refuters and drive proved contracts into existing rebuild owners through reproduced 5-to-10-contract mismatches. Static and normalized-shape closure are not runtime/source/parity closure."
     },
     "rankedNextFrontiers": [
       {

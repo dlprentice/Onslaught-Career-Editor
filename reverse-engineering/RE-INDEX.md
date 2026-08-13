@@ -192,17 +192,20 @@ script commands with handler addresses in a `0x40`-stride record array at
 [recovered registry](binary-analysis/mission-script-command-registry-2026-08-12.md)
 reconstructs all 144 records with zero untracked stores. All 144 now resolve to
 saved function entries after the backed-up structure-only promotion of 34
-formerly absent callable boundaries; **88 currently carry default `FUN_*`
-names**. The game's own data therefore supplies script-facing vocabulary for
-those 88 unnamed entries. Exactly one command,
+formerly absent callable boundaries. A later backed-up metadata ceremony
+normalized 75 reviewed existing entries, so **34 registry handlers currently
+carry default `FUN_*` names**. The game's own data therefore supplies
+script-facing vocabulary for those 34 unnamed entries. Exactly one command,
 `SetSpeed`, is bound to the shared no-op — registered but unimplemented on this
 path. It independently confirms three names the PC-native coordinate instrument
 reached by an unrelated route. A registry string is the script-facing command
 name for a slot, **not** a recovered C++ symbol; no signature or semantics
 follows from the registry alone. The separately reviewed 34-function addendum
 now records only the operations visible in those exact instruction bodies.
-Only the boundaries were promoted to Ghidra; their names and all registry
-metadata remain separate future ceremonies.
+Those 34 boundaries still retain default metadata; their naming/comment cohort
+remains separate from the completed 75-row existing-entry normalization.
+The exact backup/readback/collateral result is recorded in the
+[75-row live-promotion report](binary-analysis/mission-script-registry-vocabulary-live-promotion-2026-08-13.md).
 
 **PC-native source coordinates (2026-08-12):** the shipped PC executable passes
 `__FILE__` and `__LINE__` to its debug allocator, so the image names its own

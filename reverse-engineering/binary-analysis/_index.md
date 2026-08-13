@@ -30,6 +30,10 @@ the document it links.
   — extends bounded static-envelope coverage from the sealed 8,136-row table to
   all 8,170 currently saved functions without changing Generation 23 or Ghidra
   metadata
+- [Mission-registry 75-row vocabulary live promotion](mission-script-registry-vocabulary-live-promotion-2026-08-13.md)
+  — proves one backed-up live apply, separate readback, target-only metadata
+  changes, 8,095 byte-identical non-target rows, and exact live/tracked/POST
+  project equality; Tier-2 script vocabulary only, not C++ or behavior proof
 - [Current `.text` body ownership and listing-state accounting](current-text-ownership-2026-08-13.md)
   — replays all 8,170 saved functions / 8,287 ranges against pristine bytes,
   closes the exact zero-overlap union at 1,770,929 / 1,929,117 = 91.799978954%,
@@ -223,7 +227,9 @@ the document it links.
 > [`ghidra-function-name-table-2026-08-13.tsv`](ghidra-function-name-table-2026-08-13.tsv)
 > is the current 8,170-row address-to-name projection and the mechanical
 > checker's authority after the verified
-> [34-boundary promotion](mission-script-registry-boundary-live-promotion-2026-08-13.md).
+> [34-boundary promotion](mission-script-registry-boundary-live-promotion-2026-08-13.md)
+> and subsequent
+> [75-row vocabulary promotion](mission-script-registry-vocabulary-live-promotion-2026-08-13.md).
 > The 2026-08-12 and July tables remain dated artifacts for their original
 > checks and pinned receipts. The current count is a discovered census, not a
 > permanent ceiling.

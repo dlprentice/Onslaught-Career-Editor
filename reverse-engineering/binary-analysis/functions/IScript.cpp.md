@@ -14,7 +14,7 @@ decide an exact row or binding. The current exact 144-row registry is the
 [MissionScript appendix in `../../ghidra-functions.md`](../../ghidra-functions.md#appendix-a-complete-144-entry-missionscript-native-registry);
 direct stores in the pristine image decide the `Pause` row below.
 
-## Name corrections — 2026-07-28
+## Name corrections — 2026-07-28 and 2026-08-13
 
 Superseded in place against `ghidra-function-name-table-2026-07-27.tsv`, the
 2026-07-27 headless export of the live maintainer Ghidra project. The evidence
@@ -25,8 +25,8 @@ withdrawn label can tell it was corrected and not lost.
 
 | Address | Superseded label | Current name | Correction |
 | --- | --- | --- | --- |
-| `0x00535560` | `IScript__SetThingRefViaCUnitHelper4FD830_FromArg` | `IScript__SetFactionForHierarchy_FromArg` | same class; suffix re-read |
-| `0x005362a0` | `IScript__GetTextWidth` | `IScript__GetWorldTextSlotTimerValue` | same class; suffix re-read |
+| `0x00535560` | `IScript__SetThingRefViaCUnitHelper4FD830_FromArg`; later `IScript__SetFactionForHierarchy_FromArg` | `IScript__SetAllegiance` | shipped Tier-2 registry vocabulary; underlying hierarchy/faction mechanism retained |
+| `0x005362a0` | `IScript__GetTextWidth`; later `IScript__GetWorldTextSlotTimerValue` | `IScript__GetVariable` | shipped Tier-2 registry vocabulary is broader than the measured world-text-slot timer wrapper |
 
 Where a row's **suffix** moved rather than only its class prefix, the behavioural
 text beside it in this note was written for the old name. This sweep corrected
@@ -57,33 +57,33 @@ unverified against the new name until it is re-measured.
 | 0x00533aa0 | IScript__GetGoodieState | Get `g_Career_mGoodies[index-1]` state (cutscene/kill goodies) |
 | 0x00533b70 | IScript__Create3PointPanCamera | Create camera pan with 3 control points |
 | 0x00533eb0 | IScript__Create4PointPanCamera | Create camera pan with 4 control points |
-| 0x005345d0 | IScript__GetVectorLength | Calculate vector magnitude (sqrt) |
-| 0x005347b0 | IScript__CheckValueInRange | Check if value is within min/max bounds |
-| 0x00534b80 | IScript__GetVectorX | Extract X component from vector |
-| 0x00534c10 | IScript__GetVectorY | Extract Y component from vector |
-| 0x00534ca0 | IScript__GetVectorZ | Extract Z component from vector |
-| 0x00534fb0 | IScript__SetThingValueViaVFunc198_FromArg | Dispatch a script-provided value to selected thing vtable slot `+0x198` |
-| 0x00534fe0 | IScript__SetThingValueViaVFunc19C_FromArg | Dispatch a script-provided value to selected thing vtable slot `+0x19c` |
-| 0x00535010 | IScript__SetThingValueViaEngineHelper4FE390_FromArg | Enable a thing-name flag through the engine helper |
-| 0x00535040 | IScript__SetThingValueViaEngineHelper4FE3F0_FromArg | Disable a thing-name flag through the engine helper |
-| 0x00535530 | IScript__SetThingFloatViaVFunc1C8_FromArg | Dispatch a script-provided float to selected thing vtable slot `+0x1c8` |
-| 0x00535560 | IScript__SetFactionForHierarchy_FromArg | Dispatch an integer/faction-like state through `CUnit__SetFactionForHierarchy` |
-| 0x00535670 | IScript__GetThingName | Get name string of a game object |
-| 0x005357b0 | IScript__GetThingTypeName | Get type/class name of a game object |
-| 0x005362a0 | IScript__GetWorldTextSlotTimerValue | Calculate text width for UI rendering |
+| 0x005345d0 | IScript__Magnitude | Registry `Magnitude`; measured vector-length wrapper |
+| 0x005347b0 | IScript__IsNumberBetween | Registry `IsNumberBetween`; measured range check |
+| 0x00534b80 | IScript__GetX | Registry `GetX`; measured vector-component wrapper |
+| 0x00534c10 | IScript__GetY | Registry `GetY`; measured vector-component wrapper |
+| 0x00534ca0 | IScript__GetZ | Registry `GetZ`; measured vector-component wrapper |
+| 0x00534fb0 | IScript__EnableWeapon | Registry supplies weapon scope; body visibly dispatches the supplied value through vtable slot `+0x198` |
+| 0x00534fe0 | IScript__DisableWeapon | Registry supplies weapon scope; body visibly dispatches the supplied value through vtable slot `+0x19c` |
+| 0x00535010 | IScript__EnableSpawner | Registry supplies spawner scope; body uses the enable-by-name engine helper |
+| 0x00535040 | IScript__DisableSpawner | Registry supplies spawner scope; body uses the disable-by-name engine helper |
+| 0x00535530 | IScript__SetStealth | Registry supplies stealth meaning; body visibly dispatches the supplied float through vtable slot `+0x1c8` |
+| 0x00535560 | IScript__SetAllegiance | Registry vocabulary over the measured `CUnit__SetFactionForHierarchy` path |
+| 0x00535670 | IScript__GetWeaponName | Registry supplies weapon scope; body calls the battle-engine weapon-physics-name path |
+| 0x005357b0 | IScript__GetConfiguration | Registry vocabulary over the measured current thing-type/configuration string path |
+| 0x005362a0 | IScript__GetVariable | Registry name is broader; measured implementation wraps `CWorld__GetWorldTextSlotTimerValue` |
 | 0x005363e0 | IScript__GetPlayerBattleEngine | Get player's battle engine reference |
-| 0x00537410 | IScript__PlaySound | Play sound effect with default settings |
-| 0x00537500 | IScript__PlaySoundWithCallback | Play sound with completion callback |
-| 0x005375f0 | IScript__PlaySoundWithFade | Play sound with fade-in effect |
-| 0x005377e0 | IScript__PlaySoundWithPriority | Play sound with priority level |
-| 0x005378e0 | IScript__PlaySoundWithFadeAndPriority | Play sound with fade and priority |
+| 0x00537410 | IScript__AddMessage | Build and queue a localized `CMessage`; queued advancement can reach voice playback |
+| 0x00537500 | IScript__PlayCharMessage | Build and queue a localized character message; the measured body/call layer registers no callback |
+| 0x005375f0 | IScript__PlayCharMessageWait | Build and queue a localized character message and schedule its wait event; no fade axis was found |
+| 0x005377e0 | IScript__PlayPCharMessage | Build and queue a localized character message with caller-varied argument 7, the measured `P` axis |
+| 0x005378e0 | IScript__PlayPCharMessageWait | Build and queue the `P`-axis character message and schedule its wait event; no fade axis was found |
 | 0x00537c40 | IScript__PrintText | `PrintText(text_id)`: resolve text id through `CText__GetStringById` and print it through `CConsole__Printf("%w", ...)` |
-| 0x00537c70 | FUN_00537c70 | Mission native `Pause(seconds)`: save the current execution and schedule its continuation for current time plus the float argument |
+| 0x00537c70 | IScript__Pause | Mission native `Pause(seconds)`: save the current execution and schedule its continuation for current time plus the float argument |
 | 0x00537fd0 | IScript__IsFriendly | Return whether the current script context is friendly (`IsFriendly()`) |
 | 0x005381a0 | IScript__LevelLost | Declare the current level LOST (`LevelLost()`) |
 | 0x005381c0 | IScript__LevelLostString | Declare the current level LOST with a text id (`LevelLostString(message_id)`) |
 | 0x005381e0 | IScript__LevelWon | Declare the current level WON (`LevelWon()`) |
-| 0x005383c0 | IScript__ScheduleEvent | Schedule `PostEvent` payload as event ID `2000` for `NEXT_FRAME` (`-1.0f`) |
+| 0x005383c0 | IScript__PostEvent | Registry `PostEvent`; measured implementation allocates/schedules event ID `2000` for `NEXT_FRAME` (`-1.0f`) |
 | 0x0052ff30 | ScriptCommandRegistry__InitBuiltins | Wave864 built-in command descriptor registry initializer; 144 contiguous 0x40-byte records |
 
 ### `Pause` vertical contract
@@ -91,8 +91,8 @@ unverified against the new name until it is re-measured.
 The shipped registry is runtime-populated, so its descriptor slots are zero in
 the file image. Direct stores from `ScriptCommandRegistry__InitBuiltins`
 establish row 4 at base `0x0064CE20`, stride `0x40`, with the string `Pause` and
-handler `0x00537C70`. The current Ghidra name remains `FUN_00537c70`; this note
-does not silently promote the name.
+handler `0x00537C70`. The saved Ghidra name is now `IScript__Pause`, promoted
+as Tier-2 registry vocabulary rather than an original C++ symbol.
 
 The pristine handler body reads argument zero through the script value's float
 getter, clones the active `CEventFunction` execution state, appends it to the
