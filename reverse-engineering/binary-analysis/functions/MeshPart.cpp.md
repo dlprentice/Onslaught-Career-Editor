@@ -1,5 +1,9 @@
 # MeshPart.cpp Functions
 
+Status: active static function map
+Last updated: 2026-08-12
+Source File: `C:\dev\ONSLAUGHT2\MeshPart.cpp` (named by the shipped image; absent from `references/Onslaught/`) | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
+
 `C:\dev\ONSLAUGHT2\MeshPart.cpp` is named by the shipped image and is **absent
 from the pinned GPL drop**, so everything here comes from bytes. It is the
 largest documentation gap the PC-native source-coordinate instrument exposes;
@@ -61,6 +65,4 @@ allocation-site density, not as a function count.
 - The bone-weighted vertex path at seven arguments is the widest interface here
   and the natural first target.
 
-Source File: `C:\dev\ONSLAUGHT2\MeshPart.cpp` (named by the shipped image; absent
-from `references/Onslaught/`) | Binary: BEA.exe, SHA-256
-`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
+Source File: `C:\dev\ONSLAUGHT2\MeshPart.cpp` (named by the shipped image; absent from `references/Onslaught/`) | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
