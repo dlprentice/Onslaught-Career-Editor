@@ -173,6 +173,19 @@ for, and zero retail rows remain address-unresolved. See
 [`DEMO_VS_RETAIL.md`](DEMO_VS_RETAIL.md) for the exact accounting and proof
 boundaries.
 
+**Mission script-command registry (2026-08-12):** the shipped image pairs 144
+script commands with handler addresses in a `0x40`-stride record array at
+`0x0064CE20`, populated by `ScriptCommandRegistry__InitBuiltins`. The
+[recovered registry](binary-analysis/mission-script-command-registry-2026-08-12.md)
+reconstructs all 144 records with zero untracked stores; 110 handlers resolve to
+known function entries and **54 of those still carry default names**, so the
+game's own data supplies a name for 54 unnamed functions. Exactly one command,
+`SetSpeed`, is bound to the shared no-op — registered but unimplemented on this
+path. It independently confirms three names the PC-native coordinate instrument
+reached by an unrelated route. A registry string is the script-facing command
+name for a slot, **not** a recovered C++ symbol; no signature, contract or
+semantics follows from it, and **nothing was promoted to Ghidra**.
+
 **PC-native source coordinates (2026-08-12):** the shipped PC executable passes
 `__FILE__` and `__LINE__` to its debug allocator, so the image names its own
 authored source paths. The
