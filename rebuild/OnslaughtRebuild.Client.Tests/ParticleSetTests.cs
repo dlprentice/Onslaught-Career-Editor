@@ -1193,7 +1193,7 @@ public sealed class ParticleSetTests
         string animation = RequireSection(
             worldSource,
             "private static void AnimatePulseCannonMuzzleFlash(",
-            "private static void AnimateAtlas(");
+            "private static void AnimateTargetTankDelayedExplosion(");
         Assert.Contains("const int startCell = 1;", animation, StringComparison.Ordinal);
         Assert.Contains("const int endCell = 15;", animation, StringComparison.Ordinal);
         Assert.Contains("const double cellsPerTurn = 1.4d;", animation, StringComparison.Ordinal);
@@ -1226,7 +1226,7 @@ public sealed class ParticleSetTests
         string materializer = File.ReadAllText(Locate(
             "rebuild/tools/materialize_retail_assets.py"));
         Assert.Contains(
-            "Particle%alparticle5.tga(0)A4R4G4B4.aya\", \"5004b8c6a688b82605f870e60d4ed32a32203b4371f1aec72155fef1619a5fa0\"",
+            "Particle%alparticle5.tga(0)R5G6B5.aya\", \"5004b8c6a688b82605f870e60d4ed32a32203b4371f1aec72155fef1619a5fa0\"",
             materializer,
             StringComparison.Ordinal);
     }

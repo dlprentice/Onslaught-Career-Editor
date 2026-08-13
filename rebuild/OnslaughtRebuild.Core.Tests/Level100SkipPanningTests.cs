@@ -396,29 +396,26 @@ public sealed class Level100SkipPanningTests
     }
 
     /// <summary>
-    /// <c>CommandSpan</c> gained a load-bearing field, so the schema string had
-    /// to move with it — and the reader has to REJECT the old one rather than
-    /// read the new tape under the old contract.
+    /// <c>CommandSpan</c> gained the load-bearing <c>ChangeWeapon</c> edge, so
+    /// the schema moved from v3 to v4 and the current reader rejects a v3 tape
+    /// rather than treating two field sets as one wire contract.
     /// </summary>
     /// <remarks>
-    /// Without the bump this was the silent-drop class <c>0ccf6e96</c> exists to
-    /// prevent, and it was not theoretical: <c>skipPanning</c> is simply absent
-    /// from a <c>v1</c> reader's <c>CommandSpan</c>, so
-    /// <c>System.Text.Json</c> would have supplied <c>false</c>, the tape would
-    /// have replayed a six-second-longer opening and a whole tutorial message
-    /// chain shifted by 174 ticks, and both sides would have called it
-    /// <c>onslaught-rebuild-command-tape.v1</c>.
+    /// Unknown-member rejection already makes a v3 reader fail closed on a v4
+    /// writer's <c>changeWeapon</c> property. This assertion covers the opposite
+    /// direction: a v4 reader also refuses a valid older field set by its
+    /// explicit schema identity.
     /// </remarks>
     [Fact]
     public void ATapeWrittenUnderTheOldSchemaIsRejectedRatherThanMisparsed()
     {
         Assert.Equal(
-            "onslaught-rebuild-command-tape.v3",
+            "onslaught-rebuild-command-tape.v4",
             CommandTape.CurrentSchemaVersion);
 
         const string previousSchema = """
             {
-              "schemaVersion": "onslaught-rebuild-command-tape.v1",
+              "schemaVersion": "onslaught-rebuild-command-tape.v3",
               "name": "old-schema",
               "seed": 1,
               "durationTicks": 400,
@@ -439,7 +436,7 @@ public sealed class Level100SkipPanningTests
         InvalidDataException rejected = Assert.Throws<InvalidDataException>(
             () => CommandTapeCodec.Deserialize(previousSchema));
         Assert.Contains(
-            "onslaught-rebuild-command-tape.v1",
+            "onslaught-rebuild-command-tape.v3",
             rejected.Message,
             StringComparison.Ordinal);
     }
@@ -455,7 +452,6 @@ public sealed class Level100SkipPanningTests
         foreach (SimActions action in new[]
                  {
                      SimActions.ChargeWeapon,
-                     SimActions.ChangeWeapon,
                      SimActions.Cloak,
                  })
         {
@@ -464,6 +460,10 @@ public sealed class Level100SkipPanningTests
             Assert.Throws<ArgumentOutOfRangeException>(
                 () => new SimInput(0, 0, action).Validate());
         }
+
+        var changeWeapon = new SimInput(0, 0, SimActions.ChangeWeapon);
+        changeWeapon.Validate();
+        Assert.True((SimInput.ImplementedActions & SimActions.ChangeWeapon) != 0);
 
         // And an unassigned bit is still an unknown bit.
         Assert.Throws<ArgumentOutOfRangeException>(

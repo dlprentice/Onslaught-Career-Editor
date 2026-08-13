@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "onslaught-rebuild-command-tape.v3",
+  "schemaVersion": "onslaught-rebuild-command-tape.v4",
   "name": "first-flight",
   "seed": 2836905711,
   "durationTicks": 838,

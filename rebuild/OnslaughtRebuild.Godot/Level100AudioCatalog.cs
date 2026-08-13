@@ -747,7 +747,7 @@ public static class Level100AudioCatalog
     /// <c>PlayEffect</c>'s <c>pitch = 1.0f + (rand() % mPitchVariance)/100.0f</c>
     /// (<c>references/Onslaught/SoundManager.cpp:1188-1196</c>) and the jet's
     /// <c>SetPitch(event, 1.f + thruster*0.25f)</c>
-    /// (<c>references/Onslaught/BattleEngine.cpp:1541</c>) — so retail PC plays
+    /// (<c>references/Onslaught/BattleEngine.cpp:1542</c>) — so retail PC plays
     /// every sample at a constant 44000 Hz.
     ///
     /// The producers are deliberately still reproduced at the call sites and

@@ -1633,6 +1633,19 @@ internal sealed class Level100ChainAutopilot
         WorldSnapshot state,
         Level100ActorSnapshot target)
     {
+        // The released script re-enables Pulse for the moving-target exercise
+        // without disabling Twin. EnableWeapon does not steal the selection,
+        // so the player must use the released change-weapon edge once. The old
+        // driver stayed green only because Core used active-flag priority and
+        // silently auto-selected Pulse here.
+        if (target.TargetGroup == Level100MissionTargetGroup.MovingTargets &&
+            state.Level100PulseCannonEnabled &&
+            state.Level100WalkerSelectedWeapon !=
+                Level100MissionWeapon.PulseCannonPod)
+        {
+            return new SimInput(0, 0, SimActions.ChangeWeapon);
+        }
+
         // Is there something the script has not armed yet in the volume a miss
         // would land in? If so this is a precision shot, not a brawl: the hull
         // sweep comes off, the feet stop, and the trigger tolerance tightens.
@@ -2827,15 +2840,17 @@ internal sealed class Level100ChainAutopilot
     }
 
     /// <summary>
-    /// Is a script-bearing friendly structure standing in the shot? Every
+    /// Is a script-bearing friendly structure standing in the next round's
+    /// complete flight corridor? Every
     /// <c>Facilities</c>, <c>TankFactory</c>, <c>Hangar</c> and <c>Turret</c>
     /// actor answers <c>hit(THING_TYPE_AMMUNITION)</c> with
     /// <c>PostEvent("Hit Friendly Building")</c>, and the released LevelScript
     /// turns the twenty-first of those into <c>Friendly Building Destroyed</c>
     /// and then <c>LevelLostString</c>. A player does not shoot through the
-    /// tank factory to reach a target behind it, and an autopilot that does
-    /// loses the level rather than stalling - which is a worse failure,
-    /// because it looks like progress.
+    /// tank factory to reach a target behind it or keep firing when the same
+    /// ray reaches one behind the target. An autopilot that does loses the
+    /// level rather than stalling - which is a worse failure, because it looks
+    /// like progress.
     /// </summary>
     private static bool FriendlyStructureOnTheRay(
         WorldSnapshot state,
@@ -2853,10 +2868,25 @@ internal sealed class Level100ChainAutopilot
             return false;
         }
 
+        double roundReachMillimeters =
+            state.Level100WalkerSelectedWeapon switch
+            {
+                Level100MissionWeapon.PulseCannonPod =>
+                    SimulationConstants.ProjectileLifetimeTicks *
+                    SimulationConstants.ProjectileSpeedPerTick,
+                Level100MissionWeapon.MechTwinVulcanCannon =>
+                    SimulationConstants.MechBulletLifetimeTicks *
+                    SimulationConstants.MechBulletSpeedPerTick,
+                _ => 0,
+            };
+        double maximumProjection =
+            roundReachMillimeters / Math.Sqrt(lengthSquared);
+
         foreach (Level100ActorSnapshot actor in state.Level100Actors.Actors)
         {
             if (actor.ActorId == target.ActorId ||
                 actor.TargetGroup != Level100MissionTargetGroup.None ||
+                actor.Lifecycle != Level100ActorLifecycle.Alive ||
                 actor.Trigger.HasValue ||
                 actor.ScriptName is not ("Facilities" or "TankFactory" or "Hangar" or "Turret"))
             {
@@ -2866,7 +2896,7 @@ internal sealed class Level100ChainAutopilot
             double toX = actor.Pose.PositionMillimeters.X - startX;
             double toZ = actor.Pose.PositionMillimeters.Z - startZ;
             double projection = ((toX * deltaX) + (toZ * deltaZ)) / lengthSquared;
-            if (projection is <= 0 or >= 1)
+            if (projection <= 0 || projection > maximumProjection)
             {
                 continue;
             }

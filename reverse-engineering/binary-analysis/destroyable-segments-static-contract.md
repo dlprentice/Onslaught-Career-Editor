@@ -47,7 +47,11 @@ Do not promote these to final C++ field names until exact layout proof exists.
 
 `0x00442f60 CDestroyableSegment__VFunc_10_SpawnRubbleEffects` resolves rubble/mesh/effect context, derives spawn count from `this+0x34`, applies landscape damage, and can reach the configured explosion bridge. The corrected factory identity ties `0x00442710 CDestroyableSegment__SpawnConfiguredExplosion` to `CWorldPhysicsManager__CreateExplosion`, the explosion-definition registry `DAT_008553f8`, controller/config context through `this+0x3c`, and config field `+0xe8`.
 
-`0x00443a20 CDestroyableEndSegment__VFunc_10_SpawnEndRubbleEffects` adds end-segment setup before the base rubble path. `0x00443830 CDestroyableSwapSegment__VFunc_04_GetDamageStageIndex` derives a clamped stage index from `+0x0c`, `+0x10`, and `+0x40`.
+`0x00443a20 CDestroyableExtraUseMeshSegment__VFunc_10_SpawnEndRubbleEffects`
+adds end-segment setup before the base rubble path. The strict RTTI class is
+`CDestroyableExtraUseMeshSegment`; no `CDestroyableEndSegment` class exists in
+the specimen. `0x00443830 CDestroyableSwapSegment__VFunc_04_GetDamageStageIndex`
+derives a clamped stage index from `+0x0c`, `+0x10`, and `+0x40`.
 
 Variant vtable anchors to preserve:
 

@@ -1,7 +1,10 @@
 # Build and dump matrix
 
 Status: active, bounded archive identity census
-Last updated: 2026-08-12
+Last updated: 2026-08-13
+Specimen: pristine PC `BEA.exe`, 2,506,752 bytes, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`;
+PS2 executable identities are listed in their measured rows below.
 Evidence: MEASURED — local SHA-256, streamed member SHA-256, container
 signatures, PE/XBE headers, ZIP central-directory data, one normalized Xbox
 path/size manifest; SOURCE METADATA — explicitly labelled where local SHA-256
@@ -34,8 +37,8 @@ group IDs.
 | PC | Retail V1.00 / Bundle V299 / ASUS V299 ISOs | Exact same 692,766,720-byte ISO, SHA-256 `1dc0d95c778105ae3cb1b0db9afa701fc3141ed4ee467cdd227811f6f4248c57` | One canonical retail disc, three labels |
 | PC | Canonical retail executable | 2,506,752-byte `BEA.exe`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750` | Exact campaign pristine specimen |
 | PC | 2003 demo ZIP | Distinct 2,510,848-byte executable, SHA-256 `d8637dd755b21c720c0cb8f71923f94d2a04a184d90f5343c2e868ce8606e5c2` | RTTI/vtable and virtual-target census complete; see [`DEMO_VS_RETAIL.md`](DEMO_VS_RETAIL.md) |
-| PS2 | Europe retail | 3,615,948,800-byte inner ISO, SHA-256 `060d883b3b029c2be471d83f824b1fdf38520903f8ace47783d13e9dd399da52` | Same inner object across two different ZIP sources |
-| PS2 | USA retail | 3,615,948,800-byte inner ISO, SHA-256 `3e1fffa905680acbc57bbf9388aa77bfe60c653afe6f48823247ade88bb87ce6` | Same inner object across two different ZIP sources; distinct from Europe |
+| PS2 | Europe retail | 3,615,948,800-byte inner ISO, SHA-256 `060d883b3b029c2be471d83f824b1fdf38520903f8ace47783d13e9dd399da52`; `SLES_507.77` is 3,672,840 bytes / `87cb89b0…b655` | Same inner object across two different ZIP sources; retail executable measured read-only |
+| PS2 | USA retail | 3,615,948,800-byte inner ISO, SHA-256 `3e1fffa905680acbc57bbf9388aa77bfe60c653afe6f48823247ade88bb87ce6`; `SLUS_204.95` is 3,677,448 bytes / `4cfed76f…e166` | Same inner object across two different ZIP sources; distinct from Europe; retail executable measured read-only |
 | PS2 | Europe/USA CHD v5 | Direct and ZIP-contained CHDs match within each region | ISO equivalence remains open because CHD reports 2,448-byte units and a 4,322,188,800-byte logical image |
 | PS2 | Four magazine/demo carriers | Exact shared `BEA.ELF` and `DATA0.NYO` | One proven BEA demo core across four distinct discs; whole carriers/modules not claimed identical |
 | Xbox | USA Vimm ISO.7z / XISO.7z | Exact same outer 7z, SHA-256 `c58dd037ca6aa9baec9c58b65d1ea30ed305da86bca8e3e78fe7e2e38b31a959` | Preserve both provenance paths; XISO label is more accurate |
@@ -43,7 +46,7 @@ group IDs.
 | Xbox | Europe/Korea/USA extracted games | Same 3,823 normalized paths and 3,029,379,235 uncompressed bytes | Structure equal; every regional `Default.xbe` is distinct |
 | Xbox | Korea versus USA extracted games | Only `default.xbe` differs by ZIP path/length/CRC screen | High-confidence triage, not a 3,822-file cryptographic equality claim |
 | Xbox | Europe versus Korea/USA | XBE plus four `.aya` resources and `24.bik` differ | All six differing paths were SHA-256 checked where recorded |
-| Xbox | Two magazine demo DVD9 images | Distinct Archive.org SHA-1 metadata | Issue-11's XDVDFS BEA payload is now parsed; Issue 7 remains outside this census |
+| Xbox | Two magazine demo DVD9 images | Distinct Archive.org SHA-1 metadata | Both XDVDFS payloads are parsed locally; only Issue 11 is promoted into this tracked census |
 
 ## PC findings
 
@@ -64,8 +67,31 @@ comparison build rather than a launcher-only repack.
 ## PlayStation 2 findings
 
 The Europe and USA retail ISOs have equal lengths but different SHA-256 values.
-Region identity is therefore real at the full-image level. Filesystem-level
-and executable/data deltas remain to be measured.
+Region identity is therefore real at the full-image level. Their boot
+executables have now also been read directly from the ZIP-contained ISOs:
+
+| Region | Executable | Bytes | SHA-256 |
+| --- | --- | ---: | --- |
+| Europe | `SLES_507.77` | 3,672,840 | `87cb89b020cf107b3ba4612ac6bc86ed3fcbd6dd985e2cd3978bf897be96b655` |
+| USA | `SLUS_204.95` | 3,677,448 | `4cfed76f0b0cdf84377a4d5b1613fd197c27be9a3814743590fecba22ba4e166` |
+
+Both retail ELFs name a `.mdebug.eabi64` section, but its ELF `sh_size` is
+exactly zero. The magazine-demo ELF has no `.mdebug` section at all. None of
+the three carries a symbol payload. The demo and both retail images nevertheless
+retain the same 168 case-sensitive whole-image source-path strings and the same
+assert-reporting strings that the PC retail image lacks. Those are
+cross-build provenance and runtime-probe leads, not function symbols.
+
+Their embedded versions date the demo to 6 September 2002, Europe retail to
+18 September, and USA retail to 4 October. The demo therefore is not the oldest
+known code snapshot: Xbox Issue 7 is dated 17 June 2002. Against the pristine
+PC whole-image paths, the 139-file Xbox plate corpus, and Stuart's GPL drop, the
+PS2 roster contributes 36 basename leads not present in that union (32
+PS2-prefixed files plus `modelviewer.cpp`, `modelviewerthing.cpp`, `tower.cpp`,
+and `wall.cpp`). They establish provenance only; they do not transfer names to
+PC functions without a code or source-line join. `BSpline.cpp` is not in this
+new set: pristine PC already carries its exact path at `0x00623AB8` and joins it
+to the existing `CBSpline` function family.
 
 Four separate demo-disc carriers contain byte-identical BEA cores:
 
@@ -76,6 +102,12 @@ Four separate demo-disc carriers contain byte-identical BEA cores:
 
 This collapses the core demo build across those carriers while preserving the
 carrier discs and their other modules as separate evidence.
+
+The demo and retail PS2 images also carry
+`data\\Resources\\Loading_res_%s_%d.aya`, but this spelling is not PS2-only:
+the pristine PC image contains the same string, already indexed at
+`0x00631858`. It therefore corroborates a shared resource-loader vocabulary
+rather than adding a new container family.
 
 The direct and ZIP-contained CHDs match within region, but no controlled
 CHD-to-raw/ISO conversion has yet proved that an ISO and CHD reconstruct the
@@ -129,8 +161,8 @@ sections but deliberately leaves the 6,723-function `.text` region mixed.
   identity.
 - `NOT_MEASURED` is an explicit unknown, never a wildcard or zero hash.
 - Xbox DVD9 `CD001` may describe the DVD-video partition and does not itself
-  parse XDVDFS. Issue 11 required an XDVDFS-aware read; Issue 7 remains open in
-  this tracked census.
+  parse XDVDFS. Both demo carriers have been read locally with an XDVDFS-aware
+  parser; Issue 7's exact measurements remain outside this tracked census.
 - Password-protected Windows packages remain unopened; credentials were not
   copied into the evidence package.
 - Filename, uploader, region, or compressed-size claims never override measured
@@ -139,6 +171,6 @@ sections but deliberately leaves the 6,723-function `.text` region mixed.
 The smallest high-value successors are filesystem manifests for PC demo versus
 retail and PS2 Europe versus USA; control-flow adjudication of the 101 Xbox
 anchors outside current function bodies and ownership separation within mixed
-`.text`; ELF structure and string analysis; and tracked promotion of the already
-locally identified Issue-7 XDVDFS/XBE measurements plus its full filesystem
-census.
+`.text`; ELF structure and string analysis; and tracked promotion of the
+already locally reproduced Issue-7 XDVDFS/XBE measurements plus its full
+filesystem census.

@@ -400,8 +400,10 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                         ApplyWindowedCompatibilityPatch: false));
 
                 string optionsPath = Path.Combine(prepared.TargetGameRoot, "defaultoptions.bea");
-                if (!CreateHardLink(outsidePath, optionsPath, IntPtr.Zero))
-                    return;
+                Assert.True(
+                    CreateHardLink(outsidePath, optionsPath, IntPtr.Zero),
+                    $"Could not create the options hardlink required by this safety test; " +
+                    $"Win32 error {Marshal.GetLastWin32Error()}.");
 
                 InvalidOperationException ex = Assert.Throws<InvalidOperationException>(() =>
                     GameProfileControlOptionsService.ApplyToSafeCopy(
@@ -448,8 +450,10 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 byte[] optionsBefore = File.ReadAllBytes(optionsPath);
                 string manifestPath = Path.Combine(prepared.TargetGameRoot, GameProfileControlOptionsService.ManifestFileName);
                 File.WriteAllText(outsidePath, "{}");
-                if (!CreateHardLink(manifestPath, outsidePath, IntPtr.Zero))
-                    return;
+                Assert.True(
+                    CreateHardLink(manifestPath, outsidePath, IntPtr.Zero),
+                    $"Could not create the manifest hardlink required by this safety test; " +
+                    $"Win32 error {Marshal.GetLastWin32Error()}.");
 
                 InvalidOperationException ex = Assert.Throws<InvalidOperationException>(() =>
                     GameProfileControlOptionsService.ApplyToSafeCopy(
@@ -500,7 +504,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 }
                 catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or PlatformNotSupportedException)
                 {
-                    return;
+                    Assert.Fail($"Could not create the manifest symlink required by this safety test: {ex.Message}");
                 }
 
                 InvalidOperationException reparseEx = Assert.Throws<InvalidOperationException>(() =>

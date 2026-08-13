@@ -52,7 +52,7 @@ public sealed class HeadlessApplicationTests
     {
         string tapePath = WriteTemporaryTape("""
             {
-              "schemaVersion": "onslaught-rebuild-command-tape.v3",
+              "schemaVersion": "onslaught-rebuild-command-tape.v4",
               "name": "missing-spans",
               "seed": 1,
               "durationTicks": 10,

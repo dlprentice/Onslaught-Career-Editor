@@ -483,8 +483,8 @@ public sealed partial class Level100Audio : Node3D
         if (IsPlaying(_aquilaFlightLoop))
         {
             // The jet's producer is CBattleEngine's
-            // `SOUND.SetPitch(mEngineSound, 1.f + mThrusterAmount*0.25f)`
-            // (references/Onslaught/BattleEngine.cpp:1541), but the released PC
+            // `SOUND.SetPitch(event, 1.f + (GetJetPart()->GetThrusterValue() * 0.25f));`
+            // (references/Onslaught/BattleEngine.cpp:1542), but the released PC
             // device layer clamps it away before the buffer ever sees it
             // (references/Onslaught/pcsoundmanager.cpp:398-401). Retail's jet
             // engine is a FLAT drone; this used to raise it by a musical third

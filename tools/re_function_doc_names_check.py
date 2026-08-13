@@ -72,7 +72,7 @@ DEFAULT_TABLE = (
     REPO_ROOT
     / "reverse-engineering"
     / "binary-analysis"
-    / "ghidra-function-name-table-2026-08-12.tsv"
+    / "ghidra-function-name-table-2026-08-13.tsv"
 )
 
 # These two files intentionally do not assert a current address/name identity:

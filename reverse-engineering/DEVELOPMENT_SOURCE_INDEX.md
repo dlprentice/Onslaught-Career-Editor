@@ -32,7 +32,7 @@ Path:
 | Presenter | Jeremy Longley, Lost Toys |
 | Slides | 47 |
 | Bytes | 195,072 |
-| SHA-256 | `3b2e08607fd881dfeefb31395b49de91a68ec02dee9554714f6a97d029165713e` |
+| SHA-256 | `3b2e08607fd881dfefb31395b49de91a68ec02dee9554714f6a97d029165713e` |
 | Supporting archive | 77 files / 751,853 bytes |
 | Supporting-manifest SHA-256 | `1254ffd317766b395eef9d61473db8ce274868032eb5c663099c49df36abc0e0` |
 | Analysis status | Complete ordered transcript, terminology index, and bounded PC-retail search in ignored local lab |

@@ -1042,7 +1042,7 @@ public sealed class Level100AudioCatalogTests
     // immediately before the single SetFrequency call, on PlaySound and on every
     // later update, and BOTH producers only ever emit values at or above 1.0 -
     // PlayEffect's 1 + (rand() % variance)/100 (SoundManager.cpp:1188-1196) and
-    // the jet's 1 + thruster*0.25 (BattleEngine.cpp:1541). Retail PC therefore
+    // the jet's 1 + thruster*0.25 (BattleEngine.cpp:1542). Retail PC therefore
     // plays every sample at a constant 44000 Hz.
     [Fact]
     public void ReleasedPcPitchClamp_MakesEveryLevel100CueConstantPitch()

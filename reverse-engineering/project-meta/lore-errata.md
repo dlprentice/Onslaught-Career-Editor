@@ -4,7 +4,7 @@
   wrong, and what settled it. Moved out of the articles themselves on 2026-08-01.
 - **Evidence:** SOURCE — each entry cites the evidence that corrected it. The
   superseded text is quoted here verbatim; it is not quoted anywhere a reader goes.
-- **Last updated:** 2026-08-01
+- **Last updated:** 2026-08-13
 - **Summary:** corrections lifted out of the shipped lore corpus, plus the questions
   they left open.
 
@@ -104,21 +104,19 @@ line.
 titles: a plausible sentence nobody can source is worse than a visible gap. It stays
 truncated until someone reads the archived PDF.
 
-### Whether the fiction shelf is first-party text
+### Whether the fiction shelf is first-party text — partly settled 2026-08-13
 
-`characters.md` claims to be "drawn from the game's own character bios and briefings",
-and `battle-engine-tech.md` says its Kiralova memo is "reproduced as authored". Neither
-has ever been checked against the game.
+The character profiles are now checked against pristine retail
+`data/language/english.dat` (279,933 bytes, SHA-256
+`789ecff619d077092769df281c540d138a25fcc74d70023466a604888e59371a`).
+The retail table contains eight consecutive profiles; the article's original four
+match the archived Lost Toys page and differ slightly from retail (`learnt`/`learned`,
+`Airforce`/`Air Force`, and several expanded stat fields). `characters.md` now states
+that provenance, aligns the detailed rows with retail, and records the other four as a
+bounded stat census. The prior source-attribution question is closed for that file.
 
-This is now cheap to settle. The game's own text table holds ~2,571 developer-written
-strings, and `OnslaughtCareerEditor.AppCore/GameTextCatalog.cs` decodes it from any
-installation. One run, diffed against the bios and the memo, answers whether the fiction
-shelf is first-party text or a transcription from an archived website — and determines
-what a campaign document may quote.
-
-**Until it runs, the in-universe fiction text is edit-frozen.** "Reproduced as authored"
-is the same principle as never synthesizing a `.bes` save: if it is authored text, it is
-not ours to tighten.
+The separate `battle-engine-tech.md` Kiralova memo has not been compared and remains
+edit-frozen. Its "reproduced as authored" claim is still an open verification target.
 
 ### The PC port developer's surname
 

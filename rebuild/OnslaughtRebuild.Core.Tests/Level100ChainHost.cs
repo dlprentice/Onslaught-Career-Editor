@@ -185,15 +185,18 @@ internal sealed class Level100DirectChainHost : ILevel100ChainHost
 ///
 /// <list type="number">
 ///   <item><description><b>Held state</b> - <c>MoveX</c>, <c>MoveZ</c>,
-///   <c>Fire</c>, <c>LandingJets</c>, digital <c>LookX/LookY</c> - goes through
+///   <c>LandingJets</c>, digital <c>LookX/LookY</c> - goes through
 ///   <see cref="InteractiveSession.ObserveInput"/> exactly as
 ///   <c>FirstFlightGame.SampleInput</c> polls it. Lossless.</description></item>
-///   <item><description><b>Discrete edges</b> - <c>ToggleMode</c>,
-///   <c>Reset</c> - go through <see cref="InteractiveSession.QueueToggleMode"/>
-///   and <see cref="InteractiveSession.QueueReset"/>, which is the key-press
-///   path <c>FirstFlightGame._Input</c> uses. Lossless, and deliberately not
-///   the <c>ToggleModeHeld</c> level, because a held key produces one edge
-///   where the autopilot may want one per tick.</description></item>
+///   <item><description><b>Discrete edges</b> - <c>Fire</c>,
+///   <c>ToggleMode</c>, <c>Reset</c>, and <c>ChangeWeapon</c> - go through
+///   <see cref="InteractiveSession.QueueFirePulse"/>,
+///   <see cref="InteractiveSession.QueueToggleMode"/>,
+///   <see cref="InteractiveSession.QueueReset"/>, and
+///   <see cref="InteractiveSession.QueueChangeWeapon"/>, which is the key-press
+///   or already-sampled release path the client uses. Lossless, and
+///   deliberately not a physical button level: <c>SimActions.Fire</c> already
+///   means retail's <c>BUTTON_RELEASE</c> semantic edge.</description></item>
 ///   <item><description><b>The analogue look axis is LOSSY, and the loss is
 ///   measured rather than assumed.</b> The autopilot commands a stick position
 ///   in permille. The client has no route for that: <c>SampleInput</c> leaves
@@ -383,12 +386,17 @@ internal sealed class Level100InteractiveChainHost : ILevel100ChainHost
         _session.ObserveInput(new InteractiveInput(
             input.MoveX,
             input.MoveZ,
-            input.HasAction(SimActions.Fire),
+            FireHeld: false,
             ToggleModeHeld: false,
             ResetHeld: false,
             input.LookX,
             input.LookY,
             input.HasAction(SimActions.LandingJets)));
+
+        if (input.HasAction(SimActions.Fire))
+        {
+            _session.QueueFirePulse();
+        }
 
         if (input.HasAction(SimActions.ToggleMode))
         {
@@ -398,6 +406,11 @@ internal sealed class Level100InteractiveChainHost : ILevel100ChainHost
         if (input.HasAction(SimActions.Reset))
         {
             _session.QueueReset();
+        }
+
+        if (input.HasAction(SimActions.ChangeWeapon))
+        {
+            _session.QueueChangeWeapon();
         }
 
         // The counters read what the DRIVER ASKED FOR, always, so the

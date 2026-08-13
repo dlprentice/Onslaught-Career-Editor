@@ -380,7 +380,8 @@ public sealed partial class RetailFrontendFlow : Control
     // guide colour attenuated by the panel's own alpha. Stating the measured
     // composite avoids depending on blend rounding to reproduce it.
     private static readonly Color DevSelectGuideOverPanel = new(19f / 255f, 19f / 255f, 27f / 255f, 1f);
-    // FrontEnd.cpp:1128 draws FET3_HEADER_TEXT_BOX with col = 0x7f000000, and the
+    // FrontEnd.cpp:1127 sets col = 0x7f000000; line 1134 draws
+    // FET3_HEADER_TEXT_BOX, and the
     // measured header interior is (12,12,24) — exactly that alpha over the
     // (23,23,48) page background. Drawn as the measured composite because an
     // alpha 0x7f fill lands on (11,11,24) after this renderer's blend rounding.
@@ -1884,8 +1885,8 @@ public sealed partial class RetailFrontendFlow : Control
     /// Two of those colours corroborate the released source directly:
     /// the header box interior is exactly black at 0x7f alpha over the page
     /// background, which is the literal `col = 0x7f000000` at
-    /// references/Onslaught/FrontEnd.cpp:1128, and the title is drawn centred on
-    /// HEADER_BAR_X = 390 (FrontEnd.cpp:1101) in 0xff7f7f7f (FrontEnd.cpp:1207).
+    /// references/Onslaught/FrontEnd.cpp:1127, and the title is drawn centred on
+    /// HEADER_BAR_X = 390 (FrontEnd.cpp:1103) in 0xff7f7f7f (FrontEnd.cpp:1215).
     ///
     /// KNOWN GAPS, stated rather than faked: the metal header end-cap brackets
     /// (FET3_HEADER_BRACKET1, retail x182..190 and x585..598) and the blue
@@ -2043,7 +2044,7 @@ public sealed partial class RetailFrontendFlow : Control
     ///                        extents and colour to the FEP_DEVSELECT header
     ///   title "SELECT LEVEL" ink x304..471, y73..87; 'S' has atlas bearing (0,3), so
     ///                        origin (304, 68.5) at scale 1.5, i.e. centred on x=390
-    ///                        exactly as HEADER_BAR_X (FrontEnd.cpp:1101) requires
+    ///                        exactly as HEADER_BAR_X (FrontEnd.cpp:1103) requires
     ///   "Episode 1"          white (254,254,254), ink x130..237 y133..148, scale 1.4
     ///   "1.00 - Training..." (254,222,126), ink x130..374 y161..176, scale 1.4
     ///   column labels 1/2/3  (62,157,253) = ReleasedBlue exactly, left edges

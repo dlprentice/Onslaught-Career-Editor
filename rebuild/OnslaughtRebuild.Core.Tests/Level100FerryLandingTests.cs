@@ -133,12 +133,13 @@ internal static class Level100FerrySweep
 /// the zone, in the sea.</para>
 ///
 /// <para><b>THE DROWNING NO LONGER REPRODUCES, AND THE MECHANISM DOES.</b> At
-/// 20 Hz the defect still commits a fall the driver cannot steer - measured,
-/// 25,026 mm of surface clearance on the returning player and 24,438 mm on the
-/// cold career, against a clearance term that refuses both - but that fall now
-/// lands INSIDE the volume on dry land instead of past it in the sea, and both
-/// adverse careers reach <c>Won</c>. The fall is not shorter; the airframe
-/// arrives slower. The ballistic drift a hand-off buys is
+/// 20 Hz the horizontal-only defect still commits a fall the driver cannot
+/// steer. In the current twenty-run sweep all twenty adverse Target Zone 4
+/// hand-offs occur above the permitted cruise tier, while all twenty fixed
+/// hand-offs occur at or below it; both arms nevertheless reach <c>Won</c>
+/// because the adverse fall now lands inside the volume on dry land. The fall
+/// is not shorter; the airframe arrives slower. The ballistic drift a hand-off
+/// buys is
 /// <c>speed * (transitionTicks + r/(1-r))</c> and that expression is
 /// rate-invariant - retail's 0.975 per 20 Hz update is exactly the 30 Hz
 /// Core's 0.983263 - so the only term that moved is the speed the ferry leg
@@ -227,18 +228,17 @@ public sealed class Level100FerryLandingTests
     /// term still refuses it:</para>
     ///
     /// <list type="table">
-    ///   <item><description>returning player, adverse: <c>TargetZone4</c> morph
-    ///   at t5197, 19,904 mm out, <b>25,026 mm</b> of surface clearance,
-    ///   <c>committed=False</c>.</description></item>
-    ///   <item><description>returning player, fixed: t5574, 3,259 mm out,
-    ///   <b>4,887 mm</b>, <c>committed=True</c>.</description></item>
-    ///   <item><description>cold career, adverse: t7405, 19,693 mm out,
-    ///   <b>24,438 mm</b>; fixed: t7879, 3,223 mm out, <b>4,962 mm</b>.
+    ///   <item><description>fixed arm: <b>20/20</b> reach <c>Won</c>, zero
+    ///   <c>WaterLoss</c>, and <b>0/20</b> Target Zone 4 hand-offs exceed the
+    ///   permitted tier.</description></item>
+    ///   <item><description>horizontal-only adverse arm: <b>20/20</b> also reach
+    ///   <c>Won</c>, but <b>20/20</b> Target Zone 4 hand-offs exceed that tier.
     ///   </description></item>
     /// </list>
     ///
-    /// <para><b>What is no longer true, and why.</b> Both adverse careers now
-    /// reach <c>Won</c>. The fall is not shorter - the drift a hand-off buys is
+    /// <para><b>What is no longer true, and why.</b> Every current adverse sweep
+    /// run reaches <c>Won</c>. The fall is not shorter - the drift a hand-off
+    /// buys is
     /// <c>speed * (transitionTicks + r/(1-r))</c>, and every factor in it is
     /// rate-invariant, because retail's 0.975 horizontal retention per 20 Hz
     /// update is exactly what the 30 Hz Core spelled 0.983263. What moved is
@@ -307,12 +307,12 @@ public sealed class Level100FerryLandingTests
             $"adverse {adverseAboveTier}/{adverseFerry.Length}, " +
             $"fixed {fixedAboveTier}/{fixedFerry.Length}");
 
-        // NOT "every adverse morph", deliberately. Measured on the cold career,
-        // six of twenty perturbations arrive at the ferry BELOW 20,000 mm - as
-        // low as 17,501 - and on those the term would have permitted the morph
-        // anyway and the two arms coincide. The claim is the one that is true
-        // and is the one the gate needs: the defect reaches hand-offs the term
-        // refuses, and the term lets none of them through.
+        // The current sweep measures every adverse ferry morph above the tier,
+        // but the gate deliberately requires only a non-empty adverse set. Its
+        // durable job is to prove the horizontal-only defect reaches hand-offs
+        // the clearance term refuses; the fixed arm still requires zero high
+        // hand-offs. A later legitimate trajectory change need not keep the
+        // incidental 20/20 adverse count.
         Assert.True(
             adverseAboveTier > 0,
             "no Target Zone 4 hand-off in the ADVERSE arm was above the cruise " +

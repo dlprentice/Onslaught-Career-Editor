@@ -129,21 +129,32 @@ public sealed class Level100WaterEnvelopeTests
     /// </summary>
     private const int MedianTolerance = 24;
 
-    [Fact]
+    /// <summary>
+    /// xUnit v2 cannot dynamically skip after a test starts. Resolve the
+    /// optional local capture during discovery so a missing or stale capture
+    /// is visible as skipped, never as a passing rendered-pixel assertion.
+    /// </summary>
+    private sealed class CurrentWaterCaptureFactAttribute : FactAttribute
+    {
+        public CurrentWaterCaptureFactAttribute()
+        {
+            string? explicitCapture =
+                Environment.GetEnvironmentVariable("ONSLAUGHT_WATER_CAPTURE_DIR");
+            if (string.IsNullOrWhiteSpace(explicitCapture) &&
+                ResolveCaptureDirectory() is null)
+            {
+                Skip = "No current production Level 100 water capture is available to score.";
+            }
+        }
+    }
+
+    [CurrentWaterCaptureFact]
     public void CapturedWaterStaysInsideTheRetailEnvelope()
     {
-        string? captureDirectory = ResolveCaptureDirectory();
-        if (captureDirectory is null)
-        {
-            // No local gameplay capture on this machine. Say so out loud rather
-            // than reporting a green gate that measured nothing.
-            Assert.True(
-                string.IsNullOrEmpty(
-                    Environment.GetEnvironmentVariable("ONSLAUGHT_WATER_CAPTURE_DIR")),
-                "ONSLAUGHT_WATER_CAPTURE_DIR is set but holds no gameplay capture " +
-                "with level100-t000002ms.png.");
-            return;
-        }
+        string captureDirectory = ResolveCaptureDirectory() ??
+            throw new InvalidOperationException(
+                "ONSLAUGHT_WATER_CAPTURE_DIR does not contain the required " +
+                "gameplay frames, or the selected capture disappeared after discovery.");
 
         var failures = new List<string>();
         foreach (WaterSample sample in WaterSamples)

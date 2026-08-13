@@ -140,10 +140,10 @@ references did not change. Generation 73 remains a projection oracle, never a
 parent or authority. The next valid campaign generation is 24. Model review is
 situational and harness-agnostic under `REVIEW-PROTOCOL.md`.
 
-**Current static-envelope closure (2026-08-11):** the reviewed
+**Dated static-envelope closure (2026-08-11):** the reviewed
 [`function-c1-closure-2026-08-11.tsv`](binary-analysis/function-c1-closure-2026-08-11.tsv)
-accounts for the current 8,136-function inventory at 8,129 bounded C1 and seven
-bounded C2 functions, with zero static `OPAQUE` rows. It joins 53 disjoint
+accounts for its 8,136-function population at 8,129 bounded C1 and seven
+bounded C2 functions, with zero static `OPAQUE` rows in that population. It joins 53 disjoint
 sealed receipts covering 7,945 functions, ten post-Gen19 Mission-native
 boundaries, and 181 pre-existing C1/C2 rows. This is a distinct authority for
 static-envelope accounting; Generation 23 remains the immutable replay owner
@@ -151,7 +151,14 @@ for its admitted runtime evidence and READY/reducer lineage. See the
 [closure report](binary-analysis/function-c1-closure-2026-08-11.md) for exact
 hashes and limits.
 
-**Current PC demo/retail frontier (2026-08-12):** the conservative 8,086-entry
+**Current structural census (2026-08-13):** the verified
+[Mission-registry boundary promotion](binary-analysis/mission-script-registry-boundary-live-promotion-2026-08-13.md)
+added exactly 34 default-metadata callable entries, taking saved live and
+tracked Ghidra from 8,136 to **8,170 internal functions**. The new functions
+are outside both the dated static closure and the demo map; no semantic grade,
+name, signature, or runtime contract follows from their admission.
+
+**Dated PC demo/retail frontier (2026-08-12, 8,136-function population):** the conservative 8,086-entry
 address map plus exact second-pass reports, caller propagation, equal-delta
 body-union audit, whole-demo fingerprint scan, and terminal structural pass now
 account for 8,119 normalized-identical bodies, 16 bounded semantic divergences,
@@ -177,21 +184,24 @@ boundaries.
 script commands with handler addresses in a `0x40`-stride record array at
 `0x0064CE20`, populated by `ScriptCommandRegistry__InitBuiltins`. The
 [recovered registry](binary-analysis/mission-script-command-registry-2026-08-12.md)
-reconstructs all 144 records with zero untracked stores; 110 handlers resolve to
-known function entries and **54 of those still carry default names**, so the
-game's own data supplies a name for 54 unnamed functions. Exactly one command,
+reconstructs all 144 records with zero untracked stores. All 144 now resolve to
+saved function entries after the backed-up structure-only promotion of 34
+formerly absent callable boundaries; **88 currently carry default `FUN_*`
+names**. The game's own data therefore supplies script-facing vocabulary for
+those 88 unnamed entries. Exactly one command,
 `SetSpeed`, is bound to the shared no-op — registered but unimplemented on this
 path. It independently confirms three names the PC-native coordinate instrument
 reached by an unrelated route. A registry string is the script-facing command
 name for a slot, **not** a recovered C++ symbol; no signature, contract or
-semantics follows from it, and **nothing was promoted to Ghidra**.
+semantics follows from it. Only the 34 boundaries were promoted to Ghidra;
+their names and all registry metadata remain separate future ceremonies.
 
 **PC-native source coordinates (2026-08-12):** the shipped PC executable passes
 `__FILE__` and `__LINE__` to its debug allocator, so the image names its own
 authored source paths. The
 [PC-native source-coordinate instrument](binary-analysis/pc-native-source-coordinates-2026-08-12.md)
 recovers 1,559 coordinates over 149 distinct authored paths, landing in 827 of
-the 8,136 known functions, with 14 functions carrying coordinates from more than
+the then-current 8,136 functions, with 14 functions carrying coordinates from more than
 one path where inlining shows. It reconciles 422/422 exactly with the Xbox anchor
 join below, but that is **method validation and not corroboration** — both
 readings come from the same PC instructions, and the prior lane simply retained
@@ -447,7 +457,8 @@ being recovered**, which is exactly the trap this metric sets.
 *(Added 2026-07-27. The per-ledger figures below are dated snapshots against the
 **6,969**-function inventory and are quoted as those ledgers state them; they
 are not the current figure. The tracked `ghidra/` snapshot now has a separately
-read-back 8,136-row name projection dated 2026-08-12; the July 7,555-row table
+read-back 8,170-row name projection dated 2026-08-13; the frozen 8,136-row
+2026-08-12 table and July 7,555-row table
 remains a dated artifact. Historical live/snapshot distinction and mutation-
 wave reconciliation are tracked in [`ghidra-functions.md`](ghidra-functions.md);
 bulky working exports remain ignored under `local-lab/`.)*
@@ -471,9 +482,11 @@ different failure modes and only the first was being tested.)*
   incomplete. 468,804 exported instructions verified against the pristine binary
   with **0 byte mismatches**, 6,351 of 6,411 functions fully clean — but only
   **79.8268 % of `.text` was covered by those 6,411 historical bodies**.
-  Coverage of the current 7,555-row inventory is **UNKNOWN** until a fresh
-  interval export is measured. Reproducible for the historical population in
-  under a minute with `tools/re_verify.py`.
+  Current `.text` ownership remains **UNKNOWN** even though exact body geometry
+  now exists for all 8,170 saved rows;
+  interval union, overlaps, and noncode alignment
+  still need one current accounting pass. Reproducible for the historical
+  6,411-row population in under a minute with `tools/re_verify.py`.
 - [RTTI and source-path evidence — a documented ground truth was wrong](binary-analysis/rtti-and-source-path-evidence-2026-07-25.md)
   — 2026-07-25. **Read this before repeating "the binary has no symbols."**
   Direct ASCII scan of the pristine specimen finds **667 RTTI type descriptors**
@@ -672,8 +685,11 @@ Machine-readable siblings, for consumers that should not be parsing prose:
 - [First-flight camera/movement/morph contract](binary-analysis/first-flight-camera-movement-morph-contract-candidate.v1.json)
   — a **candidate**, as its own filename says; not an accepted contract.
 - [Retail specimen manifest](binary-analysis/retail-specimen-manifest-2026-03-14.json)
+- [2026-08-13 function name table](binary-analysis/ghidra-function-name-table-2026-08-13.tsv)
+  — the current 8,170-row address-to-name authority.
 - [2026-08-12 function name table](binary-analysis/ghidra-function-name-table-2026-08-12.tsv)
-  — the current 8,136-row address-to-name authority.
+  — frozen 8,136-row provenance retained for Generations 20–23 and its other
+  pinned consumers.
 - [2026-07-27 function name table](binary-analysis/ghidra-function-name-table-2026-07-27.tsv)
   — dated 7,555-row provenance retained for its pinned consumers.
 

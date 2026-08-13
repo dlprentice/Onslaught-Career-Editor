@@ -254,11 +254,12 @@ public enum SimActions : ushort
 
     /// <summary>
     /// <c>BUTTON_MECH_CHANGE_WEAPON</c> <c>0x14</c>, shipped row 12
-    /// (<c>active=1</c>, mouse device <c>0x10</c> code 2). DECLARED, NOT
-    /// IMPLEMENTED: Core now preserves the selected Walker and Jet slots, but
-    /// changing them would expose the still-unimplemented Missile Pod launch
-    /// law and charge/store eligibility gate.
-    /// <see cref="SimInput.Validate"/> rejects it.
+    /// (<c>active=1</c>, primary mouse device <c>0x10</c> code 2, the middle
+    /// button; secondary keyboard device <c>0x08</c> scan code <c>0x27</c>,
+    /// Semicolon).
+    /// Core cycles to the next active slot. The released heat/store eligibility
+    /// gate and Missile Pod launch law remain unimplemented; selecting the
+    /// Missile Pod is represented, but firing it still produces no shot.
     /// </summary>
     ChangeWeapon = 1 << 6,
 
@@ -299,8 +300,9 @@ public readonly record struct SimInput(
     short LookYAnalogPermille = 0)
 {
     // LandingJets may be held. Fire is the released gun-button edge; UI
-    // adapters must also edge-sample ToggleMode, Reset and SkipPanning - every
-    // shipped BUTTON_SKIP_PANNING row is KEY_ONCE (push type 8).
+    // adapters must also edge-sample ToggleMode, Reset, SkipPanning and
+    // ChangeWeapon. The released SkipPanning and ChangeWeapon mappings are
+    // one-shot actions rather than held state.
     // LookX is body look left/right and LookY is screen up/down (-1/0/+1).
     // Analog look is the deterministic -1000..1000 axis produced by an input adapter.
     public static SimInput Idle => new(0, 0);
@@ -381,6 +383,7 @@ public readonly record struct SimInput(
         SimActions.Reset |
         SimActions.LandingJets |
         SimActions.SkipPanning |
+        SimActions.ChangeWeapon |
         SimActions.ZoomIn |
         SimActions.ZoomOut;
 }

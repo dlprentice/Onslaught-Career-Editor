@@ -45,8 +45,9 @@ the top, stream loading in the middle, and clone/merge at the end.
 Two evidence joins worth keeping:
 
 - `CMeshPart__Clone` calls both `CMeshPart__Init` and
-  `CMeshPart__AllocateGeometry`, so cloning re-runs construction rather than
-  copying raw memory.
+  `CMeshPart__AllocateGeometry`, proving that cloning performs explicit
+  initialization and geometry allocation. Whether it also copies raw buffers
+  is not settled by the call list.
 - `LoadFromStream` and `LoadMaterial` are the only chunk-reader consumers here,
   and `LoadVerticesAndTriangles` and `LoadVerticesWithBones` read through
   `CDXMemBuffer` instead — two distinct input paths into the same object.

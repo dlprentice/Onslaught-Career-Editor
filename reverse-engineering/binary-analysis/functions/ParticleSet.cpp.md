@@ -18,11 +18,11 @@ invented.
 
 ## Two joins worth keeping
 
-**`CreateByType` is a thirteen-way factory.** Thirteen allocations paired with
-ten `CParticleSet__Init` calls across source lines 95–107 — one allocation site
-per line — is the shape of a type switch with a case per particle-set kind. The
-count of distinct kinds is not established: 13 allocations and 10 inits do not
-have to mean 13 or 10 types, since a case may allocate more than once.
+**`CreateByType` contains thirteen direct allocation calls.** They are paired
+with ten `CParticleSet__Init` calls across source lines 95–107, which is
+consistent with a multi-case factory. Call counts alone do not prove thirteen
+branches or thirteen particle-set kinds: a path may allocate more than once,
+and the control-flow partition has not been recovered here.
 
 **`LoadFromArchive` consumes `CTokenArchive__ReadNextToken`** ×5 with seven
 frees. That is the same token reader whose exact static parser, corpus, factory
@@ -32,8 +32,9 @@ and direct-writer contract was admitted at C1 in **Generation 18**, and whose
 a place where the campaign's TokenArchive work and the particle system meet.
 
 That join is the useful part of this file: Generation 18 established what the
-reader does, and this says who calls it and with what lifetime (seven frees in
-617 bytes, so the loader releases as it goes rather than at the end).
+reader does, and this identifies a caller that combines five token-reader calls
+with seven frees. Their ordering and object lifetimes require a control-flow
+read and are not inferred from the counts.
 
 ## Open
 

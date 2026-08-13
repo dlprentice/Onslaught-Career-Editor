@@ -6,7 +6,7 @@ capture bundles, calibrated Stuart/BSim matching, an authored Mission logger,
 and verified campaign ratchets are implemented; corpus-wide semantic joins,
 repeated action campaigns, and rebuild-ready semantic promotion remain open
 
-Last updated: 2026-08-09 (Gen13 authority; Gen10/Gen73 remain non-current)
+Last updated: 2026-08-13 (Gen23 authority; Gen10/Gen73 remain non-current)
 
 Verdict: Battle Engine Aquila no longer needs to be approached as 8,124 isolated
 decompiler functions plus an unbounded dark tail. A specimen-bound pipeline can
@@ -49,32 +49,24 @@ not establish its Steam depot identity.
 
 ---
 
-## Current complete-RE replay authority (2026-08-09) — read first
+## Current complete-RE replay authority (2026-08-13) — read first
 
 Current authority is **not** the Gen10 block below or candidate Gen73. Re-read
-`developer_state.json` → `current_re_authority`. Canonical Gen19 has
-functions=**8126**, C1=**217**, C2=**7**, function semantic OPAQUE=**7902**,
-contract C0_OPAQUE=**14021**, OPEN residual=**17**, complete_RE=**false**, and
-REBUILD_READY=**0**. Its READY is `f83dbb6e…ab9a`; reducer
-`151acbe5…f3e2`. Generation 73 is projection-oracle evidence only. Seven
-wrappers remain name-only/opaque and NearClone remains unchanged. ApplyDamage
-is now C2 only for one replicated 1,000-damage zero-shield path with an exact
-overkill parity vector; positive-shield behavior and other paths remain open.
-Gen14 also proves the exact adjacent TokenArchive dispatch-data partition and
-retires one residual without assigning the seven category meanings. Gen15
-proves the exact Mission-native `IScript__SetPos` boundary and static call shape.
-Gen16 advances only two replicated script-visible position-copy roundtrips to
-bounded C2 and a partial rebuild mapping; complete writes, side effects, broader
-inputs, and failures remain open. Gen17 adds only LockHit's measured non-null,
-sole-node removal path; all other list paths and rebuild ownership remain open.
-Gen18 adds only an exact static TokenArchive parser/corpus/factory/direct-writer
-contract at C1; runtime/refuter verdicts stay `UNSCORED`, runtime replays are
-zero, and its rebuild remains partial. Gen19 then adds only the exact
-UnsetObjective 3-byte NOP / 13-byte wrapper / 3-byte NOP partition and its C1
-static call/bit-clear contract; opaque callee and runtime behavior remain open,
-the rebuild is partial, and live Ghidra is unchanged. The next valid campaign
-generation is 20. C1 static evidence is not C2 runtime
-proof or parity, and bounded C2 is not rebuild-ready.
+`developer_state.json` → `current_re_authority`. Canonical Gen23 has
+functions=**8,126**, C1=**217**, C2=**10**, function semantic
+OPAQUE=**7,899**, contract C0_OPAQUE=**14,018**, OPEN residual=**17**,
+complete_RE=**false**, and REBUILD_READY=**0**. Its READY is
+`4471fdfe…5a93fc`; frozen reducer `a757bc51…db09`. Generation 73 is a
+projection oracle only. Gen20 bounds ten retained `CExplosion` carrier calls;
+Gen21 bounds strict-`CRound` slot-66 call/return placement; Gen22 bounds
+strict-`CRound` slot-0 arm routing; Gen23 adds exact receiver-write pairs for
+five selected arms while preserving rejected controls and lane-specific gaps.
+External effects, event 4002, field meanings, broader populations, source
+spelling, and direct rebuild parity remain open. The next valid campaign
+generation is 24. The separate 8,136-row static-envelope closure and the 34
+newly proved callable boundaries are structural/static evidence, not automatic
+Gen23 semantic admissions. C1 is not C2 runtime proof or parity, and bounded C2
+is not rebuild-ready.
 
 ## Historical recursive-campaign snapshot (2026-08-04, Generation 10)
 
@@ -238,44 +230,37 @@ its acceptance gate.
 
 ## The actual closure gap
 
-The literal Ghidra-default-name count changed between the earlier reproducible
-snapshot and the latest read-only live export:
+The current layers must remain separate:
 
 | Population | Current count | Meaning |
 | --- | ---: | --- |
-| All Ghidra function entries | 7,555 | Current maintainer database readback |
-| MSVC exception/unwind funclets | 1,179 | Compiler machinery; excluded from developer-name denominator |
-| Human-namable denominator | 6,376 | 7,555 minus 1,179 funclets |
-| Literal `FUN_<address>` names | 366 | Latest 2026-07-28 live readback |
-| Weak/unsupported three-cohort names | 1,867 / 6,376 = 29.3% | Honest semantic naming debt |
-| Functions added after the old 6,411-row fullpass | 1,144 | Never reviewed by that pass |
-| Functions with a clear identity entry in function notes | 1,027 / 7,555 = 13.594% | Documentation coverage, not byte coverage |
-| Functions with any exact entry-address note mention | 1,285 / 7,555 = 17.009% | Broader but weaker note coverage |
-| Mission native registry rows | 144 | Finite shipped registry |
-| Mission handlers absent as Ghidra function entries | 86 | Boundary/discovery debt, not just naming debt |
+| Saved Ghidra function entries | 8,170 | Exact 2026-08-13 live/tracked readback; includes 34 newly promoted registry-callable boundaries |
+| Additional proved boundaries still outside Ghidra | 0 | The 34 decoded, pairwise-disjoint entries now exist with default metadata |
+| Defensible discovered census/lower bound | **8,170** | Not a final ceiling |
+| MSVC exception/unwind funclets in saved Ghidra | 1,179 | Compiler machinery; not gameplay-semantic closure |
+| Literal `FUN_<address>` names in saved Ghidra | 966 | Includes the 34 newly created default names; the 75-row name ceremony remains separate |
+| Static-envelope closure | 8,136 rows: 8,129 C1 + 7 C2 | Dated table; does not include the 34 promoted entries |
+| Canonical campaign | 8,126 rows: 217 C1 + 10 C2 + 7,899 OPAQUE | Gen23 semantic/runtime authority |
+| Mission native registry | 144 unique names / 144 unique handlers | Finite shipped registry |
+| Registry handlers already modeled in Ghidra | 144 | 110 pre-existing plus 34 promoted default-metadata entries |
+| Registry handlers awaiting Ghidra boundary creation | 0 | Registry-facing names/signatures/semantics remain separate gates |
 
-The earlier quoted “367” was the last reproducible table at that time. The
-current source of truth is the 3,181,359-byte readback:
-
-```text
-local-lab/ghidra-from-trace-2026-07-28/inv-AFTER-functions.tsv
-SHA-256 45CBA656E73DAB3E1033256F2B6B7B5BCA08E4FE34FD5D1CC401B34F53D0A462
-```
+The saved-name projection is
+`reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-13.tsv`
+(8,170 rows; SHA-256 `19312b42…b5bf`). The independent missing-boundary proof
+is under `local-lab/mission-registry-missing-functions-20260813-v1/` and
+reproduces byte-identically. Older 7,555-row and 86-missing figures below are
+historical measurements only, not current planning denominators.
 
 This correction illustrates why the pipeline binds every result to an inventory
-hash. A queue generated against 367 names and one generated against 366 names
-are not silently the same experiment.
+hash. A queue generated against one inventory cannot silently become current.
 
-The important conclusion is that “rename 366 `FUN_*` functions” is too narrow:
-
-- 1,101 human-looking names are in the grader's `INVENTED_PREFIX` cohort.
-- 668 are weak image-substring names.
-- 98 are residual freeform labels.
-- 27 current labels conflict with RTTI ownership.
-- 100 have ambiguous owners.
-- 1,144 functions were never in the old fullpass.
-- Missing Mission handler entries are not available to rename until their
-  function boundaries are recovered.
+The important conclusion is that “rename every `FUN_*` function” remains too
+narrow: 966 current defaults are only a naming state; the 34 proved callable
+starts now exist only as default-metadata Ghidra Function objects, and thousands of descriptive or
+hypothesis names still require evidence appropriate to their claim. The
+Mission cohort itself separates boundary creation from a later 75-row Tier-2
+normalization so structural discovery cannot silently become semantic naming.
 
 The parity lab therefore ranks literal `FUN_*`, provisional vfuncs, invented
 owners, conflicts, ambiguous owners, post-fullpass entries, and executed bytes
@@ -2488,7 +2473,8 @@ order:
 1. use all 733 nonempty MSL files to count lexical authored use;
 2. select a minimal level/entity script for one native;
 3. capture one invocation;
-4. map the registry handler, including current `NO_FUNCTION` rows;
+4. map the registry handler; all 144 now have saved boundaries, while 34 still
+   carry boundary-only default metadata;
 5. recover boundary/prototype/arguments;
 6. compare typed behavior to the script-visible contract;
 7. repeat until all 144 rows have an honest state.
@@ -2659,20 +2645,22 @@ Audio:
 
 Strong:
 
-- current 7,555-row inventory;
+- 8,170 saved live/tracked entries, including 34 independently proved and
+  promoted callable starts;
 - every one of 2,127 recovered vtable targets has a function entry;
 - exact RTTI/vtable population;
 - finite Mission opcode/datatype/native tables;
-- exact body fragments and internal direct-call graph now exported;
+- exact body geometry for the 8,170 saved rows, plus a dated 7,555-row direct-
+  call graph artifact;
 - short TTD and `drcov` behavior demonstrated;
 - D3D9 draw and backbuffer evidence demonstrated.
 
 Open or concerning:
 
-- semantic names remain weak for 1,867/6,376 human-namable functions;
-- 1,144 entries postdate the old fullpass;
-- 6,528 functions lack a clear identity note;
-- 86 Mission handlers have no function entry;
+- 966 saved entries retain literal default names, while Gen23 still has 7,899
+  semantically OPAQUE rows;
+- the 34 new Mission boundaries are saved default-metadata Function objects but
+  are not yet admitted to the static/campaign rows;
 - at least six live names are directly contradicted by byte/RTTI evidence;
 - D3D/cockpit/tree correction clusters remain;
 - the registry/table discovery universe has no denominator;
@@ -2681,7 +2669,8 @@ Open or concerning:
 
 The historical 6,411-body `.text` coverage was
 1,539,953 / 1,929,117 = 79.8268%. It must not be presented as current
-7,555-body coverage. The new range export makes a fresh calculation possible,
+8,170-function coverage. Current readbacks and the new boundary proof make a fresh
+calculation possible,
 but executable-section ownership, overlaps, noncode alignment, imports, and
 function discovery need a dedicated accounting pass before publication.
 
@@ -2763,13 +2752,13 @@ Maintain separate ledgers.
 
 | Metric | Numerator / denominator | Current |
 | --- | --- | --- |
-| Current function inventory | exported rows / expected live rows | 7,555 / 7,555 |
-| Exact body geometry | functions passing range invariants / current rows | 7,555 / 7,555 |
-| Literal default names | `FUN_*` / current rows | 366 / 7,555 |
-| Weak semantic names | weak cohorts / human-namable rows | 1,867 / 6,376 |
-| Post-fullpass review | reviewed / post-fullpass entries | 0..1,144 / 1,144; regenerate ledger |
-| Clear identity notes | rows with clear identity / current rows | 1,027 / 7,555 |
-| Mission handler boundaries | defined handler entries / 144 | 86 missing; full typed state ledger required |
+| Saved Ghidra inventory | exported rows / exact 2026-08-13 readback | 8,170 / 8,170 |
+| Discovered-entry lower bound | saved rows | at least 8,170 |
+| Exact saved-body geometry | functions passing range invariants / saved rows | 8,170 / 8,170 |
+| Literal default names | `FUN_*` / saved rows | 966 / 8,170 |
+| Static function envelopes | closed saved rows / discovered lower bound | 8,136 / at least 8,170; 34 outside the dated closure |
+| Campaign semantics above OPAQUE | C1 + C2 / Gen23 rows | 227 / 8,126 |
+| Mission handler boundaries | saved structurally bounded handler starts / registry | 144 / 144; creation complete |
 | `.text` ownership | exact owned executable bytes / 1,929,117 | `UNKNOWN` pending fresh pass |
 | Stable runtime coverage | exact covered bytes / declared capture window | per scenario only |
 
@@ -2825,9 +2814,9 @@ feature denominator remains unknown until the manifest exists.
 
 ## Discrete milestones
 
-### M0 — static identity foundation: complete
+### M0 — dated 7,555-row static graph foundation: complete
 
-- [x] current 7,555-row inventory frozen;
+- [x] the then-current 7,555-row inventory frozen;
 - [x] exact static/runtime derivation measured;
 - [x] 7,672 exact Ghidra ranges exported;
 - [x] 14,142 direct-call edges exported;
@@ -2894,8 +2883,11 @@ This milestone validates the pipeline, not DOWN behavior repeatability.
   exact table binding, pristine handler body, Level 100 authored use, copied
   runtime entry/return state, and the deterministic compiled-script timing test;
 - [ ] 144/144 rows have typed entry/boundary state;
-- [ ] all 86 current missing boundaries adjudicated;
-- [ ] all weak/binding-name rows adjudicated;
+- [x] all 34 entries formerly absent from saved Ghidra have bounded, pairwise-disjoint
+  callable-body proof;
+- [x] those 34 boundaries pass the live Ghidra creation/readback ceremony;
+- [x] all 75 current-entry name normalizations are adjudicated read-only;
+- [ ] those 75 names pass their separate live Ghidra ceremony;
 - [ ] authored-use priority regenerated from exact 733-file corpus;
 - [ ] at least one runtime scenario per supported semantic family;
 - [ ] aliases and intentionally unreachable rows explicit.
@@ -3252,8 +3244,10 @@ Ghidra mutation, installed-game mutation, push, or publication occurred.
 
 The remaining function problem is now mechanically approachable:
 
-- 7,555 current functions have exact body geometry;
-- 366 retain literal defaults, while 1,867/6,376 carry broader semantic risk;
+- 8,170 saved functions have exact body geometry, including 34 callable starts
+  admitted from independent bounded CFG/body proof;
+- 966 saved entries retain literal defaults, while 7,899 Gen23 functions remain
+  semantically OPAQUE;
 - cheap differential coverage has already reduced one 16,794-start action run
   to eight leading functions;
 - exact Replay coverage can mine nearly 694 million instructions in about five

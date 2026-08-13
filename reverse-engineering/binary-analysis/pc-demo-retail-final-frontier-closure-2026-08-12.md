@@ -1,7 +1,7 @@
 # PC demo/retail final function frontier closure
 
-Status: complete, terminal cross-build closure
-Last updated: 2026-08-12
+Status: complete for its dated 8,136-function population; current census larger
+Last updated: 2026-08-13
 Evidence: MEASURED — exact specimen hashes, complete body and boundary decode,
 mapped caller/callee sequences, paired string and code-pointer operands, a
 complete MSVC `FuncInfo` census, ordered code/metadata neighbors, and an
@@ -15,6 +15,9 @@ block and metadata are absent from the demo. The complete 8,136-function retail
 inventory is now partitioned as 8,119 normalized-identical demo bodies, 16
 bounded semantic divergences, and one proven retail-only compiler package, with
 zero address-unresolved rows. Exactly 8,135 retail functions have demo entries.
+The 34 Mission-registry boundaries promoted on 2026-08-13 are outside this
+sealed map, so this partition must not be projected over the current
+8,170-function retail census; those 34 demo counterparts remain open.
 
 Specimen: pristine PC retail `BEA.exe`, 2,506,752 bytes, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`;

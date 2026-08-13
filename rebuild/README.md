@@ -164,7 +164,8 @@ Controls:
 | `W`, `A`, `S`, `D` or arrow keys | Move forward/back and strafe after the tutorial powers the Aquila |
 | Mouse or trackpad | Turn the body and aim the attached first-person view |
 | Mouse wheel down/up during walker gameplay | Zoom in/out with the released `1.0` to `0.4` Battle Engine law |
-| `Space` | Fire the Pulse Cannon after the Firing Range enables it |
+| Middle mouse or `;` during gameplay | Cycle to the next active weapon; the released heat/store eligibility extension and Missile Pod firing remain incomplete |
+| `Space` | Fire the selected implemented weapon after the tutorial enables it |
 | `R` | Reset the slice |
 
 ## Current truth

@@ -29,10 +29,14 @@ layouts, or behaviors are proven.
 > figures are superseded), [2026-07-26](name-grading-ledger-2026-07-26.md),
 > [2026-07-27](name-grading-ledger-2026-07-27-demotion2.md).
 >
-> Later waves raised the live inventory to 7,555 functions. The tracked
-> canonical snapshot remains the reviewed 6,411-function state, while the
-> current 7,555-row name projection and its one known live-name delta are
-> reconciled in [`../../../ghidra-functions.md`](../ghidra-functions.md).
+> Later waves raised the saved live/tracked inventory to 8,136 functions by
+> 2026-08-12. The verified 2026-08-13 Mission-registry promotion admitted 34
+> additional callable starts as default-metadata Function objects, so the
+> current saved census and lower bound are 8,170, not a ceiling. The current
+> 8,170-row projection and live-state
+> receipts are reconciled in
+> [`../../../ghidra-functions.md`](../ghidra-functions.md); the 6,411- and
+> 7,555-row states remain dated history only.
 
 ## Safe workflow
 
@@ -59,6 +63,7 @@ history.
   identity.
 - Reference source may suggest vocabulary but does not override the retail
   body.
-- Never commit a Ghidra project, backup, executable, raw debugger transcript,
-  or copied game payload.
+- Never commit a live/alternate Ghidra project, backup, executable, raw
+  debugger transcript, or copied game payload. The reviewed canonical snapshot
+  under `reverse-engineering/ghidra/` is the single explicit Ghidra exception.
 - Never mutate the installed game as part of analysis.

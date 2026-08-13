@@ -1,13 +1,15 @@
 # Full function static-C1 closure
 
-Status: active, bounded static closure
-Last updated: 2026-08-11
+Status: sealed dated 8,136-row static closure; current census is larger
+Last updated: 2026-08-13
 Evidence: MEASURED — 53 sealed receipt files, exact address/body joins, the
 8,136-row final Ghidra inventory, and independently checked row/grade counts;
 UNKNOWN — the semantic, runtime, source-equivalence, and rebuild gaps retained
 per row.
-Verdict: all 8,136 known functions have at least a bounded static C1 envelope;
-this settles accounting, not complete semantic or reconstruction parity.
+Verdict: all 8,136 functions in this sealed population have at least a bounded
+static C1 envelope. The 34 functions promoted on 2026-08-13 are outside this
+table, so the verdict no longer spans the current 8,170-function census; this
+settles dated accounting, not complete semantic or reconstruction parity.
 Specimen: pristine PC `BEA.exe`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
@@ -39,9 +41,13 @@ addresses between Weapon41 and the 52 standard receipts.
 
 ## Exact join
 
-The 53 receipts cover all 7,825 rows still graded `OPAQUE` in the current
-8,126-row tracked Generation-19 projection. They also cover 119 already-C1 rows
-and one already-C2 row; those stronger or existing grades were not demoted.
+The 53 receipts cover all 7,902 rows graded `OPAQUE` in the pinned canonical
+8,126-row Generation-19 campaign ledger. They also cover 42 already-C1 rows and
+one already-C2 row; those stronger or existing grades were not demoted. The
+TSV's historical `gradeBefore` column was generated from a drifted tracked
+register and reports 7,825/119 instead; it is retained byte-for-byte because
+Generations 20–23 pin this dated closure artifact. `gradeAfter`, receipt
+membership, and the final 8,136-row closure counts are unaffected.
 The ten functions added to the reviewed Ghidra inventory after Generation 19
 are the registry-identified Mission natives from `IScript__ToggleCockpit` at
 `0x00533980` through `IScript__SetLightningDensity` at `0x005383A0`. Their

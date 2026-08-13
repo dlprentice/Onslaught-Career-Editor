@@ -6,10 +6,9 @@ namespace OnslaughtRebuild.Core;
 /// The released Level 100 player's configured weapon slots, active flags and
 /// current selection. This intentionally stops before charge, heat, ammo and
 /// launch behavior. Selections are base slots: Walker slot zero may resolve to
-/// the augmented weapon at runtime. Manual cycling remains rejected, so its
-/// resource-eligibility gate is intentionally not generalized here; for every
-/// currently reachable Level 100 scripted disable, eligibility reduces to the
-/// active flag represented below.
+/// the augmented weapon at runtime. Manual cycling is bounded to the active
+/// flag represented here. The released heat/store eligibility test remains an
+/// open extension for configurations whose next active weapon cannot fire.
 /// </summary>
 internal sealed class Level100PlayerWeaponRuntime
 {
@@ -63,6 +62,16 @@ internal sealed class Level100PlayerWeaponRuntime
         _ => throw new ArgumentOutOfRangeException(nameof(mode)),
     };
 
+    internal bool SelectNextActive(VehicleMode mode)
+    {
+        if (CountActiveWeapons(mode) <= 1)
+        {
+            return false;
+        }
+
+        return TrySelectNextActive(mode);
+    }
+
     internal void SetActive(Level100MissionWeapon weapon, bool active)
     {
         switch (weapon)
@@ -95,11 +104,11 @@ internal sealed class Level100PlayerWeaponRuntime
     {
         if (!active && GetCurrentWeapon(mode) == weapon)
         {
-            TrySelectNextActive(mode);
+            _ = TrySelectNextActive(mode);
         }
     }
 
-    private void TrySelectNextActive(VehicleMode mode)
+    private bool TrySelectNextActive(VehicleMode mode)
     {
         int current = mode == VehicleMode.Walker
             ? _walkerSelection
@@ -117,11 +126,13 @@ internal sealed class Level100PlayerWeaponRuntime
                 {
                     _jetSelection = candidate;
                 }
-                return;
+                return true;
             }
 
             candidate = (candidate + 1) % 2;
         }
+
+        return false;
     }
 
     private static Level100MissionWeapon WeaponAt(VehicleMode mode, int index) =>

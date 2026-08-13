@@ -171,8 +171,11 @@ Generation 73 is a projection oracle that is never a parent or authority.
 
 ### Never collapse the evidence layers
 
-Static-envelope closure covers the current discovered census of 8,136 functions:
-it is not a final ceiling, not semantic recovery, and not reversal. The PC demo
+Static-envelope closure covers the dated 8,136-function census against which it
+was sealed. The current saved structural census is 8,170 after 34 additional
+Mission-registry boundaries were independently proved and promoted; those 34
+are not yet in the closure table. Neither count is a final ceiling, semantic
+recovery, or reversal. The PC demo
 partition and the instruction-local Xbox source-line anchors are oracles, never
 denominators for retail completion. Generation 23 owns admitted runtime
 semantics and remains sparse. Live Ghidra structural navigation may lead the
@@ -258,7 +261,7 @@ progress, not completion.
 
 ### Current frontier
 
-Updated 2026-08-12 after the first working session. Recording what closed is not
+Updated 2026-08-13 after the 34-boundary live promotion. Recording what closed is not
 narrowing the mandate; the completion test and every clause above are unchanged.
 
 **Closed this session — do not re-derive:**
@@ -274,37 +277,47 @@ narrowing the mandate; the completion test and every clause above are unchanged.
   tree, so it belongs at C1 and a Generation 24 must not pin it as C2.
 - All seven descriptive HUD route names are tested: 0 and 5 refuted, 3 half
   refuted, 4 suspect, 1/2/6 consistent.
+- The 34 MissionScript registry pointers missing from the saved 8,136-function
+  project were proved as callable boundaries, admitted by one backed-up live
+  Ghidra ceremony, separately read back, and synchronized to the tracked
+  snapshot. The current structural census is 8,170; the new default-metadata
+  functions remain outside the dated static-closure and demo-map tables.
 
 **Active frontier, in priority order:**
 
-1. **Five message natives — evidence and decision both complete; only the
-   Ghidra gate remains.** `0x00537410`, `0x00537500`, `0x005375F0`,
-   `0x005377E0`, `0x005378E0`. The naming convention was decided 2026-08-12
-   (`function-naming-convention-2026-08-12.md`): Tier 2 applies, so the registry
-   commands `AddMessage`, `PlayCharMessage`, `PlayCharMessageWait`,
-   `PlayPCharMessage`, `PlayPCharMessageWait` replace the invented
-   `WithCallback`/`WithFade`/`WithPriority` suffixes. Note the `PlaySound` stem
-   was *defensible* — the queue does reach voice through
-   `CMessageBox__StartVoiceOrFallbackTextReveal` — so this is a Tier 3 label
-   losing to Tier 2 evidence, not a false claim being corrected.
-   **Everything needed to run the gate is in
-   `local-lab/mission-native-registry-20260812-v1/PROMOTION-READY.md`**: rows,
-   comment content, all ten steps, and the collision promotion as the template.
-   Watch step 10 — the name table and the tracked documents move together, and
-   the strict name check will drift on these five until both are updated.
-2. **Four HUD names describing the wrong subsystem** — targets 0, 3, 4, 5. The
+1. **The 75-row MissionScript registry normalization.** This is one
+   evidence-coherent metadata cohort: 54 default `FUN_*` handlers, the five
+   message-name corrections at `0x00537410`, `0x00537500`, `0x005375F0`,
+   `0x005377E0`, and `0x005378E0`, and 16 descriptive Tier-3 names that lose to
+   shipped Tier-2 command vocabulary. Registry names are script-facing slot
+   names, not recovered original C++ symbols. Preserve every ABI/signature and
+   bounded mechanism fact; add no behavior claim merely from the registry.
+   Keep the frozen 2026-08-12 name table for its pinned consumers and advance
+   only the new 2026-08-13 projection and current checker.
+2. **Name the 34 newly admitted registry handlers in a separate cohort.** Their
+   boundaries are now structural fact, but their default names/comments remain
+   unchanged and they are not part of the exact 75-row existing-entry manifest.
+   Use the registry only as Tier-2 script vocabulary; do not imply C++ symbols,
+   signatures, or behavior.
+3. **Repair `0x0050FF10` separately.** Replace the stale pickup identity with
+   `CWorldPhysicsManager__CreateExplosion` and the proved caller-cleaned
+   one-index signature/comment. This is a one-row corruption repair with
+   different evidence and must not be folded into the registry ceremony.
+4. **Four HUD names describing the wrong subsystem** — targets 0, 3, 4, 5. The
    binary names none of them, so this needs a naming-convention decision before
    any promotion.
-3. **CLOSED 2026-08-12 — documentation coverage.** All 170 functions the
+5. **CLOSED 2026-08-12 — documentation coverage.** All 170 functions the
    coordinate instrument covers that lacked documentation now carry at least a
-   measured row: 22 across five per-file documents (`MeshPart.cpp`,
+   measured row: 29 unique functions across five per-file documents (`MeshPart.cpp`,
    `BattleEngineDataManager.cpp`, `WorldPhysicsManager.cpp`, `mesh.cpp`,
-   `ParticleSet.cpp`) and 148 in the mechanically generated
-   `functions/coordinate-long-tail.md`, spanning 93 files.
+   `ParticleSet.cpp`) and 141 unique functions represented by 148 function/file
+   rows in the mechanically generated `functions/coordinate-long-tail.md`,
+   spanning 93 files.
    **Coverage is what closed, not understanding** — those rows are tabled
    measured facts, not behaviour contracts, and the documents say so. Three
    caveats are recorded with them: the instrument is factory-biased and its 827
-   functions are not a random sample of the 8,136; `monitor.h`/`Monitor.h` are
+   functions are not a random sample of the then-current 8,136;
+   `monitor.h`/`Monitor.h` are
    one file the image spells two ways; and the per-file ranking counts
    coordinate rows rather than functions.
 
@@ -321,7 +334,7 @@ narrowing the mandate; the completion test and every clause above are unchanged.
    `WorldPhysicsManager.cpp` 21, `oids.cpp` 20, `mesh.cpp` 19. The broken figure
    pointed at the mission-script VM; the real gap is mesh, particle and
    data-manager code.
-4. **Generation 24**, if still wanted, parented strictly on Generation 23 and
+6. **Generation 24**, if still wanted, parented strictly on Generation 23 and
    respecting the route-order correction above.
 
 Rank from current evidence; a reproduced contradiction outranks this list.
@@ -344,6 +357,12 @@ Rank from current evidence; a reproduced contradiction outranks this list.
   reality. Recording closures and re-ranking open work is expected. Removing the
   completion test, deleting frontiers to make the goal satisfiable, or retargeting
   the mandate still requires the maintainer.
+- **2026-08-13 — structural census advanced.** The 34 registry-proved callable
+  gaps passed the full scratch/live/backup/readback gate and advanced saved
+  Ghidra from 8,136 to 8,170 functions. The frontier now separates the 75-row
+  registry vocabulary normalization from the one-row explosion-factory repair;
+  neither structural admission nor re-ranking changes the standing completion
+  test.
 
 ---
 

@@ -327,6 +327,7 @@ public sealed class Simulation
         UpdateLevel100TriggerActors();
         UpdateResources(playerPartMoveStarted);
         TryFire(playerInput);
+        TryChangeWeapon(playerInput);
         UpdateProjectiles();
         SyncLevel100PlayerState();
 
@@ -3332,6 +3333,22 @@ public sealed class Simulation
                 Level100ContactMechanics.PulseRadiusMillimeters,
                 Level100DestructionState.MechBulletDamageBits);
         }
+    }
+
+    private void TryChangeWeapon(SimInput input)
+    {
+        if (!input.HasAction(SimActions.ChangeWeapon) ||
+            _transformTicksRemaining != 0)
+        {
+            return;
+        }
+
+        // CController's released default table dispatches Fire before Change
+        // Weapon (rows 11 and 12), which is why this runs after TryFire when a
+        // synthetic input carries both edges. CBattleEngine::ChangeWeapon then
+        // refuses configurations with one or zero active weapons and delegates
+        // the cycle to the current vehicle part.
+        _ = _level100PlayerWeapons.SelectNextActive(_mode);
     }
 
     /// <summary>

@@ -1,17 +1,19 @@
 # The Mission script-command registry, recovered from shipped data
 
-Status: active, bounded static registry recovery
-Last updated: 2026-08-12
+Status: active, bounded static registry recovery; boundary disposition updated
+Last updated: 2026-08-13
 Evidence: MEASURED — abstract interpretation of the stores in
 `ScriptCommandRegistry__InitBuiltins` against the pristine specimen,
 reconstructing the record array at `0x0064CE20` and reading its name/handler
 pairs, joined to the current tracked Ghidra name projection; UNKNOWN — every
 handler signature, argument contract, side effect and runtime behaviour, none of
 which this recovery addresses.
-Verdict: 144 script commands are paired with handler addresses by the game's own
-data. 110 handlers resolve to known function entries and 54 of those functions
-still carry default names, so the registry supplies a shipped-data name for 54
-currently unnamed functions. No name was promoted to Ghidra.
+Verdict: 144 script commands are paired one-to-one with 144 unique handler
+addresses by the game's own data. All 144 now resolve to saved function entries
+after a separate verified ceremony promoted the 34 formerly absent callable
+boundaries with default metadata, raising the defensible census/lower bound to
+8,170. This report still proves registry vocabulary only, not C++ symbols,
+signatures, semantics, or a final ceiling.
 Specimen: pristine PC retail `BEA.exe`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
@@ -36,12 +38,12 @@ overstate novelty for the same reason.
 
 What this document still contributes, and what the earlier work did not have:
 
-- the handler pointers **resolved against the current name table**, which is what
-  identifies the 54 slots whose handlers still carry default names;
+- the handler pointers **resolved against the dated 2026-08-12 name table**,
+  which identifies the original 54 slots whose handlers carried default names;
 - the refutation and alignment checks below;
 - the 23-row adjudication, which finds that five handlers documented as
-  `IScript__PlaySound*` in `functions/IScript.cpp.md` queue messages and play no
-  sound.
+  `IScript__PlaySound*` in `functions/IScript.cpp.md` queue localized messages;
+  the downstream message-box path can then start voice or fall back to text.
 
 Read the structure section below as reproduction and extension of tracked
 evidence, not as first recovery.
@@ -61,8 +63,10 @@ stores left on an untracked register**.
 | Command-name pointer | record `+0x00` |
 | Handler function pointer | record `+0x30` |
 | Records recovered | 144, terminating cleanly at index 144 |
-| Handlers resolving to a known function entry | 110 |
-| Handlers on still-default `FUN_` names | 54 |
+| Unique handler pointers | 144 |
+| Handlers resolving to a saved function entry | 144 |
+| Callable handler entries absent from the current function census | 0 |
+| Handlers on current default `FUN_` names | 88 |
 | Handlers on the shared no-op | 1 |
 
 The 144 count independently matches the 144-slot native table reached from the
@@ -108,14 +112,15 @@ names require per-row adjudication before anything is promoted**, because each i
 either a name the registry should supersede or a sign that one of the two is
 wrong.
 
-The sharpest is `GetVariable` against `IScript__GetWorldTextSlotTimerValue`. The
-same `WorldTextSlotTimerValue` reading is the heaviest callee of the HUD route's
-target 0, so if the script-facing name is really `GetVariable`, either that
-reading is too specific or the underlying world routine is a generic slot
-accessor serving both. Unresolved.
+The sharpest was `GetVariable` against
+`IScript__GetWorldTextSlotTimerValue`. The adjudication below resolves the
+apparent conflict: `GetVariable` is the script-facing wrapper vocabulary, while
+the narrower world-timer name remains the visible callee mechanism.
 
-**Posture: the recovered pairing is validated; the naming promotion is not
-cleared.** It waits on those adjudications and on the full Ghidra gate.
+**Posture: the recovered pairing and all 23 disagreements are adjudicated.** A
+75-row current-entry normalization cohort (54 default names plus 21
+supersessions) has survived read-only review; live promotion still requires the
+full Ghidra gate.
 
 ## The 23 adjudications, resolved
 
@@ -194,8 +199,8 @@ script-facing command name rather than a C++ symbol.
 > originally claimed, and the parameter at `[vtable+0x30]` should be identified
 > before any of the five is renamed.
 
-**Class 2 — the existing name's suffix is wrong about mechanism (5).** Five
-handlers named `IScript__PlaySound*` call no sound routine directly. Their
+**Class 2 — the registry vocabulary supersedes five descriptive names (5).**
+Five handlers named `IScript__PlaySound*` call no sound routine directly. Their
 callees are
 `CText__GetStringById`, `CMessage__ctor_base` and
 `CMessageBox__InsertQueuedMessageSortedAndMaybeAdvance`: they build a localized
@@ -210,10 +215,14 @@ message and queue it. The two `…Wait` variants add
 | 90 | `PlayPCharMessage` | `IScript__PlaySoundWithPriority` |
 | 91 | `PlayPCharMessageWait` | `IScript__PlaySoundWithFadeAndPriority` |
 
-`WithCallback`, `WithFade` and `WithPriority` describe a mechanism that is not in
-these bodies. This is a defect in the canonical database of the same class the
-HUD source-identity correction fixed, and it holds independently of whether the
-registry names are adopted.
+`WithCallback` is unsupported by these bodies, and `WithFade` is contradicted by
+the scheduling path used by the two registry `Wait` forms. The later seven-slot
+map below shows that `WithPriority` is a plausible mechanism-facing description
+of argument seven; it is not a recovered C++ name and still loses to the shipped
+Tier-2 command names under the adopted naming convention. The firm correction
+is therefore the five-row replacement with the registry's script-facing
+vocabulary, not the broader withdrawn claim that every old suffix described an
+absent mechanism.
 
 ### `CMessage__ctor_base` recovered — and it settles the voice question
 
@@ -334,8 +343,11 @@ GetZ` over `GetVectorX/Y/Z`, `Magnitude` over `GetVectorLength`,
 `CWorld__GetWorldTextSlotTimerValue`, so only the wrapper is at issue and the
 callee keeps its name.
 
-Consequently a blanket adoption of all 54 registry names would have been wrong.
-Promotion must be per-row and must keep the two naming systems distinct.
+Consequently a blanket replacement of all 23 differing descriptive labels
+would have been wrong: 21 lose to the registry vocabulary, while the two pan-
+camera rows retain stronger shipped Tier-1 self-identities. The separate 54-row
+default-name cohort has no such conflict. Promotion must still be per-row and
+must keep script-facing Tier-2 names distinct from recovered C++ identities.
 
 ## A named dormant capability
 
@@ -353,11 +365,23 @@ This recovery establishes no handler signature, argument contract, write set,
 failure behaviour or runtime semantics; the Generation 15/16/19 work on `SetPos`
 and `UnsetObjective` shows what a real contract for one of these costs.
 
-34 of the 144 handlers did not resolve to a known function entry, and whether
-those are unrecovered boundaries or non-entry targets is untested here.
+The 34 formerly unresolved handlers were independently established as
+additional callable entries. The strict initializer reproduces all 144 pointer
+stores; each of the 34 entries decodes to a bounded, RET-reaching CFG in
+executable `.text`; their exact reachable byte sets are pairwise disjoint and
+intersect none of the PRE 8,136 Ghidra function bodies; and neither decoded
+direct branches nor an all-byte direct-branch over-approximation targets an
+interior. Two byte-identical replays and the exact rows are preserved under
+`local-lab/mission-registry-missing-functions-20260813-v1/`. The subsequent
+[live promotion](mission-script-registry-boundary-live-promotion-2026-08-13.md)
+created exactly those 34 default-metadata Function objects and changed no
+pre-existing row or other program metric. This establishes boundaries and the
+8,170 lower bound only—not original names, signatures, semantics, or a final
+inventory ceiling.
 
-**No Ghidra mutation was made and none is authorised by this report.** Promoting
-any of these names requires the full gate in
+**This registry report itself made and authorizes no Ghidra mutation.** The
+separate boundary owner authorized the completed structure-only ceremony.
+Promoting any registry-facing names still requires the full gate in
 [`reverse-engineering/ghidra/README.md`](../ghidra/README.md). The mechanical
 owner and its receipts are machine-local under
 `local-lab/mission-native-registry-20260812-v1/`; the recovered pairing is

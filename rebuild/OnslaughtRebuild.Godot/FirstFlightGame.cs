@@ -295,6 +295,17 @@ public sealed partial class FirstFlightGame : Node3D
 
         if (inputEvent is InputEventMouseButton wheel && wheel.Pressed)
         {
+            // The shipped PC binding row 12 primary slot uses mouse code 2:
+            // the middle button in the same zero-based table where codes 3/4
+            // are the wheel directions used below. Its secondary keyboard slot
+            // is scan code 0x27 (Semicolon), handled with the key edges below.
+            if (wheel.ButtonIndex == MouseButton.Middle)
+            {
+                _session.QueueChangeWeapon();
+                GetViewport().SetInputAsHandled();
+                return;
+            }
+
             if (wheel.ButtonIndex == MouseButton.WheelDown)
             {
                 _session.QueueZoomIn();
@@ -333,6 +344,10 @@ public sealed partial class FirstFlightGame : Node3D
             IsKey(keyEvent, Key.Q);
         bool resetPressed = inputEvent.IsActionPressed(ResetAction) ||
             IsKey(keyEvent, Key.R);
+        if (IsKey(keyEvent, Key.Semicolon))
+        {
+            _session.QueueChangeWeapon();
+        }
         if (IsKey(keyEvent, Key.W) || IsKey(keyEvent, Key.Up))
         {
             _session.QueueMovementPulse(0, 1);

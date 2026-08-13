@@ -1100,10 +1100,10 @@ namespace OnslaughtCareerEditor.AppCore.Tests
 
             try
             {
-                if (!CreateHardLink(linkedExe, outsideExe, IntPtr.Zero))
-                {
-                    return;
-                }
+                Assert.True(
+                    CreateHardLink(linkedExe, outsideExe, IntPtr.Zero),
+                    $"Could not create the executable hardlink required by this safety test; " +
+                    $"Win32 error {Marshal.GetLastWin32Error()}.");
 
                 InvalidOperationException ex = Assert.Throws<InvalidOperationException>(() =>
                     GameProfilePreflightService.ValidateExecutableSourceForWorkspaceCopy(linkedExe));
@@ -1161,7 +1161,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 }
                 catch (Exception createEx) when (createEx is IOException or UnauthorizedAccessException or PlatformNotSupportedException)
                 {
-                    return;
+                    Assert.Fail($"Could not create the workspace-root symlink required by this safety test: {createEx.Message}");
                 }
 
                 InvalidOperationException thrown = Assert.Throws<InvalidOperationException>(() =>
@@ -1514,7 +1514,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 }
                 catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or PlatformNotSupportedException)
                 {
-                    return;
+                    Assert.Fail($"Could not create the input-root symlink required by this safety test: {ex.Message}");
                 }
 
                 InvalidOperationException reparseEx = Assert.Throws<InvalidOperationException>(() =>
@@ -1558,10 +1558,10 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             try
             {
                 File.Delete(sourceExe);
-                if (!CreateHardLink(sourceExe, outsideExe, IntPtr.Zero))
-                {
-                    return;
-                }
+                Assert.True(
+                    CreateHardLink(sourceExe, outsideExe, IntPtr.Zero),
+                    $"Could not create the source hardlink required by this safety test; " +
+                    $"Win32 error {Marshal.GetLastWin32Error()}.");
 
                 InvalidOperationException ex = Assert.Throws<InvalidOperationException>(() =>
                     GameProfilePreflightService.PrepareWindowedCompatibilityProfile(
@@ -1606,10 +1606,10 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             try
             {
                 File.Delete(linkedFile);
-                if (!CreateHardLink(linkedFile, outsideFile, IntPtr.Zero))
-                {
-                    return;
-                }
+                Assert.True(
+                    CreateHardLink(linkedFile, outsideFile, IntPtr.Zero),
+                    $"Could not create the data-file hardlink required by this safety test; " +
+                    $"Win32 error {Marshal.GetLastWin32Error()}.");
 
                 InvalidOperationException ex = Assert.Throws<InvalidOperationException>(() =>
                     GameProfilePreflightService.PrepareWindowedCompatibilityProfile(
@@ -1652,7 +1652,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 }
                 catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or PlatformNotSupportedException)
                 {
-                    return;
+                    Assert.Fail($"Could not create the output-root symlink required by this safety test: {ex.Message}");
                 }
 
                 InvalidOperationException outputReparseEx = Assert.Throws<InvalidOperationException>(() =>

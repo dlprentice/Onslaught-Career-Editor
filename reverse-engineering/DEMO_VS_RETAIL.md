@@ -1,7 +1,7 @@
 # PC demo versus PC retail
 
-Status: active, measured cross-build evidence
-Last updated: 2026-08-12
+Status: active, measured cross-build evidence over the dated 2026-08-12 census
+Last updated: 2026-08-13
 Evidence: MEASURED — exact executable/archive hashes, independently recounted
 MSVC RTTI/vtables, a 2,127-target virtual census, a conservative 8,086-row
 cross-build function-address map, and exact multi-range, opcode-factory, and
@@ -10,12 +10,14 @@ exact-fingerprint replay, plus final source/call/metadata frontier closure;
 UNKNOWN — normalized constant values outside the explicitly checked cohorts
 and runtime/source/rebuild equivalence.
 Verdict: the PC demo is a distinct build with a structurally identical virtual
-class surface. Across virtual and non-virtual code, 8,119 of 8,136 retail
+class surface. Across the dated 8,136-function population, 8,119 retail
 functions have a complete normalized-identical demo instruction stream. Another
 16 have independently bounded semantic lineage differences. One compiler-EH
 cleanup package is proven retail-only because its parent controls-screen block
 and metadata are absent from the demo. All 8,135 retail functions with a demo
-counterpart are mapped; zero rows remain address-unresolved.
+counterpart are mapped; zero rows in that population remain address-unresolved.
+The 34 functions admitted to Ghidra on 2026-08-13 are outside this frozen map
+and remain open for PC-demo correlation; current structural census is 8,170.
 Specimen: pristine PC retail `BEA.exe`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`;
 PC demo `BEA.exe`, SHA-256
@@ -131,18 +133,18 @@ The immutable first-pass mechanical map is
 [`binary-analysis/pc-demo-retail-function-map-2026-08-11.tsv`](binary-analysis/pc-demo-retail-function-map-2026-08-11.tsv),
 1,314,885 bytes, SHA-256
 `cdb26380bb6b29e82edd601bb95dfc215f62813d925e2f4c4c78452a7af7c68a`.
-It remains evidence of where that instrument abstained. Current accounting over
-the map and the narrower exact closure reports is:
+It remains evidence of where that instrument abstained. Accounting over the
+dated map and its narrower exact closure reports is:
 
 | Whole-function result | Count |
 | --- | ---: |
-| Retail functions | 8,136 |
+| Dated retail functions covered by this map | 8,136 |
 | Entries in the original conservative address map | 8,086 |
 | Newly propagated demo entries | 6 |
 | Equal-delta body-union demo entries | 29 |
 | Exact-fingerprint demo entries | 11 |
 | Final divergent demo entries | 3 |
-| Current mapped demo entries | 8,135 |
+| Mapped demo entries in the dated population | 8,135 |
 | Original single-range normalized-identical body streams | 8,021 |
 | Multi-range normalized-identical corrections | 42 |
 | Opcode-factory normalized-identical correction | 1 |
@@ -154,6 +156,7 @@ the map and the narrower exact closure reports is:
 | Proven retail-only compiler-EH packages | 1 |
 | Address mapped, still changed or incompletely bounded | 0 |
 | Address-unresolved rows | 0 |
+| Current functions outside this dated map | 34 |
 | Prior legacy Ghidra address-set byte aggregate | 1,731,102 |
 | New equal-delta legacy / corrected instruction bytes | 11,085 / 11,096 |
 | Exact-fingerprint complete body bytes / instructions | 1,884 / 545 |

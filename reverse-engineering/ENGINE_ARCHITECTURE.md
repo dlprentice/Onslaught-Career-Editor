@@ -25,7 +25,7 @@ The primary source is:
 | Presenter | Jeremy Longley, Lost Toys |
 | Slides | 47 |
 | PPT bytes | 195,072 |
-| PPT SHA-256 | `3b2e08607fd881dfeefb31395b49de91a68ec02dee9554714f6a97d029165713e` |
+| PPT SHA-256 | `3b2e08607fd881dfefb31395b49de91a68ec02dee9554714f6a97d029165713e` |
 | Archived presentation directory | 77 files / 751,853 bytes |
 | Sorted directory-manifest SHA-256 | `1254ffd317766b395eef9d61473db8ce274868032eb5c663099c49df36abc0e0` |
 

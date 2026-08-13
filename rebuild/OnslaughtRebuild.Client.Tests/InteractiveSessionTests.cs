@@ -159,6 +159,31 @@ public sealed class InteractiveSessionTests
     }
 
     [Fact]
+    public void ChangeWeaponEdge_IsRoutedAndConsumedOnce()
+    {
+        InteractiveSession session = CreatePlayingSession();
+        Level100MissionWeapon before =
+            session.CurrentSnapshot.Level100WalkerSelectedWeapon;
+
+        session.QueueChangeWeapon();
+        Assert.True(session.HasHeldOrPendingInput);
+        FrameAdvanceResult first = session.AdvanceFrameTicks(OneCoreStepTicks);
+
+        // Level 100 has only one active walker weapon at first control, so the
+        // released CountActiveWeapons gate preserves the selected slot. The
+        // edge counter is the observable that proves the Client emitted the
+        // SimAction rather than merely clearing its pending latch.
+        Assert.Equal(before, first.CurrentSnapshot.Level100WalkerSelectedWeapon);
+        Assert.False(session.HasHeldOrPendingInput);
+        Assert.Equal(1, session.Metrics.ChangeWeaponEdgesConsumed);
+        Assert.Equal(
+            first.CurrentSnapshot.Level100WalkerSelectedWeapon,
+            session.AdvanceFrameTicks(OneCoreStepTicks)
+                .CurrentSnapshot.Level100WalkerSelectedWeapon);
+        Assert.Equal(1, session.Metrics.ChangeWeaponEdgesConsumed);
+    }
+
+    [Fact]
     public void GunAction_FiresOnceOnReleaseAndDoesNotRepeatWhileHeld()
     {
         InteractiveSession session = CreatePlayingSession();

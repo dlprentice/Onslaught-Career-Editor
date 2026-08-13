@@ -483,7 +483,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 }
                 catch (Exception ex) when (ex is UnauthorizedAccessException or PlatformNotSupportedException)
                 {
-                    return;
+                    Assert.Fail($"Could not create the file symlink required by this safety test: {ex.Message}");
                 }
 
                 AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalogPath);
@@ -512,7 +512,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 }
                 catch (Exception ex) when (ex is UnauthorizedAccessException or PlatformNotSupportedException)
                 {
-                    return;
+                    Assert.Fail($"Could not create the directory symlink required by this safety test: {ex.Message}");
                 }
 
                 AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalogPath);
@@ -569,7 +569,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 }
                 catch (Exception ex) when (ex is UnauthorizedAccessException or PlatformNotSupportedException)
                 {
-                    return;
+                    Assert.Fail($"Could not create the catalog symlink required by this safety test: {ex.Message}");
                 }
 
                 Assert.Null(AssetCatalogService.ResolveCatalogFilePath(catalogPath));

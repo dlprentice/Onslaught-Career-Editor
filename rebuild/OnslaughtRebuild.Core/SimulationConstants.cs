@@ -234,10 +234,10 @@ public static class SimulationConstants
     // time-equivalent, and a pure tick-rate artefact. CONVERSION RULE R2
     // (r20 = r30^1.5) recovers each one to six figures; the source value is
     // used rather than the conversion.
-    //   BattleEngine.cpp:1220        mRoll *= 0.97f  (jet auto-level)
+    //   BattleEngine.cpp:1219        mRoll *= 0.97f  (jet auto-level)
     //   BattleEngineJetPart.cpp:622  return 0.99f    (altitude < 1)
     //   BattleEngineJetPart.cpp:634  return 0.98f    (cruise)
-    //   BattleEngineJetPart.cpp:628  1.0f-(altitude*0.01f) floor, altitude < 3
+    //   BattleEngineJetPart.cpp:629  1.0f-(altitude*0.01f) floor, altitude < 3
     public const int JetRollAutoLevelNumerator = 970_000;
     public const int JetRollAutoLevelDenominator = 1_000_000;
     public const int JetNearSurfaceFrictionNumerator = 990_000;
@@ -326,7 +326,7 @@ public static class SimulationConstants
     // per tick with no rate factor at all, and the constant is just the length
     // scale.
     public const int MillimetersPerRetailUnit = 1_000;
-    // BattleEngineJetPart.cpp:418 `GetVelocity().MagnitudeSq() < 0.1f*0.1f`.
+    // BattleEngineJetPart.cpp:423 `GetVelocity().MagnitudeSq() < 0.1f*0.1f`.
     public const int JetGroundedSlowSpeedPerTick = 100;
     // BattleEngineJetPart.cpp:432 `GetVelocity().MagnitudeSq() < 0.025f*0.025f`.
     public const int JetAutoLandSpeedPerTick = 25;

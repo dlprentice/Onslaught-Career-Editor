@@ -72,7 +72,7 @@ public sealed class ReplayTests
     {
         const string json = """
             {
-              "schemaVersion": "onslaught-rebuild-command-tape.v3",
+              "schemaVersion": "onslaught-rebuild-command-tape.v4",
               "name": "missing-spans",
               "seed": 1,
               "durationTicks": 10,
@@ -103,7 +103,7 @@ public sealed class ReplayTests
     {
         const string json = """
             {
-              "schemaVersion": "onslaught-rebuild-command-tape.v3",
+              "schemaVersion": "onslaught-rebuild-command-tape.v4",
               "name": "unknown-property",
               "seed": 1,
               "durationTicks": 1,
@@ -183,6 +183,35 @@ public sealed class ReplayTests
             null,
             [new CommandSpan(0, 2, 0, 0, Fire: true)]);
 
+        Assert.Throws<InvalidDataException>(held.Validate);
+    }
+
+    [Fact]
+    public void CommandTape_ChangeWeaponRoundTripsAsOneReleasedEdge()
+    {
+        var source = new CommandTape(
+            CommandTape.CurrentSchemaVersion,
+            "change-weapon",
+            1,
+            1,
+            null,
+            null,
+            [new CommandSpan(0, 1, 0, 0, ChangeWeapon: true)]);
+
+        CommandTape tape = CommandTapeCodec.Deserialize(
+            CommandTapeCodec.Serialize(source));
+
+        Assert.True(tape.Spans[0].ChangeWeapon);
+        Assert.True(tape.Spans[0].ToInput().HasAction(SimActions.ChangeWeapon));
+
+        var held = new CommandTape(
+            CommandTape.CurrentSchemaVersion,
+            "held-change-weapon",
+            1,
+            2,
+            null,
+            null,
+            [new CommandSpan(0, 2, 0, 0, ChangeWeapon: true)]);
         Assert.Throws<InvalidDataException>(held.Validate);
     }
 
@@ -289,7 +318,7 @@ public sealed class ReplayTests
     {
         const string json = """
               {
-                "schemaVersion": "onslaught-rebuild-command-tape.v3",
+                "schemaVersion": "onslaught-rebuild-command-tape.v4",
                 "name": "no-look",
                 "seed": 1,
                 "durationTicks": 1,

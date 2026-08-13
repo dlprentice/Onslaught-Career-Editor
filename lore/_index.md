@@ -5,8 +5,8 @@
   measured RE evidence. Where an article disagrees with a measurement under
   [`reverse-engineering/`](../reverse-engineering/RE-INDEX.md), **the
   measurement wins** and the article is the side that gets corrected.
-- **Last updated:** 2026-07-28
-- **Summary:** navigation to the 13 lore articles in this directory, plus
+- **Last updated:** 2026-08-13
+- **Summary:** navigation to the 12 lore articles in this directory, plus
   pointers to the RE and roadmap indexes.
 
 A comprehensive record of Battle Engine Aquila (2003), Lost Toys Ltd., and the people who made it. This documentation preserves development history, in-game lore, community discoveries, and developer insights that would otherwise be lost.
@@ -20,7 +20,7 @@ A comprehensive record of Battle Engine Aquila (2003), Lost Toys Ltd., and the p
 | [lost-toys-history.md](lost-toys-history.md) | Company overview, founding, philosophy, games, closure |
 | [game-overview.md](game-overview.md) | Release info, marketing, naming, Battle Engine types, gameplay |
 | [world-lore.md](world-lore.md) | Planet Allium, Forseti vs Muspell factions, geography, story |
-| [characters.md](characters.md) | Hawk Winter, Tatiana Kiralova, Col. Kramer, Lewis Carver profiles |
+| [characters.md](characters.md) | All eight retail character-profile entries and their evidence boundary |
 | [the-campaign.md](the-campaign.md) | Campaign shape, mission numbering, live mission list from your install |
 | [battle-engine-tech.md](battle-engine-tech.md) | In-universe Aquila program memo, mech technology lore |
 | [development-history.md](development-history.md) | Timeline, GDM post-mortem, what went right/wrong, port history |
@@ -74,4 +74,3 @@ A comprehensive record of Battle Engine Aquila (2003), Lost Toys Ltd., and the p
 ---
 
 *This index provides navigation to the lore articles collected in this directory.*
-

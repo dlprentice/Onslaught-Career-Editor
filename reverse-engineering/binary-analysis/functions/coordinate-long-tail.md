@@ -1,13 +1,15 @@
 # Coordinate-covered functions: the long tail
 
 Status: active static function map
-Last updated: 2026-08-12
+Last updated: 2026-08-13
 Source File: various, each named per section by the shipped image | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
 The PC-native source-coordinate instrument covers 827 functions. The largest
-files were documented individually; what remains is a **long tail of 148
-functions spread across 93 source files**, at most a handful each. Per-file
-documents are the wrong shape for that, so they are consolidated here.
+files were documented individually; what remains here is a **long tail of 148
+function/file rows covering 141 unique functions across 93 source files**, at
+most a handful each. Seven addresses occur under two source-file spellings or
+coordinate groups and must not be counted twice. Per-file documents are the
+wrong shape for that tail, so the rows are consolidated here.
 
 Rows are **measured** only: entry address, current Ghidra name, body size,
 callee-popped argument count from `ret imm`, the compiler's own

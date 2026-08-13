@@ -67,6 +67,38 @@ public sealed class Level100PlayerWeaponRuntimeTests
         Assert.Equal(2, weapons.CountActiveWeapons(VehicleMode.Walker));
     }
 
+    [Theory]
+    [InlineData(
+        VehicleMode.Walker,
+        Level100MissionWeapon.MechTwinVulcanCannon,
+        Level100MissionWeapon.PulseCannonPod)]
+    [InlineData(
+        VehicleMode.Jet,
+        Level100MissionWeapon.MissilePod,
+        Level100MissionWeapon.MechVulcanCannon)]
+    public void ManualCycle_SelectsNextActiveReleasedSlotAndWraps(
+        VehicleMode mode,
+        Level100MissionWeapon next,
+        Level100MissionWeapon wrapped)
+    {
+        var weapons = new Level100PlayerWeaponRuntime();
+
+        Assert.True(weapons.SelectNextActive(mode));
+        Assert.Equal(next, weapons.GetCurrentWeapon(mode));
+        Assert.True(weapons.SelectNextActive(mode));
+        Assert.Equal(wrapped, weapons.GetCurrentWeapon(mode));
+    }
+
+    [Fact]
+    public void ManualCycle_WithOneActiveWeapon_DoesNotMoveSelection()
+    {
+        var weapons = new Level100PlayerWeaponRuntime();
+        weapons.SetActive(Level100MissionWeapon.MechTwinVulcanCannon, false);
+
+        Assert.False(weapons.SelectNextActive(VehicleMode.Walker));
+        Assert.Equal(Level100MissionWeapon.PulseCannonPod, weapons.WalkerSelectedWeapon);
+    }
+
     [Fact]
     public void NoActiveAlternative_PreservesBoundedCurrentSlot()
     {

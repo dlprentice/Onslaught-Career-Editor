@@ -19,7 +19,9 @@ public sealed record CommandSpan(
     short LookYAnalogPermille = 0,
     bool LandingJets = false,
     // BUTTON_SKIP_PANNING 0x3a, KEY_ONCE in every shipped row, so an edge.
-    bool SkipPanning = false)
+    bool SkipPanning = false,
+    // BUTTON_MECH_CHANGE_WEAPON 0x14, BUTTON_ONCE in the released PC mapping.
+    bool ChangeWeapon = false)
 {
     [JsonIgnore]
     public int EndTickExclusive => checked(StartTick + DurationTicks);
@@ -52,6 +54,11 @@ public sealed record CommandSpan(
             actions |= SimActions.SkipPanning;
         }
 
+        if (ChangeWeapon)
+        {
+            actions |= SimActions.ChangeWeapon;
+        }
+
         return new SimInput(
             MoveX,
             MoveZ,
@@ -73,6 +80,11 @@ public sealed record CommandTape
     /// </summary>
     /// <remarks>
     /// <para>
+    /// <c>v3 -&gt; v4</c>, 2026-08-13: <c>CommandSpan.ChangeWeapon</c> was
+    /// added when Core implemented the released weapon-cycle action. It is a
+    /// one-tick <c>BUTTON_ONCE</c> edge.
+    /// </para>
+    /// <para>
     /// <c>v2 -&gt; v3</c>, 2026-08-09: <c>CommandSpan.Fire</c> changed from a
     /// held action to the shipped controller's <c>BUTTON_RELEASE</c> edge. A
     /// fire span must therefore be exactly one tick; otherwise an old held-fire
@@ -83,12 +95,11 @@ public sealed record CommandTape
     /// (<c>BUTTON_SKIP_PANNING</c> <c>0x3a</c>) was added. It is load-bearing —
     /// it ends the opening pan and, through
     /// <c>Level100Mission.NotifyPlayingStateStarted</c>, re-bases the whole
-    /// tutorial message chain. A <c>v1</c> reader handed a tape written by this
-    /// code would have deserialized it happily, because the property is simply
-    /// absent from its <c>CommandSpan</c> and <c>System.Text.Json</c> supplies
-    /// the default, and would then have replayed a DIFFERENT run under the same
-    /// schema string. That is the silent-drop class <c>0ccf6e96</c> was written
-    /// to make structurally impossible, so the string moves with the field.
+    /// tutorial message chain. The codec has always rejected unknown JSON
+    /// members, so an older reader would reject—not silently drop—the new
+    /// property. The version still moves with every field change so writers and
+    /// readers identify one exact wire contract and missing newly introduced
+    /// fields cannot masquerade as the same schema.
     /// </para>
     /// <para>
     /// The one tracked tape, <c>rebuild/scenarios/first-flight.v1.json</c>,
@@ -97,7 +108,7 @@ public sealed record CommandTape
     /// <c>3cc382e8</c>). Its <c>schemaVersion</c> field is what moves.
     /// </para>
     /// </remarks>
-    public const string CurrentSchemaVersion = "onslaught-rebuild-command-tape.v3";
+    public const string CurrentSchemaVersion = "onslaught-rebuild-command-tape.v4";
 
     [JsonConstructor]
     public CommandTape(
@@ -200,11 +211,12 @@ public sealed record CommandTape
                 throw new InvalidDataException("Command span contains invalid input values.", exception);
             }
 
-            if ((span.ToggleMode || span.Fire || span.Reset || span.SkipPanning) &&
+            if ((span.ToggleMode || span.Fire || span.Reset || span.SkipPanning ||
+                    span.ChangeWeapon) &&
                 span.DurationTicks != 1)
             {
                 throw new InvalidDataException(
-                    "ToggleMode, Fire, Reset and SkipPanning are edge actions and require a one-tick span.");
+                    "ToggleMode, Fire, Reset, SkipPanning and ChangeWeapon are edge actions and require a one-tick span.");
             }
 
             previousEnd = endTickExclusive;

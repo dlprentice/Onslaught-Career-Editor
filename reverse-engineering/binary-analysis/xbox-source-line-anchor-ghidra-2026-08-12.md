@@ -72,7 +72,8 @@ function-inventory hashes remained byte-identical across the operation:
 Those 8,941/8,942 values are Ghidra's current discovery results for these two
 Xbox builds. They include platform-specific and library code, may still omit
 undiscovered functions, and neither replaces nor caps the separately measured
-8,136-function PC-retail inventory.
+dated 8,136-function PC-retail inventory. The current PC structural census is
+8,170 after a separate 2026-08-13 boundary promotion.
 
 ## Backup and readback boundary
 

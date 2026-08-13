@@ -51,7 +51,7 @@ namespace OnslaughtRebuild.Client.Tests;
 /// property of the shared <c>DrawHeaderBarTitle</c> origin rounding and predates
 /// this change; it is recorded rather than tuned, because correcting it moves
 /// four pinned baselines at once and <c>HEADER_BAR_X = 390</c> is a source
-/// constant (FrontEnd.cpp:1101) that should not be bent to absorb a raster
+/// constant (FrontEnd.cpp:1103) that should not be bent to absorb a raster
 /// rounding difference.</para>
 /// </summary>
 public sealed class RetailFrontendHeaderFontTests
@@ -80,24 +80,35 @@ public sealed class RetailFrontendHeaderFontTests
     ];
 
     /// <summary>
+    /// xUnit v2 cannot turn an executing test into a skip. Resolve the optional
+    /// local-evidence prerequisite during discovery instead, so an absent or
+    /// stale capture is reported as skipped rather than as a green pixel gate.
+    /// </summary>
+    private sealed class CurrentStartupCaptureFactAttribute : FactAttribute
+    {
+        public CurrentStartupCaptureFactAttribute()
+        {
+            string? explicitCapture =
+                Environment.GetEnvironmentVariable("ONSLAUGHT_STARTUP_CAPTURE_DIR");
+            if (string.IsNullOrWhiteSpace(explicitCapture) &&
+                ResolveStartupCaptureDirectory() is null)
+            {
+                Skip = "No current startup capture is available to score.";
+            }
+        }
+    }
+
+    /// <summary>
     /// The two pages this change corrected must reproduce retail's per-glyph
     /// advance pattern and ink height exactly. Font13PS at 1.5 does not.
     /// </summary>
-    [Fact]
+    [CurrentStartupCaptureFact]
     public void CorrectedHeaderTitlesReproduceRetailGlyphRuns()
     {
-        string? captureDirectory = ResolveStartupCaptureDirectory();
-        if (captureDirectory is null)
-        {
-            // No local startup capture on this machine. Say so rather than
-            // reporting a green gate that measured nothing.
-            Assert.True(
-                string.IsNullOrEmpty(
-                    Environment.GetEnvironmentVariable("ONSLAUGHT_STARTUP_CAPTURE_DIR")),
-                "ONSLAUGHT_STARTUP_CAPTURE_DIR is set but holds no startup capture " +
-                "with 06-dev-select-settled.png.");
-            return;
-        }
+        string captureDirectory = ResolveStartupCaptureDirectory() ??
+            throw new InvalidOperationException(
+                "ONSLAUGHT_STARTUP_CAPTURE_DIR does not contain the required " +
+                "startup frames, or the selected capture disappeared after discovery.");
 
         var failures = new List<string>();
         foreach (HeaderPage page in Pages)

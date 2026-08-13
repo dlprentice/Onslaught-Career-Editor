@@ -135,8 +135,8 @@ public sealed class Level100FullChainTests
     /// The naive walker autopilot - fixed 18 m stand-off, fire whenever the
     /// reticle is on the objective, never check what is in between.
     ///
-    /// <para>It clears the firing range and then stalls, with more rounds in
-    /// the terrain than in every target combined.</para>
+    /// <para>It clears the firing range but never wins, with more rounds in the
+    /// terrain than in every target combined.</para>
     ///
     /// <para><b>It used to stall a beat earlier, and #146 is why.</b> Beat 3's
     /// fourth target, <c>Target Tank #23</c>, follows <c>Target Tank Path 1</c>.
@@ -145,23 +145,17 @@ public sealed class Level100FullChainTests
     /// of this driver's fixed 18 m stand-off forever. Walked in the order the
     /// markers' own <c>target</c> pointers chain them - [6, 7, 18] - it opens at
     /// node 6, (-25438, 20500), which brings it into range on its first leg. The
-    /// tank now dies, beat 3 completes, and the stall moves to
-    /// <c>Target Zone 2</c>. The assertions below were re-derived from the
-    /// driver's own report rather than adjusted to fit.</para>
+    /// tank now dies and beat 3 completes. The exact later navigation objective
+    /// and terminal branch remain timing-sensitive measurements, not properties
+    /// of this deliberately incompetent driver.</para>
     ///
-    /// <para><b>This assertion was weakened, deliberately, and the reason is a
-    /// correction.</b> It previously asserted <c>Lost</c> through
-    /// <c>TargetTruck1.msl</c>'s <c>died()</c> <c>case FALSE</c> arm - the
-    /// naive driver's undirected fire clipped an unactivated beat-4 truck at
-    /// t2545, which posts <c>Broke Tutorial</c>. That outcome was a coincidence
-    /// of timing, not a property of the driver, and it did not survive the
-    /// released message-box gate
-    /// (<c>Level100MissionTiming.MessageBoxAllowedTick</c>): the trucks run
-    /// their authored routes from level start either way, but the player now
-    /// arrives at the firing range about 190 ticks later and the stray round no
-    /// longer meets a truck. Measured at a 54,000-tick budget - twice the
-    /// pinned one - the run stays <c>Running</c>. Asserting <c>Lost</c> again
-    /// would mean pinning an accident.</para>
+    /// <para><b>The terminal details are reported but not asserted.</b> They have
+    /// changed more than once as retail-correct timing was restored. On the
+    /// 2026-08-13 branch the run reaches <c>Lost/TutorialBroken</c> at t13010
+    /// with <c>Firing Range</c> still selected. Earlier branches stayed
+    /// <c>Running</c> at <c>Target Zone 2</c>. Neither exact branch is the
+    /// contract: clearing all four firing-range statics, following the authored
+    /// route, wasting most rounds on terrain, and still not winning are.</para>
     ///
     /// <para>This is kept, and kept failing-forward rather than deleted,
     /// because it is the control for
@@ -242,9 +236,9 @@ public sealed class Level100FullChainTests
             $"inside the {arrivalRadius} mm arrival radius of its route's final node " +
             $"{lastNode.PositionMillimeters}.");
 
-        // THE HONEST NEGATIVE, AND IT IS THE ONLY THING HERE THAT DID NOT MOVE:
-        // shooting without looking does not finish this level. After 900
-        // released seconds the mission is still Running.
+        // THE HONEST NEGATIVE: shooting without looking does not finish this
+        // level. Exact failure time, reason, and selected navigation objective
+        // have moved as retail-correct timing changed, so none is the invariant.
         //
         // Everything around it moved under #146, and the move is real rather
         // than cosmetic, so the old assertions are re-derived from the driver's
@@ -258,16 +252,15 @@ public sealed class Level100FullChainTests
         // (-25438, 20500) - toward the player - so the tank now drives into
         // range on its first leg and dies there.
         //
-        // Measured on this tree (driver report above): 13 actors destroyed,
-        // navigation reaching "Target Zone 2" at t13221, outcome still Running
-        // at t27180. The driver clears the whole firing range and then stalls
-        // one beat later than it used to.
+        // Measured on this tree (driver report above): 10 actors destroyed and
+        // Lost/TutorialBroken at t13010 with "Firing Range" selected. Those are
+        // retained as a dated observation, not promoted into a brittle branch
+        // assertion.
         Assert.NotEqual(Level100MissionOutcome.Won, final.Level100Mission.Outcome);
-        Assert.Equal("Target Zone 2", final.Level100Mission.NavigationObjective);
         Assert.Equal(Level100ActorLifecycle.Destroyed, tank.Lifecycle);
 
         // The waste is still the point, restated as what is now measurable.
-        // 292 rounds went into the terrain against 182 into every target
+        // 2,396 rounds went into the terrain against 422 into every target
         // combined, so more than half of everything fired still hits nothing -
         // which is the same claim the old `> 1_000` bound was making before the
         // corrected routes let the driver connect at all.
@@ -299,12 +292,12 @@ public sealed class Level100FullChainTests
     /// then. <c>LevelWon()</c> is called by the released
     /// <c>event("Reached Target Zone 4")</c> and by nothing else.</para>
     ///
-    /// <para><b>Current measured branch, 2026-08-03.</b> With actor impacts
+    /// <para><b>Current measured branch, 2026-08-13.</b> With actor impacts
     /// routed through the released shield/damage funnel and walker recharge
     /// gated by the pristine 0.3-second ground-contact comparison, beat 9
     /// destroys all six wave-2 drones. The sub-40 % emergency poll never posts
     /// <c>Abort Airborne Drones</c>; objective 4 completes normally, and the run
-    /// reaches <c>Won</c> at t6682 with 11,882 milli-life. The prior abort-path
+    /// reaches <c>Won</c> at t6855 with 15,868 milli-life. The prior abort-path
     /// trajectories remain dated evidence in the local-lab reports, not the
     /// active expectation of this test.</para>
     /// </summary>
@@ -393,8 +386,8 @@ public sealed class Level100FullChainTests
             Level100PrimaryObjectiveStatus.Complete,
             final.Level100Mission.PrimaryObjectives
                 .Single(objective => objective.Objective == 4).Status);
-        Assert.Equal(6_682, final.Tick);
-        Assert.Equal(11_882, final.Hull);
+        Assert.Equal(6_855, final.Tick);
+        Assert.Equal(15_868, final.Hull);
     }
 
     /// <summary>

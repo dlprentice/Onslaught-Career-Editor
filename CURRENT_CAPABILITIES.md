@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-08-12. RE authority block refreshed to canonical Gen22
+Last updated: 2026-08-13. RE authority block refreshed to canonical Gen23
 (`current_re_authority`; candidate Gen73 is projection-oracle only). Primary WinUI
 navigation was rechecked 2026-08-03 against the live shell (includes Cheats).
 The 2026-08-01 shell, appearance, Lore, Media, and four-run Level 100 reviews
@@ -520,12 +520,11 @@ The cold-start client/Core harness visits startup, logo, montage, splash,
 click-to-start, main menu, New Game, level select, briefing, configuration
 select, loading, and gameplay in released order. Driven through the client input
 adapter, that same cold first career **reaches `Won`**, through
-`event("Reached Target Zone 4")` and with failure reason `None`. It gets there
-on the released **sub-40% hull abort branch**: it destroys **18 of the 22**
-targets — three Target Trucks, six Moving Targets, three Airborne Targets 1, two
-of six Airborne Targets 2, plus `Target Tank 2`, `Target Tank 3`,
-`Target Warehouse` and `Target Tank #23` — trips `Abort Airborne Drones` at
-t6732 with 5,700 of 20,000 hull, and leaves primary objective 4 `Failed`.
+`event("Reached Target Zone 4")` and with failure reason `None`. The current
+2026-08-13 measurement destroys **all 22 targets**, including all six second-wave
+drones; the sub-40% abort remains false and primary objective 4 is `Complete`.
+It reaches `Won` at t9899 with 14,163 hull and state hash
+`17c8cb7c0f3d42966cb08ae6ab5fb0561b0d56f9d5504c80203697f8802ed405`.
 
 A second, direct-Core cold run applies the same pointer/integer-pixel
 quantisation as the client path. It has the same terminal outcome and tick,
@@ -533,19 +532,20 @@ state hash, and pose trace as the client/input-adapter run, so nothing in that
 result is evidence of an additional frontend or `InteractiveSession` defect. A
 third, **unquantised** direct-Core cold-career control also reaches **`Won`**
 and does the whole job: **all 22 destroyed**, all six wave-2 drones, the abort
-poll never fired, objective 4 `Complete`. The four targets the client arm loses
-are therefore lost to the whole-retail-pixel look quantum, on a beat that is
-chaotic at finer than that quantum. All three results are asserted by
+poll never fired, objective 4 `Complete`; its current measured endpoint is
+t8636 with 9,800 hull. All three results are asserted by
 [`rebuild/OnslaughtRebuild.Core.Tests/Level100ColdStartTests.cs`](rebuild/OnslaughtRebuild.Core.Tests/Level100ColdStartTests.cs).
 
 A fourth, returning-player direct-Core run reaches `Won` with the four
 `SLOT_TUTORIAL_*` values already saved; it does not traverse the frontend or
-client adapter. It also wins on the abort branch, with three of the six wave-2
-drones down. That evidence is
+client adapter. It destroys all 22 targets, clears all six wave-2 drones without
+the abort, completes objective 4, and reaches `Won` at t6855 with 15,868 hull.
+Those endpoint values are direct assertions, not log-only measurements. That evidence is
 [`rebuild/OnslaughtRebuild.Core.Tests/Level100FullChainTests.cs`](rebuild/OnslaughtRebuild.Core.Tests/Level100FullChainTests.cs).
 None of these is a human or automated native-Godot end-to-end proof.
 
-**Beat 9's kill count is chaotic and these figures are the 2026-08-01 values.**
+**Beat 9's kill count is trajectory-sensitive and these figures are the
+2026-08-13 values.**
 The `WaterLoss` that used to end the cold runs was fixed by the ferry
 hand-off clearance term; the wave-2 counts then moved again when the vertical
 datum (#154) and the look-response table (#161) landed, each of which flipped
@@ -559,17 +559,20 @@ within 20 m of the target volume regardless of what was underneath, and on the
 ferry to Target Zone 4 that point is open water, so the run ditched. An altitude
 term on the hand-off — `Level100ChainAutopilot.ZoneHandoffClearanceMillimeters` —
 fixed it, and [`Level100FerryLandingTests`](rebuild/OnslaughtRebuild.Core.Tests/Level100FerryLandingTests.cs)
-now asserts zero `WaterLoss` across a twenty-run one-permille sweep and carries
-an adverse control that reinstates the defect and drowns. **The water rule
-itself was not touched**: it is a byte-faithful port of `BattleEngine.cpp`
+now measures **20/20 `Won` and zero `WaterLoss`** across a twenty-run
+one-permille sweep. Its horizontal-only adverse arm also reaches `Won` 20/20,
+so it no longer proves the old drowning outcome; it proves the mechanism instead:
+all 20 adverse Target Zone 4 hand-offs are above the permitted cruise tier while
+all 20 fixed hand-offs are at or below it. **The water rule itself was not
+touched**: it is a byte-faithful port of `BattleEngine.cpp`
 :1259-1262, pinned at water + 200 mm two independent ways in the same file. A
 naive water-landing *guard* remains **tried and measured worse** and is
 deliberately not restored.
 
-The terminal **tick and hull are recorded but not gated**. The test writes them
-to its log rather than asserting them. Treat both as re-measurable, not as
-pinned facts. The test summary states the same four-run boundary as its
-assertions.
+The returning-player terminal tick and hull are pinned by assertions. The cold
+client and unquantised-control endpoint values above are recorded by the tests
+and remain re-measurable; the client/quantised direct equality of tick, complete
+state hash, and pose trace is asserted.
 
 > **Superseded 2026-08-01.** The two paragraphs above previously said the cold
 > runs still ended `Lost` / `WaterLoss` on the flight home at `t17699` with
@@ -577,8 +580,8 @@ assertions.
 > targets with objective 4 `Complete` and the abort poll never firing. The
 > ferry loss was fixed on 2026-07-31 by the hand-off clearance term; the
 > wave-2 counts moved on 2026-08-01 with the vertical datum and the
-> look-response table. Both are asserted at their current values in the two
-> test files named above.
+> look-response table. Those were the then-current values; the current
+> 2026-08-13 measurements are stated above.
 
 > **Superseded 2026-07-28 — every load-bearing clause of the paragraph these
 > three replaced is now false.** It read: "on a cold career the same sequence ends **`Lost` /
@@ -601,11 +604,11 @@ assertions.
 > longer full, is **recorded but not asserted** — it appears in the test's own
 > comment and in its log output, not in a gate.
 >
-> **Unchanged:** the two-halves framing above. `Won` as a returning player and
-> `Lost` on a cold first career are both still current, under different career
-> preconditions. The 36-tick margin figure is dropped rather than restated —
-> it described the returning-player run against a guard the cold run no longer
-> trips, and it lives in a test comment rather than an assertion.
+> **Superseded again 2026-08-13:** the two-halves framing is no longer current.
+> The present cold-client, quantised direct, unquantised direct, and
+> returning-player synthetic runs all reach `Won`; their different input
+> surfaces and career preconditions remain explicit rather than being merged
+> into one claimed playthrough.
 
 > **Superseded 2026-07-27.** This section previously read: "`Won` is likewise not
 > a full clear. The observed route to the level's `Won` state runs through the
@@ -621,9 +624,9 @@ assertions.
 > demand. Then by `b9e1ae50`, which joined the frontend and the beat chain for
 > the first time and established the cold-first-career result above.
 >
-> **Do not compress this to "it reaches `Won`", and do not compress it to "it
-> does not reach `Won`".** Both are current, under different career preconditions.
-> `GOAL.md` and `developer_state.json` carry the same two-halves phrasing.
+> This warning is historical. The present deterministic runs all reach `Won`,
+> but none is a human or automated native-Godot end-to-end proof, and their
+> distinct input surfaces must not be collapsed into one run.
 
 The current source tree and release packages do not include retail game assets
 or their conversions, other than two registered screenshots used for the app's
@@ -643,9 +646,9 @@ Read [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md) before changing this lane.
 the historical Gen10 or candidate Gen73 roots by generation number, ledger
 equality, or self-derived pins.
 
-| Metric | Canonical Gen22 |
+| Metric | Canonical Gen23 |
 | --- | ---: |
-| Authority generation | **22** (lineage `incident-20260806-recovery-v1`) |
+| Authority generation | **23** (lineage `incident-20260806-recovery-v1`) |
 | Functions | **8126** |
 | C1_CANDIDATE_PARTIAL | **217** |
 | C2_BOUNDED_RUNTIME | **10** |
@@ -654,18 +657,21 @@ equality, or self-derived pins.
 | OPEN residual | **17** |
 | REBUILD_READY | **0** |
 | complete_RE | **false** |
-| READY / reducer | `a0c8d3fb…eac90` / `a757bc51…db09` |
-| Next valid generation | **23** |
+| READY / reducer | `4471fdfe…5a93fc` / `a757bc51…db09` |
+| Next valid generation | **24** |
 
 **Tracked static-envelope closure (2026-08-11):** the separate reviewed
 [`function-c1-closure-2026-08-11.tsv`](reverse-engineering/binary-analysis/function-c1-closure-2026-08-11.tsv)
-accounts for the current 8,136-function inventory as **8,129 C1**, **7 C2**,
-and **0 static OPAQUE**. It is the current authority for minimum per-function
-static envelopes. Canonical Generation 22 remains the immutable replay
+accounts for its dated 8,136-function population as **8,129 C1**, **7 C2**,
+and **0 static OPAQUE**. The current saved structural census is **8,170** after
+the verified [34-boundary promotion](reverse-engineering/binary-analysis/mission-script-registry-boundary-live-promotion-2026-08-13.md);
+those 34 functions are outside the static-closure table and remain ungraded at
+that layer. Canonical Generation 23 remains the immutable replay
 authority for admitted runtime/campaign claims; neither count implies
 `REBUILD_READY` or complete semantic parity.
 
-**PC demo/retail function frontier (2026-08-12):** exact and semantic
+**PC demo/retail function frontier (2026-08-12, dated 8,136-function
+population):** exact and semantic
 second-pass reports now account for **8,119 normalized-identical bodies**,
 **16 bounded semantic divergences**, and **one proven retail-only compiler-EH
 package**. The
@@ -682,8 +688,10 @@ independent replay. The
 recovers three bounded divergent entries and proves the last row is a
 retail-only controls-screen cleanup package through ordered code/EH metadata.
 All 8,135 retail functions that have a demo counterpart are mapped, and **zero
-address-unresolved rows remain**. Runtime, source, and rebuild equivalence
-remain separate proof.
+address-unresolved rows remain within that sealed 8,136-function population**.
+The 34 functions promoted on 2026-08-13 are outside the map and require fresh
+demo adjudication. Runtime, source, and rebuild equivalence remain separate
+proof.
 
 Generation 11's post-loss closure accounts for every Generation-73 candidate delta without
 making that candidate a parent. It readmits 935 names, 216 bounded C1 claims,
@@ -748,6 +756,12 @@ spelling, and direct rebuild event-routing parity remain open. The nearest
 `AdvanceActorRounds` owner has no explicit retail event queue or direct routing
 test, so the mapping remains `PARTIAL_CONTRACT`; no rebuild, Ghidra, or
 executable mutation was made.
+Generation 23 then advances the same slot-0 contract only for five selected arm
+invocations: default/event-3000, event 4003, event 4001, and two event-4000
+sessions. It records exact receiver-write pairs with lane-specific continuity
+grades and immutable rejected controls. It does not generalize their order or
+writers across arms, and external effects, event 4002, field meanings, broader
+populations, and direct rebuild parity remain open.
 Further reviewer use is situational under `reverse-engineering/REVIEW-PROTOCOL.md`,
 not a fixed model matrix.
 
@@ -770,7 +784,7 @@ corrections. `StartDie` remained open/opaque at that handoff. The independent
 data-write lane has one refuter-survived semantic result: a Level 521 `LockHit`
 invocation removed the supplied target's sole fired-lock node through five exact
 ordered field transitions. These are instrument capabilities and historical
-admissions. Canonical Gen22 retains those four C2 rows, separately re-proves a
+admissions. Canonical Gen23 retains those four C2 rows, separately re-proves a
 narrower fifth ApplyDamage C2 from intact TTD wrappers, and adds the bounded
 SetPos roundtrip as a sixth, LockHit's single-node removal path as a seventh,
 the bounded CExplosion internal carrier as an eighth, and the strict-`CRound`
@@ -821,11 +835,11 @@ mission reachability, later damage/effects, and rebuild parity remain open.
 These instruments do not infer function boundaries, C++ receivers, argument or
 return types, semantics, or parity. Static/source/RTTI evidence supplied joins
 for early data-write plates. Focused player-damage / Level 521 successor work
-remains an open runtime front alongside the next impact-ranked Generation-22
-contract/rebuild advance. There is
+remains an open runtime front alongside the next impact-ranked Generation-23
+successor contract/rebuild advance. There is
 not yet a normalized corpus-wide semantic ledger, and no new trace is justified
 until existing evidence plus these instruments cannot answer a preregistered
-question. The next campaign generation is 23.
+question. The next campaign generation is 24.
 
 ## Evidence boundary
 

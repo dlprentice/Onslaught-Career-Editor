@@ -11,8 +11,12 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         public void MutationPolicyParityAcceptsAnExactSpec()
         {
             BinaryPatchSpec expected = MakeSpec();
+            BinaryPatchSpec actual = MakeSpec();
 
-            Assert.True(BinaryPatchEngine.MutationPolicyEquals(expected, expected));
+            Assert.False(
+                ReferenceEquals(expected, actual),
+                "the two operands must be distinct instances or this test proves nothing");
+            Assert.True(BinaryPatchEngine.MutationPolicyEquals(expected, actual));
         }
 
         [Fact]
@@ -28,6 +32,15 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 expected with { Selectability = "hidden_companion" },
                 expected with { PresetEligibility = new[] { "other-profile" } },
                 expected with { RequiresWindowedPair = false },
+                expected with { Key = "other-key" },
+                expected with { Track = "other-track" },
+                expected with { DisplayName = "Other patch" },
+                expected with { FileOffset = 0x121 },
+                expected with { Original = new byte[] { 0x01, 0x03 } },
+                expected with { Patched = new byte[] { 0x90, 0x91 } },
+                expected with { Optional = false },
+                expected with { TargetBinaryHashes = new[] { "other-hash" } },
+                expected with { TargetBinarySize = 4097 },
                 expected with
                 {
                     AdditionalRegions = new[]

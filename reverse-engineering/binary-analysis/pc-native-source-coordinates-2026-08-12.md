@@ -3,11 +3,11 @@
 Status: active, bounded static naming and provenance instrument
 Last updated: 2026-08-12
 Evidence: MEASURED — 1,559 `push <line>; push <path>` debug-allocator argument
-pairs decoded from the pristine specimen, joined to the current tracked Ghidra
+pairs decoded from the pristine specimen, joined to the dated 2026-08-12 Ghidra
 name projection and reconciled against the tracked Xbox anchor join; UNKNOWN —
 every semantic, boundary and behavioural question, which this instrument does not
 address.
-Verdict: 827 of the 8,136 known functions carry at least one authored source
+Verdict: 827 of the then-current 8,136 functions carry at least one authored source
 file and line number emitted by the compiler into the shipped image. This settles
 provenance and naming evidence, not semantics.
 Specimen: pristine PC retail `BEA.exe`, SHA-256
@@ -113,47 +113,30 @@ registry entry. No name is proposed here.
 > data-manager territory. The broken measurement pointed at the mission-script VM
 > instead, so it would have sent the work to the wrong subsystem entirely.
 
-## Documentation debt, ranked — and the frontier is smaller than it looked
+## Documentation debt — corrected authority
 
-Crossing the coordinates against the tracked function-doc tree turns an
-amorphous "hundreds of undocumented functions" into a priority order, and
-corrects the scope estimate substantially.
-
-| Measure | Value |
-| --- | ---: |
-| Attributed function/file pairs | 841 |
-| Documented | 27 |
-| Undocumented | 814 |
-| — of which compiler unwind funclets | 480 |
-| — of which still carry a default `FUN_` name | 27 |
-| — **real named functions, the actual frontier** | **307** |
-| Source files attributed | 145 |
-| Source files having a doc directory | 26 |
-
-**The frontier is 307, not the ~700 a raw undocumented count suggests.** Nearly
-sixty per cent of the gap is compiler unwind funclets, which are arguably not
-documentation targets at all, and a further 27 are a naming problem rather than a
-documentation one. Separating those three populations is the point of the
-exercise.
-
-Ranked by real named undocumented functions, the largest gaps are
-`IScript.cpp` (23), `CPhysicsScriptStatements.h` (18) and `.cpp` (15),
-`monitor.h` (14), `WorldPhysicsManager.h` (12), `AsmInstruction.cpp` (12),
-`MeshPart.cpp` (11) and `WorldPhysicsManager.cpp` (10). Those are concentrated in
-the mission-script VM and the physics-statement system — both already live
-campaign subjects, and both absent from the pinned GPL drop.
-
-119 of the 145 attributed source files have no documentation directory at all.
+The withdrawn 307-function census formerly repeated here was the broken
+single-`Address:` measurement described above. It is not an active frontier.
+Under the stated contract-or-purpose-row definition, the corrected gap was
+**170 unique real-named coordinate-covered functions**. That documentation gap
+is now closed: the five detailed documents cover 29 unique functions and
+`functions/coordinate-long-tail.md` has 148 function/file rows covering 141
+unique functions; their union is the same 170, not 177. This closes purpose-row
+coverage only, not behavioral contracts. The corrected ranking was
+`MeshPart.cpp` 32, `BattleEngineDataManager.cpp` 31,
+`WorldPhysicsManager.cpp` 21, `oids.cpp` 20, `mesh.cpp` 19 and
+`ParticleSet.cpp` 16.
 
 ## The instrument is factory-biased, and that explains its shape
 
-Working the ranked gap files exposes a pattern that characterises the instrument
-itself. The next five files yield 18 undocumented real-named functions, and
-almost every one is an **object factory**:
+Working the ranked gap files exposed a pattern that characterises the instrument
+itself. The first five detailed files yielded 18 then-undocumented real-named
+functions, now covered by their purpose rows, and almost every one is an
+**object factory**:
 
 | Source file | Undocumented | Functions |
 | --- | ---: | --- |
-| `WorldPhysicsManager.cpp` | 9 | `CreateSquad`, `CreateWeaponByIndex`, `CreateProjectile`, `CreateSpawner`, `CreateCharacter`, `CreatePickup`, `CreateEffect`, `CreateTrigger`, `InitializeLists` |
+| `WorldPhysicsManager.cpp` | 9 | `CreateSquad`, `CreateWeaponByIndex`, `CreateProjectile`, `CreateSpawner`, `CreateCharacter`, `CreateExplosion`, `CreateEffect`, `CreateTrigger`, `InitializeLists` |
 | `mesh.cpp` | 4 | `InitStatic`, `Load`, `FindOrCreate`, `OptimizeParts` |
 | `ParticleSet.cpp` | 3 | `CreateByType`, `LoadFromArchive`, `LoadParticleSetFile` |
 | `oids.cpp` | 1 | `OID__CreateObject` |
@@ -169,12 +152,14 @@ object factory laid out in order.
 Two consequences worth carrying:
 
 - **The instrument is a factory map, not a general function map.** Its 827
-  functions are not a random sample of the 8,136, and coverage figures derived
+  functions are not a random sample of that dated 8,136, and coverage figures derived
   from it must not be read as coverage of the binary.
 - **It is unusually well suited to object-lifecycle work.** Every `Create*` above
   arrives with its source line and its constructor callee already attached —
   `CreateProjectile` → `CRound__ctor` ×2, `CreateCharacter` → `CUnit__ctor_base`
-  ×3, `CreatePickup`/`CreateEffect`/`CreateTrigger` → `CComplexThing__ctor_base`.
+  ×3, `CreateExplosion`/`CreateEffect`/`CreateTrigger` →
+  `CComplexThing__ctor_base`. The explosion identity has separate vtable and
+  caller proof; the coordinate alone did not establish it.
   That is a spawn-path census for free.
 
 `CMesh__Load` is the outlier worth flagging separately: 18,546 bytes spanning

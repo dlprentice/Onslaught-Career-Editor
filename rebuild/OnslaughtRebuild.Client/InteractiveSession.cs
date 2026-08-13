@@ -11,6 +11,7 @@ public readonly record struct InteractiveSessionMetrics(
     long ResetGeneration,
     long FireHeldTicksSampled,
     long FirePulseEdgesConsumed,
+    long ChangeWeaponEdgesConsumed,
     long MovementPulseEdgesConsumed,
     long CappedFrameCount,
     long DroppedElapsedTicks);
@@ -111,6 +112,7 @@ public sealed class InteractiveSession
     private bool _resetEdgePending;
     private bool _firePulsePending;
     private bool _skipPanningEdgePending;
+    private bool _changeWeaponEdgePending;
     private bool _zoomInEdgePending;
     private bool _zoomOutEdgePending;
     private sbyte _movementPulseX;
@@ -128,6 +130,7 @@ public sealed class InteractiveSession
     private long _resetEdgesConsumed;
     private long _fireHeldTicksSampled;
     private long _firePulseEdgesConsumed;
+    private long _changeWeaponEdgesConsumed;
     private long _movementPulseEdgesConsumed;
     private long _cappedFrameCount;
     private long _droppedElapsedTicks;
@@ -168,6 +171,7 @@ public sealed class InteractiveSession
         _resetEdgePending ||
         _firePulsePending ||
         _skipPanningEdgePending ||
+        _changeWeaponEdgePending ||
         _zoomInEdgePending ||
         _zoomOutEdgePending ||
         _movementPulseX != 0 ||
@@ -186,6 +190,7 @@ public sealed class InteractiveSession
         _resetEdgesConsumed,
         _fireHeldTicksSampled,
         _firePulseEdgesConsumed,
+        _changeWeaponEdgesConsumed,
         _movementPulseEdgesConsumed,
         _cappedFrameCount,
         _droppedElapsedTicks);
@@ -280,6 +285,17 @@ public sealed class InteractiveSession
         }
 
         _firePulsePending = true;
+    }
+
+    /// <summary>Queues one released weapon-cycle input edge.</summary>
+    public void QueueChangeWeapon()
+    {
+        if (IsPaused || _inputSuspendedUntilReleased)
+        {
+            return;
+        }
+
+        _changeWeaponEdgePending = true;
     }
 
     public void QueueZoomIn()
@@ -392,6 +408,7 @@ public sealed class InteractiveSession
         _resetEdgePending = false;
         _firePulsePending = false;
         _skipPanningEdgePending = false;
+        _changeWeaponEdgePending = false;
         _zoomInEdgePending = false;
         _zoomOutEdgePending = false;
         _movementPulseX = 0;
@@ -554,6 +571,12 @@ public sealed class InteractiveSession
                     actions |= SimActions.SkipPanning;
                 }
 
+                if (_changeWeaponEdgePending)
+                {
+                    actions |= SimActions.ChangeWeapon;
+                    _changeWeaponEdgesConsumed++;
+                }
+
                 if (_zoomInEdgePending)
                 {
                     actions |= SimActions.ZoomIn;
@@ -578,6 +601,7 @@ public sealed class InteractiveSession
                 _resetEdgePending = false;
                 _firePulsePending = false;
                 _skipPanningEdgePending = false;
+                _changeWeaponEdgePending = false;
                 _zoomInEdgePending = false;
                 _zoomOutEdgePending = false;
                 _movementPulseX = 0;

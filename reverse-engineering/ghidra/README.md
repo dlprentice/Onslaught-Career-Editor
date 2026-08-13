@@ -4,36 +4,34 @@
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; local working copies and historical backups remain untracked.
 
-- Snapshot date: 2026-08-12
+- Snapshot date: 2026-08-13
 - Ghidra lineage used for the latest review: 12.1.2
 - Imported Steam specimen SHA-256:
   `74154BFAE14DDC8ECB87A0766F5BC381C7B7F1AB334ED7A753040EDA1E1E7750`
 - Imported specimen MD5: `3b456964020070efe696d2cc09464a55`
-- Project payload: 19 files, 186,502,021 bytes
+- Project payload: 19 files, 186,551,173 bytes
 - Canonical `sha256<TAB>bytes<TAB>path` inventory SHA-256:
-  `83330f4eae490686932d6b06fb6826019fb5e578b3b99ebee6cca7bf69cd70bb`
+  `682950bbb57b2658d8cbbe1894bfac66902392e5fff91513f85b4592532137a0`
 
 **Promotion note:** this snapshot was refreshed from the source-stable live
-maintainer project after the five-function collision-component implementation-
-identity correction passed exact PRE validation, two independent persistent
-scratch replicas, two rollback probes, separate-process readback, and full
-8,136-function inventory comparison. Exactly five names, displayed signatures,
-comments, and tag sets changed. Function boundaries, instructions, program
-bytes, data units, and references did not. The evidence owns bounded shared-base
-implementation identity only; folded derived aliases, complete runtime
-behavior, layouts, source-body equality, and reconstruction parity remain open.
-See
-[`collision-component-identity-correction-2026-08-12.md`](../binary-analysis/collision-component-identity-correction-2026-08-12.md).
+maintainer project after 34 MissionScript registry-linked callable boundaries
+passed exact PRE validation, two independent persistent scratch replicas, two
+rollback probes, one live apply, separate-process full-inventory readback, and
+POST restore. Internal functions advanced 8,136→8,170; instructions, program
+bytes, data units, references, comments, signatures, and every pre-existing
+function row remained unchanged. The new rows intentionally retain default
+metadata. See the
+[`live-promotion report`](../binary-analysis/mission-script-registry-boundary-live-promotion-2026-08-13.md).
 
 The 19-file tree is byte-identical to the independently restored/read-only-
-opened D: disaster-recovery copy made on 2026-08-12. Future live work can make
+opened D: disaster-recovery copy made on 2026-08-13. Future live work can make
 the snapshot lag again; each refresh remains a separately authorized promotion.
 The ignored live-promotion and tracked-restore receipts are respectively
-`local-lab/ghidra-collision-component-identity-live-promotion-20260812-v1/live-promotion.ready.json`
-(8,008 bytes, SHA-256 `b2a19bae9c420f1b2e12b2ff20d516c3031fa2fe09105ec92475cf6832635246`)
+`local-lab/ghidra-mission-registry-boundary-live-promotion-20260813-v1/live-promotion.ready.json`
+(9,956 bytes, SHA-256 `363a57afda96560b214c01e3a75422702ae6ac2cdeb89ed2d069231414722322`)
 and
-`local-lab/ghidra-collision-component-identity-live-promotion-20260812-v1/tracked-snapshot-restore.ready.json`
-(5,965 bytes, SHA-256 `26514c374373012618334adfde814e4ec4dc2a45e492ca2d4f7b184497933811`).
+`local-lab/ghidra-mission-registry-boundary-live-promotion-20260813-v1/tracked-snapshot-restore.ready.json`
+(5,961 bytes, SHA-256 `d79325e4d092d8abdb92f0a62d7635d80ad30034b86aa14d247aa3ac815ca8fc`).
 
 Related (not this folder):
 
@@ -70,7 +68,7 @@ the user overrides them:
 | Headless entry | `...\support\analyzeHeadless.bat` |
 | Prior install archive | `D:\GhidraArchives\` (12.0.3 retained there; do not delete) |
 | Working/maintainer project | `C:\Users\david\Ghidra\Projects` (`BEA.gpr` / `BEA.rep`) |
-| Verified off-volume recovery | `D:\BEA-Ghidra-Backups\2026-08-12-collision-component-identity-post-live\` (exact current POST snapshot; independently copied and read-only reopened) |
+| Verified off-volume recovery | `D:\BEA-Ghidra-Backups\2026-08-13-mission-registry-boundaries-post-live\` (exact current POST snapshot; independently copied and read-only reopened) |
 | Xbox Issue-11 POST recovery | `D:\BEA-Ghidra-Backups\2026-08-12-xbox-sparse-symbol-post-anchors-issue11\` (exact isolated project; restored semantic readback passed) |
 | Xbox US-retail POST recovery | `D:\BEA-Ghidra-Backups\2026-08-12-xbox-sparse-symbol-post-anchors-us-retail\` (exact isolated project; restored semantic readback passed) |
 | User settings | `%APPDATA%\ghidra\ghidra_12.1.2_PUBLIC` |
@@ -82,3 +80,29 @@ extension is installed or required. Mutating the maintainer project is a
 separately authorized action; default posture is read-only on a disposable
 copy. Promoting live maintainer DB bytes into this tracked snapshot is likewise
 separately authorized.
+
+## Promotion-tool status
+
+The early bulk/global-initializer and target-lock promotion programs are
+historical one-shot owners, not reusable current launchers. In particular,
+`ghidra_target_lock_semantic_live_launcher.py`,
+`ghidra_global_init515_live_promotion.py`, and their envelope, batch, scratch,
+full-520, and target-lock proof helpers retain fail-closed dependency hashes
+from their completed 2026-08-03–07 ceremonies. Later reviewed fixes changed the
+shared backup/envelope helpers, so reviving those old programs now stops on an
+integrity mismatch. Do not repair that by mechanically replacing hashes: their
+receipts describe the old dependency graph and the live project is no longer in
+their PRE state.
+
+This does not block a new promotion. A current mutation needs a new bounded
+target-specific owner with fresh hashes and fresh PRE/scratch/apply/readback/
+POST evidence. The Mission-registry boundary owner named above is the most
+recent boundary-only shape to study; its receipt-pinned files remain immutable.
+
+The dated `ghidra-function-name-table-2026-07-27.tsv` also is not a current
+name oracle. Nine later historical edits changed 54 rows after its original
+seal, and Generations 20–23 now pin that exact dated artifact. Do not restore or
+edit it in place and break frozen replay. The 2026-08-12 projection is likewise
+frozen for Generations 20–23 and two receipt-pinned instruments. Use the current
+2026-08-13 projection plus a fresh live readback for current names; preserve any
+correction as a new dated authority.

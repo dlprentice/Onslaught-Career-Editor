@@ -634,8 +634,10 @@ namespace OnslaughtCareerEditor.AppCore.Tests
 
                 File.WriteAllText(outsideManifestPath, "{}");
                 string manifestPath = Path.Combine(profile.TargetGameRoot, GameProfileMusicReplacementService.ManifestFileName);
-                if (!CreateHardLink(manifestPath, outsideManifestPath, IntPtr.Zero))
-                    return;
+                Assert.True(
+                    CreateHardLink(manifestPath, outsideManifestPath, IntPtr.Zero),
+                    $"Could not create the manifest hardlink required by this safety test; " +
+                    $"Win32 error {Marshal.GetLastWin32Error()}.");
 
                 InvalidOperationException ex = Assert.Throws<InvalidOperationException>(() =>
                     GameProfileMusicReplacementService.StageReplacement(
@@ -693,8 +695,10 @@ namespace OnslaughtCareerEditor.AppCore.Tests
 
                 File.Copy(stage.ManifestPath, outsideManifestPath);
                 File.Delete(stage.ManifestPath);
-                if (!CreateHardLink(stage.ManifestPath, outsideManifestPath, IntPtr.Zero))
-                    return;
+                Assert.True(
+                    CreateHardLink(stage.ManifestPath, outsideManifestPath, IntPtr.Zero),
+                    $"Could not create the restore-manifest hardlink required by this safety test; " +
+                    $"Win32 error {Marshal.GetLastWin32Error()}.");
 
                 InvalidOperationException ex = Assert.Throws<InvalidOperationException>(() =>
                     GameProfileMusicReplacementService.RestoreReplacement(
@@ -908,7 +912,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 }
                 catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or PlatformNotSupportedException)
                 {
-                    return;
+                    Assert.Fail($"Could not create the music-directory symlink required by this safety test: {ex.Message}");
                 }
 
                 InvalidOperationException reparseEx = Assert.Throws<InvalidOperationException>(() =>
@@ -954,8 +958,10 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                         ApplyWindowedCompatibilityPatch: false));
 
                 string targetPath = Path.Combine(profile.TargetGameRoot, "data", "Music", "BEA_01(Master).ogg");
-                if (!CreateHardLink(outsidePath, targetPath, IntPtr.Zero))
-                    return;
+                Assert.True(
+                    CreateHardLink(outsidePath, targetPath, IntPtr.Zero),
+                    $"Could not create the target hardlink required by this safety test; " +
+                    $"Win32 error {Marshal.GetLastWin32Error()}.");
 
                 InvalidOperationException ex = Assert.Throws<InvalidOperationException>(() =>
                     GameProfileMusicReplacementService.StageReplacement(
@@ -1009,8 +1015,10 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                         TargetMusicFileName: "BEA_01(Master).ogg",
                         ReplacementOggPath: replacementPath));
 
-                if (!CreateHardLink(outsidePath, stage.BackupPath, IntPtr.Zero))
-                    return;
+                Assert.True(
+                    CreateHardLink(outsidePath, stage.BackupPath, IntPtr.Zero),
+                    $"Could not create the backup hardlink required by this safety test; " +
+                    $"Win32 error {Marshal.GetLastWin32Error()}.");
 
                 InvalidOperationException ex = Assert.Throws<InvalidOperationException>(() =>
                     GameProfileMusicReplacementService.RestoreReplacement(

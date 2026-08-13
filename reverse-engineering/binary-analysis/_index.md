@@ -22,7 +22,7 @@ the document it links.
   binary the reference captures came from, and why it matters
 - [RE coverage baseline](re-coverage-baseline-2026-07-25.md) — the 6,411 → 6,969
   inventory growth and the byte-level verifier
-- [Full 8,136-function static-C1 closure](function-c1-closure-2026-08-11.md) —
+- [Dated 8,136-function static-C1 closure](function-c1-closure-2026-08-11.md) —
   the reviewed per-row crosswalk from 53 sealed static receipts, the ten
   post-Gen19 Mission natives, and the pre-existing bounded C1/C2 set; static
   envelope closure only, not runtime or source parity
@@ -93,8 +93,8 @@ the document it links.
   — recovers three bounded divergent demo entries through complete bodies,
   call spines, strings, callers, and source ownership, then proves the final
   unwind cleanup package is retail-only through ordered code and MSVC metadata;
-  current partition 8,119 normalized-identical / 16 divergent / 1 retail-only /
-  0 unresolved
+  dated partition 8,119 normalized-identical / 16 divergent / 1 retail-only /
+  0 unresolved; the 34 functions admitted on 2026-08-13 remain outside it
 - [`CUnit` primary virtual-interface semantic crosswalk](cunit-primary-vtable-semantics-2026-08-11.md)
   and its [46-slot table](cunit-primary-vtable-semantics-2026-08-11.tsv) — uses
   the demo twin, pinned source overrides, and typed callsites to replace field
@@ -211,11 +211,13 @@ the document it links.
 > closeout, are the current record of which names are demoted.
 >
 > The tracked
-> [`ghidra-function-name-table-2026-08-12.tsv`](ghidra-function-name-table-2026-08-12.tsv)
-> is the current 8,136-row address-to-name projection and the mechanical
-> checker's authority. The July table remains a dated 7,555-row artifact for
-> its original checks and pinned receipts. The current count is a discovered
-> census, not a permanent ceiling.
+> [`ghidra-function-name-table-2026-08-13.tsv`](ghidra-function-name-table-2026-08-13.tsv)
+> is the current 8,170-row address-to-name projection and the mechanical
+> checker's authority after the verified
+> [34-boundary promotion](mission-script-registry-boundary-live-promotion-2026-08-13.md).
+> The 2026-08-12 and July tables remain dated artifacts for their original
+> checks and pinned receipts. The current count is a discovered census, not a
+> permanent ceiling.
 
 The closeout and per-address plan supersede older saved names where they
 conflict. Static accounting does not prove runtime behavior, exact layouts,
