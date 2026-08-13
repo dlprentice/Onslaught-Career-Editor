@@ -145,6 +145,42 @@ campaign subjects, and both absent from the pinned GPL drop.
 
 119 of the 145 attributed source files have no documentation directory at all.
 
+## The instrument is factory-biased, and that explains its shape
+
+Working the ranked gap files exposes a pattern that characterises the instrument
+itself. The next five files yield 18 undocumented real-named functions, and
+almost every one is an **object factory**:
+
+| Source file | Undocumented | Functions |
+| --- | ---: | --- |
+| `WorldPhysicsManager.cpp` | 9 | `CreateSquad`, `CreateWeaponByIndex`, `CreateProjectile`, `CreateSpawner`, `CreateCharacter`, `CreatePickup`, `CreateEffect`, `CreateTrigger`, `InitializeLists` |
+| `mesh.cpp` | 4 | `InitStatic`, `Load`, `FindOrCreate`, `OptimizeParts` |
+| `ParticleSet.cpp` | 3 | `CreateByType`, `LoadFromArchive`, `LoadParticleSetFile` |
+| `oids.cpp` | 1 | `OID__CreateObject` |
+| `InitThing.cpp` | 1 | `InitThing__CreateThingByType` |
+
+The reason is structural, not coincidental: coordinates are emitted at
+**debug-allocator call sites**, so a function only appears if it allocates. That
+selects for constructors, factories and loaders and against pure logic,
+rendering and math. `CWorldPhysicsManager` contributes eight consecutive
+`Create*` entry points at source lines 145–292, which is the game's central
+object factory laid out in order.
+
+Two consequences worth carrying:
+
+- **The instrument is a factory map, not a general function map.** Its 827
+  functions are not a random sample of the 8,136, and coverage figures derived
+  from it must not be read as coverage of the binary.
+- **It is unusually well suited to object-lifecycle work.** Every `Create*` above
+  arrives with its source line and its constructor callee already attached —
+  `CreateProjectile` → `CRound__ctor` ×2, `CreateCharacter` → `CUnit__ctor_base`
+  ×3, `CreatePickup`/`CreateEffect`/`CreateTrigger` → `CComplexThing__ctor_base`.
+  That is a spawn-path census for free.
+
+`CMesh__Load` is the outlier worth flagging separately: 18,546 bytes spanning
+source lines 565–1534 with 82 buffer reads, by far the largest body the
+instrument touches.
+
 ## Boundary
 
 A coordinate proves the compiler emitted that file and line at that instruction.
