@@ -162,8 +162,10 @@ The later reviewed
 [34-function static-contract addendum](binary-analysis/mission-script-registry-new-function-static-contracts-2026-08-13.md)
 now gives each one a bounded `C1_CANDIDATE_PARTIAL` envelope and falsifier, so
 the dated closure plus that addendum cover all 8,170 saved rows at C1-or-better.
-Generation 23 and all live Ghidra metadata remain unchanged by that semantic
-pass.
+Generation 23 remained unchanged by that semantic pass. A still-later separate
+[34-row live metadata promotion](binary-analysis/mission-script-registry-new-function-vocabulary-live-promotion-2026-08-13.md)
+gave those entries bounded Tier-2 registry names/comments/tags without changing
+their bodies, ABI/storage fields, parameters, or campaign grades.
 
 **Dated PC demo/retail frontier (2026-08-12, 8,136-function population):** the conservative 8,086-entry
 address map plus exact second-pass reports, caller propagation, equal-delta
@@ -194,19 +196,18 @@ script commands with handler addresses in a `0x40`-stride record array at
 reconstructs all 144 records with zero untracked stores. All 144 now resolve to
 saved function entries after the backed-up structure-only promotion of 34
 formerly absent callable boundaries. A later backed-up metadata ceremony
-normalized 75 reviewed existing entries, so **34 registry handlers currently
-carry default `FUN_*` names**. The game's own data therefore supplies
-script-facing vocabulary for those 34 unnamed entries. Exactly one command,
+normalized 75 reviewed existing entries, and a separate later ceremony gave
+the 34 new entries their bounded Tier-2 registry vocabulary. Exactly one command,
 `SetSpeed`, is bound to the shared no-op — registered but unimplemented on this
 path. It independently confirms three names the PC-native coordinate instrument
 reached by an unrelated route. A registry string is the script-facing command
 name for a slot, **not** a recovered C++ symbol; no signature or semantics
 follows from the registry alone. The separately reviewed 34-function addendum
 now records only the operations visible in those exact instruction bodies.
-Those 34 boundaries still retain default metadata; their naming/comment cohort
-remains separate from the completed 75-row existing-entry normalization.
-The exact backup/readback/collateral result is recorded in the
-[75-row live-promotion report](binary-analysis/mission-script-registry-vocabulary-live-promotion-2026-08-13.md).
+The exact backup/readback/collateral results are recorded in the
+[75-row live-promotion report](binary-analysis/mission-script-registry-vocabulary-live-promotion-2026-08-13.md)
+and the separate
+[34-row new-function live-promotion report](binary-analysis/mission-script-registry-new-function-vocabulary-live-promotion-2026-08-13.md).
 
 **PC-native source coordinates (2026-08-12):** the shipped PC executable passes
 `__FILE__` and `__LINE__` to its debug allocator, so the image names its own
@@ -618,7 +619,7 @@ Current per-function notes live under
 | Discovery findings | [`binary-analysis/ghidra-fullpass-findings/`](binary-analysis/ghidra-fullpass-findings/) | Tracked wave reviews (W001–W018) |
 | Correction ops | `local-lab/ghidra-fullpass-2026-07-23/` (gitignored) | Queues, dual QC, apply logs; closeout 2026-07-25 |
 | Live applied DB | Maintainer Ghidra Projects (machine-local) | Working database that may receive dual-cleared applies |
-| Tracked snapshot | [`ghidra/`](ghidra/README.md) (snapshot date 2026-08-09) | Distributable reviewed snapshot; exact to the verified live state at promotion time |
+| Tracked snapshot | [`ghidra/`](ghidra/README.md) (snapshot date 2026-08-13) | Distributable reviewed snapshot; exact to the verified live state at promotion time |
 
 Host install paths, headless entry, and local project layout:
 [`ghidra/README.md`](ghidra/README.md). Expedition overlays stay under ignored

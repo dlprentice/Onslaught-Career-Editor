@@ -1,6 +1,6 @@
 # The Mission script-command registry, recovered from shipped data
 
-Status: active, bounded static registry recovery; boundary disposition updated
+Status: active, bounded static registry recovery; boundary and metadata disposition updated
 Last updated: 2026-08-13
 Evidence: MEASURED — abstract interpretation of the stores in
 `ScriptCommandRegistry__InitBuiltins` against the pristine specimen,
@@ -10,9 +10,9 @@ handler signature, argument contract, side effect and runtime behaviour, none of
 which this recovery addresses.
 Verdict: 144 script commands are paired one-to-one with 144 unique handler
 addresses by the game's own data. All 144 now resolve to saved function entries.
-The 75 reviewed existing-entry names have passed a separate backed-up live
-metadata ceremony; the 34 entries created by the earlier boundary ceremony
-still retain default names. The structural census/lower bound remains 8,170.
+The 75 reviewed existing-entry names and the 34 entries created by the earlier
+boundary ceremony have passed separate backed-up live metadata ceremonies. The
+structural census/lower bound remains 8,170.
 This report still proves registry vocabulary only, not C++ symbols, signatures,
 semantics, or a final ceiling.
 Specimen: pristine PC retail `BEA.exe`, SHA-256
@@ -67,7 +67,7 @@ stores left on an untracked register**.
 | Unique handler pointers | 144 |
 | Handlers resolving to a saved function entry | 144 |
 | Callable handler entries absent from the current function census | 0 |
-| Handlers on current default `FUN_` names | 34 |
+| Handlers on current default `FUN_` names | 0 |
 | Handlers on the shared no-op | 1 |
 
 The 144 count independently matches the 144-slot native table reached from the
@@ -391,8 +391,9 @@ the separate
 [vocabulary owner](mission-script-registry-vocabulary-normalization-2026-08-13.md)
 bounded the completed 75-row metadata ceremony, whose exact result is in the
 [live-promotion report](mission-script-registry-vocabulary-live-promotion-2026-08-13.md).
-The 34 newer entries remain a
-distinct future naming/comment cohort. The mechanical discovery owner and its
+The 34 newer entries were then handled through their own distinct owner and
+[live-promotion report](mission-script-registry-new-function-vocabulary-live-promotion-2026-08-13.md).
+The mechanical discovery owner and its
 receipts are machine-local under `local-lab/mission-native-registry-20260812-v1/`;
 the recovered pairing is
 [`mission-script-command-registry-2026-08-12.tsv`](mission-script-command-registry-2026-08-12.tsv).

@@ -9,23 +9,23 @@ owner; local working copies and historical backups remain untracked.
 - Imported Steam specimen SHA-256:
   `74154BFAE14DDC8ECB87A0766F5BC381C7B7F1AB334ED7A753040EDA1E1E7750`
 - Imported specimen MD5: `3b456964020070efe696d2cc09464a55`
-- Project payload: 19 files, 186,747,781 bytes
+- Project payload: 19 files, 186,813,317 bytes
 - Canonical `sha256<TAB>bytes<TAB>path` inventory SHA-256:
-  `8eb664062a8ba67005e9f8ad8f61aa2222585622c41022a69080c5e408cd3cf6`
-- Current rolling database `db.18610.gbf`: 68,222,976 bytes, SHA-256
-  `210a0461a6b1746f7bbc53e883b616c4a02694a055f1bd23ccadaf44472c1356`
+  `cf3b36f5a8d9183bdc0b66041445fb5451160fb21edaed9fb21bed74a9f6ee0d`
+- Current rolling database `db.18611.gbf`: 68,288,512 bytes, SHA-256
+  `6f45cdac7ae1f10987280f0ec247e6b5d6dcf866eae79e5982efa78dd68455ce`
 
 **Promotion note:** this snapshot was refreshed from the source-stable live
-maintainer project after the separate `0x0050FF10` explosion-factory repair
-passed exact PRE validation, two independent persistent scratch replicas,
-rollback/compensation and external-path controls, one live apply,
-separate-process full-inventory readback, and POST restore. The operation
-replaced the disproved pickup identity/signature/comment with the bounded
-`CWorldPhysicsManager__CreateExplosion` contract. Internal functions remain
-8,170; all bodies, instructions, program bytes, data units, references, and
-8,169 non-target function rows remained unchanged. The preceding 75-row
-MissionScript vocabulary ceremony and 34-boundary structural ceremony remain
-distinct. See the
+maintainer project after the separate 34-row new-function MissionScript
+vocabulary cohort passed exact PRE validation, two independent persistent
+scratch replicas, rollback/compensation and external-path controls, one live
+apply, separate-process full-inventory readback, and POST restore. Internal
+functions remain 8,170; exactly 34 default names became bounded Tier-2 registry
+names/comments/tags while all bodies, instructions, ABI/storage fields,
+program bytes, data units, references, and 8,136 non-target rows remained
+unchanged. See the
+[`new-function vocabulary live-promotion report`](../binary-analysis/mission-script-registry-new-function-vocabulary-live-promotion-2026-08-13.md),
+the preceding
 [`explosion-factory live-promotion report`](../binary-analysis/cexplosion-factory-identity-live-promotion-2026-08-13.md),
 its [`scratch owner`](../binary-analysis/cexplosion-factory-identity-promotion-2026-08-13.md),
 the preceding
@@ -34,17 +34,21 @@ and the structural
 [`boundary live-promotion report`](../binary-analysis/mission-script-registry-boundary-live-promotion-2026-08-13.md).
 
 The 19-file tree is byte-identical to the independently restored/read-only-
-opened D: disaster-recovery copy made on 2026-08-13. Future live work can make
+opened D: POST recovery made on 2026-08-13. Future live work can make
 the snapshot lag again; each refresh remains a separately authorized promotion.
 The current ignored live readback and tracked-restore receipts are respectively
-`local-lab/ghidra-cexplosion-live-promotion-20260813-v1/runs/live-readback/cexplosion.ready.json`
-(2,159 bytes, SHA-256 `1616fea1eb6276b052e99260a3f79084a76831544ae350a549783b5115ee3175`)
+`local-lab/ghidra-mission-registry-new34-live-promotion-20260813-v1/runs/live-readback/vocabulary.ready.json`
+(2,502 bytes, SHA-256 `d08990d8016b9f781f1a8e7ca4ac7886ccffb00cc82d4f41dea7e484921e9680`)
 and
-`local-lab/ghidra-cexplosion-live-promotion-20260813-v1/tracked-snapshot-restore.ready.json`
-(5,911 bytes, SHA-256 `72fc473678d86a43dfd3dbb4f0df692e0c507342b5e29042c6ab30ba68ec3126`).
-The aggregate read-only authority is
-`local-lab/ghidra-cexplosion-live-authority-20260813-v1/live-promotion.ready.json`
-(31,486 bytes, SHA-256 `3336fa46c8c9d894f1d81fc5561fba91ff76c89ca728792069c0746d64b55337`).
+`local-lab/ghidra-mission-registry-new34-live-promotion-20260813-v1/tracked-snapshot-restore.ready.json`
+(5,935 bytes, SHA-256 `daa5458c5853239828a54ba3f9f8b744d48f1b5102a2b9105e0c4552ef362582`).
+The reusable read-only aggregate authority is
+`local-lab/ghidra-mission-registry-new34-live-authority-20260813-v1/authority.ready.json`
+(18,373 bytes, SHA-256
+`db946cefffbda039a9e368ad6dfec6ec90b69aa4d5222fdf6ec3ab1017be951a`).
+It is reproduced by `tools/ghidra_live_promotion_authority.py` from the tracked
+cohort manifest and the preserved scratch/live/recovery evidence; it does not
+open Ghidra.
 
 Related (not this folder):
 
@@ -81,7 +85,7 @@ the user overrides them:
 | Headless entry | `...\support\analyzeHeadless.bat` |
 | Prior install archive | `D:\GhidraArchives\` (12.0.3 retained there; do not delete) |
 | Working/maintainer project | `C:\Users\david\Ghidra\Projects` (`BEA.gpr` / `BEA.rep`) |
-| Verified off-volume recovery | `D:\BEA-Ghidra-Backups\2026-08-13-cexplosion-factory-post-live\` (exact current POST snapshot; independently copied and read-only reopened) |
+| Verified off-volume recovery | `D:\BEA-Ghidra-Backups\2026-08-13-mission-registry-new34-post-live\` (exact current POST snapshot; independently copied and read-only reopened) |
 | Xbox Issue-11 POST recovery | `D:\BEA-Ghidra-Backups\2026-08-12-xbox-sparse-symbol-post-anchors-issue11\` (exact isolated project; restored semantic readback passed) |
 | Xbox US-retail POST recovery | `D:\BEA-Ghidra-Backups\2026-08-12-xbox-sparse-symbol-post-anchors-us-retail\` (exact isolated project; restored semantic readback passed) |
 | User settings | `%APPDATA%\ghidra\ghidra_12.1.2_PUBLIC` |

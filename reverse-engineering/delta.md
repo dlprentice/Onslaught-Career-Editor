@@ -46,7 +46,7 @@ pins.
 | complete_RE | **false** |
 | Candidate-chain disposition | Gen73 is `PROJECTION_ORACLE_ONLY`; all 7,294 source adjudications and 145,973 changed fields are closed by `94d7a9eb…323e0` |
 | Immediate RE front | Fifty-three disjoint bulk static passes cover 7,945 exact bodies: 7,902 formerly opaque functions now have bounded C1_STATIC hypotheses, 42 prior C1 rows are repaired or confirmed, and ApplyDamage remains C2. The sealed 8,136-row tracked static-closure OPAQUE count is zero; a separately reviewed 34-row addendum now gives the current 8,170-function census 8,163 bounded static C1 rows plus seven C2 rows, while the immutable campaign ledger separately retains 7,899 semantic OPAQUE rows. A complete 184-row residual census switched instruments to formal packs, strict RTTI/vtables, address-joined refs, strings/debug strings, registries, retained-source tokens and pristine decode: 167 exact functions / 407 slot placements advanced through strict vtable membership, then the final 17 advanced together through visible pristine instruction envelopes with row-specific falsifiers. The 46,657-byte HResultToString envelope is explicitly not represented as one original source routine. The final exact disposable project retains the dated 8,136 functions and has 7,968 HYP names, all 7,945 cohort entries C1_STATIC-or-better, and zero collateral/body/structural/alias drift. Gen20 bounds ten retained `CExplosion` slot-40 carrier calls but leaves entry, writes, returns, the full envelope, and segmented mesh-part behavior open. Gen21 bounds 7,513 strict-`CRound` slot-66 call-entry pairs and 7,204 gap-free returns but leaves writes, branches, complete Move behavior, and the shared `CMissile` placement open. Gen22 bounds 2,555 strict-`CRound` slot-0 call-entry-arm paths with exactly one selected arm per invocation and 1,972 gap-free returns. Gen23 adds exact receiver-write pairs for five selected arms while preserving lane-specific gaps and rejected controls; event 4002, external effects, field meanings, shared `CMissile` placement, source spelling, broader populations, and direct rebuild event routing remain open. Static closure is not runtime/source/parity closure. |
-| Ghidra apply | The latest authorized live operation separately repaired `0x0050FF10` to `CWorldPhysicsManager__CreateExplosion` while holding the structural count at 8,170. Separate readback changed only the reviewed target identity/signature/parameter/comment/tag fields; 8,169 non-target rows, bodies, instructions, bytes, data, and references remained exact. POST functions `8eded18a…fea5b`, POST program `a3c505c3…368c1`, and the synchronized 19-file project inventory `8eb66406…3cf6` reproduce; the preceding 75-row vocabulary and 34-boundary promotions remain separate historical parents. |
+| Ghidra apply | The latest authorized live operation gave the 34 newly admitted MissionScript handlers bounded Tier-2 registry names/comments/tags while holding the structural count at 8,170. Separate readback changed only the allowed target name/rendered-signature/comment/tag fields; 8,136 non-target rows, bodies, ABI/storage fields, instructions, bytes, data, and references remained exact. POST functions `ee309036…02f1d`, POST program `2360923e…dc02`, and the synchronized 19-file project inventory `cf3b36f5…ee0d` reproduce; the boundary, 75-row vocabulary, and one-row explosion-factory operations remain distinct historical parents. |
 
 The frozen three-master hashes later in this document remain the correct inputs
 for the 2026-07-29 synthesis. Body rows below that still say “current” without
@@ -243,8 +243,8 @@ No percentage between these rows is meaningful. In particular:
 | Force-windowed trace image | SHA-256 `E1436EF7E0AD9CCBDDD43AAACA952F6E84D4B1A282835CEAD745EFCFC32FADF4` | Baseline plus one four-byte startup patch; all other bytes match baseline and remain usable as static evidence, while every runtime observation stays derivative/path-scoped |
 | Installed-tree aggregate | manifest digest `3D8AA45FB6792B605B5A29915E4256C5D2AFECEDE92AEF6CE8780FEA6A10212D` | Complete row census from a stable but non-atomic live traversal, not a filesystem snapshot or Steam depot manifest |
 | Stuart source | commit `5352A81CDB838B145A57F7FEBC5D9FC4B0129EBB` | Exact source pin, incomplete and not independently buildable |
-| Tracked Ghidra snapshot | 8,170 currently discovered internal functions; 19 files / 186,747,781 bytes; inventory `8eb66406…3cf6` | Reviewed distributable database snapshot, exact to live at the verified 2026-08-13 explosion-factory identity repair; 8,170 is a current census, not a final ceiling |
-| Live Ghidra database | 8,170 currently discovered internal functions plus 224 external/import functions in Ghidra's aggregate count | Current maintainer state; separately read back and restore-tested from the 2026-08-13 explosion-factory POST backup before snapshot promotion |
+| Tracked Ghidra snapshot | 8,170 currently discovered internal functions; 19 files / 186,813,317 bytes; inventory `cf3b36f5…ee0d` | Reviewed distributable database snapshot, exact to live at the verified 2026-08-13 new-function MissionScript vocabulary promotion; 8,170 is a current census, not a final ceiling |
+| Live Ghidra database | 8,170 currently discovered internal functions plus 224 external/import functions in Ghidra's aggregate count | Current maintainer state; separately read back and restore-tested from the 2026-08-13 MissionScript new-function vocabulary POST backup before snapshot promotion |
 | Reconstruction state | Assertions frozen inside `source-code/stuart-source-synthesis.md` SHA-256 `57C2C02E...B7B45` | Reported snapshot only; no root-repository commit plus dirty-content fingerprint was frozen, so remeasure code before making a present-tense implementation claim |
 
 This identity split is the first atom-level rule. Any claim without its specimen
@@ -804,11 +804,12 @@ its tag, terrain, script, actor, and media shape against Level 100.
 
 - All 144 entries have distinct non-null names and handlers.
 - Current Ghidra status is 144 exact handler entries: 110 pre-existing plus 34
-  independently proved boundaries promoted as default-metadata Function
-  objects. The 110-entry review retained 35 names and the separate backed-up
+  independently proved boundaries initially promoted as default-metadata
+  Function objects. The 110-entry review retained 35 names and the separate backed-up
   live ceremony completed 75 Tier-2 normalizations: 54 former defaults plus 21
-  adjudicated supersessions. The 34 newer entries remain default-metadata;
-  boundary creation, naming, signatures, and semantics stay separate proof gates.
+  adjudicated supersessions. A later separate backed-up ceremony completed the
+  34 new-entry Tier-2 names/comments/tags; signatures and runtime semantics stay
+  separate proof gates.
 - All 27 opcode vtable targets now have function entries; NOP and LABEL share
   the no-op executor. Exact paired retail/demo decode plus strict RTTI now fixes
   every case to its instruction class and slot-0 executor; eight executor
@@ -2308,13 +2309,13 @@ under their own provenance boundaries.
 | Discovered lower bound | **8,170** |
 | Distinct saved names | 8,162 |
 | Duplicate-name spellings | 8 |
-| `FUN_*` | 912 |
+| `FUN_*` | 878 |
 | EH funclets | 1,179 |
 | Thunks | 100 |
-| Functions with plate comments | 7,016 |
-| Functions with tags | 5,978 |
+| Functions with plate comments | 7,050 |
+| Functions with tags | 6,012 |
 | Saved non-funclet population | 6,991 |
-| Latest saved live export | 7,086,736 bytes, SHA-256 `8eded18a…fea5b` |
+| Latest saved live export | 7,089,535 bytes, SHA-256 `ee309036…02f1d` |
 
 “8,170 functions” means saved database entries, not the unknowable perfect
 compiler/linker total. The 34 registry-derived boundaries are now included in
@@ -2652,7 +2653,7 @@ answer is predetermined.
 | Priority | Expedition | Why it is unusually strong | Discrete completion bar | Immediate rebuild payoff |
 | ---: | --- | --- | --- | --- |
 | 0 | Freeze specimens and claim keys | Every other result depends on exact hashes and scopes | Input hashes match; 5,515 file keys; executable/source/runtime/rebuild keys resolve | Prevents silent drift and false parity |
-| 1 | Mission native recovery | 144 exact table bindings and 144 saved handler entries; the 34 formerly absent boundaries and the separate 75-row existing-entry normalization are promoted | Name/comment the 34 new entries as a distinct Tier-2 cohort, then recover prototypes/contracts without conflating script vocabulary with C++ identity | General mission disassembler/runtime surface |
+| 1 | Mission native recovery | 144 exact table bindings and 144 saved handler entries; both the 75 existing-entry and 34 new-entry Tier-2 metadata cohorts are promoted | Recover prototypes/contracts without conflating script vocabulary with C++ identity | General mission disassembler/runtime surface |
 | 2 | Typed `sounds.sfx` | Source parser names all fields; named-baseline layout/version gates and 170-row exact parse agree | Keep 170/170 static rows closed; add byte-preserving encoder, bounded malformed-input tests, consumer xrefs, and selected runtime parse/bank trace | Language-wide typed effect catalog |
 | 3 | Battle Engine configuration format | Only 1,514 bytes; source loader, baseline consumer, and six data records align | Every byte/field/destination named or opaque; exact re-encode; world 001 fallback captured | Data-driven player profiles |
 | 4 | Signed STF correction | Exact present bug with perfect expected result | 2,571/2,571 symbols × six DATs; 151 negatives retained | Full localization catalog |
@@ -2678,7 +2679,9 @@ Recommended address order:
 
 1. **Completed:** normalize the 75 reviewed existing-entry names in a separate
    transaction;
-2. name/comment the 34 newly created entries through their own Tier-2 ceremony;
+2. **Completed 2026-08-13:** name/comment the 34 newly created entries through
+   their own Tier-2 ceremony; the remaining work is runtime/semantic depth, not
+   default-name cleanup;
 3. use the historical lexical-occurrence table only to prioritize semantic
    deepening, not to restore its superseded inventory categories;
 4. recover packed object layout and datatype-driven prototypes;

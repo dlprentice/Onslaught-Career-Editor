@@ -33,6 +33,10 @@ layouts, or behaviors are proven.
 > 2026-08-12. The first verified 2026-08-13 Mission-registry promotion admitted
 > 34 additional callable starts as default-metadata Function objects; the later
 > separate ceremony normalized 75 reviewed existing-entry names/comments/tags.
+> A still-later separate ceremony gave the 34 new entries bounded Tier-2
+> registry names/comments/tags while preserving every body and ABI/storage
+> field. The latest project state is owned by
+> [`../ghidra/README.md`](../ghidra/README.md).
 > The current saved census and lower bound are 8,170, not a ceiling. The current
 > 8,170-row projection and live-state
 > receipts are reconciled in

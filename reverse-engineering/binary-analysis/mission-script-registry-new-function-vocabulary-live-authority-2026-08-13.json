@@ -1,0 +1,580 @@
+{
+  "schema": "bea.ghidra.live-promotion-manifest.v1",
+  "id": "mission-script-registry-new34-vocabulary-live-20260813-v1",
+  "verdict": "LIVE_PROMOTION_AUTHORITY_READY",
+  "program": {
+    "name": "BEA.exe",
+    "md5": "3b456964020070efe696d2cc09464a55",
+    "sha256": "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750",
+    "internalFunctions": 8170,
+    "aggregateFunctions": 8394,
+    "instructions": 549872
+  },
+  "trackedFiles": {
+    "reverse-engineering/binary-analysis/mission-script-registry-new-function-vocabulary-normalization-2026-08-13.tsv": {
+      "bytes": 3417,
+      "sha256": "6154fb4bd4ae398b02d783fb50cd18381c1d224e2ac4c6f9dc1d26abb4d1ddc1"
+    },
+    "reverse-engineering/binary-analysis/mission-script-registry-new-function-vocabulary-normalization-pre-metadata-2026-08-13.tsv": {
+      "bytes": 8060,
+      "sha256": "cd4f6b4d4614870c12356ebce8702760d9e885e60eaf230ecd4316b06e61164f"
+    },
+    "reverse-engineering/binary-analysis/mission-script-registry-new-function-vocabulary-normalization-2026-08-13.md": {
+      "bytes": 7412,
+      "sha256": "b9f03fd35b57cbc054b35851ec5d442bd5c30a2b403047bd99d36e1771c621f1"
+    },
+    "reverse-engineering/binary-analysis/mission-script-registry-new-function-static-contracts-2026-08-13.tsv": {
+      "bytes": 21608,
+      "sha256": "86c0c4a0e0d5fe0078cb21f271b4985cb1c4fe89aa035b66215076dfbe784a31"
+    },
+    "tools/GhidraApplyMissionRegistryNewFunctionVocabulary.java": {
+      "bytes": 51090,
+      "sha256": "ab238cefbdbcc1fa343f0e27f9daecea84ca127da6baca3383c3ffc926d9f388"
+    },
+    "tools/ExportFullFunctionInventory.java": {
+      "bytes": 23963,
+      "sha256": "04519cd813f2fc25ddea8a6660f87c010f8aa4e053560993e4b35cafcc0b5197"
+    },
+    "tools/ghidra_project_backup.py": {
+      "bytes": 27502,
+      "sha256": "0f426982916f0aab982efe54664342a5d34607c2f89707159ecf6c07e205ad58"
+    },
+    "tools/GhidraProjectOpenProbe.java": {
+      "bytes": 3452,
+      "sha256": "fab2f701dfefe8604c1718d007dbe0ad59d330a9b3ec081ef2f2fe253b441fab"
+    },
+    "tools/re_ghidra_name_projection.py": {
+      "bytes": 6139,
+      "sha256": "d13d5f4d3b20cbd1e1baf24cd924d454c6c07b0bbf5517834c4089357f14ecdb"
+    }
+  },
+  "artifacts": {
+    "ghidra-function-name-table-2026-08-13.tsv": {
+      "bytes": 503177,
+      "sha256": "d61f9866d9dbf67bae817a710d50a1a136b7c2156ec6eb7f862d82dea70f26fd"
+    },
+    "inventory-diff.json": {
+      "bytes": 18478,
+      "sha256": "9c167f2308124cf4225658f77f6b1fb68217143951589b421fd2b534b1fcfba3"
+    },
+    "live-after-dry-inspect.json": {
+      "bytes": 3760,
+      "sha256": "9f2a50ec1d77edbddb31cc5d424ce1f7503bd7ccde5ae81b4b8b27495fcb439f"
+    },
+    "live-post-inspect.json": {
+      "bytes": 3760,
+      "sha256": "d856b14ea886118673225476aae99263a24b3bc4ac2b3f60d0e2baae121e1587"
+    },
+    "live-pre-inspect.json": {
+      "bytes": 3760,
+      "sha256": "b9c86b47efd728882f6ef374c77c4a4cca22dfca72ec074084c25c845fcdb1de"
+    },
+    "live-safe-stop-inspect.json": {
+      "bytes": 3760,
+      "sha256": "602776f7f2dbe1d268be29c4c3117f597f1d064d03eb08506b0438c4f17353e4"
+    },
+    "post-backup-restore.ready.json": {
+      "bytes": 5913,
+      "sha256": "878cbbe532f1fea830fde9e8de9fa791e4b0f7181060841181dc8920793cd620"
+    },
+    "post-backup-restore.ready.open-probe.log": {
+      "bytes": 4525,
+      "sha256": "5c3e0bfa05ff8e56aae9bed0f488f86e6d6e798ea4135be71fabd0d1f7fdcac2"
+    },
+    "pre-backup-restore.ready.json": {
+      "bytes": 5909,
+      "sha256": "efd08ad068e32f454dde7e7e9b02005db1608d0f9cc47a37658d1e44d8f63920"
+    },
+    "pre-backup-restore.ready.open-probe.log": {
+      "bytes": 4522,
+      "sha256": "30d2f9ca7075cb766c41c2890847cfb0aabe81dd0b14be11492a0f468fbb847f"
+    },
+    "refresh_tracked_snapshot.ps1": {
+      "bytes": 2578,
+      "sha256": "17e0171ec8722baf23bb7f9d1b6614297a1afb26eb59d0cbabdfb622dba19e37"
+    },
+    "runs/live-apply/ghidra.log": {
+      "bytes": 5493,
+      "sha256": "d2d7174329426ea0cb6584a651337c30259a5a309ea295606db5d32742c31c42"
+    },
+    "runs/live-apply/vocabulary.ready.json": {
+      "bytes": 2496,
+      "sha256": "ab7799f4aa290528a2b8c5f094ecbe59cd10f6b8c180ffbb36630459679f136e"
+    },
+    "runs/live-apply/vocabulary.tsv": {
+      "bytes": 15702,
+      "sha256": "35d73c89c5d29dd4f3daf8c308ee5e8a31eebc623abaaa5955ddc017950f6c52"
+    },
+    "runs/live-dry/ghidra.log": {
+      "bytes": 5373,
+      "sha256": "eaa642393f814d608a40403ab636af14327889c2d5502c7b03425bd3d3efc805"
+    },
+    "runs/live-dry/vocabulary.ready.json": {
+      "bytes": 2492,
+      "sha256": "f76a75c852abea7cea16bcbb02b52f21f4494b15358487a44536db92ea436b29"
+    },
+    "runs/live-dry/vocabulary.tsv": {
+      "bytes": 13389,
+      "sha256": "3695eadee1f7542935391b2ed7b06da69200697667ba57febb275527d5ac2885"
+    },
+    "runs/live-readback/functions.tsv": {
+      "bytes": 7089535,
+      "sha256": "ee3090360bd4f4b68d1ac52c59ab397e7ac37d81c76029d492e2a9d046902f1d"
+    },
+    "runs/live-readback/ghidra.log": {
+      "bytes": 6142,
+      "sha256": "5373570aabd0016ef77635a35a07b7674cbf08702ff2ab0278e735779163925d"
+    },
+    "runs/live-readback/program.tsv": {
+      "bytes": 1267,
+      "sha256": "2360923e0fa95648a708ee44297006dee222036662d7b34108d10a1fa405dc02"
+    },
+    "runs/live-readback/vocabulary.ready.json": {
+      "bytes": 2502,
+      "sha256": "d08990d8016b9f781f1a8e7ca4ac7886ccffb00cc82d4f41dea7e484921e9680"
+    },
+    "runs/live-readback/vocabulary.tsv": {
+      "bytes": 15804,
+      "sha256": "d40eb04c09459652d634c341d3bb3bfe04effdc14e7d75d83344713e041180d7"
+    },
+    "tracked-post-inspect.json": {
+      "bytes": 3804,
+      "sha256": "2c72a93c51afce3e208195d4993afd7725e3321e62f51eb4e07bd72ce3ef6ac3"
+    },
+    "tracked-pre-inspect.json": {
+      "bytes": 3804,
+      "sha256": "078a7e8a1b7e07a0de44525e14a519be24863f2951e27cf26975183a23f38fef"
+    },
+    "tracked-snapshot-restore.ready.json": {
+      "bytes": 5935,
+      "sha256": "daa5458c5853239828a54ba3f9f8b744d48f1b5102a2b9105e0c4552ef362582"
+    },
+    "tracked-snapshot-restore.ready.open-probe.log": {
+      "bytes": 4532,
+      "sha256": "adef628015142281dcb6124bd590cadb969137780fceddb3e8ecafa88e965f87"
+    }
+  },
+  "retainedProjectRoots": [
+    "post-restore-probe",
+    "pre-restore-probe",
+    "tracked-restore-probe"
+  ],
+  "externalStamps": {
+    "preFunctions": {
+      "bytes": 7086736,
+      "sha256": "8eded18abddfc0726517f2a88c7f4b2df15ff0cd13d3b70a5ca7ebd5a7afea5b"
+    },
+    "preProgram": {
+      "bytes": 1267,
+      "sha256": "a3c505c34b7ba26dec7088d9ee22e0f9c13365ae979be1ffc8f52301e1f368c1"
+    },
+    "scratchReceipt": {
+      "bytes": 31501,
+      "sha256": "8a6aedbe69f6eb9f5d222830b54bd231c5719378261d02c06986c13b89f1e118"
+    },
+    "preBackupManifest": {
+      "bytes": 7589,
+      "sha256": "40e84c0c420f00e8630bd10668e0c219eb61e4a26554b1ed833dcb5fa18bc78c"
+    },
+    "postBackupManifest": {
+      "bytes": 7589,
+      "sha256": "00a6bdd3a9ce1f464f402a08a13b9d56cdb30df4e2c953506eb5fddc51a0a05e"
+    }
+  },
+  "toolReceiptSchema": "bea.ghidra.mission-registry-new-function-vocabulary.v1",
+  "receiptBindings": {
+    "tool": "tools/GhidraApplyMissionRegistryNewFunctionVocabulary.java",
+    "manifest": "reverse-engineering/binary-analysis/mission-script-registry-new-function-vocabulary-normalization-2026-08-13.tsv",
+    "preMetadata": "reverse-engineering/binary-analysis/mission-script-registry-new-function-vocabulary-normalization-pre-metadata-2026-08-13.tsv",
+    "staticContracts": "reverse-engineering/binary-analysis/mission-script-registry-new-function-static-contracts-2026-08-13.tsv",
+    "owner": "reverse-engineering/binary-analysis/mission-script-registry-new-function-vocabulary-normalization-2026-08-13.md"
+  },
+  "targetCensus": {
+    "total": 34,
+    "NEW34_STATIC_C1": 34
+  },
+  "mutationSummary": {
+    "namesChanged": 34,
+    "commentsChanged": 34,
+    "newFunctionComments": 34,
+    "tagAssociationsAdded": 68,
+    "tagAssociationsRemoved": 0,
+    "tagDefinitionsAdded": 0,
+    "boundariesChanged": 0,
+    "abiChanged": 0,
+    "bytesChanged": 0,
+    "instructionsChanged": 0,
+    "referencesChanged": 0
+  },
+  "tagCatalog": {
+    "pre": {
+      "count": 6854,
+      "definitionsSha256": "074dd7480aebfe46aabe5a48c1429348a814c9b51b0d71d985cbdac6e764603f",
+      "usageSha256": "0ac85baaf38153328266bf4c54178f44ad871f273dabba03dfd13aaf4ded1a97"
+    },
+    "post": {
+      "count": 6854,
+      "definitionsSha256": "074dd7480aebfe46aabe5a48c1429348a814c9b51b0d71d985cbdac6e764603f",
+      "usageSha256": "0cbec4d3c190f2df8be5a3bd67ceeeaa419d3d5d9b20602b7ff9e400ade12971"
+    }
+  },
+  "functionDelta": {
+    "targetManifest": "reverse-engineering/binary-analysis/mission-script-registry-new-function-vocabulary-normalization-2026-08-13.tsv",
+    "targetAddressField": "handlerVa",
+    "expectedPreNameField": "expectedPreName",
+    "proposedNameField": "proposedName",
+    "expectedPreSourceField": "expectedNameSource",
+    "postNameSource": "USER_DEFINED",
+    "postTags": [
+      "script-command-registry",
+      "tier2-script-facing-name"
+    ],
+    "functionCount": 8170,
+    "targets": 34,
+    "nonTargets": 8136,
+    "expectedChangedTargetFields": [
+      "commentLen",
+      "commentPresent",
+      "commentSha256",
+      "fqname",
+      "fqnameLen",
+      "fqnameSha256",
+      "name",
+      "nameLen",
+      "nameSha256",
+      "nameSource",
+      "signature",
+      "signatureLen",
+      "signatureSha256",
+      "tagCount",
+      "tags",
+      "tagsSha256"
+    ]
+  },
+  "inventoryDiff": {
+    "path": "inventory-diff.json",
+    "beforeSuffix": "local-lab/ghidra-cexplosion-live-promotion-20260813-v1/runs/live-readback/functions.tsv",
+    "afterSuffix": "local-lab/ghidra-mission-registry-new34-live-promotion-20260813-v1/runs/live-readback/functions.tsv",
+    "counts": {
+      "before": 8170,
+      "after": 8170,
+      "created": 0,
+      "destroyed": 0,
+      "namesChanged": 34,
+      "signaturesChanged": 34,
+      "boundsChanged": 0,
+      "callingConvChanged": 0,
+      "instrCountChanged": 0,
+      "noReturnChanged": 0,
+      "paramCountChanged": 0,
+      "returnTypeChanged": 0,
+      "sigSourceChanged": 0,
+      "thunkFlagChanged": 0
+    },
+    "changesByField": {
+      "bodyDigest": 0,
+      "callingConv": 0,
+      "instrCount": 0,
+      "isThunk": 0,
+      "name": 34,
+      "nameSource": 34,
+      "noReturn": 0,
+      "paramCount": 0,
+      "returnType": 0,
+      "sigSource": 0,
+      "signature": 34
+    }
+  },
+  "programDelta": {
+    "commentMetricSemantics": "comments is the program-wide listing-comment record count",
+    "observedCommentDelta": "the exact +34 observed here consists of the 34 new target function comments",
+    "expectedChanges": {
+      "comments": {
+        "before": 9165,
+        "after": 9199
+      },
+      "commentsSha256": {
+        "before": "7bf6458538656da36fea94f5ca62c41ca026d75f489e2b59fc3fd3c502c62c2a",
+        "after": "37a7b6d7dd4049a2e45e7d941de0bde92fadca50a03369e2401046b7cab3e927"
+      },
+      "symbolsDefaultOther": {
+        "before": 61628,
+        "after": 61594
+      },
+      "symbolsUserDefined": {
+        "before": 6070,
+        "after": 6104
+      }
+    }
+  },
+  "runs": {
+    "dry": {
+      "mode": "dry",
+      "state": "PRE",
+      "receipt": "runs/live-dry/vocabulary.ready.json",
+      "output": "runs/live-dry/vocabulary.tsv",
+      "log": "runs/live-dry/ghidra.log",
+      "readOnly": true,
+      "saveCount": 0,
+      "sentinels": [
+        "MISSION_REGISTRY_NEW_FUNCTION_VOCABULARY_PREFLIGHT_OK targets=34 functions=8170 canonical_projection=cc769cb0b83aec0105d365e77f0702adcc1024914453b0f5615c8d7d1b333ce9",
+        "MISSION_REGISTRY_NEW_FUNCTION_VOCABULARY_DRY_COMPLETE targets=34 mutations=0"
+      ]
+    },
+    "apply": {
+      "mode": "apply",
+      "state": "POST",
+      "receipt": "runs/live-apply/vocabulary.ready.json",
+      "output": "runs/live-apply/vocabulary.tsv",
+      "log": "runs/live-apply/ghidra.log",
+      "readOnly": false,
+      "saveCount": 1,
+      "sentinels": [
+        "MISSION_REGISTRY_NEW_FUNCTION_VOCABULARY_PREFLIGHT_OK targets=34 functions=8170 canonical_projection=cc769cb0b83aec0105d365e77f0702adcc1024914453b0f5615c8d7d1b333ce9",
+        "MISSION_REGISTRY_NEW_FUNCTION_VOCABULARY_APPLY_COMPLETE targets=34 reopen_verification_required=true"
+      ]
+    },
+    "readback": {
+      "mode": "readback",
+      "state": "POST",
+      "receipt": "runs/live-readback/vocabulary.ready.json",
+      "output": "runs/live-readback/vocabulary.tsv",
+      "log": "runs/live-readback/ghidra.log",
+      "readOnly": true,
+      "saveCount": 0,
+      "sentinels": [
+        "MISSION_REGISTRY_NEW_FUNCTION_VOCABULARY_READBACK_COMPLETE targets=34 loaded_state_verified=true",
+        "INVENTORY_OK functions=8170 instructions=549872 definedData=48585 undefinedData=3912345 userSymbols=6104"
+      ]
+    }
+  },
+  "scratch": {
+    "schema": "bea.ghidra.mission-registry-new-function-vocabulary-authority.v1",
+    "verdict": "SCRATCH_AUTHORITY_READY_LIVE_FORBIDDEN"
+  },
+  "projects": {
+    "pre": {
+      "fileCount": 19,
+      "totalBytes": 186747781,
+      "canonicalInventorySha256": "8eb664062a8ba67005e9f8ad8f61aa2222585622c41022a69080c5e408cd3cf6"
+    },
+    "post": {
+      "fileCount": 19,
+      "totalBytes": 186813317,
+      "canonicalInventorySha256": "cf3b36f5a8d9183bdc0b66041445fb5451160fb21edaed9fb21bed74a9f6ee0d"
+    },
+    "delta": {
+      "removed": [
+        "BEA.rep/idata/00/~00000000.db/db.18609.gbf"
+      ],
+      "added": [
+        "BEA.rep/idata/00/~00000000.db/db.18611.gbf"
+      ],
+      "changed": [],
+      "removedRecords": {
+        "BEA.rep/idata/00/~00000000.db/db.18609.gbf": {
+          "bytes": 68222976,
+          "sha256": "a002cfb6c8d52390c0e49e7357627e305f27dff198c72f284daa732e91506d0e"
+        }
+      },
+      "addedRecords": {
+        "BEA.rep/idata/00/~00000000.db/db.18611.gbf": {
+          "bytes": 68288512,
+          "sha256": "6f45cdac7ae1f10987280f0ec247e6b5d6dcf866eae79e5982efa78dd68455ce"
+        }
+      }
+    }
+  },
+  "restores": [
+    {
+      "name": "preBackup",
+      "state": "PRE",
+      "receipt": "pre-backup-restore.ready.json",
+      "event": "preRestoreVerified"
+    },
+    {
+      "name": "postBackup",
+      "state": "POST",
+      "receipt": "post-backup-restore.ready.json",
+      "event": "postRestoreVerified"
+    },
+    {
+      "name": "trackedSnapshot",
+      "state": "POST",
+      "receipt": "tracked-snapshot-restore.ready.json",
+      "event": "trackedRestoreVerified"
+    }
+  ],
+  "chronology": [
+    [
+      "livePreInspect",
+      "preBackupCreated"
+    ],
+    [
+      "trackedPreInspect",
+      "preBackupCreated"
+    ],
+    [
+      "preBackupCreated",
+      "preRestoreVerified"
+    ],
+    [
+      "preRestoreVerified",
+      "safeStopInspect"
+    ],
+    [
+      "safeStopInspect",
+      "dryCompleted"
+    ],
+    [
+      "dryCompleted",
+      "afterDryInspect"
+    ],
+    [
+      "afterDryInspect",
+      "applyCompleted"
+    ],
+    [
+      "applyCompleted",
+      "readbackCompleted"
+    ],
+    [
+      "readbackCompleted",
+      "livePostInspect"
+    ],
+    [
+      "livePostInspect",
+      "postBackupCreated"
+    ],
+    [
+      "postBackupCreated",
+      "postRestoreVerified"
+    ],
+    [
+      "postRestoreVerified",
+      "trackedPostInspect"
+    ],
+    [
+      "trackedPostInspect",
+      "trackedRestoreVerified"
+    ]
+  ],
+  "projection": {
+    "sourceSha256": "ee3090360bd4f4b68d1ac52c59ab397e7ac37d81c76029d492e2a9d046902f1d",
+    "sourceLabel": "local-lab/ghidra-mission-registry-new34-live-promotion-20260813-v1/runs/live-readback/functions.tsv",
+    "date": "2026-08-13",
+    "trackedPath": "reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-13.tsv",
+    "retainedArtifact": "ghidra-function-name-table-2026-08-13.tsv",
+    "stamp": {
+      "bytes": 503177,
+      "sha256": "d61f9866d9dbf67bae817a710d50a1a136b7c2156ec6eb7f862d82dea70f26fd"
+    }
+  },
+  "documentation": [
+    {
+      "path": "GOAL.md",
+      "required": [
+        "The current structural census is 8,170",
+        "those 34 functions bounded Tier-2 registry names/comments/tags",
+        "new-function registry vocabulary normalized"
+      ],
+      "forbidden": [
+        "**Name the 34 newly admitted registry handlers in a separate cohort.**"
+      ]
+    },
+    {
+      "path": "reverse-engineering/RE-INDEX.md",
+      "required": [
+        "mission-script-registry-new-function-vocabulary-live-promotion-2026-08-13.md",
+        "the 34 new entries their bounded Tier-2 registry vocabulary"
+      ],
+      "forbidden": [
+        "34 registry handlers currently carry default"
+      ]
+    },
+    {
+      "path": "reverse-engineering/binary-analysis/GHIDRA-REFERENCE.md",
+      "required": [
+        "A still-later separate ceremony gave the 34 new entries bounded Tier-2",
+        "The current saved census and lower bound are 8,170, not a ceiling"
+      ]
+    },
+    {
+      "path": "reverse-engineering/binary-analysis/_index.md",
+      "required": [
+        "Mission-registry 34-row new-function vocabulary live promotion",
+        "preserving all 8,136 non-target rows"
+      ]
+    },
+    {
+      "path": "reverse-engineering/binary-analysis/mission-script-command-registry-2026-08-12.md",
+      "required": [
+        "mission-script-registry-new-function-vocabulary-live-promotion-2026-08-13.md",
+        "script-facing Tier-2 names distinct from recovered C++ identities"
+      ]
+    },
+    {
+      "path": "reverse-engineering/delta.md",
+      "root": "authorityRepo",
+      "required": [
+        "both the 75 existing-entry and 34 new-entry Tier-2 metadata cohorts are promoted",
+        "Recover prototypes/contracts without conflating script vocabulary with C++ identity"
+      ],
+      "forbidden": [
+        "Name/comment the 34 new entries as a distinct Tier-2 cohort"
+      ]
+    },
+    {
+      "path": "reverse-engineering/ghidra-functions.md",
+      "required": [
+        "Latest live readback | `local-lab/ghidra-mission-registry-new34-live-promotion-20260813-v1/runs/live-readback/functions.tsv`",
+        "| Explicit `FUN_*` names | 878 |",
+        "| Functions with plate comments | 7,050 |",
+        "those 34 new handlers bounded Tier-2 registry names/comments/tags"
+      ]
+    },
+    {
+      "path": "reverse-engineering/ghidra/README.md",
+      "required": [
+        "Project payload: 19 files, 186,813,317 bytes",
+        "cf3b36f5a8d9183bdc0b66041445fb5451160fb21edaed9fb21bed74a9f6ee0d",
+        "Current rolling database `db.18611.gbf`: 68,288,512 bytes",
+        "8,136 non-target rows remained"
+      ]
+    },
+    {
+      "path": "reverse-engineering/parity-lab.md",
+      "required": [
+        "| Defensible discovered census/lower bound | **8,170** | Not a final ceiling |",
+        "The separate 34-row new-function vocabulary ceremony replaced those exact defaults",
+        "Registry handlers awaiting Ghidra boundary creation | 0"
+      ]
+    },
+    {
+      "path": "developer_state.json",
+      "required": [
+        "missionRegistryNewFunctionVocabularyLiveGhidra",
+        "ee3090360bd4f4b68d1ac52c59ab397e7ac37d81c76029d492e2a9d046902f1d",
+        "cf3b36f5a8d9183bdc0b66041445fb5451160fb21edaed9fb21bed74a9f6ee0d",
+        "d61f9866d9dbf67bae817a710d50a1a136b7c2156ec6eb7f862d82dea70f26fd",
+        "The 34 newly created registry handlers now carry bounded Tier-2"
+      ]
+    },
+    {
+      "path": "reverse-engineering/binary-analysis/mission-script-registry-new-function-vocabulary-live-promotion-2026-08-13.md",
+      "root": "authorityRepo",
+      "required": [
+        "program-wide listing comment records `9,165 -> 9,199`",
+        "the observed `+34` consists exactly of the 34 new target function comments",
+        "census is a measured lower bound, not a final ceiling",
+        "tools/ghidra_live_promotion_authority.py",
+        "bea.ghidra.live-promotion-authority.v1",
+        "LIVE_PROMOTION_AUTHORITY_READY",
+        "repository-relative role"
+      ],
+      "forbidden": [
+        "function comments `9,165 -> 9,199`"
+      ]
+    }
+  ]
+}

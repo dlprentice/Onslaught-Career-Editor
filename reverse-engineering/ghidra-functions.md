@@ -381,16 +381,16 @@ comparison.
 | Question | Current exact answer |
 | --- | --- |
 | Static retail specimen | 2,506,752-byte x86 PE, SHA-256 `74154bfa…e7750`; D3D9 retail build |
-| Latest verified live readback | 8,170 functions after the one-row explosion-factory identity repair; latest TSV SHA-256 `8eded18abddfc0726517f2a88c7f4b2df15ff0cd13d3b70a5ca7ebd5a7afea5b` |
+| Latest verified live readback | 8,170 functions after the 34-row new-function MissionScript vocabulary promotion; latest TSV SHA-256 `ee3090360bd4f4b68d1ac52c59ab397e7ac37d81c76029d492e2a9d046902f1d` |
 | Current live function inventory | 8,170 rows; byte-identical to the sealed scratch POST and synchronized to the promoted tracked snapshot and verified POST recovery copy |
 | Dated semantic/name-table baseline | 7,555 functions; 3,181,359-byte TSV; SHA-256 `45cba656…0a462` |
 | Current distinct function names | 8,162; eight names occur at two addresses |
-| Explicit `FUN_*` names | 912 |
+| Explicit `FUN_*` names | 878 |
 | MSVC `Unwind@*` funclets | 1,179 |
 | Thunks | 100 |
-| Functions with plate comments | 7,016 |
-| Functions without a plate comment | 1,154 |
-| Functions with at least one tag | 5,978 |
+| Functions with plate comments | 7,050 |
+| Functions without a plate comment | 1,120 |
+| Functions with at least one tag | 6,012 |
 | Current human-namable denominator | 6,991, excluding the 1,179 compiler EH funclets |
 | Dated pinned-source grader's three-cohort weak/unsupported naming residual | 1,867 / 6,376 = 29.3% against the 7,555-row baseline |
 | RTTI vtable target coverage | 2,127 / 2,127 targets are current function starts |
@@ -431,11 +431,11 @@ own the durable specimen warning.
 
 | Store | Exact state | Correct use |
 | --- | --- | --- |
-| Tracked project | `reverse-engineering/ghidra/BEA.gpr` + `BEA.rep/`; snapshot 2026-08-13; 19 payload files, 186,747,781 bytes; reviewed with Ghidra 12.1.2 | Current distributable snapshot; exact at promotion time |
+| Tracked project | `reverse-engineering/ghidra/BEA.gpr` + `BEA.rep/`; snapshot 2026-08-13; 19 payload files, 186,813,317 bytes; reviewed with Ghidra 12.1.2 | Current distributable snapshot; exact at promotion time |
 | Tracked Program objects | `BEA.exe` and `BEA_Widescreen.exe` | Do not silently assume an export came from the unpatched baseline Program |
 | Live maintainer project | `C:\Users\david\Ghidra\Projects`, active Ghidra 12.1.2 | Current working database; mutation requires separate authority |
-| Latest live readback | `local-lab/ghidra-cexplosion-live-promotion-20260813-v1/runs/live-readback/functions.tsv`, SHA-256 `8eded18a…fea5b` | Current 8,170-row internal-function metadata; 8,170 is the current discovered census, not a final ceiling |
-| Current tracked name table | `reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-13.tsv`, 8,170 rows, SHA-256 `51517075…86ee` | Deterministic projection of the separately read-back live database |
+| Latest live readback | `local-lab/ghidra-mission-registry-new34-live-promotion-20260813-v1/runs/live-readback/functions.tsv`, SHA-256 `ee309036…02f1d` | Current 8,170-row internal-function metadata; 8,170 is the current discovered census, not a final ceiling |
+| Current tracked name table | `reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-13.tsv`, 8,170 rows, SHA-256 `d61f9866…f26fd` | Deterministic projection of the separately read-back live database |
 | Frozen 2026-08-12 name table | `reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-12.tsv`, 8,136 rows, SHA-256 `a6f10251…193f` | Retained byte-exact for Generations 20–23 and receipt-pinned instruments |
 | Mutated dated name table | `reverse-engineering/binary-analysis/ghidra-function-name-table-2026-07-27.tsv`, 7,555 rows, current SHA-256 `44f49ca1…e68b11`; original sealed content was `2dfe0b97…f0b84` | Historical artifact later rewritten in 54 name rows. Retained byte-exact only because Generations 20–23 pin the mutated bytes; neither hash is a current name oracle |
 | Fullpass discovery corpus | `reverse-engineering/binary-analysis/ghidra-fullpass-findings/` | Dated 6,411-function reviews; never a live name oracle |
@@ -444,10 +444,10 @@ own the durable specimen warning.
 Fresh read-only exports in this research pass remove an important ambiguity:
 
 - The tracked snapshot contains exactly 8,170 internal functions, 549,872 instructions,
-  48,585 defined-data items, 3,912,345 undefined-data items, and 6,070
+  48,585 defined-data items, 3,912,345 undefined-data items, and 6,104
   user-defined symbols. Its
-  current reviewed project inventory is 19 files / 186,747,781 bytes with digest
-  `8eb66406…3cf6`. Ghidra's aggregate function
+  current reviewed project inventory is 19 files / 186,813,317 bytes with digest
+  `cf3b36f5…ee0d`. Ghidra's aggregate function
   count is 8,394 because it also includes 224 external/import functions; the
   8,170 figure is the internal listing census, not a claim that discovery is
   permanently complete.
@@ -462,11 +462,12 @@ Fresh read-only exports in this research pass remove an important ambiguity:
   Later live mutations must repeat the backup/scratch/readback/promotion gate;
   this statement is not a promise that future working state can never move.
 - The structural parent promotion added exactly 34 default-metadata boundaries,
-  and the next promotion normalized 75 reviewed existing entries. The latest
-  one-row promotion corrected only the explosion-factory identity, signature,
-  parameter name, comment, and tags. Its
-  full-inventory comparison found only the allowed target name/rendered-
-  signature/comment/tag changes; 8,169 non-target rows, bodies, instructions,
+  the next promotion normalized 75 reviewed existing entries, and the separate
+  explosion-factory repair corrected one row. The latest promotion then gave
+  those 34 new handlers bounded Tier-2 registry names/comments/tags while
+  preserving every body, ABI/storage field, parameter, and repeatable comment.
+  Its full-inventory comparison found only the allowed target name/rendered-
+  signature/comment/tag changes; 8,136 non-target rows, bodies, instructions,
   program bytes, data units, references, non-target symbols, and unrelated
   program metrics remained exact.
 
@@ -494,10 +495,10 @@ The current Ghidra program report contains:
 | Listing instructions | 549,872 |
 | Defined data items | 48,585 |
 | Undefined data items | 3,912,345 |
-| User-defined symbols | 6,070 |
+| User-defined symbols | 6,104 |
 | Analysis symbols | 18,006 |
 | Imported symbols | 907 |
-| Other/default symbols | 61,628 |
+| Other/default symbols | 61,594 |
 | Relocations | 0 |
 
 Memory blocks:
@@ -539,7 +540,7 @@ Metadata-source and calling-convention distributions:
 
 | Dimension | Exact current distribution |
 | --- | --- |
-| Name source | USER_DEFINED 5,985; ANALYSIS 1,230; DEFAULT 954; IMPORTED 1 |
+| Name source | USER_DEFINED 6,019; ANALYSIS 1,230; DEFAULT 920; IMPORTED 1 |
 | Signature source | USER_DEFINED 6,400; ANALYSIS 1,136; DEFAULT 612; IMPORTED 22 |
 | Calling convention | `__thiscall` 2,779; `__cdecl` 1,950; `__fastcall` 1,390; `__stdcall` 1,088; unknown 963 |
 
@@ -1170,12 +1171,12 @@ The reviewed 144-row disposition is exact:
 
 | Disposition | Rows | Meaning |
 | --- | ---: | --- |
-| Boundary admitted | 34 | Callable start and default Function object proved; registry-facing name, signature, and semantics remain gated |
+| Boundary admitted | 34 | Callable start and initially default Function object proved; Tier-2 registry-facing metadata was promoted later, while signatures and runtime semantics remain gated |
 | Normalize current entry | 75 | Completed: 54 former defaults plus 21 adjudicated Tier-2 supersessions |
 | Retain current entry | 35 | 29 exact names plus six intentional compatible/stronger implementation identities |
 
 The completed 75-row normalization remains separate from the completed 34-row
-boundary ceremony and the still-open 34-row metadata cohort.
+boundary ceremony and the later completed 34-row metadata cohort.
 Registry tokens are script-facing vocabulary, not recovered original C++
 symbols, signatures, or behavior contracts. The exact current owner is
 [`mission-script-command-registry-2026-08-12.md`](binary-analysis/mission-script-command-registry-2026-08-12.md).
@@ -2311,9 +2312,9 @@ without target-specific CFG evidence and the backed-up Ghidra gate.
 
 | Cohort | Count | Current state |
 | --- | ---: | --- |
-| Saved handler boundaries | 144 / 144 | complete; 34 formerly absent entries were promoted with default metadata |
+| Saved handler boundaries | 144 / 144 | complete; 34 formerly absent entries were initially promoted with default metadata |
 | Reviewed existing-entry normalization | 75 | complete in live/tracked Ghidra: 54 former defaults + five message-name corrections + 16 Tier-3→Tier-2 supersessions |
-| Newly created Tier-2 metadata | 34 | separate cohort; bounded contracts exist, names/comments remain default/open |
+| Newly created Tier-2 metadata | 34 | complete in a separate live/tracked cohort with bounded registry names/comments/tags |
 | Retained current identities | 35 | 29 exact registry names plus six shared/stronger/compatible names intentionally excluded from the 75 |
 
 Registry vocabulary is Tier-2 script-facing evidence, never automatic original
@@ -2898,7 +2899,7 @@ to understand the current verdicts in this master.
 
 | Area | Path |
 | --- | --- |
-| Current live Ghidra readback | `local-lab/ghidra-cexplosion-live-promotion-20260813-v1/runs/live-readback/functions.tsv` |
+| Current live Ghidra readback | `local-lab/ghidra-mission-registry-new34-live-promotion-20260813-v1/runs/live-readback/functions.tsv` |
 | Trace-to-Ghidra apply/readback | `local-lab/GHIDRA-FROM-TRACE-2026-07-28.md` |
 | 144 native table | `local-lab/ghidra-from-trace-2026-07-28/script-native-table-144.tsv` |
 | Current grader artifacts | `local-lab/re-ledger/` |
@@ -2930,7 +2931,7 @@ address-keyed gaps:
 8,170 saved function bodies in the current structural census (not a ceiling)
 dated 8,136-row static closure plus a reviewed 34-row C1-static addendum
 75 existing registry entries normalized through the backed-up live gate
-34 newly created registry entries awaiting their separate Tier-2 metadata cohort
+34 newly created registry entries promoted through their separate Tier-2 metadata cohort
 one separately proved CreateExplosion identity/signature repair promoted and read back
 four refuted HUD labels awaiting convention-safe replacements
 34-function campaign/runtime admission remains separate from static closure

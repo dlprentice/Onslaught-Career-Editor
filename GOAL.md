@@ -174,8 +174,10 @@ Generation 73 is a projection oracle that is never a parent or authority.
 Static-envelope closure covers the dated 8,136-function census against which it
 was sealed. The current saved structural census is 8,170 after 34 additional
 Mission-registry boundaries were independently proved and promoted; those 34
-are not yet in the closure table. Neither count is a final ceiling, semantic
-recovery, or reversal. The PC demo
+are not in the sealed closure table, but a separate reviewed addendum bounds
+them at C1 static and a later metadata ceremony records only their Tier-2
+registry vocabulary. Neither count is a final ceiling, semantic recovery, or
+reversal. The PC demo
 partition and the instruction-local Xbox source-line anchors are oracles, never
 denominators for retail completion. Generation 23 owns admitted runtime
 semantics and remains sparse. Live Ghidra structural navigation may lead the
@@ -281,11 +283,13 @@ the mandate; the completion test and every clause above are unchanged.
 - The 34 MissionScript registry pointers missing from the saved 8,136-function
   project were proved as callable boundaries, admitted by one backed-up live
   Ghidra ceremony, separately read back, and synchronized to the tracked
-  snapshot. The current structural census is 8,170; the new default-metadata
-  functions remain outside the dated static-closure and demo-map tables. A
+  snapshot. The current structural census is 8,170; the new functions remain
+  outside the dated static-closure and demo-map tables. A
   separate reviewed addendum now gives all 34 bounded static C1 contracts and
   falsifiers, extending static-envelope coverage to every saved row without
-  changing Generation 23 or Ghidra metadata.
+  changing Generation 23. A later separate backed-up metadata ceremony gave
+  those 34 functions bounded Tier-2 registry names/comments/tags without
+  changing bodies, ABI/storage, parameters, or campaign grades.
 - Current saved-body `.text` ownership is independently closed at 1,770,929 /
   1,929,117 bytes = 91.799978954% across 8,170 functions / 8,287 exact ranges,
   with zero overlap. The remaining 158,188 bytes are listing-partitioned and
@@ -323,17 +327,20 @@ the mandate; the completion test and every clause above are unchanged.
 
 **Active frontier, in priority order:**
 
-1. **Name the 34 newly admitted registry handlers in a separate cohort.** Their
-   boundaries and bounded static contracts are now tracked, but their default
-   names/comments remain unchanged and they were not part of the completed
-   75-row existing-entry manifest. Use the registry only as Tier-2 script vocabulary;
-   preserve each row's explicit unknowns and do not imply C++ symbols,
-   signatures, runtime reachability, or reconstruction parity.
-2. **Four HUD names describing the wrong subsystem** — targets 0, 3, 4, 5. The
+1. **Recover the highest-confidence callable units and truncated body fragments
+   in the current 158,188-byte `.text` gap.** Use cross-build shape, current
+   listing state, incoming control flow, alignment, and library classification
+   to prove exact boundaries; do not infer entries from linear decode alone.
+2. **Resolve the Generation-24 carry-shape refusal without weakening the
+   reducer.** Parent strictly on Generation 23, preserve the static/runtime
+   layer boundary, and do not pin HUD route order as C2.
+3. **Deepen coherent semantic/runtime/rebuild slices.** Prefer existing traces,
+   Xbox sparse-symbol joins, shipped data, and current static contracts before
+   recording new runtime evidence; carry only proved 5-to-10-contract slices
+   into existing reconstruction owners.
+4. **Four HUD names describing the wrong subsystem** — targets 0, 3, 4, 5. The
    binary names none of them, so this needs a naming-convention decision before
    any promotion.
-3. **Generation 24**, if still wanted, parented strictly on Generation 23 and
-   respecting the route-order correction above.
 
 Rank from current evidence; a reproduced contradiction outranks this list.
 
@@ -370,6 +377,12 @@ Rank from current evidence; a reproduced contradiction outranks this list.
   correction passed its own scratch, backup, live-apply, separate-readback, and
   tracked-snapshot gates. It is now closed without changing the campaign
   generation; the 34 new registry handlers remain the first active frontier.
+- **2026-08-13 — new-function registry vocabulary normalized.** The distinct
+  34-row metadata cohort passed scratch, PRE/POST recovery, one live apply,
+  separate readback, exact non-target collateral, and tracked-snapshot gates.
+  The frontier now moves to `.text` boundary/body recovery, the Generation-24
+  carry refusal, and coherent semantic/runtime/rebuild depth; no campaign grade
+  or completion condition changed.
 
 ---
 

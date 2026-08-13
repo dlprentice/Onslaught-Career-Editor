@@ -34,6 +34,9 @@ the document it links.
   — proves one backed-up live apply, separate readback, target-only metadata
   changes, 8,095 byte-identical non-target rows, and exact live/tracked/POST
   project equality; Tier-2 script vocabulary only, not C++ or behavior proof
+- [Mission-registry 34-row new-function vocabulary live promotion](mission-script-registry-new-function-vocabulary-live-promotion-2026-08-13.md)
+  — promotes bounded Tier-2 names/comments/tags for the 34 newly admitted
+  handlers while preserving all 8,136 non-target rows and every body/ABI byte
 - [Current `.text` body ownership and listing-state accounting](current-text-ownership-2026-08-13.md)
   — replays all 8,170 saved functions / 8,287 ranges against pristine bytes,
   closes the exact zero-overlap union at 1,770,929 / 1,929,117 = 91.799978954%,
