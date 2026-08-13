@@ -263,9 +263,31 @@ argument shapes. And **`Char` and `PChar` are indistinguishable across all three
 resolved arguments**, which independently supports withdrawing `WithPriority`:
 whatever separates them lies in arguments four to seven, unreached.
 
-That partial map is the current state. Renaming any of the five still requires
-the remaining four slots, and reaching them requires resolving the indirect call
-targets rather than assuming their arity.
+That partial map was the state until the indirect targets were resolved rather
+than assumed. Reading the boxed-value vtables directly:
+
+| Vtable | Installs in IScript.cpp | Slot `+0x30` | Arity |
+| --- | ---: | --- | --- |
+| `0x005E4EA4` | 15× | `CFloatDataType__VFunc_12_0052F290` | `ret 0` |
+| `0x005E4D50` | 12× | `SharedVFunc__ReturnZero_00405930` | `ret 0` |
+| `0x005E4B4C` | 8× | `SharedVFunc__ReturnZero_00405930` | `ret 0` |
+| `0x005E4DF8` | 7× | `SharedVFunc__ReturnZero_00405930` | `ret 0` |
+| `0x005E4AF8` | 5× | `SharedVFunc__ReturnField04_0052F540` | `ret 0` |
+
+**Every one takes zero stack arguments**, so the indirect `call [reg+0x30]` that
+halted the walk consumes nothing and the backward scan can safely pass it. The
+blocker was arity, and the arity is zero — established by reading the vtables
+rather than by assuming, which is what the earlier withdrawal required.
+
+It also identifies the boxed type: vtable `0x005E4EA4` is **`CFloatDataType`**,
+and it is the vtable the three characterized health natives install at `+0x00` of
+their allocated 0x18-byte return box. So `GetRealHealth`, `GetInitialHealth` and
+`SpawnersEmpty` return a **boxed float**, and `+0x30`/`+0x34` are its
+zero-argument accessors — consistent with health being a float and with
+`SpawnersEmpty` returning a float-encoded boolean.
+
+Completing the seven-slot map per native is now unobstructed and is the next
+step; renaming still waits on it.
 
 **Class 3 — descriptive placeholder the registry supersedes (16).** `GetX/GetY/
 GetZ` over `GetVectorX/Y/Z`, `Magnitude` over `GetVectorLength`,
