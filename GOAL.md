@@ -285,6 +285,11 @@ narrowing the mandate; the completion test and every clause above are unchanged.
   separate reviewed addendum now gives all 34 bounded static C1 contracts and
   falsifiers, extending static-envelope coverage to every saved row without
   changing Generation 23 or Ghidra metadata.
+- Current saved-body `.text` ownership is independently closed at 1,770,929 /
+  1,929,117 bytes = 91.799978954% across 8,170 functions / 8,287 exact ranges,
+  with zero overlap. The remaining 158,188 bytes are listing-partitioned and
+  expose five current-function jump fragments plus high-yield code-shaped gaps;
+  this is structural accounting, not a final function census or semantic score.
 
 **Active frontier, in priority order:**
 

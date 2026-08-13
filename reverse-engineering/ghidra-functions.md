@@ -2273,32 +2273,33 @@ This queue is discrete. Counts are address-set counts from the dated current
 inventory unless labelled historical. Cohorts may overlap and must be joined by
 address before rollup.
 
-### P0: establish current executable coverage
+### CLOSED 2026-08-13: establish current executable body ownership
 
-The only byte/body coverage proof is for 6,411 functions. Since then 1,144
-functions were added. Current `.text` body coverage is **UNKNOWN**.
+The [current `.text` accounting](binary-analysis/current-text-ownership-2026-08-13.md)
+replays all 8,170 saved functions and 8,287 exact ranges against the pristine
+PE. Their zero-overlap union is 1,770,929 / 1,929,117 bytes = 91.799978954%; 67
+functions are multi-range. The 158,188 uncovered bytes divide into 54,994
+current loose-instruction bytes, 46,918 defined-data bytes, and 56,276 listing-
+unclassified bytes. Old 79.8268%, 284,815 non-padding bytes, 621 UNKNOWN runs,
+and 51,189 UNKNOWN bytes remain dated baselines only.
 
-Completion bar:
-
-1. fresh read-only full function+instruction export from the live 7,555+ DB;
-2. every exported instruction byte checked against the unpatched baseline image;
-3. interval-union coverage over the PE `.text` virtual-size denominator;
-4. overlaps and fragmented bodies reported separately;
-5. uncovered runs reclassified after subtracting current bodies;
-6. old 79.8268%, 284,815 non-padding bytes, 621 UNKNOWN runs, and 51,189
-   UNKNOWN bytes retained only as dated baselines.
+This closes saved-body interval accounting, not function discovery. Five
+current-function jump fragments and several large code-shaped gaps now form a
+bounded boundary-repair/discovery queue; no new entry or body expansion follows
+without target-specific CFG evidence and the backed-up Ghidra gate.
 
 ### P0: adjudicate the shipped MissionScript registry
 
-| Cohort | Count | Completion bar |
+| Cohort | Count | Current state |
 | --- | ---: | --- |
-| Handler entry absent as a function | 86 | Create on disposable canary, prove non-overlap and valid extent, apply/read back, then name from exact shipped binding |
-| Existing `FUN_*` with shipped name | 15 | Per-row prototype/body check, reviewed rename, exact readback |
-| Current name differs from shipped command | 24 | Determine handler identity vs command binding; do not rename shared stubs or erase stronger behavioral names |
+| Saved handler boundaries | 144 / 144 | complete; 34 formerly absent entries were promoted with default metadata |
+| Reviewed existing-entry normalization | 75 | 54 default names + five message-name corrections + 16 Tier-3→Tier-2 supersessions; scratch gate complete, live gate pending |
+| Newly created Tier-2 metadata | 34 | separate cohort; bounded contracts exist, names/comments remain default/open |
+| Retained current identities | 35 | 29 exact registry names plus six shared/stronger/compatible names intentionally excluded from the 75 |
 
-This is the cleanest currently known shipped-name recovery surface. It is not
-“101 automatic renames”: the 24 mismatches need semantic adjudication, and
-`SetSpeed` proves why.
+Registry vocabulary is Tier-2 script-facing evidence, never automatic original
+C++ identity. The 75-row and 34-row metadata cohorts remain separate, and
+`SetSpeed` remains the canonical shared-implementation counterexample.
 
 ### P0: repair known false live identities
 
@@ -2813,7 +2814,7 @@ the old and new statements are not presented as coequal truth.
 | The Ghidra project is never tracked | False as a general statement; `reverse-engineering/ghidra/` is the reviewed tracked exception. Live DBs, backups, and alternates remain untracked. |
 | The current function population is 5,771, 6,411, 6,969, 7,555, 8,125, or 8,136 | Historical counts; current live and tracked snapshot are 8,170 |
 | The tracked Ghidra snapshot contains only the 6,411-function fullpass state | False after the separately authorized promotions; it now contains the exact 8,170-function live state at promotion time |
-| Current `.text` function coverage is 79.8% | Unknown; 79.8268% is the old 6,411-body baseline |
+| Current `.text` function coverage is 79.8% | False for current saved-body ownership; 79.8268% is the old 6,411-body baseline. The current 8,170-row exact union is 91.799978954%, with semantics and final discovery still open. |
 | Twenty-five fullpass name drifts are unexplained | False after joining both map stores; all 370 are attributed |
 | `SpawnThing` reduced the residual to 1,866 | False; fresh current grader remains 1,867 / 6,376 |
 | RTTI-confirmed means the whole virtual-method name is correct | False; grader checks prefix ownership, not method suffix or slot number |

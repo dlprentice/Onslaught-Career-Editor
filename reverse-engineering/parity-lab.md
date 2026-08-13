@@ -2659,20 +2659,21 @@ Open or concerning:
 
 - 966 saved entries retain literal default names, while Gen23 still has 7,899
   semantically OPAQUE rows;
-- the 34 new Mission boundaries are saved default-metadata Function objects but
-  are not yet admitted to the static/campaign rows;
+- the 34 new Mission boundaries now have a separate bounded static-contract
+  addendum but remain outside immutable Gen23 campaign semantics;
 - at least six live names are directly contradicted by byte/RTTI evidence;
 - D3D/cockpit/tree correction clusters remain;
 - the registry/table discovery universe has no denominator;
-- current byte-verified `.text` ownership has not yet been recomputed from the
-  new exact ranges.
+- current saved-body ownership is exact, but 158,188 `.text` bytes remain
+  outside function bodies and final function discovery has no ceiling.
 
-The historical 6,411-body `.text` coverage was
-1,539,953 / 1,929,117 = 79.8268%. It must not be presented as current
-8,170-function coverage. Current readbacks and the new boundary proof make a fresh
-calculation possible,
-but executable-section ownership, overlaps, noncode alignment, imports, and
-function discovery need a dedicated accounting pass before publication.
+The historical 6,411-body `.text` coverage was 1,539,953 / 1,929,117 =
+79.8268%. The [current accounting](binary-analysis/current-text-ownership-2026-08-13.md)
+supersedes it for present use: 8,170 saved functions / 8,287 ranges own
+1,770,929 bytes = 91.799978954%, with zero overlap. The remaining 158,188 bytes
+are listing-partitioned into loose instructions, defined data, and unclassified
+content. This closes body-range accounting only; code/data truth, exact missing
+boundaries, final discovery, semantics, and runtime coverage remain open.
 
 ### Stuart source
 
@@ -2759,7 +2760,7 @@ Maintain separate ledgers.
 | Static function envelopes | closed saved rows / discovered lower bound | 8,170 / at least 8,170; sealed 8,136-row table plus reviewed 34-row addendum |
 | Campaign semantics above OPAQUE | C1 + C2 / Gen23 rows | 227 / 8,126 |
 | Mission handler boundaries | saved structurally bounded handler starts / registry | 144 / 144; creation complete |
-| `.text` ownership | exact owned executable bytes / 1,929,117 | `UNKNOWN` pending fresh pass |
+| `.text` saved-body ownership | exact owned executable bytes / 1,929,117 | 1,770,929 / 1,929,117 = 91.799978954%; zero overlap |
 | Stable runtime coverage | exact covered bytes / declared capture window | per scenario only |
 
 “All functions named” is not a closure metric. A correctly anonymous compiler

@@ -490,11 +490,13 @@ different failure modes and only the first was being tested.)*
   incomplete. 468,804 exported instructions verified against the pristine binary
   with **0 byte mismatches**, 6,351 of 6,411 functions fully clean — but only
   **79.8268 % of `.text` was covered by those 6,411 historical bodies**.
-  Current `.text` ownership remains **UNKNOWN** even though exact body geometry
-  now exists for all 8,170 saved rows;
-  interval union, overlaps, and noncode alignment
-  still need one current accounting pass. Reproducible for the historical
-  6,411-row population in under a minute with `tools/re_verify.py`.
+  [Current `.text` body ownership](binary-analysis/current-text-ownership-2026-08-13.md)
+  now supersedes that metric for present use: all 8,170 saved functions and
+  8,287 exact ranges own 1,770,929 / 1,929,117 bytes = 91.799978954%, with
+  zero overlap. The 158,188-byte gap is separately partitioned by current
+  listing state and discovery evidence; this remains structural body ownership,
+  not semantic reversal. The historical 6,411-row result remains reproducible
+  in under a minute with `tools/re_verify.py`.
 - [RTTI and source-path evidence — a documented ground truth was wrong](binary-analysis/rtti-and-source-path-evidence-2026-07-25.md)
   — 2026-07-25. **Read this before repeating "the binary has no symbols."**
   Direct ASCII scan of the pristine specimen finds **667 RTTI type descriptors**

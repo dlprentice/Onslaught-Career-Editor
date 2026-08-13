@@ -394,10 +394,11 @@ not the existence of the demonstrated spine.
   recovery, and at least 134 baseline `__FILE__` basenames are absent from the
   drop.
 - The current Ghidra database is broad but semantically sparse:
-  the dated closure gives 8,136 saved functions static envelopes, while the 34
-  newly admitted callable functions remain outside that table; Gen23 still
-  grades 7,899 of 8,126 functions semantic
-  OPAQUE and current `.text` ownership remains a separate unknown.
+  the dated closure gives 8,136 saved functions static envelopes and the
+  separate 34-row addendum extends bounded static accounting to all 8,170;
+  Gen23 still grades 7,899 of 8,126 functions semantic OPAQUE. Current exact
+  saved-body `.text` ownership is 1,770,929 / 1,929,117 = 91.799978954%, while
+  function discovery and most semantics remain open.
 - The data corpus is completely traversed at the file/wrapper level but not
   semantically complete. Most AYA payloads outside Level 100/base/frontend are
   still partial or opaque.
@@ -2327,9 +2328,10 @@ The PE `.text` virtual-size denominator is 1,929,117 bytes; the mapped block is
 
 - Old 6,411-body interval coverage is
   1,539,953 / 1,929,117 = 79.8268%.
-- Since then 1,144 function rows were added.
-- Current body-byte coverage is **UNKNOWN** until all current bodies are
-  exported and verified against the named executable.
+- Since then 1,759 function rows were added.
+- [Current saved-body ownership](binary-analysis/current-text-ownership-2026-08-13.md)
+  is 1,770,929 / 1,929,117 = 91.799978954% across 8,170 functions and 8,287
+  exact ranges, with zero overlap and 158,188 uncovered bytes.
 - Sixty-seven functions have non-contiguous bodies; min/max envelopes can
   falsely claim gap membership.
 
@@ -2708,7 +2710,7 @@ mission shape, actor families, media, and configuration use.
 | Critical | Depot provenance not established | “Shipped/Steam truth” may overgeneralize a local baseline | Use exact hashes and baseline wording; reconcile depot separately |
 | Critical | Live install is non-atomic and locally contaminated | Patched exe, saves, generated options, and proof artifacts coexist | Read-only specimen ledger; never mutate; distinguish provenance classes |
 | Critical | Analyst metadata can launder inference | Names/tags/source grades can look like byte facts | Separate EXECUTABLE-BYTES from ANALYST-METADATA and record independence group |
-| Critical | Current `.text` ownership unknown | All 8,170 saved bodies still require a current interval union, overlap, and noncode accounting pass | Fresh byte-verified interval union against 1,929,117 bytes |
+| Critical | Saved-body ownership is closed but function discovery is not | The exact 91.799978954% union leaves 158,188 bytes outside bodies, including loose instructions, data, body fragments, and code-shaped gaps | Preserve the exact gap ledger; prove CFG/body repairs and entries per target before Ghidra writes |
 | High | Tracked and live Ghidra states diverge | Reproduction from tracked project cannot yield current claims | Name live export hash; promote only by separate reviewed action |
 | High | Gen23 retains 7,899 semantic OPAQUE functions and excludes 44 later-discovered entries | Broad structural/static coverage does not equal semantic map | Current address ledger, campaign admissions, and finite system contracts—not prose volume |
 | High | Stuart source is incomplete and unbuildable | Missing owners/guards can be silently invented | Pin commit; classify every body/guard/dependency; baseline adjudication |
@@ -2768,7 +2770,7 @@ publication are separate actions with separate authority.
 | U20 | `Message.exe` reachability | May be orphaned installer/support utility | Process/create/xref/shortcut/registry/manual search |
 | U21 | Modern `cardid` behavior | Old catalog may fall through/default | Instrument directive selection on modern hardware |
 | U22 | Particle laws | Names/types complete, semantics absent | Baseline descriptor factories/update/render traces |
-| U23 | Current `.text` coverage | Old 79.8268% no longer current | Fresh exact-body interval union for all 8,170 saved rows |
+| U23 (ownership closed) | Current `.text` body ownership | 1,770,929 / 1,929,117 = 91.799978954%; 158,188 bytes remain outside saved bodies | Advance the five jump-fragment repairs and code-shaped boundary queues with target-specific proof |
 | U24 | Later Level 100 behavior | Trace ends at briefing | Indexed trace through combat and all 19 later beats |
 
 ## Atom-level completeness contract
@@ -3005,7 +3007,9 @@ source join, runtime join, disputes.
 Accounting closure is not “8,170/8,170 named.” The saved 8,170-function
 inventory—including the 34 newly admitted starts—the
 1,929,117-byte `.text` space, and each explicitly enumerated table need separate
-N/N results. Current byte-verified body coverage must be regenerated. The
+N/N results. Current byte-verified saved-body ownership is now exactly
+1,770,929 / 1,929,117 with 158,188 gap bytes; discovery and semantic closure do
+not follow from that structural result. The
 registry-of-registries remains `DISCOVERY_OPEN` until a bounded search surface
 and method produce its denominator; “all finite tables” is not a denominator.
 Semantic closure additionally requires each code row to be correctly owned or
@@ -3222,8 +3226,8 @@ The immediate smallest high-payoff sequence is:
 - packed mission representation and loose/packed precedence;
 - five remaining PhysicsScript family field maps and the full definition
   registry layout;
-- current executable byte/body coverage and thousands of semantic function
-  identities;
+- exact saved-body coverage is closed, but gap boundary/body repair, the final
+  compiler/linker function census, and thousands of semantic identities remain;
 - later Level 100 combat and game-wide runtime behavior;
 - American voice fallback, Bink stream order, complete cue/state graph;
 - particle simulation/render laws;

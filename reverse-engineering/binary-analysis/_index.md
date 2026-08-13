@@ -30,6 +30,11 @@ the document it links.
   — extends bounded static-envelope coverage from the sealed 8,136-row table to
   all 8,170 currently saved functions without changing Generation 23 or Ghidra
   metadata
+- [Current `.text` body ownership and listing-state accounting](current-text-ownership-2026-08-13.md)
+  — replays all 8,170 saved functions / 8,287 ranges against pristine bytes,
+  closes the exact zero-overlap union at 1,770,929 / 1,929,117 = 91.799978954%,
+  and partitions the 158,188-byte gap without treating loose code/data as proved
+  functions or semantics
 - [Collision-component implementation-identity correction](collision-component-identity-correction-2026-08-12.md)
   — promotes five hierarchy/source/cross-build-backed shared-base identities
   through the backed-up live and tracked Ghidra gates; folded aliases, runtime

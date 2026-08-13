@@ -1,10 +1,11 @@
 # Mission-script registry missing function boundaries
 
-Status: reviewed candidate manifest; live Ghidra promotion not yet run
+Status: promoted boundary manifest; live and tracked Ghidra synchronized
 Last updated: 2026-08-13
 Verdict: the shipped MissionScript registry proves 34 callable retail entries
-that are absent from the saved 8,136-function Ghidra inventory; this manifest
-authorizes boundary creation only after the full live-promotion gate succeeds.
+that were absent from the PRE 8,136-function Ghidra inventory. The full backed-
+up promotion gate succeeded, so all 34 now exist with default metadata in the
+current 8,170-function live and tracked snapshot.
 Evidence: MEASURED — pristine registry pointers, already-defined retail
 instructions, isolated natural Ghidra function recovery, pristine body bytes,
 and exact whole-program before/after inventories; UNKNOWN — signatures,
@@ -14,10 +15,12 @@ Specimen: pristine PC retail `BEA.exe`, SHA-256
 
 ## Result
 
-The shipped MissionScript registry contains 144 command/handler pairs. The
-current 8,136-function Ghidra inventory already has exact function entries for
-110 handlers. The remaining 34 pointers are initialized executable `.text`
-instructions in clean gaps: none is an interior address of a current function.
+The shipped MissionScript registry contains 144 command/handler pairs. At the
+PRE checkpoint, 110 had exact entries in the 8,136-function Ghidra inventory;
+the other 34 pointers were initialized executable `.text` instructions in
+clean gaps, never interiors of PRE functions. The verified promotion created
+those 34 boundaries only. Current Ghidra therefore resolves all 144 handlers
+and contains 8,170 saved functions.
 
 [`mission-script-registry-missing-function-boundaries-2026-08-13.tsv`](mission-script-registry-missing-function-boundaries-2026-08-13.tsv)
 seals those 34 entries and the exact bodies Ghidra naturally recovers from the
@@ -72,7 +75,7 @@ The disposable discovery evidence is machine-local under
 live promotion receipt and does not authorize using that mutated discovery copy
 as a scratch authority.
 
-The formal ceremony writes only under
+The formal ceremony wrote only under
 `local-lab/ghidra-mission-registry-boundary-live-promotion-20260813-v1/`.
 Its exact PRE inventory is
 `local-lab/ghidra-collision-component-identity-live-promotion-20260812-v1/runs/live-readback/functions.tsv`
@@ -81,7 +84,7 @@ bytes, SHA-256 `cfecff14…`). The registry owner is 6,924 bytes, SHA-256
 `61a44b1a…`; `ExportFullFunctionInventory.java` is 23,963 bytes, SHA-256
 `04519cd8…`. The authority wrapper pins the complete hashes and refuses drift.
 
-## Required promotion gate
+## Promotion gate that passed
 
 The target-specific mutator is
 `tools/GhidraApplyMissionRegistryBoundaries.java`; the receipt owner is
@@ -111,8 +114,18 @@ scratch result attributable to the boundary mutator alone.
 No stale historical launcher, frozen generation input, or dated name projection
 is repinned by this campaign.
 
+The sealed live receipt is
+`local-lab/ghidra-mission-registry-boundary-live-promotion-20260813-v1/live-promotion.ready.json`,
+9,956 bytes, SHA-256
+`363a57afda96560b214c01e3a75422702ae6ac2cdeb89ed2d069231414722322`.
+It proves the exact 8,136 → 8,170 census, zero pre-existing-row or program-
+listing collateral, restore-tested PRE/POST backups, and byte equality among
+live Ghidra, the POST backup, and the tracked snapshot.
+
 ## Open
 
-- The 34 handlers' signatures and complete semantic contracts.
+- Exact signatures and complete semantics remain open. A later reviewed
+  [static-contract addendum](mission-script-registry-new-function-static-contracts-2026-08-13.md)
+  supplies bounded C1 envelopes and falsifiers without changing Ghidra metadata.
 - The later Tier-2 script-facing naming cohort.
 - Runtime reachability and reconstruction parity.
