@@ -71,6 +71,38 @@ value with vtable `0x005E4EA4`, and returns `ret 0xc`. Each has zero direct
 callers and exactly one pointer reference, which is the shape of a Mission-native
 registry entry. No name is proposed here.
 
+## Documentation debt, ranked — and the frontier is smaller than it looked
+
+Crossing the coordinates against the tracked function-doc tree turns an
+amorphous "hundreds of undocumented functions" into a priority order, and
+corrects the scope estimate substantially.
+
+| Measure | Value |
+| --- | ---: |
+| Attributed function/file pairs | 841 |
+| Documented | 27 |
+| Undocumented | 814 |
+| — of which compiler unwind funclets | 480 |
+| — of which still carry a default `FUN_` name | 27 |
+| — **real named functions, the actual frontier** | **307** |
+| Source files attributed | 145 |
+| Source files having a doc directory | 26 |
+
+**The frontier is 307, not the ~700 a raw undocumented count suggests.** Nearly
+sixty per cent of the gap is compiler unwind funclets, which are arguably not
+documentation targets at all, and a further 27 are a naming problem rather than a
+documentation one. Separating those three populations is the point of the
+exercise.
+
+Ranked by real named undocumented functions, the largest gaps are
+`IScript.cpp` (23), `CPhysicsScriptStatements.h` (18) and `.cpp` (15),
+`monitor.h` (14), `WorldPhysicsManager.h` (12), `AsmInstruction.cpp` (12),
+`MeshPart.cpp` (11) and `WorldPhysicsManager.cpp` (10). Those are concentrated in
+the mission-script VM and the physics-statement system — both already live
+campaign subjects, and both absent from the pinned GPL drop.
+
+119 of the 145 attributed source files have no documentation directory at all.
+
 ## Boundary
 
 A coordinate proves the compiler emitted that file and line at that instruction.
