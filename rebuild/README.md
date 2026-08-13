@@ -142,9 +142,11 @@ The command first detects a lawfully obtained retail installation and
 materializes the exact current source/runtime files to ignored paths. For a custom
 location, run
 `pwsh rebuild/tools/Run-FirstFlight.ps1 -GameRoot "<game folder>"`. The first
-run also downloads the pinned official Godot 4.7 .NET Windows archive to a
-per-user cache. The setup script verifies its URL, size, SHA-256, runtime identity, and extracted tree from
-`toolchains/godot-4.7-stable-win-x64.json`. Later runs reuse the verified cache.
+run uses the pinned official Godot 4.7.1 .NET Windows toolchain described by
+`toolchains/godot-4.7-stable-win-x64.json`. When the process—or, on Windows,
+the current user—has `GODOT_DOTNET_ROOT` pointing to that exact verified tree,
+the system installation is reused; otherwise the archive is downloaded to a
+per-user cache and verified before every execution.
 Use `pwsh rebuild/tools/Run-FirstFlight.ps1 -Offline` to forbid downloads.
 
 `npm run prepare:rebuild-assets` performs the same exact local materialization

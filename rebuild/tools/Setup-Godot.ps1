@@ -11,12 +11,7 @@ Set-StrictMode -Version Latest
 
 Import-Module (Join-Path $PSScriptRoot 'GodotToolchain.psm1') -Force
 
-if ([string]::IsNullOrWhiteSpace($env:LOCALAPPDATA)) {
-    throw 'LOCALAPPDATA is required for the per-user Godot toolchain cache.'
-}
-
 $ManifestPath = Join-Path $PSScriptRoot '..\toolchains\godot-4.7-stable-win-x64.json'
-$CacheRoot = Join-Path $env:LOCALAPPDATA 'OnslaughtToolkit\toolchains\Godot'
 
 function Remove-ControlledCachePath {
     param([Parameter(Mandatory)][string]$Path)
@@ -61,6 +56,54 @@ function Enter-SetupLock {
 $manifestFullPath = [IO.Path]::GetFullPath($ManifestPath)
 $manifest = Get-Content -LiteralPath $manifestFullPath -Raw | ConvertFrom-Json
 $null = Assert-PinnedGodotManifest -ManifestPath $manifestFullPath -Manifest $manifest
+
+$systemRootValue = $env:GODOT_DOTNET_ROOT
+if ([string]::IsNullOrWhiteSpace($systemRootValue) -and $IsWindows) {
+    $systemRootValue = [Environment]::GetEnvironmentVariable(
+        'GODOT_DOTNET_ROOT',
+        [EnvironmentVariableTarget]::User)
+}
+
+if (-not [string]::IsNullOrWhiteSpace($systemRootValue)) {
+    $systemRoot = [IO.Path]::GetFullPath($systemRootValue)
+    Assert-GodotPathHasNoReparseComponents -Path $systemRoot
+    $systemLease = Open-VerifiedGodotToolchainLease -RootPath $systemRoot -Manifest $manifest
+    try {
+        $enginePath = Join-Path $systemRoot ([string]$manifest.executable)
+        $consolePath = Join-Path $systemRoot ([string]$manifest.consoleExecutable)
+        $versionOutput = (& $consolePath --version 2>&1 | Out-String).Trim()
+        if ($LASTEXITCODE -ne 0 -or $versionOutput -ne [string]$manifest.engine.versionOutput) {
+            throw "Pinned Godot runtime identity mismatch: expected '$($manifest.engine.versionOutput)', observed '$versionOutput'."
+        }
+
+        $result = [pscustomobject]@{
+            EnginePath = $enginePath
+            ConsolePath = $consolePath
+            Version = $versionOutput
+            ArchiveSha256 = [string]$manifest.archive.sha256
+            ManifestSha256 = (Get-FileHash -LiteralPath $manifestFullPath -Algorithm SHA256).Hash.ToLowerInvariant()
+            FileCount = $systemLease.FileCount
+            CacheVerified = $true
+            ToolchainSource = 'system'
+        }
+        $ownedSystemLease = $systemLease
+        $dispose = { $ownedSystemLease.Dispose() }.GetNewClosure()
+        $result | Add-Member -MemberType ScriptMethod -Name Dispose -Value $dispose
+        $systemLease = $null
+        return $result
+    }
+    finally {
+        if ($null -ne $systemLease) {
+            $systemLease.Dispose()
+        }
+    }
+}
+
+if ([string]::IsNullOrWhiteSpace($env:LOCALAPPDATA)) {
+    throw 'LOCALAPPDATA is required for the per-user Godot toolchain cache.'
+}
+
+$CacheRoot = Join-Path $env:LOCALAPPDATA 'OnslaughtToolkit\toolchains\Godot'
 
 $CacheRoot = [IO.Path]::GetFullPath($CacheRoot)
 $downloadsRoot = Join-Path $CacheRoot 'downloads'
@@ -144,6 +187,7 @@ try {
         ManifestSha256 = (Get-FileHash -LiteralPath $manifestFullPath -Algorithm SHA256).Hash.ToLowerInvariant()
         FileCount = $contentLease.FileCount
         CacheVerified = $true
+        ToolchainSource = 'cache'
     }
     $ownedContentLease = $contentLease
     $ownedSetupLock = $lock

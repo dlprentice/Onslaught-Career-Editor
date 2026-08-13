@@ -154,7 +154,7 @@ function Test-FirstFlightSmokeEvidence {
 
     $report = $rawReport | ConvertFrom-Json
     Assert-SmokeValue 'schemaVersion' 'onslaught-first-flight-smoke.v17' $report.schemaVersion
-    Assert-SmokeValue 'engineVersion' '4.7-stable (official)' $report.engineVersion
+    Assert-SmokeValue 'engineVersion' '4.7.1-stable (official)' $report.engineVersion
     Assert-SmokeValue 'exitReason' 'smoke-complete' $report.exitReason
     Assert-SmokeValue 'tick' 2148 $report.tick
     # REPINNED 2026-07-31 BY THE 30 Hz -> 20 Hz CORE MIGRATION (WORKSTREAM 4).

@@ -15,7 +15,7 @@ function Assert-PinnedGodotManifest {
         throw "Godot setup requires the tracked manifest path '$expectedPath'."
     }
 
-    $expectedManifestHash = '634ff6c7e84977b60350127df1bbc1306158a2e95be59600676bae84ad1a5042'
+    $expectedManifestHash = '6559c306efd9b542f54140bdf4e31fde042dc849ce4cff3b2fa80e91105dac76'
     $actualManifestHash = (Get-FileHash -LiteralPath $observedPath -Algorithm SHA256).Hash.ToLowerInvariant()
     if ($actualManifestHash -ne $expectedManifestHash) {
         throw "Pinned Godot manifest hash mismatch: expected $expectedManifestHash, observed $actualManifestHash."
@@ -23,18 +23,18 @@ function Assert-PinnedGodotManifest {
 
     $expectedValues = [ordered]@{
         'schemaVersion' = 'onslaught-godot-toolchain.v1'
-        'rootDirectory' = 'Godot_v4.7-stable_mono_win64'
-        'executable' = 'Godot_v4.7-stable_mono_win64.exe'
-        'consoleExecutable' = 'Godot_v4.7-stable_mono_win64_console.exe'
-        'archive.fileName' = 'Godot_v4.7-stable_mono_win64.zip'
-        'archive.uri' = 'https://github.com/godotengine/godot/releases/download/4.7-stable/Godot_v4.7-stable_mono_win64.zip'
-        'archive.size' = 114324762L
-        'archive.sha256' = '73087f2ef4940be2c0bff358280053912182aca82b85891d6e42d9ebc5c26880'
-        'engine.version' = '4.7-stable'
-        'engine.versionOutput' = '4.7.stable.mono.official.5b4e0cb0f'
-        'engine.godotNetSdkVersion' = '4.7.0'
+        'rootDirectory' = 'Godot_v4.7.1-stable_mono_win64'
+        'executable' = 'Godot_v4.7.1-stable_mono_win64.exe'
+        'consoleExecutable' = 'Godot_v4.7.1-stable_mono_win64_console.exe'
+        'archive.fileName' = 'Godot_v4.7.1-stable_mono_win64.zip'
+        'archive.uri' = 'https://github.com/godotengine/godot-builds/releases/download/4.7.1-stable/Godot_v4.7.1-stable_mono_win64.zip'
+        'archive.size' = 114763108L
+        'archive.sha256' = '764a089809fb1a6f745686ce9f6d3ca83adce8fb60fb9a4e2324b63baaebaa45'
+        'engine.version' = '4.7.1-stable'
+        'engine.versionOutput' = '4.7.1.stable.mono.official.a13da4feb'
+        'engine.godotNetSdkVersion' = '4.7.1'
         'engine.license' = 'MIT'
-        'engine.officialReleasePage' = 'https://godotengine.org/download/archive/4.7-stable/'
+        'engine.officialReleasePage' = 'https://godotengine.org/download/archive/4.7.1-stable/'
     }
     $actualValues = [ordered]@{
         'schemaVersion' = [string]$Manifest.schemaVersion
