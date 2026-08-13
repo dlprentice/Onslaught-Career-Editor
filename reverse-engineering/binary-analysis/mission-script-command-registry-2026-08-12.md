@@ -15,6 +15,37 @@ currently unnamed functions. No name was promoted to Ghidra.
 Specimen: pristine PC retail `BEA.exe`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
+## Prior art — corrected 2026-08-12, this recovery was less novel than first written
+
+**This document originally presented the registry as a new recovery. That was
+wrong, and the error was mine.** The registry was already tracked:
+
+- [`ghidra-functions.md`](../ghidra-functions.md) carries
+  **Appendix A: complete 144-entry MissionScript native registry**, with 144
+  numbered rows already naming `GetRealHealth`, `GetInitialHealth`,
+  `SpawnersEmpty`, `EnableWeapon` and `SetSpeed`.
+- [`functions/IScript.cpp.md`](functions/IScript.cpp.md) already states that
+  `ScriptCommandRegistry__InitBuiltins` initialises 144 contiguous `0x40`-byte
+  descriptor slots at base `0x0064CE20`, already binds the `Pause` row to
+  `0x00537C70` from direct stores, and already declines to promote that name.
+
+I checked `local-lab/msl/natives.json` for prior art and found it, but did not
+check the tracked corpus before writing — even though `ghidra-functions.md` is on
+the required intake reading list. Commit messages `14787909` and `43fb041a`
+overstate novelty for the same reason.
+
+What this document still contributes, and what the earlier work did not have:
+
+- the handler pointers **resolved against the current name table**, which is what
+  identifies the 54 slots whose handlers still carry default names;
+- the refutation and alignment checks below;
+- the 23-row adjudication, which finds that five handlers documented as
+  `IScript__PlaySound*` in `functions/IScript.cpp.md` queue messages and play no
+  sound.
+
+Read the structure section below as reproduction and extension of tracked
+evidence, not as first recovery.
+
 ## Structure
 
 `ScriptCommandRegistry__InitBuiltins @ 0x0052FF30` (13,429 bytes) populates a
