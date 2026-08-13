@@ -87,8 +87,31 @@ registry entry. No name is proposed here.
 > was testing — which is the actual defect. A real coverage figure needs that
 > definition first, and lies somewhere between 5 and 307.
 >
-> The ranking by source file below is unaffected in shape but its absolute counts
-> inherit the same error. Do not quote them.
+> The ranking by source file below inherits the same error. Do not quote it —
+> the corrected ranking is different in both counts and order.
+>
+> **Replacement measurement, with the definition stated first.** A function is
+> **documented** when a tracked document either (a) is a dedicated per-function
+> note whose header pairs its address with it, or (b) contains a table row
+> pairing its address with a purpose cell — someone wrote what it does. An
+> address appearing only in a wave/probe token list or running prose is
+> **mentioned**, which is evidence it was read, not that it was described.
+>
+> | Tier | Count |
+> | --- | ---: |
+> | Real-named coordinate-covered functions | 323 |
+> | — contracted (dedicated function doc) | 26 |
+> | — tabled (row with a purpose cell) | 127 |
+> | **= documented** | **153** |
+> | — mentioned only | 165 |
+> | — absent entirely | 5 |
+> | **undocumented** | **170** |
+>
+> **170**, between the 5 and 307 bounds and near neither. The corrected ranking is
+> `MeshPart.cpp` 32, `BattleEngineDataManager.cpp` 31, `WorldPhysicsManager.cpp`
+> 21, `oids.cpp` 20, `mesh.cpp` 19, `ParticleSet.cpp` 16 — mesh, particle and
+> data-manager territory. The broken measurement pointed at the mission-script VM
+> instead, so it would have sent the work to the wrong subsystem entirely.
 
 ## Documentation debt, ranked — and the frontier is smaller than it looked
 

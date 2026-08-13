@@ -294,8 +294,13 @@ narrowing the mandate; the completion test and every clause above are unchanged.
    of 323 real-named coordinate-covered functions, **318 are mentioned somewhere
    and 5 are not**. Neither bound is useful on its own — "mentioned" is not
    "contracted", and the original measurement never defined which it tested.
-   Before any documentation work, **define what counts as documented**; the real
-   figure lies between 5 and 307.
+   Now re-measured against a stated definition — documented means a dedicated
+   function note or a table row carrying a purpose cell, not a bare mention.
+   Of 323: 26 contracted, 127 tabled, **153 documented, 170 undocumented**.
+   Corrected ranking: `MeshPart.cpp` 32, `BattleEngineDataManager.cpp` 31,
+   `WorldPhysicsManager.cpp` 21, `oids.cpp` 20, `mesh.cpp` 19. The broken figure
+   pointed at the mission-script VM; the real gap is mesh, particle and
+   data-manager code.
 4. **Generation 24**, if still wanted, parented strictly on Generation 23 and
    respecting the route-order correction above.
 
