@@ -444,7 +444,14 @@ DIRECT_ASSETS = (
     # `sun3.tga` ships in at all, so the selection is unambiguous here.
     (GODOT_ASSETS / "Level100/Textures/particle-sun3-additive.texture.aya", "data/resources/dxtntextures/Particle%sun3.tga(0)R5G6B5.aya", "22a6b691ace6d6cc744d33cc10776e70fe08de5b8e6cb25fa4f4bcf61cbe922d"),
     (GODOT_ASSETS / "Level100/Textures/effect-flash-medium.texture.aya", "data/resources/dxtntextures/Particle%sun2.tga(0)R5G6B5.aya", "d7fbfcb4edb2167fedc0a467d4501c9bbc2f6a2852c7873daec3953e6f518f5c"),
-    (GODOT_ASSETS / "Level100/Textures/particle-alparticle5-additive.texture.aya", "data/resources/dxtntextures/Particle%alparticle5.tga(0)A4R4G4B4.aya", "5004b8c6a688b82605f870e60d4ed32a32203b4371f1aec72155fef1619a5fa0"),
+    # NOTE 2026-08-13: the format suffix was A4R4G4B4 here from 2026-08-10 until
+    # today, copied from the alparticle4 line above. The pinned SHA-256 was always
+    # correct and always described the R5G6B5 file; only the name was wrong, so
+    # this entry could never resolve and blocked the whole rebuild gate before a
+    # single test ran. The engine picks the format per source texture - alparticle4
+    # has alpha and alparticle5 does not - so neighbouring particles legitimately
+    # differ. Do not "correct" this suffix to match its neighbours again.
+    (GODOT_ASSETS / "Level100/Textures/particle-alparticle5-additive.texture.aya", "data/resources/dxtntextures/Particle%alparticle5.tga(0)R5G6B5.aya", "5004b8c6a688b82605f870e60d4ed32a32203b4371f1aec72155fef1619a5fa0"),
     (GODOT_ASSETS / "Level100/Textures/mech-pulse-medium-energy-trail.texture.aya", "data/resources/dxtntextures/Particle%Energy Trail.tga(0)R5G6B5.aya", "64eddc6b147c67886f41ef4d2bcc2a0606b453b01e4d93b9962f10cc07aba92e"),
     (GODOT_ASSETS / "Level100/Textures/mech-pulse-medium-halo.texture.aya", "data/resources/dxtntextures/Particle%Halo.tga(0)R5G6B5.aya", "cde6efc90dc7958c5bda425a04486e277beb85a7f1c33fb9074f369e92d58edb"),
     (GODOT_ASSETS / "Level100/Textures/pulse-bolt-blue-spark.texture.aya", "data/resources/dxtntextures/Particle%Blue Spark 2.tga(0)A4R4G4B4.aya", "b3730b1e9d7713910e0de4bd0cb0dcfefcb9ceb8f6402d50681a524adc0dcb08"),
