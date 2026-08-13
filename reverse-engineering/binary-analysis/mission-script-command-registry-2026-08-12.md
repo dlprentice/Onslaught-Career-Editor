@@ -132,8 +132,31 @@ and adopting the registry string here would destroy a shipped-symbol identity.
 This proves from the binary — not from caution — that a registry string is a
 script-facing command name rather than a C++ symbol.
 
-**Class 2 — the existing name is factually wrong about behaviour (5).** Five
-handlers named `IScript__PlaySound*` play no sound. Their callees are
+> **Class 2 CORRECTED 2026-08-12, later the same day — my claim was too strong.**
+> This section originally asserted that these five handlers "play no sound". That
+> is **false**, and one more level of call-graph would have shown it. The queued
+> message does reach audio:
+> `Insert…SortedAndMaybeAdvance` → `CMessageBox__VFunc_0_004B81D0` →
+> `CMessageBox__StartVoiceOrFallbackTextReveal` → `CText__GetAudioNameById` and
+> `CBinkOpenThread__StartAsync`. A message carries a voice line and the message
+> box starts it when the queue advances, so `PlaySound` is a defensible
+> description of the **effect**.
+>
+> What survives is narrower and still worth fixing: the **suffixes are wrong**.
+> `WithCallback`, `WithFade` and `WithPriority` name mechanisms that are not
+> there. The registry's actual distinctions are `AddMessage` versus
+> `PlayCharMessage` versus `PlayPCharMessage`, and plain versus `Wait` — and the
+> `Wait` variants are the two that schedule through
+> `CEventManager__GetNextFreeEvent` and `CScheduledEvent__Set`, which is exactly
+> the behaviour `WithFade` was invented to describe.
+>
+> Read the paragraph below as evidence about the immediate call layer only.
+> `CUnit__ApplyDamage` and `CUnit__TriggerEffect` also insert queued messages, so
+> the queue is not script-only.
+
+**Class 2 — the existing name's suffix is wrong about mechanism (5).** Five
+handlers named `IScript__PlaySound*` call no sound routine directly. Their
+callees are
 `CText__GetStringById`, `CMessage__ctor_base` and
 `CMessageBox__InsertQueuedMessageSortedAndMaybeAdvance`: they build a localized
 message and queue it. The two `…Wait` variants add

@@ -277,11 +277,14 @@ narrowing the mandate; the completion test and every clause above are unchanged.
 
 **Active frontier, in priority order:**
 
-1. **Five `IScript__PlaySound*` functions that play no sound** — `0x00537410`,
-   `0x00537500`, `0x005375F0`, `0x005377E0`, `0x005378E0` build and queue
-   messages. Body-level evidence, independent of any naming convention, and
-   currently wrong in both Ghidra and `functions/IScript.cpp.md`. Highest value;
-   needs the full Ghidra gate.
+1. **Five `IScript__PlaySound*` suffixes that name absent mechanisms** —
+   `0x00537410`, `0x00537500`, `0x005375F0`, `0x005377E0`, `0x005378E0` queue
+   messages; the queue reaches voice through
+   `CMessageBox__StartVoiceOrFallbackTextReveal`, so the `PlaySound` stem is
+   defensible and **only the suffixes are wrong**. `WithCallback`/`WithFade`/
+   `WithPriority` are inventions; the real distinctions are `AddMessage` vs
+   `PlayCharMessage` vs `PlayPCharMessage`, and plain vs `Wait`. Needs the full
+   Ghidra gate.
 2. **Four HUD names describing the wrong subsystem** — targets 0, 3, 4, 5. The
    binary names none of them, so this needs a naming-convention decision before
    any promotion.
