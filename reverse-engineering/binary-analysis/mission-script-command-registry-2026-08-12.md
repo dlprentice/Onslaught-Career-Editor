@@ -286,8 +286,46 @@ their allocated 0x18-byte return box. So `GetRealHealth`, `GetInitialHealth` and
 zero-argument accessors — consistent with health being a float and with
 `SpawnersEmpty` returning a float-encoded boolean.
 
-Completing the seven-slot map per native is now unobstructed and is the next
-step; renaming still waits on it.
+### The seven-slot map, complete
+
+With getter arity resolved the walk completes for all five. Arguments are pushed
+right-to-left, so argument one is the last push and lands at `this+0x18`;
+argument seven is the first push and lands at `this+0x2C`.
+
+| Native | 1 | 2 (text) | 3 | 4 | 5 (audio) | 6 | 7 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `AddMessage` | **`0x89C328`** | `ebx` | `eax` | `eax` | `ebp` | `eax` | **`0xA`** |
+| `PlayCharMessage` | `ebx` | `ebp` | `eax` | `edx` | `edi` | **`0`** | **`0xA`** |
+| `PlayCharMessageWait` | `ecx` | `eax` | `eax` | `ecx` | `edi` | `esi` | **`0xA`** |
+| `PlayPCharMessage` | `ebx` | `ebp` | `eax` | `eax` | `edi` | **`0`** | **`edx`** |
+| `PlayPCharMessageWait` | `ecx` | `eax` | `eax` | `eax` | `edx` | `edi` | **`ecx`** |
+
+Three axes fall out, each on a single slot:
+
+- **Argument 7 → `this+0x2C` is the `P` axis.** The two `PChar` forms pass a
+  script-supplied register; the other three hardcode `0xA`. So `P` marks a
+  caller-varied numeric parameter where the rest use a fixed ten.
+- **Argument 6 → `this+0x28` is the `Wait` axis.** Both plain forms pass literal
+  `0`; both `Wait` forms pass a register, alongside their
+  `CEventManager__GetNextFreeEvent` scheduling.
+- **Argument 1 separates `AddMessage`**, which alone passes the fixed global
+  `0x0089C328` where every `…CharMessage` form passes a script value.
+
+**Every one of the five passes a register in argument five**, the audio-reader
+slot — so all five can carry a voice line, which closes the Class 2 question from
+the store side.
+
+Consequences for the three suffixes. `WithPriority` names a real mechanism after
+all: a caller-varied numeric at `this+0x2C` against a fixed ten, which is what a
+priority would look like — the earlier withdrawal was right to reject the
+*reasoning*, and the conclusion survives on better evidence. `WithFade` remains
+**wrong**: that axis is argument six's scheduling handle, which is `Wait`.
+`WithCallback` remains **unsupported**: what distinguishes `PlayCharMessage` from
+`AddMessage` is argument one's source, not any callback.
+
+Renaming is now evidence-complete for the mechanism and blocked only on choosing
+between the registry's script-facing vocabulary and the existing mechanism-facing
+names — a convention decision, not a measurement.
 
 **Class 3 — descriptive placeholder the registry supersedes (16).** `GetX/GetY/
 GetZ` over `GetVectorX/Y/Z`, `Magnitude` over `GetVectorLength`,
