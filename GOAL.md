@@ -258,13 +258,40 @@ progress, not completion.
 
 ### Current frontier
 
-**None selected.** Rank from current evidence. The 2026-08-12 handoff's
-recommendation — recompute the retained HUD trace evidence under
-`local-lab/pc-hud-existing-trace-20260812-v1/`, reconcile it against the
-corrected HUD identities, and decide whether a mechanically exact Generation 24
-can admit exactly ten call-route C2 contracts parented strictly on Generation 23
-— is a **candidate**, not a command. A higher-value reproduced contradiction
-outranks it.
+Updated 2026-08-12 after the first working session. Recording what closed is not
+narrowing the mandate; the completion test and every clause above are unchanged.
+
+**Closed this session — do not re-derive:**
+
+- The HUD `RenderBlur` question, against six instruments (PostRender scan, demo
+  PostRender, `CHud__*` orphan census, shipped ASCII, Xbox `dxengine.cpp`
+  anchors, PC-native coordinates). Only the Xbox/PS2 disassembly proper remains.
+- Whether `CDXEngine+0x4CC`/`+0x4D0` are named anywhere — they are not.
+- Target 7's two arguments: a per-viewpoint object pointer from `0x0089CE08`
+  indexed by a zero-based viewpoint index, which explains both retained stack
+  words.
+- The observed trace route order is **static**, predicted exactly by the call
+  tree, so it belongs at C1 and a Generation 24 must not pin it as C2.
+- All seven descriptive HUD route names are tested: 0 and 5 refuted, 3 half
+  refuted, 4 suspect, 1/2/6 consistent.
+
+**Active frontier, in priority order:**
+
+1. **Five `IScript__PlaySound*` functions that play no sound** — `0x00537410`,
+   `0x00537500`, `0x005375F0`, `0x005377E0`, `0x005378E0` build and queue
+   messages. Body-level evidence, independent of any naming convention, and
+   currently wrong in both Ghidra and `functions/IScript.cpp.md`. Highest value;
+   needs the full Ghidra gate.
+2. **Four HUD names describing the wrong subsystem** — targets 0, 3, 4, 5. The
+   binary names none of them, so this needs a naming-convention decision before
+   any promotion.
+3. **307 real-named undocumented functions** carrying a source coordinate,
+   ranked per file in `pc-native-source-coordinates-2026-08-12.md`; `IScript.cpp`
+   (23) and `CPhysicsScriptStatements.h/.cpp` (18/15) lead.
+4. **Generation 24**, if still wanted, parented strictly on Generation 23 and
+   respecting the route-order correction above.
+
+Rank from current evidence; a reproduced contradiction outranks this list.
 
 ### Directive revisions
 
@@ -272,6 +299,18 @@ outranks it.
   the maintainer. This section replaces the practice of encoding the whole
   mandate in the goal string, which could not be revised without re-setting the
   goal. No frontier was selected at establishment.
+- **2026-08-12 — first frontier update, and a clarification of the ownership
+  clause.** `Current frontier` was rewritten from "None selected" to record five
+  closures and a ranked active list. The agent had initially read
+  *"maintainer-owned … never narrow or complete it yourself"* as forbidding any
+  edit to this section, and therefore left it stale while the evidence moved —
+  which stalled the loop. The maintainer corrected that reading. **The clause
+  forbids narrowing, weakening, retargeting, or completing the mandate; it does
+  not forbid recording progress**, and leaving the frontier stale contradicts
+  this directive's own instruction to keep durable owners aligned with verified
+  reality. Recording closures and re-ranking open work is expected. Removing the
+  completion test, deleting frontiers to make the goal satisfiable, or retargeting
+  the mandate still requires the maintainer.
 
 ---
 
