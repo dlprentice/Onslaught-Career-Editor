@@ -288,7 +288,20 @@ narrowing the mandate; the completion test and every clause above are unchanged.
 2. **Four HUD names describing the wrong subsystem** — targets 0, 3, 4, 5. The
    binary names none of them, so this needs a naming-convention decision before
    any promotion.
-3. **Documentation coverage — the "307" figure is withdrawn as mismeasured.**
+3. **CLOSED 2026-08-12 — documentation coverage.** All 170 functions the
+   coordinate instrument covers that lacked documentation now carry at least a
+   measured row: 22 across five per-file documents (`MeshPart.cpp`,
+   `BattleEngineDataManager.cpp`, `WorldPhysicsManager.cpp`, `mesh.cpp`,
+   `ParticleSet.cpp`) and 148 in the mechanically generated
+   `functions/coordinate-long-tail.md`, spanning 93 files.
+   **Coverage is what closed, not understanding** — those rows are tabled
+   measured facts, not behaviour contracts, and the documents say so. Three
+   caveats are recorded with them: the instrument is factory-biased and its 827
+   functions are not a random sample of the 8,136; `monitor.h`/`Monitor.h` are
+   one file the image spells two ways; and the per-file ranking counts
+   coordinate rows rather than functions.
+
+   Superseded history of this item, kept because it corrected itself twice:
    That audit read one `Address:` per document and missed every table row.
    Recounted across all addresses in all 1,056 `reverse-engineering/` documents:
    of 323 real-named coordinate-covered functions, **318 are mentioned somewhere
