@@ -173,6 +173,20 @@ for, and zero retail rows remain address-unresolved. See
 [`DEMO_VS_RETAIL.md`](DEMO_VS_RETAIL.md) for the exact accounting and proof
 boundaries.
 
+**PC-native source coordinates (2026-08-12):** the shipped PC executable passes
+`__FILE__` and `__LINE__` to its debug allocator, so the image names its own
+authored source paths. The
+[PC-native source-coordinate instrument](binary-analysis/pc-native-source-coordinates-2026-08-12.md)
+recovers 1,559 coordinates over 149 distinct authored paths, landing in 827 of
+the 8,136 known functions, with 14 functions carrying coordinates from more than
+one path where inlining shows. It reconciles 422/422 exactly with the Xbox anchor
+join below, but that is **method validation and not corroboration** — both
+readings come from the same PC instructions, and the prior lane simply retained
+only the Xbox intersection. Its value is coverage of subsystems the pinned GPL
+drop lacks, where the owning source file becomes a fact about the shipped build
+rather than an inference from a chosen name. It establishes no boundary,
+signature, semantics, or parity.
+
 **Current Xbox sparse-symbol checkpoint (2026-08-12):** the
 [source-line/Ghidra promotion](binary-analysis/xbox-source-line-anchor-ghidra-2026-08-12.md)
 turns the near-retail Issue-11 build into an operational oracle. Independent

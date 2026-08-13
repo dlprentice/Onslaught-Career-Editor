@@ -82,12 +82,24 @@ The tracked restore receipt is
 
 The separate live readback is 8,136 rows, 7,059,968 bytes, SHA-256
 `fa2c9d749c97f1ab439b90572fd8f2292c9f5dcf4cc8b9b4f29f1756f088fed1`.
-Its deterministic four-column tracked projection is
+Its deterministic four-column tracked projection was
 [`ghidra-function-name-table-2026-08-12.tsv`](ghidra-function-name-table-2026-08-12.tsv),
 8,136 rows, 501,131 bytes, SHA-256
 `49d6639a62268e394c85f7111b562357ca408390c2e9b08ede27d900d7e66653`.
 `tools/re_ghidra_name_projection.py` reproduces and verifies that projection
 from the exact sealed readback.
+
+> **Byte pin superseded 2026-08-12 — the linked path moved on the same day.**
+> That size and hash were current when this HUD promotion sealed. The later
+> collision-component promotion re-projected the same tracked path, so
+> `ghidra-function-name-table-2026-08-12.tsv` now holds 8,136 rows, **501,103
+> bytes**, SHA-256
+> `a6f10251aacee09bdbd3c20b8c456aad3fefb029744fde6fcf20ab184f99193f` — 28 bytes
+> shorter because five collision labels changed length. The three HUD names in
+> it are unchanged and current. The `49d6639a…` pin above is retained as the
+> dated HUD-promotion identity; it is **not** the current content of the file it
+> links to, and a reader checking that link should expect `a6f10251…`. Verified
+> by hashing both the file and the sealed readback on 2026-08-12.
 
 ## Historical boundary
 

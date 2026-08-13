@@ -23,9 +23,15 @@
 > `current_re_authority`). Generation 73 is retained only as the exact
 > projection oracle named by the post-loss claim-closure receipt; it is not a
 > campaign parent or authority.
+>
+> **The one mutable section is `## Current directive`.** An agent's standing
+> goal is a short proxy that points at it, so the directive can be revised as
+> evidence lands without re-setting the goal. Everything above and below that
+> section is the stable statement of what is wanted.
+>
 > Summary: what "done" means here — the objectives, the rebuild acceptance test that
-> stands in for it, the evidence partition, the evidence rule, and the standing
-> constraints.
+> stands in for it, the evidence partition, the evidence rule, the standing
+> constraints, and the current directive an agent executes.
 
 This is **the maintainer's statement of what is wanted**. It is not a finding and
 it is not superseded by measurement. Everything else in this repository is in
@@ -127,6 +133,145 @@ artefact and must never ship as authored behaviour.
   effect of doing something else.
 - Keep `OnslaughtRebuild.Core` deterministic and free of presentation,
   filesystem, clock, process, network, and GPU dependencies.
+
+---
+
+## Current directive
+
+> **This is the mutable section.** An agent's standing goal is a short proxy
+> that points here, so this directive can be revised as evidence lands without
+> re-setting the goal. It is **maintainer-owned**: an agent may propose changes
+> and must not narrow, weaken, retarget, or complete it on its own authority.
+> Revise it by superseding in place with a dated note in *Directive revisions*
+> below; never keep a parallel copy.
+>
+> Set 2026-08-12. Status: **active**.
+
+### Mandate
+
+Drive the primary Battle Engine Aquila reverse-engineering lane forward from
+canonical Generation 23 through successive mechanically verified generations,
+maximizing defensible progress toward complete retail understanding, durable
+function and behavior contracts, a materially improved live Ghidra
+reconstruction, and Godot parity. This is a long-horizon execution mandate, not
+permission to manufacture certainty, and not an instruction to produce process
+theater in place of reverse engineering.
+
+### Ground yourself before acting
+
+Confirm HEAD is at or beyond `25fba71a`. Confirm the pristine specimen SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`. Confirm the
+Generation 23 READY
+`4471fdfe105340ad06c2ad28d945eb05e9bc94f002110888b164581ccf1a93fc` and frozen
+reducer `a757bc51cd8302cf0e889c7db72ca58f9d865597b250371444d8c2285537db09`
+through the literal pinned verify command in
+[`developer_state.json`](developer_state.json) → `current_re_authority`.
+Generation 23 is the sole campaign parent, the next valid generation is 24, and
+Generation 73 is a projection oracle that is never a parent or authority.
+
+### Never collapse the evidence layers
+
+Static-envelope closure covers the current discovered census of 8,136 functions:
+it is not a final ceiling, not semantic recovery, and not reversal. The PC demo
+partition and the instruction-local Xbox source-line anchors are oracles, never
+denominators for retail completion. Generation 23 owns admitted runtime
+semantics and remains sparse. Live Ghidra structural navigation may lead the
+campaign without silently upgrading any semantic grade. Report the layer, the
+exact denominator, the specimen, and the date with every published number, and
+refuse any single percentage that spans layers.
+
+### The loop
+
+Run a bounded select → preregister → measure → refute → advance loop. Rank
+questions by blocked contracts, call-chain leverage, Ghidra structure, patch and
+mod value, and rebuild parity — never by address order. Mine existing evidence
+first: retained traces, pristine bytes, shipped data and compiled scripts,
+registries, RTTI, strings, dormant loggers, the pinned GPL source, current and
+backed-up Ghidra, and prior campaign ledgers. Record a new capture only when a
+preregistered question survives that mining, and then build the smallest
+controlled probe carrying explicit positive, negative, adverse, and replication
+controls.
+
+### Evidence discipline
+
+Recover what enters, what leaves, what changes, and under which conditions. A
+recovered name, a plausible decompile, one observed call, a model report, or a
+passing document gate is a lead with an evidence pointer — never
+self-authenticating truth. Reproduce every load-bearing conclusion locally
+before admitting it. Preserve open questions and the cheapest falsifier rather
+than filling gaps with confident labels. Re-check prior arithmetic, hashes, body
+ranges, multi-range bodies, aliases, and whether a test exercises the production
+path.
+
+### Ghidra promotion gate
+
+Promote to live Ghidra only through the full gate: exact program and specimen
+identity; a verified off-volume backup with a proven restore and open path;
+isolated persistent scratch replicas; rollback probes; separate-process dry run,
+apply, and readback; full non-target and program-metric comparison; thunk and
+alias refutation; a verified POST backup; and tracked-snapshot refresh only on
+byte equality. Never mutate Ghidra to show activity, and never let a report or
+model recommendation stand in for that gate. The owning procedure is
+[`reverse-engineering/ghidra/README.md`](reverse-engineering/ghidra/README.md).
+
+### Carry into the rebuild
+
+Carry sufficiently proven behavior into focused rebuild owners and parity tests,
+keeping `OnslaughtRebuild.Core` deterministic and free of presentation,
+filesystem, clock, process, network, and GPU dependencies. Maintain exact retail
+entity → reconstruction owner → implementation → test mappings, and keep
+released behavior, source-informed architecture, reconstruction choice, and
+remaining uncertainty visibly separate.
+
+### Preserve what you did not create
+
+Read the pristine specimen and never write it. Treat the installed executable as
+deliberately patched and never as byte authority. Keep `G:\BEA ROMS` read-only.
+Never destroy save or career data. Never hard-delete lab evidence; stage it
+through `tools/lab_quarantine.py` instead. Leave the uncommitted Godot toolchain
+work, the two protected UnsetObjective files, the stale lane worktrees, and every
+unrelated dirty change untouched unless explicitly directed.
+
+### Delegation
+
+Choose single-agent or coordinated execution situationally. Delegation and
+external consultation are optional, bounded, and read-only by default; you
+remain the sole integration owner and final authority.
+[`reverse-engineering/REVIEW-PROTOCOL.md`](reverse-engineering/REVIEW-PROTOCOL.md)
+owns the detail.
+
+### Countable outcomes
+
+End every work unit in one countable outcome: campaign or evidence advancement;
+an authorized Ghidra promotion; a reconstruction or parity advance; or an
+explicit open question with its cheapest falsifier and exact next command. After
+two attempts at the same noise floor, change instrument or rotate frontier. Keep
+durable owners aligned with verified reality, and supersede proven drift in
+place.
+
+### Completion test
+
+This directive is not complete while any actionable function, residual,
+contract, rebuild mapping, evidence join, or proven instrument retains an open
+frontier. Milestones, closures, successful consults, and overnight progress are
+progress, not completion.
+
+### Current frontier
+
+**None selected.** Rank from current evidence. The 2026-08-12 handoff's
+recommendation — recompute the retained HUD trace evidence under
+`local-lab/pc-hud-existing-trace-20260812-v1/`, reconcile it against the
+corrected HUD identities, and decide whether a mechanically exact Generation 24
+can admit exactly ten call-route C2 contracts parented strictly on Generation 23
+— is a **candidate**, not a command. A higher-value reproduced contradiction
+outranks it.
+
+### Directive revisions
+
+- **2026-08-12 — directive established.** The prior longform goal was cleared by
+  the maintainer. This section replaces the practice of encoding the whole
+  mandate in the goal string, which could not be revised without re-setting the
+  goal. No frontier was selected at establishment.
 
 ---
 
@@ -258,6 +403,29 @@ world. Pixel scores can expose defects; they are not the goal.
 ---
 
 ## Revision history
+
+### 2026-08-12 — the goal string became a proxy, and the directive became mutable
+
+`## Current directive` was added, and it is the only mutable section in this
+file. An agent's standing goal is now a short proxy that points at it rather
+than a longform mandate encoded in the goal string itself.
+
+The reason is mechanical: a goal string is set once and length-capped, so every
+revision — a new frontier, a superseded pin, a corrected count — required
+re-setting the whole goal, and in practice meant the live mandate drifted from
+the evidence. A tracked section can be superseded in place, which is what the
+rest of this repository already does instead of keeping parallel truth.
+
+Two guards travel with the proxy, because the indirection is otherwise
+self-defeating: the directive is maintainer-owned, so an agent may propose
+changes but must not narrow, weaken, retarget, or complete it on its own
+authority; and the goal is not complete while the directive still names an open
+frontier. Without those, the process bound by the directive could edit the
+directive that binds it.
+
+Nothing above `## Current directive` changed in substance. The objectives, the
+acceptance test, the evidence partition, and the standing constraints remain the
+stable statement of what is wanted.
 
 ### 2026-08-04 — recursive campaign directive preserved for handoff
 
