@@ -154,7 +154,27 @@ script-facing command name rather than a C++ symbol.
 > `CUnit__ApplyDamage` and `CUnit__TriggerEffect` also insert queued messages, so
 > the queue is not script-only.
 >
-> **Refined further, same day — and one suffix is partly rehabilitated.**
+> **WITHDRAWN, same day — the refinement below is wrong; read this first.**
+> The paragraph beneath claims `[vtable+0x30]` carries a parameter that
+> `PlayPCharMessage` takes from the script and the others fix at ten. That is a
+> misreading. `[vtable+0x30]` is a **no-argument getter on a boxed script value**:
+> `PlayCharMessage` does `mov ecx,[esi]; mov eax,[ecx]; call [eax+0x30]` at
+> `0x00537539` and again at `0x0053754E` for `[esi+4]`, unboxing each script
+> argument before passing it to `CText__GetStringById`; `[esi+8]` uses a different
+> getter at `[vtable+0x34]`. The `push 0xa` is a literal argument to
+> `CMessage__ctor_base` itself.
+>
+> The error was method, not arithmetic: I printed the eleven instructions
+> preceding the constructor call and read them as that call's argument setup, when
+> they spanned several unrelated calls. **Do not attribute pushes to a call
+> without checking where the preceding call boundaries are.**
+>
+> So `WithPriority` is **not** rehabilitated — it is back to unsupported, along
+> with `WithCallback`, and `WithFade` remains wrong. What actually distinguishes
+> the five is still unestablished, and identifying it needs the
+> `CMessage__ctor_base` signature rather than any inference from call windows.
+>
+> **Superseded refinement, retained so the reasoning chain is visible:**
 > Comparing the argument setup at each `CMessage__ctor_base` call site:
 > `AddMessage` passes a fixed global `0x0089C328` where the two `…CharMessage`
 > forms pass a script-supplied value, so `AddMessage` is the fixed-source form.
