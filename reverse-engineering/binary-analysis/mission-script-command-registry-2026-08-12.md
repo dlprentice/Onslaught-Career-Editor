@@ -51,6 +51,41 @@ Unlike the PC/Xbox coordinate pair — which share a signal and must not be cite
 as mutual corroboration — these two channels are genuinely independent: one reads
 debug-allocator arguments, the other reads a registrar's stores.
 
+## Refutation, and why the 54 names are not cleared for promotion
+
+Three checks were run before any promotion was contemplated.
+
+**Independent implementation — passed, 143/143.** A prior lane's read of the same
+table, by a different author and method, agrees on every index/name pair. It
+shares this recovery's source so it is not independent evidence, but it validates
+the stride and name-offset arithmetic.
+
+**Table alignment — passed.** This is the check able to detect a wrong base or
+stride. Commands `GetX`, `GetY`, `GetZ` occupy consecutive indices 57, 58, 59 and
+land in exact order on `IScript__GetVectorX`, `IScript__GetVectorY`,
+`IScript__GetVectorZ`; `SetX`, `SetY`, `SetZ` occupy 60, 61, 62. An off-by-N
+stride or wrong base would scatter or reverse those families. It does neither.
+
+**Agreement with pre-existing names — 55 testable, 32 agree, 23 disagree.** Most
+of the 23 are cases where the existing Ghidra name is a descriptive placeholder
+and the registry supplies the game's actual command:
+`IScript__SetThingValueViaVFunc198_FromArg` is registered as `EnableWeapon`,
+`IScript__CheckValueInRange` as `IsNumberBetween`, `IScript__GetVectorLength` as
+`Magnitude`. Superseding those is what this registry is for. That count therefore
+does not by itself indicate an extraction error — but it does mean **23 existing
+names require per-row adjudication before anything is promoted**, because each is
+either a name the registry should supersede or a sign that one of the two is
+wrong.
+
+The sharpest is `GetVariable` against `IScript__GetWorldTextSlotTimerValue`. The
+same `WorldTextSlotTimerValue` reading is the heaviest callee of the HUD route's
+target 0, so if the script-facing name is really `GetVariable`, either that
+reading is too specific or the underlying world routine is a generic slot
+accessor serving both. Unresolved.
+
+**Posture: the recovered pairing is validated; the naming promotion is not
+cleared.** It waits on those adjudications and on the full Ghidra gate.
+
 ## A named dormant capability
 
 Exactly one handler is the shared no-op, and its command is **`SetSpeed`**. The
