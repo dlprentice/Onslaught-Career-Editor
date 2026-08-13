@@ -247,7 +247,7 @@ The current layers must remain separate:
 
 The saved-name projection is
 `reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-13.tsv`
-(8,170 rows; SHA-256 `f7f987b5…fa51e`). The independent missing-boundary proof
+(8,170 rows; SHA-256 `51517075…86ee`). The independent missing-boundary proof
 is under `local-lab/mission-registry-missing-functions-20260813-v1/` and
 reproduces byte-identically. Older 7,555-row and 86-missing figures below are
 historical measurements only, not current planning denominators.

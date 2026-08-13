@@ -398,7 +398,9 @@ Current local boundaries that materially change the discovery lane:
   retains its observed aggregate because the explosion call's exact segmented
   mesh part is still unknown. The contrasting invocation's rejecting gate,
   segmented second mesh part, expanding-radius timing, and broader rebuild
-  parity remain open; live Ghidra promotion is separate.
+  parity remain open. The factory identity/signature at `0x0050FF10` was later
+  promoted through its own backed-up live-Ghidra ceremony; that metadata repair
+  does not close these behavioral gaps.
 - **2026-08-10 recursive caller correction:** the exact direct-xref census for
   `CWorldPhysicsManager::CreateExplosion` contains 24 calls: two in the
   recovered `CRound` switch and 22 bounded function callers. Joined

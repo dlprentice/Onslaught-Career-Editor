@@ -261,9 +261,9 @@ progress, not completion.
 
 ### Current frontier
 
-Updated 2026-08-13 after the 75-row MissionScript vocabulary promotion. Recording
-what closed is not narrowing the mandate; the completion test and every clause
-above are unchanged.
+Updated 2026-08-13 after the separate 75-row MissionScript vocabulary and
+one-row explosion-factory promotions. Recording what closed is not narrowing
+the mandate; the completion test and every clause above are unchanged.
 
 **Closed this session — do not re-derive:**
 
@@ -296,6 +296,11 @@ above are unchanged.
   former defaults, five message-name corrections, and 16 Tier-3-to-Tier-2
   supersessions. These are script-facing registry names, not recovered original
   C++ symbols, and no ABI or semantic grade changed.
+- `0x0050FF10` is no longer the stale pickup factory. A separately backed-up,
+  scratch-rehearsed, live-applied, read-back, and tracked-synchronized ceremony
+  now records `CWorldPhysicsManager__CreateExplosion` with its proved one-dword
+  caller-cleaned signature and bounded static comment. No body, instruction,
+  executable byte, function boundary, or non-target function row changed.
 - Documentation coverage for the 170 previously uncovered coordinate-instrument
   functions is closed: 29 unique functions across five per-file documents and
   141 unique functions represented by 148 rows in
@@ -324,14 +329,10 @@ above are unchanged.
    75-row existing-entry manifest. Use the registry only as Tier-2 script vocabulary;
    preserve each row's explicit unknowns and do not imply C++ symbols,
    signatures, runtime reachability, or reconstruction parity.
-2. **Repair `0x0050FF10` separately.** Replace the stale pickup identity with
-   `CWorldPhysicsManager__CreateExplosion` and the proved caller-cleaned
-   one-index signature/comment. This is a one-row corruption repair with
-   different evidence and must not be folded into the registry ceremony.
-3. **Four HUD names describing the wrong subsystem** — targets 0, 3, 4, 5. The
+2. **Four HUD names describing the wrong subsystem** — targets 0, 3, 4, 5. The
    binary names none of them, so this needs a naming-convention decision before
    any promotion.
-4. **Generation 24**, if still wanted, parented strictly on Generation 23 and
+3. **Generation 24**, if still wanted, parented strictly on Generation 23 and
    respecting the route-order correction above.
 
 Rank from current evidence; a reproduced contradiction outranks this list.
@@ -365,6 +366,10 @@ Rank from current evidence; a reproduced contradiction outranks this list.
   recovery, exact readback, and tracked-snapshot synchronization. The frontier
   now starts with the 34 newly created default-metadata handlers, while the
   one-row explosion-factory repair remains a distinct corruption correction.
+- **2026-08-13 — explosion-factory corruption repair.** The distinct one-row
+  correction passed its own scratch, backup, live-apply, separate-readback, and
+  tracked-snapshot gates. It is now closed without changing the campaign
+  generation; the 34 new registry handlers remain the first active frontier.
 
 ---
 

@@ -3,9 +3,9 @@
 #           It is a name index, not a database, disassembly, or semantic proof.
 # Projection date: 2026-08-13
 # Specimen SHA-256: 74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750
-# Source  : local-lab/ghidra-mission-registry-vocabulary-live-promotion-20260813-v1/runs/live-readback/functions.tsv
-# Source bytes: 7086689
-# Source SHA-256: da9f20a5ae3de150546e5b103bd9914e1a4ec7492bbafe5d35c4cc79b46d4756
+# Source  : local-lab/ghidra-cexplosion-live-promotion-20260813-v1/runs/live-readback/functions.tsv
+# Source bytes: 7086736
+# Source SHA-256: 8eded18abddfc0726517f2a88c7f4b2df15ff0cd13d3b70a5ca7ebd5a7afea5b
 # Rows    : 8170 internal functions; this is a discovered census, not a final ceiling.
 # Columns : address, name, bodyMin, bodyMax (hex). Non-contiguous bodies are
 #           represented by their bounding range, so bodyMin..bodyMax can over-cover.
@@ -4220,7 +4220,7 @@ address	name	bodyMin	bodyMax
 0x0050fd90	CComponent__Destructor	0x0050fd90	0x0050fe02
 0x0050fe10	CGillMHead__Destructor_VFunc01	0x0050fe10	0x0050fe82
 0x0050fe90	CTentacle__Destructor	0x0050fe90	0x0050ff02
-0x0050ff10	CWorldPhysicsManager__CreatePickup	0x0050ff10	0x0050ffa7
+0x0050ff10	CWorldPhysicsManager__CreateExplosion	0x0050ff10	0x0050ffa7
 0x0050ffb0	CExplosion__VFunc_7_0050ffb0	0x0050ffb0	0x0050ffb5
 0x0050ffc0	FUN_0050ffc0	0x0050ffc0	0x0050ffc5
 0x0050ffd0	CExplosion__scalar_deleting_dtor	0x0050ffd0	0x0050ffef

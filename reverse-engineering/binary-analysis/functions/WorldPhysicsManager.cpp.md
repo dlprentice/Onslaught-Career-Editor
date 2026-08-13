@@ -4,8 +4,6 @@ Status: active static function map
 Last updated: 2026-08-13
 Source File: `C:\dev\ONSLAUGHT2\WorldPhysicsManager.cpp` (named by the shipped image; absent from `references/Onslaught/`) | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
-<!-- ghidra-name-drift-accepted: 0x0050ff10 CWorldPhysicsManager__CreatePickup (2026-08-13; pending separate explosion-identity promotion) -->
-
 This file holds the game's **central object factory**. Eight `Create*` entry
 points sit at consecutive source lines 145–292, followed by the list
 initialiser at 301–309 — the spawn spine laid out in definition order.
@@ -14,8 +12,8 @@ Rows are **measured** only: entry address, current or independently corrected
 identity, body size,
 callee-popped byte count from `ret imm`, the compiler's own
 `__FILE__`/`__LINE__` coordinates, and the constructor each factory invokes. No
-purpose is inferred from source coordinates alone. The `0x0050FF10` row uses the
-separately proved explosion identity rather than the stale live-Ghidra name; see
+purpose is inferred from source coordinates alone. The `0x0050FF10` row now
+matches the separately gated live-Ghidra explosion identity; see
 [`cexplosion-factory-callers-2026-08-10.md`](../cexplosion-factory-callers-2026-08-10.md).
 
 | Address | Current or corrected identity | Bytes | `ret imm` bytes | Source lines | Constructs via |

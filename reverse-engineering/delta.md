@@ -46,7 +46,7 @@ pins.
 | complete_RE | **false** |
 | Candidate-chain disposition | Gen73 is `PROJECTION_ORACLE_ONLY`; all 7,294 source adjudications and 145,973 changed fields are closed by `94d7a9eb…323e0` |
 | Immediate RE front | Fifty-three disjoint bulk static passes cover 7,945 exact bodies: 7,902 formerly opaque functions now have bounded C1_STATIC hypotheses, 42 prior C1 rows are repaired or confirmed, and ApplyDamage remains C2. The sealed 8,136-row tracked static-closure OPAQUE count is zero; a separately reviewed 34-row addendum now gives the current 8,170-function census 8,163 bounded static C1 rows plus seven C2 rows, while the immutable campaign ledger separately retains 7,899 semantic OPAQUE rows. A complete 184-row residual census switched instruments to formal packs, strict RTTI/vtables, address-joined refs, strings/debug strings, registries, retained-source tokens and pristine decode: 167 exact functions / 407 slot placements advanced through strict vtable membership, then the final 17 advanced together through visible pristine instruction envelopes with row-specific falsifiers. The 46,657-byte HResultToString envelope is explicitly not represented as one original source routine. The final exact disposable project retains the dated 8,136 functions and has 7,968 HYP names, all 7,945 cohort entries C1_STATIC-or-better, and zero collateral/body/structural/alias drift. Gen20 bounds ten retained `CExplosion` slot-40 carrier calls but leaves entry, writes, returns, the full envelope, and segmented mesh-part behavior open. Gen21 bounds 7,513 strict-`CRound` slot-66 call-entry pairs and 7,204 gap-free returns but leaves writes, branches, complete Move behavior, and the shared `CMissile` placement open. Gen22 bounds 2,555 strict-`CRound` slot-0 call-entry-arm paths with exactly one selected arm per invocation and 1,972 gap-free returns. Gen23 adds exact receiver-write pairs for five selected arms while preserving lane-specific gaps and rejected controls; event 4002, external effects, field meanings, shared `CMissile` placement, source spelling, broader populations, and direct rebuild event routing remain open. Static closure is not runtime/source/parity closure. |
-| Ghidra apply | The latest authorized live operation normalized 75 reviewed existing Mission-registry entries while holding the structural count at 8,170. Separate readback changed only the reviewed name/rendered-signature/comment/tag fields; 8,095 non-target rows, bodies, instructions, ABI/storage metadata, bytes, data, and references remained exact. Aggregate READY `702f1781…219f`, POST functions `da9f20a5…d4756`, POST program `c29aa646…2f87`; the preceding 34-boundary promotion remains the structural parent. |
+| Ghidra apply | The latest authorized live operation separately repaired `0x0050FF10` to `CWorldPhysicsManager__CreateExplosion` while holding the structural count at 8,170. Separate readback changed only the reviewed target identity/signature/parameter/comment/tag fields; 8,169 non-target rows, bodies, instructions, bytes, data, and references remained exact. POST functions `8eded18a…fea5b`, POST program `a3c505c3…368c1`, and the synchronized 19-file project inventory `8eb66406…3cf6` reproduce; the preceding 75-row vocabulary and 34-boundary promotions remain separate historical parents. |
 
 The frozen three-master hashes later in this document remain the correct inputs
 for the 2026-07-29 synthesis. Body rows below that still say “current” without
@@ -243,8 +243,8 @@ No percentage between these rows is meaningful. In particular:
 | Force-windowed trace image | SHA-256 `E1436EF7E0AD9CCBDDD43AAACA952F6E84D4B1A282835CEAD745EFCFC32FADF4` | Baseline plus one four-byte startup patch; all other bytes match baseline and remain usable as static evidence, while every runtime observation stays derivative/path-scoped |
 | Installed-tree aggregate | manifest digest `3D8AA45FB6792B605B5A29915E4256C5D2AFECEDE92AEF6CE8780FEA6A10212D` | Complete row census from a stable but non-atomic live traversal, not a filesystem snapshot or Steam depot manifest |
 | Stuart source | commit `5352A81CDB838B145A57F7FEBC5D9FC4B0129EBB` | Exact source pin, incomplete and not independently buildable |
-| Tracked Ghidra snapshot | 8,170 currently discovered internal functions; 19 files / 186,665,861 bytes; inventory `b0635c39…c6ef` | Reviewed distributable database snapshot, exact to live at the verified 2026-08-13 Mission-registry vocabulary promotion; 8,170 is a current census, not a final ceiling |
-| Live Ghidra database | 8,170 currently discovered internal functions plus 224 external/import functions in Ghidra's aggregate count | Current maintainer state; separately read back and restore-tested from the 2026-08-13 vocabulary POST backup before snapshot promotion |
+| Tracked Ghidra snapshot | 8,170 currently discovered internal functions; 19 files / 186,747,781 bytes; inventory `8eb66406…3cf6` | Reviewed distributable database snapshot, exact to live at the verified 2026-08-13 explosion-factory identity repair; 8,170 is a current census, not a final ceiling |
+| Live Ghidra database | 8,170 currently discovered internal functions plus 224 external/import functions in Ghidra's aggregate count | Current maintainer state; separately read back and restore-tested from the 2026-08-13 explosion-factory POST backup before snapshot promotion |
 | Reconstruction state | Assertions frozen inside `source-code/stuart-source-synthesis.md` SHA-256 `57C2C02E...B7B45` | Reported snapshot only; no root-repository commit plus dirty-content fingerprint was frozen, so remeasure code before making a present-tense implementation claim |
 
 This identity split is the first atom-level rule. Any claim without its specimen
@@ -2314,7 +2314,7 @@ under their own provenance boundaries.
 | Functions with plate comments | 7,016 |
 | Functions with tags | 5,978 |
 | Saved non-funclet population | 6,991 |
-| Latest saved live export | 7,086,689 bytes, SHA-256 `da9f20a5…d4756` |
+| Latest saved live export | 7,086,736 bytes, SHA-256 `8eded18a…fea5b` |
 
 “8,170 functions” means saved database entries, not the unknowable perfect
 compiler/linker total. The 34 registry-derived boundaries are now included in
@@ -2404,15 +2404,18 @@ parallel “truth layer.”
 
 #### Finite Ghidra queue
 
-1. Create and read back the 34 proved Mission-registry boundaries through a
-   fresh backup/scratch/rollback/live ceremony, without naming them in the same
-   transaction.
-2. Normalize the separately reviewed 75 existing registry entries as Tier-2
-   script vocabulary while preserving every ABI/signature field.
-3. Repair `0x0050FF10` from the stale pickup identity to the independently
-   proved `CWorldPhysicsManager__CreateExplosion` contract in its own ceremony.
-4. Extend static-envelope and campaign accounting to the 34 new functions;
-   boundary proof alone does not assign semantics.
+1. **Completed:** create and read back the 34 proved Mission-registry boundaries
+   through a fresh backup/scratch/rollback/live ceremony, without naming them in
+   the same transaction.
+2. **Completed:** normalize the separately reviewed 75 existing registry
+   entries as Tier-2 script vocabulary while preserving every ABI/signature
+   field.
+3. **Completed:** repair `0x0050FF10` from the stale pickup identity to the
+   independently proved `CWorldPhysicsManager__CreateExplosion` contract in its
+   own ceremony.
+4. **Static portion completed:** extend static-envelope accounting to the 34 new
+   functions. Campaign/runtime admission remains separate and must still be
+   earned.
 5. Decide the four still-refuted HUD labels and continue coherent semantic/
    runtime/rebuild slices rather than optimizing name percentages.
 6. Keep exact entry, interior, data, string, and callsite identities separated

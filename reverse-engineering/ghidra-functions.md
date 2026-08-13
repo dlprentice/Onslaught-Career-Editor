@@ -3,14 +3,15 @@
 Status: active canonical synthesis of the current executable-analysis state; raw
 machine exports remain the address-level evidence behind this human-readable
 master
-Last updated: 2026-08-13 (75 registry-vocabulary rows promoted and backed up)
+Last updated: 2026-08-13 (explosion-factory identity repaired and backed up)
 Verdict: **The verified live and tracked databases now contain 8,170 internal
 function boundaries. The structural parent ceremony admitted 34 MissionScript
-registry-linked callable entries with default metadata; the latest backed-up
-ceremony normalized 75 reviewed existing-entry metadata rows. Fresh-process
-readback proves the other 8,095 function rows and all bodies, instructions, ABI
-and storage metadata, executable bytes, data, and references remained exact. It
-promoted no runtime behavior contract.
+registry-linked callable entries with default metadata, and the next ceremony
+normalized 75 reviewed existing-entry metadata rows. The latest separately
+backed-up ceremony repaired the identity/signature/comment at `0x0050FF10` to
+`CWorldPhysicsManager__CreateExplosion`. Fresh-process readback proves the other
+8,169 function rows and all bodies, instructions, executable bytes, data, and
+references remained exact. It promoted no runtime behavior contract.
 The subsequent reviewed 34-row static addendum supplies bounded
 `C1_CANDIDATE_PARTIAL` envelopes and falsifiers without changing Ghidra, so the
 current static-accounting projection is 8,163 C1 plus seven C2 across all 8,170
@@ -380,8 +381,8 @@ comparison.
 | Question | Current exact answer |
 | --- | --- |
 | Static retail specimen | 2,506,752-byte x86 PE, SHA-256 `74154bfa…e7750`; D3D9 retail build |
-| Latest verified live readback | 8,170 functions after the 75-row Mission-registry vocabulary promotion; latest TSV SHA-256 `da9f20a5ae3de150546e5b103bd9914e1a4ec7492bbafe5d35c4cc79b46d4756` |
-| Current live function inventory | 8,170 rows; byte-identical to both scratch replicas and synchronized to the promoted tracked snapshot and verified POST recovery copy |
+| Latest verified live readback | 8,170 functions after the one-row explosion-factory identity repair; latest TSV SHA-256 `8eded18abddfc0726517f2a88c7f4b2df15ff0cd13d3b70a5ca7ebd5a7afea5b` |
+| Current live function inventory | 8,170 rows; byte-identical to the sealed scratch POST and synchronized to the promoted tracked snapshot and verified POST recovery copy |
 | Dated semantic/name-table baseline | 7,555 functions; 3,181,359-byte TSV; SHA-256 `45cba656…0a462` |
 | Current distinct function names | 8,162; eight names occur at two addresses |
 | Explicit `FUN_*` names | 912 |
@@ -430,11 +431,11 @@ own the durable specimen warning.
 
 | Store | Exact state | Correct use |
 | --- | --- | --- |
-| Tracked project | `reverse-engineering/ghidra/BEA.gpr` + `BEA.rep/`; snapshot 2026-08-13; 19 payload files, 186,665,861 bytes; reviewed with Ghidra 12.1.2 | Current distributable snapshot; exact at promotion time |
+| Tracked project | `reverse-engineering/ghidra/BEA.gpr` + `BEA.rep/`; snapshot 2026-08-13; 19 payload files, 186,747,781 bytes; reviewed with Ghidra 12.1.2 | Current distributable snapshot; exact at promotion time |
 | Tracked Program objects | `BEA.exe` and `BEA_Widescreen.exe` | Do not silently assume an export came from the unpatched baseline Program |
 | Live maintainer project | `C:\Users\david\Ghidra\Projects`, active Ghidra 12.1.2 | Current working database; mutation requires separate authority |
-| Latest live readback | `local-lab/ghidra-mission-registry-vocabulary-live-promotion-20260813-v1/runs/live-readback/functions.tsv`, SHA-256 `da9f20a5…d4756` | Current 8,170-row internal-function metadata; 8,170 is the current discovered census, not a final ceiling |
-| Current tracked name table | `reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-13.tsv`, 8,170 rows, SHA-256 `f7f987b5…fa51e` | Deterministic projection of the separately read-back live database |
+| Latest live readback | `local-lab/ghidra-cexplosion-live-promotion-20260813-v1/runs/live-readback/functions.tsv`, SHA-256 `8eded18a…fea5b` | Current 8,170-row internal-function metadata; 8,170 is the current discovered census, not a final ceiling |
+| Current tracked name table | `reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-13.tsv`, 8,170 rows, SHA-256 `51517075…86ee` | Deterministic projection of the separately read-back live database |
 | Frozen 2026-08-12 name table | `reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-12.tsv`, 8,136 rows, SHA-256 `a6f10251…193f` | Retained byte-exact for Generations 20–23 and receipt-pinned instruments |
 | Mutated dated name table | `reverse-engineering/binary-analysis/ghidra-function-name-table-2026-07-27.tsv`, 7,555 rows, current SHA-256 `44f49ca1…e68b11`; original sealed content was `2dfe0b97…f0b84` | Historical artifact later rewritten in 54 name rows. Retained byte-exact only because Generations 20–23 pin the mutated bytes; neither hash is a current name oracle |
 | Fullpass discovery corpus | `reverse-engineering/binary-analysis/ghidra-fullpass-findings/` | Dated 6,411-function reviews; never a live name oracle |
@@ -445,8 +446,8 @@ Fresh read-only exports in this research pass remove an important ambiguity:
 - The tracked snapshot contains exactly 8,170 internal functions, 549,872 instructions,
   48,585 defined-data items, 3,912,345 undefined-data items, and 6,070
   user-defined symbols. Its
-  current reviewed project inventory is 19 files / 186,665,861 bytes with digest
-  `b0635c39…c6ef`. Ghidra's aggregate function
+  current reviewed project inventory is 19 files / 186,747,781 bytes with digest
+  `8eb66406…3cf6`. Ghidra's aggregate function
   count is 8,394 because it also includes 224 external/import functions; the
   8,170 figure is the internal listing census, not a claim that discovery is
   permanently complete.
@@ -460,12 +461,14 @@ Fresh read-only exports in this research pass remove an important ambiguity:
 - The current live export and promoted tracked snapshot agree at promotion time.
   Later live mutations must repeat the backup/scratch/readback/promotion gate;
   this statement is not a promise that future working state can never move.
-- The structural parent promotion added exactly 34 default-metadata boundaries.
-  The latest promotion then normalized 75 reviewed existing entries. Its
+- The structural parent promotion added exactly 34 default-metadata boundaries,
+  and the next promotion normalized 75 reviewed existing entries. The latest
+  one-row promotion corrected only the explosion-factory identity, signature,
+  parameter name, comment, and tags. Its
   full-inventory comparison found only the allowed target name/rendered-
-  signature/comment/tag changes; 8,095 non-target rows, bodies, instructions,
-  ABI/storage metadata, program bytes, data units, references, non-target
-  symbols, and unrelated program metrics remained exact.
+  signature/comment/tag changes; 8,169 non-target rows, bodies, instructions,
+  program bytes, data units, references, non-target symbols, and unrelated
+  program metrics remained exact.
 
 The current tracked name table exactly projects the latest live readback. The
 earlier Mission-native batch changed the function count from 8,125 to 8,136 by
@@ -2895,7 +2898,7 @@ to understand the current verdicts in this master.
 
 | Area | Path |
 | --- | --- |
-| Current live Ghidra readback | `local-lab/ghidra-mission-registry-vocabulary-live-promotion-20260813-v1/runs/live-readback/functions.tsv` |
+| Current live Ghidra readback | `local-lab/ghidra-cexplosion-live-promotion-20260813-v1/runs/live-readback/functions.tsv` |
 | Trace-to-Ghidra apply/readback | `local-lab/GHIDRA-FROM-TRACE-2026-07-28.md` |
 | 144 native table | `local-lab/ghidra-from-trace-2026-07-28/script-native-table-144.tsv` |
 | Current grader artifacts | `local-lab/re-ledger/` |
@@ -2928,7 +2931,7 @@ address-keyed gaps:
 dated 8,136-row static closure plus a reviewed 34-row C1-static addendum
 75 existing registry entries normalized through the backed-up live gate
 34 newly created registry entries awaiting their separate Tier-2 metadata cohort
-one separately proved CreateExplosion identity/signature repair
+one separately proved CreateExplosion identity/signature repair promoted and read back
 four refuted HUD labels awaiting convention-safe replacements
 34-function campaign/runtime admission remains separate from static closure
 7,899 Gen23 functions still semantically OPAQUE
