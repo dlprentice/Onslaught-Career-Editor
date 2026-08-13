@@ -277,14 +277,21 @@ narrowing the mandate; the completion test and every clause above are unchanged.
 
 **Active frontier, in priority order:**
 
-1. **Five `IScript__PlaySound*` suffixes that name absent mechanisms** —
-   `0x00537410`, `0x00537500`, `0x005375F0`, `0x005377E0`, `0x005378E0` queue
-   messages; the queue reaches voice through
-   `CMessageBox__StartVoiceOrFallbackTextReveal`, so the `PlaySound` stem is
-   defensible and **only the suffixes are wrong**. `WithCallback`/`WithFade`/
-   `WithPriority` are inventions; the real distinctions are `AddMessage` vs
-   `PlayCharMessage` vs `PlayPCharMessage`, and plain vs `Wait`. Needs the full
-   Ghidra gate.
+1. **Five message natives — evidence and decision both complete; only the
+   Ghidra gate remains.** `0x00537410`, `0x00537500`, `0x005375F0`,
+   `0x005377E0`, `0x005378E0`. The naming convention was decided 2026-08-12
+   (`function-naming-convention-2026-08-12.md`): Tier 2 applies, so the registry
+   commands `AddMessage`, `PlayCharMessage`, `PlayCharMessageWait`,
+   `PlayPCharMessage`, `PlayPCharMessageWait` replace the invented
+   `WithCallback`/`WithFade`/`WithPriority` suffixes. Note the `PlaySound` stem
+   was *defensible* — the queue does reach voice through
+   `CMessageBox__StartVoiceOrFallbackTextReveal` — so this is a Tier 3 label
+   losing to Tier 2 evidence, not a false claim being corrected.
+   **Everything needed to run the gate is in
+   `local-lab/mission-native-registry-20260812-v1/PROMOTION-READY.md`**: rows,
+   comment content, all ten steps, and the collision promotion as the template.
+   Watch step 10 — the name table and the tracked documents move together, and
+   the strict name check will drift on these five until both are updated.
 2. **Four HUD names describing the wrong subsystem** — targets 0, 3, 4, 5. The
    binary names none of them, so this needs a naming-convention decision before
    any promotion.
