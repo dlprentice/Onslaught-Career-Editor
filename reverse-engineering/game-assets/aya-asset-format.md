@@ -10,9 +10,18 @@ From deep analysis of `AYAResourceExtractor` (Stuart's extraction tool):
 
 **Pipeline corroboration note (Glenn, February 23, 2026):** dev builds reportedly included generation/precompute code (coastline mesh, some landscape LOD tables, and normal-mapped distance sprites rendered via D3D scenes), while console/release builds loaded saved outputs and had generation paths conditionally compiled out.
 
+**Cross-platform packaging note (desimbr, August 8, 2026):** Stuart recalls
+that the CD-sized PC port retained substantially more compression than the DVD
+console releases, and expects PS2 textures to use a lower resolution and/or bit
+depth than Xbox because of its smaller memory budget. A measured Level 612 pair
+supports only the packaging part so far: PC is a chunked-zlib envelope; USA
+Xbox is a raw tagged stream with the same 374 top-level tag sequence but much
+larger `TEXT`, `MESH`, and `IMPS` payloads. Treat visual-quality and corpus-wide
+claims as hypotheses until decoded logical assets are compared.
+
 ---
 
-## Compression Architecture
+## PC compression architecture
 
 ```
 AYA File Structure:
@@ -32,6 +41,12 @@ AYA File Structure:
 - **Chunk limit**: 1MB uncompressed **(AYAResourceExtractor buffer limit; not confirmed as a format rule)**
 - **Total buffer**: 4MB maximum **(extractor output buffer limit)**
 - **Format**: Standard zlib wrapper (not raw deflate, not gzip)
+
+The Xbox resource pair measured above begins directly with the tagged stream,
+without this outer member framing. `tools/aya_archive_inventory.py` therefore
+supports explicit `pc-chunked-zlib` and bounded `raw-tag-stream` envelopes; its
+`auto` mode falls back to raw only when the entire file frames into at least two
+known top-level tags. This does not imply that PS2 `DATA0.NYO` is AYA or zlib.
 
 ---
 
@@ -193,13 +208,13 @@ The README claims DXT2, but the extractor selects decoding based on the DDS head
 
 ## Data Type Encoding (Contrast with Save Files)
 
-| Type | AYA Files | BES Save Files |
+| Type | PC AYA files | BES save files |
 |------|-----------|----------------|
 | Integers | Raw uint32/int32 | Raw uint32/int32 (true view; legacy aligned view can look like `value << 16`) |
 | Floats | Raw IEEE-754 | Raw IEEE-754 |
 | Booleans | Raw 0/1 | Raw 0/1 (true view; legacy aligned view can look like `0x00010000`) |
 | Byte Order | Little-endian | Little-endian |
-| Compression | zlib | None |
+| Compression | zlib; measured Xbox Level 612 is a raw tagged stream | None |
 | Structure | Tagged chunks | Fixed offsets |
 
 This helps avoid a common pitfall: the retail `.bes` “shift-16” look is primarily a **misaligned view** problem (CCareer begins at `file+2` after a 16-bit version word), not a universal fixed-point convention.

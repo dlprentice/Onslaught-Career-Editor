@@ -269,6 +269,34 @@ From desimbr (Discord, February 15, 2026):
 
 ---
 
+## Cross-platform resource packaging note (desimbr, August 8, 2026)
+
+Stuart recalls that the console releases could retain much larger resource data
+on DVD, while the later PC port had to fit on a CD and therefore kept media much
+more heavily compressed after installation. He also expects PS2 textures to use
+lower resolution and/or bit depth than Xbox because of the PS2 memory budget,
+while recalling PC as the highest-resolution presentation. His extractor must
+explicitly decompress the PC AYA resources.
+
+This is a valuable format-oracle lead, not a corpus-wide quality result. A
+read-only same-level check already corroborates the packaging distinction:
+installed `612_res_PC.aya` is a 1,688,123-byte chunked-zlib envelope (SHA-256
+`1d0e0da61d240ff8102494ea5d7528a54069e2ee82a1ad621f23ab11813dcf1f`)
+that inflates to 4,094,457 bytes and 374 top-level chunks; the USA Xbox
+`612_res_XBOX.aya` member is a 23,311,449-byte raw tagged stream (SHA-256
+`61adffeac37c9f17548f6bfe980a7ef4236ef0565fd68db796878d1925cd73ec`)
+with the same 374-tag sequence. Only 8 declared chunk sizes and 3 payload hashes
+match. Most byte growth is in `TEXT`, `MESH`, and `IMPS`; this proves a
+materially different representation for this pair, not that every archive
+follows it or that one platform renders better.
+
+The next useful instrument compares logical assets after each platform's
+envelope is decoded: tag order, texture dimensions/format/mips, normalized pixel
+content, mesh geometry, and precomputed shadows. Container hashes and filenames
+remain separate from semantic asset identity.
+
+---
+
 ## Dev-Build Precompute Pipeline Notes (Glenn, February 23, 2026)
 
 From Glenn (Discord, February 23, 2026, paraphrased recollection):

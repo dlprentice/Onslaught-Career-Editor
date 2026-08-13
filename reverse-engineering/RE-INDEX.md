@@ -62,11 +62,12 @@ Further down this page, past the authority block: the patch recipes, the
 per-subsystem static contracts, the 2026-05-26 review cohort, the lane
 reference and runbooks, and the retail → Core translation policies.
 
-## Current complete-RE replay authority — machine-local evidence (2026-08-12)
+## Current complete-RE replay authority — machine-local campaign evidence
 
-The tracked Ghidra snapshot was refreshed from the verified collision-component
-live POST on 2026-08-12; the dated 2026-07 name ledgers still lag current work.
-Select campaign authority from
+This block selects the immutable semantic campaign parent; it does not describe
+the rolling Ghidra database. Read the
+[`canonical Ghidra owner`](ghidra/README.md) for the current structural snapshot
+and latest backed-up live promotion. Select campaign authority from
 `developer_state.json` → `current_re_authority`: canonical Generation 23 at
 `local-lab/re-campaign-incident-recovery-20260808-v1/generation-23-cround-handle-event-arm-effects-v1/`,
 READY `4471fdfe105340ad06c2ad28d945eb05e9bc94f002110888b164581ccf1a93fc`,

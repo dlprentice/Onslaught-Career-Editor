@@ -113,6 +113,19 @@ class AyaArchiveInventoryObservationTests(unittest.TestCase):
             },
             categories,
         )
+        self.assertEqual(
+            categories | {"raw_tag_stream"}, self._api("ARCHIVE_ERROR_CATEGORIES")
+        )
+
+    def test_observation_v1_rejects_raw_stream_only_rejection_category(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary) / "empty.aya"
+            source.write_bytes(b"")
+            report = self._observe([source])
+        report["archiveRecords"][0]["rejectionCategory"] = "raw_tag_stream"
+        report["sourceUniverseId"] = inventory._source_universe_id(report["archiveRecords"])
+        with self.assertRaises(ValueError):
+            self._render(report)
         with self.assertRaises(ValueError):
             self._error_type()("not-a-closed-category")
 
@@ -375,6 +388,37 @@ class AyaArchiveInventoryObservationTests(unittest.TestCase):
                 "chunk_count_limit", lambda: self._api("parse_top_level_chunks_bounded")(two)
             )
 
+    def test_raw_console_envelope_is_explicit_bounded_and_auto_detectable(self) -> None:
+        raw = _chunk(b"LVLR", b"\x67\x00\x00\x00") + _chunk(b"TARG", b"target")
+        decoded, chunks, members, envelope = self._api("decode_archive_envelope")(
+            raw, "raw-tag-stream"
+        )
+        self.assertEqual(raw, decoded)
+        self.assertEqual(["LVLR", "TARG"], [chunk.tag for chunk in chunks])
+        self.assertEqual(0, members)
+        self.assertEqual("raw-tag-stream", envelope)
+        self.assertEqual(
+            (raw, chunks, 0, "raw-tag-stream"),
+            self._api("decode_archive_envelope")(raw, "auto"),
+        )
+
+    def test_raw_console_envelope_rejects_shifted_random_and_unknown_tags(self) -> None:
+        valid = _chunk(b"LVLR", b"\x67\x00\x00\x00") + _chunk(b"TARG", b"target")
+        cases = (
+            valid[1:],
+            bytes(range(64)),
+            _chunk(b"NOPE") + _chunk(b"TARG"),
+            _chunk(b"LVLR"),
+        )
+        for fixture in cases:
+            with self.subTest(fixture=fixture[:8].hex()):
+                self._assert_category(
+                    "raw_tag_stream",
+                    lambda fixture=fixture: self._api("decode_archive_envelope")(
+                        fixture, "raw-tag-stream"
+                    ),
+                )
+
     def test_per_chunk_length_cap_and_malformed_chunk_states(self) -> None:
         payload = b"12345"
         raw = _chunk(b"AYAD", payload)
@@ -560,6 +604,7 @@ class AyaArchiveInventoryObservationTests(unittest.TestCase):
         self.assertEqual(2, len(chunks))
         self.assertEqual(str(source), summary.path)
         self.assertEqual(len(fixture), summary.compressed_size)
+        self.assertEqual("pc-chunked-zlib", summary.envelope_kind)
         self.assertEqual(hashlib.sha256(fixture).hexdigest(), summary.compressed_sha256)
         self.assertEqual({"AYAD": 1, "TARG": 1}, summary.tag_counts)
         self.assertIn(str(source), stream.getvalue())
@@ -582,6 +627,22 @@ class AyaArchiveInventoryObservationTests(unittest.TestCase):
         self.assertNotIn("private-source", rendered)
         self.assertNotIn(str(root), rendered)
         self.assertEqual("observed", json.loads(rendered)["archiveRecords"][0]["observationStatus"])
+
+    def test_cli_raw_stream_mode_reports_detected_envelope(self) -> None:
+        raw = _chunk(b"LVLR", b"\x67\x00\x00\x00") + _chunk(b"TARG", b"target")
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source = root / "612_res_XBOX.aya"
+            output = root / "output" / "inventory.json"
+            source.write_bytes(raw)
+            with contextlib.redirect_stdout(io.StringIO()):
+                result = inventory.main(
+                    [str(source), "--envelope", "raw-tag-stream", "--json-out", str(output)]
+                )
+            record = json.loads(output.read_text(encoding="utf-8"))[0]
+        self.assertEqual(0, result)
+        self.assertEqual("raw-tag-stream", record["envelope_kind"])
+        self.assertEqual(hashlib.sha256(raw).hexdigest(), record["raw_sha256"])
 
     def test_legacy_dump_and_json_outputs_remain_available_without_opt_in(self) -> None:
         fixture = _archive(_chunk(b"TEXT", b"legacy-payload"))

@@ -42,10 +42,11 @@ and receipts already dominate the decision; additional models are optional and
 selected only when the problem is broad, ambiguous, or vulnerable to a shared
 blind spot.
 
-The builder does not self-grade. A native adversarial subagent is independent
-review data only when it receives the real artifacts and a fresh brief rather
-than the builder's desired conclusion. External lanes are selected because they
-add perspective, not because a historical scaffold has empty boxes.
+When independent review is selected, the builder's own pass does not count as
+that review. A native adversarial subagent is independent review data only when
+it receives the real artifacts and a fresh brief rather than the builder's
+desired conclusion. External lanes are selected because they add perspective,
+not because a historical scaffold has empty boxes.
 
 ## Reviewer toolbox
 

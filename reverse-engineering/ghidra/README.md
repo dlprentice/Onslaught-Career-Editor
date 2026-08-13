@@ -107,10 +107,14 @@ integrity mismatch. Do not repair that by mechanically replacing hashes: their
 receipts describe the old dependency graph and the live project is no longer in
 their PRE state.
 
-This does not block a new promotion. A current mutation needs a new bounded
-target-specific owner with fresh hashes and fresh PRE/scratch/apply/readback/
-POST evidence. The Mission-registry boundary owner named above is the most
-recent boundary-only shape to study; its receipt-pinned files remain immutable.
+This does not block a new promotion. Every current mutation needs a fresh,
+immutable target manifest plus fresh PRE/scratch/apply/readback/POST evidence.
+Reuse a supported versioned promotion runner and authority when they already
+express the mutation shape and all current gates; add target-specific code only
+when the existing runner cannot fail closed on the required metadata or
+collateral. Never repin or reinterpret a completed one-shot owner. The Mission-
+registry boundary owner named above is a boundary-only reference shape; its
+receipt-pinned files remain immutable.
 
 The dated `ghidra-function-name-table-2026-07-27.tsv` also is not a current
 name oracle. Nine later historical edits changed 54 rows after its original

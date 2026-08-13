@@ -1,7 +1,7 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-07-29
+Last updated: 2026-08-13
 Summary: what each tool in `tools/` is for, and which of them are gates.
 
 `tools/` contains the small reusable support surface for the WinUI product,
@@ -118,6 +118,45 @@ PowerShell CDB/input/profile helpers are for controlled copied targets. They
 must preserve their explicit-arm, process-identity, and installed-game safety
 checks. Full Ghidra stores, backups, raw CDB transcripts, frames, copied
 executables, and bulk retail exports never belong in Git.
+
+### External-tool pilots
+
+Third-party catalogs and model recommendations are discovery indexes, not
+evidence or installation checklists. Prefer extending an existing owner. Adopt
+a dependency only against one named bottleneck and measured baseline, using
+disposable inputs and a local output root. Record exact answers, elapsed and
+operator effort, reproducibility, and database/output drift; stop when the
+candidate provides no material advantage or cannot stay inside project safety
+and evidence boundaries.
+
+For agentic Ghidra interfaces, the live and tracked projects are forbidden
+pilot targets. Use an exact disposable copy, expose the smallest read-only
+surface, compare consequential answers with existing headless exports, and
+require project-tree equality afterward. Broad rename/comment/save/delete
+surfaces are a rejection condition. For format tools, first reproduce the same
+offsets and values as the existing parser on a known fixture; add an interactive
+schema or generated parser only when it reduces repeated work across real
+consumers. Consequential results need two reproducible runs, but no tool or
+pilot is mandatory.
+
+Current candidate pilots (unmeasured until run):
+
+1. Extend this repository's bounded AYA observer for already-proved raw console
+   tag streams and compare decoded logical assets. It must retain complete byte
+   accounting and reject shifted, random, unknown-tag, and partial framing.
+2. Test
+   [EmotionEngine Reloaded](https://github.com/chaoticgd/ghidra-emotionengine-reloaded)
+   on disposable PS2 ELF projects for R5900/MMI/VU0 decode and constant-reference
+   gains. Its symbol path cannot recover BEA's zero-byte `.mdebug.eabi64`.
+3. Test the
+   [sce-symbol-scanner CLI](https://github.com/LostTemplarRH/sce-symbol-scanner)
+   against the same copies to partition Sony SDK/library code, independently
+   reviewing every short-function hit and a stratified sample of the rest.
+
+Do not treat broad Ghidra MCP access as an acceleration on the live project.
+Current candidates expose writable rename/comment/function/assembly/byte-patch
+surfaces; a future evaluation belongs only on a cloud-disabled, localhost-only
+replica with mutations disabled and exact before/after tree equality.
 
 ### The two wholesale instruments
 

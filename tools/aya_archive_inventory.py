@@ -5,13 +5,17 @@ Inventory Battle Engine Aquila packed resource archives (*.aya).
 This tool targets the higher-level chunker archives in `data/resources`,
 not the lower-level raw mesh payloads under `data/resources/meshes`.
 
-AYA resource archives are chunked-zlib files:
+PC AYA resource archives are chunked-zlib files:
 
     [u32 compressed_part_size][zlib blob][u32 size][zlib blob]...
 
 After inflation, the payload is a tagged chunk stream:
 
     [4-byte ASCII tag][u32 chunk_size][chunk_data]...
+
+Console resource files may already be the raw tagged stream. Select that
+explicitly with ``--envelope raw-tag-stream`` or use the fail-closed ``auto``
+mode for a mixed local shelf.
 
 Examples:
     python tools/aya_archive_inventory.py game/data/resources/852_res_PC.aya
@@ -81,13 +85,14 @@ REJECTION_CATEGORIES = frozenset(
         "zlib_member",
     }
 )
+ARCHIVE_ERROR_CATEGORIES = REJECTION_CATEGORIES | frozenset({"raw_tag_stream"})
 
 
 class ArchiveObservationError(ValueError):
     """Path-free terminal rejection from the bounded observation profile."""
 
     def __init__(self, category: str) -> None:
-        if category not in REJECTION_CATEGORIES:
+        if category not in ARCHIVE_ERROR_CATEGORIES:
             raise ValueError("unknown archive observation rejection category")
         self.category = category
         super().__init__(category)
@@ -114,6 +119,30 @@ COMMON_TAG_SCAN = (
     "VBUF",
 )
 
+# Exact top-level tags observed across the complete installed 301-file PC
+# resource-archive shelf. Raw-stream admission is deliberately limited to this
+# vocabulary until a reviewed console specimen proves an addition.
+TOP_LEVEL_ARCHIVE_TAGS = frozenset(
+    {
+        "AYAD",
+        "DMKR",
+        "ERES",
+        "GDIE",
+        "IMPS",
+        "LNDS",
+        "LVLR",
+        "MESH",
+        "PLAT",
+        "PMIB",
+        "SSHD",
+        "SURF",
+        "TARG",
+        "TEXT",
+        "VSDS",
+        "WRES",
+    }
+)
+
 EMBEDDED_TAG_PRIORITY = (
     "CMSH",
     "DXTX",
@@ -132,6 +161,7 @@ class ChunkEntry:
 @dataclass(frozen=True)
 class ArchiveSummary:
     path: str
+    envelope_kind: str
     compressed_size: int
     compressed_sha256: str
     raw_size: int
@@ -569,6 +599,40 @@ def inflate_aya(path: Path) -> bytes:
         raise ValueError(f"{path}: {error.category}") from error
 
 
+def _decode_raw_tag_stream(source: bytes) -> tuple[bytes, list[ChunkEntry]]:
+    if not source:
+        raise ArchiveObservationError("empty_archive")
+    if len(source) > MAX_INFLATED_BYTES:
+        raise ArchiveObservationError("inflate_limit")
+    try:
+        chunks = parse_top_level_chunks_bounded(source)
+    except ArchiveObservationError as error:
+        raise ArchiveObservationError("raw_tag_stream") from error
+    if len(chunks) < 2 or any(chunk.tag not in TOP_LEVEL_ARCHIVE_TAGS for chunk in chunks):
+        raise ArchiveObservationError("raw_tag_stream")
+    return source, chunks
+
+
+def decode_archive_envelope(
+    source: bytes,
+    envelope_kind: str,
+) -> tuple[bytes, list[ChunkEntry], int, str]:
+    if envelope_kind == "pc-chunked-zlib":
+        raw, member_count = _inflate_aya_bytes_with_count(source)
+        return raw, parse_top_level_chunks_bounded(raw), member_count, envelope_kind
+    if envelope_kind == "raw-tag-stream":
+        raw, chunks = _decode_raw_tag_stream(source)
+        return raw, chunks, 0, envelope_kind
+    if envelope_kind == "auto":
+        try:
+            raw, member_count = _inflate_aya_bytes_with_count(source)
+            return raw, parse_top_level_chunks_bounded(raw), member_count, "pc-chunked-zlib"
+        except ArchiveObservationError:
+            raw, chunks = _decode_raw_tag_stream(source)
+            return raw, chunks, 0, "raw-tag-stream"
+    raise ValueError("unsupported AYA envelope kind")
+
+
 def parse_top_level_chunks_bounded(raw: bytes) -> list[ChunkEntry]:
     chunks: list[ChunkEntry] = []
     index = 0
@@ -797,13 +861,17 @@ def _chunk_record(
 def _summarize_archive_bytes(
     path: Path,
     compressed: bytes,
+    *,
+    envelope_kind: str = "pc-chunked-zlib",
 ) -> tuple[ArchiveSummary, bytes, list[ChunkEntry], int]:
-    raw, member_count = _inflate_aya_bytes_with_count(compressed)
-    chunks = parse_top_level_chunks_bounded(raw)
+    raw, chunks, member_count, detected_envelope = decode_archive_envelope(
+        compressed, envelope_kind
+    )
     counts = Counter(chunk.tag for chunk in chunks)
 
     summary = ArchiveSummary(
         path=str(path),
+        envelope_kind=detected_envelope,
         compressed_size=len(compressed),
         compressed_sha256=_sha256_hex(compressed),
         raw_size=len(raw),
@@ -816,9 +884,14 @@ def _summarize_archive_bytes(
     return summary, raw, chunks, member_count
 
 
-def summarize_archive(path: Path) -> tuple[ArchiveSummary, bytes, list[ChunkEntry]]:
+def summarize_archive(
+    path: Path,
+    envelope_kind: str = "pc-chunked-zlib",
+) -> tuple[ArchiveSummary, bytes, list[ChunkEntry]]:
     compressed = read_held_archive(path)
-    summary, raw, chunks, _ = _summarize_archive_bytes(path, compressed)
+    summary, raw, chunks, _ = _summarize_archive_bytes(
+        path, compressed, envelope_kind=envelope_kind
+    )
     return summary, raw, chunks
 
 
@@ -1148,6 +1221,7 @@ def print_summary(summary: ArchiveSummary) -> None:
     counts = ", ".join(f"{tag}:{count}" for tag, count in sorted(summary.tag_counts.items()))
     first_tags = ", ".join(summary.first_tags)
     print(f"{summary.path}")
+    print(f"  envelope_kind : {summary.envelope_kind}")
     print(f"  compressed_size: {summary.compressed_size}")
     print(f"  raw_size       : {summary.raw_size}")
     print(f"  chunk_count    : {summary.chunk_count}")
@@ -1309,6 +1383,12 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         "--glob",
         default="*_res_PC.aya",
         help="Glob when an input is a directory (default: *_res_PC.aya)",
+    )
+    ap.add_argument(
+        "--envelope",
+        choices=("pc-chunked-zlib", "raw-tag-stream", "auto"),
+        default="pc-chunked-zlib",
+        help="Input envelope (default: pc-chunked-zlib; auto admits only a strict known raw tag stream fallback)",
     )
     ap.add_argument(
         "--limit",
@@ -1501,6 +1581,13 @@ def main(argv: list[str]) -> int:
         print("[ERR] --dump-dir requires at least one --dump-tag or --dump-index selector", file=sys.stderr)
         return 1
 
+    if args.observation_records_out is not None and args.envelope != "pc-chunked-zlib":
+        print(
+            "[ERR] path-free observation schema v1 is limited to pc-chunked-zlib inputs",
+            file=sys.stderr,
+        )
+        return 1
+
     if not paths:
         print("[ERR] no .aya archives matched the requested inputs", file=sys.stderr)
         return 1
@@ -1545,7 +1632,9 @@ def main(argv: list[str]) -> int:
         compressed: bytes | None = None
         try:
             compressed = read_held_archive(path)
-            summary, raw, chunks, member_count = _summarize_archive_bytes(path, compressed)
+            summary, raw, chunks, member_count = _summarize_archive_bytes(
+                path, compressed, envelope_kind=args.envelope
+            )
             print_summary(summary)
             if args.show_chunks > 0:
                 print_chunk_table(raw, chunks, args.show_chunks, preview_bytes=args.preview_bytes)
