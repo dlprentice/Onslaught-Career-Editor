@@ -153,6 +153,26 @@ script-facing command name rather than a C++ symbol.
 > Read the paragraph below as evidence about the immediate call layer only.
 > `CUnit__ApplyDamage` and `CUnit__TriggerEffect` also insert queued messages, so
 > the queue is not script-only.
+>
+> **Refined further, same day — and one suffix is partly rehabilitated.**
+> Comparing the argument setup at each `CMessage__ctor_base` call site:
+> `AddMessage` passes a fixed global `0x0089C328` where the two `…CharMessage`
+> forms pass a script-supplied value, so `AddMessage` is the fixed-source form.
+> More usefully, the virtual at `[vtable+0x30]` that builds the message text takes
+> a parameter which `AddMessage` and `PlayCharMessage` **hardcode to `0xA`** and
+> which `PlayPCharMessage` takes **from the script**. So the `P` prefix marks a
+> script-supplied value for something the others fix at ten — and *priority* is a
+> natural reading of that, which means `IScript__PlaySoundWithPriority` may be
+> **accurate about the mechanism** even though the registry calls the command
+> `PlayPCharMessage`.
+>
+> Status of the five suffixes on current evidence: `WithFade` is **wrong** — the
+> two variants it names are the `Wait` forms that schedule through
+> `CEventManager__GetNextFreeEvent`. `WithCallback` remains **unsupported** —
+> nothing in `PlayCharMessage` registers a callback. `WithPriority` is
+> **plausibly right**. That is a smaller correction than the one this section
+> originally claimed, and the parameter at `[vtable+0x30]` should be identified
+> before any of the five is renamed.
 
 **Class 2 — the existing name's suffix is wrong about mechanism (5).** Five
 handlers named `IScript__PlaySound*` call no sound routine directly. Their
