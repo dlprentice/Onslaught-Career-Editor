@@ -207,6 +207,15 @@ all 8,201 PRE rows exactly, and adds only the 79 reviewed default-metadata
 bodies. It changes no Generation-23 row, semantic grade, original linker name,
 runtime contract, or rebuild mapping.
 
+The separate sealed
+[24-row JPEG/IJG callback scratch admission](binary-analysis/jpeg-ijg-callback-ghidra-scratch-admission-2026-08-14.md)
+reproduces 24 exact IJG v6b algorithm bodies on two isolated copies of that
+current 8,280-function state. It corrects the false `0x005B6900` boundary to the
+actual `0x005B6800..0x005B6A86` callback, preserves every PRE function row,
+and proves only a structural 8,304-function scratch result. Its verdict is
+`SCRATCH_READY_LIVE_FORBIDDEN`; the saved census, Generation 23, semantic
+grades, runtime contracts, and rebuild remain unchanged.
+
 **Dated PC demo/retail frontier (2026-08-12, 8,136-function population):** the conservative 8,086-entry
 address map plus exact second-pass reports, caller propagation, equal-delta
 body-union audit, whole-demo fingerprint scan, and terminal structural pass now

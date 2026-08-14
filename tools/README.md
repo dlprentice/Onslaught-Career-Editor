@@ -161,6 +161,32 @@ python -I -B tools\ghidra_external_table_gap_boundary_live_authority_tests.py
 The resulting verdict is `SCRATCH_READY_LIVE_FORBIDDEN`; see the
 [scratch report](../reverse-engineering/binary-analysis/external-table-gap-ghidra-scratch-admission-2026-08-14.md).
 
+`GhidraApplyJpegCallbackBoundaries.java` is the structural-only runner for the
+corrected 24-function IJG callback cohort. It is scoped to and fail-closes on
+the expected 8,280-function PRE counts, all 38 body ranges and hashes, both
+table/padding classifications, and the correction that `0x005B6900` is the
+last byte of the instruction at `0x005B68FE`, not a function or data boundary.
+Its only allowed mutation is creation of default `FUN_` bodies inside those
+ranges. The scratch authority and backup ceremony own the exact 19-file project
+and `db.18613` identity.
+
+`ghidra_jpeg_callback_boundary_scratch_authority.py` reproduces the two saved
+positive replicas, exact preservation of all 8,280 PRE rows, both rollback
+readbacks, both external-path controls, and the read-only backup/restore/open
+proof. Aggregate receipt paths are portable; an explicit verify requires the
+complete ignored lane and authorizes neither live nor tracked mutation.
+
+```powershell
+python -I -B tools\ghidra_jpeg_callback_boundary_mutator_tests.py
+python -I -B tools\ghidra_jpeg_callback_boundary_scratch_authority_tests.py
+python -I -B tools\ghidra_jpeg_callback_boundary_scratch_authority.py verify
+```
+
+See the
+[scratch report](../reverse-engineering/binary-analysis/jpeg-ijg-callback-ghidra-scratch-admission-2026-08-14.md)
+and its
+[24-row evidence manifest](../reverse-engineering/binary-analysis/jpeg-ijg-callback-function-boundaries-2026-08-14.tsv).
+
 `ghidra_external_table_gap_boundary_live_authority.py` is the completed
 read-only promotion authority. Its historical `preflight` mode proved the
 scratch authority and then-current live/tracked PRE before ceremony roots

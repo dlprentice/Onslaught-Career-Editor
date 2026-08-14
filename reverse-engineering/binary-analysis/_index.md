@@ -60,6 +60,10 @@ the document it links.
 - [External-table gap 79-boundary live promotion](external-table-gap-ghidra-live-promotion-2026-08-14.md)
   — records the backed-up one-save promotion from 8,201 to 8,280, separate
   readback, exact preservation of every PRE row, and live/tracked/POST equality
+- [JPEG/IJG callback 24-boundary scratch admission](jpeg-ijg-callback-ghidra-scratch-admission-2026-08-14.md)
+  — reproduces 24 exact IJG v6b algorithm bodies on two isolated current-state
+  replicas, corrects the false `0x005B6900` boundary, preserves all 8,280 PRE
+  rows exactly, and stops before live or tracked Ghidra promotion
 - [PC D3DX four-vector-cross helper boundary](d3dx-vec4cross-crossbuild-boundary-2026-08-13.md)
   — closes `0x005762dd..0x005763cd` as one exact 240-byte / 97-instruction
   function through seven byte-identical PC/Issue-7/Issue-11/US-retail copies;
