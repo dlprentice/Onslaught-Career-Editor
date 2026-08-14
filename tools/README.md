@@ -119,6 +119,27 @@ must preserve their explicit-arm, process-identity, and installed-game safety
 checks. Full Ghidra stores, backups, raw CDB transcripts, frames, copied
 executables, and bulk retail exports never belong in Git.
 
+### PC-native source-coordinate instruments
+
+`re_pc_native_source_coordinates.py` is the receipt-pinned 2026-08-12
+adjacency-only instrument. Its bytes are historical evidence and must not be
+rewritten. `re_pc_native_source_coordinates_v3.py` is the versioned successor:
+it consumes the frozen owner and the reviewed
+[`1,840-row stack-stable intermediate`](../reverse-engineering/binary-analysis/pc-native-source-coordinates-stack-stable-2026-08-13.tsv),
+then proves FILE/line call arguments over bounded concrete predecessor paths
+with exact NUL-terminated path identity. It writes immutable local manifests
+or checks an existing output directory without opening Ghidra or modifying the
+specimen. Both coordinate inputs are exact hash/schema/row/function-count
+pinned; substituted or truncated owners fail before scanning or publication.
+The [merged report](../reverse-engineering/binary-analysis/pc-native-source-coordinates-2026-08-13.md)
+owns the population distinctions, exact hashes, falsifiers, and current
+1,863-coordinate result. Its focused gates are:
+
+```powershell
+py -3 tools\re_pc_native_source_coordinates_v3_tests.py
+py -3 tools\re_pc_native_source_coordinates_v3_tests.py --prove-can-fail
+```
+
 ### External-tool pilots
 
 Third-party catalogs and model recommendations are discovery indexes, not

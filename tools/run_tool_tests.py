@@ -69,6 +69,8 @@ SUITES: tuple[tuple[str, ...], ...] = (
     ("tools/re_crt_function_strata_tests.py",),
     ("tools/re_source_unit_census_tests.py",),
     ("tools/re_source_allocation_census_tests.py",),
+    ("tools/re_pc_native_source_coordinates_v3_tests.py",),
+    ("tools/re_pc_native_source_coordinates_v3_tests.py", "--prove-can-fail"),
     ("tools/re_memory_dump_census_tests.py",),
     ("tools/re_msl_logger_census_tests.py",),
     ("tools/re_console_output_topology_tests.py",),

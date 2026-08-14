@@ -216,19 +216,32 @@ The exact backup/readback/collateral results are recorded in the
 and the separate
 [34-row new-function live-promotion report](binary-analysis/mission-script-registry-new-function-vocabulary-live-promotion-2026-08-13.md).
 
-**PC-native source coordinates (2026-08-12):** the shipped PC executable passes
-`__FILE__` and `__LINE__` to its debug allocator, so the image names its own
-authored source paths. The
-[PC-native source-coordinate instrument](binary-analysis/pc-native-source-coordinates-2026-08-12.md)
-recovers 1,559 coordinates over 149 distinct authored paths, landing in 827 of
-the then-current 8,136 functions, with 14 functions carrying coordinates from more than
-one path where inlining shows. It reconciles 422/422 exactly with the Xbox anchor
-join below, but that is **method validation and not corroboration** — both
-readings come from the same PC instructions, and the prior lane simply retained
-only the Xbox intersection. Its value is coverage of subsystems the pinned GPL
-drop lacks, where the owning source file becomes a fact about the shipped build
-rather than an inference from a chosen name. It establishes no boundary,
-signature, semantics, or parity.
+**PC-native source coordinates (2026-08-12 predecessor; 2026-08-13
+successor):** the shipped PC executable passes `__FILE__` and `__LINE__` to its
+debug allocator, so the image names its own authored source paths. The
+[receipt-pinned predecessor](binary-analysis/pc-native-source-coordinates-2026-08-12.md)
+recovers 1,559 coordinates over 149 used authored paths, landing in 827 of the
+then-current 8,136 functions. Its tool bytes remain historical evidence. The
+[versioned dataflow successor](binary-analysis/pc-native-source-coordinates-2026-08-13.md)
+first preserves the reviewed
+[1,840-row stack-stable intermediate](binary-analysis/pc-native-source-coordinates-stack-stable-2026-08-13.tsv),
+then reaches **1,863 coordinates in 1,002 current functions**. Its 23 genuine
+additions are 22 rows from correcting the source-path index from 164 to 166
+image paths and one CFG-predecessor FILE/line plate; tested register/ESP-relative
+forms contribute zero retail rows. All accepted retail rows still carry their
+arguments as immediate pushes. The current manifest uses 165 of the 166 indexed
+paths. It sees 2,040 direct known-consumer calls over projection hulls but 2,039
+with exact-range-contained consumers; the sole inherited hull-only call is
+reported explicitly and none of the 23 additions depends on it. Both input
+coordinate owners are exact identity/population pinned, so truncation fails
+before a scan can publish a smaller apparent superset.
+
+The frozen rows reconcile 422/422 exactly with the Xbox anchor join below, but
+that is **method validation and not corroboration** — both readings come from
+the same PC instructions, and the prior lane simply retained only the Xbox
+intersection. Coordinate evidence can establish an emitted path/line call
+plate, not a whole-function boundary, signature, semantics, reachability, or
+parity; inlining remains visible where functions carry more than one path.
 
 **Current Xbox sparse-symbol checkpoint (2026-08-12):** the
 [source-line/Ghidra promotion](binary-analysis/xbox-source-line-anchor-ghidra-2026-08-12.md)
