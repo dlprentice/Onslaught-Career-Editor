@@ -66,6 +66,7 @@ SUITES: tuple[tuple[str, ...], ...] = (
     ("tools/re_tokenarchive_dispatch_reproof_tests.py",),
     ("tools/re_mission_native_setpos_reproof_tests.py",),
     ("tools/re_text_residual_boundary_tests.py",),
+    ("tools/re_text_gap_boundary_prep_tests.py",),
     ("tools/re_crt_function_strata_tests.py",),
     ("tools/re_source_unit_census_tests.py",),
     ("tools/re_source_allocation_census_tests.py",),
