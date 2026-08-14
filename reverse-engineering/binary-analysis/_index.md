@@ -129,6 +129,10 @@ the document it links.
   and its [22-target table](ccomplexthing-vtable-semantics-2026-08-11.tsv) —
   adds the source-backed orientation, animation, name, motion-controller, and
   mission-script layer used by higher gameplay classes
+- [`CThing` / `CComplexThing` retail object layout](cthing-ccomplexthing-layout-2026-08-13.md)
+  — closes the exact `0x3c` / `0x7c` 32-bit object envelopes, member intervals,
+  RTTI offsets, and constructor/destructor anchors while keeping the
+  mixed-tier access census local pending tier-separated regeneration
 - [`CActor` virtual-interface semantic crosswalk](cactor-vtable-semantics-2026-08-11.md)
   and its [18-target table](cactor-vtable-semantics-2026-08-11.tsv) — recovers
   the movement scheduler, pose integration/interpolation, contact timestamps,

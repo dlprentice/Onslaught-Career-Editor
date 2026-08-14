@@ -33,25 +33,34 @@ Each level adds capabilities:
 
 ## CThing Core Members
 
-| Member | Type | Purpose |
-|--------|------|---------|
-| `mPos` | FVector | World position (x, y, z) |
-| `mFlags` | short | THING_FLAGS bitmask |
-| `mThingType` | ULONG | Type bitmask (ORed up hierarchy) |
-| `mMapWhoEntry` | - | Spatial partitioning registration |
-| `mRenderThing` | - | Visual mesh reference |
-| `mCollisionSeekingThing` | - | Collision detection component |
+The pristine PC retail layout is exactly `0x3c` bytes with ABI alignment 4.
+Offsets include both vfptrs and the offset-zero base-chain word; the complete
+proof is in the [retail layout recovery](../../binary-analysis/cthing-ccomplexthing-layout-2026-08-13.md).
+
+| Offset | Member | Type | Purpose |
+|-------:|--------|------|---------|
+| `0x0c` | `mMapWhoEntry` | - | Spatial partitioning registration |
+| `0x1c` | `mPos` | `FVector` | World position (x, y, z) |
+| `0x2c` | `mFlags` | `short` | `THING_FLAGS` bitmask |
+| `0x2e` | `mThingNumber` | `short` | Counter-derived runtime thing number |
+| `0x30` | `mRenderThing` | pointer | Visual mesh reference |
+| `0x34` | `mThingType` | `ULONG` | Type bitmask (ORed up hierarchy) |
+| `0x38` | `mCollisionSeekingThing` | pointer | Collision detection component |
 
 ---
 
 ## CComplexThing Additional Members
 
-| Member | Type | Purpose |
-|--------|------|---------|
-| `mOrientation` | FMatrix | 4x4 rotation/transform matrix |
-| `mAnimation` | - | Animation controller |
-| `mMissionScript` | - | Level scripting interface |
-| `mName` | - | Named object registry entry |
+The pristine PC retail layout is exactly `0x7c` bytes including the `CThing`
+base, with ABI alignment 4.
+
+| Offset | Member | Type | Purpose |
+|-------:|--------|------|---------|
+| `0x3c` | `mOrientation` | `FMatrix` | 48-byte orientation/transform matrix |
+| `0x6c` | `mAnimation` | pointer | Animation controller |
+| `0x70` | `mMotionController` | pointer | Motion controller |
+| `0x74` | `mMissionScript` | pointer | Level scripting interface |
+| `0x78` | `mName` | pointer | Named object registry entry |
 
 ---
 
@@ -147,14 +156,18 @@ Retail encoding (true view): `stored = (meta << 24) | (kills & 0x00FFFFFF)` (pre
 
 ---
 
-## Memory Alignment: 16 Bytes
+## Object alignment versus allocator block alignment
 
-From `MemoryManager.cpp` - all game structures use 16-byte alignment:
+`MemoryManager.cpp` contains 16-byte heap-block assertions and rounds requested
+allocation sizes to 16-byte boundaries:
 ```cpp
-ASSERT((aSize & 0xf) == 0);  // Must be 16-byte aligned
+ASSERT((aSize & 0xf) == 0);
 ```
 
-This confirms `CCareerNode` (64 bytes) and other structs are properly aligned for cache efficiency and SIMD operations.
+That is an allocator contract, not proof that every C++ object has 16-byte ABI
+alignment or a size divisible by 16. The released 32-bit layouts above are
+aligned to 4 bytes; `CThing` ends at `0x3c`, directly falsifying the prior broad
+claim. Individual allocation blocks may still be rounded or aligned to 16.
 
 ---
 
