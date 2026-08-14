@@ -4,26 +4,28 @@
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; local working copies and historical backups remain untracked.
 
-- Snapshot date: 2026-08-13
+- Snapshot date: 2026-08-14
 - Ghidra lineage used for the latest review: 12.1.2
 - Imported Steam specimen SHA-256:
   `74154BFAE14DDC8ECB87A0766F5BC381C7B7F1AB334ED7A753040EDA1E1E7750`
 - Imported specimen MD5: `3b456964020070efe696d2cc09464a55`
-- Project payload: 19 files, 186,813,317 bytes
+- Project payload: 19 files, 186,911,621 bytes
 - Canonical `sha256<TAB>bytes<TAB>path` inventory SHA-256:
-  `cf3b36f5a8d9183bdc0b66041445fb5451160fb21edaed9fb21bed74a9f6ee0d`
-- Current rolling database `db.18611.gbf`: 68,288,512 bytes, SHA-256
-  `6f45cdac7ae1f10987280f0ec247e6b5d6dcf866eae79e5982efa78dd68455ce`
+  `91776fb4a67579950afc4fb3b48ea8a866733628aecfdae7a2cb918c615fe211`
+- Current rolling database `db.18612.gbf`: 68,321,280 bytes, SHA-256
+  `424775377ea0f40d9e429c9219b9310d427760acc40548dbc588ca285f932f7b`
 
 **Promotion note:** this snapshot was refreshed from the source-stable live
-maintainer project after the separate 34-row new-function MissionScript
-vocabulary cohort passed exact PRE validation, two independent persistent
-scratch replicas, rollback/compensation and external-path controls, one live
-apply, separate-process full-inventory readback, and POST restore. Internal
-functions remain 8,170; exactly 34 default names became bounded Tier-2 registry
-names/comments/tags while all bodies, instructions, ABI/storage fields,
-program bytes, data units, references, and 8,136 non-target rows remained
-unchanged. See the
+maintainer project after the 31-row text-gap boundary cohort passed exact PRE
+validation, two independent persistent scratch replicas, rollback and
+external-path controls, two fresh current-state replicas, one live apply,
+separate-process full-inventory readback, and PRE/POST/tracked restore probes.
+Internal functions advanced from 8,170 to 8,201. Every PRE function row remained
+byte-identical and the only POST additions are the 31 exact reviewed default-
+metadata boundaries; no existing body, name, signature, parameter, ABI/storage
+field, comment, or tag changed. See the
+[`text-gap boundary live-promotion report`](../binary-analysis/text-gap-missing-function-ghidra-live-promotion-2026-08-14.md),
+the preceding
 [`new-function vocabulary live-promotion report`](../binary-analysis/mission-script-registry-new-function-vocabulary-live-promotion-2026-08-13.md),
 the preceding
 [`explosion-factory live-promotion report`](../binary-analysis/cexplosion-factory-identity-live-promotion-2026-08-13.md),
@@ -34,21 +36,22 @@ and the structural
 [`boundary live-promotion report`](../binary-analysis/mission-script-registry-boundary-live-promotion-2026-08-13.md).
 
 The 19-file tree is byte-identical to the independently restored/read-only-
-opened D: POST recovery made on 2026-08-13. Future live work can make
+opened D: POST recovery made on 2026-08-14. Future live work can make
 the snapshot lag again; each refresh remains a separately authorized promotion.
 The current ignored live readback and tracked-restore receipts are respectively
-`local-lab/ghidra-mission-registry-new34-live-promotion-20260813-v1/runs/live-readback/vocabulary.ready.json`
-(2,502 bytes, SHA-256 `d08990d8016b9f781f1a8e7ca4ac7886ccffb00cc82d4f41dea7e484921e9680`)
+`local-lab/ghidra-text-gap-boundary-live-promotion-20260814-v1/runs/live-readback/boundaries.ready.json`
+(1,142 bytes, SHA-256 `ad51a411e782e0facc9b1027d158e9d6da77a91c08bb30d34dee35d4694a47a1`)
 and
-`local-lab/ghidra-mission-registry-new34-live-promotion-20260813-v1/tracked-snapshot-restore.ready.json`
-(5,935 bytes, SHA-256 `daa5458c5853239828a54ba3f9f8b744d48f1b5102a2b9105e0c4552ef362582`).
-The reusable read-only aggregate authority is
-`local-lab/ghidra-mission-registry-new34-live-authority-20260813-v1/authority.ready.json`
-(18,373 bytes, SHA-256
-`db946cefffbda039a9e368ad6dfec6ec90b69aa4d5222fdf6ec3ab1017be951a`).
-It is reproduced by `tools/ghidra_live_promotion_authority.py` from the tracked
-cohort manifest and the preserved scratch/live/recovery evidence; it does not
-open Ghidra.
+`local-lab/ghidra-text-gap-boundary-live-promotion-20260814-v1/tracked-post-restore.ready.json`
+(5,931 bytes, SHA-256 `145ad8bc7cc779d7416cc27a8ff7b33f5262dfd3caf809fe5c581212200774ef`).
+The read-only aggregate authority is
+`local-lab/ghidra-text-gap-boundary-live-authority-20260814-v2/live-promotion.ready.json`
+(36,864 bytes, SHA-256
+`0ec30cf8c8b3cd2d3faf1f9dfc37a6f05e5b33bfb5c82fd70bbc359ce4886256`).
+Its portable verifier is
+[`tools/ghidra_text_gap_boundary_live_authority.py`](../../tools/ghidra_text_gap_boundary_live_authority.py)
+(54,990 bytes, SHA-256
+`40e3bfbfe4c9104510cecbebd459f2e5e15867697b53fbca916b0c3f5f75571d`).
 
 Related (not this folder):
 
@@ -85,7 +88,7 @@ the user overrides them:
 | Headless entry | `...\support\analyzeHeadless.bat` |
 | Prior install archive | `D:\GhidraArchives\` (12.0.3 retained there; do not delete) |
 | Working/maintainer project | `C:\Users\david\Ghidra\Projects` (`BEA.gpr` / `BEA.rep`) |
-| Verified off-volume recovery | `D:\BEA-Ghidra-Backups\2026-08-13-mission-registry-new34-post-live\` (exact current POST snapshot; independently copied and read-only reopened) |
+| Verified off-volume recovery | `D:\BEA-Ghidra-Backups\2026-08-14-text-gap-boundaries-post-live\` (exact current POST snapshot; independently copied and read-only reopened) |
 | Xbox Issue-11 POST recovery | `D:\BEA-Ghidra-Backups\2026-08-12-xbox-sparse-symbol-post-anchors-issue11\` (exact isolated project; restored semantic readback passed) |
 | Xbox US-retail POST recovery | `D:\BEA-Ghidra-Backups\2026-08-12-xbox-sparse-symbol-post-anchors-us-retail\` (exact isolated project; restored semantic readback passed) |
 | User settings | `%APPDATA%\ghidra\ghidra_12.1.2_PUBLIC` |

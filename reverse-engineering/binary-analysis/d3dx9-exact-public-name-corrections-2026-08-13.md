@@ -31,7 +31,7 @@ addresses, and two already-correct names.
 
 ## Inputs
 
-The current 8,170-row name projection is 503,177 bytes, SHA-256
+The review-time 8,170-row name projection was 503,177 bytes, SHA-256
 `d61f9866d9dbf67bae817a710d50a1a136b7c2156ec6eb7f862d82dea70f26fd`.
 The exact-body export is 1,183,469 bytes, SHA-256
 `6703b759ac18528d61c4ad6f646f0fd6933eaf2a8892617f3ecc24b0ef8e0aae`;
@@ -100,12 +100,14 @@ remain visible rather than being collapsed.
   not prove runtime reachability, caller intent, exact BEA source spelling, or
   Godot parity.
 - It does not grade or rename the three alias-ambiguous addresses.
-- It does not change the 8,170-function structural census, current Ghidra
-  project, tracked projection, Generation 23, or the pending Generation 24.
+- It changed neither the then-current 8,170-function structural census nor
+  Ghidra, the tracked projection, Generation 23, or Generation 24. The later
+  31-boundary promotion advanced the independent structural census to 8,201.
 - Any Ghidra promotion remains a separate backed-up scratch/apply/readback
   ceremony with exact non-target collateral checks.
 
 The cheapest falsifier is one byte mismatch in any full body, a DLL/PDB
 GUID-age mismatch, failure to reproduce one joined public spelling in all eight
 versions, or a collision between a proposed provider-qualified label and the
-current 8,170-name projection.
+review-time 8,170-name projection; current-state consumers use the later
+8,201-row projection.

@@ -35,10 +35,12 @@ layouts, or behaviors are proven.
 > separate ceremony normalized 75 reviewed existing-entry names/comments/tags.
 > A still-later separate ceremony gave the 34 new entries bounded Tier-2
 > registry names/comments/tags while preserving every body and ABI/storage
-> field. The latest project state is owned by
+> field. The 2026-08-14 text-gap ceremony then added 31 reviewed default-
+> metadata boundaries while preserving all 8,170 PRE rows exactly. The latest
+> project state is owned by
 > [`../ghidra/README.md`](../ghidra/README.md).
-> The current saved census and lower bound are 8,170, not a ceiling. The current
-> 8,170-row projection and live-state
+> The current saved census and lower bound are 8,201, not a ceiling. The current
+> 8,201-row projection and live-state
 > receipts are reconciled in
 > [`../../../ghidra-functions.md`](../ghidra-functions.md); the 6,411- and
 > 7,555-row states remain dated history only.

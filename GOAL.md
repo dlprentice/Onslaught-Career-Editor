@@ -172,12 +172,13 @@ Generation 73 is a projection oracle that is never a parent or authority.
 ### Never collapse the evidence layers
 
 Static-envelope closure covers the dated 8,136-function census against which it
-was sealed. The current saved structural census is 8,170 after 34 additional
-Mission-registry boundaries were independently proved and promoted; those 34
-are not in the sealed closure table, but a separate reviewed addendum bounds
-them at C1 static and a later metadata ceremony records only their Tier-2
-registry vocabulary. Neither count is a final ceiling, semantic recovery, or
-reversal. The PC demo
+was sealed. A later 34-row Mission-registry addendum bounds the resulting
+8,170-row state at C1 static and a separate metadata ceremony records only its
+Tier-2 registry vocabulary. The current saved structural census is 8,201 after
+31 additional text-gap boundaries were independently proved and promoted;
+those 31 have bounded provider-compatible classifications but are outside the
+frozen grade projection and campaign. None of these counts is a final ceiling,
+semantic recovery, or reversal. The PC demo
 partition and the instruction-local Xbox source-line anchors are oracles, never
 denominators for retail completion. Generation 23 owns admitted runtime
 semantics and remains sparse. Live Ghidra structural navigation may lead the
@@ -283,16 +284,21 @@ the mandate; the completion test and every clause above are unchanged.
 - The 34 MissionScript registry pointers missing from the saved 8,136-function
   project were proved as callable boundaries, admitted by one backed-up live
   Ghidra ceremony, separately read back, and synchronized to the tracked
-  snapshot. The current structural census is 8,170; the new functions remain
-  outside the dated static-closure and demo-map tables. A
+  snapshot. That structural census was 8,170; the new functions remain outside
+  the dated static-closure and demo-map tables. A
   separate reviewed addendum now gives all 34 bounded static C1 contracts and
   falsifiers, extending static-envelope coverage to every saved row without
   changing Generation 23. A later separate backed-up metadata ceremony gave
   those 34 functions bounded Tier-2 registry names/comments/tags without
   changing bodies, ABI/storage, parameters, or campaign grades.
-- Current saved-body `.text` ownership is independently closed at 1,770,929 /
-  1,929,117 bytes = 91.799978954% across 8,170 functions / 8,287 exact ranges,
-  with zero overlap. The remaining 158,188 bytes are listing-partitioned and
+- Thirty-one exact text-gap bodies were later promoted through the same backed-
+  up structural gate, advancing the current census to 8,201 while preserving
+  every 8,170-row PRE record exactly. They remain default-named structural rows
+  with separate CRT/AMD/IJG-compatible static classifications, not campaign or
+  runtime grades.
+- Current saved-body `.text` ownership is independently closed at 1,784,978 /
+  1,929,117 bytes = 92.528239604% across 8,201 functions / 8,321 exact ranges,
+  with zero overlap. The remaining 144,139 bytes are listing-partitioned and
   expose five current-function jump fragments plus high-yield code-shaped gaps;
   this is structural accounting, not a final function census or semantic score.
 - The 75-row existing-entry MissionScript normalization passed its complete
@@ -328,7 +334,7 @@ the mandate; the completion test and every clause above are unchanged.
 **Active frontier, in priority order:**
 
 1. **Recover the highest-confidence callable units and truncated body fragments
-   in the current 158,188-byte `.text` gap.** Use cross-build shape, current
+   in the current 144,139-byte `.text` gap.** Use cross-build shape, current
    listing state, incoming control flow, alignment, and library classification
    to prove exact boundaries; do not infer entries from linear decode alone.
 2. **Resolve the Generation-24 carry-shape refusal without weakening the

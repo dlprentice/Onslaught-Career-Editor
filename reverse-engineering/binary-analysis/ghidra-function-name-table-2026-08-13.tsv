@@ -1,12 +1,12 @@
 # Ghidra function-name table -- address -> current saved symbol
 # Purpose : tracked resolution authority for address/name documentation checks.
 #           It is a name index, not a database, disassembly, or semantic proof.
-# Projection date: 2026-08-13
+# Projection date: 2026-08-14
 # Specimen SHA-256: 74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750
-# Source  : local-lab/ghidra-mission-registry-new34-live-promotion-20260813-v1/runs/live-readback/functions.tsv
-# Source bytes: 7089535
-# Source SHA-256: ee3090360bd4f4b68d1ac52c59ab397e7ac37d81c76029d492e2a9d046902f1d
-# Rows    : 8170 internal functions; this is a discovered census, not a final ceiling.
+# Source  : local-lab/ghidra-text-gap-boundary-live-promotion-20260814-v1/runs/live-readback/functions.tsv
+# Source bytes: 7109943
+# Source SHA-256: 2cc0b74f9284a3d6d59effa857cb6766bb78b08d50a7896d0dda8631f7c93314
+# Rows    : 8201 internal functions; this is a discovered census, not a final ceiling.
 # Columns : address, name, bodyMin, bodyMax (hex). Non-contiguous bodies are
 #           represented by their bounding range, so bodyMin..bodyMax can over-cover.
 address	name	bodyMin	bodyMax
@@ -5685,6 +5685,20 @@ address	name	bodyMin	bodyMax
 0x00563ada	CRT__FpuIntDispatch2_Handle	0x00563ada	0x00563c0a
 0x00563c0b	__ctrandisp1	0x00563c0b	0x00563c3d
 0x00563c3e	__fload	0x00563c3e	0x00563c79
+0x00563c80	FUN_00563c80	0x00563c80	0x00563d96
+0x00563d97	FUN_00563d97	0x00563d97	0x00564235
+0x00564236	FUN_00564236	0x00564236	0x00564248
+0x00564249	FUN_00564249	0x00564249	0x0056425b
+0x0056425c	FUN_0056425c	0x0056425c	0x005642a7
+0x005642a8	FUN_005642a8	0x005642a8	0x005642f3
+0x005642f4	FUN_005642f4	0x005642f4	0x00564327
+0x00564328	FUN_00564328	0x00564328	0x0056435b
+0x0056435c	FUN_0056435c	0x0056435c	0x005643a7
+0x005643a8	FUN_005643a8	0x005643a8	0x005643f3
+0x005643f4	FUN_005643f4	0x005643f4	0x00564427
+0x00564428	FUN_00564428	0x00564428	0x0056445b
+0x0056445c	FUN_0056445c	0x0056445c	0x00564470
+0x00564471	FUN_00564471	0x00564471	0x00564485
 0x00564486	CRT__FmodReduceCore	0x00564486	0x0056468b
 0x0056468c	CRT__FmodCore	0x0056468c	0x0056473d
 0x0056473e	FUN_0056473e	0x0056473e	0x00564943
@@ -6957,8 +6971,25 @@ address	name	bodyMin	bodyMax
 0x005b83b9	CFastVB__SinCosVec4Approx	0x005b83b9	0x005b84fe
 0x005b85c0	Math__Atan2ApproxPacked	0x005b85c0	0x005b86b4
 0x005b86c0	CFastVB__FastAcosApprox_Scalar	0x005b86c0	0x005b87b6
+0x005b87c0	FUN_005b87c0	0x005b87c0	0x005b88a1
+0x005b88c0	FUN_005b88c0	0x005b88c0	0x005b89a8
+0x005b89c0	FUN_005b89c0	0x005b89c0	0x005b89d0
+0x005b89e0	FUN_005b89e0	0x005b89e0	0x005b8ab4
+0x005b8ac0	FUN_005b8ac0	0x005b8ac0	0x005b8ad7
+0x005b8ae0	FUN_005b8ae0	0x005b8ae0	0x005b8ae7
+0x005b8b00	FUN_005b8b00	0x005b8b00	0x005b8b31
+0x005b8b40	FUN_005b8b40	0x005b8b40	0x005b8b64
+0x005b8b80	FUN_005b8b80	0x005b8b80	0x005b8bbd
+0x005b8bc0	FUN_005b8bc0	0x005b8bc0	0x005b8c1d
+0x005b8c20	FUN_005b8c20	0x005b8c20	0x005b8c2f
+0x005b8c40	FUN_005b8c40	0x005b8c40	0x005b8c87
 0x005b8ca0	CFastVB__FastTrigPairApprox_Scalar	0x005b8ca0	0x005b8d9b
 0x005b8da0	CFastVB__FastSinApprox_Scalar_005b8da0	0x005b8da0	0x005b8e9d
+0x005b8ea0	FUN_005b8ea0	0x005b8ea0	0x005b8fb0
+0x005b8fc0	FUN_005b8fc0	0x005b8fc0	0x005b9157
+0x005b9160	FUN_005b9160	0x005b9160	0x005ba26d
+0x005ba270	FUN_005ba270	0x005ba270	0x005bacbe
+0x005bacc0	FUN_005bacc0	0x005bacc0	0x005bb9a5
 0x005bb9b0	CDXTexture__InverseDct8x8_DequantAndStore_Scalar	0x005bb9b0	0x005bbe15
 0x005bbe20	FUN_005bbe20	0x005bbe20	0x005bbe66
 0x005bbe70	CDXTexture__InverseDct8x8_DequantAndStore_Mmx	0x005bbe70	0x005bc52b

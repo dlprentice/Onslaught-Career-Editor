@@ -2,11 +2,12 @@
 
 Date: 2026-08-13
 
-Status: reviewed semantic classification for structurally prepared candidates;
-no Ghidra or function-census mutation.
+Status: reviewed semantic classification; exact structural admission completed
+separately on 2026-08-14, while provider-qualified Ghidra metadata remains
+unpromoted.
 
 Verdict: **SUPPORTED AS BOUNDED PROVIDER-EQUIVALENT IDENTITIES; STRUCTURAL
-ADMISSION AND GHIDRA METADATA REMAIN SEPARATE.** The 31 exact boundary
+ADMISSION IS COMPLETE AND PROVIDER METADATA REMAINS SEPARATE.** The 31 exact boundary
 candidates prepared in
 [`text-gap-missing-function-boundaries-2026-08-13.tsv`](text-gap-missing-function-boundaries-2026-08-13.tsv)
 classify as 14 Microsoft CRT Pentium-FDIV helpers, 14 AMD 3DNow math
@@ -27,8 +28,15 @@ bytes, SHA-256
 `3266a5d678373bbc90af7af217bff14cdee999f51279ac6c63ee0e44e5a7200f`.
 An independent replay reproduced every retail body hash and instruction count,
 all 31 normalized PC-demo twins, every provider identity below, zero overlap
-with the current 8,170-function inventory, and zero collision with the current
+with the then-current 8,170-function inventory, and zero collision with the
 1,863-row PC source-coordinate corpus.
+
+The later, separately backed-up
+[`live-promotion ceremony`](text-gap-missing-function-ghidra-live-promotion-2026-08-14.md)
+admitted these exact 31 bodies and advanced the saved census to 8,201 while
+preserving every exported field of all 8,170 PRE function rows. The new rows
+still carry default `FUN_*` names. This classification owner did not perform
+that mutation and does not promote its provider-qualified labels into Ghidra.
 
 The corresponding 31-row naming ledger is
 [`text-gap-library-function-classification-2026-08-13.tsv`](text-gap-library-function-classification-2026-08-13.tsv).
@@ -77,9 +85,10 @@ agree with the pinned 6b sources.
 
 ## Claim boundary
 
-The ledger's provider-qualified labels are safe project labels only after the
-separate structural admission gate reproduces exact boundaries, bytes,
-demo-normalized equality, and non-collateral behavior. This report itself:
+The separate structural admission gate has now reproduced exact boundaries,
+bytes, demo-normalized equality, and non-collateral behavior. The ledger's
+provider-qualified labels therefore remain safe metadata candidates, not
+original-symbol claims. This report itself:
 
 - creates no function and changes no Ghidra metadata or current census;
 - does not claim that the proposed labels were original BEA linker symbols;
@@ -88,6 +97,6 @@ demo-normalized equality, and non-collateral behavior. This report itself:
 - does not create a gameplay or Godot reconstruction contract.
 
 Any conflicting provider symbol at an exact aligned entry, body mismatch,
-selector mismatch, or isolated-admission collateral falsifies the affected
-row. Until admission, every ledger row remains
-`CLASSIFIED_PENDING_STRUCTURAL_ADMISSION`.
+selector mismatch, or later collateral evidence falsifies the affected row.
+After the separate structural admission, every ledger row is
+`STRUCTURALLY_ADMITTED_PROVIDER_CLASSIFIED_METADATA_UNPROMOTED`.

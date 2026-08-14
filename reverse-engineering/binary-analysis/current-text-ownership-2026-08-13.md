@@ -1,27 +1,28 @@
 # Current `.text` body ownership and listing-state accounting
 
 Status: reviewed current structural accounting
-Last updated: 2026-08-13
+Last updated: 2026-08-14
 Evidence: MEASURED — exact pristine bytes, current read-only Ghidra body ranges
 and listing units, independent interval-union replay, and bounded linear-decode
 probes; UNKNOWN — original compiler function denominator, exact missing body
 boundaries, loose-code reachability, semantics, runtime behavior, and rebuild
 parity.
-Verdict: the 8,170 saved Ghidra bodies own exactly 1,770,929 of the pristine
-PE's 1,929,117 virtual `.text` bytes (91.799978954%), with zero overlap. The
-158,188 unowned bytes are structurally partitioned by current listing state and
+Verdict: the 8,201 saved Ghidra bodies own exactly 1,784,978 of the pristine
+PE's 1,929,117 virtual `.text` bytes (92.528239604%), with zero overlap. The
+144,139 unowned bytes are structurally partitioned by current listing state and
 bounded discovery evidence; this is body-range ownership, not percent of game
 semantics reversed.
 Specimen: pristine Steam `BEA.exe`, 2,506,752 bytes, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 Machine-local evidence root:
-`local-lab/current-text-ownership-20260813-v1/`.
+`local-lab/ghidra-text-gap-boundary-live-promotion-20260814-v1/text-ownership-post/`.
 
 ## Exact body-range result
 
-The current 8,170-function Ghidra snapshot was exported read-only from a
+The current 8,201-function Ghidra snapshot was exported read-only after the
+reviewed 31-boundary text-gap promotion, from a
 19-file byte-identical disposable copy using the established
-`ExportParityLabGraph.java` with `-readOnly -noanalysis`. The export has 8,287
+`ExportParityLabGraph.java` with `-readOnly -noanalysis`. The export has 8,321
 exact body ranges. Every exported range was independently remapped to the
 pristine PE and its SHA-256 reproduced.
 
@@ -30,31 +31,33 @@ bytes. The exact current Ghidra body-range union is:
 
 | Measure | Current result |
 | --- | ---: |
-| Functions | 8,170 |
-| Exact body ranges | 8,287 |
-| Multi-range functions | 67 |
-| Sum / union of body bytes | 1,770,929 |
-| `.text` ownership | 91.799978954% |
-| Uncovered bytes | 158,188 (8.200021046%) |
-| Uncovered runs | 5,984 |
+| Functions | 8,201 |
+| Exact body ranges | 8,321 |
+| Multi-range functions | 70 |
+| Sum / union of body bytes | 1,784,978 |
+| `.text` ownership | 92.528239604% |
+| Uncovered bytes | 144,139 (7.471760396%) |
+| Uncovered runs | 6,004 |
 | Overlapping body bytes | 0 |
 | Maximum ownership depth | 1 |
 
-This supersedes the current-use `1,767,100 / 162,017 / 91.6015%` figures. Those
-values belong to an older 8,124-function campaign generation. It also closes
-the present-tense `UNKNOWN` interval-union claim. It does **not** change that
-historical generation or Generation 23.
+This supersedes the prior current-use 8,170-state result of `1,770,929 /
+158,188 / 91.799978954%`; that result remains dated evidence for the state
+before the 31-boundary promotion. It also supersedes the still older
+`1,767,100 / 162,017 / 91.6015%` figures from an 8,124-function campaign
+generation. It does **not** change either historical generation or Generation
+23.
 
 Two offline replays are byte-identical:
 
-- `run-c/result.ready.json`: 14,341 bytes, SHA-256
-  `e6dbd602894e710a306c745b3e1404d13b0dff0e2dfbffef9b599a22f2f7b4df`
-- `run-c/uncovered-runs.tsv`: 617,749 bytes, SHA-256
-  `533ceecbbf6238ffef488dad92e5812e11db953c0a627328cf77d52ef1720adb`
+- `run-a/result.ready.json`: 14,334 bytes, SHA-256
+  `b13b26e547e784c2e4086c10fc7ceac043769166293bcf97d7def83b43598db1`
+- `run-a/uncovered-runs.tsv`: 619,802 bytes, SHA-256
+  `9b96a1a369b6bbd84400c7ac76a1fa0626a6fcd688e0f43683ab9fd94feca705`
 - exact owned range-set SHA-256:
-  `c9b0622c335f6a7c4bd7395ace338ff7ce3e78db7a3db70f09357480ee90fa7f`
+  `79f4d6545e175193129a8d1e797462356aadc518eafe0c8bf5ca6625bac09dce`
 - exact uncovered range-set SHA-256:
-  `f271917a02efcad45f66663411998d7df112ac5eb27fb45c4ebd13b9549cc7a8`
+  `3ab81ca35173c8267ce005801bfd04f91e901b4911baca9c35f32e8f501217af`
 
 The disposable project remained byte-identical to the tracked 19-file snapshot
 after the final read-only open.
@@ -74,7 +77,7 @@ each before publishing anything; and the preserved exporter no-clobber log
 records a forced rerun refusing all four existing outputs with their hashes
 unchanged.
 
-## What the 158,188 bytes contain in current Ghidra listing state
+## What the 144,139 bytes contain in current Ghidra listing state
 
 A second read-only exporter joined the same exact gaps to current listing
 instructions, defined data, and inbound references. Two exports and two offline
@@ -90,31 +93,31 @@ embedded `.text` tables. All earlier `gap-evidence-a/b` and
 
 | Partition | Bytes | Rows |
 | --- | ---: | ---: |
-| Exact function bodies | 1,770,929 | 8,287 ranges |
-| Decoded instructions outside functions | 54,994 | 16,534 instructions |
+| Exact function bodies | 1,784,978 | 8,321 ranges |
+| Decoded instructions outside functions | 44,698 | 13,749 instructions |
 | Defined data outside functions | 46,918 | 17,596 data units |
-| Listing-unclassified gap bytes | 56,276 | — |
+| Listing-unclassified gap bytes | 52,523 | — |
 | **PE `.text`** | **1,929,117** | exact closure |
 
-The full 158,188-byte gap has 65,407 bytes whose value is `00`, `90`, or `CC`
-and 92,781 other byte values. Of those padding-valued bytes, 39,207 form 5,014
-entirely padding-valued runs; mixed runs contain the other 26,200. The
-listing-unclassified 56,276-byte partition contains 49,158 padding-valued and
-only 7,118 non-padding-valued bytes. Across all gap classes, 2,498 Ghidra
-references reach 2,048 distinct unowned targets: 1,373 data, 825 conditional
-jump, 194 unconditional jump, 56 read, and 50 computed-jump references.
+The full 144,139-byte gap has 64,167 bytes whose value is `00`, `90`, or `CC`
+and 79,972 other byte values. Of those padding-valued bytes, 39,234 form 5,019
+entirely padding-valued runs; mixed runs contain the other 24,933. The
+listing-unclassified 52,523-byte partition contains 48,942 padding-valued and
+only 3,581 non-padding-valued bytes. Across all gap classes, 2,428 Ghidra
+references reach 2,018 distinct unowned targets: 1,367 data, 773 conditional
+jump, 182 unconditional jump, 56 read, and 50 computed-jump references.
 
 The bounded candidate projection is:
 
 | Mechanical class | Runs | Bytes | Meaning |
 | --- | ---: | ---: | --- |
-| Padding-only | 5,014 | 39,207 | every byte is `00`/`90`/`CC` |
+| Padding-only | 5,019 | 39,234 | every byte is `00`/`90`/`CC` |
 | Defined-data only/mixed | 199 | 49,803 | current listing contains defined data; classification may still be wrong |
-| Loose-instruction only/mixed | 619 | 51,174 | decoded listing instructions, no entry proof by this fact alone |
+| Loose-instruction only/mixed | 618 | 40,148 | decoded listing instructions, no entry proof by this fact alone |
 | Current-function jump fragment candidates | 5 | 1,270 | a current function jumps into a loose-instruction gap; ownership still needs CFG proof |
 | External-table target candidates | 51 | 9,834 | defined data in `.data`/`.rdata` points to a loose instruction start; callback/vtable/function provenance remains open |
 | Embedded-`.text` table target candidates | 3 | 2,142 | an in-section table points to loose instruction starts; likely switch/body labels until proved otherwise |
-| Unclassified-content runs | 93 | 4,758 | no current instruction/data unit; 3,977 bytes are non-padding-valued |
+| Unclassified-content runs | 109 | 1,708 | no current instruction/data unit; 1,093 bytes are non-padding-valued |
 
 The classes are a priority partition, not independent predicate counts:
 function-fragment evidence wins first. Before that priority rule, 52 gaps have
@@ -138,28 +141,28 @@ evidence already reads these as switch arms associated with the surrounding
 `0x004D9F30` body. This is a body/CFG ownership question, not evidence for three
 new functions.
 
-The largest gaps also separate data from high-yield code-shaped queues. The
+The largest remaining gaps still separate data from high-yield code-shaped
+queues. The
 26,743-byte `[0x005C9C69,0x005D04E0)` gap contains 23,942 bytes of current
 defined data and 133 references from the surrounding `HResultToString` region;
 the 6,008-byte `[0x00526098,0x00527810)` gap contains 5,996 bytes of defined
 localization tables. Neither should be advertised as a missing-function block.
-Conversely, `[0x005B8E9E,0x005BB9B0)` contains 10,296 current loose-instruction
-bytes, while two current unclassified gaps have complete bounded linear-decode
-evidence: after six `CC` bytes, `[0x00563C80,0x00564486)` decodes through all
-2,054 bytes (695 instructions, 78 returns), and `[0x005B87B7,0x005B8CA0)`
-decodes through all 1,257 bytes (290 instructions, 14 returns). These are strong
-code-shaped discovery queues, not established function boundaries. Two
-byte-identical probe receipts are 2,626 bytes each with SHA-256
-`b224f0a5aa4ab70fdd9c2316ff107eb0b722839a0e0f5a0e9494b596d18a58af`.
+Conversely, the remaining 3,280-byte `[0x005B4EB0,0x005B5B80)` and 2,424-byte
+`[0x005AD818,0x005AE190)` gaps contain 3,219 and 2,369 current loose-instruction
+bytes respectively. They are strong discovery queues, not established function
+boundaries. The two prior fully decoded unclassified regions at
+`[0x00563C80,0x00564486)` and `[0x005B87B7,0x005B8CA0)` are no longer gaps:
+the reviewed text-gap ceremony split their exact bodies into the 31 newly saved
+functions measured above.
 
 Replayed artifact identities:
 
-- `gap-evidence-c/text-gap-evidence.ready.json`: 1,029 bytes, SHA-256
-  `54111731abebc4e47181bd54e84a9290d253d042b790cab13c95d69a59d32af6`
-- `gap-accounting-c/result.ready.json`: 4,535 bytes, SHA-256
-  `1d0c8c4d326f433f34f5500789f1185fd1e655fa316ec3f6ea22c192ff9ac2c0`
-- `gap-accounting-c/gap-classification.tsv`: 837,395 bytes, SHA-256
-  `2e3e6a1826bd36180f97b12a57a030240ac5df43dd3b984e64361296e6f9b0c4`
+- `gap-evidence/text-gap-evidence.ready.json`: 1,029 bytes, SHA-256
+  `53dbdca09ea2558c7562ac168d5c964ad9d8a1d2633b5d20abd0dafd2abe7fbc`
+- `gap-accounting-a/result.ready.json`: 4,535 bytes, SHA-256
+  `d4bb971a9d29835f57ae4790b93d57a2017262f0ed3f961e6c89c4fa053eb36d`
+- `gap-accounting-a/gap-classification.tsv`: 840,190 bytes, SHA-256
+  `d3b0b94a3d6cf3d726130e16412c40e7ccddd85985e07503c78f8f2f9b7ce91b`
 
 ## Boundary
 

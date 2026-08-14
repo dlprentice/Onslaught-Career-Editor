@@ -1,7 +1,7 @@
 # Binary Analysis
 
 Status: living index for `reverse-engineering/binary-analysis/`
-Last updated: 2026-08-13
+Last updated: 2026-08-14
 Summary: front door to the static and byte-level evidence for the Steam
 `BEA.exe`. Names the current naming authority, the specimen baseline, and the
 per-system contracts. Makes no claim of its own — every claim below belongs to
@@ -26,10 +26,10 @@ the document it links.
   the reviewed per-row crosswalk from 53 sealed static receipts, the ten
   post-Gen19 Mission natives, and the pre-existing bounded C1/C2 set; static
   envelope closure only, not runtime or source parity
-- [Current 34-function Mission-registry static-contract addendum](mission-script-registry-new-function-static-contracts-2026-08-13.md)
+- [Dated 34-function Mission-registry static-contract addendum](mission-script-registry-new-function-static-contracts-2026-08-13.md)
   — extends bounded static-envelope coverage from the sealed 8,136-row table to
-  all 8,170 currently saved functions without changing Generation 23 or Ghidra
-  metadata
+  the resulting 8,170-function state without changing Generation 23 or Ghidra
+  metadata; the later 31 structural additions are outside this accounting
 - [Current 34-handler Mission-registry semantic refinement](mission-script-registry-new-function-semantic-refinement-2026-08-13.md)
   — corrects eight handler descriptions and the common receiver-type boundary;
   adds no functions, grades, runtime claims, rebuild parity, or Ghidra changes
@@ -41,19 +41,22 @@ the document it links.
   — promotes bounded Tier-2 names/comments/tags for the 34 newly admitted
   handlers while preserving all 8,136 non-target rows and every body/ABI byte
 - [Current `.text` body ownership and listing-state accounting](current-text-ownership-2026-08-13.md)
-  — replays all 8,170 saved functions / 8,287 ranges against pristine bytes,
-  closes the exact zero-overlap union at 1,770,929 / 1,929,117 = 91.799978954%,
-  and partitions the 158,188-byte gap without treating loose code/data as proved
+  — replays all 8,201 saved functions / 8,321 ranges against pristine bytes,
+  closes the exact zero-overlap union at 1,784,978 / 1,929,117 = 92.528239604%,
+  and partitions the 144,139-byte gap without treating loose code/data as proved
   functions or semantics
 - [Text-gap 31-function library classification](text-gap-library-function-classification-2026-08-13.md)
-  — identifies the separately prepared 31 exact boundary candidates as 14
+  — identifies the 31 now-admitted exact boundaries as 14
   Microsoft CRT FDIV helpers, 14 AMD 3DNow math primitives, and three IJG 6b
-  inverse-DCT routines; provider-qualified labels remain pending the structural
-  Ghidra admission gate and are not claimed as original BEA linker symbols
+  inverse-DCT routines; provider-qualified labels are not claimed as original
+  BEA linker symbols
+- [Text-gap 31-boundary live promotion](text-gap-missing-function-ghidra-live-promotion-2026-08-14.md)
+  — records the backed-up one-save promotion from 8,170 to 8,201, separate
+  readback, exact preservation of every PRE row, and live/tracked/POST equality
 - [External-table gap function-boundary preparation](external-table-gap-function-boundaries-2026-08-13.md)
   — dispositions all 51 table-target gaps, separates five existing-body/shared
   fragments, and prepares a non-overlapping 79-function lower bound with exact
-  PC-demo twins; current Ghidra remains at 8,170 pending admission
+  PC-demo twins; current Ghidra remains at 8,201 pending that separate admission
 - [PC D3DX four-vector-cross helper boundary](d3dx-vec4cross-crossbuild-boundary-2026-08-13.md)
   — closes `0x005762dd..0x005763cd` as one exact 240-byte / 97-instruction
   function through seven byte-identical PC/Issue-7/Issue-11/US-retail copies;
@@ -252,11 +255,13 @@ the document it links.
 >
 > The tracked
 > [`ghidra-function-name-table-2026-08-13.tsv`](ghidra-function-name-table-2026-08-13.tsv)
-> is the current 8,170-row address-to-name projection and the mechanical
+> is the current 8,201-row address-to-name projection and the mechanical
 > checker's authority after the verified
 > [34-boundary promotion](mission-script-registry-boundary-live-promotion-2026-08-13.md)
 > and subsequent
-> [75-row vocabulary promotion](mission-script-registry-vocabulary-live-promotion-2026-08-13.md).
+> [75-row vocabulary promotion](mission-script-registry-vocabulary-live-promotion-2026-08-13.md),
+> 34-row new-function vocabulary promotion, and
+> [31-boundary text-gap promotion](text-gap-missing-function-ghidra-live-promotion-2026-08-14.md).
 > The 2026-08-12 and July tables remain dated artifacts for their original
 > checks and pinned receipts. The current count is a discovered census, not a
 > permanent ceiling.
