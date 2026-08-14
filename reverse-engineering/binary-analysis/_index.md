@@ -285,6 +285,9 @@ evidence lives under the ignored lab’s apply logs when present.
 - [Half-pixel pixel-centre offset corrected in the projection](pixel-centre-projection-offset-applied-2026-07-26.md)
 - [CMSH `CPOS`/`CORI` identity](cmsh-cpos-cori-identity-2026-07-25.md)
 - [`CRound::Hit`, `CExplosion::Hit`, and their separate damage paths](cround-hit-damage-path-2026-08-10.md)
+- [`CRound` event-2000 two-position runtime addendum](cround-event2000-two-position-runtime-addendum-2026-08-13.md)
+  — bounds two exact receiver-matched `CALL_ENTRY` paths, explicitly retaining
+  the 167/10/2 selection limit and leaving allocator return/effects open
 - [`CWorldPhysicsManager::CreateExplosion` caller family](cexplosion-factory-callers-2026-08-10.md)
 - [Local multiplayer evidence boundary](local-multiplayer-static-runtime-contract.md)
 

@@ -141,6 +141,13 @@ references did not change. Generation 73 remains a projection oracle, never a
 parent or authority. The next valid campaign generation is 24. Model review is
 situational and harness-agnostic under `REVIEW-PROTOCOL.md`.
 
+A separately reviewed, non-parent
+[two-position event-2000 addendum](binary-analysis/cround-event2000-two-position-runtime-addendum-2026-08-13.md)
+bounds only two exact receiver-matched `CALL_ENTRY` paths to `0x00549220` on
+runtime image `e1436ef7…fadf4`. It leaves the other 165 invocations, allocator
+return/effect, exact source spelling, and rebuild parity open. It does not
+create Generation 24 or change Generation 23 counts.
+
 **Dated static-envelope closure (2026-08-11):** the reviewed
 [`function-c1-closure-2026-08-11.tsv`](binary-analysis/function-c1-closure-2026-08-11.tsv)
 accounts for its 8,136-function population at 8,129 bounded C1 and seven
