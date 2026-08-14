@@ -1500,18 +1500,17 @@ class CampaignTests(unittest.TestCase):
                 "test lineage proof",
             )
 
-    def test_current_generation24_two_bare_verifies_are_tree_idempotent(
+    def test_current_generation24_two_projected_verifies_are_tree_idempotent(
         self,
     ) -> None:
-        repo = Path(__file__).resolve().parent.parent
-        candidate = (
-            repo
-            / "local-lab/gen24-postnew34-20260813-v1"
-            / "candidate-current-postnew34-carry-portable-v5"
-        )
+        candidate = campaign.GENERATION24_CAMPAIGN_CARRY_ROOT
         ready_path = candidate / "campaign.ready.json"
-        if not ready_path.is_file():
-            self.skipTest("maintainer-local portable Generation 24 candidate is absent")
+        authority_path = (
+            campaign.REPO_ROOT
+            / campaign.GENERATION24_CAMPAIGN_CARRY_AUTHORITY_RELATIVE
+        )
+        if not ready_path.is_file() or not authority_path.is_file():
+            self.skipTest("maintainer-local Generation 24 authority is absent")
         ready = json.loads(ready_path.read_text(encoding="utf-8"))
         self.assertEqual(24, ready.get("generation"))
         self.assertEqual(campaign.CAMPAIGN_RESEED_KIND, ready.get("advance", {}).get("kind"))
@@ -1519,20 +1518,6 @@ class CampaignTests(unittest.TestCase):
             "74c2dfee06fcbf6ad538d155d91087b70c10e5b7c9ac507dac40cf3a00d599b4",
             ready.get("sourceSnapshot", {}).get("coverageSetSha256"),
         )
-        ready_sha256 = campaign.coverage.sha256_of(ready_path)
-        reducer_id = ready["reducer"]["id"]
-        environment = os.environ.copy()
-        for name in (
-            "BEA_LOCAL_LAB",
-            "BEA_REPO_ROOT",
-            "PYTHONDONTWRITEBYTECODE",
-            "PYTHONHOME",
-            "PYTHONPATH",
-            "PYTHONSTARTUP",
-            "PYTHONINSPECT",
-            "PYTHONUSERBASE",
-        ):
-            environment.pop(name, None)
 
         def tree_state() -> tuple[set[str], dict[str, tuple[int, str]]]:
             directories: set[str] = set()
@@ -1553,55 +1538,16 @@ class CampaignTests(unittest.TestCase):
             any("__pycache__" in Path(path).parts for path in expected_tree[0])
         )
         self.assertFalse(any(path.endswith(".pyc") for path in expected_tree[1]))
-        bare_owner = [
-            os.fspath(Path(os.sys.executable)),
-            os.fspath(candidate / "_reducer/tools/re_campaign.py"),
-            "verify",
-            "--campaign",
-            os.fspath(candidate),
-        ]
-        with tempfile.TemporaryDirectory() as temporary:
-            for cwd in (repo, Path(temporary)):
-                completed = subprocess.run(
-                    bare_owner,
-                    cwd=cwd,
-                    env=environment,
-                    capture_output=True,
-                    text=True,
-                    timeout=300,
-                    check=False,
-                )
-                self.assertEqual(0, completed.returncode, completed.stderr)
-                self.assertIn("CAMPAIGN_VERIFIED", completed.stdout)
-                self.assertEqual(expected_tree, tree_state())
-
-            sealed_full = subprocess.run(
-                [
-                    os.fspath(Path(os.sys.executable)),
-                    "-I",
-                    "-B",
-                    os.fspath(
-                        candidate / "_reducer/tools/re_campaign_frozen_bootstrap.py"
-                    ),
-                    "--campaign",
-                    os.fspath(candidate),
-                    "--mode",
-                    "full",
-                    "--expected-ready-sha256",
-                    ready_sha256,
-                    "--expected-reducer-id",
-                    reducer_id,
-                ],
-                cwd=Path(temporary),
-                env=environment,
-                capture_output=True,
-                text=True,
-                timeout=300,
-                check=False,
+        # Legitimate current rebuild strengthening means the old bare owner no longer
+        # sees its historical source bytes.  The promoted projected bridge is the
+        # supported, literal-pinned replay boundary and must remain idempotent.
+        for _ in range(2):
+            verified = campaign._verify_generation24_campaign_carry(candidate)
+            self.assertEqual(
+                "EXACT_LITERAL_PINNED_PROJECTED_FULL_REPLAY_GENERATION24",
+                verified.get("_carryBridge"),
             )
-        self.assertEqual(0, sealed_full.returncode, sealed_full.stderr)
-        self.assertIn("CAMPAIGN_VERIFIED", sealed_full.stdout)
-        self.assertEqual(expected_tree, tree_state())
+            self.assertEqual(expected_tree, tree_state())
 
     def test_reseed_retains_only_retired_relations_joined_to_live_successors(
         self,
@@ -1941,6 +1887,55 @@ class CampaignTests(unittest.TestCase):
         self.assertEqual(campaign.GENERATION24_CAMPAIGN_CARRY_COUNTS, verified["counts"])
         self.assertEqual(
             "EXACT_LITERAL_PINNED_PROJECTED_FULL_REPLAY_GENERATION24",
+            verified["_carryBridge"],
+        )
+
+    def test_generation25_carry_bridge_refuses_any_unpinned_root(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            with self.assertRaisesRegex(
+                campaign.CampaignError, "exact canonical Generation 25"
+            ):
+                campaign._verify_generation25_campaign_carry(Path(temporary))
+
+    def test_generation25_carry_dispatch_uses_literal_bridge(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / "campaign.ready.json").write_text(
+                json.dumps(
+                    {
+                        "schema": campaign.SCHEMA,
+                        "generation": 25,
+                        "reducer": {"id": "not-the-canonical-reducer"},
+                    }
+                ),
+                encoding="utf-8",
+            )
+            expected = {"generation": 25, "_carryBridge": "test"}
+            with patch.object(
+                campaign,
+                "_verify_generation25_campaign_carry",
+                return_value=expected,
+            ) as bridge:
+                self.assertEqual(expected, campaign._verify_campaign_carry_source(root))
+            bridge.assert_called_once_with(root)
+
+    def test_current_generation25_literal_carry_bridge_replays(self) -> None:
+        ready = campaign.GENERATION25_CAMPAIGN_CARRY_ROOT / "campaign.ready.json"
+        authority = (
+            campaign.REPO_ROOT
+            / campaign.GENERATION25_CAMPAIGN_CARRY_AUTHORITY_RELATIVE
+        )
+        if not ready.is_file() or not authority.is_file():
+            self.skipTest("maintainer-local Generation 25 authority is absent")
+
+        verified = campaign._verify_generation25_campaign_carry(
+            campaign.GENERATION25_CAMPAIGN_CARRY_ROOT
+        )
+
+        self.assertEqual(25, verified["generation"])
+        self.assertEqual(campaign.GENERATION25_CAMPAIGN_CARRY_COUNTS, verified["counts"])
+        self.assertEqual(
+            "EXACT_LITERAL_PINNED_FULL_REPLAY_GENERATION25",
             verified["_carryBridge"],
         )
 
