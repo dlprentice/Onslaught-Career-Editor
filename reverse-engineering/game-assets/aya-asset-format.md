@@ -10,14 +10,17 @@ From deep analysis of `AYAResourceExtractor` (Stuart's extraction tool):
 
 **Pipeline corroboration note (Glenn, February 23, 2026):** dev builds reportedly included generation/precompute code (coastline mesh, some landscape LOD tables, and normal-mapped distance sprites rendered via D3D scenes), while console/release builds loaded saved outputs and had generation paths conditionally compiled out.
 
-**Cross-platform packaging note (desimbr, August 8, 2026):** Stuart recalls
-that the CD-sized PC port retained substantially more compression than the DVD
-console releases, and expects PS2 textures to use a lower resolution and/or bit
-depth than Xbox because of its smaller memory budget. A measured Level 612 pair
-supports only the packaging part so far: PC is a chunked-zlib envelope; USA
-Xbox is a raw tagged stream with the same 374 top-level tag sequence but much
-larger `TEXT`, `MESH`, and `IMPS` payloads. Treat visual-quality and corpus-wide
-claims as hypotheses until decoded logical assets are compared.
+**Cross-platform packaging measurement (August 13, 2026):** the deterministic
+[PC/USA Xbox census](pc-xbox-aya-census-2026-08-13.md) pairs all 301 PC
+resources, finds one Xbox-only `goodie_232`, and accounts every file through
+strict, explicit envelopes. All PC archives use chunked-zlib (485 members in
+301 files); all 302 Xbox AYA members begin with the raw tagged stream, while
+the surrounding ZIP deflates every member. Sixty-three paired tag sequences
+differ only in `TEXT`/`MESH` counts, and six sequence-equal levels still
+substitute named textures. Larger Xbox `TEXT`, `MESH`, `GDIE`, and `IMPS`
+payloads establish target-specific serialization/storage, not resolution, bit
+depth, decoded fidelity, or visual quality. Those require field- and
+pixel/buffer-level joins.
 
 ---
 
@@ -42,11 +45,13 @@ AYA File Structure:
 - **Total buffer**: 4MB maximum **(extractor output buffer limit)**
 - **Format**: Standard zlib wrapper (not raw deflate, not gzip)
 
-The Xbox resource pair measured above begins directly with the tagged stream,
-without this outer member framing. `tools/aya_archive_inventory.py` therefore
-supports explicit `pc-chunked-zlib` and bounded `raw-tag-stream` envelopes; its
-`auto` mode falls back to raw only when the entire file frames into at least two
-known top-level tags. This does not imply that PS2 `DATA0.NYO` is AYA or zlib.
+All 302 measured Xbox AYA members begin directly with the tagged stream,
+without this PC outer-member framing. `tools/aya_archive_inventory.py`
+therefore supports explicit `pc-chunked-zlib` and bounded `raw-tag-stream`
+envelopes; its `auto` mode falls back to raw only when the entire file frames
+into at least two known top-level tags. This says nothing about PS2
+`DATA0.NYO`, and the Xbox ZIP's method-8 container compression remains a
+separate layer.
 
 ---
 

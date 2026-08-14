@@ -15,8 +15,10 @@ import unittest
 import zlib
 from pathlib import Path
 from unittest import mock
+from zipfile import ZipFile
 
 import aya_archive_inventory as inventory
+import aya_cross_platform_compare as cross_compare
 
 
 def _chunk(tag: bytes, payload: bytes = b"") -> bytes:
@@ -44,6 +46,34 @@ def _mesh_payload(*bodies: bytes) -> bytes:
             payload.extend(struct.pack("<I", 4))
             payload.extend(b"PMS2")
     return bytes(payload)
+
+
+def _text_resource_payload(name: str, trailer: bytes = b"") -> bytes:
+    body = b"CTEX" + (b"\0" * 12) + name.encode("ascii") + b"\0" + trailer
+    return b"DXTX" + struct.pack("<I", len(body)) + body
+
+
+def _pc_mesh_resource_payload(name: str, trailer: bytes = b"") -> bytes:
+    body = name.encode("ascii") + b"\0" + trailer
+    inner = b"PMS2" + struct.pack("<I", len(body)) + body
+    return b"PMSH" + struct.pack("<I", len(inner)) + inner
+
+
+def _xbox_mesh_resource_payload(name: str, trailer: bytes = b"") -> bytes:
+    body = name.encode("ascii") + b"\0" + trailer
+    return b"PMSH" + struct.pack("<I", len(body)) + body
+
+
+def _cross_archive(
+    raw: bytes, envelope: str
+) -> tuple[dict[str, object], bytes, list[dict[str, object]]]:
+    source = _archive(raw) if envelope == "pc-chunked-zlib" else raw
+    return cross_compare.inspect_archive(
+        source=source,
+        envelope=envelope,
+        stored_length=len(source),
+        stored_sha256=hashlib.sha256(source).hexdigest(),
+    )
 
 
 class AyaArchiveInventoryObservationTests(unittest.TestCase):
@@ -672,6 +702,294 @@ class AyaArchiveInventoryObservationTests(unittest.TestCase):
         self.assertEqual({"TEXT": 1}, manifest[0]["tag_counts"])
         self.assertEqual(1, len(dumped_payloads))
         self.assertEqual(1, len(dumped_metadata))
+
+
+class AyaCrossPlatformComparatorTests(unittest.TestCase):
+    maxDiff = None
+
+    def test_v3_schema_and_unique_logical_joins_are_stable(self) -> None:
+        pc_raw = b"".join(
+            (
+                _chunk(b"LVLR", struct.pack("<I", 103)),
+                _chunk(b"TARG", struct.pack("<I", 1)),
+                _chunk(b"AYAD", struct.pack("<6I", 1, 2, 3, 4, 5, 6)),
+                _chunk(b"TEXT", _text_resource_payload("MeshTex/Panel.tga", b"pc")),
+                _chunk(b"MESH", _pc_mesh_resource_payload("craft.msh", b"pc")),
+            )
+        )
+        xbox_raw = b"".join(
+            (
+                _chunk(b"LVLR", struct.pack("<I", 103)),
+                _chunk(b"TARG", struct.pack("<I", 2)),
+                _chunk(b"AYAD", struct.pack("<6I", 1, 2, 7, 4, 5, 6)),
+                _chunk(b"TEXT", _text_resource_payload("meshtex\\panel.tga", b"xbox")),
+                _chunk(b"MESH", _xbox_mesh_resource_payload("craft.msh", b"xbox")),
+            )
+        )
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            pc_root = root / "pc"
+            pc_root.mkdir()
+            (pc_root / "unit_res_PC.aya").write_bytes(_archive(pc_raw))
+            xbox_zip = root / "xbox.zip"
+            with ZipFile(xbox_zip, "w") as archive:
+                archive.writestr("data/resources/unit_res_XBOX.aya", xbox_raw)
+            result, geometry = cross_compare.build(pc_root, xbox_zip)
+
+        self.assertEqual("bea.pc-xbox-aya-logical-census.v3", cross_compare.SCHEMA)
+        self.assertEqual(
+            "bea.pc-xbox-aya-chunk-geometry.v2", cross_compare.GEOMETRY_SCHEMA
+        )
+        self.assertEqual(cross_compare.SCHEMA, result["schemaVersion"])
+        self.assertEqual(
+            {
+                "schemaVersion",
+                "sources",
+                "summary",
+                "tagAggregates",
+                "divergences",
+                "xboxOnlyRecords",
+                "pairs",
+            },
+            set(result),
+        )
+        self.assertEqual(
+            {
+                "pairedCount",
+                "pcOnly",
+                "xboxOnly",
+                "tagSequenceEqualCount",
+                "tagSequenceDivergentCount",
+                "tagRunTopologyEqualCount",
+                "logicalKeySequenceEqualCount",
+                "topLevelTextMeshMultisetEqualCount",
+                "tagSequenceEqualButTextMeshDivergentCount",
+                "tagSequenceEqualButTextMeshDivergentIds",
+                "pcChunkCount",
+                "xboxPairedChunkCount",
+                "xboxAllResourceChunkCount",
+                "geometryRowCount",
+            },
+            set(result["summary"]),
+        )
+        self.assertEqual(
+            {
+                "archiveCount",
+                "envelope",
+                "canonicalManifestSha256",
+                "totalRawBytes",
+                "totalStoredBytes",
+                "zlibMemberCount",
+                "zlibMemberCountHistogram",
+            },
+            set(result["sources"]["pc"]),
+        )
+        self.assertEqual(
+            {
+                "archiveCount",
+                "envelope",
+                "zipLength",
+                "zipSha256",
+                "canonicalMemberManifestSha256",
+                "pairedTotalRawBytes",
+                "allResourceTotalRawBytes",
+                "totalZipCompressedResourceBytes",
+                "zipCompressionMethodCounts",
+            },
+            set(result["sources"]["xbox"]),
+        )
+        pair = result["pairs"][0]
+        self.assertEqual(
+            {
+                "tagSequenceEqual",
+                "tagRunTopologyEqual",
+                "logicalKeySequenceEqual",
+                "logicalChunkMultisetEqual",
+                "topLevelTextMeshMultisetEqual",
+                "commonTagPrefixCount",
+                "commonTagSuffixCount",
+                "pcMinusXboxTagCounts",
+                "xboxMinusPcTagCounts",
+                "pcOnlyLogical",
+                "xboxOnlyLogical",
+            },
+            set(pair["comparison"]),
+        )
+        self.assertNotIn("logicalAssetMultisetEqual", json.dumps(result))
+        self.assertTrue(pair["comparison"]["tagSequenceEqual"])
+        self.assertTrue(pair["comparison"]["logicalKeySequenceEqual"])
+        self.assertTrue(pair["comparison"]["topLevelTextMeshMultisetEqual"])
+        self.assertEqual([], result["divergences"])
+        self.assertEqual(10, len(geometry))
+        self.assertEqual(
+            {
+                "schemaVersion",
+                "resourceId",
+                "platform",
+                "archiveRawSha256",
+                "chunkIndex",
+                "tag",
+                "offset",
+                "payloadOffset",
+                "declaredSize",
+                "endOffset",
+                "payloadSha256",
+                "logicalKey",
+                "logicalDisplay",
+                "logicalKeyMethod",
+                "logicalOccurrence",
+                "joinConfidence",
+                "counterpartIndex",
+                "counterpartDeclaredSize",
+                "counterpartPayloadSha256",
+                "sameDeclaredSize",
+                "samePayloadSha256",
+            },
+            set(geometry[0]),
+        )
+        text_pc = next(
+            row
+            for row in geometry
+            if row["platform"] == "PC" and row["tag"] == "TEXT"
+        )
+        self.assertEqual("meshtex\\panel.tga", text_pc["logicalKey"])
+        self.assertEqual("unique-logical-key", text_pc["joinConfidence"])
+        cross_compare.validate_expectations(
+            result,
+            paired_count=1,
+            require_no_pc_only=True,
+            xbox_only=[],
+            divergent_count=0,
+        )
+
+    def test_duplicate_text_and_mesh_keys_are_ordered_and_counted(self) -> None:
+        pc_raw = b"".join(
+            (
+                _chunk(b"LVLR", b"v"),
+                _chunk(b"TEXT", _text_resource_payload("same.tga", b"pc-0")),
+                _chunk(b"TEXT", _text_resource_payload("same.tga", b"pc-1")),
+                _chunk(b"MESH", _pc_mesh_resource_payload("same.msh", b"pc-0")),
+                _chunk(b"MESH", _pc_mesh_resource_payload("same.msh", b"pc-1")),
+            )
+        )
+        xbox_raw = b"".join(
+            (
+                _chunk(b"LVLR", b"v"),
+                _chunk(b"TEXT", _text_resource_payload("same.tga", b"xb-0")),
+                _chunk(b"TEXT", _text_resource_payload("same.tga", b"xb-1")),
+                _chunk(b"MESH", _xbox_mesh_resource_payload("same.msh", b"xb-0")),
+                _chunk(b"MESH", _xbox_mesh_resource_payload("same.msh", b"xb-1")),
+            )
+        )
+        pc_archive, _pc_raw, pc_chunks = _cross_archive(
+            pc_raw, "pc-chunked-zlib"
+        )
+        xbox_archive, _xbox_raw, xbox_chunks = _cross_archive(
+            xbox_raw, "raw-tag-stream"
+        )
+        pair, geometry, aggregate = cross_compare.compare_pair(
+            "duplicate", pc_archive, pc_chunks, xbox_archive, xbox_chunks
+        )
+
+        self.assertTrue(pair["comparison"]["logicalChunkMultisetEqual"])
+        self.assertEqual(2, aggregate["TEXT"]["logicalJoins"])
+        self.assertEqual(2, aggregate["MESH"]["logicalJoins"])
+        self.assertEqual(2, aggregate["TEXT"]["duplicateKeyJoins"])
+        self.assertEqual(2, aggregate["MESH"]["duplicateKeyJoins"])
+        for tag in ("TEXT", "MESH"):
+            rows = [
+                row
+                for row in geometry
+                if row["platform"] == "PC" and row["tag"] == tag
+            ]
+            self.assertEqual([0, 1], [row["logicalOccurrence"] for row in rows])
+            self.assertTrue(
+                all(
+                    row["joinConfidence"] == "ordered-duplicate-equal-count"
+                    for row in rows
+                )
+            )
+            self.assertEqual(
+                [row["chunkIndex"] for row in rows],
+                [row["counterpartIndex"] for row in rows],
+            )
+
+    def test_empty_mesh_name_is_explicit_and_resource_scoped(self) -> None:
+        pc_raw = _chunk(b"LVLR", b"v") + _chunk(
+            b"MESH", _pc_mesh_resource_payload("")
+        )
+        xbox_raw = _chunk(b"LVLR", b"v") + _chunk(
+            b"MESH", _xbox_mesh_resource_payload("")
+        )
+        pc_archive, _pc_raw, pc_chunks = _cross_archive(
+            pc_raw, "pc-chunked-zlib"
+        )
+        xbox_archive, _xbox_raw, xbox_chunks = _cross_archive(
+            xbox_raw, "raw-tag-stream"
+        )
+        _pair, geometry, aggregate = cross_compare.compare_pair(
+            "empty-name", pc_archive, pc_chunks, xbox_archive, xbox_chunks
+        )
+
+        rows = [row for row in geometry if row["tag"] == "MESH"]
+        self.assertEqual(2, len(rows))
+        self.assertTrue(all(row["logicalKey"] == "<empty-name>" for row in rows))
+        self.assertTrue(all(row["logicalDisplay"] == "" for row in rows))
+        self.assertTrue(
+            all(row["joinConfidence"] == "unique-logical-key" for row in rows)
+        )
+        self.assertEqual(1, aggregate["MESH"]["logicalJoins"])
+
+    def test_trailing_text_is_a_tag_run_topology_exception(self) -> None:
+        pc_raw = (
+            _chunk(b"LVLR", b"v") + _chunk(b"TARG", b"p") + _chunk(b"AYAD", b"a")
+        )
+        xbox_raw = pc_raw + _chunk(
+            b"TEXT", _text_resource_payload("loadingscreen.tga")
+        )
+        pc_archive, _pc_raw, pc_chunks = _cross_archive(
+            pc_raw, "pc-chunked-zlib"
+        )
+        xbox_archive, _xbox_raw, xbox_chunks = _cross_archive(
+            xbox_raw, "raw-tag-stream"
+        )
+        pair, _geometry, _aggregate = cross_compare.compare_pair(
+            "loading", pc_archive, pc_chunks, xbox_archive, xbox_chunks
+        )
+        comparison = pair["comparison"]
+
+        self.assertFalse(comparison["tagSequenceEqual"])
+        self.assertFalse(comparison["tagRunTopologyEqual"])
+        self.assertEqual({"TEXT": 1}, comparison["xboxMinusPcTagCounts"])
+        self.assertEqual(
+            [{"tag": "TEXT", "logicalKey": "loadingscreen.tga", "count": 1}],
+            comparison["xboxOnlyLogical"],
+        )
+
+    def test_unknown_and_malformed_cross_platform_inputs_fail_closed(self) -> None:
+        unknown = _chunk(b"LVLR", b"v") + _chunk(b"NOPE", b"x")
+        with self.assertRaises(inventory.ArchiveObservationError) as caught:
+            _cross_archive(unknown, "raw-tag-stream")
+        self.assertEqual("raw_tag_stream", caught.exception.category)
+
+        overrun = _chunk(b"LVLR", b"v") + b"TARG" + struct.pack("<I", 12) + b"x"
+        with self.assertRaises(inventory.ArchiveObservationError) as caught:
+            _cross_archive(overrun, "raw-tag-stream")
+        self.assertEqual("raw_tag_stream", caught.exception.category)
+
+        malformed_text = _chunk(b"LVLR", b"v") + _chunk(
+            b"TEXT", b"DXTX" + struct.pack("<I", 99) + b"CTEX" + (b"\0" * 16)
+        )
+        with self.assertRaisesRegex(ValueError, "DXTX wrapper"):
+            _cross_archive(malformed_text, "raw-tag-stream")
+
+        bad_mesh_body = b"PMS2" + struct.pack("<I", 99) + b"name\0"
+        malformed_mesh = _chunk(b"LVLR", b"v") + _chunk(
+            b"MESH", b"PMSH" + struct.pack("<I", len(bad_mesh_body)) + bad_mesh_body
+        )
+        with self.assertRaisesRegex(ValueError, "PMS2 wrapper"):
+            _cross_archive(malformed_mesh, "raw-tag-stream")
 
 
 if __name__ == "__main__":
