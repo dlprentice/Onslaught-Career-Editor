@@ -1,18 +1,18 @@
 # JPEG/IJG callback Ghidra live-promotion preparation
 
-Status: **current db.18614 preparation reproduced; live promotion remains forbidden**
+Status: **historical preparation consumed by the completed live promotion**
 
 Date: 2026-08-14
 
-Verdict: **PREPARATION_READY_LIVE_FORBIDDEN**
+Verdict: **PREPARATION_REPRODUCED_AND_CONSUMED**
 
 Policy: **`PREPARATION_ONLY`**
 
-Evidence: MEASURED — exact current PRE plus two disposable prospective-POST
-replicas. The authority hashes live and tracked Ghidra without opening either
-project, reproduces the retained JPEG24 scratch authority, and validates two
-fresh db.18614 replicas. No future live lane, backup, save, tracked refresh, or
-aggregate authority exists.
+Evidence: MEASURED — exact preparation-time PRE plus two disposable
+prospective-POST replicas. The authority hashed live and tracked Ghidra without
+opening either project, reproduced the retained JPEG24 scratch authority, and
+validated two fresh db.18614 replicas. The later completed ceremony is owned by
+the [live-promotion report](jpeg-ijg-callback-ghidra-live-promotion-2026-08-14.md).
 
 Specimen: pristine PC retail `BEA.exe`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
@@ -145,14 +145,12 @@ policy=PREPARATION_ONLY mutation_authorized=false
 blocker=future_ceremony_artifacts_absent
 ```
 
-## Remaining blocker
+## Historical action boundary
 
-The current static and disposable-copy proof is complete, but action authority
-is deliberately absent. A live ceremony still requires an exact off-volume PRE
-backup and read-only restore, one separately authorized live apply/save,
-separate readback, POST backup and restore, proof that tracked remained PRE,
-then a separately authorized tracked refresh and retained restore. The physical
-POST must remove only `db.18613.gbf`, preserve exact `db.18614.gbf`, add one
-nonempty `db.18615.gbf`, and preserve every other common file. Until those
-artifacts exist and the aggregate verifies, live and tracked mutation remain
-forbidden.
+This preparation granted no mutation authority. The later ceremony separately
+created and restored exact PRE/POST backups, performed one live apply/save,
+proved tracked remained PRE through POST recovery, refreshed tracked, restored
+it read-only, and sealed the aggregate authority. Its physical POST removed
+only `db.18613.gbf`, preserved exact `db.18614.gbf`, added `db.18615.gbf`, and
+preserved every common file. This document remains the immutable prospective
+proof; present state is owned by the completed live-promotion report.

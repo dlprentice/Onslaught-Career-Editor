@@ -38,13 +38,14 @@ layouts, or behaviors are proven.
 > field. The 2026-08-14 text-gap ceremony then added 31 reviewed default-
 > metadata boundaries while preserving all 8,170 PRE rows exactly. A later
 > external-table ceremony added 79 more default-metadata boundaries while
-> preserving all 8,201 PRE rows exactly. The latest five-body repair keeps the
-> census at 8,280, changes only five reviewed body rows, and advances exact
-> saved-body ownership to 93.072115377%. The latest
+> preserving all 8,201 PRE rows exactly. The five-body repair kept the census
+> at 8,280 and changed only five reviewed body rows. The latest JPEG/IJG
+> promotion adds 24 default-metadata functions while preserving every PRE row,
+> advancing exact saved-body ownership to 93.840186987%. The latest
 > project state is owned by
 > [`../ghidra/README.md`](../ghidra/README.md).
-> The current saved census and lower bound are 8,280, not a ceiling. The current
-> 8,280-row projection and live-state
+> The current saved census and lower bound are 8,304, not a ceiling. The current
+> 8,304-row projection and live-state
 > receipts are reconciled in
 > [`../../../ghidra-functions.md`](../ghidra-functions.md); the 6,411- and
 > 7,555-row states remain dated history only.

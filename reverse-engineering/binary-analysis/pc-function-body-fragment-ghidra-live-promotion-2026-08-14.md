@@ -2,7 +2,7 @@
 
 Date: 2026-08-14
 
-Status: reviewed completed live/tracked structural promotion
+Status: reviewed historical completed live/tracked structural promotion
 
 Verdict: **LIVE_TRACKED_PROMOTION_REPRODUCED**
 
@@ -63,7 +63,7 @@ tracked restore probes reproduce the same project:
   `cda0938c1a266fbe1751a8b0bf175b90c63b296f21fc9631b5bade1ecf93e541`;
 - stable `db.18613.gbf`: 68,337,664 bytes, SHA-256
   `615497847b0c732077ee7164b0973b9012092523e9ad99b91c21781952420ebe`;
-- current `db.18614.gbf`: 68,337,664 bytes, SHA-256
+- then-current `db.18614.gbf`: 68,337,664 bytes, SHA-256
   `d7f0011ea337f58b710415d5664e73d91ca9f1f61e20a836278d3e71b71b2865`.
 
 The sole physical transition removed `db.18612.gbf`, added `db.18614.gbf`,
@@ -82,7 +82,7 @@ the retained restore receipt is 5,934 bytes, SHA-256
 The tracked restore receipt is 5,945 bytes, SHA-256
 `facf9a67d54a67139f8d7b6b0205055cafb0c616e2d4ee03a8fca5c26ea6f4bc`.
 
-## Authorities and current accounting
+## Authorities and then-current accounting
 
 The reviewed manifest is
 [`pc-function-body-fragment-repairs-2026-08-14.tsv`](pc-function-body-fragment-repairs-2026-08-14.tsv).
@@ -105,15 +105,15 @@ the actual copy-receipt schema while retaining strict probe-path, command,
 sentinel, tree, and hash validation in the separate restore receipts. A focused
 regression covers that receipt boundary.
 
-A fresh read-only listing export and two byte-identical offline replays update
-the current ownership owner. The exact body union receipt is 14,318 bytes,
+A fresh read-only listing export and two byte-identical offline replays updated
+the then-current ownership owner. The exact body union receipt is 14,318 bytes,
 SHA-256
 `d2e35899eff73cf6ca22304010fbe219320832416c2a79e49b365fd3acfde056`;
 the gap-accounting receipt is 3,401 bytes, SHA-256
 `18084153a1577f08640268109520602669433b2ca2dd69cf56e97b8a6edd0d61`.
 The prior five-row jump-fragment candidate class is now empty. See
 [`current-text-ownership-2026-08-13.md`](current-text-ownership-2026-08-13.md)
-for the full 133,647-byte current partition.
+for the historical 133,647-byte partition and its newer superseding results.
 
 ## Boundary
 
@@ -122,5 +122,6 @@ source/demo/runtime evidence remains owned by the manifest and scratch report at
 their stated grades. The promotion does not prove whole-function source
 equivalence, execution of uncovered branches, field meanings, runtime effects,
 or rebuild parity. Generation 24 remains the last sealed campaign authority;
-its semantic carry is unchanged, and a later campaign must re-ground the new
-`db.18614` geometry rather than rewriting the frozen Generation 24 reducer.
+its semantic carry is unchanged, and Generation 25 later re-grounded the
+`db.18614` geometry without rewriting the frozen Generation 24 reducer. The
+subsequent JPEG/IJG promotion now owns the current db.18615 structural state.

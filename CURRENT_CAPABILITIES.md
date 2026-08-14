@@ -668,13 +668,15 @@ equality, or self-derived pins.
 accounts for its dated 8,136-function population as **8,129 C1**, **7 C2**,
 and **0 static OPAQUE**. A separately reviewed 34-row addendum extends bounded
 static accounting through the prior 8,170-row state at **8,163 C1 + 7 C2**.
-The current saved structural census is **8,280** after the later 31 text-gap and
-79 external-table admissions. Generation 25 retains all 154 post-Generation-23
-structural identities as campaign OPAQUE rows, but does not insert them into the
-frozen static tables. The five-body repair keeps that count unchanged while
-advancing current Ghidra to `db.18614` and 93.072115377% saved-body ownership;
-Generation 25 re-grounds those exact body identities, retires 16 changed
-lineages explicitly, and leaves one new 12-byte residual open. It carries the
+The current saved structural census is **8,304** after the later 31 text-gap,
+79 external-table, and 24 JPEG/IJG callback admissions. Generation 25 remains
+the frozen 8,280-row semantic authority: it retains the first 154
+post-Generation-23 structural identities as campaign OPAQUE rows but predates
+the 24 newest default-metadata functions. The five-body repair advanced Ghidra
+to `db.18614`; the JPEG/IJG promotion advances it to `db.18615` and
+93.840186987% saved-body ownership. Generation 25 re-grounded the five repaired
+bodies, retired 16 changed lineages explicitly, and left one new 12-byte
+residual open. It carries the
 admitted runtime/campaign claims without changing a semantic grade; neither count implies
 `REBUILD_READY` or complete semantic parity.
 

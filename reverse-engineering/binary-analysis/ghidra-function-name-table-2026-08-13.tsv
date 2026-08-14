@@ -3,10 +3,10 @@
 #           It is a name index, not a database, disassembly, or semantic proof.
 # Projection date: 2026-08-14
 # Specimen SHA-256: 74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750
-# Source  : local-lab/ghidra-function-fragment5-range-live-promotion-20260814-v1/runs/live-readback/functions.tsv
-# Source bytes: 7161943
-# Source SHA-256: d2ff1e8e7bd91454fff9822fb7ecc8e624525fa5c6cbc9dcfe06f4e0212b750d
-# Rows    : 8280 internal functions; this is a discovered census, not a final ceiling.
+# Source  : local-lab/ghidra-jpeg24-boundary-live-promotion-20260814-v2/runs/live-readback/functions.tsv
+# Source bytes: 7177776
+# Source SHA-256: bceedfa2eec573ee95e42a703d6f3a552c4718115fa540f3eaca492322f9a173
+# Rows    : 8304 internal functions; this is a discovered census, not a final ceiling.
 # Columns : address, name, bodyMin, bodyMax (hex). Non-contiguous bodies are
 #           represented by their bounding range, so bodyMin..bodyMax can over-cover.
 address	name	bodyMin	bodyMax
@@ -6947,6 +6947,10 @@ address	name	bodyMin	bodyMax
 0x005ab9c0	CDXTexture__InitComponentPlaneRowCache	0x005ab9c0	0x005aba8b
 0x005aba90	CDXTexture__SelectNextScanTableForProgress	0x005aba90	0x005abadc
 0x005abae0	FUN_005abae0	0x005abae0	0x005abaf5
+0x005abb00	FUN_005abb00	0x005abb00	0x005abd94
+0x005abda0	FUN_005abda0	0x005abda0	0x005abda4
+0x005abdb0	FUN_005abdb0	0x005abdb0	0x005abfe1
+0x005abff0	FUN_005abff0	0x005abff0	0x005ac17f
 0x005ac180	CDXTexture__ValidateAndIndexQuantTables	0x005ac180	0x005ac2c1
 0x005ac2d0	FUN_005ac2d0	0x005ac2d0	0x005ac921
 0x005ac930	CDXTexture__SelectColorConvertEntryPoint	0x005ac930	0x005ac97e
@@ -6959,6 +6963,10 @@ address	name	bodyMin	bodyMax
 0x005ad550	CTexture__InitDecodeCallbackTables	0x005ad550	0x005ad58d
 0x005ad590	CDXTexture__JpegEntropy_CommitAndResetBlockState	0x005ad590	0x005ad5fd
 0x005ad600	FUN_005ad600	0x005ad600	0x005ad817
+0x005ad820	FUN_005ad820	0x005ad820	0x005ada56
+0x005ada60	FUN_005ada60	0x005ada60	0x005adb52
+0x005adb60	FUN_005adb60	0x005adb60	0x005adf45
+0x005adf50	FUN_005adf50	0x005adf50	0x005ae189
 0x005ae190	CDXTexture__InitBlockCoefficientHistory	0x005ae190	0x005ae1ee
 0x005ae1f0	FUN_005ae1f0	0x005ae1f0	0x005ae5bc
 0x005ae600	CDXTexture__InitPerComponentCoefficientBuffers	0x005ae600	0x005ae67d
@@ -7002,6 +7010,9 @@ address	name	bodyMin	bodyMax
 0x005b272e	CDXTexture__InflateDefaultAllocCallback	0x005b272e	0x005b2749
 0x005b2860	CDXTexture__InitJpegEncoderComponentBuffers	0x005b2860	0x005b28de
 0x005b28e0	FUN_005b28e0	0x005b28e0	0x005b2b84
+0x005b2b90	FUN_005b2b90	0x005b2b90	0x005b2d9d
+0x005b2da0	FUN_005b2da0	0x005b2da0	0x005b2fb3
+0x005b2fc0	FUN_005b2fc0	0x005b2fc0	0x005b307b
 0x005b3080	CDXTexture__InitJpegEncoderWorkingBuffers	0x005b3080	0x005b316f
 0x005b3170	CDXTexture__BuildJpegHuffmanEncodeTable	0x005b3170	0x005b3363
 0x005b3370	CFastVB__JpegEntropy_WriteBitsWithByteStuffing_005b3370	0x005b3370	0x005b343a
@@ -7021,7 +7032,12 @@ address	name	bodyMin	bodyMax
 0x005b4580	FUN_005b4580	0x005b4580	0x005b4806
 0x005b4ae0	CDXTexture__InitJpegEncoderScanScriptState	0x005b4ae0	0x005b4b16
 0x005b4b20	FUN_005b4b20	0x005b4b20	0x005b4eaf
+0x005b4ed0	FUN_005b4ed0	0x005b4ed0	0x005b536b
+0x005b5370	FUN_005b5370	0x005b5370	0x005b5b78
 0x005b5b80	CDXTexture__InitJpegDctQuantPipeline	0x005b5b80	0x005b5c05
+0x005b5c30	FUN_005b5c30	0x005b5c30	0x005b5c73
+0x005b5c80	FUN_005b5c80	0x005b5c80	0x005b5e87
+0x005b5e90	FUN_005b5e90	0x005b5e90	0x005b6094
 0x005b60a0	CDXTexture__BuildComponentWorkBufferViews	0x005b60a0	0x005b61da
 0x005b61e0	CDXTexture__InitComponentSampleBuffers	0x005b61e0	0x005b6287
 0x005b6290	CDXTexture__PadRowsWithLastSample	0x005b6290	0x005b62e9
@@ -7030,6 +7046,8 @@ address	name	bodyMin	bodyMax
 0x005b65a0	CDXTexture__UpsampleHorizontal_Average2_Sse	0x005b65a0	0x005b6648
 0x005b6650	CDXTexture__UpsampleBilinear2x2_Scalar	0x005b6650	0x005b6710
 0x005b6720	CDXTexture__UpsampleBilinear2x2_Sse	0x005b6720	0x005b67f5
+0x005b6800	FUN_005b6800	0x005b6800	0x005b6a85
+0x005b6a90	FUN_005b6a90	0x005b6a90	0x005b6c20
 0x005b6c30	CDXTexture__UpsampleDispatchHorizontal	0x005b6c30	0x005b6c8c
 0x005b6c90	CDXTexture__UpsampleDispatchBilinear	0x005b6c90	0x005b6cec
 0x005b6cf0	CDXTexture__InitUpsamplerDispatch	0x005b6cf0	0x005b6e64
@@ -7073,6 +7091,9 @@ address	name	bodyMin	bodyMax
 0x005bbe20	FUN_005bbe20	0x005bbe20	0x005bbe66
 0x005bbe70	CDXTexture__InverseDct8x8_DequantAndStore_Mmx	0x005bbe70	0x005bc52b
 0x005bc530	FUN_005bc530	0x005bc530	0x005bc576
+0x005bc580	FUN_005bc580	0x005bc580	0x005bcc32
+0x005bcc40	FUN_005bcc40	0x005bcc40	0x005bce0f
+0x005bce10	FUN_005bce10	0x005bce10	0x005bce54
 0x005bce60	CDXTexture__ConvertYCbCrToRgb24_Mmx	0x005bce60	0x005bcf9d
 0x005bcfa0	CDXTexture__InflateCodesState_Create	0x005bcfa0	0x005bcfd2
 0x005bcfd3	CDXTexture__InflateCodesState_Process	0x005bcfd3	0x005bd501
@@ -7082,6 +7103,9 @@ address	name	bodyMin	bodyMax
 0x005bd933	CDXTexture__InflateDynamicTree_BuildLitDistTrees	0x005bd933	0x005bda2c
 0x005bda2d	CDXTexture__InflateFixedTrees_InitDescriptors	0x005bda2d	0x005bda5d
 0x005bda5e	CDXTexture__InflateOutputWindowFlush	0x005bda5e	0x005bdb6e
+0x005bdb70	FUN_005bdb70	0x005bdb70	0x005bdd95
+0x005bdda0	FUN_005bdda0	0x005bdda0	0x005bdff5
+0x005be000	FUN_005be000	0x005be000	0x005be356
 0x005be360	CDXTexture__InflateFast_DecodeBlockStream	0x005be360	0x005be621
 0x005be622	Direct3DCreate9	0x005be622	0x005be627
 0x005be628	HResultToString	0x005be628	0x005c9c68

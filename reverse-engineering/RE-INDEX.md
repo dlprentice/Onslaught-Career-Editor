@@ -222,19 +222,21 @@ runtime contract, or rebuild mapping.
 The separate sealed
 [24-row JPEG/IJG callback scratch admission](binary-analysis/jpeg-ijg-callback-ghidra-scratch-admission-2026-08-14.md)
 reproduces 24 exact IJG v6b algorithm bodies on two isolated copies of that
-current 8,280-function state. It corrects the false `0x005B6900` boundary to the
+then-current 8,280-function state. It corrects the false `0x005B6900` boundary to the
 actual `0x005B6800..0x005B6A86` callback, preserves every PRE function row,
 and proves only a structural 8,304-function scratch result. Its verdict is
 `SCRATCH_READY_LIVE_FORBIDDEN`; the saved census, Generation 23, semantic
 grades, runtime contracts, and rebuild remain unchanged.
 
-The follow-on current-state
+The follow-on preparation-time
 [JPEG24 live-promotion preparation](binary-analysis/jpeg-ijg-callback-ghidra-live-promotion-preparation-2026-08-14.md)
 re-grounded the byte-identical live/tracked 8,280-function db.18614 PRE and
 reproduced the exact 8,304-function prospective POST on two fresh disposable
-copies. It prepares a fail-closed one-save, backup/readback, tracked-restore,
-and projection/accounting ceremony, but remains `PREPARATION_ONLY` and performs
-no live or tracked Ghidra write.
+copies. It granted no mutation authority. The completed
+[JPEG/IJG live-promotion report](binary-analysis/jpeg-ijg-callback-ghidra-live-promotion-2026-08-14.md)
+now owns the 8,304-function db.18615 result: all 8,280 PRE rows remain exact,
+24 default-metadata functions add 38 ranges and 14,817 owned bytes, and
+live/tracked/POST recovery are byte-identical.
 
 The separate sealed
 [23-row CRT/runtime P0 scratch admission](binary-analysis/crt-runtime-p0-ghidra-scratch-admission-2026-08-14.md)
@@ -253,13 +255,13 @@ revalidates all 23 demo twins, and reruns the complete positive/adverse campaign
 V1 remains sealed historical evidence; v2 is the current scratch authority and
 still forbids live or tracked promotion.
 
-The follow-on current-state
+The follow-on historical
 [CRT23 live-promotion preparation](binary-analysis/crt-runtime-p0-ghidra-live-promotion-preparation-2026-08-14.md)
 re-grounded the byte-identical live/tracked 8,280-function db.18614 PRE and
 reproduced an exact 8,303-function / 8,420-range prospective POST on two fresh
 copies. It independently totals 1,796,601 owned `.text` bytes and preserves all
-8,280 PRE rows, but remains `PREPARATION_ONLY` and performs no live or tracked
-Ghidra write.
+8,280 PRE rows, but remains `PREPARATION_ONLY`, performed no live or tracked
+Ghidra write, and must be re-grounded before any future ceremony.
 
 The separate historical sealed
 [five-existing-function body-fragment scratch admission](binary-analysis/pc-function-body-fragment-ghidra-scratch-admission-2026-08-14.md)
@@ -622,9 +624,9 @@ different failure modes and only the first was being tested.)*
   with **0 byte mismatches**, 6,351 of 6,411 functions fully clean — but only
   **79.8268 % of `.text` was covered by those 6,411 historical bodies**.
   [Current `.text` body ownership](binary-analysis/current-text-ownership-2026-08-13.md)
-  now supersedes that metric for present use: all 8,280 saved functions and
-  8,396 exact ranges own 1,795,470 / 1,929,117 bytes = 93.072115377%, with
-  zero overlap. The 133,647-byte gap is separately partitioned by current
+  now supersedes that metric for present use: all 8,304 saved functions and
+  8,434 exact ranges own 1,810,287 / 1,929,117 bytes = 93.840186987%, with
+  zero overlap. The 118,830-byte gap is separately partitioned by current
   listing state and discovery evidence; this remains structural body ownership,
   not semantic reversal. The historical 6,411-row result remains reproducible
   in under a minute with `tools/re_verify.py`.
@@ -827,8 +829,8 @@ Machine-readable siblings, for consumers that should not be parsing prose:
   — a **candidate**, as its own filename says; not an accepted contract.
 - [Retail specimen manifest](binary-analysis/retail-specimen-manifest-2026-03-14.json)
 - [2026-08-13 function name table](binary-analysis/ghidra-function-name-table-2026-08-13.tsv)
-  — the current 8,280-row address-to-name authority, regenerated from the
-  2026-08-14 external-table boundary readback while retaining the stable path.
+  — the current 8,304-row address-to-name authority, regenerated from the
+  2026-08-14 JPEG/IJG callback readback while retaining the stable path.
 - [2026-08-12 function name table](binary-analysis/ghidra-function-name-table-2026-08-12.tsv)
   — frozen 8,136-row provenance retained for Generations 20–23 and its other
   pinned consumers.

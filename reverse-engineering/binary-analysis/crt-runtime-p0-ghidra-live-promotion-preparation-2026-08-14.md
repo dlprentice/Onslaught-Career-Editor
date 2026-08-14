@@ -1,6 +1,6 @@
 # CRT/runtime P0 Ghidra live-promotion preparation
 
-Status: **current db.18614 preparation reproduced; live promotion remains forbidden**
+Status: **historical db.18614 preparation; re-grounding required before promotion**
 
 Date: 2026-08-14
 
@@ -8,8 +8,9 @@ Verdict: **PREPARATION_READY_LIVE_FORBIDDEN**
 
 Policy: **`PREPARATION_ONLY`**
 
-Evidence: MEASURED — the corrected sealed v2 scratch authority, exact current
-live/tracked PRE, and two fresh disposable db.18614 prospective-POST replicas.
+Evidence: MEASURED — the corrected sealed v2 scratch authority, exact
+preparation-time live/tracked PRE, and two fresh disposable db.18614
+prospective-POST replicas.
 The preparation authority opens no Ghidra project and creates no live lane,
 backup, tracked refresh, projection, or aggregate promotion receipt.
 
@@ -19,10 +20,13 @@ Specimen: pristine PC retail `BEA.exe`, SHA-256
 Preparation base: Git commit
 `4d7ba6f938ea54ed1312e0f61ba208b0d285b84e`.
 
-## Current PRE
+## Preparation-time PRE
 
-Read-only inventories prove the live maintainer project and tracked canonical
-project are byte-identical after the five-body db.18614 promotion:
+Read-only inventories proved the live maintainer project and tracked canonical
+project were byte-identical after the five-body db.18614 promotion. The later
+[JPEG/IJG callback promotion](jpeg-ijg-callback-ghidra-live-promotion-2026-08-14.md)
+advanced both to 8,304 functions on db.18615, so this preparation must not be
+used for a current live write without a fresh geometry re-ground:
 
 | PRE property | Exact value |
 | --- | --- |

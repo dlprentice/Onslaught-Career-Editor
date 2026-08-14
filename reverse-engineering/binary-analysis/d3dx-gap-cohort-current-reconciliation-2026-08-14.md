@@ -2,11 +2,12 @@
 
 Date: 2026-08-14
 
-Status: reviewed static reconciliation; one admitted-body semantic refinement
-and two exact boundaries awaiting a separate Ghidra admission ceremony.
+Status: reviewed dated static reconciliation; one admitted-body semantic
+refinement and two exact boundaries require current-geometry re-grounding
+before a separate Ghidra admission ceremony.
 
 Evidence: **MEASURED** — exact pristine PC bodies, exact Issue-7 byte copies,
-later-Xbox single-range function boundaries, symbolic x87 formulas, current
+later-Xbox single-range function boundaries, symbolic x87 formulas, the dated
 8,280-function body ownership, loose-instruction coverage, and entry references.
 
 Specimen: pristine PC retail `BEA.exe`, SHA-256
@@ -20,10 +21,10 @@ US-retail `default.xbe`, SHA-256
 
 Verdict: **THREE COMPLETE D3DX-COMPATIBLE PC BODIES REPRODUCED; ONE IS
 ALREADY ADMITTED AND TWO REMAIN STRUCTURALLY UNADMITTED.** The sealed cohort
-contains 357 bytes / 129 instructions. Current 8,280-function evidence already
+contains 357 bytes / 129 instructions. The dated 8,280-function evidence already
 owns `0x00576b4d..0x00576bba` exactly. The other two bodies remain 248 bytes /
 92 instructions of contiguous loose code with no overlap against any of the
-8,400 current body ranges. This finding changes no Ghidra project or census.
+8,400 then-current body ranges. This finding changes no Ghidra project or census.
 
 ## Current settlement
 
@@ -126,5 +127,7 @@ Not promoted here:
 
 The two missing bodies require the normal isolated scratch validation,
 recoverable backup, dry-run/apply/readback, rollback and containment controls,
-independent review, and a separately authorized live promotion. Until then the
-current structural census remains exactly 8,280.
+independent review, and a separately authorized live promotion. This finding
+left its then-current structural census at exactly 8,280. The live/tracked
+project has since advanced independently to 8,304 functions; the two candidate
+bodies must be rechecked against that exact geometry before any promotion.

@@ -1,12 +1,18 @@
 # JPEG/IJG callback Ghidra scratch admission
 
-Status: active — sealed scratch candidate; live and tracked Ghidra mutation forbidden
+Status: historical — sealed scratch candidate consumed by reviewed live promotion
 Last updated: 2026-08-14
-Summary: reproduces 24 exact IJG v6b algorithm bodies against the current
-8,280-function db.18613 project and proves a structural-only 8,304-function
-result on two disposable replicas without authorizing promotion.
+Summary: reproduced 24 exact IJG v6b algorithm bodies against the then-current
+8,280-function db.18613 project and proved a structural-only 8,304-function
+result on two disposable replicas without itself authorizing promotion.
 
 Verdict: **SCRATCH_READY_LIVE_FORBIDDEN**
+
+Current-state note: this scratch-only verdict remains the authority for the
+pre-promotion replicas and controls. The cohort was subsequently consumed by
+the separately backed-up and reviewed
+[live promotion](jpeg-ijg-callback-ghidra-live-promotion-2026-08-14.md), which
+now owns the 8,304-function db.18615 structural state.
 
 Evidence: **MEASURED** — pristine retail bytes, exact current function-body
 ownership, two byte-identical PC-demo reproofs, two persistent Ghidra replicas,
@@ -25,13 +31,13 @@ PRE database: `db.18613.gbf`, 68,337,664 bytes, SHA-256
 ## Corrected structural cohort
 
 The [24-row manifest](jpeg-ijg-callback-function-boundaries-2026-08-14.tsv)
-reproduces twice, byte for byte, from the retained analyzer and exact current
+reproduces twice, byte for byte, from the retained analyzer and exact historical
 8,280-function body-range export:
 
 - 24 pairwise-disjoint functions in 38 body ranges and 14,817 body bytes;
 - 4,497 externally decoded instructions and 4,745 CFG edges;
 - 24/24 PC-demo normalized-body and CFG twins, including 14 raw-byte twins;
-- zero body-byte overlap with any current 8,280-function body and zero
+- zero body-byte overlap with any then-current 8,280-function body and zero
   pairwise cohort overlap; and
 - all 24 bounded as `EXACT_IJG_V6B_SOURCE_ALGORITHM` against their pinned IJG
   v6b source files and algorithms.

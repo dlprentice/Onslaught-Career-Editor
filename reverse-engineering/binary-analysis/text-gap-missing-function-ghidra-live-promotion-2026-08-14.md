@@ -107,8 +107,8 @@ The retained aggregate receipt is
 It contains only repository-relative POSIX roles; absolute machine paths from
 the historical local receipts are validated but never copied into it.
 
-The retained receipt is historical and intentionally refuses current 8,280
-live/tracked roots. Reproduction requires the exact 8,201 checkout/project
+The retained receipt is historical and intentionally refuses later 8,280 and
+current 8,304 live/tracked roots. Reproduction requires the exact 8,201 checkout/project
 state, retained live lane and scratch repository, PRE and POST backup roots,
 and existing aggregate receipt. The verifier refuses an
 overlapping output, a non-ignored seal destination, or overwrite.

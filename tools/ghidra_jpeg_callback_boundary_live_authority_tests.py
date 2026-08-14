@@ -296,22 +296,30 @@ class PureContractTests(unittest.TestCase):
                 "createdAtUtc": "2026-08-14T00:00:00Z",
                 "sourceStable": True,
                 "copyComparison": comparison,
-                "source": {**expected, "root": str(source)},
-                "destination": {**expected, "root": str(destination)},
+                "source": expected,
+                "destination": expected,
                 "readonlyOpen": None,
             }
-            path = root / "backup_manifest.json"
+            destination.mkdir()
+            path = destination / "backup_manifest.json"
             path.write_text(json.dumps(payload) + "\n", encoding="utf-8")
             authority.validate_backup_manifest(
                 path, expected, source, destination, "fixture backup"
             )
 
             wrong = json.loads(json.dumps(payload))
-            wrong["destination"]["root"] = str(root / "other-destination")
+            wrong["destination"]["root"] = str(destination)
             path.write_text(json.dumps(wrong) + "\n", encoding="utf-8")
-            with self.assertRaisesRegex(authority.AuthorityError, "destination root"):
+            with self.assertRaisesRegex(authority.AuthorityError, "root fields"):
                 authority.validate_backup_manifest(
                     path, expected, source, destination, "fixture backup"
+                )
+
+            path.write_text(json.dumps(payload) + "\n", encoding="utf-8")
+            wrong_destination = root / "wrong-destination"
+            with self.assertRaisesRegex(authority.AuthorityError, "destination path"):
+                authority.validate_backup_manifest(
+                    path, expected, source, wrong_destination, "fixture backup"
                 )
 
             wrong = json.loads(json.dumps(payload))

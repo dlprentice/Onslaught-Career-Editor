@@ -10,8 +10,8 @@ Verdict: all 8,136 functions in this sealed population have at least a bounded
 static C1 envelope. The 34 functions promoted on 2026-08-13 are outside this
 table. A separately reviewed 34-row addendum now extends bounded static-envelope
 coverage across the resulting 8,170-function state without rewriting this
-sealed artifact. The 31 text-gap and 79 external-table boundaries promoted on
-2026-08-14 are outside both tables; this report itself settles dated
+sealed artifact. The 31 text-gap, 79 external-table, and 24 JPEG/IJG boundaries
+promoted on 2026-08-14 are outside both tables; this report itself settles dated
 accounting, not complete semantic or reconstruction parity.
 Specimen: pristine PC `BEA.exe`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
@@ -80,9 +80,10 @@ This projection is the sealed authority for its dated 8,136-row question. The
 separate
 [34-function static-contract addendum](mission-script-registry-new-function-static-contracts-2026-08-13.md)
 is the dated extension: together they answer yes for that 8,170-row state at
-the bounded-static level. The current 8,280-row structural census includes 31
-later rows with separate provider-compatible classifications and 79 ungraded
-external-table rows, with no silent grade projection. Neither rewrites the immutable campaign replay, which
+the bounded-static level. The current 8,304-row structural census includes 31
+later rows with separate provider-compatible classifications, 79 ungraded
+external-table rows, and 24 ungraded JPEG/IJG structural rows, with no silent
+grade projection. Neither rewrites the immutable campaign replay, which
 remains the authority for its admitted runtime observations, residual history,
 and READY/reducer pins.
 

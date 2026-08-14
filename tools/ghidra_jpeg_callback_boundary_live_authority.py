@@ -1539,16 +1539,22 @@ def validate_backup_manifest(
             f"{label} source")
     require(manifest_value(value.get("destination", {})) == project_without_root(expected),
             f"{label} destination")
+    # ghidra_project_backup.py intentionally omits workstation roots from its
+    # durable copy manifest.  Bind the destination through the manifest's
+    # physical parent and leave source execution-path provenance to the
+    # preceding exact inspect/chronology evidence; do not validate fields the
+    # real receipt cannot contain.
     require(
-        clean_path(Path(value.get("source", {}).get("root", "")))
-        == clean_path(source_root),
-        f"{label} source root",
+        "root" not in value.get("source", {})
+        and "root" not in value.get("destination", {}),
+        f"{label} unexpected root fields",
     )
     require(
-        clean_path(Path(value.get("destination", {}).get("root", "")))
-        == clean_path(destination_root),
-        f"{label} destination root",
+        clean_path(path.parent) == clean_path(destination_root),
+        f"{label} destination path",
     )
+    require(clean_path(source_root) != clean_path(destination_root),
+            f"{label} source/destination alias")
     require(value.get("readonlyOpen") is None, f"{label} unexpectedly opened Ghidra")
     return parse_utc(value.get("createdAtUtc"), f"{label} createdAtUtc")
 

@@ -2,24 +2,24 @@
 
 Date: 2026-08-14
 
-Status: reviewed isolated scratch admission; structurally ready on disposable
-copies, with live and tracked Ghidra promotion forbidden.
+Status: reviewed historical scratch admission; current-geometry re-grounding
+required, with live and tracked Ghidra promotion forbidden.
 
-Evidence: **MEASURED** — exact pristine bodies, the reviewed current-state
+Evidence: **MEASURED** — exact pristine bodies, the reviewed dated-state
 reconciliation, two independent dry/apply/readback replicas, four adverse
 controls with separate PRE readbacks, and copied-project read-only openability.
 
 Specimen: pristine PC retail `BEA.exe`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`;
-scratch copies of the current tracked 19-file / 186,960,773-byte Ghidra project,
+scratch copies of the then-current tracked 19-file / 186,960,773-byte Ghidra project,
 whose `db.18613.gbf` is 68,337,664 bytes with SHA-256
 `615497847b0c732077ee7164b0973b9012092523e9ad99b91c21781952420ebe`.
 
 Verdict: **SCRATCH_READY_LIVE_FORBIDDEN.** Two complete D3DX-compatible loose
 bodies can be admitted as exact default-source functions on isolated copies.
 Both saved replicas independently reach 8,282 functions while preserving every
-field of all 8,280 PRE function rows. The live and tracked projects remain at
-8,280; this report authorizes neither one to change.
+field of all 8,280 PRE function rows. This report authorized neither live nor
+tracked to change; both later advanced independently to 8,304 functions.
 
 ## Exact structural result
 
@@ -136,7 +136,7 @@ Not promoted here:
 - an original linker symbol or exact upstream D3DX version;
 - runtime reachability, dispatch choice, numerical corner-case parity, source
   equivalence, or rebuild behavior; or
-- any change to the current 8,280-function census.
+- any change to the then-current 8,280-function census.
 
 The compatibility-scoped API identities remain owned by the separate
 [three-body current reconciliation](d3dx-gap-cohort-current-reconciliation-2026-08-14.md).

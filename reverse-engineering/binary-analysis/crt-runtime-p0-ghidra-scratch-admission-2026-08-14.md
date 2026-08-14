@@ -2,7 +2,7 @@
 
 Status: superseded receipt schema — v1 evidence retained; use the corrected v2 admission
 Last updated: 2026-08-14
-Summary: reproduces the corrected CRT22 run-c P0 cohort against the current
+Summary: reproduces the corrected CRT22 run-c P0 cohort against the then-current
 8,280-function db.18613 project and proves an exact structural-only
 8,303-function result on two disposable replicas without authorizing promotion.
 
@@ -16,7 +16,7 @@ Verdict: **SCRATCH_READY_LIVE_FORBIDDEN**
 > removes those fields, semantically validates every retained field, and reruns
 > the complete campaign. The sealed v1 evidence remains byte-for-byte retained.
 
-Evidence: **MEASURED** — pristine retail bytes, exact current body ownership,
+Evidence: **MEASURED** — pristine retail bytes, exact then-current body ownership,
 corrected run-c plus two byte-identical fresh reproofs, PC-demo twins, two
 persistent Ghidra replicas, full PRE/POST inventories, two rollback readbacks,
 two path-containment controls, and a retained read-only backup/restore/open
@@ -45,7 +45,7 @@ Independent admission checks establish:
 - 23 sorted P0 entries in 24 pairwise-disjoint ranges, 1,131 pristine bytes,
   and 312 externally decoded instructions;
 - exact pristine body hashes and zero overlap with all 8,400 ranges of the
-  current 8,280-function state;
+  then-current 8,280-function state;
 - a normalized- and CFG-equal PC-demo twin for every entry, rejoined to the
   exact demo specimen SHA-256
   `d8637dd755b21c720c0cb8f71923f94d2a04a184d90f5343c2e868ce8606e5c2`;

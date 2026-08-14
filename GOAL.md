@@ -174,12 +174,13 @@ Generation 73 is a projection oracle that is never a parent or authority.
 Static-envelope closure covers the dated 8,136-function census against which it
 was sealed. A later 34-row Mission-registry addendum bounds the resulting
 8,170-row state at C1 static and a separate metadata ceremony records only its
-Tier-2 registry vocabulary. Later ceremonies admitted 31 text-gap and 79
-external-table boundaries, so the current saved structural census is 8,280.
-The 31 have bounded provider-compatible classifications; the 79 remain
-default-metadata structural rows. All 154 post-Generation-23 structural rows are
-now represented in Generation 25 as OPAQUE, but remain outside the frozen static
-grade projection. None of these counts is a final ceiling,
+Tier-2 registry vocabulary. Later ceremonies admitted 31 text-gap, 79
+external-table, and 24 JPEG/IJG callback boundaries, so the current saved
+structural census is 8,304. The 31 have bounded provider-compatible
+classifications; the 79 and newest 24 remain default-metadata structural rows.
+The first 154 post-Generation-23 rows are represented in frozen Generation 25
+as OPAQUE; the newest 24 postdate that campaign and remain outside it and the
+frozen static-grade projection. None of these counts is a final ceiling,
 semantic recovery, or reversal. The PC demo
 partition and the instruction-local Xbox source-line anchors are oracles, never
 denominators for retail completion. Generation 25 carries Generation 24's
@@ -306,10 +307,11 @@ the mandate; the completion test and every clause above are unchanged.
   tracked refresh, and restore probes. They advance the structural census to
   8,280 while preserving every 8,201 PRE row, but add no semantic grade,
   original linker identity, runtime contract, or rebuild mapping.
-- Current saved-body `.text` ownership is independently closed at 1,795,470 /
-  1,929,117 bytes = 93.072115377% across 8,280 functions / 8,396 exact ranges,
+- Current saved-body `.text` ownership is independently closed at 1,810,287 /
+  1,929,117 bytes = 93.840186987% across 8,304 functions / 8,434 exact ranges,
   with zero overlap. The five reviewed current-function jump fragments are now
-  repaired existing bodies; the remaining 133,647 bytes are listing-partitioned
+  repaired existing bodies; the 24 reviewed JPEG/IJG callbacks are now exact
+  default-metadata functions; the remaining 118,830 bytes are listing-partitioned
   high-yield code/data/padding queues. This is structural accounting, not a
   final function census or semantic score.
 - The 75-row existing-entry MissionScript normalization passed its complete
@@ -345,8 +347,8 @@ the mandate; the completion test and every clause above are unchanged.
 **Active frontier, in priority order:**
 
 1. **Recover the highest-confidence callable units and body repairs in the
-   current 133,647-byte `.text` gap.** Re-ground the already reviewed JPEG/CRT
-   cohorts against the current `db.18614` geometry, then use cross-build shape, current
+   current 118,830-byte `.text` gap.** Re-ground the already reviewed CRT and
+   D3DX cohorts against the current `db.18615` geometry, then use cross-build shape, current
    listing state, incoming control flow, alignment, and library classification
    to prove exact boundaries; do not infer entries from linear decode alone.
 2. **Advance Generation 26 from the exact Generation-25 authority.** Keep any
@@ -415,12 +417,17 @@ Rank from current evidence; a reproduced contradiction outranks this list.
   remain byte-identical. Generation 24 stays frozen on its `db.18613` input;
   the next campaign must re-ground the current geometry rather than repinning
   that reducer.
-- **2026-08-14 — current db.18614 geometry reseeded as Generation 25.** Two
+- **2026-08-14 — then-current db.18614 geometry reseeded as Generation 25.** Two
   independent snapshots and canonical/replica full replays agree at 8,280
   functions. All 27,089 eligible Generation-24 carry rows are accounted for;
   16 changed structural lineages are retired explicitly and one new 12-byte
   residual remains open. The five repaired functions stay OPAQUE, no semantic
   grade or runtime contract moves, and Generation 26 is the next valid parent.
+- **2026-08-14 — 24 JPEG/IJG callbacks promoted.** A separately backed-up
+  one-save ceremony advanced live and tracked Ghidra from 8,280/db.18614 to
+  8,304/db.18615 while preserving every PRE row. It added 38 exact body ranges
+  and 14,817 owned `.text` bytes, reaching 93.840186987%. Generation 25 remains
+  frozen and a later campaign must re-ground the new structural geometry.
 
 ---
 

@@ -1,6 +1,6 @@
 # CRT/runtime P0 Ghidra scratch admission v2
 
-Status: active — hostile-audit correction sealed in scratch; live and tracked mutation forbidden
+Status: historical sealed scratch proof; current promotion requires re-grounding
 Last updated: 2026-08-14
 Summary: replaces the inadmissible v1 receipt shape, not its structural result;
 reruns the exact 23-boundary CRT22 run-c cohort through two fresh db.18613

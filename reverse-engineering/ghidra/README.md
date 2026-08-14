@@ -9,22 +9,24 @@ owner; local working copies and historical backups remain untracked.
 - Imported Steam specimen SHA-256:
   `74154BFAE14DDC8ECB87A0766F5BC381C7B7F1AB334ED7A753040EDA1E1E7750`
 - Imported specimen MD5: `3b456964020070efe696d2cc09464a55`
-- Project payload: 19 files, 186,977,157 bytes
+- Project payload: 19 files, 186,993,541 bytes
 - Canonical `sha256<TAB>bytes<TAB>path` inventory SHA-256:
-  `cda0938c1a266fbe1751a8b0bf175b90c63b296f21fc9631b5bade1ecf93e541`
-- Current rolling database `db.18614.gbf`: 68,337,664 bytes, SHA-256
-  `d7f0011ea337f58b710415d5664e73d91ca9f1f61e20a836278d3e71b71b2865`
+  `3cd459d5461919934199e3346f6a92ce14946f42af400488ccde733173a40627`
+- Current rolling database `db.18615.gbf`: 68,354,048 bytes, SHA-256
+  `6c2fc2f12394cf7b63f4f335173ba0a19b52b92c50dc4d2da987170501bc9681`
 
 **Promotion note:** this snapshot was refreshed from the source-stable live
-maintainer project after five existing-function body fragments passed exact PRE
-validation, two saved scratch replicas, rollback and containment controls, one
-live apply, separate-process full-inventory readback, tracked-still-PRE proof,
-and PRE/POST/tracked restore probes. Internal functions remain 8,280; exact body
-ranges become 8,396 and owned `.text` grows by 1,258 bytes to 1,795,470. All
-8,275 non-target rows remain byte-identical and only the five reviewed body
-rows change. No name, signature, parameter, ABI/storage field, comment, tag,
-defined-data unit, stored non-function symbol, program byte, or relocation
+maintainer project after 24 JPEG/IJG callback boundaries passed exact PRE
+validation, sealed scratch and current-state replicas, rollback and containment
+controls, one live apply, separate-process full-inventory readback,
+tracked-still-PRE proof, and PRE/POST/tracked restore probes. Internal functions
+become 8,304; exact body ranges become 8,434 and owned `.text` grows by 14,817
+bytes to 1,810,287. All 8,280 PRE rows remain field-identical and the 24 new
+rows use default metadata. No signature, parameter, ABI/storage field, comment,
+tag, defined-data unit, stored non-function symbol, program byte, or relocation
 changed. See the
+[`JPEG/IJG callback live-promotion report`](../binary-analysis/jpeg-ijg-callback-ghidra-live-promotion-2026-08-14.md),
+the preceding
 [`function-body fragment live-promotion report`](../binary-analysis/pc-function-body-fragment-ghidra-live-promotion-2026-08-14.md),
 the preceding
 [`external-table boundary live-promotion report`](../binary-analysis/external-table-gap-ghidra-live-promotion-2026-08-14.md),
@@ -44,19 +46,17 @@ The 19-file tree is byte-identical to the independently restored/read-only-
 opened D: POST recovery made on 2026-08-14. Future live work can make
 the snapshot lag again; each refresh remains a separately authorized promotion.
 The current ignored live readback and tracked-restore receipts are respectively
-`local-lab/ghidra-function-fragment5-range-live-promotion-20260814-v1/runs/live-readback/result.ready.json`
-(1,267 bytes, SHA-256 `cbf6c4cb93a3aaba265cde7027ca33f0204c009c16fc8b1c17588ef7932c983a`)
+`local-lab/ghidra-jpeg24-boundary-live-promotion-20260814-v2/runs/live-readback/boundaries.ready.json`
+(1,370 bytes, SHA-256 `3071208570090c3609eedd6dfa91ad4805c48cdb663df952dd69ddaecf86d94f`)
 and
-`local-lab/ghidra-function-fragment5-range-live-promotion-20260814-v1/tracked-post-restore.ready.json`
-(5,945 bytes, SHA-256 `facf9a67d54a67139f8d7b6b0205055cafb0c616e2d4ee03a8fca5c26ea6f4bc`).
+`local-lab/ghidra-jpeg24-boundary-live-promotion-20260814-v2/tracked-post-restore.ready.json`
+(5,927 bytes, SHA-256 `de189f7146b63027ca2a05bee3202637606d8733a183615a940dfed4d420ccb8`).
 The read-only aggregate authority is
-`local-lab/ghidra-function-fragment5-range-live-authority-20260814-v1/live-promotion.ready.json`
-(26,073 bytes, SHA-256
-`18b8a7e75bf44108d72c7589dc2fa6a1ac0e2634fbb8ac387562b41ac2fdd451`).
+`local-lab/ghidra-jpeg24-boundary-live-authority-20260814-v2/live-promotion.ready.json`
+(34,732 bytes, SHA-256
+`17a5631120e3342f64aaabd512926a0f4ed2b24c39b7879ee0209db59b0d165a`).
 Its portable verifier is
-[`tools/ghidra_function_fragment_range_live_authority.py`](../../tools/ghidra_function_fragment_range_live_authority.py)
-(68,331 bytes, SHA-256
-`bc6c7fdc9ee9a19ccff0c437166dbde2b08b98a7bcd78b4d3ca7a46de0cab30c`).
+[`tools/ghidra_jpeg_callback_boundary_live_authority.py`](../../tools/ghidra_jpeg_callback_boundary_live_authority.py).
 
 Related (not this folder):
 
@@ -93,7 +93,7 @@ the user overrides them:
 | Headless entry | `...\support\analyzeHeadless.bat` |
 | Prior install archive | `D:\GhidraArchives\` (12.0.3 retained there; do not delete) |
 | Working/maintainer project | `C:\Users\david\Ghidra\Projects` (`BEA.gpr` / `BEA.rep`) |
-| Verified off-volume recovery | `D:\BEA-Ghidra-Backups\2026-08-14-function-fragment5-ranges-post-live\` (exact current POST snapshot; independently copied and read-only reopened) |
+| Verified off-volume recovery | `D:\BEA-Ghidra-Backups\2026-08-14-jpeg24-db18614-post-live-v2\` (exact current POST snapshot; independently copied and read-only reopened) |
 | Xbox Issue-11 POST recovery | `D:\BEA-Ghidra-Backups\2026-08-12-xbox-sparse-symbol-post-anchors-issue11\` (exact isolated project; restored semantic readback passed) |
 | Xbox US-retail POST recovery | `D:\BEA-Ghidra-Backups\2026-08-12-xbox-sparse-symbol-post-anchors-us-retail\` (exact isolated project; restored semantic readback passed) |
 | User settings | `%APPDATA%\ghidra\ghidra_12.1.2_PUBLIC` |

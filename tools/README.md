@@ -208,11 +208,15 @@ and its
 The separate
 [live-promotion preparation](../reverse-engineering/binary-analysis/jpeg-ijg-callback-ghidra-live-promotion-preparation-2026-08-14.md)
 uses `GhidraApplyJpegCallbackBoundariesV2.java` and
-`ghidra_jpeg_callback_boundary_live_authority.py` to pin the exact current
+`ghidra_jpeg_callback_boundary_live_authority.py` to pin the exact then-current
 db.18614 PRE, reproduce two fresh disposable 8,304-function prospective POST
-replicas, bind `0x005B6900` listing ownership, and prepare the one-save
-backup/readback/restore plus future projection/accounting gates. Its policy is
-`PREPARATION_ONLY`; it performs no live or tracked Ghidra write.
+replicas, and bind `0x005B6900` listing ownership. After the separately
+authorized one-save ceremony, `check-live` proved PRE/POST recovery while
+tracked remained PRE; `seal` then proved the tracked refresh/restore,
+8,304-row projection, and exact 1,810,287-byte body accounting. `verify` now
+reproduces the immutable aggregate receipt without opening or writing Ghidra.
+See the completed
+[live-promotion report](../reverse-engineering/binary-analysis/jpeg-ijg-callback-ghidra-live-promotion-2026-08-14.md).
 
 `GhidraApplyD3dxGapBoundaries.java` is the structural-only runner for the two
 complete D3DX-compatible loose bodies at `0x00595FC9` and `0x00596028`. It pins
@@ -279,14 +283,15 @@ Use the
 [corrected v2 report](../reverse-engineering/binary-analysis/crt-runtime-p0-ghidra-scratch-admission-v2-2026-08-14.md);
 the v1 report and sealed lane remain historical audit evidence.
 
-`GhidraApplyCrtP0BoundariesV3.java` changes only the schema identity and exact
-db.18614 PRE/POST counters needed to replay that corrected cohort on the current
-8,396-range project. The read-only
+`GhidraApplyCrtP0BoundariesV3.java` changed only the schema identity and exact
+db.18614 PRE/POST counters needed to replay that corrected cohort on the
+pre-JPEG 8,396-range project. The read-only
 `ghidra_crt_p0_boundary_live_preparation.py` replays the v2 scratch authority,
 rehashes two fresh current-state replicas, independently totals their body
 ranges, proves all 8,280 PRE function rows unchanged, and requires live and
-tracked Ghidra to be byte-identical at db.18614. It refuses when any future
-ceremony path already exists and grants no mutation authority.
+tracked Ghidra to be byte-identical at db.18614. This preparation is now
+historical and must be re-grounded against current db.18615 before use; it
+granted no mutation authority.
 
 ```powershell
 python -I -B tools\ghidra_crt_p0_boundary_live_preparation_tests.py

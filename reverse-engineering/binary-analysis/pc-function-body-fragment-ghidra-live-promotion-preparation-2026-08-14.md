@@ -21,8 +21,8 @@ Preparation integration base: Git commit
 
 Current-state note: this runbook is no longer a launch authority. The completed
 [`live-promotion report`](pc-function-body-fragment-ghidra-live-promotion-2026-08-14.md)
-owns the `db.18614` POST, exact backups/restores, current projection, and current
-body accounting. Commands below describe the historical PRE ceremony boundary
+owns the `db.18614` POST, exact backups/restores, then-current projection, and
+then-current body accounting. Commands below describe the historical PRE ceremony boundary
 and must not be replayed against the current project as if it were still PRE.
 
 ## Read-only preparation result
