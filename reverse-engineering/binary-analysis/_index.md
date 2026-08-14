@@ -54,6 +54,10 @@ the document it links.
   — closes `0x005762dd..0x005763cd` as one exact 240-byte / 97-instruction
   function through seven byte-identical PC/Issue-7/Issue-11/US-retail copies;
   the compatibility label is not an original linker or C++ symbol
+- [D3DX9 exact-public current-name corrections](d3dx9-exact-public-name-corrections-2026-08-13.md)
+  — refutes 16 saved hypothesis names through full-body equality at the same
+  official public symbol across pinned x86 D3DX9 releases 24 through 31; three
+  alias-ambiguous addresses remain unrenamed
 - [Collision-component implementation-identity correction](collision-component-identity-correction-2026-08-12.md)
   — promotes five hierarchy/source/cross-build-backed shared-base identities
   through the backed-up live and tracked Ghidra gates; folded aliases, runtime
