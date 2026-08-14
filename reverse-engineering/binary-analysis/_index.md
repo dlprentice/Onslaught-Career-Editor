@@ -65,6 +65,10 @@ the document it links.
   — refutes 16 saved hypothesis names through full-body equality at the same
   official public symbol across pinned x86 D3DX9 releases 24 through 31; three
   alias-ambiguous addresses remain unrenamed
+- [D3DX9 section-contribution provenance](d3dx9-section-contribution-provenance-2026-08-13.md)
+  — extends exact provider attribution beyond public symbols: 50 saved bodies
+  map to one stable D3DX object basename across releases 24–31, while eight
+  version-dependent or aliasing matches remain explicit and unrenamed
 - [Collision-component implementation-identity correction](collision-component-identity-correction-2026-08-12.md)
   — promotes five hierarchy/source/cross-build-backed shared-base identities
   through the backed-up live and tracked Ghidra gates; folded aliases, runtime
