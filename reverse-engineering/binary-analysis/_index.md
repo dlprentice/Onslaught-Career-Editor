@@ -50,6 +50,10 @@ the document it links.
   Microsoft CRT FDIV helpers, 14 AMD 3DNow math primitives, and three IJG 6b
   inverse-DCT routines; provider-qualified labels remain pending the structural
   Ghidra admission gate and are not claimed as original BEA linker symbols
+- [External-table gap function-boundary preparation](external-table-gap-function-boundaries-2026-08-13.md)
+  — dispositions all 51 table-target gaps, separates five existing-body/shared
+  fragments, and prepares a non-overlapping 79-function lower bound with exact
+  PC-demo twins; current Ghidra remains at 8,170 pending admission
 - [PC D3DX four-vector-cross helper boundary](d3dx-vec4cross-crossbuild-boundary-2026-08-13.md)
   — closes `0x005762dd..0x005763cd` as one exact 240-byte / 97-instruction
   function through seven byte-identical PC/Issue-7/Issue-11/US-retail copies;
