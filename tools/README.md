@@ -243,12 +243,23 @@ receipt, and its policy remains `LIVE_FORBIDDEN`.
 python -I -B tools\re_pc_function_body_fragments_tests.py
 python -I -B tools\ghidra_function_fragment_range_mutator_tests.py
 python -I -B tools\ghidra_function_fragment_range_scratch_authority_tests.py
+python -I -B tools\ghidra_function_fragment_range_live_authority_tests.py
 ```
 
 See the
 [scratch report](../reverse-engineering/binary-analysis/pc-function-body-fragment-ghidra-scratch-admission-2026-08-14.md)
 and exact
 [five-row manifest](../reverse-engineering/binary-analysis/pc-function-body-fragment-repairs-2026-08-14.tsv).
+
+`ghidra_function_fragment_range_live_authority.py` is the read-only,
+preparation-only owner for a possible later promotion of that exact five-row
+cohort. `preflight` rehashes live/tracked db.18613 PRE and the complete retained
+scratch tree without opening Ghidra. Future `check-live`, `seal`, and `verify`
+phases fail closed until the separately authorized one-save ceremony, PRE/POST
+recovery, tracked refresh/restore, projection, and exact body accounting exist.
+The current blocker is intentional: no canonical ceremony or backup root has
+been created. See the
+[preparation and prospective runbook](../reverse-engineering/binary-analysis/pc-function-body-fragment-ghidra-live-promotion-preparation-2026-08-14.md).
 
 `ghidra_external_table_gap_boundary_live_authority.py` is the completed
 read-only promotion authority. Its historical `preflight` mode proved the

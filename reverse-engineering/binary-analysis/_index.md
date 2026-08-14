@@ -74,6 +74,10 @@ the document it links.
   — reproduces five exact body-range repairs and a 1,258-byte ownership gain on
   two isolated db.18613 replicas, excludes the FEP envelope's trailing 12 NOP
   bytes, and keeps all live and tracked Ghidra mutation forbidden
+- [Five existing-function body-fragment live-promotion preparation](pc-function-body-fragment-ghidra-live-promotion-preparation-2026-08-14.md)
+  — proves live equals tracked at the exact current db.18613 PRE, pins the
+  smallest one-save backup/readback/restore and tracked-refresh ceremony, and
+  remains preparation-only while every future ceremony root is absent
 - [PC D3DX four-vector-cross helper boundary](d3dx-vec4cross-crossbuild-boundary-2026-08-13.md)
   — closes `0x005762dd..0x005763cd` as one exact 240-byte / 97-instruction
   function through seven byte-identical PC/Issue-7/Issue-11/US-retail copies;

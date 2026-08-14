@@ -249,6 +249,15 @@ gaps bridging prior range components and the FEP envelope's trailing 12 NOP
 bytes excluded. Its policy remains `LIVE_FORBIDDEN`; saved Ghidra, semantic
 grades, runtime contracts, and rebuild state are unchanged.
 
+The follow-on
+[five-range live-promotion preparation](binary-analysis/pc-function-body-fragment-ghidra-live-promotion-preparation-2026-08-14.md)
+is read-only and remains `PREPARATION_ONLY`. It independently proves live and
+tracked are exact byte-identical 8,280/db.18613 PRE projects, reproduces the
+515-file retained scratch tree, and pins a one-save backup/readback/recovery,
+tracked-refresh, projection, and 1,795,470-byte accounting ceremony. Its
+canonical evidence and backup roots are deliberately absent; it authorizes no
+live or tracked write.
+
 **Dated PC demo/retail frontier (2026-08-12, 8,136-function population):** the conservative 8,086-entry
 address map plus exact second-pass reports, caller propagation, equal-delta
 body-union audit, whole-demo fingerprint scan, and terminal structural pass now
