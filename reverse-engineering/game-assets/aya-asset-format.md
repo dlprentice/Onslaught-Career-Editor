@@ -22,6 +22,16 @@ payloads establish target-specific serialization/storage, not resolution, bit
 depth, decoded fidelity, or visual quality. Those require field- and
 pixel/buffer-level joins.
 
+**Cross-platform texture measurement (August 14, 2026):** that field join is
+now complete for all 18,612 paired PC/USA-Xbox `TEXT` occurrences. The
+[texture-fidelity census](pc-xbox-aya-texture-fidelity-2026-08-14.md) validates
+the full `DXTX/CTEX/TFRM/TMIP` ownership chain, dimensions, frames, mip
+topology, PC loose-DDS selection, and comparable stored blocks. It finds
+18,669 frames, 33 one-top-mip drops, 25 uncompressed Xbox sky-cube frames, and
+11,332 conservative or 11,762 serialized-`CTEX`-selected exact full-chain
+block matches. These remain stored-byte measurements, not decoded-pixel or
+visual-quality claims.
+
 ---
 
 ## PC compression architecture
@@ -197,7 +207,21 @@ This pattern parallels save file structures (CCareerNode = 64 bytes fixed).
 dxtntextures\meshtex%{name}(0){format}.aya
 ```
 
-Where `{format}` is `A1R5G5B5` (16-bit) or `A8R8G8B8` (32-bit).
+Across the measured retail shelf, `{format}` is a source-format request suffix:
+`A1R5G5B5`, `A4R4G4B4`, `X8R8G8B8`, `A8R8G8B8`, or `R5G6B5`. It is not the
+stored DDS layout. For example, PC `CTEX` source code 2 requests `A4R4G4B4`
+but the selected loose file can carry a DXT2 DDS FourCC.
+
+### Serialized texture ownership
+
+The paired PC/USA-Xbox population uses one complete `DXTX` owner, a 344-byte
+`CTEX` body, then the declared number of `TFRM` children. `CTEX` stores its name
+at payload offset `0x18`, width at `0xbc`, height at `0xc0`, frame count at
+`0x148`, and format code at `0x154`. A PC `TFRM` stores only its mip count;
+the loose DDS owns its bytes. Xbox `TFRM` stores that count followed by one
+`TMIP` per level. Measured Xbox codes 3/4 have four-byte-per-pixel extents,
+code 6 has eight-byte DXT-block extents, and code 7 has 16-byte DXT-compatible
+block extents. The exact enum spelling of Xbox code 7 remains open.
 
 ### DDS Compression
 
@@ -207,7 +231,10 @@ Where `{format}` is `A1R5G5B5` (16-bit) or `A8R8G8B8` (32-bit).
 | DXT2/DXT3 | 0x32545844/0x33545844 | 16 bytes | Explicit 4-bit alpha |
 | DXT5 | 0x35545844 | 16 bytes | Interpolated 8-level alpha |
 
-The README claims DXT2, but the extractor selects decoding based on the DDS header and supports DXT1/3/5 as well. Treat DXT2 as **possible**, not exclusive.
+The 800-file measured `dxtntextures` shelf contains 212 DXT1 and 588 DXT2
+DDS files. The extractor still selects decoding from the DDS header and
+supports DXT1/3/5 in addition to DXT2; do not infer storage from the filename
+suffix.
 
 ---
 

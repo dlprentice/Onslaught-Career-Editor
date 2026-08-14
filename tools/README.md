@@ -56,10 +56,12 @@ install anything by themselves.
 
 ## Assets and formats
 
-- `aya_archive_inventory.py`, `export_game_assets.py`,
-  `export_asset_catalog.py`, `export_language_corpus.py`, and
-  `export_video_manifest.py` operate on user-supplied local inputs and write to
-  a separate local output root.
+- `aya_archive_inventory.py`, `aya_cross_platform_compare.py`, and
+  `aya_texture_fidelity_census.py` provide fail-closed AYA inventory,
+  cross-platform pairing, and stored-texture geometry/block comparison.
+- `export_game_assets.py`, `export_asset_catalog.py`,
+  `export_language_corpus.py`, and `export_video_manifest.py` operate on
+  user-supplied local inputs and write to a separate local output root.
 - `rebuild/tools/materialize_retail_assets.py` verifies one supported retail
   installation and reproduces the exact current rebuild inputs at ignored
   runtime paths. Existing rebuild build/run/smoke commands invoke it directly.
