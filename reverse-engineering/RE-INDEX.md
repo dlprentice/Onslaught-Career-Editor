@@ -4,7 +4,7 @@ Status: active — the RE evidence front door
 Last updated: 2026-08-14
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
-Current replay authority is Generation 27 via
+Current replay authority is Generation 28 via
 `developer_state.json` → `current_re_authority`; Generation 73 is a projection
 oracle only, and the Generation-10 block below is historical.
 
@@ -68,14 +68,14 @@ This block selects the immutable semantic campaign parent; it does not describe
 the rolling Ghidra database. Read the
 [`canonical Ghidra owner`](ghidra/README.md) for the current structural snapshot
 and latest backed-up live promotion. Select campaign authority from
-`developer_state.json` → `current_re_authority`: canonical Generation 27 at
-`local-lab/re-campaign-incident-recovery-20260808-v1/generation-27-current-8327-db18616-v2/`,
-READY `5e7ac61b890e780b578e86666d749df4bd0037f641b5203f4310db4f21f7a774`,
+`developer_state.json` → `current_re_authority`: canonical Generation 28 at
+`local-lab/re-campaign-incident-recovery-20260808-v1/generation-28-current-8327-db18617-v3/`,
+READY `dbfe4430a44fa032b7c655847c6a9cb5cc530c313fe49ddd8347aebfe59c5712`,
 frozen reducer `8b86f5b568067aa4cdb438b658cd95a2c118ce8f8ef2541899eaa67815832587`,
-external selector `2fe54ab2…bbca`. It contains 8,327 functions: 217 C1,
-ten bounded C2, and 8,100 OPAQUE. Its 14,437 contracts split as 14,210
-`C0_OPAQUE`, 217 C1, and ten C2; none is rebuild-ready. Its 6,110 residuals
-contain 152 open dark rows, with the other 5,958 terminal.
+external selector `8446280d…c204`. It contains 8,327 functions: 217 C1,
+ten bounded C2, and 8,100 OPAQUE. Its 14,436 contracts split as 14,209
+`C0_OPAQUE`, 217 C1, and ten C2; none is rebuild-ready. Its 6,109 residuals
+contain 152 open dark rows, with the other 5,957 terminal.
 Generation 12 admitted bounded `CBattleEngine::Damage`/`Hit` field
 writes and a partial rebuild mapping; Generation 13 admitted one replicated
 zero-shield `CUnit::ApplyDamage` entry/write contract and its exact overkill
@@ -158,8 +158,11 @@ semantics. Generation 27 then re-grounds the 23 CRT P0 functions on exact
 rows with zero unaccounted, explicitly retires 37 changed structural lineages,
 and preserves all 23 new rows as OPAQUE while recording their retained-trace
 split as nine covered, ten partial, and four dark. The 152 open residual
-geometries are not a semantic regression. The next valid campaign generation
-is 28. Model review is
+geometries are not a semantic regression. Generation 28 then re-grounds the
+25-byte CRT EH parent-body repair on exact `db.18617` geometry, accounts for all
+26,845 eligible Generation-27 carry rows with zero unaccounted, retires the one
+changed structural lineage, and preserves all 72 scenarios without changing a
+semantic grade. The next valid campaign generation is 29. Model review is
 situational and harness-agnostic under `REVIEW-PROTOCOL.md`.
 
 A separately reviewed, non-parent
@@ -175,9 +178,9 @@ accounts for its 8,136-function population at 8,129 bounded C1 and seven
 bounded C2 functions, with zero static `OPAQUE` rows in that population. It joins 53 disjoint
 sealed receipts covering 7,945 functions, ten post-Gen19 Mission-native
 boundaries, and 181 pre-existing C1/C2 rows. This is a distinct authority for
-static-envelope accounting; Generation 27 is the current replay owner and
-carries Generation 26's admitted campaign state unchanged in semantic grade
-onto exact 8,327-row `db.18616` geometry. See the
+static-envelope accounting; Generation 28 is the current replay owner and
+carries Generation 27's admitted campaign state unchanged in semantic grade
+onto exact 8,327-row `db.18617` geometry. See the
 [closure report](binary-analysis/function-c1-closure-2026-08-11.md) for exact
 hashes and limits.
 
@@ -305,8 +308,8 @@ absent. It remains the no-write preparation record. The completed
 [CRT EH parent-range live promotion](binary-analysis/crt-eh-parent-range-ghidra-live-promotion-2026-08-14.md)
 now owns db.18617: the census remains 8,327, exact ranges fall to 8,457,
 ownership rises by 25 bytes to 1,811,443, and all 8,326 non-target rows remain
-exact. Frozen Generation 27 stays the campaign parent on prior db.18616 pending
-the Generation 28 reseed.
+exact. Generation 28 now re-grounds that repair on db.18617 while leaving frozen
+Generation 27 unchanged as history.
 
 The separate historical sealed
 [five-existing-function body-fragment scratch admission](binary-analysis/pc-function-body-fragment-ghidra-scratch-admission-2026-08-14.md)

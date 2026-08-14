@@ -1,10 +1,9 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-08-14. Structural RE state is 8,327/db.18617 after the CRT
-EH parent repair; frozen campaign authority remains Gen27 on the immediately
-prior db.18616 geometry pending the Gen28 reseed (`current_re_authority`;
-candidate Gen73 is projection-oracle only). Primary WinUI
+Last updated: 2026-08-14. Structural RE state and frozen campaign authority are
+aligned at 8,327/db.18617 in Generation 28 (`current_re_authority`; candidate
+Gen73 is projection-oracle only). Primary WinUI
 navigation was rechecked 2026-08-03 against the live shell (includes Cheats).
 The 2026-08-01 shell, appearance, Lore, Media, and four-run Level 100 reviews
 retain their stated boundaries. Other rebuild and save/patch claims not
@@ -648,22 +647,22 @@ Read [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md) before changing this lane.
 the historical Gen10 or candidate Gen73 roots by generation number, ledger
 equality, or self-derived pins.
 
-| Metric | Canonical Gen27 |
+| Metric | Canonical Gen28 |
 | --- | ---: |
-| Authority generation | **27** (lineage `incident-20260806-recovery-v1`) |
+| Authority generation | **28** (lineage `incident-20260806-recovery-v1`) |
 | Functions | **8327** |
 | C1_CANDIDATE_PARTIAL | **217** |
 | C2_BOUNDED_RUNTIME | **10** |
 | function_semantic OPAQUE | **8100** |
-| contract_C0_OPAQUE | **14210** (second opacity axis) |
-| Residuals | **6110** = 152 open dark + 862 terminal bounded ambiguity + 30 terminal data + 5066 terminal padding |
+| contract_C0_OPAQUE | **14209** (second opacity axis) |
+| Residuals | **6109** = 152 open dark + 861 terminal bounded ambiguity + 30 terminal data + 5066 terminal padding |
 | OPEN residual | **152** current-geometry rows; not a semantic regression |
-| Other ledgers | questions **15398**; scenarios **72**; levers **903**; contracts **14437**; adjudications **5959**; supersessions **592** |
-| Progressed carry | **26993 / 26993**, zero unaccounted |
-| Rebuild states | NOT_READY **14428**; PARTIAL_CONTRACT **8**; CONTRACT_ONLY **1**; REBUILD_READY **0** |
+| Other ledgers | questions **15397**; scenarios **72**; levers **903**; contracts **14436**; adjudications **5958**; supersessions **592** |
+| Progressed carry | **26845 / 26845**, zero unaccounted |
+| Rebuild states | NOT_READY **14427**; PARTIAL_CONTRACT **8**; CONTRACT_ONLY **1**; REBUILD_READY **0** |
 | complete_RE | **false** |
-| READY / reducer | `5e7ac61b…a774` / `8b86f5b5…2587` |
-| Next valid generation | **28** |
+| READY / reducer | `dbfe4430…5712` / `8b86f5b5…2587` |
+| Next valid generation | **29** |
 
 **Tracked static-envelope closure (2026-08-11):** the separate reviewed
 [`function-c1-closure-2026-08-11.tsv`](reverse-engineering/binary-analysis/function-c1-closure-2026-08-11.tsv)
@@ -671,21 +670,20 @@ accounts for its dated 8,136-function population as **8,129 C1**, **7 C2**,
 and **0 static OPAQUE**. A separately reviewed 34-row addendum extends bounded
 static accounting through the prior 8,170-row state at **8,163 C1 + 7 C2**.
 The current saved structural census is **8,327** after the later 31 text-gap,
-79 external-table, 24 JPEG/IJG callback, and 23 CRT P0 admissions. Generation 27
-is the frozen 8,327-row semantic authority on the immediately prior geometry: it
+79 external-table, 24 JPEG/IJG callback, and 23 CRT P0 admissions. Generation 28
+is the frozen 8,327-row semantic authority on current db.18617 geometry: it
 retains all 201 later structural
 identities honestly as campaign OPAQUE rows where they lack a semantic grade.
 The five-body
 repair advanced Ghidra to `db.18614`; the JPEG/IJG promotion advanced it to
 `db.18615`; the CRT P0 promotion advanced it to `db.18616`; and the later CRT
 EH parent repair advanced it to `db.18617` and 93.900110776% saved-body
-ownership without adding a function. Generation 27 re-grounded all 23 CRT
-functions, retired 37 changed lineages explicitly, and accounted for
-26,993/26,993 eligible Generation-26 carry rows. It carries the admitted
-runtime/campaign claims without changing a semantic grade; neither count implies
-`REBUILD_READY` or complete semantic parity. Generation 27 is now the frozen
-semantic parent rather than an exact mirror of current body geometry; Gen28 is
-the required re-ground.
+ownership without adding a function. Generation 28 re-grounded that repaired
+parent on db.18617, retired its one changed lineage explicitly, and accounted
+for 26,845/26,845 eligible Generation-27 carry rows while preserving all 72
+scenarios. It carries the admitted runtime/campaign claims without changing a
+semantic grade; neither count implies `REBUILD_READY` or complete semantic
+parity.
 
 **PC demo/retail function frontier (2026-08-12, dated 8,136-function
 population):** exact and semantic
@@ -801,7 +799,7 @@ corrections. `StartDie` remained open/opaque at that handoff. The independent
 data-write lane has one refuter-survived semantic result: a Level 521 `LockHit`
 invocation removed the supplied target's sole fired-lock node through five exact
 ordered field transitions. These are instrument capabilities and historical
-admissions. Canonical Gen27 carries Gen23's four C2 rows through Gen26, separately re-proved
+admissions. Canonical Gen28 carries Gen23's four C2 rows through later structural reseeds, separately re-proved
 a narrower fifth ApplyDamage C2 from intact TTD wrappers, and adds the bounded
 SetPos roundtrip as a sixth, LockHit's single-node removal path as a seventh,
 the bounded CExplosion internal carrier as an eighth, and the strict-`CRound`
@@ -853,10 +851,10 @@ These instruments do not infer function boundaries, C++ receivers, argument or
 return types, semantics, or parity. Static/source/RTTI evidence supplied joins
 for early data-write plates. Focused player-damage / Level 521 successor work
 remains an open runtime front alongside the next impact-ranked contract/rebuild
-advance now carried by Generation 27. There is
+advance now carried by Generation 28. There is
 not yet a normalized corpus-wide semantic ledger, and no new trace is justified
 until existing evidence plus these instruments cannot answer a preregistered
-question. The next campaign generation is 28.
+question. The next campaign generation is 29.
 
 ## Evidence boundary
 
