@@ -6,7 +6,7 @@ capture bundles, calibrated Stuart/BSim matching, an authored Mission logger,
 and verified campaign ratchets are implemented; corpus-wide semantic joins,
 repeated action campaigns, and rebuild-ready semantic promotion remain open
 
-Last updated: 2026-08-14 (Gen25 authority; Gen10/Gen73 remain non-current)
+Last updated: 2026-08-14 (Gen26 authority; Gen10/Gen73 remain non-current)
 
 Verdict: Battle Engine Aquila no longer needs to be approached as 8,124 isolated
 decompiler functions plus an unbounded dark tail. A specimen-bound pipeline can
@@ -52,23 +52,24 @@ not establish its Steam depot identity.
 ## Current complete-RE replay authority (2026-08-14) — read first
 
 Current authority is **not** the Gen10 block below or candidate Gen73. Re-read
-`developer_state.json` → `current_re_authority`. Canonical Gen25 has
-functions=**8,280**, C1=**217**, C2=**10**, function semantic
-OPAQUE=**8,053**, contract C0_OPAQUE=**14,161**, OPEN residual=**105**
-(101 dark plus four executed), complete_RE=**false**, and REBUILD_READY=**0**.
-Its READY is `515a0218…3abd`; frozen reducer `ae77dce8…394c`. Generation 73 is a
+`developer_state.json` → `current_re_authority`. Canonical Gen26 has
+functions=**8,304**, C1=**217**, C2=**10**, function semantic
+OPAQUE=**8,077**, contract C0_OPAQUE=**14,221**, OPEN residual=**149**
+(145 dark plus four executed), complete_RE=**false**, and REBUILD_READY=**0**.
+Its READY is `83403490…452a`; frozen reducer `8b86f5b5…2587`. Generation 73 is a
 projection oracle only. Gen20 bounds ten retained `CExplosion` carrier calls;
 Gen21 bounds strict-`CRound` slot-66 call/return placement; Gen22 bounds
 strict-`CRound` slot-0 arm routing; Gen23 adds exact receiver-write pairs for
 five selected arms while preserving rejected controls and lane-specific gaps.
 Gen24 carried those claims exactly onto its sealed db.18613 geometry.
-Generation 25 re-grounds the five repaired bodies on db.18614, accounts for all
-**27,089/27,089** eligible carry rows, retires 16 changed lineages explicitly,
-and leaves the new 12-byte residual open. All five changed functions remain
-OPAQUE and no semantic grade moves.
+Generation 25 re-grounded the five repaired bodies on db.18614. Generation 26
+then re-grounds the 24 JPEG/IJG structural functions on db.18615, accounts for
+all **27,025/27,025** eligible carry rows, retires eight changed lineages
+explicitly, and carries the new functions as DARK/FUN/OPAQUE. No semantic grade
+moves.
 External effects, event 4002, field meanings, broader populations, source
 spelling, and direct rebuild parity remain open. The next valid campaign
-generation is 26. The separate 8,136-row static-envelope closure, 34-row
+generation is 27. The separate 8,136-row static-envelope closure, 34-row
 MissionScript addendum, 31 text-gap classifications, and 79 ungraded external-
 table rows remain distinct static evidence. C1 is not C2 runtime proof or
 parity, and bounded C2 is not rebuild-ready.
@@ -245,9 +246,9 @@ The current layers must remain separate:
 | MSVC exception/unwind funclets in saved Ghidra | 1,179 | Compiler machinery; not gameplay-semantic closure |
 | Literal `FUN_<address>` names in saved Ghidra | 1,012 | The separate 34-row new-function vocabulary ceremony replaced those defaults; the 31 text-gap, 79 external-table, and 24 JPEG/IJG structural rows retain default names |
 | Static-envelope accounting | 8,170 rows: 8,163 C1 + 7 C2 | Dated 8,136-row table plus reviewed 34-row addendum; excludes the 31 text-gap, 79 external-table, and 24 JPEG/IJG rows |
-| Canonical campaign | 8,280 rows: 217 C1 + 10 C2 + 8,053 OPAQUE | Gen25 db.18614 authority; 27,089/27,089 eligible carry rows accounted for |
-| Canonical residual ledger | 6,108 rows: 101 open dark + 4 open executed + 907 terminal bounded ambiguity + 30 terminal data + 5,066 terminal padding | The 105 open rows describe sealed Generation-25 geometry, not semantic regression |
-| Canonical rebuild states | 14,379 NOT_READY + 8 PARTIAL_CONTRACT + 1 CONTRACT_ONLY + 0 REBUILD_READY | Contract mapping state, not implementation parity |
+| Canonical campaign | 8,304 rows: 217 C1 + 10 C2 + 8,077 OPAQUE | Gen26 db.18615 authority; 27,025/27,025 eligible carry rows accounted for |
+| Canonical residual ledger | 6,144 rows: 145 open dark + 4 open executed + 899 terminal bounded ambiguity + 30 terminal data + 5,066 terminal padding | The 149 open rows describe sealed Generation-26 geometry, not semantic regression |
+| Canonical rebuild states | 14,439 NOT_READY + 8 PARTIAL_CONTRACT + 1 CONTRACT_ONLY + 0 REBUILD_READY | Contract mapping state, not implementation parity |
 | Mission native registry | 144 unique names / 144 unique handlers | Finite shipped registry |
 | Registry handlers already modeled in Ghidra | 144 | 110 pre-existing plus 34 separately promoted callable entries |
 | Registry handlers awaiting Ghidra boundary creation | 0 | Tier-2 registry names are complete; signatures and runtime semantics remain separate gates |
@@ -2665,20 +2666,20 @@ Strong:
 
 Open or concerning:
 
-- 1,012 saved entries retain literal default names, while Gen25 has 8,053
+- 1,012 saved entries retain literal default names, while Gen26 has 8,077
   semantically OPAQUE rows;
 - the 34 new Mission boundaries now have a separate bounded static-contract
-  addendum; Gen25 includes them structurally as OPAQUE rather than importing the
+  addendum; Gen26 includes them structurally as OPAQUE rather than importing the
   separate static grade;
 - the 31 newer text-gap boundaries have provider-compatible static
-  classifications but remain outside the frozen grade projection; Gen25 includes
+  classifications but remain outside the frozen grade projection; Gen26 includes
   them structurally as OPAQUE;
 - the 79 external-table boundaries remain default-metadata structural rows
-  outside the frozen grade projection; Gen25 includes them as OPAQUE;
+  outside the frozen grade projection; Gen26 includes them as OPAQUE;
 - the 24 JPEG/IJG boundaries remain default-metadata structural rows outside
-  both the frozen grade projection and the preceding Generation-25 campaign;
-- 105 sealed-Gen25 residuals remain open (101 dark and four executed), while
-  6,003 residual rows are terminal in the current geometry;
+  the frozen grade projection; Gen26 includes them as OPAQUE;
+- 149 sealed-Gen26 residuals remain open (145 dark and four executed), while
+  5,995 residual rows are terminal in the current geometry;
 - at least six live names are directly contradicted by byte/RTTI evidence;
 - D3D/cockpit/tree correction clusters remain;
 - the registry/table discovery universe has no denominator;
@@ -2776,7 +2777,7 @@ Maintain separate ledgers.
 | Exact saved-body geometry | functions passing range invariants / saved rows | 8,304 / 8,304 |
 | Literal default names | `FUN_*` / saved rows | 1,012 / 8,304 |
 | Static function envelopes | frozen graded rows / discovered lower bound | 8,170 / at least 8,304; sealed 8,136-row table plus reviewed 34-row addendum, with 31 text-gap rows separately classified and 79 external-table plus 24 JPEG/IJG rows ungraded |
-| Campaign semantics above OPAQUE | C1 + C2 / Gen25 rows | 227 / 8,280 |
+| Campaign semantics above OPAQUE | C1 + C2 / Gen26 rows | 227 / 8,304 |
 | Mission handler boundaries | saved structurally bounded handler starts / registry | 144 / 144; creation complete |
 | `.text` saved-body ownership | exact owned executable bytes / 1,929,117 | 1,810,287 / 1,929,117 = 93.840186987%; zero overlap |
 | Stable runtime coverage | exact covered bytes / declared capture window | per scenario only |
@@ -3265,7 +3266,7 @@ The remaining function problem is now mechanically approachable:
 
 - 8,304 saved functions have exact body geometry, including 34 registry, 31
   text-gap, 79 external-table, and 24 JPEG/IJG callable starts admitted from bounded proof;
-- 1,012 saved entries retain literal defaults, while 8,053 Gen25 functions remain
+- 1,012 saved entries retain literal defaults, while 8,077 Gen26 functions remain
   semantically OPAQUE;
 - cheap differential coverage has already reduced one 16,794-start action run
   to eight leading functions;
