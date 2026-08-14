@@ -487,8 +487,11 @@ public sealed class InteractiveSessionTests
 
         Assert.Equal(1, lookTick.StepsAdvanced);
         Assert.False(session.HasHeldOrPendingInput);
-        Assert.Equal(startingYaw + 22_667, lookTick.CurrentSnapshot.FacingYawMicroRad);
-        Assert.Equal(22_667, lookTick.CurrentSnapshot.WalkerYawVelocityMicroRadPerTick);
+        // Re-pinned 2026-08-14 after the shipped Aquila
+        // mGroundTurnRate=1.0 correction reduced full walker yaw from the
+        // provisional Core-only 22,667 to retail's 13,333 micro-radians/tick.
+        Assert.Equal(startingYaw + 13_333, lookTick.CurrentSnapshot.FacingYawMicroRad);
+        Assert.Equal(13_333, lookTick.CurrentSnapshot.WalkerYawVelocityMicroRadPerTick);
         Assert.Equal(-8_547, lookTick.CurrentSnapshot.FacingPitchMicroRad);
         Assert.Equal(
             -8_547,
@@ -520,8 +523,10 @@ public sealed class InteractiveSessionTests
         // The goldens PointerMotion_PreservesMagnitudeAndRetailRecenteringCoast
         // pins for the untouched session, reproduced through the slider at 7.0.
         // MOVED 2026-07-30, from 1,640 and -299. See the accounting on that
-        // test; both pins record the same 15 px / -7.5 px motion.
-        Assert.Equal(5_349, atSeven.CurrentSnapshot.WalkerYawVelocityMicroRadPerTick);
+        // test; both pins record the same 15 px / -7.5 px motion. The yaw pin
+        // moved again on 2026-08-14 with the shipped 13,333-micro-rad/tick scale;
+        // pitch is unchanged.
+        Assert.Equal(3_147, atSeven.CurrentSnapshot.WalkerYawVelocityMicroRadPerTick);
         Assert.Equal(
             -863,
             atSeven.CurrentSnapshot.WalkerPitchVelocityMicroRadPerTick);
@@ -710,9 +715,13 @@ public sealed class InteractiveSessionTests
         //     step 2 yaw   3,847 -> 7,294        step 2 pitch  -626 -> -1,177
         // The walker's turn is the same angular rate per SECOND at either
         // Core rate; only the per-tick quantum changed.
-        Assert.Equal(5_349, first.CurrentSnapshot.WalkerYawVelocityMicroRadPerTick);
+        // MOVED AGAIN 2026-08-14 by the shipped Aquila mGroundTurnRate=1.0
+        // correction. The prior Core-only scale was 22,667; retail is 13,333.
+        // The same pointer samples now yield yaw 3,147 then 4,277 while pitch,
+        // cursor recentring and the response-table evidence remain unchanged.
+        Assert.Equal(3_147, first.CurrentSnapshot.WalkerYawVelocityMicroRadPerTick);
         Assert.Equal(-863, first.CurrentSnapshot.WalkerPitchVelocityMicroRadPerTick);
-        Assert.Equal(startingYaw + 5_349, first.CurrentSnapshot.FacingYawMicroRad);
+        Assert.Equal(startingYaw + 3_147, first.CurrentSnapshot.FacingYawMicroRad);
         Assert.True(session.HasHeldOrPendingInput);
 
         // The guard that makes the numbers above mean something. If a future
@@ -745,18 +754,18 @@ public sealed class InteractiveSessionTests
         // closer to that law - worst case 0.4997 permille against the old
         // table's 0.9436 - so this pin is nearer retail than the one it
         // replaces, not merely different.
-        Assert.Equal(7_271, second.CurrentSnapshot.WalkerYawVelocityMicroRadPerTick);
+        Assert.Equal(4_277, second.CurrentSnapshot.WalkerYawVelocityMicroRadPerTick);
         Assert.Equal(
             -1_177,
             second.CurrentSnapshot.WalkerPitchVelocityMicroRadPerTick);
         Assert.Equal(
-            first.CurrentSnapshot.FacingYawMicroRad + 7_271,
+            first.CurrentSnapshot.FacingYawMicroRad + 4_277,
             second.CurrentSnapshot.FacingYawMicroRad);
     }
 
     // Yaw rate at full look deflection, from
     // WalkerAnalogLook_FollowsTheReleasedCurveAndUsesTheSameRetailCoast.
-    private const int FullDeflectionYawPerTick = 22_667;
+    private const int FullDeflectionYawPerTick = 13_333;
 
     [Fact]
     public void InteractiveInputSequence_MatchesDirectCoreTicks()
@@ -1950,9 +1959,12 @@ public sealed class InteractiveSessionTests
         // strict one-per-update expiry affect future state. This smoke receives
         // no actor-round damage, so its gameplay assertions are unchanged; its
         // canonical byte stream gains the empty-list count plus the version.
+        // MOVED 2026-08-14 by the already-landed shipped walker-yaw/contact
+        // batch e7aa7548. This current-state checksum had been left stale;
+        // every consequential firing-range assertion above remains unchanged.
         string finalStateHash = StateHasher.ComputeHex(session.CurrentSnapshot);
         Assert.Equal(
-            "dcad266595405161bc51632389caec9f4c54711c2db8c0860294c95a65320bbf",
+            "62cb5946ce26ad9ee72f8c55a05f2e5bc5fbd3119f52ce53b9427bec8bf78410",
             finalStateHash);
     }
 
