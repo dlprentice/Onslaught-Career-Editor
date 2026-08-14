@@ -42,6 +42,10 @@ the document it links.
   closes the exact zero-overlap union at 1,770,929 / 1,929,117 = 91.799978954%,
   and partitions the 158,188-byte gap without treating loose code/data as proved
   functions or semantics
+- [PC D3DX four-vector-cross helper boundary](d3dx-vec4cross-crossbuild-boundary-2026-08-13.md)
+  — closes `0x005762dd..0x005763cd` as one exact 240-byte / 97-instruction
+  function through seven byte-identical PC/Issue-7/Issue-11/US-retail copies;
+  the compatibility label is not an original linker or C++ symbol
 - [Collision-component implementation-identity correction](collision-component-identity-correction-2026-08-12.md)
   — promotes five hierarchy/source/cross-build-backed shared-base identities
   through the backed-up live and tracked Ghidra gates; folded aliases, runtime
