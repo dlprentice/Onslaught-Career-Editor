@@ -311,6 +311,14 @@ ownership rises by 25 bytes to 1,811,443, and all 8,326 non-target rows remain
 exact. Generation 28 now re-grounds that repair on db.18617 while leaving frozen
 Generation 27 unchanged as history.
 
+The new read-only
+[D3DX two-function live-promotion preparation](binary-analysis/d3dx-gap-two-function-ghidra-live-promotion-preparation-2026-08-14.md)
+re-grounds two complete loose-code bodies on exact 8,327-function db.18617
+geometry. Two disposable saves independently reach 8,329 functions / 8,459
+ranges / 1,811,691 owned `.text` bytes while preserving all PRE function rows.
+It pins all six physical positive/control projects, remains `PREPARATION_ONLY`,
+and performed no live or tracked Ghidra write.
+
 The separate historical sealed
 [five-existing-function body-fragment scratch admission](binary-analysis/pc-function-body-fragment-ghidra-scratch-admission-2026-08-14.md)
 adds no functions or metadata. Two isolated db.18613 replicas reproduce the

@@ -122,6 +122,10 @@ the document it links.
   — admits the two remaining bodies on two isolated db.18613 copies, preserves
   all 8,280 PRE rows exactly, and keeps live and tracked Ghidra mutation
   forbidden
+- [D3DX two-function Ghidra live-promotion preparation](d3dx-gap-two-function-ghidra-live-promotion-preparation-2026-08-14.md)
+  — re-grounds both boundaries on two disposable db.18617 replicas, preserves
+  all 8,327 PRE rows, pins six physical project trees, and remains
+  preparation-only with no live or tracked write
 - [D3DX9 exact-public current-name corrections](d3dx9-exact-public-name-corrections-2026-08-13.md)
   — refutes 16 saved hypothesis names through full-body equality at the same
   official public symbol across pinned x86 D3DX9 releases 24 through 31; three

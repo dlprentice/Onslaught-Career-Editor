@@ -228,19 +228,32 @@ db.18613 project identity.
 
 `ghidra_d3dx_gap_boundary_scratch_authority.py` verifies the sealed ignored
 campaign from its packaged copy. It rejoins all 8,280 PRE rows against two
-independent 8,282-function readbacks, checks both rollback and both containment
-controls, rehashes the retained recovery project, and authorizes no live or
-tracked mutation.
+independent 8,282-function readbacks, checks the after-one rollback and
+post-inner-commit compensation probes plus both containment controls, rehashes
+the retained recovery project, and authorizes no live or tracked mutation.
+
+`GhidraApplyD3dxGapBoundariesV2.java` and
+`ghidra_d3dx_gap_boundary_current_preparation_authority.py` re-ground that exact
+two-function shape against current db.18617 without opening live Ghidra. The
+preparation authority rejoins all 8,327 PRE rows against two independent
+8,329-function readbacks, pins the two positive and four control project trees,
+rehashes the now-historical scratch tree, and stays `PREPARATION_ONLY`. The old
+scratch verifier intentionally self-expires against later tracked Ghidra state;
+the current replicas, not an overridden historical current-root assertion, own
+the db.18617 proof.
 
 ```powershell
 python -I -B tools\ghidra_d3dx_gap_boundary_mutator_tests.py
 python -I -B tools\ghidra_d3dx_gap_boundary_scratch_authority_tests.py
+python -I -B tools\ghidra_d3dx_gap_boundary_current_preparation_authority_tests.py
 ```
 
 See the
 [scratch report](../reverse-engineering/binary-analysis/d3dx-gap-two-function-ghidra-scratch-admission-2026-08-14.md)
 and its
-[two-row manifest](../reverse-engineering/binary-analysis/d3dx-gap-two-function-scratch-manifest-2026-08-14.tsv).
+[two-row manifest](../reverse-engineering/binary-analysis/d3dx-gap-two-function-scratch-manifest-2026-08-14.tsv),
+plus the current
+[db.18617 preparation report](../reverse-engineering/binary-analysis/d3dx-gap-two-function-ghidra-live-promotion-preparation-2026-08-14.md).
 
 `GhidraApplyCrtP0Boundaries.java` is the structural-only runner for the 23 P0
 boundaries from corrected CRT22 run-c. It pins the exact 8,280-function /
