@@ -224,6 +224,14 @@ and proves only a structural 8,304-function scratch result. Its verdict is
 `SCRATCH_READY_LIVE_FORBIDDEN`; the saved census, Generation 23, semantic
 grades, runtime contracts, and rebuild remain unchanged.
 
+The follow-on
+[JPEG24 live-promotion preparation](binary-analysis/jpeg-ijg-callback-ghidra-live-promotion-preparation-2026-08-14.md)
+re-grounds the byte-identical live/tracked 8,280-function db.18613 PRE and
+prepares a fail-closed one-save, backup/readback, tracked-restore,
+projection/accounting ceremony. It remains `PREPARATION_ONLY`: no future lane
+or backup exists, no Ghidra process was opened, and the saved census is still
+8,280.
+
 The separate sealed
 [23-row CRT/runtime P0 scratch admission](binary-analysis/crt-runtime-p0-ghidra-scratch-admission-2026-08-14.md)
 pins corrected CRT22 run-c and reproduces its exact boundary-only cohort on two

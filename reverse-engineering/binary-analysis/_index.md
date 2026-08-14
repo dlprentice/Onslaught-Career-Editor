@@ -64,6 +64,10 @@ the document it links.
   — reproduces 24 exact IJG v6b algorithm bodies on two isolated current-state
   replicas, corrects the false `0x005B6900` boundary, preserves all 8,280 PRE
   rows exactly, and stops before live or tracked Ghidra promotion
+- [JPEG/IJG callback live-promotion preparation](jpeg-ijg-callback-ghidra-live-promotion-preparation-2026-08-14.md)
+  — pins the current live/tracked db.18613 PRE, exact 8,304-function
+  prospective POST, one-save recovery/refresh chronology, and fixed-point
+  listing proof while deliberately creating no ceremony artifacts
 - [CRT/runtime P0 23-boundary scratch admission](crt-runtime-p0-ghidra-scratch-admission-2026-08-14.md)
   — superseded v1 receipt shape retained for audit history
 - [CRT/runtime P0 23-boundary corrected v2 scratch admission](crt-runtime-p0-ghidra-scratch-admission-v2-2026-08-14.md)

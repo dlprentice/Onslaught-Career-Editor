@@ -182,12 +182,20 @@ complete ignored lane and authorizes neither live nor tracked mutation.
 python -I -B tools\ghidra_jpeg_callback_boundary_mutator_tests.py
 python -I -B tools\ghidra_jpeg_callback_boundary_scratch_authority_tests.py
 python -I -B tools\ghidra_jpeg_callback_boundary_scratch_authority.py verify
+python -I -B tools\ghidra_jpeg_callback_boundary_live_authority_tests.py
 ```
 
 See the
 [scratch report](../reverse-engineering/binary-analysis/jpeg-ijg-callback-ghidra-scratch-admission-2026-08-14.md)
 and its
 [24-row evidence manifest](../reverse-engineering/binary-analysis/jpeg-ijg-callback-function-boundaries-2026-08-14.tsv).
+The separate
+[live-promotion preparation](../reverse-engineering/binary-analysis/jpeg-ijg-callback-ghidra-live-promotion-preparation-2026-08-14.md)
+uses `ghidra_jpeg_callback_boundary_live_authority.py` to pin exact current
+db.18613 PRE bytes, the 8,304-function prospective POST, one-save
+backup/readback/restore chronology, `0x005B6900` listing ownership, and the
+future projection/accounting. Its policy is `PREPARATION_ONLY`; the authority
+never launches Ghidra and the preparation creates no future ceremony root.
 
 `GhidraApplyCrtP0Boundaries.java` is the structural-only runner for the 23 P0
 boundaries from corrected CRT22 run-c. It pins the exact 8,280-function /
