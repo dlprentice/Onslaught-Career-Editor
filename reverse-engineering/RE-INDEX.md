@@ -286,6 +286,14 @@ now owns the 8,327-function db.18616 result: all 8,304 PRE rows remain exact,
 23 default-metadata functions add 24 ranges and 1,131 owned bytes, and
 live/tracked/POST recovery are byte-identical.
 
+The separate sealed
+[CRT EH parent-range scratch admission](binary-analysis/crt-eh-parent-range-ghidra-scratch-admission-2026-08-14.md)
+closes the exact 25-byte filter/handler hole inside existing parent
+`0x005D0A9F` on two disposable db.18616 replicas. Function count stays 8,327,
+body ownership rises to a prospective 1,811,443 bytes, range components fall
+to 8,457, and all 8,326 non-target rows remain exact. Its policy is strictly
+`LIVE_FORBIDDEN`; current saved Ghidra and Generation 27 remain unchanged.
+
 The separate historical sealed
 [five-existing-function body-fragment scratch admission](binary-analysis/pc-function-body-fragment-ghidra-scratch-admission-2026-08-14.md)
 adds no functions or metadata. Two isolated db.18613 replicas reproduce the

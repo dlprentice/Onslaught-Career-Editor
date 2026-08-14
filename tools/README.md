@@ -349,6 +349,26 @@ python -I -B tools\ghidra_crt_p0_boundary_live_authority_v2.py verify `
 See the
 [completed live-promotion report](../reverse-engineering/binary-analysis/crt-runtime-p0-ghidra-live-promotion-2026-08-14.md).
 
+`GhidraApplyCrtEhParentRange.java` is the scratch-only follow-on for the one
+existing CRT parent deliberately excluded from that 23-function promotion. It
+adds only `0x005D0AD6..0x005D0AEF` to `CRT__LongJmpProbe_NoOp`, requires the
+exact db.18616 PRE/POST counters, forbids new filter/handler entries, and
+preserves all non-body state. `ghidra_crt_eh_parent_range_scratch_authority.py`
+replays the sealed two-replica, failure-control, inventory, backup, and
+relocation evidence without opening Ghidra. Its reusable mode is read-only and
+the campaign remains `LIVE_FORBIDDEN`.
+
+```powershell
+python -I -B tools\ghidra_crt_eh_parent_range_mutator_tests.py
+python -I -B tools\ghidra_crt_eh_parent_range_scratch_authority_tests.py
+python -I -B tools\ghidra_crt_eh_parent_range_scratch_authority.py verify
+```
+
+See the
+[scratch report](../reverse-engineering/binary-analysis/crt-eh-parent-range-ghidra-scratch-admission-2026-08-14.md)
+and exact
+[one-row manifest](../reverse-engineering/binary-analysis/crt-eh-parent-range-repair-2026-08-14.tsv).
+
 `re_pc_function_body_fragments.py` proves the exhaustive five-gap class inside
 five existing PC functions, including unique normalized demo twins and the
 deliberate 12-byte FEP NOP exclusion. `GhidraApplyFunctionFragmentRanges.java`

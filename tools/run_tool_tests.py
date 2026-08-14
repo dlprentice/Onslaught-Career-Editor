@@ -71,6 +71,8 @@ SUITES: tuple[tuple[str, ...], ...] = (
     ("tools/ghidra_crt_p0_boundary_live_preparation_tests.py",),
     ("tools/ghidra_crt_p0_boundary_live_preparation_v2_tests.py",),
     ("tools/ghidra_crt_p0_boundary_live_authority_v2_tests.py",),
+    ("tools/ghidra_crt_eh_parent_range_mutator_tests.py",),
+    ("tools/ghidra_crt_eh_parent_range_scratch_authority_tests.py",),
     ("tools/re_pc_function_body_fragments_tests.py",),
     ("tools/ghidra_function_fragment_range_mutator_tests.py",),
     ("tools/ghidra_function_fragment_range_scratch_authority_tests.py",),

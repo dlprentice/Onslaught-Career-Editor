@@ -90,6 +90,9 @@ the document it links.
 - [CRT/runtime P0 live promotion](crt-runtime-p0-ghidra-live-promotion-2026-08-14.md)
   — records the completed db.18616 promotion: 23 default-metadata functions,
   24 exact ranges, all 8,304 PRE rows unchanged, and 1,131 newly owned bytes
+- [CRT EH parent-range scratch admission](crt-eh-parent-range-ghidra-scratch-admission-2026-08-14.md)
+  — proves the excluded filter/handler is one 25-byte repair to existing parent
+  `0x005D0A9F`, with 8,326 non-target rows exact and live mutation forbidden
 - [Five existing-function body-fragment scratch admission](pc-function-body-fragment-ghidra-scratch-admission-2026-08-14.md)
   — reproduces five exact body-range repairs and a 1,258-byte ownership gain on
   two isolated db.18613 replicas, excludes the FEP envelope's trailing 12 NOP
