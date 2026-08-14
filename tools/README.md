@@ -139,19 +139,34 @@ schema or generated parser only when it reduces repeated work across real
 consumers. Consequential results need two reproducible runs, but no tool or
 pilot is mandatory.
 
-Current candidate pilots (unmeasured until run):
+Measured pilot decisions (2026-08-13; full receipts remain machine-local under
+`D:\bea-ps2-crossbuild-tool-pilot-20260813-v1`):
 
-1. Extend this repository's bounded AYA observer for already-proved raw console
-   tag streams and compare decoded logical assets. It must retain complete byte
-   accounting and reject shifted, random, unknown-tag, and partial framing.
-2. Test
-   [EmotionEngine Reloaded](https://github.com/chaoticgd/ghidra-emotionengine-reloaded)
-   on disposable PS2 ELF projects for R5900/MMI/VU0 decode and constant-reference
-   gains. Its symbol path cannot recover BEA's zero-byte `.mdebug.eabi64`.
-3. Test the
-   [sce-symbol-scanner CLI](https://github.com/LostTemplarRH/sce-symbol-scanner)
-   against the same copies to partition Sony SDK/library code, independently
-   reviewing every short-function hit and a stratified sample of the rest.
+1. This repository's bounded AYA observer now distinguishes the proved PC
+   chunked-zlib envelope from raw console tag streams while retaining complete
+   byte accounting and fail-closed framing. Logical cross-platform comparison
+   remains a repository-owned parser task, not a reason to add another format
+   framework.
+2. [EmotionEngine Reloaded v2.1.36](https://github.com/chaoticgd/ghidra-emotionengine-reloaded/releases/tag/v2.1.36)
+   is **approved only for isolated PS2 analysis projects**. Across 969
+   scanner-bounded SDK ranges it decoded 49,723/49,723 words, versus
+   42,553/49,723 under stock MIPS, and made 640 additional ranges fully
+   decodable. This establishes a materially better R5900/MMI/COP2-VU0 `.text`
+   decoder, not reachability or VU microcode recovery. The constant-reference
+   analyzer is conditional: sampled READ/WRITE references were 19/19 valid,
+   while generic DATA references produced 10 false positives and one unresolved
+   result in a 17-row purposive sample. Quarantine every DATA result for manual
+   review. The zero-byte retail `.mdebug.eabi64` still contains no symbols.
+3. [sce-symbol-scanner v0.0.1](https://github.com/LostTemplarRH/sce-symbol-scanner/releases/tag/v0.0.1)
+   is **approved as reviewed SDK boundary/name candidate evidence**, never as a
+   blind import. Each PS2 build produced 1,006 rows over 969 addresses and 16
+   libraries, with the same 967 address-free signatures across demo, EU, and US
+   builds. Twenty-nine addresses carried competing names (37 excess rows); reject
+   all collision rows until independently adjudicated. Its prototype also writes
+   a deterministic 46,143,832-byte `tests.log` into the process working
+   directory, so every wrapper must set an explicit disposable working directory.
+   Do not install either pilot into canonical Ghidra or track its binaries,
+   disposable projects, raw CSVs, or debug log.
 
 Do not treat broad Ghidra MCP access as an acceleration on the live project.
 Current candidates expose writable rename/comment/function/assembly/byte-patch
