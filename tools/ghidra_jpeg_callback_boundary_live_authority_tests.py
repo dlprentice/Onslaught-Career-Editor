@@ -45,18 +45,18 @@ class PureContractTests(unittest.TestCase):
         self.assertEqual(authority.POLICY, "PREPARATION_ONLY")
         self.assertEqual(
             authority.BASE_COMMIT,
-            "3a2397aec192330a9d26f4615b3e1aee599e7850",
+            "07417cadd227ab8d91bd2d1ab90554bd64fc3cf5",
         )
         self.assertEqual((authority.PRE_FUNCTIONS, authority.POST_FUNCTIONS), (8280, 8304))
-        self.assertEqual((authority.PRE_RANGES, authority.POST_RANGES), (8400, 8438))
-        self.assertEqual((authority.PRE_OWNED, authority.POST_OWNED), (1794212, 1809029))
+        self.assertEqual((authority.PRE_RANGES, authority.POST_RANGES), (8396, 8434))
+        self.assertEqual((authority.PRE_OWNED, authority.POST_OWNED), (1795470, 1810287))
         self.assertEqual(
             (authority.PRE_INSTRUCTIONS, authority.POST_INSTRUCTIONS),
-            (550991, 551032),
+            (551014, 551055),
         )
         self.assertEqual(
             (authority.PRE_REFERENCES, authority.POST_REFERENCES),
-            (234495, 234484),
+            (234478, 234467),
         )
         self.assertEqual(authority.POST_OWNED - authority.PRE_OWNED, 14817)
 
@@ -85,7 +85,7 @@ class PureContractTests(unittest.TestCase):
             sum(int(row[3]) for rows in authority.POST_BODY_ROWS.values() for row in rows),
             14817,
         )
-        self.assertEqual(authority.TEXT_BYTES - authority.POST_OWNED, 120088)
+        self.assertEqual(authority.TEXT_BYTES - authority.POST_OWNED, 118830)
         for rows in authority.POST_BODY_ROWS.values():
             for start, maximum, end, size, digest in rows:
                 self.assertEqual(int(end, 16) - int(start, 16), int(size))
@@ -113,7 +113,7 @@ class PureContractTests(unittest.TestCase):
             "files": [
                 {"relative_path": authority.PRE_OLD_DB_PATH, "size": 1, "sha256": "a"},
                 {"relative_path": authority.PRE_STABLE_DB_PATH,
-                 "size": authority.DB_18613[0], "sha256": authority.DB_18613[1]},
+                 "size": authority.DB_18614[0], "sha256": authority.DB_18614[1]},
                 {"relative_path": "BEA.gpr", "size": 0,
                  "sha256": hashlib.sha256(b"").hexdigest()},
             ],
@@ -143,10 +143,13 @@ class PureContractTests(unittest.TestCase):
             root = Path(temporary)
             live = root / "live"
             scratch = root / authority.SCRATCH_LANE_REL
+            preparation = root / authority.PREP_LANE_REL
             (live / "runs/live-pre-readback").mkdir(parents=True)
             (live / "runs/live-readback").mkdir(parents=True)
             (scratch / "runs/base-inventory").mkdir(parents=True)
             (scratch / "runs/formal-replica-a-readback").mkdir(parents=True)
+            (preparation / "formal-a/dry").mkdir(parents=True)
+            (preparation / "formal-a/readback").mkdir(parents=True)
             header = b"address\tname\tnameSource\tbodyBytes\tbodyRanges\tinstrCount\n"
             before = header + b"0x00000010\tStable\tUSER_DEFINED\t1\t1\t1\n"
             after = (
@@ -157,11 +160,13 @@ class PureContractTests(unittest.TestCase):
             for path in (
                 live / "runs/live-pre-readback/functions.tsv",
                 scratch / "runs/base-inventory/functions.tsv",
+                preparation / "formal-a/dry/functions.tsv",
             ):
                 path.write_bytes(before)
             for path in (
                 live / "runs/live-readback/functions.tsv",
                 scratch / "runs/formal-replica-a-readback/functions.tsv",
+                preparation / "formal-a/readback/functions.tsv",
             ):
                 path.write_bytes(after)
             cfg = authority.Config(
@@ -318,13 +323,13 @@ class PureContractTests(unittest.TestCase):
                 )
 
     def test_live_receipt_rebase_retains_fixed_point_contract(self) -> None:
-        if not (SCRATCH_REPO / authority.SCRATCH_RECEIPT_REL).is_file():
-            self.skipTest("retained JPEG24 scratch package is unavailable")
-        source_root = SCRATCH_REPO / authority.SCRATCH_LANE_REL / "runs"
+        source_root = ROOT / authority.PREP_LANE_REL
+        if not source_root.is_dir():
+            self.skipTest("retained current-state JPEG24 preparation is unavailable")
         source_by_mode = {
-            "dry": "formal-replica-a-dry",
-            "apply": "formal-replica-a-apply",
-            "readback": "formal-replica-a-readback",
+            "dry": "formal-a/dry",
+            "apply": "formal-a/apply",
+            "readback": "formal-a/readback",
         }
         with tempfile.TemporaryDirectory() as temporary:
             lane = Path(temporary) / "lane"
@@ -338,7 +343,6 @@ class PureContractTests(unittest.TestCase):
                 receipt = json.loads(
                     (source / "boundaries.ready.json").read_text(encoding="utf-8")
                 )
-                receipt["tool"]["path"] = "tools/GhidraApplyJpegCallbackBoundaries.java"
                 receipt["output"]["path"] = (
                     f"{authority.LIVE_LANE_REL}/runs/{run_name}/boundaries.tsv"
                 )
@@ -356,7 +360,7 @@ class PureContractTests(unittest.TestCase):
 
 RETAINED_AVAILABLE = (
     (SCRATCH_REPO / authority.SCRATCH_RECEIPT_REL).is_file()
-    and (SCRATCH_REPO / authority.PRE_ACCOUNTING_REL).is_file()
+    and (ROOT / authority.PRE_ACCOUNTING_REL).is_file()
 )
 
 
@@ -370,6 +374,14 @@ class RetainedEvidenceTests(unittest.TestCase):
         self.assertEqual(result["receipt"]["sha256"], authority.SCRATCH_RECEIPT_STAMP[1])
         self.assertEqual(result["fullTree"], authority.SCRATCH_TREE)
 
+    def test_current_preparation_replicas_reproduce(self) -> None:
+        result = authority.validate_preparation_replicas(self.config)
+        self.assertEqual(result["fullTree"], authority.PREP_TREE)
+        self.assertEqual((result["preFunctions"], result["postFunctions"]), (8280, 8304))
+        self.assertEqual((result["postRanges"], result["postOwnedBytes"]), (8434, 1810287))
+        self.assertIs(result["semanticOutputsByteIdentical"], True)
+        self.assertIs(result["physicalRollingDatabaseIdentityPinned"], False)
+
     def test_prospective_projection_is_exact_without_materializing(self) -> None:
         result = authority.prospective_projection(self.config)
         self.assertEqual(
@@ -382,8 +394,8 @@ class RetainedEvidenceTests(unittest.TestCase):
         self.assertEqual(
             (result["bytes"], result["sha256"]), authority.POST_BODY_RANGES_STAMP
         )
-        self.assertEqual((result["functions"], result["ranges"]), (8304, 8438))
-        self.assertEqual(result["ownedBytes"], 1809029)
+        self.assertEqual((result["functions"], result["ranges"]), (8304, 8434))
+        self.assertEqual(result["ownedBytes"], 1810287)
         self.assertIs(result["materialized"], False)
 
     def test_scratch_listing_proves_005b6900_final_byte_ownership(self) -> None:

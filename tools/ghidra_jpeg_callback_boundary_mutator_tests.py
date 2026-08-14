@@ -10,6 +10,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 MUTATOR = ROOT / "tools/GhidraApplyJpegCallbackBoundaries.java"
+MUTATOR_V2 = ROOT / "tools/GhidraApplyJpegCallbackBoundariesV2.java"
 
 
 class JpegCallbackBoundaryMutatorSourceTests(unittest.TestCase):
@@ -122,6 +123,29 @@ class JpegCallbackBoundaryMutatorSourceTests(unittest.TestCase):
         self.assertIn("non-target function changed at", self.source)
         self.assertIn("instruction outside admitted bodies changed at", self.source)
         self.assertIn("reference outside admitted bodies changed", self.source)
+
+
+class JpegCallbackBoundaryV2MutatorSourceTests(unittest.TestCase):
+    def test_v2_changes_only_the_current_pre_identity(self) -> None:
+        old = MUTATOR.read_text(encoding="utf-8")
+        current = MUTATOR_V2.read_text(encoding="utf-8")
+        expected = old
+        for before, after in (
+            ("8,280-function PRE copy", "8,280-function db.18614 PRE copy"),
+            ("GhidraApplyJpegCallbackBoundaries.java",
+             "GhidraApplyJpegCallbackBoundariesV2.java"),
+            ("GhidraApplyJpegCallbackBoundaries extends GhidraScript",
+             "GhidraApplyJpegCallbackBoundariesV2 extends GhidraScript"),
+            ("bea.ghidra.jpeg-callback-boundaries.v1",
+             "bea.ghidra.jpeg-callback-boundaries.v2"),
+            ("PRE_INSTRUCTIONS = 550991", "PRE_INSTRUCTIONS = 551014"),
+            ("POST_INSTRUCTIONS = 551032", "POST_INSTRUCTIONS = 551055"),
+            ("PRE_REFERENCES = 234495", "PRE_REFERENCES = 234478"),
+            ("POST_REFERENCES = 234484", "POST_REFERENCES = 234467"),
+        ):
+            self.assertIn(before, expected)
+            expected = expected.replace(before, after)
+        self.assertEqual(current, expected)
 
 
 if __name__ == "__main__":

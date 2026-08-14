@@ -191,11 +191,12 @@ and its
 [24-row evidence manifest](../reverse-engineering/binary-analysis/jpeg-ijg-callback-function-boundaries-2026-08-14.tsv).
 The separate
 [live-promotion preparation](../reverse-engineering/binary-analysis/jpeg-ijg-callback-ghidra-live-promotion-preparation-2026-08-14.md)
-uses `ghidra_jpeg_callback_boundary_live_authority.py` to pin the historical
-db.18613 PRE bytes, the 8,304-function prospective POST, one-save
-backup/readback/restore chronology, `0x005B6900` listing ownership, and the
-future projection/accounting. Its policy is `PREPARATION_ONLY`; it performed no
-Ghidra write. Current db.18614 requires a fresh re-ground before promotion.
+uses `GhidraApplyJpegCallbackBoundariesV2.java` and
+`ghidra_jpeg_callback_boundary_live_authority.py` to pin the exact current
+db.18614 PRE, reproduce two fresh disposable 8,304-function prospective POST
+replicas, bind `0x005B6900` listing ownership, and prepare the one-save
+backup/readback/restore plus future projection/accounting gates. Its policy is
+`PREPARATION_ONLY`; it performs no live or tracked Ghidra write.
 
 `GhidraApplyD3dxGapBoundaries.java` is the structural-only runner for the two
 complete D3DX-compatible loose bodies at `0x00595FC9` and `0x00596028`. It pins

@@ -37,9 +37,9 @@ import ghidra_project_backup as project_backup  # noqa: E402
 import re_ghidra_name_projection as name_projection  # noqa: E402
 
 
-SCHEMA = "bea.ghidra.jpeg-callback-boundary-live-authority.v1"
+SCHEMA = "bea.ghidra.jpeg-callback-boundary-live-authority.v2"
 POLICY = "PREPARATION_ONLY"
-BASE_COMMIT = "3a2397aec192330a9d26f4615b3e1aee599e7850"
+BASE_COMMIT = "07417cadd227ab8d91bd2d1ab90554bd64fc3cf5"
 PROGRAM_NAME = "BEA.exe"
 PROGRAM_MD5 = "3b456964020070efe696d2cc09464a55"
 PROGRAM_SHA256 = "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
@@ -56,35 +56,35 @@ EXTERNAL_INSTRUCTIONS = 4497
 CFG_EDGES = 4745
 PRE_FUNCTIONS = 8280
 POST_FUNCTIONS = 8304
-PRE_RANGES = 8400
-POST_RANGES = 8438
-PRE_OWNED = 1794212
-POST_OWNED = 1809029
-PRE_INSTRUCTIONS = 550991
-POST_INSTRUCTIONS = 551032
-PRE_REFERENCES = 234495
-POST_REFERENCES = 234484
+PRE_RANGES = 8396
+POST_RANGES = 8434
+PRE_OWNED = 1795470
+POST_OWNED = 1810287
+PRE_INSTRUCTIONS = 551014
+POST_INSTRUCTIONS = 551055
+PRE_REFERENCES = 234478
+POST_REFERENCES = 234467
 TEXT_START = 0x00401000
 TEXT_END = 0x005D7F9D
 TEXT_BYTES = TEXT_END - TEXT_START
 
 PRE_PROJECT = {
     "fileCount": 19,
-    "totalBytes": 186960773,
+    "totalBytes": 186977157,
     "canonicalInventorySha256":
-        "ae422079966978ec2f8f5b951b0ef5812b1074bd708ab8d782179f51c90efcf2",
+        "cda0938c1a266fbe1751a8b0bf175b90c63b296f21fc9631b5bade1ecf93e541",
 }
-DB_18612 = (
-    68321280,
-    "424775377ea0f40d9e429c9219b9310d427760acc40548dbc588ca285f932f7b",
-)
 DB_18613 = (
     68337664,
     "615497847b0c732077ee7164b0973b9012092523e9ad99b91c21781952420ebe",
 )
-PRE_OLD_DB_PATH = "BEA.rep/idata/00/~00000000.db/db.18612.gbf"
-PRE_STABLE_DB_PATH = "BEA.rep/idata/00/~00000000.db/db.18613.gbf"
-POST_ROLLING_DB_PATH = "BEA.rep/idata/00/~00000000.db/db.18614.gbf"
+DB_18614 = (
+    68337664,
+    "d7f0011ea337f58b710415d5664e73d91ca9f1f61e20a836278d3e71b71b2865",
+)
+PRE_OLD_DB_PATH = "BEA.rep/idata/00/~00000000.db/db.18613.gbf"
+PRE_STABLE_DB_PATH = "BEA.rep/idata/00/~00000000.db/db.18614.gbf"
+POST_ROLLING_DB_PATH = "BEA.rep/idata/00/~00000000.db/db.18615.gbf"
 
 MANIFEST_REL = (
     "reverse-engineering/binary-analysis/"
@@ -95,51 +95,62 @@ PROJECTION_REL = (
     "ghidra-function-name-table-2026-08-13.tsv"
 )
 LIVE_LANE_REL = (
-    "local-lab/ghidra-jpeg24-boundary-live-promotion-20260814-v1"
+    "local-lab/ghidra-jpeg24-boundary-live-promotion-20260814-v2"
 )
 AUTHORITY_RECEIPT_REL = (
-    "local-lab/ghidra-jpeg24-boundary-live-authority-20260814-v1/"
+    "local-lab/ghidra-jpeg24-boundary-live-authority-20260814-v2/"
     "live-promotion.ready.json"
+)
+PREP_LANE_REL = (
+    "local-lab/ghidra-jpeg24-boundary-live-prep-db18614-v2"
 )
 SCRATCH_LANE_REL = (
     "local-lab/ghidra-jpeg24-boundary-current-scratch-20260814-v1"
 )
 SCRATCH_RECEIPT_REL = f"{SCRATCH_LANE_REL}/scratch-authority.ready.json"
-PRE_ACCOUNTING_REL = f"{SCRATCH_LANE_REL}/inputs/current-8280-body-ranges.tsv"
+PRE_ACCOUNTING_REL = f"{PREP_LANE_REL}/static/pre-body-ranges.tsv"
 DIAGNOSTIC_ADDRESSES_REL = f"{SCRATCH_LANE_REL}/inputs/diagnostic-addresses.txt"
 PROJECTION_SOURCE = f"{LIVE_LANE_REL}/runs/live-readback/functions.tsv"
 
 PRE_FUNCTIONS_STAMP = (
-    7161942,
-    "c3942b9e340cef71b731290b845843697af5c53204449c51949b779e896272d6",
+    7161943,
+    "d2ff1e8e7bd91454fff9822fb7ecc8e624525fa5c6cbc9dcfe06f4e0212b750d",
 )
 PRE_PROGRAM_STAMP = (
     1267,
-    "3e51ce1d5e926c632869b2058c9d89e91f48345a329a724ea9520570bd91212d",
+    "b389487a65d6271329703c9e3ec9186b7261aa871a154c31179322780e1c132e",
 )
 POST_FUNCTIONS_STAMP = (
-    7177775,
-    "dce886c9ee9ddee96a2e27baff616723211b7818c2d9277e19e3202d6a307804",
+    7177776,
+    "bceedfa2eec573ee95e42a703d6f3a552c4718115fa540f3eaca492322f9a173",
 )
 POST_PROGRAM_STAMP = (
     1267,
-    "b154869020140b266e06dd5ef07d4fd99c71e328a1ffb1223d4d4c6db4b3a5e9",
+    "bcb364f619559879e815f8d95f5551ba10d9be0467023bd006ee1246b0f9b40f",
 )
 PRE_PROJECTION_STAMP = (
-    508242,
-    "6e22a93a4792a2b5a9a6109a65e3b6460dc1ef6dc0606cc195a9a50e30ebdd68",
+    508239,
+    "267210a78248f58da6bca1b4d11ee7b1812481602413e8bcac2fb4e4b4c4cb84",
 )
 POST_PROJECTION_STAMP = (
     509334,
-    "e7ac5b35d0535c6d8bfd42fe46aea72edd24caf0772f2b9ba74a718dabdb474b",
+    "5dd0d1145c2cf25004bd50208c624d9bf4f9c2fe0e4d307ac6c7ca88e8a5dfbc",
 )
 PRE_BODY_RANGES_STAMP = (
-    1198388,
-    "0101e6e8b34eaea8bd646a0fa9a8e4e448bef586c8b2b898c78241befde3aa6b",
+    1197803,
+    "495f1a86490e7b2646d2a0a6cd86bf6e4cdb071d5932b7d65ded1377621582e2",
 )
 POST_BODY_RANGES_STAMP = (
-    1203246,
-    "0050347df1e78eafb9ef758ebd86acdbfc05bf4a349381c7960e174c16df0ef0",
+    1202661,
+    "8e3640bfb280b6ce93a62db885183aa2239d1e74841685316b0117518eb63aaa",
+)
+POST_DIRECT_CALLS_STAMP = (
+    1396670,
+    "e2c3e2d0ace69d13b4bffa4d12690e60f6cf0cc50d2ff846cdc37ace680a756f",
+)
+POST_GRAPH_RECEIPT_STAMP = (
+    767,
+    "bc3047480f43cbd31b762854eb9a0fc0e2b79564786a935c0c874fc589fb3d04",
 )
 SCRATCH_RECEIPT_STAMP = (
     7077,
@@ -150,6 +161,13 @@ SCRATCH_TREE = {
     "totalBytes": 1013137450,
     "sha256":
         "7c3df3b029b3f175a41bbbf698c1b47dfd5f18c02f7616494794225f3dc2058c",
+    "canonicalization": "sha256<TAB>bytes<TAB>relative-posix-path<LF>, path order",
+}
+PREP_TREE = {
+    "fileCount": 94,
+    "totalBytes": 410373323,
+    "sha256":
+        "6a25263ce240c1311bc857b57937f37ad652a94859efb853c4d40e9bc8ef22f0",
     "canonicalization": "sha256<TAB>bytes<TAB>relative-posix-path<LF>, path order",
 }
 
@@ -184,6 +202,10 @@ EXPECTED_REPO_INPUTS = {
     "tools/GhidraApplyJpegCallbackBoundaries.java": (
         61032,
         "16b8fbf6e4ffdab716b5359e8610c77b83bb6a32b6e2ac7d98e34efbe500c480",
+    ),
+    "tools/GhidraApplyJpegCallbackBoundariesV2.java": (
+        61045,
+        "dcb2e8e92b6b877ae6c6e1f5839c298e48f0fd4a649a568d228b657af7c420dc",
     ),
     "tools/ExportFullFunctionInventory.java": (
         23963,
@@ -354,13 +376,14 @@ POST_BODY_ROWS = {
 
 CLAIMS = (
     "The retained 258-file JPEG scratch tree and exact sealed receipt reproduce two saved positive replicas, separate readbacks, adverse controls, exact PRE recovery, and two path-containment refusals.",
-    "Live and tracked were exact byte-identical db.18613 PRE projects before any ceremony artifact existed.",
+    "Two fresh disposable db.18614 replicas preserve every current PRE function row and reproduce byte-identical semantic POST inventories, listings, projections, and body-accounting exports.",
+    "Live and tracked were exact byte-identical db.18614 PRE projects before any ceremony artifact existed.",
     "The completed ceremony contains exactly one writable live apply between read-only PRE and separate read-only POST runs.",
     "All 8,280 PRE function rows remain byte-identical; the exact 24-entry manifest adds 38 pairwise-disjoint default-metadata body ranges and 14,817 owned bytes.",
     "The byte at 0x005B6900 is neither data nor a function entry and is owned only as the final byte of MOVZX 0F B6 00 beginning at 0x005B68FE inside FUN_005b6800.",
-    "The only physical project transition is db.18612 removal and db.18614 addition while db.18613 and every other common file remain exact.",
+    "The only physical project transition is db.18613 removal and db.18615 addition while db.18614 and every other common file remain exact.",
     "PRE and POST off-volume backups reopen read-only; tracked remains PRE through POST recovery, then tracked POST and its retained restore equal live POST byte-for-byte.",
-    "The tracked 8,304-row projection and exact 1,809,029-byte body accounting are refreshed mechanically from the proved POST state.",
+    "The tracked 8,304-row projection and exact 1,810,287-byte body accounting are refreshed mechanically from the proved POST state.",
     "No name, signature, comment, tag, data, byte, behavior, runtime, or reconstruction claim is authorized by this structural promotion.",
 )
 
@@ -569,9 +592,9 @@ def require_pre_project(value: Mapping[str, Any], label: str) -> None:
     for key, expected in PRE_PROJECT.items():
         require(summary.get(key) == expected, f"{label} {key} differs")
     files = project_file_map(value)
-    require(files.get(PRE_OLD_DB_PATH) == DB_18612, f"{label} db.18612 identity")
-    require(files.get(PRE_STABLE_DB_PATH) == DB_18613, f"{label} db.18613 identity")
-    require(POST_ROLLING_DB_PATH not in files, f"{label} unexpectedly contains db.18614")
+    require(files.get(PRE_OLD_DB_PATH) == DB_18613, f"{label} db.18613 identity")
+    require(files.get(PRE_STABLE_DB_PATH) == DB_18614, f"{label} db.18614 identity")
+    require(POST_ROLLING_DB_PATH not in files, f"{label} unexpectedly contains db.18615")
 
 
 def validate_post_transition(
@@ -590,9 +613,9 @@ def validate_post_transition(
     require(removed == [PRE_OLD_DB_PATH], f"{label} removed paths")
     require(added == [POST_ROLLING_DB_PATH], f"{label} added paths")
     require(changed == [], f"{label} changed common files")
-    require(after.get(PRE_STABLE_DB_PATH) == DB_18613, f"{label} stable db.18613")
+    require(after.get(PRE_STABLE_DB_PATH) == DB_18614, f"{label} stable db.18614")
     rolling = after.get(POST_ROLLING_DB_PATH)
-    require(rolling is not None and rolling[0] > 0, f"{label} rolling db.18614")
+    require(rolling is not None and rolling[0] > 0, f"{label} rolling db.18615")
     return {
         "removed": removed,
         "added": added,
@@ -600,8 +623,8 @@ def validate_post_transition(
         "byteDelta": int(post["totalBytes"]) - int(pre["totalBytes"]),
         "stableDatabase": {
             "path": PRE_STABLE_DB_PATH,
-            "bytes": DB_18613[0],
-            "sha256": DB_18613[1],
+            "bytes": DB_18614[0],
+            "sha256": DB_18614[1],
         },
         "rollingDatabase": {
             "path": POST_ROLLING_DB_PATH,
@@ -638,8 +661,12 @@ class Config:
         return self.scratch_repo / SCRATCH_RECEIPT_REL
 
     @property
+    def prep_lane(self) -> Path:
+        return self.repo / PREP_LANE_REL
+
+    @property
     def pre_accounting(self) -> Path:
-        return self.scratch_repo / PRE_ACCOUNTING_REL
+        return self.repo / PRE_ACCOUNTING_REL
 
 
 def validate_layout(config: Config) -> None:
@@ -655,6 +682,7 @@ def validate_layout(config: Config) -> None:
         config.live_project,
         config.tracked_project,
         config.scratch_lane,
+        config.prep_lane,
         config.live_lane,
         config.pre_backup,
         config.post_backup,
@@ -827,9 +855,203 @@ def validate_scratch(config: Config) -> dict[str, Any]:
     }
 
 
+def validate_preparation_receipt(
+    config: Config, replica: str, mode: str
+) -> dict[str, Any]:
+    relative = f"formal-{replica}/{mode}"
+    root = config.prep_lane / relative
+    receipt = load_json(root / "boundaries.ready.json", f"preparation {relative}")
+    require(set(receipt) == {
+        "schemaVersion", "completedAtUtc", "mode", "tool", "manifest", "output",
+        "program", "counts", "explicitBodySetsAuthorized",
+        "fixedPointAddressIsFunctionEntry", "fixedPointAddressIsData",
+        "fixedPointInstructionOwner", "postCountsPinned", "namesAuthorized",
+        "metadataAuthorized", "separateReadbackRequired",
+    }, f"preparation {relative} receipt field set")
+    require(receipt.get("schemaVersion") == "bea.ghidra.jpeg-callback-boundaries.v2",
+            f"preparation {relative} schema")
+    require(receipt.get("mode") == mode, f"preparation {relative} mode")
+    parse_utc(receipt.get("completedAtUtc"), f"preparation {relative} completion")
+    require(receipt.get("tool") == {
+        "path": "tools/GhidraApplyJpegCallbackBoundariesV2.java",
+        "bytes": EXPECTED_REPO_INPUTS["tools/GhidraApplyJpegCallbackBoundariesV2.java"][0],
+        "sha256": EXPECTED_REPO_INPUTS["tools/GhidraApplyJpegCallbackBoundariesV2.java"][1],
+    }, f"preparation {relative} tool")
+    require(receipt.get("manifest") == {
+        "path": MANIFEST_REL,
+        "bytes": EXPECTED_REPO_INPUTS[MANIFEST_REL][0],
+        "sha256": EXPECTED_REPO_INPUTS[MANIFEST_REL][1],
+    }, f"preparation {relative} manifest")
+    boundary = verify_stamp(
+        root / "boundaries.tsv", BOUNDARY_STAMPS[mode],
+        f"preparation {relative} boundaries",
+    )
+    require(receipt.get("output") == {
+        "path": f"{PREP_LANE_REL}/{relative}/boundaries.tsv",
+        "bytes": boundary["bytes"], "sha256": boundary["sha256"],
+    }, f"preparation {relative} output")
+    require(receipt.get("program") == {
+        "name": PROGRAM_NAME, "md5": PROGRAM_MD5, "sha256": PROGRAM_SHA256,
+    }, f"preparation {relative} program")
+    before_functions = POST_FUNCTIONS if mode == "readback" else PRE_FUNCTIONS
+    before_instructions = POST_INSTRUCTIONS if mode == "readback" else PRE_INSTRUCTIONS
+    after_functions = POST_FUNCTIONS if mode != "dry" else PRE_FUNCTIONS
+    after_instructions = POST_INSTRUCTIONS if mode != "dry" else PRE_INSTRUCTIONS
+    require(receipt.get("counts") == {
+        "targets": TARGETS,
+        "externalInstructions": EXTERNAL_INSTRUCTIONS,
+        "ghidraBodyInstructions": EXTERNAL_INSTRUCTIONS,
+        "functionsBefore": before_functions,
+        "functionsAfter": after_functions,
+        "instructionsBefore": before_instructions,
+        "instructionsAfter": after_instructions,
+    }, f"preparation {relative} counts")
+    require(receipt.get("explicitBodySetsAuthorized") is True
+            and receipt.get("fixedPointAddressIsFunctionEntry") is False
+            and receipt.get("fixedPointAddressIsData") is False
+            and receipt.get("fixedPointInstructionOwner") == "0x005b68fe"
+            and receipt.get("postCountsPinned") is True
+            and receipt.get("namesAuthorized") is False
+            and receipt.get("metadataAuthorized") is False
+            and receipt.get("separateReadbackRequired") is (mode != "readback"),
+            f"preparation {relative} policy")
+    scratch.verify_boundaries(
+        root / "boundaries.tsv", mode, load_targets(config.repo / MANIFEST_REL)
+    )
+    return stamp(
+        root / "boundaries.ready.json",
+        f"{PREP_LANE_REL}/{relative}/boundaries.ready.json",
+    )
+
+
+def validate_preparation_replicas(config: Config) -> dict[str, Any]:
+    require(config.prep_lane.is_dir(), "current-state preparation lane is missing")
+    measured_tree = tree_identity(config.prep_lane)
+    require(measured_tree == PREP_TREE, "current-state preparation tree differs")
+    verify_stamp(
+        config.prep_lane / "static/manifest.tsv",
+        EXPECTED_REPO_INPUTS[MANIFEST_REL], "preparation manifest copy",
+    )
+    tracked_v2 = config.repo / "tools/GhidraApplyJpegCallbackBoundariesV2.java"
+    frozen_v2 = config.prep_lane / "static/GhidraApplyJpegCallbackBoundariesV2.java"
+    verify_stamp(
+        frozen_v2,
+        EXPECTED_REPO_INPUTS["tools/GhidraApplyJpegCallbackBoundariesV2.java"],
+        "preparation mutator copy",
+    )
+    require(frozen_v2.read_bytes() == tracked_v2.read_bytes(),
+            "tracked/preparation v2 mutator differs")
+    verify_stamp(
+        config.prep_lane / "static/diagnostic-addresses.txt",
+        (88, "e0c3f01b6fcea1c9fe0de328c7850a7c29e9f7aae59cd4ef9549bf013c917aa9"),
+        "preparation diagnostic addresses",
+    )
+    verify_stamp(
+        config.prep_lane / "static/pre-body-ranges.tsv",
+        PRE_BODY_RANGES_STAMP, "preparation PRE body ranges",
+    )
+
+    deterministic = (
+        "dry/functions.tsv", "dry/program.tsv", "dry/boundaries.tsv",
+        "dry/listing-state.tsv", "apply/boundaries.tsv",
+        "readback/functions.tsv", "readback/program.tsv",
+        "readback/boundaries.tsv", "readback/listing-state.tsv",
+        "accounting/body-ranges.tsv", "accounting/direct-calls.tsv",
+        "accounting/parity-graph.ready.json", "projection.tsv",
+    )
+    replicas: dict[str, Any] = {}
+    raw: dict[str, dict[str, bytes]] = {}
+    for replica in ("a", "b"):
+        root = config.prep_lane / f"formal-{replica}"
+        project_root = config.prep_lane / f"formal-{replica}-project"
+        backup = load_json(
+            project_root / "backup_manifest.json",
+            f"preparation {replica} source-copy manifest",
+        )
+        require(backup.get("schemaVersion") == project_backup.SCHEMA_VERSION,
+                f"preparation {replica} backup schema")
+        require(backup.get("sourceStable") is True, f"preparation {replica} source stability")
+        require(backup.get("copyComparison", {}).get("matches") is True,
+                f"preparation {replica} source-copy comparison")
+        source = backup.get("source", {})
+        destination = backup.get("destination", {})
+        require_pre_project(source, f"preparation {replica} source PRE")
+        require_pre_project(destination, f"preparation {replica} copied PRE")
+
+        receipts = {
+            mode: validate_preparation_receipt(config, replica, mode)
+            for mode in ("dry", "apply", "readback")
+        }
+        verify_stamp(root / "dry/functions.tsv", PRE_FUNCTIONS_STAMP,
+                     f"preparation {replica} PRE functions")
+        verify_stamp(root / "dry/program.tsv", PRE_PROGRAM_STAMP,
+                     f"preparation {replica} PRE program")
+        verify_stamp(root / "dry/listing-state.tsv", PRE_LISTING_STAMP,
+                     f"preparation {replica} PRE listing")
+        scratch.verify_listing(root / "dry/listing-state.tsv", False)
+        verify_stamp(root / "readback/functions.tsv", POST_FUNCTIONS_STAMP,
+                     f"preparation {replica} POST functions")
+        verify_stamp(root / "readback/program.tsv", POST_PROGRAM_STAMP,
+                     f"preparation {replica} POST program")
+        verify_stamp(root / "readback/listing-state.tsv", POST_LISTING_STAMP,
+                     f"preparation {replica} POST listing")
+        scratch.verify_listing(root / "readback/listing-state.tsv", True)
+        for mode in ("dry", "apply", "readback"):
+            validate_run_log(root / mode / "ghidra.log", mode)
+        scratch.verify_diff(root / "inventory-diff.json", TARGETS)
+        verify_stamp(root / "accounting/body-ranges.tsv", POST_BODY_RANGES_STAMP,
+                     f"preparation {replica} POST body ranges")
+        verify_stamp(root / "accounting/direct-calls.tsv", POST_DIRECT_CALLS_STAMP,
+                     f"preparation {replica} POST direct calls")
+        graph_stamp = verify_stamp(
+            root / "accounting/parity-graph.ready.json", POST_GRAPH_RECEIPT_STAMP,
+            f"preparation {replica} graph receipt",
+        )
+        graph = load_json(
+            root / "accounting/parity-graph.ready.json",
+            f"preparation {replica} graph receipt",
+        )
+        require(graph.get("bodyRanges", {}).get("functionCount") == POST_FUNCTIONS
+                and graph.get("bodyRanges", {}).get("rangeCount") == POST_RANGES
+                and graph.get("bodyRanges", {}).get("sha256") == POST_BODY_RANGES_STAMP[1]
+                and graph.get("directCalls", {}).get("directEdgeCount") == 14584
+                and graph.get("directCalls", {}).get("directCallSiteCount") == 27229
+                and graph.get("directCalls", {}).get("sha256") == POST_DIRECT_CALLS_STAMP[1],
+                f"preparation {replica} graph counts")
+        verify_stamp(root / "projection.tsv", POST_PROJECTION_STAMP,
+                     f"preparation {replica} POST projection")
+        post = project_value(project_root)
+        transition = validate_post_transition(destination, post,
+                                              f"preparation {replica} POST transition")
+        raw[replica] = {relative: (root / relative).read_bytes()
+                        for relative in deterministic}
+        replicas[replica] = {
+            "sourceCopyManifest": stamp(
+                project_root / "backup_manifest.json",
+                f"{PREP_LANE_REL}/formal-{replica}-project/backup_manifest.json",
+            ),
+            "receipts": receipts,
+            "postTransition": transition,
+            "graphReceipt": graph_stamp,
+        }
+    for relative in deterministic:
+        require(raw["a"][relative] == raw["b"][relative],
+                f"preparation replicas differ: {relative}")
+    return {
+        "fullTree": measured_tree,
+        "replicas": replicas,
+        "semanticOutputsByteIdentical": True,
+        "preFunctions": PRE_FUNCTIONS,
+        "postFunctions": POST_FUNCTIONS,
+        "postRanges": POST_RANGES,
+        "postOwnedBytes": POST_OWNED,
+        "physicalRollingDatabaseIdentityPinned": False,
+    }
+
+
 def prospective_projection(config: Config) -> dict[str, Any]:
-    inventory = config.scratch_lane / "runs/formal-replica-a-readback/functions.tsv"
-    verify_stamp(inventory, POST_FUNCTIONS_STAMP, "scratch POST functions")
+    inventory = config.prep_lane / "formal-a/readback/functions.tsv"
+    verify_stamp(inventory, POST_FUNCTIONS_STAMP, "current preparation POST functions")
     raw = name_projection.projection_bytes(
         inventory,
         expected_inventory_sha256=POST_FUNCTIONS_STAMP[1],
@@ -839,6 +1061,10 @@ def prospective_projection(config: Config) -> dict[str, Any]:
     )
     measured = (len(raw), hashlib.sha256(raw).hexdigest())
     require(measured == POST_PROJECTION_STAMP, "prospective projection identity")
+    for replica in ("a", "b"):
+        materialized = config.prep_lane / f"formal-{replica}/projection.tsv"
+        require(materialized.read_bytes() == raw,
+                f"prospective projection differs from preparation {replica}")
     rows = sum(1 for line in raw.splitlines() if line and not line.startswith(b"#")) - 1
     require(rows == POST_FUNCTIONS, "prospective projection row count")
     return {"rows": rows, "bytes": measured[0], "sha256": measured[1],
@@ -892,6 +1118,10 @@ def prospective_body_accounting(config: Config) -> dict[str, Any]:
             "prospective POST body-accounting population")
     require(sum(int(row["rangeBytes"]) for row in rows) == POST_OWNED,
             "prospective POST body-accounting ownership")
+    for replica in ("a", "b"):
+        materialized = config.prep_lane / f"formal-{replica}/accounting/body-ranges.tsv"
+        require(materialized.read_bytes() == output,
+                f"prospective body accounting differs from preparation {replica}")
     return {
         "functions": POST_FUNCTIONS,
         "ranges": POST_RANGES,
@@ -908,6 +1138,7 @@ def preflight(config: Config) -> dict[str, Any]:
     repo_inputs = validate_repo_inputs(config)
     targets = load_targets(config.repo / MANIFEST_REL)
     scratch_result = validate_scratch(config)
+    preparation = validate_preparation_replicas(config)
     require(not config.live_lane.exists(), "canonical live lane already exists")
     require(not config.pre_backup.exists(), "PRE backup destination already exists")
     require(not config.post_backup.exists(), "POST backup destination already exists")
@@ -934,6 +1165,7 @@ def preflight(config: Config) -> dict[str, Any]:
         "repositoryInputs": repo_inputs,
         "targets": len(targets),
         "scratchAuthority": scratch_result,
+        "currentStatePreparation": preparation,
         "livePre": project_summary(live_before),
         "trackedPre": project_summary(tracked),
         "liveStableAcrossTwoReads": True,
@@ -991,10 +1223,12 @@ def validate_function_delta(config: Config) -> dict[str, Any]:
     after_path = config.live_lane / "runs/live-readback/functions.tsv"
     verify_stamp(before_path, PRE_FUNCTIONS_STAMP, "live PRE functions")
     verify_stamp(after_path, POST_FUNCTIONS_STAMP, "live POST functions")
-    scratch_before = config.scratch_lane / "runs/base-inventory/functions.tsv"
-    scratch_after = config.scratch_lane / "runs/formal-replica-a-readback/functions.tsv"
-    require(before_path.read_bytes() == scratch_before.read_bytes(), "live/scratch PRE functions")
-    require(after_path.read_bytes() == scratch_after.read_bytes(), "live/scratch POST functions")
+    prepared_before = config.prep_lane / "formal-a/dry/functions.tsv"
+    prepared_after = config.prep_lane / "formal-a/readback/functions.tsv"
+    require(before_path.read_bytes() == prepared_before.read_bytes(),
+            "live/preparation PRE functions")
+    require(after_path.read_bytes() == prepared_after.read_bytes(),
+            "live/preparation POST functions")
     before = raw_tsv(before_path, "address")
     after = raw_tsv(after_path, "address")
     require(before.fields == after.fields, "function headers differ")
@@ -1047,13 +1281,13 @@ def validate_program_delta(config: Config) -> dict[str, Any]:
     verify_stamp(after_path, POST_PROGRAM_STAMP, "live POST program")
     require(
         before_path.read_bytes()
-        == (config.scratch_lane / "runs/base-inventory/program.tsv").read_bytes(),
-        "live/scratch PRE program",
+        == (config.prep_lane / "formal-a/dry/program.tsv").read_bytes(),
+        "live/preparation PRE program",
     )
     require(
         after_path.read_bytes()
-        == (config.scratch_lane / "runs/formal-replica-a-readback/program.tsv").read_bytes(),
-        "live/scratch POST program",
+        == (config.prep_lane / "formal-a/readback/program.tsv").read_bytes(),
+        "live/preparation POST program",
     )
     before = read_metrics(before_path)
     after = read_metrics(after_path)
@@ -1132,7 +1366,7 @@ def validate_low_level_receipt(
         "fixedPointInstructionOwner", "postCountsPinned", "namesAuthorized",
         "metadataAuthorized", "separateReadbackRequired",
     }, f"{run_name} receipt field set")
-    require(receipt.get("schemaVersion") == "bea.ghidra.jpeg-callback-boundaries.v1",
+    require(receipt.get("schemaVersion") == "bea.ghidra.jpeg-callback-boundaries.v2",
             f"{run_name} schema")
     require(receipt.get("mode") == mode, f"{run_name} mode")
     require(receipt.get("manifest") == {
@@ -1140,9 +1374,9 @@ def validate_low_level_receipt(
         "sha256": EXPECTED_REPO_INPUTS[MANIFEST_REL][1],
     }, f"{run_name} manifest")
     require(receipt.get("tool") == {
-        "path": "tools/GhidraApplyJpegCallbackBoundaries.java",
-        "bytes": EXPECTED_REPO_INPUTS["tools/GhidraApplyJpegCallbackBoundaries.java"][0],
-        "sha256": EXPECTED_REPO_INPUTS["tools/GhidraApplyJpegCallbackBoundaries.java"][1],
+        "path": "tools/GhidraApplyJpegCallbackBoundariesV2.java",
+        "bytes": EXPECTED_REPO_INPUTS["tools/GhidraApplyJpegCallbackBoundariesV2.java"][0],
+        "sha256": EXPECTED_REPO_INPUTS["tools/GhidraApplyJpegCallbackBoundariesV2.java"][1],
     }, f"{run_name} tool")
     measured = verify_stamp(result_path, BOUNDARY_STAMPS[mode], f"{run_name} boundaries")
     require(receipt.get("output") == {
@@ -1177,13 +1411,13 @@ def validate_low_level_receipt(
             f"{run_name} metadata boundary")
     require(receipt.get("separateReadbackRequired") is (mode != "readback"),
             f"{run_name} readback policy")
-    scratch_run = {
-        "dry": "runs/formal-replica-a-dry/boundaries.tsv",
-        "apply": "runs/formal-replica-a-apply/boundaries.tsv",
-        "readback": "runs/formal-replica-a-readback/boundaries.tsv",
+    prepared_run = {
+        "dry": "formal-a/dry/boundaries.tsv",
+        "apply": "formal-a/apply/boundaries.tsv",
+        "readback": "formal-a/readback/boundaries.tsv",
     }[mode]
-    require(result_path.read_bytes() == (config.scratch_lane / scratch_run).read_bytes(),
-            f"{run_name} differs from scratch {mode}")
+    require(result_path.read_bytes() == (config.prep_lane / prepared_run).read_bytes(),
+            f"{run_name} differs from current preparation {mode}")
     scratch.verify_boundaries(
         result_path, mode, load_targets(config.repo / MANIFEST_REL)
     )
@@ -1794,6 +2028,7 @@ def build_live_phase(config: Config) -> dict[str, Any]:
     validate_layout(config)
     repo_inputs = validate_repo_inputs(config)
     scratch_result = validate_scratch(config)
+    preparation = validate_preparation_replicas(config)
     load_targets(config.repo / MANIFEST_REL)
     projects, project_times = validate_projects(config, require_tracked_post=False)
     runs, run_times = validate_runs(config)
@@ -1806,6 +2041,7 @@ def build_live_phase(config: Config) -> dict[str, Any]:
             "liveLane": validate_small_artifact_set(config, final=False),
         },
         "scratchAuthority": scratch_result,
+        "currentStatePreparation": preparation,
         "projectsAndRecovery": projects,
         "liveRun": runs,
         "chronology": chronology,
@@ -1821,6 +2057,7 @@ def build_final(config: Config) -> dict[str, Any]:
     validate_layout(config)
     repo_inputs = validate_repo_inputs(config)
     scratch_result = validate_scratch(config)
+    preparation = validate_preparation_replicas(config)
     load_targets(config.repo / MANIFEST_REL)
     projects, project_times = validate_projects(config, require_tracked_post=True)
     runs, run_times = validate_runs(config)
@@ -1837,6 +2074,7 @@ def build_final(config: Config) -> dict[str, Any]:
             "liveLane": validate_small_artifact_set(config, final=True),
         },
         "scratchAuthority": scratch_result,
+        "currentStatePreparation": preparation,
         "projectsAndRecovery": projects,
         "liveRun": runs,
         "projection": projection,
@@ -1855,7 +2093,7 @@ def validate_output(config: Config, *, sealing: bool) -> None:
     require(output == clean_path(config.repo / AUTHORITY_RECEIPT_REL),
             "aggregate receipt must use the canonical authority path")
     for root in (
-        config.live_lane, config.scratch_lane, config.live_project,
+        config.live_lane, config.scratch_lane, config.prep_lane, config.live_project,
         config.pre_backup, config.post_backup, config.tracked_project,
     ):
         require(not is_within(output, clean_path(root)),
@@ -1972,7 +2210,7 @@ def main() -> int:
             "JPEG_CALLBACK_BOUNDARY_LIVE_PREPARATION_READY "
             f"pre_project_sha256={result['livePre']['canonicalInventorySha256']} "
             f"scratch_receipt_sha256={SCRATCH_RECEIPT_STAMP[1]} "
-            "live_equals_tracked=true db=db.18613.gbf "
+            "live_equals_tracked=true db=db.18614.gbf "
             "policy=PREPARATION_ONLY mutation_authorized=false "
             "blocker=future_ceremony_artifacts_absent"
         )

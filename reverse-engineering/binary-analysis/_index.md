@@ -65,9 +65,10 @@ the document it links.
   replicas, corrects the false `0x005B6900` boundary, preserves all 8,280 PRE
   rows exactly, and stops before live or tracked Ghidra promotion
 - [JPEG/IJG callback live-promotion preparation](jpeg-ijg-callback-ghidra-live-promotion-preparation-2026-08-14.md)
-  — historically pins the then-current live/tracked db.18613 PRE, exact
-  8,304-function prospective POST, one-save recovery/refresh chronology, and
-  fixed-point listing proof; current db.18614 requires a fresh re-ground
+  — pins the current live/tracked db.18614 PRE, reproduces the exact
+  8,304-function prospective POST on two fresh copies, and prepares the
+  one-save recovery/refresh chronology plus fixed-point listing proof without
+  authorizing a live or tracked write
 - [CRT/runtime P0 23-boundary scratch admission](crt-runtime-p0-ghidra-scratch-admission-2026-08-14.md)
   — superseded v1 receipt shape retained for audit history
 - [CRT/runtime P0 23-boundary corrected v2 scratch admission](crt-runtime-p0-ghidra-scratch-admission-v2-2026-08-14.md)

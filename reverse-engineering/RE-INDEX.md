@@ -226,13 +226,13 @@ and proves only a structural 8,304-function scratch result. Its verdict is
 `SCRATCH_READY_LIVE_FORBIDDEN`; the saved census, Generation 23, semantic
 grades, runtime contracts, and rebuild remain unchanged.
 
-The follow-on historical
+The follow-on current-state
 [JPEG24 live-promotion preparation](binary-analysis/jpeg-ijg-callback-ghidra-live-promotion-preparation-2026-08-14.md)
-re-grounded the then-byte-identical live/tracked 8,280-function db.18613 PRE and
-prepared a fail-closed one-save, backup/readback, tracked-restore, and
-projection/accounting ceremony. It remains `PREPARATION_ONLY` and performed no
-Ghidra write. The later body-fragment promotion advanced current geometry to
-`db.18614`; JPEG24 must therefore be re-grounded before any ceremony.
+re-grounded the byte-identical live/tracked 8,280-function db.18614 PRE and
+reproduced the exact 8,304-function prospective POST on two fresh disposable
+copies. It prepares a fail-closed one-save, backup/readback, tracked-restore,
+and projection/accounting ceremony, but remains `PREPARATION_ONLY` and performs
+no live or tracked Ghidra write.
 
 The separate sealed
 [23-row CRT/runtime P0 scratch admission](binary-analysis/crt-runtime-p0-ghidra-scratch-admission-2026-08-14.md)
