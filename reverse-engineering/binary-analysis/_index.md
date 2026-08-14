@@ -64,6 +64,12 @@ the document it links.
   — reproduces 24 exact IJG v6b algorithm bodies on two isolated current-state
   replicas, corrects the false `0x005B6900` boundary, preserves all 8,280 PRE
   rows exactly, and stops before live or tracked Ghidra promotion
+- [CRT/runtime P0 23-boundary scratch admission](crt-runtime-p0-ghidra-scratch-admission-2026-08-14.md)
+  — superseded v1 receipt shape retained for audit history
+- [CRT/runtime P0 23-boundary corrected v2 scratch admission](crt-runtime-p0-ghidra-scratch-admission-v2-2026-08-14.md)
+  — removes unvalidated borrowed JPEG fields, semantically validates every
+  retained field, reruns two fresh replicas plus adverse controls, preserves
+  all 8,280 PRE rows, and stops before live or tracked promotion
 - [Five existing-function body-fragment scratch admission](pc-function-body-fragment-ghidra-scratch-admission-2026-08-14.md)
   — reproduces five exact body-range repairs and a 1,258-byte ownership gain on
   two isolated db.18613 replicas, excludes the FEP envelope's trailing 12 NOP

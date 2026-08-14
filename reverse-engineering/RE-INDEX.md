@@ -225,6 +225,23 @@ and proves only a structural 8,304-function scratch result. Its verdict is
 grades, runtime contracts, and rebuild remain unchanged.
 
 The separate sealed
+[23-row CRT/runtime P0 scratch admission](binary-analysis/crt-runtime-p0-ghidra-scratch-admission-2026-08-14.md)
+pins corrected CRT22 run-c and reproduces its exact boundary-only cohort on two
+isolated copies of the same 8,280-function db.18613 state. It proves an exact
+8,303-function / 8,424-range scratch result while preserving every PRE row and
+all forbidden/excluded entries. Its verdict is
+`SCRATCH_READY_LIVE_FORBIDDEN`; the saved census, semantic grades, runtime
+contracts, current promoted generation, and rebuild remain unchanged.
+
+Hostile audit later superseded that v1 receipt shape—not its structural result—
+because it inherited unpopulated JPEG identity/CFG/demo columns. The
+[corrected v2 scratch admission](binary-analysis/crt-runtime-p0-ghidra-scratch-admission-v2-2026-08-14.md)
+removes those fields, validates every retained receipt field, independently
+revalidates all 23 demo twins, and reruns the complete positive/adverse campaign.
+V1 remains sealed historical evidence; v2 is the current scratch authority and
+still forbids live or tracked promotion.
+
+The separate sealed
 [five-existing-function body-fragment scratch admission](binary-analysis/pc-function-body-fragment-ghidra-scratch-admission-2026-08-14.md)
 adds no functions or metadata. Two isolated db.18613 replicas reproduce the
 exact 1,258-byte ownership gain across five existing bodies, with four inserted

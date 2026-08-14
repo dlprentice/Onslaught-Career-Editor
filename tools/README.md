@@ -189,6 +189,47 @@ See the
 and its
 [24-row evidence manifest](../reverse-engineering/binary-analysis/jpeg-ijg-callback-function-boundaries-2026-08-14.tsv).
 
+`GhidraApplyCrtP0Boundaries.java` is the structural-only runner for the 23 P0
+boundaries from corrected CRT22 run-c. It pins the exact 8,280-function /
+8,400-range db.18613 PRE state, all 24 authorized body ranges and hashes, the
+three forbidden entries, the excluded P1 canary, and the five-byte thunk from
+`0x0045AC20` to `0x0045AC30`. Its only mutation is bounded instruction repair
+and creation of default-source function boundaries inside those bodies.
+
+`ghidra_crt_p0_boundary_scratch_authority.py` rehashes and rejoins run-c, two
+byte-identical fresh derivations, pristine and demo specimens, current body
+ownership, two saved positive replicas, two rollback readbacks, two containment
+controls, and the read-only backup/restore/open proof. It publishes or verifies
+only a portable ignored aggregate receipt and authorizes neither live nor
+tracked mutation.
+
+```powershell
+python -I -B tools\ghidra_crt_p0_boundary_mutator_tests.py
+python -I -B tools\ghidra_crt_p0_boundary_scratch_authority_tests.py
+python -I -B tools\ghidra_crt_p0_boundary_scratch_authority.py verify
+```
+
+See the
+[scratch report](../reverse-engineering/binary-analysis/crt-runtime-p0-ghidra-scratch-admission-2026-08-14.md)
+and its
+[23-row evidence manifest](../reverse-engineering/binary-analysis/crt-runtime-p0-function-boundaries-2026-08-14.tsv).
+
+Hostile audit superseded that v1 receipt shape because it copied unpopulated
+JPEG identity/CFG/demo columns. `GhidraApplyCrtP0BoundariesV2.java` emits only
+structural fields it measures or validates. The versioned v2 authority checks
+every retained TSV/READY field, revalidates the exact run-c demo owner, reruns
+both replicas and all adverse controls, and preserves v1 evidence unchanged.
+
+```powershell
+python -I -B tools\ghidra_crt_p0_boundary_v2_mutator_tests.py
+python -I -B tools\ghidra_crt_p0_boundary_scratch_authority_v2_tests.py
+python -I -B tools\ghidra_crt_p0_boundary_scratch_authority_v2.py verify
+```
+
+Use the
+[corrected v2 report](../reverse-engineering/binary-analysis/crt-runtime-p0-ghidra-scratch-admission-v2-2026-08-14.md);
+the v1 report and sealed lane remain historical audit evidence.
+
 `re_pc_function_body_fragments.py` proves the exhaustive five-gap class inside
 five existing PC functions, including unique normalized demo twins and the
 deliberate 12-byte FEP NOP exclusion. `GhidraApplyFunctionFragmentRanges.java`
