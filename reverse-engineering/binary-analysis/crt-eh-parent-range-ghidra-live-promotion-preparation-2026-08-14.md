@@ -2,9 +2,9 @@
 
 Date: 2026-08-14
 
-Status: **preparation reproduced; live ceremony not started**
+Status: **historical preparation reproduced; consumed by completed promotion**
 
-Verdict: **PREPARATION_READY_MUTATION_NOT_AUTHORIZED**
+Verdict: **PREPARATION_CONSUMED_NO_WRITE_AUTHORITY**
 
 Policy: **`PREPARATION_ONLY`**
 
@@ -111,7 +111,7 @@ is 71,504 bytes, SHA-256
 It never launches Ghidra and never writes either project.
 
 1. `preflight` replays the scratch receipt/tree, hashes live and tracked PRE,
-   mechanically rebuilds the current projection, validates all 8,458 PRE body
+   mechanically rebuilds the then-current projection, validates all 8,458 PRE body
    ranges and the exact call graph, and requires every future root to be absent.
 2. `check-live` becomes usable only after a separately authorized PRE backup,
    retained read-only restore, dry run, single writable live apply, separate
@@ -134,8 +134,10 @@ Canonical future paths are:
 - aggregate receipt:
   `local-lab/ghidra-crt-eh-parent-range-live-authority-20260814-v1/live-promotion.ready.json`.
 
-All four are absent. That is the current fail-closed blocker, not missing
-evidence.
+All four were absent during preparation. That was the fail-closed blocker, not
+missing evidence. The separately authorized ceremony later created and sealed
+them; see the
+[completed promotion](crt-eh-parent-range-ghidra-live-promotion-2026-08-14.md).
 
 ## Reproduction
 
@@ -171,8 +173,9 @@ tracked restore proof, mechanical projection, read-only parity-graph export,
 
 ## Claim boundary
 
-This preparation changes no Ghidra file, campaign generation, function count,
+This historical preparation changed no Ghidra file, campaign generation, function count,
 grade, name, ABI, runtime claim, or rebuild behavior. It proves that the exact
 25-byte structural correction is ready for an independently audited,
-recoverable ceremony. Until that ceremony and its readback complete, canonical
-ownership remains 1,811,418 bytes at 93.898814846%, not the prospective POST.
+recoverable ceremony. That ceremony and its separate readback are now complete;
+current ownership is 1,811,443 bytes at 93.900110776%. This document remains
+the no-write preparation record.

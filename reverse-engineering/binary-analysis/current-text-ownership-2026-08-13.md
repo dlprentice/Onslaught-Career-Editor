@@ -7,22 +7,22 @@ and listing units, independent interval-union replay, and bounded linear-decode
 probes; UNKNOWN — original compiler function denominator, exact missing body
 boundaries, loose-code reachability, semantics, runtime behavior, and rebuild
 parity.
-Verdict: the 8,327 saved Ghidra bodies own exactly 1,811,418 of the pristine
-PE's 1,929,117 virtual `.text` bytes (93.898814846%), with zero overlap. The
-117,699 unowned bytes are structurally partitioned by current listing state and
+Verdict: the 8,327 saved Ghidra bodies own exactly 1,811,443 of the pristine
+PE's 1,929,117 virtual `.text` bytes (93.900110776%), with zero overlap. The
+117,674 unowned bytes are structurally partitioned by current listing state and
 bounded discovery evidence; this is body-range ownership, not percent of game
 semantics reversed.
 Specimen: pristine Steam `BEA.exe`, 2,506,752 bytes, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 Machine-local evidence root:
-`local-lab/current-text-ownership-post-crt23-20260814-v1/`.
+`local-lab/current-text-ownership-post-crt-eh-parent-20260814-v1/`.
 
 ## Exact body-range result
 
 The current 8,327-function Ghidra snapshot was exported read-only after the
-reviewed 23-function CRT P0 promotion, from the exact live POST project
+reviewed CRT EH parent-range repair, from the exact live POST project
 (already byte-identical to tracked and the retained POST backup) using the
-established `ExportParityLabGraph.java` with `-readOnly -noanalysis`. The export has 8,458
+established `ExportParityLabGraph.java` with `-readOnly -noanalysis`. The export has 8,457
 exact body ranges. Every exported range was independently remapped to the
 pristine PE and its SHA-256 reproduced.
 
@@ -32,12 +32,12 @@ bytes. The exact current Ghidra body-range union is:
 | Measure | Current result |
 | --- | ---: |
 | Functions | 8,327 |
-| Exact body ranges | 8,458 |
-| Multi-range functions | 77 |
-| Sum / union of body bytes | 1,811,418 |
-| `.text` ownership | 93.898814846% |
-| Uncovered bytes | 117,699 (6.101185154%) |
-| Uncovered runs | 6,022 |
+| Exact body ranges | 8,457 |
+| Multi-range functions | 76 |
+| Sum / union of body bytes | 1,811,443 |
+| `.text` ownership | 93.900110776% |
+| Uncovered bytes | 117,674 (6.099889224%) |
+| Uncovered runs | 6,021 |
 | Overlapping body bytes | 0 |
 | Maximum ownership depth | 1 |
 
@@ -55,17 +55,17 @@ generation. It does **not** change either historical generation or Generation
 Two offline replays are byte-identical:
 
 - `run-a/result.ready.json`: 14,303 bytes, SHA-256
-  `e27e2f5852a000156a582658ca82f4ee3c979b2175de9c5adb23b0487460c05d`
-- `run-a/uncovered-runs.tsv`: 621,331 bytes, SHA-256
-  `26a3a335fa63a51df721314b842152ea0b09629b3efc89262e28a60bf3f7c0a5`
+  `397391d1e5382f4434182dd2869343d406677b7e4ea757ddc61df49893f31bfa`
+- `run-a/uncovered-runs.tsv`: 621,226 bytes, SHA-256
+  `32620ad6d9cedf0f7a301bca82c4718a5d2d763ad742b1a448ed051eaf775f85`
 - exact owned range-set SHA-256:
-  `fcf60b4a14c4cd39b8716e176ec84208b3b56872dc9217cffe47451e9549ea38`
+  `8203961a7664cbfc86cb6fc569563b67948b1c5605040d77b7336c9233a99427`
 - exact uncovered range-set SHA-256:
-  `1d1f21ea13f8d4dbae7f8c2cfa4f48eeffdab7ef8c68f738de2226124fa2a1c9`
+  `ca094810804d100dea7d001d072afc0562301926b50ea52af79aafbb2f1178ce`
 
 The aggregate authority and a subsequent project rehash kept live, tracked, and
 the retained POST backup exact at 19 files / 187,009,925 bytes / inventory
-`61f77b70fdf807c960a9441ea8e5c4a5b5bd6281675864089a52d61481432f1f`.
+`a7916b5642b808f468ef113e731a4cfcf225287c94264009fde1034edd9b91cf`.
 
 An independent minimal PE parser and per-byte coverage bitmap reproduced every
 headline, every range hash, both range-set hashes, and the uncovered TSV
@@ -82,7 +82,7 @@ each before publishing anything; and the preserved exporter no-clobber log
 records a forced rerun refusing all four existing outputs with their hashes
 unchanged.
 
-## What the 117,699 bytes contain in current Ghidra listing state
+## What the 117,674 bytes contain in current Ghidra listing state
 
 A second read-only exporter joined the same exact gaps to current listing
 instructions, defined data, and inbound references. Two offline joins over that
@@ -98,17 +98,17 @@ embedded `.text` tables. All earlier `gap-evidence-a/b` and
 
 | Partition | Bytes | Rows |
 | --- | ---: | ---: |
-| Exact function bodies | 1,811,418 | 8,458 ranges |
+| Exact function bodies | 1,811,443 | 8,457 ranges |
 | Decoded instructions outside functions | 18,922 | 5,448 instructions |
 | Defined data outside functions | 46,918 | 17,596 data units |
-| Listing-unclassified gap bytes | 51,859 | — |
+| Listing-unclassified gap bytes | 51,834 | — |
 | **PE `.text`** | **1,929,117** | exact closure |
 
-The full 117,699-byte gap has 61,292 bytes whose value is `00`, `90`, or `CC`
-and 56,407 other byte values. Of those padding-valued bytes, 39,894 form 5,098
-entirely padding-valued runs; mixed runs contain the other 21,398. The
-listing-unclassified 51,859-byte partition contains 48,813 padding-valued and
-only 3,046 non-padding-valued bytes. Across all gap classes, 1,659 Ghidra
+The full 117,674-byte gap has 61,288 bytes whose value is `00`, `90`, or `CC`
+and 56,386 other byte values. Of those padding-valued bytes, 39,894 form 5,098
+entirely padding-valued runs; mixed runs contain the other 21,394. The
+listing-unclassified 51,834-byte partition contains 48,809 padding-valued and
+only 3,025 non-padding-valued bytes. Across all gap classes, 1,659 Ghidra
 references reach 1,443 distinct unowned targets: 1,204 data, 295 conditional
 jump, 82 unconditional jump, 56 read, and 22 computed-jump references.
 
@@ -122,7 +122,7 @@ The bounded candidate projection is:
 | Current-function jump fragment candidates | 0 | 0 | the five reviewed candidates were promoted as body repairs |
 | External-table target candidates | 5 | 573 | remaining defined-data targets into loose instructions after the reviewed 79-boundary promotion; callback/body ownership remains open |
 | Embedded-`.text` table target candidates | 3 | 2,142 | an in-section table points to loose instruction starts; likely switch/body labels until proved otherwise |
-| Unclassified-content runs | 117 | 1,431 | no current instruction/data unit; classification remains open |
+| Unclassified-content runs | 116 | 1,406 | no current instruction/data unit; classification remains open |
 
 The classes are a priority partition, not independent predicate counts:
 function-fragment evidence wins first. The 79 externally referenced starts
@@ -140,6 +140,13 @@ default-metadata functions. Its two-range `0x00542710` owner absorbs the local
 tail at `0x00542720` without creating a second entry; the two EH labels and the
 separate `0x005B8500` canary remain excluded. See the
 [`CRT live-promotion report`](crt-runtime-p0-ghidra-live-promotion-2026-08-14.md).
+
+The latest CRT EH parent-range repair removes a further 25 bytes from the gap
+without adding a function. It joins the two existing body components of
+`CRT__LongJmpProbe_NoOp` across its scope-table-owned filter and handler, while
+keeping `0x005D0AD6` and `0x005D0AEA` as interior labels rather than entries.
+See the
+[`CRT EH live-promotion report`](crt-eh-parent-range-ghidra-live-promotion-2026-08-14.md).
 
 The 992-byte `[0x004DA4BE,0x004DA89E)` gap illustrates why embedded `.text`
 table targets cannot be called “missing functions.” It is fully decoded to 257
@@ -169,9 +176,9 @@ Replayed current artifact identities:
 - `gap-evidence/text-gap-evidence.ready.json`: 1,027 bytes, SHA-256
   `574274b4f1b364865cfbb9b9702f61c5eef4f0b3cec18a0f8d3b98366e830f5c`
 - `gap-accounting-a/result.ready.json`: 3,399 bytes, SHA-256
-  `61d58f40096d438bbb03375b4b386ab561fadf27ea03e680055eba6bd7fde4d9`
-- `gap-accounting-a/gap-classification.tsv`: 839,650 bytes, SHA-256
-  `bffa60038cf05fe99679ae645d8fd83bf77ab09c35e94b2a0634e90e4ceeca81`
+  `b7667aeae138410dd00a1e99f30386183546524e6165b7fc8615cfba5ab80e28`
+- `gap-accounting-a/gap-classification.tsv`: 839,502 bytes, SHA-256
+  `d8d93e11b00593a7129377bf441f4f3622a9aaa0402adb76cfbbf5f0b89a1309`
 
 ## Boundary
 

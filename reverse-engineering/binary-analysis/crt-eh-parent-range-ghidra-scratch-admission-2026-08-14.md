@@ -1,10 +1,10 @@
 # CRT EH parent-range Ghidra scratch admission
 
-Status: sealed scratch result; no live or tracked Ghidra mutation
+Status: sealed historical scratch result; consumed by later live promotion
 Last updated: 2026-08-14
 Summary: closes one 25-byte exception-filter/handler hole inside the existing
 `CRT__LongJmpProbe_NoOp` body on two disposable db.18616 replicas.
-Verdict: **STRICT_GO_FOR_LATER_LIVE_PROMOTION_PREPARATION**
+Verdict: **SCRATCH_PROOF_RETAINED_PROMOTION_COMPLETE**
 Evidence: **MEASURED** — pristine retail and demo bytes, exact scope-table
 lineage, corrected static replicas, two saved Ghidra replicas, full PRE/POST
 function inventories, forced-failure controls, containment refusals, and
@@ -14,6 +14,10 @@ Specimen: pristine PC retail `BEA.exe`, SHA-256
 PC demo `BEA.exe`, SHA-256
 `d8637dd755b21c720c0cb8f71923f94d2a04a184d90f5343c2e868ce8606e5c2`.
 Policy: `LIVE_FORBIDDEN`
+
+The scratch package remains immutable and authorized no live write. Its result
+was later consumed by the separately backed-up
+[live promotion](crt-eh-parent-range-ghidra-live-promotion-2026-08-14.md).
 
 ## Structural decision
 

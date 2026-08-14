@@ -370,15 +370,16 @@ and exact
 [one-row manifest](../reverse-engineering/binary-analysis/crt-eh-parent-range-repair-2026-08-14.tsv).
 
 `ghidra_crt_eh_parent_range_live_authority.py` is the four-mode, read-only
-outer authority for a future one-save promotion. `preflight` reproduces the
-283-file scratch package, exact live/tracked db.18616 PRE, current projection,
-body ranges, and direct-call graph while requiring every future root to be
-absent. `check-live` requires the separately created PRE/POST backups and
-restores, one writable apply between read-only dry/readback runs, and a durable
-tracked-still-PRE inspection. `seal` additionally requires an exact tracked
-refresh/restore and mechanical projection/accounting; its only write is a new
-ignored receipt. `verify` is fully read-only. None of those modes grants the
-action-specific authority required to mutate live or tracked Ghidra.
+outer authority used by the completed one-save promotion. At preparation time,
+`preflight` reproduced the 283-file scratch package, exact live/tracked
+db.18616 PRE, projection, body ranges, and direct-call graph while requiring
+every ceremony root to be absent. `check-live` required the separately created
+PRE/POST backups and restores, one writable apply between read-only
+dry/readback runs, and a durable tracked-still-PRE inspection. `seal`
+additionally required the exact tracked refresh/restore and mechanical
+projection/accounting; its only write was a new ignored receipt. `verify`
+remains fully read-only and is the reusable current gate. None of those modes
+grants action-specific authority to mutate live or tracked Ghidra.
 
 ```powershell
 python -I -B tools\ghidra_crt_eh_parent_range_live_authority_tests.py
@@ -388,8 +389,10 @@ python -I -B tools\ghidra_crt_eh_parent_range_live_authority.py preflight `
   --pre-backup <future-pre-backup> --post-backup <future-post-backup>
 ```
 
-See the
-[live-promotion preparation](../reverse-engineering/binary-analysis/crt-eh-parent-range-ghidra-live-promotion-preparation-2026-08-14.md).
+See the historical
+[live-promotion preparation](../reverse-engineering/binary-analysis/crt-eh-parent-range-ghidra-live-promotion-preparation-2026-08-14.md)
+and completed
+[live-promotion report](../reverse-engineering/binary-analysis/crt-eh-parent-range-ghidra-live-promotion-2026-08-14.md).
 
 `re_pc_function_body_fragments.py` proves the exhaustive five-gap class inside
 five existing PC functions, including unique normalized demo twins and the

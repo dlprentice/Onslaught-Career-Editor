@@ -41,9 +41,9 @@ the document it links.
   — promotes bounded Tier-2 names/comments/tags for the 34 newly admitted
   handlers while preserving all 8,136 non-target rows and every body/ABI byte
 - [Current `.text` body ownership and listing-state accounting](current-text-ownership-2026-08-13.md)
-  — replays all 8,327 saved functions / 8,458 ranges against pristine bytes,
-  closes the exact zero-overlap union at 1,811,418 / 1,929,117 = 93.898814846%,
-  and partitions the 117,699-byte gap without treating loose code/data as proved
+  — replays all 8,327 saved functions / 8,457 ranges against pristine bytes,
+  closes the exact zero-overlap union at 1,811,443 / 1,929,117 = 93.900110776%,
+  and partitions the 117,674-byte gap without treating loose code/data as proved
   functions or semantics
 - [Text-gap 31-function library classification](text-gap-library-function-classification-2026-08-13.md)
   — identifies the 31 now-admitted exact boundaries as 14
@@ -94,8 +94,11 @@ the document it links.
   — proves the excluded filter/handler is one 25-byte repair to existing parent
   `0x005D0A9F`, with 8,326 non-target rows exact and live mutation forbidden
 - [CRT EH parent-range live-promotion preparation](crt-eh-parent-range-ghidra-live-promotion-preparation-2026-08-14.md)
-  — replays the exact scratch authority against current live/tracked db.18616,
-  pins the one-save backup/readback/recovery ceremony, and authorizes no write
+  — historical no-write preparation that replayed the exact scratch authority
+  against then-current live/tracked db.18616 and pinned the later ceremony
+- [CRT EH parent-range live promotion](crt-eh-parent-range-ghidra-live-promotion-2026-08-14.md)
+  — records the completed db.18617 repair: function count stays 8,327, ranges
+  fall to 8,457, all 8,326 non-target rows stay exact, and ownership gains 25 bytes
 - [Five existing-function body-fragment scratch admission](pc-function-body-fragment-ghidra-scratch-admission-2026-08-14.md)
   — reproduces five exact body-range repairs and a 1,258-byte ownership gain on
   two isolated db.18613 replicas, excludes the FEP envelope's trailing 12 NOP

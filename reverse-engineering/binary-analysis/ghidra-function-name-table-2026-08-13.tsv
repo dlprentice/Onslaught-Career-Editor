@@ -3,9 +3,9 @@
 #           It is a name index, not a database, disassembly, or semantic proof.
 # Projection date: 2026-08-14
 # Specimen SHA-256: 74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750
-# Source  : local-lab/ghidra-crt23-p0-boundary-live-promotion-db18615-20260814-v2/runs/live-readback/functions.tsv
-# Source bytes: 7192980
-# Source SHA-256: 8640c35a820b3c5e415b947fa8a13eeb5c7c535868780dc2fe511d020a54c40e
+# Source  : local-lab/ghidra-crt-eh-parent-range-live-promotion-db18616-20260814-v1/runs/live-readback/functions.tsv
+# Source bytes: 7192981
+# Source SHA-256: 08886e03b846668681301f0f2ec2ba9ac1af0463faa1835c57abe9e717ebd866
 # Rows    : 8327 internal functions; this is a discovered census, not a final ceiling.
 # Columns : address, name, bodyMin, bodyMax (hex). Non-contiguous bodies are
 #           represented by their bounding range, so bodyMin..bodyMax can over-cover.

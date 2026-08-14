@@ -69,7 +69,9 @@ explicitly, and carries the new functions as DARK/FUN/OPAQUE. No semantic grade
 moves. Generation 27 re-grounds the 23 CRT P0 structural functions on
 8,327/db.18616, accounts for all **26,993/26,993** eligible carry rows, retires
 37 changed lineages explicitly, and carries the new functions as OPAQUE. No
-semantic grade moves.
+semantic grade moves. It remains the frozen campaign authority, while the
+current physical db.18617 differs only by the later 25-byte CRT EH parent-body
+repair; Generation 28 must re-ground that geometry without rewriting Gen27.
 External effects, event 4002, field meanings, broader populations, source
 spelling, and direct rebuild parity remain open. The next valid campaign
 generation is 28. The separate 8,136-row static-envelope closure, 34-row
@@ -249,7 +251,7 @@ The current layers must remain separate:
 | MSVC exception/unwind funclets in saved Ghidra | 1,179 | Compiler machinery; not gameplay-semantic closure |
 | Literal `FUN_<address>` names in saved Ghidra | 1,034 | The separate 34-row new-function vocabulary ceremony replaced those defaults; the 31 text-gap, 79 external-table, 24 JPEG/IJG, and 23 CRT P0 structural rows retain default names except the CRT thunk that displays its target's saved name |
 | Static-envelope accounting | 8,170 rows: 8,163 C1 + 7 C2 | Dated 8,136-row table plus reviewed 34-row addendum; excludes the 31 text-gap, 79 external-table, 24 JPEG/IJG, and 23 CRT P0 rows |
-| Canonical campaign | 8,327 rows: 217 C1 + 10 C2 + 8,100 OPAQUE | Gen27 db.18616 authority; 26,993/26,993 eligible carry rows accounted for |
+| Canonical campaign | 8,327 rows: 217 C1 + 10 C2 + 8,100 OPAQUE | Frozen Gen27 db.18616 authority; 26,993/26,993 eligible carry rows accounted for; current db.18617 geometry awaits Gen28 |
 | Canonical residual ledger | 6,110 rows: 152 open dark + 862 terminal bounded ambiguity + 30 terminal data + 5,066 terminal padding | The 152 open rows describe sealed Generation-27 geometry, not semantic regression |
 | Canonical rebuild states | 14,428 NOT_READY + 8 PARTIAL_CONTRACT + 1 CONTRACT_ONLY + 0 REBUILD_READY | Contract mapping state, not implementation parity |
 | Mission native registry | 144 unique names / 144 unique handlers | Finite shipped registry |
@@ -258,7 +260,7 @@ The current layers must remain separate:
 
 The saved-name projection is
 `reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-13.tsv`
-(8,327 rows; SHA-256 `17c7153c…41c`). The independent Mission-registry
+(8,327 rows; SHA-256 `64c87111…669`). The independent Mission-registry
 missing-boundary proof
 is under `local-lab/mission-registry-missing-functions-20260813-v1/` and
 reproduces byte-identically. Older 7,555-row and 86-missing figures below are
@@ -2689,13 +2691,13 @@ Open or concerning:
 - at least six live names are directly contradicted by byte/RTTI evidence;
 - D3D/cockpit/tree correction clusters remain;
 - the registry/table discovery universe has no denominator;
-- current saved-body ownership is exact, but 117,699 `.text` bytes remain
+- current saved-body ownership is exact, but 117,674 `.text` bytes remain
   outside function bodies and final function discovery has no ceiling.
 
 The historical 6,411-body `.text` coverage was 1,539,953 / 1,929,117 =
 79.8268%. The [current accounting](binary-analysis/current-text-ownership-2026-08-13.md)
-supersedes it for present use: 8,327 saved functions / 8,458 ranges own
-1,811,418 bytes = 93.898814846%, with zero overlap. The remaining 117,699 bytes
+supersedes it for present use: 8,327 saved functions / 8,457 ranges own
+1,811,443 bytes = 93.900110776%, with zero overlap. The remaining 117,674 bytes
 are listing-partitioned into loose instructions, defined data, and unclassified
 content. This closes body-range accounting only; code/data truth, exact missing
 boundaries, final discovery, semantics, and runtime coverage remain open.
@@ -2785,7 +2787,7 @@ Maintain separate ledgers.
 | Static function envelopes | frozen graded rows / discovered lower bound | 8,170 / at least 8,327; sealed 8,136-row table plus reviewed 34-row addendum, with 31 text-gap rows separately classified and 79 external-table plus 24 JPEG/IJG and 23 CRT P0 rows ungraded |
 | Campaign semantics above OPAQUE | C1 + C2 / Gen27 rows | 227 / 8,327 |
 | Mission handler boundaries | saved structurally bounded handler starts / registry | 144 / 144; creation complete |
-| `.text` saved-body ownership | exact owned executable bytes / 1,929,117 | 1,811,418 / 1,929,117 = 93.898814846%; zero overlap |
+| `.text` saved-body ownership | exact owned executable bytes / 1,929,117 | 1,811,443 / 1,929,117 = 93.900110776%; zero overlap |
 | Stable runtime coverage | exact covered bytes / declared capture window | per scenario only |
 
 “All functions named” is not a closure metric. A correctly anonymous compiler

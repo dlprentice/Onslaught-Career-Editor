@@ -125,4 +125,5 @@ or rebuild parity. Generation 24 remains the last sealed campaign authority;
 its semantic carry is unchanged, and Generation 25 later re-grounded the
 `db.18614` geometry without rewriting the frozen Generation 24 reducer. The
 subsequent JPEG/IJG promotion then advanced the structural state to db.18615;
-the later CRT P0 promotion now owns current db.18616.
+the later CRT P0 promotion advanced it to db.18616, and the still-later CRT EH
+parent-range repair now owns current db.18617.

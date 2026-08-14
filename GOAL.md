@@ -185,8 +185,10 @@ these counts is a final ceiling,
 semantic recovery, or reversal. The PC demo
 partition and the instruction-local Xbox source-line anchors are oracles, never
 denominators for retail completion. Generation 27 carries Generation 26's
-admitted campaign state onto exact db.18616 geometry without changing a
-semantic grade and remains sparse.
+admitted campaign state onto its frozen db.18616 geometry without changing a
+semantic grade and remains sparse. The current physical db.18617 differs only
+by the later 25-byte CRT EH parent-body repair and therefore requires the
+Generation 28 re-ground rather than a rewrite of Generation 27.
 Live Ghidra structural navigation may lead the
 campaign without silently upgrading any semantic grade. Report the layer, the
 exact denominator, the specimen, and the date with every published number, and
@@ -308,12 +310,13 @@ the mandate; the completion test and every clause above are unchanged.
   tracked refresh, and restore probes. They advance the structural census to
   8,280 while preserving every 8,201 PRE row, but add no semantic grade,
   original linker identity, runtime contract, or rebuild mapping.
-- Current saved-body `.text` ownership is independently closed at 1,811,418 /
-  1,929,117 bytes = 93.898814846% across 8,327 functions / 8,458 exact ranges,
+- Current saved-body `.text` ownership is independently closed at 1,811,443 /
+  1,929,117 bytes = 93.900110776% across 8,327 functions / 8,457 exact ranges,
   with zero overlap. The five reviewed current-function jump fragments are now
   repaired existing bodies; the 24 reviewed JPEG/IJG callbacks are now exact
   default-metadata functions; and the 23 reviewed CRT P0 entries are now exact
-  default-metadata functions. The remaining 117,699 bytes are listing-
+  default-metadata functions. The later 25-byte CRT EH repair joins one split
+  existing parent without adding an entry. The remaining 117,674 bytes are listing-
   partitioned high-yield code/data/padding queues. This is structural
   accounting, not a final function census or semantic score.
 - The 75-row existing-entry MissionScript normalization passed its complete
@@ -349,13 +352,13 @@ the mandate; the completion test and every clause above are unchanged.
 **Active frontier, in priority order:**
 
 1. **Recover the highest-confidence callable units and body repairs in the
-   current 117,699-byte `.text` gap.** Re-ground the reviewed D3DX and remaining
-   code-shaped cohorts against current `db.18616` geometry, then use cross-build
+   current 117,674-byte `.text` gap.** Re-ground the reviewed D3DX and remaining
+   code-shaped cohorts against current `db.18617` geometry, then use cross-build
    shape, current listing state, incoming control flow, alignment, and library
    classification to prove exact boundaries; do not infer entries from linear
    decode alone.
-2. **Advance Generation 28 from the exact Generation-27 authority and current
-   8,327/db.18616 geometry.** Keep any
+2. **Advance Generation 28 from the exact Generation-27 authority onto current
+   8,327/db.18617 geometry.** Keep any
    current launcher/test literal-pin update separate from the frozen reducer,
    preserve the static/runtime layer boundary, and do not pin HUD route order
    as C2.
@@ -444,7 +447,7 @@ Rank from current evidence; a reproduced contradiction outranks this list.
   8,327/db.18616 while preserving every PRE row. It added 24 exact body ranges
   and 1,131 owned `.text` bytes, reaching 93.898814846%. Generation 26 remains
   frozen.
-- **2026-08-14 — current db.18616 geometry reseeded as Generation 27.** Two
+- **2026-08-14 — then-current db.18616 geometry reseeded as Generation 27.** Two
   independent snapshots and canonical/replica full replays agree at 8,327
   functions. All 26,993 eligible Generation-26 carry rows are accounted for;
   37 changed structural lineages are retired explicitly and the 23 new CRT rows
@@ -535,7 +538,9 @@ the new functions as DARK/FUN/OPAQUE without inventing semantics. Generation 27
 then re-grounds the newer 23 CRT P0 structural rows on exact db.18616 geometry,
 accounts for all 26,993 eligible Generation-26 carry rows, explicitly retires
 37 changed structural identities, and preserves all 23 rows as OPAQUE without
-inventing semantics. The next valid campaign generation is 28.
+inventing semantics. The later CRT EH parent repair changes no function identity
+or grade but advances physical body geometry to db.18617; the next valid
+campaign generation is 28 and must re-ground that exact state.
 The saved `VFuncSlot_00_004d9910` name and grade remain unchanged. The bounded
 addenda were appended to twelve exact live/tracked Ghidra comments only after
 backup, replica, rollback, adverse-control, readback, and restore gates; no

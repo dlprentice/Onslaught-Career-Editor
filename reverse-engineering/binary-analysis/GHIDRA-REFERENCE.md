@@ -43,11 +43,14 @@ layouts, or behaviors are proven.
 > promotion adds 24 default-metadata functions while preserving every PRE row,
 > advancing exact saved-body ownership to 93.840186987%. The later CRT P0
 > promotion adds 23 default-metadata functions while preserving all 8,304 PRE
-> rows and advances exact saved-body ownership to 93.898814846%. The latest
+> rows and advances exact saved-body ownership to 93.898814846%. The later CRT
+> EH parent-range repair keeps all 8,327 entries, preserves all 8,326 non-target
+> rows, joins one split parent body, and advances exact ownership to
+> 93.900110776%. The latest
 > project state is owned by
 > [`../ghidra/README.md`](../ghidra/README.md).
 > The current saved census and lower bound are 8,327, not a ceiling. The current
-> 8,327-row projection and live-state
+> 8,327-row db.18617 projection and live-state
 > receipts are reconciled in
 > [`../../../ghidra-functions.md`](../ghidra-functions.md); the 6,411- and
 > 7,555-row states remain dated history only.

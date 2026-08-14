@@ -1,9 +1,10 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-08-14. Structural RE state and campaign authority aligned at
-8,327/db.18616 / Gen27 (`current_re_authority`; candidate Gen73
-is projection-oracle only). Primary WinUI
+Last updated: 2026-08-14. Structural RE state is 8,327/db.18617 after the CRT
+EH parent repair; frozen campaign authority remains Gen27 on the immediately
+prior db.18616 geometry pending the Gen28 reseed (`current_re_authority`;
+candidate Gen73 is projection-oracle only). Primary WinUI
 navigation was rechecked 2026-08-03 against the live shell (includes Cheats).
 The 2026-08-01 shell, appearance, Lore, Media, and four-run Level 100 reviews
 retain their stated boundaries. Other rebuild and save/patch claims not
@@ -671,16 +672,20 @@ and **0 static OPAQUE**. A separately reviewed 34-row addendum extends bounded
 static accounting through the prior 8,170-row state at **8,163 C1 + 7 C2**.
 The current saved structural census is **8,327** after the later 31 text-gap,
 79 external-table, 24 JPEG/IJG callback, and 23 CRT P0 admissions. Generation 27
-is the aligned 8,327-row semantic authority: it retains all 201 later structural
+is the frozen 8,327-row semantic authority on the immediately prior geometry: it
+retains all 201 later structural
 identities honestly as campaign OPAQUE rows where they lack a semantic grade.
 The five-body
 repair advanced Ghidra to `db.18614`; the JPEG/IJG promotion advanced it to
-`db.18615`; and the CRT promotion advanced it to `db.18616` and
-93.898814846% saved-body ownership. Generation 27 re-grounded all 23 CRT
+`db.18615`; the CRT P0 promotion advanced it to `db.18616`; and the later CRT
+EH parent repair advanced it to `db.18617` and 93.900110776% saved-body
+ownership without adding a function. Generation 27 re-grounded all 23 CRT
 functions, retired 37 changed lineages explicitly, and accounted for
 26,993/26,993 eligible Generation-26 carry rows. It carries the admitted
 runtime/campaign claims without changing a semantic grade; neither count implies
-`REBUILD_READY` or complete semantic parity.
+`REBUILD_READY` or complete semantic parity. Generation 27 is now the frozen
+semantic parent rather than an exact mirror of current body geometry; Gen28 is
+the required re-ground.
 
 **PC demo/retail function frontier (2026-08-12, dated 8,136-function
 population):** exact and semantic

@@ -290,17 +290,23 @@ The separate sealed
 [CRT EH parent-range scratch admission](binary-analysis/crt-eh-parent-range-ghidra-scratch-admission-2026-08-14.md)
 closes the exact 25-byte filter/handler hole inside existing parent
 `0x005D0A9F` on two disposable db.18616 replicas. Function count stays 8,327,
-body ownership rises to a prospective 1,811,443 bytes, range components fall
-to 8,457, and all 8,326 non-target rows remain exact. Its policy is strictly
-`LIVE_FORBIDDEN`; current saved Ghidra and Generation 27 remain unchanged.
+body ownership rises to 1,811,443 bytes, range components fall to 8,457, and
+all 8,326 non-target rows remain exact. Its scratch policy was strictly
+`LIVE_FORBIDDEN`; the later live ceremony consumed the proof without changing
+its sealed bytes.
 
-The follow-on read-only
+The now-consumed read-only
 [CRT EH parent-range live-promotion preparation](binary-analysis/crt-eh-parent-range-ghidra-live-promotion-preparation-2026-08-14.md)
 reproduces that 283-file sealed scratch payload and receipt against exact byte-identical
 live/tracked db.18616 PRE projects. It mechanically fixes the prospective
 8,327-row projection, 1,811,443-byte body union, and unchanged direct-call
 graph, while requiring the future lane, backups, and aggregate receipt to be
-absent. It remains `PREPARATION_ONLY`; no Ghidra process or write occurred.
+absent. It remains the no-write preparation record. The completed
+[CRT EH parent-range live promotion](binary-analysis/crt-eh-parent-range-ghidra-live-promotion-2026-08-14.md)
+now owns db.18617: the census remains 8,327, exact ranges fall to 8,457,
+ownership rises by 25 bytes to 1,811,443, and all 8,326 non-target rows remain
+exact. Frozen Generation 27 stays the campaign parent on prior db.18616 pending
+the Generation 28 reseed.
 
 The separate historical sealed
 [five-existing-function body-fragment scratch admission](binary-analysis/pc-function-body-fragment-ghidra-scratch-admission-2026-08-14.md)
@@ -664,8 +670,8 @@ different failure modes and only the first was being tested.)*
   **79.8268 % of `.text` was covered by those 6,411 historical bodies**.
   [Current `.text` body ownership](binary-analysis/current-text-ownership-2026-08-13.md)
   now supersedes that metric for present use: all 8,327 saved functions and
-  8,458 exact ranges own 1,811,418 / 1,929,117 bytes = 93.898814846%, with
-  zero overlap. The 117,699-byte gap is separately partitioned by current
+  8,457 exact ranges own 1,811,443 / 1,929,117 bytes = 93.900110776%, with
+  zero overlap. The 117,674-byte gap is separately partitioned by current
   listing state and discovery evidence; this remains structural body ownership,
   not semantic reversal. The historical 6,411-row result remains reproducible
   in under a minute with `tools/re_verify.py`.

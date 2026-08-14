@@ -2,7 +2,9 @@
 
 Date: 2026-08-14
 
-Status: reviewed completed live/tracked structural promotion
+Status: reviewed completed live/tracked structural promotion; current project
+state is superseded by the later
+[CRT EH parent-range repair](crt-eh-parent-range-ghidra-live-promotion-2026-08-14.md)
 
 Verdict: **LIVE_TRACKED_PROMOTION_REPRODUCED**
 
@@ -62,7 +64,7 @@ restore probes reproduce the same project:
   `61f77b70fdf807c960a9441ea8e5c4a5b5bd6281675864089a52d61481432f1f`;
 - stable `db.18615.gbf`: 68,354,048 bytes, SHA-256
   `6c2fc2f12394cf7b63f4f335173ba0a19b52b92c50dc4d2da987170501bc9681`;
-- current `db.18616.gbf`: 68,354,048 bytes, SHA-256
+- then-current `db.18616.gbf`: 68,354,048 bytes, SHA-256
   `f0d4988cfa1f36529ed3687816e231bfcc8323240e7d3f9837de48941b8f64fc`.
 
 The sole physical transition removed `db.18614.gbf`, added `db.18616.gbf`,
@@ -82,7 +84,7 @@ The retained POST restore receipt is 5,927 bytes, SHA-256
 the tracked restore receipt is 5,947 bytes, SHA-256
 `1c8fcc98cb0853242831e984a41398c3da5a63d5ed0de09c9eb36f7f65fcfb55`.
 
-## Authorities and current accounting
+## Authorities and then-current accounting
 
 The reviewed manifest is
 [`crt-runtime-p0-function-boundaries-2026-08-14.tsv`](crt-runtime-p0-function-boundaries-2026-08-14.tsv).
@@ -105,15 +107,15 @@ the inspect/backup/restore roots and read-only commands, reconstructs all 8,304
 unchanged rows plus the exact created set, and recomputes the projection and
 body union from POST bytes.
 
-A fresh read-only listing export and two byte-identical offline replays update
-the current ownership owner. The exact body-union receipt is 14,303 bytes,
+A fresh read-only listing export and two byte-identical offline replays updated
+the then-current ownership owner. The exact body-union receipt was 14,303 bytes,
 SHA-256
 `e27e2f5852a000156a582658ca82f4ee3c979b2175de9c5adb23b0487460c05d`;
 the gap-accounting receipt is 3,399 bytes, SHA-256
 `61d58f40096d438bbb03375b4b386ab561fadf27ea03e680055eba6bd7fde4d9`.
 See
 [`current-text-ownership-2026-08-13.md`](current-text-ownership-2026-08-13.md)
-for the full current 117,699-byte partition.
+for that historical 117,699-byte partition and its current superseding result.
 
 ## Boundary
 
@@ -123,5 +125,6 @@ stated grades; default metadata deliberately avoids claiming original private
 symbols. The promotion does not prove execution, original source equivalence,
 runtime effects, signatures, or rebuild parity. Generation 26 remains the
 frozen campaign authority for the preceding 8,304/db.18615 state; the next
-campaign must re-ground the new 8,327/db.18616 geometry rather than rewriting
-Generation 26.
+campaign had to re-ground the new 8,327/db.18616 geometry rather than rewriting
+Generation 26. Generation 27 subsequently did so; physical db.18617 now adds
+only the separately sealed CRT EH parent-range repair.
