@@ -306,6 +306,28 @@ See the
 Its policy is `PREPARATION_ONLY`; it opens no Ghidra project and performs no
 live or tracked write.
 
+`GhidraApplyCrtP0BoundariesV4.java` is the exact current-state counter rebase
+for db.18615: 8,304 functions, 8,434 ranges, 551,055 instructions, and 234,467
+references. The read-only
+`ghidra_crt_p0_boundary_live_preparation_v2.py` replays the corrected scratch
+authority and validates two fresh disposable prospective POST saves. It proves
+all 8,304 PRE rows exact, 23 created default-metadata functions, 1,131 newly
+owned bytes, and byte-identical semantic exports. It also binds the exact
+53-byte physical variance between the two newly written db.18616 files rather
+than claiming false database-byte determinism. Its policy remains
+`PREPARATION_ONLY` and it refuses when any future ceremony path exists.
+
+```powershell
+python -I -B tools\ghidra_crt_p0_boundary_live_preparation_v2_tests.py
+python -I -B tools\ghidra_crt_p0_boundary_live_preparation_v2.py preflight `
+  --repo <repository-root> --scratch-repo <repository-root> `
+  --live-project <maintainer-project-root> --live-lane <future-live-lane> `
+  --pre-backup <future-pre-backup> --post-backup <future-post-backup>
+```
+
+See the
+[current db.18615 preparation](../reverse-engineering/binary-analysis/crt-runtime-p0-ghidra-live-promotion-preparation-v2-2026-08-14.md).
+
 `re_pc_function_body_fragments.py` proves the exhaustive five-gap class inside
 five existing PC functions, including unique normalized demo twins and the
 deliberate 12-byte FEP NOP exclusion. `GhidraApplyFunctionFragmentRanges.java`

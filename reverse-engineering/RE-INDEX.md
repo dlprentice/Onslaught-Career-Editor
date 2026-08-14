@@ -268,6 +268,15 @@ copies. It independently totals 1,796,601 owned `.text` bytes and preserves all
 8,280 PRE rows, but remains `PREPARATION_ONLY`, performed no live or tracked
 Ghidra write, and must be re-grounded before any future ceremony.
 
+The current
+[CRT23 db.18615 live-promotion preparation v2](binary-analysis/crt-runtime-p0-ghidra-live-promotion-preparation-v2-2026-08-14.md)
+performs that re-grounding from the exact 8,304-function / 8,434-range
+live-and-tracked PRE. Two disposable saves independently produce the same
+8,327-function / 8,458-range logical POST, preserve all 8,304 PRE rows, and add
+1,131 owned bytes. Their rolling databases differ in 53 sealed bookkeeping
+bytes while every program export remains byte-identical. The result remains
+`PREPARATION_ONLY`; no live or tracked write is authorized.
+
 The separate historical sealed
 [five-existing-function body-fragment scratch admission](binary-analysis/pc-function-body-fragment-ghidra-scratch-admission-2026-08-14.md)
 adds no functions or metadata. Two isolated db.18613 replicas reproduce the

@@ -81,6 +81,10 @@ the document it links.
   — pins the historical live/tracked db.18614 PRE, reproduces the exact
   8,303-function / 8,420-range prospective POST on two fresh copies, preserves
   every PRE row, authorizes no write, and now requires current-state re-grounding
+- [CRT/runtime P0 db.18615 live-promotion preparation v2](crt-runtime-p0-ghidra-live-promotion-preparation-v2-2026-08-14.md)
+  — re-grounds the cohort on the exact 8,304-function current PRE, reproduces an
+  8,327-function / 8,458-range prospective POST twice with every PRE row exact,
+  discloses the 53-byte physical database variance, and authorizes no write
 - [Five existing-function body-fragment scratch admission](pc-function-body-fragment-ghidra-scratch-admission-2026-08-14.md)
   — reproduces five exact body-range repairs and a 1,258-byte ownership gain on
   two isolated db.18613 replicas, excludes the FEP envelope's trailing 12 NOP
