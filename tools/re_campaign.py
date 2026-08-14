@@ -10,6 +10,13 @@ its READY receipt last; `next` reads only a verified campaign.
 
 from __future__ import annotations
 
+import sys
+
+# Reducer snapshots are sealed artifacts.  Python's default import cache would
+# add unmanifested files below ``_reducer/tools`` before a second verification,
+# so every import reached through this owner must remain bytecode-write-free.
+sys.dont_write_bytecode = True
+
 import argparse
 import ast
 import csv
@@ -20,7 +27,6 @@ import re
 import shutil
 import struct
 import subprocess
-import sys
 import tempfile
 from collections import Counter
 from datetime import datetime, timezone
@@ -1037,6 +1043,36 @@ FROZEN_V5_CAMPAIGN_CARRY_ROOT = (
     / "re-campaign"
     / "campaign-2026-08-02-observed40-generation-5-v5-carried-r3-invariant-bound"
 )
+GENERATION23_CAMPAIGN_CARRY_RELATIVE = (
+    "local-lab/re-campaign-incident-recovery-20260808-v1/"
+    "generation-23-cround-handle-event-arm-effects-v1"
+)
+GENERATION23_CAMPAIGN_CARRY_ROOT = REPO_ROOT / GENERATION23_CAMPAIGN_CARRY_RELATIVE
+GENERATION23_CAMPAIGN_CARRY_READY_BYTES = 20860
+GENERATION23_CAMPAIGN_CARRY_READY_SHA256 = (
+    "4471fdfe105340ad06c2ad28d945eb05e9bc94f002110888b164581ccf1a93fc"
+)
+GENERATION23_CAMPAIGN_CARRY_REDUCER_ID = (
+    "a757bc51cd8302cf0e889c7db72ca58f9d865597b250371444d8c2285537db09"
+)
+GENERATION23_CAMPAIGN_CARRY_AUTHORITY_RELATIVE = (
+    "local-lab/re-campaign-incident-recovery-20260808-v1/"
+    "generation-23-cround-handle-event-arm-effects-authority.ready.json"
+)
+GENERATION23_CAMPAIGN_CARRY_AUTHORITY_BYTES = 10522
+GENERATION23_CAMPAIGN_CARRY_AUTHORITY_SHA256 = (
+    "12509207913b0116a94c923da7fe163c47de226b7733538baea54eb31df73ba8"
+)
+GENERATION23_CAMPAIGN_CARRY_COUNTS = {
+    "functions": 8126,
+    "residuals": 6119,
+    "questions": 15264,
+    "scenarios": 72,
+    "levers": 915,
+    "contracts": 14245,
+    "adjudications": 6103,
+    "supersessions": 592,
+}
 GLOBAL_INIT515_CAMPAIGN_ROOT = FROZEN_V5_CAMPAIGN_CARRY_ROOT
 GLOBAL_INIT515_CAMPAIGN_OWNER_PATH = (
     GLOBAL_INIT515_CAMPAIGN_ROOT / "_reducer/tools/re_campaign.py"
@@ -1090,15 +1126,45 @@ def _json_load_strict(text: str, label: str) -> object:
         raise CampaignError(f"{label} is not valid JSON: {exc}") from exc
 
 
+PORTABLE_REDUCER_DEPENDENCY_STAMPS = {
+    "aya-container-codec": {
+        "path": "_reducer/local-lab/aya_roundtrip.py",
+        "bytes": 7820,
+        "sha256": "0b4194c98dcd5929ad8978758c011255c62344d3d6d9706d8c633640adb294b9",
+    },
+    "mission-bytecode-parser": {
+        "path": "_reducer/local-lab/msl/script_parse.py",
+        "bytes": 9348,
+        "sha256": "a53288ba9ee20d22df6dcfe5b063899dd24305354025409ac6ca5d36858d7899",
+    },
+    "aya-independent-walker": {
+        "path": "_reducer/local-lab/msl/bea_aya.py",
+        "bytes": 2273,
+        "sha256": "ac6700ddd675b2cdb49a324d9a9e70046e339b3793dfd5a0293c091d283b0a2a",
+    },
+    "level521-call-context-refuter": {
+        "path": (
+            "_reducer/local-lab/"
+            "ttd-call-context-level521-impact-schema3-20260804-v1/verify.py"
+        ),
+        "bytes": 27866,
+        "sha256": "77efcca17feaa9a359713110a061df4aed5539098fbff07fd1729d78a81acec7",
+    },
+}
+
+
 def _reducer_sources() -> list[tuple[str, str, Path]]:
     """Return the complete deterministic reducer dependency set.
 
     Campaign generations carry these exact bytes. A later tool revision may
     migrate an older generation, but it may not silently reinterpret it.
     """
+    configured_lab = os.environ.get("BEA_LOCAL_LAB")
     lab_root = (
         _FROZEN_LOCAL_LAB
         if (_FROZEN_LOCAL_LAB / "aya_roundtrip.py").is_file()
+        else Path(configured_lab).resolve()
+        if configured_lab
         else REPO_ROOT / "local-lab"
     )
     owner_root = Path(__file__).resolve().parents[1]
@@ -1347,16 +1413,20 @@ def _reducer_id(files: list[dict[str, object]]) -> str:
 def _current_reducer_manifest() -> dict[str, object]:
     files: list[dict[str, object]] = []
     for role, relative, source in _reducer_sources():
-        if not source.is_file():
+        if source.is_file():
+            files.append(
+                {
+                    "role": role,
+                    "path": relative,
+                    "bytes": source.stat().st_size,
+                    "sha256": coverage.sha256_of(source),
+                }
+            )
+            continue
+        pinned = PORTABLE_REDUCER_DEPENDENCY_STAMPS.get(role)
+        if pinned is None or pinned.get("path") != relative:
             raise CampaignError(f"campaign reducer dependency is missing: {source}")
-        files.append(
-            {
-                "role": role,
-                "path": relative,
-                "bytes": source.stat().st_size,
-                "sha256": coverage.sha256_of(source),
-            }
-        )
+        files.append({"role": role, **pinned})
     return {
         "schema": REDUCER_SCHEMA,
         "id": _reducer_id(files),
@@ -1365,13 +1435,21 @@ def _current_reducer_manifest() -> dict[str, object]:
     }
 
 
-def _publish_reducer(stage: Path) -> dict[str, object]:
+def _publish_reducer(
+    stage: Path,
+    *,
+    fallback_campaign: Path | None = None,
+) -> dict[str, object]:
     manifest = _current_reducer_manifest()
     by_role = {role: source for role, _relative, source in _reducer_sources()}
     for row in manifest["files"]:
         destination = stage / str(row["path"])
         destination.parent.mkdir(parents=True, exist_ok=True)
         source = by_role[str(row["role"])]
+        if not source.is_file() and fallback_campaign is not None:
+            source = Path(fallback_campaign) / str(row["path"])
+        if not source.is_file():
+            raise CampaignError(f"campaign reducer dependency is missing: {source}")
         destination.write_bytes(source.read_bytes())
         actual = coverage.file_stamp(destination)
         if (
@@ -1514,6 +1592,15 @@ def _run_frozen_campaign_verifier(
         argv.extend(["--expected-ready-sha256", expected_ready_sha256])
     if expected_reducer_id:
         argv.extend(["--expected-reducer-id", expected_reducer_id])
+    owning_repo = next(
+        (
+            ancestor
+            for ancestor in Path(os.path.abspath(root)).parents
+            if (ancestor / "tools" / "re_campaign.py").is_file()
+            and (ancestor / ".git").exists()
+        ),
+        REPO_ROOT,
+    )
     environment = os.environ.copy()
     for name in (
         "PYTHONHOME",
@@ -1523,7 +1610,7 @@ def _run_frozen_campaign_verifier(
         "PYTHONUSERBASE",
     ):
         environment.pop(name, None)
-    environment["BEA_REPO_ROOT"] = str(REPO_ROOT)
+    environment["BEA_REPO_ROOT"] = str(owning_repo)
     environment["PYTHONDONTWRITEBYTECODE"] = "1"
     return subprocess.run(
         argv,
@@ -2174,6 +2261,33 @@ def _state_values(value: object, label: str) -> list[str]:
     return values
 
 
+def _receipt_bound_repo_path(
+    raw: object,
+    expected_relative: str,
+    label: str,
+) -> Path:
+    """Resolve an exact receipt path without rebasing it onto this checkout."""
+
+    if not isinstance(raw, str) or not raw:
+        raise CampaignError(f"{label} path is missing")
+    relative = Path(expected_relative)
+    if relative.is_absolute() or ".." in relative.parts:
+        raise CampaignError(f"{label} expected relative path is invalid")
+    recorded = Path(raw)
+    if not recorded.is_absolute():
+        recorded = REPO_ROOT / recorded
+    recorded = Path(os.path.abspath(recorded))
+    expected_parts = tuple(part.casefold() for part in relative.parts)
+    actual_parts = tuple(part.casefold() for part in recorded.parts)
+    if (
+        not expected_parts
+        or len(actual_parts) < len(expected_parts)
+        or actual_parts[-len(expected_parts) :] != expected_parts
+    ):
+        raise CampaignError(f"{label} path is outside its exact repository-relative slot")
+    return recorded
+
+
 def _partition_relation_context(receipt: dict) -> dict[str, object] | None:
     visited_parents: set[tuple[str, str]] = set()
     while True:
@@ -2229,18 +2343,19 @@ def _partition_relation_context(receipt: dict) -> dict[str, object] | None:
     if not isinstance(formal_ready, dict):
         raise CampaignError("Ghidra exact-partition formal READY stamp is malformed")
     if advance_kind == GHIDRA_PARTITION_RECOVERY_ADVANCE_KIND:
-        expected_formal_path = str(
-            (REPO_ROOT / ATOMIC14_REDERIVED_FORMAL_READY_RELATIVE).resolve()
+        expected_formal_path = _receipt_bound_repo_path(
+            formal_ready.get("path"),
+            ATOMIC14_REDERIVED_FORMAL_READY_RELATIVE,
+            "Ghidra recovery partition formal proof",
         )
         if (
-            formal_ready.get("path") != expected_formal_path
-            or formal_ready.get("bytes") != 32880
+            formal_ready.get("bytes") != 32880
             or formal_ready.get("sha256")
             != ATOMIC14_REDERIVED_FORMAL_READY_SHA256
         ):
             raise CampaignError("Ghidra recovery partition formal proof differs")
         _require_file_stamp(
-            Path(expected_formal_path),
+            expected_formal_path,
             formal_ready,
             "Ghidra recovery partition formal proof",
         )
@@ -2252,19 +2367,23 @@ def _partition_relation_context(receipt: dict) -> dict[str, object] | None:
     if advance_kind == GHIDRA_PARTITION_RECOVERY_ADVANCE_KIND:
         historical_formal = advance.get("historicalFormalReady")
         projection = advance.get("historicalProjection")
-        expected_historical_path = str(
+        expected_historical_path = _receipt_bound_repo_path(
+            historical_formal.get("path")
+            if isinstance(historical_formal, dict)
+            else None,
             (
-                REPO_ROOT
-                / "local-lab/console-callback-atomic14-20260803-v1"
-                / "formal-proof-v2/formal-proof.ready.json"
-            ).resolve()
+                "local-lab/console-callback-atomic14-20260803-v1/"
+                "formal-proof-v2/formal-proof.ready.json"
+            ),
+            "Ghidra recovery historical partition formal proof",
         )
         if (
             advance.get("branchId") != GHIDRA_PARTITION_RECOVERY_LINEAGE_ID
             or not isinstance(historical_formal, dict)
             or set(historical_formal)
             != {"path", "bytes", "sha256", "disposition"}
-            or historical_formal.get("path") != expected_historical_path
+            or Path(os.path.abspath(historical_formal.get("path")))
+            != expected_historical_path
             or historical_formal.get("bytes") != 23028
             or historical_formal.get("sha256") != ATOMIC14_FORMAL_READY_SHA256
             or historical_formal.get("disposition")
@@ -2313,15 +2432,16 @@ def _partition_relation_context(receipt: dict) -> dict[str, object] | None:
     parent_spec = receipt.get("parentCampaign")
     if not isinstance(parent_spec, dict):
         raise CampaignError("Ghidra exact-partition campaign lacks its parent")
-    parent_path = _resolve_repo_or_absolute(
-        parent_spec.get("path"), "Ghidra exact-partition parent campaign"
-    )
-    if (
-        advance_kind == GHIDRA_PARTITION_RECOVERY_ADVANCE_KIND
-        and parent_path.resolve()
-        != (REPO_ROOT / ATOMIC14_RECOVERY_PARENT_RELATIVE).resolve()
-    ):
-        raise CampaignError("Ghidra recovery partition parent path differs")
+    if advance_kind == GHIDRA_PARTITION_RECOVERY_ADVANCE_KIND:
+        parent_path = _receipt_bound_repo_path(
+            parent_spec.get("path"),
+            ATOMIC14_RECOVERY_PARENT_RELATIVE,
+            "Ghidra recovery partition parent campaign",
+        )
+    else:
+        parent_path = _resolve_repo_or_absolute(
+            parent_spec.get("path"), "Ghidra exact-partition parent campaign"
+        )
     parent_ready = parent_spec.get("ready")
     _require_file_stamp(
         parent_path / "campaign.ready.json",
@@ -3446,6 +3566,107 @@ def _validate_campaign_relations(
                 if row.get("kind") in GHIDRA_PARTITION_ADVANCE_KINDS
             },
         }
+    reseed_lineage = bool(
+        _integer(receipt.get("generation"), -1) > 0
+        and isinstance(current_advance, dict)
+        and current_advance.get("kind") == CAMPAIGN_RESEED_KIND
+    )
+    if reseed_lineage:
+        if current_advance.get("schema") != CAMPAIGN_RESEED_SCHEMA:
+            raise CampaignError("campaign reseed carry schema is unsupported")
+        parent = _runtime_mapping(
+            receipt.get("parentCampaign"), "campaign reseed relation parent"
+        )
+        parent_path = _resolve_repo_or_absolute(
+            parent.get("path"), "campaign reseed relation parent"
+        )
+        parent_ready = _runtime_mapping(
+            parent.get("ready"), "campaign reseed relation parent READY"
+        )
+        _require_file_stamp(
+            parent_path / "campaign.ready.json",
+            parent_ready,
+            "campaign reseed relation parent READY",
+        )
+        parent_receipt = _runtime_json(
+            parent_path / "campaign.ready.json",
+            "campaign reseed relation parent receipt",
+        )
+        if (
+            parent_receipt.get("schema") not in {SCHEMA, LEGACY_CAMPAIGN_SCHEMA}
+            or _integer(parent_receipt.get("generation"), -1)
+            != _integer(receipt.get("generation"), -1) - 1
+        ):
+            raise CampaignError(
+                "campaign reseed relation context lacks its direct parent generation"
+            )
+        inherited_rows = _campaign_rows_from_root(parent_path)
+        inherited_adjudications = inherited_rows["adjudications"]
+        inherited_supersessions = inherited_rows["supersessions"]
+        inherited_nonsemantic_adjudication_ids = (
+            _survived_nonsemantic_adjudication_ids(inherited_adjudications)
+        )
+
+        def inherited_reseed_boundary_context(
+            kind: str, schema: str
+        ) -> dict[str, object] | None:
+            scoped_adjudications = [
+                row
+                for row in inherited_adjudications
+                if row.get("overlaySchema") == schema
+            ]
+            scoped_supersessions = {
+                row["supersessionId"]: row
+                for row in inherited_supersessions
+                if row.get("kind") == kind
+            }
+            if not scoped_adjudications and not scoped_supersessions:
+                return None
+            partition_rows = [
+                row
+                for row in scoped_adjudications
+                if row.get("terminalState") == "TERMINAL_EXACT_PARTITION"
+            ]
+            if (
+                len(scoped_adjudications) != 2
+                or len(partition_rows) != 1
+                or not scoped_supersessions
+            ):
+                raise CampaignError(
+                    f"campaign reseed inherited {kind} relation context differs"
+                )
+            partition_row = partition_rows[0]
+            return {
+                "partitionAdjudicationId": partition_row["adjudicationId"],
+                "nonsemanticAdjudicationIds": {
+                    row["adjudicationId"] for row in scoped_adjudications
+                },
+                "retiredContract": {
+                    "contractId": partition_row["baseContractId"],
+                    "entityKey": partition_row["entityKey"],
+                    "questionIds": partition_row["questionIdsAddressed"],
+                },
+                "supersessionRows": scoped_supersessions,
+            }
+
+        setpos_context = inherited_reseed_boundary_context(
+            MISSION_NATIVE_SETPOS_ADVANCE_KIND,
+            MISSION_NATIVE_SETPOS_ADVANCE_SCHEMA,
+        )
+        unsetobjective_context = inherited_reseed_boundary_context(
+            MISSION_NATIVE_UNSETOBJECTIVE_ADVANCE_KIND,
+            MISSION_NATIVE_UNSETOBJECTIVE_ADVANCE_SCHEMA,
+        )
+        inherited_partition_supersession_ids = {
+            row["supersessionId"]
+            for row in inherited_supersessions
+            if row.get("kind") in GHIDRA_PARTITION_ADVANCE_KINDS
+        }
+        if inherited_partition_supersession_ids:
+            reseal_context = {
+                "adjudicationIds": set(),
+                "supersessionIds": inherited_partition_supersession_ids,
+            }
     generation9_recovery_lineage = bool(
         _integer(receipt.get("generation"), -1) == 9
         and partition_context is not None
@@ -4313,6 +4534,153 @@ def _verify_frozen_v5_campaign_carry(root: Path) -> dict:
     return verified
 
 
+def _verify_generation23_campaign_carry(root: Path) -> dict:
+    """Admit only the literal-pinned current Generation 23 authority as carry."""
+
+    raw = Path(os.path.abspath(root))
+    try:
+        resolved = ghidra_backup.resolve_plain_path(
+            raw, "canonical Generation 23 campaign carry", strict=True
+        )
+    except (ghidra_backup.BackupError, OSError) as exc:
+        raise CampaignError(
+            f"Generation 23 campaign carry path is not plain: {exc}"
+        ) from exc
+    expected = resolved
+    ready_path = resolved / "campaign.ready.json"
+    authority_path = resolved.parent / Path(
+        GENERATION23_CAMPAIGN_CARRY_AUTHORITY_RELATIVE
+    ).name
+    try:
+        plain_ready = ghidra_backup.resolve_plain_path(
+            ready_path, "Generation 23 campaign READY", strict=True
+        )
+        plain_authority = ghidra_backup.resolve_plain_path(
+            authority_path, "Generation 23 campaign authority", strict=True
+        )
+    except (ghidra_backup.BackupError, OSError) as exc:
+        raise CampaignError(
+            "campaign carry is not the exact canonical Generation 23 authority: "
+            f"evidence is not plain: {exc}"
+        ) from exc
+    if (
+        plain_ready.stat().st_nlink != 1
+        or plain_ready.stat().st_size != GENERATION23_CAMPAIGN_CARRY_READY_BYTES
+        or coverage.sha256_of(plain_ready)
+        != GENERATION23_CAMPAIGN_CARRY_READY_SHA256
+        or plain_authority.stat().st_nlink != 1
+        or plain_authority.stat().st_size
+        != GENERATION23_CAMPAIGN_CARRY_AUTHORITY_BYTES
+        or coverage.sha256_of(plain_authority)
+        != GENERATION23_CAMPAIGN_CARRY_AUTHORITY_SHA256
+    ):
+        raise CampaignError("Generation 23 campaign READY or authority changed")
+
+    receipt = _runtime_json(plain_ready, "canonical Generation 23 campaign")
+    authority = _runtime_json(
+        plain_authority, "canonical Generation 23 campaign authority"
+    )
+    reducer = _runtime_mapping(
+        receipt.get("reducer"), "Generation 23 campaign reducer"
+    )
+    canonical = _runtime_mapping(
+        authority.get("canonical"), "Generation 23 authority selection"
+    )
+    verification = _runtime_mapping(
+        authority.get("verification"), "Generation 23 authority verification"
+    )
+    canonical_replay = _runtime_mapping(
+        verification.get("canonicalLiteralPinnedFullReplay"),
+        "Generation 23 authority canonical replay",
+    )
+    determinism = _runtime_mapping(
+        authority.get("determinism"), "Generation 23 authority determinism"
+    )
+    selection = _runtime_mapping(
+        authority.get("selectionRule"), "Generation 23 authority selection rule"
+    )
+    specimen_sha = (
+        receipt.get("sourceSnapshot", {}).get("specimen", {}).get("sha256", "")
+    )
+    if (
+        receipt.get("schema") != SCHEMA
+        or _integer(receipt.get("generation"), -1) != 23
+        or receipt.get("counts") != GENERATION23_CAMPAIGN_CARRY_COUNTS
+        or specimen_sha.lower() != FROZEN_V5_CAMPAIGN_CARRY_SPECIMEN_SHA256
+        or reducer.get("id") != GENERATION23_CAMPAIGN_CARRY_REDUCER_ID
+        or authority.get("schema")
+        != "bea.re.cround-handle-event-arm-effects-generation23-authority.v1"
+        or authority.get("verdict") != "READY"
+        or authority.get("authorityClass") != "FULL_REPLAY_CAMPAIGN_AUTHORITY"
+        or canonical.get("absolutePath") != str(expected)
+        or canonical.get("ready", {}).get("bytes")
+        != GENERATION23_CAMPAIGN_CARRY_READY_BYTES
+        or canonical.get("ready", {}).get("sha256")
+        != GENERATION23_CAMPAIGN_CARRY_READY_SHA256
+        or canonical.get("reducerId")
+        != GENERATION23_CAMPAIGN_CARRY_REDUCER_ID
+        or canonical.get("generation") != 23
+        or authority.get("counts") != GENERATION23_CAMPAIGN_CARRY_COUNTS
+        or canonical_replay.get("exitCode") != 0
+        or canonical_replay.get("marker") != "CAMPAIGN_VERIFIED"
+        or determinism.get("allEightLedgersByteIdentical") is not True
+        or determinism.get("allFortyFourReducerFilesByteIdentical") is not True
+        or determinism.get("normalizedReadyReceiptsEqual") is not True
+        or selection.get("requiredAbsolutePath") != str(expected)
+        or selection.get("requiredReducerId")
+        != GENERATION23_CAMPAIGN_CARRY_REDUCER_ID
+        or selection.get("requiredMode") != "FULL"
+    ):
+        raise CampaignError("canonical Generation 23 campaign identity is unsupported")
+
+    manifest = _validate_reducer_snapshot(resolved, receipt)
+    if manifest.get("id") != GENERATION23_CAMPAIGN_CARRY_REDUCER_ID:
+        raise CampaignError("Generation 23 campaign reducer identity changed")
+    for output_name in OUTPUTS:
+        output_stamp = _runtime_mapping(
+            receipt.get("outputs", {}).get(output_name),
+            f"Generation 23 campaign {output_name}",
+        )
+        actual_stamp = _require_file_stamp(
+            resolved / output_name,
+            output_stamp,
+            f"Generation 23 campaign {output_name}",
+        )
+        authority_stamp = _runtime_mapping(
+            authority.get("outputs", {}).get(output_name),
+            f"Generation 23 authority {output_name}",
+        )
+        if any(
+            authority_stamp.get(field) != actual_stamp.get(field)
+            for field in ("bytes", "sha256")
+        ):
+            raise CampaignError(
+                f"Generation 23 authority output differs: {output_name}"
+            )
+
+    try:
+        completed = _run_frozen_campaign_verifier(
+            resolved,
+            replay=True,
+            timeout=300,
+            expected_ready_sha256=GENERATION23_CAMPAIGN_CARRY_READY_SHA256,
+            expected_reducer_id=GENERATION23_CAMPAIGN_CARRY_REDUCER_ID,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise CampaignError("Generation 23 frozen full replay timed out") from exc
+    if completed.returncode != 0 or "CAMPAIGN_VERIFIED" not in completed.stdout:
+        raise CampaignError(
+            "Generation 23 campaign failed its frozen full replay: "
+            f"exit={completed.returncode} stderr={completed.stderr.strip()!r}"
+        )
+    rows = _campaign_rows_from_root(resolved)
+    if {name: len(value) for name, value in rows.items()} != receipt.get("counts"):
+        raise CampaignError("Generation 23 campaign rows disagree with READY")
+    verified = dict(receipt)
+    verified["_carryBridge"] = "EXACT_LITERAL_PINNED_FULL_REPLAY_GENERATION23"
+    return verified
+
+
 def _verify_campaign_carry_source(root: Path) -> dict:
     try:
         raw = json.loads((root / "campaign.ready.json").read_text(encoding="utf-8"))
@@ -4323,6 +4691,14 @@ def _verify_campaign_carry_source(root: Path) -> dict:
         and root.resolve() == FROZEN_V5_CAMPAIGN_CARRY_ROOT.resolve()
     ):
         return _verify_frozen_v5_campaign_carry(root)
+    reducer = raw.get("reducer")
+    if (
+        raw.get("schema") == SCHEMA
+        and _integer(raw.get("generation"), -1) == 23
+        and isinstance(reducer, dict)
+        and reducer.get("id") == GENERATION23_CAMPAIGN_CARRY_REDUCER_ID
+    ):
+        return _verify_generation23_campaign_carry(root)
     if raw.get("schema") == SCHEMA:
         return verify(root)
     if raw.get("schema") == LEGACY_CAMPAIGN_SCHEMA:
@@ -5972,10 +6348,450 @@ def _residual_has_progress(row: dict[str, str]) -> bool:
     )
 
 
+def _residual_has_adjudication_free_formal_padding_progress(
+    row: dict[str, str],
+) -> bool:
+    """Recognize the one terminal residual proof that predates adjudication rows."""
+
+    return (
+        row.get("classification") == "PADDING"
+        and row.get("classificationVerdict") == "FORMAL_STATIC_PROOF_SURVIVED"
+        and row.get("terminalState") == "TERMINAL_PADDING"
+        and row.get("campaignState") == "TERMINAL_PADDING"
+    )
+
+
 def _union_semicolon(left: str, right: str) -> str:
     return ";".join(
         dict.fromkeys(value for value in (left + ";" + right).split(";") if value)
     )
+
+
+def _function_contract_question_display_name(
+    question: dict[str, str],
+    function: dict[str, str],
+) -> str | None:
+    """Return only the mutable display label from a generated function question."""
+
+    question_type = question.get("questionType")
+    entry_va = function.get("entryVa", "")
+    if (
+        question.get("entityKey") != function.get("entityKey")
+        or question.get("source") != "ledger-functions:complete-frontier"
+        or not entry_va
+    ):
+        return None
+    if question_type == "EXECUTED_FUNCTION_CONTRACT":
+        prefix = (
+            "What receiver, inputs, outputs, writes, ordering, and failure behavior "
+            f"define executed function {entry_va} ("
+        )
+    elif question_type == "DARK_FUNCTION_CONTRACT":
+        prefix = (
+            "What behavior, callers, inputs, outputs, and writes define dark function "
+            f"{entry_va} ("
+        )
+    else:
+        return None
+    text = question.get("question", "")
+    suffix = ")?"
+    if not text.startswith(prefix) or not text.endswith(suffix):
+        return None
+    display_name = text[len(prefix) : -len(suffix)]
+    if not display_name or any(character in display_name for character in "()\r\n"):
+        return None
+    return display_name
+
+
+def _question_display_name_equivalence(
+    prior: dict[str, str],
+    current: dict[str, str],
+    function_by_entity: dict[str, dict[str, str]],
+) -> dict[str, str] | None:
+    """Prove that a carry difference is only a generated function display name."""
+
+    if (
+        prior.get("questionId") != current.get("questionId")
+        or prior.get("questionType") != current.get("questionType")
+        or prior.get("entityKey") != current.get("entityKey")
+        or prior.get("question") == current.get("question")
+        or prior.get("questionId")
+        != _question_id(prior.get("questionType", ""), prior.get("entityKey", ""))
+    ):
+        return None
+    function = function_by_entity.get(current.get("entityKey", ""))
+    if function is None:
+        return None
+    historical_name = _function_contract_question_display_name(prior, function)
+    fresh_name = _function_contract_question_display_name(current, function)
+    if (
+        historical_name is None
+        or fresh_name is None
+        or fresh_name != function.get("currentName")
+        or historical_name == fresh_name
+    ):
+        return None
+    return {
+        "questionId": prior["questionId"],
+        "entityKey": prior["entityKey"],
+        "historicalDisplayName": historical_name,
+        "freshDisplayName": fresh_name,
+    }
+
+
+def _retired_reseed_relation_closure(
+    carried: dict[str, list[dict[str, str]]],
+    contract_entities: set[str],
+) -> tuple[set[str], set[str]]:
+    """Select only retired adjudication rows still joined to live successors."""
+
+    retired_entities_with_live_successors = {
+        row.get("oldEntityKey", "")
+        for row in carried["supersessions"]
+        if row.get("newEntityKey", "") in contract_entities
+    }
+    adjudication_ids: set[str] = set()
+    question_ids: set[str] = set()
+    for row in carried["adjudications"]:
+        if (
+            row.get("entityKey", "") not in contract_entities
+            and row.get("entityKey", "") in retired_entities_with_live_successors
+        ):
+            adjudication_ids.add(row["adjudicationId"])
+            question_ids.update(
+                _state_values(
+                    row.get("questionIdsAddressed", ""),
+                    f"retired adjudication {row['adjudicationId']} addressed questions",
+                )
+            )
+            question_ids.update(
+                _state_values(
+                    row.get("successorQuestionIds", ""),
+                    f"retired adjudication {row['adjudicationId']} successor questions",
+                )
+            )
+    return adjudication_ids, question_ids
+
+
+def _progressed_contract_question_ids(
+    carried_contracts: list[dict[str, str]],
+    fresh_contract_by_id: dict[str, dict[str, str]],
+    progressed_entities: set[str],
+) -> set[str]:
+    """Return the complete question provenance of contracts eligible to carry."""
+
+    question_ids: set[str] = set()
+    for prior in carried_contracts:
+        current = fresh_contract_by_id.get(prior.get("contractId", ""))
+        if (
+            prior.get("entityKey", "") not in progressed_entities
+            or not _contract_has_progress(prior)
+            or current is None
+            or current.get("entityKey", "") != prior.get("entityKey", "")
+        ):
+            continue
+        question_ids.update(
+            _state_values(
+                prior.get("questionIds", ""),
+                f"carried contract {prior['contractId']} questions",
+            )
+        )
+    return question_ids
+
+
+def _paired_c1_function_contract_entities(
+    carried_functions: dict[str, dict[str, str]],
+    carried_contracts: dict[str, dict[str, str]],
+) -> set[str]:
+    """Return every prior function whose function and contract both carry C1."""
+
+    entities: set[str] = set()
+    for entity, prior_function in carried_functions.items():
+        prior_contract = carried_contracts.get(entity)
+        if (
+            prior_contract is not None
+            and prior_function.get("semanticGrade") == "C1_CANDIDATE_PARTIAL"
+            and prior_contract.get("semanticGrade") == "C1_CANDIDATE_PARTIAL"
+            and prior_contract.get("entityKind") == "FUNCTION"
+            and prior_contract.get("entityKey") == entity
+            and prior_contract.get("entryVa") == prior_function.get("entryVa")
+            and _function_has_progress(prior_function)
+            and _contract_has_progress(prior_contract)
+        ):
+            entities.add(entity)
+    return entities
+
+
+def _function_geometry_is_exact(
+    prior: dict[str, str], current: dict[str, str]
+) -> bool:
+    """Compare every field that defines an exact specimen/body function identity."""
+
+    return all(
+        prior.get(field) == current.get(field)
+        for field in (
+            "entityKey",
+            "entryVa",
+            "entryRva",
+            "bodyRangesRva",
+            "bodyRangeSetSha256",
+            "bodyBytes",
+        )
+    )
+
+
+def _exact_entity_c1_function_contracts(
+    carried_functions: dict[str, dict[str, str]],
+    carried_contracts: dict[str, dict[str, str]],
+    fresh_functions: dict[str, dict[str, str]],
+    fresh_contracts: dict[str, dict[str, str]],
+) -> set[str]:
+    """Select paired C1 progress only where the specimen/body entity is exact."""
+
+    entities: set[str] = set()
+    for entity in _paired_c1_function_contract_entities(
+        carried_functions, carried_contracts
+    ):
+        prior_function = carried_functions[entity]
+        prior_contract = carried_contracts.get(entity)
+        current_function = fresh_functions.get(entity)
+        current_contract = fresh_contracts.get(entity)
+        if (
+            prior_contract is None
+            or current_function is None
+            or current_contract is None
+            or prior_contract.get("contractId") != current_contract.get("contractId")
+            or not _function_geometry_is_exact(prior_function, current_function)
+            or prior_contract.get("entryVa") != current_contract.get("entryVa")
+            or prior_contract.get("currentName")
+            != prior_function.get("currentName")
+            or current_contract.get("currentName")
+            != current_function.get("currentName")
+        ):
+            continue
+        entities.add(entity)
+    return entities
+
+
+def _bounded_zero_event_control_entities(
+    carried_functions: dict[str, dict[str, str]],
+    carried_contracts: dict[str, dict[str, str]],
+) -> set[str]:
+    """Select bounded zero-event controls without upgrading them above C0/open."""
+
+    entities: set[str] = set()
+    for entity, prior_contract in carried_contracts.items():
+        prior_function = carried_functions.get(entity)
+        if (
+            prior_function is not None
+            and prior_contract.get("entityKind") == "FUNCTION"
+            and prior_contract.get("contractState") == "OPEN"
+            and prior_contract.get("semanticGrade") == "C0_OPAQUE"
+            and prior_contract.get("authorVerdict")
+            == "PREREGISTERED_ZERO_EVENT_CONTROL"
+            and prior_contract.get("runtimeVerdict")
+            == "REPLICATED_BOUNDED_ZERO_EVENT_CONTROL"
+            and prior_contract.get("refuterVerdict") == "UNSCORED"
+            and "TTD_BOUNDED_ZERO_EVENT_CONTROL"
+            in set(filter(None, prior_function.get("evidenceStates", "").split(";")))
+            and prior_function.get("semanticGrade") == "OPAQUE"
+            and prior_function.get("entityKey") == entity
+            and prior_function.get("entryVa") == prior_contract.get("entryVa")
+        ):
+            entities.add(entity)
+    return entities
+
+
+def _exact_bounded_zero_event_controls(
+    candidate_entities: set[str],
+    carried_functions: dict[str, dict[str, str]],
+    carried_contracts: dict[str, dict[str, str]],
+    fresh_functions: dict[str, dict[str, str]],
+    fresh_contracts: dict[str, dict[str, str]],
+) -> list[dict[str, str]]:
+    """Bind a zero-event control only to an unchanged exact function identity."""
+
+    controls: list[dict[str, str]] = []
+    for entity in sorted(candidate_entities):
+        prior_function = carried_functions[entity]
+        prior_contract = carried_contracts[entity]
+        current_function = fresh_functions.get(entity)
+        current_contract = fresh_contracts.get(entity)
+        if current_function is None or current_contract is None:
+            continue
+        if (
+            not _function_geometry_is_exact(prior_function, current_function)
+            or current_contract.get("entityKey") != entity
+            or current_contract.get("contractId") != prior_contract.get("contractId")
+            or current_contract.get("entityKind") != "FUNCTION"
+            or current_contract.get("entryVa") != prior_contract.get("entryVa")
+            or current_function.get("currentName") != prior_function.get("currentName")
+            or current_contract.get("currentName") != prior_contract.get("currentName")
+        ):
+            raise CampaignError(
+                "bounded zero-event control exact identity or unchanged label differs: "
+                f"{entity}"
+            )
+        controls.append(
+            {
+                "entityKey": entity,
+                "entryVa": current_function["entryVa"],
+                "contractId": current_contract["contractId"],
+                "currentName": current_function.get("currentName", ""),
+                "semanticGrade": prior_contract["semanticGrade"],
+                "contractState": prior_contract["contractState"],
+                "authorVerdict": prior_contract["authorVerdict"],
+                "runtimeVerdict": prior_contract["runtimeVerdict"],
+                "disposition": "CARRY_UNCHANGED_EXACT_ENTITY_BOUNDED_ZERO_EVENT_CONTROL",
+            }
+        )
+    return controls
+
+
+def _is_retired_changed_label_only_contract(
+    prior_contract: dict[str, str],
+    prior_function: dict[str, str] | None,
+    current_contract: dict[str, str] | None,
+    current_function: dict[str, str] | None,
+) -> bool:
+    """Recognize C0 proof that supported only a label no longer in projection."""
+
+    evidence_parts = prior_contract.get("evidenceRefs", "").split(";")
+    return bool(
+        prior_function is not None
+        and current_contract is not None
+        and current_function is not None
+        and _function_geometry_is_exact(prior_function, current_function)
+        and prior_contract.get("entityKind") == "FUNCTION"
+        and prior_contract.get("entityKey") == current_contract.get("entityKey")
+        and prior_contract.get("contractId") == current_contract.get("contractId")
+        and prior_contract.get("entryVa") == current_contract.get("entryVa")
+        and prior_contract.get("currentName") == prior_function.get("currentName")
+        and current_contract.get("currentName") == current_function.get("currentName")
+        and prior_contract.get("currentName") != current_contract.get("currentName")
+        and prior_contract.get("contractState") == "OPEN"
+        and prior_contract.get("semanticGrade") == "C0_OPAQUE"
+        and all(
+            prior_contract.get(field) == "UNKNOWN"
+            for field in (
+                "receiver",
+                "inputs",
+                "returns",
+                "writes",
+                "sideEffects",
+                "preconditions",
+                "failureModes",
+            )
+        )
+        and prior_contract.get("authorVerdict") == "UNSCORED"
+        and prior_contract.get("runtimeVerdict") == "UNSCORED"
+        and prior_contract.get("refuterVerdict") == "UNSCORED"
+        and prior_contract.get("rebuildOwner") == "UNASSIGNED"
+        and prior_contract.get("rebuildImplementation") == "UNMAPPED"
+        and prior_contract.get("parityTests") == "UNMAPPED"
+        and prior_contract.get("rebuildState") == "NOT_READY"
+        and not prior_contract.get("supersedesEntityKeys")
+        and len(evidence_parts) == 2
+        and re.fullmatch(
+            r"local-lab/.+#sha256=[0-9a-f]{64}", evidence_parts[0]
+        )
+        is not None
+        and re.fullmatch(
+            r"CAMPAIGN_[A-Z0-9_]*NAME_ALIGNED(?:_[A-Z0-9_]+)?",
+            evidence_parts[1],
+        )
+        is not None
+    )
+
+
+def _carry_accounting_summary(
+    expected: set[str], dispositions: dict[str, str], label: str
+) -> dict[str, object]:
+    """Prove that every selected prior row received exactly one disposition."""
+
+    actual = set(dispositions)
+    missing = expected - actual
+    unexpected = actual - expected
+    if missing or unexpected:
+        raise CampaignError(
+            f"campaign carry {label} accounting is not exhaustive: "
+            f"unaccounted={len(missing)} unexpected={len(unexpected)}"
+        )
+    by_disposition: dict[str, dict[str, object]] = {}
+    for disposition in sorted(set(dispositions.values())):
+        identifiers = sorted(
+            identifier
+            for identifier, value in dispositions.items()
+            if value == disposition
+        )
+        identifier_payload = (
+            "\n".join(identifiers) + ("\n" if identifiers else "")
+        ).encode("utf-8")
+        by_disposition[disposition] = {
+            "rows": len(identifiers),
+            "idSetSha256": hashlib.sha256(identifier_payload).hexdigest(),
+        }
+    expected_identifiers = sorted(expected)
+    expected_payload = (
+        "\n".join(expected_identifiers)
+        + ("\n" if expected_identifiers else "")
+    ).encode("utf-8")
+    return {
+        "eligibleRows": len(expected),
+        "eligibleIdSetSha256": hashlib.sha256(expected_payload).hexdigest(),
+        "accountedRows": len(actual),
+        "unaccountedRows": 0,
+        "dispositions": by_disposition,
+    }
+
+
+def _exact_entity_c1_name_change(
+    entity: str,
+    prior_function: dict[str, str],
+    prior_contract: dict[str, str],
+    current_function: dict[str, str],
+    current_contract: dict[str, str],
+) -> dict[str, str] | None:
+    """Record a label change without transferring the historical label as truth."""
+
+    if prior_function.get("currentName") == current_function.get("currentName"):
+        return None
+    if (
+        not entity.startswith("CODE:")
+        or prior_function.get("entityKey") != entity
+        or current_function.get("entityKey") != entity
+        or prior_contract.get("entityKey") != entity
+        or current_contract.get("entityKey") != entity
+        or prior_function.get("entryVa") != current_function.get("entryVa")
+        or prior_contract.get("entryVa") != current_contract.get("entryVa")
+        or prior_contract.get("contractId") != current_contract.get("contractId")
+        or prior_contract.get("currentName") != prior_function.get("currentName")
+        or current_contract.get("currentName") != current_function.get("currentName")
+        or not prior_function.get("currentName")
+        or not current_function.get("currentName")
+    ):
+        raise CampaignError(
+            "exact-entity C1 label change lacks a consistent function/contract identity: "
+            f"{entity}"
+        )
+    return {
+        "entityKey": entity,
+        "entryVa": current_function["entryVa"],
+        "contractId": current_contract["contractId"],
+        "priorName": prior_function["currentName"],
+        "priorNameClass": prior_function.get("nameClass", ""),
+        "currentName": current_function["currentName"],
+        "currentNameClass": current_function.get("nameClass", ""),
+        "semanticGrade": prior_contract["semanticGrade"],
+        "authorVerdict": prior_contract.get("authorVerdict", ""),
+        "evidenceRefs": prior_contract.get("evidenceRefs", ""),
+        "evidenceDisposition": "C1_EVIDENCE_REMAINS_BOUND_TO_EXACT_ENTITY",
+        "labelSemanticEquivalence": "NOT_CLAIMED",
+        "disposition": (
+            "CARRY_EXACT_ENTITY_C1_KEEP_CURRENT_PROJECTION_LABEL_"
+            "NO_LABEL_EQUIVALENCE_CLAIMED"
+        ),
+    }
 
 
 def _merge_reseed_carry(
@@ -6000,15 +6816,47 @@ def _merge_reseed_carry(
         "staleContracts": 0,
         "staleAdjudications": 0,
         "staleSupersessions": 0,
+        "staleLevers": 0,
+        "retiredLineageQuestions": 0,
+        "retiredLineageAdjudications": 0,
+        "contractLineageQuestions": 0,
+        "freshContractLineageQuestions": 0,
+        "displayNameEquivalentQuestions": 0,
+        "questionDisplayNameEquivalences": [],
+        "exactEntityC1FunctionContracts": 0,
+        "newlyEligibleExactEntityC1FunctionContracts": 0,
+        "renamedNewlyEligibleExactEntityC1FunctionContracts": 0,
+        "exactEntityC1NameChanges": [],
+        "adjudicationFreeFormalPaddingResidualRows": 0,
+        "retiredFreshFormalPaddingQuestions": 0,
+        "boundedZeroEventControlCandidates": 0,
+        "exactBoundedZeroEventControls": 0,
+        "boundedZeroEventControls": [],
+        "retiredChangedLabelOnlyContracts": 0,
+        "retiredChangedLabelOnlyContractIdSetSha256": "",
+        "progressedCarryAccounting": {},
     }
 
     function_by_entity = {row["entityKey"]: row for row in fresh["functions"]}
     residual_by_entity = {row["entityKey"]: row for row in fresh["residuals"]}
     contract_by_id = {row["contractId"]: row for row in fresh["contracts"]}
+    contract_by_entity = {row["entityKey"]: row for row in fresh["contracts"]}
     contract_entities = {row["entityKey"] for row in fresh["contracts"]}
     question_by_id = {row["questionId"]: row for row in fresh["questions"]}
+    carried_function_by_entity = {
+        row["entityKey"]: row for row in carried["functions"]
+    }
+    carried_contract_by_entity = {
+        row["entityKey"]: row for row in carried["contracts"]
+    }
     adjudicated_entities = {
         row.get("entityKey", "") for row in carried["adjudications"]
+    }
+    adjudication_free_formal_padding_entities = {
+        row.get("entityKey", "")
+        for row in carried["residuals"]
+        if row.get("entityKey", "") not in adjudicated_entities
+        and _residual_has_adjudication_free_formal_padding_progress(row)
     }
     superseded_new_entities = {
         row.get("newEntityKey", "") for row in carried["supersessions"]
@@ -6019,9 +6867,202 @@ def _merge_reseed_carry(
         if "MAINTAINER_GHIDRA_SEMANTIC_PROMOTED"
         in set(filter(None, row.get("evidenceStates", "").split(";")))
     }
-    progressed_entities = (
+    provenance_progressed_entities = (
         adjudicated_entities | superseded_new_entities | semantic_promoted_entities
     )
+    paired_c1_entities = _paired_c1_function_contract_entities(
+        carried_function_by_entity, carried_contract_by_entity
+    )
+    exact_entity_c1_entities = _exact_entity_c1_function_contracts(
+        carried_function_by_entity,
+        carried_contract_by_entity,
+        function_by_entity,
+        contract_by_entity,
+    )
+    newly_eligible_c1_entities = (
+        exact_entity_c1_entities - provenance_progressed_entities
+    )
+    progressed_entities = (
+        provenance_progressed_entities
+        | paired_c1_entities
+        | adjudication_free_formal_padding_entities
+    )
+    report["exactEntityC1FunctionContracts"] = len(exact_entity_c1_entities)
+    report["newlyEligibleExactEntityC1FunctionContracts"] = len(
+        newly_eligible_c1_entities
+    )
+    name_changes: list[dict[str, str]] = []
+    for entity in sorted(newly_eligible_c1_entities):
+        change = _exact_entity_c1_name_change(
+            entity,
+            carried_function_by_entity[entity],
+            carried_contract_by_entity[entity],
+            function_by_entity[entity],
+            contract_by_entity[entity],
+        )
+        if change is not None:
+            name_changes.append(change)
+    report["renamedNewlyEligibleExactEntityC1FunctionContracts"] = len(name_changes)
+    report["exactEntityC1NameChanges"] = name_changes
+    bounded_zero_event_candidates = _bounded_zero_event_control_entities(
+        carried_function_by_entity, carried_contract_by_entity
+    )
+    bounded_zero_event_controls = _exact_bounded_zero_event_controls(
+        bounded_zero_event_candidates,
+        carried_function_by_entity,
+        carried_contract_by_entity,
+        function_by_entity,
+        contract_by_entity,
+    )
+    exact_bounded_zero_event_entities = {
+        row["entityKey"] for row in bounded_zero_event_controls
+    }
+    progressed_entities.update(bounded_zero_event_candidates)
+    report["boundedZeroEventControlCandidates"] = len(
+        bounded_zero_event_candidates
+    )
+    report["exactBoundedZeroEventControls"] = len(
+        exact_bounded_zero_event_entities
+    )
+    report["boundedZeroEventControls"] = bounded_zero_event_controls
+    retired_changed_label_only_contract_ids: set[str] = set()
+    for prior_contract in carried["contracts"]:
+        if (
+            not _contract_has_progress(prior_contract)
+            or prior_contract.get("entityKey") in progressed_entities
+        ):
+            continue
+        entity = prior_contract["entityKey"]
+        current_contract = contract_by_id.get(prior_contract["contractId"])
+        if current_contract is None or current_contract.get("entityKey") != entity:
+            continue
+        if not _is_retired_changed_label_only_contract(
+            prior_contract,
+            carried_function_by_entity.get(entity),
+            current_contract,
+            function_by_entity.get(entity),
+        ):
+            raise CampaignError(
+                "progressed contract has no reviewed reseed disposition: "
+                f"{prior_contract['contractId']}"
+            )
+        retired_changed_label_only_contract_ids.add(prior_contract["contractId"])
+    report["retiredChangedLabelOnlyContracts"] = len(
+        retired_changed_label_only_contract_ids
+    )
+    report["retiredChangedLabelOnlyContractIdSetSha256"] = hashlib.sha256(
+        (
+            "\n".join(sorted(retired_changed_label_only_contract_ids))
+            + ("\n" if retired_changed_label_only_contract_ids else "")
+        ).encode("utf-8")
+    ).hexdigest()
+    retired_fresh_formal_padding_question_ids: set[str] = set()
+    carried_residual_by_entity = {
+        row["entityKey"]: row for row in carried["residuals"]
+    }
+    for entity in sorted(adjudication_free_formal_padding_entities):
+        prior_residual = carried_residual_by_entity[entity]
+        if prior_residual.get("questionIds"):
+            raise CampaignError(
+                "adjudication-free formal padding unexpectedly retains questions: "
+                f"{entity}"
+            )
+        current_residual = residual_by_entity.get(entity)
+        if current_residual is None:
+            continue
+        for question_id in _state_values(
+            current_residual.get("questionIds", ""),
+            f"fresh formal-padding residual {entity} questions",
+        ):
+            question = question_by_id.get(question_id)
+            if (
+                question is None
+                or question.get("entityKey") != entity
+                or _question_has_progress(question)
+            ):
+                raise CampaignError(
+                    "fresh formal-padding question is not an unprogressed exact-entity "
+                    f"classification question: {question_id}"
+                )
+            retired_fresh_formal_padding_question_ids.add(question_id)
+    if retired_fresh_formal_padding_question_ids:
+        fresh["questions"] = [
+            row
+            for row in fresh["questions"]
+            if row.get("questionId")
+            not in retired_fresh_formal_padding_question_ids
+        ]
+        question_by_id = {
+            row["questionId"]: row for row in fresh["questions"]
+        }
+    report["retiredFreshFormalPaddingQuestions"] = len(
+        retired_fresh_formal_padding_question_ids
+    )
+    (
+        retired_lineage_adjudication_ids,
+        retired_lineage_question_ids,
+    ) = _retired_reseed_relation_closure(carried, contract_entities)
+    contract_lineage_question_ids = _progressed_contract_question_ids(
+        carried["contracts"], contract_by_id, progressed_entities
+    )
+
+    expected_function_rows = {
+        row["entityKey"]
+        for row in carried["functions"]
+        if row.get("entityKey") in progressed_entities
+        and (
+            _function_has_progress(row)
+            or row.get("entityKey") in bounded_zero_event_candidates
+        )
+    }
+    expected_residual_rows = {
+        row["entityKey"]
+        for row in carried["residuals"]
+        if _residual_has_progress(row)
+        and (
+            row.get("entityKey") in adjudicated_entities
+            or row.get("entityKey") in adjudication_free_formal_padding_entities
+        )
+    }
+    expected_contract_rows = {
+        row["contractId"]
+        for row in carried["contracts"]
+        if _contract_has_progress(row)
+    }
+    expected_question_rows = {
+        row["questionId"]
+        for row in carried["questions"]
+        if _question_has_progress(row)
+        or row.get("questionId") in contract_lineage_question_ids
+        or row.get("questionId") in retired_lineage_question_ids
+    }
+    expected_adjudication_rows = {
+        row["adjudicationId"] for row in carried["adjudications"]
+    }
+    expected_supersession_rows = {
+        row["supersessionId"] for row in carried["supersessions"]
+    }
+    expected_lever_rows = {
+        row["regionKey"]
+        for row in carried["levers"]
+        if row.get("state") not in ("", "UNTESTED")
+    }
+    accounting_dispositions: dict[str, dict[str, str]] = {
+        "functions": {},
+        "residuals": {},
+        "contracts": {},
+        "questions": {},
+        "adjudications": {},
+        "supersessions": {},
+        "levers": {},
+    }
+
+    def record_disposition(layer: str, identifier: str, disposition: str) -> None:
+        if identifier in accounting_dispositions[layer]:
+            raise CampaignError(
+                f"campaign carry {layer} row received two dispositions: {identifier}"
+            )
+        accounting_dispositions[layer][identifier] = disposition
 
     question_shape = (
         "questionType",
@@ -6040,26 +7081,95 @@ def _merge_reseed_carry(
         "lastMeasurementDate",
     )
     for prior in carried["questions"]:
-        if not _question_has_progress(prior):
+        question_id = prior["questionId"]
+        if question_id not in expected_question_rows:
             continue
-        current = question_by_id.get(prior["questionId"])
+        question_has_progress = _question_has_progress(prior)
+        contract_lineage_only = (
+            not question_has_progress
+            and question_id in contract_lineage_question_ids
+        )
+        retired_lineage_only = (
+            not question_has_progress
+            and question_id in retired_lineage_question_ids
+        )
+        current = question_by_id.get(question_id)
         if current is not None:
-            if any(current.get(field) != prior.get(field) for field in question_shape):
-                raise CampaignError(
-                    "campaign carry would close a changed question shape: "
-                    f"{prior['questionId']}"
+            if contract_lineage_only or retired_lineage_only:
+                if (
+                    current.get("questionType") != prior.get("questionType")
+                    or current.get("entityKey") != prior.get("entityKey")
+                ):
+                    raise CampaignError(
+                        "campaign carry contract lineage question identity differs: "
+                        f"{prior['questionId']}"
+                    )
+                report["freshContractLineageQuestions"] = (
+                    int(report["freshContractLineageQuestions"]) + 1
                 )
+                record_disposition(
+                    "questions", question_id, "RETAINED_FRESH_EXACT_LINEAGE"
+                )
+                continue
+            changed_shape = [
+                field
+                for field in question_shape
+                if current.get(field) != prior.get(field)
+            ]
+            if changed_shape:
+                equivalence = (
+                    _question_display_name_equivalence(
+                        prior, current, function_by_entity
+                    )
+                    if changed_shape == ["question"]
+                    else None
+                )
+                if equivalence is None:
+                    raise CampaignError(
+                        "campaign carry would close a changed question shape: "
+                        f"{prior['questionId']}"
+                    )
+                current["question"] = prior["question"]
+                report["displayNameEquivalentQuestions"] = (
+                    int(report["displayNameEquivalentQuestions"]) + 1
+                )
+                report["questionDisplayNameEquivalences"].append(equivalence)
             for field in question_progress:
                 current[field] = prior.get(field, "")
             report["matchedQuestions"] = int(report["matchedQuestions"]) + 1
+            record_disposition("questions", question_id, "CARRIED_EXACT_IDENTITY")
             continue
-        if prior.get("entityKey") not in contract_entities:
+        if (
+            prior.get("entityKey") not in contract_entities
+            and prior.get("questionId") not in retired_lineage_question_ids
+        ):
             report["staleQuestions"] = int(report["staleQuestions"]) + 1
+            record_disposition(
+                "questions", question_id, "RETIRED_CHANGED_IDENTITY"
+            )
             continue
         copied = {field: prior.get(field, "") for field in QUESTION_COLUMNS}
         fresh["questions"].append(copied)
         question_by_id[copied["questionId"]] = copied
-        report["successorQuestions"] = int(report["successorQuestions"]) + 1
+        if copied["questionId"] in retired_lineage_question_ids:
+            report["retiredLineageQuestions"] = (
+                int(report["retiredLineageQuestions"]) + 1
+            )
+            record_disposition(
+                "questions", question_id, "CARRIED_RETIRED_LINEAGE"
+            )
+        elif copied["questionId"] in contract_lineage_question_ids:
+            report["contractLineageQuestions"] = (
+                int(report["contractLineageQuestions"]) + 1
+            )
+            record_disposition(
+                "questions", question_id, "CARRIED_CONTRACT_LINEAGE"
+            )
+        else:
+            report["successorQuestions"] = int(report["successorQuestions"]) + 1
+            record_disposition(
+                "questions", question_id, "CARRIED_SUCCESSOR_QUESTION"
+            )
 
     all_question_ids = set(question_by_id)
     for row in fresh["questions"]:
@@ -6083,15 +7193,18 @@ def _merge_reseed_carry(
         "lastMeasurementDate",
     )
     for prior in carried["functions"]:
-        if (
-            prior.get("entityKey") not in progressed_entities
-            or not _function_has_progress(prior)
-        ):
+        entity = prior["entityKey"]
+        if entity not in expected_function_rows:
             continue
-        current = function_by_entity.get(prior.get("entityKey"))
+        current = function_by_entity.get(entity)
         if current is None:
             report["staleFunctions"] = int(report["staleFunctions"]) + 1
+            record_disposition("functions", entity, "RETIRED_CHANGED_IDENTITY")
             continue
+        if entity in paired_c1_entities and entity not in exact_entity_c1_entities:
+            raise CampaignError(
+                "exact-entity C1 function/contract geometry differs: " f"{entity}"
+            )
         if prior.get("entityKey") in semantic_promoted_entities and (
             current.get("currentName") != prior.get("currentName")
             or current.get("nameClass") != prior.get("nameClass")
@@ -6107,6 +7220,7 @@ def _merge_reseed_carry(
             current.get("evidenceStates", ""), prior.get("evidenceStates", "")
         )
         report["functionRows"] = int(report["functionRows"]) + 1
+        record_disposition("functions", entity, "CARRIED_EXACT_IDENTITY")
 
     residual_fields = (
         "classification",
@@ -6119,21 +7233,35 @@ def _merge_reseed_carry(
         "lastMeasurementDate",
     )
     for prior in carried["residuals"]:
-        if (
-            prior.get("entityKey") not in adjudicated_entities
-            or not _residual_has_progress(prior)
-        ):
+        entity = prior["entityKey"]
+        if entity not in expected_residual_rows:
             continue
-        current = residual_by_entity.get(prior.get("entityKey"))
+        adjudication_free_formal_padding = (
+            _residual_has_adjudication_free_formal_padding_progress(prior)
+        )
+        current = residual_by_entity.get(entity)
         if current is None:
             report["staleResiduals"] = int(report["staleResiduals"]) + 1
+            record_disposition("residuals", entity, "RETIRED_CHANGED_IDENTITY")
             continue
         for field in residual_fields:
             current[field] = prior.get(field, "")
         current["questionIds"] = _union_semicolon(
-            current.get("questionIds", ""), prior.get("questionIds", "")
+            ""
+            if prior.get("entityKey")
+            in adjudication_free_formal_padding_entities
+            else current.get("questionIds", ""),
+            prior.get("questionIds", ""),
         )
         report["residualRows"] = int(report["residualRows"]) + 1
+        if (
+            adjudication_free_formal_padding
+            and prior.get("entityKey") not in adjudicated_entities
+        ):
+            report["adjudicationFreeFormalPaddingResidualRows"] = (
+                int(report["adjudicationFreeFormalPaddingResidualRows"]) + 1
+            )
+        record_disposition("residuals", entity, "CARRIED_EXACT_IDENTITY")
 
     contract_progress_fields = (
         "contractState",
@@ -6159,14 +7287,20 @@ def _merge_reseed_carry(
         "lastMeasurementDate",
     )
     for prior in carried["contracts"]:
-        if (
-            prior.get("entityKey") not in progressed_entities
-            or not _contract_has_progress(prior)
-        ):
+        contract_id = prior["contractId"]
+        if contract_id not in expected_contract_rows:
             continue
-        current = contract_by_id.get(prior.get("contractId"))
+        current = contract_by_id.get(contract_id)
         if current is None or current.get("entityKey") != prior.get("entityKey"):
             report["staleContracts"] = int(report["staleContracts"]) + 1
+            record_disposition("contracts", contract_id, "RETIRED_CHANGED_IDENTITY")
+            continue
+        if contract_id in retired_changed_label_only_contract_ids:
+            record_disposition(
+                "contracts",
+                contract_id,
+                "RETAINED_FRESH_RETIRED_CHANGED_LABEL_ONLY",
+            )
             continue
         if prior.get("entityKey") in semantic_promoted_entities and (
             current.get("currentName") != prior.get("currentName")
@@ -6187,12 +7321,18 @@ def _merge_reseed_carry(
         for field in contract_progress_fields:
             current[field] = prior.get(field, "")
         current["questionIds"] = _union_semicolon(
-            current.get("questionIds", ""), prior.get("questionIds", "")
+            ""
+            if prior.get("entityKey")
+            in adjudication_free_formal_padding_entities
+            else current.get("questionIds", ""),
+            prior.get("questionIds", ""),
         )
         report["contractRows"] = int(report["contractRows"]) + 1
+        record_disposition("contracts", contract_id, "CARRIED_EXACT_IDENTITY")
 
     adjudication_ids = {row["adjudicationId"] for row in fresh["adjudications"]}
     for prior in carried["adjudications"]:
+        adjudication_id = prior["adjudicationId"]
         addressed = [
             value for value in prior.get("questionIdsAddressed", "").split(";") if value
         ]
@@ -6202,41 +7342,110 @@ def _merge_reseed_carry(
         if (
             prior.get("baseContractId") not in contract_by_id
             or prior.get("entityKey") not in contract_entities
-        ):
+        ) and prior.get("adjudicationId") not in retired_lineage_adjudication_ids:
             report["staleAdjudications"] = int(report["staleAdjudications"]) + 1
+            record_disposition(
+                "adjudications", adjudication_id, "RETIRED_CHANGED_IDENTITY"
+            )
             continue
         if any(value not in all_question_ids for value in addressed + successors):
             raise CampaignError(
                 "campaign carry adjudication references a missing question: "
                 f"{prior.get('adjudicationId', '')}"
             )
-        if prior["adjudicationId"] in adjudication_ids:
+        if adjudication_id in adjudication_ids:
+            record_disposition(
+                "adjudications", adjudication_id, "RETAINED_FRESH_IDENTICAL"
+            )
             continue
         fresh["adjudications"].append(
             {field: prior.get(field, "") for field in ADJUDICATION_COLUMNS}
         )
         adjudication_ids.add(prior["adjudicationId"])
         report["adjudications"] = int(report["adjudications"]) + 1
+        if adjudication_id in retired_lineage_adjudication_ids:
+            report["retiredLineageAdjudications"] = (
+                int(report["retiredLineageAdjudications"]) + 1
+            )
+            record_disposition(
+                "adjudications", adjudication_id, "CARRIED_RETIRED_LINEAGE"
+            )
+        else:
+            record_disposition(
+                "adjudications", adjudication_id, "CARRIED_EXACT_IDENTITY"
+            )
 
     supersession_ids = {row["supersessionId"] for row in fresh["supersessions"]}
     for prior in carried["supersessions"]:
+        supersession_id = prior["supersessionId"]
         if prior.get("newEntityKey") not in contract_entities:
             report["staleSupersessions"] = int(report["staleSupersessions"]) + 1
+            record_disposition(
+                "supersessions", supersession_id, "RETIRED_CHANGED_IDENTITY"
+            )
             continue
-        if prior["supersessionId"] in supersession_ids:
+        if supersession_id in supersession_ids:
+            record_disposition(
+                "supersessions", supersession_id, "RETAINED_FRESH_IDENTICAL"
+            )
             continue
         fresh["supersessions"].append(
             {field: prior.get(field, "") for field in SUPERSESSION_COLUMNS}
         )
         supersession_ids.add(prior["supersessionId"])
         report["supersessions"] = int(report["supersessions"]) + 1
+        record_disposition(
+            "supersessions", supersession_id, "CARRIED_SUCCESSOR_RELATION"
+        )
 
     lever_by_key = {row["regionKey"]: row for row in fresh["levers"]}
     for prior in carried["levers"]:
-        current = lever_by_key.get(prior.get("regionKey"))
-        if current is not None and prior.get("state") not in ("", "UNTESTED"):
+        region_key = prior["regionKey"]
+        if region_key not in expected_lever_rows:
+            continue
+        current = lever_by_key.get(region_key)
+        if current is not None:
             current["state"] = prior["state"]
             report["leverStates"] = int(report["leverStates"]) + 1
+            record_disposition("levers", region_key, "CARRIED_EXACT_IDENTITY")
+        else:
+            report["staleLevers"] = int(report["staleLevers"]) + 1
+            record_disposition("levers", region_key, "RETIRED_CHANGED_IDENTITY")
+
+    expected_by_layer = {
+        "functions": expected_function_rows,
+        "residuals": expected_residual_rows,
+        "contracts": expected_contract_rows,
+        "questions": expected_question_rows,
+        "adjudications": expected_adjudication_rows,
+        "supersessions": expected_supersession_rows,
+        "levers": expected_lever_rows,
+    }
+    accounting = {
+        layer: _carry_accounting_summary(
+            expected_by_layer[layer], accounting_dispositions[layer], layer
+        )
+        for layer in expected_by_layer
+    }
+    accounting["totalEligibleRows"] = sum(
+        int(value["eligibleRows"]) for value in accounting.values()
+    )
+    accounting["totalAccountedRows"] = sum(
+        int(value["accountedRows"])
+        for value in accounting.values()
+        if isinstance(value, dict)
+    )
+    accounting["unaccountedRows"] = sum(
+        int(value["unaccountedRows"])
+        for value in accounting.values()
+        if isinstance(value, dict)
+    )
+    if (
+        accounting["totalEligibleRows"] != accounting["totalAccountedRows"]
+        or accounting["unaccountedRows"] != 0
+    ):
+        raise CampaignError("campaign progressed carry accounting did not close")
+    report["progressedCarryAccounting"] = accounting
 
     return report
 
@@ -6298,7 +7507,7 @@ def seed(
         }
         for name, (columns, output_rows) in columns_by_output.items():
             _write_tsv(stage / name, columns, output_rows)
-        reducer = _publish_reducer(stage)
+        reducer = _publish_reducer(stage, fallback_campaign=carry)
         generation = (
             _integer(carry_receipt.get("generation"), -1) + 1
             if carry_receipt is not None
@@ -26652,7 +27861,10 @@ def main(argv: list[str] | None = None) -> int:
     seed_parser.add_argument(
         "--carry",
         type=Path,
-        help="verified prior campaign whose adjudicated progress must survive the fresh reseed",
+        help=(
+            "verified prior campaign whose exact-identity progress must survive "
+            "the fresh reseed"
+        ),
     )
 
     verify_parser = commands.add_parser("verify", help="verify every campaign output against READY")

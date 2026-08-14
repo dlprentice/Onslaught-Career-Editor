@@ -855,6 +855,699 @@ class CampaignTests(unittest.TestCase):
         self.assertEqual("SURVIVED", damage["refuterVerdict"])
         self.assertEqual(1, len(adjudications))
 
+    def test_reseed_carry_preserves_a_closed_generated_question_across_a_display_rename(
+        self,
+    ) -> None:
+        entity = f"CODE:{'7' * 64}:VA=0x0040a890:RANGES={'b' * 64}"
+        function = {
+            "entityKey": entity,
+            "entryVa": "0x0040a890",
+            "currentName": "CBattleEngine__Damage",
+        }
+        prior = {
+            "questionId": campaign._question_id(
+                "EXECUTED_FUNCTION_CONTRACT", entity
+            ),
+            "questionType": "EXECUTED_FUNCTION_CONTRACT",
+            "entityKey": entity,
+            "source": "ledger-functions:complete-frontier",
+            "question": (
+                "What receiver, inputs, outputs, writes, ordering, and failure "
+                "behavior define executed function 0x0040a890 "
+                "(CBattleEngine__VFunc_40_0040a890)?"
+            ),
+        }
+        current = {
+            **prior,
+            "question": (
+                "What receiver, inputs, outputs, writes, ordering, and failure "
+                "behavior define executed function 0x0040a890 "
+                "(CBattleEngine__Damage)?"
+            ),
+        }
+
+        equivalence = campaign._question_display_name_equivalence(
+            prior,
+            current,
+            {entity: function},
+        )
+
+        self.assertEqual(
+            {
+                "questionId": prior["questionId"],
+                "entityKey": entity,
+                "historicalDisplayName": "CBattleEngine__VFunc_40_0040a890",
+                "freshDisplayName": "CBattleEngine__Damage",
+            },
+            equivalence,
+        )
+
+    def test_reseed_carry_still_refuses_semantic_question_wording_drift(self) -> None:
+        entity = f"CODE:{'7' * 64}:VA=0x0040a890:RANGES={'b' * 64}"
+        function = {
+            "entityKey": entity,
+            "entryVa": "0x0040a890",
+            "currentName": "CBattleEngine__Damage",
+        }
+        prior = {
+            "questionId": campaign._question_id(
+                "EXECUTED_FUNCTION_CONTRACT", entity
+            ),
+            "questionType": "EXECUTED_FUNCTION_CONTRACT",
+            "entityKey": entity,
+            "source": "ledger-functions:complete-frontier",
+            "question": (
+                "What receiver, inputs, outputs, writes, ordering, and failure "
+                "behavior define executed function 0x0040a890 "
+                "(CBattleEngine__VFunc_40_0040a890)?"
+            ),
+        }
+        current = {
+            **prior,
+            "question": (
+                "What receiver, inputs, outputs, writes, ordering, timing, and "
+                "failure behavior define executed function 0x0040a890 "
+                "(CBattleEngine__Damage)?"
+            ),
+        }
+
+        self.assertIsNone(
+            campaign._question_display_name_equivalence(
+                prior,
+                current,
+                {entity: function},
+            )
+        )
+
+    def test_reseed_zero_event_control_refuses_a_changed_label(self) -> None:
+        entity = f"CODE:{'7' * 64}:VA=0x0040bfd0:RANGES={'b' * 64}"
+        prior_function = {
+            "entityKey": entity,
+            "entryVa": "0x0040bfd0",
+            "entryRva": "0x0000bfd0",
+            "bodyRangesRva": "0xbfd0-0xc17c",
+            "bodyRangeSetSha256": "b" * 64,
+            "bodyBytes": "428",
+            "currentName": "CBattleEngine__StartDieProcess",
+        }
+        current_function = {
+            **prior_function,
+            "currentName": "CBattleEngine__RenamedControl",
+        }
+        prior_contract = {
+            "contractId": "C-control",
+            "entityKey": entity,
+            "entityKind": "FUNCTION",
+            "entryVa": "0x0040bfd0",
+            "currentName": "CBattleEngine__StartDieProcess",
+            "contractState": "OPEN",
+            "semanticGrade": "C0_OPAQUE",
+            "authorVerdict": "PREREGISTERED_ZERO_EVENT_CONTROL",
+            "runtimeVerdict": "REPLICATED_BOUNDED_ZERO_EVENT_CONTROL",
+        }
+        current_contract = {
+            **prior_contract,
+            "currentName": "CBattleEngine__RenamedControl",
+        }
+
+        with self.assertRaisesRegex(
+            campaign.CampaignError, "unchanged label differs"
+        ):
+            campaign._exact_bounded_zero_event_controls(
+                {entity},
+                {entity: prior_function},
+                {entity: prior_contract},
+                {entity: current_function},
+                {entity: current_contract},
+            )
+
+    def test_reseed_progressed_carry_accounting_refuses_an_unaccounted_row(
+        self,
+    ) -> None:
+        with self.assertRaisesRegex(campaign.CampaignError, "not exhaustive"):
+            campaign._carry_accounting_summary(
+                {"row-a", "row-b"},
+                {"row-a": "CARRIED_EXACT_IDENTITY"},
+                "test rows",
+            )
+
+    def test_reseed_end_to_end_preserves_exact_c1_and_unadjudicated_formal_padding(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            prior_source = root / "prior-source"
+            prior_source.mkdir()
+            prior_snapshot = make_snapshot(prior_source)
+            prior_inventory_path = prior_snapshot / "ledger-functions.tsv"
+            prior_inventory = campaign._read_tsv(prior_inventory_path)
+            prior_inventory[0]["name"] = "CThing__PriorName"
+            prior_inventory[0]["nameClass"] = "NAMED"
+            prior_inventory[0]["understoodTier"] = "U1_NAMED_ONLY"
+            write_tsv(
+                prior_inventory_path,
+                list(prior_inventory[0]),
+                prior_inventory,
+            )
+            refresh_snapshot_ready(prior_snapshot)
+
+            prior = root / "prior"
+            prior_receipt = campaign.seed(prior_snapshot, prior)
+            functions = campaign._read_tsv(prior / "campaign-functions.tsv")
+            progressed_function = next(
+                row for row in functions if row["entryVa"] == "0x00401000"
+            )
+            entity = progressed_function["entityKey"]
+            progressed_function.update(
+                {
+                    "resolutionState": "CANDIDATE_CONTRACT",
+                    "semanticGrade": "C1_CANDIDATE_PARTIAL",
+                    "evidenceStates": campaign._union_semicolon(
+                        progressed_function["evidenceStates"],
+                        "CAMPAIGN_C1_OPAQUE_PE",
+                    ),
+                    "lastMeasurementDate": "2026-08-13",
+                }
+            )
+            zero_control_function = next(
+                row for row in functions if row["entryVa"] == "0x00401010"
+            )
+            zero_control_entity = zero_control_function["entityKey"]
+            zero_control_function.update(
+                {
+                    "evidenceStates": campaign._union_semicolon(
+                        zero_control_function["evidenceStates"],
+                        "TTD_BOUNDED_ZERO_EVENT_CONTROL",
+                    ),
+                    "lastMeasurementDate": "2026-08-13",
+                }
+            )
+            write_tsv(
+                prior / "campaign-functions.tsv",
+                campaign.FUNCTION_COLUMNS,
+                functions,
+            )
+
+            contracts = campaign._read_tsv(prior / "campaign-contracts.tsv")
+            progressed_contract = next(
+                row for row in contracts if row["entityKey"] == entity
+            )
+            progressed_contract.update(
+                {
+                    "contractState": "CANDIDATE_NEEDS_REFUTER",
+                    "semanticGrade": "C1_CANDIDATE_PARTIAL",
+                    "receiver": "thiscall this in ecx",
+                    "inputs": "no stack args",
+                    "returns": "eax",
+                    "writes": "none",
+                    "sideEffects": "entity-bound static contract",
+                    "preconditions": "this valid",
+                    "failureModes": "none observed",
+                    "authorVerdict": "SUPPORTED_BY_PE_STATIC_SPINE",
+                    "runtimeVerdict": "UNSCORED",
+                    "refuterVerdict": "UNSCORED",
+                    "evidenceRefs": "proof#sha256=" + "d" * 64,
+                    "rebuildState": "PARTIAL_CONTRACT",
+                    "remainingUncertainty": "runtime refuter required",
+                    "lastMeasurementDate": "2026-08-13",
+                }
+            )
+            zero_control_contract = next(
+                row for row in contracts if row["entityKey"] == zero_control_entity
+            )
+            zero_control_contract.update(
+                {
+                    "contractState": "OPEN",
+                    "semanticGrade": "C0_OPAQUE",
+                    "authorVerdict": "PREREGISTERED_ZERO_EVENT_CONTROL",
+                    "runtimeVerdict": "REPLICATED_BOUNDED_ZERO_EVENT_CONTROL",
+                    "refuterVerdict": "UNSCORED",
+                    "evidenceRefs": "zero-event-proof#sha256=" + "f" * 64,
+                    "remainingUncertainty": (
+                        "The replicated zero events are bounded and do not prove "
+                        "non-reachability."
+                    ),
+                    "lastMeasurementDate": "2026-08-13",
+                }
+            )
+            write_tsv(
+                prior / "campaign-contracts.tsv",
+                campaign.CONTRACT_COLUMNS,
+                contracts,
+            )
+
+            residuals = campaign._read_tsv(prior / "campaign-residuals.tsv")
+            formal_padding = next(
+                row for row in residuals if row["startVa"] == "0x00403010"
+            )
+            formal_padding.update(
+                {
+                    "classification": "PADDING",
+                    "classificationVerdict": "FORMAL_STATIC_PROOF_SURVIVED",
+                    "terminalState": "TERMINAL_PADDING",
+                    "campaignState": "TERMINAL_PADDING",
+                    "lever": "NONE",
+                    "cheapestFalsifier": "Any non-padding byte or incoming flow.",
+                    "questionIds": "",
+                    "lastMeasurementDate": "2026-08-13",
+                }
+            )
+            padding_entity = formal_padding["entityKey"]
+            write_tsv(
+                prior / "campaign-residuals.tsv",
+                campaign.RESIDUAL_COLUMNS,
+                residuals,
+            )
+            padding_contract = next(
+                row for row in contracts if row["entityKey"] == padding_entity
+            )
+            padding_contract.update(
+                {
+                    "contractState": "TERMINAL_PADDING",
+                    "authorVerdict": "STATIC_FORMAL_PROOF",
+                    "refuterVerdict": "SURVIVED",
+                    "questionIds": "",
+                    "evidenceRefs": "proof#sha256=" + "e" * 64,
+                    "remainingUncertainty": (
+                        "No behavior contract; exact alignment padding."
+                    ),
+                    "lastMeasurementDate": "2026-08-13",
+                }
+            )
+            write_tsv(
+                prior / "campaign-contracts.tsv",
+                campaign.CONTRACT_COLUMNS,
+                contracts,
+            )
+
+            fresh_source = root / "fresh-source"
+            fresh_source.mkdir()
+            fresh_snapshot = make_snapshot(fresh_source)
+            fresh_inventory_path = fresh_snapshot / "ledger-functions.tsv"
+            fresh_inventory = campaign._read_tsv(fresh_inventory_path)
+            fresh_inventory[0]["name"] = "CThing__CurrentName"
+            fresh_inventory[0]["nameClass"] = "NAMED"
+            fresh_inventory[0]["understoodTier"] = "U1_NAMED_ONLY"
+            write_tsv(
+                fresh_inventory_path,
+                list(fresh_inventory[0]),
+                fresh_inventory,
+            )
+            refresh_snapshot_ready(fresh_snapshot)
+
+            carried = root / "carried"
+            receipt = campaign.seed(
+                fresh_snapshot,
+                carried,
+                carry=prior,
+                _self_check=False,
+                _verified_carry_receipt=prior_receipt,
+            )
+            campaign.verify(carried, _replay_generation=False)
+            carried_functions = {
+                row["entityKey"]: row
+                for row in campaign._read_tsv(
+                    carried / "campaign-functions.tsv"
+                )
+            }
+            carried_contracts = {
+                row["entityKey"]: row
+                for row in campaign._read_tsv(
+                    carried / "campaign-contracts.tsv"
+                )
+            }
+            carried_residuals = {
+                row["entityKey"]: row
+                for row in campaign._read_tsv(
+                    carried / "campaign-residuals.tsv"
+                )
+            }
+            carried_questions = campaign._read_tsv(
+                carried / "campaign-questions.tsv"
+            )
+
+        report = receipt["advance"]["carried"]
+        self.assertEqual(1, report["newlyEligibleExactEntityC1FunctionContracts"])
+        self.assertEqual(
+            1,
+            report["renamedNewlyEligibleExactEntityC1FunctionContracts"],
+        )
+        self.assertEqual(1, report["adjudicationFreeFormalPaddingResidualRows"])
+        self.assertEqual(1, report["retiredFreshFormalPaddingQuestions"])
+        self.assertEqual(1, report["boundedZeroEventControlCandidates"])
+        self.assertEqual(1, report["exactBoundedZeroEventControls"])
+        self.assertEqual(0, report["progressedCarryAccounting"]["unaccountedRows"])
+        self.assertEqual(
+            report["progressedCarryAccounting"]["totalEligibleRows"],
+            report["progressedCarryAccounting"]["totalAccountedRows"],
+        )
+        name_change = report["exactEntityC1NameChanges"][0]
+        self.assertEqual("CThing__PriorName", name_change["priorName"])
+        self.assertEqual("CThing__CurrentName", name_change["currentName"])
+        self.assertEqual("NOT_CLAIMED", name_change["labelSemanticEquivalence"])
+        self.assertEqual("CThing__CurrentName", carried_functions[entity]["currentName"])
+        self.assertEqual(
+            "C1_CANDIDATE_PARTIAL",
+            carried_functions[entity]["semanticGrade"],
+        )
+        self.assertIn(
+            "CAMPAIGN_C1_OPAQUE_PE",
+            carried_functions[entity]["evidenceStates"],
+        )
+        self.assertEqual("CThing__CurrentName", carried_contracts[entity]["currentName"])
+        self.assertEqual(
+            "SUPPORTED_BY_PE_STATIC_SPINE",
+            carried_contracts[entity]["authorVerdict"],
+        )
+        self.assertEqual(
+            "PADDING",
+            carried_residuals[padding_entity]["classification"],
+        )
+        self.assertEqual(
+            "FORMAL_STATIC_PROOF_SURVIVED",
+            carried_residuals[padding_entity]["classificationVerdict"],
+        )
+        self.assertEqual(
+            "TERMINAL_PADDING",
+            carried_contracts[padding_entity]["contractState"],
+        )
+        self.assertFalse(carried_residuals[padding_entity]["questionIds"])
+        self.assertFalse(carried_contracts[padding_entity]["questionIds"])
+        self.assertFalse(
+            any(row["entityKey"] == padding_entity for row in carried_questions)
+        )
+        function_questions = [
+            row for row in carried_questions if row["entityKey"] == entity
+        ]
+        self.assertTrue(
+            any("CThing__CurrentName" in row["question"] for row in function_questions)
+        )
+        self.assertFalse(
+            any("CThing__PriorName" in row["question"] for row in function_questions)
+        )
+        self.assertIn(
+            "TTD_BOUNDED_ZERO_EVENT_CONTROL",
+            carried_functions[zero_control_entity]["evidenceStates"],
+        )
+        self.assertEqual(
+            "PREREGISTERED_ZERO_EVENT_CONTROL",
+            carried_contracts[zero_control_entity]["authorVerdict"],
+        )
+        self.assertEqual(
+            "REPLICATED_BOUNDED_ZERO_EVENT_CONTROL",
+            carried_contracts[zero_control_entity]["runtimeVerdict"],
+        )
+        zero_control_questions = [
+            row for row in carried_questions if row["entityKey"] == zero_control_entity
+        ]
+        self.assertEqual(1, len(zero_control_questions))
+        self.assertEqual("OPEN", zero_control_questions[0]["state"])
+
+    def test_frozen_bootstrap_full_replay_is_portable_without_root_lab_files(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source = root / "source"
+            source.mkdir()
+            out = root / "campaign"
+            receipt = campaign.seed(make_snapshot(source), out)
+            environment = os.environ.copy()
+            for name in (
+                "BEA_LOCAL_LAB",
+                "BEA_REPO_ROOT",
+                "PYTHONHOME",
+                "PYTHONPATH",
+                "PYTHONSTARTUP",
+                "PYTHONINSPECT",
+                "PYTHONUSERBASE",
+            ):
+                environment.pop(name, None)
+            completed = subprocess.run(
+                [
+                    os.fspath(Path(os.sys.executable)),
+                    "-I",
+                    "-B",
+                    os.fspath(
+                        Path(__file__).resolve().with_name(
+                            "re_campaign_frozen_bootstrap.py"
+                        )
+                    ),
+                    "--campaign",
+                    os.fspath(out),
+                    "--mode",
+                    "full",
+                    "--expected-ready-sha256",
+                    campaign.coverage.sha256_of(out / "campaign.ready.json"),
+                    "--expected-reducer-id",
+                    receipt["reducer"]["id"],
+                ],
+                cwd=root,
+                env=environment,
+                capture_output=True,
+                text=True,
+                timeout=120,
+                check=False,
+            )
+
+        self.assertEqual(0, completed.returncode, completed.stderr)
+        self.assertIn("CAMPAIGN_VERIFIED", completed.stdout)
+
+    def test_current_manifest_uses_exact_pins_for_absent_lab_dependencies(
+        self,
+    ) -> None:
+        missing = Path(tempfile.gettempdir()) / "absent-aya-roundtrip.py"
+        with patch.object(
+            campaign,
+            "_reducer_sources",
+            return_value=[
+                (
+                    "aya-container-codec",
+                    "_reducer/local-lab/aya_roundtrip.py",
+                    missing,
+                )
+            ],
+        ):
+            manifest = campaign._current_reducer_manifest()
+
+        self.assertEqual(
+            [
+                {
+                    "role": "aya-container-codec",
+                    **campaign.PORTABLE_REDUCER_DEPENDENCY_STAMPS[
+                        "aya-container-codec"
+                    ],
+                }
+            ],
+            manifest["files"],
+        )
+        self.assertEqual(campaign._reducer_id(manifest["files"]), manifest["id"])
+
+    def test_receipt_bound_lineage_path_is_checkout_independent_and_fail_closed(
+        self,
+    ) -> None:
+        expected_relative = campaign.ATOMIC14_REDERIVED_FORMAL_READY_RELATIVE
+        recorded = Path("D:/independent-owner") / expected_relative
+        self.assertEqual(
+            Path(os.path.abspath(recorded)),
+            campaign._receipt_bound_repo_path(
+                str(recorded), expected_relative, "test lineage proof"
+            ),
+        )
+        with self.assertRaisesRegex(campaign.CampaignError, "exact repository-relative"):
+            campaign._receipt_bound_repo_path(
+                str(recorded.with_name("different.ready.json")),
+                expected_relative,
+                "test lineage proof",
+            )
+
+    def test_current_generation24_two_bare_verifies_are_tree_idempotent(
+        self,
+    ) -> None:
+        repo = Path(__file__).resolve().parent.parent
+        candidate = (
+            repo
+            / "local-lab/gen24-postnew34-20260813-v1"
+            / "candidate-current-postnew34-carry-portable-v5"
+        )
+        ready_path = candidate / "campaign.ready.json"
+        if not ready_path.is_file():
+            self.skipTest("maintainer-local portable Generation 24 candidate is absent")
+        ready = json.loads(ready_path.read_text(encoding="utf-8"))
+        self.assertEqual(24, ready.get("generation"))
+        self.assertEqual(campaign.CAMPAIGN_RESEED_KIND, ready.get("advance", {}).get("kind"))
+        self.assertEqual(
+            "74c2dfee06fcbf6ad538d155d91087b70c10e5b7c9ac507dac40cf3a00d599b4",
+            ready.get("sourceSnapshot", {}).get("coverageSetSha256"),
+        )
+        ready_sha256 = campaign.coverage.sha256_of(ready_path)
+        reducer_id = ready["reducer"]["id"]
+        environment = os.environ.copy()
+        for name in (
+            "BEA_LOCAL_LAB",
+            "BEA_REPO_ROOT",
+            "PYTHONDONTWRITEBYTECODE",
+            "PYTHONHOME",
+            "PYTHONPATH",
+            "PYTHONSTARTUP",
+            "PYTHONINSPECT",
+            "PYTHONUSERBASE",
+        ):
+            environment.pop(name, None)
+
+        def tree_state() -> tuple[set[str], dict[str, tuple[int, str]]]:
+            directories: set[str] = set()
+            files: dict[str, tuple[int, str]] = {}
+            for path in candidate.rglob("*"):
+                relative = path.relative_to(candidate).as_posix()
+                if path.is_dir():
+                    directories.add(relative)
+                elif path.is_file():
+                    files[relative] = (
+                        path.stat().st_size,
+                        hashlib.sha256(path.read_bytes()).hexdigest(),
+                    )
+            return directories, files
+
+        expected_tree = tree_state()
+        self.assertFalse(
+            any("__pycache__" in Path(path).parts for path in expected_tree[0])
+        )
+        self.assertFalse(any(path.endswith(".pyc") for path in expected_tree[1]))
+        bare_owner = [
+            os.fspath(Path(os.sys.executable)),
+            os.fspath(candidate / "_reducer/tools/re_campaign.py"),
+            "verify",
+            "--campaign",
+            os.fspath(candidate),
+        ]
+        with tempfile.TemporaryDirectory() as temporary:
+            for cwd in (repo, Path(temporary)):
+                completed = subprocess.run(
+                    bare_owner,
+                    cwd=cwd,
+                    env=environment,
+                    capture_output=True,
+                    text=True,
+                    timeout=300,
+                    check=False,
+                )
+                self.assertEqual(0, completed.returncode, completed.stderr)
+                self.assertIn("CAMPAIGN_VERIFIED", completed.stdout)
+                self.assertEqual(expected_tree, tree_state())
+
+            sealed_full = subprocess.run(
+                [
+                    os.fspath(Path(os.sys.executable)),
+                    "-I",
+                    "-B",
+                    os.fspath(
+                        candidate / "_reducer/tools/re_campaign_frozen_bootstrap.py"
+                    ),
+                    "--campaign",
+                    os.fspath(candidate),
+                    "--mode",
+                    "full",
+                    "--expected-ready-sha256",
+                    ready_sha256,
+                    "--expected-reducer-id",
+                    reducer_id,
+                ],
+                cwd=Path(temporary),
+                env=environment,
+                capture_output=True,
+                text=True,
+                timeout=300,
+                check=False,
+            )
+        self.assertEqual(0, sealed_full.returncode, sealed_full.stderr)
+        self.assertIn("CAMPAIGN_VERIFIED", sealed_full.stdout)
+        self.assertEqual(expected_tree, tree_state())
+
+    def test_reseed_retains_only_retired_relations_joined_to_live_successors(
+        self,
+    ) -> None:
+        old_joined = "TEXT_RESIDUAL:specimen:0x10-0x20"
+        old_stale = "TEXT_RESIDUAL:specimen:0x30-0x40"
+        live = "CODE:specimen:VA=0x10:RANGES=digest"
+        carried = {
+            "contracts": [
+                {"contractId": "C-joined", "entityKey": old_joined},
+                {"contractId": "C-stale", "entityKey": old_stale},
+                {"contractId": "C-live", "entityKey": live},
+            ],
+            "adjudications": [
+                {
+                    "adjudicationId": "A-joined",
+                    "baseContractId": "C-joined",
+                    "entityKey": old_joined,
+                    "questionIdsAddressed": "Q-parent",
+                    "successorQuestionIds": "Q-child",
+                },
+                {
+                    "adjudicationId": "A-stale",
+                    "baseContractId": "C-stale",
+                    "entityKey": old_stale,
+                    "questionIdsAddressed": "Q-stale",
+                    "successorQuestionIds": "",
+                },
+            ],
+            "supersessions": [
+                {"oldEntityKey": old_joined, "newEntityKey": live},
+            ],
+        }
+
+        adjudications, questions = campaign._retired_reseed_relation_closure(
+            carried,
+            {live},
+        )
+
+        self.assertEqual({"A-joined"}, adjudications)
+        self.assertEqual({"Q-parent", "Q-child"}, questions)
+
+    def test_reseed_retains_complete_question_provenance_for_a_live_progressed_contract(
+        self,
+    ) -> None:
+        live = "CODE:specimen:VA=0x10:RANGES=digest"
+        stale = "CODE:specimen:VA=0x20:RANGES=old"
+        fresh = {
+            "C-live": {"contractId": "C-live", "entityKey": live},
+        }
+        carried = [
+            {
+                "contractId": "C-live",
+                "entityKey": live,
+                "contractState": "CANDIDATE_NEEDS_REFUTER",
+                "semanticGrade": "C1_CANDIDATE_PARTIAL",
+                "authorVerdict": "SUPPORTED_BY_STATIC_EVIDENCE",
+                "runtimeVerdict": "UNSCORED",
+                "refuterVerdict": "UNSCORED",
+                "evidenceRefs": "proof#sha256=" + "a" * 64,
+                "rebuildState": "NOT_READY",
+                "rebuildOwner": "UNASSIGNED",
+                "rebuildImplementation": "UNMAPPED",
+                "parityTests": "UNMAPPED",
+                "supersedesEntityKeys": "",
+                "questionIds": "Q-identity;Q-contract",
+            },
+            {
+                "contractId": "C-stale",
+                "entityKey": stale,
+                "contractState": "CANDIDATE_NEEDS_REFUTER",
+                "semanticGrade": "C1_CANDIDATE_PARTIAL",
+                "questionIds": "Q-stale",
+            },
+        ]
+
+        self.assertEqual(
+            {"Q-identity", "Q-contract"},
+            campaign._progressed_contract_question_ids(
+                carried,
+                fresh,
+                {live, stale},
+            ),
+        )
+
     def test_reseed_does_not_treat_source_residual_classification_as_progress(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -1055,6 +1748,13 @@ class CampaignTests(unittest.TestCase):
 
             with self.assertRaisesRegex(campaign.CampaignError, "exact reviewed bridge"):
                 campaign._verify_frozen_v5_campaign_carry(fake)
+
+    def test_generation23_carry_bridge_refuses_any_unpinned_root(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            with self.assertRaisesRegex(
+                campaign.CampaignError, "exact canonical Generation 23"
+            ):
+                campaign._verify_generation23_campaign_carry(Path(temporary))
 
     def test_frozen_v5_bridge_rehashes_its_historical_reducer(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
