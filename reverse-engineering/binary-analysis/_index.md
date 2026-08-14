@@ -86,6 +86,10 @@ the document it links.
   — closes `0x005762dd..0x005763cd` as one exact 240-byte / 97-instruction
   function through seven byte-identical PC/Issue-7/Issue-11/US-retail copies;
   the compatibility label is not an original linker or C++ symbol
+- [PC/Xbox D3DX three-body current reconciliation](d3dx-gap-cohort-current-reconciliation-2026-08-14.md)
+  — reproduces three complete D3DX-compatible bodies across PC and Xbox,
+  settles one as already admitted, and leaves two exact 248-byte loose-code
+  boundaries outside the current 8,280-function census pending scratch review
 - [D3DX9 exact-public current-name corrections](d3dx9-exact-public-name-corrections-2026-08-13.md)
   — refutes 16 saved hypothesis names through full-body equality at the same
   official public symbol across pinned x86 D3DX9 releases 24 through 31; three
