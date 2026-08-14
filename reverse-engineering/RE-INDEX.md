@@ -196,6 +196,15 @@ replicas while preserving every field of all 8,201 PRE function rows. Its
 verdict is `SCRATCH_READY_LIVE_FORBIDDEN`: it does not itself change the saved
 structural census, Generation 23, semantic grades, or rebuild state.
 
+The follow-on
+[79-row live-promotion authority preparation](binary-analysis/external-table-gap-ghidra-live-promotion-preparation-2026-08-14.md)
+re-verifies that scratch receipt and independently hashes live plus tracked PRE
+to the same canonical 19-file project. It separates read-only preflight, live-
+phase adjudication with a durable exact-root tracked-still-PRE inspection after
+POST recovery, and final tracked/restore/projection sealing. Its verdict is
+`LIVE_AUTHORITY_CANDIDATE_READY_CEREMONY_NOT_RUN`; no live or tracked mutation
+has occurred under that preparation.
+
 **Dated PC demo/retail frontier (2026-08-12, 8,136-function population):** the conservative 8,086-entry
 address map plus exact second-pass reports, caller propagation, equal-delta
 body-union audit, whole-demo fingerprint scan, and terminal structural pass now

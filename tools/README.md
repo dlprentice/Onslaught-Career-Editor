@@ -155,10 +155,23 @@ verify refuses to pass without it.
 python -I -B tools\ghidra_external_table_gap_boundary_mutator_tests.py
 python -I -B tools\ghidra_external_table_gap_boundary_scratch_authority_tests.py
 python -I -B tools\ghidra_external_table_gap_boundary_scratch_authority.py verify
+python -I -B tools\ghidra_external_table_gap_boundary_live_authority_tests.py
 ```
 
 The resulting verdict is `SCRATCH_READY_LIVE_FORBIDDEN`; see the
 [scratch report](../reverse-engineering/binary-analysis/external-table-gap-ghidra-scratch-admission-2026-08-14.md).
+
+`ghidra_external_table_gap_boundary_live_authority.py` is the prospective
+read-only promotion gate. Its `preflight` mode reproduces the scratch authority
+and exact live/tracked PRE without creating the ceremony roots. After a
+separately authorized live write, `check-live` proves both fresh replicas, the
+single live save, exact semantic/collateral deltas, and PRE/POST recovery while
+requiring a create-new, exact-root inspection to prove tracked Ghidra remains
+PRE after POST recovery. Only a later separately authorized
+tracked refresh can satisfy `seal`; `verify` then reproduces the create-new
+portable aggregate receipt. The authority never launches Ghidra. The exact
+[preparation and runbook](../reverse-engineering/binary-analysis/external-table-gap-ghidra-live-promotion-preparation-2026-08-14.md)
+has verdict `LIVE_AUTHORITY_CANDIDATE_READY_CEREMONY_NOT_RUN`.
 
 PowerShell CDB/input/profile helpers are for controlled copied targets. They
 must preserve their explicit-arm, process-identity, and installed-game safety
