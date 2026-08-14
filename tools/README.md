@@ -187,6 +187,26 @@ See the
 and its
 [24-row evidence manifest](../reverse-engineering/binary-analysis/jpeg-ijg-callback-function-boundaries-2026-08-14.tsv).
 
+`re_pc_function_body_fragments.py` proves the exhaustive five-gap class inside
+five existing PC functions, including unique normalized demo twins and the
+deliberate 12-byte FEP NOP exclusion. `GhidraApplyFunctionFragmentRanges.java`
+can add only those exact body ranges and bounded disassembly on an isolated
+db.18613 copy; it creates no function and changes no metadata or data.
+`ghidra_function_fragment_range_scratch_authority.py` verifies the sealed
+two-replica package without opening Ghidra; its only write is a new contained
+receipt, and its policy remains `LIVE_FORBIDDEN`.
+
+```powershell
+python -I -B tools\re_pc_function_body_fragments_tests.py
+python -I -B tools\ghidra_function_fragment_range_mutator_tests.py
+python -I -B tools\ghidra_function_fragment_range_scratch_authority_tests.py
+```
+
+See the
+[scratch report](../reverse-engineering/binary-analysis/pc-function-body-fragment-ghidra-scratch-admission-2026-08-14.md)
+and exact
+[five-row manifest](../reverse-engineering/binary-analysis/pc-function-body-fragment-repairs-2026-08-14.tsv).
+
 `ghidra_external_table_gap_boundary_live_authority.py` is the completed
 read-only promotion authority. Its historical `preflight` mode proved the
 scratch authority and then-current live/tracked PRE before ceremony roots

@@ -224,6 +224,14 @@ and proves only a structural 8,304-function scratch result. Its verdict is
 `SCRATCH_READY_LIVE_FORBIDDEN`; the saved census, Generation 23, semantic
 grades, runtime contracts, and rebuild remain unchanged.
 
+The separate sealed
+[five-existing-function body-fragment scratch admission](binary-analysis/pc-function-body-fragment-ghidra-scratch-admission-2026-08-14.md)
+adds no functions or metadata. Two isolated db.18613 replicas reproduce the
+exact 1,258-byte ownership gain across five existing bodies, with four inserted
+gaps bridging prior range components and the FEP envelope's trailing 12 NOP
+bytes excluded. Its policy remains `LIVE_FORBIDDEN`; saved Ghidra, semantic
+grades, runtime contracts, and rebuild state are unchanged.
+
 **Dated PC demo/retail frontier (2026-08-12, 8,136-function population):** the conservative 8,086-entry
 address map plus exact second-pass reports, caller propagation, equal-delta
 body-union audit, whole-demo fingerprint scan, and terminal structural pass now

@@ -64,6 +64,10 @@ the document it links.
   — reproduces 24 exact IJG v6b algorithm bodies on two isolated current-state
   replicas, corrects the false `0x005B6900` boundary, preserves all 8,280 PRE
   rows exactly, and stops before live or tracked Ghidra promotion
+- [Five existing-function body-fragment scratch admission](pc-function-body-fragment-ghidra-scratch-admission-2026-08-14.md)
+  — reproduces five exact body-range repairs and a 1,258-byte ownership gain on
+  two isolated db.18613 replicas, excludes the FEP envelope's trailing 12 NOP
+  bytes, and keeps all live and tracked Ghidra mutation forbidden
 - [PC D3DX four-vector-cross helper boundary](d3dx-vec4cross-crossbuild-boundary-2026-08-13.md)
   — closes `0x005762dd..0x005763cd` as one exact 240-byte / 97-instruction
   function through seven byte-identical PC/Issue-7/Issue-11/US-retail copies;
