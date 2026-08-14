@@ -1073,6 +1073,40 @@ GENERATION23_CAMPAIGN_CARRY_COUNTS = {
     "adjudications": 6103,
     "supersessions": 592,
 }
+GENERATION24_CAMPAIGN_CARRY_RELATIVE = (
+    "local-lab/re-campaign-incident-recovery-20260808-v1/"
+    "generation-24-current-8280-reseed-e7aa-v1"
+)
+GENERATION24_CAMPAIGN_CARRY_ROOT = REPO_ROOT / GENERATION24_CAMPAIGN_CARRY_RELATIVE
+GENERATION24_CAMPAIGN_CARRY_READY_BYTES = 37503
+GENERATION24_CAMPAIGN_CARRY_READY_SHA256 = (
+    "29ac9d91136c88a651fe5bc2202ca14d9c3a8dc7bd733e1cb7396c4c32a39e86"
+)
+GENERATION24_CAMPAIGN_CARRY_REDUCER_ID = (
+    "6cf37430cf7ddace01088aa21a8732943e027f621b54fdf52c9be002dd284582"
+)
+GENERATION24_CAMPAIGN_CARRY_AUTHORITY_RELATIVE = (
+    "local-lab/re-campaign-incident-recovery-20260808-v1/"
+    "generation-24-current-8280-reseed-e7aa-authority.ready.json"
+)
+GENERATION24_CAMPAIGN_CARRY_AUTHORITY_BYTES = 13013
+GENERATION24_CAMPAIGN_CARRY_AUTHORITY_SHA256 = (
+    "5775658318ccebb8fb19955be4764556b7c598998f9610294a012b2b628833d1"
+)
+GENERATION24_CAMPAIGN_CARRY_COUNTS = {
+    "functions": 8280,
+    "residuals": 6124,
+    "questions": 15372,
+    "scenarios": 72,
+    "levers": 910,
+    "contracts": 14404,
+    "adjudications": 6020,
+    "supersessions": 592,
+}
+GENERATION24_HISTORICAL_PROJECTION_BYTES = 23336
+GENERATION24_HISTORICAL_PROJECTION_SHA256 = (
+    "4e57dd93e26d4706a4b49e3c6f11909a0abf57c43f061838c70896baf9ca8946"
+)
 GLOBAL_INIT515_CAMPAIGN_ROOT = FROZEN_V5_CAMPAIGN_CARRY_ROOT
 GLOBAL_INIT515_CAMPAIGN_OWNER_PATH = (
     GLOBAL_INIT515_CAMPAIGN_ROOT / "_reducer/tools/re_campaign.py"
@@ -1174,6 +1208,13 @@ def _reducer_sources() -> list[tuple[str, str, Path]]:
             "frozen-bootstrap",
             "_reducer/tools/re_campaign_frozen_bootstrap.py",
             Path(__file__).resolve().with_name("re_campaign_frozen_bootstrap.py"),
+        ),
+        (
+            "historical-source-projection",
+            "_reducer/tools/re_campaign_historical_source_projection_v2.py",
+            Path(__file__).resolve().with_name(
+                "re_campaign_historical_source_projection_v2.py"
+            ),
         ),
         (
             "coverage",
@@ -4681,6 +4722,197 @@ def _verify_generation23_campaign_carry(root: Path) -> dict:
     return verified
 
 
+def _verify_generation24_campaign_carry(root: Path) -> dict:
+    """Admit only the promoted Generation 24 authority as Generation 25 carry."""
+
+    raw = Path(os.path.abspath(root))
+    try:
+        resolved = ghidra_backup.resolve_plain_path(
+            raw, "canonical Generation 24 campaign carry", strict=True
+        )
+        canonical = ghidra_backup.resolve_plain_path(
+            GENERATION24_CAMPAIGN_CARRY_ROOT,
+            "configured canonical Generation 24 campaign carry",
+            strict=True,
+        )
+    except (ghidra_backup.BackupError, OSError) as exc:
+        raise CampaignError(
+            f"Generation 24 campaign carry path is not plain: {exc}"
+        ) from exc
+    if resolved != canonical:
+        raise CampaignError(
+            "campaign carry is not the exact canonical Generation 24 authority"
+        )
+
+    ready_path = resolved / "campaign.ready.json"
+    authority_path = REPO_ROOT / GENERATION24_CAMPAIGN_CARRY_AUTHORITY_RELATIVE
+    projection_path = Path(__file__).resolve().with_name(
+        "re_campaign_historical_source_projection_v2.py"
+    )
+    try:
+        plain_ready = ghidra_backup.resolve_plain_path(
+            ready_path, "Generation 24 campaign READY", strict=True
+        )
+        plain_authority = ghidra_backup.resolve_plain_path(
+            authority_path, "Generation 24 campaign authority", strict=True
+        )
+        plain_projection = ghidra_backup.resolve_plain_path(
+            projection_path, "Generation 24 historical-source replay", strict=True
+        )
+    except (ghidra_backup.BackupError, OSError) as exc:
+        raise CampaignError(
+            "campaign carry is not the exact canonical Generation 24 authority: "
+            f"evidence is not plain: {exc}"
+        ) from exc
+    if (
+        plain_ready.stat().st_nlink != 1
+        or plain_ready.stat().st_size != GENERATION24_CAMPAIGN_CARRY_READY_BYTES
+        or coverage.sha256_of(plain_ready)
+        != GENERATION24_CAMPAIGN_CARRY_READY_SHA256
+        or plain_authority.stat().st_nlink != 1
+        or plain_authority.stat().st_size
+        != GENERATION24_CAMPAIGN_CARRY_AUTHORITY_BYTES
+        or coverage.sha256_of(plain_authority)
+        != GENERATION24_CAMPAIGN_CARRY_AUTHORITY_SHA256
+        or plain_projection.stat().st_nlink != 1
+        or plain_projection.stat().st_size
+        != GENERATION24_HISTORICAL_PROJECTION_BYTES
+        or coverage.sha256_of(plain_projection)
+        != GENERATION24_HISTORICAL_PROJECTION_SHA256
+    ):
+        raise CampaignError(
+            "Generation 24 campaign READY, authority, or historical replay changed"
+        )
+
+    receipt = _runtime_json(plain_ready, "canonical Generation 24 campaign")
+    authority = _runtime_json(
+        plain_authority, "canonical Generation 24 campaign authority"
+    )
+    reducer = _runtime_mapping(
+        receipt.get("reducer"), "Generation 24 campaign reducer"
+    )
+    selected = _runtime_mapping(
+        authority.get("canonical"), "Generation 24 authority selection"
+    )
+    selection = _runtime_mapping(
+        authority.get("selectionRule"), "Generation 24 authority selection rule"
+    )
+    verification = _runtime_mapping(
+        authority.get("verification"), "Generation 24 authority verification"
+    )
+    canonical_replay = _runtime_mapping(
+        verification.get("canonicalLiteralPinnedFullReplay"),
+        "Generation 24 authority canonical replay",
+    )
+    determinism = _runtime_mapping(
+        authority.get("determinism"), "Generation 24 authority determinism"
+    )
+    specimen_sha = (
+        receipt.get("sourceSnapshot", {}).get("specimen", {}).get("sha256", "")
+    )
+    if (
+        receipt.get("schema") != SCHEMA
+        or _integer(receipt.get("generation"), -1) != 24
+        or receipt.get("counts") != GENERATION24_CAMPAIGN_CARRY_COUNTS
+        or specimen_sha.lower() != FROZEN_V5_CAMPAIGN_CARRY_SPECIMEN_SHA256
+        or reducer.get("id") != GENERATION24_CAMPAIGN_CARRY_REDUCER_ID
+        or authority.get("schema")
+        != "bea.re.generation24-current-8280-external-authority.v1"
+        or authority.get("verdict") != "READY"
+        or authority.get("authorityClass") != "FULL_REPLAY_CAMPAIGN_AUTHORITY"
+        or selected.get("absolutePath") != str(canonical)
+        or selected.get("ready", {}).get("bytes")
+        != GENERATION24_CAMPAIGN_CARRY_READY_BYTES
+        or selected.get("ready", {}).get("sha256")
+        != GENERATION24_CAMPAIGN_CARRY_READY_SHA256
+        or selected.get("reducerId") != GENERATION24_CAMPAIGN_CARRY_REDUCER_ID
+        or selected.get("generation") != 24
+        or authority.get("counts") != GENERATION24_CAMPAIGN_CARRY_COUNTS
+        or canonical_replay.get("exitCode") != 0
+        or canonical_replay.get("marker") != "CAMPAIGN_VERIFIED"
+        or determinism.get("allEightLedgersByteIdentical") is not True
+        or determinism.get("allFortyFourReducerFilesByteIdentical") is not True
+        or determinism.get("normalizedReadyReceiptsEqual") is not True
+        or selection.get("requiredAbsolutePath") != str(canonical)
+        or selection.get("requiredReducerId")
+        != GENERATION24_CAMPAIGN_CARRY_REDUCER_ID
+        or selection.get("requiredMode") != "FULL"
+    ):
+        raise CampaignError("canonical Generation 24 campaign identity is unsupported")
+
+    manifest = _validate_reducer_snapshot(resolved, receipt)
+    if manifest.get("id") != GENERATION24_CAMPAIGN_CARRY_REDUCER_ID:
+        raise CampaignError("Generation 24 campaign reducer identity changed")
+    for output_name in OUTPUTS:
+        output_stamp = _runtime_mapping(
+            receipt.get("outputs", {}).get(output_name),
+            f"Generation 24 campaign {output_name}",
+        )
+        actual_stamp = _require_file_stamp(
+            resolved / output_name,
+            output_stamp,
+            f"Generation 24 campaign {output_name}",
+        )
+        authority_stamp = _runtime_mapping(
+            authority.get("outputs", {}).get(output_name),
+            f"Generation 24 authority {output_name}",
+        )
+        if any(
+            authority_stamp.get(field) != actual_stamp.get(field)
+            for field in ("bytes", "sha256")
+        ):
+            raise CampaignError(
+                f"Generation 24 authority output differs: {output_name}"
+            )
+
+    environment = os.environ.copy()
+    environment["BEA_REPO_ROOT"] = str(REPO_ROOT.resolve())
+    environment["PYTHONDONTWRITEBYTECODE"] = "1"
+    try:
+        completed = subprocess.run(
+            [
+                sys.executable,
+                "-I",
+                "-B",
+                str(plain_projection),
+                "--campaign",
+                str(resolved),
+                "--mode",
+                "full",
+                "--expected-ready-sha256",
+                GENERATION24_CAMPAIGN_CARRY_READY_SHA256,
+                "--expected-reducer-id",
+                GENERATION24_CAMPAIGN_CARRY_REDUCER_ID,
+                "--check-current",
+            ],
+            cwd=REPO_ROOT,
+            env=environment,
+            capture_output=True,
+            text=True,
+            timeout=900,
+            check=False,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise CampaignError("Generation 24 projected full replay timed out") from exc
+    if (
+        completed.returncode != 0
+        or "CAMPAIGN_VERIFIED" not in completed.stdout
+        or "HISTORICAL_SOURCE_PROJECTION_V2_PASS" not in completed.stdout
+    ):
+        raise CampaignError(
+            "Generation 24 campaign failed its projected frozen full replay: "
+            f"exit={completed.returncode} stderr={completed.stderr.strip()!r}"
+        )
+    rows = _campaign_rows_from_root(resolved)
+    if {name: len(value) for name, value in rows.items()} != receipt.get("counts"):
+        raise CampaignError("Generation 24 campaign rows disagree with READY")
+    verified = dict(receipt)
+    verified["_carryBridge"] = (
+        "EXACT_LITERAL_PINNED_PROJECTED_FULL_REPLAY_GENERATION24"
+    )
+    return verified
+
+
 def _verify_campaign_carry_source(root: Path) -> dict:
     try:
         raw = json.loads((root / "campaign.ready.json").read_text(encoding="utf-8"))
@@ -4699,6 +4931,8 @@ def _verify_campaign_carry_source(root: Path) -> dict:
         and reducer.get("id") == GENERATION23_CAMPAIGN_CARRY_REDUCER_ID
     ):
         return _verify_generation23_campaign_carry(root)
+    if raw.get("schema") == SCHEMA and _integer(raw.get("generation"), -1) == 24:
+        return _verify_generation24_campaign_carry(root)
     if raw.get("schema") == SCHEMA:
         return verify(root)
     if raw.get("schema") == LEGACY_CAMPAIGN_SCHEMA:

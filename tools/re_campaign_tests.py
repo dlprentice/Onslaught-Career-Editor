@@ -1895,6 +1895,55 @@ class CampaignTests(unittest.TestCase):
             ):
                 campaign._verify_generation23_campaign_carry(Path(temporary))
 
+    def test_generation24_carry_bridge_refuses_any_unpinned_root(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            with self.assertRaisesRegex(
+                campaign.CampaignError, "exact canonical Generation 24"
+            ):
+                campaign._verify_generation24_campaign_carry(Path(temporary))
+
+    def test_generation24_carry_dispatch_uses_literal_bridge(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / "campaign.ready.json").write_text(
+                json.dumps(
+                    {
+                        "schema": campaign.SCHEMA,
+                        "generation": 24,
+                        "reducer": {"id": "not-the-canonical-reducer"},
+                    }
+                ),
+                encoding="utf-8",
+            )
+            expected = {"generation": 24, "_carryBridge": "test"}
+            with patch.object(
+                campaign,
+                "_verify_generation24_campaign_carry",
+                return_value=expected,
+            ) as bridge:
+                self.assertEqual(expected, campaign._verify_campaign_carry_source(root))
+            bridge.assert_called_once_with(root)
+
+    def test_current_generation24_literal_carry_bridge_replays(self) -> None:
+        ready = campaign.GENERATION24_CAMPAIGN_CARRY_ROOT / "campaign.ready.json"
+        authority = (
+            campaign.REPO_ROOT
+            / campaign.GENERATION24_CAMPAIGN_CARRY_AUTHORITY_RELATIVE
+        )
+        if not ready.is_file() or not authority.is_file():
+            self.skipTest("maintainer-local Generation 24 authority is absent")
+
+        verified = campaign._verify_generation24_campaign_carry(
+            campaign.GENERATION24_CAMPAIGN_CARRY_ROOT
+        )
+
+        self.assertEqual(24, verified["generation"])
+        self.assertEqual(campaign.GENERATION24_CAMPAIGN_CARRY_COUNTS, verified["counts"])
+        self.assertEqual(
+            "EXACT_LITERAL_PINNED_PROJECTED_FULL_REPLAY_GENERATION24",
+            verified["_carryBridge"],
+        )
+
     def test_frozen_v5_bridge_rehashes_its_historical_reducer(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

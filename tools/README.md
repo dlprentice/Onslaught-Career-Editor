@@ -101,6 +101,11 @@ frozen verifier in memory. Both `Path.open` and built-in file reads are covered,
 including recursive parent replays; writes to projected paths are refused. The
 launcher does not repin or modify Generation 24, and its focused test exercises
 the retained full replay when the machine-local campaign evidence is present.
+`re_campaign.py` admits that campaign as Generation 25 carry only from the
+literal canonical path, READY, external authority selector, reducer, outputs,
+and counts. The carry gate invokes the same projected full replay with current
+focused rebuild checks; a replica, moved root, changed selector, or generic
+Generation 24 bundle is refused.
 
 ## Ghidra and runtime research
 
