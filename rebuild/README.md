@@ -210,9 +210,21 @@ look—is part of the trace. Walker acceleration is projected through the body's
 continuous deterministic yaw; only jet movement retains the older eight-way
 approximation.
 
+The walker now consumes the shipped Aquila configuration's exact `1.0/75`
+yaw-input gain instead of the older fitted `1.7/75` value. Terrain touchdown
+also consumes the pinned-source and pristine-PC-static Battle Engine contract:
+retail `CBattleEngine::DeclareOnGround` at `0x0040C750` has the same strict
+walker/non-walker speed thresholds, dash self-damage immunity, incidence-squared
+shield-bypassing damage and whole-velocity retention, plus the low-speed jet's
+`0.90` retention. Core evaluates that contact against its deterministic Level
+100 HFLD normal. Runtime outcome/quantization parity, object-supported contact,
+and the separate generic vertical bounce remain open; see
+[`PROVENANCE.md`](PROVENANCE.md) and delta D20 rather than treating the source
+port or static identity as runtime proof.
+
 Repeated Level 100 retail observations now inform walker acceleration, equal
 forward/strafe speed, frictional coast, and inertial body turning. Walker-to-jet
-remains an explicit transition for 16 Core ticks before Jet mode commits;
+remains an explicit transition for 10 Core ticks before Jet mode commits;
 repeated transform input, movement, turning, and fire are blocked during that
 state, but clean Level 100 keeps the flight gate closed throughout the current
 slice. A separate clean control and two early-flight copied-runtime repetitions

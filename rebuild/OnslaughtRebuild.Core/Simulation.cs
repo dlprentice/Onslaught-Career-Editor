@@ -1,9 +1,17 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+using System.Numerics;
+
 namespace OnslaughtRebuild.Core;
 
 public sealed class Simulation
 {
+    internal readonly record struct TerrainGroundImpactResponse(
+        int SpeedMillimetersPerTick,
+        bool DamageThresholdCrossed,
+        int DamageMilliLife,
+        SimVector3 Velocity);
+
     private sealed class MutableProjectile
     {
         // Rounds are deterministic ammunition state, not script actors. They
@@ -149,6 +157,45 @@ public sealed class Simulation
             actor => actor.Trigger == trigger);
         _level100Actors.SetObjective(zone.ActorId, true);
         _level100Actors.Activate(zone.ActorId);
+    }
+
+    /// <summary>
+    /// Causal-probe seam for one terrain touchdown. It places the released
+    /// Level 100 player in an airborne walker pose; the next normal
+    /// <see cref="Step"/> still owns gravity, terrain sampling, contact,
+    /// damage, velocity response, events, and actor-state synchronization.
+    /// </summary>
+    /// <remarks>
+    /// No shipped path calls this. Tests use it only to make the production
+    /// <c>CommitFlightMovement</c> contact edge repeatable without first
+    /// navigating the tutorial's flight gate.
+    /// </remarks>
+    internal void SetAirborneWalkerContactStateForMeasurement(
+        SimVector3 position,
+        SimVector3 velocity,
+        int dashTicksRemaining = 0)
+    {
+        if (dashTicksRemaining < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(dashTicksRemaining));
+        }
+
+        _mode = VehicleMode.Walker;
+        _transition = VehicleTransition.None;
+        _transformTicksRemaining = 0;
+        _playerGroundElevationMillimeters =
+            Level100Terrain.Instance.SampleGroundElevationMillimeters(
+                new SimVector2(position.X, position.Z));
+        _playerGroundDeltaMillimeters = 0;
+        _playerOnGround = false;
+        _playerInWater = false;
+        _ticksSinceGroundContact = 1;
+        _walkerDashTicksRemaining = dashTicksRemaining;
+        CommitLevel100PlayerPose(
+            new SimVector2(position.X, position.Z),
+            position.Y,
+            new SimVector2(velocity.X, velocity.Z),
+            velocity.Y);
     }
 
     /// <summary>
@@ -2266,6 +2313,121 @@ public sealed class Simulation
             ((long)y * y) +
             ((long)z * z));
 
+    /// <summary>
+    /// The source and pristine-PC-static <c>CBattleEngine::DeclareOnGround</c>
+    /// response in Core's integer units. This is deliberately separate from
+    /// the actor's later generic vertical bounce.
+    /// </summary>
+    internal static TerrainGroundImpactResponse ResolveTerrainGroundImpact(
+        bool isWalkerState,
+        bool isJetState,
+        bool walkerDashActive,
+        SimVector3 velocity,
+        SimVector2 groundGradientPermille)
+    {
+        if (isWalkerState && isJetState)
+        {
+            throw new ArgumentException(
+                "A ground impact cannot be in pure walker and pure jet state simultaneously.");
+        }
+
+        long velocitySquared =
+            ((long)velocity.X * velocity.X) +
+            ((long)velocity.Y * velocity.Y) +
+            ((long)velocity.Z * velocity.Z);
+        int speed = IntegerSquareRoot(velocitySquared);
+
+        // BattleEngine.cpp:2966-2973 returns before either damage or velocity
+        // response while the walker dash counter is nonzero.
+        if (isWalkerState && walkerDashActive)
+        {
+            return new TerrainGroundImpactResponse(
+                speed,
+                DamageThresholdCrossed: false,
+                DamageMilliLife: 0,
+                velocity);
+        }
+
+        int threshold = isWalkerState
+            ? SimulationConstants.WalkerGroundImpactThresholdPerTick
+            : SimulationConstants.JetGroundImpactThresholdPerTick;
+        if (velocitySquared <= (long)threshold * threshold)
+        {
+            SimVector3 retainedVelocity = isJetState
+                ? new SimVector3(
+                    Retain(
+                        velocity.X,
+                        SimulationConstants.JetLowSpeedGroundContactRetentionNumerator,
+                        SimulationConstants.GroundContactRetentionDenominator),
+                    Retain(
+                        velocity.Y,
+                        SimulationConstants.JetLowSpeedGroundContactRetentionNumerator,
+                        SimulationConstants.GroundContactRetentionDenominator),
+                    Retain(
+                        velocity.Z,
+                        SimulationConstants.JetLowSpeedGroundContactRetentionNumerator,
+                        SimulationConstants.GroundContactRetentionDenominator))
+                : velocity;
+            return new TerrainGroundImpactResponse(
+                speed,
+                DamageThresholdCrossed: false,
+                DamageMilliLife: 0,
+                retainedVelocity);
+        }
+
+        // Core Y is up. For height y=h(x,z), (-dh/dx,1,-dh/dz) is the matching
+        // normal. The source squares the normalized dot, so normal orientation
+        // itself is immaterial. BigInteger keeps this one rare contact ratio
+        // exact until the deterministic one-part-per-million quantization; a
+        // steep HFLD normal can overflow dot^2 * scale in Int64.
+        long normalX = -groundGradientPermille.X;
+        const long normalY = 1_000;
+        long normalZ = -groundGradientPermille.Z;
+        long normalSquared =
+            (normalX * normalX) +
+            (normalY * normalY) +
+            (normalZ * normalZ);
+        long normalDotVelocity =
+            (normalX * velocity.X) +
+            (normalY * velocity.Y) +
+            (normalZ * velocity.Z);
+        BigInteger incidenceNumerator =
+            (BigInteger)normalDotVelocity * normalDotVelocity *
+            SimulationConstants.GroundImpactIncidenceScale;
+        BigInteger incidenceDenominator =
+            (BigInteger)normalSquared * velocitySquared;
+        int incidenceSquaredPermillion = Math.Clamp(
+            (int)((incidenceNumerator + (incidenceDenominator / 2)) /
+                incidenceDenominator),
+            0,
+            SimulationConstants.GroundImpactIncidenceScale);
+        int retainedPermillion =
+            SimulationConstants.GroundImpactIncidenceScale -
+            incidenceSquaredPermillion;
+        int damageMilliLife = checked((int)DivideRoundNearest(
+            (long)speed * SimulationConstants.GroundImpactDamageMultiplier *
+                incidenceSquaredPermillion,
+            SimulationConstants.GroundImpactIncidenceScale));
+        var retained = new SimVector3(
+            Retain(
+                velocity.X,
+                retainedPermillion,
+                SimulationConstants.GroundImpactIncidenceScale),
+            Retain(
+                velocity.Y,
+                retainedPermillion,
+                SimulationConstants.GroundImpactIncidenceScale),
+            Retain(
+                velocity.Z,
+                retainedPermillion,
+                SimulationConstants.GroundImpactIncidenceScale));
+        return new TerrainGroundImpactResponse(
+            speed,
+            DamageThresholdCrossed: true,
+            damageMilliLife,
+            retained);
+    }
+
     internal static int SampleTerrainPitchMicroRad(
         SimVector2 position,
         int yawMicroRad)
@@ -2592,21 +2754,32 @@ public sealed class Simulation
         {
             if (!wasOnGround)
             {
-                _groundImpactSpeedMillimetersPerTick = Magnitude3D(
-                    velocityX,
-                    verticalVelocity,
-                    velocityZ);
-                int damagingThreshold =
-                    _mode == VehicleMode.Walker &&
-                    _transition == VehicleTransition.None
-                        ? SimulationConstants.WalkerGroundImpactThresholdPerTick
-                        : SimulationConstants.JetGroundImpactThresholdPerTick;
-                if (_groundImpactSpeedMillimetersPerTick > damagingThreshold)
+                TerrainGroundImpactResponse response = ResolveTerrainGroundImpact(
+                    isWalkerState: _mode == VehicleMode.Walker &&
+                        _transition == VehicleTransition.None,
+                    isJetState: _mode == VehicleMode.Jet &&
+                        _transition == VehicleTransition.None,
+                    walkerDashActive: _walkerDashTicksRemaining != 0,
+                    new SimVector3(velocityX, verticalVelocity, velocityZ),
+                    Level100Terrain.Instance.SampleGroundGradientPermille(nextPosition));
+                _groundImpactSpeedMillimetersPerTick =
+                    response.SpeedMillimetersPerTick;
+                velocityX = response.Velocity.X;
+                verticalVelocity = response.Velocity.Y;
+                velocityZ = response.Velocity.Z;
+                if (response.DamageThresholdCrossed)
                 {
-                    // The released threshold and contact speed are known, but
-                    // the float damage-to-current-hull translation is not.
                     EmitFlightEvent(
                         AquilaFlightEvents.GroundImpactDamageThresholdCrossed);
+                }
+                if (response.DamageMilliLife > 0 &&
+                    ApplyLevel100PlayerDamage(
+                        response.DamageMilliLife,
+                        damageShields: false,
+                        Level100PlayerDamageSource.GroundImpact,
+                        out bool impactRequestsDeath))
+                {
+                    CompleteLevel100PlayerDamageDeath(impactRequestsDeath);
                 }
             }
 

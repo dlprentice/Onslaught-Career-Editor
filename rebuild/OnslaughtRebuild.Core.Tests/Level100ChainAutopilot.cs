@@ -1453,7 +1453,7 @@ internal sealed class Level100ChainAutopilot
         }
 
         double yawError = YawErrorTo(state, position.X, position.Z);
-        short lookX = LookAxis(yawError, 2_000);
+        short lookX = WalkerLookAxis(yawError);
         double pitchError = -(state.FacingPitchMicroRad / 1_000_000d);
         short lookY = LookAxis(pitchError, 4_000);
 
@@ -1662,7 +1662,7 @@ internal sealed class Level100ChainAutopilot
         double horizontal = Horizontal(state, aim);
 
         double yawError = YawErrorTo(state, aim.X, aim.Z);
-        short lookX = LookAxis(yawError, 2_000);
+        short lookX = WalkerLookAxis(yawError);
         double pitchError = PitchErrorTo(state, aim, horizontal);
         short lookY = LookAxis(pitchError, 4_000);
 
@@ -2161,9 +2161,21 @@ internal sealed class Level100ChainAutopilot
         if (!overWater && missile is not null)
         {
             double bearing = BearingTo(state, missile.PositionMillimeters);
-            double beam = bearing + (_crabDirection * Math.PI / 2);
-            double beamError =
-                NormalizeRadians(beam - (state.FacingYawMicroRad / 1_000_000d));
+            double facingYaw = state.FacingYawMicroRad / 1_000_000d;
+            // Either perpendicular puts the player outside the seeker's
+            // 45-degree lock cone. Choose the one the nose can reach first;
+            // tying every break to the current crab side made an ordinary
+            // evasive turn needlessly take the long way round after the shipped
+            // walker-yaw correction changed the phase at which the cold career
+            // entered this fight.
+            double clockwiseBeamError =
+                NormalizeRadians(bearing + (Math.PI / 2) - facingYaw);
+            double counterClockwiseBeamError =
+                NormalizeRadians(bearing - (Math.PI / 2) - facingYaw);
+            double beamError = Math.Abs(clockwiseBeamError) <=
+                Math.Abs(counterClockwiseBeamError)
+                    ? clockwiseBeamError
+                    : counterClockwiseBeamError;
             short breakLookX = RateCommand(
                 WaveTwoYawLambda * beamError * 1_000_000d,
                 state.WalkerYawVelocityMicroRadPerTick,
@@ -3047,11 +3059,14 @@ internal sealed class Level100ChainAutopilot
     /// The stick position that turns the airframe at <c>error * gain</c> of its
     /// full rate.
     ///
-    /// <para><b>The gain is a rate gain, not a stick gain, and the distinction
-    /// became load-bearing when Core stopped being linear.</b> Every call site
-    /// below chooses its gain by asking how fast the nose should sweep for a
-    /// given aim error - 2,000 per radian in yaw, 4,000 in pitch, both tuned
-    /// against measured convergence. Retail curves the axis
+    /// <para><b>The gain is a response gain, not a raw stick gain, and the
+    /// distinction became load-bearing when Core stopped being linear.</b> The
+    /// jet and pitch call sites choose it by asking how strongly the nose should
+    /// accelerate for a given aim error - 2,000 response permille per radian in
+    /// yaw, 4,000 in pitch, both tuned against measured convergence. The ground
+    /// yaw path uses <see cref="WalkerLookAxis"/> to state the same pre-existing
+    /// controller in plant units, so the shipped full-scale correction does not
+    /// silently retune the harness. Retail curves the axis
     /// (<c>references/Onslaught/Player.cpp:334-355</c>, ported to
     /// <see cref="LookAxisResponse"/>) and the curve is compressive, so handing
     /// that number straight to <see cref="SimInput"/> asks for a rate and gets
@@ -3069,6 +3084,24 @@ internal sealed class Level100ChainAutopilot
     /// </summary>
     private static short LookAxis(double error, double gain) =>
         LookAxisCommand.ForResponsePermille((int)(error * gain));
+
+    /// <summary>
+    /// Preserves the ground driver's pre-existing tuned yaw-velocity-increment gain after
+    /// Core adopted the shipped Aquila yaw authority. The old 2,000 response
+    /// permille/radian controller acted through a 22,667 µrad/tick full-scale
+    /// increment, so its physical gain was 45,334 µrad/tick² per radian. State
+    /// this in plant units and divide by the current evidenced full scale: the
+    /// driver still uses ordinary look input, while a correction to the plant
+    /// constant no longer silently retunes the test harness.
+    /// </summary>
+    private static short WalkerLookAxis(double error)
+    {
+        const double angularAccelerationGain = 45_334d;
+        int responsePermille = (int)(
+            error * angularAccelerationGain * 1_000d /
+            SimulationConstants.WalkerYawInputMicroRadPerTick);
+        return LookAxisCommand.ForResponsePermille(responsePermille);
+    }
 
     private static double NormalizeRadians(double value)
     {

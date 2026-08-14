@@ -153,8 +153,8 @@ public sealed class Level100ColdStartTests
     /// all six second-wave drones, never takes the sub-40 % hull abort, completes
     /// primary objective 4, and reaches <see cref="Level100MissionOutcome.Won"/>
     /// through <c>event("Reached Target Zone 4")</c>. The measured current run
-    /// wins at t9899 with 14,163 hull. The unquantised direct-Core control also
-    /// clears all 22 and wins, at t8636 with 9,800 hull.</para>
+    /// wins at t9303 with 14,594 hull. The unquantised direct-Core control also
+    /// clears all 22 and wins, at t8039 with 4,929 hull.</para>
     ///
     /// <para>This supersedes the 2026-08-01 two-kill/abort trajectory. That
     /// earlier branch was real for the then-current direct-hull shortcut, but

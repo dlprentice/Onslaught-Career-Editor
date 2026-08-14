@@ -492,6 +492,7 @@ public enum Level100PlayerDamageSource : byte
     ExternalFact = 1,
     ActorRound = 2,
     WaterSkim = 3,
+    GroundImpact = 4,
 }
 
 /// <summary>

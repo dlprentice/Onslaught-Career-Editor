@@ -419,6 +419,15 @@ public static class SimulationConstants
     // shipped floats verbatim.
     public const int JetGroundImpactThresholdPerTick = 200;
     public const int WalkerGroundImpactThresholdPerTick = 400;
+    // CBattleEngine::DeclareOnGround: damaging contact applies
+    // speed*16*cos(surface)^2 life with shield damage disabled, then retains
+    // the whole velocity by 1-cos(surface)^2. A non-damaging jet contact
+    // instead retains exactly 0.90; non-damaging walker and morph contacts are
+    // unchanged by this override.
+    public const int GroundImpactDamageMultiplier = 16;
+    public const int GroundImpactIncidenceScale = 1_000_000;
+    public const int JetLowSpeedGroundContactRetentionNumerator = 900_000;
+    public const int GroundContactRetentionDenominator = 1_000_000;
     // DeclareInWater starts the failure path once the centre is within 0.2
     // retail units of the water plane.
     public const int WaterFailureClearanceMillimeters = 200;
@@ -432,9 +441,8 @@ public static class SimulationConstants
     // at that rate, so the retention is the shipped 0.8 verbatim; it was
     // 861_774, i.e. 0.8^(2/3).
     //
-    // THE INPUT IS NOT A VERBATIM RETAIL VALUE AND IS FLAGGED AS SUCH.
-    // 22_667 is the behaviour-preserving R3 conversion of the previous 10_444
-    // (x2.170337 = 22_666.9). It corresponds to
+    // The earlier 22_667 was the behaviour-preserving R3 conversion of the
+    // previous 10_444 (x2.170337 = 22_666.9). It corresponded to
     // `vx * mGroundTurnRate / 75.0f` (BattleEngineWalkerPart.cpp:349) with
     // mGroundTurnRate = 1.7. MEASURED 2026-07-31, that byte is 1.0, not 1.7:
     // record 3 "Aquila Prototype" @0x2F6 of data/battle engine
@@ -442,13 +450,9 @@ public static class SimulationConstants
     // 8bd8a86696714d94454a, 1,514 bytes, decoded whole, zero slack, alignment
     // proven against the seven already-cited fields of the same record) reads
     // 1.0 / 0x3F800000. The shipped input is therefore 1.0/75 = 13_333
-    // micro-rad per retail tick and Core's walker turns 1.7x too fast.
-    //
-    // NOT CORRECTED HERE, deliberately. 1.7x on the yaw rate is a behaviour
-    // change of a different kind from a rate conversion, and folding it into
-    // the migration would make every moved golden unattributable. It is filed
-    // as a follow-up with the byte evidence above.
-    public const int WalkerYawInputMicroRadPerTick = 22_667;
+    // micro-rad per retail tick. Core now consumes that released record rather
+    // than the superseded fitted rate.
+    public const int WalkerYawInputMicroRadPerTick = 13_333;
     public const int WalkerYawRetentionNumerator = 800_000;
     public const int WalkerYawRetentionDenominator = 1_000_000;
     // Steam injects 1/117 rad per 20 Hz update

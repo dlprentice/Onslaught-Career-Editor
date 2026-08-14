@@ -292,12 +292,13 @@ public sealed class Level100FullChainTests
     /// then. <c>LevelWon()</c> is called by the released
     /// <c>event("Reached Target Zone 4")</c> and by nothing else.</para>
     ///
-    /// <para><b>Current measured branch, 2026-08-13.</b> With actor impacts
+    /// <para><b>Current measured branch, 2026-08-14.</b> With actor impacts
     /// routed through the released shield/damage funnel and walker recharge
-    /// gated by the pristine 0.3-second ground-contact comparison, beat 9
-    /// destroys all six wave-2 drones. The sub-40 % emergency poll never posts
+    /// gated by the pristine 0.3-second ground-contact comparison, and with the
+    /// Aquila's shipped 1/75-radian walker yaw authority, beat 9 destroys all six
+    /// wave-2 drones. The sub-40 % emergency poll never posts
     /// <c>Abort Airborne Drones</c>; objective 4 completes normally, and the run
-    /// reaches <c>Won</c> at t6855 with 15,868 milli-life. The prior abort-path
+    /// reaches <c>Won</c> at t7548 with 17,200 milli-life. The prior abort-path
     /// trajectories remain dated evidence in the local-lab reports, not the
     /// active expectation of this test.</para>
     /// </summary>
@@ -386,8 +387,8 @@ public sealed class Level100FullChainTests
             Level100PrimaryObjectiveStatus.Complete,
             final.Level100Mission.PrimaryObjectives
                 .Single(objective => objective.Objective == 4).Status);
-        Assert.Equal(6_855, final.Tick);
-        Assert.Equal(15_868, final.Hull);
+        Assert.Equal(7_548, final.Tick);
+        Assert.Equal(17_200, final.Hull);
     }
 
     /// <summary>

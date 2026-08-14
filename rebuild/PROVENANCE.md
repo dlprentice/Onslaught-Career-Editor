@@ -482,11 +482,44 @@ One clean Level 100 control and two fresh repeated copies establish the walker
 translation and body-turn loop: equal forward/strafe acceleration, a 3.0-unit/s
 cap, `0.7` per-retail-update coast, yaw-velocity accumulation, and `0.8`
 retention. Core runs at that same 20 Hz, so those responses transfer without a
-rate conversion. The same control/repeat discipline maps raw states
+rate conversion. The shipped `Aquila Prototype` configuration record independently
+stores `mGroundTurnRate = 1.0` (`0x3F800000`) at record offset `0x2F6` in
+`battle engine configurations.dat`, SHA-256
+`58722b12a04cae97ad2163acb2cc2c1699f95a0688318bd8a86696714d94454a`.
+Joined to pinned `BattleEngineWalkerPart.cpp:347-350`, that makes full walker
+yaw input `1/75` radian, or `13,333` integer micro-radians per 20 Hz update. Core
+therefore no longer uses the superseded fitted `1.7/75` gain that made turning
+1.7 times too fast. The same control/repeat discipline maps raw states
 `2 → 1 → 3` to a walker-to-jet transition, which is now the shipped
 `BATTLE_ENGINE_TRANSFORM_TIME 0.5 f` × `GAME_FR 20` = 10 ticks rather than the
 16 the 30 Hz Core fitted to a measured 535–537 ms window. Jet forward speed and energy drain retain
 earlier bounded measurements.
+
+Pinned `BattleEngine.cpp:2949-2995` and pristine PC retail
+`CBattleEngine::DeclareOnGround` at `0x0040C750-0x0040C983` establish the bounded
+terrain-touchdown algorithm now consumed by Core. The retail body is the primary
+vtable's slot 68, has a normalized-identical PC-demo twin, and carries the same
+branches and literal bytes: `0.2` at `0x005D8604`, `0.4` at `0x005D8C40`, `16.0`
+at `0x005D8BC0`, and `0.90` at `0x005D8BB0`. The resulting contract is a strict
+speed threshold of `0.4` released units/update in walker state and `0.2`
+otherwise; a nonzero walker dash counter returns before self-damage and the
+specialized velocity response; damaging contact applies
+`speed * 16 * cos(surface)^2` life through the four-argument virtual Damage call
+with null source and false shield flag, then retains the complete velocity by
+`1-cos(surface)^2`; and a non-damaging jet contact retains `0.90` while a
+non-damaging walker or morph contact does not alter velocity in this override.
+The static identity/shape receipt is
+[`../reverse-engineering/binary-analysis/cbattleengine-vtable-semantics-2026-08-11.md`](../reverse-engineering/binary-analysis/cbattleengine-vtable-semantics-2026-08-11.md),
+whose machine-readable table has SHA-256
+`1bf959a26bc390b8b6d3dfb44eef543b64d2d93839dfc5efe2356314fc429e4e`.
+Millimetres-to-released-units and released-life-to-milli-life cancel, as in the
+existing water-skim mapping. Core uses its retained HFLD gradient for the normal
+and deterministically quantizes the squared incidence to one part per million.
+This bounded algorithm is therefore **SOURCE + RETAIL-STATIC**, not source-only.
+Runtime path frequency, observed hull/effect outcomes, and parity of Core's
+integer normal/incidence quantization remain open. Object-supported contact, the
+dying branch, and the actor's separate generic post-declaration vertical bounce
+are outside this bounded port.
 
 A later clean control and two fresh copies with only the proven Level 100
 early-flight byte change isolated the corresponding presentation. Transform was

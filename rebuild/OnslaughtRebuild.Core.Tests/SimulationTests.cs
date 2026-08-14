@@ -39,7 +39,7 @@ public sealed class SimulationTests
         }
 
         WorldSnapshot looked = simulation.Step(new SimInput(0, 0, LookX: 1));
-        Assert.Equal(9_067, looked.WalkerYawVelocityMicroRadPerTick);
+        Assert.Equal(5_333, looked.WalkerYawVelocityMicroRadPerTick);
 
         WorldSnapshot zoomingOut = simulation.Step(
             new SimInput(0, 0, SimActions.ZoomOut));
@@ -446,15 +446,15 @@ public sealed class SimulationTests
         Simulation simulation = CreatePlayingSimulation();
 
         foreach (int expected in
-                 new[] { 22_667, 40_800, 55_307, 66_912, 76_196 })
+                 new[] { 13_333, 23_999, 32_532, 39_358, 44_819 })
         {
             WorldSnapshot state = simulation.Step(new SimInput(0, 0, LookX: 1));
             Assert.Equal(expected, state.WalkerYawVelocityMicroRadPerTick);
         }
 
         WorldSnapshot coast = simulation.Step(SimInput.Idle);
-        Assert.Equal(60_956, coast.WalkerYawVelocityMicroRadPerTick);
-        Assert.Equal(832_668, coast.FacingYawMicroRad);
+        Assert.Equal(35_855, coast.WalkerYawVelocityMicroRadPerTick);
+        Assert.Equal(699_726, coast.FacingYawMicroRad);
     }
 
     /// <summary>
@@ -725,12 +725,12 @@ public sealed class SimulationTests
 
         WorldSnapshot state = simulation.Step(new SimInput(0, 1));
         Assert.Equal(1, state.FacingX);
-        Assert.Equal(0, state.FacingZ);
-        // 1,640,433 against the 30 Hz 1,635,706 - 4.7 milliradians over the same
-        // two-thirds of a second, which is the integer quantum of the reconverted
-        // impulse and not a change in the turn rate.
-        Assert.Equal(1_640_433, state.FacingYawMicroRad);
-        Assert.Equal(new SimVector2(-70, -5), state.PlayerVelocity);
+        Assert.Equal(1, state.FacingZ);
+        // The shipped Aquila record's 1.0 GroundTurnRate leaves the same
+        // continuous inertial yaw owner in place; only the superseded fitted
+        // 1.7 gain changed.
+        Assert.Equal(1_174_857, state.FacingYawMicroRad);
+        Assert.Equal(new SimVector2(-65, 27), state.PlayerVelocity);
     }
 
     [Fact]
@@ -861,7 +861,7 @@ public sealed class SimulationTests
         WorldSnapshot halfInput = half.Step(new SimInput(0, 0, LookXAnalogPermille: 500));
         WorldSnapshot fullInput = full.Step(new SimInput(0, 0, LookXAnalogPermille: 1_000));
 
-        Assert.Equal(22_667, fullInput.WalkerYawVelocityMicroRadPerTick);
+        Assert.Equal(13_333, fullInput.WalkerYawVelocityMicroRadPerTick);
 
         // Asserted as the law rather than as a golden number: whatever full
         // deflection commands, half deflection commands the curve's fraction
@@ -899,7 +899,7 @@ public sealed class SimulationTests
         WorldSnapshot state = simulation.Step(new SimInput(0, 0, LookX: 1));
         Assert.Equal(0, state.FacingX);
         Assert.Equal(1, state.FacingZ);
-        Assert.Equal(532_497, state.FacingYawMicroRad);
+        Assert.Equal(523_163, state.FacingYawMicroRad);
     }
 
     [Fact]
