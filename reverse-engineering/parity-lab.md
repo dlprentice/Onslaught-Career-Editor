@@ -6,7 +6,7 @@ capture bundles, calibrated Stuart/BSim matching, an authored Mission logger,
 and verified campaign ratchets are implemented; corpus-wide semantic joins,
 repeated action campaigns, and rebuild-ready semantic promotion remain open
 
-Last updated: 2026-08-14 (Gen23 authority; Gen10/Gen73 remain non-current)
+Last updated: 2026-08-14 (Gen24 authority; Gen10/Gen73 remain non-current)
 
 Verdict: Battle Engine Aquila no longer needs to be approached as 8,124 isolated
 decompiler functions plus an unbounded dark tail. A specimen-bound pipeline can
@@ -49,24 +49,27 @@ not establish its Steam depot identity.
 
 ---
 
-## Current complete-RE replay authority (2026-08-13) — read first
+## Current complete-RE replay authority (2026-08-14) — read first
 
 Current authority is **not** the Gen10 block below or candidate Gen73. Re-read
-`developer_state.json` → `current_re_authority`. Canonical Gen23 has
-functions=**8,126**, C1=**217**, C2=**10**, function semantic
-OPAQUE=**7,899**, contract C0_OPAQUE=**14,018**, OPEN residual=**17**,
-complete_RE=**false**, and REBUILD_READY=**0**. Its READY is
-`4471fdfe…5a93fc`; frozen reducer `a757bc51…db09`. Generation 73 is a
+`developer_state.json` → `current_re_authority`. Canonical Gen24 has
+functions=**8,280**, C1=**217**, C2=**10**, function semantic
+OPAQUE=**8,053**, contract C0_OPAQUE=**14,177**, OPEN residual=**105**
+(101 dark plus four executed), complete_RE=**false**, and REBUILD_READY=**0**.
+Its READY is `29ac9d91…39e86`; frozen reducer `6cf37430…4582`. Generation 73 is a
 projection oracle only. Gen20 bounds ten retained `CExplosion` carrier calls;
 Gen21 bounds strict-`CRound` slot-66 call/return placement; Gen22 bounds
 strict-`CRound` slot-0 arm routing; Gen23 adds exact receiver-write pairs for
 five selected arms while preserving rejected controls and lane-specific gaps.
+Gen24 carries those claims exactly onto current db.18613 geometry, accounts for
+all **27,780/27,780** eligible carry rows, and adds the 154 later structural
+identities only as OPAQUE.
 External effects, event 4002, field meanings, broader populations, source
 spelling, and direct rebuild parity remain open. The next valid campaign
-generation is 24. The separate 8,136-row static-envelope closure and the 34
-newly proved callable boundaries are structural/static evidence, not automatic
-Gen23 semantic admissions. C1 is not C2 runtime proof or parity, and bounded C2
-is not rebuild-ready.
+generation is 25. The separate 8,136-row static-envelope closure, 34-row
+MissionScript addendum, 31 text-gap classifications, and 79 ungraded external-
+table rows remain distinct static evidence. C1 is not C2 runtime proof or
+parity, and bounded C2 is not rebuild-ready.
 
 ## Historical recursive-campaign snapshot (2026-08-04, Generation 10)
 
@@ -239,8 +242,10 @@ The current layers must remain separate:
 | Defensible saved census/lower bound | **8,280** | Not a final ceiling |
 | MSVC exception/unwind funclets in saved Ghidra | 1,179 | Compiler machinery; not gameplay-semantic closure |
 | Literal `FUN_<address>` names in saved Ghidra | 988 | The separate 34-row new-function vocabulary ceremony replaced those defaults; the 31 text-gap and 79 external-table structural rows retain default names |
-| Static-envelope closure | 8,136 rows: 8,129 C1 + 7 C2 | Dated table; does not include the 34 promoted entries |
-| Canonical campaign | 8,126 rows: 217 C1 + 10 C2 + 7,899 OPAQUE | Gen23 semantic/runtime authority |
+| Static-envelope accounting | 8,170 rows: 8,163 C1 + 7 C2 | Dated 8,136-row table plus reviewed 34-row addendum; excludes the 31 text-gap and 79 external-table rows |
+| Canonical campaign | 8,280 rows: 217 C1 + 10 C2 + 8,053 OPAQUE | Gen24 current-geometry authority; 27,780/27,780 eligible carry rows accounted for |
+| Canonical residual ledger | 6,124 rows: 101 open dark + 4 open executed + 923 terminal bounded ambiguity + 30 terminal data + 5,066 terminal padding | The 105 open rows describe current geometry, not semantic regression |
+| Canonical rebuild states | 14,395 NOT_READY + 8 PARTIAL_CONTRACT + 1 CONTRACT_ONLY + 0 REBUILD_READY | Contract mapping state, not implementation parity |
 | Mission native registry | 144 unique names / 144 unique handlers | Finite shipped registry |
 | Registry handlers already modeled in Ghidra | 144 | 110 pre-existing plus 34 separately promoted callable entries |
 | Registry handlers awaiting Ghidra boundary creation | 0 | Tier-2 registry names are complete; signatures and runtime semantics remain separate gates |
@@ -2658,14 +2663,18 @@ Strong:
 
 Open or concerning:
 
-- 988 saved entries retain literal default names, while Gen23 still has 7,899
+- 988 saved entries retain literal default names, while Gen24 has 8,053
   semantically OPAQUE rows;
 - the 34 new Mission boundaries now have a separate bounded static-contract
-  addendum but remain outside immutable Gen23 campaign semantics;
+  addendum; Gen24 includes them structurally as OPAQUE rather than importing the
+  separate static grade;
 - the 31 newer text-gap boundaries have provider-compatible static
-  classifications but remain outside the frozen grade projection and campaign;
+  classifications but remain outside the frozen grade projection; Gen24 includes
+  them structurally as OPAQUE;
 - the 79 external-table boundaries remain default-metadata structural rows
-  outside the frozen grade projection and campaign;
+  outside the frozen grade projection; Gen24 includes them as OPAQUE;
+- 105 current-geometry residuals remain open (101 dark and four executed), while
+  6,019 terminal residual carries remain exact;
 - at least six live names are directly contradicted by byte/RTTI evidence;
 - D3D/cockpit/tree correction clusters remain;
 - the registry/table discovery universe has no denominator;
@@ -2763,7 +2772,7 @@ Maintain separate ledgers.
 | Exact saved-body geometry | functions passing range invariants / saved rows | 8,280 / 8,280 |
 | Literal default names | `FUN_*` / saved rows | 988 / 8,280 |
 | Static function envelopes | frozen graded rows / discovered lower bound | 8,170 / at least 8,280; sealed 8,136-row table plus reviewed 34-row addendum, with 31 text-gap rows separately classified and 79 external-table rows ungraded |
-| Campaign semantics above OPAQUE | C1 + C2 / Gen23 rows | 227 / 8,126 |
+| Campaign semantics above OPAQUE | C1 + C2 / Gen24 rows | 227 / 8,280 |
 | Mission handler boundaries | saved structurally bounded handler starts / registry | 144 / 144; creation complete |
 | `.text` saved-body ownership | exact owned executable bytes / 1,929,117 | 1,794,212 / 1,929,117 = 93.006904195%; zero overlap |
 | Stable runtime coverage | exact covered bytes / declared capture window | per scenario only |
@@ -3252,7 +3261,7 @@ The remaining function problem is now mechanically approachable:
 
 - 8,280 saved functions have exact body geometry, including 34 registry, 31
   text-gap, and 79 external-table callable starts admitted from bounded proof;
-- 988 saved entries retain literal defaults, while 7,899 Gen23 functions remain
+- 988 saved entries retain literal defaults, while 8,053 Gen24 functions remain
   semantically OPAQUE;
 - cheap differential coverage has already reduced one 16,794-start action run
   to eight leading functions;

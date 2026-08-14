@@ -4,7 +4,7 @@ Status: active — the RE evidence front door
 Last updated: 2026-08-14
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
-Current replay authority is Generation 23 via
+Current replay authority is Generation 24 via
 `developer_state.json` → `current_re_authority`; Generation 73 is a projection
 oracle only, and the Generation-10 block below is historical.
 
@@ -68,13 +68,15 @@ This block selects the immutable semantic campaign parent; it does not describe
 the rolling Ghidra database. Read the
 [`canonical Ghidra owner`](ghidra/README.md) for the current structural snapshot
 and latest backed-up live promotion. Select campaign authority from
-`developer_state.json` → `current_re_authority`: canonical Generation 23 at
-`local-lab/re-campaign-incident-recovery-20260808-v1/generation-23-cround-handle-event-arm-effects-v1/`,
-READY `4471fdfe105340ad06c2ad28d945eb05e9bc94f002110888b164581ccf1a93fc`,
-frozen reducer `a757bc51cd8302cf0e889c7db72ca58f9d865597b250371444d8c2285537db09`,
-external selector `12509207…3ba8`. It contains 8,126 functions, 217 C1,
-ten bounded C2, 7,899 opaque functions, 17 open residuals, and no rebuild-ready
-contract. Generation 12 admitted bounded `CBattleEngine::Damage`/`Hit` field
+`developer_state.json` → `current_re_authority`: canonical Generation 24 at
+`local-lab/re-campaign-incident-recovery-20260808-v1/generation-24-current-8280-reseed-e7aa-v1/`,
+READY `29ac9d91136c88a651fe5bc2202ca14d9c3a8dc7bd733e1cb7396c4c32a39e86`,
+frozen reducer `6cf37430cf7ddace01088aa21a8732943e027f621b54fdf52c9be002dd284582`,
+external selector `57756583…833d1`. It contains 8,280 functions: 217 C1,
+ten bounded C2, and 8,053 OPAQUE. Its 14,404 contracts split as 14,177
+`C0_OPAQUE`, 217 C1, and ten C2; none is rebuild-ready. Its 6,124 residuals
+contain 101 open dark and four open executed rows, with the other 6,019 terminal.
+Generation 12 admitted bounded `CBattleEngine::Damage`/`Hit` field
 writes and a partial rebuild mapping; Generation 13 admitted one replicated
 zero-shield `CUnit::ApplyDamage` entry/write contract and its exact overkill
 parity vector; Generation 14 closes one exact residual as the adjacent
@@ -138,7 +140,12 @@ now retain only these bounded addenda after replica, rollback, adverse-control,
 readback, backup-restore, and tracked-snapshot-restore gates; names,
 signatures, boundaries, executable bytes, instructions, data, symbols, and
 references did not change. Generation 73 remains a projection oracle, never a
-parent or authority. The next valid campaign generation is 24. Model review is
+parent or authority. Generation 24 then reseeds those exact claims onto all
+8,280 current db.18613 function identities. It accounts for all 27,780 eligible
+Generation-23 carry rows, includes the 154 added structural identities as
+OPAQUE, and makes no new semantic, runtime, Ghidra, executable, or rebuild
+claim. The 105 open residual geometries are not a semantic regression. The next
+valid campaign generation is 25. Model review is
 situational and harness-agnostic under `REVIEW-PROTOCOL.md`.
 
 A separately reviewed, non-parent
@@ -154,8 +161,9 @@ accounts for its 8,136-function population at 8,129 bounded C1 and seven
 bounded C2 functions, with zero static `OPAQUE` rows in that population. It joins 53 disjoint
 sealed receipts covering 7,945 functions, ten post-Gen19 Mission-native
 boundaries, and 181 pre-existing C1/C2 rows. This is a distinct authority for
-static-envelope accounting; Generation 23 remains the immutable replay owner
-for its admitted runtime evidence and READY/reducer lineage. See the
+static-envelope accounting; Generation 24 is the current replay owner and
+carries Generation 23's admitted runtime evidence unchanged onto the 8,280-row
+geometry. See the
 [closure report](binary-analysis/function-c1-closure-2026-08-11.md) for exact
 hashes and limits.
 

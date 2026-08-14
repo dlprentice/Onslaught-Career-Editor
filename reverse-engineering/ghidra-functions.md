@@ -3,7 +3,7 @@
 Status: active canonical synthesis of the current executable-analysis state; raw
 machine exports remain the address-level evidence behind this human-readable
 master
-Last updated: 2026-08-14 (79 external-table boundaries promoted and backed up)
+Last updated: 2026-08-14 (Gen24 reseeded on the 8,280-row current geometry)
 Verdict: **The verified live and tracked databases now contain 8,280 internal
 function boundaries. The latest separately backed-up ceremony admitted 79
 reviewed external-table bodies with default metadata. Fresh-process readback proves
@@ -19,11 +19,11 @@ additions have separate provider-compatible static classifications; the 79
 newer structural rows remain ungraded. Neither cohort has been silently inserted
 into that frozen grade projection. This is not the
 campaign-grade scoreboard below.
-Canonical Generation 23
-remains the separate semantic authority at 8,126 campaign functions plus 6,119
-exact residual entities; live structural navigation is therefore ahead of the
-campaign without silently upgrading any semantic grade.
-Semantics remain the hard problem: 14,018 of 14,245 contract rows are `C0_OPAQUE`,
+Canonical Generation 24 is the semantic campaign authority at all 8,280 current
+function identities plus 6,124 exact residual entities. It carries all 27,780
+eligible Generation-23 progress rows with zero unaccounted and includes the 154
+later structural identities as OPAQUE without silently upgrading a static or
+semantic grade. Semantics remain the hard problem: 14,177 of 14,404 contract rows are `C0_OPAQUE`,
 217 are `C1_CANDIDATE_PARTIAL`, ten are `C2_BOUNDED_RUNTIME`, and none is
 rebuild-ready. The authored Mission
 `Damage` chain, three Level 521 call-context contracts, and one separately
@@ -36,7 +36,7 @@ file is the integrated narrative and queue, not a
 claim that those gaps are solved.**
 
 Evidence: MEASURED — the pristine specimen, verified live-promotion POST
-readback, authoritative Generation-23 campaign bundle, tracked Ghidra snapshot,
+readback, authoritative Generation-24 campaign bundle, tracked Ghidra snapshot,
 function-note/fullpass corpus, pinned source, finite shipped registries,
 copied-runtime probes, and the existing TTD corpus. SOURCE-backed and INFERRED
 claims are labelled where they carry less authority than shipped bytes or
@@ -175,21 +175,24 @@ not establish its Steam depot identity.
 
 ---
 
-## Current complete-RE replay authority (2026-08-12) — read this first
+## Current complete-RE replay authority (2026-08-14) — read this first
 
 The campaign census below this pointer is a historical Generation-10
-snapshot. Current authority is canonical Generation **23**, selected
+snapshot. Current authority is canonical Generation **24**, selected
 only by `developer_state.json` → `current_re_authority`:
 
-| Metric | Canonical Gen23 |
+| Metric | Canonical Gen24 |
 |--------|------------------|
-| Functions | 8,126 (= C1 217 + C2 10 + function semantic OPAQUE 7,899) |
-| Grades | **C1=217**, **C2=10**, contract C0_OPAQUE **14018**; REBUILD_READY **0** |
-| OPEN residual | **17** police holds |
+| Functions | 8,280 (= C1 217 + C2 10 + function semantic OPAQUE 8,053) |
+| Grades | **C1=217**, **C2=10**, contract C0_OPAQUE **14177**; REBUILD_READY **0** |
+| Residuals | 6,124 = 101 open dark + 4 open executed + 923 terminal bounded ambiguity + 30 terminal data + 5,066 terminal padding |
+| OPEN residual | **105** current-geometry rows; not a semantic regression |
+| Progressed carry | **27,780 / 27,780**, zero unaccounted |
+| Rebuild states | NOT_READY 14,395; PARTIAL_CONTRACT 8; CONTRACT_ONLY 1; REBUILD_READY 0 |
 | complete_RE | **false** |
-| READY / reducer | `4471fdfe…1a93fc` / `a757bc51…db09` |
-| Campaign | `local-lab/re-campaign-incident-recovery-20260808-v1/generation-23-cround-handle-event-arm-effects-v1/` |
-| Next valid generation | **24** |
+| READY / reducer | `29ac9d91…39e86` / `6cf37430…4582` |
+| Campaign | `local-lab/re-campaign-incident-recovery-20260808-v1/generation-24-current-8280-reseed-e7aa-v1/` |
+| Next valid generation | **25** |
 
 The Generation-10 blocks that follow are historical records, not the live tip.
 Their durable engineering content (atlas, registries, safety doctrine,
@@ -230,7 +233,10 @@ meanings, broader populations, source spelling, and direct rebuild parity stay
 open. The bounded addenda were appended to twelve exact live/tracked Ghidra
 comments after replica, rollback, adverse-control, readback, and restore gates;
 no name, signature, boundary, executable-byte, instruction, data, symbol, or
-reference change occurred.
+reference change occurred. Generation 24 then reseeds those exact claims onto
+all 8,280 current db.18613 function identities. It adds the 154 post-Gen23
+structural identities as OPAQUE, accounts for all 27,780 eligible carry rows,
+and makes no new semantic, runtime, Ghidra, executable, or rebuild claim.
 
 ---
 
@@ -352,9 +358,9 @@ loads, interprets, simulates, and renders that corpus.
 
 ### Current authority in one sentence
 
-Use canonical Generation 23 for campaign function/residual and contract state,
-the separately verified 2026-08-12 collision-component live POST and tracked
-snapshot for current Ghidra state, the unpatched baseline image for bytes and
+Use canonical Generation 24 for campaign function/residual and contract state,
+the separately verified 2026-08-14 external-table live POST and tracked snapshot
+for current Ghidra state, the unpatched baseline image for bytes and
 shipped tables, RTTI/source strings for identity evidence, controlled copied-
 runtime work for behavior, and this document for the reviewed synthesis and
 open queue. Use the 2026-07-27 7,555-row table only for a clearly dated
@@ -2943,9 +2949,9 @@ dated 8,136-row static closure plus a reviewed 34-row C1-static addendum for the
 34 newly created registry entries promoted through their separate Tier-2 metadata cohort
 one separately proved CreateExplosion identity/signature repair promoted and read back
 four refuted HUD labels awaiting convention-safe replacements
-154 current functions remain outside the immutable Generation-23 campaign lineage
-7,899 Gen23 functions still semantically OPAQUE
+8,053 Gen24 functions remain semantically OPAQUE, including all 154 post-Gen23 structural identities
+105 current-geometry residuals remain open (101 dark + 4 executed)
 bounded runtime questions with explicit falsifiers
 ```
 
-That is the canonical baseline for the next Ghidra campaign.
+That is the canonical baseline for Generation 25 and the next Ghidra campaign.

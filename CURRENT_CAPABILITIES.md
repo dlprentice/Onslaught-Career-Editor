@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-08-13. RE authority block refreshed to canonical Gen23
+Last updated: 2026-08-14. RE authority block refreshed to canonical Gen24
 (`current_re_authority`; candidate Gen73 is projection-oracle only). Primary WinUI
 navigation was rechecked 2026-08-03 against the live shell (includes Cheats).
 The 2026-08-01 shell, appearance, Lore, Media, and four-run Level 100 reviews
@@ -641,34 +641,38 @@ Read [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md) before changing this lane.
 
 ## Reverse engineering and proof campaign
 
-**Current replay authority (2026-08-12):** read `developer_state.json` →
+**Current replay authority (2026-08-14):** read `developer_state.json` →
 `current_re_authority` before quoting generation or grade counts. Do not select
 the historical Gen10 or candidate Gen73 roots by generation number, ledger
 equality, or self-derived pins.
 
-| Metric | Canonical Gen23 |
+| Metric | Canonical Gen24 |
 | --- | ---: |
-| Authority generation | **23** (lineage `incident-20260806-recovery-v1`) |
-| Functions | **8126** |
+| Authority generation | **24** (lineage `incident-20260806-recovery-v1`) |
+| Functions | **8280** |
 | C1_CANDIDATE_PARTIAL | **217** |
 | C2_BOUNDED_RUNTIME | **10** |
-| function_semantic OPAQUE | **7899** |
-| contract_C0_OPAQUE | **14018** (second opacity axis) |
-| OPEN residual | **17** |
-| REBUILD_READY | **0** |
+| function_semantic OPAQUE | **8053** |
+| contract_C0_OPAQUE | **14177** (second opacity axis) |
+| Residuals | **6124** = 101 open dark + 4 open executed + 923 terminal bounded ambiguity + 30 terminal data + 5066 terminal padding |
+| OPEN residual | **105** current-geometry rows; not a semantic regression |
+| Other ledgers | questions **15372**; scenarios **72**; levers **910**; contracts **14404**; adjudications **6020**; supersessions **592** |
+| Progressed carry | **27780 / 27780**, zero unaccounted |
+| Rebuild states | NOT_READY **14395**; PARTIAL_CONTRACT **8**; CONTRACT_ONLY **1**; REBUILD_READY **0** |
 | complete_RE | **false** |
-| READY / reducer | `4471fdfe…5a93fc` / `a757bc51…db09` |
-| Next valid generation | **24** |
+| READY / reducer | `29ac9d91…39e86` / `6cf37430…4582` |
+| Next valid generation | **25** |
 
 **Tracked static-envelope closure (2026-08-11):** the separate reviewed
 [`function-c1-closure-2026-08-11.tsv`](reverse-engineering/binary-analysis/function-c1-closure-2026-08-11.tsv)
 accounts for its dated 8,136-function population as **8,129 C1**, **7 C2**,
-and **0 static OPAQUE**. The current saved structural census is **8,170** after
-the verified [34-boundary promotion](reverse-engineering/binary-analysis/mission-script-registry-boundary-live-promotion-2026-08-13.md);
-those 34 functions are outside the frozen table but now carry separately
-reviewed `C1_CANDIDATE_PARTIAL` static contracts. Joined current static
-accounting is **8,163 C1 + 7 C2**. Canonical Generation 23 remains the immutable replay
-authority for admitted runtime/campaign claims; neither count implies
+and **0 static OPAQUE**. A separately reviewed 34-row addendum extends bounded
+static accounting through the prior 8,170-row state at **8,163 C1 + 7 C2**.
+The current saved structural census is **8,280** after the later 31 text-gap and
+79 external-table admissions. Generation 24 includes all 154 post-Generation-23
+structural identities as campaign OPAQUE rows, but does not insert them into the
+frozen static tables. Canonical Generation 24 carries the admitted
+runtime/campaign claims; neither count implies
 `REBUILD_READY` or complete semantic parity.
 
 **PC demo/retail function frontier (2026-08-12, dated 8,136-function
@@ -785,8 +789,8 @@ corrections. `StartDie` remained open/opaque at that handoff. The independent
 data-write lane has one refuter-survived semantic result: a Level 521 `LockHit`
 invocation removed the supplied target's sole fired-lock node through five exact
 ordered field transitions. These are instrument capabilities and historical
-admissions. Canonical Gen23 retains those four C2 rows, separately re-proves a
-narrower fifth ApplyDamage C2 from intact TTD wrappers, and adds the bounded
+admissions. Canonical Gen24 carries Gen23's four C2 rows, separately re-proved
+a narrower fifth ApplyDamage C2 from intact TTD wrappers, and adds the bounded
 SetPos roundtrip as a sixth, LockHit's single-node removal path as a seventh,
 the bounded CExplosion internal carrier as an eighth, and the strict-`CRound`
 slot-66 placement/call envelope as a ninth, then the strict-`CRound` slot-0
@@ -836,11 +840,11 @@ mission reachability, later damage/effects, and rebuild parity remain open.
 These instruments do not infer function boundaries, C++ receivers, argument or
 return types, semantics, or parity. Static/source/RTTI evidence supplied joins
 for early data-write plates. Focused player-damage / Level 521 successor work
-remains an open runtime front alongside the next impact-ranked Generation-23
-successor contract/rebuild advance. There is
+remains an open runtime front alongside the next impact-ranked contract/rebuild
+advance now carried by Generation 24. There is
 not yet a normalized corpus-wide semantic ledger, and no new trace is justified
 until existing evidence plus these instruments cannot answer a preregistered
-question. The next campaign generation is 24.
+question. The next campaign generation is 25.
 
 ## Evidence boundary
 

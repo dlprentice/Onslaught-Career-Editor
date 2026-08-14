@@ -17,7 +17,7 @@
 > Godot rebuild, and the WinUI 3 app are coequal outcomes. A current goal chooses
 > focus, not standing rank. See [Revision history](#revision-history).
 >
-> Last updated: 2026-08-13. Current measured status belongs in
+> Last updated: 2026-08-14. Current measured status belongs in
 > [`CURRENT_CAPABILITIES.md`](CURRENT_CAPABILITIES.md) and
 > [`developer_state.json`](developer_state.json) (routing key
 > `current_re_authority`). Generation 73 is retained only as the exact
@@ -150,7 +150,7 @@ artefact and must never ship as authored behaviour.
 ### Mandate
 
 Drive the primary Battle Engine Aquila reverse-engineering lane forward from
-canonical Generation 23 through successive mechanically verified generations,
+canonical Generation 24 through successive mechanically verified generations,
 maximizing defensible progress toward complete retail understanding, durable
 function and behavior contracts, a materially improved live Ghidra
 reconstruction, and Godot parity. This is a long-horizon execution mandate, not
@@ -159,14 +159,14 @@ theater in place of reverse engineering.
 
 ### Ground yourself before acting
 
-Confirm HEAD is at or beyond `25fba71a`. Confirm the pristine specimen SHA-256
+Confirm HEAD is at or beyond `e7aa7548`. Confirm the pristine specimen SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`. Confirm the
-Generation 23 READY
-`4471fdfe105340ad06c2ad28d945eb05e9bc94f002110888b164581ccf1a93fc` and frozen
-reducer `a757bc51cd8302cf0e889c7db72ca58f9d865597b250371444d8c2285537db09`
+Generation 24 READY
+`29ac9d91136c88a651fe5bc2202ca14d9c3a8dc7bd733e1cb7396c4c32a39e86` and frozen
+reducer `6cf37430cf7ddace01088aa21a8732943e027f621b54fdf52c9be002dd284582`
 through the literal pinned verify command in
 [`developer_state.json`](developer_state.json) → `current_re_authority`.
-Generation 23 is the sole campaign parent, the next valid generation is 24, and
+Generation 24 is the sole campaign parent, the next valid generation is 25, and
 Generation 73 is a projection oracle that is never a parent or authority.
 
 ### Never collapse the evidence layers
@@ -177,12 +177,14 @@ was sealed. A later 34-row Mission-registry addendum bounds the resulting
 Tier-2 registry vocabulary. Later ceremonies admitted 31 text-gap and 79
 external-table boundaries, so the current saved structural census is 8,280.
 The 31 have bounded provider-compatible classifications; the 79 remain
-default-metadata structural rows. Both cohorts are outside the frozen grade
-projection and campaign. None of these counts is a final ceiling,
+default-metadata structural rows. All 154 post-Generation-23 structural rows are
+now represented in Generation 24 as OPAQUE, but remain outside the frozen static
+grade projection. None of these counts is a final ceiling,
 semantic recovery, or reversal. The PC demo
 partition and the instruction-local Xbox source-line anchors are oracles, never
-denominators for retail completion. Generation 23 owns admitted runtime
-semantics and remains sparse. Live Ghidra structural navigation may lead the
+denominators for retail completion. Generation 24 carries Generation 23's
+admitted runtime semantics unchanged onto current geometry and remains sparse.
+Live Ghidra structural navigation may lead the
 campaign without silently upgrading any semantic grade. Report the layer, the
 exact denominator, the specimen, and the date with every published number, and
 refuse any single percentage that spans layers.
@@ -344,9 +346,10 @@ the mandate; the completion test and every clause above are unchanged.
    in the current 134,905-byte `.text` gap.** Use cross-build shape, current
    listing state, incoming control flow, alignment, and library classification
    to prove exact boundaries; do not infer entries from linear decode alone.
-2. **Resolve the Generation-24 carry-shape refusal without weakening the
-   reducer.** Parent strictly on Generation 23, preserve the static/runtime
-   layer boundary, and do not pin HUD route order as C2.
+2. **Advance Generation 25 from the exact Generation-24 authority.** Keep any
+   current launcher/test literal-pin update separate from the frozen reducer,
+   preserve the static/runtime layer boundary, and do not pin HUD route order
+   as C2.
 3. **Deepen coherent semantic/runtime/rebuild slices.** Prefer existing traces,
    Xbox sparse-symbol joins, shipped data, and current static contracts before
    recording new runtime evidence; carry only proved 5-to-10-contract slices
@@ -396,6 +399,12 @@ Rank from current evidence; a reproduced contradiction outranks this list.
   The frontier now moves to `.text` boundary/body recovery, the Generation-24
   carry refusal, and coherent semantic/runtime/rebuild depth; no campaign grade
   or completion condition changed.
+- **2026-08-14 — current geometry reseeded as Generation 24.** The literal-
+  pinned canonical and reproduction-only replica replays account for all 8,280
+  current functions and all 27,780 eligible Generation-23 carry rows. The 154
+  structural additions enter the campaign as OPAQUE; no semantic, runtime,
+  Ghidra, executable, rebuild, or completion claim was added. The next valid
+  campaign generation is 25.
 
 ---
 
@@ -429,14 +438,14 @@ this standing campaign complete.
 
 Standing complete-RE progress is **not** the Gen10 handoff below and is no
 longer selected from the damaged Generation-73 candidate chain. Read
-`developer_state.json` → `current_re_authority`. As of 2026-08-12 the exact
-authority is canonical Generation 23 at
-`local-lab/re-campaign-incident-recovery-20260808-v1/generation-23-cround-handle-event-arm-effects-v1/`:
-READY SHA-256 `4471fdfe105340ad06c2ad28d945eb05e9bc94f002110888b164581ccf1a93fc`,
+`developer_state.json` → `current_re_authority`. As of 2026-08-14 the exact
+authority is canonical Generation 24 at
+`local-lab/re-campaign-incident-recovery-20260808-v1/generation-24-current-8280-reseed-e7aa-v1/`:
+READY SHA-256 `29ac9d91136c88a651fe5bc2202ca14d9c3a8dc7bd733e1cb7396c4c32a39e86`,
 frozen reducer ID
-`a757bc51cd8302cf0e889c7db72ca58f9d865597b250371444d8c2285537db09`,
+`6cf37430cf7ddace01088aa21a8732943e027f621b54fdf52c9be002dd284582`,
 and external authority receipt SHA-256
-`12509207913b0116a94c923da7fe163c47de226b7733538baea54eb31df73ba8`.
+`5775658318ccebb8fb19955be4764556b7c598998f9610294a012b2b628833d1`.
 Its independent replica is reproduction-only. Generation 73 supplied a
 field-level projection oracle; Generations 12 through 23 then admitted bounded
 Damage/Hit field-write contracts, one replicated zero-shield ApplyDamage
@@ -462,7 +471,13 @@ invocations, retaining per-window continuity gaps and rejecting a universal
 event-4000 sequence because the two sessions differ in writers, values, and
 order. External effects, event 2000, event 4002, field meanings, broader
 populations, original source spelling, and direct rebuild parity remain open.
-The campaign remains incomplete and the next valid campaign generation is 24.
+Generation 24 then reseeds those exact Generation-23 claims onto the current
+8,280-function/db.18613 geometry: all 27,780 eligible carry rows are accounted
+for, the 154 added structural identities enter as OPAQUE, and no new semantic,
+runtime, Ghidra, executable, or rebuild claim is made. Its 105 open residuals
+(101 dark and four executed) reflect current geometry rather than loss of the
+6,019 exact terminal carries. The campaign remains incomplete and the next
+valid campaign generation is 25.
 The saved `VFuncSlot_00_004d9910` name and grade remain unchanged. The bounded
 addenda were appended to twelve exact live/tracked Ghidra comments only after
 backup, replica, rollback, adverse-control, readback, and restore gates; no

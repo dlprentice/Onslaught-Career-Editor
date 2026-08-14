@@ -30,7 +30,7 @@ different hashes and are identified separately below.
 
 ---
 
-## Current complete-RE replay authority (2026-08-12) — read this first
+## Current complete-RE replay authority (2026-08-14) — read this first
 
 **Do not treat historical Gen10 or candidate Gen73 as current authority.** The
 exact selector is `developer_state.json` → `current_re_authority`; its external
@@ -39,13 +39,15 @@ pins.
 
 | Surface | Canonical recovered state |
 | --- | --- |
-| Authority generation | **23**, lineage `incident-20260806-recovery-v1`; READY `4471fdfe…5a93fc`, reducer `a757bc51…db09` |
-| Function ledger | 8,126 functions under `local-lab/re-campaign-incident-recovery-20260808-v1/generation-23-cround-handle-event-arm-effects-v1/` |
-| Grades | **C1=217**, **C2=10**, function semantic **OPAQUE=7899**; contract `C0_OPAQUE=14018`; REBUILD_READY **0** |
-| OPEN residual | **17** police holds; Gen14 closed TokenArchive dispatch data, Gen15 proved `IScript__SetPos` plus its two NOP neighbors, Gen19 proves the UnsetObjective 3/13/3 partition, and Gen20–Gen23 change no residual |
+| Authority generation | **24**, lineage `incident-20260806-recovery-v1`; READY `29ac9d91…39e86`, reducer `6cf37430…4582`, selector `57756583…833d1` |
+| Function ledger | 8,280 functions under `local-lab/re-campaign-incident-recovery-20260808-v1/generation-24-current-8280-reseed-e7aa-v1/` |
+| Grades | **C1=217**, **C2=10**, function semantic **OPAQUE=8053**; contract `C0_OPAQUE=14177`; REBUILD_READY **0** |
+| Residuals | **6,124** total: 101 open dark + 4 open executed + 923 terminal bounded ambiguity + 30 terminal data + 5,066 terminal padding; the 105 open rows reflect current geometry, not semantic regression |
+| Other ledgers / carry | questions 15,372; scenarios 72; levers 910; contracts 14,404; adjudications 6,020; supersessions 592; progressed carry **27,780/27,780**, zero unaccounted |
+| Rebuild state | NOT_READY 14,395; PARTIAL_CONTRACT 8; CONTRACT_ONLY 1; REBUILD_READY 0 |
 | complete_RE | **false** |
 | Candidate-chain disposition | Gen73 is `PROJECTION_ORACLE_ONLY`; all 7,294 source adjudications and 145,973 changed fields are closed by `94d7a9eb…323e0` |
-| Immediate RE front | Fifty-three disjoint bulk static passes cover 7,945 exact bodies: 7,902 formerly opaque functions now have bounded C1_STATIC hypotheses, 42 prior C1 rows are repaired or confirmed, and ApplyDamage remains C2. The sealed 8,136-row tracked static-closure OPAQUE count is zero; a separately reviewed 34-row addendum gives the prior 8,170-function state 8,163 bounded static C1 rows plus seven C2 rows, while the immutable campaign ledger separately retains 7,899 semantic OPAQUE rows. The current 8,280 structural census adds 31 reviewed text-gap bodies with provider-compatible classifications and 79 default-metadata external-table bodies outside those frozen grade tables and Generation 23. A complete 184-row residual census switched instruments to formal packs, strict RTTI/vtables, address-joined refs, strings/debug strings, registries, retained-source tokens and pristine decode: 167 exact functions / 407 slot placements advanced through strict vtable membership, then the final 17 advanced together through visible pristine instruction envelopes with row-specific falsifiers. The 46,657-byte HResultToString envelope is explicitly not represented as one original source routine. Gen20–Gen23 retain their bounded runtime claims and open effects/fields/populations. Static closure is not runtime/source/parity closure. |
+| Immediate RE front | Fifty-three disjoint bulk static passes cover 7,945 exact bodies: 7,902 formerly opaque functions now have bounded C1_STATIC hypotheses, 42 prior C1 rows are repaired or confirmed, and ApplyDamage remains C2. The sealed 8,136-row tracked static-closure OPAQUE count is zero; a separately reviewed 34-row addendum gives the prior 8,170-function state 8,163 bounded static C1 rows plus seven C2 rows. Generation 24 now includes all 154 later structural identities as campaign OPAQUE rows while keeping the 34-row addendum, 31 text-gap classifications, and 79 ungraded external-table rows outside the frozen static tables. Gen20–Gen23 retain their bounded runtime claims unchanged; Gen24 adds only exact current-geometry carry. Advance Gen25 with the 105 open residual geometries, cross-build/source/runtime refuters, and coherent rebuild contract slices. Static closure is not runtime/source/parity closure. |
 | Ghidra apply | The latest authorized live operation added exactly 79 reviewed default-metadata external-table boundaries, advancing 8,201→8,280. Separate readback preserved every exported field of all 8,201 PRE function rows. Program bytes, defined data, stored non-function symbols, comments, and relocations remained exact; the expected listing change is sealed by POST functions `c3942b9e…72d6`, POST program `3e51ce1d…212d`, and the synchronized 19-file project inventory `ae422079…cf2`. The text-gap, MissionScript boundary/vocabulary, and one-row explosion-factory operations remain distinct historical parents. |
 
 The frozen three-master hashes later in this document remain the correct inputs
@@ -397,7 +399,7 @@ not the existence of the demonstrated spine.
   the dated closure gives 8,136 saved functions static envelopes and the
   separate 34-row addendum extends bounded static accounting through the prior
   8,170-row state; the 31 text-gap and 79 external-table structural rows remain
-  outside that frozen grade projection. Gen23 still grades 7,899 of 8,126 functions semantic OPAQUE.
+  outside that frozen grade projection. Gen24 grades 8,053 of 8,280 functions semantic OPAQUE.
   Current exact saved-body `.text` ownership is 1,794,212 / 1,929,117 =
   93.006904195%, while
   function discovery and most semantics remain open.
@@ -2725,7 +2727,7 @@ mission shape, actor families, media, and configuration use.
 | Critical | Analyst metadata can launder inference | Names/tags/source grades can look like byte facts | Separate EXECUTABLE-BYTES from ANALYST-METADATA and record independence group |
 | Critical | Saved-body ownership is closed but function discovery is not | The exact 93.006904195% union leaves 134,905 bytes outside bodies, including loose instructions, data, body fragments, and code-shaped gaps | Preserve the exact gap ledger; prove CFG/body repairs and entries per target before Ghidra writes |
 | High | Tracked and live Ghidra states diverge | Reproduction from tracked project cannot yield current claims | Name live export hash; promote only by separate reviewed action |
-| High | Gen23 retains 7,899 semantic OPAQUE functions and excludes 154 later-discovered entries | Broad structural/static coverage does not equal semantic map | Current address ledger, campaign admissions, and finite system contracts—not prose volume |
+| High | Gen24 retains 8,053 semantic OPAQUE functions; its 154 post-Gen23 structural entries are included as OPAQUE, not silently graded | Broad structural/static coverage does not equal semantic map | Current address ledger, campaign admissions, and finite system contracts—not prose volume |
 | High | Stuart source is incomplete and unbuildable | Missing owners/guards can be silently invented | Pin commit; classify every body/guard/dependency; baseline adjudication |
 | High | Outer parser success is overclaimed | Decompression/header walks can conceal opaque fields and wrong render laws | Per-instance schema/opaque-range/reference ledgers |
 | High | Loose MissionScripts are incomplete | Sixteen includes absent; runtime may use packed form | Do not compile; prove selection/precedence on copied target |
