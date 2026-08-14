@@ -91,6 +91,17 @@ A run that can score nothing reports `UNSCORED`, never `PASS`. Reference frames
 are retail-derived and live under ignored local paths, so a fresh clone scores
 nothing and must say so.
 
+## Campaign replay
+
+`re_campaign_historical_source_projection_v2.py` is the supported current
+launcher for immutable campaigns whose rebuild inputs were later strengthened.
+For Generation 24 it first pins and tests the current player-damage and weapon-
+scatter owners, then exposes exactly three historical source identities to the
+frozen verifier in memory. Both `Path.open` and built-in file reads are covered,
+including recursive parent replays; writes to projected paths are refused. The
+launcher does not repin or modify Generation 24, and its focused test exercises
+the retained full replay when the machine-local campaign evidence is present.
+
 ## Ghidra and runtime research
 
 [`../reverse-engineering/parity-lab.md`](../reverse-engineering/parity-lab.md) is the engine-neutral function-discovery
