@@ -1,7 +1,7 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-08-13
+Last updated: 2026-08-14
 Summary: what each tool in `tools/` is for, and which of them are gates.
 
 `tools/` contains the small reusable support surface for the WinUI product,
@@ -131,6 +131,34 @@ py -3 tools\ghidra_text_gap_boundary_mutator_tests.py
 py -3 tools\ghidra_text_gap_boundary_scratch_authority_tests.py
 py -3 tools\ghidra_text_gap_boundary_scratch_authority.py verify
 ```
+
+`GhidraApplyExternalTableGapBoundaries.java` is the fail-closed structural
+runner for the reviewed 79-row external-table gap manifest. It validates the
+exact retail specimen, current 8,201-function PRE counters, manifest/proof
+hashes, P0/P1/P2 partition, body bytes, demo evidence, disjoint ranges, the
+corrected YUV-family row, and the existing Vec4Cross proof before admitting
+default `FUN_` boundaries on an isolated db.18612 copy. It may replace
+instruction decoding only when the complete old and new instruction ranges
+remain inside an authorized body; names, signatures, comments, tags, data, and
+bytes are outside its contract.
+
+`ghidra_external_table_gap_boundary_scratch_authority.py` reproduces the saved
+two-replica ceremony, the pinned 19-file current-project inventory, and its full
+8,201-row equality gate. It independently rehashes the actual base and retained
+restore trees, binds the detailed read-only probe log and safe command flags,
+and treats inner backup receipts as absolute execution history rather than
+portable paths. The ignored evidence is optional in a fresh clone: the
+registered authority unit test skips when absent, while an explicit saved
+verify refuses to pass without it.
+
+```powershell
+python -I -B tools\ghidra_external_table_gap_boundary_mutator_tests.py
+python -I -B tools\ghidra_external_table_gap_boundary_scratch_authority_tests.py
+python -I -B tools\ghidra_external_table_gap_boundary_scratch_authority.py verify
+```
+
+The resulting verdict is `SCRATCH_READY_LIVE_FORBIDDEN`; see the
+[scratch report](../reverse-engineering/binary-analysis/external-table-gap-ghidra-scratch-admission-2026-08-14.md).
 
 PowerShell CDB/input/profile helpers are for controlled copied targets. They
 must preserve their explicit-arm, process-identity, and installed-game safety

@@ -1,7 +1,7 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-08-13
+Last updated: 2026-08-14
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
 Current replay authority is Generation 23 via
@@ -188,6 +188,13 @@ original linker symbols, runtime contracts, Generation-23 rows, or rebuild
 parity. The dated 8,136 closure plus 34-row addendum therefore remains a
 historical 8,170-row static-accounting result rather than silently grading the
 new structural rows.
+
+The separate
+[79-row external-table gap scratch admission](binary-analysis/external-table-gap-ghidra-scratch-admission-2026-08-14.md)
+reproduces 79 exact default-metadata boundaries on two isolated db.18612
+replicas while preserving every field of all 8,201 PRE function rows. Its
+verdict is `SCRATCH_READY_LIVE_FORBIDDEN`: it does not itself change the saved
+structural census, Generation 23, semantic grades, or rebuild state.
 
 **Dated PC demo/retail frontier (2026-08-12, 8,136-function population):** the conservative 8,086-entry
 address map plus exact second-pass reports, caller propagation, equal-delta
@@ -654,7 +661,7 @@ Current per-function notes live under
 | Discovery findings | [`binary-analysis/ghidra-fullpass-findings/`](binary-analysis/ghidra-fullpass-findings/) | Tracked wave reviews (W001–W018) |
 | Correction ops | `local-lab/ghidra-fullpass-2026-07-23/` (gitignored) | Queues, dual QC, apply logs; closeout 2026-07-25 |
 | Live applied DB | Maintainer Ghidra Projects (machine-local) | Working database that may receive dual-cleared applies |
-| Tracked snapshot | [`ghidra/`](ghidra/README.md) (snapshot date 2026-08-13) | Distributable reviewed snapshot; exact to the verified live state at promotion time |
+| Tracked snapshot | [`ghidra/`](ghidra/README.md) (snapshot date 2026-08-14) | Distributable reviewed snapshot; exact to the verified live state at promotion time |
 
 Host install paths, headless entry, and local project layout:
 [`ghidra/README.md`](ghidra/README.md). Expedition overlays stay under ignored
