@@ -174,10 +174,11 @@ Generation 73 is a projection oracle that is never a parent or authority.
 Static-envelope closure covers the dated 8,136-function census against which it
 was sealed. A later 34-row Mission-registry addendum bounds the resulting
 8,170-row state at C1 static and a separate metadata ceremony records only its
-Tier-2 registry vocabulary. The current saved structural census is 8,201 after
-31 additional text-gap boundaries were independently proved and promoted;
-those 31 have bounded provider-compatible classifications but are outside the
-frozen grade projection and campaign. None of these counts is a final ceiling,
+Tier-2 registry vocabulary. Later ceremonies admitted 31 text-gap and 79
+external-table boundaries, so the current saved structural census is 8,280.
+The 31 have bounded provider-compatible classifications; the 79 remain
+default-metadata structural rows. Both cohorts are outside the frozen grade
+projection and campaign. None of these counts is a final ceiling,
 semantic recovery, or reversal. The PC demo
 partition and the instruction-local Xbox source-line anchors are oracles, never
 denominators for retail completion. Generation 23 owns admitted runtime
@@ -264,8 +265,9 @@ progress, not completion.
 
 ### Current frontier
 
-Updated 2026-08-13 after the separate 75-row MissionScript vocabulary and
-one-row explosion-factory promotions. Recording what closed is not narrowing
+Updated 2026-08-14 after the external-table boundary promotion and current
+`.text` ownership refresh, including the earlier 75-row MissionScript vocabulary
+and one-row explosion-factory promotions. Recording what closed is not narrowing
 the mandate; the completion test and every clause above are unchanged.
 
 **Closed this session — do not re-derive:**
@@ -292,13 +294,18 @@ the mandate; the completion test and every clause above are unchanged.
   those 34 functions bounded Tier-2 registry names/comments/tags without
   changing bodies, ABI/storage, parameters, or campaign grades.
 - Thirty-one exact text-gap bodies were later promoted through the same backed-
-  up structural gate, advancing the current census to 8,201 while preserving
+  up structural gate, advancing that census to 8,201 while preserving
   every 8,170-row PRE record exactly. They remain default-named structural rows
   with separate CRT/AMD/IJG-compatible static classifications, not campaign or
   runtime grades.
-- Current saved-body `.text` ownership is independently closed at 1,784,978 /
-  1,929,117 bytes = 92.528239604% across 8,201 functions / 8,321 exact ranges,
-  with zero overlap. The remaining 144,139 bytes are listing-partitioned and
+- Seventy-nine exact external-table targets were then promoted once through
+  fresh PRE/POST backups, replicas, separate readback, tracked-still-PRE proof,
+  tracked refresh, and restore probes. They advance the structural census to
+  8,280 while preserving every 8,201 PRE row, but add no semantic grade,
+  original linker identity, runtime contract, or rebuild mapping.
+- Current saved-body `.text` ownership is independently closed at 1,794,212 /
+  1,929,117 bytes = 93.006904195% across 8,280 functions / 8,400 exact ranges,
+  with zero overlap. The remaining 134,905 bytes are listing-partitioned and
   expose five current-function jump fragments plus high-yield code-shaped gaps;
   this is structural accounting, not a final function census or semantic score.
 - The 75-row existing-entry MissionScript normalization passed its complete
@@ -334,7 +341,7 @@ the mandate; the completion test and every clause above are unchanged.
 **Active frontier, in priority order:**
 
 1. **Recover the highest-confidence callable units and truncated body fragments
-   in the current 144,139-byte `.text` gap.** Use cross-build shape, current
+   in the current 134,905-byte `.text` gap.** Use cross-build shape, current
    listing state, incoming control flow, alignment, and library classification
    to prove exact boundaries; do not infer entries from linear decode alone.
 2. **Resolve the Generation-24 carry-shape refusal without weakening the

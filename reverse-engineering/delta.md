@@ -2,7 +2,7 @@
 
 Status: active canonical three-source synthesis; the three input masters and
 their line-level evidence remain the owning detail
-Last updated: 2026-08-13
+Last updated: 2026-08-14
 Verdict: **The installed corpus, the project's repo-designated unpatched executable
 baseline, and pinned Stuart source describe one recognizable engine lineage
 from three different sides,
@@ -45,8 +45,8 @@ pins.
 | OPEN residual | **17** police holds; Gen14 closed TokenArchive dispatch data, Gen15 proved `IScript__SetPos` plus its two NOP neighbors, Gen19 proves the UnsetObjective 3/13/3 partition, and Gen20–Gen23 change no residual |
 | complete_RE | **false** |
 | Candidate-chain disposition | Gen73 is `PROJECTION_ORACLE_ONLY`; all 7,294 source adjudications and 145,973 changed fields are closed by `94d7a9eb…323e0` |
-| Immediate RE front | Fifty-three disjoint bulk static passes cover 7,945 exact bodies: 7,902 formerly opaque functions now have bounded C1_STATIC hypotheses, 42 prior C1 rows are repaired or confirmed, and ApplyDamage remains C2. The sealed 8,136-row tracked static-closure OPAQUE count is zero; a separately reviewed 34-row addendum gives the prior 8,170-function state 8,163 bounded static C1 rows plus seven C2 rows, while the immutable campaign ledger separately retains 7,899 semantic OPAQUE rows. The current 8,201 structural census adds 31 reviewed text-gap bodies with provider-compatible classifications outside those frozen grade tables and Generation 23. A complete 184-row residual census switched instruments to formal packs, strict RTTI/vtables, address-joined refs, strings/debug strings, registries, retained-source tokens and pristine decode: 167 exact functions / 407 slot placements advanced through strict vtable membership, then the final 17 advanced together through visible pristine instruction envelopes with row-specific falsifiers. The 46,657-byte HResultToString envelope is explicitly not represented as one original source routine. Gen20–Gen23 retain their bounded runtime claims and open effects/fields/populations. Static closure is not runtime/source/parity closure. |
-| Ghidra apply | The latest authorized live operation added exactly 31 reviewed default-metadata text-gap boundaries, advancing 8,170→8,201. Separate readback preserved every exported field of all 8,170 PRE function rows. Program bytes, defined data, stored non-function symbols, comments, and relocations remained exact; the expected instruction/reference growth is sealed by POST functions `2cc0b74f…93314`, POST program `be169e6b…e636`, and the synchronized 19-file project inventory `91776fb4…211`. The MissionScript boundary/vocabulary and one-row explosion-factory operations remain distinct historical parents. |
+| Immediate RE front | Fifty-three disjoint bulk static passes cover 7,945 exact bodies: 7,902 formerly opaque functions now have bounded C1_STATIC hypotheses, 42 prior C1 rows are repaired or confirmed, and ApplyDamage remains C2. The sealed 8,136-row tracked static-closure OPAQUE count is zero; a separately reviewed 34-row addendum gives the prior 8,170-function state 8,163 bounded static C1 rows plus seven C2 rows, while the immutable campaign ledger separately retains 7,899 semantic OPAQUE rows. The current 8,280 structural census adds 31 reviewed text-gap bodies with provider-compatible classifications and 79 default-metadata external-table bodies outside those frozen grade tables and Generation 23. A complete 184-row residual census switched instruments to formal packs, strict RTTI/vtables, address-joined refs, strings/debug strings, registries, retained-source tokens and pristine decode: 167 exact functions / 407 slot placements advanced through strict vtable membership, then the final 17 advanced together through visible pristine instruction envelopes with row-specific falsifiers. The 46,657-byte HResultToString envelope is explicitly not represented as one original source routine. Gen20–Gen23 retain their bounded runtime claims and open effects/fields/populations. Static closure is not runtime/source/parity closure. |
+| Ghidra apply | The latest authorized live operation added exactly 79 reviewed default-metadata external-table boundaries, advancing 8,201→8,280. Separate readback preserved every exported field of all 8,201 PRE function rows. Program bytes, defined data, stored non-function symbols, comments, and relocations remained exact; the expected listing change is sealed by POST functions `c3942b9e…72d6`, POST program `3e51ce1d…212d`, and the synchronized 19-file project inventory `ae422079…cf2`. The text-gap, MissionScript boundary/vocabulary, and one-row explosion-factory operations remain distinct historical parents. |
 
 The frozen three-master hashes later in this document remain the correct inputs
 for the 2026-07-29 synthesis. Body rows below that still say “current” without
@@ -221,7 +221,7 @@ evidence.
 | Plane | Exact current denominator | What “one” means |
 | --- | ---: | --- |
 | Measured installation | 5,515 files / 133 directories / 702,659,189 bytes | One filesystem object in a locally changed live install |
-| Current live Ghidra database | 8,201 functions | One current internal Ghidra function entry, including 1,179 EH funclets and 100 thunks |
+| Current live Ghidra database | 8,280 functions | One current internal Ghidra function entry, including 1,179 EH funclets and 100 thunks |
 | Pinned Stuart source | 106 C/C++ files / 1,855 physical body blocks / 1,857 conditional definition heads | One supplied text file or parser-counted source body, not one baseline-linked function |
 | Materializer snapshot reported by the frozen Stuart master | 324 expected outputs from non-additive input tables | One bounded reported rebuild output, often transformed or shared |
 
@@ -243,8 +243,8 @@ No percentage between these rows is meaningful. In particular:
 | Force-windowed trace image | SHA-256 `E1436EF7E0AD9CCBDDD43AAACA952F6E84D4B1A282835CEAD745EFCFC32FADF4` | Baseline plus one four-byte startup patch; all other bytes match baseline and remain usable as static evidence, while every runtime observation stays derivative/path-scoped |
 | Installed-tree aggregate | manifest digest `3D8AA45FB6792B605B5A29915E4256C5D2AFECEDE92AEF6CE8780FEA6A10212D` | Complete row census from a stable but non-atomic live traversal, not a filesystem snapshot or Steam depot manifest |
 | Stuart source | commit `5352A81CDB838B145A57F7FEBC5D9FC4B0129EBB` | Exact source pin, incomplete and not independently buildable |
-| Tracked Ghidra snapshot | 8,201 currently discovered internal functions; 19 files / 186,911,621 bytes; inventory `91776fb4…211` | Reviewed distributable database snapshot, exact to live at the verified 2026-08-14 text-gap boundary promotion; 8,201 is a current census, not a final ceiling |
-| Live Ghidra database | 8,201 currently discovered internal functions plus 224 external/import functions in Ghidra's aggregate count | Current maintainer state; separately read back and restore-tested from the 2026-08-14 text-gap boundary POST backup before snapshot promotion |
+| Tracked Ghidra snapshot | 8,280 currently discovered internal functions; 19 files / 186,960,773 bytes; inventory `ae422079…cf2` | Reviewed distributable database snapshot, exact to live at the verified 2026-08-14 external-table boundary promotion; 8,280 is a current census, not a final ceiling |
+| Live Ghidra database | 8,280 currently discovered internal functions plus 224 external/import functions in Ghidra's aggregate count | Current maintainer state; separately read back and restore-tested from the 2026-08-14 external-table boundary POST backup before snapshot promotion |
 | Reconstruction state | Assertions frozen inside `source-code/stuart-source-synthesis.md` SHA-256 `57C2C02E...B7B45` | Reported snapshot only; no root-repository commit plus dirty-content fingerprint was frozen, so remeasure code before making a present-tense implementation claim |
 
 This identity split is the first atom-level rule. Any claim without its specimen
@@ -396,10 +396,10 @@ not the existence of the demonstrated spine.
 - The current Ghidra database is broad but semantically sparse:
   the dated closure gives 8,136 saved functions static envelopes and the
   separate 34-row addendum extends bounded static accounting through the prior
-  8,170-row state; the 31 newer structural rows remain outside that frozen grade
-  projection. Gen23 still grades 7,899 of 8,126 functions semantic OPAQUE.
-  Current exact saved-body `.text` ownership is 1,784,978 / 1,929,117 =
-  92.528239604%, while
+  8,170-row state; the 31 text-gap and 79 external-table structural rows remain
+  outside that frozen grade projection. Gen23 still grades 7,899 of 8,126 functions semantic OPAQUE.
+  Current exact saved-body `.text` ownership is 1,794,212 / 1,929,117 =
+  93.006904195%, while
   function discovery and most semantics remain open.
 - The data corpus is completely traversed at the file/wrapper level but not
   semantically complete. Most AYA payloads outside Level 100/base/frontend are
@@ -432,7 +432,7 @@ The project becomes tractable when every subsystem is joined on stable keys:
 | Worlds | numeric world id | 97 headers / 95 script dirs / 66 resource archives | Set differences exact; exceptional roles mostly unknown |
 | Things | definition name, ordinal, selector, RTTI class | 26 selectors; Level 100 trace 33 creations | Factory exact; total definition-record size and corpus population incomplete |
 | Mission source | exact path/case, script/object name, event/native token | 733 MSL / 123 callable identifiers / 369 event literals | Selected lexical inventories complete for the named probes; dependency resolution, full grammar/call graph, and packed/loose semantics incomplete |
-| Mission VM | opcode, datatype id, native index, handler address | 27 / 6 / 144 unique handlers | Finite registry exact; all 144 handlers are current Ghidra entries after 34 default-metadata boundaries were promoted; that historical step yielded 8,170 before the later text-gap promotion advanced the overall census to 8,201 |
+| Mission VM | opcode, datatype id, native index, handler address | 27 / 6 / 144 unique handlers | Finite registry exact; all 144 handlers are current Ghidra entries after 34 default-metadata boundaries were promoted; that historical step yielded 8,170 before later text-gap and external-table promotions advanced the overall census to 8,280 |
 | Physics | statement type, definition name, value id | 777 statements / 9 families | Four value families closed; five require equivalent field maps |
 | Career | world id, node index, link index, slot id | 43 nodes / 200 link capacity / logical slots 0..255 | Graph and wrapper strong; unknown bytes preserved |
 | Goodies | Career index, script id, archive id, grid cell, media id | 300 states / 232 descriptors and archives / invalid terminal grid id 232 | Boundary understood; baseline terminal behavior open |
@@ -2306,26 +2306,25 @@ under their own provenance boundaries.
 
 | Measure | Current value |
 | --- | ---: |
-| Saved live/tracked Ghidra rows | 8,201 |
-| Separately reviewed structural candidates still outside Ghidra | 79 |
-| Saved lower bound | **8,201** |
-| Distinct saved names | 8,193 |
+| Saved live/tracked Ghidra rows | 8,280 |
+| Reviewed 79-row external-table cohort still outside Ghidra | 0 |
+| Saved lower bound | **8,280** |
+| Distinct saved names | 8,272 |
 | Duplicate-name spellings | 8 |
-| `FUN_*` | 909 |
+| `FUN_*` | 988 |
 | EH funclets | 1,179 |
 | Thunks | 100 |
 | Functions with plate comments | 7,050 |
 | Functions with tags | 6,012 |
-| Saved non-funclet population | 7,022 |
-| Latest saved live export | 7,109,943 bytes, SHA-256 `2cc0b74f…93314` |
+| Saved non-funclet population | 7,101 |
+| Latest saved live export | 7,161,942 bytes, SHA-256 `c3942b9e…72d6` |
 
-“8,201 functions” means saved database entries, not the unknowable perfect
-compiler/linker total. The 34 registry-derived and 31 text-gap boundaries are
-now included in that lower bound, still not a ceiling. The 2026-08-13-named
-rolling projection now contains the exact 2026-08-14 8,201-row readback; the
+“8,280 functions” means saved database entries, not the unknowable perfect
+compiler/linker total. The 34 registry-derived, 31 text-gap, and 79 external-
+table boundaries are now included in that lower bound, still not a ceiling. The
+2026-08-13-named rolling projection now contains the exact 2026-08-14 8,280-row readback; the
 8,136-row 2026-08-12 and 7,555-row July projections remain frozen for their
-pinned consumers. The separate 79-row external-table cohort is reviewed but
-not silently counted as saved before its own admission gate closes.
+pinned consumers.
 
 #### Coverage has three different meanings
 
@@ -2334,15 +2333,15 @@ The PE `.text` virtual-size denominator is 1,929,117 bytes; the mapped block is
 
 - Old 6,411-body interval coverage is
   1,539,953 / 1,929,117 = 79.8268%.
-- Since then 1,790 function rows were added.
+- Since then 1,869 function rows were added.
 - [Current saved-body ownership](binary-analysis/current-text-ownership-2026-08-13.md)
-  is 1,784,978 / 1,929,117 = 92.528239604% across 8,201 functions and 8,321
-  exact ranges, with zero overlap and 144,139 uncovered bytes.
+  is 1,794,212 / 1,929,117 = 93.006904195% across 8,280 functions and 8,400
+  exact ranges, with zero overlap and 134,905 uncovered bytes.
 - Seventy functions have non-contiguous bodies; min/max envelopes can
   falsely claim gap membership.
 
 The following function-note coverage is a dated 7,555-row survey, not current
-8,201-row coverage:
+present-day coverage:
 
 | Question | Rows |
 | --- | ---: |
@@ -2724,9 +2723,9 @@ mission shape, actor families, media, and configuration use.
 | Critical | Depot provenance not established | “Shipped/Steam truth” may overgeneralize a local baseline | Use exact hashes and baseline wording; reconcile depot separately |
 | Critical | Live install is non-atomic and locally contaminated | Patched exe, saves, generated options, and proof artifacts coexist | Read-only specimen ledger; never mutate; distinguish provenance classes |
 | Critical | Analyst metadata can launder inference | Names/tags/source grades can look like byte facts | Separate EXECUTABLE-BYTES from ANALYST-METADATA and record independence group |
-| Critical | Saved-body ownership is closed but function discovery is not | The exact 92.528239604% union leaves 144,139 bytes outside bodies, including loose instructions, data, body fragments, and code-shaped gaps | Preserve the exact gap ledger; prove CFG/body repairs and entries per target before Ghidra writes |
+| Critical | Saved-body ownership is closed but function discovery is not | The exact 93.006904195% union leaves 134,905 bytes outside bodies, including loose instructions, data, body fragments, and code-shaped gaps | Preserve the exact gap ledger; prove CFG/body repairs and entries per target before Ghidra writes |
 | High | Tracked and live Ghidra states diverge | Reproduction from tracked project cannot yield current claims | Name live export hash; promote only by separate reviewed action |
-| High | Gen23 retains 7,899 semantic OPAQUE functions and excludes 75 later-discovered entries | Broad structural/static coverage does not equal semantic map | Current address ledger, campaign admissions, and finite system contracts—not prose volume |
+| High | Gen23 retains 7,899 semantic OPAQUE functions and excludes 154 later-discovered entries | Broad structural/static coverage does not equal semantic map | Current address ledger, campaign admissions, and finite system contracts—not prose volume |
 | High | Stuart source is incomplete and unbuildable | Missing owners/guards can be silently invented | Pin commit; classify every body/guard/dependency; baseline adjudication |
 | High | Outer parser success is overclaimed | Decompression/header walks can conceal opaque fields and wrong render laws | Per-instance schema/opaque-range/reference ledgers |
 | High | Loose MissionScripts are incomplete | Sixteen includes absent; runtime may use packed form | Do not compile; prove selection/precedence on copied target |
@@ -2784,7 +2783,7 @@ publication are separate actions with separate authority.
 | U20 | `Message.exe` reachability | May be orphaned installer/support utility | Process/create/xref/shortcut/registry/manual search |
 | U21 | Modern `cardid` behavior | Old catalog may fall through/default | Instrument directive selection on modern hardware |
 | U22 | Particle laws | Names/types complete, semantics absent | Baseline descriptor factories/update/render traces |
-| U23 (ownership closed) | Current `.text` body ownership | 1,784,978 / 1,929,117 = 92.528239604%; 144,139 bytes remain outside saved bodies | Advance the five jump-fragment repairs and code-shaped boundary queues with target-specific proof |
+| U23 (ownership closed) | Current `.text` body ownership | 1,794,212 / 1,929,117 = 93.006904195%; 134,905 bytes remain outside saved bodies | Advance the five jump-fragment repairs and code-shaped boundary queues with target-specific proof |
 | U24 | Later Level 100 behavior | Trace ends at briefing | Indexed trace through combat and all 19 later beats |
 
 ## Atom-level completeness contract
@@ -3003,7 +3002,7 @@ accounting, not semantic closure.
 Current exact analyst/code surfaces:
 
 ```text
-8,201 saved Ghidra function rows (including 34 registry and 31 text-gap additions)
+8,280 saved Ghidra function rows (including 34 registry, 31 text-gap, and 79 external-table additions)
 1,929,117-byte .text virtual size
 144 Mission natives
 27 Mission opcodes
@@ -3018,11 +3017,11 @@ Per code row: exact body ranges/bytes, entry/interior/data distinction, calling
 convention, prototype, name evidence, owner, callers/callees, comments/tags,
 source join, runtime join, disputes.
 
-Accounting closure is not “8,201/8,201 named.” The saved 8,201-function
-inventory—including the 34 registry and 31 text-gap additions—the
+Accounting closure is not “8,280/8,280 named.” The saved 8,280-function
+inventory—including the 34 registry, 31 text-gap, and 79 external-table additions—the
 1,929,117-byte `.text` space, and each explicitly enumerated table need separate
 N/N results. Current byte-verified saved-body ownership is now exactly
-1,784,978 / 1,929,117 with 144,139 gap bytes; discovery and semantic closure do
+1,794,212 / 1,929,117 with 134,905 gap bytes; discovery and semantic closure do
 not follow from that structural result. The
 registry-of-registries remains `DISCOVERY_OPEN` until a bounded search surface
 and method produce its denominator; “all finite tables” is not a denominator.
@@ -3330,7 +3329,7 @@ feature discovery remain open. The next bounded units include:
 97/95/66 joined world spaces
 144 Mission natives
 777 Physics statements / 6,803 nodes
-8,201 saved Ghidra rows / 1,929,117 .text bytes;
+8,280 saved Ghidra rows / 1,929,117 .text bytes;
   registry-of-registries discovery open
 106 source files / 1,855 bodies
 rebuild feature-manifest denominator pending

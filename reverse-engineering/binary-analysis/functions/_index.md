@@ -1,7 +1,7 @@
 # Function Notes
 
 Status: active — front door for the per-function RE note corpus
-Last updated: 2026-07-28
+Last updated: 2026-08-14
 Summary: what these notes are, which naming authority is current, how the
 2026-07-28 name corrections were made and what they rest on, and which of this
 corpus's known defects are still open.
@@ -56,7 +56,7 @@ Naming authority, as a dated chain, newest last:
 | 2026-08-12 | [Collision-component implementation-identity correction](../collision-component-identity-correction-2026-08-12.md) | proves and promotes five shared-base implementation identities |
 | 2026-08-12 | `ghidra-function-name-table-2026-08-12.tsv` | frozen 8,136-row projection retained for its pinned consumers |
 | 2026-08-13 | [Mission-registry boundary promotion](../mission-script-registry-boundary-live-promotion-2026-08-13.md) | proves and promotes exactly 34 callable boundaries with default metadata |
-| 2026-08-14 | `ghidra-function-name-table-2026-08-13.tsv` | **the current 8,201-row address → symbol resolution authority**, refreshed from the 31-boundary text-gap readback while retaining the stable path |
+| 2026-08-14 | `ghidra-function-name-table-2026-08-13.tsv` | **the current 8,280-row address → symbol resolution authority**, refreshed from the 79-boundary external-table readback while retaining the stable path |
 
 The mechanical check against the current last row is
 `tools/re_function_doc_names_check.py`. The table is tracked; the checker

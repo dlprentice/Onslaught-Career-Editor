@@ -2,11 +2,11 @@
 
 Date: 2026-08-13
 
-Status: reviewed structural preparation; no Ghidra or current function-census
-mutation.
+Status: historical reviewed structural preparation consumed by the completed
+2026-08-14 live promotion.
 
-Verdict: **SUPPORTED AS 79 DISTINCT FUNCTION-BOUNDARY CANDIDATES PENDING THE
-NORMAL SCRATCH-ADMISSION GATE.** The 51 current
+Verdict: **SUPPORTED AS 79 DISTINCT FUNCTION BOUNDARIES; LATER SCRATCH-VALIDATED
+AND LIVE-PROMOTED.** The then-current 51
 `EXTERNAL_TABLE_TARGET_CANDIDATE` gaps are fully dispositioned: 46 contain 78
 pairwise-disjoint callable starts, while five are fragments of existing
 functions or shared blocks. One adjacent IJG callback adds the 79th start.
@@ -15,6 +15,11 @@ Specimen: pristine PC retail `BEA.exe`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`;
 comparison PC demo `BEA.exe`, SHA-256
 `d8637dd755b21c720c0cb8f71923f94d2a04a184d90f5343c2e868ce8606e5c2`.
+
+Current settlement: the separate
+[live-promotion report](external-table-gap-ghidra-live-promotion-2026-08-14.md)
+records the later backed-up admission from 8,201 to 8,280. This owner remains
+the dated boundary/provider evidence and does not itself claim semantic grades.
 
 Evidence: **MEASURED** — the 79-row boundary ledger is
 [`external-table-gap-function-boundaries-2026-08-13.tsv`](external-table-gap-function-boundaries-2026-08-13.tsv),

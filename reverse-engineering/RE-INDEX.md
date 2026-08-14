@@ -180,8 +180,8 @@ was independently reviewed, then applied once through a fresh PRE backup,
 current-state replicas, one live save, separate readback, POST backup, and
 tracked restore. The resulting
 [live-promotion report](binary-analysis/text-gap-missing-function-ghidra-live-promotion-2026-08-14.md)
-advances the current saved census to **8,201 internal functions**, preserves all
-8,170 PRE rows exactly, and adds only the 31 reviewed default-metadata bodies.
+advanced the then-current saved census to **8,201 internal functions**, preserved all
+8,170 PRE rows exactly, and added only the 31 reviewed default-metadata bodies.
 The separate [library classification](binary-analysis/text-gap-library-function-classification-2026-08-13.md)
 bounds their CRT/AMD/IJG provider-compatible identities; it does not make them
 original linker symbols, runtime contracts, Generation-23 rows, or rebuild
@@ -193,17 +193,19 @@ The separate
 [79-row external-table gap scratch admission](binary-analysis/external-table-gap-ghidra-scratch-admission-2026-08-14.md)
 reproduces 79 exact default-metadata boundaries on two isolated db.18612
 replicas while preserving every field of all 8,201 PRE function rows. Its
-verdict is `SCRATCH_READY_LIVE_FORBIDDEN`: it does not itself change the saved
+verdict was `SCRATCH_READY_LIVE_FORBIDDEN`: it did not itself change the saved
 structural census, Generation 23, semantic grades, or rebuild state.
 
-The follow-on
+The follow-on historical
 [79-row live-promotion authority preparation](binary-analysis/external-table-gap-ghidra-live-promotion-preparation-2026-08-14.md)
-re-verifies that scratch receipt and independently hashes live plus tracked PRE
-to the same canonical 19-file project. It separates read-only preflight, live-
-phase adjudication with a durable exact-root tracked-still-PRE inspection after
-POST recovery, and final tracked/restore/projection sealing. Its verdict is
-`LIVE_AUTHORITY_CANDIDATE_READY_CEREMONY_NOT_RUN`; no live or tracked mutation
-has occurred under that preparation.
+was executed once through a fresh PRE backup, two replicas, one live save,
+separate readback, POST recovery, an exact-root tracked-still-PRE inspection,
+tracked refresh, and retained restore probes. The resulting
+[live-promotion report](binary-analysis/external-table-gap-ghidra-live-promotion-2026-08-14.md)
+advances the saved census from **8,201 to 8,280 internal functions**, preserves
+all 8,201 PRE rows exactly, and adds only the 79 reviewed default-metadata
+bodies. It changes no Generation-23 row, semantic grade, original linker name,
+runtime contract, or rebuild mapping.
 
 **Dated PC demo/retail frontier (2026-08-12, 8,136-function population):** the conservative 8,086-entry
 address map plus exact second-pass reports, caller propagation, equal-delta
@@ -523,7 +525,7 @@ being recovered**, which is exactly the trap this metric sets.
 *(Added 2026-07-27. The per-ledger figures below are dated snapshots against the
 **6,969**-function inventory and are quoted as those ledgers state them; they
 are not the current figure. The tracked `ghidra/` snapshot now has a separately
-read-back 8,201-row name projection dated 2026-08-14; the frozen 8,136-row
+read-back 8,280-row name projection dated 2026-08-14; the frozen 8,136-row
 2026-08-12 table and July 7,555-row table
 remains a dated artifact. Historical live/snapshot distinction and mutation-
 wave reconciliation are tracked in [`ghidra-functions.md`](ghidra-functions.md);
@@ -549,9 +551,9 @@ different failure modes and only the first was being tested.)*
   with **0 byte mismatches**, 6,351 of 6,411 functions fully clean — but only
   **79.8268 % of `.text` was covered by those 6,411 historical bodies**.
   [Current `.text` body ownership](binary-analysis/current-text-ownership-2026-08-13.md)
-  now supersedes that metric for present use: all 8,201 saved functions and
-  8,321 exact ranges own 1,784,978 / 1,929,117 bytes = 92.528239604%, with
-  zero overlap. The 144,139-byte gap is separately partitioned by current
+  now supersedes that metric for present use: all 8,280 saved functions and
+  8,400 exact ranges own 1,794,212 / 1,929,117 bytes = 93.006904195%, with
+  zero overlap. The 134,905-byte gap is separately partitioned by current
   listing state and discovery evidence; this remains structural body ownership,
   not semantic reversal. The historical 6,411-row result remains reproducible
   in under a minute with `tools/re_verify.py`.
@@ -754,8 +756,8 @@ Machine-readable siblings, for consumers that should not be parsing prose:
   — a **candidate**, as its own filename says; not an accepted contract.
 - [Retail specimen manifest](binary-analysis/retail-specimen-manifest-2026-03-14.json)
 - [2026-08-13 function name table](binary-analysis/ghidra-function-name-table-2026-08-13.tsv)
-  — the current 8,201-row address-to-name authority, regenerated from the
-  2026-08-14 text-gap boundary readback while retaining the stable path.
+  — the current 8,280-row address-to-name authority, regenerated from the
+  2026-08-14 external-table boundary readback while retaining the stable path.
 - [2026-08-12 function name table](binary-analysis/ghidra-function-name-table-2026-08-12.tsv)
   — frozen 8,136-row provenance retained for Generations 20–23 and its other
   pinned consumers.

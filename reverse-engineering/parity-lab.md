@@ -6,7 +6,7 @@ capture bundles, calibrated Stuart/BSim matching, an authored Mission logger,
 and verified campaign ratchets are implemented; corpus-wide semantic joins,
 repeated action campaigns, and rebuild-ready semantic promotion remain open
 
-Last updated: 2026-08-13 (Gen23 authority; Gen10/Gen73 remain non-current)
+Last updated: 2026-08-14 (Gen23 authority; Gen10/Gen73 remain non-current)
 
 Verdict: Battle Engine Aquila no longer needs to be approached as 8,124 isolated
 decompiler functions plus an unbounded dark tail. A specimen-bound pipeline can
@@ -234,11 +234,11 @@ The current layers must remain separate:
 
 | Population | Current count | Meaning |
 | --- | ---: | --- |
-| Saved Ghidra function entries | 8,201 | Exact 2026-08-14 live/tracked readback; includes the 34 registry-callable boundaries and 31 later text-gap boundaries |
-| Reviewed structural candidates still outside Ghidra | 79 | Separate external-table cohort; its live admission remains gated and is not counted in the saved census |
-| Defensible saved census/lower bound | **8,201** | Not a final ceiling; the 79-row cohort remains a separately reviewed candidate extension |
+| Saved Ghidra function entries | 8,280 | Exact 2026-08-14 live/tracked readback; includes the 34 registry-callable, 31 text-gap, and 79 external-table boundaries |
+| Reviewed 79-row structural cohort still outside Ghidra | 0 | The external-table cohort completed its separate backed live admission |
+| Defensible saved census/lower bound | **8,280** | Not a final ceiling |
 | MSVC exception/unwind funclets in saved Ghidra | 1,179 | Compiler machinery; not gameplay-semantic closure |
-| Literal `FUN_<address>` names in saved Ghidra | 909 | The separate 34-row new-function vocabulary ceremony replaced those defaults; the 31 newer structural rows retain default names |
+| Literal `FUN_<address>` names in saved Ghidra | 988 | The separate 34-row new-function vocabulary ceremony replaced those defaults; the 31 text-gap and 79 external-table structural rows retain default names |
 | Static-envelope closure | 8,136 rows: 8,129 C1 + 7 C2 | Dated table; does not include the 34 promoted entries |
 | Canonical campaign | 8,126 rows: 217 C1 + 10 C2 + 7,899 OPAQUE | Gen23 semantic/runtime authority |
 | Mission native registry | 144 unique names / 144 unique handlers | Finite shipped registry |
@@ -247,7 +247,7 @@ The current layers must remain separate:
 
 The saved-name projection is
 `reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-13.tsv`
-(8,201 rows; SHA-256 `c6084999…84d20`). The independent Mission-registry
+(8,280 rows; SHA-256 `6e22a93a…dd68`). The independent Mission-registry
 missing-boundary proof
 is under `local-lab/mission-registry-missing-functions-20260813-v1/` and
 reproduces byte-identically. Older 7,555-row and 86-missing figures below are
@@ -257,7 +257,7 @@ This correction illustrates why the pipeline binds every result to an inventory
 hash. A queue generated against one inventory cannot silently become current.
 
 The important conclusion is that “rename every `FUN_*` function” remains too
-narrow: 909 current defaults are only a naming state, and thousands of
+narrow: 988 current defaults are only a naming state, and thousands of
 descriptive or hypothesis names still require evidence appropriate to their
 claim. The Mission cohort kept boundary creation separate from both the 75-row
 existing-entry and 34-row new-entry Tier-2 normalizations so structural
@@ -2646,34 +2646,36 @@ Audio:
 
 Strong:
 
-- 8,201 saved live/tracked entries, including 34 registry-linked and 31
-  text-gap callable starts admitted through independent bounded proof;
+- 8,280 saved live/tracked entries, including 34 registry-linked, 31 text-gap,
+  and 79 external-table callable starts admitted through bounded proof;
 - every one of 2,127 recovered vtable targets has a function entry;
 - exact RTTI/vtable population;
 - finite Mission opcode/datatype/native tables;
-- exact body geometry for the 8,201 saved rows, plus a dated 7,555-row direct-
+- exact body geometry for the 8,280 saved rows, plus a dated 7,555-row direct-
   call graph artifact;
 - short TTD and `drcov` behavior demonstrated;
 - D3D9 draw and backbuffer evidence demonstrated.
 
 Open or concerning:
 
-- 909 saved entries retain literal default names, while Gen23 still has 7,899
+- 988 saved entries retain literal default names, while Gen23 still has 7,899
   semantically OPAQUE rows;
 - the 34 new Mission boundaries now have a separate bounded static-contract
   addendum but remain outside immutable Gen23 campaign semantics;
 - the 31 newer text-gap boundaries have provider-compatible static
   classifications but remain outside the frozen grade projection and campaign;
+- the 79 external-table boundaries remain default-metadata structural rows
+  outside the frozen grade projection and campaign;
 - at least six live names are directly contradicted by byte/RTTI evidence;
 - D3D/cockpit/tree correction clusters remain;
 - the registry/table discovery universe has no denominator;
-- current saved-body ownership is exact, but 144,139 `.text` bytes remain
+- current saved-body ownership is exact, but 134,905 `.text` bytes remain
   outside function bodies and final function discovery has no ceiling.
 
 The historical 6,411-body `.text` coverage was 1,539,953 / 1,929,117 =
 79.8268%. The [current accounting](binary-analysis/current-text-ownership-2026-08-13.md)
-supersedes it for present use: 8,201 saved functions / 8,321 ranges own
-1,784,978 bytes = 92.528239604%, with zero overlap. The remaining 144,139 bytes
+supersedes it for present use: 8,280 saved functions / 8,400 ranges own
+1,794,212 bytes = 93.006904195%, with zero overlap. The remaining 134,905 bytes
 are listing-partitioned into loose instructions, defined data, and unclassified
 content. This closes body-range accounting only; code/data truth, exact missing
 boundaries, final discovery, semantics, and runtime coverage remain open.
@@ -2756,14 +2758,14 @@ Maintain separate ledgers.
 
 | Metric | Numerator / denominator | Current |
 | --- | --- | --- |
-| Saved Ghidra inventory | exported rows / exact 2026-08-14 readback | 8,201 / 8,201 |
-| Discovered-entry lower bound | saved rows | at least 8,201 |
-| Exact saved-body geometry | functions passing range invariants / saved rows | 8,201 / 8,201 |
-| Literal default names | `FUN_*` / saved rows | 909 / 8,201 |
-| Static function envelopes | frozen graded rows / discovered lower bound | 8,170 / at least 8,201; sealed 8,136-row table plus reviewed 34-row addendum, with 31 newer structural rows separately classified but not grade-projected |
+| Saved Ghidra inventory | exported rows / exact 2026-08-14 readback | 8,280 / 8,280 |
+| Discovered-entry lower bound | saved rows | at least 8,280 |
+| Exact saved-body geometry | functions passing range invariants / saved rows | 8,280 / 8,280 |
+| Literal default names | `FUN_*` / saved rows | 988 / 8,280 |
+| Static function envelopes | frozen graded rows / discovered lower bound | 8,170 / at least 8,280; sealed 8,136-row table plus reviewed 34-row addendum, with 31 text-gap rows separately classified and 79 external-table rows ungraded |
 | Campaign semantics above OPAQUE | C1 + C2 / Gen23 rows | 227 / 8,126 |
 | Mission handler boundaries | saved structurally bounded handler starts / registry | 144 / 144; creation complete |
-| `.text` saved-body ownership | exact owned executable bytes / 1,929,117 | 1,784,978 / 1,929,117 = 92.528239604%; zero overlap |
+| `.text` saved-body ownership | exact owned executable bytes / 1,929,117 | 1,794,212 / 1,929,117 = 93.006904195%; zero overlap |
 | Stable runtime coverage | exact covered bytes / declared capture window | per scenario only |
 
 “All functions named” is not a closure metric. A correctly anonymous compiler
@@ -3248,9 +3250,9 @@ Ghidra mutation, installed-game mutation, push, or publication occurred.
 
 The remaining function problem is now mechanically approachable:
 
-- 8,201 saved functions have exact body geometry, including 34 registry and 31
-  text-gap callable starts admitted from independent bounded CFG/body proof;
-- 909 saved entries retain literal defaults, while 7,899 Gen23 functions remain
+- 8,280 saved functions have exact body geometry, including 34 registry, 31
+  text-gap, and 79 external-table callable starts admitted from bounded proof;
+- 988 saved entries retain literal defaults, while 7,899 Gen23 functions remain
   semantically OPAQUE;
 - cheap differential coverage has already reduced one 16,794-start action run
   to eight leading functions;

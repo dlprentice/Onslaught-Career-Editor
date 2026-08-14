@@ -110,4 +110,4 @@ The cheapest falsifier is one byte mismatch in any full body, a DLL/PDB
 GUID-age mismatch, failure to reproduce one joined public spelling in all eight
 versions, or a collision between a proposed provider-qualified label and the
 review-time 8,170-name projection; current-state consumers use the later
-8,201-row projection.
+8,280-row projection.

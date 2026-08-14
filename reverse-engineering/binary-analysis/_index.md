@@ -41,9 +41,9 @@ the document it links.
   — promotes bounded Tier-2 names/comments/tags for the 34 newly admitted
   handlers while preserving all 8,136 non-target rows and every body/ABI byte
 - [Current `.text` body ownership and listing-state accounting](current-text-ownership-2026-08-13.md)
-  — replays all 8,201 saved functions / 8,321 ranges against pristine bytes,
-  closes the exact zero-overlap union at 1,784,978 / 1,929,117 = 92.528239604%,
-  and partitions the 144,139-byte gap without treating loose code/data as proved
+  — replays all 8,280 saved functions / 8,400 ranges against pristine bytes,
+  closes the exact zero-overlap union at 1,794,212 / 1,929,117 = 93.006904195%,
+  and partitions the 134,905-byte gap without treating loose code/data as proved
   functions or semantics
 - [Text-gap 31-function library classification](text-gap-library-function-classification-2026-08-13.md)
   — identifies the 31 now-admitted exact boundaries as 14
@@ -56,7 +56,10 @@ the document it links.
 - [External-table gap function-boundary preparation](external-table-gap-function-boundaries-2026-08-13.md)
   — dispositions all 51 table-target gaps, separates five existing-body/shared
   fragments, and prepares a non-overlapping 79-function lower bound with exact
-  PC-demo twins; current Ghidra remains at 8,201 pending that separate admission
+  PC-demo twins; the separate live ceremony below has now admitted that cohort
+- [External-table gap 79-boundary live promotion](external-table-gap-ghidra-live-promotion-2026-08-14.md)
+  — records the backed-up one-save promotion from 8,201 to 8,280, separate
+  readback, exact preservation of every PRE row, and live/tracked/POST equality
 - [PC D3DX four-vector-cross helper boundary](d3dx-vec4cross-crossbuild-boundary-2026-08-13.md)
   — closes `0x005762dd..0x005763cd` as one exact 240-byte / 97-instruction
   function through seven byte-identical PC/Issue-7/Issue-11/US-retail copies;
@@ -259,13 +262,14 @@ the document it links.
 >
 > The tracked
 > [`ghidra-function-name-table-2026-08-13.tsv`](ghidra-function-name-table-2026-08-13.tsv)
-> is the current 8,201-row address-to-name projection and the mechanical
+> is the current 8,280-row address-to-name projection and the mechanical
 > checker's authority after the verified
 > [34-boundary promotion](mission-script-registry-boundary-live-promotion-2026-08-13.md)
 > and subsequent
 > [75-row vocabulary promotion](mission-script-registry-vocabulary-live-promotion-2026-08-13.md),
 > 34-row new-function vocabulary promotion, and
-> [31-boundary text-gap promotion](text-gap-missing-function-ghidra-live-promotion-2026-08-14.md).
+> [31-boundary text-gap promotion](text-gap-missing-function-ghidra-live-promotion-2026-08-14.md),
+> and [79-boundary external-table promotion](external-table-gap-ghidra-live-promotion-2026-08-14.md).
 > The 2026-08-12 and July tables remain dated artifacts for their original
 > checks and pinned receipts. The current count is a discovered census, not a
 > permanent ceiling.

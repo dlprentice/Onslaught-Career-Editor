@@ -3,10 +3,10 @@
 #           It is a name index, not a database, disassembly, or semantic proof.
 # Projection date: 2026-08-14
 # Specimen SHA-256: 74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750
-# Source  : local-lab/ghidra-text-gap-boundary-live-promotion-20260814-v1/runs/live-readback/functions.tsv
-# Source bytes: 7109943
-# Source SHA-256: 2cc0b74f9284a3d6d59effa857cb6766bb78b08d50a7896d0dda8631f7c93314
-# Rows    : 8201 internal functions; this is a discovered census, not a final ceiling.
+# Source  : local-lab/ghidra-external-table-gap-boundary-live-promotion-20260814-v1/runs/live-readback/functions.tsv
+# Source bytes: 7161942
+# Source SHA-256: c3942b9e340cef71b731290b845843697af5c53204449c51949b779e896272d6
+# Rows    : 8280 internal functions; this is a discovered census, not a final ceiling.
 # Columns : address, name, bodyMin, bodyMax (hex). Non-contiguous bodies are
 #           represented by their bounding range, so bodyMin..bodyMax can over-cover.
 address	name	bodyMin	bodyMax
@@ -593,6 +593,7 @@ address	name	bodyMin	bodyMax
 0x00421ec0	FUN_00421ec0	0x00421ec0	0x00421f82
 0x00421f90	CCarrierGuide__VFunc_3_00421f90	0x00421f90	0x0042234e
 0x00422350	FUN_00422350	0x00422350	0x0042236e
+0x00422370	FUN_00422370	0x00422370	0x00422432
 0x00422440	CCarver__Init	0x00422440	0x0042244d
 0x00422560	CCarverAI__scalar_deleting_dtor	0x00422560	0x0042257f
 0x00422580	CCarverAI__dtor_base	0x00422580	0x0042261e
@@ -1466,6 +1467,7 @@ address	name	bodyMin	bodyMax
 0x0044adb0	CEulerAngles__ctor_from_FMatrix	0x0044adb0	0x0044ae12
 0x0044ae20	CPauseMenu__InitAndSetActiveReader	0x0044ae20	0x0044ae73
 0x0044ae80	FUN_0044ae80	0x0044ae80	0x0044ae9e
+0x0044aea0	FUN_0044aea0	0x0044aea0	0x0044af62
 0x0044af70	FUN_0044af70	0x0044af70	0x0044af85
 0x0044af90	FUN_0044af90	0x0044af90	0x0044af99
 0x0044afa0	CEventManager__ctor	0x0044afa0	0x0044afd1
@@ -1635,6 +1637,7 @@ address	name	bodyMin	bodyMax
 0x00457ee0	CFEPDemoMain__DoAction	0x00457ee0	0x00457f17
 0x00457f20	CFEPDemoMain__Update	0x00457f20	0x00457f56
 0x00457f60	FUN_00457f60	0x00457f60	0x00457f7e
+0x00457f80	FUN_00457f80	0x00457f80	0x00458042
 0x00458050	CFEPDevelopment__CompareWorldFileNamePtrs	0x00458050	0x0045808e
 0x00458090	CFEPDevelopment__EnumerateWorldFiles	0x00458090	0x004581dd
 0x004581e0	CFEPDevelopment__Shutdown	0x004581e0	0x00458224
@@ -1719,6 +1722,7 @@ address	name	bodyMin	bodyMax
 0x004644d0	CFEPMain__TransitionNotification	0x004644d0	0x0046451a
 0x00464520	CFEPMain__ActiveNotification	0x00464520	0x0046452a
 0x00464530	FUN_00464530	0x00464530	0x0046454e
+0x00464550	FUN_00464550	0x00464550	0x00464612
 0x00464620	CFEPSaveGame__Init	0x00464620	0x0046462d
 0x00464630	CFEPSaveGame__ButtonPressed	0x00464630	0x004646f4
 0x00464730	CFEPSaveGame__Process	0x00464730	0x00464a76
@@ -1965,6 +1969,7 @@ address	name	bodyMin	bodyMax
 0x0047b6d0	CGroundAttackAI__VFunc_9_0047b6d0	0x0047b6d0	0x0047baa4
 0x0047bab0	CGroundAttackAI__InitState	0x0047bab0	0x0047baf5
 0x0047bb00	FUN_0047bb00	0x0047bb00	0x0047bb1e
+0x0047bb20	FUN_0047bb20	0x0047bb20	0x0047bbe2
 0x0047bbf0	CGroundAttackAircraft__Init	0x0047bbf0	0x0047bd67
 0x0047bd70	CGroundAttackAI__ScalarDeletingDestructor	0x0047bd70	0x0047bd8f
 0x0047bd90	CGroundAttackAI__Destructor	0x0047bd90	0x0047be2e
@@ -2227,6 +2232,7 @@ address	name	bodyMin	bodyMax
 0x0048ff90	CMessageBox__ActivateWithFadeStep_0p1	0x0048ff90	0x0048ff9e
 0x0048ffa0	CLevelBriefingLog__VFunc_3_0048ffa0	0x0048ffa0	0x0048ffd4
 0x0048ffe0	FUN_0048ffe0	0x0048ffe0	0x0048fffe
+0x00490000	FUN_00490000	0x00490000	0x004900c2
 0x004900d0	CLevelScriptThing__VFunc_9_004900d0	0x004900d0	0x004900e3
 0x004900f0	FUN_004900f0	0x004900f0	0x0049010e
 0x00490110	FUN_00490110	0x00490110	0x004901d2
@@ -5161,6 +5167,7 @@ address	name	bodyMin	bodyMax
 0x00544590	FUN_00544590	0x00544590	0x00544599
 0x005445a0	FUN_005445a0	0x005445a0	0x005445bc
 0x005445c0	FUN_005445c0	0x005445c0	0x005445c9
+0x005445d0	FUN_005445d0	0x005445d0	0x005445ef
 0x00544600	FUN_00544600	0x00544600	0x0054461c
 0x00544620	FUN_00544620	0x00544620	0x00544629
 0x00544630	FUN_00544630	0x00544630	0x0054464c
@@ -5297,6 +5304,7 @@ address	name	bodyMin	bodyMax
 0x005507f0	FUN_005507f0	0x005507f0	0x0055080e
 0x00550810	FUN_00550810	0x00550810	0x0055082c
 0x00550830	FUN_00550830	0x00550830	0x00550839
+0x00550840	FUN_00550840	0x00550840	0x0055085f
 0x00550870	FUN_00550870	0x00550870	0x00550895
 0x005508a0	CDXEngine__ClearMatrixBlock	0x005508a0	0x005508df
 0x005508e0	CDXEngine__InitTransformCaches	0x005508e0	0x00550b02
@@ -5328,6 +5336,7 @@ address	name	bodyMin	bodyMax
 0x00551cc0	CScreenFx__LoadZoomTextures	0x00551cc0	0x00551d3a
 0x00551d40	CScreenFx__ReleaseZoomTextures	0x00551d40	0x00551d68
 0x00551d70	FUN_00551d70	0x00551d70	0x00551d8e
+0x00551d90	FUN_00551d90	0x00551d90	0x00551e52
 0x00551e60	FUN_00551e60	0x00551e60	0x00551e7c
 0x00551e80	FUN_00551e80	0x00551e80	0x00551e89
 0x00551e90	FUN_00551e90	0x00551e90	0x00551eac
@@ -5519,6 +5528,7 @@ address	name	bodyMin	bodyMax
 0x0055df1f	CRT__Purecall_0055df1f	0x0055df1f	0x0055df27
 0x0055df28	CRT__OnexitTablePush	0x0055df28	0x0055dfa5
 0x0055dfa6	CRT__RegisterOnexitFunction	0x0055dfa6	0x0055dfb7
+0x0055dfb8	FUN_0055dfb8	0x0055dfb8	0x0055dfe6
 0x0055dfe7	CRT__RoundDoubleWithFpuChecks	0x0055dfe7	0x0055e0b5
 0x0055e0c0	__aulldiv	0x0055e0c0	0x0055e127
 0x0055e128	__ftol	0x0055e128	0x0055e14e
@@ -5530,6 +5540,7 @@ address	name	bodyMin	bodyMax
 0x0055e2d0	_strchr	0x0055e2c0	0x0055e38b
 0x0055e38c	vsprintf	0x0055e38c	0x0055e3dc
 0x0055e3ea	CRT__FpuIntrinsicDispatch2Thunk	0x0055e3ea	0x0055e3f3
+0x0055e3f4	FUN_0055e3f4	0x0055e3f4	0x0055e411
 0x0055e412	CRT__SpawnPathVarargsNoEnv_Thunk	0x0055e412	0x0055e429
 0x0055e42a	Win32__CaptureSystemTimeAsFileTimeTicks	0x0055e42a	0x0055e45e
 0x0055e45f	CRT__OpenFileByModeString_AutoUnlock	0x0055e45f	0x0055e48f
@@ -5582,6 +5593,7 @@ address	name	bodyMin	bodyMax
 0x0055fc35	CRT__IsFloat10Integral_0055fc35	0x0055fc35	0x0055fc5c
 0x0055fc5d	CD3DApplication__ReadLineFromStreamLocked	0x0055fc5d	0x0055fcbe
 0x0055fcc0	__alldiv	0x0055fcc0	0x0055fd69
+0x0055fd6a	FUN_0055fd6a	0x0055fd6a	0x0055fe11
 0x0055fe26	CRT__LockRouteByAddress	0x0055fe26	0x0055fe54
 0x0055fe55	CRT__LockRouteByIndex	0x0055fe55	0x0055fe77
 0x0055fe78	CRT__UnlockRouteByAddress	0x0055fe78	0x0055fea6
@@ -5705,6 +5717,7 @@ address	name	bodyMin	bodyMax
 0x00564a0b	CRT__SpawnSearchPathWithFallbackExtensions	0x00564a0b	0x00564b53
 0x00564b54	CRT__SpawnResolvedPathWithBuiltCommandEnv	0x00564b54	0x00564ba4
 0x00564ba5	CRT__UnhandledExceptionFilterDispatch	0x00564ba5	0x00564bea
+0x00564beb	FUN_00564beb	0x00564beb	0x00564bfb
 0x00564c09	CRT__OpenFileByModeString	0x00564c09	0x00564d78
 0x00564d79	CRT__AcquireFileStreamSlot	0x00564d79	0x00564e40
 0x00564e41	CRT__CloseFd	0x00564e41	0x00564e9d
@@ -5844,6 +5857,7 @@ address	name	bodyMin	bodyMax
 0x0056b840	___free_lc_time	0x0056b840	0x0056b9cf
 0x0056b9d0	FUN_0056b9d0	0x0056b9d0	0x0056bba4
 0x0056bba5	CRT__NormalizeLocaleGroupingStringInPlace	0x0056bba5	0x0056bbdb
+0x0056bbdc	FUN_0056bbdc	0x0056bbdc	0x0056bca6
 0x0056bca7	CRT__LoadMonetaryLocaleInfoTable	0x0056bca7	0x0056bdc8
 0x0056bdc9	CRT__FreeLocaleBufferSet	0x0056bdc9	0x0056be16
 0x0056be17	CRT__InitCTypeTablesFromCodePage	0x0056be17	0x0056c05b
@@ -6017,10 +6031,13 @@ address	name	bodyMin	bodyMax
 0x00575cdd	Math__InterpolateVec2ByUV	0x00575cdd	0x00575d1f
 0x00575d20	CDXTexture__DispatchPtr00656f30_WithInit	0x00575d20	0x00575d2c
 0x00575d2d	CFastVB__DispatchIndirect_00656f30	0x00575d2d	0x00575d32
+0x00575d33	FUN_00575d33	0x00575d33	0x00575d43
 0x00575d44	CDXTexture__DispatchPtr00656f54_WithInit	0x00575d44	0x00575d50
 0x00575d51	CFastVB__DispatchIndirect_00656f54	0x00575d51	0x00575d56
+0x00575d57	FUN_00575d57	0x00575d57	0x00575d67
 0x00575d68	CMeshCollisionVolume__DispatchPtr00656f44_WithInit	0x00575d68	0x00575d74
 0x00575d75	CFastVB__DispatchIndirect_00656f44	0x00575d75	0x00575d7a
+0x00575d7b	FUN_00575d7b	0x00575d7b	0x00575d8b
 0x00575d8c	CDXTexture__DispatchPtr00656f4c_WithInit	0x00575d8c	0x00575d98
 0x00575d99	Runtime__CallIndirectThunk_00575d99	0x00575d99	0x00575d9e
 0x00575d9f	FUN_00575d9f	0x00575d9f	0x00575dc8
@@ -6031,16 +6048,26 @@ address	name	bodyMin	bodyMax
 0x00575fa1	Math__InterpolateVec3ByUV	0x00575fa1	0x00575ffd
 0x00575ffe	CTexture__DispatchPtr00656f34_WithInit	0x00575ffe	0x0057600a
 0x0057600b	CVBufTexture__DispatchTextureTransformThunk	0x0057600b	0x00576010
+0x00576011	FUN_00576011	0x00576011	0x0057609b
 0x0057609c	CFastVB__DispatchIndirect_00657028	0x0057609c	0x005760ac
+0x005760ad	FUN_005760ad	0x005760ad	0x00576153
 0x00576154	CFastVB__DispatchIndirect_00656f58	0x00576154	0x00576160
 0x00576161	CFastVB__DispatchIndirectByGlobalTable	0x00576161	0x00576166
 0x00576167	CTexture__DispatchPtr0065702c_WithInit	0x00576167	0x00576177
 0x00576178	CTexture__DispatchPtr0065702c_NoInit	0x00576178	0x0057617d
 0x0057617e	CDXTexture__DispatchPtr00656f48_WithInit	0x0057617e	0x0057618a
 0x0057618b	CFastVB__DispatchIndirect_00656f48	0x0057618b	0x00576190
+0x00576191	FUN_00576191	0x00576191	0x005761f6
 0x005761f7	CDXTexture__DispatchPtr00657030_WithInit	0x005761f7	0x00576207
+0x00576208	FUN_00576208	0x00576208	0x00576285
 0x00576286	CDXTexture__DispatchPtr00656f68_WithInit	0x00576286	0x00576296
 0x00576297	CDXTexture__DispatchPtr00656f68_WithInit_Thunk	0x00576297	0x0057629c
+0x0057629d	FUN_0057629d	0x0057629d	0x005762ad
+0x005762ae	FUN_005762ae	0x005762ae	0x005762be
+0x005762bf	FUN_005762bf	0x005762bf	0x005762cf
+0x005762d0	FUN_005762d0	0x005762d0	0x005762dc
+0x005762dd	FUN_005762dd	0x005762dd	0x005763cc
+0x005763cd	FUN_005763cd	0x005763cd	0x005763d9
 0x005763da	FUN_005763da	0x005763da	0x00576403
 0x00576404	Math__InterpolateVec4Cubic	0x00576404	0x005764d4
 0x005764d5	CTexture__InterpolateVec4CubicNormalized_Dispatch	0x005764d5	0x005764fe
@@ -6049,11 +6076,19 @@ address	name	bodyMin	bodyMax
 0x00576621	Math__InterpolateVec4ByUV	0x00576621	0x00576697
 0x00576698	CFastVB__DispatchIndirect_00656f38	0x00576698	0x005766a4
 0x005766a5	CVertexShader__DispatchTableCall_656f38	0x005766a5	0x005766aa
+0x005766ab	FUN_005766ab	0x005766ab	0x00576749
 0x0057674a	CFastVB__DispatchIndirect_00657034	0x0057674a	0x0057675a
+0x0057675b	FUN_0057675b	0x0057675b	0x00576819
+0x0057681a	FUN_0057681a	0x0057681a	0x00576826
+0x00576827	FUN_00576827	0x00576827	0x005768f0
 0x005768f1	CFastVB__DispatchIndirect_00656f3c	0x005768f1	0x005768fd
 0x005768fe	CFastVB__DispatchTableCall_656f3c	0x005768fe	0x00576903
+0x00576904	FUN_00576904	0x00576904	0x00576b39
 0x00576b3a	CFastVB__DispatchIndirect_00656fc4	0x00576b3a	0x00576b46
 0x00576b47	CVertexShader__DispatchTableCall_656fc4	0x00576b47	0x00576b4c
+0x00576b4d	FUN_00576b4d	0x00576b4d	0x00576bb9
+0x00576bba	FUN_00576bba	0x00576bba	0x00576bc6
+0x00576bc7	FUN_00576bc7	0x00576bc7	0x00576dfc
 0x00576dfd	CFastVB__DispatchIndirect_00656f78	0x00576dfd	0x00576e09
 0x00576e0a	CVertexShader__DispatchTableCall_656f78	0x00576e0a	0x00576e0f
 0x00576e10	FUN_00576e10	0x00576e10	0x005771ae
@@ -6077,6 +6112,12 @@ address	name	bodyMin	bodyMax
 0x005776d3	CFastVB__DispatchIndirect_00656fcc	0x005776d3	0x005776e3
 0x005776e4	CFastVB__DispatchIndirect_00656fd4_ReturnInt	0x005776e4	0x0057770a
 0x0057770b	CFastVB__BuildTransformMatrixWithOffsets	0x0057770b	0x005777f0
+0x005777f1	FUN_005777f1	0x005777f1	0x005777fd
+0x005777fe	FUN_005777fe	0x005777fe	0x0057780a
+0x0057780b	FUN_0057780b	0x0057780b	0x00577817
+0x00577818	FUN_00577818	0x00577818	0x0057784c
+0x0057784d	FUN_0057784d	0x0057784d	0x00577859
+0x0057785a	FUN_0057785a	0x0057785a	0x0057798d
 0x0057798e	CFastVB__BuildAxisAngleQuaternion_Dispatch	0x0057798e	0x005779ad
 0x005779ae	CFastVB__BuildAxisAngleQuaternion	0x005779ae	0x00577a09
 0x00577a0a	Math__BuildQuaternionFromEulerAngles_Dispatch	0x00577a0a	0x00577a37
@@ -6084,12 +6125,18 @@ address	name	bodyMin	bodyMax
 0x00577a3e	Math__BuildQuaternionFromEulerAngles	0x00577a3e	0x00577b14
 0x00577b17	CTexture__DispatchPtr00656f7c_WithInit	0x00577b17	0x00577b23
 0x00577b24	CTexture__DispatchPtr00656f7c_NoInit	0x00577b24	0x00577b29
+0x00577b2a	FUN_00577b2a	0x00577b2a	0x00577bbf
+0x00577bc0	FUN_00577bc0	0x00577bc0	0x00577bcc
+0x00577bcd	FUN_00577bcd	0x00577bcd	0x00577c82
 0x00577c83	CTexture__DispatchPtr00656fe0_WithInit	0x00577c83	0x00577c8f
 0x00577c90	CTexture__DispatchPtr00656fe0_NoInit	0x00577c90	0x00577c95
+0x00577c96	FUN_00577c96	0x00577c96	0x00577d46
 0x00577d47	CTexture__DispatchPtr0065700c_WithInit	0x00577d47	0x00577d53
 0x00577d54	CTexture__DispatchPtr0065700c_NoInit	0x00577d54	0x00577d59
+0x00577d5a	FUN_00577d5a	0x00577d5a	0x00577dd4
 0x00577dd5	CDXTexture__DispatchPtr00657010_WithInit	0x00577dd5	0x00577de1
 0x00577de2	CDXTexture__DispatchPtr00657010_NoInit	0x00577de2	0x00577de7
+0x00577de8	FUN_00577de8	0x00577de8	0x00577e7f
 0x00577e80	Math__InterpolateVec4ByRatio_Dispatch	0x00577e80	0x00577ea3
 0x00577ea4	Math__InterpolateVec4ByRatio_Dispatch_Thunk	0x00577ea4	0x00577ea9
 0x00577eaa	Math__InterpolateVec4ByRatio	0x00577eaa	0x00577f8a
@@ -6100,8 +6147,20 @@ address	name	bodyMin	bodyMax
 0x0057804e	Math__BlendVec4DualWeights	0x0057804e	0x005780d5
 0x005780d6	CDXTexture__DispatchPtr00656f84_WithInit	0x005780d6	0x005780e2
 0x005780e3	Math__DispatchSlot00656f84_NoInit_005780e3	0x005780e3	0x005780e8
+0x005780e9	FUN_005780e9	0x005780e9	0x00578189
+0x0057818a	FUN_0057818a	0x0057818a	0x00578196
+0x00578197	FUN_00578197	0x00578197	0x00578238
+0x00578239	FUN_00578239	0x00578239	0x00578245
+0x00578246	FUN_00578246	0x00578246	0x0057827d
+0x0057827e	FUN_0057827e	0x0057827e	0x0057828a
+0x0057828b	FUN_0057828b	0x0057828b	0x0057832c
+0x0057832d	FUN_0057832d	0x0057832d	0x00578339
+0x0057833a	FUN_0057833a	0x0057833a	0x005783d8
 0x005783d9	CTexture__DispatchPtr00657040_WithInit	0x005783d9	0x005783e9
+0x005783ea	FUN_005783ea	0x005783ea	0x005784a8
 0x005784a9	CFastVB__DispatchIndirect_00657044	0x005784a9	0x005784b9
+0x005784ba	FUN_005784ba	0x005784ba	0x005784ca
+0x005784cb	FUN_005784cb	0x005784cb	0x00578554
 0x00578555	Math__TransformVec2ByMatrix4x4	0x00578555	0x005785bf
 0x005785c0	Math__TransformVec2ArrayToVec4Array	0x005785c0	0x00578642
 0x00578643	Math__TransformVec2ByMatrixPerspective	0x00578643	0x005786bf
@@ -6188,6 +6247,7 @@ address	name	bodyMin	bodyMax
 0x00580eef	CFastVB__ShutdownActiveProfile_Thunk	0x00580eef	0x00580ef3
 0x00580ef4	CDXTexture__CreateTexelCodecProfileFromSurfaceDesc	0x00580ef4	0x00581262
 0x00581263	CFastVB__TexelUnpackProfile__dtor	0x00581263	0x00581275
+0x00581276	FUN_00581276	0x00581276	0x00581278
 0x00581279	CFastVB__ConvertTexelVectorDomain	0x00581279	0x0058183c
 0x0058183d	CFastVB__TexelCodecProfile__dtor	0x0058183d	0x005818b6
 0x005818b7	CDXTexture__PrepareDxtScaleAndQuantizedUV	0x005818b7	0x005819b7
@@ -6294,6 +6354,7 @@ address	name	bodyMin	bodyMax
 0x00586519	CFastVB__TexelUnpackProfile_005ea088__ctor	0x00586519	0x00586534
 0x00586535	CFastVB__TexelUnpackProfile_005ea098__ctor	0x00586535	0x00586550
 0x00586551	CFastVB__TexelUnpackProfile_005ea0a8__ctor	0x00586551	0x0058656c
+0x0058656d	FUN_0058656d	0x0058656d	0x005865ec
 0x005865ed	CFastVB__TexelUnpackProfile_005ea0b8__ctor	0x005865ed	0x00586608
 0x00586609	CDXTexture__UnpackTexels_CallbackPerTexel_Stride2_ForceGBAOne	0x00586609	0x00586699
 0x0058669a	CFastVB__InitTexelUnpackVTable_005ea0c8	0x0058669a	0x005866b5
@@ -6302,6 +6363,7 @@ address	name	bodyMin	bodyMax
 0x0058675f	CFastVB__InitTexelUnpackVTable_005ea0e8	0x0058675f	0x0058677a
 0x0058677b	CDXTexture__UnpackTexels_CallbackSingleTexel	0x0058677b	0x005867d1
 0x005867d2	CFastVB__TexelUnpackProfile_005ea0f8__ctor	0x005867d2	0x005867ed
+0x005867ee	FUN_005867ee	0x005867ee	0x0058686e
 0x0058686f	CTexture__UnpackTexels_CopyRaw128	0x0058686f	0x005868d0
 0x005868d1	CFastVB__UnpackTexels_L16A16_ToFloat4	0x005868d1	0x00586977
 0x00586978	CFastVB__TexelUnpackProfile_005ea108__ctor	0x00586978	0x00586993
@@ -6338,6 +6400,7 @@ address	name	bodyMin	bodyMax
 0x00587e4e	CFastVB__TexelCodecProfile_005ea2a4__ctor	0x00587e4e	0x00587e65
 0x00587e66	CFastVB__TexelCodecProfile_scalar_deleting_dtor	0x00587e66	0x00587e81
 0x00587e82	CFastVB__CreateTexelUnpackProfileByFormat	0x00587e82	0x005885d5
+0x0058862e	FUN_0058862e	0x0058862e	0x00588649
 0x0058864a	CDXTexture__InitMappedFileContext	0x0058864a	0x0058865b
 0x0058865c	CDXTexture__OpenMappedFileReadOnly	0x0058865c	0x0058877c
 0x0058877d	CDXTexture__OpenOutputFileHandle	0x0058877d	0x00588854
@@ -6347,6 +6410,7 @@ address	name	bodyMin	bodyMax
 0x005888ae	CDXTexture__DeleteGdiObjectIfSet	0x005888ae	0x005888bb
 0x005888bc	CFastVB__InterpolateDualProfileStreams	0x005888bc	0x00588cc5
 0x00588cc6	CDXTexture__ProjectPointToPlaneAndScale	0x00588cc6	0x00588d62
+0x00588d63	FUN_00588d63	0x00588d63	0x00589093
 0x00589094	CDXTexture__RegistryValueEqualsDword	0x00589094	0x005890f0
 0x005890f1	CDXTexture__CpuHasMmxFeature	0x005890f1	0x00589115
 0x00589116	CDXTexture__IsMmxEnabledBySystemConfig	0x00589116	0x005891c5
@@ -6461,6 +6525,11 @@ address	name	bodyMin	bodyMax
 0x0059020b	CTexture__ParseScriptWithYaccTables	0x0059020b	0x005906e0
 0x005907d9	CTexture__LoadScriptAndDispatchByVersion	0x005907d9	0x00590c49
 0x00590c4a	CTexture__SetQueryStubVtableAndReleaseChild	0x00590c4a	0x00590c59
+0x00590c5a	FUN_00590c5a	0x00590c5a	0x00590c80
+0x00590c81	FUN_00590c81	0x00590c81	0x00590c8d
+0x00590c8e	FUN_00590c8e	0x00590c8e	0x00590cad
+0x00590cae	FUN_00590cae	0x00590cae	0x00590cb7
+0x00590cb8	FUN_00590cb8	0x00590cb8	0x00590cc1
 0x00590cc2	CTexture__Dtor_QueryStub_DeleteOnFlag	0x00590cc2	0x00590cdd
 0x00590cde	CDXTexture__QueryInterfaceByGuid	0x00590cde	0x00590d24
 0x00590d25	CTexture__InitMemoryWriteStream	0x00590d25	0x00590d3c
@@ -6590,6 +6659,7 @@ address	name	bodyMin	bodyMax
 0x00598702	CTexture__NodePayloadBaseCtor	0x00598702	0x0059871b
 0x0059871c	CDXTexture__ReleaseNodePayloadChain	0x0059871c	0x00598748
 0x00598749	CTexture__HasSameFormatClassId	0x00598749	0x0059875e
+0x0059875f	FUN_0059875f	0x0059875f	0x0059877d
 0x0059877e	CTexture__NodePayloadNoOp	0x0059877e	0x0059877e
 0x0059877f	CTexture__NodePayloadMatchesTypeOrNullIsZero	0x0059877f	0x0059879d
 0x0059879e	CDXTexture__InvokeNodeScoreOrZero	0x0059879e	0x005987b1
@@ -6601,16 +6671,23 @@ address	name	bodyMin	bodyMax
 0x005988f5	CFastVB__CompareNodeValuesByTagAndPayload	0x005988f5	0x005989c2
 0x005989c3	CTexture__NodeType8_InitDefaults	0x005989c3	0x005989da
 0x005989db	CTexture__NodeType8_InitFromDescriptor	0x005989db	0x00598a04
+0x00598a05	FUN_00598a05	0x00598a05	0x00598a26
+0x00598a27	FUN_00598a27	0x00598a27	0x00598a55
 0x00598a56	CFastVB__InitNodeType9	0x00598a56	0x00598a80
 0x00598a81	CFastVB__NodeType9__ctor	0x00598a81	0x00598abc
 0x00598abd	CFastVB__NodeType9__dtor	0x00598abd	0x00598ac7
+0x00598ac8	FUN_00598ac8	0x00598ac8	0x00598b07
+0x00598b08	FUN_00598b08	0x00598b08	0x00598b47
 0x00598b48	CFastVB__InitNodeType10	0x00598b48	0x00598b80
 0x00598b81	CFastVB__NodeType10_dtor	0x00598b81	0x00598bdb
+0x00598bdc	FUN_00598bdc	0x00598bdc	0x00598c84
+0x00598c85	FUN_00598c85	0x00598c85	0x00598d6a
 0x00598d6b	CFastVB__InitNodeType13	0x00598d6b	0x00598da3
 0x00598da4	CDXTexture__NodeType13__ctor	0x00598da4	0x00598ddb
 0x00598ddc	CDXTexture__NodeType13__ctorWithRefBump	0x00598ddc	0x00598e21
 0x00598e22	CTexture__Dtor_ReleaseNodePayloadByKind	0x00598e22	0x00598e5c
 0x00598e5d	CDXTexture__CompareNodePayloadWithOptionalChild	0x00598e5d	0x00598ea7
+0x00598ea8	FUN_00598ea8	0x00598ea8	0x00598f21
 0x00598f22	CDXTexture__Dtor_ReleaseNodePayload_DeleteOnFlag	0x00598f22	0x00598f3d
 0x00598f3e	CDXTexture__Dtor_NodePayload_DeleteOnFlag	0x00598f3e	0x00598f5f
 0x00598f60	CFastVB__NodeType8_scalar_deleting_dtor	0x00598f60	0x00598f81
@@ -6633,6 +6710,7 @@ address	name	bodyMin	bodyMax
 0x0059993c	CTexture__NodeType12_Ctor	0x0059993c	0x0059996e
 0x0059996f	CTexture__NodeType12_Ctor_WithStackScalars	0x0059996f	0x005999b4
 0x005999b5	CTexture__NodeType12_ScalarDeletingDtor_Body	0x005999b5	0x005999d2
+0x005999d3	FUN_005999d3	0x005999d3	0x00599a3b
 0x00599a3c	CTexture__NodeType11_Dtor_DeleteOnFlag	0x00599a3c	0x00599a57
 0x00599a58	CTexture__NodeType12_ScalarDeletingDtor	0x00599a58	0x00599a73
 0x00599a74	CFastVB__SelectBestNodeTreeMatch_ReportWarningAndSetFlag	0x00599a74	0x00599ac7
@@ -6728,6 +6806,7 @@ address	name	bodyMin	bodyMax
 0x0059ef60	CDXTexture__WriteJpegQuantTablesAndFrame	0x0059ef60	0x0059f045
 0x0059f050	CDXTexture__WriteJpegHuffmanAndScanHeaders	0x0059f050	0x0059f101
 0x0059f110	CDXTexture__WriteJpegEndOfImage	0x0059f110	0x0059f160
+0x0059f170	FUN_0059f170	0x0059f170	0x0059f25b
 0x0059f260	CDXTexture__InitJpegWriterStageCallbacks	0x0059f260	0x0059f2af
 0x0059f2b0	CDXTexture__InitializeJpegEncoderPipeline	0x0059f2b0	0x0059f353
 0x0059f360	CFastVB__DispatchOp_TransformVec4_0059f360	0x0059f360	0x0059f3d8

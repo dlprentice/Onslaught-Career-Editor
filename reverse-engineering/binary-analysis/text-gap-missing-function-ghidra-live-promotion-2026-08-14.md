@@ -75,7 +75,7 @@ The only project-tree path transition is removal of
 `db.18610.gbf` and addition of `db.18612.gbf`; every common file is
 byte-identical. `db.18611.gbf` remains 68,288,512 bytes with SHA-256
 `6f45cdac7ae1f10987280f0ec247e6b5d6dcf866eae79e5982efa78dd68455ce`.
-The current rolling `db.18612.gbf` is 68,321,280 bytes with SHA-256
+The then-current rolling `db.18612.gbf` was 68,321,280 bytes with SHA-256
 `424775377ea0f40d9e429c9219b9310d427760acc40548dbc588ca285f932f7b`.
 
 Fresh PRE, POST, and tracked-snapshot restore copies are retained. Each copy
@@ -86,7 +86,7 @@ same 224 external/import functions in both counts.
 
 ## Projection and aggregate authority
 
-The tracked
+The then-tracked
 [`ghidra-function-name-table-2026-08-13.tsv`](ghidra-function-name-table-2026-08-13.tsv)
 is mechanically rebuilt from the exact POST full inventory. It contains 8,201
 internal rows, is 504,598 bytes, and has SHA-256
@@ -95,7 +95,7 @@ internal rows, is 504,598 bytes, and has SHA-256
 [`ghidra_text_gap_boundary_live_authority.py`](../../tools/ghidra_text_gap_boundary_live_authority.py)
 is the bounded read-only aggregate verifier. It re-runs the sealed scratch
 authority, re-parses the exact target rows and whole-program delta, proves one
-live save from the logs, hashes current live/tracked/backup projects, checks
+live save from the logs, hashes the ceremony's live/tracked/backup projects, checks
 restore receipts against retained copies and logs, validates chronology, and
 regenerates the projection in memory. It never launches Ghidra. Its only write
 is create-new publication of the explicitly named ignored JSON receipt.
@@ -107,9 +107,10 @@ The retained aggregate receipt is
 It contains only repository-relative POSIX roles; absolute machine paths from
 the historical local receipts are validated but never copied into it.
 
-Reproduce the receipt with the verifier's `verify` mode, supplying the current
-repository, retained live lane and scratch repository, live project, PRE and
-POST backup roots, and the existing aggregate receipt. The verifier refuses an
+The retained receipt is historical and intentionally refuses current 8,280
+live/tracked roots. Reproduction requires the exact 8,201 checkout/project
+state, retained live lane and scratch repository, PRE and POST backup roots,
+and existing aggregate receipt. The verifier refuses an
 overlapping output, a non-ignored seal destination, or overwrite.
 
 ## Evidence boundary

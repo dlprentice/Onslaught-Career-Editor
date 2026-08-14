@@ -2,23 +2,30 @@
 
 Date: 2026-08-14
 
-Status: mechanically prepared and read-only preflighted; live and tracked
-promotion remain forbidden until separately authorized and executed
+Status: **historical preparation; the bounded ceremony completed and is owned
+by the final live-promotion report**
 
-Verdict: **LIVE_AUTHORITY_CANDIDATE_READY_CEREMONY_NOT_RUN**
+Verdict: **SUPERSEDED_BY_VERIFIED_LIVE_PROMOTION**
 
-Evidence: **MEASURED PRE / PROSPECTIVE POST** — the committed scratch authority
-reproduces exactly, and the current live and tracked projects independently
-rehash to the required PRE. No live, tracked, backup, or canonical-project byte
-was changed while preparing this authority. The future physical POST database
-is deliberately not guessed; it must be measured after the one authorized live
-save and then reproduced by the POST backup, tracked snapshot, and retained
-read-only restore copies.
+Evidence: MEASURED — historical PRE / then-prospective POST. At preparation
+time the committed scratch authority reproduced exactly and the then-current
+live and tracked projects independently rehashed to the required PRE. No live,
+tracked, backup, or canonical-project byte was changed while preparing this
+authority. The physical POST was deliberately not guessed; the later ceremony
+measured and reproduced it through the POST backup, tracked snapshot, and
+retained read-only restore copies.
 
 Specimen: pristine PC retail `BEA.exe`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 Preparation base: Git commit
 `2509f65d90c86d6328c0b584dcf5eb0e08e02471`.
+
+Current result: the separately authorized ceremony completed on 2026-08-14.
+See the
+[`79-row live-promotion report`](external-table-gap-ghidra-live-promotion-2026-08-14.md)
+and reproduce the retained aggregate receipt with `verify`. The prospective
+commands below remain the exact historical runbook; do not rerun `seal` against
+the existing create-new receipt.
 
 ## Read-only result
 
@@ -303,9 +310,11 @@ Only after the saved aggregate independently verifies may the promotion report,
 canonical Ghidra metadata, post-admission gap accounting, and downstream
 campaigns be updated. This preparation itself changes none of them.
 
-## Current blocker
+## Settlement
 
-There is no missing input for preparation. The deliberate blocker is that the
-future ceremony has not run: no live lane, PRE/POST backup, `db.18613.gbf`,
-tracked POST restore, or final aggregate receipt exists. Creating those requires
-the later live/tracked mutation authority; this candidate does not grant it.
+The preparation's former blocker is closed. Live, tracked, the POST backup, and
+retained restore evidence now reproduce the exact 8,280-function POST. The
+final 38,280-byte aggregate receipt has SHA-256
+`48ca86cf8d86e0541a202cda0154504aa7cd59ab6bbd653364f0cbf762b63a00`.
+This document records how the ceremony was prepared; the final report owns the
+current claim.

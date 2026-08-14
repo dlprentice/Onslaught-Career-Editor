@@ -1,7 +1,7 @@
 # PC demo versus PC retail
 
 Status: active, measured cross-build evidence over the dated 2026-08-12 census
-Last updated: 2026-08-13
+Last updated: 2026-08-14
 Evidence: MEASURED — exact executable/archive hashes, independently recounted
 MSVC RTTI/vtables, a 2,127-target virtual census, a conservative 8,086-row
 cross-build function-address map, and exact multi-range, opcode-factory, and
@@ -16,9 +16,10 @@ functions have a complete normalized-identical demo instruction stream. Another
 cleanup package is proven retail-only because its parent controls-screen block
 and metadata are absent from the demo. All 8,135 retail functions with a demo
 counterpart are mapped; zero rows in that population remain address-unresolved.
-The 34 functions admitted to Ghidra on 2026-08-13 and 31 text-gap functions
-admitted on 2026-08-14 are outside this frozen map and remain open for PC-demo
-correlation; the current structural census is 8,201.
+The 34 functions admitted to Ghidra on 2026-08-13, 31 text-gap functions, and
+79 external-table functions admitted on 2026-08-14 are outside this frozen map.
+The 79 have separate bounded demo correlations; integration into the frozen
+whole-population map remains open. The current structural census is 8,280.
 Specimen: pristine PC retail `BEA.exe`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`;
 PC demo `BEA.exe`, SHA-256

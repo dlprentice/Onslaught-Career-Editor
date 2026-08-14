@@ -2,15 +2,21 @@
 
 Date: 2026-08-14
 
-Status: scratch-validated preparation; live promotion remains forbidden
+Status: historical scratch validation consumed by the completed live promotion
 
 Verdict: **SCRATCH_READY_LIVE_FORBIDDEN**
 
 Evidence: **MEASURED** — exact specimen bytes, two persistent scratch replicas,
 full PRE/POST inventories, rollback readbacks, actual project-tree hashes, and
-a bound read-only restore/open log. This authorizes neither live nor tracked
-Ghidra mutation and does not itself change the saved 8,201-function census,
+a bound read-only restore/open log. This scratch receipt authorized neither live
+nor tracked Ghidra mutation and did not itself change the then-current
+8,201-function census,
 Generation 23, semantic grades, or the rebuild.
+
+Current settlement: the separate
+[live-promotion report](external-table-gap-ghidra-live-promotion-2026-08-14.md)
+records the later backed-up admission; this document remains the immutable
+scratch parent, not current-state authority.
 
 Specimen: pristine PC retail `BEA.exe`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.

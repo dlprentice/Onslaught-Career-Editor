@@ -134,7 +134,7 @@ py -3 tools\ghidra_text_gap_boundary_scratch_authority.py verify
 
 `GhidraApplyExternalTableGapBoundaries.java` is the fail-closed structural
 runner for the reviewed 79-row external-table gap manifest. It validates the
-exact retail specimen, current 8,201-function PRE counters, manifest/proof
+exact retail specimen, sealed 8,201-function PRE counters, manifest/proof
 hashes, P0/P1/P2 partition, body bytes, demo evidence, disjoint ranges, the
 corrected YUV-family row, and the existing Vec4Cross proof before admitting
 default `FUN_` boundaries on an isolated db.18612 copy. It may replace
@@ -143,7 +143,7 @@ remain inside an authorized body; names, signatures, comments, tags, data, and
 bytes are outside its contract.
 
 `ghidra_external_table_gap_boundary_scratch_authority.py` reproduces the saved
-two-replica ceremony, the pinned 19-file current-project inventory, and its full
+two-replica ceremony, the pinned 19-file PRE-project inventory, and its full
 8,201-row equality gate. It independently rehashes the actual base and retained
 restore trees, binds the detailed read-only probe log and safe command flags,
 and treats inner backup receipts as absolute execution history rather than
@@ -161,17 +161,19 @@ python -I -B tools\ghidra_external_table_gap_boundary_live_authority_tests.py
 The resulting verdict is `SCRATCH_READY_LIVE_FORBIDDEN`; see the
 [scratch report](../reverse-engineering/binary-analysis/external-table-gap-ghidra-scratch-admission-2026-08-14.md).
 
-`ghidra_external_table_gap_boundary_live_authority.py` is the prospective
-read-only promotion gate. Its `preflight` mode reproduces the scratch authority
-and exact live/tracked PRE without creating the ceremony roots. After a
+`ghidra_external_table_gap_boundary_live_authority.py` is the completed
+read-only promotion authority. Its historical `preflight` mode proved the
+scratch authority and then-current live/tracked PRE before ceremony roots
+existed. After a
 separately authorized live write, `check-live` proves both fresh replicas, the
 single live save, exact semantic/collateral deltas, and PRE/POST recovery while
 requiring a create-new, exact-root inspection to prove tracked Ghidra remains
-PRE after POST recovery. Only a later separately authorized
-tracked refresh can satisfy `seal`; `verify` then reproduces the create-new
-portable aggregate receipt. The authority never launches Ghidra. The exact
+PRE after POST recovery. A separately authorized tracked refresh then satisfied
+`seal`; `verify` now reproduces the immutable portable aggregate receipt. The
+authority never launches Ghidra; `verify` is the present reusable mode. The historical
 [preparation and runbook](../reverse-engineering/binary-analysis/external-table-gap-ghidra-live-promotion-preparation-2026-08-14.md)
-has verdict `LIVE_AUTHORITY_CANDIDATE_READY_CEREMONY_NOT_RUN`.
+is settled by the completed
+[live-promotion report](../reverse-engineering/binary-analysis/external-table-gap-ghidra-live-promotion-2026-08-14.md).
 
 PowerShell CDB/input/profile helpers are for controlled copied targets. They
 must preserve their explicit-arm, process-identity, and installed-game safety
