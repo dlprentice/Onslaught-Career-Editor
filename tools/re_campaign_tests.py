@@ -21,6 +21,145 @@ import re_campaign as campaign
 import re_gen73_reseal as gen73_reseal
 
 
+HISTORICAL_SOURCE_PROJECTION_RELATIVE = Path(
+    "local-lab/re-campaign-incident-recovery-20260808-v1/"
+    "generation-replay-audit-20260812-v1/historical_source_projection.py"
+)
+HISTORICAL_SOURCE_PROJECTION_BYTES = 17_579
+HISTORICAL_SOURCE_PROJECTION_SHA256 = (
+    "e16faa93d2820f7c5a57d135dea1bcfec9818c683f2cca4057b9c43155673aec"
+)
+HISTORICAL_REPLAY_AUDIT_RELATIVE = Path(
+    "local-lab/re-campaign-incident-recovery-20260808-v1/"
+    "generation-replay-audit-20260812-v1/all-generations-8-23.ready.json"
+)
+HISTORICAL_REPLAY_AUDIT_BYTES = 48_838
+HISTORICAL_REPLAY_AUDIT_SHA256 = (
+    "9cd8a1587f4fa393e7278e29d7aca36af87f2f6c0f00a94eeff16a8ad229f6b6"
+)
+
+
+def historical_source_projection_owner(repo: Path) -> Path:
+    """Select only the sealed historical-input projection and its audit."""
+
+    owner = repo / HISTORICAL_SOURCE_PROJECTION_RELATIVE
+    audit = repo / HISTORICAL_REPLAY_AUDIT_RELATIVE
+    for path, expected_bytes, expected_sha256, label in (
+        (
+            owner,
+            HISTORICAL_SOURCE_PROJECTION_BYTES,
+            HISTORICAL_SOURCE_PROJECTION_SHA256,
+            "historical source projection owner",
+        ),
+        (
+            audit,
+            HISTORICAL_REPLAY_AUDIT_BYTES,
+            HISTORICAL_REPLAY_AUDIT_SHA256,
+            "historical Generation 8-23 replay audit",
+        ),
+    ):
+        if not path.is_file():
+            raise AssertionError(f"{label} is missing: {path}")
+        stat = path.lstat()
+        if (
+            path.is_symlink()
+            or (getattr(stat, "st_file_attributes", 0) & 0x400)
+            or stat.st_nlink != 1
+            or stat.st_size != expected_bytes
+            or campaign.coverage.sha256_of(path) != expected_sha256
+        ):
+            raise AssertionError(f"{label} identity differs")
+    return owner
+
+
+def historical_source_projected_replay(
+    repo: Path,
+    root: Path,
+    *,
+    mode: str,
+    expected_ready_sha256: str,
+    expected_reducer_id: str,
+    timeout: int,
+    bootstrap: Path | None = None,
+) -> subprocess.CompletedProcess:
+    """Replay a frozen Gen12 campaign while preserving adverse diagnostics."""
+
+    if mode not in {"full", "integrity"}:
+        raise AssertionError(f"unsupported historical projection mode: {mode}")
+
+    owner = historical_source_projection_owner(repo)
+
+    environment = os.environ.copy()
+    environment["BEA_REPO_ROOT"] = os.fspath(repo)
+    environment["PYTHONDONTWRITEBYTECODE"] = "1"
+    # The owner's CLI deliberately collapses an adverse replay to one outer
+    # failure. Invoke its pinned projection primitive in an isolated child so
+    # the integrity tests still assert the exact frozen-reducer diagnostic.
+    child = """
+import hashlib
+import json
+import os
+import runpy
+import sys
+from pathlib import Path
+
+owner = Path(sys.argv[1])
+repo = Path(sys.argv[2])
+campaign = Path(sys.argv[3])
+mode = sys.argv[4]
+expected_ready_sha256 = sys.argv[5]
+expected_reducer_id = sys.argv[6]
+expected_owner_sha256 = sys.argv[7]
+bootstrap = Path(sys.argv[8]) if len(sys.argv) == 9 else None
+if hashlib.sha256(owner.read_bytes()).hexdigest() != expected_owner_sha256:
+    raise SystemExit("historical source projection owner changed before import")
+namespace = runpy.run_path(os.fspath(owner))
+if bootstrap is not None:
+    namespace["replay_with_projection"].__globals__["BOOTSTRAP_RELATIVE"] = bootstrap
+historical_test, _continuity = namespace["validate_continuity"](repo)
+exit_code, stdout, stderr = namespace["replay_with_projection"](
+    repo,
+    historical_test,
+    campaign,
+    mode,
+    expected_ready_sha256,
+    expected_reducer_id,
+)
+sys.stdout.write(stdout)
+sys.stderr.write(stderr)
+if exit_code == 0:
+    ready = json.loads((campaign / "campaign.ready.json").read_text(encoding="utf-8"))
+    print(
+        "HISTORICAL_SOURCE_PROJECTION_AUDIT_PASS "
+        f"generation={ready.get('generation')} mode={mode}"
+    )
+raise SystemExit(exit_code)
+"""
+    return subprocess.run(
+        [
+            os.fspath(Path(os.sys.executable)),
+            "-I",
+            "-B",
+            "-c",
+            child,
+            os.fspath(owner),
+            os.fspath(repo),
+            os.fspath(root),
+            mode,
+            expected_ready_sha256,
+            expected_reducer_id,
+            HISTORICAL_SOURCE_PROJECTION_SHA256,
+            *([os.fspath(bootstrap)] if bootstrap is not None else []),
+        ],
+        cwd=repo,
+        env=environment,
+        capture_output=True,
+        text=True,
+        timeout=timeout,
+        check=False,
+    )
+
+
 def write_tsv(path: Path, columns: list[str], rows: list[dict]) -> None:
     with open(path, "w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=columns, delimiter="\t", lineterminator="\n")
@@ -5307,7 +5446,7 @@ class CampaignRecoveryGeneration8Tests(unittest.TestCase):
         for root in (self.generation, self.replica):
             completed = self.frozen_verify(root)
             self.assertEqual(0, completed.returncode, completed.stderr)
-            self.assertIn("FROZEN_CAMPAIGN_INTEGRITY_VERIFIED", completed.stdout)
+            self.assertIn("CAMPAIGN_VERIFIED", completed.stdout)
             receipt = json.loads((root / "campaign.ready.json").read_text(encoding="utf-8"))
             receipt["generatedAtUtc"] = "<generated>"
             for stamp in receipt["outputs"].values():
@@ -6519,7 +6658,7 @@ class CampaignRecoveryGeneration12DamageWritesTests(unittest.TestCase):
         if expected_ready is None:
             raise AssertionError(f"root is not an externally selected Gen12 copy: {root}")
         repo = Path(__file__).resolve().parent.parent
-        bootstrap = Path(__file__).resolve().parent / "re_campaign_frozen_bootstrap.py"
+        bootstrap = historical_source_projection_owner(repo)
         environment = os.environ.copy()
         environment["BEA_REPO_ROOT"] = os.fspath(repo)
         environment["PYTHONDONTWRITEBYTECODE"] = "1"
@@ -6548,7 +6687,20 @@ class CampaignRecoveryGeneration12DamageWritesTests(unittest.TestCase):
 
     @staticmethod
     def frozen_verify(root: Path, *, replay: bool = False) -> subprocess.CompletedProcess:
-        return CampaignRecoveryGeneration8Tests.frozen_verify(root, replay=replay)
+        ready_path = root / "campaign.ready.json"
+        receipt = json.loads(ready_path.read_text(encoding="utf-8"))
+        reducer_id = receipt.get("reducer", {}).get("id")
+        if not isinstance(reducer_id, str) or not reducer_id:
+            raise AssertionError(f"campaign has no exact reducer identity: {root}")
+        repo = Path(__file__).resolve().parent.parent
+        return historical_source_projected_replay(
+            repo,
+            root,
+            mode="full" if replay else "integrity",
+            expected_ready_sha256=hashlib.sha256(ready_path.read_bytes()).hexdigest(),
+            expected_reducer_id=reducer_id,
+            timeout=300,
+        )
 
     @staticmethod
     def reducer_files(root: Path) -> dict[str, bytes]:
@@ -6574,6 +6726,9 @@ class CampaignRecoveryGeneration12DamageWritesTests(unittest.TestCase):
             completed = self.authority_verify(root)
             self.assertEqual(0, completed.returncode, completed.stderr)
             self.assertIn("CAMPAIGN_VERIFIED", completed.stdout)
+            self.assertIn(
+                "HISTORICAL_SOURCE_PROJECTION_AUDIT_PASS", completed.stdout
+            )
             receipt = json.loads((root / "campaign.ready.json").read_text(encoding="utf-8"))
             self.assertEqual(12, receipt["generation"])
             self.assertEqual(
@@ -6858,7 +7013,7 @@ class CampaignRecoveryGeneration13ApplyDamageTests(unittest.TestCase):
         if expected_ready is None:
             raise AssertionError(f"root is not an externally selected Gen13 copy: {root}")
         repo = Path(__file__).resolve().parent.parent
-        bootstrap = Path(__file__).resolve().parent / "re_campaign_frozen_bootstrap.py"
+        bootstrap = historical_source_projection_owner(repo)
         environment = os.environ.copy()
         environment["BEA_REPO_ROOT"] = os.fspath(repo)
         environment["PYTHONDONTWRITEBYTECODE"] = "1"
@@ -7179,7 +7334,7 @@ class CampaignRecoveryGeneration14TokenArchiveTests(unittest.TestCase):
         if expected_ready is None:
             raise AssertionError(f"root is not an externally selected Gen14 copy: {root}")
         repo = Path(__file__).resolve().parent.parent
-        bootstrap = Path(__file__).resolve().parent / "re_campaign_frozen_bootstrap.py"
+        bootstrap = historical_source_projection_owner(repo)
         environment = os.environ.copy()
         environment["BEA_REPO_ROOT"] = os.fspath(repo)
         environment["PYTHONDONTWRITEBYTECODE"] = "1"
@@ -7453,7 +7608,7 @@ class CampaignRecoveryGeneration15MissionNativeSetPosTests(unittest.TestCase):
         if expected_ready is None:
             raise AssertionError(f"root is not an externally selected Gen15 copy: {root}")
         repo = Path(__file__).resolve().parent.parent
-        bootstrap = Path(__file__).resolve().parent / "re_campaign_frozen_bootstrap.py"
+        bootstrap = historical_source_projection_owner(repo)
         environment = os.environ.copy()
         environment["BEA_REPO_ROOT"] = os.fspath(repo)
         environment["PYTHONDONTWRITEBYTECODE"] = "1"
@@ -7803,7 +7958,7 @@ class CampaignRecoveryGeneration16MissionNativeSetPosRuntimeTests(unittest.TestC
         if expected_ready is None:
             raise AssertionError(f"root is not an externally selected Gen16 copy: {root}")
         repo = Path(__file__).resolve().parent.parent
-        bootstrap = Path(__file__).resolve().parent / "re_campaign_frozen_bootstrap.py"
+        bootstrap = historical_source_projection_owner(repo)
         environment = os.environ.copy()
         environment["BEA_REPO_ROOT"] = os.fspath(repo)
         environment["PYTHONDONTWRITEBYTECODE"] = "1"
@@ -8196,7 +8351,7 @@ class CampaignRecoveryGeneration17LockHitBoundedContractTests(unittest.TestCase)
         if expected_ready is None:
             raise AssertionError(f"root is not an externally selected Gen17 copy: {root}")
         repo = Path(__file__).resolve().parent.parent
-        bootstrap = Path(__file__).resolve().parent / "re_campaign_frozen_bootstrap.py"
+        bootstrap = historical_source_projection_owner(repo)
         environment = os.environ.copy()
         environment["BEA_REPO_ROOT"] = os.fspath(repo)
         environment["PYTHONDONTWRITEBYTECODE"] = "1"
@@ -8556,46 +8711,24 @@ class CampaignRecoveryGeneration18TokenArchiveParserContractTests(unittest.TestC
 
     @classmethod
     def authority_verify(
-        cls, root: Path, *, bootstrap: Path | None = None
+        cls,
+        root: Path,
+        *,
+        bootstrap: Path | None = None,
     ) -> subprocess.CompletedProcess:
         expected_ready = cls.AUTHORITY_READY_SHA256.get(root.name)
         if expected_ready is None:
             raise AssertionError(
                 f"root is not an externally selected Gen18 copy: {root}"
             )
-        selected_bootstrap = bootstrap or (
-            cls.repo / "tools/re_campaign_frozen_bootstrap.py"
-        )
-        self_hash = campaign.coverage.sha256_of(selected_bootstrap)
-        if (
-            selected_bootstrap.stat().st_size != cls.AUTHORITY_BOOTSTRAP_BYTES
-            or self_hash != cls.AUTHORITY_BOOTSTRAP_SHA256
-        ):
-            raise AssertionError("literal-pinned frozen bootstrap differs")
-        environment = os.environ.copy()
-        environment["BEA_REPO_ROOT"] = os.fspath(cls.repo)
-        environment["PYTHONDONTWRITEBYTECODE"] = "1"
-        return subprocess.run(
-            [
-                os.fspath(Path(os.sys.executable)),
-                "-I",
-                "-B",
-                os.fspath(selected_bootstrap),
-                "--campaign",
-                os.fspath(root),
-                "--mode",
-                "full",
-                "--expected-ready-sha256",
-                expected_ready,
-                "--expected-reducer-id",
-                cls.AUTHORITY_REDUCER_ID,
-            ],
-            cwd=cls.repo,
-            env=environment,
-            capture_output=True,
-            text=True,
+        return historical_source_projected_replay(
+            cls.repo,
+            root,
+            mode="full",
+            expected_ready_sha256=expected_ready,
+            expected_reducer_id=cls.AUTHORITY_REDUCER_ID,
             timeout=1200,
-            check=False,
+            bootstrap=bootstrap,
         )
 
     @staticmethod
@@ -8644,7 +8777,8 @@ class CampaignRecoveryGeneration18TokenArchiveParserContractTests(unittest.TestC
                 poison, encoding="utf-8"
             )
             completed = self.authority_verify(
-                self.generation, bootstrap=copied_bootstrap
+                self.generation,
+                bootstrap=copied_bootstrap,
             )
             self.assertEqual(0, completed.returncode, completed.stderr)
             self.assertIn("CAMPAIGN_VERIFIED", completed.stdout)
