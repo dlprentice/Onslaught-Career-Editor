@@ -30,6 +30,9 @@ the document it links.
   — extends bounded static-envelope coverage from the sealed 8,136-row table to
   all 8,170 currently saved functions without changing Generation 23 or Ghidra
   metadata
+- [Current 34-handler Mission-registry semantic refinement](mission-script-registry-new-function-semantic-refinement-2026-08-13.md)
+  — corrects eight handler descriptions and the common receiver-type boundary;
+  adds no functions, grades, runtime claims, rebuild parity, or Ghidra changes
 - [Mission-registry 75-row vocabulary live promotion](mission-script-registry-vocabulary-live-promotion-2026-08-13.md)
   — proves one backed-up live apply, separate readback, target-only metadata
   changes, 8,095 byte-identical non-target rows, and exact live/tracked/POST
