@@ -45,6 +45,11 @@ the document it links.
   closes the exact zero-overlap union at 1,770,929 / 1,929,117 = 91.799978954%,
   and partitions the 158,188-byte gap without treating loose code/data as proved
   functions or semantics
+- [Text-gap 31-function library classification](text-gap-library-function-classification-2026-08-13.md)
+  — identifies the separately prepared 31 exact boundary candidates as 14
+  Microsoft CRT FDIV helpers, 14 AMD 3DNow math primitives, and three IJG 6b
+  inverse-DCT routines; provider-qualified labels remain pending the structural
+  Ghidra admission gate and are not claimed as original BEA linker symbols
 - [PC D3DX four-vector-cross helper boundary](d3dx-vec4cross-crossbuild-boundary-2026-08-13.md)
   — closes `0x005762dd..0x005763cd` as one exact 240-byte / 97-instruction
   function through seven byte-identical PC/Issue-7/Issue-11/US-retail copies;
