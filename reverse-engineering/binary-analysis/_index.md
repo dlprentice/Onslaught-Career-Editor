@@ -93,6 +93,9 @@ the document it links.
 - [CRT EH parent-range scratch admission](crt-eh-parent-range-ghidra-scratch-admission-2026-08-14.md)
   — proves the excluded filter/handler is one 25-byte repair to existing parent
   `0x005D0A9F`, with 8,326 non-target rows exact and live mutation forbidden
+- [CRT EH parent-range live-promotion preparation](crt-eh-parent-range-ghidra-live-promotion-preparation-2026-08-14.md)
+  — replays the exact scratch authority against current live/tracked db.18616,
+  pins the one-save backup/readback/recovery ceremony, and authorizes no write
 - [Five existing-function body-fragment scratch admission](pc-function-body-fragment-ghidra-scratch-admission-2026-08-14.md)
   — reproduces five exact body-range repairs and a 1,258-byte ownership gain on
   two isolated db.18613 replicas, excludes the FEP envelope's trailing 12 NOP

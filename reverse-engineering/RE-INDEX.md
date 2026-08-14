@@ -294,6 +294,14 @@ body ownership rises to a prospective 1,811,443 bytes, range components fall
 to 8,457, and all 8,326 non-target rows remain exact. Its policy is strictly
 `LIVE_FORBIDDEN`; current saved Ghidra and Generation 27 remain unchanged.
 
+The follow-on read-only
+[CRT EH parent-range live-promotion preparation](binary-analysis/crt-eh-parent-range-ghidra-live-promotion-preparation-2026-08-14.md)
+reproduces that 283-file sealed scratch payload and receipt against exact byte-identical
+live/tracked db.18616 PRE projects. It mechanically fixes the prospective
+8,327-row projection, 1,811,443-byte body union, and unchanged direct-call
+graph, while requiring the future lane, backups, and aggregate receipt to be
+absent. It remains `PREPARATION_ONLY`; no Ghidra process or write occurred.
+
 The separate historical sealed
 [five-existing-function body-fragment scratch admission](binary-analysis/pc-function-body-fragment-ghidra-scratch-admission-2026-08-14.md)
 adds no functions or metadata. Two isolated db.18613 replicas reproduce the
