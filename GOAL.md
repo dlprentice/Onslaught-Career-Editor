@@ -150,7 +150,7 @@ artefact and must never ship as authored behaviour.
 ### Mandate
 
 Drive the primary Battle Engine Aquila reverse-engineering lane forward from
-canonical Generation 26 through successive mechanically verified generations,
+canonical Generation 27 through successive mechanically verified generations,
 maximizing defensible progress toward complete retail understanding, durable
 function and behavior contracts, a materially improved live Ghidra
 reconstruction, and Godot parity. This is a long-horizon execution mandate, not
@@ -161,12 +161,12 @@ theater in place of reverse engineering.
 
 Confirm HEAD is at or beyond `e7aa7548`. Confirm the pristine specimen SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`. Confirm the
-Generation 26 READY
-`83403490ecd6eac942a96cd61b911cbf6a968bead053b49be1402e94c6ee452a` and frozen
+Generation 27 READY
+`5e7ac61b890e780b578e86666d749df4bd0037f641b5203f4310db4f21f7a774` and frozen
 reducer `8b86f5b568067aa4cdb438b658cd95a2c118ce8f8ef2541899eaa67815832587`
 through the literal pinned verify command in
 [`developer_state.json`](developer_state.json) → `current_re_authority`.
-Generation 26 is the sole campaign parent, the next valid generation is 27, and
+Generation 27 is the sole campaign parent, the next valid generation is 28, and
 Generation 73 is a projection oracle that is never a parent or authority.
 
 ### Never collapse the evidence layers
@@ -178,14 +178,14 @@ Tier-2 registry vocabulary. Later ceremonies admitted 31 text-gap, 79
 external-table, 24 JPEG/IJG callback, and 23 CRT P0 runtime boundaries, so the
 current saved structural census is 8,327. The 31 have bounded provider-
 compatible classifications; the 79, JPEG/IJG 24, and CRT 23 remain default-
-metadata structural rows. The first 178 post-Generation-23 rows are represented
-in frozen Generation 26 as OPAQUE; the newer 23 CRT rows await Generation 27.
+metadata structural rows. All 201 post-Generation-23 rows are represented in
+frozen Generation 27 as OPAQUE.
 All remain outside the frozen static-grade projection. None of
 these counts is a final ceiling,
 semantic recovery, or reversal. The PC demo
 partition and the instruction-local Xbox source-line anchors are oracles, never
-denominators for retail completion. Generation 26 carries Generation 25's
-admitted campaign state onto exact db.18615 geometry without changing a
+denominators for retail completion. Generation 27 carries Generation 26's
+admitted campaign state onto exact db.18616 geometry without changing a
 semantic grade and remains sparse.
 Live Ghidra structural navigation may lead the
 campaign without silently upgrading any semantic grade. Report the layer, the
@@ -354,7 +354,7 @@ the mandate; the completion test and every clause above are unchanged.
    shape, current listing state, incoming control flow, alignment, and library
    classification to prove exact boundaries; do not infer entries from linear
    decode alone.
-2. **Advance Generation 27 from the exact Generation-26 authority and current
+2. **Advance Generation 28 from the exact Generation-27 authority and current
    8,327/db.18616 geometry.** Keep any
    current launcher/test literal-pin update separate from the frozen reducer,
    preserve the static/runtime layer boundary, and do not pin HUD route order
@@ -443,8 +443,14 @@ Rank from current evidence; a reproduced contradiction outranks this list.
   up one-save ceremony advanced live and tracked Ghidra from 8,304/db.18615 to
   8,327/db.18616 while preserving every PRE row. It added 24 exact body ranges
   and 1,131 owned `.text` bytes, reaching 93.898814846%. Generation 26 remains
-  frozen; Generation 27 must re-ground the new structural geometry without
-  inventing semantic grades.
+  frozen.
+- **2026-08-14 — current db.18616 geometry reseeded as Generation 27.** Two
+  independent snapshots and canonical/replica full replays agree at 8,327
+  functions. All 26,993 eligible Generation-26 carry rows are accounted for;
+  37 changed structural lineages are retired explicitly and the 23 new CRT rows
+  enter as OPAQUE with nine covered, ten partial, and four dark retained-trace
+  states. No semantic grade, runtime contract, Ghidra project, executable, or
+  rebuild owner changes. Generation 28 is the next valid parent.
 
 ---
 
@@ -479,13 +485,13 @@ this standing campaign complete.
 Standing complete-RE progress is **not** the Gen10 handoff below and is no
 longer selected from the damaged Generation-73 candidate chain. Read
 `developer_state.json` → `current_re_authority`. As of 2026-08-14 the exact
-authority is canonical Generation 26 at
-`local-lab/re-campaign-incident-recovery-20260808-v1/generation-26-current-8304-db18615-v1/`:
-READY SHA-256 `83403490ecd6eac942a96cd61b911cbf6a968bead053b49be1402e94c6ee452a`,
+authority is canonical Generation 27 at
+`local-lab/re-campaign-incident-recovery-20260808-v1/generation-27-current-8327-db18616-v2/`:
+READY SHA-256 `5e7ac61b890e780b578e86666d749df4bd0037f641b5203f4310db4f21f7a774`,
 frozen reducer ID
 `8b86f5b568067aa4cdb438b658cd95a2c118ce8f8ef2541899eaa67815832587`,
 and external authority receipt SHA-256
-`e9b06362a12fd0576451d267574d7445528176022182dbd87a36bf5e538f7ab8`.
+`2fe54ab206a1bae858bfbe4074e38cbd9134b78dff4eb12f9345f56c28b6bbca`.
 Its independent replica is reproduction-only. Generation 73 supplied a
 field-level projection oracle; Generations 12 through 23 then admitted bounded
 Damage/Hit field-write contracts, one replicated zero-shield ApplyDamage
@@ -525,9 +531,11 @@ runtime contract, Ghidra project, executable, or rebuild owner. Generation 26
 then re-grounds the 24 JPEG/IJG structural functions on exact db.18615 geometry,
 accounts for all 27,025 eligible Generation-25 carry rows, explicitly retires
 eight changed residual/contract/question/adjudication identities, and represents
-the new functions as DARK/FUN/OPAQUE without inventing semantics. The next valid
-campaign generation is 27, which must re-ground the newer 23 CRT P0 structural
-rows on exact db.18616 geometry.
+the new functions as DARK/FUN/OPAQUE without inventing semantics. Generation 27
+then re-grounds the newer 23 CRT P0 structural rows on exact db.18616 geometry,
+accounts for all 26,993 eligible Generation-26 carry rows, explicitly retires
+37 changed structural identities, and preserves all 23 rows as OPAQUE without
+inventing semantics. The next valid campaign generation is 28.
 The saved `VFuncSlot_00_004d9910` name and grade remain unchanged. The bounded
 addenda were appended to twelve exact live/tracked Ghidra comments only after
 backup, replica, rollback, adverse-control, readback, and restore gates; no

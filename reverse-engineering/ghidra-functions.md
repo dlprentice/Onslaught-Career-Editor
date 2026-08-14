@@ -18,16 +18,15 @@ additions have separate provider-compatible static classifications; the 79
 external-table rows and 24 newer JPEG/IJG structural rows remain ungraded.
 None of these later cohorts has been silently inserted into that frozen grade
 projection. This is not the campaign-grade scoreboard below.
-Canonical Generation 26 remains the frozen semantic campaign authority at 8,304
-function identities plus 6,144 exact residual entities, sealed on db.18615. It
-carries all 27,025 eligible Generation-25 progress rows with zero unaccounted,
-explicitly retires eight changed structural lineages, and represents the 24
-JPEG/IJG functions as DARK/FUN/OPAQUE without silently upgrading a static or
-semantic grade. Semantics remain the hard problem: 14,221 of 14,448 contract
+Canonical Generation 27 is the frozen semantic campaign authority at 8,327
+function identities plus 6,110 exact residual entities, sealed on db.18616. It
+carries all 26,993 eligible Generation-26 progress rows with zero unaccounted,
+explicitly retires 37 changed structural lineages, and represents the 23 CRT
+functions as OPAQUE without silently upgrading a static or semantic grade.
+Semantics remain the hard problem: 14,210 of 14,437 contract
 rows are `C0_OPAQUE`,
 217 are `C1_CANDIDATE_PARTIAL`, ten are `C2_BOUNDED_RUNTIME`, and none is
-rebuild-ready. The 23 newer CRT rows are structural state outside that frozen
-campaign and must enter through Generation 27. The authored Mission
+rebuild-ready. The authored Mission
 `Damage` chain, three Level 521 call-context contracts, and one separately
 re-proved zero-shield ApplyDamage path, and the replicated script-visible SetPos
 position-copy path plus one non-null sole-node `CBattleEngine::LockHit` removal
@@ -180,21 +179,21 @@ not establish its Steam depot identity.
 ## Current complete-RE replay authority (2026-08-14) — read this first
 
 The campaign census below this pointer is a historical Generation-10
-snapshot. Current authority is canonical Generation **26**, selected
+snapshot. Current authority is canonical Generation **27**, selected
 only by `developer_state.json` → `current_re_authority`:
 
-| Metric | Canonical Gen26 |
+| Metric | Canonical Gen27 |
 |--------|------------------|
-| Functions | 8,304 (= C1 217 + C2 10 + function semantic OPAQUE 8,077) |
-| Grades | **C1=217**, **C2=10**, contract C0_OPAQUE **14221**; REBUILD_READY **0** |
-| Residuals | 6,144 = 145 open dark + 4 open executed + 899 terminal bounded ambiguity + 30 terminal data + 5,066 terminal padding |
-| OPEN residual | **149** current-geometry rows; not a semantic regression |
-| Progressed carry | **27,025 / 27,025**, zero unaccounted |
-| Rebuild states | NOT_READY 14,439; PARTIAL_CONTRACT 8; CONTRACT_ONLY 1; REBUILD_READY 0 |
+| Functions | 8,327 (= C1 217 + C2 10 + function semantic OPAQUE 8,100) |
+| Grades | **C1=217**, **C2=10**, contract C0_OPAQUE **14210**; REBUILD_READY **0** |
+| Residuals | 6,110 = 152 open dark + 862 terminal bounded ambiguity + 30 terminal data + 5,066 terminal padding |
+| OPEN residual | **152** dark current-geometry rows; not a semantic regression |
+| Progressed carry | **26,993 / 26,993**, zero unaccounted |
+| Rebuild states | NOT_READY 14,428; PARTIAL_CONTRACT 8; CONTRACT_ONLY 1; REBUILD_READY 0 |
 | complete_RE | **false** |
-| READY / reducer | `83403490…452a` / `8b86f5b5…2587` |
-| Campaign | `local-lab/re-campaign-incident-recovery-20260808-v1/generation-26-current-8304-db18615-v1/` |
-| Next valid generation | **27** |
+| READY / reducer | `5e7ac61b…a774` / `8b86f5b5…2587` |
+| Campaign | `local-lab/re-campaign-incident-recovery-20260808-v1/generation-27-current-8327-db18616-v2/` |
+| Next valid generation | **28** |
 
 The Generation-10 blocks that follow are historical records, not the live tip.
 Their durable engineering content (atlas, registries, safety doctrine,
@@ -249,6 +248,10 @@ Generation 26 then re-grounds the 24 JPEG/IJG structural functions on exact
 db.18615 geometry, accounts for all 27,025 eligible Generation-25 carry rows,
 retires eight changed residual/contract/question/adjudication identities, and
 represents the new functions as DARK/FUN/OPAQUE without inventing semantics.
+Generation 27 then re-grounds the 23 CRT P0 structural functions on exact
+db.18616 geometry, accounts for all 26,993 eligible Generation-26 carry rows,
+retires 37 changed structural identities, and represents the new functions as
+OPAQUE with nine covered, ten partial, and four dark retained-trace states.
 
 ---
 
@@ -370,7 +373,7 @@ loads, interprets, simulates, and renders that corpus.
 
 ### Current authority in one sentence
 
-Use canonical Generation 26 for campaign function/residual and contract state,
+Use canonical Generation 27 for campaign function/residual and contract state,
 the separately verified 2026-08-14 five-body-repair live POST and tracked
 snapshot for current Ghidra state, the unpatched baseline image for bytes and
 shipped tables, RTTI/source strings for identity evidence, controlled copied-
@@ -2964,14 +2967,14 @@ dated 8,136-row static closure plus a reviewed 34-row C1-static addendum for the
 31 newly admitted exact text-gap bodies with separate provider-compatible classifications, not frozen campaign grades
 79 newly admitted exact external-table bodies with default metadata, not semantic grades
 24 newly admitted exact JPEG/IJG callback bodies with default metadata, not semantic grades
-23 newly admitted CRT P0 runtime bodies with default metadata, outside frozen Generation 26 grades
+23 newly admitted CRT P0 runtime bodies with default metadata, carried as OPAQUE in Generation 27
 75 existing registry entries normalized through the backed-up live gate
 34 newly created registry entries promoted through their separate Tier-2 metadata cohort
 one separately proved CreateExplosion identity/signature repair promoted and read back
 four refuted HUD labels awaiting convention-safe replacements
-8,077 Gen26 functions remain semantically OPAQUE, including all 178 post-Gen23 structural identities; 23 current CRT rows await Generation 27
-149 sealed-Generation-26 residuals remain open (145 dark + 4 executed)
+8,100 Gen27 functions remain semantically OPAQUE, including all 201 post-Gen23 structural identities
+152 sealed-Generation-27 residuals remain open, all dark and none executed
 bounded runtime questions with explicit falsifiers
 ```
 
-That is the canonical baseline for Generation 27 and the next Ghidra campaign.
+That is the canonical baseline for Generation 28 and the next Ghidra campaign.
