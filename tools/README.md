@@ -114,6 +114,24 @@ canary copy. Applied wave-specific
 mutations live in Git history. `ghidra_project_backup.py` and the provenance/
 rename guards operate only on explicitly selected local project roots.
 
+`GhidraApplyTextGapBoundaries.java` is the narrow disposable-project owner for
+the reviewed 31-row PC `.text` gap manifest. It restricts disassembly and
+derived reference sources to the exact preregistered bodies, creates only
+default functions, and supports dry, apply, separate readback, and two forced
+rollback probes. It does not authorize live or tracked Ghidra mutation.
+`ghidra_text_gap_boundary_scratch_authority.py verify` reproduces the sealed
+scratch decision without opening Ghidra. Mutator READY receipts use only
+repository-relative POSIX paths. The globally registered authority test skips
+only its saved-evidence reproduction when the ignored campaign is absent;
+explicit `verify` still requires that complete saved evidence. Their focused
+gates are:
+
+```powershell
+py -3 tools\ghidra_text_gap_boundary_mutator_tests.py
+py -3 tools\ghidra_text_gap_boundary_scratch_authority_tests.py
+py -3 tools\ghidra_text_gap_boundary_scratch_authority.py verify
+```
+
 PowerShell CDB/input/profile helpers are for controlled copied targets. They
 must preserve their explicit-arm, process-identity, and installed-game safety
 checks. Full Ghidra stores, backups, raw CDB transcripts, frames, copied

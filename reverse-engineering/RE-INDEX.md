@@ -174,6 +174,14 @@ Generation 23 remained unchanged by that semantic pass. A still-later separate
 gave those entries bounded Tier-2 registry names/comments/tags without changing
 their bodies, ABI/storage fields, parameters, or campaign grades.
 
+The later sealed repaired candidate
+[31-row text-gap scratch admission](binary-analysis/text-gap-missing-function-ghidra-scratch-admission-2026-08-13.md)
+reproduces a disposable-project count of 8,201 on two exact db.18611 replicas,
+including bounded disassembly inside those prepared bodies and exact full-row
+preservation of all 8,170 existing functions. Independent integration review
+is still pending. It authorizes no live or tracked-project mutation: the
+current saved census remains 8,170.
+
 **Dated PC demo/retail frontier (2026-08-12, 8,136-function population):** the conservative 8,086-entry
 address map plus exact second-pass reports, caller propagation, equal-delta
 body-union audit, whole-demo fingerprint scan, and terminal structural pass now
