@@ -62,6 +62,8 @@ SUITES: tuple[tuple[str, ...], ...] = (
     ("tools/ghidra_jpeg_callback_boundary_mutator_tests.py",),
     ("tools/ghidra_jpeg_callback_boundary_scratch_authority_tests.py",),
     ("tools/ghidra_jpeg_callback_boundary_live_authority_tests.py",),
+    ("tools/ghidra_d3dx_gap_boundary_mutator_tests.py",),
+    ("tools/ghidra_d3dx_gap_boundary_scratch_authority_tests.py",),
     ("tools/ghidra_crt_p0_boundary_mutator_tests.py",),
     ("tools/ghidra_crt_p0_boundary_scratch_authority_tests.py",),
     ("tools/ghidra_crt_p0_boundary_v2_mutator_tests.py",),

@@ -197,6 +197,30 @@ backup/readback/restore chronology, `0x005B6900` listing ownership, and the
 future projection/accounting. Its policy is `PREPARATION_ONLY`; the authority
 never launches Ghidra and the preparation creates no future ceremony root.
 
+`GhidraApplyD3dxGapBoundaries.java` is the structural-only runner for the two
+complete D3DX-compatible loose bodies at `0x00595FC9` and `0x00596028`. It pins
+the expected 8,280-function PRE counts, both body/range hashes, and the
+function/instruction/reference counts. Its only allowed change is creation of
+the two default-source functions; semantic names and all other metadata remain
+forbidden. The scratch authority and recovery proof own the exact 19-file
+db.18613 project identity.
+
+`ghidra_d3dx_gap_boundary_scratch_authority.py` verifies the sealed ignored
+campaign from its packaged copy. It rejoins all 8,280 PRE rows against two
+independent 8,282-function readbacks, checks both rollback and both containment
+controls, rehashes the retained recovery project, and authorizes no live or
+tracked mutation.
+
+```powershell
+python -I -B tools\ghidra_d3dx_gap_boundary_mutator_tests.py
+python -I -B tools\ghidra_d3dx_gap_boundary_scratch_authority_tests.py
+```
+
+See the
+[scratch report](../reverse-engineering/binary-analysis/d3dx-gap-two-function-ghidra-scratch-admission-2026-08-14.md)
+and its
+[two-row manifest](../reverse-engineering/binary-analysis/d3dx-gap-two-function-scratch-manifest-2026-08-14.tsv).
+
 `GhidraApplyCrtP0Boundaries.java` is the structural-only runner for the 23 P0
 boundaries from corrected CRT22 run-c. It pins the exact 8,280-function /
 8,400-range db.18613 PRE state, all 24 authorized body ranges and hashes, the

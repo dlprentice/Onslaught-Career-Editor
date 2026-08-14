@@ -90,6 +90,10 @@ the document it links.
   — reproduces three complete D3DX-compatible bodies across PC and Xbox,
   settles one as already admitted, and leaves two exact 248-byte loose-code
   boundaries outside the current 8,280-function census pending scratch review
+- [D3DX two-function Ghidra scratch admission](d3dx-gap-two-function-ghidra-scratch-admission-2026-08-14.md)
+  — admits the two remaining bodies on two isolated db.18613 copies, preserves
+  all 8,280 PRE rows exactly, and keeps live and tracked Ghidra mutation
+  forbidden
 - [D3DX9 exact-public current-name corrections](d3dx9-exact-public-name-corrections-2026-08-13.md)
   — refutes 16 saved hypothesis names through full-body equality at the same
   official public symbol across pinned x86 D3DX9 releases 24 through 31; three
