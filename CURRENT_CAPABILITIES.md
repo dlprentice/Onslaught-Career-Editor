@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-08-14. RE authority block refreshed to canonical Gen24
+Last updated: 2026-08-14. RE authority block refreshed to canonical Gen25
 (`current_re_authority`; candidate Gen73 is projection-oracle only). Primary WinUI
 navigation was rechecked 2026-08-03 against the live shell (includes Cheats).
 The 2026-08-01 shell, appearance, Lore, Media, and four-run Level 100 reviews
@@ -646,22 +646,22 @@ Read [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md) before changing this lane.
 the historical Gen10 or candidate Gen73 roots by generation number, ledger
 equality, or self-derived pins.
 
-| Metric | Canonical Gen24 |
+| Metric | Canonical Gen25 |
 | --- | ---: |
-| Authority generation | **24** (lineage `incident-20260806-recovery-v1`) |
+| Authority generation | **25** (lineage `incident-20260806-recovery-v1`) |
 | Functions | **8280** |
 | C1_CANDIDATE_PARTIAL | **217** |
 | C2_BOUNDED_RUNTIME | **10** |
 | function_semantic OPAQUE | **8053** |
-| contract_C0_OPAQUE | **14177** (second opacity axis) |
-| Residuals | **6124** = 101 open dark + 4 open executed + 923 terminal bounded ambiguity + 30 terminal data + 5066 terminal padding |
+| contract_C0_OPAQUE | **14161** (second opacity axis) |
+| Residuals | **6108** = 101 open dark + 4 open executed + 907 terminal bounded ambiguity + 30 terminal data + 5066 terminal padding |
 | OPEN residual | **105** current-geometry rows; not a semantic regression |
-| Other ledgers | questions **15372**; scenarios **72**; levers **910**; contracts **14404**; adjudications **6020**; supersessions **592** |
-| Progressed carry | **27780 / 27780**, zero unaccounted |
-| Rebuild states | NOT_READY **14395**; PARTIAL_CONTRACT **8**; CONTRACT_ONLY **1**; REBUILD_READY **0** |
+| Other ledgers | questions **15356**; scenarios **72**; levers **910**; contracts **14388**; adjudications **6004**; supersessions **592** |
+| Progressed carry | **27089 / 27089**, zero unaccounted |
+| Rebuild states | NOT_READY **14379**; PARTIAL_CONTRACT **8**; CONTRACT_ONLY **1**; REBUILD_READY **0** |
 | complete_RE | **false** |
-| READY / reducer | `29ac9d91…39e86` / `6cf37430…4582` |
-| Next valid generation | **25** |
+| READY / reducer | `515a0218…3abd` / `ae77dce8…394c` |
+| Next valid generation | **26** |
 
 **Tracked static-envelope closure (2026-08-11):** the separate reviewed
 [`function-c1-closure-2026-08-11.tsv`](reverse-engineering/binary-analysis/function-c1-closure-2026-08-11.tsv)
@@ -669,13 +669,13 @@ accounts for its dated 8,136-function population as **8,129 C1**, **7 C2**,
 and **0 static OPAQUE**. A separately reviewed 34-row addendum extends bounded
 static accounting through the prior 8,170-row state at **8,163 C1 + 7 C2**.
 The current saved structural census is **8,280** after the later 31 text-gap and
-79 external-table admissions. Generation 24 includes all 154 post-Generation-23
+79 external-table admissions. Generation 25 retains all 154 post-Generation-23
 structural identities as campaign OPAQUE rows, but does not insert them into the
-frozen static tables. A later five-body repair keeps that count unchanged while
+frozen static tables. The five-body repair keeps that count unchanged while
 advancing current Ghidra to `db.18614` and 93.072115377% saved-body ownership;
-Generation 24 remains frozen on its `db.18613` geometry until a successor
-re-ground. Canonical Generation 24 carries the admitted
-runtime/campaign claims; neither count implies
+Generation 25 re-grounds those exact body identities, retires 16 changed
+lineages explicitly, and leaves one new 12-byte residual open. It carries the
+admitted runtime/campaign claims without changing a semantic grade; neither count implies
 `REBUILD_READY` or complete semantic parity.
 
 **PC demo/retail function frontier (2026-08-12, dated 8,136-function
@@ -792,7 +792,7 @@ corrections. `StartDie` remained open/opaque at that handoff. The independent
 data-write lane has one refuter-survived semantic result: a Level 521 `LockHit`
 invocation removed the supplied target's sole fired-lock node through five exact
 ordered field transitions. These are instrument capabilities and historical
-admissions. Canonical Gen24 carries Gen23's four C2 rows, separately re-proved
+admissions. Canonical Gen25 carries Gen23's four C2 rows through Gen24, separately re-proved
 a narrower fifth ApplyDamage C2 from intact TTD wrappers, and adds the bounded
 SetPos roundtrip as a sixth, LockHit's single-node removal path as a seventh,
 the bounded CExplosion internal carrier as an eighth, and the strict-`CRound`
@@ -844,10 +844,10 @@ These instruments do not infer function boundaries, C++ receivers, argument or
 return types, semantics, or parity. Static/source/RTTI evidence supplied joins
 for early data-write plates. Focused player-damage / Level 521 successor work
 remains an open runtime front alongside the next impact-ranked contract/rebuild
-advance now carried by Generation 24. There is
+advance now carried by Generation 25. There is
 not yet a normalized corpus-wide semantic ledger, and no new trace is justified
 until existing evidence plus these instruments cannot answer a preregistered
-question. The next campaign generation is 25.
+question. The next campaign generation is 26.
 
 ## Evidence boundary
 
