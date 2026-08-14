@@ -56,7 +56,7 @@ Naming authority, as a dated chain, newest last:
 | 2026-08-12 | [Collision-component implementation-identity correction](../collision-component-identity-correction-2026-08-12.md) | proves and promotes five shared-base implementation identities |
 | 2026-08-12 | `ghidra-function-name-table-2026-08-12.tsv` | frozen 8,136-row projection retained for its pinned consumers |
 | 2026-08-13 | [Mission-registry boundary promotion](../mission-script-registry-boundary-live-promotion-2026-08-13.md) | proves and promotes exactly 34 callable boundaries with default metadata |
-| 2026-08-14 | `ghidra-function-name-table-2026-08-13.tsv` | **the current 8,304-row address → symbol resolution authority**, refreshed from the JPEG/IJG db.18615 readback while retaining the stable path |
+| 2026-08-14 | `ghidra-function-name-table-2026-08-13.tsv` | **the current 8,327-row address → symbol resolution authority**, refreshed from the CRT P0 db.18616 readback while retaining the stable path |
 
 The mechanical check against the current last row is
 `tools/re_function_doc_names_check.py`. The table is tracked; the checker

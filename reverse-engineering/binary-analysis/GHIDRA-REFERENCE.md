@@ -41,11 +41,13 @@ layouts, or behaviors are proven.
 > preserving all 8,201 PRE rows exactly. The five-body repair kept the census
 > at 8,280 and changed only five reviewed body rows. The latest JPEG/IJG
 > promotion adds 24 default-metadata functions while preserving every PRE row,
-> advancing exact saved-body ownership to 93.840186987%. The latest
+> advancing exact saved-body ownership to 93.840186987%. The later CRT P0
+> promotion adds 23 default-metadata functions while preserving all 8,304 PRE
+> rows and advances exact saved-body ownership to 93.898814846%. The latest
 > project state is owned by
 > [`../ghidra/README.md`](../ghidra/README.md).
-> The current saved census and lower bound are 8,304, not a ceiling. The current
-> 8,304-row projection and live-state
+> The current saved census and lower bound are 8,327, not a ceiling. The current
+> 8,327-row projection and live-state
 > receipts are reconciled in
 > [`../../../ghidra-functions.md`](../ghidra-functions.md); the 6,411- and
 > 7,555-row states remain dated history only.

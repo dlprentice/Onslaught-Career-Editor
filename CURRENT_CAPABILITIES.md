@@ -1,8 +1,9 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-08-14. RE authority block refreshed to canonical Gen26
-(`current_re_authority`; candidate Gen73 is projection-oracle only). Primary WinUI
+Last updated: 2026-08-14. Structural RE state refreshed to 8,327/db.18616;
+campaign grades remain canonical Gen26 (`current_re_authority`; candidate Gen73
+is projection-oracle only). Primary WinUI
 navigation was rechecked 2026-08-03 against the live shell (includes Cheats).
 The 2026-08-01 shell, appearance, Lore, Media, and four-run Level 100 reviews
 retain their stated boundaries. Other rebuild and save/patch claims not
@@ -668,12 +669,14 @@ equality, or self-derived pins.
 accounts for its dated 8,136-function population as **8,129 C1**, **7 C2**,
 and **0 static OPAQUE**. A separately reviewed 34-row addendum extends bounded
 static accounting through the prior 8,170-row state at **8,163 C1 + 7 C2**.
-The current saved structural census is **8,304** after the later 31 text-gap,
-79 external-table, and 24 JPEG/IJG callback admissions. Generation 26 is the
-aligned 8,304-row semantic authority: it retains all later structural identities
-honestly as campaign OPAQUE rows where they lack a semantic grade. The five-body
+The current saved structural census is **8,327** after the later 31 text-gap,
+79 external-table, 24 JPEG/IJG callback, and 23 CRT P0 admissions. Generation 26
+remains the frozen 8,304-row semantic authority: it retains the first 178 later
+structural identities honestly as campaign OPAQUE rows where they lack a
+semantic grade, while the newer 23 CRT rows await Generation 27. The five-body
 repair advanced Ghidra to `db.18614`; the JPEG/IJG promotion advanced it to
-`db.18615` and 93.840186987% saved-body ownership. Generation 26 re-grounded all
+`db.18615`; and the CRT promotion advanced it to `db.18616` and
+93.898814846% saved-body ownership. Generation 26 re-grounded all
 24 new functions, retired eight changed lineages explicitly, and accounted for
 27,025/27,025 eligible Generation-25 carry rows. It carries the admitted
 runtime/campaign claims without changing a semantic grade; neither count implies

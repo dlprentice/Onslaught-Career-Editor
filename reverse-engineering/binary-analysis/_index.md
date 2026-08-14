@@ -41,9 +41,9 @@ the document it links.
   — promotes bounded Tier-2 names/comments/tags for the 34 newly admitted
   handlers while preserving all 8,136 non-target rows and every body/ABI byte
 - [Current `.text` body ownership and listing-state accounting](current-text-ownership-2026-08-13.md)
-  — replays all 8,304 saved functions / 8,434 ranges against pristine bytes,
-  closes the exact zero-overlap union at 1,810,287 / 1,929,117 = 93.840186987%,
-  and partitions the 118,830-byte gap without treating loose code/data as proved
+  — replays all 8,327 saved functions / 8,458 ranges against pristine bytes,
+  closes the exact zero-overlap union at 1,811,418 / 1,929,117 = 93.898814846%,
+  and partitions the 117,699-byte gap without treating loose code/data as proved
   functions or semantics
 - [Text-gap 31-function library classification](text-gap-library-function-classification-2026-08-13.md)
   — identifies the 31 now-admitted exact boundaries as 14
@@ -82,9 +82,14 @@ the document it links.
   8,303-function / 8,420-range prospective POST on two fresh copies, preserves
   every PRE row, authorizes no write, and now requires current-state re-grounding
 - [CRT/runtime P0 db.18615 live-promotion preparation v2](crt-runtime-p0-ghidra-live-promotion-preparation-v2-2026-08-14.md)
-  — re-grounds the cohort on the exact 8,304-function current PRE, reproduces an
+  — re-grounded the cohort on the exact then-current 8,304-function PRE and
+  reproduced an
   8,327-function / 8,458-range prospective POST twice with every PRE row exact,
-  discloses the 53-byte physical database variance, and authorizes no write
+  discloses the 53-byte physical database variance, and records the consumed
+  read-only preparation that itself authorized no write
+- [CRT/runtime P0 live promotion](crt-runtime-p0-ghidra-live-promotion-2026-08-14.md)
+  — records the completed db.18616 promotion: 23 default-metadata functions,
+  24 exact ranges, all 8,304 PRE rows unchanged, and 1,131 newly owned bytes
 - [Five existing-function body-fragment scratch admission](pc-function-body-fragment-ghidra-scratch-admission-2026-08-14.md)
   — reproduces five exact body-range repairs and a 1,258-byte ownership gain on
   two isolated db.18613 replicas, excludes the FEP envelope's trailing 12 NOP
@@ -103,7 +108,7 @@ the document it links.
 - [PC/Xbox D3DX three-body current reconciliation](d3dx-gap-cohort-current-reconciliation-2026-08-14.md)
   — reproduces three complete D3DX-compatible bodies across PC and Xbox,
   settles one as already admitted, and leaves two exact 248-byte loose-code
-  boundaries outside the current 8,304-function census pending scratch review
+  boundaries outside the current 8,327-function census pending scratch review
 - [D3DX two-function Ghidra scratch admission](d3dx-gap-two-function-ghidra-scratch-admission-2026-08-14.md)
   — admits the two remaining bodies on two isolated db.18613 copies, preserves
   all 8,280 PRE rows exactly, and keeps live and tracked Ghidra mutation
@@ -306,7 +311,7 @@ the document it links.
 >
 > The tracked
 > [`ghidra-function-name-table-2026-08-13.tsv`](ghidra-function-name-table-2026-08-13.tsv)
-> is the current 8,304-row address-to-name projection and the mechanical
+> is the current 8,327-row address-to-name projection and the mechanical
 > checker's authority after the verified
 > [34-boundary promotion](mission-script-registry-boundary-live-promotion-2026-08-13.md)
 > and subsequent
@@ -315,7 +320,9 @@ the document it links.
 > [31-boundary text-gap promotion](text-gap-missing-function-ghidra-live-promotion-2026-08-14.md),
 > [79-boundary external-table promotion](external-table-gap-ghidra-live-promotion-2026-08-14.md),
 > the five-body repair, and the
-> [24-boundary JPEG/IJG promotion](jpeg-ijg-callback-ghidra-live-promotion-2026-08-14.md).
+> [24-boundary JPEG/IJG promotion](jpeg-ijg-callback-ghidra-live-promotion-2026-08-14.md),
+> followed by the
+> [23-boundary CRT P0 promotion](crt-runtime-p0-ghidra-live-promotion-2026-08-14.md).
 > The 2026-08-12 and July tables remain dated artifacts for their original
 > checks and pinned receipts. The current count is a discovered census, not a
 > permanent ceiling.

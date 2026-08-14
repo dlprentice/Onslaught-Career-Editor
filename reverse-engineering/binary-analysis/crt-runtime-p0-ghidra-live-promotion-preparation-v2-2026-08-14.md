@@ -1,17 +1,19 @@
 # CRT/runtime P0 Ghidra live-promotion preparation v2
 
-Status: **current db.18615 preparation; live promotion remains forbidden**
+Status: **historical consumed db.18615 preparation**
 
 Date: 2026-08-14
 
-Verdict: **PREPARATION_READY_LIVE_FORBIDDEN**
+Verdict: **PREPARATION_CONSUMED_PROMOTION_COMPLETE**
 
-Policy: **`PREPARATION_ONLY`**
+Policy: **`PREPARATION_ONLY`** (this document itself authorized no mutation)
 
 Evidence: MEASURED — the corrected sealed v2 scratch authority, exact current
 live/tracked PRE, and two fresh disposable db.18616 prospective-POST replicas.
-The preparation authority opens no Ghidra project and creates no live lane,
-backup, tracked refresh, projection, or aggregate promotion receipt.
+The preparation authority opened no Ghidra project and created no live lane,
+backup, tracked refresh, projection, or aggregate promotion receipt. A later,
+separately authorized ceremony completed the promotion; see the
+[`live-promotion report`](crt-runtime-p0-ghidra-live-promotion-2026-08-14.md).
 
 Specimen: pristine PC retail `BEA.exe`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
@@ -165,12 +167,15 @@ policy=PREPARATION_ONLY mutation_authorized=false
 blocker=future_ceremony_artifacts_absent
 ```
 
-## Remaining blocker
+## Historical completion boundary
 
-Static and disposable-copy proof is complete, but action authority is absent.
-A future ceremony still requires an exact off-volume PRE backup and read-only
-restore, one separately authorized live apply/save, separate readback, POST
-backup and restore, proof that tracked remained PRE, then a separately
-authorized tracked refresh and retained restore. Until those artifacts exist
-and a new live authority reproduces them, live and tracked mutation remain
-forbidden.
+At preparation time, action authority was absent and the future ceremony still
+required an exact off-volume PRE backup and read-only restore, one separately
+authorized live apply/save, separate readback, POST backup and restore, proof
+that tracked remained PRE, then a separately authorized tracked refresh and
+retained restore. Those requirements were subsequently satisfied and are owned
+by the completed
+[`live-promotion report`](crt-runtime-p0-ghidra-live-promotion-2026-08-14.md)
+and its read-only aggregate authority. This preparation remains immutable
+evidence for the prospective replicas; it is not the current project owner and
+does not independently authorize any later write.

@@ -58,7 +58,7 @@ restore probes reproduce the same project:
   `3cd459d5461919934199e3346f6a92ce14946f42af400488ccde733173a40627`;
 - stable `db.18614.gbf`: 68,337,664 bytes, SHA-256
   `d7f0011ea337f58b710415d5664e73d91ca9f1f61e20a836278d3e71b71b2865`;
-- current `db.18615.gbf`: 68,354,048 bytes, SHA-256
+- ceremony-current `db.18615.gbf`: 68,354,048 bytes, SHA-256
   `6c2fc2f12394cf7b63f4f335173ba0a19b52b92c50dc4d2da987170501bc9681`.
 
 The sole physical transition removed `db.18613.gbf`, added `db.18615.gbf`,
@@ -107,7 +107,8 @@ the gap-accounting receipt is 3,399 bytes, SHA-256
 `f88810826489dbce703a0b375bc4f587dbc4fffd5c6eaeaaaf76966d5e4aec10`.
 See
 [`current-text-ownership-2026-08-13.md`](current-text-ownership-2026-08-13.md)
-for the full current 118,830-byte partition.
+for the then-current 118,830-byte partition and its later superseding current
+accounting.
 
 ## Boundary
 

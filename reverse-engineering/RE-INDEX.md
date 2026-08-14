@@ -239,7 +239,7 @@ re-grounded the byte-identical live/tracked 8,280-function db.18614 PRE and
 reproduced the exact 8,304-function prospective POST on two fresh disposable
 copies. It granted no mutation authority. The completed
 [JPEG/IJG live-promotion report](binary-analysis/jpeg-ijg-callback-ghidra-live-promotion-2026-08-14.md)
-now owns the 8,304-function db.18615 result: all 8,280 PRE rows remain exact,
+records the then-current 8,304-function db.18615 result: all 8,280 PRE rows remain exact,
 24 default-metadata functions add 38 ranges and 14,817 owned bytes, and
 live/tracked/POST recovery are byte-identical.
 
@@ -265,17 +265,21 @@ The follow-on historical
 re-grounded the byte-identical live/tracked 8,280-function db.18614 PRE and
 reproduced an exact 8,303-function / 8,420-range prospective POST on two fresh
 copies. It independently totals 1,796,601 owned `.text` bytes and preserves all
-8,280 PRE rows, but remains `PREPARATION_ONLY`, performed no live or tracked
-Ghidra write, and must be re-grounded before any future ceremony.
+8,280 PRE rows, but remains `PREPARATION_ONLY` and performed no live or tracked
+Ghidra write. The v2 preparation below later performed the required re-ground.
 
-The current
+The now-consumed
 [CRT23 db.18615 live-promotion preparation v2](binary-analysis/crt-runtime-p0-ghidra-live-promotion-preparation-v2-2026-08-14.md)
 performs that re-grounding from the exact 8,304-function / 8,434-range
-live-and-tracked PRE. Two disposable saves independently produce the same
+then-live-and-tracked PRE. Two disposable saves independently produce the same
 8,327-function / 8,458-range logical POST, preserve all 8,304 PRE rows, and add
 1,131 owned bytes. Their rolling databases differ in 53 sealed bookkeeping
-bytes while every program export remains byte-identical. The result remains
-`PREPARATION_ONLY`; no live or tracked write is authorized.
+bytes while every program export remains byte-identical. The preparation itself
+remains `PREPARATION_ONLY`; it authorized no write. The completed
+[CRT23 live-promotion report](binary-analysis/crt-runtime-p0-ghidra-live-promotion-2026-08-14.md)
+now owns the 8,327-function db.18616 result: all 8,304 PRE rows remain exact,
+23 default-metadata functions add 24 ranges and 1,131 owned bytes, and
+live/tracked/POST recovery are byte-identical.
 
 The separate historical sealed
 [five-existing-function body-fragment scratch admission](binary-analysis/pc-function-body-fragment-ghidra-scratch-admission-2026-08-14.md)
@@ -638,9 +642,9 @@ different failure modes and only the first was being tested.)*
   with **0 byte mismatches**, 6,351 of 6,411 functions fully clean — but only
   **79.8268 % of `.text` was covered by those 6,411 historical bodies**.
   [Current `.text` body ownership](binary-analysis/current-text-ownership-2026-08-13.md)
-  now supersedes that metric for present use: all 8,304 saved functions and
-  8,434 exact ranges own 1,810,287 / 1,929,117 bytes = 93.840186987%, with
-  zero overlap. The 118,830-byte gap is separately partitioned by current
+  now supersedes that metric for present use: all 8,327 saved functions and
+  8,458 exact ranges own 1,811,418 / 1,929,117 bytes = 93.898814846%, with
+  zero overlap. The 117,699-byte gap is separately partitioned by current
   listing state and discovery evidence; this remains structural body ownership,
   not semantic reversal. The historical 6,411-row result remains reproducible
   in under a minute with `tools/re_verify.py`.
@@ -843,8 +847,8 @@ Machine-readable siblings, for consumers that should not be parsing prose:
   — a **candidate**, as its own filename says; not an accepted contract.
 - [Retail specimen manifest](binary-analysis/retail-specimen-manifest-2026-03-14.json)
 - [2026-08-13 function name table](binary-analysis/ghidra-function-name-table-2026-08-13.tsv)
-  — the current 8,304-row address-to-name authority, regenerated from the
-  2026-08-14 JPEG/IJG callback readback while retaining the stable path.
+  — the current 8,327-row address-to-name authority, regenerated from the
+  2026-08-14 CRT P0 readback while retaining the stable path.
 - [2026-08-12 function name table](binary-analysis/ghidra-function-name-table-2026-08-12.tsv)
   — frozen 8,136-row provenance retained for Generations 20–23 and its other
   pinned consumers.

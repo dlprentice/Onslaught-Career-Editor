@@ -175,11 +175,12 @@ Static-envelope closure covers the dated 8,136-function census against which it
 was sealed. A later 34-row Mission-registry addendum bounds the resulting
 8,170-row state at C1 static and a separate metadata ceremony records only its
 Tier-2 registry vocabulary. Later ceremonies admitted 31 text-gap, 79
-external-table, and 24 JPEG/IJG callback boundaries, so the current saved
-structural census is 8,304. The 31 have bounded provider-compatible
-classifications; the 79 and newest 24 remain default-metadata structural rows.
-All 178 post-Generation-23 rows are represented in frozen Generation 26 as
-OPAQUE while remaining outside the frozen static-grade projection. None of
+external-table, 24 JPEG/IJG callback, and 23 CRT P0 runtime boundaries, so the
+current saved structural census is 8,327. The 31 have bounded provider-
+compatible classifications; the 79, JPEG/IJG 24, and CRT 23 remain default-
+metadata structural rows. The first 178 post-Generation-23 rows are represented
+in frozen Generation 26 as OPAQUE; the newer 23 CRT rows await Generation 27.
+All remain outside the frozen static-grade projection. None of
 these counts is a final ceiling,
 semantic recovery, or reversal. The PC demo
 partition and the instruction-local Xbox source-line anchors are oracles, never
@@ -307,13 +308,14 @@ the mandate; the completion test and every clause above are unchanged.
   tracked refresh, and restore probes. They advance the structural census to
   8,280 while preserving every 8,201 PRE row, but add no semantic grade,
   original linker identity, runtime contract, or rebuild mapping.
-- Current saved-body `.text` ownership is independently closed at 1,810,287 /
-  1,929,117 bytes = 93.840186987% across 8,304 functions / 8,434 exact ranges,
+- Current saved-body `.text` ownership is independently closed at 1,811,418 /
+  1,929,117 bytes = 93.898814846% across 8,327 functions / 8,458 exact ranges,
   with zero overlap. The five reviewed current-function jump fragments are now
   repaired existing bodies; the 24 reviewed JPEG/IJG callbacks are now exact
-  default-metadata functions; the remaining 118,830 bytes are listing-partitioned
-  high-yield code/data/padding queues. This is structural accounting, not a
-  final function census or semantic score.
+  default-metadata functions; and the 23 reviewed CRT P0 entries are now exact
+  default-metadata functions. The remaining 117,699 bytes are listing-
+  partitioned high-yield code/data/padding queues. This is structural
+  accounting, not a final function census or semantic score.
 - The 75-row existing-entry MissionScript normalization passed its complete
   scratch/live/backup/readback gate and is synchronized to tracked Ghidra: 54
   former defaults, five message-name corrections, and 16 Tier-3-to-Tier-2
@@ -347,11 +349,13 @@ the mandate; the completion test and every clause above are unchanged.
 **Active frontier, in priority order:**
 
 1. **Recover the highest-confidence callable units and body repairs in the
-   current 118,830-byte `.text` gap.** Re-ground the already reviewed CRT and
-   D3DX cohorts against the current `db.18615` geometry, then use cross-build shape, current
-   listing state, incoming control flow, alignment, and library classification
-   to prove exact boundaries; do not infer entries from linear decode alone.
-2. **Advance Generation 27 from the exact Generation-26 authority.** Keep any
+   current 117,699-byte `.text` gap.** Re-ground the reviewed D3DX and remaining
+   code-shaped cohorts against current `db.18616` geometry, then use cross-build
+   shape, current listing state, incoming control flow, alignment, and library
+   classification to prove exact boundaries; do not infer entries from linear
+   decode alone.
+2. **Advance Generation 27 from the exact Generation-26 authority and current
+   8,327/db.18616 geometry.** Keep any
    current launcher/test literal-pin update separate from the frozen reducer,
    preserve the static/runtime layer boundary, and do not pin HUD route order
    as C2.
@@ -435,6 +439,12 @@ Rank from current evidence; a reproduced contradiction outranks this list.
   JPEG/IJG rows enter as DARK/FUN/OPAQUE. No semantic grade, runtime contract,
   Ghidra project, executable, or rebuild owner changes. Generation 27 is the
   next valid parent.
+- **2026-08-14 — 23 CRT P0 runtime boundaries promoted.** A separately backed-
+  up one-save ceremony advanced live and tracked Ghidra from 8,304/db.18615 to
+  8,327/db.18616 while preserving every PRE row. It added 24 exact body ranges
+  and 1,131 owned `.text` bytes, reaching 93.898814846%. Generation 26 remains
+  frozen; Generation 27 must re-ground the new structural geometry without
+  inventing semantic grades.
 
 ---
 
@@ -516,7 +526,8 @@ then re-grounds the 24 JPEG/IJG structural functions on exact db.18615 geometry,
 accounts for all 27,025 eligible Generation-25 carry rows, explicitly retires
 eight changed residual/contract/question/adjudication identities, and represents
 the new functions as DARK/FUN/OPAQUE without inventing semantics. The next valid
-campaign generation is 27.
+campaign generation is 27, which must re-ground the newer 23 CRT P0 structural
+rows on exact db.18616 geometry.
 The saved `VFuncSlot_00_004d9910` name and grade remain unchanged. The bounded
 addenda were appended to twelve exact live/tracked Ghidra comments only after
 backup, replica, rollback, adverse-control, readback, and restore gates; no

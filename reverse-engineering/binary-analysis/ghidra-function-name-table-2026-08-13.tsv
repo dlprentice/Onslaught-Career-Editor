@@ -3,16 +3,17 @@
 #           It is a name index, not a database, disassembly, or semantic proof.
 # Projection date: 2026-08-14
 # Specimen SHA-256: 74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750
-# Source  : local-lab/ghidra-jpeg24-boundary-live-promotion-20260814-v2/runs/live-readback/functions.tsv
-# Source bytes: 7177776
-# Source SHA-256: bceedfa2eec573ee95e42a703d6f3a552c4718115fa540f3eaca492322f9a173
-# Rows    : 8304 internal functions; this is a discovered census, not a final ceiling.
+# Source  : local-lab/ghidra-crt23-p0-boundary-live-promotion-db18615-20260814-v2/runs/live-readback/functions.tsv
+# Source bytes: 7192980
+# Source SHA-256: 8640c35a820b3c5e415b947fa8a13eeb5c7c535868780dc2fe511d020a54c40e
+# Rows    : 8327 internal functions; this is a discovered census, not a final ceiling.
 # Columns : address, name, bodyMin, bodyMax (hex). Non-contiguous bodies are
 #           represented by their bounding range, so bodyMin..bodyMax can over-cover.
 address	name	bodyMin	bodyMax
 0x00401000	CGenericActiveReader__SetReader	0x00401000	0x00401033
 0x00401040	CMonitor__AddDeletionEvent	0x00401040	0x004010bd
 0x004010c0	FUN_004010c0	0x004010c0	0x004010de
+0x004010e0	FUN_004010e0	0x004010e0	0x004011a2
 0x004011b0	vector_constructor_iterator_nothrow	0x004011b0	0x004011d9
 0x004011e0	CActor__Init	0x004011e0	0x004013c4
 0x004013d0	CActor__dtor_base	0x004013d0	0x004013e1
@@ -289,6 +290,7 @@ address	name	bodyMin	bodyMax
 0x0040f3f0	FUN_0040f3f0	0x0040f3f0	0x0040f40e
 0x0040f410	FUN_0040f410	0x0040f410	0x0040f4d2
 0x0040f4e0	FUN_0040f4e0	0x0040f4e0	0x0040f4f5
+0x0040f500	FUN_0040f500	0x0040f500	0x0040f51e
 0x0040f520	CBattleEngineData__ctor	0x0040f520	0x0040f58e
 0x0040f590	CBattleEngineData__Initialise	0x0040f590	0x0040f886
 0x0040f890	CBattleEngineData__Shutdown	0x0040f890	0x0040f973
@@ -634,6 +636,7 @@ address	name	bodyMin	bodyMax
 0x00423990	CChunkReader__Skip	0x00423990	0x004239a7
 0x004239b0	CWorld__GetSubstateField_12C	0x004239b0	0x004239b9
 0x004239c0	FUN_004239c0	0x004239c0	0x004239d5
+0x004239e0	FUN_004239e0	0x004239e0	0x004239e0
 0x004239f0	CUnitAI__InitDefaults_AutoConfigTestPath	0x004239f0	0x00423bba
 0x00423bc0	CLIParams__ParseCommandLine	0x00423bc0	0x0042419f
 0x004241a0	CFlexArray__InitWithGrowth	0x004241a0	0x004241d9
@@ -1673,6 +1676,7 @@ address	name	bodyMin	bodyMax
 0x0045a910	FUN_0045a910	0x0045a910	0x0045a92c
 0x0045a930	FUN_0045a930	0x0045a930	0x0045a939
 0x0045a940	CFEPGoodies__BuildGoodieRequirementText	0x0045a940	0x0045ac15
+0x0045ac20	CFEPGoodies__BuildStaticGoodieDataTable	0x0045ac20	0x0045ac24
 0x0045ac30	CFEPGoodies__BuildStaticGoodieDataTable	0x0045ac30	0x0045c762
 0x0045c770	CGoodieData__ctor	0x0045c770	0x0045c79d
 0x0045c7a0	CFEPGoodies__Init	0x0045c7a0	0x0045c86a
@@ -2272,6 +2276,7 @@ address	name	bodyMin	bodyMax
 0x00491790	FUN_00491790	0x00491790	0x004917ae
 0x004917b0	FUN_004917b0	0x004917b0	0x00491872
 0x00491880	FUN_00491880	0x00491880	0x0049188b
+0x00491890	FUN_00491890	0x00491890	0x004918fa
 0x00491900	CMapWhoEntry__Init	0x00491900	0x0049190f
 0x00491910	FUN_00491910	0x00491910	0x00491921
 0x00491930	CMapWho__Destroy	0x00491930	0x004919a1
@@ -2755,6 +2760,7 @@ address	name	bodyMin	bodyMax
 0x004bc0b0	FUN_004bc0b0	0x004bc0b0	0x004bc0ce
 0x004bc0d0	FUN_004bc0d0	0x004bc0d0	0x004bc192
 0x004bc1a0	FUN_004bc1a0	0x004bc1a0	0x004bc1b5
+0x004bc1c0	FUN_004bc1c0	0x004bc1c0	0x004bc1de
 0x004bc1e0	FUN_004bc1e0	0x004bc1e0	0x004bc249
 0x004bc250	FUN_004bc250	0x004bc250	0x004bc259
 0x004bc260	CWorld__InitOccupancyBitplanes	0x004bc260	0x004bc2cd
@@ -2785,6 +2791,7 @@ address	name	bodyMin	bodyMax
 0x004bed30	CExplosionInitThing__StepToLowestCostNeighbor8	0x004bed30	0x004bee96
 0x004beea0	CExplosionInitThing__SimplifyGridPathByLineOfSight	0x004beea0	0x004bef90
 0x004befa0	FUN_004befa0	0x004befa0	0x004befbe
+0x004befc0	FUN_004befc0	0x004befc0	0x004bf082
 0x004bf090	OID__CreateObject	0x004bf090	0x004bf92a
 0x004bf9e0	OID__InitInfluenceMapObject	0x004bf9e0	0x004bf9fb
 0x004bfa00	CThing__CopyGlobal829dd0Block30ToOut_004bfa00	0x004bfa00	0x004bfa18
@@ -2960,6 +2967,7 @@ address	name	bodyMin	bodyMax
 0x004cbed0	FUN_004cbed0	0x004cbed0	0x004cbeee
 0x004cbef0	FUN_004cbef0	0x004cbef0	0x004cbfb2
 0x004cbfc0	FUN_004cbfc0	0x004cbfc0	0x004cbfd7
+0x004cbfe0	FUN_004cbfe0	0x004cbfe0	0x004cbfe0
 0x004cbff0	CParticleManager__DestroyParticleSetList	0x004cbff0	0x004cc012
 0x004cc020	CParticleSet__CreateByType	0x004cc020	0x004cc813
 0x004cc850	CParticleSet__Init	0x004cc850	0x004cc869
@@ -4029,6 +4037,7 @@ address	name	bodyMin	bodyMax
 0x00505830	FUN_00505830	0x00505830	0x0050584e
 0x00505850	FUN_00505850	0x00505850	0x00505912
 0x00505920	FUN_00505920	0x00505920	0x00505935
+0x00505940	FUN_00505940	0x00505940	0x0050595e
 0x00505960	CWaypoint__Load	0x00505960	0x00505aac
 0x00505ab0	CWaypointManager__ReleasePendingObjects	0x00505ab0	0x00505adb
 0x00505ae0	CWaypointManager__LoadWaypoints	0x00505ae0	0x00505ba5
@@ -4104,6 +4113,7 @@ address	name	bodyMin	bodyMax
 0x0050d870	FUN_0050d870	0x0050d870	0x0050d88e
 0x0050d890	FUN_0050d890	0x0050d890	0x0050d952
 0x0050d960	FUN_0050d960	0x0050d960	0x0050d975
+0x0050d980	FUN_0050d980	0x0050d980	0x0050d99e
 0x0050d9a0	CWorldMeshList__Clear	0x0050d9a0	0x0050d9db
 0x0050d9e0	CWorldMeshList__Add	0x0050d9e0	0x0050dc1b
 0x0050dc20	CWorldMeshList__MarkUsed	0x0050dc20	0x0050dca0
@@ -4450,6 +4460,7 @@ address	name	bodyMin	bodyMax
 0x0051a010	CCredits__WriteEntry_String	0x0051a010	0x0051a02f
 0x0051a030	CCredits__RenderCredits	0x0051a030	0x0051a1e5
 0x0051a1f0	FUN_0051a1f0	0x0051a1f0	0x0051a225
+0x0051a230	FUN_0051a230	0x0051a230	0x0051a264
 0x0051a270	CFastVB__Create	0x0051a270	0x0051a338
 0x0051a340	CFastVB__Destroy	0x0051a340	0x0051a370
 0x0051a380	CFastVB__LockAligned	0x0051a380	0x0051a428
@@ -5122,6 +5133,7 @@ address	name	bodyMin	bodyMax
 0x00541770	CDXFrontEndVideo__GetWidth	0x00541770	0x0054177d
 0x00541780	CDXFrontEndVideo__GetHeight	0x00541780	0x0054178e
 0x00541790	CDXFrontEndVideo__Render	0x00541790	0x00541d16
+0x00541d20	FUN_00541d20	0x00541d20	0x00541d20
 0x00541d30	CDXFrontEndVideo__Update	0x00541d30	0x00541dd9
 0x00541de0	FUN_00541de0	0x00541de0	0x00541dfe
 0x00541e00	FUN_00541e00	0x00541e00	0x00541ec2
@@ -5134,6 +5146,7 @@ address	name	bodyMin	bodyMax
 0x00542600	FUN_00542600	0x00542600	0x0054261e
 0x00542620	FUN_00542620	0x00542620	0x005426e2
 0x005426f0	FUN_005426f0	0x005426f0	0x00542705
+0x00542710	FUN_00542710	0x00542710	0x00542735
 0x00542740	CDXEngine__InitLandscapeTextureTables	0x00542740	0x0054274b
 0x00542750	FUN_00542750	0x00542750	0x0054276e
 0x00542770	FUN_00542770	0x00542770	0x00542832
@@ -5168,6 +5181,7 @@ address	name	bodyMin	bodyMax
 0x005445a0	FUN_005445a0	0x005445a0	0x005445bc
 0x005445c0	FUN_005445c0	0x005445c0	0x005445c9
 0x005445d0	FUN_005445d0	0x005445d0	0x005445ef
+0x005445f0	FUN_005445f0	0x005445f0	0x005445f9
 0x00544600	FUN_00544600	0x00544600	0x0054461c
 0x00544620	FUN_00544620	0x00544620	0x00544629
 0x00544630	FUN_00544630	0x00544630	0x0054464c
@@ -5177,6 +5191,7 @@ address	name	bodyMin	bodyMax
 0x00544690	FUN_00544690	0x00544690	0x005446ac
 0x005446b0	FUN_005446b0	0x005446b0	0x005446b9
 0x005446c0	FUN_005446c0	0x005446c0	0x005446d5
+0x005446e0	FUN_005446e0	0x005446e0	0x005446fe
 0x00544770	CDXLandscape__ReleaseOwnedResources	0x00544770	0x005447ce
 0x005447d0	CDXLandscape__FreeObjectCallback	0x005447d0	0x005447dd
 0x005447e0	CDXLandscape__CreateMipLevels	0x005447e0	0x00544999
@@ -5290,6 +5305,7 @@ address	name	bodyMin	bodyMax
 0x00550200	DXParticleTexture__GetVertexPtrAt	0x00550200	0x0055021d
 0x00550220	DXParticleTexture__Render	0x00550220	0x005502c4
 0x005502d0	FUN_005502d0	0x005502d0	0x005502f1
+0x00550300	FUN_00550300	0x00550300	0x0055031e
 0x00550320	CLandscapeVB__VFunc_0_00550320	0x00550320	0x00550377
 0x00550380	CLandscapeVB__ctor	0x00550380	0x00550391
 0x005503a0	CDXPatch__Destructor_thunk	0x005503a0	0x005503a4
@@ -5305,6 +5321,7 @@ address	name	bodyMin	bodyMax
 0x00550810	FUN_00550810	0x00550810	0x0055082c
 0x00550830	FUN_00550830	0x00550830	0x00550839
 0x00550840	FUN_00550840	0x00550840	0x0055085f
+0x00550860	FUN_00550860	0x00550860	0x00550869
 0x00550870	FUN_00550870	0x00550870	0x00550895
 0x005508a0	CDXEngine__ClearMatrixBlock	0x005508a0	0x005508df
 0x005508e0	CDXEngine__InitTransformCaches	0x005508e0	0x00550b02
@@ -5511,6 +5528,7 @@ address	name	bodyMin	bodyMax
 0x0055db0a	CRT__EhVectorDestructorIterator_WithUnwind	0x0055db0a	0x0055db71
 0x0055db72	CRT__EhVectorDestructorIterator_IfNoException	0x0055db72	0x0055db89
 0x0055db8a	eh_vector_destructor_iterator	0x0055db8a	0x0055dbe7
+0x0055dbe8	FUN_0055dbe8	0x0055dbe8	0x0055dbfd
 0x0055dbfe	_rand	0x0055dbfe	0x0055dc1f
 0x0055dc20	eh_vector_constructor_iterator	0x0055dc20	0x0055dc89
 0x0055dc8a	CRT__EhVectorConstructorIterator_Unwind	0x0055dc8a	0x0055dca1
@@ -5594,6 +5612,7 @@ address	name	bodyMin	bodyMax
 0x0055fc5d	CD3DApplication__ReadLineFromStreamLocked	0x0055fc5d	0x0055fcbe
 0x0055fcc0	__alldiv	0x0055fcc0	0x0055fd69
 0x0055fd6a	FUN_0055fd6a	0x0055fd6a	0x0055fe11
+0x0055fe12	FUN_0055fe12	0x0055fe12	0x0055fe25
 0x0055fe26	CRT__LockRouteByAddress	0x0055fe26	0x0055fe54
 0x0055fe55	CRT__LockRouteByIndex	0x0055fe55	0x0055fe77
 0x0055fe78	CRT__UnlockRouteByAddress	0x0055fe78	0x0055fea6
@@ -5612,6 +5631,7 @@ address	name	bodyMin	bodyMax
 0x005606c5	CRT__SehUnwindAndResumeSearch	0x005606c5	0x0056073f
 0x00560740	CRT__CallCatchBlock	0x00560740	0x005607e4
 0x0056080d	CRT__CleanupCatchContext	0x0056080d	0x0056085a
+0x0056085b	FUN_0056085b	0x0056085b	0x00560884
 0x00560885	CRT__BuildCatchObject	0x00560885	0x00560a3c
 0x00560a49	CRT__DestroyCatchObject	0x00560a49	0x00560a9e
 0x00560ab0	CRT__AdjustPointerByPMD	0x00560ab0	0x00560ad2
@@ -5718,6 +5738,7 @@ address	name	bodyMin	bodyMax
 0x00564b54	CRT__SpawnResolvedPathWithBuiltCommandEnv	0x00564b54	0x00564ba4
 0x00564ba5	CRT__UnhandledExceptionFilterDispatch	0x00564ba5	0x00564bea
 0x00564beb	FUN_00564beb	0x00564beb	0x00564bfb
+0x00564bfc	FUN_00564bfc	0x00564bfc	0x00564c08
 0x00564c09	CRT__OpenFileByModeString	0x00564c09	0x00564d78
 0x00564d79	CRT__AcquireFileStreamSlot	0x00564d79	0x00564e40
 0x00564e41	CRT__CloseFd	0x00564e41	0x00564e9d
@@ -5784,6 +5805,7 @@ address	name	bodyMin	bodyMax
 0x005689b8	CRT__CallocWithRetry	0x005689b8	0x00568af4
 0x00568a51	CRT__UnlockHeap9_SbAllocPath	0x00568a51	0x00568a59
 0x00568ada	CRT__UnlockHeap9_DeferredAllocPath	0x00568ada	0x00568ae2
+0x00568af5	FUN_00568af5	0x00568af5	0x00568b75
 0x00568b76	CRT__LseekFd	0x00568b76	0x00568bda
 0x00568bdb	CRT__LseekFd_NoLock	0x00568bdb	0x00568c4d
 0x00568c4e	CRT__StructuredExceptionFilterDispatch	0x00568c4e	0x00568d8b
@@ -7126,6 +7148,7 @@ address	name	bodyMin	bodyMax
 0x005d0a2a	CFEPSaveGame__WideCharToLowerCompat	0x005d0a2a	0x005d0a9e
 0x005d0a9f	CRT__LongJmpProbe_NoOp	0x005d0a9f	0x005d0b03
 0x005d0c0c	GetCurrentProcessId	0x005d0c0c	0x005d0c11
+0x005d0c12	FUN_005d0c12	0x005d0c12	0x005d0c7e
 0x005d0c7f	CRT__LCMapStringW_AnsiCompat	0x005d0c7f	0x005d0e87
 0x005d0e88	CRT__WcsNLen	0x005d0e88	0x005d0eb7
 0x005d0eb8	CRT__GetCharTypeMaskCompat	0x005d0eb8	0x005d0f09

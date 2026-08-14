@@ -1,24 +1,24 @@
-# Battle Engine Aquila's 8,304-function Ghidra corpus is deeply mapped, not atom-complete
+# Battle Engine Aquila's 8,327-function Ghidra corpus is deeply mapped, not atom-complete
 
 Status: active canonical synthesis of the current executable-analysis state; raw
 machine exports remain the address-level evidence behind this human-readable
 master
-Last updated: 2026-08-14 (24 JPEG/IJG callback boundaries promoted on db.18615)
-Verdict: **The verified live and tracked databases now contain 8,304 internal
-function boundaries. The latest separately backed-up ceremony created 24
-default-metadata functions while preserving every 8,280 PRE row exactly.
-Fresh-process readback proves 38 exact new ranges and a 14,817-byte ownership
-gain to 1,810,287. Program bytes, defined data, stored non-function symbols,
-comments, and relocations remained exact; the 41-instruction increase and
-11-reference decrease are sealed in the POST program inventory. It promoted no
-runtime behavior contract or original linker spelling.
+Last updated: 2026-08-14 (23 CRT runtime boundaries promoted on db.18616)
+Verdict: **The verified live and tracked databases now contain 8,327 internal
+function boundaries. The latest separately backed-up ceremony created 23
+default-metadata functions while preserving every 8,304 PRE row exactly.
+Fresh-process readback proves 24 exact new ranges and a 1,131-byte ownership
+gain to 1,811,418. Program bytes, defined data, stored non-function symbols,
+comments, and relocations remained exact; the 78-instruction and 11-reference
+increases are sealed in the POST program inventory. It promoted no runtime
+behavior contract or original linker spelling.
 The dated 8,136-row closure plus the 34-row MissionScript addendum still account
 for the preceding 8,170-row state at 8,163 C1 plus seven C2. The 31 text-gap
 additions have separate provider-compatible static classifications; the 79
 external-table rows and 24 newer JPEG/IJG structural rows remain ungraded.
 None of these later cohorts has been silently inserted into that frozen grade
 projection. This is not the campaign-grade scoreboard below.
-Canonical Generation 26 is the semantic campaign authority at all 8,304
+Canonical Generation 26 remains the frozen semantic campaign authority at 8,304
 function identities plus 6,144 exact residual entities, sealed on db.18615. It
 carries all 27,025 eligible Generation-25 progress rows with zero unaccounted,
 explicitly retires eight changed structural lineages, and represents the 24
@@ -26,7 +26,8 @@ JPEG/IJG functions as DARK/FUN/OPAQUE without silently upgrading a static or
 semantic grade. Semantics remain the hard problem: 14,221 of 14,448 contract
 rows are `C0_OPAQUE`,
 217 are `C1_CANDIDATE_PARTIAL`, ten are `C2_BOUNDED_RUNTIME`, and none is
-rebuild-ready. The authored Mission
+rebuild-ready. The 23 newer CRT rows are structural state outside that frozen
+campaign and must enter through Generation 27. The authored Mission
 `Damage` chain, three Level 521 call-context contracts, and one separately
 re-proved zero-shield ApplyDamage path, and the replicated script-visible SetPos
 position-copy path plus one non-null sole-node `CBattleEngine::LockHit` removal
@@ -401,21 +402,21 @@ comparison.
 | Question | Current exact answer |
 | --- | --- |
 | Static retail specimen | 2,506,752-byte x86 PE, SHA-256 `74154bfa…e7750`; D3D9 retail build |
-| Latest verified live readback | 8,304 functions after the JPEG/IJG callback promotion; latest TSV SHA-256 `bceedfa2eec573ee95e42a703d6f3a552c4718115fa540f3eaca492322f9a173` |
-| Current live function inventory | 8,304 rows; all 8,280 PRE rows exact, 24 default-metadata rows added, and live/tracked/POST recovery synchronized |
+| Latest verified live readback | 8,327 functions after the CRT P0 runtime promotion; latest TSV SHA-256 `8640c35a820b3c5e415b947fa8a13eeb5c7c535868780dc2fe511d020a54c40e` |
+| Current live function inventory | 8,327 rows; all 8,304 PRE rows exact, 23 default-metadata rows added, and live/tracked/POST recovery synchronized |
 | Dated semantic/name-table baseline | 7,555 functions; 3,181,359-byte TSV; SHA-256 `45cba656…0a462` |
-| Current distinct function names | 8,296; eight names occur at two addresses |
-| Explicit `FUN_*` names | 1,012 |
+| Current distinct function names | 8,318; nine names occur at two addresses |
+| Explicit `FUN_*` names | 1,034 |
 | MSVC `Unwind@*` funclets | 1,179 |
-| Thunks | 100 |
+| Thunks | 101 |
 | Functions with plate comments | 7,050 |
-| Functions without a plate comment | 1,254 |
+| Functions without a plate comment | 1,277 |
 | Functions with at least one tag | 6,012 |
-| Current human-namable denominator | 7,125, excluding the 1,179 compiler EH funclets |
+| Current human-namable denominator | 7,148, excluding the 1,179 compiler EH funclets |
 | Dated pinned-source grader's three-cohort weak/unsupported naming residual | 1,867 / 6,376 = 29.3% against the 7,555-row baseline |
 | RTTI vtable target coverage | 2,127 / 2,127 targets are current function starts |
 | Fullpass population | 6,411 functions reviewed in W001–W018 |
-| Current functions never in that dated fullpass | 1,893 / 8,304 = 22.80% |
+| Current functions never in that dated fullpass | 1,916 / 8,327 = 23.01% |
 | Dated clear identity coverage in the 322 function notes | 1,027 / 7,555 = 13.594% |
 | Dated exact entry-address mention in those notes | 1,285 / 7,555 = 17.009% |
 | MissionScript native registry | 144 / 144 names and 144 distinct handlers recovered |
@@ -451,11 +452,11 @@ own the durable specimen warning.
 
 | Store | Exact state | Correct use |
 | --- | --- | --- |
-| Tracked project | `reverse-engineering/ghidra/BEA.gpr` + `BEA.rep/`; snapshot 2026-08-14; 19 payload files, 186,993,541 bytes; reviewed with Ghidra 12.1.2 | Current distributable snapshot; exact at promotion time |
+| Tracked project | `reverse-engineering/ghidra/BEA.gpr` + `BEA.rep/`; snapshot 2026-08-14; 19 payload files, 187,009,925 bytes; reviewed with Ghidra 12.1.2 | Current distributable snapshot; exact at promotion time |
 | Tracked Program objects | `BEA.exe` and `BEA_Widescreen.exe` | Do not silently assume an export came from the unpatched baseline Program |
 | Live maintainer project | `C:\Users\david\Ghidra\Projects`, active Ghidra 12.1.2 | Current working database; mutation requires separate authority |
-| Latest live readback | `local-lab/ghidra-jpeg24-boundary-live-promotion-20260814-v2/runs/live-readback/functions.tsv`, SHA-256 `bceedfa2…a173` | Current 8,304-row internal-function metadata; 8,304 is the current discovered census, not a final ceiling |
-| Current tracked name table | `reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-13.tsv`, 8,304 rows, SHA-256 `5dd0d114…dfbc` | Deterministic projection of the separately read-back live database |
+| Latest live readback | `local-lab/ghidra-crt23-p0-boundary-live-promotion-db18615-20260814-v2/runs/live-readback/functions.tsv`, SHA-256 `8640c35a…c40e` | Current 8,327-row internal-function metadata; 8,327 is the current discovered census, not a final ceiling |
+| Current tracked name table | `reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-13.tsv`, 8,327 rows, SHA-256 `17c7153c…41c` | Deterministic projection of the separately read-back live database |
 | Frozen 2026-08-12 name table | `reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-12.tsv`, 8,136 rows, SHA-256 `a6f10251…193f` | Retained byte-exact for Generations 20–23 and receipt-pinned instruments |
 | Mutated dated name table | `reverse-engineering/binary-analysis/ghidra-function-name-table-2026-07-27.tsv`, 7,555 rows, current SHA-256 `44f49ca1…e68b11`; original sealed content was `2dfe0b97…f0b84` | Historical artifact later rewritten in 54 name rows. Retained byte-exact only because Generations 20–23 pin the mutated bytes; neither hash is a current name oracle |
 | Fullpass discovery corpus | `reverse-engineering/binary-analysis/ghidra-fullpass-findings/` | Dated 6,411-function reviews; never a live name oracle |
@@ -463,13 +464,13 @@ own the durable specimen warning.
 
 Fresh read-only exports in this research pass remove an important ambiguity:
 
-- The tracked snapshot contains exactly 8,304 internal functions, 551,055 instructions,
-  48,585 defined-data items, 3,908,270 undefined-data items, and 6,104
+- The tracked snapshot contains exactly 8,327 internal functions, 551,133 instructions,
+  48,585 defined-data items, 3,907,928 undefined-data items, and 6,104
   user-defined symbols. Its
-  current reviewed project inventory is 19 files / 186,993,541 bytes with digest
-  `3cd459d5…627`. Ghidra's aggregate function
-  count is 8,528 because it also includes 224 external/import functions; the
-  8,304 figure is the internal listing census, not a claim that discovery is
+  current reviewed project inventory is 19 files / 187,009,925 bytes with digest
+  `61f77b70…2f1f`. Ghidra's aggregate function
+  count is 8,551 because it also includes 224 external/import functions; the
+  8,327 figure is the internal listing census, not a claim that discovery is
   permanently complete.
 - It is byte-identical to the source-stable 2026-08-14 live copy and the
   independently opened/read-back D: disaster-recovery copy. The 6,411
@@ -500,8 +501,8 @@ adding eleven exact registry-linked boundaries. The 2026-08-12 collision
 correction then changed five pre-existing metadata rows without changing the
 count; the MissionScript boundary promotion advanced 8,136 to 8,170, the
 text-gap boundary promotion advanced 8,170 to 8,201, the external-table
-boundary promotion advanced 8,201 to 8,280, and the JPEG/IJG callback
-promotion advanced 8,280 to 8,304.
+boundary promotion advanced 8,201 to 8,280, the JPEG/IJG callback promotion
+advanced 8,280 to 8,304, and the CRT P0 promotion advanced 8,304 to 8,327.
 
 The historical `BEA_Widescreen.exe` Program corresponds to a 2,506,752-byte
 patched image described as SHA-256
@@ -516,15 +517,15 @@ The current Ghidra program report contains:
 
 | Metric | Value |
 | --- | ---: |
-| Internal functions | 8,304 |
-| Aggregate functions, including external/import | 8,528 |
-| Listing instructions | 551,055 |
+| Internal functions | 8,327 |
+| Aggregate functions, including external/import | 8,551 |
+| Listing instructions | 551,133 |
 | Defined data items | 48,585 |
-| Undefined data items | 3,908,270 |
+| Undefined data items | 3,907,928 |
 | User-defined symbols | 6,104 |
 | Analysis symbols | 18,006 |
 | Imported symbols | 907 |
-| Other/default symbols | 61,682 |
+| Other/default symbols | 61,702 |
 | Relocations | 0 |
 
 Memory blocks:
@@ -542,10 +543,10 @@ The older coverage calculation uses the PE `.text` virtual-size denominator
 1,929,117, not the mapped block's page-rounded 1,929,216. Do not mix those two
 denominators.
 
-The current exact-body export proves 1,810,287 unique function-owned bytes
-across 8,434 ranges with zero overlap: 93.840186987% of the 1,929,117-byte PE
-virtual `.text`. Those bodies contain 545,373 instruction rows, while Ghidra's
-program report counts 551,055 listing instructions because it also includes
+The current exact-body export proves 1,811,418 unique function-owned bytes
+across 8,458 ranges with zero overlap: 93.898814846% of the 1,929,117-byte PE
+virtual `.text`. Those bodies contain 545,685 instruction rows, while Ghidra's
+program report counts 551,133 listing instructions because it also includes
 loose instructions outside functions. Do not treat either instruction count as
 a second byte-coverage percentage or confuse saved-body ownership with final
 function discovery.
@@ -554,24 +555,24 @@ Body topology is:
 
 | Body ranges per function | Functions |
 | ---: | ---: |
-| 1 contiguous range | 8,228 |
-| 2 ranges | 59 |
+| 1 contiguous range | 8,250 |
+| 2 ranges | 60 |
 | 3 ranges | 14 |
 | 4 ranges | 1 |
 | 21 ranges | 2 |
 
-Thus 76 functions are non-contiguous. Any tool that treats `[bodyMin, bodyMax]`
+Thus 77 functions are non-contiguous. Any tool that treats `[bodyMin, bodyMax]`
 as continuous can falsely assign an address in a gap to that function.
 
 Metadata-source and calling-convention distributions:
 
 | Dimension | Exact current distribution |
 | --- | --- |
-| Name source | USER_DEFINED 6,019; ANALYSIS 1,230; DEFAULT 1,054; IMPORTED 1 |
-| Signature source | USER_DEFINED 6,400; ANALYSIS 1,136; DEFAULT 746; IMPORTED 22 |
-| Calling convention | `__thiscall` 2,779; `__cdecl` 1,950; `__fastcall` 1,390; `__stdcall` 1,088; unknown 1,097 |
+| Name source | USER_DEFINED 6,019; ANALYSIS 1,230; DEFAULT 1,077; IMPORTED 1 |
+| Signature source | USER_DEFINED 6,401; ANALYSIS 1,136; DEFAULT 768; IMPORTED 22 |
+| Calling convention | `__thiscall` 2,779; `__cdecl` 1,950; `__fastcall` 1,390; `__stdcall` 1,088; unknown 1,120 |
 
-### Eight duplicate current names
+### Nine duplicate current names
 
 Names are not unique keys:
 
@@ -581,6 +582,7 @@ Names are not unique keys:
 | `CCredits__BuildDefaultEntries` | `0x00518be0`, `0x00518bf0` |
 | `CDXTexture__EnsureLoaded` | `0x0053a040`, `0x00557060` |
 | `CDXTexture__InitMappedFileContext` | `0x0057cc53`, `0x0058864a` |
+| `CFEPGoodies__BuildStaticGoodieDataTable` | `0x0045ac20`, `0x0045ac30` |
 | `CSPtrSet__Clear` | `0x0042f220`, `0x004e5c60` |
 | `PCPlatform__ResetAsyncMusicStream` | `0x00515360`, `0x005285b0` |
 | `ScriptCommandRegistry__InitBuiltins` | `0x0052ff20`, `0x0052ff30` |
@@ -1189,7 +1191,7 @@ mistaken for the record base. The complete current geometry is
 `0x0064f220`.
 
 All 144 records have distinct shipped names, distinct non-zero handlers, and a
-recoverable developer-authored binding. The current 8,304-entry saved database
+recoverable developer-authored binding. The current 8,327-entry saved database
 now contains an exact function entry for every handler: 110 pre-existing rows
 plus the 34 independently proved clean-gap boundaries promoted on 2026-08-13.
 The resulting discovered census remains a lower bound, not a ceiling.
@@ -2147,7 +2149,7 @@ useful history but is not the current checker result or current name authority:
 
 Therefore that dated survey left 6,528 functions without a clear identity entry
 and 6,270 without an exact entry-address mention. These complements must not be
-projected onto the current 8,304 saved rows.
+projected onto the current 8,327 saved rows.
 
 That dated strict run reported:
 
@@ -2178,11 +2180,11 @@ consistent:
   current heading in the measured set.
 - Thirty-one accepted assertions are interior addresses rather than function
   starts.
-- For 76 non-contiguous bodies, a min/max-envelope lookup can assign an address
+- For 77 non-contiguous bodies, a min/max-envelope lookup can assign an address
   in a body gap to the wrong function.
 
 The current 2026-08-14 strict run instead scans 329 documents against the exact
-8,304-row POST projection, resolves 1,388 assertions, and reports zero drift or
+8,327-row POST projection, resolves 1,388 assertions, and reports zero drift or
 unresolved assertions. That is a naming-consistency gate, not semantic closure.
 
 ### Dated hand-verified contradictions from that survey
@@ -2323,16 +2325,16 @@ address before rollup.
 ### CLOSED 2026-08-14: establish current executable body ownership
 
 The [current `.text` accounting](binary-analysis/current-text-ownership-2026-08-13.md)
-replays all 8,304 saved functions and 8,434 exact ranges against the pristine
-PE. Their zero-overlap union is 1,810,287 / 1,929,117 bytes = 93.840186987%; 76
-functions are multi-range. The 118,830 uncovered bytes divide into 19,711
-current loose-instruction bytes, 46,918 defined-data bytes, and 52,201 listing-
+replays all 8,327 saved functions and 8,458 exact ranges against the pristine
+PE. Their zero-overlap union is 1,811,418 / 1,929,117 bytes = 93.898814846%; 77
+functions are multi-range. The 117,699 uncovered bytes divide into 18,922
+current loose-instruction bytes, 46,918 defined-data bytes, and 51,859 listing-
 unclassified bytes. Old 79.8268%, 284,815 non-padding bytes, 621 UNKNOWN runs,
 and 51,189 UNKNOWN bytes remain dated baselines only.
 
 This closes saved-body interval accounting, not function discovery. The former
 five jump-fragment candidates are now promoted body repairs, and the reviewed
-JPEG/IJG callback cohort is now promoted. The CRT/D3DX cohorts and remaining
+JPEG/IJG callback and CRT P0 cohorts are now promoted. The remaining D3DX and
 code-shaped gaps form the next
 bounded discovery queue. No new entry or body expansion follows without
 current-state target proof and the backed-up Ghidra gate.
@@ -2861,9 +2863,9 @@ the old and new statements are not presented as coequal truth.
 | --- | --- |
 | The `E143…` capture executable is pristine | False; it is pristine plus the force-windowed patch |
 | The Ghidra project is never tracked | False as a general statement; `reverse-engineering/ghidra/` is the reviewed tracked exception. Live DBs, backups, and alternates remain untracked. |
-| The current function population is 5,771, 6,411, 6,969, 7,555, 8,125, 8,136, 8,170, 8,201, or 8,280 | Historical counts; current live and tracked snapshot are 8,304 |
-| The tracked Ghidra snapshot contains only the 6,411-function fullpass state | False after the separately authorized promotions; it now contains the exact 8,304-function live state at promotion time |
-| Current `.text` function coverage is 79.8% | False for current saved-body ownership; 79.8268% is the old 6,411-body baseline. The current 8,304-row exact union is 93.840186987%, with semantics and final discovery still open. |
+| The current function population is 5,771, 6,411, 6,969, 7,555, 8,125, 8,136, 8,170, 8,201, 8,280, or 8,304 | Historical counts; current live and tracked snapshot are 8,327 |
+| The tracked Ghidra snapshot contains only the 6,411-function fullpass state | False after the separately authorized promotions; it now contains the exact 8,327-function live state at promotion time |
+| Current `.text` function coverage is 79.8% | False for current saved-body ownership; 79.8268% is the old 6,411-body baseline. The current 8,327-row exact union is 93.898814846%, with semantics and final discovery still open. |
 | Twenty-five fullpass name drifts are unexplained | False after joining both map stores; all 370 are attributed |
 | `SpawnThing` reduced the residual to 1,866 | False; fresh current grader remains 1,867 / 6,376 |
 | RTTI-confirmed means the whole virtual-method name is correct | False; grader checks prefix ownership, not method suffix or slot number |
@@ -2957,16 +2959,17 @@ The remaining work is not “look at everything again.” It is a finite set of
 address-keyed gaps:
 
 ```text
-8,304 saved function bodies in the current structural census (not a ceiling)
+8,327 saved function bodies in the current structural census (not a ceiling)
 dated 8,136-row static closure plus a reviewed 34-row C1-static addendum for the prior 8,170-row state
 31 newly admitted exact text-gap bodies with separate provider-compatible classifications, not frozen campaign grades
 79 newly admitted exact external-table bodies with default metadata, not semantic grades
 24 newly admitted exact JPEG/IJG callback bodies with default metadata, not semantic grades
+23 newly admitted CRT P0 runtime bodies with default metadata, outside frozen Generation 26 grades
 75 existing registry entries normalized through the backed-up live gate
 34 newly created registry entries promoted through their separate Tier-2 metadata cohort
 one separately proved CreateExplosion identity/signature repair promoted and read back
 four refuted HUD labels awaiting convention-safe replacements
-8,077 Gen26 functions remain semantically OPAQUE, including all 178 post-Gen23 structural identities
+8,077 Gen26 functions remain semantically OPAQUE, including all 178 post-Gen23 structural identities; 23 current CRT rows await Generation 27
 149 sealed-Generation-26 residuals remain open (145 dark + 4 executed)
 bounded runtime questions with explicit falsifiers
 ```

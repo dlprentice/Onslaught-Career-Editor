@@ -289,9 +289,9 @@ pre-JPEG 8,396-range project. The read-only
 `ghidra_crt_p0_boundary_live_preparation.py` replays the v2 scratch authority,
 rehashes two fresh current-state replicas, independently totals their body
 ranges, proves all 8,280 PRE function rows unchanged, and requires live and
-tracked Ghidra to be byte-identical at db.18614. This preparation is now
-historical and must be re-grounded against current db.18615 before use; it
-granted no mutation authority.
+tracked Ghidra to be byte-identical at db.18614. This preparation is historical;
+the later v2 preparation re-grounded it against then-current db.18615. It granted
+no mutation authority.
 
 ```powershell
 python -I -B tools\ghidra_crt_p0_boundary_live_preparation_tests.py
@@ -315,7 +315,8 @@ all 8,304 PRE rows exact, 23 created default-metadata functions, 1,131 newly
 owned bytes, and byte-identical semantic exports. It also binds the exact
 53-byte physical variance between the two newly written db.18616 files rather
 than claiming false database-byte determinism. Its policy remains
-`PREPARATION_ONLY` and it refuses when any future ceremony path exists.
+`PREPARATION_ONLY`; it refused until the separately authorized ceremony paths
+were created and is now retained as consumed preparation evidence.
 
 ```powershell
 python -I -B tools\ghidra_crt_p0_boundary_live_preparation_v2_tests.py
@@ -326,7 +327,27 @@ python -I -B tools\ghidra_crt_p0_boundary_live_preparation_v2.py preflight `
 ```
 
 See the
-[current db.18615 preparation](../reverse-engineering/binary-analysis/crt-runtime-p0-ghidra-live-promotion-preparation-v2-2026-08-14.md).
+[consumed db.18615 preparation](../reverse-engineering/binary-analysis/crt-runtime-p0-ghidra-live-promotion-preparation-v2-2026-08-14.md).
+
+`ghidra_crt_p0_boundary_live_authority_v2.py` is the read-only aggregate owner
+for the completed db.18615 ceremony. It proves the sole writable live save,
+separate PRE/POST readbacks, all 8,304 unchanged PRE rows and the exact 23-row
+addition, the db.18614-to-db.18616 rotation with stable db.18615, retained
+read-only PRE/POST/tracked restores, live/tracked/POST-backup equality, the
+mechanical 8,327-row name projection, and 1,811,418-byte body union. `seal`
+create-writes only the ignored aggregate receipt; `verify` is entirely
+read-only.
+
+```powershell
+python -I -B tools\ghidra_crt_p0_boundary_live_authority_v2_tests.py
+python -I -B tools\ghidra_crt_p0_boundary_live_authority_v2.py verify `
+  --repo <repository-root> --live-project <maintainer-project-root> `
+  --pre-backup <retained-pre-backup> --post-backup <retained-post-backup> `
+  --output <repository-root>\local-lab\ghidra-crt23-p0-boundary-live-promotion-db18615-20260814-v2\live-promotion.ready.json
+```
+
+See the
+[completed live-promotion report](../reverse-engineering/binary-analysis/crt-runtime-p0-ghidra-live-promotion-2026-08-14.md).
 
 `re_pc_function_body_fragments.py` proves the exhaustive five-gap class inside
 five existing PC functions, including unique normalized demo twins and the
