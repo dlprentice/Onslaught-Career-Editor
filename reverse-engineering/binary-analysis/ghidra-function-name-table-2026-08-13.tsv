@@ -3,9 +3,9 @@
 #           It is a name index, not a database, disassembly, or semantic proof.
 # Projection date: 2026-08-14
 # Specimen SHA-256: 74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750
-# Source  : local-lab/ghidra-external-table-gap-boundary-live-promotion-20260814-v1/runs/live-readback/functions.tsv
-# Source bytes: 7161942
-# Source SHA-256: c3942b9e340cef71b731290b845843697af5c53204449c51949b779e896272d6
+# Source  : local-lab/ghidra-function-fragment5-range-live-promotion-20260814-v1/runs/live-readback/functions.tsv
+# Source bytes: 7161943
+# Source SHA-256: d2ff1e8e7bd91454fff9822fb7ecc8e624525fa5c6cbc9dcfe06f4e0212b750d
 # Rows    : 8280 internal functions; this is a discovered census, not a final ceiling.
 # Columns : address, name, bodyMin, bodyMax (hex). Non-contiguous bodies are
 #           represented by their bounding range, so bodyMin..bodyMax can over-cover.
@@ -1715,7 +1715,7 @@ address	name	bodyMin	bodyMax
 0x004621e0	CFEPMain__GetActionCount	0x004621e0	0x0046221c
 0x00462250	CFEPMain__ButtonPressed	0x00462250	0x004623b1
 0x004623e0	CFEPMain__DoAction	0x004623e0	0x00462618
-0x00462640	CFEPMain__Process	0x00462640	0x0046282a
+0x00462640	CFEPMain__Process	0x00462640	0x00462b63
 0x00462b70	CFEPMain__RenderPreCommon	0x00462b70	0x00462c88
 0x00462c90	CFEPMain__Update	0x00462c90	0x00462d17
 0x00462d40	CFEPMain__Render	0x00462d40	0x0046449e

@@ -671,7 +671,10 @@ static accounting through the prior 8,170-row state at **8,163 C1 + 7 C2**.
 The current saved structural census is **8,280** after the later 31 text-gap and
 79 external-table admissions. Generation 24 includes all 154 post-Generation-23
 structural identities as campaign OPAQUE rows, but does not insert them into the
-frozen static tables. Canonical Generation 24 carries the admitted
+frozen static tables. A later five-body repair keeps that count unchanged while
+advancing current Ghidra to `db.18614` and 93.072115377% saved-body ownership;
+Generation 24 remains frozen on its `db.18613` geometry until a successor
+re-ground. Canonical Generation 24 carries the admitted
 runtime/campaign claims; neither count implies
 `REBUILD_READY` or complete semantic parity.
 

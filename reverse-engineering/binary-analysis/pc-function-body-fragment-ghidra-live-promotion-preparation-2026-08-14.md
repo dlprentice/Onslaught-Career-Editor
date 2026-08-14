@@ -2,23 +2,28 @@
 
 Date: 2026-08-14
 
-Status: **prepared only; no live or tracked Ghidra mutation performed**
+Status: **historical preparation consumed by the completed live promotion**
 
-Verdict: **PREPARATION_READY_MUTATION_NOT_AUTHORIZED**
+Verdict: **PREPARATION_REPRODUCED_AND_CONSUMED**
 
 Policy: **`PREPARATION_ONLY`**
 
-Evidence: MEASURED PRE / prospective POST. The exact retained scratch authority
-and its full tree reproduce; the live maintainer project and tracked canonical
-project independently hash to the same current PRE twice around the comparison.
-The POST semantic shape is fixed by two sealed scratch replicas, but the future
-rolling Ghidra database bytes are deliberately unknown until a separately
-authorized save.
+Evidence: MEASURED — historical PRE / then-prospective POST. The exact retained
+scratch authority and its full tree reproduce; the preparation-time live and
+tracked projects independently hashed to the same PRE twice around the
+comparison. The later authorized ceremony reproduced the predicted POST and is
+owned by the completed report linked below.
 
 Specimen: pristine PC retail `BEA.exe`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 Preparation integration base: Git commit
 `add5571c0779287f2e575c371e477cd33872662c`.
+
+Current-state note: this runbook is no longer a launch authority. The completed
+[`live-promotion report`](pc-function-body-fragment-ghidra-live-promotion-2026-08-14.md)
+owns the `db.18614` POST, exact backups/restores, current projection, and current
+body accounting. Commands below describe the historical PRE ceremony boundary
+and must not be replayed against the current project as if it were still PRE.
 
 ## Read-only preparation result
 
@@ -50,15 +55,15 @@ The portable aggregate receipt is 9,348 bytes / SHA-256
 `a35f35ac99cd5d7251a86b7cf54c5aac2e2919870efca6566600045138571a04`.
 It reproduces two saved positive replicas, two separate readbacks, two adverse
 controls with exact PRE restoration, two containment refusals, and read-only
-backup openability. The retained scratch package remains immutable; the future
-ceremony does not append to it or reinterpret its `LIVE_FORBIDDEN` policy.
+backup openability. The retained scratch package remains immutable; the later
+ceremony did not append to it or reinterpret its `LIVE_FORBIDDEN` policy.
 
-The canonical future evidence root, PRE backup, POST backup, and aggregate
-authority root are all absent. That absence is the deliberate current blocker:
-**future ceremony artifacts do not yet exist**. No directory was pre-created,
-no Ghidra process was opened, and no file in live or tracked Ghidra changed.
+At preparation time, the canonical future evidence root, PRE backup, POST
+backup, and aggregate authority root were all absent. That absence was the
+deliberate blocker: no directory had been pre-created, no Ghidra process had
+been opened, and no live or tracked Ghidra file had changed.
 
-## Exact prospective semantic POST
+## Exact then-prospective semantic POST
 
 The reviewed five-row manifest permits only body-range addition and bounded
 disassembly in five existing functions:
@@ -102,9 +107,10 @@ backup, tracked, and both retained POST restore views reproduce the same bytes.
 
 ## Authority phases
 
+The final
 [`ghidra_function_fragment_range_live_authority.py`](../../tools/ghidra_function_fragment_range_live_authority.py)
-is 68,448 bytes, SHA-256
-`01ba56f624943c5cd11f78242264b39b76919a0caf787ae699e0147c8882da80`.
+is 68,331 bytes, SHA-256
+`bc6c7fdc9ee9a19ccff0c437166dbde2b08b98a7bcd78b4d3ca7a46de0cab30c`.
 It never launches Ghidra and never writes either project.
 
 1. `preflight` reproduces the entire retained scratch identity, hashes live and
@@ -121,16 +127,16 @@ It never launches Ghidra and never writes either project.
 
 The low-level Ghidra script retains its frozen scratch-era
 `READY_FOR_SCRATCH_ONLY` / `LIVE_FORBIDDEN` receipt. That receipt never grants
-authority. A future live run is permitted only by an explicit action-specific
-authorization outside the script; the outer authority then treats the inner
-receipt solely as a byte-exact structural measurement. This preparation grants
-no such authorization.
+authority. The later live run required explicit action-specific authorization
+outside the script; the outer authority treated the inner receipt solely as a
+byte-exact structural measurement. This preparation itself granted no such
+authorization.
 
-## Prospective ceremony
+## Historical prospective ceremony
 
-This is a future runbook, not permission to run it. Use it only with Ghidra
-closed, the maintainer project quiescent, and separate explicit authorization
-for the live save. Stop on the first discrepancy.
+This was the prospective runbook used for the completed ceremony. It is
+preserved for audit history, not as permission to replay it against the current
+project. Stop on the first discrepancy when reproducing its historical gates.
 
 Set the exact roots:
 
@@ -338,10 +344,11 @@ py -3 -I -B (Join-Path $toolsRoot 'ghidra_function_fragment_range_live_authority
   --output $authorityReceipt
 ```
 
-## Current blocker
+## Historical blocker and resolution
 
-The preparation is complete and reproducible, but the live lane, PRE backup,
-POST backup, tracked POST restore, refreshed projection/accounting, and final
-aggregate receipt do not exist. That is intentional. Until an explicit future
-authorization creates them in the exact order above, the only valid verdict is
-`PREPARATION_READY_MUTATION_NOT_AUTHORIZED`.
+At preparation time, the live lane, PRE backup, POST backup, tracked POST
+restore, refreshed projection/accounting, and aggregate receipt did not exist;
+the only valid verdict was `PREPARATION_READY_MUTATION_NOT_AUTHORIZED`. The
+later authorized ceremony created and reproduced each artifact in the required
+order. Its current verdict and hashes belong exclusively to the completed
+live-promotion report linked above.

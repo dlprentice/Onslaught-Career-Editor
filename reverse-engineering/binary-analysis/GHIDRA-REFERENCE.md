@@ -38,7 +38,9 @@ layouts, or behaviors are proven.
 > field. The 2026-08-14 text-gap ceremony then added 31 reviewed default-
 > metadata boundaries while preserving all 8,170 PRE rows exactly. A later
 > external-table ceremony added 79 more default-metadata boundaries while
-> preserving all 8,201 PRE rows exactly. The latest
+> preserving all 8,201 PRE rows exactly. The latest five-body repair keeps the
+> census at 8,280, changes only five reviewed body rows, and advances exact
+> saved-body ownership to 93.072115377%. The latest
 > project state is owned by
 > [`../ghidra/README.md`](../ghidra/README.md).
 > The current saved census and lower bound are 8,280, not a ceiling. The current

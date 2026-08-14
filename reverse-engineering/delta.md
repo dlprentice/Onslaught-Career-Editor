@@ -42,7 +42,7 @@ pins.
 | Authority generation | **24**, lineage `incident-20260806-recovery-v1`; READY `29ac9d91…39e86`, reducer `6cf37430…4582`, selector `57756583…833d1` |
 | Function ledger | 8,280 functions under `local-lab/re-campaign-incident-recovery-20260808-v1/generation-24-current-8280-reseed-e7aa-v1/` |
 | Grades | **C1=217**, **C2=10**, function semantic **OPAQUE=8053**; contract `C0_OPAQUE=14177`; REBUILD_READY **0** |
-| Residuals | **6,124** total: 101 open dark + 4 open executed + 923 terminal bounded ambiguity + 30 terminal data + 5,066 terminal padding; the 105 open rows reflect current geometry, not semantic regression |
+| Residuals | **6,124** total: 101 open dark + 4 open executed + 923 terminal bounded ambiguity + 30 terminal data + 5,066 terminal padding; the 105 open rows reflect sealed Generation-24 geometry, not semantic regression |
 | Other ledgers / carry | questions 15,372; scenarios 72; levers 910; contracts 14,404; adjudications 6,020; supersessions 592; progressed carry **27,780/27,780**, zero unaccounted |
 | Rebuild state | NOT_READY 14,395; PARTIAL_CONTRACT 8; CONTRACT_ONLY 1; REBUILD_READY 0 |
 | complete_RE | **false** |
@@ -245,8 +245,8 @@ No percentage between these rows is meaningful. In particular:
 | Force-windowed trace image | SHA-256 `E1436EF7E0AD9CCBDDD43AAACA952F6E84D4B1A282835CEAD745EFCFC32FADF4` | Baseline plus one four-byte startup patch; all other bytes match baseline and remain usable as static evidence, while every runtime observation stays derivative/path-scoped |
 | Installed-tree aggregate | manifest digest `3D8AA45FB6792B605B5A29915E4256C5D2AFECEDE92AEF6CE8780FEA6A10212D` | Complete row census from a stable but non-atomic live traversal, not a filesystem snapshot or Steam depot manifest |
 | Stuart source | commit `5352A81CDB838B145A57F7FEBC5D9FC4B0129EBB` | Exact source pin, incomplete and not independently buildable |
-| Tracked Ghidra snapshot | 8,280 currently discovered internal functions; 19 files / 186,960,773 bytes; inventory `ae422079…cf2` | Reviewed distributable database snapshot, exact to live at the verified 2026-08-14 external-table boundary promotion; 8,280 is a current census, not a final ceiling |
-| Live Ghidra database | 8,280 currently discovered internal functions plus 224 external/import functions in Ghidra's aggregate count | Current maintainer state; separately read back and restore-tested from the 2026-08-14 external-table boundary POST backup before snapshot promotion |
+| Tracked Ghidra snapshot | 8,280 currently discovered internal functions; 19 files / 186,977,157 bytes; inventory `cda0938c…541` | Reviewed distributable database snapshot, exact to live after the verified 2026-08-14 five-body repair; 8,280 is a current census, not a final ceiling |
+| Live Ghidra database | 8,280 currently discovered internal functions plus 224 external/import functions in Ghidra's aggregate count | Current maintainer state; separately read back and restore-tested from the 2026-08-14 function-fragment POST backup before snapshot promotion |
 | Reconstruction state | Assertions frozen inside `source-code/stuart-source-synthesis.md` SHA-256 `57C2C02E...B7B45` | Reported snapshot only; no root-repository commit plus dirty-content fingerprint was frozen, so remeasure code before making a present-tense implementation claim |
 
 This identity split is the first atom-level rule. Any claim without its specimen
@@ -400,8 +400,8 @@ not the existence of the demonstrated spine.
   separate 34-row addendum extends bounded static accounting through the prior
   8,170-row state; the 31 text-gap and 79 external-table structural rows remain
   outside that frozen grade projection. Gen24 grades 8,053 of 8,280 functions semantic OPAQUE.
-  Current exact saved-body `.text` ownership is 1,794,212 / 1,929,117 =
-  93.006904195%, while
+  Current exact saved-body `.text` ownership is 1,795,470 / 1,929,117 =
+  93.072115377%, while
   function discovery and most semantics remain open.
 - The data corpus is completely traversed at the file/wrapper level but not
   semantically complete. Most AYA payloads outside Level 100/base/frontend are
@@ -2344,9 +2344,9 @@ The PE `.text` virtual-size denominator is 1,929,117 bytes; the mapped block is
   1,539,953 / 1,929,117 = 79.8268%.
 - Since then 1,869 function rows were added.
 - [Current saved-body ownership](binary-analysis/current-text-ownership-2026-08-13.md)
-  is 1,794,212 / 1,929,117 = 93.006904195% across 8,280 functions and 8,400
-  exact ranges, with zero overlap and 134,905 uncovered bytes.
-- Seventy functions have non-contiguous bodies; min/max envelopes can
+  is 1,795,470 / 1,929,117 = 93.072115377% across 8,280 functions and 8,396
+  exact ranges, with zero overlap and 133,647 uncovered bytes.
+- Sixty-seven functions have non-contiguous bodies; min/max envelopes can
   falsely claim gap membership.
 
 The following function-note coverage is a dated 7,555-row survey, not current
@@ -2732,7 +2732,7 @@ mission shape, actor families, media, and configuration use.
 | Critical | Depot provenance not established | “Shipped/Steam truth” may overgeneralize a local baseline | Use exact hashes and baseline wording; reconcile depot separately |
 | Critical | Live install is non-atomic and locally contaminated | Patched exe, saves, generated options, and proof artifacts coexist | Read-only specimen ledger; never mutate; distinguish provenance classes |
 | Critical | Analyst metadata can launder inference | Names/tags/source grades can look like byte facts | Separate EXECUTABLE-BYTES from ANALYST-METADATA and record independence group |
-| Critical | Saved-body ownership is closed but function discovery is not | The exact 93.006904195% union leaves 134,905 bytes outside bodies, including loose instructions, data, body fragments, and code-shaped gaps | Preserve the exact gap ledger; prove CFG/body repairs and entries per target before Ghidra writes |
+| Critical | Saved-body ownership is closed but function discovery is not | The exact 93.072115377% union leaves 133,647 bytes outside bodies, including loose instructions, data, padding, and code-shaped gaps | Preserve the exact gap ledger; prove CFG/body repairs and entries per target before Ghidra writes |
 | High | Tracked and live Ghidra states diverge | Reproduction from tracked project cannot yield current claims | Name live export hash; promote only by separate reviewed action |
 | High | Gen24 retains 8,053 semantic OPAQUE functions; its 154 post-Gen23 structural entries are included as OPAQUE, not silently graded | Broad structural/static coverage does not equal semantic map | Current address ledger, campaign admissions, and finite system contracts—not prose volume |
 | High | Stuart source is incomplete and unbuildable | Missing owners/guards can be silently invented | Pin commit; classify every body/guard/dependency; baseline adjudication |
@@ -2792,7 +2792,7 @@ publication are separate actions with separate authority.
 | U20 | `Message.exe` reachability | May be orphaned installer/support utility | Process/create/xref/shortcut/registry/manual search |
 | U21 | Modern `cardid` behavior | Old catalog may fall through/default | Instrument directive selection on modern hardware |
 | U22 | Particle laws | Names/types complete, semantics absent | Baseline descriptor factories/update/render traces |
-| U23 (ownership closed) | Current `.text` body ownership | 1,794,212 / 1,929,117 = 93.006904195%; 134,905 bytes remain outside saved bodies | Advance the five jump-fragment repairs and code-shaped boundary queues with target-specific proof |
+| U23 (ownership closed) | Current `.text` body ownership | 1,795,470 / 1,929,117 = 93.072115377%; 133,647 bytes remain outside saved bodies | Re-ground the reviewed JPEG/CRT cohorts and advance code-shaped boundary queues with target-specific proof |
 | U24 | Later Level 100 behavior | Trace ends at briefing | Indexed trace through combat and all 19 later beats |
 
 ## Atom-level completeness contract
@@ -3030,7 +3030,7 @@ Accounting closure is not “8,280/8,280 named.” The saved 8,280-function
 inventory—including the 34 registry, 31 text-gap, and 79 external-table additions—the
 1,929,117-byte `.text` space, and each explicitly enumerated table need separate
 N/N results. Current byte-verified saved-body ownership is now exactly
-1,794,212 / 1,929,117 with 134,905 gap bytes; discovery and semantic closure do
+1,795,470 / 1,929,117 with 133,647 gap bytes; discovery and semantic closure do
 not follow from that structural result. The
 registry-of-registries remains `DISCOVERY_OPEN` until a bounded search surface
 and method produce its denominator; “all finite tables” is not a denominator.

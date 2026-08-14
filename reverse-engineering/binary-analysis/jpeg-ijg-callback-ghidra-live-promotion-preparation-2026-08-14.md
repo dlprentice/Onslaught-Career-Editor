@@ -1,16 +1,15 @@
 # JPEG/IJG callback Ghidra live-promotion preparation
 
-Status: **prepared only; no Ghidra process opened and no live or tracked
-mutation performed**
+Status: **historical pre-fragment preparation; current db.18614 re-ground required**
 
 Date: 2026-08-14
 
-Verdict: **PREPARATION_READY_MUTATION_NOT_AUTHORIZED**
+Verdict: **PREPARATION_SUPERSEDED_REQUIRES_CURRENT_REGROUND**
 
 Policy: **`PREPARATION_ONLY`**
 
-Evidence: MEASURED PRE / prospective POST. Raw-file hashing re-grounded the
-live maintainer project and tracked canonical project twice around their
+Evidence: MEASURED — historical PRE / prospective POST. Raw-file hashing
+re-grounded the then-current live maintainer project and tracked canonical project twice around their
 comparison without opening Ghidra. The retained JPEG24 scratch authority and
 whole evidence tree reproduce exactly. The semantic POST is fixed by two saved
 scratch replicas, while the future rolling database bytes remain deliberately
@@ -21,10 +20,16 @@ Specimen: pristine PC retail `BEA.exe`, SHA-256
 Preparation base: Git commit
 `3a2397aec192330a9d26f4615b3e1aee599e7850`.
 
+Current-state note: this preparation performed no Ghidra write. The separate
+five-body repair has since advanced live/tracked Ghidra from `db.18613` to
+`db.18614` without changing the 8,280-function count. The JPEG24 structural
+proof remains retained, but every PRE, POST, projection, and physical-database
+pin below must be regenerated before a new promotion ceremony.
+
 ## Read-only preparation result
 
-The live and tracked projects are byte-identical at the current 8,280-function
-PRE:
+At preparation time, the live and tracked projects were byte-identical at the
+then-current 8,280-function PRE:
 
 | PRE property | Exact value |
 | --- | --- |
@@ -296,9 +301,9 @@ py -3 -I -B (Join-Path $toolsRoot 'ghidra_jpeg_callback_boundary_live_authority.
 
 ## Current blocker
 
-The authority, report, exact PRE pins, semantic POST fixtures, future
-projection/accounting, and ceremony topology are prepared. The live lane, PRE
-backup, POST backup, one-save evidence, tracked POST restore, and final
-aggregate receipt do not exist. This is intentional. Until a future explicit
-authorization creates them in the prescribed order, the only valid verdict is
-`PREPARATION_READY_MUTATION_NOT_AUTHORIZED`.
+The retained semantic fixtures and ceremony topology remain useful, but the
+exact PRE pins describe historical `db.18613`. A fresh current-state authority
+must re-ground `db.18614`, prove all 8,280 current rows and 8,396 ranges, and
+derive a new prospective POST before any ceremony. The live lane, backups,
+one-save evidence, tracked POST restore, and aggregate receipt also remain
+absent. Therefore this preparation cannot authorize the next promotion.

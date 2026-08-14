@@ -183,7 +183,7 @@ grade projection. None of these counts is a final ceiling,
 semantic recovery, or reversal. The PC demo
 partition and the instruction-local Xbox source-line anchors are oracles, never
 denominators for retail completion. Generation 24 carries Generation 23's
-admitted runtime semantics unchanged onto current geometry and remains sparse.
+admitted runtime semantics unchanged onto its sealed geometry and remains sparse.
 Live Ghidra structural navigation may lead the
 campaign without silently upgrading any semantic grade. Report the layer, the
 exact denominator, the specimen, and the date with every published number, and
@@ -305,11 +305,12 @@ the mandate; the completion test and every clause above are unchanged.
   tracked refresh, and restore probes. They advance the structural census to
   8,280 while preserving every 8,201 PRE row, but add no semantic grade,
   original linker identity, runtime contract, or rebuild mapping.
-- Current saved-body `.text` ownership is independently closed at 1,794,212 /
-  1,929,117 bytes = 93.006904195% across 8,280 functions / 8,400 exact ranges,
-  with zero overlap. The remaining 134,905 bytes are listing-partitioned and
-  expose five current-function jump fragments plus high-yield code-shaped gaps;
-  this is structural accounting, not a final function census or semantic score.
+- Current saved-body `.text` ownership is independently closed at 1,795,470 /
+  1,929,117 bytes = 93.072115377% across 8,280 functions / 8,396 exact ranges,
+  with zero overlap. The five reviewed current-function jump fragments are now
+  repaired existing bodies; the remaining 133,647 bytes are listing-partitioned
+  high-yield code/data/padding queues. This is structural accounting, not a
+  final function census or semantic score.
 - The 75-row existing-entry MissionScript normalization passed its complete
   scratch/live/backup/readback gate and is synchronized to tracked Ghidra: 54
   former defaults, five message-name corrections, and 16 Tier-3-to-Tier-2
@@ -342,8 +343,9 @@ the mandate; the completion test and every clause above are unchanged.
 
 **Active frontier, in priority order:**
 
-1. **Recover the highest-confidence callable units and truncated body fragments
-   in the current 134,905-byte `.text` gap.** Use cross-build shape, current
+1. **Recover the highest-confidence callable units and body repairs in the
+   current 133,647-byte `.text` gap.** Re-ground the already reviewed JPEG/CRT
+   cohorts against the current `db.18614` geometry, then use cross-build shape, current
    listing state, incoming control flow, alignment, and library classification
    to prove exact boundaries; do not infer entries from linear decode alone.
 2. **Advance Generation 25 from the exact Generation-24 authority.** Keep any
@@ -405,6 +407,13 @@ Rank from current evidence; a reproduced contradiction outranks this list.
   structural additions enter the campaign as OPAQUE; no semantic, runtime,
   Ghidra, executable, rebuild, or completion claim was added. The next valid
   campaign generation is 25.
+- **2026-08-14 — five body fragments promoted.** A separately backed-up live
+  ceremony repaired five existing bodies without changing the 8,280-function
+  count. Exact body ownership advances by 1,258 bytes to 93.072115377%, the
+  live/tracked project advances to `db.18614`, and all 8,275 non-target rows
+  remain byte-identical. Generation 24 stays frozen on its `db.18613` input;
+  the next campaign must re-ground the current geometry rather than repinning
+  that reducer.
 
 ---
 
@@ -471,11 +480,11 @@ invocations, retaining per-window continuity gaps and rejecting a universal
 event-4000 sequence because the two sessions differ in writers, values, and
 order. External effects, event 2000, event 4002, field meanings, broader
 populations, original source spelling, and direct rebuild parity remain open.
-Generation 24 then reseeds those exact Generation-23 claims onto the current
-8,280-function/db.18613 geometry: all 27,780 eligible carry rows are accounted
+Generation 24 then reseeded those exact Generation-23 claims onto the
+then-current 8,280-function/db.18613 geometry: all 27,780 eligible carry rows are accounted
 for, the 154 added structural identities enter as OPAQUE, and no new semantic,
 runtime, Ghidra, executable, or rebuild claim is made. Its 105 open residuals
-(101 dark and four executed) reflect current geometry rather than loss of the
+(101 dark and four executed) reflect that sealed geometry rather than loss of the
 6,019 exact terminal carries. The campaign remains incomplete and the next
 valid campaign generation is 25.
 The saved `VFuncSlot_00_004d9910` name and grade remain unchanged. The bounded

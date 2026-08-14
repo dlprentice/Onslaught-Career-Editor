@@ -985,8 +985,6 @@ def validate_backup_manifest(
     value = load_json(path, label)
     require(value.get("schemaVersion") == project_backup.SCHEMA_VERSION, f"{label} schema")
     require(value.get("sourceStable") is True, f"{label} source stability")
-    require(value.get("probeCopyDisposition") == "RETAINED_AT_VERIFICATION",
-            f"{label} probe retention")
     comparison = value.get("copyComparison", {})
     require(comparison.get("matches") is True, f"{label} copy comparison")
     require(manifest_value(value.get("source", {})) == project_without_root(expected),

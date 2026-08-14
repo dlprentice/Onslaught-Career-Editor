@@ -55,10 +55,10 @@ def config(output: Path | None = None) -> authority.Config:
 class PureContractTests(unittest.TestCase):
     def test_authority_tool_identity_is_frozen(self) -> None:
         tool = ROOT / "tools/ghidra_function_fragment_range_live_authority.py"
-        self.assertEqual(tool.stat().st_size, 68448)
+        self.assertEqual(tool.stat().st_size, 68331)
         self.assertEqual(
             authority.sha256_file(tool),
-            "01ba56f624943c5cd11f78242264b39b76919a0caf787ae699e0147c8882da80",
+            "bc6c7fdc9ee9a19ccff0c437166dbde2b08b98a7bcd78b4d3ca7a46de0cab30c",
         )
 
     def test_exact_pre_post_contract(self) -> None:
@@ -162,6 +162,36 @@ class PureContractTests(unittest.TestCase):
         with mock.patch.dict(authority.PRE_PROJECT, {"fileCount": 3}):
             with self.assertRaises(authority.AuthorityError):
                 authority.validate_post_transition(pre, post, "synthetic")
+
+    def test_backup_manifest_accepts_copy_receipt_shape(self) -> None:
+        project = {
+            "projectName": "BEA",
+            "fileCount": 1,
+            "totalBytes": 0,
+            "structurallyComplete": True,
+            "files": [{
+                "relative_path": "BEA.gpr",
+                "size": 0,
+                "sha256": hashlib.sha256(b"").hexdigest(),
+            }],
+        }
+        receipt = {
+            "schemaVersion": authority.project_backup.SCHEMA_VERSION,
+            "createdAtUtc": "2026-08-14T00:00:00Z",
+            "sourceStable": True,
+            "copyComparison": {"matches": True},
+            "source": project,
+            "destination": project,
+            "readonlyOpen": None,
+        }
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "backup_manifest.json"
+            path.write_text(json.dumps(receipt), encoding="utf-8")
+            authority.validate_backup_manifest(path, project, "synthetic backup")
+            receipt["copyComparison"]["matches"] = False
+            path.write_text(json.dumps(receipt), encoding="utf-8")
+            with self.assertRaisesRegex(authority.AuthorityError, "copy comparison"):
+                authority.validate_backup_manifest(path, project, "synthetic backup")
 
     def test_portability_and_create_new_receipt_fail_closed(self) -> None:
         authority.ensure_portable({"path": "local-lab/evidence.json"})

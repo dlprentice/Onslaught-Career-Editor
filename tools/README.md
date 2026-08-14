@@ -191,11 +191,11 @@ and its
 [24-row evidence manifest](../reverse-engineering/binary-analysis/jpeg-ijg-callback-function-boundaries-2026-08-14.tsv).
 The separate
 [live-promotion preparation](../reverse-engineering/binary-analysis/jpeg-ijg-callback-ghidra-live-promotion-preparation-2026-08-14.md)
-uses `ghidra_jpeg_callback_boundary_live_authority.py` to pin exact current
+uses `ghidra_jpeg_callback_boundary_live_authority.py` to pin the historical
 db.18613 PRE bytes, the 8,304-function prospective POST, one-save
 backup/readback/restore chronology, `0x005B6900` listing ownership, and the
-future projection/accounting. Its policy is `PREPARATION_ONLY`; the authority
-never launches Ghidra and the preparation creates no future ceremony root.
+future projection/accounting. Its policy is `PREPARATION_ONLY`; it performed no
+Ghidra write. Current db.18614 requires a fresh re-ground before promotion.
 
 `GhidraApplyD3dxGapBoundaries.java` is the structural-only runner for the two
 complete D3DX-compatible loose bodies at `0x00595FC9` and `0x00596028`. It pins
@@ -265,8 +265,9 @@ the v1 report and sealed lane remain historical audit evidence.
 `re_pc_function_body_fragments.py` proves the exhaustive five-gap class inside
 five existing PC functions, including unique normalized demo twins and the
 deliberate 12-byte FEP NOP exclusion. `GhidraApplyFunctionFragmentRanges.java`
-can add only those exact body ranges and bounded disassembly on an isolated
-db.18613 copy; it creates no function and changes no metadata or data.
+can add only those exact body ranges and bounded disassembly on the sealed
+isolated db.18613 scratch copies; it creates no function and changes no metadata
+or data.
 `ghidra_function_fragment_range_scratch_authority.py` verifies the sealed
 two-replica package without opening Ghidra; its only write is a new contained
 receipt, and its policy remains `LIVE_FORBIDDEN`.
@@ -283,15 +284,17 @@ See the
 and exact
 [five-row manifest](../reverse-engineering/binary-analysis/pc-function-body-fragment-repairs-2026-08-14.tsv).
 
-`ghidra_function_fragment_range_live_authority.py` is the read-only,
-preparation-only owner for a possible later promotion of that exact five-row
-cohort. `preflight` rehashes live/tracked db.18613 PRE and the complete retained
-scratch tree without opening Ghidra. Future `check-live`, `seal`, and `verify`
-phases fail closed until the separately authorized one-save ceremony, PRE/POST
-recovery, tracked refresh/restore, projection, and exact body accounting exist.
-The current blocker is intentional: no canonical ceremony or backup root has
-been created. See the
-[preparation and prospective runbook](../reverse-engineering/binary-analysis/pc-function-body-fragment-ghidra-live-promotion-preparation-2026-08-14.md).
+`ghidra_function_fragment_range_live_authority.py` is the completed read-only,
+preparation-policy authority for that exact five-row cohort. Its historical
+`preflight` proved live/tracked db.18613 PRE and the complete retained scratch
+tree without opening Ghidra. After the separately authorized one-save ceremony,
+`check-live` proved PRE/POST recovery while tracked was still PRE; `seal` then
+proved the tracked refresh/restore, projection, and exact 1,795,470-byte body
+accounting. `verify` now reproduces the immutable aggregate receipt without
+opening or writing Ghidra. See the historical
+[preparation runbook](../reverse-engineering/binary-analysis/pc-function-body-fragment-ghidra-live-promotion-preparation-2026-08-14.md)
+and completed
+[live-promotion report](../reverse-engineering/binary-analysis/pc-function-body-fragment-ghidra-live-promotion-2026-08-14.md).
 
 `ghidra_external_table_gap_boundary_live_authority.py` is the completed
 read-only promotion authority. Its historical `preflight` mode proved the

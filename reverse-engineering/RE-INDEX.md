@@ -140,12 +140,14 @@ now retain only these bounded addenda after replica, rollback, adverse-control,
 readback, backup-restore, and tracked-snapshot-restore gates; names,
 signatures, boundaries, executable bytes, instructions, data, symbols, and
 references did not change. Generation 73 remains a projection oracle, never a
-parent or authority. Generation 24 then reseeds those exact claims onto all
-8,280 current db.18613 function identities. It accounts for all 27,780 eligible
+parent or authority. Generation 24 then reseeded those exact claims onto all
+8,280 then-current db.18613 function identities. It accounts for all 27,780 eligible
 Generation-23 carry rows, includes the 154 added structural identities as
 OPAQUE, and makes no new semantic, runtime, Ghidra, executable, or rebuild
-claim. The 105 open residual geometries are not a semantic regression. The next
-valid campaign generation is 25. Model review is
+claim. The later body-only `db.18614` promotion leaves those 8,280 identities
+unchanged but requires the next campaign to re-ground current body geometry.
+The 105 open residual geometries are not a semantic regression. The next valid
+campaign generation is 25. Model review is
 situational and harness-agnostic under `REVIEW-PROTOCOL.md`.
 
 A separately reviewed, non-parent
@@ -162,8 +164,8 @@ bounded C2 functions, with zero static `OPAQUE` rows in that population. It join
 sealed receipts covering 7,945 functions, ten post-Gen19 Mission-native
 boundaries, and 181 pre-existing C1/C2 rows. This is a distinct authority for
 static-envelope accounting; Generation 24 is the current replay owner and
-carries Generation 23's admitted runtime evidence unchanged onto the 8,280-row
-geometry. See the
+carries Generation 23's admitted runtime evidence unchanged onto its sealed
+8,280-row `db.18613` geometry. See the
 [closure report](binary-analysis/function-c1-closure-2026-08-11.md) for exact
 hashes and limits.
 
@@ -224,13 +226,13 @@ and proves only a structural 8,304-function scratch result. Its verdict is
 `SCRATCH_READY_LIVE_FORBIDDEN`; the saved census, Generation 23, semantic
 grades, runtime contracts, and rebuild remain unchanged.
 
-The follow-on
+The follow-on historical
 [JPEG24 live-promotion preparation](binary-analysis/jpeg-ijg-callback-ghidra-live-promotion-preparation-2026-08-14.md)
-re-grounds the byte-identical live/tracked 8,280-function db.18613 PRE and
-prepares a fail-closed one-save, backup/readback, tracked-restore,
-projection/accounting ceremony. It remains `PREPARATION_ONLY`: no future lane
-or backup exists, no Ghidra process was opened, and the saved census is still
-8,280.
+re-grounded the then-byte-identical live/tracked 8,280-function db.18613 PRE and
+prepared a fail-closed one-save, backup/readback, tracked-restore, and
+projection/accounting ceremony. It remains `PREPARATION_ONLY` and performed no
+Ghidra write. The later body-fragment promotion advanced current geometry to
+`db.18614`; JPEG24 must therefore be re-grounded before any ceremony.
 
 The separate sealed
 [23-row CRT/runtime P0 scratch admission](binary-analysis/crt-runtime-p0-ghidra-scratch-admission-2026-08-14.md)
@@ -249,22 +251,22 @@ revalidates all 23 demo twins, and reruns the complete positive/adverse campaign
 V1 remains sealed historical evidence; v2 is the current scratch authority and
 still forbids live or tracked promotion.
 
-The separate sealed
+The separate historical sealed
 [five-existing-function body-fragment scratch admission](binary-analysis/pc-function-body-fragment-ghidra-scratch-admission-2026-08-14.md)
 adds no functions or metadata. Two isolated db.18613 replicas reproduce the
 exact 1,258-byte ownership gain across five existing bodies, with four inserted
 gaps bridging prior range components and the FEP envelope's trailing 12 NOP
-bytes excluded. Its policy remains `LIVE_FORBIDDEN`; saved Ghidra, semantic
-grades, runtime contracts, and rebuild state are unchanged.
+bytes excluded. Its own policy remains `LIVE_FORBIDDEN`; it did not mutate
+saved Ghidra or change semantic grades, runtime contracts, or rebuild state.
 
-The follow-on
+The follow-on historical
 [five-range live-promotion preparation](binary-analysis/pc-function-body-fragment-ghidra-live-promotion-preparation-2026-08-14.md)
-is read-only and remains `PREPARATION_ONLY`. It independently proves live and
-tracked are exact byte-identical 8,280/db.18613 PRE projects, reproduces the
-515-file retained scratch tree, and pins a one-save backup/readback/recovery,
-tracked-refresh, projection, and 1,795,470-byte accounting ceremony. Its
-canonical evidence and backup roots are deliberately absent; it authorizes no
-live or tracked write.
+was read-only and remains `PREPARATION_ONLY`. It independently proved the
+8,280/db.18613 PRE, reproduced the 515-file scratch tree, and pinned the later
+one-save backup/readback/recovery ceremony. The completed
+[live-promotion report](binary-analysis/pc-function-body-fragment-ghidra-live-promotion-2026-08-14.md)
+now owns the exact `db.18614` result: zero functions added, five body rows
+changed, 8,275 non-target rows exact, and 1,258 newly owned bytes.
 
 **Dated PC demo/retail frontier (2026-08-12, 8,136-function population):** the conservative 8,086-entry
 address map plus exact second-pass reports, caller propagation, equal-delta
@@ -611,8 +613,8 @@ different failure modes and only the first was being tested.)*
   **79.8268 % of `.text` was covered by those 6,411 historical bodies**.
   [Current `.text` body ownership](binary-analysis/current-text-ownership-2026-08-13.md)
   now supersedes that metric for present use: all 8,280 saved functions and
-  8,400 exact ranges own 1,794,212 / 1,929,117 bytes = 93.006904195%, with
-  zero overlap. The 134,905-byte gap is separately partitioned by current
+  8,396 exact ranges own 1,795,470 / 1,929,117 bytes = 93.072115377%, with
+  zero overlap. The 133,647-byte gap is separately partitioned by current
   listing state and discovery evidence; this remains structural body ownership,
   not semantic reversal. The historical 6,411-row result remains reproducible
   in under a minute with `tools/re_verify.py`.

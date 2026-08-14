@@ -41,9 +41,9 @@ the document it links.
   — promotes bounded Tier-2 names/comments/tags for the 34 newly admitted
   handlers while preserving all 8,136 non-target rows and every body/ABI byte
 - [Current `.text` body ownership and listing-state accounting](current-text-ownership-2026-08-13.md)
-  — replays all 8,280 saved functions / 8,400 ranges against pristine bytes,
-  closes the exact zero-overlap union at 1,794,212 / 1,929,117 = 93.006904195%,
-  and partitions the 134,905-byte gap without treating loose code/data as proved
+  — replays all 8,280 saved functions / 8,396 ranges against pristine bytes,
+  closes the exact zero-overlap union at 1,795,470 / 1,929,117 = 93.072115377%,
+  and partitions the 133,647-byte gap without treating loose code/data as proved
   functions or semantics
 - [Text-gap 31-function library classification](text-gap-library-function-classification-2026-08-13.md)
   — identifies the 31 now-admitted exact boundaries as 14
@@ -65,9 +65,9 @@ the document it links.
   replicas, corrects the false `0x005B6900` boundary, preserves all 8,280 PRE
   rows exactly, and stops before live or tracked Ghidra promotion
 - [JPEG/IJG callback live-promotion preparation](jpeg-ijg-callback-ghidra-live-promotion-preparation-2026-08-14.md)
-  — pins the current live/tracked db.18613 PRE, exact 8,304-function
-  prospective POST, one-save recovery/refresh chronology, and fixed-point
-  listing proof while deliberately creating no ceremony artifacts
+  — historically pins the then-current live/tracked db.18613 PRE, exact
+  8,304-function prospective POST, one-save recovery/refresh chronology, and
+  fixed-point listing proof; current db.18614 requires a fresh re-ground
 - [CRT/runtime P0 23-boundary scratch admission](crt-runtime-p0-ghidra-scratch-admission-2026-08-14.md)
   — superseded v1 receipt shape retained for audit history
 - [CRT/runtime P0 23-boundary corrected v2 scratch admission](crt-runtime-p0-ghidra-scratch-admission-v2-2026-08-14.md)
@@ -79,9 +79,12 @@ the document it links.
   two isolated db.18613 replicas, excludes the FEP envelope's trailing 12 NOP
   bytes, and keeps all live and tracked Ghidra mutation forbidden
 - [Five existing-function body-fragment live-promotion preparation](pc-function-body-fragment-ghidra-live-promotion-preparation-2026-08-14.md)
-  — proves live equals tracked at the exact current db.18613 PRE, pins the
-  smallest one-save backup/readback/restore and tracked-refresh ceremony, and
-  remains preparation-only while every future ceremony root is absent
+  — historical read-only runbook that proved the exact db.18613 PRE and pinned
+  the later one-save backup/readback/restore and tracked-refresh ceremony
+- [Five existing-function body-fragment live promotion](pc-function-body-fragment-ghidra-live-promotion-2026-08-14.md)
+  — records the completed db.18614 promotion: 8,280 functions unchanged,
+  8,396 exact ranges, five target body rows, 8,275 exact non-target rows, and
+  1,258 newly owned `.text` bytes
 - [PC D3DX four-vector-cross helper boundary](d3dx-vec4cross-crossbuild-boundary-2026-08-13.md)
   — closes `0x005762dd..0x005763cd` as one exact 240-byte / 97-instruction
   function through seven byte-identical PC/Issue-7/Issue-11/US-retail copies;
