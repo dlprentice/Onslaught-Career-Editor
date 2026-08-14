@@ -251,6 +251,14 @@ revalidates all 23 demo twins, and reruns the complete positive/adverse campaign
 V1 remains sealed historical evidence; v2 is the current scratch authority and
 still forbids live or tracked promotion.
 
+The follow-on current-state
+[CRT23 live-promotion preparation](binary-analysis/crt-runtime-p0-ghidra-live-promotion-preparation-2026-08-14.md)
+re-grounded the byte-identical live/tracked 8,280-function db.18614 PRE and
+reproduced an exact 8,303-function / 8,420-range prospective POST on two fresh
+copies. It independently totals 1,796,601 owned `.text` bytes and preserves all
+8,280 PRE rows, but remains `PREPARATION_ONLY` and performs no live or tracked
+Ghidra write.
+
 The separate historical sealed
 [five-existing-function body-fragment scratch admission](binary-analysis/pc-function-body-fragment-ghidra-scratch-admission-2026-08-14.md)
 adds no functions or metadata. Two isolated db.18613 replicas reproduce the

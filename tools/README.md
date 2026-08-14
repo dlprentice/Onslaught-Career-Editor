@@ -263,6 +263,28 @@ Use the
 [corrected v2 report](../reverse-engineering/binary-analysis/crt-runtime-p0-ghidra-scratch-admission-v2-2026-08-14.md);
 the v1 report and sealed lane remain historical audit evidence.
 
+`GhidraApplyCrtP0BoundariesV3.java` changes only the schema identity and exact
+db.18614 PRE/POST counters needed to replay that corrected cohort on the current
+8,396-range project. The read-only
+`ghidra_crt_p0_boundary_live_preparation.py` replays the v2 scratch authority,
+rehashes two fresh current-state replicas, independently totals their body
+ranges, proves all 8,280 PRE function rows unchanged, and requires live and
+tracked Ghidra to be byte-identical at db.18614. It refuses when any future
+ceremony path already exists and grants no mutation authority.
+
+```powershell
+python -I -B tools\ghidra_crt_p0_boundary_live_preparation_tests.py
+python -I -B tools\ghidra_crt_p0_boundary_live_preparation.py preflight `
+  --repo <repository-root> --scratch-repo <repository-root> `
+  --live-project <maintainer-project-root> --live-lane <future-live-lane> `
+  --pre-backup <future-pre-backup> --post-backup <future-post-backup>
+```
+
+See the
+[live-promotion preparation](../reverse-engineering/binary-analysis/crt-runtime-p0-ghidra-live-promotion-preparation-2026-08-14.md).
+Its policy is `PREPARATION_ONLY`; it opens no Ghidra project and performs no
+live or tracked write.
+
 `re_pc_function_body_fragments.py` proves the exhaustive five-gap class inside
 five existing PC functions, including unique normalized demo twins and the
 deliberate 12-byte FEP NOP exclusion. `GhidraApplyFunctionFragmentRanges.java`
