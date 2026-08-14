@@ -3431,12 +3431,17 @@ public sealed class Simulation
                  round < SimulationConstants.MechVulcanVolleySize;
                  round++)
             {
+                (int yawInaccuracy, int pitchInaccuracy) =
+                    _level100ActorMechanics.NextWeaponInaccuracy(
+                        SimulationConstants.PlayerVulcanInaccuracyMicroRadians);
                 LaunchWalkerRound(
                     Level100ProjectileKind.MechAirBullet,
                     SimulationConstants.MechAirBulletSpeedPerTick,
                     SimulationConstants.MechAirBulletLifetimeTicks,
                     Level100ContactMechanics.PulseRadiusMillimeters,
-                    SimulationConstants.MechAirBulletDamageBits);
+                    SimulationConstants.MechAirBulletDamageBits,
+                    yawInaccuracy,
+                    pitchInaccuracy);
             }
             return;
         }
@@ -3461,12 +3466,17 @@ public sealed class Simulation
             // `Mech Pulse Cannon Charged` carries no CWeaponVolleySize node, so
             // it takes the shipped default of 1 and one release is one round.
             EmitWeaponFireEvent(Level100PlayerWeapon.PulseCannonPod, 1);
+            (int yawInaccuracy, int pitchInaccuracy) =
+                _level100ActorMechanics.NextWeaponInaccuracy(
+                    SimulationConstants.PulseCannonInaccuracyMicroRadians);
             LaunchWalkerRound(
                 Level100ProjectileKind.MechPulseBoltMedium,
                 SimulationConstants.ProjectileSpeedPerTick,
                 SimulationConstants.ProjectileLifetimeTicks,
                 Level100ContactMechanics.PulseRadiusMillimeters,
-                Level100DestructionState.PulseDamageBits);
+                Level100DestructionState.PulseDamageBits,
+                yawInaccuracy,
+                pitchInaccuracy);
             return;
         }
 
@@ -3474,12 +3484,10 @@ public sealed class Simulation
         // Mech Twin Vulcan Cannon at the end of the first firing-range
         // exercise, so from that point the walker's only weapon is the Twin
         // Vulcan. Its weapon mode fires CWeaponVolleySize 4 Mech Bullet rounds
-        // per CWeaponReloadTime 0.05 s. CWeaponInaccuracy 0.006981317 rad and
-        // the four CWeaponLaunchSequence muzzle entries are read but not
-        // modelled: neither a released scatter sequence nor released muzzle
-        // offsets are established, and inventing either would be an unproven
-        // behaviour claim. The volley therefore leaves the one evidenced
-        // BattleEngine emitter along the aim ray.
+        // per CWeaponReloadTime 0.05 s. CWeaponInaccuracy 0.006981317 rad is
+        // applied through the same global two-draw path as actor weapons. The
+        // four CWeaponLaunchSequence muzzle entries remain unmodelled, so the
+        // volley leaves the one evidenced BattleEngine emitter.
         if (walkerSelected != Level100MissionWeapon.MechTwinVulcanCannon)
         {
             throw new InvalidOperationException(
@@ -3499,12 +3507,17 @@ public sealed class Simulation
             SimulationConstants.TwinVulcanVolleySize);
         for (int round = 0; round < SimulationConstants.TwinVulcanVolleySize; round++)
         {
+            (int yawInaccuracy, int pitchInaccuracy) =
+                _level100ActorMechanics.NextWeaponInaccuracy(
+                    SimulationConstants.PlayerVulcanInaccuracyMicroRadians);
             LaunchWalkerRound(
                 Level100ProjectileKind.MechBullet,
                 SimulationConstants.MechBulletSpeedPerTick,
                 SimulationConstants.MechBulletLifetimeTicks,
                 Level100ContactMechanics.PulseRadiusMillimeters,
-                Level100DestructionState.MechBulletDamageBits);
+                Level100DestructionState.MechBulletDamageBits,
+                yawInaccuracy,
+                pitchInaccuracy);
         }
     }
 
@@ -3534,37 +3547,55 @@ public sealed class Simulation
         int speedPerTick,
         int lifetimeTicks,
         int contactRadiusMillimeters,
-        uint damageBits)
+        uint damageBits,
+        int yawInaccuracyMicroRadians,
+        int pitchInaccuracyMicroRadians)
     {
-        (int sin, int cos) = FixedSinCos(_facingYawMicroRad);
-        (int pitchSin, int pitchCos) = FixedSinCos(_facingPitchMicroRad);
+        int launchYaw = NormalizeMicroRad(
+            _facingYawMicroRad + yawInaccuracyMicroRadians);
+        int launchPitch = NormalizeMicroRad(
+            _facingPitchMicroRad + pitchInaccuracyMicroRadians);
+        (int launchSin, int launchCos) = FixedSinCos(launchYaw);
+        (int launchPitchSin, int launchPitchCos) = FixedSinCos(launchPitch);
         int horizontalSpeed = DivideRoundNearest(
-            (long)pitchCos * speedPerTick,
+            (long)launchPitchCos * speedPerTick,
             FixedTrigScale);
         int velocityX = DivideRoundNearest(
-            -(long)sin * horizontalSpeed,
+            -(long)launchSin * horizontalSpeed,
             FixedTrigScale);
         int velocityZ = DivideRoundNearest(
-            (long)cos * horizontalSpeed,
+            (long)launchCos * horizontalSpeed,
             FixedTrigScale);
         int verticalVelocity = DivideRoundNearest(
-            -(long)pitchSin * speedPerTick,
+            -(long)launchPitchSin * speedPerTick,
             FixedTrigScale);
+
+        // Inaccuracy rotates the round direction only. The retained cockpit
+        // emitter remains on the unscattered Battle Engine basis.
+        (int emitterSin, int emitterCos) = FixedSinCos(_facingYawMicroRad);
+        (int emitterPitchSin, int emitterPitchCos) =
+            FixedSinCos(_facingPitchMicroRad);
         int emitterForwardPlane = DivideRoundNearest(
-            ((long)SimulationConstants.PulseCannonEmitterForwardMillimeters * pitchCos) +
-            ((long)SimulationConstants.PulseCannonEmitterUpMillimeters * pitchSin),
+            ((long)SimulationConstants.PulseCannonEmitterForwardMillimeters *
+                emitterPitchCos) +
+            ((long)SimulationConstants.PulseCannonEmitterUpMillimeters *
+                emitterPitchSin),
             FixedTrigScale);
         int emitterVerticalOffset = DivideRoundNearest(
-            (-(long)SimulationConstants.PulseCannonEmitterForwardMillimeters * pitchSin) +
-            ((long)SimulationConstants.PulseCannonEmitterUpMillimeters * pitchCos),
+            (-(long)SimulationConstants.PulseCannonEmitterForwardMillimeters *
+                emitterPitchSin) +
+            ((long)SimulationConstants.PulseCannonEmitterUpMillimeters *
+                emitterPitchCos),
             FixedTrigScale);
         int emitterOffsetX = DivideRoundNearest(
-            ((long)SimulationConstants.PulseCannonEmitterRightMillimeters * cos) -
-            ((long)emitterForwardPlane * sin),
+            ((long)SimulationConstants.PulseCannonEmitterRightMillimeters *
+                emitterCos) -
+            ((long)emitterForwardPlane * emitterSin),
             FixedTrigScale);
         int emitterOffsetZ = DivideRoundNearest(
-            ((long)SimulationConstants.PulseCannonEmitterRightMillimeters * sin) +
-            ((long)emitterForwardPlane * cos),
+            ((long)SimulationConstants.PulseCannonEmitterRightMillimeters *
+                emitterSin) +
+            ((long)emitterForwardPlane * emitterCos),
             FixedTrigScale);
 
         SimVector2 playerPosition = PlayerPosition;

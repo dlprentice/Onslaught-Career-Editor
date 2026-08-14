@@ -628,6 +628,18 @@ shot direction. Terrain-relative limits, mouse inversion, auto-aim, and vertical
 target collision remain unimplemented. The setup patch,
 copies, and raw samples were disposable.
 
+`ProjectileBurst__SpawnFromCurrentPreset` at `0x005069F0` closes the bounded
+per-projectile scatter law shared by actor and player weapons: it consumes two
+samples from the global gameplay stream, applies the second to yaw and the first
+to pitch, and scales both by the weapon mode's `CWeaponInaccuracy`. The exact
+Level 100 modes carry `0.008726646` rad for the charged Pulse Cannon and
+`0.006981317` rad for both player Vulcans. Core now routes all three player modes
+through the already-canonical actor-weapon stream and leaves the measured
+cockpit emitter unrotated while scattering the round direction. The focused
+test pins draw count, order, snapshot seed state, and emitted directions. This
+does not claim that Core has the same absolute stream phase as every retail
+shot: the released stream is global and other shipped consumers remain absent.
+
 The copied Steam options bind Movement Forward/Backward/Left/Right to both
 `WASD` and the matching arrow keys, while Look Left/Right/Up/Down consume the
 mouse axes. Steam `CController::DoMappings` at `0x0042DB40` maps each centered

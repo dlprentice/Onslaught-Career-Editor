@@ -118,10 +118,10 @@ ordered typed impact/terminal effects across every Core step in a rendered
 frame. Secondary material passes, steep-slope and broader actor/structure
 collision, unmeasured mesh-part damage variation, retail debris RNG/bounce,
 occupancy/path-grid route adjustment, Target Truck contact/destruction,
-Vulcan firing, and most mission behavior remain provisional. The bounded
-ground-vehicle owner does retain the released Target Tank and Target Truck
-command intents and advances their canonical actor poses from the materialized
-waypoint and physics definitions.
+Vulcan contact/damage parity, and most mission behavior remain provisional.
+The bounded ground-vehicle owner does retain the released Target Tank and
+Target Truck command intents and advances their canonical actor poses from the
+materialized waypoint and physics definitions.
 
 Retail asset payloads and converted copies are not repository source. The
 bounded materializer verifies a supported user-provided installation and writes
@@ -245,9 +245,12 @@ mission powers the Aquila at tick 1000. Reaching the Firing Range temporarily
 deactivates the player, then re-enables it with the Pulse Cannon; flight remains
 disabled. Walker pitch uses the released `1/117`-radian input and `0.8`
 retention verbatim, with the two repeated absolute limits measured
-on Level 100's authored start slope. Pulse Cannon rounds use the same yaw/pitch
-direction as the crosshair camera and begin at the measured cockpit `Gun`
-emitter. Terrain-relative pitch limiting, vertical target collision, auto-aim,
+on Level 100's authored start slope. Pulse Cannon and both player Vulcans now
+apply each mode's shipped inaccuracy through the exact shared-gameplay-stream
+two-draw order, while rounds still begin at the measured cockpit `Gun` emitter.
+The base aim remains the crosshair camera's yaw/pitch; exact absolute retail RNG
+phase, predictive aiming, and authored per-round muzzle sequences remain open.
+Terrain-relative pitch limiting, vertical target collision, auto-aim,
 terrain clipping, mouse inversion,
 jet movement,
 jet-to-walker simulation, exact backend attenuation, resource semantics,
@@ -364,7 +367,8 @@ dynamic ring texture, full multi-stage mask state and Level 100 influence map,
 other radio portraits/video and exact portrait RNG phase, Warehouse
 segment-specific health and breakup,
 mesh-part damage variation, secondary particles/debris, Target Truck
-contact/destruction, Vulcan ballistics, and the remainder of the mission remain
+contact/destruction, Vulcan muzzle sequences and predictive aiming, and the
+remainder of the mission remain
 unimplemented. The old seeded synthetic targets are gone;
 Core and Godot now share the observed retail targets by canonical actor ID and
 definition/mesh binding, including dynamically spawned training trucks, plus

@@ -1247,6 +1247,119 @@ public sealed class SimulationTests
         }
     }
 
+    [Fact]
+    public void PlayerProjectilesConsumeReleasedScatterInRetailDrawOrder()
+    {
+        Simulation pulse = CreateFiringRangeExerciseSimulation();
+        int pulseSeed = pulse.Snapshot.Level100ActorMechanics.ReleasedRandomSeed;
+        var pulseRandom = new Level100ReleasedRandom(pulseSeed);
+        (int PulseYaw, int PulsePitch) pulseOffset = NextOffsets(
+            pulseRandom,
+            SimulationConstants.PulseCannonInaccuracyMicroRadians);
+
+        WorldSnapshot pulseShot = pulse.Step(new SimInput(0, 0, SimActions.Fire));
+        Assert.Equal(
+            pulseRandom.Seed,
+            pulseShot.Level100ActorMechanics.ReleasedRandomSeed);
+        AssertDirection(
+            Assert.Single(pulseShot.Projectiles),
+            pulseShot.FacingYawMicroRad,
+            pulseShot.FacingPitchMicroRad,
+            pulseOffset);
+
+        Simulation jet = CreatePlayingSimulation();
+        jet.GrantFlightLegForMeasurement(Level100MissionTrigger.TargetZone2);
+        jet.Step(new SimInput(0, 0, SimActions.ToggleMode));
+        for (int tick = 0;
+             jet.Snapshot.Mode != VehicleMode.Jet ||
+                 jet.Snapshot.Transition != VehicleTransition.None;
+             tick++)
+        {
+            Assert.True(tick < 100, "Walker-to-jet morph did not complete.");
+            jet.Step(SimInput.Idle);
+        }
+
+        int jetSeed = jet.Snapshot.Level100ActorMechanics.ReleasedRandomSeed;
+        var jetRandom = new Level100ReleasedRandom(jetSeed);
+        (int Yaw, int Pitch)[] jetOffsets = Enumerable.Range(
+                0,
+                SimulationConstants.MechVulcanVolleySize)
+            .Select(_ => NextOffsets(
+                jetRandom,
+                SimulationConstants.PlayerVulcanInaccuracyMicroRadians))
+            .ToArray();
+
+        WorldSnapshot jetShot = jet.Step(new SimInput(0, 0, SimActions.Fire));
+        Assert.Equal(jetRandom.Seed, jetShot.Level100ActorMechanics.ReleasedRandomSeed);
+        ProjectileSnapshot[] rounds = jetShot.Projectiles.OrderBy(item => item.Id).ToArray();
+        Assert.Equal(jetOffsets.Length, rounds.Length);
+        for (int index = 0; index < rounds.Length; index++)
+        {
+            AssertDirection(
+                rounds[index],
+                jetShot.FacingYawMicroRad,
+                jetShot.FacingPitchMicroRad,
+                jetOffsets[index]);
+        }
+        Assert.NotEqual(rounds[0].Velocity, rounds[1].Velocity);
+        Assert.NotEqual(
+            rounds[0].VerticalVelocityMillimetersPerTick,
+            rounds[1].VerticalVelocityMillimetersPerTick);
+
+        static (int Yaw, int Pitch) NextOffsets(
+            Level100ReleasedRandom random,
+            int inaccuracyMicroRadians)
+        {
+            int first = random.NextSignedUnitScaled(inaccuracyMicroRadians);
+            int second = random.NextSignedUnitScaled(inaccuracyMicroRadians);
+            return (second, first);
+        }
+
+        static void AssertDirection(
+            ProjectileSnapshot projectile,
+            int facingYaw,
+            int facingPitch,
+            (int Yaw, int Pitch) offset)
+        {
+            int actualYaw = (int)Math.Round(
+                Math.Atan2(-projectile.Velocity.X, projectile.Velocity.Z) * 1_000_000d,
+                MidpointRounding.AwayFromZero);
+            long horizontalSquared =
+                ((long)projectile.Velocity.X * projectile.Velocity.X) +
+                ((long)projectile.Velocity.Z * projectile.Velocity.Z);
+            int actualPitch = (int)Math.Round(
+                Math.Atan2(
+                    -projectile.VerticalVelocityMillimetersPerTick,
+                    Math.Sqrt(horizontalSquared)) * 1_000_000d,
+                MidpointRounding.AwayFromZero);
+
+            Assert.InRange(
+                Normalize(actualYaw - Normalize(facingYaw + offset.Yaw)),
+                -500,
+                500);
+            Assert.InRange(
+                Normalize(actualPitch - Normalize(facingPitch + offset.Pitch)),
+                -500,
+                500);
+        }
+
+        static int Normalize(int angle)
+        {
+            const int Pi = 3_141_593;
+            const int Tau = Pi * 2;
+            int normalized = angle % Tau;
+            if (normalized > Pi)
+            {
+                normalized -= Tau;
+            }
+            else if (normalized < -Pi)
+            {
+                normalized += Tau;
+            }
+            return normalized;
+        }
+    }
+
     [Theory]
     [InlineData(Level100ProjectileKind.MechBullet, false)]
     [InlineData(Level100ProjectileKind.MechBullet, true)]

@@ -85,6 +85,21 @@ public sealed partial class Level100ActorMechanics
     }
 
     /// <summary>
+    /// Advances the released global gameplay stream for one projectile and
+    /// returns the two inaccuracy offsets in the Euler order consumed by
+    /// <c>ProjectileBurst__SpawnFromCurrentPreset</c> @<c>0x005069f0</c>.
+    /// </summary>
+    internal (int YawMicroRadians, int PitchMicroRadians) NextWeaponInaccuracy(
+        int inaccuracyMicroRadians)
+    {
+        int firstSample =
+            _releasedRandom.NextSignedUnitScaled(inaccuracyMicroRadians);
+        int secondSample =
+            _releasedRandom.NextSignedUnitScaled(inaccuracyMicroRadians);
+        return (secondSample, firstSample);
+    }
+
+    /// <summary>
     /// Causal-probe seam for the Battle Engine damage consumer. The next
     /// normal <see cref="Simulation.Step"/> still owns hit dispatch, shield
     /// damage, directional-flash creation, death handling and event order.
@@ -405,10 +420,8 @@ public sealed partial class Level100ActorMechanics
         // the reconstruction only if the shipped code would take them - it
         // does, unconditionally, so the stream advances by two per projectile
         // regardless of the scatter magnitude.
-        int firstSample =
-            _releasedRandom.NextSignedUnitScaled(mode.InaccuracyMicroRadians);
-        int secondSample =
-            _releasedRandom.NextSignedUnitScaled(mode.InaccuracyMicroRadians);
+        (int yawInaccuracy, int pitchInaccuracy) =
+            NextWeaponInaccuracy(mode.InaccuracyMicroRadians);
 
         Level100ActorRoundData round = Level100ActorArmament.Round(mode.Round);
         _actorRounds.Add(new ActorRoundState
@@ -418,8 +431,8 @@ public sealed partial class Level100ActorMechanics
             TargetActorId = targetId,
             Kind = round.Kind,
             PositionMillimeters = ownerPose.PositionMillimeters,
-            YawMicroRadians = NormalizeMicroRad(yaw + secondSample),
-            PitchMicroRadians = NormalizeMicroRad(pitch + firstSample),
+            YawMicroRadians = NormalizeMicroRad(yaw + yawInaccuracy),
+            PitchMicroRadians = NormalizeMicroRad(pitch + pitchInaccuracy),
             RemainingBaseTicks = round.LifeSpanBaseTicks,
             ElapsedBaseTicks = 0,
             Locked = round.Seeks,

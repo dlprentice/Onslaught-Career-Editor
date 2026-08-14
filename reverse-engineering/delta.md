@@ -980,6 +980,13 @@ and destination mappings in the executable master.
 
 - The 20 Hz cadence and a speed-35 pulse advancing 1.75 world units per update
   establish units/second interpretation; 0.1 seconds is two updates.
+- `ProjectileBurst__SpawnFromCurrentPreset` at `0x005069F0` consumes two
+  shared gameplay-RNG samples per projectile, applies the second to yaw and the
+  first to pitch, and scales them by `CWeaponInaccuracy`. The charged Pulse
+  mode carries `0.008726646`; both player Vulcans carry `0.006981317`. Core now
+  applies that exact bounded law to all three modes. Absolute sample phase
+  remains open because other retail consumers of the global stream are not all
+  reconstructed.
 - Damage combination remains open. Direct pulse observation is compatible
   with `0.8 + 1.0`, but has not isolated the consumer. A direct Twin Vulcan hit
   sharply distinguishes additive `0.081`, round-only `0.08`, and

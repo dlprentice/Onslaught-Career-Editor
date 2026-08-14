@@ -631,6 +631,9 @@ public static class SimulationConstants
     // `Mech Pulse Cannon Charged` @0x134E3, whose CWeaponReloadTime is 0.1 s
     // (0x3DCCCCCD @0x1351D), exactly two released 20 Hz updates.
     public const int PulseCannonReloadTicks = 2;
+    // The same charged mode carries CWeaponInaccuracy 0.008726646 rad
+    // (0x3C0EFA35), rounded here to deterministic integer microradians.
+    public const int PulseCannonInaccuracyMicroRadians = 8_727;
     // Fresh copied-Steam Level 100 runs independently repeated four
     // lowest-charge Pulse Cannon rounds against each of the three training
     // tanks. Every round carried definition speed 35 and moved exactly 1.75
@@ -665,6 +668,9 @@ public static class SimulationConstants
     public const int MechBulletSpeedPerTick = 3_000;
     public const int MechBulletLifetimeTicks = 1 * TicksPerSecond;
     public const int TwinVulcanVolleySize = 4;
+    // Both player Vulcan modes carry the same CWeaponInaccuracy
+    // 0.006981317 rad (0x3BE4C388).
+    public const int PlayerVulcanInaccuracyMicroRadians = 6_981;
     // CWeaponReloadTime 0.05 s. A 20 Hz Core tick IS 50 ms, so the reload is
     // exactly one tick and the released 20 volleys per second fall out of the
     // rate itself.

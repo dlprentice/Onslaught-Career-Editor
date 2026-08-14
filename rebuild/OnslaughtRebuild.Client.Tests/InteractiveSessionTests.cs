@@ -1962,9 +1962,14 @@ public sealed class InteractiveSessionTests
         // MOVED 2026-08-14 by the already-landed shipped walker-yaw/contact
         // batch e7aa7548. This current-state checksum had been left stale;
         // every consequential firing-range assertion above remains unchanged.
+        // MOVED AGAIN by the exact player weapon-scatter contract: the four
+        // released Pulse shots each consume their shipped two RNG samples and
+        // carry distinct yaw/pitch velocity. The mission and target assertions
+        // above remain unchanged; this checksum also binds the advanced shared
+        // RNG state and the four still-live projectile trajectories.
         string finalStateHash = StateHasher.ComputeHex(session.CurrentSnapshot);
         Assert.Equal(
-            "62cb5946ce26ad9ee72f8c55a05f2e5bc5fbd3119f52ce53b9427bec8bf78410",
+            "c33268c199c8a3e77ab2de53d16eefc346b0abab3b6867a4d4379981d636cb4e",
             finalStateHash);
     }
 
