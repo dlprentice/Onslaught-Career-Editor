@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-08-14. Structural RE and frozen campaign authority are
+Last updated: 2026-08-15. Structural RE and frozen campaign authority are
 aligned at 8,329/db.18618 in Generation 29
 (`current_re_authority`; candidate Gen73 is projection-oracle only). Primary WinUI
 navigation was rechecked 2026-08-03 against the live shell (includes Cheats).
@@ -663,6 +663,28 @@ equality, or self-derived pins.
 | complete_RE | **false** |
 | READY / reducer | `fe61f696…c9ac9` / `8b86f5b5…2587` |
 | Next valid generation | **30** |
+
+**Mission `Damage` rebuild blocker cleared (2026-08-15) — campaign counts
+unchanged.** The single `CONTRACT_ONLY` row above is `C-8c445f1e27de9913`,
+`IScript__Damage @ 0x005348C0`, which carried `C2_BOUNDED_RUNTIME` with
+`rebuildImplementation` recorded as *not yet implemented* and `parityTests`
+`UNMAPPED`. That rebuild gap is now closed in code:
+`Level100ActorScriptRuntime.InvokeDamageNative` implements the measured
+forwarding contract and two focused parity tests pin it. Three separate
+evidence advances back it — a decode of all 25 hash-pinned Level 100 objects
+showing **366 native calls across 40 commands with 69 absent**; a shipped-source
+census finding **six authored call sites in four levels** (`level500`,
+`level521`, `level522`, `level530`, `level720`), the first evidence that shipped
+authored content calls this native at all — authored source, not proved
+execution, since no `SetScript` attaches those scripts; and a pristine-specimen read
+proving the wrapper's `+0xA0` slot resolves to `CBattleEngine::Damage
+@ 0x0040A890` for a battle-engine receiver and `CUnit__ApplyDamage
+@ 0x004F9A90` for the measured unit receiver, joining three existing contracts.
+Details in
+[`IScript.cpp.md`](reverse-engineering/binary-analysis/functions/IScript.cpp.md).
+**The table above is deliberately not edited.** Generation 29 is frozen, so the
+campaign still reports `CONTRACT_ONLY 1` until a Generation 30 re-grounds it;
+the rebuild layer and the campaign layer are reported separately on purpose.
 
 **Tracked static-envelope closure (2026-08-11):** the separate reviewed
 [`function-c1-closure-2026-08-11.tsv`](reverse-engineering/binary-analysis/function-c1-closure-2026-08-11.tsv)

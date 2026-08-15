@@ -17,7 +17,7 @@
 > Godot rebuild, and the WinUI 3 app are coequal outcomes. A current goal chooses
 > focus, not standing rank. See [Revision history](#revision-history).
 >
-> Last updated: 2026-08-14. Current measured status belongs in
+> Last updated: 2026-08-15. Current measured status belongs in
 > [`CURRENT_CAPABILITIES.md`](CURRENT_CAPABILITIES.md) and
 > [`developer_state.json`](developer_state.json) (routing key
 > `current_re_authority`). Generation 73 is retained only as the exact
@@ -351,6 +351,25 @@ the mandate; the completion test and every clause above are unchanged.
   `BattleEngineDataManager.cpp` 31, `WorldPhysicsManager.cpp` 21, `oids.cpp` 20,
   and `mesh.cpp` 19.
 
+- **The Mission `Damage` native's rebuild blocker (2026-08-15).**
+  `C-8c445f1e27de9913` (`IScript__Damage @ 0x005348C0`) was the campaign's only
+  `CONTRACT_ONLY` row: `C2_BOUNDED_RUNTIME` evidence with no rebuild
+  implementation and `parityTests: UNMAPPED`. It now has both, plus three
+  evidence advances that did not exist before. A decode of all 25 hash-pinned
+  Level 100 script objects proves the shipped Level 100 content issues **366
+  native calls across 40 commands and never native 69**, so reaching it there is
+  a property of the released VM, not of released content. A shipped-source
+  census then found the **first evidence that shipped authored content calls
+  this native at all**: six authored call sites in four levels, which the pilot
+  had explicitly recorded as unestablished. That is authored source, not proved
+  execution — no `SetScript` attaches those scripts, so attachment comes from
+  level data and is unverified. A pristine-specimen read of vtable slot
+  `+0xA0` resolves `CBattleEngine 0x005D89C4` to `CBattleEngine::Damage
+  @ 0x0040A890` and the measured receiver `0x005E24DC` to `CUnit__ApplyDamage
+  @ 0x004F9A90`, joining three existing contracts under one proven
+  receiver-selection rule. Generation 29 stays frozen and the campaign still
+  reports `CONTRACT_ONLY 1`; only the rebuild and evidence layers moved.
+
 **Active frontier, in priority order:**
 
 1. **Recover the highest-confidence callable units and body repairs in the
@@ -370,6 +389,13 @@ the mandate; the completion test and every clause above are unchanged.
 4. **Four HUD names describing the wrong subsystem** — targets 0, 3, 4, 5. The
    binary names none of them, so this needs a naming-convention decision before
    any promotion.
+5. **Observe one natural Mission `Damage` call.** Six shipped call sites are now
+   known and the receiver-selection rule is specimen-proved, but no retained
+   trace reaches any of them: the 66 level-opening traces stop before the player
+   is ever under fire. The cheapest falsifier is a level 521 run that lands the
+   player on the Hive boss with a break at `0x005348C0` reading `ECX`, the
+   receiver vtable, and the resolved `+0xA0` target. This would also settle
+   positive-shield absorption, which every current damage contract leaves open.
 
 Rank from current evidence; a reproduced contradiction outranks this list.
 
@@ -470,6 +496,13 @@ Rank from current evidence; a reproduced contradiction outranks this list.
   ownership by 248 bytes to 93.912966399%. Generation 28 remains frozen on its
   prior db.18617 geometry; the two new rows receive no semantic or runtime grade
   here.
+- **2026-08-15 — Mission `Damage` slice carried into the rebuild.** The
+  frontier records one closure and one new open question. No Ghidra, executable,
+  campaign generation, or semantic grade changed, and no frontier was removed:
+  the completion test and every clause above stand. The new item 5 is added
+  because closing the rebuild blocker exposed a runtime gap that no retained
+  trace can fill, which is the kind of open question this directive asks to be
+  preserved rather than papered over.
 - **2026-08-14 — db.18618 reseeded as Generation 29.** Two independent
   snapshots and canonical/replica full replays agree at 8,329 functions. All
   26,841 eligible Generation-28 carry rows are accounted for; the D3DX pair

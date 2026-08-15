@@ -90,6 +90,96 @@ public sealed class Level100MissionTests
     }
 
     [Fact]
+    public void MissionNativeDamage_ForwardsTheAuthoredFloat32AmountUnchanged()
+    {
+        // The wrapper at 0x005348C0 was measured handing its caller's amount to
+        // the receiver's damage virtual through the indirect call at
+        // 0x005348E3, with a non-null source, applyShields 1, and meshPart -1.
+        // 0x447A0000 is the pilot amount, 0x40E80000 its 7.25 holdout, and
+        // 0x3E800000 the 0.25 that data\MissionScripts\level521\hive.msl:339
+        // and its 522/530 twins pass. The integer case covers Damage(100) at
+        // level500\Submarine.msl:87, whose literal is widened rather than
+        // rejected.
+        Level100ActorDefinitionSet definitions = Level100TestActorDefinitions.Create();
+        var actors = new Level100ActorRegistry(definitions);
+        Level100ActorId player = actors.GetThingRef("Player 1")!.Value;
+        Level100ActorId target = actors.GetThingRef("Turret 01")!.Value;
+        var runtime = new Level100ActorScriptRuntime(actors, player);
+        Level100ActorSnapshot before = actors.GetActor(target);
+
+        foreach ((float amount, uint bits) in new[]
+        {
+            (1000.0f, 0x447A0000u),
+            (7.25f, 0x40E80000u),
+            (0.25f, 0x3E800000u),
+        })
+        {
+            Level100MissionDamageForward forward = runtime.InvokeDamageNative(
+                69,
+                target,
+                [Level100ScriptValue.Float(amount)]);
+
+            Assert.Equal(bits, forward.AmountBits);
+            Assert.Equal(amount, forward.Amount);
+            Assert.Equal(target, forward.Receiver);
+            Assert.True(forward.ApplyShields);
+            Assert.Equal(-1, forward.MeshPartIndex);
+        }
+
+        Level100MissionDamageForward widened = runtime.InvokeDamageNative(
+            69,
+            target,
+            [Level100ScriptValue.Integer(100)]);
+        Assert.Equal(0x42C80000u, widened.AmountBits);
+        Assert.Equal(100.0f, widened.Amount);
+        Assert.True(widened.ApplyShields);
+        Assert.Equal(-1, widened.MeshPartIndex);
+
+        // The wrapper owns no life law, so forwarding must leave the receiver
+        // untouched; CUnit__ApplyDamage's arithmetic is pinned separately by
+        // Level100DestructionContactTests.
+        Assert.Equal(before, actors.GetActor(target));
+
+        Assert.Throws<InvalidOperationException>(() =>
+            runtime.InvokeDamageNative(69, target, Array.Empty<Level100ScriptValue>()));
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            runtime.InvokeDamageNative(
+                68,
+                target,
+                [Level100ScriptValue.Float(1000.0f)]));
+        Assert.Equal(before, actors.GetActor(target));
+    }
+
+    [Fact]
+    public void MissionNativeDamage_IsIssuedByNoShippedLevel100Program()
+    {
+        // Reaching native 69 is a property of the released VM, not of released
+        // Level 100 content: the forced Setup pilot proved the VM dispatches it,
+        // while all six shipped callers live in levels 500, 521, 522, 530, and
+        // 720. This decodes all 25 hash-pinned objects so that cannot rot.
+        var natives = new Dictionary<int, int>();
+        foreach (string name in Level100MissionProgram.ProgramNames)
+        {
+            Level100MissionProgram program = Level100MissionProgram.LoadEmbedded(name);
+            foreach (Level100Instruction instruction in program.Instructions)
+            {
+                if (instruction.Opcode != 24)
+                {
+                    continue;
+                }
+
+                int command = instruction.Attribute & 0xff;
+                natives[command] = natives.TryGetValue(command, out int seen) ? seen + 1 : 1;
+            }
+        }
+
+        // Non-vacuity: the pinned payloads decode to exactly this native census.
+        Assert.Equal(366, natives.Values.Sum());
+        Assert.Equal(40, natives.Count);
+        Assert.DoesNotContain(69, natives.Keys);
+    }
+
+    [Fact]
     public void ReleasedPrograms_InitializeAgainstOneCanonicalActorRegistry()
     {
         Level100ActorDefinitionSet definitions = Level100TestActorDefinitions.Create();

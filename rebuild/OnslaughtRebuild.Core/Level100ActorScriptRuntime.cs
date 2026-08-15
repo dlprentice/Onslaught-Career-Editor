@@ -13,6 +13,7 @@ public enum Level100ActorScriptCommandKind
     Stop = 7,
     SetSnowDensity = 8,
     Print = 9,
+    Damage = 10,
 }
 
 public enum Level100ActorScriptWaitKind
@@ -61,6 +62,24 @@ public sealed record Level100ActorScriptRuntimeSnapshot(
     IReadOnlyList<Level100ActorScriptInstanceSnapshot> Instances,
     IReadOnlyList<Level100ActorScriptEventPosted> PendingPostedEvents,
     IReadOnlyList<Level100ActorScriptCommand> PendingCommands);
+
+/// <summary>
+/// The four values the Mission-native <c>Damage</c> wrapper at
+/// <c>0x005348C0</c> was measured forwarding to the runtime receiver's damage
+/// virtual (<c>vtable +0xA0</c>) through its indirect call at
+/// <c>0x005348E3</c>. The wrapper itself performs no arithmetic: the life law
+/// belongs to whichever virtual the receiver resolves, so this type carries the
+/// amount as exact float32 bits rather than a converted value.
+/// </summary>
+internal readonly record struct Level100MissionDamageForward(
+    Level100ActorId Receiver,
+    uint AmountBits,
+    bool ApplyShields,
+    int MeshPartIndex)
+{
+    internal float Amount =>
+        BitConverter.Int32BitsToSingle(unchecked((int)AmountBits));
+}
 
 /// <summary>
 /// Deterministic owner for the released Level 100 actor programs. It executes
@@ -1023,6 +1042,18 @@ public sealed class Level100ActorScriptRuntime
                         RequireContext(execution).AsActorId(),
                         arguments),
                     WaitRequest.None);
+            case 69: // Damage
+            {
+                Level100MissionDamageForward forward = InvokeDamageNative(
+                    command,
+                    RequireContext(execution).AsActorId(),
+                    arguments);
+                EmitCommand(
+                    forward.Receiver,
+                    Level100ActorScriptCommandKind.Damage,
+                    scalar: unchecked((int)forward.AmountBits));
+                return NativeResult.Void;
+            }
             case 82: // Retreat
                 RequireArguments(command, arguments, 0);
                 EmitCommand(RequireContext(execution).AsActorId(), Level100ActorScriptCommandKind.Retreat);
@@ -1113,6 +1144,82 @@ public sealed class Level100ActorScriptRuntime
                 "Expected Mission native SetObjective or UnsetObjective."),
         };
         _actors.SetObjective(receiver, objective);
+    }
+
+    /// <summary>
+    /// Implements the bounded Mission-native <c>Damage</c> forwarding contract
+    /// shared by the script dispatcher and focused parity tests. Retail runtime
+    /// evidence proves the wrapper at <c>0x005348C0</c> hands its caller's
+    /// amount to the runtime receiver's damage virtual unchanged, alongside a
+    /// non-null source, <c>applyShields = 1</c>, and <c>meshPartIndex = -1</c>;
+    /// the measured Turret 01 receiver resolved <c>vtable +0xA0</c> to
+    /// <c>CUnit__ApplyDamage</c> at <c>0x004F9A90</c>, which refuted the rival
+    /// that the wrapper hardcodes <c>CBattleEngine::Damage</c> at
+    /// <c>0x0040A890</c>. Reading that same slot out of the pristine image
+    /// confirms both arms of the selection: <c>CBattleEngine</c>'s vtable
+    /// <c>0x005D89C4 + 0xA0</c> holds <c>0x0040A890</c> while the measured
+    /// receiver's <c>0x005E24DC + 0xA0</c> holds <c>0x004F9A90</c>. The wrapper
+    /// therefore selects no law of its own, so this emits a typed boundary
+    /// instead of subtracting life here; the receiving laws stay with
+    /// <c>Level100Destruction</c> and <c>Level100PlayerDamage</c>, which own and
+    /// test them separately. No Level 100 consumer applies the emitted command,
+    /// because no shipped Level 100 program issues this native at all.
+    /// </summary>
+    /// <remarks>
+    /// Two evidence layers stay separate. The virtual-dispatch and argument
+    /// facts come from a forced Level 100 <c>Setup</c> program measured at
+    /// amounts 1000.0 and 7.25. Shipped authored content calls this native at
+    /// six sites in four levels — authored source, not proved execution, since
+    /// no <c>SetScript</c> attaches those scripts and no trace runs them:
+    /// <c>level521\hive.msl:339</c> and its 522 and
+    /// 530 twins pass the float literal 0.25 to an explicit
+    /// <c>THING_TYPE_BATTLE_ENGINE</c> receiver, while
+    /// <c>level500\Submarine.msl:83,87</c> and <c>level720\Prison.msl:37</c>
+    /// use the bare self-receiver form and pass, respectively, a
+    /// <c>GetHealth()</c>-derived quotient, the integer literal 100, and
+    /// <c>orig_health / 2</c>. The amount therefore shares units with
+    /// <c>GetHealth</c> and is not always float-typed in source, which is why
+    /// an integer argument is widened rather than rejected. Prison.msl then
+    /// polls <c>GetHealth()</c> until it falls to <c>orig_health / 2</c>, so
+    /// shipped content itself depends on the plain decrement that the measured
+    /// life bits <c>0x3BA3D70B - 0x447A0000 = 0xC479FFAE</c> confirm without a
+    /// clamp at zero. A decode of all 25 hash-pinned Level 100 objects finds no
+    /// shipped Level 100 program that issues native 69 at all, so reaching this
+    /// path is a property of the released VM rather than of released Level 100
+    /// content. Whether the compiler emits Integer or Float for a literal such
+    /// as <c>Damage(100)</c> is unmeasured; the source argument's identity,
+    /// positive-shield absorption, the bare self-receiver form's resolution,
+    /// death and cleanup ordering, and the natural weapon path remain open, and
+    /// no retained trace reaches a shipped call site.
+    /// </remarks>
+    internal Level100MissionDamageForward InvokeDamageNative(
+        int command,
+        Level100ActorId receiver,
+        IReadOnlyList<Level100ScriptValue> arguments)
+    {
+        if (command != 69)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(command),
+                command,
+                "Expected Mission native Damage.");
+        }
+
+        RequireArguments(command, arguments, 1);
+        Level100ScriptValue amount = arguments[0];
+
+        // Preserve the authored float32 payload exactly. Retail forwards the
+        // caller's value without conversion, so a Float argument must keep its
+        // shipped bits rather than round-trip through an arithmetic widening.
+        uint amountBits = amount.Type == Level100ScriptValueType.Float
+            ? unchecked((uint)amount.Scalar)
+            : unchecked((uint)BitConverter.SingleToInt32Bits(amount.AsFloat()));
+
+        return new Level100MissionDamageForward(
+            receiver,
+            amountBits,
+            ApplyShields: true,
+            MeshPartIndex: -1);
     }
 
     private void EmitCommand(

@@ -1,7 +1,7 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-08-14
+Last updated: 2026-08-15
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
 Current replay authority is Generation 29 via
@@ -389,6 +389,23 @@ The exact backup/readback/collateral results are recorded in the
 [75-row live-promotion report](binary-analysis/mission-script-registry-vocabulary-live-promotion-2026-08-13.md)
 and the separate
 [34-row new-function live-promotion report](binary-analysis/mission-script-registry-new-function-vocabulary-live-promotion-2026-08-13.md).
+
+**Mission `Damage` native, registry row 69 (2026-08-15):** the
+[`Damage` vertical contract](binary-analysis/functions/IScript.cpp.md) works one
+registry row all the way down. Row 69 sits at `0x0064CE20 + 69*0x40 =
+0x0064DF60` with handler `IScript__Damage @ 0x005348C0`. The wrapper owns no
+damage law: its single indirect call dispatches `vtable +0xA0`, and a pristine
+read of that slot gives `CBattleEngine::Damage @ 0x0040A890` for a
+battle-engine receiver and `CUnit__ApplyDamage @ 0x004F9A90` for the measured
+unit receiver, joining three existing contracts under one receiver-selection
+rule. A shipped-source census supplies the first evidence that shipped authored
+content calls this native at all — six authored call sites across levels 500,
+521, 522, 530, and 720, which is authored source rather than proved execution —
+while a decode of all 25 hash-pinned Level 100 objects shows Level 100 never
+issues it. This is a rebuild and evidence advance only:
+Generation 29 stays frozen, no Ghidra or executable byte changed, and the
+campaign still reports zero rebuild-ready contracts. No natural call has been
+observed at runtime, and no retained trace can reach one.
 
 **PC-native source coordinates (2026-08-12 predecessor; 2026-08-13
 successor):** the shipped PC executable passes `__FILE__` and `__LINE__` to its

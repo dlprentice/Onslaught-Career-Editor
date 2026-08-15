@@ -35,7 +35,7 @@ unverified against the new name until it is re-measured.
 
 ---
 
-## Functions (45 listed)
+## Functions (46 listed)
 
 | Address | Name | Purpose |
 |---------|------|---------|
@@ -59,6 +59,7 @@ unverified against the new name until it is re-measured.
 | 0x00533eb0 | IScript__Create4PointPanCamera | Create camera pan with 4 control points |
 | 0x005345d0 | IScript__Magnitude | Registry `Magnitude`; measured vector-length wrapper |
 | 0x005347b0 | IScript__IsNumberBetween | Registry `IsNumberBetween`; measured range check |
+| 0x005348c0 | IScript__Damage | Registry `Damage`; measured forwarder that hands its float argument to the runtime receiver's damage virtual (`vtable +0xa0`) with a non-null source, `applyShields=1`, and `meshPart=-1` |
 | 0x00534b80 | IScript__GetX | Registry `GetX`; measured vector-component wrapper |
 | 0x00534c10 | IScript__GetY | Registry `GetY`; measured vector-component wrapper |
 | 0x00534ca0 | IScript__GetZ | Registry `GetZ`; measured vector-component wrapper |
@@ -129,6 +130,115 @@ The rebuild already owns the same engine-neutral behavior in
 `Level100MissionTiming.PauseTicks` and the two compiled-script execution
 contexts. Its focused `TargetZone1` test retains the raw `0.5f` argument bits,
 proves no continuation through ticks 1–14, and proves resumption at tick 15.
+
+### `Damage` vertical contract
+
+Recorded 2026-08-15. The registry descriptor is row 69, which the shared base
+`0x0064CE20` and stride `0x40` place at `0x0064DF60` — the same address the
+independent registry table in [`ghidra-functions.md`](../../ghidra-functions.md)
+lists for shipped name `Damage` and handler `0x005348C0`. The saved Ghidra name
+is `IScript__Damage` over the body `0x005348C0`–`0x005348ED`, promoted as Tier-2
+registry vocabulary rather than an original C++ symbol.
+
+**The wrapper owns no damage law.** Its indirect call at `0x005348E3` dispatches
+through the *runtime* receiver's `vtable +0xA0`. On the forced Level 100 pilot
+the receiver's vtable `0x005E24DC` resolved that slot to `CUnit__ApplyDamage`
+at `0x004F9A90`, receiving the amount unchanged plus a non-null source,
+`applyShields = 1`, and `meshPart = -1`. This refuted the preregistered rival
+that the wrapper hardcodes `CBattleEngine::Damage` at `0x0040A890`; the two
+`Damage` entities remain distinct, and which law runs is a property of the
+receiver, not of this function.
+
+The measured life transition is a plain float32 subtract with **no clamp at
+zero**: `0x3BA3D70B - 0x447A0000 = 0xC479FFAE`
+(`0.005000000353902578 - 1000.0 = -999.9949951171875`), reproduced exactly in
+IEEE-754 single precision. Shields stayed `0.0 -> 0.0` at `applyShields = 1`, so
+that arm proves only that zero shields absorb nothing. Evidence:
+`local-lab/damage-chain-pilot-2026-08-02/runtime-contract.json` and its 7.25
+holdout (`0x40E80000`), campaign contract `C-8c445f1e27de9913`.
+
+**Shipped authored callers — six sites in four levels.** The pilot recorded that
+it established no natural issue path. The released `.msl` corpus does contain
+authored calls to this native, though never in Level 100. Read this as
+*authored source*, not as proved execution: no `SetScript("hive")` exists
+anywhere in the corpus, so these scripts are attached by level data rather than
+by a script call, and that attachment is not verified here. The level 521/522
+resource archives are compressed, so a raw scan for the object name is
+uninformative in both directions.
+
+| Site | Form | Amount |
+| --- | --- | --- |
+| `level500\Submarine.msl:83` | bare self-receiver | `health`, set to `GetHealth() / 6` |
+| `level500\Submarine.msl:87` | bare self-receiver | integer literal `100` |
+| `level521\hive.msl:339` | `other_thing.Damage(...)` | float literal `0.25` |
+| `level522\hive.msl:339` | `other_thing.Damage(...)` | float literal `0.25` |
+| `level530\hive.msl:292` | `other_thing.Damage(...)` | float literal `0.25` |
+| `level720\Prison.msl:37` | bare self-receiver | `orig_health / 2` |
+
+`level521\hive.msl` and `level522\hive.msl` are byte-identical
+(SHA-256 `0f636d9d0aff7fa21cbd8659267f105dee6b7bcd861ebd5d930d1d43cd45ebfa`,
+13,433 bytes); `level530\hive.msl` is
+`7d11ccf69a85419efbcea3181f224b0392c16e6b1dfff6035bccbb860e36e15b`,
+`level500\Submarine.msl` is
+`ebc6e7c50b0a345ba5305abd8f0a21265532a6efc9733469b88a6af606810051`, and
+`level720\Prison.msl` is
+`df4467e893bfca24cbefea8d93bcfa8de3fa45243b49ee605e2f65f9d3389c52`, all read
+from the pristine safe copy.
+
+Two facts follow from the authored content itself. The amount **shares units
+with `GetHealth`** — three of the six sites derive it from a `GetHealth()`
+return — and `Prison.msl` then polls `GetHealth()` in a `while` loop until it
+falls to `orig_health / 2`, so shipped content *depends* on the plain decrement
+that the measured bits confirm. The three hive sites are a contact handler
+gated by `allowed_to_damage` with `Pause(0.5)`, whose shipped comment reads
+"damage them every 0.5 secs", against an explicit
+`IsA(THING_TYPE_BATTLE_ENGINE)` receiver. Submarine.msl also brackets its call
+in `SetVulnerable(TRUE)` / `(FALSE)`, the same idiom the authored pilot used.
+
+**Both damage laws are the same vtable slot, read from the specimen.** Slot
+`+0xA0` is slot 40, and the pristine image resolves it for each receiver class
+directly:
+
+| Receiver vtable | File offset | Slot `+0xA0` target |
+| --- | --- | --- |
+| `CBattleEngine` `0x005D89C4` | `0x001D8A64` | `0x0040A890` `CBattleEngine::Damage` |
+| measured `CCannon` receiver `0x005E24DC` | `0x001E257C` | `0x004F9A90` `CUnit__ApplyDamage` |
+
+So the single indirect call at `0x005348E3` provably reaches the player damage
+law for a battle-engine receiver and the unit law for a unit receiver. The
+three hive sites gate on `IsA(THING_TYPE_BATTLE_ENGINE)` before calling, which
+makes them *authored* callers of `CBattleEngine::Damage @ 0x0040A890` — the same
+entity that already carries its own `C2_BOUNDED_RUNTIME` contract and rebuild
+owner. This is a static specimen read joining three existing contracts; it is
+neither a runtime observation of those calls nor proof that they execute.
+
+**Level 100 does not reach this native.** Decoding all 25 hash-pinned Level 100
+script objects yields 366 native calls across 40 distinct commands, and 69 is
+not among them. Reaching this path in Level 100 is therefore a property of the
+released VM, not of released Level 100 content. Two independent decoders — a
+scratch Python reader and the rebuild's own `Level100MissionProgram` parser —
+agree on both totals.
+
+The rebuild owns the forwarding half in
+`Level100ActorScriptRuntime.InvokeDamageNative`, which preserves the authored
+float32 bits exactly, widens an integer literal rather than rejecting it, emits
+a typed `Damage` command boundary, and mutates no actor state. Parity tests:
+`Level100MissionTests.MissionNativeDamage_ForwardsTheAuthoredFloat32AmountUnchanged`
+and `MissionNativeDamage_IsIssuedByNoShippedLevel100Program`. The receiving law
+stays with its existing owners — `Level100Destruction` for the `CUnit` arm,
+already pinned to `0xC479FFAE` by
+`Level100DestructionContactTests.ApplyDamageTraceVectorPreservesExactOverkillBits`,
+and `Level100PlayerDamage` for the battle-engine arm.
+
+Open: no natural hive/Submarine/Prison call has been observed at runtime, so
+the source argument's identity, whether the compiler emits Integer or Float for
+`Damage(100)`, positive-shield absorption, the bare self-receiver form's
+resolution, and death/cleanup ordering all remain unmeasured. The retained
+corpus cannot close these: its 66 level-opening traces stop before the player is
+ever under fire, so no retained run reaches the Hive contact. Cheapest
+falsifier: break on `0x005348C0` in a level 521 run that lands the player on the
+Hive boss and read `ECX`, the receiver vtable, and the resolved `+0xA0` target;
+anything other than `0x0040A890` would refute the specimen read above.
 
 ## Key Patterns
 
