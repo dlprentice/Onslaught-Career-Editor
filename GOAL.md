@@ -389,13 +389,28 @@ the mandate; the completion test and every clause above are unchanged.
 4. **Four HUD names describing the wrong subsystem** — targets 0, 3, 4, 5. The
    binary names none of them, so this needs a naming-convention decision before
    any promotion.
-5. **Observe one natural Mission `Damage` call.** Six shipped call sites are now
-   known and the receiver-selection rule is specimen-proved, but no retained
-   trace reaches any of them: the 66 level-opening traces stop before the player
-   is ever under fire. The cheapest falsifier is a level 521 run that lands the
-   player on the Hive boss with a break at `0x005348C0` reading `ECX`, the
-   receiver vtable, and the resolved `+0xA0` target. This would also settle
-   positive-shield absorption, which every current damage contract leaves open.
+5. **Mine the natural Mission `Damage` call that is already recorded.**
+   Re-querying all 66 level-opening coverage indexes shows `0x005348C0` **is**
+   covered — at `level720`, where `Prison.msl:37` calls
+   `Damage(orig_health / 2)` from an `init()`-posted handler after `Pause(3.0)`
+   with no player action. The same trace covers `CUnit__ApplyDamage`, so it
+   should corroborate the receiver-selection rule on a natural path.
+   `CBattleEngine::Damage` is separately covered at `level731`, `level732`, and
+   `level854`. Querying a retained trace needs no elevation and no gameplay:
+   run `tools/Invoke-TtdCallContextV2.ps1` against
+   `G:\bea-ttd\level-opening-3m-v1-level720` for entry arguments, `ECX`, the
+   receiver vtable, and the resolved `+0xA0` target.
+6. **Only then, the hive contact.** It stays open but is now the harder of two
+   natural paths rather than the only one.
+   [`tools/RUNBOOK-level521-native-capture.md`](tools/RUNBOOK-level521-native-capture.md)
+   already targets this native and names the act: fly the battle engine into
+   the Hive boss. The level-521 index proves `hive.msl` is attached and live
+   (its uniquely-authored `Teleport` executed) while leaving `0x005348C0`
+   uncovered, so the gap is the player collision, not attachment. Cost is the
+   blocker: TTD runs this game **~62× slow** (301 s recorded = 4.85 s of game
+   time). `tools/Test-Level521NativeCoverage.ps1` scores such a take, and
+   unattended recording needs `TTD.exe -installservice` once — the missing
+   `TTDService` is why every recording prompts today.
 
 Rank from current evidence; a reproduced contradiction outranks this list.
 

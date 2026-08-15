@@ -1169,8 +1169,11 @@ public sealed class Level100ActorScriptRuntime
     /// Two evidence layers stay separate. The virtual-dispatch and argument
     /// facts come from a forced Level 100 <c>Setup</c> program measured at
     /// amounts 1000.0 and 7.25. Shipped authored content calls this native at
-    /// six sites in four levels — authored source, not proved execution, since
-    /// no <c>SetScript</c> attaches those scripts and no trace runs them:
+    /// six sites in four levels. Those are authored call sites; the level-521
+    /// opening trace proves the owning <c>hive.msl</c> is attached and live
+    /// (its uniquely-authored <c>Teleport</c> executed) while this native and
+    /// both damage laws stayed uncovered, so the contact handler is reachable
+    /// but unfired at level start:
     /// <c>level521\hive.msl:339</c> and its 522 and
     /// 530 twins pass the float literal 0.25 to an explicit
     /// <c>THING_TYPE_BATTLE_ENGINE</c> receiver, while
@@ -1187,10 +1190,13 @@ public sealed class Level100ActorScriptRuntime
     /// shipped Level 100 program that issues native 69 at all, so reaching this
     /// path is a property of the released VM rather than of released Level 100
     /// content. Whether the compiler emits Integer or Float for a literal such
-    /// as <c>Damage(100)</c> is unmeasured; the source argument's identity,
-    /// positive-shield absorption, the bare self-receiver form's resolution,
-    /// death and cleanup ordering, and the natural weapon path remain open, and
-    /// no retained trace reaches a shipped call site.
+    /// as <c>Damage(100)</c> is unmeasured, as are the source argument's
+    /// identity, positive-shield absorption, death and cleanup ordering, and
+    /// the natural weapon path. A natural call <i>is</i> already recorded:
+    /// re-querying all 66 level-opening coverage indexes finds
+    /// <c>0x005348C0</c> covered at level 720, where <c>Prison.msl:37</c> fires
+    /// it with no player action, so those questions are answerable by mining an
+    /// existing trace rather than by a new capture.
     /// </remarks>
     internal Level100MissionDamageForward InvokeDamageNative(
         int command,

@@ -675,8 +675,10 @@ evidence advances back it — a decode of all 25 hash-pinned Level 100 objects
 showing **366 native calls across 40 commands with 69 absent**; a shipped-source
 census finding **six authored call sites in four levels** (`level500`,
 `level521`, `level522`, `level530`, `level720`), the first evidence that shipped
-authored content calls this native at all — authored source, not proved
-execution, since no `SetScript` attaches those scripts; and a pristine-specimen read
+authored content calls this native at all, one of which — `Prison.msl:37` in
+`level720` — is **already covered by a retained level-opening trace**, so a
+natural call can be mined without elevation, gameplay, or a new capture; and a
+pristine-specimen read
 proving the wrapper's `+0xA0` slot resolves to `CBattleEngine::Damage
 @ 0x0040A890` for a battle-engine receiver and `CUnit__ApplyDamage
 @ 0x004F9A90` for the measured unit receiver, joining three existing contracts.

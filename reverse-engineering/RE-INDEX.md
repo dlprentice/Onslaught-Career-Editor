@@ -400,9 +400,16 @@ battle-engine receiver and `CUnit__ApplyDamage @ 0x004F9A90` for the measured
 unit receiver, joining three existing contracts under one receiver-selection
 rule. A shipped-source census supplies the first evidence that shipped authored
 content calls this native at all — six authored call sites across levels 500,
-521, 522, 530, and 720, which is authored source rather than proved execution —
-while a decode of all 25 hash-pinned Level 100 objects shows Level 100 never
-issues it. This is a rebuild and evidence advance only:
+521, 522, 530, and 720 — while a decode of all 25 hash-pinned Level 100 objects
+shows Level 100 never issues it. Re-querying all 66 level-opening coverage
+indexes finds `0x005348C0` covered at **`level720`**, where `Prison.msl:37`
+fires it with no player action; `CUnit__ApplyDamage` is covered at 18 levels
+including 720, and `CBattleEngine::Damage` at `level731`, `level732`, and
+`level854`. So a natural call is already recorded and can be mined without
+elevation or gameplay. The level-521 index separately proves `hive.msl` is
+attached and live — its uniquely-authored `Teleport` executed — while leaving
+`0x005348C0` uncovered there, so that level's gap is the player collision, not
+script attachment. This is a rebuild and evidence advance only:
 Generation 29 stays frozen, no Ghidra or executable byte changed, and the
 campaign still reports zero rebuild-ready contracts. No natural call has been
 observed at runtime, and no retained trace can reach one.

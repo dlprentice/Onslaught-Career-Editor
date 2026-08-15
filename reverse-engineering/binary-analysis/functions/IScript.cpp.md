@@ -159,12 +159,7 @@ holdout (`0x40E80000`), campaign contract `C-8c445f1e27de9913`.
 
 **Shipped authored callers — six sites in four levels.** The pilot recorded that
 it established no natural issue path. The released `.msl` corpus does contain
-authored calls to this native, though never in Level 100. Read this as
-*authored source*, not as proved execution: no `SetScript("hive")` exists
-anywhere in the corpus, so these scripts are attached by level data rather than
-by a script call, and that attachment is not verified here. The level 521/522
-resource archives are compressed, so a raw scan for the object name is
-uninformative in both directions.
+authored calls to this native, though never in Level 100:
 
 | Site | Form | Amount |
 | --- | --- | --- |
@@ -184,6 +179,33 @@ uninformative in both directions.
 `level720\Prison.msl` is
 `df4467e893bfca24cbefea8d93bcfa8de3fa45243b49ee605e2f65f9d3389c52`, all read
 from the pristine safe copy.
+
+**The level 521 hive script is proved live, and this native is proved not to
+fire at level start.** Corrected 2026-08-15: an earlier draft of this section
+called attachment unverified because no `SetScript("hive")` exists anywhere in
+the corpus. The retained level-521 opening settles it. Reading the exec-coverage
+index
+`G:\bea-ttd\q-campaign-coverage-v1\level-opening-3m-v1-level521\coverage.jsonl`
+(7,077 executed ranges over the pristine module at base `0x400000`):
+
+| Handler | Covered in the 181 s opening |
+| --- | --- |
+| `IScript__Teleport` `0x005369B0` | **yes**, range `0x005369B0-0x005369E1` |
+| `IScript__Damage` `0x005348C0` | no |
+| `CUnit__ApplyDamage` `0x004F9A90` | no |
+| `CBattleEngine::Damage` `0x0040A890` | no |
+
+`Teleport` is authored in the whole of level 521 exactly once, at
+`hive.msl:57` — the only other occurrence, `:54`, is commented out — so its
+execution proves `hive.msl`'s `init()` ran and the boss object is live. The
+script is attached; it simply never activates at start. The same index shows
+this native and both damage laws absent, which is a measured negative rather
+than an absence of looking: the contact handler is gated behind
+`allowed_to_damage` and a player collision that the opening never performs.
+This matches
+[`tools/RUNBOOK-level521-native-capture.md`](../../../tools/RUNBOOK-level521-native-capture.md),
+which already targets `Damage` as one of the natives reachable only by flying
+the battle engine into the boss.
 
 Two facts follow from the authored content itself. The amount **shares units
 with `GetHealth`** — three of the six sites derive it from a `GetHealth()`
@@ -230,15 +252,52 @@ already pinned to `0xC479FFAE` by
 `Level100DestructionContactTests.ApplyDamageTraceVectorPreservesExactOverkillBits`,
 and `Level100PlayerDamage` for the battle-engine arm.
 
-Open: no natural hive/Submarine/Prison call has been observed at runtime, so
-the source argument's identity, whether the compiler emits Integer or Float for
-`Damage(100)`, positive-shield absorption, the bare self-receiver form's
-resolution, and death/cleanup ordering all remain unmeasured. The retained
-corpus cannot close these: its 66 level-opening traces stop before the player is
-ever under fire, so no retained run reaches the Hive contact. Cheapest
-falsifier: break on `0x005348C0` in a level 521 run that lands the player on the
-Hive boss and read `ECX`, the receiver vtable, and the resolved `+0xA0` target;
-anything other than `0x0040A890` would refute the specimen read above.
+**A natural call is already in the retained corpus — corrected 2026-08-15.** An
+earlier draft of this section claimed no retained trace reaches a shipped call
+site. That was wrong, and re-querying all 66 level-opening coverage indexes
+disproves it:
+
+| Handler | Levels covering it, of 66 |
+| --- | ---: |
+| `IScript__Damage` `0x005348C0` | **1** — `level720` |
+| `CUnit__ApplyDamage` `0x004F9A90` | 18 — incl. `level720` |
+| `CBattleEngine::Damage` `0x0040A890` | 3 — `level731`, `level732`, `level854` |
+
+Level 720 is exactly where `Prison.msl:37` sits, and that call needs **no player
+action**: `init()` runs `HalfDestroy(); Pause(3.0); PostEvent("Health Check")`,
+and the handler calls `Damage(orig_health / 2)` — well inside a 181 s opening.
+The same trace covers `CUnit__ApplyDamage`, which is what `+0xA0` should resolve
+to for a prison-building receiver, so this is a natural-path corroboration of
+the receiver-selection rule rather than a forced one. The trace is
+`G:\bea-ttd\level-opening-3m-v1-level720`, and querying a retained trace needs
+no elevation.
+
+The hive contact remains unobserved, but it is now the *harder* of two natural
+paths rather than the only one, and `Prison.msl` exercises the bare
+self-receiver form with a `GetHealth()`-derived amount.
+
+Open: the source argument's identity, whether the compiler emits Integer or
+Float for `Damage(100)`, positive-shield absorption, and death/cleanup ordering
+remain unmeasured.
+
+Next instrument, cheapest first:
+
+1. **Query the retained level 720 trace.** It already contains a natural call
+   and needs no elevation, no gameplay, and no new capture. Read the entry
+   arguments, `ECX`, the receiver vtable, and the resolved `+0xA0` target with
+   the existing `tools/Invoke-TtdCallContextV2.ps1`. This is the measurement
+   that should have been run before any of the wording above was written.
+2. **A battle-engine receiver.** Level 720's receiver is a prison building, so
+   it tests the `CUnit` arm. `level731`, `level732`, and `level854` cover
+   `CBattleEngine::Damage`, so check whether any of those reaches it *through*
+   `0x005348C0` before authoring anything.
+3. **The hive contact, only if 1 and 2 leave it open.** It is expensive for a
+   measured reason: TTD runs this game about **62× slow** — a 301 s recording
+   captured 97 simulation ticks, or 4.85 s of game time
+   (`local-lab/TTD-COMBAT-TRACES-2026-08-02.md`) — and reaching the contact
+   needs eight turrets, the research station, boss lift-off, then a collision.
+   `tools/Test-Level521NativeCoverage.ps1` already scores such a take, and
+   unattended recording would need `TTD.exe -installservice` once.
 
 ## Key Patterns
 
