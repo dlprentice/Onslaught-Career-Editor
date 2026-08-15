@@ -276,28 +276,65 @@ The hive contact remains unobserved, but it is now the *harder* of two natural
 paths rather than the only one, and `Prison.msl` exercises the bare
 self-receiver form with a `GetHealth()`-derived amount.
 
+**That natural call is now measured.** A 240 s replay of the level-720 trace
+returned two gap-free `CALL_ENTRY_RETURN` envelopes on one thread, with
+`expectations=pass`, `pairing=pass`, `collectorChecks=pass`,
+`replay_complete=true`, `truncated=false`, and zero orphan returns. Receipt:
+`local-lab/mission-damage-natural-level720-20260815-v1/take1-discovery/`,
+`call-context.jsonl` SHA-256
+`5cd0f26134fa3a2d5521334d9fc4d8a7923f872701170259a910dfc87992e4b0`.
+
+- **Caller.** `IScript__Damage` was entered from `0x0052EB54`, returning to
+  `0x0052EB56` — the Mission VM dispatcher, the same caller the forced pilot
+  recorded, now confirmed on a natural path.
+- **ABI.** The wrapper returns `C2 0C 00` = `ret 0xC`, the three-dword
+  script-command ABI. `CUnit__ApplyDamage` returns `C2 10 00` = `ret 0x10`.
+- **The forwarded tuple, natural.** At the `ApplyDamage` call the stack carried
+  `amount = 0x42F53D16` (**122.61930847167969**), `source = 0x082241C0`,
+  `applyShields = 1`, `meshPartIndex = -1` — exactly the pilot's four-argument
+  shape, on shipped content. `Prison.msl:37` authors `Damage(orig_health / 2)`,
+  implying `orig_health ≈ 245.2386`, which is consistent with a
+  `GetHealth()`-derived half.
+- **The wrapper's own indirect call is byte-confirmed.** Its 46-byte body ends
+  `… 6a ff … 6a 01 … d9 1c 24 · ff 97 a0 00 00 00 · 5f 5e c2 0c 00`: push `-1`,
+  push `1`, store the float argument, then `call dword ptr [edi+0xA0]` at
+  `0x005348E3`, whose next instruction is `0x005348E9` — and `0x005348E9`
+  appears on the observed `ApplyDamage` frame, tying the two envelopes together.
+
+**The `+0xA0` rule has a third arm, and it forwards.** This corrects the
+two-arm reading above. The level-720 receiver is a prison building, and its
+slot 40 resolves not to a damage law but to
+`CBuilding__VFunc_40_004179a0` (body `0x004179a0`-`0x00417a1e`), which passes
+the identical four arguments on to `CUnit__ApplyDamage` from `0x00417A16`. So
+`+0xA0` is a per-class virtual that some classes implement directly
+(`CCannon` → `CUnit__ApplyDamage`, `CBattleEngine` → `CBattleEngine::Damage`)
+and others implement as a forwarder. The nesting is real, not inferred: the
+inner envelope opens after the outer entry and closes before the outer return.
+
 Open: the source argument's identity, whether the compiler emits Integer or
 Float for `Damage(100)`, positive-shield absorption, and death/cleanup ordering
 remain unmeasured.
 
 Next instrument, cheapest first:
 
-1. **Query the retained level 720 trace.** It already contains a natural call
-   and needs no elevation, no gameplay, and no new capture. Read the entry
-   arguments, `ECX`, the receiver vtable, and the resolved `+0xA0` target with
-   the existing `tools/Invoke-TtdCallContextV2.ps1`. This is the measurement
-   that should have been run before any of the wording above was written.
-2. **A battle-engine receiver.** Level 720's receiver is a prison building, so
-   it tests the `CUnit` arm. `level731`, `level732`, and `level854` cover
-   `CBattleEngine::Damage`, so check whether any of those reaches it *through*
-   `0x005348C0` before authoring anything.
-3. **The hive contact, only if 1 and 2 leave it open.** It is expensive for a
-   measured reason: TTD runs this game about **62× slow** — a 301 s recording
-   captured 97 simulation ticks, or 4.85 s of game time
-   (`local-lab/TTD-COMBAT-TRACES-2026-08-02.md`) — and reaching the contact
-   needs eight turrets, the research station, boss lift-off, then a collision.
-   `tools/Test-Level521NativeCoverage.ps1` already scores such a take, and
-   unattended recording would need `TTD.exe -installservice` once.
+1. **A battle-engine receiver, still unobserved.** Level 720 exercised the
+   building arm. `level731`, `level732`, and `level854` cover
+   `CBattleEngine::Damage @ 0x0040A890`; query those three for whether it is
+   ever reached *through* `0x005348C0` rather than by weapon/collision code.
+   Same instrument, no elevation, no gameplay.
+2. **Read the source argument.** Level 720 passed `source = 0x082241C0`, which
+   equals the receiver pointer, so the natural self-damage case cannot separate
+   "source" from "self". A different receiver/source pair is needed.
+3. **The hive contact, only if 1 leaves the battle-engine arm open.** Expensive
+   for a measured reason: TTD runs this game about **62× slow** — a 301 s
+   recording captured 97 simulation ticks, or 4.85 s of game time
+   (`local-lab/TTD-COMBAT-TRACES-2026-08-02.md`) — and reaching it needs eight
+   turrets, the research station, boss lift-off, then a collision.
+   `tools/Test-Level521NativeCoverage.ps1` scores such a take. Note that
+   unattended recording has no one-time fix on this machine: `TTDService.exe`
+   is not present in the installed WinDbg package, so `TTD.exe -initialize` is
+   unavailable and every recording needs its own elevated token
+   (`SeDebugPrivilege`; measured non-elevated failure `0x80070005`).
 
 ## Key Patterns
 

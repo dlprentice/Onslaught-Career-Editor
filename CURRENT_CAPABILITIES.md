@@ -676,8 +676,13 @@ showing **366 native calls across 40 commands with 69 absent**; a shipped-source
 census finding **six authored call sites in four levels** (`level500`,
 `level521`, `level522`, `level530`, `level720`), the first evidence that shipped
 authored content calls this native at all, one of which — `Prison.msl:37` in
-`level720` — is **already covered by a retained level-opening trace**, so a
-natural call can be mined without elevation, gameplay, or a new capture; and a
+`level720` — is **covered by a retained level-opening trace and has now been
+measured**: a 240 s replay returned two gap-free `CALL_ENTRY_RETURN` envelopes
+showing the Mission VM dispatcher forwarding `amount = 122.61930847167969`,
+`source`, `applyShields = 1`, `meshPart = -1` on shipped content, with no
+elevation, gameplay, or new capture. That measurement also superseded a
+two-arm reading of the `+0xA0` rule: the prison receiver's slot 40 is
+`CBuilding__VFunc_40_004179a0`, a forwarder to `CUnit__ApplyDamage`. Also a
 pristine-specimen read
 proving the wrapper's `+0xA0` slot resolves to `CBattleEngine::Damage
 @ 0x0040A890` for a battle-engine receiver and `CUnit__ApplyDamage

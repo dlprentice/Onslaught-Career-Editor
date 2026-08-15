@@ -1156,9 +1156,14 @@ public sealed class Level100ActorScriptRuntime
     /// <c>CUnit__ApplyDamage</c> at <c>0x004F9A90</c>, which refuted the rival
     /// that the wrapper hardcodes <c>CBattleEngine::Damage</c> at
     /// <c>0x0040A890</c>. Reading that same slot out of the pristine image
-    /// confirms both arms of the selection: <c>CBattleEngine</c>'s vtable
+    /// confirms two arms of the selection: <c>CBattleEngine</c>'s vtable
     /// <c>0x005D89C4 + 0xA0</c> holds <c>0x0040A890</c> while the measured
-    /// receiver's <c>0x005E24DC + 0xA0</c> holds <c>0x004F9A90</c>. The wrapper
+    /// receiver's <c>0x005E24DC + 0xA0</c> holds <c>0x004F9A90</c>. A natural
+    /// level-720 call adds a third: a prison building's slot 40 is
+    /// <c>CBuilding__VFunc_40_004179a0</c>, which is not a damage law but a
+    /// forwarder passing the same four arguments to <c>CUnit__ApplyDamage</c>.
+    /// So <c>+0xA0</c> is a per-class virtual, implemented directly by some
+    /// classes and forwarded by others. The wrapper
     /// therefore selects no law of its own, so this emits a typed boundary
     /// instead of subtracting life here; the receiving laws stay with
     /// <c>Level100Destruction</c> and <c>Level100PlayerDamage</c>, which own and

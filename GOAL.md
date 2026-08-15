@@ -369,6 +369,18 @@ the mandate; the completion test and every clause above are unchanged.
   @ 0x004F9A90`, joining three existing contracts under one proven
   receiver-selection rule. Generation 29 stays frozen and the campaign still
   reports `CONTRACT_ONLY 1`; only the rebuild and evidence layers moved.
+- **A natural Mission `Damage` call is measured (2026-08-15).** Two earlier
+  claims in this entry were wrong and are corrected: a retained trace *does*
+  reach a shipped call site, and `hive.msl` *is* proved attached. Querying the
+  level-720 trace — no elevation, no gameplay, 240 s — returned two gap-free
+  `CALL_ENTRY_RETURN` envelopes. On shipped content the Mission VM dispatcher
+  at `0x0052EB54` enters the wrapper, which forwards
+  `amount = 122.61930847167969`, `source`, `applyShields = 1`,
+  `meshPart = -1` — the forced pilot's tuple, confirmed naturally. The
+  two-arm `+0xA0` reading is superseded: the prison receiver's slot 40 is
+  `CBuilding__VFunc_40_004179a0`, a **forwarder** to `CUnit__ApplyDamage`, so
+  `+0xA0` is a per-class virtual that some classes implement and others
+  forward. Receipt `call-context.jsonl` SHA-256 `5cd0f261…92e4b0`.
 
 **Active frontier, in priority order:**
 
@@ -389,17 +401,14 @@ the mandate; the completion test and every clause above are unchanged.
 4. **Four HUD names describing the wrong subsystem** — targets 0, 3, 4, 5. The
    binary names none of them, so this needs a naming-convention decision before
    any promotion.
-5. **Mine the natural Mission `Damage` call that is already recorded.**
-   Re-querying all 66 level-opening coverage indexes shows `0x005348C0` **is**
-   covered — at `level720`, where `Prison.msl:37` calls
-   `Damage(orig_health / 2)` from an `init()`-posted handler after `Pause(3.0)`
-   with no player action. The same trace covers `CUnit__ApplyDamage`, so it
-   should corroborate the receiver-selection rule on a natural path.
-   `CBattleEngine::Damage` is separately covered at `level731`, `level732`, and
-   `level854`. Querying a retained trace needs no elevation and no gameplay:
-   run `tools/Invoke-TtdCallContextV2.ps1` against
-   `G:\bea-ttd\level-opening-3m-v1-level720` for entry arguments, `ECX`, the
-   receiver vtable, and the resolved `+0xA0` target.
+5. **Reach the battle-engine arm of `Damage`.** The level-720 natural call is
+   now **measured** (see the closure above), which leaves one arm untested.
+   `CBattleEngine::Damage @ 0x0040A890` is covered at `level731`, `level732`,
+   and `level854`; query those three for whether it is reached *through*
+   `0x005348C0` rather than by weapon or collision code. Same instrument, no
+   elevation, no gameplay. Level 720 also passed `source` equal to the receiver
+   pointer, so a different receiver/source pair is still needed to separate
+   "source" from "self".
 6. **Only then, the hive contact.** It stays open but is now the harder of two
    natural paths rather than the only one.
    [`tools/RUNBOOK-level521-native-capture.md`](tools/RUNBOOK-level521-native-capture.md)
