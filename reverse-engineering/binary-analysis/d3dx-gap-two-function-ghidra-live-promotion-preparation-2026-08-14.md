@@ -2,8 +2,8 @@
 
 Date: 2026-08-14
 
-Status: reviewed current-state preparation; live and tracked Ghidra promotion
-remain forbidden until a separate authorized ceremony exists.
+Status: reviewed historical preparation; consumed by the completed
+[live promotion](d3dx-gap-two-function-ghidra-live-promotion-2026-08-14.md).
 
 Evidence: **MEASURED** — exact pristine bodies, the reviewed D3DX compatibility
 owner, two fresh dry/apply/readback replicas, four adverse controls with
@@ -18,8 +18,8 @@ projects, canonical inventory SHA-256
 with `db.18617.gbf` SHA-256
 `52cedb3555f418ea8000b0f8bb4c14cddc8c88954b3a5f3104e7600c487b52b0`.
 
-Verdict: **PREPARATION_READY_LIVE_FORBIDDEN.** The two exact loose-code bodies
-remain safe structural candidates on the current db.18617 geometry. Two fresh
+Verdict: **PREPARATION_READY_LIVE_FORBIDDEN.** At preparation time, the two
+exact loose-code bodies were safe structural candidates on db.18617 geometry. Two fresh
 disposable saves independently reach the same 8,329-function semantic state
 while preserving every field of all 8,327 PRE function rows. This preparation
 opened neither live nor tracked Ghidra and authorizes no mutation.
@@ -147,11 +147,12 @@ Not promoted here:
 - an original linker symbol or exact upstream D3DX version;
 - runtime reachability, dispatch choice, numerical corner-case parity, source
   equivalence, or rebuild behavior; or
-- a change to the current 8,327-function census or Generation 28 campaign.
+- a change to the then-current 8,327-function census or Generation 28 campaign.
 
 The compatibility-scoped identities remain owned by the separate
 [three-body current reconciliation](d3dx-gap-cohort-current-reconciliation-2026-08-14.md).
-A live promotion still requires a separately reviewed one-save ceremony with
-fresh PRE backup, live apply/readback, POST recovery, tracked refresh/restore,
-projection, and aggregate authority. This preparation is evidence for that
-decision, not permission to perform it.
+The later reviewed live promotion supplied the separately authorized one-save
+ceremony, fresh PRE backup, live apply/readback, POST recovery, tracked
+refresh/restore, projection, and aggregate authority. This preparation remains
+the immutable decision evidence; it did not itself authorize or perform that
+write.

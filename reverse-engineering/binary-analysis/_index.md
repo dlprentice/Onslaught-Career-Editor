@@ -41,9 +41,9 @@ the document it links.
   — promotes bounded Tier-2 names/comments/tags for the 34 newly admitted
   handlers while preserving all 8,136 non-target rows and every body/ABI byte
 - [Current `.text` body ownership and listing-state accounting](current-text-ownership-2026-08-13.md)
-  — replays all 8,327 saved functions / 8,457 ranges against pristine bytes,
-  closes the exact zero-overlap union at 1,811,443 / 1,929,117 = 93.900110776%,
-  and partitions the 117,674-byte gap without treating loose code/data as proved
+  — replays all 8,329 saved functions / 8,459 ranges against pristine bytes,
+  closes the exact zero-overlap union at 1,811,691 / 1,929,117 = 93.912966399%,
+  and partitions the 117,426-byte gap without treating loose code/data as proved
   functions or semantics
 - [Text-gap 31-function library classification](text-gap-library-function-classification-2026-08-13.md)
   — identifies the 31 now-admitted exact boundaries as 14
@@ -116,16 +116,20 @@ the document it links.
   the compatibility label is not an original linker or C++ symbol
 - [PC/Xbox D3DX three-body current reconciliation](d3dx-gap-cohort-current-reconciliation-2026-08-14.md)
   — reproduces three complete D3DX-compatible bodies across PC and Xbox,
-  settles one as already admitted, and leaves two exact 248-byte loose-code
-  boundaries outside the current 8,327-function census pending scratch review
+  settles one as already admitted, and historically identified two exact
+  248-byte loose-code boundaries later consumed by the db.18618 promotion
 - [D3DX two-function Ghidra scratch admission](d3dx-gap-two-function-ghidra-scratch-admission-2026-08-14.md)
   — admits the two remaining bodies on two isolated db.18613 copies, preserves
   all 8,280 PRE rows exactly, and keeps live and tracked Ghidra mutation
   forbidden
 - [D3DX two-function Ghidra live-promotion preparation](d3dx-gap-two-function-ghidra-live-promotion-preparation-2026-08-14.md)
   — re-grounds both boundaries on two disposable db.18617 replicas, preserves
-  all 8,327 PRE rows, pins six physical project trees, and remains
-  preparation-only with no live or tracked write
+  all 8,327 PRE rows, pins six physical project trees, and records the consumed
+  preparation-only state that itself authorized no live or tracked write
+- [D3DX two-function Ghidra live promotion](d3dx-gap-two-function-ghidra-live-promotion-2026-08-14.md)
+  — records the completed db.18618 promotion: two DEFAULT-source functions,
+  8,327 PRE rows unchanged, 8,329 functions / 8,459 ranges / 1,811,691 owned
+  `.text` bytes, one live save, and exact PRE/POST/tracked recovery
 - [D3DX9 exact-public current-name corrections](d3dx9-exact-public-name-corrections-2026-08-13.md)
   — refutes 16 saved hypothesis names through full-body equality at the same
   official public symbol across pinned x86 D3DX9 releases 24 through 31; three
@@ -324,7 +328,7 @@ the document it links.
 >
 > The tracked
 > [`ghidra-function-name-table-2026-08-13.tsv`](ghidra-function-name-table-2026-08-13.tsv)
-> is the current 8,327-row address-to-name projection and the mechanical
+> is the current 8,329-row address-to-name projection and the mechanical
 > checker's authority after the verified
 > [34-boundary promotion](mission-script-registry-boundary-live-promotion-2026-08-13.md)
 > and subsequent
@@ -335,7 +339,9 @@ the document it links.
 > the five-body repair, and the
 > [24-boundary JPEG/IJG promotion](jpeg-ijg-callback-ghidra-live-promotion-2026-08-14.md),
 > followed by the
-> [23-boundary CRT P0 promotion](crt-runtime-p0-ghidra-live-promotion-2026-08-14.md).
+> [23-boundary CRT P0 promotion](crt-runtime-p0-ghidra-live-promotion-2026-08-14.md),
+> the CRT EH parent repair, and the
+> [two-boundary D3DX promotion](d3dx-gap-two-function-ghidra-live-promotion-2026-08-14.md).
 > The 2026-08-12 and July tables remain dated artifacts for their original
 > checks and pinned receipts. The current count is a discovered census, not a
 > permanent ceiling.

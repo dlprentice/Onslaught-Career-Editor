@@ -126,4 +126,5 @@ its semantic carry is unchanged, and Generation 25 later re-grounded the
 `db.18614` geometry without rewriting the frozen Generation 24 reducer. The
 subsequent JPEG/IJG promotion then advanced the structural state to db.18615;
 the later CRT P0 promotion advanced it to db.18616, and the still-later CRT EH
-parent-range repair now owns current db.18617.
+parent-range repair advanced it to db.18617. The later D3DX two-function
+promotion now owns current db.18618.

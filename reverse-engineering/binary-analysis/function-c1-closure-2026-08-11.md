@@ -80,10 +80,11 @@ This projection is the sealed authority for its dated 8,136-row question. The
 separate
 [34-function static-contract addendum](mission-script-registry-new-function-static-contracts-2026-08-13.md)
 is the dated extension: together they answer yes for that 8,170-row state at
-the bounded-static level. The current 8,327-row structural census includes 31
+the bounded-static level. The current 8,329-row structural census includes 31
 later rows with separate provider-compatible classifications, 79 ungraded
-external-table rows, 24 ungraded JPEG/IJG structural rows, and 23 ungraded CRT
-P0 structural rows, with no silent grade projection. Neither rewrites the
+external-table rows, 24 ungraded JPEG/IJG structural rows, 23 ungraded CRT P0
+structural rows, and two ungraded D3DX rows, with no silent grade projection.
+Neither rewrites the
 immutable campaign replay, which
 remains the authority for its admitted runtime observations, residual history,
 and READY/reducer pins.

@@ -46,11 +46,13 @@ layouts, or behaviors are proven.
 > rows and advances exact saved-body ownership to 93.898814846%. The later CRT
 > EH parent-range repair keeps all 8,327 entries, preserves all 8,326 non-target
 > rows, joins one split parent body, and advances exact ownership to
-> 93.900110776%. The latest
+> 93.900110776%. The later D3DX promotion adds two exact DEFAULT-source
+> functions while preserving all 8,327 PRE rows, advancing the rolling census
+> to 8,329/db.18618 and exact ownership to 93.912966399%. The latest
 > project state is owned by
 > [`../ghidra/README.md`](../ghidra/README.md).
-> The current saved census and lower bound are 8,327, not a ceiling. The current
-> 8,327-row db.18617 projection and live-state
+> The current saved census and lower bound are 8,329, not a ceiling. The current
+> 8,329-row db.18618 projection and live-state
 > receipts are reconciled in
 > [`../../../ghidra-functions.md`](../ghidra-functions.md); the 6,411- and
 > 7,555-row states remain dated history only.

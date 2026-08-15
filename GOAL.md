@@ -176,16 +176,18 @@ was sealed. A later 34-row Mission-registry addendum bounds the resulting
 8,170-row state at C1 static and a separate metadata ceremony records only its
 Tier-2 registry vocabulary. Later ceremonies admitted 31 text-gap, 79
 external-table, 24 JPEG/IJG callback, and 23 CRT P0 runtime boundaries, so the
-current saved structural census is 8,327. The 31 have bounded provider-
-compatible classifications; the 79, JPEG/IJG 24, and CRT 23 remain default-
-metadata structural rows. All 201 post-Generation-23 rows are represented in
-frozen Generation 28 as OPAQUE.
+saved structural census reached 8,327. The later D3DX ceremony adds two more
+DEFAULT-source rows, so the rolling census is now 8,329. The 31 have bounded
+provider-compatible classifications; the 79, JPEG/IJG 24, CRT 23, and two
+D3DX rows remain default-metadata structural rows. Generation 28 represents
+the 201 then-current post-Generation-23 rows as OPAQUE; the two newer D3DX rows
+remain ungraded outside that frozen campaign.
 All remain outside the frozen static-grade projection. None of
 these counts is a final ceiling,
 semantic recovery, or reversal. The PC demo
 partition and the instruction-local Xbox source-line anchors are oracles, never
 denominators for retail completion. Generation 28 carries Generation 27's
-admitted campaign state onto current db.18617 geometry without changing a
+admitted campaign state onto its exact db.18617 geometry without changing a
 semantic grade and remains sparse.
 Live Ghidra structural navigation may lead the
 campaign without silently upgrading any semantic grade. Report the layer, the
@@ -308,13 +310,15 @@ the mandate; the completion test and every clause above are unchanged.
   tracked refresh, and restore probes. They advance the structural census to
   8,280 while preserving every 8,201 PRE row, but add no semantic grade,
   original linker identity, runtime contract, or rebuild mapping.
-- Current saved-body `.text` ownership is independently closed at 1,811,443 /
-  1,929,117 bytes = 93.900110776% across 8,327 functions / 8,457 exact ranges,
+- Current saved-body `.text` ownership is independently closed at 1,811,691 /
+  1,929,117 bytes = 93.912966399% across 8,329 functions / 8,459 exact ranges,
   with zero overlap. The five reviewed current-function jump fragments are now
   repaired existing bodies; the 24 reviewed JPEG/IJG callbacks are now exact
   default-metadata functions; and the 23 reviewed CRT P0 entries are now exact
   default-metadata functions. The later 25-byte CRT EH repair joins one split
-  existing parent without adding an entry. The remaining 117,674 bytes are listing-
+  existing parent without adding an entry. The subsequent D3DX promotion adds
+  two exact DEFAULT-source functions and removes 248 fully decoded bytes from
+  the gap. The remaining 117,426 bytes are listing-
   partitioned high-yield code/data/padding queues. This is structural
   accounting, not a final function census or semantic score.
 - The 75-row existing-entry MissionScript normalization passed its complete
@@ -350,8 +354,8 @@ the mandate; the completion test and every clause above are unchanged.
 **Active frontier, in priority order:**
 
 1. **Recover the highest-confidence callable units and body repairs in the
-   current 117,674-byte `.text` gap.** Re-ground the reviewed D3DX and remaining
-   code-shaped cohorts against current `db.18617` geometry, then use cross-build
+   current 117,426-byte `.text` gap.** Continue re-grounding the remaining
+   code-shaped cohorts against current `db.18618` geometry, then use cross-build
    shape, current listing state, incoming control flow, alignment, and library
    classification to prove exact boundaries; do not infer entries from linear
    decode alone.
@@ -459,6 +463,13 @@ Rank from current evidence; a reproduced contradiction outranks this list.
   the one changed structural lineage, and preserve all 72 scenarios. No
   semantic grade, runtime contract, executable, or rebuild owner changes.
   Generation 29 is the next valid parent.
+- **2026-08-14 — two D3DX-compatible boundaries promoted to db.18618.** A
+  separately backed one-save ceremony adds exact DEFAULT-source functions at
+  `0x00595FC9` and `0x00596028`, preserves every 8,327 PRE row, advances the
+  rolling census to 8,329 functions / 8,459 ranges, and raises saved-body
+  ownership by 248 bytes to 93.912966399%. Generation 28 remains frozen on its
+  prior db.18617 geometry; the two new rows await Generation 29 and receive no
+  semantic or runtime grade here.
 
 ---
 

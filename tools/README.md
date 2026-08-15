@@ -234,26 +234,38 @@ the retained recovery project, and authorizes no live or tracked mutation.
 
 `GhidraApplyD3dxGapBoundariesV2.java` and
 `ghidra_d3dx_gap_boundary_current_preparation_authority.py` re-ground that exact
-two-function shape against current db.18617 without opening live Ghidra. The
+two-function shape against then-current db.18617 without opening live Ghidra. The
 preparation authority rejoins all 8,327 PRE rows against two independent
 8,329-function readbacks, pins the two positive and four control project trees,
-rehashes the now-historical scratch tree, and stays `PREPARATION_ONLY`. The old
+rehashes the now-historical scratch tree, and records the consumed
+`PREPARATION_ONLY` state. The old
 scratch verifier intentionally self-expires against later tracked Ghidra state;
-the current replicas, not an overridden historical current-root assertion, own
+the preparation replicas, not an overridden historical current-root assertion, own
 the db.18617 proof.
+
+`ghidra_d3dx_gap_boundary_live_authority.py` verifies the completed one-save
+live ceremony without mutating Ghidra. It binds the exact PRE and db.18618 POST
+project trees, all nine run directories, the tracked-still-PRE phase, retained
+PRE/POST/tracked restore probes, exact 8,327-to-8,329 function join, unchanged
+instruction/reference counts, rolling-database rotation, current name
+projection, and 1,811,691-byte body union. Its create-new aggregate receipt is
+portable; repeated `verify` runs are read-only.
 
 ```powershell
 python -I -B tools\ghidra_d3dx_gap_boundary_mutator_tests.py
 python -I -B tools\ghidra_d3dx_gap_boundary_scratch_authority_tests.py
 python -I -B tools\ghidra_d3dx_gap_boundary_current_preparation_authority_tests.py
+python -I -B tools\ghidra_d3dx_gap_boundary_live_authority_tests.py
 ```
 
 See the
 [scratch report](../reverse-engineering/binary-analysis/d3dx-gap-two-function-ghidra-scratch-admission-2026-08-14.md)
 and its
 [two-row manifest](../reverse-engineering/binary-analysis/d3dx-gap-two-function-scratch-manifest-2026-08-14.tsv),
-plus the current
-[db.18617 preparation report](../reverse-engineering/binary-analysis/d3dx-gap-two-function-ghidra-live-promotion-preparation-2026-08-14.md).
+plus the historical
+[db.18617 preparation report](../reverse-engineering/binary-analysis/d3dx-gap-two-function-ghidra-live-promotion-preparation-2026-08-14.md)
+and completed
+[db.18618 live-promotion report](../reverse-engineering/binary-analysis/d3dx-gap-two-function-ghidra-live-promotion-2026-08-14.md).
 
 `GhidraApplyCrtP0Boundaries.java` is the structural-only runner for the 23 P0
 boundaries from corrected CRT22 run-c. It pins the exact 8,280-function /

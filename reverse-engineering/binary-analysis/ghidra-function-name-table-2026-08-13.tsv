@@ -3,10 +3,10 @@
 #           It is a name index, not a database, disassembly, or semantic proof.
 # Projection date: 2026-08-14
 # Specimen SHA-256: 74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750
-# Source  : local-lab/ghidra-crt-eh-parent-range-live-promotion-db18616-20260814-v1/runs/live-readback/functions.tsv
-# Source bytes: 7192981
-# Source SHA-256: 08886e03b846668681301f0f2ec2ba9ac1af0463faa1835c57abe9e717ebd866
-# Rows    : 8327 internal functions; this is a discovered census, not a final ceiling.
+# Source  : d3dx-gap-two-db18617-post
+# Source bytes: 7194298
+# Source SHA-256: 7b343b3578a01562daca02ec431586cf39e042d0daab9d6aa9448b779f880ef0
+# Rows    : 8329 internal functions; this is a discovered census, not a final ceiling.
 # Columns : address, name, bodyMin, bodyMax (hex). Non-contiguous bodies are
 #           represented by their bounding range, so bodyMin..bodyMax can over-cover.
 address	name	bodyMin	bodyMax
@@ -6653,6 +6653,8 @@ address	name	bodyMin	bodyMax
 0x00595c10	CTexture__SetDefaultJpegCompressColorSpace	0x00595c10	0x00595d72
 0x00595da0	CTexture__InitializeJpegCompressionDefaults	0x00595da0	0x00595e99
 0x00595ea0	FUN_00595ea0	0x00595ea0	0x00595f08
+0x00595fc9	FUN_00595fc9	0x00595fc9	0x00596027
+0x00596028	FUN_00596028	0x00596028	0x005960c0
 0x005960c1	CDXTexture__FastReciprocalSqrtScalar	0x005960c1	0x00596105
 0x00596106	CDXTexture__NormalizeVec3Fast	0x00596106	0x005961cf
 0x005961d0	CDXTexture__MultiplyMatrix4x4_InPlaceSafe	0x005961d0	0x005962b2

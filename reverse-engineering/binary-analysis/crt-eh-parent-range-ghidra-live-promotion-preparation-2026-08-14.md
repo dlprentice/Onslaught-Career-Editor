@@ -177,5 +177,5 @@ This historical preparation changed no Ghidra file, campaign generation, functio
 grade, name, ABI, runtime claim, or rebuild behavior. It proves that the exact
 25-byte structural correction is ready for an independently audited,
 recoverable ceremony. That ceremony and its separate readback are now complete;
-current ownership is 1,811,443 bytes at 93.900110776%. This document remains
+then-current ownership was 1,811,443 bytes at 93.900110776%. This document remains
 the no-write preparation record.

@@ -6,7 +6,9 @@ Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
 Current replay authority is Generation 28 via
 `developer_state.json` → `current_re_authority`; Generation 73 is a projection
-oracle only, and the Generation-10 block below is historical.
+oracle only, and the Generation-10 block below is historical. The rolling
+structural Ghidra snapshot is newer at 8,329 functions / db.18618; its two
+D3DX rows remain ungraded outside the frozen Generation 28 campaign.
 
 This directory preserves evidence that materially supports the toolkit,
 rebuild, modding work, or contributor understanding. Git history holds completed
@@ -311,13 +313,20 @@ ownership rises by 25 bytes to 1,811,443, and all 8,326 non-target rows remain
 exact. Generation 28 now re-grounds that repair on db.18617 while leaving frozen
 Generation 27 unchanged as history.
 
-The new read-only
+The now-consumed read-only
 [D3DX two-function live-promotion preparation](binary-analysis/d3dx-gap-two-function-ghidra-live-promotion-preparation-2026-08-14.md)
 re-grounds two complete loose-code bodies on exact 8,327-function db.18617
 geometry. Two disposable saves independently reach 8,329 functions / 8,459
 ranges / 1,811,691 owned `.text` bytes while preserving all PRE function rows.
-It pins all six physical positive/control projects, remains `PREPARATION_ONLY`,
-and performed no live or tracked Ghidra write.
+It pins all six physical positive/control projects and records the
+`PREPARATION_ONLY` state that itself performed no live or tracked Ghidra write.
+The completed
+[D3DX two-function live promotion](binary-analysis/d3dx-gap-two-function-ghidra-live-promotion-2026-08-14.md)
+now owns db.18618: two DEFAULT-source functions advance the rolling structural
+census to 8,329 and exact ranges to 8,459, ownership rises by 248 bytes to
+1,811,691, and every 8,327 PRE row stays exact. Generation 28 remains frozen on
+the immediately prior db.18617 geometry; the two new rows await Generation 29
+and are not silently graded here.
 
 The separate historical sealed
 [five-existing-function body-fragment scratch admission](binary-analysis/pc-function-body-fragment-ghidra-scratch-admission-2026-08-14.md)
@@ -680,9 +689,9 @@ different failure modes and only the first was being tested.)*
   with **0 byte mismatches**, 6,351 of 6,411 functions fully clean — but only
   **79.8268 % of `.text` was covered by those 6,411 historical bodies**.
   [Current `.text` body ownership](binary-analysis/current-text-ownership-2026-08-13.md)
-  now supersedes that metric for present use: all 8,327 saved functions and
-  8,457 exact ranges own 1,811,443 / 1,929,117 bytes = 93.900110776%, with
-  zero overlap. The 117,674-byte gap is separately partitioned by current
+  now supersedes that metric for present use: all 8,329 saved functions and
+  8,459 exact ranges own 1,811,691 / 1,929,117 bytes = 93.912966399%, with
+  zero overlap. The 117,426-byte gap is separately partitioned by current
   listing state and discovery evidence; this remains structural body ownership,
   not semantic reversal. The historical 6,411-row result remains reproducible
   in under a minute with `tools/re_verify.py`.
@@ -885,8 +894,9 @@ Machine-readable siblings, for consumers that should not be parsing prose:
   — a **candidate**, as its own filename says; not an accepted contract.
 - [Retail specimen manifest](binary-analysis/retail-specimen-manifest-2026-03-14.json)
 - [2026-08-13 function name table](binary-analysis/ghidra-function-name-table-2026-08-13.tsv)
-  — the current 8,327-row address-to-name authority, regenerated from the
-  2026-08-14 CRT P0 readback while retaining the stable path.
+  — the current 8,329-row address-to-name authority, regenerated from the
+  2026-08-14 D3DX two-function db.18618 readback while retaining the stable
+  path.
 - [2026-08-12 function name table](binary-analysis/ghidra-function-name-table-2026-08-12.tsv)
   — frozen 8,136-row provenance retained for Generations 20–23 and its other
   pinned consumers.

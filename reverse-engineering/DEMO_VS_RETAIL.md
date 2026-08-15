@@ -18,9 +18,11 @@ and metadata are absent from the demo. All 8,135 retail functions with a demo
 counterpart are mapped; zero rows in that population remain address-unresolved.
 The 34 functions admitted to Ghidra on 2026-08-13, 31 text-gap functions, 79
 external-table functions, 24 JPEG/IJG callback functions, and 23 CRT P0
-functions admitted on 2026-08-14 are outside this frozen map. The 79, 24, and
-23 have separate bounded demo correlations; integration into the frozen whole-
-population map remains open. The current structural census is 8,327.
+functions admitted on 2026-08-14 are outside this frozen map. Two later D3DX
+functions are outside it as well. The 79, 24, and 23 have separate bounded demo
+correlations; the D3DX pair instead has separate PC/Xbox compatibility evidence.
+Integration into the frozen whole-population demo map remains open. The current
+structural census is 8,329.
 Specimen: pristine PC retail `BEA.exe`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`;
 PC demo `BEA.exe`, SHA-256
