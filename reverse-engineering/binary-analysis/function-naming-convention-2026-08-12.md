@@ -70,6 +70,17 @@ better move is to leave the refutation recorded in
 reading establishes what each actually renders. Deciding the convention does not
 oblige using it.
 
+**Update 2026-08-14 — the demotion half executed.** The four refuted or
+suspect descriptive names were demoted in one backed-up live ceremony
+(`db.18619`) to neutral Tier-3 placeholders `CHud__RoutePanel_T0_00483530`,
+`CHud__RoutePanel_T3_004858d0`, `CHud__RoutePanel_T4_00485d50`, and
+`CHud__RoutePanel_T5_00486940`, each carrying a measured-fact comment, the
+refutation verdict, and the evidence pointer — because a known-false label is
+worse than a neutral one, while an invented replacement label repeats the
+original mistake. Replacement descriptive naming still waits for a body-reading
+or draw-route measurement. See
+[`hud-route-name-demotion-live-promotion-2026-08-14.md`](hud-route-name-demotion-live-promotion-2026-08-14.md).
+
 ## What this does not authorise
 
 No Ghidra mutation. Promotion of any name above still requires the full gate in

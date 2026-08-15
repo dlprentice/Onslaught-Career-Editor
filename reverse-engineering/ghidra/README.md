@@ -4,28 +4,31 @@
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; local working copies and historical backups remain untracked.
 
-- Snapshot date: 2026-08-14
+- Snapshot date: 2026-08-14 (second refresh: HUD route name demotion)
 - Ghidra lineage used for the latest review: 12.1.2
 - Imported Steam specimen SHA-256:
   `74154BFAE14DDC8ECB87A0766F5BC381C7B7F1AB334ED7A753040EDA1E1E7750`
 - Imported specimen MD5: `3b456964020070efe696d2cc09464a55`
 - Project payload: 19 files, 187,009,925 bytes
-- Canonical `sha256<TAB>bytes<TAB>path` inventory SHA-256:
-  `c6cb2a228f110a8c7949d8f337a41fc4f060fb33b959bc11868e5cb315e1df7a`
-- Current rolling database `db.18618.gbf`: 68,354,048 bytes, SHA-256
-  `189bc6c738dadcc1796228c6e8c4efbd66acad617098ac5dd19045ac57e50c78`
+- Canonical project inventory (sha256<TAB>bytes<TAB>relative-posix-path<LF>,
+  sorted by rendered line) SHA-256:
+  `f43e3d4f9287eca3e09925195f3d71519369e4727d959c58afe821df489c9f3f`
+- Current rolling database `db.18619.gbf`: 68,354,048 bytes, SHA-256
+  `dd809b9545a902639c54df39037021649af436ed1ec602c6134d07afa2193ca0`
+  (stable prior `db.18618.gbf` retained)
 
 **Promotion note:** this snapshot was refreshed from the source-stable live
-maintainer project after the two exact D3DX-compatible loose-code bodies passed
-sealed scratch and current-geometry replicas, rollback and containment
-controls, one live apply, separate-process full-inventory readback,
-tracked-still-PRE proof, and PRE/POST/tracked restore probes. Internal functions
-advance from 8,327 to 8,329; exact body ranges advance from 8,457 to 8,459 and
-owned `.text` grows by 248 bytes to 1,811,691. All 8,327 PRE function rows
-remain field-identical; only DEFAULT-source functions `FUN_00595fc9` and
-`FUN_00596028` are added. No semantic name, signature, parameter, ABI/storage
-field, comment, tag, defined-data unit, stored non-function symbol, program
-byte, instruction, or reference changed. See the
+maintainer project after the four HUD route descriptive-name demotions
+(`0x00483530`, `0x004858d0`, `0x00485d50`, `0x00486940` → neutral
+`CHud__RoutePanel_T*_<address>` Tier-3 labels) passed sealed scratch and
+current-geometry replicas, rollback and containment controls, one live apply,
+separate-process full-inventory readback, tracked-still-PRE proof, and
+PRE/POST/tracked restore probes. Internal functions remain 8,329; only the
+four rows' names, displayed signatures, comments, and tags changed, and at
+program scope only `commentsSha256`. No boundary, instruction, program byte,
+data unit, reference, or non-target function row moved. See the
+[`HUD route name demotion report`](../binary-analysis/hud-route-name-demotion-live-promotion-2026-08-14.md)
+and the preceding
 [`D3DX two-function live-promotion report`](../binary-analysis/d3dx-gap-two-function-ghidra-live-promotion-2026-08-14.md),
 the preceding
 [`CRT EH parent-range live-promotion report`](../binary-analysis/crt-eh-parent-range-ghidra-live-promotion-2026-08-14.md),
@@ -50,20 +53,22 @@ and the structural
 [`boundary live-promotion report`](../binary-analysis/mission-script-registry-boundary-live-promotion-2026-08-13.md).
 
 The 19-file tree is byte-identical to the independently restored/read-only-
-opened D: POST recovery made on 2026-08-14. Future live work can make
+opened D: POST recovery made on 2026-08-14 (HUD route demotion POST backup).
+Future live work can make
 the snapshot lag again; each refresh remains a separately authorized promotion.
 The current ignored live readback and tracked-restore receipts are respectively
-`local-lab/ghidra-d3dx-gap-two-boundary-live-promotion-db18617-20260814-v1/runs/live-readback/boundaries.ready.json`
-(1,213 bytes, SHA-256 `03136bcb6cee83d06f027c0f309dd4a568ccdbaa5357a859a93ff2a74edcfc54`)
+`local-lab/ghidra-hud-route-demotion-20260814-v1/runs/live-readback/targets.ready.json`
+(1,878 bytes, SHA-256 `c5da3f2136c430bb932c1f35b4c1c1e07d01fc12ab928cf6c370b8f2f509f163`)
 and
-`local-lab/ghidra-d3dx-gap-two-boundary-live-promotion-db18617-20260814-v1/tracked-post-restore.ready.json`
-(5,955 bytes, SHA-256 `37400a0daaa2d7d05abf58628cdd9b956f38b55a2c390cfc78affab01612b536`).
+`local-lab/ghidra-hud-route-demotion-20260814-v1/tracked-snapshot-restore.ready.json`
+(5,897 bytes, SHA-256
+`72d427018989894fbfca07136c919751481f17c9aecc704f0c690655e918b3a8`).
 The read-only aggregate authority is
-`local-lab/ghidra-d3dx-gap-two-boundary-live-authority-20260814-v1/live-promotion.ready.json`
-(21,564 bytes, SHA-256
-`b68c593c0266e197011e0a841db5a7510aa8eb35a10b976b97a6198a5cd1831a`).
+`local-lab/ghidra-hud-route-demotion-live-authority-20260814-v1/live-promotion.ready.json`
+(4,738 bytes, SHA-256
+`42c8383f807bc2d645fe592dc88fd0f4c4b2386653a390ff973986189703b17b`).
 Its portable verifier is
-[`tools/ghidra_d3dx_gap_boundary_live_authority.py`](../../tools/ghidra_d3dx_gap_boundary_live_authority.py).
+[`tools/ghidra_hud_route_demotion_live_authority.py`](../../tools/ghidra_hud_route_demotion_live_authority.py).
 
 Related (not this folder):
 
@@ -100,7 +105,7 @@ the user overrides them:
 | Headless entry | `...\support\analyzeHeadless.bat` |
 | Prior install archive | `D:\GhidraArchives\` (12.0.3 retained there; do not delete) |
 | Working/maintainer project | `C:\Users\david\Ghidra\Projects` (`BEA.gpr` / `BEA.rep`) |
-| Verified off-volume recovery | `D:\BEA-Ghidra-Backups\2026-08-14-d3dx-gap-two-post-live\` (exact current POST snapshot; independently copied and read-only reopened) |
+| Verified off-volume recovery | `D:\BEA-Ghidra-Backups\2026-08-14-hud-route-demotion-post-live` (exact current POST snapshot; independently copied and read-only reopened) |
 | Xbox Issue-11 POST recovery | `D:\BEA-Ghidra-Backups\2026-08-12-xbox-sparse-symbol-post-anchors-issue11\` (exact isolated project; restored semantic readback passed) |
 | Xbox US-retail POST recovery | `D:\BEA-Ghidra-Backups\2026-08-12-xbox-sparse-symbol-post-anchors-us-retail\` (exact isolated project; restored semantic readback passed) |
 | User settings | `%APPDATA%\ghidra\ghidra_12.1.2_PUBLIC` |
