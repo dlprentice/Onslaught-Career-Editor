@@ -414,6 +414,30 @@ Generation 29 stays frozen, no Ghidra or executable byte changed, and the
 campaign still reports zero rebuild-ready contracts. No natural call has been
 observed at runtime, and no retained trace can reach one.
 
+**Mission-native corpus coverage census (2026-08-15):** the
+[144-native census](binary-analysis/mission-native-corpus-coverage-2026-08-15.tsv)
+crosses every registry handler against two independent axes — executed anywhere
+in the 66 retained level-opening traces, and authored anywhere in the 733
+shipped `.msl` files. It answers "can this question be settled from evidence we
+already hold?" without a new capture:
+
+| Disposition | Count | Meaning |
+| --- | ---: | --- |
+| `OBSERVED` | 59 | executed and authored — mineable now by trace query |
+| `OBSERVED_UNAUTHORED` | 1 | executed but no shipped `.msl` call site |
+| `AUTHORED_UNOBSERVED` | 51 | shipped content calls it; no retained trace ran it |
+| `DORMANT_CANDIDATE` | 33 | never executed and never authored anywhere |
+
+The 51 independently reproduce the count in
+[`tools/RUNBOOK-level521-native-capture.md`](../tools/RUNBOOK-level521-native-capture.md),
+which was derived by a different route. The 33 dormant candidates —
+`SetWindVector`, `SetRainDensity`, `SetLightningDensity`, `ToggleCockpit`,
+`SwitchMessagesOn`/`Off`, `Goto4PointPanCamera`, `GotoPlayerCamera`,
+`MPDeclareGameDrawn`, `IsOverWater`, the three `GetWeapon*` readers, and others
+— are registered, implemented, and never used by shipped content, which is
+patch and mod surface rather than a gap. Coverage means the handler entry was
+executed, not that its contract is known.
+
 **PC-native source coordinates (2026-08-12 predecessor; 2026-08-13
 successor):** the shipped PC executable passes `__FILE__` and `__LINE__` to its
 debug allocator, so the image names its own authored source paths. The
