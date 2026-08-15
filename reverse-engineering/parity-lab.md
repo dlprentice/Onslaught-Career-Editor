@@ -6,7 +6,7 @@ capture bundles, calibrated Stuart/BSim matching, an authored Mission logger,
 and verified campaign ratchets are implemented; corpus-wide semantic joins,
 repeated action campaigns, and rebuild-ready semantic promotion remain open
 
-Last updated: 2026-08-14 (Gen28 authority; Gen10/Gen73 remain non-current)
+Last updated: 2026-08-14 (Gen29 authority; Gen10/Gen73 remain non-current)
 
 Verdict: Battle Engine Aquila no longer needs to be approached as 8,124 isolated
 decompiler functions plus an unbounded dark tail. A specimen-bound pipeline can
@@ -52,11 +52,11 @@ not establish its Steam depot identity.
 ## Current complete-RE replay authority (2026-08-14) — read first
 
 Current authority is **not** the Gen10 block below or candidate Gen73. Re-read
-`developer_state.json` → `current_re_authority`. Canonical Gen28 has
-functions=**8,327**, C1=**217**, C2=**10**, function semantic
-OPAQUE=**8,100**, contract C0_OPAQUE=**14,209**, OPEN residual=**152**
+`developer_state.json` → `current_re_authority`. Canonical Gen29 has
+functions=**8,329**, C1=**217**, C2=**10**, function semantic
+OPAQUE=**8,102**, contract C0_OPAQUE=**14,211**, OPEN residual=**153**
 (all dark; none executed), complete_RE=**false**, and REBUILD_READY=**0**.
-Its READY is `dbfe4430…5712`; frozen reducer `8b86f5b5…2587`. Generation 73 is a
+Its READY is `fe61f696…c9ac9`; frozen reducer `8b86f5b5…2587`. Generation 73 is a
 projection oracle only. Gen20 bounds ten retained `CExplosion` carrier calls;
 Gen21 bounds strict-`CRound` slot-66 call/return placement; Gen22 bounds
 strict-`CRound` slot-0 arm routing; Gen23 adds exact receiver-write pairs for
@@ -72,10 +72,13 @@ moves. Generation 27 re-grounds the 23 CRT P0 structural functions on
 semantic grade moves. Generation 28 then re-grounds the 25-byte CRT EH parent
 repair on exact db.18617, accounts for all **26,845/26,845** eligible carry rows,
 retires one changed lineage, and preserves all 72 scenarios. No semantic grade
+moves. Generation 29 then re-grounds the two D3DX-compatible functions on exact
+db.18618, accounts for all **26,841/26,841** eligible carry rows, retires one
+changed lineage, and carries both additions as OPAQUE/DARK. No semantic grade
 moves.
 External effects, event 4002, field meanings, broader populations, source
 spelling, and direct rebuild parity remain open. The next valid campaign
-generation is 29. The separate 8,136-row static-envelope closure, 34-row
+generation is 30. The separate 8,136-row static-envelope closure, 34-row
 MissionScript addendum, 31 text-gap classifications, and 79 ungraded external-
 table rows remain distinct static evidence. C1 is not C2 runtime proof or
 parity, and bounded C2 is not rebuild-ready.
@@ -252,9 +255,9 @@ The current layers must remain separate:
 | MSVC exception/unwind funclets in saved Ghidra | 1,179 | Compiler machinery; not gameplay-semantic closure |
 | Literal `FUN_<address>` names in saved Ghidra | 1,036 | The separate 34-row new-function vocabulary ceremony replaced those defaults; the 31 text-gap, 79 external-table, 24 JPEG/IJG, 23 CRT P0, and two D3DX structural rows retain default names except the CRT thunk that displays its target's saved name |
 | Static-envelope accounting | 8,170 rows: 8,163 C1 + 7 C2 | Dated 8,136-row table plus reviewed 34-row addendum; excludes the 31 text-gap, 79 external-table, 24 JPEG/IJG, 23 CRT P0, and two D3DX rows |
-| Canonical campaign | 8,327 rows: 217 C1 + 10 C2 + 8,100 OPAQUE | Frozen Gen28 db.18617 authority; 26,845/26,845 eligible carry rows accounted for |
-| Canonical residual ledger | 6,109 rows: 152 open dark + 861 terminal bounded ambiguity + 30 terminal data + 5,066 terminal padding | The 152 open rows describe sealed Generation-28 geometry, not semantic regression |
-| Canonical rebuild states | 14,427 NOT_READY + 8 PARTIAL_CONTRACT + 1 CONTRACT_ONLY + 0 REBUILD_READY | Contract mapping state, not implementation parity |
+| Canonical campaign | 8,329 rows: 217 C1 + 10 C2 + 8,102 OPAQUE | Frozen Gen29 db.18618 authority; 26,841/26,841 eligible carry rows accounted for |
+| Canonical residual ledger | 6,109 rows: 153 open dark + 860 terminal bounded ambiguity + 30 terminal data + 5,066 terminal padding | The 153 open rows describe sealed Generation-29 geometry, not semantic regression |
+| Canonical rebuild states | 14,429 NOT_READY + 8 PARTIAL_CONTRACT + 1 CONTRACT_ONLY + 0 REBUILD_READY | Contract mapping state, not implementation parity |
 | Mission native registry | 144 unique names / 144 unique handlers | Finite shipped registry |
 | Registry handlers already modeled in Ghidra | 144 | 110 pre-existing plus 34 separately promoted callable entries |
 | Registry handlers awaiting Ghidra boundary creation | 0 | Tier-2 registry names are complete; signatures and runtime semantics remain separate gates |
@@ -2673,21 +2676,23 @@ Strong:
 
 Open or concerning:
 
-- 1,034 saved entries retain literal default names, while Gen28 has 8,100
+- 1,036 saved entries retain literal default names, while Gen29 has 8,102
   semantically OPAQUE rows;
 - the 34 new Mission boundaries now have a separate bounded static-contract
-  addendum; Gen28 includes them structurally as OPAQUE rather than importing the
+  addendum; Gen29 includes them structurally as OPAQUE rather than importing the
   separate static grade;
 - the 31 newer text-gap boundaries have provider-compatible static
-  classifications but remain outside the frozen grade projection; Gen28 includes
+  classifications but remain outside the frozen grade projection; Gen29 includes
   them structurally as OPAQUE;
 - the 79 external-table boundaries remain default-metadata structural rows
-  outside the frozen grade projection; Gen28 includes them as OPAQUE;
+  outside the frozen grade projection; Gen29 includes them as OPAQUE;
 - the 24 JPEG/IJG boundaries remain default-metadata structural rows outside
-  the frozen grade projection; Gen28 includes them as OPAQUE;
+  the frozen grade projection; Gen29 includes them as OPAQUE;
 - the 23 CRT P0 boundaries remain default-metadata structural rows outside the
-  frozen grade projection; Gen28 includes them as OPAQUE;
-- 152 sealed-Gen28 residuals remain open, all dark, while 5,957 residual rows
+  frozen grade projection; Gen29 includes them as OPAQUE;
+- the two D3DX-compatible rows remain outside the frozen static-grade
+  projection; Gen29 carries them as OPAQUE/DARK;
+- 153 sealed-Gen29 residuals remain open, all dark, while 5,956 residual rows
   are terminal in the current geometry;
 - at least six live names are directly contradicted by byte/RTTI evidence;
 - D3D/cockpit/tree correction clusters remain;
@@ -2786,7 +2791,7 @@ Maintain separate ledgers.
 | Exact saved-body geometry | functions passing range invariants / saved rows | 8,329 / 8,329 |
 | Literal default names | `FUN_*` / saved rows | 1,036 / 8,329 |
 | Static function envelopes | frozen graded rows / discovered lower bound | 8,170 / at least 8,329; sealed 8,136-row table plus reviewed 34-row addendum, with 31 text-gap rows separately classified and 79 external-table plus 24 JPEG/IJG, 23 CRT P0, and two D3DX rows ungraded |
-| Campaign semantics above OPAQUE | C1 + C2 / Gen28 rows | 227 / 8,327 |
+| Campaign semantics above OPAQUE | C1 + C2 / Gen29 rows | 227 / 8,329 |
 | Mission handler boundaries | saved structurally bounded handler starts / registry | 144 / 144; creation complete |
 | `.text` saved-body ownership | exact owned executable bytes / 1,929,117 | 1,811,691 / 1,929,117 = 93.912966399%; zero overlap |
 | Stable runtime coverage | exact covered bytes / declared capture window | per scenario only |
@@ -3276,7 +3281,7 @@ The remaining function problem is now mechanically approachable:
 - 8,329 saved functions have exact body geometry, including 34 registry, 31
   text-gap, 79 external-table, 24 JPEG/IJG, 23 CRT P0, and two D3DX callable starts
   admitted from bounded proof;
-- 1,034 saved entries retain literal defaults, while 8,100 Gen28 functions remain
+- 1,036 saved entries retain literal defaults, while 8,102 Gen29 functions remain
   semantically OPAQUE;
 - cheap differential coverage has already reduced one 16,794-start action run
   to eight leading functions;

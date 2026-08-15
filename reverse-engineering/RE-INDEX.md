@@ -4,11 +4,11 @@ Status: active — the RE evidence front door
 Last updated: 2026-08-14
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
-Current replay authority is Generation 28 via
+Current replay authority is Generation 29 via
 `developer_state.json` → `current_re_authority`; Generation 73 is a projection
-oracle only, and the Generation-10 block below is historical. The rolling
-structural Ghidra snapshot is newer at 8,329 functions / db.18618; its two
-D3DX rows remain ungraded outside the frozen Generation 28 campaign.
+oracle only, and the Generation-10 block below is historical. Campaign and
+structural Ghidra state align at 8,329 functions / db.18618; the two D3DX rows
+are carried as OPAQUE/DARK rather than silently graded.
 
 This directory preserves evidence that materially supports the toolkit,
 rebuild, modding work, or contributor understanding. Git history holds completed
@@ -70,14 +70,14 @@ This block selects the immutable semantic campaign parent; it does not describe
 the rolling Ghidra database. Read the
 [`canonical Ghidra owner`](ghidra/README.md) for the current structural snapshot
 and latest backed-up live promotion. Select campaign authority from
-`developer_state.json` → `current_re_authority`: canonical Generation 28 at
-`local-lab/re-campaign-incident-recovery-20260808-v1/generation-28-current-8327-db18617-v3/`,
-READY `dbfe4430a44fa032b7c655847c6a9cb5cc530c313fe49ddd8347aebfe59c5712`,
+`developer_state.json` → `current_re_authority`: canonical Generation 29 at
+`local-lab/re-campaign-incident-recovery-20260808-v1/generation-29-current-8329-db18618-v2/`,
+READY `fe61f69646c644a880134474869f1c577403e6aa5675730cd1f0c467660c9ac9`,
 frozen reducer `8b86f5b568067aa4cdb438b658cd95a2c118ce8f8ef2541899eaa67815832587`,
-external selector `8446280d…c204`. It contains 8,327 functions: 217 C1,
-ten bounded C2, and 8,100 OPAQUE. Its 14,436 contracts split as 14,209
+external selector `1156ee18…e93e`. It contains 8,329 functions: 217 C1,
+ten bounded C2, and 8,102 OPAQUE. Its 14,438 contracts split as 14,211
 `C0_OPAQUE`, 217 C1, and ten C2; none is rebuild-ready. Its 6,109 residuals
-contain 152 open dark rows, with the other 5,957 terminal.
+contain 153 open dark rows, with the other 5,956 terminal.
 Generation 12 admitted bounded `CBattleEngine::Damage`/`Hit` field
 writes and a partial rebuild mapping; Generation 13 admitted one replicated
 zero-shield `CUnit::ApplyDamage` entry/write contract and its exact overkill
@@ -164,7 +164,10 @@ geometries are not a semantic regression. Generation 28 then re-grounds the
 25-byte CRT EH parent-body repair on exact `db.18617` geometry, accounts for all
 26,845 eligible Generation-27 carry rows with zero unaccounted, retires the one
 changed structural lineage, and preserves all 72 scenarios without changing a
-semantic grade. The next valid campaign generation is 29. Model review is
+semantic grade. Generation 29 then re-grounds the two D3DX-compatible functions
+on exact `db.18618` geometry, accounts for all 26,841 eligible Generation-28
+carry rows with zero unaccounted, retires one changed lineage, and carries the
+new rows as OPAQUE/DARK. The next valid campaign generation is 30. Model review is
 situational and harness-agnostic under `REVIEW-PROTOCOL.md`.
 
 A separately reviewed, non-parent
@@ -180,9 +183,9 @@ accounts for its 8,136-function population at 8,129 bounded C1 and seven
 bounded C2 functions, with zero static `OPAQUE` rows in that population. It joins 53 disjoint
 sealed receipts covering 7,945 functions, ten post-Gen19 Mission-native
 boundaries, and 181 pre-existing C1/C2 rows. This is a distinct authority for
-static-envelope accounting; Generation 28 is the current replay owner and
-carries Generation 27's admitted campaign state unchanged in semantic grade
-onto exact 8,327-row `db.18617` geometry. See the
+static-envelope accounting; Generation 29 is the current replay owner and
+carries Generation 28's admitted campaign state unchanged in semantic grade
+onto exact 8,329-row `db.18618` geometry. See the
 [closure report](binary-analysis/function-c1-closure-2026-08-11.md) for exact
 hashes and limits.
 
@@ -324,9 +327,9 @@ The completed
 [D3DX two-function live promotion](binary-analysis/d3dx-gap-two-function-ghidra-live-promotion-2026-08-14.md)
 now owns db.18618: two DEFAULT-source functions advance the rolling structural
 census to 8,329 and exact ranges to 8,459, ownership rises by 248 bytes to
-1,811,691, and every 8,327 PRE row stays exact. Generation 28 remains frozen on
-the immediately prior db.18617 geometry; the two new rows await Generation 29
-and are not silently graded here.
+1,811,691, and every 8,327 PRE row stays exact. Generation 29 now re-grounds
+that exact db.18618 geometry and carries the two new rows as OPAQUE/DARK without
+silently upgrading their semantic or runtime grade.
 
 The separate historical sealed
 [five-existing-function body-fragment scratch admission](binary-analysis/pc-function-body-fragment-ghidra-scratch-admission-2026-08-14.md)

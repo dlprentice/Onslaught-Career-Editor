@@ -19,13 +19,13 @@ external-table rows, 24 JPEG/IJG rows, 23 CRT P0 rows, and two newer D3DX
 structural rows remain ungraded.
 None of these later cohorts has been silently inserted into that frozen grade
 projection. This is not the campaign-grade scoreboard below.
-Canonical Generation 28 is the frozen semantic campaign authority at 8,327
-function identities plus 6,109 exact residual entities, sealed on its exact
-db.18617 geometry. It carries all 26,845 eligible Generation-27 progress rows
-with zero unaccounted, explicitly retires the CRT EH parent's one changed
-structural lineage, and preserves all 72 scenarios without silently upgrading a
-static or semantic grade.
-Semantics remain the hard problem: 14,209 of 14,436 contract
+Canonical Generation 29 is the frozen semantic campaign authority at 8,329
+function identities plus 6,109 exact residual entities, sealed on exact
+db.18618 geometry. It carries all 26,841 eligible Generation-28 progress rows
+with zero unaccounted, explicitly retires one changed structural lineage,
+preserves all 72 scenarios, and carries the D3DX pair as OPAQUE/DARK without
+silently upgrading a static or semantic grade.
+Semantics remain the hard problem: 14,211 of 14,438 contract
 rows are `C0_OPAQUE`,
 217 are `C1_CANDIDATE_PARTIAL`, ten are `C2_BOUNDED_RUNTIME`, and none is
 rebuild-ready. The authored Mission
@@ -181,21 +181,21 @@ not establish its Steam depot identity.
 ## Current complete-RE replay authority (2026-08-14) — read this first
 
 The campaign census below this pointer is a historical Generation-10
-snapshot. Current authority is canonical Generation **28**, selected
+snapshot. Current authority is canonical Generation **29**, selected
 only by `developer_state.json` → `current_re_authority`:
 
-| Metric | Canonical Gen28 |
+| Metric | Canonical Gen29 |
 |--------|------------------|
-| Functions | 8,327 (= C1 217 + C2 10 + function semantic OPAQUE 8,100) |
-| Grades | **C1=217**, **C2=10**, contract C0_OPAQUE **14209**; REBUILD_READY **0** |
-| Residuals | 6,109 = 152 open dark + 861 terminal bounded ambiguity + 30 terminal data + 5,066 terminal padding |
-| OPEN residual | **152** dark current-geometry rows; not a semantic regression |
-| Progressed carry | **26,845 / 26,845**, zero unaccounted |
-| Rebuild states | NOT_READY 14,427; PARTIAL_CONTRACT 8; CONTRACT_ONLY 1; REBUILD_READY 0 |
+| Functions | 8,329 (= C1 217 + C2 10 + function semantic OPAQUE 8,102) |
+| Grades | **C1=217**, **C2=10**, contract C0_OPAQUE **14211**; REBUILD_READY **0** |
+| Residuals | 6,109 = 153 open dark + 860 terminal bounded ambiguity + 30 terminal data + 5,066 terminal padding |
+| OPEN residual | **153** dark current-geometry rows; not a semantic regression |
+| Progressed carry | **26,841 / 26,841**, zero unaccounted |
+| Rebuild states | NOT_READY 14,429; PARTIAL_CONTRACT 8; CONTRACT_ONLY 1; REBUILD_READY 0 |
 | complete_RE | **false** |
-| READY / reducer | `dbfe4430…5712` / `8b86f5b5…2587` |
-| Campaign | `local-lab/re-campaign-incident-recovery-20260808-v1/generation-28-current-8327-db18617-v3/` |
-| Next valid generation | **29** |
+| READY / reducer | `fe61f696…c9ac9` / `8b86f5b5…2587` |
+| Campaign | `local-lab/re-campaign-incident-recovery-20260808-v1/generation-29-current-8329-db18618-v2/` |
+| Next valid generation | **30** |
 
 The Generation-10 blocks that follow are historical records, not the live tip.
 Their durable engineering content (atlas, registries, safety doctrine,
@@ -258,6 +258,10 @@ Generation 28 then re-grounds the repaired CRT EH parent body on exact db.18617
 geometry, accounts for all 26,845 eligible Generation-27 carry rows, retires
 one changed structural identity, and preserves the full 72-scenario set without
 moving a semantic grade.
+Generation 29 then re-grounds the two D3DX-compatible structural functions on
+exact db.18618 geometry, accounts for all 26,841 eligible Generation-28 carry
+rows, retires one changed identity, and carries both additions as OPAQUE/DARK
+without moving a semantic grade.
 
 ---
 
@@ -379,7 +383,7 @@ loads, interprets, simulates, and renders that corpus.
 
 ### Current authority in one sentence
 
-Use canonical Generation 28 for campaign function/residual and contract state,
+Use canonical Generation 29 for campaign function/residual and contract state,
 the separately verified 2026-08-14 db.18618 live POST and tracked snapshot for
 current Ghidra state, the unpatched baseline image for bytes and
 shipped tables, RTTI/source strings for identity evidence, controlled copied-
@@ -2975,15 +2979,16 @@ dated 8,136-row static closure plus a reviewed 34-row C1-static addendum for the
 31 newly admitted exact text-gap bodies with separate provider-compatible classifications, not frozen campaign grades
 79 newly admitted exact external-table bodies with default metadata, not semantic grades
 24 newly admitted exact JPEG/IJG callback bodies with default metadata, not semantic grades
-23 newly admitted CRT P0 runtime bodies with default metadata, carried as OPAQUE in Generation 28
-2 newly admitted D3DX-compatible bodies with default metadata, outside frozen Generation 28
+23 newly admitted CRT P0 runtime bodies with default metadata, carried as OPAQUE in Generation 29
+2 newly admitted D3DX-compatible bodies with default metadata, carried as OPAQUE/DARK in Generation 29
 75 existing registry entries normalized through the backed-up live gate
 34 newly created registry entries promoted through their separate Tier-2 metadata cohort
 one separately proved CreateExplosion identity/signature repair promoted and read back
 four refuted HUD labels awaiting convention-safe replacements
-8,100 Gen28 functions remain semantically OPAQUE, including all 201 then-current post-Gen23 structural identities
-152 sealed-Generation-28 residuals remain open, all dark and none executed
+8,102 Gen29 functions remain semantically OPAQUE, including all 203 post-Gen23 structural identities
+153 sealed-Generation-29 residuals remain open, all dark and none executed
 bounded runtime questions with explicit falsifiers
 ```
 
-That is the canonical baseline for Generation 29 and the next Ghidra campaign.
+That is the canonical Generation-29 baseline; Generation 30 is the next valid
+campaign only after a new mechanically complete advance.
