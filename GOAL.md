@@ -321,10 +321,11 @@ instrument before any ceremony. The DeepSeek corpus relocation is byte-verified:
 H: twin matches the same tree SHA, and the F:/H: sources are being staged
 recoverably into `D:\lab-quarantine\20260817\` before removal, leaving
 `F:\GhidraBackups` as the only retained F: content. Generation 31 inputs are
-staged and verified (16 gate result JSONs and 16 SURVIVED probe-refuter
-findings), and the bespoke `tools\build_generation31_authority.py` is cutting
-all 16 rows onto the db.18624 seed in one generation: 15 rows raise
-C0_OPAQUE → C1_CANDIDATE_PARTIAL, row 13 carries its grade unchanged, and
+staged (16 gate result JSONs and 16 SURVIVED probe-refuter findings, verified
+on disk), and the bespoke `tools\build_generation31_authority.py` is under
+integration review before it cuts all 16 rows onto the db.18624 seed in one
+generation: 14 rows raise C0_OPAQUE → C1_CANDIDATE_PARTIAL, row 13 carries its
+grade unchanged, the fresh second GetFriction row enters at C1_CANDIDATE_PARTIAL, and
 REBUILD_READY moves 0 → 16 with no other grade movement. The campaign model
 now admits the one measured two-owner contract pair (both GetFriction rows,
 distinct owners, terminal) behind `_validate_contract_owner_rows`. The
