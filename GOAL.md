@@ -466,11 +466,14 @@ corrections → Level100 crash characterisation → falsifier close-out.
    8,293 untouched / only the three signature columns moved, PRE and POST
    backups restore-proven, and the tracked snapshot refreshed on byte equality
    (live rolled db.18624 → db.18625; `local-lab\arity36-ceremony-2026-08-17\`).
-5. **Pointer/vftable cohort.** 65 of 99 untyped pointer slots are RTTI vftables
-   across 59 classes. Add ONE typed vftable-apply verb to the cohort framework
-   (with the existing gate + mutator suite), then apply each vftable with its
-   recovered class identity — never a bespoke applier, never 99 isolated
-   dwords.
+5. **Pointer/vftable cohort — PROMOTED TO LIVE 2026-08-17.** The typed
+   `SET_DATA_POINTER` verb landed in the framework (75-test suite green) and
+   the 65-slot cohort ran the full gate: rehearsal and live identity/dry/apply/
+   readback all PASS (db.18626 → db.18627); each pointer is typed with its
+   recovered class identity, zero function rows moved, PRE/POST backups
+   restore-proven, tracked refreshed on byte equality. The 34 `.data` rows of
+   the original 99 were correctly excluded (their COL anchors fail — a
+   different table shape); 65 is exactly the objective's RTTI-vftable count.
 6. **Runtime-witnessed name corrections — PROMOTED TO LIVE 2026-08-17.** The
    five-row `name-cohort5` landed through the framework (db.18625 → db.18626):
    `0x0048c3b0` → `CInfluenceNode__CalculateInfluence`, `0x0052ff20` →

@@ -5,12 +5,12 @@ Last updated: 2026-08-17. The campaign authority is Generation 31 on exact
 db.18624 geometry (8,329 functions; grades 8,088 OPAQUE / 231 C1 / 10 C2, with
 the first 16 contracts REBUILD_READY), re-grounded through the Generation-30
 literal-pin carry bridge after the live and tracked Ghidra database reached
-**db.18626** through *seven* authorized promotions on 2026-08-17 — 41 boundary
+**db.18627** through *eight* authorized promotions on 2026-08-17 — 41 boundary
 corrections, then 160 renames, then 294 ABI signature corrections, then the two
 sequential one-row ceremonies of the CTentacle factory-name chain, then the
 36-row abi-two-witness-arity36 SET_PROTOTYPE cohort, then the five-row
-runtime-witnessed name cohort (name-only; the campaign's db.18624 geometry is
-unaffected). Candidate Gen73 is
+runtime-witnessed name cohort, then the 65-slot RTTI vftable pointer cohort
+(data typing only; the campaign's db.18624 geometry is unaffected). Candidate Gen73 is
 projection-oracle only. Primary WinUI
 navigation was rechecked 2026-08-03 against the live shell (includes Cheats).
 The 2026-08-01 shell, appearance, Lore, Media, and four-run Level 100 reviews
