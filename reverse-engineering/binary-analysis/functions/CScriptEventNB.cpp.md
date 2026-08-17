@@ -1,7 +1,8 @@
 # CScriptEventNB function map
 
 Status: active static function map
-Last updated: 2026-08-17 (event-dispatch slice; register/post/handle byte-mapped)
+Last updated: 2026-08-17 (event-dispatch slice; register/post/handle and the
+world script-event loader byte-mapped)
 Source File: `C:\dev\ONSLAUGHT2\MissionScript\ScriptEventNB.cpp` (SEH
 `__FILE__` pointer `0x0064fe98` read out of `RegisterEventListener`) | Binary:
 BEA.exe, SHA-256
@@ -39,6 +40,7 @@ listener symmetrically. The global instance is `0x0089c590`.
 | `0x00538960` | `CScriptEventNB__RegisterEventListener` | `6aff 68c3745d00 64a100000000 50 64892500000000 … 8b4908 … 8b01 ff5038 … 8b17 8bcf 8bf0 ff5238 … 3a16 751c … 6a68 6898fe6400 6a76 6a18 b9f03d9c00 … 8d6e04 8bcd e8f9cdfaff … 6a11 … 6a19 … 8b4e04 57 e84ccffaff … 578d4e04 e8d3cffaff` | `ret 8`, two stack args on the singleton `0x0089c590`. **Arg1 is the name-key node** — `[arg1]` is a virtual name object whose `vtable+0x38` returns the compared name and `vtable+0x48` returns the value stored at `element[0]`. **Arg2 is the listener** (`CEventFunction`), whose `+4` field is the `CMonitor` deletion-event `CSPtrSet`. Walks `[this+8]` comparing `element[0].vtable[0x38]` names byte-wise; on miss it allocates a **0x68**-byte element, `CSPtrSet__Init(element+4)`, stores `element[0] = arg1.vtable[0x48]()`, allocates a **0x11**-byte node, `node[0]=listener`, `CMonitor__AddDeletionEvent(listener,node)` (`0x00401040`) and `CSPtrSet__AddToTail(element+4,node)`; on hit it allocates a **0x19**-byte node, lazily builds `[listener+4]` under the `Monitor.h:94` pattern (`__FILE__` `0x0064fa6c`), then `AddToHead`/`AddToTail`. Returns the element. HIGH on the wiring; the 0x11-vs-0x19 node-size split is measured and open (see below). |
 | `0x00538b70` | `CScriptEventNB__PostEvent` | `555657 8bf9 8b4708 8b480c 85c9 7551 … b858c26200 … 3ad3 … 68ccfe6400 6880f56600 e8738bf0ff … 8b4708 8b28 … ff5038 … 3a16 … c6471401 … e86071ffff` | `ret 4`, one string arg, singleton `this`. If `[[this+8]+0xc]` (the listener count) is zero and the name is not `"game playing"` (`0x0062c258`), it prints `CConsole__Printf(0x0066f580, "Warning: No listeners for posted event '%s'", name)` (`0x00441740`, format `0x0064fecc`). Then walks the entries, compares `element[0].vtable[0x38]` names, and on match sets `element[0x14]=1` and calls `CEventFunction__Execute(node->[0])` (`0x0052fda0`) for every node in `element+4`. HIGH. |
 | `0x00538c70` | `CScriptEventNB__HandleEventMessage` | `51 8b442408 5357 8bf9 66817804d007 0f851d010000 8b400c … ff5038 … b858c26200 … 3a1e 751c … 68ccfe6400 6880f56600 … 885f14 … e83370ffff` | `ret 4`; **vtable slot 0** of `CScriptEventNB` (`0x005e4f44`), which is why the `E8/E9` census finds zero direct callers. Arg is a message struct: `word[arg+4]` must be **0x7d0** (2000) or it returns, and `[arg+0xc]` is the name object whose `vtable+0x38` supplies the name. Same empty-list `"game playing"` warning and the same entry scan / `CEventFunction__Execute` dispatch as `PostEvent`. HIGH on the dispatch; the identity of message 0x7d0's sender stays open. |
+| `0x0050ac70` | `CWorld__LoadScriptEvents` | `6aff 68a25b5d00 64a100000000 50 64892500000000 83ec18 … 8b6c242c … 8d442408 6a04 50 8bcd e8d2d80300 … 81c620010000 … 68c0000000 68acd26300 6a18 6a08 b9f03d9c00 e807e40300 … 55 8bc8 e8a14a0200 … 68c3000000 68acd26300 6a18 6a70 … e89be10200 … 68c5000000 68acd26300 6a18 6a08 … 8938 897004 … 8b4c2414 50 e8c2adfdff … 8d4c241c 6a0a 51 8bcd e804d80300 … c20400` | `ret 4`, one arg — a `CDXMemBuffer` read source (`CDXMemBuffer__Read`, `0x00548570`); `this` is the `CWorld`. Reads a 4-byte count; if `<= 0` returns. Then loops: allocates a **0xc0**-byte `CStringDataType` (`world.cpp:24`, `__FILE__` `0x0063d2ac`) and `CStringDataType__ReadFromBuffer` (`0x0052f790`) for the name, allocates a **0x70**-byte `CMissionScriptObjectCode` (`world.cpp:195`) and constructs it (`0x00538ec0`), allocates an **8**-byte `{name, code}` pair (`world.cpp:197`), `CSPtrSet__AddToTail` (`0x004e5b20`) into `[this+0x120]`, then reads a trailing **0xa**-byte field before the next record. HIGH on the read/construct/append chain; the trailing 0xa field's meaning is MEDIUM. |
 
 ## Callers (direct `E8` rel32, whole-image scan)
 
@@ -55,8 +57,7 @@ listener symmetrically. The global instance is `0x0089c590`.
 
 ## Family roster (named in live Ghidra, not yet byte-mapped here)
 
-`CScriptEventNB__UpdateWaypointFollowing` (`0x00538470`),
-`CWorld__LoadScriptEvents` (`0x0050ac70`).
+`CScriptEventNB__UpdateWaypointFollowing` (`0x00538470`).
 
 `CScriptEventNB__UpdateWaypointFollowing` is name-suspect: its body is
 position-vector math (`fld [esi+0x14+0x1c]` minus `[target+0x1c]`, distance
@@ -78,4 +79,3 @@ adjacent singleton `0x0089c5e0` — no listener-set walk — so the
   message `0x7d0` and a name object at `[msg+0xc]` — scan for code loading
   `0x0089c590` and calling `[eax]`.
 - The doubled `CSPtrSet__Clear` at the tail of `ClearListenerEntry`.
-- `CWorld__LoadScriptEvents` (`0x0050ac70`, `ret 4`) is still unmapped.
