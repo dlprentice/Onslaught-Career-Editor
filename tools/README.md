@@ -135,10 +135,38 @@ build `endTransaction(id, false)` does not revert `Function.updateFunction`,
 script throws. Every non-mutating gate for every row therefore runs before the
 first write, and no receipt claims transaction-level atomicity.
 
+**`varargs` is a manifest field of `SET_PROTOTYPE`, and its default is
+PRESERVE.** The three superseded appliers all cleared varargs unconditionally and
+then asserted `POST`/readback `varargs == false`, so a variadic prototype could
+not be expressed at all, and a target that already carried `varargs=true` would
+have been silently stripped with its own POST gate certifying the strip.
+Measured 2026-08-17 on db.18622: **10 of the 8,329 functions carry
+`varargs=true`**, so that second failure mode was one manifest row away rather
+than hypothetical. In the framework the value comes from the column bound by
+`col.varArgs` — `true`, `false`, or empty for preserve — and an absent binding
+means preserve for every row *and* keeps `varArgs` a frozen collateral column, so
+a strip by omission is a refusal on any of the 8,329 rows. `POST` and readback
+compare against the manifest value, never a literal. `probe-fault-varargsflip`
+writes the opposite of the resolved decision so those gates can be provoked in
+both directions; like every fault mode it can never commit.
+
+**Every run records which applier produced it.** `COHORT_APPLIER` and the
+receipt's `applier` object carry this script's own source SHA-256, measured before
+the spec is read, because otherwise the only way to tell which framework version
+wrote a receipt is file mtimes plus re-deriving the twin — inference, not a chain
+of custody. A spec may also pin `applierSha256`, repeated to admit both the
+instrument and its live twin (their digests necessarily differ); a pin that
+matches nothing refuses with `APPLIER SHA PIN` before any write.
+
 `ghidra_cohort_replay.py` rebuilds a replica from an off-volume PRE backup, runs
 the ceremony modes, and grades the receipts against the completed ceremonies
-(`--verdict`). It also builds the standing noncanonical sandbox (`--sandbox`).
-The focused gate is:
+(`--verdict`). A `rehearsalOnly` cohort has no archived ceremony to reproduce, so
+a clean run is reported as `REHEARSED_NOT_PROMOTED` and authorizes nothing. It
+also builds the standing noncanonical sandbox (`--sandbox`), runs the framework's
+provoked gate matrix (`--probes core|fault|all`), and runs the varargs controls
+(`--probes varargs`): five executed refusals plus the positive control that a
+manifest saying nothing leaves a `varargs=true` target untouched. The focused
+gate is:
 
 ```powershell
 py -3 -m unittest tools.ghidra_cohort_framework_tests
@@ -147,7 +175,14 @@ py -3 -m unittest tools.ghidra_cohort_framework_tests
 The three superseded one-shot appliers (`GhidraApplyBoundaryCohort41V4.java`,
 `GhidraApplyNameCohort160V2.java`, `GhidraApplyAbiSignaturesV2.java`) and their
 mutator suites stay in place as the receipt-pinned owners of their completed
-ceremonies. Do not repin or revive them; new cohorts use the framework.
+ceremonies. Do not repin or revive them; new cohorts use the framework. In
+particular, **do not add varargs support to the superseded appliers**: each one's
+source SHA-256 is pinned by its own mutator suite, which also proves it is the
+reviewed one-gate-inverted derivation of its rehearsal instrument, so even a
+comment at the defect site would repin a completed owner. The defect is recorded
+here and in the framework banner instead, and
+`test_v2_is_left_exactly_as_its_receipts_pinned_it` fails if `V2` is edited at
+all.
 
 [`../reverse-engineering/parity-lab.md`](../reverse-engineering/parity-lab.md) is the engine-neutral function-discovery
 and parity-pipeline authority. `parity_lab.py` joins repeated `drcov` or TTD

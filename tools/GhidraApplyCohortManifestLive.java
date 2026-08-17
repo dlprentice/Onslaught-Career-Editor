@@ -40,10 +40,34 @@
 //
 //   SET_NAME               Function.setName / Symbol.setName
 //   SET_PROTOTYPE          Function.updateFunction (DYNAMIC_STORAGE_FORMAL_PARAMS)
+//                          plus Function.setVarArgs, MANIFEST-DRIVEN (see below)
 //   SET_BODY               Function.setBody
 //   DISASSEMBLE_BOUNDED    Disassembler.disassemble(seeds, admitted, true)
 //   CLEAR_BOUNDED          Listing.clearCodeUnits inside the admitted ranges
 //   REMOVE_STALE_BOOKMARK  BookmarkManager.removeBookmark for a pinned set
+//
+// ---------------------------------------------------------------------------
+// VARARGS IS A MANIFEST FIELD OF SET_PROTOTYPE, AND ITS DEFAULT IS PRESERVE.
+// The three superseded appliers all carried
+//     if (f.hasVarArgs()) { f.setVarArgs(false); }
+// and then asserted POST/readback varargs == false.  That is two defects in one:
+// a variadic function's prototype could never be expressed, and a target that
+// already had varargs=true would be silently STRIPPED with the POST gate
+// certifying the stripped state as correct.  Measured 2026-08-17 on db.18622:
+// 10 of the 8,329 functions carry varargs=true, so the exposure was one manifest
+// row away, not hypothetical.
+//
+// Here the value comes from the manifest column bound by `col.varArgs`:
+//     true     set varargs on
+//     false    set varargs off
+//     empty    PRESERVE - end POST state must equal the PRE state
+//     column absent entirely: PRESERVE for every row, and `varArgs` additionally
+//              stays a FROZEN collateral column, so a move on ANY function -
+//              target rows included - is a refusal.  A spec can therefore never
+//              strip varargs by omission, which is the whole point.
+// POST and readback compare against that manifest value, never against a
+// literal.  A spec cannot widen FROZEN_COLUMNS; binding col.varArgs only unlocks
+// the one column for the cohort's own target rows.
 //
 // ---------------------------------------------------------------------------
 // REVERSIBILITY, measured in this Ghidra 12.1.2 headless build rather than
@@ -93,10 +117,14 @@
 //              version still advances, so treat the replica as spent.
 //   probe-fault-escape | probe-fault-extraclear | probe-fault-clearescape
 //   probe-fault-strandbytes | probe-fault-precedentclear
+//   probe-fault-varargsflip
 //              adverse fault injection.  Each deliberately breaks the
 //              framework's own confinement so the detector can be shown to
 //              fire.  None can ever commit: commit is hard-wired false in
-//              every fault mode.
+//              every fault mode.  varargsflip writes the OPPOSITE of the
+//              resolved varargs decision - including the preserved PRE value
+//              when the manifest asks for nothing - so the POST/readback
+//              varargs gates can be provoked in both directions.
 //   probe-relax-manifest
 //              adverse refusal testing with the manifest digest, row-count and
 //              POST-census pins DISABLED, so a deliberately corrupted manifest
@@ -109,6 +137,14 @@
 //
 // The spec's own SHA-256 is pinned on the command line and the spec pins the
 // manifest, so neither can be edited silently between rehearsal and apply.
+//
+// PROVENANCE.  Every run measures and echoes THIS SCRIPT'S OWN source digest
+// (COHORT_APPLIER, and the "applier" object in the receipt).  Without it, the
+// only way to establish which applier version produced a receipt was file mtimes
+// plus re-deriving the twin - inference, not measurement, and not a chain of
+// custody.  A spec may additionally pin `applierSha256`, repeated if it wants to
+// admit both the instrument and its live twin; a pin that matches nothing is
+// APPLIER SHA PIN and refuses before any write.
 
 import ghidra.app.script.GhidraScript;
 import ghidra.program.disassemble.Disassembler;
@@ -189,6 +225,7 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
     // reach live, whatever its spec declares.
     static final String[] LIVE_AUTHORIZED_COHORTS = {
         "boundary-cohort41", "name-cohort160", "abi-cohort294",
+        "tentacle-chain-a", "tentacle-chain-b",
     };
 
     // Reversibility strings.  These are the ONLY reversibility claims any
@@ -222,8 +259,13 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
     };
 
     /** Which frozen columns each verb is allowed to move, and only on its own
-     *  target rows.  Compiled in for the same reason. */
-    static Set<String> mutableColumnsFor(Set<String> verbs) {
+     *  target rows.  Compiled in for the same reason.
+     *
+     *  varArgsDeclared is the ONE spec-dependent input: it says the spec bound
+     *  col.varArgs, i.e. the cohort declared varargs as an axis it is changing.
+     *  It can only ever UNLOCK the single `varArgs` column for target rows; a
+     *  spec cannot add a column to FROZEN_COLUMNS or unlock any other one. */
+    static Set<String> mutableColumnsFor(Set<String> verbs, boolean varArgsDeclared) {
         Set<String> out = new LinkedHashSet<>();
         if (verbs.contains(V_SET_NAME)) {
             out.add("name");
@@ -245,10 +287,17 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
         }
         if (verbs.contains(V_SET_PROTOTYPE)) {
             out.add("signatureShape");
-            out.add("varArgs");
             out.add("signatureSource");
             out.add("stackParamBytes");
             out.add("stackParamCount");
+            // varArgs is unlocked ONLY for a cohort that binds col.varArgs.  A
+            // prototype cohort that says nothing about varargs leaves it FROZEN,
+            // so the collateral census refuses a move on a target row too - that
+            // is what makes "absent column means do not touch" a gate rather
+            // than an intention.
+            if (varArgsDeclared) {
+                out.add("varArgs");
+            }
         }
         return out;
     }
@@ -268,6 +317,10 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
      *  NOT mean nothing was written - this build has no working in-process
      *  rollback - so every receipt reports both. */
     private boolean writesAttempted = false;
+    /** probe-fault-varargsflip only: write the OPPOSITE of the resolved varargs
+     *  decision so the POST/readback varargs gates can be provoked by execution.
+     *  A fault mode can never commit. */
+    private boolean faultVarArgsFlip = false;
 
     private void fail(String message) {
         failures.add(message);
@@ -332,20 +385,58 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
         "postDefinedData", "postUndefinedData", "postBookmarks",
         "postFunctionNameDigest", "postFunctionBodyDigest", "postFrozenDigest",
         "manifestSha256", "manifestBytes", "manifestRows", "manifestColumns",
-        "manifestHeaderPipe",
+        "manifestHeaderPipe", "applierSha256",
         "col.addr", "col.currentName", "col.proposedName", "col.liveKind",
         "col.currentRanges", "col.proposedRanges", "col.subtype",
         "col.terminatorVa", "col.terminatorBytes", "col.deltaBytes",
         "col.byteProof",
         "col.liveName", "col.currentSignature", "col.currentSignatureSha256",
         "col.proposedSignature", "col.callingConvention", "col.returnType",
-        "col.paramSpec", "col.arity", "col.arityBytes",
+        "col.paramSpec", "col.arity", "col.arityBytes", "col.varArgs",
         "unique", "constant", "enum", "enumPrefix", "forbidToken", "noCycle",
         "expectedTargetsChanged", "expectedSymbolsAdded",
         "expectedSymbolsRemoved", "expectedFunctionsUntouched",
         "admittedBytes", "admittedUndefinedBytes", "clearedUnits",
         "clearedBytes", "clearPlan", "staleBookmark", "bookmarkType",
         "bookmarkCategory", "tableSubtype", "legalCallingConvention"));
+
+    /** This script's own source bytes, digested.  A receipt that cannot say
+     *  which applier produced it cannot support a chain of custody: before this,
+     *  the only way to establish which instrument version ran was file mtimes
+     *  plus re-deriving the twin, which is inference rather than measurement.
+     *  The instrument and its live twin necessarily differ here, so a spec that
+     *  pins `applierSha256` may list both. */
+    private String applierSha = "<unmeasured>";
+    private String applierPath = "<unknown>";
+    private long applierBytes = -1;
+
+    private void measureApplier() {
+        try {
+            byte[] raw;
+            try (java.io.InputStream in = getSourceFile().getInputStream()) {
+                raw = in.readAllBytes();
+            }
+            applierBytes = raw.length;
+            applierSha = sha256(raw);
+            applierPath = getSourceFile().getName();
+        } catch (Exception exc) {
+            applierSha = "<unreadable:" + exc.getClass().getSimpleName() + ">";
+        }
+    }
+
+    private void gateApplierPin(Spec spec) {
+        List<String> pinned = spec.all("applierSha256");
+        if (pinned.isEmpty()) {
+            return;
+        }
+        for (String want : pinned) {
+            if (want.equalsIgnoreCase(applierSha)) {
+                return;
+            }
+        }
+        fail("APPLIER SHA PIN: applier sha256 " + applierSha + " is not among the "
+            + pinned.size() + " pinned by the spec " + pinned);
+    }
 
     private Spec loadSpec(Path specPath, String pinnedSha) throws Exception {
         Spec spec = new Spec();
@@ -406,6 +497,14 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
         final List<String[]> params = new ArrayList<>();
         int arity;
         int arityBytes;
+        /** The function's varargs state as measured BEFORE any write.  It is the
+         *  expectation for a PRESERVE row, so a preserved row is proven against
+         *  a measurement rather than against a literal. */
+        boolean preVarArgs;
+        /** The manifest's varargs decision: TRUE, FALSE, or null for PRESERVE
+         *  (empty cell, or no bound column at all). */
+        Boolean varArgsWanted;
+        String varArgsPost = "";
 
         // measurement
         String targetName = "";
@@ -1066,8 +1165,9 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
         boolean faultClearEscape = "probe-fault-clearescape".equals(mode);
         boolean faultStrand = "probe-fault-strandbytes".equals(mode);
         boolean faultPrecedent = "probe-fault-precedentclear".equals(mode);
+        faultVarArgsFlip = "probe-fault-varargsflip".equals(mode);
         boolean faultMode = faultEscape || faultExtraClear || faultClearEscape
-                || faultStrand || faultPrecedent;
+                || faultStrand || faultPrecedent || faultVarArgsFlip;
         boolean mutating = apply || planOnly || relax || faultMode;
         if (!(census || identity || dry || apply || readback || collateralOnly
                 || planOnly || relax || faultMode)) {
@@ -1100,6 +1200,9 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
         println("COHORT_LIVE_TARGET banner=AUTHORIZED-LIVE-MAINTAINER-PROJECT"
             + " policy=" + POLICY + " path=" + projectPath);
         println("COHORT_GATE containment=ok policy=" + POLICY + " path=" + projectPath);
+        measureApplier();
+        println("COHORT_APPLIER script=" + applierPath + " bytes=" + applierBytes
+            + " sha256=" + applierSha + " framework=" + FRAMEWORK);
 
         if (currentProgram == null) {
             println("COHORT_FAIL reason=no_current_program");
@@ -1115,6 +1218,7 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
                 + Arrays.asList(LIVE_AUTHORIZED_COHORTS));
             return;
         }
+        gateApplierPin(spec);
         Set<String> verbs = new LinkedHashSet<>();
         for (String v : spec.all("verb")) {
             if (!KNOWN_VERBS.contains(v)) {
@@ -1129,9 +1233,13 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
         // Verb-declaration gate: a column binding only a non-declared verb owns
         // is a refusal, so a name cohort is structurally unable to touch a body.
         checkVerbColumnBinding(spec, verbs);
-        Set<String> mutableColumns = mutableColumnsFor(verbs);
+        boolean varArgsDeclared = spec.has("col.varArgs");
+        Set<String> mutableColumns = mutableColumnsFor(verbs, varArgsDeclared);
         println("COHORT_GATE spec=ok cohort=" + cohortId + " sha256=" + spec.sha256
             + " verbs=" + verbs + " mutableColumns=" + mutableColumns);
+        println("COHORT_GATE varargsPolicy=MANIFEST_DRIVEN_DEFAULT_PRESERVE"
+            + " varargsColumnBound=" + varArgsDeclared
+            + " varArgsFrozenForTargets=" + !varArgsDeclared);
 
         // ---- GATE 2: program identity --------------------------------------
         gateIdentity(spec);
@@ -1545,6 +1653,25 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
             }
             println("COHORT_GATE types=ok resolved=" + resolved
                 + " (lookup only, no new type defined)");
+            int vaOn = 0;
+            int vaOff = 0;
+            int vaPreserve = 0;
+            int vaPreserveTrue = 0;
+            for (Row row : rows) {
+                if (row.varArgsWanted == null) {
+                    vaPreserve++;
+                    if (row.preVarArgs) {
+                        vaPreserveTrue++;
+                    }
+                } else if (row.varArgsWanted.booleanValue()) {
+                    vaOn++;
+                } else {
+                    vaOff++;
+                }
+            }
+            println("COHORT_GATE varargs=ok setTrue=" + vaOn + " setFalse=" + vaOff
+                + " preserve=" + vaPreserve + " preservedTrue=" + vaPreserveTrue
+                + " (preserve compares POST against the measured PRE value)");
         }
 
         // ---- boundary aggregate pins ---------------------------------------
@@ -1838,6 +1965,7 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
         owner.put("col.paramSpec", V_SET_PROTOTYPE);
         owner.put("col.arity", V_SET_PROTOTYPE);
         owner.put("col.arityBytes", V_SET_PROTOTYPE);
+        owner.put("col.varArgs", V_SET_PROTOTYPE);
         for (Map.Entry<String, String> e : owner.entrySet()) {
             if (spec.has(e.getKey()) && !verbs.contains(e.getValue())) {
                 fail("VERB NOT DECLARED: the spec binds " + e.getKey()
@@ -1860,6 +1988,10 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
             requireBinding(spec, "col.returnType", V_SET_PROTOTYPE);
             requireBinding(spec, "col.paramSpec", V_SET_PROTOTYPE);
             requireBinding(spec, "col.callingConvention", V_SET_PROTOTYPE);
+            // col.varArgs is DELIBERATELY NOT REQUIRED.  An absent binding is the
+            // PRESERVE default, and it additionally keeps varArgs frozen for
+            // every row.  Requiring it would force every future prototype cohort
+            // to restate a value it has no evidence about.
         }
         if (verbs.contains(V_CLEAR) && !verbs.contains(V_DISASSEMBLE)) {
             fail("VERB DEPENDENCY: CLEAR_BOUNDED without DISASSEMBLE_BOUNDED "
@@ -2058,6 +2190,39 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
         }
         if (f.isExternal()) {
             fail(row, "is external");
+        }
+        // -- varargs: manifest-driven, PRESERVE by default --------------------
+        // The PRE value is measured here, before any write, so a PRESERVE row is
+        // graded against the state that actually existed rather than a literal.
+        row.preVarArgs = f.hasVarArgs();
+        row.varArgsWanted = null;
+        String varArgsCell = row.get("varArgs").trim();
+        if (row.cells.containsKey("varArgs") && !varArgsCell.isEmpty()) {
+            if ("true".equals(varArgsCell)) {
+                row.varArgsWanted = Boolean.TRUE;
+            } else if ("false".equals(varArgsCell)) {
+                row.varArgsWanted = Boolean.FALSE;
+            } else {
+                fail(row, "illegal varargs value [" + varArgsCell + "]; the "
+                    + "varargs column is true, false, or EMPTY for preserve");
+            }
+        }
+        // The proposed prototype string and the varargs decision must agree, so a
+        // row cannot ask for varargs while pinning a non-variadic rendering (or
+        // the reverse) and then fail confusingly at the rendered-prototype gate.
+        // Ghidra renders a variadic prototype with a ", ...)" tail - measured on
+        // db.18622, where all 10 varargs=true functions render that way.
+        if (!readback) {
+            boolean resolved = row.varArgsWanted == null
+                ? row.preVarArgs : row.varArgsWanted.booleanValue();
+            boolean proposedIsVariadic =
+                row.get("proposedSignature").endsWith(", ...)");
+            if (resolved != proposedIsVariadic) {
+                fail(row, "varargs/proposedSignature disagree: the varargs "
+                    + "decision resolves to [" + resolved + "] but the proposed "
+                    + "signature " + (proposedIsVariadic
+                        ? "ends with a ', ...)' tail" : "has no ', ...)' tail"));
+            }
         }
         // paramSpec / arity structure
         row.params.clear();
@@ -2584,8 +2749,18 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
                         + row.arityBytes + "] actual ["
                         + f.getStackFrame().getParameterSize() + "]");
                 }
-                if (f.hasVarArgs()) {
-                    fail(row, "POST varargs expected [false] actual [true]");
+                // Compared against the MANIFEST decision, never a literal.  For a
+                // PRESERVE row the expectation is the PRE value measured before
+                // the write, so an accidental strip is a hard failure here even
+                // though the manifest said nothing.
+                boolean wantVarArgs = row.varArgsWanted == null
+                    ? row.preVarArgs : row.varArgsWanted.booleanValue();
+                row.varArgsPost = String.valueOf(f.hasVarArgs());
+                if (f.hasVarArgs() != wantVarArgs) {
+                    fail(row, "POST varargs expected [" + wantVarArgs
+                        + "] actual [" + f.hasVarArgs() + "]"
+                        + (row.varArgsWanted == null
+                            ? " (PRESERVE: the PRE value)" : ""));
                 }
                 if (!"USER_DEFINED".equals(f.getSignatureSource().toString())) {
                     fail(row, "POST signature source expected [USER_DEFINED] "
@@ -2681,8 +2856,16 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
                         + row.arityBytes + "] actual ["
                         + f.getStackFrame().getParameterSize() + "]");
                 }
-                if (f.hasVarArgs()) {
-                    fail(row, "READBACK varargs expected [false] actual [true]");
+                // A separate readback process cannot know the PRE state, so an
+                // explicit manifest value is asserted directly and a PRESERVE row
+                // is proven by the full prototype-string equality gate above:
+                // Ghidra renders varargs as the ", ...)" tail, so a stripped
+                // varargs cannot satisfy READBACK signature expected [...].
+                row.varArgsPost = String.valueOf(f.hasVarArgs());
+                if (row.varArgsWanted != null
+                        && f.hasVarArgs() != row.varArgsWanted.booleanValue()) {
+                    fail(row, "READBACK varargs expected [" + row.varArgsWanted
+                        + "] actual [" + f.hasVarArgs() + "]");
                 }
                 if (!"USER_DEFINED".equals(f.getSignatureSource().toString())) {
                     fail(row, "READBACK signature source expected [USER_DEFINED] "
@@ -2710,8 +2893,17 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
                 currentProgram),
             params, FunctionUpdateType.DYNAMIC_STORAGE_FORMAL_PARAMS, true,
             SourceType.USER_DEFINED);
-        if (f.hasVarArgs()) {
-            f.setVarArgs(false);
+        // The varargs decision comes from the manifest; a row that asked for
+        // nothing is restored to the value measured before this write, so
+        // updateFunction cannot silently drop it either.  This is the only
+        // setVarArgs call in the framework.
+        boolean want = row.varArgsWanted == null
+            ? row.preVarArgs : row.varArgsWanted.booleanValue();
+        if (faultVarArgsFlip) {
+            want = !want;    // probe-fault-varargsflip; can never commit
+        }
+        if (f.hasVarArgs() != want) {
+            f.setVarArgs(want);
         }
         return f.getSignature().getPrototypeString(true);
     }
@@ -2970,7 +3162,8 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
             + "\tpreInstrBytes\tpreDataBytes\tpreUndefBytes\tpostInstrBytes"
             + "\tpostDataBytes\tpostUndefBytes\tclassifiedDelta\tphase1Passes"
             + "\tresyncRounds\tclearedRanges\tclearedKinds\tpreInstrCount"
-            + "\tpostInstrCount\tstillUndefined\tescaped\trendered\tverdict"
+            + "\tpostInstrCount\tstillUndefined\tescaped"
+            + "\tvarArgsPre\tvarArgsWanted\tvarArgsPost\trendered\tverdict"
             + "\tgateFailures\n");
         for (Row row : rows) {
             tsv.append(row.addrText).append('\t')
@@ -3006,6 +3199,10 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
                .append(row.postInstrCount).append('\t')
                .append(row.stillUndefined).append('\t')
                .append(row.escaped).append('\t')
+               .append(row.preVarArgs).append('\t')
+               .append(row.varArgsWanted == null ? "PRESERVE"
+                       : String.valueOf(row.varArgsWanted)).append('\t')
+               .append(row.varArgsPost).append('\t')
                .append(row.rendered).append('\t')
                .append(row.verdict).append('\t')
                .append(String.join(" | ", row.gateFailures)).append('\n');
@@ -3033,6 +3230,14 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
          .append("\",\n");
         j.append("  \"gateOrder\": \"ALL_NON_MUTATING_GATES_FOR_ALL_ROWS_BEFORE_")
          .append("FIRST_WRITE\",\n");
+        j.append("  \"varargsPolicy\": \"MANIFEST_DRIVEN_DEFAULT_PRESERVE\",\n");
+        j.append("  \"varargsColumnBound\": ").append(spec.has("col.varArgs"))
+         .append(",\n");
+        j.append("  \"applier\": {\"script\": \"").append(jsonEscape(applierPath))
+         .append("\", \"bytes\": ").append(applierBytes)
+         .append(", \"sha256\": \"").append(jsonEscape(applierSha))
+         .append("\", \"pinnedBySpec\": ")
+         .append(!spec.all("applierSha256").isEmpty()).append("},\n");
         j.append("  \"spec\": {\"path\": \"").append(jsonEscape(spec.path))
          .append("\", \"bytes\": ").append(spec.bytes)
          .append(", \"sha256\": \"").append(spec.sha256).append("\"},\n");

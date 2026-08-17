@@ -43,6 +43,15 @@ original appliers implemented appears there with the applier it came from, and
 `test_every_inventoried_gate_exists_in_the_framework` fails if its refusal text
 is not in the framework source.
 
+VARARGS.  All three superseded appliers hard-cleared varargs and then asserted
+POST/readback varargs == false, so a variadic prototype could not be expressed
+and a target that already had varargs=true would be stripped with the POST gate
+certifying the strip.  In the framework varargs is a MANIFEST field of
+SET_PROTOTYPE whose default is PRESERVE; `VarargsFieldTests` pins that contract
+in the source, and the executed negative controls in
+`ghidra_cohort_replay.py --probes varargs` prove the gates fire in both
+directions and that a preserved varargs=true target is defended.
+
 Run:  python -m unittest tools.ghidra_cohort_framework_tests -v
 Emit the twin from the instrument + allowlist:
       python tools/ghidra_cohort_framework_tests.py --emit-live
@@ -66,6 +75,7 @@ SPEC_DIR = TOOLS / "cohort-specs"
 BOUNDARY_SPEC = SPEC_DIR / "boundary-cohort41.spec.tsv"
 NAME_SPEC = SPEC_DIR / "name-cohort160.spec.tsv"
 ABI_SPEC = SPEC_DIR / "abi-cohort294.spec.tsv"
+VARARGS_SPEC = SPEC_DIR / "varargs-cohort2.spec.tsv"
 
 BOUNDARY_MANIFEST = (
     REPO / "reverse-engineering" / "binary-analysis"
@@ -81,8 +91,21 @@ ABI_MANIFEST = (
     REPO / "local-lab" / "ghidra-cohort-framework" / "manifests"
     / "abi-signature-manifest-2026-08-17.tsv"
 )
+VARARGS_MANIFEST = (
+    REPO / "reverse-engineering" / "binary-analysis"
+    / "varargs-cohort2-promotion-manifest-2026-08-17.tsv"
+)
 
 REQUIRED_LIVE_PROJECT_DIR = r"c:\users\david\ghidra\projects\bea.rep"
+
+# One entry per completed per-cohort live grant, in the order the twin lists them.
+# A cohort that has only been rehearsed does NOT belong here: boundary/name/abi
+# ran on 2026-08-17 (db.18618 -> db.18622), and the two tentacle ceremonies ran
+# the same day (db.18622 -> db.18623 -> db.18624).
+LIVE_GRANTED_COHORTS = [
+    "boundary-cohort41", "name-cohort160", "abi-cohort294",
+    "tentacle-chain-a", "tentacle-chain-b",
+]
 PROGRAM_SHA256 = (
     "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
 )
@@ -162,6 +185,12 @@ GATE_INVENTORY: dict[str, tuple[str, str]] = {
     "m31-spec-syntax": ("SPEC SYNTAX", "F"),
     "m32-column-binding-missing": (
         "which the header does not contain", "F"),
+    # -- varargs as a manifest field (new: none of the three could express it) --
+    "m33-illegal-varargs-value": ("illegal varargs value", "F"),
+    "m34-varargs-signature-disagree": (
+        "varargs/proposedSignature disagree", "F"),
+    # -- applier provenance (new: no applier recorded its own digest) ----------
+    "m35-applier-sha-pin": ("APPLIER SHA PIN", "F"),
     # -- verb declaration (the framework's own structural gate) ----------
     "v01-verb-not-declared": ("VERB NOT DECLARED", "F"),
     "v02-verb-binding-missing": ("does not bind", "F"),
@@ -242,6 +271,10 @@ GATE_INVENTORY: dict[str, tuple[str, str]] = {
     "o04-post-signature": ("POST signature expected", "A"),
     "o05-post-cc": ("POST calling convention expected", "A"),
     "o06-post-stack-bytes": ("POST stack parameter bytes expected", "A"),
+    # o07/r09 are carried over from the ABI applier, but their EXPECTATION is no
+    # longer the literal false: it is the manifest value, or for a PRESERVE row
+    # the varargs state measured before the write.  The refusal text is the same
+    # string, so the losslessness proof still binds it.
     "o07-post-varargs": ("POST varargs expected", "A"),
     "o08-post-signature-source": ("POST signature source expected", "A"),
     "o09-post-custom-storage": ("POST uses custom variable storage", "A"),
@@ -458,6 +491,7 @@ LIVE_ALLOWLISTED_EDITS: list[tuple[str, str, str]] = [
         "    // reach live, whatever its spec declares.\n"
         "    static final String[] LIVE_AUTHORIZED_COHORTS = {\n"
         '        "boundary-cohort41", "name-cohort160", "abi-cohort294",\n'
+        '        "tentacle-chain-a", "tentacle-chain-b",\n'
         "    };\n",
     ),
     (
@@ -602,11 +636,30 @@ class FrameworkDerivationTests(unittest.TestCase):
                        '"onslaught-career-editor/reverse-engineering"'):
             self.assertIn(marker, self.live)
 
-    def test_the_twin_allowlists_cohorts_and_only_the_three_completed_ones(self) -> None:
+    def test_the_twin_allowlists_exactly_the_granted_cohorts(self) -> None:
+        """One entry per completed per-cohort grant, and nothing else.
+
+        This is deliberately an EXACT set rather than a presence check.  A grant
+        that exists in the twin but not here, or here but not in the twin, is a
+        mismatch between what the maintainer authorized and what the framework
+        will run - so both directions must fail.  A cohort that has only been
+        REHEARSED is not granted and must not appear.
+        """
         self.assertIn("LIVE_AUTHORIZED_COHORTS", self.live)
         self.assertIn("reason=cohort_not_live_authorized", self.live)
-        for cohort in ("boundary-cohort41", "name-cohort160", "abi-cohort294"):
-            self.assertIn(f'"{cohort}"', self.live)
+        block = self.live.split(
+            "static final String[] LIVE_AUTHORIZED_COHORTS = {", 1)[1]
+        block = block.split("};", 1)[0]
+        got = [t.strip().strip('",') for t in block.replace("\n", " ").split()]
+        got = [t for t in got if t and not t.startswith("//")]
+        self.assertEqual(got, LIVE_GRANTED_COHORTS)
+        # the allowlist literal inside the derivation must say the same thing
+        derivation = "".join(after for _r, _b, after in LIVE_ALLOWLISTED_EDITS)
+        for cohort in LIVE_GRANTED_COHORTS:
+            self.assertIn(f'"{cohort}"', derivation)
+        for rehearsed_only in ("varargs-cohort2",):
+            self.assertNotIn(rehearsed_only, self.live,
+                             "a rehearsed cohort is not an authorization")
 
     def test_the_twin_carries_no_extra_containment_relaxation(self) -> None:
         """A live path must not be reachable from a contains() test."""
@@ -946,6 +999,245 @@ class CohortSpecTests(unittest.TestCase):
                             f"refuted row {refuted} shipped as a target")
 
 
+class ApplierProvenanceTests(unittest.TestCase):
+    """A receipt must be able to say which applier produced it.
+
+    Before this, establishing that was mtimes plus re-deriving the twin: the
+    tentacle lane had to record that as INFERRED.  Now every run measures its own
+    source digest and echoes it into the log and the receipt, and a spec may pin
+    it.
+    """
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.base = BASE.read_text(encoding="utf-8")
+        cls.live = LIVE.read_text(encoding="utf-8")
+        cls.code = code_only(cls.base)
+
+    def test_both_files_measure_their_own_source(self) -> None:
+        for text, label in ((self.base, "instrument"), (self.live, "twin")):
+            with self.subTest(label=label):
+                self.assertIn("getSourceFile().getInputStream()", text)
+                self.assertIn("COHORT_APPLIER script=", text)
+                self.assertIn(r'\"applier\": {\"script\"', text)
+
+    def test_the_digest_is_measured_before_the_spec_is_even_read(self) -> None:
+        """So a refusal that happens early still names the applier."""
+        self.assertLess(self.code.index("measureApplier();"),
+                        self.code.index("Spec spec = loadSpec("))
+
+    def test_the_pin_is_optional_and_may_list_the_twin_too(self) -> None:
+        self.assertIn('List<String> pinned = spec.all("applierSha256");',
+                      self.code)
+        self.assertIn("if (pinned.isEmpty()) {", self.code)
+        block = self.base.split(
+            "KNOWN_SPEC_KEYS = new LinkedHashSet<>(Arrays.asList(", 1)[1]
+        self.assertIn('"applierSha256"', block.split("));", 1)[0])
+
+    def test_the_instrument_and_the_twin_have_different_digests(self) -> None:
+        """Which is exactly why a pin has to admit more than one value."""
+        self.assertNotEqual(_sha256(BASE), _sha256(LIVE))
+
+    def test_a_missing_pin_would_be_caught(self) -> None:
+        tampered = self.base.replace("APPLIER SHA PIN", "applier sha ok")
+        self.assertTrue(tampered != self.base)
+        self.assertTrue(
+            GATE_INVENTORY["m35-applier-sha-pin"][0] not in tampered)
+
+
+class VarargsFieldTests(unittest.TestCase):
+    """varargs is a manifest field of SET_PROTOTYPE, defaulting to PRESERVE.
+
+    The defect this replaces, present in all three superseded appliers:
+
+        if (f.hasVarArgs()) { f.setVarArgs(false); }
+        requireEqual(..., "POST varargs", false, f.hasVarArgs());
+
+    so (1) a variadic prototype could never be SET, and (2) a target that already
+    carried varargs=true would be stripped, with the POST and readback gates
+    certifying the stripped state.  Measured on db.18622: 10 of the 8,329
+    functions carry varargs=true, so the second failure mode was one manifest row
+    away from being live.
+    """
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.base = BASE.read_text(encoding="utf-8")
+        cls.live = LIVE.read_text(encoding="utf-8")
+        cls.code = code_only(cls.base)
+
+    def test_no_literal_false_expectation_survives_anywhere(self) -> None:
+        for text, label in ((self.base, "instrument"), (self.live, "twin")):
+            for banned in ('POST varargs expected [false] actual [true]',
+                           'READBACK varargs expected [false] actual [true]'):
+                with self.subTest(label=label, banned=banned):
+                    self.assertNotIn(banned, text)
+
+    def test_the_only_setvarargs_call_writes_the_resolved_decision(self) -> None:
+        # still exactly one mutation call, and it is not a constant
+        self.assertEqual(self.code.count(".setVarArgs("), 1)
+        self.assertIn("f.setVarArgs(want);", self.code)
+        self.assertNotIn("setVarArgs(false)", self.code)
+        self.assertNotIn("setVarArgs(true)", self.code)
+
+    def test_an_absent_or_empty_cell_means_preserve_not_false(self) -> None:
+        self.assertIn("row.varArgsWanted = null;", self.code)
+        # The resolved value for a null decision is the measured PRE value, at
+        # all three sites: the pre-write cross-check, the POST gate, and the
+        # apply itself.  Whitespace-normalised so indentation cannot mask a loss.
+        flat = " ".join(self.code.split())
+        self.assertEqual(
+            flat.count("row.varArgsWanted == null ? row.preVarArgs "
+                       ": row.varArgsWanted.booleanValue()"), 3, flat.count(
+                           "row.varArgsWanted == null"))
+        self.assertIn("row.preVarArgs = f.hasVarArgs();", self.code)
+        # and col.varArgs must NOT be a required binding
+        self.assertNotIn('requireBinding(spec, "col.varArgs"', self.code)
+
+    def test_post_and_readback_compare_against_the_manifest_value(self) -> None:
+        self.assertIn('fail(row, "POST varargs expected [" + wantVarArgs', self.code)
+        self.assertIn('fail(row, "READBACK varargs expected [" + row.varArgsWanted',
+                      self.code)
+
+    def test_the_column_is_owned_by_set_prototype_and_known_to_the_spec(self) -> None:
+        self.assertIn('owner.put("col.varArgs", V_SET_PROTOTYPE);', self.code)
+        block = self.base.split(
+            "KNOWN_SPEC_KEYS = new LinkedHashSet<>(Arrays.asList(", 1)[1]
+        block = block.split("));", 1)[0]
+        self.assertIn('"col.varArgs"', block)
+
+    def test_a_spec_cannot_widen_the_frozen_collateral_columns(self) -> None:
+        """The frozen list is compiled in; a spec may only unlock varArgs."""
+        block = self.base.split("static final String[] FROZEN_COLUMNS = {", 1)[1]
+        block = block.split("};", 1)[0]
+        got = [t.strip().strip('",') for t in block.replace("\n", " ").split()]
+        self.assertEqual([t for t in got if t], FROZEN_COLUMNS)
+        # nothing spec-supplied may reach the frozen list or the mutable set
+        mut = self.base.split("static Set<String> mutableColumnsFor(", 1)[1]
+        mut = code_only(mut.split("\n    }", 1)[0])
+        for banned in ("spec.", "manifest", "cells.get"):
+            self.assertNotIn(banned, mut, banned)
+        self.assertEqual(mut.count('out.add("varArgs")'), 1)
+        arm = mut.split("if (varArgsDeclared) {", 1)
+        self.assertEqual(len(arm), 2, "varArgs is not guarded by varArgsDeclared")
+        self.assertIn('out.add("varArgs")', arm[1].split("}", 1)[0])
+        # the one spec-dependent input is a boolean the caller derives from the
+        # binding, so a spec cannot name a column to unlock
+        self.assertIn(
+            'boolean varArgsDeclared = spec.has("col.varArgs");', self.code)
+
+    def test_varargs_stays_frozen_for_a_cohort_that_says_nothing(self) -> None:
+        """Which is what makes the preserve default a gate, not an intention."""
+        self.assertIn("varArgsFrozenForTargets=", self.base)
+        # l03 is the refusal a stripped varargs hits when no column is bound
+        self.assertIn(GATE_INVENTORY["l03-target-moved-frozen-column"][0],
+                      self.base)
+
+    def test_the_fault_injector_can_never_commit(self) -> None:
+        self.assertIn('"probe-fault-varargsflip".equals(mode)', self.code)
+        self.assertIn("|| faultVarArgsFlip;", self.code)
+        self.assertIn("commit = failures.isEmpty() && !planOnly && !faultMode;",
+                      self.code)
+        # the injector is the ONE place the decision may be inverted
+        self.assertEqual(self.code.count("want = !want;"), 1)
+
+    def test_the_receipt_states_the_policy_and_the_per_row_decision(self) -> None:
+        self.assertIn(r'\"varargsPolicy\": \"MANIFEST_DRIVEN_DEFAULT_PRESERVE\"',
+                      self.base)
+        self.assertIn(r"varArgsPre\tvarArgsWanted\tvarArgsPost", self.base)
+        self.assertIn(r'\"varargsColumnBound\"', self.base)
+
+    def test_the_two_row_cohort_spec_is_expressed_as_a_spec(self) -> None:
+        self.assertTrue(VARARGS_SPEC.exists(), VARARGS_SPEC)
+        s = read_spec(VARARGS_SPEC)
+        self.assertEqual(s["verb"], ["SET_PROTOTYPE"])
+        self.assertEqual(s["programSha256"], [PROGRAM_SHA256])
+        self.assertEqual(s["manifestRows"], ["2"])
+        self.assertIn("col.varArgs", s)
+        # a signature cohort may not reach a name or a body
+        for forbidden in ("col.proposedName", "col.currentName",
+                          "col.proposedRanges", "col.currentRanges"):
+            self.assertNotIn(forbidden, s)
+
+    def test_every_varargs_spec_key_is_known_to_the_framework(self) -> None:
+        block = self.base.split(
+            "KNOWN_SPEC_KEYS = new LinkedHashSet<>(Arrays.asList(", 1)[1]
+        block = block.split("));", 1)[0]
+        known = {t.strip().strip('",') for t in block.replace("\n", " ").split()}
+        for key in read_spec(VARARGS_SPEC):
+            with self.subTest(key=key):
+                self.assertIn(key, known)
+
+    def test_the_two_rows_ask_for_varargs_and_render_it(self) -> None:
+        if not VARARGS_MANIFEST.exists():
+            self.skipTest("varargs manifest absent")
+        rows = [l for l in VARARGS_MANIFEST.read_text(encoding="utf-8").split("\n")
+                if l]
+        header = rows[0].split("\t")
+        self.assertIn("varargs", header)
+        va = header.index("varargs")
+        proposed = header.index("proposedSignature")
+        current = header.index("currentSignatureLive")
+        self.assertEqual(len(rows) - 1, 2)
+        for line in rows[1:]:
+            cells = line.split("\t")
+            with self.subTest(addr=cells[0]):
+                self.assertEqual(cells[va], "true")
+                self.assertTrue(cells[proposed].endswith(", ...)"),
+                                cells[proposed])
+                self.assertFalse(cells[current].endswith(", ...)"),
+                                 "the row is not a change")
+
+    def test_the_spec_pins_match_the_manifest_on_disk(self) -> None:
+        if not VARARGS_MANIFEST.exists():
+            self.skipTest("varargs manifest absent")
+        s = read_spec(VARARGS_SPEC)
+        self.assertEqual(s["manifestSha256"], [_sha256(VARARGS_MANIFEST)])
+        raw = VARARGS_MANIFEST.read_bytes()
+        self.assertEqual(s["manifestBytes"], [str(len(raw))])
+        self.assertNotIn(b"\r\n", raw,
+                         "CRLF: git normalises it on commit and the pin breaks")
+        rows = [l for l in raw.decode("utf-8").split("\n") if l]
+        self.assertEqual(s["manifestHeaderPipe"],
+                         ["|".join(rows[0].split("\t"))])
+        self.assertEqual(s["manifestColumns"], [str(len(rows[0].split("\t")))])
+
+    def test_the_spec_file_is_lf_so_its_own_pin_survives_a_commit(self) -> None:
+        self.assertNotIn(b"\r\n", VARARGS_SPEC.read_bytes())
+
+    def test_v2_is_left_exactly_as_its_receipts_pinned_it(self) -> None:
+        """V2 keeps the defect, on purpose, and keeps its pinned digest.
+
+        The obvious place for a "the capability moved" note is V2's varargs site,
+        but V2's source SHA-256 is pinned by its own mutator suite
+        (`V2_SHA256`), which also proves V2 is the reviewed one-gate-inverted
+        derivation of GhidraApplyAbiSignatures.java.  A comment there would break
+        both, i.e. it would repin a completed one-shot owner - which
+        reverse-engineering/ghidra/README.md forbids.  So the record lives where
+        it cannot invalidate a receipt: tools/README.md, the framework banner, and
+        this test.
+        """
+        v2_tests = (TOOLS / "ghidra_abi_signature_mutator_tests.py").read_text(
+            encoding="utf-8")
+        pin = [l for l in v2_tests.split("\n") if l.startswith("V2_SHA256 = ")]
+        self.assertEqual(len(pin), 1)
+        pinned = pin[0].split('"')[1]
+        self.assertEqual(
+            _sha256(TOOLS / "GhidraApplyAbiSignaturesV2.java"), pinned,
+            "V2 was edited; its receipts pin these bytes")
+        v2 = (TOOLS / "GhidraApplyAbiSignaturesV2.java").read_text(
+            encoding="utf-8")
+        # the defect is still there, unchanged, and still cannot set varargs
+        self.assertIn("if (f.hasVarArgs()) {\n            f.setVarArgs(false);", v2)
+        self.assertNotIn("setVarArgs(true)", v2)
+        # and the moved capability is recorded somewhere that is not V2
+        readme = (TOOLS / "README.md").read_text(encoding="utf-8")
+        for needed in ("varargs", "PRESERVE", "GhidraApplyCohortManifest"):
+            self.assertIn(needed, readme)
+        self.assertIn("do not add varargs support to the superseded appliers",
+                      readme)
+
+
 class NegativeControlTests(unittest.TestCase):
     """The tests above must have teeth."""
 
@@ -975,8 +1267,33 @@ class NegativeControlTests(unittest.TestCase):
 
     def test_a_smuggled_verb_would_be_caught(self) -> None:
         tampered = self.base.replace(
-            "f.setVarArgs(false);", "f.setVarArgs(false);\n f.setComment(null);")
+            "f.setVarArgs(want);", "f.setVarArgs(want);\n f.setComment(null);")
+        self.assertTrue(tampered != self.base)
         self.assertTrue(".setComment(" in code_only(tampered))
+
+    def test_a_reverted_unconditional_varargs_strip_would_be_caught(self) -> None:
+        """The exact V2 defect, reintroduced, must break these tests."""
+        tampered = self.base.replace("f.setVarArgs(want);",
+                                     "f.setVarArgs(false);")
+        self.assertTrue(tampered != self.base)
+        self.assertTrue("f.setVarArgs(want);" not in code_only(tampered))
+        self.assertTrue("setVarArgs(false)" in code_only(tampered))
+
+    def test_a_literal_false_post_expectation_would_be_caught(self) -> None:
+        tampered = self.base.replace(
+            'fail(row, "POST varargs expected [" + wantVarArgs',
+            'fail(row, "POST varargs expected [false] actual [true]"; //')
+        self.assertTrue(tampered != self.base)
+        self.assertTrue(
+            "POST varargs expected [false] actual [true]" in tampered)
+
+    def test_unlocking_varargs_unconditionally_would_be_caught(self) -> None:
+        """Dropping the varArgsDeclared guard re-hides a strip from collateral."""
+        tampered = self.base.replace("            if (varArgsDeclared) {\n", "")
+        self.assertTrue(tampered != self.base)
+        mut = tampered.split("static Set<String> mutableColumnsFor(", 1)[1]
+        mut = mut.split("\n    }", 1)[0]
+        self.assertTrue("if (varArgsDeclared) {" not in mut)
 
     def test_a_rollback_claim_would_be_caught(self) -> None:
         tampered = self.base.replace(
@@ -1062,6 +1379,84 @@ class ReplayReceiptTests(unittest.TestCase):
         expectations = [p["expect"] for p in probes]
         self.assertEqual(len(set(expectations)), len(expectations),
                          "two probes graded against the same refusal message")
+
+    # The executed varargs controls.  Presence of a gate is not firing of a
+    # gate: each of these is a real headless run against a scratch replica that
+    # must refuse for its own reason, and none may commit.
+    VARARGS_PROBES = {
+        "p11-varargs-asked-true-written-false":
+            "POST varargs expected [true] actual [false]",
+        "p12-varargs-asked-false-written-true":
+            "POST varargs expected [false] actual [true]",
+        "p13-varargs-preserve-true-stripped":
+            "POST varargs expected [true] actual [false] (PRESERVE: the PRE value)",
+        "p14-varargs-illegal-value": "illegal varargs value",
+        "p15-varargs-signature-disagree": "varargs/proposedSignature disagree",
+        "p16-applier-sha-pin": "APPLIER SHA PIN",
+    }
+
+    def test_the_varargs_negative_controls_were_provoked(self) -> None:
+        matrix = self.LANE / "probes" / "matrix.json"
+        if not matrix.exists():
+            self.skipTest("the provocation matrix has not been run")
+        data = json.loads(matrix.read_text(encoding="utf-8"))
+        by_probe = {p["probe"]: p for p in data["probes"]}
+        if not any(p in by_probe for p in self.VARARGS_PROBES):
+            self.skipTest("the varargs probes have not been run in this clone")
+        for probe, expect in self.VARARGS_PROBES.items():
+            with self.subTest(probe=probe):
+                self.assertIn(probe, by_probe)
+                got = by_probe[probe]
+                self.assertEqual(got["expect"], expect)
+                self.assertEqual(got["verdict"], "REFUSED")
+                self.assertFalse(got["appliedAnyway"])
+
+    def test_the_varargs_preserve_positive_control_left_it_alone(self) -> None:
+        """A manifest that says nothing must leave varargs=true UNCHANGED."""
+        matrix = self.LANE / "probes" / "matrix.json"
+        if not matrix.exists():
+            self.skipTest("the provocation matrix has not been run")
+        data = json.loads(matrix.read_text(encoding="utf-8"))
+        controls = {c["control"]: c for c in data.get("positiveControls", [])}
+        if "c01-varargs-preserved-by-silence" not in controls:
+            self.skipTest("the preserve control has not been run in this clone")
+        got = controls["c01-varargs-preserved-by-silence"]
+        self.assertEqual(got["verdict"], "PRESERVED")
+        self.assertEqual(got["result"], "PASS")
+        self.assertTrue(got["committed"])
+        self.assertEqual(got["varArgsPre"], "true")
+        self.assertEqual(got["varArgsWanted"], "PRESERVE")
+        self.assertEqual(got["varArgsPost"], "true")
+        self.assertTrue(got["readbackResult"] == "PASS")
+        self.assertTrue(got["renderedKeepsVariadicTail"])
+
+    def test_the_varargs_rehearsal_set_varargs_on_both_rows(self) -> None:
+        """The rehearsal is a rehearsal: no live claim rides on this receipt."""
+        apply_json = self.LANE / "varargs-cohort2" / "apply.json"
+        if not apply_json.exists():
+            self.skipTest("the varargs cohort has not been rehearsed here")
+        got = json.loads(apply_json.read_text(encoding="utf-8"))
+        self.assertEqual(got["result"], "PASS")
+        self.assertTrue(got["committed"])
+        self.assertEqual(got["counts"]["rows"], 2)
+        self.assertEqual(got["varargsPolicy"], "MANIFEST_DRIVEN_DEFAULT_PRESERVE")
+        self.assertTrue(got["varargsColumnBound"])
+        self.assertEqual(got["policy"], "LIVE_FORBIDDEN")
+        read_json = self.LANE / "varargs-cohort2" / "readback.json"
+        self.assertTrue(read_json.exists(), "no separate-process readback")
+        rb = json.loads(read_json.read_text(encoding="utf-8"))
+        self.assertEqual(rb["result"], "PASS")
+        self.assertEqual(rb["counts"]["rows"], 2)
+        tsv = self.LANE / "varargs-cohort2" / "readback.tsv"
+        if tsv.exists():
+            rows = [l.split("\t") for l in
+                    tsv.read_text(encoding="utf-8").split("\n") if l]
+            head = rows[0]
+            post = head.index("varArgsPost")
+            want = head.index("varArgsWanted")
+            for r in rows[1:]:
+                self.assertEqual(r[want], "true")
+                self.assertEqual(r[post], "true")
 
     def test_replayed_apply_receipts_match_the_archived_ceremonies(self) -> None:
         if not self.LANE.exists():

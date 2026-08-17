@@ -369,6 +369,22 @@ the document it links.
 > the dated 2026-08-13, 2026-08-12 and July tables correctly still show the
 > pre-swap names.
 
+> **Two byte-proven variadic prototypes, REHEARSED not promoted (2026-08-17).**
+> [varargs-cohort2-promotion-manifest-2026-08-17.tsv](varargs-cohort2-promotion-manifest-2026-08-17.tsv)
+> carries `0x0055de9b` `sprintf` and `0x0042b840` `CConsole__AddString`, each
+> declared `varargs=false` while its bytes build a `va_list` from the argument slot
+> after the last declared parameter — `8d4510` (`lea eax,[ebp+0x10]`) at
+> `0x0055deab` forwarded to `CRT__FormatOutputToStream`, and
+> `8d842428210000` (`lea eax,[esp+0x2128]`) at `0x0042b86a` forwarded to
+> `vsprintf` — both re-derived from the pristine specimen. Both defects had
+> already been written into their own plate comments and never converted, because
+> every applier available then cleared `varargs` unconditionally and asserted
+> `false`; `varargs` is now a manifest field of the cohort framework's
+> `SET_PROTOTYPE` verb, defaulting to preserve. The cohort is rehearsed on a
+> replica with a separate-process readback and is **not** in the live twin's
+> authorization allowlist. Its PRE pins are `db.18623`-era and must be
+> re-measured against the then-current database before any live ceremony.
+
 The closeout and per-address plan supersede older saved names where they
 conflict. Static accounting does not prove runtime behavior, exact layouts,
 patch behavior, or rebuild parity. Fullpass findings are discovery notes, not a

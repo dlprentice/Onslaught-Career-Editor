@@ -21,6 +21,12 @@ Usage:
   python tools/ghidra_cohort_replay.py --cohort abi-cohort294 --steps census
   python tools/ghidra_cohort_replay.py --sandbox        # build the standing sandbox
   python tools/ghidra_cohort_replay.py --verdict        # grade what has been run
+  python tools/ghidra_cohort_replay.py --probes varargs # the varargs controls
+
+REHEARSAL vs REPRODUCTION.  `COHORTS` holds both: a completed ceremony is graded
+against its archived receipts, while a `rehearsalOnly` cohort has no archive and
+a clean run is reported as REHEARSED_NOT_PROMOTED.  Nothing here authorizes a
+live apply; the live twin's compiled cohort allowlist is the only authorization.
 """
 from __future__ import annotations
 
@@ -140,6 +146,35 @@ COHORTS: dict[str, dict] = {
 }
 
 SANDBOX_BACKUP = BACKUPS / "2026-08-17-abi-signature-cohort294-post-live"
+
+# ---------------------------------------------------------------------------
+# REHEARSAL-ONLY cohorts.  These have NOT been promoted: the entry exists so the
+# ceremony modes can be run against a replica and graded, and nothing here is a
+# live authorization (the live twin's compiled allowlist is the only one).
+REHEARSAL_COHORTS: dict[str, dict] = {
+    "varargs-cohort2": {
+        # PRE is the newest verified off-volume backup at the time of rehearsal.
+        # A live ceremony must take its own fresh PRE backup and re-pin: the
+        # tentacle chain advanced live past this state on the same day.
+        "backup": BACKUPS / "2026-08-17-tentacle-chain-a-post-live",   # db.18623
+        "spec": SPECS / "varargs-cohort2.spec.tsv",
+        "manifest": (REPO / "reverse-engineering" / "binary-analysis"
+                     / "varargs-cohort2-promotion-manifest-2026-08-17.tsv"),
+        "rehearsalOnly": True,
+        "archived": {
+            "source": "REHEARSAL ONLY - no completed ceremony to compare to",
+            "rows": 2,
+            "applied": 2,
+            "preFunctions": 8329, "postFunctions": 8329,
+            "preInstructions": 551232, "postInstructions": 551232,
+            "preReferences": 234493, "postReferences": 234493,
+            "preBookmarks": 2301, "postBookmarks": 2301,
+            "preDefinedData": 48583, "postDefinedData": 48583,
+            "preUndefinedData": 3907629, "postUndefinedData": 3907629,
+        },
+    },
+}
+COHORTS.update(REHEARSAL_COHORTS)
 
 
 # --------------------------------------------------------------------- utils
@@ -319,6 +354,297 @@ def _doctor(path: Path, edits: list[tuple[str, str]], dest: Path) -> Path:
     return dest
 
 
+def _doctor_manifest(manifest: Path, edits: dict[str, dict[str, str]],
+                     dest: Path) -> Path:
+    """Rewrite named cells of named rows, keeping the header and shape intact."""
+    rows = [l for l in manifest.read_text(encoding="utf-8").split("\n") if l]
+    header = rows[0].split("\t")
+    out = [rows[0]]
+    seen: set[str] = set()
+    for line in rows[1:]:
+        cells = line.split("\t")
+        want = edits.get(cells[0])
+        if want:
+            seen.add(cells[0])
+            for column, value in want.items():
+                cells[header.index(column)] = value
+        out.append("\t".join(cells))
+    missing = set(edits) - seen
+    if missing:
+        raise SystemExit(f"probe edit targets no manifest row: {missing}")
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.write_bytes(("\n".join(out) + "\n").encode("utf-8"))
+    return dest
+
+
+def _repin_spec(spec: Path, manifest: Path, dest: Path,
+                extra: list[tuple[str, str]] | None = None) -> Path:
+    """Point a spec at a doctored manifest by re-deriving only its pins.
+
+    Every other gate stays enforced - this is not a relaxation mode.  Without it
+    a doctored manifest would refuse on the digest pin and the gate under test
+    would never be reached.
+    """
+    raw = manifest.read_bytes()
+    text = spec.read_text(encoding="utf-8")
+    swaps = [
+        ("manifestSha256\t", hashlib.sha256(raw).hexdigest()),
+        ("manifestBytes\t", str(len(raw))),
+    ]
+    for key, value in swaps:
+        old = [l for l in text.split("\n") if l.startswith(key)]
+        if len(old) != 1:
+            raise SystemExit(f"cannot re-pin {key} in {spec.name}")
+        text = text.replace(old[0], key + value, 1)
+    for old, new in (extra or []):
+        if old not in text:
+            raise SystemExit(f"spec edit not found in {spec.name}: {old!r}")
+        text = text.replace(old, new, 1)
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.write_bytes(text.encode("utf-8"))
+    return dest
+
+
+# The one-row PRESERVE control.  Its target already carries varargs=true in the
+# database (measured 2026-08-17: 10 of 8,329 functions do), and the control's
+# manifest has NO varargs column at all, so "absent means do not touch" is
+# exercised against a real variadic function rather than argued.  The proposal is
+# a deliberately trivial parameter rename: it exists only to make the row a
+# non-no-op so the prototype path actually runs, and it is never promoted.
+PRESERVE_CONTROL_ADDR = "0x00441740"
+PRESERVE_CONTROL_HEADER = (
+    "addr\tliveName\tcurrentSignatureLive\tproposedSignature\tcallingConvention"
+    "\treturnTypeProposed\tparamSpec\tarity\tarityBytes\tconfidence")
+PRESERVE_CONTROL_ROW = (
+    "0x00441740\tCConsole__Printf"
+    "\tvoid __cdecl CConsole__Printf(void * console, char * format, ...)"
+    "\tvoid __cdecl CConsole__Printf(void * console, char * fmt, ...)"
+    "\t__cdecl\tvoid"
+    "\tSTACK:void *:console:expl;STACK:char *:fmt:expl\t2\t8\tHIGH")
+
+
+def _preserve_control_inputs(work: Path) -> tuple[Path, Path]:
+    """A spec+manifest pair that never mentions varargs, written to the lane."""
+    manifest = work / "varargs-preserve-control.tsv"
+    manifest.parent.mkdir(parents=True, exist_ok=True)
+    manifest.write_bytes(
+        (PRESERVE_CONTROL_HEADER + "\n" + PRESERVE_CONTROL_ROW + "\n")
+        .encode("utf-8"))
+    raw = manifest.read_bytes()
+    base = read_spec_text(SPECS / "varargs-cohort2.spec.tsv")
+    spec_lines = [
+        l for l in base.split("\n")
+        if not l.startswith(("cohortId\t", "cohortTitle\t", "manifestSha256\t",
+                             "manifestBytes\t", "manifestRows\t",
+                             "manifestColumns\t", "manifestHeaderPipe\t",
+                             "col.", "expectedTargetsChanged\t",
+                             "expectedFunctionsUntouched\t", "constant\t",
+                             "enum\t", "unique\t"))
+    ]
+    spec_lines += [
+        "cohortId\tvarargs-preserve-control",
+        "cohortTitle\tPRESERVE control: no varargs column at all",
+        f"manifestSha256\t{hashlib.sha256(raw).hexdigest()}",
+        f"manifestBytes\t{len(raw)}",
+        "manifestRows\t1",
+        "manifestColumns\t10",
+        "manifestHeaderPipe\t" + "|".join(PRESERVE_CONTROL_HEADER.split("\t")),
+        "col.addr\taddr",
+        "col.liveName\tliveName",
+        "col.currentSignature\tcurrentSignatureLive",
+        "col.proposedSignature\tproposedSignature",
+        "col.callingConvention\tcallingConvention",
+        "col.returnType\treturnTypeProposed",
+        "col.paramSpec\tparamSpec",
+        "col.arity\tarity",
+        "col.arityBytes\tarityBytes",
+        "unique\taddr",
+        "expectedTargetsChanged\t1",
+        "expectedFunctionsUntouched\t8328",
+    ]
+    spec = work / "varargs-preserve-control.spec.tsv"
+    spec.write_bytes(("\n".join(spec_lines) + "\n").encode("utf-8"))
+    return spec, manifest
+
+
+def read_spec_text(path: Path) -> str:
+    return path.read_text(encoding="utf-8")
+
+
+def run_varargs_controls() -> int:
+    """Execute the varargs negative controls and the PRESERVE positive control.
+
+    Every one of these is a real headless run on a replica restored from the
+    off-volume PRE backup.  The negatives must REFUSE for their own reason and
+    must not commit; the positive must PASS and leave varargs=true untouched,
+    proven by a separate-process readback.
+    """
+    cfg = COHORTS["varargs-cohort2"]
+    spec, manifest = cfg["spec"], cfg["manifest"]
+    if not manifest.exists():
+        raise SystemExit(f"manifest missing: {manifest}")
+    work = LANE / "probes"
+    out = RECEIPTS / "probes"
+    out.mkdir(parents=True, exist_ok=True)
+    logs = LANE / "logs" / "probes"
+
+    # -- doctored inputs, all written into the ephemeral lane -----------------
+    m_false = _doctor_manifest(manifest, {"0x0042b840": {
+        "varargs": "false",
+        "proposedSignature":
+            "void __cdecl CConsole__AddString(void * console, char * format)",
+        "paramSpec": "STACK:void *:console:expl;STACK:char *:format:expl",
+    }}, work / "varargs-asked-false.tsv")
+    # The tracked spec pins `constant varArgs=true` - the axis this cohort exists
+    # for - so an asked-false row would refuse on that pin BEFORE the write and
+    # the POST gate under test would never run.  Dropping exactly that one
+    # cohort-specific pin is the whole relaxation; every framework gate stays on.
+    s_false = _repin_spec(spec, m_false, work / "varargs-asked-false.spec.tsv",
+                          extra=[("constant\tvarArgs=true\n", "")])
+    m_illegal = _doctor_manifest(manifest, {"0x0055de9b": {"varargs": "yes"}},
+                                 work / "varargs-illegal.tsv")
+    s_illegal = _repin_spec(spec, m_illegal, work / "varargs-illegal.spec.tsv")
+    m_disagree = _doctor_manifest(manifest, {"0x0055de9b": {"varargs": "false"}},
+                                  work / "varargs-disagree.tsv")
+    s_disagree = _repin_spec(spec, m_disagree,
+                             work / "varargs-disagree.spec.tsv")
+    p_spec, p_manifest = _preserve_control_inputs(work)
+    # provenance: a spec may pin the applier's own source digest, and a pin that
+    # matches nothing must refuse before any write.
+    s_applier = _repin_spec(
+        spec, manifest, work / "varargs-bad-applier.spec.tsv",
+        extra=[("verb\tSET_PROTOTYPE",
+                "applierSha256\t" + "00" * 32 + "\nverb\tSET_PROTOTYPE")])
+
+    negatives = [
+        # tag, spec, manifest, mode, writable, expected refusal
+        ("p11-varargs-asked-true-written-false", spec, manifest,
+         "probe-fault-varargsflip", True,
+         "POST varargs expected [true] actual [false]"),
+        ("p12-varargs-asked-false-written-true", s_false, m_false,
+         "probe-fault-varargsflip", True,
+         "POST varargs expected [false] actual [true]"),
+        ("p13-varargs-preserve-true-stripped", p_spec, p_manifest,
+         "probe-fault-varargsflip", True,
+         "POST varargs expected [true] actual [false] (PRESERVE: the PRE value)"),
+        ("p14-varargs-illegal-value", s_illegal, m_illegal, "dry", False,
+         "illegal varargs value"),
+        ("p15-varargs-signature-disagree", s_disagree, m_disagree, "dry", False,
+         "varargs/proposedSignature disagree"),
+        ("p16-applier-sha-pin", s_applier, manifest, "dry", False,
+         "APPLIER SHA PIN"),
+    ]
+
+    results = []
+    for tag, sp, mf, mode, writable, expect in negatives:
+        replica = LANE / "replicas" / (f"varargs-{tag}" if writable
+                                       else "varargs-probe-clean")
+        if writable or not replica.exists():
+            restore(replica, cfg["backup"])
+        args = [str(sp), sha256_file(sp), str(mf), mode,
+                str(out / f"{tag}.json"), str(out / f"{tag}.tsv")]
+        for suffix in (".json", ".tsv"):
+            stale = out / f"{tag}{suffix}"
+            if stale.exists():
+                stale.unlink()
+        rc, _hits, log = headless(tag, replica, args, not writable, logs)
+        refused = expect in log
+        applied_anyway = False
+        receipt = out / f"{tag}.json"
+        if receipt.exists():
+            got = json.loads(receipt.read_text(encoding="utf-8"))
+            applied_anyway = bool(got.get("committed"))
+            if got.get("result") == "PASS":
+                refused = False
+        undetected = "COHORT_FAULT_UNDETECTED" in log
+        results.append(dict(probe=tag, mode=mode, expect=expect,
+                            refusalObserved=refused,
+                            appliedAnyway=applied_anyway,
+                            faultUndetected=undetected,
+                            verdict="REFUSED" if refused and not applied_anyway
+                                    and not undetected else "NOT_REFUSED"))
+        print(f"     -> {results[-1]['verdict']} (expected {expect!r})")
+        if writable:
+            shutil.rmtree(replica, ignore_errors=True)
+
+    # -- the positive control: silence must PRESERVE varargs=true ------------
+    control = dict(control="c01-varargs-preserved-by-silence",
+                   target=PRESERVE_CONTROL_ADDR,
+                   spec=str(p_spec), manifest=str(p_manifest))
+    replica = LANE / "replicas" / "varargs-preserve-control"
+    restore(replica, cfg["backup"])
+    for step, mode, readonly in (("apply", "apply", False),
+                                 ("readback", "readback", True)):
+        tag = f"c01-preserve-{step}"
+        args = [str(p_spec), sha256_file(p_spec), str(p_manifest), mode,
+                str(out / f"{tag}.json"), str(out / f"{tag}.tsv")]
+        rc, _hits, _log = headless(tag, replica, args, readonly, logs)
+        receipt = out / f"{tag}.json"
+        got = json.loads(receipt.read_text(encoding="utf-8")) if receipt.exists() \
+            else {}
+        if step == "apply":
+            control["result"] = got.get("result")
+            control["committed"] = bool(got.get("committed"))
+            control["varargsColumnBound"] = got.get("varargsColumnBound")
+            control["failures"] = got.get("failures", [])[:5]
+        else:
+            control["readbackResult"] = got.get("result")
+        tsv = out / f"{tag}.tsv"
+        if tsv.exists():
+            rows = [l.split("\t") for l in
+                    tsv.read_text(encoding="utf-8").split("\n") if l]
+            head = rows[0]
+            row = rows[1]
+            if step == "apply":
+                control["varArgsPre"] = row[head.index("varArgsPre")]
+                control["varArgsWanted"] = row[head.index("varArgsWanted")]
+                control["renderedKeepsVariadicTail"] = row[
+                    head.index("rendered")].endswith(", ...)")
+            control["varArgsPost"] = row[head.index("varArgsPost")]
+    control["verdict"] = ("PRESERVED"
+                          if control.get("result") == "PASS"
+                          and control.get("readbackResult") == "PASS"
+                          and control.get("varArgsPre") == "true"
+                          and control.get("varArgsWanted") == "PRESERVE"
+                          and control.get("varArgsPost") == "true"
+                          and control.get("renderedKeepsVariadicTail")
+                          else "NOT_PRESERVED")
+    print(f"     -> {control['verdict']} (silence must leave varargs=true)")
+    shutil.rmtree(replica, ignore_errors=True)
+
+    _merge_matrix(out / "matrix.json", results, [control])
+    bad = [r for r in results if r["verdict"] != "REFUSED"]
+    if control["verdict"] != "PRESERVED":
+        bad.append(control)
+    print(f"\nvarargs controls={len(results) + 1} "
+          f"failed={len(bad)}")
+    for r in bad:
+        print("   FAILED CONTROL:", r.get("probe") or r.get("control"))
+    return 0 if not bad else 1
+
+
+def _merge_matrix(path: Path, probes: list[dict],
+                  controls: list[dict] | None = None) -> None:
+    """Add these results to the standing matrix instead of replacing it.
+
+    The framework's own 15 probes and these varargs controls are separate runs;
+    overwriting would silently retire proof that is still valid.
+    """
+    existing: dict = {"probes": [], "positiveControls": []}
+    if path.exists():
+        existing.update(json.loads(path.read_text(encoding="utf-8")))
+    existing.setdefault("positiveControls", [])
+    fresh = {p["probe"] for p in probes}
+    existing["probes"] = [p for p in existing["probes"]
+                          if p["probe"] not in fresh] + probes
+    if controls:
+        names = {c["control"] for c in controls}
+        existing["positiveControls"] = [
+            c for c in existing["positiveControls"]
+            if c.get("control") not in names] + controls
+    path.write_text(json.dumps(existing, indent=2), encoding="utf-8")
+
+
 def run_probes(which: str) -> int:
     """Provoke gates with real headless runs, and require each to refuse.
 
@@ -456,8 +782,7 @@ def run_probes(which: str) -> int:
             print(f"     -> {results[-1]['verdict']} (expected {expect!r})")
             shutil.rmtree(replica, ignore_errors=True)
 
-    (out / "matrix.json").write_text(
-        json.dumps({"probes": results}, indent=2), encoding="utf-8")
+    _merge_matrix(out / "matrix.json", results)
     bad = [r for r in results if r["verdict"] != "REFUSED"]
     print(f"\nprobes={len(results)} refused={len(results) - len(bad)} "
           f"notRefused={len(bad)}")
@@ -555,7 +880,13 @@ def verdict() -> int:
         ]
         entry["checks"] = len(checks)
         entry["divergences"] = divergences
-        entry["status"] = "REPRODUCED" if not divergences else "DIVERGED"
+        if cfg.get("rehearsalOnly"):
+            # There is no completed ceremony behind these numbers, so a clean run
+            # is a rehearsal, never a reproduction and never an authorization.
+            entry["status"] = ("REHEARSED_NOT_PROMOTED" if not divergences
+                               else "REHEARSAL_DIVERGED")
+        else:
+            entry["status"] = "REPRODUCED" if not divergences else "DIVERGED"
         problems += len(divergences)
         report[name] = entry
 
@@ -657,12 +988,15 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--steps", default="identity,dry,apply,readback")
     ap.add_argument("--sandbox", action="store_true")
     ap.add_argument("--verdict", action="store_true")
-    ap.add_argument("--probes", default=None, choices=["core", "fault", "all"],
+    ap.add_argument("--probes", default=None,
+                    choices=["core", "fault", "all", "varargs"],
                     help="provoke gates with real headless runs")
     ns = ap.parse_args(argv)
 
     if ns.sandbox:
         return build_sandbox()
+    if ns.probes == "varargs":
+        return run_varargs_controls()
     if ns.probes:
         return run_probes(ns.probes)
     if ns.verdict:

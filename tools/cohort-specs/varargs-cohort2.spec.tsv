@@ -1,0 +1,110 @@
+# Cohort spec: the two byte-proven variadic prototypes that no previous applier
+# could express.  0x0055de9b sprintf and 0x0042b840 CConsole__AddString are each
+# declared varargs=false while their bytes build a va_list from the argument slot
+# after the last declared parameter and forward it to a formatter.  Both defects
+# were already written down in their own Ghidra plate comments and never
+# converted into a signature change, because every applier available at the time
+# cleared varargs unconditionally and then asserted false.
+#
+# RE-DERIVED FROM PRISTINE BYTES 2026-08-17 against
+# local-lab/pristine-verification-2026-07-26/pristine-target/BEA.exe
+# sha256 74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750
+# (PE parsed here: 4 sections, imageBase 00400000, .text VA 00401000 raw 00001000,
+# so file offset = VA - 0x400000 for .text/.rdata/.data and .data raw ends at
+# VA 00661000; .rsrc is offset by 0x774000 and is NOT flat):
+#   0055deab  8d4510            lea eax,[ebp+0x10]      -> va_list, 3rd arg slot
+#   0055dec4  e86b390000        call 0x561834           -> CRT__FormatOutputToStream
+#   0042b86a  8d842428210000    lea eax,[esp+0x2128]    -> va_list, 3rd arg slot
+#   0042b87b  e80c2b1300        call 0x55e38c           -> vsprintf
+# The discriminator between the two forwarders is byte-level: vsprintf at
+# 0055e38c pushes the va_list POINTER it was handed ([ebp+0x10]), while sprintf
+# LEAs its own frame slot - so sprintf is the variadic entry and vsprintf is not.
+#
+# THIS COHORT IS THE FIRST USER OF THE MANIFEST-DRIVEN varargs FIELD.  col.varArgs
+# binds the manifest's `varargs` column; true sets it, false clears it, an empty
+# cell preserves, and a spec that does not bind the column at all preserves for
+# every row AND leaves varArgs frozen in the collateral census.  Nothing else
+# about either function may move: name, body, comment, tags, calling convention
+# and every other frozen column are gated over all 8,329 functions.
+#
+# PRE PINS ARE db.18623-ERA AND WILL GO STALE.  They were MEASURED by this
+# framework's own `census` mode on a replica restored from
+# D:\BEA-Ghidra-Backups\2026-08-17-tentacle-chain-a-post-live, the newest verified
+# off-volume backup when this spec was written.  Live moved to db.18623 the same
+# day and a second tentacle ceremony was queued behind it, so a live apply MUST
+# take its own fresh PRE backup and re-measure these pins first.  This spec has
+# been REHEARSED ONLY; the live twin's compiled allowlist does not contain it.
+cohortId	varargs-cohort2
+cohortTitle	2 byte-proven variadic prototypes, varargs axis only
+
+programName	BEA.exe
+programMd5	3b456964020070efe696d2cc09464a55
+programSha256	74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750
+imageBase	00400000
+language	x86:LE:32:default
+compilerSpec	windows
+
+verb	SET_PROTOTYPE
+
+preFunctions	8329
+preInstructions	551232
+preReferences	234493
+preDefinedData	48583
+preUndefinedData	3907629
+preBookmarks	2301
+preFunctionNameDigest	8485ddc93d736caa39fc73be624fb5078a5836635f29a3bbcb6bb253c5c7b027
+preFunctionBodyDigest	cb96581a599479d8aa57c2319a5e110226969934c2c14797a2575c689537a9be
+preFrozenDigest	b1a31f0b84706edc33e42eff372204384e21219d27c84b61db3c7c3b853da1c0
+
+# A prototype change moves no structural metric - that is what the completed
+# 294-row ceremony measured - so POST repeats PRE.  The name and body digests
+# repeat too: this cohort touches neither.  postFrozenDigest is deliberately NOT
+# pinned, because signatureShape and varArgs are frozen columns the two target
+# rows legitimately move and the value cannot be computed outside the framework;
+# the POST collateral census still compares every frozen column on all 8,329 rows.
+postFunctions	8329
+postInstructions	551232
+postReferences	234493
+postDefinedData	48583
+postUndefinedData	3907629
+postBookmarks	2301
+postFunctionNameDigest	8485ddc93d736caa39fc73be624fb5078a5836635f29a3bbcb6bb253c5c7b027
+postFunctionBodyDigest	cb96581a599479d8aa57c2319a5e110226969934c2c14797a2575c689537a9be
+
+manifestSha256	1d42ec00a6772f6b27fd6a33e6284609f114da34ad9bf9e0b7ce82d8854f1290
+manifestBytes	1279
+manifestRows	2
+manifestColumns	15
+manifestHeaderPipe	addr|liveName|currentSignatureLive|currentSignatureSha256|proposedSignature|callingConvention|returnTypeProposed|paramSpec|arity|arityBytes|varargs|vaListEvidence|forwardedTo|confidence|changeAxes
+
+col.addr	addr
+col.liveName	liveName
+col.currentSignature	currentSignatureLive
+col.currentSignatureSha256	currentSignatureSha256
+col.proposedSignature	proposedSignature
+col.callingConvention	callingConvention
+col.returnType	returnTypeProposed
+col.paramSpec	paramSpec
+col.arity	arity
+col.arityBytes	arityBytes
+col.varArgs	varargs
+
+unique	addr
+# `constant`/`enum`/`unique` are checked against BOUND logical columns only, so a
+# pin on an unbound column (confidence, changeAxes) would be silently vacuous.
+# Only bound columns are pinned here.  varArgs=true is the axis this cohort exists
+# for, so it is pinned rather than merely bound.
+constant	varArgs=true
+enum	callingConvention=__cdecl
+
+# The hazard classes the ABI cohort's GO recommendation ruled NO-GO stay out, and
+# so does any silent re-typing: this cohort changes the varargs axis only.
+forbidToken	__return_storage_ptr__
+forbidToken	__vectorcall
+forbidToken	__thiscall
+forbidToken	__fastcall
+forbidToken	__stdcall
+forbidToken	CONTRADICTS
+
+expectedTargetsChanged	2
+expectedFunctionsUntouched	8327
