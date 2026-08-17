@@ -429,8 +429,12 @@ attached and live — its uniquely-authored `Teleport` executed — while leavin
 `0x005348C0` uncovered there, so that level's gap is the player collision, not
 script attachment. This is a rebuild and evidence advance only:
 Generation 29 stays frozen, no Ghidra or executable byte changed, and the
-campaign still reports zero rebuild-ready contracts. No natural call has been
-observed at runtime, and no retained trace can reach one.
+campaign still reports zero rebuild-ready contracts. What has *not* been done is
+mining that recorded call: no value has been read out of the level720 trace yet.
+(An earlier draft of this paragraph ended "no natural call has been observed at
+runtime, and no retained trace can reach one" — refuted by the sweep reported
+three sentences above it, and removed here rather than left standing beside the
+measurement that overturned it.)
 
 **Mission-native corpus coverage census (2026-08-15):** the
 [144-native census](binary-analysis/mission-native-corpus-coverage-2026-08-15.tsv)

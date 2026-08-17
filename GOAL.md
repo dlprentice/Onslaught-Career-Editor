@@ -1096,14 +1096,28 @@ inbound reference including vtable slots, so `SharedVFunc__Return2` reports 14 a
 has **zero** real callers. Never rank or call a function unreferenced by it.
 
 **The retained coverage indexes have a domain, and it bounds every reachability
-claim.** The watchpoint is `execute` and the highest covered VA across all 66
-indexes is `0x005D050F` — they span `.text` only. So for any address at or above
-roughly `0x5d1000`, "0 traces" is a **category error, not a measurement**, and a
-join reporting data symbols as unreached is reporting the instrument rather than
-the program. The denominator is **66, not 72**: no 72-index set exists at that
-path, and three addresses reported at 69/72 measure **66/66** — every trace.
-Set membership does reproduce exactly. Conversely, a 0/66 result *inside* `.text`
-is load-bearing, and three such addresses are genuinely never executed.
+claim.** The instrument installs a single whole-module watchpoint with
+`AccessMask::Execute`, so data reads and writes are invisible **by access type**,
+not by address range; `re_coverage_ledger.py` then clips to `[text_lo, text_hi)`.
+So for an address in `.rdata`, `.data`, BSS or `.rsrc`, "0 traces" is a
+**category error, not a measurement**, and a join reporting data symbols as
+unreached describes the instrument rather than the program. Conversely a 0-trace
+result for a `.text` address *is* load-bearing, and three such addresses are
+genuinely never executed.
+
+**Do not convert that into an address threshold.** `.text` runs to `0x005D7F9D`;
+the highest *covered* VA is `0x005D050F`, an empirical high-water mark and not a
+domain edge. Every miss below `0x005D8000` is a valid measured negative — a
+mechanical `>= 0x005D1000` rule would wrongly flag **1,198 legitimate
+`OPEN_DARK` rows**, the unwind funclets and cold tails. And quote denominators
+with their root: `G:\bea-ttd` holds 72 `coverage.jsonl` files, of which **66**
+are the level-opening campaign and the rest are 3 level-521 takes plus 3 pilots.
+So 69 and 72 are reconstructible as wider-root joins; what is wrong is reading
+either as the level-opening denominator, against which a per-address "69 of 72"
+does not reproduce — three such addresses measure **66/66**, every trace. State
+the roots a join walked rather than a bare count. An audit for tracked claims
+resting on the category error found **none**: it is recorded as refuted, never
+asserted, and the offending join lives only in the untracked drop.
 
 **The open falsifiers closed 32 of 34 on free instruments** — shipped strings,
 RTTI census, static derivation from pristine bytes, and the retained coverage

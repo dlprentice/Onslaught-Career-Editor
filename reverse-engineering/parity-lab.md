@@ -3151,6 +3151,26 @@ outputs remain ignored. Retail assets and executables are not added to Git.
   traces private and local until deliberately reviewed.
 - Manual record gating is thread-local according to the documented API; an
   external helper must not be assumed to atomically gate all BEA threads.
+- **The exec-coverage instrument sees execution only, so it cannot speak about
+  data addresses at all.** `tools/ttd-exec-coverage/ttd_exec_coverage.cpp`
+  installs a single watchpoint over the whole module with
+  `AccessMask::Execute` — reads and writes are invisible *by access type*, not
+  by address range — and `tools/re_coverage_ledger.py` then clips results to
+  `[text_lo, text_hi)`. Consequently, for an address in `.rdata`, `.data`, BSS
+  or `.rsrc`, **"0 traces" is a category error, not a measurement**, and a join
+  reporting data symbols as unreached is describing the instrument rather than
+  the program.
+- Do not turn that into an address threshold. `.text` runs to VA `0x005D7F9D`;
+  the highest *covered* VA across the retained indexes is `0x005D050F`, which is
+  an empirical high-water mark, **not** a domain edge. A miss anywhere below
+  `0x005D8000` is a valid measured negative — the unwind funclets and cold tails
+  in that band are legitimately dark, and a mechanical `>= 0x005D1000` rule
+  would wrongly flag 1,198 of them.
+- Quote coverage denominators with their root. `G:\bea-ttd` contains 72
+  `coverage.jsonl` files, but only **66** are the level-opening campaign; the
+  rest are 3 level-521 takes and 3 pilots. A per-address "69 of 72" is not
+  reproducible against the level-opening corpus, so state which roots a join
+  walked instead of quoting a bare denominator.
 
 ### BSim and Stuart
 
