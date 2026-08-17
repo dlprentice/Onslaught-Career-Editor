@@ -294,16 +294,17 @@ maintainer returned 2026-08-17 (~13:05 EDT) and directed: target the complete,
 proof-gated reverse engineering of the retail binary so a proper rebuild can
 proceed; relocate the DeepSeek corpus off F:; and work autonomously through a
 ~5-hour window with delegated decisions. The harness goal was set to this
-directive. The corpus is being relocated, with byte-exact verification, into
-`local-lab\ds-deep-review\` (frozen drop; 155,622 files) and
-`local-lab\ds-deep-review-extended\` (95 files plus `rows.tsv`); the F: copies
-and the H: twin are removed only after verification passes, leaving
-`F:\GhidraBackups` as the only retained F: content. Priority order is the carry
-bridge → Generation 31 on db.18624 (the 16 mutation-killed contracts become the
-first REBUILD_READY rows) → slot-instrument reproducibility → arity-36
-promotion → pointer/vftable cohort → runtime-witnessed name corrections →
-Level100 crash characterisation → falsifier close-out. Full-RE completion
-remains the standing mandate; this list is its current frontier.
+directive. The corpus relocation is verified: `local-lab\ds-deep-review\`
+(frozen drop; 155,622 files, 532,623,995 bytes) is byte-exact against F: by
+equal tree SHA-256 `9291c7ee…dfbf`, `local-lab\ds-deep-review-extended\` is
+per-file byte-exact (95/95), and `rows.tsv` is byte-exact; the H: twin pair is
+the last verification, and the F: copies and H: twin are removed only after it
+passes, leaving `F:\GhidraBackups` as the only retained F: content. Priority
+order is the carry bridge → Generation 31 on db.18624 (the 16 mutation-killed
+contracts become the first REBUILD_READY rows) → slot-instrument reproducibility
+→ arity-36 promotion → pointer/vftable cohort → runtime-witnessed name
+corrections → Level100 crash characterisation → falsifier close-out. Full-RE
+completion remains the standing mandate; this list is its current frontier.
 
 **Closed this session — do not re-derive:**
 
