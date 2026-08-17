@@ -422,9 +422,15 @@ remains the standing mandate; this list is its current frontier.
    rows are two contract rows, and a `FullyQualifiedName=` filter matches a
    `[Theory]`'s rows, so `expectedTests` is the row count. This produces the
    project's first `REBUILD_READY` rows.
-3. **Settle the slot instrument's visit-order question** at `0x00563d97`
-   (single-VA run vs the full 8,329-address run) before promoting
-   `abi-two-witness-arity36`.
+3. **Slot instrument visit-order question — settled 2026-08-17, not a blocker.**
+   `0x00563d97` is address-set-independent on current tooling: DETERMINATE /
+   LOWER_BOUND / 28 unresolved accesses / 412 blocks in both the single-VA and
+   full-8,329 runs (receipt
+   `local-lab\slot-order-falsifier-2026-08-17\RESULT.md`). The earlier flip does
+   not reproduce post-797dcf60. Before promoting `abi-two-witness-arity36`,
+   still re-run exactly those 36 rows through the current instrument and require
+   per-row status/exactness agreement — their fields were measured with the
+   pre-fix instrument and must not be promoted stale.
 4. **Pointer/vftable cohort.** 65 of 99 untyped pointer slots are RTTI vftables
    across 59 classes. The framework has no vftable-apply verb; decide the
    capability and apply with recovered class identity — never a bespoke
