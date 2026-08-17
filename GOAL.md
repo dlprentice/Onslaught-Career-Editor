@@ -741,6 +741,52 @@ scope to:
 - **There is no separate `CEventManager::AdvanceTime`** — it is inlined into
   `Update` at `0x0044B5C3`.
 
+**NO-GO clearance 2026-08-16 — four of five blockers cleared, the fifth is the
+mutation shape.** An off-volume PRE backup of the live project exists at
+`D:\BEA-Ghidra-Backups\2026-08-16-boundary-cohort41-pre-live`, restore-proved
+byte-exact and reopened read-only, giving four-way per-file equality across
+LIVE, BACKUP, RESTORED, and TRACKED. The applier is hardened: **29 gates were
+each provoked with a single-difference probe run writable and every one
+refused**, with no probe ever producing an APPLIED verdict. Eight rows were
+re-derived by recursive-descent traversal rather than the builder's linear
+sweep — five reproduce exactly and three were traversal blind spots closed with
+direct byte evidence, including an MSVC SEH filter/handler pair whose addresses
+appear verbatim in the `_EH4` scope table at `0x005e5b60`. **No refutation
+survived; the manifest needed no correction.** A second replica built from the
+backup reproduces the first digest-for-digest, and a genuine mid-batch halt
+leaves coherent state that restores byte-exact.
+
+*The remaining blocker, and the premise needed correcting first.* "19 rows /
+233 bytes with no defined instructions" actually means no instruction *starts*
+in the added range. Those 233 bytes are 11 operand-tail bytes of instructions
+beginning outside the range, 72 already typed as DATA, and only 150 genuinely
+undefined; the true figure is **274 undefined bytes across 34 rows**. Precedent
+is unambiguous — `setBody(` appears in exactly two shipped appliers and both
+follow it with bounded disassembly, while the one non-disassembling boundary
+applier refuses any target that is not already fully defined. **No completed
+ceremony has ever left admitted bytes undefined.**
+
+*But porting that precedent verbatim is measurably destructive here.* Measured
+on a throwaway replica, the clear-then-disassemble shape clears 800
+instructions, drives references **−48**, fails exact coverage on 11 of 41 rows,
+and at `0x00450010` turns 58 defined instruction bytes into 65 undefined. The
+minimal shape — bounded disassembly seeded only at the undefined runs — instead
+yields **+90 instructions and +12 references with no escape beyond the proposed
+bodies**. The fix is a V3 applier built on the correct generalisation of the
+shared invariant: **every admitted byte must end fully *classified*, instruction
+or defined data**, not "fully instruction-covered". The six operand-tail rows
+and three table rows satisfy that by precondition and must not be disassembled;
+disassembling the tables would be wrong. The measurement also exposed a real
+database defect — in six rows Ghidra's existing decode inside the added range is
+desynchronised by 2–3 bytes from the true stream.
+
+*Adjudicated and not blocking.* The four `endValidation=False` rows are a false
+alarm: three are jump/SEH data tables already typed as DATA with `endIsCUmax`
+true and zero gap to the next function, and `entry` decodes 264 of 264 bytes,
+its only irregularity being a `call exit` tail rather than ret/jmp. All 41 rows
+have `endIsCUmax` true. Tighten `validate_end` to report those subtypes
+distinctly rather than as a bare `False` that reads like a defect.
+
 **Campaign-layer corrections.** Discard the single `CONTRACT_REFUTED` row. It
 claims `0x005d85d8` sits in bss with no file bytes, but that VA maps to file
 offset `0x1D85D8`, which holds `00 00 a0 40` — exactly the 5.0f the Gen-29
