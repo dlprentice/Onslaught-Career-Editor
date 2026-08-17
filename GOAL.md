@@ -706,6 +706,41 @@ ends-mid-instruction gate passes all four: the linear sweep and Ghidra's
 code-unit view disagree on those tails, which is expected for jump-table tails
 but must be adjudicated rather than left as two answers.
 
+**First rebuild slice landed 2026-08-16 — eight contracts, 77 parity tests.**
+`RetailEventScheduler`, `RetailChunkReader`, `RetailAnalogueControls`, and
+`RetailCameraLaws` own the released event-scheduler ring, in-memory chunk
+framing, PC analogue-axis normalisation, and the aspect/zoom laws. All four are
+dependency-free — no `using` statements at all — and nothing is wired into
+`Simulation.Step`, so no existing Core trace hash moves. A 14-mutant sweep
+killed 12 and proved 2 behaviourally equivalent; the lane also caught and
+corrected one of its own false claims, having documented a mutant as fatal that
+turned out to be a pure optimisation.
+
+**Six more divergences, all on rows the manifest marks `AGREES`.** These raise
+the tracked-exception count to 23 and show what `AGREES` does and does not
+scope to:
+
+- **A whole source stage is absent from retail.** `Controller.cpp:226-233`
+  specifies four analogue reads and the `ANALOGUE_X_DEAD`/`ANALOGUE_Y_DEAD`
+  `0.36f` clamps. The retail body at `0x0042DB40` goes from inlined
+  `CalcNumMappings` straight to the `mPlaying` test with no axis read, and
+  `0.36f` (`0x3EB851EC`) occurs **zero times** in the whole image. `AGREES` is
+  scoped to bytes, args, ret, and strings — it does not mean the cited source
+  range is implemented.
+- **Compiler reciprocals, twice.** `PCController.cpp` says `/1000.0f` but
+  `0x00514640` does `fmul 0.001f`, differing by one ulp at **81,462 of 140,001**
+  raw axis values. `Camera.cpp:650` says `(fov/90)/2.0f` but `0x0041A681`
+  multiplies by the rounded `1/90`, diverging on **41 of 180** integer FOVs.
+- **Event numbers are `int16`**, not the `const int` the signature advertises:
+  `CScheduledEvent::Set` writes a WORD and `0x0044B32E` re-reads with `movsx`,
+  so 40000 round-trips as −25536.
+- `CChunkReader__Read` is *understated* as `NOT_CROSS_CHECKED`; its bytes match
+  `chunker.cpp:180-187` exactly, and its release build has the
+  `ASSERT(ReadSinceChunk<=Size)` compiled out, which is what makes the silent
+  over-read real.
+- **There is no separate `CEventManager::AdvanceTime`** — it is inlined into
+  `Update` at `0x0044B5C3`.
+
 **Campaign-layer corrections.** Discard the single `CONTRACT_REFUTED` row. It
 claims `0x005d85d8` sits in bss with no file bytes, but that VA maps to file
 offset `0x1D85D8`, which holds `00 00 a0 40` — exactly the 5.0f the Gen-29
