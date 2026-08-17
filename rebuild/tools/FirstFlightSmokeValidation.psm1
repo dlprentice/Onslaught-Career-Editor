@@ -229,7 +229,14 @@ function Test-FirstFlightSmokeEvidence {
     # unzoomed 1000/1000, so the move is structural; the in-process canonical
     # tape independently measures the exact repin and native remains the host
     # check.
-    Assert-SmokeValue 'stateHash' '997c20348dd9c4cbd7d59011060aa1c18e2906d912bba0e035671e60fe3bb1e5' $report.stateHash
+    # MOVED TWICE since that pin, and this file missed both: the shipped
+    # walker-yaw/contact batch e7aa7548 and the exact player weapon-scatter
+    # contract 383d5b3e each changed the canonical byte stream, and
+    # InteractiveSessionTests.cs pins the current hash c33268c1... (44/44 green
+    # on current main). The native smoke's observed hash equals that pin, so
+    # this is a sync to the already-landed deterministic state, not a re-pin of
+    # a regression.
+    Assert-SmokeValue 'stateHash' 'c33268c199c8a3e77ab2de53d16eefc346b0abab3b6867a4d4379981d636cb4e' $report.stateHash
     Assert-SmokeValue 'targetsDestroyed' 0 $report.targetsDestroyed
     Assert-SmokeValue 'mode' 'Walker' $report.mode
     Assert-SmokeValue 'level100OpeningTicksRemaining' 0 $report.level100OpeningTicksRemaining

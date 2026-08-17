@@ -1146,7 +1146,8 @@ public sealed partial class FirstFlightWorldView : Node3D
         _pulseCannonMuzzleFlashTexture = CuratedAyaTextureLoader.Load(
             "res://Assets/Level100/Textures/particle-alparticle5-additive.texture.aya",
             128,
-            128);
+            128,
+            CuratedAyaTextureLoader.Compression.Dxt1);
         _targetTankExplosionAnimatedTexture = CuratedAyaTextureLoader.Load(
             "res://Assets/Level100/Textures/target-tank-explosion-animated.texture.aya",
             256,
