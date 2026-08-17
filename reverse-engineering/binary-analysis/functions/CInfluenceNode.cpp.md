@@ -2,6 +2,7 @@
 
 Status: active static function map
 Last updated: 2026-08-17
+Source File: `C:\dev\ONSLAUGHT2\InfluenceMap.cpp` (named by the shipped image at `0x0062d61c`) | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 Evidence: MEASURED — every byte below was re-read from the pristine specimen
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750` at the
 stated file offsets (VA − 0x400000 for .text). Class identity: RTTI
