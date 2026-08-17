@@ -228,6 +228,7 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
         "tentacle-chain-a", "tentacle-chain-b",
         "abi-two-witness-arity36",
         "name-cohort5-runtime-witnessed",
+        "vftable-cohort65",
     };
 
     // Reversibility strings.  These are the ONLY reversibility claims any

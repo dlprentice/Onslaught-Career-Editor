@@ -107,12 +107,15 @@ REQUIRED_LIVE_PROJECT_DIR = r"c:\users\david\ghidra\projects\bea.rep"
 # spec re-derived to the honest LOWER_BOUND exactness. name-cohort5-runtime-witnessed
 # is granted 2026-08-17 after the full rehearsal on a db.18625 replica: census/dry/
 # apply all PASS (5 rows, 8,324 untouched, name column only, 5 symbols swapped) with
-# measured pre/post pins.
+# measured pre/post pins. vftable-cohort65 is granted 2026-08-17 after the full
+# rehearsal on a db.18626 replica: dry/apply/readback all PASS (65 RTTI vftable
+# slots typed, 0 function rows changed, 65 symbols added, memory digest frozen).
 LIVE_GRANTED_COHORTS = [
     "boundary-cohort41", "name-cohort160", "abi-cohort294",
     "tentacle-chain-a", "tentacle-chain-b",
     "abi-two-witness-arity36",
     "name-cohort5-runtime-witnessed",
+    "vftable-cohort65",
 ]
 PROGRAM_SHA256 = (
     "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
@@ -516,6 +519,7 @@ LIVE_ALLOWLISTED_EDITS: list[tuple[str, str, str]] = [
         '        "tentacle-chain-a", "tentacle-chain-b",\n'
         '        "abi-two-witness-arity36",\n'
         '        "name-cohort5-runtime-witnessed",\n'
+        '        "vftable-cohort65",\n'
         "    };\n",
     ),
     (
