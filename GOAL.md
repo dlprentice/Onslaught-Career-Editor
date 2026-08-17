@@ -450,17 +450,20 @@ corrections → Level100 crash characterisation → falsifier close-out.
    ceremony steps (replica, cut-time Ghidra inspect receipts, POST
    backup/tracked refresh, Gen-31 authority receipt) stay recorded in
    `developer_state.json` and are the next ceremony.
-3. **Gen-31 ceremony completion.** Build the on-disk replica, take the three
-   cut-time live/backup/tracked Ghidra inspect receipts, take the POST backup,
-   refresh the tracked snapshot on byte equality, and produce the Generation-31
-   authority receipt in the Generation-30 shape.
+3. **Gen-31 ceremony — COMPLETE (v2 re-cut).** Canonical + replica rebuilt on
+   the current tree after the Godot smoke repair moved the rebuild-source
+   fingerprint, both frozen-verified CAMPAIGN_VERIFIED, all eight ledgers
+   byte-identical, cut-time live/backup/tracked Ghidra inspect receipts agree
+   at 19 files / 187,403,141 bytes (tracked == live, no refresh needed), POST
+   backup verified, and the external authority receipt is emitted and pinned
+   (`current_re_authority` → v2; `0bf94104`).
 4. **Promote abi-two-witness-arity36 through the full gate.** The slot
    instrument visit-order question is settled 2026-08-17 (no flip) and all 36
    rows are byte-adjudicated (36/36 witness + RET anchors re-verify against
-   the pristine specimen; `local-lab\arity36-readjudication-2026-08-17\REPORT.md`).
-   Re-derive the spec with honest per-row `LOWER_BOUND` exactness (the
-   committed `COMPLETE_ENUMERATION` constant is stale), rehearse on a db.18624
-   replica, then run the ceremony.
+   the pristine specimen; `local-lab\arity36-readjudication-2026-08-17\REPORT.md`),
+   and the spec now pins the honest `LOWER_BOUND` exactness (`72bf182b`). Next:
+   framework census on a db.18624 replica, then the live ceremony through the
+   full gate.
 5. **Pointer/vftable cohort.** 65 of 99 untyped pointer slots are RTTI vftables
    across 59 classes. Add ONE typed vftable-apply verb to the cohort framework
    (with the existing gate + mutator suite), then apply each vftable with its
