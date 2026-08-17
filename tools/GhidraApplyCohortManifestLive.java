@@ -241,12 +241,13 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
     static final String V_SET_NAME = "SET_NAME";
     static final String V_SET_PROTOTYPE = "SET_PROTOTYPE";
     static final String V_SET_BODY = "SET_BODY";
+    static final String V_SET_DATA_POINTER = "SET_DATA_POINTER";
     static final String V_DISASSEMBLE = "DISASSEMBLE_BOUNDED";
     static final String V_CLEAR = "CLEAR_BOUNDED";
     static final String V_BOOKMARK = "REMOVE_STALE_BOOKMARK";
     static final List<String> KNOWN_VERBS = Arrays.asList(
         V_DISASSEMBLE, V_CLEAR, V_BOOKMARK, V_SET_BODY, V_SET_NAME,
-        V_SET_PROTOTYPE);
+        V_SET_PROTOTYPE, V_SET_DATA_POINTER);
 
     /** The frozen per-function collateral column list.  Compiled in, never
      *  spec-supplied: a spec cannot widen it, and every column not claimed by a
@@ -395,6 +396,7 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
         "col.liveName", "col.currentSignature", "col.currentSignatureSha256",
         "col.proposedSignature", "col.callingConvention", "col.returnType",
         "col.paramSpec", "col.arity", "col.arityBytes", "col.varArgs",
+        "col.colName", "col.dwordValue", "col.confidence", "col.proposedLabel",
         "unique", "constant", "enum", "enumPrefix", "forbidToken", "noCycle",
         "expectedTargetsChanged", "expectedSymbolsAdded",
         "expectedSymbolsRemoved", "expectedFunctionsUntouched",
@@ -726,6 +728,27 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
             }
         }
         return hex(d.digest());
+    }
+
+    private long readInt(Address address) throws Exception {
+        byte[] got = new byte[4];
+        if (currentProgram.getMemory().getBytes(address, got) != 4) {
+            throw new IllegalStateException("cannot read 4 bytes at " + address);
+        }
+        return ((long) (got[0] & 0xff))
+            | ((long) (got[1] & 0xff) << 8)
+            | ((long) (got[2] & 0xff) << 16)
+            | ((long) (got[3] & 0xff) << 24);
+    }
+
+    private String readCString(Address address) throws Exception {
+        byte[] chunk = new byte[128];
+        int read = currentProgram.getMemory().getBytes(address, chunk);
+        int end = 0;
+        while (end < read && chunk[end] != 0) {
+            end++;
+        }
+        return new String(chunk, 0, end, StandardCharsets.US_ASCII);
     }
 
     private static String signatureShape(Function f) {
@@ -1573,6 +1596,72 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
                     continue;
                 }
                 row.targetName = s.getName();
+            } else if ("DATA:POINTER".equals(row.liveKind)) {
+                if (!verbs.contains(V_SET_DATA_POINTER)) {
+                    fail(row, "DATA:POINTER row without the SET_DATA_POINTER verb");
+                    continue;
+                }
+                if (fn != null) {
+                    fail(row, "is a function, but the manifest says DATA:POINTER");
+                    continue;
+                }
+                if (readback) {
+                    if (listing.getDefinedDataAt(row.entry) == null) {
+                        fail(row, "READBACK slot has no defined data");
+                        continue;
+                    }
+                    Symbol label = currentProgram.getSymbolTable()
+                            .getPrimarySymbol(row.entry);
+                    if (label == null
+                            || !row.get("proposedLabel").equals(label.getName())) {
+                        fail(row, "READBACK label expected ["
+                            + row.get("proposedLabel") + "] actual ["
+                            + (label == null ? "<none>" : label.getName()) + "]");
+                        continue;
+                    }
+                } else {
+                    if (listing.getDefinedDataAt(row.entry) != null
+                            || listing.getDataContaining(row.entry) != null) {
+                        fail(row, "slot is already inside defined data");
+                        continue;
+                    }
+                }
+                long want = Long.parseLong(row.get("dwordValue"), 16);
+                long got = readInt(row.entry);
+                if (got != want) {
+                    fail(row, "slot dword expected [" + row.get("dwordValue")
+                        + "] actual [" + String.format("%08x", got) + "]");
+                    continue;
+                }
+                Address target = row.entry.getNewAddress(got);
+                if (fm.getFunctionAt(target) == null) {
+                    fail(row, "slot dword target is not a function entry: "
+                        + String.format("%08x", got));
+                    continue;
+                }
+                long col = readInt(row.entry.subtract(4));
+                long td = readInt(row.entry.getNewAddress(col + 0x0c));
+                long namePtr = readInt(row.entry.getNewAddress(td + 0x08));
+                String mangled = readCString(row.entry.getNewAddress(namePtr));
+                if (mangled.isEmpty()
+                        || !mangled.equalsIgnoreCase(row.get("colName"))) {
+                    fail(row, "COL identity expected [" + row.get("colName")
+                        + "] actual [" + mangled + "]");
+                    continue;
+                }
+                if (!readback) {
+                    List<String> hits = idx.get(row.get("proposedLabel"));
+                    if (hits != null) {
+                        for (String h : hits) {
+                            if (!h.equals(row.addrText.substring(2))) {
+                                fail(row, "collision: proposed label '"
+                                    + row.get("proposedLabel")
+                                    + "' already exists at 0x" + h);
+                            }
+                        }
+                    }
+                }
+                row.targetName = row.get("proposedLabel");
             } else {
                 if (fn == null) {
                     fail(row, "NO FUNCTION AT ENTRY");
@@ -1899,6 +1988,27 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
                 }
             }
 
+            // -- PHASE F: setDataPointer ------------------------------------
+            if (verbs.contains(V_SET_DATA_POINTER) && failures.isEmpty()) {
+                for (Row row : rows) {
+                    if (!"DATA:POINTER".equals(row.liveKind)) {
+                        continue;
+                    }
+                    try {
+                        listing.createData(row.entry,
+                            new PointerDataType(
+                                ghidra.program.model.data.VoidDataType.dataType));
+                        currentProgram.getSymbolTable().createLabel(
+                            row.entry, row.get("proposedLabel"),
+                            SourceType.USER_DEFINED);
+                        row.verdict = "APPLIED";
+                    } catch (Exception exc) {
+                        row.verdict = "APPLY_THREW:" + exc.getClass().getSimpleName();
+                        fail(row, "setDataPointer threw " + exc);
+                    }
+                }
+            }
+
             // -- POST gates --------------------------------------------------
             gatePostRows(rows, spec, verbs, fm, readback);
             if (verbs.contains(V_SET_NAME)) {
@@ -1968,6 +2078,10 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
         owner.put("col.arity", V_SET_PROTOTYPE);
         owner.put("col.arityBytes", V_SET_PROTOTYPE);
         owner.put("col.varArgs", V_SET_PROTOTYPE);
+        owner.put("col.colName", V_SET_DATA_POINTER);
+        owner.put("col.dwordValue", V_SET_DATA_POINTER);
+        owner.put("col.confidence", V_SET_DATA_POINTER);
+        owner.put("col.proposedLabel", V_SET_DATA_POINTER);
         for (Map.Entry<String, String> e : owner.entrySet()) {
             if (spec.has(e.getKey()) && !verbs.contains(e.getValue())) {
                 fail("VERB NOT DECLARED: the spec binds " + e.getKey()
@@ -1994,6 +2108,11 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
             // PRESERVE default, and it additionally keeps varArgs frozen for
             // every row.  Requiring it would force every future prototype cohort
             // to restate a value it has no evidence about.
+        }
+        if (verbs.contains(V_SET_DATA_POINTER)) {
+            requireBinding(spec, "col.colName", V_SET_DATA_POINTER);
+            requireBinding(spec, "col.dwordValue", V_SET_DATA_POINTER);
+            requireBinding(spec, "col.proposedLabel", V_SET_DATA_POINTER);
         }
         if (verbs.contains(V_CLEAR) && !verbs.contains(V_DISASSEMBLE)) {
             fail("VERB DEPENDENCY: CLEAR_BOUNDED without DISASSEMBLE_BOUNDED "
@@ -2988,7 +3107,31 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
         addedSyms.removeAll(preSyms);
         Set<String> removedSyms = new LinkedHashSet<>(preSyms);
         removedSyms.removeAll(postSyms);
-        if (!verbs.contains(V_SET_NAME)) {
+        if (verbs.contains(V_SET_DATA_POINTER)) {
+            if (!removedSyms.isEmpty()) {
+                fail("SET_DATA_POINTER removed non-dynamic symbols: "
+                    + removedSyms);
+            }
+            if (!relaxed && spec.has("expectedSymbolsAdded")
+                    && addedSyms.size() != spec.num("expectedSymbolsAdded", -1)) {
+                fail("symbols added " + addedSyms.size() + " != "
+                    + spec.num("expectedSymbolsAdded", -1));
+            }
+            for (String s : addedSyms) {
+                String[] c = s.split("\t", -1);
+                boolean matched = false;
+                for (Row row : rows) {
+                    if (c[0].equals(String.format(Locale.ROOT, "%08x", row.addr))
+                            && c[1].equals(row.get("proposedLabel"))) {
+                        matched = true;
+                        break;
+                    }
+                }
+                if (!matched) {
+                    drift.add("UNEXPECTED ADDED SYMBOL " + s);
+                }
+            }
+        } else if (!verbs.contains(V_SET_NAME)) {
             if (!addedSyms.isEmpty() || !removedSyms.isEmpty()) {
                 fail("the non-dynamic symbol census changed but no rename verb "
                     + "was declared: added=" + addedSyms.size() + " removed="
@@ -3084,13 +3227,21 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
 
         // -- defined data -------------------------------------------------
         List<String> postDefinedData = definedDataCensus();
-        boolean dataMayMove = verbs.contains(V_CLEAR) || verbs.contains(V_DISASSEMBLE);
+        boolean dataMayMove = verbs.contains(V_CLEAR)
+            || verbs.contains(V_DISASSEMBLE)
+            || verbs.contains(V_SET_DATA_POINTER);
         if (!dataMayMove) {
             if (!preDefinedData.equals(postDefinedData)) {
                 fail("the defined-data census changed but no geometry verb was "
                     + "declared");
             }
         } else {
+            Set<Address> dataTargets = new HashSet<>();
+            for (Row row : rows) {
+                if ("DATA:POINTER".equals(row.liveKind) && row.entry != null) {
+                    dataTargets.add(row.entry);
+                }
+            }
             Set<String> preSet = new LinkedHashSet<>(preDefinedData);
             Set<String> postSet = new LinkedHashSet<>(postDefinedData);
             Set<String> changed = new LinkedHashSet<>(preSet);
@@ -3100,7 +3251,9 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
             changed.addAll(gained);
             for (String s : changed) {
                 Address at = toAddr(Long.parseLong(s.substring(0, s.indexOf('\t')), 16));
-                if (!admitted.contains(at)) {
+                boolean allowed = verbs.contains(V_SET_DATA_POINTER)
+                    ? dataTargets.contains(at) : admitted.contains(at);
+                if (!allowed) {
                     fail("DEFINED DATA CHANGED OUTSIDE the admitted ranges at "
                         + at + " (" + s + ")");
                 }

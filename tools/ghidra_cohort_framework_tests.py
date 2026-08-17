@@ -204,6 +204,20 @@ GATE_INVENTORY: dict[str, tuple[str, str]] = {
     "v02-verb-binding-missing": ("does not bind", "F"),
     "v03-verb-dependency": ("VERB DEPENDENCY", "F"),
     "v04-no-verb-declared": ("declares no verb", "F"),
+    # -- SET_DATA_POINTER gates (new verb: data-slot typing with class identity) --
+    "d01-data-row-without-verb": (
+        "DATA:POINTER row without the SET_DATA_POINTER verb", "F"),
+    "d02-slot-inside-defined-data": (
+        "slot is already inside defined data", "F"),
+    "d03-slot-dword-drift": ("slot dword expected", "F"),
+    "d04-slot-target-not-function": (
+        "slot dword target is not a function entry", "F"),
+    "d05-col-identity-drift": ("COL identity expected", "F"),
+    "d06-label-collision": ("collision: proposed label", "F"),
+    "d07-readback-no-data": ("READBACK slot has no defined data", "F"),
+    "d08-readback-label-drift": ("READBACK label expected", "F"),
+    "d09-symbols-removed": (
+        "SET_DATA_POINTER removed non-dynamic symbols", "F"),
     # -- per-row current-state staleness ---------------------------------
     "s01-no-function-at-entry": ("NO FUNCTION AT ENTRY", "BNA"),
     "s02-function-entry-exact": ("function entry expected", "NA"),
@@ -350,7 +364,7 @@ FROZEN_COLUMNS = [
 
 VERBS = [
     "DISASSEMBLE_BOUNDED", "CLEAR_BOUNDED", "REMOVE_STALE_BOOKMARK",
-    "SET_BODY", "SET_NAME", "SET_PROTOTYPE",
+    "SET_BODY", "SET_NAME", "SET_PROTOTYPE", "SET_DATA_POINTER",
 ]
 
 # The only Ghidra mutation calls the framework may contain, and how many times.
@@ -359,6 +373,8 @@ AUTHORIZED_MUTATION_CALLS = {
     ".setBody(": 1,
     ".setName(": 2,            # Function.setName and Symbol.setName
     ".updateFunction(": 1,
+    ".createData(": 1,       # SET_DATA_POINTER: type one slot as a pointer
+    ".createLabel(": 1,      # SET_DATA_POINTER: class-identity label
     ".setVarArgs(": 1,
     ".removeBookmark(": 1,
     ".disassemble(": 2,        # bounded phase 1, and the escape fault injector
@@ -375,7 +391,6 @@ FORBIDDEN_MUTATION_CALLS = [
     ".setCallingConvention(",
     ".setReturnType(",
     ".setCustomVariableStorage(",
-    ".createData(",
     ".removeData(",
     ".clearListing(",
     ".setBytes(",
@@ -384,7 +399,6 @@ FORBIDDEN_MUTATION_CALLS = [
     ".addMemoryReference(",
     ".setPrimary(",
     ".setPinned(",
-    ".createLabel(",
     ".removeSymbol(",
     ".setNoReturn(",
     ".setThunkedFunction(",
@@ -748,7 +762,7 @@ class FrameworkVerbTests(unittest.TestCase):
             with self.subTest(call=call):
                 self.assertNotIn(call, self.code)
 
-    def test_the_verb_list_is_exactly_the_six_declared_verbs(self) -> None:
+    def test_the_verb_list_is_exactly_the_seven_declared_verbs(self) -> None:
         for verb in VERBS:
             self.assertTrue(f'"{verb}"' in self.base, verb)
         self.assertTrue("KNOWN_VERBS = Arrays.asList(" in self.base)
