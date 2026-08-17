@@ -75,12 +75,17 @@ Two things this table deliberately does **not** claim. It does not claim these
 contracts are graded `REBUILD_READY`: that grade is a campaign artifact and
 needs the ceremony in `tools/re_campaign.py`
 (`_validate_rebuild_ready_gate`), which stamps owner/test/project SHA-256s, a
-`rebuildMapping`, and a re-run of the focused test. And it does not claim
-replay coverage: eleven of these sixteen implementations are **not wired into
-`Simulation.Step`**, so no cold-start or full-chain trace can reach them, and
-the focused test is the only falsifier they have. That is the precedent the
-jet-friction row set: a green replay suite there was *vacuous* with respect to
-the constant it was supposed to guard.
+`rebuildMapping`, and a re-run of the focused test. And it does not claim replay
+coverage. **Fifteen of these sixteen implementations are unreachable from the
+simulation and replay path** — measured, by searching `Simulation.cs`,
+`ReplayRunner.cs`, `CommandTape.cs`, `StateHasher.cs` and every `Level100*.cs`
+for the owner types: the only hit is the *comment* naming `RetailJetFriction` at
+`Simulation.cs:1858`, and the only genuinely wired row is
+`Simulation.JetFrictionNumerator` itself. So no cold-start or full-chain trace
+can reach the other fifteen, and the focused test is the only falsifier they
+have. That is exactly the precedent the jet-friction row set: a green replay
+suite there was *vacuous* with respect to the constant it was supposed to guard,
+because the jet throttle caps below the gate's band.
 
 ## Parity dimensions and their gates
 
