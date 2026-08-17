@@ -9,13 +9,13 @@ owner; local working copies and historical backups remain untracked.
 - Imported Steam specimen SHA-256:
   `74154BFAE14DDC8ECB87A0766F5BC381C7B7F1AB334ED7A753040EDA1E1E7750`
 - Imported specimen MD5: `3b456964020070efe696d2cc09464a55`
-- Project payload: 19 files, 187,059,077 bytes
+- Project payload: 19 files, 187,239,301 bytes
 - Canonical project inventory (sha256<TAB>bytes<TAB>relative-posix-path<LF>,
   sorted by rendered line) SHA-256:
-  `08a7ffdaca6864a03431997f95730600abbbda0f25f39f7b0c12ae1348307377`
-- Current rolling database `db.18621.gbf`: 68,386,816 bytes, SHA-256
-  `ac5fcf400da340954bfe2913f3169bd5000a078f7b0a7a2bc606c9006809f263`
-  (stable prior `db.18620.gbf` retained)
+  `26603333e989bad238376f7dc66709b16820bb252922ef7e8e6d048452cbb9a5`
+- Current rolling database `db.18622.gbf`: 68,550,656 bytes, SHA-256
+  `ce089b6e946ba99d353fb93526159862a75446ca70ef3a7aebc4447897f8ea26`
+  (stable prior `db.18621.gbf` retained)
 
 **Promotion note:** this snapshot was refreshed from the source-stable live
 maintainer project after the four HUD route descriptive-name demotions
