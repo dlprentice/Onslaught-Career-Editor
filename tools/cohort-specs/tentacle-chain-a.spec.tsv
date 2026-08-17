@@ -1,0 +1,72 @@
+# Cohort spec: CEREMONY A of the two-ceremony CTentacle factory-name chain.
+#
+# ONE ROW, DELIBERATELY.  0x004f07e0 and 0x004f0860 each want the name the other
+# currently holds, so a single cohort containing both is refused - correctly - by
+# this framework's noCycle and collision gates, and no non-mutating pre-flight
+# check can clear both at once.  The chain is therefore staged as two one-row
+# cohorts: A frees CTentacle__CreateTentacleAI, and only then does B's spec
+# become satisfiable.  Ceremony A must complete in full - separate-process
+# readback, POST backup, tracked refresh - before ceremony B's gates run.
+# Do NOT merge these two specs, and do NOT relax noCycle to make one cohort pass;
+# an ordered/staged rename is a reviewed framework extension, not a gate to drop.
+#
+# Every metric below was MEASURED by this framework's own `census` mode on a
+# replica restored from D:\BEA-Ghidra-Backups\2026-08-17-tentacle-chain-a-pre-live
+# (byte-identical to live db.18622), not carried over from prose.
+# postFrozenDigest is deliberately NOT pinned: `name` is one of the 20 frozen
+# columns, so the target row legitimately moves it, and the value cannot be
+# computed outside the framework.  The framework's own POST collateral census
+# still compares every frozen column on all 8,329 rows.
+cohortId	tentacle-chain-a
+cohortTitle	1 function rename: 0x004f07e0 -> CTentacle__CreateTentacleGuide
+
+programName	BEA.exe
+programMd5	3b456964020070efe696d2cc09464a55
+programSha256	74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750
+imageBase	00400000
+language	x86:LE:32:default
+compilerSpec	windows
+
+verb	SET_NAME
+
+preFunctions	8329
+preInstructions	551232
+preReferences	234493
+preDefinedData	48583
+preUndefinedData	3907629
+preBookmarks	2301
+preFunctionNameDigest	ee545445dc497fc993bd506ea47c1a9dbe59bbfc364f6c7c54393f61d9eccd66
+preFunctionBodyDigest	cb96581a599479d8aa57c2319a5e110226969934c2c14797a2575c689537a9be
+preFrozenDigest	fc12cad56750a76efea235fc790b265fa1c22a6b635b6cbeb6e6d91ccfe2604b
+
+postFunctions	8329
+postInstructions	551232
+postReferences	234493
+postDefinedData	48583
+postUndefinedData	3907629
+postBookmarks	2301
+postFunctionNameDigest	8485ddc93d736caa39fc73be624fb5078a5836635f29a3bbcb6bb253c5c7b027
+postFunctionBodyDigest	cb96581a599479d8aa57c2319a5e110226969934c2c14797a2575c689537a9be
+
+manifestSha256	bad7e315f37ecfe41d595f32947c264a59f79dea7133fcc64816180d034643e3
+manifestBytes	1616
+manifestRows	1
+manifestColumns	9
+manifestHeaderPipe	addr|provenance|liveKind|currentNameLive|proposedName|tier|anchorKind|anchorEvidence|reason
+
+col.addr	addr
+col.liveKind	liveKind
+col.currentName	currentNameLive
+col.proposedName	proposedName
+
+unique	addr
+unique	proposedName
+unique	currentName
+noCycle	proposedName:currentName
+enum	liveKind=FUNCTION,SYMBOL:Label
+enum	provenance=PROMOTE,DEMOTE,SLOTFIX
+
+expectedTargetsChanged	1
+expectedFunctionsUntouched	8328
+expectedSymbolsAdded	1
+expectedSymbolsRemoved	1

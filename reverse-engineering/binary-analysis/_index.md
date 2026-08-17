@@ -358,6 +358,17 @@ the document it links.
 > original checks and pinned receipts. The current count is a discovered
 > census, not a permanent ceiling.
 
+> **The CTentacle factory-name chain, promoted 2026-08-17.**
+> [tentacle-factory-name-chain-2026-08-17.md](tentacle-factory-name-chain-2026-08-17.md)
+> carries the byte evidence that `0x004f07e0` and `0x004f0860` held names
+> belonging to each other, and the two one-row cohort specs that staged the swap
+> as two sequential ceremonies. Both landed on live: `db.18622` → `db.18623`
+> (`0x004f07e0` → `CTentacle__CreateTentacleGuide`) → `db.18624`
+> (`0x004f0860` → `CTentacle__CreateTentacleAI`). The 2026-08-17 name table above
+> is re-projected from the ceremony-B live POST readback and carries both rows;
+> the dated 2026-08-13, 2026-08-12 and July tables correctly still show the
+> pre-swap names.
+
 The closeout and per-address plan supersede older saved names where they
 conflict. Static accounting does not prove runtime behavior, exact layouts,
 patch behavior, or rebuild parity. Fullpass findings are discovery notes, not a

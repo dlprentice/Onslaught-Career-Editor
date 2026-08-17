@@ -4,29 +4,74 @@
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; local working copies and historical backups remain untracked.
 
-- Snapshot date: 2026-08-14 (second refresh: HUD route name demotion)
+- Snapshot date: 2026-08-17 (seventh refresh: the two-ceremony CTentacle
+  factory-name chain)
 - Ghidra lineage used for the latest review: 12.1.2
 - Imported Steam specimen SHA-256:
   `74154BFAE14DDC8ECB87A0766F5BC381C7B7F1AB334ED7A753040EDA1E1E7750`
 - Imported specimen MD5: `3b456964020070efe696d2cc09464a55`
-- Project payload: 19 files, 187,239,301 bytes
-- Canonical project inventory (sha256<TAB>bytes<TAB>relative-posix-path<LF>,
-  sorted by rendered line) SHA-256:
-  `26603333e989bad238376f7dc66709b16820bb252922ef7e8e6d048452cbb9a5`
-- Current rolling database `db.18622.gbf`: 68,550,656 bytes, SHA-256
-  `ce089b6e946ba99d353fb93526159862a75446ca70ef3a7aebc4447897f8ea26`
-  (stable prior `db.18621.gbf` retained)
+- Project payload: 19 files, 187,403,141 bytes
+- Canonical project inventory SHA-256:
+  `1ecf589ac5168ff12f42ba67d10bca13a5ae0104521cd0418924f8c5b3db566b`
+- Current rolling database `db.18624.gbf`: 68,550,656 bytes, SHA-256
+  `24c54d29fdd66321353715cfac369c419c709b7e7a963193ab0e8161a14294f6`
+  (stable prior `db.18623.gbf`, 68,550,656 bytes, SHA-256
+  `24fba0b59fcf9a1331788c1c00e01e57b46bb240e83bddf1d80e02c4f4b2cc1d`, retained)
 
-**Promotion note:** this snapshot was refreshed from the source-stable live
-maintainer project after the four HUD route descriptive-name demotions
-(`0x00483530`, `0x004858d0`, `0x00485d50`, `0x00486940` → neutral
-`CHud__RoutePanel_T*_<address>` Tier-3 labels) passed sealed scratch and
-current-geometry replicas, rollback and containment controls, one live apply,
+**Reproducing the inventory digest.** The convention was previously stated as
+`sha256<TAB>bytes<TAB>relative-posix-path<LF>`, which reads as line-terminated.
+It is not: the digest is over the rows **joined** by `LF` with **no trailing
+newline**, one row per payload file as
+`sha256<TAB>bytes<TAB>relative-posix-path`, sorted by the rendered line, over the
+19 payload files with this `README.md` excluded. Measured 2026-08-17 against both
+the tracked tree and the live maintainer project: both reproduce
+`26603333e989…` at 19 files and 187,239,301 bytes, so the recorded pin describes
+the current `db.18622` payload and not a superseded one. Re-measure rather than
+quote — a concurrent ceremony can move this at any time.
+
+**Promotion note (superseded in place 2026-08-17).** This header previously still
+described the 2026-08-14 HUD route demotion while its `db` and payload pins had
+already been advanced by three later promotions — the stale-prose-with-current-
+pins failure mode. The pins above are current; the promotion history is:
+`db.18618` → 41 boundary corrections → `db.18619`/`db.18620` → 160 name
+corrections (158 functions, 2 labels) → `db.18621` → 294 ABI signature
+corrections → `db.18622` → **CTentacle factory-name ceremony A** → `db.18623` →
+**CTentacle factory-name ceremony B** → `db.18624`, all on 2026-08-17, each a
+separately authorized promotion. Internal functions remain **8,329** across all
+five: no function was created or destroyed. All five ceremonies are owned by the
+shared cohort framework's replayable specs under `tools/cohort-specs/`; prefer
+replaying a spec over reading this paragraph.
+
+**The CTentacle factory-name chain (`db.18622` → `db.18624`).** Two one-row
+`SET_NAME` cohorts, run as two sequential ceremonies through
+`GhidraApplyCohortManifestLive.java`:
+`0x004f07e0` `CTentacle__CreateTentacleAI` → `CTentacle__CreateTentacleGuide`
+(ceremony A, `db.18623`), then `0x004f0860` `CTentacle__CreateWarspiteAI` →
+`CTentacle__CreateTentacleAI` (ceremony B, `db.18624`). They are **two cohorts on
+purpose**: each row wants the name the other holds, so a single cohort is refused
+by the framework's own `noCycle` and collision gates, and with no in-process
+rollback available every non-mutating gate must pass before the first write.
+Ceremony A was closed in full — separate-process readback, verified POST backup,
+tracked refresh on proven byte equality — before ceremony B's gates were
+evaluated. Each ceremony measured `functionsExamined=8329 functionsChanged=1
+functionsUntouched=8328 columnsMoved={name=1}`, with an independent external
+diff of the full 8,329-row inventory confirming one changed row, zero non-target
+movement, zero frozen-column drift, and zero movement in all 29 program-scope
+metrics. Evidence and byte anchors:
+[`CTentacle factory-name chain`](../binary-analysis/tentacle-factory-name-chain-2026-08-17.md).
+
+The 2026-08-14 HUD route demotion, retained for its own record: four descriptive
+names (`0x00483530`, `0x004858d0`, `0x00485d50`, `0x00486940`) were demoted to
+neutral `CHud__RoutePanel_T*_<address>` Tier-3 labels after sealed scratch and
+current-geometry replicas, containment controls, one live apply,
 separate-process full-inventory readback, tracked-still-PRE proof, and
-PRE/POST/tracked restore probes. Internal functions remain 8,329; only the
+PRE/POST/tracked restore probes. Only those
 four rows' names, displayed signatures, comments, and tags changed, and at
 program scope only `commentsSha256`. No boundary, instruction, program byte,
-data unit, reference, or non-target function row moved. See the
+data unit, reference, or non-target function row moved. Its "rollback control"
+is superseded: in-process rollback is measured **unavailable** in this build, so
+reversibility is ceremony-level restore from a verified off-volume PRE backup
+only. See the
 [`HUD route name demotion report`](../binary-analysis/hud-route-name-demotion-live-promotion-2026-08-14.md)
 and the preceding
 [`D3DX two-function live-promotion report`](../binary-analysis/d3dx-gap-two-function-ghidra-live-promotion-2026-08-14.md),
@@ -52,8 +97,13 @@ the preceding
 and the structural
 [`boundary live-promotion report`](../binary-analysis/mission-script-registry-boundary-live-promotion-2026-08-13.md).
 
-The 19-file tree is byte-identical to the independently restored/read-only-
-opened D: POST recovery made on 2026-08-14 (HUD route demotion POST backup).
+The 19-file tree was measured byte-identical to the live maintainer project on
+2026-08-17 — 19 files, 187,403,141 bytes, inventory `1ecf589a…` from both
+trees, zero per-file mismatches — and to the independently restored,
+read-only-reopened D: POST recovery for ceremony B
+(`D:\BEA-Ghidra-Backups\2026-08-17-tentacle-chain-b-post-live`), which reopened
+with program `BEA.exe`, md5 `3b456964020070efe696d2cc09464a55` and specimen
+sha256 `74154bfa…7750`.
 Future live work can make
 the snapshot lag again; each refresh remains a separately authorized promotion.
 The current ignored live readback and tracked-restore receipts are respectively
@@ -105,7 +155,8 @@ the user overrides them:
 | Headless entry | `...\support\analyzeHeadless.bat` |
 | Prior install archive | `D:\GhidraArchives\` (12.0.3 retained there; do not delete) |
 | Working/maintainer project | `C:\Users\david\Ghidra\Projects` (`BEA.gpr` / `BEA.rep`) |
-| Verified off-volume recovery | `D:\BEA-Ghidra-Backups\2026-08-14-hud-route-demotion-post-live` (exact current POST snapshot; independently copied and read-only reopened) |
+| Verified off-volume recovery | `D:\BEA-Ghidra-Backups\2026-08-17-tentacle-chain-b-post-live` (exact current `db.18624` POST snapshot; independently copied, restore-proven byte-identical, and read-only reopened) |
+| Prior verified recovery | `D:\BEA-Ghidra-Backups\2026-08-17-tentacle-chain-a-post-live` (`db.18623`, ceremony B's PRE) and `...-tentacle-chain-a-pre-live` (`db.18622`, the chain's PRE) |
 | Xbox Issue-11 POST recovery | `D:\BEA-Ghidra-Backups\2026-08-12-xbox-sparse-symbol-post-anchors-issue11\` (exact isolated project; restored semantic readback passed) |
 | Xbox US-retail POST recovery | `D:\BEA-Ghidra-Backups\2026-08-12-xbox-sparse-symbol-post-anchors-us-retail\` (exact isolated project; restored semantic readback passed) |
 | User settings | `%APPDATA%\ghidra\ghidra_12.1.2_PUBLIC` |

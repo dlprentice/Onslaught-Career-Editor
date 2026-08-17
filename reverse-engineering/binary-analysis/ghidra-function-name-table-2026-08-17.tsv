@@ -3,9 +3,9 @@
 #           It is a name index, not a database, disassembly, or semantic proof.
 # Projection date: 2026-08-17
 # Specimen SHA-256: 74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750
-# Source  : name-cohort160-replica-readback-2026-08-17
-# Source bytes: 7191223
-# Source SHA-256: 9128be3ca177a946dd0e420ccbd7cb7094039ce2bb48bbded4e9f79a90ec3bca
+# Source  : tentacle-chain-b-live-post-readback-2026-08-17 (db.18624)
+# Source bytes: 7190526
+# Source SHA-256: b0c8400ae846a85436dd96076813def5a475f463395f3f58a3983a115df03352
 # Rows    : 8329 internal functions; this is a discovered census, not a final ceiling.
 # Columns : address, name, bodyMin, bodyMax (hex). Non-contiguous bodies are
 #           represented by their bounding range, so bodyMin..bodyMax can over-cover.
@@ -3650,8 +3650,8 @@ address	name	bodyMin	bodyMax
 0x004f0560	FUN_004f0560	0x004f0560	0x004f0622
 0x004f0630	CTentacle__VFunc_9_004f0630	0x004f0630	0x004f075f
 0x004f0760	CTentacle__CreateMCTentacle	0x004f0760	0x004f07d5
-0x004f07e0	CTentacle__CreateTentacleAI	0x004f07e0	0x004f085a
-0x004f0860	CTentacle__CreateWarspiteAI	0x004f0860	0x004f08e3
+0x004f07e0	CTentacle__CreateTentacleGuide	0x004f07e0	0x004f085a
+0x004f0860	CTentacle__CreateTentacleAI	0x004f0860	0x004f08e3
 0x004f08f0	CTentacleAI__scalar_deleting_dtor	0x004f08f0	0x004f090f
 0x004f0910	CTentacleAI__dtor_base	0x004f0910	0x004f09ae
 0x004f09b0	CTentacle__VFunc_66_004f09b0	0x004f09b0	0x004f0b90

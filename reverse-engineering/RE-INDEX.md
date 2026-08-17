@@ -11,14 +11,25 @@ Ghidra state no longer align, and that gap is deliberate.** The campaign
 authority is Generation 29, still frozen on exact `db.18618` geometry with
 8,329 functions, and the two D3DX rows are carried as OPAQUE/DARK rather than
 silently graded. The live and tracked Ghidra database has since advanced to
-**`db.18622`** through *three* authorized promotions on 2026-08-17 — 41 function
+**`db.18624`** through *five* authorized promotions on 2026-08-17 — 41 function
 boundary corrections recovering 3,293 bytes, then 158 function renames plus 2
-label renames, then 294 ABI signature corrections. Function count is unchanged
-at 8,329; instructions moved 551,143 → 551,232 and references 234,478 → 234,493.
+label renames, then 294 ABI signature corrections, then the two sequential
+one-row ceremonies of the
+[CTentacle factory-name chain](binary-analysis/tentacle-factory-name-chain-2026-08-17.md)
+(`0x004f07e0` → `CTentacle__CreateTentacleGuide` at `db.18623`, then
+`0x004f0860` → `CTentacle__CreateTentacleAI` at `db.18624`). Function count is
+unchanged at 8,329; instructions moved 551,143 → 551,232 and references
+234,478 → 234,493, and the last two ceremonies moved **no** structural metric at
+all — each measured one changed function row, zero non-target movement, and zero
+movement in all 29 program-scope metrics.
 **Do not re-ground a generation onto `db.18618` and do not read Generation 29's
 names as current** — the current name projection is
-[`ghidra-function-name-table-2026-08-17.tsv`](binary-analysis/ghidra-function-name-table-2026-08-17.tsv).
-Generation 30 is the next valid parent and must re-ground onto `db.18622`.
+[`ghidra-function-name-table-2026-08-17.tsv`](binary-analysis/ghidra-function-name-table-2026-08-17.tsv),
+re-projected 2026-08-17 from the ceremony-B live POST readback at `db.18624`.
+Generation 30 was cut on exact `db.18622` geometry and the two later name
+ceremonies moved two rows after it, so a generation re-grounding now must
+re-ground onto `db.18624` and must not read Generation 30's names for
+`0x004f07e0` or `0x004f0860`.
 
 **Measure that version; do not quote it.** Ceremonies run concurrently here and
 each one rolls the database file version — and opening a project *without*
@@ -967,11 +978,14 @@ Machine-readable siblings, for consumers that should not be parsing prose:
   — a **candidate**, as its own filename says; not an accepted contract.
 - [Retail specimen manifest](binary-analysis/retail-specimen-manifest-2026-03-14.json)
 - [2026-08-17 function name table](binary-analysis/ghidra-function-name-table-2026-08-17.tsv)
-  — the current 8,329-row address-to-name authority, projected from a
-  read-only db.18621 readback taken on a replica of the 2026-08-17
-  name-cohort POST backup. It carries the four HUD route demotions and the
-  158 renames of the 2026-08-17 name cohort, which the 2026-08-13 table
-  predated.
+  — the current 8,329-row address-to-name authority, re-projected from the
+  read-only **db.18624** live POST readback of the CTentacle factory-name
+  chain's ceremony B. It carries the four HUD route demotions, the
+  158 renames of the 2026-08-17 name cohort, and the chain's two rows
+  (`0x004f07e0` `CTentacle__CreateTentacleGuide`, `0x004f0860`
+  `CTentacle__CreateTentacleAI`). Its earlier db.18621 projection differed from
+  live in exactly those two rows, which is a third independent confirmation of
+  the chain's collateral result.
 - [2026-08-13 function name table](binary-analysis/ghidra-function-name-table-2026-08-13.tsv)
   — frozen 8,329-row provenance from the 2026-08-14 D3DX two-function db.18618
   readback, retained for the checks and receipts pinned to it.
