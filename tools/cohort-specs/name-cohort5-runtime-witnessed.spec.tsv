@@ -1,0 +1,50 @@
+cohortId	name-cohort5-runtime-witnessed
+cohortTitle	5 runtime-witnessed name corrections, name only
+programName	BEA.exe
+programMd5	3b456964020070efe696d2cc09464a55
+programSha256	74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750
+imageBase	00400000
+language	x86:LE:32:default
+compilerSpec	windows
+verb	SET_NAME
+preFunctions	8329
+preInstructions	551232
+preReferences	234493
+preDefinedData	48583
+preUndefinedData	3907629
+preBookmarks	2301
+preFunctionNameDigest	bbb6dd4547fdb7bfa8714105fd556b99ac79e42014eda5537b9b37b85ad47231
+preFunctionBodyDigest	cb96581a599479d8aa57c2319a5e110226969934c2c14797a2575c689537a9be
+# preFrozenDigest re-pinned 2026-08-17: the first rehearsal census refused the
+# c7bdf231... pin because the abi-two-witness-arity36 apply (db.18625) moved the
+# frozen census (signature columns) to 58ea83a1...; names/body unchanged. The
+# measured value wins; the first pin was one ceremony old.
+preFrozenDigest	58ea83a1a8e16ba66a753e7616aadcbeb87e4433281cd4e6593b2d1a0dc3bb55
+postFunctions	8329
+postInstructions	551232
+postReferences	234493
+postDefinedData	48583
+postUndefinedData	3907629
+postBookmarks	2301
+postFunctionNameDigest	94d97aab6f578fe5b1b86f8a759b0257c5518d53c9d836107bae361faacca4c9
+postFunctionBodyDigest	cb96581a599479d8aa57c2319a5e110226969934c2c14797a2575c689537a9be
+postFrozenDigest	2b23493d13d4ebc231f8b8dab5b3c68cd21c51e7dd8726fa2591a095ee33458f
+manifestSha256	e2a329c73cc23982ab6b7affd0b3e1f28cfdba910db584c85a56a35242d91aa1
+manifestBytes	2560
+manifestRows	5
+manifestColumns	9
+manifestHeaderPipe	addr|provenance|liveKind|currentNameLive|proposedName|tier|anchorKind|anchorEvidence|reason
+col.addr	addr
+col.liveKind	liveKind
+col.currentName	currentNameLive
+col.proposedName	proposedName
+unique	addr
+unique	proposedName
+unique	currentName
+noCycle	proposedName:currentName
+enum	liveKind=FUNCTION,SYMBOL:Label
+enum	provenance=PROMOTE,DEMOTE,SLOTFIX
+expectedTargetsChanged	5
+expectedFunctionsUntouched	8324
+expectedSymbolsAdded	5
+expectedSymbolsRemoved	5

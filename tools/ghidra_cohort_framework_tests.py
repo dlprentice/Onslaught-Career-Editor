@@ -104,11 +104,15 @@ REQUIRED_LIVE_PROJECT_DIR = r"c:\users\david\ghidra\projects\bea.rep"
 # the same day (db.18622 -> db.18623 -> db.18624). abi-two-witness-arity36 is
 # granted 2026-08-17 after the recorded recommendation: all 36 rows re-adjudicated
 # against the pristine specimen (36/36 witness + ret byte anchors exact) with the
-# spec re-derived to the honest LOWER_BOUND exactness.
+# spec re-derived to the honest LOWER_BOUND exactness. name-cohort5-runtime-witnessed
+# is granted 2026-08-17 after the full rehearsal on a db.18625 replica: census/dry/
+# apply all PASS (5 rows, 8,324 untouched, name column only, 5 symbols swapped) with
+# measured pre/post pins.
 LIVE_GRANTED_COHORTS = [
     "boundary-cohort41", "name-cohort160", "abi-cohort294",
     "tentacle-chain-a", "tentacle-chain-b",
     "abi-two-witness-arity36",
+    "name-cohort5-runtime-witnessed",
 ]
 PROGRAM_SHA256 = (
     "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
@@ -497,6 +501,7 @@ LIVE_ALLOWLISTED_EDITS: list[tuple[str, str, str]] = [
         '        "boundary-cohort41", "name-cohort160", "abi-cohort294",\n'
         '        "tentacle-chain-a", "tentacle-chain-b",\n'
         '        "abi-two-witness-arity36",\n'
+        '        "name-cohort5-runtime-witnessed",\n'
         "    };\n",
     ),
     (
