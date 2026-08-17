@@ -6,9 +6,19 @@ Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
 Current replay authority is Generation 29 via
 `developer_state.json` → `current_re_authority`; Generation 73 is a projection
-oracle only, and the Generation-10 block below is historical. Campaign and
-structural Ghidra state align at 8,329 functions / db.18618; the two D3DX rows
-are carried as OPAQUE/DARK rather than silently graded.
+oracle only, and the Generation-10 block below is historical. **Campaign and
+Ghidra state no longer align, and that gap is deliberate.** The campaign
+authority is Generation 29, still frozen on exact `db.18618` geometry with
+8,329 functions, and the two D3DX rows are carried as OPAQUE/DARK rather than
+silently graded. The live and tracked Ghidra database has since advanced to
+**`db.18621`** through two authorized promotions on 2026-08-17 — 41 function
+boundary corrections recovering 3,293 bytes, then 158 function renames plus 2
+label renames. Function count is unchanged at 8,329; instructions moved
+551,143 → 551,232 and references 234,478 → 234,493. **Do not re-ground a
+generation onto `db.18618` and do not read Generation 29's names as current** —
+the current name projection is
+[`ghidra-function-name-table-2026-08-17.tsv`](binary-analysis/ghidra-function-name-table-2026-08-17.tsv).
+Generation 30 is the next valid parent and must re-ground onto `db.18621`.
 
 This directory preserves evidence that materially supports the toolkit,
 rebuild, modding work, or contributor understanding. Git history holds completed
