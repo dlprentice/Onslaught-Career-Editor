@@ -77,7 +77,8 @@ hash downstream. This is expected — but it must be deliberate and recorded:
 - `Level100ColdStartTests` and the deterministic run fixtures (cold start,
   pointer-quantised, full-chain).
 - `InteractiveSessionTests` (100 000-step bounds).
-- `HeadlessApplicationTests` (8 MiB tape bound, replay determinism, `--expect`).
+- `HeadlessApplicationTests` (8 MiB tape bound, replay determinism, `--expect`,
+  and the pinned first-flight trace/state fingerprint owner).
 - `StateHasher` canonical-format tests.
 
 A contributor who touches `Simulation.cs`, `SimulationConstants.cs`,

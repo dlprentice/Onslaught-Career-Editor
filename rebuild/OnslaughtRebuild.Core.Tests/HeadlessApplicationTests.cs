@@ -31,6 +31,36 @@ public sealed class HeadlessApplicationTests
     }
 
     [Fact]
+    public void DefaultTape_TraceAndStateHashesMatchThePinnedFirstFlightFingerprint()
+    {
+        // Owns the first-flight.v1.json fingerprint (838 ticks, seed
+        // 2836905711) for this revision, per rebuild/DETERMINISM.md: a
+        // behavior change that legitimately moves Core's trace must re-pin
+        // these two values in the same commit as the behavior change. The
+        // native Godot smoke pins the 2148-tick rendered path separately.
+        using var output = new StringWriter();
+        using var error = new StringWriter();
+
+        int exitCode = HeadlessApplication.Run(
+            ["--expect", "efc818f7708bea67ecaffb5e6acc6807c90f29e7499a69f1891ff407f8388014", "--repeat", "2"],
+            output,
+            error);
+
+        using JsonDocument result = JsonDocument.Parse(output.ToString());
+        Assert.Equal(0, exitCode);
+        Assert.Equal(838, result.RootElement.GetProperty("ticks").GetInt32());
+        Assert.True(result.RootElement.GetProperty("traceHashChecked").GetBoolean());
+        Assert.True(result.RootElement.GetProperty("traceHashVerified").GetBoolean());
+        Assert.Equal(
+            "efc818f7708bea67ecaffb5e6acc6807c90f29e7499a69f1891ff407f8388014",
+            result.RootElement.GetProperty("traceHash").GetString());
+        Assert.Equal(
+            "0c034978c006049e57833564aba0b10cad00c87e61d5658737e13cc6a389f6ce",
+            result.RootElement.GetProperty("finalStateHash").GetString());
+        Assert.Equal(string.Empty, error.ToString());
+    }
+
+    [Fact]
     public void InvalidExpectedHash_IsRejectedAsUsageError()
     {
         string tapePath = Path.Combine(AppContext.BaseDirectory, "scenarios", "first-flight.v1.json");
