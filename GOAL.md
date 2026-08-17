@@ -457,13 +457,15 @@ corrections → Level100 crash characterisation → falsifier close-out.
    at 19 files / 187,403,141 bytes (tracked == live, no refresh needed), POST
    backup verified, and the external authority receipt is emitted and pinned
    (`current_re_authority` → v2; `0bf94104`).
-4. **Promote abi-two-witness-arity36 through the full gate.** The slot
+4. **abi-two-witness-arity36 — PROMOTED TO LIVE 2026-08-17.** The slot
    instrument visit-order question is settled 2026-08-17 (no flip) and all 36
    rows are byte-adjudicated (36/36 witness + RET anchors re-verify against
    the pristine specimen; `local-lab\arity36-readjudication-2026-08-17\REPORT.md`),
-   and the spec now pins the honest `LOWER_BOUND` exactness (`72bf182b`). Next:
-   framework census on a db.18624 replica, then the live ceremony through the
-   full gate.
+   and the spec pins the honest `LOWER_BOUND` exactness (`72bf182b`). The full
+   gate then ran on live: census/dry/apply/readback all PASS, 36 rows changed /
+   8,293 untouched / only the three signature columns moved, PRE and POST
+   backups restore-proven, and the tracked snapshot refreshed on byte equality
+   (live rolled db.18624 → db.18625; `local-lab\arity36-ceremony-2026-08-17\`).
 5. **Pointer/vftable cohort.** 65 of 99 untyped pointer slots are RTTI vftables
    across 59 classes. Add ONE typed vftable-apply verb to the cohort framework
    (with the existing gate + mutator suite), then apply each vftable with its

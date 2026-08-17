@@ -12,13 +12,15 @@ carry bridge and lands the first 16 `REBUILD_READY` contracts (14 rows raise
 C0_OPAQUE → C1_CANDIDATE_PARTIAL, one carries C1 unchanged, one fresh
 GetFriction row enters C1; independently verified CAMPAIGN_VERIFIED with the
 measured on-disk READY/reducer pins). The live and tracked Ghidra database is
-**`db.18624`** through *five* authorized promotions on 2026-08-17 — 41 function
+**`db.18625`** through *six* authorized promotions on 2026-08-17 — 41 function
 boundary corrections recovering 3,293 bytes, then 158 function renames plus 2
 label renames, then 294 ABI signature corrections, then the two sequential
 one-row ceremonies of the
 [CTentacle factory-name chain](binary-analysis/tentacle-factory-name-chain-2026-08-17.md)
 (`0x004f07e0` → `CTentacle__CreateTentacleGuide` at `db.18623`, then
-`0x004f0860` → `CTentacle__CreateTentacleAI` at `db.18624`). Function count is
+`0x004f0860` → `CTentacle__CreateTentacleAI` at `db.18624`), then the 36-row
+`abi-two-witness-arity36` SET_PROTOTYPE cohort at `db.18625` (signature-only;
+no name, body, or reference moved). Function count is
 unchanged at 8,329; instructions moved 551,143 → 551,232 and references
 234,478 → 234,493, and the last two ceremonies moved **no** structural metric at
 all — each measured one changed function row, zero non-target movement, and zero
@@ -26,7 +28,8 @@ movement in all 29 program-scope metrics.
 **Do not re-ground a generation onto `db.18618` or `db.18622`, and do not read
 Generation 29/30 names as current** — the current name projection is
 [`ghidra-function-name-table-2026-08-17.tsv`](binary-analysis/ghidra-function-name-table-2026-08-17.tsv),
-re-projected 2026-08-17 from the ceremony-B live POST readback at `db.18624`.
+re-projected 2026-08-17 from the ceremony-B live POST readback at `db.18624`;
+the arity36 promotion moved no names, so it remains the current name authority.
 
 **Measure that version; do not quote it.** Ceremonies run concurrently here and
 each one rolls the database file version — and opening a project *without*
