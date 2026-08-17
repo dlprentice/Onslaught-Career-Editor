@@ -471,11 +471,14 @@ corrections → Level100 crash characterisation → falsifier close-out.
    (with the existing gate + mutator suite), then apply each vftable with its
    recovered class identity — never a bespoke applier, never 99 isolated
    dwords.
-6. **Runtime-witnessed name corrections** (`0x0048c3b0` →
-   `CInfluenceNode__CalculateInfluence`, `0x0052ff20` InitBuiltins, `0x005363e0`
-   GetPlayer, `0x0043a860` both halves, `0x004398f0`), witnesses now in
-   `local-lab\ds-deep-review-extended\data\`. Author the cohort spec + manifest
-   and promote through the framework.
+6. **Runtime-witnessed name corrections — PROMOTED TO LIVE 2026-08-17.** The
+   five-row `name-cohort5` landed through the framework (db.18625 → db.18626):
+   `0x0048c3b0` → `CInfluenceNode__CalculateInfluence`, `0x0052ff20` →
+   `ScriptCommandRegistry__InitBuiltins_thunk_0052ff20` (jump thunk to the real
+   InitBuiltins), `0x005363e0` → `IScript__GetPlayer`, `0x0043a860` →
+   `CExplosionStatement__VFunc_3_0043a860`, `0x004398f0` →
+   `SharedVFunc_T3_004398f0` (owner refuted; neutral placeholder). Rehearsal and
+   live receipts in `local-lab\name-cohort5-{rehearsal,ceremony}-2026-08-17\`.
 7. **Falsifier frontier — CLOSED 2026-08-17.** `0x004e2b30` terminal (no
    vftable store; class unrecoverable from specimen), `[obj+0x260]` polarity
    settled (2 = walker, 3 = flight), `0x0043a860`/`0x0052db60` statically

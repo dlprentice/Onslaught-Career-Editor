@@ -72,7 +72,7 @@ unverified against the new name until it is re-measured.
 | 0x00535670 | IScript__GetWeaponName | Registry supplies weapon scope; body calls the battle-engine weapon-physics-name path |
 | 0x005357b0 | IScript__GetConfiguration | Registry vocabulary over the measured current thing-type/configuration string path |
 | 0x005362a0 | IScript__GetVariable | Registry name is broader; measured implementation wraps `CWorld__GetWorldTextSlotTimerValue` |
-| 0x005363e0 | IScript__GetPlayerBattleEngine | Get player's battle engine reference |
+| 0x005363e0 | IScript__GetPlayer | Get the player (registry name GetPlayer) |
 | 0x00537410 | IScript__AddMessage | Build and queue a localized `CMessage`; queued advancement can reach voice playback |
 | 0x00537500 | IScript__PlayCharMessage | Build and queue a localized character message; the measured body/call layer registers no callback |
 | 0x005375f0 | IScript__PlayCharMessageWait | Build and queue a localized character message and schedule its wait event; no fade axis was found |
@@ -397,8 +397,8 @@ Sound functions integrate with the sound manager:
 |---------|--------|----------|
 | 0x0064fa9c | "FATAL ERROR: null thing passed to 'Create3PointPanCamera'" | IScript__Create3PointPanCamera |
 | 0x0064fad8 | "FATAL ERROR: null thing passed to 'Create4PointPanCamera'" | IScript__Create4PointPanCamera |
-| 0x0064fc3c | "Fatal error: Player %d has no battle engine!!!" | IScript__GetPlayerBattleEngine |
-| 0x0064fc6c | "Warning: sorry no player %d returning 1" | IScript__GetPlayerBattleEngine |
+| 0x0064fc3c | "Fatal error: Player %d has no battle engine!!!" | IScript__GetPlayer |
+| 0x0064fc6c | "Warning: sorry no player %d returning 1" | IScript__GetPlayer |
 | 0x0064fd30 | "_unknown_" | IScript__PlaySound (default sound name) |
 | 0x0064fd3c | "SHIT this should never happen" | IScript__PlaySoundWithFade (error case) |
 

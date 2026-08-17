@@ -105,7 +105,7 @@ the invented method spelling, nothing else.
 | `0x00435010` | `void * __cdecl CPhysicsScriptStatements__CreateStatementType4(int valueType)` | Type-4/weapon-mode value factory over observed value ids `0x1` through `0x26`; exact value classes/layouts remain unproven. |
 | `0x00437490` | `void * __cdecl CPhysicsScriptStatements__CreateStatementType5(int valueType)` | Type-5/round value factory over observed value ids `0x1` through `0x26`; exact value classes/layouts remain unproven. |
 | `0x00439b40` | `void * __cdecl CPhysicsScriptStatements__CreateStatementType6(int valueType)` | Type-6/spawner value factory over observed spawner value ids; exact value classes/layouts remain unproven. |
-| `0x0043a860` | `void * __cdecl CPhysicsScriptStatements__CreateStatementType7(int valueType)` | Type-7/explosion value factory over observed value ids `0x1` through `0xf`; exact value classes/layouts remain unproven. |
+| `0x0043a860` | `void * __cdecl CExplosionStatement__VFunc_3_0043a860(int valueType)` | CExplosionStatement (type 6) slot-3 factory over observed value ids `0x1` through `0xf`; exact value classes/layouts remain unproven. |
 | `0x0043b990` | `void * __cdecl CPhysicsScriptStatements__CreateStatementType8(int valueType)` | Type-8/feature value factory over observed value ids `0x1` through `0x7`; exact value classes/layouts remain unproven. |
 | `0x0043c0b0` | `void * __cdecl CPhysicsScriptStatements__CreateStatementType9(int valueType)` | Type-9/hazard value factory over observed value ids `0x1` through `0x4`; exact value classes/layouts remain unproven. |
 | `0x0043c500` | `void * __cdecl CPhysicsScriptStatements__CreateStatementType10(int valueType)` | Type-10/component value factory over observed ids `0x1..0x19` except `0x5`; exact value classes/layouts remain unproven. |
@@ -222,7 +222,7 @@ the invented method spelling, nothing else.
 | `0x004014c0` | `void __thiscall SharedVFunc__NoOpOneArg_004014c0(void * this, int arg0)` | Wave 339 superseded the older frontend-specific label after vtable-slot evidence showed broad shared no-op use. |
 | `0x00405930` | `int __thiscall SharedVFunc__ReturnZero_00405930(void * this)` | Wave 339 superseded the older controller-specific label after vtable-slot evidence showed broad shared return-zero use. |
 | `0x00434b60` | `void __thiscall CPhysicsScriptValue_T3_00434b60(void * this, void * memBuffer)` | Recovered shared scalar load boundary for the value object field at `this+0x8`. |
-| `0x004398f0` | `int __fastcall CPhysicsScriptValue__GetOwnedStringAt08SerializedSize(void * this)` | Recovered shared owned-string serialized-size boundary. |
+| `0x004398f0` | `int __fastcall SharedVFunc_T3_004398f0(void * this)` | Recovered shared owned-string serialized-size boundary; the CPhysicsScriptValue owner was refuted by the RTTI census, so this holds a neutral placeholder. |
 | `0x00439b40` | `void * __cdecl CPhysicsScriptStatements__CreateStatementType6(int valueType)` | Hardened the type-6/spawner value factory signature/comment. |
 | `0x00439e70` | `void __thiscall CSpawnerBasedOn__ApplyToSpawnerByName(void * this, char * spawnerName)` | Applies base-spawner fields after resolving the named spawner record. |
 | `0x0043a040` | `void __fastcall CPhysicsSpawnerValue__dtor_base(void * this)` | Base destructor body for `CPhysicsSpawnerValue`; adjacent vtable evidence points at the recovered scalar-deleting wrapper. |
@@ -243,7 +243,7 @@ the invented method spelling, nothing else.
 
 | Address | Saved signature | Current evidence |
 | --- | --- | --- |
-| `0x0043a860` | `void * __cdecl CPhysicsScriptStatements__CreateStatementType7(int valueType)` | Hardened the type-7/explosion value factory over ids `0x1..0xf`; factory vtable evidence spans `0x005da6c4` through `0x005da7dc`, with exact classes/layouts still unproven. |
+| `0x0043a860` | `void * __cdecl CExplosionStatement__VFunc_3_0043a860(int valueType)` | Hardened the CExplosionStatement (type 6) slot-3 factory over ids `0x1..0xf`; factory vtable evidence spans `0x005da6c4` through `0x005da7dc`, with exact classes/layouts still unproven. |
 | `0x0043abd0` | `void __thiscall CExplosionBasedOn__ApplyToExplosionByName(void * this, char * explosionName)` | Searches `DAT_008553f8`, resolves the base/source explosion name at `this+0x8`, and copies selected fields from the source explosion record. |
 | `0x0043aea0` | `void __thiscall CExplosionBasedOn__CopySoundString28(void * this, char * sourceString)` | Helper that copies/clones the sound string into the explosion-based value string slot for record field `+0x28`; exact layout remains unproven. |
 | `0x0043af10` | `void __thiscall CExplosionBasedOn__CopyWaterSoundString2C(void * this, char * sourceString)` | Helper that copies/clones the water-sound string into the explosion-based value string slot for record field `+0x2c`; exact layout remains unproven. |

@@ -3,9 +3,9 @@
 #           It is a name index, not a database, disassembly, or semantic proof.
 # Projection date: 2026-08-17
 # Specimen SHA-256: 74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750
-# Source  : tentacle-chain-b-live-post-readback-2026-08-17 (db.18624)
-# Source bytes: 7190526
-# Source SHA-256: b0c8400ae846a85436dd96076813def5a475f463395f3f58a3983a115df03352
+# Source  : name-cohort5-live-post-readback-2026-08-17 (db.18626)
+# Source bytes: 7193137
+# Source SHA-256: 64865c7f94bde15a352b48e90ad045e750f25fdc8ece534d5f39ab368db265ce
 # Rows    : 8329 internal functions; this is a discovered census, not a final ceiling.
 # Columns : address, name, bodyMin, bodyMax (hex). Non-contiguous bodies are
 #           represented by their bounding range, so bodyMin..bodyMax can over-cover.
@@ -1118,7 +1118,7 @@ address	name	bodyMin	bodyMax
 0x00439620	CRoundMesh__ApplyToRoundByName	0x00439620	0x0043970f
 0x00439710	CRoundEffect__ApplyToRoundByName	0x00439710	0x004397fc
 0x00439800	CRoundWaterEffect__ApplyToRoundByName	0x00439800	0x004398ec
-0x004398f0	CPhysicsScriptValue__GetOwnedStringAt08SerializedSize	0x004398f0	0x00439908
+0x004398f0	SharedVFunc_T3_004398f0	0x004398f0	0x00439908
 0x00439910	CRoundExplosion__ApplyToRoundByName	0x00439910	0x004399fc
 0x00439a00	CRoundTreeCollision__ApplyToRoundByName	0x00439a00	0x00439a9b
 0x00439aa0	CRoundTreeCollision__LoadFromMemBuffer	0x00439aa0	0x00439ac6
@@ -1142,7 +1142,7 @@ address	name	bodyMin	bodyMax
 0x0043a720	CSpawnerPostSpawnDelay__ApplyToSpawnerByName	0x0043a720	0x0043a7af
 0x0043a7b0	CSpawnerInfinite__ApplyToSpawnerByName	0x0043a7b0	0x0043a83f
 0x0043a840	CPhysicsSpawnerValueLeaf_T3_0043a840	0x0043a840	0x0043a85f
-0x0043a860	CPhysicsScriptStatements__CreateStatementType7	0x0043a860	0x0043ab86
+0x0043a860	CExplosionStatement__VFunc_3_0043a860	0x0043a860	0x0043ab86
 0x0043abd0	CExplosionBasedOn__ApplyToExplosionByName	0x0043abd0	0x0043ae95
 0x0043aea0	CExplosionBasedOn__CopySoundString28	0x0043aea0	0x0043af06
 0x0043af10	CExplosionBasedOn__CopyWaterSoundString2C	0x0043af10	0x0043af76
@@ -2171,7 +2171,7 @@ address	name	bodyMin	bodyMax
 0x0048c300	DestructorBody_0048c300	0x0048c300	0x0048c34b
 0x0048c350	CInfluenceNode__DetachNeighborLinks_0048c350	0x0048c350	0x0048c386
 0x0048c390	CInfluenceNode__InitFromComplexThingInit_0048c390	0x0048c390	0x0048c3a7
-0x0048c3b0	CInfluenceMap__CalculateInfluence	0x0048c3b0	0x0048c550
+0x0048c3b0	CInfluenceNode__CalculateInfluence	0x0048c3b0	0x0048c550
 0x0048c560	FUN_0048c560	0x0048c560	0x0048c57e
 0x0048c580	FUN_0048c580	0x0048c580	0x0048c642
 0x0048c650	InitThing__CreateThingByType	0x0048c650	0x0048cb42
@@ -4809,7 +4809,7 @@ address	name	bodyMin	bodyMax
 0x0052fda0	CEventFunction__Execute	0x0052fda0	0x0052fe2f
 0x0052fe30	FUN_0052fe30	0x0052fe30	0x0052fe4e
 0x0052fe50	FUN_0052fe50	0x0052fe50	0x0052ff12
-0x0052ff20	ScriptCommandRegistry_T3_0052ff20	0x0052ff20	0x0052ff24
+0x0052ff20	ScriptCommandRegistry__InitBuiltins_thunk_0052ff20	0x0052ff20	0x0052ff24
 0x0052ff30	ScriptCommandRegistry__InitBuiltins	0x0052ff30	0x005333a4
 0x005333b0	IScript__Constructor	0x005333b0	0x00533422
 0x00533430	IScript__ScalarDeletingDestructor	0x00533430	0x0053344f
@@ -4929,7 +4929,7 @@ address	name	bodyMin	bodyMax
 0x005362a0	IScript__GetVariable	0x005362a0	0x0053632d
 0x00536330	IScript__ShutdownVariable	0x00536330	0x00536348
 0x00536350	IScript__IsA	0x00536350	0x005363da
-0x005363e0	IScript__GetPlayerBattleEngine	0x005363e0	0x005365bd
+0x005363e0	IScript__GetPlayer	0x005363e0	0x005365bd
 0x005365c0	IScript__GetSquad	0x005365c0	0x005366b9
 0x005366c0	IScript__GetTarget	0x005366c0	0x005367bc
 0x005367c0	IScript__GetThingRef	0x005367c0	0x00536913

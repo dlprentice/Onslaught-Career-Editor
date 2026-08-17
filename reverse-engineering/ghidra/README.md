@@ -4,19 +4,19 @@
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; local working copies and historical backups remain untracked.
 
-- Snapshot date: 2026-08-17 (eighth refresh: the abi-two-witness-arity36
-  SET_PROTOTYPE cohort, 36 rows)
+- Snapshot date: 2026-08-17 (ninth refresh: the five-row runtime-witnessed
+  name-corrections cohort)
 - Ghidra lineage used for the latest review: 12.1.2
 - Imported Steam specimen SHA-256:
   `74154BFAE14DDC8ECB87A0766F5BC381C7B7F1AB334ED7A753040EDA1E1E7750`
 - Imported specimen MD5: `3b456964020070efe696d2cc09464a55`
-- Project payload: 19 files, 187,435,909 bytes
+- Project payload: 19 files, 187,468,677 bytes
 - Canonical project inventory SHA-256:
-  `7b60acd7aac9c0346f6dfcd70dd9da5244580dcce2e681dc841ce87da43998bc`
-- Current rolling database `db.18625.gbf`: 68,583,424 bytes, SHA-256
-  `0ecc40d3a9556e85a2bd2b089c6fc9f9848710d6c38fe25eedf779729fefc4d7`
-  (stable prior `db.18624.gbf`, 68,550,656 bytes, SHA-256
-  `24c54d29fdd66321353715cfac369c419c709b7e7a963193ab0e8161a14294f6`, retained)
+  `4b0a6ee286a77595659253fa83c18f82e72f845b6f41ffab23e14bd7134452eb`
+- Current rolling database `db.18626.gbf`: 68,583,424 bytes, SHA-256
+  `fdd94fbcc6ff39189f193f39333990453c7762360dc32e4df48b3107c95fa46f`
+  (stable prior `db.18625.gbf`, 68,583,424 bytes, SHA-256
+  `0ecc40d3a9556e85a2bd2b089c6fc9f9848710d6c38fe25eedf779729fefc4d7`, retained)
 
 **Reproducing the inventory digest.** The convention was previously stated as
 `sha256<TAB>bytes<TAB>relative-posix-path<LF>`, which reads as line-terminated.
@@ -24,8 +24,8 @@ It is not: the digest is over the rows **joined** by `LF` with **no trailing
 newline**, one row per payload file as
 `sha256<TAB>bytes<TAB>relative-posix-path`, sorted by the rendered line, over the
 19 payload files with this `README.md` excluded. Measured 2026-08-17 after the
-arity36 refresh against both the tracked tree and the live maintainer project:
-both reproduce `7b60acd7…` at 19 files and 187,435,909 bytes. Re-measure rather
+name-cohort5 refresh against both the tracked tree and the live maintainer
+project: both reproduce `4b0a6ee2…` at 19 files and 187,468,677 bytes. Re-measure rather
 than quote — a concurrent ceremony can move this at any time.
 
 **Promotion note (superseded in place 2026-08-17).** This header previously still
