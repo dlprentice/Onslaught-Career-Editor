@@ -450,7 +450,7 @@ from pristine bytes, and only through the full Ghidra gate.
 
 | # | Cohort | Size | Disposition |
 | ---: | --- | ---: | --- |
-| 1 | BOUNDARY, restricted | **41 of 77 (byte-derived)** | Manifest complete; ready for ceremony once preconditions clear |
+| 1 | BOUNDARY, restricted | **41 of 77 (byte-derived)** | **PROMOTED TO LIVE 2026-08-17** — tracked refresh still pending |
 | 2 | ABI, byte-provable | ~548 of 1,001 (est) | Promote after per-row `RET n` / `ADD ESP,n` check |
 | 3 | NAME, Tier 1 only | **33 (anchor-verified)** | Promote; each re-proved twice, zero re-proof failures |
 | 4 | NAME, demotions | **116** | 90 neutral `_T3_<addr>` placeholders + 26 descriptive relabels |
@@ -822,6 +822,43 @@ against an `int[32]` store, so slots 256–1023 exist in the save and are
 unreachable; and `IsEpisodeAvailable` dereferences the NULL its own
 `GetNodeFromWorldNo` just returned, where the sibling `DoesBaseThingExist`
 checks first.
+
+**LIVE PROMOTION COMPLETE 2026-08-17 — the 41-row boundary cohort is in the
+maintainer database.** Every gate held on the first attempt; nothing was
+restored or repaired. The applier is `tools/GhidraApplyBoundaryCohort41V4.java`,
+derived from V3 by an allowlisted edit of **9 lines removed and 11 added**, the
+only substantive change being the containment gate — which now requires the
+live project path by `equals` rather than `contains`, so no replica, restored
+backup, or clone can satisfy it. Both repository-path refusals carry verbatim
+and still run first. V3 remains unmodified and `LIVE_FORBIDDEN`. Its 37 tests
+prove the derivation two independent ways — replaying the allowlist onto V3
+reproduces V4's exact bytes, and every differing line must be claimed by an
+allowlist entry — with negative controls confirming a weakened pin and a
+deleted table check are both caught.
+
+*Results.* PRE and POST backups both taken off-volume to `D:` and both
+restore-proven by byte comparison and a read-only reopen. Live's tree digest
+was byte-identical to the rehearsal base, so nothing had drifted. Dry
+(`-readOnly`) 41× WOULD_APPLY, apply 41× APPLIED with 25 units cleared and zero
+admitted bytes left undefined, separate-JVM readback 41/41 PASS. **POST pins
+match V3's re-measurement with zero deviation**: 8,329 functions, 551,232
+instructions (+89), 234,493 references (+15), 48,583 defined data, 3,907,629
+undefined, 2,301 bookmarks. Collateral proof passes with the non-target digest
+`96a0d2d0…641b5` identical on both sides and **8,288 non-target rows
+unchanged**; the 41 target rows moved only in their geometry columns.
+
+*The strongest single receipt:* the live `dry.tsv`, `apply.tsv`, `readback.tsv`,
+and both inventory files are **byte-identical to the rehearsal's replica-a
+receipts**. The live apply reproduced the rehearsed one exactly, which is what a
+rehearsal is supposed to buy and rarely proves this cleanly.
+
+*State.* Live is now 187,026,309 bytes and holds the promotion. **The tracked
+snapshot at `reverse-engineering/ghidra` was deliberately left untouched at
+187,009,925 bytes** and still holds the pre-cohort state — refreshing it is a
+separate promotion requiring its own authorization, and live and tracked are no
+longer twins until then. The pristine specimen still hashes `74154bfa…7750`.
+Generation 30, all semantic grades, and the NAME, slot-ordinal, and ABI cohorts
+were untouched.
 
 **Campaign-layer corrections.** Discard the single `CONTRACT_REFUTED` row. It
 claims `0x005d85d8` sits in bss with no file bytes, but that VA maps to file
