@@ -145,29 +145,41 @@ artefact and must never ship as authored behaviour.
 > Revise it by superseding in place with a dated note in *Directive revisions*
 > below; never keep a parallel copy.
 >
-> Set 2026-08-12. Status: **active**.
+> Set 2026-08-12; revised 2026-08-17 (full-RE mandate, Generation 30/31
+> grounding, corpus relocation). Status: **active**.
 
 ### Mandate
 
-Drive the primary Battle Engine Aquila reverse-engineering lane forward from
-canonical Generation 29 through successive mechanically verified generations,
-maximizing defensible progress toward complete retail understanding, durable
-function and behavior contracts, a materially improved live Ghidra
-reconstruction, and Godot parity. This is a long-horizon execution mandate, not
-permission to manufacture certainty, and not an instruction to produce process
-theater in place of reverse engineering.
+Reverse the retail binary to completion as the prime directive. Drive every one
+of the current 8,329 functions — and every later-admitted boundary — toward a
+defensible terminal state: a C2/REBUILD_READY contract, or an explicit open
+question with its cheapest falsifier and next instrument. Every claim is
+byte-proven and two-witness gated; the Godot rebuild and the WinUI toolkit
+consume this work as coequal outcomes. Advance through successive mechanically
+verified generations and framework-gated Ghidra promotions, maximizing
+defensible progress and landing promotions rather than accumulating tooling.
+This is a long-horizon execution mandate, not permission to manufacture
+certainty, and not an instruction to produce process theater in place of
+reverse engineering.
 
 ### Ground yourself before acting
 
-Confirm HEAD is at or beyond `e7aa7548`. Confirm the pristine specimen SHA-256
-`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`. Confirm the
-Generation 29 READY
-`fe61f69646c644a880134474869f1c577403e6aa5675730cd1f0c467660c9ac9` and frozen
-reducer `8b86f5b568067aa4cdb438b658cd95a2c118ce8f8ef2541899eaa67815832587`
-through the literal pinned verify command in
+Confirm HEAD is at or beyond `c4722b7a`. Confirm the pristine specimen SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`. The current
+campaign authority is Generation 30, cut on exact db.18622 geometry: READY
+`124168acc36f1c5cef3d816dcb116786a5094eaa654e347951976b24decb3788`, receipt
+`77d6ae26d7e866fa6e64aa0ed516814dace868a87287ec9811394a7ed3d2e995`, pinned
+reducer `a5131593f1c77f4a2460e1659e33490dd7d62581e316e8edc77b25022fecdf95` —
+verify through the literal pinned command in
 [`developer_state.json`](developer_state.json) → `current_re_authority`.
-Generation 29 is the sole campaign parent, the next valid generation is 30, and
-Generation 73 is a projection oracle that is never a parent or authority.
+Generation 30 is the sole campaign parent, and the next valid generation is 31.
+The orphan-testhost fix moved reducer source #3, so cutting Generation 31
+requires the `_verify_generation30_campaign_carry` literal-pin bridge, modeled
+on the Generation 29 bridge. Live and tracked Ghidra are byte-identical twins
+at db.18624 (five 2026-08-17 promotions); a generation re-grounding must target
+db.18624, and the database version is measured by inspection, never quoted.
+Generation 73 is a projection oracle and the DeepSeek drop's verdict layer is
+an index, never a campaign parent or authority.
 
 ### Never collapse the evidence layers
 
@@ -277,6 +289,22 @@ Updated 2026-08-14 after the external-table boundary promotion and current
 and one-row explosion-factory promotions. Recording what closed is not narrowing
 the mandate; the completion test and every clause above are unchanged.
 
+**2026-08-17 — maintainer directive, goal reset, and corpus relocation.** The
+maintainer returned 2026-08-17 (~13:05 EDT) and directed: target the complete,
+proof-gated reverse engineering of the retail binary so a proper rebuild can
+proceed; relocate the DeepSeek corpus off F:; and work autonomously through a
+~5-hour window with delegated decisions. The harness goal was set to this
+directive. The corpus is being relocated, with byte-exact verification, into
+`local-lab\ds-deep-review\` (frozen drop; 155,621 files) and
+`local-lab\ds-deep-review-extended\` (95 files plus `rows.tsv`); the F: copies
+and the H: twin are removed only after verification passes, leaving
+`F:\GhidraBackups` as the only retained F: content. Priority order is the carry
+bridge → Generation 31 on db.18624 (the 16 mutation-killed contracts become the
+first REBUILD_READY rows) → slot-instrument reproducibility → arity-36
+promotion → pointer/vftable cohort → runtime-witnessed name corrections →
+Level100 crash characterisation → falsifier close-out. Full-RE completion
+remains the standing mandate; this list is its current frontier.
+
 **Closed this session — do not re-derive:**
 
 - The HUD `RenderBlur` question, against six instruments (PostRender scan, demo
@@ -384,46 +412,40 @@ the mandate; the completion test and every clause above are unchanged.
 
 **Active frontier, in priority order:**
 
-1. **Recover the highest-confidence callable units and body repairs in the
-   current 117,426-byte `.text` gap.** Continue re-grounding the remaining
-   code-shaped cohorts against current `db.18618` geometry, then use cross-build
-   shape, current listing state, incoming control flow, alignment, and library
-   classification to prove exact boundaries; do not infer entries from linear
-   decode alone.
-2. **Preserve Generation 29 as the exact db.18618 authority.** Advance
-   Generation 30 only after a mechanically complete structural, semantic, or
-   runtime change; keep frozen reducers immutable and do not pin HUD route order
-   as C2.
-3. **Deepen coherent semantic/runtime/rebuild slices.** Prefer existing traces,
-   Xbox sparse-symbol joins, shipped data, and current static contracts before
-   recording new runtime evidence; carry only proved 5-to-10-contract slices
-   into existing reconstruction owners.
-4. **Four HUD names describing the wrong subsystem** — targets 0, 3, 4, 5. The
-   binary names none of them, so this needs a naming-convention decision before
-   any promotion.
-5. **Reach the battle-engine arm of `Damage`.** The level-720 natural call is
-   now **measured** (see the closure above), which leaves one arm untested.
-   `CBattleEngine::Damage @ 0x0040A890` is covered at `level731`, `level732`,
-   and `level854`; query those three for whether it is reached *through*
-   `0x005348C0` rather than by weapon or collision code. Same instrument, no
-   elevation, no gameplay. Level 720 also passed `source` equal to the receiver
-   pointer, so a different receiver/source pair is still needed to separate
-   "source" from "self".
-6. **Only then, the hive contact.** It stays open but is now the harder of two
-   natural paths rather than the only one.
-   [`tools/RUNBOOK-level521-native-capture.md`](tools/RUNBOOK-level521-native-capture.md)
-   already targets this native and names the act: fly the battle engine into
-   the Hive boss. The level-521 index proves `hive.msl` is attached and live
-   (its uniquely-authored `Teleport` executed) while leaving `0x005348C0`
-   uncovered, so the gap is the player collision, not attachment. Cost is the
-   blocker: TTD runs this game **~62× slow** (301 s recorded = 4.85 s of game
-   time). `tools/Test-Level521NativeCoverage.ps1` scores such a take, and
-   unattended recording needs `TTD.exe -installservice` once — the missing
-   `TTDService` is why every recording prompts today.
+1. **The carry bridge.** Write `_verify_generation30_campaign_carry` in
+   `tools/re_campaign.py`, modeled on the Generation 29 bridge, with literal
+   pins from the Generation 30 receipt `77d6ae26…`. The orphan-testhost fix
+   moved reducer source #3 (`a5131593… → 8ff375b7…`), so `--carry <gen30>` is
+   refused until this lands.
+2. **Cut Generation 31 on db.18624** with the 16 measured mutation-killed
+   contracts (spec `_CRITERION_3_SIXTEEN_KILLS_20260817`): the two jet-friction
+   rows are two contract rows, and a `FullyQualifiedName=` filter matches a
+   `[Theory]`'s rows, so `expectedTests` is the row count. This produces the
+   project's first `REBUILD_READY` rows.
+3. **Settle the slot instrument's visit-order question** at `0x00563d97`
+   (single-VA run vs the full 8,329-address run) before promoting
+   `abi-two-witness-arity36`.
+4. **Pointer/vftable cohort.** 65 of 99 untyped pointer slots are RTTI vftables
+   across 59 classes. The framework has no vftable-apply verb; decide the
+   capability and apply with recovered class identity — never a bespoke
+   applier, never 99 isolated dwords.
+5. **Runtime-witnessed name corrections** (`0x0048c3b0` →
+   `CInfluenceNode__CalculateInfluence`, `0x0052ff20` InitBuiltins, `0x005363e0`
+   GetPlayer, `0x0043a860` both halves, `0x004398f0`), witnesses now in
+   `local-lab\ds-deep-review-extended\data\`.
+6. **Characterise the four Level100 crash classes** (stackalloc suspects;
+   `Passed: 9` then host death) and make the full unfiltered Core suite pass in
+   one run.
+7. **Close the falsifier frontier:** `0x004e2b30` vftable-store site, the
+   `[obj+0x260]` invert-Y polarity, rewrite `0x0043a860`/`0x0052db60` falsifiers
+   as static, terminal `0x005363e0` carrying its slot-21 witness.
 
 Rank from current evidence; a reproduced contradiction outranks this list.
+Backlog (the 117,426-byte `.text` gap, the HUD naming-convention decision, the
+battle-engine `Damage` arm, the hive contact, spine-tier field coverage) stays
+recorded in the history above and does not gate the current frontier.
 
-#### `F:\DS DEEP Review` integration — recorded 2026-08-16
+#### DeepSeek drop integration — recorded 2026-08-16; corpus now at `local-lab\ds-deep-review`
 
 The standing goal points here for specifics so they can be revised without
 re-setting it. Counts marked (est) come from reviewer sampling and are replaced
@@ -1452,10 +1474,17 @@ in write mode against live. Reversibility remains restore-from-backup only.
   ownership by 248 bytes to 93.912966399%. Generation 28 remains frozen on its
   prior db.18617 geometry; the two new rows receive no semantic or runtime grade
   here.
+- **2026-08-17 — full-RE mandate sharpened and the DeepSeek corpus relocated
+  into the repo.** The maintainer directed complete reverse engineering as the
+  prime directive and authorized autonomous delegated execution for a ~5-hour
+  window. `F:\DS DEEP Review`, `F:\DS DEEP Review Extended`, and `F:\rows.tsv`
+  are moved into gitignored `local-lab\` with byte-exact verification; F: is
+  cleared except `GhidraBackups`, and the H: twin is removed, only after each
+  copy verifies. The harness goal now proxies this directive.
 - **2026-08-16 — DS DEEP Review integration frontier recorded.** The maintainer
   set a long-horizon goal covering integration of the external
-  `F:\DS DEEP Review` drop alongside coequal rebuild advancement. That goal is a
-  short proxy that points at this section for revisable specifics, so the
+  `local-lab\ds-deep-review` drop alongside coequal rebuild advancement. That
+  goal is a short proxy that points at this section for revisable specifics, so the
   cohort order, exclusion lists, preconditions, and campaign-layer corrections
   are recorded above rather than in the goal string. Nothing in the mandate was
   narrowed or retargeted: the drop adds an annotation layer over Generation 29
