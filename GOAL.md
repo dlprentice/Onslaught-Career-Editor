@@ -1057,20 +1057,53 @@ the 73 flagged rows: 148 byte assertions at 134 holds, 5 refuted, 9
 semantic-undecidable; zero rows fully refuted; every count the review gave
 reproduced exactly.
 
-**Do not treat that 1,399 as a mutation cohort yet.** 1,191 of them lie at or
-above `0x5d0000`, the SEH unwind-funclet tail region, which is the signature of a
-deliberate `CALL_RETURN` flow override — applied precisely so the decompiler
-reads a tail jump as call-then-return. If that is what it is, the label is a
-faithful report of an intentional analysis decision, retyping would *degrade*
-decompilation across 170 entities, and the deliverable is documentation teaching
-consumers to read `UNCONDITIONAL_CALL` on an `E9` byte correctly. Settle intent
-before proposing rows; reference and data retyping are semantic changes, so the
-collateral proof must cover decompilation drift, not just changed-row counts.
-Two withdrawals stand: the `0x00401000` spurious-data-ref row is a false
-positive, and the `0x004013d0` count is 11, not 12. One exporter-side defect sits
-outside the 73 — `index.tsv`'s `callers` counts every inbound reference including
-vtable slots, so `SharedVFunc__Return2` reports 14 and has **zero** real callers.
-Never rank or call a function unreferenced by that column.
+**That 1,399 is not a cohort at all — the suspicion was correct and it is now
+settled.** All 1,400 candidates (1,399 `E9` plus one `EB`) carry an explicit
+**`FlowOverride.CALL_RETURN`** on a `JMP`: 1,400 of 1,400, none without. That is
+Ghidra's deliberate and correct model for a **tail call**, so the label is a
+faithful report of an intentional decision and the "wrong kind" reading was
+wrong too. Proven by experiment, not argued: clearing the override on 12 sites
+grew decompilation **181 → 378 lines**, made the decompiler inline callee bodies
+so the named call vanished, and raised unreachable-block warnings. Retyping would
+**destroy 1,400 correct call edges** — 4.91% of 28,502, touching 1,012 of 8,329
+functions, and leaving **89 callees with no inbound call edge**, reading as dead
+code. The below/above-`0x5d0000` split is not two populations: both are tail
+calls, differing only in provenance. **The deliverable here is documentation** —
+read `UNCONDITIONAL_CALL` on an `E9`/`EB` byte as "tail jump under
+`FlowOverride.CALL_RETURN`" — and the lesson is that a large mechanical
+population is not automatically a large mechanical win.
+
+**What survives is class (b): 99 promotable rows**, the untyped pointer slots,
+reproducing 14,110/13,988/122 exactly. Safety is measured, not assumed: all 99
+target slots with no data defined and not inside any defined data, so nothing
+Ghidra laid down is overwritten, and only **29** are read directly by code, so
+only those can move any decompilation. Controls are the reason to trust it —
+8,000 non-boundary VAs and 8,000 corrupted `E8` immediates all rejected with zero
+leaks, 26,447 of 26,447 genuine edges accepted, and the control caught *itself*
+false-rejecting three real pointer slots that read as printable UTF-16. Residual
+risk to name: pre-typing individual dwords could block a later RTTI structure
+application over the same bytes.
+
+Most of the drop's own XREF numbers do not reproduce — 742 stored refs measures
+1,170, 505 measures 996, 39 measures 10 in-cohort, 18-of-66 measures 8-of-65, and
+the 27 missing DATA refs measures 21, with 27 being the count of the *mirror* set,
+which looks like a sign flip. Only the two cited claims reproduce byte-exactly.
+Three withdrawals stand: the `0x00401000` row is a false positive, the
+`0x004013d0` count is 11 not 12, and the "2 bogus PE-header refs" are 11
+header-sourced references, **all legitimate** `ImageBaseOffset32` fields. One
+exporter-side defect sits outside the 73 — `index.tsv`'s `callers` counts every
+inbound reference including vtable slots, so `SharedVFunc__Return2` reports 14 and
+has **zero** real callers. Never rank or call a function unreferenced by it.
+
+**The retained coverage indexes have a domain, and it bounds every reachability
+claim.** The watchpoint is `execute` and the highest covered VA across all 66
+indexes is `0x005D050F` — they span `.text` only. So for any address at or above
+roughly `0x5d1000`, "0 traces" is a **category error, not a measurement**, and a
+join reporting data symbols as unreached is reporting the instrument rather than
+the program. The denominator is **66, not 72**: no 72-index set exists at that
+path, and three addresses reported at 69/72 measure **66/66** — every trace.
+Set membership does reproduce exactly. Conversely, a 0/66 result *inside* `.text`
+is load-bearing, and three such addresses are genuinely never executed.
 
 **The ABI contradiction class has a mechanical root cause, found 2026-08-17.**
 Ghidra's `param_size` — the size in *bytes* of the stack-argument area — was
