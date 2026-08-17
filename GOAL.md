@@ -787,6 +787,42 @@ its only irregularity being a `call exit` tail rather than ret/jmp. All 41 rows
 have `endIsCUmax` true. Tighten `validate_end` to report those subtypes
 distinctly rather than as a bare `False` that reads like a defect.
 
+**Second rebuild slice 2026-08-16 — nine contracts, and a defect in our own
+code.** `RetailCareerNodes`, `RetailCareerProgress`, `RetailWeaponStores`, and
+`RetailJetFriction` bring the parity suite to **185 tests**, all passing, with
+36 mutants swept and 31 killed; the five survivors were each *proved*
+equivalent, notably float-versus-double division being innocuous by Figueroa's
+condition with a 2×10⁸ operand sweep finding zero disagreements.
+
+*The most valuable finding is a rebuild defect, not a drop defect.*
+`Simulation.JetFrictionNumerator` gates its interpolated arm at
+`speed >= 1_000`; retail's gate is **1.5** (`BattleEngineJetPart.cpp:628`,
+constant `0x3FC00000` at `0x005D8BD8`, loaded at `0x00411B39`), and the
+1000× scale is confirmed by that function's own `1_000`/`3_000` altitude bounds
+standing for retail's 1 and 3. Jets at altitude ∈ [1,3) and speed ∈ [1.0,1.5)
+get a flat 0.99 where retail interpolates to 0.98. Left unfixed here because it
+moves cold-start trace hashes, which `DETERMINISM.md` requires re-pinning in the
+same commit; pinned by
+`RetailJetFrictionTests.GetFriction_InterpolatesAtSpeedsCoreAlreadyTreatsAsFast`
+and filed as its own task. **Five review passes over these rows found nothing
+here — implementing them did.**
+
+*Three more divergences, again on rows marked `AGREES`, bringing tracked
+exceptions to 26.* `GetGradeFromRanking` grades **NaN as `'S'`**, because
+`if (f == 1.f)` compiles to `fcomp`/`fnstsw`/`test ah,0x40` — C3 alone — and an
+unordered compare sets `C3|C2|C0 = 0x45`, so the mask hits and NaN takes the top
+grade. `GetWeaponAmmoCount` **rounds rather than truncates**: the source casts
+`(SINT)` but `0x0041449D` is a bare `fistp qword` under `/QIfist`, so 3.5 → 4
+where the source says 3. And `GetWeaponAmmoPercentage`'s `mStoreHeat` branch is
+**dead** — `test edx,edx` at `0x0041443F` sets flags nothing consumes, because
+both source arms denote the same division and the compiler folded them.
+
+*Two shipped defects recorded, not repaired.* The slot guard is `cmp eax,0x100`
+against an `int[32]` store, so slots 256–1023 exist in the save and are
+unreachable; and `IsEpisodeAvailable` dereferences the NULL its own
+`GetNodeFromWorldNo` just returned, where the sibling `DoesBaseThingExist`
+checks first.
+
 **Campaign-layer corrections.** Discard the single `CONTRACT_REFUTED` row. It
 claims `0x005d85d8` sits in bss with no file bytes, but that VA maps to file
 offset `0x1D85D8`, which holds `00 00 a0 40` — exactly the 5.0f the Gen-29
