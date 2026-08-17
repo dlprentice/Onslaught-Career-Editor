@@ -90,12 +90,17 @@ public sealed class RetailJetFrictionTests
                     StationaryComponent,
                     StationaryComponent)));
 
-    // Core's existing fixed-point jet model opens the interpolated arm at a
-    // speed of 1.0 in the same scale (Simulation.JetFrictionNumerator, speed <
-    // 1_000 against altitudes of 1_000 and 3_000). Retail's gate is 1.5 at both
-    // BattleEngineJetPart.cpp:628 and 0x00411B39, so speeds in [1.0, 1.5) below
-    // the ceiling are exactly where the two models part company. Pinned here so
-    // the disagreement cannot be closed by quietly moving this law.
+    // THE ROW THAT FOUND THE REBUILD DEFECT, kept under its original name so
+    // the GOAL.md entry that cites it still resolves.
+    //
+    // Core's fixed-point jet model used to open the interpolated arm at a speed
+    // of 1.0 in the same scale (Simulation.JetFrictionNumerator, speed < 1_000
+    // against altitudes of 1_000 and 3_000), so speeds in [1.0, 1.5) below the
+    // ceiling were exactly where the two models parted company. Retail's gate
+    // is 1.5 at both BattleEngineJetPart.cpp:628 and 0x00411B39, and Core's is
+    // now 1_500. This row is what that fix was graded against and it is still
+    // the float-exact pin: 1.2 is inside the window that used to be wrong, and
+    // it must interpolate to 0.98 bit for bit.
     [Fact]
     public void GetFriction_InterpolatesAtSpeedsCoreAlreadyTreatsAsFast()
     {
@@ -109,6 +114,86 @@ public sealed class RetailJetFrictionTests
                     1.2f,
                     StationaryComponent,
                     StationaryComponent)));
+    }
+
+    // CORE'S OWN INTEGER LADDER, AND THE ONLY FALSIFIER THE GATE HAS.
+    //
+    // THIS ROW EXISTS BECAUSE NO REPLAY IN THIS REPOSITORY CAN SEE THE FIX.
+    // The gate divides speeds in [1_000, 1_500) at altitudes in [1_000, 3_000).
+    // Core's jet throttle drives the magnitude toward a target that tops out at
+    // SimulationConstants.JetMaximumSpeedPerTick = 900 (the shipped
+    // mMaxAirVelocity 0.9), which is BELOW the band's floor - so steady flight
+    // cannot enter the band at all, and only a transient over-speed from an
+    // external impulse could. Measured: the Level 100 cold-start trace's jet
+    // legs run at 140-417 mm/tick, and moving the gate from 1_000 to 1_500
+    // leaves every cold-start trace hash byte-identical. A replay suite that
+    // cannot distinguish the two gate values cannot defend either one, so this
+    // direct row is the whole guard.
+    //
+    // Non-vacuity is asserted rather than assumed, the way this suite asserts
+    // an exercised population elsewhere: the band is proved non-empty, every
+    // probe is proved to lie inside it, and each probe is proved to return
+    // something DIFFERENT from the pre-fix answer. Delete the gate, restore it
+    // to 1_000, or drop it to 0 and this test fails.
+    [Fact]
+    public void CoreLadder_GatesTheInterpolatedArmAtOnePointFive()
+    {
+        const int OldGate = 1_000;
+        const int ShippedGate = 1_500;
+        const int InterpolatingAltitude = 2_000;
+
+        // The band the fix is about is non-empty, and it sits entirely above
+        // the jet's own maximum throttle target - which is WHY no trace reaches
+        // it. If a future change raises that cap past the band, this assertion
+        // fails and the vacuity argument above must be re-measured.
+        Assert.True(ShippedGate > OldGate);
+        Assert.True(SimulationConstants.JetMaximumSpeedPerTick < OldGate);
+
+        int[] band = [OldGate, 1_100, 1_250, 1_499];
+        Assert.NotEmpty(band);
+
+        foreach (int speed in band)
+        {
+            // NON-VACUITY: this probe really is in the band that used to be
+            // wrong - at or above the old gate, and below the shipped one.
+            Assert.InRange(speed, OldGate, ShippedGate - 1);
+
+            // Retail interpolates here. At altitude 2 the interpolation lands
+            // exactly on the cruise numerator, which is a DIFFERENT number from
+            // the flat near-surface value the old gate returned.
+            int actual = Simulation.JetFrictionNumerator(InterpolatingAltitude, speed);
+            Assert.Equal(SimulationConstants.JetCruiseFrictionNumerator, actual);
+            Assert.NotEqual(SimulationConstants.JetNearSurfaceFrictionNumerator, actual);
+
+            // And it agrees with the float-exact retail model bit for bit, which
+            // is the parity claim rather than a self-consistent restatement.
+            Assert.Equal(
+                0x3F7AE148u,
+                BitConverter.SingleToUInt32Bits(
+                    RetailJetFriction.GetFriction(
+                        waterLevel: 2.0f,
+                        groundLevel: 2.0f,
+                        positionZ: 0.0f,
+                        speed / 1_000.0f,
+                        StationaryComponent,
+                        StationaryComponent)));
+        }
+
+        // The gate is `>=`, exactly as retail's C0-only compare is: 1_499
+        // interpolates and 1_500 takes the flat arm.
+        Assert.Equal(
+            SimulationConstants.JetCruiseFrictionNumerator,
+            Simulation.JetFrictionNumerator(InterpolatingAltitude, ShippedGate - 1));
+        Assert.Equal(
+            SimulationConstants.JetNearSurfaceFrictionNumerator,
+            Simulation.JetFrictionNumerator(InterpolatingAltitude, ShippedGate));
+
+        // The interpolated arm is retail's single line 1 - altitude*0.01 across
+        // the whole band, not just at its midpoint: 0.99 at altitude 1, 0.985 at
+        // 1.5, 0.98 at 2. Speed 0 keeps this reading the same arm.
+        Assert.Equal(990_000, Simulation.JetFrictionNumerator(1_000, 0));
+        Assert.Equal(985_000, Simulation.JetFrictionNumerator(1_500, 0));
+        Assert.Equal(980_000, Simulation.JetFrictionNumerator(2_000, 0));
     }
 
     // The reference is the numerically SMALLER of water and ground, whichever

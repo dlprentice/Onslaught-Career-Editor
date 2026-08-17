@@ -1826,7 +1826,14 @@ public sealed class Simulation
         return 1_000;
     }
 
-    private static int JetFrictionNumerator(int altitude, int speed)
+    /// <summary>
+    /// Core's integer form of <c>CBattleEngineJetPart::GetFriction</c>'s ladder.
+    /// <c>internal</c> rather than <c>private</c> because no replay in this
+    /// repository reaches the slow-flight gate — see
+    /// <c>RetailJetFrictionTests.CoreLadder_GatesTheInterpolatedArmAtOnePointFive</c>,
+    /// which is the only falsifier the gate has.
+    /// </summary>
+    internal static int JetFrictionNumerator(int altitude, int speed)
     {
         if (altitude < 1_000)
         {
@@ -1834,7 +1841,23 @@ public sealed class Simulation
         }
         if (altitude < 3_000)
         {
-            if (speed >= 1_000)
+            // THE SLOW-FLIGHT GATE IS 1.5 RELEASED UNITS PER UPDATE, NOT 1.0.
+            // `BattleEngineJetPart.cpp:628` reads `if (velocity<1.5f)`, and the
+            // pristine 74154bfa image agrees byte for byte: the `fcomp dword
+            // ptr [0x005D8BD8]` at 0x00411B39 inside
+            // CBattleEngineJetPart::GetFriction (0x00411AA0) loads 0x3FC00000
+            // = 1.5f. One released unit per update is
+            // SimulationConstants.MillimetersPerRetailUnit = 1_000 Core
+            // millimetres per tick - the same scale that makes the altitude
+            // bounds above 1_000 and 3_000 for retail's 1 and 3 - so the gate
+            // is 1_500.
+            //
+            // It was 1_000, i.e. retail's 1.0, which flattened the interpolated
+            // arm to 0.99 for every speed in [1.0, 1.5) below the ceiling;
+            // retail interpolates there, reaching 0.98 at altitude 2.
+            // RetailJetFriction is the float-exact model of the same law and
+            // RetailJetFrictionTests pins the gate to those bytes.
+            if (speed >= 1_500)
             {
                 return SimulationConstants.JetNearSurfaceFrictionNumerator;
             }

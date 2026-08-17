@@ -54,16 +54,16 @@ namespace OnslaughtRebuild.Core;
 /// reachable below altitude 3, so <c>0.97</c> is approached but never returned.
 /// </para>
 /// <para>
-/// <b>Core's existing fixed-point jet model uses a different slow-flight
-/// gate.</b> <c>Simulation.JetFrictionNumerator</c> admits the interpolated arm
-/// at <c>speed &lt; 1_000</c> in the same milli-unit scale that gives it
-/// altitudes of <c>1_000</c> and <c>3_000</c> for retail's 1 and 3. Retail's
-/// gate is <c>1.5f</c> — <c>1_500</c> in that scale — at both
-/// <c>BattleEngineJetPart.cpp:628</c> and <c>0x00411B39</c>. The two disagree
-/// for speeds in <c>[1.0, 1.5)</c> at altitudes in <c>[1, 3)</c>, where retail
-/// interpolates and Core returns <c>0.99</c>. Nothing here changes that model;
-/// this owner records the measured law and the disagreement so the next reader
-/// does not assume they already match.
+/// <b>Core's fixed-point jet model now uses this same slow-flight gate.</b>
+/// <c>Simulation.JetFrictionNumerator</c> admitted the interpolated arm at
+/// <c>speed &lt; 1_000</c> — retail's 1.0 — in the milli-unit scale that gives
+/// it altitudes of <c>1_000</c> and <c>3_000</c> for retail's 1 and 3, so the
+/// two models disagreed for speeds in <c>[1.0, 1.5)</c> at altitudes in
+/// <c>[1, 3)</c>, where retail interpolates and Core returned a flat
+/// <c>0.99</c>. That gate is now <c>1_500</c>, from <c>1.5f</c> at both
+/// <c>BattleEngineJetPart.cpp:628</c> and <c>0x00411B39</c>. What is still
+/// deliberately different is only the arithmetic: Core's ladder is integer
+/// fixed point in millimetres, and this owner is the float-exact model.
 /// </para>
 /// <para>
 /// <b>Not established here.</b> Two of the three inputs come from outside Core
