@@ -560,6 +560,51 @@ the slot ordinal wrong, and one, `0x005503b0`, where the drop's own refutation
 is false: it claims a full-image scan found no `CDXPatchManager` evidence, but
 `C:\dev\ONSLAUGHT2\DXPatchManager.cpp` ships at file offset `0x25211c`.
 
+**Semantic tranche 3 closed 2026-08-16 — and it is the rebuild feedstock.** All
+1,042 `SOURCE_CORRELATED_STATIC` rows were checked against pinned source
+`5352a81`: **885 SOURCE_CONFIRMED, 51 partial, 20 refuted, 86 uncitable**, over
+1,857 GPL-tree citations. All 337 cross-checked disassembly bundles are
+byte-exact against the specimen, so the evidence chain validates end to end.
+Read `SOURCE_CONFIRMED` as "not contradicted" rather than "verified": only
+**61% of confirmations land on the row's own subject**, the rest on a collateral
+identifier the row merely mentions. The strict primary-identifier rate is 94.7%.
+
+**Seventeen retail-versus-source divergences — tracked exceptions.** The
+evidence partition requires recording each one:
+
+- `0x004e0890 CSoundManager::CreateSample` — source takes three arguments (12
+  bytes); retail `RET 0x10` pops **16**, and the body reads `[ESP+0x10c]` and
+  `[ESP+0x114]`. The PC build carries a fourth parameter the Xbox source lacks.
+- `0x005145f0 CController::CController` — source takes four arguments; retail
+  `RET 0xc` pops 12. The PC constructor drops one.
+- `0x0052af00` and `0x0052ba50` — source declares `()`; both retail bodies
+  `RET 0x4`, so each takes one argument.
+- `0x0042e610` — the binary's own `__FILE__`/`__LINE__` pair cites
+  `Controller.cpp:967`, but the GPL file has **553 lines**. The retail
+  translation unit is at least 1.75× longer than the drop, which quantifies the
+  partiality rather than assuming it.
+- Eleven string-constant divergences: the `!EVAH!` cheat literal, the
+  `sysmem.csv` / `memstats.txt` / `memmap.txt` dump paths, several D3D error
+  and leak strings, and `meshtex\basicpanel.tga` are all absent from retail
+  though `meshtex` is present. Five of the seventeen are low-confidence,
+  aligned on method name only.
+
+**Two rows where the citation is right and our name is wrong.**
+`0x0041c330 CCareer__GetGradeForWorld` is the free function
+`CGrade GRADE(int world_num)` at `Career.cpp:640` — retail agrees with the
+source, being `__cdecl` with no receiver and loading global `0x00624184`.
+`0x0042f220 CSPtrSet__Clear` is `GenericSPtrSet::RemoveAll()`, wrong in both
+halves.
+
+**Rebuild feedstock: 188 prime rows.** 510 of the 1,042 sit in portable
+subsystems (ActiveReaderSPtr 112, FrontendPageFlow 73, Sound 63, BattleEngine
+46, EventScheduler 46, Camera 45, JetPart 30, Controller 30, WalkerPart 28,
+Career 22, SaveStorage 15); 532 are recover-from-bytes. The 188 that are
+confirmed *on their own subject*, portable, and agree with the binary are the
+first real parity-test queue this project has had, led by the Camera,
+EventScheduler, Controller, SaveStorage `CChunkReader__*`, and Music/Sound
+clusters.
+
 **Campaign-layer corrections.** Discard the single `CONTRACT_REFUTED` row. It
 claims `0x005d85d8` sits in bss with no file bytes, but that VA maps to file
 offset `0x1D85D8`, which holds `00 00 a0 40` — exactly the 5.0f the Gen-29
