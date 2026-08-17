@@ -440,16 +440,17 @@ corrections → Level100 crash characterisation → falsifier close-out.
 
 **Active frontier, in priority order:**
 
-1. **The carry bridge.** Write `_verify_generation30_campaign_carry` in
-   `tools/re_campaign.py`, modeled on the Generation 29 bridge, with literal
-   pins from the Generation 30 receipt `77d6ae26…`. The orphan-testhost fix
-   moved reducer source #3 (`a5131593… → 8ff375b7…`), so `--carry <gen30>` is
-   refused until this lands.
-2. **Cut Generation 31 on db.18624** with the 16 measured mutation-killed
-   contracts (spec `_CRITERION_3_SIXTEEN_KILLS_20260817`): the two jet-friction
-   rows are two contract rows, and a `FullyQualifiedName=` filter matches a
-   `[Theory]`'s rows, so `expectedTests` is the row count. This produces the
-   project's first `REBUILD_READY` rows.
+1. **Carry bridge — DONE.** `_verify_generation30_campaign_carry` landed
+   (`a0a3987b`) with literal pins from `77d6ae26…`, reproduced independently.
+2. **Generation 31 — CUT AND INDEPENDENTLY VERIFIED 2026-08-17.** The first 16
+   `REBUILD_READY` rows land on db.18624 (`6bd1f54a`): 14 rows raise
+   C0_OPAQUE → C1_CANDIDATE_PARTIAL, row 13 unchanged, the second GetFriction
+   row `C-2b931aa6…` enters C1. The integration owner re-ran the frozen
+   bootstrap with the measured on-disk pins: CAMPAIGN_VERIFIED, exit 0
+   (`local-lab\gen31-verify-measuredpins-2026-08-17.log`). Remaining Gen-31
+   ceremony steps (replica, cut-time Ghidra inspect receipts, POST
+   backup/tracked refresh, Gen-31 authority receipt) stay recorded in
+   `developer_state.json` and are the next ceremony.
 3. **Slot instrument visit-order question — settled 2026-08-17, not a blocker.**
    `0x00563d97` is address-set-independent on current tooling: DETERMINATE /
    LOWER_BOUND / 28 unresolved accesses / 412 blocks in both the single-VA and
@@ -467,9 +468,10 @@ corrections → Level100 crash characterisation → falsifier close-out.
    `CInfluenceNode__CalculateInfluence`, `0x0052ff20` InitBuiltins, `0x005363e0`
    GetPlayer, `0x0043a860` both halves, `0x004398f0`), witnesses now in
    `local-lab\ds-deep-review-extended\data\`.
-6. **Characterise the four Level100 crash classes** (stackalloc suspects;
-   `Passed: 9` then host death) and make the full unfiltered Core suite pass in
-   one run.
+6. **Core gate — GREEN 2026-08-17.** The full unfiltered Core suite passed in
+   one run (729/729, 25 m 30 s, exit 0; `local-lab\fullsuite-2026-08-17.log`)
+   and all four Level100 classes pass individually; the historical host deaths
+   stay attributed to environmental contention until reproduced.
 7. **Close the falsifier frontier:** `0x004e2b30` vftable-store site, the
    `[obj+0x260]` invert-Y polarity, rewrite `0x0043a860`/`0x0052db60` falsifiers
    as static, terminal `0x005363e0` carrying its slot-21 witness.
