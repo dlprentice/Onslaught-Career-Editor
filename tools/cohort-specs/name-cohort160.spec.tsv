@@ -1,0 +1,55 @@
+# Cohort spec: the 160-row name cohort completed 2026-08-17.
+# Carried over from tools/GhidraApplyNameCohort160V2.java.  PRE and POST are
+# both db.18620->db.18621: a rename moves no structural metric at all.
+cohortId	name-cohort160
+cohortTitle	158 function renames plus 2 label renames, name only
+
+programName	BEA.exe
+programMd5	3b456964020070efe696d2cc09464a55
+programSha256	74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750
+imageBase	00400000
+language	x86:LE:32:default
+compilerSpec	windows
+
+verb	SET_NAME
+
+preFunctions	8329
+preInstructions	551232
+preReferences	234493
+preDefinedData	48583
+preUndefinedData	3907629
+preBookmarks	2301
+preFunctionNameDigest	1ea6683b48d7086ed4a214bbb74357d7ff964ebdc2c995f8a9d414626822b9c1
+
+postFunctions	8329
+postInstructions	551232
+postReferences	234493
+postDefinedData	48583
+postUndefinedData	3907629
+postBookmarks	2301
+postFunctionNameDigest	ee545445dc497fc993bd506ea47c1a9dbe59bbfc364f6c7c54393f61d9eccd66
+
+manifestSha256	00362b034a124c27ff23ba1ff0501b8009a486ba729ca33db11427fe3631f214
+manifestBytes	77085
+manifestRows	160
+manifestColumns	9
+manifestHeaderPipe	addr|provenance|liveKind|currentNameLive|proposedName|tier|anchorKind|anchorEvidence|reason
+
+col.addr	addr
+col.liveKind	liveKind
+col.currentName	currentNameLive
+col.proposedName	proposedName
+
+unique	addr
+unique	proposedName
+unique	currentName
+noCycle	proposedName:currentName
+enum	liveKind=FUNCTION,SYMBOL:Label
+enum	provenance=PROMOTE,DEMOTE,SLOTFIX
+
+# 158 of the 160 rows are functions; the other 2 are labels and therefore never
+# appear in the per-function frozen census.
+expectedTargetsChanged	158
+expectedFunctionsUntouched	8171
+expectedSymbolsAdded	160
+expectedSymbolsRemoved	160

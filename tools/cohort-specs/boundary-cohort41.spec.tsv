@@ -1,0 +1,90 @@
+# Cohort spec: the 41-row function-boundary cohort completed 2026-08-17.
+# Carried over from tools/GhidraApplyBoundaryCohort41V4.java, which this spec
+# plus tools/GhidraApplyCohortManifest.java replaces.  PRE is db.18619,
+# POST is db.18620.  Every number here was measured on a replica built from the
+# off-volume PRE backup and is reproduced by the archived cycle-a receipts.
+cohortId	boundary-cohort41
+cohortTitle	41-row function-boundary growth with bounded reclassification
+
+programName	BEA.exe
+programMd5	3b456964020070efe696d2cc09464a55
+programSha256	74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750
+imageBase	00400000
+language	x86:LE:32:default
+compilerSpec	windows
+textBlock	.text
+textStart	00401000
+textEnd	005d7fff
+
+verb	DISASSEMBLE_BOUNDED
+verb	CLEAR_BOUNDED
+verb	REMOVE_STALE_BOOKMARK
+verb	SET_BODY
+
+preFunctions	8329
+preInstructions	551143
+preReferences	234478
+preDefinedData	48585
+preUndefinedData	3907903
+preBookmarks	2303
+
+postFunctions	8329
+postInstructions	551232
+postReferences	234493
+postDefinedData	48583
+postUndefinedData	3907629
+postBookmarks	2301
+
+manifestSha256	9abc5aedb1c7ff3c959670a714e457480e83ed6075b76a23cee5195e20399ed3
+manifestBytes	6217
+manifestRows	41
+manifestColumns	9
+manifestHeaderPipe	addr|currentRanges|proposedRanges|subtype|terminatorVa|terminatorBytes|deltaBytes|byteProof|agreesWithNote
+
+col.addr	addr
+col.currentRanges	currentRanges
+col.proposedRanges	proposedRanges
+col.subtype	subtype
+col.terminatorVa	terminatorVa
+col.terminatorBytes	terminatorBytes
+col.deltaBytes	deltaBytes
+col.byteProof	byteProof
+
+unique	addr
+
+admittedBytes	3293
+admittedUndefinedBytes	274
+clearedUnits	25
+clearedBytes	63
+tableSubtype	INCLUDE_JUMP_OR_SEH_TABLE
+bookmarkType	Error
+bookmarkCategory	Bad Instruction
+
+# The ONLY spans this cohort may clear.  Derived dynamically at run time and
+# then required to equal this pin exactly.
+clearPlan	0x00417190|00417349-00417350
+clearPlan	0x00437490|00437a3e-00437a5b
+clearPlan	0x00450010|0045004d-00450050;00450052-00450059
+clearPlan	0x0045ffa0|00460020-00460026
+clearPlan	0x0046ff10|00470050-00470053
+clearPlan	0x004c4100|004c4148-004c4149
+
+# Error/"Bad Instruction" bookmarks the post-classification listing refutes.
+staleBookmark	00417347
+staleBookmark	00437a3a
+staleBookmark	00437a41
+staleBookmark	00437a47
+staleBookmark	00437a4d
+staleBookmark	00437a54
+staleBookmark	0045004b
+staleBookmark	00450051
+staleBookmark	00450054
+staleBookmark	0046001d
+staleBookmark	0047004a
+staleBookmark	00472e2c
+staleBookmark	0047e190
+staleBookmark	0048ac5c
+staleBookmark	004c4145
+
+expectedTargetsChanged	41
+expectedFunctionsUntouched	8288

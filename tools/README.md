@@ -109,6 +109,46 @@ Generation 24 bundle is refused.
 
 ## Ghidra and runtime research
 
+### Cohort promotion framework
+
+`GhidraApplyCohortManifest.java` is the single reusable promotion applier. A
+cohort is a **manifest plus a spec**, not a new program: `cohort-specs/*.spec.tsv`
+declares the program identity, the PRE/POST metric pins, the manifest integrity
+pins, the manifest-column-to-verb binding, and the opt-in verb set
+(`SET_NAME`, `SET_PROTOTYPE`, `SET_BODY`, `DISASSEMBLE_BOUNDED`,
+`CLEAR_BOUNDED`, `REMOVE_STALE_BOOKMARK`). A verb the spec does not declare is
+structurally unreachable, so a name cohort cannot touch a body and a signature
+cohort cannot touch a name. Modes are `census`, `identity`, `dry`/`predict`,
+`apply`, `readback`, `collateral`, `plan`, and the adverse `probe-*` modes,
+which can never commit.
+
+It is `LIVE_FORBIDDEN` by construction and refuses any project path outside a
+`cohort-rehearsal` segment. `GhidraApplyCohortManifestLive.java` is its
+live-capable twin, derived by the reviewed allowlist in
+`ghidra_cohort_framework_tests.py` — one gate inverted, plus a compiled
+per-cohort authorization allowlist. Regenerate it with
+`python tools/ghidra_cohort_framework_tests.py --emit-live`; never hand-edit it.
+
+Reversibility is a **ceremony-level** property. In this Ghidra 12.1.2 headless
+build `endTransaction(id, false)` does not revert `Function.updateFunction`,
+`Program.canUndo()` is false, and a new db version is written even when the
+script throws. Every non-mutating gate for every row therefore runs before the
+first write, and no receipt claims transaction-level atomicity.
+
+`ghidra_cohort_replay.py` rebuilds a replica from an off-volume PRE backup, runs
+the ceremony modes, and grades the receipts against the completed ceremonies
+(`--verdict`). It also builds the standing noncanonical sandbox (`--sandbox`).
+The focused gate is:
+
+```powershell
+py -3 -m unittest tools.ghidra_cohort_framework_tests
+```
+
+The three superseded one-shot appliers (`GhidraApplyBoundaryCohort41V4.java`,
+`GhidraApplyNameCohort160V2.java`, `GhidraApplyAbiSignaturesV2.java`) and their
+mutator suites stay in place as the receipt-pinned owners of their completed
+ceremonies. Do not repin or revive them; new cohorts use the framework.
+
 [`../reverse-engineering/parity-lab.md`](../reverse-engineering/parity-lab.md) is the engine-neutral function-discovery
 and parity-pipeline authority. `parity_lab.py` joins repeated `drcov` or TTD
 Replay coverage to exact Ghidra ranges, emits queryable evidence bundles, and

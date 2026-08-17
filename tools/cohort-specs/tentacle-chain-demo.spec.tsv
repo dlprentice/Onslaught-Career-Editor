@@ -1,0 +1,75 @@
+# Cohort spec: DEMONSTRATION ONLY - the 2-row tentacle-chain rename cohort that
+# another lane authored today as a fourth one-shot applier
+# (tools/GhidraApplyTentacleChain{,V2}.java, 1,818 lines of Java plus a fourth
+# 156-line mutator suite).  Its verb set is setName and nothing else, so it needs
+# ZERO new framework code: this file is the whole cohort.
+#
+# It is deliberately NOT in GhidraApplyCohortManifestLive's LIVE_AUTHORIZED_COHORTS
+# allowlist, so the live twin refuses it.  The rehearsal instrument can measure it;
+# only a recorded per-cohort grant can promote it.
+#
+# MEASURED RESULT, 2026-08-17, replica from the post-ABI backup (db.18622):
+# `dry` REFUSED with two carried-over gates and nothing else:
+#     0x004f0860: rename cycle: 'CTentacle__CreateTentacleAI' is another row's
+#                 current name; this framework refuses order-dependent swaps
+#     0x004f0860: collision: proposed name 'CTentacle__CreateTentacleAI' for
+#                 0x004f0860 already exists at 0x004f07e0
+# That is NOT a defect in the cohort: 0x004f07e0 is one of the five rows the
+# name-cohort160 GO recommendation dropped as "valid but order-dependent", and
+# this cohort's manifest carries a leading `ceremony` column precisely to stage
+# the swap in two passes.  It is a defect in this SPEC: an ordered/staged rename
+# is a capability none of the three completed appliers had, so the framework
+# refuses it by design rather than guessing an order.
+#
+# Supporting it is a reviewed extension - a `col.stage` binding plus a staged
+# SET_NAME pass - not a relaxation of the cycle gate.  Do not "fix" this spec by
+# deleting `noCycle`.
+#
+cohortId	tentacle-chain-demo
+cohortTitle	DEMONSTRATION: 2 renames, no new applier code
+
+programName	BEA.exe
+programMd5	3b456964020070efe696d2cc09464a55
+programSha256	74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750
+imageBase	00400000
+language	x86:LE:32:default
+compilerSpec	windows
+
+verb	SET_NAME
+
+preFunctions	8329
+preInstructions	551232
+preReferences	234493
+preDefinedData	48583
+preUndefinedData	3907629
+preBookmarks	2301
+
+postFunctions	8329
+postInstructions	551232
+postReferences	234493
+postDefinedData	48583
+postUndefinedData	3907629
+postBookmarks	2301
+
+manifestSha256	59cb2bad5cfe11c39d128b71ce933d5d9a27cddb78794a227071c2cbe2795dfc
+manifestBytes	1758
+manifestRows	2
+manifestColumns	10
+manifestHeaderPipe	ceremony|addr|provenance|liveKind|currentNameLive|proposedName|tier|anchorKind|anchorEvidence|reason
+
+col.addr	addr
+col.liveKind	liveKind
+col.currentName	currentNameLive
+col.proposedName	proposedName
+
+unique	addr
+unique	proposedName
+unique	currentName
+noCycle	proposedName:currentName
+enum	liveKind=FUNCTION,SYMBOL:Label
+enum	provenance=PROMOTE,DEMOTE,SLOTFIX
+
+expectedTargetsChanged	2
+expectedFunctionsUntouched	8327
+expectedSymbolsAdded	2
+expectedSymbolsRemoved	2

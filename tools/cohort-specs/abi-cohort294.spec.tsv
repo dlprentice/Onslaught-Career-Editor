@@ -1,0 +1,62 @@
+# Cohort spec: the 294-row byte-derived ABI signature cohort completed
+# 2026-08-17.  Carried over from tools/GhidraApplyAbiSignaturesV2.java.  PRE is
+# db.18621, POST is db.18622; a prototype change moves no structural metric.
+# NO CALLING CONVENTION IS EVER RELABELLED: the convention column is gated as
+# CURRENT and re-gated as POST, and it stays a FROZEN collateral column.
+cohortId	abi-cohort294
+cohortTitle	294 byte-derived function prototypes, signature only
+
+programName	BEA.exe
+programMd5	3b456964020070efe696d2cc09464a55
+programSha256	74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750
+imageBase	00400000
+language	x86:LE:32:default
+compilerSpec	windows
+
+verb	SET_PROTOTYPE
+
+preFunctions	8329
+preInstructions	551232
+preReferences	234493
+preDefinedData	48583
+preUndefinedData	3907629
+preBookmarks	2301
+
+postFunctions	8329
+postInstructions	551232
+postReferences	234493
+postDefinedData	48583
+postUndefinedData	3907629
+postBookmarks	2301
+
+manifestSha256	d858563eb18f69837cb19236acde1771fc6d5847c2d75f8f7fc36728f0ea8d24
+manifestBytes	165137
+manifestRows	294
+manifestColumns	17
+manifestHeaderPipe	addr|liveName|currentSignatureLive|currentSignatureSha256|proposedSignature|callingConvention|returnTypeProposed|paramSpec|arity|arityBytes|retImmediate|receiverInEcx|returnUsage|evidenceBytes|confidence|changeAxes|frameCorroboration
+
+col.addr	addr
+col.liveName	liveName
+col.currentSignature	currentSignatureLive
+col.currentSignatureSha256	currentSignatureSha256
+col.proposedSignature	proposedSignature
+col.callingConvention	callingConvention
+col.returnType	returnTypeProposed
+col.paramSpec	paramSpec
+col.arity	arity
+col.arityBytes	arityBytes
+
+unique	addr
+constant	confidence=HIGH
+enum	callingConvention=__thiscall,__fastcall,__stdcall,__cdecl
+enumPrefix	frameCorroboration=EXACT,CONSISTENT_LOWER,n/a
+
+# Hazard classes the recorded GO recommendation ruled NO-GO.  None may ride
+# along: a hidden x87 return-storage pointer, a convention outside the four
+# allowlisted, and the frame comparator's contradiction verdict.
+forbidToken	__return_storage_ptr__
+forbidToken	__vectorcall
+forbidToken	CONTRADICTS
+
+expectedTargetsChanged	294
+expectedFunctionsUntouched	8035
