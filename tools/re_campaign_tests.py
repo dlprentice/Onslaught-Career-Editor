@@ -1939,6 +1939,84 @@ class CampaignTests(unittest.TestCase):
             verified["_carryBridge"],
         )
 
+    def test_generation29_carry_bridge_refuses_any_unpinned_root(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            with self.assertRaisesRegex(
+                campaign.CampaignError, "exact canonical Generation 29"
+            ):
+                campaign._verify_generation29_campaign_carry(Path(temporary))
+
+    def test_generation29_carry_dispatch_uses_literal_bridge(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / "campaign.ready.json").write_text(
+                json.dumps(
+                    {
+                        "schema": campaign.SCHEMA,
+                        "generation": 29,
+                        "reducer": {
+                            "id": campaign.GENERATION29_CAMPAIGN_CARRY_REDUCER_ID
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+            expected = {"generation": 29, "_carryBridge": "test"}
+            with patch.object(
+                campaign,
+                "_verify_generation29_campaign_carry",
+                return_value=expected,
+            ) as bridge:
+                self.assertEqual(expected, campaign._verify_campaign_carry_source(root))
+            bridge.assert_called_once_with(root)
+
+    def test_generation29_carry_dispatch_ignores_a_foreign_reducer(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / "campaign.ready.json").write_text(
+                json.dumps(
+                    {
+                        "schema": campaign.SCHEMA,
+                        "generation": 29,
+                        "reducer": {"id": "not-the-generation29-reducer"},
+                    }
+                ),
+                encoding="utf-8",
+            )
+            with patch.object(
+                campaign,
+                "_verify_generation29_campaign_carry",
+                side_effect=AssertionError("literal bridge must not be reached"),
+            ):
+                with patch.object(
+                    campaign, "verify", return_value={"generation": 29}
+                ) as ordinary:
+                    self.assertEqual(
+                        {"generation": 29},
+                        campaign._verify_campaign_carry_source(root),
+                    )
+            ordinary.assert_called_once_with(root)
+
+    def test_current_generation29_literal_carry_bridge_replays(self) -> None:
+        ready = campaign.GENERATION29_CAMPAIGN_CARRY_ROOT / "campaign.ready.json"
+        authority = (
+            campaign.REPO_ROOT
+            / campaign.GENERATION29_CAMPAIGN_CARRY_AUTHORITY_RELATIVE
+        )
+        if not ready.is_file() or not authority.is_file():
+            self.skipTest("maintainer-local Generation 29 authority is absent")
+
+        verified = campaign._verify_generation29_campaign_carry(
+            campaign.GENERATION29_CAMPAIGN_CARRY_ROOT
+        )
+
+        self.assertEqual(29, verified["generation"])
+        self.assertEqual(campaign.GENERATION29_CAMPAIGN_CARRY_COUNTS, verified["counts"])
+        self.assertEqual(
+            "EXACT_LITERAL_PINNED_FULL_REPLAY_GENERATION29",
+            verified["_carryBridge"],
+        )
+
     def test_frozen_v5_bridge_rehashes_its_historical_reducer(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
