@@ -1105,6 +1105,54 @@ path, and three addresses reported at 69/72 measure **66/66** — every trace.
 Set membership does reproduce exactly. Conversely, a 0/66 result *inside* `.text`
 is load-bearing, and three such addresses are genuinely never executed.
 
+**The open falsifiers closed 32 of 34 on free instruments** — shipped strings,
+RTTI census, static derivation from pristine bytes, and the retained coverage
+indexes. No TTD query, no debugger breakpoint, nothing above tier 1. That is the
+directive's instrument ladder working as intended, and it is worth noticing that
+*six of the falsifiers were themselves defective*: nine of ten contract rows have
+an **empty** falsifier column, one demanded a runtime experiment for a string
+sitting in `.data`, one named a `DSOUND.dll` that does not ship, two deferred to
+sources or a PDB nobody has when the image's own RTTI answers outright, and one
+proposed breakpointing the parameters of a function that takes none. A falsifier
+that cannot be executed is not a plan.
+
+Two results carry beyond their rows. **`0x0043a860` is wrong in both halves of
+its name**: a run of one-per-type factory stubs stores each type code at
+`[eax+4]`, recovering the enum — 6 is `CExplosionStatement` and **7 is
+`CComponentStatement`** — so the owner is wrong *and* the number is wrong. And
+the **cheat/debug gate is a live shipped affordance, not dead code**: `0x00662DF4`
+is written via `[ebx+0x3c]` off the same `ebx = 0x00662DB8` base as
+`m_bWindowed`, gated by the shipped switch **`-autoconfigtest`**. That correction
+came from the lane withdrawing its own "dormant unless patched" claim after being
+pointed at the documented trap that an absolute-address scan cannot see an
+object-relative store — the same trap that once refuted a "this flag is dead"
+caveat. Its accompanying switch-table "discovery" is *not* new; see
+[`CLIParams__ParseCommandLine.md`](binary-analysis/functions/CLIParams.cpp/CLIParams__ParseCommandLine.md).
+
+One row is now **terminal rather than open**, which is the right disposition and
+under-used: `0x004e2b30`'s class name is *not recoverable from the specimen* — no
+`CSoundEvent` among 667 RTTI type descriptors, in no vtable, named by no string.
+Recording that as the answer beats parking it forever against a PDB nobody has.
+Its honest loose thread is preserved: the function calls through `[esi]`, so the
+receiver *is* polymorphic and a vftable must be installed outside the censused
+window.
+
+**A name-correction cohort is assembling from byte evidence**, independent of the
+drop's NAME class: `0x0043a860`, `g_D3DDeviceIndex` at `0x0066061c` (refuted — a
+packed display-mode selector, bits 0–15 / 16–30 / flag at 31, not an index),
+`0x004398f0`, `0x005363e0`, `0x0052ff20`, and `0x004f0860`. Equally worth
+recording are the names that **survived** so nobody re-opens them: `CActor` at
+`0x00401b50` holds because `CActor` carries two Complete Object Locators, at
+offset 8 and offset 0; `CWaypoint` holds on an ICF-folded body owned by three
+classes; `g_Cheat_MALLOY` and `g_Cheat_LATETE` hold, the missing plaintext being
+XOR obfuscation under the key `"HELP ME!!"`; and all four
+`CAREER_mInvertY{Walker,Flight}_{P1,P2}` hold — the UTF-16LE UI labels at string
+ids `0x38`/`0x39` settle the walker-versus-flight assignment that
+[`CCareer__StaticInitDefaults.md`](binary-analysis/functions/Career.cpp/CCareer__StaticInitDefaults.md)
+had recorded as *verification pending*. Neither cohort gets a bespoke applier:
+both wait for the framework, which exists precisely to stop a fourth one being
+written.
+
 **The ABI contradiction class has a mechanical root cause, found 2026-08-17.**
 Ghidra's `param_size` — the size in *bytes* of the stack-argument area — was
 transcribed into review prose as the RET immediate, and that single confusion
