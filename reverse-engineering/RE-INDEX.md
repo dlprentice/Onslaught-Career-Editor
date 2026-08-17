@@ -11,14 +11,22 @@ Ghidra state no longer align, and that gap is deliberate.** The campaign
 authority is Generation 29, still frozen on exact `db.18618` geometry with
 8,329 functions, and the two D3DX rows are carried as OPAQUE/DARK rather than
 silently graded. The live and tracked Ghidra database has since advanced to
-**`db.18621`** through two authorized promotions on 2026-08-17 — 41 function
+**`db.18622`** through *three* authorized promotions on 2026-08-17 — 41 function
 boundary corrections recovering 3,293 bytes, then 158 function renames plus 2
-label renames. Function count is unchanged at 8,329; instructions moved
-551,143 → 551,232 and references 234,478 → 234,493. **Do not re-ground a
-generation onto `db.18618` and do not read Generation 29's names as current** —
-the current name projection is
+label renames, then 294 ABI signature corrections. Function count is unchanged
+at 8,329; instructions moved 551,143 → 551,232 and references 234,478 → 234,493.
+**Do not re-ground a generation onto `db.18618` and do not read Generation 29's
+names as current** — the current name projection is
 [`ghidra-function-name-table-2026-08-17.tsv`](binary-analysis/ghidra-function-name-table-2026-08-17.tsv).
-Generation 30 is the next valid parent and must re-ground onto `db.18621`.
+Generation 30 is the next valid parent and must re-ground onto `db.18622`.
+
+**Measure that version; do not quote it.** Ceremonies run concurrently here and
+each one rolls the database file version — and opening a project *without*
+`-readOnly` rolls it on close even when the script refused and wrote nothing. So
+any `db.NNNNN` written in this file is a record of the past, not a reading of the
+present: establish it by inspection as an identity step, and argue
+tracked-versus-live equality **semantically**, via a full readback bit-identical
+at program scope and across all 8,329 function rows, never by file digest.
 
 This directory preserves evidence that materially supports the toolkit,
 rebuild, modding work, or contributor understanding. Git history holds completed

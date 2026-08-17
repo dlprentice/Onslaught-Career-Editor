@@ -3,9 +3,10 @@
 Status: active — what is demonstrated today, and what is not
 Last updated: 2026-08-17. The frozen campaign authority is Generation 29 at
 8,329/db.18618, but the live and tracked Ghidra database has advanced to
-**db.18621** through two authorized promotions on 2026-08-17 (41 boundary
-corrections, then 160 renames), so campaign and Ghidra state deliberately no
-longer align and Generation 30 must re-ground onto db.18621
+**db.18622** through *three* authorized promotions on 2026-08-17 — 41 boundary
+corrections, then 160 renames, then 294 ABI signature corrections — so campaign
+and Ghidra state deliberately no longer align and Generation 30 must re-ground
+onto db.18622
 (`current_re_authority`; candidate Gen73 is projection-oracle only). Primary WinUI
 navigation was rechecked 2026-08-03 against the live shell (includes Cheats).
 The 2026-08-01 shell, appearance, Lore, Media, and four-run Level 100 reviews
