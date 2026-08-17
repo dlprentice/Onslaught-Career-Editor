@@ -4,6 +4,13 @@ Status: **promoted.** Both ceremonies landed on live through the shared cohort
 framework: `db.18622` → `db.18623` → `db.18624`, tracked snapshot refreshed on
 proven byte equality.
 Last updated: 2026-08-17.
+Evidence: MEASURED — RTTI Complete Object Locator anchors re-derived from the
+pristine specimen bytes, a read-only export of all 86,721 symbols proving each
+proposed name free at its own ceremony's gate, per-ceremony identity, dry-run,
+apply and separate-process readback receipts, and collateral over all 8,329
+function rows showing exactly one changed row and zero non-target movement.
+Specimen: pristine PC retail `BEA.exe`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 Summary: the three CTentacle factory names at vtable slots 117/118/119 were
 rotated by one. Slot 117 was corrected by the 2026-08-17 name cohort. This
 document records the byte evidence for the remaining two, the two-ceremony
