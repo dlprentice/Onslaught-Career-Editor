@@ -622,6 +622,48 @@ first real parity-test queue this project has had, led by the Camera,
 EventScheduler, Controller, SaveStorage `CChunkReader__*`, and Music/Sound
 clusters.
 
+**Semantic tranche 2 closed 2026-08-16 — and it is the calibration result.**
+All 6,094 `SUPPORTED_BY_PE_STATIC_SPINE` rows were run through the tier-1
+verifier: 33,158 assertions, **5,405 CONFIRMED, 38 with warnings, 591
+uncheckable, 60 REFUTED.** The raw pass produced 250 refutations and **190 were
+checker defects**, found by adjudicating all 297 failures individually —
+function-extent citations whose high endpoint can never be an instruction
+boundary, traversal stopping at jump tables (some bodies only 4–35% covered),
+idiom-start citations, and notation collisions such as `RET 0xc3` where `0xC3`
+is the opcode. The fixes are targeted rather than lenient: the corrected
+checker reproduces tranche 1 exactly at 948/3/14/1 with none of its three
+refutations dissolving.
+
+*The 60.* Twelve are semantic contradictions, all ABI: six wrong arities or
+terminators and six with the cleanup direction inverted. `0x0050f600` and
+`0x005387a0` are the priority pair — both assert a `RET` on a function that has
+none, being vtable tail-dispatches, and both contradict their own `returns`
+field. Thirteen are address-citation defects. The remaining 35 are checker
+artifacts carrying no ledger defect.
+
+*Coverage is the real finding.* Only one row is fully checked; 5,434 are
+partial and 659 have no machine contact. Across 39,939 load-bearing fields only
+**27.3% carry any assertion**: `inputs` 79.2%, `returns` 27.1%, `writes` 26.0%,
+`receiver` 26.0%, `sideEffects` 15.0%, `failureModes` 10.8%, `preconditions`
+**3.0%**. **1,230 CONFIRMED rows — 22.8% — rest on exactly one passing
+assertion**, usually the RET immediate. The control quantifies the ceiling:
+RET-immediate mutations are caught 99.6% of the time, but GWRITE and DISP
+manage 86% and 93% only on call-free fully-covered bodies, and just **11% of
+the tier is call-free and fully covered**. So roughly 95% of global-store and
+displacement claims are not machine-falsifiable at all, and 5,914 passing DISP
+assertions mostly mean the displacement appears somewhere in the body.
+
+**Read `CONFIRMED` in this tier as "the argument-cleanup convention checks out
+and little else does."** The `inputs` field and the body extents are settled;
+nothing else is. The 659 no-contact rows are a smaller risk than the label
+suggests — median body two instructions, 81% at three or fewer, and 25 sampled
+by hand were all plausible with the inferred part explicitly hedged — but the
+**21 with 40 or more instructions are checkable content lost to notation gaps**
+and should be re-extracted first. Follow-ups the evidence supports: fix the 12
+ABI contradictions and 13 address citations, and sweep the corpus for
+`retn <param-bytes>` written on cdecl functions, since that house notation habit
+was only caught where the extractor happened to see it.
+
 **Campaign-layer corrections.** Discard the single `CONTRACT_REFUTED` row. It
 claims `0x005d85d8` sits in bss with no file bytes, but that VA maps to file
 offset `0x1D85D8`, which holds `00 00 a0 40` — exactly the 5.0f the Gen-29
