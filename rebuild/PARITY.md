@@ -52,6 +52,18 @@ Owner paths are relative to the repository root; test names are relative to
 `rebuild/OnslaughtRebuild.Core.Tests/` and the
 `OnslaughtRebuild.Core.Tests` namespace.
 
+> **Receipts.** The 17 mutation records behind this table — one per row plus the
+> one deliberate `SURVIVED` control — live at
+> `local-lab/rebuild-parity-mutation-kills-2026-08-17/`, with
+> `mutation-results.json` (per row: target test, mutation meaning, every failing
+> test observed, and `ownerSha256Before`/`After`), the `mutate.py` harness that
+> produced them, the read-only specimen reader used to re-derive every anchor
+> here, and `MANIFEST.sha256`. `local-lab/` is **ignored by git and invisible to
+> a fresh clone**, so a clone sees this table's claims without its evidence;
+> `local-lab/INDEX.md` carries the entry. Re-deriving a row costs one narrow
+> `--filter` run, so treat a missing receipt as a reason to re-measure rather
+> than to trust the table.
+
 | Retail entity | Anchor, and what the bytes say | Owner | Implementation | Test | Cases | Mutation that was killed |
 |---|---|---|---|---|---|---|
 | `CBattleEngineJetPart::GetFriction` slow-flight gate | `0x00411B39` `d81dd88b5d00` = `fcomp dword ptr [0x005D8BD8]`; that dword is `00 00 c0 3f` = `1.5f`; `test ah,1` at `0x00411B41` | `rebuild/OnslaughtRebuild.Core/Simulation.cs` | `Simulation.JetFrictionNumerator` | `RetailJetFrictionTests.CoreLadder_GatesTheInterpolatedArmAtOnePointFive` | 1 | gate back to `1_000` (retail 1.0) |
