@@ -871,7 +871,13 @@ mutant killed rather than the equivalence assumed.
 **The systemic finding: `nDivergence=0` is a statement about identity, not
 semantics.** Six of these eight contracts diverge from their source *text* on
 unordered inputs, because the shipped compares read `C0` alone or `C0|C3` where
-C's operators do neither. A NaN energy returns `0.005f` from jet `Gravity`
+C's operators do neither. **Refined 2026-08-17 — the earlier statement was too
+broad.** MSVC's `>=` and `>` idioms *are* NaN-correct: they emit `test ah,0x41`
+(C0|C3), so an unordered compare fails as C requires. The offenders are the
+**equality and truthiness** idioms, which emit `test ah,0x40` (C3 alone) or
+`test ah,1` (C0 alone) and therefore mis-handle unordered inputs. Reading the
+mask is what distinguishes them, so "check every float compare" stands while
+"every compare diverges" does not. A NaN energy returns `0.005f` from jet `Gravity`
 where `mEnergy == 0` returns `0.0f`; NaN speed and NaN energy both fail
 `AutoLevel`'s gates; a NaN store value counts as *below* capacity in
 `CanWeaponFire` and opens the gate; and `ChangeWeapon`'s unordered compare

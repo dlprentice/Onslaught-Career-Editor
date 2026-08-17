@@ -217,7 +217,10 @@ public sealed class RetailCareerNode
 /// Owner in the pinned drop: <c>references/Onslaught/Career.cpp</c>,
 /// declaration at <c>Career.h:116</c> and <c>Career.h:193</c>. Retail identity:
 /// <c>0x0041B8F0</c>, a linear scan of <c>num_nodes</c> records comparing
-/// <c>[node + 0x14]</c> — <c>mWorldNumber</c> — and returning
+/// <c>mWorldNumber</c> — the instruction is <c>lea edx, [ecx + 0x14]</c>, which
+/// is <c>this + 0x14</c> and therefore <c>node + 0x10</c>, since the array
+/// itself begins at <c>this + 4</c>; the inline scan in <c>GRADE</c> starts at
+/// the same absolute <c>0x00660634</c> — and returning
 /// <c>this + 4 + i * 0x40</c>, which also fixes <c>mNode</c> at <c>CCareer+4</c>
 /// with no <c>CSArray</c> header.
 /// </para>
