@@ -65,7 +65,30 @@ register-computed calls are outside that scan's reach.
 
 So the frontend drives the scheduler with the combined `Update`, while
 `CGame__Update` drives it with the split pair and runs gameplay between the
-clock advance and the dispatch. `AddEvent_TimeFromNow` has 24 direct callers
-and `AddEvent` has 128; both are enumerable with
-`tools\call_xref_scan.py` and are left as the map's next consumer census
-rather than listed here.
+clock advance and the dispatch.
+
+### `AddEvent_TimeFromNow` consumers (24 direct call sites, whole-image scan)
+
+| Owner (name-table range) | Call sites | What it schedules |
+| --- | --- | --- |
+| `CGame__InitRestartLoop` | `0x0046c5f0` | restart sequencing |
+| `CGame__DeclareLevelLost` | `0x0046f50e` | level-lost follow-up |
+| `CGame__DeclarePlayerDead` | `0x0046f6e3` `0x0046f71a` `0x0046f75b` `0x0046f792` | death follow-up (four distinct delays) |
+| `CGame__HandleEvent` | `0x00470018` | event-driven reschedule |
+| `CGame__RespawnPlayer` | `0x00470330` `0x00470416` | respawn timing |
+| `CMessageBox__TryAdvanceQueuedMessage` | `0x004b7c90` | reveal pacing |
+| `CMessageBox__StartVoiceOrFallbackTextReveal` | `0x004b7eec` | reveal pacing |
+| `CMessageBox__AdvanceRevealAndScheduleNextTick` | `0x004b8096` `0x004b80c4` `0x004b8141` `0x004b8184` `0x004b81b9` | the self-reschedule: five arms re-post the next reveal tick at a time-from-now offset |
+| `CMessageBox__VFunc_0_004b81d0` | `0x004b8263` | reveal pacing |
+| `CCSPersistentThing__Init` | `0x004269e3` | persistent-thing polling |
+| `CFenrir__VFunc_50_0044e1c0` | `0x0044e1e9` | Fenrir virtual arm |
+| `CPlayer__GotoPanView` | `0x004d2fbe` | pan-view transition |
+| `CTree__CreateFallingTree` | `0x004f6a74` | tree fall start |
+| `CTree__UpdateFallingTree` | `0x004f6fa6` | tree fall continuation |
+| `CUnit__HandleEvent` | `0x004f9964` | unit event follow-up |
+| `IScript__SetTimer` | `0x00535908` | mission-script timers — script delays run on the manager clock |
+
+`AddEvent` has 128 direct call sites (not listed); re-run
+`py -3 tools\call_xref_scan.py <pristine> 0x0044b2d0 0x0044b370` to reproduce
+either census, and the owning-function attribution comes from
+`ghidra-function-name-table-2026-08-17.tsv` body ranges.
