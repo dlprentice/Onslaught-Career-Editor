@@ -1,7 +1,7 @@
 # Binary Analysis
 
 Status: living index for `reverse-engineering/binary-analysis/`
-Last updated: 2026-08-14
+Last updated: 2026-08-17
 Summary: front door to the static and byte-level evidence for the Steam
 `BEA.exe`. Names the current naming authority, the specimen baseline, and the
 per-system contracts. Makes no claim of its own — every claim below belongs to
@@ -365,9 +365,18 @@ the document it links.
 > as two sequential ceremonies. Both landed on live: `db.18622` → `db.18623`
 > (`0x004f07e0` → `CTentacle__CreateTentacleGuide`) → `db.18624`
 > (`0x004f0860` → `CTentacle__CreateTentacleAI`). The 2026-08-17 name table above
-> is re-projected from the ceremony-B live POST readback and carries both rows;
-> the dated 2026-08-13, 2026-08-12 and July tables correctly still show the
-> pre-swap names.
+> is re-projected from the name-cohort5 live POST readback at `db.18626` and
+> carries both rows; the dated 2026-08-13, 2026-08-12 and July tables correctly
+> still show the pre-swap names.
+
+> **Three later 2026-08-17 promotions.** After the tentacle chain, the 36-row
+> `abi-two-witness-arity36` SET_PROTOTYPE cohort landed at `db.18625`
+> (signature-only), the five-row runtime-witnessed `name-cohort5` landed at
+> `db.18626` (name-only), and the 65-slot RTTI vftable `vftable-cohort65`
+> SET_DATA_POINTER cohort landed at `db.18627` (data typing only). None created
+> or destroyed a function; the name table is the `db.18626` projection because
+> the vftable cohort moved no function row. Current routing is
+> [`RE-INDEX.md`](../RE-INDEX.md); ceremony receipts live under `local-lab/`.
 
 > **Runtime-witness corpus merge, 2026-08-17.**
 > [runtime-witness-corpus-merge-2026-08-17.md](runtime-witness-corpus-merge-2026-08-17.md)

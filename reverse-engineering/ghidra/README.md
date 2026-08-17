@@ -35,11 +35,14 @@ pins failure mode. The pins above are current; the promotion history is:
 `db.18618` → 41 boundary corrections → `db.18619`/`db.18620` → 160 name
 corrections (158 functions, 2 labels) → `db.18621` → 294 ABI signature
 corrections → `db.18622` → **CTentacle factory-name ceremony A** → `db.18623` →
-**CTentacle factory-name ceremony B** → `db.18624`, all on 2026-08-17, each a
-separately authorized promotion. Internal functions remain **8,329** across all
-five: no function was created or destroyed. All five ceremonies are owned by the
-shared cohort framework's replayable specs under `tools/cohort-specs/`; prefer
-replaying a spec over reading this paragraph.
+**CTentacle factory-name ceremony B** → `db.18624` → the 36-row
+`abi-two-witness-arity36` SET_PROTOTYPE cohort → `db.18625` → the five-row
+runtime-witnessed `name-cohort5` → `db.18626` → the 65-slot RTTI vftable
+`vftable-cohort65` SET_DATA_POINTER cohort → `db.18627`, all on 2026-08-17, each
+a separately authorized promotion. Internal functions remain **8,329** across
+all eight: no function was created or destroyed. All eight ceremonies are owned
+by the shared cohort framework's replayable specs under `tools/cohort-specs/`;
+prefer replaying a spec over reading this paragraph.
 
 **The CTentacle factory-name chain (`db.18622` → `db.18624`).** Two one-row
 `SET_NAME` cohorts, run as two sequential ceremonies through
@@ -154,7 +157,7 @@ the user overrides them:
 | Headless entry | `...\support\analyzeHeadless.bat` |
 | Prior install archive | `D:\GhidraArchives\` (12.0.3 retained there; do not delete) |
 | Working/maintainer project | `C:\Users\david\Ghidra\Projects` (`BEA.gpr` / `BEA.rep`) |
-| Verified off-volume recovery | `D:\BEA-Ghidra-Backups\2026-08-17-tentacle-chain-b-post-live` (exact current `db.18624` POST snapshot; independently copied, restore-proven byte-identical, and read-only reopened) |
+| Verified off-volume recovery | `D:\BEA-Ghidra-Backups\2026-08-17-vftable65-post-live` (exact current `db.18627` POST snapshot; independently copied, restore-proven byte-identical, and read-only reopened) |
 | Prior verified recovery | `D:\BEA-Ghidra-Backups\2026-08-17-tentacle-chain-a-post-live` (`db.18623`, ceremony B's PRE) and `...-tentacle-chain-a-pre-live` (`db.18622`, the chain's PRE) |
 | Xbox Issue-11 POST recovery | `D:\BEA-Ghidra-Backups\2026-08-12-xbox-sparse-symbol-post-anchors-issue11\` (exact isolated project; restored semantic readback passed) |
 | Xbox US-retail POST recovery | `D:\BEA-Ghidra-Backups\2026-08-12-xbox-sparse-symbol-post-anchors-us-retail\` (exact isolated project; restored semantic readback passed) |
