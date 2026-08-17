@@ -369,7 +369,8 @@ public class GhidraApplyCohortManifest extends GhidraScript {
         "col.liveName", "col.currentSignature", "col.currentSignatureSha256",
         "col.proposedSignature", "col.callingConvention", "col.returnType",
         "col.paramSpec", "col.arity", "col.arityBytes", "col.varArgs",
-        "col.colName", "col.dwordValue", "col.confidence", "col.proposedLabel",
+        "col.colName", "col.dwordValue", "col.confidence", "col.colAddr",
+        "col.proposedLabel",
         "unique", "constant", "enum", "enumPrefix", "forbidToken", "noCycle",
         "expectedTargetsChanged", "expectedSymbolsAdded",
         "expectedSymbolsRemoved", "expectedFunctionsUntouched",
@@ -1562,71 +1563,81 @@ public class GhidraApplyCohortManifest extends GhidraScript {
                 }
                 row.targetName = s.getName();
             } else if ("DATA:POINTER".equals(row.liveKind)) {
-                if (!verbs.contains(V_SET_DATA_POINTER)) {
-                    fail(row, "DATA:POINTER row without the SET_DATA_POINTER verb");
-                    continue;
-                }
-                if (fn != null) {
-                    fail(row, "is a function, but the manifest says DATA:POINTER");
-                    continue;
-                }
-                if (readback) {
-                    if (listing.getDefinedDataAt(row.entry) == null) {
-                        fail(row, "READBACK slot has no defined data");
+                try {
+                    if (!verbs.contains(V_SET_DATA_POINTER)) {
+                        fail(row, "DATA:POINTER row without the SET_DATA_POINTER verb");
                         continue;
                     }
-                    Symbol label = currentProgram.getSymbolTable()
-                            .getPrimarySymbol(row.entry);
-                    if (label == null
-                            || !row.get("proposedLabel").equals(label.getName())) {
-                        fail(row, "READBACK label expected ["
-                            + row.get("proposedLabel") + "] actual ["
-                            + (label == null ? "<none>" : label.getName()) + "]");
+                    if (fn != null) {
+                        fail(row, "is a function, but the manifest says DATA:POINTER");
                         continue;
                     }
-                } else {
-                    if (listing.getDefinedDataAt(row.entry) != null
-                            || listing.getDataContaining(row.entry) != null) {
-                        fail(row, "slot is already inside defined data");
+                    if (readback) {
+                        if (listing.getDefinedDataAt(row.entry) == null) {
+                            fail(row, "READBACK slot has no defined data");
+                            continue;
+                        }
+                        Symbol label = currentProgram.getSymbolTable()
+                                .getPrimarySymbol(row.entry);
+                        if (label == null
+                                || !row.get("proposedLabel").equals(label.getName())) {
+                            fail(row, "READBACK label expected ["
+                                + row.get("proposedLabel") + "] actual ["
+                                + (label == null ? "<none>" : label.getName()) + "]");
+                            continue;
+                        }
+                    } else {
+                        Data directData = listing.getDefinedDataAt(row.entry);
+                        Data containingData = listing.getDataContaining(row.entry);
+                        boolean undefinedNow = directData == null
+                            && (containingData == null
+                                || !containingData.isDefined());
+                        if (!undefinedNow) {
+                            fail(row, "slot is already inside defined data");
+                            continue;
+                        }
+                    }
+                    long want = Long.parseLong(row.get("dwordValue"), 16);
+                    long got = readInt(row.entry);
+                    if (got != want) {
+                        fail(row, "slot dword expected [" + row.get("dwordValue")
+                            + "] actual [" + String.format("%08x", got) + "]");
                         continue;
                     }
-                }
-                long want = Long.parseLong(row.get("dwordValue"), 16);
-                long got = readInt(row.entry);
-                if (got != want) {
-                    fail(row, "slot dword expected [" + row.get("dwordValue")
-                        + "] actual [" + String.format("%08x", got) + "]");
-                    continue;
-                }
-                Address target = row.entry.getNewAddress(got);
-                if (fm.getFunctionAt(target) == null) {
-                    fail(row, "slot dword target is not a function entry: "
-                        + String.format("%08x", got));
-                    continue;
-                }
-                long col = readInt(row.entry.subtract(4));
-                long td = readInt(row.entry.getNewAddress(col + 0x0c));
-                long namePtr = readInt(row.entry.getNewAddress(td + 0x08));
-                String mangled = readCString(row.entry.getNewAddress(namePtr));
-                if (mangled.isEmpty()
-                        || !mangled.equalsIgnoreCase(row.get("colName"))) {
-                    fail(row, "COL identity expected [" + row.get("colName")
-                        + "] actual [" + mangled + "]");
-                    continue;
-                }
-                if (!readback) {
-                    List<String> hits = idx.get(row.get("proposedLabel"));
-                    if (hits != null) {
-                        for (String h : hits) {
-                            if (!h.equals(row.addrText.substring(2))) {
-                                fail(row, "collision: proposed label '"
-                                    + row.get("proposedLabel")
-                                    + "' already exists at 0x" + h);
+                    Address target = row.entry.getNewAddress(got);
+                    if (fm.getFunctionAt(target) == null) {
+                        fail(row, "slot dword target is not a function entry: "
+                            + String.format("%08x", got));
+                        continue;
+                    }
+                    Address colAddr = toAddr(
+                        Long.parseLong(row.get("colAddr").replaceFirst("^0x", ""), 16));
+                    long col = readInt(colAddr);
+                    long td = readInt(colAddr.getNewAddress(col + 0x0c));
+                    long namePtr = readInt(colAddr.getNewAddress(td + 0x08));
+                    String mangled = readCString(colAddr.getNewAddress(namePtr));
+                    if (mangled.isEmpty()
+                            || !mangled.equalsIgnoreCase(row.get("colName"))) {
+                        fail(row, "COL identity expected [" + row.get("colName")
+                            + "] actual [" + mangled + "]");
+                        continue;
+                    }
+                    if (!readback) {
+                        List<String> hits = idx.get(row.get("proposedLabel"));
+                        if (hits != null) {
+                            for (String h : hits) {
+                                if (!h.equals(row.addrText.substring(2))) {
+                                    fail(row, "collision: proposed label '"
+                                        + row.get("proposedLabel")
+                                        + "' already exists at 0x" + h);
+                                }
                             }
                         }
                     }
+                    row.targetName = row.get("proposedLabel");
+                } catch (Exception exc) {
+                    fail(row, "data slot gate threw " + exc);
                 }
-                row.targetName = row.get("proposedLabel");
             } else {
                 if (fn == null) {
                     fail(row, "NO FUNCTION AT ENTRY");
@@ -2046,6 +2057,7 @@ public class GhidraApplyCohortManifest extends GhidraScript {
         owner.put("col.colName", V_SET_DATA_POINTER);
         owner.put("col.dwordValue", V_SET_DATA_POINTER);
         owner.put("col.confidence", V_SET_DATA_POINTER);
+        owner.put("col.colAddr", V_SET_DATA_POINTER);
         owner.put("col.proposedLabel", V_SET_DATA_POINTER);
         for (Map.Entry<String, String> e : owner.entrySet()) {
             if (spec.has(e.getKey()) && !verbs.contains(e.getValue())) {
