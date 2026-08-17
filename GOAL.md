@@ -452,8 +452,8 @@ from pristine bytes, and only through the full Ghidra gate.
 | ---: | --- | ---: | --- |
 | 1 | BOUNDARY, restricted | **41 of 77 (byte-derived)** | Manifest complete; ready for ceremony once preconditions clear |
 | 2 | ABI, byte-provable | ~548 of 1,001 (est) | Promote after per-row `RET n` / `ADD ESP,n` check |
-| 3 | NAME, Tier 1 only | 50–150 (est) | Promote only where the class appears in the image |
-| 4 | NAME, refutation-only | ~346 (est) | Convert to demotions, not renames |
+| 3 | NAME, Tier 1 only | **33 (anchor-verified)** | Promote; each re-proved twice, zero re-proof failures |
+| 4 | NAME, demotions | **116** | 90 neutral `_T3_<addr>` placeholders + 26 descriptive relabels |
 | 5 | XREF | 73 | Byte-check each; 59 are single-lane |
 | 6 | COMMENT / OTHER | 254 | Defer; documentation grade |
 
@@ -533,6 +533,32 @@ NOPs. The boundary lane reached the same verdict independently. Both are absent
 from the 41-row manifest, as are all six refuted rows and all four
 stale-named addresses; the cohort is 23 FILL_HOLE, 10 EXTEND_TAIL, 5
 RET_IMM_SPLIT, and 3 JUMP/SEH-table rows.
+
+**NAME, re-derived 2026-08-16.** The 509 is composite, like the 77: only 368
+rows carry a terminal `FLAGGED(NAME)`, the rest are plain `FLAGGED` with
+`primary_issue == NAME`, over 504 unique addresses. Of 70 real proposals, **33
+survive anchor verification** and were re-proved from scratch in a second pass
+with zero failures; 116 become demotions; 8 are rejected. The strongest
+promotion closes a falsifier left open by review: `0x0053f010` binds to
+`CDXEngine` because all four call sites carry `MOV ECX,0x0089c9a0`, that global
+is initialised to vtable `0x005e4fc4`, and its COL resolves to
+`.?AVCDXEngine@@`. 347 rows stay UNRESOLVED — non-virtual members whose
+declaring class no vtable can settle; they need body or call-site work, not
+another naming pass.
+
+**Two naming waves, and one is systematically wrong.** A mechanical audit of
+all 439 refutations found that `Class__VFunc_N_addr` names measure exact (9 of
+9) while `Class__VFuncNN_Description` names are off by one (6 of 6 —
+`CInfantryUnit__VFunc65` is slot 66). The two waves used different base
+conventions. **This affects existing database names well beyond this cohort and
+should be swept separately.** The same audit found 38 refutations that do not
+survive, because the recorded class genuinely owns the vtable slot, and 49
+"invented" names that are drift from shipped source paths
+(`CSpawnerThng` ← `SpawnerThng.cpp`) — misspellings rather than fabrications.
+Rejections include two rows whose recorded name was already correct and only
+the slot ordinal wrong, and one, `0x005503b0`, where the drop's own refutation
+is false: it claims a full-image scan found no `CDXPatchManager` evidence, but
+`C:\dev\ONSLAUGHT2\DXPatchManager.cpp` ships at file offset `0x25211c`.
 
 **Campaign-layer corrections.** Discard the single `CONTRACT_REFUTED` row. It
 claims `0x005d85d8` sits in bss with no file bytes, but that VA maps to file
