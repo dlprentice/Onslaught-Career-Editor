@@ -450,30 +450,44 @@ corrections → Level100 crash characterisation → falsifier close-out.
    ceremony steps (replica, cut-time Ghidra inspect receipts, POST
    backup/tracked refresh, Gen-31 authority receipt) stay recorded in
    `developer_state.json` and are the next ceremony.
-3. **Slot instrument visit-order question — settled 2026-08-17, not a blocker.**
-   `0x00563d97` is address-set-independent on current tooling: DETERMINATE /
-   LOWER_BOUND / 28 unresolved accesses / 412 blocks in both the single-VA and
-   full-8,329 runs (receipt
-   `local-lab\slot-order-falsifier-2026-08-17\RESULT.md`). The earlier flip does
-   not reproduce post-797dcf60. Before promoting `abi-two-witness-arity36`,
-   still re-run exactly those 36 rows through the current instrument and require
-   per-row status/exactness agreement — their fields were measured with the
-   pre-fix instrument and must not be promoted stale.
-4. **Pointer/vftable cohort.** 65 of 99 untyped pointer slots are RTTI vftables
-   across 59 classes. The framework has no vftable-apply verb; decide the
-   capability and apply with recovered class identity — never a bespoke
-   applier, never 99 isolated dwords.
-5. **Runtime-witnessed name corrections** (`0x0048c3b0` →
+3. **Gen-31 ceremony completion.** Build the on-disk replica, take the three
+   cut-time live/backup/tracked Ghidra inspect receipts, take the POST backup,
+   refresh the tracked snapshot on byte equality, and produce the Generation-31
+   authority receipt in the Generation-30 shape.
+4. **Promote abi-two-witness-arity36 through the full gate.** The slot
+   instrument visit-order question is settled 2026-08-17 (no flip) and all 36
+   rows are byte-adjudicated (36/36 witness + RET anchors re-verify against
+   the pristine specimen; `local-lab\arity36-readjudication-2026-08-17\REPORT.md`).
+   Re-derive the spec with honest per-row `LOWER_BOUND` exactness (the
+   committed `COMPLETE_ENUMERATION` constant is stale), rehearse on a db.18624
+   replica, then run the ceremony.
+5. **Pointer/vftable cohort.** 65 of 99 untyped pointer slots are RTTI vftables
+   across 59 classes. Add ONE typed vftable-apply verb to the cohort framework
+   (with the existing gate + mutator suite), then apply each vftable with its
+   recovered class identity — never a bespoke applier, never 99 isolated
+   dwords.
+6. **Runtime-witnessed name corrections** (`0x0048c3b0` →
    `CInfluenceNode__CalculateInfluence`, `0x0052ff20` InitBuiltins, `0x005363e0`
    GetPlayer, `0x0043a860` both halves, `0x004398f0`), witnesses now in
-   `local-lab\ds-deep-review-extended\data\`.
-6. **Core gate — GREEN 2026-08-17.** The full unfiltered Core suite passed in
-   one run (729/729, 25 m 30 s, exit 0; `local-lab\fullsuite-2026-08-17.log`)
-   and all four Level100 classes pass individually; the historical host deaths
-   stay attributed to environmental contention until reproduced.
+   `local-lab\ds-deep-review-extended\data\`. Author the cohort spec + manifest
+   and promote through the framework.
 7. **Close the falsifier frontier:** `0x004e2b30` vftable-store site, the
    `[obj+0x260]` invert-Y polarity, rewrite `0x0043a860`/`0x0052db60` falsifiers
    as static, terminal `0x005363e0` carrying its slot-21 witness.
+8. **Continuous function-level RE.** Mine the retained 66-trace corpus and the
+   relocated DeepSeek index to raise the 8,088 OPAQUE rows through bounded,
+   byte-cited C1/C2 slices and rebuild owners. Reasoned "this consumes X and
+   decides Y" hypotheses with explicit confidence labels are progress; the
+   cheapest falsifier travels with every row.
+9. **Core gate — GREEN 2026-08-17.** The full unfiltered Core suite passed in
+   one run (729/729, 25 m 30 s, exit 0; `local-lab\fullsuite-2026-08-17.log`)
+   and all four Level100 classes pass individually; the historical host deaths
+   stay attributed to environmental contention until reproduced.
+10. **Organization and truth routing.** Consolidate the top-level, RE, and
+    local-lab documents toward one current-truth path; implement the H:
+    graveyard archival policy; land the D:/G: audit outcomes; keep
+    `developer_state.json`, `RE-INDEX.md`, and `CURRENT_CAPABILITIES.md`
+    aligned as each promotion lands.
 
 Rank from current evidence; a reproduced contradiction outranks this list.
 Backlog (the 117,426-byte `.text` gap, the HUD naming-convention decision, the
