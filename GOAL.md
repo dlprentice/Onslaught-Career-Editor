@@ -824,15 +824,25 @@ both that the new test bites and that the pre-existing suite was blind to this
 constant.
 
 *One gate is genuinely unmet and is recorded rather than glossed.* The full
-unfiltered Core suite never completed — not once, with or without the change. The
-test host crashes (never an assertion) at wildly varying points, and it
-**reproduces on the pristine baseline with the change reverted**, so it is not a
-regression signal. Attribution is inference, not measurement: machine commit
-charge was 36.6 GB of a 44.2 GB limit with two Ghidra JVMs, `cdb`, and several
-agent lanes resident, and no dump or stack could be captured. The honest
-consequence is that **the concurrency that speeds this work up is what prevents
-its own acceptance gate from running**, and the suite needs one clean run on a
-quiet machine.
+unfiltered Core suite has never completed — with or without the change. The test
+host crashes (never an assertion) at wildly varying points, and it **reproduces
+on the pristine baseline with the change reverted**, so it is not a regression
+signal. Attribution is inference, not measurement: machine commit charge was
+36.6 GB of a 44.2 GB limit with two Ghidra JVMs, `cdb`, and several agent lanes
+resident, and no dump or stack could be captured. The honest consequence is that
+**the concurrency that speeds this work up is what prevents its own acceptance
+gate from running**.
+
+*Best run so far, 2026-08-17 on `a0469ffc` — still not a pass.* On a quieter
+machine (8.2 GB physical free rather than 6.8) the suite reached **582 passed, 0
+failed, 0 skipped in 28m01s** — and then a parallel test host crashed, the run
+reported `Test Run Aborted`, and the process exit code was **1**. The project
+declares 368 `[Fact]` plus 85 `[Theory]` carrying 361 data rows, so on the order
+of **150 cases never executed**. Read it precisely: *everything that ran was
+green, and the blocker is environmental rather than behavioural* — but 582 of ~729
+is **not** a met gate, and must not be reported as one. Note also that a tee'd
+pipeline's exit status is not `dotnet test`'s; take the code from
+`PIPESTATUS`/`$LASTEXITCODE` or the run will look clean when it aborted.
 
 *Three more divergences, again on rows marked `AGREES`, bringing tracked
 exceptions to 26.* `GetGradeFromRanking` grades **NaN as `'S'`**, because
