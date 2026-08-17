@@ -274,11 +274,11 @@ public class SavePatchRegressionTests
     }
 
     [Test]
-    public void PatchFile_KillPatch_PreservesMetaHighByte()
+    public void PatchFile_KillPatch_PreservesScreenPositionHighByte()
     {
         Assert.That(File.Exists(GoldSavePath), Is.True, $"Missing baseline save: {GoldSavePath}");
 
-        string tempDir = Path.Combine(Path.GetTempPath(), $"onslaught-killmeta-{Guid.NewGuid():N}");
+        string tempDir = Path.Combine(Path.GetTempPath(), $"onslaught-killscreenpos-{Guid.NewGuid():N}");
         Directory.CreateDirectory(tempDir);
         string input = Path.Combine(tempDir, "input.bes");
         string output = Path.Combine(tempDir, "output.bes");
@@ -286,11 +286,11 @@ public class SavePatchRegressionTests
         try
         {
             byte[] buf = File.ReadAllBytes(GoldSavePath);
-            byte[] seededMeta = new byte[] { 0xA1, 0xB2, 0xC3, 0xD4, 0xE5 };
-            for (int i = 0; i < seededMeta.Length; i++)
+            byte[] seededTopBytes = new byte[] { 0xA1, 0xB2, 0xC3, 0xD4, 0xE5 };
+            for (int i = 0; i < seededTopBytes.Length; i++)
             {
                 int off = 0x23F6 + (i * 4);
-                uint seeded = ((uint)seededMeta[i] << 24) | 7u;
+                uint seeded = ((uint)seededTopBytes[i] << 24) | 7u;
                 BinaryPrimitives.WriteUInt32LittleEndian(buf.AsSpan(off, 4), seeded);
             }
             File.WriteAllBytes(input, buf);
@@ -308,13 +308,154 @@ public class SavePatchRegressionTests
             Assert.That(result.Success, Is.True, result.Message);
 
             byte[] after = File.ReadAllBytes(output);
-            for (int i = 0; i < seededMeta.Length; i++)
+            for (int i = 0; i < seededTopBytes.Length; i++)
             {
                 int off = 0x23F6 + (i * 4);
                 uint raw = ReadUInt32(after, off);
-                Assert.That((raw >> 24) & 0xFFu, Is.EqualTo((uint)seededMeta[i]), $"Meta byte changed for kill slot {i}.");
+                Assert.That((raw >> 24) & 0xFFu, Is.EqualTo((uint)seededTopBytes[i]), $"Packed top byte changed for kill slot {i}.");
                 Assert.That(raw & 0x00FFFFFFu, Is.EqualTo(123u), $"Kill payload mismatch for slot {i}.");
             }
+        }
+        finally
+        {
+            if (Directory.Exists(tempDir))
+                Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    // The top byte of kill slots 0 and 1 is a screen-position offset in excess-128, owned by
+    // CFEPScreenPos: the unpackers at 0x004218F0 / 0x00421900 answer (word >>> 24) - 0x80, the
+    // packers at 0x00421910 / 0x00421940 rewrite the byte over a preserved word & 0xFFFFFF, and
+    // their only callers read the pair into one two-int structure at 0x0051F470. Screen position 0
+    // is therefore the stored byte 0x80, and +48 is 0xB0.
+    //
+    // The reference implementation is rebuild/OnslaughtRebuild.Core/RetailCareerKillCounters.cs.
+    // It is mirrored here rather than referenced because that project is GPL-3.0 and this MIT
+    // toolkit must not link it; if the two ever disagree, the retail bytes above decide.
+    private const int ScreenPositionBias = 0x80;
+
+    private static uint PackScreenPosition(int killCount, int screenPosition) =>
+        unchecked((uint)((screenPosition - ScreenPositionBias) << 24) | ((uint)killCount & 0x00FFFFFFu));
+
+    private static int UnpackScreenPosition(uint storedWord) =>
+        unchecked((int)(storedWord >> 24) - ScreenPositionBias);
+
+    [Test]
+    public void PatchFile_KillPatch_KeepsWhatThePackedByteMeans_NotJustItsBits()
+    {
+        Assert.That(File.Exists(GoldSavePath), Is.True, $"Missing baseline save: {GoldSavePath}");
+
+        // +48 is a screen position CCareer::Load accepts: the gate at 0x0042126A-0x00421280 keeps
+        // -0x40..+0x40 and zeroes anything outside it, so a save seeded this way is a fixed point.
+        const int screenPosition = 48;
+        const int seededCount = 1234;
+        const int patchedCount = 4242;
+
+        string tempDir = NewTempDir("killscreenpos-meaning");
+        string input = Path.Combine(tempDir, "input.bes");
+        string output = Path.Combine(tempDir, "output.bes");
+
+        try
+        {
+            byte[] buf = File.ReadAllBytes(GoldSavePath);
+            for (int slot = 0; slot < 2; slot++)
+            {
+                BinaryPrimitives.WriteUInt32LittleEndian(
+                    buf.AsSpan(KillBase + (slot * 4), 4),
+                    PackScreenPosition(seededCount, screenPosition));
+            }
+
+            Assert.That(
+                buf[KillBase + 3],
+                Is.EqualTo((byte)0xB0),
+                "Screen position +48 must seed as the excess-128 byte 0xB0, or this test proves nothing.");
+            File.WriteAllBytes(input, buf);
+
+            var patcher = new BesFilePatcher
+            {
+                PatchNodes = false,
+                PatchLinks = false,
+                PatchGoodies = false,
+                PatchKills = true,
+                GlobalKillCount = patchedCount,
+            };
+
+            PatchResult result = patcher.PatchFile(input, output);
+            Assert.That(result.Success, Is.True, result.Message);
+
+            byte[] after = File.ReadAllBytes(output);
+            SaveAnalysis analysis = BesFilePatcher.AnalyzeSave(output);
+            Assert.That(analysis.IsValid, Is.True, analysis.ErrorMessage);
+
+            Assert.Multiple(() =>
+            {
+                for (int slot = 0; slot < 2; slot++)
+                {
+                    uint raw = ReadUInt32(after, KillBase + (slot * 4));
+                    Assert.That(
+                        UnpackScreenPosition(raw),
+                        Is.EqualTo(screenPosition),
+                        $"Patching the kill count moved the screen position stored in kill slot {slot}.");
+                    Assert.That(
+                        raw & 0x00FFFFFFu,
+                        Is.EqualTo((uint)patchedCount),
+                        $"Kill slot {slot} did not take the patched count.");
+                    Assert.That(
+                        analysis.KillScreenPositionBytes[slot],
+                        Is.EqualTo((byte)0xB0),
+                        $"The analyzer should surface the stored screen-position byte for kill slot {slot}.");
+                    Assert.That(analysis.KillCounts[slot], Is.EqualTo(patchedCount));
+                }
+            });
+        }
+        finally
+        {
+            if (Directory.Exists(tempDir))
+                Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    [Test]
+    public void CompareFiles_ScreenPositionByteDifference_IsNotReportedAsAKillCountChange()
+    {
+        Assert.That(File.Exists(GoldSavePath), Is.True, $"Missing baseline save: {GoldSavePath}");
+
+        string tempDir = NewTempDir("screenpos-diff");
+        string left = Path.Combine(tempDir, "left.bes");
+        string right = Path.Combine(tempDir, "right.bes");
+
+        try
+        {
+            byte[] buf = File.ReadAllBytes(GoldSavePath);
+            for (int slot = 0; slot < 2; slot++)
+            {
+                BinaryPrimitives.WriteUInt32LittleEndian(
+                    buf.AsSpan(KillBase + (slot * 4), 4),
+                    PackScreenPosition(1234, 0));
+            }
+            File.WriteAllBytes(left, buf);
+
+            // The only difference between the two files is where the player put the HUD: same
+            // counts, screen position moved from 0 to +48 in both packed slots.
+            for (int slot = 0; slot < 2; slot++)
+            {
+                BinaryPrimitives.WriteUInt32LittleEndian(
+                    buf.AsSpan(KillBase + (slot * 4), 4),
+                    PackScreenPosition(1234, 48));
+            }
+            File.WriteAllBytes(right, buf);
+
+            BesFilePatcher.CompareResult diff = BesFilePatcher.CompareFiles(left, right);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(diff.DifferingBytes, Is.EqualTo(2), "Only the two packed top bytes should differ.");
+                Assert.That(
+                    diff.RegionCounts.ContainsKey("Kills"),
+                    Is.False,
+                    "A moved HUD screen position must not be reported as a kill-count difference.");
+                Assert.That(diff.RegionCounts["ScreenPos"], Is.EqualTo(2));
+            });
         }
         finally
         {

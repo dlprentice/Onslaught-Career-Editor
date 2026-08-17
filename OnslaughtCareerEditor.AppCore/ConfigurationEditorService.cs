@@ -438,7 +438,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             byte[] buf = File.ReadAllBytes(path);
             Dictionary<int, (uint Slot0Device, uint Slot0Key, uint Slot1Device, uint Slot1Key)> bindings = new();
-            const int optionsStart = 0x24BE;
+            const int optionsStart = BesFilePatcher.CAREER_BLOCK_END;
             const int entrySize = 0x20;
             for (int i = 0; i < analysis.OptionsEntryCount; i++)
             {

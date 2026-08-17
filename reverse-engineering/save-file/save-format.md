@@ -1,7 +1,7 @@
 # BES save file format
 
 Status: supported retail/Steam specimen contract
-Last updated: 2026-07-16
+Last updated: 2026-08-17
 
 Supported career saves are exactly 10,004 bytes (`0x2714`) and begin with the
 16-bit version word `0x4BD1`. `CCareer__Load` and `CCareer__Save` copy a fixed
@@ -26,7 +26,7 @@ retail executable and observed retail files own the on-disk contract.
 | `0x0006` | 6,400 | `CCareerNode[100]` | scoped node edits only |
 | `0x1906` | 1,600 | `CCareerNodeLink[200]` | scoped link edits only |
 | `0x1F46` | 1,200 | `CGoodie[300]` | indices 0–232 displayable; 233–299 preserve-only |
-| `0x23F6` | 20 | five packed kill counters | edit lower 24 bits; preserve every top byte |
+| `0x23F6` | 20 | five packed kill counters; rows 0–1 carry a screen-position byte on top | edit lower 24 bits; preserve every top byte |
 | `0x240A` | 128 | `mSlots[32]` | scoped bit edits only |
 | `0x248A` | 4 | `mCareerInProgress` | preserve unless explicitly edited |
 | `0x248E` | 4 | sound volume float | preserve on career edits |
@@ -82,9 +82,33 @@ unchanged.
 ## Kill counters and slots
 
 The five kill counters start at true-view offset `0x23F6`. Their lower 24 bits
-hold the count; the top byte carries confirmed metadata for the first two rows
-and is conservatively preserved for all five. The historical `0x23A4` location
-is inside the Goodie array and must never be used for kill edits.
+hold the count — `CCareer::GetNumKilled` masks with `and eax, 0xFFFFFF` at
+`0x0041C16B` — and the top byte of the **first two** rows is a front-end
+**screen-position** offset in excess-128, not opaque metadata:
+
+- Unpack: `0x004218F0` (row 0) and `0x00421900` (row 1), both
+  `shr eax, 0x18` then `sub eax, 0x80`, so the stored byte `0x80` is screen
+  position `0`.
+- Pack: `0x00421910` (row 0) and `0x00421940` (row 1), which write
+  `((value - 0x80) << 24)` over a preserved `word & 0xFFFFFF`.
+- Owner: `CFEPScreenPos` (type descriptor `0x00629DB0`, complete object locator
+  `0x00613D10`, vtable `0x005DB858`). Its page reads both rows into one two-int
+  structure at `0x0051F470` and writes them back at `0x0051F490`; the adjusters
+  at `0x0051FA20`-`0x0051FAE7` are asymmetric — word 0 steps `±4` clamped to
+  `[-0x3F, +0x40]`, word 1 steps `±1` clamped to `[-0x32, +0x40]`.
+- `CCareer::Load` gates both at `0x0042126A`-`0x00421280`: outside `±0x40` the
+  offset becomes **0**, not the nearest limit, and both rows are repacked
+  unconditionally.
+
+Rows 2–4 have no accessor and no known consumer; their top byte is carried
+unread and preserved. Because `CCareer::UpdateThingsKilled` stores an unmasked
+32-bit sum (`0x0041C1A9`), a count that carries out of bit 23 adds one to the
+packed byte and shifts the screen position — shipped behaviour, correctable
+from the game's own options page. All addresses are the pristine
+`74154bfa…` image, file offset = VA - 0x400000.
+
+The historical `0x23A4` location is inside the Goodie array and must never be
+used for kill edits.
 
 The slot bitset begins at `0x240A`. Retail logic addresses
 `mSlots[slot >> 5]` with bit `slot & 31`; observed game logic uses slot IDs

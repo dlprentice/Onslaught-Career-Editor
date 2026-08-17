@@ -581,6 +581,9 @@
                                                         SmallChange="25"
                                                         SpinButtonPlacementMode="Inline"
                                                         ValueChanged="EditorGlobalKillNumberBox_ValueChanged" />
+                                    <TextBlock Text="16,777,215 is the real top of this counter, so it stays available. Worth knowing before you use it: with a value at or near the maximum, one more kill in game rolls the count over, so the count shown in game wraps to a low number, and for Aircraft and Vehicles the HUD screen position also moves by one step. That is how the original game behaves, and the game's own options page moves the screen position back."
+                                               Style="{StaticResource SectionBodyTextStyle}"
+                                               TextWrapping="WrapWholeWords" />
                                     <TextBlock x:Name="EditorKillBaselineSummaryTextBlock"
                                                Style="{StaticResource SectionBodyTextStyle}"
                                                TextWrapping="WrapWholeWords" />
@@ -780,6 +783,9 @@
                                                    FontWeight="SemiBold" />
                                         <TextBlock Text="These overrides stay inline with the rest of the save-editing flow so category counts read as a separate section instead of a hidden follow-up."
                                                    Style="{StaticResource SectionBodyTextStyle}" />
+                                        <TextBlock Text="Each override accepts up to 16,777,215, which is the real top of the counter. Worth knowing before you use it: with a value at or near the maximum, one more kill in game rolls that count over, so the count shown in game wraps to a low number. Aircraft and Vehicles keep the HUD screen position in the same four bytes as their count, so those two also move the HUD by one step. That is how the original game behaves, and the game's own options page moves the screen position back."
+                                                   Style="{StaticResource SectionBodyTextStyle}"
+                                                   TextWrapping="WrapWholeWords" />
                                         <ItemsControl x:Name="EditorCategoryKillsListView"
                                                       AutomationProperties.AutomationId="EditorCategoryKillsListView">
                                             <ItemsControl.ItemTemplate>

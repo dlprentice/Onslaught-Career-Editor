@@ -147,7 +147,7 @@ public readonly struct RetailGrade
 /// <item><c>+0x0000</c> <c>mPendingExtraGoodies</c> — the one dword <c>lea eax, [eax + ecx + 4]</c> leaves in front of <c>mNode</c>, and the only data member <c>Career.h</c> declares before <c>protected:</c>.</item>
 /// <item><c>+0x0004</c> <c>mNode</c> — <c>0x00420B00</c>, and the absolute <c>0x00660624</c> the world scan in <c>GRADE</c> starts from (<c>0x0041C3BE</c>).</item>
 /// <item><c>+0x1904</c> <c>mNodeLink</c> — the displacement at <c>0x0041BC8A</c>. <c>0x1904 - 4 = 0x1900 = 100 * 64</c>, i.e. <c>MAX_NODES</c> nodes of <c>sizeof(CCareerNode)</c>, and the stride is the <c>shl eax, 6</c> above.</item>
-/// <item><c>+0x1F44</c> <c>mGoodies</c> — the absolute <c>0x00661F44</c> at <c>0x0041B6BA</c>. <c>0x1F44 - 0x1904 = 0x640 = 200 * 8</c>, i.e. <c>MAX_LINKS</c> links of eight bytes.</item>
+/// <item><c>+0x1F44</c> <c>mGoodies</c> — the absolute <c>0x00662564</c> the constructor's 300-dword <c>rep stosd</c> starts from (<c>mov edi, 0x662564</c> at <c>0x0041B6DC</c>). <c>0x1F44 - 0x1904 = 0x640 = 200 * 8</c>, i.e. <c>MAX_LINKS</c> links of eight bytes, and the 200-iteration eight-byte init loop at <c>0x0041B6C6</c> over <c>0x00661F24</c> confirms both the count and the stride.</item>
 /// <item><c>+0x23F4</c> <c>mKilledThings</c> — <c>0x0041C167</c>. <c>0x23F4 - 0x1F44 = 0x4B0 = 300 * 4</c>, i.e. <c>MAX_NUM_GOODIES</c> goodies of one dword.</item>
 /// <item><c>+0x2408</c> <c>mSlots</c> — the displacement <see cref="RetailCareerSlots"/> measures three ways. <c>0x2408 - 0x23F4 = 0x14 = 5 * 4</c>, i.e. <c>TK_TOTAL</c> counters.</item>
 /// </list>
@@ -158,16 +158,44 @@ public readonly struct RetailGrade
 /// </para>
 /// <para>
 /// <b>The shipped record is eight bytes larger than the header describes, and
-/// retail wins.</b> <c>CCareer::Load</c> copies
-/// <c>rep movsd</c> with <c>ecx = 0x92F</c> (<c>0x00421236</c>) and advances its
-/// cursor by <c>0x24BC</c> (<c>0x00421253</c>); <c>0x92F * 4 = 0x24BC</c>, so
-/// <see cref="RecordSize"/> is measured twice and agrees with itself. Adding up
-/// every member <c>Career.h</c> declares gives <c>0x24B4</c>. Eight bytes the
-/// pinned header does not declare are therefore present at or after
-/// <c>mSlots</c>; where exactly is <b>not</b> established here, and any save
-/// tooling that lays the tail out from the header alone will be wrong by two
-/// dwords. The cheapest falsifier is the first byte-level diff of two real
-/// <c>.bes</c> careers that differ only in a tail setting.
+/// retail wins.</b> <c>CCareer::Load</c> copies <c>rep movsd</c> with
+/// <c>ecx = 0x92F</c> — <c>0x00421236</c>, and the same <c>mov ecx, 0x92F</c>
+/// again at <c>0x0042136C</c> and <c>0x004213EB</c> — and advances its cursor by
+/// <c>0x24BC</c> (<c>0x00421253</c>); <c>0x92F * 4 = 0x24BC</c>, so
+/// <see cref="RecordSize"/> is measured five times and agrees with itself.
+/// Adding up every member <c>Career.h</c> declares gives <c>0x24B4</c>.
+/// </para>
+/// <para>
+/// <b>The eight extra bytes are a second invert-Y pair at <c>+0x24A4</c>, and
+/// the constructor places them.</b> <c>CCareer::CCareer</c> at
+/// <c>0x0041B6A0</c> initialises <b>four</b> two-dword pairs behind the two
+/// volume floats, where <c>Career.h</c> declares only three past
+/// <c>mIsGod</c>: <c>+0x249C</c>/<c>+0x24A0</c> and <c>+0x24A4</c>/<c>+0x24A8</c>
+/// to <b>zero</b> (<c>0x0041B701</c>, <c>0x0041B727</c>, <c>0x0041B6FB</c>,
+/// <c>0x0041B721</c>), then <c>+0x24AC</c>/<c>+0x24B0</c> and
+/// <c>+0x24B4</c>/<c>+0x24B8</c> to <b>one</b> (<c>0x0041B707</c>,
+/// <c>0x0041B72D</c>, <c>0x0041B6EF</c>, <c>0x0041B6F6</c>). Every store is an
+/// absolute over the <c>CAREER</c> singleton, so each offset is
+/// <c>address - 0x00660620</c>. The <c>1</c> defaults pin <c>mVibration</c> and
+/// <c>mControllerConfigurationNum</c> to the last two pairs — which is also what
+/// ends the record at <c>+0x24BC</c>, exactly <see cref="RecordSize"/> — leaving
+/// <b>two</b> zeroed pairs where the header declares one <c>mInvertYAxis</c>.
+/// The undeclared pair is therefore the second invert-Y pair at
+/// <c>+0x24A4..+0x24AB</c>, and <c>mIsGod</c> keeps
+/// <c>+0x2494</c>/<c>+0x2498</c> as the one pair this constructor never writes.
+/// So the tail is now laid out rather than guessed; see the offsets below.
+/// </para>
+/// <para>
+/// <b>Which invert pair is flight and which is walker is not this
+/// constructor's evidence.</b> Both are zero-initialised, so <c>0x0041B6A0</c>
+/// cannot separate them. The flight-then-walker assignment carried by
+/// <see cref="FlightInvertYAxisArrayOffset"/> and
+/// <see cref="WalkerInvertYAxisArrayOffset"/> comes from the Controls UI reads
+/// recorded in <c>reverse-engineering/game-mechanics/god-mode.md</c>, and is the
+/// layout the shipped save tooling writes
+/// (<c>reverse-engineering/save-file/save-format.md</c>, where the file offset is
+/// the career offset plus two). Swapping those two names would still satisfy
+/// every byte measured here.
 /// </para>
 /// <para>
 /// <b>Not established here.</b> <c>CCareer::GetLink</c> (<c>Career.h:139</c>)
@@ -215,10 +243,49 @@ public static class RetailCareerRecordLayout
     /// <summary><c>mSlots</c> — the displacement <see cref="RetailCareerSlots"/> measures.</summary>
     public const int SlotArrayOffset = 0x2408;
 
+    /// <summary><c>mCareerInProgress</c> — <c>mov [0x00662AA8], 0</c> at <c>0x0041B6E5</c>.</summary>
+    public const int CareerInProgressOffset = 0x2488;
+
+    /// <summary><c>mSoundVolume</c> — the <c>0.8f</c> (<c>0x3F4CCCCD</c>) store at <c>0x0041B70D</c>.</summary>
+    public const int SoundVolumeOffset = 0x248C;
+
+    /// <summary><c>mMusicVolume</c> — the <c>0.9f</c> (<c>0x3F666666</c>) store at <c>0x0041B717</c>.</summary>
+    public const int MusicVolumeOffset = 0x2490;
+
+    /// <summary>
+    /// <c>mIsGod</c> — the one two-dword pair <c>0x0041B6A0</c> never writes, so its position
+    /// is the header's declaration order rather than a store. The Steam build repurposes
+    /// <c>+0x2494</c> as the pause-menu god-mode toggle state.
+    /// </summary>
+    public const int IsGodArrayOffset = 0x2494;
+
+    /// <summary>
+    /// The declared <c>mInvertYAxis</c> pair — zeroed at <c>0x0041B701</c> and
+    /// <c>0x0041B727</c>. Flight rather than walker per the type remarks.
+    /// </summary>
+    public const int FlightInvertYAxisArrayOffset = 0x249C;
+
+    /// <summary>
+    /// The pair <c>Career.h</c> does not declare, and the whole of the record's eight extra
+    /// bytes — zeroed at <c>0x0041B6FB</c> and <c>0x0041B721</c>.
+    /// </summary>
+    public const int WalkerInvertYAxisArrayOffset = 0x24A4;
+
+    /// <summary><c>mVibration</c> — set to <c>1</c> at <c>0x0041B707</c> and <c>0x0041B72D</c>.</summary>
+    public const int VibrationArrayOffset = 0x24AC;
+
+    /// <summary>
+    /// <c>mControllerConfigurationNum</c> — set to <c>1</c> at <c>0x0041B6EF</c> and
+    /// <c>0x0041B6F6</c>. Two dwords past this is <see cref="RecordSize"/>.
+    /// </summary>
+    public const int ControllerConfigurationArrayOffset = 0x24B4;
+
     /// <summary>
     /// <c>sizeof(CCareer)</c> as the shipped <c>Load</c> copies it —
-    /// <c>0x92F</c> dwords at <c>0x00421236</c>, <c>0x24BC</c> bytes at
-    /// <c>0x00421253</c>. Eight more than the pinned header accounts for.
+    /// <c>0x92F</c> dwords at <c>0x00421236</c>, <c>0x0042136C</c> and
+    /// <c>0x004213EB</c>, <c>0x24BC</c> bytes at <c>0x00421253</c>. Eight more
+    /// than the pinned header accounts for, and the eight are
+    /// <see cref="WalkerInvertYAxisArrayOffset"/>.
     /// </summary>
     public const int RecordSize = 0x24BC;
 

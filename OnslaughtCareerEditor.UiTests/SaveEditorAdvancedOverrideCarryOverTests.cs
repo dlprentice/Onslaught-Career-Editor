@@ -93,7 +93,13 @@ public class SaveEditorAdvancedOverrideCarryOverTests
         {
             string otherSave = Path.Combine(tempDir, "other.bes");
             byte[] buf = File.ReadAllBytes(GoldSavePath);
-            System.Buffers.Binary.BinaryPrimitives.WriteUInt32LittleEndian(buf.AsSpan(0x23F6, 4), 55u);
+
+            // 0x23F6 is kill slot 0, whose top byte is not part of the count: it is the
+            // CFEPScreenPos offset in excess-128 (pack 0x00421910, unpack 0x004218F0), so 0x80
+            // means screen position 0. Writing a bare 55 would store the byte 0x00, i.e. -128,
+            // which CCareer::Load then zeroes at 0x0042126A. Same end state today, but only by
+            // luck — bias the write so this fixture stores what the game would store.
+            System.Buffers.Binary.BinaryPrimitives.WriteUInt32LittleEndian(buf.AsSpan(0x23F6, 4), 0x80000000u | 55u);
             File.WriteAllBytes(otherSave, buf);
 
             SaveCategoryKillRow[] reloaded = SaveEditorAdvancedService.LoadCategoryKillRows(otherSave).ToArray();

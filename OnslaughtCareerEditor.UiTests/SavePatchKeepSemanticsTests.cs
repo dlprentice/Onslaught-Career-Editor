@@ -76,8 +76,9 @@ public class SavePatchKeepSemanticsTests
                 continue;
             }
 
-            // The whole dword, not just the count: the opaque metadata byte in bits 24..31 must survive
-            // too, and it does so here because an untargeted category is never written at all.
+            // The whole dword, not just the count: bits 24..31 must survive too — for categories 0 and 1
+            // that is the CFEPScreenPos screen-position offset in excess-128 (unpack 0x004218F0, pack
+            // 0x00421910) — and they do here because an untargeted category is never written at all.
             uint beforeRaw = ReadUInt32(temp.InputBytes, KillBase + (category * 4));
             uint afterRaw = ReadUInt32(after, KillBase + (category * 4));
             Assert.That(

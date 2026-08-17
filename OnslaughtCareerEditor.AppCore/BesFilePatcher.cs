@@ -120,7 +120,35 @@ namespace OnslaughtCareerEditor.AppCore
 
         // Kill counts
         public int[] KillCounts { get; set; } = new int[5];
-        public byte[] KillMeta { get; set; } = new byte[5];
+
+        /// <summary>
+        /// The stored top byte of each kill dword, exactly as it sits on disk.
+        /// </summary>
+        /// <remarks>
+        /// This is not opaque metadata. For slots 0 and 1 it is a front-end screen-position
+        /// offset in excess-128, owned by <c>CFEPScreenPos</c> (type descriptor
+        /// <c>0x00629DB0</c>): the unpackers at <c>0x004218F0</c> / <c>0x00421900</c> answer
+        /// <c>(word &gt;&gt;&gt; 24) - 0x80</c> and the packers at <c>0x00421910</c> /
+        /// <c>0x00421940</c> rewrite the byte over a preserved <c>word &amp; 0xFFFFFF</c>. Their
+        /// only callers are the options page that reads both words into one two-int structure at
+        /// <c>0x0051F470</c> and writes them back at <c>0x0051F490</c>. So <c>0x80</c> means
+        /// screen position 0. Slots 2-4 have no accessor and no known consumer; their byte is
+        /// carried unread and preserved. Measured in the pristine <c>74154bfa…</c> image, file
+        /// offset = VA - 0x400000.
+        /// </remarks>
+        public byte[] KillScreenPositionBytes { get; set; } = new byte[5];
+
+        /// <summary>
+        /// Former name for <see cref="KillScreenPositionBytes"/>, kept so existing callers keep
+        /// compiling. Same array, same bytes.
+        /// </summary>
+        [Obsolete("Renamed to KillScreenPositionBytes: the top byte of kill slots 0 and 1 is a CFEPScreenPos screen-position offset in excess-128 (unpack 0x004218F0, pack 0x00421910, page accessors 0x0051F470), not opaque metadata.")]
+        public byte[] KillMeta
+        {
+            get => KillScreenPositionBytes;
+            set => KillScreenPositionBytes = value;
+        }
+
         public int?[] NextUnlockThresholds { get; set; } = new int?[5];
 
         // Tech slots
@@ -181,6 +209,13 @@ namespace OnslaughtCareerEditor.AppCore
         private const int CCAREER_CONTROLLER_CONFIG_P1 = 0x24B4;
         private const int CCAREER_CONTROLLER_CONFIG_P2 = 0x24B8;
 
+        // sizeof(CCareer), measured five times in the pristine 74154bfa... image (file offset =
+        // VA - 0x400000): mov ecx,0x92F before rep movsd at 0x00421236, 0x0042136C and 0x004213EB,
+        // and add ebp,0x24BC at 0x00421253 (0x92F * 4 == 0x24BC). The last member the constructor
+        // at 0x0041B6A0 writes is the controller-configuration pair at +0x24B4/+0x24B8, which ends
+        // the record at +0x24BC.
+        private const int CCAREER_RECORD_SIZE = 0x24BC;
+
         private const int NODE_SIZE = 64;             // CCareerNode struct
         private const int NODE_COUNT = 100;
         private const int LINK_SIZE = 8;              // CCareerNodeLink struct
@@ -217,6 +252,14 @@ namespace OnslaughtCareerEditor.AppCore
         private const int VIBRATION_P2 = CAREER_BASE + CCAREER_VIBRATION_P2;              // Controller vibration (P2)
         private const int CONTROLLER_CONFIG_P1 = CAREER_BASE + CCAREER_CONTROLLER_CONFIG_P1;
         private const int CONTROLLER_CONFIG_P2 = CAREER_BASE + CCAREER_CONTROLLER_CONFIG_P2;
+
+        /// <summary>
+        /// First file byte past the fixed career record, which is also where the options entries
+        /// begin (0x24BE). Derived from the measured <c>sizeof(CCareer)</c> rather than restated,
+        /// so a corrected record size cannot leave the options layout behind.
+        /// </summary>
+        public const int CAREER_BLOCK_END = CAREER_BASE + CCAREER_RECORD_SIZE;
+
         private const int GOODIE_COUNT = 300;
         // Retail goodies gallery can surface slot 232 (FMV 33) in addition to 0..231.
         private const int GOODIE_DISPLAYABLE_COUNT = 233;
@@ -288,7 +331,8 @@ namespace OnslaughtCareerEditor.AppCore
 
         /// <summary>
         /// Baseline kill count written to every category. Null means "keep": categories with no entry in
-        /// <see cref="PerCategoryKills"/> are left byte-for-byte as read, metadata byte included.
+        /// <see cref="PerCategoryKills"/> are left byte-for-byte as read, packed screen-position byte
+        /// included.
         /// </summary>
         public int? GlobalKillCount { get; set; } = null;
 
@@ -742,7 +786,7 @@ namespace OnslaughtCareerEditor.AppCore
 
         private static (int EntryCount, int TailStart, int EntriesSize, int TailSize) ComputeOptionsLayout(int fileSize)
         {
-            const int optionsStart = 0x24BE;
+            const int optionsStart = CAREER_BLOCK_END;
             const int tailSize = 0x56;
             const int entrySize = 0x20;
             const int baseSize = optionsStart + tailSize; // 0x2514
@@ -782,7 +826,7 @@ namespace OnslaughtCareerEditor.AppCore
                 throw new InvalidDataException(
                     $"Options copy requires matching options layout. Source entries={nSrc}, Dest entries={nDest}.");
 
-            const int optionsStart = 0x24BE;
+            const int optionsStart = CAREER_BLOCK_END;
             if (CopyOptionsEntries)
                 Array.Copy(srcBuf, optionsStart, destBuf, optionsStart, entriesSizeDest);
             if (CopyOptionsTail)
@@ -816,7 +860,7 @@ namespace OnslaughtCareerEditor.AppCore
                 return;
 
             var (n, tailStart, _entriesSize, _tailSize) = ComputeOptionsLayout(buf.Length);
-            const int optionsStart = 0x24BE;
+            const int optionsStart = CAREER_BLOCK_END;
             const int entrySize = 0x20;
 
             // Build entry_id -> entry offset map for this file.
@@ -1198,9 +1242,10 @@ namespace OnslaughtCareerEditor.AppCore
         /// </summary>
         /// <param name="defaultKills">
         /// Baseline written to every category. Null means "keep": a category with no per-category
-        /// override is not written at all, so its 4 bytes (count and opaque metadata byte) survive
-        /// byte-for-byte. Before 2026-07-26 this parameter was a non-nullable int, and setting one
-        /// category silently rewrote the other four with the caller's default.
+        /// override is not written at all, so its 4 bytes (the 24-bit count and the packed
+        /// screen-position byte above it) survive byte-for-byte. Before 2026-07-26 this parameter
+        /// was a non-nullable int, and setting one category silently rewrote the other four with
+        /// the caller's default.
         /// </param>
         public void SetKillCounts(byte[] buf, int? defaultKills, Dictionary<int, int>? perCategoryKills)
         {
@@ -1218,18 +1263,21 @@ namespace OnslaughtCareerEditor.AppCore
                 else
                 {
                     // Keep. Do not read-modify-write: leaving the dword untouched preserves the
-                    // metadata byte and the count without depending on the encoding being right.
+                    // screen-position byte and the count without depending on the encoding being
+                    // right.
                     continue;
                 }
 
-                // True view encoding: stored_value = (meta << 24) | (kills & 0x00FFFFFF)
+                // True view encoding: stored_value = (screen_position_byte << 24) | (kills & 0x00FFFFFF).
+                // For slots 0 and 1 that top byte is the CFEPScreenPos offset in excess-128
+                // (unpack 0x004218F0, pack 0x00421910); it is preserved here, never authored.
                 if (kills < 0) kills = 0;
                 if (kills > 0x00FFFFFF) kills = 0x00FFFFFF;
 
                 int offset = KILLS_BASE + k * 4;
                 uint cur = ReadUInt32(buf, offset);
-                uint meta = cur & 0xFF000000;
-                uint encoded = meta | ((uint)kills & 0x00FFFFFF);
+                uint screenPositionByte = cur & 0xFF000000;
+                uint encoded = screenPositionByte | ((uint)kills & 0x00FFFFFF);
                 WriteUInt32(buf, offset, encoded);
             }
         }
@@ -1485,7 +1533,7 @@ namespace OnslaughtCareerEditor.AppCore
 
                 // Options entries + tail snapshot (dynamic count; tail size fixed at 0x56).
                 // Total size formula from BEA.exe: 0x2514 + 0x20*N.
-                const int optionsStart = 0x24BE;
+                const int optionsStart = CAREER_BLOCK_END;
                 const int baseSize = 0x2514;
                 const int entrySize = 0x20;
                 const int tailSize = 0x56;
@@ -1615,7 +1663,7 @@ namespace OnslaughtCareerEditor.AppCore
                     int off = KILLS_BASE + k * 4;
                     uint raw = ReadUInt32(buf, off);
                     int kills = (int)(raw & 0x00FFFFFF);
-                    analysis.KillMeta[k] = (byte)(raw >> 24);
+                    analysis.KillScreenPositionBytes[k] = (byte)(raw >> 24);
                     analysis.KillCounts[k] = kills;
                     analysis.NextUnlockThresholds[k] = GetNextUnlockThreshold(k, kills);
                 }
@@ -1694,7 +1742,19 @@ namespace OnslaughtCareerEditor.AppCore
             if (offset < TECH_SLOTS_BASE)
             {
                 int kill = (offset - KILLS_BASE) / 4;
+                int byteInWord = (offset - KILLS_BASE) % 4;
                 string[] cats = { "Aircraft", "Vehicles", "Emplacements", "Infantry", "Mechs" };
+
+                // The top byte of kill slots 0 and 1 is not part of the count. It is the
+                // front-end screen-position offset in excess-128 that CFEPScreenPos owns
+                // (unpack 0x004218F0 / 0x00421900, pack 0x00421910 / 0x00421940, page accessors
+                // 0x0051F470 / 0x0051F490). Little-endian, so it is byte 3 of the dword. Labelling
+                // it Kills[...] made two saves that differ only in HUD screen position read as a
+                // kill-count difference. Slots 2-4 have no accessor and no known packed field, so
+                // only 0 and 1 split out.
+                if (byteInWord == 3 && kill < 2)
+                    return $"ScreenPos[{kill}]";
+
                 return $"Kills[{(kill < 5 ? cats[kill] : kill.ToString())}]";
             }
             if (offset < CAREER_BASE + 0x2488) // Tech slots: CCareer 0x2408..0x2487
@@ -1704,7 +1764,7 @@ namespace OnslaughtCareerEditor.AppCore
             }
             if (offset < CAREER_BASE + 0x2498) // CCareer 0x2488..0x2497 (career in progress + audio + god mode enabled)
                 return "ProgressSettings";
-            if (offset < CAREER_BASE + 0x24BC) // CCareer 0x2498..0x24BB (control flags/config/pending goodies)
+            if (offset < CAREER_BLOCK_END) // CCareer 0x2498..0x24BB (control flags/config/pending goodies)
                 return "CareerSettings2";
 
             // Options entries + tail snapshot (dynamic count; tail size fixed at 0x56)
@@ -1723,6 +1783,7 @@ namespace OnslaughtCareerEditor.AppCore
             if (region.StartsWith("Link[")) return "Links";
             if (region.StartsWith("Goodie[")) return "Goodies";
             if (region.StartsWith("Kills[")) return "Kills";
+            if (region.StartsWith("ScreenPos[")) return "ScreenPos";
             if (region.StartsWith("TechSlot[")) return "TechSlots";
             if (region.StartsWith("GodMode")) return "GodMode";
             return region;
@@ -2005,7 +2066,7 @@ namespace OnslaughtCareerEditor.AppCore
                     try
                     {
                         byte[] buf = File.ReadAllBytes(analysis.FilePath);
-                        const int optionsStart = 0x24BE;
+                        const int optionsStart = CAREER_BLOCK_END;
                         const int entrySize = 0x20;
                         int n = analysis.OptionsEntryCount;
 
@@ -2169,8 +2230,14 @@ namespace OnslaughtCareerEditor.AppCore
                     ? $" (next unlock at {analysis.NextUnlockThresholds[k]})"
                     : " (all unlocked)";
 
-                string metaStr = analysis.KillMeta[k] != 0 ? $" meta=0x{analysis.KillMeta[k]:X2}" : "";
-                sb.AppendLine($"  {categories[k],-13}: {analysis.KillCounts[k],6}{metaStr}{progress}");
+                // Slots 0 and 1 carry the CFEPScreenPos offset in their top byte (unpack
+                // 0x004218F0 / 0x00421900: (byte - 0x80)); slots 2-4 have no accessor, so their
+                // byte is reported raw.
+                byte storedByte = analysis.KillScreenPositionBytes[k];
+                string screenPosStr = k < 2
+                    ? $" screen pos={storedByte - 0x80:+0;-0;0} (byte 0x{storedByte:X2})"
+                    : storedByte != 0 ? $" top byte=0x{storedByte:X2}" : "";
+                sb.AppendLine($"  {categories[k],-13}: {analysis.KillCounts[k],6}{screenPosStr}{progress}");
             }
             sb.AppendLine();
 

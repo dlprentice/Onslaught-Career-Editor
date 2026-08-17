@@ -128,22 +128,22 @@ if ((iVar5 < -0x40) || (0x40 < iVar5)) {
 
 ---
 
-## The "Top Byte" Is Persisted Metadata (Unknown UI Meaning)
+## The "Top Byte" Is a Persisted Screen-Position Offset
 
-The *top byte* of the first two kill counters (CCareer offsets `0x23F4` and `0x23F8`) is treated by the retail binary as **persistent options/metadata**, not as part of the kill count:
+The *top byte* of the first two kill counters (CCareer offsets `0x23F4` and `0x23F8`) is not part of the kill count. It is a front-end **screen-position** offset stored in excess-128 — the stored byte `0x80` is position `0` — and its owner is `CFEPScreenPos`: RTTI type descriptor `0x00629DB0` (`.?AVCFEPScreenPos@@`), complete object locator `0x00613D10`, vtable `0x005DB858`. The four accessors and the pair readers/writers below are its only users anywhere in the image:
 
 - `CCareer__GetKillCounterTopByte_23F4` (`0x004218f0`) / `CCareer__SetKillCounterTopByte_23F4` (`0x00421910`)
 - `CCareer__GetKillCounterTopByte_23F8` (`0x00421900`) / `CCareer__SetKillCounterTopByte_23F8` (`0x00421940`)
 - `CFEPOptions__GetKillCounterTopBytes_23F4_23F8` (`0x0051f470`) reads both values
 - `CFEPOptions__SetKillCounterTopBytes_23F4_23F8` (`0x0051f490`) writes both values
 
-**Practical consequence for patchers:** when writing kill counts (true view at `0x23F6..0x2409`), preserve the existing `meta` byte: `new = (old & 0xFF000000) | (kills & 0x00FFFFFF)`.
+**Practical consequence for patchers:** when writing kill counts (true view at `0x23F6..0x2409`), preserve the existing top byte: `new = (old & 0xFF000000) | (kills & 0x00FFFFFF)`. A byte-level diff of two saves must also report that byte as a screen-position difference rather than a kill-count difference; `BesFilePatcher.GetRegionName` labels it `ScreenPos[0]`/`ScreenPos[1]`.
 
 **Important:** This is *not* the Sound/Music volume system. The real audio volumes are IEEE-754 floats in CCareer at:
 - `mSoundVolume` (true view `0x248E`)
 - `mMusicVolume` (true view `0x2492`)
 
-We have not yet confirmed what user-facing setting (if any) these kill-counter meta bytes correspond to in the options UI.
+**Settled (Aug 2026):** the user-facing setting is the front end's own screen-position adjustment. The only callers of the four accessors sit in one contiguous block, `0x0051F470`-`0x0051FD6C`, reached through the `CFEPScreenPos` vtable at `0x005DB858`; the adjusters at `0x0051FA20`-`0x0051FAE7` are asymmetric — the `0x23F4` word steps `±4` clamped to `[-0x3F, +0x40]`, the `0x23F8` word steps `±1` clamped to `[-0x32, +0x40]` — and each one repacks through the setter and plays a UI sample. Which of the two is horizontal is still not established. Because `CCareer::UpdateThingsKilled` stores an unmasked 32-bit sum (`0x0041C1A9`), a count carrying out of bit 23 adds one to the stored byte and shifts the player's screen by one unit; that is shipped behaviour and is correctable from the game's own options page.
 
 ---
 
