@@ -294,17 +294,43 @@ maintainer returned 2026-08-17 (~13:05 EDT) and directed: target the complete,
 proof-gated reverse engineering of the retail binary so a proper rebuild can
 proceed; relocate the DeepSeek corpus off F:; and work autonomously through a
 ~5-hour window with delegated decisions. The harness goal was set to this
-directive. The corpus relocation is verified: `local-lab\ds-deep-review\`
+directive. The corpus relocation is COMPLETE and verified: `local-lab\ds-deep-review\`
 (frozen drop; 155,622 files, 532,623,995 bytes) is byte-exact against F: by
-equal tree SHA-256 `9291c7ee…dfbf`, `local-lab\ds-deep-review-extended\` is
-per-file byte-exact (95/95), and `rows.tsv` is byte-exact; the H: twin pair is
-the last verification, and the F: copies and H: twin are removed only after it
-passes, leaving `F:\GhidraBackups` as the only retained F: content. Priority
-order is the carry bridge → Generation 31 on db.18624 (the 16 mutation-killed
-contracts become the first REBUILD_READY rows) → slot-instrument reproducibility
-→ arity-36 promotion → pointer/vftable cohort → runtime-witnessed name
-corrections → Level100 crash characterisation → falsifier close-out. Full-RE
-completion remains the standing mandate; this list is its current frontier.
+equal tree SHA-256 `9291c7ee…dfbf`; `local-lab\ds-deep-review-extended\` is
+per-file byte-exact (95/95); `rows.tsv` is byte-exact; and the H: twin matched
+the verified C: copy by equal tree SHA before removal. The F: and H: copies
+were removed via `tools\lab_quarantine.py` staging into `D:\lab-quarantine\20260817`
+(recoverable; manifest sha256s equal the verified copies), leaving
+`F:\GhidraBackups` as the only retained F: content. Priority order is the carry
+bridge → Generation 31 on db.18624 (the 16 mutation-killed contracts become the
+first REBUILD_READY rows) → slot-instrument reproducibility → arity-36 promotion
+→ pointer/vftable cohort → runtime-witnessed name corrections → Level100 crash
+characterisation → falsifier close-out. Full-RE completion remains the standing
+mandate; this list is its current frontier.
+
+**2026-08-17 (autonomous shift) — bridge landed, corpus relocated, Gen 31 in
+cut.** The Generation 30 literal-pin carry bridge is committed (`a0a3987b`;
+`_verify_generation30_campaign_carry`, four mirror tests, frozen Gen-30 replay
+`CAMPAIGN_VERIFIED`). The slot-instrument visit-order question is settled with
+no flip: `0x00563d97` is DETERMINATE / LOWER_BOUND / 28 unresolved accesses /
+412 blocks; the arity-36 cohort still needs its spec re-derived on the current
+instrument before any ceremony. The DeepSeek corpus relocation is byte-verified:
+`local-lab\ds-deep-review\` (155,622 files, 532,623,995 bytes; tree SHA-256
+`9291c7ee…dfbf`), `local-lab\ds-deep-review-extended\` (95/95), and
+`local-lab\ds-deep-review-extended\rows.tsv` (SHA-256 `7530c0e5…d1b47`); the
+H: twin matches the same tree SHA, and the F:/H: sources are being staged
+recoverably into `D:\lab-quarantine\20260817\` before removal, leaving
+`F:\GhidraBackups` as the only retained F: content. Generation 31 inputs are
+staged and verified (16 gate result JSONs and 16 SURVIVED probe-refuter
+findings), and the bespoke `tools\build_generation31_authority.py` is cutting
+all 16 rows onto the db.18624 seed in one generation: 15 rows raise
+C0_OPAQUE → C1_CANDIDATE_PARTIAL, row 13 carries its grade unchanged, and
+REBUILD_READY moves 0 → 16 with no other grade movement. The campaign model
+now admits the one measured two-owner contract pair (both GetFriction rows,
+distinct owners, terminal) behind `_validate_contract_owner_rows`. The
+remaining priority order is the Gen 31 authority ceremony → arity-36
+re-derivation/promotion → pointer/vftable cohort → runtime-witnessed name
+corrections → Level100 crash characterisation → falsifier close-out.
 
 **Closed this session — do not re-derive:**
 
