@@ -51,6 +51,8 @@ listener symmetrically. The global instance is `0x0089c590`.
 | `PostEvent` | `0x0046fedb` | `CGame__StartPlayingState` — posts `"game playing"` |
 | `PostEvent` | `0x0046ff99` | `CGame__HandleEvent` — posts `"game playing"` |
 | `PostEvent` | `0x00470041` | `CGame__HandleEvent` — posts `"game playing"` |
+| `CreateListenerSet` | `0x0046c5cb` | `CGame__InitRestartLoop` — builds the singleton's `[this+8]` listener container on restart |
+| `DestroyAllEvents` | `0x0046ccf2` | `CGame__ShutdownRestartLoop` — clears it on shutdown |
 
 `HandleEventMessage` has no direct caller: its address is stored at `.rdata`
 `0x005e4f44`, the first slot of the vtable `Init` installs.
@@ -76,6 +78,9 @@ adjacent singleton `0x0089c5e0` — no listener-set walk — so the
 - The `[this+8]` 0x42-byte container: `+0`/`+8`/`+0xc` are measured as
   head-ish/cursor/count; the exact head-vs-tail node identities.
 - Who invokes `CScriptEventNB::HandleEventMessage` (vtable slot 0) with
-  message `0x7d0` and a name object at `[msg+0xc]` — scan for code loading
-  `0x0089c590` and calling `[eax]`.
+  message `0x7d0` and a name object at `[msg+0xc]` — the immediate-`ecx`
+  census of `0x0089c590` finds only register/post and the two restart-loop
+  lifecycle sites, so the sender loads the singleton through a memory operand
+  or a derived pointer; scan for memory-operand reads of `0x0089c590` followed
+  by a `call [reg]`.
 - The doubled `CSPtrSet__Clear` at the tail of `ClearListenerEntry`.
