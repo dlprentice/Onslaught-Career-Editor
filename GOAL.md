@@ -528,6 +528,28 @@ the 6,094 `SUPPORTED_BY_PE_STATIC_SPINE` rows, and route the 1,042
 `SOURCE_CORRELATED_STATIC` rows into rebuild parity, where a focused test is
 the cheapest falsifier available.
 
+**Tranche 1 closed 2026-08-16.** A capstone-based verifier extracted 4,434
+machine-checkable assertions from the 966 `STATIC_FORMAL_PROOF` rows and
+checked each against the specimen: **948 CONFIRMED, 1 with warnings, 3 REFUTED,
+14 uncheckable.** All three refutations are address-citation defects rather
+than semantic ones — `0x004011b0` cites the `JS` one byte early, `0x00569c60`
+cites the `JZ` two bytes early, and `0x00439af0` is systematically `-0x20`,
+with one cited VA falling inside another instruction. The described behavior is
+correct in each; only the addresses are wrong, which is still the class of
+error that corrupts a comment or label pass. The verifier fails when it should:
+five named corruptions all flipped to REFUTED, and a bulk sweep detects 100% of
+RET-immediate and returned-constant mutations, 98% of mnemonics, and 86% of
+global-store targets.
+
+Carry its caveat rather than rounding it away. Its own tuning loop found 27 of
+30 first-pass failures were verifier bugs, which biases toward CONFIRMED, and
+~4.6 assertions per row cannot cover seven prose fields; frame-relative
+displacement checks are WARN-only by design because prologue pushes shift ESP.
+**"No machine-checkable contradiction" is a weaker statement than "tier-1
+byte-provable," and this tranche closes only the former.** Semantic claims —
+role names, "computes the adjugate", "lazy-inits the deletion set" — remain
+unchecked and still need a falsifier each.
+
 ### Directive revisions
 
 - **2026-08-12 — directive established.** The prior longform goal was cleared by
