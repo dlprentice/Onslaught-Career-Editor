@@ -226,6 +226,7 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
     static final String[] LIVE_AUTHORIZED_COHORTS = {
         "boundary-cohort41", "name-cohort160", "abi-cohort294",
         "tentacle-chain-a", "tentacle-chain-b",
+        "abi-two-witness-arity36",
     };
 
     // Reversibility strings.  These are the ONLY reversibility claims any
