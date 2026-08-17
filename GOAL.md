@@ -664,6 +664,48 @@ ABI contradictions and 13 address citations, and sweep the corpus for
 `retn <param-bytes>` written on cdecl functions, since that house notation habit
 was only caught where the extractor happened to see it.
 
+**BOUNDARY scratch rehearsal 2026-08-16 — technical PASS, procedural NO-GO.**
+Identity was verified from inside the database, not from a filename: specimen
+`74154bfa…7750`, 8,329 internal plus 224 external functions, 551,143
+instructions, 234,478 references. Dry run 41/41 with zero gate failures; apply
+then **separate-process** readback 41/41, confirmed again by a second tool
+recomputing body digests independently. Collateral proof: 0 functions created,
+0 destroyed, **8,288 non-target rows compared and 0 changed**, non-target
+raw-text digest identical PRE and POST, and every program-scope metric
+unchanged including `memorySha256`, `referencesSha256`, and `commentsSha256`.
+The project's own `ghidra_inventory_diff.py` independently reports
+`created=0 destroyed=0 boundsChanged=41 namesChanged=0`.
+
+*Seven adverse probes, seven refused* — overlap with a neighbour, end
+mid-instruction, missing entry, current-state drift, dropping owned bytes, a
+tampered manifest, and a live-looking project path. All were run **writable**,
+so a broken gate could have persisted damage; afterwards the probe replica was
+byte-identical to its baseline. The live project was hashed before and after
+and is unchanged in sha256, size, and mtime.
+
+*Why NO-GO, and none of it is a defect in the cohort.* No off-volume PRE
+backup, restore probe, or read-only reopen has been done — a hard gate. No
+existing applier could take this cohort, since each hard-pins `TARGET_COUNT`,
+manifest sha, and PRE/POST counts from its own completed ceremony and the
+README forbids repinning a one-shot owner; the necessary new applier therefore
+has no mutator tests and no independent refutation, which `AGENTS.md` forbids
+promoting. Only one replica was used where the precedent lane used two plus
+staged mid-apply probes. Refused probes still printed `Save succeeded` and
+rolled the checkpoint db, so a live run must do its gate pass `-readOnly` and
+open writable only after the cohort reports OK.
+
+*Two substantive items to adjudicate first.* **19 of 41 targets add 233 bytes
+containing no defined instructions** — all five RET_IMM_SPLIT rows, all three
+jump/SEH-table rows, `entry`, `__amsg_exit`, and nine fills. Earlier CRT-P0,
+JPEG, and external-table lanes authorized bounded in-body disassembly, so if
+the live promotion should disassemble those bytes it is a different mutation
+shape needing its own rehearsal, and if not, the POST state must not be read as
+complete. Separately the manifest's `endValidation` is False for `0x00472d50`,
+`0x0047d750`, `0x0048a570`, and `0x00560181` while Ghidra's own
+ends-mid-instruction gate passes all four: the linear sweep and Ghidra's
+code-unit view disagree on those tails, which is expected for jump-table tails
+but must be adjudicated rather than left as two answers.
+
 **Campaign-layer corrections.** Discard the single `CONTRACT_REFUTED` row. It
 claims `0x005d85d8` sits in bss with no file bytes, but that VA maps to file
 offset `0x1D85D8`, which holds `00 00 a0 40` — exactly the 5.0f the Gen-29
