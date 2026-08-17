@@ -1,0 +1,124 @@
+# Cohort spec: the 36-row TWO-WITNESS stack-argument ARITY cohort.
+# REHEARSED 2026-08-17, NOT PROMOTED.  Another lane held live for the CTentacle
+# rename chain while this was authored, so nothing here is a live authorization.
+#
+# WHAT THE SECOND WITNESS IS.  Every ABI row in the campaign's 1,001-row
+# FLAGGED(ABI) set rested on ONE witness: the RET immediate.  The stack-argument
+# slot instrument that landed at 797dcf60 (tools/re_stack_arg_slot_measure.py)
+# adds a second, body-derived one: per-basic-block symbolic ESP/EBP tracking that
+# resolves every stack memory operand to an incoming argument slot index, so
+# `arg_bytes_min` is an exhaustive enumeration of the argument extent the body
+# actually touches and never mentions the terminator.  Its independence is
+# PROVEN BY CONTROL, not asserted: corrupting the RET immediate does not move the
+# measure, and corrupting the frame does.
+#
+# MEASURED HERE, twice.  This lane re-derived BOTH witnesses from the pristine
+# specimen with a freshly written PE parser, recursive-descent decoder and ESP
+# tracker that shares no code with that instrument
+# (scratchpad/abi90/verify_bytes.py).  For all 36 rows the independent pass
+# reproduces the RET immediate exactly, reproduces `arg_bytes_min` exactly,
+# resolves every stack access at an exact delta (zero unresolved, zero indexed,
+# zero escaping `lea`), resolves every callee purge, and finds the ESP delta
+# exactly 0 at every `ret` - the instrument's own free internal-validity oracle,
+# which never mentions the RET immediate.  The section table was parsed rather
+# than trusted: .text/.rdata/.data are flat (file offset == VA - 0x400000) and
+# .rsrc is NOT, and .data raw ends at VA 0x00661000.
+#
+# WHAT THIS COHORT CHANGES, AND WHAT IT REFUSES TO.  Stack ARITY only.  NO
+# CALLING CONVENTION IS EVER RELABELLED: `callingConvention` carries the value
+# the database already holds, is gated as CURRENT and re-gated as POST, and stays
+# a FROZEN collateral column.  35 of the 36 rows are `unknown`, and they stay
+# `unknown`: an arity correction is not licence to resolve a convention the bytes
+# cannot settle.  No row proposes a register argument, a
+# `__return_storage_ptr__`, or a return-type change; `returnTypeProposed` is the
+# value already recorded.  33 rows have NO existing parameter at all, so their
+# correction is a pure append of `undefined4 param_N` slots.  `col.varArgs` is
+# deliberately NOT bound, so varargs stays PRESERVE and stays frozen.
+#
+# EVERY EXCLUSION, WITH ITS REASON, is in the companion manifest note and the
+# report; the counts are: 1,001 classification rows -> 936 unique addresses ->
+# 93 satisfy the stated four-part criterion -> 43 of those were ALREADY
+# corrected to exactly this arity by the completed 294-row ceremony (db.18621 ->
+# db.18622), leaving 50 -> 11 refused by this framework's own EDX-fabrication
+# gate in a measured `dry` run, 2 dropped because the second witness is vacuous
+# on them, 1 dropped because its fix needs a simultaneous parameter rename.
+#
+# PINS.  Every number below was MEASURED by this framework's own `census` mode on
+# a replica restored from D:\BEA-Ghidra-Backups\2026-08-17-tentacle-chain-b-post-live
+# (db.18624), which is byte-current with live as of this authoring.  RE-PINNED
+# ONCE ALREADY: the first pass measured db.18623 mid-chain, and when ceremony B
+# landed exactly three pins moved - preFunctionNameDigest, postFunctionNameDigest
+# and preFrozenDigest - while every structural metric, functionBodyDigest,
+# bookmarkDigest, definedDataDigest and memoryDigest were byte-identical.  Neither
+# tentacle address is one of these 36 targets.  Any further live ceremony must
+# re-measure the same way rather than trust these three.
+# postFrozenDigest is deliberately NOT pinned - signatureShape, stackParamBytes
+# and stackParamCount are frozen columns this verb legitimately moves on its own
+# target rows, and the value cannot be computed outside the framework.  The POST
+# collateral census still compares every frozen column on all 8,329 rows.
+cohortId	abi-two-witness-arity36
+cohortTitle	36 stack-argument arity corrections, two independent witnesses, signature only
+
+programName	BEA.exe
+programMd5	3b456964020070efe696d2cc09464a55
+programSha256	74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750
+imageBase	00400000
+language	x86:LE:32:default
+compilerSpec	windows
+
+verb	SET_PROTOTYPE
+
+preFunctions	8329
+preInstructions	551232
+preReferences	234493
+preDefinedData	48583
+preUndefinedData	3907629
+preBookmarks	2301
+preFunctionNameDigest	bbb6dd4547fdb7bfa8714105fd556b99ac79e42014eda5537b9b37b85ad47231
+preFunctionBodyDigest	cb96581a599479d8aa57c2319a5e110226969934c2c14797a2575c689537a9be
+preFrozenDigest	c7bdf231eb725974974ef81c55554f9f5000da1aba153c8abc49ffdd344d8c48
+
+postFunctions	8329
+postInstructions	551232
+postReferences	234493
+postDefinedData	48583
+postUndefinedData	3907629
+postBookmarks	2301
+postFunctionNameDigest	bbb6dd4547fdb7bfa8714105fd556b99ac79e42014eda5537b9b37b85ad47231
+postFunctionBodyDigest	cb96581a599479d8aa57c2319a5e110226969934c2c14797a2575c689537a9be
+
+manifestSha256	48079bf132bd59375e1ff28534033081e863f9c6ad6c0f34c2330ef051fa4037
+manifestBytes	21520
+manifestRows	36
+manifestColumns	18
+manifestHeaderPipe	addr|liveName|currentSignatureLive|currentSignatureSha256|proposedSignature|callingConvention|returnTypeProposed|paramSpec|arity|arityBytes|retImmediate|argSlotWitness|witnessInstruction|retInstruction|exactness|confidence|changeAxes|independentReDerivation
+
+col.addr	addr
+col.liveName	liveName
+col.currentSignature	currentSignatureLive
+col.currentSignatureSha256	currentSignatureSha256
+col.proposedSignature	proposedSignature
+col.callingConvention	callingConvention
+col.returnType	returnTypeProposed
+col.paramSpec	paramSpec
+col.arity	arity
+col.arityBytes	arityBytes
+
+unique	addr
+constant	confidence=HIGH
+constant	changeAxes=ARITY
+constant	exactness=COMPLETE_ENUMERATION
+constant	independentReDerivation=REPRODUCED_INDEPENDENTLY
+enum	callingConvention=unknown,__thiscall
+
+# Hazard classes this lane refuses to let ride along.  The first two are the
+# fabrication classes an earlier plan for this axis would have introduced; the
+# third is the frame comparator's contradiction verdict; the fourth is the
+# convention that cannot host a stack argument without inventing an EDX one.
+forbidToken	__return_storage_ptr__
+forbidToken	__vectorcall
+forbidToken	CONTRADICTS
+forbidToken	__fastcall
+
+expectedTargetsChanged	36
+expectedFunctionsUntouched	8293

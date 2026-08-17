@@ -1,0 +1,185 @@
+# EVIDENCE MANIFEST - the 99 promotable untyped function-pointer slots.
+#
+# THIS IS NOT A FRAMEWORK-CONSUMABLE MANIFEST AND HAS NO SPEC, DELIBERATELY.
+# tools/GhidraApplyCohortManifest.java has exactly six verbs - SET_NAME,
+# SET_PROTOTYPE, SET_BODY, DISASSEMBLE_BOUNDED, CLEAR_BOUNDED,
+# REMOVE_STALE_BOOKMARK - and NONE of them can define or type data.  Verified in
+# the source rather than assumed: the only `PointerDataType` use in the whole
+# applier is `getPointer` while building a parameter TYPE for SET_PROTOTYPE, and
+# there is no `createData`, no `DataUtilities`, no `setDataType` and no
+# `addMemoryReference` anywhere in it.  Typing an .rdata/.data dword is the
+# capability this cohort needs and the framework lacks, so per the standing rule
+# this lane STOPPED rather than inventing a seventh verb or a new applier.  A
+# spec is deliberately absent because any spec written today would have to
+# declare a verb that does not exist.
+#
+# NOTE ON THIS COMMENT BLOCK.  The framework's manifest reader treats line 0 as
+# the column header and does NOT skip `#` lines (only the SPEC reader does).  If a
+# data verb ever lands, this block must move into the spec and be deleted from
+# here, or GATE 4 will refuse on header drift.
+#
+# PROVENANCE.  Rows are the 99 `action=ADD` rows of
+# scratchpad/xref-cohort/xref-correction-manifest.tsv, sha256
+# e080b101db323c05e889492537d184cade6db560527d571faf727d1829ed386d (111 rows: 99
+# ADD, 12 UNRESOLVED, zero retype).  That input hash was re-derived here and
+# matches.  The 12 UNRESOLVED rows are excluded and are listed at the bottom of
+# this file as comments with their reason.
+#
+# MEASURED BY THIS LANE on a replica restored from
+# D:\BEA-Ghidra-Backups\2026-08-17-tentacle-chain-a-post-live (db.18623), never
+# on live:
+#   * safety, INDEPENDENTLY CONFIRMED - all 99 slots report status=UNDEFINED
+#     under tools/DiagnoseAddressListingState.java: no data at the slot, no
+#     defined data containing it, no instruction at or containing it, no function
+#     containing it.  Zero violations.  65 slots are in .rdata, 34 in .data.
+#   * code reads, INDEPENDENTLY CONFIRMED - tools/ExportXrefsForAddresses.java
+#     finds exactly 29 of the 99 slots referenced from inside a function body
+#     (42 INDIRECTION + 3 DATA references over 44 distinct reading functions);
+#     the other 70 have no inbound reference at all.
+#   * effect, MEASURED on a throwaway replica - typing all 99 as `pointer` moves
+#     definedData 48583 -> 48682 (+99) and references 234493 -> 234592 (+99),
+#     with undefinedData 3907629 -> 3907233 (-396 = 99 x 4 bytes) and
+#     instructions unchanged at 551232.  An independent 8,329-row / 40-column
+#     function-inventory diff shows NO function row moved on any column.
+#   * decompilation drift, MEASURED before and after on that replica for all 44
+#     reading functions - 44 of 44 change and the change is strictly an
+#     improvement: total decompiled lines 1098 -> 1050 because the
+#     "Globals starting with '_' overlap smaller symbols at the same address"
+#     warning is eliminated, `(*_DAT_00657014)()` becomes
+#     `(*(code *)PTR_CFastVB__DispatchIndirect_00657014_00657014)()`, and
+#     CFEPLevelSelect's vtable store becomes
+#     `*(undefined ***)this = &PTR_CFEPLevelSelect__Init_005db584`.  No regression
+#     was observed in any of the 44.
+#
+# THE RESIDUAL RISK IS REAL AND IS NOT A HYPOTHETICAL.  The named risk was that
+# pre-typing individual dwords could block a later RTTI structure application over
+# the same bytes.  Measured from pristine bytes by walking each slot's maximal run
+# of consecutive aligned .text-entry dwords and resolving the dword before the run
+# head as an MSVC Complete Object Locator (COL -> +0x0C type descriptor -> +0x08
+# mangled name): 65 of the 99 slots sit inside a PROVEN RTTI vftable, implicating
+# 59 distinct classes.  Run lengths are 706 (3 slots), 46 (15), 24 (12), 9 (3),
+# 7 (1), 3 (12), 2 (51), 1 (2).  So the majority of this cohort is not "loose
+# pointers Ghidra missed" - it is vftable entries, and the higher-value mutation
+# is to apply the vftable with its recovered class identity rather than to add 99
+# isolated dwords.  `rttiVftableClass` below carries the class per row so that
+# decision can be made per row instead of in bulk.
+#
+# The `pointer` type used for the measurement is the generic 4-byte pointer, NOT a
+# function-pointer type with a signature; nothing here proposes a signature for
+# any target.
+refFrom	refTo	targetName	currentType	proposedType	action	sourceBytes	confidence	slotStateMeasured	codeReadsSlot	ptrRunStart	ptrRunLen	rttiVftableClass
+005d87cc	0053f160	VFuncSlot_01_0053f160	<none>	DATA	ADD	60f15300b0ac4b00	HIGH	UNDEFINED	0	005d87c8	3	.?AVCAnimation@@
+005d87d0	004bacb0	CMonitor__Shutdown_Core	<none>	DATA	ADD	b0ac4b0000000000	MEDIUM	UNDEFINED	0	005d87c8	3	.?AVCAnimation@@
+005d8c84	0040e280	CInitThing__LoadFromMemBuffer	<none>	DATA	ADD	80e24000ec51b83d	HIGH	UNDEFINED	0	005d8c80	2	.?AVCExplosionInitThing@@
+005d9744	0042c460	CConsoleMenu__UnlinkChild	<none>	DATA	ADD	60c4420078d36000	HIGH	UNDEFINED	0	005d972c	7	.?AVCConsoleRootMenu@@
+005dab00	00405930	SharedVFunc__ReturnZero_00405930	<none>	DATA	ADD	3059400030226100	HIGH	UNDEFINED	0	005daafc	2	.?AVCSeekNothing@@
+005dab0c	004014a0	SharedVFunc__Return1_004014a0	<none>	DATA	ADD	a0144000e0216100	HIGH	UNDEFINED	0	005dab08	2	.?AVCSeekTarget@@
+005dab18	004059c0	SharedVFunc__Return2_004059c0	<none>	DATA	ADD	c0594000c8226100	HIGH	UNDEFINED	0	005dab14	2	.?AVCSeekTargetOnly@@
+005dab24	0055df1f	CRT__Purecall_0055df1f	<none>	DATA	ADD	1fdf5500b8236100	HIGH	UNDEFINED	0	005dab20	2	.?AVCPhysicsSeekType@@
+005dab30	0052d990	FUN_0052d990	<none>	DATA	ADD	90d95200f8246100	HIGH	UNDEFINED	0	005dab2c	2	.?AVCSimpleBuildingBehaviourType@@
+005dab3c	0052d950	FUN_0052d950	<none>	DATA	ADD	50d9520058246100	HIGH	UNDEFINED	0	005dab38	2	.?AVCPodBehaviourType@@
+005dab48	0050ffc0	FUN_0050ffc0	<none>	DATA	ADD	c0ff500098256100	HIGH	UNDEFINED	0	005dab44	2	.?AVCFenrirBehaviourType@@
+005dab54	0052da00	FUN_0052da00	<none>	DATA	ADD	00da520038266100	HIGH	UNDEFINED	0	005dab50	2	.?AVCWarspiteDomeBehaviourType@@
+005dab60	004df500	FUN_004df500	<none>	DATA	ADD	00f54d00d8266100	HIGH	UNDEFINED	0	005dab5c	2	.?AVCWarspiteBehaviourType@@
+005dab6c	0052dac0	FUN_0052dac0	<none>	DATA	ADD	c0da5200c8276100	HIGH	UNDEFINED	0	005dab68	2	.?AVCSentinelBehaviourType@@
+005dab78	0052db10	FUN_0052db10	<none>	DATA	ADD	10db520068286100	HIGH	UNDEFINED	0	005dab74	2	.?AVCGillMBehaviourType@@
+005dab84	0052db60	CWaypoint__GetTypeId12_0052db60	<none>	DATA	ADD	60db5200b8286100	HIGH	UNDEFINED	0	005dab80	2	.?AVCCarverBehaviourType@@
+005dab90	00418410	FUN_00418410	<none>	DATA	ADD	1084410008296100	HIGH	UNDEFINED	0	005dab8c	2	.?AVCThunderHeadBehaviourType@@
+005dab9c	0052dbf0	FUN_0052dbf0	<none>	DATA	ADD	f0db520058296100	HIGH	UNDEFINED	0	005dab98	2	.?AVCDiveBomberBehaviourType@@
+005daba8	004ead60	FUN_004ead60	<none>	DATA	ADD	60ad4e00a8296100	HIGH	UNDEFINED	0	005daba4	2	.?AVCSubmarineBehaviourType@@
+005dabb4	0052dc80	FUN_0052dc80	<none>	DATA	ADD	80dc5200f8296100	HIGH	UNDEFINED	0	005dabb0	2	.?AVCHiveBossBehaviourType@@
+005dabc0	0052dcd0	FUN_0052dcd0	<none>	DATA	ADD	d0dc5200b02a6100	HIGH	UNDEFINED	0	005dabbc	2	.?AVCMineBehaviourType@@
+005dabcc	0052dd20	FUN_0052dd20	<none>	DATA	ADD	20dd520028276100	HIGH	UNDEFINED	0	005dabc8	2	.?AVCDropshipBehaviourType@@
+005dabd8	004c4a40	FUN_004c4a40	<none>	DATA	ADD	404a4c00482a6100	HIGH	UNDEFINED	0	005dabd4	2	.?AVCJeepBehaviourType@@
+005dabe4	0052ddb0	SharedUnitVFunc__ReturnInt10_0052ddb0	<none>	DATA	ADD	b0dd520018236100	HIGH	UNDEFINED	0	005dabe0	2	.?AVCGroundAttackAircraftBehaviourType@@
+005dabf0	0052de00	FUN_0052de00	<none>	DATA	ADD	00de520068236100	HIGH	UNDEFINED	0	005dabec	2	.?AVCBomberBehaviourType@@
+005dabfc	004175b0	CPhysicsScriptValue_T3_004175b0	<none>	DATA	ADD	b075410008246100	HIGH	UNDEFINED	0	005dabf8	2	.?AVCFighterBehaviourType@@
+005dac08	0052de90	FUN_0052de90	<none>	DATA	ADD	90de5200a8246100	HIGH	UNDEFINED	0	005dac04	2	.?AVCBuildingUnitBehaviourType@@
+005dac14	0052f660	FUN_0052f660	<none>	DATA	ADD	60f6520048256100	HIGH	UNDEFINED	0	005dac10	2	.?AVCCarrierUnitBehaviourType@@
+005dac20	004dbc20	SharedUnitVFunc_T3_004dbc20	<none>	DATA	ADD	20bc4d00e8256100	HIGH	UNDEFINED	0	005dac1c	2	.?AVCBoatUnitBehaviourType@@
+005dac2c	004db8c0	CPhysicsScriptValue__GetScalarSerializedSize4	<none>	DATA	ADD	c0b84d0088266100	HIGH	UNDEFINED	0	005dac28	2	.?AVCTurretUnitBehaviourType@@
+005dac38	00405ee0	SharedVFunc__Return3_00405ee0	<none>	DATA	ADD	e05e400078276100	HIGH	UNDEFINED	0	005dac34	2	.?AVCInfantryUnitBehaviourType@@
+005dac44	004059c0	SharedVFunc__Return2_004059c0	<none>	DATA	ADD	c059400018286100	HIGH	UNDEFINED	0	005dac40	2	.?AVCGroundUnitBehaviourType@@
+005dac8c	0055df1f	CRT__Purecall_0055df1f	<none>	DATA	ADD	1fdf5500702d6100	HIGH	UNDEFINED	0	005dac88	2	.?AVCPhysicsAlligenceType@@
+005dac98	00405ee0	SharedVFunc__Return3_00405ee0	<none>	DATA	ADD	e05e4000682c6100	HIGH	UNDEFINED	0	005dac94	2	.?AVCMountainousNavMapType@@
+005daca4	004059c0	SharedVFunc__Return2_004059c0	<none>	DATA	ADD	c0594000b82c6100	HIGH	UNDEFINED	0	005daca0	2	.?AVCSteepNavMapType@@
+005dacb0	004014a0	SharedVFunc__Return1_004014a0	<none>	DATA	ADD	a0144000082d6100	HIGH	UNDEFINED	0	005dacac	2	.?AVCFlatNavMapType@@
+005dacbc	00405930	SharedVFunc__ReturnZero_00405930	<none>	DATA	ADD	30594000a02d6100	HIGH	UNDEFINED	0	005dacb8	2	.?AVCWaterNavMapType@@
+005dacc8	0055df1f	CRT__Purecall_0055df1f	<none>	DATA	ADD	1fdf5500a82e6100	HIGH	UNDEFINED	0	005dacc4	2	.?AVCPhysicsNavMapType@@
+005dacd4	00405930	SharedVFunc__ReturnZero_00405930	<none>	DATA	ADD	30594000402e6100	HIGH	UNDEFINED	0	005dacd0	2	.?AVCOnStateType@@
+005dace0	004014a0	SharedVFunc__Return1_004014a0	<none>	DATA	ADD	a0144000f02d6100	HIGH	UNDEFINED	0	005dacdc	2	.?AVCOnfStateType@@
+005dacec	004059c0	SharedVFunc__Return2_004059c0	<none>	DATA	ADD	c0594000d82e6100	HIGH	UNDEFINED	0	005dace8	2	.?AVCOffStateType@@
+005dacf8	0055df1f	CRT__Purecall_0055df1f	<none>	DATA	ADD	1fdf5500416e6f6e	HIGH	UNDEFINED	0	005dacf4	2	.?AVCPhysicsStateType@@
+005db2a8	0053f160	VFuncSlot_01_0053f160	<none>	DATA	ADD	60f15300b0ac4b00	HIGH	UNDEFINED	0	005db2a4	3	.?AVCFearGrid@@
+005db2ac	004bacb0	CMonitor__Shutdown_Core	<none>	DATA	ADD	b0ac4b000000a0c0	MEDIUM	UNDEFINED	0	005db2a4	3	.?AVCFearGrid@@
+005db584	004603d0	CFEPLevelSelect__Init	<none>	DATA	ADD	d003460090044600	HIGH	UNDEFINED	1	005db584	9	.?AVCFEPLevelSelect@@
+005dbbd4	0046d350	CStartInitThing__VFunc_1_0046d350	<none>	DATA	ADD	50d34600b03e6100	HIGH	UNDEFINED	0	005dbbd0	2	.?AVCStartInitThing@@
+005dbf7c	0053f160	VFuncSlot_01_0053f160	<none>	DATA	ADD	60f15300b0ac4b00	HIGH	UNDEFINED	0	005dbf78	3	.?AVCHLCollisionDetector@@
+005dbf80	004bacb0	CMonitor__Shutdown_Core	<none>	DATA	ADD	b0ac4b00be378638	MEDIUM	UNDEFINED	0	005dbf78	3	.?AVCHLCollisionDetector@@
+005dc160	0048dcc0	CSphereTriggerInitThing__VFunc_1_0048dcc0	<none>	DATA	ADD	c0dc480080456100	HIGH	UNDEFINED	0	005dc15c	2	.?AVCSphereTriggerInitThing@@
+005dc16c	0040e280	CInitThing__LoadFromMemBuffer	<none>	DATA	ADD	80e2400020466100	HIGH	UNDEFINED	0	005dc168	2	.?AVCHazardInitThing@@
+005dc178	0040e280	CInitThing__LoadFromMemBuffer	<none>	DATA	ADD	80e2400070466100	HIGH	UNDEFINED	0	005dc174	2	.?AVCFeatureInitThing@@
+005dc184	0048da20	CWallInitThing__VFunc_1_0048da20	<none>	DATA	ADD	20da480060476100	HIGH	UNDEFINED	0	005dc180	2	.?AVCWallInitThing@@
+005dc190	0048cc90	CTreeInitThing__VFunc_1_0048cc90	<none>	DATA	ADD	90cc4800d0456100	HIGH	UNDEFINED	0	005dc18c	2	.?AVCTreeInitThing@@
+005dc19c	0048db80	CCutsceneInitThing__VFunc_1_0048db80	<none>	DATA	ADD	80db480010476100	HIGH	UNDEFINED	0	005dc198	2	.?AVCCutsceneInitThing@@
+005dc1a8	0048ce00	CSpawnerInitThing__VFunc_1_0048ce00	<none>	DATA	ADD	00ce4800c0466100	HIGH	UNDEFINED	0	005dc1a4	2	.?AVCSpawnerInitThing@@
+005dc1c4	0040e280	CInitThing__LoadFromMemBuffer	<none>	DATA	ADD	80e24000e0476100	HIGH	UNDEFINED	0	005dc1c0	2	.?AVCUnitInitThing@@
+005dc1d0	0040e280	CInitThing__LoadFromMemBuffer	<none>	DATA	ADD	80e2400030486100	HIGH	UNDEFINED	0	005dc1cc	2	.?AVCInitThing@@
+005dc6d8	004b7300	CMessageBox__scalar_deleting_dtor	<none>	DATA	ADD	00734b00b0ac4b00	HIGH	UNDEFINED	0	005dc6d4	3	.?AVCMessageBox@@
+005dc6dc	004bacb0	CMonitor__Shutdown_Core	<none>	DATA	ADD	b0ac4b008fc2753d	MEDIUM	UNDEFINED	0	005dc6d4	3	.?AVCMessageBox@@
+005dcad8	0040e280	CInitThing__LoadFromMemBuffer	<none>	DATA	ADD	80e2400040576100	HIGH	UNDEFINED	0	005dcad4	2	.?AVCBattleEngineInitThing@@
+005de9b8	0040e280	CInitThing__LoadFromMemBuffer	<none>	DATA	ADD	80e2400020676100	HIGH	UNDEFINED	0	005de9b4	2	.?AVCRoundInitThing@@
+005e4f0c	00533430	IScript__ScalarDeletingDestructor	<none>	DATA	ADD	3034530010385300	HIGH	UNDEFINED	0	005e4f08	3	.?AVIScript@@
+005e4f10	00533810	IScript__VFunc_2_00533810	<none>	DATA	ADD	10385300e02e6542	MEDIUM	UNDEFINED	0	005e4f08	3	.?AVIScript@@
+005e4f80	00405930	SharedVFunc__ReturnZero_00405930	<none>	DATA	ADD	30594000a0935500	HIGH	UNDEFINED	0	005e4f64	9	.?AVCBLTexture@@
+005e4f84	005593a0	CDXTexture__VFunc_8_005593a0	<none>	DATA	ADD	a093550048e19a3f	MEDIUM	UNDEFINED	0	005e4f64	9	.?AVCBLTexture@@
+006222a0	0045ac20	CFEPGoodies__BuildStaticGoodieDataTable	<none>	DATA	ADD	20ac450050004600	HIGH	UNDEFINED	0	00622004	706	<none>
+006222a4	00460050	FUN_00460050	<none>	DATA	ADD	5000460070004600	HIGH	UNDEFINED	0	00622004	706	<none>
+006225b4	004befc0	FUN_004befc0	<none>	DATA	ADD	c0ef4b0050004c00	HIGH	UNDEFINED	0	00622004	706	<none>
+006532ec	0059877e	CTexture__NodePayloadNoOp	<none>	DATA	ADD	7e8759007e875900	HIGH	UNDEFINED	0	006532e8	3	<none>
+006532f0	0059877e	CTexture__NodePayloadNoOp	<none>	DATA	ADD	7e87590000000000	MEDIUM	UNDEFINED	0	006532e8	3	<none>
+00653d38	0056c05c	CRT__ReturnZero	<none>	DATA	ADD	5cc05600105e5e00	HIGH	UNDEFINED	1	00653d38	1	<none>
+00653d44	0056c05c	CRT__ReturnZero	<none>	DATA	ADD	5cc05600045e5e00	HIGH	UNDEFINED	0	00653d44	1	<none>
+00656f38	00576698	CFastVB__DispatchIndirect_00656f38	<none>	DATA	ADD	98665700f1685700	HIGH	UNDEFINED	2	00656f30	46	<none>
+00656f3c	005768f1	CFastVB__DispatchIndirect_00656f3c	<none>	DATA	ADD	f1685700ba6b5700	MEDIUM	UNDEFINED	2	00656f30	46	<none>
+00656f40	00576bba	FUN_00576bba	<none>	DATA	ADD	ba6b5700685d5700	MEDIUM	UNDEFINED	1	00656f30	46	<none>
+00656f44	00575d68	CMeshCollisionVolume__DispatchPtr00656f44_WithInit	<none>	DATA	ADD	685d57007e615700	MEDIUM	UNDEFINED	2	00656f30	46	<none>
+00656f48	0057617e	CDXTexture__DispatchPtr00656f48_WithInit	<none>	DATA	ADD	7e6157008c5d5700	MEDIUM	UNDEFINED	2	00656f30	46	<none>
+00656f4c	00575d8c	CDXTexture__DispatchPtr00656f4c_WithInit	<none>	DATA	ADD	8c5d5700cd635700	MEDIUM	UNDEFINED	2	00656f30	46	<none>
+00656f50	005763cd	FUN_005763cd	<none>	DATA	ADD	cd635700445d5700	MEDIUM	UNDEFINED	1	00656f30	46	<none>
+00656f54	00575d44	CDXTexture__DispatchPtr00656f54_WithInit	<none>	DATA	ADD	445d570054615700	HIGH	UNDEFINED	2	00656f30	46	<none>
+00656f78	00576dfd	CFastVB__DispatchIndirect_00656f78	<none>	DATA	ADD	fd6d5700177b5700	HIGH	UNDEFINED	2	00656f30	46	<none>
+00656f7c	00577b17	CTexture__DispatchPtr00656f7c_WithInit	<none>	DATA	ADD	177b5700c07b5700	MEDIUM	UNDEFINED	2	00656f30	46	<none>
+00656f80	00577bc0	FUN_00577bc0	<none>	DATA	ADD	c07b5700d6805700	HIGH	UNDEFINED	1	00656f30	46	<none>
+00656fc4	00576b3a	CFastVB__DispatchIndirect_00656fc4	<none>	DATA	ADD	3a6b5700b0755700	HIGH	UNDEFINED	2	00656f30	46	<none>
+00656fc8	005775b0	Math__BuildQuaternionRotationMatrix_Dispatch	<none>	DATA	ADD	b0755700d3765700	HIGH	UNDEFINED	2	00656f30	46	<none>
+00656fe0	00577c83	CTexture__DispatchPtr00656fe0_WithInit	<none>	DATA	ADD	837c57000e805700	HIGH	UNDEFINED	2	00656f30	46	<none>
+00656fe4	0057800e	CTexture__DispatchPtr00656fe4_WithInit	<none>	DATA	ADD	0e805700105b5700	MEDIUM	UNDEFINED	1	00656f30	46	<none>
+0065700c	00577d47	CTexture__DispatchPtr0065700c_WithInit	<none>	DATA	ADD	477d5700d57d5700	HIGH	UNDEFINED	2	00656fec	24	<none>
+00657010	00577dd5	CDXTexture__DispatchPtr00657010_WithInit	<none>	DATA	ADD	d57d5700b6595700	MEDIUM	UNDEFINED	2	00656fec	24	<none>
+00657014	005759b6	CFastVB__DispatchIndirect_00657014	<none>	DATA	ADD	b6595700585a5700	HIGH	UNDEFINED	2	00656fec	24	<none>
+00657028	0057609c	DispatchPtr_00657028_WithInit	<none>	DATA	ADD	9c60570067615700	HIGH	UNDEFINED	1	00656fec	24	<none>
+0065702c	00576167	CTexture__DispatchPtr0065702c_WithInit	<none>	DATA	ADD	67615700f7615700	MEDIUM	UNDEFINED	2	00656fec	24	<none>
+00657030	005761f7	CDXTexture__DispatchPtr00657030_WithInit	<none>	DATA	ADD	f76157004a675700	MEDIUM	UNDEFINED	1	00656fec	24	<none>
+00657034	0057674a	CFastVB__DispatchIndirect_00657034	<none>	DATA	ADD	4a6757009d625700	MEDIUM	UNDEFINED	1	00656fec	24	<none>
+00657038	0057629d	FUN_0057629d	<none>	DATA	ADD	9d625700bf625700	MEDIUM	UNDEFINED	1	00656fec	24	<none>
+0065703c	005762bf	FUN_005762bf	<none>	DATA	ADD	bf625700d9835700	MEDIUM	UNDEFINED	1	00656fec	24	<none>
+00657040	005783d9	CTexture__DispatchPtr00657040_WithInit	<none>	DATA	ADD	d9835700a9845700	MEDIUM	UNDEFINED	1	00656fec	24	<none>
+00657044	005784a9	CFastVB__DispatchIndirect_00657044	<none>	DATA	ADD	a9845700ba845700	MEDIUM	UNDEFINED	1	00656fec	24	<none>
+00657048	005784ba	FUN_005784ba	<none>	DATA	ADD	ba84570000000000	MEDIUM	UNDEFINED	1	00656fec	24	<none>
+#
+# EXCLUDED - the 12 UNRESOLVED rows of the input manifest. Each is an isolated
+# entry-pointer dword with no adjacent typed slot, so the neighbourhood argument
+# that carries the 99 does not carry them; they need their own evidence.
+# 005e5ab0 <- 0055db72  dword reads 0055db72 = entry of CRT_T3_0055db72, but the slot is isolated (no adjacent typed slot; entry-pointer run length only 1); neighbourhood con
+# 005e5ad0 <- 0055dc8a  dword reads 0055dc8a = entry of CRT__EhVectorConstructorIterator_Unwind, but the slot is isolated (no adjacent typed slot; entry-pointer run length on
+# 005e5b00 <- 0055ecb1  dword reads 0055ecb1 = entry of CRT__UnlockHeapLock9_0055ecb1, but the slot is isolated (no adjacent typed slot; entry-pointer run length only 1); nei
+# 005e5b18 <- 0055f0ef  dword reads 0055f0ef = entry of CRT__UnlockHeapLock, but the slot is isolated (no adjacent typed slot; entry-pointer run length only 1); neighbourhood
+# 005e5b24 <- 0055f147  dword reads 0055f147 = entry of CRT__UnlockHeapLock_Alt, but the slot is isolated (no adjacent typed slot; entry-pointer run length only 1); neighbour
+# 00622b30 <- 0055fe12  dword reads 0055fe12 = entry of FUN_0055fe12, but the slot is isolated (no adjacent typed slot; entry-pointer run length only 2); neighbourhood contex
+# 00622b34 <- 005d0c12  dword reads 005d0c12 = entry of FUN_005d0c12, but the slot is isolated (no adjacent typed slot; entry-pointer run length only 2); neighbourhood contex
+# 00622b40 <- 00564bfc  dword reads 00564bfc = entry of FUN_00564bfc, but the slot is isolated (no adjacent typed slot; entry-pointer run length only 1); neighbourhood contex
+# 00653648 <- 00564ba5  dword reads 00564ba5 = entry of CRT__UnhandledExceptionFilterDispatch, but the slot is isolated (no adjacent typed slot; entry-pointer run length only
+# 006569d4 <- 00544450  dword reads 00544450 = entry of FUN_00544450, but the slot is isolated (no adjacent typed slot; entry-pointer run length only 1); neighbourhood contex
+# 00658898 <- 004c0000  dword reads 004c0000 = entry of CEscapePod__dtor_base, but the slot is isolated (no adjacent typed slot; entry-pointer run length only 1); neighbourho
+# 0065a414 <- 00570000  dword reads 00570000 = entry of CFastVB__BuildTriangleStripFromSeedRecord, but the slot is isolated (no adjacent typed slot; entry-pointer run length 
