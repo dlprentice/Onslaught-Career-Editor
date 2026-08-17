@@ -44,3 +44,28 @@ a REBUILD_READY row): the event number is a 16-bit word.
 - The 20,000-entry pool capacity (`MAX_NUM_EVENTS`) is sourced from
   `eventmanager.h:20`, not yet read out of the image — the exhaustion string
   `0x00628d60` is verified, its capacity is not.
+
+## Callers and lifecycle (byte-cited)
+
+Every direct caller below loads `mov ecx, 0x00672fc8` immediately before the
+call, so `0x00672fc8` is the address of the global `CEventManager` instance
+these shipped call sites share. A whole-image direct `E8`/`E9` rel32 scan
+finds exactly one caller each for `Update` and `AdvanceTime`; indirect or
+register-computed calls are outside that scan's reach.
+
+| Caller | Call site | Target |
+| --- | --- | --- |
+| `CFrontEnd__Init` | `0x0046630b` | `Init` (`0x0044b060`) |
+| `CGame__InitRestartLoop` | `0x0046c587` | `Init` (`0x0044b060`) |
+| `CFrontEnd__Process` | `0x00466bfe` | `Update` (`0x0044b5c0`) — the combined AdvanceTime + Flush path, once per frontend frame |
+| `CGame__Update` | `0x0046eb5d` | `AdvanceTime` (`0x0044b600`) — early in the frame |
+| `CGame__Update` | `0x0046ebce` | `Flush` (`0x0044b640`) — late in the frame, after the `[esi+0x29c]` object-update loop (which ends `cmp ebp,eax; jl` at `0x0046ebaa` and makes virtual calls through `call [eax+8]` at `0x0046eb9a`) |
+| `IScript__PlayCharMessageWait` | `0x00537703` | `GetNextFreeEvent` (`0x0044b2a0`) |
+| `IScript__PlayPCharMessageWait` | `0x005379ff` | `GetNextFreeEvent` (`0x0044b2a0`) |
+
+So the frontend drives the scheduler with the combined `Update`, while
+`CGame__Update` drives it with the split pair and runs gameplay between the
+clock advance and the dispatch. `AddEvent_TimeFromNow` has 24 direct callers
+and `AddEvent` has 128; both are enumerable with
+`tools\call_xref_scan.py` and are left as the map's next consumer census
+rather than listed here.
