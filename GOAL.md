@@ -295,7 +295,7 @@ proof-gated reverse engineering of the retail binary so a proper rebuild can
 proceed; relocate the DeepSeek corpus off F:; and work autonomously through a
 ~5-hour window with delegated decisions. The harness goal was set to this
 directive. The corpus is being relocated, with byte-exact verification, into
-`local-lab\ds-deep-review\` (frozen drop; 155,621 files) and
+`local-lab\ds-deep-review\` (frozen drop; 155,622 files) and
 `local-lab\ds-deep-review-extended\` (95 files plus `rows.tsv`); the F: copies
 and the H: twin are removed only after verification passes, leaving
 `F:\GhidraBackups` as the only retained F: content. Priority order is the carry
