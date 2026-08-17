@@ -860,6 +860,46 @@ longer twins until then. The pristine specimen still hashes `74154bfa…7750`.
 Generation 30, all semantic grades, and the NAME, slot-ordinal, and ABI cohorts
 were untouched.
 
+**Third rebuild slice 2026-08-17 — and a systemic divergence class.** Eight
+contracts across six new owners bring the parity suite to **327 tests**. The
+mutation sweep ran 47 and killed 43; four survivors were each proved equivalent,
+and a fifth apparent survivor turned out to be a **missing test** — the
+`GoingIntoWater` arm selector coincides only over a sea-level water line, and
+lifting the water to 4.0 makes the narrowing bite, so the test was added and the
+mutant killed rather than the equivalence assumed.
+
+**The systemic finding: `nDivergence=0` is a statement about identity, not
+semantics.** Six of these eight contracts diverge from their source *text* on
+unordered inputs, because the shipped compares read `C0` alone or `C0|C3` where
+C's operators do neither. A NaN energy returns `0.005f` from jet `Gravity`
+where `mEnergy == 0` returns `0.0f`; NaN speed and NaN energy both fail
+`AutoLevel`'s gates; a NaN store value counts as *below* capacity in
+`CanWeaponFire` and opens the gate; and `ChangeWeapon`'s unordered compare
+*accepts* where `value >= consumption` rejects. Combined with slice 2's
+`GetGradeFromRanking` grading NaN as `'S'`, this is now a recurring class rather
+than a curiosity: **MSVC's comparison idioms are not NaN-correct, and the
+Xbox-era source cannot show it.** Any contract ported from source text without
+reading the compare's condition-code mask is unverified on that axis.
+
+*Two manifest defects.* `CBattleEngineWalkerPart::CanWeaponFire` at
+`0x00414630` **has no manifest row at all** — a 128-byte gap between
+`GetWeaponIconName` and `ResetConfiguration`. And the walker and jet
+`CanWeaponFire` are **not twins**, though both sit at line 936 of their own file
+and the jet's row is `AGREES` with `nDivergence=0`:
+`BattleEngineWalkerPart.cpp:940` wraps the whole body in
+`if (weapon->IsActive())` and the jet's does not, with the shipped code matching
+each — `mov ecx,[eax+0x9C] / test ecx,ecx / je` at `0x0041463C` in the walker
+and no such load anywhere in `0x00412570`. **A rebuild sharing one
+implementation across both chassis would be wrong for one of them.**
+
+*Constants read from the image, not headers.* Both `Gravity` jump tables were
+walked out of the binary — `EBattleEngineState` declares `MORPHING_INTO_WALKER`
+first, so reading the header as "walker first" inverts the law. `SUPERTYPE::
+Gravity()` inlines as `0.01f` and `*0.2f` folds bit-exactly to `0.002f`
+(`0x3B03126F`). `CWeapon` is absent from the drop entirely, so its five charge
+levels, `-1` sentinel, `index*100` scale, and live charge at `weapon+0x60` were
+recovered from bytes alone.
+
 **Campaign-layer corrections.** Discard the single `CONTRACT_REFUTED` row. It
 claims `0x005d85d8` sits in bss with no file bytes, but that VA maps to file
 offset `0x1D85D8`, which holds `00 00 a0 40` — exactly the 5.0f the Gen-29
