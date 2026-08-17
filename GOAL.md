@@ -800,12 +800,39 @@ condition with a 2×10⁸ operand sweep finding zero disagreements.
 constant `0x3FC00000` at `0x005D8BD8`, loaded at `0x00411B39`), and the
 1000× scale is confirmed by that function's own `1_000`/`3_000` altitude bounds
 standing for retail's 1 and 3. Jets at altitude ∈ [1,3) and speed ∈ [1.0,1.5)
-get a flat 0.99 where retail interpolates to 0.98. Left unfixed here because it
-moves cold-start trace hashes, which `DETERMINISM.md` requires re-pinning in the
-same commit; pinned by
-`RetailJetFrictionTests.GetFriction_InterpolatesAtSpeedsCoreAlreadyTreatsAsFast`
-and filed as its own task. **Five review passes over these rows found nothing
-here — implementing them did.**
+get a flat 0.99 where retail interpolates to 0.98. **Five review passes over
+these rows found nothing here — implementing them did.**
+
+**Fixed 2026-08-17, and the reason it was deferred turned out to be false.** This
+was left standing on the belief that it moves cold-start trace hashes and so
+required a `DETERMINISM.md` re-pin. It moves **no** hashes — measured by
+instrumenting the ladder directly: over a full cold start it is called **2,623**
+times, the maximum speed ever passed is **602**, and the number of calls whose
+altitude even enters the `[1_000, 3_000)` window is **zero**. The jet throttle
+targets at most `JetMaximumSpeedPerTick = 900` (shipped `mMaxAirVelocity` 0.9),
+which is *below* the band floor, so **no replay in this repository can reach the
+gate** and the re-pin clause was never engaged. A green suite here would have been
+**vacuous**, which is the trap worth remembering: a passing test that cannot see
+the constant it guards is not evidence.
+
+Because replay cannot supply a falsifier, the proof is a direct one — a test that
+drives the integer ladder through the boundary, asserts the band is non-empty,
+cross-checks every probe against the float-exact model bit for bit, and pins the
+`>=` boundary at 1_499/1_500. Its **mutation kill is measured**: restoring the
+gate to `1_000` fails that test while the other 21 rows still pass, which proves
+both that the new test bites and that the pre-existing suite was blind to this
+constant.
+
+*One gate is genuinely unmet and is recorded rather than glossed.* The full
+unfiltered Core suite never completed — not once, with or without the change. The
+test host crashes (never an assertion) at wildly varying points, and it
+**reproduces on the pristine baseline with the change reverted**, so it is not a
+regression signal. Attribution is inference, not measurement: machine commit
+charge was 36.6 GB of a 44.2 GB limit with two Ghidra JVMs, `cdb`, and several
+agent lanes resident, and no dump or stack could be captured. The honest
+consequence is that **the concurrency that speeds this work up is what prevents
+its own acceptance gate from running**, and the suite needs one clean run on a
+quiet machine.
 
 *Three more divergences, again on rows marked `AGREES`, bringing tracked
 exceptions to 26.* `GetGradeFromRanking` grades **NaN as `'S'`**, because
@@ -1168,9 +1195,12 @@ both wait for the framework, which exists precisely to stop a fourth one being
 written.
 
 **The ABI contradiction class has a mechanical root cause, found 2026-08-17.**
-Ghidra's `param_size` — the size in *bytes* of the stack-argument area — was
-transcribed into review prose as the RET immediate, and that single confusion
-explains every inverted-cleanup row examined. 12 confirmed became **17** once a
+Ghidra's `param_size` was transcribed into review prose as the RET immediate, and
+that single confusion explains every inverted-cleanup row examined. *Refined:*
+`param_size` is **the sum of the declared parameter *type* sizes**, not the
+aligned stack-argument area — a `char` or `bool` parameter yields `psz=1` against
+a `RET 0x4`, which is why three apparent self-ABI gaps (`0x0042b120`,
+`0x00517d00`, `0x0052af00`) are not gaps at all. 12 confirmed became **17** once a
 checker rule that passes `retn N (cdecl)` was dropped; it was defensible about
 author intent but it hid text the bytes refute. A harder class sits underneath:
 functions that **contain no RET at all**, tail-dispatching via JMP, where the
@@ -1233,6 +1263,56 @@ first pass produced 85 contradictions that were all regex artifacts. One
 byte-refuted claim of a third kind did surface outside the population:
 `0x004bfbb0`'s "RET 0x24 matches disasm" reads a six-byte body
 `b8 24 00 00 00 c3`, where `0x24` is the **return value**, not a cleanup immediate.
+
+**DECOMPILE has a mechanical root cause too, and it is not what the class name
+suggests: the flagged rows are collateral, and the defects live at the CALLEE.**
+The flag is "decompile sanity — phantom params, missing inputs, absurd
+prototypes", and attribution is direct evidence rather than inference: the exporter
+opens a `DecompInterface` and writes `getDecompiledFunction().getC()` **verbatim**,
+so `decompile.c` is a pure function of pristine bytes × our database × decompiler
+version. There is no stored artifact to mutate — but a *faithful* rendering can
+still report a wrong database **field**, and it almost always belongs to a callee
+rather than the address that got flagged. **Zero rows are defects in the drop's own
+artifacts**, which is the opposite of the XREF result.
+
+Three clean mechanisms account for the bulk. **266 rows reduce to a handful of
+callee signature fields**, and **210 of them come from a single address**:
+`OID__FreeObject_Callback` at `0x00449d40` is declared with one parameter while 657
+call sites push four (`line, path, memtype, obj`) with `ADD ESP,0x10`, so the
+decompiler drops the `__FILE__`/`__LINE__` plate everywhere. **SEH funclets are
+inherent, not defective** — every `Unwind@` row carrying an `unaff_` uses exactly
+`unaff_EBP`, because a funclet is entered with its *parent's* EBP and no C
+prototype can express that. And **decompiler ESP desync** explains 29 of 41
+non-funclet `unaff_` rows, each containing an indirect callee-pop call. Four rows
+are simply arithmetically false prose: "decompile says `+0xd`, disasm proves
+`+0x34`" describes pointer arithmetic on an `int*`, and 0xd × 4 = 0x34 — the same
+address.
+
+**The structural half of DECOMPILE is a shadow of the ABI cohort.** Of 29 genuine
+database-defect addresses, **19 are already in the 294-row ABI set** with
+`retImmediate` and `arityBytes` matching an independent measurement exactly — so
+promoting ABI clears them for free, and no DECOMPILE cohort should be created. Ten
+are new and byte-verified, including `sprintf` and `CConsole__AddString` declared
+`varargs=false`, `CDXMemBuffer__dtor_base` declared `__fastcall(void)` when
+`MOV ESI,ECX` is its second instruction, and three functions declared `__cdecl`
+that pop their own stack — which a `__cdecl` function cannot do. **Three were
+already documented in our own plate comments**: earlier campaign prose recorded the
+defect and nobody converted it into a signature change.
+
+*A tool defect worth fixing before it becomes live:*
+`tools/GhidraApplyAbiSignaturesV2.java` **unconditionally clears `varargs` and
+asserts `false`** in both POST and readback, so it cannot carry a varargs row at
+all. Latent rather than live today — no current ABI target has `varargs=true` — but
+it silently bounds what any cohort built on that applier can express.
+
+Two accounting notes. **469 is composite**: only 397 rows carry a terminal
+`FLAGGED(DECOMPILE)`, the DECOMPILE-*touching* population is 490, and 21 land in
+other classes because a terminal ABI suffix wins. And the lane drew its own
+inference boundary rather than rounding it away: it hand-adjudicated 16 of 178
+decompiler-behaviour rows, found no further database defect, and said plainly that
+16 of 178 is not a census. It also **declined to publish 29 x87 return-type
+candidates** because its FLD-versus-FST heuristic is noisy — the right call, with
+the falsifier named.
 
 Two smaller carries. A citation fix turned out to hide a **value** finding: the
 constant at `0x0056d647` is the 80-bit long double **0.1**, not 10 — `cc`×8,
