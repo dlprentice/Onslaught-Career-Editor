@@ -423,6 +423,90 @@ the mandate; the completion test and every clause above are unchanged.
 
 Rank from current evidence; a reproduced contradiction outranks this list.
 
+#### `F:\DS DEEP Review` integration — recorded 2026-08-16
+
+The standing goal points here for specifics so they can be revised without
+re-setting it. Counts marked (est) come from reviewer sampling and are replaced
+by byte-derived manifests as those land.
+
+**Verified grounding.** The pristine specimen and the Gen-29 READY pin
+`fe61f696…c9ac9` are byte-identical to ours, as are all eight baseline campaign
+TSVs, and the 14,438 contract IDs join 1:1 with zero orphans. An independent
+pass re-checked all 8,737 declared body ranges and 1,143 residual heads against
+the specimen: zero missing files, zero length mismatches, zero byte mismatches.
+The bundle layer is trustworthy and re-derivation from it is cheap.
+
+**What the drop is not.** Its adjudication layer decided 1,179 of 1,539
+conflicts by regex over agent prose without opening an artifact, while emitting
+rationales asserting byte evidence. 923 rows carry a false
+`AGREEMENT primary==adversarial` label because `build_ledger.py` collapses
+issue classes, and 905 terminal `FLAGGED` rows carry no class at all. Its
+validators accepted 11 of 16 deliberately fabricated shards, and five of six
+gates cannot fail anything. Both passes ran one model, so lane agreement is
+correlated error rather than corroboration.
+
+**Cohort order.** Each cohort promotes only after every row in it is re-derived
+from pristine bytes, and only through the full Ghidra gate.
+
+| # | Cohort | Size | Disposition |
+| ---: | --- | ---: | --- |
+| 1 | BOUNDARY, restricted | ~49 of 77 (est) | Promote; byte-derived manifest in flight |
+| 2 | ABI, byte-provable | ~548 of 1,001 (est) | Promote after per-row `RET n` / `ADD ESP,n` check |
+| 3 | NAME, Tier 1 only | 50–150 (est) | Promote only where the class appears in the image |
+| 4 | NAME, refutation-only | ~346 (est) | Convert to demotions, not renames |
+| 5 | XREF | 73 | Byte-check each; 59 are single-lane |
+| 6 | COMMENT / OTHER | 254 | Defer; documentation grade |
+
+**Excluded — do not promote.**
+
+- All 469 `DECOMPILE` rows. Decompiler output is regenerated on demand, so
+  there is no stored artifact to mutate.
+- The five BOUNDARY rows that are the campaign's own `ExportBundles.java`
+  truncation bug (shards 0237, 0279). Applying them would corrupt correct
+  bodies.
+- The eleven BOUNDARY rows whose correct action is **create a function**, not
+  extend one. `0x0055d988 __global_unwind2` ends correctly at `0x0055D9A7`;
+  extending it would swallow the separate routine at `0x0055D9A8`–`0x0055D9C9`.
+- `0x00455d9b` and `0x005d6b71`. Both assert a recorded-versus-pristine byte
+  mismatch, both reproduce as byte-identical, and both carry adjudication text
+  claiming pristine verification.
+- The 22 `CBattleEngineJetPart` / `CBattleEngineWalkerPart` NAME proposals. The
+  image contains no `JetPart`, no `WalkerPart`, and neither `.cpp` path, so they
+  are SOURCE grade and have no rung in the naming convention.
+- The 73 soft calling-convention ABI rows — `__fastcall` versus `__thiscall` on
+  a receiver-only function is byte-indistinguishable, as the campaign itself
+  states at `0x004013d0` — and the 81 `calling_conv=unknown` rows, which record
+  honest database state rather than a defect.
+- The 53 FLAGGED rows on RES/UMT/SYM/PAD lanes, twelve of them BOUNDARY. These
+  are Gen-29 corpus records, not Ghidra objects; correcting them is a campaign
+  edit, and two of the ones checked are already known false.
+
+**Preconditions before any ceremony.** Reconcile the duplicated addresses — 43
+differ at class level and 111 differ in total, against a documented 43 — and
+re-pin the bundle export against the live database. The bundles date from
+2026-08-15 and nothing records which database version they were taken against;
+`0x004858d0` is already stale because our own `5c82208f` ceremony demoted that
+name.
+
+**Campaign-layer corrections.** Discard the single `CONTRACT_REFUTED` row. It
+claims `0x005d85d8` sits in bss with no file bytes, but that VA maps to file
+offset `0x1D85D8`, which holds `00 00 a0 40` — exactly the 5.0f the Gen-29
+contract recorded. Void the 1,013 zero-evidence residual verdicts: 153
+`OPEN_CLASSIFICATION` plus 860 `TERMINAL_BOUNDED_AMBIGUITY` rows stamped
+`CONTRACT_VERIFIED` with empty evidence and notes.
+
+**Semantic pass.** The 8,102 fills read accurately — roughly 99% citation
+accuracy under byte-level attack, with randomly sampled and least-informative
+rows alike reproducing exactly — and they fill the semantic axis that
+`function-c1-closure-2026-08-11` explicitly left open. But the pass has no
+adversarial lane, its gate accepts C1 on three non-`UNKNOWN` fields, and zero
+C0 across 8,102 functions is a completion-pressure signature rather than a
+finding. No grade moves on it. Supply the missing lane in three tranches:
+mechanically verify the 966 `STATIC_FORMAL_PROOF` rows, adversarially review
+the 6,094 `SUPPORTED_BY_PE_STATIC_SPINE` rows, and route the 1,042
+`SOURCE_CORRELATED_STATIC` rows into rebuild parity, where a focused test is
+the cheapest falsifier available.
+
 ### Directive revisions
 
 - **2026-08-12 — directive established.** The prior longform goal was cleared by
@@ -520,6 +604,16 @@ Rank from current evidence; a reproduced contradiction outranks this list.
   ownership by 248 bytes to 93.912966399%. Generation 28 remains frozen on its
   prior db.18617 geometry; the two new rows receive no semantic or runtime grade
   here.
+- **2026-08-16 — DS DEEP Review integration frontier recorded.** The maintainer
+  set a long-horizon goal covering integration of the external
+  `F:\DS DEEP Review` drop alongside coequal rebuild advancement. That goal is a
+  short proxy that points at this section for revisable specifics, so the
+  cohort order, exclusion lists, preconditions, and campaign-layer corrections
+  are recorded above rather than in the goal string. Nothing in the mandate was
+  narrowed or retargeted: the drop adds an annotation layer over Generation 29
+  and changes no grade on its own authority. Five independent reviews graded the
+  drop before any of it was accepted; the exclusions exist because that review
+  found rows whose application would have damaged the database.
 - **2026-08-15 — Mission `Damage` slice carried into the rebuild.** The
   frontier records one closure and one new open question. No Ghidra, executable,
   campaign generation, or semantic grade changed, and no frontier was removed:
