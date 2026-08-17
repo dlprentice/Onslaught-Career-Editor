@@ -316,8 +316,15 @@ public sealed class RetailEventSchedulerTests
         Assert.Equal(unchecked((short)40_000), scheduler.EventNumOf(wide.Handle));
         Assert.Equal(-25_536, scheduler.EventNumOf(wide.Handle));
 
+        // NON-VACUITY: the probe is proved to be OUTSIDE int16 range, so the
+        // narrowing is really exercised, and the int-storing rebuild's answer is
+        // asserted to be excluded rather than merely different-looking.
+        Assert.True(40_000 > short.MaxValue);
+        Assert.NotEqual(40_000, scheduler.EventNumOf(wide.Handle));
+
         RetailEventDispatch fired = Assert.Single(scheduler.Update());
         Assert.Equal(-25_536, fired.EventNum);
+        Assert.NotEqual(40_000, fired.EventNum);
     }
 
     // Pins the re-arm path that makes CPanCamera::Update (Camera.cpp:392) viable:

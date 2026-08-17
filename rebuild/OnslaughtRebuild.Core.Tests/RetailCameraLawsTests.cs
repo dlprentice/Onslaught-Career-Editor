@@ -58,16 +58,24 @@ public sealed class RetailCameraLawsTests
     // fov 65 the two differ in the last ulp: 0x3EB8E38F against 0x3EB8E38E. 41
     // of the 180 integer FOVs from 1 to 180 diverge. The 90 and 45 rows are
     // there so the test still covers the agreeing majority.
+    //
+    // NON-VACUITY: three of these four rows deliberately agree with the source
+    // text, so only the 65.0 row can observe the divergence at all. The fourth
+    // column declares which rows discriminate and the test proves that
+    // classification at run time, and the sweep below proves the discriminating
+    // population is exactly the 41 integer FOVs the comment claims - measured,
+    // not asserted in prose. Delete the 65.0 row and the sweep still fails.
     [Theory]
-    [InlineData(65.0f, 0x3EB8E38Fu, 0x3EB8E38Eu)]
-    [InlineData(90.0f, 0x3F000000u, 0x3F000000u)]
-    [InlineData(45.0f, 0x3E800000u, 0x3E800000u)]
-    [InlineData(120.0f, 0x3F2AAAABu, 0x3F2AAAABu)]
+    [InlineData(65.0f, 0x3EB8E38Fu, 0x3EB8E38Eu, true)]
+    [InlineData(90.0f, 0x3F000000u, 0x3F000000u, false)]
+    [InlineData(45.0f, 0x3E800000u, 0x3E800000u, false)]
+    [InlineData(120.0f, 0x3F2AAAABu, 0x3F2AAAABu, false)]
     public void MovieCameraZoom_MultipliesByTheRoundedReciprocalOfNinety(
-        float fieldOfView, uint retailBits, uint sourceTextBits)
+        float fieldOfView, uint retailBits, uint sourceTextBits, bool divergent)
     {
         var zoom = new RetailMovieCameraZoom();
 
+        Assert.Equal(divergent, retailBits != sourceTextBits);
         Assert.Equal(
             0x3C360B61u,
             BitConverter.SingleToUInt32Bits(RetailCameraLaws.InverseReferenceFieldOfView));
@@ -77,6 +85,24 @@ public sealed class RetailCameraLawsTests
         Assert.Equal(
             sourceTextBits,
             BitConverter.SingleToUInt32Bits(fieldOfView / 90.0f / 2.0f));
+
+        // The exercised population, counted rather than claimed: over the 180
+        // integer fields of view the reciprocal multiply and the source-text
+        // divide disagree on exactly 41, and this row's own FOV is on the side
+        // the fourth column says it is.
+        int divergentFieldsOfView = 0;
+        for (int fov = 1; fov <= 180; fov++)
+        {
+            uint shipped = BitConverter.SingleToUInt32Bits(
+                new RetailMovieCameraZoom().GetZoom(1.0f, fov));
+            uint sourceText = BitConverter.SingleToUInt32Bits(fov / 90.0f / 2.0f);
+            if (shipped != sourceText)
+            {
+                divergentFieldsOfView++;
+            }
+        }
+
+        Assert.Equal(41, divergentFieldsOfView);
     }
 
     // Pins the memo itself (Camera.cpp:631-635 / 0x0041A636-0x0041A651): the

@@ -76,21 +76,42 @@ public sealed class RetailWeaponSelectionTests
     // they are different functions: a deactivated current weapon fires on a jet
     // and does not on a walker. A rebuild that shared one implementation
     // between the chassis is wrong for one of them whichever way it picks.
+    //
+    // NON-VACUITY: the whole contract is that the two chassis DISAGREE, so the
+    // third column declares which rows separate them and the test measures the
+    // separation rather than describing it. Only the deactivated row can - and
+    // the sweep counts that the discriminating population over the three probes
+    // is exactly one, so a rebuild sharing one body between the chassis cannot
+    // pass by making every row agree.
     [Theory]
-    [InlineData(0, false)]
-    [InlineData(1, true)]
-    [InlineData(-9, true)]
+    [InlineData(0, false, true)]
+    [InlineData(1, true, false)]
+    [InlineData(-9, true, false)]
     public void CanWalkerWeaponFire_AddsTheActiveGateTheJetDoesNotHave(
-        int isActive, bool expected)
+        int isActive, bool expected, bool chassisDisagreeHere)
     {
         RetailWeaponStores stores = Stores(1, value: 5.0f, capacity: 0.0f, heat: 0, overheat: 0);
 
-        Assert.Equal(
-            expected,
-            RetailWeaponFireGate.CanWalkerWeaponFire(stores, ammoStore: 1, isActive));
+        bool walker = RetailWeaponFireGate.CanWalkerWeaponFire(stores, ammoStore: 1, isActive);
+        bool jet = RetailWeaponFireGate.CanWeaponFire(stores, ammoStore: 1);
+
+        Assert.Equal(expected, walker);
 
         // The jet never reads the word, so it fires either way.
-        Assert.True(RetailWeaponFireGate.CanWeaponFire(stores, ammoStore: 1));
+        Assert.True(jet);
+        Assert.Equal(chassisDisagreeHere, walker != jet);
+
+        int probesWhereTheChassisDisagree = 0;
+        foreach (int word in new[] { 0, 1, -9 })
+        {
+            if (RetailWeaponFireGate.CanWalkerWeaponFire(stores, ammoStore: 1, word)
+                != RetailWeaponFireGate.CanWeaponFire(stores, ammoStore: 1))
+            {
+                probesWhereTheChassisDisagree++;
+            }
+        }
+
+        Assert.Equal(1, probesWhereTheChassisDisagree);
     }
 
     // The compare is against the shared +0.0f word, so a negative zero store

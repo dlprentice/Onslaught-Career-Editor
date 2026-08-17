@@ -126,6 +126,14 @@ public sealed class RetailChunkReaderTests
         Assert.Equal(6u, reader.Size);
         Assert.Equal(18, reader.WhereAmI);
 
+        // NON-VACUITY: the over-read state this test exists to describe is proved
+        // to have been reached - more bytes charged to the chunk than the chunk
+        // holds - and the unsigned difference is proved to have wrapped past the
+        // whole 32-bit range rather than clamping. A rebuild that refused or
+        // clamped the over-read never reaches this line.
+        Assert.True(reader.ReadSinceChunk > reader.Size);
+        Assert.Equal(0xFFFFFFFCu, unchecked(reader.Size - reader.ReadSinceChunk));
+
         Assert.Equal(0, reader.Skip());
         Assert.Equal(18, reader.WhereAmI);
         Assert.Equal(6u, reader.ReadSinceChunk);

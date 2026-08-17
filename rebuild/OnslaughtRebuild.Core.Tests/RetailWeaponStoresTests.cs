@@ -85,19 +85,37 @@ public sealed class RetailWeaponStoresTests
     // rounding-mode change and no helper call - /QIfist codegen - so the
     // conversion uses the ambient control word, which the CRT leaves at 0x027F:
     // round to nearest, ties to even. The third column is the source text, and
-    // it disagrees on three of these six rows.
+    // it disagrees on four of these six rows.
+    //
+    // NON-VACUITY: the fourth column declares whether the row separates the two
+    // models, and the test proves that classification at run time rather than
+    // trusting the comment. Two rows deliberately agree (2.5 and -2.5 are already
+    // ties-to-even), so a bare per-row NotEqual would be false; asserting the
+    // declared split instead proves the probe set contains four rows on which a
+    // truncating rebuild gives a different answer. Flip any `divergent: true` row
+    // to false and the test fails, so the discriminating population cannot be
+    // silently emptied.
     [Theory]
-    [InlineData(2.5f, 2, 2)]
-    [InlineData(3.5f, 4, 3)]
-    [InlineData(2.7f, 3, 2)]
-    [InlineData(1.5f, 2, 1)]
-    [InlineData(-2.5f, -2, -2)]
-    [InlineData(-1.5f, -2, -1)]
+    [InlineData(2.5f, 2, 2, false)]
+    [InlineData(3.5f, 4, 3, true)]
+    [InlineData(2.7f, 3, 2, true)]
+    [InlineData(1.5f, 2, 1, true)]
+    [InlineData(-2.5f, -2, -2, false)]
+    [InlineData(-1.5f, -2, -1, true)]
     public void AmmoCount_RoundsToNearestEvenWhereTheSourceTextTruncates(
-        float value, int retail, int sourceText)
+        float value, int retail, int sourceText, bool divergent)
     {
-        Assert.Equal(retail, RetailWeaponStoreReadouts.AmmoCount(Stores(value, 10.0f), 0));
+        Assert.Equal(divergent, retail != sourceText);
+
+        int measured = RetailWeaponStoreReadouts.AmmoCount(Stores(value, 10.0f), 0);
+
+        Assert.Equal(retail, measured);
         Assert.Equal(sourceText, (int)value);
+
+        if (divergent)
+        {
+            Assert.NotEqual((int)value, measured);
+        }
     }
 
     // An energy store reports no rounds: the `test edx, edx / jne 0x004144AA`

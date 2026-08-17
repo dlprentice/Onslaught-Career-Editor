@@ -49,6 +49,16 @@ public sealed class RetailWalkerWaterEntryTests
     // an entry; standing at the water line, the same ground ahead is well over
     // the margin and is one. This is what a rebuild that hard-wired either arm
     // would fail.
+    //
+    // NOT A GUARD ON THE SELECTOR, and that is measured rather than assumed. An
+    // "assert the two arms disagree here" guard was added to this method and then
+    // WITHDRAWN: hard-wiring the high arm (`groundHere - waterLevel > -inf`) still
+    // reproduces both rows and still makes the two probes disagree, because over a
+    // water line at zero the high arm's `ahead > float(here)` separates 10.0 from
+    // 0.0 on its own. The selector's own contract is guarded by
+    // GoingIntoWater_TakesTheLowArmAtExactlyTheMarginAboveWater and
+    // GoingIntoWater_MeasuresTheLowArmFromTheWaterLine, which that same mutant
+    // does kill. Read this method as what it is: two retail answers, pinned.
     [Theory]
     [InlineData(10.0f, 5.0f, false)]
     [InlineData(0.0f, 5.0f, true)]
@@ -93,6 +103,14 @@ public sealed class RetailWalkerWaterEntryTests
     // would reject, because rounding 4.3000000119 to float lifts it to
     // 4.3000001907. This is the row that separates `>` from `>=` at
     // 0x00413ABF; a sea-level test cannot.
+    //
+    // NON-VACUITY: the first three assertions ARE the exercised-population proof
+    // and are load-bearing rather than descriptive. The probe is proved to sit
+    // exactly ON the selector's threshold, so `>` and `>=` really do disagree
+    // here; the narrowed ground here is proved to be the lifted 0x4089999A; and
+    // the high arm is proved to REJECT this ground ahead, so the TRUE below can
+    // only have come from the low arm. Remove any one of them and the final
+    // assertion stops being attributable to the selector.
     [Fact]
     public void GoingIntoWater_TakesTheLowArmAtExactlyTheMarginAboveWater()
     {
@@ -101,6 +119,8 @@ public sealed class RetailWalkerWaterEntryTests
         const double ahead = 4.3000001;
 
         Assert.Equal((double)RetailWalkerWaterEntry.ShoreDepth, here - (double)waterLevel);
+        Assert.False(here - (double)waterLevel > (double)RetailWalkerWaterEntry.ShoreDepth);
+        Assert.True(here - (double)waterLevel >= (double)RetailWalkerWaterEntry.ShoreDepth);
         Assert.Equal(0x4089999Au, BitConverter.SingleToUInt32Bits((float)here));
         Assert.False(ahead > (double)(float)here);
 

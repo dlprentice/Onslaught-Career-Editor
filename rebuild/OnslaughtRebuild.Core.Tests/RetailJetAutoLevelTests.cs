@@ -40,14 +40,32 @@ public sealed class RetailJetAutoLevelTests
     // the seam: 0.1f squared in double is BELOW the folded constant, because
     // the constant was rounded up when it was folded. So a jet moving at
     // exactly 0.1 along one axis does NOT auto-level.
+    //
+    // NON-VACUITY: the third column declares whether the row separates the folded
+    // constant at 0x005D8C60 (0x3C23D70B) from a rebuild that wrote a plain 0.01f
+    // (0x3C23D70A), and the test measures that separation instead of asserting it
+    // in a comment. Only the 0.1f row does: 0.1f squared is >= 0x3C23D70A and
+    // < 0x3C23D70B, so it is the single probe on which the one-ulp difference is
+    // observable at all. The assertion proves that probe is really inside that
+    // one-ulp window, so the window cannot quietly become empty.
     [Theory]
-    [InlineData(0.0f, false)]
-    [InlineData(0.09f, false)]
-    [InlineData(0.1f, false)]
-    [InlineData(0.10000001f, true)]
-    [InlineData(5.0f, true)]
+    [InlineData(0.0f, false, false)]
+    [InlineData(0.09f, false, false)]
+    [InlineData(0.1f, false, true)]
+    [InlineData(0.10000001f, true, false)]
+    [InlineData(5.0f, true, false)]
     public void AutoLevel_GatesOnTheSquaredManoeuvreSpeedWhenGrounded(
-        float speedAlongX, bool expected) =>
+        float speedAlongX, bool expected, bool separatesTheFoldedConstant)
+    {
+        double magnitudeSq = RetailJetAutoLevel.VelocityMagnitudeSquared(
+            speedAlongX, 0.0f, 0.0f);
+        const float PlainHundredth = 0.01f;
+
+        Assert.Equal(
+            separatesTheFoldedConstant,
+            magnitudeSq >= PlainHundredth
+                && magnitudeSq < RetailJetAutoLevel.MinManoeuvreVelocitySq);
+
         Assert.Equal(
             expected,
             RetailJetAutoLevel.AutoLevel(
@@ -55,6 +73,7 @@ public sealed class RetailJetAutoLevelTests
                 velocityX: speedAlongX, velocityY: 0.0f, velocityZ: 0.0f,
                 energy: 1.0f,
                 doingBarrelCount: 0.0f));
+    }
 
     // The squared magnitude never leaves the x87 stack, so every partial
     // product and sum is at the ambient 53-bit precision. This vector is one

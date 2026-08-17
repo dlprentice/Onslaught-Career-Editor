@@ -119,6 +119,12 @@ Record a source or address only when it makes a current implementation decision
 auditable. Generated inventories, human-review gates, and proof-plan chains are
 not provenance.
 
+The exact **retail entity → owner → implementation → test** mappings for the
+carried behavior contracts live in one place,
+[`PARITY.md`](PARITY.md) → *Carried retail contracts*, together with the
+specimen anchor each was derived from and the measured mutation that kills its
+test. Add a row there when a contract is carried; do not start a second table.
+
 ## Current slice
 
 The normal Godot entry path now belongs to a presentation-only frontend state

@@ -48,19 +48,64 @@ public sealed class RetailBattleEngineGravityTests
     // dying table at 0x00407520 is {0.01f, 0.01f, 0.01f, jet}. Every entry is
     // asserted, so moving the scaled arm to any other state - or applying it
     // while dying - fails.
+    //
+    // NON-VACUITY: the scaled arm sits at ONE table index, so the whole contract
+    // is which index that is - and reading BattleEngine.h:28-34 as "walker first"
+    // moves it. The fourth column declares whether this state is the one the two
+    // tables disagree on, and the test measures the disagreement rather than
+    // taking the ordinals on trust. Exactly one of the three non-jet states may
+    // answer that description, which the sweep at the end counts.
     [Theory]
-    [InlineData(false, RetailBattleEngineState.MorphingIntoWalker, 0x3B03126Fu)]
-    [InlineData(false, RetailBattleEngineState.MorphingIntoJet, 0x3C23D70Au)]
-    [InlineData(false, RetailBattleEngineState.Walker, 0x3C23D70Au)]
-    [InlineData(true, RetailBattleEngineState.MorphingIntoWalker, 0x3C23D70Au)]
-    [InlineData(true, RetailBattleEngineState.MorphingIntoJet, 0x3C23D70Au)]
-    [InlineData(true, RetailBattleEngineState.Walker, 0x3C23D70Au)]
+    [InlineData(false, RetailBattleEngineState.MorphingIntoWalker, 0x3B03126Fu, true)]
+    [InlineData(false, RetailBattleEngineState.MorphingIntoJet, 0x3C23D70Au, false)]
+    [InlineData(false, RetailBattleEngineState.Walker, 0x3C23D70Au, false)]
+    [InlineData(true, RetailBattleEngineState.MorphingIntoWalker, 0x3C23D70Au, true)]
+    [InlineData(true, RetailBattleEngineState.MorphingIntoJet, 0x3C23D70Au, false)]
+    [InlineData(true, RetailBattleEngineState.Walker, 0x3C23D70Au, false)]
     public void Gravity_WalksBothJumpTables(
-        bool isDying, RetailBattleEngineState state, uint expectedBits) =>
+        bool isDying,
+        RetailBattleEngineState state,
+        uint expectedBits,
+        bool tablesDisagreeHere)
+    {
         Assert.Equal(
             expectedBits,
             BitConverter.SingleToUInt32Bits(
                 RetailBattleEngineGravity.Gravity(isDying, state, jetEnergy: 1.0f)));
+
+        Assert.Equal(
+            tablesDisagreeHere,
+            BitConverter.SingleToUInt32Bits(
+                RetailBattleEngineGravity.Gravity(false, state, jetEnergy: 1.0f))
+                != BitConverter.SingleToUInt32Bits(
+                    RetailBattleEngineGravity.Gravity(true, state, jetEnergy: 1.0f)));
+
+        // The exercised population, counted: across the three non-jet slots the
+        // alive table differs from the dying table at exactly one index, and it
+        // is index 0. If a rebuild moved the scaled arm the count stays 1 and
+        // this assertion still catches it, because the index is named.
+        RetailBattleEngineState[] nonJet =
+        [
+            RetailBattleEngineState.MorphingIntoWalker,
+            RetailBattleEngineState.MorphingIntoJet,
+            RetailBattleEngineState.Walker,
+        ];
+        int scaledSlots = 0;
+        int scaledIndex = -1;
+        foreach (RetailBattleEngineState slot in nonJet)
+        {
+            if (BitConverter.SingleToUInt32Bits(
+                    RetailBattleEngineGravity.Gravity(false, slot, jetEnergy: 1.0f))
+                == 0x3B03126Fu)
+            {
+                scaledSlots++;
+                scaledIndex = (int)slot;
+            }
+        }
+
+        Assert.Equal(1, scaledSlots);
+        Assert.Equal(0, scaledIndex);
+    }
 
     // Slot 3 forwards to the jet part in BOTH tables - 0x004074E8 and
     // 0x0040750D are the same two instructions - so the dying flag must not
