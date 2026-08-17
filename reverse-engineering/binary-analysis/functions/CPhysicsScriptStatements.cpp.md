@@ -25,10 +25,38 @@ withdrawn label can tell it was corrected and not lost.
 | `0x00426150` | `CCollisionSeekingRound__Init` | `CCollisionSeekingThing__Init` | class prefix moved; suffix unchanged |
 | `0x0042f5f0` | `CWeaponStatement__Create` | `WeaponDefinition__CreateAndRegisterByName` | owner corrected from parser statement to created definition |
 | `0x0042ffa0` | `CRoundStatement__Create` | `CRoundData__CreateAndRegisterByName` | owner corrected from parser statement to created round data |
-| `0x004309e0` | `CExplosionStatement__Create` | `ExplosionDefinition__CreateAndRegisterByName` | owner corrected from parser statement to created definition |
+| `0x004309e0` | `CExplosionStatement__Create` | `ExplosionDefinition_T3_004309e0` | owner corrected from parser statement to created definition; the corrected suffix was itself withdrawn on 2026-08-17 (see below) |
 | `0x00430e60` | `CComponentStatement__CreateAndRegisterByName` | `CComponent__CreateAndRegisterByName` | owner corrected from parser statement to created component |
 | `0x0043c010` | `CFeatureTexture__ApplyToFeatureByName` | `CFeatureExplosion__ApplyToFeatureByName` | feature field semantic corrected; prior texture gloss withdrawn |
 | `0x0043d500` | `CComponentIndexedScalar164__ApplyToComponentByName` | `CComponentAttackPriority__ApplyToComponentByName` | component field semantic corrected; generic indexed-scalar gloss withdrawn |
+
+## Name demotions — 2026-08-17
+
+The 2026-08-17 name cohort
+([`name-cohort-promotion-manifest-2026-08-17.tsv`](../name-cohort-promotion-manifest-2026-08-17.tsv))
+ran an anchor audit over every saved name in the image and demoted seven in
+this file to neutral `<prefix>_T3_<address>` placeholders. A `_T3_` name is a
+stable token, not an identity claim: it asserts nothing about class or method
+and exists so the address has a name that does not mislead.
+
+| Address | Superseded label | Current name | What the audit found |
+| --- | --- | --- | --- |
+| `0x004309e0` | `ExplosionDefinition__CreateAndRegisterByName` | `ExplosionDefinition_T3_004309e0` | `ExplosionDefinition` is absent from the image; no vtable owns this VA. |
+| `0x00434b60` | `CPhysicsScriptValue__LoadScalarAt08FromMemBuffer` | `CPhysicsScriptValue_T3_00434b60` | Class absent; the VA is slot 3 of `CUnitIndiscriminate`, `CUnitBig`, `CUnitWingman` and `CUnitRetreat`. |
+| `0x00435b20` | `CPhysicsWeaponModeValue__LoadTwoScalarsFromMemBuffer` | `CPhysicsWeaponModeValue_T3_00435b20` | The class *does* have an RTTI type descriptor `.?AVCPhysicsWeaponModeValue@@`, but it does not own this VA: slot 3 of `CUnitAttackPriority`, `CWeaponLaunchSequence` and `CComponentAttackPriority` does. Wrong owner, not a missing one. |
+| `0x00438400` | `CPhysicsRoundValueLeaf__shared_scalar_deleting_dtor` | `CPhysicsRoundValueLeaf_T3_00438400` | Class absent; the VA is slot 0 of `CRoundLength`, `CRoundSmart`, `CRoundMesh` and `CRoundMissile`. |
+| `0x0043a840` | `CPhysicsSpawnerValueLeaf__shared_scalar_deleting_dtor` | `CPhysicsSpawnerValueLeaf_T3_0043a840` | Class absent; the VA is slot 0 of `CSpawnerConditions`, `CSpawnerInfinite`, `CSpawnerBasedOn` and `CSpawnerPostSpawnDelay`. |
+| `0x0043b1a0` | `CPhysicsScriptValue__LoadOwnedStringAt08FromMemBuffer` | `CPhysicsScriptValue_T3_0043b1a0` | Class absent; the VA is slot 3 of `CUnitGroundWake`, `CUnitWaterWake`, `CUnitAfterburner` and `CUnitSpawnNoise`. |
+| `0x0043b970` | `CPhysicsExplosionValueLeaf__shared_scalar_deleting_dtor` | `CPhysicsExplosionValueLeaf_T3_0043b970` | Class absent; the VA is slot 0 of `CExplosionWaterSound`, `CExplosionShockwave`, `CExplosionOriented` and `CExplosionLight`. |
+
+**What was withdrawn, and what was not.** The audit graded *names* against RTTI
+and vtable anchors. It did not re-read any body, so the "Current evidence"
+column below still stands on its own measurements — the free path through
+`CDXMemoryManager__Free`, the field offsets, the `0x50`-byte record. Note also
+that the audit's own owner lists corroborate the "shared" reading in that
+column: each demoted leaf destructor is genuinely reached from four sibling
+vtables at the same slot. What is withdrawn is the invented owning class and
+the invented method spelling, nothing else.
 
 ---
 
@@ -56,7 +84,7 @@ withdrawn label can tell it was corrected and not lost.
 | `0x00430660` | `int __fastcall CSpawnerStatement__GetSerializedSize(void * this)` | Recovered top-level spawner-statement serialized-size body. |
 | `0x004306e0` | `void __thiscall CSpawnerStatement__LoadFromMemBuffer(void * this, void * memBuffer)` | Recovered top-level spawner-statement load body; dispatches type-6 child load helpers or skips unknown payload bytes. |
 | `0x004309a0` | `void __fastcall CExplosionStatement__CreateExplosionAndRecurse(void * this)` | Corrected from stale vfunc label to top-level explosion create-and-recurse update body. |
-| `0x004309e0` | `void __cdecl ExplosionDefinition__CreateAndRegisterByName(char * name)` | Creates a `0x50` explosion-like record by name and appends it to `DAT_008553f8`. |
+| `0x004309e0` | `void __cdecl ExplosionDefinition_T3_004309e0(char * name)` | Creates a `0x50` explosion-like record by name and appends it to `DAT_008553f8`. |
 | `0x00430ae0` | `int __fastcall CExplosionStatement__GetSerializedSize(void * this)` | Recovered top-level explosion-statement serialized-size body. |
 | `0x00430b60` | `void __thiscall CExplosionStatement__LoadFromMemBuffer(void * this, void * memBuffer)` | Recovered top-level explosion-statement load body; dispatches type-7 child load helpers or skips unknown payload bytes. |
 | `0x00430e20` | `void __fastcall CComponentStatement__CreateComponentAndRecurse(void * this)` | Corrected from stale vfunc label to top-level component create-and-recurse update body. |
@@ -147,7 +175,7 @@ withdrawn label can tell it was corrected and not lost.
 | --- | --- | --- |
 | `0x00435840` | `void __thiscall CWeaponBasedOn__ApplyToWeaponByName(void * this, char * weaponName)` | Searches global weapon list `DAT_008553e8` by name and copies selected fields from the base/source weapon named by `this + 0x8`. |
 | `0x004359c0` | `void __fastcall CPhysicsWeaponModeValue__dtor_base(void * this)` | Base destructor body called by `0x00437080` before optional object free; this supersedes the Wave 336 constructor-base wording. Wave987 removed the stale `constructor` tag and preserved `destructor` plus `supersedes-wave336-ctor-label`. |
-| `0x00435b20` | `void __thiscall CPhysicsWeaponModeValue__LoadTwoScalarsFromMemBuffer(void * this, void * memBuffer)` | Shared load helper for two 4-byte scalar fields at `this + 0x8` and `this + 0xc`. |
+| `0x00435b20` | `void __thiscall CPhysicsWeaponModeValue_T3_00435b20(void * this, void * memBuffer)` | Shared load helper for two 4-byte scalar fields at `this + 0x8` and `this + 0xc`. |
 | `0x00435c90` | `void __thiscall CWeaponLaunchAngle__LoadFromMemBuffer(void * this, void * memBuffer)` | Launch-angle load helper for three 4-byte fields at `this + 0x8`, `this + 0xc`, and `this + 0x10`. |
 | `0x00436130` | `void __thiscall CWeaponVolleySize__ApplyToWeaponModeByName(void * this, char * weaponModeName)` | Searches global weapon-mode list `DAT_008553ec` by record name at `+0x30`, rounds the scalar at `this + 0x8`, and writes record field `+0x48`. |
 | `0x00436320` | `void __thiscall CWeaponPreFireEffect__ApplyToWeaponModeByName(void * this, char * weaponModeName)` | Replaces the pre-fire effect owned string at weapon-mode record `+0x20`. |
@@ -172,7 +200,7 @@ withdrawn label can tell it was corrected and not lost.
 | `0x00438050` | `void __thiscall CPhysicsRoundValue__SetOwnedValueStringAt08(void * this, char * sourceString)` | Supersedes stale `CUnitAI` ownership; frees `this+0x8` and copies `sourceString` into the owned value string slot used by round-value handlers. |
 | `0x004380c0` | `void __fastcall CPhysicsRoundValue__dtor_base(void * this)` | Base destructor body that installs vtable `0x005da584`; that vtable slot 0 points at recovered boundary `0x004380d0`. |
 | `0x004380d0` | `void * __thiscall CPhysicsRoundValue__scalar_deleting_dtor(void * this, int flags)` | Recovered missing base scalar-deleting destructor wrapper from vtable `0x005da584`; optionally frees `this` through `OID__FreeObject`. |
-| `0x00438400` | `void * __thiscall CPhysicsRoundValueLeaf__shared_scalar_deleting_dtor(void * this, int flags)` | Shared leaf scalar-deleting destructor wrapper that calls `CPhysicsRoundValue__dtor_base` and, when flags bit 0 is set, frees `this` through `CDXMemoryManager__Free(&DAT_009c3df0, this)` via `0x00549220`, not `OID__FreeObject`. |
+| `0x00438400` | `void * __thiscall CPhysicsRoundValueLeaf_T3_00438400(void * this, int flags)` | Shared leaf scalar-deleting destructor wrapper that calls `CPhysicsRoundValue__dtor_base` and, when flags bit 0 is set, frees `this` through `CDXMemoryManager__Free(&DAT_009c3df0, this)` via `0x00549220`, not `OID__FreeObject`. |
 | `0x00438b40` | `void __thiscall CRoundGridOfFear__ApplyToRoundByName(void * this, char * roundName)` | Searches `DAT_008553f0` by round name and writes `ROUND(this+0x8)` to round record `+0x58`. |
 | `0x004394e0` | `void __thiscall CRoundSeek__ApplyToRoundByName(void * this, char * roundName)` | Recovered function boundary from `CRoundSeek` vtable context; writes nested child value result from `this+0x8` to round record `+0x48`. |
 | `0x00439580` | `void __thiscall CRoundSeek__LoadFromMemBuffer(void * this, void * memBuffer)` | Reads nested value type id, dispatches `CPhysicsScriptStatements__CreateStatementType11`, and stores the child value at `this+0x8`. |
@@ -193,7 +221,7 @@ withdrawn label can tell it was corrected and not lost.
 | --- | --- | --- |
 | `0x004014c0` | `void __thiscall SharedVFunc__NoOpOneArg_004014c0(void * this, int arg0)` | Wave 339 superseded the older frontend-specific label after vtable-slot evidence showed broad shared no-op use. |
 | `0x00405930` | `int __thiscall SharedVFunc__ReturnZero_00405930(void * this)` | Wave 339 superseded the older controller-specific label after vtable-slot evidence showed broad shared return-zero use. |
-| `0x00434b60` | `void __thiscall CPhysicsScriptValue__LoadScalarAt08FromMemBuffer(void * this, void * memBuffer)` | Recovered shared scalar load boundary for the value object field at `this+0x8`. |
+| `0x00434b60` | `void __thiscall CPhysicsScriptValue_T3_00434b60(void * this, void * memBuffer)` | Recovered shared scalar load boundary for the value object field at `this+0x8`. |
 | `0x004398f0` | `int __fastcall CPhysicsScriptValue__GetOwnedStringAt08SerializedSize(void * this)` | Recovered shared owned-string serialized-size boundary. |
 | `0x00439b40` | `void * __cdecl CPhysicsScriptStatements__CreateStatementType6(int valueType)` | Hardened the type-6/spawner value factory signature/comment. |
 | `0x00439e70` | `void __thiscall CSpawnerBasedOn__ApplyToSpawnerByName(void * this, char * spawnerName)` | Applies base-spawner fields after resolving the named spawner record. |
@@ -207,8 +235,8 @@ withdrawn label can tell it was corrected and not lost.
 | `0x0043a570` / `0x0043a600` | `CSpawnerMinRange__ApplyToSpawnerByName`, `CSpawnerMaxRange__ApplyToSpawnerByName` | Recovered spawner range apply helpers. |
 | `0x0043a690` / `0x0043a720` | `CSpawnerPreSpawnDelay__ApplyToSpawnerByName`, `CSpawnerPostSpawnDelay__ApplyToSpawnerByName` | Recovered pre/post-spawn delay apply helpers. |
 | `0x0043a7b0` | `CSpawnerInfinite__ApplyToSpawnerByName` | Recovered spawner infinite apply helper. |
-| `0x0043a840` | `void * __thiscall CPhysicsSpawnerValueLeaf__shared_scalar_deleting_dtor(void * this, int flags)` | Shared leaf scalar-deleting destructor wrapper for spawner value vtables; Wave1183 corrected the optional-free path to `CDXMemoryManager__Free(&DAT_009c3df0, this)` via `0x00549220`, not `OID__FreeObject`. |
-| `0x0043b1a0` | `void __thiscall CPhysicsScriptValue__LoadOwnedStringAt08FromMemBuffer(void * this, void * memBuffer)` | Recovered shared owned-string load boundary. |
+| `0x0043a840` | `void * __thiscall CPhysicsSpawnerValueLeaf_T3_0043a840(void * this, int flags)` | Shared leaf scalar-deleting destructor wrapper for spawner value vtables; Wave1183 corrected the optional-free path to `CDXMemoryManager__Free(&DAT_009c3df0, this)` via `0x00549220`, not `OID__FreeObject`. |
+| `0x0043b1a0` | `void __thiscall CPhysicsScriptValue_T3_0043b1a0(void * this, void * memBuffer)` | Recovered shared owned-string load boundary. |
 | `0x004db8c0` | `int __fastcall CPhysicsScriptValue__GetScalarSerializedSize4(void * this)` | Recovered shared scalar serialized-size helper returning fixed size `4`. |
 
 ## Explosion Value Helpers
@@ -225,7 +253,7 @@ withdrawn label can tell it was corrected and not lost.
 | `0x0043b3a0`, `0x0043b430`, `0x0043b4c0`, `0x0043b700` | `CExplosionScalar34__ApplyToExplosionByName`, `CExplosionScalar38__ApplyToExplosionByName`, `CExplosionScalar3C__ApplyToExplosionByName`, `CExplosionScalar40__ApplyToExplosionByName` | Recovered offset-backed scalar apply helpers for explosion record fields `+0x34`, `+0x38`, `+0x3c`, and `+0x40`; scalar field semantics remain unproven. |
 | `0x0043b550`, `0x0043b5e0`, `0x0043b670` | `CExplosionScalar44__ApplyToExplosionByName`, `CExplosionScalar48__ApplyToExplosionByName`, `CExplosionScalar4C__ApplyToExplosionByName` | Recovered offset-backed scalar apply helpers for explosion record fields `+0x44`, `+0x48`, and `+0x4c`; scalar field semantics remain unproven. |
 | `0x0043b790` / `0x0043b880` | `CExplosionSound__ApplyToExplosionByName`, `CExplosionWaterSound__ApplyToExplosionByName` | Owned-string explosion sound apply helpers for record fields `+0x28` and `+0x2c`. |
-| `0x0043b970` | `void * __thiscall CPhysicsExplosionValueLeaf__shared_scalar_deleting_dtor(void * this, int flags)` | Corrected stale vfunc-slot label to shared leaf scalar-deleting destructor wrapper evidence; Wave1183 corrected the optional-free path to `CDXMemoryManager__Free(&DAT_009c3df0, this)` via `0x00549220`, not `OID__FreeObject`. |
+| `0x0043b970` | `void * __thiscall CPhysicsExplosionValueLeaf_T3_0043b970(void * this, int flags)` | Corrected stale vfunc-slot label to shared leaf scalar-deleting destructor wrapper evidence; Wave1183 corrected the optional-free path to `CDXMemoryManager__Free(&DAT_009c3df0, this)` via `0x00549220`, not `OID__FreeObject`. |
 
 ## Feature Value Helpers
 

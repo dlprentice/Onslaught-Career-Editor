@@ -20,7 +20,7 @@ withdrawn label can tell it was corrected and not lost.
 | `0x004bb8c0` | `FUN_004bb8c0` | `CMusic__PlaySelection` | placeholder replaced; this address carries a name now |
 | `0x004f2150` | `FUN_004f2150` | `CText__Ctor` | placeholder replaced; this address carries a name now |
 | `0x004f21f0` | `FUN_004f21f0` | `CText__Init` | placeholder replaced; this address carries a name now |
-| `0x004fdc10` | `FUN_004fdc10` | `CFrontEndPage__Init_ReturnTrue` | placeholder replaced; this address carries a name now |
+| `0x004fdc10` | `FUN_004fdc10` | `SharedVFunc__ReturnTrue_004fdc10` | placeholder replaced; the 2026-07-28 `CFrontEndPage__Init_ReturnTrue` reading was itself withdrawn on 2026-08-17 (see below) |
 | `0x005145f0` | `FUN_005145f0` | `CController__ctor` | placeholder replaced; this address carries a name now |
 | `0x005159b0` | `FUN_005159b0` | `PlatformInput__ResetKeyStateTables` | placeholder replaced; this address carries a name now |
 | `0x00541240` | `FUN_00541240` | `CDXFrontEndVideo__SetDefaultSize` | placeholder replaced; this address carries a name now |
@@ -30,6 +30,23 @@ Where a row's **suffix** moved rather than only its class prefix, the behavioura
 text beside it in this note was written for the old name. This sweep corrected
 names against the export and re-derived no behaviour, so read any such gloss as
 unverified against the new name until it is re-measured.
+
+## Name correction — 2026-08-17
+
+One row above was corrected again. `0x004fdc10` had been read as
+`CFrontEndPage__Init_ReturnTrue`, a FrontEnd-exclusive page initializer. The
+2026-08-17 name cohort
+([`name-cohort-promotion-manifest-2026-08-17.tsv`](../../name-cohort-promotion-manifest-2026-08-17.tsv))
+counted the references and found **36 data references spread over 36 distinct
+vtable classes** — the address is a shared `return 1` stub reused image-wide,
+and FrontEnd exclusivity is refuted. It is now
+`SharedVFunc__ReturnTrue_004fdc10`.
+
+This matters beyond the name: the "Called Functions" table below listed this
+address with the purpose `Resource loading`. That gloss is withdrawn, not
+reworded. A stub that 35 other classes also point at cannot be doing
+FrontEnd resource loading, and what `CFrontEnd__Init` gains by calling it is
+no longer claimed here.
 
 ---
 
@@ -174,7 +191,7 @@ Complex logic determines which page to show first:
 | 0x0044b060 | CEventManager__Init | Unknown init |
 | 0x0041bd00 | CCareer__Update | Career update |
 | 0x004687e0 | CFrontEnd__LoadSharedResources | Resource loading |
-| 0x004fdc10 | CFrontEndPage__Init_ReturnTrue | Resource loading |
+| 0x004fdc10 | SharedVFunc__ReturnTrue_004fdc10 | **`Resource loading` withdrawn.** Measured 2026-08-17: 36 data references from 36 distinct vtable classes. It is a shared `return 1` stub, not a FrontEnd-owned initializer, and no resource-loading purpose survives the measurement. |
 | 0x00541240 | CDXFrontEndVideo__SetDefaultSize | Resource loading |
 | 0x0040c640 | DebugTrace | Debug logging |
 | 0x0044d320 | CFrontEnd__InitPageStateDefaults | Unknown |

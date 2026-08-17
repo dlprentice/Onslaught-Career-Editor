@@ -93,7 +93,7 @@ struct CDXPatchPool {
 | 0x0048f2f0 | CDXPatch__SetGridOriginStepAndRebuild | 0x30 | Wave807 owner/signature correction; sets patch grid origin/step fields and rebuilds vertices from `CDXLandscape__UpdateLOD` callsite `0x00546fe6` |
 | 0x0048f320 | CLandscapeVB__RestoreAndRebuildIfDirty | 0x30 | Wave422 owner/signature correction; vtable slot restore/rebuild wrapper |
 | 0x00550380 | CLandscapeVB__ctor | 0x20 | Sets vtable to 0x005e5114 |
-| 0x005503a0 | CDXPatch__Destructor_thunk | 0x10 | Thunk to CVBuffer destructor |
+| 0x005503a0 | CDXPatch_T3_005503a0 | 0x10 | Thunk to CVBuffer destructor. The `CDXPatch__Destructor_thunk` spelling was demoted to a neutral Tier-3 placeholder on 2026-08-17: the anchor audit found no `CDXPatch` type descriptor in the image and no vtable owning this VA. The body reading — a ten-byte thunk into the CVBuffer destructor — is unaffected, and the sibling `CDXPatch__*` rows above were not part of that cohort. |
 | 0x005503b0 | CDXPatchManager__ReleasePatches | 0x20 | Releases patch pool via vtable call |
 | 0x005503d0 | CDXPatchManager__ResetPatchSlots | 0x30 | Resets all slot indices to -1 (0xFFFF) |
 | 0x00550400 | CDXPatchManager__AllocatePatchSlot | 0x30 | Finds free slot, returns patch pointer |

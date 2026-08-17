@@ -1,7 +1,7 @@
 # WorldPhysicsManager.cpp Functions
 
 Status: active static function map
-Last updated: 2026-08-13
+Last updated: 2026-08-17
 Source File: `C:\dev\ONSLAUGHT2\WorldPhysicsManager.cpp` (named by the shipped image; absent from `references/Onslaught/`) | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
 This file holds the game's **central object factory**. Eight `Create*` entry
@@ -16,6 +16,18 @@ purpose is inferred from source coordinates alone. The `0x0050FF10` row now
 matches the separately gated live-Ghidra explosion identity; see
 [`cexplosion-factory-callers-2026-08-10.md`](../cexplosion-factory-callers-2026-08-10.md).
 
+The `0x00510060` and `0x00510150` rows carried `CreateEffect` and
+`CreateTrigger` until 2026-08-17, when the name cohort recorded in
+[`name-cohort-promotion-manifest-2026-08-17.tsv`](../name-cohort-promotion-manifest-2026-08-17.tsv)
+replaced both suffixes with the product class each factory actually builds.
+`0x00510060` installs vtable `0x005E45E0`, whose COL at `0x006184C0` names
+`.?AVCFeature@@`, and that vtable's slot 7 returns the shipped literal
+`CFeature` at `0x0063DA28`. `0x00510150` installs vtable `0x005E477C`, COL
+`0x00618538` naming `.?AVCHazard@@`, slot 7 returning the shipped literal
+`CHazard` at `0x0063DA50`. No `CTrigger` or `CreateTrigger` string exists
+anywhere in the image. The `CWorldPhysicsManager` prefix itself has no RTTI and
+rests only on the alloc-site path `C:\dev\ONSLAUGHT2\WorldPhysicsManager.cpp`.
+
 | Address | Current or corrected identity | Bytes | `ret imm` bytes | Source lines | Constructs via |
 | --- | --- | ---: | ---: | --- | --- |
 | `0x0050F4B0` | `CWorldPhysicsManager__CreateSquad` | 268 | 0 | 145–149 | `CDXMemoryManager__Alloc` ×2 |
@@ -24,8 +36,8 @@ matches the separately gated live-Ghidra explosion identity; see
 | `0x0050F970` | `CWorldPhysicsManager__CreateSpawner` | 200 | 0 | 230 | `CSpawnerThng__Constructor` |
 | `0x0050FA40` | `CWorldPhysicsManager__CreateCharacter` | 590 | 0 | 247–251 | `CUnit__ctor_base` ×3 |
 | `0x0050FF10` | `CWorldPhysicsManager__CreateExplosion` | 152 | 0 | 265 | `CComplexThing__ctor_base`, then strict `CExplosion` vtables |
-| `0x00510060` | `CWorldPhysicsManager__CreateEffect` | 140 | 0 | 278 | `CComplexThing__ctor_base` |
-| `0x00510150` | `CWorldPhysicsManager__CreateTrigger` | 165 | 0 | 292 | `CComplexThing__ctor_base` |
+| `0x00510060` | `CWorldPhysicsManager__CreateFeature` | 140 | 0 | 278 | `CComplexThing__ctor_base` |
+| `0x00510150` | `CWorldPhysicsManager__CreateHazard` | 165 | 0 | 292 | `CComplexThing__ctor_base` |
 | `0x005102A0` | `CWorldPhysicsManager__InitializeLists` | 626 | 0 | 301–309 | `CDXMemoryManager__Alloc` ×9, `CSPtrSet__Init` ×9 |
 
 ## What the shape shows
@@ -35,11 +47,13 @@ Three tiers are visible in the constructor column, and they cost nothing to read
 - **`CRound__ctor` ×2** for projectiles and **`CUnit__ctor_base` ×3** for
   characters — multiple constructor calls in one factory, so these branch on a
   subtype before constructing.
-- **`CComplexThing__ctor_base`** shared by explosions, effects and triggers —
+- **`CComplexThing__ctor_base`** shared by explosions, features and hazards —
   three factory paths built from one base class, each in a small body of
-  140–165 bytes. Only the explosion row has the additional strict-RTTI/vtable
-  proof cited above; this table does not establish the other two complete
-  construction contracts.
+  140–165 bytes. All three now carry a product-class anchor: the explosion row
+  has the strict-RTTI/vtable proof cited above, and the feature and hazard rows
+  have the COL-plus-shipped-literal pair recorded above. What none of the three
+  establishes is a complete construction contract; only the class each factory
+  returns is measured.
 - **`CWeapon__ctor_base`** and **`CSpawnerThng__Constructor`** each used once.
 
 `InitializeLists` performs nine allocations paired with nine `CSPtrSet__Init`

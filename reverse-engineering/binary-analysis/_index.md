@@ -327,9 +327,11 @@ the document it links.
 > closeout, are the current record of which names are demoted.
 >
 > The tracked
-> [`ghidra-function-name-table-2026-08-13.tsv`](ghidra-function-name-table-2026-08-13.tsv)
+> [`ghidra-function-name-table-2026-08-17.tsv`](ghidra-function-name-table-2026-08-17.tsv)
 > is the current 8,329-row address-to-name projection and the mechanical
-> checker's authority after the verified
+> checker's authority. It supersedes
+> [`ghidra-function-name-table-2026-08-13.tsv`](ghidra-function-name-table-2026-08-13.tsv),
+> which was the authority after the verified
 > [34-boundary promotion](mission-script-registry-boundary-live-promotion-2026-08-13.md)
 > and subsequent
 > [75-row vocabulary promotion](mission-script-registry-vocabulary-live-promotion-2026-08-13.md),
@@ -341,10 +343,20 @@ the document it links.
 > followed by the
 > [23-boundary CRT P0 promotion](crt-runtime-p0-ghidra-live-promotion-2026-08-14.md),
 > the CRT EH parent repair, and the
-> [two-boundary D3DX promotion](d3dx-gap-two-function-ghidra-live-promotion-2026-08-14.md).
-> The 2026-08-12 and July tables remain dated artifacts for their original
-> checks and pinned receipts. The current count is a discovered census, not a
-> permanent ceiling.
+> [two-boundary D3DX promotion](d3dx-gap-two-function-ghidra-live-promotion-2026-08-14.md),
+> but which then sat unrefreshed through three further live promotions. The
+> 2026-08-17 table closes that gap: it adds the four
+> [HUD route demotions](hud-route-name-demotion-live-promotion-2026-08-14.md)
+> and the 158 function renames of the
+> [2026-08-17 name cohort](name-cohort-promotion-manifest-2026-08-17.tsv),
+> 162 rows in all, and it carries the body ranges left by the 41-row
+> [boundary cohort](boundary-cohort41-promotion-manifest-2026-08-16.tsv).
+> The row count is unchanged at 8,329: no function was created or destroyed by
+> any of the three.
+>
+> The 2026-08-13, 2026-08-12 and July tables remain dated artifacts for their
+> original checks and pinned receipts. The current count is a discovered
+> census, not a permanent ceiling.
 
 The closeout and per-address plan supersede older saved names where they
 conflict. Static accounting does not prove runtime behavior, exact layouts,

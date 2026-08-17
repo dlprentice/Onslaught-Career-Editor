@@ -16,13 +16,41 @@ withdrawn label can tell it was corrected and not lost.
 | --- | --- | --- | --- |
 | `0x004227e0` | `CCarverAI__OnHit` | `CCarver__OnHit` | class prefix moved; suffix unchanged |
 | `0x00422820` | `CCarverAI__Fire` | `CCarver__Fire` | class prefix moved; suffix unchanged |
-| `0x00422910` | `CCarver__VFunc104_IsWingBlendAboveThreshold` | `CCarver__VFunc104_IsWingBlendAtOrBelowThreshold` | Same class; the predicate is **inverted** (`Above` to `AtOrBelow`). Any text written for the old sense is now wrong in direction, not just in name. |
+| `0x00422910` | `CCarver__VFunc104_IsWingBlendAboveThreshold` | `CCarver__VFunc105_IsWingBlendAtOrBelowThreshold` | Same class; the predicate is **inverted** (`Above` to `AtOrBelow`). Any text written for the old sense is now wrong in direction, not just in name. The slot ordinal was corrected separately on 2026-08-17 (`104` to `105`); see the note below. |
 | `0x00422970` | `CCarverAI__CanStartAttack` | `CCarver__CanStartAttack` | class prefix moved; suffix unchanged |
 
 Where a row's **suffix** moved rather than only its class prefix, the behavioural
 text beside it in this note was written for the old name. This sweep corrected
 names against the export and re-derived no behaviour, so read any such gloss as
 unverified against the new name until it is re-measured.
+
+## Slot-ordinal corrections — 2026-08-17
+
+Both CCarver virtual names recovered by Wave945 encoded the wrong vtable
+ordinal. The 2026-08-17 name cohort
+([`name-cohort-promotion-manifest-2026-08-17.tsv`](../name-cohort-promotion-manifest-2026-08-17.tsv))
+measured the ordinals directly out of CCarver vtable `0x005E0D8C` (COL class
+`CCarver`, 118 entries) and corrected both by one. The original numbering
+started at `head+4` — the scalar-deleting-destructor slot — and so dropped the
+vtable's true slot 0.
+
+| Address | Superseded label | Current name | Correction |
+| --- | --- | --- | --- |
+| `0x004228b0` | `CCarver__VFunc35_RenderWithFadeGlobal` | `CCarver__VFunc36_RenderWithFadeGlobal` | Slot ordinal only. Vtable `0x005E0D8C` holds this VA at slot 36, entry address `0x005E0E1C`. |
+| `0x00422910` | `CCarver__VFunc104_IsWingBlendAtOrBelowThreshold` | `CCarver__VFunc105_IsWingBlendAtOrBelowThreshold` | Slot ordinal only. Vtable `0x005E0D8C` holds this VA at slot 105, entry address `0x005E0F30`. |
+
+This corrected the ordinal and nothing else: neither body, boundary, class nor
+predicate sense was re-measured by that cohort. The Wave945 narrative below
+still spells both withdrawn ordinals; it is left as written because it records
+what that wave did, not what the database now holds.
+
+**Open, and not resolved here.** The `CCarver__Thunk_CallGuideVFunc08` gloss at
+`0x00422750` says "CCarver vtable slot 63". That ordinal was written under the
+same head+4 convention this section just corrected, so it is likely off by one
+as well — but no one has measured it against `0x005E0D8C`, the 2026-08-17
+cohort did not include it, and the name itself encodes the *guide* vtable's
+slot 8 rather than a CCarver ordinal. Left as found rather than adjusted by
+analogy.
 
 ---
 
@@ -59,8 +87,8 @@ Wave1129 (`wave1129-lifecycle-init-current-risk-review`) re-read and tag-normali
 | 0x004227a0 | CCarverAI__CloseWings | `void __fastcall CCarverAI__CloseWings(void * this)` | Wing-close animation helper. |
 | 0x004227e0 | CCarver__OnHit | `void __thiscall CCarver__OnHit(void * this, void * otherThing, void * collisionReport)` | Hit override with explicit stack arguments. |
 | 0x00422820 | CCarver__Fire | `int __fastcall CCarver__Fire(void * this)` | Fire/animation helper; runtime weapon behavior remains unproven. |
-| 0x004228b0 | CCarver__VFunc35_RenderWithFadeGlobal | `void __thiscall CCarver__VFunc35_RenderWithFadeGlobal(void * this, uint render_flags)` | Wave945 recovered CCarver vtable slot 35 render wrapper; compares `this+0x280` against `0x005d856c`, wraps `CThing__Render(this, render_flags | 0x40)` with global `0x0063012c`, and returns with `RET 0x4`. |
-| 0x00422910 | CCarver__VFunc104_IsWingBlendAtOrBelowThreshold | `int __fastcall CCarver__VFunc104_IsWingBlendAtOrBelowThreshold(void * this)` | Wave945 recovered CCarver vtable slot 104 predicate; compares `this+0x280` against `0x005d856c` and returns `1` on the above-threshold path or `0` otherwise. |
+| 0x004228b0 | CCarver__VFunc36_RenderWithFadeGlobal | `void __thiscall CCarver__VFunc36_RenderWithFadeGlobal(void * this, uint render_flags)` | Wave945 recovered CCarver vtable slot 36 render wrapper; compares `this+0x280` against `0x005d856c`, wraps `CThing__Render(this, render_flags | 0x40)` with global `0x0063012c`, and returns with `RET 0x4`. |
+| 0x00422910 | CCarver__VFunc105_IsWingBlendAtOrBelowThreshold | `int __fastcall CCarver__VFunc105_IsWingBlendAtOrBelowThreshold(void * this)` | Wave945 recovered CCarver vtable slot 105 predicate; compares `this+0x280` against `0x005d856c` and returns `1` on the above-threshold path or `0` otherwise. **The direction of that return sentence still reads for the withdrawn `Above` name and has not been re-measured; see the 2026-07-28 correction table above.** |
 | 0x00422930 | CCarverAI__SetLastAttackTime | `void __fastcall CCarverAI__SetLastAttackTime(void * this)` | Stores current global time into the last-attack timestamp field. |
 | 0x00422940 | CCarverAI__IsRecentlyAttacked | `int __fastcall CCarverAI__IsRecentlyAttacked(void * this)` | Short cooldown predicate using the last-attack timestamp. |
 | 0x00422970 | CCarver__CanStartAttack | `int __fastcall CCarver__CanStartAttack(void * this)` | Recovered boundary for attack-start predicate. |

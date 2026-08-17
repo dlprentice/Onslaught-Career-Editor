@@ -30,7 +30,7 @@ The function accesses the stack frame of `CTexture__FindTexture` via the unaffec
 
 | Address | Name | Purpose |
 |---------|------|---------|
-| 0x00449d40 | OID__FreeObject_Callback | Cleanup/deallocation callback wrapper (calls `OID__FreeObject`) |
+| 0x00449d40 | OID_T3_00449d40 | Cleanup/deallocation callback wrapper (calls `OID__FreeObject`). Demoted from `OID__FreeObject_Callback` on 2026-08-17: no `OID` type descriptor is present in the image and no vtable owns this VA. The wrapper reading is a body observation and is unaffected, but note that `OID__FreeObject` itself is not a name the current Ghidra function table carries, so the callee in that parenthesis is unresolved rather than merely renamed. |
 
 Call sites often push additional debug context (alloc tag / file / line) for consistency with allocation sites, but this helper ultimately frees the pointer.
 

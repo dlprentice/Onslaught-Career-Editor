@@ -155,6 +155,15 @@
       "irrecoverableHistoricalIdentity": "Atomic14 formal-proof.ready.json: 23028 bytes / a504c24b1eab555da8a01fc56d91561d3147a508dd3f906b0ac41e97697a83e6; explicitly not reconstructed or substituted. Gen3/Gen4 READY receipts remain archival losses and are not current replay dependencies."
     },
     "latestLiveGhidraState": {
+      "_supersededInPlace_20260817": "This key described the 2026-08-14 HUD demotion at db.18618/db.18619 and was left stale by BOTH of 2026-08-17's promotions until the name-oracle refresh caught it. It is the routing key a resuming agent reads for live Ghidra state, so staleness here is a defect, not bookkeeping.",
+      "liveDbVersion": "db.18621",
+      "liveAndTrackedAreTwins": true,
+      "projectPayload": "19 files, 187,059,077 bytes; canonical inventory SHA-256 08a7ffdaca6864a03431997f95730600abbbda0f25f39f7b0c12ae1348307377",
+      "promotion1_boundaryCohort41": "2026-08-17, db.18619 -> db.18620. 41 function bodies grown, 3,293 bytes recovered. Applier tools/GhidraApplyBoundaryCohort41V4.java; manifest reverse-engineering/binary-analysis/boundary-cohort41-promotion-manifest-2026-08-16.tsv. POST: functions 8329, instructions 551232, references 234493, definedData 48583, undefinedData 3907629, bookmarks 2301. Collateral: 8,288 non-target rows unchanged, digest 96a0d2d0...641b5 both sides.",
+      "promotion2_nameCohort160": "2026-08-17, db.18620 -> db.18621. 158 function renames + 2 label renames. Applier tools/GhidraApplyNameCohort160V2.java; manifest reverse-engineering/binary-analysis/name-cohort-promotion-manifest-2026-08-17.tsv sha256 00362b03... Symbols 26096 -> 26096 with 160 added and 160 removed; zero non-target renames; 32/32 collateral checks.",
+      "backups": "Off-volume on D:, all restore-proven and reopened read-only: 2026-08-16-boundary-cohort41-pre-live, 2026-08-17-boundary-cohort41-pre-live-v2, 2026-08-17-boundary-cohort41-post-live, 2026-08-17-name-cohort160-pre-live (preserves the db.18620 rollback point), 2026-08-17-name-cohort160-post-live.",
+      "currentNameProjection": "reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-17.tsv; 8,329 rows; SHA-256 a59aa28f333eccdde4567ee9aec2f512527d0fd06e8d32c96c5ac90e87ef74f4",
+      "_priorRecord_20260814_hudDemotion": {
       "promotionReadback": "local-lab/ghidra-hud-route-demotion-20260814-v1/runs/live-readback/targets.tsv",
       "promotionReadbackBytes": 2204,
       "promotionReadbackSha256": "f9f99b1d05941b40907a98cd3e6cafe81317c6fe5aa9d41cce835d8d76cb6cd5",
@@ -191,6 +200,7 @@
       "trackedSnapshotSynchronized": true,
       "recoveryMutation": false,
       "claimBoundary": "Exactly four HUD route rows changed name, displayed signature, comment, and tags (metadata-only demotion; db.18618 -> db.18619). Function count, boundaries, bodies, instructions, program bytes, data, references, and all 8,325 non-target rows are byte-identical; at program scope only commentsSha256 moved. No original C++ symbol was recovered; no campaign generation, runtime contract, or reconstruction parity is claimed."
+    }
     },
     "activeHypothesisOverlay": {
       "status": "NONCANONICAL_SCRATCH_ONLY_NEVER_SYNC_TO_LIVE",

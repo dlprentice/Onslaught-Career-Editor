@@ -52,9 +52,9 @@ Non-blocking script event system for mission scripting. "NB" stands for "Non-Blo
 | 0x005386b0 | CPostEventData__ScalarDeletingDestructor | WAVE586 | `void * __thiscall ... (void * this, byte delete_flags)` |
 | 0x00538780 | CScriptEventNB__ScalarDeletingDestructor2 | WAVE586 | `void * __thiscall ... (void * this, byte delete_flags)` |
 | 0x00538950 | CScriptEventNB__BaseDestructor | WAVE586 | `void __fastcall ... (void * event_nb)`; restores vtable and shuts down monitor base |
-| 0x00538860 | CScriptEventNB__CreateEventListener | WAVE586 | `void __fastcall ... (void * event_nb)`; allocates the listener set |
+| 0x00538860 | CScriptEventNB__CreateListenerSet | WAVE586 | `void __fastcall ... (void * event_nb)`; allocates the listener set. Renamed 2026-08-17 to agree with the behaviour this row already recorded; the class keeps its RTTI anchor. |
 | 0x00538960 | CScriptEventNB__RegisterEventListener | WAVE586 | `void * __thiscall ... (void * this, void * event_name_ref, void * event_function)` |
-| 0x005387b0 | CScriptEventNB__ClearEventListeners | WAVE586 | `void __fastcall ... (void * listener_entry)`; clears one listener entry |
+| 0x005387b0 | CScriptEventNB__ClearListenerEntry | WAVE586 | `void __fastcall ... (void * listener_entry)`; clears one listener entry. Renamed 2026-08-17 from the plural `ClearEventListeners`, which contradicted this row's own singular reading and its `listener_entry` parameter. |
 | 0x005388d0 | CScriptEventNB__DestroyAllEvents | WAVE586 | `void __fastcall ... (void * event_nb)`; destroys all listener entries |
 | 0x00538470 | CScriptEventNB__UpdateWaypointFollowing | WAVE586 | `void __fastcall ... (void * event_nb)`; waypoint following logic with distance checks |
 | 0x005385e0 | IScript__HandleMessage | WAVE586 | `void __thiscall ... (void * this, void * message)`; message IDs 2000, 0x7d1, 0x7d2 |

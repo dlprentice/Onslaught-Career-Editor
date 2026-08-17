@@ -30,7 +30,7 @@ Static read-back evidence:
 | `0x004654f8 IsCheatActive` | Cheat text compare caller. |
 | `0x004b7b28 CMessageBox__SelectPortraitIndex`, `0x004b7fdf CMessageBox__StartVoiceOrFallbackTextReveal` | Message-box text and portrait caller evidence. |
 | `0x00514c33 EnumerateSaveFiles_Main`, `0x00514fb7 PCPlatform__WriteSaveFile`, `0x005150b7 PCPlatform__ReadSaveFile`, `0x00514ef7 PCPlatform__DeleteSaveFile` | Save-file path caller evidence. |
-| `0x004f7bf0 Text__AsciiToWideScratch`, `0x004f7c70 StringScratch__CopyToRotating4KBufferA`, `0x004f7cd0 StringScratch__CopyToRotating4KBufferB` | Adjacent four-slot scratch-buffer helper context. |
+| `0x004f7bf0 Text__AsciiToWideScratch`, `0x004f7c70 StringScratch_T3_004f7c70`, `0x004f7cd0 StringScratch_T3_004f7cd0` | Adjacent four-slot scratch-buffer helper context. The two `StringScratch__CopyToRotating4KBuffer{A,B}` spellings were demoted to neutral Tier-3 placeholders on 2026-08-17: no `StringScratch` type descriptor exists in the image and no vtable owns either VA, so the invented class and the A/B ordering were both unsupported. Their adjacency to `0x004f7bf0` and the four-slot rotation described in the `FromWCHAR` row above are separate, still-standing byte readings. |
 
 Post-Wave834 queue telemetry is `6098` total, `5656` commented, `442` commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed proxy `5656/6098 = 92.75%`, strict proxy `5656/6098 = 92.75%`, and next raw commentless row `0x004f9a90 CUnit__ApplyDamage`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-000436_post_wave834_fromwchar_string_conversion_verified`.
 

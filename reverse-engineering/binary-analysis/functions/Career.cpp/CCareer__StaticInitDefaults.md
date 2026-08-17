@@ -1,12 +1,31 @@
 # CCareer__StaticInitDefaults
 
+<!-- ghidra-name-drift-accepted: 0x0041b6a0 CCareer_T3_0041b6a0 (2026-08-17) -->
+
 > Address: `0x0041b6a0`
+>
+> **The saved Ghidra name is now the Tier-3 placeholder `CCareer_T3_0041b6a0`.**
+> This page keeps its old title so existing references still resolve.
 >
 > Source: startup init-table entry (`g_InitFuncTable[3]` @ `0x006220b0`).
 > Defaults align with `references/Onslaught/Career.cpp` (`CCareer::CCareer()`), and node/link/goodie clearing overlaps `CCareer::Blank()` but does **not** build the mission graph.
 
+## Name demotion — 2026-08-17
+
+The 2026-08-17 anchor audit
+([`name-cohort-promotion-manifest-2026-08-17.tsv`](../../name-cohort-promotion-manifest-2026-08-17.tsv))
+found no `CCareer` type descriptor anywhere in the shipped image and no vtable
+owning this VA, so the descriptive name was replaced by a neutral placeholder.
+
+That audit graded names against RTTI and vtable anchors only. It did not
+re-read the body, and it does not touch the two independent things this page
+actually stands on: that `g_InitFuncTable[3]` at `0x006220B0` points here, and
+the measured field offsets and default values recorded below. Those remain as
+measured. What is withdrawn is the implication that the image itself proves the
+`CCareer::` ownership and the `StaticInitDefaults` spelling.
+
 ## Status
-- **Named in Ghidra:** Yes
+- **Named in Ghidra:** yes, but only as the placeholder `CCareer_T3_0041b6a0`
 - **Signature Set:** Yes
 - **Verified vs Source:** Partial
 

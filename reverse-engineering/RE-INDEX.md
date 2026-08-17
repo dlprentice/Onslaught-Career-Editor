@@ -944,10 +944,15 @@ Machine-readable siblings, for consumers that should not be parsing prose:
 - [First-flight camera/movement/morph contract](binary-analysis/first-flight-camera-movement-morph-contract-candidate.v1.json)
   — a **candidate**, as its own filename says; not an accepted contract.
 - [Retail specimen manifest](binary-analysis/retail-specimen-manifest-2026-03-14.json)
+- [2026-08-17 function name table](binary-analysis/ghidra-function-name-table-2026-08-17.tsv)
+  — the current 8,329-row address-to-name authority, projected from a
+  read-only db.18621 readback taken on a replica of the 2026-08-17
+  name-cohort POST backup. It carries the four HUD route demotions and the
+  158 renames of the 2026-08-17 name cohort, which the 2026-08-13 table
+  predated.
 - [2026-08-13 function name table](binary-analysis/ghidra-function-name-table-2026-08-13.tsv)
-  — the current 8,329-row address-to-name authority, regenerated from the
-  2026-08-14 D3DX two-function db.18618 readback while retaining the stable
-  path.
+  — frozen 8,329-row provenance from the 2026-08-14 D3DX two-function db.18618
+  readback, retained for the checks and receipts pinned to it.
 - [2026-08-12 function name table](binary-analysis/ghidra-function-name-table-2026-08-12.tsv)
   — frozen 8,136-row provenance retained for Generations 20–23 and its other
   pinned consumers.

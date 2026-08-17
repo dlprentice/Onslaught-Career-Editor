@@ -56,7 +56,9 @@ Naming authority, as a dated chain, newest last:
 | 2026-08-12 | [Collision-component implementation-identity correction](../collision-component-identity-correction-2026-08-12.md) | proves and promotes five shared-base implementation identities |
 | 2026-08-12 | `ghidra-function-name-table-2026-08-12.tsv` | frozen 8,136-row projection retained for its pinned consumers |
 | 2026-08-13 | [Mission-registry boundary promotion](../mission-script-registry-boundary-live-promotion-2026-08-13.md) | proves and promotes exactly 34 callable boundaries with default metadata |
-| 2026-08-14 | `ghidra-function-name-table-2026-08-13.tsv` | **the current 8,329-row address → symbol resolution authority**, refreshed from the D3DX two-function db.18618 readback while retaining the stable path |
+| 2026-08-14 | `ghidra-function-name-table-2026-08-13.tsv` | frozen 8,329-row projection from the D3DX two-function db.18618 readback, retained for its pinned consumers |
+| 2026-08-17 | [name-cohort promotion manifest](../name-cohort-promotion-manifest-2026-08-17.tsv) | the 160-row cohort — 33 promotions, 114 demotions to `_T3_` placeholders, 15 slot-ordinal fixes, 2 labels — that this table's newest 158 function rows come from |
+| 2026-08-17 | `ghidra-function-name-table-2026-08-17.tsv` | **the current 8,329-row address → symbol resolution authority**, projected from a read-only db.18621 readback; adds the four HUD route demotions and the 158 name-cohort renames the 2026-08-13 table predated |
 
 The mechanical check against the current last row is
 `tools/re_function_doc_names_check.py`. The table is tracked; the checker
