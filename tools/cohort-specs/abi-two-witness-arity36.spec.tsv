@@ -107,7 +107,14 @@ col.arityBytes	arityBytes
 unique	addr
 constant	confidence=HIGH
 constant	changeAxes=ARITY
-constant	exactness=COMPLETE_ENUMERATION
+# EXACTNESS RE-DERIVED 2026-08-17: the pre-fix slot instrument reported
+# COMPLETE_ENUMERATION for these rows; the current instrument (post-797dcf60)
+# honestly reports LOWER_BOUND for all 36 (complete enum = 0 across the full
+# 8,329 run). Re-adjudicated at the byte level: all 36 witnessInstruction and
+# retInstruction pins re-read from the pristine specimen (74154bfa...7750),
+# 36/36 + 36/36 exact, 0 failures, so every arity correction stands on its
+# byte anchors. The honest spec value is LOWER_BOUND, never the stale constant.
+constant	exactness=LOWER_BOUND
 constant	independentReDerivation=REPRODUCED_INDEPENDENTLY
 enum	callingConvention=unknown,__thiscall
 
