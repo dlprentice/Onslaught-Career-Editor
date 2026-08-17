@@ -1,16 +1,17 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-08-15
+Last updated: 2026-08-17
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
-Current replay authority is Generation 29 via
+Current replay authority is Generation 31 via
 `developer_state.json` → `current_re_authority`; Generation 73 is a projection
-oracle only, and the Generation-10 block below is historical. **Campaign and
-Ghidra state no longer align, and that gap is deliberate.** The campaign
-authority is Generation 29, still frozen on exact `db.18618` geometry with
-8,329 functions, and the two D3DX rows are carried as OPAQUE/DARK rather than
-silently graded. The live and tracked Ghidra database has since advanced to
+oracle only, and the Generation-10 block below is historical. Generation 31
+re-grounds on exact `db.18624` geometry through the Generation-30 literal-pin
+carry bridge and lands the first 16 `REBUILD_READY` contracts (14 rows raise
+C0_OPAQUE → C1_CANDIDATE_PARTIAL, one carries C1 unchanged, one fresh
+GetFriction row enters C1; independently verified CAMPAIGN_VERIFIED with the
+measured on-disk READY/reducer pins). The live and tracked Ghidra database is
 **`db.18624`** through *five* authorized promotions on 2026-08-17 — 41 function
 boundary corrections recovering 3,293 bytes, then 158 function renames plus 2
 label renames, then 294 ABI signature corrections, then the two sequential
@@ -22,14 +23,10 @@ unchanged at 8,329; instructions moved 551,143 → 551,232 and references
 234,478 → 234,493, and the last two ceremonies moved **no** structural metric at
 all — each measured one changed function row, zero non-target movement, and zero
 movement in all 29 program-scope metrics.
-**Do not re-ground a generation onto `db.18618` and do not read Generation 29's
-names as current** — the current name projection is
+**Do not re-ground a generation onto `db.18618` or `db.18622`, and do not read
+Generation 29/30 names as current** — the current name projection is
 [`ghidra-function-name-table-2026-08-17.tsv`](binary-analysis/ghidra-function-name-table-2026-08-17.tsv),
 re-projected 2026-08-17 from the ceremony-B live POST readback at `db.18624`.
-Generation 30 was cut on exact `db.18622` geometry and the two later name
-ceremonies moved two rows after it, so a generation re-grounding now must
-re-ground onto `db.18624` and must not read Generation 30's names for
-`0x004f07e0` or `0x004f0860`.
 
 **Measure that version; do not quote it.** Ceremonies run concurrently here and
 each one rolls the database file version — and opening a project *without*
@@ -99,14 +96,16 @@ This block selects the immutable semantic campaign parent; it does not describe
 the rolling Ghidra database. Read the
 [`canonical Ghidra owner`](ghidra/README.md) for the current structural snapshot
 and latest backed-up live promotion. Select campaign authority from
-`developer_state.json` → `current_re_authority`: canonical Generation 29 at
-`local-lab/re-campaign-incident-recovery-20260808-v1/generation-29-current-8329-db18618-v2/`,
-READY `fe61f69646c644a880134474869f1c577403e6aa5675730cd1f0c467660c9ac9`,
-frozen reducer `8b86f5b568067aa4cdb438b658cd95a2c118ce8f8ef2541899eaa67815832587`,
-external selector `1156ee18…e93e`. It contains 8,329 functions: 217 C1,
-ten bounded C2, and 8,102 OPAQUE. Its 14,438 contracts split as 14,211
-`C0_OPAQUE`, 217 C1, and ten C2; none is rebuild-ready. Its 6,109 residuals
-contain 153 open dark rows, with the other 5,956 terminal.
+`developer_state.json` → `current_re_authority`: canonical Generation 31 at
+`local-lab/re-campaign-incident-recovery-20260808-v1/generation-31-current-8329-db18624-v1/`,
+READY `b99b6e4faca61915d8c727b7b21fe08ebb868780cd18398cc583f6ec2fcd437b`,
+frozen reducer `21ad46fff9d2aec8034a4edcf2c83fad627c2fcae3a9a21ebac7e03976c7627b`.
+It contains 8,329 functions: 231 C1, ten bounded C2, and 8,088 OPAQUE. Its
+14,365 contracts split as 14,123 `C0_OPAQUE`, 232 C1, and ten C2, and the
+first 16 contracts are `REBUILD_READY` (rebuild ledger: 14,340 NOT_READY, 8
+PARTIAL_CONTRACT, 1 CONTRACT_ONLY, 16 REBUILD_READY). Its 6,035 residuals
+contain 154 open dark rows, with the other 5,881 terminal. The per-generation
+narrative below remains the historical record of how those grades were earned.
 Generation 12 admitted bounded `CBattleEngine::Damage`/`Hit` field
 writes and a partial rebuild mapping; Generation 13 admitted one replicated
 zero-shield `CUnit::ApplyDamage` entry/write contract and its exact overkill

@@ -166,16 +166,15 @@ reverse engineering.
 
 Confirm HEAD is at or beyond `c4722b7a`. Confirm the pristine specimen SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`. The current
-campaign authority is Generation 30, cut on exact db.18622 geometry: READY
-`124168acc36f1c5cef3d816dcb116786a5094eaa654e347951976b24decb3788`, receipt
-`77d6ae26d7e866fa6e64aa0ed516814dace868a87287ec9811394a7ed3d2e995`, pinned
-reducer `a5131593f1c77f4a2460e1659e33490dd7d62581e316e8edc77b25022fecdf95` —
+campaign authority is Generation 31, cut on exact db.18624 geometry through
+the Generation-30 literal-pin carry bridge: READY
+`b99b6e4faca61915d8c727b7b21fe08ebb868780cd18398cc583f6ec2fcd437b`, pinned
+reducer `21ad46fff9d2aec8034a4edcf2c83fad627c2fcae3a9a21ebac7e03976c7627b` —
 verify through the literal pinned command in
 [`developer_state.json`](developer_state.json) → `current_re_authority`.
-Generation 30 is the sole campaign parent, and the next valid generation is 31.
-The orphan-testhost fix moved reducer source #3, so cutting Generation 31
-requires the `_verify_generation30_campaign_carry` literal-pin bridge, modeled
-on the Generation 29 bridge. Live and tracked Ghidra are byte-identical twins
+Generation 31 is the sole campaign parent, it carries the first 16
+`REBUILD_READY` contracts, and the next valid generation is 32. Live and
+tracked Ghidra are byte-identical twins
 at db.18624 (five 2026-08-17 promotions); a generation re-grounding must target
 db.18624, and the database version is measured by inspection, never quoted.
 Generation 73 is a projection oracle and the DeepSeek drop's verdict layer is
