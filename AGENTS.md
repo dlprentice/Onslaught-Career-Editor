@@ -175,6 +175,16 @@ Also:
 - A subagent report is data, not authority. Reproduce load-bearing conclusions,
   and verify background reviewers actually reached a working state; a spawn
   receipt alone is not a liveness oracle.
+- In the Codex harness, spawn lanes with a minimal context fork and a
+  self-contained brief that states the lane is a subagent, not the primary,
+  forbids commits, and names its single output path. Full-context forks have
+  produced lanes that acted as the primary; empty forks have produced lanes
+  with no task. Always verify a lane's claimed artifacts on disk before acting
+  on them.
+- Retirement is a move to `H:\graveyard\` with a manifest row, never a
+  hard-delete, unless the older `tools/lab_quarantine.py` stage-to-D: flow is
+  explicitly required by the tooling. Extract what a retired artifact teaches
+  into the durable owners before moving it.
 - External CLI reviewers follow the same rule. Keep their lanes read-only unless
   a writing lane is explicitly isolated; preserve prompts and reports under
   `local-lab/`, confirm real work and clean exit, reproduce consequential claims,

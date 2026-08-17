@@ -471,9 +471,12 @@ corrections → Level100 crash characterisation → falsifier close-out.
    GetPlayer, `0x0043a860` both halves, `0x004398f0`), witnesses now in
    `local-lab\ds-deep-review-extended\data\`. Author the cohort spec + manifest
    and promote through the framework.
-7. **Close the falsifier frontier:** `0x004e2b30` vftable-store site, the
-   `[obj+0x260]` invert-Y polarity, rewrite `0x0043a860`/`0x0052db60` falsifiers
-   as static, terminal `0x005363e0` carrying its slot-21 witness.
+7. **Falsifier frontier — CLOSED 2026-08-17.** `0x004e2b30` terminal (no
+   vftable store; class unrecoverable from specimen), `[obj+0x260]` polarity
+   settled (2 = walker, 3 = flight), `0x0043a860`/`0x0052db60` statically
+   settled, `0x005363e0` terminal carrying its slot-21 GetPlayer witness
+   (`local-lab\falsifier-closeout-2026-08-17\CLOSEOUT.md`). The remaining name
+   corrections join the name-cohort item.
 8. **Continuous function-level RE.** Mine the retained 66-trace corpus and the
    relocated DeepSeek index to raise the 8,088 OPAQUE rows through bounded,
    byte-cited C1/C2 slices and rebuild owners. Reasoned "this consumes X and
