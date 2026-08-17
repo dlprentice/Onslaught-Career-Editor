@@ -898,7 +898,8 @@ Generation 30, all semantic grades, and the NAME, slot-ordinal, and ABI cohorts
 were untouched.
 
 **Third rebuild slice 2026-08-17 — and a systemic divergence class.** Eight
-contracts across six new owners bring the parity suite to **327 tests**. The
+contracts across six new owners bring the parity suite to **327 tests** (later
+measured at **501** across the 21 `Retail*` owners, in 2.4 s). The
 mutation sweep ran 47 and killed 43; four survivors were each proved equivalent,
 and a fifth apparent survivor turned out to be a **missing test** — the
 `GoingIntoWater` arm selector coincides only over a sea-level water line, and
@@ -914,8 +915,13 @@ broad.** MSVC's `>=` and `>` idioms *are* NaN-correct: they emit `test ah,0x41`
 **equality and truthiness** idioms, which emit `test ah,0x40` (C3 alone) or
 `test ah,1` (C0 alone) and therefore mis-handle unordered inputs. Reading the
 mask is what distinguishes them, so "check every float compare" stands while
-"every compare diverges" does not. A NaN energy returns `0.005f` from jet `Gravity`
-where `mEnergy == 0` returns `0.0f`; NaN speed and NaN energy both fail
+"every compare diverges" does not. Jet `Gravity` returns `0.005f` when
+`mEnergy == 0` — `test ah,0x40` then `je` yields `0.0f` only when *not* equal,
+matching `BattleEngineJetPart.cpp:509` — and a NaN energy *also* returns
+`0.005f`, so the divergence is that C semantics would give `0.0f`. (An earlier
+draft of this sentence had that clause inverted, reading "where `mEnergy == 0`
+returns `0.0f`"; the substance held but the polarity was wrong.) NaN speed and
+NaN energy both fail
 `AutoLevel`'s gates; a NaN store value counts as *below* capacity in
 `CanWeaponFire` and opens the gate; and `ChangeWeapon`'s unordered compare
 *accepts* where `value >= consumption` rejects. Combined with slice 2's
@@ -1309,11 +1315,21 @@ that pop their own stack — which a `__cdecl` function cannot do. **Three were
 already documented in our own plate comments**: earlier campaign prose recorded the
 defect and nobody converted it into a signature change.
 
-*A tool defect worth fixing before it becomes live:*
+*A tool defect worth fixing before it becomes live — now closed, and the
+"latent" half of the claim was wrong:*
 `tools/GhidraApplyAbiSignaturesV2.java` **unconditionally clears `varargs` and
 asserts `false`** in both POST and readback, so it cannot carry a varargs row at
-all. Latent rather than live today — no current ABI target has `varargs=true` — but
-it silently bounds what any cohort built on that applier can express.
+all. It was latent for that cohort — none of its 294 targets had `varargs=true` —
+but **10 of the 8,329 functions in the database do** (measured 2026-08-17 on
+db.18622), so a single added row would have stripped a real variadic function with
+the applier's own POST gate certifying the strip. Fixed 2026-08-17 in the shared
+framework rather than in V2, whose source digest its receipts pin: `varargs` is
+now a manifest field of `SET_PROTOTYPE` in
+`tools/GhidraApplyCohortManifest.java`, defaulting to **preserve**, with the
+column left frozen for any cohort that does not bind it, POST/readback compared
+against the manifest value, and both directions plus the preserve case provoked by
+execution. `sprintf` (`0x0055de9b`) and `CConsole__AddString` (`0x0042b840`) are
+expressed as the two-row `varargs-cohort2` spec, **rehearsed, not promoted**.
 
 Two accounting notes. **469 is composite**: only 397 rows carry a terminal
 `FLAGGED(DECOMPILE)`, the DECOMPILE-*touching* population is 490, and 21 land in
