@@ -1175,6 +1175,39 @@ GENERATION29_CAMPAIGN_CARRY_COUNTS = {
     "adjudications": 5957,
     "supersessions": 592,
 }
+GENERATION30_CAMPAIGN_CARRY_RELATIVE = (
+    "local-lab/re-campaign-incident-recovery-20260808-v1/"
+    "generation-30-current-8329-db18622-v1"
+)
+GENERATION30_CAMPAIGN_CARRY_ROOT = REPO_ROOT / GENERATION30_CAMPAIGN_CARRY_RELATIVE
+GENERATION30_CAMPAIGN_CARRY_READY_BYTES = 38021
+GENERATION30_CAMPAIGN_CARRY_READY_SHA256 = (
+    "124168acc36f1c5cef3d816dcb116786a5094eaa654e347951976b24decb3788"
+)
+GENERATION30_CAMPAIGN_CARRY_REDUCER_ID = (
+    "a5131593f1c77f4a2460e1659e33490dd7d62581e316e8edc77b25022fecdf95"
+)
+GENERATION30_CAMPAIGN_CARRY_AUTHORITY_RELATIVE = (
+    "local-lab/re-campaign-incident-recovery-20260808-v1/"
+    "generation-30-current-8329-db18622-authority.ready.json"
+)
+GENERATION30_CAMPAIGN_CARRY_AUTHORITY_BYTES = 24908
+GENERATION30_CAMPAIGN_CARRY_AUTHORITY_SHA256 = (
+    "77d6ae26d7e866fa6e64aa0ed516814dace868a87287ec9811394a7ed3d2e995"
+)
+GENERATION30_CAMPAIGN_CARRY_AUTHORITY_SCHEMA = (
+    "bea.re.generation30-current-8329-db18622-external-authority.v1"
+)
+GENERATION30_CAMPAIGN_CARRY_COUNTS = {
+    "functions": 8329,
+    "residuals": 6035,
+    "questions": 15325,
+    "scenarios": 72,
+    "levers": 903,
+    "contracts": 14364,
+    "adjudications": 5882,
+    "supersessions": 592,
+}
 GLOBAL_INIT515_CAMPAIGN_ROOT = FROZEN_V5_CAMPAIGN_CARRY_ROOT
 GLOBAL_INIT515_CAMPAIGN_OWNER_PATH = (
     GLOBAL_INIT515_CAMPAIGN_ROOT / "_reducer/tools/re_campaign.py"
@@ -5310,6 +5343,178 @@ def _verify_generation29_campaign_carry(root: Path) -> dict:
     return verified
 
 
+def _verify_generation30_campaign_carry(root: Path) -> dict:
+    """Admit only the promoted Generation 30 authority as Generation 31 carry.
+
+    Generation 30 sealed its reducer before the orphan-testhost fix advanced
+    reducer source #3 (``tools/re_campaign_historical_source_projection_v2.py``
+    plus its tests), so the ordinary same-reducer route in ``verify`` correctly
+    refuses this parent.  This is the published migration: every identity is a
+    literal pin taken from the sealed Generation 30 authority, and the parent is
+    replayed in full by its own frozen owner rather than by this file.
+    """
+
+    raw = Path(os.path.abspath(root))
+    try:
+        resolved = ghidra_backup.resolve_plain_path(
+            raw, "canonical Generation 30 campaign carry", strict=True
+        )
+        canonical = ghidra_backup.resolve_plain_path(
+            GENERATION30_CAMPAIGN_CARRY_ROOT,
+            "configured canonical Generation 30 campaign carry",
+            strict=True,
+        )
+    except (ghidra_backup.BackupError, OSError) as exc:
+        raise CampaignError(
+            f"Generation 30 campaign carry path is not plain: {exc}"
+        ) from exc
+    if resolved != canonical:
+        raise CampaignError(
+            "campaign carry is not the exact canonical Generation 30 authority"
+        )
+
+    ready_path = resolved / "campaign.ready.json"
+    authority_path = REPO_ROOT / GENERATION30_CAMPAIGN_CARRY_AUTHORITY_RELATIVE
+    try:
+        plain_ready = ghidra_backup.resolve_plain_path(
+            ready_path, "Generation 30 campaign READY", strict=True
+        )
+        plain_authority = ghidra_backup.resolve_plain_path(
+            authority_path, "Generation 30 campaign authority", strict=True
+        )
+    except (ghidra_backup.BackupError, OSError) as exc:
+        raise CampaignError(
+            "campaign carry is not the exact canonical Generation 30 authority: "
+            f"evidence is not plain: {exc}"
+        ) from exc
+    if (
+        plain_ready.stat().st_nlink != 1
+        or plain_ready.stat().st_size != GENERATION30_CAMPAIGN_CARRY_READY_BYTES
+        or coverage.sha256_of(plain_ready)
+        != GENERATION30_CAMPAIGN_CARRY_READY_SHA256
+        or plain_authority.stat().st_nlink != 1
+        or plain_authority.stat().st_size
+        != GENERATION30_CAMPAIGN_CARRY_AUTHORITY_BYTES
+        or coverage.sha256_of(plain_authority)
+        != GENERATION30_CAMPAIGN_CARRY_AUTHORITY_SHA256
+    ):
+        raise CampaignError("Generation 30 campaign READY or authority changed")
+
+    receipt = _runtime_json(plain_ready, "canonical Generation 30 campaign")
+    authority = _runtime_json(
+        plain_authority, "canonical Generation 30 campaign authority"
+    )
+    reducer = _runtime_mapping(
+        receipt.get("reducer"), "Generation 30 campaign reducer"
+    )
+    selected = _runtime_mapping(
+        authority.get("canonical"), "Generation 30 authority selection"
+    )
+    selection = _runtime_mapping(
+        authority.get("selectionRule"), "Generation 30 authority selection rule"
+    )
+    verification = _runtime_mapping(
+        authority.get("verification"), "Generation 30 authority verification"
+    )
+    canonical_replay = _runtime_mapping(
+        verification.get("canonicalFrozenOwnerFullReplay"),
+        "Generation 30 authority canonical replay",
+    )
+    replica_replay = _runtime_mapping(
+        verification.get("replicaFrozenOwnerFullReplay"),
+        "Generation 30 authority replica replay",
+    )
+    determinism = _runtime_mapping(
+        authority.get("determinism"), "Generation 30 authority determinism"
+    )
+    specimen_sha = (
+        receipt.get("sourceSnapshot", {}).get("specimen", {}).get("sha256", "")
+    )
+    if (
+        receipt.get("schema") != SCHEMA
+        or _integer(receipt.get("generation"), -1) != 30
+        or receipt.get("counts") != GENERATION30_CAMPAIGN_CARRY_COUNTS
+        or specimen_sha.lower() != FROZEN_V5_CAMPAIGN_CARRY_SPECIMEN_SHA256
+        or reducer.get("id") != GENERATION30_CAMPAIGN_CARRY_REDUCER_ID
+        or authority.get("schema") != GENERATION30_CAMPAIGN_CARRY_AUTHORITY_SCHEMA
+        or authority.get("verdict") != "READY"
+        or authority.get("authorityClass") != "FULL_REPLAY_CAMPAIGN_AUTHORITY"
+        or selected.get("absolutePath") != str(canonical)
+        or selected.get("ready", {}).get("bytes")
+        != GENERATION30_CAMPAIGN_CARRY_READY_BYTES
+        or selected.get("ready", {}).get("sha256")
+        != GENERATION30_CAMPAIGN_CARRY_READY_SHA256
+        or selected.get("reducerId") != GENERATION30_CAMPAIGN_CARRY_REDUCER_ID
+        or selected.get("generation") != 30
+        or selected.get("reducerFiles") != 45
+        or authority.get("counts") != GENERATION30_CAMPAIGN_CARRY_COUNTS
+        or canonical_replay.get("exitCode") != 0
+        or canonical_replay.get("marker") != "CAMPAIGN_VERIFIED"
+        or replica_replay.get("exitCode") != 0
+        or replica_replay.get("marker") != "CAMPAIGN_VERIFIED"
+        or determinism.get("allEightCampaignLedgersByteIdentical") is not True
+        or determinism.get("allFortyFiveReducerFilesByteIdentical") is not True
+        or determinism.get("normalizedCampaignReadyReceiptsEqual") is not True
+        or selection.get("requiredAbsolutePath") != str(canonical)
+        or selection.get("requiredReadySha256")
+        != GENERATION30_CAMPAIGN_CARRY_READY_SHA256
+        or selection.get("requiredReducerId")
+        != GENERATION30_CAMPAIGN_CARRY_REDUCER_ID
+        or selection.get("requiredMode") != "FULL"
+        or selection.get("replicaMayBeSelected") is not False
+    ):
+        raise CampaignError(
+            "canonical Generation 30 campaign identity is unsupported"
+        )
+
+    manifest = _validate_reducer_snapshot(resolved, receipt)
+    if manifest.get("id") != GENERATION30_CAMPAIGN_CARRY_REDUCER_ID:
+        raise CampaignError("Generation 30 campaign reducer identity changed")
+    for output_name in OUTPUTS:
+        output_stamp = _runtime_mapping(
+            receipt.get("outputs", {}).get(output_name),
+            f"Generation 30 campaign {output_name}",
+        )
+        actual_stamp = _require_file_stamp(
+            resolved / output_name,
+            output_stamp,
+            f"Generation 30 campaign {output_name}",
+        )
+        authority_stamp = _runtime_mapping(
+            authority.get("outputs", {}).get(output_name),
+            f"Generation 30 authority {output_name}",
+        )
+        if any(
+            authority_stamp.get(field) != actual_stamp.get(field)
+            for field in ("bytes", "sha256")
+        ):
+            raise CampaignError(
+                f"Generation 30 authority output differs: {output_name}"
+            )
+
+    try:
+        completed = _run_frozen_campaign_verifier(
+            resolved,
+            replay=True,
+            timeout=900,
+            expected_ready_sha256=GENERATION30_CAMPAIGN_CARRY_READY_SHA256,
+            expected_reducer_id=GENERATION30_CAMPAIGN_CARRY_REDUCER_ID,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise CampaignError("Generation 30 frozen full replay timed out") from exc
+    if completed.returncode != 0 or "CAMPAIGN_VERIFIED" not in completed.stdout:
+        raise CampaignError(
+            "Generation 30 campaign failed its frozen full replay: "
+            f"exit={completed.returncode} stderr={completed.stderr.strip()!r}"
+        )
+    rows = _campaign_rows_from_root(resolved)
+    if {name: len(value) for name, value in rows.items()} != receipt.get("counts"):
+        raise CampaignError("Generation 30 campaign rows disagree with READY")
+    verified = dict(receipt)
+    verified["_carryBridge"] = "EXACT_LITERAL_PINNED_FULL_REPLAY_GENERATION30"
+    return verified
+
+
 def _verify_campaign_carry_source(root: Path) -> dict:
     try:
         raw = json.loads((root / "campaign.ready.json").read_text(encoding="utf-8"))
@@ -5339,6 +5544,13 @@ def _verify_campaign_carry_source(root: Path) -> dict:
         and reducer.get("id") == GENERATION29_CAMPAIGN_CARRY_REDUCER_ID
     ):
         return _verify_generation29_campaign_carry(root)
+    if (
+        raw.get("schema") == SCHEMA
+        and _integer(raw.get("generation"), -1) == 30
+        and isinstance(reducer, dict)
+        and reducer.get("id") == GENERATION30_CAMPAIGN_CARRY_REDUCER_ID
+    ):
+        return _verify_generation30_campaign_carry(root)
     if raw.get("schema") == SCHEMA:
         return verify(root)
     if raw.get("schema") == LEGACY_CAMPAIGN_SCHEMA:
