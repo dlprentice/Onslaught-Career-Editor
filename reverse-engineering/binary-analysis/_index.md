@@ -369,6 +369,17 @@ the document it links.
 > the dated 2026-08-13, 2026-08-12 and July tables correctly still show the
 > pre-swap names.
 
+> **Runtime-witness corpus merge, 2026-08-17.**
+> [runtime-witness-corpus-merge-2026-08-17.md](runtime-witness-corpus-merge-2026-08-17.md)
+> records the byte-verified relocation of the DeepSeek Extended workspace into
+> gitignored `local-lab\ds-deep-review-extended\` and routes its second-witness
+> tables: the 49-row falsifier reachability join, the 77-row boundary runtime
+> corroboration (13 EXTENSION_EXECUTES), the 97 runtime name anchors (including
+> `CWorld__LoadWorldFile` at `0x0050b720`), and the settled zlib/DSOUND external
+> rows. The queued name corrections and falsifier close-outs it backs are the
+> frontier items in `GOAL.md`; the tables remain untracked and reproduce-before-
+> promote.
+
 > **Two byte-proven variadic prototypes, REHEARSED not promoted (2026-08-17).**
 > [varargs-cohort2-promotion-manifest-2026-08-17.tsv](varargs-cohort2-promotion-manifest-2026-08-17.tsv)
 > carries `0x0055de9b` `sprintf` and `0x0042b840` `CConsole__AddString`, each

@@ -1206,7 +1206,7 @@ came from the lane withdrawing its own "dormant unless patched" claim after bein
 pointed at the documented trap that an absolute-address scan cannot see an
 object-relative store — the same trap that once refuted a "this flag is dead"
 caveat. Its accompanying switch-table "discovery" is *not* new; see
-[`CLIParams__ParseCommandLine.md`](binary-analysis/functions/CLIParams.cpp/CLIParams__ParseCommandLine.md).
+[`CLIParams__ParseCommandLine.md`](reverse-engineering/binary-analysis/functions/CLIParams.cpp/CLIParams__ParseCommandLine.md).
 
 One row is now **terminal rather than open**, which is the right disposition and
 under-used: `0x004e2b30`'s class name is *not recoverable from the specimen* — no
@@ -1227,7 +1227,7 @@ classes; `g_Cheat_MALLOY` and `g_Cheat_LATETE` hold, the missing plaintext being
 XOR obfuscation under the key `"HELP ME!!"`; and all four
 `CAREER_mInvertY{Walker,Flight}_{P1,P2}` hold — the UTF-16LE UI labels at string
 ids `0x38`/`0x39` settle the walker-versus-flight assignment that
-[`CCareer__StaticInitDefaults.md`](binary-analysis/functions/Career.cpp/CCareer__StaticInitDefaults.md)
+[`CCareer__StaticInitDefaults.md`](reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__StaticInitDefaults.md)
 had recorded as *verification pending*. Neither cohort gets a bespoke applier:
 both wait for the framework, which exists precisely to stop a fourth one being
 written.
