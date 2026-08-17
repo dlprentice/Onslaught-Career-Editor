@@ -546,12 +546,29 @@ is initialised to vtable `0x005e4fc4`, and its COL resolves to
 declaring class no vtable can settle; they need body or call-site work, not
 another naming pass.
 
-**Two naming waves, and one is systematically wrong.** A mechanical audit of
-all 439 refutations found that `Class__VFunc_N_addr` names measure exact (9 of
-9) while `Class__VFuncNN_Description` names are off by one (6 of 6 —
-`CInfantryUnit__VFunc65` is slot 66). The two waves used different base
-conventions. **This affects existing database names well beyond this cohort and
-should be swept separately.** The same audit found 38 refutations that do not
+**Slot-ordinal naming — swept, and the two-wave reading is refuted.** The NAME
+audit proposed that `Class__VFunc_N_addr` names are exact while
+`Class__VFuncNN_Description` names are systematically off by one. A full sweep
+of all **919** slot-encoding names across six spellings disproves it: **891
+exact, 9 off-by-one, 7 gross, 4 aliased-but-matching, 8 not errors.** The
+`VFuncNN_Description` spelling is 21 exact against 9 wrong — mixed, not a
+convention. The earlier 6-of-6 sample came entirely from `CInfantryUnit`, where
+6 of the 9 bad names live, and correctly-numbered names of the same spelling
+sit interleaved in that same vtable. The defect is per-name, never per-wave.
+
+*Proven cause, and it is neither candidate we proposed.* The delta is **+1** —
+encoded one lower than truth — and delta −1 occurs **zero times** in 919 names,
+so nothing in this database counts the RTTI pointer as slot 0. The namer took
+slot 0 as `head+4`: all 9 satisfy both `encoded == index-from-head+4` and
+`head+4` being that class's scalar deleting destructor. That is the "MSVC
+vtable[0] is the destructor" assumption, false in this hierarchy, where slot 0
+is `CUnit__HandleEvent` at `0x004f9820` and the destructor is slot 1.
+**16 names need correction**, zero unresolved, no collisions; two `CTree` names
+have the ordinal written in hex (`VFunc_27` is slot 39), and three carry a wrong
+class label as well. The 8 `Destructor_VFunc01` names are correct as written —
+each names its calling thunk's slot, not a vtable entry.
+
+The NAME audit also found 38 refutations that do not
 survive, because the recorded class genuinely owns the vtable slot, and 49
 "invented" names that are drift from shipped source paths
 (`CSpawnerThng` ← `SpawnerThng.cpp`) — misspellings rather than fabrications.
