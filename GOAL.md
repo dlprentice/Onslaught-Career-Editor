@@ -1175,11 +1175,64 @@ checker rule that passes `retn N (cdecl)` was dropped; it was defensible about
 author intent but it hid text the bytes refute. A harder class sits underneath:
 functions that **contain no RET at all**, tail-dispatching via JMP, where the
 cited RET address is the last byte of the dispatch instruction and the byte is
-`0x00` — `0x0050f600`, `0x005387a0`, `0x00453460`, `0x00453630` so far. Because
-the cause is mechanical, this class is a candidate for one bulk sweep rather than
-1,001 adjudications; but a defect in the review's prose is **not** evidence our
-database is wrong, and only rows implying a wrong convention, parameter count, or
-stack delta are mutation candidates.
+`0x00` — `0x0050f600`, `0x005387a0`, `0x00453460`, `0x00453630` so far. A defect
+in the review's prose is **not** evidence our database is wrong; only rows
+implying a wrong convention, parameter count, or stack delta are mutation
+candidates.
+
+**The bulk lever does not generalise — swept, and the hypothesis is refuted.**
+`param_size` confusion explains **5 of the 1,001** FLAGGED(ABI) rows, and the
+histogram is `NOT_A_DEFECT` 989, `NO_RET_AT_ALL` 7, `PARAM_SIZE_CONFUSION` 5,
+**`GENUINE` 0**. The reason is a **population conflation**, and it is worth
+naming: the reviewers' shard prose overwhelmingly *does* distinguish the two —
+the canonical finding in this drop is literally "declared `param_size 8` but
+terminator is `RET 0xc`" — and where the confusion occurs it is in the *semantic
+contract* text, not the shard note. The 17-in-a-sample rate came from a checker
+over contract text, a **different population**, and none of the four exemplars
+that motivated the sweep is even among the 1,001. So one class's root cause is
+not transferable to a class that merely shares its name.
+
+Staleness explains **zero** of it, measured rather than assumed: across all 924
+in-image cohort addresses the drop's readback and today's live readback diverge in
+**no** field — `paramSize`, `paramCount`, `callingConv`, `returnType`, `varArgs`,
+body geometry, signature, name, `sigSource` — with the comparator proved
+non-vacuous by flagging 41 `bodyBytes`, 23 `bodyRanges`, 18 `bodyMax` and 4
+name+signature changes whole-image.
+
+Corpus-wide, **990 of 8,329 declared bodies contain no RET** (976 tail-dispatch
+JMP, 7 noreturn CALL, 4 ending mid-flow, and 3 truncated with the real RET just
+past `bodyMax` — a *boundary* class, not ABI). Of the 983 genuinely RET-less, 63
+still carry a RET assertion and only 6 are in the 1,001, so this is a ~6%
+notation leak rather than a systemic failure. Dropping the lenient `retn N
+(cdecl)` rule exposes 16 claims over 14 functions; ten are the clean shape and
+all ten were byte-verified, but **nine sit outside the 1,001**. Three name their
+own source in the text — "RET 4 (param_size 4)", "retn 0x30 (param_size 0x30)",
+"retn 8 per meta" — which is direct evidence of the transcription mechanism even
+though it does not generalise.
+
+**Candidate supply is not the constraint; independent corroboration is.** 498
+addresses imply a database correction (268 pop more than declared, 194 less), but
+only **82 carry an independent witness** — the frame corroborator is sound only on
+EBP frames, 252 of 924. So 416 of the 498 rest on the RET immediate *alone*, the
+same single-assertion weakness the tier-2 calibration already flagged. Do **not**
+promote at 498, and do not treat it as corroborating the earlier 294: they are two
+different measurements under different tests, not one confirmed by the other. The
+right next move is an instrument, not an adjudication queue — a path-correct
+argument-slot measure (per-basic-block ESP abstract interpretation, or
+caller-push-count corroboration from `xrefs_to.tsv`) lifts coverage from 27% to
+near 100% and is cheaper than hand-checking 416 rows. Meanwhile the **23
+prose-only corrections can land now**, since they need no Ghidra gate at all, and
+the 141 `cc=unknown` rows should have their **arity** corrected while the
+convention stays recorded as genuinely UNDETERMINED.
+
+One scope limit, stated rather than buried: `GENUINE = 0` is scoped to the **RET
+axis**. The receiver, phantom-parameter, return-value and varargs axes are
+**unmeasured** — the ECX-receiver attempt was abandoned because the prose does not
+distinguish "the convention passes `this` in ECX" from "the body reads ECX", and a
+first pass produced 85 contradictions that were all regex artifacts. One
+byte-refuted claim of a third kind did surface outside the population:
+`0x004bfbb0`'s "RET 0x24 matches disasm" reads a six-byte body
+`b8 24 00 00 00 c3`, where `0x24` is the **return value**, not a cleanup immediate.
 
 Two smaller carries. A citation fix turned out to hide a **value** finding: the
 constant at `0x0056d647` is the 80-bit long double **0.1**, not 10 — `cc`×8,
