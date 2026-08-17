@@ -68,6 +68,10 @@ LEGACY_CAMPAIGN_SCHEMA = "bea.re.campaign.v4"
 BOUNDARY_EXPORT_SCHEMA = "bea.re.boundary-targets.v1"
 RUNTIME_ADVANCE_KIND = "RUNTIME_CONTRACT_ADJUDICATION"
 RUNTIME_ADVANCE_SCHEMA = "bea.re.runtime-contract-advance.v1"
+GENERATION31_REBUILD_READY_ADVANCE_KIND = "GENERATION31_REBUILD_READY_SIXTEEN"
+GENERATION31_REBUILD_READY_ADVANCE_SCHEMA = (
+    "bea.re.generation31-rebuild-ready-advance.v1"
+)
 REFUTER_SUBJECT_SCHEMA = "bea.re.refuter-subject.v1"
 REBUILD_GATE_SCHEMA = "bea.re.rebuild-parity-gate.v2"
 REBUILD_RESULT_SCHEMA = "bea.re.rebuild-parity-result.v2"
@@ -1540,6 +1544,11 @@ def _reducer_sources() -> list[tuple[str, str, Path]]:
                 / "ttd-call-context-level521-impact-schema3-20260804-v1"
                 / "verify.py"
             ).resolve(),
+        ),
+        (
+            "generation31-rebuild-ready-builder",
+            "_reducer/tools/build_generation31_authority.py",
+            Path(__file__).resolve().with_name("build_generation31_authority.py"),
         ),
     ]
 
@@ -3711,11 +3720,17 @@ def _validate_campaign_relations(
     reseed_lineage = bool(
         _integer(receipt.get("generation"), -1) > 0
         and isinstance(current_advance, dict)
-        and current_advance.get("kind") == CAMPAIGN_RESEED_KIND
+        and current_advance.get("kind")
+        in {CAMPAIGN_RESEED_KIND, GENERATION31_REBUILD_READY_ADVANCE_KIND}
     )
     if reseed_lineage:
-        if current_advance.get("schema") != CAMPAIGN_RESEED_SCHEMA:
-            raise CampaignError("campaign reseed carry schema is unsupported")
+        if current_advance.get("schema") not in {
+            CAMPAIGN_RESEED_SCHEMA,
+            GENERATION31_REBUILD_READY_ADVANCE_SCHEMA,
+        }:
+            raise CampaignError(
+                "campaign reseed lineage carry schema is unsupported"
+            )
         parent = _runtime_mapping(
             receipt.get("parentCampaign"), "campaign reseed relation parent"
         )
@@ -3910,7 +3925,18 @@ def _validate_campaign_relations(
     residual_by_entity = unique_map(residuals, "entityKey", "residuals")
     question_by_id = unique_map(questions, "questionId", "questions")
     contract_by_id = unique_map(contracts, "contractId", "contracts")
-    contract_by_entity = unique_map(contracts, "entityKey", "contracts")
+    contract_by_entity: dict[str, dict[str, str]] = {}
+    for row in contracts:
+        value = str(row.get("entityKey", ""))
+        if not value:
+            raise CampaignError("campaign contracts contain a missing entityKey")
+        if value in contract_by_entity:
+            # A duplicated entityKey is legal only in the validated terminal
+            # multi-owner shape; keep the base row for downstream single-row
+            # lookups and let the validator adjudicate the whole group.
+            _validate_contract_owner_rows(contracts)
+            continue
+        contract_by_entity[value] = row
     if set(function_by_entity) & set(residual_by_entity):
         raise CampaignError("campaign function and residual entity keys overlap")
     entity_keys = set(function_by_entity) | set(residual_by_entity)
@@ -4131,18 +4157,37 @@ def _validate_campaign_relations(
         )
         for question_id in addressed:
             question = question_by_id.get(question_id)
+            shared_multi_owner_reference = (
+                question_id in addressed_by
+                and question is not None
+                and question.get("entityKey") == contract.get("entityKey")
+                and question.get("state") == f"CLOSED_{verdict}"
+                and question.get("lastOutcome") == verdict
+                and sum(
+                    1
+                    for row in contracts
+                    if row.get("entityKey") == contract.get("entityKey")
+                )
+                > 1
+            )
+            if shared_multi_owner_reference:
+                # A second terminal rebuild owner may reference the base row's
+                # already-closed question, but it may never close it twice; the
+                # whole duplicate group must be the validated multi-owner shape.
+                _validate_contract_owner_rows(contracts)
             if (
                 question is None
                 or question.get("entityKey") != contract.get("entityKey")
                 or question_id not in linked
                 or question.get("state") != f"CLOSED_{verdict}"
                 or question.get("lastOutcome") != verdict
-                or question_id in addressed_by
+                or (question_id in addressed_by and not shared_multi_owner_reference)
             ):
                 raise CampaignError(
                     f"campaign adjudication does not own its addressed question: {adjudication_id}"
                 )
-            addressed_by[question_id] = adjudication_id
+            if not shared_multi_owner_reference:
+                addressed_by[question_id] = adjudication_id
         for question_id in successors:
             question = question_by_id.get(question_id)
             partition_successor = bool(
@@ -8658,6 +8703,10 @@ def _replay_campaign_generation(campaign: Path, receipt: dict) -> None:
                 parent_receipt = _verify_runtime_contract_parent_campaign(
                     parent_path
                 )
+            elif kind == GENERATION31_REBUILD_READY_ADVANCE_KIND:
+                parent_receipt = _verify_generation30_campaign_carry(
+                    parent_path
+                )
             elif kind == TTD_CALL_CONTEXT_ADVANCE_KIND:
                 parent_receipt = _verify_ttd_call_context_parent_campaign(
                     parent_path
@@ -8712,6 +8761,36 @@ def _replay_campaign_generation(campaign: Path, receipt: dict) -> None:
                     overlay_root,
                     adjudication_path,
                     replay,
+                    _self_check=False,
+                    _verified_parent_receipt=parent_receipt,
+                )
+            elif kind == GENERATION31_REBUILD_READY_ADVANCE_KIND:
+                if (
+                    advance.get("schema")
+                    != GENERATION31_REBUILD_READY_ADVANCE_SCHEMA
+                ):
+                    raise CampaignError(
+                        "Generation 31 rebuild-ready advance schema is unsupported"
+                    )
+                snapshot_spec = _runtime_mapping(
+                    advance.get("snapshot"), "Generation 31 snapshot"
+                )
+                snapshot = _resolve_repo_or_absolute(
+                    snapshot_spec.get("path"), "Generation 31 snapshot"
+                )
+                prep_spec = _runtime_mapping(
+                    advance.get("prepRoot"), "Generation 31 prep root"
+                )
+                prep_root = _resolve_repo_or_absolute(
+                    prep_spec.get("path"), "Generation 31 prep root"
+                )
+                import build_generation31_authority
+
+                build_generation31_authority.build(
+                    parent_path,
+                    replay,
+                    snapshot=snapshot,
+                    prep=prep_root,
                     _self_check=False,
                     _verified_parent_receipt=parent_receipt,
                 )
@@ -9113,6 +9192,50 @@ def _replay_campaign_generation(campaign: Path, receipt: dict) -> None:
         _compare_replayed_campaign(campaign, receipt, replay)
 
 
+def _validate_contract_owner_rows(contracts: list[dict[str, str]]) -> None:
+    """Admit a second contract row for one entity only as a terminal rebuild owner.
+
+    Generation 31 grades two owners of one retail law as two REBUILD_READY
+    contract rows (Simulation.cs and RetailJetFriction.cs both bind
+    CBattleEngineJetPart__GetFriction at 0x00411aa0).  A duplicated entityKey is
+    therefore legal only when every duplicated row is terminal rebuild-ready,
+    at most one row in the group is non-terminal, and each row names a distinct
+    rebuildOwner - so a duplicate can never double-count progress or reopen a
+    question the base row already closed.
+    """
+    by_entity: dict[str, list[dict[str, str]]] = {}
+    for row in contracts:
+        by_entity.setdefault(row.get("entityKey", ""), []).append(row)
+    for entity_key, rows in by_entity.items():
+        if len(rows) < 2:
+            continue
+        nonterminal = [
+            row
+            for row in rows
+            if not row.get("contractState", "").startswith("TERMINAL_")
+        ]
+        if len(nonterminal) > 1:
+            raise CampaignError(
+                "campaign entity carries multiple nonterminal contract rows: "
+                f"{entity_key}"
+            )
+        for row in rows:
+            if (
+                row.get("contractState") != "TERMINAL_REBUILD_READY"
+                or row.get("rebuildState") != "REBUILD_READY"
+            ):
+                raise CampaignError(
+                    "campaign duplicate contract rows must be terminal "
+                    f"rebuild-ready: {entity_key} {row.get('contractId', '')}"
+                )
+        owners = [row.get("rebuildOwner", "") for row in rows]
+        if any(not owner for owner in owners) or len(owners) != len(set(owners)):
+            raise CampaignError(
+                "campaign multi-owner contract rows must name distinct owners: "
+                f"{entity_key}"
+            )
+
+
 def verify(campaign: Path, *, _replay_generation: bool = True) -> dict:
     receipt_path = campaign / "campaign.ready.json"
     try:
@@ -9170,10 +9293,13 @@ def verify(campaign: Path, *, _replay_generation: bool = True) -> dict:
     question_ids = require_unique(questions, "questionId", "questions")
     contract_ids = require_unique(contracts, "contractId", "contracts")
     del contract_ids
-    contract_entities = require_unique(contracts, "entityKey", "contracts")
+    contract_entities = {row.get("entityKey", "") for row in contracts}
+    if any(not value for value in contract_entities):
+        raise CampaignError("campaign contracts contain missing entityKey values")
     expected_contract_entities = function_entities | residual_entities
     if contract_entities != expected_contract_entities:
         raise CampaignError("campaign contracts do not account for every function and residual exactly once")
+    _validate_contract_owner_rows(contracts)
     if adjudications:
         require_unique(adjudications, "adjudicationId", "adjudications")
     if supersessions:

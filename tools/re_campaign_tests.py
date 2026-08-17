@@ -918,6 +918,73 @@ class CampaignTests(unittest.TestCase):
             campaign._survived_nonsemantic_adjudication_ids(rows),
         )
 
+    def test_contract_owner_rows_admit_one_terminal_second_owner(self) -> None:
+        rows = [
+            {
+                "contractId": "C-a",
+                "entityKey": "E",
+                "contractState": "TERMINAL_REBUILD_READY",
+                "rebuildState": "REBUILD_READY",
+                "rebuildOwner": "rebuild/One.cs",
+            },
+            {
+                "contractId": "C-b",
+                "entityKey": "E",
+                "contractState": "TERMINAL_REBUILD_READY",
+                "rebuildState": "REBUILD_READY",
+                "rebuildOwner": "rebuild/Two.cs",
+            },
+        ]
+        campaign._validate_contract_owner_rows(rows)
+
+    def test_contract_owner_rows_refuse_duplicate_nonterminal_rows(self) -> None:
+        rows = [
+            {
+                "contractId": contract_id,
+                "entityKey": "E",
+                "contractState": "OPEN",
+                "rebuildState": "NOT_READY",
+                "rebuildOwner": f"rebuild/{contract_id}.cs",
+            }
+            for contract_id in ("C-a", "C-b")
+        ]
+        with self.assertRaisesRegex(campaign.CampaignError, "multiple nonterminal"):
+            campaign._validate_contract_owner_rows(rows)
+
+    def test_contract_owner_rows_refuse_duplicate_owners(self) -> None:
+        rows = [
+            {
+                "contractId": contract_id,
+                "entityKey": "E",
+                "contractState": "TERMINAL_REBUILD_READY",
+                "rebuildState": "REBUILD_READY",
+                "rebuildOwner": "rebuild/One.cs",
+            }
+            for contract_id in ("C-a", "C-b")
+        ]
+        with self.assertRaisesRegex(campaign.CampaignError, "distinct owners"):
+            campaign._validate_contract_owner_rows(rows)
+
+    def test_contract_owner_rows_refuse_nonterminal_duplicate_state(self) -> None:
+        rows = [
+            {
+                "contractId": "C-a",
+                "entityKey": "E",
+                "contractState": "OPEN",
+                "rebuildState": "NOT_READY",
+                "rebuildOwner": "rebuild/One.cs",
+            },
+            {
+                "contractId": "C-b",
+                "entityKey": "E",
+                "contractState": "TERMINAL_REBUILD_READY",
+                "rebuildState": "PARTIAL_CONTRACT",
+                "rebuildOwner": "rebuild/Two.cs",
+            },
+        ]
+        with self.assertRaisesRegex(campaign.CampaignError, "terminal rebuild-ready"):
+            campaign._validate_contract_owner_rows(rows)
+
     def test_seed_publishes_eight_bound_ledgers_and_a_ready_receipt(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
