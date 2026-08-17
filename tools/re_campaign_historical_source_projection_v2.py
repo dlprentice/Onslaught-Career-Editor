@@ -14,6 +14,7 @@ from __future__ import annotations
 import argparse
 import builtins
 import contextlib
+import csv
 import difflib
 import hashlib
 import importlib.util
@@ -22,6 +23,7 @@ import json
 import os
 import pathlib
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -94,8 +96,35 @@ PROOF_READY_SHA256 = (
 )
 
 
+TEST_PROJECT_RELATIVE = Path(
+    "rebuild/OnslaughtRebuild.Core.Tests/OnslaughtRebuild.Core.Tests.csproj"
+)
+TEST_OUTPUT_RELATIVE = Path("rebuild/OnslaughtRebuild.Core.Tests/bin/Debug/net8.0")
+TEST_OUTPUT_HELD_NAMES = (
+    "OnslaughtRebuild.Core.dll",
+    "OnslaughtRebuild.Client.dll",
+    "OnslaughtRebuild.Headless.dll",
+    "OnslaughtRebuild.Core.Tests.dll",
+)
+TEST_HOST_IMAGE_NAMES = ("testhost.exe", "vstest.console.exe")
+FOCUSED_RUN_TIMEOUT_SECONDS = 300
+FOCUSED_HANG_TIMEOUT = "120s"
+BUILD_LOCK_SIGNATURES = ("MSB3027", "MSB3021", "MSB3026", "The file is locked by")
+
+
 class ProjectionError(RuntimeError):
     """The current-source, historical-input, or replay gate did not hold."""
+
+
+class StaleTestHostError(ProjectionError):
+    """A surviving test host, not the change under test, blocked the suite.
+
+    A leftover ``testhost`` keeps the test project's output assemblies open, so
+    the next build fails its copy step with MSB3027/MSB3021 and ``dotnet test``
+    exits non-zero without running a single test.  Reporting that as a test
+    failure misattributes an environmental fault to the change under test, so it
+    gets its own name and its own message.
+    """
 
 
 def require(condition: bool, message: str) -> None:
@@ -261,38 +290,385 @@ def validate_actor_continuity(
     )
 
 
-def _run(
-    arguments: list[str], *, cwd: Path, timeout: int
-) -> subprocess.CompletedProcess[str]:
+def held_test_outputs(root: Path) -> list[str]:
+    """Name every test output assembly a live process still holds open.
+
+    This is the exact condition MSBuild's copy step hits, probed the same way:
+    open the destination for writing.  A sharing violation means some process
+    still has the assembly mapped.  Anything that is not a sharing violation is
+    reported verbatim rather than swallowed, because a probe that cannot answer
+    must not look like a clean answer.
+    """
+
+    held: list[str] = []
+    for name in TEST_OUTPUT_HELD_NAMES:
+        path = root / TEST_OUTPUT_RELATIVE / name
+        if not path.is_file():
+            continue
+        try:
+            with path.open("r+b"):
+                pass
+        except PermissionError as exc:
+            held.append(f"{name} (locked: {exc.strerror or exc})")
+        except OSError as exc:
+            held.append(f"{name} (unprobeable: {exc})")
+    return held
+
+
+def live_test_hosts() -> tuple[list[tuple[str, int]], str | None]:
+    """Census live test-host images, or say why the census is unavailable."""
+
+    if sys.platform != "win32":
+        return [], "process census is implemented for Windows only"
+    found: list[tuple[str, int]] = []
+    for image in TEST_HOST_IMAGE_NAMES:
+        try:
+            completed = subprocess.run(
+                ["tasklist", "/FI", f"IMAGENAME eq {image}", "/FO", "CSV", "/NH"],
+                capture_output=True,
+                text=True,
+                timeout=60,
+                check=False,
+            )
+        except (OSError, subprocess.SubprocessError) as exc:
+            return found, f"tasklist failed for {image}: {exc}"
+        if completed.returncode != 0:
+            return found, (
+                f"tasklist exited {completed.returncode} for {image}: "
+                f"{completed.stderr.strip()!r}"
+            )
+        for row in csv.reader(io.StringIO(completed.stdout)):
+            if len(row) >= 2 and row[0].lower() == image.lower():
+                try:
+                    found.append((row[0], int(row[1])))
+                except ValueError:
+                    return found, f"tasklist emitted a non-numeric pid: {row!r}"
+    return found, None
+
+
+def _describe_hosts(hosts: list[tuple[str, int]]) -> str:
+    return ", ".join(f"{name}({pid})" for name, pid in hosts) or "none"
+
+
+def preflight_test_host_guard(root: Path) -> None:
+    """Refuse to start when a leftover test host already owns the outputs.
+
+    Without this, the build's copy step fails and ``dotnet test`` exits non-zero
+    before running a test, which the suite gate would otherwise report as
+    "current focused rebuild suite failed".
+    """
+
+    held = held_test_outputs(root)
+    if not held:
+        return
+    hosts, census_error = live_test_hosts()
+    detail = [
+        "STALE_TEST_HOST_DETECTED: the focused rebuild suite was not started "
+        "because a live process still holds the test project's output "
+        "assemblies open, so the build copy step would fail with "
+        "MSB3027/MSB3021 before any test ran.",
+        f"held={held}",
+        f"testHosts={_describe_hosts(hosts)}",
+        f"outputDirectory={(root / TEST_OUTPUT_RELATIVE).as_posix()}",
+        "This is an environment fault, not a rebuild failure. Terminate the "
+        "reported process tree (taskkill /T /F /PID <pid>) and rerun.",
+    ]
+    if census_error:
+        detail.append(f"processCensusUnavailable={census_error}")
+    raise StaleTestHostError(" ".join(detail))
+
+
+_JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE = 0x00002000
+_JOB_OBJECT_EXTENDED_LIMIT_INFORMATION = 9
+
+
+def _kernel32() -> Any:
+    """Return kernel32 with pointer-safe prototypes for the job-object calls."""
+
+    import ctypes
+    import ctypes.wintypes as wintypes
+
+    library = ctypes.WinDLL("kernel32", use_last_error=True)
+    library.CreateJobObjectW.argtypes = [ctypes.c_void_p, ctypes.c_wchar_p]
+    library.CreateJobObjectW.restype = ctypes.c_void_p
+    library.SetInformationJobObject.argtypes = [
+        ctypes.c_void_p,
+        ctypes.c_int,
+        ctypes.c_void_p,
+        wintypes.DWORD,
+    ]
+    library.SetInformationJobObject.restype = wintypes.BOOL
+    library.AssignProcessToJobObject.argtypes = [ctypes.c_void_p, ctypes.c_void_p]
+    library.AssignProcessToJobObject.restype = wintypes.BOOL
+    library.TerminateJobObject.argtypes = [ctypes.c_void_p, wintypes.UINT]
+    library.TerminateJobObject.restype = wintypes.BOOL
+    library.CloseHandle.argtypes = [ctypes.c_void_p]
+    library.CloseHandle.restype = wintypes.BOOL
+    return library
+
+
+def _extended_limit_structure() -> Any:
+    import ctypes
+
+    class BasicLimit(ctypes.Structure):
+        _fields_ = [
+            ("PerProcessUserTimeLimit", ctypes.c_int64),
+            ("PerJobUserTimeLimit", ctypes.c_int64),
+            ("LimitFlags", ctypes.c_uint32),
+            ("MinimumWorkingSetSize", ctypes.c_size_t),
+            ("MaximumWorkingSetSize", ctypes.c_size_t),
+            ("ActiveProcessLimit", ctypes.c_uint32),
+            ("Affinity", ctypes.c_size_t),
+            ("PriorityClass", ctypes.c_uint32),
+            ("SchedulingClass", ctypes.c_uint32),
+        ]
+
+    class IoCounters(ctypes.Structure):
+        _fields_ = [
+            ("ReadOperationCount", ctypes.c_uint64),
+            ("WriteOperationCount", ctypes.c_uint64),
+            ("OtherOperationCount", ctypes.c_uint64),
+            ("ReadTransferCount", ctypes.c_uint64),
+            ("WriteTransferCount", ctypes.c_uint64),
+            ("OtherTransferCount", ctypes.c_uint64),
+        ]
+
+    class ExtendedLimit(ctypes.Structure):
+        _fields_ = [
+            ("BasicLimitInformation", BasicLimit),
+            ("IoInfo", IoCounters),
+            ("ProcessMemoryLimit", ctypes.c_size_t),
+            ("JobMemoryLimit", ctypes.c_size_t),
+            ("PeakProcessMemoryUsed", ctypes.c_size_t),
+            ("PeakJobMemoryUsed", ctypes.c_size_t),
+        ]
+
+    return ExtendedLimit
+
+
+def adopt_process_tree(process: subprocess.Popen[str]) -> tuple[int | None, list[str]]:
+    """Put the child in a kill-on-close job object; report what happened.
+
+    ``KILL_ON_JOB_CLOSE`` is the only mechanism that also survives the parent
+    dying without running any Python cleanup: the handle closes with the process
+    and Windows terminates every process still in the job.  Every failure is
+    reported instead of suppressed, so a lane never assumes ownership it does
+    not have.
+    """
+
+    notes: list[str] = []
+    if sys.platform != "win32":
+        notes.append("job-object ownership is Windows-only; not adopted")
+        return None, notes
+    import ctypes
+
+    try:
+        kernel32 = _kernel32()
+        limit_type = _extended_limit_structure()
+    except (OSError, AttributeError) as exc:  # pragma: no cover - CPython ships ctypes
+        notes.append(f"job-object interface unavailable: {exc!r}")
+        return None, notes
+    job = kernel32.CreateJobObjectW(None, None)
+    if not job:
+        notes.append(f"CreateJobObjectW failed: winerror={ctypes.get_last_error()}")
+        return None, notes
+    limits = limit_type()
+    limits.BasicLimitInformation.LimitFlags = _JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
+    if not kernel32.SetInformationJobObject(
+        job,
+        _JOB_OBJECT_EXTENDED_LIMIT_INFORMATION,
+        ctypes.byref(limits),
+        ctypes.sizeof(limits),
+    ):
+        notes.append(
+            "SetInformationJobObject(KILL_ON_JOB_CLOSE) failed: "
+            f"winerror={ctypes.get_last_error()}"
+        )
+        kernel32.CloseHandle(job)
+        return None, notes
+    handle = getattr(process, "_handle", None)
+    if handle is None:
+        notes.append("child process handle is unavailable; job not assigned")
+        kernel32.CloseHandle(job)
+        return None, notes
+    if not kernel32.AssignProcessToJobObject(job, int(handle)):
+        notes.append(
+            f"AssignProcessToJobObject failed for pid={process.pid}: "
+            f"winerror={ctypes.get_last_error()}"
+        )
+        kernel32.CloseHandle(job)
+        return None, notes
+    notes.append(f"job object owns pid={process.pid} with KILL_ON_JOB_CLOSE")
+    return int(job), notes
+
+
+def _close_job(job: int | None) -> list[str]:
+    if job is None:
+        return []
+    import ctypes
+
+    if not _kernel32().CloseHandle(job):
+        return [f"CloseHandle(job) failed: winerror={ctypes.get_last_error()}"]
+    return ["job handle closed"]
+
+
+def terminate_process_tree(
+    root: Path, process: subprocess.Popen[str], job: int | None
+) -> list[str]:
+    """Kill the child and every descendant, then verify and report the result.
+
+    Killing only the direct child is what orphans a ``testhost``.  This kills
+    the whole tree, waits, re-enumerates, and states plainly whether anything is
+    still alive.  Nothing here suppresses an error: a failed kill must be
+    visible, because a silently failed kill is how an orphan survives a cleanup
+    and poisons the next build.
+    """
+
+    report: list[str] = []
+    before, census_error = live_test_hosts()
+    report.append(f"testHostsBeforeKill={_describe_hosts(before)}")
+    if census_error:
+        report.append(f"processCensusUnavailable={census_error}")
+
+    if sys.platform == "win32":
+        try:
+            killed = subprocess.run(
+                ["taskkill", "/T", "/F", "/PID", str(process.pid)],
+                capture_output=True,
+                text=True,
+                timeout=120,
+                check=False,
+            )
+            report.append(
+                f"taskkill /T /F /PID {process.pid} exit={killed.returncode} "
+                f"stdout={killed.stdout.strip()!r} stderr={killed.stderr.strip()!r}"
+            )
+        except (OSError, subprocess.SubprocessError) as exc:
+            report.append(f"taskkill /T /F /PID {process.pid} raised {exc!r}")
+    if job is not None:
+        import ctypes
+
+        if _kernel32().TerminateJobObject(job, 1):
+            report.append("TerminateJobObject succeeded")
+        else:
+            report.append(
+                f"TerminateJobObject failed: winerror={ctypes.get_last_error()}"
+            )
+    try:
+        process.kill()
+    except OSError as exc:
+        report.append(f"direct child kill raised {exc!r}")
+    try:
+        process.wait(timeout=120)
+        report.append(f"direct child pid={process.pid} exited")
+    except subprocess.TimeoutExpired:
+        report.append(f"direct child pid={process.pid} IS STILL ALIVE after kill")
+
+    after, after_error = live_test_hosts()
+    held = held_test_outputs(root)
+    if after_error:
+        report.append(f"processCensusUnavailableAfterKill={after_error}")
+    if after or held:
+        report.append(
+            "STILL ALIVE after cleanup: "
+            f"testHosts={_describe_hosts(after)} heldOutputs={held}"
+        )
+    else:
+        report.append("cleanup verified: no test host alive, no output assembly held")
+    return report
+
+
+def run_focused_suite(
+    root: Path,
+) -> tuple[subprocess.CompletedProcess[str], list[str], Path]:
+    """Run the focused rebuild suite so it cannot leave an orphan behind."""
+
+    results = Path(tempfile.mkdtemp(prefix="bea-focused-results-"))
+    command = [
+        "dotnet",
+        "test",
+        os.fspath(TEST_PROJECT_RELATIVE),
+        "--filter",
+        CURRENT_FOCUSED_FILTER,
+        "--no-restore",
+        "--nologo",
+        "--results-directory",
+        os.fspath(results),
+        "--blame-hang-timeout",
+        FOCUSED_HANG_TIMEOUT,
+    ]
     environment = os.environ.copy()
     environment["DOTNET_CLI_TELEMETRY_OPTOUT"] = "1"
-    return subprocess.run(
-        arguments,
-        cwd=cwd,
+    environment["VSTEST_HOST_DEBUG"] = "0"
+    process = subprocess.Popen(
+        command,
+        cwd=root,
         env=environment,
         text=True,
-        capture_output=True,
-        timeout=timeout,
-        check=False,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
     )
+    job, notes = adopt_process_tree(process)
+    try:
+        try:
+            stdout, stderr = process.communicate(
+                timeout=FOCUSED_RUN_TIMEOUT_SECONDS
+            )
+        except BaseException as exc:
+            notes.extend(terminate_process_tree(root, process, job))
+            with contextlib.suppress(Exception):
+                process.communicate(timeout=60)
+            if isinstance(exc, subprocess.TimeoutExpired):
+                raise ProjectionError(
+                    "current focused rebuild suite exceeded "
+                    f"{FOCUSED_RUN_TIMEOUT_SECONDS}s and its process tree was "
+                    f"terminated: results={results.as_posix()} "
+                    f"cleanup={'; '.join(notes)}"
+                ) from exc
+            raise
+    finally:
+        notes.extend(_close_job(job))
+    completed = subprocess.CompletedProcess(
+        command, process.returncode, stdout, stderr
+    )
+    return completed, notes, results
 
 
 def validate_current(root: Path, old_owner: ModuleType) -> dict[str, Any]:
-    completed = _run(
-        [
-            "dotnet",
-            "test",
-            "rebuild/OnslaughtRebuild.Core.Tests/OnslaughtRebuild.Core.Tests.csproj",
-            "--filter",
-            CURRENT_FOCUSED_FILTER,
-            "--no-restore",
-            "--nologo",
-        ],
-        cwd=root,
-        timeout=300,
-    )
+    preflight_test_host_guard(root)
+    completed, cleanup_notes, results = run_focused_suite(root)
     output = completed.stdout + completed.stderr
-    require(completed.returncode == 0, "current focused rebuild suite failed")
+    if completed.returncode != 0:
+        held = held_test_outputs(root)
+        signatures = [
+            signature
+            for signature in BUILD_LOCK_SIGNATURES
+            if signature in output
+        ]
+        if held or signatures:
+            hosts, census_error = live_test_hosts()
+            detail = [
+                "STALE_TEST_HOST_DETECTED: the focused rebuild suite could not "
+                "build because a live process holds the test project's output "
+                "assemblies open; no test verdict was produced.",
+                f"exit={completed.returncode}",
+                f"buildLockSignatures={signatures}",
+                f"held={held}",
+                f"testHosts={_describe_hosts(hosts)}",
+                f"resultsDirectory={results.as_posix()}",
+                f"cleanup={'; '.join(cleanup_notes)}",
+                "This is an environment fault, not a rebuild failure. Terminate "
+                "the reported process tree and rerun.",
+            ]
+            if census_error:
+                detail.append(f"processCensusUnavailable={census_error}")
+            raise StaleTestHostError(" ".join(detail))
+        raise ProjectionError(
+            "current focused rebuild suite failed: "
+            f"exit={completed.returncode} results={results.as_posix()} "
+            f"tail={output[-1200:]!r}"
+        )
+    shutil.rmtree(results, ignore_errors=True)
     match = re.search(
         r"Failed:\s*(\d+),\s*Passed:\s*(\d+),\s*Skipped:\s*(\d+),\s*Total:\s*(\d+)",
         output,
@@ -332,6 +708,10 @@ def validate_current(root: Path, old_owner: ModuleType) -> dict[str, Any]:
             "filter": CURRENT_FOCUSED_FILTER,
             "stdoutSha256": sha256_bytes(completed.stdout.encode("utf-8")),
             "stderrSha256": sha256_bytes(completed.stderr.encode("utf-8")),
+            "runTimeoutSeconds": FOCUSED_RUN_TIMEOUT_SECONDS,
+            "hangTimeout": FOCUSED_HANG_TIMEOUT,
+            "processTreeOwnership": cleanup_notes,
+            "staleTestHostPreflightPassed": True,
         },
         "frozenPlayerDamageProof": {
             "author": stamp(proof_author, root),

@@ -1103,9 +1103,14 @@ GENERATION24_CAMPAIGN_CARRY_COUNTS = {
     "adjudications": 6020,
     "supersessions": 592,
 }
-GENERATION24_HISTORICAL_PROJECTION_BYTES = 23336
+# The live replay instrument gained verified process-tree cleanup and a
+# STALE_TEST_HOST_DETECTED pre-flight guard on 2026-08-17, so its identity
+# advanced.  Every sealed generation keeps its own byte-identical 4e57dd93
+# copy under `_reducer/tools/` and pins that copy in its own READY receipt, so
+# no frozen replay is reinterpreted by this move.
+GENERATION24_HISTORICAL_PROJECTION_BYTES = 38114
 GENERATION24_HISTORICAL_PROJECTION_SHA256 = (
-    "4e57dd93e26d4706a4b49e3c6f11909a0abf57c43f061838c70896baf9ca8946"
+    "cfd5793aa7e98499a9dcbc86925b0b43f5e0178ceec1cd9931712a86035b4b03"
 )
 GENERATION25_CAMPAIGN_CARRY_RELATIVE = (
     "local-lab/re-campaign-incident-recovery-20260808-v1/"
