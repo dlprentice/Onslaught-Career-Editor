@@ -502,12 +502,37 @@ range, never the quoted one.
   are Gen-29 corpus records, not Ghidra objects; correcting them is a campaign
   edit, and two of the ones checked are already known false.
 
-**Preconditions before any ceremony.** Reconcile the duplicated addresses — 43
-differ at class level and 111 differ in total, against a documented 43 — and
-re-pin the bundle export against the live database. The bundles date from
-2026-08-15 and nothing records which database version they were taken against;
-`0x004858d0` is already stale because our own `5c82208f` ceremony demoted that
-name.
+**Preconditions — both CLEAR as of 2026-08-16.**
+
+*Re-pin.* The drop's `inputs/readback/functions.tsv` is byte-identical to our
+own **pre-demotion** readback, so the drop sits exactly one ceremony behind
+`5c82208f`. Across 8,329 rows each side there are zero only-in-drop rows, zero
+only-in-ours, **zero body-extent differences**, and exactly four name
+divergences — the four HUD routes we demoted (`0x00483530`, `0x004858d0`,
+`0x00485d50`, `0x00486940`). The drop is internally split: all 8,813 bundle
+`meta.tsv` files are **current** with zero name mismatches, while the index,
+manifest, shard rows, and ledger `entity_key` are stale. **A ceremony therefore
+reads current state from bundle `meta.tsv`, never from the ledger key.** All
+four stale addresses carry FLAGGED NAME rows whose finding simply *is* the
+demotion we already landed.
+
+*Duplicate addresses.* 309 confirmed (308 with two rows, one with three). The
+111 splits as 43 base-verdict differences — exactly the reconciled set — plus
+68 class-only and 198 identical. The 68 are not 68 conflicts: 47 are an
+annotation artifact of `build_final_ledger.py`'s
+`terminal = pv if pv == av else (av or pv)`, which overwrites a class when one
+lane wrote a bare `FLAGGED`; the remaining 21 are 18 ROLE_DIFFERENT and 3
+GENUINE_CONFLICT, with zero unresolved. That same merge rule silently discarded
+two real DECOMPILE defects, at `0x00577de8` and `0x0057828b`, which no ledger
+row now carries.
+
+*Two further BOUNDARY refutations.* `0x005abb00` and `0x005abdb0` claim
+"ranges 2-3 not exported"; the bundles ship every range (655 and 549 bytes,
+matching declared `bodyBytes` exactly) and the inter-range gaps are alignment
+NOPs. The boundary lane reached the same verdict independently. Both are absent
+from the 41-row manifest, as are all six refuted rows and all four
+stale-named addresses; the cohort is 23 FILL_HOLE, 10 EXTEND_TAIL, 5
+RET_IMM_SPLIT, and 3 JUMP/SEH-table rows.
 
 **Campaign-layer corrections.** Discard the single `CONTRACT_REFUTED` row. It
 claims `0x005d85d8` sits in bss with no file bytes, but that VA maps to file
