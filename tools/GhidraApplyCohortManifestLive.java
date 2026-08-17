@@ -1647,10 +1647,9 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
                     }
                     Address colAddr = toAddr(
                         Long.parseLong(row.get("colAddr").replaceFirst("^0x", ""), 16));
-                    long col = readInt(colAddr);
-                    long td = readInt(colAddr.getNewAddress(col + 0x0c));
-                    long namePtr = readInt(colAddr.getNewAddress(td + 0x08));
-                    String mangled = readCString(colAddr.getNewAddress(namePtr));
+                    long colStruct = readInt(colAddr);
+                    long td = readInt(toAddr(colStruct + 0x0c));
+                    String mangled = readCString(toAddr(td + 0x08));
                     if (mangled.isEmpty()
                             || !mangled.equalsIgnoreCase(row.get("colName"))) {
                         fail(row, "COL identity expected [" + row.get("colName")
