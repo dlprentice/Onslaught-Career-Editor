@@ -450,26 +450,47 @@ from pristine bytes, and only through the full Ghidra gate.
 
 | # | Cohort | Size | Disposition |
 | ---: | --- | ---: | --- |
-| 1 | BOUNDARY, restricted | ~49 of 77 (est) | Promote; byte-derived manifest in flight |
+| 1 | BOUNDARY, restricted | **41 of 77 (byte-derived)** | Manifest complete; ready for ceremony once preconditions clear |
 | 2 | ABI, byte-provable | ~548 of 1,001 (est) | Promote after per-row `RET n` / `ADD ESP,n` check |
 | 3 | NAME, Tier 1 only | 50–150 (est) | Promote only where the class appears in the image |
 | 4 | NAME, refutation-only | ~346 (est) | Convert to demotions, not renames |
 | 5 | XREF | 73 | Byte-check each; 59 are single-lane |
 | 6 | COMMENT / OTHER | 254 | Defer; documentation grade |
 
-**Excluded — do not promote.**
+**BOUNDARY, re-derived 2026-08-16.** The 77 is not a ledger count — only 55
+rows carry a terminal `FLAGGED(BOUNDARY)`; 77 comes from the report's
+categoriser (terminal suffix, else `primary_issue`, else `adv_issue`), a rule
+that reproduces the whole 2,383 distribution exactly. Subtypes: FILL_HOLE 23,
+CREATE_NEW_FUNCTION 17, CORPUS_ROW 12, EXTEND_TAIL 10, RET_IMM_SPLIT 5,
+JUMP/SEH table 3, UNCLEAR 3, EXPORT_BUG 2, FALSE 2. **41 rows are promotable,
+recovering 3,293 bytes**, each re-derived by linear sweep from the entry with a
+branch high-water mark and each byte-proof re-read from the specimen; zero
+invariant violations and zero overlaps. Eleven further rows carry wrong
+addresses in their notes but a correct extent, so they promote on the derived
+range, never the quoted one.
+
+**Excluded — do not promote.** 28 unique rows, having removed a double count:
+`0x00455d9b` and `0x005d6b71` are RES-lane and already inside the corpus-12.
 
 - All 469 `DECOMPILE` rows. Decompiler output is regenerated on demand, so
   there is no stored artifact to mutate.
-- The five BOUNDARY rows that are the campaign's own `ExportBundles.java`
-  truncation bug (shards 0237, 0279). Applying them would corrupt correct
-  bodies.
-- The eleven BOUNDARY rows whose correct action is **create a function**, not
+- The 17 BOUNDARY rows whose correct action is **create a function**, not
   extend one. `0x0055d988 __global_unwind2` ends correctly at `0x0055D9A7`;
   extending it would swallow the separate routine at `0x0055D9A8`–`0x0055D9C9`.
-- `0x00455d9b` and `0x005d6b71`. Both assert a recorded-versus-pristine byte
-  mismatch, both reproduce as byte-identical, and both carry adjudication text
-  claiming pristine verification.
+- Four demonstrably false rows: `0x00455d9b` and `0x005d6b71` assert a
+  recorded-versus-pristine byte mismatch that reproduces as byte-identical;
+  `0x00466ba0` argues from a declared end the metadata does not carry, putting
+  its "25 bytes past the end" inside the declared range; `0x0052d3d0` is
+  contiguous to its `ret` and is a `disasm.tsv` mis-decode misfiled as a
+  boundary.
+- Two `ExportBundles.java` export-bug rows, and two UNCLEAR rows whose naive
+  fill would swallow `CRT__UnlockByIndex9_005621b9`, `…_00562307`, and
+  `CRT__UnlockHeap9_SbHeapMsizePath` — caught by the overlap detector.
+- **Verify exclusions too.** `0x0056defa` was carried on the export-bug list
+  and is in fact a genuine 30-byte fill: both gaps are that function's own SEH
+  filter and handler funclets, dword-referenced from scope tables `0x005e69e4`
+  and `0x005e69f0`, matching nine promoted CRT rows in shape. An exclusion list
+  inherited from a report is a hypothesis like any other.
 - The 22 `CBattleEngineJetPart` / `CBattleEngineWalkerPart` NAME proposals. The
   image contains no `JetPart`, no `WalkerPart`, and neither `.cpp` path, so they
   are SOURCE grade and have no rung in the naming convention.
