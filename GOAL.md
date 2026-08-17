@@ -451,7 +451,7 @@ from pristine bytes, and only through the full Ghidra gate.
 | # | Cohort | Size | Disposition |
 | ---: | --- | ---: | --- |
 | 1 | BOUNDARY, restricted | **41 of 77 (byte-derived)** | **PROMOTED TO LIVE 2026-08-17** — tracked refresh still pending |
-| 2 | ABI, byte-provable | ~548 of 1,001 (est) | Promote after per-row `RET n` / `ADD ESP,n` check |
+| 2 | ABI, byte-derived | **294 of 1,001** — *not* the ~548 estimate | Rehearsed; the 548 plan would have fabricated ABI state |
 | 3 | NAME, Tier 1 only | **33 (anchor-verified)** | Promote; each re-proved twice, zero re-proof failures |
 | 4 | NAME, demotions | **116** | 90 neutral `_T3_<addr>` placeholders + 26 descriptive relabels |
 | 5 | XREF | 73 | Byte-check each; 59 are single-lane |
@@ -905,6 +905,44 @@ Gravity()` inlines as `0.01f` and `*0.2f` folds bit-exactly to `0.002f`
 (`0x3B03126F`). `CWeapon` is absent from the drop entirely, so its five charge
 levels, `-1` sentinel, `index*100` scale, and live charge at `weapon+0x60` were
 recovered from bytes alone.
+
+**ABI cohort re-derived 2026-08-17 — and the recorded plan was wrong.** The
+~548-row promotion set written into this frontier came from reviewer sampling.
+Re-deriving all 1,001 rows from bytes cuts it to **294**, and the difference is
+not conservatism: the 548 plan would have **fabricated ABI state**. It would
+have relabelled calling conventions the bytes cannot discriminate (144
+targets), written signatures onto 103 functions whose live state is Ghidra's
+DEFAULT *absence* rather than a defect, fabricated an EDX register argument on
+30 `__fastcall` functions, and fabricated a hidden `__return_storage_ptr__`
+stack parameter on 2 x87 returns — the last two hazard classes unidentified by
+review. **165 targets are affirmatively refuted**: every byte-decidable axis
+agrees with the live signature, so there is nothing to fix. Note also that the
+1,001 rows are only 936 distinct targets, 924 of them in-image.
+
+The manifest **never relabels a calling convention** (thiscall 238, stdcall 40,
+fastcall 11, cdecl 5, all unchanged). It changes arity on 279, return on 8, both
+on 7 — removing 190 phantom stack parameters and adding 96 proven ones. Arity is
+cross-checked by an independent measure, the highest incoming-arg frame slot the
+body actually reads, giving 157 EXACT, 71 CONSISTENT_LOWER, **0 CONTRADICTS**,
+and disqualifying 13 rows outright. Re-pin found **zero drift**, correcting the
+brief rather than confirming it: today's 199 changed functions have an empty
+intersection with the cohort, and the comparator was proved non-vacuous by
+feeding it those 199 and seeing exactly 158 signature and 1 geometry flags.
+
+**Material safety finding — no headless rollback.** In this Ghidra 12.1.2 build
+`endTransaction(id, false)` does **not** revert `Function.updateFunction`: 296
+rehearsal targets survived an abort, because a headless postScript already runs
+inside an outer transaction and the nested abort is a no-op. `Program.canUndo()`
+is false, and headless writes a new db version even when the script throws.
+**Reversibility must therefore be proven at the ceremony level — a replica
+restored from backup being byte-identical — never at the transaction level**, and
+the name-cohort applier's atomic-abort claim cannot be substantiated for
+signatures. Required practice from here: evaluate every non-mutating gate for
+every row *before* the first write, with data-type resolution done lookup-only
+so no new type is ever defined, so no gate can fail mid-cohort. A fresh
+pre-apply backup with verified restore is mandatory, not advisory. This is also
+the root cause of the earlier observation that refused writable probes still
+printed `Save succeeded` and advanced the checkpoint database.
 
 **Campaign-layer corrections.** Discard the single `CONTRACT_REFUTED` row. It
 claims `0x005d85d8` sits in bss with no file bytes, but that VA maps to file
