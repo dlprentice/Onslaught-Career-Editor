@@ -974,13 +974,17 @@ is the expensive part of integrating it.
 **NEW PROMOTABLE COHORT — the XREF class is a defect in our own reference
 graph.** Of 742 stored references to the 66 flagged addresses, 505 verify
 byte-exactly as `E8` CALL+rel32, but **39 are typed `UNCONDITIONAL_CALL` where
-the source byte is `E9`** — a tail JMP mistyped as a call, which corrupts the
-call graph — and 2 are bogus analyzer references from PE-header offsets whose
-dword is `0x1000`. A whole-image pointer scan found a further **27 DATA
-references present in the bytes and absent from the database**. 18 of 66
-addresses carry a type contradiction and 24 of 66 a DATA discrepancy, with two
-cited claims reproducing exactly (`0x004059c0` 18 raw versus 14 stored,
-`0x00405ee0` 15 versus 13). This is ours to fix, not the drop's.
+the source byte is `E9`** — a tail JMP mistyped as a call — and a whole-image
+pointer scan found a further **27 DATA references present in the bytes and
+absent from the database**. 18 of 66 addresses carry a type contradiction and 24
+of 66 a DATA discrepancy, with two cited claims reproducing exactly
+(`0x004059c0` 18 raw versus 14 stored, `0x00405ee0` 15 versus 13).
+
+Those counts are a **66-address sample, not the population** — the corpus
+measurement below supersedes them at 1,399 and 122 — and the 2 "bogus"
+PE-header references counted here are **withdrawn**: they are legitimate
+`ImageBaseOffset32` RVA fields. Read this paragraph as the discovery, not as the
+size or the verdict.
 
 **Also decided from the populated database:** 131 of 234 COMMENT rows are stale
 (129 name a symbol existing nowhere in the database), 9 of 20 OTHER rows resolve
@@ -1031,6 +1035,71 @@ displacement checks are WARN-only by design because prologue pushes shift ESP.
 byte-provable," and this tranche closes only the former.** Semantic claims —
 role names, "computes the adjugate", "lazy-inits the deletion set" — remain
 unchecked and still need a falsifier each.
+
+**The XREF class, sized and attributed 2026-08-17.** The class is real and it is
+a **database** defect, not an exporter one — and that is now direct evidence
+rather than inference. The exporter iterates `getReferencesTo` and writes every
+reference with `ref_type` from Ghidra's own `RefType.toString()`, with no filter
+and no type mapping anywhere in the write loop. So a reference absent from
+`xrefs_to.tsv` was never created by Ghidra at all, and the mistyped edges carry
+that type in the database itself.
+
+The population is far larger than the flagged rows. Of 27,836
+`UNCONDITIONAL_CALL` rows, **1,399 sit on an `E9` byte across 170 entities, and
+all 1,399 resolve to the correct target** — the edge is right, only its kind is
+wrong. The error is strictly one-directional: all 32 `UNCONDITIONAL_JUMP` rows
+sit on `E9` and none on `E8`, so the correct label demonstrably exists and is
+used. Separately, **122 of 14,110** four-byte-aligned `.rdata`/`.data` slots
+holding a `.text` VA are missing, across 90 entities, structurally rather than
+uniformly — in the window `0x005daaf8`–`0x005dab40` every third dword is absent
+while its neighbour is listed, an RTTI vftable typing artifact. Adjudication of
+the 73 flagged rows: 148 byte assertions at 134 holds, 5 refuted, 9
+semantic-undecidable; zero rows fully refuted; every count the review gave
+reproduced exactly.
+
+**Do not treat that 1,399 as a mutation cohort yet.** 1,191 of them lie at or
+above `0x5d0000`, the SEH unwind-funclet tail region, which is the signature of a
+deliberate `CALL_RETURN` flow override — applied precisely so the decompiler
+reads a tail jump as call-then-return. If that is what it is, the label is a
+faithful report of an intentional analysis decision, retyping would *degrade*
+decompilation across 170 entities, and the deliverable is documentation teaching
+consumers to read `UNCONDITIONAL_CALL` on an `E9` byte correctly. Settle intent
+before proposing rows; reference and data retyping are semantic changes, so the
+collateral proof must cover decompilation drift, not just changed-row counts.
+Two withdrawals stand: the `0x00401000` spurious-data-ref row is a false
+positive, and the `0x004013d0` count is 11, not 12. One exporter-side defect sits
+outside the 73 — `index.tsv`'s `callers` counts every inbound reference including
+vtable slots, so `SharedVFunc__Return2` reports 14 and has **zero** real callers.
+Never rank or call a function unreferenced by that column.
+
+**The ABI contradiction class has a mechanical root cause, found 2026-08-17.**
+Ghidra's `param_size` — the size in *bytes* of the stack-argument area — was
+transcribed into review prose as the RET immediate, and that single confusion
+explains every inverted-cleanup row examined. 12 confirmed became **17** once a
+checker rule that passes `retn N (cdecl)` was dropped; it was defensible about
+author intent but it hid text the bytes refute. A harder class sits underneath:
+functions that **contain no RET at all**, tail-dispatching via JMP, where the
+cited RET address is the last byte of the dispatch instruction and the byte is
+`0x00` — `0x0050f600`, `0x005387a0`, `0x00453460`, `0x00453630` so far. Because
+the cause is mechanical, this class is a candidate for one bulk sweep rather than
+1,001 adjudications; but a defect in the review's prose is **not** evidence our
+database is wrong, and only rows implying a wrong convention, parameter count, or
+stack delta are mutation candidates.
+
+Two smaller carries. A citation fix turned out to hide a **value** finding: the
+constant at `0x0056d647` is the 80-bit long double **0.1**, not 10 — `cc`×8,
+`fb`, `3f`, exponent `0x3ffb` at bias−4 and significand 1.6, laid out as a CRT
+`_LDBL12`. And `0x004af110`/`0x004aede0` carry a clean three-cell **column
+rotation** in the ledger, with otherwise correct content: a ledger fix, not an
+extractor fix.
+
+**The no-rollback finding extends, and this governs every future ceremony.**
+Opening a project **without** `-readOnly` rolls the database file version on
+close *even when the post-script refused and wrote nothing*. So a refused row
+still moves the live version, "tracked still `PRE`" must be argued
+**semantically** — a full readback bit-identical at program scope and across all
+8,329 function rows — never by file digest, and gate provocations must never run
+in write mode against live. Reversibility remains restore-from-backup only.
 
 ### Directive revisions
 
