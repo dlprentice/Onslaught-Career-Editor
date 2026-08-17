@@ -944,6 +944,53 @@ pre-apply backup with verified restore is mandatory, not advisory. This is also
 the root cause of the earlier observation that refused writable probes still
 printed `Save succeeded` and advanced the checkpoint database.
 
+**Ungated sandbox experiment 2026-08-17 — verdict: triage instrument, not a
+mutation harness.** All 2,383 ledger rows were applied ungated in a
+`NONCANONICAL_SANDBOX_NEVER_SYNC_TO_LIVE` project built from a restore-proven
+backup; live and tracked were byte-identical to their PRE state at both the
+start and end of the run. 508 applied, 2 refused.
+
+*What the sandbox caught:* both `OverlappingFunctionException` refusals, exactly
+the two rows a static pre-pass had predicted — and `0x0056080d`'s proposed end
+`0x00560a49` **is another function's entry** (`CRT__DestroyCatchObject`), so the
+extraction had grabbed the next function's start. Also the absence-to-assertion
+conversion, quantified: `sigSource` moved DEFAULT→USER_DEFINED on 158 functions,
+219 of 423 arity rows overwrote a Ghidra DEFAULT, and 363 landed on functions
+whose calling convention is `unknown`.
+
+*What it missed, and this is the point:* **all 165 refuted ABI signatures apply
+cleanly**, as do the anchorless names and the `0x0044ca30` slot-108-of-a-68-entry
+vtable attribution — which the run renamed to the literal string `recorded`,
+with Ghidra's full cooperation and no warning. 70 distinct verified names
+collapsed into that one word silently. The ~18-of-708 estimate held.
+
+*The lane's own headline, worth keeping:* **the dominant damage was its
+prose-to-mutation extraction, not the ledger's proposals.** 79 of 81 name
+extractions were English words lifted out of evidence prose; the honest
+expressible count is ~431, not the regex's 510. Extraction is the riskiest link
+and it fails silently, which is why the drop carrying no structured target field
+is the expensive part of integrating it.
+
+**NEW PROMOTABLE COHORT — the XREF class is a defect in our own reference
+graph.** Of 742 stored references to the 66 flagged addresses, 505 verify
+byte-exactly as `E8` CALL+rel32, but **39 are typed `UNCONDITIONAL_CALL` where
+the source byte is `E9`** — a tail JMP mistyped as a call, which corrupts the
+call graph — and 2 are bogus analyzer references from PE-header offsets whose
+dword is `0x1000`. A whole-image pointer scan found a further **27 DATA
+references present in the bytes and absent from the database**. 18 of 66
+addresses carry a type contradiction and 24 of 66 a DATA discrepancy, with two
+cited claims reproducing exactly (`0x004059c0` 18 raw versus 14 stored,
+`0x00405ee0` 15 versus 13). This is ours to fix, not the drop's.
+
+**Also decided from the populated database:** 131 of 234 COMMENT rows are stale
+(129 name a symbol existing nowhere in the database), 9 of 20 OTHER rows resolve
+— 5 confirmed frame-size defects, 4 confirmed mistyped thunks, and **6 that are
+latent uninitialised-memory bugs in the retail binary itself** — and 31 of the
+347 unresolved names are disambiguated structurally: 26 are `TEXT_RESIDUAL`
+range labels that are not function entries, and 5 cite an address 16–112 bytes
+*inside* a function whose entry lies elsewhere. The remaining 316 are blocked by
+anchor absence in the image, which no database state can settle.
+
 **Campaign-layer corrections.** Discard the single `CONTRACT_REFUTED` row. It
 claims `0x005d85d8` sits in bss with no file bytes, but that VA maps to file
 offset `0x1D85D8`, which holds `00 00 a0 40` — exactly the 5.0f the Gen-29
