@@ -1,7 +1,7 @@
 # IScript function map
 
 Status: active static function map
-Last updated: 2026-08-18 (event-id 2; EGameState 0x008a9ac0; VM+0x210 at 0x0089c7f0)
+Last updated: 2026-08-18 (arrived/timer fire sites; EGameState; VM+0x210)
 Source File: `C:\dev\ONSLAUGHT2\MissionScript\IScript.cpp` (SEH `__FILE__`
 pointer `0x0064fa40` read out of `IScript__PostEvent`) | Binary: BEA.exe,
 SHA-256
@@ -154,7 +154,25 @@ db.18627.
   running". Wait helpers copy that same six-dword tail into a fresh CVM.
 - The 2002 arm's `CScriptObjectCode__CallEvent` invocation
   (`this=0x0089c5e0`, args `[edi+0xc], 2, &0x0089c528, 0`): CLOSED as
-  event-id **2** (`timer` in the `0x0064fef8` table) of the 13-slot `CMissionScriptObjectCode+0x14` table.
-  `0x0089c528` is a BSS scratch pointer shared with the other IScript
-  CallEvent wrappers (see `CScriptObjectCode.cpp.md`). The authored
-  name is `timer`; handler-body meaning is still open.
+  event-id **2** (`timer` in the `0x0064fef8` table). The 13-slot IP is
+  `-1` in all 762 shipped objects, so the call no-ops. `IScript__SetTimer`
+  (`0x005358e0`, zero direct `E8`, registry `"SetTimer"`) is the command
+  that would schedule this message:
+  `AddEvent_TimeFromNow(2002, this, delay)` via `0x0044b2d0` (`push 0x7d2`
+  at `0x005358fd`). Zero compiled uses and zero loose-`.msl` `SetTimer(` /
+  `timer()` / `event("timer")`. See
+  [`CScriptObjectCode.cpp.md`](CScriptObjectCode.cpp.md) for the named
+  `CEventFunction` occupancy (994 records, 0 listen-string `timer`).
+- **arrived (id 1).** CLOSED as a fire site, empty as a shipped body.
+  Only `E8` to `IScript__CreateThingRef` (`0x005335d0`) is `0x00538583`
+  in the end-of-waypoint-chain arm of `UpdateWaypointFollowing` (next
+  waypoint null and `[this+0x1c]==0`). It boxes `[this+0x24]` — written
+  by `FollowWaypoint` at `0x00537dc7` from `args[1]->vtable[+0x30]()` —
+  as a `CInt` and `CallEvent(id=1, argc=1)`. All 762 13-slot IPs are
+  `-1`; 0 listen-string `arrived`.
+- Nested-listener registration. CLOSED as the tail of
+  `IScript__CallEvent0AndRegisterNestedListeners` (`0x00533500`): after
+  `CallEvent(id=0)` it walks `eventObj+0x48` and
+  `RegisterEventListener`s each name wrapper. Only `E8` is
+  `CComplexThing__HandleEvent` `0x004f4359` (thing message 2001 when
+  `[thing+0x74]` is set).

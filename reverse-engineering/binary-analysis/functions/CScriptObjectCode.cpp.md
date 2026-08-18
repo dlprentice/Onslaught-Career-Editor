@@ -1,7 +1,7 @@
 # CScriptObjectCode function map
 
 Status: active static function map
-Last updated: 2026-08-18 (RETURN / CALLLOCAL / event names / 762-object trailer census)
+Last updated: 2026-08-18 (arrived/timer bind: empty 13-slots; named CEventFunctions)
 Source File: `C:\dev\ONSLAUGHT2\MissionScript\ScriptObjectCode.cpp` (the
 VM's `__FILE__` chain is established by the adjacent
 [`ScriptObjectCode.cpp.md`](ScriptObjectCode.cpp.md) wave receipts) | Binary:
@@ -230,11 +230,90 @@ Shipped occupancy (safe-copy `local-lab/safe-copy-bea-pristine/data/Resources`,
 | 7 | `shutdown` | 3 | `5` 3 |
 | 8–12 | `notdefined*` | **0** (all `-1`) | — |
 
-`CallEvent` already no-ops an IP of `-1`. So the eight IScript wrappers
-still *fire* ids 0–7, but shipped objects have no compiled body for
-`arrived` / `timer` / `notdefined*`. Do not invent where those handlers
-live (named `CEventFunction`s on `+0x48` are a candidate, not measured
-here).
+`CallEvent` already no-ops an IP of `-1`. The eight IScript wrappers still
+*fire* ids 0–7. Shipped objects have no compiled 13-slot body for
+`arrived` / `timer` / `notdefined*`. Those two names also do **not** live
+as `CEventFunction` listen-strings (measured below). The fire sites are:
+
+- **arrived (id 1).** Only `E8` to `IScript__CreateThingRef`
+  (`0x005335d0`) is `0x00538583` inside
+  `CScriptEventNB__UpdateWaypointFollowing`: the end-of-waypoint-chain
+  arm (`[this+0x14]` advanced to null and `[this+0x1c] == 0`). It boxes
+  `[IScript+0x24]` as a `CInt` (`vptr 0x005e4af8`) at BSS `0x0089c528`
+  and `CallEvent(eventObj, 1, &0x0089c528, 1)`. `FollowWaypoint`
+  (`0x00537d70`) is the writer of `+0x24` (`mov [esi+0x24],eax` at
+  `0x00537dc7` from `args[1]->vtable[+0x30]()`). On the shipped corpus
+  the lookup is always `-1`, so the wrapper deletes the `CInt` and
+  returns.
+- **timer (id 2).** `IScript__SetTimer` (`0x005358e0`, `ret 0xc`, zero
+  direct `E8` — registry command `"SetTimer"`) calls
+  `CEventManager__AddEvent_TimeFromNow` (`0x0044b2d0`) with event
+  **2002** (`push 0x7d2` at `0x005358fd`) against the same `IScript`.
+  `HandleMessage`'s 2002 arm then `CallEvent(eventObj, 2, &0x0089c528, 0)`.
+  Zero compiled `SetTimer` uses (native-corpus `DORMANT_CANDIDATE`) and
+  zero `SetTimer(` / `timer()` / `event("timer")` in 733 loose
+  `.msl`. The 2002 arm can still fire if something else schedules 2002;
+  the 13-slot body is still `-1`.
+
+### Named `CEventFunction` occupancy (the `+0x48` set)
+
+`CEventFunction__CEventFunction` (`0x0052fa70`, `ret 8`) is **not** an
+id-table writer. Independently re-read 2026-08-18 from file offset
+`0x0012fa70`:
+
+| Offset | Field | Witness |
+| --- | --- | --- |
+| `+0` | vptr `0x005e4ef8` | `mov [edi],0x5e4ef8` at `0x0052fabd` after the `CMonitor` base install |
+| `+8` | entry PC | `lea ecx,[edi+8]; push 4; push ecx; call 0x00548570` at `0x0052fab0` |
+| `+0xc` | `CSPtrSet` of name wrappers | `lea ecx,[edi+0xc]; call 0x004e5840`; each param is a symbol index resolved through `[owner+0x58]`, datatype **must** be `3` (`cmp eax,3` at `0x0052fb12`) else `"FATAL ERROR: Event Function was expecting a string"` (`0x0064cd38`) |
+| `+0x1c` | owner `CMissionScriptObjectCode*` | `mov [edi+0x1c],eax` at `0x0052fac3` |
+
+`CEventFunction__Execute` (`0x0052fda0`) is the **only** `E8` to
+`CallEventDirect` (`0x00539a60` at `0x0052fe24`):
+`CallEventDirect(owner=this+0x1c, entryPC=this+8, args=local[], count)`.
+`Execute` itself has exactly two `E8` sites, both already mapped:
+`CScriptEventNB__PostEvent` `0x00538c3b` and
+`CScriptEventNB__HandleEventMessage` `0x00538d68`. Named handlers
+therefore never consult the 13-slot table.
+
+Registration is `IScript__CallEvent0AndRegisterNestedListeners`
+(`0x00533500`): after `CallEvent(id=0)` it walks `eventObj+0x48` and
+for each function's `+0xc` name wrappers calls
+`CScriptEventNB__RegisterEventListener` (`0x00538960`) on singleton
+`0x0089c590` (`push name; push function` at `0x0053355d`). Only `E8` to
+`0x00533500` is `CComplexThing__HandleEvent` `0x004f4359` (message
+**2001** on a thing that has `[this+0x74]`).
+
+Same 762-object safe-copy parse, 0 failures:
+
+| | count |
+| --- | --- |
+| `CEventFunction` records | **994** |
+| objects with at least one | 386 |
+| objects with none | 376 |
+| unique listen-strings | 364 |
+| listen-string `arrived` | **0** |
+| listen-string `timer` | **0** |
+| listen-string `game playing` | 92 |
+
+Top listen-strings after `game playing`: `Target Emplacements` 17,
+`Marshall Destroyed` 14, `Lock Buildings` 11, `run away` 11. Strings
+that merely *contain* those words are different names (`Gill-M Arrived`
+8, `Carrier Arrived` 2, `Transports Arrived` 2, `Start Timer` 2,
+`Timer Pulse` 5, `Start Race Timer` 5) and are not id-1 / id-2.
+
+Spot-check (parser `read_event` vs the ctor reads above): `110` RLWD
+`Scout` has evtab died=`1` and one named handler `{entry:5, "game playing"}`;
+`200` RLWD `FighterAttack` has init=`1`, hit=`30`, and named entries
+2 / 9 / 16 / 23. The named PCs are not id-table slots.
+
+733 loose `MissionScripts/**/*.msl` contain zero `arrived(`, `timer(`,
+`SetTimer(`, `event("arrived"`, or `event("timer"`.
+
+Cheapest falsifier: a shipped object whose 13-slot `arrived`/`timer` IP
+is not `-1`; a `CEventFunction` whose string symbol value is exactly
+`arrived` or `timer`; a second `E8` to `CreateThingRef` or
+`CallEventDirect`.
 
 Object trailers (ctor writes A → `+0x60`, B → `+0x5c`):
 
@@ -248,8 +327,8 @@ No shipped object has trailerA `== 1`, so the Run-time trace compare at
 PC=0 preamble; 47 do not.
 
 Cheapest falsifier for a missing static user of 8–12: another `E8` to `0x00539990`
-outside this census, or a `CallEventDirect` path that is really an id-table
-lookup in disguise.
+outside the eight-site census. `CallEventDirect` is not an id-table
+lookup: its only `E8` is `CEventFunction__Execute` passing `this+8`.
 
 ## Open questions (cheapest falsifier first)
 
@@ -266,7 +345,10 @@ lookup in disguise.
 - The 13 event-id slots at `eventObj+0x14`. CLOSED: names and arities
   come from `.data` `0x0064fef8`; static users of 0–7 are the IScript
   wrappers above. Ids 8–12 (`notdefined4`–`notdefined8`) have no direct
-  `E8`. Handler bodies remain open.
+  `E8`. `arrived` / `timer` have no shipped 13-slot body and no
+  same-name `CEventFunction`; they fire (and no-op) from the waypoint
+  end-of-chain / `SetTimer`→2002 paths above. Authored arrival/delay
+  behavior on the corpus is the named-string set, not those two ids.
 - The second `.rdata` holder of `FUN_0052da00` at `0x005dab54`: CLOSED as
   `CWarspiteDomeBehaviourType` vtable `0x005dab50[+4]` (cohort census
   `col_ptr 0x005dab4c`). Same thunk body (`mov eax,0x17; ret`), different

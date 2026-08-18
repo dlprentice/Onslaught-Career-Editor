@@ -1,8 +1,8 @@
 # EventFunction.cpp - Function Mappings
 
 > Source file/debug path: `[maintainer-local-source-export-root]\MissionScript\EventFunction.cpp` (0x0064cce0)
-> Last updated: 2026-08-17 (RTTI hierarchy settled; see the note after the
-> vtable table) — prior text updated 2026-05-19
+> Last updated: 2026-08-18 (ctor entry-PC + Execute CallEventDirect pin;
+> named-event occupancy) — RTTI 2026-08-17; prior text 2026-05-19
 
 ## Overview
 
@@ -12,8 +12,11 @@ Key retail evidence:
 
 - Event-function vtable: `0x005e4ef8`.
 - Event-function parameter wrapper vtable: `0x005e4d50`.
-- Constructor and clone allocate 8-byte parameter wrapper nodes and require datatype id `3`.
-- Execute stages wrapper objects into the observed local 10-slot array before calling `CScriptObjectCode__CallEventDirect`.
+- Constructor reads a 4-byte **entry PC** into `this+8` and a 4-byte
+  param count, then one symbol index per param (datatype must be `3`).
+- Execute stages wrapper objects into a local array and calls
+  `CScriptObjectCode__CallEventDirect(owner=this+0x1c, entryPC=this+8, …)`.
+  That is the only `E8` to `CallEventDirect`.
 
 The runtime event behavior remains unproven. This page records saved static Ghidra evidence only, not runtime dispatch behavior, concrete layout finality, BEA patching, or rebuild parity.
 
@@ -31,7 +34,7 @@ Wave577 targeted the adjacent queue-head EventFunction tranche and applied no re
 | --- | --- | --- |
 | `0x0052f9a0` | `void __thiscall CEventFunction__Destructor(void * this)` | Installs `0x005e4ef8`, walks the CSPtrSet at `this+0x0c` through iterator slot `this+0x14`, frees 8-byte wrappers through `DAT_009c3df0`, clears the set twice, then calls `CMonitor__Shutdown`. |
 | `0x0052fa50` | `void * __thiscall CEventFunction__ScalarDeletingDestructor(void * this, byte flags)` | Vtable slot at `0x005e4efc`; `RET 0x4` confirms one `flags` stack argument after `ECX=this`; frees `this` when `flags&1` is set. |
-| `0x0052fa70` | `void * __thiscall CEventFunction__CEventFunction(void * this, void * script_object_code, void * bytecode_reader)` | `RET 0x8`; switches from the `0x005d92d4` `CMonitor` base vtable to `0x005e4ef8`, stores owner at `this+0x1c`, reads event id/count from the bytecode reader, resolves symbol indexes through `CScriptObjectCode__GetInstruction`, requires datatype id `3`, and appends wrappers allocated at EventFunction.cpp line `0x40`. |
+| `0x0052fa70` | `void * __thiscall CEventFunction__CEventFunction(void * this, void * script_object_code, void * bytecode_reader)` | `RET 0x8`; switches from the `0x005d92d4` `CMonitor` base vtable to `0x005e4ef8`, stores owner at `this+0x1c`, reads **entry PC** into `this+8` then param count, resolves each symbol index through `[owner+0x58]`, requires datatype id `3`, and appends wrappers allocated at EventFunction.cpp line `0x40`. |
 | `0x0052fbb0` | `void * __thiscall CEventFunction__Clone(void * this, void * cloned_script_object_code)` | `RET 0x4`; allocates a `0x20`-byte clone at line `0x4e`, copies the event id, initializes the parameter list, resolves source symbols through owner `+0x58`, verifies datatype id `3`, compares string getter slot `+0x38`, and appends line-`0x1b` wrapper nodes. |
 | `0x0052fda0` | `void __thiscall CEventFunction__Execute(void * this)` | Register-only `this`; walks `this+0x0c`, allocates 8-byte `CEventFunctionParam` wrappers at line `0x96`, installs vtable `0x005e4d50`, copies payload byte from `wrapped_object+0x04+0x14`, stores into the local 10-slot array, and calls `CScriptObjectCode__CallEventDirect`. |
 
