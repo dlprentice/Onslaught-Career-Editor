@@ -21,7 +21,8 @@ live in `developer_state.json` and the campaign ledgers.
   Cheats names the same three places for the career it is about to copy.
   A Lore search with no hits now says to try another word or clear the search,
   instead of calling the empty tree filtered results. Cheats will not offer to
-  write into a folder inside the installed game.
+  write into a folder inside the installed game. Media load and playback
+  failures stay on the page without dumping the raw exception.
 
 ## 1.0.11 — 2026-08-07
 

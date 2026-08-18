@@ -35,6 +35,7 @@
     <Compile Include="..\OnslaughtCareerEditor.WinUI\Helpers\CareerSaveLocationText.cs" Link="WinUI\Helpers\CareerSaveLocationText.cs" />
     <Compile Include="..\OnslaughtCareerEditor.WinUI\Helpers\InstalledGamePatchText.cs" Link="WinUI\Helpers\InstalledGamePatchText.cs" />
     <Compile Include="..\OnslaughtCareerEditor.WinUI\Helpers\MediaKeepPlaying.cs" Link="WinUI\Helpers\MediaKeepPlaying.cs" />
+    <Compile Include="..\OnslaughtCareerEditor.WinUI\Helpers\MediaPageText.cs" Link="WinUI\Helpers\MediaPageText.cs" />
     <Compile Include="..\OnslaughtCareerEditor.WinUI\Helpers\LiveTrainerPageText.cs" Link="WinUI\Helpers\LiveTrainerPageText.cs" />
     <Compile Include="..\OnslaughtCareerEditor.WinUI\Helpers\LorePageText.cs" Link="WinUI\Helpers\LorePageText.cs" />
     <Compile Include="..\OnslaughtCareerEditor.WinUI\Helpers\SaveEditorAdvancedOverrideCarryOver.cs" Link="WinUI\Helpers\SaveEditorAdvancedOverrideCarryOver.cs" />

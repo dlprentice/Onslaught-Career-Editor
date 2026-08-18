@@ -211,8 +211,9 @@ online play. Host/Join, matchmaking, and new networking are unavailable.
 ### Media, assets, and Lore
 
 - Media reads supported audio/video from a selected local game path. A load
-  failure now states its cause where the user can see it; the reason previously
-  went only into a permanently collapsed panel.
+  or playback failure states what happened where the user can see it, without
+  dumping the raw exception. The reason previously went only into a permanently
+  collapsed panel, then later leaked as `Details:` plus the exception text.
 - Cutscenes are listed by number (`Cutscene 01`..`Cutscene 33`). The game ships
   no titles for them.
 
