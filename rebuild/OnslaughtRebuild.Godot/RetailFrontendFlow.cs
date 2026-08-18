@@ -571,6 +571,8 @@ public sealed partial class RetailFrontendFlow : Control
     private Texture2D _levelRing01 = null!;
     private Texture2D _levelRing02 = null!;
     private Texture2D _loadingScreen = null!;
+    private Texture2D _loadingBarL = null!;
+    private Texture2D _loadingBarR = null!;
     private Texture2D _titleFont = null!;
     private Texture2D _font22 = null!;
     private int[] _font22Widths = [];
@@ -2551,15 +2553,18 @@ public sealed partial class RetailFrontendFlow : Control
     ///         from x=270 centres on x=319
     ///   bar   x78..562, y423..447
     ///
-    /// KNOWN GAP: the bar is drawn here as a measured opaque black rectangle,
-    /// which its two ends are, but retail's is a TEXTURED bar whose alpha ramps
-    /// off toward the middle — sampling row y=435 gives ref/background ratios of
-    /// 0.07 at x=100 rising to ~0.77 near x=300 and back to 0.03 by x=540. That
-    /// ramp is the BarL/BarC/BarR art the binary names, which is not in the
-    /// materialized set, so it is not reproduced and the mid-bar residual is
-    /// reported rather than tuned away. Note also that the reference frame is
-    /// the earliest matching frame, so its bar is at zero fill: nothing here is
-    /// evidence about how a filled bar draws.
+    /// The bar chrome is FrontEnd\BarL/BarC/BarR.tga, hash-pinned into
+    /// FRONTEND_ASSETS. Each file decodes as 64x64 DXT2, which is
+    /// HEADER_BAR_SIZE in CFrontEnd::DrawBar (FrontEnd.cpp:1071-1092): first
+    /// tile BarL, middle tiles BarC, last tile BarR. CConsole__RenderLoadingScreen
+    /// (0x0042C810) pushes the same 78.0 x origin the capture measured
+    /// (PUSH 0x429c0000 at 0x0042CB3B) before CVBufTexture__DrawSpriteEx.
+    ///
+    /// This page's reference frame is zero fill, so BarC is not drawn: it is a
+    /// uniformly opaque slab and would hide the measured mid-bar alpha ramp.
+    /// Cap dest width is the native 64; dest height is the measured 25. How a
+    /// filled bar composites BarC remains un evidenced.
+    /// Falsifier: local-lab/retail-reference-pristine/loading/07-loading-640x480.png.
     /// </summary>
     private void DrawLoading()
     {
@@ -2582,9 +2587,19 @@ public sealed partial class RetailFrontendFlow : Control
         DrawFont22Outlined(_loadingText, origin + new Vector2(1f, -1f), Colors.Black);
         DrawFont22Outlined(_loadingText, origin, Colors.White);
 
-        DrawRect(
-            new Rect2(LoadingBarLeft, LoadingBarTop, LoadingBarWidth, LoadingBarHeight),
-            Colors.Black);
+        const float capWidth = 64f;
+        DrawTextureRect(
+            _loadingBarL,
+            new Rect2(LoadingBarLeft, LoadingBarTop, capWidth, LoadingBarHeight),
+            false);
+        DrawTextureRect(
+            _loadingBarR,
+            new Rect2(
+                LoadingBarLeft + LoadingBarWidth - capWidth,
+                LoadingBarTop,
+                capWidth,
+                LoadingBarHeight),
+            false);
     }
 
     private bool HandlePointerMotion(Vector2 position)
@@ -3020,6 +3035,11 @@ public sealed partial class RetailFrontendFlow : Control
             512,
             512,
             CuratedAyaTextureLoader.Compression.Dxt1);
+        _loadingBarL = LoadTexture("bar-l", 64, 64);
+        // BarC is the opaque centre slab. Zero-fill does not draw it; load it
+        // so a missing or wrong hash-pinned aya still fails Initialize.
+        _ = LoadTexture("bar-c", 64, 64);
+        _loadingBarR = LoadTexture("bar-r", 64, 64);
         // data/language holds exactly five sets and the released texture set carries
         // exactly five matching flags (Career.h: NUM_LANGUAGES 5). Order matches
         // RetailFrontendLanguage.

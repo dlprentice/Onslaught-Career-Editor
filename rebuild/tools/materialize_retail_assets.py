@@ -579,6 +579,12 @@ FRONTEND_ASSETS = (
     (GODOT_ASSETS / "Frontend/title-font.texture.aya", "data/resources/textures/mustbe_TitleFont.tga(0)A8R8G8B8.aya", "1941e28a5665665fb7f8f733e7a4854c60def33e1d4f1cb9caa979bc204d0707"),
     (GODOT_ASSETS / "Frontend/system-font.texture.aya", "data/resources/textures/mustbe_SystemFont(0)A8R8G8B8.aya", "475edc8c9b95e3d3619e9b78e168dfcda8575042b728d96de1598cb8917967eb"),
     (GODOT_ASSETS / "Frontend/loading-screen.texture.aya", "data/resources/dxtntextures/LoadingScreen.tga(0)X8R8G8B8.aya", "e4ad32fee41a31477e97d4f6f0b280f33c360756e3aba27bf23746038443fc2c"),
+    # CFrontEnd::DrawBar (FrontEnd.cpp:1073) and CFrontEnd__LoadSharedResources
+    # (0x004687e0) name FrontEnd\BarL/BarC/BarR.tga. Safe-copy hashes from
+    # local-lab/safe-copy-bea-pristine/data/resources/dxtntextures/.
+    (GODOT_ASSETS / "Frontend/bar-l.texture.aya", "data/resources/dxtntextures/FrontEnd%BarL.tga(0)A8R8G8B8.aya", "fbd28ca720ebe91cb8f58a9f5be5e4e9ee5c013fc42052fd1bec6b41dfd094bd"),
+    (GODOT_ASSETS / "Frontend/bar-c.texture.aya", "data/resources/dxtntextures/FrontEnd%BarC.tga(0)A8R8G8B8.aya", "347828edf9f97dd3463ce7374e167e57f8bd837113cbfad71cb8cbc6bcde68a5"),
+    (GODOT_ASSETS / "Frontend/bar-r.texture.aya", "data/resources/dxtntextures/FrontEnd%BarR.tga(0)A8R8G8B8.aya", "9995d4a41ff140d3d33004086e82f940db946c0db45635b5c853662ace6c6199"),
     # The mouse cursor sprite. Retail closes every interactive frontend frame
     # with a 32x32 quad of this texture at the pointer position, measured on 14
     # draws across 13 pages and 4 launches in the 2026-07-27 d3d9 sweep

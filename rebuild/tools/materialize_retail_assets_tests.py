@@ -361,5 +361,34 @@ class CutsceneVoiceTrackTests(unittest.TestCase):
                 self._run(temporary, [0, 1, 2, 3, 4], self.VIDEO_FRAMES * 44100 // self.FPS - 1)
 
 
+class FrontendLoadingBarAssetsTests(unittest.TestCase):
+    def test_barl_barc_barr_are_hash_pinned(self) -> None:
+        rows = {
+            destination.as_posix(): (source, expected)
+            for destination, source, expected in materializer.FRONTEND_ASSETS
+        }
+        self.assertEqual(
+            rows["rebuild/OnslaughtRebuild.Godot/Assets/Frontend/bar-l.texture.aya"],
+            (
+                "data/resources/dxtntextures/FrontEnd%BarL.tga(0)A8R8G8B8.aya",
+                "fbd28ca720ebe91cb8f58a9f5be5e4e9ee5c013fc42052fd1bec6b41dfd094bd",
+            ),
+        )
+        self.assertEqual(
+            rows["rebuild/OnslaughtRebuild.Godot/Assets/Frontend/bar-c.texture.aya"],
+            (
+                "data/resources/dxtntextures/FrontEnd%BarC.tga(0)A8R8G8B8.aya",
+                "347828edf9f97dd3463ce7374e167e57f8bd837113cbfad71cb8cbc6bcde68a5",
+            ),
+        )
+        self.assertEqual(
+            rows["rebuild/OnslaughtRebuild.Godot/Assets/Frontend/bar-r.texture.aya"],
+            (
+                "data/resources/dxtntextures/FrontEnd%BarR.tga(0)A8R8G8B8.aya",
+                "9995d4a41ff140d3d33004086e82f940db946c0db45635b5c853662ace6c6199",
+            ),
+        )
+
+
 if __name__ == "__main__":
     unittest.main()
