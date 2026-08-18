@@ -1,7 +1,7 @@
 # CScriptObjectCode function map
 
 Status: active static function map
-Last updated: 2026-08-18 (POP stores stack top into symbol[attr]+8)
+Last updated: 2026-08-18 (47 trailerB=0 objects listed)
 Source File: `C:\dev\ONSLAUGHT2\MissionScript\ScriptObjectCode.cpp` (the
 VM's `__FILE__` chain is established by the adjacent
 [`ScriptObjectCode.cpp.md`](ScriptObjectCode.cpp.md) wave receipts) | Binary:
@@ -404,6 +404,23 @@ No shipped object has trailerA `== 1`, so the Run-time trace compare at
 `0x00539ba4` is off for the whole corpus. 715 objects have a one-time
 PC=0 preamble; 47 do not.
 
+The 47 `trailerB=0` objects, independently re-listed 2026-08-18 from
+the same 762-object safe-copy parse (`ip != -1`):
+
+| Level | Name | n | Slots present | Instr |
+| --- | --- | --- | --- | --- |
+| 4 | `VitalBuilding` | 5 | init, died | 12 |
+| 10 | `Target1` / `Target2` / `Target3` | 8+8+8 | died | 4 |
+| 311, 312 | `ForsetiBuilding` / `ForsetiTurret` / `MuspellBuilding` | 3+3 | died | 4 |
+| 321, 322 | same three names | 3+3 | init, died | 5 |
+| 400 | `ImportantBuilding` | 1 | init, died | 9 |
+| 400 | `VitalBuilding` | 1 | init, died | 12 |
+| 521, 522 | `arachnid` / `gnat` | 2+2 | died | 16 |
+
+All 47 still have trailerA `0`. They are small died-focused
+templates (plus a few init+died). Occupancy only — no authored
+reason the compiler omitted the preamble.
+
 Cheapest falsifier for a missing static user of 8–12: another `E8` to `0x00539990`
 outside the eight-site census. `CallEventDirect` is not an id-table
 lookup: its only `E8` is `CEventFunction__Execute` passing `this+8`.
@@ -420,8 +437,9 @@ lookup: its only `E8` is `CEventFunction__Execute` passing `this+8`.
   the corpus. Cheapest falsifier: one compiled object whose stream
   contains opcode `0x19` or `0x1a`.
 - `+0x5c` / trailerB: CLOSED as the one-time PC=0 preamble flag.
-  Shipped split is 715 ones / 47 zeros (safe-copy census above). Authored
-  name of the field is still open.
+  Shipped split is 715 ones / 47 zeros (safe-copy census above). The
+  47 are listed in the occupancy table. Authored name of the field
+  is still open.
 - trailerA / `+0x60`: CLOSED as 0 in all 762 shipped objects. The
   `== 1` trace compare is unused on the corpus.
 - The 13 event-id slots at `eventObj+0x14`. CLOSED: names and arities
