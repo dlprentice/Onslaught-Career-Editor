@@ -115,6 +115,23 @@ public sealed class RetailFeMessBoxTests
         Assert.Contains("RetailFrontendScreen.QuitConfirm", handleKey);
         Assert.Contains("SelectQuitConfirmIndex(RetailFeMessBox.YesChoiceIndex)", handleKey);
         Assert.Contains("SelectQuitConfirmIndex(RetailFeMessBox.DefaultChoiceIndex)", handleKey);
+
+        int quit = handleKey.IndexOf(
+            "Screen == RetailFrontendScreen.QuitConfirm",
+            StringComparison.Ordinal);
+        Assert.True(quit >= 0, "HandleKey must special-case QuitConfirm.");
+        string quitArm = handleKey[quit..];
+        int sharedUpLeft = quitArm.IndexOf(
+            "IsKey(key, Key.Up) || IsKey(key, Key.Left)",
+            StringComparison.Ordinal);
+        Assert.True(sharedUpLeft > 0, "The shared Up/Left arm must follow the QuitConfirm split.");
+        string beforeShared = quitArm[..sharedUpLeft];
+        Assert.Contains("IsKey(key, Key.Up)", beforeShared);
+        Assert.Contains("SelectQuitConfirmIndex(RetailFeMessBox.YesChoiceIndex)", beforeShared);
+        Assert.Contains("IsKey(key, Key.Down)", beforeShared);
+        Assert.Contains("SelectQuitConfirmIndex(RetailFeMessBox.DefaultChoiceIndex)", beforeShared);
+        Assert.DoesNotContain("IsKey(key, Key.Left)", beforeShared);
+        Assert.DoesNotContain("IsKey(key, Key.Right)", beforeShared);
         Assert.Contains("IsKey(key, Key.Left)", handleKey);
         Assert.Contains("_session.MovePrevious()", handleKey);
         Assert.Contains("IsKey(key, Key.Right)", handleKey);
