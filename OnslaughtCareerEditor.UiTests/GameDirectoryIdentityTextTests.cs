@@ -147,6 +147,7 @@ public class GameDirectoryIdentityTextTests
         Assert.That(homeCode, Does.Contain("GameDirectoryIdentityText.AutoDetectFailed"));
         Assert.That(homeCode, Does.Contain("GameDirectoryIdentityText.PersistFailed"));
         Assert.That(homeCode, Does.Not.Contain("That folder could not be saved"));
+        Assert.That(homeCode, Does.Not.Contain("could not save that location"));
     }
 
     [Test]

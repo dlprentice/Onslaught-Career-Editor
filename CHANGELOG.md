@@ -45,7 +45,9 @@ live in `developer_state.json` and the campaign ledgers.
   be kept and puts the previous folder back, instead of leaving the new path
   looking saved. A look or media choice that cannot be kept is named the
   same way and the previous value is put back. Home uses that same folder
-  sentence when a chosen install cannot be kept. Save Lab overwrite cancel
+  sentence when a chosen install cannot be kept, including after auto-detect.
+  A failed playable-copy setup stays on the same "nothing was changed"
+  note instead of the prepare message. Save Lab overwrite cancel
   says the file was left as it is. Putting a career into a safe copy, or
   bringing one out, asks the same overwrite question.
 

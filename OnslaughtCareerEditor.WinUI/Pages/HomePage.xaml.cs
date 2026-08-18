@@ -232,7 +232,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             AppConfig config = AppConfig.Load();
             if (!config.SetGameDir(detected))
             {
-                ShowQuickStartNote("Found the game but could not save that location. Try choosing the folder yourself.");
+                ShowQuickStartNote(GameDirectoryIdentityText.PersistFailed);
                 return;
             }
 
@@ -323,7 +323,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
                     if (prepared.PatchResult.Requested && !prepared.PatchResult.Success)
                     {
-                        ShowQuickStartNote(prepared.PatchResult.Message);
+                        ShowQuickStartNote(HomeQuickStartState.FailureNote);
                         AppStatusService.SetStatus("Home: could not prepare the copy");
                         return;
                     }
