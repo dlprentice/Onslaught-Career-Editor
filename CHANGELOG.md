@@ -22,7 +22,8 @@ live in `developer_state.json` and the campaign ledgers.
   A Lore search with no hits now says to try another word or clear the search,
   instead of calling the empty tree filtered results. Cheats will not offer to
   write into a folder inside the installed game. Media load and playback
-  failures stay on the page without dumping the raw exception. A Media search
+  failures stay on the page without dumping the raw exception. The dedicated
+  video player says it could not start, without the exception. A Media search
   with no hits now says to try another word or clear the search. Windowed & Mods
   Last operation and the safe-copy list do the same: a failure names the action
   and that nothing was changed, without the exception. Home setup failures

@@ -5,6 +5,7 @@ using LibVLCSharp.Shared;
 using Microsoft.UI.Text;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using OnslaughtCareerEditor.WinUI.Helpers;
 using VlcMedia = LibVLCSharp.Shared.Media;
 using XamlBrush = Microsoft.UI.Xaml.Media.Brush;
 
@@ -212,10 +213,10 @@ namespace OnslaughtCareerEditor.WinUI
                     PlayInternal(pendingPath);
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 _isReady = false;
-                _statusTextBlock.Text = $"Video player initialization failed: {ex.Message}";
+                _statusTextBlock.Text = MediaPageText.DedicatedPlayerInitFailed;
                 RaisePlaybackStateChanged();
             }
         }
