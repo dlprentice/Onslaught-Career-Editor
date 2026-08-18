@@ -1,7 +1,7 @@
 # IScript function map
 
 Status: active static function map
-Last updated: 2026-08-18 (CGroundVehicleGuide VFunc03 consumes mode 1)
+Last updated: 2026-08-18 (VFunc03 mode-1 calls 0x004bc2e0 into guide+0x24)
 Source File: `C:\dev\ONSLAUGHT2\MissionScript\IScript.cpp` (SEH `__FILE__`
 pointer `0x0064fa40` read out of `IScript__PostEvent`) | Binary: BEA.exe,
 SHA-256
@@ -57,7 +57,7 @@ name value into a `CPostEventData` and scheduling event `0x7d0` against the
 | `0x00537d70` | `IScript__FollowWaypoint` | `53 55 8b6c240c 56 8bf1 57 8b4d00 8b01 ff5038 8b4e10 8bd8 83c11c 51 53 e89fdefcff 8bf8 83c408 85ff 751a 53 68a8fd6400 … 8b4d04 8b11 ff5230 6a00 8d571c 83ec10 8b4e10 894624 … ff90f4000000 8b4610 8b4e08 3bc1 753c 8b4e18 … c7461c00000000 … 68d0070000 … c20c00` | `ret 0xc`; zero direct `E8` (native 0). `args[0]->vtable[+0x38]()` is the path name; `0x00505c30(name, thing+0x1c)` looks up the waypoint; miss prints `Cant find waypoint path '%s'` (`0x0064fda8`) and returns. `args[1]->vtable[+0x30]()` is stored at `[this+0x24]` with **no** later branch. Copies waypoint `+0x1c` (4 floats) onto the stack and calls thing `vtable[+0xf4]`. `[this+0x14]=waypoint`, `[this+0x1c]=0`. If `[this+0x18]!=1`, sets it and `AddEvent_AtTime(2000, this, NEXT_FRAME)`. HIGH. Descriptor `0x0064ce20+0x04=2` (arity); no arg-name strings. |
 | `0x00505c30` | `NamedEntryList_T3_00505c30` | `a1c04f8500 56 85c0 57 a3c84f8500 7404 8b30 … e838270600 83c408 85c0 7422 … c744240c7f96184b 894610 … d9411c d822 d94120 d86204 d94124 d86208 … c3` | cdecl `(char* name, float* pos)`. Bare `ret`. Walks the `CSPtrSet` at `0x00854fc0` (cursor `0x00854fc8`) whose payloads are `CWaypointPath` (vptr store `0x005dfc8c`, COLOC `0x006172d0` → TypeDescriptor `0x0063d220` = `.?AVCWaypointPath@@`). Name test is CRT `stricmp` (`0x00568390`) of `[path+4]` vs `name`. Hit: walk the embedded `CSPtrSet` at `path+8` (cursor `path+0x10`) and keep the child with the smallest `(Δx²+Δy²+Δz²)` of `[child+0x1c]` vs `pos`; seed `9999999.0f` (`0x4b18967f`). Empty/miss returns 0. Two `E8`: `0x00537d8c`, `0x00537e6b`. HIGH. Table name stays the demoted placeholder — class `NamedEntryList` is absent. |
 | `0x0047e2d0` | `CGuide__VFunc04_SetVectorMode1_0047e2d0` | `8b442414 85c0 750f 8b4118 8b903c010000 837a2002 7425 8b442404 … c7411c01000000 83c108 … c21400` | Slot 4 (`+0x10`) of `CGuide` `0x005dbdc4` (COLOC `0x006141a8` → `.?AVCGuide@@`). `ret 0x14`. If the BOOL is 0 and `[[owner+0x13c]+0x20]==2`, return without store. Else `[this+0x1c]=1` and copy the 4-dword vector to `[this+8]`. Zero direct `E8`. Same slot-4 dword on `CAirGuide` `0x005d8594`, `CMechGuide` `0x005dc4f4`, `CThunderheadGuide` `0x005df8d4`. HIGH. |
-| `0x0047d750` | `CGroundVehicleGuide__VFunc03_UpdateGuidanceState_0047d750` | `81eca4000000 53 55 56 8bf1 57 8b4e18 f6412c04 7413 … d94610 d86124 8d5e08 … e81f47f8ff … d81dec855d00 … 8b461c 85c0 0f8474090000 … e8f9050800 … 837e1c01 0f8552060000` | Slot 3 of `CGroundVehicleGuide` `0x005dbd90` (COLOC `0x00614170` → `.?AVCGroundVehicleGuide@@`); slot 4 is still `0x0047e2d0`. Zero `E8`. Early-out if owner `mFlags` bit2 (`TF_DYING`). Dest `guide+8` minus `owner+0x1c` via `0x00401ec0`; zero `owner+0x14c`; 2D `d² < 0.5f` (`0x005d85ec`) or mode `0` or `0x004fde10(owner)` ( `[unit+0x244]∈{3,4,5}` ) → near exit `0x0047e183`. Then `cmp mode,1` / `jne 0x0047dee0`. HIGH on the gate; mode-1 body still open. |
+| `0x0047d750` | `CGroundVehicleGuide__VFunc03_UpdateGuidanceState_0047d750` | `81eca4000000 53 55 56 8bf1 57 8b4e18 f6412c04 7413 … 837e1c01 0f8552060000 8b7e18 8b8f3c010000 396920 0f8440060000 … e81ae90300` | Slot 3 of `CGroundVehicleGuide` `0x005dbd90` (COLOC `0x00614170` → `.?AVCGroundVehicleGuide@@`); slot 4 is still `0x0047e2d0`. Zero `E8`. Early-out if owner `mFlags` bit2 (`TF_DYING`). Dest `guide+8` minus `owner+0x1c` via `0x00401ec0`; zero `owner+0x14c`; 2D `d² < 0.5f` (`0x005d85ec`) or mode `0` or `0x004fde10(owner)` (`[unit+0x244]∈{3,4,5}`) → near exit `0x0047e183`. Mode-1 arm (`cmp [+0x1c],1`): skip if `[owner+0x13c]+0x20==2`; if `d² > 1.0f` (`0x005d8568`) and `[guide+0x20]` live, `0x004bc2e0(grid=[+0x20], dest, owner-pos, 1, out=&guide+0x24)` (`ret 0x28`; table name `CExplosionInitThing__ClearCostGridBoundsAndBuildPath`). HIGH on the gates and the call; the rest of the arm (follow the built path) is open. |
 | `0x00533840` | `IScript__RestoreSavedStateAndGotoInstruction` | `568bf1 8b4638 85c0 7453 50 b9e0c58900 e8bb600000 8b4638 8d4e28 50 e86f23fbff … c3` | Zero-arg `ret`. If `[this+0x38]==0` return. Else `CopyState(+0x38)`, `CSPtrSet__Remove(+0x28)`, delete, `[this+0x38]=0`, then Reset on LEVEL_LOST else `GotoInstruction([0x0089c7f4])`. Same resume as HandleMessage 2001. Only `E8` is `CComplexThing__FinishedPlayingCurrentAnimation` `0x004f45a7`. HIGH. |
 
 ### The three message arms (byte-exact)
@@ -262,7 +262,9 @@ zero `E8`):
 FollowWaypoint uses slot 4 / mode 1. The ground-vehicle consumer of that
 mode is `CGroundVehicleGuide` slot 3 (`0x0047d750`): after the dying /
 near / mode-0 / `[unit+0x244]∈{3,4,5}` gates it `cmp [guide+0x1c],1`.
-The mode-1 arm itself is not yet mapped. `FollowWaypointWait` refuses when
+Mode 1 then path-queries `0x004bc2e0` into `guide+0x24` when
+`d² > 1.0f` and `[guide+0x20]` is live. Following that path (and the
+table name on `0x004bc2e0`) is open. `FollowWaypointWait` refuses when
 `[IScript+0x10] != [IScript+8]`.
 
 ## Open questions (cheapest falsifier first)
