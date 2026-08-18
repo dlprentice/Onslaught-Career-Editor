@@ -1,7 +1,7 @@
 # IScript function map
 
 Status: active static function map
-Last updated: 2026-08-18 (waypoint lookup + CGuide slot 4 dest write)
+Last updated: 2026-08-18 (CGuide dest-mode family slots 4-8)
 Source File: `C:\dev\ONSLAUGHT2\MissionScript\IScript.cpp` (SEH `__FILE__`
 pointer `0x0064fa40` read out of `IScript__PostEvent`) | Binary: BEA.exe,
 SHA-256
@@ -247,7 +247,19 @@ vector at `guide+8`. Ctor `0x0047e290` sets `[+0x18]=owner`, copies
 `owner+0x1c` into `+8`, zeroes `+0x1c`. Sibling predicate
 `CUnit__IsField13cNotMode2_004fdc90` (`0x004fdc90`) is the same
 `[+0x13c]+0x20==2` test. `+0x13c` identity and the meaning of `2` stay
-open. `FollowWaypointWait` refuses when `[IScript+0x10] != [IScript+8]`.
+open. Sibling dest-mode slots on the same `CGuide` table (all virtual;
+zero `E8`):
+
+| Slot | Address | Name | Mode write | ABI |
+| --- | --- | --- | --- | --- |
+| 4 | `0x0047e2d0` | `CGuide__VFunc04_SetVectorMode1_0047e2d0` | `1`, skip if BOOL=0 and `[+0x13c]+0x20==2` | `ret 0x14` |
+| 5 | `0x0047e310` | `CGuide__VFunc05_SetVectorMode2_0047e310` | `2` | `ret 0x10` |
+| 6 | `0x0047e340` | `CGuide__VFunc06_SetVectorMode3_0047e340` | `3` | `ret 0x10` |
+| 7 | `0x0047e370` | `CGuide__VFunc07_SetVectorModeFromOwnerState_0047e370` | `3`, or `0` if `[owner+0x140]+0x94` live; skip if `[+0x13c]+0x20==2` | `ret 0x10` |
+| 8 | `0x0047e3d0` | `CGuide__VFunc08_ResetVectorsFromOwner_0047e3d0` | `0`, copy `owner+0x1c` to `+8`, zero `owner+0x14c` | `ret` |
+
+FollowWaypoint uses slot 4 / mode 1. `FollowWaypointWait` refuses when
+`[IScript+0x10] != [IScript+8]`.
 
 ## Open questions (cheapest falsifier first)
 
