@@ -1052,6 +1052,11 @@
                                              AutomationProperties.AutomationId="ConfigurationInputFile"
                                              Header="Input options file"
                                              TextChanged="ConfigurationPathTextBox_TextChanged" />
+                                    <TextBlock x:Name="ConfigurationInputLocationTextBlock"
+                                               AutomationProperties.AutomationId="ConfigurationInputLocation"
+                                               Style="{StaticResource SectionBodyTextStyle}"
+                                               TextWrapping="WrapWholeWords"
+                                               Visibility="Collapsed" />
                                     <TextBox x:Name="ConfigurationOutputFileTextBox"
                                              AutomationProperties.AutomationId="ConfigurationOutputFile"
                                              Header="Output options file"

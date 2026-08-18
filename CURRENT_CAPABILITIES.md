@@ -86,8 +86,9 @@ files keep the block.
 ### Save Lab and Game Options
 
 - Analyze existing `.bes` career saves and `.bea` options files.
-- Name whether an opened career save sits in the installed game, a playable
-  safe copy, or a folder the player chose, without dumping the full path.
+- Name whether an opened career save or `defaultoptions.bea` sits in the
+  installed game, a playable safe copy, or a folder the player chose, without
+  dumping the full path.
 - Write a separate save copy with supported mission, link, Goodie, rank, and
   kill-count changes.
 - Write one selected displayable Goodie state directly to one `.bes` file in a

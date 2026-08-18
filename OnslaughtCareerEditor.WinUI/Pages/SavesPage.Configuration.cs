@@ -281,11 +281,14 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 _configurationInputValid = false;
                 _configurationSnapshot = null;
                 _configurationKeybindRows.Clear();
+                ClearConfigurationInputLocation();
                 ConfigurationCurrentSettingsTextBlock.Text = "Select a .bea file to inspect the current boot-time global settings.";
                 ConfigurationCurrentTailTextBlock.Text = "Keybind and tail details will appear here after a valid options file is loaded.";
                 UpdateConfigurationActionState();
                 return;
             }
+
+            RenderConfigurationInputLocation(inputPath);
 
             try
             {
@@ -305,6 +308,22 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
 
             UpdateConfigurationActionState();
+        }
+
+        private void RenderConfigurationInputLocation(string inputPath)
+        {
+            CareerSaveLocationKind kind = CareerSaveLocation.Classify(inputPath);
+            string line = CareerSaveLocationText.Describe(kind, inputPath);
+            ConfigurationInputLocationTextBlock.Text = line;
+            ConfigurationInputLocationTextBlock.Visibility = string.IsNullOrWhiteSpace(line)
+                ? Visibility.Collapsed
+                : Visibility.Visible;
+        }
+
+        private void ClearConfigurationInputLocation()
+        {
+            ConfigurationInputLocationTextBlock.Text = string.Empty;
+            ConfigurationInputLocationTextBlock.Visibility = Visibility.Collapsed;
         }
 
         private void RenderConfigurationSnapshot(ConfigurationSnapshot snapshot)

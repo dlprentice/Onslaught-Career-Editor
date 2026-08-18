@@ -76,6 +76,9 @@ public class CareerSaveLocationTextTests
         Assert.That(xaml, Does.Contain("AutomationProperties.AutomationId=\"SaveEditorInputLocation\""));
         Assert.That(code, Does.Contain("CareerSaveLocation.Classify"));
         Assert.That(code, Does.Contain("CareerSaveLocationText.Describe"));
+        Assert.That(xaml, Does.Contain("AutomationProperties.AutomationId=\"ConfigurationInputLocation\""));
+        Assert.That(File.ReadAllText(Path.Combine(root, "OnslaughtCareerEditor.WinUI", "Pages", "SavesPage.Configuration.cs")),
+            Does.Contain("CareerSaveLocationText.Describe"));
     }
 
     private static string FindRepoRoot()

@@ -90,6 +90,7 @@ public class WinUiAccessibilityAuditTests
                 "ConfigurationStatusInfo",
                 "ConfigurationDetectedFilesComboBox",
                 "ConfigurationInputFile",
+                "ConfigurationInputLocation",
                 "ConfigurationOutputFile",
                 "ConfigurationControllerConfigP1",
                 "ConfigurationPatchButton",
