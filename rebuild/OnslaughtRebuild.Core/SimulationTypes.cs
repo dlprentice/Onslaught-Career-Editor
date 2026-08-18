@@ -246,9 +246,10 @@ public enum SimActions : ushort
 
     /// <summary>
     /// <c>BUTTON_MECH_CHARGE_GUN_POD</c> <c>0x13</c>, shipped row 10
-    /// (<c>active=1</c>, mouse device <c>0x0f</c>). DECLARED, NOT IMPLEMENTED:
-    /// Core currently models a release as a single <see cref="Fire"/> edge and
-    /// has no charge accumulator. <see cref="SimInput.Validate"/> rejects it.
+    /// (<c>active=1</c>, mouse device <c>0x0f</c>). Held samples advance the
+    /// current chargable walker weapon via
+    /// <see cref="RetailWeaponCharge.Charge"/>. ReadyToCharge, store spend,
+    /// overheat-to-fire, and charge-level-1 round select remain open.
     /// </summary>
     ChargeWeapon = 1 << 5,
 
@@ -383,6 +384,7 @@ public readonly record struct SimInput(
         SimActions.Reset |
         SimActions.LandingJets |
         SimActions.SkipPanning |
+        SimActions.ChargeWeapon |
         SimActions.ChangeWeapon |
         SimActions.ZoomIn |
         SimActions.ZoomOut;

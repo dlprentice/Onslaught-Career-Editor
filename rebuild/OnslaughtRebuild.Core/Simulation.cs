@@ -159,6 +159,9 @@ public sealed class Simulation
         _level100Actors.Activate(zone.ActorId);
     }
 
+    internal uint Level100PulseCannonChargeBits =>
+        _level100PlayerWeapons.PulseCannonChargeBits;
+
     /// <summary>
     /// Causal-probe seam for one terrain touchdown. It places the released
     /// Level 100 player in an airborne walker pose; the next normal
@@ -373,6 +376,7 @@ public sealed class Simulation
         UpdateWalkerFeet();
         UpdateLevel100TriggerActors();
         UpdateResources(playerPartMoveStarted);
+        TryChargeWeapon(playerInput);
         TryFire(playerInput);
         TryChangeWeapon(playerInput);
         UpdateProjectiles();
@@ -3542,6 +3546,19 @@ public sealed class Simulation
                 yawInaccuracy,
                 pitchInaccuracy);
         }
+    }
+
+    private void TryChargeWeapon(SimInput input)
+    {
+        if (!input.HasAction(SimActions.ChargeWeapon) ||
+            _transformTicksRemaining != 0)
+        {
+            return;
+        }
+
+        // Row 10 of the shipped table, before Fire (row 11). The increment
+        // arm is Charge(); ReadyToCharge / store spend stay open.
+        _level100PlayerWeapons.AdvanceCharge(_mode, _transition);
     }
 
     private void TryChangeWeapon(SimInput input)

@@ -4,8 +4,9 @@ namespace OnslaughtRebuild.Core;
 
 /// <summary>
 /// The released Level 100 player's configured weapon slots, active flags and
-/// current selection. This intentionally stops before charge, heat, ammo and
-/// launch behavior. Selections are base slots: Walker slot zero may resolve to
+/// current selection. Charge is the Pulse Cannon Pod accumulator advanced by
+/// held <see cref="SimActions.ChargeWeapon"/>. Heat, ammo stores, and launch
+/// remain open. Selections are base slots: Walker slot zero may resolve to
 /// the augmented weapon at runtime. Manual cycling is bounded to the active
 /// flag represented here. The released heat/store eligibility test remains an
 /// open extension for configurations whose next active weapon cannot fire.
@@ -18,8 +19,12 @@ internal sealed class Level100PlayerWeaponRuntime
     private bool _missilePodActive;
     private int _walkerSelection;
     private int _jetSelection;
+    private RetailWeaponChargeTable _pulseCharge = Level100PulseCannonCharge.CreatePod();
 
     internal Level100PlayerWeaponRuntime() => ResetConfiguration();
+
+    internal uint PulseCannonChargeBits =>
+        BitConverter.SingleToUInt32Bits(_pulseCharge.Charge);
 
     internal Level100MissionWeapon WalkerSelectedWeapon =>
         WeaponAt(VehicleMode.Walker, _walkerSelection);
@@ -35,6 +40,26 @@ internal sealed class Level100PlayerWeaponRuntime
         _missilePodActive = true;
         _walkerSelection = 0;
         _jetSelection = 0;
+        _pulseCharge = Level100PulseCannonCharge.CreatePod();
+    }
+
+    /// <summary>
+    /// The increment arm of <c>CBattleEngineWalkerPart::ChargeWeapon</c> at
+    /// <c>0x00413CF0</c> for Level 100's Pulse Cannon Pod. ReadyToCharge,
+    /// store spend, and overheat-to-fire are not modelled.
+    /// </summary>
+    internal void AdvanceCharge(VehicleMode mode, VehicleTransition transition)
+    {
+        if (mode != VehicleMode.Walker ||
+            transition != VehicleTransition.None ||
+            WalkerSelectedWeapon != Level100MissionWeapon.PulseCannonPod ||
+            !_pulseCannonActive ||
+            RetailWeaponCharge.FullyCharged(_pulseCharge))
+        {
+            return;
+        }
+
+        RetailWeaponCharge.Charge(_pulseCharge);
     }
 
     internal Level100MissionWeapon GetCurrentWeapon(VehicleMode mode) => mode switch
@@ -126,6 +151,11 @@ internal sealed class Level100PlayerWeaponRuntime
                 {
                     _jetSelection = candidate;
                 }
+
+                // ChangeWeapon's aftermath: LoseCharge on the newly selected
+                // weapon. Level 100 only accumulates charge on the Pulse
+                // Cannon Pod; resetting that table matches the store of +0.0f.
+                RetailWeaponCharge.LoseCharge(_pulseCharge);
                 return true;
             }
 
