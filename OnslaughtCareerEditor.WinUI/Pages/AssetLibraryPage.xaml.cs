@@ -125,6 +125,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 AppStatusService.SetStatus("Asset Library: catalog not found");
                 AssetItemsListView.ItemsSource = null;
                 ResetSelection();
+                UpdateAssetListNote(search: string.Empty, matchCount: 0);
                 return;
             }
 
@@ -341,6 +342,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }).Cast<object>().ToArray();
 
             AssetItemsListView.ItemsSource = items;
+            UpdateAssetListNote(search, items.Length);
             if (_selectedKind == AssetListKind.Goodies)
             {
                 UpdateGoodieFilterStatus();
@@ -354,6 +356,16 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             {
                 ResetSelection();
             }
+        }
+
+        private void UpdateAssetListNote(string search, int matchCount)
+        {
+            bool hasCatalog = !string.IsNullOrWhiteSpace(_snapshot.CatalogFilePath);
+            string? note = AssetLibraryPageText.DescribeListNote(hasCatalog, search, matchCount);
+            AssetListNoteTextBlock.Text = note ?? string.Empty;
+            AssetListNoteTextBlock.Visibility = string.IsNullOrWhiteSpace(note)
+                ? Visibility.Collapsed
+                : Visibility.Visible;
         }
 
         private static IEnumerable Filter<T>(IEnumerable<T> items, string search) where T : class

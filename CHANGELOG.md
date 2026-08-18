@@ -27,7 +27,8 @@ live in `developer_state.json` and the campaign ledgers.
   Last operation and the safe-copy list do the same: a failure names the action
   and that nothing was changed, without the exception. Home setup failures
   keep the same sentence and drop the exception. Save Lab comparison/analysis
-  and Game Options browse/patch failures do the same.
+  and Game Options browse/patch failures do the same. An Asset Library search
+  with no hits now says to try another word or clear the search.
 
 ## 1.0.11 — 2026-08-07
 

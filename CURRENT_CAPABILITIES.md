@@ -234,7 +234,8 @@ online play. Host/Join, matchmaking, and new networking are unavailable.
 > is retained only because it is wired into receipt-bound evidence acceptance;
 > it is recorded as unconfirmed.
 - Asset Library opens an existing generated catalog and previews supported
-  PNG/FBX metadata, linked textures, and bounded wireframes. It has no asset
+  PNG/FBX metadata, linked textures, and bounded wireframes. A search that
+  matches nothing says to try another word or clear the search. It has no asset
   importer, repacker, animation/bone pipeline, or material-package workflow.
 - Lore searches and renders the canonical articles under [`lore/`](lore/_index.md)
   with tree navigation and Back/Forward/Home history. A search that matches
