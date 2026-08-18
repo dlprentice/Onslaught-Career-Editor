@@ -1,7 +1,7 @@
 # CScriptObjectCode function map
 
 Status: active static function map
-Last updated: 2026-08-18 (47 trailerB=0 objects listed)
+Last updated: 2026-08-18 (init/died first opcodes: empty RETURN vs CALL)
 Source File: `C:\dev\ONSLAUGHT2\MissionScript\ScriptObjectCode.cpp` (the
 VM's `__FILE__` chain is established by the adjacent
 [`ScriptObjectCode.cpp.md`](ScriptObjectCode.cpp.md) wave receipts) | Binary:
@@ -236,6 +236,21 @@ Shipped occupancy (safe-copy `local-lab/safe-copy-bea-pristine/data/Resources`,
 | 6 | `ready` | 6 | `5` 6 |
 | 7 | `shutdown` | 3 | `5` 3 |
 | 8–12 | `notdefined*` | **0** (all `-1`) | — |
+
+Independently re-counted 2026-08-18 (same parser, `ip != -1`). Opcode
+`5` = PUSH, `24` = CALL, `23` = RETURN. RETURN-first means `Run`
+sees opcode `0x17` with `[vm+0x224] <= 0` and **exits without**
+`ExecutePop` — an empty handler. 116 inits start that way
+(VitalBuilding / checkpoints / LevelScript / …); only 7 dieds
+(Checkpoint1 ×5, Lander, Lander2). Of the 13 `trailerB=0` inits,
+12 are RETURN-first.
+
+CALL-first inits (137): `CInstructionOP_CALL__ExecuteCall`
+(`0x0052ea40`) takes native id from `byte [instr+4]` and argc from
+`byte [instr+5]`, indexes `0x0064ce20 + id*64`. Top CALL-first
+natives (parser `natives.json`): `SetObjective` argc 0 ×86,
+`GetHealth` argc 1 ×26, `Deactivate` ×12, `Activate` ×4. PUSH-first
+is the arg-then-call shape.
 
 `CallEvent` already no-ops an IP of `-1`. The eight IScript wrappers still
 *fire* ids 0–7. Shipped objects have no compiled 13-slot body for
