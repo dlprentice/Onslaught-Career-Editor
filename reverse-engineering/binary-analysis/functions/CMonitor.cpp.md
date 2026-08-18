@@ -1,7 +1,7 @@
 # CMonitor / CSPtrSet function map
 
 Status: active static function map
-Last updated: 2026-08-17
+Last updated: 2026-08-18
 Source File: `C:\dev\ONSLAUGHT2\Monitor.h` (SEH `__FILE__` pointer `0x00622b80`
 read out of `AddDeletionEvent`) | Binary: BEA.exe, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
@@ -59,9 +59,16 @@ workhorse list for these pointer sets.
   `AddDeletionEvent` would name it.
 - The vtable `0x005d92d4`'s RTTI descriptor: CLOSED — COLOC `0x0060cbe0` at
   `0x005d92d0` (`vtable-4`) → TD `0x00622bd8` = `.?AVCMonitor@@`, with bases
-  `CMonitor` and `IListener` (`.?AVIListener@@`). Derived classes named by
-  the same COLOC walk: `CEventFunction`, `IScript`, `CVM`, `CPostEventData`,
-  `CScriptEventNB` (see `CScriptEventNB.cpp.md`); the full subclass census
-  against the 59 vftable-cohort65 classes remains open.
+  `CMonitor` and `IListener` (`.?AVIListener@@`). Script-cluster subclasses
+  named by the same walk: `CEventFunction`, `IScript`, `CVM`,
+  `CPostEventData`, `CScriptEventNB` (see `CScriptEventNB.cpp.md`). The
+  vftable-cohort65 subclass census is CLOSED: of the 59 unique classes,
+  exactly five derive from `CMonitor` (`CAnimation`, `CFearGrid`,
+  `CHLCollisionDetector`, `CMessageBox`, `IScript`); the other 54 do not.
+  Independently re-walked 2026-08-18 against pristine `74154bfa…` (every
+  census.tsv `col_ptr` → COL → TD → CHD → BaseClassArray; 59/59 agree;
+  receipt `local-lab/hermes-kanban-campaign-2026-08-18/cmonitor-census/`).
+  A child's full-image count of 167 proper subclasses was **not** re-counted
+  here.
 - `CSPtrSet` node ownership: `CSPtrSet__ClearAnyDynamicCreatedNodes` at
   `0x004e5990` separates dynamic from static nodes — which pool owns each.
