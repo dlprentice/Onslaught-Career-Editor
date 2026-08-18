@@ -1,7 +1,7 @@
 # CScriptObjectCode function map
 
 Status: active static function map
-Last updated: 2026-08-18 (POINTER retargets IScript+0x10 for method CALLs)
+Last updated: 2026-08-18 (POINTER +0x40 is thing-ptr [this+4] or 0)
 Source File: `C:\dev\ONSLAUGHT2\MissionScript\ScriptObjectCode.cpp` (the
 VM's `__FILE__` chain is established by the adjacent
 [`ScriptObjectCode.cpp.md`](ScriptObjectCode.cpp.md) wave receipts) | Binary:
@@ -73,7 +73,7 @@ arm at `0x00539265`.
 | `0x0052e2f0` | `CInstructionOP_POP__VFunc_0_0052e2f0` | `8b4104 8b4c240c 56 50 e862b40000 8bf0 8b4e08 85c9 7406 8b11 6a01 ff12 8b4c240c e85ab10000 894608 5e c20c00` | `ret 0xc`. `symbol = CScriptObjectCode__GetInstruction(symbols, attr)` (`0x00539760` = `[table][index]`); if `[symbol+8]` delete via `vtable[0](1)`; `[symbol+8] = Pop(stack)` (`0x00539470`). HIGH. All 128 shipped `hit` 13-slot bodies start with this opcode, so CallEvent id 4's argc=1 thing-ref lands in that local. File-scope `vars` init uses this; runtime `x = expr` uses GETTOP. |
 | `0x0052e9c0` | `CInstructionOP_GETTOP__VFunc_0_0052e9c0` | `8b4104 8b4c240c 56 50 e892ad0000 8bf0 8b4608 85c0 7518 8b4c240c 50 e8ffaa0000 8b10 8bc8 ff5248 894608 5e c20c00 8b4c240c 57 8b38 6a00 e8e3aa0000 8b4e08 50 ff5714 5f 5e c20c00` at file offset `0x0012e9c0` | `ret 0xc`. `symbol = GetInstruction(symbols, attr)`; peek = `GetTop(stack, 0)` (`0x005394e0`) — **does not pop**. If `[symbol+8] == 0`, clone peek via `vtable[+0x48]` into `[symbol+8]`; else `existing->vtable[+0x14](existing, peek)` (in-place assign). HIGH. `player = GetPlayer(1)` is `CALL` / `GETTOP player` / `REMOVE_TOP`. 1904 shipped GETTOPs, all dest type 0, 0 OOB. |
 | `0x005394e0` | `CScriptObjectCode__GetTop` | `8b8100020000 8b542404 2bc2 85c0 7f18 52 68f4006500 6880f56600 e84082f0ff 83c40c 33c0 c20400 8b4481fc c20400` | `ret 4`; `this` = stack head. `idx = [head+0x200] - arg`; if `idx <= 0` print `"FATAL ERROR: Stack item does not exist in call to GetTop - %d"` (`0x006500f4`) and return 0; else return `[head + idx*4 - 4]`. Arg 0 is the top. HIGH. |
-| `0x0052ea10` | `CInstructionOP_POINTER__VFunc_0_0052ea10` | `8b4c2408 56 e856aa0000 8bf0 8bce 8b06 ff5040 8b4c2408 85f6 8b5108 8b4a68 894110 7408 8b16 6a01 8bce ff12 5e c20c00` at file offset `0x0012ea10` | `ret 0xc`. `Pop(stack)` (`0x00539470`); `eax = popped->vtable[+0x40]()`; `IScript* = [[vm+8]+0x68]` (owning script); `[IScript+0x10] = eax`; if popped non-null, `vtable[0](1)` delete. HIGH on the bytes. Constructor default of `+0x10` is the attached thing (`CComplexThing.cpp.md`); this opcode retargets it for the next native. `player.DisableFlightMode()` is PUSH player / POINTER / CALL. 950 shipped: before PUSH 485 / CALL 465; after PUSH 527 / CALL 423. Authored name of slot `+0x40` open. |
+| `0x0052ea10` | `CInstructionOP_POINTER__VFunc_0_0052ea10` | `8b4c2408 56 e856aa0000 8bf0 8bce 8b06 ff5040 8b4c2408 85f6 8b5108 8b4a68 894110 7408 8b16 6a01 8bce ff12 5e c20c00` at file offset `0x0012ea10` | `ret 0xc`. `Pop(stack)` (`0x00539470`); `eax = popped->vtable[+0x40]()`; `IScript* = [[vm+8]+0x68]`; `[IScript+0x10] = eax`; if popped non-null, `vtable[0](1)` delete. HIGH. Slot `+0x40` independently re-read on all six datatype vtables: `CThingPtrDataType` `0x005e4df8[+0x40] = 0x0052f540` `SharedVFunc__ReturnField04` (`mov eax,[ecx+4]; ret`) — the thing pointer; CInt/CFloat/CString/CBool/CPosition all `0x00405930` `SharedVFunc__ReturnZero` (`xor eax,eax; ret`) so a non-thing POINTER nulls `+0x10`. Constructor default of `+0x10` is the attached thing. `player.DisableFlightMode()` is PUSH player / POINTER / CALL. 950 shipped. |
 | `0x00539760` | `CScriptObjectCode__GetInstruction` | `8b01 8b4c2404 8b0488 c20400` | `ret 4`. `return [this][index]`. Used as the symbol-table indexer by PUSH/POP. HIGH on the bytes; the name is the table label, not a claim that the table holds instructions. |
 | `0x00539470` | `CScriptObjectCode__Pop` | `8b8100020000 85c0 7515 689c006500 … 33c0 c3 48 898100020000 8b0481 c3` | Zero-arg. `this` = stack head. Empty (`[head+0x200]==0`) prints via `0x0065009c` and returns 0; else `--depth` and return `[head + depth*4]`. HIGH. |
 | `0x00539910` | `CScriptObjectCode__CopyState` | `8b7c240c 8bf1 8b4708 8d570c 894608 8b8f14020000 898e14020000 52 8d4e0c e81afaffff … 8b8718020000 898618020000 … c7861002000000000000 8bc6 … c20400` | `ret 4`, one arg = source. Copies `[src+8]`, `[src+0x214]` (PC), calls `CScriptObjectCode__RestoreStack` (`0x00539350`) with `(dst+0xc, src+0xc)`, then copies `+0x218`, `+0x220`, `+0x21c`, `+0x224`, and zeroes the running flag `+0x210`. Returns `this`. HIGH. |
@@ -461,7 +461,9 @@ dword to `IScript+0x10` (via `eventObj+0x68`), and deletes the
 wrapper. 950 shipped. Scout `LevelScript` `player.DisableFlightMode()`
 is PUSH player / POINTER / CALL `DisableFlightMode`. A preceding CALL
 then POINTER is the no-temp shape (`GetThingRef(name).SetScript(...)`).
-Whether the next native restores `+0x10` is open.
+Slot `+0x40` is now closed for the six shipped datatypes (thing-ptr
+returns `[this+4]`; the other five return 0). Whether the next native
+restores `+0x10` is open.
 
 So the preamble does **not** leave CALL args on the stack: it never
 contains CALL. It is the compiled file-scope initializer. Loose `*.msl`
