@@ -117,6 +117,11 @@
                         <ComboBoxItem Content="Light" Tag="light" />
                         <ComboBoxItem Content="Dark" Tag="dark" />
                     </ComboBox>
+                    <TextBlock x:Name="AppearancePersistStatusTextBlock"
+                               AutomationProperties.AutomationId="SettingsAppearancePersistStatus"
+                               Style="{StaticResource SectionBodyTextStyle}"
+                               TextWrapping="WrapWholeWords"
+                               Visibility="Collapsed" />
                 </StackPanel>
             </Border>
 
@@ -142,6 +147,11 @@
                                   Toggled="MediaPreferenceChanged" />
                     <TextBlock Text="Note: if overlap prevention is enabled, starting video will stop audio even if background audio is allowed."
                                Style="{StaticResource SectionBodyTextStyle}" />
+                    <TextBlock x:Name="MediaPersistStatusTextBlock"
+                               AutomationProperties.AutomationId="SettingsMediaPersistStatus"
+                               Style="{StaticResource SectionBodyTextStyle}"
+                               TextWrapping="WrapWholeWords"
+                               Visibility="Collapsed" />
                 </StackPanel>
             </Border>
 

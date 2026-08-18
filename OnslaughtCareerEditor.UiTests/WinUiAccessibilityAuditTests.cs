@@ -204,6 +204,8 @@ public class WinUiAccessibilityAuditTests
                 "SettingsGameDirectoryPathDetails",
                 "SettingsGameDirectoryPathTextBox",
                 "SettingsGameDirectoryIdentity",
+                "SettingsAppearancePersistStatus",
+                "SettingsMediaPersistStatus",
                 "SettingsAllowBackgroundAudioToggle",
                 "SettingsAllowBackgroundVideoToggle",
                 "SettingsPreventOverlapToggle",

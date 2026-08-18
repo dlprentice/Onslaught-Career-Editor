@@ -38,6 +38,12 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         public const string PersistFailed =
             "Could not keep that folder. Nothing was changed. Try choosing it again.";
 
+        public const string AppearancePersistFailed =
+            "Could not keep that look. Nothing was changed. Try choosing it again.";
+
+        public const string MediaPersistFailed =
+            "Could not keep those media choices. Nothing was changed. Try them again.";
+
         public static string ForSettings(RetailExecutableIdentity identity)
         {
             return identity switch

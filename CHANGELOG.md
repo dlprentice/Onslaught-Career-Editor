@@ -40,7 +40,8 @@ live in `developer_state.json` and the campaign ledgers.
   file without the full path. An Asset Library search with no hits now says to
   try another word or clear the search. Settings names a folder that could not
   be kept and puts the previous folder back, instead of leaving the new path
-  looking saved.
+  looking saved. A look or media choice that cannot be kept is named the
+  same way and the previous value is put back.
 
 ## 1.0.11 — 2026-08-07
 

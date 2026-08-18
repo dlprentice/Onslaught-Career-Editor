@@ -85,7 +85,9 @@ public class GameDirectoryIdentityTextTests
                 GameDirectoryIdentityText.ForSettings(identity) + " " +
                 GameDirectoryIdentityText.ForHomeGuidance(identity, "default guidance") + " " +
                 GameDirectoryIdentityText.AutoDetectFailed + " " +
-                GameDirectoryIdentityText.PersistFailed).ToLowerInvariant();
+                GameDirectoryIdentityText.PersistFailed + " " +
+                GameDirectoryIdentityText.AppearancePersistFailed + " " +
+                GameDirectoryIdentityText.MediaPersistFailed).ToLowerInvariant();
             foreach (string word in banned)
             {
                 Assert.That(all, Does.Not.Contain(word), $"Identity copy should not say '{word}'.");
@@ -113,6 +115,17 @@ public class GameDirectoryIdentityTextTests
     }
 
     [Test]
+    public void AFailedAppearanceOrMediaSaveNamesTheChoiceWasNotKept()
+    {
+        Assert.That(GameDirectoryIdentityText.AppearancePersistFailed, Does.Contain("Could not keep that look"));
+        Assert.That(GameDirectoryIdentityText.AppearancePersistFailed, Does.Contain("Nothing was changed"));
+        Assert.That(GameDirectoryIdentityText.MediaPersistFailed, Does.Contain("Could not keep those media choices"));
+        Assert.That(GameDirectoryIdentityText.MediaPersistFailed, Does.Contain("Nothing was changed"));
+        Assert.That(GameDirectoryIdentityText.AppearancePersistFailed, Does.Not.Contain(":\\"));
+        Assert.That(GameDirectoryIdentityText.MediaPersistFailed, Does.Not.Contain(":\\"));
+    }
+
+    [Test]
     public void SettingsAndHomeActuallyShowTheIdentityLine()
     {
         string root = FindRepoRoot();
@@ -127,6 +140,10 @@ public class GameDirectoryIdentityTextTests
         Assert.That(settingsCode, Does.Contain("GameDirectoryIdentityText.AutoDetectFailed"));
         Assert.That(settingsCode, Does.Contain("GameDirectoryIdentityText.PersistFailed"));
         Assert.That(settingsCode, Does.Contain("RestoreKeptGameDirectory"));
+        Assert.That(settingsCode, Does.Contain("GameDirectoryIdentityText.AppearancePersistFailed"));
+        Assert.That(settingsCode, Does.Contain("RestoreKeptAppearance"));
+        Assert.That(settingsCode, Does.Contain("GameDirectoryIdentityText.MediaPersistFailed"));
+        Assert.That(settingsCode, Does.Contain("RestoreKeptMediaPreferences"));
         Assert.That(homeCode, Does.Contain("GameDirectoryIdentityText.AutoDetectFailed"));
     }
 
@@ -146,6 +163,33 @@ public class GameDirectoryIdentityTextTests
         Assert.That(sentence, Is.GreaterThan(restore));
         Assert.That(notify, Is.GreaterThan(sentence));
         Assert.That(settings.IndexOf("return;", fail, notify - fail, StringComparison.Ordinal), Is.GreaterThan(sentence));
+    }
+
+    [Test]
+    public void SettingsPutsTheKeptLookAndMediaBackBeforeItSaysPersistFailed()
+    {
+        string settings = File.ReadAllText(Path.Combine(
+            FindRepoRoot(), "OnslaughtCareerEditor.WinUI", "Pages", "SettingsPage.xaml.cs"));
+        string xaml = File.ReadAllText(Path.Combine(
+            FindRepoRoot(), "OnslaughtCareerEditor.WinUI", "Pages", "SettingsPage.xaml"));
+
+        int appearanceFail = settings.IndexOf("RestoreKeptAppearance();", StringComparison.Ordinal);
+        int mediaFail = settings.IndexOf("RestoreKeptMediaPreferences();", StringComparison.Ordinal);
+        int appearanceNotify = settings.IndexOf(
+            "AppearancePersistStatusTextBlock.Visibility = Visibility.Collapsed;",
+            StringComparison.Ordinal);
+        int mediaNotify = settings.IndexOf(
+            "MediaPersistStatusTextBlock.Visibility = Visibility.Collapsed;",
+            StringComparison.Ordinal);
+
+        Assert.That(appearanceFail, Is.GreaterThanOrEqualTo(0));
+        Assert.That(mediaFail, Is.GreaterThan(appearanceFail));
+        Assert.That(appearanceNotify, Is.GreaterThan(appearanceFail));
+        Assert.That(mediaNotify, Is.GreaterThan(mediaFail));
+        Assert.That(xaml, Does.Contain("SettingsAppearancePersistStatus"));
+        Assert.That(xaml, Does.Contain("SettingsMediaPersistStatus"));
+        Assert.That(settings, Does.Contain("GameDirectoryIdentityText.AppearancePersistFailed"));
+        Assert.That(settings, Does.Contain("GameDirectoryIdentityText.MediaPersistFailed"));
     }
 
     private static string FindRepoRoot()

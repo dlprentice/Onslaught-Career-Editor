@@ -39,6 +39,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             AllowBackgroundAudioToggle.IsOn = config.AllowBackgroundAudio;
             AllowBackgroundVideoToggle.IsOn = config.AllowBackgroundVideo;
             PreventOverlapToggle.IsOn = config.PreventAudioVideoOverlap;
+            AppearancePersistStatusTextBlock.Visibility = Visibility.Collapsed;
+            MediaPersistStatusTextBlock.Visibility = Visibility.Collapsed;
 
             UpdateSaveFileInfo(gameDir);
             ConfigPathTextBlock.Text = AppConfig.GetConfigPath();
@@ -135,6 +137,46 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             ClearGameDirectoryIdentity();
             GameDirectoryStatusTextBlock.Text = "No game directory set. Click Browse or Auto-Detect.";
             GameDirectoryStatusTextBlock.Foreground = ThemeBrushes.Warning();
+        }
+
+        private void RestoreKeptAppearance()
+        {
+            AppConfig kept = AppConfig.Load();
+            string preference = AppThemePreference.Normalize(kept.AppTheme);
+            _isLoadingSettings = true;
+            try
+            {
+                SelectThemeChoice(preference);
+            }
+            finally
+            {
+                _isLoadingSettings = false;
+            }
+
+            App.MainWindowInstance?.ApplyThemePreference(preference);
+            AppearancePersistStatusTextBlock.Text = GameDirectoryIdentityText.AppearancePersistFailed;
+            AppearancePersistStatusTextBlock.Foreground = ThemeBrushes.Warning();
+            AppearancePersistStatusTextBlock.Visibility = Visibility.Visible;
+        }
+
+        private void RestoreKeptMediaPreferences()
+        {
+            AppConfig kept = AppConfig.Load();
+            _isLoadingSettings = true;
+            try
+            {
+                AllowBackgroundAudioToggle.IsOn = kept.AllowBackgroundAudio;
+                AllowBackgroundVideoToggle.IsOn = kept.AllowBackgroundVideo;
+                PreventOverlapToggle.IsOn = kept.PreventAudioVideoOverlap;
+            }
+            finally
+            {
+                _isLoadingSettings = false;
+            }
+
+            MediaPersistStatusTextBlock.Text = GameDirectoryIdentityText.MediaPersistFailed;
+            MediaPersistStatusTextBlock.Foreground = ThemeBrushes.Warning();
+            MediaPersistStatusTextBlock.Visibility = Visibility.Visible;
         }
 
         private void UpdateSaveFileInfo(string? gameDir)
@@ -250,10 +292,12 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             config.AppTheme = preference;
             if (!config.Save())
             {
+                RestoreKeptAppearance();
                 AppStatusService.SetStatus("Settings: failed to save the appearance choice");
                 return;
             }
 
+            AppearancePersistStatusTextBlock.Visibility = Visibility.Collapsed;
             AppConfigChangedService.NotifyChanged(config);
             AppStatusService.SetStatus($"Settings: appearance set to {AppThemePreference.DescribeChoice(preference)}");
         }
@@ -278,10 +322,12 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
             if (!config.Save())
             {
+                RestoreKeptMediaPreferences();
                 AppStatusService.SetStatus("Settings: failed to save media preferences");
                 return;
             }
 
+            MediaPersistStatusTextBlock.Visibility = Visibility.Collapsed;
             AppConfigChangedService.NotifyChanged(config);
             App.MainWindowInstance?.RefreshFooter();
             AppStatusService.SetStatus("Settings: media preferences updated");
