@@ -57,6 +57,32 @@ bodies below:
   (`CWorld__LoadScriptEvents` constructs it per script file; see
   [`CScriptEventNB.cpp.md`](CScriptEventNB.cpp.md)).
 
+## Instruction factory — `CAsmInstruction__SpawnFromOpcode` (`0x0052d3d0`)
+
+The 27-opcode dispatch is byte-settled against the
+[VM schema](../missionscript-vm-datatype-opcode-schema.v1.json):
+
+1. `mov ecx,[esp+8]` takes the bytecode reader; `lea eax,[esp+0xc]` reuses the
+   argument slot as a 4-byte buffer and `call 0x00548570`
+   (`CDXMemBuffer__Read`) reads the instruction **attribute** (the "second
+   dword" the schema names).
+2. `mov eax,[esp+8]; cmp eax,0x1a; ja 0x52d8cb` bounds-checks the **opcode
+   argument** (arg0, already decoded by the caller) against 26; out of range
+   prints `"FATAL ERROR: uknown instruction in spawn"` (`0x0064cab8`, the
+   shipped typo) and returns null.
+3. `jmp dword [eax*4 + 0x0052d8e4]` dispatches through the 27-entry jump table
+   (entries `0x0052d3f7` … `0x0052d89b`, one case body per opcode).
+4. Each case allocates **0xc** bytes (`AsmInstruction.cpp` `__FILE__`
+   `0x0064c5c4`, per-case `__LINE__` `0x57`/`0x58`/… rising), stores the
+   attribute at `instr+0x04`, and installs the per-opcode vtable at `instr+0`
+   with the exact law **`vtable = 0x005e4d40 − 0x10 × opcode`** — verified for
+   all 27 opcodes against the schema's vtable column (`NOOP_0` `0x005e4d40`
+   down to `PUSHPC` `0x005e4ba0`).
+
+So an instruction object is a 12-byte `{vtable, attribute}` pair, and
+`Run`'s two virtual calls are `vtable[8]` (opcode getter) and `vtable[0]`
+(executor) over that pair.
+
 ## Stack discipline (settled this slice)
 
 The operand stack is an **inline 128-dword array**: head at `+0xc` of the VM
