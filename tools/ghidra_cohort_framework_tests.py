@@ -113,6 +113,10 @@ REQUIRED_LIVE_PROJECT_DIR = r"c:\users\david\ghidra\projects\bea.rep"
 # varargs-cohort2 is granted 2026-08-18 after the full rehearsal on a db.18627
 # replica: census/identity/dry/apply/readback all PASS (2 rows, 8327 untouched,
 # columnsMoved={signatureShape=2, varArgs=2}).
+# name-cohort-unique-owner is granted 2026-08-18 after reviewer t_393ec4d8 GO
+# on the unique-RTTI-owner / vtable-slot grade (same class as the name-cohort5
+# slotfix row): replica census/identity/dry/apply/readback PASS on a db.18628
+# copy (12 rows, 8317 untouched, columnsMoved={name=12}).
 LIVE_GRANTED_COHORTS = [
     "boundary-cohort41", "name-cohort160", "abi-cohort294",
     "tentacle-chain-a", "tentacle-chain-b",
@@ -120,6 +124,7 @@ LIVE_GRANTED_COHORTS = [
     "name-cohort5-runtime-witnessed",
     "vftable-cohort65",
     "varargs-cohort2",
+    "name-cohort-unique-owner",
 ]
 PROGRAM_SHA256 = (
     "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
@@ -525,6 +530,7 @@ LIVE_ALLOWLISTED_EDITS: list[tuple[str, str, str]] = [
         '        "name-cohort5-runtime-witnessed",\n'
         '        "vftable-cohort65",\n'
         '        "varargs-cohort2",\n'
+        '        "name-cohort-unique-owner",\n'
         "    };\n",
     ),
     (
@@ -692,7 +698,6 @@ class FrameworkDerivationTests(unittest.TestCase):
             self.assertIn(f'"{cohort}"', derivation)
         for rehearsed_only in (
                 "name-cohort-waypoint-follow",
-                "name-cohort-unique-owner",
         ):
             self.assertNotIn(rehearsed_only, self.live,
                              "a rehearsed cohort is not an authorization")

@@ -196,15 +196,15 @@ REHEARSAL_COHORTS: dict[str, dict] = {
         },
     },
     "name-cohort-unique-owner": {
-        # PRE is current live POST (db.18628). Replica apply/readback PASS;
-        # not live-authorized until a reviewer GO on the unique-RTTI-owner grade.
-        "backup": BACKUPS / "2026-08-18-varargs-cohort2-post-live",
+        # PRE is the verified off-volume backup taken immediately before the
+        # 2026-08-18 live apply (db.18628). Replay against that PRE.
+        "backup": BACKUPS / "2026-08-18-name-cohort-unique-owner-pre-live",
         "spec": SPECS / "name-cohort-unique-owner.spec.tsv",
         "manifest": SPECS / "name-cohort-unique-owner-manifest.tsv",
-        "rehearsalOnly": True,
+        "rehearsalOnly": False,
         "archived": {
-            "source": "REHEARSAL ONLY - census/identity/dry/apply/readback "
-                      "PASS 2026-08-18 on a db.18628 replica; not live-authorized",
+            "source": "local-lab/name-cohort-unique-owner-ceremony-2026-08-18/"
+                      "{apply,readback}.json (live, 2026-08-18)",
             "rows": 12,
             "applied": 12,
             "preFunctions": 8329, "postFunctions": 8329,
