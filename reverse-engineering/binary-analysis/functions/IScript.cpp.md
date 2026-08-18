@@ -279,7 +279,8 @@ Mode 1 then path-queries `0x004bc2e0` into `guide+0x24` when
 path-follow overwrites desired with the waypoint heading; join
 `0x0047dee0` stores desired at `[owner+0x120]`. `|Δ|≤0.6` near-exits.
 `|Δ|>0.6` writes a local-Y step (`slot 111 * 0.05 * ±4`) through
-`mOrientation` into `owner+0x14c`. Who applies `+0x14c` is open.
+`mOrientation` into `owner+0x14c`. Apply: `CGroundUnit__UpdateLinkedEffectsByHeightClearance`
+adds `+0x14c * 0.4f` into `mVelocity`; `CActor__Move` adds `mVelocity` to `mPos`.
 
 ## Open questions (cheapest falsifier first)
 
