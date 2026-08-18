@@ -1,7 +1,7 @@
 # IScript function map
 
 Status: active static function map
-Last updated: 2026-08-18 (Play*MessageWait fires on CMessageBox 3002)
+Last updated: 2026-08-18 (FollowWaypoint body + flag is arrived argc only)
 Source File: `C:\dev\ONSLAUGHT2\MissionScript\IScript.cpp` (SEH `__FILE__`
 pointer `0x0064fa40` read out of `IScript__PostEvent`) | Binary: BEA.exe,
 SHA-256
@@ -54,6 +54,7 @@ name value into a `CPostEventData` and scheduling event `0x7d0` against the
 | `0x005375f0` | `IScript__PlayCharMessageWait` | `6aff 6849735d00 64a1 … 68d1070000 … c7442440cdcc4c3d e8c36afaff … c20c00` | `ret 0xc`. Registry 36. Snapshot + `GetNextFreeEvent` + `CScheduledEvent__Set(2001, 0.05f, this, CVM)` + `CMessage__ctor_base` / `CMessageBox__InsertQueuedMessageSortedAndMaybeAdvance`. HIGH on the snapshot and event id. |
 | `0x005378e0` | `IScript__PlayPCharMessageWait` | `6aff 68a9735d00 64a1 … 68d1070000 … c7442420cdcc4c3d e8c767faff … c20c00` | `ret 0xc`. Registry 91. Same CVM + 2001 `Set` shape as `PlayCharMessageWait`, then a seven-arg `CMessage` with the extra script dword. HIGH on the snapshot and event id. |
 | `0x00537e40` | `IScript__FollowWaypointWait` | `538bd9 55bd01000000 8b4318 56 3bc5 57 0f8464010000 … 68d0070000 … c20c00` | `ret 0xc`. Early-out if `[this+0x18]==1`. Snapshot; `[this+0x1c]=1`, `[this+0x20]=CVM`, `[this+0x18]=1`; `AddEvent_AtTime(2000, this, NEXT_FRAME)`. HIGH. |
+| `0x00537d70` | `IScript__FollowWaypoint` | `53 55 8b6c240c 56 8bf1 57 8b4d00 8b01 ff5038 8b4e10 8bd8 83c11c 51 53 e89fdefcff 8bf8 83c408 85ff 751a 53 68a8fd6400 … 8b4d04 8b11 ff5230 6a00 8d571c 83ec10 8b4e10 894624 … ff90f4000000 8b4610 8b4e08 3bc1 753c 8b4e18 … c7461c00000000 … 68d0070000 … c20c00` | `ret 0xc`; zero direct `E8` (native 0). `args[0]->vtable[+0x38]()` is the path name; `0x00505c30(name, thing+0x1c)` looks up the waypoint; miss prints `Cant find waypoint path '%s'` (`0x0064fda8`) and returns. `args[1]->vtable[+0x30]()` is stored at `[this+0x24]` with **no** later branch. Copies waypoint `+0x1c` (4 floats) onto the stack and calls thing `vtable[+0xf4]`. `[this+0x14]=waypoint`, `[this+0x1c]=0`. If `[this+0x18]!=1`, sets it and `AddEvent_AtTime(2000, this, NEXT_FRAME)`. HIGH. Descriptor `0x0064ce20+0x04=2` (arity); no arg-name strings. |
 | `0x00533840` | `IScript__RestoreSavedStateAndGotoInstruction` | `568bf1 8b4638 85c0 7453 50 b9e0c58900 e8bb600000 8b4638 8d4e28 50 e86f23fbff … c3` | Zero-arg `ret`. If `[this+0x38]==0` return. Else `CopyState(+0x38)`, `CSPtrSet__Remove(+0x28)`, delete, `[this+0x38]=0`, then Reset on LEVEL_LOST else `GotoInstruction([0x0089c7f4])`. Same resume as HandleMessage 2001. Only `E8` is `CComplexThing__FinishedPlayingCurrentAnimation` `0x004f45a7`. HIGH. |
 
 ### The three message arms (byte-exact)
@@ -271,9 +272,17 @@ string, `call 0x0058c893`) — not events.
   (`CInt`), value **0** in 13 and **1** in 6. The only other `+0x24`
   access in `0x00533000..0x00539000` is the read at `0x0053857d` that
   boxes arrived(). FollowWaypoint itself does not branch on the flag.
-  Flag=1 objects: 600 `Ship`/`Slave`, 731/732 `messages`, 741/742
-  `Marshall`. Loose `.msl` writes `1` at those same six sites and
-  never names the argument. Authored name still open. All 762 13-slot
+  Flag=1 loose-`.msl` sites (independently re-listed 2026-08-18):
+  `level600/Ship.msl` `FollowWaypoint("Interception", 1)`,
+  `level600/Slave.msl` `FollowWaypoint("Slave", 1)`,
+  `level731/messages.msl` and `level732/messages.msl`
+  `FollowWaypoint("Fenrir", 1)`, `level741/Marshall.msl` and
+  `level742/Marshall.msl` `FollowWaypoint("marshall", 1)`, plus
+  commented `level731/732 Fenrir.msl` `FollowWaypoint("Withdraw", 1)`.
+  None names the argument. Registry record `0x0064ce20` has no
+  arg-name pointers. Authored name still open. Cheapest remaining
+  instrument: pinned `IScript.cpp` we do not have, or a runtime
+  `arrived()` handler that reads the boxed `CInt`. All 762 13-slot
   IPs are `-1`; 0 listen-string `arrived`.
 - Nested-listener registration / thing attach. CLOSED. `+0x74` is
   `mMissionScript`. `CComplexThing__SetScript` (`0x004f4230`) clones the
