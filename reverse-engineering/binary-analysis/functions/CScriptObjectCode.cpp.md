@@ -245,9 +245,12 @@ as `CEventFunction` listen-strings (measured below). The fire sites are:
   (`0x00537d70`) is the writer of `+0x24` (`mov [esi+0x24],eax` at
   `0x00537dc7` from `args[1]->vtable[+0x30]()`, which for `CInt` is
   `SharedVFunc__ReturnField04_0052f540`). 19 shipped native-0 `CALL`s:
-  that second arg is always a `CInt` **0** (13) or **1** (6). On the
-  shipped corpus the lookup is always `-1`, so the wrapper deletes the
-  `CInt` and returns.
+ that second arg is always a `CInt` **0** (13) or **1** (6). Only
+ other `IScript+0x24` access in `0x00533000..0x00539000` is the
+ arrived() box. Flag=1: 600 Ship/Slave, 731/732 messages, 741/742
+ Marshall. On the
+ shipped corpus the lookup is always `-1`, so the wrapper deletes the
+ `CInt` and returns.
 - **timer (id 2).** `IScript__SetTimer` (`0x005358e0`, `ret 0xc`, zero
   direct `E8` — registry command `"SetTimer"`) calls
   `CEventManager__AddEvent_TimeFromNow` (`0x0044b2d0`) with event

@@ -117,7 +117,9 @@ path that nulls `+0x74` before those two sites.
 ## Open questions (cheapest falsifier first)
 
 - Authored name of `FollowWaypoint` args[1] (the `CInt` 0/1 at
-  `IScript+0x24`): still open. Not this attach path.
+  `IScript+0x24`): still open. Sole retail reader is the arrived()
+  box at `0x0053857d`. Six compiled `1`s: 600 Ship/Slave, 731/732
+  messages, 741/742 Marshall. Loose `.msl` never names the argument.
 - Who schedules thing-event 2002 besides `HandleEvent`'s own arm and
   `CThing::StartDieProcess` callers. Cheapest: whole-image `push 0x7d2`
   against a thing `to_call`.

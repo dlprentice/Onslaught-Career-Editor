@@ -173,9 +173,13 @@ db.18627.
   `args[1]->vtable[+0x30]()`. For `CInt` that slot is
   `SharedVFunc__ReturnField04_0052f540` (`mov eax,[ecx+4]; ret`).
   19 shipped `CALL` native-0 sites: the second PUSH is always type-1
-  (`CInt`), value **0** in 13 and **1** in 6. Authored name of the
-  flag is still open. All 762 13-slot IPs are `-1`; 0 listen-string
-  `arrived`.
+  (`CInt`), value **0** in 13 and **1** in 6. The only other `+0x24`
+  access in `0x00533000..0x00539000` is the read at `0x0053857d` that
+  boxes arrived(). FollowWaypoint itself does not branch on the flag.
+  Flag=1 objects: 600 `Ship`/`Slave`, 731/732 `messages`, 741/742
+  `Marshall`. Loose `.msl` writes `1` at those same six sites and
+  never names the argument. Authored name still open. All 762 13-slot
+  IPs are `-1`; 0 listen-string `arrived`.
 - Nested-listener registration / thing attach. CLOSED. `+0x74` is
   `mMissionScript`. `CComplexThing__SetScript` (`0x004f4230`) clones the
   named object, constructs this IScript (`0x005333b0`, only `E8`), stores
