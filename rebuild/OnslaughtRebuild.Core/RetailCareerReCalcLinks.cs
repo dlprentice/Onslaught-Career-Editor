@@ -177,6 +177,18 @@ public sealed class RetailCareerCampaign
     /// <c>CCareer::Update</c> then <c>ReCalcLinks</c> —
     /// <c>Career.cpp:379-515</c>, <c>0x0041BD00</c> / <c>0x0041BDF0</c>.
     /// </summary>
+    public void ApplyUpdate(RetailEndLevelSnapshot snapshot) =>
+        ApplyUpdate(
+            snapshot.FinalState,
+            snapshot.WorldFinished,
+            snapshot.Ranking,
+            snapshot.SecondaryStatuses,
+            snapshot.ThingsKilled);
+
+    /// <summary>
+    /// <c>CCareer::Update</c> then <c>ReCalcLinks</c> —
+    /// <c>Career.cpp:379-515</c>, <c>0x0041BD00</c> / <c>0x0041BDF0</c>.
+    /// </summary>
     public void ApplyUpdate(
         int finalState,
         int worldFinished,

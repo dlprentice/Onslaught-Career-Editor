@@ -1,7 +1,7 @@
 # Rebuild parity contract
 
 Status: active — what "1:1 behavioral and experiential parity" means operationally
-Last updated: 2026-08-18 (Level 100 post-Won ReCalcLinks secondary verdict).
+Last updated: 2026-08-18 (Level 100 FillOutEndLevelData Won snapshot).
 Evidence: SOURCE — authority order and the known divergences are
 recorded in `PROVENANCE.md` plus the Lost-countdown row of this table; gate capabilities are MEASURED claims of the
 tracked harnesses named in the table. Every row of *Carried retail contracts*
@@ -87,13 +87,14 @@ Owner paths are relative to the repository root; test names are relative to
 | `CWeapon__AdvanceChargeProgressIfAnySlotAssigned` | `0x005068F0`; `0x005DB358`=`00 00 c8 43`=`400.0f`; `test ah,1` / `je` then `fld [record+8]` / `fadd [weapon+0x60]`. CanCharge scan starts at `record+0x10`. Level 100 `Pulse Cannon Pod` @`0x17463` of `default physics.dat` (`e1fb3ded…ada14`) has rate `0x41200000`=`10.0f` and levels 0+1 present, so ten 20 Hz samples fill MaxCharge 100 | `rebuild/OnslaughtRebuild.Core/RetailWeaponCharge.cs` and `rebuild/OnslaughtRebuild.Core/Level100PulseCannonCharge.cs` | `RetailWeaponCharge.Charge` | `RetailWeaponChargeTests.Charge_AddsTheRecordRateWhileBelowFourHundred` | 1 | cap written as `MaxCharge` (`100.0f`); **and** Pulse Cannon rate written as `1.0f` |
 | `CGame::DeclareLevelLost` / `::DeclareLevelWon` countdown | `0x0046F4A8` `c7 43 48 00 00 00 40` = `mov [ebx+0x48], 0x40000000` = `2.0f`; `0x0046F338` `c7 43 48 00 00 a0 40` = `5.0f` after `cmp eax,0x2E5` / `0x2E6` miss. Source `game.cpp:75` writes `GAME_COUNT_WHEN_LOST_OR_DRAW 5.0f` for both | `rebuild/OnslaughtRebuild.Core/RetailGameEndCountdown.cs` and `rebuild/OnslaughtRebuild.Core/Level100MissionTiming.cs` | `RetailGameEndCountdown.LostTicks` | `RetailGameEndCountdownTests.TutorialBroken_StartsTheTwoSecondLostCountdown` | 1 | Lost written as the source `5.0f` (`0x40A00000`) |
 | `CCareer::ReCalcLinks` after Level 100 Won | `0x0041BDF0` calls `0x004496E0`; world 100 `level_structure[0]` is lower child node 1 / world 110 and higher `mToNode=-1`. Level 100 ships four primaries and no secondaries, so the predicate is the no-objectives FALSE; the lower link still completes (`Career.cpp:488-490`) and the dummy higher stays `CN_NOT_COMPLETE` | `rebuild/OnslaughtRebuild.Core/RetailCareerReCalcLinks.cs` | `RetailCareerCampaign.ApplyUpdate` | `RetailCareerReCalcLinksTests.Level100Won_UnlocksWorld110EvenThoughTheSecondaryPredicateIsTheNoObjectivesFalse` | 1 | require `IsAllSecondaryObjectivesComplete` for the lower child too |
+| `CGame::FillOutEndLevelData` Level 100 Won snapshot | `0x0046D470`; `mWorldFinished=100`, `mFinalState=5`, ten unset secondary statuses. `game.cpp:1028` `if (GetNumSecondaryObjectives())` is false, so the 0.4/0.6 ranking clamp is skipped even though `0x004496E0` would return FALSE | `rebuild/OnslaughtRebuild.Core/RetailFillOutEndLevelData.cs` | `RetailFillOutEndLevelData.AfterSecondaryRankingClamp` | `RetailFillOutEndLevelDataTests.Level100Won_DoesNotClampRankingBecauseThereAreNoSecondaries` | 3 | apply the failed-secondary `0.6` cap when the authored count is 0 |
 
 Two things this table deliberately does **not** claim. It does not claim these
 contracts are graded `REBUILD_READY`: that grade is a campaign artifact and
 needs the ceremony in `tools/re_campaign.py`
 (`_validate_rebuild_ready_gate`), which stamps owner/test/project SHA-256s, a
 `rebuildMapping`, and a re-run of the focused test. And it does not claim replay
-coverage. **Sixteen of these nineteen implementations are unreachable from the
+coverage. **Seventeen of these twenty implementations are unreachable from the
 simulation and replay path** — measured, by searching `Simulation.cs`,
 `ReplayRunner.cs`, `CommandTape.cs`, `StateHasher.cs` and every `Level100*.cs`
 for the owner types: `Simulation.JetFrictionNumerator` is wired,
@@ -103,11 +104,11 @@ when the player holds `SimActions.ChargeWeapon` on the Pulse Cannon Pod, and
 `Level100Mission.DeclareLost` on the released Broke-Tutorial /
 `LevelLostString` path. Charge is not in `StateHasher` because it does not
 yet change fire, movement, or any other hashed field. So no cold-start or
-full-chain trace can reach the other sixteen, and the focused test is the
+full-chain trace can reach the other seventeen, and the focused test is the
 only falsifier they have. That is exactly
 the precedent the jet-friction row set: a green replay suite there was
 *vacuous* with respect to the constant it was supposed to guard, because the
-jet throttle caps below the gate's band. The seventeenth through nineteenth
+jet throttle caps below the gate's band. The seventeenth through twentieth
 rows' mutation kills were measured on 2026-08-18 in this worktree; they are
 not among the 17 files
 under `local-lab/rebuild-parity-mutation-kills-2026-08-17/`.
@@ -132,7 +133,7 @@ harness. This gap is named here so it is not mistaken for closure.
 
 What the table above adds is narrower and real: **per-contract** gates that do
 compare rebuild behavior to retail behavior, because the expected value in each
-is read out of the pristine specimen rather than out of the rebuild. Nineteen
+is read out of the pristine specimen rather than out of the rebuild. Twenty
 laws is not parity. It is the first set of rows where a wrong rebuild is
 mechanically detected instead of merely plausible-looking, and the mutation kill
 is what distinguishes the two.

@@ -1,0 +1,105 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+
+namespace OnslaughtRebuild.Core;
+
+/// <summary>
+/// The fields <c>CGame::FillOutEndLevelData</c> writes that
+/// <c>CCareer::Update</c> / <c>ReCalcLinks</c> actually read after a
+/// Level 100 win.
+/// </summary>
+public readonly record struct RetailEndLevelSnapshot(
+    int WorldFinished,
+    int FinalState,
+    float Ranking,
+    IReadOnlyList<int> SecondaryStatuses,
+    IReadOnlyList<int> ThingsKilled);
+
+/// <summary>
+/// <c>CGame::FillOutEndLevelData</c> as it applies to a Level 100 Won —
+/// the snapshot career consumes, not the score-time ranking arithmetic.
+/// </summary>
+/// <remarks>
+/// <para>
+/// Owner in the pinned drop: <c>references/Onslaught/game.cpp:910-1043</c>.
+/// Retail identity: <c>0x0046D470</c>. Callers include
+/// <c>CGame::RestartLoopRunLevel</c>. The secondary predicate at
+/// <c>0x004496E0</c> is already pinned; this type only records when
+/// FillOut consults it.
+/// </para>
+/// <para>
+/// <b>Level 100 copies four primaries and no secondaries.</b>
+/// <c>mWorldFinished = mCurrentLevel</c> is 100.
+/// <c>mFinalState = mGameState</c> is <c>GAME_STATE_LEVEL_WON</c> (5).
+/// <c>mSecondaryObjectives</c> is the ten-entry array with every
+/// <c>GetStatus()</c> unset. Do not invent secondary content.
+/// </para>
+/// <para>
+/// <b>The ranking clamp is gated on a non-zero secondary count.</b>
+/// <c>game.cpp:1028</c> is <c>if (GetNumSecondaryObjectives())</c>.
+/// When that count is 0 the 0.4 floor and 0.6 cap never run, even
+/// though <c>IsAllSecondaryObjectivesComplete</c> would return FALSE.
+/// The 0.4 / 0.6 immediates are therefore not claimed here.
+/// </para>
+/// <para>
+/// <b>Not established here.</b> The score-time multiplier at
+/// <c>game.cpp:988-1026</c> (<c>mFullScoreTime</c> /
+/// <c>mPercentageScoreTime</c>). Whether Level 100's authored times
+/// make that arm live. Base-things copy. Slot dword copy. Kill
+/// readout from <c>CPlayer</c>.
+/// </para>
+/// </remarks>
+public static class RetailFillOutEndLevelData
+{
+    /// <summary>Shipped Level 100 primary count — <c>LevelScript.msl</c>.</summary>
+    public const int Level100PrimaryCount = 4;
+
+    /// <summary>Shipped Level 100 secondary count — there are none.</summary>
+    public const int Level100SecondaryCount = 0;
+
+    /// <summary>The ten unset <c>GetStatus()</c> words FillOut copies for Level 100.</summary>
+    public static int[] UnsetSecondaryStatuses() =>
+        new int[RetailEndLevelObjectives.SecondaryObjectiveCount];
+
+    /// <summary>
+    /// The post-Won snapshot Level 100 hands to career. Ranking defaults to
+    /// the <c>mRanking=1.0f</c> store at <c>game.cpp:967</c> before the
+    /// unclaimed score-time arm; callers may override.
+    /// </summary>
+    public static RetailEndLevelSnapshot ForLevel100Won(
+        float ranking = 1.0f,
+        IReadOnlyList<int>? thingsKilled = null)
+    {
+        return new RetailEndLevelSnapshot(
+            RetailCareerReCalcLinks.TrainingWorldNumber,
+            RetailCareerReCalcLinks.GameStateLevelWon,
+            ranking,
+            UnsetSecondaryStatuses(),
+            thingsKilled ?? new int[RetailCareerCounters.KilledTypeCount]);
+    }
+
+    /// <summary>
+    /// The <c>game.cpp:1028-1042</c> ranking clamp. A zero secondary count
+    /// is a skip. Non-zero counts are a different, unmeasured arm.
+    /// </summary>
+    public static float AfterSecondaryRankingClamp(
+        float ranking,
+        int secondaryCount,
+        IReadOnlyList<int> secondaryObjectiveStatuses)
+    {
+        if (secondaryObjectiveStatuses is null)
+        {
+            throw new ArgumentNullException(nameof(secondaryObjectiveStatuses));
+        }
+
+        if (secondaryCount == 0)
+        {
+            return ranking;
+        }
+
+        throw new InvalidOperationException(
+            "FillOutEndLevelData only consults IsAllSecondaryObjectivesComplete " +
+            "when GetNumSecondaryObjectives() is non-zero. The 0.4 / 0.6 " +
+            "immediates are not measured for this owner; Level 100 never " +
+            "reaches that arm.");
+    }
+}
