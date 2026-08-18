@@ -1,7 +1,7 @@
 # CScriptObjectCode function map
 
 Status: active static function map
-Last updated: 2026-08-18 (CComplexThing attach fires init/ready/died/shutdown)
+Last updated: 2026-08-18 (named-event bodies end at LABEL; optional REMOVE_TOP)
 Source File: `C:\dev\ONSLAUGHT2\MissionScript\ScriptObjectCode.cpp` (the
 VM's `__FILE__` chain is established by the adjacent
 [`ScriptObjectCode.cpp.md`](ScriptObjectCode.cpp.md) wave receipts) | Binary:
@@ -341,6 +341,24 @@ native. Top shipped first-natives (parser `natives.json`, native 0
 `PlayCharMessageWait` 59, `Print` 47, `PlayCharMessage` 32,
 `SetAIState` 26, `GetThingRef` 25. This is occupancy, not a claim
 that those natives are the authored purpose of the event.
+
+Every named-event JMPFALSE target is opcode `0x0d`. Independently
+re-read 2026-08-18 (994/994, 0 oob). RTTI at vtable `0x005e4c70`
+(COLOC `0x00618e40` → `.?AVCInstructionOP_LABEL@@`): getter
+`FUN_0052dcd0` is `mov eax,0x0d; ret`; executor is
+`SharedVFunc__NoOp_Ret0C` (`0x00453ac0`, `ret 0xc`). Opcode
+`0x0e` is `.?AVCInstructionOP_REMOVE_TOP@@` (vtable `0x005e4c60`,
+COLOC `0x00618f30`): getter `FUN_0052dc80` is `mov eax,0x0e; ret`;
+executor `CInstructionOP_REMOVE_TOP__VFunc_0_0052e320` (`0x0052e320`)
+calls `CScriptObjectCode__RemoveTop` (`0x005394a0`) on the operand
+stack — dec depth, `vtable[0](elem, 1)` the discarded top, or
+print `FATAL ERROR: RemoveTop called on empty stack`
+(`0x006500c4`). Opcode immediately before the end-label: `0x0e`
+671 / `0x0d` 309 / `0x13` 14 (the empty delta-1 handlers). The
+compiled shape is `JMPFALSE L` / body / optional `REMOVE_TOP` /
+`L: LABEL`. The skip lands on a no-op so the VM continues after
+the handler; `REMOVE_TOP` drops a leftover statement value so
+`CallEventDirect`'s exit-depth check can pass.
 
 Thing-side fire of the 13-slot ids (not IScript `HandleMessage`)
 is owned by [`CComplexThing.cpp.md`](CComplexThing.cpp.md):
