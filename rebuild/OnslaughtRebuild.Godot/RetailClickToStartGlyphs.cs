@@ -34,9 +34,9 @@ namespace OnslaughtRebuild.GodotClient;
 /// not the body.</para>
 ///
 /// <para>No Godot types. The 2-D consumer ignores z; the bits stay on the
-/// helper so a later depth owner does not have to re-read the body. Wiring
-/// through <c>DrawClickToStart</c> is deferred while
-/// <c>RetailFrontendFlow.cs</c> is a hotspot.</para>
+/// helper so a later depth owner does not have to re-read the body.
+/// <c>DrawClickToStart</c> consumes <see cref="ShouldDraw"/>, <see cref="X"/>,
+/// and <see cref="Passes"/>.</para>
 /// </summary>
 public static class RetailClickToStartGlyphs
 {

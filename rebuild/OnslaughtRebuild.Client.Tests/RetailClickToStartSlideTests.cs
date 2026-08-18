@@ -99,7 +99,6 @@ public sealed class RetailClickToStartSlideTests
         Assert.Contains("RetailClickToStartSlide.Passes", flow);
         Assert.Contains("DAT_0089d7bc", flow);
         Assert.DoesNotContain("(1f - fade) * (1f - fade) * 400f", flow);
-        Assert.DoesNotContain("RetailClickToStartGlyphs", flow);
         Assert.DoesNotContain("vectorlosttoyssplash", flow);
         Assert.DoesNotContain("TWIMTBP", flow);
     }

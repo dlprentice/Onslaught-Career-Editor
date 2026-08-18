@@ -1005,22 +1005,22 @@ public sealed partial class RetailFrontendFlow : Control
             splashScale,
             Colors.White);
 
-        // Prompt after this+0x18 > 4.0, visible while fmod(timer, 4.0) < 2.0.
-        // The previous PosMod(timer, 2) < 1.6 was a stub for the CRT fmod thunk.
-        if (RetailClickToStartPrompt.IsPromptVisible(_clickPulseTimer))
+        // CFEPIntro::Render 0x0051B92F glyph submits — Localization 0x77,
+        // five CDXFont__DrawTextScaled calls at Y 401/399/400, sx=sy=1.
+        // A capture-derived textScale=2 is not the body. ShouldDraw is the
+        // same timer>4 / fmod<2 arm as RetailClickToStartPrompt.
+        if (RetailClickToStartGlyphs.ShouldDraw(_clickPulseTimer))
         {
-            // Mixed case, per the pristine 640x480 capture of the click-to-start
-            // screen (local-lab/retail-reference-pristine/click-to-start-640x480.png).
             const string prompt = "Click to start"; // Localization 0x77
-            const float textScale = 2f;
-            float width = MeasureText(prompt, textScale);
-            var origin = new Vector2(320f - (width * 0.5f), 400f);
-            // Retail: four ±1 black outline passes + white body (no extra drop-shadow).
-            DrawTextFlat(prompt, origin + new Vector2(-1f, 1f), textScale, Colors.Black);
-            DrawTextFlat(prompt, origin + new Vector2(1f, 1f), textScale, Colors.Black);
-            DrawTextFlat(prompt, origin + new Vector2(-1f, -1f), textScale, Colors.Black);
-            DrawTextFlat(prompt, origin + new Vector2(1f, -1f), textScale, Colors.Black);
-            DrawTextFlat(prompt, origin, textScale, Colors.White);
+            int width = (int)MeasureText(prompt, RetailClickToStartGlyphs.ScaleX);
+            foreach (RetailClickToStartGlyphs.Pass pass in RetailClickToStartGlyphs.Passes)
+            {
+                DrawTextFlat(
+                    prompt,
+                    new Vector2(RetailClickToStartGlyphs.X(pass, width), pass.Y),
+                    RetailClickToStartGlyphs.ScaleX,
+                    RetailColor(pass.Color));
+            }
         }
 
         // DAT_0089d7bc LostToys sliding pair. No skip after the two byte

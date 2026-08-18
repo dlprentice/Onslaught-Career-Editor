@@ -24,8 +24,9 @@ namespace OnslaughtRebuild.Client.Tests;
 /// <c>DrawClickToStart</c> prompt used four ±1 outlines + a white body at
 /// <c>y=400</c> with <c>textScale = 2</c> from a capture. These cases pin
 /// the specimen Y immediates 401 / 399 / 400, <c>sx=sy=1</c>, z bits
-/// <c>0x3DCCCCCD</c>, and <c>X = 320 − width×0.5 + dx</c>. Wiring through
-/// the hotspot is deferred.</para>
+/// <c>0x3DCCCCCD</c>, and <c>X = 320 − width×0.5 + dx</c>.
+/// <c>DrawClickToStart</c> must call the recovered glyphs rather than keep
+/// that reconstruction copy.</para>
 /// </summary>
 public sealed class RetailClickToStartGlyphsTests
 {
@@ -100,13 +101,17 @@ public sealed class RetailClickToStartGlyphsTests
     }
 
     [Fact]
-    public void DrawClickToStartIsNotYetWiredBecauseTheHotspotIsLive()
+    public void DrawClickToStartCallsTheRecoveredGlyphsInsteadOfTheScaleTwoCopy()
     {
         string flow = File.ReadAllText(
             Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "RetailFrontendFlow.cs"));
 
-        Assert.DoesNotContain("RetailClickToStartGlyphs", flow);
-        Assert.Contains("const float textScale = 2f;", flow);
-        Assert.Contains("new Vector2(320f - (width * 0.5f), 400f)", flow);
+        Assert.Contains("RetailClickToStartGlyphs.ShouldDraw", flow);
+        Assert.Contains("RetailClickToStartGlyphs.X", flow);
+        Assert.Contains("RetailClickToStartGlyphs.Passes", flow);
+        Assert.DoesNotContain("const float textScale = 2f;", flow);
+        Assert.DoesNotContain("new Vector2(320f - (width * 0.5f), 400f)", flow);
+        Assert.DoesNotContain("vectorlosttoyssplash", flow);
+        Assert.DoesNotContain("TWIMTBP", flow);
     }
 }

@@ -115,7 +115,7 @@ public sealed class RetailClickToStartPromptTests
         string flow = File.ReadAllText(
             Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "RetailFrontendFlow.cs"));
 
-        Assert.Contains("RetailClickToStartPrompt.IsPromptVisible", flow);
+        Assert.Contains("RetailClickToStartGlyphs.ShouldDraw", flow);
         Assert.Contains("RetailClickToStartSplash.Scale", flow);
         Assert.Contains("RetailClickToStartPrompt.Advance", flow);
         Assert.DoesNotContain("RetailClickToStartPrompt.SplashScale", flow);
