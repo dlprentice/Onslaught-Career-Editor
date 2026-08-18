@@ -121,8 +121,13 @@ path that nulls `+0x74` before those two sites.
   box at `0x0053857d`. Six compiled `1`s: 600 Ship/Slave, 731/732
   messages, 741/742 Marshall. Loose `.msl` never names the argument.
 - Who schedules thing-event 2002 besides `HandleEvent`'s own arm and
-  `CThing::StartDieProcess` callers. Cheapest: whole-image `push 0x7d2`
-  against a thing `to_call`.
+  `CThing::StartDieProcess` callers: CLOSED for the script path.
+  `IScript__Die` (`0x00535cd0`, `ret 0xc`, zero direct `E8`, native 13)
+  does `AddEvent_AtTime(0x7d2, [IScript+0x10], NEXT_FRAME)`. 48 compiled
+  `CALL` native-13 sites, all argc 0. Other `push 0x7d2` sites are a
+  different enum or unmapped: `CGame__HandleEvent` `0x0047000d` is
+  `EGameEvent` `FINISHED_PANNING` (`game.h:35`); `CTree__UpdateFallingTree`
+  `0x004f6f93` and `0x00590a55` are not claimed.
 - `CFeature__VFunc_50_0044cd80` / `CUnit__MarkDestroyedAndCleanupLinks`
   as the reachable started_dying fires: CLOSED (section above).
 - `IScript__VFunc_2_00533810` has zero direct `E8`; the 2000 arm's
