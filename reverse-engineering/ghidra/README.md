@@ -4,28 +4,28 @@
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; local working copies and historical backups remain untracked.
 
-- Snapshot date: 2026-08-17 (tenth refresh: the 65-slot RTTI vftable pointer
-  cohort)
+- Snapshot date: 2026-08-18 (eleventh refresh: the two-row `varargs-cohort2`
+  SET_PROTOTYPE)
 - Ghidra lineage used for the latest review: 12.1.2
 - Imported Steam specimen SHA-256:
   `74154BFAE14DDC8ECB87A0766F5BC381C7B7F1AB334ED7A753040EDA1E1E7750`
 - Imported specimen MD5: `3b456964020070efe696d2cc09464a55`
-- Project payload: 19 files, 187,485,061 bytes
+- Project payload: 19 files, 187,501,445 bytes
 - Canonical project inventory SHA-256:
-  `255be528409b915d613b922eed4d4120965e6cf134201b00910e3fb6bcd44878`
-- Current rolling database `db.18627.gbf`: 68,599,808 bytes, SHA-256
-  `63c6d7076a67757c1eaa81324320e32ef806bb6fe3d2987ef77e0ae2ad5def85`
-  (stable prior `db.18626.gbf`, 68,583,424 bytes, SHA-256
-  `fdd94fbcc6ff39189f193f39333990453c7762360dc32e4df48b3107c95fa46f`, retained)
+  `b205787da3e3c3b0df4e5eec7c0f443610f2b6dbec35fdd02384230ac46f9722`
+- Current rolling database `db.18628.gbf`: 68,599,808 bytes, SHA-256
+  `966b61ab3e0aa4e4d1f8fbba5ccd8f00c8ceb28997328f1c2fda82d94dfda09e`
+  (stable prior `db.18627.gbf`, 68,599,808 bytes, SHA-256
+  `63c6d7076a67757c1eaa81324320e32ef806bb6fe3d2987ef77e0ae2ad5def85`, retained)
 
 **Reproducing the inventory digest.** The convention was previously stated as
 `sha256<TAB>bytes<TAB>relative-posix-path<LF>`, which reads as line-terminated.
 It is not: the digest is over the rows **joined** by `LF` with **no trailing
 newline**, one row per payload file as
 `sha256<TAB>bytes<TAB>relative-posix-path`, sorted by the rendered line, over the
-19 payload files with this `README.md` excluded. Measured 2026-08-17 after the
-vftable65 refresh against both the tracked tree and the live maintainer
-project: both reproduce `255be528…` at 19 files and 187,485,061 bytes. Re-measure rather
+19 payload files with this `README.md` excluded. Measured 2026-08-18 after the
+varargs-cohort2 refresh against both the tracked tree and the live maintainer
+project: both reproduce `b205787d…` at 19 files and 187,501,445 bytes. Re-measure rather
 than quote — a concurrent ceremony can move this at any time.
 
 **Promotion note (superseded in place 2026-08-17).** This header previously still
@@ -38,9 +38,11 @@ corrections → `db.18622` → **CTentacle factory-name ceremony A** → `db.186
 **CTentacle factory-name ceremony B** → `db.18624` → the 36-row
 `abi-two-witness-arity36` SET_PROTOTYPE cohort → `db.18625` → the five-row
 runtime-witnessed `name-cohort5` → `db.18626` → the 65-slot RTTI vftable
-`vftable-cohort65` SET_DATA_POINTER cohort → `db.18627`, all on 2026-08-17, each
-a separately authorized promotion. Internal functions remain **8,329** across
-all eight: no function was created or destroyed. All eight ceremonies are owned
+`vftable-cohort65` SET_DATA_POINTER cohort → `db.18627` → the two-row
+`varargs-cohort2` SET_PROTOTYPE (`sprintf` / `CConsole__AddString` varargs
+axis only) → `db.18628` on 2026-08-18, each a separately authorized
+promotion. Internal functions remain **8,329** across all nine: no function
+was created or destroyed. All nine ceremonies are owned
 by the shared cohort framework's replayable specs under `tools/cohort-specs/`;
 prefer replaying a spec over reading this paragraph. The 34 `.data` rows of the
 original 99-slot pointer cohort were correctly excluded and have a terminal
@@ -161,7 +163,7 @@ the user overrides them:
 | Headless entry | `...\support\analyzeHeadless.bat` |
 | Prior install archive | `D:\GhidraArchives\` (12.0.3 retained there; do not delete) |
 | Working/maintainer project | `C:\Users\david\Ghidra\Projects` (`BEA.gpr` / `BEA.rep`) |
-| Verified off-volume recovery | `D:\BEA-Ghidra-Backups\2026-08-17-vftable65-post-live` (exact current `db.18627` POST snapshot; independently copied, restore-proven byte-identical, and read-only reopened) |
+| Verified off-volume recovery | `D:\BEA-Ghidra-Backups\2026-08-18-varargs-cohort2-post-live` (exact current `db.18628` POST snapshot; independently copied, restore-proven byte-identical, and read-only reopened; F: twin at `F:\GhidraBackups\2026-08-18-varargs-cohort2-post-live`) |
 | Prior verified recovery | `D:\BEA-Ghidra-Backups\2026-08-17-tentacle-chain-a-post-live` (`db.18623`, ceremony B's PRE) and `...-tentacle-chain-a-pre-live` (`db.18622`, the chain's PRE) |
 | Xbox Issue-11 POST recovery | `D:\BEA-Ghidra-Backups\2026-08-12-xbox-sparse-symbol-post-anchors-issue11\` (exact isolated project; restored semantic readback passed) |
 | Xbox US-retail POST recovery | `D:\BEA-Ghidra-Backups\2026-08-12-xbox-sparse-symbol-post-anchors-us-retail\` (exact isolated project; restored semantic readback passed) |

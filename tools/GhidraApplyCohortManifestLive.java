@@ -229,6 +229,7 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
         "abi-two-witness-arity36",
         "name-cohort5-runtime-witnessed",
         "vftable-cohort65",
+        "varargs-cohort2",
     };
 
     // Reversibility strings.  These are the ONLY reversibility claims any

@@ -110,12 +110,16 @@ REQUIRED_LIVE_PROJECT_DIR = r"c:\users\david\ghidra\projects\bea.rep"
 # measured pre/post pins. vftable-cohort65 is granted 2026-08-17 after the full
 # rehearsal on a db.18626 replica: dry/apply/readback all PASS (65 RTTI vftable
 # slots typed, 0 function rows changed, 65 symbols added, memory digest frozen).
+# varargs-cohort2 is granted 2026-08-18 after the full rehearsal on a db.18627
+# replica: census/identity/dry/apply/readback all PASS (2 rows, 8327 untouched,
+# columnsMoved={signatureShape=2, varArgs=2}).
 LIVE_GRANTED_COHORTS = [
     "boundary-cohort41", "name-cohort160", "abi-cohort294",
     "tentacle-chain-a", "tentacle-chain-b",
     "abi-two-witness-arity36",
     "name-cohort5-runtime-witnessed",
     "vftable-cohort65",
+    "varargs-cohort2",
 ]
 PROGRAM_SHA256 = (
     "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
@@ -520,6 +524,7 @@ LIVE_ALLOWLISTED_EDITS: list[tuple[str, str, str]] = [
         '        "abi-two-witness-arity36",\n'
         '        "name-cohort5-runtime-witnessed",\n'
         '        "vftable-cohort65",\n'
+        '        "varargs-cohort2",\n'
         "    };\n",
     ),
     (
@@ -685,7 +690,7 @@ class FrameworkDerivationTests(unittest.TestCase):
         derivation = "".join(after for _r, _b, after in LIVE_ALLOWLISTED_EDITS)
         for cohort in LIVE_GRANTED_COHORTS:
             self.assertIn(f'"{cohort}"', derivation)
-        for rehearsed_only in ("varargs-cohort2",):
+        for rehearsed_only in ():
             self.assertNotIn(rehearsed_only, self.live,
                              "a rehearsed cohort is not an authorization")
 

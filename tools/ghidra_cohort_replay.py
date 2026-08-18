@@ -148,29 +148,31 @@ COHORTS: dict[str, dict] = {
 SANDBOX_BACKUP = BACKUPS / "2026-08-17-abi-signature-cohort294-post-live"
 
 # ---------------------------------------------------------------------------
-# REHEARSAL-ONLY cohorts.  These have NOT been promoted: the entry exists so the
-# ceremony modes can be run against a replica and graded, and nothing here is a
-# live authorization (the live twin's compiled allowlist is the only one).
+# Completed cohorts that started as rehearsal-only and were later promoted.
+# varargs-cohort2 was rehearsed 2026-08-17 against db.18623 and promoted
+# 2026-08-18 against a fresh db.18627 PRE. The live twin's compiled allowlist
+# is still the only live authorization.
 REHEARSAL_COHORTS: dict[str, dict] = {
     "varargs-cohort2": {
-        # PRE is the newest verified off-volume backup at the time of rehearsal.
-        # A live ceremony must take its own fresh PRE backup and re-pin: the
-        # tentacle chain advanced live past this state on the same day.
-        "backup": BACKUPS / "2026-08-17-tentacle-chain-a-post-live",   # db.18623
+        # PRE is the verified off-volume backup taken immediately before the
+        # 2026-08-18 live apply (db.18627). Replay against that PRE, not the
+        # older tentacle-chain snapshot.
+        "backup": BACKUPS / "2026-08-18-varargs-cohort2-pre-live",   # db.18627
         "spec": SPECS / "varargs-cohort2.spec.tsv",
         "manifest": (REPO / "reverse-engineering" / "binary-analysis"
                      / "varargs-cohort2-promotion-manifest-2026-08-17.tsv"),
-        "rehearsalOnly": True,
+        "rehearsalOnly": False,
         "archived": {
-            "source": "REHEARSAL ONLY - no completed ceremony to compare to",
+            "source": "local-lab/varargs-cohort2-ceremony-2026-08-18/"
+                      "{apply,readback}.json (live, 2026-08-18)",
             "rows": 2,
             "applied": 2,
             "preFunctions": 8329, "postFunctions": 8329,
             "preInstructions": 551232, "postInstructions": 551232,
-            "preReferences": 234493, "postReferences": 234493,
+            "preReferences": 234558, "postReferences": 234558,
             "preBookmarks": 2301, "postBookmarks": 2301,
-            "preDefinedData": 48583, "postDefinedData": 48583,
-            "preUndefinedData": 3907629, "postUndefinedData": 3907629,
+            "preDefinedData": 48648, "postDefinedData": 48648,
+            "preUndefinedData": 3907369, "postUndefinedData": 3907369,
         },
     },
 }
