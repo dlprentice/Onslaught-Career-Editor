@@ -508,6 +508,11 @@
                                              AutomationProperties.AutomationId="SaveEditorInputFile"
                                              Header="Input save"
                                              TextChanged="EditorPathTextBox_TextChanged" />
+                                    <TextBlock x:Name="EditorInputLocationTextBlock"
+                                               AutomationProperties.AutomationId="SaveEditorInputLocation"
+                                               Style="{StaticResource SectionBodyTextStyle}"
+                                               TextWrapping="WrapWholeWords"
+                                               Visibility="Collapsed" />
                                     <TextBox x:Name="EditorOutputFileTextBox"
                                              AutomationProperties.AutomationId="SaveEditorOutputFile"
                                              Header="Output save"

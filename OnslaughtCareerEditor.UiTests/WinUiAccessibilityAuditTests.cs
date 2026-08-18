@@ -83,6 +83,7 @@ public class WinUiAccessibilityAuditTests
                 "SaveAnalyzerFilePath",
                 "SaveAnalyzerAnalyzeButton",
                 "SaveEditorInputFile",
+                "SaveEditorInputLocation",
                 "SaveEditorOutputFile",
                 "SaveEditorPatchButton",
                 "SaveEditorOutputLog",

@@ -15,7 +15,9 @@ live in `developer_state.json` and the campaign ledgers.
   is disclosed as carrying those changes. If the file cannot be read, the app
   says so instead of pretending it was changed. Windowed & Mods uses the same
   distinction: a locked executable is not described as already patched. Auto-Detect
-  failure is shown on Settings, not only in the status bar.
+  failure is shown on Settings, not only in the status bar. Save Lab names whether
+  the opened career save sits in the installed game, a playable copy, or a folder
+  the player chose.
 
 ## 1.0.11 — 2026-08-07
 

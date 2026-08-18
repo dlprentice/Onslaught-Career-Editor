@@ -1294,6 +1294,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             if (inputPath.Length == 0)
             {
                 _editorInputValid = false;
+                ClearEditorInputLocation();
                 UpdateEditorActionState();
                 return;
             }
@@ -1301,8 +1302,24 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             _editorInputValid = File.Exists(inputPath)
                 && !SaveEditorService.IsOptionsLikeFilePath(inputPath)
                 && BesFilePatcher.IsValidBesFile(inputPath);
-
+            RenderEditorInputLocation(inputPath);
             UpdateEditorActionState();
+        }
+
+        private void RenderEditorInputLocation(string inputPath)
+        {
+            CareerSaveLocationKind kind = CareerSaveLocation.Classify(inputPath);
+            string line = CareerSaveLocationText.Describe(kind, inputPath);
+            EditorInputLocationTextBlock.Text = line;
+            EditorInputLocationTextBlock.Visibility = string.IsNullOrWhiteSpace(line)
+                ? Visibility.Collapsed
+                : Visibility.Visible;
+        }
+
+        private void ClearEditorInputLocation()
+        {
+            EditorInputLocationTextBlock.Text = string.Empty;
+            EditorInputLocationTextBlock.Visibility = Visibility.Collapsed;
         }
 
         private SavePatchRequest BuildEditorRequest(out string? advancedError)
