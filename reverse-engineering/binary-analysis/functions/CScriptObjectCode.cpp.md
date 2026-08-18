@@ -1,7 +1,7 @@
 # CScriptObjectCode function map
 
 Status: active static function map
-Last updated: 2026-08-18 (arrived/timer bind; 994 named entries are JMPFALSE)
+Last updated: 2026-08-18 (CComplexThing attach fires init/ready/died/shutdown)
 Source File: `C:\dev\ONSLAUGHT2\MissionScript\ScriptObjectCode.cpp` (the
 VM's `__FILE__` chain is established by the adjacent
 [`ScriptObjectCode.cpp.md`](ScriptObjectCode.cpp.md) wave receipts) | Binary:
@@ -50,6 +50,7 @@ pointer used for its allocations is `0x00650040` =
 | `+0x5c` | preamble-present dword (serialized) | ctor `lea eax,[esi+0x5c]; push 4; push eax; call 0x00548570` at `0x00539011`; `CallEvent` runs PC=0 iff this is nonzero and `+0x6c == 0` |
 | `+0x60` | per-step trace dword (serialized) | ctor `lea edx,[esi+0x60]; push 4; push edx; call 0x00548570` at `0x00539004`; `Run` does `cmp dword [obj+0x60],1` at `0x00539ba4` |
 | `+0x64` | instruction-count copy | ctor `mov ecx,[esi+0xc]; mov [esi+0x64],ecx` at `0x0053901e` |
+| `+0x68` | owning `IScript*` | `IScript__Constructor` writes `mov [eventObj+0x68],this` at `0x005333f9`. Not a ctor-serialized field |
 | `+0x6c` | preamble-already-run flag | ctor zeroes it (`mov [esi+0x6c],ebp` with `ebp=0` at `0x00538f1a`); `CallEvent`/`CallEventDirect` write `1` after the PC=0 preamble |
 
 `CScriptObjectCode__Clone` copies the four trailer dwords on the success
@@ -337,6 +338,17 @@ native. Top shipped first-natives (parser `natives.json`, native 0
 `PlayCharMessageWait` 59, `Print` 47, `PlayCharMessage` 32,
 `SetAIState` 26, `GetThingRef` 25. This is occupancy, not a claim
 that those natives are the authored purpose of the event.
+
+Thing-side fire of the 13-slot ids (not IScript `HandleMessage`)
+is owned by [`CComplexThing.cpp.md`](CComplexThing.cpp.md):
+`SetScript` → thing-event 2001 → `CallEvent(id=0)` + register
+`+0x48` names; non-unit things then get thing-event 2003 →
+`CallEvent(id=6)`. `AddShutdownEvent` → `CallEvent(id=3)` then
+deletes the IScript and schedules thing-event 2000 →
+`CallEvent(id=7)` only if `+0x74` is still live (it is not, on
+that path). `Hit` → `CallEvent(id=4)`. `StartDieProcess` on this
+class cannot reach `CallEvent(id=5)` because it calls
+`AddShutdownEvent` first.
 
 733 loose `MissionScripts/**/*.msl` contain zero `arrived(`, `timer(`,
 `SetTimer(`, `event("arrived"`, or `event("timer"`.

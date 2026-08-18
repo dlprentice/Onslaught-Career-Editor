@@ -1,7 +1,7 @@
 # IScript function map
 
 Status: active static function map
-Last updated: 2026-08-18 (arrived/timer fire sites; EGameState; VM+0x210)
+Last updated: 2026-08-18 (CComplexThing attach: 2001=init, 2003=ready)
 Source File: `C:\dev\ONSLAUGHT2\MissionScript\IScript.cpp` (SEH `__FILE__`
 pointer `0x0064fa40` read out of `IScript__PostEvent`) | Binary: BEA.exe,
 SHA-256
@@ -176,9 +176,13 @@ db.18627.
   (`CInt`), value **0** in 13 and **1** in 6. Authored name of the
   flag is still open. All 762 13-slot IPs are `-1`; 0 listen-string
   `arrived`.
-- Nested-listener registration. CLOSED as the tail of
-  `IScript__CallEvent0AndRegisterNestedListeners` (`0x00533500`): after
-  `CallEvent(id=0)` it walks `eventObj+0x48` and
-  `RegisterEventListener`s each name wrapper. Only `E8` is
-  `CComplexThing__HandleEvent` `0x004f4359` (thing message 2001 when
-  `[thing+0x74]` is set).
+- Nested-listener registration / thing attach. CLOSED. `+0x74` is
+  `mMissionScript`. `CComplexThing__SetScript` (`0x004f4230`) clones the
+  named object, constructs this IScript (`0x005333b0`, only `E8`), stores
+  it at `+0x74`, and `AddEvent_AtTime(INIT_SCRIPT=2001, thing, NEXT_FRAME)`.
+  `HandleEvent` 2001 (only `E8` to `0x00533500`) runs `Init` then, unless
+  `mThingType & 0x10` (`THING_TYPE_UNIT`), schedules `READY_SCRIPT=2003`.
+  2003 is the only `E8` to `IScript__CallEventId6_OrReset`. Thing 2000
+  is `SHUTDOWN` (`[IScript.vtable+8]` = `IScript__VFunc_2_00533810`,
+  id 7). See [`CComplexThing.cpp.md`](CComplexThing.cpp.md). The IScript
+  `HandleMessage` 2000/2001/2002 arms are a different receiver.
