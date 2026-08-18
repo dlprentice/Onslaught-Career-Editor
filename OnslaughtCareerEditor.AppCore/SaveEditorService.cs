@@ -109,7 +109,7 @@ namespace OnslaughtCareerEditor.AppCore
             catch (Exception ex) when (ex is ArgumentException or IOException or NotSupportedException
                                         or UnauthorizedAccessException or System.Security.SecurityException)
             {
-                return $"That path could not be read: {ex.Message}";
+                return "That career save could not be read.";
             }
 
             if (!info.Exists)
@@ -142,7 +142,7 @@ namespace OnslaughtCareerEditor.AppCore
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException
                                         or System.Security.SecurityException)
             {
-                return $"That file could not be opened: {ex.Message}";
+                return "That file could not be opened.";
             }
 
             return null;

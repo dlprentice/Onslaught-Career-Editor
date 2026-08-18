@@ -34,10 +34,12 @@ live in `developer_state.json` and the campaign ledgers.
   Options overwrite confirmation names the file, not the full path, and leaves
   the existing file alone if the player cancels. Save Lab overwrite
   confirmation names the file, not the folder. Windowed & Mods create-copy
-  and launch confirmations name the folder, not the full path. An Asset
-  Library search with no hits now says to try another word or clear the
-  search. Settings names a folder that could not be kept and puts the
-  previous folder back, instead of leaving the new path looking saved.
+  and launch confirmations name the folder, not the full path. A Cheats write
+  that fails no longer dumps the exception, and an unreadable career path is
+  named the same way. An Asset Library search with no hits now says to try
+  another word or clear the search. Settings names a folder that could not be
+  kept and puts the previous folder back, instead of leaving the new path
+  looking saved.
 
 ## 1.0.11 — 2026-08-07
 

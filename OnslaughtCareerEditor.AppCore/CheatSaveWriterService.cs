@@ -54,6 +54,8 @@ namespace OnslaughtCareerEditor.AppCore
     /// </summary>
     public static class CheatSaveWriterService
     {
+        public const string WriteFailed = "Could not write that save. Nothing was changed.";
+
         private const string ProfileManifestFileName = "onslaught-profile-manifest.json";
         private const string SavegamesFolderName = "savegames";
 
@@ -241,7 +243,7 @@ namespace OnslaughtCareerEditor.AppCore
                                         or NotSupportedException or UnauthorizedAccessException
                                         or System.Text.Json.JsonException)
             {
-                return new CheatSaveWriteOutcome(false, ex.Message, null);
+                return new CheatSaveWriteOutcome(false, WriteFailed, null);
             }
         }
 

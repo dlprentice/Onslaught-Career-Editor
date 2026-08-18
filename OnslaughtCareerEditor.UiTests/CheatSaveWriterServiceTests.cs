@@ -162,6 +162,19 @@ public class CheatSaveWriterServiceTests
     }
 
     [Test]
+    public void AFailedWriteDoesNotDumpTheExceptionOrAPath()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "CheatSaveWriterService.cs"));
+
+        Assert.That(source, Does.Contain("WriteFailed"));
+        Assert.That(source, Does.Not.Contain("ex.Message"));
+        Assert.That(CheatSaveWriterService.WriteFailed, Does.Contain("Nothing was changed"));
+        Assert.That(CheatSaveWriterService.WriteFailed, Does.Not.Contain(":\\"));
+        Assert.That(CheatSaveWriterService.WriteFailed.ToLowerInvariant(), Does.Not.Contain("exception"));
+    }
+
+    [Test]
     public void SafeCopyDiscoveryIsTotal_AndNeverThrowsWhenThereAreNone()
     {
         Assert.DoesNotThrow(() => _ = CheatSaveWriterService.FindSafeCopyTargets());

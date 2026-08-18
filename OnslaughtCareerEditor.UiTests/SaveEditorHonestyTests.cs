@@ -223,6 +223,18 @@ public class SaveEditorHonestyTests
         }
     }
 
+    [Test]
+    public void AnUnreadableCareerPathDoesNotDumpTheException()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "SaveEditorService.cs"));
+
+        Assert.That(source, Does.Contain("That career save could not be read."));
+        Assert.That(source, Does.Contain("That file could not be opened."));
+        Assert.That(source, Does.Not.Contain("That path could not be read:"));
+        Assert.That(source, Does.Not.Contain("That file could not be opened:"));
+    }
+
     // --------------------------------------------- output-safety claim
 
     [Test]
