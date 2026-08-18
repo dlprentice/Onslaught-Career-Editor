@@ -469,8 +469,10 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 if (File.Exists(request.OutputPath) &&
                     !await ConfirmAsync(
                         "Overwrite output file?",
-                        $"The output file already exists:\n{request.OutputPath}\n\nOverwrite it?"))
+                        SaveLabPageText.BuildOverwriteQuestion(request.OutputPath)))
                 {
+                    ConfigurationOutputTextBox.Text = SaveLabPageText.OverwriteCanceled;
+                    ConfigurationCopyOutputButton.IsEnabled = true;
                     AppStatusService.SetStatus("Game Options: overwrite canceled");
                     return;
                 }

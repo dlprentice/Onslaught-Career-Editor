@@ -42,5 +42,23 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
                 ? CareerSaveLocation.InstalledDestinationRefused
                 : null;
         }
+
+        public const string OverwriteCanceled =
+            "That file was left as it is. Nothing was changed.";
+
+        /// <summary>
+        /// Same question Cheats already asks. The leaf name is enough; a full
+        /// path does not belong in the confirmation.
+        /// </summary>
+        public static string BuildOverwriteQuestion(string? outputPath)
+        {
+            string fileName = Path.GetFileName((outputPath ?? string.Empty).Trim());
+            if (string.IsNullOrWhiteSpace(fileName))
+            {
+                fileName = "That file";
+            }
+
+            return CheatsPageText.BuildOverwriteQuestion(fileName);
+        }
     }
 }

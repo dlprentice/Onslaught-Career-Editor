@@ -62,7 +62,45 @@ public class SaveLabPageHonestyTests
         Assert.That(options, Does.Contain("SaveLabPageText.InputNotReady"));
         Assert.That(options, Does.Contain("SaveLabPageText.PatchFailed"));
         Assert.That(options, Does.Contain("SaveLabPageText.DescribeOutputRefusal"));
+        Assert.That(options, Does.Contain("SaveLabPageText.BuildOverwriteQuestion"));
+        Assert.That(options, Does.Contain("SaveLabPageText.OverwriteCanceled"));
         Assert.That(options, Does.Not.Contain("ex.Message"));
+        Assert.That(options, Does.Not.Contain("{request.OutputPath}"));
+    }
+
+    [Test]
+    public void OverwriteQuestionNamesTheFileNotThePath()
+    {
+        string path = Path.Combine(
+            "C:" + Path.DirectorySeparatorChar + "Users",
+            "player",
+            "Documents",
+            "defaultoptions.bea");
+        string question = SaveLabPageText.BuildOverwriteQuestion(path);
+
+        Assert.That(question, Does.Contain("defaultoptions.bea"));
+        Assert.That(question, Does.Contain("cannot be undone"));
+        Assert.That(question, Does.Not.Contain(path));
+        Assert.That(question, Does.Not.Contain(":\\"));
+        Assert.That(question, Does.Not.Contain("/"));
+        Assert.That(SaveLabPageText.OverwriteCanceled, Does.Contain("Nothing was changed"));
+        Assert.That(SaveLabPageText.OverwriteCanceled, Does.Not.Contain(":\\"));
+    }
+
+    [Test]
+    public void GameOptionsAsksBeforeItPatchesAndLeavesTheFileAloneOnCancel()
+    {
+        string options = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI", "Pages", "SavesPage.Configuration.cs"));
+
+        int confirm = options.IndexOf("SaveLabPageText.BuildOverwriteQuestion", StringComparison.Ordinal);
+        int patch = options.IndexOf("ConfigurationEditorService.PatchConfiguration", StringComparison.Ordinal);
+        int canceled = options.IndexOf("SaveLabPageText.OverwriteCanceled", StringComparison.Ordinal);
+
+        Assert.That(confirm, Is.GreaterThanOrEqualTo(0));
+        Assert.That(patch, Is.GreaterThan(confirm));
+        Assert.That(canceled, Is.GreaterThan(confirm));
+        Assert.That(canceled, Is.LessThan(patch));
     }
 
     [Test]
