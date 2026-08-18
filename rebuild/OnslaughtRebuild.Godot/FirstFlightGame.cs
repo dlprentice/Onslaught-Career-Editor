@@ -43,6 +43,7 @@ public sealed partial class FirstFlightGame : Node3D
     private bool _skipStartupMedia;
     private bool _forceStartupMedia;
     private RetailStartupSequence? _startupSequence;
+    private double _clickToStartPageSeconds;
     private bool _smokeCompleting;
     private bool _windowHasFocus;
     private bool _focusLossHandlerInputCleared;
@@ -164,6 +165,7 @@ public sealed partial class FirstFlightGame : Node3D
 
         if (!_gameplayActive)
         {
+            AdvanceAttractIdle(delta);
             return;
         }
 
@@ -1336,6 +1338,82 @@ public sealed partial class FirstFlightGame : Node3D
         _frontend?.ResumeAfterStartupMedia();
         _startupSequence?.QueueFree();
         _startupSequence = null;
+        _clickToStartPageSeconds = 0d;
+    }
+
+    /// <summary>
+    /// <c>CLTShell::RunFrontEndAndGameLoop</c> attract restart. After
+    /// click-to-start writes <c>-3</c>, the shell replays <c>ltlogo</c> /
+    /// <c>openingfmv</c> and <c>Init(FEE_FROM_ATTRACT)</c> lands on
+    /// <c>FEP_INTRO</c> again. See <see cref="RetailAttractLoop"/>.
+    ///
+    /// <para>Smoke and capture stay off this path: those plans are
+    /// frame-counted and assume the page does not leave for ninety seconds of
+    /// movies. That suppression is ours, not retail's. No fade is drawn.</para>
+    /// </summary>
+    private void AdvanceAttractIdle(double delta)
+    {
+        if (_startupSequence is not null || _frontend is null)
+        {
+            return;
+        }
+
+        if (_smokeMode || _captureMode || _captureArgumentsPresent)
+        {
+            return;
+        }
+
+        if (_frontend.CurrentScreen != RetailFrontendScreen.ClickToStart)
+        {
+            _clickToStartPageSeconds = 0d;
+            return;
+        }
+
+        _clickToStartPageSeconds += Math.Max(0d, delta);
+        if (!RetailAttractLoop.ShouldRestartAttract(_clickToStartPageSeconds))
+        {
+            return;
+        }
+
+        _clickToStartPageSeconds = 0d;
+        StartAttractRestartMedia();
+    }
+
+    private void StartAttractRestartMedia()
+    {
+        if (_startupSequence is not null)
+        {
+            return;
+        }
+
+        if (_skipStartupMedia && !_forceStartupMedia)
+        {
+            // -skipfmv is retail's cold-start/level-intro gate. Whether it also
+            // swallows this loop's CFMV calls is unmeasured; do not invent a
+            // black re-init of FEP_INTRO with no movies.
+            return;
+        }
+
+        var sequence = new RetailStartupSequence { Name = "RetailAttractRestart" };
+        sequence.InitializeForAttract(
+            RetailStartupSequence.ResolveMediaRoot(OS.GetCmdlineUserArgs()),
+            _captureArgumentsPresent
+                ? RetailStartupClockMode.FixedTick
+                : RetailStartupClockMode.Wall);
+
+        if (sequence.ScheduledSeconds <= 0d)
+        {
+            sequence.QueueFree();
+            return;
+        }
+
+        RetailFrontendFlow frontend = _frontend ??
+            throw new InvalidOperationException(
+                "Attract restart needs the frontend to already exist.");
+        frontend.SuspendForStartupMedia();
+        sequence.Completed += FinishRetailStartupMedia;
+        _startupSequence = sequence;
+        AddChild(sequence);
     }
 
     private void StartFrontendMusicAfterStartupMedia()

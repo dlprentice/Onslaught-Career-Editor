@@ -52,6 +52,8 @@
              Link="godot-startup-source\RetailClickToStartPrompt.cs" />
     <Compile Include="..\OnslaughtRebuild.Godot\RetailClickToStartTitle.cs"
              Link="godot-startup-source\RetailClickToStartTitle.cs" />
+    <Compile Include="..\OnslaughtRebuild.Godot\RetailAttractLoop.cs"
+             Link="godot-startup-source\RetailAttractLoop.cs" />
     <Compile Include="..\OnslaughtRebuild.Godot\RetailFeMessBox.cs"
              Link="godot-startup-source\RetailFeMessBox.cs" />
   </ItemGroup>
@@ -78,6 +80,9 @@
              CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\OnslaughtRebuild.Godot\RetailFrontendFlow.cs"
              Link="godot-pause-source\RetailFrontendFlow.cs"
+             CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\OnslaughtRebuild.Godot\RetailStartupSequence.cs"
+             Link="godot-pause-source\RetailStartupSequence.cs"
              CopyToOutputDirectory="PreserveNewest" />
     <!-- FEP_OPTIONS lives in a partial. RetailFrontendPageFillEvidenceTests has
          to see its page renderer too, because the "the frontend is showing the

@@ -501,11 +501,48 @@ public sealed class RetailStartupSchedule
         return new RetailStartupSchedule(cue, clips);
     }
 
+    /// <summary>
+    /// Attract restart: <c>Play("ltlogo")</c> then <c>Play("openingfmv")</c>.
+    /// No splash beat, no publisher, no TWIMTBP. See
+    /// <see cref="RetailAttractLoop"/>.
+    /// </summary>
+    public static RetailStartupSchedule ForAttractRestart(
+        IReadOnlyDictionary<RetailStartupCue, RetailStartupClip> clips)
+    {
+        ArgumentNullException.ThrowIfNull(clips);
+        return new RetailStartupSchedule(clips, new AttractRestartMark());
+    }
+
     private RetailStartupSchedule(
         RetailStartupCue cue,
         IReadOnlyDictionary<RetailStartupCue, RetailStartupClip> clips)
     {
         TotalSeconds = AppendVideo(cue, clips, 0d);
+    }
+
+    private readonly struct AttractRestartMark
+    {
+    }
+
+    private RetailStartupSchedule(
+        IReadOnlyDictionary<RetailStartupCue, RetailStartupClip> clips,
+        AttractRestartMark _)
+    {
+        ArgumentNullException.ThrowIfNull(clips);
+
+        double cursor = 0d;
+        cursor = AppendVideo(RetailStartupCue.LostToysLogo, clips, cursor);
+        if (clips.ContainsKey(RetailStartupCue.LostToysLogo) &&
+            clips.ContainsKey(RetailStartupCue.OpeningMontage))
+        {
+            _beats.Add(new Beat(
+                RetailStartupFrameKind.Black, null, cursor, InterClipBlackSeconds,
+                false, 0d, 0));
+            cursor += InterClipBlackSeconds;
+        }
+
+        cursor = AppendVideo(RetailStartupCue.OpeningMontage, clips, cursor);
+        TotalSeconds = cursor;
     }
 
     /// <summary>Total length of the sequence, in seconds of injected time.</summary>

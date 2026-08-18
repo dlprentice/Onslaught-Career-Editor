@@ -181,6 +181,19 @@ public sealed partial class RetailStartupSequence : Control
         _initialized = true;
     }
 
+    /// <summary>
+    /// Attract restart: <c>ltlogo</c> then <c>openingfmv</c>, then the host
+    /// re-enters click-to-start. No splash beat. See
+    /// <see cref="RetailAttractLoop"/>.
+    /// </summary>
+    public void InitializeForAttract(string mediaRoot, RetailStartupClockMode clock)
+    {
+        BeginInitialize(clock);
+        _media = RetailStartupMediaIndex.Load(mediaRoot, File.Exists);
+        _schedule = RetailStartupSchedule.ForAttractRestart(_media.Clips);
+        _initialized = true;
+    }
+
     private void BeginInitialize(RetailStartupClockMode clock)
     {
         if (_initialized)

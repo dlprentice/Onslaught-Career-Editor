@@ -37,10 +37,8 @@ namespace OnslaughtRebuild.GodotClient;
 /// strictly greater than <c>30.0f</c> at <c>0x005DB1E4</c>, Process writes
 /// <c>-3</c> to the frontend quit/result global <c>0x008A956C</c>
 /// (<c>fsub [this+4]; fcomp [30.0f]; test ah,0x41 / jnz skip</c> then
-/// <c>mov [0x008A956C], -3</c> at <c>0x0051B731</c>). That is the cheapest
-/// account of the measured t=32 s click-to-start fade-to-black
-/// (<c>local-lab/STARTUP-FLOW-FINDINGS-2026-07-25.md</c>). The consumer of
-/// <c>-3</c> is not claimed here and must not be faked as a black frame.</para>
+/// <c>mov [0x008A956C], -3</c> at <c>0x0051B731</c>). The consumer is
+/// <see cref="RetailAttractLoop"/> — not a CFEPIntro fade.</para>
 ///
 /// <para>No Godot types. The capture rig suppresses this page's timing the
 /// same way retail's <c>-skipfmv</c> does, so these numbers have to stand on
