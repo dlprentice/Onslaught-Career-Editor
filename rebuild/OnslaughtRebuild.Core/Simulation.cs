@@ -163,6 +163,13 @@ public sealed class Simulation
         _level100PlayerWeapons.PulseCannonChargeBits;
 
     /// <summary>
+    /// Core's stand-in for <c>DAT_00672FD0</c>: seconds at the current tick,
+    /// after <see cref="Step"/> has already incremented <c>_tick</c>.
+    /// </summary>
+    private float EngineTimeSeconds =>
+        (float)((double)_tick / SimulationConstants.TicksPerSecond);
+
+    /// <summary>
     /// Causal-probe seam for one terrain touchdown. It places the released
     /// Level 100 player in an airborne walker pose; the next normal
     /// <see cref="Step"/> still owns gravity, terrain sampling, contact,
@@ -3490,6 +3497,7 @@ public sealed class Simulation
 
             _energy -= SimulationConstants.FireEnergyCost;
             _fireCooldownTicksRemaining = SimulationConstants.PulseCannonReloadTicks;
+            _level100PlayerWeapons.StampPulseReadyAt(EngineTimeSeconds);
             // `Mech Pulse Cannon Charged` carries no CWeaponVolleySize node, so
             // it takes the shipped default of 1 and one release is one round.
             EmitWeaponFireEvent(Level100PlayerWeapon.PulseCannonPod, 1);
@@ -3556,9 +3564,9 @@ public sealed class Simulation
             return;
         }
 
-        // Row 10 of the shipped table, before Fire (row 11). The increment
-        // arm is Charge(); ReadyToCharge / store spend stay open.
-        _level100PlayerWeapons.AdvanceCharge(_mode, _transition);
+        // Row 10 of the shipped table, before Fire (row 11). ReadyToCharge
+        // at 0x0050A080 refuses the increment until now > last fire + reload.
+        _level100PlayerWeapons.AdvanceCharge(_mode, _transition, EngineTimeSeconds);
     }
 
     private void TryChangeWeapon(SimInput input)

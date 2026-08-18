@@ -7,8 +7,10 @@ namespace OnslaughtRebuild.Core.Tests;
 /// <summary>
 /// The Level 100 Pulse Cannon Pod's authored charge table, joined to
 /// <see cref="RetailWeaponCharge.Charge"/> so a player holding
-/// <c>BUTTON_MECH_CHARGE_GUN_POD</c> advances that table. ReadyToCharge,
-/// store spend, and charge-level-1 fire remain the next ChargeWeapon arms.
+/// <c>BUTTON_MECH_CHARGE_GUN_POD</c> advances that table. After Fire,
+/// <see cref="RetailWeaponCharge.ReadyToCharge"/> keeps Charge blocked
+/// until <c>CWeaponReloadTime</c> 0.1 s has strictly elapsed. Store spend
+/// and charge-level-1 fire remain the next ChargeWeapon arms.
 /// </summary>
 /// <remarks>
 /// Every scalar is a dword out of
@@ -43,6 +45,11 @@ public sealed class Level100PulseCannonChargeTests
         Assert.Equal(
             0x00000000u,
             BitConverter.SingleToUInt32Bits(RetailWeaponCharge.GetCharge(pod)));
+        Assert.True(RetailWeaponCharge.ReadyToCharge(pod, 1.0f));
+        Assert.Equal(0x3DCCCCCDu, Level100PulseCannonCharge.ReloadTimeBits);
+        Assert.Equal(
+            Level100PulseCannonCharge.ReloadTime,
+            BitConverter.UInt32BitsToSingle(Level100PulseCannonCharge.ReloadTimeBits));
     }
 
     /// <summary>

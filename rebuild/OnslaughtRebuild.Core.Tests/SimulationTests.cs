@@ -1525,6 +1525,36 @@ public sealed class SimulationTests
     }
 
     [Fact]
+    public void AfterPulseFire_ChargeWaitsUntilReloadStrictlyElapses()
+    {
+        Simulation simulation = CreateFiringRangeExerciseSimulation();
+        var charge = new SimInput(0, 0, SimActions.ChargeWeapon);
+        charge.Validate();
+
+        WorldSnapshot fired = simulation.Step(new SimInput(0, 0, SimActions.Fire));
+        Assert.Equal(
+            Level100PlayerWeapon.PulseCannonPod,
+            Assert.Single(fired.Level100WeaponFireEvents).Weapon);
+        Assert.Equal(SimulationConstants.PulseCannonReloadTicks, fired.FireCooldownTicksRemaining);
+        Assert.Equal(0x00000000u, simulation.Level100PulseCannonChargeBits);
+
+        // ReadyToCharge at 0x0050A080 is `now > weapon+0x64` (`test ah, 0x41`
+        // / jz). Fire stamps +0x64 = now + CWeaponReloadTime 0.1 s, so the
+        // equality tick (exactly 0.1 s / two 20 Hz updates later) is still
+        // blocked. Fire itself is already allowed on that tick; Charge is not.
+        simulation.Step(charge);
+        Assert.Equal(0x00000000u, simulation.Level100PulseCannonChargeBits);
+        Assert.Equal(1, simulation.Snapshot.FireCooldownTicksRemaining);
+
+        simulation.Step(charge);
+        Assert.Equal(0x00000000u, simulation.Level100PulseCannonChargeBits);
+        Assert.Equal(0, simulation.Snapshot.FireCooldownTicksRemaining);
+
+        simulation.Step(charge);
+        Assert.Equal(0x41200000u, simulation.Level100PulseCannonChargeBits);
+    }
+
+    [Fact]
     public void SnapshotCollections_DoNotExposeMutableArrays()
     {
         Simulation simulation = CreatePlayingSimulation();

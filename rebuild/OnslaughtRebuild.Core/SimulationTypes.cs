@@ -248,7 +248,8 @@ public enum SimActions : ushort
     /// <c>BUTTON_MECH_CHARGE_GUN_POD</c> <c>0x13</c>, shipped row 10
     /// (<c>active=1</c>, mouse device <c>0x0f</c>). Held samples advance the
     /// current chargable walker weapon via
-    /// <see cref="RetailWeaponCharge.Charge"/>. ReadyToCharge, store spend,
+    /// <see cref="RetailWeaponCharge.Charge"/> once
+    /// <see cref="RetailWeaponCharge.ReadyToCharge"/> is true. Store spend,
     /// overheat-to-fire, and charge-level-1 round select remain open.
     /// </summary>
     ChargeWeapon = 1 << 5,

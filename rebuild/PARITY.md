@@ -1,7 +1,7 @@
 # Rebuild parity contract
 
 Status: active — what "1:1 behavioral and experiential parity" means operationally
-Last updated: 2026-08-18 (Level 100 Pulse Cannon charge increment).
+Last updated: 2026-08-18 (Level 100 Pulse Cannon ReadyToCharge).
 Evidence: SOURCE — authority order and the three known divergences are
 recorded in `PROVENANCE.md`; gate capabilities are MEASURED claims of the
 tracked harnesses named in the table. Every row of *Carried retail contracts*
@@ -94,7 +94,10 @@ simulation and replay path** — measured, by searching `Simulation.cs`,
 `ReplayRunner.cs`, `CommandTape.cs`, `StateHasher.cs` and every `Level100*.cs`
 for the owner types: `Simulation.JetFrictionNumerator` is wired, and
 `RetailWeaponCharge.Charge` is now reached from `Simulation.TryChargeWeapon`
-when the player holds `SimActions.ChargeWeapon` on the Pulse Cannon Pod. Charge
+when the player holds `SimActions.ChargeWeapon` on the Pulse Cannon Pod, and
+`RetailWeaponCharge.ReadyToCharge` (`0x0050A080`, `test ah,0x41`) blocks that
+increment until engine time is strictly greater than the Fire-stamped
+`now + CWeaponReloadTime` (0.1 s on `Mech Pulse Cannon Charged`). Charge
 is not in `StateHasher` because it does not yet change fire, movement, or any
 other hashed field. So no cold-start or full-chain trace can reach the other
 fifteen, and the focused test is the only falsifier they have. That is exactly
@@ -102,7 +105,8 @@ the precedent the jet-friction row set: a green replay suite there was
 *vacuous* with respect to the constant it was supposed to guard, because the
 jet throttle caps below the gate's band. The seventeenth row's mutation kill
 was measured on 2026-08-18 in this worktree; it is not one of the 17 files
-under `local-lab/rebuild-parity-mutation-kills-2026-08-17/`.
+under `local-lab/rebuild-parity-mutation-kills-2026-08-17/`. ReadyToCharge is
+pinned by `SimulationTests.AfterPulseFire_ChargeWaitsUntilReloadStrictlyElapses`.
 
 ## Parity dimensions and their gates
 
