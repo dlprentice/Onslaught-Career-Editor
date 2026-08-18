@@ -284,6 +284,33 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             Assert.False(File.Exists(Path.Combine(keep, "Unwanted.bes")));
         }
 
+        [Fact]
+        public void Rescue_RefusesAnInstalledGameFolderAndDoesNotCreateOne()
+        {
+            using var lab = new SafeCopyLab();
+            string copy = lab.CreateCopy("copy-installed");
+            string source = lab.WriteSave(copy, Path.Combine("savegames", "Maladim.bes"));
+            string game = lab.CreateInstalledGame("steam-game");
+            string savegames = Path.Combine(game, "savegames");
+            string wouldCreate = Path.Combine(game, "kept-from-copy");
+
+            SafeCopySaveRescueResult existing = SafeCopySaveRescueService.Rescue(
+                new SafeCopySaveRescueRequest { ProfileRoot = copy, DestinationDirectory = savegames },
+                lab.ProfilesRoot);
+            SafeCopySaveRescueResult missing = SafeCopySaveRescueService.Rescue(
+                new SafeCopySaveRescueRequest { ProfileRoot = copy, DestinationDirectory = wouldCreate },
+                lab.ProfilesRoot);
+
+            Assert.False(existing.Success);
+            Assert.Equal(CareerSaveLocation.InstalledDestinationRefused, existing.Message);
+            Assert.False(File.Exists(Path.Combine(savegames, "Maladim.bes")));
+            Assert.True(File.Exists(source));
+
+            Assert.False(missing.Success);
+            Assert.Equal(CareerSaveLocation.InstalledDestinationRefused, missing.Message);
+            Assert.False(Directory.Exists(wouldCreate));
+        }
+
         // ---------------------------------------------------- rescue then delete
 
         [Fact]
@@ -401,6 +428,15 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                     Path.Combine(copy, GameProfilePreflightService.ProfileManifestFileName),
                     "{\"schemaVersion\":\"" + GameProfilePreflightService.SchemaVersion + "\"}");
                 return copy;
+            }
+
+            public string CreateInstalledGame(string name)
+            {
+                string game = Path.Combine(Root, name);
+                Directory.CreateDirectory(Path.Combine(game, "data"));
+                Directory.CreateDirectory(Path.Combine(game, "savegames"));
+                File.WriteAllBytes(Path.Combine(game, "BEA.exe"), new byte[16]);
+                return game;
             }
 
             public string WriteSave(string copy, string relativePath, string? marker = null)

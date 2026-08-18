@@ -1096,6 +1096,14 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             if (string.IsNullOrWhiteSpace(folder))
                 return;
 
+            string? refused = SaveRescuePageText.DescribeDestinationRefusal(folder);
+            if (refused is not null)
+            {
+                ShowSaveRescueNote(refused);
+                AppStatusService.SetStatus("Save Lab: could not bring that career out");
+                return;
+            }
+
             SafeCopySaveRescueResult result = RunSaveRescue(copy, save, folder!, allowOverwrite: false);
 
             if (result.NeedsOverwriteConfirmation)

@@ -90,7 +90,8 @@ files keep the block.
   installed game, a playable safe copy, or a folder the player chose, without
   dumping the full path. Cheats uses the same classifier for the source career
   it is about to copy, and will not offer to write into a folder inside the
-  installed game.
+  installed game. Bringing a career out of a copy uses the same refusal and
+  names the destination folder without the full path.
 - Write a separate save copy with supported mission, link, Goodie, rank, and
   kill-count changes. Comparison, analysis, and Game Options failures name what
   failed and that nothing was changed, without dumping the exception.

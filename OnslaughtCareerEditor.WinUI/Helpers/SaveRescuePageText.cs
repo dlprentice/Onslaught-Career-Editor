@@ -77,15 +77,50 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
 
         /// <summary>
         /// What happened, in the voice the rest of the page uses: what landed, and where it is.
+        /// The folder is named, never shown as a full path.
         /// </summary>
         public static string BuildOutcomeNote(SafeCopySaveRescueResult result)
         {
             ArgumentNullException.ThrowIfNull(result);
 
             if (!result.Success)
-                return result.Message;
+            {
+                if (CareerSaveLocation.Classify(result.DestinationDirectory) == CareerSaveLocationKind.InstalledGame)
+                    return CareerSaveLocation.InstalledDestinationRefused;
 
-            return $"{result.Message} They are in {result.DestinationDirectory}.";
+                return result.Message;
+            }
+
+            string leaf = FolderLeaf(result.DestinationDirectory);
+            return string.IsNullOrWhiteSpace(leaf)
+                ? $"{result.Message} They are in the folder you chose."
+                : $"{result.Message} They are in the folder \"{leaf}\".";
+        }
+
+        /// <summary>
+        /// Null when the write may proceed. The same installed-game sentence Cheats uses,
+        /// so a folder picker cannot become a second classifier.
+        /// </summary>
+        public static string? DescribeDestinationRefusal(string? folder)
+        {
+            return CareerSaveLocation.Classify(folder) == CareerSaveLocationKind.InstalledGame
+                ? CareerSaveLocation.InstalledDestinationRefused
+                : null;
+        }
+
+        private static string FolderLeaf(string? path)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+                return string.Empty;
+
+            try
+            {
+                return Path.GetFileName(Path.TrimEndingDirectorySeparator(path.Trim()));
+            }
+            catch (ArgumentException)
+            {
+                return string.Empty;
+            }
         }
 
         /// <summary>How a career reads in the picker: its name, and when it was last played.</summary>

@@ -149,7 +149,7 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
             {
                 if (CareerSaveLocation.Classify(chosenFolder) == CareerSaveLocationKind.InstalledGame)
                 {
-                    return "That folder is inside your installed game. The app will not write there.";
+                    return CareerSaveLocation.InstalledDestinationRefused;
                 }
 
                 return $"Going into the folder \"{Path.GetFileName(Path.TrimEndingDirectorySeparator(chosenFolder))}\". "

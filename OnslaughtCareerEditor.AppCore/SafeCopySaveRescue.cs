@@ -345,6 +345,15 @@ namespace OnslaughtCareerEditor.AppCore
                         Array.Empty<SafeCopySaveRescueFileOutcome>());
                 }
 
+                if (LooksLikeInstalledGameDestination(destination))
+                {
+                    return new SafeCopySaveRescueResult(
+                        false,
+                        CareerSaveLocation.InstalledDestinationRefused,
+                        destination,
+                        Array.Empty<SafeCopySaveRescueFileOutcome>());
+                }
+
                 wanted = SelectRequested(inventory, request.FileNames);
                 if (wanted.Count == 0)
                 {
@@ -492,6 +501,28 @@ namespace OnslaughtCareerEditor.AppCore
             {
                 return new SafeCopySaveRescueFileOutcome(save.FileName, false, outputPath, ex.Message);
             }
+        }
+
+        /// <summary>
+        /// A folder picker usually returns an existing directory. Rescue also accepts a path it
+        /// would create, so walk up to the first ancestor that exists and classify that. Layout
+        /// only: this must not create the folder just to ask the question.
+        /// </summary>
+        private static bool LooksLikeInstalledGameDestination(string destination)
+        {
+            string? current = destination;
+            while (!string.IsNullOrWhiteSpace(current))
+            {
+                if (Directory.Exists(current) || File.Exists(current))
+                    return CareerSaveLocation.Classify(current) == CareerSaveLocationKind.InstalledGame;
+
+                string? parent = Path.GetDirectoryName(current);
+                if (string.Equals(parent, current, StringComparison.OrdinalIgnoreCase))
+                    break;
+                current = parent;
+            }
+
+            return false;
         }
 
         /// <summary>

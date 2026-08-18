@@ -19,6 +19,13 @@ namespace OnslaughtCareerEditor.AppCore
     /// </summary>
     public static class CareerSaveLocation
     {
+        /// <summary>
+        /// Said when a chosen folder sits inside the installed game. Shared so Save Lab,
+        /// Cheats, and the rescue writer cannot drift into three different refusals.
+        /// </summary>
+        public const string InstalledDestinationRefused =
+            "That folder is inside your installed game. The app will not write there.";
+
         public static CareerSaveLocationKind Classify(string? path)
         {
             if (string.IsNullOrWhiteSpace(path))
