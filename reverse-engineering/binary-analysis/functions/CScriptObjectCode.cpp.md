@@ -193,20 +193,28 @@ and Reset()s instead of calling. `0x0089c528` is a `.data` BSS scratch pointer (
 `argCount=1`; the OrReset / 2002 / VFunc_2 paths pass the same address with
 `argCount=0`.
 
-| Id | Caller | Site | Args |
-| --- | --- | --- | --- |
-| 0 | `IScript__CallEvent0AndRegisterNestedListeners` | `0x0053352a` | `(obj, 0, NULL, 0)` then walks `[obj+0x48]` registering nested `CEventFunction`s |
-| 1 | `IScript__CreateThingRef` | `0x0053364e` | `(obj, 1, &0x0089c528, 1)` after `mov [0x0089c528], wrapper` |
-| 2 | `IScript__HandleMessage` 2002 arm | `0x00538638` | `(obj, 2, &0x0089c528, 0)` |
-| 3 | `IScript__CallEventId3_OrReset` | `0x00533805` | `(obj, 3, &0x0089c528, 0)` |
-| 4 | `IScript__CreateThingRefWithSquad` | `0x005337bd` | `(obj, 4, &0x0089c528, 1)` |
-| 5 | `IScript__CallEventId5_OrReset` | `0x00533685` | `(obj, 5, &0x0089c528, 0)` |
-| 6 | `IScript__CallEventId6_OrReset` | `0x005335c5` | `(obj, 6, &0x0089c528, 0)` |
-| 7 | `IScript__VFunc_2_00533810` | `0x00533835` | `(obj, 7, &0x0089c528, 0)` |
-| 8–12 | *(none)* | — | no direct `E8` |
+| Id | Name (table `0x0064fef8`) | Arity | Caller | Site |
+| --- | --- | --- | --- | --- |
+| 0 | `init` | 0 | `IScript__CallEvent0AndRegisterNestedListeners` | `0x0053352a` |
+| 1 | `arrived` | 1 | `IScript__CreateThingRef` | `0x0053364e` |
+| 2 | `timer` | 0 | `IScript__HandleMessage` 2002 arm | `0x00538638` |
+| 3 | `died` | 0 | `IScript__CallEventId3_OrReset` | `0x00533805` |
+| 4 | `hit` | 1 | `IScript__CreateThingRefWithSquad` | `0x005337bd` |
+| 5 | `started_dying` | 0 | `IScript__CallEventId5_OrReset` | `0x00533685` |
+| 6 | `ready` | 0 | `IScript__CallEventId6_OrReset` | `0x005335c5` |
+| 7 | `shutdown` | 0 | `IScript__VFunc_2_00533810` | `0x00533835` |
+| 8 | `notdefined4` | 0 | *(none)* | — |
+| 9 | `notdefined5` | 0 | *(none)* | — |
+| 10 | `notdefined6` | 0 | *(none)* | — |
+| 11 | `notdefined7` | 0 | *(none)* | — |
+| 12 | `notdefined8` | 0 | *(none)* | — |
 
-Authored names (OnCreate / OnDamage / …) are **not** claimed. Cheapest
-falsifier for a missing static user of 8–12: another `E8` to `0x00539990`
+The names are the 13 `{int32 id, char* name, int32 arity}` records at
+`.data` `0x0064fef8` (file `0x0024fef8`), independently re-read 2026-08-18.
+They match the wrapper immediates above. Authored *behavior* of each
+handler is still open.
+
+Cheapest falsifier for a missing static user of 8–12: another `E8` to `0x00539990`
 outside this census, or a `CallEventDirect` path that is really an id-table
 lookup in disguise.
 
@@ -222,9 +230,10 @@ lookup in disguise.
   open. Cheapest: read the two trailer dwords out of one shipped
   `MissionScripts/level***` record and watch `CallEvent` skip or take the
   preamble.
-- The 13 event-id slots at `eventObj+0x14`. CLOSED for static
-  *users* of ids 0–7 (see the table above). Ids 8–12 have no direct
-  `E8` to `CallEvent`. Authored event names remain open.
+- The 13 event-id slots at `eventObj+0x14`. CLOSED: names and arities
+  come from `.data` `0x0064fef8`; static users of 0–7 are the IScript
+  wrappers above. Ids 8–12 (`notdefined4`–`notdefined8`) have no direct
+  `E8`. Handler bodies remain open.
 - The second `.rdata` holder of `FUN_0052da00` at `0x005dab54`: CLOSED as
   `CWarspiteDomeBehaviourType` vtable `0x005dab50[+4]` (cohort census
   `col_ptr 0x005dab4c`). Same thunk body (`mov eax,0x17; ret`), different

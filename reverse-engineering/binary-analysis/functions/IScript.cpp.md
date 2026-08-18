@@ -90,7 +90,13 @@ The `CScriptEventNB__` prefix is mis-owned, byte-proven:
   → move one step → reschedule 2000 against `this` → `Flush` → message 2000.
 
 Candidate name `IScript__UpdateWaypointFollowing`; do not promote outside a
-name cohort. The older decompiler gloss in
+name cohort. Independently re-read 2026-08-18: the only `E8` is still
+`0x0053869b` (`mov ecx,edi; call 0x00538470`). A second static witness is
+`IScript__FollowWaypoint` (`0x00537d70`, zero direct `E8` — a registry
+command) which writes `[this+0x14]` and schedules the same
+`AddEvent_AtTime(2000, this, NEXT_FRAME, …)` loop. Ready for a future
+name-only cohort row; cheapest falsifier is `[ecx] != 0x005e4f08` at
+entry. The older decompiler gloss in
 [`ScriptEventNB.cpp.md`](ScriptEventNB.cpp.md) claiming this function
 rescheduled with `(2000, this, &nextFrame, 0, 0, 0)` is **confirmed** by the
 tail above; the same document's `CScriptEventNB__HandleMessage` label was
@@ -136,7 +142,7 @@ db.18627.
   key.
 - The dispatch globals `0x008a9ac0` and `0x0089c7f0`: CLOSED.
   `0x008a9ac0` is the `EGameState` dword (`references/Onslaught/game.h:42-54`).
-  IScript's `cmp …,4` is `GAME_STATE_LEVEL_LOST`. Sibling writers match the
+  `DAT_008a9a98+0x28`. IScript's `cmp …,4` is `GAME_STATE_LEVEL_LOST`. Sibling writers match the
   rest of the enum: `con_win` stores `5` (`GAME_STATE_LEVEL_WON`), and
   `SetQuit`-shaped sites (`FUN_00429ab0`, `CGame__HandleEvent`,
   `CEngine__MarkDeviceResetPending`, `con_map`) store `9`
@@ -148,7 +154,7 @@ db.18627.
   running". Wait helpers copy that same six-dword tail into a fresh CVM.
 - The 2002 arm's `CScriptObjectCode__CallEvent` invocation
   (`this=0x0089c5e0`, args `[edi+0xc], 2, &0x0089c528, 0`): CLOSED as
-  event-id **2** of the 13-slot `CMissionScriptObjectCode+0x14` table.
+  event-id **2** (`timer` in the `0x0064fef8` table) of the 13-slot `CMissionScriptObjectCode+0x14` table.
   `0x0089c528` is a BSS scratch pointer shared with the other IScript
-  CallEvent wrappers (see `CScriptObjectCode.cpp.md`). Authored name of
-  id 2 is still open.
+  CallEvent wrappers (see `CScriptObjectCode.cpp.md`). The authored
+  name is `timer`; handler-body meaning is still open.
