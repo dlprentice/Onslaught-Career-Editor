@@ -1,7 +1,7 @@
 # IScript function map
 
 Status: active static function map
-Last updated: 2026-08-18 (FollowWaypoint body + flag is arrived argc only)
+Last updated: 2026-08-18 (waypoint lookup 0x00505c30 + thing[+0xf4] GoToPoint)
 Source File: `C:\dev\ONSLAUGHT2\MissionScript\IScript.cpp` (SEH `__FILE__`
 pointer `0x0064fa40` read out of `IScript__PostEvent`) | Binary: BEA.exe,
 SHA-256
@@ -53,8 +53,9 @@ name value into a `CPostEventData` and scheduling event `0x7d0` against the
 | `0x005351d0` | `IScript__PlayAnimationWait` | `538bd9 56578b4310 8b7030 8b4074 85c0 7404 3bc3 7412 6864fb6400 … 897338 c20c00` | `ret 0xc`. Plays via `CMesh__FindAnimationIndexByName` + thing `vtable[+0xf0]`; snapshots a `CVM` into `[this+0x38]`; sets the stop flag. Resume is `IScript__RestoreSavedStateAndGotoInstruction`. HIGH. |
 | `0x005375f0` | `IScript__PlayCharMessageWait` | `6aff 6849735d00 64a1 … 68d1070000 … c7442440cdcc4c3d e8c36afaff … c20c00` | `ret 0xc`. Registry 36. Snapshot + `GetNextFreeEvent` + `CScheduledEvent__Set(2001, 0.05f, this, CVM)` + `CMessage__ctor_base` / `CMessageBox__InsertQueuedMessageSortedAndMaybeAdvance`. HIGH on the snapshot and event id. |
 | `0x005378e0` | `IScript__PlayPCharMessageWait` | `6aff 68a9735d00 64a1 … 68d1070000 … c7442420cdcc4c3d e8c767faff … c20c00` | `ret 0xc`. Registry 91. Same CVM + 2001 `Set` shape as `PlayCharMessageWait`, then a seven-arg `CMessage` with the extra script dword. HIGH on the snapshot and event id. |
-| `0x00537e40` | `IScript__FollowWaypointWait` | `538bd9 55bd01000000 8b4318 56 3bc5 57 0f8464010000 … 68d0070000 … c20c00` | `ret 0xc`. Early-out if `[this+0x18]==1`. Snapshot; `[this+0x1c]=1`, `[this+0x20]=CVM`, `[this+0x18]=1`; `AddEvent_AtTime(2000, this, NEXT_FRAME)`. HIGH. |
+| `0x00537e40` | `IScript__FollowWaypointWait` | `538bd9 55bd01000000 8b4318 56 3bc5 57 0f8464010000 … 68d0070000 … c20c00` | `ret 0xc`. Early-out if `[this+0x18]==1`. Same `0x00505c30(name, thing+0x1c)` lookup; miss prints `FATAL ERROR: Cant find waypoint path '%s'` (`0x0064fe00`). If `[this+0x10] != [this+8]` prints `FATAL ERROR:  Cant Follow waypoint way for other object` (`0x0064fdc8`) and returns. Else copies waypoint `+0x1c` and calls thing `vtable[+0xf4]`; snapshot; `[this+0x1c]=1`, `[this+0x20]=CVM`, `[this+0x18]=1`; `AddEvent_AtTime(2000, this, NEXT_FRAME)`. HIGH. |
 | `0x00537d70` | `IScript__FollowWaypoint` | `53 55 8b6c240c 56 8bf1 57 8b4d00 8b01 ff5038 8b4e10 8bd8 83c11c 51 53 e89fdefcff 8bf8 83c408 85ff 751a 53 68a8fd6400 … 8b4d04 8b11 ff5230 6a00 8d571c 83ec10 8b4e10 894624 … ff90f4000000 8b4610 8b4e08 3bc1 753c 8b4e18 … c7461c00000000 … 68d0070000 … c20c00` | `ret 0xc`; zero direct `E8` (native 0). `args[0]->vtable[+0x38]()` is the path name; `0x00505c30(name, thing+0x1c)` looks up the waypoint; miss prints `Cant find waypoint path '%s'` (`0x0064fda8`) and returns. `args[1]->vtable[+0x30]()` is stored at `[this+0x24]` with **no** later branch. Copies waypoint `+0x1c` (4 floats) onto the stack and calls thing `vtable[+0xf4]`. `[this+0x14]=waypoint`, `[this+0x1c]=0`. If `[this+0x18]!=1`, sets it and `AddEvent_AtTime(2000, this, NEXT_FRAME)`. HIGH. Descriptor `0x0064ce20+0x04=2` (arity); no arg-name strings. |
+| `0x00505c30` | `NamedEntryList_T3_00505c30` | `a1c04f8500 56 85c0 57 a3c84f8500 7404 8b30 … e838270600 83c408 85c0 7422 … c744240c7f96184b 894610 … d9411c d822 d94120 d86204 d94124 d86208 … c3` | cdecl `(char* name, float* pos)`. Bare `ret`. Walks the `CSPtrSet` at `0x00854fc0` (cursor `0x00854fc8`) whose payloads are `CWaypointPath` (vptr store `0x005dfc8c`, COLOC `0x006172d0` → TypeDescriptor `0x0063d220` = `.?AVCWaypointPath@@`). Name test is CRT `stricmp` (`0x00568390`) of `[path+4]` vs `name`. Hit: walk the embedded `CSPtrSet` at `path+8` (cursor `path+0x10`) and keep the child with the smallest `(Δx²+Δy²+Δz²)` of `[child+0x1c]` vs `pos`; seed `9999999.0f` (`0x4b18967f`). Empty/miss returns 0. Two `E8`: `0x00537d8c`, `0x00537e6b`. HIGH. Table name stays the demoted placeholder — class `NamedEntryList` is absent. |
 | `0x00533840` | `IScript__RestoreSavedStateAndGotoInstruction` | `568bf1 8b4638 85c0 7453 50 b9e0c58900 e8bb600000 8b4638 8d4e28 50 e86f23fbff … c3` | Zero-arg `ret`. If `[this+0x38]==0` return. Else `CopyState(+0x38)`, `CSPtrSet__Remove(+0x28)`, delete, `[this+0x38]=0`, then Reset on LEVEL_LOST else `GotoInstruction([0x0089c7f4])`. Same resume as HandleMessage 2001. Only `E8` is `CComplexThing__FinishedPlayingCurrentAnimation` `0x004f45a7`. HIGH. |
 
 ### The three message arms (byte-exact)
@@ -210,6 +211,36 @@ schedulers are `0x0053771a`, `0x00537a16`, `0x00537d4c`.
 `0x004f42be` is thing `INIT_SCRIPT` (different receiver).
 `0x00590913` / `0x00590ab2` are the shader parser (`push 0x7d1` +
 string, `call 0x0058c893`) — not events.
+
+## Waypoint path lookup and thing slot 61 (byte-exact 2026-08-18)
+
+Independently re-read from pristine `74154bfa…`. `CWaypointManager__LoadWaypoints`
+(`0x00505ae0`, `__FILE__` `0x0063d1f8` = `C:\dev\ONSLAUGHT2\WaypointManager…`)
+allocates a **0x18-byte** object, installs vptr `0x005dfc8c`,
+`CSPtrSet__Init` (`0x004e5840`) at `+8`, `CWaypoint__Load` (`0x00505960`),
+then `CSPtrSet__AddToTail` (`0x004e5b20`) onto `0x00854fc0`. `CWaypoint__Load`
+writes the path name at `+4` and `AddToHead`s (`0x004e5a80`) child things
+whose `[thing+0x34] & 0x1000` (byte `ch` of `mThingType`) onto that set.
+The type bit is occupancy only — not named here.
+
+`0x00505c30` is therefore a named-path + nearest-child walk of that
+manager set, not a `NamedEntryList` method. Both Follow natives pass
+`[IScript+0x10]+0x1c` as the query position (`mPos`).
+
+Thing `vtable[+0xf4]` is slot **61**. Independently read:
+
+| Primary | COLOC → RTTI | Slot 61 |
+| --- | --- | --- |
+| `0x005df784` | `CComplexThing` | `0x00401520` `ret 0x14` — empty `GoToPoint(FVector, BOOL)` (`thing.h:293`) |
+| `0x005df998` | `CUnit` | `0x004fce00` |
+| `0x005dd788` | `CRadar` | `0x004fce00` |
+| `0x005e1490` | `CSubmarine` | `0x004fce00` |
+
+`CUnit__ForwardField208Slot10_004fce00`: if `[this+0x208]` live, copy the
+four-dword vector + the BOOL and `call [guide->vtable+0x10]`. Unit inits
+store a guide at `+0x208`; the guide slot-4 body is the next slice.
+`FollowWaypointWait` refuses when `[IScript+0x10] != [IScript+8]` (the
+POINTER-retargeted thing is not the attached one).
 
 ## Open questions (cheapest falsifier first)
 
