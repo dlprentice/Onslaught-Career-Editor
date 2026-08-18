@@ -1,0 +1,69 @@
+# Unique-owner SET_NAME cohort. Rehearsal first; not on the live allowlist
+# until identity/dry/apply/readback are green on a db.18628 replica.
+#
+# Population: every live function whose class prefix is contradicted by a
+# SINGLE strict RTTI vtable owner, re-measured 2026-08-18 with
+# tools/re_rtti_vtables.py against specimen 74154bfa…7750
+# (667 TDs / 724 COLs / 11777 slots, matching the pinned census).
+# CMusic__Play (only CPCMusic) is excluded: CMusic is a real base class and
+# that row is an override, not a refuted prefix. Waypoint 0x00538470 is
+# excluded: no runtime vptr witness. 0x004e36c0 CSpawnerThng__FindSpawnerByName
+# is a zero-vtable body leftover, not this unique-owner set.
+#
+# PRE pins copied from the measured db.18628 waypoint spec (varargs-cohort2
+# POST). Census on this replica must reproduce them before dry/apply.
+cohortId	name-cohort-unique-owner
+cohortTitle	12 unique-RTTI-owner name corrections, name only (rehearsal)
+
+programName	BEA.exe
+programMd5	3b456964020070efe696d2cc09464a55
+programSha256	74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750
+imageBase	00400000
+language	x86:LE:32:default
+compilerSpec	windows
+
+verb	SET_NAME
+
+preFunctions	8329
+preInstructions	551232
+preReferences	234558
+preDefinedData	48648
+preUndefinedData	3907369
+preBookmarks	2301
+preFunctionNameDigest	94d97aab6f578fe5b1b86f8a759b0257c5518d53c9d836107bae361faacca4c9
+preFunctionBodyDigest	cb96581a599479d8aa57c2319a5e110226969934c2c14797a2575c689537a9be
+preFrozenDigest	4c81b617e59f0f25f00577e4ce88e6e77a62abee158fe41698337dd1c9fcca93
+
+# Structural POST repeats PRE (SET_NAME moves no instruction/data/bookmark
+# count). postFunctionNameDigest and postFrozenDigest omitted until a
+# rehearsal apply measures them. Inventing them is a fake pin.
+postFunctions	8329
+postInstructions	551232
+postReferences	234558
+postDefinedData	48648
+postUndefinedData	3907369
+postBookmarks	2301
+postFunctionBodyDigest	cb96581a599479d8aa57c2319a5e110226969934c2c14797a2575c689537a9be
+
+manifestSha256	604e4b328375408aeb246d19d7ee234f6e492be37a33a6411bf7d3b719bf07f8
+manifestBytes	3785
+manifestRows	12
+manifestColumns	9
+manifestHeaderPipe	addr|provenance|liveKind|currentNameLive|proposedName|tier|anchorKind|anchorEvidence|reason
+
+col.addr	addr
+col.liveKind	liveKind
+col.currentName	currentNameLive
+col.proposedName	proposedName
+
+unique	addr
+unique	proposedName
+unique	currentName
+noCycle	proposedName:currentName
+enum	liveKind=FUNCTION,SYMBOL:Label
+enum	provenance=PROMOTE,DEMOTE,SLOTFIX
+
+expectedTargetsChanged	12
+expectedFunctionsUntouched	8317
+expectedSymbolsAdded	12
+expectedSymbolsRemoved	12
