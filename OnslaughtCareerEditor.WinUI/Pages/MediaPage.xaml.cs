@@ -1155,26 +1155,16 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         private string BuildAudioEmptyStateText(string search)
         {
-            if (string.IsNullOrWhiteSpace(_snapshot.GameDirectory))
-            {
-                return "Game install not configured. Choose Settings or Browse Game Directory.";
-            }
-
-            return string.IsNullOrWhiteSpace(search)
-                ? "No audio found in the current install."
-                : "No audio matches the current search.";
+            return MediaPageText.DescribeAudioEmptyState(
+                !string.IsNullOrWhiteSpace(_snapshot.GameDirectory),
+                search);
         }
 
         private string BuildVideoEmptyStateText(string search)
         {
-            if (string.IsNullOrWhiteSpace(_snapshot.GameDirectory))
-            {
-                return "Game install not configured. Choose Settings or Browse Game Directory.";
-            }
-
-            return string.IsNullOrWhiteSpace(search)
-                ? "No video found in the current install."
-                : "No video matches the current search.";
+            return MediaPageText.DescribeVideoEmptyState(
+                !string.IsNullOrWhiteSpace(_snapshot.GameDirectory),
+                search);
         }
 
         private void ApplyPendingVideoHandoff()

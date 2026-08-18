@@ -23,5 +23,32 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
 
         public const string StoryContinueFailedStatus =
             "Media: the next cutscene could not be played";
+
+        public const string EmptySearchNextStep =
+            "Try another word, or clear the search.";
+
+        public static string DescribeAudioEmptyState(bool hasGameDirectory, string? search)
+        {
+            if (!hasGameDirectory)
+            {
+                return "Game install not configured. Choose Settings or Browse Game Directory.";
+            }
+
+            return string.IsNullOrWhiteSpace(search)
+                ? "No audio found in the current install."
+                : EmptySearchNextStep;
+        }
+
+        public static string DescribeVideoEmptyState(bool hasGameDirectory, string? search)
+        {
+            if (!hasGameDirectory)
+            {
+                return "Game install not configured. Choose Settings or Browse Game Directory.";
+            }
+
+            return string.IsNullOrWhiteSpace(search)
+                ? "No video found in the current install."
+                : EmptySearchNextStep;
+        }
     }
 }

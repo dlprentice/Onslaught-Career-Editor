@@ -69,5 +69,37 @@ public class MediaPageHonestyTests
         Assert.That(code, Does.Contain("MediaPageText.StoryContinueFailedStatus"));
         Assert.That(code, Does.Not.Contain("ex.Message"));
         Assert.That(code, Does.Not.Contain("Details:"));
+        Assert.That(code, Does.Contain("MediaPageText.DescribeAudioEmptyState"));
+        Assert.That(code, Does.Contain("MediaPageText.DescribeVideoEmptyState"));
+        Assert.That(code, Does.Not.Contain("matches the current search"));
+    }
+
+    [Test]
+    public void AnEmptySearchSaysWhatToDoNext_RatherThanDescribingTheEmptiness()
+    {
+        string audio = MediaPageText.DescribeAudioEmptyState(true, "no-such-track");
+        string video = MediaPageText.DescribeVideoEmptyState(true, "no-such-cutscene");
+
+        Assert.That(audio, Is.EqualTo(MediaPageText.EmptySearchNextStep));
+        Assert.That(video, Is.EqualTo(MediaPageText.EmptySearchNextStep));
+        Assert.That(audio, Does.Contain("another word"));
+        Assert.That(audio, Does.Contain("clear the search"));
+        Assert.That(audio, Does.Not.Contain("matches"));
+        Assert.That(audio, Does.Not.Contain("no-such-track"));
+        Assert.That(video, Does.Not.Contain("no-such-cutscene"));
+    }
+
+    [Test]
+    public void AnEmptyLibraryWithoutASearchKeepsTheInstallLine()
+    {
+        Assert.That(
+            MediaPageText.DescribeAudioEmptyState(true, ""),
+            Does.Contain("No audio found"));
+        Assert.That(
+            MediaPageText.DescribeVideoEmptyState(true, "   "),
+            Does.Contain("No video found"));
+        Assert.That(
+            MediaPageText.DescribeAudioEmptyState(false, "music"),
+            Does.Contain("not configured"));
     }
 }
