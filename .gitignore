@@ -112,4 +112,5 @@ cardid.txt
 # hypothetical: this repo has twice had unrelated work swept into a commit by a
 # broad add. `settings.local.json` is per-machine and not shared state.
 .claude/worktrees/
+.worktrees/
 .claude/settings.local.json
