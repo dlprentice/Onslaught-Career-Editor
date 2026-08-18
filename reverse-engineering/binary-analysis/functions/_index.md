@@ -22,6 +22,13 @@ Useful starting points:
 - [Frontend processing](FrontEnd.cpp/CFrontEnd__Process.md) and [Goodies processing](FEPGoodies.cpp/CFEPGoodies__Process.md) —
   menu and frontend behavior.
 - [Unit damage](Unit.cpp/CUnit__ApplyDamage.md) — unit initialization, damage, transform, and effects.
+- [Mission-script VM](CScriptObjectCode.cpp.md) — the stack-VM interpreter
+  (`Run`, `CallEvent`, `CallEventDirect`, `Push`/`ClearStack`/`RestoreStack`,
+  the instruction factory) plus its wiring:
+  [`IScript.cpp.md`](IScript.cpp.md) (command registry and message dispatch),
+  [`CScriptEventNB.cpp.md`](CScriptEventNB.cpp.md) (named events and the
+  message-0x7d0 fire path), and
+  [`EventFunction.cpp.md`](EventFunction.cpp.md) (named callbacks).
 
 Browse the directory tree for the complete retained set. Generated rollups and
 per-owner mirror indexes were removed; Git history preserves them if an old
