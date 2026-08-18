@@ -995,8 +995,8 @@ public sealed partial class RetailFrontendFlow : Control
     private void DrawClickToStart()
     {
         // CFEPIntro::Render 0x0051B840 splash pulse — DAT_0089d880 / fe_splash1.
-        // Argument is 1.0 while this+0x18 <= 0, then the live timer. Do not
-        // clamp to 1 afterwards; that freeze is a rebuild defect.
+        // Argument is min(this+0x18, 1.0): fcom [1.0f] at 0x0051B869, replace
+        // only when the timer is strictly greater than 1.
         float splashScale = RetailClickToStartPrompt.SplashScale(_clickPulseTimer);
         // Call-site x/y are center anchors at settled scale ≈ (320, 240).
         float splashX = (558f - (splashScale * 238f)) - 126.4375f;

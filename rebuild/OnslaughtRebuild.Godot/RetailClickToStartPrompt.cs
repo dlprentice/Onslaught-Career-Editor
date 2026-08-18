@@ -22,13 +22,16 @@ namespace OnslaughtRebuild.GodotClient;
 /// (<c>fld [dt]; fadd st,st; fadd [esi+18]</c> at <c>0x0051B78D</c>).</item>
 /// </list>
 ///
-/// <para><b>Render.</b> The splash argument is <c>1.0f</c> while the timer is
-/// ≤ 0 (<c>0x0051B866</c> <c>fcom [0]; test ah,0x41</c>) and the unclamped
-/// timer afterwards — there is no <c>min(t, 1)</c>. The prompt is drawn only
-/// when the timer is strictly greater than <c>4.0f</c> at <c>0x005D85BC</c>
-/// and <c>fmod(timer, 4.0)</c> is strictly less than <c>2.0f</c> at
-/// <c>0x005D8BA0</c>. The modulus is the qword <c>4.0</c> at <c>0x005DB4A0</c>,
-/// consumed by the CRT <c>fmod</c> thunk at <c>0x0055E3EA</c>.</para>
+/// <para><b>Render.</b> The splash argument is <c>min(timer, 1.0f)</c>:
+/// <c>fld [this+0x18]</c> at <c>0x0051B866</c>, then <c>fcom [1.0f]</c> at
+/// <c>0x005D8568</c> / <c>test ah,0x41</c> / <c>jnz keep</c>; only when the
+/// timer is strictly greater than 1 does Render <c>fstp</c> and reload
+/// <c>1.0f</c>. <c>0x005D856C</c> is the adjacent <c>0.0f</c> used by Process,
+/// not this compare. The prompt is drawn only when the timer is strictly
+/// greater than <c>4.0f</c> at <c>0x005D85BC</c> and <c>fmod(timer, 4.0)</c>
+/// is strictly less than <c>2.0f</c> at <c>0x005D8BA0</c>. The modulus is the
+/// qword <c>4.0</c> at <c>0x005DB4A0</c>, consumed by the CRT <c>fmod</c>
+/// thunk at <c>0x0055E3EA</c>.</para>
 ///
 /// <para><b>Not claimed here.</b> After 30 s with no click, Process writes
 /// <c>-3</c> to the frontend quit/result global <c>0x008A956C</c>
@@ -115,10 +118,10 @@ public static class RetailClickToStartPrompt
     }
 
     /// <summary>
-    /// Splash-pulse argument: 1.0 while the timer has not started, otherwise
-    /// the live timer. Retail does not clamp this to 1 afterwards.
+    /// Splash-pulse argument: the live timer while it is ≤ 1.0, otherwise 1.0.
+    /// <c>0x0051B869</c> <c>fcom [1.0f]</c> / <c>test ah,0x41</c> / <c>jnz keep</c>.
     /// </summary>
-    public static float SplashArgument(double timer) => timer <= 0d ? 1f : (float)timer;
+    public static float SplashArgument(double timer) => timer <= 1d ? (float)timer : 1f;
 
     /// <summary>
     /// <c>((cos(t*π)+1)*0.375)+0.46875</c> with <see cref="SplashArgument"/>.

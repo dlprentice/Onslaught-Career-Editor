@@ -76,18 +76,23 @@ public sealed class RetailClickToStartPromptTests
     }
 
     [Fact]
-    public void SplashPulseUsesOneWhenTheTimerHasNotStartedAndDoesNotClampAfterwards()
+    public void SplashArgumentIsTheLiveTimerClampedAtOne()
     {
-        // 0x0051B866 fcom [0]; test ah,0x41 / jnz keep: timer<=0 is replaced
-        // with 1.0. There is no later min(t, 1) — that freeze is a rebuild defect.
-        float atRest = RetailClickToStartPrompt.SplashScale(0d);
-        float atOne = RetailClickToStartPrompt.SplashScale(1d);
-        float later = RetailClickToStartPrompt.SplashScale(2d);
-
-        Assert.Equal(atOne, atRest);
-        Assert.NotEqual(atOne, later);
-        Assert.Equal(ExpectedSplashScale(1f), atRest, 5);
-        Assert.Equal(ExpectedSplashScale(2f), later, 5);
+        // 0x0051B869 fcom dword [0x005D8568] = 1.0f; test ah,0x41 / jnz keep.
+        // Timer <= 1 keeps the live value (including 0 during the seed hold).
+        // Timer > 1 is replaced with 1.0. That is min(timer, 1), not "use 1
+        // while idle then run unclamped".
+        Assert.Equal(0f, RetailClickToStartPrompt.SplashArgument(0d));
+        Assert.Equal(1f, RetailClickToStartPrompt.SplashArgument(1d));
+        Assert.Equal(1f, RetailClickToStartPrompt.SplashArgument(2d));
+        Assert.NotEqual(
+            RetailClickToStartPrompt.SplashScale(0d),
+            RetailClickToStartPrompt.SplashScale(1d));
+        Assert.Equal(
+            RetailClickToStartPrompt.SplashScale(1d),
+            RetailClickToStartPrompt.SplashScale(2d));
+        Assert.Equal(ExpectedSplashScale(0f), RetailClickToStartPrompt.SplashScale(0d), 5);
+        Assert.Equal(ExpectedSplashScale(1f), RetailClickToStartPrompt.SplashScale(1d), 5);
     }
 
     [Fact]
