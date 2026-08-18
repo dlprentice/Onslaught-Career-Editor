@@ -121,13 +121,23 @@ path that nulls `+0x74` before those two sites.
   box at `0x0053857d`. Six compiled `1`s: 600 Ship/Slave, 731/732
   messages, 741/742 Marshall. Loose `.msl` never names the argument.
 - Who schedules thing-event 2002 besides `HandleEvent`'s own arm and
-  `CThing::StartDieProcess` callers: CLOSED for the script path.
-  `IScript__Die` (`0x00535cd0`, `ret 0xc`, zero direct `E8`, native 13)
-  does `AddEvent_AtTime(0x7d2, [IScript+0x10], NEXT_FRAME)`. 48 compiled
-  `CALL` native-13 sites, all argc 0. Other `push 0x7d2` sites are a
-  different enum or unmapped: `CGame__HandleEvent` `0x0047000d` is
-  `EGameEvent` `FINISHED_PANNING` (`game.h:35`); `CTree__UpdateFallingTree`
-  `0x004f6f93` and `0x00590a55` are not claimed.
+  `CThing::StartDieProcess` callers: CLOSED. Five `push 0x7d2` sites
+  in the image, independently classified:
+  - `IScript__Die` (`0x00535cd0`, native 13, 0 `E8`):
+    `AddEvent_AtTime(0x7d2, [IScript+0x10], NEXT_FRAME)`. 48 compiled
+    uses, all argc 0.
+  - `IScript__SetTimer` (`0x005358fd`): `TimeFromNow(0x7d2, IScript,
+    delay)` — IScript `HandleMessage` timer, not a thing fire.
+  - `CGame__HandleEvent` (`0x0047000d`): `EGameEvent`
+    `FINISHED_PANNING` (`game.h:35`).
+  - `CTree__UpdateFallingTree` (`0x004f6f93`): `TimeFromNow(0x7d2,
+    this, 5.0f)`. `ebp` is `this` (`mov ebp,ecx` at `0x004f6b9d`).
+    Five seconds later `CTree__HandleEvent` (`0x004f7050`) does not
+    handle 2002 (it only special-cases 3000/3001) and tails to
+    `CThing__HandleEvent` (`0x004f3730`), which does
+    `call [vtable+0xc8]` = `StartDieProcess`.
+  - `0x00590a55`: not an event. `push "unrecognized shader version"`
+    (`0x005ed330`) then `push 0x7d2` then jmp — a parser error path.
 - `CFeature__VFunc_50_0044cd80` / `CUnit__MarkDestroyedAndCleanupLinks`
   as the reachable started_dying fires: CLOSED (section above).
 - `IScript__VFunc_2_00533810` has zero direct `E8`; the 2000 arm's
