@@ -1,7 +1,7 @@
 # IScript function map
 
 Status: active static function map
-Last updated: 2026-08-18 (PlayAnimationWait resumes via FinishedPlaying)
+Last updated: 2026-08-18 (Play*MessageWait fires on CMessageBox 3002)
 Source File: `C:\dev\ONSLAUGHT2\MissionScript\IScript.cpp` (SEH `__FILE__`
 pointer `0x0064fa40` read out of `IScript__PostEvent`) | Binary: BEA.exe,
 SHA-256
@@ -195,7 +195,7 @@ Per-native after the shared ctor:
 | Native | Resume |
 | --- | --- |
 | `Pause` | `fld [0x00672fd0]` (`CEventManager+8` = `mTime`) `fadd` delay; `AddEvent_AtTime(2001, this, &due, data=CVM)` |
-| `PlayCharMessageWait` / `PlayPCharMessageWait` | `GetNextFreeEvent` + `CScheduledEvent__Set(2001, 0.05f CLOCK_TICK, this, CVM)` then `CMessage__ctor_base` / insert. The message owns the event; **when** it fires is not claimed here |
+| `PlayCharMessageWait` / `PlayPCharMessageWait` | `GetNextFreeEvent` + `CScheduledEvent__Set(2001, 0.05f CLOCK_TICK, this, CVM)`. Ctor arg6 lands that node at `CMessage+0x28`. `CMessageBox__VFunc_0_004b81d0` event **3002** (`0xbba`, jump-table case 2 at `0x004b8206`) calls `CEventManager__AddEvent_ScheduledEvent` (`0x0044b310`): `due = mTime + [event+0x10]` so resume is **now+0.05s**, then the free-list recycle. 3002 is self-posted by `StartVoiceOrFallbackTextReveal` (`TimeFromNow` 0.5f when `CMessage+0x38` voice is set) and by two `AdvanceRevealAndScheduleNextTick` arms (2.7f / 0.3f). Actor `MOVE=3000` shares the number space; do not treat 3002 as an actor event |
 | `FollowWaypointWait` | `AddEvent_AtTime(2000, this, NEXT_FRAME)`; `[this+0x1c]=1`, `[this+0x20]=CVM`. Resume is the end-of-chain arm above, not message 2001 |
 | `PlayAnimationWait` | `[this+0x38]=CVM` after `CMesh__FindAnimationIndexByName` (`0x004aa630`) + thing `vtable[+0xf0]`. Replaces a prior `+0x38` (Remove `+0x28` + delete). If `[thing+0x74] != this` it prints `FATAL ERROR: Called PlayAnimWait on the non base script object` (`0x0064fb64`) and **continues**. Resume is `IScript__RestoreSavedStateAndGotoInstruction` (`0x00533840`) |
 
@@ -241,10 +241,12 @@ string, `call 0x0058c893`) — not events.
   vtables. One direct `E8` at `0x004fdfdd` inside
   `CUnit__HandleDeployAndFireAnimationCompletion`. Cheapest
   falsifier: another `E8` to `0x00533840`.
-- When the `Play*MessageWait` `CScheduledEvent` actually fires: open.
-  `Set` writes `0.05f` into the event; `CMessage` holds the node.
-  Cheapest falsifier: the `CMessageBox` arm that `AddEvent`s or
-  `Flush`es that node.
+- When the `Play*MessageWait` `CScheduledEvent` actually fires: CLOSED.
+  Stored at `CMessage+0x28`. `CMessageBox__VFunc_0_004b81d0`
+  (`movsx [event+4]; add eax,0xfffff448`; cases 3000–3004) case 2
+  (`0xbba`) is `AddEvent_ScheduledEvent` of that node. Due time is
+  `mTime + 0.05f`. Cheapest falsifier: another reader of
+  `CMessage+0x28` that also inserts the node.
 - The 2002 arm's `CScriptObjectCode__CallEvent` invocation
   (`this=0x0089c5e0`, args `[edi+0xc], 2, &0x0089c528, 0`): CLOSED as
   event-id **2** (`timer` in the `0x0064fef8` table). The 13-slot IP is
