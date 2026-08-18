@@ -143,3 +143,9 @@ path that nulls `+0x74` before those two sites.
 - `IScript__VFunc_2_00533810` has zero direct `E8`; the 2000 arm's
   `[IScript.vtable+8]` is the static witness. A second virtual caller
   would be another slot-2 site.
+- `CThing__HandleEvent` (`0x004f3730`) else-arm vs source
+  `CMonitor::HandleEvent`: CLOSED as equivalent. Retail `sub 0x7d0;
+  je Shutdown; sub 2; je StartDieProcess; ret 4`. Source
+  `thing.cpp:174-177` default-calls `CMonitor::HandleEvent`. CMonitor
+  vtable `0x005d92d4[+0]` is `0x004014c0` (`ret 4`). No behavioral
+  divergence.

@@ -355,6 +355,10 @@ stack — dec depth, `vtable[0](elem, 1)` the discarded top, or
 print `FATAL ERROR: RemoveTop called on empty stack`
 (`0x006500c4`). Opcode immediately before the end-label: `0x0e`
 671 / `0x0d` 309 / `0x13` 14 (the empty delta-1 handlers). The
+309 are not adjacent handlers: every one is an internal join
+`LABEL` that a body `JMPFALSE` (255) or `JMP` (54) already
+targets, immediately followed by the handler's end `LABEL`.
+Zero unreferenced. The
 compiled shape is `JMPFALSE L` / body / optional `REMOVE_TOP` /
 `L: LABEL`. The skip lands on a no-op so the VM continues after
 the handler; `REMOVE_TOP` drops a leftover statement value so
