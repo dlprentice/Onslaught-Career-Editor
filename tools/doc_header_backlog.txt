@@ -209,7 +209,6 @@ reverse-engineering/binary-analysis/functions/Hazard.cpp/CHazard__VFunc02_Cleanu
 reverse-engineering/binary-analysis/functions/HeightField.cpp/CHeightField__InitColorGradient.md
 reverse-engineering/binary-analysis/functions/HeightField.cpp/CHeightField__Load.md
 reverse-engineering/binary-analysis/functions/HeightField.cpp/CHeightField__RecomputeGridExtentsAndHeightRange.md
-reverse-engineering/binary-analysis/functions/IScript.cpp.md
 reverse-engineering/binary-analysis/functions/MCMech.cpp.md
 reverse-engineering/binary-analysis/functions/MCTentacle.cpp.md
 reverse-engineering/binary-analysis/functions/Mech.cpp/CMech__InitCockpit.md

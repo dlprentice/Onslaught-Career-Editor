@@ -104,8 +104,8 @@ the rolling Ghidra database. Read the
 [`canonical Ghidra owner`](ghidra/README.md) for the current structural snapshot
 and latest backed-up live promotion. Select campaign authority from
 `developer_state.json` → `current_re_authority`: canonical Generation 31 at
-`local-lab/re-campaign-incident-recovery-20260808-v1/generation-31-current-8329-db18624-v1/`,
-READY `b99b6e4faca61915d8c727b7b21fe08ebb868780cd18398cc583f6ec2fcd437b`,
+`local-lab/re-campaign-incident-recovery-20260808-v1/generation-31-current-8329-db18624-v2/`,
+READY `2e77c62d236edacbe4974ca844a6ac0b692e84b3259b884b8afc25a29aad4219`,
 frozen reducer `21ad46fff9d2aec8034a4edcf2c83fad627c2fcae3a9a21ebac7e03976c7627b`.
 It contains 8,329 functions: 231 C1, ten bounded C2, and 8,088 OPAQUE. Its
 14,365 contracts split as 14,123 `C0_OPAQUE`, 232 C1, and ten C2, and the

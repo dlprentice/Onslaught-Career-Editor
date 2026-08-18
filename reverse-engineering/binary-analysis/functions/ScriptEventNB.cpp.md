@@ -1,5 +1,17 @@
 # ScriptEventNB.cpp - Function Mappings
 
+> **Superseded for current byte contracts (2026-08-17).** The active
+> byte-level maps are
+> [`CScriptEventNB.cpp.md`](CScriptEventNB.cpp.md) (register/post/handle,
+> world loader, and the message-0x7d0 fire path) and
+> [`IScript.cpp.md`](IScript.cpp.md) (`IScript__HandleMessage`, the
+> waypoint-following owner review, and the script-system vtable cluster).
+> This page is retained for its name-correction provenance and the Wave586
+> read-back record only; its decompiler-derived pseudocode and its
+> `0x005e4f34` slot table carry stale values (for example slot 2 is
+> `CMonitor__Shutdown_Core` `0x004bacb0`, not `0x004bac40`) and must not be
+> read as current byte truth.
+
 > Source file: `MissionScript/ScriptEventNB.cpp`
 > Debug path: `[maintainer-local-source-export-root]\MissionScript\ScriptEventNB.cpp` (0x0064fe98)
 > Last updated: 2026-05-19
