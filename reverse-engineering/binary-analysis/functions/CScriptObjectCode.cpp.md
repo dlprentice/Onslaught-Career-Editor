@@ -1,7 +1,7 @@
 # CScriptObjectCode function map
 
 Status: active static function map
-Last updated: 2026-08-18 (IScript *Wait natives snapshot a 0x228 CVM)
+Last updated: 2026-08-18 (POP stores stack top into symbol[attr]+8)
 Source File: `C:\dev\ONSLAUGHT2\MissionScript\ScriptObjectCode.cpp` (the
 VM's `__FILE__` chain is established by the adjacent
 [`ScriptObjectCode.cpp.md`](ScriptObjectCode.cpp.md) wave receipts) | Binary:
@@ -68,6 +68,9 @@ arm at `0x00539265`.
 | `0x0052ec40` | `CInstructionOP_CALLLOCAL__VFunc_0_0052ec40` | `8b442404 8b4904 898814020000 8b8824020000 41 898824020000 c20c00` at file offset `0x0012ec40` | `ret 0xc`. `vm = arg0`; `PC = [instr+4]` (the attribute); `[vm+0x224]++`. This is `CInstructionOP_CALLLOCAL` vtable `0x005e4bb0[+0]`. The only interpreter increment of the return-depth guard. HIGH. |
 | `0x0052d990` | `FUN_0052d990` | `b819000000 c3` | `mov eax,0x19; ret` — 32-bit opcode getter at `CInstructionOP_CALLLOCAL` vtable `0x005e4bb0[+8]`. HIGH. |
 | `0x0052e0a0` | `CInstructionOP_PUSHPC__VFunc_0_0052e0a0` | `56 688f000000 8bf1 68c4c56400 6a18 6a08 … c700f84a5e00 894804 e84bb30000 … c20c00` | `ret 0xc`. Allocates an 8-byte `CInt` (`vptr 0x005e4af8`) whose value is the instruction attribute `[this+4]` and `Push`es it. That attribute is a stored PC, not the live `vm+0x214`. Together with `CALLLOCAL` this is the compiled call sequence (push return PC, then jump and increment depth). HIGH on the bytes. The pairing is unused on the 762-object corpus (0× `0x19`, 0× `0x1a` in 55,836 instructions). |
+| `0x0052e2f0` | `CInstructionOP_POP__VFunc_0_0052e2f0` | `8b4104 8b4c240c 56 50 e862b40000 8bf0 8b4e08 85c9 7406 8b11 6a01 ff12 8b4c240c e85ab10000 894608 5e c20c00` | `ret 0xc`. `symbol = CScriptObjectCode__GetInstruction(symbols, attr)` (`0x00539760` = `[table][index]`); if `[symbol+8]` delete via `vtable[0](1)`; `[symbol+8] = Pop(stack)` (`0x00539470`). HIGH. All 128 shipped `hit` 13-slot bodies start with this opcode, so CallEvent id 4's argc=1 thing-ref lands in that local. |
+| `0x00539760` | `CScriptObjectCode__GetInstruction` | `8b01 8b4c2404 8b0488 c20400` | `ret 4`. `return [this][index]`. Used as the symbol-table indexer by PUSH/POP. HIGH on the bytes; the name is the table label, not a claim that the table holds instructions. |
+| `0x00539470` | `CScriptObjectCode__Pop` | `8b8100020000 85c0 7515 689c006500 … 33c0 c3 48 898100020000 8b0481 c3` | Zero-arg. `this` = stack head. Empty (`[head+0x200]==0`) prints via `0x0065009c` and returns 0; else `--depth` and return `[head + depth*4]`. HIGH. |
 | `0x00539910` | `CScriptObjectCode__CopyState` | `8b7c240c 8bf1 8b4708 8d570c 894608 8b8f14020000 898e14020000 52 8d4e0c e81afaffff … 8b8718020000 898618020000 … c7861002000000000000 8bc6 … c20400` | `ret 4`, one arg = source. Copies `[src+8]`, `[src+0x214]` (PC), calls `CScriptObjectCode__RestoreStack` (`0x00539350`) with `(dst+0xc, src+0xc)`, then copies `+0x218`, `+0x220`, `+0x21c`, `+0x224`, and zeroes the running flag `+0x210`. Returns `this`. HIGH. |
 | `0x00539980` | `CScriptObjectCode__Reset` | `83c10c e958faffff` | Zero-arg tail: `add ecx,0xc; jmp 0x005393e0` = `CScriptObjectCode__ClearStack(this+0xc)`. HIGH. |
 | `0x00539990` | `CScriptObjectCode__CallEvent` | `8b860c020000 85c0 7412 6860016500 6880f56600 e8937df0ff … 8b7c240c 897e08 8b476c 85c0 752b 8b475c 85c0 7424 c7861402000000000000 … e81e010000 c7476c01000000 … 8b449114 83f8ff 898614020000 7525 …` | `ret 0x10`, four args `(eventObj, eventId, args[], argCount)`. If the operand stack is not empty (`[this+0x20c] != 0`) prints `"FATAL ERROR: stack not empty on call"` (`0x00650160`). Stores `[this+8] = eventObj`; if `eventObj->[+0x6c] == 0` and `eventObj->[+0x5c] != 0` runs the preamble (`PC = 0`, `Run`, then `eventObj->[+0x6c] = 1`). Resolves the entry `eventObj->[+0x14 + eventId*4]`; `-1` means no handler, in which case it deletes each arg element via `call [elem->vtable][0](elem, 1)` and returns. Otherwise sets `PC = entry`, pushes each arg with `CScriptObjectCode__Push` (`0x00539420`), and calls `Run`. HIGH on the dispatch; `+0x5c`/`+0x6c` are now owned (see the event-object table) and the preamble-present *meaning* of a nonzero `+0x5c` stays MEDIUM. |
@@ -228,7 +231,7 @@ Shipped occupancy (safe-copy `local-lab/safe-copy-bea-pristine/data/Resources`,
 | 1 | `arrived` | **0** (all `-1`) | — |
 | 2 | `timer` | **0** (all `-1`) | — |
 | 3 | `died` | 265 | `5` 145 / `24` 113 / `23` 7 |
-| 4 | `hit` | 128 | all opcode `6` |
+| 4 | `hit` | 128 | all opcode `6` (POP → `symbol[attr]+8`) |
 | 5 | `started_dying` | 142 | `5` 99 / `24` 39 / `23` 4 |
 | 6 | `ready` | 6 | `5` 6 |
 | 7 | `shutdown` | 3 | `5` 3 |
