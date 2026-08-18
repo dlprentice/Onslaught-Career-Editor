@@ -1,5 +1,6 @@
-# Unique-owner SET_NAME cohort. Rehearsal first; not on the live allowlist
-# until identity/dry/apply/readback are green on a db.18628 replica.
+# Unique-owner SET_NAME cohort. Replica census/identity/dry/apply/readback
+# PASS on a copy of D:\BEA-Ghidra-Backups\2026-08-18-varargs-cohort2-post-live
+# (db.18628). Not on the live allowlist until a reviewer GO.
 #
 # Population: every live function whose class prefix is contradicted by a
 # SINGLE strict RTTI vtable owner, re-measured 2026-08-18 with
@@ -35,15 +36,19 @@ preFunctionBodyDigest	cb96581a599479d8aa57c2319a5e110226969934c2c14797a2575c6895
 preFrozenDigest	4c81b617e59f0f25f00577e4ce88e6e77a62abee158fe41698337dd1c9fcca93
 
 # Structural POST repeats PRE (SET_NAME moves no instruction/data/bookmark
-# count). postFunctionNameDigest and postFrozenDigest omitted until a
-# rehearsal apply measures them. Inventing them is a fake pin.
+# count). Name and frozen POST digests measured 2026-08-18 by replica apply
+# then a separate-process census on that applied replica
+# (local-lab/name-cohort-unique-owner-rehearsal-2026-08-18/receipts/
+# {apply,census}.log). Body digest unchanged.
 postFunctions	8329
 postInstructions	551232
 postReferences	234558
 postDefinedData	48648
 postUndefinedData	3907369
 postBookmarks	2301
+postFunctionNameDigest	3ccf43ed3e3e4d55b12fb0d57c766cb3383501540b78a62e26296f40f6db7a11
 postFunctionBodyDigest	cb96581a599479d8aa57c2319a5e110226969934c2c14797a2575c689537a9be
+postFrozenDigest	1d68e5b4243c9ba5f9d9113ad519c183b16c3284339b3b64c739433b449175ca
 
 manifestSha256	604e4b328375408aeb246d19d7ee234f6e492be37a33a6411bf7d3b719bf07f8
 manifestBytes	3785

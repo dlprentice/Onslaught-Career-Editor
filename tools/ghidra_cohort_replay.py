@@ -195,6 +195,26 @@ REHEARSAL_COHORTS: dict[str, dict] = {
             "preUndefinedData": 3907369, "postUndefinedData": 3907369,
         },
     },
+    "name-cohort-unique-owner": {
+        # PRE is current live POST (db.18628). Replica apply/readback PASS;
+        # not live-authorized until a reviewer GO on the unique-RTTI-owner grade.
+        "backup": BACKUPS / "2026-08-18-varargs-cohort2-post-live",
+        "spec": SPECS / "name-cohort-unique-owner.spec.tsv",
+        "manifest": SPECS / "name-cohort-unique-owner-manifest.tsv",
+        "rehearsalOnly": True,
+        "archived": {
+            "source": "REHEARSAL ONLY - census/identity/dry/apply/readback "
+                      "PASS 2026-08-18 on a db.18628 replica; not live-authorized",
+            "rows": 12,
+            "applied": 12,
+            "preFunctions": 8329, "postFunctions": 8329,
+            "preInstructions": 551232, "postInstructions": 551232,
+            "preReferences": 234558, "postReferences": 234558,
+            "preBookmarks": 2301, "postBookmarks": 2301,
+            "preDefinedData": 48648, "postDefinedData": 48648,
+            "preUndefinedData": 3907369, "postUndefinedData": 3907369,
+        },
+    },
 }
 COHORTS.update(REHEARSAL_COHORTS)
 
