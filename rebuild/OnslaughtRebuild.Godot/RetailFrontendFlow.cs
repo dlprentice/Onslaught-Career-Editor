@@ -778,9 +778,15 @@ public sealed partial class RetailFrontendFlow : Control
                 _clickPageSeconds = 0d;
             }
 
-            // Retail Process accumulates roughly 2 * frameΔ into this+0x18.
-            _clickPulseTimer += 2d * step;
+            // CFEPIntro::Process 0x0051B6B0: hold this+0x18 at 0 until
+            // GetTime()-[this+4] > 1.0, seed 0x3727C5AC, then add 2*dt.
+            // See RetailClickToStartPrompt. The 30 s idle write of -3 to
+            // 0x008A956C is deliberately not driven here.
             _clickPageSeconds += step;
+            _clickPulseTimer = RetailClickToStartPrompt.Advance(
+                _clickPulseTimer,
+                _clickPageSeconds,
+                step);
         }
         else if (_session.Screen != RetailFrontendScreen.IntroCutscene)
         {
@@ -988,9 +994,10 @@ public sealed partial class RetailFrontendFlow : Control
 
     private void DrawClickToStart()
     {
-        // FUN_0051b840 splash pulse — DAT_0089d880 / fe_splash1.
-        float t = Mathf.Min((float)_clickPulseTimer, 1f);
-        float splashScale = ((Mathf.Cos(t * Mathf.Pi) + 1f) * 0.375f) + 0.46875f;
+        // CFEPIntro::Render 0x0051B840 splash pulse — DAT_0089d880 / fe_splash1.
+        // Argument is 1.0 while this+0x18 <= 0, then the live timer. Do not
+        // clamp to 1 afterwards; that freeze is a rebuild defect.
+        float splashScale = RetailClickToStartPrompt.SplashScale(_clickPulseTimer);
         // Call-site x/y are center anchors at settled scale ≈ (320, 240).
         float splashX = (558f - (splashScale * 238f)) - 126.4375f;
         float splashY = 135.9375f + (222f * splashScale);
@@ -1002,8 +1009,9 @@ public sealed partial class RetailFrontendFlow : Control
             splashScale,
             Colors.White);
 
-        // Prompt after timer > 4. Blink duty cycle is stubbed (retail FPU thunk WAIT).
-        if (_clickPulseTimer > 4d && (Mathf.PosMod((float)_clickPulseTimer, 2f) < 1.6f))
+        // Prompt after this+0x18 > 4.0, visible while fmod(timer, 4.0) < 2.0.
+        // The previous PosMod(timer, 2) < 1.6 was a stub for the CRT fmod thunk.
+        if (RetailClickToStartPrompt.IsPromptVisible(_clickPulseTimer))
         {
             // Mixed case, per the pristine 640x480 capture of the click-to-start
             // screen (local-lab/retail-reference-pristine/click-to-start-640x480.png).
@@ -1019,10 +1027,13 @@ public sealed partial class RetailFrontendFlow : Control
             DrawTextFlat(prompt, origin, textScale, Colors.White);
         }
 
-        // DAT_0089d7bc LostToys sliding pair after prompt gate.
-        if (_clickPulseTimer > 4d)
+        // DAT_0089d7bc LostToys sliding pair after the same this+0x18 > 4 gate.
+        if (_clickPulseTimer > RetailClickToStartPrompt.PromptGateSeconds)
         {
-            float fade = Mathf.Clamp((float)_clickPulseTimer - 4f, 0f, 1f);
+            float fade = Mathf.Clamp(
+                (float)(_clickPulseTimer - RetailClickToStartPrompt.PromptGateSeconds),
+                0f,
+                1f);
             float off = (1f - fade) * (1f - fade) * 400f;
             // Call sites use mode 0 (top-left style) at these XY with sx=sy=1.
             DrawTextureRect(

@@ -46,6 +46,10 @@
              Link="godot-startup-source\RetailStartupSchedule.cs" />
     <Compile Include="..\OnslaughtRebuild.Godot\RetailStartupMediaIndex.cs"
              Link="godot-startup-source\RetailStartupMediaIndex.cs" />
+    <!-- CFEPIntro this+0x18 clock. Godot-free so the click-to-start prompt
+         blink can be pinned without an engine; DrawClickToStart is the consumer. -->
+    <Compile Include="..\OnslaughtRebuild.Godot\RetailClickToStartPrompt.cs"
+             Link="godot-startup-source\RetailClickToStartPrompt.cs" />
   </ItemGroup>
 
   <ItemGroup>
