@@ -1,7 +1,7 @@
 # Rebuild parity contract
 
 Status: active — what "1:1 behavioral and experiential parity" means operationally
-Last updated: 2026-08-17 (added the carried-contract mapping table).
+Last updated: 2026-08-18 (Level 100 Pulse Cannon charge increment).
 Evidence: SOURCE — authority order and the three known divergences are
 recorded in `PROVENANCE.md`; gate capabilities are MEASURED claims of the
 tracked harnesses named in the table. Every row of *Carried retail contracts*
@@ -37,7 +37,7 @@ These are exceptions to record precisely, not templates for loose porting.
 
 ## Carried retail contracts — entity, owner, implementation, test
 
-Recorded 2026-08-17. Every retail anchor below was **re-derived from the
+Recorded 2026-08-17, with the Pulse Cannon increment row added 2026-08-18. Every retail anchor below was **re-derived from the
 pristine specimen** for this table (PE headers parsed directly; flat mapping
 file offset = VA − 0x400000 for `.text`/`.rdata`/`.data`, whose raw ends are
 0x005D8000 / 0x00622000 / 0x00661000 — `.rsrc` is **not** flat and 0x00672FD0 is
@@ -82,22 +82,26 @@ Owner paths are relative to the repository root; test names are relative to
 | `CBattleEngineWalkerPart::GoingIntoWater` arm selector | `0x00413A70`; selector at `0x00413ABF` against `0x005D8CB4` = `9a99993e` = 0.3f, on the unrounded height | `rebuild/OnslaughtRebuild.Core/RetailWalkerWaterEntry.cs` | `RetailWalkerWaterEntry.GoingIntoWater` | `RetailWalkerWaterEntryTests.GoingIntoWater_TakesTheLowArmAtExactlyTheMarginAboveWater` | 1 | make the selector inclusive; **and** hard-wire one arm |
 | `CBattleEngineJetPart::AutoLevel` | `0x00412900`; `0x0041293A` `fcomp dword ptr [0x005D8C60]`, that dword `0bd7233c` = 0.010000000707805157 = `float(0.1f)²` — **not** `0.01f`, which is `0ad7233c` at `0x005D8574` | `rebuild/OnslaughtRebuild.Core/RetailJetAutoLevel.cs` | `RetailJetAutoLevel.AutoLevel` | `RetailJetAutoLevelTests.AutoLevel_GatesOnTheSquaredManoeuvreSpeedWhenGrounded` | 5 | write the threshold as plain `0.01f` |
 | `CChunkReader::Read` / `::Skip` over-read | `0x00423965` `imul esi,[esp+0x10]` then `0x00423971` `add edx,esi` — the charge is **unclamped**; `0x00423998` `sub eax,esi` wraps unsigned and `0x0042399A` resets the accounting to `Size`, so `CDXMemBuffer::Skip`'s `size>0` guard drops it | `rebuild/OnslaughtRebuild.Core/RetailChunkReader.cs` | `RetailChunkReader.Skip` | `RetailChunkReaderTests.Skip_AfterOverReadingAChunkIsASilentNoOpRatherThanARewind` | 1 | clamp the over-read charge at the chunk size |
+| `CWeapon__AdvanceChargeProgressIfAnySlotAssigned` | `0x005068F0`; `0x005DB358`=`00 00 c8 43`=`400.0f`; `test ah,1` / `je` then `fld [record+8]` / `fadd [weapon+0x60]`. CanCharge scan starts at `record+0x10`. Level 100 `Pulse Cannon Pod` @`0x17463` of `default physics.dat` (`e1fb3ded…ada14`) has rate `0x41200000`=`10.0f` and levels 0+1 present, so ten 20 Hz samples fill MaxCharge 100 | `rebuild/OnslaughtRebuild.Core/RetailWeaponCharge.cs` and `rebuild/OnslaughtRebuild.Core/Level100PulseCannonCharge.cs` | `RetailWeaponCharge.Charge` | `RetailWeaponChargeTests.Charge_AddsTheRecordRateWhileBelowFourHundred` | 1 | cap written as `MaxCharge` (`100.0f`); **and** Pulse Cannon rate written as `1.0f` |
 
 Two things this table deliberately does **not** claim. It does not claim these
 contracts are graded `REBUILD_READY`: that grade is a campaign artifact and
 needs the ceremony in `tools/re_campaign.py`
 (`_validate_rebuild_ready_gate`), which stamps owner/test/project SHA-256s, a
 `rebuildMapping`, and a re-run of the focused test. And it does not claim replay
-coverage. **Fifteen of these sixteen implementations are unreachable from the
+coverage. **Sixteen of these seventeen implementations are unreachable from the
 simulation and replay path** — measured, by searching `Simulation.cs`,
 `ReplayRunner.cs`, `CommandTape.cs`, `StateHasher.cs` and every `Level100*.cs`
 for the owner types: the only hit is the *comment* naming `RetailJetFriction` at
 `Simulation.cs:1858`, and the only genuinely wired row is
-`Simulation.JetFrictionNumerator` itself. So no cold-start or full-chain trace
-can reach the other fifteen, and the focused test is the only falsifier they
+`Simulation.JetFrictionNumerator` itself. `Level100PulseCannonCharge` is a
+Level 100 *table*, not a Simulation call. So no cold-start or full-chain trace
+can reach the other sixteen, and the focused test is the only falsifier they
 have. That is exactly the precedent the jet-friction row set: a green replay
 suite there was *vacuous* with respect to the constant it was supposed to guard,
-because the jet throttle caps below the gate's band.
+because the jet throttle caps below the gate's band. The seventeenth row's
+mutation kill was measured on 2026-08-18 in this worktree; it is not one of the
+17 files under `local-lab/rebuild-parity-mutation-kills-2026-08-17/`.
 
 ## Parity dimensions and their gates
 
@@ -119,7 +123,7 @@ harness. This gap is named here so it is not mistaken for closure.
 
 What the table above adds is narrower and real: **per-contract** gates that do
 compare rebuild behavior to retail behavior, because the expected value in each
-is read out of the pristine specimen rather than out of the rebuild. Sixteen
+is read out of the pristine specimen rather than out of the rebuild. Seventeen
 laws is not parity. It is the first set of rows where a wrong rebuild is
 mechanically detected instead of merely plausible-looking, and the mutation kill
 is what distinguishes the two.
