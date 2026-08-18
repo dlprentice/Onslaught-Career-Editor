@@ -281,6 +281,7 @@ path-follow overwrites desired with the waypoint heading; join
 `|Δ|>0.6` writes a local-Y step (`slot 111 * 0.05 * ±4`) through
 `mOrientation` into `owner+0x14c`. Apply: `CGroundUnit__UpdateLinkedEffectsByHeightClearance`
 adds `+0x14c * 0.4f` into `mVelocity`; `CActor__Move` adds `mVelocity` to `mPos`.
+`+0x120` is consumed by `CUnit__SmoothEulerTowardTargetAndBuildMatrix` (slot 77).
 
 ## Open questions (cheapest falsifier first)
 
