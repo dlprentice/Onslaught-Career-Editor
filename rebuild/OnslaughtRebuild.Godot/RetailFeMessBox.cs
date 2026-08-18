@@ -120,6 +120,13 @@ public static class RetailFeMessBox
     /// </summary>
     public const int DefaultChoiceIndex = 0;
 
+    /// <summary>
+    /// Upper YESNO row. <c>CFrontEnd__HandleModalPanelButton</c> <c>0x0044dd60</c>
+    /// option_mode 2 writes <c>this+0x1fa0 = 1</c> on button <c>0x2a</c>
+    /// (<c>BUTTON_FRONTEND_MENU_UP</c>).
+    /// </summary>
+    public const int YesChoiceIndex = 1;
+
     /// <summary>FONT_SMALL (Font13PS) atlas cell. Used as the prompt line pitch.</summary>
     public const float FontSmallLine = 16f;
 

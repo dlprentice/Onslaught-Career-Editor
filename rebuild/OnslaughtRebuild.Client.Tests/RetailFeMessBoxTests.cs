@@ -100,13 +100,39 @@ public sealed class RetailFeMessBoxTests
         Assert.Contains("RetailFeMessBox.YesChoiceTop", MethodBody(flow, "QuitConfirmIndexAt"));
     }
 
+    [Fact]
+    public void QuitConfirmUpSelectsYesAndDownSelectsNo()
+    {
+        // CFrontEnd__HandleModalPanelButton 0x0044dd60 option_mode 2:
+        // BUTTON_FRONTEND_MENU_UP 0x2a writes this+0x1fa0 = 1 (Yes, upper);
+        // DOWN 0x2b writes 0 (No, lower). PCController maps KEYCODE_UP/DOWN
+        // onto those buttons. Session law stays 0=No / 1=Yes; Left/Right keep
+        // MovePrevious / MoveNext.
+        Assert.Equal(1, RetailFeMessBox.YesChoiceIndex);
+        Assert.Equal(0, RetailFeMessBox.DefaultChoiceIndex);
+
+        string handleKey = MethodBody(FlowSource(), "HandleKey");
+        Assert.Contains("RetailFrontendScreen.QuitConfirm", handleKey);
+        Assert.Contains("SelectQuitConfirmIndex(RetailFeMessBox.YesChoiceIndex)", handleKey);
+        Assert.Contains("SelectQuitConfirmIndex(RetailFeMessBox.DefaultChoiceIndex)", handleKey);
+        Assert.Contains("IsKey(key, Key.Left)", handleKey);
+        Assert.Contains("_session.MovePrevious()", handleKey);
+        Assert.Contains("IsKey(key, Key.Right)", handleKey);
+        Assert.Contains("_session.MoveNext()", handleKey);
+    }
+
     private static string FlowSource() =>
         File.ReadAllText(
             Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "RetailFrontendFlow.cs"));
 
     private static string MethodBody(string source, string methodName)
     {
-        int signature = source.IndexOf("int " + methodName + "(", StringComparison.Ordinal);
+        int signature = IndexOfSignature(source, "int " + methodName + "(");
+        if (signature < 0)
+        {
+            signature = IndexOfSignature(source, "bool " + methodName + "(");
+        }
+
         Assert.True(signature >= 0, methodName + " was not found.");
         int open = source.IndexOf('{', signature);
         int depth = 0;
@@ -127,5 +153,11 @@ public sealed class RetailFeMessBoxTests
         }
 
         throw new InvalidOperationException(methodName + " has an unbalanced body.");
+    }
+
+    private static int IndexOfSignature(string source, string signature)
+    {
+        int found = source.IndexOf(signature, StringComparison.Ordinal);
+        return found;
     }
 }

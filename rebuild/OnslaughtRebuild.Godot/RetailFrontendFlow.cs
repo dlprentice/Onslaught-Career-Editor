@@ -2772,6 +2772,37 @@ public sealed partial class RetailFrontendFlow : Control
             }
         }
 
+        // QuitConfirm is a vertical YESNO stack. Retail
+        // CFrontEnd__HandleModalPanelButton 0x0044dd60 option_mode 2:
+        // BUTTON_FRONTEND_MENU_UP (0x2a) writes this+0x1fa0 = 1 (Yes, upper);
+        // DOWN (0x2b) writes 0 (No, lower). PCController.cpp maps KEYCODE_UP /
+        // KEYCODE_DOWN onto those buttons. Left/Right keep the session
+        // 0=No / 1=Yes MovePrevious / MoveNext law.
+        if (_session.Screen == RetailFrontendScreen.QuitConfirm)
+        {
+            if (IsKey(key, Key.Up))
+            {
+                if (_session.SelectQuitConfirmIndex(RetailFeMessBox.YesChoiceIndex))
+                {
+                    RequestAudioCue(RetailFrontendAudioCue.Move);
+                    QueueRedraw();
+                }
+
+                return true;
+            }
+
+            if (IsKey(key, Key.Down))
+            {
+                if (_session.SelectQuitConfirmIndex(RetailFeMessBox.DefaultChoiceIndex))
+                {
+                    RequestAudioCue(RetailFrontendAudioCue.Move);
+                    QueueRedraw();
+                }
+
+                return true;
+            }
+        }
+
         if (IsKey(key, Key.Up) || IsKey(key, Key.Left))
         {
             if (_session.MovePrevious())
