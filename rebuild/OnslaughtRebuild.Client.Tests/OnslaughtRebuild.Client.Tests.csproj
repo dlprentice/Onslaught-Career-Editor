@@ -54,6 +54,8 @@
              Link="godot-startup-source\RetailClickToStartTitle.cs" />
     <Compile Include="..\OnslaughtRebuild.Godot\RetailClickToStartSlide.cs"
              Link="godot-startup-source\RetailClickToStartSlide.cs" />
+    <Compile Include="..\OnslaughtRebuild.Godot\RetailClickToStartGlyphs.cs"
+             Link="godot-startup-source\RetailClickToStartGlyphs.cs" />
     <Compile Include="..\OnslaughtRebuild.Godot\RetailAttractLoop.cs"
              Link="godot-startup-source\RetailAttractLoop.cs" />
     <Compile Include="..\OnslaughtRebuild.Godot\RetailFmvSkip.cs"
