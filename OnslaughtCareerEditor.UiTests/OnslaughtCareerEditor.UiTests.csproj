@@ -31,6 +31,7 @@
     <Compile Include="..\OnslaughtCareerEditor.WinUI\Helpers\ExplorerRevealService.cs" Link="WinUI\Helpers\ExplorerRevealService.cs" />
     <Compile Include="..\OnslaughtCareerEditor.WinUI\Helpers\HomeArrivalFocusPolicy.cs" Link="WinUI\Helpers\HomeArrivalFocusPolicy.cs" />
     <Compile Include="..\OnslaughtCareerEditor.WinUI\Helpers\HomeQuickStartState.cs" Link="WinUI\Helpers\HomeQuickStartState.cs" />
+    <Compile Include="..\OnslaughtCareerEditor.WinUI\Helpers\GameDirectoryIdentityText.cs" Link="WinUI\Helpers\GameDirectoryIdentityText.cs" />
     <Compile Include="..\OnslaughtCareerEditor.WinUI\Helpers\InstalledGamePatchText.cs" Link="WinUI\Helpers\InstalledGamePatchText.cs" />
     <Compile Include="..\OnslaughtCareerEditor.WinUI\Helpers\MediaKeepPlaying.cs" Link="WinUI\Helpers\MediaKeepPlaying.cs" />
     <Compile Include="..\OnslaughtCareerEditor.WinUI\Helpers\LiveTrainerPageText.cs" Link="WinUI\Helpers\LiveTrainerPageText.cs" />

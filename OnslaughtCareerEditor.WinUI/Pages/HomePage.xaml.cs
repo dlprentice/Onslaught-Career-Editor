@@ -129,7 +129,11 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             SetupStatusTextBlock.Text = string.IsNullOrWhiteSpace(folderName)
                 ? "Game directory configured."
                 : $"Game directory configured: {folderName}.";
-            SetupGuidanceTextBlock.Text = "Windowed & Mods creates a safe game copy, patches only that copy, and plays only that copy without changing the Steam/game install.";
+            const string defaultGuidance =
+                "Windowed & Mods creates a safe game copy, patches only that copy, and plays only that copy without changing the Steam/game install.";
+            RetailExecutableIdentity identity = BinaryPatchEngine.IdentifyRetailExecutable(
+                AppConfig.TryGetGameExecutablePath(gameDir));
+            SetupGuidanceTextBlock.Text = GameDirectoryIdentityText.ForHomeGuidance(identity, defaultGuidance);
         }
 
         /// <summary>

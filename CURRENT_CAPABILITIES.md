@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-08-17. The campaign authority is Generation 31 on exact
+Last updated: 2026-08-18. The campaign authority is Generation 31 on exact
 db.18624 geometry (8,329 functions; grades 8,088 OPAQUE / 231 C1 / 10 C2, with
 the first 16 contracts REBUILD_READY), re-grounded through the Generation-30
 literal-pin carry bridge after the live and tracked Ghidra database reached
@@ -58,6 +58,10 @@ values under `HKLM`) before falling back to the previously hardcoded
 `C:`/`D:`/`E:` candidate list, then scans `libraryfolders.vdf` as before. The
 test-only `ONSLAUGHT_GAME_DIR_CANDIDATES` and `ONSLAUGHT_STEAM_ROOT_CANDIDATES`
 overrides still short-circuit every built-in candidate, including the registry.
+A folder with `BEA.exe` and `data` is still a full install for layout, but
+Settings and Home now also say whether that executable is the known Steam
+retail file, something else, or unreadable right now. They will not call a
+changed file an original.
 
 ### Lore
 

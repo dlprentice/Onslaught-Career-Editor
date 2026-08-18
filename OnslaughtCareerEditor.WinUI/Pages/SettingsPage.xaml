@@ -75,6 +75,11 @@
                     <TextBlock x:Name="GameDirectoryStatusTextBlock"
                                AutomationProperties.AutomationId="SettingsGameDirectoryStatus"
                                Style="{StaticResource SectionBodyTextStyle}" />
+                    <TextBlock x:Name="GameDirectoryIdentityTextBlock"
+                               AutomationProperties.AutomationId="SettingsGameDirectoryIdentity"
+                               Style="{StaticResource SectionBodyTextStyle}"
+                               TextWrapping="WrapWholeWords"
+                               Visibility="Collapsed" />
                 </StackPanel>
             </Border>
 

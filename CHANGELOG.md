@@ -1,12 +1,19 @@
 # Onslaught Toolkit changelog
 
 Status: active — app-release record only
-Last updated: 2026-08-07
+Last updated: 2026-08-18
 Evidence: MEASURED — each entry names the released ZIP/tag it describes and
 was written from the release probe report and release notes of that tag.
 Summary: per-version record of shipped WinUI releases, for downloaders who
 arrive from the Releases page. RE generations are NOT recorded here — they
 live in `developer_state.json` and the campaign ledgers.
+
+## Unreleased
+
+- Settings and Home now say whether the chosen `BEA.exe` is the known Steam
+  retail file. A changed file is not called an original; a copy made from it
+  is disclosed as carrying those changes. If the file cannot be read, the app
+  says so instead of pretending it was changed.
 
 ## 1.0.11 — 2026-08-07
 

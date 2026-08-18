@@ -1793,20 +1793,31 @@ namespace OnslaughtCareerEditor.AppCore
         /// </summary>
         public static bool LooksLikeCleanRetailExecutable(string exePath)
         {
+            return IdentifyRetailExecutable(exePath) == RetailExecutableIdentity.KnownCleanRetail;
+        }
+
+        /// <summary>
+        /// Classify a BEA.exe without writing. A locked or otherwise unreadable file is
+        /// <see cref="RetailExecutableIdentity.Unreadable"/>, not "already changed".
+        /// </summary>
+        public static RetailExecutableIdentity IdentifyRetailExecutable(string? exePath)
+        {
             try
             {
                 if (string.IsNullOrWhiteSpace(exePath) || !File.Exists(exePath))
-                    return false;
+                    return RetailExecutableIdentity.Missing;
 
                 if (new FileInfo(exePath).Length != KnownRetailSteamSize)
-                    return false;
+                    return RetailExecutableIdentity.DifferentFromKnownRetail;
 
                 byte[] bytes = File.ReadAllBytes(exePath);
-                return IsKnownCleanRetailSpecimen(bytes, ComputeSha256Hex(bytes));
+                return IsKnownCleanRetailSpecimen(bytes, ComputeSha256Hex(bytes))
+                    ? RetailExecutableIdentity.KnownCleanRetail
+                    : RetailExecutableIdentity.DifferentFromKnownRetail;
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
             {
-                return false;
+                return RetailExecutableIdentity.Unreadable;
             }
         }
 

@@ -30,6 +30,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
             else
             {
+                ClearGameDirectoryIdentity();
                 GameDirectoryStatusTextBlock.Text = "No game directory set. Click Browse or Auto-Detect.";
                 GameDirectoryStatusTextBlock.Foreground = ThemeBrushes.Warning();
             }
@@ -63,6 +64,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         private void ValidateGameDirectory(string path)
         {
+            ClearGameDirectoryIdentity();
+
             if (!Directory.Exists(path))
             {
                 GameDirectoryStatusTextBlock.Text = "Directory does not exist.";
@@ -75,7 +78,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             if (inspection.Status == GameDirectoryStatus.FullInstall)
             {
                 GameDirectoryStatusTextBlock.Text = "Valid game directory detected (with executable and data).";
-                GameDirectoryStatusTextBlock.Foreground = ThemeBrushes.Success();
+                RenderGameDirectoryIdentity(path);
             }
             else if (inspection.Status == GameDirectoryStatus.MediaOnly)
             {
@@ -92,6 +95,27 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 GameDirectoryStatusTextBlock.Text = "Warning: this does not look like a full BEA installation yet.";
                 GameDirectoryStatusTextBlock.Foreground = ThemeBrushes.Warning();
             }
+        }
+
+        private void RenderGameDirectoryIdentity(string gameDirectory)
+        {
+            string? exePath = AppConfig.TryGetGameExecutablePath(gameDirectory);
+            RetailExecutableIdentity identity = BinaryPatchEngine.IdentifyRetailExecutable(exePath);
+            string line = GameDirectoryIdentityText.ForSettings(identity);
+            GameDirectoryIdentityTextBlock.Text = line;
+            GameDirectoryIdentityTextBlock.Visibility = string.IsNullOrWhiteSpace(line)
+                ? Visibility.Collapsed
+                : Visibility.Visible;
+            GameDirectoryStatusTextBlock.Foreground = GameDirectoryIdentityText.IsWarning(identity)
+                ? ThemeBrushes.Warning()
+                : ThemeBrushes.Success();
+            GameDirectoryIdentityTextBlock.Foreground = GameDirectoryStatusTextBlock.Foreground;
+        }
+
+        private void ClearGameDirectoryIdentity()
+        {
+            GameDirectoryIdentityTextBlock.Text = string.Empty;
+            GameDirectoryIdentityTextBlock.Visibility = Visibility.Collapsed;
         }
 
         private void UpdateSaveFileInfo(string? gameDir)
