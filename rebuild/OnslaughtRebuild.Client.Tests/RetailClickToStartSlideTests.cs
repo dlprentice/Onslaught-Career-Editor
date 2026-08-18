@@ -15,10 +15,10 @@ namespace OnslaughtRebuild.Client.Tests;
 /// (<c>0x005563D0</c>) calls on <c>DAT_0089d7bc</c> (<c>FrontEnd\LostToys.tga</c>).
 /// Not attract <c>vectorlosttoyssplash</c>. Not TWIMTBP.</para>
 ///
-/// <para>What is asserted is the LAW, not Godot pixels. The previous
-/// <c>DrawClickToStart</c> fade was labelled reconstruction; these cases pin
+/// <para>What is asserted is the LAW, not Godot pixels. These cases pin
 /// the specimen clamp / square / 400 travel and refuse a linear travel.
-/// Wiring through the hotspot is deferred.</para>
+/// <c>DrawClickToStart</c> must call the recovered slide rather than keep
+/// the reconstruction fade, offset, and rects.</para>
 /// </summary>
 public sealed class RetailClickToStartSlideTests
 {
@@ -89,13 +89,18 @@ public sealed class RetailClickToStartSlideTests
     }
 
     [Fact]
-    public void DrawClickToStartIsNotYetWiredBecauseTheHotspotIsLive()
+    public void DrawClickToStartCallsTheRecoveredSlideInsteadOfTheReconstructionCopy()
     {
         string flow = File.ReadAllText(
             Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "RetailFrontendFlow.cs"));
 
-        Assert.DoesNotContain("RetailClickToStartSlide", flow);
+        Assert.Contains("RetailClickToStartSlide.ShouldDraw", flow);
+        Assert.Contains("RetailClickToStartSlide.X", flow);
+        Assert.Contains("RetailClickToStartSlide.Passes", flow);
         Assert.Contains("DAT_0089d7bc", flow);
-        Assert.Contains("(1f - fade) * (1f - fade) * 400f", flow);
+        Assert.DoesNotContain("(1f - fade) * (1f - fade) * 400f", flow);
+        Assert.DoesNotContain("RetailClickToStartGlyphs", flow);
+        Assert.DoesNotContain("vectorlosttoyssplash", flow);
+        Assert.DoesNotContain("TWIMTBP", flow);
     }
 }

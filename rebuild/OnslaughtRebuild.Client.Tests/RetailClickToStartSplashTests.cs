@@ -101,7 +101,6 @@ public sealed class RetailClickToStartSplashTests
         Assert.Contains("RetailClickToStartSplash.Scale", flow);
         Assert.DoesNotContain("(558f - (splashScale * 238f)) - 126.4375f", flow);
         Assert.DoesNotContain("135.9375f + (222f * splashScale)", flow);
-        Assert.DoesNotContain("RetailClickToStartSlide", flow);
         Assert.DoesNotContain("RetailClickToStartGlyphs", flow);
         Assert.DoesNotContain("vectorlosttoyssplash", flow);
         Assert.DoesNotContain("TWIMTBP", flow);

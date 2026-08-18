@@ -133,7 +133,6 @@ public sealed partial class RetailFrontendFlow : Control
     // Alpha 0xfd, CORRECTED 2026-07-28 from 0xff: frame 3000 draw 6 is
     // 0xFD3F3F3F. Same alpha-byte class as the row-label correction at :75-77.
     private static readonly Color FlagTint = RetailColor(0xfd3f3f3f);
-    private static readonly Color ClickSlideShadow = RetailColor(0x3f000000);
     private static readonly Color ShadowTint = RetailColor(0x3e000000);
     private static readonly Color VersionTint = RetailColor(0xff102025);
     // Released overlay format string is "V%1d.%02d" at VA 0x00629454 in pristine
@@ -1024,25 +1023,25 @@ public sealed partial class RetailFrontendFlow : Control
             DrawTextFlat(prompt, origin, textScale, Colors.White);
         }
 
-        // DAT_0089d7bc LostToys sliding pair after the same this+0x18 > 4 gate.
-        if (_clickPulseTimer > RetailClickToStartPrompt.PromptGateSeconds)
+        // DAT_0089d7bc LostToys sliding pair. No skip after the two byte
+        // writes: both mode-0 CDXSurf calls issue even when this+0x18 <= 4
+        // (the pair sits 400 px off the left edge). Fade is
+        // clamp(timer-4, 0, 1); offset is (1-fade)²*400; dest X is
+        // settled − offset.
+        if (RetailClickToStartSlide.ShouldDraw(_clickPulseTimer))
         {
-            float fade = Mathf.Clamp(
-                (float)(_clickPulseTimer - RetailClickToStartPrompt.PromptGateSeconds),
-                0f,
-                1f);
-            float off = (1f - fade) * (1f - fade) * 400f;
-            // Call sites use mode 0 (top-left style) at these XY with sx=sy=1.
-            DrawTextureRect(
-                _clickSlide,
-                new Rect2(124f - off, -6f, _clickSlide.GetWidth(), _clickSlide.GetHeight()),
-                false,
-                ClickSlideShadow);
-            DrawTextureRect(
-                _clickSlide,
-                new Rect2(120f - off, -10f, _clickSlide.GetWidth(), _clickSlide.GetHeight()),
-                false,
-                Colors.White);
+            foreach (RetailClickToStartSlide.Pass pass in RetailClickToStartSlide.Passes)
+            {
+                DrawTextureRect(
+                    _clickSlide,
+                    new Rect2(
+                        RetailClickToStartSlide.X(pass, _clickPulseTimer),
+                        pass.Y,
+                        _clickSlide.GetWidth(),
+                        _clickSlide.GetHeight()),
+                    false,
+                    RetailColor(pass.Color));
+            }
         }
 
         // CFEPIntro::Render 0x0051BBA0 title slam — DAT_0089d88c / FE_BEA_Title2.

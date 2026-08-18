@@ -37,7 +37,8 @@ namespace OnslaughtRebuild.GodotClient;
 /// <para>No Godot types. The 2-D consumer ignores z; the bits stay on the
 /// helper so a later depth owner does not have to re-read the body.
 /// <c>DrawClickToStart</c> consumes <see cref="X"/>, <see cref="Y"/>, and
-/// <see cref="Scale"/>. Slide and glyph helpers stay unwired.</para>
+/// <see cref="Scale"/>. The LostToys slide is wired separately. Glyphs
+/// stay unwired.</para>
 /// </summary>
 public static class RetailClickToStartSplash
 {
