@@ -1,7 +1,7 @@
 # CScriptObjectCode function map
 
 Status: active static function map
-Last updated: 2026-08-18 (RETURN / CALLLOCAL / event-id 0–7 static users)
+Last updated: 2026-08-18 (RETURN / CALLLOCAL / event names / 762-object trailer census)
 Source File: `C:\dev\ONSLAUGHT2\MissionScript\ScriptObjectCode.cpp` (the
 VM's `__FILE__` chain is established by the adjacent
 [`ScriptObjectCode.cpp.md`](ScriptObjectCode.cpp.md) wave receipts) | Binary:
@@ -214,6 +214,39 @@ The names are the 13 `{int32 id, char* name, int32 arity}` records at
 They match the wrapper immediates above. Authored *behavior* of each
 handler is still open.
 
+Shipped occupancy (safe-copy `local-lab/safe-copy-bea-pristine/data/Resources`,
+301 `.aya`, 115 worlds, **762** script objects, 0 parse failures, parser
+`local-lab/msl/script_parse.py` mirroring ctor `0x00538ec0`):
+
+| Id | Name | Objects with IP `!= -1` | First opcode of those IPs |
+| --- | --- | --- | --- |
+| 0 | `init` | 573 | `5` 320 / `24` 137 / `23` 116 |
+| 1 | `arrived` | **0** (all `-1`) | — |
+| 2 | `timer` | **0** (all `-1`) | — |
+| 3 | `died` | 265 | `5` 145 / `24` 113 / `23` 7 |
+| 4 | `hit` | 128 | all opcode `6` |
+| 5 | `started_dying` | 142 | `5` 99 / `24` 39 / `23` 4 |
+| 6 | `ready` | 6 | `5` 6 |
+| 7 | `shutdown` | 3 | `5` 3 |
+| 8–12 | `notdefined*` | **0** (all `-1`) | — |
+
+`CallEvent` already no-ops an IP of `-1`. So the eight IScript wrappers
+still *fire* ids 0–7, but shipped objects have no compiled body for
+`arrived` / `timer` / `notdefined*`. Do not invent where those handlers
+live (named `CEventFunction`s on `+0x48` are a candidate, not measured
+here).
+
+Object trailers (ctor writes A → `+0x60`, B → `+0x5c`):
+
+| trailerA (`+0x60`) | trailerB (`+0x5c`) | count |
+| --- | --- | --- |
+| 0 | 1 | 715 |
+| 0 | 0 | 47 |
+
+No shipped object has trailerA `== 1`, so the Run-time trace compare at
+`0x00539ba4` is off for the whole corpus. 715 objects have a one-time
+PC=0 preamble; 47 do not.
+
 Cheapest falsifier for a missing static user of 8–12: another `E8` to `0x00539990`
 outside this census, or a `CallEventDirect` path that is really an id-table
 lookup in disguise.
@@ -225,11 +258,11 @@ lookup in disguise.
   (`CInstructionOP_PUSHPC__VFunc_0_0052e0a0`) pushes the *attribute* as a
   `CInt`; whether every shipped local-call site emits `PUSHPC` then
   `CALLLOCAL` is still open (read one `MissionScripts/level***` stream).
-- `+0x5c` is a serialized dword that gates the one-time PC=0 preamble. Its
-  authored name and any meaning beyond "nonzero ⇒ run preamble" are still
-  open. Cheapest: read the two trailer dwords out of one shipped
-  `MissionScripts/level***` record and watch `CallEvent` skip or take the
-  preamble.
+- `+0x5c` / trailerB: CLOSED as the one-time PC=0 preamble flag.
+  Shipped split is 715 ones / 47 zeros (safe-copy census above). Authored
+  name of the field is still open.
+- trailerA / `+0x60`: CLOSED as 0 in all 762 shipped objects. The
+  `== 1` trace compare is unused on the corpus.
 - The 13 event-id slots at `eventObj+0x14`. CLOSED: names and arities
   come from `.data` `0x0064fef8`; static users of 0–7 are the IScript
   wrappers above. Ids 8–12 (`notdefined4`–`notdefined8`) have no direct
