@@ -42,7 +42,11 @@ runtime-witnessed `name-cohort5` → `db.18626` → the 65-slot RTTI vftable
 a separately authorized promotion. Internal functions remain **8,329** across
 all eight: no function was created or destroyed. All eight ceremonies are owned
 by the shared cohort framework's replayable specs under `tools/cohort-specs/`;
-prefer replaying a spec over reading this paragraph.
+prefer replaying a spec over reading this paragraph. The 34 `.data` rows of the
+original 99-slot pointer cohort were correctly excluded and have a terminal
+disposition: none is a vtable (CRT init/hook tables, a `CFastVB` CPU-feature
+dispatch table, and a `CTexture` interpolation dispatch table) — see
+[`../binary-analysis/data34-slot-disposition-2026-08-17.md`](../binary-analysis/data34-slot-disposition-2026-08-17.md).
 
 **The CTentacle factory-name chain (`db.18622` → `db.18624`).** Two one-row
 `SET_NAME` cohorts, run as two sequential ceremonies through

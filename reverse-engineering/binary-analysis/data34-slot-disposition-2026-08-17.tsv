@@ -1,0 +1,35 @@
+addr	dwordValue	tableBase	tableLen	consumer	identity	confidence
+0x006222a0	0x0045ac20	0x00622004	706	CRT init-range walk (no direct address ref)	CRT dynamic-initializer array member	HIGH
+0x006222a4	0x00460050	0x00622004	706	CRT init-range walk (no direct address ref)	CRT dynamic-initializer array member	HIGH
+0x006225b4	0x004befc0	0x00622004	706	CRT init-range walk (no direct address ref)	CRT dynamic-initializer array member	HIGH
+0x006532ec	0x0059877e	0x006532e8	3	CRT__RunStaticInitRangesWithOptionalCallback (reads slot 0)	CRT static-init range/callback table slot	HIGH
+0x006532f0	0x0059877e	0x006532e8	3	CRT__RunStaticInitRangesWithOptionalCallback (reads slot 0)	CRT static-init range/callback table slot	MEDIUM
+0x00653d38	0x0056c05c	0x00653d38	1	CRT__SetLocaleCategory (call [esi+0x653d38])	CRT locale hook slot defaulting to CRT__ReturnZero	HIGH
+0x00653d44	0x0056c05c	0x00653d44	1	unreferenced	CRT locale hook slot defaulting to CRT__ReturnZero	HIGH
+0x00656f38	0x00576698	0x00656f30	46	CFastVB__InitDispatchTableByCpuFeature	CFastVB CPU-feature dispatch table member	HIGH
+0x00656f3c	0x005768f1	0x00656f30	46	CFastVB__InitDispatchTableByCpuFeature	CFastVB CPU-feature dispatch table member	MEDIUM
+0x00656f40	0x00576bba	0x00656f30	46	CFastVB__InitDispatchTableByCpuFeature	CFastVB CPU-feature dispatch table member	MEDIUM
+0x00656f44	0x00575d68	0x00656f30	46	CFastVB__InitDispatchTableByCpuFeature	CFastVB CPU-feature dispatch table member	MEDIUM
+0x00656f48	0x0057617e	0x00656f30	46	CFastVB__InitDispatchTableByCpuFeature	CFastVB CPU-feature dispatch table member	MEDIUM
+0x00656f4c	0x00575d8c	0x00656f30	46	CFastVB__InitDispatchTableByCpuFeature	CFastVB CPU-feature dispatch table member	MEDIUM
+0x00656f50	0x005763cd	0x00656f30	46	CFastVB__InitDispatchTableByCpuFeature	CFastVB CPU-feature dispatch table member	MEDIUM
+0x00656f54	0x00575d44	0x00656f30	46	CFastVB__InitDispatchTableByCpuFeature	CFastVB CPU-feature dispatch table member	HIGH
+0x00656f78	0x00576dfd	0x00656f30	46	CFastVB__InitDispatchTableByCpuFeature	CFastVB CPU-feature dispatch table member	HIGH
+0x00656f7c	0x00577b17	0x00656f30	46	CFastVB__InitDispatchTableByCpuFeature	CFastVB CPU-feature dispatch table member	MEDIUM
+0x00656f80	0x00577bc0	0x00656f30	46	CFastVB__InitDispatchTableByCpuFeature	CFastVB CPU-feature dispatch table member	HIGH
+0x00656fc4	0x00576b3a	0x00656f30	46	CFastVB__InitDispatchTableByCpuFeature	CFastVB CPU-feature dispatch table member	HIGH
+0x00656fc8	0x005775b0	0x00656f30	46	CFastVB__InitDispatchTableByCpuFeature	CFastVB CPU-feature dispatch table member	HIGH
+0x00656fe0	0x00577c83	0x00656f30	46	CFastVB__InitDispatchTableByCpuFeature	CFastVB CPU-feature dispatch table member	HIGH
+0x00656fe4	0x0057800e	0x00656f30	46	CFastVB__InitDispatchTableByCpuFeature	CFastVB CPU-feature dispatch table member	MEDIUM
+0x0065700c	0x00577d47	0x00656fec	24	CTexture__InterpolateVec2CubicNormalized_Dispatch (call [0x656fec])	CTexture interpolation dispatch table member	HIGH
+0x00657010	0x00577dd5	0x00656fec	24	CTexture__InterpolateVec2CubicNormalized_Dispatch	CTexture interpolation dispatch table member	MEDIUM
+0x00657014	0x005759b6	0x00656fec	24	CTexture__InterpolateVec2CubicNormalized_Dispatch	CTexture interpolation dispatch table member	HIGH
+0x00657028	0x0057609c	0x00656fec	24	CTexture__InterpolateVec2CubicNormalized_Dispatch	CTexture interpolation dispatch table member	HIGH
+0x0065702c	0x00576167	0x00656fec	24	CTexture__InterpolateVec2CubicNormalized_Dispatch	CTexture interpolation dispatch table member	MEDIUM
+0x00657030	0x005761f7	0x00656fec	24	CTexture__InterpolateVec2CubicNormalized_Dispatch	CTexture interpolation dispatch table member	MEDIUM
+0x00657034	0x0057674a	0x00656fec	24	CTexture__InterpolateVec2CubicNormalized_Dispatch	CTexture interpolation dispatch table member	MEDIUM
+0x00657038	0x0057629d	0x00656fec	24	CTexture__InterpolateVec2CubicNormalized_Dispatch	CTexture interpolation dispatch table member	MEDIUM
+0x0065703c	0x005762bf	0x00656fec	24	CTexture__InterpolateVec2CubicNormalized_Dispatch	CTexture interpolation dispatch table member	MEDIUM
+0x00657040	0x005783d9	0x00656fec	24	CTexture__InterpolateVec2CubicNormalized_Dispatch	CTexture interpolation dispatch table member	MEDIUM
+0x00657044	0x005784a9	0x00656fec	24	CTexture__InterpolateVec2CubicNormalized_Dispatch	CTexture interpolation dispatch table member	MEDIUM
+0x00657048	0x005784ba	0x00656fec	24	CTexture__InterpolateVec2CubicNormalized_Dispatch	CTexture interpolation dispatch table member	MEDIUM
