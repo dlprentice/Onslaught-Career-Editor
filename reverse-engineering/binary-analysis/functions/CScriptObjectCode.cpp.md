@@ -1,7 +1,7 @@
 # CScriptObjectCode function map
 
 Status: active static function map
-Last updated: 2026-08-18 (arrived/timer bind: empty 13-slots; named CEventFunctions)
+Last updated: 2026-08-18 (arrived/timer bind; 994 named entries are JMPFALSE)
 Source File: `C:\dev\ONSLAUGHT2\MissionScript\ScriptObjectCode.cpp` (the
 VM's `__FILE__` chain is established by the adjacent
 [`ScriptObjectCode.cpp.md`](ScriptObjectCode.cpp.md) wave receipts) | Binary:
@@ -306,6 +306,26 @@ Spot-check (parser `read_event` vs the ctor reads above): `110` RLWD
 `Scout` has evtab died=`1` and one named handler `{entry:5, "game playing"}`;
 `200` RLWD `FighterAttack` has init=`1`, hit=`30`, and named entries
 2 / 9 / 16 / 23. The named PCs are not id-table slots.
+
+Every one of the 994 named entries is opcode `0x13`
+(`CInstructionOP_JMPFALSE`). Independently re-read executor
+`0x0052e950` (`ret 0xc`, file `0x0012e950`): `Pop` (`0x00539470`),
+`call [elem->vtable+0x3c]`, if AL is 0 write `instr+4` to `vm+0x214`
+(PC), then delete the element. All 994 jumps are **forward** (min
+delta 1, max 367, mode 6 with 127). `nparam` is 1 on every record.
+Zero named entries share a PC with a 13-slot IP.
+
+The popped value is a `CBoolDataType` (`vtable 0x005e4d50`, RTTI
+`.?AVCBoolDataType@@` — not a distinct `CEventFunctionParam` class).
+`Execute` installs that vtable on an 8-byte wrapper and copies
+`byte [listenerElement+0x14]` into `wrapper+4`. Slot `+0x3c` is
+`CBoolDataType__VFunc_15_0052e480` (`mov al,[ecx+4]; ret` at file
+`0x0012e480`). `PostEvent` / `HandleEventMessage` write
+`element+0x14 = 1` before `Execute`, so the posted path falls through
+into the body; a 0 skips to the attribute PC (the instruction after
+the handler). Scout: entry 5 `JMPFALSE 14`, body
+`PlayCharMessage` + `PostEvent("Enemy Engaged")`, target 14 is
+`op0d` immediately after.
 
 733 loose `MissionScripts/**/*.msl` contain zero `arrived(`, `timer(`,
 `SetTimer(`, `event("arrived"`, or `event("timer"`.
