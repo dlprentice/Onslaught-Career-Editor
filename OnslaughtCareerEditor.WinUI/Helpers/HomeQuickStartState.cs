@@ -100,5 +100,8 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         public const string WorkingLabel = "Setting up your copy...";
 
         public const string LaunchingLabel = "Starting the game...";
+
+        public const string FailureNote =
+            "That did not work, and nothing was changed.";
     }
 }

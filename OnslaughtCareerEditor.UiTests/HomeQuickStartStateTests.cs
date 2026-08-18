@@ -127,4 +127,17 @@ public class HomeQuickStartStateTests
             Does.Not.Contain("only ever"),
             "No standing absolute about the installed game survives the opt-in.");
     }
+
+    [Test]
+    public void ASetupFailureSaysNothingWasChangedWithoutTheException()
+    {
+        Assert.That(HomeQuickStartState.FailureNote, Does.Contain("nothing was changed"));
+        Assert.That(HomeQuickStartState.FailureNote, Does.Not.Contain(":\\"));
+        Assert.That(HomeQuickStartState.FailureNote.ToLowerInvariant(), Does.Not.Contain("exception"));
+
+        string code = System.IO.File.ReadAllText(System.IO.Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI", "Pages", "HomePage.xaml.cs"));
+        Assert.That(code, Does.Contain("HomeQuickStartState.FailureNote"));
+        Assert.That(code, Does.Not.Contain("{ex.Message}"));
+    }
 }

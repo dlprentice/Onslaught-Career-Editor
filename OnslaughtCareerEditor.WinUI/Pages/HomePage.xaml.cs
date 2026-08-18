@@ -361,7 +361,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                                         or UnauthorizedAccessException or DirectoryNotFoundException
                                         or System.ComponentModel.Win32Exception)
             {
-                ShowQuickStartNote($"That did not work, and nothing was changed. {ex.Message}");
+                ShowQuickStartNote(HomeQuickStartState.FailureNote);
                 AppStatusService.SetStatus("Home: setup did not finish");
             }
             finally
