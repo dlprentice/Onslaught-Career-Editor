@@ -27,6 +27,9 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
             "The app could not read BEA.exe just now, so it cannot say whether this is the known Steam retail file. " +
             "Windowed & Mods still works on a separate copy unless you ask it to change the installed game.";
 
+        public const string AutoDetectFailed =
+            "Could not find the game automatically. Choose the folder you installed it into - the one holding BEA.exe.";
+
         public static string ForSettings(RetailExecutableIdentity identity)
         {
             return identity switch

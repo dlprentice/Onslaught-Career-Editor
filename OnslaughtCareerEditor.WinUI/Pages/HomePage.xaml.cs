@@ -224,7 +224,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             string? detected = AppConfig.DetectGameDirectory();
             if (string.IsNullOrWhiteSpace(detected))
             {
-                ShowQuickStartNote("Could not find the game automatically. Choose the folder you installed it into - the one holding BEA.exe.");
+                ShowQuickStartNote(GameDirectoryIdentityText.AutoDetectFailed);
                 AppStatusService.SetStatus("Home: game folder not found automatically");
                 return;
             }

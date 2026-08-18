@@ -83,12 +83,22 @@ public class GameDirectoryIdentityTextTests
         {
             string all = (
                 GameDirectoryIdentityText.ForSettings(identity) + " " +
-                GameDirectoryIdentityText.ForHomeGuidance(identity, "default guidance")).ToLowerInvariant();
+                GameDirectoryIdentityText.ForHomeGuidance(identity, "default guidance") + " " +
+                GameDirectoryIdentityText.AutoDetectFailed).ToLowerInvariant();
             foreach (string word in banned)
             {
                 Assert.That(all, Does.Not.Contain(word), $"Identity copy should not say '{word}'.");
             }
         }
+    }
+
+    [Test]
+    public void AutoDetectFailureTellsThePlayerWhatToDoWithoutJargon()
+    {
+        Assert.That(GameDirectoryIdentityText.AutoDetectFailed, Does.Contain("Could not find the game automatically"));
+        Assert.That(GameDirectoryIdentityText.AutoDetectFailed, Does.Contain("BEA.exe"));
+        Assert.That(GameDirectoryIdentityText.AutoDetectFailed.ToLowerInvariant(), Does.Not.Contain("preflight"));
+        Assert.That(GameDirectoryIdentityText.AutoDetectFailed.ToLowerInvariant(), Does.Not.Contain("catalog"));
     }
 
     [Test]
@@ -103,6 +113,8 @@ public class GameDirectoryIdentityTextTests
         Assert.That(settingsCode, Does.Contain("IdentifyRetailExecutable"));
         Assert.That(settingsCode, Does.Contain("GameDirectoryIdentityText.ForSettings"));
         Assert.That(homeCode, Does.Contain("GameDirectoryIdentityText.ForHomeGuidance"));
+        Assert.That(settingsCode, Does.Contain("GameDirectoryIdentityText.AutoDetectFailed"));
+        Assert.That(homeCode, Does.Contain("GameDirectoryIdentityText.AutoDetectFailed"));
     }
 
     private static string FindRepoRoot()

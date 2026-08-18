@@ -159,6 +159,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             string? detected = AppConfig.DetectGameDirectory();
             if (string.IsNullOrWhiteSpace(detected))
             {
+                GameDirectoryStatusTextBlock.Text = GameDirectoryIdentityText.AutoDetectFailed;
+                GameDirectoryStatusTextBlock.Foreground = ThemeBrushes.Warning();
                 AppStatusService.SetStatus("Settings: could not auto-detect the game directory");
                 return;
             }
