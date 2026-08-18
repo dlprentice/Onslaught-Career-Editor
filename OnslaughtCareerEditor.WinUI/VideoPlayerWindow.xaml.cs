@@ -28,7 +28,7 @@ namespace OnslaughtCareerEditor.WinUI
 
         public VideoPlayerWindow()
         {
-            Title = "Onslaught Career Editor - Video Player";
+            Title = "Onslaught Toolkit - Video Player";
 
             _videoView = new VideoView
             {
@@ -238,7 +238,7 @@ namespace OnslaughtCareerEditor.WinUI
 
             _currentMediaPath = path;
             _pendingMediaPath = null;
-            Title = $"Onslaught Career Editor - {Path.GetFileName(path)}";
+            Title = $"Onslaught Toolkit - {Path.GetFileName(path)}";
             _statusTextBlock.Text = $"Opening {Path.GetFileName(path)}...";
             RaisePlaybackStateChanged();
         }

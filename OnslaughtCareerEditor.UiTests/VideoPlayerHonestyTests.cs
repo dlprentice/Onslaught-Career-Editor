@@ -33,4 +33,18 @@ public class VideoPlayerHonestyTests
         Assert.That(code, Does.Not.Contain("ex.Message"));
         Assert.That(code, Does.Not.Contain("initialization failed"));
     }
+
+    [Test]
+    public void TheDedicatedWindowsUseThePublicProductName()
+    {
+        string player = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI", "VideoPlayerWindow.xaml.cs"));
+        string playback = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI", "Media", "VideoPlaybackWindow.cs"));
+
+        Assert.That(player, Does.Contain("Onslaught Toolkit"));
+        Assert.That(playback, Does.Contain("Onslaught Toolkit"));
+        Assert.That(player, Does.Not.Contain("Onslaught Career Editor"));
+        Assert.That(playback, Does.Not.Contain("Onslaught Career Editor"));
+    }
 }

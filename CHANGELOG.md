@@ -23,7 +23,8 @@ live in `developer_state.json` and the campaign ledgers.
   instead of calling the empty tree filtered results. Cheats will not offer to
   write into a folder inside the installed game. Media load and playback
   failures stay on the page without dumping the raw exception. The dedicated
-  video player says it could not start, without the exception. A Media search
+  video player says it could not start, without the exception. Dedicated video
+  windows now use the public product name, Onslaught Toolkit. A Media search
   with no hits now says to try another word or clear the search. Windowed & Mods
   Last operation and the safe-copy list do the same: a failure names the action
   and that nothing was changed, without the exception. Home setup failures
@@ -45,7 +46,8 @@ live in `developer_state.json` and the campaign ledgers.
   looking saved. A look or media choice that cannot be kept is named the
   same way and the previous value is put back. Home uses that same folder
   sentence when a chosen install cannot be kept. Save Lab overwrite cancel
-  says the file was left as it is.
+  says the file was left as it is. Putting a career into a safe copy, or
+  bringing one out, asks the same overwrite question.
 
 ## 1.0.11 — 2026-08-07
 
