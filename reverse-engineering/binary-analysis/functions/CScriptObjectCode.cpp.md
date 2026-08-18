@@ -1,7 +1,7 @@
 # CScriptObjectCode function map
 
 Status: active static function map
-Last updated: 2026-08-18 (named-event bodies end at LABEL; optional REMOVE_TOP)
+Last updated: 2026-08-18 (IScript *Wait natives snapshot a 0x228 CVM)
 Source File: `C:\dev\ONSLAUGHT2\MissionScript\ScriptObjectCode.cpp` (the
 VM's `__FILE__` chain is established by the adjacent
 [`ScriptObjectCode.cpp.md`](ScriptObjectCode.cpp.md) wave receipts) | Binary:
@@ -162,11 +162,14 @@ matching pair of `RETURN`:
 A whole-`.text` scan of `[reg+0x224]` in `0x0052d000..0x0053a200` finds
 exactly these interpreter writers: `ExecutePop` (read + decrement),
 `CALLLOCAL` (read + increment), `Run` (zero on entry + the `<= 0` stop
-test), `CopyState` (copy), and `InitRuntime` (zero). Five `IScript__*Wait`
-constructors (`PlayAnimationWait`, `PlayCharMessageWait`,
-`PlayPCharMessageWait`, `Pause`, `FollowWaypointWait`) write
-`[eax+0x224] = [0x0089c804]` while installing CVM vptr `0x005e4f1c` on a
-**new** object — that is construction, not an interpreter increment.
+test), `CopyState` (copy), and `InitRuntime` (zero). Five `IScript__*Wait` constructors
+(`PlayAnimationWait`, `PlayCharMessageWait`,
+`PlayPCharMessageWait`, `Pause`, `FollowWaypointWait`) allocate a
+**0x228-byte CVM**, `rep movsd` 0x81 stack dwords, copy this same
+six-dword tail, install vptr `0x005e4f1c`, then write live
+`[0x0089c800]=1` so `Run` yields. That is construction plus a stop,
+not an interpreter increment. See
+[`IScript.cpp.md`](IScript.cpp.md) → "Wait helpers".
 
 Cheapest falsifier: another instruction class whose executor writes
 `[vm+0x224]` outside that census, or a shipped script that returns from a
