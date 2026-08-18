@@ -3,7 +3,7 @@
 > Source file: `MissionScript/DataType.cpp`
 > Debug path string: `0x0064cc80` ("[maintainer-local-source-export-root]\MissionScript\DataType.cpp")
 > Header string: `0x0064c628` ("[maintainer-local-source-export-root]\MissionScript\DataType.h")
-> Last updated: 2026-06-08
+> Last updated: 2026-08-18 (CThingPtr[+0x14] is SetReader assign, not Print)
 
 ## Name corrections — 2026-07-28
 
@@ -17,7 +17,7 @@ withdrawn label can tell it was corrected and not lost.
 | Address | Superseded label | Current name | Correction |
 | --- | --- | --- | --- |
 | `0x0052ea40` | `CAsmInstruction__ExecuteCall` | `CInstructionOP_CALL__ExecuteCall` | class prefix moved; suffix unchanged |
-| `0x0052f430` | `CStringDataType__Print` | `CThingPtrDataType__Print` | class prefix moved; suffix unchanged |
+| `0x0052f430` | `CStringDataType__Print` | `CThingPtrDataType__Print` | class prefix moved; suffix unchanged. **2026-08-18 body:** the Print suffix is the table label; the body is assign via `CGenericActiveReader__SetReader` on `this+4` |
 
 ---
 
@@ -38,7 +38,7 @@ Wave576 hardened the CStringDataType tail, CThingPtrDataType tail, shared CDataT
 | --- | --- | --- |
 | `0x0052f2c0` | `void * __thiscall CStringDataType__Clone(void * this)` | Allocates an 8-byte CString object, installs vtable `0x005e4e4c`, allocates/copies a heap string from `this+0x04`, and null-terminates the clone buffer. |
 | `0x0052f360` | `bool __thiscall CStringDataType__Equals(void * this, void * rhs)` | Reads rhs through datatype vtable slot `+0x38` and compares the returned string against `this+0x04`. |
-| `0x0052f430` | `void __thiscall CStringDataType__Print(void * this, void * rhs)` | Calls rhs vtable slot `+0x40` and passes the returned reader cell to `CGenericActiveReader__SetReader` for the string field at `this+0x04`. |
+| `0x0052f430` | `void __thiscall CThingPtrDataType__Print(void * this, void * rhs)` | Table name is Print. Body is assign: `thing* = rhs->vtable[+0x40]()` then `CGenericActiveReader__SetReader(&this+4, thing*)`. Independently re-read 2026-08-18. |
 | `0x0052f470` | `void * __thiscall CThingPtrDataType__Clone(void * this)` | Allocates an 8-byte thing-pointer datatype, copies `this+0x04`, registers the clone field with `CSPtrSet__AddToHead` when needed, and installs vtable `0x005e4df8`. |
 | `0x0052f550` | `void * __thiscall CThingPtrDataType__ScalarDeletingDestructor(void * this, byte flags)` | Calls `CThingPtrDataType__Destructor` and frees `this` when `flags&1` is set. |
 | `0x0052f570` | `void __thiscall CThingPtrDataType__Destructor(void * this)` | Removes `this+0x04` from the pointed object's `CSPtrSet` when present and restores base vtable pointer `0x005e4b4c`. |
@@ -196,7 +196,7 @@ CDataType                    (base class)
 |---------|------|---------|
 | 0x0052f2c0 | CStringDataType__Clone | Creates copy of string data type |
 | 0x0052f360 | CStringDataType__Equals | String comparison (strcmp) |
-| 0x0052f430 | CThingPtrDataType__Print | Print string value |
+| 0x0052f430 | CThingPtrDataType__Print | Assign / rebind the thing slot at `this+4` via SetReader (Print is the table label) |
 | 0x0052f690 | CStringDataType__InitFromString | Initialize from C string |
 | 0x0052f720 | CStringDataType__ScalarDeletingDestructor | Scalar deleting destructor |
 | 0x0052f740 | CStringDataType__Destructor | Frees string buffer |
