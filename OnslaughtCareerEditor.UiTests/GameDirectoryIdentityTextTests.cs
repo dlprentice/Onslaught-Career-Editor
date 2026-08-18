@@ -177,9 +177,11 @@ public class GameDirectoryIdentityTextTests
         int mediaFail = settings.IndexOf("RestoreKeptMediaPreferences();", StringComparison.Ordinal);
         int appearanceNotify = settings.IndexOf(
             "AppearancePersistStatusTextBlock.Visibility = Visibility.Collapsed;",
+            appearanceFail,
             StringComparison.Ordinal);
         int mediaNotify = settings.IndexOf(
             "MediaPersistStatusTextBlock.Visibility = Visibility.Collapsed;",
+            mediaFail,
             StringComparison.Ordinal);
 
         Assert.That(appearanceFail, Is.GreaterThanOrEqualTo(0));
