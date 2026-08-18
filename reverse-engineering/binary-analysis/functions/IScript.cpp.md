@@ -1,7 +1,7 @@
 # IScript function map
 
 Status: active static function map
-Last updated: 2026-08-18 (event-id 2 / BSS scratch `0x0089c528` closed)
+Last updated: 2026-08-18 (event-id 2; EGameState 0x008a9ac0; VM+0x210 at 0x0089c7f0)
 Source File: `C:\dev\ONSLAUGHT2\MissionScript\IScript.cpp` (SEH `__FILE__`
 pointer `0x0064fa40` read out of `IScript__PostEvent`) | Binary: BEA.exe,
 SHA-256
@@ -134,8 +134,18 @@ db.18627.
   The `vtable+0x38`/`+0x48` reads in `IScript__PostEvent` and
   `CScriptEventNB__RegisterEventListener` therefore take a `CStringDataType`
   key.
-- The dispatch globals `0x008a9ac0` (state selector) and `0x0089c7f0` (2002
-  guard): which state machine owns them.
+- The dispatch globals `0x008a9ac0` and `0x0089c7f0`: CLOSED.
+  `0x008a9ac0` is the `EGameState` dword (`references/Onslaught/game.h:42-54`).
+  IScript's `cmp …,4` is `GAME_STATE_LEVEL_LOST`. Sibling writers match the
+  rest of the enum: `con_win` stores `5` (`GAME_STATE_LEVEL_WON`), and
+  `SetQuit`-shaped sites (`FUN_00429ab0`, `CGame__HandleEvent`,
+  `CEngine__MarkDeviceResetPending`, `con_map`) store `9`
+  (`GAME_STATE_QUIT`) when the current value is `<= 3` (`GAME_STATE_PLAYING`).
+  The adjacent dword `0x008a9acc` is the `SetQuit` partner (those sites write
+  `1` = `QT_QUIT_TO_FRONTEND` there). `0x0089c7f0` is not a free flag: it is
+  the `CScriptObjectCode` singleton `0x0089c5e0+0x210` (running); `0x0089c7f4`
+  is `+0x214` (PC). The 2002 `test [0x0089c7f0]` is therefore "VM already
+  running". Wait helpers copy that same six-dword tail into a fresh CVM.
 - The 2002 arm's `CScriptObjectCode__CallEvent` invocation
   (`this=0x0089c5e0`, args `[edi+0xc], 2, &0x0089c528, 0`): CLOSED as
   event-id **2** of the 13-slot `CMissionScriptObjectCode+0x14` table.

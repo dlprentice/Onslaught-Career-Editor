@@ -186,8 +186,8 @@ pointer array into the destination.
 `CScriptObjectCode__CallEvent` has exactly eight direct `E8` sites. All
 eight live in `IScript`. Arg order is `(eventObj, eventId, args, argCount)`
 with `this = 0x0089c5e0`. `eventObj` is always `[IScript+0xc]`. Every
-wrapper except id 0 also consults `[0x008a9ac0]==4` and Reset()s instead of
-calling. `0x0089c528` is a `.data` BSS scratch pointer (PE
+wrapper except id 0 also consults `[0x008a9ac0]==4` (`GAME_STATE_LEVEL_LOST`)
+and Reset()s instead of calling. `0x0089c528` is a `.data` BSS scratch pointer (PE
 `to_offset` refuses it as uninitialised); `CreateThingRef` /
 `CreateThingRefWithSquad` store a freshly allocated wrapper there and pass
 `argCount=1`; the OrReset / 2002 / VFunc_2 paths pass the same address with
