@@ -1,7 +1,7 @@
 # IScript function map
 
 Status: active static function map
-Last updated: 2026-08-18 (IScript *Wait natives snapshot a 0x228 CVM)
+Last updated: 2026-08-18 (PlayAnimationWait resumes via FinishedPlaying)
 Source File: `C:\dev\ONSLAUGHT2\MissionScript\IScript.cpp` (SEH `__FILE__`
 pointer `0x0064fa40` read out of `IScript__PostEvent`) | Binary: BEA.exe,
 SHA-256
@@ -50,10 +50,11 @@ name value into a `CPostEventData` and scheduling event `0x7d0` against the
 
 | `0x00535cd0` | `IScript__Die` | `8b4910 6a00 6a00 8d442408 6a00 50 51 68d2070000 b9c82f6700 c7442418000080bf e87956f1ff c20c00` | `ret 0xc`; zero direct `E8` (native 13). `AddEvent_AtTime(0x7d2, [this+0x10], NEXT_FRAME)` — thing-event `START_DIE_PROCESS` on the attached thing. 48 compiled uses, all argc 0. HIGH. Distinct from IScript `HandleMessage` 2002 (`timer`) and from `CGame` `FINISHED_PANNING`. |
 | `0x00537c70` | `IScript__Pause` | `8b442404 538bd9 568b08 8b11 ff5234 d95c240c 68a8070000 6840fa6400 6a18 6828020000 … c20c00` | `ret 0xc`. `args[0]->vtable[+0x34]()` (float), snapshot a 0x228 `CVM`, `AddEvent_AtTime(2001, this, mTime+delay, data=CVM)`, then `[0x0089c800]=1`. HIGH. |
-| `0x005351d0` | `IScript__PlayAnimationWait` | `538bd9 56578b4310 8b7030 8b4074 85c0 7404 3bc3 7412 6864fb6400 … 897338 c20c00` | `ret 0xc`. Plays via `CMesh__FindAnimationIndexByName` + thing `vtable[+0xf0]`; snapshots a `CVM` into `[this+0x38]`; sets the stop flag; **no** scheduled resume. HIGH on the snapshot; resume owner open. |
+| `0x005351d0` | `IScript__PlayAnimationWait` | `538bd9 56578b4310 8b7030 8b4074 85c0 7404 3bc3 7412 6864fb6400 … 897338 c20c00` | `ret 0xc`. Plays via `CMesh__FindAnimationIndexByName` + thing `vtable[+0xf0]`; snapshots a `CVM` into `[this+0x38]`; sets the stop flag. Resume is `IScript__RestoreSavedStateAndGotoInstruction`. HIGH. |
 | `0x005375f0` | `IScript__PlayCharMessageWait` | `6aff 6849735d00 64a1 … 68d1070000 … c7442440cdcc4c3d e8c36afaff … c20c00` | `ret 0xc`. Registry 36. Snapshot + `GetNextFreeEvent` + `CScheduledEvent__Set(2001, 0.05f, this, CVM)` + `CMessage__ctor_base` / `CMessageBox__InsertQueuedMessageSortedAndMaybeAdvance`. HIGH on the snapshot and event id. |
 | `0x005378e0` | `IScript__PlayPCharMessageWait` | `6aff 68a9735d00 64a1 … 68d1070000 … c7442420cdcc4c3d e8c767faff … c20c00` | `ret 0xc`. Registry 91. Same CVM + 2001 `Set` shape as `PlayCharMessageWait`, then a seven-arg `CMessage` with the extra script dword. HIGH on the snapshot and event id. |
 | `0x00537e40` | `IScript__FollowWaypointWait` | `538bd9 55bd01000000 8b4318 56 3bc5 57 0f8464010000 … 68d0070000 … c20c00` | `ret 0xc`. Early-out if `[this+0x18]==1`. Snapshot; `[this+0x1c]=1`, `[this+0x20]=CVM`, `[this+0x18]=1`; `AddEvent_AtTime(2000, this, NEXT_FRAME)`. HIGH. |
+| `0x00533840` | `IScript__RestoreSavedStateAndGotoInstruction` | `568bf1 8b4638 85c0 7453 50 b9e0c58900 e8bb600000 8b4638 8d4e28 50 e86f23fbff … c3` | Zero-arg `ret`. If `[this+0x38]==0` return. Else `CopyState(+0x38)`, `CSPtrSet__Remove(+0x28)`, delete, `[this+0x38]=0`, then Reset on LEVEL_LOST else `GotoInstruction([0x0089c7f4])`. Same resume as HandleMessage 2001. Only `E8` is `CComplexThing__FinishedPlayingCurrentAnimation` `0x004f45a7`. HIGH. |
 
 ### The three message arms (byte-exact)
 
@@ -181,7 +182,13 @@ Then `CSPtrSet__AddToTail` (`0x004e5b20`) on `IScript+0x28`, and
 `mov dword [0x0089c800], 1` — singleton `+0x220` — so `Run` exits
 after the current instruction. A whole-image immediate census of
 `0x0089c800` finds **exactly ten** hits, all inside these five
-functions (one copy + one store-1 each). No other writer.
+functions (one copy + one store-1 each). No other writer. A sixth
+image store of vptr `0x005e4f1c` is
+`CScriptObjectCode__InitRuntime` (`0x005398d0`): it installs the
+CVM vtable on the **singleton** and zeroes `+4` / `+8` / `+0x20c` /
+`+0x210` / `+0x214` / `+0x218` / `+0x21c` / `+0x224`. Different
+shape (`mov [eax+0x20c],ecx` then `c7 00 1c 4f 5e 00`); not a Wait
+snapshot.
 
 Per-native after the shared ctor:
 
@@ -190,7 +197,7 @@ Per-native after the shared ctor:
 | `Pause` | `fld [0x00672fd0]` (`CEventManager+8` = `mTime`) `fadd` delay; `AddEvent_AtTime(2001, this, &due, data=CVM)` |
 | `PlayCharMessageWait` / `PlayPCharMessageWait` | `GetNextFreeEvent` + `CScheduledEvent__Set(2001, 0.05f CLOCK_TICK, this, CVM)` then `CMessage__ctor_base` / insert. The message owns the event; **when** it fires is not claimed here |
 | `FollowWaypointWait` | `AddEvent_AtTime(2000, this, NEXT_FRAME)`; `[this+0x1c]=1`, `[this+0x20]=CVM`. Resume is the end-of-chain arm above, not message 2001 |
-| `PlayAnimationWait` | `[this+0x38]=CVM` after `CMesh__FindAnimationIndexByName` (`0x004aa630`) + thing `vtable[+0xf0]`. Replaces a prior `+0x38` (Remove `+0x28` + delete). If `[thing+0x74] != this` it prints `FATAL ERROR: Called PlayAnimWait on the non base script object` (`0x0064fb64`) and **continues**. No scheduled resume |
+| `PlayAnimationWait` | `[this+0x38]=CVM` after `CMesh__FindAnimationIndexByName` (`0x004aa630`) + thing `vtable[+0xf0]`. Replaces a prior `+0x38` (Remove `+0x28` + delete). If `[thing+0x74] != this` it prints `FATAL ERROR: Called PlayAnimWait on the non base script object` (`0x0064fb64`) and **continues**. Resume is `IScript__RestoreSavedStateAndGotoInstruction` (`0x00533840`) |
 
 `IScript` ctor (`0x005333b0`, `ret 8`) zeroes `+0x14`, `+0x18`,
 `+0x1c`, `+0x24`, `+0x38` and constructs the `CSPtrSet` at `+0x28`.
@@ -224,10 +231,16 @@ string, `call 0x0058c893`) — not events.
   the `CScriptObjectCode` singleton `0x0089c5e0+0x210` (running); `0x0089c7f4`
   is `+0x214` (PC). The 2002 `test [0x0089c7f0]` is therefore "VM already
   running". Wait-helper CVM construction: CLOSED (section above).
-- Who reads `IScript+0x38` to resume `PlayAnimationWait`: open. The
-  native stores the CVM there and sets the stop flag but schedules
-  nothing. Cheapest falsifier: a `[reg+0x38]` load that `CopyState`s
-  or `GotoInstruction`s.
+- Who reads `IScript+0x38` to resume `PlayAnimationWait`: CLOSED.
+  `IScript__RestoreSavedStateAndGotoInstruction` (`0x00533840`) is
+  the sole reader. Only `E8` is
+  `CComplexThing__FinishedPlayingCurrentAnimation` (`0x004f45a0`):
+  `ecx=[this+0x74]; if ecx call Restore; mov eax,1; ret`. That
+  function is slot **59** of `CComplexThing` vtable `0x005df784`
+  (`0x005df784+0xEC = 0x005df870`) and sits in **26** `.rdata`
+  vtables. One direct `E8` at `0x004fdfdd` inside
+  `CUnit__HandleDeployAndFireAnimationCompletion`. Cheapest
+  falsifier: another `E8` to `0x00533840`.
 - When the `Play*MessageWait` `CScheduledEvent` actually fires: open.
   `Set` writes `0.05f` into the event; `CMessage` holds the node.
   Cheapest falsifier: the `CMessageBox` arm that `AddEvent`s or

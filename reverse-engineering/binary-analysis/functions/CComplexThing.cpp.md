@@ -1,7 +1,7 @@
 # CComplexThing function map
 
 Status: active static function map
-Last updated: 2026-08-18
+Last updated: 2026-08-18 (FinishedPlaying resumes PlayAnimationWait)
 Source File: `C:\dev\ONSLAUGHT2\thing.cpp` (SEH `__FILE__` pointer
 `0x006331c0` read out of `CComplexThing__SetScript`) | Binary: BEA.exe,
 SHA-256
@@ -28,6 +28,7 @@ already owns the envelope: `+0x2c` `mFlags`, `+0x34` `mThingType`,
 | 2 | `+8` | `0x004f41b0` | `CComplexThing__Shutdown` |
 | 14 | `+0x38` | `0x004f43d0` | `CComplexThing__AddShutdownEvent` |
 | 50 | `+0xc8` | `0x004f4430` | `CComplexThing__StartDieProcess` |
+| 59 | `+0xEC` | `0x004f45a0` | `CComplexThing__FinishedPlayingCurrentAnimation` |
 
 `HandleEvent` is also stored in nine other `.rdata` vtables (subclass
 overrides that still share slot 0). `Flush` delivers scheduled events
@@ -52,6 +53,7 @@ These thing-event numbers are **not** the IScript `HandleMessage`
 | `0x004f43d0` | `CComplexThing__AddShutdownEvent` | `f6462c01 7521 8b4e74 85c9 741a e8faf30300 … 6a01 ff5004 c7467400000000 … 0c01 56 68d0070000 … c744241c000080bf e8446ff5ff c3` | Zero-arg `ret`. If `mFlags` bit0 (`TF_DECLARED_SHUTDOWN`) is clear and `+0x74` is set: `IScript__CallEventId3_OrReset` (died), virtual-delete the IScript, null `+0x74`. Then set bit0 and `AddEvent_AtTime(0x7d0, this, NEXT_FRAME, …)`. HIGH. Matches `thing.cpp:711-723` plus `CThing::AddShutdownEvent` (`thing.cpp:183-189`). |
 | `0x004f4430` | `CComplexThing__StartDieProcess` | `668b462c a804 751e 0c04 6689462c 8b06 ff5038 8b4e74 85c9 7405 e80ef20300 b801000000 5e c3` | Zero-arg. If `mFlags` bit2 (`TF_DYING`) already set, return 0. Else set bit2, `call [vtable+0x38]` (`AddShutdownEvent`), then if `+0x74` still set `IScript__CallEventId5_OrReset` (started_dying), return 1. HIGH on the bytes. On this class `AddShutdownEvent` has already nulled `+0x74`, so the CallEventId5 is unreachable here (same order as `thing.cpp:728-737`). |
 | `0x004f4480` | `CComplexThing__Hit` | `8b4974 85c9 7413 8b442404 f7403400000080 7406 50 e8f6f10300 c20800` | `ret 8`; args `(other, report)`. `report` is unused. If `+0x74` and `other+0x34 & 0x80000000` (source `IsA(THING_TYPE_COMPLEX_THING)`), `IScript__CreateThingRefWithSquad` (hit). HIGH. Matches `thing.cpp:748-755`. |
+| `0x004f45a0` | `CComplexThing__FinishedPlayingCurrentAnimation` | `8b4974 85c9 7405 e894f20300 b801000000 c3` | Zero-arg; `ecx=[this+0x74]`; if set, `IScript__RestoreSavedStateAndGotoInstruction` (`0x00533840`); `mov eax,1; ret`. Slot 59 (`+0xEC`) of vtable `0x005df784` and 25 other `.rdata` copies (26 total). One direct `E8` at `0x004fdfdd` (`CUnit__HandleDeployAndFireAnimationCompletion`). HIGH. This is the `PlayAnimationWait` resume. |
 | `0x005333b0` | `IScript__Constructor` | `c706d4925d00 8d4e28 e85b24fbff … c706084f5e00 894608 894e0c 897168 … 897e24 … c20800` | `ret 8`; args `(thing, eventObj)`. Installs `CMonitor` vptr `0x005d92d4` then IScript vptr `0x005e4f08`. `CSPtrSet__Init` at `+0x28`. `[this+8]=[this+0x10]=thing`; `[this+0xc]=eventObj`; `[eventObj+0x68]=this`. Zeroes `+0x14` / `+0x18` / `+0x1c` / `+0x24` / `+0x38`. HIGH. Only `E8` is `SetScript` `0x004f42a8`. |
 | `0x0050abc0` | `CWorld__CloneScriptObjectCodeByName` | `8b8520010000 … ff5038 … 3a16 … 7443 8b4f04 e8e1e30200 c20400` / miss `6858… 68d2886300 e8f56af3ff 33c0 c20400` | `ret 4`; `this` = world `0x00855090`. Walks `[world+0x120]` comparing each object's `vtable[+0x38]` string to the arg. Hit: `CScriptObjectCode__Clone` (`0x00539040`) of `[node+4]`. Miss: `CConsole__Printf` `\"FATAL ERROR: Cant find script '%s'\"` (`0x0063d288`) and return 0. HIGH. Only `E8` is `SetScript`. |
 | `0x00535c50` | `IScript__SetScript` | `8b442404 8bf1 8b08 8b11 ff5238 8b4e10 50 e8c9e5fbff c20c00` | `ret 0xc`. `args[0]->vtable[+0x38]()` (name string) then `CComplexThing__SetScript` on `[IScript+0x10]` (the thing). HIGH. Registry command; second static `E8` to `SetScript`. |
@@ -112,6 +114,7 @@ path that nulls `+0x74` before those two sites.
 | `HandleEvent` | five sites | subclass forwards (`0x004019ff`, `0x0043fcbd`, `0x0044c14d`, `0x004e37ad`, `0x004e65ed`). Scheduled 2001/2003/2000 arrive via slot 0, not these `E8`s |
 | `AddShutdownEvent` | `0x0044cdc5`, `0x004894cc`, `0x004d7e79` | plus the virtual call from `StartDieProcess` |
 | `StartDieProcess` | `JMP 0x004db13a` | plus HandleEvent 2002's `[vtable+0xc8]` |
+| `FinishedPlayingCurrentAnimation` | `0x004fdfdd` | `CUnit__HandleDeployAndFireAnimationCompletion`; also slot 59 of 26 vtables |
 | `Hit` | five sites | including `CSphereTrigger__Hit` `0x004e5728` |
 
 ## Open questions (cheapest falsifier first)
