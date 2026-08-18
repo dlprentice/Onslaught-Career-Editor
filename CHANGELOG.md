@@ -36,7 +36,8 @@ live in `developer_state.json` and the campaign ledgers.
   confirmation names the file, not the folder. Windowed & Mods create-copy
   and launch confirmations name the folder, not the full path. An Asset
   Library search with no hits now says to try another word or clear the
-  search.
+  search. Settings names a folder that could not be kept and puts the
+  previous folder back, instead of leaving the new path looking saved.
 
 ## 1.0.11 — 2026-08-07
 

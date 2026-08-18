@@ -84,7 +84,8 @@ public class GameDirectoryIdentityTextTests
             string all = (
                 GameDirectoryIdentityText.ForSettings(identity) + " " +
                 GameDirectoryIdentityText.ForHomeGuidance(identity, "default guidance") + " " +
-                GameDirectoryIdentityText.AutoDetectFailed).ToLowerInvariant();
+                GameDirectoryIdentityText.AutoDetectFailed + " " +
+                GameDirectoryIdentityText.PersistFailed).ToLowerInvariant();
             foreach (string word in banned)
             {
                 Assert.That(all, Does.Not.Contain(word), $"Identity copy should not say '{word}'.");
@@ -102,6 +103,16 @@ public class GameDirectoryIdentityTextTests
     }
 
     [Test]
+    public void AFailedSaveNamesTheFolderWasNotKept()
+    {
+        Assert.That(GameDirectoryIdentityText.PersistFailed, Does.Contain("Could not keep that folder"));
+        Assert.That(GameDirectoryIdentityText.PersistFailed, Does.Contain("Nothing was changed"));
+        Assert.That(GameDirectoryIdentityText.PersistFailed, Does.Contain("Try choosing it again"));
+        Assert.That(GameDirectoryIdentityText.PersistFailed, Does.Not.Contain(":\\"));
+        Assert.That(GameDirectoryIdentityText.PersistFailed, Does.Not.Contain("/"));
+    }
+
+    [Test]
     public void SettingsAndHomeActuallyShowTheIdentityLine()
     {
         string root = FindRepoRoot();
@@ -114,7 +125,27 @@ public class GameDirectoryIdentityTextTests
         Assert.That(settingsCode, Does.Contain("GameDirectoryIdentityText.ForSettings"));
         Assert.That(homeCode, Does.Contain("GameDirectoryIdentityText.ForHomeGuidance"));
         Assert.That(settingsCode, Does.Contain("GameDirectoryIdentityText.AutoDetectFailed"));
+        Assert.That(settingsCode, Does.Contain("GameDirectoryIdentityText.PersistFailed"));
+        Assert.That(settingsCode, Does.Contain("RestoreKeptGameDirectory"));
         Assert.That(homeCode, Does.Contain("GameDirectoryIdentityText.AutoDetectFailed"));
+    }
+
+    [Test]
+    public void SettingsPutsTheKeptFolderBackBeforeItSaysPersistFailed()
+    {
+        string settings = File.ReadAllText(Path.Combine(
+            FindRepoRoot(), "OnslaughtCareerEditor.WinUI", "Pages", "SettingsPage.xaml.cs"));
+
+        int fail = settings.IndexOf("if (!config.SetGameDir(path))", StringComparison.Ordinal);
+        int restore = settings.IndexOf("RestoreKeptGameDirectory();", StringComparison.Ordinal);
+        int sentence = settings.IndexOf("GameDirectoryIdentityText.PersistFailed", StringComparison.Ordinal);
+        int notify = settings.IndexOf("AppConfigChangedService.NotifyChanged", StringComparison.Ordinal);
+
+        Assert.That(fail, Is.GreaterThanOrEqualTo(0));
+        Assert.That(restore, Is.GreaterThan(fail));
+        Assert.That(sentence, Is.GreaterThan(restore));
+        Assert.That(notify, Is.GreaterThan(sentence));
+        Assert.That(settings.IndexOf("return;", fail, notify - fail, StringComparison.Ordinal), Is.GreaterThan(sentence));
     }
 
     private static string FindRepoRoot()

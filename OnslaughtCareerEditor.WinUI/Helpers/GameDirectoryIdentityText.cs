@@ -30,6 +30,14 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         public const string AutoDetectFailed =
             "Could not find the game automatically. Choose the folder you installed it into - the one holding BEA.exe.";
 
+        /// <summary>
+        /// Settings already painted the chosen folder before persist. If the
+        /// write fails, this sentence has to replace that picture so the page
+        /// does not look saved.
+        /// </summary>
+        public const string PersistFailed =
+            "Could not keep that folder. Nothing was changed. Try choosing it again.";
+
         public static string ForSettings(RetailExecutableIdentity identity)
         {
             return identity switch

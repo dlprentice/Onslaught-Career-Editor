@@ -118,6 +118,25 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             GameDirectoryIdentityTextBlock.Visibility = Visibility.Collapsed;
         }
 
+        /// <summary>
+        /// Persist failed after the chosen folder was already drawn. Put the
+        /// kept folder back so the page matches what is still on disk.
+        /// </summary>
+        private void RestoreKeptGameDirectory()
+        {
+            string? kept = AppConfig.Load().GameDirectory;
+            RenderGameDirectory(kept);
+            if (!string.IsNullOrWhiteSpace(kept))
+            {
+                ValidateGameDirectory(kept);
+                return;
+            }
+
+            ClearGameDirectoryIdentity();
+            GameDirectoryStatusTextBlock.Text = "No game directory set. Click Browse or Auto-Detect.";
+            GameDirectoryStatusTextBlock.Foreground = ThemeBrushes.Warning();
+        }
+
         private void UpdateSaveFileInfo(string? gameDir)
         {
             if (string.IsNullOrWhiteSpace(gameDir))
@@ -182,6 +201,9 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             AppConfig config = AppConfig.Load();
             if (!config.SetGameDir(path))
             {
+                RestoreKeptGameDirectory();
+                GameDirectoryStatusTextBlock.Text = GameDirectoryIdentityText.PersistFailed;
+                GameDirectoryStatusTextBlock.Foreground = ThemeBrushes.Warning();
                 AppStatusService.SetStatus("Settings: failed to save game directory");
                 return;
             }
