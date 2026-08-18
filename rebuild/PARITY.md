@@ -89,19 +89,20 @@ contracts are graded `REBUILD_READY`: that grade is a campaign artifact and
 needs the ceremony in `tools/re_campaign.py`
 (`_validate_rebuild_ready_gate`), which stamps owner/test/project SHA-256s, a
 `rebuildMapping`, and a re-run of the focused test. And it does not claim replay
-coverage. **Sixteen of these seventeen implementations are unreachable from the
+coverage. **Fifteen of these seventeen implementations are unreachable from the
 simulation and replay path** — measured, by searching `Simulation.cs`,
 `ReplayRunner.cs`, `CommandTape.cs`, `StateHasher.cs` and every `Level100*.cs`
-for the owner types: the only hit is the *comment* naming `RetailJetFriction` at
-`Simulation.cs:1858`, and the only genuinely wired row is
-`Simulation.JetFrictionNumerator` itself. `Level100PulseCannonCharge` is a
-Level 100 *table*, not a Simulation call. So no cold-start or full-chain trace
-can reach the other sixteen, and the focused test is the only falsifier they
-have. That is exactly the precedent the jet-friction row set: a green replay
-suite there was *vacuous* with respect to the constant it was supposed to guard,
-because the jet throttle caps below the gate's band. The seventeenth row's
-mutation kill was measured on 2026-08-18 in this worktree; it is not one of the
-17 files under `local-lab/rebuild-parity-mutation-kills-2026-08-17/`.
+for the owner types: `Simulation.JetFrictionNumerator` is wired, and
+`RetailWeaponCharge.Charge` is now reached from `Simulation.TryChargeWeapon`
+when the player holds `SimActions.ChargeWeapon` on the Pulse Cannon Pod. Charge
+is not in `StateHasher` because it does not yet change fire, movement, or any
+other hashed field. So no cold-start or full-chain trace can reach the other
+fifteen, and the focused test is the only falsifier they have. That is exactly
+the precedent the jet-friction row set: a green replay suite there was
+*vacuous* with respect to the constant it was supposed to guard, because the
+jet throttle caps below the gate's band. The seventeenth row's mutation kill
+was measured on 2026-08-18 in this worktree; it is not one of the 17 files
+under `local-lab/rebuild-parity-mutation-kills-2026-08-17/`.
 
 ## Parity dimensions and their gates
 

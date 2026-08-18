@@ -7,9 +7,8 @@ namespace OnslaughtRebuild.Core.Tests;
 /// <summary>
 /// The Level 100 Pulse Cannon Pod's authored charge table, joined to
 /// <see cref="RetailWeaponCharge.Charge"/> so a player holding
-/// <c>BUTTON_MECH_CHARGE_GUN_POD</c> has a named law rather than a silent
-/// no-op. Core still rejects that action at <see cref="SimInput.Validate"/>;
-/// this file pins the weapon the action would advance.
+/// <c>BUTTON_MECH_CHARGE_GUN_POD</c> advances that table. ReadyToCharge,
+/// store spend, and charge-level-1 fire remain the next ChargeWeapon arms.
 /// </summary>
 /// <remarks>
 /// Every scalar is a dword out of

@@ -451,7 +451,6 @@ public sealed class Level100SkipPanningTests
     {
         foreach (SimActions action in new[]
                  {
-                     SimActions.ChargeWeapon,
                      SimActions.Cloak,
                  })
         {
@@ -464,6 +463,10 @@ public sealed class Level100SkipPanningTests
         var changeWeapon = new SimInput(0, 0, SimActions.ChangeWeapon);
         changeWeapon.Validate();
         Assert.True((SimInput.ImplementedActions & SimActions.ChangeWeapon) != 0);
+
+        var chargeWeapon = new SimInput(0, 0, SimActions.ChargeWeapon);
+        chargeWeapon.Validate();
+        Assert.True((SimInput.ImplementedActions & SimActions.ChargeWeapon) != 0);
 
         // And an unassigned bit is still an unknown bit.
         Assert.Throws<ArgumentOutOfRangeException>(
