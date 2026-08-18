@@ -346,9 +346,13 @@ is owned by [`CComplexThing.cpp.md`](CComplexThing.cpp.md):
 `CallEvent(id=6)`. `AddShutdownEvent` → `CallEvent(id=3)` then
 deletes the IScript and schedules thing-event 2000 →
 `CallEvent(id=7)` only if `+0x74` is still live (it is not, on
-that path). `Hit` → `CallEvent(id=4)`. `StartDieProcess` on this
-class cannot reach `CallEvent(id=5)` because it calls
-`AddShutdownEvent` first.
+that path). `Hit` → `CallEvent(id=4)`. `StartDieProcess` on
+`CComplexThing` cannot reach `CallEvent(id=5)` because it calls
+`AddShutdownEvent` first. The two reachable `CallEventId5` sites
+keep `+0x74` live: `CFeature__VFunc_50_0044cd80` (slot 50, no
+teardown) and `CUnit__MarkDestroyedAndCleanupLinks` (slot 50 of
+three unit vtables; fires after count teardown, before `+0x144`
+cleanup).
 
 733 loose `MissionScripts/**/*.msl` contain zero `arrived(`, `timer(`,
 `SetTimer(`, `event("arrived"`, or `event("timer"`.

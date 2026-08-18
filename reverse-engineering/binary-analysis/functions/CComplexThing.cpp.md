@@ -88,11 +88,20 @@ virtual call. No IScript wrapper here.
 `CComplexThing__StartDieProcess` calls slot 14 (`AddShutdownEvent`)
 **before** `CallEventId5`. `AddShutdownEvent` already fired died and
 nulled `+0x74`, so the started_dying call on this class is unreachable.
-The same order is in `thing.cpp:728-737`. `IScript__CallEventId5_OrReset`
-still has two other `E8` sites that can fire a live `+0x74`:
-`CFeature__VFunc_50_0044cd80` `0x0044cd98` and
-`CUnit__MarkDestroyedAndCleanupLinks` `0x004fd1e8`. Those bodies are
-not mapped here.
+The same order is in `thing.cpp:728-737`.
+
+The other two `E8` sites fire while `+0x74` is still live. Independently
+re-read 2026-08-18:
+
+| Address | Name | Body | `+0x74` at CallEventId5 |
+| --- | --- | --- | --- |
+| `0x0044cd80` | `CFeature__VFunc_50_0044cd80` | If `TF_DYING` already set, return 0. Else set bit2, `CallEventId5` if `+0x74`, return 1. No `AddShutdownEvent`. Zero direct `E8` — slot 50 of the `CFeature` vtable at `0x005e45e0` (COLOC `0x006184c0`). | live |
+| `0x004fd140` | `CUnit__MarkDestroyedAndCleanupLinks` | If `TF_DYING` already set, return 0. Unlink (`0x004e1130` on `0x00896988`), set bit2, optional `+0x164` count teardown, optional `+0x178` call `0x004443f0`, **then** `CallEventId5` if `+0x74`, then `+0x144` / `+0x18c` cleanup, return 1. Nine direct `E8`s. Slot 50 of three vtables (`0x005dd788` COLOC `0x00615728`, `0x005df998` COLOC `0x00617050`, `0x005e1490` COLOC `0x00617a30`). | live |
+
+So shipped `started_dying` bodies (142 objects) are reachable from
+feature/unit slot-50 overrides, not from `CComplexThing__StartDieProcess`.
+Cheapest falsifier: a fourth `E8` to `0x00533660`, or a feature/unit
+path that nulls `+0x74` before those two sites.
 
 ## Callers (direct `E8`)
 
@@ -113,8 +122,7 @@ not mapped here.
   `CThing::StartDieProcess` callers. Cheapest: whole-image `push 0x7d2`
   against a thing `to_call`.
 - `CFeature__VFunc_50_0044cd80` / `CUnit__MarkDestroyedAndCleanupLinks`
-  as the reachable started_dying fires. Cheapest: disassemble those two
-  bodies and confirm `+0x74` is still live at the `CallEventId5` `E8`.
+  as the reachable started_dying fires: CLOSED (section above).
 - `IScript__VFunc_2_00533810` has zero direct `E8`; the 2000 arm's
   `[IScript.vtable+8]` is the static witness. A second virtual caller
   would be another slot-2 site.
