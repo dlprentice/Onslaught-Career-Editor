@@ -690,7 +690,7 @@ class FrameworkDerivationTests(unittest.TestCase):
         derivation = "".join(after for _r, _b, after in LIVE_ALLOWLISTED_EDITS)
         for cohort in LIVE_GRANTED_COHORTS:
             self.assertIn(f'"{cohort}"', derivation)
-        for rehearsed_only in ():
+        for rehearsed_only in ("name-cohort-waypoint-follow",):
             self.assertNotIn(rehearsed_only, self.live,
                              "a rehearsed cohort is not an authorization")
 

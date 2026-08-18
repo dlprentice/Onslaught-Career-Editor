@@ -175,6 +175,26 @@ REHEARSAL_COHORTS: dict[str, dict] = {
             "preUndefinedData": 3907369, "postUndefinedData": 3907369,
         },
     },
+    "name-cohort-waypoint-follow": {
+        # PRE is current live POST (db.18628). DRAFT: identity/dry PASS,
+        # no live grant — still waiting on a runtime vptr watch.
+        "backup": BACKUPS / "2026-08-18-varargs-cohort2-post-live",
+        "spec": SPECS / "name-cohort-waypoint-follow.spec.tsv",
+        "manifest": SPECS / "name-cohort-waypoint-follow-manifest.tsv",
+        "rehearsalOnly": True,
+        "archived": {
+            "source": "REHEARSAL ONLY - identity/dry PASS 2026-08-18; "
+                      "not live-authorized (no runtime receiver witness)",
+            "rows": 1,
+            "applied": 0,
+            "preFunctions": 8329, "postFunctions": 8329,
+            "preInstructions": 551232, "postInstructions": 551232,
+            "preReferences": 234558, "postReferences": 234558,
+            "preBookmarks": 2301, "postBookmarks": 2301,
+            "preDefinedData": 48648, "postDefinedData": 48648,
+            "preUndefinedData": 3907369, "postUndefinedData": 3907369,
+        },
+    },
 }
 COHORTS.update(REHEARSAL_COHORTS)
 
