@@ -265,7 +265,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             AppConfig config = AppConfig.Load();
             if (!config.SetGameDir(path))
             {
-                ShowQuickStartNote("That folder could not be saved. Try another one.");
+                ShowQuickStartNote(GameDirectoryIdentityText.PersistFailed);
                 return;
             }
 
