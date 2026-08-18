@@ -200,6 +200,32 @@ public class InstalledGamePatchSurfaceTests
             Is.EqualTo(InstalledGamePatchReadiness.NoGameChosen));
     }
 
+    [Test]
+    public void ALockedExecutableIsNotCalledAlreadyChanged()
+    {
+        string path = Path.Combine(Path.GetTempPath(), $"bea-locked-{Guid.NewGuid():N}.exe");
+        File.WriteAllBytes(path, new byte[2_506_752]);
+        try
+        {
+            using var exclusive = new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+
+            InstalledGamePatchReadiness readiness = InstalledGamePatchText.DescribeReadiness(path);
+
+            Assert.That(readiness, Is.EqualTo(InstalledGamePatchReadiness.Unreadable));
+            Assert.That(InstalledGamePatchText.CanPatch(readiness), Is.False);
+            Assert.That(InstalledGamePatchText.CanBackUp(readiness), Is.False);
+            string status = InstalledGamePatchText.BuildStatusLine(readiness, null);
+            Assert.That(status.ToLowerInvariant(), Does.Contain("could not read"));
+            Assert.That(status.ToLowerInvariant(), Does.Not.Contain("already changed"));
+            Assert.That(status.ToLowerInvariant(), Does.Not.Contain("will not copy a changed file"));
+        }
+        finally
+        {
+            if (File.Exists(path))
+                File.Delete(path);
+        }
+    }
+
     // ------------------------------------------------------------------ the handlers
 
     [Test]

@@ -13,7 +13,8 @@ live in `developer_state.json` and the campaign ledgers.
 - Settings and Home now say whether the chosen `BEA.exe` is the known Steam
   retail file. A changed file is not called an original; a copy made from it
   is disclosed as carrying those changes. If the file cannot be read, the app
-  says so instead of pretending it was changed.
+  says so instead of pretending it was changed. Windowed & Mods uses the same
+  distinction: a locked executable is not described as already patched.
 
 ## 1.0.11 — 2026-08-07
 

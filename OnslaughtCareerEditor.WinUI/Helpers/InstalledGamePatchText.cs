@@ -21,6 +21,12 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         /// cannot promise to put anything back and will not pretend otherwise.
         /// </summary>
         ChangedWithNothingToGoBackTo,
+
+        /// <summary>
+        /// The file is there but cannot be read right now. That is not the same as "already
+        /// changed" - the game being open is enough to lock BEA.exe.
+        /// </summary>
+        Unreadable,
     }
 
     /// <summary>
@@ -91,9 +97,12 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
                 InstalledGamePatchReadiness.CleanAndUnbackedUp =>
                     "Your game is as it shipped. Nothing has been backed up yet - patching will copy the original first.",
                 InstalledGamePatchReadiness.ChangedWithNothingToGoBackTo =>
-                    "Something has already changed this BEA.exe, and there is no original beside it. The app will not "
-                        + "copy a changed file and call it the original, so patching stays off until the game is "
-                        + "verified or reinstalled.",
+                    "Something has already changed this BEA.exe, and there is no original beside it. The app will not " +
+                        "copy a changed file and call it the original, so patching stays off until the game is " +
+                        "verified or reinstalled.",
+                InstalledGamePatchReadiness.Unreadable =>
+                    "The app could not read BEA.exe just now, so it cannot say whether this is as it shipped. " +
+                        "Patching stays off until the file can be read.",
                 _ => string.Empty,
             } + DescribeWhere(exePath);
         }
@@ -170,9 +179,14 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
                     return InstalledGamePatchReadiness.BackedUp;
                 }
 
-                return BinaryPatchEngine.LooksLikeCleanRetailExecutable(exePath)
-                    ? InstalledGamePatchReadiness.CleanAndUnbackedUp
-                    : InstalledGamePatchReadiness.ChangedWithNothingToGoBackTo;
+                return BinaryPatchEngine.IdentifyRetailExecutable(exePath) switch
+                {
+                    RetailExecutableIdentity.KnownCleanRetail => InstalledGamePatchReadiness.CleanAndUnbackedUp,
+                    RetailExecutableIdentity.Unreadable => InstalledGamePatchReadiness.Unreadable,
+                    RetailExecutableIdentity.DifferentFromKnownRetail =>
+                        InstalledGamePatchReadiness.ChangedWithNothingToGoBackTo,
+                    _ => InstalledGamePatchReadiness.NoGameChosen,
+                };
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
             {
