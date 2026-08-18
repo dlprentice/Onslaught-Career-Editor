@@ -1,7 +1,7 @@
 # CMonitor / CSPtrSet function map
 
 Status: active static function map
-Last updated: 2026-08-18 (SetReader relink + death-walk zeros *[arg] + Clear recycles wrappers)
+Last updated: 2026-08-18 (SetReader relink + death-walk zeros *[arg] + wrapper pool closed)
 Source File: `C:\dev\ONSLAUGHT2\Monitor.h` (SEH `__FILE__` pointer `0x00622b80`
 read out of `AddDeletionEvent`) | Binary: BEA.exe, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
@@ -23,7 +23,8 @@ names.
 | `0x004bacb0` | `CMonitor__Shutdown_Core` | `56 57 8bf9 8b4704 85c0 7453 8b08 … c70000000000 … e82445f7ff 56 b9f03d9c00 e819e50800 c7470400000000 5f 5e c3` | Same death-walk / Clear / Free / `[this+4]=0` as `Shutdown`, but does **not** install the base vtable. HIGH. Used by subclasses that have already swapped the vptr. |
 | `0x004e5840` | `CSPtrSet__Init` | `8bc1 33c9 8908 894804 89480c c3` | Zeroes `+0` (head), `+4` (tail), and `+0xC` (count) — the 0x18-byte object a monitor allocates. HIGH. |
 | `0x004e5a80` | `CSPtrSet__AddToHead` | `a134d18300 56 85c0 8bf1 7512 … 6a08 b9f03d9c00 e8e6350600 8b16 8b4c2408 895004 8908 8b560c 8906` | `ret 4`. Recycles an 8-byte wrapper from free-list `0x0083d130` or `Alloc`s 8 (`SPtrSet.cpp:0xb7`). `[node+4] = old head`; `[node+0] = arg`; `[set+0] = node`. HIGH: the deletion set stores **wrappers**, not the arg itself. |
-| `0x004e5c60` | `CSPtrSet__Clear` | `8b410c 33d2 3bc2 7421 8b4104 3bc2 740b 56 8b3530d18300 897004 5e 8b01 a330d18300 8911 895104 89510c c3` at file offset `0x000e5c60` | Zero-arg `ret`. If `count` (`+0xc`) is 0, return. Else splice the live chain onto free-list `0x0083d130` (`[tail+4] = old_free` when tail live; `[0x0083d130] = old head`) and zero `+0` / `+4` / `+0xc`. Does **not** call `CDXMemoryManager__Free` per node. HIGH. `0x0042f220` is a 5-byte `jmp` to this body (same table name); Shutdown calls the thunk. |
+| `0x004e5c60` | `CSPtrSet__Clear` | `8b410c 33d2 3bc2 7421 8b4104 3bc2 740b 56 8b3530d18300 897004 5e 8b01 a330d18300 8911 895104 89510c c3` at file offset `0x000e5c60` | Zero-arg `ret`. If `count` (`+0xc`) is 0, return. Else splice the live chain onto free-list `0x0083d130` (`[tail+4] = old_free` when tail live; `[0x0083d130] = old head`) and zero `+0` / `+4` / `+0xc`. Does **not** call `CDXMemoryManager__Free` per node. HIGH. `0x0042f220` is a 5-byte `jmp` to this body (same table name); CMonitor death-walk calls the thunk. |
+| `0x004e5990` | `CSPtrSet__ClearAnyDynamicCreatedNodes` | `56 8b3530d18300 57 33ff 85f6 7444 8b0d34d18300 8bc6 8b7604 3bc1 7211 8b1538d18300 8d14d1 3bc2 7304 8bf8 eb20 85ff 7405 897704 eb06 893530d18300 50 b9f03d9c00 e848380600 … c3` | Zero-arg `ret` (cdecl). Walks free-list `0x0083d130`. Pool is `[0x0083d134, 0x0083d134 + 0x0083d138*8)`. In-range nodes stay; out-of-range nodes are unlinked and `CDXMemoryManager__Free`d. HIGH. Sole `E8` is `CGame__Shutdown` `0x0046c9e9`. These are the overflow wrappers AddToHead allocs after the "creating nodes dynamicaly" warning (`0x00632774`). |
 
 ## Family roster (named in live Ghidra, not yet byte-mapped here)
 
@@ -96,11 +97,11 @@ inlines `CSPtrSet__Remove` instead of calling `DeleteDeletionEvent`.
   receipt `local-lab/hermes-kanban-campaign-2026-08-18/cmonitor-census/`).
   A child's full-image count of 167 proper subclasses was **not** re-counted
   here.
-- `CSPtrSet` 8-byte wrapper ownership: CLOSED 2026-08-18 for the
-  AddToHead/Clear pair. `AddToHead` recycles from `0x0083d130` or
-  allocs 8 (`SPtrSet.cpp:0xb7`). `Clear` (`0x004e5c60`) pushes the
-  whole chain back onto that free list and zeroes the set; it does
-  not `Free` each wrapper. Shutdown then `Free`s the 0x18-byte set
-  itself. `CSPtrSet__ClearAnyDynamicCreatedNodes` (`0x004e5990`)
-  still separates "dynamic" from "static" nodes — which other
-  callers use that path is open.
+- `CSPtrSet` 8-byte wrapper ownership: CLOSED 2026-08-18. `AddToHead`
+  recycles `0x0083d130` or allocs 8 (`SPtrSet.cpp:0xb7`, increments
+  `0x0083d13c`, prints `0x00632774`). `Clear` (`0x004e5c60`) returns
+  the whole chain to that free list. `ClearAnyDynamicCreatedNodes`
+  (`0x004e5990`) then `Free`s any free-list node outside the static
+  pool `[0x0083d134, + 0x0083d138*8)` — sole caller
+  `CGame__Shutdown` `0x0046c9e9`. CMonitor death-walk `Free`s only
+  the 0x18-byte set.
