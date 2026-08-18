@@ -116,14 +116,20 @@ The `CScheduledEvent` layout is now byte-settled against the pinned
 | `+0x0c` | `mData` (`CActiveReader<CMonitor>`) | `mov eax,[eax+0xc]` at `0x00538c85` |
 | `+0x10` | `mTime` (float) | `mov [esi+0x10],edx` in `Set`; `fcomp [edx+0x10]` at `0x0044b6d1` |
 
-Vtable adjacency note: `CPostEventData`'s vptr `0x005e4f34` and the
-singleton's vptr `0x005e4f44` are adjacent `.rdata` arrays. The singleton's
-first three slots override the same three `CMonitor` slots — `HandleEvent`,
-scalar dtor, `Shutdown_Core` (its `DestroyAllEvents` at `0x005388d0` first
-calls base `CMonitor__Shutdown_Core` `0x004bacb0`); `CPostEventData`
-overrides only its scalar dtor (`0x005386b0`) and keeps the base no-op
-`HandleEvent`, so a posted `CPostEventData` never re-enters the dispatch when
-used as `data`.
+RTTI class hierarchy (COLOC walk, MSVC `vtable-4` layout — each vptr is
+preceded by its Complete Object Locator pointer): `IListener`
+(`.?AVIListener@@`, COLOC `0x00619608`) is the root; `CMonitor : IListener`
+(`.?AVCMonitor@@`, COLOC `0x0060cbe0` at `0x005d92d0`, vtable `0x005d92d4`);
+`CEventFunction`, `IScript`, `CVM`, `CPostEventData`, and `CScriptEventNB`
+all derive `: CMonitor`. `CPostEventData`'s COLOC `0x00619658` sits at
+`0x005e4f30` (vptr `0x005e4f34`), the singleton's COLOC `0x006196a8` sits at
+`0x005e4f40` (vptr `0x005e4f44`) — two adjacent 3-slot vtables. The
+singleton's three slots override the three `CMonitor` virtuals —
+`HandleEvent` (base no-op `0x004014c0` → `0x00538c70`), scalar dtor
+(`0x00538780`), `Shutdown_Core` (`0x005388d0`, which first calls base
+`CMonitor__Shutdown_Core` `0x004bacb0`); `CPostEventData` overrides only its
+scalar dtor (`0x005386b0`) and keeps the base no-op `HandleEvent`, so a
+posted `CPostEventData` never re-enters the dispatch when used as `data`.
 
 ## Family roster (named in live Ghidra, not yet byte-mapped here)
 
@@ -141,11 +147,15 @@ adjacent singleton `0x0089c5e0` — no listener-set walk — so the
 
 ## Open questions (cheapest falsifier first)
 
-- The name object's class: which RTTI type carries `vtable+0x38` = name getter
-  and `vtable+0x48` = value/clone factory — run the COL walk from the vtable
-  pointed to by a key node in `IScript__CallEvent0AndRegisterNestedListeners`;
-  a second measured anchor is `IScript__PostEvent`'s
-  `call [nameObj->vtable+0x48]` clone into `CPostEventData+8`.
+- The name object's class: CLOSED — the RTTI COLOC walk names it
+  `CStringDataType` (mangled `.?AVCStringDataType@@`, COLOC `0x006194e8` at
+  `vtable-4`, vtable `0x005e4e4c`): slot `+0x38` (14) is
+  `SharedVFunc__ReturnField04_0052f540` (the name getter returning the
+  string buffer at `[this+4]`) and slot `+0x48` (18) is
+  `CStringDataType__Clone` (`0x0052f2c0`, the clone factory used by
+  `RegisterEventListener` and `IScript__PostEvent`). The names loaded by
+  `CWorld__LoadScriptEvents` are this type, so the event-entry name objects
+  are `CStringDataType` instances.
 - The `0x11` vs `0x19` node-size split (17 vs 25 bytes) between the
   register-new and register-existing arms — what the found arm's extra 8 bytes
   hold.

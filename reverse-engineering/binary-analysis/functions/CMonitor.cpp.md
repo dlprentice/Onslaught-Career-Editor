@@ -57,7 +57,11 @@ workhorse list for these pointer sets.
 - The exact meaning of the argument pushed into `CSPtrSet__AddToHead` (the
   `ret 4` dword): a retained-trace probe of `RegisterEventListener` →
   `AddDeletionEvent` would name it.
-- The vtable `0x005d92d4`'s RTTI descriptor and the monitor's derived classes
-  (the `CMonitor` subclasses among the 59 vftable-cohort65 classes).
+- The vtable `0x005d92d4`'s RTTI descriptor: CLOSED — COLOC `0x0060cbe0` at
+  `0x005d92d0` (`vtable-4`) → TD `0x00622bd8` = `.?AVCMonitor@@`, with bases
+  `CMonitor` and `IListener` (`.?AVIListener@@`). Derived classes named by
+  the same COLOC walk: `CEventFunction`, `IScript`, `CVM`, `CPostEventData`,
+  `CScriptEventNB` (see `CScriptEventNB.cpp.md`); the full subclass census
+  against the 59 vftable-cohort65 classes remains open.
 - `CSPtrSet` node ownership: `CSPtrSet__ClearAnyDynamicCreatedNodes` at
   `0x004e5990` separates dynamic from static nodes — which pool owns each.
