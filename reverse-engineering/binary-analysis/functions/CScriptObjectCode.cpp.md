@@ -1,8 +1,8 @@
 # CScriptObjectCode function map
 
 Status: active static function map
-Last updated: 2026-08-18 (CInstructionOP_RETURN vtable[+8]/[+0] pin;
-CMissionScriptObjectCode trailer fields +0x5c/+0x60/+0x6c)
+Last updated: 2026-08-18 (RETURN pin; CALLLOCAL is the +0x224 increment;
+CMissionScriptObjectCode trailer fields)
 Source File: `C:\dev\ONSLAUGHT2\MissionScript\ScriptObjectCode.cpp` (the
 VM's `__FILE__` chain is established by the adjacent
 [`ScriptObjectCode.cpp.md`](ScriptObjectCode.cpp.md) wave receipts) | Binary:
@@ -30,7 +30,7 @@ bodies below:
 | `+0x218` | flags (printed by the trace) | trace format `"-> %4d stack size = %d flags = %d"` |
 | `+0x21c` | saved stack base | snapshot before `Run`; the exit check compares `+0x20c` to it |
 | `+0x220` | stop flag | set to 1 by the 10,000-step guard; `Run` exits when nonzero |
-| `+0x224` | return-depth guard | `Run` zeroes it on entry; exits when a `0x17` instruction is fetched and this field is `<= 0` |
+| `+0x224` | return-depth guard | `Run` zeroes it on entry; `CInstructionOP_CALLLOCAL__VFunc_0_0052ec40` is the only interpreter increment; `ExecutePop` decrements; a fetched `0x17` with this field `<= 0` exits `Run` |
 
 ### Event object (`CMissionScriptObjectCode`, 0x70 bytes)
 
@@ -64,7 +64,10 @@ arm at `0x00539265`.
 | --- | --- | --- | --- |
 | `0x00538ec0` | `CMissionScriptObjectCode__ctor` | `6aff 6812755d00 … c706544f5e00 896e6c e84ef60000 … 8d5660 6a04 52 8bcf e85ff50000 8d465c 6a04 50 8bcf e852f50000 8b4e0c 89 4e64 … c20400` | `ret 4`; arg = `CDXMemBuffer*`. Inits flex array at `+4` and `CSPtrSet` at `+0x48`, installs vptr `0x005e4f54`, zeroes `+0x6c`, reads the instruction stream through `CAsmInstruction__SpawnFromOpcode` (`0x0052d3d0`), reads 13 event PCs into `+0x14`, stores the symbol table at `+0x58`, appends each `CEventFunction` (`0x0052fa70`) onto `+0x48`, then reads the two serialized trailer dwords into `+0x60` then `+0x5c` and copies the flex count to `+0x64`. HIGH on the layout and the two trailer reads. |
 | `0x0052da00` | `FUN_0052da00` | `b817000000 c3` at file offset `0x0012da00` | Zero-arg `ret`. `mov eax,0x17; ret` — a 32-bit EAX constant 23. This is `CInstructionOP_RETURN` vtable `0x005e4bd0[+8]`, the getter `Run` calls via `call [edx+8]` at `0x00539b5e` and then `cmp eax,0x17`. The same address is also stored at `.rdata` `0x005dab54` (a second, non-RETURN vtable), so the thunk is not class-exclusive; the current name `FUN_0052da00` is the honest label. HIGH on the RETURN-slot contract and the return width (32-bit EAX, not a byte). |
-| `0x0052e0f0` | `CInstructionOP_RETURN__ExecutePop` | `578b7c2408 8b8724020000 85c0 7e72 … 898724020000 e85db30000 … ff5030 898714020000 … c7 00 f84a5e00 c7400401000000 e8c1b20000 … c20c00` | `ret 0xc`; `CInstructionOP_RETURN` vtable `0x005e4bd0[+0]`, the executor `Run` calls via `call [edx]` at `0x00539b9f` with `(vm, &stack, symbols)`. If `[vm+0x224] <= 0` it returns immediately. Else it decrements `+0x224`, `Pop`s (`0x00539470`), reads a scalar through the element's `vtable[+0x30]`, writes that value to `vm+0x214` (PC), deletes the element, and pushes an 8-byte `CInt` (`vptr 0x005e4af8`, value 1). HIGH on the bytes. This arm is reachable only after something has incremented `+0x224`; `Run` itself zeroes that field on entry, so a top-level `0x17` exits the loop *without* calling this function. |
+| `0x0052e0f0` | `CInstructionOP_RETURN__ExecutePop` | `578b7c2408 8b8724020000 85c0 7e72 … 898724020000 e85db30000 … ff5030 898714020000 … c7 00 f84a5e00 c7400401000000 e8c1b20000 … c20c00` | `ret 0xc`; `CInstructionOP_RETURN` vtable `0x005e4bd0[+0]`, the executor `Run` calls via `call [edx]` at `0x00539b9f` with `(vm, &stack, symbols)`. If `[vm+0x224] <= 0` it returns immediately. Else it decrements `+0x224`, `Pop`s (`0x00539470`), reads a scalar through the element's `vtable[+0x30]`, writes that value to `vm+0x214` (PC), deletes the element, and pushes an 8-byte `CInt` (`vptr 0x005e4af8`, value 1). HIGH. Reachable only after `CALLLOCAL` has incremented `+0x224`; a top-level `0x17` still exits `Run` without calling this function. |
+| `0x0052ec40` | `CInstructionOP_CALLLOCAL__VFunc_0_0052ec40` | `8b442404 8b4904 898814020000 8b8824020000 41 898824020000 c20c00` at file offset `0x0012ec40` | `ret 0xc`. `vm = arg0`; `PC = [instr+4]` (the attribute); `[vm+0x224]++`. This is `CInstructionOP_CALLLOCAL` vtable `0x005e4bb0[+0]`. The only interpreter increment of the return-depth guard. HIGH. |
+| `0x0052d990` | `FUN_0052d990` | `b819000000 c3` | `mov eax,0x19; ret` — 32-bit opcode getter at `CInstructionOP_CALLLOCAL` vtable `0x005e4bb0[+8]`. HIGH. |
+| `0x0052e0a0` | `CInstructionOP_PUSHPC__VFunc_0_0052e0a0` | `56 688f000000 8bf1 68c4c56400 6a18 6a08 … c700f84a5e00 894804 e84bb30000 … c20c00` | `ret 0xc`. Allocates an 8-byte `CInt` (`vptr 0x005e4af8`) whose value is the instruction attribute `[this+4]` and `Push`es it. That attribute is a stored PC, not the live `vm+0x214`. Together with `CALLLOCAL` this is the compiled call sequence (push return PC, then jump and increment depth). HIGH on the bytes; the authored pairing is MEDIUM until a shipped script is shown to emit `PUSHPC` immediately before `CALLLOCAL`. |
 | `0x00539910` | `CScriptObjectCode__CopyState` | `8b7c240c 8bf1 8b4708 8d570c 894608 8b8f14020000 898e14020000 52 8d4e0c e81afaffff … 8b8718020000 898618020000 … c7861002000000000000 8bc6 … c20400` | `ret 4`, one arg = source. Copies `[src+8]`, `[src+0x214]` (PC), calls `CScriptObjectCode__RestoreStack` (`0x00539350`) with `(dst+0xc, src+0xc)`, then copies `+0x218`, `+0x220`, `+0x21c`, `+0x224`, and zeroes the running flag `+0x210`. Returns `this`. HIGH. |
 | `0x00539980` | `CScriptObjectCode__Reset` | `83c10c e958faffff` | Zero-arg tail: `add ecx,0xc; jmp 0x005393e0` = `CScriptObjectCode__ClearStack(this+0xc)`. HIGH. |
 | `0x00539990` | `CScriptObjectCode__CallEvent` | `8b860c020000 85c0 7412 6860016500 6880f56600 e8937df0ff … 8b7c240c 897e08 8b476c 85c0 752b 8b475c 85c0 7424 c7861402000000000000 … e81e010000 c7476c01000000 … 8b449114 83f8ff 898614020000 7525 …` | `ret 0x10`, four args `(eventObj, eventId, args[], argCount)`. If the operand stack is not empty (`[this+0x20c] != 0`) prints `"FATAL ERROR: stack not empty on call"` (`0x00650160`). Stores `[this+8] = eventObj`; if `eventObj->[+0x6c] == 0` and `eventObj->[+0x5c] != 0` runs the preamble (`PC = 0`, `Run`, then `eventObj->[+0x6c] = 1`). Resolves the entry `eventObj->[+0x14 + eventId*4]`; `-1` means no handler, in which case it deletes each arg element via `call [elem->vtable][0](elem, 1)` and returns. Otherwise sets `PC = entry`, pushes each arg with `CScriptObjectCode__Push` (`0x00539420`), and calls `Run`. HIGH on the dispatch; `+0x5c`/`+0x6c` are now owned (see the event-object table) and the preamble-present *meaning* of a nonzero `+0x5c` stays MEDIUM. |
@@ -145,6 +148,30 @@ re-hashed this slice). Its static-anchor bytes
 `837a60017521` match the ctor/`Run` reread above. The 136-line runtime
 count was **not** re-executed here.
 
+## Call/return depth — `CALLLOCAL` increments `+0x224`
+
+`CInstructionOP_CALLLOCAL` (opcode `0x19`, vtable `0x005e4bb0`) is the
+matching pair of `RETURN`:
+
+| Slot | Address | Current name | Body |
+| --- | --- | --- | --- |
+| `+0` | `0x0052ec40` | `CInstructionOP_CALLLOCAL__VFunc_0_0052ec40` | `PC = attribute; [vm+0x224]++` (`ret 0xc`) |
+| `+4` | `0x0052d9a0` | `CInstructionOP_CALLLOCAL__VFunc_1_0052d9a0` | 12-byte clone, same shape as RETURN's clone |
+| `+8` | `0x0052d990` | `FUN_0052d990` | `mov eax,0x19; ret` |
+
+A whole-`.text` scan of `[reg+0x224]` in `0x0052d000..0x0053a200` finds
+exactly these interpreter writers: `ExecutePop` (read + decrement),
+`CALLLOCAL` (read + increment), `Run` (zero on entry + the `<= 0` stop
+test), `CopyState` (copy), and `InitRuntime` (zero). Five `IScript__*Wait`
+constructors (`PlayAnimationWait`, `PlayCharMessageWait`,
+`PlayPCharMessageWait`, `Pause`, `FollowWaypointWait`) write
+`[eax+0x224] = [0x0089c804]` while installing CVM vptr `0x005e4f1c` on a
+**new** object — that is construction, not an interpreter increment.
+
+Cheapest falsifier: another instruction class whose executor writes
+`[vm+0x224]` outside that census, or a shipped script that returns from a
+local call without a preceding `CALLLOCAL`.
+
 ## Stack discipline (settled this slice)
 
 The operand stack is an **inline 128-dword array**: head at `+0xc` of the VM
@@ -157,10 +184,11 @@ pointer array into the destination.
 
 ## Open questions (cheapest falsifier first)
 
-- Who increments `vm+0x224` so `CInstructionOP_RETURN__ExecutePop` is
-  reachable? `Run` zeroes the field on every entry. Cheapest: byte-map
-  `CInstructionOP_CALLLOCAL__VFunc_0_0052ec40` (`0x0052ec40`) and any sibling
-  that writes `[reg+0x224]`.
+- Who increments `vm+0x224`: CLOSED — `CInstructionOP_CALLLOCAL__VFunc_0_0052ec40`
+  (`0x0052ec40`) is the only interpreter increment. `PUSHPC`
+  (`CInstructionOP_PUSHPC__VFunc_0_0052e0a0`) pushes the *attribute* as a
+  `CInt`; whether every shipped local-call site emits `PUSHPC` then
+  `CALLLOCAL` is still open (read one `MissionScripts/level***` stream).
 - `+0x5c` is a serialized dword that gates the one-time PC=0 preamble. Its
   authored name and any meaning beyond "nonzero ⇒ run preamble" are still
   open. Cheapest: read the two trailer dwords out of one shipped
