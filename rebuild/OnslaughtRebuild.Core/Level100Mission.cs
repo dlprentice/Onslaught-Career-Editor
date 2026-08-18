@@ -78,6 +78,8 @@ public sealed class Level100Mission
     private int _messageBoxAllowedTick =
         Level100MissionTiming.MessageBoxAllowedTick;
 
+    private readonly Level100WonCareerHandoff _wonCareerHandoff = new();
+
     public Level100Mission(
         Level100ActorRegistry actors,
         Level100ActorId playerActorId,
@@ -112,6 +114,13 @@ public sealed class Level100Mission
         _initializerRan = true;
         RunNewExecution("init", _program.BuiltInEventInstructionPointers[0]);
     }
+
+    /// <summary>
+    /// The cold training career this mission hands to
+    /// <c>CCareer::Update</c> when it reaches
+    /// <see cref="Level100MissionTerminalState.FrontEndHandoffReady"/> after Won.
+    /// </summary>
+    public RetailCareerCampaign Career => _wonCareerHandoff.Career;
 
     public Level100MissionSnapshot Snapshot => new(
         _tick,
@@ -1002,6 +1011,7 @@ public sealed class Level100Mission
         {
             _terminalState = Level100MissionTerminalState.FrontEndHandoffReady;
             _events.Add(new Level100TerminalStateChanged(_tick, _terminalState));
+            _wonCareerHandoff.TryApply(_outcome, _terminalState);
         }
         else if (_outcome == Level100MissionOutcome.Lost &&
                  _terminalTicksRemaining ==

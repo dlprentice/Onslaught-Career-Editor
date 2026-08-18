@@ -1,7 +1,7 @@
 # Rebuild parity contract
 
 Status: active — what "1:1 behavioral and experiential parity" means operationally
-Last updated: 2026-08-18 (Level 100 FillOutEndLevelData Won snapshot).
+Last updated: 2026-08-18 (Level 100 Won career handoff from FrontEndHandoffReady).
 Evidence: SOURCE — authority order and the known divergences are
 recorded in `PROVENANCE.md` plus the Lost-countdown row of this table; gate capabilities are MEASURED claims of the
 tracked harnesses named in the table. Every row of *Carried retail contracts*
@@ -39,7 +39,7 @@ These are exceptions to record precisely, not templates for loose porting.
 ## Carried retail contracts — entity, owner, implementation, test
 
 Recorded 2026-08-17, with the Pulse Cannon increment, end-level countdown,
-and Level 100 ReCalcLinks rows added 2026-08-18. Every retail anchor below was **re-derived from the
+ReCalcLinks, FillOut, and FrontEndHandoffReady career-handoff rows added 2026-08-18. Every retail anchor below was **re-derived from the
 pristine specimen** for this table (PE headers parsed directly; flat mapping
 file offset = VA − 0x400000 for `.text`/`.rdata`/`.data`, whose raw ends are
 0x005D8000 / 0x00622000 / 0x00661000 — `.rsrc` is **not** flat and 0x00672FD0 is
@@ -88,27 +88,31 @@ Owner paths are relative to the repository root; test names are relative to
 | `CGame::DeclareLevelLost` / `::DeclareLevelWon` countdown | `0x0046F4A8` `c7 43 48 00 00 00 40` = `mov [ebx+0x48], 0x40000000` = `2.0f`; `0x0046F338` `c7 43 48 00 00 a0 40` = `5.0f` after `cmp eax,0x2E5` / `0x2E6` miss. Source `game.cpp:75` writes `GAME_COUNT_WHEN_LOST_OR_DRAW 5.0f` for both | `rebuild/OnslaughtRebuild.Core/RetailGameEndCountdown.cs` and `rebuild/OnslaughtRebuild.Core/Level100MissionTiming.cs` | `RetailGameEndCountdown.LostTicks` | `RetailGameEndCountdownTests.TutorialBroken_StartsTheTwoSecondLostCountdown` | 1 | Lost written as the source `5.0f` (`0x40A00000`) |
 | `CCareer::ReCalcLinks` after Level 100 Won | `0x0041BDF0` calls `0x004496E0`; world 100 `level_structure[0]` is lower child node 1 / world 110 and higher `mToNode=-1`. Level 100 ships four primaries and no secondaries, so the predicate is the no-objectives FALSE; the lower link still completes (`Career.cpp:488-490`) and the dummy higher stays `CN_NOT_COMPLETE` | `rebuild/OnslaughtRebuild.Core/RetailCareerReCalcLinks.cs` | `RetailCareerCampaign.ApplyUpdate` | `RetailCareerReCalcLinksTests.Level100Won_UnlocksWorld110EvenThoughTheSecondaryPredicateIsTheNoObjectivesFalse` | 1 | require `IsAllSecondaryObjectivesComplete` for the lower child too |
 | `CGame::FillOutEndLevelData` Level 100 Won snapshot | `0x0046D470`; `mWorldFinished=100`, `mFinalState=5`, ten unset secondary statuses. `game.cpp:1028` `if (GetNumSecondaryObjectives())` is false, so the 0.4/0.6 ranking clamp is skipped even though `0x004496E0` would return FALSE | `rebuild/OnslaughtRebuild.Core/RetailFillOutEndLevelData.cs` | `RetailFillOutEndLevelData.AfterSecondaryRankingClamp` | `RetailFillOutEndLevelDataTests.Level100Won_DoesNotClampRankingBecauseThereAreNoSecondaries` | 3 | apply the failed-secondary `0.6` cap when the authored count is 0 |
+| `CGame::FillOutEndLevelData` then `CCareer::Update` from Level 100 `FrontEndHandoffReady` | After the already-pinned Won 5.0 f countdown, `RestartLoopRunLevel` calls FillOut `0x0046D470` then Update `0x0041BD00`. Mission `FrontEndHandoffReady` is that seam: `ForLevel100Won()` then `ApplyUpdate`. No new secondaries | `rebuild/OnslaughtRebuild.Core/Level100WonCareerHandoff.cs` | `Level100WonCareerHandoff.TryApply` | `Level100WonCareerHandoffTests.FrontEndHandoffReadyAfterWon_AppliesFillOutAndUnlocksWorld110` | 1 | skip `ApplyUpdate` on the handoff |
 
 Two things this table deliberately does **not** claim. It does not claim these
 contracts are graded `REBUILD_READY`: that grade is a campaign artifact and
 needs the ceremony in `tools/re_campaign.py`
 (`_validate_rebuild_ready_gate`), which stamps owner/test/project SHA-256s, a
 `rebuildMapping`, and a re-run of the focused test. And it does not claim replay
-coverage. **Seventeen of these twenty implementations are unreachable from the
+coverage. **Sixteen of these twenty-one implementations are unreachable from the
 simulation and replay path** — measured, by searching `Simulation.cs`,
 `ReplayRunner.cs`, `CommandTape.cs`, `StateHasher.cs` and every `Level100*.cs`
 for the owner types: `Simulation.JetFrictionNumerator` is wired,
 `RetailWeaponCharge.Charge` is reached from `Simulation.TryChargeWeapon`
-when the player holds `SimActions.ChargeWeapon` on the Pulse Cannon Pod, and
+when the player holds `SimActions.ChargeWeapon` on the Pulse Cannon Pod,
 `RetailGameEndCountdown.LostTicks` is reached from
 `Level100Mission.DeclareLost` on the released Broke-Tutorial /
-`LevelLostString` path. Charge is not in `StateHasher` because it does not
-yet change fire, movement, or any other hashed field. So no cold-start or
-full-chain trace can reach the other seventeen, and the focused test is the
+`LevelLostString` path, and `Level100WonCareerHandoff.TryApply` (which
+calls the already-pinned `ForLevel100Won` / `ApplyUpdate`) is reached from
+`Level100Mission` when `FrontEndHandoffReady` follows Won. Charge and the
+career graph are not in `StateHasher` because they do not yet change fire,
+movement, or any other hashed field. So no cold-start or
+full-chain trace can reach the other sixteen, and the focused test is the
 only falsifier they have. That is exactly
 the precedent the jet-friction row set: a green replay suite there was
 *vacuous* with respect to the constant it was supposed to guard, because the
-jet throttle caps below the gate's band. The seventeenth through twentieth
+jet throttle caps below the gate's band. The seventeenth through twenty-first
 rows' mutation kills were measured on 2026-08-18 in this worktree; they are
 not among the 17 files
 under `local-lab/rebuild-parity-mutation-kills-2026-08-17/`.
