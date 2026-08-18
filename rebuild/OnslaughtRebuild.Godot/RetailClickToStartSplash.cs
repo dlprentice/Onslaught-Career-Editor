@@ -35,9 +35,9 @@ namespace OnslaughtRebuild.GodotClient;
 /// 0, 1.0, 0)</c>. Mode 4 is the centre-anchor used by the title slam.</para>
 ///
 /// <para>No Godot types. The 2-D consumer ignores z; the bits stay on the
-/// helper so a later depth owner does not have to re-read the body. Wiring
-/// through <c>DrawClickToStart</c> is deferred while
-/// <c>RetailFrontendFlow.cs</c> is a hotspot.</para>
+/// helper so a later depth owner does not have to re-read the body.
+/// <c>DrawClickToStart</c> consumes <see cref="X"/>, <see cref="Y"/>, and
+/// <see cref="Scale"/>. Slide and glyph helpers stay unwired.</para>
 /// </summary>
 public static class RetailClickToStartSplash
 {

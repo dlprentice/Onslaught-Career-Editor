@@ -116,8 +116,9 @@ public sealed class RetailClickToStartPromptTests
             Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "RetailFrontendFlow.cs"));
 
         Assert.Contains("RetailClickToStartPrompt.IsPromptVisible", flow);
-        Assert.Contains("RetailClickToStartPrompt.SplashScale", flow);
+        Assert.Contains("RetailClickToStartSplash.Scale", flow);
         Assert.Contains("RetailClickToStartPrompt.Advance", flow);
+        Assert.DoesNotContain("RetailClickToStartPrompt.SplashScale", flow);
         Assert.DoesNotContain("PosMod((float)_clickPulseTimer, 2f) < 1.6f", flow);
         Assert.DoesNotContain("Mathf.Min((float)_clickPulseTimer, 1f)", flow);
     }

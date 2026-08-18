@@ -994,17 +994,14 @@ public sealed partial class RetailFrontendFlow : Control
 
     private void DrawClickToStart()
     {
-        // CFEPIntro::Render 0x0051B840 splash pulse — DAT_0089d880 / fe_splash1.
-        // Argument is min(this+0x18, 1.0): fcom [1.0f] at 0x0051B869, replace
-        // only when the timer is strictly greater than 1.
-        float splashScale = RetailClickToStartPrompt.SplashScale(_clickPulseTimer);
-        // Call-site x/y are center anchors at settled scale ≈ (320, 240).
-        float splashX = (558f - (splashScale * 238f)) - 126.4375f;
-        float splashY = 135.9375f + (222f * splashScale);
+        // CFEPIntro::Render 0x0051B866 splash dest — DAT_0089d880 / fe_splash1.
+        // Scale is min(this+0x18, 1.0) then the stored pulse; dest is the
+        // specimen affine, not a scale-free (320, 240) centre.
+        float splashScale = RetailClickToStartSplash.Scale(_clickPulseTimer);
         DrawSurfaceCentered(
             _clickBackground,
-            splashX,
-            splashY,
+            RetailClickToStartSplash.X(_clickPulseTimer),
+            RetailClickToStartSplash.Y(_clickPulseTimer),
             splashScale,
             splashScale,
             Colors.White);

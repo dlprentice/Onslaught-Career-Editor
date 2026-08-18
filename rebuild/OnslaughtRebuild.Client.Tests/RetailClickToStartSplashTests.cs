@@ -17,11 +17,10 @@ namespace OnslaughtRebuild.Client.Tests;
 /// on <c>DAT_0089d880</c> (<c>FrontEnd\v2\fe_splash1.tga</c>). Not attract
 /// <c>vectorlosttoyssplash</c>. Not TWIMTBP.</para>
 ///
-/// <para>What is asserted is the LAW, not Godot pixels. The previous
-/// <c>DrawClickToStart</c> dest used the same affine as unlabeled
-/// reconstruction. These cases pin the specimen float-pool VAs, the
-/// right-to-left 11-dword pack, and refuse a scale-free (320, 240) dest.
-/// Wiring through the hotspot is deferred.</para>
+/// <para>What is asserted is the LAW, not Godot pixels. These cases pin
+/// the specimen float-pool VAs, the right-to-left 11-dword pack, and
+/// refuse a scale-free (320, 240) dest. <c>DrawClickToStart</c> must
+/// call the recovered dest rather than keep an unlabeled copy.</para>
 /// </summary>
 public sealed class RetailClickToStartSplashTests
 {
@@ -92,14 +91,18 @@ public sealed class RetailClickToStartSplashTests
     }
 
     [Fact]
-    public void DrawClickToStartIsNotYetWiredBecauseTheHotspotIsLive()
+    public void DrawClickToStartCallsTheRecoveredSplashDestInsteadOfTheUnlabeledCopy()
     {
         string flow = File.ReadAllText(
             Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "RetailFrontendFlow.cs"));
 
-        Assert.DoesNotContain("RetailClickToStartSplash", flow);
-        Assert.Contains("(558f - (splashScale * 238f)) - 126.4375f", flow);
-        Assert.Contains("135.9375f + (222f * splashScale)", flow);
+        Assert.Contains("RetailClickToStartSplash.X", flow);
+        Assert.Contains("RetailClickToStartSplash.Y", flow);
+        Assert.Contains("RetailClickToStartSplash.Scale", flow);
+        Assert.DoesNotContain("(558f - (splashScale * 238f)) - 126.4375f", flow);
+        Assert.DoesNotContain("135.9375f + (222f * splashScale)", flow);
+        Assert.DoesNotContain("RetailClickToStartSlide", flow);
+        Assert.DoesNotContain("RetailClickToStartGlyphs", flow);
         Assert.DoesNotContain("vectorlosttoyssplash", flow);
         Assert.DoesNotContain("TWIMTBP", flow);
     }
