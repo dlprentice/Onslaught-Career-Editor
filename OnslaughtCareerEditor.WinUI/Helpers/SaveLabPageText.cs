@@ -1,3 +1,5 @@
+using OnslaughtCareerEditor.AppCore;
+
 namespace OnslaughtCareerEditor.WinUI.Helpers
 {
     /// <summary>
@@ -29,5 +31,16 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
 
         public const string PatchFailed =
             "Game options patch failed. Nothing was changed.";
+
+        /// <summary>
+        /// Null when the write may proceed. Same classifier and sentence as Cheats
+        /// and Save Rescue, so an output path cannot become a second walk.
+        /// </summary>
+        public static string? DescribeOutputRefusal(string? outputPath)
+        {
+            return CareerSaveLocation.ClassifyExisting(outputPath) == CareerSaveLocationKind.InstalledGame
+                ? CareerSaveLocation.InstalledDestinationRefused
+                : null;
+        }
     }
 }

@@ -103,7 +103,7 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         /// </summary>
         public static string? DescribeDestinationRefusal(string? folder)
         {
-            return CareerSaveLocation.Classify(folder) == CareerSaveLocationKind.InstalledGame
+            return CareerSaveLocation.ClassifyExisting(folder) == CareerSaveLocationKind.InstalledGame
                 ? CareerSaveLocation.InstalledDestinationRefused
                 : null;
         }

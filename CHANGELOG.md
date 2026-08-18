@@ -29,8 +29,10 @@ live in `developer_state.json` and the campaign ledgers.
   keep the same sentence and drop the exception. Save Lab comparison/analysis
   and Game Options browse/patch failures do the same. Save Lab will not keep a
   rescued career in a folder inside the installed game, and it names that folder
-  without dumping the full path. An Asset Library search with no hits now says
-  to try another word or clear the search.
+  without dumping the full path. Save Lab and Game Options also keep the write
+  button off when the chosen output file sits inside the installed game. An
+  Asset Library search with no hits now says to try another word or clear the
+  search.
 
 ## 1.0.11 — 2026-08-07
 

@@ -91,6 +91,23 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 CareerSaveLocation.Classify(Path.GetDirectoryName(chosenSave)));
         }
 
+        [Fact]
+        public void ClassifyExisting_WalksUpToTheFirstFolderThatIsThere()
+        {
+            using var lab = new LocationLab();
+            lab.MakeInstalledGame();
+            string missing = Path.Combine(lab.Root, "savegames", "new-career.bes");
+            Assert.False(File.Exists(missing));
+            Assert.Equal(CareerSaveLocationKind.Missing, CareerSaveLocation.Classify(missing));
+            Assert.Equal(CareerSaveLocationKind.InstalledGame, CareerSaveLocation.ClassifyExisting(missing));
+
+            using var chosen = new LocationLab();
+            string keep = Path.Combine(chosen.Root, "Documents");
+            Directory.CreateDirectory(keep);
+            string alsoMissing = Path.Combine(keep, "new-career.bes");
+            Assert.Equal(CareerSaveLocationKind.ChosenFolder, CareerSaveLocation.ClassifyExisting(alsoMissing));
+        }
+
         private sealed class LocationLab : IDisposable
         {
             public LocationLab()

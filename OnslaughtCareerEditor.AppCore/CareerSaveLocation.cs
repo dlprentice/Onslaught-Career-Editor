@@ -61,5 +61,40 @@ namespace OnslaughtCareerEditor.AppCore
                 ? CareerSaveLocationKind.InstalledGame
                 : CareerSaveLocationKind.ChosenFolder;
         }
+
+        /// <summary>
+        /// Classify a path that may not exist yet by walking up to the first
+        /// ancestor that does. Folder pickers build <c>folder\\newfile.bes</c>;
+        /// that file is Missing until the write, but the folder is already there.
+        /// Layout only: this never creates the path.
+        /// </summary>
+        public static CareerSaveLocationKind ClassifyExisting(string? path)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+                return CareerSaveLocationKind.Missing;
+
+            string current;
+            try
+            {
+                current = Path.GetFullPath(path.Trim());
+            }
+            catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
+            {
+                return CareerSaveLocationKind.Missing;
+            }
+
+            while (!string.IsNullOrWhiteSpace(current))
+            {
+                if (File.Exists(current) || Directory.Exists(current))
+                    return Classify(current);
+
+                string? parent = Path.GetDirectoryName(current);
+                if (string.Equals(parent, current, StringComparison.OrdinalIgnoreCase))
+                    break;
+                current = parent ?? string.Empty;
+            }
+
+            return CareerSaveLocationKind.Missing;
+        }
     }
 }

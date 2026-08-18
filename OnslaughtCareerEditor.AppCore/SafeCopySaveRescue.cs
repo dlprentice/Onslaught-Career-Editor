@@ -510,19 +510,7 @@ namespace OnslaughtCareerEditor.AppCore
         /// </summary>
         private static bool LooksLikeInstalledGameDestination(string destination)
         {
-            string? current = destination;
-            while (!string.IsNullOrWhiteSpace(current))
-            {
-                if (Directory.Exists(current) || File.Exists(current))
-                    return CareerSaveLocation.Classify(current) == CareerSaveLocationKind.InstalledGame;
-
-                string? parent = Path.GetDirectoryName(current);
-                if (string.Equals(parent, current, StringComparison.OrdinalIgnoreCase))
-                    break;
-                current = parent;
-            }
-
-            return false;
+            return CareerSaveLocation.ClassifyExisting(destination) == CareerSaveLocationKind.InstalledGame;
         }
 
         /// <summary>

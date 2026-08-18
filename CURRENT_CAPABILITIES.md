@@ -91,7 +91,8 @@ files keep the block.
   dumping the full path. Cheats uses the same classifier for the source career
   it is about to copy, and will not offer to write into a folder inside the
   installed game. Bringing a career out of a copy uses the same refusal and
-  names the destination folder without the full path.
+  names the destination folder without the full path. Save Lab and Game Options
+  also refuse an output file inside the installed game before the write.
 - Write a separate save copy with supported mission, link, Goodie, rank, and
   kill-count changes. Comparison, analysis, and Game Options failures name what
   failed and that nothing was changed, without dumping the exception.

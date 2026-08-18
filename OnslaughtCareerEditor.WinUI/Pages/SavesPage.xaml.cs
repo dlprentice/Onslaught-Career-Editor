@@ -1516,6 +1516,10 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             {
                 EditorSafetyHintTextBlock.Text = "Output file must be different from input file. In-place save patching remains blocked.";
             }
+            else if (SaveLabPageText.DescribeOutputRefusal(request.OutputPath) is { } refusedOutput)
+            {
+                EditorSafetyHintTextBlock.Text = refusedOutput;
+            }
             else if (!outputIsSaveLike)
             {
                 // This used to read "...stay outside every game folder", which claimed more than
@@ -1536,6 +1540,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 EditorSafetyHintTextBlock.Text = "Save patching is ready. Mission rank and category-kill overrides are supported here; startup settings and keybind overrides still belong in Game Options.";
             }
 
+            bool outputRefused = SaveLabPageText.DescribeOutputRefusal(request.OutputPath) is not null;
             bool canWrite =
                 _editorInputValid &&
                 hasInput &&
@@ -1544,7 +1549,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 string.IsNullOrWhiteSpace(advancedError) &&
                 overrideDependenciesSatisfied &&
                 !samePath &&
-                outputIsSaveLike;
+                outputIsSaveLike &&
+                !outputRefused;
             EditorPatchButton.IsEnabled = canWrite;
 
             bool canWriteFocusedGoodie =
@@ -1554,7 +1560,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 hasInput &&
                 hasOutput &&
                 !samePath &&
-                outputIsSaveLike;
+                outputIsSaveLike &&
+                !outputRefused;
             EditorPatchFocusedGoodieButton.IsEnabled = canWriteFocusedGoodie;
             EditorFocusedGoodieStatusTextBlock.Text = focusedGoodieError ?? (canWriteFocusedGoodie
                 ? $"Ready to write only Goodie ID {focusedGoodieRequest!.GoodieId:000} as {MissionScriptGoodieStateSaveCodec.GetStateLabel(focusedGoodieRequest.State)}."

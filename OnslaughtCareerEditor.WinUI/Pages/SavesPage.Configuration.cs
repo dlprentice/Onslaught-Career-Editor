@@ -402,6 +402,10 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             {
                 ConfigurationSafetyHintTextBlock.Text = "Copy-source toggles require a valid existing .bes or .bea file.";
             }
+            else if (SaveLabPageText.DescribeOutputRefusal(outputPath) is { } refusedOutput)
+            {
+                ConfigurationSafetyHintTextBlock.Text = refusedOutput;
+            }
             else if (!outputIsOptionsLike)
             {
                 ConfigurationSafetyHintTextBlock.Text = "Output path must remain a .bea / defaultoptions.bea path.";
@@ -424,7 +428,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 controllerConfigValid &&
                 keybindErrors.Count == 0 &&
                 (!copyRequested || copySourcePathValid) &&
-                hasPending;
+                hasPending &&
+                SaveLabPageText.DescribeOutputRefusal(outputPath) is null;
 
             ConfigurationCopyOutputButton.IsEnabled = !string.IsNullOrWhiteSpace(ConfigurationOutputTextBox.Text);
         }
