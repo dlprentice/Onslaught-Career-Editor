@@ -1472,7 +1472,11 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
                 if (!await ConfirmAsync(
                         "Create safe copy?",
-                        $"The app will copy the selected game folder into its own safe workspace, then apply the verified profile and selected mods only inside that copy.\n\nSource folder:\n{sourceGameRoot}\n\nDestination root:\n{options.OutputRoot}\n\n{PatchBenchLabCreationInputText.BuildConfirmationSection(creationInputState)}\n\nThis can take a few minutes and may require several GB of free disk space. The Steam/game install stays unchanged.{spaceSection}"))
+                        PatchBenchSafeCopyOutcomeText.BuildCreateConfirmation(
+                            sourceGameRoot,
+                            options.OutputRoot,
+                            PatchBenchLabCreationInputText.BuildConfirmationSection(creationInputState),
+                            spaceSection)))
                 {
                     PatchBenchCopiedProfileSummary.Text = PatchBenchSafeCopyOutcomeText.BuildCanceledSummary();
                     OperationLogTextBox.Text = PatchBenchSafeCopyOutcomeText.BuildCanceledOperationLog();
@@ -1609,7 +1613,9 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             {
                 if (!await ConfirmAsync(
                         "Launch safe game copy?",
-                        $"The app will launch BEA.exe from the safe game copy only.\n\nSafe copy: {plan.WorkingDirectory}\n{PatchBenchLaunchText.BuildModifierSummary(plan.Arguments)}\n\nThe Steam/game install stays unchanged. The game may take focus, switch display modes, fail to start, or exit. Any manual input after launch is not counted as automated proof."))
+                        PatchBenchLaunchText.BuildLaunchConfirmation(
+                            plan.WorkingDirectory,
+                            PatchBenchLaunchText.BuildModifierSummary(plan.Arguments))))
                 {
                     AppStatusService.SetStatus("Windowed & Mods: safe copy launch canceled");
                     return;

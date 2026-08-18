@@ -1,4 +1,5 @@
 using OnslaughtCareerEditor.WinUI.Models;
+using System.IO;
 
 namespace OnslaughtCareerEditor.WinUI.Helpers
 {
@@ -27,6 +28,45 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         public static string BuildCanceledOperationLog()
         {
             return "Safe copy creation canceled before any copy or patch operation started.";
+        }
+
+        /// <summary>
+        /// The create-copy question names the source and workspace folders.
+        /// The full path does not belong in the confirmation.
+        /// </summary>
+        public static string BuildCreateConfirmation(
+            string? sourceGameRoot,
+            string? destinationRoot,
+            string settingsSection,
+            string? spaceSection)
+        {
+            string sourceName = FolderLeaf(sourceGameRoot, "the selected game folder");
+            string destinationName = FolderLeaf(destinationRoot, "the app workspace");
+            string body =
+                "The app will copy the selected game folder into its own safe workspace, then apply the verified profile and selected mods only inside that copy." +
+                Environment.NewLine + Environment.NewLine +
+                "Source folder: " + sourceName +
+                Environment.NewLine + Environment.NewLine +
+                "Destination: " + destinationName +
+                Environment.NewLine + Environment.NewLine +
+                settingsSection +
+                Environment.NewLine + Environment.NewLine +
+                "This can take a few minutes and may require several GB of free disk space. The Steam/game install stays unchanged.";
+
+            return string.IsNullOrWhiteSpace(spaceSection)
+                ? body
+                : body + Environment.NewLine + Environment.NewLine + spaceSection.Trim();
+        }
+
+        private static string FolderLeaf(string? path, string fallback)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                return fallback;
+            }
+
+            string name = Path.GetFileName(Path.TrimEndingDirectorySeparator(path.Trim()));
+            return string.IsNullOrWhiteSpace(name) ? fallback : name;
         }
 
         public static string BuildFailedSummary()

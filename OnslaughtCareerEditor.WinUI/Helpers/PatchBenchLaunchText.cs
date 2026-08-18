@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.IO;
 using OnslaughtCareerEditor.WinUI.Models;
 
 namespace OnslaughtCareerEditor.WinUI.Helpers
@@ -43,6 +44,34 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
             return arguments.Count == 0
                 ? "Launch modifiers: none."
                 : $"Launch modifiers: {string.Join(" ", arguments)}.";
+        }
+
+        /// <summary>
+        /// The launch question names the copy folder. The working-directory
+        /// path does not belong in the confirmation.
+        /// </summary>
+        public static string BuildLaunchConfirmation(string? workingDirectory, string modifierSummary)
+        {
+            string name = FolderLeaf(workingDirectory, "this safe copy");
+            return
+                "The app will launch BEA.exe from the safe game copy only." +
+                Environment.NewLine + Environment.NewLine +
+                "Safe copy: " + name +
+                Environment.NewLine +
+                modifierSummary +
+                Environment.NewLine + Environment.NewLine +
+                "The Steam/game install stays unchanged. The game may take focus, switch display modes, fail to start, or exit. Any manual input after launch is not counted as automated proof.";
+        }
+
+        private static string FolderLeaf(string? path, string fallback)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                return fallback;
+            }
+
+            string name = Path.GetFileName(Path.TrimEndingDirectorySeparator(path.Trim()));
+            return string.IsNullOrWhiteSpace(name) ? fallback : name;
         }
     }
 }

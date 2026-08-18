@@ -32,8 +32,10 @@ live in `developer_state.json` and the campaign ledgers.
   without dumping the full path. Save Lab and Game Options also keep the write
   button off when the chosen output file sits inside the installed game. Game
   Options overwrite confirmation names the file, not the full path, and leaves
-  the existing file alone if the player cancels. An Asset Library search with
-  no hits now says to try another word or clear the search.
+  the existing file alone if the player cancels. Windowed & Mods create-copy
+  and launch confirmations name the folder, not the full path. An Asset
+  Library search with no hits now says to try another word or clear the
+  search.
 
 ## 1.0.11 — 2026-08-07
 

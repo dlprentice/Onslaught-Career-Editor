@@ -263,7 +263,12 @@ public class SafeCopyManagerSurfaceTests
 
         Assert.That(spaceCheck, Is.GreaterThanOrEqualTo(0));
         Assert.That(confirm, Is.GreaterThan(spaceCheck), "The space read happens before the one confirmation.");
-        Assert.That(code, Does.Contain("{spaceSection}"), "And it is shown inside that confirmation.");
+        Assert.That(code, Does.Contain("BuildCreateConfirmation"), "And it is shown inside that confirmation.");
+        Assert.That(code, Does.Contain("spaceSection"), "The space sentence is still an argument to that confirmation.");
+        Assert.That(code, Does.Not.Contain("{sourceGameRoot}"));
+        Assert.That(code, Does.Not.Contain("{options.OutputRoot}"));
+        Assert.That(code, Does.Not.Contain("{plan.WorkingDirectory}"));
+        Assert.That(code, Does.Contain("BuildLaunchConfirmation"));
     }
 
     [Test]

@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Reflection;
 using NUnit.Framework;
 
@@ -90,6 +91,29 @@ public class PatchBenchSafeCopyOutcomeTextTests
         Assert.That(line, Does.Not.Contain(":\\"));
         Assert.That(line, Does.Not.Contain("0x"));
         Assert.That(line.ToLowerInvariant(), Does.Not.Contain("exception"));
+    }
+
+    [Test]
+    public void CreateConfirmationNamesTheFoldersNotThePaths()
+    {
+        string source = Path.Combine("C:" + Path.DirectorySeparatorChar + "Steam", "steamapps", "common", "Battle Engine Aquila");
+        string dest = Path.Combine("C:" + Path.DirectorySeparatorChar + "Users", "player", "AppData", "GameProfiles");
+        string question = InvokeString(
+            "BuildCreateConfirmation",
+            source,
+            dest,
+            "Settings affecting this copy:" + Environment.NewLine + "Extra settings for next copy: none active.",
+            "There may not be enough free space.");
+
+        Assert.That(question, Does.Contain("Battle Engine Aquila"));
+        Assert.That(question, Does.Contain("GameProfiles"));
+        Assert.That(question, Does.Contain("There may not be enough free space."));
+        Assert.That(question, Does.Contain("Steam/game install stays unchanged"));
+        Assert.That(question, Does.Not.Contain(source));
+        Assert.That(question, Does.Not.Contain(dest));
+        Assert.That(question, Does.Not.Contain(":\\"));
+        Assert.That(question, Does.Not.Contain("steamapps"));
+        Assert.That(question, Does.Not.Contain("Users"));
     }
 
     private static string InvokeString(string methodName, params object?[] arguments)
