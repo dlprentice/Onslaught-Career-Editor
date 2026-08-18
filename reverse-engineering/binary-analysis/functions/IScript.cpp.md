@@ -166,10 +166,16 @@ db.18627.
 - **arrived (id 1).** CLOSED as a fire site, empty as a shipped body.
   Only `E8` to `IScript__CreateThingRef` (`0x005335d0`) is `0x00538583`
   in the end-of-waypoint-chain arm of `UpdateWaypointFollowing` (next
-  waypoint null and `[this+0x1c]==0`). It boxes `[this+0x24]` — written
-  by `FollowWaypoint` at `0x00537dc7` from `args[1]->vtable[+0x30]()` —
-  as a `CInt` and `CallEvent(id=1, argc=1)`. All 762 13-slot IPs are
-  `-1`; 0 listen-string `arrived`.
+  waypoint null and `[this+0x1c]==0`). It boxes `[this+0x24]` as a
+  `CInt` (`vptr 0x005e4af8`) and `CallEvent(id=1, argc=1)`.
+  `FollowWaypoint` (`0x00537d70`, native 0, `ret 0xc`) is the writer:
+  `mov [esi+0x24],eax` at `0x00537dc7` after
+  `args[1]->vtable[+0x30]()`. For `CInt` that slot is
+  `SharedVFunc__ReturnField04_0052f540` (`mov eax,[ecx+4]; ret`).
+  19 shipped `CALL` native-0 sites: the second PUSH is always type-1
+  (`CInt`), value **0** in 13 and **1** in 6. Authored name of the
+  flag is still open. All 762 13-slot IPs are `-1`; 0 listen-string
+  `arrived`.
 - Nested-listener registration. CLOSED as the tail of
   `IScript__CallEvent0AndRegisterNestedListeners` (`0x00533500`): after
   `CallEvent(id=0)` it walks `eventObj+0x48` and

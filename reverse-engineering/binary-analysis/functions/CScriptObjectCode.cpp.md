@@ -242,9 +242,11 @@ as `CEventFunction` listen-strings (measured below). The fire sites are:
   `[IScript+0x24]` as a `CInt` (`vptr 0x005e4af8`) at BSS `0x0089c528`
   and `CallEvent(eventObj, 1, &0x0089c528, 1)`. `FollowWaypoint`
   (`0x00537d70`) is the writer of `+0x24` (`mov [esi+0x24],eax` at
-  `0x00537dc7` from `args[1]->vtable[+0x30]()`). On the shipped corpus
-  the lookup is always `-1`, so the wrapper deletes the `CInt` and
-  returns.
+  `0x00537dc7` from `args[1]->vtable[+0x30]()`, which for `CInt` is
+  `SharedVFunc__ReturnField04_0052f540`). 19 shipped native-0 `CALL`s:
+  that second arg is always a `CInt` **0** (13) or **1** (6). On the
+  shipped corpus the lookup is always `-1`, so the wrapper deletes the
+  `CInt` and returns.
 - **timer (id 2).** `IScript__SetTimer` (`0x005358e0`, `ret 0xc`, zero
   direct `E8` — registry command `"SetTimer"`) calls
   `CEventManager__AddEvent_TimeFromNow` (`0x0044b2d0`) with event
