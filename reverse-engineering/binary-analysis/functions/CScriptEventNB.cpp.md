@@ -157,8 +157,15 @@ adjacent singleton `0x0089c5e0` — no listener-set walk — so the
   `CWorld__LoadScriptEvents` are this type, so the event-entry name objects
   are `CStringDataType` instances.
 - The `0x11` vs `0x19` node-size split (17 vs 25 bytes) between the
-  register-new and register-existing arms — what the found arm's extra 8 bytes
-  hold.
+  register-new and register-existing arms: MEASURED, still open — both arms
+  write only `node[0] = listener` before the set inserts (the sets wrap each
+  item in their own 8-byte `{item,next}` node: `CSPtrSet__AddToHead`
+  `0x004e5a80` / `CSPtrSet__AddToTail` `0x004e5b20`); no writer or reader of
+  node bytes `+4..+24` was found in `RegisterEventListener`,
+  `ClearListenerEntry`, `CMonitor__Shutdown_Core` (`0x004bacb0`, which zeroes
+  only `node[0]`), or the dispatch walk. The hit arm's extra 8 bytes have no
+  static consumer; next instrument is a runtime watch of a hit-arm node's
+  bytes during `RegisterEventListener`.
 - The `[this+8]` 0x42-byte container: `+0`/`+8`/`+0xc` are measured as
   head-ish/cursor/count; the exact head-vs-tail node identities.
 - Who invokes `CScriptEventNB::HandleEventMessage` (vtable slot 0) with

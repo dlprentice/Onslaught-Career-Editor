@@ -10,7 +10,10 @@
 > read-back record only; its decompiler-derived pseudocode and its
 > `0x005e4f34` slot table carry stale values (for example slot 2 is
 > `CMonitor__Shutdown_Core` `0x004bacb0`, not `0x004bac40`) and must not be
-> read as current byte truth.
+> read as current byte truth. Its `CRelaxedSquad` base-class labels (overview,
+> the 0x10-byte `CreateListenerSet` reading, and the `eventListener` field
+> gloss) are refuted by the 2026-08-17 RTTI COLOC walk: the event-listener
+> base is `CMonitor : IListener`, never `CRelaxedSquad`.
 
 > Source file: `MissionScript/ScriptEventNB.cpp`
 > Debug path: `[maintainer-local-source-export-root]\MissionScript\ScriptEventNB.cpp` (0x0064fe98)

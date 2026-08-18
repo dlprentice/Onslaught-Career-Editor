@@ -1,11 +1,12 @@
 # EventFunction.cpp - Function Mappings
 
 > Source file/debug path: `[maintainer-local-source-export-root]\MissionScript\EventFunction.cpp` (0x0064cce0)
-> Last updated: 2026-05-19
+> Last updated: 2026-08-17 (RTTI hierarchy settled; see the note after the
+> vtable table) — prior text updated 2026-05-19
 
 ## Overview
 
-`CEventFunction` is the retail MissionScript event-function container. Wave577 saved clean Ghidra signatures, comments, and tags for the full five-function EventFunction.cpp slice after headless dry/apply/read-back. The binary initializes through a `CRelaxedSquad`-like vtable during construction/destruction setup, but exact source class hierarchy and source-body identity remain unproven from the current Stuart source snapshot.
+`CEventFunction` is the retail MissionScript event-function container. Wave577 saved clean Ghidra signatures, comments, and tags for the full five-function EventFunction.cpp slice after headless dry/apply/read-back. The binary initializes through the `CMonitor` base vtable during construction/destruction setup (RTTI-settled 2026-08-17: `CEventFunction : CMonitor : IListener`; see the note after the vtable table). Source-body identity against the current Stuart source snapshot remains unproven.
 
 Key retail evidence:
 
@@ -30,7 +31,7 @@ Wave577 targeted the adjacent queue-head EventFunction tranche and applied no re
 | --- | --- | --- |
 | `0x0052f9a0` | `void __thiscall CEventFunction__Destructor(void * this)` | Installs `0x005e4ef8`, walks the CSPtrSet at `this+0x0c` through iterator slot `this+0x14`, frees 8-byte wrappers through `DAT_009c3df0`, clears the set twice, then calls `CMonitor__Shutdown`. |
 | `0x0052fa50` | `void * __thiscall CEventFunction__ScalarDeletingDestructor(void * this, byte flags)` | Vtable slot at `0x005e4efc`; `RET 0x4` confirms one `flags` stack argument after `ECX=this`; frees `this` when `flags&1` is set. |
-| `0x0052fa70` | `void * __thiscall CEventFunction__CEventFunction(void * this, void * script_object_code, void * bytecode_reader)` | `RET 0x8`; switches from the `0x005d92d4` CRelaxedSquad-like vtable to `0x005e4ef8`, stores owner at `this+0x1c`, reads event id/count from the bytecode reader, resolves symbol indexes through `CScriptObjectCode__GetInstruction`, requires datatype id `3`, and appends wrappers allocated at EventFunction.cpp line `0x40`. |
+| `0x0052fa70` | `void * __thiscall CEventFunction__CEventFunction(void * this, void * script_object_code, void * bytecode_reader)` | `RET 0x8`; switches from the `0x005d92d4` `CMonitor` base vtable to `0x005e4ef8`, stores owner at `this+0x1c`, reads event id/count from the bytecode reader, resolves symbol indexes through `CScriptObjectCode__GetInstruction`, requires datatype id `3`, and appends wrappers allocated at EventFunction.cpp line `0x40`. |
 | `0x0052fbb0` | `void * __thiscall CEventFunction__Clone(void * this, void * cloned_script_object_code)` | `RET 0x4`; allocates a `0x20`-byte clone at line `0x4e`, copies the event id, initializes the parameter list, resolves source symbols through owner `+0x58`, verifies datatype id `3`, compares string getter slot `+0x38`, and appends line-`0x1b` wrapper nodes. |
 | `0x0052fda0` | `void __thiscall CEventFunction__Execute(void * this)` | Register-only `this`; walks `this+0x0c`, allocates 8-byte `CEventFunctionParam` wrappers at line `0x96`, installs vtable `0x005e4d50`, copies payload byte from `wrapped_object+0x04+0x14`, stores into the local 10-slot array, and calls `CScriptObjectCode__CallEventDirect`. |
 
@@ -59,7 +60,7 @@ Read-back artifacts:
 | --- | --- | --- |
 | `0x005e4ef8` | `CEventFunction` vtable | Slot `+0x04` points at `CEventFunction__ScalarDeletingDestructor`. |
 | `0x005e4d50` | `CEventFunctionParam`/datatype-region vtable evidence | Execute installs this vtable on the transient 8-byte event parameter wrappers. |
-| `0x005d92d4` | CRelaxedSquad-like vtable candidate | Constructor/destructor setup uses this before switching to `CEventFunction`; exact hierarchy remains unproven. |
+| `0x005d92d4` | `CMonitor` base vtable | Constructor/destructor setup uses this before switching to `CEventFunction`. RTTI-settled 2026-08-17, not `CRelaxedSquad`-like. |
 
 ### Error Strings
 
@@ -68,6 +69,23 @@ Read-back artifacts:
 | `0x0064cd38` | `FATAL ERROR: Event Function was expecting a string` | Constructor datatype guard. |
 | `0x0064cd6c` | `FATAL ERROR can't find event string in symbol table` | Clone symbol lookup failure. |
 | `0x0064cda0` | `FATAL ERROR: Data type wrong type in clone for event function` | Clone datatype guard. |
+
+## RTTI hierarchy note (2026-08-17)
+
+The COLOC walk from the pristine `74154bfa…` image settles the class hierarchy
+the 2026-05-19 text left open. `CEventFunction`'s Complete Object Locator is
+`0x00619538`, stored at `vtable-4` (`0x005e4ef4`); its type descriptor
+`0x0064cd18` carries the mangled name `.?AVCEventFunction@@`, and its base
+array is `CEventFunction` → `CMonitor` (`.?AVCMonitor@@`) →
+`IListener` (`.?AVIListener@@`). The vtable `0x005e4ef8` therefore overrides
+the three `CMonitor` virtuals as: slot 0 `HandleEvent` = the shared base no-op
+`0x004014c0` (a `CEventFunction` used as an event-manager `to_call` ignores
+the event), slot 1 = `CEventFunction__ScalarDeletingDestructor`
+(`0x0052fa50`), slot 2 = base `CMonitor__Shutdown_Core` (`0x004bacb0`). The
+dword at `0x005e4f04` (`vtable+0xc`) is the adjacent `IScript` vtable's COLOC
+`0x00619588`, not a fourth `CEventFunction` slot. See
+[`CScriptEventNB.cpp.md`](CScriptEventNB.cpp.md) for the sibling classes
+(`IScript`, `CVM`, `CPostEventData`, `CScriptEventNB`).
 | `0x0064cde0` | `FATAL ERROR: Could not find symbol table in clone` | Clone owner/symbol-table guard. |
 
 ## Cross-References
@@ -82,4 +100,4 @@ Read-back artifacts:
 
 ## Proof Boundary
 
-Wave577 improves saved static Ghidra readability and queue telemetry for the EventFunction.cpp slice. The runtime event behavior remains unproven, including actual mission event firing behavior, concrete parameter payload semantics, parameter count safety, exact source class hierarchy, BEA patching, and rebuild parity.
+Wave577 improves saved static Ghidra readability and queue telemetry for the EventFunction.cpp slice. The runtime event behavior remains unproven, including actual mission event firing behavior, concrete parameter payload semantics, parameter count safety, BEA patching, and rebuild parity. The class hierarchy is no longer in that set: RTTI settles it as `CEventFunction : CMonitor : IListener` (2026-08-17 note below).
