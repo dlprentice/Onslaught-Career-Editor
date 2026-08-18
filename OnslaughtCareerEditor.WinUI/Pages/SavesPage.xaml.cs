@@ -376,9 +376,9 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             {
                 RenderDocument(SaveAnalyzerService.CompareFiles(leftPath, rightPath));
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                RenderError("Comparison failed", $"Error comparing files: {ex.Message}");
+                RenderError("Comparison failed", SaveLabPageText.ComparisonFailed);
             }
         }
 
@@ -433,9 +433,9 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     verbose: VerboseToggle.IsOn,
                     dumpMystery: DumpMysteryToggle.IsOn));
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                RenderError("Analysis failed", $"Error analyzing file: {ex.Message}");
+                RenderError("Analysis failed", SaveLabPageText.AnalysisFailed);
             }
         }
 

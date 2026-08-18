@@ -92,7 +92,8 @@ files keep the block.
   it is about to copy, and will not offer to write into a folder inside the
   installed game.
 - Write a separate save copy with supported mission, link, Goodie, rank, and
-  kill-count changes.
+  kill-count changes. Comparison, analysis, and Game Options failures name what
+  failed and that nothing was changed, without dumping the exception.
 - Write one selected displayable Goodie state directly to one `.bes` file in a
   verified app-owned Safe Game Copy; in-place and installed-tree output remain
   blocked.
