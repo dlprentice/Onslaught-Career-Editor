@@ -1048,17 +1048,25 @@ public sealed partial class RetailFrontendFlow : Control
                 Colors.White);
         }
 
-        // Title micro-pulse near (250,290) after ~2s (simplified vs multi-pass retail).
-        if (_clickPageSeconds * 1.2d > 2d)
+        // CFEPIntro::Render 0x0051BBA0 title slam — DAT_0089d88c / FE_BEA_Title2.
+        // Gate is page*1.2 > 2; scale slams 2.5→0.5; four z=0.05 outline
+        // corners then the z=0.04 body. The previous 0.35 / sin(page*3) stub
+        // is not the specimen law.
+        if (RetailClickToStartTitle.ShouldDraw(_clickPageSeconds))
         {
-            float logoPulse = 0.55f + (0.45f * (0.5f + (0.5f * Mathf.Sin((float)_clickPageSeconds * 3f))));
-            DrawSurfaceCentered(
-                _titleLogo,
-                250f,
-                290f,
-                0.35f,
-                0.35f,
-                new Color(TitleLogoTint.R, TitleLogoTint.G, TitleLogoTint.B, logoPulse));
+            float titleScale = RetailClickToStartTitle.Scale(_clickPageSeconds);
+            uint outline = RetailClickToStartTitle.OutlineColor(_clickPageSeconds);
+            uint body = RetailClickToStartTitle.BodyColor(_clickPageSeconds);
+            foreach (RetailClickToStartTitle.Pass pass in RetailClickToStartTitle.Passes)
+            {
+                DrawSurfaceCentered(
+                    _titleLogo,
+                    pass.X,
+                    pass.Y,
+                    titleScale,
+                    titleScale,
+                    RetailColor(pass.Outline ? outline : body));
+            }
         }
     }
 
