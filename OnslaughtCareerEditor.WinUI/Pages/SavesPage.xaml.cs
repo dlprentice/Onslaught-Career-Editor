@@ -922,7 +922,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 {
                     XamlRoot = XamlRoot,
                     Title = "Replace the save that is already there?",
-                    Content = $"{name}.bes already exists in {target.DisplayName}. Replacing it cannot be undone.",
+                    Content = SaveLabPageText.BuildOverwriteQuestion($"{name}.bes")
+                        + $" It is in {target.DisplayName}.",
                     PrimaryButtonText = "Replace it",
                     CloseButtonText = "Keep it",
                     DefaultButton = ContentDialogButton.Close,
@@ -1116,7 +1117,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 {
                     XamlRoot = XamlRoot,
                     Title = "Replace the career that is already there?",
-                    Content = $"{save.FileName} already exists in that folder. Replacing it cannot be undone.",
+                    Content = SaveLabPageText.BuildOverwriteQuestion(save.FileName),
                     PrimaryButtonText = "Replace it",
                     CloseButtonText = "Keep it",
                     DefaultButton = ContentDialogButton.Close,

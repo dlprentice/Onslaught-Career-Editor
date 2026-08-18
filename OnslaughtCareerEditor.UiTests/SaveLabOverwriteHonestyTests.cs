@@ -56,5 +56,7 @@ public class SaveLabOverwriteHonestyTests
         Assert.That(firstCanceled, Is.GreaterThan(firstConfirm));
         Assert.That(firstCanceled, Is.LessThan(secondConfirm));
         Assert.That(secondCanceled, Is.GreaterThan(secondConfirm));
+        Assert.That(editor, Does.Not.Contain("already exists in"));
+        Assert.That(editor, Does.Contain("It is in {target.DisplayName}"));
     }
 }
