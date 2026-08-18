@@ -3,7 +3,28 @@
 > Source file: `MissionScript/DataType.cpp`
 > Debug path string: `0x0064cc80` ("[maintainer-local-source-export-root]\MissionScript\DataType.cpp")
 > Header string: `0x0064c628` ("[maintainer-local-source-export-root]\MissionScript\DataType.h")
-> Last updated: 2026-08-18 (CThingPtr[+0x14] is SetReader assign, not Print)
+> Last updated: 2026-08-18 (all six datatype +0x14 GETTOP assign slots)
+
+## GETTOP assign slots — 2026-08-18
+
+Independently re-read from specimen `74154bfa…` (file offset VA − 0x400000).
+`CInstructionOP_GETTOP` (`0x0052e9c0`) calls `existing->vtable[+0x14](peek)`
+when `[symbol+8]` is already live. Slot `+0x14` is the sixth vtable dword.
+
+| Vtable | Class | `+0x14` | Table name | Body (HIGH) |
+| --- | --- | --- | --- | --- |
+| `0x005e4af8` | CInt | `0x0052d2a0` | `CIntDataType__Assign` | `rhs->vtable[+0x30]()` then `[this+4] = eax` |
+| `0x005e4ea4` | CFloat | `0x0052f170` | `CFloatDataType__Assign` | `rhs->vtable[+0x34]()` then `fstp [this+4]` |
+| `0x005e4d50` | CBool | `0x0052e460` | `CBoolDataType__Assign` | `rhs->vtable[+0x3c]()` then `[this+4] = al` |
+| `0x005e4df8` | CThingPtr | `0x0052f430` | `CThingPtrDataType__Print` | `rhs->vtable[+0x40]()` then `SetReader(&this+4)` — Print is the table label |
+| `0x005e4da4` | CPosition | `0x0052f5d0` | `CPositionDataType__VFunc_5_0052f5d0` | `rhs->vtable[+0x44]()` then copy four dwords onto `this+4..+0x10` |
+| `0x005e4e4c` | CString | `0x004014c0` | `SharedVFunc__NoOpOneArg_004014c0` | `ret 4` — a live string is **not** rewritten by GETTOP |
+
+First write of a null `symbol+8` still clones via `vtable[+0x48]` (CString
+clone is `0x0052f2c0`). POP still deletes and replaces. Only the GETTOP
+*reassign* path is a no-op for strings. Authored reason open.
+
+---
 
 ## Name corrections — 2026-07-28
 
