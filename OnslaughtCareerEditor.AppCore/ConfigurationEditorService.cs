@@ -132,6 +132,10 @@ namespace OnslaughtCareerEditor.AppCore
 
     public static class ConfigurationEditorService
     {
+        public const string InputMissing = "That options file could not be found. Nothing was changed.";
+        public const string InputInvalid = "That file is not a valid game options file. Nothing was changed.";
+        public const string PathsUnusable = "Those options paths could not be used. Nothing was changed.";
+
         private sealed record KeybindDefinition(
             string GroupLabel,
             string ActionLabel,
@@ -312,17 +316,17 @@ namespace OnslaughtCareerEditor.AppCore
             }
             catch (Exception ex) when (ex is ArgumentException or IOException or InvalidOperationException or NotSupportedException)
             {
-                return PatchResult.Fail(ex.Message);
+                return PatchResult.Fail(PathsUnusable);
             }
 
             if (!File.Exists(inputPath))
             {
-                return PatchResult.Fail($"Input file not found: {inputPath}");
+                return PatchResult.Fail(InputMissing);
             }
 
             if (!BesFilePatcher.IsValidBesFile(inputPath))
             {
-                return PatchResult.Fail($"Input file is not a valid BEA save/options file: {inputPath}");
+                return PatchResult.Fail(InputInvalid);
             }
 
             if (!HasPendingChanges(request))

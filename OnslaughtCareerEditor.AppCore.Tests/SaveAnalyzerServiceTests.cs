@@ -95,6 +95,46 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         }
 
         [Fact]
+        public void PatchConfiguration_MissingOrInvalidInputDoesNotDumpThePath()
+        {
+            string missing = Path.Combine(Path.GetTempPath(), $"absent-{Guid.NewGuid():N}.bea");
+            PatchResult missingResult = ConfigurationEditorService.PatchConfiguration(new ConfigurationPatchRequest
+            {
+                InputPath = missing,
+                OutputPath = Path.Combine(Path.GetTempPath(), "out.bea"),
+                SoundVolumeOverride = 0.8f
+            });
+
+            Assert.False(missingResult.Success);
+            Assert.Equal(ConfigurationEditorService.InputMissing, missingResult.Message);
+            Assert.DoesNotContain(missing, missingResult.Message);
+            Assert.DoesNotContain(":\\", missingResult.Message);
+            Assert.Contains("Nothing was changed", missingResult.Message);
+
+            string tempDir = Path.Combine(Path.GetTempPath(), $"oce-options-invalid-{Guid.NewGuid():N}");
+            Directory.CreateDirectory(tempDir);
+            try
+            {
+                string junk = Path.Combine(tempDir, "defaultoptions.bea");
+                File.WriteAllText(junk, "not a bea");
+                PatchResult invalid = ConfigurationEditorService.PatchConfiguration(new ConfigurationPatchRequest
+                {
+                    InputPath = junk,
+                    OutputPath = Path.Combine(tempDir, "out.bea"),
+                    SoundVolumeOverride = 0.8f
+                });
+
+                Assert.False(invalid.Success);
+                Assert.Equal(ConfigurationEditorService.InputInvalid, invalid.Message);
+                Assert.DoesNotContain(junk, invalid.Message);
+            }
+            finally
+            {
+                Directory.Delete(tempDir, recursive: true);
+            }
+        }
+
+        [Fact]
         public void PatchConfiguration_FailsWhenInputAndOutputPathsMatch()
         {
             string tempDir = Path.Combine(Path.GetTempPath(), "oce-options-same-path-test", Guid.NewGuid().ToString("N"));
