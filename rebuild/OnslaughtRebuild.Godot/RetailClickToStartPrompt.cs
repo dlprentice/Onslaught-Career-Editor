@@ -33,12 +33,14 @@ namespace OnslaughtRebuild.GodotClient;
 /// qword <c>4.0</c> at <c>0x005DB4A0</c>, consumed by the CRT <c>fmod</c>
 /// thunk at <c>0x0055E3EA</c>.</para>
 ///
-/// <para><b>Not claimed here.</b> After 30 s with no click, Process writes
+/// <para><b>Idle result, predicate only.</b> After page-elapsed time is
+/// strictly greater than <c>30.0f</c> at <c>0x005DB1E4</c>, Process writes
 /// <c>-3</c> to the frontend quit/result global <c>0x008A956C</c>
-/// (<c>fcomp [30.0f]</c> at <c>0x005DB1E4</c>). That is a lifecycle seam, not
-/// a prompt law, and is left for a later slice. It is the cheapest account of
-/// the measured t=32 s click-to-start fade-to-black
-/// (<c>local-lab/STARTUP-FLOW-FINDINGS-2026-07-25.md</c>).</para>
+/// (<c>fsub [this+4]; fcomp [30.0f]; test ah,0x41 / jnz skip</c> then
+/// <c>mov [0x008A956C], -3</c> at <c>0x0051B731</c>). That is the cheapest
+/// account of the measured t=32 s click-to-start fade-to-black
+/// (<c>local-lab/STARTUP-FLOW-FINDINGS-2026-07-25.md</c>). The consumer of
+/// <c>-3</c> is not claimed here and must not be faked as a black frame.</para>
 ///
 /// <para>No Godot types. The capture rig suppresses this page's timing the
 /// same way retail's <c>-skipfmv</c> does, so these numbers have to stand on
@@ -79,6 +81,18 @@ public static class RetailClickToStartPrompt
     public const double BlinkOnSeconds = 2.0;
 
     /// <summary>
+    /// <c>0x005DB1E4</c> = <c>30.0f</c>. Process writes
+    /// <see cref="IdleResult"/> once <c>GetTime()-[this+4]</c> is strictly
+    /// greater than this. Independent of the 2*dt pulse timer.
+    /// </summary>
+    public const double IdleTimeoutSeconds = 30.0;
+
+    /// <summary>
+    /// Immediate written to <c>0x008A956C</c> at <c>0x0051B731</c>.
+    /// </summary>
+    public const int IdleResult = -3;
+
+    /// <summary>
     /// One Process tick of <c>this+0x18</c>.
     /// <paramref name="pageSeconds"/> is wall time since the page became
     /// active, matching <c>GetTime() - [this+4]</c>.
@@ -116,6 +130,13 @@ public static class RetailClickToStartPrompt
 
         return remainder < BlinkOnSeconds;
     }
+
+    /// <summary>
+    /// Whether Process would write <see cref="IdleResult"/> this tick.
+    /// Compare is page elapsed, not <see cref="Advance"/>.
+    /// </summary>
+    public static bool ShouldWriteIdleResult(double pageSeconds) =>
+        pageSeconds > IdleTimeoutSeconds;
 
     /// <summary>
     /// Splash-pulse argument: the live timer while it is ≤ 1.0, otherwise 1.0.

@@ -11,8 +11,9 @@ namespace OnslaughtRebuild.Client.Tests;
 ///
 /// <para><b>Bodies.</b> <c>CFEPIntro::Process</c> <c>0x0051B6B0</c>–<c>0x0051B83C</c>
 /// and <c>CFEPIntro::Render</c> <c>0x0051B840</c>–<c>0x0051BE66</c>. File offset =
-/// VA − <c>0x400000</c>. This class does not claim the 30 s idle write of
-/// <c>-3</c> to <c>0x008A956C</c>; that is a later lifecycle seam.</para>
+/// VA − <c>0x400000</c>. The 30 s idle compare is claimed as a predicate
+/// only; the consumer of the <c>-3</c> write to <c>0x008A956C</c> is a
+/// later lifecycle seam.</para>
 ///
 /// <para>What is asserted is the LAW, not Godot pixels. The previous prompt
 /// condition <c>PosMod(timer, 2) &lt; 1.6</c> was a stub for the CRT
@@ -93,6 +94,19 @@ public sealed class RetailClickToStartPromptTests
             RetailClickToStartPrompt.SplashScale(2d));
         Assert.Equal(ExpectedSplashScale(0f), RetailClickToStartPrompt.SplashScale(0d), 5);
         Assert.Equal(ExpectedSplashScale(1f), RetailClickToStartPrompt.SplashScale(1d), 5);
+    }
+
+    [Fact]
+    public void IdleResultIsWrittenOnlyOncePageElapsedIsStrictlyAboveThirty()
+    {
+        // 0x0051B721 fsub [esi+4]; 0x0051B724 fcomp [30.0f] at 0x005DB1E4;
+        // test ah,0x41 / jnz skip; else mov [0x008A956C], -3 at 0x0051B731.
+        // This is page elapsed, not the 2*dt pulse timer.
+        Assert.Equal(30.0, RetailClickToStartPrompt.IdleTimeoutSeconds);
+        Assert.Equal(-3, RetailClickToStartPrompt.IdleResult);
+        Assert.False(RetailClickToStartPrompt.ShouldWriteIdleResult(30.0d));
+        Assert.True(RetailClickToStartPrompt.ShouldWriteIdleResult(30.0d + 1e-6));
+        Assert.False(RetailClickToStartPrompt.ShouldWriteIdleResult(0d));
     }
 
     [Fact]
