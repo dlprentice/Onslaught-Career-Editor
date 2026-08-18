@@ -1,7 +1,7 @@
 # Rebuild parity contract
 
 Status: active — what "1:1 behavioral and experiential parity" means operationally
-Last updated: 2026-08-18 (Level 100 Pulse Cannon ReadyToCharge).
+Last updated: 2026-08-18 (Level 100 Pulse Cannon Charged-2 fire).
 Evidence: SOURCE — authority order and the three known divergences are
 recorded in `PROVENANCE.md`; gate capabilities are MEASURED claims of the
 tracked harnesses named in the table. Every row of *Carried retail contracts*
@@ -97,16 +97,22 @@ for the owner types: `Simulation.JetFrictionNumerator` is wired, and
 when the player holds `SimActions.ChargeWeapon` on the Pulse Cannon Pod, and
 `RetailWeaponCharge.ReadyToCharge` (`0x0050A080`, `test ah,0x41`) blocks that
 increment until engine time is strictly greater than the Fire-stamped
-`now + CWeaponReloadTime` (0.1 s on `Mech Pulse Cannon Charged`). Charge
-is not in `StateHasher` because it does not yet change fire, movement, or any
-other hashed field. So no cold-start or full-chain trace can reach the other
-fifteen, and the focused test is the only falsifier they have. That is exactly
+`now + CWeaponReloadTime` (0.1 s on `Mech Pulse Cannon Charged`). Fire at
+FullyCharged selects `Mech Pulse Cannon Charged 2` @`0x135b3` /
+`Mech Pulse Bolt Large` @`0xacda` of `default physics.dat` (`e1fb3ded…ada14`);
+tap-fire at charge 0 stays Medium. Charge itself is not in `StateHasher`
+because the hashed field it now changes is projectile `Kind`. So no
+cold-start or full-chain trace can reach the other fifteen, and the
+focused test is the only falsifier they have. That is exactly
 the precedent the jet-friction row set: a green replay suite there was
 *vacuous* with respect to the constant it was supposed to guard, because the
 jet throttle caps below the gate's band. The seventeenth row's mutation kill
 was measured on 2026-08-18 in this worktree; it is not one of the 17 files
 under `local-lab/rebuild-parity-mutation-kills-2026-08-17/`. ReadyToCharge is
 pinned by `SimulationTests.AfterPulseFire_ChargeWaitsUntilReloadStrictlyElapses`.
+Charged-2 / Large fire is pinned by
+`SimulationTests.FireAtFullyCharged_LaunchesMechPulseBoltLarge` and
+`Level100PulseCannonChargeTests.FireAtFullyCharged_SelectsCharged2LargeBolt`.
 
 ## Parity dimensions and their gates
 

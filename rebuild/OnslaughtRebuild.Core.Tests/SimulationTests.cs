@@ -1525,6 +1525,30 @@ public sealed class SimulationTests
     }
 
     [Fact]
+    public void FireAtFullyCharged_LaunchesMechPulseBoltLarge()
+    {
+        Simulation tap = CreateFiringRangeExerciseSimulation();
+        WorldSnapshot tapFired = tap.Step(new SimInput(0, 0, SimActions.Fire));
+        Assert.Equal(
+            Level100ProjectileKind.MechPulseBoltMedium,
+            Assert.Single(tapFired.Projectiles).Kind);
+
+        Simulation charged = CreateFiringRangeExerciseSimulation();
+        var charge = new SimInput(0, 0, SimActions.ChargeWeapon);
+        charge.Validate();
+        for (int sample = 0; sample < 10; sample++)
+        {
+            charged.Step(charge);
+        }
+
+        Assert.Equal(0x42C80000u, charged.Level100PulseCannonChargeBits);
+        WorldSnapshot chargedFired = charged.Step(new SimInput(0, 0, SimActions.Fire));
+        Assert.Equal(
+            Level100ProjectileKind.MechPulseBoltLarge,
+            Assert.Single(chargedFired.Projectiles).Kind);
+    }
+
+    [Fact]
     public void AfterPulseFire_ChargeWaitsUntilReloadStrictlyElapses()
     {
         Simulation simulation = CreateFiringRangeExerciseSimulation();

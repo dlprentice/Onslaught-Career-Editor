@@ -3505,7 +3505,7 @@ public sealed class Simulation
                 _level100ActorMechanics.NextWeaponInaccuracy(
                     SimulationConstants.PulseCannonInaccuracyMicroRadians);
             LaunchWalkerRound(
-                Level100ProjectileKind.MechPulseBoltMedium,
+                _level100PlayerWeapons.PulseFireRound,
                 SimulationConstants.ProjectileSpeedPerTick,
                 SimulationConstants.ProjectileLifetimeTicks,
                 Level100ContactMechanics.PulseRadiusMillimeters,
@@ -3686,6 +3686,8 @@ public sealed class Simulation
             {
                 Level100ProjectileKind.MechPulseBoltMedium =>
                     Level100DestructionEffectKind.PulseImpact,
+                Level100ProjectileKind.MechPulseBoltLarge =>
+                    Level100DestructionEffectKind.PulseImpact,
                 Level100ProjectileKind.MechBullet or
                     Level100ProjectileKind.MechAirBullet =>
                     Level100DestructionEffectKind.VulcanImpact,
@@ -3693,8 +3695,9 @@ public sealed class Simulation
                     $"Projectile {projectile.Id} has unsupported impact kind " +
                     $"{projectile.Kind}."),
             };
-            bool hit = projectile.Kind ==
-                Level100ProjectileKind.MechPulseBoltMedium
+            bool hit = projectile.Kind is
+                Level100ProjectileKind.MechPulseBoltMedium or
+                Level100ProjectileKind.MechPulseBoltLarge
                 ? _level100Destruction.TryApplyPulseSweep(start, end, out _)
                 : _level100Destruction.TryApplyRoundSweep(
                     start,

@@ -62,10 +62,12 @@ public enum Level100PlayerWeapon : byte
     None = 0,
 
     /// <summary>
-    /// `Pulse Cannon Pod` (data/default physics.dat @0x1746b). Charge level 0
-    /// selects weapon mode `Mech Pulse Cannon Charged` (@0x134eb), whose
+    /// `Pulse Cannon Pod` (data/default physics.dat @0x17463). Charge level 0
+    /// selects weapon mode `Mech Pulse Cannon Charged` (@0x134e3), whose
     /// CWeaponRound is `Mech Pulse Bolt Medium` and whose CWeaponLaunchSound is
     /// `BE Pulse Cannon Fire` (payload @0x13576) = sounds.sfx record 37.
+    /// Charge level 1 / FullyCharged selects `Mech Pulse Cannon Charged 2`
+    /// (@0x135b3), whose CWeaponRound is `Mech Pulse Bolt Large`.
     /// This is the weapon the released firing-range exercise enables
     /// (LevelScript.msl line 112).
     /// </summary>
@@ -413,6 +415,7 @@ public enum Level100ProjectileKind : byte
     MechPulseBoltMedium = 1,
     MechBullet = 2,
     MechAirBullet = 3,
+    MechPulseBoltLarge = 4,
 }
 
 public sealed record ProjectileSnapshot(

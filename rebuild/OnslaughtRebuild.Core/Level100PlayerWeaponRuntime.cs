@@ -26,6 +26,9 @@ internal sealed class Level100PlayerWeaponRuntime
     internal uint PulseCannonChargeBits =>
         BitConverter.SingleToUInt32Bits(_pulseCharge.Charge);
 
+    internal Level100ProjectileKind PulseFireRound =>
+        Level100PulseCannonCharge.SelectFireRound(_pulseCharge);
+
     internal Level100MissionWeapon WalkerSelectedWeapon =>
         WeaponAt(VehicleMode.Walker, _walkerSelection);
 

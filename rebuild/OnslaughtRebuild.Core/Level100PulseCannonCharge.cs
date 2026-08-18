@@ -22,9 +22,17 @@ namespace OnslaughtRebuild.Core;
 /// <see cref="RetailWeaponCharge.CanCharge"/> is true.
 /// </para>
 /// <para>
+/// Fire at FullyCharged (charge &gt;= 100) selects the level-1 mode
+/// <c>Mech Pulse Cannon Charged 2</c> @<c>0x135b3</c>, whose
+/// <c>CWeaponRound</c> is <c>Mech Pulse Bolt Large</c> @<c>0xacda</c>.
+/// Tap-fire at charge 0 stays level 0 / Medium.
+/// </para>
+/// <para>
 /// <b>Not established here.</b> The energy-store add of
-/// <c>CWeaponConsumption</c> 4.0, overheat-to-fire, and which round
-/// <c>Fire</c> selects at charge level 1 remain the next ChargeWeapon arms.
+/// <c>CWeaponConsumption</c> 0x40800000 = 4.0, overheat-to-fire,
+/// Charged 2's <c>CWeaponReloadTime</c> 0x3f000000 = 0.5 s, and Large's
+/// authored velocity/life/radius/damage (20 / 7 / 0.20 / 8.0) remain
+/// the next ChargeWeapon arms.
 /// </para>
 /// </remarks>
 public static class Level100PulseCannonCharge
@@ -60,5 +68,22 @@ public static class Level100PulseCannonCharge
         pod.Levels[0] = 0;
         pod.Levels[1] = 1;
         return pod;
+    }
+
+    /// <summary>
+    /// The round <c>CWeapon::Fire</c> launches for this pod. Charge 0 is
+    /// level 0 / <c>Mech Pulse Cannon Charged</c> / Medium. FullyCharged
+    /// (charge &gt;= MaxCharge 100) is level 1 / Charged 2 / Large.
+    /// </summary>
+    public static Level100ProjectileKind SelectFireRound(RetailWeaponChargeTable pod)
+    {
+        if (pod is null)
+        {
+            throw new ArgumentNullException(nameof(pod));
+        }
+
+        return RetailWeaponCharge.FullyCharged(pod)
+            ? Level100ProjectileKind.MechPulseBoltLarge
+            : Level100ProjectileKind.MechPulseBoltMedium;
     }
 }

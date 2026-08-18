@@ -161,8 +161,8 @@ public sealed class RetailWeaponChargeTable
 /// the reason <see cref="RetailWeaponStoreReadouts"/> sets out at length —
 /// binary64 carries more than twice binary32's significand, so the double
 /// rounding is innocuous for a single divide. The energy-store add of
-/// consumption, overheat-to-fire, and which round <c>Fire</c> selects at
-/// charge level 1 remain the next ChargeWeapon arms.
+/// consumption, overheat-to-fire remain the next ChargeWeapon arms. Fire
+/// at FullyCharged now selects Charged 2 / <c>Mech Pulse Bolt Large</c>.
 /// </para>
 /// </remarks>
 public static class RetailWeaponCharge

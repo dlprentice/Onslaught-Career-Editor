@@ -642,7 +642,10 @@ public static class SimulationConstants
     public const int ProjectileSpeedPerTick = 1_750;
     // The round the above weaponmode fires is `Mech Pulse Bolt Medium`
     // @0xAC16 of the same physics.dat. Its CRoundLifeSpan is exactly 6.0
-    // (0x40C00000 @0xAC5D), or 120 released 20 Hz updates.
+    // (0x40C00000 @0xAC5D), or 120 released 20 Hz updates. Charge level 1
+    // names `Mech Pulse Cannon Charged 2` @0x135b3, whose CWeaponRound is
+    // `Mech Pulse Bolt Large` @0xacda; Fire selects that identity when
+    // FullyCharged. Large's authored 20/7/0.20/8.0 scalars are not this arm.
     public const int ProjectileLifetimeTicks = 6 * TicksPerSecond;
     // Mech Twin Vulcan Cannon, read out of data/default physics.dat
     // (sha256 e1fb3ded...b1a2321e1d6a9ba1542c74ada14, 175,603 bytes, 777

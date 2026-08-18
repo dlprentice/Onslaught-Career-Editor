@@ -9,8 +9,9 @@ namespace OnslaughtRebuild.Core.Tests;
 /// <see cref="RetailWeaponCharge.Charge"/> so a player holding
 /// <c>BUTTON_MECH_CHARGE_GUN_POD</c> advances that table. After Fire,
 /// <see cref="RetailWeaponCharge.ReadyToCharge"/> keeps Charge blocked
-/// until <c>CWeaponReloadTime</c> 0.1 s has strictly elapsed. Store spend
-/// and charge-level-1 fire remain the next ChargeWeapon arms.
+/// until <c>CWeaponReloadTime</c> 0.1 s has strictly elapsed. Fire at
+/// FullyCharged selects Charged 2 / <c>Mech Pulse Bolt Large</c>; tap-fire
+/// at charge 0 stays Medium. Store spend remains the next ChargeWeapon arm.
 /// </summary>
 /// <remarks>
 /// Every scalar is a dword out of
@@ -82,6 +83,34 @@ public sealed class Level100PulseCannonChargeTests
         // Charge() itself still adds below 400. ChargeWeapon at 0x00413CF0
         // is what stops calling it, via FullyCharged. The increment body's
         // 400.0 cap is pinned in RetailWeaponChargeTests.
+    }
+
+    /// <summary>
+    /// <c>Pulse Cannon Pod</c> @<c>0x17463</c> charge-level 1 names
+    /// <c>Mech Pulse Cannon Charged 2</c> @<c>0x135b3</c>, whose
+    /// <c>CWeaponRound</c> is <c>Mech Pulse Bolt Large</c> @<c>0xacda</c>
+    /// of the same <c>e1fb3ded…ada14</c> physics.dat. FullyCharged is
+    /// charge &gt;= MaxCharge 100, so ten rate-10 increments select Large.
+    /// Charge 0 is still level 0 / Medium. A rebuild that always launched
+    /// Medium, or that used Small, dies here.
+    /// </summary>
+    [Fact]
+    public void FireAtFullyCharged_SelectsCharged2LargeBolt()
+    {
+        RetailWeaponChargeTable tap = PulseCannonPod();
+        Assert.Equal(
+            Level100ProjectileKind.MechPulseBoltMedium,
+            Level100PulseCannonCharge.SelectFireRound(tap));
+
+        for (int sample = 0; sample < 10; sample++)
+        {
+            RetailWeaponCharge.Charge(tap);
+        }
+
+        Assert.True(RetailWeaponCharge.FullyCharged(tap));
+        Assert.Equal(
+            Level100ProjectileKind.MechPulseBoltLarge,
+            Level100PulseCannonCharge.SelectFireRound(tap));
     }
 
     private static RetailWeaponChargeTable PulseCannonPod() =>
