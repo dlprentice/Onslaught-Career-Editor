@@ -114,7 +114,11 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
             return sentence;
         }
 
-        /// <summary>The chosen source save, named but never shown as a full path.</summary>
+        /// <summary>
+        /// The chosen source save, named but never shown as a full path. When the file can be
+        /// placed, this also says whether it sits in the installed game, a playable copy this
+        /// app made, or a folder the player chose. Classification is shared with Save Lab.
+        /// </summary>
         public static string BuildSourceSummary(string? sourcePath)
         {
             if (string.IsNullOrWhiteSpace(sourcePath))
@@ -122,7 +126,16 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
                 return "Press Choose a save and pick the career save you want to start from.";
             }
 
-            return $"Starting from {Path.GetFileName(sourcePath)}. It is copied, not changed.";
+            string name = Path.GetFileName(sourcePath);
+            string where = CareerSaveLocation.Classify(sourcePath) switch
+            {
+                CareerSaveLocationKind.InstalledGame => ", inside your installed game folder",
+                CareerSaveLocationKind.SafeCopy => ", inside a playable copy this app made",
+                CareerSaveLocationKind.ChosenFolder => ", in a folder you chose",
+                _ => string.Empty,
+            };
+
+            return $"Starting from {name}{where}. It is copied, not changed.";
         }
 
         public static string BuildDestinationSummary(CheatSaveTarget? safeCopy, string? chosenFolder)

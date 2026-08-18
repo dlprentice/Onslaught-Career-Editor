@@ -18,6 +18,7 @@ live in `developer_state.json` and the campaign ledgers.
   failure is shown on Settings, not only in the status bar. Save Lab names whether
   the opened career save sits in the installed game, a playable copy, or a folder
   the player chose. Game Options does the same for the opened defaultoptions.bea.
+  Cheats names the same three places for the career it is about to copy.
 
 ## 1.0.11 — 2026-08-07
 

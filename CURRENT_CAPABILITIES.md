@@ -88,7 +88,8 @@ files keep the block.
 - Analyze existing `.bes` career saves and `.bea` options files.
 - Name whether an opened career save or `defaultoptions.bea` sits in the
   installed game, a playable safe copy, or a folder the player chose, without
-  dumping the full path.
+  dumping the full path. Cheats uses the same classifier for the source career
+  it is about to copy.
 - Write a separate save copy with supported mission, link, Goodie, rank, and
   kill-count changes.
 - Write one selected displayable Goodie state directly to one `.bes` file in a

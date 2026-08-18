@@ -445,11 +445,161 @@ public class CheatsPageHonestyTests
     }
 
     [Test]
+    public void AnInstalledSourceSaveIsNamedAsTheInstalledGame()
+    {
+        using var lab = new SourceLocationLab();
+        lab.MakeInstalledGame();
+        string save = lab.WriteSave("savegames", "career.bes");
+
+        string summary = CheatsPageText.BuildSourceSummary(save);
+
+        Assert.That(summary, Does.Contain("career.bes"));
+        Assert.That(summary, Does.Contain("installed game"));
+        Assert.That(summary, Does.Contain("not changed"));
+        Assert.That(summary.ToLowerInvariant(), Does.Not.Contain("playable copy"));
+        Assert.That(summary, Does.Not.Contain(lab.Root));
+    }
+
+    [Test]
+    public void ASafeCopySourceSaveIsNotCalledTheInstalledGame()
+    {
+        using var lab = new SourceLocationLab();
+        lab.MakeInstalledGame();
+        lab.WriteFile(GameProfilePreflightService.ProfileManifestFileName, "{}");
+        string save = lab.WriteSave("savegames", "career.bes");
+
+        string summary = CheatsPageText.BuildSourceSummary(save);
+
+        Assert.That(summary, Does.Contain("playable copy"));
+        Assert.That(summary.ToLowerInvariant(), Does.Not.Contain("installed game"));
+        Assert.That(summary, Does.Contain("not changed"));
+        Assert.That(summary, Does.Not.Contain(lab.Root));
+    }
+
+    [Test]
+    public void AChosenFolderSourceSaveIsNamedAsThePlayersFolder()
+    {
+        using var lab = new SourceLocationLab();
+        string save = lab.WriteSave("Documents", "career.bes");
+
+        string summary = CheatsPageText.BuildSourceSummary(save);
+
+        Assert.That(summary, Does.Contain("folder you chose"));
+        Assert.That(summary, Does.Contain("not changed"));
+        Assert.That(summary.ToLowerInvariant(), Does.Not.Contain("installed game"));
+        Assert.That(summary, Does.Not.Contain(lab.Root));
+    }
+
+    [Test]
+    public void TheSourceSummaryUsesTheSharedClassifierAndNeverDumpsAPathOrJargon()
+    {
+        string helper = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI", "Helpers", "CheatsPageText.cs"));
+        Assert.That(helper, Does.Contain("CareerSaveLocation.Classify"));
+        Assert.That(helper, Does.Not.Contain("new CareerSaveLocation"));
+
+        string[] banned =
+        {
+            "receipt", "manifest", "provenance", "byte-verified", "specimen",
+            "catalog", "preflight", "profile root", "proof level", "dword",
+        };
+
+        using var lab = new SourceLocationLab();
+        lab.MakeInstalledGame();
+        string installed = lab.WriteSave("savegames", "career.bes");
+        string chosen = Path.Combine(Path.GetTempPath(), $"bea-cheat-chosen-{Guid.NewGuid():N}", "career.bes");
+        Directory.CreateDirectory(Path.GetDirectoryName(chosen)!);
+        File.WriteAllBytes(chosen, new byte[16]);
+        try
+        {
+            foreach (string summary in new[]
+                     {
+                         CheatsPageText.BuildSourceSummary(installed),
+                         CheatsPageText.BuildSourceSummary(chosen),
+                         CheatsPageText.BuildSourceSummary(Path.Combine("C:", "saves", "MyCareer.bes")),
+                     })
+            {
+                Assert.That(summary, Does.Not.Contain(":\\"));
+                Assert.That(summary, Does.Not.Contain("/"));
+                foreach (string word in banned)
+                {
+                    Assert.That(
+                        summary.ToLowerInvariant(),
+                        Does.Not.Contain(word),
+                        $"Source copy should not say '{word}'.");
+                }
+            }
+        }
+        finally
+        {
+            try
+            {
+                Directory.Delete(Path.GetDirectoryName(chosen)!, recursive: true);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
+    [Test]
     public void TheOverwriteQuestionSaysItCannotBeUndone()
     {
         string question = CheatsPageText.BuildOverwriteQuestion("MALLOY.bes");
 
         Assert.That(question, Does.Contain("MALLOY.bes"));
         Assert.That(question, Does.Contain("cannot be undone"));
+    }
+
+    private sealed class SourceLocationLab : IDisposable
+    {
+        public SourceLocationLab()
+        {
+            Root = Path.Combine(Path.GetTempPath(), $"bea-cheat-src-{Guid.NewGuid():N}");
+            Directory.CreateDirectory(Root);
+        }
+
+        public string Root { get; }
+
+        public void MakeInstalledGame()
+        {
+            Directory.CreateDirectory(Path.Combine(Root, "data"));
+            File.WriteAllBytes(Path.Combine(Root, "BEA.exe"), new byte[16]);
+        }
+
+        public void WriteFile(string relativePath, string contents)
+        {
+            string path = Path.Combine(Root, relativePath);
+            string? parent = Path.GetDirectoryName(path);
+            if (!string.IsNullOrWhiteSpace(parent))
+            {
+                Directory.CreateDirectory(parent);
+            }
+
+            File.WriteAllText(path, contents);
+        }
+
+        public string WriteSave(string folder, string fileName)
+        {
+            string dir = Path.Combine(Root, folder);
+            Directory.CreateDirectory(dir);
+            string path = Path.Combine(dir, fileName);
+            File.WriteAllBytes(path, new byte[16]);
+            return path;
+        }
+
+        public void Dispose()
+        {
+            try
+            {
+                if (Directory.Exists(Root))
+                {
+                    Directory.Delete(Root, recursive: true);
+                }
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+            }
+        }
     }
 }
