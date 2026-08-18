@@ -749,7 +749,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             else
             {
                 LibraryCountTextBlock.Text = $"{visibleDocuments} matching documents";
-                PaneStateTextBlock.Text = $"Filtered results for \"{query}\".";
+                PaneStateTextBlock.Text = LorePageText.DescribeSearchStatus(query, visibleDocuments);
             }
         }
 

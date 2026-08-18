@@ -230,8 +230,10 @@ online play. Host/Join, matchmaking, and new networking are unavailable.
   PNG/FBX metadata, linked textures, and bounded wireframes. It has no asset
   importer, repacker, animation/bone pipeline, or material-package workflow.
 - Lore searches and renders the canonical articles under [`lore/`](lore/_index.md)
-  with tree navigation and Back/Forward/Home history. Portable builds generate
-  a reader pack from that single source rather than tracking a mirror.
+  with tree navigation and Back/Forward/Home history. A search that matches
+  nothing says to try another word or clear the search; it does not call the
+  empty tree a filtered result. Portable builds generate a reader pack from
+  that single source rather than tracking a mirror.
 
 `tools/aya_archive_inventory.py` is a working read-only AYA structure scanner.
 The legacy AYA export bridge still depends on untracked local upstream binaries,
