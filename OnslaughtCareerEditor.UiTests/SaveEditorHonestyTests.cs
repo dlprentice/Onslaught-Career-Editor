@@ -235,6 +235,24 @@ public class SaveEditorHonestyTests
         Assert.That(source, Does.Not.Contain("That file could not be opened:"));
     }
 
+    [Test]
+    public void AMissingSaveDoesNotDumpThePathOnPatch()
+    {
+        string missing = Path.Combine(Path.GetTempPath(), $"absent-{Guid.NewGuid():N}.bes");
+        PatchResult result = SaveEditorService.PatchSave(new SavePatchRequest
+        {
+            InputPath = missing,
+            OutputPath = Path.Combine(Path.GetTempPath(), "out.bes"),
+            PatchNodes = true,
+        });
+
+        Assert.That(result.Success, Is.False);
+        Assert.That(result.Message, Is.EqualTo(SaveEditorService.InputMissing));
+        Assert.That(result.Message, Does.Not.Contain(missing));
+        Assert.That(result.Message, Does.Not.Contain(":\\"));
+        Assert.That(result.Message, Does.Contain("Nothing was changed"));
+    }
+
     // --------------------------------------------- output-safety claim
 
     [Test]

@@ -53,6 +53,9 @@ namespace OnslaughtCareerEditor.AppCore
 
     public static class SaveEditorService
     {
+        public const string InputMissing = "That career save could not be found. Nothing was changed.";
+        public const string PathsUnusable = "Those save paths could not be used. Nothing was changed.";
+
         public static IReadOnlyList<SaveAnalyzerFileItem> GetDetectedCareerSaves(string? gameDir = null)
         {
             return SaveAnalyzerService.GetDetectedFiles(gameDir)
@@ -314,12 +317,12 @@ namespace OnslaughtCareerEditor.AppCore
             }
             catch (Exception ex) when (ex is ArgumentException or IOException or InvalidOperationException or NotSupportedException)
             {
-                return PatchResult.Fail(ex.Message);
+                return PatchResult.Fail(PathsUnusable);
             }
 
             if (!File.Exists(inputPath))
             {
-                return PatchResult.Fail($"Input file not found: {inputPath}");
+                return PatchResult.Fail(InputMissing);
             }
 
             if (!HasAnySelectedSection(request))
@@ -384,7 +387,7 @@ namespace OnslaughtCareerEditor.AppCore
 
                 if (!File.Exists(inputPath))
                 {
-                    return PatchResult.Fail($"Input file not found: {inputPath}");
+                    return PatchResult.Fail(InputMissing);
                 }
 
                 IReadOnlyDictionary<int, uint> stateOverride = new Dictionary<int, uint>
@@ -430,7 +433,7 @@ namespace OnslaughtCareerEditor.AppCore
             }
             catch (Exception ex) when (ex is ArgumentException or IOException or InvalidOperationException or NotSupportedException)
             {
-                return PatchResult.Fail(ex.Message);
+                return PatchResult.Fail(PathsUnusable);
             }
         }
 
