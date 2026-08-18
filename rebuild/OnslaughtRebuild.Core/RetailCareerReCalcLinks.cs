@@ -1,0 +1,304 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+
+namespace OnslaughtRebuild.Core;
+
+/// <summary>
+/// One released career-graph edge — the 8-byte <c>CCareerNodeLink</c> at
+/// <c>CCareer + 0x1904</c>.
+/// </summary>
+/// <remarks>
+/// Owner in the pinned drop: <c>references/Onslaught/Career.h:58-73</c>.
+/// Retail identity: stride 8 from <c>0x0041BC8A</c> /
+/// <see cref="RetailCareerRecordLayout.LinkStride"/>. The three
+/// <c>ECNLinkType</c> values are the enum order
+/// <c>CN_NOT_COMPLETE</c>, <c>CN_COMPLETE</c>,
+/// <c>CN_COMPLETE_BROKEN</c> — <c>Career.h:58-63</c> — and the save-format
+/// walk in <c>reverse-engineering/save-file/career-graph.md</c> reads the
+/// same 0 / 1 / 2 out of real <c>.bes</c> files.
+/// </remarks>
+public sealed class RetailCareerNodeLink
+{
+    /// <summary><c>CN_NOT_COMPLETE</c> — <c>Career.h:60</c>.</summary>
+    public const int NotComplete = 0;
+
+    /// <summary><c>CN_COMPLETE</c> — <c>Career.h:61</c>; <c>*link = 1</c> in <c>ReCalcLinks</c>.</summary>
+    public const int Complete = 1;
+
+    /// <summary><c>CN_COMPLETE_BROKEN</c> — <c>Career.h:62</c>; the alternate-parent store.</summary>
+    public const int CompleteBroken = 2;
+
+    /// <summary><c>mLinkType</c> — <c>+0x00</c>.</summary>
+    public int LinkType { get; set; } = NotComplete;
+
+    /// <summary><c>mToNode</c> — <c>+0x04</c>; a node index, or <c>-1</c> for an unused child slot.</summary>
+    public int ToNode { get; set; } = -1;
+}
+
+/// <summary>
+/// The cold-career Level 100 slice of <c>CCareer::Update</c> and
+/// <c>CCareer::ReCalcLinks</c> — the post-Won consumer of
+/// <see cref="RetailEndLevelObjectives.IsAllSecondaryObjectivesComplete"/>.
+/// </summary>
+/// <remarks>
+/// <para>
+/// Owner in the pinned drop: <c>references/Onslaught/Career.cpp:379-515</c>
+/// and the first two rows of <c>level_structure</c>
+/// (<c>Career.cpp</c> / <c>career-graph.md</c> node 0 = world 100 → node 1 =
+/// world 110, higher child <c>-1</c>). Retail identities:
+/// <c>0x0041BD00</c> <c>CCareer::Update</c>, <c>0x0041BDF0</c>
+/// <c>CCareer::ReCalcLinks</c>, calling <c>0x004496E0</c>.
+/// </para>
+/// <para>
+/// <b>Level 100 has four primaries and no secondaries.</b> The shipped
+/// <c>LevelScript.msl</c> defines only those four;
+/// <c>CGame::GetNumSecondaryObjectives</c> is therefore 0, so
+/// <c>FillOutEndLevelData</c> at <c>game.cpp:1028</c> never consults the
+/// secondary predicate for the ranking clamp. The ten secondary status
+/// words stay unset (neither 1 nor 2). The predicate itself still runs
+/// from <c>ReCalcLinks</c> and takes the no-objectives arm: log, then
+/// <c>xor eax, eax</c>. That FALSE is indistinguishable from a real
+/// failure. This type must not invent secondary content to make it TRUE.
+/// </para>
+/// <para>
+/// <b>The FALSE does not lock world 110.</b> <c>GetChildLinks</c> always
+/// yields the lower and higher link pointers
+/// (<c>Career.cpp:268-273</c>). World 100 is not 500, so the higher
+/// dummy (<c>mToNode == -1</c>) completes only when the predicate is
+/// TRUE — it stays <c>CN_NOT_COMPLETE</c> — and the lower link to node 1
+/// completes unconditionally (<c>Career.cpp:488-490</c>). A rebuild that
+/// required secondaries for <i>every</i> child would leave training's
+/// only exit locked. A rebuild that treated "no secondaries" as success
+/// would mark the dummy higher link complete.
+/// </para>
+/// <para>
+/// <b>Lost does not touch the graph.</b> <c>Update</c> returns after
+/// <c>UpdateGoodieStates</c> when
+/// <c>END_LEVEL_DATA.mFinalState != GAME_STATE_LEVEL_WON</c>
+/// (<c>Career.cpp:382-385</c>). <c>GAME_STATE_LEVEL_WON</c> is 5 —
+/// <c>con_win</c> stores 5; <c>GAME_STATE_LEVEL_LOST</c> is 4
+/// (<c>game.h:42-53</c>, <c>IScript</c> <c>cmp …,4</c>).
+/// </para>
+/// <para>
+/// <b>Not established here.</b> The world-500 slot arm
+/// (<c>Career.cpp:468-481</c>). <c>UpdateBaseWorldExistsStuffForNode</c>
+/// on <c>level_structure[0][3] == 110</c>. Goodie recomputation. The
+/// ranking clamp constants 0.4 / 0.6 inside
+/// <c>FillOutEndLevelData</c> — they are gated on a non-zero secondary
+/// count, so Level 100 never reaches them.
+/// </para>
+/// </remarks>
+public static class RetailCareerReCalcLinks
+{
+    /// <summary>World 100 — <c>level_structure[0][0]</c>; <c>cmp eax, 0x64</c> at <c>0x0041C188</c>.</summary>
+    public const int TrainingWorldNumber = 100;
+
+    /// <summary>World 110 — <c>level_structure[0][1]</c> is node index 1, whose world is 110.</summary>
+    public const int TrainingLowerChildWorldNumber = 110;
+
+    /// <summary>The unused higher child of world 100 — <c>level_structure[0][2]</c>.</summary>
+    public const int TrainingHigherChildNodeIndex = -1;
+
+    /// <summary>Shipped Level 100 <c>LevelScript.msl</c> primary count.</summary>
+    public const int TrainingPrimaryObjectiveCount = 4;
+
+    /// <summary>Shipped Level 100 secondary count — there are none.</summary>
+    public const int TrainingSecondaryObjectiveCount = 0;
+
+    /// <summary><c>GAME_STATE_LEVEL_WON</c> — <c>game.h:49</c>; <c>con_win</c> stores 5.</summary>
+    public const int GameStateLevelWon = 5;
+
+    /// <summary><c>GAME_STATE_LEVEL_LOST</c> — <c>game.h:48</c>; <c>cmp …,4</c>.</summary>
+    public const int GameStateLevelLost = 4;
+
+    /// <summary>
+    /// Whether <c>FillOutEndLevelData</c> at <c>game.cpp:1028</c> consults the
+    /// secondary predicate. Level 100's count is 0, so the ranking clamp is
+    /// skipped even though the predicate would return FALSE.
+    /// </summary>
+    public static bool AppliesSecondaryRankingClamp =>
+        TrainingSecondaryObjectiveCount != 0;
+
+    /// <summary>
+    /// A fresh career whose first two nodes match the shipped training
+    /// slice: world 100 with lower child 110 and a dummy higher link.
+    /// </summary>
+    public static RetailCareerCampaign CreateColdTrainingSlice()
+    {
+        var career = new RetailCareerCampaign();
+        RetailCareerNode training = career.Nodes.Add(TrainingWorldNumber, complete: 0);
+        RetailCareerNode next = career.Nodes.Add(TrainingLowerChildWorldNumber, complete: 0);
+
+        career.Links.Add(new RetailCareerNodeLink { ToNode = 1 });
+        career.Links.Add(new RetailCareerNodeLink { ToNode = TrainingHigherChildNodeIndex });
+        career.Links.Add(new RetailCareerNodeLink());
+        career.Links.Add(new RetailCareerNodeLink());
+
+        training.LowerLink = 0;
+        training.HigherLink = 1;
+        next.LowerLink = 2;
+        next.HigherLink = 3;
+        return career;
+    }
+}
+
+/// <summary>
+/// The nodes, links, and kill counters <see cref="RetailCareerReCalcLinks"/>
+/// mutates. Not a full <c>CCareer</c> — only the fields the Level 100 Won
+/// path reads.
+/// </summary>
+public sealed class RetailCareerCampaign
+{
+    private const int World500 = 500;
+
+    /// <summary><c>mNode</c>.</summary>
+    public RetailCareerNodeTable Nodes { get; } = new();
+
+    /// <summary><c>mNodeLink</c>.</summary>
+    public List<RetailCareerNodeLink> Links { get; } = new();
+
+    /// <summary><c>mKilledThings</c> plus the world-100 skip.</summary>
+    public RetailCareerCounters Counters { get; } = new();
+
+    /// <summary><c>mCareerInProgress</c> — set only on a Won update.</summary>
+    public int CareerInProgress { get; private set; }
+
+    /// <summary><c>CCareer::GetLink</c> — <c>Career.h:139</c>.</summary>
+    public RetailCareerNodeLink? GetLink(int index)
+    {
+        if (index < 0 || index >= Links.Count)
+        {
+            return null;
+        }
+
+        return Links[index];
+    }
+
+    /// <summary>
+    /// <c>CCareer::Update</c> then <c>ReCalcLinks</c> —
+    /// <c>Career.cpp:379-515</c>, <c>0x0041BD00</c> / <c>0x0041BDF0</c>.
+    /// </summary>
+    public void ApplyUpdate(
+        int finalState,
+        int worldFinished,
+        float ranking,
+        IReadOnlyList<int> secondaryObjectiveStatuses,
+        IReadOnlyList<int> thingsKilledThisLevel)
+    {
+        if (finalState != RetailCareerReCalcLinks.GameStateLevelWon)
+        {
+            return;
+        }
+
+        Counters.UpdateThingsKilled(worldFinished, thingsKilledThisLevel);
+
+        RetailCareerNode? node = Nodes.Find(worldFinished);
+        if (node is null)
+        {
+            return;
+        }
+
+        if (ranking > node.Ranking)
+        {
+            node.Ranking = ranking;
+        }
+
+        node.Complete = 1;
+        CareerInProgress = 1;
+        ReCalcLinks(worldFinished, secondaryObjectiveStatuses);
+    }
+
+    /// <summary>
+    /// <c>CCareer::ReCalcLinks</c> — <c>Career.cpp:423-515</c>,
+    /// <c>0x0041BDF0</c>. World 500 is a different slot-gated arm and is
+    /// refused here rather than silently taking the secondary-objective path.
+    /// </summary>
+    public void ReCalcLinks(
+        int worldFinished,
+        IReadOnlyList<int> secondaryObjectiveStatuses)
+    {
+        if (worldFinished == World500)
+        {
+            throw new InvalidOperationException(
+                "World 500 completes child links from slots 61/62, not from " +
+                "IsAllSecondaryObjectivesComplete; that arm is not this owner.");
+        }
+
+        RetailCareerNode? finished = Nodes.Find(worldFinished);
+        if (finished is null)
+        {
+            return;
+        }
+
+        RetailSecondaryObjectiveVerdict verdict =
+            RetailEndLevelObjectives.IsAllSecondaryObjectivesComplete(
+                secondaryObjectiveStatuses);
+
+        // GetChildLinks always yields lower then higher, even when ToNode is -1.
+        TryCompleteChild(GetLink(finished.LowerLink), isHigher: false, verdict);
+        TryCompleteChild(GetLink(finished.HigherLink), isHigher: true, verdict);
+    }
+
+    private void TryCompleteChild(
+        RetailCareerNodeLink? link,
+        bool isHigher,
+        RetailSecondaryObjectiveVerdict verdict)
+    {
+        if (link is null || link.LinkType == RetailCareerNodeLink.Complete)
+        {
+            return;
+        }
+
+        bool complete = isHigher ? verdict.Result : true;
+        if (!complete)
+        {
+            return;
+        }
+
+        link.LinkType = RetailCareerNodeLink.Complete;
+        MarkCompetingParentsBroken(link);
+    }
+
+    private void MarkCompetingParentsBroken(RetailCareerNodeLink completed)
+    {
+        RetailCareerNode? toNode = NodeAt(completed.ToNode);
+        if (toNode is null)
+        {
+            return;
+        }
+
+        for (int index = 0; index < Nodes.NodeCount; index++)
+        {
+            RetailCareerNode node = Nodes.Nodes[index];
+            MarkIfCompeting(GetLink(node.LowerLink), completed, toNode);
+            MarkIfCompeting(GetLink(node.HigherLink), completed, toNode);
+        }
+    }
+
+    private void MarkIfCompeting(
+        RetailCareerNodeLink? candidate,
+        RetailCareerNodeLink completed,
+        RetailCareerNode toNode)
+    {
+        if (candidate is null ||
+            ReferenceEquals(candidate, completed) ||
+            candidate.LinkType != RetailCareerNodeLink.Complete)
+        {
+            return;
+        }
+
+        if (ReferenceEquals(NodeAt(candidate.ToNode), toNode))
+        {
+            candidate.LinkType = RetailCareerNodeLink.CompleteBroken;
+        }
+    }
+
+    private RetailCareerNode? NodeAt(int index)
+    {
+        if (index < 0 || index >= Nodes.NodeCount)
+        {
+            return null;
+        }
+
+        return Nodes.Nodes[index];
+    }
+}
