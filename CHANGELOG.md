@@ -43,7 +43,9 @@ live in `developer_state.json` and the campaign ledgers.
   another word or clear the search. Settings names a folder that could not
   be kept and puts the previous folder back, instead of leaving the new path
   looking saved. A look or media choice that cannot be kept is named the
-  same way and the previous value is put back.
+  same way and the previous value is put back. Home uses that same folder
+  sentence when a chosen install cannot be kept. Save Lab overwrite cancel
+  says the file was left as it is.
 
 ## 1.0.11 — 2026-08-07
 

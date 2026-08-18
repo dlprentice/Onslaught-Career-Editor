@@ -778,6 +778,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     "Overwrite output file?",
                     SaveLabPageText.BuildOverwriteQuestion(outputPath)))
             {
+                EditorOutputTextBox.Text = SaveLabPageText.OverwriteCanceled;
+                EditorCopyOutputButton.IsEnabled = true;
                 AppStatusService.SetStatus("Save Editor: focused Goodie overwrite canceled");
                 return;
             }
@@ -845,6 +847,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     "Overwrite output file?",
                     SaveLabPageText.BuildOverwriteQuestion(outputPath)))
             {
+                EditorOutputTextBox.Text = SaveLabPageText.OverwriteCanceled;
+                EditorCopyOutputButton.IsEnabled = true;
                 AppStatusService.SetStatus("Save Editor: overwrite canceled");
                 return;
             }

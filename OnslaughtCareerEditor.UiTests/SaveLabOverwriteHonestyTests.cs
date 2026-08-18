@@ -44,7 +44,17 @@ public class SaveLabOverwriteHonestyTests
             TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI", "Pages", "SavesPage.xaml.cs"));
 
         Assert.That(editor, Does.Contain("SaveLabPageText.BuildOverwriteQuestion"));
+        Assert.That(editor, Does.Contain("SaveLabPageText.OverwriteCanceled"));
         Assert.That(editor, Does.Not.Contain("The output file already exists"));
         Assert.That(editor, Does.Not.Contain("{outputPath}"));
+
+        int firstConfirm = editor.IndexOf("SaveLabPageText.BuildOverwriteQuestion", StringComparison.Ordinal);
+        int secondConfirm = editor.IndexOf("SaveLabPageText.BuildOverwriteQuestion", firstConfirm + 1, StringComparison.Ordinal);
+        int firstCanceled = editor.IndexOf("SaveLabPageText.OverwriteCanceled", StringComparison.Ordinal);
+        int secondCanceled = editor.IndexOf("SaveLabPageText.OverwriteCanceled", firstCanceled + 1, StringComparison.Ordinal);
+        Assert.That(secondConfirm, Is.GreaterThan(firstConfirm));
+        Assert.That(firstCanceled, Is.GreaterThan(firstConfirm));
+        Assert.That(firstCanceled, Is.LessThan(secondConfirm));
+        Assert.That(secondCanceled, Is.GreaterThan(secondConfirm));
     }
 }
