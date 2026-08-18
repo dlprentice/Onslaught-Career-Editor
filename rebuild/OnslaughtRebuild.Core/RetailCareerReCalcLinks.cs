@@ -142,9 +142,9 @@ public static class RetailCareerReCalcLinks
 }
 
 /// <summary>
-/// The nodes, links, and kill counters <see cref="RetailCareerReCalcLinks"/>
-/// mutates. Not a full <c>CCareer</c> — only the fields the Level 100 Won
-/// path reads.
+/// The nodes, links, kill counters, and slots
+/// <see cref="RetailCareerReCalcLinks"/> mutates. Not a full
+/// <c>CCareer</c> — only the fields the Level 100 Won path reads.
 /// </summary>
 public sealed class RetailCareerCampaign
 {
@@ -158,6 +158,9 @@ public sealed class RetailCareerCampaign
 
     /// <summary><c>mKilledThings</c> plus the world-100 skip.</summary>
     public RetailCareerCounters Counters { get; } = new();
+
+    /// <summary><c>mSlots</c> — overwritten from FillOut on a Won update.</summary>
+    public RetailCareerSlots Slots { get; } = new();
 
     /// <summary><c>mCareerInProgress</c> — set only on a Won update.</summary>
     public int CareerInProgress { get; private set; }
@@ -183,22 +186,32 @@ public sealed class RetailCareerCampaign
             snapshot.WorldFinished,
             snapshot.Ranking,
             snapshot.SecondaryStatuses,
-            snapshot.ThingsKilled);
+            snapshot.ThingsKilled,
+            snapshot.SlotWords);
 
     /// <summary>
     /// <c>CCareer::Update</c> then <c>ReCalcLinks</c> —
     /// <c>Career.cpp:379-515</c>, <c>0x0041BD00</c> / <c>0x0041BDF0</c>.
+    /// The 32-dword slot store is the already-pinned
+    /// <see cref="RetailCareerSlotHandoff.OverwriteFromEndLevel"/>;
+    /// this method does not reimplement that copy.
     /// </summary>
     public void ApplyUpdate(
         int finalState,
         int worldFinished,
         float ranking,
         IReadOnlyList<int> secondaryObjectiveStatuses,
-        IReadOnlyList<int> thingsKilledThisLevel)
+        IReadOnlyList<int> thingsKilledThisLevel,
+        IReadOnlyList<int>? slotWords = null)
     {
         if (finalState != RetailCareerReCalcLinks.GameStateLevelWon)
         {
             return;
+        }
+
+        if (slotWords is not null)
+        {
+            RetailCareerSlotHandoff.OverwriteFromEndLevel(Slots, slotWords);
         }
 
         Counters.UpdateThingsKilled(worldFinished, thingsKilledThisLevel);

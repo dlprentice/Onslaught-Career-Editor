@@ -41,12 +41,12 @@ namespace OnslaughtRebuild.Core;
 /// guard and are still copied. Do not invent other slots.
 /// </para>
 /// <para>
-/// <b>Not established here.</b> FillOut's
-/// <c>END_LEVEL_DATA.mSlots = GAME.mSlots</c> copy
-/// (<c>game.cpp:971</c>). The mission-path wire from
+/// <b>Not established here.</b> The mission-path wire from
 /// <c>FrontEndHandoffReady</c>. <c>CGame::SetSlot</c>'s
 /// any-nonzero setter versus <c>CCareer::SetSlot</c>'s literal-1
 /// setter — this owner copies words, it does not call SetSlot.
+/// FillOut's first-play snapshot bits live on
+/// <see cref="RetailFillOutEndLevelData.ForLevel100Won"/>.
 /// </para>
 /// </remarks>
 public static class RetailCareerSlotHandoff

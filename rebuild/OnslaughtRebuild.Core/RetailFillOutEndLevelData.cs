@@ -12,7 +12,8 @@ public readonly record struct RetailEndLevelSnapshot(
     int FinalState,
     float Ranking,
     IReadOnlyList<int> SecondaryStatuses,
-    IReadOnlyList<int> ThingsKilled);
+    IReadOnlyList<int> ThingsKilled,
+    IReadOnlyList<int> SlotWords);
 
 /// <summary>
 /// <c>CGame::FillOutEndLevelData</c> as it applies to a Level 100 Won —
@@ -34,6 +35,14 @@ public readonly record struct RetailEndLevelSnapshot(
 /// <c>GetStatus()</c> unset. Do not invent secondary content.
 /// </para>
 /// <para>
+/// <b>A first-play win SetSlotSave's four tutorial bits.</b>
+/// <c>SLOT_TUTORIAL_1..4</c> are 63..66. FillOut copies
+/// <c>END_LEVEL_DATA.mSlots = GAME.mSlots</c> (<c>game.cpp:971</c>),
+/// so those four bits are the only addressable ones on this
+/// snapshot. Do not invent other slots. The 32-dword career
+/// assignment stays on <see cref="RetailCareerSlotHandoff"/>.
+/// </para>
+/// <para>
 /// <b>The ranking clamp is gated on a non-zero secondary count.</b>
 /// <c>game.cpp:1028</c> is <c>if (GetNumSecondaryObjectives())</c>.
 /// When that count is 0 the 0.4 floor and 0.6 cap never run, even
@@ -44,8 +53,8 @@ public readonly record struct RetailEndLevelSnapshot(
 /// <b>Not established here.</b> The score-time multiplier at
 /// <c>game.cpp:988-1026</c> (<c>mFullScoreTime</c> /
 /// <c>mPercentageScoreTime</c>). Whether Level 100's authored times
-/// make that arm live. Base-things copy. Slot dword copy. Kill
-/// readout from <c>CPlayer</c>.
+/// make that arm live. Base-things copy. The mission-path wire from
+/// <c>FrontEndHandoffReady</c>. Kill readout from <c>CPlayer</c>.
 /// </para>
 /// </remarks>
 public static class RetailFillOutEndLevelData
@@ -61,6 +70,27 @@ public static class RetailFillOutEndLevelData
         new int[RetailEndLevelObjectives.SecondaryObjectiveCount];
 
     /// <summary>
+    /// <c>GAME.mSlots</c> after a first-play Level 100 win
+    /// <c>SetSlotSave</c>'d <c>SLOT_TUTORIAL_1..4</c>. FillOut copies
+    /// these 32 words into <c>END_LEVEL_DATA.mSlots</c>.
+    /// </summary>
+    public static int[] FirstPlayTutorialSlotWords()
+    {
+        var slots = new RetailCareerSlots();
+        slots.SetSlot(RetailCareerSlotHandoff.TutorialIntroductionSlot, 1);
+        slots.SetSlot(RetailCareerSlotHandoff.TutorialPulseCannonSlot, 1);
+        slots.SetSlot(RetailCareerSlotHandoff.TutorialVulcanCannonSlot, 1);
+        slots.SetSlot(RetailCareerSlotHandoff.TutorialStatusBarsSlot, 1);
+        var words = new int[RetailCareerSlots.SlotWords];
+        for (int index = 0; index < words.Length; index++)
+        {
+            words[index] = slots.Words[index];
+        }
+
+        return words;
+    }
+
+    /// <summary>
     /// The post-Won snapshot Level 100 hands to career. Ranking defaults to
     /// the <c>mRanking=1.0f</c> store at <c>game.cpp:967</c> before the
     /// unclaimed score-time arm; callers may override.
@@ -74,7 +104,8 @@ public static class RetailFillOutEndLevelData
             RetailCareerReCalcLinks.GameStateLevelWon,
             ranking,
             UnsetSecondaryStatuses(),
-            thingsKilled ?? new int[RetailCareerCounters.KilledTypeCount]);
+            thingsKilled ?? new int[RetailCareerCounters.KilledTypeCount],
+            FirstPlayTutorialSlotWords());
     }
 
     /// <summary>
