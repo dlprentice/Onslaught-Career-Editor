@@ -130,6 +130,8 @@ as immutable staging evidence; guarded launch validation remains strict.
 - Plan, apply, restore, and verify expected-byte catalog patches on that copy.
 - Launch and stop only the copied-game process started by the app.
 - Keep BEA.exe-only technical copies separate from playable profiles.
+- A failed Last operation or safe-copy list action names what failed and that
+  nothing was changed. It does not dump the raw exception.
 
 Enhanced Copy applies the complete 28-region widescreen correction, selects
 the retail 16:9 option, uses the supported `-res 1600 900` windowed baseline,

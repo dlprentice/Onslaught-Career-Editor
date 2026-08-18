@@ -82,6 +82,19 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
             return $"Deleted {displayName} and freed {sizeText}.";
         }
 
+        public static string DescribeLaunchFailure(string displayName)
+        {
+            return $"Could not launch {displayName}. Nothing was changed.";
+        }
+
+        public const string CheckFailure =
+            "That copy could not be checked. Nothing was changed.";
+
+        public static string DescribeDeleteFailure(string displayName)
+        {
+            return $"Could not delete {displayName}. Nothing was changed.";
+        }
+
         /// <summary>
         /// The warning before creating a copy on a volume that cannot fit it.
         ///

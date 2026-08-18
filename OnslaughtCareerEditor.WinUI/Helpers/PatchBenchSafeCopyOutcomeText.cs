@@ -9,6 +9,11 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         private const string MusicPlaybackBoundaryClause = MusicPlaybackBoundary + ".";
         private static string MusicPlaybackBoundarySentence => char.ToUpperInvariant(MusicPlaybackBoundary[0]) + MusicPlaybackBoundary[1..] + ".";
 
+        public static string DescribeCaughtFailure(string action)
+        {
+            return $"Could not {action}. Nothing was changed.";
+        }
+
         public static string BuildDefaultMusicReplacementStatus()
         {
             return $"No music swap staged. Staging only; {MusicPlaybackBoundaryClause}";

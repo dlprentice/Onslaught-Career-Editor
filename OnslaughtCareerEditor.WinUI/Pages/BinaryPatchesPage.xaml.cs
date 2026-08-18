@@ -221,7 +221,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
             catch (Exception ex) when (IsUserFacingOperationException(ex))
             {
-                OperationLogTextBox.Text = $"Could not check whether the copied game is still running: {ex.Message}";
+                OperationLogTextBox.Text = PatchBenchSafeCopyOutcomeText.DescribeCaughtFailure("check whether the copied game is still running");
             }
             finally
             {
@@ -1213,7 +1213,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
             catch (Exception ex) when (IsUserFacingOperationException(ex))
             {
-                OperationLogTextBox.Text = $"Could not browse for BEA.exe: {ex.Message}";
+                OperationLogTextBox.Text = PatchBenchSafeCopyOutcomeText.DescribeCaughtFailure("browse for BEA.exe");
                 AppStatusService.SetStatus("Windowed & Mods: browse failed");
             }
         }
@@ -1264,9 +1264,9 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     "Original executable stays unchanged. Verify the copy before applying patches.";
                 AppStatusService.SetStatus("Windowed & Mods: BEA.exe-only copy ready");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                OperationLogTextBox.Text = $"Could not create BEA.exe-only copy: {ex.Message}";
+                OperationLogTextBox.Text = PatchBenchSafeCopyOutcomeText.DescribeCaughtFailure("create a BEA.exe-only copy");
                 AppStatusService.SetStatus("Windowed & Mods: BEA.exe-only copy failed");
             }
 
@@ -1344,7 +1344,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
             catch (Exception ex) when (IsUserFacingOperationException(ex))
             {
-                OperationLogTextBox.Text = $"Could not apply patches to BEA.exe-only copy: {ex.Message}";
+                OperationLogTextBox.Text = PatchBenchSafeCopyOutcomeText.DescribeCaughtFailure("apply patches to the BEA.exe-only copy");
                 AppStatusService.SetStatus("Windowed & Mods: apply failed");
                 UpdateControlState();
             }
@@ -1387,7 +1387,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
             catch (Exception ex) when (IsUserFacingOperationException(ex))
             {
-                OperationLogTextBox.Text = $"Could not restore BEA.exe-only backup: {ex.Message}";
+                OperationLogTextBox.Text = PatchBenchSafeCopyOutcomeText.DescribeCaughtFailure("restore the BEA.exe-only backup");
                 AppStatusService.SetStatus("Windowed & Mods: restore failed");
                 UpdateControlState();
             }
@@ -1562,7 +1562,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 PatchBenchCopiedProfileLaunchPlan.Text = string.Empty;
                 PatchBenchCopiedProfileLaunchStatus.Text = PatchBenchLaunchText.BuildBoundary("No safe copy launch attempted.");
                 PatchBenchMusicReplacementStatus.Text = PatchBenchSafeCopyOutcomeText.BuildDefaultMusicReplacementStatus();
-                OperationLogTextBox.Text = $"Could not prepare safe game copy: {ex.Message}";
+                OperationLogTextBox.Text = PatchBenchSafeCopyOutcomeText.DescribeCaughtFailure("prepare a safe game copy");
                 AppStatusService.SetStatus("Windowed & Mods: safe copy preparation failed");
             }
             finally
@@ -1639,10 +1639,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             catch (Exception ex) when (IsUserFacingOperationException(ex))
             {
                 PatchBenchCopiedProfileLaunchStatus.Text = "Safe copy launch failed.";
-                string detail = string.IsNullOrWhiteSpace(ex.Message)
-                    ? $"{ex.GetType().Name} (0x{ex.HResult:X8})"
-                    : $"{ex.GetType().Name} (0x{ex.HResult:X8}): {ex.Message}";
-                OperationLogTextBox.Text = $"Could not launch safe copy: {detail}";
+                OperationLogTextBox.Text = PatchBenchSafeCopyOutcomeText.DescribeCaughtFailure("launch the safe copy");
                 AppStatusService.SetStatus("Windowed & Mods: safe copy launch failed");
             }
             finally
@@ -1706,7 +1703,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             catch (Exception ex) when (IsUserFacingOperationException(ex))
             {
                 PatchBenchCopiedProfileLaunchStatus.Text = "Safe copy stop failed.";
-                OperationLogTextBox.Text = $"Could not stop safe copy: {ex.Message}";
+                OperationLogTextBox.Text = PatchBenchSafeCopyOutcomeText.DescribeCaughtFailure("stop the safe copy");
                 AppStatusService.SetStatus("Windowed & Mods: safe copy stop failed");
             }
             finally
@@ -1780,7 +1777,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             catch (Exception ex) when (IsUserFacingOperationException(ex))
             {
                 PatchBenchMusicReplacementStatus.Text = PatchBenchSafeCopyOutcomeText.BuildMusicPresetFailedStatus();
-                OperationLogTextBox.Text = $"Could not stage safe-copy music preset: {ex.Message}";
+                OperationLogTextBox.Text = PatchBenchSafeCopyOutcomeText.DescribeCaughtFailure("stage the safe-copy music preset");
                 AppStatusService.SetStatus("Windowed & Mods: music preset staging failed");
                 UpdateControlState();
             }
@@ -1840,7 +1837,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             catch (Exception ex) when (IsUserFacingOperationException(ex))
             {
                 PatchBenchMusicReplacementStatus.Text = PatchBenchSafeCopyOutcomeText.BuildMusicStagingFailedStatus();
-                OperationLogTextBox.Text = $"Could not stage copied music bytes: {ex.Message}";
+                OperationLogTextBox.Text = PatchBenchSafeCopyOutcomeText.DescribeCaughtFailure("stage copied music bytes");
                 AppStatusService.SetStatus("Windowed & Mods: copied music byte staging failed");
             }
             finally
@@ -1905,7 +1902,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             catch (Exception ex) when (IsUserFacingOperationException(ex))
             {
                 PatchBenchMusicReplacementStatus.Text = PatchBenchSafeCopyOutcomeText.BuildMusicRestoreFailedStatus();
-                OperationLogTextBox.Text = $"Could not restore safe-copy music backup: {ex.Message}";
+                OperationLogTextBox.Text = PatchBenchSafeCopyOutcomeText.DescribeCaughtFailure("restore the safe-copy music backup");
                 AppStatusService.SetStatus("Windowed & Mods: music backup restore failed");
             }
             finally
@@ -2606,7 +2603,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
             catch (Exception ex) when (IsUserFacingOperationException(ex))
             {
-                error = ex.Message;
+                error = PatchBenchSafeCopyOutcomeText.DescribeCaughtFailure("prepare that launch");
                 return false;
             }
         }
@@ -2741,7 +2738,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
             catch (Exception ex) when (IsUserFacingOperationException(ex))
             {
-                ShowSafeCopyManagerNote($"Could not launch {row.DisplayName}: {ex.Message}");
+                ShowSafeCopyManagerNote(SafeCopyManagerText.DescribeLaunchFailure(row.DisplayName));
                 AppStatusService.SetStatus("Windowed & Mods: could not launch that copy");
             }
         }
@@ -2773,7 +2770,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
             catch (Exception ex) when (IsUserFacingOperationException(ex))
             {
-                ShowSafeCopyManagerNote($"That copy could not be checked. Nothing was changed. {ex.Message}");
+                ShowSafeCopyManagerNote(SafeCopyManagerText.CheckFailure);
                 return;
             }
 
@@ -2857,7 +2854,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
             catch (Exception ex) when (IsUserFacingOperationException(ex))
             {
-                ShowSafeCopyManagerNote($"Could not delete {row.DisplayName}: {ex.Message}");
+                ShowSafeCopyManagerNote(SafeCopyManagerText.DescribeDeleteFailure(row.DisplayName));
                 AppStatusService.SetStatus("Windowed & Mods: the copy was not deleted");
             }
 

@@ -81,6 +81,17 @@ public class PatchBenchSafeCopyOutcomeTextTests
         });
     }
 
+    [Test]
+    public void ACaughtFailureSaysWhatFailedWithoutTheException()
+    {
+        string line = InvokeString("DescribeCaughtFailure", "launch the safe copy");
+
+        Assert.That(line, Is.EqualTo("Could not launch the safe copy. Nothing was changed."));
+        Assert.That(line, Does.Not.Contain(":\\"));
+        Assert.That(line, Does.Not.Contain("0x"));
+        Assert.That(line.ToLowerInvariant(), Does.Not.Contain("exception"));
+    }
+
     private static string InvokeString(string methodName, params object?[] arguments)
     {
         return (string)ReflectedWinUiTestSupport.InvokeRequiredStaticMethod(

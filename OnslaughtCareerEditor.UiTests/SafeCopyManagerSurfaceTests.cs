@@ -265,4 +265,32 @@ public class SafeCopyManagerSurfaceTests
         Assert.That(confirm, Is.GreaterThan(spaceCheck), "The space read happens before the one confirmation.");
         Assert.That(code, Does.Contain("{spaceSection}"), "And it is shown inside that confirmation.");
     }
+
+    [Test]
+    public void ALaunchOrDeleteFailureNamesTheCopyAndDoesNotDumpTheException()
+    {
+        string launch = SafeCopyManagerText.DescribeLaunchFailure("trainer-proof");
+        string delete = SafeCopyManagerText.DescribeDeleteFailure("trainer-proof");
+
+        Assert.That(launch, Does.Contain("trainer-proof"));
+        Assert.That(launch, Does.Contain("Nothing was changed"));
+        Assert.That(delete, Does.Contain("trainer-proof"));
+        Assert.That(delete, Does.Contain("Nothing was changed"));
+        Assert.That(SafeCopyManagerText.CheckFailure, Does.Contain("Nothing was changed"));
+        Assert.That(launch, Does.Not.Contain(":\\"));
+        Assert.That(delete, Does.Not.Contain(":\\"));
+    }
+
+    [Test]
+    public void TheManagerNotesUseTheSharedFailureSentencesAndNeverDumpExMessage()
+    {
+        string code = PageCode();
+
+        Assert.That(code, Does.Contain("SafeCopyManagerText.DescribeLaunchFailure"));
+        Assert.That(code, Does.Contain("SafeCopyManagerText.CheckFailure"));
+        Assert.That(code, Does.Contain("SafeCopyManagerText.DescribeDeleteFailure"));
+        Assert.That(code, Does.Contain("PatchBenchSafeCopyOutcomeText.DescribeCaughtFailure"));
+        Assert.That(code, Does.Not.Contain("{ex.Message}"));
+        Assert.That(code, Does.Not.Contain("HResult"));
+    }
 }
