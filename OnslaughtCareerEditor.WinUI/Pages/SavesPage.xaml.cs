@@ -776,7 +776,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             if (File.Exists(outputPath) &&
                 !await ConfirmAsync(
                     "Overwrite output file?",
-                    $"The output file already exists:\n{outputPath}\n\nOverwrite it?"))
+                    SaveLabPageText.BuildOverwriteQuestion(outputPath)))
             {
                 AppStatusService.SetStatus("Save Editor: focused Goodie overwrite canceled");
                 return;
@@ -843,7 +843,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             if (File.Exists(outputPath) &&
                 !await ConfirmAsync(
                     "Overwrite output file?",
-                    $"The output file already exists:\n{outputPath}\n\nOverwrite it?"))
+                    SaveLabPageText.BuildOverwriteQuestion(outputPath)))
             {
                 AppStatusService.SetStatus("Save Editor: overwrite canceled");
                 return;
