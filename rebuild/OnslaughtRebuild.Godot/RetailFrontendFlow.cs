@@ -563,6 +563,7 @@ public sealed partial class RetailFrontendFlow : Control
     private Texture2D _titleBracket01 = null!;
     private Texture2D _titleBracket02 = null!;
     private Texture2D _titleTextBox = null!;
+    private Texture2D _feBlank = null!;
     private Texture2D _symbolBracket01 = null!;
     private Texture2D _symbolBracket02 = null!;
     private Texture2D _levelBracket01 = null!;
@@ -1847,36 +1848,64 @@ public sealed partial class RetailFrontendFlow : Control
 
     private void DrawQuitConfirm()
     {
-        // Quit Create() is 400 wide at (320, 240). Height is still
-        // reconstruction: the 4th stack immediate is 0.1f, not a pixel extent.
-        const float reconstructionHeight = 140f;
-        DrawRect(
-            new Rect2(
-                RetailFeMessBox.QuitLeft,
-                RetailFeMessBox.QuitCenterY - (reconstructionHeight * 0.5f),
-                RetailFeMessBox.QuitWidth,
-                reconstructionHeight),
-            new Color(0f, 0f, 0f, 0.82f));
-        DrawTextCentered(QuitConfirmPrompt, new Vector2(320f, 190f), 1.7f, Colors.White);
+        // Create() width/centre are pinned on RetailFeMessBox. Height is still
+        // reconstruction (the 4th stack immediate is 0.1f). Chrome below is
+        // FrontEnd.cpp DrawPanel/DrawBox plus the option_mode-2 YESNO stack,
+        // not FEMessBox.cpp tiles — that file is absent and there is no
+        // quit-confirm capture.
+        var box = new Rect2(
+            RetailFeMessBox.QuitLeft,
+            RetailFeMessBox.BoxTop,
+            RetailFeMessBox.QuitWidth,
+            RetailFeMessBox.ReconstructionHeight);
+        DrawTextureRect(_feBlank, box, false, RetailColor(RetailFeMessBox.PanelColor));
+        DrawFeMessBoxEdges(box, RetailColor(RetailFeMessBox.BorderColor));
 
-        DrawQuitConfirmChoice("No", 220f, _session.SelectedQuitConfirmIndex == 0);
-        DrawQuitConfirmChoice("Yes", 420f, _session.SelectedQuitConfirmIndex == 1);
+        Color text = RetailColor(RetailFeMessBox.TextColor);
+        float promptWidth = MeasureText(QuitConfirmPrompt, 1f);
+        DrawText(
+            QuitConfirmPrompt,
+            new Vector2(RetailFeMessBox.QuitCenterX - (promptWidth * 0.5f), RetailFeMessBox.PromptTop),
+            1f,
+            text);
+
+        DrawQuitConfirmChoice(
+            RetailFeMessBox.YesLabel,
+            RetailFeMessBox.YesChoiceTop,
+            _session.SelectedQuitConfirmIndex == 1);
+        DrawQuitConfirmChoice(
+            RetailFeMessBox.NoLabel,
+            RetailFeMessBox.NoChoiceTop,
+            _session.SelectedQuitConfirmIndex == 0);
     }
 
-    private void DrawQuitConfirmChoice(string label, float centerX, bool selected)
+    private void DrawQuitConfirmChoice(string label, float top, bool selected)
     {
-        Color color = selected ? ReleasedSelected : ReleasedNormal;
+        float width = MeasureFont22Text(label, 1f);
+        float left = RetailFeMessBox.QuitCenterX - (width * 0.5f);
         if (selected)
         {
-            float width = Mathf.Max(72f, MeasureText(label, 1f) + 20f);
             DrawTextureRect(
-                _titleTextBox,
-                new Rect2(centerX - (width * 0.5f), 248f, width, 20f),
+                _feBlank,
+                new Rect2(
+                    left - RetailFeMessBox.HighlightPadX,
+                    top,
+                    width + (RetailFeMessBox.HighlightPadX * 2f),
+                    RetailFeMessBox.ChoiceRowHeight),
                 false,
-                HighlightTint);
+                RetailColor(RetailFeMessBox.HighlightColor));
         }
 
-        DrawTextCentered(label, new Vector2(centerX, 250f), 2f, color);
+        DrawFont22Text(label, new Vector2(left, top), 1f, 1f, RetailColor(RetailFeMessBox.TextColor));
+    }
+
+    private void DrawFeMessBoxEdges(Rect2 box, Color color)
+    {
+        float w = RetailFeMessBox.BoxLineWidth;
+        DrawRect(new Rect2(box.Position.X, box.Position.Y, box.Size.X, w), color);
+        DrawRect(new Rect2(box.Position.X, box.End.Y - w, box.Size.X, w), color);
+        DrawRect(new Rect2(box.Position.X, box.Position.Y, w, box.Size.Y), color);
+        DrawRect(new Rect2(box.End.X - w, box.Position.Y, w, box.Size.Y), color);
     }
 
     /// <summary>
@@ -2859,12 +2888,22 @@ public sealed partial class RetailFrontendFlow : Control
 
     private static int QuitConfirmIndexAt(Vector2 designPosition)
     {
-        if (new Rect2(160f, 240f, 120f, 36f).HasPoint(designPosition))
+        var noRow = new Rect2(
+            RetailFeMessBox.QuitLeft,
+            RetailFeMessBox.NoChoiceTop,
+            RetailFeMessBox.QuitWidth,
+            RetailFeMessBox.ChoiceRowHeight);
+        if (noRow.HasPoint(designPosition))
         {
             return 0;
         }
 
-        if (new Rect2(360f, 240f, 120f, 36f).HasPoint(designPosition))
+        var yesRow = new Rect2(
+            RetailFeMessBox.QuitLeft,
+            RetailFeMessBox.YesChoiceTop,
+            RetailFeMessBox.QuitWidth,
+            RetailFeMessBox.ChoiceRowHeight);
+        if (yesRow.HasPoint(designPosition))
         {
             return 1;
         }
@@ -2931,6 +2970,14 @@ public sealed partial class RetailFrontendFlow : Control
         _titleBracket01 = LoadTexture("title-bracket-01", 256, 256);
         _titleBracket02 = LoadTexture("title-bracket-02", 256, 256);
         _titleTextBox = LoadTexture("title-text-box", 256, 32);
+        // FET2_BLANK — FrontEnd.cpp:755. Same 16×16 FrontEnd%v2%FE_Blank.tga
+        // the pause menu already materializes.
+        _feBlank = LoadTexture(
+            "blank",
+            16,
+            16,
+            CuratedAyaTextureLoader.Compression.Dxt1,
+            folder: "PauseMenu");
         _symbolBracket01 = LoadTexture("symbol-bracket-01", 128, 128);
         _symbolBracket02 = LoadTexture("symbol-bracket-02", 128, 128);
         _levelBracket01 = LoadTexture("level-bracket-01", 512, 512);
