@@ -1,8 +1,7 @@
 # IScript function map
 
 Status: active static function map
-Last updated: 2026-08-17 (the 2000/2001/2002 message dispatch, the
-waypoint-following owner review, and the script-system vtable cluster)
+Last updated: 2026-08-18 (event-id 2 / BSS scratch `0x0089c528` closed)
 Source File: `C:\dev\ONSLAUGHT2\MissionScript\IScript.cpp` (SEH `__FILE__`
 pointer `0x0064fa40` read out of `IScript__PostEvent`) | Binary: BEA.exe,
 SHA-256
@@ -138,5 +137,8 @@ db.18627.
 - The dispatch globals `0x008a9ac0` (state selector) and `0x0089c7f0` (2002
   guard): which state machine owns them.
 - The 2002 arm's `CScriptObjectCode__CallEvent` invocation
-  (`this=0x0089c5e0`, args `[edi+0xc], 2, &0x0089c528, 0`): what event `2`
-  and the `0x0089c528` target mean.
+  (`this=0x0089c5e0`, args `[edi+0xc], 2, &0x0089c528, 0`): CLOSED as
+  event-id **2** of the 13-slot `CMissionScriptObjectCode+0x14` table.
+  `0x0089c528` is a BSS scratch pointer shared with the other IScript
+  CallEvent wrappers (see `CScriptObjectCode.cpp.md`). Authored name of
+  id 2 is still open.

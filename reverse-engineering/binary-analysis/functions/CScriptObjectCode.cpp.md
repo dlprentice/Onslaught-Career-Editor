@@ -1,8 +1,7 @@
 # CScriptObjectCode function map
 
 Status: active static function map
-Last updated: 2026-08-18 (RETURN pin; CALLLOCAL is the +0x224 increment;
-CMissionScriptObjectCode trailer fields)
+Last updated: 2026-08-18 (RETURN / CALLLOCAL / event-id 0–7 static users)
 Source File: `C:\dev\ONSLAUGHT2\MissionScript\ScriptObjectCode.cpp` (the
 VM's `__FILE__` chain is established by the adjacent
 [`ScriptObjectCode.cpp.md`](ScriptObjectCode.cpp.md) wave receipts) | Binary:
@@ -45,7 +44,7 @@ pointer used for its allocations is `0x00650040` =
 | --- | --- | --- |
 | `+0x00` | vptr `0x005e4f54` | `mov [esi],0x5e4f54` at `0x00538f14` |
 | `+0x04` | code-array (flex) head | `lea ebx,[esi+4]; call 0x004241a0`; `Run` fetches `code = [obj+4]` |
-| `+0x14` | 13-dword event-id → PC table | ctor reads 13 dwords through `CDXMemBuffer__Read` (`0x00548570`); `CallEvent` indexes `[obj+0x14+eventId*4]` |
+| `+0x14` | 13-dword event-id → PC table | ctor reads 13 dwords; `CallEvent` indexes `[obj+0x14+eventId*4]`. Static users of ids 0–7 are listed below; ids 8–12 have **no** direct `E8` to `CallEvent` |
 | `+0x48` | `CSPtrSet` of `CEventFunction` | ctor `call 0x004e5840` then `CSPtrSet__AddToTail` (`0x004e5b20`) |
 | `+0x58` | symbol table | ctor stores the `0x00539770` reader result (`mov [esi+0x58],eax` at `0x00538fab`) |
 | `+0x5c` | preamble-present dword (serialized) | ctor `lea eax,[esi+0x5c]; push 4; push eax; call 0x00548570` at `0x00539011`; `CallEvent` runs PC=0 iff this is nonzero and `+0x6c == 0` |
@@ -182,6 +181,35 @@ each resident element through its `vtable[0](elem, 1)` (the shared
 value-delete convention), and `RestoreStack` then shallow-moves the source's
 pointer array into the destination.
 
+## Event-id table — static `CallEvent` users of slots 0–7
+
+`CScriptObjectCode__CallEvent` has exactly eight direct `E8` sites. All
+eight live in `IScript`. Arg order is `(eventObj, eventId, args, argCount)`
+with `this = 0x0089c5e0`. `eventObj` is always `[IScript+0xc]`. Every
+wrapper except id 0 also consults `[0x008a9ac0]==4` and Reset()s instead of
+calling. `0x0089c528` is a `.data` BSS scratch pointer (PE
+`to_offset` refuses it as uninitialised); `CreateThingRef` /
+`CreateThingRefWithSquad` store a freshly allocated wrapper there and pass
+`argCount=1`; the OrReset / 2002 / VFunc_2 paths pass the same address with
+`argCount=0`.
+
+| Id | Caller | Site | Args |
+| --- | --- | --- | --- |
+| 0 | `IScript__CallEvent0AndRegisterNestedListeners` | `0x0053352a` | `(obj, 0, NULL, 0)` then walks `[obj+0x48]` registering nested `CEventFunction`s |
+| 1 | `IScript__CreateThingRef` | `0x0053364e` | `(obj, 1, &0x0089c528, 1)` after `mov [0x0089c528], wrapper` |
+| 2 | `IScript__HandleMessage` 2002 arm | `0x00538638` | `(obj, 2, &0x0089c528, 0)` |
+| 3 | `IScript__CallEventId3_OrReset` | `0x00533805` | `(obj, 3, &0x0089c528, 0)` |
+| 4 | `IScript__CreateThingRefWithSquad` | `0x005337bd` | `(obj, 4, &0x0089c528, 1)` |
+| 5 | `IScript__CallEventId5_OrReset` | `0x00533685` | `(obj, 5, &0x0089c528, 0)` |
+| 6 | `IScript__CallEventId6_OrReset` | `0x005335c5` | `(obj, 6, &0x0089c528, 0)` |
+| 7 | `IScript__VFunc_2_00533810` | `0x00533835` | `(obj, 7, &0x0089c528, 0)` |
+| 8–12 | *(none)* | — | no direct `E8` |
+
+Authored names (OnCreate / OnDamage / …) are **not** claimed. Cheapest
+falsifier for a missing static user of 8–12: another `E8` to `0x00539990`
+outside this census, or a `CallEventDirect` path that is really an id-table
+lookup in disguise.
+
 ## Open questions (cheapest falsifier first)
 
 - Who increments `vm+0x224`: CLOSED — `CInstructionOP_CALLLOCAL__VFunc_0_0052ec40`
@@ -194,8 +222,10 @@ pointer array into the destination.
   open. Cheapest: read the two trailer dwords out of one shipped
   `MissionScripts/level***` record and watch `CallEvent` skip or take the
   preamble.
-- The 13 event-id slots at `eventObj+0x14`. IScript's 2002 arm already
-  calls `CallEvent(..., 2, &0x0089c528, 0)` — slot 2 is one named user;
-  the other twelve are not.
-- The second `.rdata` holder of `FUN_0052da00` at `0x005dab54` is not a
-  RETURN vtable. Class identity of that table is unclaimed.
+- The 13 event-id slots at `eventObj+0x14`. CLOSED for static
+  *users* of ids 0–7 (see the table above). Ids 8–12 have no direct
+  `E8` to `CallEvent`. Authored event names remain open.
+- The second `.rdata` holder of `FUN_0052da00` at `0x005dab54`: CLOSED as
+  `CWarspiteDomeBehaviourType` vtable `0x005dab50[+4]` (cohort census
+  `col_ptr 0x005dab4c`). Same thunk body (`mov eax,0x17; ret`), different
+  class; do not rename it to a RETURN getter.
