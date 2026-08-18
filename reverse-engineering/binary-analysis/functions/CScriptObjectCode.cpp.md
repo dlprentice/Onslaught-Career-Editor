@@ -329,6 +329,15 @@ the handler). Scout: entry 5 `JMPFALSE 14`, body
 `PlayCharMessage` + `PostEvent("Enemy Engaged")`, target 14 is
 `op0d` immediately after.
 
+Immediately after the guard: PUSH 833 / CALL 147 / NOOP_0D 14
+(the 14 NOOP_0D rows are the empty delta-1 handlers). Walking past
+a leading PUSH run, **518** of 994 hit a `CALL` as the first
+native. Top shipped first-natives (parser `natives.json`, native 0
+=`FollowWaypoint`): `SetObjective` 75, `Pause` 68,
+`PlayCharMessageWait` 59, `Print` 47, `PlayCharMessage` 32,
+`SetAIState` 26, `GetThingRef` 25. This is occupancy, not a claim
+that those natives are the authored purpose of the event.
+
 733 loose `MissionScripts/**/*.msl` contain zero `arrived(`, `timer(`,
 `SetTimer(`, `event("arrived"`, or `event("timer"`.
 
