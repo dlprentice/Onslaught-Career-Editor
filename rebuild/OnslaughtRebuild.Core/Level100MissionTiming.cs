@@ -18,11 +18,13 @@ public static class Level100MissionTiming
 
     public const int AuthoredTriggerRadiusMillimeters = 5_000;
     public const int HealthPollCadenceTicks = SimulationConstants.TicksPerSecond;
-    public const int SuccessCountdownTicks = 5 * SimulationConstants.TicksPerSecond;
-    // Pristine CGame::DeclareLevelLost @ 0x0046F430 stores 2.0f here. The
-    // pinned GPL source still says 5.0f, so this is an evidenced retail/source
-    // divergence rather than a source-port choice.
-    public const int FailureCountdownTicks = 2 * SimulationConstants.TicksPerSecond;
+    // CGame::DeclareLevelWon @ 0x0046F338 stores 0x40A00000 = 5.0f at +0x48
+    // for every world that is not 741/742. Level 100 takes that arm.
+    public const int SuccessCountdownTicks = RetailGameEndCountdown.WonTicks;
+    // CGame::DeclareLevelLost @ 0x0046F4A8 stores 0x40000000 = 2.0f at +0x48.
+    // The pinned GPL source still says 5.0f, so this is an evidenced
+    // retail/source divergence rather than a source-port choice.
+    public const int FailureCountdownTicks = RetailGameEndCountdown.LostTicks;
     public const int FailureMenuDelayTicks = SimulationConstants.TicksPerSecond / 2;
     // CGame::DeclareLevelLost schedules PAUSE_GAME 15 seconds after a
     // player-death loss and starts CONTINUE_FADE_OUT_GAME_SOUNDS on the next
