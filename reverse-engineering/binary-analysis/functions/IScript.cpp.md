@@ -55,18 +55,21 @@ name value into a `CPostEventData` and scheduling event `0x7d0` against the
 `UpdateWaypointFollowing` on the same `this`; `ret 4`.
 
 **2001** (`0x00538642`): `esi = [msg+0xc]`; null returns. Then
-`push esi; mov ecx,0x0089c5e0; call 0x539910` (CScriptObjectCode method),
+`push esi; mov ecx,0x0089c5e0; call 0x539910`
+(`CScriptObjectCode__CopyState`),
 `push esi; lea ecx,[edi+0x28]; call 0x004e5bd0` (`CSPtrSet__Remove` from the
 IScript's own `+0x28` set), `mov edx,[esi]; push 1; mov ecx,esi;
 call [edx+4]` (virtual delete of the payload with flags = 1), then a state
-selector `cmp [0x008a9ac0],4`: `==4` → `mov ecx,0x0089c5e0; call 0x539980`;
-else → `push [0x0089c7f4]; mov ecx,0x0089c5e0; call 0x539ae0`; `ret 4`.
-The 2001 payload is the destroyed-object notification.
+selector `cmp [0x008a9ac0],4`: `==4` → `mov ecx,0x0089c5e0; call 0x539980`
+(`CScriptObjectCode__Reset`); else → `push [0x0089c7f4];
+mov ecx,0x0089c5e0; call 0x539ae0` (`CScriptObjectCode__GotoInstruction`);
+`ret 4`. The 2001 payload is the destroyed-object notification.
 
 **2002** (`0x00538601`): guard `mov eax,[0x0089c7f0]; test eax,eax;
 jne return`; `cmp [0x008a9ac0],4`: `==4` → `mov ecx,0x0089c5e0;
-call 0x539980`; else → `mov eax,[edi+0xc]; push 0; push 0x0089c528;
-push 2; push eax; mov ecx,0x0089c5e0; call 0x539990`; `ret 4`.
+call 0x539980` (`CScriptObjectCode__Reset`); else → `mov eax,[edi+0xc];
+push 0; push 0x0089c528; push 2; push eax; mov ecx,0x0089c5e0;
+call 0x539990` (`CScriptObjectCode__CallEvent`); `ret 4`.
 
 ### `CScriptEventNB__UpdateWaypointFollowing` — owner review (not yet a rename)
 
@@ -134,5 +137,6 @@ db.18627.
   key.
 - The dispatch globals `0x008a9ac0` (state selector) and `0x0089c7f0` (2002
   guard): which state machine owns them.
-- The 2002 arm's four-argument `0x539990(edi+0xc, 2, &0x0089c528, 0)`:
-  what the `2` and the `0x0089c528` target mean.
+- The 2002 arm's `CScriptObjectCode__CallEvent` invocation
+  (`this=0x0089c5e0`, args `[edi+0xc], 2, &0x0089c528, 0`): what event `2`
+  and the `0x0089c528` target mean.
