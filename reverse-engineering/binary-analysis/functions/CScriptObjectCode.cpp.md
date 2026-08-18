@@ -1,7 +1,7 @@
 # CScriptObjectCode function map
 
 Status: active static function map
-Last updated: 2026-08-18 (PC=0 preamble: file-scope PUSH/POP, no leftover CALL)
+Last updated: 2026-08-18 (GETTOP is runtime assignment; preamble stays POP)
 Source File: `C:\dev\ONSLAUGHT2\MissionScript\ScriptObjectCode.cpp` (the
 VM's `__FILE__` chain is established by the adjacent
 [`ScriptObjectCode.cpp.md`](ScriptObjectCode.cpp.md) wave receipts) | Binary:
@@ -70,7 +70,9 @@ arm at `0x00539265`.
 | `0x0052e0a0` | `CInstructionOP_PUSHPC__VFunc_0_0052e0a0` | `56 688f000000 8bf1 68c4c56400 6a18 6a08 … c700f84a5e00 894804 e84bb30000 … c20c00` | `ret 0xc`. Allocates an 8-byte `CInt` (`vptr 0x005e4af8`) whose value is the instruction attribute `[this+4]` and `Push`es it. That attribute is a stored PC, not the live `vm+0x214`. Together with `CALLLOCAL` this is the compiled call sequence (push return PC, then jump and increment depth). HIGH on the bytes. The pairing is unused on the 762-object corpus (0× `0x19`, 0× `0x1a` in 55,836 instructions). |
 | `0x0052e2c0` | `CInstructionOP_PUSH__VFunc_00_0052e2c0` | `56 8bf1 8b4c2410 8b4604 50 e890b40000 50 8bce e868edffff 8b4c240c 50 e83eb10000 5e c20c00` at file offset `0x0012e2c0` | `ret 0xc`. `symbol = GetInstruction(symbols, [this+4])` (`0x00539760`); clone = `CAsmInstruction__GetAttributeValue(symbol)` (`0x0052d040`); `Push(stack, clone)` (`0x00539420`). HIGH. The 332 non-empty shipped preambles are this opcode paired with POP. |
 | `0x0052d040` | `CAsmInstruction__GetAttributeValue` | `8b442404 8b4808 85c9 7408 8b01 ff5048 c20400 … 6878c56400 … c700f84a5e00 c7400400000000 c20400` | `ret 4`; arg is a **symbol record**, not an instruction. If `[symbol+8]` clone via `vtable[+0x48]`. Else `CConsole__Printf` `"FATAL ERROR:  no data set for attribute '%s'"` (`0x0064c5f8`) and allocate an 8-byte `CInt` 0 (`vptr 0x005e4af8`). The live name is the table label; the body is a value-clone. HIGH on the bytes. |
-| `0x0052e2f0` | `CInstructionOP_POP__VFunc_0_0052e2f0` | `8b4104 8b4c240c 56 50 e862b40000 8bf0 8b4e08 85c9 7406 8b11 6a01 ff12 8b4c240c e85ab10000 894608 5e c20c00` | `ret 0xc`. `symbol = CScriptObjectCode__GetInstruction(symbols, attr)` (`0x00539760` = `[table][index]`); if `[symbol+8]` delete via `vtable[0](1)`; `[symbol+8] = Pop(stack)` (`0x00539470`). HIGH. All 128 shipped `hit` 13-slot bodies start with this opcode, so CallEvent id 4's argc=1 thing-ref lands in that local. |
+| `0x0052e2f0` | `CInstructionOP_POP__VFunc_0_0052e2f0` | `8b4104 8b4c240c 56 50 e862b40000 8bf0 8b4e08 85c9 7406 8b11 6a01 ff12 8b4c240c e85ab10000 894608 5e c20c00` | `ret 0xc`. `symbol = CScriptObjectCode__GetInstruction(symbols, attr)` (`0x00539760` = `[table][index]`); if `[symbol+8]` delete via `vtable[0](1)`; `[symbol+8] = Pop(stack)` (`0x00539470`). HIGH. All 128 shipped `hit` 13-slot bodies start with this opcode, so CallEvent id 4's argc=1 thing-ref lands in that local. File-scope `vars` init uses this; runtime `x = expr` uses GETTOP. |
+| `0x0052e9c0` | `CInstructionOP_GETTOP__VFunc_0_0052e9c0` | `8b4104 8b4c240c 56 50 e892ad0000 8bf0 8b4608 85c0 7518 8b4c240c 50 e8ffaa0000 8b10 8bc8 ff5248 894608 5e c20c00 8b4c240c 57 8b38 6a00 e8e3aa0000 8b4e08 50 ff5714 5f 5e c20c00` at file offset `0x0012e9c0` | `ret 0xc`. `symbol = GetInstruction(symbols, attr)`; peek = `GetTop(stack, 0)` (`0x005394e0`) — **does not pop**. If `[symbol+8] == 0`, clone peek via `vtable[+0x48]` into `[symbol+8]`; else `existing->vtable[+0x14](existing, peek)` (in-place assign). HIGH. `player = GetPlayer(1)` is `CALL` / `GETTOP player` / `REMOVE_TOP`. 1904 shipped GETTOPs, all dest type 0, 0 OOB. |
+| `0x005394e0` | `CScriptObjectCode__GetTop` | `8b8100020000 8b542404 2bc2 85c0 7f18 52 68f4006500 6880f56600 e84082f0ff 83c40c 33c0 c20400 8b4481fc c20400` | `ret 4`; `this` = stack head. `idx = [head+0x200] - arg`; if `idx <= 0` print `"FATAL ERROR: Stack item does not exist in call to GetTop - %d"` (`0x006500f4`) and return 0; else return `[head + idx*4 - 4]`. Arg 0 is the top. HIGH. |
 | `0x00539760` | `CScriptObjectCode__GetInstruction` | `8b01 8b4c2404 8b0488 c20400` | `ret 4`. `return [this][index]`. Used as the symbol-table indexer by PUSH/POP. HIGH on the bytes; the name is the table label, not a claim that the table holds instructions. |
 | `0x00539470` | `CScriptObjectCode__Pop` | `8b8100020000 85c0 7515 689c006500 … 33c0 c3 48 898100020000 8b0481 c3` | Zero-arg. `this` = stack head. Empty (`[head+0x200]==0`) prints via `0x0065009c` and returns 0; else `--depth` and return `[head + depth*4]`. HIGH. |
 | `0x00539910` | `CScriptObjectCode__CopyState` | `8b7c240c 8bf1 8b4708 8d570c 894608 8b8f14020000 898e14020000 52 8d4e0c e81afaffff … 8b8718020000 898618020000 … c7861002000000000000 8bc6 … c20400` | `ret 4`, one arg = source. Copies `[src+8]`, `[src+0x214]` (PC), calls `CScriptObjectCode__RestoreStack` (`0x00539350`) with `(dst+0xc, src+0xc)`, then copies `+0x218`, `+0x220`, `+0x21c`, `+0x224`, and zeroes the running flag `+0x210`. Returns `this`. HIGH. |
@@ -439,6 +441,18 @@ are typed consts (int 418 / bool 296 / float 56); every POP target is
 symbol type 0 (the uninitialized `vars` slot). 0 of 715 event IPs fall
 inside the prefix. 72 of the 715 have no 13-slot IP at all (named
 handlers only) and still carry `trailerB=1`.
+
+Runtime assignment is a different opcode. `CInstructionOP_GETTOP`
+(`0x0052e9c0`) peeks the top via `GetTop(stack, 0)` and writes
+`symbol[attr]+8` (first time: clone `vtable[+0x48]`; later:
+`vtable[+0x14]` assign). It does not pop — the statement's
+`REMOVE_TOP` discards the expression. Scout `AirborneDrone2` init:
+`SetObjective(); SetAllegiance(1); player = GetPlayer(1); Attack(player);`
+is CALL / REMOVE_TOP / PUSH 1 / CALL / REMOVE_TOP / PUSH 1 / CALL
+GetPlayer / **GETTOP player** / REMOVE_TOP / PUSH player / CALL Attack /
+REMOVE_TOP. 1904 shipped GETTOPs, every dest type 0. The 1148 type-0
+PUSHes whose symbol is never a POP dest (`player`, `target`,
+`component`, …) are GETTOP-assigned, not uninitialized reads.
 
 So the preamble does **not** leave CALL args on the stack: it never
 contains CALL. It is the compiled file-scope initializer. Loose `*.msl`
