@@ -50,6 +50,8 @@
          blink can be pinned without an engine; DrawClickToStart is the consumer. -->
     <Compile Include="..\OnslaughtRebuild.Godot\RetailClickToStartPrompt.cs"
              Link="godot-startup-source\RetailClickToStartPrompt.cs" />
+    <Compile Include="..\OnslaughtRebuild.Godot\RetailFeMessBox.cs"
+             Link="godot-startup-source\RetailFeMessBox.cs" />
   </ItemGroup>
 
   <ItemGroup>

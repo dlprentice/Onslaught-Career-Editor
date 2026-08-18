@@ -1847,8 +1847,16 @@ public sealed partial class RetailFrontendFlow : Control
 
     private void DrawQuitConfirm()
     {
-        // Reconstruction messbox chrome (Steam FEMessBox layout not fully ported).
-        DrawRect(new Rect2(70f, 160f, 500f, 140f), new Color(0f, 0f, 0f, 0.82f));
+        // Quit Create() is 400 wide at (320, 240). Height is still
+        // reconstruction: the 4th stack immediate is 0.1f, not a pixel extent.
+        const float reconstructionHeight = 140f;
+        DrawRect(
+            new Rect2(
+                RetailFeMessBox.QuitLeft,
+                RetailFeMessBox.QuitCenterY - (reconstructionHeight * 0.5f),
+                RetailFeMessBox.QuitWidth,
+                reconstructionHeight),
+            new Color(0f, 0f, 0f, 0.82f));
         DrawTextCentered(QuitConfirmPrompt, new Vector2(320f, 190f), 1.7f, Colors.White);
 
         DrawQuitConfirmChoice("No", 220f, _session.SelectedQuitConfirmIndex == 0);
