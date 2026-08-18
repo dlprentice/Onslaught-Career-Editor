@@ -20,7 +20,8 @@ live in `developer_state.json` and the campaign ledgers.
   the player chose. Game Options does the same for the opened defaultoptions.bea.
   Cheats names the same three places for the career it is about to copy.
   A Lore search with no hits now says to try another word or clear the search,
-  instead of calling the empty tree filtered results.
+  instead of calling the empty tree filtered results. Cheats will not offer to
+  write into a folder inside the installed game.
 
 ## 1.0.11 — 2026-08-07
 

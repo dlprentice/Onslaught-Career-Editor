@@ -66,6 +66,31 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             Assert.Equal(CareerSaveLocationKind.SafeCopy, CareerSaveLocation.Classify(save));
         }
 
+        [Fact]
+        public void ADirectoryIsClassifiedTheSameWayAsAFileInsideIt()
+        {
+            using var lab = new LocationLab();
+            lab.MakeInstalledGame();
+            string installedSave = lab.WriteSave("savegames", "career.bes");
+            Assert.Equal(
+                CareerSaveLocationKind.InstalledGame,
+                CareerSaveLocation.Classify(Path.GetDirectoryName(installedSave)));
+
+            using var copy = new LocationLab();
+            copy.MakeInstalledGame();
+            copy.WriteFile(GameProfilePreflightService.ProfileManifestFileName, "{}");
+            string copySave = copy.WriteSave("savegames", "career.bes");
+            Assert.Equal(
+                CareerSaveLocationKind.SafeCopy,
+                CareerSaveLocation.Classify(Path.GetDirectoryName(copySave)));
+
+            using var chosen = new LocationLab();
+            string chosenSave = chosen.WriteSave("Documents", "career.bes");
+            Assert.Equal(
+                CareerSaveLocationKind.ChosenFolder,
+                CareerSaveLocation.Classify(Path.GetDirectoryName(chosenSave)));
+        }
+
         private sealed class LocationLab : IDisposable
         {
             public LocationLab()

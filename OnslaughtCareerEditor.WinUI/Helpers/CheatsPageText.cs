@@ -147,6 +147,11 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
 
             if (!string.IsNullOrWhiteSpace(chosenFolder))
             {
+                if (CareerSaveLocation.Classify(chosenFolder) == CareerSaveLocationKind.InstalledGame)
+                {
+                    return "That folder is inside your installed game. The app will not write there.";
+                }
+
                 return $"Going into the folder \"{Path.GetFileName(Path.TrimEndingDirectorySeparator(chosenFolder))}\". "
                     + "Copy it into a safe copy's savegames folder when you want to play it.";
             }
@@ -180,6 +185,11 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
             if (string.IsNullOrWhiteSpace(destinationDirectory))
             {
                 return "Choose where the new save should go.";
+            }
+
+            if (CareerSaveLocation.Classify(destinationDirectory) == CareerSaveLocationKind.InstalledGame)
+            {
+                return "Choose a folder that is not inside the installed game.";
             }
 
             return null;

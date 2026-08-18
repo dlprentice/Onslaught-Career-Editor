@@ -435,6 +435,47 @@ public class CheatsPageHonestyTests
     }
 
     [Test]
+    public void AnInstalledDestinationIsNamedAndBlocksTheWrite()
+    {
+        using var lab = new SourceLocationLab();
+        lab.MakeInstalledGame();
+        string savegames = Path.GetDirectoryName(lab.WriteSave("savegames", "career.bes"))!;
+        CheatSaveName ready = CheatSaveNameComposer.Compose(null, [CheatCodeCatalog.AllGoodiesId]);
+
+        string summary = CheatsPageText.BuildDestinationSummary(null, savegames);
+        string? blocker = CheatsPageText.DescribeWhatIsStillNeeded(
+            Path.Combine("C:", "saves", "MyCareer.bes"),
+            ready,
+            savegames);
+
+        Assert.That(summary, Does.Contain("installed game"));
+        Assert.That(summary.ToLowerInvariant(), Does.Contain("will not write"));
+        Assert.That(summary, Does.Not.Contain(lab.Root));
+        Assert.That(blocker, Is.Not.Null);
+        Assert.That(blocker, Does.Contain("installed game"));
+    }
+
+    [Test]
+    public void ASafeCopyDestinationIsStillAllowed()
+    {
+        using var lab = new SourceLocationLab();
+        lab.MakeInstalledGame();
+        lab.WriteFile(GameProfilePreflightService.ProfileManifestFileName, "{}");
+        string savegames = Path.GetDirectoryName(lab.WriteSave("savegames", "career.bes"))!;
+        CheatSaveName ready = CheatSaveNameComposer.Compose(null, [CheatCodeCatalog.AllGoodiesId]);
+
+        string summary = CheatsPageText.BuildDestinationSummary(null, savegames);
+        string? blocker = CheatsPageText.DescribeWhatIsStillNeeded(
+            Path.Combine("C:", "saves", "MyCareer.bes"),
+            ready,
+            savegames);
+
+        Assert.That(summary.ToLowerInvariant(), Does.Not.Contain("will not write"));
+        Assert.That(summary.ToLowerInvariant(), Does.Not.Contain("installed game"));
+        Assert.That(blocker, Is.Null);
+    }
+
+    [Test]
     public void TheSourceSummaryPromisesTheOriginalIsOnlyRead()
     {
         string summary = CheatsPageText.BuildSourceSummary(Path.Combine("C:", "saves", "MyCareer.bes"));

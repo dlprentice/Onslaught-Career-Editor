@@ -14,17 +14,23 @@ namespace OnslaughtCareerEditor.AppCore
     /// <summary>
     /// Where a career save is sitting. Layout only: it never writes, and it never treats a
     /// playable copy this app made as the installed game even though that copy also has
-    /// BEA.exe and a data folder.
+    /// BEA.exe and a data folder. A directory can be classified the same way as a file
+    /// inside it, so a destination folder uses this instead of a second walk.
     /// </summary>
     public static class CareerSaveLocation
     {
         public static CareerSaveLocationKind Classify(string? path)
         {
-            if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
+            if (string.IsNullOrWhiteSpace(path))
+                return CareerSaveLocationKind.Missing;
+
+            bool isFile = File.Exists(path);
+            bool isDirectory = !isFile && Directory.Exists(path);
+            if (!isFile && !isDirectory)
                 return CareerSaveLocationKind.Missing;
 
             string fullPath = Path.GetFullPath(path);
-            string? current = Path.GetDirectoryName(fullPath);
+            string? current = isFile ? Path.GetDirectoryName(fullPath) : fullPath;
             bool sawInstalledLayout = false;
 
             while (!string.IsNullOrWhiteSpace(current))
