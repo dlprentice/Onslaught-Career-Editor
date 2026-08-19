@@ -32,6 +32,12 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
             "Make a safe copy in Windowed & Mods, or press Choose a folder instead.";
 
         /// <summary>
+        /// The short InfoBar title when refresh still finds no copies. It
+        /// names the next step; the body is <see cref="NoSafeCopiesFoundNote"/>.
+        /// </summary>
+        public const string NoSafeCopiesFoundTitle = "Make a safe copy first.";
+
+        /// <summary>
         /// The short marker shown beside a cheat nobody has watched work, or null for one somebody
         /// has. This is the visible half of the evidence: the full sentence moves behind the
         /// disclosure, but a player must not have to open anything to learn that a switch has

@@ -344,6 +344,17 @@ public class CheatsPageHonestyTests
             PageXaml,
             Does.Contain(noSaveChosen),
             "The markup's starting text must be the same sentence the code produces, or the page opens on a stale one.");
+        Assert.That(
+            File.ReadAllText(PageCodeBehindPath),
+            Does.Not.Contain("No safe copies yet"),
+            "The refresh InfoBar title used to describe emptiness. Name the next step.");
+        Assert.That(
+            File.ReadAllText(PageCodeBehindPath),
+            Does.Contain("CheatsPageText.NoSafeCopiesFoundTitle"));
+        Assert.That(
+            CheatsPageText.NoSafeCopiesFoundTitle,
+            Does.Not.Contain("yet").IgnoreCase);
+        Assert.That(CheatsPageText.NoSafeCopiesFoundTitle, Does.Contain("safe copy"));
     }
 
     [Test]

@@ -284,7 +284,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             RefreshComposition();
             SetStatus(
                 InfoBarSeverity.Informational,
-                _safeCopyTargets.Count == 0 ? "No safe copies yet" : "Ready",
+                _safeCopyTargets.Count == 0 ? CheatsPageText.NoSafeCopiesFoundTitle : "Ready",
                 _safeCopyTargets.Count == 0
                     ? CheatsPageText.NoSafeCopiesFoundNote
                     : $"Found {_safeCopyTargets.Count} safe {(_safeCopyTargets.Count == 1 ? "copy" : "copies")}.");
