@@ -115,6 +115,10 @@ namespace OnslaughtCareerEditor.AppCore
         public const string CopyFolderMissing = "That copy folder could not be found.";
         public const string CopiedBeaMissing = "That copy is missing BEA.exe.";
         public const string SourceExecutableMissing = "That source executable could not be found.";
+        public const string Level100EnglishDatMissing = "That copy is missing english.dat.";
+        public const string Level100EnglishDatBackupMissing = "That copy is missing english.dat.original.backup.";
+        public const string Level100ResourceMissing = "That copy is missing 100_res_PC.aya.";
+        public const string Level100ResourceBackupMissing = "That copy is missing 100_res_PC.aya.original.backup.";
         public const string SourceFolderMissing = "That game folder could not be found.";
         public const string ProfileFolderRequired = "An app-owned profile folder is required.";
         public const string WorkspaceFileMustStayInside = "The workspace file must stay inside the app-owned profile folder.";
@@ -664,9 +668,9 @@ namespace OnslaughtCareerEditor.AppCore
             string targetPath = ResolveProfileRelativePath(resolvedGameRoot, targetRelativePath, "Level 100 text target");
             string backupPath = ResolveProfileRelativePath(resolvedGameRoot, backupRelativePath, "Level 100 text backup");
             if (!File.Exists(targetPath))
-                throw new FileNotFoundException("Playable copied game folder Level 100 text target is missing.", targetPath);
+                throw new FileNotFoundException(Level100EnglishDatMissing);
             if (!File.Exists(backupPath))
-                throw new FileNotFoundException("Playable copied game folder Level 100 text backup is missing.", backupPath);
+                throw new FileNotFoundException(Level100EnglishDatBackupMissing);
 
             string originalSha256 = RequiredString(modEl, "originalSha256", "Level 100 text metadata");
             string modifiedSha256 = RequiredString(modEl, "modifiedSha256", "Level 100 text metadata");
@@ -745,9 +749,9 @@ namespace OnslaughtCareerEditor.AppCore
             string targetPath = ResolveProfileRelativePath(resolvedGameRoot, targetRelativePath, "Level 100 early-flight target");
             string backupPath = ResolveProfileRelativePath(resolvedGameRoot, backupRelativePath, "Level 100 early-flight backup");
             if (!File.Exists(targetPath))
-                throw new FileNotFoundException("Playable copied game folder Level 100 early-flight target is missing.", targetPath);
+                throw new FileNotFoundException(Level100ResourceMissing);
             if (!File.Exists(backupPath))
-                throw new FileNotFoundException("Playable copied game folder Level 100 early-flight backup is missing.", backupPath);
+                throw new FileNotFoundException(Level100ResourceBackupMissing);
 
             string originalSha256 = RequiredString(modEl, "originalSha256", "Level 100 early-flight metadata");
             string modifiedSha256 = RequiredString(modEl, "modifiedSha256", "Level 100 early-flight metadata");
@@ -1391,7 +1395,7 @@ namespace OnslaughtCareerEditor.AppCore
             string targetPath = Path.Combine(targetRoot, Level100EnglishDatRelativePath.Replace('/', Path.DirectorySeparatorChar));
             string backupPath = Path.Combine(targetRoot, Level100EnglishDatBackupRelativePath.Replace('/', Path.DirectorySeparatorChar));
             if (!File.Exists(targetPath))
-                throw new FileNotFoundException("The copied game does not contain data\\language\\english.dat.", targetPath);
+                throw new FileNotFoundException(Level100EnglishDatMissing);
 
             RejectExistingReparseAncestors(targetPath, "Level 100 English language table path");
             RejectReparsePoint(targetPath, "Level 100 English language table");
@@ -1474,7 +1478,7 @@ namespace OnslaughtCareerEditor.AppCore
             string targetPath = Path.Combine(targetRoot, Level100ResourceArchiveRelativePath.Replace('/', Path.DirectorySeparatorChar));
             string backupPath = Path.Combine(targetRoot, Level100ResourceArchiveBackupRelativePath.Replace('/', Path.DirectorySeparatorChar));
             if (!File.Exists(targetPath))
-                throw new FileNotFoundException("The copied game does not contain data\\resources\\100_res_PC.aya.", targetPath);
+                throw new FileNotFoundException(Level100ResourceMissing);
 
             RejectExistingReparseAncestors(targetPath, "Level 100 mission archive path");
             RejectReparsePoint(targetPath, "Level 100 mission archive");

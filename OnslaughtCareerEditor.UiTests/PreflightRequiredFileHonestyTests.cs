@@ -50,6 +50,19 @@ public class PreflightRequiredFileHonestyTests
         Assert.That(source, Does.Not.Contain("Required game entry is missing: BEA.exe"));
         Assert.That(source, Does.Not.Contain("Executable override is missing."));
         Assert.That(source, Does.Not.Contain("FileNotFoundException($\"Required game file is missing: {entry}\", path)"));
+        Assert.That(source, Does.Not.Contain("Level 100 text target is missing."));
+        Assert.That(source, Does.Not.Contain("Level 100 text backup is missing."));
+        Assert.That(source, Does.Not.Contain("Level 100 early-flight target is missing."));
+        Assert.That(source, Does.Not.Contain("Level 100 early-flight backup is missing."));
+        Assert.That(source, Does.Not.Contain("data\\\\language\\\\english.dat."));
+        Assert.That(source, Does.Not.Contain("data\\\\resources\\\\100_res_PC.aya."));
+        Assert.That(source, Does.Contain("Level100EnglishDatMissing"));
+        Assert.That(source, Does.Contain("Level100EnglishDatBackupMissing"));
+        Assert.That(source, Does.Contain("Level100ResourceMissing"));
+        Assert.That(source, Does.Contain("Level100ResourceBackupMissing"));
+        Assert.That(source, Does.Not.Contain("FileNotFoundException(Level100EnglishDatMissing,"));
+        Assert.That(source, Does.Not.Contain("FileNotFoundException(Level100ResourceMissing,"));
+        Assert.That(source, Does.Not.Contain("FileNotFoundException(Level100ResourceBackupMissing,"));
     }
 
     [Test]
