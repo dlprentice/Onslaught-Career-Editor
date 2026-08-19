@@ -72,6 +72,16 @@ public class SaveLabPageHonestyTests
     }
 
     [Test]
+    public void GameOptionsOutputHintNamesTheFileNotAPath()
+    {
+        string options = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI", "Pages", "SavesPage.Configuration.cs"));
+
+        Assert.That(options, Does.Contain("The output file must remain a .bea / defaultoptions.bea file."));
+        Assert.That(options, Does.Not.Contain("Output path must remain"));
+    }
+
+    [Test]
     public void OverwriteQuestionNamesTheFileNotThePath()
     {
         string path = Path.Combine(

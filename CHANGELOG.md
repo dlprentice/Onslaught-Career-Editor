@@ -84,6 +84,7 @@ live in `developer_state.json` and the campaign ledgers.
   with a path or Win32 dump uses the shared keep-failed sentence. A missing
   patch or profile catalog no longer dumps the exception. Save Lab names
   the output file, not a path, when the destination is not a career save.
+  Game Options does the same for an options file that is not .bea.
   A failed Save Editor write that still looks like a dump uses that same
   kind of sentence. An empty Lore library says to refresh, instead of
   describing the emptiness.

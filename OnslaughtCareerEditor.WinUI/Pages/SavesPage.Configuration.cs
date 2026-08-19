@@ -408,7 +408,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
             else if (!outputIsOptionsLike)
             {
-                ConfigurationSafetyHintTextBlock.Text = "Output path must remain a .bea / defaultoptions.bea path.";
+                ConfigurationSafetyHintTextBlock.Text = "The output file must remain a .bea / defaultoptions.bea file.";
             }
             else if (AreSamePaths(inputPath, outputPath))
             {
