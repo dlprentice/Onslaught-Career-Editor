@@ -398,7 +398,7 @@ namespace OnslaughtCareerEditor.AppCore
 
                 string appOwnedProfilesRoot = FileMutationSafety.NormalizeLocalPath(
                     AppConfig.GetGameProfilesDir(),
-                    "App-owned profiles root");
+                    "app-owned profile folder");
                 if (!FileMutationSafety.IsSameOrUnderRoot(outputPath, appOwnedProfilesRoot))
                 {
                     return BesFilePatcher.PatchGoodieStates(inputPath, outputPath, stateOverride);

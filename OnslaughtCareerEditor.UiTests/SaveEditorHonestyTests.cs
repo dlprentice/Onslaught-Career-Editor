@@ -611,4 +611,14 @@ public class SaveEditorHonestyTests
         Assert.That(rankStatus.Reason, Does.Not.Contain("The selected save file was not found"));
         Assert.That(rankStatus.Reason, Does.Contain("Nothing was changed"));
     }
+
+    [Test]
+    public void ASaveInsideACopyNamesTheProfileFolderNotARoot()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "SaveEditorService.cs"));
+
+        Assert.That(source, Does.Not.Contain("App-owned profiles root"));
+        Assert.That(source, Does.Contain("\"app-owned profile folder\""));
+    }
 }

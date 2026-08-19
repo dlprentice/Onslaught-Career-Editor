@@ -70,4 +70,14 @@ public class CheatsWriteHonestyTests
         Assert.That(method, Does.Contain("CheatsPageText.DescribeWriteOutcome"));
         Assert.That(method, Does.Not.Contain("outcome.Message"));
     }
+
+    [Test]
+    public void ASaveInsideACopyNamesTheProfileFolderNotARoot()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "CheatSaveWriterService.cs"));
+
+        Assert.That(source, Does.Not.Contain("App-owned profiles root"));
+        Assert.That(source, Does.Contain("\"app-owned profile folder\""));
+    }
 }

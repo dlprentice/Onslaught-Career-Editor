@@ -200,7 +200,7 @@ namespace OnslaughtCareerEditor.AppCore
 
                 string profilesRoot = FileMutationSafety.NormalizeLocalPath(
                     AppConfig.GetGameProfilesDir(),
-                    "App-owned profiles root");
+                    "app-owned profile folder");
                 if (!FileMutationSafety.IsSameOrUnderRoot(outputPath, profilesRoot))
                 {
                     // Ordinary folder. The guarded transaction still refuses anything inside an
