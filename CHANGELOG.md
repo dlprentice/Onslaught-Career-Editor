@@ -97,7 +97,9 @@ live in `developer_state.json` and the campaign ledgers.
   loaded patch or profile catalog is named without the file path. Home
   names a missing folder, an empty save list, or a failed save count as a
   next step, not a dash. A failed Game Options write that still looks
-  like a dump uses the shared nothing-was-changed sentence.
+  like a dump uses the shared nothing-was-changed sentence. A failed
+  focused Goodie write that still looks like a dump uses that same
+  sentence.
 
 ## 1.0.11 — 2026-08-07
 

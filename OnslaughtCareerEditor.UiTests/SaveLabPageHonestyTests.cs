@@ -150,6 +150,24 @@ public class SaveLabPageHonestyTests
     }
 
     [Test]
+    public void TheFocusedGoodiePatchResultUsesTheNamedFailureSentence()
+    {
+        string code = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot,
+            "OnslaughtCareerEditor.WinUI",
+            "Pages",
+            "SavesPage.xaml.cs"));
+
+        int start = code.IndexOf("private async void EditorPatchFocusedGoodieButton_Click", StringComparison.Ordinal);
+        int end = code.IndexOf("private async void EditorPatchButton_Click", StringComparison.Ordinal);
+        Assert.That(start, Is.GreaterThanOrEqualTo(0));
+        Assert.That(end, Is.GreaterThan(start));
+
+        string method = code[start..end];
+        Assert.That(method, Does.Contain("SaveLabPageText.DescribeEditorPatchFailure"));
+    }
+
+    [Test]
     public void AGameOptionsPatchDumpUsesTheSharedFailureSentence()
     {
         string dump = @"Could not write C:\Users\player\Documents\defaultoptions.bea (Win32 error 5).";

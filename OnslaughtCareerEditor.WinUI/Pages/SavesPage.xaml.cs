@@ -798,10 +798,11 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             string stateLabel = MissionScriptGoodieStateSaveCodec.GetStateLabel(request.State);
             string displayMessage = result.Success
                 ? $"Goodie ID {request.GoodieId:000} was written as {stateLabel} to {BuildFileNameSummary(request.OutputPath, "the selected output file")}.\nThe source save was not modified. If this destination is a Safe Game Copy, the output is staged only in that verified copy's savegames folder."
-                : ReplacePathWithLabel(
-                    ReplacePathWithLabel(result.Message, request.InputPath, "selected input save"),
-                    request.OutputPath,
-                    "selected output file");
+                : SaveLabPageText.DescribeEditorPatchFailure(
+                    ReplacePathWithLabel(
+                        ReplacePathWithLabel(result.Message, request.InputPath, "selected input save"),
+                        request.OutputPath,
+                        "selected output file"));
 
             EditorOutputTextBox.Text = displayMessage;
             EditorCopyOutputButton.IsEnabled = !string.IsNullOrWhiteSpace(result.Message);
