@@ -138,6 +138,8 @@ public class SafeCopyManagerSurfaceTests
             SafeCopyManagerText.BuildTotalLine(Array.Empty<SafeCopyOverview>()),
             Is.EqualTo(SafeCopyManagerText.EmptyNote));
         Assert.That(SafeCopyManagerText.EmptyNote, Does.Contain("Create one above"));
+        Assert.That(SafeCopyManagerText.EmptyNote, Does.Not.Contain("yet"));
+        Assert.That(SafeCopyManagerText.EmptyNote, Does.Not.Contain("No safe copies"));
     }
 
     // ------------------------------------------------------------------ the delete

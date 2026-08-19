@@ -28,7 +28,7 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         public const string RefreshButtonText = "Look again";
 
         public const string EmptyNote =
-            "No safe copies yet. Create one above and it will show up here.";
+            "Create one above and it will show up here.";
 
         public const string DeleteDialogTitle = "Delete this copy?";
 
