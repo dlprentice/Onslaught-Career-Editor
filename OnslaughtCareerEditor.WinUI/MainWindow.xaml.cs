@@ -128,7 +128,7 @@ namespace OnslaughtCareerEditor.WinUI
                 ReviewSetupButton,
                 !gameDirectoryReady
                     ? ShellFooterText.NeedsFolderTooltip
-                    : "Open Settings to review the configured install and safe app-owned workspace behavior.");
+                    : "Open Settings to review the configured install and the safe copy.");
         }
 
         public void MaximizeForUserWorkspace()
@@ -912,7 +912,7 @@ namespace OnslaughtCareerEditor.WinUI
                 Title = "Close copied game too?",
                 Content = new TextBlock
                 {
-                    Text = $"Closing Onslaught Toolkit will close or force-stop {copiedGameText} it launched from an app-owned safe copy. Save progress first; the installed game folder stays unchanged.",
+                    Text = $"Closing Onslaught Toolkit will close or force-stop {copiedGameText} it launched from a safe copy. Save progress first; the installed game folder stays unchanged.",
                     TextWrapping = TextWrapping.WrapWholeWords,
                 },
                 PrimaryButtonText = "Close toolkit and copied game",
