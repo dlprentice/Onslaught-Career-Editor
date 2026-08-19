@@ -6,7 +6,7 @@ namespace OnslaughtCareerEditor.AppCore
         {
             string attempted = string.IsNullOrWhiteSpace(attemptedPath)
                 ? string.Empty
-                : " The selected path does not contain catalog.json.";
+                : " The selected folder does not contain catalog.json.";
             const string baseline = "No generated catalog is loaded. This app reads an existing generated local asset catalog only.";
 
             if (!string.IsNullOrWhiteSpace(attemptedPath) &&

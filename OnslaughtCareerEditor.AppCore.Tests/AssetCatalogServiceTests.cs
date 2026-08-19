@@ -908,6 +908,18 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         }
 
         [Fact]
+        public void BuildMissingCatalogStatus_NamesTheFolderNotAPath()
+        {
+            string attempted = Path.Combine("C:", "Games", "export-catalog");
+            string status = AssetCatalogLoadStatusText.BuildMissingCatalogStatus(attempted, detectedGameDirectory: null);
+
+            Assert.Contains("The selected folder does not contain catalog.json.", status);
+            Assert.DoesNotContain("selected path", status, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain(attempted, status, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain(":\\", status);
+        }
+
+        [Fact]
         public void Load_ReturnsEmptyForMissingCatalog()
         {
             string missing = Path.Combine(Path.GetTempPath(), "oce-missing-assets", Guid.NewGuid().ToString("N"));
