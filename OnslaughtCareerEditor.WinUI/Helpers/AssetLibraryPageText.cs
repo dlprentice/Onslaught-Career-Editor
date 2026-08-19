@@ -23,6 +23,12 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         public const string SidecarPreviewMissing =
             "Choose another export if you need a sidecar preview.";
 
+        /// <summary>
+        /// A blank path card used to say only that no file is selected.
+        /// Name the next step.
+        /// </summary>
+        public const string EmptyPathCardNextStep = "Choose a file first.";
+
         public static string? DescribeListNote(bool hasCatalog, string? search, int matchCount)
         {
             if (!hasCatalog || matchCount > 0 || string.IsNullOrWhiteSpace(search))
@@ -40,7 +46,7 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         {
             if (string.IsNullOrWhiteSpace(path))
             {
-                return "No file selected";
+                return EmptyPathCardNextStep;
             }
 
             string trimmed = path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
