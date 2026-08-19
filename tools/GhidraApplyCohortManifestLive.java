@@ -233,6 +233,7 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
         "name-cohort-unique-owner",
         "name-cohort-fun-unique-owner",
         "name-cohort-placeholder-unique-owner",
+        "name-cohort-cockpit-dual-owner",
     };
 
     // Reversibility strings.  These are the ONLY reversibility claims any

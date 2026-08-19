@@ -4,19 +4,19 @@
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; local working copies and historical backups remain untracked.
 
-- Snapshot date: 2026-08-18 (fourteenth refresh: the 7-row
-  `name-cohort-placeholder-unique-owner` SET_NAME)
+- Snapshot date: 2026-08-18 (fifteenth refresh: the 3-row
+  `name-cohort-cockpit-dual-owner` SET_NAME)
 - Ghidra lineage used for the latest review: 12.1.2
 - Imported Steam specimen SHA-256:
   `74154BFAE14DDC8ECB87A0766F5BC381C7B7F1AB334ED7A753040EDA1E1E7750`
 - Imported specimen MD5: `3b456964020070efe696d2cc09464a55`
 - Project payload: 19 files, 187,501,445 bytes
 - Canonical project inventory SHA-256:
-  `70da3a48a120f946e5585683d5437d36107fb152dba0e0a159cb76bfdfce1efd`
-- Current rolling database `db.18631.gbf`: 68,599,808 bytes, SHA-256
-  `b905bffaf4b9a9cfded4a325ee1eba9dd38fbbf4854a66afa138b7ac741b4730`
-  (stable prior `db.18630.gbf`, 68,599,808 bytes, SHA-256
-  `a41bf0d03c1ac45b22fa8fd60f2abca1320e07a983dee4ae464dbe93f62e74d2`, retained)
+  `3cd2c2c9741606d9b9f85ac7ea27d79697c860a0da390e54db96d553efaa7b99`
+- Current rolling database `db.18632.gbf`: 68,599,808 bytes, SHA-256
+  `3334bd33b71712734eb854b900a72721febbfa4fea0540a12f7eb481c4f870bf`
+  (stable prior `db.18631.gbf`, 68,599,808 bytes, SHA-256
+  `b905bffaf4b9a9cfded4a325ee1eba9dd38fbbf4854a66afa138b7ac741b4730`, retained)
 
 **Reproducing the inventory digest.** The convention was previously stated as
 `sha256<TAB>bytes<TAB>relative-posix-path<LF>`, which reads as line-terminated.
@@ -24,8 +24,8 @@ It is not: the digest is over the rows **joined** by `LF` with **no trailing
 newline**, one row per payload file as
 `sha256<TAB>bytes<TAB>relative-posix-path`, sorted by the rendered line, over the
 19 payload files with this `README.md` excluded. Measured 2026-08-18 after the
-name-cohort-placeholder-unique-owner refresh against both the tracked tree and the live maintainer
-project: both reproduce `70da3a48…` at 19 files and 187,501,445 bytes. Re-measure rather
+name-cohort-cockpit-dual-owner refresh against both the tracked tree and the live maintainer
+project: both reproduce `3cd2c2c9…` at 19 files and 187,501,445 bytes. Re-measure rather
 than quote — a concurrent ceremony can move this at any time.
 
 **Promotion note (superseded in place 2026-08-17).** This header previously still
@@ -43,9 +43,10 @@ runtime-witnessed `name-cohort5` → `db.18626` → the 65-slot RTTI vftable
 axis only) → `db.18628` → the 12-row `name-cohort-unique-owner` SET_NAME
 → `db.18629` → the 8-row `name-cohort-fun-unique-owner` SET_NAME
 → `db.18630` → the 7-row `name-cohort-placeholder-unique-owner` SET_NAME
-→ `db.18631` on 2026-08-18, each a separately authorized
-promotion. Internal functions remain **8,329** across all twelve: no function
-was created or destroyed. All twelve ceremonies are owned
+→ `db.18631` → the 3-row `name-cohort-cockpit-dual-owner` SET_NAME
+→ `db.18632` on 2026-08-18, each a separately authorized
+promotion. Internal functions remain **8,329** across all thirteen: no function
+was created or destroyed. All thirteen ceremonies are owned
 by the shared cohort framework's replayable specs under `tools/cohort-specs/`;
 prefer replaying a spec over reading this paragraph. The 34 `.data` rows of the
 original 99-slot pointer cohort were correctly excluded and have a terminal
@@ -166,7 +167,7 @@ the user overrides them:
 | Headless entry | `...\support\analyzeHeadless.bat` |
 | Prior install archive | `D:\GhidraArchives\` (12.0.3 retained there; do not delete) |
 | Working/maintainer project | `C:\Users\david\Ghidra\Projects` (`BEA.gpr` / `BEA.rep`) |
-| Verified off-volume recovery | `D:\BEA-Ghidra-Backups\2026-08-18-name-cohort-placeholder-unique-owner-post-live` (exact current `db.18631` POST snapshot; independently copied, restore-proven byte-identical, and read-only reopened; F: twin at `F:\GhidraBackups\2026-08-18-name-cohort-placeholder-unique-owner-post-live`) |
+| Verified off-volume recovery | `D:\BEA-Ghidra-Backups\2026-08-18-name-cohort-cockpit-dual-owner-post-live` (exact current `db.18632` POST snapshot; independently copied, restore-proven byte-identical, and read-only reopened; F: twin at `F:\GhidraBackups\2026-08-18-name-cohort-cockpit-dual-owner-post-live`) |
 | Prior verified recovery | `D:\BEA-Ghidra-Backups\2026-08-17-tentacle-chain-a-post-live` (`db.18623`, ceremony B's PRE) and `...-tentacle-chain-a-pre-live` (`db.18622`, the chain's PRE) |
 | Xbox Issue-11 POST recovery | `D:\BEA-Ghidra-Backups\2026-08-12-xbox-sparse-symbol-post-anchors-issue11\` (exact isolated project; restored semantic readback passed) |
 | Xbox US-retail POST recovery | `D:\BEA-Ghidra-Backups\2026-08-12-xbox-sparse-symbol-post-anchors-us-retail\` (exact isolated project; restored semantic readback passed) |

@@ -256,17 +256,17 @@ REHEARSAL_COHORTS: dict[str, dict] = {
         },
     },
     "name-cohort-cockpit-dual-owner": {
-        # PRE is current live POST (db.18631). DRAFT: not live-authorized.
-        # Dual-owner sibling-prefix grade needs a reviewer GO.
-        "backup": BACKUPS / "2026-08-18-name-cohort-placeholder-unique-owner-post-live",
+        # PRE is the verified off-volume backup taken immediately before the
+        # 2026-08-18 live apply (db.18631). Replay against that PRE.
+        "backup": BACKUPS / "2026-08-18-name-cohort-cockpit-dual-owner-pre-live",
         "spec": SPECS / "name-cohort-cockpit-dual-owner.spec.tsv",
         "manifest": SPECS / "name-cohort-cockpit-dual-owner-manifest.tsv",
-        "rehearsalOnly": True,
+        "rehearsalOnly": False,
         "archived": {
-            "source": "REHEARSAL ONLY - not live-authorized "
-                      "(dual-owner sibling-prefix grade pending reviewer GO)",
+            "source": "local-lab/name-cohort-cockpit-dual-owner-ceremony-2026-08-18/"
+                      "{apply,readback}.json (live, 2026-08-18)",
             "rows": 3,
-            "applied": 0,
+            "applied": 3,
             "preFunctions": 8329, "postFunctions": 8329,
             "preInstructions": 551232, "postInstructions": 551232,
             "preReferences": 234558, "postReferences": 234558,

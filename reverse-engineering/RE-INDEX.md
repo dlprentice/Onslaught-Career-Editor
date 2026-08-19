@@ -12,11 +12,11 @@ carry bridge and lands the first 16 `REBUILD_READY` contracts (14 rows raise
 C0_OPAQUE → C1_CANDIDATE_PARTIAL, one carries C1 unchanged, one fresh
 GetFriction row enters C1; independently verified CAMPAIGN_VERIFIED with the
 measured on-disk READY/reducer pins). The live and tracked Ghidra database is
-**`db.18631`** after the 2026-08-18 `name-cohort-placeholder-unique-owner` promotion (twelfth
-authorized framework ceremony; 7 unique-RTTI-owner T3/VFuncSlot SET_NAME rows; 8,322
-function rows untouched). Prior lineage through **`db.18630`** is the
-2026-08-18 `name-cohort-fun-unique-owner` promotion (8 unique-RTTI-owner FUN_ SET_NAME rows)
-then `name-cohort-unique-owner`, `varargs-cohort2` and the eight 2026-08-17 promotions — 41 function
+**`db.18632`** after the 2026-08-18 `name-cohort-cockpit-dual-owner` promotion (thirteenth
+authorized framework ceremony; 3 dual-owner sibling-prefix SET_NAME rows; 8,326
+function rows untouched). Prior lineage through **`db.18631`** is the
+2026-08-18 `name-cohort-placeholder-unique-owner` promotion (7 unique-RTTI-owner T3/VFuncSlot SET_NAME rows)
+then `name-cohort-fun-unique-owner`, `name-cohort-unique-owner`, `varargs-cohort2` and the eight 2026-08-17 promotions — 41 function
 boundary corrections recovering 3,293 bytes, then 158 function renames plus 2
 label renames, then 294 ABI signature corrections, then the two sequential
 one-row ceremonies of the
