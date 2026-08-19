@@ -60,11 +60,10 @@ public sealed partial class RetailFrontendFlow
     /// Measured on nine such rows across the Sound and Video frames, retail's
     /// label-side ink always ends at x=316 and its value-side ink always begins at
     /// x=323. Right-aligning the label (colon included) so its advance ends at 319
-    /// and starting the value at 322 reproduces both to within one pixel, the
-    /// residual being per-glyph left bearing rather than layout.
+    /// and starting the value from RetailOptionsDropdownValueDest.DestX
+    /// reproduces both to within the known per-glyph left-bearing residual.
     /// </summary>
     private const float OptionLabelRightX = 319f;
-    private const float OptionValueLeftX = 322f;
 
     private const float OptionRowCenterX = 320f;
 
@@ -290,6 +289,9 @@ public sealed partial class RetailFrontendFlow
         // CMenuItemDropdown dest leftover is RetailOptionsDropdownDest:
         // incoming dest X minus full SIZE.cx. Dest Y keeps the row top.
         // Nearby 5.0 is leftover min dest X. Nearby 2.0 is not dest.
+        // CMenuItemDropdown collapsed value dest leftover is
+        // RetailOptionsDropdownValueDest: incoming dest X plus the pad
+        // leftover. Dest Y keeps the row top. The pad constant is not dest.
         // CMenuItem__Render icon dest leftover is RetailOptionsMenuItemIconDest:
         // incoming dest X minus integer-half SIZE.cx via fsubr.
         // RetailOptionsMenuItemIconDest.DestX. Dest Y keeps the row
@@ -357,15 +359,17 @@ public sealed partial class RetailFrontendFlow
             color);
 
     /// <summary>
-    /// Label right-aligned on the incoming dest leftover. Value stays
-    /// on the measured left column. Dest Y keeps the row top.
+    /// Label right-aligned on the incoming dest leftover. Value dest is
+    /// incoming dest X plus the pad leftover. Dest Y keeps the row top.
     /// </summary>
     private void DrawLabelValueRow(string label, string value, float top, Color color)
     {
         // Incoming dest X minus full SIZE.cx. Nearby leftover min dest X
         // is not dest Y. Nearby 2.0 is not dest. The dest is already a
         // whole pixel, so this is not a half-pixel origin. The 2px
-        // MeasureText residual stays open.
+        // MeasureText residual stays open. Collapsed value dest leftover
+        // is incoming dest X plus the pad leftover.
+        // RetailOptionsDropdownValueDest.DestX. Dest Y keeps the row top.
         DrawOptionsBodyText(
             label,
             new Vector2(
@@ -373,7 +377,11 @@ public sealed partial class RetailFrontendFlow
                 top),
             1f,
             color);
-        DrawOptionsBodyText(value, new Vector2(OptionValueLeftX, top), 1f, color);
+        DrawOptionsBodyText(
+            value,
+            new Vector2(RetailOptionsDropdownValueDest.DestX(OptionLabelRightX), top),
+            1f,
+            color);
     }
 
     private void DrawValueBarRow(RetailOptionsRow row, float top, Color color)
