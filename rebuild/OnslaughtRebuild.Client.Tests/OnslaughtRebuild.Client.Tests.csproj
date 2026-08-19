@@ -70,6 +70,8 @@
              Link="godot-startup-source\RetailClickToStartProcess.cs" />
     <Compile Include="..\OnslaughtRebuild.Godot\RetailClickToStartProcessHead.cs"
              Link="godot-startup-source\RetailClickToStartProcessHead.cs" />
+    <Compile Include="..\OnslaughtRebuild.Godot\RetailMainMenuHitTest.cs"
+             Link="godot-startup-source\RetailMainMenuHitTest.cs" />
     <Compile Include="..\OnslaughtRebuild.Godot\RetailFeMessBox.cs"
              Link="godot-startup-source\RetailFeMessBox.cs" />
   </ItemGroup>
