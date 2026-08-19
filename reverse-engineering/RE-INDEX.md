@@ -1,10 +1,10 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-08-17
+Last updated: 2026-08-18
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
-Current replay authority is Generation 31 via
+Current replay authority is Generation 31 **v2** via
 `developer_state.json` → `current_re_authority`; Generation 73 is a projection
 oracle only, and the Generation-10 block below is historical. Generation 31
 re-grounds on exact `db.18624` geometry through the Generation-30 literal-pin
@@ -103,10 +103,11 @@ This block selects the immutable semantic campaign parent; it does not describe
 the rolling Ghidra database. Read the
 [`canonical Ghidra owner`](ghidra/README.md) for the current structural snapshot
 and latest backed-up live promotion. Select campaign authority from
-`developer_state.json` → `current_re_authority`: canonical Generation 31 at
+`developer_state.json` → `current_re_authority`: canonical Generation 31 **v2** at
 `local-lab/re-campaign-incident-recovery-20260808-v1/generation-31-current-8329-db18624-v2/`,
 READY `2e77c62d236edacbe4974ca844a6ac0b692e84b3259b884b8afc25a29aad4219`,
 frozen reducer `21ad46fff9d2aec8034a4edcf2c83fad627c2fcae3a9a21ebac7e03976c7627b`.
+v1 READY `b99b6e4f…` and every `generation-31-*-v1*` directory are superseded.
 It contains 8,329 functions: 231 C1, ten bounded C2, and 8,088 OPAQUE. Its
 14,365 contracts split as 14,123 `C0_OPAQUE`, 232 C1, and ten C2, and the
 first 16 contracts are `REBUILD_READY` (rebuild ledger: 14,340 NOT_READY, 8

@@ -1,7 +1,7 @@
 # Local lab overlay
 
 Status: active — the ignored-directory boundary
-Last updated: 2026-08-06.
+Last updated: 2026-08-18.
 Summary: which local paths own retail inputs and bulky generated work, and what
 may be promoted out of them into tracked evidence.
 
@@ -32,12 +32,15 @@ logs, screenshots, captures, and generated catalogs remain local.
 
 Current machine-local RE campaign and READY pointers are indexed in
 [`reverse-engineering/RE-INDEX.md`](reverse-engineering/RE-INDEX.md) (**live tip
-first**, historical Gen10 demoted). Complete-RE tip census lives in
-`developer_state.json` → `complete_re_tip_20260805`; when present, prefer
-`local-lab/OPAQUE-C1-CHECKPOINT-GEN73-20260806-FINAL-3WAY-DELTA.md` over peer
-lane synths. Plate/campaign patterns under `local-lab/` include
-`c1-opaque-*-batch-*`, `function-c1-*-generationNN-*`, and `checkpoint-*-gen*`;
-promote only the smallest public-safe fact. Ghidra live project mutation remains
-separately authorized (default: not authorized). Keep that index and
-`developer_state.json` as routing aids; each ignored bundle's frozen verifier
-and measured bytes remain the authority when a summary goes stale.
+first**; Generation 31 **v2** is the campaign parent; historical Gen10 and
+candidate Gen73 are demoted). On this workstation start at
+`local-lab/INDEX.md` — a short map to
+`local-lab/hermes-kanban-campaign-2026-08-18/` (operating brief
+`CAMPAIGN-V2.md`, grounding `HANDOFF-CURRENT.md`) and the 2026-08-17
+drive inventories. The DeepSeek drop lives at `local-lab/ds-deep-review/`
+and `local-lab/ds-deep-review-extended/` (relocated off `F:\DS DEEP *`;
+those F: paths no longer exist). The 3,211-line historical catalog is
+`local-lab/INDEX-CATALOG-2026-08-17.md`. Keep `developer_state.json` as a
+routing aid; each ignored bundle's frozen verifier and measured bytes
+remain the authority when a summary goes stale. Ghidra live project
+mutation remains separately authorized (default: not authorized).

@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-08-08 (recovery authority and evidence-register gates refreshed).
+Last updated: 2026-08-18 (Core-suite pin 730/730; do not treat 729 as current).
 Header fields under [`DOCUMENTATION.md`](DOCUMENTATION.md).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
@@ -20,7 +20,7 @@ options, not a required sequence.
 | CLI | `npm run test:cli` and the relevant AppCore test |
 | Lore inputs/reader | `npm run test:lore-pack` plus the LoreBrowserService tests |
 | Public payload/provenance boundary | `npm run test:safety` |
-| Rebuild Core | `npm run test:rebuild-core` |
+| Rebuild Core | `npm run test:rebuild-core` — last measured **730/730** on `a65826fa` (729/729 is the earlier `fd5ab355` run). Do not re-run the 25-minute suite unless a Core owner actually changed |
 | Rebuild client/adapters | `npm run test:rebuild-client` |
 | Godot toolchain or native behavior | the matching `test:rebuild-*` command; native smoke only when native behavior changed |
 | Frontend page drawing | `rebuild/tools/Capture-Frontend.ps1 -Plan mainmenu`, which now scores the capture against the retail reference and returns `FAIL` on regression. `npm run test:tools` covers the scorer itself |

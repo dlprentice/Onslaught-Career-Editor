@@ -2,7 +2,7 @@
 
 Status: active — merged routing record; the witness tables themselves remain
 untracked local evidence.
-Last updated: 2026-08-17.
+Last updated: 2026-08-18.
 Evidence: MEASURED — per-file SHA-256-verified relocation of the DeepSeek
 Extended workspace and its machine-built witness tables. Every row below is a
 pointer to a named witness file; every claim in those files must be reproduced
@@ -11,7 +11,9 @@ Specimen: pristine PC retail `BEA.exe`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 Summary: the `F:\DS DEEP Review Extended` workspace (DeepSeek's read-only
 investigation of the G:\ TTD corpus) now lives inside the repository under
-gitignored `local-lab\ds-deep-review-extended\`, byte-verified. This page
+gitignored `local-lab\ds-deep-review-extended\`, byte-verified. The `F:\`
+paths in the bullets below are **historical origins**; they no longer
+exist on disk as of 2026-08-17. This page
 records which of its findings are consumed and which are queued as second
 witnesses for pending promotions. It adds no grades and no Ghidra mutation on
 its own authority.
