@@ -1329,7 +1329,7 @@
                                   IsExpanded="False">
                             <StackPanel Spacing="16"
                                         Margin="0,12,0,0">
-                                <TextBlock Text="This app-owned executable-copy workflow is separate from Safe Game Copy and never counts as a creation input."
+                                <TextBlock Text="This BEA.exe-only copy workflow is separate from Safe Game Copy and never counts as a creation input."
                                            Style="{StaticResource SectionBodyTextStyle}" />
                                 <Expander x:Name="PatchBenchAdvancedTechnicalExpander" Header="Advanced technical check, not needed to play"
                                           AutomationProperties.AutomationId="PatchBenchAdvancedTechnicalExpander"
