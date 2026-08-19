@@ -57,6 +57,7 @@ public class SaveLabPageHonestyTests
         Assert.That(analyzer, Does.Contain("SaveLabPageText.DescribeOutputRefusal"));
         Assert.That(analyzer, Does.Contain("SaveLabPageText.SafeCopyInstallFailed"));
         Assert.That(analyzer, Does.Contain("SaveLabPageText.AnalysisNeedsAFile"));
+        Assert.That(analyzer, Does.Not.Contain("No analysis yet"));
         Assert.That(analyzer, Does.Contain("SaveAnalyzerService.BuildInfoTitle"));
         Assert.That(analyzer, Does.Not.Contain("ex.Message"));
         Assert.That(analyzer, Does.Not.Contain("or .bea path"));

@@ -507,7 +507,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             SummaryTreeView.RootNodes.Clear();
             SummaryTreeView.RootNodes.Add(new TreeViewNode
             {
-                Content = "No analysis yet. Select a detected file or browse for a .bes / .bea file to inspect.",
+                Content = SaveLabPageText.AnalysisNeedsAFile,
                 IsExpanded = true
             });
 
