@@ -1078,10 +1078,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             var (_, _, backupRows) = BinaryPatchEngine.VerifyPatchSpecs(backupBytes, selected);
             if (backupRows.Any(row => row.State != BinaryPatchState.Original))
-            {
-                string states = string.Join(", ", backupRows.Select(row => $"{row.Spec.Key}={BinaryPatchEngine.StateLabel(row.State)}"));
-                throw new InvalidOperationException($"Playable copied game folder executable backup snapshot is not a clean base for selected patches: {states}");
-            }
+                throw new InvalidOperationException(CopiedBackupNotRetail);
 
             byte[] expectedPatchedBytes = backupBytes.ToArray();
             foreach (BinaryPatchSpec spec in selected)
