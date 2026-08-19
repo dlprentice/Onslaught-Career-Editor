@@ -766,7 +766,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                             TargetMusicFileName: "BEA_01(Master).ogg",
                             ReplacementOggPath: secondReplacementPath)));
 
-                Assert.Contains("no longer matches", ex.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(GameProfileMusicReplacementService.MusicTargetMismatch, ex.Message);
                 Assert.Equal(OggBytes(0x44), File.ReadAllBytes(Path.Combine(profile.TargetGameRoot, "data", "Music", "BEA_01(Master).ogg")));
             }
             finally

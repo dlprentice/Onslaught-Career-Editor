@@ -75,6 +75,7 @@ namespace OnslaughtCareerEditor.AppCore
         public const string MusicDetailsWrongTarget = "That copy's music details do not match the music file.";
         public const string MusicBackupMismatch = "That copy's music backup no longer matches.";
         public const string MusicRestoreMismatch = "That copy's restored music file no longer matches.";
+        public const string MusicTargetMismatch = "That music file no longer matches its backup.";
         public const string MusicRestored = "That music file was restored.";
         private const string BackupSuffix = ".original.backup";
 
@@ -352,7 +353,7 @@ namespace OnslaughtCareerEditor.AppCore
             string targetSha = ComputeSha256(File.ReadAllBytes(targetPath));
             string backupSha = ComputeSha256(File.ReadAllBytes(backupPath));
             if (!string.Equals(targetSha, backupSha, StringComparison.OrdinalIgnoreCase))
-                throw new InvalidOperationException("Current copied-game music target no longer matches the original backup; restore before staging another replacement.");
+                throw new InvalidOperationException(MusicTargetMismatch);
         }
 
         private static string ValidateSafeGameRoot(string safeGameRoot, string appOwnedProfilesRoot)

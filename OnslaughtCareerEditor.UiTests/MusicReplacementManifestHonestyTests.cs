@@ -67,6 +67,17 @@ public class MusicReplacementManifestHonestyTests
             Is.EqualTo("That music file was restored."));
         Assert.That(GameProfileMusicReplacementService.MusicRestored.ToLowerInvariant(),
             Does.Not.Contain("playable"));
+        Assert.That(source, Does.Contain("MusicTargetMismatch"));
+        Assert.That(source, Does.Not.Contain("copied-game music target"));
+        Assert.That(source, Does.Not.Contain("restore before staging another replacement"));
+        Assert.That(GameProfileMusicReplacementService.MusicTargetMismatch,
+            Is.EqualTo("That music file no longer matches its backup."));
+        Assert.That(GameProfileMusicReplacementService.MusicTargetMismatch.ToLowerInvariant(),
+            Does.Not.Contain("playable"));
+        Assert.That(GameProfileMusicReplacementService.MusicTargetMismatch.ToLowerInvariant(),
+            Does.Not.Contain("copied-game"));
+        Assert.That(GameProfileMusicReplacementService.MusicTargetMismatch.ToLowerInvariant(),
+            Does.Not.Contain("path"));
     }
 
     [Test]
