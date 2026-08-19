@@ -80,7 +80,7 @@
                               Header="File details"
                               IsExpanded="False">
                         <TextBlock x:Name="CatalogFullPathTextBlock"
-                                   AutomationProperties.AutomationId="AssetCatalogFullPath"
+                                   AutomationProperties.AutomationId="AssetCatalogFile"
                                    FontFamily="Consolas"
                                    FontSize="12"
                                    MaxWidth="420"
@@ -491,7 +491,7 @@
                                     Visibility="Collapsed"
                                     Click="OpenInMediaButton_Click" />
                             <Button x:Name="CopyExportPathButton"
-                                    AutomationProperties.AutomationId="AssetCopyExportPathButton"
+                                    AutomationProperties.AutomationId="AssetCopyExportFileButton"
                                     Content="Copy file"
                                     IsEnabled="False"
                                     Click="CopyExportPathButton_Click" />
@@ -646,7 +646,7 @@
                                 <TextBlock Text="Export file"
                                            FontWeight="SemiBold" />
                                 <TextBlock x:Name="SelectedExportPathTextBlock"
-                                           AutomationProperties.AutomationId="AssetSelectedExportPath"
+                                           AutomationProperties.AutomationId="AssetSelectedExportFile"
                                            FontFamily="Consolas"
                                            FontSize="12"
                                            TextWrapping="WrapWholeWords" />

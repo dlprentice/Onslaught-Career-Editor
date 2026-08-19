@@ -149,4 +149,18 @@ public class AssetLibraryHonestyTests
         Assert.That(xaml, Does.Not.Contain("AssetCatalogPathTextBox"));
         Assert.That(xaml, Does.Not.Contain("AssetGoodieSaveStatePathTextBox"));
     }
+
+    [Test]
+    public void CatalogAndExportDetailsNameTheFileNotAPath()
+    {
+        string xaml = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI", "Pages", "AssetLibraryPage.xaml"));
+
+        Assert.That(xaml, Does.Contain("AutomationProperties.AutomationId=\"AssetCatalogFile\""));
+        Assert.That(xaml, Does.Contain("AutomationProperties.AutomationId=\"AssetSelectedExportFile\""));
+        Assert.That(xaml, Does.Contain("AutomationProperties.AutomationId=\"AssetCopyExportFileButton\""));
+        Assert.That(xaml, Does.Not.Contain("AssetCatalogFullPath"));
+        Assert.That(xaml, Does.Not.Contain("AssetSelectedExportPath"));
+        Assert.That(xaml, Does.Not.Contain("AssetCopyExportPathButton"));
+    }
 }

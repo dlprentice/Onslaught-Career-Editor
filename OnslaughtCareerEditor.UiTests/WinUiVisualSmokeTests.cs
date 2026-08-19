@@ -155,7 +155,7 @@ public class WinUiVisualSmokeTests
             expectedText: "Copy file",
             initialAssetSubTab: 0,
             assetCatalogPath: assetCatalogFixture,
-            beforeCapture: window => ScrollIntoViewByAutomationId(window, "AssetCopyExportPathButton"));
+            beforeCapture: window => ScrollIntoViewByAutomationId(window, "AssetCopyExportFileButton"));
         CaptureConfiguredTab(
             exePath,
             evidenceDir,

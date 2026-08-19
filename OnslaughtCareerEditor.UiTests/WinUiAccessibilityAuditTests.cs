@@ -188,7 +188,7 @@ public class WinUiAccessibilityAuditTests
                 "AssetTexturePreviewImage",
                 "AssetModelWireframePanel",
                 "AssetOpenExportButton",
-                "AssetCopyExportPathButton"
+                "AssetCopyExportFileButton"
             ],
             ["OnslaughtCareerEditor.WinUI/Pages/LorePage.xaml"] =
             [
