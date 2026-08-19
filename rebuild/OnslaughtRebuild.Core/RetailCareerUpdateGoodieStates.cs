@@ -118,7 +118,11 @@ public sealed class RetailCareerGoodies
 /// first-play S slots is counted before ApplyUpdate because
 /// <c>CountGoodies</c> uses <c>mState &gt;= GS_NEW</c>. Isolated
 /// leftover <c>GS_OLD</c> <c>NewGoodieCount=0</c> does not uniquely
-/// prove that count.
+/// prove that count. Leftover <c>GS_INSTRUCTIONS</c> on those five
+/// slots is not counted before ApplyUpdate because
+/// <c>GS_INSTRUCTIONS</c> is below <c>GS_NEW</c>. Isolated leftover
+/// <c>GS_INSTRUCTIONS</c> store names the write to 2, not the
+/// pre-count.
 /// </para>
 /// </remarks>
 public static class RetailCareerUpdateGoodieStates
@@ -190,7 +194,11 @@ public static class RetailCareerUpdateGoodieStates
     /// before ApplyUpdate because <c>CountGoodies</c> uses
     /// <c>mState &gt;= GS_NEW</c>. Isolated leftover
     /// <c>GS_OLD</c> <c>NewGoodieCount=0</c> does not uniquely
-    /// prove that count. Do not invent
+    /// prove that count. Isolated leftover <c>GS_INSTRUCTIONS</c>
+    /// is not counted before ApplyUpdate because
+    /// <c>GS_INSTRUCTIONS</c> is below <c>GS_NEW</c>. Isolated
+    /// leftover <c>GS_INSTRUCTIONS</c> store names the write to 2,
+    /// not that pre-count. Do not invent
     /// a world-110 FillOut or the rest of the table.
     /// <c>mPendingExtraGoodies</c> and episode instruction marks stay
     /// unclaimed.
@@ -257,6 +265,10 @@ public static class RetailCareerUpdateGoodieStates
     /// on the five first-play S slots therefore reads 5 before
     /// ApplyUpdate. Isolated leftover <c>GS_OLD</c>
     /// <c>NewGoodieCount=0</c> does not uniquely prove that count.
+    /// Leftover <c>GS_INSTRUCTIONS</c> on those five slots therefore
+    /// reads 0 before ApplyUpdate. Isolated leftover
+    /// <c>GS_INSTRUCTIONS</c> store names the write to 2, not that
+    /// pre-count.
     /// </summary>
     public static int CountGoodies(RetailCareerCampaign career)
     {

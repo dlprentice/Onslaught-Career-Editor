@@ -1029,9 +1029,11 @@ public sealed class RetailCareerCampaignApplyUpdateTests
     /// leftover <c>GS_OLD</c> <c>NewGoodieCount=0</c> does not uniquely
     /// prove this: the delta is 0 whether <c>previouslyNew</c> is 0 or
     /// 5. The latch names first-play Unknown-to-New. Replay names
-    /// already-<c>GS_NEW</c>. Leftover <c>GS_INSTRUCTIONS</c> names
-    /// the store-when-not-done side, not the count of leftover Old.
-    /// Mutation: count only <c>== GS_NEW</c>. Storing <c>GS_NEW</c>
+    /// already-<c>GS_NEW</c>. Isolated leftover <c>GS_INSTRUCTIONS</c>
+    /// store names the write to 2, not the count of leftover Old.
+    /// Isolated leftover Instructions count names the skip of
+    /// state 1. Mutation: count only <c>== GS_NEW</c>. Storing
+    /// <c>GS_NEW</c>
     /// even when <c>mState &gt; GS_INSTRUCTIONS</c> is not unique
     /// versus
     /// <c>Level100Won_ApplyUpdateDoesNotOverwriteAlreadyOldTrainingGoodies</c>.
@@ -1060,6 +1062,50 @@ public sealed class RetailCareerCampaignApplyUpdateTests
         RetailEndLevelSnapshot snapshot = RetailFillOutEndLevelData.ForLevel100Won();
 
         Assert.Equal(5, RetailCareerUpdateGoodieStates.CountGoodies(career));
+
+        career.ApplyUpdate(snapshot);
+
+        Assert.Equal(5, RetailCareerUpdateGoodieStates.CountGoodies(career));
+        Assert.Equal(1, career.Nodes.Find(100)!.Complete);
+        Assert.All(snapshot.SecondaryStatuses, status => Assert.Equal(0, status));
+    }
+
+    /// <summary>
+    /// <c>CountGoodies</c> counts <c>mState &gt;= GS_NEW</c>
+    /// (<c>Career.cpp:670-680</c>). Seeding the five first-play S slots
+    /// as <c>GS_INSTRUCTIONS</c> therefore reads 0 before ApplyUpdate.
+    /// Isolated leftover <c>GS_INSTRUCTIONS</c> store names the write
+    /// to 2, not the pre-count. Isolated leftover Old count expects 5.
+    /// FrontEndHandoff leftover Instructions names the store through
+    /// <c>TryApply</c>. Mutation: count <c>mState &gt;= GS_INSTRUCTIONS</c>.
+    /// Counting only <c>== GS_NEW</c> still reads 0 on this seed.
+    /// Do not invent <c>SET_GOODIE_INSTRUCTION</c> or episode
+    /// instruction marks — leftover seed only.
+    /// <c>mPendingExtraGoodies</c> stays unclaimed. No new
+    /// secondaries.
+    /// </summary>
+    [Fact]
+    public void Level100Won_CountGoodiesDoesNotCountLeftoverInstructionTrainingGoodies()
+    {
+        RetailCareerCampaign career = RetailCareerReCalcLinks.CreateColdTrainingSlice();
+        career.Goodies.Set(
+            RetailCareerUpdateGoodieStates.CompleteWorld100Bio,
+            RetailCareerGoodieState.Instructions);
+        career.Goodies.Set(
+            RetailCareerUpdateGoodieStates.CompleteWorld100Second,
+            RetailCareerGoodieState.Instructions);
+        career.Goodies.Set(
+            RetailCareerUpdateGoodieStates.GradeCOnWorld100,
+            RetailCareerGoodieState.Instructions);
+        career.Goodies.Set(
+            RetailCareerUpdateGoodieStates.GradeBOnWorld100,
+            RetailCareerGoodieState.Instructions);
+        career.Goodies.Set(
+            RetailCareerUpdateGoodieStates.GradeAOnWorld100,
+            RetailCareerGoodieState.Instructions);
+        RetailEndLevelSnapshot snapshot = RetailFillOutEndLevelData.ForLevel100Won();
+
+        Assert.Equal(0, RetailCareerUpdateGoodieStates.CountGoodies(career));
 
         career.ApplyUpdate(snapshot);
 
