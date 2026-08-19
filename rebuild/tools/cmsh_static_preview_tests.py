@@ -768,6 +768,41 @@ class CmshStaticPreviewTests(unittest.TestCase):
         with self.assertRaisesRegex(preview.CmshProfileError, "unresolved material texture"):
             preview.emit_obj(malformed, include_material_layer_groups=True)
 
+    def test_emit_mtl_names_match_obj_usemtl_and_map_kd_is_slot0_name(self) -> None:
+        """MTL is the missing bind half of `--material-layer-groups`.
+
+        `map_Kd` is the mesh TEXB name for TEXR slot 0, not a guessed PNG path.
+        """
+        mesh = preview.parse_cmsh_stream(build_material_fixture_stream())
+        obj = preview.emit_obj(mesh, include_material_layer_groups=True)
+        mtl = preview.emit_mtl(mesh)
+        usemtl = [line[7:] for line in obj.splitlines() if line.startswith(b"usemtl ")]
+        newmtl = [line[7:] for line in mtl.splitlines() if line.startswith(b"newmtl ")]
+        self.assertEqual(usemtl, newmtl)
+        self.assertEqual(
+            [b"meshtex\\alpha.tga", b"meshtex\\delta.tga"],
+            [line[7:] for line in mtl.splitlines() if line.startswith(b"map_Kd ")],
+        )
+        self.assertNotIn(str(Path.cwd()).encode("utf-8"), mtl)
+        malformed = replace(
+            mesh,
+            parts=(
+                mesh.parts[0],
+                replace(
+                    mesh.parts[1],
+                    groups=(
+                        replace(
+                            mesh.parts[1].groups[0],
+                            raw_texr_u32=(0, 4, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF),
+                        ),
+                        mesh.parts[1].groups[1],
+                    ),
+                ),
+            ),
+        )
+        with self.assertRaisesRegex(preview.CmshProfileError, "unresolved material texture"):
+            preview.emit_mtl(malformed)
+
     def test_material_report_retains_vertex_attributes_duplicate_names_and_six_unknown_positions(self) -> None:
         mesh = preview.parse_cmsh_stream(build_material_fixture_stream())
 
