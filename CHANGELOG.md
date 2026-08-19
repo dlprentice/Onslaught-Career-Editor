@@ -56,7 +56,8 @@ live in `developer_state.json` and the campaign ledgers.
   analysis or compare file uses that same sentence instead of the exception, and
   a failed compare is not called identical. A failed stop of a
   copied game names the action and that nothing was changed, without the
-  exception. A failed backup of the installed game does the same. The
+  exception. A failed backup of the installed game does the same, and an
+  unreadable install path is named without the exception. The
   installed-game status line names the folder, not the path.
 
 ## 1.0.11 — 2026-08-07

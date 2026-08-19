@@ -137,6 +137,8 @@ namespace OnslaughtCareerEditor.AppCore
         public const string BackupSuffix = ".original.backup";
         public const string InstalledBackupFailed =
             "The backup could not be made, so nothing was patched. Your game is untouched.";
+        public const string InstalledPathUnreadable =
+            "That game file could not be read. Nothing was changed.";
         private const string BackupHashSuffix = ".sha256";
         private const string CatalogRelativePath = "patches/catalog/patches.v2.json";
         private const string ExpectedPatchCatalogSha256 = "48cebf987355622bb54c212d5af4705a6c80df468a25651773c6f41522619622";
@@ -1673,7 +1675,7 @@ namespace OnslaughtCareerEditor.AppCore
             }
             catch (Exception ex) when (ex is ArgumentException or IOException or NotSupportedException)
             {
-                return (false, $"That path could not be read: {ex.Message}", null);
+                return (false, InstalledPathUnreadable, null);
             }
 
             if (!string.Equals(Path.GetFileName(fullExePath), TargetFileName, StringComparison.OrdinalIgnoreCase))

@@ -152,10 +152,15 @@ public class InstalledGamePatchSurfaceTests
         Assert.That(BinaryPatchEngine.InstalledBackupFailed, Does.Contain("untouched"));
         Assert.That(BinaryPatchEngine.InstalledBackupFailed, Does.Not.Contain(":\\"));
         Assert.That(BinaryPatchEngine.InstalledBackupFailed.ToLowerInvariant(), Does.Not.Contain("exception"));
+        Assert.That(BinaryPatchEngine.InstalledPathUnreadable, Does.Contain("could not be read"));
+        Assert.That(BinaryPatchEngine.InstalledPathUnreadable, Does.Contain("Nothing was changed"));
+        Assert.That(BinaryPatchEngine.InstalledPathUnreadable, Does.Not.Contain(":\\"));
 
         string engine = File.ReadAllText(Path.Combine(RepoRoot(), "OnslaughtCareerEditor.AppCore", "BinaryPatchEngine.cs"));
         Assert.That(engine, Does.Contain("InstalledBackupFailed"));
+        Assert.That(engine, Does.Contain("InstalledPathUnreadable"));
         Assert.That(engine, Does.Not.Contain("your game is untouched: {ex.Message}"));
+        Assert.That(engine, Does.Not.Contain("That path could not be read: {ex.Message}"));
     }
 
     [Test]
