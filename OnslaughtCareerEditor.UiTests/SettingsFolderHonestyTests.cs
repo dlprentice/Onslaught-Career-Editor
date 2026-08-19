@@ -42,4 +42,23 @@ public class SettingsFolderHonestyTests
         Assert.That(page, Does.Contain("Game folder not set"));
         Assert.That(page, Does.Contain("Set the game folder to find save and options files."));
     }
+
+    [Test]
+    public void SettingsNamesTheFolderNotADirectory()
+    {
+        string page = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot,
+            "OnslaughtCareerEditor.WinUI",
+            "Pages",
+            "SettingsPage.xaml.cs"));
+
+        Assert.That(page, Does.Not.Contain("No game directory set."));
+        Assert.That(page, Does.Contain("No game folder set. Click Browse or Auto-Detect."));
+        Assert.That(page, Does.Not.Contain("could not auto-detect the game directory"));
+        Assert.That(page, Does.Contain("Settings: could not find the game folder"));
+        Assert.That(page, Does.Not.Contain("failed to save game directory"));
+        Assert.That(page, Does.Contain("Settings: could not keep that folder"));
+        Assert.That(page, Does.Not.Contain("Settings: game directory updated"));
+        Assert.That(page, Does.Contain("Settings: game folder updated"));
+    }
 }

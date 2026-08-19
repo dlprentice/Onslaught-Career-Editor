@@ -31,7 +31,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             else
             {
                 ClearGameDirectoryIdentity();
-                GameDirectoryStatusTextBlock.Text = "No game directory set. Click Browse or Auto-Detect.";
+                GameDirectoryStatusTextBlock.Text = "No game folder set. Click Browse or Auto-Detect.";
                 GameDirectoryStatusTextBlock.Foreground = ThemeBrushes.Warning();
             }
 
@@ -137,7 +137,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
 
             ClearGameDirectoryIdentity();
-            GameDirectoryStatusTextBlock.Text = "No game directory set. Click Browse or Auto-Detect.";
+            GameDirectoryStatusTextBlock.Text = "No game folder set. Click Browse or Auto-Detect.";
             GameDirectoryStatusTextBlock.Foreground = ThemeBrushes.Warning();
         }
 
@@ -224,7 +224,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             {
                 GameDirectoryStatusTextBlock.Text = GameDirectoryIdentityText.AutoDetectFailed;
                 GameDirectoryStatusTextBlock.Foreground = ThemeBrushes.Warning();
-                AppStatusService.SetStatus("Settings: could not auto-detect the game directory");
+                AppStatusService.SetStatus("Settings: could not find the game folder");
                 return;
             }
 
@@ -248,7 +248,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 RestoreKeptGameDirectory();
                 GameDirectoryStatusTextBlock.Text = GameDirectoryIdentityText.PersistFailed;
                 GameDirectoryStatusTextBlock.Foreground = ThemeBrushes.Warning();
-                AppStatusService.SetStatus("Settings: failed to save game directory");
+                AppStatusService.SetStatus("Settings: could not keep that folder");
                 return;
             }
 
@@ -257,7 +257,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             App.MainWindowInstance?.RefreshFooter();
             AppStatusService.SetStatus(
                 AppConfig.InspectGameDirectory(path).Status == GameDirectoryStatus.FullInstall
-                    ? "Settings: game directory updated"
+                    ? "Settings: game folder updated"
                     : "Settings: folder saved but the full game install is still required");
         }
 
