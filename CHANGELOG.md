@@ -147,7 +147,8 @@ live in `developer_state.json` and the campaign ledgers.
   the catalog keys. A Windowed & Mods Last operation that still looks
   like a dump names BEA.exe, not the path. A workspace backup refusal
   names BEA.exe.original.backup, not a path. Home setup names a ready
-  game folder, not a directory.
+  game folder, not a directory. Copying an Asset Library
+  export names the file, not a path.
 
 ## 1.0.11 — 2026-08-07
 

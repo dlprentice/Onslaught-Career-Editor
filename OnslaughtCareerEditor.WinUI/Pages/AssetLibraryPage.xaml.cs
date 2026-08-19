@@ -1214,14 +1214,14 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         {
             if (string.IsNullOrWhiteSpace(_selectedExportPath))
             {
-                AppStatusService.SetStatus("Asset Library: no export path selected");
+                AppStatusService.SetStatus(AssetLibraryPageText.NoExportSelectedStatus);
                 return;
             }
 
             DataPackage data = new();
             data.SetText(_selectedExportPath);
             Clipboard.SetContent(data);
-            AppStatusService.SetStatus("Asset Library: export path copied");
+            AppStatusService.SetStatus(AssetLibraryPageText.ExportCopiedStatus);
         }
 
         private bool ConfigureExportActions(string exportPath, bool exists, string label)

@@ -83,4 +83,18 @@ public class AssetLibraryHonestyTests
         Assert.That(code, Does.Not.Contain("SelectedExportPathTextBlock.Text = texture.ExportPath"));
         Assert.That(code, Does.Not.Contain("SelectedExportPathTextBlock.Text = mesh.ExportPath"));
     }
+
+    [Test]
+    public void CopyingAnExportNamesTheFileNotAPath()
+    {
+        string page = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI", "Pages", "AssetLibraryPage.xaml.cs"));
+
+        Assert.That(page, Does.Not.Contain("no export path selected"));
+        Assert.That(page, Does.Not.Contain("export path copied"));
+        Assert.That(page, Does.Contain("AssetLibraryPageText.NoExportSelectedStatus"));
+        Assert.That(page, Does.Contain("AssetLibraryPageText.ExportCopiedStatus"));
+        Assert.That(AssetLibraryPageText.NoExportSelectedStatus.ToLowerInvariant(), Does.Not.Contain("path"));
+        Assert.That(AssetLibraryPageText.ExportCopiedStatus.ToLowerInvariant(), Does.Not.Contain("path"));
+    }
 }

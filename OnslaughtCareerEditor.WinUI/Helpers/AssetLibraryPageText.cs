@@ -11,6 +11,12 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         public const string EmptySearchNextStep =
             "Try another word, or clear the search.";
 
+        public const string NoExportSelectedStatus =
+            "Asset Library: no file selected";
+
+        public const string ExportCopiedStatus =
+            "Asset Library: export copied";
+
         public static string? DescribeListNote(bool hasCatalog, string? search, int matchCount)
         {
             if (!hasCatalog || matchCount > 0 || string.IsNullOrWhiteSpace(search))
