@@ -296,6 +296,10 @@ public sealed partial class RetailFrontendFlow
         // CMenuItemDropdown expanded list hover leftover is
         // RetailOptionsDropdownListHover: call 0x004693D0 then write
         // currentIndex. That is hover, not dest and not colour.
+        // CMenuItemDropdown expanded list click leftover is
+        // RetailOptionsDropdownListClick: call 0x00469400 then write
+        // currentIndex and the expand byte. That is click, not dest,
+        // not colour, and not hover.
         // CMenuItemDropdown expanded panel dest leftover is
         // RetailOptionsDropdownPanelDest: collapsed dest leftover, dest Y
         // incoming minus integer-half of (count-1)*cy, width max cx plus 3.
@@ -761,22 +765,33 @@ public sealed partial class RetailFrontendFlow
 
         if (_options.IsExpanded)
         {
+            // CMenuItemDropdown expanded list click leftover is
+            // RetailOptionsDropdownListClick: call 0x00469400 then write
+            // currentIndex and the expand byte. That is click, not dest
+            // and not colour. Hover leftover already owns 0x004A3FA6.
             RetailOptionsRow expanded = _options.SelectedRow;
             float rowTop = _options.RowTop(_options.SelectedIndex);
+            int labelCx = (int)MeasureText(expanded.Label, 1f);
             for (int i = 0; i < expanded.States.Count; i++)
             {
-                float entryTop = RetailOptionsDropdownListDestY.DestY(
-                    rowTop,
-                    expanded.States.Count,
-                    (int)DropdownEntryPitch,
-                    i);
-                if (design.Y >= entryTop && design.Y < entryTop + DropdownEntryPitch &&
-                    design.X >= RetailOptionsDropdownPanelDest.DestX(OptionLabelRightX))
+                if (!RetailOptionsDropdownListClick.Contains(
+                    design.X,
+                    design.Y,
+                    RetailOptionsDropdownListDest.DestX(OptionLabelRightX),
+                    RetailOptionsDropdownListDestY.DestY(
+                        rowTop,
+                        expanded.States.Count,
+                        (int)DropdownEntryPitch,
+                        i),
+                    labelCx,
+                    (int)DropdownEntryPitch))
                 {
-                    _options.SelectState(i);
-                    ConfirmOptions();
-                    return true;
+                    continue;
                 }
+
+                _options.SelectState(i);
+                ConfirmOptions();
+                return true;
             }
             ConfirmOptions();
             return true;

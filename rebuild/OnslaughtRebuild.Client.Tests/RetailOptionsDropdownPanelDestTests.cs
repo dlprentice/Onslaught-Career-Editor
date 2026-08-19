@@ -224,7 +224,7 @@ public sealed class RetailOptionsDropdownPanelDestTests
         Assert.DoesNotContain("HandlePointerConfirm", draw, StringComparison.Ordinal);
         Assert.DoesNotContain("0x00463669", draw, StringComparison.Ordinal);
         Assert.DoesNotContain("GetTextExtent", draw, StringComparison.Ordinal);
-        Assert.Contains("RetailOptionsDropdownPanelDest.DestX", confirm, StringComparison.Ordinal);
+        Assert.DoesNotContain("RetailOptionsDropdownPanelDest.DestX", confirm, StringComparison.Ordinal);
         Assert.DoesNotContain("DropdownPanelLeft", confirm, StringComparison.Ordinal);
         Assert.DoesNotContain("322.5", confirm, StringComparison.Ordinal);
         Assert.DoesNotContain("RetailOptionsDropdownPanelDest", centered, StringComparison.Ordinal);
