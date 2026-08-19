@@ -255,6 +255,26 @@ REHEARSAL_COHORTS: dict[str, dict] = {
             "preUndefinedData": 3907369, "postUndefinedData": 3907369,
         },
     },
+    "name-cohort-cockpit-dual-owner": {
+        # PRE is current live POST (db.18631). DRAFT: not live-authorized.
+        # Dual-owner sibling-prefix grade needs a reviewer GO.
+        "backup": BACKUPS / "2026-08-18-name-cohort-placeholder-unique-owner-post-live",
+        "spec": SPECS / "name-cohort-cockpit-dual-owner.spec.tsv",
+        "manifest": SPECS / "name-cohort-cockpit-dual-owner-manifest.tsv",
+        "rehearsalOnly": True,
+        "archived": {
+            "source": "REHEARSAL ONLY - not live-authorized "
+                      "(dual-owner sibling-prefix grade pending reviewer GO)",
+            "rows": 3,
+            "applied": 0,
+            "preFunctions": 8329, "postFunctions": 8329,
+            "preInstructions": 551232, "postInstructions": 551232,
+            "preReferences": 234558, "postReferences": 234558,
+            "preBookmarks": 2301, "postBookmarks": 2301,
+            "preDefinedData": 48648, "postDefinedData": 48648,
+            "preUndefinedData": 3907369, "postUndefinedData": 3907369,
+        },
+    },
 }
 COHORTS.update(REHEARSAL_COHORTS)
 

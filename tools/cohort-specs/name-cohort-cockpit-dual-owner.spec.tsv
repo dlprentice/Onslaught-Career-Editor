@@ -1,0 +1,93 @@
+# Dual-owner sibling-prefix SET_NAME leftover (3 CCockpit+CDXCockpit FUN_).
+# Not on the live allowlist until a reviewer GO on the question:
+# is FUN_ owned by exactly two classes at the same slot, named after the
+# class already used on a sibling shared slot of that table pair, the same
+# grade as unique-owner Class__VFunc_N_addr?
+#
+# Population: the documented 12-row unnamed-RTTI-owner queue leftover after
+# name-cohort-fun-unique-owner. Strict RTTI census 2026-08-18
+# (tools/re_rtti_vtables.py, specimen 74154bfa…7750, 667 TDs / 724 COLs /
+# 11777 slots) leaves 4 multi-owner FUN_. This cohort takes the 3-row
+# CCockpit+CDXCockpit family (slots 0/1/7). Excluded:
+#   0x004c4a00 CPDModifier+CParticleDescriptor — mixed sibling prefixes
+#   CThingCamera+CThing3rdPersonCamera FUN_ — no sibling shared slot already
+#     named after either owner
+#   CGenericCamera+CInterpolatedCamera FUN_ — same grade, held for a later
+#     slice after this grade is reviewed
+#   LandscapeDetail_SetLevel/GetLevel — invented method suffixes
+#   waypoint 0x00538470, CMusic__Play, Goto3/4,
+#   CSpawnerThng__FindSpawnerByName
+#
+# Naming rule (local to this table pair, already landed): both CCockpit
+# 0x005d94ac and CDXCockpit 0x005d8838 slot 6 already point at
+# CCockpit__VFunc_6_00425410. Proposed names are CCockpit__VFunc_{0,1,7}_addr.
+# Proposed names are free. No method suffix is invented. Strict hierarchy
+# (tools/re_rtti_vtables.py): CDXCockpit -> CCockpit is a direct edge
+# (example CHD 0x0060c618), so the sibling prefix is the base class.
+#
+# PRE pins copied from the measured name-cohort-placeholder-unique-owner POST
+# (db.18631). Replica must reproduce them before dry/apply.
+# POST name/frozen digests measured 2026-08-18 by replica apply then a
+# separate-process census on that applied replica
+# (local-lab/name-cohort-cockpit-dual-owner-rehearsal-2026-08-18/receipts/
+# {apply,census}.log). Body digest unchanged. Frozen moves because FUN_
+# default symbols become user-defined (columnsMoved name+symbolSource).
+# Not live-authorized. No live write.
+cohortId	name-cohort-cockpit-dual-owner
+cohortTitle	3 dual-owner CCockpit FUN_ name corrections, name only (rehearsal)
+
+programName	BEA.exe
+programMd5	3b456964020070efe696d2cc09464a55
+programSha256	74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750
+imageBase	00400000
+language	x86:LE:32:default
+compilerSpec	windows
+
+verb	SET_NAME
+
+preFunctions	8329
+preInstructions	551232
+preReferences	234558
+preDefinedData	48648
+preUndefinedData	3907369
+preBookmarks	2301
+preFunctionNameDigest	fadad23cc507f0575764b8302fe26b97c16332249a1ce44b07a5da3825cb3a9c
+preFunctionBodyDigest	cb96581a599479d8aa57c2319a5e110226969934c2c14797a2575c689537a9be
+preFrozenDigest	7943423b52b78f0f1a4166870073ff650e72ee3bd53b035ae89e4e074d1c0103
+
+# Structural POST repeats PRE (SET_NAME moves no instruction/data/bookmark
+# count). Name and frozen POST digests measured 2026-08-18 by replica apply
+# then a separate-process census. Body digest unchanged. Frozen moves because
+# FUN_ default symbols become user-defined (columnsMoved name+symbolSource).
+postFunctions	8329
+postInstructions	551232
+postReferences	234558
+postDefinedData	48648
+postUndefinedData	3907369
+postBookmarks	2301
+postFunctionNameDigest	d780dd1468fc86068ec647f6597833e755db9a414a4a5e923099ca8b89c35e27
+postFunctionBodyDigest	cb96581a599479d8aa57c2319a5e110226969934c2c14797a2575c689537a9be
+postFrozenDigest	48b8b227f2d6853adcdca47579f12ac94342dc5457a1bde63c128ddf4f848d59
+
+manifestSha256	b67e1247ff310c387ad3757e27f7f7aeee6ffd7dcff3f2d023bed7a8108ee4d8
+manifestBytes	1189
+manifestRows	3
+manifestColumns	9
+manifestHeaderPipe	addr|provenance|liveKind|currentNameLive|proposedName|tier|anchorKind|anchorEvidence|reason
+
+col.addr	addr
+col.liveKind	liveKind
+col.currentName	currentNameLive
+col.proposedName	proposedName
+
+unique	addr
+unique	proposedName
+unique	currentName
+noCycle	proposedName:currentName
+enum	liveKind=FUNCTION,SYMBOL:Label
+enum	provenance=PROMOTE,DEMOTE,SLOTFIX
+
+expectedTargetsChanged	3
+expectedFunctionsUntouched	8326
+expectedSymbolsAdded	3
+expectedSymbolsRemoved	3
