@@ -68,6 +68,7 @@ namespace OnslaughtCareerEditor.AppCore
         public const string MusicBackupMissing = "That music backup file could not be found.";
         public const string CopyCannotUseLink = "That copy cannot use a shortcut or link.";
         public const string FileCannotShareData = "That file cannot share its data with another file.";
+        public const string MusicSwapPresetUnknown = "That music swap is not available.";
         private const string BackupSuffix = ".original.backup";
 
         private static readonly GameProfileMusicSwapPreset[] s_musicSwapPresets =
@@ -107,7 +108,7 @@ namespace OnslaughtCareerEditor.AppCore
         {
             GameProfileMusicSwapPreset? preset = s_musicSwapPresets.FirstOrDefault(preset =>
                 string.Equals(preset.Id, presetId, StringComparison.OrdinalIgnoreCase));
-            return preset ?? throw new InvalidOperationException($"Unknown safe-copy music swap preset: {presetId}");
+            return preset ?? throw new InvalidOperationException(MusicSwapPresetUnknown);
         }
 
         public static GameProfileMusicReplacementOptions BuildSafeCopyMusicSwapPresetOptions(

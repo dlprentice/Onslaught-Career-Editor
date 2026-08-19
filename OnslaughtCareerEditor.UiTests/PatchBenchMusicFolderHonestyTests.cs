@@ -32,7 +32,28 @@ public class PatchBenchMusicFolderHonestyTests
             "GameProfileMusicReplacementService.cs"));
 
         Assert.That(source, Does.Contain("MusicFolderMissing"));
+        Assert.That(source, Does.Contain("MusicSwapPresetUnknown"));
+        Assert.That(source, Does.Not.Contain("Unknown safe-copy music swap preset:"));
+        Assert.That(source, Does.Not.Contain("{presetId}"));
+        Assert.That(GameProfileMusicReplacementService.MusicSwapPresetUnknown,
+            Is.EqualTo("That music swap is not available."));
+        Assert.That(GameProfileMusicReplacementService.MusicSwapPresetUnknown.ToLowerInvariant(),
+            Does.Not.Contain("path"));
         Assert.That(source, Does.Not.Contain("does not contain data\\\\Music."));
         Assert.That(source, Does.Not.Contain("does not contain data\\Music."));
+    }
+
+    [Test]
+    public void AnUnknownMusicSwapNamesTheRefusalWithoutTheCatalogId()
+    {
+        InvalidOperationException error = Assert.Throws<InvalidOperationException>(
+            () => GameProfileMusicReplacementService.GetSafeCopyMusicSwapPreset("not_a_music_swap"));
+
+        Assert.That(error.Message, Is.EqualTo(GameProfileMusicReplacementService.MusicSwapPresetUnknown));
+        Assert.That(error.Message, Does.Not.Contain("not_a_music_swap"));
+        Assert.That(error.Message, Does.Not.Contain("preset"));
+        Assert.That(error.Message.ToLowerInvariant(), Does.Not.Contain("path"));
+        Assert.That(error.Message, Does.Not.Contain(":\\"));
+        Assert.That(error.Message, Does.Not.Contain("/"));
     }
 }
