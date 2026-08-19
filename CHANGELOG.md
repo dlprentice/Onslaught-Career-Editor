@@ -35,7 +35,8 @@ live in `developer_state.json` and the campaign ledgers.
   keep the same sentence and drop the exception. Save Lab comparison/analysis
   and Game Options browse/patch failures do the same. Save Lab will not keep a
   rescued career in a folder inside the installed game, and it names that folder
-  without dumping the full path. Save Lab and Game Options also keep the write
+  without dumping the full path. If that folder cannot be created, it says so
+  without the path or the exception. Save Lab and Game Options also keep the write
   button off when the chosen output file sits inside the installed game. Game
   Options overwrite confirmation names the file, not the full path, and leaves
   the existing file alone if the player cancels. Save Lab overwrite

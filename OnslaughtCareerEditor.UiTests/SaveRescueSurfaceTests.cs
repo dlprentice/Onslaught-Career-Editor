@@ -257,6 +257,21 @@ public class SaveRescueSurfaceTests
         Assert.That(code, Does.Contain("CareerSaveLocation.Classify").Or.Contain("DescribeDestinationRefusal"));
     }
 
+    [Test]
+    public void AFailedRescueDoesNotDumpTheException()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "SafeCopySaveRescue.cs"));
+
+        Assert.That(source, Does.Contain("CouldNotKeep"));
+        Assert.That(source, Does.Contain("DescribeCaughtFailure"));
+        Assert.That(source, Does.Not.Contain("ex.Message,"));
+        Assert.That(source, Does.Not.Contain("ex.Message)"));
+        Assert.That(SafeCopySaveRescueService.CouldNotKeep, Does.Contain("Nothing was changed"));
+        Assert.That(SafeCopySaveRescueService.CouldNotKeep, Does.Not.Contain(":\\"));
+        Assert.That(SafeCopySaveRescueService.CouldNotKeep.ToLowerInvariant(), Does.Not.Contain("exception"));
+    }
+
     private sealed class InstalledDestinationLab : IDisposable
     {
         public InstalledDestinationLab()

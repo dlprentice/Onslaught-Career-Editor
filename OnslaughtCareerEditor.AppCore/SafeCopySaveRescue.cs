@@ -136,6 +136,8 @@ namespace OnslaughtCareerEditor.AppCore
         /// </summary>
         public const string CareerSaveExtension = ".bes";
 
+        public const string CouldNotKeep = "Could not keep that career. Nothing was changed.";
+
         /// <summary>
         /// Where the game keeps saves inside a copy. <c>savegames</c> is the Steam build's folder
         /// and is where everything this app writes goes; the rest are swept because a save that
@@ -373,7 +375,7 @@ namespace OnslaughtCareerEditor.AppCore
             {
                 return new SafeCopySaveRescueResult(
                     false,
-                    ex.Message,
+                    DescribeCaughtFailure(ex),
                     request.DestinationDirectory,
                     Array.Empty<SafeCopySaveRescueFileOutcome>());
             }
@@ -420,7 +422,7 @@ namespace OnslaughtCareerEditor.AppCore
                                         or UnauthorizedAccessException or ArgumentException
                                         or DirectoryNotFoundException)
             {
-                return new SafeCopyRemovalResult(false, ex.Message, null, null);
+                return new SafeCopyRemovalResult(false, DescribeCaughtFailure(ex), null, null);
             }
 
             SafeCopySaveRescueResult? rescue = null;
@@ -459,8 +461,8 @@ namespace OnslaughtCareerEditor.AppCore
                 return new SafeCopyRemovalResult(
                     false,
                     rescue is null
-                        ? ex.Message
-                        : $"{rescue.Message} The copy could not be deleted: {ex.Message}",
+                        ? DescribeCaughtFailure(ex)
+                        : $"{rescue.Message} The copy could not be deleted. Nothing more was changed.",
                     rescue,
                     null);
             }
@@ -499,7 +501,7 @@ namespace OnslaughtCareerEditor.AppCore
             catch (Exception ex) when (ex is ArgumentException or IOException or InvalidOperationException
                                         or NotSupportedException or UnauthorizedAccessException)
             {
-                return new SafeCopySaveRescueFileOutcome(save.FileName, false, outputPath, ex.Message);
+                return new SafeCopySaveRescueFileOutcome(save.FileName, false, outputPath, DescribeCaughtFailure(ex));
             }
         }
 
@@ -511,6 +513,21 @@ namespace OnslaughtCareerEditor.AppCore
         private static bool LooksLikeInstalledGameDestination(string destination)
         {
             return CareerSaveLocation.ClassifyExisting(destination) == CareerSaveLocationKind.InstalledGame;
+        }
+
+        private static string DescribeCaughtFailure(Exception ex)
+        {
+            string message = ex.Message ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(message) || MessageLeaksPath(message))
+                return CouldNotKeep;
+
+            return message;
+        }
+
+        private static bool MessageLeaksPath(string message)
+        {
+            return message.Contains(":\\", StringComparison.Ordinal)
+                || message.Contains(":/", StringComparison.Ordinal);
         }
 
         /// <summary>

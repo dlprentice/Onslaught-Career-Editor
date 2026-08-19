@@ -311,6 +311,30 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             Assert.False(Directory.Exists(wouldCreate));
         }
 
+        [Fact]
+        public void Rescue_AnUnusableDestinationDoesNotDumpThePath()
+        {
+            using var lab = new SafeCopyLab();
+            string copy = lab.CreateCopy("copy-blocked-folder");
+            string source = lab.WriteSave(copy, Path.Combine("savegames", "Maladim.bes"));
+            string blocker = Path.Combine(lab.Root, "not-a-folder");
+            File.WriteAllBytes(blocker, new byte[] { 1 });
+            string keep = Path.Combine(blocker, "kept-saves");
+
+            SafeCopySaveRescueResult result = SafeCopySaveRescueService.Rescue(
+                new SafeCopySaveRescueRequest { ProfileRoot = copy, DestinationDirectory = keep },
+                lab.ProfilesRoot);
+
+            Assert.False(result.Success);
+            Assert.Equal(SafeCopySaveRescueService.CouldNotKeep, result.Message);
+            Assert.DoesNotContain(keep, result.Message);
+            Assert.DoesNotContain(lab.Root, result.Message);
+            Assert.DoesNotContain(":\\", result.Message);
+            Assert.DoesNotContain("exception", result.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.True(File.Exists(source));
+            Assert.False(Directory.Exists(keep));
+        }
+
         // ---------------------------------------------------- rescue then delete
 
         [Fact]
