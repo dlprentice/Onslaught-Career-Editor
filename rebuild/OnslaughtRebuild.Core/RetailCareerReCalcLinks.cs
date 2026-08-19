@@ -117,8 +117,9 @@ public sealed class RetailCareerNodeLink
 /// secondary count, so Level 100 never reaches them. The Level
 /// 100 goodie arms (0, 8, 78, 121, 164) are the already-pinned
 /// <see cref="RetailCareerUpdateGoodieStates"/> slice. Goodie 1
-/// (<c>GRADE(110) &gt;= C</c>) stays closed on that path because
-/// world 110 is incomplete.
+/// (<c>GRADE(110) &gt;= C</c>) stays closed on first-play because
+/// world 110 is incomplete; leftover complete-110 plus C opens
+/// the store. Do not invent a world-110 FillOut.
 /// </para>
 /// </remarks>
 public static class RetailCareerReCalcLinks

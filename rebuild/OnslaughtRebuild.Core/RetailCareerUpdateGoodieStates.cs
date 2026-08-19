@@ -68,7 +68,8 @@ public sealed class RetailCareerGoodies
 /// 78, 121, and 164. <c>GRADE(110) &gt;= C</c> writes goodie 1, but
 /// world 110 stays incomplete / BlankRanking so that arm is the
 /// already-pinned incomplete <c>'E'</c> and goodie 1 stays
-/// <c>GS_UNKNOWN</c>. <c>CGrade::operator&gt;=</c> treats <c>'S'</c> as
+/// <c>GS_UNKNOWN</c>. Leftover complete-110 plus ranking 0.25f
+/// (already pinned as C) opens the store. <c>CGrade::operator&gt;=</c> treats <c>'S'</c> as
 /// above every other grade, so the already-pinned FillOut 1.0f unlocks
 /// the five world-100 slots together. <c>SET_GOODIE_NEW</c> stores 2
 /// only when <c>mState &lt;= GS_INSTRUCTIONS</c>.
@@ -116,7 +117,10 @@ public static class RetailCareerUpdateGoodieStates
     /// (<c>Career.cpp:382-385</c>) but world 100 stays incomplete, so
     /// both globals stay ctor 0. <c>GRADE(110) &gt;= C</c> stays closed
     /// after first-play: world 110 is incomplete so the lookup is
-    /// <c>'E'</c> and goodie 1 stays <c>GS_UNKNOWN</c>.
+    /// <c>'E'</c> and goodie 1 stays <c>GS_UNKNOWN</c>. Leftover
+    /// complete-110 plus ranking 0.25f opens
+    /// <c>SET_GOODIE_NEW(1)</c>; do not invent a world-110 FillOut
+    /// or <c>COMPLETE_LEVEL(110)</c>.
     /// <c>mPendingExtraGoodies</c> and episode instruction marks stay
     /// unclaimed.
     /// </summary>
