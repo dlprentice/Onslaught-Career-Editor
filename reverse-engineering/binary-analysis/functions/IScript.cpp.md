@@ -1,7 +1,7 @@
 # IScript function map
 
 Status: active static function map
-Last updated: 2026-08-18 (0x004bed30 8-neighbor strictly-smaller step)
+Last updated: 2026-08-18 (0x004beea0 two-pass 0x004bc510 trim)
 Source File: `C:\dev\ONSLAUGHT2\MissionScript\IScript.cpp` (SEH `__FILE__`
 pointer `0x0064fa40` read out of `IScript__PostEvent`) | Binary: BEA.exe,
 SHA-256
@@ -64,6 +64,7 @@ name value into a `CPostEventData` and scheduling event `0x7d0` against the
 | `0x004be420` | `CExplosionInitThing__SelectNextPathStepDirection` | `83ec08 33c0 89442400 89442404 8b442404 8b15c09d8200 … 83c408 c3` | cdecl; bare `ret`; EAX=1 dest-hit (`0x004be93d`), EAX=0 at 500 steps (`cmp [esp+4],0x1f4` / `0x004be946`). Zero stack args — walks globals `0x00829dc0` / `0x00809dbc` toward `0x00809db4` / `0x00809db0`, marks word grid `0x00809dc0`. One inbound `E8` `0x004be337`. Callees: `0x004be970` occupancy test, `0x004be9b0`/`0x004bea10`/`0x004bea70`/`0x004bead0` N/W/S/E step tests. Table class not a COLOC — do not promote. HIGH on ABI, cap, return, caller. Jump-table arms open. |
 | `0x004beb30` | `CExplosionInitThing__FindNearestVisitedGridCell` | `83ec20 53 55 8b0db09d8000 56 57 8b3db49d8000 … 6681bc28c09d8000ffff … 81fd00010000 0f8cbefeffff 5f5e5d5b 83c420 c3` | cdecl; bare `ret`; zero stack args; zero `E8`. Sole inbound `E8` is `0x004be340` (the `EAX==0` arm of `0x004be1d0`). Reads dest cell `[0x00809db4]`/`[0x00809db0]` and the 256×256 word grid at `0x00809dc0` (row stride `0x200` bytes). Outer radius `ebp=0..0xFF`. First word `!= 0xFFFF` (the `0x004bc2e0` clear sentinel) wins and rewrites those dest globals — four hit exits `0x004becbd` / `0x004becdd` / `0x004becf7` / `0x004bed0c`. Miss (`cmp ebp,0x100` at `0x004bec99`) leaves dest unchanged (`0x004becb5`). Caller does not test EAX; it re-reads the globals then `0x004bed30`. Table class not a COLOC — do not promote. HIGH on ABI, caller, sentinel, rewrite-or-not. |
 | `0x004bed30` | `CExplosionInitThing__StepToLowestCostNeighbor8` | `51 8b442408 8b54240c 53 55 8b08 8b12 … 668b046dc09d8000 … 668b1c6dc09b8000 … 8931 893a 5f5e5d5b 59 c3` | cdecl; two `int*` inout args (caller `add esp,8`). Zero `E8`. Sole inbound `E8` is `0x004be3d3`. `ecx=[arg0]` / `edx=[arg1]` / index `ecx*256+edx`. Seed best = current word at `0x00809dc0`. Eight bounded neighbors (N/S/W/E then NW/SW/NE/SE via `±0x200`/`±2`) win on **strictly smaller** unsigned word. Writes the winner back to `*arg0`/`*arg1`; stay if none. Table class not a COLOC — do not promote. HIGH on ABI, 8-neighbor, strictly-less, write-back. |
+| `0x004beea0` | `CExplosionInitThing__SimplifyGridPathByLineOfSight` | `53 55 8b5c240c 56 8bf1 57 8b7e0c 4f 7831 … e836d6ffff 85c0 7503 4f 79cf … e8c8d5ffff … c20400` | `thiscall` `ret 4`. `this` = out-struct (`+0xc` count, `+0x10`/`+0x18` X/Y bytes). Arg = occupancy (`ebx` from `[0x00809db8]`). Two `E8` to `OccupancyBitplane__IsGridSegmentBlocked` `0x004bc510` (label). Pass 1: from `count-1` down, while EAX=0 (clear) drop; then compact and `sub [+0xc]`. Pass 2: from 0 up against cell 0, same. Sole inbound `E8` `0x004be40a`. Table class not a COLOC — do not promote. HIGH on ABI, both calls, count shrink. |
 | `0x00533840` | `IScript__RestoreSavedStateAndGotoInstruction` | `568bf1 8b4638 85c0 7453 50 b9e0c58900 e8bb600000 8b4638 8d4e28 50 e86f23fbff … c3` | Zero-arg `ret`. If `[this+0x38]==0` return. Else `CopyState(+0x38)`, `CSPtrSet__Remove(+0x28)`, delete, `[this+0x38]=0`, then Reset on LEVEL_LOST else `GotoInstruction([0x0089c7f4])`. Same resume as HandleMessage 2001. Only `E8` is `CComplexThing__FinishedPlayingCurrentAnimation` `0x004f45a7`. HIGH. |
 
 ### The three message arms (byte-exact)
@@ -291,6 +292,9 @@ left in `0x00809db4`/`0x00809db0`. Each `0x004bed30` step writes the
 8-neighbor with the strictly smaller unsigned word (or stays). The loop
 stops when the stepped cell equals the start cell (`[esp+0x10]`/`[esp+0x20]`
 from the owner-pos fistp) or the previous cell, then `0x004beea0` may run.
+`0x004beea0` is `thiscall` `ret 4` on the out-struct: two passes of
+`0x004bc510` (clear=0) drop a prefix then a suffix of the X/Y bytes and
+shrink `+0xc`.
 
 ## Open questions (cheapest falsifier first)
 
