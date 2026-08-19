@@ -17,6 +17,7 @@ namespace OnslaughtCareerEditor.AppCore
         public const string LeaseFolderMismatch =
             "A managed copy must stay in this registry's profile folder.";
         public const string CopyFolderMissing = "That copy folder could not be found.";
+        public const string CopyCannotUseLink = "That copy cannot use a shortcut or link.";
 
         private readonly object _gate = new();
         private readonly Dictionary<int, GameProfileRegisteredProcess> _processes = new();
@@ -512,7 +513,7 @@ namespace OnslaughtCareerEditor.AppCore
         {
             FileAttributes attributes = File.GetAttributes(path);
             if ((attributes & FileAttributes.ReparsePoint) != 0)
-                throw new InvalidOperationException($"Managed playable copied game folder registry refuses reparse points in {label}.");
+                throw new InvalidOperationException(CopyCannotUseLink);
         }
 
         private static void RejectExistingReparseAncestors(string path, string label)

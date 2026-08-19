@@ -147,6 +147,7 @@ namespace OnslaughtCareerEditor.AppCore
             "Patch target is under Program Files or another protected install folder. Work in a copy, or choose to patch your installed game - which takes a verified backup first.";
         public const string BackupFileMissing =
             "BEA.exe.original.backup could not be found. Nothing was changed.";
+        public const string TargetCannotUseLink = "That file cannot use a shortcut or link.";
         private const string BackupHashSuffix = ".sha256";
         private const string CatalogRelativePath = "patches/catalog/patches.v2.json";
         private const string ExpectedPatchCatalogSha256 = "48cebf987355622bb54c212d5af4705a6c80df468a25651773c6f41522619622";
@@ -2165,7 +2166,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             FileAttributes attributes = File.GetAttributes(path);
             if ((attributes & FileAttributes.ReparsePoint) != 0)
-                throw new InvalidOperationException($"Patch Bench refuses reparse points in {label}.");
+                throw new InvalidOperationException(TargetCannotUseLink);
         }
 
         private static void RejectExistingReparseAncestors(string path, string label)

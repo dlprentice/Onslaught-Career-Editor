@@ -66,6 +66,7 @@ namespace OnslaughtCareerEditor.AppCore
         public const string TargetMusicFileMissing = "That target music file could not be found.";
         public const string ReplacementMusicFileMissing = "That replacement music file could not be found.";
         public const string MusicBackupMissing = "That music backup file could not be found.";
+        public const string CopyCannotUseLink = "That copy cannot use a shortcut or link.";
         private const string BackupSuffix = ".original.backup";
 
         private static readonly GameProfileMusicSwapPreset[] s_musicSwapPresets =
@@ -512,7 +513,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             FileAttributes attributes = File.GetAttributes(path);
             if ((attributes & FileAttributes.ReparsePoint) != 0)
-                throw new InvalidOperationException($"Playable copied game folder music replacement refuses reparse points in {label}.");
+                throw new InvalidOperationException(CopyCannotUseLink);
         }
 
         private static void RejectExistingReparseAncestors(string path, string label)

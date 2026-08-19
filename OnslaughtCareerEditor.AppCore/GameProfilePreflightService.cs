@@ -124,6 +124,7 @@ namespace OnslaughtCareerEditor.AppCore
         public const string WorkspaceFileMustStayInside = "The workspace file must stay inside the app-owned profile folder.";
         public const string CopyMustStayInside = "That copy must stay inside the app-owned profile folder.";
         public const string FileMustStayInsideCopy = "That file must stay inside the copy.";
+        public const string CopyCannotUseLink = "That copy cannot use a shortcut or link.";
         public const string CopiedBeaMismatch = "That copy's BEA.exe does not match this copy.";
         public const string CopiedBackupMissing = "That copy is missing BEA.exe.original.backup.";
         public const string CopiedBackupHashMissing = "That copy is missing the BEA.exe.original.backup hash file.";
@@ -2008,7 +2009,7 @@ namespace OnslaughtCareerEditor.AppCore
         {
             FileAttributes attributes = File.GetAttributes(path);
             if ((attributes & FileAttributes.ReparsePoint) != 0)
-                throw new InvalidOperationException($"Playable copied game folder preparation refuses reparse points in {label}.");
+                throw new InvalidOperationException(CopyCannotUseLink);
         }
 
         private static void RejectMultipleHardLinks(string path, string label)

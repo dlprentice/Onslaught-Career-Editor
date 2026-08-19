@@ -73,6 +73,7 @@ namespace OnslaughtCareerEditor.AppCore
         public const string ProfileFolderRequired = "An app-owned profile folder is required.";
         public const string OptionsFileMissing = "That copy is missing defaultoptions.bea.";
         public const string OptionsBackupMissing = "That copy is missing a defaultoptions.bea backup.";
+        public const string CopyCannotUseLink = "That copy cannot use a shortcut or link.";
 
         public static GameProfileControlOptionsResult ApplyToSafeCopy(GameProfileControlOptionsRequest request)
         {
@@ -427,7 +428,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             FileAttributes attributes = File.GetAttributes(path);
             if ((attributes & FileAttributes.ReparsePoint) != 0)
-                throw new InvalidOperationException($"Safe-copy control options refuse reparse points in {label}.");
+                throw new InvalidOperationException(CopyCannotUseLink);
         }
 
         private static void RejectMultipleHardLinks(string path, string label)
