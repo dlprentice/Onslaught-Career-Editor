@@ -50,8 +50,8 @@
                                FontWeight="SemiBold" />
                     <TextBlock Text="Steam/game install: read-only source for everything on this page except one thing. Patch my installed game, at the bottom, changes it on purpose - and copies your original BEA.exe first so you can put it back."
                                 Style="{StaticResource SectionBodyTextStyle}" />
-                    <TextBlock Text="Safe game copy: app-owned folder. This is what Play runs."
-                                Style="{StaticResource SectionBodyTextStyle}" />
+                    <TextBlock Text="Safe game copy: this copy folder. This is what Play runs."
+                               Style="{StaticResource SectionBodyTextStyle}" />
                     <TextBlock Text="Advanced BEA.exe-only copy: used for technical inspection and byte-level patching only. It is not a fully playable game folder."
                                Style="{StaticResource SectionBodyTextStyle}" />
                 </StackPanel>
