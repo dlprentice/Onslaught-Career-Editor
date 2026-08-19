@@ -356,7 +356,7 @@ namespace OnslaughtCareerEditor.AppCore
             string profilesRoot = NormalizeExistingDirectory(appOwnedProfilesRoot);
             if (!IsSameOrUnderRoot(root, profilesRoot) ||
                 string.Equals(root, profilesRoot, StringComparison.OrdinalIgnoreCase))
-                throw new InvalidOperationException("Playable copied game folder must stay under the app-owned profiles root.");
+                throw new InvalidOperationException(GameProfilePreflightService.CopyMustStayInside);
 
             RejectExistingReparseAncestors(root, "playable copied game folder root");
             RejectReparsePoint(root, "playable copied game folder root");

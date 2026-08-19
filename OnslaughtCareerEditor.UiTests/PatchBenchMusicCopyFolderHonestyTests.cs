@@ -46,5 +46,8 @@ public class PatchBenchMusicCopyFolderHonestyTests
         Assert.That(source, Does.Contain("ProfileFolderMissing"));
         Assert.That(source, Does.Not.Contain("Playable copied game folder root does not exist:"));
         Assert.That(source, Does.Not.Contain("App-owned profiles root does not exist:"));
+        Assert.That(source, Does.Not.Contain(
+            "Playable copied game folder must stay under the app-owned profiles root."));
+        Assert.That(source, Does.Contain("CopyMustStayInside"));
     }
 }
