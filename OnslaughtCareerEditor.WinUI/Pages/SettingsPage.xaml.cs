@@ -91,7 +91,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
             else if (inspection.Status == GameDirectoryStatus.ExecutableOnly)
             {
-                GameDirectoryStatusTextBlock.Text = "Partial game folder detected: BEA.exe is present, but the data folder is missing. Choose the full game folder before using media or safe-copy workflows.";
+                GameDirectoryStatusTextBlock.Text = "Partial game folder detected: BEA.exe is present, but the data folder is missing. " + GameDirectoryIdentityText.SnapshotNeedsFullInstall;
                 GameDirectoryStatusTextBlock.Foreground = ThemeBrushes.Warning();
             }
             else

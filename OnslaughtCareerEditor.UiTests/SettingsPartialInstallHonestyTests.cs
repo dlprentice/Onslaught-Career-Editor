@@ -35,6 +35,16 @@ public class SettingsPartialInstallHonestyTests
         Assert.That(settings, Does.Contain("Valid game folder detected"));
         Assert.That(settings, Does.Contain("GameDirectoryIdentityText.SnapshotNeedsFullInstall"));
         Assert.That(settings, Does.Not.Contain("Choose the full install"));
+        Assert.That(settings, Does.Not.Contain("Choose the full game folder"));
         Assert.That(settings, Does.Not.Contain("full BEA installation yet"));
+
+        int executableStart = end;
+        int executableEnd = settings.IndexOf("This does not look like", executableStart, StringComparison.Ordinal);
+        Assert.That(executableStart, Is.GreaterThan(start));
+        Assert.That(executableEnd, Is.GreaterThan(executableStart));
+        string executableOnly = settings[executableStart..executableEnd];
+        Assert.That(executableOnly, Does.Contain("GameDirectoryIdentityText.SnapshotNeedsFullInstall"));
+        Assert.That(executableOnly, Does.Contain("the data folder is missing"));
+        Assert.That(executableOnly, Does.Not.Contain("Choose the full game folder"));
     }
 }
