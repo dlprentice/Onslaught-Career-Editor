@@ -267,6 +267,50 @@ public sealed class RetailCareerCampaignApplyUpdateTests
     }
 
     /// <summary>
+    /// Lost returns before <c>mSlots = END_LEVEL_DATA.mSlots</c>
+    /// (<c>Career.cpp:382-385</c> / <c>392</c>). FillOut still carries
+    /// first-play <c>SLOT_TUTORIAL_1..4</c> (63..66); ApplyUpdate does
+    /// not assign them, so leftover career bits stay and the tutorial
+    /// bits stay unset. Isolated
+    /// <see cref="RetailCareerSlotHandoff.ShouldOverwriteFromEndLevel"/>
+    /// does not go through ApplyUpdate. Existing Lost goodie / latch
+    /// tests do not name slots. Mutation: overwrite <c>mSlots</c> on
+    /// the Lost return. No new secondaries.
+    /// </summary>
+    [Fact]
+    public void Level100Lost_ApplyUpdateDoesNotOverwriteCareerSlotsFromTheFillOutSnapshot()
+    {
+        RetailCareerCampaign career = RetailCareerReCalcLinks.CreateColdTrainingSlice();
+        career.Slots.SetSlot(1, 1);
+        RetailEndLevelSnapshot won = RetailFillOutEndLevelData.ForLevel100Won();
+        RetailEndLevelSnapshot lost = won with
+        {
+            FinalState = RetailCareerReCalcLinks.GameStateLevelLost,
+        };
+        var snapshotSlots = new RetailCareerSlots();
+        snapshotSlots.CopyWords(lost.SlotWords);
+
+        Assert.Equal(1, snapshotSlots.GetSlot(RetailCareerSlotHandoff.TutorialIntroductionSlot));
+        Assert.Equal(1, snapshotSlots.GetSlot(RetailCareerSlotHandoff.TutorialPulseCannonSlot));
+        Assert.Equal(1, snapshotSlots.GetSlot(RetailCareerSlotHandoff.TutorialVulcanCannonSlot));
+        Assert.Equal(1, snapshotSlots.GetSlot(RetailCareerSlotHandoff.TutorialStatusBarsSlot));
+        Assert.Equal(0, snapshotSlots.GetSlot(1));
+        Assert.False(RetailCareerSlotHandoff.ShouldOverwriteFromEndLevel(lost.FinalState));
+
+        career.ApplyUpdate(lost);
+
+        Assert.Equal(1, career.Slots.GetSlot(1));
+        Assert.Equal(0, career.Slots.GetSlot(RetailCareerSlotHandoff.TutorialIntroductionSlot));
+        Assert.Equal(0, career.Slots.GetSlot(RetailCareerSlotHandoff.TutorialPulseCannonSlot));
+        Assert.Equal(0, career.Slots.GetSlot(RetailCareerSlotHandoff.TutorialVulcanCannonSlot));
+        Assert.Equal(0, career.Slots.GetSlot(RetailCareerSlotHandoff.TutorialStatusBarsSlot));
+        Assert.NotEqual(lost.SlotWords, career.Slots.Words);
+        Assert.Equal(0, career.Nodes.Find(100)!.Complete);
+        Assert.Equal(0, career.CareerInProgress);
+        Assert.All(lost.SecondaryStatuses, status => Assert.Equal(0, status));
+    }
+
+    /// <summary>
     /// <c>GRADE(100) &gt;= C</c> is not <c>&gt;= B</c>. Ranking 0.25f is
     /// already pinned as C, so a Level 100 win at that ranking unlocks
     /// 0, 8, and 78 and leaves 121 / 164 at <c>GS_UNKNOWN</c>. Mutation:

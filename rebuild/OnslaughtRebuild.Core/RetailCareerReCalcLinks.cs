@@ -237,7 +237,8 @@ public sealed class RetailCareerCampaign
     /// <c>Career.cpp:379-515</c>, <c>0x0041BD00</c> / <c>0x0041BDF0</c>.
     /// The 32-dword slot store is the already-pinned
     /// <see cref="RetailCareerSlotHandoff.OverwriteFromEndLevel"/>;
-    /// this method does not reimplement that copy.
+    /// this method does not reimplement that copy. Lost returns
+    /// before that store (<c>Career.cpp:382-385</c> / <c>392</c>).
     /// </summary>
     public void ApplyUpdate(
         int finalState,
