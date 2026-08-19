@@ -990,7 +990,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
             catch (Exception ex) when (ex is ArgumentException or IOException or InvalidOperationException or NotSupportedException or UnauthorizedAccessException)
             {
-                AppStatusService.SetStatus("Asset Library: sidecar texture failed trusted-root validation");
+                AppStatusService.SetStatus(AssetLibraryPageText.SidecarPreviewRefused);
                 return;
             }
 

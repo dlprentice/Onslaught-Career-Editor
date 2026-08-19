@@ -24,6 +24,14 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
             "Choose another export if you need a sidecar preview.";
 
         /// <summary>
+        /// Opening a sidecar used to say "trusted-root validation". Name the
+        /// texture. The catch covers more than one refusal, so do not invent a
+        /// specific folder-check.
+        /// </summary>
+        public const string SidecarPreviewRefused =
+            "Asset Library: that sidecar texture could not be opened.";
+
+        /// <summary>
         /// A blank path card used to say only that no file is selected.
         /// Name the next step.
         /// </summary>

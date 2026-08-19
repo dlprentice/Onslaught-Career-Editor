@@ -26,4 +26,26 @@ public class AssetLinkedTextureHonestyTests
         Assert.That(AssetLibraryPageText.SidecarPreviewMissing.ToLowerInvariant(), Does.Not.Contain("unavailable"));
         Assert.That(AssetLibraryPageText.SidecarPreviewMissing.ToLowerInvariant(), Does.Not.Contain("path"));
     }
+
+    [Test]
+    public void ARefusedSidecarTextureNamesTheTextureNotATrustedRoot()
+    {
+        string page = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot,
+            "OnslaughtCareerEditor.WinUI",
+            "Pages",
+            "AssetLibraryPage.xaml.cs"));
+        string sentence = AssetLibraryPageText.SidecarPreviewRefused;
+
+        Assert.That(page, Does.Contain("AssetLibraryPageText.SidecarPreviewRefused"));
+        Assert.That(page, Does.Not.Contain("trusted-root"));
+        Assert.That(page, Does.Not.Contain("failed trusted-root validation"));
+        Assert.That(sentence, Is.EqualTo("Asset Library: that sidecar texture could not be opened."));
+        Assert.That(sentence, Does.Contain("sidecar texture"));
+        Assert.That(sentence.ToLowerInvariant(), Does.Not.Contain("trusted"));
+        Assert.That(sentence.ToLowerInvariant(), Does.Not.Contain("root"));
+        Assert.That(sentence.ToLowerInvariant(), Does.Not.Contain("path"));
+        Assert.That(sentence, Does.Not.Contain(":\\"));
+        Assert.That(sentence, Does.Not.Contain("/"));
+    }
 }
