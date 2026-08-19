@@ -135,6 +135,7 @@ namespace OnslaughtCareerEditor.AppCore
         public const string CopiedBackupNotRetail = "That copy's BEA.exe.original.backup is not the known Steam retail file.";
         public const string CopiedBeaPatchesMismatch = "That copy's BEA.exe no longer matches its patches.";
         public const string CopiedBeaPatchApplyFailed = "Those patches could not be applied to that copy.";
+        public const string RequiredPatchRowMissing = "A required patch row is missing.";
         public const string ProfileFolderInsideGame =
             "The app-owned profile folder must not sit inside the game folder.";
         public const string GameFolderInsideProfile =
@@ -1317,7 +1318,7 @@ namespace OnslaughtCareerEditor.AppCore
             foreach (string key in keys)
             {
                 if (!byKey.TryGetValue(key, out BinaryPatchSpec? spec))
-                    throw new InvalidOperationException($"Required patch catalog row is missing: {key}");
+                    throw new InvalidOperationException(RequiredPatchRowMissing);
                 selected.Add(spec);
             }
 

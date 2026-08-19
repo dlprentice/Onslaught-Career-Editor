@@ -118,6 +118,14 @@ public class PreflightRequiredFileHonestyTests
         Assert.That(source, Does.Not.Contain("patch verification failed:"));
         Assert.That(source, Does.Contain("CopiedBeaPatchesMismatch"));
         Assert.That(source, Does.Contain("CopiedBeaPatchApplyFailed"));
+        Assert.That(source, Does.Not.Contain("Required patch catalog row is missing:"));
+        Assert.That(source, Does.Contain("RequiredPatchRowMissing"));
+        Assert.That(GameProfilePreflightService.RequiredPatchRowMissing,
+            Is.EqualTo("A required patch row is missing."));
+        Assert.That(GameProfilePreflightService.RequiredPatchRowMissing.ToLowerInvariant(),
+            Does.Not.Contain("catalog"));
+        Assert.That(GameProfilePreflightService.RequiredPatchRowMissing.ToLowerInvariant(),
+            Does.Not.Contain("key"));
         Assert.That(source, Does.Contain("CopiedBackupMissing"));
         Assert.That(source, Does.Contain("CopiedBackupHashMissing"));
         Assert.That(source, Does.Contain("CopiedBackupHashMismatch"));
