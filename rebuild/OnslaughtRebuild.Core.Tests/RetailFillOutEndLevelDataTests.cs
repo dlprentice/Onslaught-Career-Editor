@@ -35,6 +35,24 @@ public sealed class RetailFillOutEndLevelDataTests
     }
 
     /// <summary>
+    /// <c>game.cpp:967</c> stores <c>mRanking = 1.0f</c> before the
+    /// unclaimed score-time arm. Level 100's secondary count is 0, so
+    /// the 0.4 / 0.6 clamp never runs. Mutation: defaulting the snapshot
+    /// ranking to the failed-secondary 0.6 cap fails this equality.
+    /// Do not invent secondaries or score-time.
+    /// </summary>
+    [Fact]
+    public void Level100Won_SnapshotRankingIsThePreClampOnePointZero()
+    {
+        RetailEndLevelSnapshot snapshot = RetailFillOutEndLevelData.ForLevel100Won();
+
+        Assert.Equal(1.0f, snapshot.Ranking);
+        Assert.NotEqual(0.6f, snapshot.Ranking);
+        Assert.NotEqual(0.4f, snapshot.Ranking);
+        Assert.All(snapshot.SecondaryStatuses, status => Assert.Equal(0, status));
+    }
+
+    /// <summary>
     /// FillOut copies the ten primary <c>GetStatus()</c> words. After a
     /// Level 100 win those are four <c>MOS_COMPLETE</c> (1) and six
     /// unset slots — already pinned on
