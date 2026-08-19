@@ -120,7 +120,9 @@ live in `developer_state.json` and the campaign ledgers.
   write inside a Battle Engine Aquila game folder names the files, not
   the output paths. A missing restore backup names
   BEA.exe.original.backup, not the path. A dumped installed-game patch
-  or restore uses the shared nothing-was-changed sentence.
+  or restore uses the shared nothing-was-changed sentence. Career-save
+  and Game Options patcher refusals that used to say an input or output
+  path now name the files.
 
 ## 1.0.11 — 2026-08-07
 

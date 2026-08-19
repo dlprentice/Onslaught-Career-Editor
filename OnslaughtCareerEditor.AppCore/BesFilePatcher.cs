@@ -846,18 +846,18 @@ namespace OnslaughtCareerEditor.AppCore
             if (string.Equals(inputExtension, ".bes", StringComparison.OrdinalIgnoreCase))
             {
                 if (!string.Equals(outputExtension, ".bes", StringComparison.OrdinalIgnoreCase))
-                    throw new InvalidOperationException("Career save patching requires a .bes output path.");
+                    throw new InvalidOperationException("Career save patching requires a .bes output file.");
                 return;
             }
 
             if (string.Equals(inputExtension, ".bea", StringComparison.OrdinalIgnoreCase))
             {
                 if (!string.Equals(outputExtension, ".bea", StringComparison.OrdinalIgnoreCase))
-                    throw new InvalidOperationException("Game options patching requires a .bea output path.");
+                    throw new InvalidOperationException("Game options patching requires a .bea output file.");
                 return;
             }
 
-            throw new InvalidOperationException("Patching requires a .bes career save or .bea options input path.");
+            throw new InvalidOperationException("Patching requires a .bes career save or .bea options input file.");
         }
 
         private void ApplyOptionsEntryOverrides(byte[] buf)
