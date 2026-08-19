@@ -112,6 +112,7 @@ namespace OnslaughtCareerEditor.AppCore
     {
         public const string SchemaVersion = "winui-copied-game-profile.v1";
         public const string TargetCopyExists = "That copy folder already exists.";
+        public const string CopyFolderMissing = "That copy folder could not be found.";
 
         /// <summary>
         /// The manifest every generated playable copied game folder carries. Its presence is what
@@ -2113,7 +2114,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             string normalizedRoot = NormalizeDirectoryForCreation(appOwnedProfilesRoot);
             if (!Directory.Exists(profileRoot))
-                throw new DirectoryNotFoundException($"Playable copied game folder does not exist: {profileRoot}");
+                throw new DirectoryNotFoundException(CopyFolderMissing);
 
             string normalizedProfile = NormalizeExistingDirectory(profileRoot);
             RejectExistingReparseAncestors(normalizedRoot, "app-owned playable copied game folder root");

@@ -138,6 +138,8 @@ namespace OnslaughtCareerEditor.AppCore
 
         public const string CouldNotKeep = "Could not keep that career. Nothing was changed.";
 
+        public const string CopyFolderMissing = "That copy folder could not be found.";
+
         /// <summary>
         /// Where the game keeps saves inside a copy. <c>savegames</c> is the Steam build's folder
         /// and is where everything this app writes goes; the rest are swept because a save that
@@ -575,7 +577,7 @@ namespace OnslaughtCareerEditor.AppCore
                 throw new InvalidOperationException("A playable copied game folder is required.");
 
             if (!Directory.Exists(profileRoot))
-                throw new DirectoryNotFoundException($"Playable copied game folder does not exist: {profileRoot}");
+                throw new DirectoryNotFoundException(CopyFolderMissing);
 
             string normalizedRoot = FileMutationSafety.NormalizeLocalPath(
                 appOwnedProfilesRoot,

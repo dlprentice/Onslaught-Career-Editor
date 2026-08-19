@@ -147,6 +147,21 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         }
 
         [Fact]
+        public void DeleteGeneratedProfile_AMissingCopyFolderNamesTheFolderNotAPath()
+        {
+            using var lab = new SafeCopyLab();
+            string missing = Path.Combine(lab.ProfilesRoot, "gone-copy");
+
+            DirectoryNotFoundException error = Assert.Throws<DirectoryNotFoundException>(
+                () => GameProfilePreflightService.DeleteGeneratedProfile(missing, lab.ProfilesRoot));
+
+            Assert.Equal(GameProfilePreflightService.CopyFolderMissing, error.Message);
+            Assert.DoesNotContain(missing, error.Message);
+            Assert.DoesNotContain(lab.Root, error.Message);
+            Assert.DoesNotContain(":\\", error.Message);
+        }
+
+        [Fact]
         public void DeleteGeneratedProfile_TakesTheSavesOnlyWhenTheCallerSaysSoExplicitly()
         {
             using var lab = new SafeCopyLab();
@@ -309,6 +324,25 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             Assert.False(missing.Success);
             Assert.Equal(CareerSaveLocation.InstalledDestinationRefused, missing.Message);
             Assert.False(Directory.Exists(wouldCreate));
+        }
+
+        [Fact]
+        public void Rescue_AMissingCopyFolderNamesTheFolderNotAPath()
+        {
+            using var lab = new SafeCopyLab();
+            string missing = Path.Combine(lab.ProfilesRoot, "gone-copy");
+            string keep = Path.Combine(lab.Root, "kept-gone");
+
+            SafeCopySaveRescueResult result = SafeCopySaveRescueService.Rescue(
+                new SafeCopySaveRescueRequest { ProfileRoot = missing, DestinationDirectory = keep },
+                lab.ProfilesRoot);
+
+            Assert.False(result.Success);
+            Assert.Equal(SafeCopySaveRescueService.CopyFolderMissing, result.Message);
+            Assert.DoesNotContain(missing, result.Message);
+            Assert.DoesNotContain(lab.Root, result.Message);
+            Assert.DoesNotContain(":\\", result.Message);
+            Assert.DoesNotContain("Playable copied game folder does not exist", result.Message);
         }
 
         [Fact]
