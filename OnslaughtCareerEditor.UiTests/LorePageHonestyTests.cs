@@ -126,4 +126,15 @@ public class LorePageHonestyTests
         Assert.That(LorePageText.LinkOpenFailed, Does.Contain("could not be opened"));
         Assert.That(LorePageText.LinkOpenFailed, Does.Not.Contain("The selected"));
     }
+
+    [Test]
+    public void AMissingDocumentDoesNotAttachTheKey()
+    {
+        string page = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI", "Pages", "LorePage.xaml.cs"));
+
+        Assert.That(page, Does.Contain("throw new FileNotFoundException(LorePageText.DocumentLoadFailed)"));
+        Assert.That(page, Does.Not.Contain("The selected lore document was not found."));
+        Assert.That(page, Does.Not.Contain("FileNotFoundException(\"The selected lore document was not found.\", documentKey)"));
+    }
 }

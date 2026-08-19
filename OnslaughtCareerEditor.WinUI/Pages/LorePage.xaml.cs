@@ -291,7 +291,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             string documentKey = _service.NormalizeDocumentKey(filePath);
             if (!_service.DocumentExists(documentKey))
             {
-                throw new FileNotFoundException("The selected lore document was not found.", documentKey);
+                throw new FileNotFoundException(LorePageText.DocumentLoadFailed);
             }
 
             if (addToHistory && !_suppressHistory && !string.IsNullOrWhiteSpace(_currentSourcePath))
