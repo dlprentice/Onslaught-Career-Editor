@@ -631,7 +631,7 @@
                                            AutomationProperties.AutomationId="AssetModelTextureLinks"
                                            Style="{StaticResource SectionBodyTextStyle}"
                                            TextWrapping="WrapWholeWords"
-                                           Text="Catalog and sidecar texture links appear here when an FBX export references extracted textures." />
+                                           Text="Texture links appear here when an FBX export references extracted textures." />
                                 <Button x:Name="ViewLinkedTextureButton"
                                         AutomationProperties.AutomationId="AssetViewLinkedTextureButton"
                                         Content="View linked texture"
