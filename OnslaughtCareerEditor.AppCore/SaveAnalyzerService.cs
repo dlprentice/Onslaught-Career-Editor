@@ -135,9 +135,7 @@ namespace OnslaughtCareerEditor.AppCore
                     : "Single-file analysis: .bes career save view.",
                 StatusText = isValid
                     ? $"Save Analyzer: {analysis.CompletedNodes} missions, {analysis.CompletedLinks} links"
-                    : string.Equals(analysis.ErrorMessage, AnalysisFailed, StringComparison.Ordinal)
-                        ? AnalysisFailed
-                        : $"Save Analyzer: Invalid file - {analysis.ErrorMessage}",
+                    : AnalysisFailed,
                 ReportText = BesFilePatcher.FormatAnalysisReport(analysis, verbose, dumpMystery),
                 Metrics = metrics,
                 SummaryNodes = BuildAnalysisSummaryNodes(analysis),

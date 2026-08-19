@@ -402,7 +402,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 Assert.False(analysis.IsValid);
                 Assert.False(analysis.VersionValid);
                 Assert.Contains("Invalid .bes version word", analysis.ErrorMessage);
-                Assert.Contains("Invalid file", document.StatusText);
+                Assert.Equal(SaveAnalyzerService.AnalysisFailed, document.StatusText);
                 Assert.Contains("Invalid .bes version word", document.ReportText);
             }
             finally
@@ -520,10 +520,30 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             SaveAnalyzerDocument document = SaveAnalyzerService.BuildAnalysisDocument(analysis, verbose: false, dumpMystery: false);
 
             Assert.Equal("Analysis: broken.bes", document.Title);
-            Assert.Contains("Invalid file", document.StatusText);
+            Assert.Equal(SaveAnalyzerService.AnalysisFailed, document.StatusText);
             Assert.Single(document.SummaryNodes);
             Assert.Equal("Invalid file size", document.SummaryNodes[0].Label);
             Assert.Contains("ERROR: Invalid file size", document.ReportText);
+        }
+
+        [Fact]
+        public void BuildAnalysisDocument_DoesNotDumpTheAnalyzerErrorOnTheStatusLine()
+        {
+            SaveAnalysis analysis = new()
+            {
+                IsValid = false,
+                FilePath = @"C:\Games\Steam\steamapps\common\Battle Engine Aquila\career.bes",
+                ErrorMessage = "Invalid file size: 9,972 bytes (expected 10,004)"
+            };
+
+            SaveAnalyzerDocument document = SaveAnalyzerService.BuildAnalysisDocument(analysis, verbose: false, dumpMystery: false);
+
+            Assert.Equal(SaveAnalyzerService.AnalysisFailed, document.StatusText);
+            Assert.Contains("Nothing was changed", document.StatusText);
+            Assert.DoesNotContain("Invalid file size", document.StatusText);
+            Assert.DoesNotContain("Save Analyzer: Invalid file -", document.StatusText);
+            Assert.DoesNotContain(@"C:\Games", document.StatusText);
+            Assert.DoesNotContain(":\\", document.StatusText);
         }
 
         [Fact]
