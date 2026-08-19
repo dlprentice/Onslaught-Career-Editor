@@ -54,6 +54,8 @@ public class PreflightRequiredFileHonestyTests
         Assert.That(source, Does.Not.Contain("Level 100 text backup is missing."));
         Assert.That(source, Does.Not.Contain("Level 100 early-flight target is missing."));
         Assert.That(source, Does.Not.Contain("Level 100 early-flight backup is missing."));
+        Assert.That(source, Does.Not.Contain("music replacement target is missing."));
+        Assert.That(source, Does.Not.Contain("music replacement backup is missing."));
         Assert.That(source, Does.Not.Contain("data\\\\language\\\\english.dat."));
         Assert.That(source, Does.Not.Contain("data\\\\resources\\\\100_res_PC.aya."));
         Assert.That(source, Does.Contain("Level100EnglishDatMissing"));
@@ -63,6 +65,10 @@ public class PreflightRequiredFileHonestyTests
         Assert.That(source, Does.Not.Contain("FileNotFoundException(Level100EnglishDatMissing,"));
         Assert.That(source, Does.Not.Contain("FileNotFoundException(Level100ResourceMissing,"));
         Assert.That(source, Does.Not.Contain("FileNotFoundException(Level100ResourceBackupMissing,"));
+        Assert.That(source, Does.Contain("TargetMusicFileMissing"));
+        Assert.That(source, Does.Contain("MusicBackupMissing"));
+        Assert.That(source, Does.Not.Contain("FileNotFoundException(GameProfileMusicReplacementService.TargetMusicFileMissing,"));
+        Assert.That(source, Does.Not.Contain("FileNotFoundException(GameProfileMusicReplacementService.MusicBackupMissing,"));
     }
 
     [Test]

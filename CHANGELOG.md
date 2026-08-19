@@ -190,7 +190,8 @@ live in `developer_state.json` and the campaign ledgers.
   missing inline video names the file, not a path. A missing Lore
   document reuses the could-not-be-opened sentence, not a key.
   A missing copied english.dat, its backup, or 100_res_PC.aya
-  names the file, not a path.
+  names the file, not a path. A missing copied music replacement
+  or its backup names the file, not a path.
 
 ## 1.0.11 — 2026-08-07
 

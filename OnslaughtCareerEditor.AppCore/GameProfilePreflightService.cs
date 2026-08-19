@@ -836,9 +836,9 @@ namespace OnslaughtCareerEditor.AppCore
                     throw new InvalidOperationException("Playable copied game folder music replacement manifest target file does not match its target name.");
 
                 if (!File.Exists(targetPath))
-                    throw new FileNotFoundException("Playable copied game folder music replacement target is missing.", targetPath);
+                    throw new FileNotFoundException(GameProfileMusicReplacementService.TargetMusicFileMissing);
                 if (!File.Exists(backupPath))
-                    throw new FileNotFoundException("Playable copied game folder music replacement backup is missing.", backupPath);
+                    throw new FileNotFoundException(GameProfileMusicReplacementService.MusicBackupMissing);
 
                 string actualTargetHash = ComputeSha256(targetPath);
                 if (!string.Equals(actualTargetHash, replacementSha256, StringComparison.OrdinalIgnoreCase))
