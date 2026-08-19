@@ -97,6 +97,20 @@ public class FileMutationSafetyHonestyTests
     }
 
     [Test]
+    public void AMutationGuardEscapeNamesTheFolderNotALabel()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "FileMutationSafety.cs"));
+
+        Assert.That(source, Does.Not.Contain("{label} mutation guard escaped its held directory."));
+        Assert.That(source, Does.Not.Contain("{label} is too large to read safely."));
+        Assert.That(source, Does.Contain("FolderGuardEscaped"));
+        Assert.That(source, Does.Contain("FileTooLargeToRead"));
+        Assert.That(source, Does.Contain("That folder guard escaped its held folder."));
+        Assert.That(source, Does.Contain("That file is too large to read safely."));
+    }
+
+    [Test]
     public void AMissingProtectedInputDoesNotAttachTheFilePath()
     {
         string source = File.ReadAllText(Path.Combine(

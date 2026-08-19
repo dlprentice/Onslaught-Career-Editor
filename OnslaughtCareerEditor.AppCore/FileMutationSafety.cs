@@ -57,6 +57,8 @@ namespace OnslaughtCareerEditor.AppCore
         internal const string FolderCouldNotBeGuarded = "That folder could not be guarded against in-place change.";
         internal const string FolderGuardCouldNotBeCreated = "That folder guard could not be created.";
         internal const string FolderCouldNotBeSecuredForPublication = "That folder could not be secured for publication.";
+        internal const string FolderGuardEscaped = "That folder guard escaped its held folder.";
+        internal const string FileTooLargeToRead = "That file is too large to read safely.";
 
         internal static string NormalizeLocalPath(string path, string label)
         {
@@ -597,7 +599,7 @@ namespace OnslaughtCareerEditor.AppCore
                         PathComparison))
                 {
                     throw new InvalidOperationException(
-                        $"{label} mutation guard escaped its held directory.");
+                        FolderGuardEscaped);
                 }
                 return (sentinel, sentinelPath);
             }
@@ -1361,7 +1363,7 @@ namespace OnslaughtCareerEditor.AppCore
         private static byte[] ReadAllBytes(FileStream stream, string label)
         {
             if (stream.Length > int.MaxValue)
-                throw new IOException($"{label} is too large to read safely.");
+                throw new IOException(FileMutationSafety.FileTooLargeToRead);
 
             byte[] bytes = new byte[checked((int)stream.Length)];
             stream.Position = 0;
