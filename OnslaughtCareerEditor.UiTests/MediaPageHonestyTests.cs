@@ -276,4 +276,20 @@ public class MediaPageHonestyTests
         Assert.That(xaml, Does.Contain(MediaPageText.NoTrackSelectedNextStep));
         Assert.That(xaml, Does.Contain(MediaPageText.NoVideoSelectedNextStep));
     }
+
+    [Test]
+    public void APlayWithoutASelectionSaysWhatToDoNext()
+    {
+        string code = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI", "Pages", "MediaPage.xaml.cs"));
+
+        Assert.That(MediaPageText.NoTrackSelectedStatus, Is.EqualTo("Media: choose a track"));
+        Assert.That(MediaPageText.NoVideoSelectedStatus, Is.EqualTo("Media: choose a video"));
+        Assert.That(MediaPageText.NoTrackSelectedStatus.ToLowerInvariant(), Does.Not.Contain("selected"));
+        Assert.That(MediaPageText.NoVideoSelectedStatus.ToLowerInvariant(), Does.Not.Contain("selected"));
+        Assert.That(code, Does.Contain("MediaPageText.NoTrackSelectedStatus"));
+        Assert.That(code, Does.Contain("MediaPageText.NoVideoSelectedStatus"));
+        Assert.That(code, Does.Not.Contain("no audio track selected"));
+        Assert.That(code, Does.Not.Contain("Media: no video selected"));
+    }
 }

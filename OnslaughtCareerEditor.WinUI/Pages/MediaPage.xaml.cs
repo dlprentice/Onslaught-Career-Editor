@@ -1862,7 +1862,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         {
             if (_selectedAudio == null)
             {
-                AppStatusService.SetStatus("Media: no audio track selected");
+                AppStatusService.SetStatus(MediaPageText.NoTrackSelectedStatus);
                 return;
             }
 
@@ -1976,7 +1976,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         {
             if (_selectedVideo == null)
             {
-                AppStatusService.SetStatus("Media: no video selected");
+                AppStatusService.SetStatus(MediaPageText.NoVideoSelectedStatus);
                 return;
             }
 

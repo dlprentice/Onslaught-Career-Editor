@@ -48,6 +48,10 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
 
         public const string NoVideoSelectedNextStep = "Choose a video.";
 
+        public const string NoTrackSelectedStatus = "Media: choose a track";
+
+        public const string NoVideoSelectedStatus = "Media: choose a video";
+
         public static string DescribeAudioEmptyState(bool hasGameDirectory, string? search)
         {
             if (!hasGameDirectory)
