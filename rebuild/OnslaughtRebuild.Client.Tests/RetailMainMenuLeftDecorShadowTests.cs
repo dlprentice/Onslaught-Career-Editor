@@ -24,8 +24,8 @@ namespace OnslaughtRebuild.Client.Tests;
 /// (<c>0x005563D0</c>). Both dest helpers at <c>0x0046388F</c> and
 /// <c>0x004638A3</c> land on <c>0x00468730</c>. Dest is the left-arc
 /// pair (219+5, 344+5), not right 462/365. Body sibling 0x004638B7
-/// is the leftover not/and/xor pack at (219,344) Z 0.3 — not this
-/// type. Left-twin 0x00463A8F / 0x00463AD3 is DAT_0089D898 — also
+/// is RetailMainMenuLeftDecorOverlay at (219,344) Z 0.3 — not this
+/// type. Left-twin 0x00463A8F / 0x00463AD3 is DAT_0089D898 — still
 /// leftover. Settled 255 submits <c>0x3E000000</c>, which is capture
 /// ShadowTint. DrawMainMenu keeps ShadowTint. Not a sheen (that is
 /// already 0x00464343). Not SetLanguage. Not a Process increment.

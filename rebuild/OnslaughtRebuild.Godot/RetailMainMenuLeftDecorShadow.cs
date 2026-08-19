@@ -43,9 +43,9 @@ namespace OnslaughtRebuild.GodotClient;
 ///
 /// <para><b>Not the twin-fade gate.</b> <c>0x00463E8D</c> owns
 /// DAT_0089D8A4 only. This type does not invent that gate or a
-/// <c>ShouldDraw</c>. Body sibling <c>0x004638B7</c> is the leftover
-/// not/and/xor pack at dest immediates 344.0 / 219.0 and Z
-/// <c>0x3E99999A</c> — not this type. Left-twin pair
+/// <c>ShouldDraw</c>. Body sibling <c>0x004638B7</c> is already
+/// <see cref="RetailMainMenuLeftDecorOverlay"/> — dest immediates
+/// 344.0 / 219.0 and Z <c>0x3E99999A</c>, not this type. Left-twin pair
 /// <c>0x00463A8F</c> / <c>0x00463AD3</c> is DAT_0089D898 — also
 /// leftover.</para>
 ///
@@ -203,7 +203,7 @@ public static class RetailMainMenuLeftDecorShadow
     /// <summary>Capture BracketTint still owns the body overlay.</summary>
     public const bool ReplacesBracketTint = false;
 
-    /// <summary>0x004638B7 is leftover, not this type.</summary>
+    /// <summary>0x004638B7 is already <see cref="RetailMainMenuLeftDecorOverlay"/>.</summary>
     public const bool RedoesBodyOverlay = false;
 
     /// <summary>The 224/349 addends are the already-shipped ellipse centre.</summary>
