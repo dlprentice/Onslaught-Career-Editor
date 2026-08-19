@@ -104,7 +104,8 @@ live in `developer_state.json` and the campaign ledgers.
   and data the same way. The Review setup tooltip uses that sentence
   too. An empty safe-copy list says to create one above, not that there
   are none yet. An empty Save Analyzer tree uses the same choose-a-file
-  sentence, not "No analysis yet." A failed Game Options write that still looks
+  sentence, not "No analysis yet." Settings incomplete-folder lines
+  name BEA.exe and data, not "the full install." A failed Game Options write that still looks
   like a dump uses the shared nothing-was-changed sentence. A failed
   focused Goodie write that still looks like a dump uses that same
   sentence. Save Editor refusals that used to say paths now name the

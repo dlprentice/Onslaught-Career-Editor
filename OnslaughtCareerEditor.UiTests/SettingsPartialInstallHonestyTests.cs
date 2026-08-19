@@ -33,5 +33,8 @@ public class SettingsPartialInstallHonestyTests
         Assert.That(settings, Does.Contain("Partial game folder detected"));
         Assert.That(settings, Does.Not.Contain("Valid game directory detected"));
         Assert.That(settings, Does.Contain("Valid game folder detected"));
+        Assert.That(settings, Does.Contain("GameDirectoryIdentityText.SnapshotNeedsFullInstall"));
+        Assert.That(settings, Does.Not.Contain("Choose the full install"));
+        Assert.That(settings, Does.Not.Contain("full BEA installation yet"));
     }
 }

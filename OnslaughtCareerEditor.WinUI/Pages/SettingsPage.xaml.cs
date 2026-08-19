@@ -63,7 +63,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 ? "Choose your installed game folder. The app reads it to create playable copies, and only changes it if you ask it to."
                 : isFullInstall
                     ? "Source material. Editing and patching work on copies unless you choose to patch this install in Windowed & Mods."
-                    : "This saved folder is incomplete. Choose the full install before using automatic discovery, Media, or playable safe copies.";
+                    : "This saved folder is incomplete. " + GameDirectoryIdentityText.SnapshotNeedsFullInstall;
         }
 
         private void ValidateGameDirectory(string path)
@@ -86,7 +86,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
             else if (inspection.Status == GameDirectoryStatus.MediaOnly)
             {
-                GameDirectoryStatusTextBlock.Text = "Partial game folder detected: the data folder is present, but BEA.exe is missing. Choose the full install before using Media or playable safe copies.";
+                GameDirectoryStatusTextBlock.Text = "Partial game folder detected: the data folder is present, but BEA.exe is missing. " + GameDirectoryIdentityText.SnapshotNeedsFullInstall;
                 GameDirectoryStatusTextBlock.Foreground = ThemeBrushes.Warning();
             }
             else if (inspection.Status == GameDirectoryStatus.ExecutableOnly)
@@ -96,7 +96,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
             else
             {
-                GameDirectoryStatusTextBlock.Text = "Warning: this does not look like a full BEA installation yet.";
+                GameDirectoryStatusTextBlock.Text = "This does not look like a Battle Engine Aquila folder. " + GameDirectoryIdentityText.SnapshotNeedsFullInstall;
                 GameDirectoryStatusTextBlock.Foreground = ThemeBrushes.Warning();
             }
         }
