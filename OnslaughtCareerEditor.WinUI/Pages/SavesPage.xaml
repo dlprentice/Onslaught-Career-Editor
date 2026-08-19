@@ -601,7 +601,7 @@
                                 <TextBlock Text="Focused Goodie state"
                                            FontSize="18"
                                            FontWeight="SemiBold" />
-                                <TextBlock Text="Write one documented Goodie dword without running the broad Goodies pass. IDs are zero-based. A Safe Game Copy destination must be one .bes file directly inside that verified profile's savegames folder; installed game folders and in-place output remain blocked."
+                                <TextBlock Text="Write one documented Goodie dword without running the broad Goodies pass. IDs are zero-based. A safe-copy destination must be one .bes file in that copy's savegames folder; installed game folders and in-place output remain blocked."
                                            Style="{StaticResource SectionBodyTextStyle}"
                                            TextWrapping="WrapWholeWords" />
                                 <Grid ColumnSpacing="12">

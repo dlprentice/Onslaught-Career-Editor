@@ -412,7 +412,7 @@ namespace OnslaughtCareerEditor.AppCore
                     !string.Equals(segments[1], "savegames", StringComparison.OrdinalIgnoreCase))
                 {
                     return PatchResult.Fail(
-                        "Safe-copy Goodie output must be one .bes file directly inside a verified profile's savegames folder.");
+                        "Inside a safe copy, that Goodie save has to be one .bes file in that copy's savegames folder.");
                 }
 
                 string profileRoot = Path.Combine(appOwnedProfilesRoot, segments[0]);
