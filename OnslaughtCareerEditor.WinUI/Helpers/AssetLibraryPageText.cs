@@ -20,6 +20,9 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         public const string PreviewExportMissing =
             "This goodie is cataloged. Choose another Goodie, or load an export that includes its preview.";
 
+        public const string SidecarPreviewMissing =
+            "Choose another export if you need a sidecar preview.";
+
         public static string? DescribeListNote(bool hasCatalog, string? search, int matchCount)
         {
             if (!hasCatalog || matchCount > 0 || string.IsNullOrWhiteSpace(search))

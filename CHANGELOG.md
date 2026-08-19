@@ -184,7 +184,8 @@ live in `developer_state.json` and the campaign ledgers.
   A Windowed & Mods create that cannot see the source game folder names
   the next step, not the emptiness. A missing copy used to launch names
   the folder, not a path. A blank app-owned profile folder names the
-  folder, not a root.
+  folder, not a root. A missing Asset Library sidecar preview names
+  the next step, not the emptiness.
 
 ## 1.0.11 — 2026-08-07
 

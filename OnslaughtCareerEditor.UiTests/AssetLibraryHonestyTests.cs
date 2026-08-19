@@ -123,4 +123,18 @@ public class AssetLibraryHonestyTests
         Assert.That(AssetLibraryPageText.PreviewExportMissing, Does.Contain("Choose another Goodie"));
         Assert.That(AssetLibraryPageText.PreviewExportMissing, Does.Not.Contain("yet"));
     }
+
+    [Test]
+    public void AMissingSidecarPreviewSaysWhatToDoNext()
+    {
+        string page = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI", "Pages", "AssetLibraryPage.xaml.cs"));
+        string helper = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI", "Helpers", "AssetLibraryPageText.cs"));
+
+        Assert.That(helper, Does.Contain("Choose another export if you need a sidecar preview."));
+        Assert.That(page, Does.Contain("AssetLibraryPageText.SidecarPreviewMissing"));
+        Assert.That(page, Does.Not.Contain("No sidecar preview file was found beside the export."));
+        Assert.That(helper, Does.Not.Contain("found beside the export"));
+    }
 }

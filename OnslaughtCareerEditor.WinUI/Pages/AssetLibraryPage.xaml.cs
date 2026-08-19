@@ -901,7 +901,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         private static string BuildSidecarTextureSummary(int sidecarCount, int bindingCount)
         {
             return sidecarCount == 0
-                ? "No sidecar preview file was found beside the export."
+                ? AssetLibraryPageText.SidecarPreviewMissing
                 : $"Sidecar preview files: {sidecarCount}/{bindingCount}.";
         }
 
