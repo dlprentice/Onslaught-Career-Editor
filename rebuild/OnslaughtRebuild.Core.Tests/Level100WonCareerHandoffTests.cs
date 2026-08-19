@@ -943,6 +943,39 @@ public sealed class Level100WonCareerHandoffTests
     }
 
     /// <summary>
+    /// <c>IScript::EnableFlightMode</c> at <c>0x00535079</c>
+    /// calls <c>0x0040dcb0</c>, which is
+    /// <c>mov dword ptr [ecx+0x58c], 1</c>. First-play beat 6
+    /// posts one Enable, so <c>CBattleEngine+0x58c</c> is 1
+    /// before FillOut. Isolated
+    /// <c>FlightModeEnabled</c> = true names the rebuild bool
+    /// and still passes if this store is skipped. Isolated
+    /// <see cref="RetailEnableFlightMode.Enable"/> names
+    /// literal-1; one live store of 1 is not unique versus
+    /// increment from 0. Mutation: skip the
+    /// <c>+0x58c</c> store. Disable's clear / morph stay
+    /// unclaimed. ChargeWeapon stays unclaimed. Live
+    /// <c>GAME.mSlots</c> stay unclaimed. No new secondaries.
+    /// </summary>
+    [Fact]
+    public void EnableFlightMode_FirstPlayWonWritesCBattleEnginePlus58C()
+    {
+        Level100Mission mission = DriveReleasedFirstPlayUntilWon();
+
+        Assert.Equal(Level100MissionOutcome.Won, mission.Snapshot.Outcome);
+        Assert.True(mission.Snapshot.FlightModeEnabled);
+        Assert.Equal(
+            RetailEnableFlightMode.FlagEnabled,
+            mission.FlightModeFlag);
+        Assert.Equal(
+            RetailEnableFlightMode.Enable(RetailEnableFlightMode.FlagDisabled),
+            mission.FlightModeFlag);
+        Assert.All(
+            RetailFillOutEndLevelData.ForLevel100Won().SecondaryStatuses,
+            status => Assert.Equal(0, status));
+    }
+
+    /// <summary>
     /// <c>CCareer::Update</c> at <c>0x0041BD06</c> is
     /// <c>cmp eax, 5</c> / <c>jne</c>. Lost is 4, so FillOut is never
     /// applied even if the handoff state is claimed. Mutation: dropping

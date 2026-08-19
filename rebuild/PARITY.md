@@ -1,7 +1,7 @@
 # Rebuild parity contract
 
 Status: active — what "1:1 behavioral and experiential parity" means operationally
-Last updated: 2026-08-19 (Level 100 IScript::AddScore adds to CGame+0xf4).
+Last updated: 2026-08-19 (Level 100 IScript::EnableFlightMode stores 1 at CBattleEngine+0x58c).
 Evidence: SOURCE — authority order and the known divergences are
 recorded in `PROVENANCE.md` plus the Lost-countdown row of this table; gate capabilities are MEASURED claims of the
 tracked harnesses named in the table. Every row of *Carried retail contracts*
@@ -158,6 +158,7 @@ Owner paths are relative to the repository root; test names are relative to
 | `IScript::PrimaryObjectiveFailed` Level 100 init MOS | `0x00534440` writes state 2 (Wave580 plate). Level 100 `init()` calls it for objectives 1..4 before the first `PlayCharMessageWait`. Rebuild `Level100PrimaryObjectiveStatus.Failed` is 1, so an identity cast is not `MOS_FAILED`. Isolated FillOut Won names four `MOS_COMPLETE` (1) and does not go through init. `GetNumPrimaryObjectives` counting non-zero is not unique versus mapping Failed to 1. Live `GAME.mSlots` stay unclaimed. No new secondaries | `rebuild/OnslaughtRebuild.Core/RetailGameObjectiveCount.cs` | `RetailGameObjectiveCount.FromLevel100MissionStatus` | `Level100MissionTests.Init_PrimaryObjectiveFailedWritesRetailMosFailedTwo` | 1 | identity-cast the mission enum so Failed stores 1 |
 | `IScript::PrimaryObjectiveFailed` Level 100 init text dword | `0x0053445e` `89 78 04` = `mov [eax+4], edi` on specimen `74154bfa…`. Twin Complete at `0x005343fe`. Table base `lea eax, [eax*8+0x8a9adc]`. Level 100 `init()` stores `_100_OBJECTIVE_1..4` = 110325434 / 111145813 / 111966192 / 112786571 (first cited in `msl-scripting.md`; 2..4 from hash-pinned LevelScript). Isolated MOS-failed names state 2, not `+4`. Isolated FillOut Won names four `GetStatus()` words and does not copy the text dword. Live `GAME.mSlots` stay unclaimed. No new secondaries | `rebuild/OnslaughtRebuild.Core/RetailGameObjectiveCount.cs` | `RetailGameObjectiveCount.FromLevel100MissionPrimaryTextIds` | `Level100MissionTests.Init_PrimaryObjectiveFailedWritesRetailObjectiveTextDword` | 1 | leave the ten text words at 0 |
 | `IScript::AddScore` Level 100 incrementer | `0x005343c0` body `8b442404 8b08 8b11 ff5230 01058c9b8a00 c20c00` on specimen `74154bfa…`. `0x005343cb` is `01 05 8c 9b 8a 00` = `add [0x008a9b8c], eax` = `CGame+0xf4`. Source `game.h:210` is `mScore+=inScore`. LoadLevel writes 0. Isolated `ScoreDelta` = 50 names the rebuild accumulator; one live `AddScore(50)` is not unique versus replace. Isolated FillOut `ScoreWord` copies a parameterized dword. First-play elapsed and FillOut score stay unclaimed. Live `GAME.mSlots` stay unclaimed. No new secondaries | `rebuild/OnslaughtRebuild.Core/RetailAddScore.cs` | `RetailAddScore.Add` | `RetailAddScoreTests.Add_AddsTheDeltaOntoCGamePlusF4NotReplace` | 1 | replace so a second +50 stays 50 |
+| `IScript::EnableFlightMode` Level 100 flight flag | `0x00535070` body `8b4910f64134087405e8328cedffc20c00` on specimen `74154bfa…`. `0x00535079` is `e8 32 8c ed ff` = `call 0x0040dcb0` (W001 inbound). Callee `0x0040dcb0` is `c7 81 8c 05 00 00 01 00 00 00 c3` = `mov [ecx+0x58c], 1`. Isolated `FlightModeEnabled` = true names the rebuild bool; skip store Expected 1 Actual 0. One live store of 1 is not unique versus increment from 0. Wrapper gate `test [ecx+0x34], 8` and Disable clear / morph stay unclaimed. ChargeWeapon stays unclaimed. Live `GAME.mSlots` stay unclaimed. No new secondaries | `rebuild/OnslaughtRebuild.Core/RetailEnableFlightMode.cs` | `RetailEnableFlightMode.Enable` | `RetailEnableFlightModeTests.Enable_StoresLiteralOneAtCBattleEnginePlus58CNotIncrement` | 1 | increment so Enable(1) becomes 2 |
 
 Two things this table deliberately does **not** claim. It does not claim these
 contracts are graded `REBUILD_READY`: that grade is a campaign artifact and
@@ -314,6 +315,13 @@ not uniquely prove `add [0x008a9b8c], eax`. One live
 `AddScore(50)` is not unique versus replace. Isolated
 FillOut `ScoreWord` copies a parameterized dword. First-play
 elapsed and FillOut score stay unclaimed.
+The EnableFlightMode flight-flag row names
+`RetailEnableFlightMode.Enable`; isolated
+`FlightModeEnabled` = true names the rebuild bool and
+does not uniquely prove `mov [ecx+0x58c], 1`. One live
+store of 1 is not unique versus increment from 0.
+Wrapper gate `test [ecx+0x34], 8` and Disable clear /
+morph stay unclaimed. ChargeWeapon stays unclaimed.
 The score-time arm row names `AfterScoreTimeArm` on
 the already-pinned FillOut owner; it does not rewrite
 `ForLevel100Won`. The score-percentage last-wins row names

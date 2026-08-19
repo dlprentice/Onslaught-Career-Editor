@@ -39,6 +39,7 @@ public sealed class Level100Mission
     private int _observedPlayerHealth;
     private bool _playerActive = true;
     private bool _flightModeEnabled = true;
+    private int _flightModeFlag = RetailEnableFlightMode.FlagDisabled;
     private Level100MissionWeaponAvailability _pulseCannonAvailability;
     private Level100MissionWeaponAvailability _twinVulcanAvailability;
     private Level100MissionWeaponAvailability _mechVulcanAvailability;
@@ -190,6 +191,14 @@ public sealed class Level100Mission
     /// names the rebuild accumulator, not this store.
     /// </summary>
     public int GameScore => _gameScore;
+
+    /// <summary>
+    /// <c>CBattleEngine+0x58c</c> — the
+    /// <c>mov dword ptr [ecx+0x58c], 1</c> destination.
+    /// Isolated <see cref="Level100MissionSnapshot.FlightModeEnabled"/>
+    /// names the rebuild bool, not this store.
+    /// </summary>
+    public int FlightModeFlag => _flightModeFlag;
 
     internal bool GameplayPaused => Level100MissionTiming.GameplayPaused(
         _outcome,
@@ -718,8 +727,14 @@ public sealed class Level100Mission
                 RequireArguments(command, arguments, 1);
                 SetWeapon(arguments[0].AsString(), false);
                 return NativeResult.Void;
-            case 100: // EnableFlightMode
+            case 100: // EnableFlightMode — IScript__EnableFlightMode 0x00535070
                 RequireArguments(command, arguments, 0);
+                // Isolated FlightModeEnabled names the rebuild bool.
+                // Isolated Enable names literal-1; one live store of 1
+                // is not unique versus increment from 0. Disable's
+                // clear / morph stay unclaimed. ChargeWeapon stays
+                // unclaimed. Live GAME.mSlots stay unclaimed.
+                _flightModeFlag = RetailEnableFlightMode.Enable(_flightModeFlag);
                 SetFlightMode(true);
                 return NativeResult.Void;
             case 101: // DisableFlightMode
