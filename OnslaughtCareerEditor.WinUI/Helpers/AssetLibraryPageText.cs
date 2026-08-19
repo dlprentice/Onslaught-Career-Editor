@@ -1,3 +1,5 @@
+using System.IO;
+
 namespace OnslaughtCareerEditor.WinUI.Helpers
 {
     /// <summary>
@@ -17,6 +19,27 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
             }
 
             return EmptySearchNextStep;
+        }
+
+        /// <summary>
+        /// Path cards name the file and its parent folder. The full path stays off the page.
+        /// </summary>
+        public static string BuildPathSummary(string? path)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                return "No local path selected";
+            }
+
+            string trimmed = path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            string name = Path.GetFileName(trimmed);
+            string? parent = Path.GetFileName(Path.GetDirectoryName(trimmed) ?? string.Empty);
+            if (string.IsNullOrWhiteSpace(parent))
+            {
+                return string.IsNullOrWhiteSpace(name) ? "Configured local path" : name;
+            }
+
+            return $"{name} in {parent}";
         }
     }
 }

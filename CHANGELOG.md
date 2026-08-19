@@ -26,7 +26,8 @@ live in `developer_state.json` and the campaign ledgers.
   video player says it could not start, without the exception. Dedicated video
   windows now use the public product name, Onslaught Toolkit. Media names the
   source folder and the selected file by their last segment, not the full path.
-  A Media search with no hits now says to try another word or clear the search. Windowed & Mods
+  A Media search with no hits now says to try another word or clear the search. Asset
+  Library names the catalog and export by their last segments, not the full path. Windowed & Mods
   Last operation and the safe-copy list do the same: a failure names the action
   and that nothing was changed, without the exception. Home setup failures
   keep the same sentence and drop the exception. Save Lab comparison/analysis

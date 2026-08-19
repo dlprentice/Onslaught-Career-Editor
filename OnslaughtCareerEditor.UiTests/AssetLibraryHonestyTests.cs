@@ -46,4 +46,39 @@ public class AssetLibraryHonestyTests
         Assert.That(code, Does.Not.Contain("matches the current search"));
         Assert.That(code, Does.Not.Contain("Filtered results"));
     }
+
+    [Test]
+    public void ACatalogPathIsNamedByItsLeafNotThePath()
+    {
+        string path = @"C:\Users\david\exports\catalog.json";
+        string summary = AssetLibraryPageText.BuildPathSummary(path);
+
+        Assert.That(summary, Is.EqualTo("catalog.json in exports"));
+        Assert.That(summary, Does.Not.Contain(path));
+        Assert.That(summary, Does.Not.Contain(@":\"));
+        Assert.That(summary, Does.Not.Contain("Users"));
+        Assert.That(
+            AssetLibraryPageText.BuildPathSummary(@"D:\generated\textures\crate.png"),
+            Is.EqualTo("crate.png in textures"));
+    }
+
+    [Test]
+    public void AMissingAssetPathFallsBackWithoutPrintingAPath()
+    {
+        Assert.That(AssetLibraryPageText.BuildPathSummary("   "), Is.EqualTo("No local path selected"));
+        Assert.That(AssetLibraryPageText.BuildPathSummary(null), Is.EqualTo("No local path selected"));
+    }
+
+    [Test]
+    public void ThePagePaintsThePathSummaryNotTheFullPath()
+    {
+        string code = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI", "Pages", "AssetLibraryPage.xaml.cs"));
+
+        Assert.That(code, Does.Contain("AssetLibraryPageText.BuildPathSummary"));
+        Assert.That(code, Does.Not.Contain("CatalogFullPathTextBlock.Text = _snapshot.CatalogFilePath"));
+        Assert.That(code, Does.Not.Contain("CatalogFullPathTextBlock.Text = path"));
+        Assert.That(code, Does.Not.Contain("SelectedExportPathTextBlock.Text = texture.ExportPath"));
+        Assert.That(code, Does.Not.Contain("SelectedExportPathTextBlock.Text = mesh.ExportPath"));
+    }
 }

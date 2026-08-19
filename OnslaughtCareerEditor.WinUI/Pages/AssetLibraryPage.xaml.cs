@@ -121,7 +121,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 CatalogSummaryTextBlock.Text = "Load a catalog to see textures, meshes, and goodies.";
                 CatalogCoverageTextBlock.Text = "Coverage summary appears after a generated catalog loads.";
                 CatalogProvenanceTextBlock.Text = "Catalog provenance appears after a generated catalog loads.";
-                CatalogFullPathTextBlock.Text = path ?? string.Empty;
+                CatalogFullPathTextBlock.Text = AssetLibraryPageText.BuildPathSummary(path);
                 AppStatusService.SetStatus("Asset Library: catalog not found");
                 AssetItemsListView.ItemsSource = null;
                 ResetSelection();
@@ -134,8 +134,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             ChangeCatalogButton.Visibility = Visibility.Visible;
             CatalogPathTextBox.Text = string.Empty;
             CatalogPathTextBox.PlaceholderText = "Paste catalog.json path or browse to a generated export folder";
-            CatalogStatusTextBlock.Text = $"Catalog loaded: {BuildPathSummary(_snapshot.CatalogFilePath)}";
-            CatalogFullPathTextBlock.Text = _snapshot.CatalogFilePath;
+            CatalogStatusTextBlock.Text = $"Catalog loaded: {AssetLibraryPageText.BuildPathSummary(_snapshot.CatalogFilePath)}";
+            CatalogFullPathTextBlock.Text = AssetLibraryPageText.BuildPathSummary(_snapshot.CatalogFilePath);
             CatalogSummaryTextBlock.Text =
                 $"{_snapshot.Summary.TextureCount} textures, {_snapshot.Summary.LooseMeshCount} loose meshes, {_snapshot.Summary.EmbeddedMeshCount} embedded meshes, {_snapshot.Summary.GoodieCount} goodies";
             CatalogCoverageTextBlock.Text = BuildCatalogCoverageSummary();
@@ -451,7 +451,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             {
                 _goodieSaveAnalysis = null;
                 _goodieSaveStatePath = string.Empty;
-                GoodieSaveStateStatusTextBlock.Text = $"{BuildPathSummary(path)} is not a valid BEA save buffer.";
+                GoodieSaveStateStatusTextBlock.Text = $"{AssetLibraryPageText.BuildPathSummary(path)} is not a valid BEA save buffer.";
                 AppStatusService.SetStatus("Asset Library: Goodies save state invalid");
                 UpdateAssetList();
                 return;
@@ -466,7 +466,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
             int unlocked = analysis.GoodieStates.Count(static state => state.IsDisplayable && state.IsUnlocked);
             int displayable = analysis.GoodieStates.Count(static state => state.IsDisplayable);
-            GoodieSaveStateStatusTextBlock.Text = $"Loaded Goodies state from {BuildPathSummary(path)}: {unlocked}/{displayable} displayable slots unlocked or viewed.";
+            GoodieSaveStateStatusTextBlock.Text = $"Loaded Goodies state from {AssetLibraryPageText.BuildPathSummary(path)}: {unlocked}/{displayable} displayable slots unlocked or viewed.";
             AppStatusService.SetStatus("Asset Library: Goodies save state loaded");
             UpdateAssetList();
         }
@@ -477,7 +477,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             SelectedAssetTitleTextBlock.Text = texture.DisplayName;
             SelectedAssetSummaryTextBlock.Text =
                 $"{texture.SourceGroup}; {texture.PackedReferenceCount} packed references; export {BuildAvailability(exportAvailable)}.";
-            SelectedExportPathTextBlock.Text = texture.ExportPath;
+            SelectedExportPathTextBlock.Text = AssetLibraryPageText.BuildPathSummary(texture.ExportPath);
             SelectedCatalogIdTextBlock.Text = texture.CatalogId;
             GoodieFactsPanel.Visibility = Visibility.Collapsed;
             PreviewTitleTextBlock.Text = "Texture preview";
@@ -522,7 +522,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             SelectedAssetTitleTextBlock.Text = mesh.DisplayName;
             SelectedAssetSummaryTextBlock.Text =
                 $"{mesh.PackedReferenceCount} packed references; FBX export {BuildAvailability(exportAvailable)}. Use the in-app wireframe for a quick geometry check, then open the FBX for full material review.";
-            SelectedExportPathTextBlock.Text = mesh.ExportPath;
+            SelectedExportPathTextBlock.Text = AssetLibraryPageText.BuildPathSummary(mesh.ExportPath);
             SelectedCatalogIdTextBlock.Text = mesh.CatalogId;
             GoodieFactsPanel.Visibility = Visibility.Collapsed;
             PreviewTitleTextBlock.Text = $"Model export: {mesh.DisplayName}";
@@ -543,7 +543,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             SelectedAssetTitleTextBlock.Text = mesh.DisplayName;
             SelectedAssetSummaryTextBlock.Text =
                 $"{mesh.SourceArchive}; FBX export {BuildAvailability(exportAvailable)}. Use the in-app wireframe for a quick geometry check, then open the FBX for full material review.";
-            SelectedExportPathTextBlock.Text = mesh.ExportPath;
+            SelectedExportPathTextBlock.Text = AssetLibraryPageText.BuildPathSummary(mesh.ExportPath);
             SelectedCatalogIdTextBlock.Text = mesh.CatalogId;
             GoodieFactsPanel.Visibility = Visibility.Collapsed;
             PreviewTitleTextBlock.Text = $"Embedded model export: {mesh.DisplayName}";
@@ -1307,24 +1307,6 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         private static string FormatByteSize(long byteSize)
         {
             return byteSize > 0 ? $"{byteSize:N0} bytes" : "Unknown";
-        }
-
-        private static string BuildPathSummary(string? path)
-        {
-            if (string.IsNullOrWhiteSpace(path))
-            {
-                return "No local path selected";
-            }
-
-            string trimmed = path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-            string name = Path.GetFileName(trimmed);
-            string? parent = Path.GetFileName(Path.GetDirectoryName(trimmed) ?? string.Empty);
-            if (string.IsNullOrWhiteSpace(parent))
-            {
-                return string.IsNullOrWhiteSpace(name) ? "Configured local path" : name;
-            }
-
-            return $"{name} in {parent}";
         }
 
         private static AssetListKind GetInitialAssetKind()
