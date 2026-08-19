@@ -129,6 +129,8 @@ namespace OnslaughtCareerEditor.AppCore
         public const string CopiedBackupHashMissing = "That copy is missing the BEA.exe.original.backup hash file.";
         public const string CopiedBackupHashMismatch = "That copy's BEA.exe.original.backup does not match its hash file.";
         public const string CopiedBackupNotRetail = "That copy's BEA.exe.original.backup is not the known Steam retail file.";
+        public const string CopiedBeaPatchesMismatch = "That copy's BEA.exe no longer matches its patches.";
+        public const string CopiedBeaPatchApplyFailed = "Those patches could not be applied to that copy.";
         public const string ProfileFolderInsideGame =
             "The app-owned profile folder must not sit inside the game folder.";
         public const string GameFolderInsideProfile =
@@ -1035,12 +1037,9 @@ namespace OnslaughtCareerEditor.AppCore
 
             IReadOnlyList<BinaryPatchSpec> selected = SelectPatchSpecs(patchKeys);
             byte[] data = File.ReadAllBytes(executablePath);
-            var (_, allPatched, rows) = BinaryPatchEngine.VerifyPatchSpecs(data, selected);
+            var (_, allPatched, _) = BinaryPatchEngine.VerifyPatchSpecs(data, selected);
             if (!allPatched)
-            {
-                string states = string.Join(", ", rows.Select(row => $"{row.Spec.Key}={BinaryPatchEngine.StateLabel(row.State)}"));
-                throw new InvalidOperationException($"The current copied executable no longer matches the manifest patch state: {states}");
-            }
+                throw new InvalidOperationException(CopiedBeaPatchesMismatch);
 
             ValidatePatchedExecutableAgainstBackupSnapshot(executablePath, selected);
         }
@@ -1241,15 +1240,12 @@ namespace OnslaughtCareerEditor.AppCore
                 selected);
 
             if (!success)
-                throw new InvalidOperationException($"Playable copied game folder patch apply failed: {message}");
+                throw new InvalidOperationException(CopiedBeaPatchApplyFailed);
 
             byte[] readback = File.ReadAllBytes(exePath);
-            var (_, allPatched, rows) = BinaryPatchEngine.VerifyPatchSpecs(readback, selected);
+            var (_, allPatched, _) = BinaryPatchEngine.VerifyPatchSpecs(readback, selected);
             if (!allPatched)
-            {
-                string states = string.Join(", ", rows.Select(row => $"{row.Spec.Key}={BinaryPatchEngine.StateLabel(row.State)}"));
-                throw new InvalidOperationException($"Playable copied game folder patch verification failed: {states}");
-            }
+                throw new InvalidOperationException(CopiedBeaPatchesMismatch);
 
             return new GameProfilePatchResult(
                 true,

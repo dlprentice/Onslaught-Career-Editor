@@ -92,6 +92,11 @@ public class PreflightRequiredFileHonestyTests
         Assert.That(source, Does.Not.Contain("backup snapshot hash does not match its sidecar."));
         Assert.That(source, Does.Not.Contain("backup snapshot is not a trusted clean Steam retail specimen."));
         Assert.That(source, Does.Not.Contain("not a clean base for selected patches"));
+        Assert.That(source, Does.Not.Contain("manifest patch state:"));
+        Assert.That(source, Does.Not.Contain("patch apply failed:"));
+        Assert.That(source, Does.Not.Contain("patch verification failed:"));
+        Assert.That(source, Does.Contain("CopiedBeaPatchesMismatch"));
+        Assert.That(source, Does.Contain("CopiedBeaPatchApplyFailed"));
         Assert.That(source, Does.Contain("CopiedBackupMissing"));
         Assert.That(source, Does.Contain("CopiedBackupHashMissing"));
         Assert.That(source, Does.Contain("CopiedBackupHashMismatch"));
