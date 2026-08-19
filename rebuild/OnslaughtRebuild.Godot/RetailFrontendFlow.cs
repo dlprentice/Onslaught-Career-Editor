@@ -1662,7 +1662,9 @@ public sealed partial class RetailFrontendFlow : Control
     /// colours is multiplied by the same alpha byte, so it reveals with them. The
     /// selected-row sine at 0x0046319E is pinned by RetailMainMenuLanguageSine;
     /// session cannot hold this+0x08=-1, so this draw does not light that pack.
-    /// Two per-arrow blink timers remain unmodelled and are not introduced here.
+    /// Chevron visibility is RetailMainMenuLanguageBlink: fistp(mCounter) signed
+    /// remainder 64, draw while below 50. Cold BSS 0 draws. The 2x copies stay
+    /// no-ops.
     /// </summary>
     private void DrawLanguageSelector(float fade)
     {
@@ -1696,16 +1698,21 @@ public sealed partial class RetailFrontendFlow : Control
         // sprite's transparent border the way retail's sampler does, which is
         // where the two differ by a texel of edge feathering.
         var arrowTint = new Color(ChromeTint, ChromeTint.A * fade);
-        DrawTextureRect(
-            _feArrow,
-            LanguageRowRect(RetailFrontendLanguageRow.LeftChevron),
-            false,
-            arrowTint);
-        DrawTextureRect(
-            _feArrow,
-            LanguageRowRect(RetailFrontendLanguageRow.RightChevron),
-            false,
-            arrowTint);
+        if (RetailMainMenuLanguageBlink.ShouldDraw(
+                RetailMainMenuLanguageBlink.ImageInitialCounter,
+                RetailMainMenuLanguageBlink.ImageInitialTimer))
+        {
+            DrawTextureRect(
+                _feArrow,
+                LanguageRowRect(RetailFrontendLanguageRow.LeftChevron),
+                false,
+                arrowTint);
+            DrawTextureRect(
+                _feArrow,
+                LanguageRowRect(RetailFrontendLanguageRow.RightChevron),
+                false,
+                arrowTint);
+        }
     }
 
     /// <summary>

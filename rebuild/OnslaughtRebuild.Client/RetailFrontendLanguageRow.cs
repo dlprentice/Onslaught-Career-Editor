@@ -87,14 +87,12 @@ namespace OnslaughtRebuild.Client;
 /// draws contribute nothing, so 39 is not the number of things a renderer must
 /// produce.</para>
 ///
-/// <para><b>What is NOT established.</b> The whole row blinks — the four chevron
-/// draws are absent from 119 of the 500 frames 2900-3399, and absent from frame
-/// 3500 of this same inventory, which is why that frame carries 35 draws and not
-/// 39. Neither period, duty cycle nor phase is recovered, and no blink is
-/// modelled. The selected-row sine is now pinned by
+/// <para><b>What is NOT established.</b> The selected-row sine is pinned by
 /// <c>RetailMainMenuLanguageSine</c>; session cannot hold <c>this+0x08 = -1</c>
-/// so this class does not light it and does not invent <c>SetLanguage</c>.
-/// Neither omission is introduced by this class — both predate it.</para>
+/// so this class does not light it. Chevron hide/show is
+/// <c>RetailMainMenuLanguageBlink</c> (signed <c>mCounter % 64</c> below 50).
+/// Absolute phase still depends on a Process increment this lane does not
+/// invent. The 2x copies stay unmodelled no-ops.</para>
 /// </summary>
 public static class RetailFrontendLanguageRow
 {
