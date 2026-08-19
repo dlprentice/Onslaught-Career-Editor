@@ -1,7 +1,7 @@
 # IScript function map
 
 Status: active static function map
-Last updated: 2026-08-18 (0x004beea0 two-pass 0x004bc510 trim)
+Last updated: 2026-08-18 (0x004bc510 segment blocked = bit-clear / OOB)
 Source File: `C:\dev\ONSLAUGHT2\MissionScript\IScript.cpp` (SEH `__FILE__`
 pointer `0x0064fa40` read out of `IScript__PostEvent`) | Binary: BEA.exe,
 SHA-256
@@ -65,6 +65,7 @@ name value into a `CPostEventData` and scheduling event `0x7d0` against the
 | `0x004beb30` | `CExplosionInitThing__FindNearestVisitedGridCell` | `83ec20 53 55 8b0db09d8000 56 57 8b3db49d8000 … 6681bc28c09d8000ffff … 81fd00010000 0f8cbefeffff 5f5e5d5b 83c420 c3` | cdecl; bare `ret`; zero stack args; zero `E8`. Sole inbound `E8` is `0x004be340` (the `EAX==0` arm of `0x004be1d0`). Reads dest cell `[0x00809db4]`/`[0x00809db0]` and the 256×256 word grid at `0x00809dc0` (row stride `0x200` bytes). Outer radius `ebp=0..0xFF`. First word `!= 0xFFFF` (the `0x004bc2e0` clear sentinel) wins and rewrites those dest globals — four hit exits `0x004becbd` / `0x004becdd` / `0x004becf7` / `0x004bed0c`. Miss (`cmp ebp,0x100` at `0x004bec99`) leaves dest unchanged (`0x004becb5`). Caller does not test EAX; it re-reads the globals then `0x004bed30`. Table class not a COLOC — do not promote. HIGH on ABI, caller, sentinel, rewrite-or-not. |
 | `0x004bed30` | `CExplosionInitThing__StepToLowestCostNeighbor8` | `51 8b442408 8b54240c 53 55 8b08 8b12 … 668b046dc09d8000 … 668b1c6dc09b8000 … 8931 893a 5f5e5d5b 59 c3` | cdecl; two `int*` inout args (caller `add esp,8`). Zero `E8`. Sole inbound `E8` is `0x004be3d3`. `ecx=[arg0]` / `edx=[arg1]` / index `ecx*256+edx`. Seed best = current word at `0x00809dc0`. Eight bounded neighbors (N/S/W/E then NW/SW/NE/SE via `±0x200`/`±2`) win on **strictly smaller** unsigned word. Writes the winner back to `*arg0`/`*arg1`; stay if none. Table class not a COLOC — do not promote. HIGH on ABI, 8-neighbor, strictly-less, write-back. |
 | `0x004beea0` | `CExplosionInitThing__SimplifyGridPathByLineOfSight` | `53 55 8b5c240c 56 8bf1 57 8b7e0c 4f 7831 … e836d6ffff 85c0 7503 4f 79cf … e8c8d5ffff … c20400` | `thiscall` `ret 4`. `this` = out-struct (`+0xc` count, `+0x10`/`+0x18` X/Y bytes). Arg = occupancy (`ebx` from `[0x00809db8]`). Two `E8` to `OccupancyBitplane__IsGridSegmentBlocked` `0x004bc510` (label). Pass 1: from `count-1` down, while EAX=0 (clear) drop; then compact and `sub [+0xc]`. Pass 2: from 0 up against cell 0, same. Sole inbound `E8` `0x004be40a`. Table class not a COLOC — do not promote. HIGH on ABI, both calls, count shrink. |
+| `0x004bc510` | `OccupancyBitplane__IsGridSegmentBlocked` | `83ec10 8b542414 53 55 56 85d2 57 894c241c 0f8c9a010000 … 33c0 5b 83c410 c21000 / b801000000 5b 83c410 c21000` | `thiscall` `ret 0x10`. `this` = bitplane. Four int args `(A0,B0,A1,B1)` in `[0,0xff]` or EAX=1. Same cell → EAX=0, no read. Else swap each axis so min≤max and walk the **min→max** diagonal (slope = abs(dminor)/abs(dmajor), always ≥0): A-major samples `bitplane[(A>>3)*256+B] & (1<<(A&7))` from `minA` to `maxA`; B-major the same from `minB` to `maxB`. **Bit clear or OOB → EAX=1 (blocked); every sampled bit set → EAX=0 (clear).** Opposite-sign ΔA/ΔB therefore tests the other box diagonal. A-major tests dest; B-major skips dest. Three `E8`: `0x004be254` (start→dest; EAX=0 stores a 1-cell dest path), `0x004beed5` / `0x004bef43` (trim). HIGH. |
 | `0x00533840` | `IScript__RestoreSavedStateAndGotoInstruction` | `568bf1 8b4638 85c0 7453 50 b9e0c58900 e8bb600000 8b4638 8d4e28 50 e86f23fbff … c3` | Zero-arg `ret`. If `[this+0x38]==0` return. Else `CopyState(+0x38)`, `CSPtrSet__Remove(+0x28)`, delete, `[this+0x38]=0`, then Reset on LEVEL_LOST else `GotoInstruction([0x0089c7f4])`. Same resume as HandleMessage 2001. Only `E8` is `CComplexThing__FinishedPlayingCurrentAnimation` `0x004f45a7`. HIGH. |
 
 ### The three message arms (byte-exact)
@@ -294,7 +295,11 @@ stops when the stepped cell equals the start cell (`[esp+0x10]`/`[esp+0x20]`
 from the owner-pos fistp) or the previous cell, then `0x004beea0` may run.
 `0x004beea0` is `thiscall` `ret 4` on the out-struct: two passes of
 `0x004bc510` (clear=0) drop a prefix then a suffix of the X/Y bytes and
-shrink `+0xc`.
+shrink `+0xc`. `0x004bc510` itself is `thiscall` `ret 0x10` on the
+occupancy bitplane: four int cells, EAX=1 when any sampled bit is
+**clear** (or a coord is outside `[0,0xff]`), EAX=0 when every sampled
+bit is set. The walk is the min→max box diagonal, not the original
+directed segment when ΔA and ΔB have opposite signs.
 
 ## Open questions (cheapest falsifier first)
 
