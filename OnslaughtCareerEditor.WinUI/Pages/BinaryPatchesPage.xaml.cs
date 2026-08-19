@@ -1833,13 +1833,10 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 _lastMusicReplacementResult = result;
                 PatchBenchMusicReplacementStatus.Text =
                     PatchBenchSafeCopyOutcomeText.BuildMusicStagedStatus(result.TargetMusicFileName, copiedTrackSwap);
-                OperationLogTextBox.Text =
-                    (copiedTrackSwap ? "Safe-copy track swap staged.\n" : "Copied music bytes staged.\n") +
-                    $"Target: {result.TargetRelativePath}\n" +
-                    $"Replacement source: {Path.GetFileName(replacementPath)}\n" +
-                    $"Backup: {result.BackupRelativePath}\n" +
-                    "Manifest written without absolute source paths.\n" +
-                    "Original install remains unchanged; runtime audio playback is not proven.";
+                OperationLogTextBox.Text = PatchBenchSafeCopyOutcomeText.BuildMusicStagedOperationLog(
+                    result.TargetMusicFileName,
+                    replacementPath,
+                    copiedTrackSwap);
                 AppStatusService.SetStatus(copiedTrackSwap ? "Windowed & Mods: safe-copy music swap staged" : "Windowed & Mods: music replacement staged");
             }
             catch (Exception ex) when (IsUserFacingOperationException(ex))

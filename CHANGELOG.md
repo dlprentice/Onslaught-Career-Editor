@@ -61,7 +61,8 @@ live in `developer_state.json` and the campaign ledgers.
   unreadable install path is named without the exception. The
   installed-game status line names the folder, not the path. A restored
   music backup names the track and that the install was not changed,
-  without the internal restore sentence.
+  without the internal restore sentence. Staging a copied track names the
+  two files the same way, not the Music folder path.
 
 ## 1.0.11 — 2026-08-07
 

@@ -58,6 +58,17 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
                 : body + Environment.NewLine + Environment.NewLine + spaceSection.Trim();
         }
 
+        private static string TrackLeaf(string? path, string fallback)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                return fallback;
+            }
+
+            string name = Path.GetFileName(path.Trim());
+            return string.IsNullOrWhiteSpace(name) ? fallback : name;
+        }
+
         private static string FolderLeaf(string? path, string fallback)
         {
             if (string.IsNullOrWhiteSpace(path))
@@ -189,6 +200,21 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
                 : $"Copied music bytes staged for {targetMusicFileName}. Staging only; {MusicPlaybackBoundaryClause}";
         }
 
+        /// <summary>
+        /// Last operation names the two tracks. The relative Music path and
+        /// the manifest sentence do not belong on the page.
+        /// </summary>
+        public static string BuildMusicStagedOperationLog(
+            string targetMusicFileName,
+            string replacementPath,
+            bool copiedTrackSwap)
+        {
+            string target = TrackLeaf(targetMusicFileName, "that track");
+            string replacement = TrackLeaf(replacementPath, "the replacement track");
+            string verb = copiedTrackSwap ? "Safe-copy track swap staged" : "Copied music bytes staged";
+            return $"{verb} for {target} from {replacement}. The original install stays unchanged.";
+        }
+
         public static string BuildMusicStagingFailedStatus()
         {
             return "Copied music byte staging failed.";
@@ -232,14 +258,7 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
                 return DescribeCaughtFailure("restore the safe-copy music backup");
             }
 
-            string name = string.IsNullOrWhiteSpace(targetMusicFileName)
-                ? string.Empty
-                : Path.GetFileName(targetMusicFileName.Trim());
-            if (string.IsNullOrWhiteSpace(name))
-            {
-                name = "that track";
-            }
-
+            string name = TrackLeaf(targetMusicFileName, "that track");
             return $"Music backup restored for {name}. The original install stays unchanged.";
         }
 
