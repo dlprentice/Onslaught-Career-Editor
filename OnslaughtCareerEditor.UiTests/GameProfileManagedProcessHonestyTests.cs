@@ -28,4 +28,16 @@ public class GameProfileManagedProcessHonestyTests
         Assert.That(source, Does.Not.Contain("Managed playable copied game folder directory does not exist."));
         Assert.That(source, Does.Contain("Managed playable copied game folder does not exist."));
     }
+
+    [Test]
+    public void AManagedProcessBeaExeNamesTheFolderNotARoot()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "GameProfileManagedProcessRegistry.cs"));
+
+        Assert.That(source, Does.Not.Contain(
+            "must point at BEA.exe under the app-owned playable copied game folder root."));
+        Assert.That(source, Does.Contain(
+            "must point at BEA.exe under the app-owned playable copied game folder."));
+    }
 }

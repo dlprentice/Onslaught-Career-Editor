@@ -175,7 +175,7 @@ namespace OnslaughtCareerEditor.AppCore
                 throw new InvalidOperationException("A managed playable copied game folder process root must match the registry lease root.");
 
             if (!TryBuildRegisteredProcess(process, appOwnedProfilesRoot, out GameProfileRegisteredProcess registered))
-                throw new InvalidOperationException("A managed playable copied game folder process must point at BEA.exe under the app-owned playable copied game folder root.");
+                throw new InvalidOperationException("A managed playable copied game folder process must point at BEA.exe under the app-owned playable copied game folder.");
 
             lock (_gate)
             {
