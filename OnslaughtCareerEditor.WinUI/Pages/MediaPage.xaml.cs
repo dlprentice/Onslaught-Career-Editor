@@ -1834,7 +1834,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             catch (Exception)
             {
                 StopAudioPlayback();
-                AudioPathTextBlock.Text = "This audio track could not be played. Try another one, or check that the media files are intact.";
+                AudioPathTextBlock.Text = MediaPageText.AudioPlaybackFailedBody;
                 AppStatusService.SetStatus(MediaPageText.AudioPlaybackFailedStatus);
             }
         }
@@ -1873,7 +1873,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             catch (Exception)
             {
                 StopAudioPlayback();
-                AudioPathTextBlock.Text = "This audio track could not be played. Try another one, or check that the media files are intact.";
+                AudioPathTextBlock.Text = MediaPageText.AudioPlaybackFailedBody;
                 AppStatusService.SetStatus(MediaPageText.AudioPlaybackFailedStatus);
             }
         }

@@ -103,7 +103,8 @@ live in `developer_state.json` and the campaign ledgers.
   sentence. Save Editor refusals that used to say paths now name the
   files. Save Lab names a missing analysis file, not a path. An inline
   video that fails mid-play uses the same could-not-be-played sentence
-  as the other Media failures. Game Options refusals that used to say
+  as the other Media failures. An audio track that cannot play uses that
+  same kind of sentence. Game Options refusals that used to say
   paths now name the files.
 
 ## 1.0.11 — 2026-08-07

@@ -17,6 +17,9 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         public const string AudioPlaybackFailedStatus =
             "Media: this audio track could not be played";
 
+        public const string AudioPlaybackFailedBody =
+            "This audio track could not be played. Try another one, or check that the media files are intact.";
+
         public const string VideoPlaybackFailedStatus =
             "Media: this video could not be played";
 

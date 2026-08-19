@@ -64,6 +64,7 @@ public class MediaPageHonestyTests
         Assert.That(code, Does.Contain("MediaPageText.LoadFailureMessage"));
         Assert.That(code, Does.Contain("MediaPageText.InlineVideoUnavailableBody"));
         Assert.That(code, Does.Contain("MediaPageText.AudioPlaybackFailedStatus"));
+        Assert.That(code, Does.Contain("MediaPageText.AudioPlaybackFailedBody"));
         Assert.That(code, Does.Contain("MediaPageText.VideoPlaybackFailedStatus"));
         Assert.That(code, Does.Contain("MediaPageText.VideoPlaybackFailedBody"));
         Assert.That(code, Does.Contain("MediaPageText.StoryStartFailedStatus"));
@@ -182,5 +183,22 @@ public class MediaPageHonestyTests
         Assert.That(method, Does.Contain("MediaPageText.VideoPlaybackFailedStatus"));
         Assert.That(method, Does.Not.Contain("Inline playback error."));
         Assert.That(method, Does.Not.Contain("Media: video playback failed"));
+    }
+
+    [Test]
+    public void AnAudioPlaybackFailureUsesTheSharedSentence()
+    {
+        string sentence = MediaPageText.AudioPlaybackFailedBody;
+
+        Assert.That(sentence, Does.Contain("could not be played"));
+        Assert.That(sentence, Does.Contain("intact"));
+        Assert.That(sentence.ToLowerInvariant(), Does.Not.Contain("exception"));
+        Assert.That(sentence, Does.Not.Contain(@":\"));
+        Assert.That(sentence, Does.Not.Contain("/"));
+
+        string code = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI", "Pages", "MediaPage.xaml.cs"));
+        Assert.That(code, Does.Contain("MediaPageText.AudioPlaybackFailedBody"));
+        Assert.That(code, Does.Not.Contain("This audio track could not be played. Try another one"));
     }
 }
