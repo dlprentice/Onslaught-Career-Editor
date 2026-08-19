@@ -178,6 +178,7 @@ live in `developer_state.json` and the campaign ledgers.
   A Goodie with no preview names the next step, not the emptiness.
   A Windowed & Mods launch plan that is not ready names the next step,
   not the emptiness. A missing playable copy names the folder, not a path.
+  Staging music in a missing copy names the folder, not a path.
 
 ## 1.0.11 — 2026-08-07
 

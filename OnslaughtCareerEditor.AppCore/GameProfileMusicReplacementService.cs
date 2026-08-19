@@ -61,6 +61,8 @@ namespace OnslaughtCareerEditor.AppCore
         public const string UseBea01ForBea02PresetId = "use-bea01-for-bea02";
         public const string UseBea02ForBea04PresetId = "use-bea02-for-bea04";
         public const string MusicFolderMissing = "That copy does not have a Music folder.";
+        public const string CopyFolderMissing = "That copy folder could not be found.";
+        public const string ProfileFolderMissing = "That app-owned profile folder could not be found.";
         private const string BackupSuffix = ".original.backup";
 
         private static readonly GameProfileMusicSwapPreset[] s_musicSwapPresets =
@@ -343,9 +345,9 @@ namespace OnslaughtCareerEditor.AppCore
         private static string ValidateSafeGameRoot(string safeGameRoot, string appOwnedProfilesRoot)
         {
             if (string.IsNullOrWhiteSpace(safeGameRoot) || !Directory.Exists(safeGameRoot))
-                throw new DirectoryNotFoundException($"Playable copied game folder root does not exist: {safeGameRoot}");
+                throw new DirectoryNotFoundException(CopyFolderMissing);
             if (string.IsNullOrWhiteSpace(appOwnedProfilesRoot) || !Directory.Exists(appOwnedProfilesRoot))
-                throw new DirectoryNotFoundException($"App-owned profiles root does not exist: {appOwnedProfilesRoot}");
+                throw new DirectoryNotFoundException(ProfileFolderMissing);
 
             string root = NormalizeExistingDirectory(safeGameRoot);
             string profilesRoot = NormalizeExistingDirectory(appOwnedProfilesRoot);
