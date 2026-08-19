@@ -2442,6 +2442,18 @@ public sealed partial class RetailFrontendFlow : Control
                 _ = RetailLevelSelectLaterEsp94One.Applies(
                     RetailLevelSelectLaterEsp94One.CompareOne);
                 _ = RetailLevelSelectLaterEsp94One.CompareOne;
+                // RetailLevelSelectLater20: later leftover after
+                // the later [esp+0x94]/fcomp 1.0 compare is
+                // fld [esp+0x18] / fadd [0x005D857C] (20.0) /
+                // fstp [esp]. Official 74154bfa independently
+                // re-read this cycle. First store is 0x00460FF7
+                // fstp [esp]. That is an addend on the later-60
+                // local, not dest. The later second fadd 20.0 at
+                // 0x00460FFE is later. Do not invent dest from
+                // 20.0 or 1.0.
+                _ = RetailLevelSelectLater20.Offset(
+                    RetailLevelSelectLater60.Scaled(1));
+                _ = RetailLevelSelectLater20.Addend;
             }
         }
 
