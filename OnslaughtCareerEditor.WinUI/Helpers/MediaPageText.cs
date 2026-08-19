@@ -41,11 +41,14 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         public const string EmptyLibraryNextStep =
             "Check the game folder still has its media files, or choose another folder.";
 
+        public const string GameFolderNotConfigured =
+            "Game install not configured. Choose Settings or Browse Game Folder.";
+
         public static string DescribeAudioEmptyState(bool hasGameDirectory, string? search)
         {
             if (!hasGameDirectory)
             {
-                return "Game install not configured. Choose Settings or Browse Game Directory.";
+                return GameFolderNotConfigured;
             }
 
             return string.IsNullOrWhiteSpace(search)
@@ -57,7 +60,7 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         {
             if (!hasGameDirectory)
             {
-                return "Game install not configured. Choose Settings or Browse Game Directory.";
+                return GameFolderNotConfigured;
             }
 
             return string.IsNullOrWhiteSpace(search)

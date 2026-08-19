@@ -112,6 +112,32 @@ public class MediaPageHonestyTests
         Assert.That(
             MediaPageText.DescribeAudioEmptyState(false, "music"),
             Does.Contain("not configured"));
+        Assert.That(
+            MediaPageText.DescribeAudioEmptyState(false, "music"),
+            Is.EqualTo(MediaPageText.GameFolderNotConfigured));
+        Assert.That(MediaPageText.GameFolderNotConfigured, Does.Contain("Browse Game Folder"));
+        Assert.That(MediaPageText.GameFolderNotConfigured, Does.Not.Contain("Directory"));
+    }
+
+    [Test]
+    public void AnUnsetInstallNamesTheFolderNotADirectory()
+    {
+        string code = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI", "Pages", "MediaPage.xaml.cs"));
+        string xaml = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI", "Pages", "MediaPage.xaml"));
+
+        Assert.That(code, Does.Contain("MediaPageText.GameFolderNotConfigured"));
+        Assert.That(code, Does.Not.Contain("Game directory not set"));
+        Assert.That(code, Does.Not.Contain("Set the game directory"));
+        Assert.That(code, Does.Not.Contain("game directory not configured"));
+        Assert.That(code, Does.Not.Contain("game directory selected"));
+        Assert.That(code, Does.Not.Contain("Browse Game Directory"));
+        Assert.That(xaml, Does.Not.Contain("Game directory not set"));
+        Assert.That(xaml, Does.Not.Contain("current game directory"));
+        Assert.That(xaml, Does.Not.Contain("Browse Game Directory"));
+        Assert.That(xaml, Does.Contain("Browse Game Folder"));
+        Assert.That(xaml, Does.Contain("current game folder"));
     }
 
     [Test]

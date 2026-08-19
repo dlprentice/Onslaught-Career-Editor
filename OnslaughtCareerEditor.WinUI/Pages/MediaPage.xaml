@@ -71,7 +71,7 @@
                        AutomationProperties.AutomationId="MediaPageTitle"
                        AutomationProperties.HeadingLevel="Level1"
                        Style="{StaticResource SectionTitleTextStyle}" />
-            <TextBlock Text="Browse installed music, voice, cutscenes, and briefings from the current game directory. Audio and video now play inline on the page."
+            <TextBlock Text="Browse installed music, voice, cutscenes, and briefings from the current game folder. Audio and video now play inline on the page."
                        Style="{StaticResource SectionBodyTextStyle}" />
             <InfoBar x:Name="MediaStatusInfoBar"
                      AutomationProperties.AutomationId="MediaStatusInfoBar"
@@ -92,7 +92,7 @@
                 <TextBlock x:Name="MediaSummaryTextBlock"
                            Text="Loading media library..." />
                 <TextBlock x:Name="MediaGameDirectoryTextBlock"
-                           Text="Game directory not set" />
+                           Text="Game folder not set" />
             </StackPanel>
         </StackPanel>
 
@@ -393,7 +393,7 @@
                                     </controls:Expander>
                                     <StackPanel Orientation="Horizontal"
                                                 Spacing="8">
-                                        <Button Content="Browse Game Directory"
+                                        <Button Content="Browse Game Folder"
                                                 AutomationProperties.AutomationId="MediaAudioBrowseGameDirectoryButton"
                                                 Click="BrowseGameDirectoryButton_Click" />
                                         <Button Content="Reload Library"
@@ -593,7 +593,7 @@
                                             </controls:Expander>
                                             <StackPanel Orientation="Horizontal"
                                                         Spacing="8">
-                                                <Button Content="Browse Game Directory"
+                                                <Button Content="Browse Game Folder"
                                                         AutomationProperties.AutomationId="MediaVideoBrowseGameDirectoryButton"
                                                         Click="BrowseGameDirectoryButton_Click" />
                                                 <Button Content="Reload Library"

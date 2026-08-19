@@ -228,16 +228,16 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     _snapshot = MediaCatalogSnapshot.Empty;
                     _hasLoaded = true;
                     ResetLibraryState();
-                    MediaSummaryTextBlock.Text = "Game directory not set";
-                    MediaGameDirectoryTextBlock.Text = "Set the game directory in Settings or browse here.";
-                    SetMediaDirectoryDisplay(gameDirectory, "Set the game directory in Settings or browse here before loading media.");
+                    MediaSummaryTextBlock.Text = "Game folder not set";
+                    MediaGameDirectoryTextBlock.Text = "Set the game folder in Settings or browse here.";
+                    SetMediaDirectoryDisplay(gameDirectory, "Set the game folder in Settings or browse here before loading media.");
                     ShowMediaStatus(
                         InfoBarSeverity.Informational,
                         "Point the app at your game folder",
                         "Media comes straight from your Battle Engine Aquila install. Choose that folder and the soundtrack, voice lines, cutscenes, and briefings appear here.",
                         showAction: true,
                         actionLabel: ChooseFolderActionLabel);
-                    AppStatusService.SetStatus("Media: game directory not configured");
+                    AppStatusService.SetStatus("Media: game folder not configured");
                     return;
                 }
 
@@ -348,8 +348,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             SetSelectedVideo(null);
             StopAudioPlayback();
             StopVideoPlayback();
-            AddAudioPlaceholderNode("Game install not configured. Choose Settings or Browse Game Directory.");
-            AddVideoPlaceholderNode("Game install not configured. Choose Settings or Browse Game Directory.");
+            AddAudioPlaceholderNode(MediaPageText.GameFolderNotConfigured);
+            AddVideoPlaceholderNode(MediaPageText.GameFolderNotConfigured);
         }
 
         private void SetMediaDirectoryDisplay(string? fullPath, string status)
@@ -1696,7 +1696,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             AppConfigChangedService.NotifyChanged(config);
             App.MainWindowInstance.RefreshFooter();
             MediaGameDirectoryTextBlock.Text = MediaPageText.BuildFolderSummary(path, "Configured install");
-            AppStatusService.SetStatus("Media: game directory selected");
+            AppStatusService.SetStatus("Media: game folder selected");
             await LoadMediaCatalogAsync();
         }
 

@@ -151,7 +151,8 @@ live in `developer_state.json` and the campaign ledgers.
   game folder, not a directory. Copying an Asset Library
   export names the file, not a path. A safe copy with no
   careers names the next step, not the emptiness. Asset Library file cards say
-  File details and Export file, not Path details.
+  File details and Export file, not Path details. Media with no
+  game folder set names the folder, not a directory.
 
 ## 1.0.11 — 2026-08-07
 
