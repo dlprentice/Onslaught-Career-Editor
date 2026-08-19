@@ -194,6 +194,39 @@ public sealed class Level100WonCareerHandoffTests
     }
 
     /// <summary>
+    /// FrontEndHandoffReady after the released first-play script applies
+    /// the already-pinned first-play S, so <c>CountGoodies</c> rises by
+    /// five (<c>Career.cpp:670-680</c>). <c>new_goodie_count</c> at
+    /// <c>0x00662B20</c> adds that delta (<c>Career.cpp:895-897</c>) and
+    /// <c>first_goodie</c> latches because goodie 0 left
+    /// <c>GOODIE_NOT_DONE</c> (<c>Career.cpp:688 / 899-900</c>). Isolated
+    /// <c>Level100Won_ApplyUpdateAddsFiveNewGoodiesAndLatchesFirstGoodie</c>
+    /// does not go through <c>TryApply</c>. The already-pinned
+    /// FrontEndHandoff goodie-state test does not name these two
+    /// globals. Mutation: clear both after <c>TryApply</c>.
+    /// <c>mPendingExtraGoodies</c> and episode instruction marks stay
+    /// unclaimed. No new secondaries.
+    /// </summary>
+    [Fact]
+    public void FrontEndHandoffReadyAfterWon_AddsFiveNewGoodiesAndLatchesFirstGoodie()
+    {
+        Level100Mission mission = DriveReleasedFirstPlayToTerminal();
+
+        Assert.Equal(Level100MissionOutcome.Won, mission.Snapshot.Outcome);
+        Assert.Equal(
+            Level100MissionTerminalState.FrontEndHandoffReady,
+            mission.Snapshot.TerminalState);
+        Assert.Equal(5, mission.Career.Counters.NewGoodieCount);
+        Assert.Equal(1, mission.Career.Counters.FirstGoodie);
+        Assert.Equal(
+            RetailCareerGoodieState.New,
+            mission.Career.Goodies.Get(RetailCareerUpdateGoodieStates.CompleteWorld100Bio));
+        Assert.All(
+            RetailFillOutEndLevelData.ForLevel100Won().SecondaryStatuses,
+            status => Assert.Equal(0, status));
+    }
+
+    /// <summary>
     /// FrontEndHandoffReady applies the already-pinned
     /// <c>UpdateBaseWorldExistsStuffForNode</c> copy onto world 110.
     /// First-play zeros at 35..287 clear Blank's all-1s there; world

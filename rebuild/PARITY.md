@@ -1,7 +1,7 @@
 # Rebuild parity contract
 
 Status: active — what "1:1 behavioral and experiential parity" means operationally
-Last updated: 2026-08-19 (Level 100 ApplyUpdate Lost ReCalcLinks skip).
+Last updated: 2026-08-19 (Level 100 FrontEndHandoff new-goodie latch).
 Evidence: SOURCE — authority order and the known divergences are
 recorded in `PROVENANCE.md` plus the Lost-countdown row of this table; gate capabilities are MEASURED claims of the
 tracked harnesses named in the table. Every row of *Carried retail contracts*
@@ -131,6 +131,7 @@ Owner paths are relative to the repository root; test names are relative to
 | `CBattleEngine::ConfirmedKill` Level 100 incrementer remaining slots | Independently re-read specimen: `0x004d30eb` `test [eax+0x34],0x40000` / `inc [ecx+0x10]`; `0x004d30fa` `test dh,0x40` = `0x4000` / `inc [ecx+0x14]`; `0x004d3105` `test dh,8` = `0x800` / `inc [ecx+0x18]`. First-play totals stay unclaimed. Iceberg store-0 stays open. No new secondaries | `rebuild/OnslaughtRebuild.Core/RetailConfirmedKill.cs` | `RetailConfirmedKill.Apply` | `RetailConfirmedKillTests.Level100Won_ConfirmedKillIncrementsSlotTwoOnFlag40000` | 1 | write `0x40000` into slot 0 |
 | `CBattleEngine::ConfirmedKill` Level 100 null player-reader skip | Independently re-read specimen: `0x0040a56d` `mov ecx,[ecx+0x574]` / `0x0040a573` `test ecx,ecx` / `je 0x0040a57d` skips `0x004d30d0`. Bytes are a null pointer, not source `ToRead()` dying-flag. First-play totals stay unclaimed. Iceberg store-0 stays open. No new secondaries | `rebuild/OnslaughtRebuild.Core/RetailConfirmedKill.cs` | `RetailConfirmedKill.Apply` | `RetailConfirmedKillTests.Level100Won_ConfirmedKillDoesNotIncrementWhenPlayerReaderIsNull` | 1 | increment even when the reader is null |
 | `CGame::FillOutEndLevelData` then `CCareer::UpdateGoodieStates` from Level 100 `FrontEndHandoffReady` | After the already-pinned Won countdown, first-play FillOut 1.0f / S unlocks goodies 0, 8, 78, 121, and 164. Cite `0x0041de68` / `0x0041ea4f` / `0x0041f70e`. Score-time / base-things / kill totals stay unclaimed. No new secondaries | `rebuild/OnslaughtRebuild.Core/Level100WonCareerHandoff.cs` | `Level100WonCareerHandoff.TryApply` | `Level100WonCareerHandoffTests.FrontEndHandoffReadyAfterWon_UnlocksTrainingGoodiesForAnS` | 1 | skip `ApplyUpdate` on the handoff |
+| `CGame::FillOutEndLevelData` then `CCareer::UpdateGoodieStates` Level 100 FrontEndHandoff latch | Same seam. First-play S raises `CountGoodies` by five; `new_goodie_count` at `0x00662B20` adds the delta (`Career.cpp:895-897`) and `first_goodie` at `0x00662B24` latches because goodie 0 left `GOODIE_NOT_DONE` (`Career.cpp:688 / 899-900`). Isolated ApplyUpdate latch does not go through `TryApply`. Existing FrontEndHandoff goodie-state test does not name these two globals. `mPendingExtraGoodies` and episode instruction marks stay unclaimed. No new secondaries | `rebuild/OnslaughtRebuild.Core/Level100WonCareerHandoff.cs` | `Level100WonCareerHandoff.TryApply` | `Level100WonCareerHandoffTests.FrontEndHandoffReadyAfterWon_AddsFiveNewGoodiesAndLatchesFirstGoodie` | 1 | clear both globals after `TryApply` |
 
 Two things this table deliberately does **not** claim. It does not claim these
 contracts are graded `REBUILD_READY`: that grade is a campaign artifact and
@@ -188,7 +189,10 @@ prove leftover Blank all-1s. The
 world-100 kill-skip row names `RetailCareerCounters.UpdateThingsKilled`;
 `ApplyUpdate` is the already-pinned caller. The
 FrontEndHandoff goodie row names the same `TryApply` owner as the
-Won handoff. The score-time arm row names `AfterScoreTimeArm` on
+Won handoff. The FrontEndHandoff latch row names that same
+`TryApply` owner; isolated ApplyUpdate latch and the
+FrontEndHandoff goodie-state test do not name the two globals.
+The score-time arm row names `AfterScoreTimeArm` on
 the already-pinned FillOut owner; it does not rewrite
 `ForLevel100Won`. The score-percentage last-wins row names
 `Level100ScorePercentage` on that same FillOut owner. The

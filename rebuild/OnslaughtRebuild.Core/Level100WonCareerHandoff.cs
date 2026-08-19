@@ -16,7 +16,9 @@ namespace OnslaughtRebuild.Core;
 /// seam for Level 100. This type does not reimplement FillOut, ReCalcLinks,
 /// or the ranking-clamp skip — it only applies
 /// <see cref="RetailFillOutEndLevelData.ForLevel100Won"/> to a cold
-/// training slice.
+/// training slice. First-play S still carries the already-pinned
+/// <c>CountGoodies</c> delta into <c>new_goodie_count</c> /
+/// <c>first_goodie</c> through this <see cref="TryApply"/> seam.
 /// </para>
 /// <para>
 /// <b>Do not invent secondaries.</b> Level 100 ships four primaries and
