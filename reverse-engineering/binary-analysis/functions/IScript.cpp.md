@@ -1,7 +1,7 @@
 # IScript function map
 
 Status: active static function map
-Last updated: 2026-08-18 (0x004be420 500-step search envelope)
+Last updated: 2026-08-18 (0x004beb30 fallback retargets dest to a marked cell)
 Source File: `C:\dev\ONSLAUGHT2\MissionScript\IScript.cpp` (SEH `__FILE__`
 pointer `0x0064fa40` read out of `IScript__PostEvent`) | Binary: BEA.exe,
 SHA-256
@@ -62,6 +62,7 @@ name value into a `CPostEventData` and scheduling event `0x7d0` against the
 | `0x004bc2e0` | `CExplosionInitThing__ClearCostGridBoundsAndBuildPath` | `51 a1b80a6300 53 8b1db40a6300 55 56 8b35c49d8200 … e8041e0000 83c42c 5f 5e 5d 5b 59 c22800` | `thiscall` `ret 0x28`. `this` is `[guide+0x20]` from `CUnit__GetGridMapByType` (`0x004fd380`). Clears the dirty-rect of the 256-wide word grid at `0x00809dc0` to `-1`, resets bounds (`0x00829dc4`/`0x00829dc8`=`0xff`, `0x00630ab4`/`0x00630ab8`=`0`), then the sole `E8` `0x004be1d0`. Four image `E8`: `0x0047d9c1`, `0x0048a880`, `0x004a0eab`, `0x004e7696`. HIGH on ABI, clear, and callers. Table class `CExplosionInitThing` is not a COLOC on this body — do not promote. |
 | `0x004be1d0` | `CExplosionInitThing__BuildGridPathWithFallbackSearch` | `83ec0c d9442410 df7c2404 … 8916 33d2 897e04 895608 89560c … c7460801000000 c3` | cdecl; sole `E8` from `0x004bc3c7`. Writes the out-struct at `guide+0x24`: `+0/+4` dest ints, `+8=1` when a path exists, `+0xc` remaining count, `+0x10/+0x18` X/Y byte buffers (ctor `0x0047d590` allocs them via `Array.h` `0x0062cba4`, 0x54 bytes, seed dest=`-1`). If `0x004bc510` returns 0, store the dest cell and return; else `E8` `0x004be337` → `0x004be420`; EAX=0 falls through to `0x004beb30`. HIGH on the out-struct. |
 | `0x004be420` | `CExplosionInitThing__SelectNextPathStepDirection` | `83ec08 33c0 89442400 89442404 8b442404 8b15c09d8200 … 83c408 c3` | cdecl; bare `ret`; EAX=1 dest-hit (`0x004be93d`), EAX=0 at 500 steps (`cmp [esp+4],0x1f4` / `0x004be946`). Zero stack args — walks globals `0x00829dc0` / `0x00809dbc` toward `0x00809db4` / `0x00809db0`, marks word grid `0x00809dc0`. One inbound `E8` `0x004be337`. Callees: `0x004be970` occupancy test, `0x004be9b0`/`0x004bea10`/`0x004bea70`/`0x004bead0` N/W/S/E step tests. Table class not a COLOC — do not promote. HIGH on ABI, cap, return, caller. Jump-table arms open. |
+| `0x004beb30` | `CExplosionInitThing__FindNearestVisitedGridCell` | `83ec20 53 55 8b0db09d8000 56 57 8b3db49d8000 … 6681bc28c09d8000ffff … 81fd00010000 0f8cbefeffff 5f5e5d5b 83c420 c3` | cdecl; bare `ret`; zero stack args; zero `E8`. Sole inbound `E8` is `0x004be340` (the `EAX==0` arm of `0x004be1d0`). Reads dest cell `[0x00809db4]`/`[0x00809db0]` and the 256×256 word grid at `0x00809dc0` (row stride `0x200` bytes). Outer radius `ebp=0..0xFF`. First word `!= 0xFFFF` (the `0x004bc2e0` clear sentinel) wins and rewrites those dest globals — four hit exits `0x004becbd` / `0x004becdd` / `0x004becf7` / `0x004bed0c`. Miss (`cmp ebp,0x100` at `0x004bec99`) leaves dest unchanged (`0x004becb5`). Caller does not test EAX; it re-reads the globals then `0x004bed30`. Table class not a COLOC — do not promote. HIGH on ABI, caller, sentinel, rewrite-or-not. |
 | `0x00533840` | `IScript__RestoreSavedStateAndGotoInstruction` | `568bf1 8b4638 85c0 7453 50 b9e0c58900 e8bb600000 8b4638 8d4e28 50 e86f23fbff … c3` | Zero-arg `ret`. If `[this+0x38]==0` return. Else `CopyState(+0x38)`, `CSPtrSet__Remove(+0x28)`, delete, `[this+0x38]=0`, then Reset on LEVEL_LOST else `GotoInstruction([0x0089c7f4])`. Same resume as HandleMessage 2001. Only `E8` is `CComplexThing__FinishedPlayingCurrentAnimation` `0x004f45a7`. HIGH. |
 
 ### The three message arms (byte-exact)
@@ -283,6 +284,9 @@ path-follow overwrites desired with the waypoint heading; join
 `mOrientation` into `owner+0x14c`. Apply: `CGroundUnit__UpdateLinkedEffectsByHeightClearance`
 adds `+0x14c * 0.4f` into `mVelocity`; `CActor__Move` adds `mVelocity` to `mPos`.
 `+0x120` is consumed by `CUnit__SmoothEulerTowardTargetAndBuildMatrix` (slot 77).
+When `0x004be420` returns 0, `0x004be1d0` calls `0x004beb30` once, then
+continues the same `0x004bed30` walk from whatever dest cell the fallback
+left in `0x00809db4`/`0x00809db0`.
 
 ## Open questions (cheapest falsifier first)
 
