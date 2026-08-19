@@ -316,7 +316,7 @@ namespace OnslaughtCareerEditor.AppCore
                         TrustedExportRoot))
                 {
                     throw new InvalidOperationException(
-                        $"{label} directory resolves outside the selected generated export root.");
+                        $"{label} folder resolves outside the selected generated export folder.");
                 }
 
                 string expectedPhysicalPath = Path.Combine(
