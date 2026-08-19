@@ -1,7 +1,7 @@
 # CHeightField__TraceLineAgainstHeightfield
 
 Status: active static function note
-Last updated: 2026-08-18
+Last updated: 2026-08-18 (hit-declare predicates)
 Source File: HeightField.cpp (absent from the pinned GPL
 `references/Onslaught/` drop) | Binary: BEA.exe, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
@@ -65,6 +65,18 @@ Retail names EAX=0 as FALSE: the only string this body prints is
 `"Warning: LOS return FALSE in lower step l = %2.8f, step = %2.8f checks = %d on check = %d"`
 via `0x00441740`, and only after the self-call returned 0.
 
+Four jumps to the hit-declare join `0x00490cb3` (loop head `0x00490ba7`):
+
+1. Arg2 `== 1` and current Z (`[esp+0x3c]`) `>= [this+0x1034]` parked at
+   `[esp+0x30]`: `fcomp` / `test ah, 1` / `je 0x00490cb3`.
+2. Biased XY has bit `0x3e0000` (`test ecx, 0x3e0000` / `jne 0x00490c68`)
+   **and** Z `> 0.0` (`fcomp [0x005d856c]` / `test ah, 0x41` / `je`).
+3. In-grid: Z is not `< [this+eax*8+0x13e0]` (`test ah, 1` / `jne` miss-step)
+   **and** Z is `> [this+eax*8+0x13dc]` (`test ah, 0x41` / `je` hit).
+4. In-grid between those two floats: `0x0047eb00` AX `movsx` / `fild` /
+   `fmul [this+0x102c]` / `fcomp` Z / `test ah, 1` / `jne` hit
+   (sample·scale `<` Z).
+
 Cheapest falsifier: file `0x00090a40` is not `6a ff 68 88 31 5d 00`,
 **or** `0x00090a59` is not `8b d9`, **or** `0x00090ce6` / `0x00090ddb`
 are not `b8 01 00 00 00`, **or** `0x00090d82` is not `8b cb`, **or**
@@ -84,8 +96,8 @@ fifteen `E8`s
   `0x0047eb80`.
 - Authored names for `this+0x1034` / `+0x102c` / `+0x13dc` / `+0x13e0`
   and for `line+0x20`.
-- The four hit-declare predicates that jump to `0x00490cb3` (walked by
-  child `t_34939b24`; not re-derived here).
+- The four hit-declare predicates that jump to `0x00490cb3`: CLOSED
+  below (independently re-read; matches `t_34939b24`).
 - Callee `0x0047eb00` (`CHeightField__SampleInterpolatedHeight`) body:
   CLOSED in
   [`CHeightField__SampleInterpolatedHeight.md`](CHeightField__SampleInterpolatedHeight.md).
