@@ -50,6 +50,9 @@ namespace OnslaughtCareerEditor.AppCore
         public const string ComparisonFailed =
             "Those files could not be compared. Nothing was changed.";
 
+        public const string NoDetectedFilesNextStep =
+            "Set the game folder in Settings, or browse for a file.";
+
         private static readonly string[] KillCategories = { "Aircraft", "Vehicles", "Emplacements", "Infantry", "Mechs" };
 
         public static IReadOnlyList<SaveAnalyzerFileItem> GetDetectedFiles(string? gameDir = null)

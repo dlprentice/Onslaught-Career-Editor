@@ -153,7 +153,7 @@
                                        Style="{StaticResource SectionBodyTextStyle}" />
                             <ComboBox x:Name="DetectedFilesComboBox"
                                       AutomationProperties.AutomationId="SaveAnalyzerDetectedFilesComboBox"
-                                      PlaceholderText="No detected files yet"
+                                      PlaceholderText="Set the game folder in Settings, or browse for a file."
                                       DisplayMemberPath="DisplayName"
                                       SelectionChanged="DetectedFilesComboBox_SelectionChanged" />
                             <Button x:Name="RefreshDetectedFilesButton"
@@ -495,7 +495,7 @@
                                     <ComboBox x:Name="EditorDetectedFilesComboBox"
                                               AutomationProperties.AutomationId="SaveEditorDetectedFiles"
                                               Header="Detected career saves"
-                                              PlaceholderText="No detected career saves yet"
+                                              PlaceholderText="Set the game folder in Settings, or browse for a file."
                                               DisplayMemberPath="DisplayName"
                                               SelectionChanged="EditorDetectedFilesComboBox_SelectionChanged" />
                                     <TextBlock x:Name="EditorDetectedFilesStatusTextBlock"

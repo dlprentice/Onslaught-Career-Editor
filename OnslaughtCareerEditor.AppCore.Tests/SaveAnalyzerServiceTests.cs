@@ -11,6 +11,16 @@ namespace OnslaughtCareerEditor.AppCore.Tests
     public sealed class SaveAnalyzerServiceTests
     {
         [Fact]
+        public void NoDetectedFilesNextStep_NamesTheNextStep()
+        {
+            Assert.Contains("Settings", SaveAnalyzerService.NoDetectedFilesNextStep);
+            Assert.Contains("browse", SaveAnalyzerService.NoDetectedFilesNextStep, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("No detected", SaveAnalyzerService.NoDetectedFilesNextStep);
+            Assert.DoesNotContain("path", SaveAnalyzerService.NoDetectedFilesNextStep, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain(":\\", SaveAnalyzerService.NoDetectedFilesNextStep);
+        }
+
+        [Fact]
         public void BuildDefaultSaveOutputPath_AppendsPatchedSuffix()
         {
             string output = SaveEditorService.BuildDefaultSaveOutputPath(@"C:\temp\career.bes", @"C:\safe-output");

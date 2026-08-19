@@ -60,6 +60,9 @@ public class SaveLabPageHonestyTests
         Assert.That(analyzer, Does.Contain("SaveAnalyzerService.BuildInfoTitle"));
         Assert.That(analyzer, Does.Not.Contain("ex.Message"));
         Assert.That(analyzer, Does.Not.Contain("or .bea path"));
+        Assert.That(analyzer, Does.Contain("SaveAnalyzerService.NoDetectedFilesNextStep"));
+        Assert.That(analyzer, Does.Not.Contain("No detected files yet"));
+        Assert.That(analyzer, Does.Not.Contain("No detected career saves yet"));
 
         Assert.That(options, Does.Contain("SaveLabPageText.BrowseOptionsFailed"));
         Assert.That(options, Does.Contain("SaveLabPageText.ChooseOutputFailed"));

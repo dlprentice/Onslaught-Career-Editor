@@ -157,7 +157,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             _detectedFiles = SaveAnalyzerService.GetDetectedFiles(gameDir);
             DetectedFilesComboBox.ItemsSource = _detectedFiles;
             DetectedFilesComboBox.PlaceholderText = _detectedFiles.Count == 0
-                ? "No detected files yet"
+                ? SaveAnalyzerService.NoDetectedFilesNextStep
                 : "Choose a detected file";
             RestoreAnalyzerDetectedFileSelection(selectedPath);
             DetectedFilesStatusTextBlock.Text = _detectedFiles.Count == 0
@@ -211,7 +211,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             _editorDetectedFiles = SaveEditorService.GetDetectedCareerSaves(gameDir);
             EditorDetectedFilesComboBox.ItemsSource = _editorDetectedFiles;
             EditorDetectedFilesComboBox.PlaceholderText = _editorDetectedFiles.Count == 0
-                ? "No detected career saves yet"
+                ? SaveAnalyzerService.NoDetectedFilesNextStep
                 : "Choose a career save";
             RestoreEditorDetectedFileSelection(selectedPath);
             EditorDetectedFilesStatusTextBlock.Text = _editorDetectedFiles.Count == 0

@@ -116,7 +116,9 @@ live in `developer_state.json` and the campaign ledgers.
   compare error, on the status line. A failed compare or analysis no
   longer titles the banner complete. A failed compare no longer calls
   the files identical on the metric card. A failed analysis no longer
-  dumps the analyzer sentence on the Missions card. Keeping careers and then deleting a
+  dumps the analyzer sentence on the Missions card. An empty Save Lab
+  file list says to set the game folder or browse, instead of describing
+  the emptiness. Keeping careers and then deleting a
   copy names a dumped removal without the path. A media-only install
   names the data folder, not media/data. A Cheats refresh
   that still finds no copies names the next step, not the emptiness. A
