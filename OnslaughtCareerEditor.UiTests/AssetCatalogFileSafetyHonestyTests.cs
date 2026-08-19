@@ -150,4 +150,14 @@ public class AssetCatalogFileSafetyHonestyTests
         Assert.That(source, Does.Contain("CatalogIdentityMissing"));
         Assert.That(source, Does.Contain("That catalog has no saved identity."));
     }
+
+    [Test]
+    public void ACatalogLockNamesTheFolderNotADirectory()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "AssetCatalogFileSafety.cs"));
+
+        Assert.That(source, Does.Not.Contain("\"Asset catalog directory\""));
+        Assert.That(source, Does.Contain("\"asset catalog folder\""));
+    }
 }

@@ -186,7 +186,7 @@ namespace OnslaughtCareerEditor.AppCore
                     ?? throw new DirectoryNotFoundException("The asset catalog has no containing folder.");
                 _catalogDirectoryLocks = FileMutationSafety.LockDirectoryTree(
                     catalogDirectory,
-                    "Asset catalog directory");
+                    "asset catalog folder");
                 if (!FileMutationSafety.IsSameOrUnderRoot(
                         _catalogDirectoryLocks.PhysicalPath,
                         _rootLocks.PhysicalPath))
