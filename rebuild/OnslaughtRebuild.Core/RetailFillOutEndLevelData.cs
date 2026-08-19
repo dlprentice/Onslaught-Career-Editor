@@ -166,6 +166,26 @@ public static class RetailFillOutEndLevelData
     }
 
     /// <summary>
+    /// <c>TF_DYING</c> — <c>0x0046d4d1</c> <c>test byte [eax+0x2c],4</c>.
+    /// </summary>
+    public const int ThingFlagDying = 4;
+
+    /// <summary>
+    /// One FillOut base-thing store. <c>0x0046d4cb</c> null-reader and
+    /// <c>0x0046d4d1</c> TF_DYING both write 0. First-play does not
+    /// take that arm. Player iceberg-kill values stay unclaimed.
+    /// </summary>
+    public static int BaseThingLeftWord(bool thingLive, int thingFlags2c)
+    {
+        if (!thingLive || (thingFlags2c & ThingFlagDying) != 0)
+        {
+            return 0;
+        }
+
+        return 1;
+    }
+
+    /// <summary>
     /// FillOut copies five dwords from <c>player+8</c>. Those start at
     /// ctor-zero and only <c>0x004d30d0</c> increments them. A first-play
     /// Won that never takes ConfirmedKill is therefore five zeros.

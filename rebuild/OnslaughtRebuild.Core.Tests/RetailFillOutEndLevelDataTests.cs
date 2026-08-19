@@ -285,6 +285,35 @@ public sealed class RetailFillOutEndLevelDataTests
     }
 
     /// <summary>
+    /// Independently re-read specimen: <c>0x0046d4d1</c>
+    /// <c>test byte [eax+0x2c],4</c> / <c>jne 0x0046d4df</c> stores 0.
+    /// A live pointer with TF_DYING set is therefore 0, same as a null
+    /// reader. First-play still stores 1 at 0..34 — player iceberg-kill
+    /// values stay unclaimed. Mutation: store 1 on TF_DYING. Do not
+    /// invent secondaries.
+    /// </summary>
+    [Fact]
+    public void Level100Won_FillOutStoresZeroWhenBaseThingIsDying()
+    {
+        Assert.Equal(
+            1,
+            RetailFillOutEndLevelData.BaseThingLeftWord(thingLive: true, thingFlags2c: 0));
+        Assert.Equal(
+            0,
+            RetailFillOutEndLevelData.BaseThingLeftWord(
+                thingLive: true,
+                thingFlags2c: RetailFillOutEndLevelData.ThingFlagDying));
+        Assert.Equal(
+            0,
+            RetailFillOutEndLevelData.BaseThingLeftWord(thingLive: false, thingFlags2c: 0));
+        Assert.Equal(1, RetailFillOutEndLevelData.ForLevel100Won().BaseThingsLeft[4]);
+        Assert.Equal(1, RetailFillOutEndLevelData.ForLevel100Won().BaseThingsLeft[9]);
+        Assert.All(
+            RetailFillOutEndLevelData.ForLevel100Won().SecondaryStatuses,
+            status => Assert.Equal(0, status));
+    }
+
+    /// <summary>
     /// Kill readout is ctor-zero plus <c>0x004d30d0</c> ConfirmedKill
     /// increments, not an authored L100 constant. A first-play Won that
     /// never takes that increment snapshots five zeros. Career still

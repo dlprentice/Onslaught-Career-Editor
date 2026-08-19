@@ -59,4 +59,24 @@ public sealed class RetailConfirmedKillTests
             RetailFillOutEndLevelData.ForLevel100Won().SecondaryStatuses,
             status => Assert.Equal(0, status));
     }
+
+    /// <summary>
+    /// Same incrementer. Independently re-read <c>0x004d30df</c>
+    /// <c>test [eax+0x34],0x20000</c> into <c>player+0xc</c>. Mutation:
+    /// write that bit into slot 0. First-play totals stay unclaimed.
+    /// Do not invent secondaries.
+    /// </summary>
+    [Fact]
+    public void Level100Won_ConfirmedKillIncrementsSlotOneOnFlag20000()
+    {
+        int[] after = RetailConfirmedKill.Apply(
+            RetailFillOutEndLevelData.FirstPlayThingsKilled(),
+            thingFlags: 0x20000,
+            thingAllegiance: 1);
+
+        Assert.Equal(new[] { 0, 1, 0, 0, 0 }, after);
+        Assert.Equal(
+            new[] { 0, 0, 0, 0, 0 },
+            RetailFillOutEndLevelData.ForLevel100Won().ThingsKilled);
+    }
 }

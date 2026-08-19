@@ -1,7 +1,7 @@
 # Rebuild parity contract
 
 Status: active — what "1:1 behavioral and experiential parity" means operationally
-Last updated: 2026-08-19 (Level 100 ConfirmedKill allegiance gate).
+Last updated: 2026-08-19 (Level 100 FillOut TF_DYING store-0).
 Evidence: SOURCE — authority order and the known divergences are
 recorded in `PROVENANCE.md` plus the Lost-countdown row of this table; gate capabilities are MEASURED claims of the
 tracked harnesses named in the table. Every row of *Carried retail contracts*
@@ -100,6 +100,7 @@ Owner paths are relative to the repository root; test names are relative to
 | `CGame::FillOutEndLevelData` Level 100 last-wins S-score | Independently re-read specimen `74154bfa…` + inflated `100_res_PC.aya` `115ede05…2df4`: `0x0050d2f7` `mov [0x008a9b90], edx` from RLWD `+0x147ae` = 210. `0x0046d6e5` / `0x0046d6f9` / `0x0046d707` `jl` so equality stores `0x3f800000` at `0x0046d709`. Not leftover BSWD 1000. First-play elapsed and score stay unclaimed. No new secondaries | `rebuild/OnslaughtRebuild.Core/RetailFillOutEndLevelData.cs` | `RetailFillOutEndLevelData.Level100SGradeScore` | `RetailFillOutEndLevelDataTests.Level100Won_ScoreTimeArmStoresOneAtExactLastWinsS` | 1 | adopt leftover BSWD 1000 |
 | `CGame::FillOutEndLevelData` Level 100 last-wins D-score | Independently re-read specimen: `0x0050d307` `mov [0x008a9b94], edx` from RLWD `+0x147b2` = 70. A fistp'd 70 against leftover BSWD 200 is strictly below D (`0x0046d724` `jl`) and stores 0 at `0x0046d772`. First-play elapsed and score stay unclaimed. No new secondaries | `rebuild/OnslaughtRebuild.Core/RetailFillOutEndLevelData.cs` | `RetailFillOutEndLevelData.Level100DGradeScore` | `RetailFillOutEndLevelDataTests.Level100Won_ScoreTimeArmUsesLastWinsDSeventyNotLeftoverBswdTwoHundred` | 1 | adopt leftover BSWD 200 |
 | `CGame::FillOutEndLevelData` Level 100 first-play base-things | `[0x0085515c]` is 35 (At() membership: 27 type-8 + 6 type-35 + 2 type-37 `CSafeSide`). Store 1 at `0x006728f8+i*4` for `i=0..34`; `35..287` stay 0. Not the materializer's 33. Iceberg player-kill store-0 stays open. No new secondaries | `rebuild/OnslaughtRebuild.Core/RetailFillOutEndLevelData.cs` | `RetailFillOutEndLevelData.FirstPlayBaseThingsLeft` | `RetailFillOutEndLevelDataTests.Level100Won_FillOutStoresOneForEachOfThirtyFiveBaseThings` | 1 | adopt the materializer's 33 visible units |
+| `CGame::FillOutEndLevelData` Level 100 TF_DYING store-0 | Independently re-read specimen: `0x0046d4d1` `test byte [eax+0x2c],4` / `jne 0x0046d4df` stores 0. Null reader also stores 0. First-play still 1 at 0..34; player iceberg-kill values stay unclaimed. No new secondaries | `rebuild/OnslaughtRebuild.Core/RetailFillOutEndLevelData.cs` | `RetailFillOutEndLevelData.BaseThingLeftWord` | `RetailFillOutEndLevelDataTests.Level100Won_FillOutStoresZeroWhenBaseThingIsDying` | 1 | store 1 on TF_DYING |
 | `CCareer::UpdateBaseWorldExistsStuffForNode` after Level 100 Won | `Career.cpp:443-452` / `519-527`. `level_structure[0][3]==110` is the primary destination; `[0][4]==-1` so the secondary arm does not run. First-play zeros at `35..287` clear Blank's all-1s on world 110. World 100 stays Blank. Iceberg store-0 stays open. No new secondaries | `rebuild/OnslaughtRebuild.Core/RetailCareerReCalcLinks.cs` | `RetailCareerCampaign.UpdateBaseWorldExistsStuffForNode` | `RetailCareerCampaignApplyUpdateTests.Level100Won_ApplyUpdateCopiesFillOutBaseThingsOntoWorld110` | 1 | skip the copy (leave world 110 bit 35 set) |
 | `CGame::FillOutEndLevelData` then `CCareer::UpdateBaseWorldExistsStuffForNode` from Level 100 `FrontEndHandoffReady` | After the already-pinned Won countdown, first-play FillOut copies onto world 110. Mutation is skip `ApplyUpdate` on the handoff. Iceberg store-0 stays open. No new secondaries | `rebuild/OnslaughtRebuild.Core/Level100WonCareerHandoff.cs` | `Level100WonCareerHandoff.TryApply` | `Level100WonCareerHandoffTests.FrontEndHandoffReadyAfterWon_CopiesFillOutBaseThingsOntoWorld110` | 1 | skip `ApplyUpdate` on the handoff |
 | `CGame::FillOutEndLevelData` Level 100 first-play kills | Copy five dwords from `player+8` (`0x0046d60f`) if player 0 is live. `CPlayer__ctor` zeros `+8..+18`. Only `0x004d30d0` increments them. A first-play Won that never takes ConfirmedKill is `0,0,0,0,0`. Career `0x0041c180` still `je` world 100. No new secondaries | `rebuild/OnslaughtRebuild.Core/RetailFillOutEndLevelData.cs` | `RetailFillOutEndLevelData.FirstPlayThingsKilled` | `RetailFillOutEndLevelDataTests.Level100Won_FirstPlayKillReadoutIsFiveZerosUnlessConfirmedKill` | 1 | write a non-zero authored L100 kill vector |
@@ -166,7 +167,8 @@ not rewrite `ForLevel100Won`. The last-wins S-score row names
 D-score row names `Level100DGradeScore` on that same FillOut
 owner. The ConfirmedKill allegiance row names
 `RetailConfirmedKill.Apply`; first-play totals stay unclaimed.
-Charge and the
+The TF_DYING store-0 row names `BaseThingLeftWord` on the
+already-pinned FillOut owner. Charge and the
 career graph are not in `StateHasher` because they do not yet change fire,
 movement, or any other hashed field. So no cold-start or
 full-chain trace can reach the other sixteen, and the focused test is the
