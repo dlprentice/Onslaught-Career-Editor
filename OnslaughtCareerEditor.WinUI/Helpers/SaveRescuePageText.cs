@@ -56,8 +56,8 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         public static string BuildNoSavesNote(string copyDisplayName)
         {
             return string.IsNullOrWhiteSpace(copyDisplayName)
-                ? "That copy has no careers in it yet."
-                : $"{copyDisplayName} has no careers in it yet.";
+                ? "Play a career in that copy, then look again."
+                : $"Play a career in {copyDisplayName}, then look again.";
         }
 
         /// <summary>One line naming what is about to be copied and out of where.</summary>

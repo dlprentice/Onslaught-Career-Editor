@@ -148,7 +148,8 @@ live in `developer_state.json` and the campaign ledgers.
   like a dump names BEA.exe, not the path. A workspace backup refusal
   names BEA.exe.original.backup, not a path. Home setup names a ready
   game folder, not a directory. Copying an Asset Library
-  export names the file, not a path.
+  export names the file, not a path. A safe copy with no
+  careers names the next step, not the emptiness.
 
 ## 1.0.11 — 2026-08-07
 

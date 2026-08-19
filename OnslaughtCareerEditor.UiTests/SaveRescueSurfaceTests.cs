@@ -157,10 +157,11 @@ public class SaveRescueSurfaceTests
     public void WithAnEmptyCopyTheSummaryNamesTheCopyRatherThanBlamingThePlayer()
     {
         var empty = new SafeCopySaveInventory(@"X:\copies\my-copy", "my-copy", Array.Empty<SafeCopySaveFile>());
+        string summary = SaveRescuePageText.BuildSelectionSummary(empty, null);
 
-        Assert.That(
-            SaveRescuePageText.BuildSelectionSummary(empty, null),
-            Is.EqualTo("my-copy has no careers in it yet."));
+        Assert.That(summary, Is.EqualTo("Play a career in my-copy, then look again."));
+        Assert.That(summary, Does.Not.Contain("yet").IgnoreCase);
+        Assert.That(SaveRescuePageText.BuildNoSavesNote(string.Empty), Is.EqualTo("Play a career in that copy, then look again."));
     }
 
     [Test]
