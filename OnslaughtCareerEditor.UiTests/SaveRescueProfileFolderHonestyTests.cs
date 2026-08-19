@@ -17,8 +17,9 @@ public class SaveRescueProfileFolderHonestyTests
             () => SafeCopySaveRescueService.Inventory("copy", " "));
 
         Assert.That(error.Message, Is.EqualTo(SafeCopySaveRescueService.ProfileFolderRequired));
-        Assert.That(error.Message, Is.EqualTo("An app-owned profile folder is required."));
+        Assert.That(error.Message, Is.EqualTo("A profile folder is required."));
         Assert.That(error.Message, Does.Contain("profile folder"));
+        Assert.That(error.Message, Does.Not.Contain("app-owned"));
         Assert.That(error.Message.ToLowerInvariant(), Does.Not.Contain("root"));
         Assert.That(error.Message.ToLowerInvariant(), Does.Not.Contain("path"));
     }

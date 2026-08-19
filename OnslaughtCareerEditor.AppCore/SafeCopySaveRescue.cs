@@ -140,7 +140,7 @@ namespace OnslaughtCareerEditor.AppCore
 
         public const string CopyFolderMissing = "That copy folder could not be found.";
 
-        public const string ProfileFolderRequired = "An app-owned profile folder is required.";
+        public const string ProfileFolderRequired = "A profile folder is required.";
 
         public const string CopyRequired = "A copy is required.";
 
