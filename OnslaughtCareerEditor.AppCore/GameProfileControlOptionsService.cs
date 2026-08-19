@@ -105,7 +105,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             string optionsPath = Path.Combine(profileRoot, "defaultoptions.bea");
             if (!File.Exists(optionsPath))
-                throw new FileNotFoundException("Safe game copy is missing defaultoptions.bea.", optionsPath);
+                throw new FileNotFoundException("That copy is missing defaultoptions.bea.");
 
             RejectReparsePoint(optionsPath, "safe-copy defaultoptions.bea");
             RejectMultipleHardLinks(optionsPath, "Safe-copy defaultoptions.bea");
