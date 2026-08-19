@@ -133,6 +133,14 @@ REQUIRED_LIVE_PROJECT_DIR = r"c:\users\david\ghidra\projects\bea.rep"
 # on a db.18631 copy (3 rows, 8326 untouched,
 # columnsMoved={name=3, symbolSource=3}). Not a blank check for other
 # dual-owner leftovers.
+# name-cohort-round-dual-owner is granted 2026-08-19 after reviewer
+# t_dfd691a2 GO on t_22b107dc: VFuncSlot_* owned by exactly two RTTI
+# classes at the same slot of one table pair, named Class__VFunc_N_addr
+# after a sibling shared slot of that pair already Class__VFunc_N_addr.
+# Replica census/identity/dry/apply/readback PASS on a db.18632 copy
+# (6 rows, 8323 untouched, columnsMoved={name=6}). Not unique-owner.
+# Not the t_75e4ccdd cockpit FUN_ family. Not a blank check for other
+# dual-owner leftovers.
 LIVE_GRANTED_COHORTS = [
     "boundary-cohort41", "name-cohort160", "abi-cohort294",
     "tentacle-chain-a", "tentacle-chain-b",
@@ -144,6 +152,7 @@ LIVE_GRANTED_COHORTS = [
     "name-cohort-fun-unique-owner",
     "name-cohort-placeholder-unique-owner",
     "name-cohort-cockpit-dual-owner",
+    "name-cohort-round-dual-owner",
 ]
 PROGRAM_SHA256 = (
     "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
@@ -553,6 +562,7 @@ LIVE_ALLOWLISTED_EDITS: list[tuple[str, str, str]] = [
         '        "name-cohort-fun-unique-owner",\n'
         '        "name-cohort-placeholder-unique-owner",\n'
         '        "name-cohort-cockpit-dual-owner",\n'
+        '        "name-cohort-round-dual-owner",\n'
         "    };\n",
     ),
     (
@@ -720,7 +730,6 @@ class FrameworkDerivationTests(unittest.TestCase):
             self.assertIn(f'"{cohort}"', derivation)
         for rehearsed_only in (
                 "name-cohort-waypoint-follow",
-                "name-cohort-round-dual-owner",
         ):
             self.assertNotIn(rehearsed_only, self.live,
                              "a rehearsed cohort is not an authorization")

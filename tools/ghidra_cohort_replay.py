@@ -276,18 +276,17 @@ REHEARSAL_COHORTS: dict[str, dict] = {
         },
     },
     "name-cohort-round-dual-owner": {
-        # PRE is current live POST (db.18632). DRAFT: not live-authorized.
-        # Dual-owner sibling-prefix on VFuncSlot leftovers; t_75e4ccdd GO
-        # does not cover this family.
-        "backup": BACKUPS / "2026-08-18-name-cohort-cockpit-dual-owner-post-live",
+        # PRE is the verified off-volume backup taken immediately before the
+        # 2026-08-19 live apply (db.18632). Replay against that PRE.
+        "backup": BACKUPS / "2026-08-19-name-cohort-round-dual-owner-pre-live",
         "spec": SPECS / "name-cohort-round-dual-owner.spec.tsv",
         "manifest": SPECS / "name-cohort-round-dual-owner-manifest.tsv",
-        "rehearsalOnly": True,
+        "rehearsalOnly": False,
         "archived": {
-            "source": "REHEARSAL ONLY - not live-authorized "
-                      "(t_75e4ccdd GO is cockpit FUN_ only)",
+            "source": "local-lab/name-cohort-round-dual-owner-ceremony-2026-08-19/"
+                      "{apply,readback}.json (live, 2026-08-19)",
             "rows": 6,
-            "applied": 0,
+            "applied": 6,
             "preFunctions": 8329, "postFunctions": 8329,
             "preInstructions": 551232, "postInstructions": 551232,
             "preReferences": 234558, "postReferences": 234558,
