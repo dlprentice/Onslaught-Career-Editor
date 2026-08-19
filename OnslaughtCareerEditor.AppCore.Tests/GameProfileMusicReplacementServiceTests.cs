@@ -425,7 +425,8 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                             TargetMusicFileName: "BEA_01(Master).ogg",
                             ReplacementOggPath: replacementPath)));
 
-        Assert.Contains("generated playable copied game folder manifest", ex.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(GameProfilePreflightService.CopyManifestMissing, ex.Message);
+                Assert.DoesNotContain("playable", ex.Message, StringComparison.OrdinalIgnoreCase);
             }
             finally
             {

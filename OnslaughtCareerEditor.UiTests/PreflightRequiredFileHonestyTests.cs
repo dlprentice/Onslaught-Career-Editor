@@ -164,6 +164,16 @@ public class PreflightRequiredFileHonestyTests
             Does.Not.Contain("playable"));
         Assert.That(GameProfilePreflightService.CopyLaunchFolderMismatch.ToLowerInvariant(),
             Does.Not.Contain("root"));
+        Assert.That(source, Does.Contain("CopyManifestMissing"));
+        Assert.That(source, Does.Contain("CopyManifestOutOfDate"));
+        Assert.That(source, Does.Not.Contain("Launch plan requires a generated playable copied game folder manifest."));
+        Assert.That(source, Does.Not.Contain("Launch plan requires a current playable copied game folder manifest."));
+        Assert.That(GameProfilePreflightService.CopyManifestMissing,
+            Is.EqualTo("That copy is missing onslaught-profile-manifest.json."));
+        Assert.That(GameProfilePreflightService.CopyManifestMissing.ToLowerInvariant(),
+            Does.Not.Contain("playable"));
+        Assert.That(GameProfilePreflightService.CopyManifestOutOfDate.ToLowerInvariant(),
+            Does.Not.Contain("playable"));
         Assert.That(source, Does.Contain("CopiedBackupMissing"));
         Assert.That(source, Does.Contain("CopiedBackupHashMissing"));
         Assert.That(source, Does.Contain("CopiedBackupHashMismatch"));

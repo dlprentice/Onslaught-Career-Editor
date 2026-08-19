@@ -1365,7 +1365,8 @@ namespace OnslaughtCareerEditor.AppCore.Tests
 
                 InvalidOperationException manifestEx = Assert.Throws<InvalidOperationException>(() =>
                     GameProfilePreflightService.BuildLaunchPlan(sourceRoot, Array.Empty<string>()));
-        Assert.Contains("generated playable copied game folder manifest", manifestEx.Message);
+                Assert.Equal(GameProfilePreflightService.CopyManifestMissing, manifestEx.Message);
+                Assert.DoesNotContain("playable", manifestEx.Message, StringComparison.OrdinalIgnoreCase);
             }
             finally
             {

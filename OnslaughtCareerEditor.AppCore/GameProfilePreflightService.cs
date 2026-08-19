@@ -143,6 +143,8 @@ namespace OnslaughtCareerEditor.AppCore
         public const string CopyDetailsIncomplete = "That copy's details are incomplete.";
         public const string CopyLaunchFolderMissing = "That copy is missing its launch folder.";
         public const string CopyLaunchFolderMismatch = "That copy does not match this launch folder.";
+        public const string CopyManifestMissing = "That copy is missing onslaught-profile-manifest.json.";
+        public const string CopyManifestOutOfDate = "That copy's details file is out of date.";
         public const string ProfileFolderInsideGame =
             "The app-owned profile folder must not sit inside the game folder.";
         public const string GameFolderInsideProfile =
@@ -622,7 +624,7 @@ namespace OnslaughtCareerEditor.AppCore
             string resolvedGameRoot = NormalizeExistingDirectory(gameRoot);
             string manifestPath = Path.Combine(resolvedGameRoot, "onslaught-profile-manifest.json");
             if (!File.Exists(manifestPath))
-                throw new InvalidOperationException("Launch plan requires a generated playable copied game folder manifest.");
+                throw new InvalidOperationException(CopyManifestMissing);
 
             using JsonDocument doc = JsonDocument.Parse(File.ReadAllText(manifestPath));
             string? schemaVersion = doc.RootElement.TryGetProperty("schemaVersion", out JsonElement schemaEl)
@@ -633,7 +635,7 @@ namespace OnslaughtCareerEditor.AppCore
                 : null;
 
             if (!string.Equals(schemaVersion, SchemaVersion, StringComparison.Ordinal))
-                throw new InvalidOperationException("Launch plan requires a current playable copied game folder manifest.");
+                throw new InvalidOperationException(CopyManifestOutOfDate);
 
             if (string.IsNullOrWhiteSpace(targetGameRoot))
                 throw new InvalidOperationException(CopyLaunchFolderMissing);
