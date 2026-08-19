@@ -146,8 +146,6 @@ public sealed partial class RetailFrontendFlow
     private static readonly Color BarEmpty = new(80f / 255f, 80f / 255f, 80f / 255f, 1f);
 
     private static readonly Color DropdownPanel = new(40f / 255f, 56f / 255f, 104f / 255f, 1f);
-    private static readonly Color DropdownEntry = new(128f / 255f, 128f / 255f, 128f / 255f, 1f);
-    private static readonly Color DropdownEntrySelected = Colors.White;
 
     private static readonly string[] OptionsPageTitles =
     [
@@ -292,6 +290,9 @@ public sealed partial class RetailFrontendFlow
         // CMenuItemDropdown expanded list dest Y leftover is
         // RetailOptionsDropdownListDestY: panel dest leftover plus index
         // times cy. Dest Y does not consult currentIndex.
+        // CMenuItemDropdown expanded list colour leftover is
+        // RetailOptionsDropdownListColor: 0xFF404040, or -1 when the
+        // loop index equals currentIndex. That is colour, not dest.
         // CMenuItemDropdown expanded panel dest leftover is
         // RetailOptionsDropdownPanelDest: collapsed dest leftover, dest Y
         // incoming minus integer-half of (count-1)*cy, width max cx plus 3.
@@ -482,7 +483,10 @@ public sealed partial class RetailFrontendFlow
             // Incoming dest X plus collapsed pad plus the pad leftover.
             // Dest is not the pad constant. Dest Y is the panel dest
             // leftover plus index times cy. Dest Y does not consult
-            // currentIndex.
+            // currentIndex. Colour leftover is
+            // RetailOptionsDropdownListColor: 0xFF404040, or -1 when
+            // the loop index equals currentIndex. That is colour, not
+            // dest.
             DrawOptionsBodyText(
                 row.StateLabel(i),
                 new Vector2(
@@ -493,7 +497,7 @@ public sealed partial class RetailFrontendFlow
                         (int)DropdownEntryPitch,
                         i)),
                 1f,
-                i == row.CurrentIndex ? DropdownEntrySelected : DropdownEntry);
+                RetailColor(RetailOptionsDropdownListColor.PackedColor(i, row.CurrentIndex)));
         }
     }
 
