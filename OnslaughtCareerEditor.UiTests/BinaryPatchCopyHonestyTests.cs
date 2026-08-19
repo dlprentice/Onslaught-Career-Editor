@@ -125,7 +125,8 @@ public class BinaryPatchCopyHonestyTests
         Assert.That(xaml, Does.Not.Contain("Source path details"));
         Assert.That(xaml, Does.Contain("Source file details"));
         Assert.That(xaml, Does.Not.Contain("Path to replacement .ogg"));
-        Assert.That(xaml, Does.Contain("Replacement .ogg file"));
+        Assert.That(xaml, Does.Not.Contain("Replacement .ogg file"));
+        Assert.That(xaml, Does.Contain("PlaceholderText=\"Replacement music file\""));
         Assert.That(xaml, Does.Not.Contain("Replacement track OGG path"));
         Assert.That(xaml, Does.Contain("Replacement track OGG file"));
         Assert.That(xaml, Does.Not.Contain("Source executable path"));

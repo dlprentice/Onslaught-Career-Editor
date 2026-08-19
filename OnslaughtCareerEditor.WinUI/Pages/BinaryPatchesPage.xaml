@@ -1291,7 +1291,7 @@
                                              AutomationProperties.AutomationId="PatchBenchMusicReplacementFile"
                                              AutomationProperties.Name="Replacement track OGG file"
                                              TextChanged="MusicReplacementInput_TextChanged"
-                                             PlaceholderText="Replacement .ogg file" />
+                                             PlaceholderText="Replacement music file" />
                                     <TextBlock Text="Target must be an existing file in the safe copy's data\Music folder. Stop the safe copy before staging or restoring."
                                                Style="{StaticResource SectionBodyTextStyle}" />
                                     <StackPanel Spacing="10">
