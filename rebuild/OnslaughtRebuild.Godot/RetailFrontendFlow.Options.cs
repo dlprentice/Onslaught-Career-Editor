@@ -279,15 +279,29 @@ public sealed partial class RetailFrontendFlow
 
     private void DrawOptionRow(RetailOptionsRow row, float top, bool selected)
     {
-        // CApplyMenuItem::Render 0x004A4310 and CMenuItemDropdown::Render
-        // 0x004A3C69 share the same packed cosine. Apply uses the page
-        // DAT_00704A88 flag; a dropdown uses committed != current.
-        bool pulse = (row.Action == RetailOptionsAction.Apply && _options.HasPendingChanges) ||
-            (row.Kind == RetailOptionsRowKind.Dropdown &&
-             RetailOptionsApplyPulse.DropdownRowIsPending(row.CommittedIndex, row.CurrentIndex));
-        Color color = pulse
-            ? RetailColor(RetailOptionsApplyPulse.PackedColor(true, (float)_animationSeconds))
-            : selected ? OptionSelected : OptionNormal;
+        // CApplyMenuItem::Render 0x004A4310 packs the cosine and forwards
+        // it to CMenuItem__Render, which ANDs ESI with that incoming at
+        // 0x004A33FC after selected 0xFFFFCC00 / disabled 0x50505050.
+        // CMenuItemDropdown::Render 0x004A3C69 uses the same cosine as
+        // EDI itself — it does not call CMenuItem__Render.
+        float seconds = (float)_animationSeconds;
+        Color color;
+        if (row.Kind == RetailOptionsRowKind.Dropdown &&
+            RetailOptionsApplyPulse.DropdownRowIsPending(row.CommittedIndex, row.CurrentIndex))
+        {
+            color = RetailColor(RetailOptionsApplyPulse.PackedColor(true, seconds));
+        }
+        else if (row.Action == RetailOptionsAction.Apply && _options.HasPendingChanges)
+        {
+            color = RetailColor(RetailOptionsMenuItemColor.PackedColor(
+                selected,
+                enabled: true,
+                RetailOptionsApplyPulse.PackedColor(true, seconds)));
+        }
+        else
+        {
+            color = selected ? OptionSelected : OptionNormal;
+        }
 
         switch (row.Kind)
         {
