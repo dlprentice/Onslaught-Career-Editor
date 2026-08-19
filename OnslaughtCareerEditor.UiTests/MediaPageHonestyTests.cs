@@ -65,9 +65,11 @@ public class MediaPageHonestyTests
         Assert.That(code, Does.Contain("MediaPageText.InlineVideoUnavailableBody"));
         Assert.That(code, Does.Contain("MediaPageText.AudioPlaybackFailedStatus"));
         Assert.That(code, Does.Contain("MediaPageText.VideoPlaybackFailedStatus"));
+        Assert.That(code, Does.Contain("MediaPageText.VideoPlaybackFailedBody"));
         Assert.That(code, Does.Contain("MediaPageText.StoryStartFailedStatus"));
         Assert.That(code, Does.Contain("MediaPageText.StoryContinueFailedStatus"));
         Assert.That(code, Does.Not.Contain("ex.Message"));
+        Assert.That(code, Does.Not.Contain("Inline playback error."));
         Assert.That(code, Does.Not.Contain("Details:"));
         Assert.That(code, Does.Contain("MediaPageText.DescribeAudioEmptyState"));
         Assert.That(code, Does.Contain("MediaPageText.DescribeVideoEmptyState"));
@@ -154,5 +156,31 @@ public class MediaPageHonestyTests
         Assert.That(code, Does.Not.Contain("MediaGameDirectoryTextBlock.Text = _snapshot.GameDirectory"));
         Assert.That(code, Does.Not.Contain("MediaGameDirectoryTextBlock.Text = path"));
         Assert.That(code, Does.Not.Contain(": fullPath;"));
+    }
+
+    [Test]
+    public void AnInlinePlaybackFailureUsesTheSharedVideoSentence()
+    {
+        string sentence = MediaPageText.VideoPlaybackFailedBody;
+
+        Assert.That(sentence, Does.Contain("could not be played"));
+        Assert.That(sentence, Does.Contain("intact"));
+        Assert.That(sentence.ToLowerInvariant(), Does.Not.Contain("exception"));
+        Assert.That(sentence.ToLowerInvariant(), Does.Not.Contain("inline playback error"));
+        Assert.That(sentence, Does.Not.Contain(@":\"));
+        Assert.That(sentence, Does.Not.Contain("/"));
+
+        string code = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI", "Pages", "MediaPage.xaml.cs"));
+        int start = code.IndexOf("private void VideoPlayer_EncounteredError", StringComparison.Ordinal);
+        int end = code.IndexOf("private void VideoPlayer_LengthChanged", StringComparison.Ordinal);
+        Assert.That(start, Is.GreaterThanOrEqualTo(0));
+        Assert.That(end, Is.GreaterThan(start));
+
+        string method = code[start..end];
+        Assert.That(method, Does.Contain("MediaPageText.VideoPlaybackFailedBody"));
+        Assert.That(method, Does.Contain("MediaPageText.VideoPlaybackFailedStatus"));
+        Assert.That(method, Does.Not.Contain("Inline playback error."));
+        Assert.That(method, Does.Not.Contain("Media: video playback failed"));
     }
 }

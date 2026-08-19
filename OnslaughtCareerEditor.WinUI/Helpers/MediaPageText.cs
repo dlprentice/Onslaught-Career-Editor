@@ -20,6 +20,9 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         public const string VideoPlaybackFailedStatus =
             "Media: this video could not be played";
 
+        public const string VideoPlaybackFailedBody =
+            "This video could not be played. Try another one, or check that the media files are intact.";
+
         public const string DedicatedPlayerInitFailed =
             "The video player could not start. Nothing was changed.";
 

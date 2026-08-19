@@ -101,7 +101,9 @@ live in `developer_state.json` and the campaign ledgers.
   like a dump uses the shared nothing-was-changed sentence. A failed
   focused Goodie write that still looks like a dump uses that same
   sentence. Save Editor refusals that used to say paths now name the
-  files. Save Lab names a missing analysis file, not a path.
+  files. Save Lab names a missing analysis file, not a path. An inline
+  video that fails mid-play uses the same could-not-be-played sentence
+  as the other Media failures.
 
 ## 1.0.11 — 2026-08-07
 

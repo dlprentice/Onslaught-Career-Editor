@@ -768,7 +768,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 catch (Exception)
                 {
                     ResetVideoPlaybackState(stopPlayer: false);
-                    VideoPathTextBlock.Text = "This video could not be played. Try another one, or check that the media files are intact.";
+                    VideoPathTextBlock.Text = MediaPageText.VideoPlaybackFailedBody;
                     AppStatusService.SetStatus(MediaPageText.VideoPlaybackFailedStatus);
                 }
             });
@@ -975,8 +975,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             DispatcherQueue.TryEnqueue(() =>
             {
                 ResetVideoPlaybackState(stopPlayer: false);
-                VideoPathTextBlock.Text = "Inline playback error.";
-                AppStatusService.SetStatus("Media: video playback failed");
+                VideoPathTextBlock.Text = MediaPageText.VideoPlaybackFailedBody;
+                AppStatusService.SetStatus(MediaPageText.VideoPlaybackFailedStatus);
             });
         }
 
@@ -1853,7 +1853,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             catch (Exception)
             {
                 StopVideoPlayback();
-                VideoPathTextBlock.Text = "This video could not be played. Try another one, or check that the media files are intact.";
+                VideoPathTextBlock.Text = MediaPageText.VideoPlaybackFailedBody;
                 AppStatusService.SetStatus(MediaPageText.VideoPlaybackFailedStatus);
             }
         }
@@ -1987,7 +1987,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             catch (Exception)
             {
                 StopVideoPlayback();
-                VideoPathTextBlock.Text = "This video could not be played. Try another one, or check that the media files are intact.";
+                VideoPathTextBlock.Text = MediaPageText.VideoPlaybackFailedBody;
                 AppStatusService.SetStatus(MediaPageText.VideoPlaybackFailedStatus);
             }
         }
