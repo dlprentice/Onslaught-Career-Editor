@@ -91,7 +91,7 @@ namespace OnslaughtCareerEditor.AppCore
                 string.Equals(resolvedPath, normalizedRoot, FileMutationSafety.PathComparison))
             {
                 throw new InvalidOperationException(
-                    "Catalog export paths must remain below the selected generated export root.");
+                    "Catalog exports must stay inside the selected generated export folder.");
             }
 
             return resolvedPath;
@@ -286,7 +286,7 @@ namespace OnslaughtCareerEditor.AppCore
             if (string.IsNullOrWhiteSpace(catalogPath))
                 return AssetCatalogSourceRead.Missing(string.Empty, AssetCatalogSourceEvidence.Missing);
             if (requireRelative && Path.IsPathRooted(catalogPath))
-                throw new InvalidOperationException("Catalog export paths must be bundle-root-relative.");
+                throw new InvalidOperationException("Catalog exports must be bundle-root-relative.");
 
             string sourcePath = AssetCatalogFileSafety.ResolveSourcePath(TrustedExportRoot, catalogPath);
             FileMutationSafety.RejectOutputInGameTree(sourcePath);
