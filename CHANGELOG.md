@@ -47,7 +47,8 @@ live in `developer_state.json` and the campaign ledgers.
   file without the full path. Save Editor patch refusals do the same for a
   missing career save. Save Editor advanced read refusals name the action
   without the exception. A locked Save Editor write names the action
-  without the exception. An Asset Library search with no hits now says to try
+  without the exception. A successful Save Editor write names the file,
+  not the path. An Asset Library search with no hits now says to try
   another word or clear the search. Settings names a folder that could not
   be kept and puts the previous folder back, instead of leaving the new path
   looking saved. A look or media choice that cannot be kept is named the

@@ -680,7 +680,7 @@ namespace OnslaughtCareerEditor.AppCore
                 ApplyOptionsTailOverrides(buf);
 
                 mutation.Commit(buf);
-                return PatchResult.Ok($"Successfully patched: {outputPath}");
+                return PatchResult.Ok($"Successfully patched: {Path.GetFileName(outputPath)}");
             }
             catch (Exception)
             {
@@ -760,7 +760,7 @@ namespace OnslaughtCareerEditor.AppCore
                 }
 
                 mutation.Commit(buf);
-                return PatchResult.Ok($"Patched {statesByIndex.Count} Goodie state override(s): {outputPath}");
+                return PatchResult.Ok($"Patched {statesByIndex.Count} Goodie state override(s): {Path.GetFileName(outputPath)}");
             }
             catch (Exception)
             {

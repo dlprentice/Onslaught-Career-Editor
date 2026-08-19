@@ -377,6 +377,39 @@ public class SaveEditorHonestyTests
         }
     }
 
+    [Test]
+    public void ASuccessfulPatchNamesTheFileNotThePath()
+    {
+        string tempDir = Path.Combine(Path.GetTempPath(), $"onslaught-patch-ok-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDir);
+        try
+        {
+            string input = Path.Combine(tempDir, "career.bes");
+            string output = Path.Combine(tempDir, "out.bes");
+            File.Copy(GoldSavePath, input);
+
+            PatchResult result = SaveEditorService.PatchSave(new SavePatchRequest
+            {
+                InputPath = input,
+                OutputPath = output,
+                PatchNodes = false,
+                PatchLinks = true,
+                PatchGoodies = false,
+                PatchKills = false,
+            });
+
+            Assert.That(result.Success, Is.True, result.Message);
+            Assert.That(result.Message, Does.Contain("out.bes"));
+            Assert.That(result.Message, Does.Not.Contain(tempDir));
+            Assert.That(result.Message, Does.Not.Contain(output));
+            Assert.That(result.Message, Does.Not.Contain(":\\"));
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
     // --------------------------------------------- output-safety claim
 
     [Test]
