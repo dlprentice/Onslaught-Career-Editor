@@ -18,9 +18,10 @@ public class AssetModelSidecarHonestyTests
             "AssetModelTextureLinkService.cs"));
 
         Assert.That(source, Does.Not.Contain("Model sidecar texture directory resolves outside"));
+        Assert.That(source, Does.Not.Contain("trusted generated export folder"));
         Assert.That(
             source,
-            Does.Contain("The model sidecar texture folder resolves outside the trusted generated export folder."));
+            Does.Contain("The model sidecar texture folder resolves outside the generated export folder."));
     }
 
     [Test]
