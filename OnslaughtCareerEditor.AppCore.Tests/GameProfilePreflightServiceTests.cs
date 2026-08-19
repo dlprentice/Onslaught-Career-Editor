@@ -587,7 +587,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                             ApplyWindowedCompatibilityPatch: true,
                             AllowByteLayoutOnlyTarget: true)));
 
-                Assert.Contains("protected install root", ex.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(GameProfilePreflightService.ProfileFolderUnderProtectedInstall, ex.Message);
                 Assert.False(Directory.Exists(Path.Combine(outputRoot, "protected-output")));
             }
             finally

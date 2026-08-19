@@ -117,6 +117,14 @@ namespace OnslaughtCareerEditor.AppCore
         public const string ProfileFolderRequired = "An app-owned profile folder is required.";
         public const string WorkspaceFileMustStayInside = "The workspace file must stay inside the app-owned profile folder.";
         public const string CopyMustStayInside = "That copy must stay inside the app-owned profile folder.";
+        public const string ProfileFolderInsideGame =
+            "The app-owned profile folder must not sit inside the game folder.";
+        public const string GameFolderInsideProfile =
+            "The game folder must not sit inside the app-owned profile folder.";
+        public const string ProfileFolderUnderProtectedInstall =
+            "The app-owned profile folder must not sit under Program Files or another protected install folder.";
+        public const string ProfileFolderUnderSteamInstall =
+            "The app-owned profile folder must not sit under a steamapps/common/Battle Engine Aquila install folder.";
 
         /// <summary>
         /// The manifest every generated playable copied game folder carries. Its presence is what
@@ -1852,12 +1860,12 @@ namespace OnslaughtCareerEditor.AppCore
         {
             if (IsSameOrUnderRoot(outputRoot, sourceRoot))
             {
-                throw new InvalidOperationException("The app-owned output root must not be inside the source game root.");
+                throw new InvalidOperationException(ProfileFolderInsideGame);
             }
 
             if (IsSameOrUnderRoot(sourceRoot, outputRoot))
             {
-                throw new InvalidOperationException("The source game root must not be inside the app-owned output root.");
+                throw new InvalidOperationException(GameFolderInsideProfile);
             }
         }
 
@@ -1865,12 +1873,12 @@ namespace OnslaughtCareerEditor.AppCore
         {
             if (IsPathUnderProtectedInstallRoot(outputRoot))
             {
-                throw new InvalidOperationException("The app-owned output root must not be under Program Files or another protected install root.");
+                throw new InvalidOperationException(ProfileFolderUnderProtectedInstall);
             }
 
             if (HasKnownSteamInstallShape(outputRoot))
             {
-                throw new InvalidOperationException("The app-owned output root must not be under a steamapps/common/Battle Engine Aquila install root.");
+                throw new InvalidOperationException(ProfileFolderUnderSteamInstall);
             }
         }
 
