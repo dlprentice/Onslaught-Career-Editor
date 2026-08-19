@@ -304,7 +304,10 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                         outputRoot,
                         GameProfileMusicReplacementService.UseBea02ForBea01PresetId));
 
-                Assert.Contains("Preset replacement music file", ex.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(GameProfileMusicReplacementService.ReplacementMusicFileMissing, ex.Message);
+                Assert.Equal("That replacement music file could not be found.", ex.Message);
+                Assert.DoesNotContain("Preset", ex.Message, StringComparison.Ordinal);
+                Assert.Null(ex.FileName);
             }
             finally
             {

@@ -46,6 +46,11 @@ public class PatchBenchMusicFolderHonestyTests
             Is.EqualTo("That music file is not an OGG."));
         Assert.That(GameProfileMusicReplacementService.MusicFileNotOgg,
             Does.Not.Contain("OggS"));
+        Assert.That(source, Does.Contain("ReplacementMusicFileMissing"));
+        Assert.That(GameProfileMusicReplacementService.ReplacementMusicFileMissing,
+            Is.EqualTo("That replacement music file could not be found."));
+        Assert.That(GameProfileMusicReplacementService.ReplacementMusicFileMissing,
+            Does.Not.Contain("Preset"));
         Assert.That(source, Does.Not.Contain("does not contain data\\\\Music."));
         Assert.That(source, Does.Not.Contain("does not contain data\\Music."));
     }
