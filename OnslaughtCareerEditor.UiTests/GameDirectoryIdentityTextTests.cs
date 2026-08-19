@@ -238,6 +238,32 @@ public class GameDirectoryIdentityTextTests
         Assert.That(GameDirectoryIdentityText.BuildFolderSummary("   ", "Configured install"), Is.EqualTo("Configured install"));
     }
 
+    [Test]
+    public void HomeSnapshotEmptyStatesSayWhatToDoNext()
+    {
+        Assert.That(GameDirectoryIdentityText.SnapshotNeedsFolder, Does.Contain("folder"));
+        Assert.That(GameDirectoryIdentityText.SnapshotNeedsFolder, Does.Not.Contain("—"));
+        Assert.That(GameDirectoryIdentityText.SnapshotSavesNone, Does.Contain("in-game"));
+        Assert.That(GameDirectoryIdentityText.SnapshotSavesNone, Does.Not.Contain("None yet"));
+        Assert.That(GameDirectoryIdentityText.SnapshotSavesUnavailable, Does.Contain("Settings"));
+        Assert.That(GameDirectoryIdentityText.SnapshotSavesUnavailable, Does.Not.Contain("Unavailable"));
+        Assert.That(GameDirectoryIdentityText.SnapshotNeedsFolder, Does.Not.Contain(":\\"));
+        Assert.That(GameDirectoryIdentityText.SnapshotSavesNone, Does.Not.Contain("/"));
+    }
+
+    [Test]
+    public void TheHomeSnapshotUsesTheSharedEmptyStates()
+    {
+        string home = File.ReadAllText(Path.Combine(FindRepoRoot(), "OnslaughtCareerEditor.WinUI", "Pages", "HomePage.xaml.cs"));
+
+        Assert.That(home, Does.Contain("GameDirectoryIdentityText.SnapshotNeedsFolder"));
+        Assert.That(home, Does.Contain("GameDirectoryIdentityText.SnapshotSavesNone"));
+        Assert.That(home, Does.Contain("GameDirectoryIdentityText.SnapshotSavesUnavailable"));
+        Assert.That(home, Does.Not.Contain("\"—\""));
+        Assert.That(home, Does.Not.Contain("\"None yet\""));
+        Assert.That(home, Does.Not.Contain("\"Unavailable\""));
+    }
+
     private static string FindRepoRoot()
     {
         DirectoryInfo? directory = new(TestContext.CurrentContext.TestDirectory);

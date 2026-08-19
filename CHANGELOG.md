@@ -94,7 +94,9 @@ live in `developer_state.json` and the campaign ledgers.
   analyzer sentence. A missing Save Editor career save names that the
   file could not be found, not a path. A patch-target filesystem-safety
   refusal uses the unusable-target sentence, without the exception. A
-  loaded patch or profile catalog is named without the file path.
+  loaded patch or profile catalog is named without the file path. Home
+  names a missing folder, an empty save list, or a failed save count as a
+  next step, not a dash.
 
 ## 1.0.11 — 2026-08-07
 

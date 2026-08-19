@@ -50,8 +50,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
             if (string.IsNullOrWhiteSpace(gameDir))
             {
-                HomeSnapshotSavesTextBlock.Text = "—";
-                HomeSnapshotMediaTextBlock.Text = "—";
+                HomeSnapshotSavesTextBlock.Text = GameDirectoryIdentityText.SnapshotNeedsFolder;
+                HomeSnapshotMediaTextBlock.Text = GameDirectoryIdentityText.SnapshotNeedsFolder;
                 return;
             }
 
@@ -60,14 +60,14 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 int saveCount = AppConfig.FindSaveFiles(gameDir).Count;
                 HomeSnapshotSavesTextBlock.Text = saveCount switch
                 {
-                    0 => "None yet",
+                    0 => GameDirectoryIdentityText.SnapshotSavesNone,
                     1 => "1 file",
                     _ => $"{saveCount} files",
                 };
             }
             catch (Exception)
             {
-                HomeSnapshotSavesTextBlock.Text = "Unavailable";
+                HomeSnapshotSavesTextBlock.Text = GameDirectoryIdentityText.SnapshotSavesUnavailable;
             }
 
             HomeSnapshotMediaTextBlock.Text = ready ? "Ready to browse" : "Needs the full install";

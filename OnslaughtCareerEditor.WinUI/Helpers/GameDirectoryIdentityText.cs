@@ -45,6 +45,12 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         public const string MediaPersistFailed =
             "Could not keep those media choices. Nothing was changed. Try them again.";
 
+        public const string SnapshotNeedsFolder = "Set the game folder first.";
+
+        public const string SnapshotSavesNone = "Create a save in-game first.";
+
+        public const string SnapshotSavesUnavailable = "Could not count saves. Try Settings.";
+
         public static string ForSettings(RetailExecutableIdentity identity)
         {
             return identity switch
