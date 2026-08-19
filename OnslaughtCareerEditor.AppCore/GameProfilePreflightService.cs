@@ -140,6 +140,7 @@ namespace OnslaughtCareerEditor.AppCore
         public const string UnsupportedLaunchArgument = "That launch argument is not supported.";
         public const string UnexpectedLaunchArgumentValue = "That launch argument value is not expected.";
         public const string LaunchArgumentNeedsANumber = "That launch argument needs a number.";
+        public const string CopyDetailsIncomplete = "That copy's details are incomplete.";
         public const string ProfileFolderInsideGame =
             "The app-owned profile folder must not sit inside the game folder.";
         public const string GameFolderInsideProfile =
@@ -976,12 +977,12 @@ namespace OnslaughtCareerEditor.AppCore
             if (!element.TryGetProperty(propertyName, out JsonElement child) ||
                 child.ValueKind != JsonValueKind.String)
             {
-                throw new InvalidOperationException($"Playable copied game folder {label} is missing {propertyName}.");
+                throw new InvalidOperationException(CopyDetailsIncomplete);
             }
 
             string? value = child.GetString();
             if (string.IsNullOrWhiteSpace(value))
-                throw new InvalidOperationException($"Playable copied game folder {label} has an empty {propertyName}.");
+                throw new InvalidOperationException(CopyDetailsIncomplete);
 
             return value;
         }

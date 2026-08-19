@@ -145,6 +145,13 @@ public class PreflightRequiredFileHonestyTests
             Is.EqualTo("That launch argument is not supported."));
         Assert.That(GameProfilePreflightService.UnsupportedLaunchArgument.ToLowerInvariant(),
             Does.Not.Contain("path"));
+        Assert.That(source, Does.Contain("CopyDetailsIncomplete"));
+        Assert.That(source, Does.Not.Contain("Playable copied game folder {label} is missing"));
+        Assert.That(source, Does.Not.Contain("Playable copied game folder {label} has an empty"));
+        Assert.That(GameProfilePreflightService.CopyDetailsIncomplete,
+            Is.EqualTo("That copy's details are incomplete."));
+        Assert.That(GameProfilePreflightService.CopyDetailsIncomplete.ToLowerInvariant(),
+            Does.Not.Contain("path"));
         Assert.That(source, Does.Contain("CopiedBackupMissing"));
         Assert.That(source, Does.Contain("CopiedBackupHashMissing"));
         Assert.That(source, Does.Contain("CopiedBackupHashMismatch"));
