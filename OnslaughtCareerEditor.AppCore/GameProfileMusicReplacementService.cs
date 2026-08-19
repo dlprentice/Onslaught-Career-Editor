@@ -66,6 +66,9 @@ namespace OnslaughtCareerEditor.AppCore
         public const string TargetMusicFileMissing = "That target music file could not be found.";
         public const string TargetMusicFileNameInvalid = "That target must be a single .ogg music file.";
         public const string ReplacementMusicFileMissing = "That replacement music file could not be found.";
+        public const string ReplacementMusicFileRequired = "A replacement music file is required.";
+        public const string ReplacementMustNotBeTarget =
+            "The replacement music file must not be the target music file.";
         public const string MusicBackupMissing = "That music backup file could not be found.";
         public const string CopyCannotUseLink = "That copy cannot use a shortcut or link.";
         public const string FileCannotShareData = "That file cannot share its data with another file.";
@@ -215,7 +218,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             string replacementPath = ValidateReplacementOgg(options.ReplacementOggPath);
             if (string.Equals(Path.GetFullPath(replacementPath), Path.GetFullPath(targetPath), StringComparison.OrdinalIgnoreCase))
-                throw new InvalidOperationException("The replacement OGG must not be the target music file.");
+                throw new InvalidOperationException(ReplacementMustNotBeTarget);
 
             string manifestPath = Path.Combine(safeRoot, ManifestFileName);
             RejectExistingReparseAncestors(manifestPath, "music replacement manifest path");
@@ -396,16 +399,16 @@ namespace OnslaughtCareerEditor.AppCore
         private static string ValidateReplacementOgg(string replacementPath)
         {
             if (string.IsNullOrWhiteSpace(replacementPath))
-                throw new InvalidOperationException("A replacement OGG is required.");
+                throw new InvalidOperationException(ReplacementMusicFileRequired);
 
             string fullPath = Path.GetFullPath(replacementPath);
             if (!File.Exists(fullPath))
-                throw new FileNotFoundException("That replacement OGG file could not be found.");
+                throw new FileNotFoundException(ReplacementMusicFileMissing);
             if (!string.Equals(Path.GetExtension(fullPath), ".ogg", StringComparison.OrdinalIgnoreCase))
                 throw new InvalidOperationException("Replacement music file must use the .ogg extension.");
 
-            RejectExistingReparseAncestors(fullPath, "replacement OGG path");
-            RejectReparsePoint(fullPath, "replacement OGG file");
+            RejectExistingReparseAncestors(fullPath, "replacement music file");
+            RejectReparsePoint(fullPath, "replacement music file");
 
             ValidateOggHeader(fullPath, "Replacement music file");
 
