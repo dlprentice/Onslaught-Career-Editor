@@ -1598,7 +1598,10 @@ public sealed partial class RetailFrontendFlow : Control
             _titleTextBox,
             new Rect2(MenuColumnX - (boxWidth * 0.5f), rowY - 16f, boxWidth, 32f),
             false,
-            new Color(HighlightTint, HighlightTint.A * iconFade));
+            new Color(
+                RetailColor(RetailMainMenuSelectorBarColor.SubmittedColor(
+                    RetailMainMenuSelectorBarColor.ImageSettledFadeByte)),
+                HighlightTint.A * iconFade));
     }
 
     /// <summary>
