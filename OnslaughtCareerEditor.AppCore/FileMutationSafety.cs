@@ -631,10 +631,10 @@ namespace OnslaughtCareerEditor.AppCore
             Action<string>? afterSourcePrepared = null,
             Action<string, WindowsFileIdentity>? verifyPublishedDirectory = null)
         {
-            string normalizedSource = NormalizeLocalPath(sourceDirectory, "Staged package directory");
-            string normalizedDestination = NormalizeLocalPath(destinationDirectory, "Published package directory");
+            string normalizedSource = NormalizeLocalPath(sourceDirectory, "Staged package folder");
+            string normalizedDestination = NormalizeLocalPath(destinationDirectory, "Published package folder");
             if (!Directory.Exists(normalizedSource))
-                throw new DirectoryNotFoundException("The staged package directory no longer exists.");
+                throw new DirectoryNotFoundException("The staged package folder no longer exists.");
             if (Directory.Exists(normalizedDestination) || File.Exists(normalizedDestination))
                 throw new IOException("The published package folder is no longer vacant.");
 
@@ -645,7 +645,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             if (!OperatingSystem.IsWindows())
             {
-                RejectReparsePoint(normalizedSource, "Staged package directory");
+                RejectReparsePoint(normalizedSource, "Staged package folder");
                 RejectOutputInGameTree(Path.Combine(normalizedDestination, ".onslaught-package-root-probe"));
                 Directory.Move(normalizedSource, normalizedDestination);
                 return default;
@@ -657,7 +657,7 @@ namespace OnslaughtCareerEditor.AppCore
                 guardTargetMutation: true);
             string physicalDestination = NormalizeLocalPath(
                 Path.Combine(destinationParentLocks.PhysicalPath, destinationName),
-                "Published package directory");
+                "Published package folder");
             RejectOutputInGameTree(Path.Combine(physicalDestination, ".onslaught-package-root-probe"));
 
             if (!string.IsNullOrWhiteSpace(trustedSourceRoot))
@@ -669,25 +669,25 @@ namespace OnslaughtCareerEditor.AppCore
                     IsSameOrUnderRoot(trustedSourceLocks.PhysicalPath, physicalDestination))
                 {
                     throw new InvalidOperationException(
-                        "Published package directory cannot overlap the trusted generated asset export root.");
+                        "The published package folder cannot overlap the trusted generated asset export folder.");
                 }
             }
 
             using SafeFileHandle sourceHandle = OpenDirectoryRenameHandle(
                 normalizedSource,
-                "Staged package directory");
+                "Staged package folder");
             WindowsFileIdentity sourceIdentity = GetWindowsIdentity(
                 sourceHandle,
-                "Staged package directory");
+                "Staged package folder");
             if (sourceIdentity.IsReparsePoint ||
                 !sourceIdentity.IsSameFile(expectedSourceIdentity) ||
                 !string.Equals(
-                    GetFinalLocalPath(sourceHandle, "Staged package directory"),
+                    GetFinalLocalPath(sourceHandle, "Staged package folder"),
                     normalizedSource,
                     PathComparison))
             {
                 throw new InvalidOperationException(
-                    "The staged package directory changed identity before publication.");
+                    "The staged package folder changed identity before publication.");
             }
 
             prepareSourceDirectory?.Invoke(normalizedSource, sourceIdentity);
@@ -699,11 +699,11 @@ namespace OnslaughtCareerEditor.AppCore
             RenameDirectoryHandle(sourceHandle, physicalDestination);
             WindowsFileIdentity publishedIdentity = GetWindowsIdentity(
                 sourceHandle,
-                "Published package directory");
-            string publishedPath = GetFinalLocalPath(sourceHandle, "Published package directory");
+                "Published package folder");
+            string publishedPath = GetFinalLocalPath(sourceHandle, "Published package folder");
             if (!publishedIdentity.IsSameFile(sourceIdentity))
             {
-                throw new IOException("The published package directory did not retain the staged directory identity.");
+                throw new IOException("The published package folder did not retain the staged folder identity.");
             }
             if (!string.Equals(publishedPath, physicalDestination, PathComparison))
             {
@@ -823,7 +823,7 @@ namespace OnslaughtCareerEditor.AppCore
                 {
                     int error = Marshal.GetLastWin32Error();
                     throw new IOException(
-                        $"Could not publish the staged package directory. Win32 error: {error}",
+                        $"Could not publish the staged package folder. Win32 error: {error}",
                         new Win32Exception(error));
                 }
             }
