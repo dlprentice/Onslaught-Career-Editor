@@ -405,7 +405,7 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
                 return "Watch a running copy first.";
 
             if (reading is null)
-                return "Nothing has been read yet.";
+                return "Wait for the first reading.";
 
             if (!reading.HasVitals)
                 return DescribeReadStatus(reading.Status);
