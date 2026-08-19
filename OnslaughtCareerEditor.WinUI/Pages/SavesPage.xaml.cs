@@ -1413,6 +1413,54 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             };
         }
 
+        /// <summary>
+        /// What the opened save already has for the focused Goodie. Empty when
+        /// there is no file to read; a refusal sentence when the file is there
+        /// but the dword cannot be shown.
+        /// </summary>
+        private string BuildFocusedGoodieCurrentText(string? inputPath)
+        {
+            if (string.IsNullOrWhiteSpace(inputPath))
+            {
+                return string.Empty;
+            }
+
+            double rawId = EditorFocusedGoodieIdNumberBox.Value;
+            if (double.IsNaN(rawId) || double.IsInfinity(rawId) || rawId != Math.Truncate(rawId))
+            {
+                return string.Empty;
+            }
+
+            int goodieId = (int)rawId;
+            if ((uint)goodieId >= MissionScriptGoodieStateSaveCodec.DisplayableGoodieCount)
+            {
+                return string.Empty;
+            }
+
+            try
+            {
+                if (!File.Exists(inputPath))
+                {
+                    return string.Empty;
+                }
+
+                byte[] buffer = File.ReadAllBytes(inputPath);
+                if (!MissionScriptGoodieStateSaveCodec.TryGetDisplayableStateBySaveIndex(
+                        buffer,
+                        goodieId,
+                        out MissionScriptGoodieState state))
+                {
+                    return SaveLabPageText.FocusedGoodieCurrentUnreadable;
+                }
+
+                return SaveLabPageText.DescribeFocusedGoodieCurrent(goodieId, state);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
+            {
+                return SaveLabPageText.FocusedGoodieCurrentUnreadable;
+            }
+        }
+
         private void ApplyEditorPreset(string preset)
         {
             _suppressEditorPresetSync = true;
@@ -1573,6 +1621,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             EditorFocusedGoodieStatusTextBlock.Text = focusedGoodieError ?? (canWriteFocusedGoodie
                 ? $"Ready to write only Goodie ID {focusedGoodieRequest!.GoodieId:000} as {MissionScriptGoodieStateSaveCodec.GetStateLabel(focusedGoodieRequest.State)}."
                 : "Choose a valid .bes input and a different .bes output to enable this one-field write.");
+            EditorFocusedGoodieCurrentTextBlock.Text = BuildFocusedGoodieCurrentText(request.InputPath);
 
             Models.SaveEditorCompletionEvaluation completion = SaveEditorJourneyStateMachine.EvaluateCompletion(
                 _lastWrittenCompletion,

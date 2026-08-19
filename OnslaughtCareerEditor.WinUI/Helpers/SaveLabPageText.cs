@@ -100,5 +100,17 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
 
             return CheatsPageText.BuildOverwriteQuestion(fileName);
         }
+
+        /// <summary>
+        /// What this save already has for the focused Goodie. Shown next to the
+        /// write controls so a player can see the dword they are about to replace.
+        /// </summary>
+        public static string DescribeFocusedGoodieCurrent(int goodieId, MissionScriptGoodieState state)
+        {
+            return $"This save has Goodie {goodieId:000} as {MissionScriptGoodieStateSaveCodec.GetStateLabel(state)}.";
+        }
+
+        public const string FocusedGoodieCurrentUnreadable =
+            "This save's current Goodie state could not be read.";
     }
 }

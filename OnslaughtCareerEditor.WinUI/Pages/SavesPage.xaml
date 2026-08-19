@@ -628,6 +628,10 @@
                                         <ComboBoxItem Content="Old (blue)" Tag="3" />
                                     </ComboBox>
                                 </Grid>
+                                <TextBlock x:Name="EditorFocusedGoodieCurrentTextBlock"
+                                           AutomationProperties.AutomationId="SaveEditorFocusedGoodieCurrent"
+                                           Style="{StaticResource SectionBodyTextStyle}"
+                                           TextWrapping="WrapWholeWords" />
                                 <TextBlock x:Name="EditorFocusedGoodieStatusTextBlock"
                                            AutomationProperties.AutomationId="SaveEditorFocusedGoodieStatus"
                                            Style="{StaticResource SectionBodyTextStyle}"

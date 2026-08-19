@@ -14,6 +14,8 @@ live in `developer_state.json` and the campaign ledgers.
   turns on the three existing holds at the values in the boxes. It is still a
   top-up, not a freeze: walker mode still needs energy held for shields to last,
   jet mode still zeros shields, and one hit big enough to kill still will.
+- Save Lab focused Goodie now shows what the opened save already has for that
+  ID, so a write is replacing a named state rather than a blind dword.
 - Settings and Home now say whether the chosen `BEA.exe` is the known Steam
   retail file. A changed file is not called an original; a copy made from it
   is disclosed as carrying those changes. If the file cannot be read, the app

@@ -94,6 +94,37 @@ namespace OnslaughtCareerEditor.AppCore
             return GetStateAtVector(buffer, vector);
         }
 
+        /// <summary>
+        /// Read one displayable Goodie dword without throwing. Save Lab uses this
+        /// to show the current state before a focused write.
+        /// </summary>
+        public static bool TryGetDisplayableStateBySaveIndex(
+            ReadOnlySpan<byte> buffer,
+            int saveGoodieIndex,
+            out MissionScriptGoodieState state)
+        {
+            state = default;
+            if ((uint)saveGoodieIndex >= DisplayableGoodieCount)
+            {
+                return false;
+            }
+
+            if (!IsValidCareerSaveContainer(buffer))
+            {
+                return false;
+            }
+
+            MissionScriptGoodieStateVector vector = GetVectorFromSaveIndex(saveGoodieIndex);
+            uint raw = BinaryPrimitives.ReadUInt32LittleEndian(buffer.Slice(vector.TrueViewDwordOffset, 4));
+            if (raw > MaxKnownStateValue)
+            {
+                return false;
+            }
+
+            state = (MissionScriptGoodieState)raw;
+            return true;
+        }
+
         public static void SetDisplayableStateByScriptIndex(Span<byte> buffer, int scriptIndex, MissionScriptGoodieState state)
         {
             MissionScriptGoodieStateVector vector = GetDisplayableVectorFromScriptIndex(scriptIndex);
