@@ -20,4 +20,15 @@ public class AssetCatalogFileSafetyHonestyTests
         Assert.That(source, Does.Contain("Catalog exports must stay inside the selected generated export folder."));
         Assert.That(source, Does.Contain("Catalog exports must be bundle-root-relative."));
     }
+
+    [Test]
+    public void ACatalogWithoutAParentNamesTheFolderNotADirectory()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "AssetCatalogFileSafety.cs"));
+
+        Assert.That(source, Does.Not.Contain("has no containing directory."));
+        Assert.That(source, Does.Contain("The asset catalog has no containing folder."));
+        Assert.That(source, Does.Contain("has no containing folder."));
+    }
 }

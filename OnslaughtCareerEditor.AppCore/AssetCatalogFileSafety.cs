@@ -166,7 +166,7 @@ namespace OnslaughtCareerEditor.AppCore
                     Path.Combine(_rootLocks.PhysicalPath, ".onslaught-asset-root-probe"));
 
                 string catalogDirectory = Path.GetDirectoryName(selection.CatalogFilePath)
-                    ?? throw new DirectoryNotFoundException("The asset catalog has no containing directory.");
+                    ?? throw new DirectoryNotFoundException("The asset catalog has no containing folder.");
                 _catalogDirectoryLocks = FileMutationSafety.LockDirectoryTree(
                     catalogDirectory,
                     "Asset catalog directory");
@@ -304,7 +304,7 @@ namespace OnslaughtCareerEditor.AppCore
             }
 
             string sourceDirectory = Path.GetDirectoryName(sourcePath)
-                ?? throw new DirectoryNotFoundException($"{label} has no containing directory.");
+                ?? throw new DirectoryNotFoundException($"{label} has no containing folder.");
             FileMutationSafety.DirectoryLockSet? sourceDirectoryLocks =
                 FileMutationSafety.LockDirectoryTree(sourceDirectory, $"{label} directory");
             SafeFileHandle? handle = null;
