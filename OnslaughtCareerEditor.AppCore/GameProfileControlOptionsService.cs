@@ -69,6 +69,8 @@ namespace OnslaughtCareerEditor.AppCore
         };
 
         public const string FolderGone = "That folder could not be used.";
+        public const string CopyFolderMissing = "That copy folder could not be found.";
+        public const string ProfileFolderRequired = "An app-owned profile folder is required.";
 
         public static GameProfileControlOptionsResult ApplyToSafeCopy(GameProfileControlOptionsRequest request)
         {
@@ -348,10 +350,10 @@ namespace OnslaughtCareerEditor.AppCore
         private static string ValidateProfileRoot(string profileRoot, string appOwnedProfilesRoot)
         {
             if (string.IsNullOrWhiteSpace(appOwnedProfilesRoot))
-                throw new InvalidOperationException("An app-owned safe game copy root is required.");
+                throw new InvalidOperationException(ProfileFolderRequired);
 
             if (string.IsNullOrWhiteSpace(profileRoot))
-                throw new DirectoryNotFoundException("Safe game copy root does not exist.");
+                throw new DirectoryNotFoundException(CopyFolderMissing);
 
             string resolvedAppRoot = NormalizeExistingDirectory(appOwnedProfilesRoot);
             string resolvedProfileRoot = NormalizeExistingDirectory(profileRoot);
