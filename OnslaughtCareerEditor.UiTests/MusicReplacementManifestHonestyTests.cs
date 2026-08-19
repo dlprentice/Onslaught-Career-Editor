@@ -22,10 +22,17 @@ public class MusicReplacementManifestHonestyTests
             "Playable copied game folder music replacement manifest paths do not match the target music file."));
         Assert.That(source, Does.Not.Contain(
             "Music replacement manifest paths must be package-relative."));
-        Assert.That(source, Does.Contain(
+        Assert.That(source, Does.Not.Contain(
             "Playable copied game folder music replacement manifest files do not match the target music file."));
+        Assert.That(source, Does.Contain("MusicDetailsWrongTarget"));
         Assert.That(source, Does.Contain(
             "Music replacement manifest files must stay inside the copy."));
+        Assert.That(GameProfileMusicReplacementService.MusicDetailsWrongTarget,
+            Is.EqualTo("That copy's music details do not match the music file."));
+        Assert.That(GameProfileMusicReplacementService.MusicDetailsWrongTarget.ToLowerInvariant(),
+            Does.Not.Contain("playable"));
+        Assert.That(GameProfileMusicReplacementService.MusicDetailsWrongTarget.ToLowerInvariant(),
+            Does.Not.Contain("manifest"));
         Assert.That(source, Does.Contain("MusicDetailsUnsupported"));
         Assert.That(source, Does.Not.Contain(
             "Playable copied game folder music replacement manifest has an unsupported schema."));

@@ -72,6 +72,7 @@ namespace OnslaughtCareerEditor.AppCore
         public const string MusicFileTooSmall = "That music file is too small.";
         public const string MusicFileNotOgg = "That music file is not an OGG.";
         public const string MusicDetailsUnsupported = "That copy's music details are out of date.";
+        public const string MusicDetailsWrongTarget = "That copy's music details do not match the music file.";
         private const string BackupSuffix = ".original.backup";
 
         private static readonly GameProfileMusicSwapPreset[] s_musicSwapPresets =
@@ -299,7 +300,7 @@ namespace OnslaughtCareerEditor.AppCore
             if (!string.Equals(Path.GetFullPath(manifestTargetPath), Path.GetFullPath(targetPath), StringComparison.OrdinalIgnoreCase) ||
                 !string.Equals(Path.GetFullPath(manifestBackupPath), Path.GetFullPath(backupPath), StringComparison.OrdinalIgnoreCase))
             {
-                throw new InvalidOperationException("Playable copied game folder music replacement manifest files do not match the target music file.");
+                throw new InvalidOperationException(MusicDetailsWrongTarget);
             }
 
             if (!File.Exists(backupPath))
