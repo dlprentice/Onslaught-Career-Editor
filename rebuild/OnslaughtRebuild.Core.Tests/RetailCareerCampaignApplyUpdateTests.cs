@@ -304,6 +304,32 @@ public sealed class RetailCareerCampaignApplyUpdateTests
     }
 
     /// <summary>
+    /// <c>GRADE(100) &gt;= A</c> at ranking 0.75f (already pinned as A)
+    /// unlocks 164. Cite <c>0x0041f70e</c>. Mutation: skip the A arm
+    /// leaves 164 at <c>GS_UNKNOWN</c>. Iceberg store-0 and first-play
+    /// elapsed stay unclaimed. No new secondaries.
+    /// </summary>
+    [Fact]
+    public void Level100Won_ApplyUpdateGradeAUnlocksTheATrainingGoodie()
+    {
+        RetailCareerCampaign career = RetailCareerReCalcLinks.CreateColdTrainingSlice();
+        RetailEndLevelSnapshot snapshot = RetailFillOutEndLevelData.ForLevel100Won(ranking: 0.75f);
+
+        career.ApplyUpdate(snapshot);
+
+        Assert.Equal(
+            (byte)'A',
+            RetailCareerGrade.GradeByteFromRanking(career.Nodes.Find(100)!.Ranking));
+        Assert.Equal(
+            RetailCareerGoodieState.New,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeBOnWorld100));
+        Assert.Equal(
+            RetailCareerGoodieState.New,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeAOnWorld100));
+        Assert.All(snapshot.SecondaryStatuses, status => Assert.Equal(0, status));
+    }
+
+    /// <summary>
     /// <c>ReCalcLinks</c> copies FillOut <c>mBaseThingsLeft</c> onto
     /// <c>level_structure[0][3] == 110</c>
     /// (<c>Career.cpp:443-452 / 519-527</c>). First-play is 1 at
