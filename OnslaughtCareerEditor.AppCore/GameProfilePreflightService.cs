@@ -1949,7 +1949,7 @@ namespace OnslaughtCareerEditor.AppCore
                 + Path.DirectorySeparatorChar;
         }
 
-        private static string BuildRedactedCommandPreview(IReadOnlyList<string> arguments)
+        public static string BuildRedactedCommandPreview(IReadOnlyList<string> arguments)
         {
             string argumentString = string.Join(" ", arguments);
             return argumentString.Length == 0

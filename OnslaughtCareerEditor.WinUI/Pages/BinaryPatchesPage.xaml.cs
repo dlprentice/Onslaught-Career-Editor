@@ -2297,7 +2297,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             PatchBenchCopiedProfileReceipt.Text = PatchBenchSafeCopyOutcomeText.BuildRestoredTrackedLaunchReceipt();
             PatchBenchCopiedProfileLaunchStatus.Text = PatchBenchSafeCopyOutcomeText.BuildRestoredTrackedLaunchStatus();
             PatchBenchCopiedProfileLaunchPlan.Text =
-                $"\"{registered.Process.ExecutablePath}\" {string.Join(" ", registered.Process.Arguments)}".TrimEnd();
+                GameProfilePreflightService.BuildRedactedCommandPreview(registered.Process.Arguments);
         }
 
         private static bool SetEquals(IReadOnlyCollection<string> left, IReadOnlyCollection<string> right)
