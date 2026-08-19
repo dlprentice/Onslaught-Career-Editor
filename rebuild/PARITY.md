@@ -1,7 +1,7 @@
 # Rebuild parity contract
 
 Status: active — what "1:1 behavioral and experiential parity" means operationally
-Last updated: 2026-08-19 (Level 100 ApplyUpdate skips world-100 kills).
+Last updated: 2026-08-19 (Level 100 FillOut exact-D stores 0.001).
 Evidence: SOURCE — authority order and the known divergences are
 recorded in `PROVENANCE.md` plus the Lost-countdown row of this table; gate capabilities are MEASURED claims of the
 tracked harnesses named in the table. Every row of *Carried retail contracts*
@@ -96,6 +96,7 @@ Owner paths are relative to the repository root; test names are relative to
 | `CGame::FillOutEndLevelData` Level 100 Won ranking | `game.cpp:967` stores `mRanking=1.0f` before the score-time arm. Level 100's secondary count is 0, so the 0.4/0.6 clamp never rewrites it. First-play elapsed and score stay unclaimed | `rebuild/OnslaughtRebuild.Core/RetailFillOutEndLevelData.cs` | `RetailFillOutEndLevelData.ForLevel100Won` | `RetailFillOutEndLevelDataTests.Level100Won_SnapshotRankingIsThePreClampOnePointZero` | 1 | default ranking written as the failed-secondary `0.6` cap |
 | `CGame::FillOutEndLevelData` Level 100 score-time arm | Last LoadWorld is outer RLWD. `0x0046d638` `fld [this+0x10c]` / `fsub [this+0x108]` / `fcomp 0.0` / `test ah,0x41` / `jne 0x0046d79b`. RLWD `+0x147ba/+0x147be` = 300.0 / 500.0 so the arm is live. Zero score vs last-wins D=70 stores 0 at `0x0046d772` (not pre-arm 1.0, not source 0.001). First-play elapsed and score stay unclaimed. No new secondaries | `rebuild/OnslaughtRebuild.Core/RetailFillOutEndLevelData.cs` | `RetailFillOutEndLevelData.AfterScoreTimeArm` | `RetailFillOutEndLevelDataTests.Level100Won_ScoreTimeArmRewritesAZeroScoreToZeroBecauseRlwdDeltaIsPositive` | 1 | invent the skip (leave pre-arm 1.0f) |
 | `CGame::FillOutEndLevelData` Level 100 score-percentage last-wins | Last LoadWorld stores RLWD `+0x147c2` = 1.0 at `CGame+0x110` (`0x0050d301` `fstp [0x008a9ba8]`). Not the `LoadLevel` leftover 0.5. Mid-band elapsed therefore does not scale a 140 score. First-play elapsed and score stay unclaimed. No new secondaries | `rebuild/OnslaughtRebuild.Core/RetailFillOutEndLevelData.cs` | `RetailFillOutEndLevelData.Level100ScorePercentage` | `RetailFillOutEndLevelDataTests.Level100Won_ScoreTimeArmDoesNotScaleAMidScoreByElapsedBecauseScorePercentageIsOne` | 1 | adopt the `LoadLevel` leftover `0.5` |
+| `CGame::FillOutEndLevelData` Level 100 exact-D score | Independently re-read specimen: `0x0046d724` `jl 0x0046d772` stores 0 only when fistp'd score is strictly below last-wins D=70. Equality interpolates to 0 then `0x0046d791` stores `0x3a83126f` (0.001). First-play elapsed and score stay unclaimed. No new secondaries | `rebuild/OnslaughtRebuild.Core/RetailFillOutEndLevelData.cs` | `RetailFillOutEndLevelData.AfterScoreTimeArm` | `RetailFillOutEndLevelDataTests.Level100Won_ScoreTimeArmStoresPointZeroZeroOneAtExactLastWinsD` | 1 | skip the 0.001 replacement |
 | `CGame::FillOutEndLevelData` Level 100 first-play base-things | `[0x0085515c]` is 35 (At() membership: 27 type-8 + 6 type-35 + 2 type-37 `CSafeSide`). Store 1 at `0x006728f8+i*4` for `i=0..34`; `35..287` stay 0. Not the materializer's 33. Iceberg player-kill store-0 stays open. No new secondaries | `rebuild/OnslaughtRebuild.Core/RetailFillOutEndLevelData.cs` | `RetailFillOutEndLevelData.FirstPlayBaseThingsLeft` | `RetailFillOutEndLevelDataTests.Level100Won_FillOutStoresOneForEachOfThirtyFiveBaseThings` | 1 | adopt the materializer's 33 visible units |
 | `CCareer::UpdateBaseWorldExistsStuffForNode` after Level 100 Won | `Career.cpp:443-452` / `519-527`. `level_structure[0][3]==110` is the primary destination; `[0][4]==-1` so the secondary arm does not run. First-play zeros at `35..287` clear Blank's all-1s on world 110. World 100 stays Blank. Iceberg store-0 stays open. No new secondaries | `rebuild/OnslaughtRebuild.Core/RetailCareerReCalcLinks.cs` | `RetailCareerCampaign.UpdateBaseWorldExistsStuffForNode` | `RetailCareerCampaignApplyUpdateTests.Level100Won_ApplyUpdateCopiesFillOutBaseThingsOntoWorld110` | 1 | skip the copy (leave world 110 bit 35 set) |
 | `CGame::FillOutEndLevelData` then `CCareer::UpdateBaseWorldExistsStuffForNode` from Level 100 `FrontEndHandoffReady` | After the already-pinned Won countdown, first-play FillOut copies onto world 110. Mutation is skip `ApplyUpdate` on the handoff. Iceberg store-0 stays open. No new secondaries | `rebuild/OnslaughtRebuild.Core/Level100WonCareerHandoff.cs` | `Level100WonCareerHandoff.TryApply` | `Level100WonCareerHandoffTests.FrontEndHandoffReadyAfterWon_CopiesFillOutBaseThingsOntoWorld110` | 1 | skip `ApplyUpdate` on the handoff |
@@ -155,7 +156,9 @@ FrontEndHandoff goodie row names the same `TryApply` owner as the
 Won handoff. The score-time arm row names `AfterScoreTimeArm` on
 the already-pinned FillOut owner; it does not rewrite
 `ForLevel100Won`. The score-percentage last-wins row names
-`Level100ScorePercentage` on that same FillOut owner. Charge and the
+`Level100ScorePercentage` on that same FillOut owner. The
+exact-D row names the same `AfterScoreTimeArm` owner; it does
+not rewrite `ForLevel100Won`. Charge and the
 career graph are not in `StateHasher` because they do not yet change fire,
 movement, or any other hashed field. So no cold-start or
 full-chain trace can reach the other sixteen, and the focused test is the

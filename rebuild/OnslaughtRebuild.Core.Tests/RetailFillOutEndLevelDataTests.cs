@@ -125,6 +125,48 @@ public sealed class RetailFillOutEndLevelDataTests
     }
 
     /// <summary>
+    /// Last-wins D is 70 at <c>this+0xfc</c>. Independently re-read
+    /// specimen: <c>0x0046d724</c> <c>jl 0x0046d772</c> stores 0 only
+    /// when the fistp'd score is strictly below D. Equality falls
+    /// through the interpolate-to-0 path and the already-cited
+    /// <c>0x3a83126f</c> (0.001) replacement. First-play elapsed and
+    /// score stay unclaimed — this does not rewrite
+    /// <see cref="RetailFillOutEndLevelData.ForLevel100Won"/>.
+    /// Mutation: skip the 0.001 replacement leaves 0. Do not invent
+    /// secondaries.
+    /// </summary>
+    [Fact]
+    public void Level100Won_ScoreTimeArmStoresPointZeroZeroOneAtExactLastWinsD()
+    {
+        float atD = RetailFillOutEndLevelData.AfterScoreTimeArm(
+            preArmRanking: 1.0f,
+            elapsedTime: 0.0f,
+            RetailFillOutEndLevelData.Level100FullScoreTime,
+            RetailFillOutEndLevelData.Level100PercentageScoreTime,
+            RetailFillOutEndLevelData.Level100ScorePercentage,
+            score: RetailFillOutEndLevelData.Level100DGradeScore,
+            RetailFillOutEndLevelData.Level100SGradeScore,
+            RetailFillOutEndLevelData.Level100DGradeScore);
+        float belowD = RetailFillOutEndLevelData.AfterScoreTimeArm(
+            preArmRanking: 1.0f,
+            elapsedTime: 0.0f,
+            RetailFillOutEndLevelData.Level100FullScoreTime,
+            RetailFillOutEndLevelData.Level100PercentageScoreTime,
+            RetailFillOutEndLevelData.Level100ScorePercentage,
+            score: RetailFillOutEndLevelData.Level100DGradeScore - 1,
+            RetailFillOutEndLevelData.Level100SGradeScore,
+            RetailFillOutEndLevelData.Level100DGradeScore);
+
+        Assert.Equal(0.001f, atD);
+        Assert.Equal(0.0f, belowD);
+        Assert.NotEqual(0.0f, atD);
+        Assert.Equal(1.0f, RetailFillOutEndLevelData.ForLevel100Won().Ranking);
+        Assert.All(
+            RetailFillOutEndLevelData.ForLevel100Won().SecondaryStatuses,
+            status => Assert.Equal(0, status));
+    }
+
+    /// <summary>
     /// <c>game.cpp:967</c> stores <c>mRanking = 1.0f</c> before the
     /// score-time arm. Level 100's secondary count is 0, so the 0.4 / 0.6
     /// clamp never runs. Mutation: defaulting the snapshot ranking to the
