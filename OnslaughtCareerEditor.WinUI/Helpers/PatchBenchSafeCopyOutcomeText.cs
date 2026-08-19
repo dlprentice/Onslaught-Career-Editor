@@ -1,3 +1,4 @@
+using OnslaughtCareerEditor.AppCore;
 using OnslaughtCareerEditor.WinUI.Models;
 using System;
 using System.IO;
@@ -28,6 +29,9 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
             return message;
         }
 
+        public const string BeaExeOnlyCopyMustStayInside =
+            "The BEA.exe-only copy must stay inside the workspace folder.";
+
         /// <summary>
         /// Last operation for apply, verify, or restore. A dump can survive the
         /// path substitution, so name the refusal here.
@@ -39,6 +43,9 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
 
             if (LooksLikeAPathOrDump(message))
                 return DescribeCaughtFailure("change that BEA.exe");
+
+            if (string.Equals(message, BinaryPatchEngine.PatchTargetMustStayInsideWorkspaceFolder, StringComparison.Ordinal))
+                return BeaExeOnlyCopyMustStayInside;
 
             return message;
         }
