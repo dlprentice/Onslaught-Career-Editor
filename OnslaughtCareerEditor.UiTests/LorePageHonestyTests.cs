@@ -109,4 +109,21 @@ public class LorePageHonestyTests
         Assert.That(code, Does.Not.Contain("did not return any readable files"));
         Assert.That(code, Does.Not.Contain("No documents found"));
     }
+
+    [Test]
+    public void AFailedDocumentOpenNamesTheActionNotTheSelection()
+    {
+        string page = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI", "Pages", "LorePage.xaml.cs"));
+
+        Assert.That(page, Does.Not.Contain("The selected Lore document could not be opened"));
+        Assert.That(page, Does.Not.Contain("The selected Lore link could not be opened"));
+        Assert.That(page, Does.Contain("LorePageText.DocumentLoadFailed"));
+        Assert.That(page, Does.Contain("LorePageText.LinkOpenFailed"));
+        Assert.That(LorePageText.DocumentLoadFailed, Does.Contain("could not be opened"));
+        Assert.That(LorePageText.DocumentLoadFailed, Does.Contain("Refresh"));
+        Assert.That(LorePageText.DocumentLoadFailed, Does.Not.Contain("The selected"));
+        Assert.That(LorePageText.LinkOpenFailed, Does.Contain("could not be opened"));
+        Assert.That(LorePageText.LinkOpenFailed, Does.Not.Contain("The selected"));
+    }
 }

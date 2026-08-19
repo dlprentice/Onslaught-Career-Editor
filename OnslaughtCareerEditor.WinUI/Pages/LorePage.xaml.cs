@@ -16,8 +16,6 @@ namespace OnslaughtCareerEditor.WinUI.Pages
     public sealed partial class LorePage : Page
     {
         private const string LoreLibraryLoadFailureMessage = "The offline Lore library could not be loaded. Refresh the library or reinstall the app package if this keeps happening.";
-        private const string LoreDocumentLoadFailureMessage = "The selected Lore document could not be opened. Refresh the library and try again.";
-        private const string LoreNavigationFailureMessage = "The selected Lore link could not be opened. Refresh the library and try again.";
         private const string LoreHistoryFailureMessage = "That Lore history entry could not be reopened. Refresh the library and try again.";
         private const string LoreHomeFailureMessage = "The Lore home document could not be opened. Refresh the library and try again.";
         private const string LoreExternalOpenFailureMessage = "That Lore document could not be handed to your browser. Try again once the library has finished loading.";
@@ -409,7 +407,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
             catch
             {
-                ShowReaderPlaceholder("Could not navigate link", LoreNavigationFailureMessage);
+                ShowReaderPlaceholder("Could not navigate link", LorePageText.LinkOpenFailed);
                 AppStatusService.SetStatus("Lore: navigation failed");
             }
         }
@@ -582,7 +580,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
             catch
             {
-                ShowReaderPlaceholder("Could not load document", LoreDocumentLoadFailureMessage);
+                ShowReaderPlaceholder("Could not load document", LorePageText.DocumentLoadFailed);
                 AppStatusService.SetStatus("Lore: load failed");
             }
             finally

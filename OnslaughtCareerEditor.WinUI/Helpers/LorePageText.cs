@@ -14,6 +14,12 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         public const string EmptyLibraryNextStep =
             "Refresh the library, or reinstall the app if this keeps happening.";
 
+        public const string DocumentLoadFailed =
+            "That Lore document could not be opened. Refresh the library and try again.";
+
+        public const string LinkOpenFailed =
+            "That Lore link could not be opened. Refresh the library and try again.";
+
         public const string DocumentTooltipFallback = "Offline Lore document";
 
         public static string DescribeSearchStatus(string query, int matchCount)
