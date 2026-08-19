@@ -409,12 +409,12 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
                 if (outcome.Success)
                 {
-                    SetStatus(InfoBarSeverity.Success, "Done", outcome.Message);
+                    SetStatus(InfoBarSeverity.Success, "Done", CheatsPageText.DescribeWriteOutcome(outcome));
                     AppStatusService.SetStatus("Cheats: cheat save written");
                 }
                 else
                 {
-                    SetStatus(InfoBarSeverity.Warning, "Nothing written", outcome.Message);
+                    SetStatus(InfoBarSeverity.Warning, "Nothing written", CheatsPageText.DescribeWriteOutcome(outcome));
                 }
             }
             finally

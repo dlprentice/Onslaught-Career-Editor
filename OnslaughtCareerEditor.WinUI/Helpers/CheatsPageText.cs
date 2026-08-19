@@ -201,6 +201,43 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
                 + "Rename yours instead if you want to keep both.";
         }
 
+        /// <summary>
+        /// What Write just did. Named here so the page never paints
+        /// <see cref="CheatSaveWriteOutcome.Message"/>, which can still carry a
+        /// path from an input-rejection sentence.
+        /// </summary>
+        public static string DescribeWriteOutcome(CheatSaveWriteOutcome outcome)
+        {
+            if (outcome.Success)
+            {
+                if (!LooksLikeAPathOrDump(outcome.Message) && !string.IsNullOrWhiteSpace(outcome.Message))
+                    return outcome.Message;
+
+                string fileName = Path.GetFileName(outcome.OutputPath ?? string.Empty);
+                if (string.IsNullOrWhiteSpace(fileName))
+                    fileName = "that save";
+
+                return $"Wrote {fileName}. The save you started from was not touched.";
+            }
+
+            if (LooksLikeAPathOrDump(outcome.Message))
+                return CheatSaveWriterService.WriteFailed;
+
+            return string.IsNullOrWhiteSpace(outcome.Message)
+                ? CheatSaveWriterService.WriteFailed
+                : outcome.Message;
+        }
+
+        private static bool LooksLikeAPathOrDump(string? message)
+        {
+            if (string.IsNullOrWhiteSpace(message))
+                return false;
+
+            return message.Contains(":\\", StringComparison.Ordinal)
+                || message.Contains("Win32", StringComparison.OrdinalIgnoreCase)
+                || message.Contains("exception", StringComparison.OrdinalIgnoreCase);
+        }
+
         private static string JoinReadable(IReadOnlyList<string> values)
         {
             return values.Count switch

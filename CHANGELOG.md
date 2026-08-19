@@ -72,7 +72,9 @@ live in `developer_state.json` and the campaign ledgers.
   dump or a path. A live-trainer write that cannot open the copy
   names that refusal the same way, without the Win32 dump. The launch
   plan names BEA.exe, not the copy folder path. Putting a career into a
-  safe copy names a failed write without the writer sentence.
+  safe copy names a failed write without the writer sentence. A Cheats
+  write names the new file, not a path, if the writer sentence is not
+  already public-safe.
 
 ## 1.0.11 — 2026-08-07
 
