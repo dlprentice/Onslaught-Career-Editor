@@ -49,6 +49,18 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
             return message;
         }
 
+        /// <summary>
+        /// A Game Options write refusal. Named here so the page never paints a
+        /// redacted <c>PatchResult.Message</c> that still carries a dump.
+        /// </summary>
+        public static string DescribeConfigurationPatchFailure(string? message)
+        {
+            if (string.IsNullOrWhiteSpace(message) || LooksLikeAPathOrDump(message))
+                return PatchFailed;
+
+            return message;
+        }
+
         private static bool LooksLikeAPathOrDump(string message)
         {
             return message.Contains(":\\", StringComparison.Ordinal)

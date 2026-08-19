@@ -150,6 +150,36 @@ public class SaveLabPageHonestyTests
     }
 
     [Test]
+    public void AGameOptionsPatchDumpUsesTheSharedFailureSentence()
+    {
+        string dump = @"Could not write C:\Users\player\Documents\defaultoptions.bea (Win32 error 5).";
+        string sentence = SaveLabPageText.DescribeConfigurationPatchFailure(dump);
+
+        Assert.That(sentence, Is.EqualTo(SaveLabPageText.PatchFailed));
+        Assert.That(sentence, Does.Not.Contain(":\\"));
+        Assert.That(sentence.ToLowerInvariant(), Does.Not.Contain("win32"));
+        Assert.That(sentence, Does.Contain("Nothing was changed"));
+    }
+
+    [Test]
+    public void TheGameOptionsPatchResultUsesTheNamedFailureSentence()
+    {
+        string code = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot,
+            "OnslaughtCareerEditor.WinUI",
+            "Pages",
+            "SavesPage.Configuration.cs"));
+
+        int start = code.IndexOf("private static string FormatConfigurationPatchResultForUi", StringComparison.Ordinal);
+        int end = code.IndexOf("private static string RedactConfigurationPatchPaths", StringComparison.Ordinal);
+        Assert.That(start, Is.GreaterThanOrEqualTo(0));
+        Assert.That(end, Is.GreaterThan(start));
+
+        string method = code[start..end];
+        Assert.That(method, Does.Contain("SaveLabPageText.DescribeConfigurationPatchFailure"));
+    }
+
+    [Test]
     public void GameOptionsAsksBeforeItPatchesAndLeavesTheFileAloneOnCancel()
     {
         string options = File.ReadAllText(Path.Combine(

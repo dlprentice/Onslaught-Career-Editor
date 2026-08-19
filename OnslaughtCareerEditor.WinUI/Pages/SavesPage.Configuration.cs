@@ -532,11 +532,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     "The source options file was not modified.";
             }
 
-            string message = string.IsNullOrWhiteSpace(result.Message)
-                ? "The game options patch could not be completed."
-                : RedactConfigurationPatchPaths(result.Message, request);
-
-            return "Game options patch failed.\n" + message;
+            return SaveLabPageText.DescribeConfigurationPatchFailure(
+                RedactConfigurationPatchPaths(result.Message, request));
         }
 
         private static string RedactConfigurationPatchPaths(string message, ConfigurationPatchRequest request)
