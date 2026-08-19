@@ -5,8 +5,9 @@ Last updated: 2026-08-19
 Summary: FillOut's score-time arm is live on L100: last LoadWorld
 stores RLWD `300.0f` / `500.0f` so `(pct − full)=200>0`. Base-things
 `Size` is 35 (At() membership, including two type-37 `CSafeSide`).
-Training still unlocks goodies 0/8/78/121/164. Kill totals stay
-unclaimed.
+Training still unlocks goodies 0/8/78/121/164. Kill readout is
+ctor-zero plus ConfirmedKill increments, not an authored L100
+constant.
 Source File: `references/Onslaught/game.cpp:910` | Binary: BEA.exe, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 Evidence: MEASURED — independently re-read 2026-08-19 from the official
@@ -75,11 +76,20 @@ is not claimed. No TTD dword at FillOut was read.
 | `0x00672e44` | 32 dwords from `this+0x308` (`cmp eax, 0x80`) |
 
 If `[this+0x2a4]` (player 0) is live: copy **five** dwords from
-`player+8` to `0x00672e30`. Else store five zeros. That is the inlined
-`GetNumEnemyThingKilled` readout. The five values after a first-play
-Level 100 Won are gameplay and are **not** measured here.
-`CCareer__UpdateThingsKilled` (`0x0041c180`) still does `cmp [0x00672e18], 0x64`
-/ `je` return, so world 100 never adds them to career totals.
+`player+8` to `0x00672e30` (`0x0046d60f`). Else store five zeros.
+`CPlayer__ctor` `0x004d2780` writes those five dwords to 0
+(`89 46 08` … `89 46 18` at `0x004d27de`–`0x004d27eb`, EAX=0).
+The only image incrementer is `0x004d30d0` (table name
+`CInfluenceMap__AccumulateThingFlags`; one inbound `E8` at
+`0x0040a578` inside `CBattleEngine__VFunc_101_0040a560`):
+`inc [player+8/+c/+10/+14/+18]` gated on `[thing+0x34]` bits
+`0x400` / `0x20000` / `0x40000` / `0x4000` / `0x800`, and only
+when `[thing+0x138]==1`. That is not an authored L100 constant.
+A first-play Won does not require a ConfirmedKill, so the snapshot
+is **0,0,0,0,0 unless the player actually scored those bits**.
+`CCareer__UpdateThingsKilled` (`0x0041c180`) still does
+`cmp [0x00672e18], 0x64` / `je` return, so world 100 never adds
+them to career totals. No TTD dword was read.
 
 ### Score-time arm
 
@@ -152,10 +162,13 @@ Cheapest falsifier: file `0x0006d470` is not `a1 5c 51 85 00`, **or**
 **or** L100 RLWD payload `+0x147ba` is not `00 00 96 43`, **or**
 `+0x147be` is not `00 00 fa 43`, **or** BSWD payload `+62` is not
 `uint16 35`, **or** `0x0010d00f` is not
-`8d 8a c0 00 00 00 e8 06 8b fd ff`.
+`8d 8a c0 00 00 00 e8 06 8b fd ff`, **or** `0x000d27de` is not
+`89 46 08`, **or** `0x000d30dc` is not `ff 41 08`, **or**
+`tools/call_xref_scan.py` on `0x004d30d0` is not exactly `E8` at
+`0x0040a578`.
 
 ## Functions
 
 | Address | Name | Byte evidence | Contract (confidence) |
 | --- | --- | --- | --- |
-| `0x0046d470` | `CGame__FillOutEndLevelData` | `a15c518500 81ec10010000 3d20010000 … d9850c010000 d8a508010000 … c3` | thiscall; bare `ret`; 920 B. HIGH on ABI, L100 `Size=35`, RLWD `300/500` live score-time arm, kill copy from `player+8`. **Not** on L100 kill totals, iceberg-destroy store-0, or authored names for the other nine tail dwords. |
+| `0x0046d470` | `CGame__FillOutEndLevelData` | `a15c518500 81ec10010000 3d20010000 … d9850c010000 d8a508010000 … c3` | thiscall; bare `ret`; 920 B. HIGH on ABI, L100 `Size=35`, RLWD `300/500` live score-time arm, kill copy from `player+8`. **Not** on an authored five-kill vector, iceberg-destroy store-0, or names for the other nine tail dwords. |
