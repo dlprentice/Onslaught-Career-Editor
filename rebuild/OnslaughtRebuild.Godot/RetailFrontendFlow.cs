@@ -1400,9 +1400,10 @@ public sealed partial class RetailFrontendFlow : Control
                 continue;
             }
 
-            Color textColor = selected
-                ? ReleasedSelected
-                : item.IsAvailable ? ReleasedNormal : ReleasedUnavailable;
+            Color textColor = RetailColor(RetailMainMenuLabelColor.SubmittedColor(
+                selected,
+                item.IsAvailable,
+                RetailMainMenuLabelColor.ImageSettledFadeByte));
             DrawText(label, textPos, textScale, new Color(textColor, textColor.A * fade));
         }
 
