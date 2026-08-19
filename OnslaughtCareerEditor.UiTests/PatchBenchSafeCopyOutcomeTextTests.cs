@@ -110,6 +110,26 @@ public class PatchBenchSafeCopyOutcomeTextTests
     }
 
     [Test]
+    public void ADumpedPatchLogUsesTheSharedFailureSentence()
+    {
+        string helper = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot,
+            "OnslaughtCareerEditor.WinUI",
+            "Helpers",
+            "PatchBenchSafeCopyOutcomeText.cs"));
+        string page = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot,
+            "OnslaughtCareerEditor.WinUI",
+            "Pages",
+            "BinaryPatchesPage.xaml.cs"));
+
+        Assert.That(helper, Does.Contain("DescribePatchLog"));
+        Assert.That(helper, Does.Contain("change that BEA.exe"));
+        Assert.That(page, Does.Contain("PatchBenchSafeCopyOutcomeText.DescribePatchLog"));
+        Assert.That(helper, Does.Not.Contain("ex.Message"));
+    }
+
+    [Test]
     public void CreateConfirmationNamesTheFoldersNotThePaths()
     {
         string source = Path.Combine("C:" + Path.DirectorySeparatorChar + "Steam", "steamapps", "common", "Battle Engine Aquila");

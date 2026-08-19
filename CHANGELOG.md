@@ -141,7 +141,8 @@ live in `developer_state.json` and the campaign ledgers.
   A missing Asset Library export names the file, not a recorded path.
   A valid or partial install names the game folder, not a directory.
   A Windowed & Mods custom-selection receipt names the patch rows, not
-  the catalog keys.
+  the catalog keys. A Windowed & Mods Last operation that still looks
+  like a dump names BEA.exe, not the path.
 
 ## 1.0.11 — 2026-08-07
 

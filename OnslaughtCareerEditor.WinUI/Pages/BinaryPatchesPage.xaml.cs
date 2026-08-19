@@ -2327,13 +2327,14 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         private static string FormatPatchLogForUi(string message, string exePath)
         {
-            if (string.IsNullOrWhiteSpace(message) || string.IsNullOrWhiteSpace(exePath))
+            string named = PatchBenchSafeCopyOutcomeText.DescribePatchLog(message);
+            if (string.IsNullOrWhiteSpace(named) || string.IsNullOrWhiteSpace(exePath))
             {
-                return message;
+                return named;
             }
 
             string backupPath = BinaryPatchEngine.BuildBackupPath(exePath);
-            string formatted = message.Replace(backupPath, "BEA.exe-only backup snapshot", StringComparison.OrdinalIgnoreCase);
+            string formatted = named.Replace(backupPath, "BEA.exe-only backup snapshot", StringComparison.OrdinalIgnoreCase);
             return formatted.Replace(exePath, "app-owned BEA.exe-only copy", StringComparison.OrdinalIgnoreCase);
         }
 

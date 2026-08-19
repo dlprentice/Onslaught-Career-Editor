@@ -28,6 +28,21 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
             return message;
         }
 
+        /// <summary>
+        /// Last operation for apply, verify, or restore. A dump can survive the
+        /// path substitution, so name the refusal here.
+        /// </summary>
+        public static string DescribePatchLog(string? message)
+        {
+            if (string.IsNullOrWhiteSpace(message))
+                return message ?? string.Empty;
+
+            if (LooksLikeAPathOrDump(message))
+                return DescribeCaughtFailure("change that BEA.exe");
+
+            return message;
+        }
+
         private static bool LooksLikeAPathOrDump(string message)
         {
             return message.Contains(":\\", StringComparison.Ordinal)
