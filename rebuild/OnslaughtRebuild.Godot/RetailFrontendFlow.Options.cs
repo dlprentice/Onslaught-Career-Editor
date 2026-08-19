@@ -125,7 +125,6 @@ public sealed partial class RetailFrontendFlow
     //   entries baselines 271 / 287 / 303, ink from x324
     private const float DropdownPanelLeft = 322.5f;
     private const float DropdownEntryPitch = 16f;
-    private const float DropdownTextLeft = 323f;
     private const float DropdownPanelPad = 3f;
     private const float DropdownPanelTopInset = 15.5f;
 
@@ -292,6 +291,9 @@ public sealed partial class RetailFrontendFlow
         // CMenuItemDropdown collapsed value dest leftover is
         // RetailOptionsDropdownValueDest: incoming dest X plus the pad
         // leftover. Dest Y keeps the row top. The pad constant is not dest.
+        // CMenuItemDropdown expanded list dest leftover is
+        // RetailOptionsDropdownListDest: collapsed dest leftover plus the
+        // pad leftover. Dest Y keeps the entry top. The pad constant is not dest.
         // CMenuItem__Render icon dest leftover is RetailOptionsMenuItemIconDest:
         // incoming dest X minus integer-half SIZE.cx via fsubr.
         // RetailOptionsMenuItemIconDest.DestX. Dest Y keeps the row
@@ -474,9 +476,11 @@ public sealed partial class RetailFrontendFlow
         for (int i = 0; i < row.States.Count; i++)
         {
             float entryTop = top + ((i - row.CurrentIndex) * DropdownEntryPitch);
+            // Incoming dest X plus collapsed pad plus the pad leftover.
+            // Dest is not the 2.0 constant. Dest Y keeps the entry top.
             DrawOptionsBodyText(
                 row.StateLabel(i),
-                new Vector2(DropdownTextLeft, entryTop),
+                new Vector2(RetailOptionsDropdownListDest.DestX(OptionLabelRightX), entryTop),
                 1f,
                 i == row.CurrentIndex ? DropdownEntrySelected : DropdownEntry);
         }
