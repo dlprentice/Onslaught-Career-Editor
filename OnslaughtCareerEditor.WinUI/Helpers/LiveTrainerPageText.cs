@@ -239,6 +239,31 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         public const string NothingRunningNote =
             "Launch a copy from Windowed & Mods, start a mission, then press Watch the running copy.";
 
+        /// <summary>
+        /// Why Watch did not attach. Named here so the page never paints
+        /// <see cref="LiveTrainerAttachOutcome.Message"/>, which for a failed
+        /// open is the Win32 dump and can carry a path.
+        /// </summary>
+        public static string DescribeAttachRefusal(LiveTrainerAttachRefusal refusal)
+        {
+            return refusal switch
+            {
+                LiveTrainerAttachRefusal.NoProcessGiven =>
+                    NothingRunningNote,
+                LiveTrainerAttachRefusal.InstalledGameDirectory =>
+                    "That is your installed game. The trainer only watches a copy launched from Windowed & Mods.",
+                LiveTrainerAttachRefusal.NotAManagedProcess =>
+                    "That process was not launched by this app, so it was not opened.",
+                LiveTrainerAttachRefusal.NotRunning =>
+                    "That copied game is not running any more.",
+                LiveTrainerAttachRefusal.ProcessIdentityChanged =>
+                    "That is not the copied game this app started. Nothing was opened.",
+                LiveTrainerAttachRefusal.CouldNotOpen =>
+                    "Could not open that copied game. Nothing was read.",
+                _ => NothingRunningNote,
+            };
+        }
+
         /// <summary>Where the app is in the attach cycle, in one line.</summary>
         public static string BuildAttachSummary(bool attached, string? copyName, string? message)
         {

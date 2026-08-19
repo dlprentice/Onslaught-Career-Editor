@@ -478,8 +478,9 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             if (!outcome.Success || outcome.Session is null)
             {
                 _lastTrainerReading = null;
-                LiveTrainerAttachStatusTextBlock.Text = LiveTrainerPageText.BuildAttachSummary(false, null, outcome.Message);
-                SetLiveTrainerStatus(InfoBarSeverity.Warning, "Not watching", outcome.Message);
+                string refusal = LiveTrainerPageText.DescribeAttachRefusal(outcome.Decision.Refusal);
+                LiveTrainerAttachStatusTextBlock.Text = LiveTrainerPageText.BuildAttachSummary(false, null, refusal);
+                SetLiveTrainerStatus(InfoBarSeverity.Warning, "Not watching", refusal);
                 RefreshLiveTrainerControls();
                 return;
             }
@@ -489,7 +490,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             LiveTrainerAttachStatusTextBlock.Text = LiveTrainerPageText.BuildAttachSummary(
                 true,
                 LiveTrainerPageText.DescribeCopyName(registered.Process),
-                outcome.Message);
+                null);
 
             StartLiveTrainerTimer(LiveTrainerHold.IdleInterval);
             LiveTrainerTick();
