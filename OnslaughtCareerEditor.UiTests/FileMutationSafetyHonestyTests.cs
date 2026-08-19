@@ -17,6 +17,7 @@ public class FileMutationSafetyHonestyTests
             TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "FileMutationSafety.cs"));
 
         Assert.That(source, Does.Not.Contain("Output paths inside a Battle Engine Aquila game folder"));
+        Assert.That(source, Does.Contain("OutputInsideGameFolder"));
         Assert.That(source, Does.Contain("Output files inside a Battle Engine Aquila game folder are blocked."));
         Assert.That(source, Does.Contain("Choose the app-owned patched-output folder or another non-game folder."));
     }

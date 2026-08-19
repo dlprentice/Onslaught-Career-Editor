@@ -178,6 +178,15 @@ namespace OnslaughtCareerEditor.AppCore
         public const string PatchUnreadable =
             "That file could not be patched. Nothing was changed.";
 
+        public const string CareerSaveRequiresBesOutput =
+            "Career save patching requires a .bes output file.";
+
+        public const string GameOptionsRequiresBeaOutput =
+            "Game options patching requires a .bea output file.";
+
+        public const string PatchRequiresBesOrBeaInput =
+            "Patching requires a .bes career save or .bea options input file.";
+
         public const string BindingsDecodeFailed =
             "Bindings could not be decoded.";
 
@@ -537,7 +546,9 @@ namespace OnslaughtCareerEditor.AppCore
 
                 inputPath = FileMutationSafety.NormalizeLocalPath(inputPath, "Input file");
                 outputPath = FileMutationSafety.NormalizeLocalPath(outputPath, "Output file");
-                ValidatePatchExtensions(inputPath, outputPath);
+                string? extensionError = DescribeInvalidPatchExtension(inputPath, outputPath);
+                if (extensionError is not null)
+                    return PatchResult.Fail(extensionError);
 
                 string? copyOptionsPath = CopyOptionsEntries || CopyOptionsTail
                     ? CopyOptionsFromPath
@@ -685,9 +696,9 @@ namespace OnslaughtCareerEditor.AppCore
                 mutation.Commit(buf);
                 return PatchResult.Ok($"Successfully patched: {Path.GetFileName(outputPath)}");
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return PatchResult.Fail(PatchUnreadable);
+                return PatchResult.Fail(DescribeCaughtPatchFailure(ex));
             }
         }
 
@@ -765,9 +776,9 @@ namespace OnslaughtCareerEditor.AppCore
                 mutation.Commit(buf);
                 return PatchResult.Ok($"Patched {statesByIndex.Count} Goodie state override(s): {Path.GetFileName(outputPath)}");
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return PatchResult.Fail(PatchUnreadable);
+                return PatchResult.Fail(DescribeCaughtPatchFailure(ex));
             }
         }
 
@@ -839,25 +850,36 @@ namespace OnslaughtCareerEditor.AppCore
                 Array.Copy(srcBuf, tailStartDest, destBuf, tailStartDest, destBuf.Length - tailStartDest);
         }
 
-        private static void ValidatePatchExtensions(string inputPath, string outputPath)
+        private static string DescribeCaughtPatchFailure(Exception error)
+        {
+            if (FileMutationSafety.TryGetKnownRefusal(error, out string? refusal) &&
+                !string.IsNullOrWhiteSpace(refusal))
+            {
+                return refusal;
+            }
+
+            return PatchUnreadable;
+        }
+
+        private static string? DescribeInvalidPatchExtension(string inputPath, string outputPath)
         {
             string inputExtension = Path.GetExtension(inputPath);
             string outputExtension = Path.GetExtension(outputPath);
             if (string.Equals(inputExtension, ".bes", StringComparison.OrdinalIgnoreCase))
             {
                 if (!string.Equals(outputExtension, ".bes", StringComparison.OrdinalIgnoreCase))
-                    throw new InvalidOperationException("Career save patching requires a .bes output file.");
-                return;
+                    return CareerSaveRequiresBesOutput;
+                return null;
             }
 
             if (string.Equals(inputExtension, ".bea", StringComparison.OrdinalIgnoreCase))
             {
                 if (!string.Equals(outputExtension, ".bea", StringComparison.OrdinalIgnoreCase))
-                    throw new InvalidOperationException("Game options patching requires a .bea output file.");
-                return;
+                    return GameOptionsRequiresBeaOutput;
+                return null;
             }
 
-            throw new InvalidOperationException("Patching requires a .bes career save or .bea options input file.");
+            return PatchRequiresBesOrBeaInput;
         }
 
         private void ApplyOptionsEntryOverrides(byte[] buf)

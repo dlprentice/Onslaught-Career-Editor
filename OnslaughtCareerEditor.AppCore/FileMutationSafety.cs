@@ -49,6 +49,8 @@ namespace OnslaughtCareerEditor.AppCore
         internal const string FileCannotUseReservedDevice = "That file cannot use a reserved device name.";
         internal const string FileResolvesToNetwork = "That file resolves to a network location.";
         internal const string FileDoesNotResolveToLocalDrive = "That file does not resolve to a local drive.";
+        internal const string OutputInsideGameFolder =
+            "Output files inside a Battle Engine Aquila game folder are blocked. Choose the app-owned patched-output folder or another non-game folder.";
         internal const string FolderChangedIdentity = "That folder changed identity while it was being secured.";
         internal const string FolderChangedIdentityBeforeGuard = "That folder changed identity before its mutation guard was created.";
         internal const string FileCouldNotBeInspected = "That file could not be inspected.";
@@ -62,6 +64,55 @@ namespace OnslaughtCareerEditor.AppCore
         internal const string StagedOutputCouldNotBeCreated = "That staged output file could not be created.";
         internal const string StagedPackageCouldNotBePublished = "That staged package folder could not be published.";
         internal const string StagedOutputQuarantineCouldNotBeUpdated = "That staged output quarantine could not be updated.";
+
+        private static readonly HashSet<string> s_knownRefusals =
+        [
+            FileCannotUseLink,
+            FolderCannotUseLink,
+            FileCannotShareData,
+            FileOrFolderRequired,
+            FileCannotUseDeviceLocation,
+            FileCannotUseDriveRelativeLocation,
+            FileCannotUseNetworkLocation,
+            FileCannotUseAlternateStream,
+            FileCannotUseReservedDevice,
+            FileResolvesToNetwork,
+            FileDoesNotResolveToLocalDrive,
+            OutputInsideGameFolder,
+            FolderChangedIdentity,
+            FolderChangedIdentityBeforeGuard,
+            FileCouldNotBeInspected,
+            FileCouldNotBeSecured,
+            FileCouldNotBeResolved,
+            FolderCouldNotBeGuarded,
+            FolderGuardCouldNotBeCreated,
+            FolderCouldNotBeSecuredForPublication,
+            FolderGuardEscaped,
+            FileTooLargeToRead,
+            StagedOutputCouldNotBeCreated,
+            StagedPackageCouldNotBePublished,
+            StagedOutputQuarantineCouldNotBeUpdated,
+        ];
+
+        internal static bool TryGetKnownRefusal(Exception error, out string? message)
+        {
+            string candidate = error.Message ?? string.Empty;
+            if (error is ArgumentException argument && !string.IsNullOrEmpty(argument.ParamName))
+            {
+                string suffix = $" (Parameter '{argument.ParamName}')";
+                if (candidate.EndsWith(suffix, StringComparison.Ordinal))
+                    candidate = candidate[..^suffix.Length];
+            }
+
+            if (s_knownRefusals.Contains(candidate))
+            {
+                message = candidate;
+                return true;
+            }
+
+            message = null;
+            return false;
+        }
 
         internal static string NormalizeLocalPath(string path, string label)
         {
@@ -174,8 +225,7 @@ namespace OnslaughtCareerEditor.AppCore
                 if (File.Exists(Path.Combine(current, "BEA.exe")) &&
                     Directory.Exists(Path.Combine(current, "data")))
                 {
-                    throw new InvalidOperationException(
-                        "Output files inside a Battle Engine Aquila game folder are blocked. Choose the app-owned patched-output folder or another non-game folder.");
+                    throw new InvalidOperationException(OutputInsideGameFolder);
                 }
 
                 string? parent = Path.GetDirectoryName(current);

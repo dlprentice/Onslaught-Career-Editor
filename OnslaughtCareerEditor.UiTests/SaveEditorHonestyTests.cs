@@ -411,6 +411,8 @@ public class SaveEditorHonestyTests
             TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "BesFilePatcher.cs"));
 
         Assert.That(source, Does.Contain("PatchUnreadable"));
+        Assert.That(source, Does.Contain("DescribeCaughtPatchFailure"));
+        Assert.That(source, Does.Contain("TryGetKnownRefusal"));
         Assert.That(source, Does.Not.Contain("return PatchResult.Fail(ex.Message);"));
         Assert.That(BesFilePatcher.PatchUnreadable, Does.Contain("Nothing was changed"));
         Assert.That(BesFilePatcher.PatchUnreadable, Does.Not.Contain(":\\"));
