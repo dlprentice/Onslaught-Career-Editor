@@ -64,6 +64,8 @@
              Link="godot-startup-source\RetailFmvSkip.cs" />
     <Compile Include="..\OnslaughtRebuild.Godot\RetailClickToStartInput.cs"
              Link="godot-startup-source\RetailClickToStartInput.cs" />
+    <Compile Include="..\OnslaughtRebuild.Godot\RetailClickToStartOverlay.cs"
+             Link="godot-startup-source\RetailClickToStartOverlay.cs" />
     <Compile Include="..\OnslaughtRebuild.Godot\RetailFeMessBox.cs"
              Link="godot-startup-source\RetailFeMessBox.cs" />
   </ItemGroup>
