@@ -292,4 +292,18 @@ public class MediaPageHonestyTests
         Assert.That(code, Does.Not.Contain("no audio track selected"));
         Assert.That(code, Does.Not.Contain("Media: no video selected"));
     }
+
+    [Test]
+    public void AMissingInlineVideoDoesNotAttachTheFilePath()
+    {
+        string code = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI", "Pages", "MediaPage.xaml.cs"));
+        string helper = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI", "Helpers", "MediaPageText.cs"));
+
+        Assert.That(helper, Does.Contain("That video file could not be found."));
+        Assert.That(code, Does.Contain("MediaPageText.VideoFileMissing"));
+        Assert.That(code, Does.Not.Contain("The selected video file was not found."));
+        Assert.That(code, Does.Not.Contain("FileNotFoundException(\"The selected video file was not found.\", fullPath)"));
+    }
 }
