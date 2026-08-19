@@ -12,7 +12,7 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
             "Try another word, or clear the search.";
 
         public const string NoExportSelectedStatus =
-            "Asset Library: no file selected";
+            "Asset Library: choose an export file first.";
 
         public const string ExportCopiedStatus =
             "Asset Library: export copied";
