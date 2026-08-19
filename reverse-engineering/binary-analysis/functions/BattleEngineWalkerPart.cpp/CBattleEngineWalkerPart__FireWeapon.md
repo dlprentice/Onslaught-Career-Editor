@@ -71,8 +71,8 @@ mapping until that lane names the arm.
 
 Siblings: `CBattleEngineWalkerPart__GetCurrentWeapon` /
 `CBattleEngineWalkerPart__ChangeWeapon`. Next named:
-`CBattleEngineJetPart__FireWeapon` `0x00411b90` if present;
-else `CBattleEngine__ChargeWeapon` `0x00409ef0`.
+`CBattleEngineWalkerPart__ChargeWeapon` `0x00413cf0` (no
+2026-08-19 PE envelope).
 
 ## Functions
 
