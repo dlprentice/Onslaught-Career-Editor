@@ -22,7 +22,11 @@ namespace OnslaughtRebuild.Core;
 /// Leftover world-110 complete + ranking 0.0f (already pinned as
 /// E) still opens <c>SET_GOODIE_NEW(14)</c> through the same
 /// seam. Isolated leftover 14 names ApplyUpdate; Lost leftover
-/// 14 names the Lost return.
+/// 14 names the Lost return. Leftover world-110 complete +
+/// ranking 0.25f (already pinned as C) still opens
+/// <c>SET_GOODIE_NEW(1)</c> through the same seam. Isolated
+/// leftover C names ApplyUpdate; FrontEndHandoff leftover 14
+/// names 14, not 1.
 /// </para>
 /// <para>
 /// <b>Do not invent secondaries.</b> Level 100 ships four primaries and

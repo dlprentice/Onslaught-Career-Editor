@@ -69,7 +69,10 @@ public sealed class RetailCareerGoodies
 /// world 110 stays incomplete / BlankRanking so that arm is the
 /// already-pinned incomplete <c>'E'</c> and goodie 1 stays
 /// <c>GS_UNKNOWN</c>. Leftover complete-110 plus ranking 0.25f
-/// (already pinned as C) opens the store. <c>COMPLETE_LEVEL(110)</c>
+/// (already pinned as C) opens the store. FrontEndHandoff leftover
+/// of that C seed still opens it because <c>TryApply</c> calls
+/// ApplyUpdate. Isolated leftover C names ApplyUpdate.
+/// <c>COMPLETE_LEVEL(110)</c>
 /// writes goodie 14, but first-play leaves world 110 incomplete so
 /// that arm stays closed. Leftover complete-110 plus ranking 0.0f
 /// (already pinned as E) opens that store while
@@ -131,7 +134,10 @@ public static class RetailCareerUpdateGoodieStates
     /// after first-play: world 110 is incomplete so the lookup is
     /// <c>'E'</c> and goodie 1 stays <c>GS_UNKNOWN</c>. Leftover
     /// complete-110 plus ranking 0.25f opens
-    /// <c>SET_GOODIE_NEW(1)</c>. <c>COMPLETE_LEVEL(110)</c> stays
+    /// <c>SET_GOODIE_NEW(1)</c>. FrontEndHandoff leftover of that
+    /// C seed still opens 1 because <c>TryApply</c> calls
+    /// ApplyUpdate. Isolated leftover C does not go through
+    /// <c>TryApply</c>. <c>COMPLETE_LEVEL(110)</c> stays
     /// closed after first-play: world 110 is unlocked but still
     /// incomplete, so goodie 14 stays <c>GS_UNKNOWN</c>. Leftover
     /// complete-110 plus ranking 0.0f (already pinned as E) opens
