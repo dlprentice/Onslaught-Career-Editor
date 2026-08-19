@@ -1445,6 +1445,19 @@ public sealed partial class RetailFrontendFlow : Control
             leftArcBody,
             leftArcShadow,
             MainMenuLeftDecor(transition));
+        // Colour at 0x00463873 is RetailMainMenuLeftDecorShadow: DAT_0089D894
+        // *63 alpha pack, dest fadd 224/349, z push 0x3EB33333 (0.35) not
+        // scale. Settled 255 submits 0x3E000000, which is this ShadowTint,
+        // so the draw keeps ShadowTint and does not call SubmittedColor.
+        // Dest is the left-arc pair (219+5, 344+5), not right 462/365.
+        // Both dest helpers land on 0x00468730. The 224/349 addends are
+        // the already-shipped ellipse centre — do not redo
+        // RetailFrontendDecorShadow. Body sibling 0x004638B7 is leftover.
+        // Left-twin 0x00463A8F / 0x00463AD3 is DAT_0089D898 leftover.
+        // Not a sheen (that is 0x00464343 / TitleLogoReflectionLayer).
+        // Not a 29% title-logo scale. ChromeTint and BracketTint stay
+        // put. Do not redo 0x00463D1F, 0x00463D63, 0x00463F3F, or
+        // 0x00463F83.
         DrawMainMenuDecor(
             _titleBracket02,
             leftArcBody,

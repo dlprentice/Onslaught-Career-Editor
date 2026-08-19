@@ -102,6 +102,8 @@
              Link="godot-startup-source\RetailMainMenuRightDecorShadow.cs" />
     <Compile Include="..\OnslaughtRebuild.Godot\RetailMainMenuRightDecorOverlay.cs"
              Link="godot-startup-source\RetailMainMenuRightDecorOverlay.cs" />
+    <Compile Include="..\OnslaughtRebuild.Godot\RetailMainMenuLeftDecorShadow.cs"
+             Link="godot-startup-source\RetailMainMenuLeftDecorShadow.cs" />
     <Compile Include="..\OnslaughtRebuild.Godot\RetailFrontendCursor.cs"
              Link="godot-startup-source\RetailFrontendCursor.cs" />
     <Compile Include="..\OnslaughtRebuild.Godot\RetailFeMessBox.cs"
