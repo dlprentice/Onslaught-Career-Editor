@@ -98,7 +98,7 @@
                     </Grid.ColumnDefinitions>
                     <TextBox x:Name="CatalogPathTextBox"
                              Grid.Column="0"
-                             AutomationProperties.AutomationId="AssetCatalogPathTextBox"
+                             AutomationProperties.AutomationId="AssetCatalogFileTextBox"
                              PlaceholderText="Paste catalog.json, or browse to a generated export folder" />
                     <Button x:Name="BrowseCatalogButton"
                             Grid.Column="1"
@@ -137,7 +137,7 @@
                         </Grid.ColumnDefinitions>
                         <TextBox x:Name="GoodieSaveStatePathTextBox"
                                  Grid.Column="0"
-                                 AutomationProperties.AutomationId="AssetGoodieSaveStatePathTextBox"
+                                 AutomationProperties.AutomationId="AssetGoodieSaveStateFileTextBox"
                                  PlaceholderText="Choose a copied .bes save for Goodies state" />
                         <Button Grid.Column="1"
                                 AutomationProperties.AutomationId="AssetBrowseGoodieSaveStateButton"

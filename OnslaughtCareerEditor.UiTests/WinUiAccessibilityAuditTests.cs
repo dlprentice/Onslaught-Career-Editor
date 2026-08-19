@@ -177,13 +177,13 @@ public class WinUiAccessibilityAuditTests
             ],
             ["OnslaughtCareerEditor.WinUI/Pages/AssetLibraryPage.xaml"] =
             [
-                "AssetCatalogPathTextBox",
+                "AssetCatalogFileTextBox",
                 "AssetCatalogFirstRunGuide",
                 "AssetLoadCatalogButton",
                 "AssetItemsList",
                 "AssetGoodiesTabButton",
                 "AssetGoodieSaveStateStatus",
-                "AssetGoodieSaveStatePathTextBox",
+                "AssetGoodieSaveStateFileTextBox",
                 "AssetLoadGoodieSaveStateButton",
                 "AssetTexturePreviewImage",
                 "AssetModelWireframePanel",

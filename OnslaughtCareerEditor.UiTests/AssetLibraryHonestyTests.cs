@@ -137,4 +137,16 @@ public class AssetLibraryHonestyTests
         Assert.That(page, Does.Not.Contain("No sidecar preview file was found beside the export."));
         Assert.That(helper, Does.Not.Contain("found beside the export"));
     }
+
+    [Test]
+    public void CatalogAndGoodieTextBoxesNameTheFileNotAPath()
+    {
+        string xaml = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI", "Pages", "AssetLibraryPage.xaml"));
+
+        Assert.That(xaml, Does.Contain("AutomationProperties.AutomationId=\"AssetCatalogFileTextBox\""));
+        Assert.That(xaml, Does.Contain("AutomationProperties.AutomationId=\"AssetGoodieSaveStateFileTextBox\""));
+        Assert.That(xaml, Does.Not.Contain("AssetCatalogPathTextBox"));
+        Assert.That(xaml, Does.Not.Contain("AssetGoodieSaveStatePathTextBox"));
+    }
 }
