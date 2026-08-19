@@ -142,6 +142,8 @@
              Link="godot-startup-source\RetailLevelSelectSlidingBorders.cs" />
     <Compile Include="..\OnslaughtRebuild.Godot\RetailLevelSelectFsub148.cs"
              Link="godot-startup-source\RetailLevelSelectFsub148.cs" />
+    <Compile Include="..\OnslaughtRebuild.Godot\RetailLevelSelectFsub10.cs"
+             Link="godot-startup-source\RetailLevelSelectFsub10.cs" />
     <Compile Include="..\OnslaughtRebuild.Godot\RetailFrontendCursor.cs"
              Link="godot-startup-source\RetailFrontendCursor.cs" />
     <Compile Include="..\OnslaughtRebuild.Godot\RetailFeMessBox.cs"

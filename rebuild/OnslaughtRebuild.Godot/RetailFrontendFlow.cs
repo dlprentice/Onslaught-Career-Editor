@@ -2346,6 +2346,16 @@ public sealed partial class RetailFrontendFlow : Control
                 RetailLevelSelectFsub148.Pad(
                     RetailLevelSelectFsub148.SettledField)))
         {
+            // RetailLevelSelectFsub10: later leftover is
+            // fld [esp+0x14] / fsub [0x005D85CC] (10.0) /
+            // fstp [esp] before call 0x005563D0. Official
+            // 74154bfa independently re-read this cycle:
+            // 0x00460C94 is d825cc855d00 fsub, not fld.
+            // Settled 148.0-10.0 is 138.0. That is not dest.
+            // The 322.0 push at 0x00460CE1 is later. Do not
+            // invent dest from 10.0.
+            _ = RetailLevelSelectFsub10.Delta(
+                RetailLevelSelectFsub148.SettledPad);
             DrawLevelNodeGraph();
         }
 
