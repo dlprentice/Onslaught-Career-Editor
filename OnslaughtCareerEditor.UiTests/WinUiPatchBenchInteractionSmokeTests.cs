@@ -78,11 +78,11 @@ public class WinUiPatchBenchInteractionSmokeTests
             InvokeByAutomationId(window, "PatchBenchAddVersionMarkerButton");
             AssertAutomationNameContains(window, "PatchBenchPlayerModsSelectionStatus", "PATCHED identity marker");
             InvokeByAutomationId(window, "PatchBenchClearVersionMarkerButton");
-            AssertAutomationNameContains(window, "PatchBenchPlayerModsSelectionStatus", "Player mods selected: none");
+            AssertAutomationNameContains(window, "PatchBenchPlayerModsSelectionStatus", "No player mods on");
             InvokeByAutomationId(window, "PatchBenchAddGoodiesPreviewButton");
             AssertAutomationNameContains(window, "PatchBenchPlayerModsSelectionStatus", "Goodies wall preview");
             InvokeByAutomationId(window, "PatchBenchClearGoodiesPreviewButton");
-            AssertAutomationNameContains(window, "PatchBenchPlayerModsSelectionStatus", "Player mods selected: none");
+            AssertAutomationNameContains(window, "PatchBenchPlayerModsSelectionStatus", "No player mods on");
 
             foreach (string normalId in new[]
                      {

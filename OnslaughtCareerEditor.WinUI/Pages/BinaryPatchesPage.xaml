@@ -247,8 +247,8 @@
                                                Style="{StaticResource SectionBodyTextStyle}" />
                                     <TextBlock x:Name="PatchBenchPlayerModsSelectionStatus"
                                                AutomationProperties.AutomationId="PatchBenchPlayerModsSelectionStatus"
-                                               AutomationProperties.Name="Player mods selected: none."
-                                               Text="Player mods selected: none."
+                                               AutomationProperties.Name="No player mods on. Turn one on above."
+                                               Text="No player mods on. Turn one on above."
                                                TextWrapping="WrapWholeWords" />
                                     <Grid ColumnSpacing="8"
                                           RowSpacing="8">
