@@ -39,6 +39,26 @@ public class PatchBenchStopHonestyTests
             Is.EqualTo("Stop needs a copy this app started."));
         Assert.That(GameProfileRuntimeService.StopNeedsManagedCopy.ToLowerInvariant(),
             Does.Not.Contain("path"));
+        Assert.That(code, Does.Contain("StopWaitInvalid"));
+        Assert.That(code, Does.Contain("CopyAlreadyGone"));
+        Assert.That(code, Does.Contain("CopyNoLongerMatches"));
+        Assert.That(code, Does.Contain("CopyExitedBeforeStop"));
+        Assert.That(code, Does.Contain("CopyExitTimeUnread"));
+        Assert.That(code, Does.Contain("CopyClosed"));
+        Assert.That(code, Does.Contain("CopyDidNotExit"));
+        Assert.That(code, Does.Contain("CopyStillRunning"));
+        Assert.That(code, Does.Contain("CopyWasStopped"));
+        Assert.That(code, Does.Not.Contain("Managed playable copied game folder process"));
+        Assert.That(code, Does.Not.Contain("Could not stop managed playable copied game folder process"));
+        Assert.That(code, Does.Not.Contain("Int32.MaxValue"));
+        Assert.That(GameProfileRuntimeService.CopyAlreadyGone,
+            Is.EqualTo("That copy was already gone."));
+        Assert.That(GameProfileRuntimeService.CopyWasStopped,
+            Is.EqualTo("That copy was stopped."));
+        Assert.That(GameProfileRuntimeService.StopWaitInvalid.ToLowerInvariant(),
+            Does.Not.Contain("playable"));
+        Assert.That(GameProfileRuntimeService.CopyNoLongerMatches.ToLowerInvariant(),
+            Does.Not.Contain("record"));
     }
 
     [Test]

@@ -79,6 +79,15 @@ namespace OnslaughtCareerEditor.AppCore
         public const string CopyDidNotStart = "That copy did not start.";
         public const string StopNeedsManagedCopy = "Stop needs a copy this app started.";
         public const string CopyCannotUseLink = "That copy cannot use a shortcut or link.";
+        public const string StopWaitInvalid = "That stop wait is not valid.";
+        public const string CopyAlreadyGone = "That copy was already gone.";
+        public const string CopyNoLongerMatches = "That process is no longer this copy.";
+        public const string CopyExitedBeforeStop = "That copy exited before stop.";
+        public const string CopyExitTimeUnread = "That copy's exit time could not be read.";
+        public const string CopyClosed = "That copy closed.";
+        public const string CopyDidNotExit = "That copy did not exit after stop.";
+        public const string CopyStillRunning = "That copy is still running after stop.";
+        public const string CopyWasStopped = "That copy was stopped.";
 
         private static readonly TimeSpan s_defaultStopTimeout = TimeSpan.FromSeconds(3);
 
@@ -320,7 +329,7 @@ namespace OnslaughtCareerEditor.AppCore
                 totalTimeoutMilliseconds < 0 ||
                 totalTimeoutMilliseconds > int.MaxValue)
             {
-                return new GameProfileStopResult(false, process.ProcessId, "Could not stop managed playable copied game folder process: stop timeout must be a finite nonnegative millisecond value no greater than Int32.MaxValue.");
+                return new GameProfileStopResult(false, process.ProcessId, GameProfileRuntimeService.StopWaitInvalid);
             }
 
             int stopTimeoutMilliseconds = (int)totalTimeoutMilliseconds;
@@ -331,7 +340,7 @@ namespace OnslaughtCareerEditor.AppCore
             }
             catch (ArgumentException)
             {
-                return new GameProfileStopResult(true, process.ProcessId, "Managed playable copied game folder process was already gone before an exact stop handle could be acquired.", AlreadyGone: true);
+                return new GameProfileStopResult(true, process.ProcessId, GameProfileRuntimeService.CopyAlreadyGone, AlreadyGone: true);
             }
             catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception)
             {
@@ -350,14 +359,14 @@ namespace OnslaughtCareerEditor.AppCore
 
                         if (!MatchesManagedProcess(running, process))
                         {
-                            return new GameProfileStopResult(false, process.ProcessId, "Refused to stop a process that no longer matches the managed playable copied game folder record.");
+                            return new GameProfileStopResult(false, process.ProcessId, GameProfileRuntimeService.CopyNoLongerMatches);
                         }
 
                         if (running.HasExited)
                             return new GameProfileStopResult(
                                 true,
                                 process.ProcessId,
-                                "Managed playable copied game folder process exited before the exact stop request.",
+                                GameProfileRuntimeService.CopyExitedBeforeStop,
                                 AlreadyGone: true);
 
                         bool liveBeforeStop = true;
@@ -374,9 +383,9 @@ namespace OnslaughtCareerEditor.AppCore
                         if (closeSent && running.WaitForExit(stopTimeoutMilliseconds))
                         {
                             if (!TryGetExactExitTime(running, out DateTimeOffset exitTime))
-                                return new GameProfileStopResult(false, process.ProcessId, "Managed playable copied game folder process exited but its exact exit time could not be read.", liveBeforeStop, true, true, false, true);
+                                return new GameProfileStopResult(false, process.ProcessId, GameProfileRuntimeService.CopyExitTimeUnread, liveBeforeStop, true, true, false, true);
 
-                            return new GameProfileStopResult(true, process.ProcessId, "Managed playable copied game folder process closed normally.", liveBeforeStop, true, true, false, true, false, exitTime);
+                            return new GameProfileStopResult(true, process.ProcessId, GameProfileRuntimeService.CopyClosed, liveBeforeStop, true, true, false, true, false, exitTime);
                         }
 
                         bool forceRequested = false;
@@ -386,7 +395,7 @@ namespace OnslaughtCareerEditor.AppCore
                             running.Kill(entireProcessTree: false);
                             if (!running.WaitForExit(stopTimeoutMilliseconds))
                             {
-                                return new GameProfileStopResult(false, process.ProcessId, "Managed playable copied game folder process did not exit after stop request.", liveBeforeStop, true, closeSent, forceRequested);
+                                return new GameProfileStopResult(false, process.ProcessId, GameProfileRuntimeService.CopyDidNotExit, liveBeforeStop, true, closeSent, forceRequested);
                             }
                         }
 
@@ -395,13 +404,13 @@ namespace OnslaughtCareerEditor.AppCore
                         running.Refresh();
                         if (!running.HasExited)
                         {
-                            return new GameProfileStopResult(false, process.ProcessId, "Managed playable copied game folder process is still running after stop request.", liveBeforeStop, stopRequested, closeSent, forceRequested);
+                            return new GameProfileStopResult(false, process.ProcessId, GameProfileRuntimeService.CopyStillRunning, liveBeforeStop, stopRequested, closeSent, forceRequested);
                         }
 
                         if (!TryGetExactExitTime(running, out DateTimeOffset stoppedAt))
-                            return new GameProfileStopResult(false, process.ProcessId, "Managed playable copied game folder process stopped but its exact exit time could not be read.", liveBeforeStop, stopRequested, closeSent, forceRequested, true);
+                            return new GameProfileStopResult(false, process.ProcessId, GameProfileRuntimeService.CopyExitTimeUnread, liveBeforeStop, stopRequested, closeSent, forceRequested, true);
 
-                        return new GameProfileStopResult(stopRequested, process.ProcessId, stopRequested ? "Managed playable copied game folder process was stopped." : "Managed playable copied game folder process exited before a stop request was sent.", liveBeforeStop, stopRequested, closeSent, forceRequested, true, !stopRequested, stoppedAt);
+                        return new GameProfileStopResult(stopRequested, process.ProcessId, stopRequested ? GameProfileRuntimeService.CopyWasStopped : GameProfileRuntimeService.CopyExitedBeforeStop, liveBeforeStop, stopRequested, closeSent, forceRequested, true, !stopRequested, stoppedAt);
                     }
                     finally
                     {
