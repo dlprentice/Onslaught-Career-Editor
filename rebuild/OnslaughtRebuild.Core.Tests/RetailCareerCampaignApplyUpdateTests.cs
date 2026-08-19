@@ -1023,6 +1023,72 @@ public sealed class RetailCareerCampaignApplyUpdateTests
     }
 
     /// <summary>
+    /// <c>SET_GOODIE_NEW</c> stores when <c>mState &lt;= GS_INSTRUCTIONS</c>
+    /// (<c>Career.cpp:564-566</c>). Seeding the five first-play S slots
+    /// as <c>GS_INSTRUCTIONS</c> therefore writes 2. Isolated
+    /// leftover <c>GS_OLD</c> and FrontEndHandoff leftover
+    /// <c>GS_OLD</c> name the skip for state 3. FrontEndHandoff S
+    /// starts at <c>GS_UNKNOWN</c>. Replay names already-<c>GS_NEW</c>.
+    /// Mutation: skip <c>SET_GOODIE_NEW</c> when
+    /// <c>mState == GS_INSTRUCTIONS</c>. Skipping
+    /// <c>SET_GOODIE_NEW</c> when <c>mState &gt; GS_UNKNOWN</c> still
+    /// lets first-play S through and leaves isolated <c>GS_OLD</c>
+    /// at 3. Storing <c>GS_NEW</c> even when
+    /// <c>mState &gt; GS_INSTRUCTIONS</c> is not unique versus
+    /// <c>Level100Won_ApplyUpdateDoesNotOverwriteAlreadyOldTrainingGoodies</c>.
+    /// Do not invent <c>SET_GOODIE_INSTRUCTION</c> or episode
+    /// instruction marks — leftover seed only.
+    /// <c>mPendingExtraGoodies</c> stays unclaimed. No new
+    /// secondaries.
+    /// </summary>
+    [Fact]
+    public void Level100Won_ApplyUpdateStoresNewOverInstructionTrainingGoodies()
+    {
+        RetailCareerCampaign career = RetailCareerReCalcLinks.CreateColdTrainingSlice();
+        career.Goodies.Set(
+            RetailCareerUpdateGoodieStates.CompleteWorld100Bio,
+            RetailCareerGoodieState.Instructions);
+        career.Goodies.Set(
+            RetailCareerUpdateGoodieStates.CompleteWorld100Second,
+            RetailCareerGoodieState.Instructions);
+        career.Goodies.Set(
+            RetailCareerUpdateGoodieStates.GradeCOnWorld100,
+            RetailCareerGoodieState.Instructions);
+        career.Goodies.Set(
+            RetailCareerUpdateGoodieStates.GradeBOnWorld100,
+            RetailCareerGoodieState.Instructions);
+        career.Goodies.Set(
+            RetailCareerUpdateGoodieStates.GradeAOnWorld100,
+            RetailCareerGoodieState.Instructions);
+        RetailEndLevelSnapshot snapshot = RetailFillOutEndLevelData.ForLevel100Won();
+
+        Assert.Equal(0, career.Counters.NewGoodieCount);
+        Assert.Equal(0, career.Counters.FirstGoodie);
+
+        career.ApplyUpdate(snapshot);
+
+        Assert.Equal(
+            RetailCareerGoodieState.New,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.CompleteWorld100Bio));
+        Assert.Equal(
+            RetailCareerGoodieState.New,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.CompleteWorld100Second));
+        Assert.Equal(
+            RetailCareerGoodieState.New,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeCOnWorld100));
+        Assert.Equal(
+            RetailCareerGoodieState.New,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeBOnWorld100));
+        Assert.Equal(
+            RetailCareerGoodieState.New,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeAOnWorld100));
+        Assert.Equal(5, career.Counters.NewGoodieCount);
+        Assert.Equal(1, career.Counters.FirstGoodie);
+        Assert.Equal(1, career.Nodes.Find(100)!.Complete);
+        Assert.All(snapshot.SecondaryStatuses, status => Assert.Equal(0, status));
+    }
+
+    /// <summary>
     /// <c>GetAndResetGoodieNewCount</c> / <c>GetAndResetFirstGoodie</c>
     /// (<c>Career.cpp:1411-1424</c>) consume the already-pinned first-play
     /// latch. A second <c>ApplyUpdate</c> then leaves both globals at 0:

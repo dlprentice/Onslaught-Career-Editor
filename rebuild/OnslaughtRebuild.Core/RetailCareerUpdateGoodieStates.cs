@@ -35,13 +35,17 @@ public sealed class RetailCareerGoodies
 
     /// <summary>
     /// Direct store of one <c>mGoodies[i].mState</c> dword. Tests seed
-    /// <c>GS_OLD</c> so <c>SET_GOODIE_NEW</c>'s overwrite guard is unique.
+    /// leftover <c>GS_OLD</c> so the overwrite skip is unique, and
+    /// leftover <c>GS_INSTRUCTIONS</c> so the store-when-not-done
+    /// side is unique.
     /// </summary>
     public void Set(int index, int state) => _states[index] = state;
 
     /// <summary>
     /// <c>SET_GOODIE_NEW</c> — <c>Career.cpp:566</c>. Stores
     /// <c>GS_NEW</c> only when <c>mState &lt;= GS_INSTRUCTIONS</c>.
+    /// Leftover <c>GS_INSTRUCTIONS</c> therefore writes 2; leftover
+    /// <c>GS_OLD</c> stays 3.
     /// </summary>
     public void SetNewIfNotDone(int index)
     {
@@ -91,10 +95,14 @@ public sealed class RetailCareerGoodies
 /// <c>CGrade::operator&gt;=</c> treats <c>'S'</c> as
 /// above every other grade, so the already-pinned FillOut 1.0f unlocks
 /// the five world-100 slots together. <c>SET_GOODIE_NEW</c> stores 2
-/// only when <c>mState &lt;= GS_INSTRUCTIONS</c>. FrontEndHandoff
+/// only when <c>mState &lt;= GS_INSTRUCTIONS</c>. Leftover
+/// <c>GS_INSTRUCTIONS</c> on those five slots therefore writes 2.
+/// FrontEndHandoff
 /// leftover <c>GS_OLD</c> through <c>TryApply</c> still leaves
 /// those five slots at 3. Isolated leftover <c>GS_OLD</c> names
-/// ApplyUpdate, not <c>TryApply</c>. Existing FrontEndHandoff
+/// ApplyUpdate, not <c>TryApply</c>. Isolated leftover
+/// <c>GS_INSTRUCTIONS</c> names ApplyUpdate and does not go
+/// through <c>TryApply</c>. Existing FrontEndHandoff
 /// S goodies start <c>GS_UNKNOWN</c> and name them as New.
 /// </para>
 /// <para>
@@ -168,7 +176,9 @@ public static class RetailCareerUpdateGoodieStates
     /// <c>GS_OLD</c> on the five first-play S slots still leaves
     /// them at 3 because <c>TryApply</c> calls ApplyUpdate.
     /// Isolated leftover <c>GS_OLD</c> does not go through
-    /// <c>TryApply</c>. Do not invent
+    /// <c>TryApply</c>. Isolated leftover
+    /// <c>GS_INSTRUCTIONS</c> writes 2 on ApplyUpdate and
+    /// does not go through <c>TryApply</c>. Do not invent
     /// a world-110 FillOut or the rest of the table.
     /// <c>mPendingExtraGoodies</c> and episode instruction marks stay
     /// unclaimed.
