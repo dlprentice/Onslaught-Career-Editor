@@ -140,6 +140,8 @@ namespace OnslaughtCareerEditor.AppCore
 
         public const string CopyFolderMissing = "That copy folder could not be found.";
 
+        public const string ProfileFolderRequired = "An app-owned profile folder is required.";
+
         /// <summary>
         /// Where the game keeps saves inside a copy. <c>savegames</c> is the Steam build's folder
         /// and is where everything this app writes goes; the rest are swept because a save that
@@ -571,7 +573,7 @@ namespace OnslaughtCareerEditor.AppCore
         internal static string ValidateGeneratedProfile(string profileRoot, string appOwnedProfilesRoot)
         {
             if (string.IsNullOrWhiteSpace(appOwnedProfilesRoot))
-                throw new InvalidOperationException("An app-owned playable copied game folder root is required.");
+                throw new InvalidOperationException(ProfileFolderRequired);
 
             if (string.IsNullOrWhiteSpace(profileRoot))
                 throw new InvalidOperationException("A playable copied game folder is required.");
