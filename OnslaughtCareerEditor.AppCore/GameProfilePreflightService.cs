@@ -1121,7 +1121,7 @@ namespace OnslaughtCareerEditor.AppCore
                 : Path.GetFullPath(executableOverridePath);
 
             if (!File.Exists(candidate))
-                throw new FileNotFoundException("BEA.exe source was not found.", candidate);
+                throw new FileNotFoundException(SourceExecutableMissing);
 
             if (!IsSupportedExecutableSourceName(Path.GetFileName(candidate)))
                 throw new InvalidOperationException("Executable source must be named BEA.exe or BEA.exe.original.backup.");

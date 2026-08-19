@@ -46,6 +46,7 @@ public class PreflightRequiredFileHonestyTests
         Assert.That(source, Does.Not.Contain("Executable source was not found."));
         Assert.That(source, Does.Contain("SourceExecutableMissing"));
         Assert.That(source, Does.Not.Contain("FileNotFoundException(SourceExecutableMissing,"));
+        Assert.That(source, Does.Not.Contain("BEA.exe source was not found."));
     }
 
     [Test]
