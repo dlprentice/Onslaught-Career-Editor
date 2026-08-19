@@ -1051,6 +1051,43 @@ public sealed class Level100WonCareerHandoffTests
     }
 
     /// <summary>
+    /// <c>IScript::SetObjective</c> at <c>0x00535ed5</c> is
+    /// <c>push 1 / call 0x004f3970</c>. Official
+    /// <c>CThing::SetObjective</c> at <c>0x004f398e</c> is
+    /// <c>or byte ptr [esi+0x2c], 0x20</c>. First-play
+    /// LevelScript <c>GetThingRef("Target Zone 4")</c> then
+    /// <c>SetObjective</c> therefore ORs bit 0x20 at that
+    /// thing's <c>+0x2c</c> before FillOut. Isolated last
+    /// navigation name / <c>IsObjective</c> = true names the
+    /// rebuild string and bool and still pass if this OR is
+    /// skipped. Isolated <see cref="RetailSetObjective.Mark"/>
+    /// names the OR; one live store of 0x20 from 0 is not
+    /// unique versus replace. Mutation: skip the
+    /// <c>+0x2c</c> OR. Noticeboard Add/Remove stay
+    /// unclaimed. ChargeWeapon stays unclaimed. Live
+    /// <c>GAME.mSlots</c> stay unclaimed. No new secondaries.
+    /// </summary>
+    [Fact]
+    public void SetObjective_FirstPlayWonOrsBit20AtTargetZone4Plus2C()
+    {
+        Level100Mission mission = DriveReleasedFirstPlayUntilWon();
+
+        Assert.Equal(Level100MissionOutcome.Won, mission.Snapshot.Outcome);
+        Assert.Contains(
+            mission.Snapshot.PendingEvents.OfType<Level100NavigationObjectiveChanged>(),
+            item => item.ThingName == "Target Zone 4");
+        Assert.Equal(
+            RetailSetObjective.MarkedBit,
+            mission.ThingFlagWord("Target Zone 4"));
+        Assert.Equal(
+            RetailSetObjective.Mark(0),
+            mission.ThingFlagWord("Target Zone 4"));
+        Assert.All(
+            RetailFillOutEndLevelData.ForLevel100Won().SecondaryStatuses,
+            status => Assert.Equal(0, status));
+    }
+
+    /// <summary>
     /// <c>CCareer::Update</c> at <c>0x0041BD06</c> is
     /// <c>cmp eax, 5</c> / <c>jne</c>. Lost is 4, so FillOut is never
     /// applied even if the handoff state is claimed. Mutation: dropping
