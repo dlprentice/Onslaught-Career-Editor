@@ -1341,12 +1341,33 @@ public sealed partial class RetailFrontendFlow : Control
         DrawRect(new Rect2(123f, 0f, 1f, DesignHeight), DevSelectGuide);
         DrawRect(new Rect2(0f, 180f, DesignWidth, 1f), DevSelectGuide);
 
-        // DAT_0089d7f0 Forseti writing chrome — three settled tiles (Y thunk ≈ 175),
-        // packed colour (alpha * 0x3f0000) | 0xffffff, so alpha is the page fade.
+        // DAT_0089d7f0 Forseti writing chrome. Y is CFEPMain::Render 0x00462D46:
+        // 175 - fmod(mCounter * 0.3, 350), then +350 / +700. Cold BSS counter
+        // is 0, which is the three settled tiles. Packed colour remains
+        // (alpha * 0x3f0000) | 0xffffff, so alpha is the page fade.
         var chromeTint = new Color(ChromeTint.R, ChromeTint.G, ChromeTint.B, ChromeTint.A * fade);
-        DrawSurfaceCentered(_forsetiWritingLarge, 458f, 175f, 1f, 1f, chromeTint);
-        DrawSurfaceCentered(_forsetiWritingLarge, 458f, 175f + 350f, 1f, 1f, chromeTint);
-        DrawSurfaceCentered(_forsetiWritingLarge, 458f, 175f + 700f, 1f, 1f, chromeTint);
+        float writingCounter = RetailMainMenuWritingScroll.ImageInitialCounter;
+        DrawSurfaceCentered(
+            _forsetiWritingLarge,
+            RetailMainMenuWritingScroll.TileX,
+            RetailMainMenuWritingScroll.TileY(writingCounter, 0),
+            1f,
+            1f,
+            chromeTint);
+        DrawSurfaceCentered(
+            _forsetiWritingLarge,
+            RetailMainMenuWritingScroll.TileX,
+            RetailMainMenuWritingScroll.TileY(writingCounter, 1),
+            1f,
+            1f,
+            chromeTint);
+        DrawSurfaceCentered(
+            _forsetiWritingLarge,
+            RetailMainMenuWritingScroll.TileX,
+            RetailMainMenuWritingScroll.TileY(writingCounter, 2),
+            1f,
+            1f,
+            chromeTint);
 
         DrawLanguageSelector(fade);
 
