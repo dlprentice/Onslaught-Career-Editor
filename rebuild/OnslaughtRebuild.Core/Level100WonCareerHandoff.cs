@@ -31,6 +31,11 @@ namespace OnslaughtRebuild.Core;
 /// the lookup is the already-pinned incomplete <c>'E'</c> and
 /// goodie 1 stays <c>GS_UNKNOWN</c>. Isolated closed GRADE(110)
 /// names ApplyUpdate and does not go through this seam.
+/// First-play through this seam also leaves
+/// <c>COMPLETE_LEVEL(110)</c> closed: world 110 is unlocked but
+/// still incomplete, so goodie 14 stays <c>GS_UNKNOWN</c>.
+/// Isolated closed COMPLETE_LEVEL(110) names ApplyUpdate and
+/// does not go through this seam.
 /// </para>
 /// <para>
 /// <b>Do not invent secondaries.</b> Level 100 ships four primaries and

@@ -75,6 +75,10 @@ public sealed class RetailCareerGoodies
 /// First-play FrontEndHandoff still leaves goodie 1 at
 /// <c>GS_UNKNOWN</c> because world 110 is incomplete; isolated
 /// closed GRADE(110) names ApplyUpdate, not <c>TryApply</c>.
+/// First-play FrontEndHandoff still leaves goodie 14 at
+/// <c>GS_UNKNOWN</c> because world 110 is unlocked but still
+/// incomplete; isolated closed COMPLETE_LEVEL(110) names
+/// ApplyUpdate, not <c>TryApply</c>.
 /// <c>COMPLETE_LEVEL(110)</c>
 /// writes goodie 14, but first-play leaves world 110 incomplete so
 /// that arm stays closed. Leftover complete-110 plus ranking 0.0f
@@ -145,7 +149,9 @@ public static class RetailCareerUpdateGoodieStates
     /// incomplete; isolated closed GRADE(110) does not go
     /// through <c>TryApply</c>. <c>COMPLETE_LEVEL(110)</c> stays
     /// closed after first-play: world 110 is unlocked but still
-    /// incomplete, so goodie 14 stays <c>GS_UNKNOWN</c>. Leftover
+    /// incomplete, so goodie 14 stays <c>GS_UNKNOWN</c>. Isolated
+    /// closed COMPLETE_LEVEL(110) does not go through
+    /// <c>TryApply</c>. Leftover
     /// complete-110 plus ranking 0.0f (already pinned as E) opens
     /// <c>SET_GOODIE_NEW(14)</c> while <c>GRADE(110) &gt;= C</c> stays
     /// closed. Lost leftover of that same seed still opens 14

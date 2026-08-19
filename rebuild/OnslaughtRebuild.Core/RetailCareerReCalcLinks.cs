@@ -126,7 +126,10 @@ public sealed class RetailCareerNodeLink
 /// closed GRADE(110) names ApplyUpdate, not <c>TryApply</c>.
 /// Goodie 14 (<c>COMPLETE_LEVEL(110)</c>) stays closed
 /// on first-play because world 110 is unlocked but still
-/// incomplete. Leftover complete-110 plus ranking 0.0f (already
+/// incomplete. First-play FrontEndHandoff still leaves
+/// goodie 14 at <c>GS_UNKNOWN</c>; isolated closed
+/// COMPLETE_LEVEL(110) names ApplyUpdate, not
+/// <c>TryApply</c>. Leftover complete-110 plus ranking 0.0f (already
 /// pinned as E) opens that store. Lost leftover of the same
 /// seed still opens it because <c>Update</c> still calls
 /// <c>UpdateGoodieStates</c> then returns

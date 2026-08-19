@@ -407,6 +407,49 @@ public sealed class Level100WonCareerHandoffTests
     }
 
     /// <summary>
+    /// <c>COMPLETE_LEVEL(110)</c> (<c>Career.cpp:704</c>) stays closed
+    /// after first-play S through <c>TryApply</c>. Isolated
+    /// <c>Level100Won_ApplyUpdateLeavesTheWorld110CompleteGoodieUnknown</c>
+    /// names ApplyUpdate and does not go through <c>TryApply</c>.
+    /// Leftover 14 FrontEndHandoff names goodie 14 as <c>GS_NEW</c>.
+    /// Existing FrontEndHandoff S goodies name 0 / 8 / 78 / 121 / 164,
+    /// not 14. DriveReleasedFirstPlayToTerminal with no leftover seed
+    /// leaves world 110 unlocked but incomplete. Do not invent a
+    /// world-110 FillOut or the rest of the table. Mutation: store
+    /// <c>GS_NEW</c> on goodie 14 after <c>TryApply</c>. Skipping
+    /// <c>SET_GOODIE_NEW(14)</c> is not unique versus leftover 14.
+    /// Skipping <c>ApplyUpdate</c> on the handoff is not unique
+    /// versus existing FrontEndHandoff tests. No new secondaries.
+    /// </summary>
+    [Fact]
+    public void FrontEndHandoffReadyAfterWon_LeavesTheWorld110CompleteGoodieUnknown()
+    {
+        Level100Mission mission = DriveReleasedFirstPlayToTerminal();
+
+        Assert.Equal(Level100MissionOutcome.Won, mission.Snapshot.Outcome);
+        Assert.Equal(
+            Level100MissionTerminalState.FrontEndHandoffReady,
+            mission.Snapshot.TerminalState);
+
+        RetailCareerNode next = mission.Career.Nodes.Find(110)!;
+        Assert.Equal(
+            RetailCareerGrade.PerfectGrade,
+            RetailCareerGrade.GradeByteFromRanking(
+                mission.Career.Nodes.Find(100)!.Ranking));
+        Assert.Equal(0, next.Complete);
+        Assert.Equal(RetailCareerNode.BlankRanking, next.Ranking);
+        Assert.Equal(
+            RetailCareerGoodieState.New,
+            mission.Career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeCOnWorld100));
+        Assert.Equal(
+            RetailCareerGoodieState.Unknown,
+            mission.Career.Goodies.Get(RetailCareerUpdateGoodieStates.CompleteWorld110));
+        Assert.All(
+            RetailFillOutEndLevelData.ForLevel100Won().SecondaryStatuses,
+            status => Assert.Equal(0, status));
+    }
+
+    /// <summary>
     /// FrontEndHandoffReady applies the already-pinned
     /// <c>UpdateBaseWorldExistsStuffForNode</c> copy onto world 110.
     /// First-play zeros at 35..287 clear Blank's all-1s there; world
