@@ -1,3 +1,4 @@
+using System;
 using OnslaughtCareerEditor.AppCore;
 
 namespace OnslaughtCareerEditor.WinUI.Helpers
@@ -32,6 +33,29 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
 
         public const string SafeCopyInstallFailed =
             "Could not put that save in the safe copy. Nothing was changed.";
+
+        public const string SaveEditorPatchFailed =
+            "Could not write that career save. Nothing was changed.";
+
+        /// <summary>
+        /// A Save Editor write refusal. Named here so the page never paints a
+        /// redacted <c>PatchResult.Message</c> that still carries a dump.
+        /// </summary>
+        public static string DescribeEditorPatchFailure(string? message)
+        {
+            if (string.IsNullOrWhiteSpace(message) || LooksLikeAPathOrDump(message))
+                return SaveEditorPatchFailed;
+
+            return message;
+        }
+
+        private static bool LooksLikeAPathOrDump(string message)
+        {
+            return message.Contains(":\\", StringComparison.Ordinal)
+                || message.Contains(":/", StringComparison.Ordinal)
+                || message.Contains("Win32", StringComparison.OrdinalIgnoreCase)
+                || message.Contains("exception", StringComparison.OrdinalIgnoreCase);
+        }
 
         /// <summary>
         /// Null when the write may proceed. Same classifier and sentence as Cheats

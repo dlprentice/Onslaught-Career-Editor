@@ -1237,7 +1237,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 return $"Done - your changes are in a new save.\nFile: {outputName}\nThe save you started from was not touched. Close the copied game, then choose Put it in my safe copy to play it.";
             }
 
-            return RedactEditorPatchPaths(result.Message, request);
+            return SaveLabPageText.DescribeEditorPatchFailure(
+                RedactEditorPatchPaths(result.Message, request));
         }
 
         private static string RedactEditorPatchPaths(string message, SavePatchRequest request)

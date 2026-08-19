@@ -84,6 +84,8 @@ live in `developer_state.json` and the campaign ledgers.
   with a path or Win32 dump uses the shared keep-failed sentence. A missing
   patch or profile catalog no longer dumps the exception. Save Lab names
   the output file, not a path, when the destination is not a career save.
+  A failed Save Editor write that still looks like a dump uses that same
+  kind of sentence.
 
 ## 1.0.11 — 2026-08-07
 

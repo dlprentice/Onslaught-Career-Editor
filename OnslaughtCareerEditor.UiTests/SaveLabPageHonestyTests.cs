@@ -26,6 +26,7 @@ public class SaveLabPageHonestyTests
             SaveLabPageText.LoadKeybindsFailed,
             SaveLabPageText.PatchFailed,
             SaveLabPageText.SafeCopyInstallFailed,
+            SaveLabPageText.SaveEditorPatchFailed,
         };
 
         foreach (string line in lines)
@@ -106,6 +107,36 @@ public class SaveLabPageHonestyTests
         string method = code[start..end];
         Assert.That(method, Does.Contain("SaveLabPageText.SafeCopyInstallFailed"));
         Assert.That(method, Does.Not.Contain("outcome.Message"));
+    }
+
+    [Test]
+    public void ASaveEditorPatchDumpUsesTheSharedFailureSentence()
+    {
+        string dump = @"Could not write C:\Users\player\Documents\career.bes (Win32 error 5).";
+        string sentence = SaveLabPageText.DescribeEditorPatchFailure(dump);
+
+        Assert.That(sentence, Is.EqualTo(SaveLabPageText.SaveEditorPatchFailed));
+        Assert.That(sentence, Does.Not.Contain(":\\"));
+        Assert.That(sentence.ToLowerInvariant(), Does.Not.Contain("win32"));
+        Assert.That(sentence, Does.Contain("Nothing was changed"));
+    }
+
+    [Test]
+    public void TheSaveEditorPatchResultUsesTheNamedFailureSentence()
+    {
+        string code = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot,
+            "OnslaughtCareerEditor.WinUI",
+            "Pages",
+            "SavesPage.xaml.cs"));
+
+        int start = code.IndexOf("private static string FormatEditorPatchResultForUi", StringComparison.Ordinal);
+        int end = code.IndexOf("private static string RedactEditorPatchPaths", StringComparison.Ordinal);
+        Assert.That(start, Is.GreaterThanOrEqualTo(0));
+        Assert.That(end, Is.GreaterThan(start));
+
+        string method = code[start..end];
+        Assert.That(method, Does.Contain("SaveLabPageText.DescribeEditorPatchFailure"));
     }
 
     [Test]
