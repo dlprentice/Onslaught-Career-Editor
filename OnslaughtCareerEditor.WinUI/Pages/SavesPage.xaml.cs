@@ -419,7 +419,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             {
                 SetAnalyzerInfoBar(
                     "Analyzer needs a valid file",
-                    "Choose a valid .bes or .bea path before running analysis.",
+                    SaveLabPageText.AnalysisNeedsAFile,
                     InfoBarSeverity.Warning);
                 AppStatusService.SetStatus("Save Lab: no valid file selected");
                 UpdateActionState();

@@ -101,7 +101,7 @@ live in `developer_state.json` and the campaign ledgers.
   like a dump uses the shared nothing-was-changed sentence. A failed
   focused Goodie write that still looks like a dump uses that same
   sentence. Save Editor refusals that used to say paths now name the
-  files.
+  files. Save Lab names a missing analysis file, not a path.
 
 ## 1.0.11 — 2026-08-07
 

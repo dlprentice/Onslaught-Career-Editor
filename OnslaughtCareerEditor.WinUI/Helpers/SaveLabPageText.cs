@@ -13,6 +13,9 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
 
         public const string AnalysisFailed = SaveAnalyzerService.AnalysisFailed;
 
+        public const string AnalysisNeedsAFile =
+            "Choose a valid .bes or .bea file before running analysis.";
+
         public const string BrowseOptionsFailed =
             "Could not browse for an options file. Nothing was changed.";
 

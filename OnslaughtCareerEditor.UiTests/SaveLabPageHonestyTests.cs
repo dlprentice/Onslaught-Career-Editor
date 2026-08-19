@@ -56,7 +56,9 @@ public class SaveLabPageHonestyTests
         Assert.That(analyzer, Does.Contain("SaveLabPageText.AnalysisFailed"));
         Assert.That(analyzer, Does.Contain("SaveLabPageText.DescribeOutputRefusal"));
         Assert.That(analyzer, Does.Contain("SaveLabPageText.SafeCopyInstallFailed"));
+        Assert.That(analyzer, Does.Contain("SaveLabPageText.AnalysisNeedsAFile"));
         Assert.That(analyzer, Does.Not.Contain("ex.Message"));
+        Assert.That(analyzer, Does.Not.Contain("or .bea path"));
 
         Assert.That(options, Does.Contain("SaveLabPageText.BrowseOptionsFailed"));
         Assert.That(options, Does.Contain("SaveLabPageText.ChooseOutputFailed"));
@@ -69,6 +71,18 @@ public class SaveLabPageHonestyTests
         Assert.That(options, Does.Contain("SaveLabPageText.OverwriteCanceled"));
         Assert.That(options, Does.Not.Contain("ex.Message"));
         Assert.That(options, Does.Not.Contain("{request.OutputPath}"));
+    }
+
+    [Test]
+    public void AnalyzerMissingFileNamesTheFileNotAPath()
+    {
+        string sentence = SaveLabPageText.AnalysisNeedsAFile;
+
+        Assert.That(sentence, Does.Contain(".bes"));
+        Assert.That(sentence, Does.Contain(".bea"));
+        Assert.That(sentence, Does.Contain("file"));
+        Assert.That(sentence, Does.Not.Contain("path"));
+        Assert.That(sentence, Does.Not.Contain(":\\"));
     }
 
     [Test]
