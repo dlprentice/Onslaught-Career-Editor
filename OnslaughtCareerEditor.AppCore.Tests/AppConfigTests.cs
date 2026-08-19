@@ -157,7 +157,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 PatchResult result = CreateNoOpPatcher().PatchFile(input, output);
 
                 Assert.False(result.Success);
-                Assert.Contains("reparse", result.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Contains("shortcut or link", result.Message, StringComparison.OrdinalIgnoreCase);
                 Assert.False(Directory.Exists(Path.Combine(realRoot, "OnslaughtCareerEditor")));
             }
             finally

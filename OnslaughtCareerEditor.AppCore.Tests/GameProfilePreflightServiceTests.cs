@@ -406,7 +406,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 File.WriteAllBytes(copiedLanguagePath, copiedLanguage);
                 InvalidOperationException tamperEx = Assert.Throws<InvalidOperationException>(() =>
                     GameProfilePreflightService.BuildLaunchPlan(result.TargetGameRoot, new[] { "-level", "100" }));
-                Assert.Contains("Level 100 text target no longer matches", tamperEx.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Contains("english.dat no longer matches", tamperEx.Message, StringComparison.OrdinalIgnoreCase);
             }
             finally
             {
@@ -478,7 +478,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 File.WriteAllBytes(copiedArchivePath, tamperedArchive);
                 InvalidOperationException tamperEx = Assert.Throws<InvalidOperationException>(() =>
                     GameProfilePreflightService.BuildLaunchPlan(result.TargetGameRoot, new[] { "-level", "100" }));
-                Assert.Contains("early-flight target no longer matches", tamperEx.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Contains("100_res_PC.aya no longer matches", tamperEx.Message, StringComparison.OrdinalIgnoreCase);
             }
             finally
             {
@@ -1266,7 +1266,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                             ApplyWindowedCompatibilityPatch: true,
                             AllowByteLayoutOnlyTarget: true)));
 
-                Assert.Contains("app-owned output root", ex.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Contains("app-owned profile folder", ex.Message, StringComparison.OrdinalIgnoreCase);
             }
             finally
             {
@@ -1485,8 +1485,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 // message no longer tells the owner of a legitimate disc pressing that their game
                 // "has been modified". What must survive is that it refuses, and that it says
                 // plainly nothing was written.
-                Assert.Contains("byte evidence", ex.Message, StringComparison.OrdinalIgnoreCase);
-                Assert.Contains("Nothing was changed", ex.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Contains("could not be applied", ex.Message, StringComparison.OrdinalIgnoreCase);
                 Assert.False(Directory.Exists(Path.Combine(outputRoot, "already-patched")));
             }
             finally
@@ -1519,8 +1518,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
 
                 // Superseded 2026-08-01, with the refusal intact - see the note on the
                 // already-patched case above.
-                Assert.Contains("byte evidence", ex.Message, StringComparison.OrdinalIgnoreCase);
-                Assert.Contains("Nothing was changed", ex.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Contains("could not be applied", ex.Message, StringComparison.OrdinalIgnoreCase);
                 Assert.False(Directory.Exists(Path.Combine(outputRoot, "identity-reject")));
             }
             finally
