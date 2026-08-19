@@ -65,4 +65,19 @@ public class SettingsFolderHonestyTests
         Assert.That(page, Does.Not.Contain("Settings: game directory updated"));
         Assert.That(page, Does.Contain("Settings: game folder updated"));
     }
+
+    [Test]
+    public void SettingsFolderTextBoxesNameTheFolderNotAPath()
+    {
+        string xaml = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot,
+            "OnslaughtCareerEditor.WinUI",
+            "Pages",
+            "SettingsPage.xaml"));
+
+        Assert.That(xaml, Does.Contain("AutomationProperties.AutomationId=\"SettingsGameDirectoryFolderDetails\""));
+        Assert.That(xaml, Does.Contain("AutomationProperties.AutomationId=\"SettingsGameDirectoryFolderTextBox\""));
+        Assert.That(xaml, Does.Not.Contain("SettingsGameDirectoryPathDetails"));
+        Assert.That(xaml, Does.Not.Contain("SettingsGameDirectoryPathTextBox"));
+    }
 }

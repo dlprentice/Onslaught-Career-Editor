@@ -65,10 +65,10 @@
                         </Grid>
                     </Border>
                     <controls:Expander Header="Folder name"
-                                       AutomationProperties.AutomationId="SettingsGameDirectoryPathDetails"
+                                       AutomationProperties.AutomationId="SettingsGameDirectoryFolderDetails"
                                        IsExpanded="False">
                         <TextBox x:Name="GameDirectoryTextBox"
-                                 AutomationProperties.AutomationId="SettingsGameDirectoryPathTextBox"
+                                 AutomationProperties.AutomationId="SettingsGameDirectoryFolderTextBox"
                                  Header="Folder name"
                                  IsReadOnly="True" />
                     </controls:Expander>

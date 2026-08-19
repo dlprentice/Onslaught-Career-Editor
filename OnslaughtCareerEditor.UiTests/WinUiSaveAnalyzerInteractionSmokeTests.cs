@@ -56,7 +56,7 @@ public class WinUiSaveAnalyzerInteractionSmokeTests
             Window window = WaitForMainWindow(app, automation);
 
             WaitForText(window, "1. Inspect a file", TimeSpan.FromSeconds(20));
-            SetTextBox(window, "SaveAnalyzerFilePath", Path.GetFullPath(savePath));
+            SetTextBox(window, "SaveAnalyzerInputFile", Path.GetFullPath(savePath));
             AutomationElement analyzeButton = FindByAutomationId(window, "SaveAnalyzerAnalyzeButton");
             bool analyzeReady = Retry.WhileFalse(() => analyzeButton.IsEnabled, TimeSpan.FromSeconds(5)).Success;
             Assert.That(analyzeReady, Is.True, "Expected Analyze / Reload to become enabled for the provided save path.");

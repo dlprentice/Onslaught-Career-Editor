@@ -94,7 +94,7 @@ public class WinUiHomeNavigationSmokeTests
     [Category("WinUIRuntime")]
     [Explicit("Launches WinUI on Home and verifies each Home task button reaches its destination page.")]
     [Apartment(ApartmentState.STA)]
-    [TestCase("HomeOpenSaveLabButton", "SaveAnalyzerFilePath")]
+    [TestCase("HomeOpenSaveLabButton", "SaveAnalyzerInputFile")]
     [TestCase("HomeOpenMediaButton", "MediaAudioTabButton")]
     [TestCase("HomeOpenLoreButton", "LoreSearchBox")]
     [TestCase("HomeOpenPatchBenchButton", "PatchBenchScrollViewer")]
@@ -429,7 +429,7 @@ public class WinUiHomeNavigationSmokeTests
         Assert.That(configurationReady, Is.True, "Expected Game Options inputs after Home deep-link.");
 
         bool analyzerHidden = Retry.WhileFalse(
-            () => TryFindByAutomationId(window, "SaveAnalyzerFilePath") is null,
+            () => TryFindByAutomationId(window, "SaveAnalyzerInputFile") is null,
             TimeSpan.FromSeconds(5)).Success;
         Assert.That(analyzerHidden, Is.True, "Expected Save Analyzer tab content hidden after Game Options deep-link.");
 

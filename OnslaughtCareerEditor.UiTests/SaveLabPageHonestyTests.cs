@@ -363,6 +363,18 @@ public class SaveLabPageHonestyTests
         Assert.That(SaveLabPageText.DescribeOutputRefusal(output), Is.Null);
     }
 
+    [Test]
+    public void AnalyzerTextBoxesNameTheFileNotAPath()
+    {
+        string xaml = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI", "Pages", "SavesPage.xaml"));
+
+        Assert.That(xaml, Does.Contain("AutomationProperties.AutomationId=\"SaveAnalyzerInputFile\""));
+        Assert.That(xaml, Does.Contain("AutomationProperties.AutomationId=\"SaveAnalyzerCompareFile\""));
+        Assert.That(xaml, Does.Not.Contain("SaveAnalyzerFilePath"));
+        Assert.That(xaml, Does.Not.Contain("SaveAnalyzerCompareFilePath"));
+    }
+
     private sealed class OutputLocationLab : IDisposable
     {
         public OutputLocationLab()

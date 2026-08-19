@@ -179,7 +179,7 @@
                                                FontSize="18"
                                                FontWeight="SemiBold" />
                                     <TextBox x:Name="FilePathTextBox"
-                                             AutomationProperties.AutomationId="SaveAnalyzerFilePath"
+                                             AutomationProperties.AutomationId="SaveAnalyzerInputFile"
                                              Header="Input file"
                                              TextChanged="FilePathTextBox_TextChanged" />
                                     <Grid ColumnSpacing="8">
@@ -227,7 +227,7 @@
                                                FontSize="16"
                                                FontWeight="SemiBold" />
                                     <TextBox x:Name="CompareFilePathTextBox"
-                                             AutomationProperties.AutomationId="SaveAnalyzerCompareFilePath"
+                                             AutomationProperties.AutomationId="SaveAnalyzerCompareFile"
                                              Header="Compare against"
                                              TextChanged="CompareFilePathTextBox_TextChanged" />
                                     <Grid ColumnSpacing="8">

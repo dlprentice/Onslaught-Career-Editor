@@ -78,9 +78,9 @@ public class WinUiSettingsInteractionSmokeTests
 
             Assert.That(WindowContainsName(window, gameDirectory), Is.False, "Primary Settings UI should summarize the install without exposing the full path.");
 
-            ExpandPathDetails(window, "SettingsGameDirectoryPathDetails");
+            ExpandPathDetails(window, "SettingsGameDirectoryFolderDetails");
             string folderName = Retry.WhileNull(
-                () => TryGetTextBoxText(FindByAutomationId(window, "SettingsGameDirectoryPathTextBox")),
+                () => TryGetTextBoxText(FindByAutomationId(window, "SettingsGameDirectoryFolderTextBox")),
                 TimeSpan.FromSeconds(5)).Result ?? string.Empty;
             Assert.That(folderName, Is.EqualTo(expectedFolderName));
             Assert.That(folderName, Does.Not.Contain(@":\"));
