@@ -318,6 +318,32 @@ public sealed class RetailOptionsMenu
     }
 
     /// <summary>
+    /// Post-loop cancel leftover. Official 74154bfa writes
+    /// <c>[this+0x20]</c> from <c>[this+0x1c]</c> and
+    /// <c>[this+0x24]=0</c> when <c>0x0044DEA0</c> returns 0 and
+    /// <c>[0x0089BE28]</c> is set. That is not dest, not colour, not
+    /// hover, and not click. Back (<c>0x2E</c>) does not own this
+    /// leftover.
+    /// </summary>
+    public bool CancelExpanded()
+    {
+        if (!IsExpanded)
+        {
+            return false;
+        }
+
+        RetailOptionsRow row = SelectedRow;
+        row.CurrentIndex = RetailOptionsDropdownListCancel.CurrentIndexAfterCancel(
+            row.CurrentIndex,
+            row.CommittedIndex,
+            apply: true);
+        IsExpanded = RetailOptionsDropdownListCancel.ExpandAfterCancel(
+            IsExpanded,
+            apply: true);
+        return true;
+    }
+
+    /// <summary>
     /// Left/right (buttons <c>0x36</c>/<c>0x37</c>). On a value bar this steps the
     /// index directly - value rows are not entered first. On a dropdown, retail
     /// EXPANDS the list and moves by one in the same press.

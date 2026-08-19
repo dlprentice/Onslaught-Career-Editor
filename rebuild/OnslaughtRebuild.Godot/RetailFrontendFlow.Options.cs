@@ -616,6 +616,8 @@ public sealed partial class RetailFrontendFlow
 
     internal void BackFromOptionsForCapture() => BackFromOptions();
 
+    internal bool CancelOptionsForCapture() => HandleOptionsPointerCancel();
+
     // =====================================================================
     // Input
     // =====================================================================
@@ -835,6 +837,31 @@ public sealed partial class RetailFrontendFlow
         }
 
         ConfirmOptions();
+        return true;
+    }
+
+    private bool HandleOptionsPointerCancel()
+    {
+        // CMenuItemDropdown post-loop cancel leftover is
+        // RetailOptionsDropdownListCancel: call 0x0044DEA0 then, when
+        // 0x0089BE28 is set, write currentIndex from committedIndex and
+        // the expand byte. That is cancel, not dest, not colour, not
+        // hover, and not click. Click leftover already owns 0x004A4010.
+        // Hover leftover already owns 0x004A3FA6.
+        if (!RetailOptionsDropdownListCancel.Applies(
+                RetailOptionsDropdownListCancel.HelperNonzero(0, 0),
+                latch: true))
+        {
+            return false;
+        }
+
+        if (!_options.CancelExpanded())
+        {
+            return false;
+        }
+
+        RequestAudioCue(RetailFrontendAudioCue.Back);
+        QueueRedraw();
         return true;
     }
 }
