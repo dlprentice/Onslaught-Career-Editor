@@ -44,6 +44,10 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         public const string GameFolderNotConfigured =
             "Game install not configured. Choose Settings or Browse Game Folder.";
 
+        public const string NoTrackSelectedNextStep = "Choose a track.";
+
+        public const string NoVideoSelectedNextStep = "Choose a video.";
+
         public static string DescribeAudioEmptyState(bool hasGameDirectory, string? search)
         {
             if (!hasGameDirectory)

@@ -237,4 +237,29 @@ public class MediaPageHonestyTests
         Assert.That(code, Does.Contain("MediaPageText.AudioPlaybackFailedBody"));
         Assert.That(code, Does.Not.Contain("This audio track could not be played. Try another one"));
     }
+
+    [Test]
+    public void AnUnselectedTrackOrVideoSaysWhatToDoNext_RatherThanDescribingTheEmptiness()
+    {
+        string xaml = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI", "Pages", "MediaPage.xaml"));
+        string code = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI", "Pages", "MediaPage.xaml.cs"));
+
+        Assert.That(MediaPageText.NoTrackSelectedNextStep, Is.EqualTo("Choose a track."));
+        Assert.That(MediaPageText.NoVideoSelectedNextStep, Is.EqualTo("Choose a video."));
+        Assert.That(MediaPageText.NoTrackSelectedNextStep.ToLowerInvariant(), Does.Not.Contain("selected"));
+        Assert.That(MediaPageText.NoVideoSelectedNextStep.ToLowerInvariant(), Does.Not.Contain("selected"));
+        Assert.That(MediaPageText.NoTrackSelectedNextStep, Does.Not.Contain(@":\"));
+        Assert.That(MediaPageText.NoVideoSelectedNextStep, Does.Not.Contain(@":\"));
+
+        Assert.That(code, Does.Contain("MediaPageText.NoTrackSelectedNextStep"));
+        Assert.That(code, Does.Contain("MediaPageText.NoVideoSelectedNextStep"));
+        Assert.That(code, Does.Not.Contain("No track selected"));
+        Assert.That(code, Does.Not.Contain("No video selected"));
+        Assert.That(xaml, Does.Not.Contain("No track selected"));
+        Assert.That(xaml, Does.Not.Contain("No video selected"));
+        Assert.That(xaml, Does.Contain(MediaPageText.NoTrackSelectedNextStep));
+        Assert.That(xaml, Does.Contain(MediaPageText.NoVideoSelectedNextStep));
+    }
 }

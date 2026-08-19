@@ -1372,7 +1372,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         private void SetSelectedAudio(MediaAudioItem? item)
         {
             _selectedAudio = item;
-            AudioNowPlayingTextBlock.Text = item?.Name ?? "No track selected";
+            AudioNowPlayingTextBlock.Text = item?.Name ?? MediaPageText.NoTrackSelectedNextStep;
 
             // The words, when the game's own text table has them for this recording.
             string? spoken = item?.Transcript;
@@ -1390,7 +1390,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         private void SetSelectedVideo(MediaVideoItem? item)
         {
             _selectedVideo = item;
-            VideoSelectedTextBlock.Text = item?.Name ?? "No video selected";
+            VideoSelectedTextBlock.Text = item?.Name ?? MediaPageText.NoVideoSelectedNextStep;
             VideoPathTextBlock.Text = item == null
                 ? "Select a video from the left to start playback or reveal the file in Explorer."
                 : BuildVideoSelectionSummary(item);

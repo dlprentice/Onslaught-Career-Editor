@@ -257,7 +257,7 @@
                                                AutomationProperties.AutomationId="MediaAudioNowPlaying"
                                                FontSize="22"
                                                FontWeight="SemiBold"
-                                               Text="No track selected"
+                                               Text="Choose a track."
                                                TextWrapping="WrapWholeWords" />
                                     <TextBlock x:Name="AudioTranscriptTextBlock"
                                                AutomationProperties.AutomationId="MediaAudioTranscript"
@@ -548,7 +548,7 @@
                                                AutomationProperties.AutomationId="MediaVideoSelected"
                                                FontSize="22"
                                                FontWeight="SemiBold"
-                                               Text="No video selected"
+                                               Text="Choose a video."
                                                TextWrapping="WrapWholeWords" />
                                     <TextBlock x:Name="VideoPathTextBlock"
                                                AutomationProperties.AutomationId="MediaVideoSourceSummary"
