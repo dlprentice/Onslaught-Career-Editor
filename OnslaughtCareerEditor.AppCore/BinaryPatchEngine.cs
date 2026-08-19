@@ -155,6 +155,7 @@ namespace OnslaughtCareerEditor.AppCore
             "BEA.exe.original.backup could not be found. Nothing was changed.";
         public const string BackupHashWithoutBackup =
             "The backup hash file is here without BEA.exe.original.backup. Remove that leftover hash file. Nothing was changed.";
+        public const string BeaExeOnlyCopyIdentity = "BEA.exe-only copy";
         public const string TargetCannotUseLink = "That file cannot use a shortcut or link.";
         public const string FileCannotShareData = "That file cannot share its data with another file.";
         public const string StagedFileVerificationFailed = "That staged file could not be verified.";
@@ -1626,7 +1627,7 @@ namespace OnslaughtCareerEditor.AppCore
             byte[] data = File.ReadAllBytes(fullExePath);
             string identityLabel = requireCatalog
                 ? ValidateTargetIdentity(data, selected ?? Array.Empty<BinaryPatchSpec>(), target)
-                : "app-owned Patch Bench BEA.exe-only copy";
+                : BeaExeOnlyCopyIdentity;
 
             if (identityLabel.Length == 0)
             {
