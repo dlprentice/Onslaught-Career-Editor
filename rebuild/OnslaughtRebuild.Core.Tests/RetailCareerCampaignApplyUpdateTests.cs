@@ -370,6 +370,45 @@ public sealed class RetailCareerCampaignApplyUpdateTests
     }
 
     /// <summary>
+    /// Ranking 0.001f is already pinned as the score-time replacement
+    /// after an exact-D scaled score (<c>0x3a83126f</c>). That is
+    /// <c>'D'</c> (<c>'D' - floor(0.001*4)</c>), so
+    /// <c>GRADE(100) &gt;= C</c> stays closed. Mutation: treating any
+    /// ranking above 0 as C writes 2 into 78. Iceberg store-0 and
+    /// first-play elapsed stay unclaimed. No new secondaries.
+    /// </summary>
+    [Fact]
+    public void Level100Won_ApplyUpdateGradeDUnlocksOnlyTheCompleteTrainingGoodies()
+    {
+        RetailCareerCampaign career = RetailCareerReCalcLinks.CreateColdTrainingSlice();
+        RetailEndLevelSnapshot snapshot = RetailFillOutEndLevelData.ForLevel100Won(ranking: 0.001f);
+
+        career.ApplyUpdate(snapshot);
+
+        Assert.Equal(1, career.Nodes.Find(100)!.Complete);
+        Assert.Equal(0.001f, career.Nodes.Find(100)!.Ranking);
+        Assert.Equal(
+            (byte)'D',
+            RetailCareerGrade.GradeByteFromRanking(career.Nodes.Find(100)!.Ranking));
+        Assert.Equal(
+            RetailCareerGoodieState.New,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.CompleteWorld100Bio));
+        Assert.Equal(
+            RetailCareerGoodieState.New,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.CompleteWorld100Second));
+        Assert.Equal(
+            RetailCareerGoodieState.Unknown,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeCOnWorld100));
+        Assert.Equal(
+            RetailCareerGoodieState.Unknown,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeBOnWorld100));
+        Assert.Equal(
+            RetailCareerGoodieState.Unknown,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeAOnWorld100));
+        Assert.All(snapshot.SecondaryStatuses, status => Assert.Equal(0, status));
+    }
+
+    /// <summary>
     /// <c>ReCalcLinks</c> copies FillOut <c>mBaseThingsLeft</c> onto
     /// <c>level_structure[0][3] == 110</c>
     /// (<c>Career.cpp:443-452 / 519-527</c>). First-play is 1 at
