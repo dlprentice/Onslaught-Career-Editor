@@ -172,7 +172,8 @@ live in `developer_state.json` and the campaign ledgers.
   source cards say Source file details, not a path. The replacement
   picker names the .ogg file. A device, drive-relative,
   or network location refusal names the location, not a path. A
-  Windowed & Mods verify hint names the file, not a path.
+  Windowed & Mods verify hint names the file, not a path. Save Editor
+  advanced overrides with none chosen name the next step, not the emptiness.
 
 ## 1.0.11 — 2026-08-07
 

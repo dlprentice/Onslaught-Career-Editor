@@ -73,13 +73,22 @@ public class SaveEditorFirstSaveJourneyTests
         Assert.That(helper.ToLowerInvariant(), Does.Not.Contain("manually copy"));
     }
 
-    [TestCase(0, 0, "No advanced overrides active")]
+    [TestCase(0, 0, SaveEditorFirstSaveJourneyText.NoAdvancedOverridesNextStep)]
     [TestCase(1, 0, "1 mission override active")]
     [TestCase(0, 1, "1 category-kill override active")]
     [TestCase(2, 3, "2 mission overrides and 3 category-kill overrides active")]
     public void AdvancedStatus_ReportsVisibleSingularAndPluralCounts(int missions, int categories, string expected)
     {
         Assert.That(SaveEditorFirstSaveJourneyText.BuildAdvancedOverrideStatus(missions, categories), Is.EqualTo(expected));
+    }
+
+    [Test]
+    public void AdvancedStatus_EmptyStateSaysWhatToDoNext()
+    {
+        string xaml = ReadRepoFile("OnslaughtCareerEditor.WinUI", "Pages", "SavesPage.xaml");
+        Assert.That(SaveEditorFirstSaveJourneyText.NoAdvancedOverridesNextStep, Does.Contain("Choose"));
+        Assert.That(xaml, Does.Contain(SaveEditorFirstSaveJourneyText.NoAdvancedOverridesNextStep));
+        Assert.That(xaml, Does.Not.Contain("No advanced overrides active"));
     }
 
     [Test]

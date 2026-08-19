@@ -698,11 +698,11 @@
                             <TextBlock x:Name="SaveEditorAdvancedOverridesStatus"
                                        AutomationProperties.AutomationId="SaveEditorAdvancedOverridesStatus"
                                        Style="{StaticResource SectionBodyTextStyle}"
-                                       Text="No advanced overrides active"
+                                       Text="Choose a mission rank or category kill to override."
                                        TextWrapping="WrapWholeWords" />
                             <Expander x:Name="SaveEditorAdvancedOverridesExpander"
                                       AutomationProperties.AutomationId="SaveEditorAdvancedOverridesExpander"
-                                      AutomationProperties.Name="Advanced: per-mission ranks and category kills. No advanced overrides active"
+                                      AutomationProperties.Name="Advanced: per-mission ranks and category kills. Choose a mission rank or category kill to override."
                                       Header="Advanced: per-mission ranks and category kills"
                                       IsExpanded="False">
                                 <Border Style="{StaticResource SavesSectionCardStyle}">

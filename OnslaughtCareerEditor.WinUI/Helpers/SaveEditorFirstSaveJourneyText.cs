@@ -4,6 +4,9 @@ namespace OnslaughtCareerEditor.WinUI.Helpers;
 
 internal static class SaveEditorFirstSaveJourneyText
 {
+    public const string NoAdvancedOverridesNextStep =
+        "Choose a mission rank or category kill to override.";
+
     public static string BuildStatus(SaveEditorFirstSaveJourneyState state)
     {
         if (!state.HasValidInput)
@@ -42,7 +45,7 @@ internal static class SaveEditorFirstSaveJourneyText
         categoryCount = Math.Max(0, categoryCount);
         if (missionCount == 0 && categoryCount == 0)
         {
-            return "No advanced overrides active";
+            return NoAdvancedOverridesNextStep;
         }
 
         string missionText = missionCount == 1 ? "1 mission override" : $"{missionCount} mission overrides";

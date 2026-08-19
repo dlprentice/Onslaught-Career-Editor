@@ -6,6 +6,7 @@ using FlaUI.Core.Definitions;
 using FlaUI.Core.Tools;
 using NUnit.Framework;
 using OnslaughtCareerEditor.AppCore;
+using OnslaughtCareerEditor.WinUI.Helpers;
 
 namespace OnslaughtCareerEditor.UiTests;
 
@@ -143,7 +144,7 @@ public class WinUiSaveLabNativeWorkflowTests
         {
             Assert.That(patchButton.IsEnabled, Is.False, "Start-empty Save Editor must not write without a selected section.");
             Assert.That(TryGetName(window, "SaveEditorFirstSaveStatus"), Does.Contain("Choose at least one change"));
-            Assert.That(TryGetName(window, "SaveEditorAdvancedOverridesStatus"), Is.EqualTo("No advanced overrides active"));
+            Assert.That(TryGetName(window, "SaveEditorAdvancedOverridesStatus"), Is.EqualTo(SaveEditorFirstSaveJourneyText.NoAdvancedOverridesNextStep));
         });
         AssertAdvancedRegionReachableAndCollapsed(window);
 
