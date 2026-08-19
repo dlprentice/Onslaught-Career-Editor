@@ -66,6 +66,7 @@ namespace OnslaughtCareerEditor.AppCore
         public const string DebugCameraPreviewProfileId = "debug-camera-preview";
         public const string CustomProfileId = "custom";
         public const string PatchRowNotSelectable = "That patch row is not selectable.";
+        public const string ProfilePresetUnknown = "That copy profile is not available.";
 
         private static readonly string[] s_windowedCompatibilityKeys =
         {
@@ -378,7 +379,7 @@ namespace OnslaughtCareerEditor.AppCore
         {
             SafeCopyProfilePreset? preset = s_profileCatalogLoad.Presets.FirstOrDefault(preset =>
                 string.Equals(preset.Id, profileId, StringComparison.OrdinalIgnoreCase));
-            return preset ?? throw new InvalidOperationException($"Unknown safe-copy profile preset: {profileId}");
+            return preset ?? throw new InvalidOperationException(ProfilePresetUnknown);
         }
 
         public static string SafeCopyProfileCatalogVersion => s_profileCatalogLoad.SchemaVersion;
