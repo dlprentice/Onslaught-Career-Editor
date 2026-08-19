@@ -1110,7 +1110,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             public GameProfileStopResult Stop(GameProfileManagedProcess process, TimeSpan gracefulTimeout)
             {
                 Stops.Add(process);
-        return new GameProfileStopResult(true, process.ProcessId, "Stopped managed playable copied game folder.");
+                return new GameProfileStopResult(true, process.ProcessId, GameProfileRuntimeService.CopyWasStopped);
             }
         }
 
