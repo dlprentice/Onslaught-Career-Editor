@@ -143,7 +143,8 @@ live in `developer_state.json` and the campaign ledgers.
   A valid or partial install names the game folder, not a directory.
   A Windowed & Mods custom-selection receipt names the patch rows, not
   the catalog keys. A Windowed & Mods Last operation that still looks
-  like a dump names BEA.exe, not the path.
+  like a dump names BEA.exe, not the path. A workspace backup refusal
+  names BEA.exe.original.backup, not a path.
 
 ## 1.0.11 — 2026-08-07
 

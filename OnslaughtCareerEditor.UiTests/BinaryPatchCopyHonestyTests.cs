@@ -115,4 +115,16 @@ public class BinaryPatchCopyHonestyTests
         Assert.That(page, Does.Not.Contain("loaded source path from shared settings"));
         Assert.That(page, Does.Contain("Windowed & Mods: loaded BEA.exe from Settings"));
     }
+
+    [Test]
+    public void AWorkspaceBackupRefusalNamesTheFileNotAPath()
+    {
+        string engine = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "BinaryPatchEngine.cs"));
+
+        Assert.That(engine, Does.Not.Contain("Patch backup path must stay inside"));
+        Assert.That(engine, Does.Not.Contain("Patch backup hash path must stay inside"));
+        Assert.That(engine, Does.Contain("BEA.exe.original.backup must stay inside the app-owned Patch Bench workspace."));
+        Assert.That(engine, Does.Contain("The backup hash file must stay inside the app-owned Patch Bench workspace."));
+    }
 }

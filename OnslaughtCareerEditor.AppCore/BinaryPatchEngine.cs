@@ -1591,11 +1591,11 @@ namespace OnslaughtCareerEditor.AppCore
 
             string backupPath = BuildBackupPath(fullExePath);
             if (!IsPathUnderRoot(backupPath, fullRoot))
-                return (false, "Patch backup path must stay inside the app-owned Patch Bench workspace.", null);
+                return (false, "BEA.exe.original.backup must stay inside the app-owned Patch Bench workspace.", null);
 
             string backupHashPath = BuildBackupHashPath(fullExePath);
             if (!IsPathUnderRoot(backupHashPath, fullRoot))
-                return (false, "Patch backup hash path must stay inside the app-owned Patch Bench workspace.", null);
+                return (false, "The backup hash file must stay inside the app-owned Patch Bench workspace.", null);
 
             var filesystemSafety = ValidatePatchFilesystemSafety(fullExePath, backupPath, backupHashPath, fullRoot);
             if (!filesystemSafety.success)
