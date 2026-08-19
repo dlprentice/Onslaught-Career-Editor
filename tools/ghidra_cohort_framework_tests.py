@@ -117,6 +117,10 @@ REQUIRED_LIVE_PROJECT_DIR = r"c:\users\david\ghidra\projects\bea.rep"
 # on the unique-RTTI-owner / vtable-slot grade (same class as the name-cohort5
 # slotfix row): replica census/identity/dry/apply/readback PASS on a db.18628
 # copy (12 rows, 8317 untouched, columnsMoved={name=12}).
+# name-cohort-fun-unique-owner is granted 2026-08-18 after reviewer t_d5861b30 GO
+# on the same unique-RTTI-owner / vtable-slot grade (FUN_ leftovers named
+# Class__VFunc_N_addr): replica census/identity/dry/apply/readback PASS on a
+# db.18629 copy (8 rows, 8321 untouched, columnsMoved={name=8, symbolSource=8}).
 LIVE_GRANTED_COHORTS = [
     "boundary-cohort41", "name-cohort160", "abi-cohort294",
     "tentacle-chain-a", "tentacle-chain-b",
@@ -125,6 +129,7 @@ LIVE_GRANTED_COHORTS = [
     "vftable-cohort65",
     "varargs-cohort2",
     "name-cohort-unique-owner",
+    "name-cohort-fun-unique-owner",
 ]
 PROGRAM_SHA256 = (
     "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
@@ -531,6 +536,7 @@ LIVE_ALLOWLISTED_EDITS: list[tuple[str, str, str]] = [
         '        "vftable-cohort65",\n'
         '        "varargs-cohort2",\n'
         '        "name-cohort-unique-owner",\n'
+        '        "name-cohort-fun-unique-owner",\n'
         "    };\n",
     ),
     (
