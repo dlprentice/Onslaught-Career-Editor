@@ -178,6 +178,9 @@ namespace OnslaughtCareerEditor.AppCore
         public const string PatchUnreadable =
             "That file could not be patched. Nothing was changed.";
 
+        public const string BindingsDecodeFailed =
+            "Bindings could not be decoded.";
+
         // ---------- layout constants ----------
         // File format confirmed via Ghidra static analysis of BEA.exe (Feb 2026)
         //
@@ -2136,9 +2139,9 @@ namespace OnslaughtCareerEditor.AppCore
 
                         sb.AppendLine();
                     }
-                    catch (Exception ex)
+                    catch (Exception)
                     {
-                        sb.AppendLine($"  (Bindings decode failed: {ex.Message})");
+                        sb.AppendLine($"  ({BindingsDecodeFailed})");
                         sb.AppendLine();
                     }
                 }

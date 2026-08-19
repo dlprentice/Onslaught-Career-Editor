@@ -611,6 +611,38 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             Assert.DoesNotContain("Could not find file", document.ReportText, StringComparison.OrdinalIgnoreCase);
         }
 
+        [Fact]
+        public void FormatAnalysisReport_DoesNotDumpTheExceptionWhenBindingsCannotBeRead()
+        {
+            string source = File.ReadAllText(Path.Combine(
+                FindRepoRoot(),
+                "OnslaughtCareerEditor.AppCore",
+                "BesFilePatcher.cs"));
+
+            Assert.Contains("BindingsDecodeFailed", source);
+            Assert.DoesNotContain("Bindings decode failed: {ex.Message}", source);
+            Assert.Equal("Bindings could not be decoded.", BesFilePatcher.BindingsDecodeFailed);
+            Assert.DoesNotContain(":\\", BesFilePatcher.BindingsDecodeFailed);
+            Assert.DoesNotContain("/", BesFilePatcher.BindingsDecodeFailed);
+        }
+
+        private static string FindRepoRoot()
+        {
+            DirectoryInfo? current = new(AppContext.BaseDirectory);
+            while (current is not null)
+            {
+                if (File.Exists(Path.Combine(current.FullName, "package.json")) &&
+                    Directory.Exists(Path.Combine(current.FullName, "OnslaughtCareerEditor.AppCore")))
+                {
+                    return current.FullName;
+                }
+
+                current = current.Parent;
+            }
+
+            throw new InvalidOperationException("Could not find the repository root from the test directory.");
+        }
+
         private static void WriteGoodie(byte[] buffer, int goodieBase, int index, uint state)
         {
             BinaryPrimitives.WriteUInt32LittleEndian(buffer.AsSpan(goodieBase + index * 4, 4), state);
