@@ -135,6 +135,7 @@ namespace OnslaughtCareerEditor.AppCore
         public const string InputMissing = "That options file could not be found. Nothing was changed.";
         public const string InputInvalid = "That file is not a valid game options file. Nothing was changed.";
         public const string PathsUnusable = "Those options files could not be used. Nothing was changed.";
+        public const string NoPendingChangesSelected = "Select a change first.";
 
         private sealed record KeybindDefinition(
             string GroupLabel,
@@ -253,7 +254,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             if (parts.Count == 0)
             {
-                return "No pending configuration changes selected yet.";
+                return NoPendingChangesSelected;
             }
 
             return "Pending: " + string.Join(", ", parts) + ".";

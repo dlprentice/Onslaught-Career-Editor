@@ -107,7 +107,8 @@ live in `developer_state.json` and the campaign ledgers.
   sentence, not "No analysis yet." Settings incomplete-folder lines
   name BEA.exe and data, not "the full install." An empty Save Editor
   patch summary says to select a change first, not that none are
-  selected yet. A failed Game Options write that still looks
+  selected yet. An empty Game Options patch summary uses that same
+  sentence. A failed Game Options write that still looks
   like a dump uses the shared nothing-was-changed sentence. A failed
   focused Goodie write that still looks like a dump uses that same
   sentence. Save Editor refusals that used to say paths now name the
