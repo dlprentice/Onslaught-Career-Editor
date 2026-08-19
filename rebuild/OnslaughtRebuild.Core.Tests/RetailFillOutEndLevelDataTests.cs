@@ -398,6 +398,56 @@ public sealed class RetailFillOutEndLevelDataTests
     }
 
     /// <summary>
+    /// Independently re-read specimen <c>74154bfa…</c>:
+    /// <c>0x0046d5b0</c> <c>mov ecx,[0x00672fd0]</c> /
+    /// <c>0x0046d5c0</c> <c>mov eax,[ebp+0xf4]</c> /
+    /// <c>0x0046d5c6</c> <c>mov [0x00672e28], ecx</c> /
+    /// <c>0x0046d5cc</c> <c>mov [0x00672e24], eax</c>. Those are the
+    /// only FillOut stores of <c>mTimeTaken</c> / <c>mScore</c>. The
+    /// score-time arm's <c>0x0046d701</c> <c>mov [ebp+0xf4], eax</c>
+    /// rewrites <c>CGame.mScore</c> only. First-play elapsed and score
+    /// stay unclaimed — this does not rewrite
+    /// <see cref="RetailFillOutEndLevelData.ForLevel100Won"/>.
+    /// Mutation: leftover score 999 / leftover time 12.5, or the
+    /// post-arm scaled score under leftover <c>LoadLevel</c> 0.5.
+    /// Do not invent secondaries.
+    /// </summary>
+    [Fact]
+    public void Level100Won_FillOutScoreAndTimeAreThePreArmCopiesNotTheScaledRewrite()
+    {
+        const int preArmScore = 140;
+        const float eventManagerTime = 400.0f;
+
+        int scaled = RetailFillOutEndLevelData.AfterScoreTimeArmGameScore(
+            elapsedTime: eventManagerTime,
+            RetailFillOutEndLevelData.Level100FullScoreTime,
+            RetailFillOutEndLevelData.Level100PercentageScoreTime,
+            leftoverScorePercentage: 0.5f,
+            score: preArmScore);
+
+        Assert.Equal(
+            preArmScore,
+            RetailFillOutEndLevelData.ScoreWord(preArmScore));
+        Assert.NotEqual(
+            999,
+            RetailFillOutEndLevelData.ScoreWord(preArmScore));
+        Assert.NotEqual(
+            scaled,
+            RetailFillOutEndLevelData.ScoreWord(preArmScore));
+        Assert.Equal(105, scaled);
+        Assert.Equal(
+            eventManagerTime,
+            RetailFillOutEndLevelData.TimeTakenWord(eventManagerTime));
+        Assert.NotEqual(
+            12.5f,
+            RetailFillOutEndLevelData.TimeTakenWord(eventManagerTime));
+        Assert.Equal(1.0f, RetailFillOutEndLevelData.ForLevel100Won().Ranking);
+        Assert.All(
+            RetailFillOutEndLevelData.ForLevel100Won().SecondaryStatuses,
+            status => Assert.Equal(0, status));
+    }
+
+    /// <summary>
     /// FillOut copies the ten primary <c>GetStatus()</c> words. After a
     /// Level 100 win those are four <c>MOS_COMPLETE</c> (1) and six
     /// unset slots — already pinned on

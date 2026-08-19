@@ -71,7 +71,9 @@ public readonly record struct RetailEndLevelSnapshot(
 /// skips the <c>0x3a83126f</c> (0.001f) replacement that source
 /// <c>game.cpp:1021-1024</c> would apply after clamping −1. First-play
 /// elapsed and <c>this+0xf4</c> stay unclaimed — do not rewrite the
-/// snapshot ranking from an invented score.
+/// snapshot ranking from an invented score. FillOut still copies
+/// <c>[ebp+0xf4]</c> to <c>0x00672e24</c> and <c>[0x00672fd0]</c>
+/// to <c>0x00672e28</c> before that arm.
 /// </para>
 /// <para>
 /// <b>Not established here.</b> A player who wrecks an iceberg
@@ -140,6 +142,25 @@ public static class RetailFillOutEndLevelData
     /// and score stay unclaimed.
     /// </summary>
     public static int LostReasonWord(int gameLevelLostReason) => gameLevelLostReason;
+
+    /// <summary>
+    /// FillOut <c>0x0046d5cc</c> <c>mov [0x00672e24], eax</c> from
+    /// <c>[ebp+0xf4]</c>. The score-time arm later fistp-rewrites
+    /// <c>CGame+0xf4</c> at <c>0x0046d701</c> and does not store
+    /// <c>0x00672e24</c> again. First-play <c>this+0xf4</c> stays
+    /// unclaimed — mutation: leftover 999, or the post-arm scaled
+    /// score.
+    /// </summary>
+    public static int ScoreWord(int gameScore) => gameScore;
+
+    /// <summary>
+    /// FillOut <c>0x0046d5c6</c> <c>mov [0x00672e28], ecx</c> from
+    /// <c>[0x00672fd0]</c> (<c>EVENT_MANAGER.GetTime()</c>). The arm
+    /// rereads that dword for the multiplier and never writes
+    /// <c>0x00672e28</c> again. First-play elapsed stays unclaimed —
+    /// mutation: leftover 12.5.
+    /// </summary>
+    public static float TimeTakenWord(float eventManagerTime) => eventManagerTime;
 
     /// <summary>The ten unset <c>GetStatus()</c> words FillOut copies for Level 100.</summary>
     public static int[] UnsetSecondaryStatuses() =>
@@ -375,6 +396,53 @@ public static class RetailFillOutEndLevelData
         }
 
         return ranking;
+    }
+
+    /// <summary>
+    /// The fistp'd <c>CGame.mScore</c> rewrite at <c>0x0046d701</c>.
+    /// FillOut does not copy this back to <c>0x00672e24</c>. A skip
+    /// leaves the pre-arm score. Leftover <c>LoadLevel</c> 0.5 at
+    /// elapsed 400 turns 140 into 105.
+    /// </summary>
+    public static int AfterScoreTimeArmGameScore(
+        float elapsedTime,
+        float fullScoreTime,
+        float percentageScoreTime,
+        float leftoverScorePercentage,
+        int score)
+    {
+        if (ScoreTimeArmSkips(fullScoreTime, percentageScoreTime))
+        {
+            return score;
+        }
+
+        float multiplier;
+        if (elapsedTime < fullScoreTime)
+        {
+            multiplier = 1.0f;
+        }
+        else if (elapsedTime < percentageScoreTime)
+        {
+            float delta = percentageScoreTime - fullScoreTime;
+            multiplier = leftoverScorePercentage
+                - ((elapsedTime - percentageScoreTime) / delta)
+                * (1.0f - leftoverScorePercentage);
+        }
+        else
+        {
+            multiplier = leftoverScorePercentage;
+        }
+
+        if (!(multiplier <= 1.0f))
+        {
+            multiplier = 1.0f;
+        }
+        else if (multiplier < 0.0f)
+        {
+            multiplier = 0.0f;
+        }
+
+        return LowDwordOfFistp(score * (double)multiplier);
     }
 
     private const float PointZeroZeroOne = 0.001f;
