@@ -51,6 +51,8 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
 
         public const string SnapshotSavesUnavailable = "Could not count saves. Try Settings.";
 
+        public const string SnapshotNeedsFullInstall = "Choose the folder that has BEA.exe and data.";
+
         public static string ForSettings(RetailExecutableIdentity identity)
         {
             return identity switch

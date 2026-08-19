@@ -70,7 +70,9 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 HomeSnapshotSavesTextBlock.Text = GameDirectoryIdentityText.SnapshotSavesUnavailable;
             }
 
-            HomeSnapshotMediaTextBlock.Text = ready ? "Ready to browse" : "Needs the full install";
+            HomeSnapshotMediaTextBlock.Text = ready
+                ? "Ready to browse"
+                : GameDirectoryIdentityText.SnapshotNeedsFullInstall;
         }
 
         private void RefreshSetupStatus()

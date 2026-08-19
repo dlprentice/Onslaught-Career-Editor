@@ -87,7 +87,8 @@ public class GameDirectoryIdentityTextTests
                 GameDirectoryIdentityText.AutoDetectFailed + " " +
                 GameDirectoryIdentityText.PersistFailed + " " +
                 GameDirectoryIdentityText.AppearancePersistFailed + " " +
-                GameDirectoryIdentityText.MediaPersistFailed).ToLowerInvariant();
+                GameDirectoryIdentityText.MediaPersistFailed + " " +
+                GameDirectoryIdentityText.SnapshotNeedsFullInstall).ToLowerInvariant();
             foreach (string word in banned)
             {
                 Assert.That(all, Does.Not.Contain(word), $"Identity copy should not say '{word}'.");
@@ -249,6 +250,11 @@ public class GameDirectoryIdentityTextTests
         Assert.That(GameDirectoryIdentityText.SnapshotSavesUnavailable, Does.Not.Contain("Unavailable"));
         Assert.That(GameDirectoryIdentityText.SnapshotNeedsFolder, Does.Not.Contain(":\\"));
         Assert.That(GameDirectoryIdentityText.SnapshotSavesNone, Does.Not.Contain("/"));
+        Assert.That(GameDirectoryIdentityText.SnapshotNeedsFullInstall, Does.Contain("BEA.exe"));
+        Assert.That(GameDirectoryIdentityText.SnapshotNeedsFullInstall, Does.Contain("data"));
+        Assert.That(GameDirectoryIdentityText.SnapshotNeedsFullInstall, Does.Not.Contain("full install"));
+        Assert.That(GameDirectoryIdentityText.SnapshotNeedsFullInstall, Does.Not.Contain(":\\"));
+        Assert.That(GameDirectoryIdentityText.SnapshotNeedsFullInstall, Does.Not.Contain("/"));
     }
 
     [Test]
@@ -263,6 +269,8 @@ public class GameDirectoryIdentityTextTests
         Assert.That(home, Does.Not.Contain("\"None yet\""));
         Assert.That(home, Does.Not.Contain("\"Unavailable\""));
         Assert.That(home, Does.Not.Contain("\"Not set yet\""));
+        Assert.That(home, Does.Contain("GameDirectoryIdentityText.SnapshotNeedsFullInstall"));
+        Assert.That(home, Does.Not.Contain("\"Needs the full install\""));
     }
 
     private static string FindRepoRoot()

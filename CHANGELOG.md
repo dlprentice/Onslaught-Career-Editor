@@ -97,7 +97,8 @@ live in `developer_state.json` and the campaign ledgers.
   loaded patch or profile catalog is named without the file path. Home
   names a missing folder, an empty save list, or a failed save count as a
   next step, not a dash. The game line on that card uses the same folder
-  sentence. A failed Game Options write that still looks
+  sentence. An incomplete install on that card names BEA.exe and data,
+  not just "the full install." A failed Game Options write that still looks
   like a dump uses the shared nothing-was-changed sentence. A failed
   focused Goodie write that still looks like a dump uses that same
   sentence. Save Editor refusals that used to say paths now name the
