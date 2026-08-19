@@ -99,7 +99,7 @@
                     <TextBox x:Name="CatalogPathTextBox"
                              Grid.Column="0"
                              AutomationProperties.AutomationId="AssetCatalogPathTextBox"
-                             PlaceholderText="Paste catalog.json path or browse to a generated export folder" />
+                             PlaceholderText="Paste catalog.json, or browse to a generated export folder" />
                     <Button x:Name="BrowseCatalogButton"
                             Grid.Column="1"
                             AutomationProperties.AutomationId="AssetBrowseCatalogButton"

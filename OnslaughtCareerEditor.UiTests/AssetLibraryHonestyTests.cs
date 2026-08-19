@@ -103,6 +103,8 @@ public class AssetLibraryHonestyTests
     {
         string xaml = File.ReadAllText(Path.Combine(
             TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI", "Pages", "AssetLibraryPage.xaml"));
+        string code = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI", "Pages", "AssetLibraryPage.xaml.cs"));
 
         Assert.That(xaml, Does.Not.Contain("Path details"));
         Assert.That(xaml, Does.Not.Contain("Local export path"));
@@ -110,5 +112,9 @@ public class AssetLibraryHonestyTests
         Assert.That(xaml, Does.Contain("Export file"));
         Assert.That(xaml, Does.Not.Contain("Copy path"));
         Assert.That(xaml, Does.Contain("Copy file"));
+        Assert.That(xaml, Does.Not.Contain("catalog.json path"));
+        Assert.That(xaml, Does.Contain("Paste catalog.json, or browse to a generated export folder"));
+        Assert.That(code, Does.Not.Contain("catalog.json path"));
+        Assert.That(code, Does.Contain("Paste catalog.json, or browse to a generated export folder"));
     }
 }

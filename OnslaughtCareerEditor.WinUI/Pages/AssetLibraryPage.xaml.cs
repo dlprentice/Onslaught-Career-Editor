@@ -133,7 +133,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             CatalogInputGrid.Visibility = Visibility.Collapsed;
             ChangeCatalogButton.Visibility = Visibility.Visible;
             CatalogPathTextBox.Text = string.Empty;
-            CatalogPathTextBox.PlaceholderText = "Paste catalog.json path or browse to a generated export folder";
+            CatalogPathTextBox.PlaceholderText = "Paste catalog.json, or browse to a generated export folder";
             CatalogStatusTextBlock.Text = $"Catalog loaded: {AssetLibraryPageText.BuildPathSummary(_snapshot.CatalogFilePath)}";
             CatalogFullPathTextBlock.Text = AssetLibraryPageText.BuildPathSummary(_snapshot.CatalogFilePath);
             CatalogSummaryTextBlock.Text =

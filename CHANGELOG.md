@@ -166,7 +166,8 @@ live in `developer_state.json` and the campaign ledgers.
   Lore library names the next step, not the emptiness.
   Putting a career in a safe copy when none
   exists names the next step, not the emptiness. A missing
-  managed copy names the folder, not a directory.
+  managed copy names the folder, not a directory. The Asset Library
+  catalog picker names catalog.json, not a path.
 
 ## 1.0.11 — 2026-08-07
 
