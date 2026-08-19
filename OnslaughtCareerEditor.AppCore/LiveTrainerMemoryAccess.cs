@@ -99,9 +99,8 @@ namespace OnslaughtCareerEditor.AppCore
             SafeProcessHandle handle = Win32ProcessMemoryAccessor.OpenProcess(desired, false, (uint)processId);
             if (handle.IsInvalid)
             {
-                int error = Marshal.GetLastPInvokeError();
                 handle.Dispose();
-                failure = $"Could not open the game process for {(((access & ProcessMemoryAccess.Write) != 0) ? "reading and writing" : "reading")} (Win32 error {error}).";
+                failure = "Could not open that copied game.";
                 return false;
             }
 

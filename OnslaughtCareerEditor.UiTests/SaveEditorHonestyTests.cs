@@ -95,9 +95,101 @@ public class SaveEditorHonestyTests
             var rows = SaveEditorAdvancedService.LoadMissionRankRows(truncated, out var status).ToArray();
 
             Assert.That(status.FileWasRead, Is.False);
-            Assert.That(status.Reason, Does.Contain("bytes"),
-                "A wrong-length file must be distinguishable from 'no file selected'.");
+            Assert.That(status.Reason, Is.EqualTo(SaveEditorAdvancedService.MissionGradesUnreadable));
+            Assert.That(status.Reason, Does.Contain("Nothing was changed"));
+            Assert.That(status.Reason, Does.Not.Contain("Mission grades were not read:"));
+            Assert.That(status.Reason, Does.Not.Contain("bytes"));
+            Assert.That(status.Reason, Does.Not.Contain(truncated));
+            Assert.That(status.Reason, Does.Not.Contain(":\\"));
             Assert.That(rows.All(row => row.CurrentRank == "-"), Is.True);
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    [Test]
+    public void AnUnreadableSaveDoesNotDumpTheExceptionOnMissionGrades()
+    {
+        string tempDir = Path.Combine(Path.GetTempPath(), $"onslaught-locked-grades-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDir);
+        try
+        {
+            string locked = Path.Combine(tempDir, "career.bes");
+            File.Copy(GoldSavePath, locked);
+
+            using (new FileStream(locked, FileMode.Open, FileAccess.Read, FileShare.None))
+            {
+                var rows = SaveEditorAdvancedService.LoadMissionRankRows(locked, out var status).ToArray();
+
+                Assert.That(status.FileWasRead, Is.False);
+                Assert.That(status.Reason, Is.EqualTo(SaveEditorAdvancedService.MissionGradesUnreadable));
+                Assert.That(status.Reason, Does.Contain("Nothing was changed"));
+                Assert.That(status.Reason, Does.Not.Contain(locked));
+                Assert.That(status.Reason, Does.Not.Contain(":\\"));
+                Assert.That(status.Reason, Does.Not.Contain(tempDir));
+                Assert.That(rows.All(row => row.CurrentRank == "-"), Is.True);
+            }
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    [Test]
+    public void AnUnreadableSaveDoesNotDumpTheExceptionOnKillCounts()
+    {
+        string tempDir = Path.Combine(Path.GetTempPath(), $"onslaught-locked-kills-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDir);
+        try
+        {
+            string locked = Path.Combine(tempDir, "career.bes");
+            File.Copy(GoldSavePath, locked);
+
+            using (new FileStream(locked, FileMode.Open, FileAccess.Read, FileShare.None))
+            {
+                var rows = SaveEditorAdvancedService.LoadCategoryKillRows(locked, out var status).ToArray();
+
+                Assert.That(status.FileWasRead, Is.False);
+                Assert.That(status.Reason, Is.EqualTo(SaveEditorAdvancedService.KillCountsUnreadable));
+                Assert.That(status.Reason, Does.Contain("Nothing was changed"));
+                Assert.That(status.Reason, Does.Not.Contain(locked));
+                Assert.That(status.Reason, Does.Not.Contain(":\\"));
+                Assert.That(status.Reason, Does.Not.Contain(tempDir));
+                Assert.That(rows.All(row => !row.CurrentValueKnown), Is.True);
+            }
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    [Test]
+    public void AWrongSizeSaveDoesNotDumpTheAnalyzerErrorOnKillCounts()
+    {
+        string tempDir = Path.Combine(Path.GetTempPath(), $"onslaught-short-kills-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDir);
+        try
+        {
+            string truncated = Path.Combine(tempDir, "truncated.bes");
+            byte[] gold = File.ReadAllBytes(GoldSavePath);
+            File.WriteAllBytes(truncated, gold.AsSpan(0, gold.Length - 32).ToArray());
+
+            var rows = SaveEditorAdvancedService
+                .LoadCategoryKillRows(truncated, out var status)
+                .ToArray();
+
+            Assert.That(status.FileWasRead, Is.False);
+            Assert.That(status.Reason, Is.EqualTo(SaveEditorAdvancedService.KillCountsUnreadable));
+            Assert.That(status.Reason, Does.Contain("Nothing was changed"));
+            Assert.That(status.Reason, Does.Not.Contain("Kill counts were not read:"));
+            Assert.That(status.Reason, Does.Not.Contain("Invalid file size"));
+            Assert.That(status.Reason, Does.Not.Contain(truncated));
+            Assert.That(status.Reason, Does.Not.Contain(":\\"));
+            Assert.That(rows.All(row => !row.CurrentValueKnown), Is.True);
         }
         finally
         {
@@ -223,6 +315,198 @@ public class SaveEditorHonestyTests
         }
     }
 
+    [Test]
+    public void AMissingCareerSaveDoesNotNameAPath()
+    {
+        string missing = Path.Combine(Path.GetTempPath(), $"absent-{Guid.NewGuid():N}.bes");
+
+        string? reason = SaveEditorService.DescribeCareerSaveInputRejection(missing);
+
+        Assert.That(reason, Is.EqualTo(SaveEditorService.InputMissing));
+        Assert.That(reason, Does.Contain("Nothing was changed"));
+        Assert.That(reason, Does.Not.Contain(missing));
+        Assert.That(reason, Does.Not.Contain(@":\"));
+        Assert.That(reason, Does.Not.Contain('/'));
+        Assert.That(reason!.ToLowerInvariant(), Does.Not.Contain("path"));
+        Assert.That(reason, Does.Not.Contain("No file exists at that path."));
+    }
+
+    [Test]
+    public void AWrongExtensionDoesNotNameAPathOnPatch()
+    {
+        string input = Path.Combine(Path.GetTempPath(), "career.txt");
+        string output = Path.Combine(Path.GetTempPath(), "out.txt");
+
+        PatchResult full = SaveEditorService.PatchSave(new SavePatchRequest
+        {
+            InputPath = input,
+            OutputPath = output,
+            PatchNodes = true,
+        });
+        PatchResult focused = SaveEditorService.PatchFocusedGoodieState(new FocusedGoodieStatePatchRequest
+        {
+            InputPath = input,
+            OutputPath = output,
+            GoodieId = 0,
+            State = MissionScriptGoodieState.New,
+        });
+
+        Assert.That(full.Success, Is.False);
+        Assert.That(focused.Success, Is.False);
+        Assert.That(full.Message, Does.Contain(".bes"));
+        Assert.That(focused.Message, Does.Contain(".bes"));
+        Assert.That(full.Message.ToLowerInvariant(), Does.Not.Contain("path"));
+        Assert.That(focused.Message.ToLowerInvariant(), Does.Not.Contain("path"));
+        Assert.That(full.Message, Does.Not.Contain(input));
+        Assert.That(focused.Message, Does.Not.Contain(output));
+        Assert.That(SaveEditorService.PathsUnusable.ToLowerInvariant(), Does.Not.Contain("path"));
+        Assert.That(SaveEditorService.PathsUnusable, Does.Contain("Nothing was changed"));
+    }
+
+    [Test]
+    public void AnUnreadableCareerPathDoesNotDumpTheException()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "SaveEditorService.cs"));
+
+        Assert.That(source, Does.Contain("That career save could not be read."));
+        Assert.That(source, Does.Contain("That file could not be opened."));
+        Assert.That(source, Does.Contain("return InputMissing;"));
+        Assert.That(source, Does.Not.Contain("No file exists at that path."));
+        Assert.That(source, Does.Not.Contain("Those save paths"));
+        Assert.That(source, Does.Not.Contain("input and output paths"));
+        Assert.That(source, Does.Not.Contain("That path could not be read:"));
+        Assert.That(source, Does.Not.Contain("That file could not be opened:"));
+        Assert.That(source, Does.Not.Contain("\"Input path\""));
+        Assert.That(source, Does.Not.Contain("\"Output path\""));
+        Assert.That(source, Does.Contain("\"Input file\""));
+        Assert.That(source, Does.Contain("\"Output file\""));
+    }
+
+    [Test]
+    public void AdvancedReadRefusalsDoNotInterpolateTheException()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "SaveEditorAdvancedService.cs"));
+
+        Assert.That(source, Does.Contain("MissionGradesUnreadable"));
+        Assert.That(source, Does.Contain("KillCountsUnreadable"));
+        Assert.That(source, Does.Not.Contain("Mission grades could not be read: {ex.Message}"));
+        Assert.That(source, Does.Not.Contain("Kill counts could not be read: {ex.Message}"));
+        Assert.That(source, Does.Not.Contain("Kill counts were not read:"));
+        Assert.That(source, Does.Not.Contain("Mission grades were not read:"));
+        Assert.That(source, Does.Not.Contain("analysis.ErrorMessage"));
+        Assert.That(source, Does.Not.Contain("No save is selected."));
+        Assert.That(source, Does.Not.Contain("The selected save file was not found."));
+        Assert.That(SaveEditorAdvancedService.MissionGradesUnreadable, Does.Contain("Nothing was changed"));
+        Assert.That(SaveEditorAdvancedService.KillCountsUnreadable, Does.Contain("Nothing was changed"));
+        Assert.That(SaveEditorAdvancedService.MissionGradesUnreadable, Does.Not.Contain(":\\"));
+        Assert.That(SaveEditorAdvancedService.KillCountsUnreadable, Does.Not.Contain(":\\"));
+    }
+
+    [Test]
+    public void APatchCatchDoesNotInterpolateTheException()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "BesFilePatcher.cs"));
+
+        Assert.That(source, Does.Contain("PatchUnreadable"));
+        Assert.That(source, Does.Contain("DescribeCaughtPatchFailure"));
+        Assert.That(source, Does.Contain("TryGetKnownRefusal"));
+        Assert.That(source, Does.Not.Contain("return PatchResult.Fail(ex.Message);"));
+        Assert.That(BesFilePatcher.PatchUnreadable, Does.Contain("Nothing was changed"));
+        Assert.That(BesFilePatcher.PatchUnreadable, Does.Not.Contain(":\\"));
+    }
+
+    [Test]
+    public void AMissingSaveDoesNotDumpThePathOnPatch()
+    {
+        string missing = Path.Combine(Path.GetTempPath(), $"absent-{Guid.NewGuid():N}.bes");
+        PatchResult result = SaveEditorService.PatchSave(new SavePatchRequest
+        {
+            InputPath = missing,
+            OutputPath = Path.Combine(Path.GetTempPath(), "out.bes"),
+            PatchNodes = true,
+        });
+
+        Assert.That(result.Success, Is.False);
+        Assert.That(result.Message, Is.EqualTo(SaveEditorService.InputMissing));
+        Assert.That(result.Message, Does.Not.Contain(missing));
+        Assert.That(result.Message, Does.Not.Contain(":\\"));
+        Assert.That(result.Message, Does.Contain("Nothing was changed"));
+    }
+
+    [Test]
+    public void ALockedOutputDoesNotDumpTheExceptionOnPatch()
+    {
+        string tempDir = Path.Combine(Path.GetTempPath(), $"onslaught-locked-out-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDir);
+        try
+        {
+            string input = Path.Combine(tempDir, "career.bes");
+            string output = Path.Combine(tempDir, "out.bes");
+            File.Copy(GoldSavePath, input);
+            File.Copy(GoldSavePath, output);
+
+            using (new FileStream(output, FileMode.Open, FileAccess.Read, FileShare.None))
+            {
+                PatchResult result = SaveEditorService.PatchSave(new SavePatchRequest
+                {
+                    InputPath = input,
+                    OutputPath = output,
+                    PatchNodes = false,
+                    PatchLinks = true,
+                    PatchGoodies = false,
+                    PatchKills = false,
+                });
+
+                Assert.That(result.Success, Is.False);
+                Assert.That(result.Message, Is.EqualTo(BesFilePatcher.PatchUnreadable));
+                Assert.That(result.Message, Does.Contain("Nothing was changed"));
+                Assert.That(result.Message, Does.Not.Contain(output));
+                Assert.That(result.Message, Does.Not.Contain(":\\"));
+                Assert.That(result.Message, Does.Not.Contain(tempDir));
+            }
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    [Test]
+    public void ASuccessfulPatchNamesTheFileNotThePath()
+    {
+        string tempDir = Path.Combine(Path.GetTempPath(), $"onslaught-patch-ok-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDir);
+        try
+        {
+            string input = Path.Combine(tempDir, "career.bes");
+            string output = Path.Combine(tempDir, "out.bes");
+            File.Copy(GoldSavePath, input);
+
+            PatchResult result = SaveEditorService.PatchSave(new SavePatchRequest
+            {
+                InputPath = input,
+                OutputPath = output,
+                PatchNodes = false,
+                PatchLinks = true,
+                PatchGoodies = false,
+                PatchKills = false,
+            });
+
+            Assert.That(result.Success, Is.True, result.Message);
+            Assert.That(result.Message, Does.Contain("out.bes"));
+            Assert.That(result.Message, Does.Not.Contain(tempDir));
+            Assert.That(result.Message, Does.Not.Contain(output));
+            Assert.That(result.Message, Does.Not.Contain(":\\"));
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
     // --------------------------------------------- output-safety claim
 
     [Test]
@@ -234,6 +518,7 @@ public class SaveEditorHonestyTests
         // BEA.exe and data/. The user's Documents and LocalAppData save roots match neither, and the
         // app itself offers files from both, so a sentence promising "every game folder" was false.
         Assert.That(hint, Does.Not.Contain("every game folder"));
+        Assert.That(hint.ToLowerInvariant(), Does.Not.Contain("path"));
         Assert.That(hint, Does.Contain("BEA.exe"),
             "The hint must name what the guard actually keys on.");
         Assert.That(
@@ -252,12 +537,88 @@ public class SaveEditorHonestyTests
         Assert.That(File.Exists(source), Is.True, $"Missing {source}");
 
         string text = File.ReadAllText(source);
-        const string marker = "Output path must end in .bes";
+        const string marker = "The output file must end in .bes";
         int start = text.IndexOf(marker, StringComparison.Ordinal);
         Assert.That(start, Is.GreaterThanOrEqualTo(0), "The output-safety hint literal was not found.");
 
         // The literal is a multi-part concatenation; take the enclosing statement.
         int end = text.IndexOf(';', start);
         return text.Substring(start, end - start);
+    }
+
+    [Test]
+    public void AnEmptyPendingSummarySaysWhatToDoNext()
+    {
+        string summary = SaveEditorService.BuildPendingChangesSummary(new SavePatchRequest
+        {
+            PatchNodes = false,
+            PatchLinks = false,
+            PatchGoodies = false,
+            PatchKills = false,
+        });
+
+        Assert.That(summary, Is.EqualTo(SaveEditorService.NoPendingChangesSelected));
+        Assert.That(summary, Does.Not.Contain("yet"));
+        Assert.That(summary, Does.Contain("change"));
+
+        string xaml = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI", "Pages", "SavesPage.xaml"));
+        Assert.That(xaml, Does.Contain(SaveEditorService.NoPendingChangesSelected));
+        Assert.That(xaml, Does.Not.Contain("No pending save changes selected yet"));
+    }
+
+    [Test]
+    public void AnUnreadKillSummaryDoesNotSayYet()
+    {
+        string empty = SaveEditorAdvancedService.BuildKillSeedSummary(Array.Empty<SaveCategoryKillRow>());
+        Assert.That(empty, Does.Contain("Choose a career save first"));
+        Assert.That(empty, Does.Not.Contain("yet"));
+        Assert.That(empty, Does.Not.Contain("No save is loaded"));
+        Assert.That(empty, Does.Contain("not a cumulative score"));
+    }
+
+    [Test]
+    public void AnEmptyAdvancedReadNamesTheNextStep()
+    {
+        SaveEditorAdvancedService.LoadMissionRankRows(null, out var rankStatus);
+        SaveEditorAdvancedService.LoadCategoryKillRows("   ", out var killStatus);
+
+        Assert.That(rankStatus.FileWasRead, Is.False);
+        Assert.That(killStatus.FileWasRead, Is.False);
+        Assert.That(rankStatus.Reason, Is.EqualTo(SaveEditorService.DescribeCareerSaveInputRejection(null)));
+        Assert.That(killStatus.Reason, Is.EqualTo(SaveEditorService.DescribeCareerSaveInputRejection("   ")));
+        Assert.That(rankStatus.Reason, Does.Contain("Choose"));
+        Assert.That(rankStatus.Reason, Does.Not.Contain("No save is selected"));
+        Assert.That(killStatus.Reason, Does.Not.Contain("No save is selected"));
+        Assert.That(rankStatus.Reason.ToLowerInvariant(), Does.Not.Contain("path"));
+        Assert.That(killStatus.Reason.ToLowerInvariant(), Does.Not.Contain("path"));
+    }
+
+    [Test]
+    public void AMissingAdvancedReadReusesInputMissing()
+    {
+        string missing = Path.Combine(Path.GetTempPath(), $"absent-{Guid.NewGuid():N}.bes");
+
+        SaveEditorAdvancedService.LoadMissionRankRows(missing, out var rankStatus);
+        SaveEditorAdvancedService.LoadCategoryKillRows(missing, out var killStatus);
+
+        Assert.That(rankStatus.FileWasRead, Is.False);
+        Assert.That(killStatus.FileWasRead, Is.False);
+        Assert.That(rankStatus.Reason, Is.EqualTo(SaveEditorService.InputMissing));
+        Assert.That(killStatus.Reason, Is.EqualTo(SaveEditorService.InputMissing));
+        Assert.That(rankStatus.Reason, Does.Not.Contain(missing));
+        Assert.That(killStatus.Reason, Does.Not.Contain(missing));
+        Assert.That(rankStatus.Reason, Does.Not.Contain("The selected save file was not found"));
+        Assert.That(rankStatus.Reason, Does.Contain("Nothing was changed"));
+    }
+
+    [Test]
+    public void ASaveInsideACopyNamesTheProfileFolderNotARoot()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "SaveEditorService.cs"));
+
+        Assert.That(source, Does.Not.Contain("App-owned profiles root"));
+        Assert.That(source, Does.Contain("\"app-owned profile folder\""));
     }
 }

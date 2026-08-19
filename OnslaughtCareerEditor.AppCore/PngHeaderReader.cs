@@ -6,13 +6,14 @@ namespace OnslaughtCareerEditor.AppCore
 {
     public static class PngHeaderReader
     {
+        public const string ExportMissing = "That texture export could not be found.";
         private static readonly byte[] PngSignature = [137, 80, 78, 71, 13, 10, 26, 10];
 
         public static PngHeaderInfo Read(string? path)
         {
             if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
             {
-                return new PngHeaderInfo(false, null, null, 0, "PNG export is not available at the recorded local path.");
+                return new PngHeaderInfo(false, null, null, 0, ExportMissing);
             }
 
             using FileStream stream = File.OpenRead(path);

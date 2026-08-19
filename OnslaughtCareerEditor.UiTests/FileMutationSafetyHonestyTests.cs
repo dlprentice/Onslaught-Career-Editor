@@ -1,0 +1,172 @@
+using System.IO;
+using NUnit.Framework;
+
+namespace OnslaughtCareerEditor.UiTests;
+
+/// <summary>
+/// FileMutationSafety used to say "output paths" when a write would land
+/// inside a Battle Engine Aquila game folder, and two later refusals still
+/// named a path. Name the file or folder.
+/// </summary>
+public class FileMutationSafetyHonestyTests
+{
+    [Test]
+    public void AGameFolderWriteNamesTheFilesNotThePaths()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "FileMutationSafety.cs"));
+
+        Assert.That(source, Does.Not.Contain("Output paths inside a Battle Engine Aquila game folder"));
+        Assert.That(source, Does.Contain("OutputInsideGameFolder"));
+        Assert.That(source, Does.Contain("Output files inside a Battle Engine Aquila game folder are blocked."));
+        Assert.That(source, Does.Contain("Choose the output folder or another non-game folder."));
+    }
+
+    [Test]
+    public void AFolderOutputNamesTheFileNotAPath()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "FileMutationSafety.cs"));
+
+        Assert.That(source, Does.Not.Contain("The selected output path is a directory."));
+        Assert.That(source, Does.Contain("The selected output file is a folder."));
+        Assert.That(source, Does.Not.Contain("Output path must remain inside the verified app-owned profile root."));
+        Assert.That(source, Does.Contain("The output file must remain inside the verified app-owned profile folder."));
+        Assert.That(source, Does.Not.Contain("The selected output folder does not exist."));
+        Assert.That(source, Does.Contain("That folder could not be found. Choose a folder again."));
+        Assert.That(source, Does.Not.Contain("expected local path."));
+        Assert.That(source, Does.Contain("expected local folder."));
+        Assert.That(source, Does.Not.Contain("\"Input path\""));
+        Assert.That(source, Does.Not.Contain("\"Output path\""));
+        Assert.That(source, Does.Contain("\"Input file\""));
+        Assert.That(source, Does.Contain("\"Output file\""));
+    }
+
+    [Test]
+    public void ADeviceLocationRefusalDoesNotSayPath()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "FileMutationSafety.cs"));
+
+        Assert.That(source, Does.Not.Contain("cannot use a Windows device path."));
+        Assert.That(source, Does.Not.Contain("cannot use a drive-relative path."));
+        Assert.That(source, Does.Not.Contain("cannot use a UNC or network path."));
+        Assert.That(source, Does.Not.Contain("\"Protected input path\""));
+        Assert.That(source, Does.Contain("cannot use a Windows device location."));
+        Assert.That(source, Does.Contain("cannot use a drive-relative location."));
+        Assert.That(source, Does.Contain("cannot use a UNC or network location."));
+        Assert.That(source, Does.Contain("\"Protected input file\""));
+        Assert.That(source, Does.Not.Contain("{label} is required."));
+        Assert.That(source, Does.Not.Contain("{label} cannot use a Windows device location."));
+        Assert.That(source, Does.Contain("FileOrFolderRequired"));
+        Assert.That(source, Does.Contain("FileCannotUseDeviceLocation"));
+    }
+
+    [Test]
+    public void AResolvedNetworkLocationDoesNotSayPath()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "FileMutationSafety.cs"));
+
+        Assert.That(source, Does.Not.Contain("resolves to a network path."));
+        Assert.That(source, Does.Not.Contain("does not resolve to a local DOS drive path."));
+        Assert.That(source, Does.Contain("resolves to a network location."));
+        Assert.That(source, Does.Contain("does not resolve to a local drive."));
+        Assert.That(source, Does.Not.Contain("{label} resolves to a network location."));
+        Assert.That(source, Does.Not.Contain("reserved DOS device name"));
+        Assert.That(source, Does.Contain("FileCannotUseReservedDevice"));
+    }
+
+    [Test]
+    public void AnIdentityChangeOrInspectFailureNamesTheFileNotALabel()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "FileMutationSafety.cs"));
+
+        Assert.That(source, Does.Not.Contain("{label} changed identity while it was being secured."));
+        Assert.That(source, Does.Not.Contain("{label} changed identity before its mutation guard was created."));
+        Assert.That(source, Does.Not.Contain("Could not inspect {label}. Win32 error:"));
+        Assert.That(source, Does.Not.Contain("Could not resolve {label}. Win32 error:"));
+        Assert.That(source, Does.Not.Contain("Could not secure {label}. Win32 error:"));
+        Assert.That(source, Does.Not.Contain("Could not guard {label}"));
+        Assert.That(source, Does.Not.Contain("Could not create {label} mutation guard"));
+        Assert.That(source, Does.Not.Contain("Could not secure {label} for publication"));
+        Assert.That(source, Does.Contain("FolderChangedIdentity"));
+        Assert.That(source, Does.Contain("FileCouldNotBeInspected"));
+        Assert.That(source, Does.Contain("That folder changed identity while it was being secured."));
+        Assert.That(source, Does.Contain("That file could not be inspected."));
+    }
+
+    [Test]
+    public void AMutationGuardEscapeNamesTheFolderNotALabel()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "FileMutationSafety.cs"));
+
+        Assert.That(source, Does.Not.Contain("{label} mutation guard escaped its held directory."));
+        Assert.That(source, Does.Not.Contain("{label} is too large to read safely."));
+        Assert.That(source, Does.Contain("FolderGuardEscaped"));
+        Assert.That(source, Does.Contain("FileTooLargeToRead"));
+        Assert.That(source, Does.Contain("That folder guard escaped its held folder."));
+        Assert.That(source, Does.Contain("That file is too large to read safely."));
+    }
+
+    [Test]
+    public void AStagedOutputFailureDoesNotDumpAWin32Error()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "FileMutationSafety.cs"));
+
+        Assert.That(source, Does.Not.Contain("Win32 error:"));
+        Assert.That(source, Does.Contain("StagedOutputCouldNotBeCreated"));
+        Assert.That(source, Does.Contain("StagedPackageCouldNotBePublished"));
+        Assert.That(source, Does.Contain("StagedOutputQuarantineCouldNotBeUpdated"));
+        Assert.That(source, Does.Contain("That staged output file could not be created."));
+        Assert.That(source, Does.Contain("That staged package folder could not be published."));
+        Assert.That(source, Does.Contain("That staged output quarantine could not be updated."));
+    }
+
+    [Test]
+    public void AMissingProtectedInputDoesNotAttachTheFilePath()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "FileMutationSafety.cs"));
+
+        Assert.That(source, Does.Not.Contain(
+            "throw new FileNotFoundException(\"Protected input file was not found.\", path);"));
+        Assert.That(source, Does.Contain("That protected input file could not be found."));
+        Assert.That(source, Does.Not.Contain("FileNotFoundException(\"That protected input file could not be found.\","));
+        Assert.That(source, Does.Not.Contain("{label} does not exist."));
+        Assert.That(source, Does.Contain("That folder could not be found."));
+        Assert.That(source, Does.Not.Contain("cannot be a symbolic link, junction, or other reparse point."));
+        Assert.That(source, Does.Not.Contain("cannot contain a symbolic link, junction, or other reparse point."));
+        Assert.That(source, Does.Not.Contain("Committed output is a symbolic link, junction, or other reparse point."));
+        Assert.That(source, Does.Contain("FileCannotUseLink"));
+        Assert.That(source, Does.Contain("FolderCannotUseLink"));
+        Assert.That(source, Does.Contain("FileCannotShareData"));
+        Assert.That(source, Does.Contain("That file cannot use a shortcut or link."));
+        Assert.That(source, Does.Contain("That folder cannot use a shortcut or link."));
+        Assert.That(source, Does.Contain("That file cannot share its data with another file."));
+        Assert.That(source, Does.Not.Contain("is hardlinked to another file"));
+    }
+
+    [Test]
+    public void AnAppOwnedProfileRefusalNamesTheFolderNotARoot()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "FileMutationSafety.cs"));
+
+        Assert.That(source, Does.Not.Contain("canonical app-owned GameProfiles root"));
+        Assert.That(source, Does.Not.Contain("Generated profile root must remain below"));
+        Assert.That(source, Does.Contain("AppOwnedProfileFolderRequired"));
+        Assert.That(source, Does.Contain("CopyMustStayInside"));
+        Assert.That(source, Does.Contain("Those changes need the app-owned profile folder."));
+        Assert.That(source, Does.Contain("That copy must stay inside the app-owned profile folder."));
+        Assert.That(source, Does.Not.Contain("GameProfiles root"));
+        Assert.That(source, Does.Not.Contain("\"Generated profile root\""));
+        Assert.That(source, Does.Not.Contain("\"App-owned profiles root\""));
+        Assert.That(source, Does.Not.Contain("\"Canonical app-owned profiles root\""));
+        Assert.That(source, Does.Contain("\"copy folder\""));
+        Assert.That(source, Does.Contain("\"app-owned profile folder\""));
+    }
+}

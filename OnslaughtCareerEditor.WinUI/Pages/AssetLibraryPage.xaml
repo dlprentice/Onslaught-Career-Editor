@@ -46,7 +46,7 @@
                     <TextBlock x:Name="CatalogStatusTextBlock"
                                AutomationProperties.AutomationId="AssetCatalogStatus"
                                Style="{StaticResource SectionBodyTextStyle}"
-                               Text="No generated catalog is loaded yet." />
+                               Text="Paste catalog.json, or browse to a generated export folder." />
                     <Border x:Name="CatalogFirstRunGuideBorder"
                             Background="{ThemeResource ShellMutedSurfaceBrush}"
                             BorderBrush="{ThemeResource ShellBorderBrush}"
@@ -77,10 +77,10 @@
                             Visibility="Collapsed"
                             Click="ChangeCatalogButton_Click" />
                     <Expander x:Name="CatalogPathDetailsExpander"
-                              Header="Path details"
+                              Header="File details"
                               IsExpanded="False">
                         <TextBlock x:Name="CatalogFullPathTextBlock"
-                                   AutomationProperties.AutomationId="AssetCatalogFullPath"
+                                   AutomationProperties.AutomationId="AssetCatalogFile"
                                    FontFamily="Consolas"
                                    FontSize="12"
                                    MaxWidth="420"
@@ -98,8 +98,8 @@
                     </Grid.ColumnDefinitions>
                     <TextBox x:Name="CatalogPathTextBox"
                              Grid.Column="0"
-                             AutomationProperties.AutomationId="AssetCatalogPathTextBox"
-                             PlaceholderText="Paste catalog.json path or browse to a generated export folder" />
+                             AutomationProperties.AutomationId="AssetCatalogFileTextBox"
+                             PlaceholderText="Paste catalog.json, or browse to a generated export folder" />
                     <Button x:Name="BrowseCatalogButton"
                             Grid.Column="1"
                             AutomationProperties.AutomationId="AssetBrowseCatalogButton"
@@ -137,7 +137,7 @@
                         </Grid.ColumnDefinitions>
                         <TextBox x:Name="GoodieSaveStatePathTextBox"
                                  Grid.Column="0"
-                                 AutomationProperties.AutomationId="AssetGoodieSaveStatePathTextBox"
+                                 AutomationProperties.AutomationId="AssetGoodieSaveStateFileTextBox"
                                  PlaceholderText="Choose a copied .bes save for Goodies state" />
                         <Button Grid.Column="1"
                                 AutomationProperties.AutomationId="AssetBrowseGoodieSaveStateButton"
@@ -229,10 +229,17 @@
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
+                        <StackPanel Spacing="6">
                         <TextBox x:Name="AssetSearchBox"
                                  AutomationProperties.AutomationId="AssetSearchBox"
                                  PlaceholderText="Search current asset list"
                                  TextChanged="AssetSearchBox_TextChanged" />
+                        <TextBlock x:Name="AssetListNoteTextBlock"
+                                   AutomationProperties.AutomationId="AssetListNote"
+                                   Style="{StaticResource SectionBodyTextStyle}"
+                                   TextWrapping="WrapWholeWords"
+                                   Visibility="Collapsed" />
+                        </StackPanel>
                         <StackPanel x:Name="GoodieFilterPanel"
                                     Grid.Row="1"
                                     Spacing="6"
@@ -484,8 +491,8 @@
                                     Visibility="Collapsed"
                                     Click="OpenInMediaButton_Click" />
                             <Button x:Name="CopyExportPathButton"
-                                    AutomationProperties.AutomationId="AssetCopyExportPathButton"
-                                    Content="Copy path"
+                                    AutomationProperties.AutomationId="AssetCopyExportFileButton"
+                                    Content="Copy file"
                                     IsEnabled="False"
                                     Click="CopyExportPathButton_Click" />
                         </StackPanel>
@@ -624,7 +631,7 @@
                                            AutomationProperties.AutomationId="AssetModelTextureLinks"
                                            Style="{StaticResource SectionBodyTextStyle}"
                                            TextWrapping="WrapWholeWords"
-                                           Text="Catalog and sidecar texture links appear here when an FBX export references extracted textures." />
+                                           Text="Texture links appear here when an FBX export references extracted textures." />
                                 <Button x:Name="ViewLinkedTextureButton"
                                         AutomationProperties.AutomationId="AssetViewLinkedTextureButton"
                                         Content="View linked texture"
@@ -633,13 +640,13 @@
                                         Click="ViewLinkedTextureButton_Click" />
                             </StackPanel>
                         </Border>
-                        <Expander Header="Path details"
+                        <Expander Header="File details"
                                   IsExpanded="False">
                             <StackPanel Spacing="6">
-                                <TextBlock Text="Local export path"
+                                <TextBlock Text="Export file"
                                            FontWeight="SemiBold" />
                                 <TextBlock x:Name="SelectedExportPathTextBlock"
-                                           AutomationProperties.AutomationId="AssetSelectedExportPath"
+                                           AutomationProperties.AutomationId="AssetSelectedExportFile"
                                            FontFamily="Consolas"
                                            FontSize="12"
                                            TextWrapping="WrapWholeWords" />

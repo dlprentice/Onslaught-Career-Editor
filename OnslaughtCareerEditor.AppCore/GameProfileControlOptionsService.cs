@@ -68,6 +68,17 @@ namespace OnslaughtCareerEditor.AppCore
             FastMouseLookSensitivity,
         };
 
+        public const string FolderGone = "That folder could not be used.";
+        public const string CopyFolderMissing = "That copy folder could not be found.";
+        public const string ProfileFolderRequired = "An app-owned profile folder is required.";
+        public const string CopyMustStayInside =
+            "That copy must stay inside the app-owned profile folder.";
+        public const string OptionsFileMissing = "That copy is missing defaultoptions.bea.";
+        public const string OptionsBackupMissing = "That copy is missing a defaultoptions.bea backup.";
+        public const string CopyCannotUseLink = "That copy cannot use a shortcut or link.";
+        public const string FileCannotShareData = "That file cannot share its data with another file.";
+        public const string UniqueFileCouldNotBeMade = "That file could not be created in that folder.";
+
         public static GameProfileControlOptionsResult ApplyToSafeCopy(GameProfileControlOptionsRequest request)
         {
             bool hasKeybindOverrides = request.KeybindRows is { Count: > 0 } &&
@@ -101,7 +112,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             string optionsPath = Path.Combine(profileRoot, "defaultoptions.bea");
             if (!File.Exists(optionsPath))
-                throw new FileNotFoundException("Safe game copy is missing defaultoptions.bea.", optionsPath);
+                throw new FileNotFoundException(OptionsFileMissing);
 
             RejectReparsePoint(optionsPath, "safe-copy defaultoptions.bea");
             RejectMultipleHardLinks(optionsPath, "Safe-copy defaultoptions.bea");
@@ -199,7 +210,7 @@ namespace OnslaughtCareerEditor.AppCore
                     return path;
             }
 
-            throw new IOException($"Could not allocate a unique {prefix}{extension} path in {directory}.");
+            throw new IOException(UniqueFileCouldNotBeMade);
         }
 
         private static void WriteControlOptionsManifest(
@@ -346,21 +357,21 @@ namespace OnslaughtCareerEditor.AppCore
         private static string ValidateProfileRoot(string profileRoot, string appOwnedProfilesRoot)
         {
             if (string.IsNullOrWhiteSpace(appOwnedProfilesRoot))
-                throw new InvalidOperationException("An app-owned safe game copy root is required.");
+                throw new InvalidOperationException(ProfileFolderRequired);
 
             if (string.IsNullOrWhiteSpace(profileRoot))
-                throw new DirectoryNotFoundException("Safe game copy root does not exist.");
+                throw new DirectoryNotFoundException(CopyFolderMissing);
 
             string resolvedAppRoot = NormalizeExistingDirectory(appOwnedProfilesRoot);
             string resolvedProfileRoot = NormalizeExistingDirectory(profileRoot);
-            RejectExistingReparseAncestors(resolvedAppRoot, "app-owned safe game copy root");
-            RejectExistingReparseAncestors(resolvedProfileRoot, "safe game copy root");
-            RejectReparsePoint(resolvedProfileRoot, "safe game copy root");
+            RejectExistingReparseAncestors(resolvedAppRoot, "app-owned safe game copy folder");
+            RejectExistingReparseAncestors(resolvedProfileRoot, "safe game copy folder");
+            RejectReparsePoint(resolvedProfileRoot, "safe game copy folder");
 
             if (!IsSameOrUnderRoot(resolvedProfileRoot, resolvedAppRoot) ||
                 string.Equals(resolvedProfileRoot, resolvedAppRoot, StringComparison.OrdinalIgnoreCase))
             {
-                throw new InvalidOperationException("Safe-copy control options require a generated profile under the app-owned safe game copy root.");
+                throw new InvalidOperationException(CopyMustStayInside);
             }
 
             return resolvedProfileRoot;
@@ -393,7 +404,7 @@ namespace OnslaughtCareerEditor.AppCore
         private static string NormalizeExistingDirectory(string path)
         {
             if (!Directory.Exists(path))
-                throw new DirectoryNotFoundException($"Directory does not exist: {path}");
+                throw new DirectoryNotFoundException(FolderGone);
 
             return Path.GetFullPath(path)
                 .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
@@ -421,7 +432,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             FileAttributes attributes = File.GetAttributes(path);
             if ((attributes & FileAttributes.ReparsePoint) != 0)
-                throw new InvalidOperationException($"Safe-copy control options refuse reparse points in {label}.");
+                throw new InvalidOperationException(CopyCannotUseLink);
         }
 
         private static void RejectMultipleHardLinks(string path, string label)
@@ -431,7 +442,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             uint linkCount = GetWindowsHardLinkCount(path);
             if (linkCount > 1)
-                throw new InvalidOperationException($"{label} is hardlinked to another file; refusing to mutate a shared file identity.");
+                throw new InvalidOperationException(FileCannotShareData);
         }
 
         private static uint GetWindowsHardLinkCount(string path)
@@ -443,7 +454,7 @@ namespace OnslaughtCareerEditor.AppCore
                 FileShare.ReadWrite | FileShare.Delete);
 
             if (!GetFileInformationByHandle(handle, out ByHandleFileInformation info))
-                throw new IOException($"Could not inspect hardlink count for safe-copy control options target. Win32 error: {Marshal.GetLastWin32Error()}");
+                throw new IOException(FileMutationSafety.FileCouldNotBeInspected, new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error()));
 
             return info.NumberOfLinks;
         }

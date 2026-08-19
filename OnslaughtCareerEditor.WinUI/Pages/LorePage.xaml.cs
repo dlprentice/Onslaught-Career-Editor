@@ -16,12 +16,9 @@ namespace OnslaughtCareerEditor.WinUI.Pages
     public sealed partial class LorePage : Page
     {
         private const string LoreLibraryLoadFailureMessage = "The offline Lore library could not be loaded. Refresh the library or reinstall the app package if this keeps happening.";
-        private const string LoreDocumentLoadFailureMessage = "The selected Lore document could not be opened. Refresh the library and try again.";
-        private const string LoreNavigationFailureMessage = "The selected Lore link could not be opened. Refresh the library and try again.";
         private const string LoreHistoryFailureMessage = "That Lore history entry could not be reopened. Refresh the library and try again.";
         private const string LoreHomeFailureMessage = "The Lore home document could not be opened. Refresh the library and try again.";
         private const string LoreExternalOpenFailureMessage = "That Lore document could not be handed to your browser. Try again once the library has finished loading.";
-        private const string LoreDocumentTooltipFallback = "Offline Lore document";
 
         private readonly LoreBrowserService _service = new();
         private readonly Dictionary<string, LoreDocument> _documentLookup = new(StringComparer.OrdinalIgnoreCase);
@@ -130,11 +127,11 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 }
                 else
                 {
-                    CurrentDocumentTextBlock.Text = "No documents found";
-                    CurrentPathTextBlock.Text = "The lore library did not produce any readable documents.";
+                    CurrentDocumentTextBlock.Text = LorePageText.EmptyLibraryNextStep;
+                    CurrentPathTextBlock.Text = LorePageText.EmptyLibraryNextStep;
                     ShowReaderPlaceholder(
-                        "No documents found",
-                        "The lore reader is ready, but the current library scan did not return any readable files.");
+                        LorePageText.EmptyLibraryNextStep,
+                        LorePageText.EmptyLibraryNextStep);
                 }
 
                 UpdateCounts();
@@ -294,7 +291,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             string documentKey = _service.NormalizeDocumentKey(filePath);
             if (!_service.DocumentExists(documentKey))
             {
-                throw new FileNotFoundException("The selected lore document was not found.", documentKey);
+                throw new FileNotFoundException(LorePageText.DocumentLoadFailed);
             }
 
             if (addToHistory && !_suppressHistory && !string.IsNullOrWhiteSpace(_currentSourcePath))
@@ -338,8 +335,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 // A blank reader panel is exactly the failure this page was
                 // rebuilt to eliminate; say so rather than painting nothing.
                 ShowReaderPlaceholder(
-                    "Nothing to read here",
-                    "This Lore document loaded successfully but contains no readable content.");
+                    LorePageText.EmptyLibraryNextStep,
+                    LorePageText.EmptyLibraryNextStep);
                 return;
             }
 
@@ -410,7 +407,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
             catch
             {
-                ShowReaderPlaceholder("Could not navigate link", LoreNavigationFailureMessage);
+                ShowReaderPlaceholder("Could not navigate link", LorePageText.LinkOpenFailed);
                 AppStatusService.SetStatus("Lore: navigation failed");
             }
         }
@@ -583,7 +580,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
             catch
             {
-                ShowReaderPlaceholder("Could not load document", LoreDocumentLoadFailureMessage);
+                ShowReaderPlaceholder("Could not load document", LorePageText.DocumentLoadFailed);
                 AppStatusService.SetStatus("Lore: load failed");
             }
             finally
@@ -749,7 +746,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             else
             {
                 LibraryCountTextBlock.Text = $"{visibleDocuments} matching documents";
-                PaneStateTextBlock.Text = $"Filtered results for \"{query}\".";
+                PaneStateTextBlock.Text = LorePageText.DescribeSearchStatus(query, visibleDocuments);
             }
         }
 
@@ -827,21 +824,17 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         private string ResolveToolTipPath(string sourcePath)
         {
-            if (_documentLookup.TryGetValue(sourcePath, out LoreDocument? document) &&
-                !string.IsNullOrWhiteSpace(document.RelativePath))
+            if (_documentLookup.TryGetValue(sourcePath, out LoreDocument? document))
             {
-                return document.RelativePath;
+                return LorePageText.BuildDocumentTooltip(document.Title, document.RelativePath, sourcePath);
             }
 
             if (IsLorePackSourcePath(sourcePath))
             {
-                return LoreDocumentTooltipFallback;
+                return LorePageText.DocumentTooltipFallback;
             }
 
-            string fileName = Path.GetFileName(sourcePath);
-            return string.IsNullOrWhiteSpace(fileName)
-                ? LoreDocumentTooltipFallback
-                : fileName;
+            return LorePageText.BuildDocumentTooltip(title: null, relativePath: null, sourcePath);
         }
 
         private static string BuildNodeKey(LoreTreeItem item, string? parentKey, int index)

@@ -65,6 +65,9 @@ namespace OnslaughtCareerEditor.AppCore
         public const string EnhancedPreviewProfileId = "enhanced-edition-preview";
         public const string DebugCameraPreviewProfileId = "debug-camera-preview";
         public const string CustomProfileId = "custom";
+        public const string PatchRowNotSelectable = "That patch row is not selectable.";
+        public const string ProfilePresetUnknown = "That copy profile is not available.";
+        public const string ProfilePresetNotReady = "That copy profile cannot be used yet.";
 
         private static readonly string[] s_windowedCompatibilityKeys =
         {
@@ -106,7 +109,7 @@ namespace OnslaughtCareerEditor.AppCore
                 "16:9 gameplay and modern mouse aiming",
                 "Copied executable and default options",
                 "Verified in copied Level 100 gameplay at 1600x900 on the supported Steam specimen.",
-                "Applies the complete 28-region aspect/FOV correction, launches the supported 1600x900 windowed baseline, selects the retail 16:9 option, and uses minimum mouse sensitivity in the app-owned copy.",
+                "Applies the complete 28-region aspect/FOV correction, launches the supported 1600x900 windowed baseline, selects the retail 16:9 option, and uses minimum mouse sensitivity in the safe copy.",
                 s_windowedCompatibilityKeys,
                 new[] { "-res", "1600", "900" },
                 new[] { "screenShape=1", "mouseLookSensitivity=0.1" },
@@ -377,7 +380,7 @@ namespace OnslaughtCareerEditor.AppCore
         {
             SafeCopyProfilePreset? preset = s_profileCatalogLoad.Presets.FirstOrDefault(preset =>
                 string.Equals(preset.Id, profileId, StringComparison.OrdinalIgnoreCase));
-            return preset ?? throw new InvalidOperationException($"Unknown safe-copy profile preset: {profileId}");
+            return preset ?? throw new InvalidOperationException(ProfilePresetUnknown);
         }
 
         public static string SafeCopyProfileCatalogVersion => s_profileCatalogLoad.SchemaVersion;
@@ -393,7 +396,7 @@ namespace OnslaughtCareerEditor.AppCore
             SafeCopyProfilePreset preset = GetSafeCopyProfilePreset(profileId);
             if (!preset.IsSelectable)
             {
-                throw new InvalidOperationException($"{preset.DisplayName} cannot produce patch keys yet.");
+                throw new InvalidOperationException(ProfilePresetNotReady);
             }
 
             return preset.PatchKeys.ToArray();
@@ -426,7 +429,7 @@ namespace OnslaughtCareerEditor.AppCore
                 !visibleSpecs.Any(spec => string.Equals(spec.Key, key, StringComparison.OrdinalIgnoreCase)));
             if (!string.IsNullOrWhiteSpace(unknownKey))
             {
-                return $"Unknown or hidden patch row is not selectable: {unknownKey}.";
+                return PatchRowNotSelectable;
             }
 
             var selected = visibleSpecs
@@ -597,11 +600,11 @@ namespace OnslaughtCareerEditor.AppCore
                     schemaVersion,
                     catalogHash,
                     UsingFallback: false,
-                    Status: $"Loaded safe-copy profile catalog from {catalogPath}");
+                    Status: "Loaded the safe-copy profile catalog.");
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException or InvalidOperationException)
             {
-                return FallbackProfileCatalog($"Profile catalog read failed ({ex.Message}); using built-in safe-copy profile presets.");
+                return FallbackProfileCatalog("Profile catalog could not be read; using built-in safe-copy profile presets.");
             }
         }
 

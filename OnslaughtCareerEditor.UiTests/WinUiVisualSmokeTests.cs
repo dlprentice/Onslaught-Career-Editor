@@ -152,10 +152,10 @@ public class WinUiVisualSmokeTests
             evidenceDir,
             "04-asset-preview-scrolled.png",
             initialTag: "assets",
-            expectedText: "Copy path",
+            expectedText: "Copy file",
             initialAssetSubTab: 0,
             assetCatalogPath: assetCatalogFixture,
-            beforeCapture: window => ScrollIntoViewByAutomationId(window, "AssetCopyExportPathButton"));
+            beforeCapture: window => ScrollIntoViewByAutomationId(window, "AssetCopyExportFileButton"));
         CaptureConfiguredTab(
             exePath,
             evidenceDir,
@@ -385,7 +385,7 @@ public class WinUiVisualSmokeTests
             evidenceDir,
             "asset-library-sidecar-texture.png",
             initialTag: "assets",
-            expectedText: "Sidecar texture preview: orphan_sidecar.png",
+            expectedText: "Texture preview: orphan_sidecar.png",
             settleMilliseconds: 1_000,
             initialAssetSubTab: 1,
             assetCatalogPath: assetCatalogFixture,
@@ -737,7 +737,7 @@ public class WinUiVisualSmokeTests
         Assert.That(metadata, Does.Contain("polygon index entries"));
         string textureLinks = TryGetName(FindByAutomationId(window, "AssetModelTextureLinks")) ?? string.Empty;
         Assert.That(textureLinks, Does.Contain("direct catalog texture link"));
-        Assert.That(textureLinks, Does.Contain("Sidecar preview files"));
+        Assert.That(textureLinks, Does.Contain("Texture preview files"));
         Button openButton = FindByAutomationId(window, "AssetOpenExportButton").AsButton();
         Assert.That(openButton.IsEnabled, Is.True, $"Expected model export action to be enabled for {expectedTitle}.");
     }
@@ -766,19 +766,20 @@ public class WinUiVisualSmokeTests
         AssertSelectedTitle(window, expectedTitle);
         string textureLinks = TryGetName(FindByAutomationId(window, "AssetModelTextureLinks")) ?? string.Empty;
         Assert.That(textureLinks, Does.Contain("none are direct catalog rows"));
-        Assert.That(textureLinks, Does.Contain("Sidecar preview files: 1/1"));
+        Assert.That(textureLinks, Does.Contain("Texture preview files: 1/1"));
 
         AutomationElement sidecarButtonElement = FindByAutomationId(window, "AssetViewLinkedTextureButton");
         Button sidecarButton = sidecarButtonElement.AsButton();
         Assert.That(sidecarButton.IsEnabled, Is.True, "Expected a sidecar-only model to offer a sidecar texture preview.");
-        Assert.That(TryGetName(sidecarButtonElement) ?? string.Empty, Does.Contain("Preview sidecar texture"));
+        string leftoverButtonName = TryGetName(sidecarButtonElement) ?? string.Empty;
+        Assert.That(leftoverButtonName, Does.Contain("Preview texture"));
+        Assert.That(leftoverButtonName.ToLowerInvariant(), Does.Not.Contain("sidecar"));
         sidecarButton.Invoke();
         Thread.Sleep(750);
 
         _ = FindByAutomationId(window, "AssetTexturePreviewImage");
         string previewTitle = TryGetName(FindByAutomationId(window, "AssetPreviewTitle")) ?? string.Empty;
-        Assert.That(previewTitle, Does.Contain("Sidecar texture preview"));
-        Assert.That(previewTitle, Does.Contain(expectedFileName));
+        Assert.That(previewTitle, Is.EqualTo($"Texture preview: {expectedFileName}"));
     }
 
     private static void AssertGoodieModelSelection(Window window, string searchText, string expectedTitle)

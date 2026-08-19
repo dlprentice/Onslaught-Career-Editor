@@ -715,7 +715,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 Assert.False(row.ReadablePng);
                 Assert.Null(row.Width);
                 Assert.Null(row.Height);
-                Assert.Contains("validation", row.Status, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(AssetCatalogReadabilityService.ExportCouldNotBeOpened, row.Status);
             }
             finally
             {
@@ -905,6 +905,19 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                     Directory.Delete(fakeGameRoot, recursive: true);
                 }
             }
+        }
+
+        [Fact]
+        public void BuildMissingCatalogStatus_NamesTheFolderNotAPath()
+        {
+            string attempted = Path.Combine("C:", "Games", "export-catalog");
+            string status = AssetCatalogLoadStatusText.BuildMissingCatalogStatus(attempted, detectedGameDirectory: null);
+
+            Assert.Contains("That folder does not contain catalog.json.", status);
+            Assert.DoesNotContain("The selected folder", status, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("selected path", status, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain(attempted, status, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain(":\\", status);
         }
 
         [Fact]

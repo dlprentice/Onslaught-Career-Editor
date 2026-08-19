@@ -17,7 +17,7 @@ namespace OnslaughtCareerEditor.WinUI.Media
 
         public VideoPlaybackWindow()
         {
-            Title = "Onslaught Career Editor Video Player";
+            Title = "Onslaught Toolkit - Video Player";
             Content = new Grid
             {
                 Background = new SolidColorBrush(ColorHelper.FromArgb(255, 0, 0, 0)),
@@ -49,8 +49,8 @@ namespace OnslaughtCareerEditor.WinUI.Media
             }
 
             Title = string.IsNullOrWhiteSpace(title)
-                ? "Onslaught Career Editor Video Player"
-                : $"Onslaught Career Editor Video Player - {title}";
+                ? "Onslaught Toolkit - Video Player"
+                : $"Onslaught Toolkit - Video Player - {title}";
 
             Activate();
 

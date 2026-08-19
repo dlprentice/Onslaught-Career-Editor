@@ -1502,6 +1502,29 @@ public sealed class SimulationTests
     }
 
     [Fact]
+    public void HoldingChargeWeapon_FillsThePulseCannonPodInTenTicks()
+    {
+        Simulation simulation = CreateFiringRangeExerciseSimulation();
+        Assert.True(simulation.Snapshot.Level100PulseCannonEnabled);
+        Assert.Equal(
+            Level100MissionWeapon.PulseCannonPod,
+            simulation.Snapshot.Level100WalkerSelectedWeapon);
+
+        var charge = new SimInput(0, 0, SimActions.ChargeWeapon);
+        charge.Validate();
+        Assert.Equal(0x00000000u, simulation.Level100PulseCannonChargeBits);
+
+        for (int sample = 0; sample < 10; sample++)
+        {
+            simulation.Step(charge);
+        }
+
+        Assert.Equal(0x42C80000u, simulation.Level100PulseCannonChargeBits);
+        simulation.Step(charge);
+        Assert.Equal(0x42C80000u, simulation.Level100PulseCannonChargeBits);
+    }
+
+    [Fact]
     public void SnapshotCollections_DoNotExposeMutableArrays()
     {
         Simulation simulation = CreatePlayingSimulation();

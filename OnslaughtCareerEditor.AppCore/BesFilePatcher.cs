@@ -175,6 +175,21 @@ namespace OnslaughtCareerEditor.AppCore
             public BindingSlotOverride Slot1 { get; } = new();
         }
 
+        public const string PatchUnreadable =
+            "That file could not be patched. Nothing was changed.";
+
+        public const string CareerSaveRequiresBesOutput =
+            "Career save patching requires a .bes output file.";
+
+        public const string GameOptionsRequiresBeaOutput =
+            "Game options patching requires a .bea output file.";
+
+        public const string PatchRequiresBesOrBeaInput =
+            "Patching requires a .bes career save or .bea options input file.";
+
+        public const string BindingsDecodeFailed =
+            "Bindings could not be decoded.";
+
         // ---------- layout constants ----------
         // File format confirmed via Ghidra static analysis of BEA.exe (Feb 2026)
         //
@@ -529,9 +544,11 @@ namespace OnslaughtCareerEditor.AppCore
                     return PatchResult.Fail(discardedOverrideRequest);
                 }
 
-                inputPath = FileMutationSafety.NormalizeLocalPath(inputPath, "Input path");
-                outputPath = FileMutationSafety.NormalizeLocalPath(outputPath, "Output path");
-                ValidatePatchExtensions(inputPath, outputPath);
+                inputPath = FileMutationSafety.NormalizeLocalPath(inputPath, "Input file");
+                outputPath = FileMutationSafety.NormalizeLocalPath(outputPath, "Output file");
+                string? extensionError = DescribeInvalidPatchExtension(inputPath, outputPath);
+                if (extensionError is not null)
+                    return PatchResult.Fail(extensionError);
 
                 string? copyOptionsPath = CopyOptionsEntries || CopyOptionsTail
                     ? CopyOptionsFromPath
@@ -677,11 +694,11 @@ namespace OnslaughtCareerEditor.AppCore
                 ApplyOptionsTailOverrides(buf);
 
                 mutation.Commit(buf);
-                return PatchResult.Ok($"Successfully patched: {outputPath}");
+                return PatchResult.Ok($"Successfully patched: {Path.GetFileName(outputPath)}");
             }
             catch (Exception ex)
             {
-                return PatchResult.Fail(ex.Message);
+                return PatchResult.Fail(DescribeCaughtPatchFailure(ex));
             }
         }
 
@@ -710,12 +727,12 @@ namespace OnslaughtCareerEditor.AppCore
                     return PatchResult.Fail("Select both input and output files before patching.");
                 }
 
-                inputPath = FileMutationSafety.NormalizeLocalPath(inputPath, "Input path");
-                outputPath = FileMutationSafety.NormalizeLocalPath(outputPath, "Output path");
+                inputPath = FileMutationSafety.NormalizeLocalPath(inputPath, "Input file");
+                outputPath = FileMutationSafety.NormalizeLocalPath(outputPath, "Output file");
                 if (!string.Equals(Path.GetExtension(inputPath), ".bes", StringComparison.OrdinalIgnoreCase) ||
                     !string.Equals(Path.GetExtension(outputPath), ".bes", StringComparison.OrdinalIgnoreCase))
                 {
-                    return PatchResult.Fail("Goodie state patching requires .bes input and output paths.");
+                    return PatchResult.Fail("Goodie state patching requires .bes input and output files.");
                 }
 
                 using GuardedFileMutation mutation = outputAuthorization is null
@@ -757,11 +774,11 @@ namespace OnslaughtCareerEditor.AppCore
                 }
 
                 mutation.Commit(buf);
-                return PatchResult.Ok($"Patched {statesByIndex.Count} Goodie state override(s): {outputPath}");
+                return PatchResult.Ok($"Patched {statesByIndex.Count} Goodie state override(s): {Path.GetFileName(outputPath)}");
             }
             catch (Exception ex)
             {
-                return PatchResult.Fail(ex.Message);
+                return PatchResult.Fail(DescribeCaughtPatchFailure(ex));
             }
         }
 
@@ -833,25 +850,36 @@ namespace OnslaughtCareerEditor.AppCore
                 Array.Copy(srcBuf, tailStartDest, destBuf, tailStartDest, destBuf.Length - tailStartDest);
         }
 
-        private static void ValidatePatchExtensions(string inputPath, string outputPath)
+        private static string DescribeCaughtPatchFailure(Exception error)
+        {
+            if (FileMutationSafety.TryGetKnownRefusal(error, out string? refusal) &&
+                !string.IsNullOrWhiteSpace(refusal))
+            {
+                return refusal;
+            }
+
+            return PatchUnreadable;
+        }
+
+        private static string? DescribeInvalidPatchExtension(string inputPath, string outputPath)
         {
             string inputExtension = Path.GetExtension(inputPath);
             string outputExtension = Path.GetExtension(outputPath);
             if (string.Equals(inputExtension, ".bes", StringComparison.OrdinalIgnoreCase))
             {
                 if (!string.Equals(outputExtension, ".bes", StringComparison.OrdinalIgnoreCase))
-                    throw new InvalidOperationException("Career save patching requires a .bes output path.");
-                return;
+                    return CareerSaveRequiresBesOutput;
+                return null;
             }
 
             if (string.Equals(inputExtension, ".bea", StringComparison.OrdinalIgnoreCase))
             {
                 if (!string.Equals(outputExtension, ".bea", StringComparison.OrdinalIgnoreCase))
-                    throw new InvalidOperationException("Game options patching requires a .bea output path.");
-                return;
+                    return GameOptionsRequiresBeaOutput;
+                return null;
             }
 
-            throw new InvalidOperationException("Patching requires a .bes career save or .bea options input path.");
+            return PatchRequiresBesOrBeaInput;
         }
 
         private void ApplyOptionsEntryOverrides(byte[] buf)
@@ -1687,10 +1715,10 @@ namespace OnslaughtCareerEditor.AppCore
 
                 return analysis;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 analysis.IsValid = false;
-                analysis.ErrorMessage = ex.Message;
+                analysis.ErrorMessage = SaveAnalyzerService.AnalysisFailed;
                 return analysis;
             }
         }
@@ -1852,9 +1880,9 @@ namespace OnslaughtCareerEditor.AppCore
 
                 return result;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                result.ErrorMessage = ex.Message;
+                result.ErrorMessage = SaveAnalyzerService.ComparisonFailed;
                 return result;
             }
         }
@@ -2133,9 +2161,9 @@ namespace OnslaughtCareerEditor.AppCore
 
                         sb.AppendLine();
                     }
-                    catch (Exception ex)
+                    catch (Exception)
                     {
-                        sb.AppendLine($"  (Bindings decode failed: {ex.Message})");
+                        sb.AppendLine($"  ({BindingsDecodeFailed})");
                         sb.AppendLine();
                     }
                 }

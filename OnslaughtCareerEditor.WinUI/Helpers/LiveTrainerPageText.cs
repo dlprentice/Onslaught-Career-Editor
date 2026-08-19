@@ -239,6 +239,60 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         public const string NothingRunningNote =
             "Launch a copy from Windowed & Mods, start a mission, then press Watch the running copy.";
 
+        /// <summary>
+        /// Why Watch did not attach. Named here so the page never paints
+        /// <see cref="LiveTrainerAttachOutcome.Message"/>, which for a failed
+        /// open is the Win32 dump and can carry a path.
+        /// </summary>
+        public static string DescribeAttachRefusal(LiveTrainerAttachRefusal refusal)
+        {
+            return refusal switch
+            {
+                LiveTrainerAttachRefusal.NoProcessGiven =>
+                    NothingRunningNote,
+                LiveTrainerAttachRefusal.InstalledGameDirectory =>
+                    "That is your installed game. The trainer only watches a copy launched from Windowed & Mods.",
+                LiveTrainerAttachRefusal.NotAManagedProcess =>
+                    "That process was not launched by this app, so it was not opened.",
+                LiveTrainerAttachRefusal.NotRunning =>
+                    "That copied game is not running any more.",
+                LiveTrainerAttachRefusal.ProcessIdentityChanged =>
+                    "That is not the copied game this app started. Nothing was opened.",
+                LiveTrainerAttachRefusal.CouldNotOpen =>
+                    "Could not open that copied game. Nothing was read.",
+                _ => NothingRunningNote,
+            };
+        }
+
+        /// <summary>
+        /// What Set just did. Named here so the page never paints
+        /// <see cref="LiveTrainerWriteOutcome.Message"/>, which for a failed
+        /// write-open is the Win32 dump.
+        /// </summary>
+        public static string DescribeWriteOutcome(LiveTrainerWriteOutcome outcome)
+        {
+            if (outcome.Success)
+            {
+                return $"Set {LiveTrainerAddresses.NameOf(outcome.Vital)} to {outcome.Requested.ToString("0.##", CultureInfo.InvariantCulture)}.";
+            }
+
+            if (LooksLikeAProcessOpenDump(outcome.Message))
+                return "Could not open that copied game. Nothing was written.";
+
+            return string.IsNullOrWhiteSpace(outcome.Message)
+                ? "Could not change that value. Nothing was written."
+                : outcome.Message;
+        }
+
+        private static bool LooksLikeAProcessOpenDump(string? message)
+        {
+            if (string.IsNullOrWhiteSpace(message))
+                return false;
+
+            return message.Contains("Win32", StringComparison.OrdinalIgnoreCase)
+                || message.Contains("Could not open the game process", StringComparison.Ordinal);
+        }
+
         /// <summary>Where the app is in the attach cycle, in one line.</summary>
         public static string BuildAttachSummary(bool attached, string? copyName, string? message)
         {
@@ -269,8 +323,46 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
                 LiveTrainerReadStatus.Read =>
                     "Reading a running mission, but the numbers do not look like vitals - so nothing here "
                         + "will be changed. This is what a wrong field position looks like.",
-                _ => reading.Message,
+                _ => DescribeReadStatus(reading.Status),
             };
+        }
+
+        /// <summary>
+        /// Why a read did not produce vitals. Named here so the page never
+        /// paints <see cref="LiveTrainerReadResult.Message"/>.
+        /// </summary>
+        public static string DescribeReadStatus(LiveTrainerReadStatus status)
+        {
+            return status switch
+            {
+                LiveTrainerReadStatus.NotAttached =>
+                    "Not attached to a game.",
+                LiveTrainerReadStatus.ProcessGone =>
+                    "The copied game is no longer readable. It has probably closed.",
+                LiveTrainerReadStatus.NoMissionRunning =>
+                    "No mission is running. Start one in the copied game and the numbers appear here.",
+                LiveTrainerReadStatus.NoBattleEngine =>
+                    "A mission is loading but you are not in a vehicle yet.",
+                LiveTrainerReadStatus.PointerImplausible =>
+                    "The player slot held something that cannot be a player, so nothing is being shown.",
+                LiveTrainerReadStatus.PlayerUnreadable =>
+                    "The player was there a moment ago but could not be read. The mission may have just ended.",
+                LiveTrainerReadStatus.Read =>
+                    "Reading a running mission.",
+                _ => "Nothing could be read from the copied game.",
+            };
+        }
+
+        /// <summary>
+        /// Why Hold stopped. Named here so the page never paints
+        /// <see cref="LiveTrainerHoldTick.Message"/>.
+        /// </summary>
+        public static string DescribeHoldStop(LiveTrainerHoldTick tick)
+        {
+            if (tick.Reading.Status != LiveTrainerReadStatus.Read)
+                return $"Holding stopped. {DescribeReadStatus(tick.Reading.Status)}";
+
+            return "Holding stopped: the writes stopped landing.";
         }
 
         /// <summary>
@@ -313,10 +405,10 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
                 return "Watch a running copy first.";
 
             if (reading is null)
-                return "Nothing has been read yet.";
+                return "Wait for the first reading.";
 
             if (!reading.HasVitals)
-                return reading.Message;
+                return DescribeReadStatus(reading.Status);
 
             if (!reading.WritingCanBeOffered)
                 return "The numbers read back do not look like vitals, so nothing here will be changed.";

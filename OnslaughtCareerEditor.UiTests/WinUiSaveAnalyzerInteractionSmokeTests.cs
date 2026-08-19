@@ -12,6 +12,7 @@ using FlaUI.Core.Tools;
 using FlaUI.UIA3;
 using NUnit.Framework;
 using OnslaughtCareerEditor.AppCore;
+using OnslaughtCareerEditor.WinUI.Helpers;
 
 namespace OnslaughtCareerEditor.UiTests;
 
@@ -55,7 +56,7 @@ public class WinUiSaveAnalyzerInteractionSmokeTests
             Window window = WaitForMainWindow(app, automation);
 
             WaitForText(window, "1. Inspect a file", TimeSpan.FromSeconds(20));
-            SetTextBox(window, "SaveAnalyzerFilePath", Path.GetFullPath(savePath));
+            SetTextBox(window, "SaveAnalyzerInputFile", Path.GetFullPath(savePath));
             AutomationElement analyzeButton = FindByAutomationId(window, "SaveAnalyzerAnalyzeButton");
             bool analyzeReady = Retry.WhileFalse(() => analyzeButton.IsEnabled, TimeSpan.FromSeconds(5)).Success;
             Assert.That(analyzeReady, Is.True, "Expected Analyze / Reload to become enabled for the provided save path.");
@@ -164,7 +165,7 @@ public class WinUiSaveAnalyzerInteractionSmokeTests
             AssertCheckBoxState(window, "SaveEditorPatchKillsCheckBox", isChecked: false);
             Assert.That(patchButton.IsEnabled, Is.False, "Start empty must keep Write disabled until a section is selected.");
             Assert.That(TryGetName(FindByAutomationId(window, "SaveEditorFirstSaveStatus")), Does.Contain("Choose at least one change"));
-            Assert.That(TryGetName(FindByAutomationId(window, "SaveEditorAdvancedOverridesStatus")), Is.EqualTo("No advanced overrides active"));
+            Assert.That(TryGetName(FindByAutomationId(window, "SaveEditorAdvancedOverridesStatus")), Is.EqualTo(SaveEditorFirstSaveJourneyText.NoAdvancedOverridesNextStep));
             AutomationElement advancedExpander = FindByAutomationId(window, "SaveEditorAdvancedOverridesExpander");
             AutomationElement editorScroll = FindByAutomationId(window, "SaveEditorScrollViewer");
             ScrollIntoView(advancedExpander);

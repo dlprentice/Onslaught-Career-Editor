@@ -1,0 +1,163 @@
+using System.IO;
+using NUnit.Framework;
+
+namespace OnslaughtCareerEditor.UiTests;
+
+/// <summary>
+/// A catalog export that left the generated folder used to say
+/// "Catalog export paths". Name the exports and the folder.
+/// </summary>
+public class AssetCatalogFileSafetyHonestyTests
+{
+    [Test]
+    public void AnEscapedExportNamesTheFolderNotAPath()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "AssetCatalogFileSafety.cs"));
+
+        Assert.That(source, Does.Not.Contain("Catalog export paths must remain below"));
+        Assert.That(source, Does.Not.Contain("Catalog export paths must be bundle-root-relative."));
+        Assert.That(source, Does.Not.Contain("Catalog exports must be bundle-root-relative."));
+        Assert.That(source, Does.Contain("ExportsMustStayInside"));
+        Assert.That(source, Does.Contain("Catalog exports must stay inside the selected generated export folder."));
+        Assert.That(source, Does.Not.Contain("bundle-root-relative."));
+    }
+
+    [Test]
+    public void ACatalogWithoutAParentNamesTheFolderNotADirectory()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "AssetCatalogFileSafety.cs"));
+
+        Assert.That(source, Does.Not.Contain("has no containing directory."));
+        Assert.That(source, Does.Contain("The asset catalog has no containing folder."));
+        Assert.That(source, Does.Contain("That catalog export file has no containing folder."));
+        Assert.That(source, Does.Not.Contain("{label} has no containing folder."));
+    }
+
+    [Test]
+    public void AnEscapedCatalogFolderNamesTheFolderNotADirectory()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "AssetCatalogFileSafety.cs"));
+
+        Assert.That(source, Does.Not.Contain("The asset catalog directory resolves outside"));
+        Assert.That(source, Does.Contain("The asset catalog folder resolves outside the selected generated export folder."));
+        Assert.That(source, Does.Not.Contain("directory resolves outside the selected generated export root."));
+        Assert.That(source, Does.Contain("That catalog export folder resolves outside the selected generated export folder."));
+        Assert.That(source, Does.Not.Contain("The asset catalog file resolves outside the selected generated export root."));
+        Assert.That(source, Does.Contain("The asset catalog file resolves outside the selected generated export folder."));
+        Assert.That(source, Does.Not.Contain("{label} resolves outside the selected generated export root."));
+        Assert.That(source, Does.Not.Contain("{label} resolves outside the selected generated export folder."));
+        Assert.That(source, Does.Not.Contain("{label} folder resolves outside"));
+        Assert.That(source, Does.Contain("That catalog export file resolves outside the selected generated export folder."));
+    }
+
+    [Test]
+    public void AMissingExportDoesNotAttachTheFilePath()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "AssetCatalogFileSafety.cs"));
+
+        Assert.That(source, Does.Not.Contain(
+            "throw new FileNotFoundException(\"The catalog export file does not exist.\", Path);"));
+        Assert.That(source, Does.Contain("That catalog export file could not be found."));
+        Assert.That(source, Does.Not.Contain("FileNotFoundException(\"That catalog export file could not be found.\","));
+        Assert.That(source, Does.Not.Contain("\"Asset catalog path\""));
+        Assert.That(source, Does.Not.Contain("\"Catalog export path\""));
+        Assert.That(source, Does.Contain("\"Asset catalog\""));
+        Assert.That(source, Does.Contain("\"Catalog export file\""));
+    }
+
+    [Test]
+    public void ALinkedCatalogNamesAShortcutOrLinkNotAReparsePoint()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "AssetCatalogFileSafety.cs"));
+
+        Assert.That(source, Does.Not.Contain("cannot be a symbolic link or other reparse point."));
+        Assert.That(source, Does.Not.Contain("{label} cannot be a symbolic link"));
+        Assert.That(source, Does.Contain("FileMutationSafety.FileCannotUseLink"));
+    }
+
+    [Test]
+    public void ASharedCatalogFileIsNamedWithoutCallingItAHardlink()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "AssetCatalogFileSafety.cs"));
+
+        Assert.That(source, Does.Not.Contain("cannot be hardlinked to another file."));
+        Assert.That(source, Does.Contain("FileMutationSafety.FileCannotShareData"));
+    }
+
+    [Test]
+    public void ACatalogIdentityChangeNamesTheFolderNotARoot()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "AssetCatalogFileSafety.cs"));
+
+        Assert.That(source, Does.Not.Contain("The catalog root or catalog file changed identity"));
+        Assert.That(source, Does.Not.Contain("The catalog generated export root changed"));
+        Assert.That(source, Does.Contain("CatalogFolderChangedIdentity"));
+        Assert.That(source, Does.Contain("ExportFolderChanged"));
+        Assert.That(source, Does.Contain(
+            "The catalog folder or catalog.json changed identity after the catalog was loaded."));
+        Assert.That(source, Does.Contain(
+            "The generated export folder changed after the catalog was loaded."));
+    }
+
+    [Test]
+    public void CatalogSourceAccessNamesTheFolderNotARoot()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "AssetCatalogFileSafety.cs"));
+
+        Assert.That(source, Does.Not.Contain("trusted generated export root."));
+        Assert.That(source, Does.Contain("CatalogSourceNeedsExportFolder"));
+        Assert.That(source, Does.Contain(
+            "Catalog source access needs a loaded catalog and its generated export folder."));
+    }
+
+    [Test]
+    public void AMissingCatalogJsonNamesTheFolderNotABundleLayout()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "AssetCatalogFileSafety.cs"));
+
+        Assert.That(source, Does.Not.Contain("generated bundle layout"));
+        Assert.That(source, Does.Contain("CatalogJsonMissing"));
+        Assert.That(source, Does.Contain("The catalog folder no longer has catalog.json."));
+    }
+
+    [Test]
+    public void CatalogAccessNamesTheExportFolderNotATrustedRoot()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "AssetCatalogFileSafety.cs"));
+
+        Assert.That(source, Does.Not.Contain("Trusted asset export root"));
+        Assert.That(source, Does.Not.Contain("Snapshot trusted asset export root"));
+        Assert.That(source, Does.Contain("\"generated export folder\""));
+    }
+
+    [Test]
+    public void ACatalogWithoutIdentityNamesTheCatalogNotEvidence()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "AssetCatalogFileSafety.cs"));
+
+        Assert.That(source, Does.Not.Contain("trusted identity evidence"));
+        Assert.That(source, Does.Contain("CatalogIdentityMissing"));
+        Assert.That(source, Does.Contain("That catalog has no saved identity."));
+    }
+
+    [Test]
+    public void ACatalogLockNamesTheFolderNotADirectory()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "AssetCatalogFileSafety.cs"));
+
+        Assert.That(source, Does.Not.Contain("\"Asset catalog directory\""));
+        Assert.That(source, Does.Contain("\"asset catalog folder\""));
+    }
+}

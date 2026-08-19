@@ -1,0 +1,52 @@
+using System.IO;
+using NUnit.Framework;
+using OnslaughtCareerEditor.WinUI.Helpers;
+
+namespace OnslaughtCareerEditor.UiTests;
+
+/// <summary>
+/// Asset Library used to say a linked or sidecar texture was unavailable.
+/// Name the next step, the same leftover SidecarPreviewMissing already closed.
+/// </summary>
+public class AssetLinkedTextureHonestyTests
+{
+    [Test]
+    public void AMissingLinkedTextureSaysWhatToDoNext()
+    {
+        string page = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot,
+            "OnslaughtCareerEditor.WinUI",
+            "Pages",
+            "AssetLibraryPage.xaml.cs"));
+
+        Assert.That(page, Does.Contain("AssetLibraryPageText.SidecarPreviewMissing"));
+        Assert.That(page, Does.Not.Contain("no linked texture is available"));
+        Assert.That(page, Does.Not.Contain("sidecar texture preview file is unavailable"));
+        Assert.That(AssetLibraryPageText.SidecarPreviewMissing, Does.Contain("another export"));
+        Assert.That(AssetLibraryPageText.SidecarPreviewMissing.ToLowerInvariant(), Does.Not.Contain("unavailable"));
+        Assert.That(AssetLibraryPageText.SidecarPreviewMissing.ToLowerInvariant(), Does.Not.Contain("path"));
+    }
+
+    [Test]
+    public void ARefusedSidecarTextureNamesTheTextureNotATrustedRoot()
+    {
+        string page = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot,
+            "OnslaughtCareerEditor.WinUI",
+            "Pages",
+            "AssetLibraryPage.xaml.cs"));
+        string sentence = AssetLibraryPageText.SidecarPreviewRefused;
+
+        Assert.That(page, Does.Contain("AssetLibraryPageText.SidecarPreviewRefused"));
+        Assert.That(page, Does.Not.Contain("trusted-root"));
+        Assert.That(page, Does.Not.Contain("failed trusted-root validation"));
+        Assert.That(sentence, Is.EqualTo("Asset Library: that texture could not be opened."));
+        Assert.That(sentence, Does.Contain("texture"));
+        Assert.That(sentence.ToLowerInvariant(), Does.Not.Contain("sidecar"));
+        Assert.That(sentence.ToLowerInvariant(), Does.Not.Contain("trusted"));
+        Assert.That(sentence.ToLowerInvariant(), Does.Not.Contain("root"));
+        Assert.That(sentence.ToLowerInvariant(), Does.Not.Contain("path"));
+        Assert.That(sentence, Does.Not.Contain(":\\"));
+        Assert.That(sentence, Does.Not.Contain("/"));
+    }
+}

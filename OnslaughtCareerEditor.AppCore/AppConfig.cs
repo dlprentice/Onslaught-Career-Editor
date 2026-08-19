@@ -347,6 +347,24 @@ namespace OnslaughtCareerEditor.AppCore
             return new GameDirectoryInspection(status, fullPath, hasExe, hasData, hasMusic, hasVideo);
         }
 
+        /// <summary>
+        /// The BEA.exe inside a game folder, if one is there. Layout only: it does not
+        /// hash the file or decide whether it is the known retail build.
+        /// </summary>
+        public static string? TryGetGameExecutablePath(string? gameDirectory)
+        {
+            if (string.IsNullOrWhiteSpace(gameDirectory) || !Directory.Exists(gameDirectory))
+                return null;
+
+            string fullPath = Path.GetFullPath(gameDirectory);
+            string bea = Path.Combine(fullPath, "BEA.exe");
+            if (File.Exists(bea))
+                return bea;
+
+            string lowercase = Path.Combine(fullPath, "bea.exe");
+            return File.Exists(lowercase) ? lowercase : null;
+        }
+
         private static IEnumerable<string> GetGameDirectoryCandidates()
         {
             string? overrideCandidates = Environment.GetEnvironmentVariable(GameDirectoryCandidatesEnvironmentVariable);

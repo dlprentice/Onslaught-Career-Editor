@@ -60,11 +60,10 @@ public sealed partial class RetailFrontendFlow
     /// Measured on nine such rows across the Sound and Video frames, retail's
     /// label-side ink always ends at x=316 and its value-side ink always begins at
     /// x=323. Right-aligning the label (colon included) so its advance ends at 319
-    /// and starting the value at 322 reproduces both to within one pixel, the
-    /// residual being per-glyph left bearing rather than layout.
+    /// and starting the value from RetailOptionsDropdownValueDest.DestX
+    /// reproduces both to within the known per-glyph left-bearing residual.
     /// </summary>
     private const float OptionLabelRightX = 319f;
-    private const float OptionValueLeftX = 322f;
 
     private const float OptionRowCenterX = 320f;
 
@@ -117,18 +116,12 @@ public sealed partial class RetailFrontendFlow
 
     // ---- Dropdown popup -------------------------------------------------
     //
-    // MEASURED on fep-options-sound-quality-dropdown-640x480.png. The panel is
-    // OPAQUE (proved by the subagent pass: 570 distinct background colours,
-    // luma 0..255, all mapping to the single value (40,56,104) - no blend can do
-    // that), its entries run on a 16px pitch that is unrelated to the page's 20,
-    // and the CURRENT entry sits at the expanded row's own baseline.
-    //   panel   x322.5..529.5, y259.5..307.5  (207 x 48 for three entries)
-    //   entries baselines 271 / 287 / 303, ink from x324
-    private const float DropdownPanelLeft = 322.5f;
+    // The panel is OPAQUE (proved by the subagent pass: 570 distinct background
+    // colours, luma 0..255, all mapping to the single value (40,56,104) - no
+    // blend can do that). Entries run on a 16px pitch that is unrelated to the
+    // page's 20. Dest and width are RetailOptionsDropdownPanelDest, not the
+    // measured 322.5 / 15.5 pair.
     private const float DropdownEntryPitch = 16f;
-    private const float DropdownTextLeft = 323f;
-    private const float DropdownPanelPad = 3f;
-    private const float DropdownPanelTopInset = 15.5f;
 
     // ---- Colours --------------------------------------------------------
     //
@@ -153,8 +146,6 @@ public sealed partial class RetailFrontendFlow
     private static readonly Color BarEmpty = new(80f / 255f, 80f / 255f, 80f / 255f, 1f);
 
     private static readonly Color DropdownPanel = new(40f / 255f, 56f / 255f, 104f / 255f, 1f);
-    private static readonly Color DropdownEntry = new(128f / 255f, 128f / 255f, 128f / 255f, 1f);
-    private static readonly Color DropdownEntrySelected = Colors.White;
 
     private static readonly string[] OptionsPageTitles =
     [
@@ -279,7 +270,62 @@ public sealed partial class RetailFrontendFlow
 
     private void DrawOptionRow(RetailOptionsRow row, float top, bool selected)
     {
-        Color color = selected ? OptionSelected : OptionNormal;
+        // CApplyMenuItem::Render 0x004A4310 packs the cosine and forwards
+        // it to CMenuItem__Render, which ANDs ESI with that incoming at
+        // 0x004A33FC after selected 0xFFFFCC00 / disabled 0x50505050.
+        // CMenuItemDropdown::Render 0x004A3C69 uses the same cosine as
+        // EDI itself — it does not call CMenuItem__Render.
+        // CMenuItem__Render dest leftover is RetailOptionsMenuItemDest:
+        // incoming dest X minus integer-half SIZE.cx. Dest Y keeps the
+        // row top. Nearby 5.0 is leftover min dest X, not dest Y.
+        // CMenuItemDropdown dest leftover is RetailOptionsDropdownDest:
+        // incoming dest X minus full SIZE.cx. Dest Y keeps the row top.
+        // Nearby 5.0 is leftover min dest X. Nearby 2.0 is not dest.
+        // CMenuItemDropdown collapsed value dest leftover is
+        // RetailOptionsDropdownValueDest: incoming dest X plus the pad
+        // leftover. Dest Y keeps the row top. The pad constant is not dest.
+        // CMenuItemDropdown expanded list dest leftover is
+        // RetailOptionsDropdownListDest: collapsed dest leftover plus the
+        // pad leftover. Dest is not the pad constant.
+        // CMenuItemDropdown expanded list dest Y leftover is
+        // RetailOptionsDropdownListDestY: panel dest leftover plus index
+        // times cy. Dest Y does not consult currentIndex.
+        // CMenuItemDropdown expanded list colour leftover is
+        // RetailOptionsDropdownListColor: 0xFF404040, or -1 when the
+        // loop index equals currentIndex. That is colour, not dest.
+        // CMenuItemDropdown expanded list hover leftover is
+        // RetailOptionsDropdownListHover: call 0x004693D0 then write
+        // currentIndex. That is hover, not dest and not colour.
+        // CMenuItemDropdown expanded list click leftover is
+        // RetailOptionsDropdownListClick: call 0x00469400 then write
+        // currentIndex and the expand byte. That is click, not dest,
+        // not colour, and not hover.
+        // CMenuItemDropdown expanded panel dest leftover is
+        // RetailOptionsDropdownPanelDest: collapsed dest leftover, dest Y
+        // incoming minus integer-half of (count-1)*cy, width max cx plus 3.
+        // CMenuItem__Render icon dest leftover is RetailOptionsMenuItemIconDest:
+        // incoming dest X minus integer-half SIZE.cx via fsubr.
+        // RetailOptionsMenuItemIconDest.DestX. Dest Y keeps the row
+        // top. No leftover min dest X. Nearby 20.0 is leftover
+        // label pitch, not dest. Do not invent a prefix draw.
+        float seconds = (float)_animationSeconds;
+        Color color;
+        if (row.Kind == RetailOptionsRowKind.Dropdown &&
+            RetailOptionsApplyPulse.DropdownRowIsPending(row.CommittedIndex, row.CurrentIndex))
+        {
+            color = RetailColor(RetailOptionsApplyPulse.PackedColor(true, seconds));
+        }
+        else if (row.Action == RetailOptionsAction.Apply && _options.HasPendingChanges)
+        {
+            color = RetailColor(RetailOptionsMenuItemColor.PackedColor(
+                selected,
+                enabled: true,
+                RetailOptionsApplyPulse.PackedColor(true, seconds)));
+        }
+        else
+        {
+            color = selected ? OptionSelected : OptionNormal;
+        }
 
         switch (row.Kind)
         {
@@ -306,37 +352,47 @@ public sealed partial class RetailFrontendFlow
     }
 
     /// <summary>
-    /// Centred, floored to a whole pixel.
+    /// Centred on the incoming dest X leftover.
     ///
-    /// The floor is NOT cosmetic. A half-pixel origin makes Godot resample every
-    /// glyph, and the first capture of this page showed it: the bindings grid's
-    /// 4px-wide 'R' stem came out as a 5px run of half-intensity texels where
-    /// retail draws four full ones. Flooring reproduces retail's own ink columns
-    /// exactly - "Control configuration details" at x219, "Movement: Forward" at
-    /// x261, both measured off the retail frame.
+    /// CMenuItem__Render dest leftover is RetailOptionsMenuItemDest:
+    /// incoming dest X minus integer-half SIZE.cx. Dest Y keeps the
+    /// row top. Nearby leftover min dest X is not dest Y. The dest
+    /// is already a whole pixel, so this is not a half-pixel origin.
+    /// The 2px MeasureText residual stays open.
     /// </summary>
     private void DrawOptionTextCentered(string text, float top, Color color) =>
         DrawOptionsBodyText(
             text,
-            new Vector2(Mathf.Floor(OptionRowCenterX - (MeasureText(text, 1f) * 0.5f)), top),
+            new Vector2(
+                RetailOptionsMenuItemDest.DestX(OptionRowCenterX, (int)MeasureText(text, 1f)),
+                top),
             1f,
             color);
 
     /// <summary>
-    /// Label right-aligned so its colon lands on the fixed column, value
-    /// left-aligned from it. Retail pins the colon ink at x315..317 and the value
-    /// ink at x322 on every such row, while the label's left edge varies from
-    /// x44 to x265 - so this is a two-column layout, not a centred one.
+    /// Label right-aligned on the incoming dest leftover. Value dest is
+    /// incoming dest X plus the pad leftover. Dest Y keeps the row top.
     /// </summary>
     private void DrawLabelValueRow(string label, string value, float top, Color color)
     {
-        float labelWidth = MeasureText(label, 1f);
+        // Incoming dest X minus full SIZE.cx. Nearby leftover min dest X
+        // is not dest Y. Nearby 2.0 is not dest. The dest is already a
+        // whole pixel, so this is not a half-pixel origin. The 2px
+        // MeasureText residual stays open. Collapsed value dest leftover
+        // is incoming dest X plus the pad leftover.
+        // RetailOptionsDropdownValueDest.DestX. Dest Y keeps the row top.
         DrawOptionsBodyText(
             label,
-            new Vector2(Mathf.Floor(OptionLabelRightX - labelWidth), top),
+            new Vector2(
+                RetailOptionsDropdownDest.DestX(OptionLabelRightX, (int)MeasureText(label, 1f)),
+                top),
             1f,
             color);
-        DrawOptionsBodyText(value, new Vector2(OptionValueLeftX, top), 1f, color);
+        DrawOptionsBodyText(
+            value,
+            new Vector2(RetailOptionsDropdownValueDest.DestX(OptionLabelRightX), top),
+            1f,
+            color);
     }
 
     private void DrawValueBarRow(RetailOptionsRow row, float top, Color color)
@@ -414,26 +470,41 @@ public sealed partial class RetailFrontendFlow
             widest = Mathf.Max(widest, MeasureText(row.StateLabel(i), 1f));
         }
 
-        // Retail anchors the panel on the LIST, not on the row: the CURRENT entry
-        // occupies the expanded row's own y and the rest fall above and below it.
-        // Measured on the three-state Sound quality frame with Medium selected:
-        // panel y259.5..307.5 against that row's cell top 275, i.e. first entry at
-        // 275 - 1*16 = 259 and 15.5 of inset.
+        // Retail anchors the panel dest leftover on incoming dest Y minus
+        // integer-half of (count-1)*cy. Dest X is the collapsed dest leftover.
+        // Width is max cx plus the add ebp,3 leftover. Dest is not the pad.
         float height = row.States.Count * DropdownEntryPitch;
-        float panelTop = top - DropdownPanelTopInset - (row.CurrentIndex * DropdownEntryPitch);
-
         DrawRect(
-            new Rect2(DropdownPanelLeft, panelTop, widest + DropdownPanelPad, height),
+            new Rect2(
+                RetailOptionsDropdownPanelDest.DestX(OptionLabelRightX),
+                RetailOptionsDropdownPanelDest.DestY(
+                    top,
+                    row.States.Count,
+                    (int)DropdownEntryPitch),
+                RetailOptionsDropdownPanelDest.Width((int)widest),
+                height),
             DropdownPanel);
 
         for (int i = 0; i < row.States.Count; i++)
         {
-            float entryTop = top + ((i - row.CurrentIndex) * DropdownEntryPitch);
+            // Incoming dest X plus collapsed pad plus the pad leftover.
+            // Dest is not the pad constant. Dest Y is the panel dest
+            // leftover plus index times cy. Dest Y does not consult
+            // currentIndex. Colour leftover is
+            // RetailOptionsDropdownListColor: 0xFF404040, or -1 when
+            // the loop index equals currentIndex. That is colour, not
+            // dest.
             DrawOptionsBodyText(
                 row.StateLabel(i),
-                new Vector2(DropdownTextLeft, entryTop),
+                new Vector2(
+                    RetailOptionsDropdownListDest.DestX(OptionLabelRightX),
+                    RetailOptionsDropdownListDestY.DestY(
+                        top,
+                        row.States.Count,
+                        (int)DropdownEntryPitch,
+                        i)),
                 1f,
-                i == row.CurrentIndex ? DropdownEntrySelected : DropdownEntry);
+                RetailColor(RetailOptionsDropdownListColor.PackedColor(i, row.CurrentIndex)));
         }
     }
 
@@ -545,6 +616,8 @@ public sealed partial class RetailFrontendFlow
 
     internal void BackFromOptionsForCapture() => BackFromOptions();
 
+    internal bool CancelOptionsForCapture() => HandleOptionsPointerCancel();
+
     // =====================================================================
     // Input
     // =====================================================================
@@ -634,6 +707,44 @@ public sealed partial class RetailFrontendFlow
 
     private bool HandleOptionsPointerMotion(Vector2 design)
     {
+        // CMenuItemDropdown expanded list hover leftover is
+        // RetailOptionsDropdownListHover: call 0x004693D0 then write
+        // currentIndex. That is hover, not dest and not colour. Click
+        // at 0x004A4010 is a later leftover.
+        if (_options.IsExpanded)
+        {
+            RetailOptionsRow expanded = _options.SelectedRow;
+            float rowTop = _options.RowTop(_options.SelectedIndex);
+            int labelCx = (int)MeasureText(expanded.Label, 1f);
+            for (int i = 0; i < expanded.States.Count; i++)
+            {
+                if (!RetailOptionsDropdownListHover.Contains(
+                    design.X,
+                    design.Y,
+                    RetailOptionsDropdownListDest.DestX(OptionLabelRightX),
+                    RetailOptionsDropdownListDestY.DestY(
+                        rowTop,
+                        expanded.States.Count,
+                        (int)DropdownEntryPitch,
+                        i),
+                    labelCx,
+                    (int)DropdownEntryPitch))
+                {
+                    continue;
+                }
+
+                if (!_options.HoverState(i))
+                {
+                    return false;
+                }
+
+                RequestAudioCue(RetailFrontendAudioCue.Move);
+                return true;
+            }
+
+            return false;
+        }
+
         // Hovering IS selecting: the retail hover path sets the selected index and
         // does not consult IsEnabled, and the click path then injects the same
         // 0x2C/0x33 pair the keyboard produces.
@@ -656,18 +767,41 @@ public sealed partial class RetailFrontendFlow
 
         if (_options.IsExpanded)
         {
+            // CMenuItemDropdown expanded list click leftover is
+            // RetailOptionsDropdownListClick: call 0x00469400 then write
+            // currentIndex and the expand byte. That is click, not dest
+            // and not colour. Hover leftover already owns 0x004A3FA6.
+            // CMenuItemDropdown click-hit sound leftover is
+            // RetailOptionsDropdownListClickSound: push 1 then
+            // call 0x00468770. That is not dest, not colour, not
+            // hover, not click, and not cancel.
             RetailOptionsRow expanded = _options.SelectedRow;
             float rowTop = _options.RowTop(_options.SelectedIndex);
+            int labelCx = (int)MeasureText(expanded.Label, 1f);
             for (int i = 0; i < expanded.States.Count; i++)
             {
-                float entryTop = rowTop + ((i - expanded.CurrentIndex) * DropdownEntryPitch);
-                if (design.Y >= entryTop && design.Y < entryTop + DropdownEntryPitch &&
-                    design.X >= DropdownPanelLeft)
+                if (!RetailOptionsDropdownListClick.Contains(
+                    design.X,
+                    design.Y,
+                    RetailOptionsDropdownListDest.DestX(OptionLabelRightX),
+                    RetailOptionsDropdownListDestY.DestY(
+                        rowTop,
+                        expanded.States.Count,
+                        (int)DropdownEntryPitch,
+                        i),
+                    labelCx,
+                    (int)DropdownEntryPitch))
                 {
-                    _options.SelectState(i);
-                    ConfirmOptions();
-                    return true;
+                    continue;
                 }
+
+                _options.SelectState(i);
+                if (RetailOptionsDropdownListClickSound.Applies(hit: true))
+                {
+                    ConfirmOptions();
+                }
+
+                return true;
             }
             ConfirmOptions();
             return true;
@@ -711,6 +845,34 @@ public sealed partial class RetailFrontendFlow
         }
 
         ConfirmOptions();
+        return true;
+    }
+
+    private bool HandleOptionsPointerCancel()
+    {
+        // CMenuItemDropdown post-loop cancel leftover is
+        // RetailOptionsDropdownListCancel: call 0x0044DEA0 then, when
+        // 0x0089BE28 is set, write currentIndex from committedIndex and
+        // the expand byte. That is cancel, not dest, not colour, not
+        // hover, and not click. Click leftover already owns 0x004A4010.
+        // Hover leftover already owns 0x004A3FA6. Latch-to-button SET
+        // leftover is RetailFrontendLatchToButton: test ah, 0x80 then
+        // mov [0x0089BE28], 1. That is the SET cancel leftover reads.
+        // FMV skip already owns the OR at 0x0053F2EB.
+        if (!RetailOptionsDropdownListCancel.Applies(
+                RetailOptionsDropdownListCancel.HelperNonzero(0, 0),
+                latch: RetailFrontendLatchToButton.Set(rightDown: true)))
+        {
+            return false;
+        }
+
+        if (!_options.CancelExpanded())
+        {
+            return false;
+        }
+
+        RequestAudioCue(RetailFrontendAudioCue.Back);
+        QueueRedraw();
         return true;
     }
 }

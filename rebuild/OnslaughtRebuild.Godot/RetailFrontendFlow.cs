@@ -18,7 +18,7 @@ public sealed partial class RetailFrontendFlow : Control
     private const float DesignWidth = 640f;
     private const float DesignHeight = 480f;
     private const float MenuColumnX = 219f;
-    private const float MenuStartY = 304f;
+    private static float MenuStartY => RetailMainMenuRowY.NonzeroSlotY;
     private const float MenuPitch = 20f;
     private const float MenuHitHalfWidth = 120f;
     // mustbe_Font13PS.tga — 256² atlas, 16px cells, 16 columns, ASCII-32 origin.
@@ -133,16 +133,19 @@ public sealed partial class RetailFrontendFlow : Control
     // Alpha 0xfd, CORRECTED 2026-07-28 from 0xff: frame 3000 draw 6 is
     // 0xFD3F3F3F. Same alpha-byte class as the row-label correction at :75-77.
     private static readonly Color FlagTint = RetailColor(0xfd3f3f3f);
-    private static readonly Color ClickSlideShadow = RetailColor(0x3f000000);
     private static readonly Color ShadowTint = RetailColor(0x3e000000);
     private static readonly Color VersionTint = RetailColor(0xff102025);
-    // Released overlay format string is "V%1d.%02d" at VA 0x00629454 in pristine
-    // BEA.exe (sha256 74154bfa…), rendering "V1.00". The prior value here was
-    // "V1.00 - PATCHED", transcribed from a reference capture taken on a safe copy
-    // whose version_overlay_* patches repoint the format pointer at 0x0046416f to a
-    // code cave at VA 0x005AA444 holding "V%1d.%02d - PATCHED". That suffix is an
-    // artifact of the patched capture, not released behavior.
-    private const string VersionText = "V1.00";
+    // Released overlay format is CFEPMain::Render 0x0046416E:
+    // push 0x00629454 "V%1d.%02d". Image-initial major 0x00629410 is 1;
+    // minor 0x00679980 is BSS 0. RetailMainMenuVersionOverlay owns the
+    // sprintf. The prior value here was "V1.00 - PATCHED", transcribed
+    // from a reference capture taken on a safe copy whose
+    // version_overlay_* patches repoint the format pointer at 0x0046416f
+    // to a code cave at VA 0x005AA444 holding "V%1d.%02d - PATCHED".
+    // That suffix is an artifact of the patched capture, not released
+    // behavior. Colour at 0x004641B1/B4 is fade<<24 | 0x00102025 =
+    // 0xFF102025 settled, which is this VersionTint, so the draw keeps
+    // VersionTint and does not call SubmittedColor.
 
     // FEP_DEVSELECT ("CHOOSE GAME NAME"). See DrawDevSelect for the measurement
     // method; every literal below is either a measured extent from the pristine
@@ -778,9 +781,15 @@ public sealed partial class RetailFrontendFlow : Control
                 _clickPageSeconds = 0d;
             }
 
-            // Retail Process accumulates roughly 2 * frameΔ into this+0x18.
-            _clickPulseTimer += 2d * step;
+            // CFEPIntro::Process 0x0051B6B0: hold this+0x18 at 0 until
+            // GetTime()-[this+4] > 1.0, seed 0x3727C5AC, then add 2*dt.
+            // See RetailClickToStartPrompt. The 30 s idle write of -3 to
+            // 0x008A956C is deliberately not driven here.
             _clickPageSeconds += step;
+            _clickPulseTimer = RetailClickToStartPrompt.Advance(
+                _clickPulseTimer,
+                _clickPageSeconds,
+                step);
         }
         else if (_session.Screen != RetailFrontendScreen.IntroCutscene)
         {
@@ -915,15 +924,15 @@ public sealed partial class RetailFrontendFlow : Control
             return;
         }
 
-        // FrontEnd.cpp:551-552 — while mActivePage == FEP_TRANSITION the button
-        // action is never forwarded to a page. CFEPMain__Render corroborates from
-        // the other side: both of its hit-test blocks are guarded by
-        // `_DAT_005d8bb0 < transition` with _DAT_005d8bb0 = 0.9 (verified 0.9 in
-        // the pristine specimen's float pool), so retail additionally ignores the
-        // pointer over the last tenth of the reveal. Only the coarse page-level
-        // gate is ported; the 0.9 pointer gate is a CFEPMain detail this lane's
-        // hit-testing does not model.
-        if (_mainTransitionTime > 0)
+        // FrontEnd.cpp:551-552 — while mActivePage == FEP_TRANSITION the
+        // button action is never forwarded to a page. CFEPMain::Render
+        // hover is not ButtonPressed: 0x004630AC / 0x004631EF run when
+        // transition > 0.9 (fcomp [0x005D8BB0]; test ah,0x41 / jne skip).
+        // Motion is therefore allowed through; HandlePointerMotion applies
+        // the 0.9 gate. Confirm and HandleKey stay swallowed here.
+        if (RetailMainMenuHitTest.SwallowsFrontendInput(
+                _mainTransitionTime > 0,
+                inputEvent is InputEventMouseMotion))
         {
             return;
         }
@@ -988,66 +997,91 @@ public sealed partial class RetailFrontendFlow : Control
 
     private void DrawClickToStart()
     {
-        // FUN_0051b840 splash pulse — DAT_0089d880 / fe_splash1.
-        float t = Mathf.Min((float)_clickPulseTimer, 1f);
-        float splashScale = ((Mathf.Cos(t * Mathf.Pi) + 1f) * 0.375f) + 0.46875f;
-        // Call-site x/y are center anchors at settled scale ≈ (320, 240).
-        float splashX = (558f - (splashScale * 238f)) - 126.4375f;
-        float splashY = 135.9375f + (222f * splashScale);
+        // CFEPIntro::Render 0x0051B866 splash dest — DAT_0089d880 / fe_splash1.
+        // Scale is min(this+0x18, 1.0) then the stored pulse; dest is the
+        // specimen affine, not a scale-free (320, 240) centre.
+        float splashScale = RetailClickToStartSplash.Scale(_clickPulseTimer);
         DrawSurfaceCentered(
             _clickBackground,
-            splashX,
-            splashY,
+            RetailClickToStartSplash.X(_clickPulseTimer),
+            RetailClickToStartSplash.Y(_clickPulseTimer),
             splashScale,
             splashScale,
             Colors.White);
 
-        // Prompt after timer > 4. Blink duty cycle is stubbed (retail FPU thunk WAIT).
-        if (_clickPulseTimer > 4d && (Mathf.PosMod((float)_clickPulseTimer, 2f) < 1.6f))
+        // CFEPIntro::Render 0x0051B92F glyph submits — Localization 0x77,
+        // five CDXFont__DrawTextScaled calls at Y 401/399/400, sx=sy=1.
+        // A capture-derived textScale=2 is not the body. ShouldDraw is the
+        // same timer>4 / fmod<2 arm as RetailClickToStartPrompt.
+        if (RetailClickToStartGlyphs.ShouldDraw(_clickPulseTimer))
         {
-            // Mixed case, per the pristine 640x480 capture of the click-to-start
-            // screen (local-lab/retail-reference-pristine/click-to-start-640x480.png).
             const string prompt = "Click to start"; // Localization 0x77
-            const float textScale = 2f;
-            float width = MeasureText(prompt, textScale);
-            var origin = new Vector2(320f - (width * 0.5f), 400f);
-            // Retail: four ±1 black outline passes + white body (no extra drop-shadow).
-            DrawTextFlat(prompt, origin + new Vector2(-1f, 1f), textScale, Colors.Black);
-            DrawTextFlat(prompt, origin + new Vector2(1f, 1f), textScale, Colors.Black);
-            DrawTextFlat(prompt, origin + new Vector2(-1f, -1f), textScale, Colors.Black);
-            DrawTextFlat(prompt, origin + new Vector2(1f, -1f), textScale, Colors.Black);
-            DrawTextFlat(prompt, origin, textScale, Colors.White);
+            int width = (int)MeasureText(prompt, RetailClickToStartGlyphs.ScaleX);
+            foreach (RetailClickToStartGlyphs.Pass pass in RetailClickToStartGlyphs.Passes)
+            {
+                DrawTextFlat(
+                    prompt,
+                    new Vector2(RetailClickToStartGlyphs.X(pass, width), pass.Y),
+                    RetailClickToStartGlyphs.ScaleX,
+                    RetailColor(pass.Color));
+            }
         }
 
-        // DAT_0089d7bc LostToys sliding pair after prompt gate.
-        if (_clickPulseTimer > 4d)
+        // DAT_0089d7bc LostToys sliding pair. No skip after the two byte
+        // writes: both mode-0 CDXSurf calls issue even when this+0x18 <= 4
+        // (the pair sits 400 px off the left edge). Fade is
+        // clamp(timer-4, 0, 1); offset is (1-fade)²*400; dest X is
+        // settled − offset.
+        if (RetailClickToStartSlide.ShouldDraw(_clickPulseTimer))
         {
-            float fade = Mathf.Clamp((float)_clickPulseTimer - 4f, 0f, 1f);
-            float off = (1f - fade) * (1f - fade) * 400f;
-            // Call sites use mode 0 (top-left style) at these XY with sx=sy=1.
-            DrawTextureRect(
-                _clickSlide,
-                new Rect2(124f - off, -6f, _clickSlide.GetWidth(), _clickSlide.GetHeight()),
-                false,
-                ClickSlideShadow);
-            DrawTextureRect(
-                _clickSlide,
-                new Rect2(120f - off, -10f, _clickSlide.GetWidth(), _clickSlide.GetHeight()),
-                false,
-                Colors.White);
+            foreach (RetailClickToStartSlide.Pass pass in RetailClickToStartSlide.Passes)
+            {
+                DrawTextureRect(
+                    _clickSlide,
+                    new Rect2(
+                        RetailClickToStartSlide.X(pass, _clickPulseTimer),
+                        pass.Y,
+                        _clickSlide.GetWidth(),
+                        _clickSlide.GetHeight()),
+                    false,
+                    RetailColor(pass.Color));
+            }
         }
 
-        // Title micro-pulse near (250,290) after ~2s (simplified vs multi-pass retail).
-        if (_clickPageSeconds * 1.2d > 2d)
+        // CFEPIntro::Render 0x0051BBA0 title slam — DAT_0089d88c / FE_BEA_Title2.
+        // Gate is page*1.2 > 2; scale slams 2.5→0.5; four z=0.05 outline
+        // corners then the z=0.04 body. The previous 0.35 / sin(page*3) stub
+        // is not the specimen law.
+        if (RetailClickToStartTitle.ShouldDraw(_clickPageSeconds))
         {
-            float logoPulse = 0.55f + (0.45f * (0.5f + (0.5f * Mathf.Sin((float)_clickPageSeconds * 3f))));
+            float titleScale = RetailClickToStartTitle.Scale(_clickPageSeconds);
+            uint outline = RetailClickToStartTitle.OutlineColor(_clickPageSeconds);
+            uint body = RetailClickToStartTitle.BodyColor(_clickPageSeconds);
+            foreach (RetailClickToStartTitle.Pass pass in RetailClickToStartTitle.Passes)
+            {
+                DrawSurfaceCentered(
+                    _titleLogo,
+                    pass.X,
+                    pass.Y,
+                    titleScale,
+                    titleScale,
+                    RetailColor(pass.Outline ? outline : body));
+            }
+        }
+
+        // CFEPIntro::Render 0x0051BD01 sixth z=0.02 copy. Second gate:
+        // 2 < page < 2.25, not page*1.2 > 2. Dest (250, 290), sx=sy=1-v.
+        // Not folded into Passes.
+        if (RetailClickToStartTitle.ShouldDrawSixth(_clickPageSeconds))
+        {
+            float sixthScale = RetailClickToStartTitle.SixthScale(_clickPageSeconds);
             DrawSurfaceCentered(
                 _titleLogo,
-                250f,
-                290f,
-                0.35f,
-                0.35f,
-                new Color(TitleLogoTint.R, TitleLogoTint.G, TitleLogoTint.B, logoPulse));
+                RetailClickToStartTitle.SixthPass.X,
+                RetailClickToStartTitle.SixthPass.Y,
+                sixthScale,
+                sixthScale,
+                RetailColor(RetailClickToStartTitle.SixthColor(_clickPageSeconds)));
         }
     }
 
@@ -1311,12 +1345,39 @@ public sealed partial class RetailFrontendFlow : Control
         DrawRect(new Rect2(123f, 0f, 1f, DesignHeight), DevSelectGuide);
         DrawRect(new Rect2(0f, 180f, DesignWidth, 1f), DevSelectGuide);
 
-        // DAT_0089d7f0 Forseti writing chrome — three settled tiles (Y thunk ≈ 175),
-        // packed colour (alpha * 0x3f0000) | 0xffffff, so alpha is the page fade.
+        // DAT_0089D7F0 Forseti writing chrome. Y is CFEPMain::Render 0x00462D46:
+        // 175 - fmod(mCounter * 0.3, 350), then +350 / +700. Cold BSS counter
+        // is 0, which is the three settled tiles. Colour at 0x00462DE4 is
+        // RetailMainMenuWritingColor: settled (255*63)<<16 | 0x00FFFFFF is
+        // 0x3EFFFFFF, which is not capture ChromeTint 0x3E7F7F7F, so this
+        // draw keeps ChromeTint and does not call SubmittedColor. Z/X at
+        // 0x00462DFF is RetailMainMenuWritingZ: three tiles push
+        // 0x3F666666 then dest 458. That leftover is Z, not scale, so the
+        // draw keeps scale 1.0 and TileX and does not treat the dword as
+        // a 29% title-logo. Not a sheen. ChromeTint stays put.
         var chromeTint = new Color(ChromeTint.R, ChromeTint.G, ChromeTint.B, ChromeTint.A * fade);
-        DrawSurfaceCentered(_forsetiWritingLarge, 458f, 175f, 1f, 1f, chromeTint);
-        DrawSurfaceCentered(_forsetiWritingLarge, 458f, 175f + 350f, 1f, 1f, chromeTint);
-        DrawSurfaceCentered(_forsetiWritingLarge, 458f, 175f + 700f, 1f, 1f, chromeTint);
+        float writingCounter = RetailMainMenuWritingScroll.ImageInitialCounter;
+        DrawSurfaceCentered(
+            _forsetiWritingLarge,
+            RetailMainMenuWritingScroll.TileX,
+            RetailMainMenuWritingScroll.TileY(writingCounter, 0),
+            1f,
+            1f,
+            chromeTint);
+        DrawSurfaceCentered(
+            _forsetiWritingLarge,
+            RetailMainMenuWritingScroll.TileX,
+            RetailMainMenuWritingScroll.TileY(writingCounter, 1),
+            1f,
+            1f,
+            chromeTint);
+        DrawSurfaceCentered(
+            _forsetiWritingLarge,
+            RetailMainMenuWritingScroll.TileX,
+            RetailMainMenuWritingScroll.TileY(writingCounter, 2),
+            1f,
+            1f,
+            chromeTint);
 
         DrawLanguageSelector(fade);
 
@@ -1334,7 +1395,15 @@ public sealed partial class RetailFrontendFlow : Control
         for (int index = 0; index < _session.Items.Count; index++)
         {
             RetailFrontendMenuItem item = _session.Items[index];
-            float rowY = MenuStartY + (index * MenuPitch);
+            // RetailMainMenuRowY: [esp+0x10] seeds 268 / index
+            // -1. Nonzero [0x0083D990] overwrites 304 / index 0.
+            // Dest Y keeps rowY - 8. Do not invent dest Y.
+            // RetailMainMenuLanguagePitch: language fall-through
+            // fld / fadd 36.0 at 0x00463647, then the shared
+            // tail. Reached from 0x004634EE and after 0x0046363B.
+            // Next slot is NonzeroSlotY. Dest Y keeps rowY - 8.
+            // Do not invent dest from 36.0 or the nearby 284 push.
+            float rowY = RetailMainMenuRowY.NonzeroSlotY + (index * MenuPitch);
             bool selected = index == _session.SelectedMainIndex;
             // Draw the string as authored. english.json holds "Continue Game" /
             // "Load Game" in mixed case and retail renders them that way.
@@ -1342,16 +1411,32 @@ public sealed partial class RetailFrontendFlow : Control
             string label = _menuText[item.Kind];
             const float textScale = 1f;
             float textWidth = MeasureText(label, textScale);
-            var textPos = new Vector2(MenuColumnX - (textWidth * 0.5f), rowY - 8f);
+            // RetailMainMenuLabelDest: dest X is the measure
+            // sibling (219 minus half cx), not a dest immediate.
+            // Dest Y keeps rowY - 8. Do not invent dest or a
+            // 2px kerning hack.
+            var textPos = new Vector2(
+                RetailMainMenuLabelDest.DestX(textWidth),
+                rowY - 8f);
 
             if (fade <= 0f)
             {
                 continue;
             }
 
-            Color textColor = selected
-                ? ReleasedSelected
-                : item.IsAvailable ? ReleasedNormal : ReleasedUnavailable;
+            // RetailMainMenuLabelText: the other CFEPMain::Render
+            // DrawTextDynamic at 0x0046316F. Dest is ebx / [esp+0x24],
+            // not immediates. 0x0046315A leftover is Z, not writing
+            // chrome and not the selector bar. Leftover stack args
+            // 10 / 9 / 8 stay unused. Font slot push 1. Scales stay
+            // 1.0. Colour stays LabelColor. Dest stays MeasureText.
+            // Cite-fix: cmp ebx, 0x3E8 is 0x00465771; 0x00465777 is
+            // mov word [eax], 0. Do not invent dest, wrap, fade,
+            // sheen, or a 2px kerning hack.
+            Color textColor = RetailColor(RetailMainMenuLabelColor.SubmittedColor(
+                selected,
+                item.IsAvailable,
+                RetailMainMenuLabelColor.ImageSettledFadeByte));
             DrawText(label, textPos, textScale, new Color(textColor, textColor.A * fade));
         }
 
@@ -1387,11 +1472,45 @@ public sealed partial class RetailFrontendFlow : Control
             leftArcBody,
             leftArcShadow,
             MainMenuLeftDecor(transition));
+        // Colour at 0x00463873 is RetailMainMenuLeftDecorShadow: DAT_0089D894
+        // *63 alpha pack, dest fadd 224/349, z push 0x3EB33333 (0.35) not
+        // scale. Settled 255 submits 0x3E000000, which is this ShadowTint,
+        // so the draw keeps ShadowTint and does not call SubmittedColor.
+        // Dest is the left-arc pair (219+5, 344+5), not right 462/365.
+        // Both dest helpers land on 0x00468730. The 224/349 addends are
+        // the already-shipped ellipse centre — do not redo
+        // RetailFrontendDecorShadow. Colour at 0x004638B7 is
+        // RetailMainMenuLeftDecorOverlay: DAT_0089D894 not/and/xor pack,
+        // dest immediates 219/344, z push 0x3E99999A (0.3) not scale.
+        // Settled 255 submits 0xFEFFFFFF, which is not this BracketTint
+        // 0xFE7F7F7F, so the draw keeps BracketTint and does not call
+        // SubmittedColor. Dest is the left-arc body, not right. Not the
+        // 0x00463E8D twin gate (that is D8A4). Not a sheen (that is
+        // 0x00464343 / TitleLogoReflectionLayer). Not a 29% title-logo
+        // scale. ChromeTint and ShadowTint stay put. Do not redo
+        // 0x00463873, 0x00463D1F, 0x00463D63, 0x00463F3F, or 0x00463F83.
         DrawMainMenuDecor(
             _titleBracket02,
             leftArcBody,
             leftArcShadow,
             MainMenuLeftDecorTwin(transition));
+        // Colour at 0x00463A8F is RetailMainMenuLeftTwinShadow: DAT_0089D898
+        // *63 alpha pack, dest fadd 224/349, z push 0x3EB33333 (0.35) not
+        // scale. Settled 255 submits 0x3E000000, which is this ShadowTint,
+        // so the draw keeps ShadowTint and does not call SubmittedColor.
+        // Dest is the leftover left-twin pair (219+5, 344+5), not
+        // DAT_0089D894 primary and not right 462/365. Both dest helpers
+        // land on 0x00468730. The 224/349 addends are the already-shipped
+        // ellipse centre — do not redo RetailFrontendDecorShadow. Colour
+        // at 0x00463AD3 is RetailMainMenuLeftTwinOverlay: DAT_0089D898
+        // not/and/xor pack, dest immediates 219/344, z push 0x3E99999A
+        // (0.3) not scale. Settled 255 submits 0xFEFFFFFF, which is not
+        // this BracketTint 0xFE7F7F7F, so the draw keeps BracketTint and
+        // does not call SubmittedColor. Dest is the leftover left-twin
+        // body, not DAT_0089D894 primary and not right. Not a sheen.
+        // Not a 29% title-logo scale. ChromeTint and ShadowTint stay
+        // put. Do not redo 0x00463873, 0x004638B7, 0x00463A8F,
+        // 0x00463D1F, 0x00463D63, 0x00463F3F, or 0x00463F83.
         DrawMainMenuDecor(
             _symbolBracket01,
             rightArcBody,
@@ -1402,6 +1521,41 @@ public sealed partial class RetailFrontendFlow : Control
             rightArcBody,
             rightArcShadow,
             MainMenuRightDecorTwin(transition));
+        // Colour at 0x00463D1F is RetailMainMenuRightDecorShadow: DAT_0089D8A0
+        // *63 alpha pack, dest fadd 462/365, z push 0x3EB33333 (0.35) not
+        // scale. Settled 255 submits 0x3E000000, which is this ShadowTint,
+        // so the draw keeps ShadowTint and does not call SubmittedColor.
+        // Dest is the right-arc pair, not left. Not the 0x00463E8D twin
+        // gate (that is D8A4). The 462/365 addends are the already-shipped
+        // ellipse centre — do not redo RetailFrontendDecorShadow. Not a
+        // sheen (that is 0x00464343 / TitleLogoReflectionLayer). Not a
+        // 29% title-logo scale. ChromeTint and BracketTint stay put. Do
+        // not redo 0x00463F3F or 0x00463F83.
+        // Colour at 0x00463D63 is RetailMainMenuRightDecorOverlay:
+        // DAT_0089D8A0 not/and/xor pack, dest immediates 457/355, z push
+        // 0x3E99999A (0.3) not scale. Settled 255 submits 0xFEFFFFFF,
+        // which is not this BracketTint 0xFE7F7F7F, so the draw keeps
+        // BracketTint and does not call SubmittedColor. Dest is the
+        // right-arc body, not left. Not the 0x00463E8D twin gate (that
+        // is D8A4). Not a sheen. Not a 29% title-logo scale. ChromeTint
+        // and ShadowTint stay put. Do not redo 0x00463D1F.
+        // Colour at 0x00463F3F is RetailMainMenuRightTwinShadow: DAT_0089D8A4
+        // *63 alpha pack, dest fadd 462/365, z push 0x3EB33333 (0.35) not
+        // scale. Settled 255 submits 0x3E000000, which is this ShadowTint,
+        // so the draw keeps ShadowTint and does not call SubmittedColor.
+        // Same 0x00463E8D gate as the body overlay; settled frames skip.
+        // The 462/365 addends are the already-shipped ellipse centre —
+        // do not redo RetailFrontendDecorShadow. Not a sheen (that is
+        // 0x00464343 / TitleLogoReflectionLayer). Not a 29% title-logo
+        // scale. ChromeTint and BracketTint stay put.
+        // Colour at 0x00463F83 is RetailMainMenuRightTwinOverlay: DAT_0089D8A4
+        // mode-4 at (457,355), z push 0x3E99999A (0.3) not scale. Settled 255
+        // submits 0xFEFFFFFF, which is not this BracketTint 0xFE7F7F7F, so
+        // the draw keeps BracketTint and does not call SubmittedColor. Gate
+        // 0x00463E8D skips the call once transition >= 0.9; settled frames
+        // never issue it. Not a sheen (that is 0x00464343 /
+        // TitleLogoReflectionLayer). Not a 29% title-logo scale. ChromeTint
+        // and ShadowTint stay put.
 
         if (iconFade > 0f)
         {
@@ -1410,6 +1564,10 @@ public sealed partial class RetailFrontendFlow : Control
             // Pair C of the four the shadow law was recovered from: the
             // selected-row icon takes the SHARED (u,v) offset, the same vector as
             // the right arc, off the same body anchor (457,355).
+            // Colour at 0x0046407C is RetailMainMenuSelectedIconShadow: settled
+            // ((255<<6)-255)<<16 & 0xFF000000 is 0x3E000000, which is this
+            // ShadowTint, so the draw keeps ShadowTint and does not call
+            // SubmittedColor. Shadow scale stays ShadowScaleBoost (1.05).
             DrawSurfaceCentered(
                 icon,
                 rightArcShadow.X,
@@ -1417,6 +1575,12 @@ public sealed partial class RetailFrontendFlow : Control
                 ShadowScaleBoost,
                 ShadowScaleBoost,
                 new Color(ShadowTint, ShadowTint.A * iconFade));
+            // Colour at 0x004640DC is RetailMainMenuSelectedIconColor: settled
+            // ((255<<8)-255)<<16 | 0x00FFFFFF is 0xFEFFFFFF, which is not
+            // this BracketTint 0xFE7F7F7F (frame 3000 draw 31), so the draw
+            // keeps BracketTint and does not call SubmittedColor. Body scale
+            // stays 1.0; this is not a 29% scale. ChromeTint and ShadowTint
+            // stay put.
             DrawSurfaceCentered(icon, 457f, 355f, 1f, 1f, new Color(iconTint, iconTint.A * iconFade));
         }
 
@@ -1424,19 +1588,44 @@ public sealed partial class RetailFrontendFlow : Control
         {
             // SHADOWED, corrected 2026-07-28 from a single flat run. The version
             // string is a shadow/body PAIR like every other text run on the page:
-            // frame 3000 draw 32 is (0.5,464.5)-(42.5,480.5) at 0xFF000000 and
-            // draw 33 is (-0.5,463.5)-(41.5,479.5) at 0xFF102025 — the same
-            // "shadow on the anchor, body at anchor-(1,1), shadow RGB black
-            // carrying the body's own alpha" law that was verified on 63 pairs
-            // across six pages and that DrawText already implements. It was left
-            // flat because our MeasureText("V1.00") is 44 against retail's 42px
-            // ink, which was read as evidence that the pair was not understood.
-            // It was not: the width is a glyph-advance question and the pair is a
-            // separate, settled fact. The 2px remains open and is now the only
-            // thing open about this element.
+            // frame 3000 draw 32/33 is the already-owned DrawText pair — shadow
+            // on the anchor, body at anchor-(1,1), shadow RGB black carrying the
+            // body's own alpha. Dest leftover at 0x004641C9 is
+            // RetailMainMenuVersionOverlayZ: PLATFORM__GetWindowHeight then
+            // sub 0x10, dest X push 0. That leftover is not a dest immediate.
+            // 0x004641C4 push 0x3C23D70A is Z, not scale, so this draw keeps
+            // VersionTint, Format, DestX, DestY(DesignHeight), and scale 1.0.
+            // Font leftover is RetailMainMenuVersionOverlayFont: push 1 selects
+            // FONT_SMALL / Font13PS at this+0x20, not this+0x1C. No measure
+            // call on the sprintf buffer. Pre-draw leftover is
+            // RetailMainMenuVersionOverlayEnable: after sprintf / add esp,10 /
+            // lea edx,[esp+0x3C], 0x00464180 stores [0x00679B40]=0. The
+            // 0x00465F00 reader is mov al,[0x00679B40]; ret. Widen leftover
+            // is RetailMainMenuVersionOverlayWiden: after the enable-byte
+            // store, push edx of that sprintf buffer and call
+            // Text__AsciiToWideScratch. add esp,4 shows cdecl one-arg.
+            // EAX is the wide scratch pointer. Tail leftover is
+            // RetailMainMenuVersionOverlayTail: after add esp,4 the
+            // three leftover pushes remain as DrawTextDynamic's last
+            // three stack slots. The leftover float is past the
+            // below-zero / below-quarter / below-half arms, and the
+            // second leftover dword is zero so that colour arm is
+            // skipped. Do not invent dest, wrap, fade, or sheen from
+            // those slots. Post-draw leftover is
+            // RetailMainMenuVersionOverlayFlags:
+            // after DrawTextDynamic, 0x004641FC/203/20A store
+            // [0x00679B40]=1, [0x009C68AC]=0, [0x009C690D]=1 between
+            // fcom [0.0] and fnstsw. That fcom is the already-owned
+            // title-logo shadow clamp, not a version fade. The MeasureText
+            // residual stays open; do not invent a fade or a kerning hack.
             DrawText(
-                VersionText,
-                new Vector2(0f, DesignHeight - 16f),
+                RetailMainMenuVersionOverlayWiden.Widen(
+                    RetailMainMenuVersionOverlay.Format(
+                        RetailMainMenuVersionOverlay.ImageInitialMajor,
+                        RetailMainMenuVersionOverlay.ImageInitialMinor)),
+                new Vector2(
+                    RetailMainMenuVersionOverlayZ.DestX,
+                    RetailMainMenuVersionOverlayZ.DestY((int)DesignHeight)),
                 1f,
                 new Color(VersionTint, VersionTint.A * fade));
         }
@@ -1490,14 +1679,39 @@ public sealed partial class RetailFrontendFlow : Control
         // body is (64,2)-(576,258), centre (320,130) — this anchor exactly — and
         // its shadow takes the SHARED (u,v) offset off it, at the same 1.05 scale.
         // The (325,140) that stood here is that offset's time-mean.
+        // Colour at 0x0046424F is RetailMainMenuTitleLogoShadow: settled
+        // (255*63)<<16 & 0xFF000000 is 0x3E000000, which is this ShadowTint,
+        // so the draw keeps ShadowTint and does not call SubmittedColor.
+        // dest==0x0c at 0x0046423D forces ESI=255. Body scale stays 1.0;
+        // this is not a 29% scale. Body pack stays TitleLogoTint.
+        // DAT_0089D88C leftover at 0x00464251 is
+        // RetailMainMenuTitleLogoShadowZ: same Title2, then push
+        // 0x3DCCCCCD. That leftover is Z, not scale. Dest is
+        // GetShadowOffsetY + [0x005D8C20] and GetShadowOffsetX +
+        // [0x005DB4A8], not RenderSurface immediates, so this draw
+        // keeps ShadowTint, ShadowScaleBoost, DestX, DestY, and
+        // sharedShadow. Nearby 0x3F866666 is already
+        // ShadowScaleBoost. Not a sheen.
+        // DAT_0089D88C at 0x004642CE is RetailMainMenuTitleLogoZ:
+        // FrontEnd\v3\FE_BEA_Title2.tga via ebp+0x12C, then push
+        // 0x3F7FBE77, dest Y 130, dest X 320. That leftover is Z, not
+        // scale, so this draw keeps TitleLogoTint, scale 1.0, DestX,
+        // and DestY and does not treat the dword as a 29% title-logo.
+        // Nearby 0x3F866666 is already ShadowScaleBoost. Not a sheen.
         DrawSurfaceCentered(
             _titleLogo,
-            320f + (float)sharedShadow.X,
-            130f + (float)sharedShadow.Y,
+            RetailMainMenuTitleLogoZ.DestX + (float)sharedShadow.X,
+            RetailMainMenuTitleLogoZ.DestY + (float)sharedShadow.Y,
             ShadowScaleBoost,
             ShadowScaleBoost,
             ShadowTint);
-        DrawSurfaceCentered(_titleLogo, 320f, 130f, 1f, 1f, TitleLogoTint);
+        DrawSurfaceCentered(
+            _titleLogo,
+            RetailMainMenuTitleLogoZ.DestX,
+            RetailMainMenuTitleLogoZ.DestY,
+            1f,
+            1f,
+            TitleLogoTint);
     }
 
     /// <summary>
@@ -1525,6 +1739,13 @@ public sealed partial class RetailFrontendFlow : Control
     /// <c>rowY - 16</c> lands the quad at y 288 for row 0; a D3D9 quad spanning
     /// [288,320) covers pixel rows 288..319, which is what a Godot Rect2 at
     /// y = 288, h = 32 covers.</para>
+    ///
+    /// <para>DAT_0089D89C at 0x00462FED is RetailMainMenuSelectorBarZ:
+    /// FrontEnd\v3\FE_BEA_title_text_box.tga via ebp+0x13C, then push
+    /// 0x3EA8F5C3 and dest 219. That leftover is Z, not scale, so this
+    /// draw keeps _titleTextBox, the measured ink+31 width, and DestX
+    /// and does not treat the dword as a 29% title-logo. Colour at
+    /// 0x00462FB9 stays RetailMainMenuSelectorBarColor. Not a sheen.</para>
     /// </summary>
     private void DrawMainMenuSelectorBar(float iconFade)
     {
@@ -1542,11 +1763,20 @@ public sealed partial class RetailFrontendFlow : Control
         float rowY = MenuStartY + (index * MenuPitch);
         float boxWidth = MeasureText(_menuText[_session.Items[index].Kind], 1f) + 31f;
 
+        // DAT_0089D89C at 0x00462FED is RetailMainMenuSelectorBarZ.
+        // 0x3EA8F5C3 leftover is Z, not scale. Dest X is this DestX.
         DrawTextureRect(
             _titleTextBox,
-            new Rect2(MenuColumnX - (boxWidth * 0.5f), rowY - 16f, boxWidth, 32f),
+            new Rect2(
+                RetailMainMenuSelectorBarZ.DestX - (boxWidth * 0.5f),
+                rowY - 16f,
+                boxWidth,
+                32f),
             false,
-            new Color(HighlightTint, HighlightTint.A * iconFade));
+            new Color(
+                RetailColor(RetailMainMenuSelectorBarColor.SubmittedColor(
+                    RetailMainMenuSelectorBarColor.ImageSettledFadeByte)),
+                HighlightTint.A * iconFade));
     }
 
     /// <summary>
@@ -1609,9 +1839,14 @@ public sealed partial class RetailFrontendFlow : Control
     /// <paramref name="fade"/> is CFEPMain__Render's page fade. The language row is
     /// drawn inside the same loop as the menu labels and every one of its packed
     /// colours is multiplied by the same alpha byte, so it reveals with them. The
-    /// released row additionally carries a sine brightness pulse when it is the
-    /// selected row and two per-arrow blink timers; neither is modelled here, and
-    /// neither is introduced by this change.
+    /// selected-row sine at 0x0046319E is pinned by RetailMainMenuLanguageSine;
+    /// session cannot hold this+0x08=-1, so this draw does not light that pack.
+    /// Chevron visibility is RetailMainMenuLanguageBlink: fistp(mCounter) signed
+    /// remainder 64, draw while below 50. Cold BSS 0 draws. The 2x copies stay
+    /// no-ops. Chevron colour at 0x0046336B / 0x004634F4 is
+    /// RetailMainMenuLanguageChevronColor: settled unselected submits
+    /// 0x3EFFFFFF, which is not capture ChromeTint 0x3E7F7F7F, so this
+    /// draw keeps ChromeTint and does not call SubmittedColor.
     /// </summary>
     private void DrawLanguageSelector(float fade)
     {
@@ -1645,16 +1880,21 @@ public sealed partial class RetailFrontendFlow : Control
         // sprite's transparent border the way retail's sampler does, which is
         // where the two differ by a texel of edge feathering.
         var arrowTint = new Color(ChromeTint, ChromeTint.A * fade);
-        DrawTextureRect(
-            _feArrow,
-            LanguageRowRect(RetailFrontendLanguageRow.LeftChevron),
-            false,
-            arrowTint);
-        DrawTextureRect(
-            _feArrow,
-            LanguageRowRect(RetailFrontendLanguageRow.RightChevron),
-            false,
-            arrowTint);
+        if (RetailMainMenuLanguageBlink.ShouldDraw(
+                RetailMainMenuLanguageBlink.ImageInitialCounter,
+                RetailMainMenuLanguageBlink.ImageInitialTimer))
+        {
+            DrawTextureRect(
+                _feArrow,
+                LanguageRowRect(RetailFrontendLanguageRow.LeftChevron),
+                false,
+                arrowTint);
+            DrawTextureRect(
+                _feArrow,
+                LanguageRowRect(RetailFrontendLanguageRow.RightChevron),
+                false,
+                arrowTint);
+        }
     }
 
     /// <summary>
@@ -1836,8 +2076,16 @@ public sealed partial class RetailFrontendFlow : Control
 
     private void DrawQuitConfirm()
     {
-        // Reconstruction messbox chrome (Steam FEMessBox layout not fully ported).
-        DrawRect(new Rect2(70f, 160f, 500f, 140f), new Color(0f, 0f, 0f, 0.82f));
+        // Quit Create() is 400 wide at (320, 240). Height is still
+        // reconstruction: the 4th stack immediate is 0.1f, not a pixel extent.
+        const float reconstructionHeight = 140f;
+        DrawRect(
+            new Rect2(
+                RetailFeMessBox.QuitLeft,
+                RetailFeMessBox.QuitCenterY - (reconstructionHeight * 0.5f),
+                RetailFeMessBox.QuitWidth,
+                reconstructionHeight),
+            new Color(0f, 0f, 0f, 0.82f));
         DrawTextCentered(QuitConfirmPrompt, new Vector2(320f, 190f), 1.7f, Colors.White);
 
         DrawQuitConfirmChoice("No", 220f, _session.SelectedQuitConfirmIndex == 0);
@@ -2098,12 +2346,16 @@ public sealed partial class RetailFrontendFlow : Control
                 ReleasedBlue);
         }
 
-        // FrontEnd.cpp:891-892 — FET3_SELECT_BRACKET1 at SELECT_BRACKET_X/Y
-        // (328,343) with SELECT_BRACKET_SCALE 1.25, plus its +5/+10 shadow at
-        // scale*1.05 in 0x3F000000. FEP_LEVEL_SELECT is one of the pages
+        // RetailLevelSelectSlidingBorders: CFEPLevelSelect::Render first
+        // leftover is the unique call 0x00460B61 to
+        // CFrontEnd__DrawSlidingTextBordersAndMask. FrontEnd.cpp:891-892 —
+        // FET3_SELECT_BRACKET1 at SELECT_BRACKET_X/Y (328,343) with
+        // SELECT_BRACKET_SCALE 1.25, plus its +5/+10 shadow at scale*1.05 in
+        // 0x3F000000. FEP_LEVEL_SELECT is one of the pages
         // got_standard_SlidingTextBordersAndMask() returns TRUE for
         // (FrontEnd.cpp:783), which pins transition to 1 and therefore this
         // settled scale; the outside bracket only draws while dest == FEP_MAIN.
+        // The 148.0 fsub at 0x00460B66 is later and is not dest.
         //
         // MEASURED, and this page does NOT reproduce the 1.4 the FEP_DEVSELECT
         // build settled on: fitting the FE_select_level_bracket01 alpha mask over
@@ -2113,10 +2365,15 @@ public sealed partial class RetailFrontendFlow : Control
         // a local optimum on this frame. The source constants are therefore used
         // verbatim. The shadow reproduces exactly: 0x3f000000 over (23,23,48) is
         // (17,17,36), which is the third most common colour in the capture.
-        const float bracketScale = 1.25f;
-        const float bracketShadowScale = bracketScale * ShadowScaleBoost;
-        DrawSurfaceCentered(_levelBracket01, 333f, 353f, bracketShadowScale, bracketShadowScale, ShadowTint);
-        DrawSurfaceCentered(_levelBracket01, 328f, 343f, bracketScale, bracketScale, BracketTint);
+        if (RetailLevelSelectSlidingBorders.Applies(
+                standardPage: true,
+                fromVirtualKeyboard: false))
+        {
+            const float bracketScale = RetailLevelSelectSlidingBorders.SettledInsideScale;
+            const float bracketShadowScale = bracketScale * ShadowScaleBoost;
+            DrawSurfaceCentered(_levelBracket01, 333f, 353f, bracketShadowScale, bracketShadowScale, ShadowTint);
+            DrawSurfaceCentered(_levelBracket01, 328f, 343f, bracketScale, bracketScale, BracketTint);
+        }
 
         // font22 at scale 1, for the glyph-run and per-letter-IoU evidence
         // written out in DrawDevSelect. Retail's ink here is x304..471, y72..88,
@@ -2570,6 +2827,19 @@ public sealed partial class RetailFrontendFlow : Control
             return false;
         }
 
+        // 0x004630AC / 0x004631EF: hover only when transition > 0.9.
+        // Language hover writes this+0x08 = -1; that is not a language
+        // swap and not a button confirm. Session cannot hold -1.
+        if (!RetailMainMenuHitTest.AcceptsHitTest(MainMenuTransition))
+        {
+            return false;
+        }
+
+        if (RetailMainMenuHitTest.LanguageHoverContains(design.X, design.Y))
+        {
+            return false;
+        }
+
         int index = MainMenuIndexAt(design);
         // Retail hover requires GetActionCount ≠ 0 — ignore grayed rows.
         if (index < 0 ||
@@ -2590,6 +2860,13 @@ public sealed partial class RetailFrontendFlow : Control
         switch (_session.Screen)
         {
             case RetailFrontendScreen.ClickToStart:
+                // CFEPIntro::Process 0x0051B801 submits (0,0,width,width,0x2C)
+                // — full window, not a glyph box. See RetailClickToStartInput.
+                if (!RetailClickToStartInput.AcceptsMouseAt(design.X, design.Y))
+                {
+                    return false;
+                }
+
                 Confirm();
                 return true;
 

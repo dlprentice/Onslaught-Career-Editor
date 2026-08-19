@@ -121,10 +121,11 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 CatalogSummaryTextBlock.Text = "Load a catalog to see textures, meshes, and goodies.";
                 CatalogCoverageTextBlock.Text = "Coverage summary appears after a generated catalog loads.";
                 CatalogProvenanceTextBlock.Text = "Catalog provenance appears after a generated catalog loads.";
-                CatalogFullPathTextBlock.Text = path ?? string.Empty;
+                CatalogFullPathTextBlock.Text = AssetLibraryPageText.BuildPathSummary(path);
                 AppStatusService.SetStatus("Asset Library: catalog not found");
                 AssetItemsListView.ItemsSource = null;
                 ResetSelection();
+                UpdateAssetListNote(search: string.Empty, matchCount: 0);
                 return;
             }
 
@@ -132,9 +133,9 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             CatalogInputGrid.Visibility = Visibility.Collapsed;
             ChangeCatalogButton.Visibility = Visibility.Visible;
             CatalogPathTextBox.Text = string.Empty;
-            CatalogPathTextBox.PlaceholderText = "Paste catalog.json path or browse to a generated export folder";
-            CatalogStatusTextBlock.Text = $"Catalog loaded: {BuildPathSummary(_snapshot.CatalogFilePath)}";
-            CatalogFullPathTextBlock.Text = _snapshot.CatalogFilePath;
+            CatalogPathTextBox.PlaceholderText = "Paste catalog.json, or browse to a generated export folder";
+            CatalogStatusTextBlock.Text = $"Catalog loaded: {AssetLibraryPageText.BuildPathSummary(_snapshot.CatalogFilePath)}";
+            CatalogFullPathTextBlock.Text = AssetLibraryPageText.BuildPathSummary(_snapshot.CatalogFilePath);
             CatalogSummaryTextBlock.Text =
                 $"{_snapshot.Summary.TextureCount} textures, {_snapshot.Summary.LooseMeshCount} loose meshes, {_snapshot.Summary.EmbeddedMeshCount} embedded meshes, {_snapshot.Summary.GoodieCount} goodies";
             CatalogCoverageTextBlock.Text = BuildCatalogCoverageSummary();
@@ -341,6 +342,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }).Cast<object>().ToArray();
 
             AssetItemsListView.ItemsSource = items;
+            UpdateAssetListNote(search, items.Length);
             if (_selectedKind == AssetListKind.Goodies)
             {
                 UpdateGoodieFilterStatus();
@@ -354,6 +356,16 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             {
                 ResetSelection();
             }
+        }
+
+        private void UpdateAssetListNote(string search, int matchCount)
+        {
+            bool hasCatalog = !string.IsNullOrWhiteSpace(_snapshot.CatalogFilePath);
+            string? note = AssetLibraryPageText.DescribeListNote(hasCatalog, search, matchCount);
+            AssetListNoteTextBlock.Text = note ?? string.Empty;
+            AssetListNoteTextBlock.Visibility = string.IsNullOrWhiteSpace(note)
+                ? Visibility.Collapsed
+                : Visibility.Visible;
         }
 
         private static IEnumerable Filter<T>(IEnumerable<T> items, string search) where T : class
@@ -439,7 +451,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             {
                 _goodieSaveAnalysis = null;
                 _goodieSaveStatePath = string.Empty;
-                GoodieSaveStateStatusTextBlock.Text = $"{BuildPathSummary(path)} is not a valid BEA save buffer.";
+                GoodieSaveStateStatusTextBlock.Text = $"{AssetLibraryPageText.BuildPathSummary(path)} is not a valid BEA save buffer.";
                 AppStatusService.SetStatus("Asset Library: Goodies save state invalid");
                 UpdateAssetList();
                 return;
@@ -454,7 +466,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
             int unlocked = analysis.GoodieStates.Count(static state => state.IsDisplayable && state.IsUnlocked);
             int displayable = analysis.GoodieStates.Count(static state => state.IsDisplayable);
-            GoodieSaveStateStatusTextBlock.Text = $"Loaded Goodies state from {BuildPathSummary(path)}: {unlocked}/{displayable} displayable slots unlocked or viewed.";
+            GoodieSaveStateStatusTextBlock.Text = $"Loaded Goodies state from {AssetLibraryPageText.BuildPathSummary(path)}: {unlocked}/{displayable} displayable slots unlocked or viewed.";
             AppStatusService.SetStatus("Asset Library: Goodies save state loaded");
             UpdateAssetList();
         }
@@ -465,7 +477,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             SelectedAssetTitleTextBlock.Text = texture.DisplayName;
             SelectedAssetSummaryTextBlock.Text =
                 $"{texture.SourceGroup}; {texture.PackedReferenceCount} packed references; export {BuildAvailability(exportAvailable)}.";
-            SelectedExportPathTextBlock.Text = texture.ExportPath;
+            SelectedExportPathTextBlock.Text = AssetLibraryPageText.BuildPathSummary(texture.ExportPath);
             SelectedCatalogIdTextBlock.Text = texture.CatalogId;
             GoodieFactsPanel.Visibility = Visibility.Collapsed;
             PreviewTitleTextBlock.Text = "Texture preview";
@@ -480,7 +492,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             ModelWireframeNoteTextBlock.Visibility = Visibility.Collapsed;
             TexturePreviewEmptyTextBlock.Text = exportAvailable
                 ? "Loading texture preview..."
-                : "Texture export is not available at the recorded local path.";
+                : PngHeaderReader.ExportMissing;
             ModelTextureLinksTextBlock.Text = "Catalog texture links appear when a model export is selected.";
             ClearSelectedModelLinkedTexture();
 
@@ -510,7 +522,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             SelectedAssetTitleTextBlock.Text = mesh.DisplayName;
             SelectedAssetSummaryTextBlock.Text =
                 $"{mesh.PackedReferenceCount} packed references; FBX export {BuildAvailability(exportAvailable)}. Use the in-app wireframe for a quick geometry check, then open the FBX for full material review.";
-            SelectedExportPathTextBlock.Text = mesh.ExportPath;
+            SelectedExportPathTextBlock.Text = AssetLibraryPageText.BuildPathSummary(mesh.ExportPath);
             SelectedCatalogIdTextBlock.Text = mesh.CatalogId;
             GoodieFactsPanel.Visibility = Visibility.Collapsed;
             PreviewTitleTextBlock.Text = $"Model export: {mesh.DisplayName}";
@@ -531,7 +543,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             SelectedAssetTitleTextBlock.Text = mesh.DisplayName;
             SelectedAssetSummaryTextBlock.Text =
                 $"{mesh.SourceArchive}; FBX export {BuildAvailability(exportAvailable)}. Use the in-app wireframe for a quick geometry check, then open the FBX for full material review.";
-            SelectedExportPathTextBlock.Text = mesh.ExportPath;
+            SelectedExportPathTextBlock.Text = AssetLibraryPageText.BuildPathSummary(mesh.ExportPath);
             SelectedCatalogIdTextBlock.Text = mesh.CatalogId;
             GoodieFactsPanel.Visibility = Visibility.Collapsed;
             PreviewTitleTextBlock.Text = $"Embedded model export: {mesh.DisplayName}";
@@ -580,7 +592,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 PreviewTitleTextBlock.Text = $"Goodie entry: {goodie.DisplayName}";
                 TexturePreviewEmptyTextBlock.Text = goodie.HasVideo
                     ? $"Cutscene {goodie.VideoSequenceId} is linked in the media catalog. Use Media playback for Bink preparation and playback."
-                    : "This goodie is cataloged, but no matching local preview export is available yet.";
+                    : AssetLibraryPageText.PreviewExportMissing;
                 TexturePreviewEmptyTextBlock.Visibility = Visibility.Visible;
                 if (goodie.HasVideo && !string.IsNullOrWhiteSpace(goodie.VideoSequenceId))
                 {
@@ -626,7 +638,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 return $"{reward}; opens Media for cutscene {goodie.VideoSequenceId}.";
             }
 
-            return $"{reward}; no local preview export is linked yet.";
+            return $"{reward}. Choose another Goodie, or load an export that includes its preview.";
         }
 
         private string BuildGoodieSummary(AssetGoodieItem goodie, bool matchedTexture, bool matchedMesh, GoodieStateDetail? saveState)
@@ -889,8 +901,33 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         private static string BuildSidecarTextureSummary(int sidecarCount, int bindingCount)
         {
             return sidecarCount == 0
-                ? "No sidecar preview file was found beside the export."
-                : $"Sidecar preview files: {sidecarCount}/{bindingCount}.";
+                ? AssetLibraryPageText.SidecarPreviewMissing
+                : $"Texture preview files: {sidecarCount}/{bindingCount}.";
+        }
+
+        private static string BuildSidecarTexturePreviewTitle(string fileName)
+        {
+            return $"Texture preview: {fileName}";
+        }
+
+        private static string BuildSidecarTexturePreviewUnreadable()
+        {
+            return "Texture exists, but the preview could not be opened.";
+        }
+
+        private static string BuildSidecarTexturePreviewLoading()
+        {
+            return "Loading texture preview...";
+        }
+
+        private static string BuildSidecarTexturePreviewStatus(string fileName)
+        {
+            return $"Asset Library: showing texture preview {fileName}";
+        }
+
+        private static string BuildSidecarTexturePreviewButtonLabel()
+        {
+            return "Preview texture";
         }
 
         private void ConfigureSelectedModelLinkedTexture(
@@ -908,7 +945,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             _selectedModelSidecarTextureFileName = _selectedModelLinkedTexture == null ? sidecarTexture?.FileName ?? string.Empty : string.Empty;
 
             bool hasPreviewTarget = _selectedModelLinkedTexture != null || !string.IsNullOrWhiteSpace(_selectedModelSidecarTexturePath);
-            ViewLinkedTextureButton.Content = _selectedModelLinkedTexture == null ? "Preview sidecar texture" : "View linked texture";
+            ViewLinkedTextureButton.Content = _selectedModelLinkedTexture == null ? BuildSidecarTexturePreviewButtonLabel() : "View linked texture";
             ViewLinkedTextureButton.IsEnabled = hasPreviewTarget;
             ViewLinkedTextureButton.Visibility = !hasPreviewTarget
                 ? Visibility.Collapsed
@@ -931,7 +968,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         {
             if (_selectedModelLinkedTexture == null && string.IsNullOrWhiteSpace(_selectedModelSidecarTexturePath))
             {
-                AppStatusService.SetStatus("Asset Library: no linked texture is available for this model");
+                AppStatusService.SetStatus(AssetLibraryPageText.SidecarPreviewMissing);
                 return;
             }
 
@@ -958,7 +995,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             _selectedSidecarLease = null;
             if (string.IsNullOrWhiteSpace(_selectedModelSidecarTexturePath))
             {
-                AppStatusService.SetStatus("Asset Library: sidecar texture preview file is unavailable");
+                AppStatusService.SetStatus(AssetLibraryPageText.SidecarPreviewMissing);
                 return;
             }
 
@@ -972,33 +1009,33 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 {
                     _selectedSidecarLease.Dispose();
                     _selectedSidecarLease = null;
-                    AppStatusService.SetStatus("Asset Library: sidecar texture preview file is unavailable");
+                    AppStatusService.SetStatus(AssetLibraryPageText.SidecarPreviewMissing);
                     return;
                 }
             }
             catch (Exception ex) when (ex is ArgumentException or IOException or InvalidOperationException or NotSupportedException or UnauthorizedAccessException)
             {
-                AppStatusService.SetStatus("Asset Library: sidecar texture failed trusted-root validation");
+                AppStatusService.SetStatus(AssetLibraryPageText.SidecarPreviewRefused);
                 return;
             }
 
             TexturePreviewPanel.Visibility = Visibility.Visible;
             TexturePreviewBackgroundPanel.Visibility = Visibility.Visible;
             TexturePreviewCanvasNoteTextBlock.Visibility = Visibility.Visible;
-            TexturePreviewEmptyTextBlock.Text = "Loading sidecar texture preview...";
+            TexturePreviewEmptyTextBlock.Text = BuildSidecarTexturePreviewLoading();
             TexturePreviewEmptyTextBlock.Visibility = Visibility.Visible;
 
             try
             {
                 TexturePreviewImage.Source = new BitmapImage(new Uri(_selectedSidecarLease!.PhysicalPath));
                 TexturePreviewEmptyTextBlock.Visibility = Visibility.Collapsed;
-                PreviewTitleTextBlock.Text = $"Sidecar texture preview: {_selectedModelSidecarTextureFileName}";
-                AppStatusService.SetStatus($"Asset Library: previewing sidecar texture {_selectedModelSidecarTextureFileName}");
+                PreviewTitleTextBlock.Text = BuildSidecarTexturePreviewTitle(_selectedModelSidecarTextureFileName);
+                AppStatusService.SetStatus(BuildSidecarTexturePreviewStatus(_selectedModelSidecarTextureFileName));
             }
             catch (Exception ex) when (ex is ArgumentException or UriFormatException or IOException)
             {
                 TexturePreviewImage.Source = null;
-                TexturePreviewEmptyTextBlock.Text = "Sidecar texture exists, but the preview could not be opened.";
+                TexturePreviewEmptyTextBlock.Text = BuildSidecarTexturePreviewUnreadable();
                 TexturePreviewEmptyTextBlock.Visibility = Visibility.Visible;
             }
         }
@@ -1202,14 +1239,14 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         {
             if (string.IsNullOrWhiteSpace(_selectedExportPath))
             {
-                AppStatusService.SetStatus("Asset Library: no export path selected");
+                AppStatusService.SetStatus(AssetLibraryPageText.NoExportSelectedStatus);
                 return;
             }
 
             DataPackage data = new();
             data.SetText(_selectedExportPath);
             Clipboard.SetContent(data);
-            AppStatusService.SetStatus("Asset Library: export path copied");
+            AppStatusService.SetStatus(AssetLibraryPageText.ExportCopiedStatus);
         }
 
         private bool ConfigureExportActions(string exportPath, bool exists, string label)
@@ -1295,24 +1332,6 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         private static string FormatByteSize(long byteSize)
         {
             return byteSize > 0 ? $"{byteSize:N0} bytes" : "Unknown";
-        }
-
-        private static string BuildPathSummary(string? path)
-        {
-            if (string.IsNullOrWhiteSpace(path))
-            {
-                return "No local path selected";
-            }
-
-            string trimmed = path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-            string name = Path.GetFileName(trimmed);
-            string? parent = Path.GetFileName(Path.GetDirectoryName(trimmed) ?? string.Empty);
-            if (string.IsNullOrWhiteSpace(parent))
-            {
-                return string.IsNullOrWhiteSpace(name) ? "Configured local path" : name;
-            }
-
-            return $"{name} in {parent}";
         }
 
         private static AssetListKind GetInitialAssetKind()

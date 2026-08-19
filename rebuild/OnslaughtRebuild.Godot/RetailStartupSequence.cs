@@ -181,6 +181,19 @@ public sealed partial class RetailStartupSequence : Control
         _initialized = true;
     }
 
+    /// <summary>
+    /// Attract restart: <c>ltlogo</c> then <c>openingfmv</c>, then the host
+    /// re-enters click-to-start. No splash beat. See
+    /// <see cref="RetailAttractLoop"/>.
+    /// </summary>
+    public void InitializeForAttract(string mediaRoot, RetailStartupClockMode clock)
+    {
+        BeginInitialize(clock);
+        _media = RetailStartupMediaIndex.Load(mediaRoot, File.Exists);
+        _schedule = RetailStartupSchedule.ForAttractRestart(_media.Clips);
+        _initialized = true;
+    }
+
     private void BeginInitialize(RetailStartupClockMode clock)
     {
         if (_initialized)
@@ -263,14 +276,20 @@ public sealed partial class RetailStartupSequence : Control
             return;
         }
 
-        // Retail's Play() returns non-zero when the user aborts, and the
-        // sequencer's `test eax,eax / jne done` after each call means one abort
-        // skips every remaining clip rather than only the current one.
+        // CFMV::ReceiveButtonAction 0x004656E0 plus the three backend mouse
+        // latches at 0x0053F2EB. Any other key or pad used to abort here; that
+        // was not the specimen law. See RetailFmvSkip.
+        // One abort still skips every remaining clip: the sequencer's
+        // `test eax,eax / jne done` after each Play().
         bool abort = inputEvent switch
         {
-            InputEventMouseButton button => button.Pressed,
-            InputEventKey key => key.Pressed && !key.Echo,
-            InputEventJoypadButton pad => pad.Pressed,
+            InputEventMouseButton button when button.Pressed =>
+                RetailFmvSkip.AcceptsMouseLatch(
+                    left: button.ButtonIndex == MouseButton.Left,
+                    middle: button.ButtonIndex == MouseButton.Middle,
+                    right: button.ButtonIndex == MouseButton.Right),
+            InputEventKey key when key.Pressed && !key.Echo =>
+                RetailFmvSkip.AcceptsDefaultSkipScanCode(ScanCodeFor(key.Keycode)),
             _ => false,
         };
 
@@ -285,6 +304,19 @@ public sealed partial class RetailStartupSequence : Control
 
     /// <summary>Skips the sequence from code. Used by the smoke harness.</summary>
     public void AbortForHarness() => _aborted = true;
+
+    /// <summary>
+    /// DIK scan codes for the four default skip-cutscene rows. Anything else
+    /// returns 0, which is not in <see cref="RetailFmvSkip.DefaultSkipScanCodes"/>.
+    /// </summary>
+    private static int ScanCodeFor(Key key) => key switch
+    {
+        Key.Space => 0x39,
+        Key.Enter => 0x1C,
+        Key.Escape => 0x01,
+        Key.KpEnter => 0x9C,
+        _ => 0,
+    };
 
     public override void _Draw()
     {

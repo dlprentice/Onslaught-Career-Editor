@@ -1,7 +1,7 @@
 # Repository and Application Map
 
 Status: active source-routing index
-Last updated: 2026-08-08
+Last updated: 2026-08-18
 Summary: stable ownership, dependency direction, and code-entry routing for the
 Onslaught Toolkit repository and its WinUI, AppCore, CLI, rebuild, RE, and
 support surfaces.
@@ -96,7 +96,7 @@ safe-copy implementation.
 | Path | Authority |
 | --- | --- |
 | [`reverse-engineering/`](reverse-engineering/RE-INDEX.md) | Promoted specimen-bound evidence. Its index routes the `delta`, `parity-lab`, `ghidra-functions`, `installed-corpus-census`, `binary-strings`, and `stuart-source-synthesis` masters. |
-| `local-lab/` and `local-proofs/` | Ignored working evidence, retail-derived material, captures, scratch binaries/projects, and frozen local proof boundaries. Read `local-lab/INDEX.md` when present. |
+| `local-lab/` and `local-proofs/` | Ignored working evidence, retail-derived material, captures, scratch binaries/projects, and frozen local proof boundaries. `local-lab/INDEX.md` is the map (2026-08-18 campaign + drive inventories), not a catalog. |
 | [`rebuild/`](rebuild/README.md) | GPL-licensed reconstruction; provenance, determinism, and parity contracts are subtree-owned. |
 | [`tools/`](tools/README.md) | Focused extraction, validation, Ghidra, asset, release, and controlled-runtime instruments. Root [`package.json`](package.json) owns commands. |
 | [`patches/`](patches/README.md) | The only active executable-patch and safe-copy profile catalogs. AppCore owns planning and guarded application. |

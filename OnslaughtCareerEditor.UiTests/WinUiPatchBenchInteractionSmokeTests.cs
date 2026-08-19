@@ -78,11 +78,11 @@ public class WinUiPatchBenchInteractionSmokeTests
             InvokeByAutomationId(window, "PatchBenchAddVersionMarkerButton");
             AssertAutomationNameContains(window, "PatchBenchPlayerModsSelectionStatus", "PATCHED identity marker");
             InvokeByAutomationId(window, "PatchBenchClearVersionMarkerButton");
-            AssertAutomationNameContains(window, "PatchBenchPlayerModsSelectionStatus", "Player mods selected: none");
+            AssertAutomationNameContains(window, "PatchBenchPlayerModsSelectionStatus", "No player mods on");
             InvokeByAutomationId(window, "PatchBenchAddGoodiesPreviewButton");
             AssertAutomationNameContains(window, "PatchBenchPlayerModsSelectionStatus", "Goodies wall preview");
             InvokeByAutomationId(window, "PatchBenchClearGoodiesPreviewButton");
-            AssertAutomationNameContains(window, "PatchBenchPlayerModsSelectionStatus", "Player mods selected: none");
+            AssertAutomationNameContains(window, "PatchBenchPlayerModsSelectionStatus", "No player mods on");
 
             foreach (string normalId in new[]
                      {
@@ -354,8 +354,9 @@ public class WinUiPatchBenchInteractionSmokeTests
             Assert.That(applyComplete, Is.True, "Apply output should report patch completion.");
             string applyLog = TryGetTextBoxText(operationLog) ?? string.Empty;
             Assert.That(applyLog, Does.Not.Contain(sourceExePath), "Primary Patch Bench output should not expose the private source path.");
-            Assert.That(applyLog, Does.Not.Contain(workingCopyPath), "Primary Patch Bench output should summarize the app-owned BEA.exe-only copy path.");
-            Assert.That(applyLog, Does.Contain("app-owned BEA.exe-only copy"));
+            Assert.That(applyLog, Does.Not.Contain(workingCopyPath), "Primary Patch Bench output should summarize the BEA.exe-only copy path.");
+            Assert.That(applyLog, Does.Contain("BEA.exe-only copy"));
+            Assert.That(applyLog, Does.Not.Contain("app-owned BEA.exe-only copy"));
             Assert.That(applyLog, Does.Contain("BEA.exe-only backup snapshot"));
             Assert.That(File.Exists(BinaryPatchEngine.BuildBackupPath(workingCopyPath)), Is.True, "Patch apply should create a backup for the BEA.exe-only copy.");
             Assert.That(SHA256.HashData(File.ReadAllBytes(sourceExePath)), Is.EqualTo(sourceHashBefore), "Source BEA.exe must not be changed by apply.");

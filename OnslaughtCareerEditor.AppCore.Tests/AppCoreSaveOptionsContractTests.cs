@@ -42,7 +42,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             ConfigurationPatchRequest request = new();
 
             Assert.False(ConfigurationEditorService.HasPendingChanges(request));
-            Assert.Contains("No pending configuration changes", ConfigurationEditorService.BuildPendingChangesSummary(request));
+            Assert.Contains(ConfigurationEditorService.NoPendingChangesSelected, ConfigurationEditorService.BuildPendingChangesSummary(request));
         }
     }
 }

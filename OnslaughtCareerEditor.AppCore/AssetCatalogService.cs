@@ -163,7 +163,7 @@ namespace OnslaughtCareerEditor.AppCore
                 .Where(static path => !string.IsNullOrWhiteSpace(path))
                 .ToList();
             if (exportPaths.Distinct(FileMutationSafety.PathComparer).Count() != exportPaths.Count)
-                throw new InvalidOperationException("Asset catalog primary export paths must be unique.");
+                throw new InvalidOperationException("Asset catalog primary exports must be unique.");
             if (goodies.Select(static row => row.Index).Distinct().Count() != goodies.Count)
                 throw new InvalidOperationException("Asset catalog Goodie indexes must be unique.");
         }
@@ -235,7 +235,7 @@ namespace OnslaughtCareerEditor.AppCore
                 GetInt(row, "packed_reference_count") + GetInt(row, "gdie_ref_count"),
                 export.Exists
                     ? FbxModelSummaryReader.Read(export.Stream)
-                    : AssetModelSummary.Unavailable(0, "FBX export is not available at the recorded local path."));
+                    : AssetModelSummary.Unavailable(0, FbxModelSummaryReader.ExportMissing));
         }
 
         private static AssetEmbeddedMeshItem BuildEmbeddedMeshItem(JsonElement row, AssetCatalogLoadSession session)
@@ -252,7 +252,7 @@ namespace OnslaughtCareerEditor.AppCore
                 export.Exists,
                 export.Exists
                     ? FbxModelSummaryReader.Read(export.Stream)
-                    : AssetModelSummary.Unavailable(0, "FBX export is not available at the recorded local path."));
+                    : AssetModelSummary.Unavailable(0, FbxModelSummaryReader.ExportMissing));
         }
 
         private static AssetGoodieItem BuildGoodieItem(JsonElement row)

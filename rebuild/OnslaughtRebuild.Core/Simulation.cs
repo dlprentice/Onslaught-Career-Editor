@@ -134,6 +134,13 @@ public sealed class Simulation
     public WorldSnapshot Snapshot => CreateSnapshot();
 
     /// <summary>
+    /// The live training career <see cref="Level100Mission"/> hands to
+    /// <c>CCareer::Update</c> when Won reaches
+    /// <see cref="Level100MissionTerminalState.FrontEndHandoffReady"/>.
+    /// </summary>
+    internal RetailCareerCampaign Level100Career => _level100Mission.Career;
+
+    /// <summary>
     /// Measurement seam. Applies exactly the two <em>capability grants</em> the
     /// released LevelScript performs at the head of beat 6 —
     /// <c>player.EnableFlightMode()</c> and, for one Target Zone,
@@ -158,6 +165,9 @@ public sealed class Simulation
         _level100Actors.SetObjective(zone.ActorId, true);
         _level100Actors.Activate(zone.ActorId);
     }
+
+    internal uint Level100PulseCannonChargeBits =>
+        _level100PlayerWeapons.PulseCannonChargeBits;
 
     /// <summary>
     /// Causal-probe seam for one terrain touchdown. It places the released
@@ -373,6 +383,7 @@ public sealed class Simulation
         UpdateWalkerFeet();
         UpdateLevel100TriggerActors();
         UpdateResources(playerPartMoveStarted);
+        TryChargeWeapon(playerInput);
         TryFire(playerInput);
         TryChangeWeapon(playerInput);
         UpdateProjectiles();
@@ -3542,6 +3553,19 @@ public sealed class Simulation
                 yawInaccuracy,
                 pitchInaccuracy);
         }
+    }
+
+    private void TryChargeWeapon(SimInput input)
+    {
+        if (!input.HasAction(SimActions.ChargeWeapon) ||
+            _transformTicksRemaining != 0)
+        {
+            return;
+        }
+
+        // Row 10 of the shipped table, before Fire (row 11). The increment
+        // arm is Charge(); ReadyToCharge / store spend stay open.
+        _level100PlayerWeapons.AdvanceCharge(_mode, _transition);
     }
 
     private void TryChangeWeapon(SimInput input)

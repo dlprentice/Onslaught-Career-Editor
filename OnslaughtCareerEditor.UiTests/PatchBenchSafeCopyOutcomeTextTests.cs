@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Reflection;
 using NUnit.Framework;
 
@@ -81,12 +82,122 @@ public class PatchBenchSafeCopyOutcomeTextTests
         });
     }
 
+    [Test]
+    public void ACaughtFailureSaysWhatFailedWithoutTheException()
+    {
+        string line = InvokeString("DescribeCaughtFailure", "launch the safe copy");
+
+        Assert.That(line, Is.EqualTo("Could not launch the safe copy. Nothing was changed."));
+        Assert.That(line, Does.Not.Contain(":\\"));
+        Assert.That(line, Does.Not.Contain("0x"));
+        Assert.That(line.ToLowerInvariant(), Does.Not.Contain("exception"));
+    }
+
+    [Test]
+    public void ADumpedInstalledWriteUsesTheSharedFailureSentence()
+    {
+        string helper = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot,
+            "OnslaughtCareerEditor.WinUI",
+            "Helpers",
+            "PatchBenchSafeCopyOutcomeText.cs"));
+
+        Assert.That(helper, Does.Contain("DescribeInstalledWriteFailure"));
+        Assert.That(helper, Does.Contain("change your installed game"));
+        Assert.That(helper, Does.Contain("LooksLikeAPathOrDump"));
+        Assert.That(helper, Does.Contain("Nothing was changed"));
+        Assert.That(helper.ToLowerInvariant(), Does.Not.Contain("ex.Message"));
+    }
+
+    [Test]
+    public void ADumpedPatchLogUsesTheSharedFailureSentence()
+    {
+        string helper = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot,
+            "OnslaughtCareerEditor.WinUI",
+            "Helpers",
+            "PatchBenchSafeCopyOutcomeText.cs"));
+        string page = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot,
+            "OnslaughtCareerEditor.WinUI",
+            "Pages",
+            "BinaryPatchesPage.xaml.cs"));
+
+        Assert.That(helper, Does.Contain("DescribePatchLog"));
+        Assert.That(helper, Does.Contain("change that BEA.exe"));
+        Assert.That(page, Does.Contain("PatchBenchSafeCopyOutcomeText.DescribePatchLog"));
+        Assert.That(helper, Does.Not.Contain("ex.Message"));
+    }
+
+    [Test]
+    public void CreateConfirmationNamesTheFoldersNotThePaths()
+    {
+        string source = Path.Combine("C:" + Path.DirectorySeparatorChar + "Steam", "steamapps", "common", "Battle Engine Aquila");
+        string dest = Path.Combine("C:" + Path.DirectorySeparatorChar + "Users", "player", "AppData", "GameProfiles");
+        string question = InvokeString(
+            "BuildCreateConfirmation",
+            source,
+            dest,
+            "Settings affecting this copy:" + Environment.NewLine + "Extra settings for next copy: none active.",
+            "There may not be enough free space.");
+
+        Assert.That(question, Does.Contain("Battle Engine Aquila"));
+        Assert.That(question, Does.Contain("GameProfiles"));
+        Assert.That(question, Does.Contain("There may not be enough free space."));
+        Assert.That(question, Does.Contain("Steam/game install stays unchanged"));
+        Assert.That(question, Does.Not.Contain(source));
+        Assert.That(question, Does.Not.Contain(dest));
+        Assert.That(question, Does.Not.Contain(":\\"));
+        Assert.That(question, Does.Not.Contain("steamapps"));
+        Assert.That(question, Does.Not.Contain("Users"));
+    }
+
+    [Test]
+    public void PreparedMusicSwapNamesTheBackupFileNotTheFolder()
+    {
+        object music = CreateMusicSwapTextState(
+            "BEA_01(Master).ogg",
+            "data/Music/BEA_01(Master).ogg.original.backup");
+        string summary = InvokeString("BuildPreparedSummary", CreatePreparedState(music));
+
+        Assert.That(summary, Does.Contain("BEA_01(Master).ogg"));
+        Assert.That(summary, Does.Contain("BEA_01(Master).ogg.original.backup"));
+        Assert.That(summary, Does.Not.Contain("data/Music"));
+        Assert.That(summary, Does.Not.Contain("data\\Music"));
+    }
+
     private static string InvokeString(string methodName, params object?[] arguments)
     {
         return (string)ReflectedWinUiTestSupport.InvokeRequiredStaticMethod(
             GetHelperType(),
             methodName,
             arguments);
+    }
+
+    private static object CreatePreparedState(object musicSwap)
+    {
+        Type stateType = ReflectedWinUiTestSupport.GetRequiredType(
+            "OnslaughtCareerEditor.WinUI.Models.PatchBenchSafeCopyOutcomeTextState",
+            ReflectedSafeCopyOutcomeSourcePaths);
+
+        return Activator.CreateInstance(
+            stateType,
+            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
+            binder: null,
+            args:
+            [
+                false,
+                null,
+                musicSwap,
+                "copy-one",
+                1,
+                "none",
+                "no launch modifiers",
+                false,
+                false,
+            ],
+            culture: null)
+            ?? throw new InvalidOperationException($"Could not create {stateType.FullName}.");
     }
 
     private static object CreateMusicSwapTextState(string targetMusicFileName, string backupRelativePath)
