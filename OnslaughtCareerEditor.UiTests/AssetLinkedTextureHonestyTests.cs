@@ -40,8 +40,9 @@ public class AssetLinkedTextureHonestyTests
         Assert.That(page, Does.Contain("AssetLibraryPageText.SidecarPreviewRefused"));
         Assert.That(page, Does.Not.Contain("trusted-root"));
         Assert.That(page, Does.Not.Contain("failed trusted-root validation"));
-        Assert.That(sentence, Is.EqualTo("Asset Library: that sidecar texture could not be opened."));
-        Assert.That(sentence, Does.Contain("sidecar texture"));
+        Assert.That(sentence, Is.EqualTo("Asset Library: that texture could not be opened."));
+        Assert.That(sentence, Does.Contain("texture"));
+        Assert.That(sentence.ToLowerInvariant(), Does.Not.Contain("sidecar"));
         Assert.That(sentence.ToLowerInvariant(), Does.Not.Contain("trusted"));
         Assert.That(sentence.ToLowerInvariant(), Does.Not.Contain("root"));
         Assert.That(sentence.ToLowerInvariant(), Does.Not.Contain("path"));
