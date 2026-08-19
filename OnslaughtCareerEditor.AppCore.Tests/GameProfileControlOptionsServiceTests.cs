@@ -175,7 +175,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
 
                 InvalidOperationException executableError = Assert.Throws<InvalidOperationException>(() =>
                     GameProfilePreflightService.ValidateSaveStagingProfileRoot(prepared.TargetGameRoot));
-                Assert.Contains("executable", executableError.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Contains("BEA.exe", executableError.Message, StringComparison.OrdinalIgnoreCase);
             }
             finally
             {
@@ -516,7 +516,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                             AppOwnedProfilesRoot: outputRoot,
                             MouseSensitivityOverride: GameProfileControlOptionsService.SharperMouseLookSensitivity)));
 
-                Assert.Contains("reparse", reparseEx.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Contains("shortcut or link", reparseEx.Message, StringComparison.OrdinalIgnoreCase);
                 Assert.Equal(optionsBefore, File.ReadAllBytes(optionsPath));
                 Assert.Empty(Directory.GetFiles(prepared.TargetGameRoot, "defaultoptions.bea.*.bak"));
             }

@@ -830,7 +830,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                     using AssetCatalogSourceLease _ = AssetCatalogSourceAccessService.Open(snapshot, sourcePath);
                 });
 
-                Assert.Contains("root", error.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Contains("catalog folder", error.Message, StringComparison.OrdinalIgnoreCase);
                 Assert.Contains("identity", error.Message, StringComparison.OrdinalIgnoreCase);
             }
             finally
