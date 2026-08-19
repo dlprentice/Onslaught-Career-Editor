@@ -72,7 +72,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
             if (!Directory.Exists(path))
             {
-                GameDirectoryStatusTextBlock.Text = "Directory does not exist.";
+                GameDirectoryStatusTextBlock.Text = "That folder is gone.";
                 GameDirectoryStatusTextBlock.Foreground = ThemeBrushes.Danger();
                 return;
             }
@@ -238,7 +238,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
             if (!Directory.Exists(path))
             {
-                AppStatusService.SetStatus("Settings: game directory path is invalid");
+                AppStatusService.SetStatus("Settings: that folder is gone");
                 return;
             }
 

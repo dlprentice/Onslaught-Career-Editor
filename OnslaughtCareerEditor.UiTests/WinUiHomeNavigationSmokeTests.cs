@@ -221,7 +221,7 @@ public class WinUiHomeNavigationSmokeTests
 
         Assert.That(
             FindByAutomationId(window, "SettingsGameDirectoryStatus").Name,
-            Is.EqualTo("Directory does not exist."));
+            Is.EqualTo("That folder is gone."));
         Assert.That(
             FindByAutomationId(window, "SettingsGameDirectorySummary").Name,
             Is.EqualTo(Path.GetFileName(missingGameDirectory)));
