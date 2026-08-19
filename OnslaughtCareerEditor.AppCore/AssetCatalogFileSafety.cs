@@ -95,7 +95,7 @@ namespace OnslaughtCareerEditor.AppCore
             if (string.IsNullOrWhiteSpace(catalogPath))
                 return string.Empty;
 
-            string normalizedRoot = FileMutationSafety.NormalizeLocalPath(trustedRoot, "Trusted asset export root");
+            string normalizedRoot = FileMutationSafety.NormalizeLocalPath(trustedRoot, "generated export folder");
             string normalizedPath = catalogPath.Replace('/', Path.DirectorySeparatorChar);
             string resolvedPath = Path.IsPathRooted(normalizedPath)
                 ? FileMutationSafety.NormalizeLocalPath(normalizedPath, "Catalog export file")
@@ -118,7 +118,7 @@ namespace OnslaughtCareerEditor.AppCore
                 return null;
 
             string normalizedCatalog = FileMutationSafety.NormalizeLocalPath(catalogPath, "Asset catalog file");
-            string normalizedRoot = FileMutationSafety.NormalizeLocalPath(trustedRoot, "Trusted asset export root");
+            string normalizedRoot = FileMutationSafety.NormalizeLocalPath(trustedRoot, "generated export folder");
             string volumeRoot = Path.GetPathRoot(normalizedRoot) ?? string.Empty;
             if (string.Equals(
                     normalizedRoot.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar),
@@ -176,7 +176,7 @@ namespace OnslaughtCareerEditor.AppCore
             {
                 _rootLocks = FileMutationSafety.LockDirectoryTree(
                     selection.TrustedExportRoot,
-                    "Trusted asset export root");
+                    "generated export folder");
                 FileMutationSafety.RejectOutputInGameTree(
                     Path.Combine(_rootLocks.PhysicalPath, ".onslaught-asset-root-probe"));
 
@@ -499,7 +499,7 @@ namespace OnslaughtCareerEditor.AppCore
                 session = AssetCatalogFileSafety.BeginLoad(selection);
                 string expectedRoot = FileMutationSafety.NormalizeLocalPath(
                     snapshot.TrustedExportRoot,
-                    "Snapshot trusted asset export root");
+                    "generated export folder");
                 if (!string.Equals(
                         session.TrustedExportRoot,
                         expectedRoot,

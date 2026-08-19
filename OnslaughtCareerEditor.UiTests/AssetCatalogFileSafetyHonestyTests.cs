@@ -128,4 +128,15 @@ public class AssetCatalogFileSafetyHonestyTests
         Assert.That(source, Does.Contain("CatalogJsonMissing"));
         Assert.That(source, Does.Contain("The catalog folder no longer has catalog.json."));
     }
+
+    [Test]
+    public void CatalogAccessNamesTheExportFolderNotATrustedRoot()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "AssetCatalogFileSafety.cs"));
+
+        Assert.That(source, Does.Not.Contain("Trusted asset export root"));
+        Assert.That(source, Does.Not.Contain("Snapshot trusted asset export root"));
+        Assert.That(source, Does.Contain("\"generated export folder\""));
+    }
 }
