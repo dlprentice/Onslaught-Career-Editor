@@ -131,7 +131,7 @@ namespace OnslaughtCareerEditor.WinUI.Models
                 "free_camera_keyboard_strafe_right_q_hook" => "A safe-copy run observed hook bytes, cave bytes, Q/button-30 dispatch, post-cave button-41 readback, and changing free-camera position through PrepareForInterpolation.",
                 "free_camera_keyboard_yaw_left_q_hook" => "A safe-copy run observed hook bytes, cave bytes, Q/button-25 dispatch, post-cave button-36 readback, and changing free-camera orientation through PrepareForInterpolation.",
                 "free_camera_keyboard_yaw_right_q_hook" => "A safe-copy run observed hook bytes, cave bytes, Q/button-27 dispatch, post-cave button-37 readback, and changing free-camera orientation through PrepareForInterpolation.",
-                "free_camera_keyboard_pitch_up_q_hook" => "Safe-copy CDB proof observed hook bytes, cave bytes, Q/button-26 dispatch with negative vertical analogue value, post-cave button-34 readback, and changing free-camera orientation through PrepareForInterpolation.",
+                "free_camera_keyboard_pitch_up_q_hook" => "A safe-copy run observed hook bytes, cave bytes, Q/button-26 dispatch with negative vertical analogue value, post-cave button-34 readback, and changing free-camera orientation through PrepareForInterpolation.",
                 "free_camera_keyboard_pitch_down_q_hook" => "Safe-copy CDB proof observed hook bytes, cave bytes, Q/button-28 dispatch with positive vertical analogue value, post-cave button-35 readback, and changing free-camera orientation through PrepareForInterpolation.",
                 _ => "Patch bytes are checked before and after apply.",
             };
