@@ -1535,7 +1535,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 // both. Whether those roots should be protected is an open owner decision; until it is
                 // taken, the sentence must not imply they already are.
                 EditorSafetyHintTextBlock.Text =
-                    "Output path must end in .bes and must not land inside the installed game folder " +
+                    "The output file must end in .bes and must not land inside the installed game folder " +
                     "(the one holding BEA.exe and data). That is the only location blocked: your " +
                     "Documents and AppData save folders are not, so an output file there can replace a " +
                     "real career and no backup is taken.";

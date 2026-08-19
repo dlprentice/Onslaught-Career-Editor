@@ -80,13 +80,10 @@ live in `developer_state.json` and the campaign ledgers.
   status, not the internal read sentence. Installed-game patch and restore
   questions name the folder, not the path. A Save Analyzer report that
   cannot decode keybinds names that, without the exception. A Lore document
-<<<<<<< HEAD
   tooltip names the file, not the lore-book folder. A failed career rescue
-  with a path or Win32 dump uses the shared keep-failed sentence.
-=======
-  tooltip names the file, not the lore-book folder. A missing patch or
-  profile catalog no longer dumps the exception.
->>>>>>> 9b5cca61 (feat(app): keep exceptions off a missing patch catalog)
+  with a path or Win32 dump uses the shared keep-failed sentence. A missing
+  patch or profile catalog no longer dumps the exception. Save Lab names
+  the output file, not a path, when the destination is not a career save.
 
 ## 1.0.11 — 2026-08-07
 

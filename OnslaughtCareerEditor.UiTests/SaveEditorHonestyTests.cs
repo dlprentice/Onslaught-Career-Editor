@@ -421,6 +421,7 @@ public class SaveEditorHonestyTests
         // BEA.exe and data/. The user's Documents and LocalAppData save roots match neither, and the
         // app itself offers files from both, so a sentence promising "every game folder" was false.
         Assert.That(hint, Does.Not.Contain("every game folder"));
+        Assert.That(hint.ToLowerInvariant(), Does.Not.Contain("path"));
         Assert.That(hint, Does.Contain("BEA.exe"),
             "The hint must name what the guard actually keys on.");
         Assert.That(
@@ -439,7 +440,7 @@ public class SaveEditorHonestyTests
         Assert.That(File.Exists(source), Is.True, $"Missing {source}");
 
         string text = File.ReadAllText(source);
-        const string marker = "Output path must end in .bes";
+        const string marker = "The output file must end in .bes";
         int start = text.IndexOf(marker, StringComparison.Ordinal);
         Assert.That(start, Is.GreaterThanOrEqualTo(0), "The output-safety hint literal was not found.");
 
