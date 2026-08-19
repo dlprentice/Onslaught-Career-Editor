@@ -143,4 +143,34 @@ public sealed class RetailConfirmedKillTests
             new[] { 0, 0, 0, 0, 0 },
             RetailFillOutEndLevelData.ForLevel100Won().ThingsKilled);
     }
+
+    /// <summary>
+    /// Independently re-read specimen <c>74154bfa…</c>: after the
+    /// allegiance compare, <c>0x0040a56d</c> <c>mov ecx,[ecx+0x574]</c>
+    /// / <c>0x0040a573</c> <c>test ecx,ecx</c> / <c>je 0x0040a57d</c>
+    /// skips <c>0x004d30d0</c>. Bytes are a null pointer, not source
+    /// <c>ToRead()</c> dying-flag. Mutation: increment anyway.
+    /// First-play totals stay unclaimed. Do not invent secondaries.
+    /// </summary>
+    [Fact]
+    public void Level100Won_ConfirmedKillDoesNotIncrementWhenPlayerReaderIsNull()
+    {
+        int[] after = RetailConfirmedKill.Apply(
+            RetailFillOutEndLevelData.FirstPlayThingsKilled(),
+            thingFlags: RetailConfirmedKill.Slot0Flag |
+                RetailConfirmedKill.Slot1Flag |
+                RetailConfirmedKill.Slot2Flag |
+                RetailConfirmedKill.Slot3Flag |
+                RetailConfirmedKill.Slot4Flag,
+            thingAllegiance: 1,
+            playerReaderNonNull: false);
+
+        Assert.Equal(new[] { 0, 0, 0, 0, 0 }, after);
+        Assert.Equal(
+            RetailFillOutEndLevelData.FirstPlayThingsKilled(),
+            after);
+        Assert.All(
+            RetailFillOutEndLevelData.ForLevel100Won().SecondaryStatuses,
+            status => Assert.Equal(0, status));
+    }
 }

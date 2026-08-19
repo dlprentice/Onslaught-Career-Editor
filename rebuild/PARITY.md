@@ -1,7 +1,7 @@
 # Rebuild parity contract
 
 Status: active — what "1:1 behavioral and experiential parity" means operationally
-Last updated: 2026-08-19 (Level 100 ConfirmedKill remaining incrementer slots).
+Last updated: 2026-08-19 (Level 100 ConfirmedKill null player-reader skip).
 Evidence: SOURCE — authority order and the known divergences are
 recorded in `PROVENANCE.md` plus the Lost-countdown row of this table; gate capabilities are MEASURED claims of the
 tracked harnesses named in the table. Every row of *Carried retail contracts*
@@ -118,6 +118,7 @@ Owner paths are relative to the repository root; test names are relative to
 | `CCareer::UpdateThingsKilled` after Level 100 Won | `0x0041c180`. `cmp eax,0x64` / `je` at `0x0041c188` still refuses world 100. A non-zero FillOut kill vector does not accumulate. ConfirmedKill increment values stay unclaimed. Iceberg store-0 and first-play elapsed stay unclaimed. No new secondaries | `rebuild/OnslaughtRebuild.Core/RetailCareerProgress.cs` | `RetailCareerCounters.UpdateThingsKilled` | `RetailCareerCampaignApplyUpdateTests.Level100Won_ApplyUpdateDoesNotAccumulateThingsKilledForWorld100` | 1 | drop the equality skip |
 | `CBattleEngine::ConfirmedKill` Level 100 allegiance gate | Independently re-read specimen: `0x0040a564` `cmp [eax+0x138],1` / `jne 0x0040a57d` skips `0x004d30d0`. One inbound `E8` at `0x0040a578`. First-play totals stay unclaimed — a Won that never takes this path still snapshots five zeros. Iceberg store-0 stays open. No new secondaries | `rebuild/OnslaughtRebuild.Core/RetailConfirmedKill.cs` | `RetailConfirmedKill.Apply` | `RetailConfirmedKillTests.Level100Won_ConfirmedKillDoesNotIncrementWhenThingAllegianceIsNotOne` | 1 | increment even when `+0x138` is not 1 |
 | `CBattleEngine::ConfirmedKill` Level 100 incrementer remaining slots | Independently re-read specimen: `0x004d30eb` `test [eax+0x34],0x40000` / `inc [ecx+0x10]`; `0x004d30fa` `test dh,0x40` = `0x4000` / `inc [ecx+0x14]`; `0x004d3105` `test dh,8` = `0x800` / `inc [ecx+0x18]`. First-play totals stay unclaimed. Iceberg store-0 stays open. No new secondaries | `rebuild/OnslaughtRebuild.Core/RetailConfirmedKill.cs` | `RetailConfirmedKill.Apply` | `RetailConfirmedKillTests.Level100Won_ConfirmedKillIncrementsSlotTwoOnFlag40000` | 1 | write `0x40000` into slot 0 |
+| `CBattleEngine::ConfirmedKill` Level 100 null player-reader skip | Independently re-read specimen: `0x0040a56d` `mov ecx,[ecx+0x574]` / `0x0040a573` `test ecx,ecx` / `je 0x0040a57d` skips `0x004d30d0`. Bytes are a null pointer, not source `ToRead()` dying-flag. First-play totals stay unclaimed. Iceberg store-0 stays open. No new secondaries | `rebuild/OnslaughtRebuild.Core/RetailConfirmedKill.cs` | `RetailConfirmedKill.Apply` | `RetailConfirmedKillTests.Level100Won_ConfirmedKillDoesNotIncrementWhenPlayerReaderIsNull` | 1 | increment even when the reader is null |
 | `CGame::FillOutEndLevelData` then `CCareer::UpdateGoodieStates` from Level 100 `FrontEndHandoffReady` | After the already-pinned Won countdown, first-play FillOut 1.0f / S unlocks goodies 0, 8, 78, 121, and 164. Cite `0x0041de68` / `0x0041ea4f` / `0x0041f70e`. Score-time / base-things / kill totals stay unclaimed. No new secondaries | `rebuild/OnslaughtRebuild.Core/Level100WonCareerHandoff.cs` | `Level100WonCareerHandoff.TryApply` | `Level100WonCareerHandoffTests.FrontEndHandoffReadyAfterWon_UnlocksTrainingGoodiesForAnS` | 1 | skip `ApplyUpdate` on the handoff |
 
 Two things this table deliberately does **not** claim. It does not claim these
@@ -170,6 +171,8 @@ owner. The ConfirmedKill allegiance row names
 `RetailConfirmedKill.Apply`; first-play totals stay unclaimed.
 The remaining incrementer-slot row names that same
 `Apply` owner; it does not rewrite first-play totals.
+The null player-reader row names that same `Apply`
+owner; first-play still has a live player 0.
 The TF_DYING store-0 row names `BaseThingLeftWord` on the
 already-pinned FillOut owner. Charge and the
 career graph are not in `StateHasher` because they do not yet change fire,

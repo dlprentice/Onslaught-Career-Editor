@@ -13,8 +13,11 @@ namespace OnslaughtRebuild.Core;
 /// <c>74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750</c>.
 /// Caller <c>0x0040a560</c>: <c>cmp [thing+0x138],1</c> at
 /// <c>0x0040a564</c> / <c>jne 0x0040a57d</c>, then
-/// <c>[this+0x574]</c> must be live, then <c>E8</c> at
-/// <c>0x0040a578</c>. <c>tools/call_xref_scan.py</c> on
+/// <c>0x0040a56d</c> <c>mov ecx,[ecx+0x574]</c> /
+/// <c>0x0040a573</c> <c>test ecx,ecx</c> / <c>je 0x0040a57d</c>,
+/// then <c>E8</c> at <c>0x0040a578</c>. That is a null pointer,
+/// not source <c>ToRead()</c> dying-flag.
+/// <c>tools/call_xref_scan.py</c> on
 /// <c>0x004d30d0</c> is that one inbound call.
 /// </para>
 /// <para>
@@ -49,7 +52,11 @@ public static class RetailConfirmedKill
     /// Apply the caller gate then the five incrementer bits. Returns a
     /// new five-word vector. Does not mutate <paramref name="current"/>.
     /// </summary>
-    public static int[] Apply(IReadOnlyList<int> current, int thingFlags, int thingAllegiance)
+    public static int[] Apply(
+        IReadOnlyList<int> current,
+        int thingFlags,
+        int thingAllegiance,
+        bool playerReaderNonNull = true)
     {
         if (current is null)
         {
@@ -70,6 +77,11 @@ public static class RetailConfirmedKill
         }
 
         if (thingAllegiance != EnemyAllegiance)
+        {
+            return next;
+        }
+
+        if (!playerReaderNonNull)
         {
             return next;
         }
