@@ -532,7 +532,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             Assert.Equal("Analysis: broken.bes", document.Title);
             Assert.Equal(SaveAnalyzerService.AnalysisFailed, document.StatusText);
             Assert.Single(document.SummaryNodes);
-            Assert.Equal("Invalid file size", document.SummaryNodes[0].Label);
+            Assert.Equal(SaveAnalyzerService.AnalysisFailed, document.SummaryNodes[0].Label);
             Assert.Contains("ERROR: Invalid file size", document.ReportText);
         }
 
@@ -574,6 +574,22 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             Assert.DoesNotContain(
                 "Invalid file size",
                 document.Metrics.Single(metric => metric.Label == "Missions").Detail ?? string.Empty);
+        }
+
+        [Fact]
+        public void BuildAnalysisDocument_DoesNotDumpTheAnalyzerErrorOnTheTree()
+        {
+            SaveAnalysis analysis = new()
+            {
+                IsValid = false,
+                FilePath = @"C:\Games\Steam\steamapps\common\Battle Engine Aquila\career.bes",
+                ErrorMessage = "Invalid file size: 9,972 bytes (expected 10,004)"
+            };
+
+            SaveAnalyzerDocument document = SaveAnalyzerService.BuildAnalysisDocument(analysis, verbose: false, dumpMystery: false);
+
+            Assert.Equal(SaveAnalyzerService.AnalysisFailed, document.SummaryNodes[0].Label);
+            Assert.Contains("ERROR: Invalid file size", document.ReportText);
         }
 
         [Fact]
