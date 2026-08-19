@@ -74,11 +74,12 @@ public readonly record struct RetailEndLevelSnapshot(
 /// snapshot ranking from an invented score.
 /// </para>
 /// <para>
-/// <b>Not established here.</b> Career
-/// <c>UpdateBaseWorldExistsStuffForNode</c> onto world 110. A
-/// player who wrecks an iceberg and still Wins would store 0 on
-/// those type-35 indices. First-play elapsed and score. ConfirmedKill
-/// increments when the player actually scores those bits.
+/// <b>Not established here.</b> A player who wrecks an iceberg
+/// and still Wins would store 0 on those type-35 indices.
+/// First-play elapsed and score. ConfirmedKill increments when
+/// the player actually scores those bits. Career
+/// <c>UpdateBaseWorldExistsStuffForNode</c> onto world 110 is
+/// the already-pinned <see cref="RetailCareerCampaign"/> slice.
 /// </para>
 /// </remarks>
 public static class RetailFillOutEndLevelData

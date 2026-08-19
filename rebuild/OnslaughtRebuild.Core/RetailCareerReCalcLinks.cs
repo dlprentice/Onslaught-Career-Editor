@@ -90,14 +90,26 @@ public sealed class RetailCareerNodeLink
 /// <c>BlankRanking</c> / grade E.
 /// </para>
 /// <para>
+/// <b>Base things land on world 110, not 100.</b>
+/// <c>Career.cpp:443-452</c> calls
+/// <c>UpdateBaseWorldExistsStuffForNode(GetNodeFromWorldNo(
+/// level_structure[node][3]))</c> when that column is not -1.
+/// For world 100 that column is 110. The 288-word FillOut vector
+/// is forwarded through <c>SetBaseThingExistTo</c>
+/// (<c>Career.cpp:519-527</c>); only literal 1 sets a bit, so the
+/// first-play zeros at 35..287 clear Blank's all-1s on 110.
+/// <c>level_structure[0][4]</c> is -1, so the secondary arm does
+/// not run.
+/// </para>
+/// <para>
 /// <b>Not established here.</b> The world-500 slot arm
-/// (<c>Career.cpp:468-481</c>). <c>UpdateBaseWorldExistsStuffForNode</c>
-/// on <c>level_structure[0][3] == 110</c>. The ranking clamp constants
-/// 0.4 / 0.6 inside <c>FillOutEndLevelData</c> — they are gated on a
-/// non-zero secondary count, so Level 100 never reaches them.
-/// Score-time, base-things contents, and CPlayer kill readout stay
-/// unclaimed. The Level 100 goodie arms (0, 8, 78, 121, 164) are the
-/// already-pinned <see cref="RetailCareerUpdateGoodieStates"/> slice.
+/// (<c>Career.cpp:468-481</c>). Iceberg player-kill store-0.
+/// First-play elapsed and score. ConfirmedKill increments. The
+/// ranking clamp constants 0.4 / 0.6 inside
+/// <c>FillOutEndLevelData</c> — they are gated on a non-zero
+/// secondary count, so Level 100 never reaches them. The Level
+/// 100 goodie arms (0, 8, 78, 121, 164) are the already-pinned
+/// <see cref="RetailCareerUpdateGoodieStates"/> slice.
 /// </para>
 /// </remarks>
 public static class RetailCareerReCalcLinks
@@ -107,6 +119,20 @@ public static class RetailCareerReCalcLinks
 
     /// <summary>World 110 — <c>level_structure[0][1]</c> is node index 1, whose world is 110.</summary>
     public const int TrainingLowerChildWorldNumber = 110;
+
+    /// <summary>
+    /// <c>level_structure[0][3]</c> — the world
+    /// <c>UpdateBaseWorldExistsStuffForNode</c> writes after a world-100
+    /// primary. Same number as the lower child, different column.
+    /// </summary>
+    public const int TrainingPrimaryBaseThingsWorldNumber = 110;
+
+    /// <summary>
+    /// <c>level_structure[0][4]</c> — no higher-tier base-things
+    /// destination, and Level 100 secondaries are the no-objectives
+    /// FALSE anyway.
+    /// </summary>
+    public const int TrainingSecondaryBaseThingsWorldNumber = -1;
 
     /// <summary>The unused higher child of world 100 — <c>level_structure[0][2]</c>.</summary>
     public const int TrainingHigherChildNodeIndex = -1;
@@ -203,7 +229,8 @@ public sealed class RetailCareerCampaign
             snapshot.Ranking,
             snapshot.SecondaryStatuses,
             snapshot.ThingsKilled,
-            snapshot.SlotWords);
+            snapshot.SlotWords,
+            snapshot.BaseThingsLeft);
 
     /// <summary>
     /// <c>CCareer::Update</c> then <c>ReCalcLinks</c> —
@@ -218,7 +245,8 @@ public sealed class RetailCareerCampaign
         float ranking,
         IReadOnlyList<int> secondaryObjectiveStatuses,
         IReadOnlyList<int> thingsKilledThisLevel,
-        IReadOnlyList<int>? slotWords = null)
+        IReadOnlyList<int>? slotWords = null,
+        IReadOnlyList<int>? baseThingsLeft = null)
     {
         if (finalState != RetailCareerReCalcLinks.GameStateLevelWon)
         {
@@ -246,7 +274,7 @@ public sealed class RetailCareerCampaign
 
         node.Complete = 1;
         CareerInProgress = 1;
-        ReCalcLinks(worldFinished, secondaryObjectiveStatuses);
+        ReCalcLinks(worldFinished, secondaryObjectiveStatuses, baseThingsLeft);
         RetailCareerUpdateGoodieStates.Update(this);
     }
 
@@ -257,7 +285,8 @@ public sealed class RetailCareerCampaign
     /// </summary>
     public void ReCalcLinks(
         int worldFinished,
-        IReadOnlyList<int> secondaryObjectiveStatuses)
+        IReadOnlyList<int> secondaryObjectiveStatuses,
+        IReadOnlyList<int>? baseThingsLeft = null)
     {
         if (worldFinished == World500)
         {
@@ -272,6 +301,11 @@ public sealed class RetailCareerCampaign
             return;
         }
 
+        if (baseThingsLeft is not null)
+        {
+            CopyLevel100PrimaryBaseThings(worldFinished, baseThingsLeft);
+        }
+
         RetailSecondaryObjectiveVerdict verdict =
             RetailEndLevelObjectives.IsAllSecondaryObjectivesComplete(
                 secondaryObjectiveStatuses);
@@ -279,6 +313,44 @@ public sealed class RetailCareerCampaign
         // GetChildLinks always yields lower then higher, even when ToNode is -1.
         TryCompleteChild(GetLink(finished.LowerLink), isHigher: false, verdict);
         TryCompleteChild(GetLink(finished.HigherLink), isHigher: true, verdict);
+    }
+
+    /// <summary>
+    /// <c>CCareer::UpdateBaseWorldExistsStuffForNode</c> —
+    /// <c>Career.cpp:519-527</c>. Forwards each of the 288 FillOut
+    /// dwords through <see cref="RetailCareerNode.SetBaseThingExistTo"/>.
+    /// </summary>
+    public static void UpdateBaseWorldExistsStuffForNode(
+        RetailCareerNode node,
+        IReadOnlyList<int> baseThingsLeft)
+    {
+        ArgumentNullException.ThrowIfNull(node);
+        ArgumentNullException.ThrowIfNull(baseThingsLeft);
+
+        for (int offset = 0; offset < RetailCareerNode.BaseThingsExistsSize; offset++)
+        {
+            int value = offset < baseThingsLeft.Count ? baseThingsLeft[offset] : 0;
+            node.SetBaseThingExistTo(offset, value);
+        }
+    }
+
+    private void CopyLevel100PrimaryBaseThings(
+        int worldFinished,
+        IReadOnlyList<int> baseThingsLeft)
+    {
+        if (worldFinished != RetailCareerReCalcLinks.TrainingWorldNumber)
+        {
+            return;
+        }
+
+        RetailCareerNode? destination = Nodes.Find(
+            RetailCareerReCalcLinks.TrainingPrimaryBaseThingsWorldNumber);
+        if (destination is null)
+        {
+            return;
+        }
+
+        UpdateBaseWorldExistsStuffForNode(destination, baseThingsLeft);
     }
 
     private void TryCompleteChild(
