@@ -290,7 +290,7 @@ namespace OnslaughtCareerEditor.AppCore
             if (!string.Equals(Path.GetFullPath(manifestTargetPath), Path.GetFullPath(targetPath), StringComparison.OrdinalIgnoreCase) ||
                 !string.Equals(Path.GetFullPath(manifestBackupPath), Path.GetFullPath(backupPath), StringComparison.OrdinalIgnoreCase))
             {
-                throw new InvalidOperationException("Playable copied game folder music replacement manifest paths do not match the target music file.");
+                throw new InvalidOperationException("Playable copied game folder music replacement manifest files do not match the target music file.");
             }
 
             if (!File.Exists(backupPath))
@@ -413,7 +413,7 @@ namespace OnslaughtCareerEditor.AppCore
         private static string ResolveManifestRelativePath(string safeRoot, string relativePath)
         {
             if (string.IsNullOrWhiteSpace(relativePath) || Path.IsPathFullyQualified(relativePath))
-                throw new InvalidOperationException("Music replacement manifest paths must be package-relative.");
+                throw new InvalidOperationException("Music replacement manifest files must stay inside the copy.");
 
             string fullPath = Path.GetFullPath(Path.Combine(safeRoot, relativePath.Replace('/', Path.DirectorySeparatorChar)));
             if (!IsSameOrUnderRoot(fullPath, safeRoot))

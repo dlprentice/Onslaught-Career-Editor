@@ -180,7 +180,7 @@ live in `developer_state.json` and the campaign ledgers.
   not the emptiness. A missing playable copy names the folder, not a path.
   Staging music in a missing copy names the folder, not a path. A
   resolved network or non-local drive refusal names the location,
-  not a path.
+  not a path. A music replacement manifest names the files, not a path.
   A Windowed & Mods create that cannot see the source game folder names
   the next step, not the emptiness.
 
