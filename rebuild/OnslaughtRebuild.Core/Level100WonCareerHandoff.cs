@@ -36,6 +36,13 @@ namespace OnslaughtRebuild.Core;
 /// still incomplete, so goodie 14 stays <c>GS_UNKNOWN</c>.
 /// Isolated closed COMPLETE_LEVEL(110) names ApplyUpdate and
 /// does not go through this seam.
+/// Leftover <c>mNumAttempts</c> on world 100 (7) and world 110
+/// (11) also survives this seam: <c>CCareer::Update</c> never
+/// writes <c>+0x38</c>. Isolated leftover 7 / 11 names
+/// ApplyUpdate and does not go through this seam. Isolated
+/// Blank ctor 0 and existing FrontEndHandoff ranking /
+/// Complete / CareerInProgress / goodie tests do not name
+/// <c>+0x38</c>.
 /// </para>
 /// <para>
 /// <b>Do not invent secondaries.</b> Level 100 ships four primaries and
