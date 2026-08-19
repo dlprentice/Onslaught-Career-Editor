@@ -145,7 +145,7 @@ namespace OnslaughtCareerEditor.AppCore
                     Directory.Exists(Path.Combine(current, "data")))
                 {
                     throw new InvalidOperationException(
-                        "Output paths inside a Battle Engine Aquila game folder are blocked. Choose the app-owned patched-output folder or another non-game folder.");
+                        "Output files inside a Battle Engine Aquila game folder are blocked. Choose the app-owned patched-output folder or another non-game folder.");
                 }
 
                 string? parent = Path.GetDirectoryName(current);

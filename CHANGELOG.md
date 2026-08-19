@@ -114,7 +114,9 @@ live in `developer_state.json` and the campaign ledgers.
   compare error, on the status line. Keeping careers and then deleting a
   copy names a dumped removal without the path. A media-only install
   names the data folder, not media/data. A Cheats refresh
-  that still finds no copies names the next step, not the emptiness.
+  that still finds no copies names the next step, not the emptiness. A
+  write inside a Battle Engine Aquila game folder names the files, not
+  the output paths.
 
 ## 1.0.11 — 2026-08-07
 
