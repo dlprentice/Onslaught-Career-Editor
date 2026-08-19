@@ -28,7 +28,7 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         {
             if (string.IsNullOrWhiteSpace(path))
             {
-                return "No local path selected";
+                return "No file selected";
             }
 
             string trimmed = path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
@@ -36,7 +36,7 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
             string? parent = Path.GetFileName(Path.GetDirectoryName(trimmed) ?? string.Empty);
             if (string.IsNullOrWhiteSpace(parent))
             {
-                return string.IsNullOrWhiteSpace(name) ? "Configured local path" : name;
+                return string.IsNullOrWhiteSpace(name) ? "That file" : name;
             }
 
             return $"{name} in {parent}";

@@ -65,8 +65,10 @@ public class AssetLibraryHonestyTests
     [Test]
     public void AMissingAssetPathFallsBackWithoutPrintingAPath()
     {
-        Assert.That(AssetLibraryPageText.BuildPathSummary("   "), Is.EqualTo("No local path selected"));
-        Assert.That(AssetLibraryPageText.BuildPathSummary(null), Is.EqualTo("No local path selected"));
+        Assert.That(AssetLibraryPageText.BuildPathSummary("   "), Is.EqualTo("No file selected"));
+        Assert.That(AssetLibraryPageText.BuildPathSummary(null), Is.EqualTo("No file selected"));
+        Assert.That(AssetLibraryPageText.BuildPathSummary("   ").ToLowerInvariant(), Does.Not.Contain("path"));
+        Assert.That(AssetLibraryPageText.BuildPathSummary(@"C:\").ToLowerInvariant(), Does.Not.Contain("path"));
     }
 
     [Test]
