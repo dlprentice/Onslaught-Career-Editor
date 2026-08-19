@@ -492,7 +492,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             ModelWireframeNoteTextBlock.Visibility = Visibility.Collapsed;
             TexturePreviewEmptyTextBlock.Text = exportAvailable
                 ? "Loading texture preview..."
-                : "Texture export is not available at the recorded local path.";
+                : PngHeaderReader.ExportMissing;
             ModelTextureLinksTextBlock.Text = "Catalog texture links appear when a model export is selected.";
             ClearSelectedModelLinkedTexture();
 

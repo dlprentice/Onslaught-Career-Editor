@@ -48,7 +48,7 @@ namespace OnslaughtCareerEditor.AppCore
                 exportExists = source.Exists;
                 header = source.Exists
                     ? PngHeaderReader.Read(source.Stream)
-                    : new PngHeaderInfo(false, null, null, 0, "PNG export is not available at the recorded local path.");
+                    : new PngHeaderInfo(false, null, null, 0, PngHeaderReader.ExportMissing);
             }
             catch (Exception ex) when (ex is ArgumentException or IOException or InvalidOperationException or NotSupportedException or UnauthorizedAccessException)
             {

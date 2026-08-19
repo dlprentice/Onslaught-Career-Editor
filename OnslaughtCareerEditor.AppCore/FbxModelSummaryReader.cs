@@ -5,6 +5,7 @@ namespace OnslaughtCareerEditor.AppCore
 {
     public static class FbxModelSummaryReader
     {
+        public const string ExportMissing = "That model export could not be found.";
         private const int MaxCapturedDoubleArrayValues = 1_000_000;
         private const int MaxCapturedIntArrayValues = 1_000_000;
 
@@ -19,7 +20,7 @@ namespace OnslaughtCareerEditor.AppCore
         {
             if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
             {
-                return AssetModelSummary.Unavailable(0, "FBX export is not available at the recorded local path.");
+                return AssetModelSummary.Unavailable(0, ExportMissing);
             }
 
             try

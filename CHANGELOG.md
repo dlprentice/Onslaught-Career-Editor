@@ -137,6 +137,7 @@ live in `developer_state.json` and the campaign ledgers.
   Settings with no game folder set names the folder, not a directory.
   Settings status lines name the folder the same way. A Windowed & Mods
   install that has not been chosen names the next step, not the emptiness.
+  A missing Asset Library export names the file, not a recorded path.
 
 ## 1.0.11 — 2026-08-07
 
