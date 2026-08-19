@@ -224,6 +224,39 @@ public class PreflightRequiredFileHonestyTests
             Does.Not.Contain("manifest"));
         Assert.That(GameProfilePreflightService.Level100TextBytesMismatch.ToLowerInvariant(),
             Does.Not.Contain("replacement"));
+        Assert.That(source, Does.Contain("Level100EarlyFlightDetailsInvalid"));
+        Assert.That(source, Does.Contain("Level100EarlyFlightDetailsUnsupported"));
+        Assert.That(source, Does.Contain("Level100EarlyFlightDetailsWrongTarget"));
+        Assert.That(source, Does.Contain("Level100EarlyFlightBackupMismatch"));
+        Assert.That(source, Does.Contain("Level100EarlyFlightFileMismatch"));
+        Assert.That(source, Does.Contain("Level100EarlyFlightSizeMismatch"));
+        Assert.That(source, Does.Contain("Level100EarlyFlightWrongCommand"));
+        Assert.That(source, Does.Contain("Level100EarlyFlightPayloadMismatch"));
+        Assert.That(source, Does.Not.Contain("Playable copied game folder Level 100 early-flight"));
+        Assert.That(GameProfilePreflightService.Level100EarlyFlightDetailsInvalid,
+            Is.EqualTo("That copy's Level 100 early-flight details are invalid."));
+        Assert.That(GameProfilePreflightService.Level100EarlyFlightDetailsUnsupported,
+            Is.EqualTo("That copy's Level 100 early-flight details are out of date."));
+        Assert.That(GameProfilePreflightService.Level100EarlyFlightDetailsWrongTarget,
+            Is.EqualTo("That copy's Level 100 early-flight details do not target 100_res_PC.aya."));
+        Assert.That(GameProfilePreflightService.Level100EarlyFlightBackupMismatch,
+            Is.EqualTo("That copy's 100_res_PC.aya.original.backup no longer matches."));
+        Assert.That(GameProfilePreflightService.Level100EarlyFlightFileMismatch,
+            Is.EqualTo("That copy's 100_res_PC.aya no longer matches."));
+        Assert.That(GameProfilePreflightService.Level100EarlyFlightSizeMismatch,
+            Is.EqualTo("That copy's Level 100 early-flight archive sizes do not match."));
+        Assert.That(GameProfilePreflightService.Level100EarlyFlightWrongCommand,
+            Is.EqualTo("That copy's Level 100 early-flight details have the wrong command."));
+        Assert.That(GameProfilePreflightService.Level100EarlyFlightPayloadMismatch,
+            Is.EqualTo("That copy's Level 100 early-flight payload no longer matches."));
+        Assert.That(GameProfilePreflightService.Level100EarlyFlightDetailsInvalid.ToLowerInvariant(),
+            Does.Not.Contain("playable"));
+        Assert.That(GameProfilePreflightService.Level100EarlyFlightDetailsUnsupported.ToLowerInvariant(),
+            Does.Not.Contain("schema"));
+        Assert.That(GameProfilePreflightService.Level100EarlyFlightFileMismatch.ToLowerInvariant(),
+            Does.Not.Contain("manifest"));
+        Assert.That(GameProfilePreflightService.Level100EarlyFlightWrongCommand.ToLowerInvariant(),
+            Does.Not.Contain("substitution"));
     }
 
     [Test]

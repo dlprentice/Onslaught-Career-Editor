@@ -155,6 +155,14 @@ namespace OnslaughtCareerEditor.AppCore
         public const string Level100TextRangeMissing = "That copy's Level 100 text details are missing their changed range.";
         public const string Level100TextRangeInvalid = "That copy's Level 100 text details have an invalid changed range.";
         public const string Level100TextBytesMismatch = "That copy's Level 100 text no longer matches.";
+        public const string Level100EarlyFlightDetailsInvalid = "That copy's Level 100 early-flight details are invalid.";
+        public const string Level100EarlyFlightDetailsUnsupported = "That copy's Level 100 early-flight details are out of date.";
+        public const string Level100EarlyFlightDetailsWrongTarget = "That copy's Level 100 early-flight details do not target 100_res_PC.aya.";
+        public const string Level100EarlyFlightBackupMismatch = "That copy's 100_res_PC.aya.original.backup no longer matches.";
+        public const string Level100EarlyFlightFileMismatch = "That copy's 100_res_PC.aya no longer matches.";
+        public const string Level100EarlyFlightSizeMismatch = "That copy's Level 100 early-flight archive sizes do not match.";
+        public const string Level100EarlyFlightWrongCommand = "That copy's Level 100 early-flight details have the wrong command.";
+        public const string Level100EarlyFlightPayloadMismatch = "That copy's Level 100 early-flight payload no longer matches.";
         public const string ProfileFolderInsideGame =
             "The app-owned profile folder must not sit inside the game folder.";
         public const string GameFolderInsideProfile =
@@ -764,18 +772,18 @@ namespace OnslaughtCareerEditor.AppCore
             }
 
             if (modEl.ValueKind != JsonValueKind.Object)
-                throw new InvalidOperationException("Playable copied game folder Level 100 early-flight metadata is invalid.");
+                throw new InvalidOperationException(Level100EarlyFlightDetailsInvalid);
 
             string schemaVersion = RequiredString(modEl, "schemaVersion", "Level 100 early-flight metadata");
             if (!string.Equals(schemaVersion, Level100EarlyFlightModSchemaVersion, StringComparison.Ordinal))
-                throw new InvalidOperationException("Playable copied game folder Level 100 early-flight metadata has an unsupported schema.");
+                throw new InvalidOperationException(Level100EarlyFlightDetailsUnsupported);
 
             string targetRelativePath = RequiredString(modEl, "targetRelativePath", "Level 100 early-flight metadata");
             string backupRelativePath = RequiredString(modEl, "backupRelativePath", "Level 100 early-flight metadata");
             if (!string.Equals(targetRelativePath, Level100ResourceArchiveRelativePath, StringComparison.OrdinalIgnoreCase) ||
                 !string.Equals(backupRelativePath, Level100ResourceArchiveBackupRelativePath, StringComparison.OrdinalIgnoreCase))
             {
-                throw new InvalidOperationException("Playable copied game folder Level 100 early-flight metadata does not target the supported mission archive.");
+                throw new InvalidOperationException(Level100EarlyFlightDetailsWrongTarget);
             }
 
             string targetPath = ResolveProfileRelativePath(resolvedGameRoot, targetRelativePath, "Level 100 early-flight target");
@@ -788,9 +796,9 @@ namespace OnslaughtCareerEditor.AppCore
             string originalSha256 = RequiredString(modEl, "originalSha256", "Level 100 early-flight metadata");
             string modifiedSha256 = RequiredString(modEl, "modifiedSha256", "Level 100 early-flight metadata");
             if (!string.Equals(ComputeSha256(backupPath), originalSha256, StringComparison.OrdinalIgnoreCase))
-                throw new InvalidOperationException("Playable copied game folder Level 100 early-flight backup no longer matches its manifest hash.");
+                throw new InvalidOperationException(Level100EarlyFlightBackupMismatch);
             if (!string.Equals(ComputeSha256(targetPath), modifiedSha256, StringComparison.OrdinalIgnoreCase))
-                throw new InvalidOperationException("Playable copied game folder Level 100 early-flight target no longer matches its manifest hash.");
+                throw new InvalidOperationException(Level100EarlyFlightFileMismatch);
 
             if (!modEl.TryGetProperty("originalSize", out JsonElement originalSizeEl) ||
                 !originalSizeEl.TryGetInt64(out long originalSize) ||
@@ -799,7 +807,7 @@ namespace OnslaughtCareerEditor.AppCore
                 new FileInfo(backupPath).Length != originalSize ||
                 new FileInfo(targetPath).Length != modifiedSize)
             {
-                throw new InvalidOperationException("Playable copied game folder Level 100 early-flight archive sizes no longer match its manifest.");
+                throw new InvalidOperationException(Level100EarlyFlightSizeMismatch);
             }
 
             string originalPayloadSha256 = RequiredString(modEl, "originalPayloadSha256", "Level 100 early-flight metadata");
@@ -817,7 +825,7 @@ namespace OnslaughtCareerEditor.AppCore
                 !replacementCommandEl.TryGetInt32(out int replacementCommandIndex) ||
                 replacementCommandIndex != EnableFlightModeCommandIndex)
             {
-                throw new InvalidOperationException("Playable copied game folder Level 100 early-flight metadata has the wrong command substitution.");
+                throw new InvalidOperationException(Level100EarlyFlightWrongCommand);
             }
 
             byte[] originalPayload = ReadLevel100ResourceArchive(File.ReadAllBytes(backupPath)).Payload;
@@ -827,7 +835,7 @@ namespace OnslaughtCareerEditor.AppCore
             if (!string.Equals(ComputeSha256(originalPayload), originalPayloadSha256, StringComparison.OrdinalIgnoreCase) ||
                 !string.Equals(ComputeSha256(modifiedPayload), modifiedPayloadSha256, StringComparison.OrdinalIgnoreCase))
             {
-                throw new InvalidOperationException("Playable copied game folder Level 100 early-flight payload no longer matches its manifest hash.");
+                throw new InvalidOperationException(Level100EarlyFlightPayloadMismatch);
             }
 
             ValidateSinglePayloadByteChange(originalPayload, modifiedPayload);
