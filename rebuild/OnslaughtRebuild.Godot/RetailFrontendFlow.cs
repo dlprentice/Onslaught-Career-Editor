@@ -2467,6 +2467,18 @@ public sealed partial class RetailFrontendFlow : Control
                     RetailLevelSelectLater20.Offset(
                         RetailLevelSelectLater60.Scaled(1)));
                 _ = RetailLevelSelectLaterFadd20.Addend;
+                // RetailLevelSelectLaterFsub20: later leftover
+                // after the later second 20.0 addend is
+                // fld [esp+0x20] / fsub [0x005D857C] (20.0) /
+                // fstp [esp]. Official 74154bfa independently
+                // re-read this cycle. First store is 0x00461013
+                // fstp [esp]. That is a subtrahend on a later
+                // [esp+0x20] local, not dest. The later second
+                // fsub 20.0 at 0x0046101A is later. Do not
+                // invent dest from 20.0 or 1.0.
+                _ = RetailLevelSelectLaterFsub20.Offset(
+                    RetailLevelSelectLater60.Scaled(1));
+                _ = RetailLevelSelectLaterFsub20.Subtrahend;
             }
         }
 
