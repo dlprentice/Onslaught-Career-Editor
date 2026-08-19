@@ -27,5 +27,8 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
                 ? "The game folder is ready."
                 : $"Using the folder \"{name}\".";
         }
+
+        public const string NeedsFolderTooltip =
+            "Open Settings and choose the folder that has BEA.exe and data.";
     }
 }

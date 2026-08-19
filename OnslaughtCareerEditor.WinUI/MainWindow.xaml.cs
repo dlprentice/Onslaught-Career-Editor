@@ -123,7 +123,7 @@ namespace OnslaughtCareerEditor.WinUI
                 GameDirectoryTextBlock,
                 gameDirectoryReady
                     ? ShellFooterText.DescribeReadyTooltip(gameDir)
-                    : "Open Settings and choose the full Battle Engine Aquila install.");
+                    : ShellFooterText.NeedsFolderTooltip);
             ToolTipService.SetToolTip(
                 ReviewSetupButton,
                 !gameDirectoryReady

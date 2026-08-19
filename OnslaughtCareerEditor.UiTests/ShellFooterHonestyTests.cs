@@ -45,7 +45,20 @@ public class ShellFooterHonestyTests
         Assert.That(code, Does.Contain("ShellFooterText.BuildFolderLabel"));
         Assert.That(code, Does.Contain("ShellFooterText.DescribeReadyTooltip"));
         Assert.That(code, Does.Contain("? ShellFooterText.DescribeReadyTooltip(gameDir)"));
+        Assert.That(code, Does.Contain("ShellFooterText.NeedsFolderTooltip"));
         Assert.That(code, Does.Not.Contain("                    ? gameDir"));
         Assert.That(code, Does.Not.Contain("private static string BuildGameDirectoryLabel"));
+        Assert.That(code, Does.Not.Contain("full Battle Engine Aquila install"));
+    }
+
+    [Test]
+    public void AnIncompleteFolderTooltipNamesBeaExeAndData()
+    {
+        Assert.That(ShellFooterText.NeedsFolderTooltip, Does.Contain("BEA.exe"));
+        Assert.That(ShellFooterText.NeedsFolderTooltip, Does.Contain("data"));
+        Assert.That(ShellFooterText.NeedsFolderTooltip, Does.Contain("Settings"));
+        Assert.That(ShellFooterText.NeedsFolderTooltip, Does.Not.Contain("full Battle Engine"));
+        Assert.That(ShellFooterText.NeedsFolderTooltip, Does.Not.Contain(":\\"));
+        Assert.That(ShellFooterText.NeedsFolderTooltip, Does.Not.Contain("/"));
     }
 }
