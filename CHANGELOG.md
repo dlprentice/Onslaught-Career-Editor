@@ -80,7 +80,8 @@ live in `developer_state.json` and the campaign ledgers.
   status, not the internal read sentence. Installed-game patch and restore
   questions name the folder, not the path. A Save Analyzer report that
   cannot decode keybinds names that, without the exception. A Lore document
-  tooltip names the file, not the lore-book folder.
+  tooltip names the file, not the lore-book folder. A failed career rescue
+  with a path or Win32 dump uses the shared keep-failed sentence.
 
 ## 1.0.11 — 2026-08-07
 

@@ -211,6 +211,23 @@ public class SaveRescueSurfaceTests
     }
 
     [Test]
+    public void AFailedRescueWithAPathUsesTheSharedFailureSentence()
+    {
+        var result = new SafeCopySaveRescueResult(
+            false,
+            @"Could not copy C:\Users\player\Documents\Maladim.bes (Win32 error 5).",
+            @"D:\my careers",
+            Array.Empty<SafeCopySaveRescueFileOutcome>());
+
+        string note = SaveRescuePageText.BuildOutcomeNote(result);
+
+        Assert.That(note, Is.EqualTo(SafeCopySaveRescueService.CouldNotKeep));
+        Assert.That(note, Does.Not.Contain(":\\"));
+        Assert.That(note.ToLowerInvariant(), Does.Not.Contain("win32"));
+        Assert.That(note, Does.Contain("Nothing was changed"));
+    }
+
+    [Test]
     public void AnInstalledDestinationIsNamedAndBlocksTheWrite()
     {
         using var lab = new InstalledDestinationLab();

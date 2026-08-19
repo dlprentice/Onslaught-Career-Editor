@@ -88,6 +88,9 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
                 if (CareerSaveLocation.Classify(result.DestinationDirectory) == CareerSaveLocationKind.InstalledGame)
                     return CareerSaveLocation.InstalledDestinationRefused;
 
+                if (string.IsNullOrWhiteSpace(result.Message) || LooksLikeAPathOrDump(result.Message))
+                    return SafeCopySaveRescueService.CouldNotKeep;
+
                 return result.Message;
             }
 
@@ -121,6 +124,14 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
             {
                 return string.Empty;
             }
+        }
+
+        private static bool LooksLikeAPathOrDump(string message)
+        {
+            return message.Contains(":\\", StringComparison.Ordinal)
+                || message.Contains(":/", StringComparison.Ordinal)
+                || message.Contains("Win32", StringComparison.OrdinalIgnoreCase)
+                || message.Contains("exception", StringComparison.OrdinalIgnoreCase);
         }
 
         /// <summary>How a career reads in the picker: its name, and when it was last played.</summary>
