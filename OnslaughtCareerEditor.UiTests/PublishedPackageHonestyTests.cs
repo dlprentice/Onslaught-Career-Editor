@@ -29,6 +29,6 @@ public class PublishedPackageHonestyTests
         Assert.That(source, Does.Contain("The published package folder cannot overlap the trusted generated asset export folder."));
         Assert.That(source, Does.Contain("The staged package folder changed identity before publication."));
         Assert.That(source, Does.Contain("The published package folder did not retain the staged folder identity."));
-        Assert.That(source, Does.Contain("Could not publish the staged package folder."));
+        Assert.That(source, Does.Contain("That staged package folder could not be published."));
     }
 }

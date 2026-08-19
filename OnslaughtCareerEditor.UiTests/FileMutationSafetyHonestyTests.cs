@@ -111,6 +111,21 @@ public class FileMutationSafetyHonestyTests
     }
 
     [Test]
+    public void AStagedOutputFailureDoesNotDumpAWin32Error()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "FileMutationSafety.cs"));
+
+        Assert.That(source, Does.Not.Contain("Win32 error:"));
+        Assert.That(source, Does.Contain("StagedOutputCouldNotBeCreated"));
+        Assert.That(source, Does.Contain("StagedPackageCouldNotBePublished"));
+        Assert.That(source, Does.Contain("StagedOutputQuarantineCouldNotBeUpdated"));
+        Assert.That(source, Does.Contain("That staged output file could not be created."));
+        Assert.That(source, Does.Contain("That staged package folder could not be published."));
+        Assert.That(source, Does.Contain("That staged output quarantine could not be updated."));
+    }
+
+    [Test]
     public void AMissingProtectedInputDoesNotAttachTheFilePath()
     {
         string source = File.ReadAllText(Path.Combine(

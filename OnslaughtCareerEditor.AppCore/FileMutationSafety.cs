@@ -59,6 +59,9 @@ namespace OnslaughtCareerEditor.AppCore
         internal const string FolderCouldNotBeSecuredForPublication = "That folder could not be secured for publication.";
         internal const string FolderGuardEscaped = "That folder guard escaped its held folder.";
         internal const string FileTooLargeToRead = "That file is too large to read safely.";
+        internal const string StagedOutputCouldNotBeCreated = "That staged output file could not be created.";
+        internal const string StagedPackageCouldNotBePublished = "That staged package folder could not be published.";
+        internal const string StagedOutputQuarantineCouldNotBeUpdated = "That staged output quarantine could not be updated.";
 
         internal static string NormalizeLocalPath(string path, string label)
         {
@@ -246,7 +249,7 @@ namespace OnslaughtCareerEditor.AppCore
                 int error = Marshal.GetLastWin32Error();
                 handle.Dispose();
                 throw new IOException(
-                    $"Could not create staged output. Win32 error: {error}",
+                    StagedOutputCouldNotBeCreated,
                     new Win32Exception(error));
             }
 
@@ -848,7 +851,7 @@ namespace OnslaughtCareerEditor.AppCore
                 {
                     int error = Marshal.GetLastWin32Error();
                     throw new IOException(
-                        $"Could not publish the staged package folder. Win32 error: {error}",
+                        StagedPackageCouldNotBePublished,
                         new Win32Exception(error));
                 }
             }
@@ -881,7 +884,7 @@ namespace OnslaughtCareerEditor.AppCore
                 {
                     int error = Marshal.GetLastWin32Error();
                     throw new IOException(
-                        $"Could not update staged output quarantine state. Win32 error: {error}",
+                        StagedOutputQuarantineCouldNotBeUpdated,
                         new Win32Exception(error));
                 }
             }
