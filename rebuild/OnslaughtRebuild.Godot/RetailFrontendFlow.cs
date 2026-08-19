@@ -2346,12 +2346,16 @@ public sealed partial class RetailFrontendFlow : Control
                 ReleasedBlue);
         }
 
-        // FrontEnd.cpp:891-892 — FET3_SELECT_BRACKET1 at SELECT_BRACKET_X/Y
-        // (328,343) with SELECT_BRACKET_SCALE 1.25, plus its +5/+10 shadow at
-        // scale*1.05 in 0x3F000000. FEP_LEVEL_SELECT is one of the pages
+        // RetailLevelSelectSlidingBorders: CFEPLevelSelect::Render first
+        // leftover is the unique call 0x00460B61 to
+        // CFrontEnd__DrawSlidingTextBordersAndMask. FrontEnd.cpp:891-892 —
+        // FET3_SELECT_BRACKET1 at SELECT_BRACKET_X/Y (328,343) with
+        // SELECT_BRACKET_SCALE 1.25, plus its +5/+10 shadow at scale*1.05 in
+        // 0x3F000000. FEP_LEVEL_SELECT is one of the pages
         // got_standard_SlidingTextBordersAndMask() returns TRUE for
         // (FrontEnd.cpp:783), which pins transition to 1 and therefore this
         // settled scale; the outside bracket only draws while dest == FEP_MAIN.
+        // The 148.0 fsub at 0x00460B66 is later and is not dest.
         //
         // MEASURED, and this page does NOT reproduce the 1.4 the FEP_DEVSELECT
         // build settled on: fitting the FE_select_level_bracket01 alpha mask over
@@ -2361,10 +2365,15 @@ public sealed partial class RetailFrontendFlow : Control
         // a local optimum on this frame. The source constants are therefore used
         // verbatim. The shadow reproduces exactly: 0x3f000000 over (23,23,48) is
         // (17,17,36), which is the third most common colour in the capture.
-        const float bracketScale = 1.25f;
-        const float bracketShadowScale = bracketScale * ShadowScaleBoost;
-        DrawSurfaceCentered(_levelBracket01, 333f, 353f, bracketShadowScale, bracketShadowScale, ShadowTint);
-        DrawSurfaceCentered(_levelBracket01, 328f, 343f, bracketScale, bracketScale, BracketTint);
+        if (RetailLevelSelectSlidingBorders.Applies(
+                standardPage: true,
+                fromVirtualKeyboard: false))
+        {
+            const float bracketScale = RetailLevelSelectSlidingBorders.SettledInsideScale;
+            const float bracketShadowScale = bracketScale * ShadowScaleBoost;
+            DrawSurfaceCentered(_levelBracket01, 333f, 353f, bracketShadowScale, bracketShadowScale, ShadowTint);
+            DrawSurfaceCentered(_levelBracket01, 328f, 343f, bracketScale, bracketScale, BracketTint);
+        }
 
         // font22 at scale 1, for the glyph-run and per-letter-IoU evidence
         // written out in DrawDevSelect. Retail's ink here is x304..471, y72..88,
