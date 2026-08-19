@@ -109,14 +109,20 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
 
         private static string DescribeWhere(string? exePath)
         {
+            string name = FolderLeaf(exePath, string.Empty);
+            return string.IsNullOrWhiteSpace(name) ? string.Empty : $" ({name})";
+        }
+
+        private static string FolderLeaf(string? exePath, string fallback)
+        {
             if (string.IsNullOrWhiteSpace(exePath))
             {
-                return string.Empty;
+                return fallback;
             }
 
             string? folder = Path.GetDirectoryName(exePath.Trim());
             string name = Path.GetFileName(Path.TrimEndingDirectorySeparator(folder ?? string.Empty));
-            return string.IsNullOrWhiteSpace(name) ? string.Empty : $" ({name})";
+            return string.IsNullOrWhiteSpace(name) ? fallback : name;
         }
 
         /// <summary>
@@ -125,7 +131,7 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         /// </summary>
         public static string BuildPatchConfirmation(string exePath, string patchSummary)
         {
-            return $"This changes the game in:\n{Path.GetDirectoryName(exePath)}\n\n"
+            return $"This changes the game in:\n{FolderLeaf(exePath, "the selected game folder")}\n\n"
                 + $"Changes: {patchSummary}\n\n"
                 + "Your original executable is copied and checked before anything is written. If the copy cannot be "
                 + "made, nothing is patched. Put my game back returns it afterwards.";
@@ -133,7 +139,7 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
 
         public static string BuildRestoreConfirmation(string exePath)
         {
-            return $"This puts back the original executable in:\n{Path.GetDirectoryName(exePath)}\n\n"
+            return $"This puts back the original executable in:\n{FolderLeaf(exePath, "the selected game folder")}\n\n"
                 + RestoreScopeNote;
         }
 

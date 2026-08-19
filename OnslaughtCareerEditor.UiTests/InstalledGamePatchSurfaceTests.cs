@@ -125,12 +125,26 @@ public class InstalledGamePatchSurfaceTests
             @"C:\Games\Battle Engine Aquila\BEA.exe",
             "Windowed, Widescreen");
 
-        Assert.That(confirmation, Does.Contain(@"C:\Games\Battle Engine Aquila"));
+        Assert.That(confirmation, Does.Contain("Battle Engine Aquila"));
         Assert.That(confirmation, Does.Contain("Windowed, Widescreen"));
+        Assert.That(confirmation, Does.Not.Contain(@"C:\Games"));
+        Assert.That(confirmation, Does.Not.Contain(@":\"));
         Assert.That(
             confirmation,
             Does.Contain("If the copy cannot be made, nothing is patched"),
             "The one thing somebody needs to believe is that a failed backup means a failed patch.");
+    }
+
+    [Test]
+    public void TheRestoreConfirmationNamesTheFolderNotThePath()
+    {
+        string confirmation = InstalledGamePatchText.BuildRestoreConfirmation(
+            @"C:\Games\Battle Engine Aquila\BEA.exe");
+
+        Assert.That(confirmation, Does.Contain("Battle Engine Aquila"));
+        Assert.That(confirmation, Does.Contain(InstalledGamePatchText.RestoreScopeNote));
+        Assert.That(confirmation, Does.Not.Contain(@"C:\Games"));
+        Assert.That(confirmation, Does.Not.Contain(@":\"));
     }
 
     [Test]
