@@ -74,6 +74,8 @@ namespace OnslaughtCareerEditor.AppCore
         public const string StopFailed = "Could not stop that copied game. Nothing was changed.";
         public const string CopyFolderMissing = "That copy folder could not be found.";
         public const string ProfileFolderRequired = "An app-owned profile folder is required.";
+        public const string CopyMustStayInside =
+            "Launch/stop requires a managed copy inside the app-owned profile folder.";
 
         private static readonly TimeSpan s_defaultStopTimeout = TimeSpan.FromSeconds(3);
 
@@ -199,7 +201,7 @@ namespace OnslaughtCareerEditor.AppCore
             if (!IsSameOrUnderRoot(resolvedProfileRoot, resolvedAppRoot) ||
                 string.Equals(resolvedProfileRoot, resolvedAppRoot, StringComparison.OrdinalIgnoreCase))
             {
-                throw new InvalidOperationException("Launch/stop requires a managed playable copied game folder generated under the app-owned playable copied game folder root.");
+                throw new InvalidOperationException(CopyMustStayInside);
             }
 
             if (!Directory.Exists(resolvedProfileRoot))

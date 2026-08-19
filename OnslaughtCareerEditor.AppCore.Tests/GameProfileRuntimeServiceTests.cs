@@ -88,7 +88,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                             LaunchArguments: Array.Empty<string>()),
                         runner));
 
-        Assert.Contains("app-owned playable copied game folder root", ex.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(GameProfileRuntimeService.CopyMustStayInside, ex.Message);
                 Assert.Empty(runner.Starts);
             }
             finally
