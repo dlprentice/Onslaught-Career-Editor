@@ -915,6 +915,11 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             return "Texture exists, but the preview could not be opened.";
         }
 
+        private static string BuildSidecarTexturePreviewLoading()
+        {
+            return "Loading texture preview...";
+        }
+
         private void ConfigureSelectedModelLinkedTexture(
             AssetModelTextureLinks links,
             IReadOnlyList<AssetModelSidecarTexture> sidecarTextures)
@@ -1007,7 +1012,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             TexturePreviewPanel.Visibility = Visibility.Visible;
             TexturePreviewBackgroundPanel.Visibility = Visibility.Visible;
             TexturePreviewCanvasNoteTextBlock.Visibility = Visibility.Visible;
-            TexturePreviewEmptyTextBlock.Text = "Loading sidecar texture preview...";
+            TexturePreviewEmptyTextBlock.Text = BuildSidecarTexturePreviewLoading();
             TexturePreviewEmptyTextBlock.Visibility = Visibility.Visible;
 
             try
