@@ -117,7 +117,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             if (!info.Exists)
             {
-                return "No file exists at that path.";
+                return InputMissing;
             }
 
             if (info.Length != BesFilePatcher.EXPECTED_FILE_SIZE)

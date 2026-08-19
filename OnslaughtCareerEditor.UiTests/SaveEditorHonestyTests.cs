@@ -312,6 +312,22 @@ public class SaveEditorHonestyTests
     }
 
     [Test]
+    public void AMissingCareerSaveDoesNotNameAPath()
+    {
+        string missing = Path.Combine(Path.GetTempPath(), $"absent-{Guid.NewGuid():N}.bes");
+
+        string? reason = SaveEditorService.DescribeCareerSaveInputRejection(missing);
+
+        Assert.That(reason, Is.EqualTo(SaveEditorService.InputMissing));
+        Assert.That(reason, Does.Contain("Nothing was changed"));
+        Assert.That(reason, Does.Not.Contain(missing));
+        Assert.That(reason, Does.Not.Contain(@":\"));
+        Assert.That(reason, Does.Not.Contain('/'));
+        Assert.That(reason!.ToLowerInvariant(), Does.Not.Contain("path"));
+        Assert.That(reason, Does.Not.Contain("No file exists at that path."));
+    }
+
+    [Test]
     public void AnUnreadableCareerPathDoesNotDumpTheException()
     {
         string source = File.ReadAllText(Path.Combine(
@@ -319,6 +335,8 @@ public class SaveEditorHonestyTests
 
         Assert.That(source, Does.Contain("That career save could not be read."));
         Assert.That(source, Does.Contain("That file could not be opened."));
+        Assert.That(source, Does.Contain("return InputMissing;"));
+        Assert.That(source, Does.Not.Contain("No file exists at that path."));
         Assert.That(source, Does.Not.Contain("That path could not be read:"));
         Assert.That(source, Does.Not.Contain("That file could not be opened:"));
     }

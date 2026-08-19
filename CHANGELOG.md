@@ -91,7 +91,8 @@ live in `developer_state.json` and the campaign ledgers.
   library says to refresh, instead of describing the emptiness. A missing
   Windowed & Mods quick-pick row names the refusal, not the catalog key.
   A Save Editor kill-count read that fails names the action, not the
-  analyzer sentence.
+  analyzer sentence. A missing Save Editor career save names that the
+  file could not be found, not a path.
 
 ## 1.0.11 — 2026-08-07
 
