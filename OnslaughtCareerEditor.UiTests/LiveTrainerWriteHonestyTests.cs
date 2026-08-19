@@ -62,6 +62,19 @@ public class LiveTrainerWriteHonestyTests
         Assert.That(method, Does.Not.Contain("outcome.Message"));
     }
 
+    [Test]
+    public void AFailedProcessOpenDoesNotDumpWin32()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot,
+            "OnslaughtCareerEditor.AppCore",
+            "LiveTrainerMemoryAccess.cs"));
+
+        Assert.That(source, Does.Contain("Could not open that copied game."));
+        Assert.That(source, Does.Not.Contain("Win32 error"));
+        Assert.That(source, Does.Not.Contain("game process for"));
+    }
+
     private static void AssertSentenceIsPublicSafe(string sentence)
     {
         Assert.That(sentence, Does.Not.Contain(":\\"));
