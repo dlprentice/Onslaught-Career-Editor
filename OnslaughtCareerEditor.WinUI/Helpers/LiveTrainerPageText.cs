@@ -264,6 +264,35 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
             };
         }
 
+        /// <summary>
+        /// What Set just did. Named here so the page never paints
+        /// <see cref="LiveTrainerWriteOutcome.Message"/>, which for a failed
+        /// write-open is the Win32 dump.
+        /// </summary>
+        public static string DescribeWriteOutcome(LiveTrainerWriteOutcome outcome)
+        {
+            if (outcome.Success)
+            {
+                return $"Set {LiveTrainerAddresses.NameOf(outcome.Vital)} to {outcome.Requested.ToString("0.##", CultureInfo.InvariantCulture)}.";
+            }
+
+            if (LooksLikeAProcessOpenDump(outcome.Message))
+                return "Could not open that copied game. Nothing was written.";
+
+            return string.IsNullOrWhiteSpace(outcome.Message)
+                ? "Could not change that value. Nothing was written."
+                : outcome.Message;
+        }
+
+        private static bool LooksLikeAProcessOpenDump(string? message)
+        {
+            if (string.IsNullOrWhiteSpace(message))
+                return false;
+
+            return message.Contains("Win32", StringComparison.OrdinalIgnoreCase)
+                || message.Contains("Could not open the game process", StringComparison.Ordinal);
+        }
+
         /// <summary>Where the app is in the attach cycle, in one line.</summary>
         public static string BuildAttachSummary(bool attached, string? copyName, string? message)
         {

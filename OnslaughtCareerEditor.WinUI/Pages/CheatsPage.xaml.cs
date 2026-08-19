@@ -699,10 +699,11 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
 
             LiveTrainerWriteOutcome outcome = _trainerSession.Write(vital, (float)requested);
+            string note = LiveTrainerPageText.DescribeWriteOutcome(outcome);
             SetLiveTrainerStatus(
                 outcome.Success ? InfoBarSeverity.Success : InfoBarSeverity.Warning,
                 outcome.Success ? "Set" : "Nothing written",
-                outcome.Message);
+                note);
             LiveTrainerTick();
         }
 

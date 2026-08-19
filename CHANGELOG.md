@@ -67,7 +67,8 @@ live in `developer_state.json` and the campaign ledgers.
   two files the same way, not the Music folder path. A prepared copy's
   music-swap note names the backup file the same way. A live-trainer attach
   refusal names why the copy was not opened, without the Win32
-  dump or a path.
+  dump or a path. A live-trainer write that cannot open the copy
+  names that refusal the same way, without the Win32 dump.
 
 ## 1.0.11 — 2026-08-07
 
