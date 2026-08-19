@@ -49,6 +49,7 @@ public class ShellFooterHonestyTests
         Assert.That(code, Does.Not.Contain("                    ? gameDir"));
         Assert.That(code, Does.Not.Contain("private static string BuildGameDirectoryLabel"));
         Assert.That(code, Does.Not.Contain("full Battle Engine Aquila install"));
+        Assert.That(code, Does.Not.Contain("Battle Engine Aquila install the app reads from"));
     }
 
     [Test]

@@ -127,7 +127,7 @@ namespace OnslaughtCareerEditor.WinUI
             ToolTipService.SetToolTip(
                 ReviewSetupButton,
                 !gameDirectoryReady
-                    ? "Open Settings to choose the Battle Engine Aquila install the app reads from."
+                    ? ShellFooterText.NeedsFolderTooltip
                     : "Open Settings to review the configured install and safe app-owned workspace behavior.");
         }
 

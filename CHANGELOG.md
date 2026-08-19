@@ -101,7 +101,8 @@ live in `developer_state.json` and the campaign ledgers.
   not just "the full install." Choosing an incomplete folder on Home uses
   that same sentence. Home setup uses it when the folder is not set, not
   "the full Battle Engine Aquila folder." The footer tooltip names BEA.exe
-  and data the same way. A failed Game Options write that still looks
+  and data the same way. The Review setup tooltip uses that sentence
+  too. A failed Game Options write that still looks
   like a dump uses the shared nothing-was-changed sentence. A failed
   focused Goodie write that still looks like a dump uses that same
   sentence. Save Editor refusals that used to say paths now name the
