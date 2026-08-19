@@ -275,7 +275,6 @@ reverse-engineering/binary-analysis/functions/game.cpp/CGame__DeclarePlayerDead.
 reverse-engineering/binary-analysis/functions/game.cpp/CGame__DoWeWantMesh.md
 reverse-engineering/binary-analysis/functions/game.cpp/CGame__DrawDebugStuff.md
 reverse-engineering/binary-analysis/functions/game.cpp/CGame__DrawGameStuff.md
-reverse-engineering/binary-analysis/functions/game.cpp/CGame__FillOutEndLevelData.md
 reverse-engineering/binary-analysis/functions/game.cpp/CGame__GetCamera.md
 reverse-engineering/binary-analysis/functions/game.cpp/CGame__GetController.md
 reverse-engineering/binary-analysis/functions/game.cpp/CGame__GetNumPrimaryObjectives.md
