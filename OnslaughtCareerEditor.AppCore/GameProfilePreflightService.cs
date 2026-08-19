@@ -125,6 +125,10 @@ namespace OnslaughtCareerEditor.AppCore
         public const string CopyMustStayInside = "That copy must stay inside the app-owned profile folder.";
         public const string FileMustStayInsideCopy = "That file must stay inside the copy.";
         public const string CopiedBeaMismatch = "That copy's BEA.exe does not match this copy.";
+        public const string CopiedBackupMissing = "That copy is missing BEA.exe.original.backup.";
+        public const string CopiedBackupHashMissing = "That copy is missing the BEA.exe.original.backup hash file.";
+        public const string CopiedBackupHashMismatch = "That copy's BEA.exe.original.backup does not match its hash file.";
+        public const string CopiedBackupNotRetail = "That copy's BEA.exe.original.backup is not the known Steam retail file.";
         public const string ProfileFolderInsideGame =
             "The app-owned profile folder must not sit inside the game folder.";
         public const string GameFolderInsideProfile =
@@ -1045,21 +1049,23 @@ namespace OnslaughtCareerEditor.AppCore
         {
             string backupPath = BinaryPatchEngine.BuildBackupPath(executablePath);
             string backupHashPath = BinaryPatchEngine.BuildBackupHashPath(executablePath);
-            if (!File.Exists(backupPath) || !File.Exists(backupHashPath))
-                throw new InvalidOperationException("Playable copied game folder launch requires the copied executable backup snapshot and hash sidecar.");
+            if (!File.Exists(backupPath))
+                throw new InvalidOperationException(CopiedBackupMissing);
+            if (!File.Exists(backupHashPath))
+                throw new InvalidOperationException(CopiedBackupHashMissing);
 
             byte[] backupBytes = File.ReadAllBytes(backupPath);
             string expectedBackupHash = File.ReadAllText(backupHashPath).Trim();
             string actualBackupHash = ComputeSha256(backupPath);
             if (!string.Equals(expectedBackupHash, actualBackupHash, StringComparison.OrdinalIgnoreCase))
-                throw new InvalidOperationException("Playable copied game folder executable backup snapshot hash does not match its sidecar.");
+                throw new InvalidOperationException(CopiedBackupHashMismatch);
 
             var trustedHashes = selected
                 .SelectMany(spec => spec.TargetBinaryHashes ?? Array.Empty<string>())
                 .Where(hash => !string.IsNullOrWhiteSpace(hash))
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
             if (!trustedHashes.Contains(actualBackupHash))
-                throw new InvalidOperationException("Playable copied game folder executable backup snapshot is not a trusted clean Steam retail specimen.");
+                throw new InvalidOperationException(CopiedBackupNotRetail);
 
             long[] trustedSizes = selected
                 .Select(spec => spec.TargetBinarySize)
@@ -1068,7 +1074,7 @@ namespace OnslaughtCareerEditor.AppCore
                 .Distinct()
                 .ToArray();
             if (trustedSizes.Length == 0 || !trustedSizes.Contains(backupBytes.LongLength))
-                throw new InvalidOperationException("Playable copied game folder executable backup snapshot size is not a trusted clean Steam retail specimen.");
+                throw new InvalidOperationException(CopiedBackupNotRetail);
 
             var (_, _, backupRows) = BinaryPatchEngine.VerifyPatchSpecs(backupBytes, selected);
             if (backupRows.Any(row => row.State != BinaryPatchState.Original))

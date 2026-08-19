@@ -255,7 +255,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                             LaunchArguments: Array.Empty<string>()),
                         runner));
 
-                Assert.Contains("trusted clean Steam retail specimen", ex.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(GameProfilePreflightService.CopiedBackupNotRetail, ex.Message);
                 Assert.Empty(runner.Starts);
             }
             finally
@@ -304,7 +304,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                             LaunchArguments: Array.Empty<string>()),
                         runner));
 
-                Assert.Contains("trusted clean Steam retail specimen", ex.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(GameProfilePreflightService.CopiedBackupNotRetail, ex.Message);
                 Assert.Empty(runner.Starts);
             }
             finally

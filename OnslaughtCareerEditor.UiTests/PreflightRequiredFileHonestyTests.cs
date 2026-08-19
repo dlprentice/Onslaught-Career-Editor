@@ -88,6 +88,19 @@ public class PreflightRequiredFileHonestyTests
             Does.Not.Contain("path"));
         Assert.That(GameProfilePreflightService.CopiedBeaMismatch.ToLowerInvariant(),
             Does.Not.Contain("path"));
+        Assert.That(source, Does.Not.Contain("launch requires the copied executable backup snapshot"));
+        Assert.That(source, Does.Not.Contain("backup snapshot hash does not match its sidecar."));
+        Assert.That(source, Does.Not.Contain("backup snapshot is not a trusted clean Steam retail specimen."));
+        Assert.That(source, Does.Contain("CopiedBackupMissing"));
+        Assert.That(source, Does.Contain("CopiedBackupHashMissing"));
+        Assert.That(source, Does.Contain("CopiedBackupHashMismatch"));
+        Assert.That(source, Does.Contain("CopiedBackupNotRetail"));
+        Assert.That(GameProfilePreflightService.CopiedBackupMissing,
+            Is.EqualTo("That copy is missing BEA.exe.original.backup."));
+        Assert.That(GameProfilePreflightService.CopiedBackupNotRetail.ToLowerInvariant(),
+            Does.Not.Contain("path"));
+        Assert.That(GameProfilePreflightService.CopiedBackupNotRetail.ToLowerInvariant(),
+            Does.Not.Contain("specimen"));
     }
 
     [Test]
