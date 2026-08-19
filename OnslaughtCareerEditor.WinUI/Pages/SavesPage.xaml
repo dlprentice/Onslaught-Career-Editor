@@ -453,7 +453,7 @@
                                           IsOpen="True"
                                           IsClosable="False"
                                           Severity="Informational"
-                                          Title="Save editor common path"
+                                          Title="Save Editor"
                                           Message="Edit career progress, goodies, mission ranks, and kills here. Startup settings, audio levels, and controls are in Game Options." />
 
                         <Border x:Name="SaveEditorFirstSaveGuide"
@@ -647,7 +647,7 @@
                                 <TextBlock Text="Patch sections"
                                            FontSize="18"
                                            FontWeight="SemiBold" />
-                                <TextBlock Text="Keep the common path explicit: choose only the save regions you want rewritten."
+                                <TextBlock Text="Choose only the save regions you want rewritten."
                                            Style="{StaticResource SectionBodyTextStyle}" />
                                 <Grid ColumnSpacing="12"
                                       RowSpacing="8">
