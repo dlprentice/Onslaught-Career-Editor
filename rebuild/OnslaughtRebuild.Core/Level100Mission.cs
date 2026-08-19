@@ -52,6 +52,7 @@ public sealed class Level100Mission
     private int _scoreDelta;
     private int _gameScore = RetailAddScore.LoadLevelZero;
     private readonly Dictionary<int, int> _hudPartWords = new();
+    private readonly Dictionary<Level100MissionWeapon, int> _weaponActiveWords = new();
 
     /// <summary>
     /// The Core tick the most recently scheduled character message clears, or
@@ -210,6 +211,17 @@ public sealed class Level100Mission
     /// </summary>
     public int HudPartWord(int partIndex) =>
         _hudPartWords.TryGetValue(partIndex, out int word) ? word : 0;
+
+    /// <summary>
+    /// <c>CWeapon+0x9c</c> — the
+    /// <c>mov dword ptr [edi+0x9c], 1</c> destination.
+    /// Isolated <see cref="Level100WeaponAvailabilityChanged.Enabled"/>
+    /// names the rebuild bool, not this store. A weapon this
+    /// mission never Enabled reads 0 here; that is not a
+    /// start-active or Disable store-0 claim.
+    /// </summary>
+    public int WeaponActiveWord(Level100MissionWeapon weapon) =>
+        _weaponActiveWords.TryGetValue(weapon, out int word) ? word : 0;
 
     internal bool GameplayPaused => Level100MissionTiming.GameplayPaused(
         _outcome,
@@ -724,7 +736,7 @@ public sealed class Level100Mission
                 RequireArguments(command, arguments, 2);
                 SetPrimaryObjective(arguments, Level100PrimaryObjectiveStatus.Failed);
                 return NativeResult.Void;
-            case 98: // EnableWeapon
+            case 98: // EnableWeapon — IScript__EnableWeapon 0x00534fb0
                 RequireArguments(command, arguments, 1);
                 SetWeapon(arguments[0].AsString(), true);
                 return NativeResult.Void;
@@ -952,6 +964,17 @@ public sealed class Level100Mission
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(weapon));
+        }
+
+        if (enabled)
+        {
+            // Isolated Enabled names the rebuild bool / enum.
+            // Isolated Enable names literal-1; one live store of 1
+            // is not unique versus increment from 0. Disable's
+            // store-0 / ChangeWeapon stay unclaimed. ChargeWeapon
+            // stays unclaimed. Live GAME.mSlots stay unclaimed.
+            int current = WeaponActiveWord(weapon);
+            _weaponActiveWords[weapon] = RetailEnableWeapon.Enable(current);
         }
 
         _events.Add(new Level100WeaponAvailabilityChanged(_tick, weapon, enabled));

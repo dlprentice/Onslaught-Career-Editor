@@ -1013,6 +1013,44 @@ public sealed class Level100WonCareerHandoffTests
     }
 
     /// <summary>
+    /// <c>IScript::EnableWeapon</c> at <c>0x00534fce</c>
+    /// calls thing vfunc <c>+0x198</c>. The Level 100 player
+    /// override <c>0x0040dc30</c> forwards to walker
+    /// <c>0x00414970</c>, which is
+    /// <c>mov dword ptr [edi+0x9c], 1</c>. First-play
+    /// <c>EnableWeapon("Mech Twin Vulcan Cannon")</c> therefore
+    /// stores 1 at Twin's <c>+0x9c</c> before FillOut. Isolated
+    /// last <c>Enabled</c> = true names the rebuild bool and
+    /// still passes if this store is skipped. Isolated
+    /// <see cref="RetailEnableWeapon.Enable"/> names
+    /// literal-1; one live store of 1 is not unique versus
+    /// increment from 0. Mutation: skip the <c>+0x9c</c>
+    /// store. Disable's store-0 / ChangeWeapon stay
+    /// unclaimed. ChargeWeapon stays unclaimed. Live
+    /// <c>GAME.mSlots</c> stay unclaimed. No new secondaries.
+    /// </summary>
+    [Fact]
+    public void EnableWeapon_FirstPlayWonWritesOneAtTwinVulcanPlus9C()
+    {
+        Level100Mission mission = DriveReleasedFirstPlayUntilWon();
+
+        Assert.Equal(Level100MissionOutcome.Won, mission.Snapshot.Outcome);
+        Assert.Contains(
+            mission.Snapshot.PendingEvents.OfType<Level100WeaponAvailabilityChanged>(),
+            item => item.Weapon == Level100MissionWeapon.MechTwinVulcanCannon &&
+                    item.Enabled);
+        Assert.Equal(
+            RetailEnableWeapon.FlagEnabled,
+            mission.WeaponActiveWord(Level100MissionWeapon.MechTwinVulcanCannon));
+        Assert.Equal(
+            RetailEnableWeapon.Enable(RetailEnableWeapon.FlagDisabled),
+            mission.WeaponActiveWord(Level100MissionWeapon.MechTwinVulcanCannon));
+        Assert.All(
+            RetailFillOutEndLevelData.ForLevel100Won().SecondaryStatuses,
+            status => Assert.Equal(0, status));
+    }
+
+    /// <summary>
     /// <c>CCareer::Update</c> at <c>0x0041BD06</c> is
     /// <c>cmp eax, 5</c> / <c>jne</c>. Lost is 4, so FillOut is never
     /// applied even if the handoff state is claimed. Mutation: dropping
