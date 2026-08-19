@@ -120,4 +120,35 @@ public sealed class RetailCareerCampaignApplyUpdateTests
         Assert.Equal(0, next.Complete);
         Assert.All(snapshot.SecondaryStatuses, status => Assert.Equal(0, status));
     }
+
+    /// <summary>
+    /// <c>Career.cpp:405-406</c> stores <c>mRanking</c> only when the
+    /// snapshot is strictly greater. A worse Level 100 replay therefore
+    /// leaves the already-pinned first-play 1.0f / S in place. Mutation:
+    /// assigning the snapshot even when it is not greater makes world 100
+    /// read 0.5. Score-time stays unclaimed. No new secondaries.
+    /// </summary>
+    [Fact]
+    public void Level100Won_ApplyUpdateDoesNotDowngradeAnExistingBetterRanking()
+    {
+        RetailCareerCampaign career = RetailCareerReCalcLinks.CreateColdTrainingSlice();
+        career.ApplyUpdate(RetailFillOutEndLevelData.ForLevel100Won());
+        career.ApplyUpdate(RetailFillOutEndLevelData.ForLevel100Won(ranking: 0.5f));
+
+        RetailCareerNode training = career.Nodes.Find(100)!;
+        RetailCareerNode next = career.Nodes.Find(110)!;
+        Assert.Equal(1.0f, training.Ranking);
+        Assert.Equal(
+            RetailCareerGrade.PerfectGrade,
+            RetailCareerGrade.GradeByteFromRanking(training.Ranking));
+        Assert.Equal(RetailCareerNode.BlankRanking, next.Ranking);
+        Assert.Equal(
+            RetailCareerGrade.FailedGrade,
+            RetailCareerGrade.GradeByteFromRanking(next.Ranking));
+        Assert.Equal(1, training.Complete);
+        Assert.Equal(0, next.Complete);
+        Assert.All(
+            RetailFillOutEndLevelData.ForLevel100Won().SecondaryStatuses,
+            status => Assert.Equal(0, status));
+    }
 }

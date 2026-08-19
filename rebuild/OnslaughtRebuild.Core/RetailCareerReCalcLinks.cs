@@ -79,13 +79,15 @@ public sealed class RetailCareerNodeLink
 /// (<c>game.h:42-53</c>, <c>IScript</c> <c>cmp …,4</c>).
 /// </para>
 /// <para>
-/// <b>Ranking is written only onto the finished world.</b>
+/// <b>Ranking is written only onto the finished world, and only if
+/// strictly greater.</b>
 /// <c>Career.cpp:396-406</c> looks up
 /// <c>GetNodeFromWorldNo(mWorldFinished)</c> and stores
 /// <c>mRanking</c> there when the snapshot is strictly greater. After
 /// a Level 100 win that is world 100 at the already-pinned 1.0f
-/// (grade S). Unlocking world 110 does not copy the ranking; that
-/// node stays <c>BlankRanking</c> / grade E.
+/// (grade S). A worse replay does not downgrade it. Unlocking world
+/// 110 does not copy the ranking; that node stays
+/// <c>BlankRanking</c> / grade E.
 /// </para>
 /// <para>
 /// <b>Not established here.</b> The world-500 slot arm
