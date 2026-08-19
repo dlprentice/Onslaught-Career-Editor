@@ -42,7 +42,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             _configurationDetectedFiles = ConfigurationEditorService.GetDetectedOptionsFiles(gameDir);
             ConfigurationDetectedFilesComboBox.ItemsSource = _configurationDetectedFiles;
             ConfigurationDetectedFilesComboBox.PlaceholderText = _configurationDetectedFiles.Count == 0
-                ? "No detected options files yet"
+                ? SaveAnalyzerService.NoDetectedFilesNextStep
                 : "Choose an options file";
             RestoreConfigurationDetectedFileSelection(selectedPath);
             ConfigurationDetectedFilesStatusTextBlock.Text = _configurationDetectedFiles.Count == 0

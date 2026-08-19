@@ -73,8 +73,15 @@ public class SaveLabPageHonestyTests
         Assert.That(options, Does.Contain("SaveLabPageText.DescribeOutputRefusal"));
         Assert.That(options, Does.Contain("SaveLabPageText.BuildOverwriteQuestion"));
         Assert.That(options, Does.Contain("SaveLabPageText.OverwriteCanceled"));
+        Assert.That(options, Does.Contain("SaveAnalyzerService.NoDetectedFilesNextStep"));
+        Assert.That(options, Does.Not.Contain("No detected options files yet"));
         Assert.That(options, Does.Not.Contain("ex.Message"));
         Assert.That(options, Does.Not.Contain("{request.OutputPath}"));
+
+        string xaml = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI", "Pages", "SavesPage.xaml"));
+        Assert.That(xaml, Does.Contain(SaveAnalyzerService.NoDetectedFilesNextStep));
+        Assert.That(xaml, Does.Not.Contain("No detected options files yet"));
     }
 
     [Test]

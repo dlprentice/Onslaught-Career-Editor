@@ -1039,7 +1039,7 @@
                                     <ComboBox x:Name="ConfigurationDetectedFilesComboBox"
                                               AutomationProperties.AutomationId="ConfigurationDetectedFilesComboBox"
                                               Header="Detected options files"
-                                              PlaceholderText="No detected options files yet"
+                                              PlaceholderText="Set the game folder in Settings, or browse for a file."
                                               DisplayMemberPath="DisplayName"
                                               SelectionChanged="ConfigurationDetectedFilesComboBox_SelectionChanged" />
                                     <TextBlock x:Name="ConfigurationDetectedFilesStatusTextBlock"

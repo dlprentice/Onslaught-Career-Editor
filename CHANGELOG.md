@@ -119,8 +119,9 @@ live in `developer_state.json` and the campaign ledgers.
   longer titles the banner complete. A failed compare no longer calls
   the files identical on the metric card. A failed analysis no longer
   dumps the analyzer sentence on the Missions card. An empty Save Lab
-  file list says to set the game folder or browse, instead of describing
-  the emptiness. Refreshing that list names the game folder, not a
+  or Game Options file list says to set the game folder or browse,
+  instead of describing the emptiness. Refreshing that list names the
+  game folder, not a
   directory. Keeping careers and then deleting a
   copy names a dumped removal without the path. A media-only install
   names the data folder, not media/data. A Cheats refresh
