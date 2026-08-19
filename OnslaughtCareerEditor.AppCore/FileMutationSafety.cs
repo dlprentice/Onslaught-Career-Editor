@@ -1300,7 +1300,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             FileMutationSafety.RejectReparsePoint(_physicalOutputPath, "Output file");
             if (Directory.Exists(_physicalOutputPath))
-                throw new InvalidOperationException("The selected output path is a directory.");
+                throw new InvalidOperationException("The selected output file is a folder.");
             if (!File.Exists(_physicalOutputPath))
                 return;
 
@@ -1332,7 +1332,7 @@ namespace OnslaughtCareerEditor.AppCore
             }
 
             if (!FileMutationSafety.IsSameOrUnderRoot(_physicalOutputPath, _authorization.PhysicalProfileRoot))
-                throw new InvalidOperationException("Output path must remain inside the verified app-owned profile root.");
+                throw new InvalidOperationException("The output file must remain inside the verified app-owned profile folder.");
         }
 
         private static byte[] ReadAllBytes(FileStream stream, string label)
