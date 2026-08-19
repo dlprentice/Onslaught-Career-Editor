@@ -300,7 +300,7 @@ namespace OnslaughtCareerEditor.AppCore
         public static string ValidateExecutableSourceForWorkspaceCopy(string sourcePath)
         {
             if (string.IsNullOrWhiteSpace(sourcePath))
-                throw new InvalidOperationException("Executable source path is required.");
+                throw new InvalidOperationException("A source executable is required.");
 
             string fullPath = Path.GetFullPath(sourcePath);
             if (!File.Exists(fullPath))
@@ -321,7 +321,7 @@ namespace OnslaughtCareerEditor.AppCore
             string expectedFileName)
         {
             if (string.IsNullOrWhiteSpace(destinationPath))
-                throw new InvalidOperationException("Workspace destination path is required.");
+                throw new InvalidOperationException("A destination file is required.");
 
             if (string.IsNullOrWhiteSpace(appOwnedRoot))
                 throw new InvalidOperationException("An app-owned workspace root is required.");
