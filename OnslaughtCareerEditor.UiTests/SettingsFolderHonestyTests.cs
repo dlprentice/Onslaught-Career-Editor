@@ -37,5 +37,9 @@ public class SettingsFolderHonestyTests
 
         Assert.That(page, Does.Not.Contain("verify the selected install path."));
         Assert.That(page, Does.Contain("check the selected game folder."));
+        Assert.That(page, Does.Not.Contain("Game directory not configured"));
+        Assert.That(page, Does.Not.Contain("Set the game directory to enable save/options file detection."));
+        Assert.That(page, Does.Contain("Game folder not set"));
+        Assert.That(page, Does.Contain("Set the game folder to find save and options files."));
     }
 }

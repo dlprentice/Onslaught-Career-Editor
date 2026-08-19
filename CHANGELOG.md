@@ -133,6 +133,7 @@ live in `developer_state.json` and the campaign ledgers.
   path. A Save Editor mission-grade read
   that fails names the action, not the file size. Empty Save Lab, Save
   Editor, and Game Options lists name the game folder, not a directory.
+  Settings with no game folder set names the folder, not a directory.
 
 ## 1.0.11 — 2026-08-07
 

@@ -185,8 +185,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         {
             if (string.IsNullOrWhiteSpace(gameDir))
             {
-                SaveDirectoryTextBlock.Text = "Game directory not configured";
-                SaveFileCountTextBlock.Text = "Set the game directory to enable save/options file detection.";
+                SaveDirectoryTextBlock.Text = "Game folder not set";
+                SaveFileCountTextBlock.Text = "Set the game folder to find save and options files.";
                 return;
             }
 
