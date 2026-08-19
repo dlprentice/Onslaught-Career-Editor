@@ -1284,7 +1284,7 @@
                                              AutomationProperties.AutomationId="PatchBenchMusicTargetFileName"
                                              AutomationProperties.Name="Target track in safe copy"
                                              TextChanged="MusicReplacementInput_TextChanged"
-                                             PlaceholderText="Existing copied data\Music file, for example BEA_01(Master).ogg" />
+                                             PlaceholderText="Existing copied music file" />
                                     <TextBlock Text="Replacement music file"
                                                Style="{StaticResource SectionBodyTextStyle}" />
                                     <TextBox x:Name="PatchBenchMusicReplacementPath"
