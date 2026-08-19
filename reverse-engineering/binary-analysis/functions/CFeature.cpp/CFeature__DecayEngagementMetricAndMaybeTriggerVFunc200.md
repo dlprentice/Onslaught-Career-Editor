@@ -61,4 +61,4 @@ not `8b 48 18 89 8b e0 00 00 00`.
 
 | Address | Name | Byte evidence | Contract (confidence) |
 | --- | --- | --- | --- |
-| `0x0044cd20` | `CFeature__DecayEngagementMetricAndMaybeTriggerVFunc200` | `568bf1 8b86e4000000 8b4810 85c9 754c d986e0000000 d8642408 … ff92c8000000 … c21000` | thiscall; ret 0x10; virtual-only slot 40. If `[data+0x10]==0`, subtract `[esp+8]` from `[this+0xe0]` and call slot 50 when the result is `< 0`. HIGH on ABI, those slots, that call. **Not** on authored names or L100 iceberg `[data+0x10]` / `[data+0x18]` values. |
+| `0x0044cd20` | `CFeature__DecayEngagementMetricAndMaybeTriggerVFunc200` | `568bf1 8b86e4000000 8b4810 85c9 754c d986e0000000 d8642408 … ff92c8000000 … c21000` | thiscall; ret 0x10; virtual-only slot 40. If `[data+0x10]==0`, subtract `[esp+8]` from `[this+0xe0]` and call slot 50 when the result is `< 0`. HIGH on ABI, those slots, that call. Iceberg 1–4 occupancy after this physics.dat update: `[data+0x10]=1` so this skip is live; `[data+0x18]=0`. **Not** on live RAM or authored names. |
