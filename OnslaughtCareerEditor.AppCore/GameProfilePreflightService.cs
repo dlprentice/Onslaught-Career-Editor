@@ -2164,8 +2164,7 @@ namespace OnslaughtCareerEditor.AppCore
             string manifestPath = Path.Combine(normalizedProfile, ProfileManifestFileName);
             if (!File.Exists(manifestPath))
             {
-                throw new InvalidOperationException(
-                    $"Refusing to delete a folder that is not an app-generated playable copied game folder: {ProfileManifestFileName} is missing.");
+                throw new InvalidOperationException(CopyManifestMissing);
             }
 
             RejectReparsePoint(manifestPath, "playable copied game folder manifest");

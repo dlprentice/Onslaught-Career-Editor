@@ -174,6 +174,7 @@ public class PreflightRequiredFileHonestyTests
             Does.Not.Contain("playable"));
         Assert.That(GameProfilePreflightService.CopyManifestOutOfDate.ToLowerInvariant(),
             Does.Not.Contain("playable"));
+        Assert.That(source, Does.Not.Contain("Refusing to delete a folder that is not an app-generated playable copied game folder:"));
         Assert.That(source, Does.Contain("CopiedBackupMissing"));
         Assert.That(source, Does.Contain("CopiedBackupHashMissing"));
         Assert.That(source, Does.Contain("CopiedBackupHashMismatch"));

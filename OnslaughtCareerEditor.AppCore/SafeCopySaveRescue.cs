@@ -605,8 +605,7 @@ namespace OnslaughtCareerEditor.AppCore
                 GameProfilePreflightService.ProfileManifestFileName);
             if (!File.Exists(manifestPath))
             {
-                throw new InvalidOperationException(
-                    $"Not an app-generated playable copied game folder: {GameProfilePreflightService.ProfileManifestFileName} is missing.");
+                throw new InvalidOperationException(GameProfilePreflightService.CopyManifestMissing);
             }
 
             return normalizedProfile;
