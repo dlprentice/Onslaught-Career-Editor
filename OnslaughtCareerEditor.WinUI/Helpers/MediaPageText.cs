@@ -1,3 +1,5 @@
+using System.IO;
+
 namespace OnslaughtCareerEditor.WinUI.Helpers
 {
     /// <summary>
@@ -52,6 +54,42 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
             return string.IsNullOrWhiteSpace(search)
                 ? "No video found in the current install."
                 : EmptySearchNextStep;
+        }
+
+        /// <summary>
+        /// Folder cards name the last path segment. The full path stays off the page.
+        /// </summary>
+        public static string BuildFolderSummary(string? path, string fallback)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                return fallback;
+            }
+
+            string trimmed = path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            string name = Path.GetFileName(trimmed);
+            return string.IsNullOrWhiteSpace(name) ? fallback : name;
+        }
+
+        /// <summary>
+        /// Selected audio and video name the file, not the folder it sits in.
+        /// </summary>
+        public static string BuildFileName(string? path, string fallback)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                return fallback;
+            }
+
+            string name = Path.GetFileName(path.Trim());
+            return string.IsNullOrWhiteSpace(name) ? fallback : name;
+        }
+
+        public static string DescribeDirectoryDetail(string? path)
+        {
+            return string.IsNullOrWhiteSpace(path)
+                ? "No install folder selected."
+                : BuildFolderSummary(path, "Configured install");
         }
     }
 }

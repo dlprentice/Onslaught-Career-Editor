@@ -220,7 +220,8 @@ online play. Host/Join, matchmaking, and new networking are unavailable.
   dumping the raw exception. The reason previously went only into a permanently
   collapsed panel, then later leaked as `Details:` plus the exception text. A
   search that matches nothing says to try another word or clear the search; it
-  does not call the empty tree a missed match.
+  does not call the empty tree a missed match. The source folder and the
+  selected file are named by their last segment, not the full path.
 - Cutscenes are listed by number (`Cutscene 01`..`Cutscene 33`). The game ships
   no titles for them.
 

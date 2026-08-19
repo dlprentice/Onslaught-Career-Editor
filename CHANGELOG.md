@@ -24,8 +24,9 @@ live in `developer_state.json` and the campaign ledgers.
   write into a folder inside the installed game. Media load and playback
   failures stay on the page without dumping the raw exception. The dedicated
   video player says it could not start, without the exception. Dedicated video
-  windows now use the public product name, Onslaught Toolkit. A Media search
-  with no hits now says to try another word or clear the search. Windowed & Mods
+  windows now use the public product name, Onslaught Toolkit. Media names the
+  source folder and the selected file by their last segment, not the full path.
+  A Media search with no hits now says to try another word or clear the search. Windowed & Mods
   Last operation and the safe-copy list do the same: a failure names the action
   and that nothing was changed, without the exception. Home setup failures
   keep the same sentence and drop the exception. Save Lab comparison/analysis

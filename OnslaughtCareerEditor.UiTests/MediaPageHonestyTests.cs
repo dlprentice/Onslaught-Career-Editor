@@ -102,4 +102,57 @@ public class MediaPageHonestyTests
             MediaPageText.DescribeAudioEmptyState(false, "music"),
             Does.Contain("not configured"));
     }
+
+    [Test]
+    public void AGameFolderIsNamedByItsLeafNotThePath()
+    {
+        string path = @"C:\Games\Steam\steamapps\common\Battle Engine Aquila";
+        string leaf = MediaPageText.BuildFolderSummary(path, "Configured install");
+
+        Assert.That(leaf, Is.EqualTo("Battle Engine Aquila"));
+        Assert.That(leaf, Does.Not.Contain(path));
+        Assert.That(leaf, Does.Not.Contain(@":\"));
+        Assert.That(leaf, Does.Not.Contain("/"));
+        Assert.That(leaf, Does.Not.Contain("Games"));
+        Assert.That(
+            MediaPageText.BuildFolderSummary(@"C:\Games\Battle Engine Aquila\", "Configured install"),
+            Is.EqualTo("Battle Engine Aquila"));
+    }
+
+    [Test]
+    public void AMissingFolderFallsBackWithoutPrintingAPath()
+    {
+        Assert.That(MediaPageText.BuildFolderSummary("   ", "Configured install"), Is.EqualTo("Configured install"));
+        Assert.That(MediaPageText.BuildFolderSummary(null, "Configured install"), Is.EqualTo("Configured install"));
+        Assert.That(MediaPageText.DescribeDirectoryDetail(null), Does.Contain("folder"));
+        Assert.That(MediaPageText.DescribeDirectoryDetail(null), Does.Not.Contain(@":\"));
+        Assert.That(MediaPageText.DescribeDirectoryDetail(@"D:\Steam\common\BEA"), Is.EqualTo("BEA"));
+    }
+
+    [Test]
+    public void ASelectedFileIsNamedByItsLeafNotThePath()
+    {
+        string path = @"C:\Games\Battle Engine Aquila\data\sound\briefing.ogg";
+        string name = MediaPageText.BuildFileName(path, "that file");
+
+        Assert.That(name, Is.EqualTo("briefing.ogg"));
+        Assert.That(name, Does.Not.Contain(path));
+        Assert.That(name, Does.Not.Contain(@":\"));
+        Assert.That(name, Does.Not.Contain("Games"));
+        Assert.That(MediaPageText.BuildFileName("   ", "that file"), Is.EqualTo("that file"));
+    }
+
+    [Test]
+    public void ThePagePaintsTheFolderLeafNotThePath()
+    {
+        string code = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI", "Pages", "MediaPage.xaml.cs"));
+
+        Assert.That(code, Does.Contain("MediaPageText.BuildFolderSummary"));
+        Assert.That(code, Does.Contain("MediaPageText.DescribeDirectoryDetail"));
+        Assert.That(code, Does.Contain("MediaPageText.BuildFileName"));
+        Assert.That(code, Does.Not.Contain("MediaGameDirectoryTextBlock.Text = _snapshot.GameDirectory"));
+        Assert.That(code, Does.Not.Contain("MediaGameDirectoryTextBlock.Text = path"));
+        Assert.That(code, Does.Not.Contain(": fullPath;"));
+    }
 }

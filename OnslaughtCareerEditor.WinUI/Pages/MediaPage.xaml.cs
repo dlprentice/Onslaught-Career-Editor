@@ -246,7 +246,9 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 _snapshot = await Task.Run(() => _catalogService.Load(Path.GetFullPath(gameDirectory)));
                 _hasLoaded = true;
 
-                MediaGameDirectoryTextBlock.Text = _snapshot.GameDirectory;
+                MediaGameDirectoryTextBlock.Text = MediaPageText.BuildFolderSummary(
+                    _snapshot.GameDirectory,
+                    "Configured install");
                 MediaSummaryTextBlock.Text = $"{_snapshot.AudioItems.Count} audio items, {_snapshot.VideoItems.Count} videos";
                 SetMediaDirectoryDisplay(
                     _snapshot.GameDirectory,
@@ -354,10 +356,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         {
             string summary = string.IsNullOrWhiteSpace(fullPath)
                 ? "Not configured"
-                : BuildFolderSummary(fullPath, "Configured install");
-            string detail = string.IsNullOrWhiteSpace(fullPath)
-                ? "No install path selected."
-                : fullPath;
+                : MediaPageText.BuildFolderSummary(fullPath, "Configured install");
+            string detail = MediaPageText.DescribeDirectoryDetail(fullPath);
 
             AudioGameDirectorySummaryTextBlock.Text = summary;
             VideoGameDirectorySummaryTextBlock.Text = summary;
@@ -1304,28 +1304,16 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             return Path.GetFullPath(filePath);
         }
 
-        private static string BuildFolderSummary(string? path, string fallback)
-        {
-            if (string.IsNullOrWhiteSpace(path))
-            {
-                return fallback;
-            }
-
-            string trimmed = path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-            string name = Path.GetFileName(trimmed);
-            return string.IsNullOrWhiteSpace(name) ? fallback : name;
-        }
-
         private static string BuildAudioSelectionSummary(MediaAudioItem item)
         {
             string suffix = string.IsNullOrWhiteSpace(item.DurationLabel) ? string.Empty : $" • {item.DurationLabel}";
-            return $"{item.GroupName} • {Path.GetFileName(item.FilePath)}{suffix}";
+            return $"{item.GroupName} • {MediaPageText.BuildFileName(item.FilePath, item.Name)}{suffix}";
         }
 
         private static string BuildVideoSelectionSummary(MediaVideoItem item)
         {
             string suffix = string.IsNullOrWhiteSpace(item.SizeText) ? string.Empty : $" • {item.SizeText}";
-            return $"{item.SectionName} • {Path.GetFileName(item.FilePath)}{suffix}";
+            return $"{item.SectionName} • {MediaPageText.BuildFileName(item.FilePath, item.Name)}{suffix}";
         }
 
         private static string FormatMediaFileSize(long bytes)
@@ -1707,7 +1695,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             config.Save();
             AppConfigChangedService.NotifyChanged(config);
             App.MainWindowInstance.RefreshFooter();
-            MediaGameDirectoryTextBlock.Text = path;
+            MediaGameDirectoryTextBlock.Text = MediaPageText.BuildFolderSummary(path, "Configured install");
             AppStatusService.SetStatus("Media: game directory selected");
             await LoadMediaCatalogAsync();
         }
