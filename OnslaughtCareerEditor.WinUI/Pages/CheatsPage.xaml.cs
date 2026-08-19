@@ -605,7 +605,10 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     _suppressHoldToggleEvents = false;
                 }
 
-                SetLiveTrainerStatus(InfoBarSeverity.Informational, "Holding stopped", tick.Message);
+                SetLiveTrainerStatus(
+                    InfoBarSeverity.Informational,
+                    "Holding stopped",
+                    LiveTrainerPageText.DescribeHoldStop(tick));
             }
 
             StartLiveTrainerTimer(_trainerHold.IsHolding ? LiveTrainerHold.DefaultInterval : LiveTrainerHold.IdleInterval);

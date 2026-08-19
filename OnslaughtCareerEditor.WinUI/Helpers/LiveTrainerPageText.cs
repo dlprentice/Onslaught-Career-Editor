@@ -323,8 +323,46 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
                 LiveTrainerReadStatus.Read =>
                     "Reading a running mission, but the numbers do not look like vitals - so nothing here "
                         + "will be changed. This is what a wrong field position looks like.",
-                _ => reading.Message,
+                _ => DescribeReadStatus(reading.Status),
             };
+        }
+
+        /// <summary>
+        /// Why a read did not produce vitals. Named here so the page never
+        /// paints <see cref="LiveTrainerReadResult.Message"/>.
+        /// </summary>
+        public static string DescribeReadStatus(LiveTrainerReadStatus status)
+        {
+            return status switch
+            {
+                LiveTrainerReadStatus.NotAttached =>
+                    "Not attached to a game.",
+                LiveTrainerReadStatus.ProcessGone =>
+                    "The copied game is no longer readable. It has probably closed.",
+                LiveTrainerReadStatus.NoMissionRunning =>
+                    "No mission is running. Start one in the copied game and the numbers appear here.",
+                LiveTrainerReadStatus.NoBattleEngine =>
+                    "A mission is loading but you are not in a vehicle yet.",
+                LiveTrainerReadStatus.PointerImplausible =>
+                    "The player slot held something that cannot be a player, so nothing is being shown.",
+                LiveTrainerReadStatus.PlayerUnreadable =>
+                    "The player was there a moment ago but could not be read. The mission may have just ended.",
+                LiveTrainerReadStatus.Read =>
+                    "Reading a running mission.",
+                _ => "Nothing could be read from the copied game.",
+            };
+        }
+
+        /// <summary>
+        /// Why Hold stopped. Named here so the page never paints
+        /// <see cref="LiveTrainerHoldTick.Message"/>.
+        /// </summary>
+        public static string DescribeHoldStop(LiveTrainerHoldTick tick)
+        {
+            if (tick.Reading.Status != LiveTrainerReadStatus.Read)
+                return $"Holding stopped. {DescribeReadStatus(tick.Reading.Status)}";
+
+            return "Holding stopped: the writes stopped landing.";
         }
 
         /// <summary>
@@ -370,7 +408,7 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
                 return "Nothing has been read yet.";
 
             if (!reading.HasVitals)
-                return reading.Message;
+                return DescribeReadStatus(reading.Status);
 
             if (!reading.WritingCanBeOffered)
                 return "The numbers read back do not look like vitals, so nothing here will be changed.";

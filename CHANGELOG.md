@@ -75,7 +75,8 @@ live in `developer_state.json` and the campaign ledgers.
   safe copy names a failed write without the writer sentence. A Cheats
   write names the new file, not a path, if the writer sentence is not
   already public-safe. A failed apply or restore of a copied game no
-  longer dumps the exception.
+  longer dumps the exception. A live-trainer read or hold stop names the
+  status, not the internal read sentence.
 
 ## 1.0.11 — 2026-08-07
 
