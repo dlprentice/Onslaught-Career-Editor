@@ -28,4 +28,23 @@ public class PatchBenchPatchRowHonestyTests
         Assert.That(page, Does.Not.Contain("Patch row is not available: {key}"));
         Assert.That(helper, Does.Not.Contain("{key}"));
     }
+
+    [Test]
+    public void AnEmptyAdvancedPatchSummarySaysWhatToDoNext()
+    {
+        string xaml = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot,
+            "OnslaughtCareerEditor.WinUI",
+            "Pages",
+            "BinaryPatchesPage.xaml"));
+        string page = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot,
+            "OnslaughtCareerEditor.WinUI",
+            "Pages",
+            "BinaryPatchesPage.xaml.cs"));
+
+        Assert.That(page, Does.Contain("Choose at least one patch to continue."));
+        Assert.That(xaml, Does.Contain("Choose at least one patch to continue."));
+        Assert.That(xaml, Does.Not.Contain("No patches selected."));
+    }
 }

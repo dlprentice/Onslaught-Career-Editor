@@ -1412,7 +1412,7 @@
                                                     </Expander>
                                                 </StackPanel>
                                                 <TextBlock x:Name="SelectionSummaryTextBlock"
-                                                           Text="No patches selected."
+                                                           Text="Choose at least one patch to continue."
                                                            Style="{StaticResource SectionBodyTextStyle}" />
                                                 <TextBlock Text="Advanced BEA.exe-only copies are for byte inspection and apply/restore checks. Restore or create a fresh copy before changing patch sets; this is not the normal launch path."
                                                            Style="{StaticResource SectionBodyTextStyle}" />
