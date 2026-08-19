@@ -117,5 +117,10 @@ public class AssetLibraryHonestyTests
         Assert.That(code, Does.Not.Contain("catalog.json path"));
         Assert.That(code, Does.Contain("Paste catalog.json, or browse to a generated export folder"));
         Assert.That(xaml, Does.Not.Contain("No generated catalog is loaded yet"));
+        Assert.That(code, Does.Contain("AssetLibraryPageText.PreviewExportMissing"));
+        Assert.That(code, Does.Not.Contain("available yet"));
+        Assert.That(code, Does.Not.Contain("linked yet"));
+        Assert.That(AssetLibraryPageText.PreviewExportMissing, Does.Contain("Choose another Goodie"));
+        Assert.That(AssetLibraryPageText.PreviewExportMissing, Does.Not.Contain("yet"));
     }
 }

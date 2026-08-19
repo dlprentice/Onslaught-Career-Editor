@@ -592,7 +592,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 PreviewTitleTextBlock.Text = $"Goodie entry: {goodie.DisplayName}";
                 TexturePreviewEmptyTextBlock.Text = goodie.HasVideo
                     ? $"Cutscene {goodie.VideoSequenceId} is linked in the media catalog. Use Media playback for Bink preparation and playback."
-                    : "This goodie is cataloged, but no matching local preview export is available yet.";
+                    : AssetLibraryPageText.PreviewExportMissing;
                 TexturePreviewEmptyTextBlock.Visibility = Visibility.Visible;
                 if (goodie.HasVideo && !string.IsNullOrWhiteSpace(goodie.VideoSequenceId))
                 {
@@ -638,7 +638,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 return $"{reward}; opens Media for cutscene {goodie.VideoSequenceId}.";
             }
 
-            return $"{reward}; no local preview export is linked yet.";
+            return $"{reward}. Choose another Goodie, or load an export that includes its preview.";
         }
 
         private string BuildGoodieSummary(AssetGoodieItem goodie, bool matchedTexture, bool matchedMesh, GoodieStateDetail? saveState)

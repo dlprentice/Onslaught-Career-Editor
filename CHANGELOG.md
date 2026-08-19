@@ -175,6 +175,7 @@ live in `developer_state.json` and the campaign ledgers.
   Windowed & Mods verify hint names the file, not a path. Save Editor
   advanced overrides with none chosen name the next step, not the emptiness.
   An empty Asset Library catalog status names the next step, not the emptiness.
+  A Goodie with no preview names the next step, not the emptiness.
 
 ## 1.0.11 — 2026-08-07
 
