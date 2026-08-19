@@ -135,13 +135,17 @@ public sealed partial class RetailFrontendFlow : Control
     private static readonly Color FlagTint = RetailColor(0xfd3f3f3f);
     private static readonly Color ShadowTint = RetailColor(0x3e000000);
     private static readonly Color VersionTint = RetailColor(0xff102025);
-    // Released overlay format string is "V%1d.%02d" at VA 0x00629454 in pristine
-    // BEA.exe (sha256 74154bfa…), rendering "V1.00". The prior value here was
-    // "V1.00 - PATCHED", transcribed from a reference capture taken on a safe copy
-    // whose version_overlay_* patches repoint the format pointer at 0x0046416f to a
-    // code cave at VA 0x005AA444 holding "V%1d.%02d - PATCHED". That suffix is an
-    // artifact of the patched capture, not released behavior.
-    private const string VersionText = "V1.00";
+    // Released overlay format is CFEPMain::Render 0x0046416E:
+    // push 0x00629454 "V%1d.%02d". Image-initial major 0x00629410 is 1;
+    // minor 0x00679980 is BSS 0. RetailMainMenuVersionOverlay owns the
+    // sprintf. The prior value here was "V1.00 - PATCHED", transcribed
+    // from a reference capture taken on a safe copy whose
+    // version_overlay_* patches repoint the format pointer at 0x0046416f
+    // to a code cave at VA 0x005AA444 holding "V%1d.%02d - PATCHED".
+    // That suffix is an artifact of the patched capture, not released
+    // behavior. Colour at 0x004641B1/B4 is fade<<24 | 0x00102025 =
+    // 0xFF102025 settled, which is this VersionTint, so the draw keeps
+    // VersionTint and does not call SubmittedColor.
 
     // FEP_DEVSELECT ("CHOOSE GAME NAME"). See DrawDevSelect for the measurement
     // method; every literal below is either a measured extent from the pristine
@@ -1489,7 +1493,9 @@ public sealed partial class RetailFrontendFlow : Control
             // separate, settled fact. The 2px remains open and is now the only
             // thing open about this element.
             DrawText(
-                VersionText,
+                RetailMainMenuVersionOverlay.Format(
+                    RetailMainMenuVersionOverlay.ImageInitialMajor,
+                    RetailMainMenuVersionOverlay.ImageInitialMinor),
                 new Vector2(0f, DesignHeight - 16f),
                 1f,
                 new Color(VersionTint, VersionTint.A * fade));

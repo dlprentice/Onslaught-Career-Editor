@@ -86,6 +86,8 @@
              Link="godot-startup-source\RetailMainMenuLabelColor.cs" />
     <Compile Include="..\OnslaughtRebuild.Godot\RetailMainMenuSelectorBarColor.cs"
              Link="godot-startup-source\RetailMainMenuSelectorBarColor.cs" />
+    <Compile Include="..\OnslaughtRebuild.Godot\RetailMainMenuVersionOverlay.cs"
+             Link="godot-startup-source\RetailMainMenuVersionOverlay.cs" />
     <Compile Include="..\OnslaughtRebuild.Godot\RetailFrontendCursor.cs"
              Link="godot-startup-source\RetailFrontendCursor.cs" />
     <Compile Include="..\OnslaughtRebuild.Godot\RetailFeMessBox.cs"
