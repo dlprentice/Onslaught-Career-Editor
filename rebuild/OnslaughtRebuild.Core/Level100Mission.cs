@@ -39,6 +39,7 @@ public sealed class Level100Mission
     private int _observedPlayerHealth;
     private bool _playerActive = true;
     private bool _flightModeEnabled = true;
+    private int _flightModeFlag = RetailEnableFlightMode.FlagDisabled;
     private Level100MissionWeaponAvailability _pulseCannonAvailability;
     private Level100MissionWeaponAvailability _twinVulcanAvailability;
     private Level100MissionWeaponAvailability _mechVulcanAvailability;
@@ -49,6 +50,9 @@ public sealed class Level100Mission
     private bool _tutorialVulcanCannon;
     private bool _tutorialStatusBars;
     private int _scoreDelta;
+    private int _gameScore = RetailAddScore.LoadLevelZero;
+    private readonly Dictionary<int, int> _hudPartWords = new();
+    private readonly Dictionary<Level100MissionWeapon, int> _weaponActiveWords = new();
 
     /// <summary>
     /// The Core tick the most recently scheduled character message clears, or
@@ -77,6 +81,8 @@ public sealed class Level100Mission
     /// </remarks>
     private int _messageBoxAllowedTick =
         Level100MissionTiming.MessageBoxAllowedTick;
+
+    private readonly Level100WonCareerHandoff _wonCareerHandoff = new();
 
     public Level100Mission(
         Level100ActorRegistry actors,
@@ -112,6 +118,13 @@ public sealed class Level100Mission
         _initializerRan = true;
         RunNewExecution("init", _program.BuiltInEventInstructionPointers[0]);
     }
+
+    /// <summary>
+    /// The cold training career this mission hands to
+    /// <c>CCareer::Update</c> when it reaches
+    /// <see cref="Level100MissionTerminalState.FrontEndHandoffReady"/> after Won.
+    /// </summary>
+    public RetailCareerCampaign Career => _wonCareerHandoff.Career;
 
     public Level100MissionSnapshot Snapshot => new(
         _tick,
@@ -173,6 +186,42 @@ public sealed class Level100Mission
         _messageBoxAllowedTick);
 
     public Level100MissionOutcome Outcome => _outcome;
+
+    /// <summary>
+    /// <c>CGame+0xf4</c> — the <c>add [0x008a9b8c], eax</c>
+    /// destination. Isolated <see cref="Level100MissionSnapshot.ScoreDelta"/>
+    /// names the rebuild accumulator, not this store.
+    /// </summary>
+    public int GameScore => _gameScore;
+
+    /// <summary>
+    /// <c>CBattleEngine+0x58c</c> — the
+    /// <c>mov dword ptr [ecx+0x58c], 1</c> destination.
+    /// Isolated <see cref="Level100MissionSnapshot.FlightModeEnabled"/>
+    /// names the rebuild bool, not this store.
+    /// </summary>
+    public int FlightModeFlag => _flightModeFlag;
+
+    /// <summary>
+    /// <c>dword [index*4+0x008aa51c]</c> — Highlight stores 2,
+    /// UnHighlight stores 1. Isolated
+    /// <see cref="Level100HudEmphasisChanged.Emphasized"/> names
+    /// the rebuild bool, not this store. A part this mission
+    /// never wrote reads 0 here; that is not a BSS-init claim.
+    /// </summary>
+    public int HudPartWord(int partIndex) =>
+        _hudPartWords.TryGetValue(partIndex, out int word) ? word : 0;
+
+    /// <summary>
+    /// <c>CWeapon+0x9c</c> — the
+    /// <c>mov dword ptr [edi+0x9c], 1</c> destination.
+    /// Isolated <see cref="Level100WeaponAvailabilityChanged.Enabled"/>
+    /// names the rebuild bool, not this store. A weapon this
+    /// mission never Enabled reads 0 here; that is not a
+    /// start-active or Disable store-0 claim.
+    /// </summary>
+    public int WeaponActiveWord(Level100MissionWeapon weapon) =>
+        _weaponActiveWords.TryGetValue(weapon, out int word) ? word : 0;
 
     internal bool GameplayPaused => Level100MissionTiming.GameplayPaused(
         _outcome,
@@ -653,19 +702,13 @@ public sealed class Level100Mission
                 RequireArguments(command, arguments, 0);
                 UnsetNavigationObjective(RequireContext(execution));
                 return NativeResult.Void;
-            case 34: // HighlightHudPart
+            case 34: // HighlightHudPart — IScript__HighlightHudPart 0x00535e60
                 RequireArguments(command, arguments, 1);
-                _events.Add(new Level100HudEmphasisChanged(
-                    _tick,
-                    arguments[0].AsInteger(),
-                    true));
+                StoreHudPartWord(arguments[0].AsInteger(), highlight: true);
                 return NativeResult.Void;
-            case 35: // UnHighlightHudPart
+            case 35: // UnHighlightHudPart — IScript__UnHighlightHudPart 0x00535e80
                 RequireArguments(command, arguments, 1);
-                _events.Add(new Level100HudEmphasisChanged(
-                    _tick,
-                    arguments[0].AsInteger(),
-                    false));
+                StoreHudPartWord(arguments[0].AsInteger(), highlight: false);
                 return NativeResult.Void;
             case 36: // PlayCharMessageWait
                 RequireArguments(command, arguments, 3);
@@ -678,17 +721,22 @@ public sealed class Level100Mission
                 RequireArguments(command, arguments, 2);
                 SetPrimaryObjective(arguments, Level100PrimaryObjectiveStatus.Complete);
                 return NativeResult.Void;
-            case 85: // AddScore
+            case 85: // AddScore — IScript__AddScore 0x005343c0
                 RequireArguments(command, arguments, 1);
                 int delta = arguments[0].AsInteger();
                 _scoreDelta = unchecked(_scoreDelta + delta);
+                // Isolated ScoreDelta names the rebuild accumulator.
+                // Isolated FillOut ScoreWord copies a parameterized
+                // dword. First-play elapsed / FillOut score stay
+                // unclaimed. Live GAME.mSlots stay unclaimed.
+                _gameScore = RetailAddScore.Add(_gameScore, delta);
                 _events.Add(new Level100ScoreChanged(_tick, delta, _scoreDelta));
                 return NativeResult.Void;
             case 87: // PrimaryObjectiveFailed
                 RequireArguments(command, arguments, 2);
                 SetPrimaryObjective(arguments, Level100PrimaryObjectiveStatus.Failed);
                 return NativeResult.Void;
-            case 98: // EnableWeapon
+            case 98: // EnableWeapon — IScript__EnableWeapon 0x00534fb0
                 RequireArguments(command, arguments, 1);
                 SetWeapon(arguments[0].AsString(), true);
                 return NativeResult.Void;
@@ -696,8 +744,14 @@ public sealed class Level100Mission
                 RequireArguments(command, arguments, 1);
                 SetWeapon(arguments[0].AsString(), false);
                 return NativeResult.Void;
-            case 100: // EnableFlightMode
+            case 100: // EnableFlightMode — IScript__EnableFlightMode 0x00535070
                 RequireArguments(command, arguments, 0);
+                // Isolated FlightModeEnabled names the rebuild bool.
+                // Isolated Enable names literal-1; one live store of 1
+                // is not unique versus increment from 0. Disable's
+                // clear / morph stay unclaimed. ChargeWeapon stays
+                // unclaimed. Live GAME.mSlots stay unclaimed.
+                _flightModeFlag = RetailEnableFlightMode.Enable(_flightModeFlag);
                 SetFlightMode(true);
                 return NativeResult.Void;
             case 101: // DisableFlightMode
@@ -719,7 +773,7 @@ public sealed class Level100Mission
                 return new NativeResult(
                     Level100ScriptValue.Boolean(GetTutorialSlot(arguments[0].AsInteger())),
                     WaitRequest.None);
-            case 133: // SetSlotSave
+            case 133: // SetSlotSave — IScript__SetSlotSave 0x00533900
                 RequireArguments(command, arguments, 2);
                 SetTutorialSlot(arguments[0].AsInteger(), arguments[1].AsBoolean());
                 return NativeResult.Void;
@@ -844,6 +898,23 @@ public sealed class Level100Mission
             Level100ActorCommand.UnsetObjective));
     }
 
+    /// <summary>
+    /// Isolated <see cref="Level100HudEmphasisChanged.Emphasized"/>
+    /// names the rebuild bool. These stores are the official
+    /// immediates 2 then 1. Array extent stays unclaimed.
+    /// </summary>
+    private void StoreHudPartWord(int partIndex, bool highlight)
+    {
+        int current = HudPartWord(partIndex);
+        _hudPartWords[partIndex] = highlight
+            ? RetailHighlightHudPart.Highlight(current)
+            : RetailHighlightHudPart.Unhighlight(current);
+        _events.Add(new Level100HudEmphasisChanged(
+            _tick,
+            partIndex,
+            highlight));
+    }
+
     private void SetPrimaryObjective(
         IReadOnlyList<Level100ScriptValue> arguments,
         Level100PrimaryObjectiveStatus status)
@@ -895,6 +966,17 @@ public sealed class Level100Mission
                 throw new ArgumentOutOfRangeException(nameof(weapon));
         }
 
+        if (enabled)
+        {
+            // Isolated Enabled names the rebuild bool / enum.
+            // Isolated Enable names literal-1; one live store of 1
+            // is not unique versus increment from 0. Disable's
+            // store-0 / ChangeWeapon stay unclaimed. ChargeWeapon
+            // stays unclaimed. Live GAME.mSlots stay unclaimed.
+            int current = WeaponActiveWord(weapon);
+            _weaponActiveWords[weapon] = RetailEnableWeapon.Enable(current);
+        }
+
         _events.Add(new Level100WeaponAvailabilityChanged(_tick, weapon, enabled));
     }
 
@@ -934,6 +1016,10 @@ public sealed class Level100Mission
                     $"Released Level 100 requested unknown saved slot {slot}.");
         }
 
+        // IScript::SetSlotSave at 0x00533900 also calls CCareer::SetSlot
+        // immediately. Isolated FrontEndHandoff overwrite names ApplyUpdate,
+        // not this persist. Live GAME.mSlots stay unclaimed.
+        RetailSetSlotSave.PersistCareerSlot(Career.Slots, slot, value);
         _events.Add(new Level100TutorialSlotSaved(_tick, slot));
     }
 
@@ -1002,6 +1088,7 @@ public sealed class Level100Mission
         {
             _terminalState = Level100MissionTerminalState.FrontEndHandoffReady;
             _events.Add(new Level100TerminalStateChanged(_tick, _terminalState));
+            _wonCareerHandoff.TryApply(_outcome, _terminalState);
         }
         else if (_outcome == Level100MissionOutcome.Lost &&
                  _terminalTicksRemaining ==

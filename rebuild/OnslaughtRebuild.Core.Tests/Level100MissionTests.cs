@@ -15,6 +15,169 @@ public sealed class Level100MissionTests
     private static readonly Level100TutorialProgress CompletedTutorialSlots =
         new(Introduction: true, PulseCannon: true, VulcanCannon: true, StatusBars: true);
 
+    /// <summary>
+    /// <c>IScript::PrimaryObjectiveFailed</c> at <c>0x00534440</c>
+    /// writes state 2 (Wave580 plate; <c>MOS_FAILED</c> at
+    /// <c>0x004496FB</c>). Level 100 <c>init()</c> calls it for
+    /// objectives 1..4 before the first <c>PlayCharMessageWait</c>.
+    /// Rebuild <see cref="Level100PrimaryObjectiveStatus.Failed"/>
+    /// is 1, so an identity cast is not retail. Isolated FillOut
+    /// Won names four <c>MOS_COMPLETE</c> (1) and does not go
+    /// through init. <c>GetNumPrimaryObjectives</c> counting
+    /// non-zero is not unique versus mapping Failed to 1.
+    /// Mutation: identity-cast the mission enum. Do not invent
+    /// secondaries. Live <c>GAME.mSlots</c> stay unclaimed.
+    /// </summary>
+    [Fact]
+    public void Init_PrimaryObjectiveFailedWritesRetailMosFailedTwo()
+    {
+        Level100ActorDefinitionSet definitions = Level100TestActorDefinitions.Create();
+        var actors = new Level100ActorRegistry(definitions);
+        Level100ActorId player = actors.GetThingRef("Player 1")!.Value;
+        var mission = new Level100Mission(
+            actors,
+            player,
+            new Level100TutorialProgress(false, false, false, false));
+
+        int[] mos = RetailGameObjectiveCount.FromLevel100MissionPrimaries(
+            mission.Snapshot.PrimaryObjectives);
+
+        Assert.Equal(
+            RetailGameObjectiveCount.StatusFailed,
+            RetailGameObjectiveCount.FromLevel100MissionStatus(
+                Level100PrimaryObjectiveStatus.Failed));
+        Assert.Equal(
+            RetailGameObjectiveCount.StatusComplete,
+            RetailGameObjectiveCount.FromLevel100MissionStatus(
+                Level100PrimaryObjectiveStatus.Complete));
+        Assert.Equal(
+            RetailGameObjectiveCount.StatusNotDefined,
+            RetailGameObjectiveCount.FromLevel100MissionStatus(
+                Level100PrimaryObjectiveStatus.Uninitialized));
+        Assert.NotEqual(
+            RetailGameObjectiveCount.StatusFailed,
+            (int)Level100PrimaryObjectiveStatus.Failed);
+        Assert.Equal(new[] { 2, 2, 2, 2, 0, 0, 0, 0, 0, 0 }, mos);
+        Assert.Equal(
+            4,
+            RetailGameObjectiveCount.GetNumPrimaryObjectives(mos));
+        Assert.All(
+            mission.Snapshot.PrimaryObjectives,
+            objective => Assert.Equal(
+                Level100PrimaryObjectiveStatus.Failed,
+                objective.Status));
+        Assert.All(
+            RetailFillOutEndLevelData.ForLevel100Won().SecondaryStatuses,
+            status => Assert.Equal(0, status));
+    }
+
+    /// <summary>
+    /// <c>IScript::PrimaryObjectiveFailed</c> at <c>0x0053445e</c>
+    /// is <c>mov [eax+4], edi</c> — the second dword of the
+    /// stride-8 <c>CMissionObjective</c> at <c>0x008a9adc</c>.
+    /// Twin Complete at <c>0x005343fe</c>. Official
+    /// <c>74154bfa…</c>; A15 names "primary objective text +
+    /// state". <c>game.h</c> is
+    /// <c>Set(MOS_FAILED, string_id)</c>. Level 100
+    /// <c>init()</c> writes
+    /// <c>_100_OBJECTIVE_1..4</c> (110325434 cited in
+    /// <c>msl-scripting.md</c>; 2..4 from the hash-pinned
+    /// LevelScript). Isolated MOS-failed names state 2, not
+    /// <c>[eax+4]</c>. Isolated FillOut Won names four
+    /// <c>GetStatus()</c> words and does not copy the text
+    /// dword. Mutation: leave the ten text words at 0.
+    /// Live <c>GAME.mSlots</c> stay unclaimed. No new
+    /// secondaries.
+    /// </summary>
+    [Fact]
+    public void Init_PrimaryObjectiveFailedWritesRetailObjectiveTextDword()
+    {
+        Level100ActorDefinitionSet definitions = Level100TestActorDefinitions.Create();
+        var actors = new Level100ActorRegistry(definitions);
+        Level100ActorId player = actors.GetThingRef("Player 1")!.Value;
+        var mission = new Level100Mission(
+            actors,
+            player,
+            new Level100TutorialProgress(false, false, false, false));
+
+        int[] texts = RetailGameObjectiveCount.FromLevel100MissionPrimaryTextIds(
+            mission.Snapshot.PrimaryObjectives);
+        int[] mos = RetailGameObjectiveCount.FromLevel100MissionPrimaries(
+            mission.Snapshot.PrimaryObjectives);
+
+        Assert.Equal(
+            new[]
+            {
+                RetailGameObjectiveCount.Level100InitObjectiveText1,
+                RetailGameObjectiveCount.Level100InitObjectiveText2,
+                RetailGameObjectiveCount.Level100InitObjectiveText3,
+                RetailGameObjectiveCount.Level100InitObjectiveText4,
+                0, 0, 0, 0, 0, 0,
+            },
+            texts);
+        Assert.Equal(110325434, RetailGameObjectiveCount.Level100InitObjectiveText1);
+        Assert.NotEqual(RetailGameObjectiveCount.StatusFailed, texts[0]);
+        Assert.Equal(new[] { 2, 2, 2, 2, 0, 0, 0, 0, 0, 0 }, mos);
+        Assert.All(
+            RetailFillOutEndLevelData.ForLevel100Won().PrimaryStatuses,
+            status => Assert.NotEqual(RetailGameObjectiveCount.Level100InitObjectiveText1, status));
+        Assert.All(
+            RetailFillOutEndLevelData.ForLevel100Won().SecondaryStatuses,
+            status => Assert.Equal(0, status));
+    }
+
+    /// <summary>
+    /// <c>IScript::UnHighlightHudPart</c> at <c>0x00535e8c</c>
+    /// is <c>mov dword [eax*4+0x008aa51c], 1</c>. Twin Highlight
+    /// at <c>0x00535e6c</c> stores 2. First-play <c>init()</c>
+    /// Highlights then UnHighlights <c>HUD_COMPASS</c> (2) and
+    /// <c>HUD_RADAR</c> (4) before Activate. Isolated last
+    /// <c>Emphasized</c> = false names the rebuild bool and
+    /// still passes if this store is skipped. Isolated
+    /// <see cref="RetailHighlightHudPart.Unhighlight"/> names
+    /// literal-1; skip UnHighlight after Highlight leaves 2.
+    /// Mutation: skip the UnHighlight store. Array extent and
+    /// state-1/2 HUD meaning stay unclaimed. Live
+    /// <c>GAME.mSlots</c> stay unclaimed. No new secondaries.
+    /// </summary>
+    [Fact]
+    public void Init_UnHighlightHudPartWritesOneAfterHighlightTwo()
+    {
+        Level100ActorDefinitionSet definitions = Level100TestActorDefinitions.Create();
+        var actors = new Level100ActorRegistry(definitions);
+        Level100ActorId player = actors.GetThingRef("Player 1")!.Value;
+        var mission = new Level100Mission(
+            actors,
+            player,
+            new Level100TutorialProgress(false, false, false, false));
+
+        const int settleTicks = 100 * SimulationConstants.TicksPerSecond;
+        for (int tick = 0; tick < settleTicks; tick++)
+        {
+            mission.AdvanceTick(SimulationConstants.MaximumHull);
+        }
+
+        Assert.Equal(
+            RetailHighlightHudPart.Unhighlighted,
+            mission.HudPartWord(RetailHighlightHudPart.CompassIndex));
+        Assert.Equal(
+            RetailHighlightHudPart.Unhighlighted,
+            mission.HudPartWord(RetailHighlightHudPart.RadarIndex));
+        Assert.Equal(
+            RetailHighlightHudPart.Unhighlight(RetailHighlightHudPart.Highlight(0)),
+            mission.HudPartWord(RetailHighlightHudPart.CompassIndex));
+        Assert.NotEqual(
+            RetailHighlightHudPart.Highlighted,
+            mission.HudPartWord(RetailHighlightHudPart.CompassIndex));
+        Assert.Contains(
+            mission.Snapshot.PendingEvents.OfType<Level100HudEmphasisChanged>(),
+            item => item.PartId == RetailHighlightHudPart.CompassIndex &&
+                    !item.Emphasized);
+        Assert.All(
+            RetailFillOutEndLevelData.ForLevel100Won().SecondaryStatuses,
+            status => Assert.Equal(0, status));
+    }
+
     [Fact]
     public void MissionNativeSetPos_CopiesGetPosPositionAndPreservesOtherPoseState()
     {

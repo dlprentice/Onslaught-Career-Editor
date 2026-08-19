@@ -49,14 +49,22 @@ public sealed class RetailWeaponChargeTable
     /// <summary>The table at <c>weapon-&gt;record + 0x0C</c>, five dwords.</summary>
     public int[] Levels { get; } = new int[LevelCount] { AbsentLevel, AbsentLevel, AbsentLevel, AbsentLevel, AbsentLevel };
 
+    /// <summary>
+    /// <c>CWeaponChargeRate</c> — the float at <c>record + 0x08</c>, added into
+    /// <see cref="Charge"/> by <see cref="RetailWeaponCharge.Charge"/>.
+    /// </summary>
+    public float ChargeRate { get; set; }
+
     /// <summary><c>mCharge</c> — the float at <c>weapon + 0x60</c>.</summary>
     public float Charge { get; set; }
 }
 
 /// <summary>
-/// <c>CWeapon::GetCharge</c>, <c>CanCharge</c>, <c>FullyCharged</c> and
-/// <c>LoseCharge</c>, recovered from the three battle-engine bodies that inline
-/// them. Each is a pure function of the charge-level table and the live charge.
+/// <c>CWeapon::GetCharge</c>, <c>CanCharge</c>, <c>FullyCharged</c>,
+/// <c>LoseCharge</c> and <c>Charge</c>, recovered from the three battle-engine
+/// bodies that inline the first four and from the increment helper they call.
+/// Each is a pure function of the charge-level table, the charge rate, and the
+/// live charge.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -67,6 +75,7 @@ public sealed class RetailWeaponChargeTable
 /// <item><c>0x00412000</c> <c>CBattleEngineJetPart::LoseWeaponCharge</c> — <c>LoseCharge</c> inlined to one store at <c>0x0041203B</c>.</item>
 /// <item><c>0x00413CF0</c> <c>CBattleEngineWalkerPart::ChargeWeapon</c> — <c>CanCharge</c> at <c>0x00413D2B</c> and <c>FullyCharged</c> at <c>0x00413D91-0x00413DE1</c>.</item>
 /// <item><c>0x00411F96</c> — the same <c>LoseCharge</c> store again, inside <c>ChangeWeapon</c>.</item>
+/// <item><c>0x005068F0</c> <c>CWeapon__AdvanceChargeProgressIfAnySlotAssigned</c> — <c>weapon-&gt;Charge()</c>, called from <c>0x00413E04</c>.</item>
 /// </list>
 /// <para>
 /// <b><c>GetCharge</c> is a fraction of the highest present level, and it
@@ -115,6 +124,18 @@ public sealed class RetailWeaponChargeTable
 /// never be unordered, so that is the only way in.
 /// </para>
 /// <para>
+/// <b><c>Charge</c> adds the rate under a 400.0 cap that is not MaxCharge.</b>
+/// <c>0x005068F0</c> re-runs the CanCharge scan from <c>record + 0x10</c> and
+/// returns if nothing in 1..4 is present. Otherwise it
+/// <c>fcomp</c>s <c>mCharge</c> against <c>0x005DB358</c> =
+/// <c>00 00 c8 43</c> = <c>400.0f</c> with <c>test ah, 1 / je</c>, then
+/// <c>fld [record+8] / fadd [weapon+0x60] / fstp [weapon+0x60]</c>. So a
+/// charge of 100 still increments, and a charge of 400 does not. The
+/// Pulse Cannon Pod fills at 100 only because <c>ChargeWeapon</c> at
+/// <c>0x00413CF0</c> stops calling this helper once
+/// <see cref="FullyCharged"/> is true.
+/// </para>
+/// <para>
 /// <b>Not established here.</b> What the five levels <i>mean</i> is not
 /// claimed — only that they are read as present/absent markers and that their
 /// index scales the charge. Whether <c>-1</c> is the only absent marker, and
@@ -124,7 +145,10 @@ public sealed class RetailWeaponChargeTable
 /// double-precision quotient; this type rounds it to float, which is safe for
 /// the reason <see cref="RetailWeaponStoreReadouts"/> sets out at length —
 /// binary64 carries more than twice binary32's significand, so the double
-/// rounding is innocuous for a single divide.
+/// rounding is innocuous for a single divide. <c>ReadyToCharge</c> at
+/// <c>0x0050A080</c>, the energy-store add of consumption, overheat-to-fire,
+/// and which round <c>Fire</c> selects at charge level 1 remain the next
+/// ChargeWeapon arms.
 /// </para>
 /// </remarks>
 public static class RetailWeaponCharge
@@ -218,5 +242,41 @@ public static class RetailWeaponCharge
         }
 
         weapon.Charge = BitConverter.UInt32BitsToSingle(0u);
+    }
+
+    /// <summary>
+    /// The increment-body cap — <c>0x005DB358</c> = <c>00 00 c8 43</c> =
+    /// <c>400.0f</c>. This is not <see cref="MaxCharge"/>; Pulse Cannon Pod
+    /// fills at 100 because <c>ChargeWeapon</c> stops calling this helper.
+    /// </summary>
+    public const float IncrementCap = 400.0f;
+
+    /// <summary>
+    /// <c>CWeapon__AdvanceChargeProgressIfAnySlotAssigned</c> at
+    /// <c>0x005068F0</c>. The CanCharge scan starts at <c>record + 0x10</c>;
+    /// when a later level is present and the live charge is strictly below
+    /// <see cref="IncrementCap"/> (<c>test ah, 1 / je</c>), it does
+    /// <c>fld [record+8] / fadd [weapon+0x60] / fstp [weapon+0x60]</c>.
+    /// </summary>
+    public static void Charge(RetailWeaponChargeTable weapon)
+    {
+        if (weapon is null)
+        {
+            throw new ArgumentNullException(nameof(weapon));
+        }
+
+        if (!CanCharge(weapon))
+        {
+            return;
+        }
+
+        // test ah, 1 / je: skip when C0 is clear, i.e. charge >= 400 ordered.
+        // An unordered charge sets C0 and still adds.
+        if (weapon.Charge >= IncrementCap)
+        {
+            return;
+        }
+
+        weapon.Charge = (float)((double)weapon.ChargeRate + (double)weapon.Charge);
     }
 }

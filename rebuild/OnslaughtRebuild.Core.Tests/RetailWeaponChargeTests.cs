@@ -125,6 +125,66 @@ public sealed class RetailWeaponChargeTests
     public void FullyCharged_ReportsFullWhenNothingCanCharge() =>
         Assert.True(RetailWeaponCharge.FullyCharged(Weapon(0.0f, 7, -1, -1, -1, -1)));
 
+    // 0x005068F0 adds record+8 into weapon+0x60 only when a level in 1..4 is
+    // present and the live charge is strictly below 400.0 at 0x005DB358
+    // (test ah,1 / je). It does not consult MaxCharge; ChargeWeapon is the
+    // caller that stops at FullyCharged.
+    [Fact]
+    public void Charge_AddsTheRecordRateWhileBelowFourHundred()
+    {
+        RetailWeaponChargeTable weapon = Weapon(100.0f, -1, 7, -1, -1, -1);
+        weapon.ChargeRate = 10.0f;
+
+        RetailWeaponCharge.Charge(weapon);
+
+        Assert.Equal(0x42DC0000u, BitConverter.SingleToUInt32Bits(weapon.Charge));
+    }
+
+    [Fact]
+    public void Charge_DoesNotAddAtTheFourHundredCap()
+    {
+        RetailWeaponChargeTable weapon = Weapon(
+            RetailWeaponCharge.IncrementCap,
+            -1,
+            7,
+            -1,
+            -1,
+            -1);
+        weapon.ChargeRate = 10.0f;
+
+        RetailWeaponCharge.Charge(weapon);
+
+        Assert.Equal(
+            0x43C80000u,
+            BitConverter.SingleToUInt32Bits(weapon.Charge));
+    }
+
+    // The increment compare is C0 alone, so an unordered charge is below the
+    // cap and the add runs. NaN + 10 is still NaN; a rebuild that wrote
+    // `charge < 400` in C# would skip and also leave NaN. The observable is
+    // that 399.0 still adds (it is below) and 400.0 does not.
+    [Fact]
+    public void Charge_AddsFromJustBelowTheCapWithoutClamping()
+    {
+        RetailWeaponChargeTable weapon = Weapon(399.0f, -1, 7, -1, -1, -1);
+        weapon.ChargeRate = 10.0f;
+
+        RetailWeaponCharge.Charge(weapon);
+
+        Assert.Equal(409.0f, weapon.Charge);
+    }
+
+    [Fact]
+    public void Charge_IsANoOpWhenNothingCanCharge()
+    {
+        RetailWeaponChargeTable weapon = Weapon(0.0f, 7, -1, -1, -1, -1);
+        weapon.ChargeRate = 10.0f;
+
+        RetailWeaponCharge.Charge(weapon);
+
+        Assert.Equal(0x00000000u, BitConverter.SingleToUInt32Bits(weapon.Charge));
+    }
+
     // `mov dword ptr [weapon + 0x60], 0` is an integer store of the all-zero
     // word, so the charge lands on +0.0f. A rebuild that wrote -0.0f, or that
     // subtracted to zero, would leave a different bit pattern for the divide to
