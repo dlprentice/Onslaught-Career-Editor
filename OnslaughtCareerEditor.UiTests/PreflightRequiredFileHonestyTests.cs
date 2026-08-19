@@ -185,6 +185,45 @@ public class PreflightRequiredFileHonestyTests
             Does.Not.Contain("path"));
         Assert.That(GameProfilePreflightService.CopiedBackupNotRetail.ToLowerInvariant(),
             Does.Not.Contain("specimen"));
+        Assert.That(source, Does.Contain("Level100TextDetailsInvalid"));
+        Assert.That(source, Does.Contain("Level100TextDetailsUnsupported"));
+        Assert.That(source, Does.Contain("Level100TextDetailsWrongTarget"));
+        Assert.That(source, Does.Contain("Level100TextBackupMismatch"));
+        Assert.That(source, Does.Contain("Level100TextFileMismatch"));
+        Assert.That(source, Does.Contain("Level100TextSizeMismatch"));
+        Assert.That(source, Does.Contain("Level100TextWrongId"));
+        Assert.That(source, Does.Contain("Level100TextRangeMissing"));
+        Assert.That(source, Does.Contain("Level100TextRangeInvalid"));
+        Assert.That(source, Does.Contain("Level100TextBytesMismatch"));
+        Assert.That(source, Does.Not.Contain("Playable copied game folder Level 100 text"));
+        Assert.That(GameProfilePreflightService.Level100TextDetailsInvalid,
+            Is.EqualTo("That copy's Level 100 text details are invalid."));
+        Assert.That(GameProfilePreflightService.Level100TextDetailsUnsupported,
+            Is.EqualTo("That copy's Level 100 text details are out of date."));
+        Assert.That(GameProfilePreflightService.Level100TextDetailsWrongTarget,
+            Is.EqualTo("That copy's Level 100 text details do not target english.dat."));
+        Assert.That(GameProfilePreflightService.Level100TextBackupMismatch,
+            Is.EqualTo("That copy's english.dat.original.backup no longer matches."));
+        Assert.That(GameProfilePreflightService.Level100TextFileMismatch,
+            Is.EqualTo("That copy's english.dat no longer matches."));
+        Assert.That(GameProfilePreflightService.Level100TextSizeMismatch,
+            Is.EqualTo("That copy's Level 100 text file sizes do not match."));
+        Assert.That(GameProfilePreflightService.Level100TextWrongId,
+            Is.EqualTo("That copy's Level 100 text details name the wrong text."));
+        Assert.That(GameProfilePreflightService.Level100TextRangeMissing,
+            Is.EqualTo("That copy's Level 100 text details are missing their changed range."));
+        Assert.That(GameProfilePreflightService.Level100TextRangeInvalid,
+            Is.EqualTo("That copy's Level 100 text details have an invalid changed range."));
+        Assert.That(GameProfilePreflightService.Level100TextBytesMismatch,
+            Is.EqualTo("That copy's Level 100 text no longer matches."));
+        Assert.That(GameProfilePreflightService.Level100TextDetailsInvalid.ToLowerInvariant(),
+            Does.Not.Contain("playable"));
+        Assert.That(GameProfilePreflightService.Level100TextDetailsUnsupported.ToLowerInvariant(),
+            Does.Not.Contain("schema"));
+        Assert.That(GameProfilePreflightService.Level100TextFileMismatch.ToLowerInvariant(),
+            Does.Not.Contain("manifest"));
+        Assert.That(GameProfilePreflightService.Level100TextBytesMismatch.ToLowerInvariant(),
+            Does.Not.Contain("replacement"));
     }
 
     [Test]

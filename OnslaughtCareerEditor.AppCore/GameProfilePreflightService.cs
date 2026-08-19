@@ -145,6 +145,16 @@ namespace OnslaughtCareerEditor.AppCore
         public const string CopyLaunchFolderMismatch = "That copy does not match this launch folder.";
         public const string CopyManifestMissing = "That copy is missing onslaught-profile-manifest.json.";
         public const string CopyManifestOutOfDate = "That copy's details file is out of date.";
+        public const string Level100TextDetailsInvalid = "That copy's Level 100 text details are invalid.";
+        public const string Level100TextDetailsUnsupported = "That copy's Level 100 text details are out of date.";
+        public const string Level100TextDetailsWrongTarget = "That copy's Level 100 text details do not target english.dat.";
+        public const string Level100TextBackupMismatch = "That copy's english.dat.original.backup no longer matches.";
+        public const string Level100TextFileMismatch = "That copy's english.dat no longer matches.";
+        public const string Level100TextSizeMismatch = "That copy's Level 100 text file sizes do not match.";
+        public const string Level100TextWrongId = "That copy's Level 100 text details name the wrong text.";
+        public const string Level100TextRangeMissing = "That copy's Level 100 text details are missing their changed range.";
+        public const string Level100TextRangeInvalid = "That copy's Level 100 text details have an invalid changed range.";
+        public const string Level100TextBytesMismatch = "That copy's Level 100 text no longer matches.";
         public const string ProfileFolderInsideGame =
             "The app-owned profile folder must not sit inside the game folder.";
         public const string GameFolderInsideProfile =
@@ -673,18 +683,18 @@ namespace OnslaughtCareerEditor.AppCore
             }
 
             if (modEl.ValueKind != JsonValueKind.Object)
-                throw new InvalidOperationException("Playable copied game folder Level 100 text metadata is invalid.");
+                throw new InvalidOperationException(Level100TextDetailsInvalid);
 
             string schemaVersion = RequiredString(modEl, "schemaVersion", "Level 100 text metadata");
             if (!string.Equals(schemaVersion, Level100TextModSchemaVersion, StringComparison.Ordinal))
-                throw new InvalidOperationException("Playable copied game folder Level 100 text metadata has an unsupported schema.");
+                throw new InvalidOperationException(Level100TextDetailsUnsupported);
 
             string targetRelativePath = RequiredString(modEl, "targetRelativePath", "Level 100 text metadata");
             string backupRelativePath = RequiredString(modEl, "backupRelativePath", "Level 100 text metadata");
             if (!string.Equals(targetRelativePath, Level100EnglishDatRelativePath, StringComparison.OrdinalIgnoreCase) ||
                 !string.Equals(backupRelativePath, Level100EnglishDatBackupRelativePath, StringComparison.OrdinalIgnoreCase))
             {
-                throw new InvalidOperationException("Playable copied game folder Level 100 text metadata does not target the supported English language table.");
+                throw new InvalidOperationException(Level100TextDetailsWrongTarget);
             }
 
             string targetPath = ResolveProfileRelativePath(resolvedGameRoot, targetRelativePath, "Level 100 text target");
@@ -697,9 +707,9 @@ namespace OnslaughtCareerEditor.AppCore
             string originalSha256 = RequiredString(modEl, "originalSha256", "Level 100 text metadata");
             string modifiedSha256 = RequiredString(modEl, "modifiedSha256", "Level 100 text metadata");
             if (!string.Equals(ComputeSha256(backupPath), originalSha256, StringComparison.OrdinalIgnoreCase))
-                throw new InvalidOperationException("Playable copied game folder Level 100 text backup no longer matches its manifest hash.");
+                throw new InvalidOperationException(Level100TextBackupMismatch);
             if (!string.Equals(ComputeSha256(targetPath), modifiedSha256, StringComparison.OrdinalIgnoreCase))
-                throw new InvalidOperationException("Playable copied game folder Level 100 text target no longer matches its manifest hash.");
+                throw new InvalidOperationException(Level100TextFileMismatch);
 
             if (!modEl.TryGetProperty("originalSize", out JsonElement originalSizeEl) ||
                 !originalSizeEl.TryGetInt64(out long originalSize) ||
@@ -709,14 +719,14 @@ namespace OnslaughtCareerEditor.AppCore
                 new FileInfo(targetPath).Length != modifiedSize ||
                 originalSize != modifiedSize)
             {
-                throw new InvalidOperationException("Playable copied game folder Level 100 text file sizes do not match its fixed-size manifest contract.");
+                throw new InvalidOperationException(Level100TextSizeMismatch);
             }
 
             if (!modEl.TryGetProperty("textId", out JsonElement textIdEl) ||
                 !textIdEl.TryGetUInt32(out uint textId) ||
                 textId != Level100TutorialTextId)
             {
-                throw new InvalidOperationException("Playable copied game folder Level 100 text metadata has the wrong text ID.");
+                throw new InvalidOperationException(Level100TextWrongId);
             }
 
             if (!modEl.TryGetProperty("changedOffset", out JsonElement offsetEl) ||
@@ -724,7 +734,7 @@ namespace OnslaughtCareerEditor.AppCore
                 !modEl.TryGetProperty("changedByteCount", out JsonElement byteCountEl) ||
                 !byteCountEl.TryGetInt32(out int changedByteCount))
             {
-                throw new InvalidOperationException("Playable copied game folder Level 100 text metadata is missing its changed range.");
+                throw new InvalidOperationException(Level100TextRangeMissing);
             }
 
             byte[] originalBytes = Encoding.Unicode.GetBytes(Level100TutorialOriginalText);
@@ -733,7 +743,7 @@ namespace OnslaughtCareerEditor.AppCore
                 changedOffset < 0 ||
                 changedOffset > new FileInfo(targetPath).Length - changedByteCount)
             {
-                throw new InvalidOperationException("Playable copied game folder Level 100 text metadata has an invalid changed range.");
+                throw new InvalidOperationException(Level100TextRangeInvalid);
             }
 
             byte[] backupData = File.ReadAllBytes(backupPath);
@@ -741,7 +751,7 @@ namespace OnslaughtCareerEditor.AppCore
             if (!backupData.AsSpan(changedOffset, changedByteCount).SequenceEqual(originalBytes) ||
                 !targetData.AsSpan(changedOffset, changedByteCount).SequenceEqual(replacementBytes))
             {
-                throw new InvalidOperationException("Playable copied game folder Level 100 text bytes no longer match the expected original/replacement pair.");
+                throw new InvalidOperationException(Level100TextBytesMismatch);
             }
         }
 
