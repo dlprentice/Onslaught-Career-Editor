@@ -48,7 +48,7 @@
                                            FontWeight="SemiBold" />
                                 <TextBlock x:Name="GameDirectoryRoleTextBlock"
                                            AutomationProperties.AutomationId="SettingsGameDirectoryRole"
-                                          Text="Choose your install folder as read-only source material to enable saves, media, and playable copied-game workflows."
+                                          Text="Choose your installed game folder. The app reads it to create copies, and only changes it if you ask it to."
                                            Style="{StaticResource SectionBodyTextStyle}" />
                             </StackPanel>
                             <Button x:Name="SettingsBrowseGameDirectoryButton"

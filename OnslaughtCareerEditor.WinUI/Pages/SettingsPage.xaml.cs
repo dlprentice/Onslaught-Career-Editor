@@ -60,7 +60,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 ? GameDirectoryIdentityText.SnapshotNeedsFolder
                 : GameDirectoryIdentityText.BuildFolderSummary(gameDir, isFullInstall ? "Configured install" : "Saved folder needs review");
             GameDirectoryRoleTextBlock.Text = string.IsNullOrWhiteSpace(gameDir)
-                ? "Choose your installed game folder. The app reads it to create playable copies, and only changes it if you ask it to."
+                ? "Choose your installed game folder. The app reads it to create copies, and only changes it if you ask it to."
                 : isFullInstall
                     ? "Source material. Editing and patching work on copies unless you choose to patch this install in Windowed & Mods."
                     : "This saved folder is incomplete. " + GameDirectoryIdentityText.SnapshotNeedsFullInstall;

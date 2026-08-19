@@ -93,4 +93,25 @@ public class SettingsFolderHonestyTests
         Assert.That(xaml, Does.Contain("AutomationProperties.AutomationId=\"SettingsConfigFile\""));
         Assert.That(xaml, Does.Not.Contain("SettingsConfigPath"));
     }
+
+    [Test]
+    public void SettingsRoleNamesACopyNotAPlayableWorkflow()
+    {
+        string xaml = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot,
+            "OnslaughtCareerEditor.WinUI",
+            "Pages",
+            "SettingsPage.xaml"));
+        string page = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot,
+            "OnslaughtCareerEditor.WinUI",
+            "Pages",
+            "SettingsPage.xaml.cs"));
+
+        Assert.That(xaml, Does.Not.Contain("playable copied-game"));
+        Assert.That(xaml, Does.Not.Contain("playable copies"));
+        Assert.That(page, Does.Not.Contain("playable copies"));
+        Assert.That(xaml, Does.Contain("create copies"));
+        Assert.That(page, Does.Contain("create copies"));
+    }
 }
