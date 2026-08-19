@@ -54,6 +54,10 @@ namespace OnslaughtCareerEditor.AppCore
     /// </summary>
     public static class CheatSaveWriterService
     {
+        public const string WriteFailed = "Could not write that save. Nothing was changed.";
+        public const string DestinationFolderMissing =
+            "That folder could not be found. Choose a folder again.";
+
         private const string ProfileManifestFileName = "onslaught-profile-manifest.json";
         private const string SavegamesFolderName = "savegames";
 
@@ -164,18 +168,18 @@ namespace OnslaughtCareerEditor.AppCore
 
             try
             {
-                string inputPath = FileMutationSafety.NormalizeLocalPath(request.InputPath.Trim(), "Input path");
+                string inputPath = FileMutationSafety.NormalizeLocalPath(request.InputPath.Trim(), "Input file");
                 string outputDirectory = FileMutationSafety.NormalizeLocalPath(
                     request.OutputDirectory.Trim(),
                     "Output folder");
                 if (!Directory.Exists(outputDirectory))
                 {
-                    return new CheatSaveWriteOutcome(false, "That folder does not exist any more.", null);
+                    return new CheatSaveWriteOutcome(false, DestinationFolderMissing, null);
                 }
 
                 string outputPath = FileMutationSafety.NormalizeLocalPath(
                     BuildOutputPath(outputDirectory, request.Name),
-                    "Output path");
+                    "Output file");
 
                 if (FileMutationSafety.AreLexicallySamePath(inputPath, outputPath))
                 {
@@ -196,7 +200,7 @@ namespace OnslaughtCareerEditor.AppCore
 
                 string profilesRoot = FileMutationSafety.NormalizeLocalPath(
                     AppConfig.GetGameProfilesDir(),
-                    "App-owned profiles root");
+                    "app-owned profile folder");
                 if (!FileMutationSafety.IsSameOrUnderRoot(outputPath, profilesRoot))
                 {
                     // Ordinary folder. The guarded transaction still refuses anything inside an
@@ -241,7 +245,7 @@ namespace OnslaughtCareerEditor.AppCore
                                         or NotSupportedException or UnauthorizedAccessException
                                         or System.Text.Json.JsonException)
             {
-                return new CheatSaveWriteOutcome(false, ex.Message, null);
+                return new CheatSaveWriteOutcome(false, WriteFailed, null);
             }
         }
 

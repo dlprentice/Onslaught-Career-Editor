@@ -43,12 +43,12 @@
                                            Style="{StaticResource SectionBodyTextStyle}" />
                                 <TextBlock x:Name="GameDirectorySummaryTextBlock"
                                            AutomationProperties.AutomationId="SettingsGameDirectorySummary"
-                                           Text="Not configured"
+                                           Text="Set the game folder first."
                                            FontSize="22"
                                            FontWeight="SemiBold" />
                                 <TextBlock x:Name="GameDirectoryRoleTextBlock"
                                            AutomationProperties.AutomationId="SettingsGameDirectoryRole"
-                                          Text="Choose your install folder as read-only source material to enable saves, media, and playable copied-game workflows."
+                                          Text="Choose your installed game folder. The app reads it to create copies, and only changes it if you ask it to."
                                            Style="{StaticResource SectionBodyTextStyle}" />
                             </StackPanel>
                             <Button x:Name="SettingsBrowseGameDirectoryButton"
@@ -64,17 +64,22 @@
                                     Click="AutoDetectGameDirectoryButton_Click" />
                         </Grid>
                     </Border>
-                    <controls:Expander Header="Path details"
-                                       AutomationProperties.AutomationId="SettingsGameDirectoryPathDetails"
+                    <controls:Expander Header="Folder name"
+                                       AutomationProperties.AutomationId="SettingsGameDirectoryFolderDetails"
                                        IsExpanded="False">
                         <TextBox x:Name="GameDirectoryTextBox"
-                                 AutomationProperties.AutomationId="SettingsGameDirectoryPathTextBox"
-                                 Header="Full install path"
+                                 AutomationProperties.AutomationId="SettingsGameDirectoryFolderTextBox"
+                                 Header="Folder name"
                                  IsReadOnly="True" />
                     </controls:Expander>
                     <TextBlock x:Name="GameDirectoryStatusTextBlock"
                                AutomationProperties.AutomationId="SettingsGameDirectoryStatus"
                                Style="{StaticResource SectionBodyTextStyle}" />
+                    <TextBlock x:Name="GameDirectoryIdentityTextBlock"
+                               AutomationProperties.AutomationId="SettingsGameDirectoryIdentity"
+                               Style="{StaticResource SectionBodyTextStyle}"
+                               TextWrapping="WrapWholeWords"
+                               Visibility="Collapsed" />
                 </StackPanel>
             </Border>
 
@@ -112,6 +117,11 @@
                         <ComboBoxItem Content="Light" Tag="light" />
                         <ComboBoxItem Content="Dark" Tag="dark" />
                     </ComboBox>
+                    <TextBlock x:Name="AppearancePersistStatusTextBlock"
+                               AutomationProperties.AutomationId="SettingsAppearancePersistStatus"
+                               Style="{StaticResource SectionBodyTextStyle}"
+                               TextWrapping="WrapWholeWords"
+                               Visibility="Collapsed" />
                 </StackPanel>
             </Border>
 
@@ -137,6 +147,11 @@
                                   Toggled="MediaPreferenceChanged" />
                     <TextBlock Text="Note: if overlap prevention is enabled, starting video will stop audio even if background audio is allowed."
                                Style="{StaticResource SectionBodyTextStyle}" />
+                    <TextBlock x:Name="MediaPersistStatusTextBlock"
+                               AutomationProperties.AutomationId="SettingsMediaPersistStatus"
+                               Style="{StaticResource SectionBodyTextStyle}"
+                               TextWrapping="WrapWholeWords"
+                               Visibility="Collapsed" />
                 </StackPanel>
             </Border>
 
@@ -148,7 +163,7 @@
                                    AutomationProperties.AutomationId="SettingsFileDetails"
                                    IsExpanded="False">
                     <TextBlock x:Name="ConfigPathTextBlock"
-                               AutomationProperties.AutomationId="SettingsConfigPath"
+                               AutomationProperties.AutomationId="SettingsConfigFile"
                                Style="{StaticResource SectionBodyTextStyle}" />
                 </controls:Expander>
             </StackPanel>

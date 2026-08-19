@@ -157,11 +157,11 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             _detectedFiles = SaveAnalyzerService.GetDetectedFiles(gameDir);
             DetectedFilesComboBox.ItemsSource = _detectedFiles;
             DetectedFilesComboBox.PlaceholderText = _detectedFiles.Count == 0
-                ? "No detected files yet"
+                ? SaveAnalyzerService.NoDetectedFilesNextStep
                 : "Choose a detected file";
             RestoreAnalyzerDetectedFileSelection(selectedPath);
             DetectedFilesStatusTextBlock.Text = _detectedFiles.Count == 0
-                ? "No save or options files were detected. Set the game directory in Settings or browse manually."
+                ? "No save or options files were detected. Set the game folder in Settings or browse manually."
                 : $"{_detectedFiles.Count} detected file(s) available.";
         }
 
@@ -211,11 +211,11 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             _editorDetectedFiles = SaveEditorService.GetDetectedCareerSaves(gameDir);
             EditorDetectedFilesComboBox.ItemsSource = _editorDetectedFiles;
             EditorDetectedFilesComboBox.PlaceholderText = _editorDetectedFiles.Count == 0
-                ? "No detected career saves yet"
+                ? SaveAnalyzerService.NoDetectedFilesNextStep
                 : "Choose a career save";
             RestoreEditorDetectedFileSelection(selectedPath);
             EditorDetectedFilesStatusTextBlock.Text = _editorDetectedFiles.Count == 0
-                ? "No .bes career saves were detected. Set the game directory in Settings or browse manually."
+                ? "No .bes career saves were detected. Set the game folder in Settings or browse manually."
                 : $"{_editorDetectedFiles.Count} detected career save(s) available.";
         }
 
@@ -376,9 +376,9 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             {
                 RenderDocument(SaveAnalyzerService.CompareFiles(leftPath, rightPath));
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                RenderError("Comparison failed", $"Error comparing files: {ex.Message}");
+                RenderError("Comparison failed", SaveLabPageText.ComparisonFailed);
             }
         }
 
@@ -419,7 +419,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             {
                 SetAnalyzerInfoBar(
                     "Analyzer needs a valid file",
-                    "Choose a valid .bes or .bea path before running analysis.",
+                    SaveLabPageText.AnalysisNeedsAFile,
                     InfoBarSeverity.Warning);
                 AppStatusService.SetStatus("Save Lab: no valid file selected");
                 UpdateActionState();
@@ -433,9 +433,9 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     verbose: VerboseToggle.IsOn,
                     dumpMystery: DumpMysteryToggle.IsOn));
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                RenderError("Analysis failed", $"Error analyzing file: {ex.Message}");
+                RenderError("Analysis failed", SaveLabPageText.AnalysisFailed);
             }
         }
 
@@ -458,7 +458,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             PopulateSummaryTree(document.SummaryNodes);
 
             SetAnalyzerInfoBar(
-                document.IsComparisonMode ? "Comparison complete" : "Analysis complete",
+                SaveAnalyzerService.BuildInfoTitle(document),
                 document.StatusText,
                 document.ReportText.Contains("ERROR:", StringComparison.OrdinalIgnoreCase)
                     ? InfoBarSeverity.Warning
@@ -498,7 +498,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             AnalyzerMetricsGrid.Opacity = 0;
             SetAnalyzerInfoBar(
                 "Analyzer ready",
-                "Choose a detected or manual file path to inspect save structure, options state, and comparison data.",
+                "Choose a detected file or browse for a .bes or .bea file to inspect save structure, options, and comparison data.",
                 InfoBarSeverity.Informational);
             AnalyzerTitleTextBlock.Text = "Save Analyzer";
             AnalyzerModeTextBlock.Text = "Single-file analysis: choose a .bes or .bea file to inspect.";
@@ -507,7 +507,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             SummaryTreeView.RootNodes.Clear();
             SummaryTreeView.RootNodes.Add(new TreeViewNode
             {
-                Content = "No analysis yet. Select a detected file or browse for a .bes / .bea file to inspect.",
+                Content = SaveLabPageText.AnalysisNeedsAFile,
                 IsExpanded = true
             });
 
@@ -776,8 +776,10 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             if (File.Exists(outputPath) &&
                 !await ConfirmAsync(
                     "Overwrite output file?",
-                    $"The output file already exists:\n{outputPath}\n\nOverwrite it?"))
+                    SaveLabPageText.BuildOverwriteQuestion(outputPath)))
             {
+                EditorOutputTextBox.Text = SaveLabPageText.OverwriteCanceled;
+                EditorCopyOutputButton.IsEnabled = true;
                 AppStatusService.SetStatus("Save Editor: focused Goodie overwrite canceled");
                 return;
             }
@@ -795,11 +797,12 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
             string stateLabel = MissionScriptGoodieStateSaveCodec.GetStateLabel(request.State);
             string displayMessage = result.Success
-                ? $"Goodie ID {request.GoodieId:000} was written as {stateLabel} to {BuildFileNameSummary(request.OutputPath, "the selected output file")}.\nThe source save was not modified. If this destination is a Safe Game Copy, the output is staged only in that verified copy's savegames folder."
-                : ReplacePathWithLabel(
-                    ReplacePathWithLabel(result.Message, request.InputPath, "selected input save"),
-                    request.OutputPath,
-                    "selected output file");
+                ? $"Goodie ID {request.GoodieId:000} was written as {stateLabel} to {BuildFileNameSummary(request.OutputPath, "the selected output file")}.\nThe source save was not modified. If this destination is a Safe Game Copy, the output is staged only in that copy's savegames folder."
+                : SaveLabPageText.DescribeEditorPatchFailure(
+                    ReplacePathWithLabel(
+                        ReplacePathWithLabel(result.Message, request.InputPath, "selected input save"),
+                        request.OutputPath,
+                        "selected output file"));
 
             EditorOutputTextBox.Text = displayMessage;
             EditorCopyOutputButton.IsEnabled = !string.IsNullOrWhiteSpace(result.Message);
@@ -843,8 +846,10 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             if (File.Exists(outputPath) &&
                 !await ConfirmAsync(
                     "Overwrite output file?",
-                    $"The output file already exists:\n{outputPath}\n\nOverwrite it?"))
+                    SaveLabPageText.BuildOverwriteQuestion(outputPath)))
             {
+                EditorOutputTextBox.Text = SaveLabPageText.OverwriteCanceled;
+                EditorCopyOutputButton.IsEnabled = true;
                 AppStatusService.SetStatus("Save Editor: overwrite canceled");
                 return;
             }
@@ -898,7 +903,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             IReadOnlyList<CheatSaveTarget> targets = CheatSaveWriterService.FindSafeCopyTargets();
             if (targets.Count == 0)
             {
-                ShowInstallNote("There is no safe copy yet. Make one in Windowed & Mods, then come back.");
+                ShowInstallNote("There is no safe copy. Make one in Windowed & Mods, then come back.");
                 return;
             }
 
@@ -918,7 +923,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 {
                     XamlRoot = XamlRoot,
                     Title = "Replace the save that is already there?",
-                    Content = $"{name}.bes already exists in {target.DisplayName}. Replacing it cannot be undone.",
+                    Content = SaveLabPageText.BuildOverwriteQuestion($"{name}.bes")
+                        + $" It is in {target.DisplayName}.",
                     PrimaryButtonText = "Replace it",
                     CloseButtonText = "Keep it",
                     DefaultButton = ContentDialogButton.Close,
@@ -941,7 +947,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
             ShowInstallNote(outcome.Success
                 ? $"Done. {name}.bes is in {target.DisplayName} - close the copied game before loading it."
-                : outcome.Message);
+                : SaveLabPageText.SafeCopyInstallFailed);
             AppStatusService.SetStatus(outcome.Success
                 ? "Save Lab: put the save into your safe copy"
                 : "Save Lab: could not install the save");
@@ -1096,6 +1102,14 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             if (string.IsNullOrWhiteSpace(folder))
                 return;
 
+            string? refused = SaveRescuePageText.DescribeDestinationRefusal(folder);
+            if (refused is not null)
+            {
+                ShowSaveRescueNote(refused);
+                AppStatusService.SetStatus("Save Lab: could not bring that career out");
+                return;
+            }
+
             SafeCopySaveRescueResult result = RunSaveRescue(copy, save, folder!, allowOverwrite: false);
 
             if (result.NeedsOverwriteConfirmation)
@@ -1104,7 +1118,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 {
                     XamlRoot = XamlRoot,
                     Title = "Replace the career that is already there?",
-                    Content = $"{save.FileName} already exists in that folder. Replacing it cannot be undone.",
+                    Content = SaveLabPageText.BuildOverwriteQuestion(save.FileName),
                     PrimaryButtonText = "Replace it",
                     CloseButtonText = "Keep it",
                     DefaultButton = ContentDialogButton.Close,
@@ -1174,7 +1188,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     preconditionsCurrent: false,
                     launcherSucceeded: false);
                 FailWrittenSaveReveal(
-                    "The written-copy details changed or the app-owned output is missing. Write the separate copy again before showing it.",
+                    "The written-copy details changed or the written save is missing. Write the separate copy again before showing it.",
                     clearCompletion: true);
                 return;
             }
@@ -1191,7 +1205,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             else
             {
                 FailWrittenSaveReveal(
-                    "File Explorer could not be opened. The successful written save remains unchanged in the app-owned output folder; try Show again.",
+                    "File Explorer could not be opened. The successful written save remains unchanged in the output folder; try Show again.",
                     clearCompletion: false);
             }
         }
@@ -1224,7 +1238,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 return $"Done - your changes are in a new save.\nFile: {outputName}\nThe save you started from was not touched. Close the copied game, then choose Put it in my safe copy to play it.";
             }
 
-            return RedactEditorPatchPaths(result.Message, request);
+            return SaveLabPageText.DescribeEditorPatchFailure(
+                RedactEditorPatchPaths(result.Message, request));
         }
 
         private static string RedactEditorPatchPaths(string message, SavePatchRequest request)
@@ -1294,6 +1309,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             if (inputPath.Length == 0)
             {
                 _editorInputValid = false;
+                ClearEditorInputLocation();
                 UpdateEditorActionState();
                 return;
             }
@@ -1301,8 +1317,24 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             _editorInputValid = File.Exists(inputPath)
                 && !SaveEditorService.IsOptionsLikeFilePath(inputPath)
                 && BesFilePatcher.IsValidBesFile(inputPath);
-
+            RenderEditorInputLocation(inputPath);
             UpdateEditorActionState();
+        }
+
+        private void RenderEditorInputLocation(string inputPath)
+        {
+            CareerSaveLocationKind kind = CareerSaveLocation.Classify(inputPath);
+            string line = CareerSaveLocationText.Describe(kind, inputPath);
+            EditorInputLocationTextBlock.Text = line;
+            EditorInputLocationTextBlock.Visibility = string.IsNullOrWhiteSpace(line)
+                ? Visibility.Collapsed
+                : Visibility.Visible;
+        }
+
+        private void ClearEditorInputLocation()
+        {
+            EditorInputLocationTextBlock.Text = string.Empty;
+            EditorInputLocationTextBlock.Visibility = Visibility.Collapsed;
         }
 
         private SavePatchRequest BuildEditorRequest(out string? advancedError)
@@ -1491,6 +1523,10 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             {
                 EditorSafetyHintTextBlock.Text = "Output file must be different from input file. In-place save patching remains blocked.";
             }
+            else if (SaveLabPageText.DescribeOutputRefusal(request.OutputPath) is { } refusedOutput)
+            {
+                EditorSafetyHintTextBlock.Text = refusedOutput;
+            }
             else if (!outputIsSaveLike)
             {
                 // This used to read "...stay outside every game folder", which claimed more than
@@ -1501,7 +1537,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 // both. Whether those roots should be protected is an open owner decision; until it is
                 // taken, the sentence must not imply they already are.
                 EditorSafetyHintTextBlock.Text =
-                    "Output path must end in .bes and must not land inside the installed game folder " +
+                    "The output file must end in .bes and must not land inside the installed game folder " +
                     "(the one holding BEA.exe and data). That is the only location blocked: your " +
                     "Documents and AppData save folders are not, so an output file there can replace a " +
                     "real career and no backup is taken.";
@@ -1511,6 +1547,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 EditorSafetyHintTextBlock.Text = "Save patching is ready. Mission rank and category-kill overrides are supported here; startup settings and keybind overrides still belong in Game Options.";
             }
 
+            bool outputRefused = SaveLabPageText.DescribeOutputRefusal(request.OutputPath) is not null;
             bool canWrite =
                 _editorInputValid &&
                 hasInput &&
@@ -1519,7 +1556,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 string.IsNullOrWhiteSpace(advancedError) &&
                 overrideDependenciesSatisfied &&
                 !samePath &&
-                outputIsSaveLike;
+                outputIsSaveLike &&
+                !outputRefused;
             EditorPatchButton.IsEnabled = canWrite;
 
             bool canWriteFocusedGoodie =
@@ -1529,7 +1567,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 hasInput &&
                 hasOutput &&
                 !samePath &&
-                outputIsSaveLike;
+                outputIsSaveLike &&
+                !outputRefused;
             EditorPatchFocusedGoodieButton.IsEnabled = canWriteFocusedGoodie;
             EditorFocusedGoodieStatusTextBlock.Text = focusedGoodieError ?? (canWriteFocusedGoodie
                 ? $"Ready to write only Goodie ID {focusedGoodieRequest!.GoodieId:000} as {MissionScriptGoodieStateSaveCodec.GetStateLabel(focusedGoodieRequest.State)}."

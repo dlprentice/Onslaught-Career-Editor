@@ -2,6 +2,7 @@ using System.Buffers.Binary;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using Microsoft.Win32.SafeHandles;
 using OnslaughtCareerEditor.AppCore;
 using Xunit;
 
@@ -9,6 +10,126 @@ namespace OnslaughtCareerEditor.AppCore.Tests
 {
     public sealed class FileMutationSafetyTests
     {
+        [Fact]
+        public void RejectReparsePoint_NamesAShortcutOrLinkNotALabel()
+        {
+            if (!OperatingSystem.IsWindows())
+                return;
+
+            using TempMutationRoot root = TempMutationRoot.Create();
+            string real = root.WriteValidFile("real.bes");
+            string link = Path.Combine(root.Path, "link.bes");
+            try
+            {
+                File.CreateSymbolicLink(link, real);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or PlatformNotSupportedException)
+            {
+                return;
+            }
+
+            InvalidOperationException error = Assert.Throws<InvalidOperationException>(
+                () => FileMutationSafety.RejectReparsePoint(link, "app-owned output root"));
+
+            Assert.Equal(FileMutationSafety.FileCannotUseLink, error.Message);
+            Assert.Equal("That file cannot use a shortcut or link.", error.Message);
+            Assert.DoesNotContain("app-owned output root", error.Message, StringComparison.Ordinal);
+            Assert.DoesNotContain("reparse", error.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("path", error.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public void RejectReparsePoint_NamesALinkedFolderNotALabel()
+        {
+            if (!OperatingSystem.IsWindows())
+                return;
+
+            using TempMutationRoot root = TempMutationRoot.Create();
+            string realDirectory = Path.Combine(root.Path, "real-folder");
+            string linkedDirectory = Path.Combine(root.Path, "linked-folder");
+            Directory.CreateDirectory(realDirectory);
+            try
+            {
+                Directory.CreateSymbolicLink(linkedDirectory, realDirectory);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or PlatformNotSupportedException)
+            {
+                return;
+            }
+
+            InvalidOperationException error = Assert.Throws<InvalidOperationException>(
+                () => FileMutationSafety.RejectReparsePoint(linkedDirectory, "app-owned output root"));
+
+            Assert.Equal(FileMutationSafety.FolderCannotUseLink, error.Message);
+            Assert.Equal("That folder cannot use a shortcut or link.", error.Message);
+            Assert.DoesNotContain("app-owned output root", error.Message, StringComparison.Ordinal);
+            Assert.DoesNotContain("reparse", error.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("path", error.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public void NormalizeLocalPath_NamesAFileNotATechnicalLabel()
+        {
+            ArgumentException blank = Assert.Throws<ArgumentException>(
+                () => FileMutationSafety.NormalizeLocalPath("  ", "Generated profile root"));
+
+            Assert.StartsWith(FileMutationSafety.FileOrFolderRequired, blank.Message);
+            Assert.Equal("path", blank.ParamName);
+            Assert.DoesNotContain("Generated profile root", blank.Message, StringComparison.Ordinal);
+
+            if (!OperatingSystem.IsWindows())
+                return;
+
+            InvalidOperationException device = Assert.Throws<InvalidOperationException>(
+                () => FileMutationSafety.NormalizeLocalPath(@"\\?\C:\gone.bes", "Generated profile root"));
+
+            Assert.Equal(FileMutationSafety.FileCannotUseDeviceLocation, device.Message);
+            Assert.DoesNotContain("Generated profile root", device.Message, StringComparison.Ordinal);
+            Assert.DoesNotContain("path", device.Message, StringComparison.OrdinalIgnoreCase);
+
+            InvalidOperationException reserved = Assert.Throws<InvalidOperationException>(
+                () => FileMutationSafety.NormalizeLocalPath(
+                    Path.Combine(Path.GetTempPath(), "NUL.bes"),
+                    "Generated profile root"));
+
+            Assert.Equal(FileMutationSafety.FileCannotUseReservedDevice, reserved.Message);
+            Assert.DoesNotContain("Generated profile root", reserved.Message, StringComparison.Ordinal);
+            Assert.DoesNotContain("NUL", reserved.Message, StringComparison.Ordinal);
+        }
+
+        [Fact]
+        public void GetWindowsIdentity_NamesTheFileNotAWin32Dump()
+        {
+            if (!OperatingSystem.IsWindows())
+                return;
+
+            using SafeFileHandle handle = new(IntPtr.Zero, ownsHandle: false);
+            IOException error = Assert.Throws<IOException>(
+                () => FileMutationSafety.GetWindowsIdentity(handle, "Generated profile root"));
+
+            Assert.Equal(FileMutationSafety.FileCouldNotBeInspected, error.Message);
+            Assert.DoesNotContain("Generated profile root", error.Message, StringComparison.Ordinal);
+            Assert.DoesNotContain("Win32", error.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("path", error.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public void OpenNoFollowReadHandle_NamesTheFileNotAWin32Dump()
+        {
+            if (!OperatingSystem.IsWindows())
+                return;
+
+            string missing = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"), "gone.bes");
+            IOException error = Assert.Throws<IOException>(
+                () => FileMutationSafety.OpenNoFollowReadHandle(missing, "Generated profile root"));
+
+            Assert.Equal(FileMutationSafety.FileCouldNotBeSecured, error.Message);
+            Assert.DoesNotContain("Generated profile root", error.Message, StringComparison.Ordinal);
+            Assert.DoesNotContain("Win32", error.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain(missing, error.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.IsType<Win32Exception>(error.InnerException);
+        }
+
         [Fact]
         public void PatchFile_RejectsNonBesOutput()
         {
@@ -19,7 +140,8 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             PatchResult result = CreateNoOpPatcher().PatchFile(input, output);
 
             Assert.False(result.Success);
-            Assert.Contains(".bes output", result.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.Equal(BesFilePatcher.CareerSaveRequiresBesOutput, result.Message);
+            Assert.DoesNotContain("path", result.Message, StringComparison.OrdinalIgnoreCase);
             Assert.False(File.Exists(output));
         }
 
@@ -40,7 +162,9 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             PatchResult result = CreateNoOpPatcher().PatchFile(input, output);
 
             Assert.False(result.Success);
-            Assert.Contains("hardlink", result.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.Equal(FileMutationSafety.FileCannotShareData, result.Message);
+            Assert.DoesNotContain("hardlink", result.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("reparse", result.Message, StringComparison.OrdinalIgnoreCase);
             Assert.Equal(before, File.ReadAllBytes(input));
         }
 
@@ -64,7 +188,8 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 new Dictionary<int, uint> { [71] = 3 });
 
             Assert.False(result.Success);
-            Assert.Contains("hardlink", result.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.Equal(FileMutationSafety.FileCannotShareData, result.Message);
+            Assert.DoesNotContain("hardlink", result.Message, StringComparison.OrdinalIgnoreCase);
             Assert.Equal(before, File.ReadAllBytes(input));
         }
 
@@ -83,7 +208,8 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             PatchResult result = CreateNoOpPatcher().PatchFile(input, output);
 
             Assert.False(result.Success);
-            Assert.Contains("reparse", result.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.Equal(FileMutationSafety.FileCannotUseLink, result.Message);
+            Assert.DoesNotContain("reparse", result.Message, StringComparison.OrdinalIgnoreCase);
             Assert.Equal(before, File.ReadAllBytes(input));
         }
 
@@ -102,7 +228,8 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             PatchResult result = CreateNoOpPatcher().PatchFile(input, output);
 
             Assert.False(result.Success);
-            Assert.Contains("reparse", result.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.Equal(FileMutationSafety.FileCannotUseLink, result.Message);
+            Assert.DoesNotContain("reparse", result.Message, StringComparison.OrdinalIgnoreCase);
             Assert.False(File.Exists(missingTarget));
         }
 
@@ -123,7 +250,8 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             PatchResult result = CreateNoOpPatcher().PatchFile(input, output);
 
             Assert.False(result.Success);
-            Assert.Contains("reparse", result.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.Equal(FileMutationSafety.FolderCannotUseLink, result.Message);
+            Assert.DoesNotContain("reparse", result.Message, StringComparison.OrdinalIgnoreCase);
             Assert.False(File.Exists(Path.Combine(realOutputDirectory, "output.bes")));
         }
 
@@ -141,7 +269,8 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             PatchResult result = CreateNoOpPatcher().PatchFile(input, output);
 
             Assert.False(result.Success);
-            Assert.Contains("game folder", result.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.Equal(FileMutationSafety.OutputInsideGameFolder, result.Message);
+            Assert.DoesNotContain("path", result.Message, StringComparison.OrdinalIgnoreCase);
             Assert.False(File.Exists(output));
         }
 
@@ -220,7 +349,8 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                         });
                 });
 
-                Assert.Contains("reparse", error.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Contains("shortcut or link", error.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.DoesNotContain("reparse", error.Message, StringComparison.OrdinalIgnoreCase);
             }
             finally
             {
@@ -296,7 +426,8 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                     File.CreateSymbolicLink(committedPath, escaped);
                 }));
 
-            Assert.Contains("reparse", error.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("shortcut or link", error.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("reparse", error.Message, StringComparison.OrdinalIgnoreCase);
             Assert.Equal(before, File.ReadAllBytes(input));
             Assert.Equal(before, File.ReadAllBytes(escaped));
         }
@@ -316,7 +447,13 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             PatchResult result = CreateNoOpPatcher().PatchFile(input, output);
 
             Assert.False(result.Success);
-            Assert.Contains(expected, result.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.Equal(
+                expected == "alternate data stream"
+                    ? FileMutationSafety.FileCannotUseAlternateStream
+                    : FileMutationSafety.FileCannotUseReservedDevice,
+                result.Message);
+            Assert.DoesNotContain("DOS", result.Message, StringComparison.Ordinal);
+            Assert.DoesNotContain("path", result.Message, StringComparison.OrdinalIgnoreCase);
         }
 
         [Fact]
@@ -343,7 +480,8 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 PatchResult result = CreateNoOpPatcher().PatchFile(input, output);
 
                 Assert.False(result.Success);
-                Assert.Contains("game folder", result.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(FileMutationSafety.OutputInsideGameFolder, result.Message);
+                Assert.DoesNotContain("path", result.Message, StringComparison.OrdinalIgnoreCase);
                 Assert.False(File.Exists(Path.Combine(saveDirectory, "output.bes")));
             }
             finally
@@ -377,7 +515,8 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             });
 
             Assert.False(result.Success);
-            Assert.Contains("hardlink", result.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.Equal(FileMutationSafety.FileCannotShareData, result.Message);
+            Assert.DoesNotContain("hardlink", result.Message, StringComparison.OrdinalIgnoreCase);
             Assert.Equal(before, File.ReadAllBytes(copySource));
         }
 
@@ -395,7 +534,12 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             PatchResult result = CreateNoOpPatcher().PatchFile(input, output);
 
             Assert.False(result.Success);
-            Assert.Contains(expected, result.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.Equal(
+                expected == "UNC"
+                    ? FileMutationSafety.FileCannotUseNetworkLocation
+                    : FileMutationSafety.FileCannotUseDriveRelativeLocation,
+                result.Message);
+            Assert.DoesNotContain("path", result.Message, StringComparison.OrdinalIgnoreCase);
         }
 
         [Fact]
@@ -411,7 +555,8 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             PatchResult result = CreateNoOpPatcher().PatchFile(input, output);
 
             Assert.False(result.Success);
-            Assert.Contains("device path", result.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.Equal(FileMutationSafety.FileCannotUseDeviceLocation, result.Message);
+            Assert.DoesNotContain("path", result.Message, StringComparison.OrdinalIgnoreCase);
         }
 
         [Fact]

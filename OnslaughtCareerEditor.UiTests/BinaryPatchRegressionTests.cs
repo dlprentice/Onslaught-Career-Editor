@@ -233,8 +233,10 @@ public class BinaryPatchRegressionTests
             var apply = BinaryPatchEngine.ApplyPatchesToFile(BuildTestTarget(exePath, tempDir), selected);
 
             Assert.That(apply.success, Is.False);
-            Assert.That(apply.message, Does.Contain("existing backup snapshot integrity"));
-            Assert.That(apply.message, Does.Contain("hash sidecar"));
+            Assert.That(apply.message, Does.Contain("BEA.exe.original.backup could not be checked"));
+            Assert.That(apply.message, Does.Not.Contain("snapshot integrity"));
+            Assert.That(apply.message, Does.Contain("hash file"));
+            Assert.That(apply.message, Does.Not.Contain("hash sidecar"));
             Assert.That(File.ReadAllBytes(exePath), Is.EqualTo(original), "Apply must not mutate when the pre-existing backup is not integrity-verified.");
         }
         finally
@@ -359,7 +361,8 @@ public class BinaryPatchRegressionTests
             var restore = BinaryPatchEngine.RestoreFromBackup(BuildTestTarget(exePath, tempDir));
 
             Assert.That(restore.success, Is.False);
-            Assert.That(restore.message, Does.Contain("backup snapshot integrity"));
+            Assert.That(restore.message, Does.Contain("BEA.exe.original.backup no longer matches its hash file"));
+            Assert.That(restore.message, Does.Not.Contain("snapshot integrity"));
             Assert.That(File.ReadAllBytes(exePath), Is.EqualTo(patchedBeforeRestore), "Restore must not overwrite from a corrupted backup snapshot.");
         }
         finally
@@ -473,8 +476,9 @@ public class BinaryPatchRegressionTests
             var restore = BinaryPatchEngine.RestoreFromBackup(BuildTestTarget(exePath, tempDir));
 
             Assert.That(restore.success, Is.False);
-            Assert.That(restore.message, Does.Contain("hash sidecar"));
-            Assert.That(File.ReadAllBytes(exePath), Is.EqualTo(patchedBeforeRestore), "Restore must not overwrite from a backup without a hash sidecar.");
+            Assert.That(restore.message, Does.Contain("hash file"));
+            Assert.That(restore.message, Does.Not.Contain("hash sidecar"));
+            Assert.That(File.ReadAllBytes(exePath), Is.EqualTo(patchedBeforeRestore), "Restore must not overwrite from a backup without a hash file.");
         }
         finally
         {
@@ -506,7 +510,9 @@ public class BinaryPatchRegressionTests
             var restore = BinaryPatchEngine.RestoreFromBackup(BuildTestTarget(exePath, tempDir, allowByteLayoutOnly: false));
 
             Assert.That(restore.success, Is.False);
-            Assert.That(restore.message, Does.Contain("trusted clean Steam retail BEA.exe"));
+            Assert.That(restore.message, Does.Contain("BEA.exe.original.backup is not a Steam BEA.exe this app can restore"));
+            Assert.That(restore.message, Does.Not.Contain("trusted clean"));
+            Assert.That(restore.message, Does.Not.Contain("specimen"));
             Assert.That(File.ReadAllBytes(exePath), Is.EqualTo(patchedBeforeRestore), "Restore must not overwrite from a backup with only self-authored sidecar provenance.");
         }
         finally
@@ -568,7 +574,9 @@ public class BinaryPatchRegressionTests
 
             var apply = BinaryPatchEngine.ApplyPatchesToFile(BuildTestTarget(exePath, allowedRoot), selected);
             Assert.That(apply.success, Is.False);
-            Assert.That(apply.message, Does.Contain("app-owned Patch Bench workspace"));
+            Assert.That(apply.message, Is.EqualTo(BinaryPatchEngine.PatchTargetMustStayInsideWorkspaceFolder));
+            Assert.That(apply.message, Does.Contain("workspace folder"));
+            Assert.That(apply.message, Does.Not.Contain("Patch Bench"));
             Assert.That(File.Exists(BinaryPatchEngine.BuildBackupPath(exePath)), Is.False);
         }
         finally
@@ -633,7 +641,8 @@ public class BinaryPatchRegressionTests
             var apply = BinaryPatchEngine.ApplyPatchesToFile(BuildTestTarget(linkedExe, allowedRoot), selected);
 
             Assert.That(apply.success, Is.False);
-            Assert.That(apply.message, Does.Contain("reparse"));
+            Assert.That(apply.message, Is.EqualTo(BinaryPatchEngine.TargetCannotUseLink));
+            Assert.That(apply.message, Does.Not.Contain("reparse"));
             Assert.That(File.ReadAllBytes(outsideExe), Is.EqualTo(original), "Linked outside executable must not be mutated.");
             Assert.That(File.Exists(BinaryPatchEngine.BuildBackupPath(linkedExe)), Is.False);
         }
@@ -673,7 +682,8 @@ public class BinaryPatchRegressionTests
             var apply = BinaryPatchEngine.ApplyPatchesToFile(BuildTestTarget(linkedExe, allowedRoot), selected);
 
             Assert.That(apply.success, Is.False);
-            Assert.That(apply.message, Does.Contain("hardlink").IgnoreCase);
+            Assert.That(apply.message, Is.EqualTo(BinaryPatchEngine.FileCannotShareData));
+            Assert.That(apply.message, Does.Not.Contain("hardlink").IgnoreCase);
             Assert.That(File.ReadAllBytes(outsideExe), Is.EqualTo(original), "Hardlinked outside executable must not be mutated.");
             Assert.That(File.Exists(BinaryPatchEngine.BuildBackupPath(linkedExe)), Is.False);
         }

@@ -128,6 +128,12 @@ namespace OnslaughtCareerEditor.AppCore
 
     public static class SaveEditorAdvancedService
     {
+        public const string MissionGradesUnreadable =
+            "Those mission grades could not be read. Nothing was changed.";
+
+        public const string KillCountsUnreadable =
+            "Those kill counts could not be read. Nothing was changed.";
+
         private const int NodeBaseOffset = 0x0006;
         private const int NodeSize = 64;
         private const int NodeCount = 100;
@@ -205,15 +211,11 @@ namespace OnslaughtCareerEditor.AppCore
                 });
             }
 
-            if (string.IsNullOrWhiteSpace(filePath))
+            if (string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath))
             {
-                status = SaveEditorAdvancedReadStatus.NotRead("No save is selected.");
-                return rows;
-            }
-
-            if (!File.Exists(filePath))
-            {
-                status = SaveEditorAdvancedReadStatus.NotRead("The selected save file was not found.");
+                status = SaveEditorAdvancedReadStatus.NotRead(
+                    SaveEditorService.DescribeCareerSaveInputRejection(filePath)
+                    ?? SaveEditorService.InputMissing);
                 return rows;
             }
 
@@ -224,11 +226,9 @@ namespace OnslaughtCareerEditor.AppCore
                 {
                     // The analyzer understands the 0x2514 + 0x20*N size law, but every write path and
                     // this reader require exactly 10004 bytes. All 41 real specimens are 10004, so no
-                    // observed file lands here; failing closed stays correct, but it must say so
-                    // instead of returning blank rows that look like "no file selected".
-                    status = SaveEditorAdvancedReadStatus.NotRead(
-                        $"Mission grades were not read: this file is {buf.Length:N0} bytes and a career save is " +
-                        $"{BesFilePatcher.EXPECTED_FILE_SIZE:N0}.");
+                    // observed file lands here; failing closed stays correct. Name the action, not the
+                    // byte count, so a wrong-length file is not a second analyzer dump.
+                    status = SaveEditorAdvancedReadStatus.NotRead(MissionGradesUnreadable);
                     return rows;
                 }
 
@@ -249,7 +249,7 @@ namespace OnslaughtCareerEditor.AppCore
             {
                 // Was `catch {}`. The rows returned here still read "-" in every Current column, which
                 // is honest only because the caller is now told why.
-                status = SaveEditorAdvancedReadStatus.NotRead($"Mission grades could not be read: {ex.Message}");
+                status = SaveEditorAdvancedReadStatus.NotRead(MissionGradesUnreadable);
                 return rows;
             }
 
@@ -268,44 +268,40 @@ namespace OnslaughtCareerEditor.AppCore
         {
             // These seeds are a starting point for the override boxes, never a claim about the file.
             int[] counts = CategoryDefinitions.Select(definition => definition.DefaultSeed).ToArray();
-            status = SaveEditorAdvancedReadStatus.NotRead("No save is selected.");
 
-            if (!string.IsNullOrWhiteSpace(filePath))
+            if (string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath))
             {
-                if (!File.Exists(filePath))
+                status = SaveEditorAdvancedReadStatus.NotRead(
+                    SaveEditorService.DescribeCareerSaveInputRejection(filePath)
+                    ?? SaveEditorService.InputMissing);
+            }
+            else
+            {
+                try
                 {
-                    status = SaveEditorAdvancedReadStatus.NotRead("The selected save file was not found.");
-                }
-                else
-                {
-                    try
+                    SaveAnalysis analysis = BesFilePatcher.AnalyzeSave(filePath);
+                    if (analysis.IsValid && analysis.KillCounts.Length >= CategoryDefinitions.Length)
                     {
-                        SaveAnalysis analysis = BesFilePatcher.AnalyzeSave(filePath);
-                        if (analysis.IsValid && analysis.KillCounts.Length >= CategoryDefinitions.Length)
+                        for (int i = 0; i < CategoryDefinitions.Length; i++)
                         {
-                            for (int i = 0; i < CategoryDefinitions.Length; i++)
-                            {
-                                counts[i] = analysis.KillCounts[i];
-                            }
+                            counts[i] = analysis.KillCounts[i];
+                        }
 
-                            status = SaveEditorAdvancedReadStatus.Read();
-                        }
-                        else
-                        {
-                            status = SaveEditorAdvancedReadStatus.NotRead(
-                                "Kill counts were not read: " +
-                                (analysis.ErrorMessage ?? "this file is not a readable career save."));
-                        }
+                        status = SaveEditorAdvancedReadStatus.Read();
                     }
-                    catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException
-                                                or NotSupportedException or InvalidDataException)
+                    else
                     {
-                        // Was `catch {}`. Falling through here left 100/100/25/40/20 in CurrentValue and
-                        // the UI printed them in its Current column as if the save had said so; worse,
-                        // GetSuggestedGlobalKillSeed then turned that fiction into the number an
-                        // unchecked-category patch wrote.
-                        status = SaveEditorAdvancedReadStatus.NotRead($"Kill counts could not be read: {ex.Message}");
+                        status = SaveEditorAdvancedReadStatus.NotRead(KillCountsUnreadable);
                     }
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException
+                                            or NotSupportedException or InvalidDataException)
+                {
+                    // Was `catch {}`. Falling through here left 100/100/25/40/20 in CurrentValue and
+                    // the UI printed them in its Current column as if the save had said so; worse,
+                    // GetSuggestedGlobalKillSeed then turned that fiction into the number an
+                    // unchecked-category patch wrote.
+                    status = SaveEditorAdvancedReadStatus.NotRead(KillCountsUnreadable);
                 }
             }
 
@@ -353,7 +349,7 @@ namespace OnslaughtCareerEditor.AppCore
         {
             if (rows.Count == 0)
             {
-                return "No save is loaded yet. This field is only the write value used for unchecked categories; it is not a cumulative score.";
+                return "Choose a career save first. This field is only the write value used for unchecked categories; it is not a cumulative score.";
             }
 
             if (rows.Any(row => !row.CurrentValueKnown))

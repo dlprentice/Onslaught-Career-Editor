@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using NUnit.Framework;
+using OnslaughtCareerEditor.AppCore;
 using OnslaughtCareerEditor.WinUI.Helpers;
 
 namespace OnslaughtCareerEditor.UiTests;
@@ -124,12 +125,68 @@ public class InstalledGamePatchSurfaceTests
             @"C:\Games\Battle Engine Aquila\BEA.exe",
             "Windowed, Widescreen");
 
-        Assert.That(confirmation, Does.Contain(@"C:\Games\Battle Engine Aquila"));
+        Assert.That(confirmation, Does.Contain("Battle Engine Aquila"));
         Assert.That(confirmation, Does.Contain("Windowed, Widescreen"));
+        Assert.That(confirmation, Does.Not.Contain(@"C:\Games"));
+        Assert.That(confirmation, Does.Not.Contain(@":\"));
         Assert.That(
             confirmation,
             Does.Contain("If the copy cannot be made, nothing is patched"),
             "The one thing somebody needs to believe is that a failed backup means a failed patch.");
+    }
+
+    [Test]
+    public void TheRestoreConfirmationNamesTheFolderNotThePath()
+    {
+        string confirmation = InstalledGamePatchText.BuildRestoreConfirmation(
+            @"C:\Games\Battle Engine Aquila\BEA.exe");
+
+        Assert.That(confirmation, Does.Contain("Battle Engine Aquila"));
+        Assert.That(confirmation, Does.Contain(InstalledGamePatchText.RestoreScopeNote));
+        Assert.That(confirmation, Does.Not.Contain(@"C:\Games"));
+        Assert.That(confirmation, Does.Not.Contain(@":\"));
+    }
+
+    [Test]
+    public void TheStatusLineNamesTheFolderNotThePath()
+    {
+        string path = Path.Combine("C:" + Path.DirectorySeparatorChar + "Steam", "steamapps", "common", "Battle Engine Aquila", "BEA.exe");
+        string status = InstalledGamePatchText.BuildStatusLine(InstalledGamePatchReadiness.CleanAndUnbackedUp, path);
+
+        Assert.That(status, Does.Contain("Battle Engine Aquila"));
+        Assert.That(status, Does.Not.Contain(path));
+        Assert.That(status, Does.Not.Contain("steamapps"));
+        Assert.That(status, Does.Not.Contain(":\\"));
+    }
+
+    [Test]
+    public void AnUnbackedInstallDoesNotSayYet()
+    {
+        string status = InstalledGamePatchText.BuildStatusLine(
+            InstalledGamePatchReadiness.CleanAndUnbackedUp,
+            null);
+
+        Assert.That(status, Does.Contain("Nothing has been backed up."));
+        Assert.That(status, Does.Contain("copy the original first"));
+        Assert.That(status, Does.Not.Contain("yet"));
+    }
+
+    [Test]
+    public void AFailedBackupNamesTheActionWithoutTheException()
+    {
+        Assert.That(BinaryPatchEngine.InstalledBackupFailed, Does.Contain("backup could not be made"));
+        Assert.That(BinaryPatchEngine.InstalledBackupFailed, Does.Contain("untouched"));
+        Assert.That(BinaryPatchEngine.InstalledBackupFailed, Does.Not.Contain(":\\"));
+        Assert.That(BinaryPatchEngine.InstalledBackupFailed.ToLowerInvariant(), Does.Not.Contain("exception"));
+        Assert.That(BinaryPatchEngine.InstalledPathUnreadable, Does.Contain("could not be read"));
+        Assert.That(BinaryPatchEngine.InstalledPathUnreadable, Does.Contain("Nothing was changed"));
+        Assert.That(BinaryPatchEngine.InstalledPathUnreadable, Does.Not.Contain(":\\"));
+
+        string engine = File.ReadAllText(Path.Combine(RepoRoot(), "OnslaughtCareerEditor.AppCore", "BinaryPatchEngine.cs"));
+        Assert.That(engine, Does.Contain("InstalledBackupFailed"));
+        Assert.That(engine, Does.Contain("InstalledPathUnreadable"));
+        Assert.That(engine, Does.Not.Contain("your game is untouched: {ex.Message}"));
+        Assert.That(engine, Does.Not.Contain("That path could not be read: {ex.Message}"));
     }
 
     [Test]
@@ -151,6 +208,19 @@ public class InstalledGamePatchSurfaceTests
             Assert.That(InstalledGamePatchText.CanPatch(InstalledGamePatchReadiness.NoGameChosen), Is.False);
             Assert.That(InstalledGamePatchText.CanRestore(InstalledGamePatchReadiness.NoGameChosen), Is.False);
         });
+    }
+
+    [Test]
+    public void AMissingInstallNamesTheNextStepNotTheEmptiness()
+    {
+        string status = InstalledGamePatchText.BuildStatusLine(InstalledGamePatchReadiness.NoGameChosen, null);
+
+        Assert.That(status, Does.Contain("Settings"));
+        Assert.That(status, Does.Contain("BEA.exe"));
+        Assert.That(status, Does.Not.Contain("yet").IgnoreCase);
+        Assert.That(status, Does.Not.Contain("No installed game chosen"));
+        Assert.That(status, Does.Not.Contain(":\\"));
+        Assert.That(status, Does.Not.Contain("/"));
     }
 
     /// <summary>
@@ -189,7 +259,7 @@ public class InstalledGamePatchSurfaceTests
         Assert.That(InstalledGamePatchText.CanPatch(clean), Is.True);
         Assert.That(
             InstalledGamePatchText.BuildStatusLine(clean, null),
-            Does.Contain("patching will copy the original first"));
+            Does.Contain("copy the original first"));
     }
 
     [Test]
@@ -198,6 +268,32 @@ public class InstalledGamePatchSurfaceTests
         Assert.That(
             InstalledGamePatchText.DescribeReadiness(Path.Combine(Path.GetTempPath(), $"nope-{Guid.NewGuid():N}.exe")),
             Is.EqualTo(InstalledGamePatchReadiness.NoGameChosen));
+    }
+
+    [Test]
+    public void ALockedExecutableIsNotCalledAlreadyChanged()
+    {
+        string path = Path.Combine(Path.GetTempPath(), $"bea-locked-{Guid.NewGuid():N}.exe");
+        File.WriteAllBytes(path, new byte[2_506_752]);
+        try
+        {
+            using var exclusive = new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+
+            InstalledGamePatchReadiness readiness = InstalledGamePatchText.DescribeReadiness(path);
+
+            Assert.That(readiness, Is.EqualTo(InstalledGamePatchReadiness.Unreadable));
+            Assert.That(InstalledGamePatchText.CanPatch(readiness), Is.False);
+            Assert.That(InstalledGamePatchText.CanBackUp(readiness), Is.False);
+            string status = InstalledGamePatchText.BuildStatusLine(readiness, null);
+            Assert.That(status.ToLowerInvariant(), Does.Contain("could not read"));
+            Assert.That(status.ToLowerInvariant(), Does.Not.Contain("already changed"));
+            Assert.That(status.ToLowerInvariant(), Does.Not.Contain("will not copy a changed file"));
+        }
+        finally
+        {
+            if (File.Exists(path))
+                File.Delete(path);
+        }
     }
 
     // ------------------------------------------------------------------ the handlers
@@ -274,5 +370,26 @@ public class InstalledGamePatchSurfaceTests
             Assert.That(patchBench, Does.Not.Contain("Your Steam install is never changed."));
             Assert.That(patchBench, Does.Contain("copies your original executable first"));
         });
+    }
+
+    [Test]
+    public void InstalledPatchAndRestoreUseTheNamedFailureSentence()
+    {
+        string code = PageCode();
+        Assert.That(code, Does.Contain("PatchBenchSafeCopyOutcomeText.DescribeInstalledWriteFailure"));
+        Assert.That(code, Does.Not.Contain("applied ? $\"{authorizationMessage} Your game is patched.\" : applyMessage"));
+        Assert.That(code, Does.Not.Contain("success ? \"Your game is back the way it was.\" : message"));
+    }
+
+    [Test]
+    public void ANamedFailureIsNotSaidTwice()
+    {
+        string note = InstalledGamePatchText.BuildOutcomeNote(false, BinaryPatchEngine.InstalledPathUnreadable);
+
+        Assert.That(note, Is.EqualTo(BinaryPatchEngine.InstalledPathUnreadable));
+        Assert.That(note, Does.Contain("Nothing was changed"));
+        Assert.That(
+            note.Split("Nothing was changed", StringSplitOptions.None).Length - 1,
+            Is.EqualTo(1));
     }
 }

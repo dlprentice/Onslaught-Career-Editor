@@ -1,4 +1,7 @@
+using OnslaughtCareerEditor.AppCore;
 using OnslaughtCareerEditor.WinUI.Models;
+using System;
+using System.IO;
 
 namespace OnslaughtCareerEditor.WinUI.Helpers
 {
@@ -8,6 +11,81 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         private const string MusicPlaybackBoundary = "in-game playback is still experimental and unproven";
         private const string MusicPlaybackBoundaryClause = MusicPlaybackBoundary + ".";
         private static string MusicPlaybackBoundarySentence => char.ToUpperInvariant(MusicPlaybackBoundary[0]) + MusicPlaybackBoundary[1..] + ".";
+
+        public static string DescribeCaughtFailure(string action)
+        {
+            return $"Could not {action}. Nothing was changed.";
+        }
+
+        /// <summary>
+        /// An installed-game write refusal. Named here so the page never paints
+        /// an apply or restore sentence that still carries a dump.
+        /// </summary>
+        public static string DescribeInstalledWriteFailure(string? message)
+        {
+            if (string.IsNullOrWhiteSpace(message) || LooksLikeAPathOrDump(message))
+                return DescribeCaughtFailure("change your installed game");
+
+            return message;
+        }
+
+        public const string BeaExeOnlyCopyMustStayInside =
+            "The BEA.exe-only copy must stay inside the workspace folder.";
+
+        public const string BeaExeOnlyCopyProtectedInstallFolder =
+            "The BEA.exe-only copy is under Program Files or another protected install folder. Work in a copy, or choose to patch your installed game - which takes a verified backup first.";
+
+        public const string BeaExeOnlyCopySteamAppsCommonInstall =
+            "The BEA.exe-only copy is a steamapps/common/Battle Engine Aquila install. Work in a copy, or choose to patch your installed game - which takes a verified backup first.";
+
+        public const string ThatFileMustBeBeaExeOnlyCopy =
+            "That file must be a BEA.exe-only copy.";
+
+        public const string BeaExeOnlyCopyUnusable =
+            "That BEA.exe-only copy could not be used. Nothing was changed.";
+
+        /// <summary>
+        /// Last operation for apply, verify, or restore. A dump can survive the
+        /// path substitution, so name the refusal here.
+        /// </summary>
+        public static string DescribePatchLog(string? message)
+        {
+            if (string.IsNullOrWhiteSpace(message))
+                return message ?? string.Empty;
+
+            if (LooksLikeAPathOrDump(message))
+                return DescribeCaughtFailure("change that BEA.exe");
+
+            if (string.Equals(message, BinaryPatchEngine.PatchTargetMustStayInsideWorkspaceFolder, StringComparison.Ordinal))
+                return BeaExeOnlyCopyMustStayInside;
+
+            if (string.Equals(message, BinaryPatchEngine.ProtectedInstallFolder, StringComparison.Ordinal))
+                return BeaExeOnlyCopyProtectedInstallFolder;
+
+            if (string.Equals(message, BinaryPatchEngine.SteamAppsCommonInstall, StringComparison.Ordinal))
+                return BeaExeOnlyCopySteamAppsCommonInstall;
+
+            if (string.Equals(message, BinaryPatchEngine.PatchTargetMustBeBeaExeOnlyCopy, StringComparison.Ordinal))
+                return ThatFileMustBeBeaExeOnlyCopy;
+
+            if (string.Equals(message, BinaryPatchEngine.WorkingCopyPathUnusable, StringComparison.Ordinal))
+                return BeaExeOnlyCopyUnusable;
+
+            return message;
+        }
+
+        private static bool LooksLikeAPathOrDump(string message)
+        {
+            return message.Contains(":\\", StringComparison.Ordinal)
+                || message.Contains(":/", StringComparison.Ordinal)
+                || message.Contains("Win32", StringComparison.OrdinalIgnoreCase)
+                || message.Contains("exception", StringComparison.OrdinalIgnoreCase);
+        }
+
+        public const string PatchRowUnavailable = "That patch row is not available.";
+
+        public const string SourceGameFolderMissing =
+            "Choose a BEA.exe that sits in a game folder.";
 
         public static string BuildDefaultMusicReplacementStatus()
         {
@@ -22,6 +100,56 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         public static string BuildCanceledOperationLog()
         {
             return "Safe copy creation canceled before any copy or patch operation started.";
+        }
+
+        /// <summary>
+        /// The create-copy question names the source and workspace folders.
+        /// The full path does not belong in the confirmation.
+        /// </summary>
+        public static string BuildCreateConfirmation(
+            string? sourceGameRoot,
+            string? destinationRoot,
+            string settingsSection,
+            string? spaceSection)
+        {
+            string sourceName = FolderLeaf(sourceGameRoot, "the selected game folder");
+            string destinationName = FolderLeaf(destinationRoot, "the app workspace");
+            string body =
+                "The app will copy the selected game folder into its own safe workspace, then apply the selected profile and selected mods only inside that copy." +
+                Environment.NewLine + Environment.NewLine +
+                "Source folder: " + sourceName +
+                Environment.NewLine + Environment.NewLine +
+                "Destination: " + destinationName +
+                Environment.NewLine + Environment.NewLine +
+                settingsSection +
+                Environment.NewLine + Environment.NewLine +
+                "This can take a few minutes and may require several GB of free disk space. The Steam/game install stays unchanged.";
+
+            return string.IsNullOrWhiteSpace(spaceSection)
+                ? body
+                : body + Environment.NewLine + Environment.NewLine + spaceSection.Trim();
+        }
+
+        private static string TrackLeaf(string? path, string fallback)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                return fallback;
+            }
+
+            string name = Path.GetFileName(path.Trim());
+            return string.IsNullOrWhiteSpace(name) ? fallback : name;
+        }
+
+        private static string FolderLeaf(string? path, string fallback)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                return fallback;
+            }
+
+            string name = Path.GetFileName(Path.TrimEndingDirectorySeparator(path.Trim()));
+            return string.IsNullOrWhiteSpace(name) ? fallback : name;
         }
 
         public static string BuildFailedSummary()
@@ -144,6 +272,21 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
                 : $"Copied music bytes staged for {targetMusicFileName}. Staging only; {MusicPlaybackBoundaryClause}";
         }
 
+        /// <summary>
+        /// Last operation names the two tracks. The relative Music path and
+        /// the manifest sentence do not belong on the page.
+        /// </summary>
+        public static string BuildMusicStagedOperationLog(
+            string targetMusicFileName,
+            string replacementPath,
+            bool copiedTrackSwap)
+        {
+            string target = TrackLeaf(targetMusicFileName, "that track");
+            string replacement = TrackLeaf(replacementPath, "the replacement track");
+            string verb = copiedTrackSwap ? "Safe-copy track swap staged" : "Copied music bytes staged";
+            return $"{verb} for {target} from {replacement}. The original install stays unchanged.";
+        }
+
         public static string BuildMusicStagingFailedStatus()
         {
             return "Copied music byte staging failed.";
@@ -176,6 +319,21 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
             return "Safe-copy music backup restore failed.";
         }
 
+        /// <summary>
+        /// Last operation names the restored track. The internal restore
+        /// sentence does not belong on the page.
+        /// </summary>
+        public static string BuildMusicRestoreOperationLog(string targetMusicFileName, bool success)
+        {
+            if (!success)
+            {
+                return DescribeCaughtFailure("restore the safe-copy music backup");
+            }
+
+            string name = TrackLeaf(targetMusicFileName, "that track");
+            return $"Music backup restored for {name}. The original install stays unchanged.";
+        }
+
         private static string BuildSavegamesSummary(bool copiedSavegames)
         {
             return copiedSavegames
@@ -194,7 +352,7 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         {
             return musicSwap is null
                 ? "Music swap: no copied-track swap staged during safe-copy creation."
-                : $"Music swap: copied-track swap staged for {musicSwap.TargetMusicFileName}; backup {musicSwap.BackupRelativePath}; runtime playback still needs live testing.";
+                : $"Music swap: copied-track swap staged for {musicSwap.TargetMusicFileName}; backup {TrackLeaf(musicSwap.BackupRelativePath, "the backup file")}; runtime playback still needs live testing.";
         }
 
         private static string BuildLevel100TextModSummary(bool applied)

@@ -5,6 +5,7 @@ using LibVLCSharp.Shared;
 using Microsoft.UI.Text;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using OnslaughtCareerEditor.WinUI.Helpers;
 using VlcMedia = LibVLCSharp.Shared.Media;
 using XamlBrush = Microsoft.UI.Xaml.Media.Brush;
 
@@ -27,7 +28,7 @@ namespace OnslaughtCareerEditor.WinUI
 
         public VideoPlayerWindow()
         {
-            Title = "Onslaught Career Editor - Video Player";
+            Title = "Onslaught Toolkit - Video Player";
 
             _videoView = new VideoView
             {
@@ -73,13 +74,13 @@ namespace OnslaughtCareerEditor.WinUI
         {
             if (string.IsNullOrWhiteSpace(path))
             {
-                throw new ArgumentException("Video path is required.", nameof(path));
+                throw new ArgumentException("A video file is required.", nameof(path));
             }
 
             string fullPath = Path.GetFullPath(path);
             if (!File.Exists(fullPath))
             {
-                throw new FileNotFoundException("The selected video file was not found.", fullPath);
+                throw new FileNotFoundException("That video file could not be found.");
             }
 
             if (!IsReady)
@@ -212,10 +213,10 @@ namespace OnslaughtCareerEditor.WinUI
                     PlayInternal(pendingPath);
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 _isReady = false;
-                _statusTextBlock.Text = $"Video player initialization failed: {ex.Message}";
+                _statusTextBlock.Text = MediaPageText.DedicatedPlayerInitFailed;
                 RaisePlaybackStateChanged();
             }
         }
@@ -237,7 +238,7 @@ namespace OnslaughtCareerEditor.WinUI
 
             _currentMediaPath = path;
             _pendingMediaPath = null;
-            Title = $"Onslaught Career Editor - {Path.GetFileName(path)}";
+            Title = $"Onslaught Toolkit - {Path.GetFileName(path)}";
             _statusTextBlock.Text = $"Opening {Path.GetFileName(path)}...";
             RaisePlaybackStateChanged();
         }

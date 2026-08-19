@@ -115,20 +115,20 @@ namespace OnslaughtCareerEditor.WinUI
             string? gameDir = config.GetGameDirOrDetect(persistDetection: true) ?? config.GameDirectory;
             bool gameDirectoryReady = AppConfig.InspectGameDirectory(gameDir).Status == GameDirectoryStatus.FullInstall;
             string gameDirectoryLabel = gameDirectoryReady
-                ? BuildGameDirectoryLabel(gameDir)
+                ? ShellFooterText.BuildFolderLabel(gameDir)
                 : string.IsNullOrWhiteSpace(gameDir) ? "Not set" : "Needs review";
             GameDirectoryTextBlock.Text = gameDirectoryLabel;
             AutomationProperties.SetName(GameDirectoryTextBlock, $"Game folder: {gameDirectoryLabel}");
             ToolTipService.SetToolTip(
                 GameDirectoryTextBlock,
                 gameDirectoryReady
-                    ? gameDir
-                    : "Open Settings and choose the full Battle Engine Aquila install.");
+                    ? ShellFooterText.DescribeReadyTooltip(gameDir)
+                    : ShellFooterText.NeedsFolderTooltip);
             ToolTipService.SetToolTip(
                 ReviewSetupButton,
                 !gameDirectoryReady
-                    ? "Open Settings to choose the Battle Engine Aquila install the app reads from."
-                    : "Open Settings to review the configured install and safe app-owned workspace behavior.");
+                    ? ShellFooterText.NeedsFolderTooltip
+                    : "Open Settings to review the configured install and the safe copy.");
         }
 
         public void MaximizeForUserWorkspace()
@@ -890,7 +890,7 @@ namespace OnslaughtCareerEditor.WinUI
             args.Cancel = true;
             if (!await ConfirmCloseWithManagedSafeCopyAsync(activeSafeCopies.Count))
             {
-                AppStatusService.SetStatus("Close canceled: copied game still running");
+                AppStatusService.SetStatus("Safe copy is still running.");
                 return;
             }
 
@@ -912,7 +912,7 @@ namespace OnslaughtCareerEditor.WinUI
                 Title = "Close copied game too?",
                 Content = new TextBlock
                 {
-                    Text = $"Closing Onslaught Toolkit will close or force-stop {copiedGameText} it launched from an app-owned safe copy. Save progress first; the installed game folder stays unchanged.",
+                    Text = $"Closing Onslaught Toolkit will close or force-stop {copiedGameText} it launched from a safe copy. Save progress first; the installed game folder stays unchanged.",
                     TextWrapping = TextWrapping.WrapWholeWords,
                 },
                 PrimaryButtonText = "Close toolkit and copied game",
@@ -939,18 +939,6 @@ namespace OnslaughtCareerEditor.WinUI
             config.WindowWidth = Math.Clamp(size.Width, AppConfig.MinWindowWidth, AppConfig.MaxWindowWidth);
             config.WindowHeight = Math.Clamp(size.Height, AppConfig.MinWindowHeight, AppConfig.MaxWindowHeight);
             config.Save();
-        }
-
-        private static string BuildGameDirectoryLabel(string? gameDir)
-        {
-            if (string.IsNullOrWhiteSpace(gameDir))
-            {
-                return "Not set";
-            }
-
-            string trimmed = gameDir.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-            string folderName = Path.GetFileName(trimmed);
-            return string.IsNullOrWhiteSpace(folderName) ? "Configured" : folderName;
         }
 
         private void ReviewSetupButton_Click(object sender, RoutedEventArgs e)

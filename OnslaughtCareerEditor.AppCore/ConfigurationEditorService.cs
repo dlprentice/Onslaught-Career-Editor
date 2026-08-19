@@ -132,6 +132,11 @@ namespace OnslaughtCareerEditor.AppCore
 
     public static class ConfigurationEditorService
     {
+        public const string InputMissing = "That options file could not be found. Nothing was changed.";
+        public const string InputInvalid = "That file is not a valid game options file. Nothing was changed.";
+        public const string PathsUnusable = "Those options files could not be used. Nothing was changed.";
+        public const string NoPendingChangesSelected = "Select a change first.";
+
         private sealed record KeybindDefinition(
             string GroupLabel,
             string ActionLabel,
@@ -249,7 +254,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             if (parts.Count == 0)
             {
-                return "No pending configuration changes selected yet.";
+                return NoPendingChangesSelected;
             }
 
             return "Pending: " + string.Join(", ", parts) + ".";
@@ -297,12 +302,12 @@ namespace OnslaughtCareerEditor.AppCore
             string outputPath = request.OutputPath?.Trim() ?? string.Empty;
             if (inputPath.Length == 0 || outputPath.Length == 0)
             {
-                return PatchResult.Fail("Select both input and output .bea paths before patching game options.");
+                return PatchResult.Fail("Select both input and output files before patching.");
             }
 
             if (!SaveEditorService.IsOptionsLikeFilePath(inputPath) || !SaveEditorService.IsOptionsLikeFilePath(outputPath))
             {
-                return PatchResult.Fail("Game Options requires .bea/defaultoptions.bea input and output paths.");
+                return PatchResult.Fail("Game Options requires .bea/defaultoptions.bea files.");
             }
 
             try
@@ -312,17 +317,17 @@ namespace OnslaughtCareerEditor.AppCore
             }
             catch (Exception ex) when (ex is ArgumentException or IOException or InvalidOperationException or NotSupportedException)
             {
-                return PatchResult.Fail(ex.Message);
+                return PatchResult.Fail(PathsUnusable);
             }
 
             if (!File.Exists(inputPath))
             {
-                return PatchResult.Fail($"Input file not found: {inputPath}");
+                return PatchResult.Fail(InputMissing);
             }
 
             if (!BesFilePatcher.IsValidBesFile(inputPath))
             {
-                return PatchResult.Fail($"Input file is not a valid BEA save/options file: {inputPath}");
+                return PatchResult.Fail(InputInvalid);
             }
 
             if (!HasPendingChanges(request))

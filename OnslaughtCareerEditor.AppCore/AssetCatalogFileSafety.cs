@@ -7,6 +7,24 @@ namespace OnslaughtCareerEditor.AppCore
     {
         private const string CatalogFileName = "catalog.json";
         private const string AssetCatalogDirectoryName = "asset_catalog";
+        internal const string CatalogExportHasNoContainingFolder =
+            "That catalog export file has no containing folder.";
+        internal const string CatalogExportFolderOutsideGenerated =
+            "That catalog export folder resolves outside the selected generated export folder.";
+        internal const string CatalogExportFileOutsideGenerated =
+            "That catalog export file resolves outside the selected generated export folder.";
+        internal const string ExportsMustStayInside =
+            "Catalog exports must stay inside the selected generated export folder.";
+        internal const string CatalogFolderChangedIdentity =
+            "The catalog folder or catalog.json changed identity after the catalog was loaded.";
+        internal const string ExportFolderChanged =
+            "The generated export folder changed after the catalog was loaded.";
+        internal const string CatalogSourceNeedsExportFolder =
+            "Catalog source access needs a loaded catalog and its generated export folder.";
+        internal const string CatalogJsonMissing =
+            "The catalog folder no longer has catalog.json.";
+        internal const string CatalogIdentityMissing =
+            "That catalog has no saved identity.";
 
         internal static AssetCatalogSelection? ResolveSelection(string? pathOrDirectory)
         {
@@ -15,7 +33,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             try
             {
-                string selectedPath = FileMutationSafety.NormalizeLocalPath(pathOrDirectory, "Asset catalog path");
+                string selectedPath = FileMutationSafety.NormalizeLocalPath(pathOrDirectory, "Asset catalog");
                 if (File.Exists(selectedPath))
                 {
                     if (!string.Equals(Path.GetFileName(selectedPath), CatalogFileName, StringComparison.OrdinalIgnoreCase))
@@ -79,19 +97,18 @@ namespace OnslaughtCareerEditor.AppCore
             if (string.IsNullOrWhiteSpace(catalogPath))
                 return string.Empty;
 
-            string normalizedRoot = FileMutationSafety.NormalizeLocalPath(trustedRoot, "Trusted asset export root");
+            string normalizedRoot = FileMutationSafety.NormalizeLocalPath(trustedRoot, "generated export folder");
             string normalizedPath = catalogPath.Replace('/', Path.DirectorySeparatorChar);
             string resolvedPath = Path.IsPathRooted(normalizedPath)
-                ? FileMutationSafety.NormalizeLocalPath(normalizedPath, "Catalog export path")
+                ? FileMutationSafety.NormalizeLocalPath(normalizedPath, "Catalog export file")
                 : FileMutationSafety.NormalizeLocalPath(
                     Path.Combine(normalizedRoot, normalizedPath),
-                    "Catalog export path");
+                    "Catalog export file");
 
             if (!FileMutationSafety.IsSameOrUnderRoot(resolvedPath, normalizedRoot) ||
                 string.Equals(resolvedPath, normalizedRoot, FileMutationSafety.PathComparison))
             {
-                throw new InvalidOperationException(
-                    "Catalog export paths must remain below the selected generated export root.");
+                throw new InvalidOperationException(ExportsMustStayInside);
             }
 
             return resolvedPath;
@@ -103,7 +120,7 @@ namespace OnslaughtCareerEditor.AppCore
                 return null;
 
             string normalizedCatalog = FileMutationSafety.NormalizeLocalPath(catalogPath, "Asset catalog file");
-            string normalizedRoot = FileMutationSafety.NormalizeLocalPath(trustedRoot, "Trusted asset export root");
+            string normalizedRoot = FileMutationSafety.NormalizeLocalPath(trustedRoot, "generated export folder");
             string volumeRoot = Path.GetPathRoot(normalizedRoot) ?? string.Empty;
             if (string.Equals(
                     normalizedRoot.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar),
@@ -161,21 +178,21 @@ namespace OnslaughtCareerEditor.AppCore
             {
                 _rootLocks = FileMutationSafety.LockDirectoryTree(
                     selection.TrustedExportRoot,
-                    "Trusted asset export root");
+                    "generated export folder");
                 FileMutationSafety.RejectOutputInGameTree(
                     Path.Combine(_rootLocks.PhysicalPath, ".onslaught-asset-root-probe"));
 
                 string catalogDirectory = Path.GetDirectoryName(selection.CatalogFilePath)
-                    ?? throw new DirectoryNotFoundException("The asset catalog has no containing directory.");
+                    ?? throw new DirectoryNotFoundException("The asset catalog has no containing folder.");
                 _catalogDirectoryLocks = FileMutationSafety.LockDirectoryTree(
                     catalogDirectory,
-                    "Asset catalog directory");
+                    "asset catalog folder");
                 if (!FileMutationSafety.IsSameOrUnderRoot(
                         _catalogDirectoryLocks.PhysicalPath,
                         _rootLocks.PhysicalPath))
                 {
                     throw new InvalidOperationException(
-                        "The asset catalog directory resolves outside the selected generated export root.");
+                        "The asset catalog folder resolves outside the selected generated export folder.");
                 }
 
                 SafeFileHandle handle = FileMutationSafety.OpenNoFollowReadHandle(
@@ -185,9 +202,9 @@ namespace OnslaughtCareerEditor.AppCore
                 {
                     WindowsFileIdentity identity = FileMutationSafety.GetWindowsIdentity(handle, "Asset catalog file");
                     if (identity.IsReparsePoint)
-                        throw new InvalidOperationException("The asset catalog file cannot be a symbolic link or other reparse point.");
+                        throw new InvalidOperationException(FileMutationSafety.FileCannotUseLink);
                     if (OperatingSystem.IsWindows() && identity.NumberOfLinks > 1)
-                        throw new InvalidOperationException("The asset catalog file cannot be hardlinked to another file.");
+                        throw new InvalidOperationException(FileMutationSafety.FileCannotShareData);
 
                     string physicalCatalogPath = OperatingSystem.IsWindows()
                         ? FileMutationSafety.GetFinalLocalPath(handle, "Asset catalog file")
@@ -202,7 +219,7 @@ namespace OnslaughtCareerEditor.AppCore
                         !FileMutationSafety.IsSameOrUnderRoot(physicalCatalogPath, _rootLocks.PhysicalPath))
                     {
                         throw new InvalidOperationException(
-                            "The asset catalog file resolves outside the selected generated export root.");
+                            "The asset catalog file resolves outside the selected generated export folder.");
                     }
 
                     _catalogStream = new FileStream(handle, FileAccess.Read);
@@ -253,14 +270,13 @@ namespace OnslaughtCareerEditor.AppCore
             if (_rootLocks is null || _catalogStream is null)
                 throw new ObjectDisposedException(nameof(AssetCatalogLoadSession));
             if (!evidence.IsPresent)
-                throw new InvalidOperationException("The catalog snapshot does not contain trusted identity evidence.");
+                throw new InvalidOperationException(AssetCatalogFileSafety.CatalogIdentityMissing);
 
             if (OperatingSystem.IsWindows() &&
                 (!_rootLocks.Identity.IsSameFile(evidence.RootIdentity) ||
                     !_catalogIdentity.IsSameFile(evidence.CatalogIdentity)))
             {
-                throw new InvalidOperationException(
-                    "The catalog root or catalog file changed identity after the catalog was loaded.");
+                throw new InvalidOperationException(AssetCatalogFileSafety.CatalogFolderChangedIdentity);
             }
 
             _catalogStream.Position = 0;
@@ -286,7 +302,7 @@ namespace OnslaughtCareerEditor.AppCore
             if (string.IsNullOrWhiteSpace(catalogPath))
                 return AssetCatalogSourceRead.Missing(string.Empty, AssetCatalogSourceEvidence.Missing);
             if (requireRelative && Path.IsPathRooted(catalogPath))
-                throw new InvalidOperationException("Catalog export paths must be bundle-root-relative.");
+                throw new InvalidOperationException(AssetCatalogFileSafety.ExportsMustStayInside);
 
             string sourcePath = AssetCatalogFileSafety.ResolveSourcePath(TrustedExportRoot, catalogPath);
             FileMutationSafety.RejectOutputInGameTree(sourcePath);
@@ -304,9 +320,9 @@ namespace OnslaughtCareerEditor.AppCore
             }
 
             string sourceDirectory = Path.GetDirectoryName(sourcePath)
-                ?? throw new DirectoryNotFoundException($"{label} has no containing directory.");
+                ?? throw new DirectoryNotFoundException(AssetCatalogFileSafety.CatalogExportHasNoContainingFolder);
             FileMutationSafety.DirectoryLockSet? sourceDirectoryLocks =
-                FileMutationSafety.LockDirectoryTree(sourceDirectory, $"{label} directory");
+                FileMutationSafety.LockDirectoryTree(sourceDirectory, "catalog export folder");
             SafeFileHandle? handle = null;
             FileStream? stream = null;
             try
@@ -315,8 +331,7 @@ namespace OnslaughtCareerEditor.AppCore
                         sourceDirectoryLocks.PhysicalPath,
                         TrustedExportRoot))
                 {
-                    throw new InvalidOperationException(
-                        $"{label} directory resolves outside the selected generated export root.");
+                    throw new InvalidOperationException(AssetCatalogFileSafety.CatalogExportFolderOutsideGenerated);
                 }
 
                 string expectedPhysicalPath = Path.Combine(
@@ -325,9 +340,9 @@ namespace OnslaughtCareerEditor.AppCore
                 handle = FileMutationSafety.OpenNoFollowReadHandle(sourcePath, label);
                 WindowsFileIdentity identity = FileMutationSafety.GetWindowsIdentity(handle, label);
                 if (identity.IsReparsePoint)
-                    throw new InvalidOperationException($"{label} cannot be a symbolic link or other reparse point.");
+                    throw new InvalidOperationException(FileMutationSafety.FileCannotUseLink);
                 if (OperatingSystem.IsWindows() && identity.NumberOfLinks > 1)
-                    throw new InvalidOperationException($"{label} cannot be hardlinked to another file.");
+                    throw new InvalidOperationException(FileMutationSafety.FileCannotShareData);
 
                 string physicalPath = OperatingSystem.IsWindows()
                     ? FileMutationSafety.GetFinalLocalPath(handle, label)
@@ -339,8 +354,7 @@ namespace OnslaughtCareerEditor.AppCore
                     !FileMutationSafety.IsSameOrUnderRoot(physicalPath, TrustedExportRoot) ||
                     string.Equals(physicalPath, TrustedExportRoot, FileMutationSafety.PathComparison))
                 {
-                    throw new InvalidOperationException(
-                        $"{label} resolves outside the selected generated export root.");
+                    throw new InvalidOperationException(AssetCatalogFileSafety.CatalogExportFileOutsideGenerated);
                 }
 
                 stream = new FileStream(handle, FileAccess.Read);
@@ -446,7 +460,7 @@ namespace OnslaughtCareerEditor.AppCore
         internal AssetCatalogSourceEvidence Evidence { get; }
 
         internal Stream Stream => _stream
-            ?? throw new FileNotFoundException("The catalog export file does not exist.", Path);
+            ?? throw new FileNotFoundException("That catalog export file could not be found.");
 
         internal static AssetCatalogSourceRead Missing(
             string path,
@@ -473,13 +487,12 @@ namespace OnslaughtCareerEditor.AppCore
             if (string.IsNullOrWhiteSpace(snapshot.CatalogFilePath) ||
                 string.IsNullOrWhiteSpace(snapshot.TrustedExportRoot))
             {
-                throw new InvalidOperationException(
-                    "Catalog source access requires a loaded catalog with a trusted generated export root.");
+                throw new InvalidOperationException(AssetCatalogFileSafety.CatalogSourceNeedsExportFolder);
             }
 
             AssetCatalogSelection? selection = AssetCatalogFileSafety.ResolveSelection(snapshot.CatalogFilePath);
             if (selection is null)
-                throw new InvalidOperationException("The catalog no longer has the required generated bundle layout.");
+                throw new InvalidOperationException(AssetCatalogFileSafety.CatalogJsonMissing);
 
             AssetCatalogLoadSession? session = null;
             AssetCatalogSourceRead? source = null;
@@ -488,14 +501,13 @@ namespace OnslaughtCareerEditor.AppCore
                 session = AssetCatalogFileSafety.BeginLoad(selection);
                 string expectedRoot = FileMutationSafety.NormalizeLocalPath(
                     snapshot.TrustedExportRoot,
-                    "Snapshot trusted asset export root");
+                    "generated export folder");
                 if (!string.Equals(
                         session.TrustedExportRoot,
                         expectedRoot,
                         FileMutationSafety.PathComparison))
                 {
-                    throw new InvalidOperationException(
-                        "The catalog generated export root changed after the catalog was loaded.");
+                    throw new InvalidOperationException(AssetCatalogFileSafety.ExportFolderChanged);
                 }
 
                 session.ValidateTrust(snapshot.TrustEvidence);

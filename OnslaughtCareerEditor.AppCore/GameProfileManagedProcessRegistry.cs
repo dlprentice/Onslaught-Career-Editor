@@ -14,6 +14,15 @@ namespace OnslaughtCareerEditor.AppCore
     {
         public const string LeaseFileName = "onslaught-managed-processes.json";
         public const string LeaseSchemaVersion = "winui-managed-safe-copy-processes.v1";
+        public const string LeaseFolderMismatch =
+            "A managed copy must stay in this registry's profile folder.";
+        public const string CopyFolderMissing = "That copy folder could not be found.";
+        public const string CopyCannotUseLink = "That copy cannot use a shortcut or link.";
+        public const string CopyProcessNotRegistered = "That copy is not registered with this session.";
+        public const string CopyBeaMustStayInside = "That copy's BEA.exe must stay in the copy.";
+        public const string ManagedCopyNeedsProfileFolder = "A managed copy needs an app-owned profile folder.";
+        public const string ManagedCopyLeaseOutOfDate = "That managed copy's session details are out of date.";
+        public const string ManagedCopyLeaseRowsMissing = "That managed copy's session details are missing their process rows.";
 
         private readonly object _gate = new();
         private readonly Dictionary<int, GameProfileRegisteredProcess> _processes = new();
@@ -169,13 +178,13 @@ namespace OnslaughtCareerEditor.AppCore
         public void Register(GameProfileManagedProcess process, string appOwnedProfilesRoot)
         {
             if (string.IsNullOrWhiteSpace(appOwnedProfilesRoot))
-                throw new InvalidOperationException("A managed playable copied game folder process requires an app-owned profile root.");
+                throw new InvalidOperationException(ManagedCopyNeedsProfileFolder);
 
             if (!LeaseRootMatches(appOwnedProfilesRoot))
-                throw new InvalidOperationException("A managed playable copied game folder process root must match the registry lease root.");
+                throw new InvalidOperationException(LeaseFolderMismatch);
 
             if (!TryBuildRegisteredProcess(process, appOwnedProfilesRoot, out GameProfileRegisteredProcess registered))
-                throw new InvalidOperationException("A managed playable copied game folder process must point at BEA.exe under the app-owned playable copied game folder root.");
+                throw new InvalidOperationException(CopyBeaMustStayInside);
 
             lock (_gate)
             {
@@ -203,7 +212,7 @@ namespace OnslaughtCareerEditor.AppCore
             {
                 if (!_processes.TryGetValue(process.ProcessId, out registered!))
                 {
-                    return new GameProfileStopResult(false, process.ProcessId, "Playable copied game folder process is not registered with this app session.");
+                    return new GameProfileStopResult(false, process.ProcessId, CopyProcessNotRegistered);
                 }
             }
 
@@ -256,14 +265,14 @@ namespace OnslaughtCareerEditor.AppCore
                 if (!string.Equals(schemaVersion, LeaseSchemaVersion, StringComparison.Ordinal))
                 {
                     shouldRewrite = true;
-                    throw new InvalidOperationException("Managed playable copied game folder lease schema is stale.");
+                    throw new InvalidOperationException(ManagedCopyLeaseOutOfDate);
                 }
 
                 if (!root.TryGetProperty("processes", out JsonElement processesEl) ||
                     processesEl.ValueKind != JsonValueKind.Array)
                 {
                     shouldRewrite = true;
-                    throw new InvalidOperationException("Managed playable copied game folder lease is missing process rows.");
+                    throw new InvalidOperationException(ManagedCopyLeaseRowsMissing);
                 }
 
                 lock (_gate)
@@ -481,7 +490,7 @@ namespace OnslaughtCareerEditor.AppCore
         private static string NormalizeExistingDirectory(string path)
         {
             if (string.IsNullOrWhiteSpace(path) || !Directory.Exists(path))
-                throw new DirectoryNotFoundException("Managed playable copied game folder directory does not exist.");
+                throw new DirectoryNotFoundException(CopyFolderMissing);
 
             return Path.GetFullPath(path)
                 .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
@@ -509,7 +518,7 @@ namespace OnslaughtCareerEditor.AppCore
         {
             FileAttributes attributes = File.GetAttributes(path);
             if ((attributes & FileAttributes.ReparsePoint) != 0)
-                throw new InvalidOperationException($"Managed playable copied game folder registry refuses reparse points in {label}.");
+                throw new InvalidOperationException(CopyCannotUseLink);
         }
 
         private static void RejectExistingReparseAncestors(string path, string label)

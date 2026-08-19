@@ -94,7 +94,7 @@ public class WinUiHomeNavigationSmokeTests
     [Category("WinUIRuntime")]
     [Explicit("Launches WinUI on Home and verifies each Home task button reaches its destination page.")]
     [Apartment(ApartmentState.STA)]
-    [TestCase("HomeOpenSaveLabButton", "SaveAnalyzerFilePath")]
+    [TestCase("HomeOpenSaveLabButton", "SaveAnalyzerInputFile")]
     [TestCase("HomeOpenMediaButton", "MediaAudioTabButton")]
     [TestCase("HomeOpenLoreButton", "LoreSearchBox")]
     [TestCase("HomeOpenPatchBenchButton", "PatchBenchScrollViewer")]
@@ -221,7 +221,7 @@ public class WinUiHomeNavigationSmokeTests
 
         Assert.That(
             FindByAutomationId(window, "SettingsGameDirectoryStatus").Name,
-            Is.EqualTo("Directory does not exist."));
+            Is.EqualTo("That folder is gone."));
         Assert.That(
             FindByAutomationId(window, "SettingsGameDirectorySummary").Name,
             Is.EqualTo(Path.GetFileName(missingGameDirectory)));
@@ -330,7 +330,7 @@ public class WinUiHomeNavigationSmokeTests
             using (HomeNavigationSession readySession = LaunchHomeSession(stagingDirectory, readyGameDirectory, "ready", requireRepoBuild: true))
             {
                 Window window = readySession.Window;
-                WaitForText(window, "Game directory configured: full-game.", TimeSpan.FromSeconds(20));
+                WaitForText(window, "Game folder ready: full-game.", TimeSpan.FromSeconds(20));
 
                 Assert.That(FindByAutomationId(window, "HomeSetupTitle").Name, Is.EqualTo("Setup"));
                 AutomationElement patchBenchHeading = FindByAutomationId(window, "HomePatchModsTitle");
@@ -429,7 +429,7 @@ public class WinUiHomeNavigationSmokeTests
         Assert.That(configurationReady, Is.True, "Expected Game Options inputs after Home deep-link.");
 
         bool analyzerHidden = Retry.WhileFalse(
-            () => TryFindByAutomationId(window, "SaveAnalyzerFilePath") is null,
+            () => TryFindByAutomationId(window, "SaveAnalyzerInputFile") is null,
             TimeSpan.FromSeconds(5)).Success;
         Assert.That(analyzerHidden, Is.True, "Expected Save Analyzer tab content hidden after Game Options deep-link.");
 

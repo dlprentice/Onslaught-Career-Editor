@@ -385,6 +385,15 @@ public class LiveTrainerPageHonestyTests
     }
 
     [Test]
+    public void AWriteBlockBeforeTheFirstReadNamesTheNextStep()
+    {
+        string? blocked = LiveTrainerPageText.DescribeWhyWritingIsBlocked(true, null);
+
+        Assert.That(blocked, Is.EqualTo("Wait for the first reading."));
+        Assert.That(blocked, Does.Not.Contain("yet").IgnoreCase);
+    }
+
+    [Test]
     public void EveryNumberIsShownWithTheBytesItCameFrom()
     {
         // The raw bytes are not decoration. They are how a player tells a real reading from a bit

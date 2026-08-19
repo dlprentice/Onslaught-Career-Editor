@@ -46,12 +46,12 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
             HomeSnapshotGameTextBlock.Text = ready && !string.IsNullOrWhiteSpace(gameDir)
                 ? Path.GetFileName(gameDir.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar))
-                : "Not set yet";
+                : GameDirectoryIdentityText.SnapshotNeedsFolder;
 
             if (string.IsNullOrWhiteSpace(gameDir))
             {
-                HomeSnapshotSavesTextBlock.Text = "—";
-                HomeSnapshotMediaTextBlock.Text = "—";
+                HomeSnapshotSavesTextBlock.Text = GameDirectoryIdentityText.SnapshotNeedsFolder;
+                HomeSnapshotMediaTextBlock.Text = GameDirectoryIdentityText.SnapshotNeedsFolder;
                 return;
             }
 
@@ -60,17 +60,19 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 int saveCount = AppConfig.FindSaveFiles(gameDir).Count;
                 HomeSnapshotSavesTextBlock.Text = saveCount switch
                 {
-                    0 => "None yet",
+                    0 => GameDirectoryIdentityText.SnapshotSavesNone,
                     1 => "1 file",
                     _ => $"{saveCount} files",
                 };
             }
             catch (Exception)
             {
-                HomeSnapshotSavesTextBlock.Text = "Unavailable";
+                HomeSnapshotSavesTextBlock.Text = GameDirectoryIdentityText.SnapshotSavesUnavailable;
             }
 
-            HomeSnapshotMediaTextBlock.Text = ready ? "Ready to browse" : "Needs the full install";
+            HomeSnapshotMediaTextBlock.Text = ready
+                ? "Ready to browse"
+                : GameDirectoryIdentityText.SnapshotNeedsFullInstall;
         }
 
         private void RefreshSetupStatus()
@@ -98,12 +100,12 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 // the invitation and offers to find the folder automatically.
                 // This bar exists so keyboard and screen-reader users land on a
                 // setup action on arrival, so it should not restate the card.
-                HomeSetupInfoBar.Title = "Game folder not set";
+                HomeSetupInfoBar.Title = GameDirectoryIdentityText.SnapshotNeedsFolder;
                 HomeSetupInfoBar.Message = "Save Lab still opens files you pick yourself.";
                 HomeSetupActionButton.Content = "Choose game folder";
                 AutomationProperties.SetName(HomeSetupActionButton, "Choose game folder");
                 SetupTitleTextBlock.Text = "Setup not finished";
-                SetupStatusTextBlock.Text = "Game folder not set. The app needs the full Battle Engine Aquila folder for Media and playable safe copies.";
+                SetupStatusTextBlock.Text = "Game folder not set. " + GameDirectoryIdentityText.SnapshotNeedsFullInstall;
                 SetupGuidanceTextBlock.Text = "Save Lab still works with files you choose manually. Setting the folder also enables automatic save detection.";
                 return;
             }
@@ -127,9 +129,13 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             HomeSetupInfoBar.Message = string.Empty;
             SetupTitleTextBlock.Text = "Setup";
             SetupStatusTextBlock.Text = string.IsNullOrWhiteSpace(folderName)
-                ? "Game directory configured."
-                : $"Game directory configured: {folderName}.";
-            SetupGuidanceTextBlock.Text = "Windowed & Mods creates a safe game copy, patches only that copy, and plays only that copy without changing the Steam/game install.";
+                ? "Game folder ready."
+                : $"Game folder ready: {folderName}.";
+            const string defaultGuidance =
+                "Windowed & Mods creates a safe game copy, patches only that copy, and plays only that copy without changing the Steam/game install.";
+            RetailExecutableIdentity identity = BinaryPatchEngine.IdentifyRetailExecutable(
+                AppConfig.TryGetGameExecutablePath(gameDir));
+            SetupGuidanceTextBlock.Text = GameDirectoryIdentityText.ForHomeGuidance(identity, defaultGuidance);
         }
 
         /// <summary>
@@ -220,7 +226,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             string? detected = AppConfig.DetectGameDirectory();
             if (string.IsNullOrWhiteSpace(detected))
             {
-                ShowQuickStartNote("Could not find the game automatically. Choose the folder you installed it into - the one holding BEA.exe.");
+                ShowQuickStartNote(GameDirectoryIdentityText.AutoDetectFailed);
                 AppStatusService.SetStatus("Home: game folder not found automatically");
                 return;
             }
@@ -228,7 +234,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             AppConfig config = AppConfig.Load();
             if (!config.SetGameDir(detected))
             {
-                ShowQuickStartNote("Found the game but could not save that location. Try choosing the folder yourself.");
+                ShowQuickStartNote(GameDirectoryIdentityText.PersistFailed);
                 return;
             }
 
@@ -261,7 +267,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             AppConfig config = AppConfig.Load();
             if (!config.SetGameDir(path))
             {
-                ShowQuickStartNote("That folder could not be saved. Try another one.");
+                ShowQuickStartNote(GameDirectoryIdentityText.PersistFailed);
                 return;
             }
 
@@ -269,7 +275,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             App.MainWindowInstance.RefreshFooter();
             ShowQuickStartNote(picked.Status == GameDirectoryStatus.FullInstall
                 ? null
-                : "That folder does not have both BEA.exe and the data folder in it. Playable copies need the full install.");
+                : GameDirectoryIdentityText.SnapshotNeedsFullInstall);
             AppStatusService.SetStatus("Home: game folder chosen");
             RefreshSetupStatus();
         }
@@ -319,7 +325,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
                     if (prepared.PatchResult.Requested && !prepared.PatchResult.Success)
                     {
-                        ShowQuickStartNote(prepared.PatchResult.Message);
+                        ShowQuickStartNote(HomeQuickStartState.FailureNote);
                         AppStatusService.SetStatus("Home: could not prepare the copy");
                         return;
                     }
@@ -357,7 +363,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                                         or UnauthorizedAccessException or DirectoryNotFoundException
                                         or System.ComponentModel.Win32Exception)
             {
-                ShowQuickStartNote($"That did not work, and nothing was changed. {ex.Message}");
+                ShowQuickStartNote(HomeQuickStartState.FailureNote);
                 AppStatusService.SetStatus("Home: setup did not finish");
             }
             finally

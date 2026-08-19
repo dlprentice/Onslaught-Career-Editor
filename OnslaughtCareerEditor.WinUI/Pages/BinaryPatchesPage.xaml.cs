@@ -221,7 +221,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
             catch (Exception ex) when (IsUserFacingOperationException(ex))
             {
-                OperationLogTextBox.Text = $"Could not check whether the copied game is still running: {ex.Message}";
+                OperationLogTextBox.Text = PatchBenchSafeCopyOutcomeText.DescribeCaughtFailure("check whether the copied game is still running");
             }
             finally
             {
@@ -414,7 +414,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     ? "Choose at least one patch to continue."
                     : verifiedCurrent
                         ? "BEA.exe-only copy is verified and ready for patching."
-                        : "Verify the BEA.exe-only copy after any path or selection change.";
+                        : "Verify the BEA.exe-only copy after any file or selection change.";
 
             UpdateCopiedProfileLaunchReadiness(
                 copiedProfileContentMatchesCurrent,
@@ -831,7 +831,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 string.Equals(item.Spec.Key, key, StringComparison.OrdinalIgnoreCase));
             if (item is null)
             {
-                OperationLogTextBox.Text = $"Patch row is not available: {key}";
+                OperationLogTextBox.Text = PatchBenchSafeCopyOutcomeText.PatchRowUnavailable;
                 AppStatusService.SetStatus("Windowed & Mods: quick pick unavailable");
                 return;
             }
@@ -1213,7 +1213,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
             catch (Exception ex) when (IsUserFacingOperationException(ex))
             {
-                OperationLogTextBox.Text = $"Could not browse for BEA.exe: {ex.Message}";
+                OperationLogTextBox.Text = PatchBenchSafeCopyOutcomeText.DescribeCaughtFailure("browse for BEA.exe");
                 AppStatusService.SetStatus("Windowed & Mods: browse failed");
             }
         }
@@ -1222,7 +1222,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         {
             if (LoadSourcePathFromConfig())
             {
-                AppStatusService.SetStatus("Windowed & Mods: loaded source path from shared settings");
+                AppStatusService.SetStatus("Windowed & Mods: loaded BEA.exe from Settings");
                 return;
             }
 
@@ -1264,9 +1264,9 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     "Original executable stays unchanged. Verify the copy before applying patches.";
                 AppStatusService.SetStatus("Windowed & Mods: BEA.exe-only copy ready");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                OperationLogTextBox.Text = $"Could not create BEA.exe-only copy: {ex.Message}";
+                OperationLogTextBox.Text = PatchBenchSafeCopyOutcomeText.DescribeCaughtFailure("create a BEA.exe-only copy");
                 AppStatusService.SetStatus("Windowed & Mods: BEA.exe-only copy failed");
             }
 
@@ -1279,7 +1279,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             string exePath = (ExePathTextBox.Text ?? string.Empty).Trim();
             if (!IsUsableWorkingCopy(exePath))
             {
-                OperationLogTextBox.Text = "Create an app-owned BEA.exe-only copy before verification.";
+                OperationLogTextBox.Text = "Create a BEA.exe-only copy before verification.";
                 AppStatusService.SetStatus("Windowed & Mods: BEA.exe-only copy required");
                 UpdateControlState();
                 return;
@@ -1310,7 +1310,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             string exePath = (ExePathTextBox.Text ?? string.Empty).Trim();
             if (!IsUsableWorkingCopy(exePath))
             {
-                OperationLogTextBox.Text = "Create an app-owned BEA.exe-only copy before applying patches.";
+                OperationLogTextBox.Text = "Create a BEA.exe-only copy before applying patches.";
                 AppStatusService.SetStatus("Windowed & Mods: BEA.exe-only copy required");
                 UpdateControlState();
                 return;
@@ -1329,7 +1329,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             {
                 if (!await ConfirmAsync(
                         "Apply selected patches?",
-                        "The selected verified catalog patches will be applied to the app-owned BEA.exe-only copy only. The original BEA.exe stays unchanged. Restore uses the first full-file backup snapshot, not a per-patch undo."))
+                        "The selected verified catalog patches will be applied to the BEA.exe-only copy only. The original BEA.exe stays unchanged. Restore uses the first full-file backup snapshot, not a per-patch undo."))
                 {
                     AppStatusService.SetStatus("Windowed & Mods: apply canceled");
                     return;
@@ -1344,7 +1344,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
             catch (Exception ex) when (IsUserFacingOperationException(ex))
             {
-                OperationLogTextBox.Text = $"Could not apply patches to BEA.exe-only copy: {ex.Message}";
+                OperationLogTextBox.Text = PatchBenchSafeCopyOutcomeText.DescribeCaughtFailure("apply patches to the BEA.exe-only copy");
                 AppStatusService.SetStatus("Windowed & Mods: apply failed");
                 UpdateControlState();
             }
@@ -1355,7 +1355,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             string exePath = (ExePathTextBox.Text ?? string.Empty).Trim();
             if (!IsUsableWorkingCopy(exePath))
             {
-                OperationLogTextBox.Text = "Create an app-owned BEA.exe-only copy before restoring patch backups.";
+                OperationLogTextBox.Text = "Create a BEA.exe-only copy before restoring patch backups.";
                 AppStatusService.SetStatus("Windowed & Mods: BEA.exe-only copy required");
                 UpdateControlState();
                 return;
@@ -1363,7 +1363,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
             if (!File.Exists(BinaryPatchEngine.BuildBackupPath(exePath)))
             {
-                OperationLogTextBox.Text = "Backup file not found for the selected executable.";
+                OperationLogTextBox.Text = BinaryPatchEngine.BackupFileMissing;
                 AppStatusService.SetStatus("Windowed & Mods: backup not found");
                 UpdateControlState();
                 return;
@@ -1387,7 +1387,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
             catch (Exception ex) when (IsUserFacingOperationException(ex))
             {
-                OperationLogTextBox.Text = $"Could not restore BEA.exe-only backup: {ex.Message}";
+                OperationLogTextBox.Text = PatchBenchSafeCopyOutcomeText.DescribeCaughtFailure("restore the BEA.exe-only backup");
                 AppStatusService.SetStatus("Windowed & Mods: restore failed");
                 UpdateControlState();
             }
@@ -1430,7 +1430,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 string? sourceGameRoot = Path.GetDirectoryName(Path.GetFullPath(sourcePath));
                 if (string.IsNullOrWhiteSpace(sourceGameRoot) || !Directory.Exists(sourceGameRoot))
                 {
-                    OperationLogTextBox.Text = "The selected BEA.exe does not have a usable source game folder.";
+                    OperationLogTextBox.Text = PatchBenchSafeCopyOutcomeText.SourceGameFolderMissing;
                     AppStatusService.SetStatus("Windowed & Mods: safe copy source folder missing");
                     return;
                 }
@@ -1472,7 +1472,11 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
                 if (!await ConfirmAsync(
                         "Create safe copy?",
-                        $"The app will copy the selected game folder into its own safe workspace, then apply the verified profile and selected mods only inside that copy.\n\nSource folder:\n{sourceGameRoot}\n\nDestination root:\n{options.OutputRoot}\n\n{PatchBenchLabCreationInputText.BuildConfirmationSection(creationInputState)}\n\nThis can take a few minutes and may require several GB of free disk space. The Steam/game install stays unchanged.{spaceSection}"))
+                        PatchBenchSafeCopyOutcomeText.BuildCreateConfirmation(
+                            sourceGameRoot,
+                            options.OutputRoot,
+                            PatchBenchLabCreationInputText.BuildConfirmationSection(creationInputState),
+                            spaceSection)))
                 {
                     PatchBenchCopiedProfileSummary.Text = PatchBenchSafeCopyOutcomeText.BuildCanceledSummary();
                     OperationLogTextBox.Text = PatchBenchSafeCopyOutcomeText.BuildCanceledOperationLog();
@@ -1485,7 +1489,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 PatchBenchCopiedProfileSummary.Text = "Creating safe game copy. This can take a few minutes for a full game folder...";
                 PatchBenchCopiedProfileLaunchPlan.Text = string.Empty;
                 PatchBenchCopiedProfileLaunchStatus.Text = PatchBenchLaunchText.BuildBoundary("No safe copy launch attempted.");
-                OperationLogTextBox.Text = "Preparing a safe game copy in the app-owned GameProfiles workspace. The selected Steam/game install stays unchanged.";
+                OperationLogTextBox.Text = "Preparing a safe game copy. The selected Steam/game install stays unchanged.";
                 AppStatusService.SetStatus("Windowed & Mods: preparing safe copy");
 
                 GameProfilePrepareResult result = await Task.Run(() =>
@@ -1562,7 +1566,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 PatchBenchCopiedProfileLaunchPlan.Text = string.Empty;
                 PatchBenchCopiedProfileLaunchStatus.Text = PatchBenchLaunchText.BuildBoundary("No safe copy launch attempted.");
                 PatchBenchMusicReplacementStatus.Text = PatchBenchSafeCopyOutcomeText.BuildDefaultMusicReplacementStatus();
-                OperationLogTextBox.Text = $"Could not prepare safe game copy: {ex.Message}";
+                OperationLogTextBox.Text = PatchBenchSafeCopyOutcomeText.DescribeCaughtFailure("prepare a safe game copy");
                 AppStatusService.SetStatus("Windowed & Mods: safe copy preparation failed");
             }
             finally
@@ -1609,7 +1613,9 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             {
                 if (!await ConfirmAsync(
                         "Launch safe game copy?",
-                        $"The app will launch BEA.exe from the safe game copy only.\n\nSafe copy: {plan.WorkingDirectory}\n{PatchBenchLaunchText.BuildModifierSummary(plan.Arguments)}\n\nThe Steam/game install stays unchanged. The game may take focus, switch display modes, fail to start, or exit. Any manual input after launch is not counted as automated proof."))
+                        PatchBenchLaunchText.BuildLaunchConfirmation(
+                            plan.WorkingDirectory,
+                            PatchBenchLaunchText.BuildModifierSummary(plan.Arguments))))
                 {
                     AppStatusService.SetStatus("Windowed & Mods: safe copy launch canceled");
                     return;
@@ -1639,10 +1645,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             catch (Exception ex) when (IsUserFacingOperationException(ex))
             {
                 PatchBenchCopiedProfileLaunchStatus.Text = "Safe copy launch failed.";
-                string detail = string.IsNullOrWhiteSpace(ex.Message)
-                    ? $"{ex.GetType().Name} (0x{ex.HResult:X8})"
-                    : $"{ex.GetType().Name} (0x{ex.HResult:X8}): {ex.Message}";
-                OperationLogTextBox.Text = $"Could not launch safe copy: {detail}";
+                OperationLogTextBox.Text = PatchBenchSafeCopyOutcomeText.DescribeCaughtFailure("launch the safe copy");
                 AppStatusService.SetStatus("Windowed & Mods: safe copy launch failed");
             }
             finally
@@ -1656,7 +1659,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         {
             if (_managedCopiedProfileProcess is null)
             {
-                PatchBenchCopiedProfileLaunchStatus.Text = "No managed safe copy process is active.";
+                PatchBenchCopiedProfileLaunchStatus.Text = PatchBenchLaunchText.NoActiveCopiedGame;
                 AppStatusService.SetStatus("Windowed & Mods: no safe copy process");
                 UpdateControlState();
                 return;
@@ -1700,13 +1703,15 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 PatchBenchCopiedProfileLaunchStatus.Text = result.Success
                     ? PatchBenchLaunchText.BuildBoundary("Managed safe copy process stopped.")
                     : "Managed safe copy process was not stopped.";
-                OperationLogTextBox.Text = result.Message;
+                OperationLogTextBox.Text = result.Success
+                    ? PatchBenchLaunchText.BuildBoundary("Managed safe copy process stopped.")
+                    : PatchBenchSafeCopyOutcomeText.DescribeCaughtFailure("stop the safe copy");
                 AppStatusService.SetStatus(result.Success ? "Windowed & Mods: safe copy stopped" : "Windowed & Mods: safe copy stop failed");
             }
             catch (Exception ex) when (IsUserFacingOperationException(ex))
             {
                 PatchBenchCopiedProfileLaunchStatus.Text = "Safe copy stop failed.";
-                OperationLogTextBox.Text = $"Could not stop safe copy: {ex.Message}";
+                OperationLogTextBox.Text = PatchBenchSafeCopyOutcomeText.DescribeCaughtFailure("stop the safe copy");
                 AppStatusService.SetStatus("Windowed & Mods: safe copy stop failed");
             }
             finally
@@ -1780,7 +1785,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             catch (Exception ex) when (IsUserFacingOperationException(ex))
             {
                 PatchBenchMusicReplacementStatus.Text = PatchBenchSafeCopyOutcomeText.BuildMusicPresetFailedStatus();
-                OperationLogTextBox.Text = $"Could not stage safe-copy music preset: {ex.Message}";
+                OperationLogTextBox.Text = PatchBenchSafeCopyOutcomeText.DescribeCaughtFailure("stage the safe-copy music preset");
                 AppStatusService.SetStatus("Windowed & Mods: music preset staging failed");
                 UpdateControlState();
             }
@@ -1811,8 +1816,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             PatchBenchRestoreMusicReplacementButton.IsEnabled = false;
             PatchBenchMusicReplacementStatus.Text = PatchBenchSafeCopyOutcomeText.BuildMusicStagingProgressStatus(copiedTrackSwap);
             OperationLogTextBox.Text = copiedTrackSwap
-                ? "Copying one safe-copy OGG track over another safe-copy OGG track. The original install stays unchanged."
-                : "Staging one replacement OGG into the safe copy. The original install stays unchanged.";
+                ? "Copying one music file over another. The original install stays unchanged."
+                : "Staging one replacement music file into the safe copy. The original install stays unchanged.";
                 AppStatusService.SetStatus(copiedTrackSwap ? "Windowed & Mods: staging safe-copy music swap" : "Windowed & Mods: staging copied music bytes");
 
             try
@@ -1828,19 +1833,16 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 _lastMusicReplacementResult = result;
                 PatchBenchMusicReplacementStatus.Text =
                     PatchBenchSafeCopyOutcomeText.BuildMusicStagedStatus(result.TargetMusicFileName, copiedTrackSwap);
-                OperationLogTextBox.Text =
-                    (copiedTrackSwap ? "Safe-copy track swap staged.\n" : "Copied music bytes staged.\n") +
-                    $"Target: {result.TargetRelativePath}\n" +
-                    $"Replacement source: {Path.GetFileName(replacementPath)}\n" +
-                    $"Backup: {result.BackupRelativePath}\n" +
-                    "Manifest written without absolute source paths.\n" +
-                    "Original install remains unchanged; runtime audio playback is not proven.";
+                OperationLogTextBox.Text = PatchBenchSafeCopyOutcomeText.BuildMusicStagedOperationLog(
+                    result.TargetMusicFileName,
+                    replacementPath,
+                    copiedTrackSwap);
                 AppStatusService.SetStatus(copiedTrackSwap ? "Windowed & Mods: safe-copy music swap staged" : "Windowed & Mods: music replacement staged");
             }
             catch (Exception ex) when (IsUserFacingOperationException(ex))
             {
                 PatchBenchMusicReplacementStatus.Text = PatchBenchSafeCopyOutcomeText.BuildMusicStagingFailedStatus();
-                OperationLogTextBox.Text = $"Could not stage copied music bytes: {ex.Message}";
+                OperationLogTextBox.Text = PatchBenchSafeCopyOutcomeText.DescribeCaughtFailure("stage copied music bytes");
                 AppStatusService.SetStatus("Windowed & Mods: copied music byte staging failed");
             }
             finally
@@ -1898,14 +1900,16 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
                 PatchBenchMusicReplacementStatus.Text =
                     PatchBenchSafeCopyOutcomeText.BuildMusicRestoreResultStatus(result.TargetMusicFileName, result.Success);
-                OperationLogTextBox.Text = result.Message;
+                OperationLogTextBox.Text = PatchBenchSafeCopyOutcomeText.BuildMusicRestoreOperationLog(
+                    result.TargetMusicFileName,
+                    result.Success);
                 AppStatusService.SetStatus(result.Success ? "Windowed & Mods: music backup restored" : "Windowed & Mods: music restore failed");
 
             }
             catch (Exception ex) when (IsUserFacingOperationException(ex))
             {
                 PatchBenchMusicReplacementStatus.Text = PatchBenchSafeCopyOutcomeText.BuildMusicRestoreFailedStatus();
-                OperationLogTextBox.Text = $"Could not restore safe-copy music backup: {ex.Message}";
+                OperationLogTextBox.Text = PatchBenchSafeCopyOutcomeText.DescribeCaughtFailure("restore the safe-copy music backup");
                 AppStatusService.SetStatus("Windowed & Mods: music backup restore failed");
             }
             finally
@@ -2129,8 +2133,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
 
             return IsUsableWorkingCopy(path)
-                ? "BEA.exe in the app advanced patch workspace."
-                : "Create an app-owned BEA.exe-only copy before verification or patching.";
+                ? "This is a BEA.exe-only copy."
+                : "Create a BEA.exe-only copy before verification or patching.";
         }
 
         private string BuildPatchDisplayList(IEnumerable<string> patchKeys)
@@ -2293,7 +2297,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             PatchBenchCopiedProfileReceipt.Text = PatchBenchSafeCopyOutcomeText.BuildRestoredTrackedLaunchReceipt();
             PatchBenchCopiedProfileLaunchStatus.Text = PatchBenchSafeCopyOutcomeText.BuildRestoredTrackedLaunchStatus();
             PatchBenchCopiedProfileLaunchPlan.Text =
-                $"\"{registered.Process.ExecutablePath}\" {string.Join(" ", registered.Process.Arguments)}".TrimEnd();
+                GameProfilePreflightService.BuildRedactedCommandPreview(registered.Process.Arguments);
         }
 
         private static bool SetEquals(IReadOnlyCollection<string> left, IReadOnlyCollection<string> right)
@@ -2323,14 +2327,15 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         private static string FormatPatchLogForUi(string message, string exePath)
         {
-            if (string.IsNullOrWhiteSpace(message) || string.IsNullOrWhiteSpace(exePath))
+            string named = PatchBenchSafeCopyOutcomeText.DescribePatchLog(message);
+            if (string.IsNullOrWhiteSpace(named) || string.IsNullOrWhiteSpace(exePath))
             {
-                return message;
+                return named;
             }
 
             string backupPath = BinaryPatchEngine.BuildBackupPath(exePath);
-            string formatted = message.Replace(backupPath, "BEA.exe-only backup snapshot", StringComparison.OrdinalIgnoreCase);
-            return formatted.Replace(exePath, "app-owned BEA.exe-only copy", StringComparison.OrdinalIgnoreCase);
+            string formatted = named.Replace(backupPath, "BEA.exe-only backup snapshot", StringComparison.OrdinalIgnoreCase);
+            return formatted.Replace(exePath, "BEA.exe-only copy", StringComparison.OrdinalIgnoreCase);
         }
 
         private static bool IsUsableWorkingCopy(string path)
@@ -2606,7 +2611,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
             catch (Exception ex) when (IsUserFacingOperationException(ex))
             {
-                error = ex.Message;
+                error = PatchBenchSafeCopyOutcomeText.DescribeCaughtFailure("prepare that launch");
                 return false;
             }
         }
@@ -2741,7 +2746,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
             catch (Exception ex) when (IsUserFacingOperationException(ex))
             {
-                ShowSafeCopyManagerNote($"Could not launch {row.DisplayName}: {ex.Message}");
+                ShowSafeCopyManagerNote(SafeCopyManagerText.DescribeLaunchFailure(row.DisplayName));
                 AppStatusService.SetStatus("Windowed & Mods: could not launch that copy");
             }
         }
@@ -2773,7 +2778,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
             catch (Exception ex) when (IsUserFacingOperationException(ex))
             {
-                ShowSafeCopyManagerNote($"That copy could not be checked. Nothing was changed. {ex.Message}");
+                ShowSafeCopyManagerNote(SafeCopyManagerText.CheckFailure);
                 return;
             }
 
@@ -2837,9 +2842,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     SafeCopyRemovalResult removal = await Task.Run(() =>
                         SafeCopySaveRescueService.RescueThenDelete(row.ProfileRoot, profilesRoot, keepCareersIn));
 
-                    ShowSafeCopyManagerNote(removal.Success
-                        ? $"{removal.Message} Freed {row.SizeText}."
-                        : removal.Message);
+                    ShowSafeCopyManagerNote(
+                        SafeCopyManagerText.DescribeRemovalOutcome(removal, row.DisplayName, row.SizeText));
                     AppStatusService.SetStatus(removal.Success
                         ? "Windowed & Mods: kept the careers and deleted the copy"
                         : "Windowed & Mods: the copy was not deleted");
@@ -2857,7 +2861,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
             catch (Exception ex) when (IsUserFacingOperationException(ex))
             {
-                ShowSafeCopyManagerNote($"Could not delete {row.DisplayName}: {ex.Message}");
+                ShowSafeCopyManagerNote(SafeCopyManagerText.DescribeDeleteFailure(row.DisplayName));
                 AppStatusService.SetStatus("Windowed & Mods: the copy was not deleted");
             }
 
@@ -2989,7 +2993,9 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 BinaryPatchEngine.ApplyPatchesToFile(target, selected));
 
             OperationLogTextBox.Text = FormatPatchLogForUi(applyMessage, exePath);
-            ShowInstalledGameNote(applied, applied ? $"{authorizationMessage} Your game is patched." : applyMessage);
+            ShowInstalledGameNote(applied, applied
+                ? $"{authorizationMessage} Your game is patched."
+                : PatchBenchSafeCopyOutcomeText.DescribeInstalledWriteFailure(applyMessage));
             AppStatusService.SetStatus(applied
                 ? "Windowed & Mods: your installed game is patched"
                 : "Windowed & Mods: patching your game did not complete");
@@ -3028,7 +3034,9 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     InstalledGame: authorization)));
 
             OperationLogTextBox.Text = FormatPatchLogForUi(message, exePath);
-            ShowInstalledGameNote(success, success ? "Your game is back the way it was." : message);
+            ShowInstalledGameNote(success, success
+                ? "Your game is back the way it was."
+                : PatchBenchSafeCopyOutcomeText.DescribeInstalledWriteFailure(message));
             AppStatusService.SetStatus(success
                 ? "Windowed & Mods: your game is back the way it was"
                 : "Windowed & Mods: could not put your game back");

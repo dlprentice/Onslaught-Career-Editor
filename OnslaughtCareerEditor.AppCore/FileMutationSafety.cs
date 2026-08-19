@@ -38,10 +38,90 @@ namespace OnslaughtCareerEditor.AppCore
             ? StringComparer.OrdinalIgnoreCase
             : StringComparer.Ordinal;
 
+        internal const string FileCannotUseLink = "That file cannot use a shortcut or link.";
+        internal const string FolderCannotUseLink = "That folder cannot use a shortcut or link.";
+        internal const string FileCannotShareData = "That file cannot share its data with another file.";
+        internal const string FileOrFolderRequired = "A file or folder is required.";
+        internal const string FileCannotUseDeviceLocation = "That file cannot use a Windows device location.";
+        internal const string FileCannotUseDriveRelativeLocation = "That file cannot use a drive-relative location.";
+        internal const string FileCannotUseNetworkLocation = "That file cannot use a UNC or network location.";
+        internal const string FileCannotUseAlternateStream = "That file cannot use an alternate data stream.";
+        internal const string FileCannotUseReservedDevice = "That file cannot use a reserved device name.";
+        internal const string FileResolvesToNetwork = "That file resolves to a network location.";
+        internal const string FileDoesNotResolveToLocalDrive = "That file does not resolve to a local drive.";
+        internal const string OutputInsideGameFolder =
+            "Output files inside a Battle Engine Aquila game folder are blocked. Choose the output folder or another non-game folder.";
+        internal const string FolderChangedIdentity = "That folder changed identity while it was being secured.";
+        internal const string FolderChangedIdentityBeforeGuard = "That folder changed identity before its mutation guard was created.";
+        internal const string FileCouldNotBeInspected = "That file could not be inspected.";
+        internal const string FileCouldNotBeSecured = "That file could not be secured.";
+        internal const string FileCouldNotBeResolved = "That file could not be resolved.";
+        internal const string FolderCouldNotBeGuarded = "That folder could not be guarded against in-place change.";
+        internal const string FolderGuardCouldNotBeCreated = "That folder guard could not be created.";
+        internal const string FolderCouldNotBeSecuredForPublication = "That folder could not be secured for publication.";
+        internal const string FolderGuardEscaped = "That folder guard escaped its held folder.";
+        internal const string FileTooLargeToRead = "That file is too large to read safely.";
+        internal const string StagedOutputCouldNotBeCreated = "That staged output file could not be created.";
+        internal const string StagedPackageCouldNotBePublished = "That staged package folder could not be published.";
+        internal const string StagedOutputQuarantineCouldNotBeUpdated = "That staged output quarantine could not be updated.";
+        internal const string AppOwnedProfileFolderRequired = "Those changes need the app-owned profile folder.";
+        internal const string CopyMustStayInside = "That copy must stay inside the app-owned profile folder.";
+
+        private static readonly HashSet<string> s_knownRefusals =
+        [
+            FileCannotUseLink,
+            FolderCannotUseLink,
+            FileCannotShareData,
+            FileOrFolderRequired,
+            FileCannotUseDeviceLocation,
+            FileCannotUseDriveRelativeLocation,
+            FileCannotUseNetworkLocation,
+            FileCannotUseAlternateStream,
+            FileCannotUseReservedDevice,
+            FileResolvesToNetwork,
+            FileDoesNotResolveToLocalDrive,
+            OutputInsideGameFolder,
+            FolderChangedIdentity,
+            FolderChangedIdentityBeforeGuard,
+            FileCouldNotBeInspected,
+            FileCouldNotBeSecured,
+            FileCouldNotBeResolved,
+            FolderCouldNotBeGuarded,
+            FolderGuardCouldNotBeCreated,
+            FolderCouldNotBeSecuredForPublication,
+            FolderGuardEscaped,
+            FileTooLargeToRead,
+            StagedOutputCouldNotBeCreated,
+            StagedPackageCouldNotBePublished,
+            StagedOutputQuarantineCouldNotBeUpdated,
+            AppOwnedProfileFolderRequired,
+            CopyMustStayInside,
+        ];
+
+        internal static bool TryGetKnownRefusal(Exception error, out string? message)
+        {
+            string candidate = error.Message ?? string.Empty;
+            if (error is ArgumentException argument && !string.IsNullOrEmpty(argument.ParamName))
+            {
+                string suffix = $" (Parameter '{argument.ParamName}')";
+                if (candidate.EndsWith(suffix, StringComparison.Ordinal))
+                    candidate = candidate[..^suffix.Length];
+            }
+
+            if (s_knownRefusals.Contains(candidate))
+            {
+                message = candidate;
+                return true;
+            }
+
+            message = null;
+            return false;
+        }
+
         internal static string NormalizeLocalPath(string path, string label)
         {
             if (string.IsNullOrWhiteSpace(path))
-                throw new ArgumentException($"{label} is required.", nameof(path));
+                throw new ArgumentException(FileOrFolderRequired, nameof(path));
 
             string trimmed = path.Trim();
             if (OperatingSystem.IsWindows())
@@ -50,21 +130,21 @@ namespace OnslaughtCareerEditor.AppCore
                     trimmed.StartsWith(@"\\.\", StringComparison.Ordinal) ||
                     trimmed.StartsWith(@"\??\", StringComparison.Ordinal))
                 {
-                    throw new InvalidOperationException($"{label} cannot use a Windows device path.");
+                    throw new InvalidOperationException(FileCannotUseDeviceLocation);
                 }
 
                 if (Path.IsPathRooted(trimmed) && !Path.IsPathFullyQualified(trimmed))
-                    throw new InvalidOperationException($"{label} cannot use a drive-relative path.");
+                    throw new InvalidOperationException(FileCannotUseDriveRelativeLocation);
             }
 
             string fullPath = Path.GetFullPath(trimmed);
             if (OperatingSystem.IsWindows())
             {
                 if (fullPath.StartsWith(@"\\", StringComparison.Ordinal))
-                    throw new InvalidOperationException($"{label} cannot use a UNC or network path.");
+                    throw new InvalidOperationException(FileCannotUseNetworkLocation);
 
                 if (fullPath.IndexOf(':', startIndex: 2) >= 0)
-                    throw new InvalidOperationException($"{label} cannot use an alternate data stream.");
+                    throw new InvalidOperationException(FileCannotUseAlternateStream);
 
                 RejectReservedDosNames(fullPath, label);
             }
@@ -82,8 +162,8 @@ namespace OnslaughtCareerEditor.AppCore
         internal static bool AreLexicallySamePath(string left, string right)
         {
             return string.Equals(
-                NormalizeLocalPath(left, "Input path"),
-                NormalizeLocalPath(right, "Output path"),
+                NormalizeLocalPath(left, "Input file"),
+                NormalizeLocalPath(right, "Output file"),
                 PathComparison);
         }
 
@@ -123,7 +203,12 @@ namespace OnslaughtCareerEditor.AppCore
             }
 
             if ((attributes & FileAttributes.ReparsePoint) != 0)
-                throw new InvalidOperationException($"{label} cannot be a symbolic link, junction, or other reparse point.");
+            {
+                throw new InvalidOperationException(
+                    (attributes & FileAttributes.Directory) != 0
+                        ? FolderCannotUseLink
+                        : FileCannotUseLink);
+            }
         }
 
         internal static void RejectMultipleHardLinks(string path, string label)
@@ -133,7 +218,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             WindowsFileIdentity identity = GetWindowsIdentity(path);
             if (identity.NumberOfLinks > 1)
-                throw new InvalidOperationException($"{label} is hardlinked to another file; refusing to mutate a shared file identity.");
+                throw new InvalidOperationException(FileCannotShareData);
         }
 
         internal static void RejectOutputInGameTree(string outputPath)
@@ -144,8 +229,7 @@ namespace OnslaughtCareerEditor.AppCore
                 if (File.Exists(Path.Combine(current, "BEA.exe")) &&
                     Directory.Exists(Path.Combine(current, "data")))
                 {
-                    throw new InvalidOperationException(
-                        "Output paths inside a Battle Engine Aquila game folder are blocked. Choose the app-owned patched-output folder or another non-game folder.");
+                    throw new InvalidOperationException(OutputInsideGameFolder);
                 }
 
                 string? parent = Path.GetDirectoryName(current);
@@ -219,7 +303,7 @@ namespace OnslaughtCareerEditor.AppCore
                 int error = Marshal.GetLastWin32Error();
                 handle.Dispose();
                 throw new IOException(
-                    $"Could not create staged output. Win32 error: {error}",
+                    StagedOutputCouldNotBeCreated,
                     new Win32Exception(error));
             }
 
@@ -261,28 +345,26 @@ namespace OnslaughtCareerEditor.AppCore
             string profileRoot,
             string appOwnedProfilesRoot)
         {
-            string normalizedProfileRoot = NormalizeLocalPath(profileRoot, "Generated profile root");
-            string normalizedAppRoot = NormalizeLocalPath(appOwnedProfilesRoot, "App-owned profiles root");
-            string canonicalAppRoot = NormalizeLocalPath(AppConfig.GetGameProfilesDir(), "Canonical app-owned profiles root");
+            string normalizedProfileRoot = NormalizeLocalPath(profileRoot, "copy folder");
+            string normalizedAppRoot = NormalizeLocalPath(appOwnedProfilesRoot, "app-owned profile folder");
+            string canonicalAppRoot = NormalizeLocalPath(AppConfig.GetGameProfilesDir(), "app-owned profile folder");
             if (!string.Equals(normalizedAppRoot, canonicalAppRoot, PathComparison))
             {
-                throw new InvalidOperationException(
-                    "Safe-copy mutation requires the canonical app-owned GameProfiles root.");
+                throw new InvalidOperationException(AppOwnedProfileFolderRequired);
             }
 
             DirectoryLockSet? appLocks = null;
             DirectoryLockSet? profileLocks = null;
             try
             {
-                appLocks = LockDirectoryTree(normalizedAppRoot, "App-owned profiles root");
+                appLocks = LockDirectoryTree(normalizedAppRoot, "app-owned profile folder");
                 RejectOutputInGameTree(Path.Combine(appLocks.PhysicalPath, ".onslaught-profile-root-probe"));
 
-                profileLocks = LockDirectoryTree(normalizedProfileRoot, "Generated profile root");
+                profileLocks = LockDirectoryTree(normalizedProfileRoot, "copy folder");
                 if (!IsSameOrUnderRoot(profileLocks.PhysicalPath, appLocks.PhysicalPath) ||
                     string.Equals(profileLocks.PhysicalPath, appLocks.PhysicalPath, PathComparison))
                 {
-                    throw new InvalidOperationException(
-                        "Generated profile root must remain below the canonical app-owned GameProfiles root.");
+                    throw new InvalidOperationException(CopyMustStayInside);
                 }
 
                 AppOwnedProfileMutationAuthorization authorization = new(
@@ -306,7 +388,7 @@ namespace OnslaughtCareerEditor.AppCore
                 return default;
 
             if (!GetFileInformationByHandle(handle, out ByHandleFileInformation info))
-                throw new IOException($"Could not inspect {label}. Win32 error: {Marshal.GetLastWin32Error()}");
+                throw new IOException(FileCouldNotBeInspected, new Win32Exception(Marshal.GetLastWin32Error()));
 
             return new WindowsFileIdentity(
                 info.VolumeSerialNumber,
@@ -323,7 +405,7 @@ namespace OnslaughtCareerEditor.AppCore
         {
             string logicalPath = NormalizeLocalPath(directoryPath, label);
             if (!Directory.Exists(logicalPath))
-                throw new DirectoryNotFoundException($"{label} does not exist.");
+                throw new DirectoryNotFoundException("That folder could not be found.");
 
             if (!OperatingSystem.IsWindows())
             {
@@ -350,8 +432,7 @@ namespace OnslaughtCareerEditor.AppCore
                     if (identity.IsReparsePoint)
                     {
                         handle.Dispose();
-                        throw new InvalidOperationException(
-                            $"{label} cannot contain a symbolic link, junction, or other reparse point.");
+                        throw new InvalidOperationException(FolderCannotUseLink);
                     }
 
                     string resolved = GetFinalLocalPath(handle, label);
@@ -362,7 +443,7 @@ namespace OnslaughtCareerEditor.AppCore
                             PathComparison))
                     {
                         handle.Dispose();
-                        throw new InvalidOperationException($"{label} changed identity while it was being secured.");
+                        throw new InvalidOperationException(FolderChangedIdentity);
                     }
 
                     handles.Add(handle);
@@ -371,7 +452,7 @@ namespace OnslaughtCareerEditor.AppCore
                 }
 
                 if (logicalTargetHandle is null)
-                    throw new DirectoryNotFoundException($"{label} does not exist.");
+                    throw new DirectoryNotFoundException("That folder could not be found.");
 
                 string physicalPath = GetFinalLocalPath(logicalTargetHandle, label);
                 WindowsFileIdentity initialIdentity = GetWindowsIdentity(logicalTargetHandle, label);
@@ -382,15 +463,14 @@ namespace OnslaughtCareerEditor.AppCore
                     if (identity.IsReparsePoint)
                     {
                         handle.Dispose();
-                        throw new InvalidOperationException(
-                            $"{label} cannot contain a symbolic link, junction, or other reparse point.");
+                        throw new InvalidOperationException(FolderCannotUseLink);
                     }
 
                     string resolved = GetFinalLocalPath(handle, label);
                     if (!string.Equals(resolved, ancestor, PathComparison))
                     {
                         handle.Dispose();
-                        throw new InvalidOperationException($"{label} changed identity while it was being secured.");
+                        throw new InvalidOperationException(FolderChangedIdentity);
                     }
 
                     handles.Add(handle);
@@ -400,7 +480,7 @@ namespace OnslaughtCareerEditor.AppCore
                 if (!initialIdentity.IsSameFile(finalIdentity) ||
                     !string.Equals(GetFinalLocalPath(logicalTargetHandle, label), physicalPath, PathComparison))
                 {
-                    throw new InvalidOperationException($"{label} changed identity while it was being secured.");
+                    throw new InvalidOperationException(FolderChangedIdentity);
                 }
 
                 (SafeFileHandle Handle, string Path)? mutationSentinel = guardTargetMutation
@@ -433,7 +513,7 @@ namespace OnslaughtCareerEditor.AppCore
             string normalizedOutputDirectory = NormalizeLocalPath(outputDirectory, "Output folder");
             string expectedDirectory = NormalizeLocalPath(AppConfig.GetPatchedOutputDir(), "App-owned patched-output folder");
             if (!string.Equals(normalizedOutputDirectory, expectedDirectory, PathComparison))
-                throw new DirectoryNotFoundException("The selected output folder does not exist.");
+                throw new DirectoryNotFoundException("That folder could not be found. Choose a folder again.");
 
             var missingNames = new Stack<string>();
             string? existingAncestor = normalizedOutputDirectory;
@@ -472,7 +552,7 @@ namespace OnslaughtCareerEditor.AppCore
                         guardTargetMutation: true);
                     heldLocks.Add(nextLocks);
                     if (!string.Equals(nextLocks.PhysicalPath, Path.GetFullPath(nextPhysicalPath), PathComparison))
-                        throw new InvalidOperationException("App-owned output folder resolved outside its expected local path.");
+                        throw new InvalidOperationException("App-owned output folder resolved outside its expected local folder.");
 
                     currentPhysicalPath = nextLocks.PhysicalPath;
                     RejectOutputInGameTree(Path.Combine(currentPhysicalPath, ".onslaught-output-root-probe"));
@@ -501,7 +581,7 @@ namespace OnslaughtCareerEditor.AppCore
             {
                 int error = Marshal.GetLastWin32Error();
                 handle.Dispose();
-                throw new IOException($"Could not secure {label}. Win32 error: {error}", new Win32Exception(error));
+                throw new IOException(FileCouldNotBeSecured, new Win32Exception(error));
             }
 
             return handle;
@@ -524,7 +604,7 @@ namespace OnslaughtCareerEditor.AppCore
             {
                 int error = Marshal.GetLastWin32Error();
                 throw new IOException(
-                    $"Could not guard {label} against in-place directory mutation. Win32 error: {error}",
+                    FolderCouldNotBeGuarded,
                     new Win32Exception(error));
             }
 
@@ -538,7 +618,7 @@ namespace OnslaughtCareerEditor.AppCore
                     PathComparison))
             {
                 throw new InvalidOperationException(
-                    $"{label} changed identity before its mutation guard was created.");
+                    FolderChangedIdentityBeforeGuard);
             }
 
             string sentinelPath = Path.Combine(
@@ -557,7 +637,7 @@ namespace OnslaughtCareerEditor.AppCore
                 int error = Marshal.GetLastWin32Error();
                 sentinel.Dispose();
                 throw new IOException(
-                    $"Could not create {label} mutation guard. Win32 error: {error}",
+                    FolderGuardCouldNotBeCreated,
                     new Win32Exception(error));
             }
 
@@ -574,7 +654,7 @@ namespace OnslaughtCareerEditor.AppCore
                         PathComparison))
                 {
                     throw new InvalidOperationException(
-                        $"{label} mutation guard escaped its held directory.");
+                        FolderGuardEscaped);
                 }
                 return (sentinel, sentinelPath);
             }
@@ -616,7 +696,7 @@ namespace OnslaughtCareerEditor.AppCore
             {
                 int error = Marshal.GetLastWin32Error();
                 handle.Dispose();
-                throw new IOException($"Could not secure {label}. Win32 error: {error}", new Win32Exception(error));
+                throw new IOException(FileCouldNotBeSecured, new Win32Exception(error));
             }
 
             return handle;
@@ -631,21 +711,21 @@ namespace OnslaughtCareerEditor.AppCore
             Action<string>? afterSourcePrepared = null,
             Action<string, WindowsFileIdentity>? verifyPublishedDirectory = null)
         {
-            string normalizedSource = NormalizeLocalPath(sourceDirectory, "Staged package directory");
-            string normalizedDestination = NormalizeLocalPath(destinationDirectory, "Published package directory");
+            string normalizedSource = NormalizeLocalPath(sourceDirectory, "Staged package folder");
+            string normalizedDestination = NormalizeLocalPath(destinationDirectory, "Published package folder");
             if (!Directory.Exists(normalizedSource))
-                throw new DirectoryNotFoundException("The staged package directory no longer exists.");
+                throw new DirectoryNotFoundException("The staged package folder no longer exists.");
             if (Directory.Exists(normalizedDestination) || File.Exists(normalizedDestination))
-                throw new IOException("The published package path is no longer vacant.");
+                throw new IOException("The published package folder is no longer vacant.");
 
             string? destinationParent = Path.GetDirectoryName(normalizedDestination);
             string destinationName = Path.GetFileName(normalizedDestination);
             if (string.IsNullOrWhiteSpace(destinationParent) || string.IsNullOrWhiteSpace(destinationName))
-                throw new InvalidOperationException("The published package path is invalid.");
+                throw new InvalidOperationException("The published package folder is invalid.");
 
             if (!OperatingSystem.IsWindows())
             {
-                RejectReparsePoint(normalizedSource, "Staged package directory");
+                RejectReparsePoint(normalizedSource, "Staged package folder");
                 RejectOutputInGameTree(Path.Combine(normalizedDestination, ".onslaught-package-root-probe"));
                 Directory.Move(normalizedSource, normalizedDestination);
                 return default;
@@ -657,58 +737,58 @@ namespace OnslaughtCareerEditor.AppCore
                 guardTargetMutation: true);
             string physicalDestination = NormalizeLocalPath(
                 Path.Combine(destinationParentLocks.PhysicalPath, destinationName),
-                "Published package directory");
+                "Published package folder");
             RejectOutputInGameTree(Path.Combine(physicalDestination, ".onslaught-package-root-probe"));
 
             if (!string.IsNullOrWhiteSpace(trustedSourceRoot))
             {
                 using DirectoryLockSet trustedSourceLocks = LockDirectoryTree(
                     trustedSourceRoot,
-                    "Trusted asset export root");
+                    "generated export folder");
                 if (IsSameOrUnderRoot(physicalDestination, trustedSourceLocks.PhysicalPath) ||
                     IsSameOrUnderRoot(trustedSourceLocks.PhysicalPath, physicalDestination))
                 {
                     throw new InvalidOperationException(
-                        "Published package directory cannot overlap the trusted generated asset export root.");
+                        "The published package folder cannot overlap the generated export folder.");
                 }
             }
 
             using SafeFileHandle sourceHandle = OpenDirectoryRenameHandle(
                 normalizedSource,
-                "Staged package directory");
+                "Staged package folder");
             WindowsFileIdentity sourceIdentity = GetWindowsIdentity(
                 sourceHandle,
-                "Staged package directory");
+                "Staged package folder");
             if (sourceIdentity.IsReparsePoint ||
                 !sourceIdentity.IsSameFile(expectedSourceIdentity) ||
                 !string.Equals(
-                    GetFinalLocalPath(sourceHandle, "Staged package directory"),
+                    GetFinalLocalPath(sourceHandle, "Staged package folder"),
                     normalizedSource,
                     PathComparison))
             {
                 throw new InvalidOperationException(
-                    "The staged package directory changed identity before publication.");
+                    "The staged package folder changed identity before publication.");
             }
 
             prepareSourceDirectory?.Invoke(normalizedSource, sourceIdentity);
             afterSourcePrepared?.Invoke(normalizedSource);
 
             if (Directory.Exists(physicalDestination) || File.Exists(physicalDestination))
-                throw new IOException("The published package path appeared during publication.");
+                throw new IOException("The published package folder appeared during publication.");
 
             RenameDirectoryHandle(sourceHandle, physicalDestination);
             WindowsFileIdentity publishedIdentity = GetWindowsIdentity(
                 sourceHandle,
-                "Published package directory");
-            string publishedPath = GetFinalLocalPath(sourceHandle, "Published package directory");
+                "Published package folder");
+            string publishedPath = GetFinalLocalPath(sourceHandle, "Published package folder");
             if (!publishedIdentity.IsSameFile(sourceIdentity))
             {
-                throw new IOException("The published package directory did not retain the staged directory identity.");
+                throw new IOException("The published package folder did not retain the staged folder identity.");
             }
             if (!string.Equals(publishedPath, physicalDestination, PathComparison))
             {
                 throw new IOException(
-                    $"The published package directory resolved to '{publishedPath}' instead of '{physicalDestination}'.");
+                    "The published package folder did not stay in the expected place.");
             }
 
             try
@@ -729,19 +809,19 @@ namespace OnslaughtCareerEditor.AppCore
             var buffer = new StringBuilder(512);
             uint length = GetFinalPathNameByHandleW(handle, buffer, (uint)buffer.Capacity, 0);
             if (length == 0)
-                throw new IOException($"Could not resolve {label}. Win32 error: {Marshal.GetLastWin32Error()}");
+                throw new IOException(FileCouldNotBeResolved, new Win32Exception(Marshal.GetLastWin32Error()));
 
             if (length >= buffer.Capacity)
             {
                 buffer.EnsureCapacity(checked((int)length + 1));
                 length = GetFinalPathNameByHandleW(handle, buffer, (uint)buffer.Capacity, 0);
                 if (length == 0 || length >= buffer.Capacity)
-                    throw new IOException($"Could not resolve {label}. Win32 error: {Marshal.GetLastWin32Error()}");
+                    throw new IOException(FileCouldNotBeResolved, new Win32Exception(Marshal.GetLastWin32Error()));
             }
 
             string resolved = buffer.ToString();
             if (resolved.StartsWith(@"\\?\UNC\", StringComparison.OrdinalIgnoreCase))
-                throw new InvalidOperationException($"{label} resolves to a network path.");
+                throw new InvalidOperationException(FileResolvesToNetwork);
             if (resolved.StartsWith(@"\\?\", StringComparison.Ordinal))
                 resolved = resolved[4..];
             if (resolved.StartsWith(@"\??\", StringComparison.Ordinal))
@@ -751,7 +831,7 @@ namespace OnslaughtCareerEditor.AppCore
                 resolved[1] != ':' ||
                 (resolved[2] != Path.DirectorySeparatorChar && resolved[2] != Path.AltDirectorySeparatorChar))
             {
-                throw new InvalidOperationException($"{label} does not resolve to a local DOS drive path.");
+                throw new InvalidOperationException(FileDoesNotResolveToLocalDrive);
             }
 
             return TrimDirectoryPath(NormalizeLocalPath(resolved, label));
@@ -794,7 +874,7 @@ namespace OnslaughtCareerEditor.AppCore
             {
                 int error = Marshal.GetLastWin32Error();
                 handle.Dispose();
-                throw new IOException($"Could not secure {label} for publication. Win32 error: {error}", new Win32Exception(error));
+                throw new IOException(FolderCouldNotBeSecuredForPublication, new Win32Exception(error));
             }
 
             return handle;
@@ -823,7 +903,7 @@ namespace OnslaughtCareerEditor.AppCore
                 {
                     int error = Marshal.GetLastWin32Error();
                     throw new IOException(
-                        $"Could not publish the staged package directory. Win32 error: {error}",
+                        StagedPackageCouldNotBePublished,
                         new Win32Exception(error));
                 }
             }
@@ -856,7 +936,7 @@ namespace OnslaughtCareerEditor.AppCore
                 {
                     int error = Marshal.GetLastWin32Error();
                     throw new IOException(
-                        $"Could not update staged output quarantine state. Win32 error: {error}",
+                        StagedOutputQuarantineCouldNotBeUpdated,
                         new Win32Exception(error));
                 }
             }
@@ -893,7 +973,7 @@ namespace OnslaughtCareerEditor.AppCore
                 string trimmed = component.TrimEnd(' ', '.');
                 string stem = trimmed.Split('.', 2)[0];
                 if (s_reservedDosNames.Contains(stem))
-                    throw new InvalidOperationException($"{label} cannot use the reserved DOS device name '{stem}'.");
+                    throw new InvalidOperationException(FileCannotUseReservedDevice);
             }
         }
 
@@ -1060,14 +1140,14 @@ namespace OnslaughtCareerEditor.AppCore
             IReadOnlyList<string?> protectedInputPaths,
             bool requireProtectedInput)
         {
-            OutputPath = FileMutationSafety.NormalizeLocalPath(outputPath, "Output path");
+            OutputPath = FileMutationSafety.NormalizeLocalPath(outputPath, "Output file");
             _authorization = authorization;
 
             try
             {
                 string? outputDirectory = Path.GetDirectoryName(OutputPath);
                 if (string.IsNullOrWhiteSpace(outputDirectory))
-                    throw new DirectoryNotFoundException("The selected output folder does not exist.");
+                    throw new DirectoryNotFoundException("That folder could not be found. Choose a folder again.");
 
                 string directoryToLock = Directory.Exists(outputDirectory)
                     ? outputDirectory
@@ -1084,11 +1164,11 @@ namespace OnslaughtCareerEditor.AppCore
                     if (string.IsNullOrWhiteSpace(candidate))
                         continue;
 
-                    string path = FileMutationSafety.NormalizeLocalPath(candidate, "Protected input path");
+                    string path = FileMutationSafety.NormalizeLocalPath(candidate, "Protected input file");
                     if (_inputs.ContainsKey(path))
                         continue;
                     if (!File.Exists(path))
-                        throw new FileNotFoundException("Protected input file was not found.", path);
+                        throw new FileNotFoundException("That protected input file could not be found.");
 
                     FileMutationSafety.RejectReparsePoint(path, "Protected input file");
                     FileStream stream = new(
@@ -1120,7 +1200,7 @@ namespace OnslaughtCareerEditor.AppCore
 
         internal byte[] ReadAllBytes(string path)
         {
-            string normalized = FileMutationSafety.NormalizeLocalPath(path, "Protected input path");
+            string normalized = FileMutationSafety.NormalizeLocalPath(path, "Protected input file");
             if (!_inputs.TryGetValue(normalized, out ProtectedInput? input))
                 throw new InvalidOperationException("The requested file is not held by this guarded transaction.");
 
@@ -1141,7 +1221,7 @@ namespace OnslaughtCareerEditor.AppCore
             string path,
             Action<string>? beforeCommittedOpen = null)
         {
-            string normalized = FileMutationSafety.NormalizeLocalPath(path, "Protected input path");
+            string normalized = FileMutationSafety.NormalizeLocalPath(path, "Protected input file");
             if (!_inputs.TryGetValue(normalized, out ProtectedInput? input))
                 throw new InvalidOperationException("The requested file is not held by this guarded transaction.");
 
@@ -1230,7 +1310,7 @@ namespace OnslaughtCareerEditor.AppCore
                 {
                     WindowsFileIdentity committedIdentity = FileMutationSafety.GetWindowsIdentity(committedHandle, "committed output identity");
                     if (OperatingSystem.IsWindows() && committedIdentity.IsReparsePoint)
-                        throw new IOException("Committed output is a symbolic link, junction, or other reparse point.");
+                        throw new IOException(FileMutationSafety.FileCannotUseLink);
                     if (OperatingSystem.IsWindows() && !tempIdentity.IsSameFile(committedIdentity))
                         throw new IOException("Committed output identity does not match the staged file.");
                     if (OperatingSystem.IsWindows() && committedIdentity.NumberOfLinks != 1)
@@ -1300,7 +1380,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             FileMutationSafety.RejectReparsePoint(_physicalOutputPath, "Output file");
             if (Directory.Exists(_physicalOutputPath))
-                throw new InvalidOperationException("The selected output path is a directory.");
+                throw new InvalidOperationException("The selected output file is a folder.");
             if (!File.Exists(_physicalOutputPath))
                 return;
 
@@ -1311,7 +1391,7 @@ namespace OnslaughtCareerEditor.AppCore
                 FileShare.Read);
             WindowsFileIdentity outputIdentity = FileMutationSafety.GetWindowsIdentity(outputHandle, "output identity");
             if (OperatingSystem.IsWindows() && outputIdentity.NumberOfLinks > 1)
-                throw new InvalidOperationException("Output file is hardlinked to another file; refusing to replace a shared file identity.");
+                throw new InvalidOperationException(FileMutationSafety.FileCannotShareData);
 
             if (OperatingSystem.IsWindows() && _inputs.Values.Any(input => input.Identity.IsSameFile(outputIdentity)))
                 throw new InvalidOperationException("Refusing to patch in place. Output file must be different from every protected input file; aliased writes are also blocked.");
@@ -1332,13 +1412,13 @@ namespace OnslaughtCareerEditor.AppCore
             }
 
             if (!FileMutationSafety.IsSameOrUnderRoot(_physicalOutputPath, _authorization.PhysicalProfileRoot))
-                throw new InvalidOperationException("Output path must remain inside the verified app-owned profile root.");
+                throw new InvalidOperationException("The output file must remain inside the verified app-owned profile folder.");
         }
 
         private static byte[] ReadAllBytes(FileStream stream, string label)
         {
             if (stream.Length > int.MaxValue)
-                throw new IOException($"{label} is too large to read safely.");
+                throw new IOException(FileMutationSafety.FileTooLargeToRead);
 
             byte[] bytes = new byte[checked((int)stream.Length)];
             stream.Position = 0;

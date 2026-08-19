@@ -122,7 +122,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 InvalidOperationException ex = Assert.Throws<InvalidOperationException>(() =>
                     GameProfilePreflightService.BuildLaunchPlan(prepared.TargetGameRoot, Array.Empty<string>()));
 
-                Assert.Contains("control-options manifest hash", ex.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(GameProfilePreflightService.ControlOptionsFileMismatch, ex.Message);
             }
             finally
             {
@@ -412,7 +412,8 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                             AppOwnedProfilesRoot: outputRoot,
                             MouseSensitivityOverride: GameProfileControlOptionsService.SharperMouseLookSensitivity)));
 
-                Assert.Contains("hardlinked", ex.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(GameProfileControlOptionsService.FileCannotShareData, ex.Message);
+                Assert.DoesNotContain("hardlinked", ex.Message, StringComparison.OrdinalIgnoreCase);
                 Assert.Empty(Directory.GetFiles(prepared.TargetGameRoot, "defaultoptions.bea.*.bak"));
             }
             finally
@@ -462,7 +463,8 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                             AppOwnedProfilesRoot: outputRoot,
                             MouseSensitivityOverride: GameProfileControlOptionsService.SharperMouseLookSensitivity)));
 
-                Assert.Contains("hardlinked", ex.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(GameProfileControlOptionsService.FileCannotShareData, ex.Message);
+                Assert.DoesNotContain("hardlinked", ex.Message, StringComparison.OrdinalIgnoreCase);
                 Assert.Equal(optionsBefore, File.ReadAllBytes(optionsPath));
                 Assert.Empty(Directory.GetFiles(prepared.TargetGameRoot, "defaultoptions.bea.*.bak"));
             }
@@ -554,7 +556,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                             AppOwnedProfilesRoot: nonCanonicalRoot,
                             MouseSensitivityOverride: GameProfileControlOptionsService.SharperMouseLookSensitivity)));
 
-                Assert.Contains("canonical app-owned GameProfiles root", error.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(FileMutationSafety.AppOwnedProfileFolderRequired, error.Message);
                 Assert.Equal(before, File.ReadAllBytes(optionsPath));
                 Assert.Empty(Directory.GetFiles(prepared.TargetGameRoot, "defaultoptions.bea.*.bak"));
             }
@@ -602,6 +604,25 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                     Directory.Delete(tempRoot, recursive: true);
                 }
             }
+        }
+
+        [Fact]
+        public void ApplyToSafeCopy_AMissingFolderDoesNotDumpThePath()
+        {
+            string missing = Path.Combine(Path.GetTempPath(), $"onslaught-missing-copy-{Guid.NewGuid():N}");
+            string missingProfile = Path.Combine(missing, "copy");
+
+            DirectoryNotFoundException error = Assert.Throws<DirectoryNotFoundException>(() =>
+                GameProfileControlOptionsService.ApplyToSafeCopy(
+                    new GameProfileControlOptionsRequest(
+                        ProfileRoot: missingProfile,
+                        AppOwnedProfilesRoot: missing,
+                        MouseSensitivityOverride: GameProfileControlOptionsService.SharperMouseLookSensitivity)));
+
+            Assert.Equal(GameProfileControlOptionsService.FolderGone, error.Message);
+            Assert.DoesNotContain(missing, error.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain(":\\", error.Message);
+            Assert.DoesNotContain("Directory does not exist", error.Message, StringComparison.OrdinalIgnoreCase);
         }
 
         private static void PrepareSourceGameRoot(string sourceRoot)

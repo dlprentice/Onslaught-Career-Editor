@@ -58,6 +58,10 @@ values under `HKLM`) before falling back to the previously hardcoded
 `C:`/`D:`/`E:` candidate list, then scans `libraryfolders.vdf` as before. The
 test-only `ONSLAUGHT_GAME_DIR_CANDIDATES` and `ONSLAUGHT_STEAM_ROOT_CANDIDATES`
 overrides still short-circuit every built-in candidate, including the registry.
+A folder with `BEA.exe` and `data` is still a full install for layout, but
+Settings and Home now also say whether that executable is the known Steam
+retail file, something else, or unreadable right now. They will not call a
+changed file an original.
 
 ### Lore
 
@@ -82,8 +86,16 @@ files keep the block.
 ### Save Lab and Game Options
 
 - Analyze existing `.bes` career saves and `.bea` options files.
+- Name whether an opened career save or `defaultoptions.bea` sits in the
+  installed game, a playable safe copy, or a folder the player chose, without
+  dumping the full path. Cheats uses the same classifier for the source career
+  it is about to copy, and will not offer to write into a folder inside the
+  installed game. Bringing a career out of a copy uses the same refusal and
+  names the destination folder without the full path. Save Lab and Game Options
+  also refuse an output file inside the installed game before the write.
 - Write a separate save copy with supported mission, link, Goodie, rank, and
-  kill-count changes.
+  kill-count changes. Comparison, analysis, and Game Options failures name what
+  failed and that nothing was changed, without dumping the exception.
 - Write one selected displayable Goodie state directly to one `.bes` file in a
   verified app-owned Safe Game Copy; in-place and installed-tree output remain
   blocked.
@@ -121,6 +133,8 @@ as immutable staging evidence; guarded launch validation remains strict.
 - Plan, apply, restore, and verify expected-byte catalog patches on that copy.
 - Launch and stop only the copied-game process started by the app.
 - Keep BEA.exe-only technical copies separate from playable profiles.
+- A failed Last operation or safe-copy list action names what failed and that
+  nothing was changed. It does not dump the raw exception.
 
 Enhanced Copy applies the complete 28-region widescreen correction, selects
 the retail 16:9 option, uses the supported `-res 1600 900` windowed baseline,
@@ -202,8 +216,12 @@ online play. Host/Join, matchmaking, and new networking are unavailable.
 ### Media, assets, and Lore
 
 - Media reads supported audio/video from a selected local game path. A load
-  failure now states its cause where the user can see it; the reason previously
-  went only into a permanently collapsed panel.
+  or playback failure states what happened where the user can see it, without
+  dumping the raw exception. The reason previously went only into a permanently
+  collapsed panel, then later leaked as `Details:` plus the exception text. A
+  search that matches nothing says to try another word or clear the search; it
+  does not call the empty tree a missed match. The source folder and the
+  selected file are named by their last segment, not the full path.
 - Cutscenes are listed by number (`Cutscene 01`..`Cutscene 33`). The game ships
   no titles for them.
 
@@ -219,11 +237,14 @@ online play. Host/Join, matchmaking, and new networking are unavailable.
 > is retained only because it is wired into receipt-bound evidence acceptance;
 > it is recorded as unconfirmed.
 - Asset Library opens an existing generated catalog and previews supported
-  PNG/FBX metadata, linked textures, and bounded wireframes. It has no asset
+  PNG/FBX metadata, linked textures, and bounded wireframes. A search that
+  matches nothing says to try another word or clear the search. It has no asset
   importer, repacker, animation/bone pipeline, or material-package workflow.
 - Lore searches and renders the canonical articles under [`lore/`](lore/_index.md)
-  with tree navigation and Back/Forward/Home history. Portable builds generate
-  a reader pack from that single source rather than tracking a mirror.
+  with tree navigation and Back/Forward/Home history. A search that matches
+  nothing says to try another word or clear the search; it does not call the
+  empty tree a filtered result. Portable builds generate a reader pack from
+  that single source rather than tracking a mirror.
 
 `tools/aya_archive_inventory.py` is a working read-only AYA structure scanner.
 The legacy AYA export bridge still depends on untracked local upstream binaries,

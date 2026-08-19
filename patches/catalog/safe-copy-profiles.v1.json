@@ -22,7 +22,7 @@
           "display_name": "16:9 gameplay and modern mouse aiming",
           "category": "Copied executable and default options",
           "proof_status": "Verified in copied Level 100 gameplay at 1600x900 on the supported Steam specimen.",
-          "claim_boundary": "Applies the complete 28-region aspect/FOV correction, launches the supported 1600x900 windowed baseline, selects the retail 16:9 option, and uses minimum mouse sensitivity in the app-owned copy.",
+          "claim_boundary": "Applies the complete 28-region aspect/FOV correction, launches the supported 1600x900 windowed baseline, selects the retail 16:9 option, and uses minimum mouse sensitivity in the safe copy.",
           "patch_keys": [
             "resolution_gate",
             "force_windowed"
@@ -73,7 +73,7 @@
           "display_name": "16:9 gameplay and modern mouse aiming",
           "category": "Copied executable and default options",
           "proof_status": "Verified in copied Level 100 gameplay at 1600x900 on the supported Steam specimen.",
-          "claim_boundary": "Applies the complete 28-region aspect/FOV correction, launches the supported 1600x900 windowed baseline, selects the retail 16:9 option, and uses minimum mouse sensitivity in the app-owned copy.",
+          "claim_boundary": "Applies the complete 28-region aspect/FOV correction, launches the supported 1600x900 windowed baseline, selects the retail 16:9 option, and uses minimum mouse sensitivity in the safe copy.",
           "patch_keys": [
             "resolution_gate",
             "force_windowed"
@@ -151,7 +151,7 @@
           "display_name": "16:9 gameplay and modern mouse aiming",
           "category": "Copied executable and default options",
           "proof_status": "Verified in copied Level 100 gameplay at 1600x900 on the supported Steam specimen.",
-          "claim_boundary": "Applies the complete 28-region aspect/FOV correction, launches the supported 1600x900 windowed baseline, selects the retail 16:9 option, and uses minimum mouse sensitivity in the app-owned copy.",
+          "claim_boundary": "Applies the complete 28-region aspect/FOV correction, launches the supported 1600x900 windowed baseline, selects the retail 16:9 option, and uses minimum mouse sensitivity in the safe copy.",
           "patch_keys": [
             "resolution_gate",
             "force_windowed"
@@ -319,7 +319,7 @@
           "display_name": "16:9 gameplay and modern mouse aiming",
           "category": "Copied executable and default options",
           "proof_status": "Verified in copied Level 100 gameplay at 1600x900 on the supported Steam specimen.",
-          "claim_boundary": "Applies the complete 28-region aspect/FOV correction, launches the supported 1600x900 windowed baseline, selects the retail 16:9 option, and uses minimum mouse sensitivity in the app-owned copy.",
+          "claim_boundary": "Applies the complete 28-region aspect/FOV correction, launches the supported 1600x900 windowed baseline, selects the retail 16:9 option, and uses minimum mouse sensitivity in the safe copy.",
           "patch_keys": [
             "resolution_gate",
             "force_windowed"

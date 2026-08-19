@@ -44,6 +44,15 @@ namespace OnslaughtCareerEditor.AppCore
 
     public static class SaveAnalyzerService
     {
+        public const string AnalysisFailed =
+            "That file could not be analyzed. Nothing was changed.";
+
+        public const string ComparisonFailed =
+            "Those files could not be compared. Nothing was changed.";
+
+        public const string NoDetectedFilesNextStep =
+            "Set the game folder in Settings, or browse for a file.";
+
         private static readonly string[] KillCategories = { "Aircraft", "Vehicles", "Emplacements", "Infantry", "Mechs" };
 
         public static IReadOnlyList<SaveAnalyzerFileItem> GetDetectedFiles(string? gameDir = null)
@@ -72,6 +81,17 @@ namespace OnslaughtCareerEditor.AppCore
             return BuildCompareDocument(leftPath, rightPath, result);
         }
 
+        public static string BuildInfoTitle(SaveAnalyzerDocument document)
+        {
+            if (string.Equals(document.StatusText, ComparisonFailed, StringComparison.Ordinal))
+                return "Comparison failed";
+
+            if (string.Equals(document.StatusText, AnalysisFailed, StringComparison.Ordinal))
+                return "Analysis failed";
+
+            return document.IsComparisonMode ? "Comparison complete" : "Analysis complete";
+        }
+
         public static SaveAnalyzerDocument BuildAnalysisDocument(SaveAnalysis analysis, bool verbose, bool dumpMystery)
         {
             string fileName = Path.GetFileName(analysis.FilePath) ?? "Unknown file";
@@ -97,7 +117,7 @@ namespace OnslaughtCareerEditor.AppCore
                 {
                     Label = "Missions",
                     Value = isValid ? $"{analysis.CompletedNodes}/{usedNodes}" : "Invalid",
-                    Detail = isValid ? "completed / used nodes" : analysis.ErrorMessage
+                    Detail = isValid ? "completed / used nodes" : null
                 },
                 new SaveAnalyzerMetric
                 {
@@ -129,7 +149,7 @@ namespace OnslaughtCareerEditor.AppCore
                     : "Single-file analysis: .bes career save view.",
                 StatusText = isValid
                     ? $"Save Analyzer: {analysis.CompletedNodes} missions, {analysis.CompletedLinks} links"
-                    : $"Save Analyzer: Invalid file - {analysis.ErrorMessage}",
+                    : AnalysisFailed,
                 ReportText = BesFilePatcher.FormatAnalysisReport(analysis, verbose, dumpMystery),
                 Metrics = metrics,
                 SummaryNodes = BuildAnalysisSummaryNodes(analysis),
@@ -176,7 +196,9 @@ namespace OnslaughtCareerEditor.AppCore
                 {
                     Label = "Top Region",
                     Value = topRegion ?? "None",
-                    Detail = topRegion is null ? "files identical" : "highest differing byte count"
+                    Detail = !string.IsNullOrWhiteSpace(result.ErrorMessage)
+                        ? "could not be compared"
+                        : topRegion is null ? "files identical" : "highest differing byte count"
                 }
             };
 
@@ -186,7 +208,9 @@ namespace OnslaughtCareerEditor.AppCore
                 Title = "File Comparison",
                 SummaryTitle = "Comparison Summary",
                 ModeText = "Comparison mode: summary counts and differing regions for the selected pair.",
-                StatusText = result.DifferingBytes == 0
+                StatusText = !string.IsNullOrWhiteSpace(result.ErrorMessage)
+                    ? ComparisonFailed
+                    : result.DifferingBytes == 0
                     ? "Save Analyzer: Files are identical"
                     : $"Save Analyzer: Found {result.DifferingBytes} differing bytes in {result.DiffRanges.Count} regions",
                 ReportText = BesFilePatcher.FormatCompareReport(result, leftPath, rightPath),
@@ -201,7 +225,7 @@ namespace OnslaughtCareerEditor.AppCore
             {
                 return new[]
                 {
-                    Node(analysis.ErrorMessage ?? "No analysis available")
+                    Node(AnalysisFailed)
                 };
             }
 

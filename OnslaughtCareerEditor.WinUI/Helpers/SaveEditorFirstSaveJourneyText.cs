@@ -4,6 +4,9 @@ namespace OnslaughtCareerEditor.WinUI.Helpers;
 
 internal static class SaveEditorFirstSaveJourneyText
 {
+    public const string NoAdvancedOverridesNextStep =
+        "Choose a mission rank or category kill to override.";
+
     public static string BuildStatus(SaveEditorFirstSaveJourneyState state)
     {
         if (!state.HasValidInput)
@@ -19,8 +22,8 @@ internal static class SaveEditorFirstSaveJourneyText
         if (state.HasCompletedCurrentPlan)
         {
             return state.CanRevealWrittenCopy
-                ? "Written copy ready. Show it in File Explorer, then manually copy it into a Safe Game Copy's savegames folder when ready to try it."
-                : "Written copy ready at the chosen destination. Manually copy it into a Safe Game Copy's savegames folder when ready to try it.";
+                ? "Written copy ready. Show it in File Explorer, or choose Put it in my safe copy after you close the copied game."
+                : "Written copy ready. Choose Put it in my safe copy after you close the copied game.";
         }
 
         if (!state.HasSelectedChanges)
@@ -42,7 +45,7 @@ internal static class SaveEditorFirstSaveJourneyText
         categoryCount = Math.Max(0, categoryCount);
         if (missionCount == 0 && categoryCount == 0)
         {
-            return "No advanced overrides active";
+            return NoAdvancedOverridesNextStep;
         }
 
         string missionText = missionCount == 1 ? "1 mission override" : $"{missionCount} mission overrides";

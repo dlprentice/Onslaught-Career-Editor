@@ -31,6 +31,15 @@ namespace OnslaughtCareerEditor.AppCore
         public const int MinimumHeight = 480;
         public const int MaximumExtent = 16384;
 
+        public const string ResolutionFormatHelp =
+            "Give a resolution as WIDTHxHEIGHT, for example 1920x1080.";
+
+        public const string ResolutionNotASize =
+            "That is not a resolution. Use WIDTHxHEIGHT, for example 1920x1080.";
+
+        public static string ResolutionOutOfRange =>
+            $"That copy accepts widths from {MinimumWidth} to {MaximumExtent} and heights from {MinimumHeight} to {MaximumExtent}.";
+
         /// <summary>The resolution a safe copy uses unless the player chooses another.</summary>
         public static DisplayResolutionPreset Measured { get; } = new(1600, 900, IsMeasured: true);
 
@@ -82,7 +91,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             if (string.IsNullOrWhiteSpace(value))
             {
-                problem = "Give a resolution as WIDTHxHEIGHT, for example 1920x1080.";
+                problem = ResolutionFormatHelp;
                 return false;
             }
 
@@ -91,13 +100,13 @@ namespace OnslaughtCareerEditor.AppCore
                 !int.TryParse(parts[0].Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out int width) ||
                 !int.TryParse(parts[1].Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out int height))
             {
-                problem = $"'{value}' is not a resolution. Use WIDTHxHEIGHT, for example 1920x1080.";
+                problem = ResolutionNotASize;
                 return false;
             }
 
             if (!IsSupported(width, height))
             {
-                problem = $"The copied game accepts widths from {MinimumWidth} to {MaximumExtent} and heights from {MinimumHeight} to {MaximumExtent}.";
+                problem = ResolutionOutOfRange;
                 return false;
             }
 

@@ -53,6 +53,10 @@ namespace OnslaughtCareerEditor.AppCore
 
     public static class SaveEditorService
     {
+        public const string InputMissing = "That career save could not be found. Nothing was changed.";
+        public const string PathsUnusable = "Those career saves could not be used. Nothing was changed.";
+        public const string NoPendingChangesSelected = "Select a change first.";
+
         public static IReadOnlyList<SaveAnalyzerFileItem> GetDetectedCareerSaves(string? gameDir = null)
         {
             return SaveAnalyzerService.GetDetectedFiles(gameDir)
@@ -109,12 +113,12 @@ namespace OnslaughtCareerEditor.AppCore
             catch (Exception ex) when (ex is ArgumentException or IOException or NotSupportedException
                                         or UnauthorizedAccessException or System.Security.SecurityException)
             {
-                return $"That path could not be read: {ex.Message}";
+                return "That career save could not be read.";
             }
 
             if (!info.Exists)
             {
-                return "No file exists at that path.";
+                return InputMissing;
             }
 
             if (info.Length != BesFilePatcher.EXPECTED_FILE_SIZE)
@@ -142,7 +146,7 @@ namespace OnslaughtCareerEditor.AppCore
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException
                                         or System.Security.SecurityException)
             {
-                return $"That file could not be opened: {ex.Message}";
+                return "That file could not be opened.";
             }
 
             return null;
@@ -287,7 +291,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             if (parts.Count == 0)
             {
-                return "No pending save changes selected yet.";
+                return NoPendingChangesSelected;
             }
 
             return "Pending: " + string.Join(", ", parts) + ".";
@@ -304,7 +308,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             if (!IsCareerSaveFilePath(inputPath) || !IsCareerSaveFilePath(outputPath))
             {
-                return PatchResult.Fail("Save Editor requires .bes career save input and output paths.");
+                return PatchResult.Fail("Save Editor requires .bes career save input and output files.");
             }
 
             try
@@ -314,12 +318,12 @@ namespace OnslaughtCareerEditor.AppCore
             }
             catch (Exception ex) when (ex is ArgumentException or IOException or InvalidOperationException or NotSupportedException)
             {
-                return PatchResult.Fail(ex.Message);
+                return PatchResult.Fail(PathsUnusable);
             }
 
             if (!File.Exists(inputPath))
             {
-                return PatchResult.Fail($"Input file not found: {inputPath}");
+                return PatchResult.Fail(InputMissing);
             }
 
             if (!HasAnySelectedSection(request))
@@ -359,7 +363,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             if (!IsCareerSaveFilePath(inputPath) || !IsCareerSaveFilePath(outputPath))
             {
-                return PatchResult.Fail("Focused Goodie state patching requires .bes input and output paths.");
+                return PatchResult.Fail("Focused Goodie state patching requires .bes input and output files.");
             }
 
             if ((uint)request.GoodieId >= MissionScriptGoodieStateSaveCodec.DisplayableGoodieCount)
@@ -375,8 +379,8 @@ namespace OnslaughtCareerEditor.AppCore
 
             try
             {
-                inputPath = FileMutationSafety.NormalizeLocalPath(inputPath, "Input path");
-                outputPath = FileMutationSafety.NormalizeLocalPath(outputPath, "Output path");
+                inputPath = FileMutationSafety.NormalizeLocalPath(inputPath, "Input file");
+                outputPath = FileMutationSafety.NormalizeLocalPath(outputPath, "Output file");
                 if (FileMutationSafety.AreLexicallySamePath(inputPath, outputPath))
                 {
                     return PatchResult.Fail("Output file must be different from input file. In-place save patching is blocked.");
@@ -384,7 +388,7 @@ namespace OnslaughtCareerEditor.AppCore
 
                 if (!File.Exists(inputPath))
                 {
-                    return PatchResult.Fail($"Input file not found: {inputPath}");
+                    return PatchResult.Fail(InputMissing);
                 }
 
                 IReadOnlyDictionary<int, uint> stateOverride = new Dictionary<int, uint>
@@ -394,7 +398,7 @@ namespace OnslaughtCareerEditor.AppCore
 
                 string appOwnedProfilesRoot = FileMutationSafety.NormalizeLocalPath(
                     AppConfig.GetGameProfilesDir(),
-                    "App-owned profiles root");
+                    "app-owned profile folder");
                 if (!FileMutationSafety.IsSameOrUnderRoot(outputPath, appOwnedProfilesRoot))
                 {
                     return BesFilePatcher.PatchGoodieStates(inputPath, outputPath, stateOverride);
@@ -408,7 +412,7 @@ namespace OnslaughtCareerEditor.AppCore
                     !string.Equals(segments[1], "savegames", StringComparison.OrdinalIgnoreCase))
                 {
                     return PatchResult.Fail(
-                        "Safe-copy Goodie output must be one .bes file directly inside a verified profile's savegames folder.");
+                        "Inside a safe copy, that Goodie save has to be one .bes file in that copy's savegames folder.");
                 }
 
                 string profileRoot = Path.Combine(appOwnedProfilesRoot, segments[0]);
@@ -430,7 +434,7 @@ namespace OnslaughtCareerEditor.AppCore
             }
             catch (Exception ex) when (ex is ArgumentException or IOException or InvalidOperationException or NotSupportedException)
             {
-                return PatchResult.Fail(ex.Message);
+                return PatchResult.Fail(PathsUnusable);
             }
         }
 
