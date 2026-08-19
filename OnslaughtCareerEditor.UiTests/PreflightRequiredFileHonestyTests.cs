@@ -287,6 +287,45 @@ public class PreflightRequiredFileHonestyTests
             Does.Not.Contain("manifest"));
         Assert.That(GameProfilePreflightService.MusicFileMismatch.ToLowerInvariant(),
             Does.Not.Contain("hash"));
+        Assert.That(source, Does.Contain("ControlOptionsDetailsInvalid"));
+        Assert.That(source, Does.Contain("ControlOptionsDetailsUnsupported"));
+        Assert.That(source, Does.Contain("ControlOptionsProofUnsupported"));
+        Assert.That(source, Does.Contain("ControlOptionsDetailsWrongTarget"));
+        Assert.That(source, Does.Contain("ControlOptionsFileMismatch"));
+        Assert.That(source, Does.Contain("ControlOptionsFileSizeMismatch"));
+        Assert.That(source, Does.Contain("ControlOptionsRangesMissing"));
+        Assert.That(source, Does.Contain("ControlOptionsBackupDetailsMissing"));
+        Assert.That(source, Does.Contain("ControlOptionsBackupSizeMismatch"));
+        Assert.That(source, Does.Contain("ControlOptionsBackupMismatch"));
+        Assert.That(source, Does.Not.Contain("Playable copied game folder control-options"));
+        Assert.That(GameProfilePreflightService.ControlOptionsDetailsInvalid,
+            Is.EqualTo("That copy's defaultoptions.bea details are invalid."));
+        Assert.That(GameProfilePreflightService.ControlOptionsDetailsUnsupported,
+            Is.EqualTo("That copy's defaultoptions.bea details are out of date."));
+        Assert.That(GameProfilePreflightService.ControlOptionsProofUnsupported,
+            Is.EqualTo("That copy's defaultoptions.bea details cannot be used yet."));
+        Assert.That(GameProfilePreflightService.ControlOptionsDetailsWrongTarget,
+            Is.EqualTo("That copy's controller details do not target defaultoptions.bea."));
+        Assert.That(GameProfilePreflightService.ControlOptionsFileMismatch,
+            Is.EqualTo("That copy's defaultoptions.bea no longer matches."));
+        Assert.That(GameProfilePreflightService.ControlOptionsFileSizeMismatch,
+            Is.EqualTo("That copy's defaultoptions.bea size does not match."));
+        Assert.That(GameProfilePreflightService.ControlOptionsRangesMissing,
+            Is.EqualTo("That copy's controller details are missing their changed ranges."));
+        Assert.That(GameProfilePreflightService.ControlOptionsBackupDetailsMissing,
+            Is.EqualTo("That copy's controller details are missing backup details."));
+        Assert.That(GameProfilePreflightService.ControlOptionsBackupSizeMismatch,
+            Is.EqualTo("That copy's defaultoptions.bea backup size does not match."));
+        Assert.That(GameProfilePreflightService.ControlOptionsBackupMismatch,
+            Is.EqualTo("That copy's defaultoptions.bea backup no longer matches."));
+        Assert.That(GameProfilePreflightService.ControlOptionsDetailsInvalid.ToLowerInvariant(),
+            Does.Not.Contain("playable"));
+        Assert.That(GameProfilePreflightService.ControlOptionsProofUnsupported.ToLowerInvariant(),
+            Does.Not.Contain("proof"));
+        Assert.That(GameProfilePreflightService.ControlOptionsFileMismatch.ToLowerInvariant(),
+            Does.Not.Contain("manifest"));
+        Assert.That(GameProfilePreflightService.ControlOptionsFileMismatch.ToLowerInvariant(),
+            Does.Not.Contain("hash"));
     }
 
     [Test]

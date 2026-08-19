@@ -122,7 +122,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 InvalidOperationException ex = Assert.Throws<InvalidOperationException>(() =>
                     GameProfilePreflightService.BuildLaunchPlan(prepared.TargetGameRoot, Array.Empty<string>()));
 
-                Assert.Contains("control-options manifest hash", ex.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(GameProfilePreflightService.ControlOptionsFileMismatch, ex.Message);
             }
             finally
             {
