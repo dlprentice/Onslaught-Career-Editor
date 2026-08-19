@@ -368,6 +368,14 @@ public class PreflightRequiredFileHonestyTests
             Is.EqualTo("That copy needs the windowed compatibility patch set."));
         Assert.That(GameProfilePreflightService.CopyNeedsWindowedPatchSet.ToLowerInvariant(),
             Does.Not.Contain("playable"));
+        Assert.That(source, Does.Contain("SourceFileMustStayInsideGame"));
+        Assert.That(source, Does.Not.Contain("Playable copied game folder source traversal escaped"));
+        Assert.That(GameProfilePreflightService.SourceFileMustStayInsideGame,
+            Is.EqualTo("That file must stay inside the game folder."));
+        Assert.That(GameProfilePreflightService.SourceFileMustStayInsideGame.ToLowerInvariant(),
+            Does.Not.Contain("playable"));
+        Assert.That(GameProfilePreflightService.SourceFileMustStayInsideGame.ToLowerInvariant(),
+            Does.Not.Contain("traversal"));
     }
 
     [Test]

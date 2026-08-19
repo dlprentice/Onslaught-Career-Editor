@@ -186,6 +186,7 @@ namespace OnslaughtCareerEditor.AppCore
         public const string CopyNeedsWindowedPatchSet = "That copy needs the windowed compatibility patch set.";
         public const string CopyBeaSizeMissing = "That copy's details are missing BEA.exe size.";
         public const string CopyBeaHashMissing = "That copy's details are missing the BEA.exe hash.";
+        public const string SourceFileMustStayInsideGame = "That file must stay inside the game folder.";
         public const string ProfileFolderInsideGame =
             "The app-owned profile folder must not sit inside the game folder.";
         public const string GameFolderInsideProfile =
@@ -2056,7 +2057,7 @@ namespace OnslaughtCareerEditor.AppCore
         private static void RejectIfOutsideRoot(string path, string root)
         {
             if (!IsSameOrUnderRoot(path, root))
-                throw new InvalidOperationException("Playable copied game folder source traversal escaped the selected game root.");
+                throw new InvalidOperationException(SourceFileMustStayInsideGame);
         }
 
         private static void RejectReparsePoint(string path, string label)
