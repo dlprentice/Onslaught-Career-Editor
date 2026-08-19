@@ -184,6 +184,8 @@ namespace OnslaughtCareerEditor.AppCore
         public const string CopyPatchDidNotSucceed = "That copy's details do not record a successful patch.";
         public const string CopyPatchRowsMissing = "That copy's details are missing their patch rows.";
         public const string CopyNeedsWindowedPatchSet = "That copy needs the windowed compatibility patch set.";
+        public const string CopyBeaSizeMissing = "That copy's details are missing BEA.exe size.";
+        public const string CopyBeaHashMissing = "That copy's details are missing the BEA.exe hash.";
         public const string ProfileFolderInsideGame =
             "The app-owned profile folder must not sit inside the game folder.";
         public const string GameFolderInsideProfile =
@@ -1151,14 +1153,14 @@ namespace OnslaughtCareerEditor.AppCore
             if (!manifestRoot.TryGetProperty("executableSize", out JsonElement sizeEl) ||
                 !sizeEl.TryGetInt64(out long expectedSize))
             {
-                throw new InvalidOperationException("Playable copied game folder manifest is missing executable size metadata.");
+                throw new InvalidOperationException(CopyBeaSizeMissing);
             }
 
             if (!manifestRoot.TryGetProperty("executableSha256", out JsonElement hashEl) ||
                 hashEl.ValueKind != JsonValueKind.String ||
                 string.IsNullOrWhiteSpace(hashEl.GetString()))
             {
-                throw new InvalidOperationException("Playable copied game folder manifest is missing executable full-file hash metadata.");
+                throw new InvalidOperationException(CopyBeaHashMissing);
             }
 
             FileInfo info = new(executablePath);

@@ -348,6 +348,20 @@ public class PreflightRequiredFileHonestyTests
             Does.Not.Contain("key"));
         Assert.That(GameProfilePreflightService.CopyPatchDidNotSucceed.ToLowerInvariant(),
             Does.Not.Contain("metadata"));
+        Assert.That(source, Does.Contain("CopyBeaSizeMissing"));
+        Assert.That(source, Does.Contain("CopyBeaHashMissing"));
+        Assert.That(source, Does.Not.Contain("Playable copied game folder manifest is missing executable size"));
+        Assert.That(source, Does.Not.Contain("Playable copied game folder manifest is missing executable full-file"));
+        Assert.That(GameProfilePreflightService.CopyBeaSizeMissing,
+            Is.EqualTo("That copy's details are missing BEA.exe size."));
+        Assert.That(GameProfilePreflightService.CopyBeaHashMissing,
+            Is.EqualTo("That copy's details are missing the BEA.exe hash."));
+        Assert.That(GameProfilePreflightService.CopyBeaSizeMissing.ToLowerInvariant(),
+            Does.Not.Contain("playable"));
+        Assert.That(GameProfilePreflightService.CopyBeaHashMissing.ToLowerInvariant(),
+            Does.Not.Contain("metadata"));
+        Assert.That(GameProfilePreflightService.CopyBeaHashMissing.ToLowerInvariant(),
+            Does.Not.Contain("full-file"));
     }
 
     [Test]
