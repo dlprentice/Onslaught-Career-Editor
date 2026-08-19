@@ -171,7 +171,8 @@ live in `developer_state.json` and the campaign ledgers.
   catalog picker names catalog.json, not a path. Windowed & Mods
   source cards say Source file details, not a path. The replacement
   picker names the .ogg file. A device, drive-relative,
-  or network location refusal names the location, not a path.
+  or network location refusal names the location, not a path. A
+  Windowed & Mods verify hint names the file, not a path.
 
 ## 1.0.11 — 2026-08-07
 

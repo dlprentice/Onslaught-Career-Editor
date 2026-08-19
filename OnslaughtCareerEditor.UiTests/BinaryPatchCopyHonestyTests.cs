@@ -133,6 +133,16 @@ public class BinaryPatchCopyHonestyTests
     }
 
     [Test]
+    public void WindowedAndModsVerifyHintNamesTheFileNotAPath()
+    {
+        string page = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI", "Pages", "BinaryPatchesPage.xaml.cs"));
+
+        Assert.That(page, Does.Not.Contain("after any path or selection change"));
+        Assert.That(page, Does.Contain("after any file or selection change"));
+    }
+
+    [Test]
     public void AWorkspaceBackupRefusalNamesTheFileNotAPath()
     {
         string engine = File.ReadAllText(Path.Combine(

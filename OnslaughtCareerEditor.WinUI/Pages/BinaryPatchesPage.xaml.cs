@@ -414,7 +414,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     ? "Choose at least one patch to continue."
                     : verifiedCurrent
                         ? "BEA.exe-only copy is verified and ready for patching."
-                        : "Verify the BEA.exe-only copy after any path or selection change.";
+                        : "Verify the BEA.exe-only copy after any file or selection change.";
 
             UpdateCopiedProfileLaunchReadiness(
                 copiedProfileContentMatchesCurrent,
