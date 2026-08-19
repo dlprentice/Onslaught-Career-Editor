@@ -1,7 +1,7 @@
 # Rebuild parity contract
 
 Status: active — what "1:1 behavioral and experiential parity" means operationally
-Last updated: 2026-08-19 (Level 100 init PrimaryObjectiveFailed writes CMissionObjective+4 text).
+Last updated: 2026-08-19 (Level 100 IScript::AddScore adds to CGame+0xf4).
 Evidence: SOURCE — authority order and the known divergences are
 recorded in `PROVENANCE.md` plus the Lost-countdown row of this table; gate capabilities are MEASURED claims of the
 tracked harnesses named in the table. Every row of *Carried retail contracts*
@@ -157,6 +157,7 @@ Owner paths are relative to the repository root; test names are relative to
 | `IScript::SetSlotSave` Level 100 tutorial persist | `0x00533900` calls `CGame::SetSlot` `0x0046d3a0` then `CCareer::SetSlot` `0x004214e0`. First-play `SetSlotSave(SLOT_TUTORIAL_1..4, TRUE)` writes career bits 63..66 during the tutorial, before `DeclareLevelWon` and before FillOut / `ApplyUpdate`. Isolated FrontEndHandoff overwrite names the 32-dword assignment after `TryApply`; empty FillOut slot words still leave 63..66 set here. World 100 stays incomplete. Live `GAME.mSlots` stay unclaimed. No new secondaries | `rebuild/OnslaughtRebuild.Core/RetailSetSlotSave.cs` | `RetailSetSlotSave.PersistCareerSlot` | `Level100WonCareerHandoffTests.SetSlotSave_PersistsTutorialBitsBeforeApplyUpdate` | 1 | skip `PersistCareerSlot` so 63..66 stay 0 on `SuccessCountdown` |
 | `IScript::PrimaryObjectiveFailed` Level 100 init MOS | `0x00534440` writes state 2 (Wave580 plate). Level 100 `init()` calls it for objectives 1..4 before the first `PlayCharMessageWait`. Rebuild `Level100PrimaryObjectiveStatus.Failed` is 1, so an identity cast is not `MOS_FAILED`. Isolated FillOut Won names four `MOS_COMPLETE` (1) and does not go through init. `GetNumPrimaryObjectives` counting non-zero is not unique versus mapping Failed to 1. Live `GAME.mSlots` stay unclaimed. No new secondaries | `rebuild/OnslaughtRebuild.Core/RetailGameObjectiveCount.cs` | `RetailGameObjectiveCount.FromLevel100MissionStatus` | `Level100MissionTests.Init_PrimaryObjectiveFailedWritesRetailMosFailedTwo` | 1 | identity-cast the mission enum so Failed stores 1 |
 | `IScript::PrimaryObjectiveFailed` Level 100 init text dword | `0x0053445e` `89 78 04` = `mov [eax+4], edi` on specimen `74154bfa…`. Twin Complete at `0x005343fe`. Table base `lea eax, [eax*8+0x8a9adc]`. Level 100 `init()` stores `_100_OBJECTIVE_1..4` = 110325434 / 111145813 / 111966192 / 112786571 (first cited in `msl-scripting.md`; 2..4 from hash-pinned LevelScript). Isolated MOS-failed names state 2, not `+4`. Isolated FillOut Won names four `GetStatus()` words and does not copy the text dword. Live `GAME.mSlots` stay unclaimed. No new secondaries | `rebuild/OnslaughtRebuild.Core/RetailGameObjectiveCount.cs` | `RetailGameObjectiveCount.FromLevel100MissionPrimaryTextIds` | `Level100MissionTests.Init_PrimaryObjectiveFailedWritesRetailObjectiveTextDword` | 1 | leave the ten text words at 0 |
+| `IScript::AddScore` Level 100 incrementer | `0x005343c0` body `8b442404 8b08 8b11 ff5230 01058c9b8a00 c20c00` on specimen `74154bfa…`. `0x005343cb` is `01 05 8c 9b 8a 00` = `add [0x008a9b8c], eax` = `CGame+0xf4`. Source `game.h:210` is `mScore+=inScore`. LoadLevel writes 0. Isolated `ScoreDelta` = 50 names the rebuild accumulator; one live `AddScore(50)` is not unique versus replace. Isolated FillOut `ScoreWord` copies a parameterized dword. First-play elapsed and FillOut score stay unclaimed. Live `GAME.mSlots` stay unclaimed. No new secondaries | `rebuild/OnslaughtRebuild.Core/RetailAddScore.cs` | `RetailAddScore.Add` | `RetailAddScoreTests.Add_AddsTheDeltaOntoCGamePlusF4NotReplace` | 1 | replace so a second +50 stays 50 |
 
 Two things this table deliberately does **not** claim. It does not claim these
 contracts are graded `REBUILD_READY`: that grade is a campaign artifact and
@@ -307,6 +308,12 @@ on that same owner; isolated MOS-failed names state 2 and
 does not uniquely prove `[eax+4]`. Isolated FillOut Won
 names four `GetStatus()` words and does not copy the text
 dword. Live `GAME.mSlots` stay unclaimed.
+The AddScore incrementer row names `RetailAddScore.Add`; isolated
+`ScoreDelta` = 50 names the rebuild accumulator and does
+not uniquely prove `add [0x008a9b8c], eax`. One live
+`AddScore(50)` is not unique versus replace. Isolated
+FillOut `ScoreWord` copies a parameterized dword. First-play
+elapsed and FillOut score stay unclaimed.
 The score-time arm row names `AfterScoreTimeArm` on
 the already-pinned FillOut owner; it does not rewrite
 `ForLevel100Won`. The score-percentage last-wins row names

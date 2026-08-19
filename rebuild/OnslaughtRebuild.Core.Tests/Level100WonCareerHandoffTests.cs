@@ -912,6 +912,37 @@ public sealed class Level100WonCareerHandoffTests
     }
 
     /// <summary>
+    /// <c>IScript::AddScore</c> at <c>0x005343cb</c> is
+    /// <c>add [0x008a9b8c], eax</c>. First-play
+    /// <c>TUTORIAL_DODGE_GOOD</c> posts one <c>AddScore(50)</c>,
+    /// so <c>CGame+0xf4</c> is 50 before FillOut. Isolated
+    /// <c>ScoreDelta</c> = 50 names the rebuild accumulator and
+    /// still passes if this store is skipped. Isolated FillOut
+    /// <see cref="RetailFillOutEndLevelData.ScoreWord"/> copies a
+    /// parameterized dword and does not go through AddScore.
+    /// Isolated <see cref="RetailAddScore.Add"/> names add-not-replace;
+    /// one live +50 is not unique versus replace. Mutation: skip
+    /// the <c>CGame+0xf4</c> store. First-play elapsed and FillOut
+    /// score stay unclaimed. Live <c>GAME.mSlots</c> stay unclaimed.
+    /// No new secondaries.
+    /// </summary>
+    [Fact]
+    public void AddScore_FirstPlayWonWritesCGamePlusF4()
+    {
+        Level100Mission mission = DriveReleasedFirstPlayUntilWon();
+
+        Assert.Equal(Level100MissionOutcome.Won, mission.Snapshot.Outcome);
+        Assert.Equal(50, mission.Snapshot.ScoreDelta);
+        Assert.Equal(50, mission.GameScore);
+        Assert.Equal(
+            RetailAddScore.Add(RetailAddScore.LoadLevelZero, 50),
+            mission.GameScore);
+        Assert.All(
+            RetailFillOutEndLevelData.ForLevel100Won().SecondaryStatuses,
+            status => Assert.Equal(0, status));
+    }
+
+    /// <summary>
     /// <c>CCareer::Update</c> at <c>0x0041BD06</c> is
     /// <c>cmp eax, 5</c> / <c>jne</c>. Lost is 4, so FillOut is never
     /// applied even if the handoff state is claimed. Mutation: dropping

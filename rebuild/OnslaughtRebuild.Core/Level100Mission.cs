@@ -49,6 +49,7 @@ public sealed class Level100Mission
     private bool _tutorialVulcanCannon;
     private bool _tutorialStatusBars;
     private int _scoreDelta;
+    private int _gameScore = RetailAddScore.LoadLevelZero;
 
     /// <summary>
     /// The Core tick the most recently scheduled character message clears, or
@@ -182,6 +183,13 @@ public sealed class Level100Mission
         _messageBoxAllowedTick);
 
     public Level100MissionOutcome Outcome => _outcome;
+
+    /// <summary>
+    /// <c>CGame+0xf4</c> — the <c>add [0x008a9b8c], eax</c>
+    /// destination. Isolated <see cref="Level100MissionSnapshot.ScoreDelta"/>
+    /// names the rebuild accumulator, not this store.
+    /// </summary>
+    public int GameScore => _gameScore;
 
     internal bool GameplayPaused => Level100MissionTiming.GameplayPaused(
         _outcome,
@@ -687,10 +695,15 @@ public sealed class Level100Mission
                 RequireArguments(command, arguments, 2);
                 SetPrimaryObjective(arguments, Level100PrimaryObjectiveStatus.Complete);
                 return NativeResult.Void;
-            case 85: // AddScore
+            case 85: // AddScore — IScript__AddScore 0x005343c0
                 RequireArguments(command, arguments, 1);
                 int delta = arguments[0].AsInteger();
                 _scoreDelta = unchecked(_scoreDelta + delta);
+                // Isolated ScoreDelta names the rebuild accumulator.
+                // Isolated FillOut ScoreWord copies a parameterized
+                // dword. First-play elapsed / FillOut score stay
+                // unclaimed. Live GAME.mSlots stay unclaimed.
+                _gameScore = RetailAddScore.Add(_gameScore, delta);
                 _events.Add(new Level100ScoreChanged(_tick, delta, _scoreDelta));
                 return NativeResult.Void;
             case 87: // PrimaryObjectiveFailed
