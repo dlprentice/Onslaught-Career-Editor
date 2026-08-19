@@ -1,0 +1,62 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+
+using OnslaughtRebuild.Core;
+
+namespace OnslaughtRebuild.Core.Tests;
+
+/// <summary>
+/// Parity tests for the Level 100 ConfirmedKill incrementer. Caller
+/// <c>0x0040a560</c> then <c>0x004d30d0</c>. First-play values stay
+/// unclaimed — a Won that never takes this path still snapshots five
+/// zeros. Do not invent secondaries.
+/// </summary>
+public sealed class RetailConfirmedKillTests
+{
+    /// <summary>
+    /// Independently re-read specimen <c>74154bfa…</c>:
+    /// <c>0x0040a564</c> <c>cmp [eax+0x138],1</c> / <c>jne</c> skips
+    /// <c>0x004d30d0</c>. <c>tools/call_xref_scan.py</c> on
+    /// <c>0x004d30d0</c> is one <c>E8</c> at <c>0x0040a578</c>.
+    /// Mutation: increment even when <c>+0x138</c> is not 1. Do not
+    /// invent first-play totals or secondaries.
+    /// </summary>
+    [Fact]
+    public void Level100Won_ConfirmedKillDoesNotIncrementWhenThingAllegianceIsNotOne()
+    {
+        int[] after = RetailConfirmedKill.Apply(
+            RetailFillOutEndLevelData.FirstPlayThingsKilled(),
+            thingFlags: 0x400 | 0x20000 | 0x40000 | 0x4000 | 0x800,
+            thingAllegiance: 0);
+
+        Assert.Equal(new[] { 0, 0, 0, 0, 0 }, after);
+        Assert.Equal(
+            RetailFillOutEndLevelData.FirstPlayThingsKilled(),
+            after);
+        Assert.All(
+            RetailFillOutEndLevelData.ForLevel100Won().SecondaryStatuses,
+            status => Assert.Equal(0, status));
+    }
+
+    /// <summary>
+    /// Same body. <c>0x004d30d7</c> <c>test dh,4</c> is bit
+    /// <c>0x400</c> into <c>player+8</c>. The other four flags stay
+    /// off. Mutation: increment slot 0 on any flag. First-play totals
+    /// stay unclaimed. Do not invent secondaries.
+    /// </summary>
+    [Fact]
+    public void Level100Won_ConfirmedKillIncrementsSlotZeroOnFlag400()
+    {
+        int[] after = RetailConfirmedKill.Apply(
+            RetailFillOutEndLevelData.FirstPlayThingsKilled(),
+            thingFlags: 0x400,
+            thingAllegiance: 1);
+
+        Assert.Equal(new[] { 1, 0, 0, 0, 0 }, after);
+        Assert.Equal(
+            new[] { 0, 0, 0, 0, 0 },
+            RetailFillOutEndLevelData.ForLevel100Won().ThingsKilled);
+        Assert.All(
+            RetailFillOutEndLevelData.ForLevel100Won().SecondaryStatuses,
+            status => Assert.Equal(0, status));
+    }
+}
