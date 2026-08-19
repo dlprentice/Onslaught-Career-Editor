@@ -73,7 +73,10 @@ public sealed class RetailCareerGoodies
 /// writes goodie 14, but first-play leaves world 110 incomplete so
 /// that arm stays closed. Leftover complete-110 plus ranking 0.0f
 /// (already pinned as E) opens that store while
-/// <c>GRADE(110) &gt;= C</c> stays closed. <c>CGrade::operator&gt;=</c> treats <c>'S'</c> as
+/// <c>GRADE(110) &gt;= C</c> stays closed. Lost leftover of the same
+/// seed still opens it because <c>CCareer::Update</c> still calls
+/// this body then returns (<c>Career.cpp:382-385</c>).
+/// <c>CGrade::operator&gt;=</c> treats <c>'S'</c> as
 /// above every other grade, so the already-pinned FillOut 1.0f unlocks
 /// the five world-100 slots together. <c>SET_GOODIE_NEW</c> stores 2
 /// only when <c>mState &lt;= GS_INSTRUCTIONS</c>.
@@ -131,7 +134,10 @@ public static class RetailCareerUpdateGoodieStates
     /// incomplete, so goodie 14 stays <c>GS_UNKNOWN</c>. Leftover
     /// complete-110 plus ranking 0.0f (already pinned as E) opens
     /// <c>SET_GOODIE_NEW(14)</c> while <c>GRADE(110) &gt;= C</c> stays
-    /// closed. Do not invent
+    /// closed. Lost leftover of that same seed still opens 14
+    /// because this body still runs on the Lost return
+    /// (<c>Career.cpp:382-385</c>). Isolated Won leftover 14 does
+    /// not go through Lost ApplyUpdate. Do not invent
     /// a world-110 FillOut or the rest of the table.
     /// <c>mPendingExtraGoodies</c> and episode instruction marks stay
     /// unclaimed.

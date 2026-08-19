@@ -230,7 +230,10 @@ public sealed class RetailCareerCampaignApplyUpdateTests
     /// but world 100 is not complete, so <c>GRADE(100)</c> is the incomplete
     /// <c>'E'</c> and none of 0 / 8 / 78 / 121 / 164 become
     /// <c>GS_NEW</c>. Mutation: unlocking those five without the complete
-    /// / grade predicates would fail the zeros.
+    /// / grade predicates would fail the zeros. Leftover complete-110
+    /// plus ranking 0.0f now names the open goodie-14 store through
+    /// this same Lost return; this test does not seed that leftover
+    /// or name goodie 14.
     /// </summary>
     [Fact]
     public void Level100Lost_ApplyUpdateDoesNotUnlockTrainingGoodies()
@@ -401,6 +404,64 @@ public sealed class RetailCareerCampaignApplyUpdateTests
         Assert.Equal(
             RetailCareerNodeLink.NotComplete,
             career.GetLink(training.LowerLink)!.LinkType);
+        Assert.All(lost.SecondaryStatuses, status => Assert.Equal(0, status));
+    }
+
+    /// <summary>
+    /// Lost still calls <c>UpdateGoodieStates</c> then returns
+    /// (<c>Career.cpp:382-385</c>). Leftover world-110 complete + E
+    /// (ranking 0.0f already pinned) therefore still opens
+    /// <c>Career.cpp:704</c> <c>SET_GOODIE_NEW(14)</c>. Isolated Won
+    /// leftover 14 does not go through Lost ApplyUpdate. Existing Lost
+    /// zeros name 0 / 8 / 78 / 121 / 164 and do not seed leftover
+    /// complete-110 or name goodie 14. Lost latch does not name 14.
+    /// Ranking 0.0f keeps <c>GRADE(110) &gt;= C</c> closed so goodie 1
+    /// stays <c>GS_UNKNOWN</c>. World 100 stays incomplete, so the
+    /// five first-play S slots stay <c>GS_UNKNOWN</c>. Do not invent a
+    /// world-110 FillOut or the rest of the table. Mutation: skip
+    /// <c>UpdateGoodieStates</c> on the Lost return. Skipping
+    /// <c>SET_GOODIE_NEW(14)</c> is not unique versus the Won leftover
+    /// pin. No new secondaries.
+    /// </summary>
+    [Fact]
+    public void Level100Lost_ApplyUpdateLeftoverWorld110CompleteEUnlocksTheWorld110CompleteGoodie()
+    {
+        RetailCareerCampaign career = RetailCareerReCalcLinks.CreateColdTrainingSlice();
+        RetailCareerNode next = career.Nodes.Find(110)!;
+        next.Complete = 1;
+        next.Ranking = 0.0f;
+        RetailEndLevelSnapshot won = RetailFillOutEndLevelData.ForLevel100Won();
+        RetailEndLevelSnapshot lost = won with
+        {
+            FinalState = RetailCareerReCalcLinks.GameStateLevelLost,
+        };
+
+        career.ApplyUpdate(lost);
+
+        Assert.Equal(0, career.Nodes.Find(100)!.Complete);
+        Assert.Equal(1, next.Complete);
+        Assert.Equal(0.0f, next.Ranking);
+        Assert.Equal(
+            RetailCareerGrade.FailedGrade,
+            RetailWorldGrade.GradeByteForWorld(
+                new[]
+                {
+                    new RetailWorldGradeNode(
+                        RetailCareerReCalcLinks.TrainingWorldNumber,
+                        career.Nodes.Find(100)!.Complete,
+                        career.Nodes.Find(100)!.Ranking),
+                    new RetailWorldGradeNode(next.WorldNumber, next.Complete, next.Ranking),
+                },
+                next.WorldNumber));
+        Assert.Equal(
+            RetailCareerGoodieState.Unknown,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.CompleteWorld100Bio));
+        Assert.Equal(
+            RetailCareerGoodieState.Unknown,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeCOnWorld110));
+        Assert.Equal(
+            RetailCareerGoodieState.New,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.CompleteWorld110));
         Assert.All(lost.SecondaryStatuses, status => Assert.Equal(0, status));
     }
 

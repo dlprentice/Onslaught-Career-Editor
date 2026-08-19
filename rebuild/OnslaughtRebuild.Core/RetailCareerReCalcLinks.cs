@@ -122,7 +122,10 @@ public sealed class RetailCareerNodeLink
 /// the store. Goodie 14 (<c>COMPLETE_LEVEL(110)</c>) stays closed
 /// on first-play because world 110 is unlocked but still
 /// incomplete. Leftover complete-110 plus ranking 0.0f (already
-/// pinned as E) opens that store. Do not invent a world-110 FillOut.
+/// pinned as E) opens that store. Lost leftover of the same
+/// seed still opens it because <c>Update</c> still calls
+/// <c>UpdateGoodieStates</c> then returns
+/// (<c>Career.cpp:382-385</c>). Do not invent a world-110 FillOut.
 /// </para>
 /// </remarks>
 public static class RetailCareerReCalcLinks
@@ -254,8 +257,11 @@ public sealed class RetailCareerCampaign
     /// before that store and before <c>ReCalcLinks</c> /
     /// <c>UpdateBaseWorldExistsStuffForNode</c>
     /// (<c>Career.cpp:382-385</c> / <c>392</c> / <c>416</c> /
-    /// <c>443-452</c> / <c>519-527</c>). This method does not write
-    /// <c>CCareerNode.mNumAttempts</c> (<c>+0x38</c>);
+    /// <c>443-452</c> / <c>519-527</c>). Lost leftover world-110
+    /// complete + ranking 0.0f still opens
+    /// <c>SET_GOODIE_NEW(14)</c> because this method still calls
+    /// <c>UpdateGoodieStates</c> on that return. This method does not
+    /// write <c>CCareerNode.mNumAttempts</c> (<c>+0x38</c>);
     /// <c>Career.cpp:379-418</c> never does.
     /// </summary>
     public void ApplyUpdate(
