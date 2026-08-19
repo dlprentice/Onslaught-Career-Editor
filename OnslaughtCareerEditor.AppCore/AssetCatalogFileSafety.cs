@@ -185,7 +185,7 @@ namespace OnslaughtCareerEditor.AppCore
                 {
                     WindowsFileIdentity identity = FileMutationSafety.GetWindowsIdentity(handle, "Asset catalog file");
                     if (identity.IsReparsePoint)
-                        throw new InvalidOperationException("The asset catalog file cannot be a symbolic link or other reparse point.");
+                        throw new InvalidOperationException(FileMutationSafety.FileCannotUseLink);
                     if (OperatingSystem.IsWindows() && identity.NumberOfLinks > 1)
                         throw new InvalidOperationException("The asset catalog file cannot be hardlinked to another file.");
 
@@ -325,7 +325,7 @@ namespace OnslaughtCareerEditor.AppCore
                 handle = FileMutationSafety.OpenNoFollowReadHandle(sourcePath, label);
                 WindowsFileIdentity identity = FileMutationSafety.GetWindowsIdentity(handle, label);
                 if (identity.IsReparsePoint)
-                    throw new InvalidOperationException($"{label} cannot be a symbolic link or other reparse point.");
+                    throw new InvalidOperationException(FileMutationSafety.FileCannotUseLink);
                 if (OperatingSystem.IsWindows() && identity.NumberOfLinks > 1)
                     throw new InvalidOperationException($"{label} cannot be hardlinked to another file.");
 

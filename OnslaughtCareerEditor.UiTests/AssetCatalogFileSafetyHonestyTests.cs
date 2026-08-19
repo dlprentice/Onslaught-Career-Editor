@@ -63,4 +63,15 @@ public class AssetCatalogFileSafetyHonestyTests
         Assert.That(source, Does.Contain("\"Asset catalog\""));
         Assert.That(source, Does.Contain("\"Catalog export file\""));
     }
+
+    [Test]
+    public void ALinkedCatalogNamesAShortcutOrLinkNotAReparsePoint()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "AssetCatalogFileSafety.cs"));
+
+        Assert.That(source, Does.Not.Contain("cannot be a symbolic link or other reparse point."));
+        Assert.That(source, Does.Not.Contain("{label} cannot be a symbolic link"));
+        Assert.That(source, Does.Contain("FileMutationSafety.FileCannotUseLink"));
+    }
 }
