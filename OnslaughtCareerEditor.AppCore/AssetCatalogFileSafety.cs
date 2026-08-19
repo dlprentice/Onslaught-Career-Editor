@@ -19,6 +19,8 @@ namespace OnslaughtCareerEditor.AppCore
             "The catalog folder or catalog.json changed identity after the catalog was loaded.";
         internal const string ExportFolderChanged =
             "The generated export folder changed after the catalog was loaded.";
+        internal const string CatalogSourceNeedsExportFolder =
+            "Catalog source access needs a loaded catalog and its generated export folder.";
 
         internal static AssetCatalogSelection? ResolveSelection(string? pathOrDirectory)
         {
@@ -481,8 +483,7 @@ namespace OnslaughtCareerEditor.AppCore
             if (string.IsNullOrWhiteSpace(snapshot.CatalogFilePath) ||
                 string.IsNullOrWhiteSpace(snapshot.TrustedExportRoot))
             {
-                throw new InvalidOperationException(
-                    "Catalog source access requires a loaded catalog with a trusted generated export root.");
+                throw new InvalidOperationException(AssetCatalogFileSafety.CatalogSourceNeedsExportFolder);
             }
 
             AssetCatalogSelection? selection = AssetCatalogFileSafety.ResolveSelection(snapshot.CatalogFilePath);

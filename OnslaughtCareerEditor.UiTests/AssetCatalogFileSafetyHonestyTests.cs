@@ -105,4 +105,16 @@ public class AssetCatalogFileSafetyHonestyTests
         Assert.That(source, Does.Contain(
             "The generated export folder changed after the catalog was loaded."));
     }
+
+    [Test]
+    public void CatalogSourceAccessNamesTheFolderNotARoot()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "AssetCatalogFileSafety.cs"));
+
+        Assert.That(source, Does.Not.Contain("trusted generated export root."));
+        Assert.That(source, Does.Contain("CatalogSourceNeedsExportFolder"));
+        Assert.That(source, Does.Contain(
+            "Catalog source access needs a loaded catalog and its generated export folder."));
+    }
 }
