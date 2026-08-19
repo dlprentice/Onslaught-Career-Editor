@@ -721,7 +721,7 @@ namespace OnslaughtCareerEditor.AppCore
                 if (!string.Equals(Path.GetExtension(inputPath), ".bes", StringComparison.OrdinalIgnoreCase) ||
                     !string.Equals(Path.GetExtension(outputPath), ".bes", StringComparison.OrdinalIgnoreCase))
                 {
-                    return PatchResult.Fail("Goodie state patching requires .bes input and output paths.");
+                    return PatchResult.Fail("Goodie state patching requires .bes input and output files.");
                 }
 
                 using GuardedFileMutation mutation = outputAuthorization is null

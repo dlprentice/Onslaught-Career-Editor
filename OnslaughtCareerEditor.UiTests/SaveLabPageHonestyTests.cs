@@ -228,6 +228,16 @@ public class SaveLabPageHonestyTests
     }
 
     [Test]
+    public void AFocusedGoodieBesPatcherRefusalNamesTheFilesNotPaths()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "BesFilePatcher.cs"));
+
+        Assert.That(source, Does.Contain("Goodie state patching requires .bes input and output files."));
+        Assert.That(source, Does.Not.Contain("Goodie state patching requires .bes input and output paths."));
+    }
+
+    [Test]
     public void GameOptionsAsksBeforeItPatchesAndLeavesTheFileAloneOnCancel()
     {
         string options = File.ReadAllText(Path.Combine(

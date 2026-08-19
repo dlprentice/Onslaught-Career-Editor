@@ -106,9 +106,9 @@ live in `developer_state.json` and the campaign ledgers.
   video that fails mid-play uses the same could-not-be-played sentence
   as the other Media failures. An audio track that cannot play uses that
   same kind of sentence. Game Options refusals that used to say
-  paths now name the files. A Media library with no tracks or
-  cutscenes says to check the game folder, instead of describing
-  the emptiness.
+  paths now name the files. A focused Goodie patcher refusal does the
+  same. A Media library with no tracks or cutscenes says to check the
+  game folder, instead of describing the emptiness.
 
 ## 1.0.11 — 2026-08-07
 
