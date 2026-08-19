@@ -1565,21 +1565,22 @@ public sealed partial class RetailFrontendFlow : Control
         {
             // SHADOWED, corrected 2026-07-28 from a single flat run. The version
             // string is a shadow/body PAIR like every other text run on the page:
-            // frame 3000 draw 32 is (0.5,464.5)-(42.5,480.5) at 0xFF000000 and
-            // draw 33 is (-0.5,463.5)-(41.5,479.5) at 0xFF102025 — the same
-            // "shadow on the anchor, body at anchor-(1,1), shadow RGB black
-            // carrying the body's own alpha" law that was verified on 63 pairs
-            // across six pages and that DrawText already implements. It was left
-            // flat because our MeasureText("V1.00") is 44 against retail's 42px
-            // ink, which was read as evidence that the pair was not understood.
-            // It was not: the width is a glyph-advance question and the pair is a
-            // separate, settled fact. The 2px remains open and is now the only
-            // thing open about this element.
+            // frame 3000 draw 32/33 is the already-owned DrawText pair — shadow
+            // on the anchor, body at anchor-(1,1), shadow RGB black carrying the
+            // body's own alpha. Dest leftover at 0x004641C9 is
+            // RetailMainMenuVersionOverlayZ: PLATFORM__GetWindowHeight then
+            // sub 0x10, dest X push 0. That leftover is not a dest immediate.
+            // 0x004641C4 push 0x3C23D70A is Z, not scale, so this draw keeps
+            // VersionTint, Format, DestX, DestY(DesignHeight), and scale 1.0.
+            // The 2px MeasureText residual stays open; do not invent a kerning
+            // hack.
             DrawText(
                 RetailMainMenuVersionOverlay.Format(
                     RetailMainMenuVersionOverlay.ImageInitialMajor,
                     RetailMainMenuVersionOverlay.ImageInitialMinor),
-                new Vector2(0f, DesignHeight - 16f),
+                new Vector2(
+                    RetailMainMenuVersionOverlayZ.DestX,
+                    RetailMainMenuVersionOverlayZ.DestY((int)DesignHeight)),
                 1f,
                 new Color(VersionTint, VersionTint.A * fade));
         }
