@@ -29,7 +29,8 @@ public class AssetCatalogFileSafetyHonestyTests
 
         Assert.That(source, Does.Not.Contain("has no containing directory."));
         Assert.That(source, Does.Contain("The asset catalog has no containing folder."));
-        Assert.That(source, Does.Contain("has no containing folder."));
+        Assert.That(source, Does.Contain("That catalog export file has no containing folder."));
+        Assert.That(source, Does.Not.Contain("{label} has no containing folder."));
     }
 
     [Test]
@@ -41,11 +42,13 @@ public class AssetCatalogFileSafetyHonestyTests
         Assert.That(source, Does.Not.Contain("The asset catalog directory resolves outside"));
         Assert.That(source, Does.Contain("The asset catalog folder resolves outside the selected generated export folder."));
         Assert.That(source, Does.Not.Contain("directory resolves outside the selected generated export root."));
-        Assert.That(source, Does.Contain("folder resolves outside the selected generated export folder."));
+        Assert.That(source, Does.Contain("That catalog export folder resolves outside the selected generated export folder."));
         Assert.That(source, Does.Not.Contain("The asset catalog file resolves outside the selected generated export root."));
         Assert.That(source, Does.Contain("The asset catalog file resolves outside the selected generated export folder."));
         Assert.That(source, Does.Not.Contain("{label} resolves outside the selected generated export root."));
-        Assert.That(source, Does.Contain("{label} resolves outside the selected generated export folder."));
+        Assert.That(source, Does.Not.Contain("{label} resolves outside the selected generated export folder."));
+        Assert.That(source, Does.Not.Contain("{label} folder resolves outside"));
+        Assert.That(source, Does.Contain("That catalog export file resolves outside the selected generated export folder."));
     }
 
     [Test]

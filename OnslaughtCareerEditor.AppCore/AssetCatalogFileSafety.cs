@@ -7,6 +7,12 @@ namespace OnslaughtCareerEditor.AppCore
     {
         private const string CatalogFileName = "catalog.json";
         private const string AssetCatalogDirectoryName = "asset_catalog";
+        internal const string CatalogExportHasNoContainingFolder =
+            "That catalog export file has no containing folder.";
+        internal const string CatalogExportFolderOutsideGenerated =
+            "That catalog export folder resolves outside the selected generated export folder.";
+        internal const string CatalogExportFileOutsideGenerated =
+            "That catalog export file resolves outside the selected generated export folder.";
 
         internal static AssetCatalogSelection? ResolveSelection(string? pathOrDirectory)
         {
@@ -304,9 +310,9 @@ namespace OnslaughtCareerEditor.AppCore
             }
 
             string sourceDirectory = Path.GetDirectoryName(sourcePath)
-                ?? throw new DirectoryNotFoundException($"{label} has no containing folder.");
+                ?? throw new DirectoryNotFoundException(AssetCatalogFileSafety.CatalogExportHasNoContainingFolder);
             FileMutationSafety.DirectoryLockSet? sourceDirectoryLocks =
-                FileMutationSafety.LockDirectoryTree(sourceDirectory, $"{label} directory");
+                FileMutationSafety.LockDirectoryTree(sourceDirectory, "catalog export folder");
             SafeFileHandle? handle = null;
             FileStream? stream = null;
             try
@@ -315,8 +321,7 @@ namespace OnslaughtCareerEditor.AppCore
                         sourceDirectoryLocks.PhysicalPath,
                         TrustedExportRoot))
                 {
-                    throw new InvalidOperationException(
-                        $"{label} folder resolves outside the selected generated export folder.");
+                    throw new InvalidOperationException(AssetCatalogFileSafety.CatalogExportFolderOutsideGenerated);
                 }
 
                 string expectedPhysicalPath = Path.Combine(
@@ -339,8 +344,7 @@ namespace OnslaughtCareerEditor.AppCore
                     !FileMutationSafety.IsSameOrUnderRoot(physicalPath, TrustedExportRoot) ||
                     string.Equals(physicalPath, TrustedExportRoot, FileMutationSafety.PathComparison))
                 {
-                    throw new InvalidOperationException(
-                        $"{label} resolves outside the selected generated export folder.");
+                    throw new InvalidOperationException(AssetCatalogFileSafety.CatalogExportFileOutsideGenerated);
                 }
 
                 stream = new FileStream(handle, FileAccess.Read);
