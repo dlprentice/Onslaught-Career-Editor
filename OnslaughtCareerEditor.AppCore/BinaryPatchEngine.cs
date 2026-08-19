@@ -141,6 +141,8 @@ namespace OnslaughtCareerEditor.AppCore
             "That game file could not be read. Nothing was changed.";
         public const string WorkingCopyPathUnusable =
             "That patch target could not be used. Nothing was changed.";
+        public const string WorkspaceFolderRequired =
+            "An app-owned workspace folder is required.";
         public const string BackupFileMissing =
             "BEA.exe.original.backup could not be found. Nothing was changed.";
         private const string BackupHashSuffix = ".sha256";
@@ -1532,7 +1534,7 @@ namespace OnslaughtCareerEditor.AppCore
             // for - so a caller patching an install does not have to invent a workspace root it
             // does not have.
             if (string.IsNullOrWhiteSpace(target.AllowedRoot) && target.InstalledGame is null)
-                return (false, "Patch target requires an app-owned workspace root.", null);
+                return (false, WorkspaceFolderRequired, null);
 
             string fullExePath;
             string fullRoot;
