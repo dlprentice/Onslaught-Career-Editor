@@ -25,6 +25,7 @@ public class SaveLabPageHonestyTests
             SaveLabPageText.BrowseCopySourceFailed,
             SaveLabPageText.LoadKeybindsFailed,
             SaveLabPageText.PatchFailed,
+            SaveLabPageText.SafeCopyInstallFailed,
         };
 
         foreach (string line in lines)
@@ -53,6 +54,7 @@ public class SaveLabPageHonestyTests
         Assert.That(analyzer, Does.Contain("SaveLabPageText.ComparisonFailed"));
         Assert.That(analyzer, Does.Contain("SaveLabPageText.AnalysisFailed"));
         Assert.That(analyzer, Does.Contain("SaveLabPageText.DescribeOutputRefusal"));
+        Assert.That(analyzer, Does.Contain("SaveLabPageText.SafeCopyInstallFailed"));
         Assert.That(analyzer, Does.Not.Contain("ex.Message"));
 
         Assert.That(options, Does.Contain("SaveLabPageText.BrowseOptionsFailed"));
@@ -85,6 +87,25 @@ public class SaveLabPageHonestyTests
         Assert.That(question, Does.Not.Contain("/"));
         Assert.That(SaveLabPageText.OverwriteCanceled, Does.Contain("Nothing was changed"));
         Assert.That(SaveLabPageText.OverwriteCanceled, Does.Not.Contain(":\\"));
+    }
+
+    [Test]
+    public void PuttingASaveInASafeCopyDoesNotPaintTheWriteMessage()
+    {
+        string code = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot,
+            "OnslaughtCareerEditor.WinUI",
+            "Pages",
+            "SavesPage.xaml.cs"));
+
+        int start = code.IndexOf("private async void SaveEditorInstallToSafeCopyButton_Click", StringComparison.Ordinal);
+        int end = code.IndexOf("private void ShowInstallNote", StringComparison.Ordinal);
+        Assert.That(start, Is.GreaterThanOrEqualTo(0));
+        Assert.That(end, Is.GreaterThan(start));
+
+        string method = code[start..end];
+        Assert.That(method, Does.Contain("SaveLabPageText.SafeCopyInstallFailed"));
+        Assert.That(method, Does.Not.Contain("outcome.Message"));
     }
 
     [Test]

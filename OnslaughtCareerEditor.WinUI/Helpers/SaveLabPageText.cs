@@ -30,6 +30,9 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         public const string PatchFailed =
             "Game options patch failed. Nothing was changed.";
 
+        public const string SafeCopyInstallFailed =
+            "Could not put that save in the safe copy. Nothing was changed.";
+
         /// <summary>
         /// Null when the write may proceed. Same classifier and sentence as Cheats
         /// and Save Rescue, so an output path cannot become a second walk.

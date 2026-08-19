@@ -946,7 +946,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
             ShowInstallNote(outcome.Success
                 ? $"Done. {name}.bes is in {target.DisplayName} - close the copied game before loading it."
-                : outcome.Message);
+                : SaveLabPageText.SafeCopyInstallFailed);
             AppStatusService.SetStatus(outcome.Success
                 ? "Save Lab: put the save into your safe copy"
                 : "Save Lab: could not install the save");

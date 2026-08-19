@@ -70,7 +70,8 @@ live in `developer_state.json` and the campaign ledgers.
   refusal names why the copy was not opened, without the Win32
   dump or a path. A live-trainer write that cannot open the copy
   names that refusal the same way, without the Win32 dump. The launch
-  plan names BEA.exe, not the copy folder path.
+  plan names BEA.exe, not the copy folder path. Putting a career into a
+  safe copy names a failed write without the writer sentence.
 
 ## 1.0.11 — 2026-08-07
 
