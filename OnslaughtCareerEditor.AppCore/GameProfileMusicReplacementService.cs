@@ -69,6 +69,8 @@ namespace OnslaughtCareerEditor.AppCore
         public const string CopyCannotUseLink = "That copy cannot use a shortcut or link.";
         public const string FileCannotShareData = "That file cannot share its data with another file.";
         public const string MusicSwapPresetUnknown = "That music swap is not available.";
+        public const string MusicFileTooSmall = "That music file is too small.";
+        public const string MusicFileNotOgg = "That music file is not an OGG.";
         private const string BackupSuffix = ".original.backup";
 
         private static readonly GameProfileMusicSwapPreset[] s_musicSwapPresets =
@@ -409,11 +411,11 @@ namespace OnslaughtCareerEditor.AppCore
             using (FileStream stream = File.OpenRead(path))
             {
                 if (stream.Read(header, 0, header.Length) != header.Length)
-                    throw new InvalidOperationException($"{label} is too small.");
+                    throw new InvalidOperationException(MusicFileTooSmall);
             }
 
             if (header[0] != (byte)'O' || header[1] != (byte)'g' || header[2] != (byte)'g' || header[3] != (byte)'S')
-                throw new InvalidOperationException($"{label} must start with the OggS header.");
+                throw new InvalidOperationException(MusicFileNotOgg);
         }
 
         private static string ResolveManifestRelativePath(string safeRoot, string relativePath)

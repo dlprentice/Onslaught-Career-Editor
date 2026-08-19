@@ -39,6 +39,13 @@ public class PatchBenchMusicFolderHonestyTests
             Is.EqualTo("That music swap is not available."));
         Assert.That(GameProfileMusicReplacementService.MusicSwapPresetUnknown.ToLowerInvariant(),
             Does.Not.Contain("path"));
+        Assert.That(source, Does.Contain("MusicFileTooSmall"));
+        Assert.That(source, Does.Contain("MusicFileNotOgg"));
+        Assert.That(source, Does.Not.Contain("must start with the OggS header"));
+        Assert.That(GameProfileMusicReplacementService.MusicFileNotOgg,
+            Is.EqualTo("That music file is not an OGG."));
+        Assert.That(GameProfileMusicReplacementService.MusicFileNotOgg,
+            Does.Not.Contain("OggS"));
         Assert.That(source, Does.Not.Contain("does not contain data\\\\Music."));
         Assert.That(source, Does.Not.Contain("does not contain data\\Music."));
     }

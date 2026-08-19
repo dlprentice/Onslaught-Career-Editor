@@ -345,8 +345,9 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                         outputRoot,
                         GameProfileMusicReplacementService.UseBea02ForBea01PresetId));
 
-                Assert.Contains("Preset target music file", ex.Message, StringComparison.OrdinalIgnoreCase);
-                Assert.Contains("OggS", ex.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(GameProfileMusicReplacementService.MusicFileNotOgg, ex.Message);
+                Assert.DoesNotContain("OggS", ex.Message, StringComparison.Ordinal);
+                Assert.DoesNotContain("Preset", ex.Message, StringComparison.Ordinal);
             }
             finally
             {
@@ -491,7 +492,8 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                             TargetMusicFileName: "BEA_01(Master).ogg",
                             ReplacementOggPath: replacementPath)));
 
-                Assert.Contains("OggS", ex.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(GameProfileMusicReplacementService.MusicFileNotOgg, ex.Message);
+                Assert.DoesNotContain("OggS", ex.Message, StringComparison.Ordinal);
             }
             finally
             {
