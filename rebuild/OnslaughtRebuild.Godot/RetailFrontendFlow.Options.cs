@@ -855,10 +855,13 @@ public sealed partial class RetailFrontendFlow
         // 0x0089BE28 is set, write currentIndex from committedIndex and
         // the expand byte. That is cancel, not dest, not colour, not
         // hover, and not click. Click leftover already owns 0x004A4010.
-        // Hover leftover already owns 0x004A3FA6.
+        // Hover leftover already owns 0x004A3FA6. Latch-to-button SET
+        // leftover is RetailFrontendLatchToButton: test ah, 0x80 then
+        // mov [0x0089BE28], 1. That is the SET cancel leftover reads.
+        // FMV skip already owns the OR at 0x0053F2EB.
         if (!RetailOptionsDropdownListCancel.Applies(
                 RetailOptionsDropdownListCancel.HelperNonzero(0, 0),
-                latch: true))
+                latch: RetailFrontendLatchToButton.Set(rightDown: true)))
         {
             return false;
         }
