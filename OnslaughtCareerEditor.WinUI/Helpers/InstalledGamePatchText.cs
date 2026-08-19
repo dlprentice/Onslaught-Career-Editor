@@ -95,7 +95,7 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
                     "Your original executable is saved beside the game as BEA.exe.original.backup. "
                         + "Patching from here can be undone.",
                 InstalledGamePatchReadiness.CleanAndUnbackedUp =>
-                    "Your game is as it shipped. Nothing has been backed up yet - patching will copy the original first.",
+                    "Your game is as it shipped. Nothing has been backed up. Patching will copy the original first.",
                 InstalledGamePatchReadiness.ChangedWithNothingToGoBackTo =>
                     "Something has already changed this BEA.exe, and there is no original beside it. The app will not " +
                         "copy a changed file and call it the original, so patching stays off until the game is " +

@@ -160,6 +160,18 @@ public class InstalledGamePatchSurfaceTests
     }
 
     [Test]
+    public void AnUnbackedInstallDoesNotSayYet()
+    {
+        string status = InstalledGamePatchText.BuildStatusLine(
+            InstalledGamePatchReadiness.CleanAndUnbackedUp,
+            null);
+
+        Assert.That(status, Does.Contain("Nothing has been backed up."));
+        Assert.That(status, Does.Contain("copy the original first"));
+        Assert.That(status, Does.Not.Contain("yet"));
+    }
+
+    [Test]
     public void AFailedBackupNamesTheActionWithoutTheException()
     {
         Assert.That(BinaryPatchEngine.InstalledBackupFailed, Does.Contain("backup could not be made"));
@@ -247,7 +259,7 @@ public class InstalledGamePatchSurfaceTests
         Assert.That(InstalledGamePatchText.CanPatch(clean), Is.True);
         Assert.That(
             InstalledGamePatchText.BuildStatusLine(clean, null),
-            Does.Contain("patching will copy the original first"));
+            Does.Contain("copy the original first"));
     }
 
     [Test]
