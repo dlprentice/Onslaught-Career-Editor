@@ -20,8 +20,11 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         public const string PreviewExportMissing =
             "This goodie is cataloged. Choose another Goodie, or load an export that includes its preview.";
 
+        /// <summary>
+        /// An empty leftover-texture list used to say sidecar. Name the texture.
+        /// </summary>
         public const string SidecarPreviewMissing =
-            "Choose another export if you need a sidecar preview.";
+            "Choose another export if you need a texture preview.";
 
         /// <summary>
         /// Opening a leftover texture used to say sidecar. Name the texture.

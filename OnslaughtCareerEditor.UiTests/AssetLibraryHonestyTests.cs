@@ -132,7 +132,7 @@ public class AssetLibraryHonestyTests
         string helper = File.ReadAllText(Path.Combine(
             TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI", "Helpers", "AssetLibraryPageText.cs"));
 
-        Assert.That(helper, Does.Contain("Choose another export if you need a sidecar preview."));
+        Assert.That(helper, Does.Contain("Choose another export if you need a texture preview."));
         Assert.That(page, Does.Contain("AssetLibraryPageText.SidecarPreviewMissing"));
         Assert.That(page, Does.Not.Contain("No sidecar preview file was found beside the export."));
         Assert.That(helper, Does.Not.Contain("found beside the export"));
