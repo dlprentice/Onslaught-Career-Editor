@@ -2,10 +2,11 @@
 
 Status: active static function note
 Last updated: 2026-08-19
-Summary: FillOut's score-time arm skips unless CWorld__LoadWorld stored
-(percentage − full) > 0; kills copy player+8; training still unlocks
-goodies 0/8/78/121/164. L100 Size, kill totals, and authored time bytes
-stay unclaimed.
+Summary: FillOut's score-time arm is live on L100: last LoadWorld
+stores RLWD `300.0f` / `500.0f` so `(pct − full)=200>0`. Base-things
+`Size` is 35 (At() membership, including two type-37 `CSafeSide`).
+Training still unlocks goodies 0/8/78/121/164. Kill totals stay
+unclaimed.
 Source File: `references/Onslaught/game.cpp:910` | Binary: BEA.exe, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 Evidence: MEASURED — independently re-read 2026-08-19 from the official
@@ -42,9 +43,22 @@ as set, so a leftover `0` **clears** that bit on the destination node.
 `level_structure[0][3] = 110` is the destination after a world-100
 primary; this body does not itself walk the career graph.
 
-`Size` after a first-play Level 100 Won is **not** measured here. Authored
-BSWD has 35 unit records (materializer: 33 visible + 2 type-37 markers).
-That is not a runtime `[0x0085515c]` reading.
+`Size` after a first-play Level 100 Won is **35**. That is
+`CSPtrSet` `+0xc` on WORLD+`0xc0` (`0x00855150`). Only the is-base
+`LoadWorld` `AddToTail` arms at `0x0050d00f` / `0x0050d05b` grow it.
+L100 BSWD payload (AYA `100_res_PC.aya` WRES/WRLD/BSWD, inflated SHA-256
+`115ede05…2df4`, tag at inflated `3595001`, payload `3595009`) is
+`uint16` version 50 then, at payload `+60`, `int32 1` / `int32 0` /
+`uint16 35`. Type 37 is created (`0x004bf745` `push 0x45` /
+`push 0x00630c20`) and names `.?AVCSafeSide` at `0x00630b48` /
+`CSafeSide` at `0x00630c98`. Do not drop those two slots. Do not adopt
+materializer 33.
+
+First-play script does not kill a list member. FillOut therefore stores
+`1` at `0x006728f8+i*4` for `i=0..34` and leaves `35..287` untouched (0
+on a cold BSS). A player who destroys a type-35 iceberg *and still Wins*
+would flip those indices; that is not the first-play script contract and
+is not claimed. No TTD dword at FillOut was read.
 
 ### Scalars, objectives, slots, kills
 
@@ -100,11 +114,23 @@ The only image `fstp` of those two BSS dwords is inside
 
 Each float was just `CDXMemBuffer__Read` (`0x00548570`, 4 bytes) into
 `[esp+0x7c]` / `[esp+0x84]` / `[esp+0x8c]` / `[esp+0x68]`. Version
-`[esp+0x18]` in `{45,46,47}` reads three extra dwords first; Level 100
-is version 50, so those extras are skipped (`cmp ax, 0x2d` / `0x30`).
-Which BSWD/RLWD bytes become the two times is **not** claimed — last
-`LoadWorld` wins. Until that map exists, do not invent a skip of this
-arm for Level 100.
+`[esp+0x18]` in `{45,46,47}` reads five extra dwords first; Level 100
+is version 50, so those extras are skipped (`cmp ax, 0x2d` / `0x30` at
+`0x0050d242`).
+
+Last `LoadWorld` on a Level 100 start is the outer / level parse
+(`LoadLevel` → `LoadWorldFile(level_id, is_base=0)`), stream
+WRES/WRLD/RLWD (tag at inflated `3649678`, payload `3649686`, version
+50). Dwords 8 and 9 of the 11-dword post-waypoint block are payload
+`+0x147ba` / `+0x147be` = `0x43960000` / `0x43fa0000` (`300.0f` /
+`500.0f`). `(500 − 300) = 200 > 0`, so FillOut's `test ah,0x41` /
+`jne` skip does **not** fire. BSWD same slots are
+`0x0068457d` / `0x0012ef72` and lose to the later RLWD `fstp`s.
+Authored names for the other nine tail dwords are **not** claimed.
+
+Independent re-read 2026-08-19 after `t_01b77abf` / `t_4302bd82`.
+Specimen + twin `74154bfa…7750`. Inflated L100 AYA SHA-256
+`115ede05…2df4`. No Ghidra.
 
 ### Secondary ranking clamp
 
@@ -121,10 +147,15 @@ Cheapest falsifier: file `0x0006d470` is not `a1 5c 51 85 00`, **or**
 `d9 85 0c 01 00 00`, **or** `0x0006d63e` is not `d8 a5 08 01 00 00`,
 **or** `operand_scan` of `0x008a9ba0` / `0x008a9ba4` is not exactly one
 `fstp` each at `0x0050d2e0` / `0x0050d2ed`, **or**
-`0x0001c188` is not `83 f8 64`.
+`0x0001c188` is not `83 f8 64`, **or** `0x0010d2e0` is not
+`d9 1d a0 9b 8a 00`, **or** `0x0010d2ed` is not `d9 1d a4 9b 8a 00`,
+**or** L100 RLWD payload `+0x147ba` is not `00 00 96 43`, **or**
+`+0x147be` is not `00 00 fa 43`, **or** BSWD payload `+62` is not
+`uint16 35`, **or** `0x0010d00f` is not
+`8d 8a c0 00 00 00 e8 06 8b fd ff`.
 
 ## Functions
 
 | Address | Name | Byte evidence | Contract (confidence) |
 | --- | --- | --- | --- |
-| `0x0046d470` | `CGame__FillOutEndLevelData` | `a15c518500 81ec10010000 3d20010000 … d9850c010000 d8a508010000 … c3` | thiscall; bare `ret`; 920 B. HIGH on ABI, base-things 1/0 law, kill copy from `player+8`, pre-arm `1.0f`, score-time `fcomp` skip, LoadWorld-only BSS writers. **Not** on L100 `Size`, L100 kill totals, or authored time bytes. |
+| `0x0046d470` | `CGame__FillOutEndLevelData` | `a15c518500 81ec10010000 3d20010000 … d9850c010000 d8a508010000 … c3` | thiscall; bare `ret`; 920 B. HIGH on ABI, L100 `Size=35`, RLWD `300/500` live score-time arm, kill copy from `player+8`. **Not** on L100 kill totals, iceberg-destroy store-0, or authored names for the other nine tail dwords. |

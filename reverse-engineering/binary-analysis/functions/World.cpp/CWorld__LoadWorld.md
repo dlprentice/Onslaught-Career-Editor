@@ -36,6 +36,21 @@ world setup. The sole return is `RET 0xc`, proving three stack arguments. The
 argument names are bounded semantic labels; arity, order, and callee cleanup are
 direct ABI evidence.
 
+## MEASURED 2026-08-19 (L100 score-time tail)
+
+Independently re-read official specimen `74154bfa…7750` and inflated
+`100_res_PC.aya` SHA-256 `115ede05…2df4` after `t_01b77abf`. No Ghidra.
+Wave844 / 2026-07-13 text below is not this proof.
+
+The only image `fstp` of `CGame+0x108` / `+0x10c` is `0x0050d2e0` /
+`0x0050d2ed`. Last Level 100 `LoadWorld` is the outer RLWD parse.
+Payload dwords 8 and 9 at `+0x147ba` / `+0x147be` are `300.0f` /
+`500.0f`. `(pct − full)>0`. Authored names for the other nine tail
+dwords are not claimed.
+
+Cheapest falsifier: `0x0010d2e0` is not `d9 1d a0 9b 8a 00`, **or**
+L100 RLWD payload `+0x147ba` is not `00 00 96 43`.
+
 ## Historical Wave844 Static Read-Back
 
 Wave844 saved comment/tag evidence and preserved the then-existing one-argument
