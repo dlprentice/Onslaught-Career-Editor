@@ -201,7 +201,7 @@ namespace OnslaughtCareerEditor.AppCore
                     return path;
             }
 
-            throw new IOException($"Could not allocate a unique {prefix}{extension} path in {directory}.");
+            throw new IOException($"Could not make a unique {prefix}{extension} in that folder.");
         }
 
         private static void WriteControlOptionsManifest(
