@@ -265,7 +265,7 @@ namespace OnslaughtCareerEditor.AppCore
             string safeRoot = ValidateSafeGameRoot(options.SafeGameRoot, options.AppOwnedProfilesRoot);
             string manifestPath = Path.Combine(safeRoot, ManifestFileName);
             if (!File.Exists(manifestPath))
-                throw new FileNotFoundException("Playable copied game folder music replacement manifest was not found.", manifestPath);
+                throw new FileNotFoundException("That copy is missing onslaught-music-replacement-manifest.json.");
             RejectExistingReparseAncestors(manifestPath, "music replacement manifest path");
             RejectReparsePoint(manifestPath, "music replacement manifest");
             RejectMultipleHardLinks(manifestPath, "Music replacement manifest");

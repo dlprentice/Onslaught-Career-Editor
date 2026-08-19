@@ -40,4 +40,19 @@ public class MusicReplacementManifestHonestyTests
         Assert.That(source, Does.Contain(
             "Music replacement manifest files must stay inside the copy."));
     }
+
+    [Test]
+    public void AMissingManifestNamesTheFileNotAPath()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot,
+            "OnslaughtCareerEditor.AppCore",
+            "GameProfileMusicReplacementService.cs"));
+
+        Assert.That(source, Does.Not.Contain(
+            "Playable copied game folder music replacement manifest was not found."));
+        Assert.That(source, Does.Not.Contain(", manifestPath)"));
+        Assert.That(source, Does.Contain(
+            "That copy is missing onslaught-music-replacement-manifest.json."));
+    }
 }
