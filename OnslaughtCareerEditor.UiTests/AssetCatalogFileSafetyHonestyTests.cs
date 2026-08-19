@@ -31,4 +31,14 @@ public class AssetCatalogFileSafetyHonestyTests
         Assert.That(source, Does.Contain("The asset catalog has no containing folder."));
         Assert.That(source, Does.Contain("has no containing folder."));
     }
+
+    [Test]
+    public void AnEscapedCatalogFolderNamesTheFolderNotADirectory()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "AssetCatalogFileSafety.cs"));
+
+        Assert.That(source, Does.Not.Contain("The asset catalog directory resolves outside"));
+        Assert.That(source, Does.Contain("The asset catalog folder resolves outside the selected generated export folder."));
+    }
 }

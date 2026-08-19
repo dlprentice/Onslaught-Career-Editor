@@ -175,7 +175,7 @@ namespace OnslaughtCareerEditor.AppCore
                         _rootLocks.PhysicalPath))
                 {
                     throw new InvalidOperationException(
-                        "The asset catalog directory resolves outside the selected generated export root.");
+                        "The asset catalog folder resolves outside the selected generated export folder.");
                 }
 
                 SafeFileHandle handle = FileMutationSafety.OpenNoFollowReadHandle(
