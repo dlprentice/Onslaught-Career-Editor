@@ -1403,7 +1403,13 @@ public sealed partial class RetailFrontendFlow : Control
             string label = _menuText[item.Kind];
             const float textScale = 1f;
             float textWidth = MeasureText(label, textScale);
-            var textPos = new Vector2(MenuColumnX - (textWidth * 0.5f), rowY - 8f);
+            // RetailMainMenuLabelDest: dest X is the measure
+            // sibling (219 minus half cx), not a dest immediate.
+            // Dest Y keeps rowY - 8. Do not invent dest or a
+            // 2px kerning hack.
+            var textPos = new Vector2(
+                RetailMainMenuLabelDest.DestX(textWidth),
+                rowY - 8f);
 
             if (fade <= 0f)
             {

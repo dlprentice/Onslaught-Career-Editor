@@ -171,8 +171,8 @@ public sealed class RetailMainMenuLabelTextTests
 
         Assert.Contains("RetailMainMenuLabelText", draw, StringComparison.Ordinal);
         Assert.Contains("RetailMainMenuLabelColor.SubmittedColor", draw, StringComparison.Ordinal);
+        Assert.Contains("RetailMainMenuLabelDest.DestX", draw, StringComparison.Ordinal);
         Assert.Contains("MeasureText", draw, StringComparison.Ordinal);
-        Assert.Contains("MenuColumnX", draw, StringComparison.Ordinal);
         Assert.Contains("DrawText(", draw, StringComparison.Ordinal);
         Assert.DoesNotContain("0.32", draw, StringComparison.Ordinal);
         Assert.DoesNotContain("1000f", draw, StringComparison.Ordinal);
