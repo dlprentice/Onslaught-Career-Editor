@@ -286,6 +286,38 @@ public sealed class RetailOptionsMenu
     }
 
     /// <summary>
+    /// Expanded list hover leftover. Official 74154bfa writes
+    /// <c>[this+0x20]</c> when <c>0x004693D0</c> returns true. That is
+    /// currentIndex, not dest, not colour, and not a Live apply. Click
+    /// at <c>0x004A4010</c> is a later leftover.
+    /// </summary>
+    public bool HoverState(int index)
+    {
+        if (!IsExpanded)
+        {
+            return false;
+        }
+
+        RetailOptionsRow row = SelectedRow;
+        if (index < 0 || index >= row.States.Count)
+        {
+            return false;
+        }
+
+        int next = RetailOptionsDropdownListHover.CurrentIndexAfterHover(
+            row.CurrentIndex,
+            index,
+            hit: true);
+        if (next == row.CurrentIndex)
+        {
+            return false;
+        }
+
+        row.CurrentIndex = next;
+        return true;
+    }
+
+    /// <summary>
     /// Left/right (buttons <c>0x36</c>/<c>0x37</c>). On a value bar this steps the
     /// index directly - value rows are not entered first. On a dropdown, retail
     /// EXPANDS the list and moves by one in the same press.

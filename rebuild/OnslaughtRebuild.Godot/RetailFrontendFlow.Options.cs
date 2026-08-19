@@ -293,6 +293,9 @@ public sealed partial class RetailFrontendFlow
         // CMenuItemDropdown expanded list colour leftover is
         // RetailOptionsDropdownListColor: 0xFF404040, or -1 when the
         // loop index equals currentIndex. That is colour, not dest.
+        // CMenuItemDropdown expanded list hover leftover is
+        // RetailOptionsDropdownListHover: call 0x004693D0 then write
+        // currentIndex. That is hover, not dest and not colour.
         // CMenuItemDropdown expanded panel dest leftover is
         // RetailOptionsDropdownPanelDest: collapsed dest leftover, dest Y
         // incoming minus integer-half of (count-1)*cy, width max cx plus 3.
@@ -698,6 +701,44 @@ public sealed partial class RetailFrontendFlow
 
     private bool HandleOptionsPointerMotion(Vector2 design)
     {
+        // CMenuItemDropdown expanded list hover leftover is
+        // RetailOptionsDropdownListHover: call 0x004693D0 then write
+        // currentIndex. That is hover, not dest and not colour. Click
+        // at 0x004A4010 is a later leftover.
+        if (_options.IsExpanded)
+        {
+            RetailOptionsRow expanded = _options.SelectedRow;
+            float rowTop = _options.RowTop(_options.SelectedIndex);
+            int labelCx = (int)MeasureText(expanded.Label, 1f);
+            for (int i = 0; i < expanded.States.Count; i++)
+            {
+                if (!RetailOptionsDropdownListHover.Contains(
+                    design.X,
+                    design.Y,
+                    RetailOptionsDropdownListDest.DestX(OptionLabelRightX),
+                    RetailOptionsDropdownListDestY.DestY(
+                        rowTop,
+                        expanded.States.Count,
+                        (int)DropdownEntryPitch,
+                        i),
+                    labelCx,
+                    (int)DropdownEntryPitch))
+                {
+                    continue;
+                }
+
+                if (!_options.HoverState(i))
+                {
+                    return false;
+                }
+
+                RequestAudioCue(RetailFrontendAudioCue.Move);
+                return true;
+            }
+
+            return false;
+        }
+
         // Hovering IS selecting: the retail hover path sets the selected index and
         // does not consult IsEnabled, and the click path then injects the same
         // 0x2C/0x33 pair the keyboard produces.
