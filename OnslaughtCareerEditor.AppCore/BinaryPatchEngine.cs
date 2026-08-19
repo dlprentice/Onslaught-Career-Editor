@@ -153,6 +153,8 @@ namespace OnslaughtCareerEditor.AppCore
             "Patch target is under Program Files or another protected install folder. Work in a copy, or choose to patch your installed game - which takes a verified backup first.";
         public const string SteamAppsCommonInstall =
             "Patch target is a steamapps/common/Battle Engine Aquila install. Work in a copy, or choose to patch your installed game - which takes a verified backup first.";
+        public const string PatchTargetMustBeBeaExeOnlyCopy =
+            "Patch target must be a BEA.exe-only copy.";
         public const string BackupFileMissing =
             "BEA.exe.original.backup could not be found. Nothing was changed.";
         public const string BackupHashWithoutBackup =
@@ -1545,7 +1547,7 @@ namespace OnslaughtCareerEditor.AppCore
                 return (false, "Select a valid BEA.exe first.", null);
 
             if (!string.Equals(Path.GetFileName(target.ExePath), TargetFileName, StringComparison.OrdinalIgnoreCase))
-                return (false, "Patch target must be a BEA.exe-only copy.", null);
+                return (false, PatchTargetMustBeBeaExeOnlyCopy, null);
 
             // An installed-game permission carries its own root - the game folder it was granted
             // for - so a caller patching an install does not have to invent a workspace root it
