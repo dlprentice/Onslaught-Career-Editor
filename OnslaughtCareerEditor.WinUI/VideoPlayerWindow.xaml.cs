@@ -80,7 +80,7 @@ namespace OnslaughtCareerEditor.WinUI
             string fullPath = Path.GetFullPath(path);
             if (!File.Exists(fullPath))
             {
-                throw new FileNotFoundException("The selected video file was not found.", fullPath);
+                throw new FileNotFoundException("That video file could not be found.");
             }
 
             if (!IsReady)

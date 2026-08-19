@@ -58,4 +58,15 @@ public class VideoPlayerHonestyTests
         Assert.That(player, Does.Contain("A video file is required."));
         Assert.That(player.ToLowerInvariant(), Does.Not.Contain("video path"));
     }
+
+    [Test]
+    public void AMissingVideoDoesNotAttachTheFilePath()
+    {
+        string player = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI", "VideoPlayerWindow.xaml.cs"));
+
+        Assert.That(player, Does.Not.Contain("new FileNotFoundException(\"The selected video file was not found.\", fullPath)"));
+        Assert.That(player, Does.Contain("That video file could not be found."));
+        Assert.That(player, Does.Not.Contain("FileNotFoundException(MediaPageText"));
+    }
 }
