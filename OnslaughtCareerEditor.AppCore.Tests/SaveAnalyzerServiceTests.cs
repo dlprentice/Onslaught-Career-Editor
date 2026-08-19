@@ -581,6 +581,34 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         }
 
         [Fact]
+        public void BuildCompareDocument_DoesNotDumpTheCompareErrorOnTheStatusLine()
+        {
+            BesFilePatcher.CompareResult result = new()
+            {
+                File1Name = "left.bes",
+                File2Name = "right.bes",
+                File1Size = 9972,
+                File2Size = 10004,
+                DifferingBytes = 0,
+                ErrorMessage = "Invalid file size: 9,972 bytes (expected 10,004)"
+            };
+
+            SaveAnalyzerDocument document = SaveAnalyzerService.BuildCompareDocument(
+                @"C:\Games\Steam\steamapps\common\Battle Engine Aquila\left.bes",
+                @"C:\Games\Steam\steamapps\common\Battle Engine Aquila\right.bes",
+                result);
+
+            Assert.Equal(SaveAnalyzerService.ComparisonFailed, document.StatusText);
+            Assert.Contains("Nothing was changed", document.StatusText);
+            Assert.DoesNotContain("Invalid file size", document.StatusText);
+            Assert.DoesNotContain("identical", document.StatusText, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain(@"C:\Games", document.StatusText);
+            Assert.DoesNotContain(":\\", document.StatusText);
+            Assert.Contains("9,972", document.Metrics.Single(metric => metric.Label == "Size Match").Detail);
+            Assert.Contains("9,972", document.ReportText);
+        }
+
+        [Fact]
         public void AnalyzeFile_MissingPath_DoesNotDumpThePathOrException()
         {
             string missing = Path.Combine(

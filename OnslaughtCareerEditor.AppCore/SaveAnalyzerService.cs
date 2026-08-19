@@ -193,7 +193,7 @@ namespace OnslaughtCareerEditor.AppCore
                 SummaryTitle = "Comparison Summary",
                 ModeText = "Comparison mode: summary counts and differing regions for the selected pair.",
                 StatusText = !string.IsNullOrWhiteSpace(result.ErrorMessage)
-                    ? result.ErrorMessage
+                    ? ComparisonFailed
                     : result.DifferingBytes == 0
                     ? "Save Analyzer: Files are identical"
                     : $"Save Analyzer: Found {result.DifferingBytes} differing bytes in {result.DiffRanges.Count} regions",

@@ -110,7 +110,8 @@ live in `developer_state.json` and the campaign ledgers.
   same. A Media library with no tracks or cutscenes says to check the
   game folder, instead of describing the emptiness. Windowed & Mods
   apply and restore name BEA.exe and BEA.exe.original.backup, not the
-  full paths.
+  full paths. A failed Save Analyzer compare names the action, not the
+  compare error, on the status line.
 
 ## 1.0.11 — 2026-08-07
 
