@@ -1277,8 +1277,7 @@ namespace OnslaughtCareerEditor.AppCore
                 catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
                 {
                     return (false,
-                        "Apply aborted: the verified full-file backup could not be created, and the BEA.exe-only copy was not modified.\n" +
-                        ex.Message);
+                        "Apply aborted: the verified full-file backup could not be created, and the BEA.exe-only copy was not modified.");
                 }
             }
 
@@ -1301,8 +1300,7 @@ namespace OnslaughtCareerEditor.AppCore
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
             {
                 return (false,
-                    "Patch apply failed before atomic publication completed. The verified full-file backup remains available.\n" +
-                    ex.Message);
+                    "Patch apply failed before atomic publication completed. The verified full-file backup remains available.");
             }
             var (_, allPatchedAfterWrite, afterRows) = VerifyPatchSpecs(readBackData, selected);
             if (!allPatchedAfterWrite)
@@ -1471,8 +1469,7 @@ namespace OnslaughtCareerEditor.AppCore
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
             {
                 return (false,
-                    "Restore failed before atomic publication completed. The verified backup snapshot was left unchanged.\n" +
-                    ex.Message);
+                    "Restore failed before atomic publication completed. The verified backup snapshot was left unchanged.");
             }
             if (!restoredBytes.SequenceEqual(backupBytes))
             {

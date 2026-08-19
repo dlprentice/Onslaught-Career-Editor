@@ -74,7 +74,8 @@ live in `developer_state.json` and the campaign ledgers.
   plan names BEA.exe, not the copy folder path. Putting a career into a
   safe copy names a failed write without the writer sentence. A Cheats
   write names the new file, not a path, if the writer sentence is not
-  already public-safe.
+  already public-safe. A failed apply or restore of a copied game no
+  longer dumps the exception.
 
 ## 1.0.11 — 2026-08-07
 
