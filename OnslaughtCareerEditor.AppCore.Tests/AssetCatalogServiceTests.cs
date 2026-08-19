@@ -913,7 +913,8 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             string attempted = Path.Combine("C:", "Games", "export-catalog");
             string status = AssetCatalogLoadStatusText.BuildMissingCatalogStatus(attempted, detectedGameDirectory: null);
 
-            Assert.Contains("The selected folder does not contain catalog.json.", status);
+            Assert.Contains("That folder does not contain catalog.json.", status);
+            Assert.DoesNotContain("The selected folder", status, StringComparison.OrdinalIgnoreCase);
             Assert.DoesNotContain("selected path", status, StringComparison.OrdinalIgnoreCase);
             Assert.DoesNotContain(attempted, status, StringComparison.OrdinalIgnoreCase);
             Assert.DoesNotContain(":\\", status);
