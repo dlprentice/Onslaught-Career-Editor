@@ -1410,6 +1410,15 @@ public sealed partial class RetailFrontendFlow : Control
                 continue;
             }
 
+            // RetailMainMenuLabelText: the other CFEPMain::Render
+            // DrawTextDynamic at 0x0046316F. Dest is ebx / [esp+0x24],
+            // not immediates. 0x0046315A leftover is Z, not writing
+            // chrome and not the selector bar. Leftover stack args
+            // 10 / 9 / 8 stay unused. Font slot push 1. Scales stay
+            // 1.0. Colour stays LabelColor. Dest stays MeasureText.
+            // Cite-fix: cmp ebx, 0x3E8 is 0x00465771; 0x00465777 is
+            // mov word [eax], 0. Do not invent dest, wrap, fade,
+            // sheen, or a 2px kerning hack.
             Color textColor = RetailColor(RetailMainMenuLabelColor.SubmittedColor(
                 selected,
                 item.IsAvailable,
