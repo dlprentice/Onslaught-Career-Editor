@@ -46,7 +46,7 @@ namespace OnslaughtRebuild.Client.Tests;
 /// already owns <c>0x00460B61</c>. Latch SET already owns
 /// <c>0x0042D5CF</c>. FMV skip already owns the OR at
 /// <c>0x0053F2EB</c>. The later <c>fld [esp+0x94]</c> /
-/// <c>fcomp 1.0</c> at <c>0x00460FD6</c> is later. Dest Y
+/// <c>fcomp 1.0</c> at <c>0x00460FD8</c> is later. Dest Y
 /// does not. Dest is not 15.5, 322.5, 148.0, 10.0, 138.0,
 /// 322.0, 610.0, 90.0, 570.0, 0.75, 4.0, 1.0, 255.0, 0.0,
 /// 60.0, 0.5, 320.0, or the 2.0 constant. DrawLevelSelect
@@ -91,7 +91,7 @@ public sealed class RetailLevelSelectLater60Tests
         Assert.Equal(0x43A00000u, RetailLevelSelectLater60.AddendBits);
         Assert.Equal(0x00460F85u, RetailLevelSelectLater60.FstpSite);
         Assert.Equal(0x18, RetailLevelSelectLater60.StoreLocal);
-        Assert.Equal(0x00460FD6u, RetailLevelSelectLater60.LaterEsp94OneSite);
+        Assert.Equal(0x00460FD8u, RetailLevelSelectLater60.LaterEsp94OneSite);
         Assert.Equal(0x00460FECu, RetailLevelSelectLater60.LaterEsp18Site);
         Assert.Equal(0x0042D5CFu, RetailLevelSelectLater60.LatchSetSite);
         Assert.Equal(0x0053F2EBu, RetailLevelSelectLater60.FmvOrSite);

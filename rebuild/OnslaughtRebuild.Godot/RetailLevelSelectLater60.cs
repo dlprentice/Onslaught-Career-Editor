@@ -60,7 +60,7 @@ namespace OnslaughtRebuild.GodotClient;
 /// <c>0x00460F85</c> <c>fstp [esp+0x18]</c>
 /// (<c>d9 5c 24 18</c>). That is a store of the scaled local,
 /// not dest. The later <c>fld [esp+0x94]</c> /
-/// <c>fcomp 1.0</c> at <c>0x00460FD6</c> is later. The later
+/// <c>fcomp 1.0</c> at <c>0x00460FD8</c> is later. The later
 /// <c>fld [esp+0x18]</c> at <c>0x00460FEC</c> is later.
 /// DrawLevelSelect already owns the measured node centres. Do
 /// not invent dest from 60.0. Do not invent dest from 0.5. Do
@@ -147,8 +147,8 @@ public static class RetailLevelSelectLater60
     /// <summary>Stack local that receives the scaled value. Not dest.</summary>
     public const int StoreLocal = 0x18;
 
-    /// <summary>Later <c>fld [esp+0x94]</c> / <c>fcomp 1.0</c> at <c>0x00460FD6</c>. Not this leftover.</summary>
-    public const uint LaterEsp94OneSite = 0x00460FD6u;
+    /// <summary>Later <c>fld [esp+0x94]</c> / <c>fcomp 1.0</c> at <c>0x00460FD8</c>. Not this leftover.</summary>
+    public const uint LaterEsp94OneSite = 0x00460FD8u;
 
     /// <summary>Later <c>fld [esp+0x18]</c> at <c>0x00460FEC</c>. Not this leftover.</summary>
     public const uint LaterEsp18Site = 0x00460FECu;

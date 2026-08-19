@@ -2423,7 +2423,7 @@ public sealed partial class RetailFrontendFlow : Control
                 // store is 0x00460F85 fstp [esp+0x18].
                 // That is a scaled local, not dest. The
                 // later fld [esp+0x94] / fcomp 1.0 at
-                // 0x00460FD6 is later. Do not invent dest
+                // 0x00460FD8 is later. Do not invent dest
                 // from 60.0, 0.5, or 320.0.
                 _ = RetailLevelSelectLater60.Factor;
                 _ = RetailLevelSelectLater60.Half;
