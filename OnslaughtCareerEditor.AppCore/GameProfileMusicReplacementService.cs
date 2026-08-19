@@ -73,6 +73,7 @@ namespace OnslaughtCareerEditor.AppCore
         public const string MusicFileNotOgg = "That music file is not an OGG.";
         public const string MusicDetailsUnsupported = "That copy's music details are out of date.";
         public const string MusicDetailsWrongTarget = "That copy's music details do not match the music file.";
+        public const string MusicBackupMismatch = "That copy's music backup no longer matches.";
         private const string BackupSuffix = ".original.backup";
 
         private static readonly GameProfileMusicSwapPreset[] s_musicSwapPresets =
@@ -313,7 +314,7 @@ namespace OnslaughtCareerEditor.AppCore
             RejectMultipleHardLinks(backupPath, "Music backup file");
             string backupSha = ComputeSha256(File.ReadAllBytes(backupPath));
             if (!string.Equals(backupSha, originalSha256, StringComparison.OrdinalIgnoreCase))
-                throw new InvalidOperationException("Playable copied game folder music backup no longer matches the replacement manifest.");
+                throw new InvalidOperationException(MusicBackupMismatch);
 
             string tempPath = Path.Combine(
                 Path.GetDirectoryName(targetPath)!,

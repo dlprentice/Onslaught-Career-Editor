@@ -42,6 +42,15 @@ public class MusicReplacementManifestHonestyTests
             Does.Not.Contain("playable"));
         Assert.That(GameProfileMusicReplacementService.MusicDetailsUnsupported.ToLowerInvariant(),
             Does.Not.Contain("schema"));
+        Assert.That(source, Does.Contain("MusicBackupMismatch"));
+        Assert.That(source, Does.Not.Contain(
+            "Playable copied game folder music backup no longer matches the replacement manifest."));
+        Assert.That(GameProfileMusicReplacementService.MusicBackupMismatch,
+            Is.EqualTo("That copy's music backup no longer matches."));
+        Assert.That(GameProfileMusicReplacementService.MusicBackupMismatch.ToLowerInvariant(),
+            Does.Not.Contain("playable"));
+        Assert.That(GameProfileMusicReplacementService.MusicBackupMismatch.ToLowerInvariant(),
+            Does.Not.Contain("manifest"));
     }
 
     [Test]
