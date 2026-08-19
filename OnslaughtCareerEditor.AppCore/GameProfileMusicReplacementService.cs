@@ -67,6 +67,7 @@ namespace OnslaughtCareerEditor.AppCore
         public const string ReplacementMusicFileMissing = "That replacement music file could not be found.";
         public const string MusicBackupMissing = "That music backup file could not be found.";
         public const string CopyCannotUseLink = "That copy cannot use a shortcut or link.";
+        public const string FileCannotShareData = "That file cannot share its data with another file.";
         private const string BackupSuffix = ".original.backup";
 
         private static readonly GameProfileMusicSwapPreset[] s_musicSwapPresets =
@@ -543,7 +544,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             uint linkCount = GetWindowsHardLinkCount(path);
             if (linkCount > 1)
-                throw new InvalidOperationException($"{label} is hardlinked to another file; refusing to mutate a shared file identity.");
+                throw new InvalidOperationException(FileCannotShareData);
         }
 
         private static uint GetWindowsHardLinkCount(string path)

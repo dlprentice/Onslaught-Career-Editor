@@ -1,5 +1,6 @@
 using System.IO;
 using NUnit.Framework;
+using OnslaughtCareerEditor.AppCore;
 
 namespace OnslaughtCareerEditor.UiTests;
 
@@ -86,5 +87,19 @@ public class MusicReplacementManifestHonestyTests
         Assert.That(source, Does.Not.Contain("FileNotFoundException(TargetMusicFileMissing,"));
         Assert.That(source, Does.Not.Contain("FileNotFoundException(ReplacementMusicFileMissing,"));
         Assert.That(source, Does.Not.Contain("FileNotFoundException(MusicBackupMissing,"));
+    }
+
+    [Test]
+    public void ASharedMusicFileIsNamedWithoutCallingItAHardlink()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot,
+            "OnslaughtCareerEditor.AppCore",
+            "GameProfileMusicReplacementService.cs"));
+
+        Assert.That(source, Does.Not.Contain("is hardlinked to another file"));
+        Assert.That(source, Does.Contain("FileCannotShareData"));
+        Assert.That(GameProfileMusicReplacementService.FileCannotShareData,
+            Is.EqualTo("That file cannot share its data with another file."));
     }
 }

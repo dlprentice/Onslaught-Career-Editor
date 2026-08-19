@@ -647,7 +647,8 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                             TargetMusicFileName: "BEA_01(Master).ogg",
                             ReplacementOggPath: replacementPath)));
 
-                Assert.Contains("hardlinked", ex.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(GameProfileMusicReplacementService.FileCannotShareData, ex.Message);
+                Assert.DoesNotContain("hardlinked", ex.Message, StringComparison.OrdinalIgnoreCase);
                 Assert.Equal(originalTrackBytes, File.ReadAllBytes(Path.Combine(profile.TargetGameRoot, "data", "Music", "BEA_01(Master).ogg")));
                 Assert.Equal("{}", File.ReadAllText(outsideManifestPath));
             }
@@ -706,7 +707,8 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                             SafeGameRoot: profile.TargetGameRoot,
                             AppOwnedProfilesRoot: outputRoot)));
 
-                Assert.Contains("hardlinked", ex.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(GameProfileMusicReplacementService.FileCannotShareData, ex.Message);
+                Assert.DoesNotContain("hardlinked", ex.Message, StringComparison.OrdinalIgnoreCase);
                 Assert.True(File.Exists(stage.ManifestPath));
                 Assert.Equal(replacementBytes, File.ReadAllBytes(stage.TargetPath));
             }
@@ -971,7 +973,8 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                             TargetMusicFileName: "BEA_01(Master).ogg",
                             ReplacementOggPath: replacementPath)));
 
-                Assert.Contains("hardlinked", ex.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(GameProfileMusicReplacementService.FileCannotShareData, ex.Message);
+                Assert.DoesNotContain("hardlinked", ex.Message, StringComparison.OrdinalIgnoreCase);
                 Assert.Equal(OggBytes(0x11), File.ReadAllBytes(outsidePath));
             }
             finally
@@ -1026,7 +1029,8 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                             SafeGameRoot: profile.TargetGameRoot,
                             AppOwnedProfilesRoot: outputRoot)));
 
-                Assert.Contains("hardlinked", ex.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(GameProfileMusicReplacementService.FileCannotShareData, ex.Message);
+                Assert.DoesNotContain("hardlinked", ex.Message, StringComparison.OrdinalIgnoreCase);
                 Assert.Equal(OggBytes(0x44), File.ReadAllBytes(stage.TargetPath));
             }
             finally
