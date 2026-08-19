@@ -74,6 +74,8 @@
              Link="godot-startup-source\RetailMainMenuHitTest.cs" />
     <Compile Include="..\OnslaughtRebuild.Godot\RetailMainMenuWritingScroll.cs"
              Link="godot-startup-source\RetailMainMenuWritingScroll.cs" />
+    <Compile Include="..\OnslaughtRebuild.Godot\RetailMainMenuWritingColor.cs"
+             Link="godot-startup-source\RetailMainMenuWritingColor.cs" />
     <Compile Include="..\OnslaughtRebuild.Godot\RetailMainMenuLanguageSine.cs"
              Link="godot-startup-source\RetailMainMenuLanguageSine.cs" />
     <Compile Include="..\OnslaughtRebuild.Godot\RetailMainMenuLanguageBlink.cs"
