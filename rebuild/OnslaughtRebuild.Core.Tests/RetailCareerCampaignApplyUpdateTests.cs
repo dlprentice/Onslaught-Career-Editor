@@ -548,6 +548,58 @@ public sealed class RetailCareerCampaignApplyUpdateTests
     }
 
     /// <summary>
+    /// <c>GRADE(110) &gt;= C</c> (<c>Career.cpp:770</c>) stays closed after
+    /// a Level 100 C-grade Won. World 110 is in the cold slice, still
+    /// incomplete, so <c>GRADE</c> is the already-pinned incomplete
+    /// <c>'E'</c> (<c>0x0041C3FE</c>) rather than BlankRanking-as-C.
+    /// Isolated closed GRADE(110) names goodie 1, not 79. Isolated
+    /// leftover C 79 names the open store. FrontEndHandoff leftover
+    /// 79 names <c>TryApply</c>. Existing C-band tests unlock 78 and
+    /// do not name 79. Mutation: store <c>GS_NEW</c> on goodie 79 after
+    /// ApplyUpdate when world 110 is incomplete. Skipping
+    /// <c>SET_GOODIE_NEW(79)</c> is not unique versus leftover C
+    /// concept-art. Do not invent <c>GRADE(110) &gt;= B</c> / <c>A</c>
+    /// or a world-110 FillOut. No new secondaries.
+    /// </summary>
+    [Fact]
+    public void Level100Won_ApplyUpdateGradeCLeavesTheWorld110CConceptArtGoodieUnknown()
+    {
+        RetailCareerCampaign career = RetailCareerReCalcLinks.CreateColdTrainingSlice();
+        RetailEndLevelSnapshot snapshot = RetailFillOutEndLevelData.ForLevel100Won(ranking: 0.25f);
+
+        career.ApplyUpdate(snapshot);
+
+        RetailCareerNode next = career.Nodes.Find(110)!;
+        Assert.Equal(
+            (byte)'C',
+            RetailCareerGrade.GradeByteFromRanking(career.Nodes.Find(100)!.Ranking));
+        Assert.Equal(0, next.Complete);
+        Assert.Equal(RetailCareerNode.BlankRanking, next.Ranking);
+        Assert.Equal(
+            RetailWorldGrade.IncompleteGradeByte,
+            RetailWorldGrade.GradeByteForWorld(
+                new[]
+                {
+                    new RetailWorldGradeNode(
+                        RetailCareerReCalcLinks.TrainingWorldNumber,
+                        career.Nodes.Find(100)!.Complete,
+                        career.Nodes.Find(100)!.Ranking),
+                    new RetailWorldGradeNode(next.WorldNumber, next.Complete, next.Ranking),
+                },
+                next.WorldNumber));
+        Assert.Equal(
+            RetailCareerGoodieState.New,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeCOnWorld100));
+        Assert.Equal(
+            RetailCareerGoodieState.Unknown,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeCOnWorld110));
+        Assert.Equal(
+            RetailCareerGoodieState.Unknown,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeCConceptArtOnWorld110));
+        Assert.All(snapshot.SecondaryStatuses, status => Assert.Equal(0, status));
+    }
+
+    /// <summary>
     /// Leftover world-110 complete + C (ranking 0.25f already pinned)
     /// opens <c>Career.cpp:691</c> <c>SET_GOODIE_NEW(1)</c>. Isolated
     /// <c>GradeByteForWorld</c> already returns C for complete+0.25 and
@@ -780,8 +832,9 @@ public sealed class RetailCareerCampaignApplyUpdateTests
     /// is also New; that count is not unique versus skip
     /// <c>SET_GOODIE_NEW(79)</c>.
     /// Isolated leftover 14 CountGoodies uses ranking 0.0f so
-    /// <c>GRADE(110) &gt;= C</c> stays closed. First-play closed
-    /// GRADE(110) names goodie 1 and does not name 79. World 110 is
+    /// <c>GRADE(110) &gt;= C</c> stays closed. Isolated first-play
+    /// closed GRADE(110) names 1; isolated first-play closed
+    /// concept-art names 79 at <c>GS_UNKNOWN</c>. World 110 is
     /// in the cold slice, so this is not a missing-world NULL deref.
     /// Do not invent <c>GRADE(110) &gt;= B</c> / <c>A</c> or a
     /// world-110 FillOut. Mutation: skip <c>SET_GOODIE_NEW(79)</c>

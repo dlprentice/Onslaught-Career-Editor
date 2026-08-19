@@ -72,7 +72,8 @@ public sealed class RetailCareerGoodies
 /// 78, 121, and 164. <c>GRADE(110) &gt;= C</c> writes goodie 1 and
 /// concept-art goodie 79, but world 110 stays incomplete / BlankRanking
 /// so that arm is the already-pinned incomplete <c>'E'</c> and both
-/// stay <c>GS_UNKNOWN</c>. Leftover complete-110 plus ranking 0.25f
+/// stay <c>GS_UNKNOWN</c>. Isolated closed GRADE(110) names 1;
+/// isolated closed concept-art names 79. Leftover complete-110 plus ranking 0.25f
 /// (already pinned as C) opens both stores. FrontEndHandoff leftover
 /// of that C seed still opens it because <c>TryApply</c> calls
 /// ApplyUpdate. Isolated leftover C names ApplyUpdate.
@@ -137,7 +138,8 @@ public static class RetailCareerUpdateGoodieStates
     /// Goodie 79 — concept-art <c>GRADE(110) &gt;= C</c> —
     /// <c>Career.cpp:770</c>. Same predicate as
     /// <see cref="GradeCOnWorld110"/>; first-play leaves world 110
-    /// incomplete so this stays <c>GS_UNKNOWN</c>. Leftover
+    /// incomplete so this stays <c>GS_UNKNOWN</c>. Isolated closed
+    /// concept-art names that first-play store. Leftover
     /// complete-110 plus ranking 0.25f opens the store.
     /// </summary>
     public const int GradeCConceptArtOnWorld110 = 79;
@@ -174,7 +176,9 @@ public static class RetailCareerUpdateGoodieStates
     /// complete-110 plus ranking 0.25f opens
     /// <c>SET_GOODIE_NEW(1)</c> and <c>SET_GOODIE_NEW(79)</c>.
     /// Isolated leftover C names 1, not 79. Isolated leftover C
-    /// concept-art names ApplyUpdate. FrontEndHandoff leftover of
+    /// concept-art names ApplyUpdate. Isolated first-play closed
+    /// concept-art names ApplyUpdate and leaves 79 at
+    /// <c>GS_UNKNOWN</c>. FrontEndHandoff leftover of
     /// that C seed still opens 1 and 79 because <c>TryApply</c>
     /// calls ApplyUpdate. Isolated leftover C does not go through
     /// <c>TryApply</c>. First-play FrontEndHandoff still leaves
