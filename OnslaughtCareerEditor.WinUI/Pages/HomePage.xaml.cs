@@ -275,7 +275,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             App.MainWindowInstance.RefreshFooter();
             ShowQuickStartNote(picked.Status == GameDirectoryStatus.FullInstall
                 ? null
-                : "That folder does not have both BEA.exe and the data folder in it. Playable copies need the full install.");
+                : GameDirectoryIdentityText.SnapshotNeedsFullInstall);
             AppStatusService.SetStatus("Home: game folder chosen");
             RefreshSetupStatus();
         }

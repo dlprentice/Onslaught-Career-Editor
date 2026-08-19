@@ -98,7 +98,8 @@ live in `developer_state.json` and the campaign ledgers.
   names a missing folder, an empty save list, or a failed save count as a
   next step, not a dash. The game line on that card uses the same folder
   sentence. An incomplete install on that card names BEA.exe and data,
-  not just "the full install." A failed Game Options write that still looks
+  not just "the full install." Choosing an incomplete folder on Home uses
+  that same sentence. A failed Game Options write that still looks
   like a dump uses the shared nothing-was-changed sentence. A failed
   focused Goodie write that still looks like a dump uses that same
   sentence. Save Editor refusals that used to say paths now name the

@@ -138,8 +138,10 @@ public class HomeQuickStartStateTests
         string code = System.IO.File.ReadAllText(System.IO.Path.Combine(
             TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI", "Pages", "HomePage.xaml.cs"));
         Assert.That(code, Does.Contain("HomeQuickStartState.FailureNote"));
+        Assert.That(code, Does.Contain("GameDirectoryIdentityText.SnapshotNeedsFullInstall"));
         Assert.That(code, Does.Not.Contain("{ex.Message}"));
         Assert.That(code, Does.Not.Contain("PatchResult.Message"));
         Assert.That(code, Does.Not.Contain("could not save that location"));
+        Assert.That(code, Does.Not.Contain("need the full install"));
     }
 }
