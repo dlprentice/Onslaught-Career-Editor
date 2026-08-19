@@ -233,7 +233,8 @@ public class BinaryPatchRegressionTests
             var apply = BinaryPatchEngine.ApplyPatchesToFile(BuildTestTarget(exePath, tempDir), selected);
 
             Assert.That(apply.success, Is.False);
-            Assert.That(apply.message, Does.Contain("existing backup snapshot integrity"));
+            Assert.That(apply.message, Does.Contain("BEA.exe.original.backup could not be checked"));
+            Assert.That(apply.message, Does.Not.Contain("snapshot integrity"));
             Assert.That(apply.message, Does.Contain("hash file"));
             Assert.That(apply.message, Does.Not.Contain("hash sidecar"));
             Assert.That(File.ReadAllBytes(exePath), Is.EqualTo(original), "Apply must not mutate when the pre-existing backup is not integrity-verified.");
@@ -360,7 +361,8 @@ public class BinaryPatchRegressionTests
             var restore = BinaryPatchEngine.RestoreFromBackup(BuildTestTarget(exePath, tempDir));
 
             Assert.That(restore.success, Is.False);
-            Assert.That(restore.message, Does.Contain("backup snapshot integrity"));
+            Assert.That(restore.message, Does.Contain("BEA.exe.original.backup no longer matches its hash file"));
+            Assert.That(restore.message, Does.Not.Contain("snapshot integrity"));
             Assert.That(File.ReadAllBytes(exePath), Is.EqualTo(patchedBeforeRestore), "Restore must not overwrite from a corrupted backup snapshot.");
         }
         finally

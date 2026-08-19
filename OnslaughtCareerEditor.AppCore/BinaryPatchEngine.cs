@@ -1276,7 +1276,7 @@ namespace OnslaughtCareerEditor.AppCore
                 if (!backupIntegrity.success)
                 {
                     return (false,
-                        "Apply aborted: existing backup snapshot integrity could not be verified.\n" +
+                        "Apply aborted: BEA.exe.original.backup could not be checked.\n" +
                         backupIntegrity.message);
                 }
 
@@ -1915,7 +1915,7 @@ namespace OnslaughtCareerEditor.AppCore
             if (!File.Exists(backupHashPath))
             {
                 return (false,
-                    "Restore aborted: backup snapshot integrity could not be verified.\n" +
+                    "Restore aborted: BEA.exe.original.backup could not be checked.\n" +
                     "The backup hash file is missing, and the BEA.exe-only copy was not overwritten.");
             }
 
@@ -1924,7 +1924,7 @@ namespace OnslaughtCareerEditor.AppCore
             if (!string.Equals(expected, actual, StringComparison.OrdinalIgnoreCase))
             {
                 return (false,
-                    "Restore aborted: backup snapshot integrity check failed.\n" +
+                    "Restore aborted: BEA.exe.original.backup no longer matches its hash file.\n" +
                     "The BEA.exe-only copy was not overwritten.");
             }
 
