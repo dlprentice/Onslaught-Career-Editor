@@ -161,7 +161,8 @@ live in `developer_state.json` and the campaign ledgers.
   live-trainer write block before the first reading names the next
   step, not the emptiness. The Asset Library copy
   button names the file, not a path. Registering a
-  managed copy names the app-owned profile folder, not a root.
+  managed copy names the app-owned profile folder, not a root. An empty
+  Lore library names the next step, not the emptiness.
 
 ## 1.0.11 — 2026-08-07
 

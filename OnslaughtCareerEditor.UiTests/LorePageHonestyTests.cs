@@ -107,5 +107,6 @@ public class LorePageHonestyTests
         Assert.That(code, Does.Contain("LorePageText.EmptyLibraryNextStep"));
         Assert.That(code, Does.Not.Contain("did not produce any readable documents"));
         Assert.That(code, Does.Not.Contain("did not return any readable files"));
+        Assert.That(code, Does.Not.Contain("No documents found"));
     }
 }

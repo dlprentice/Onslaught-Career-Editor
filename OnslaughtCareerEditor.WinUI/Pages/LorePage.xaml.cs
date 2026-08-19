@@ -129,10 +129,10 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 }
                 else
                 {
-                    CurrentDocumentTextBlock.Text = "No documents found";
+                    CurrentDocumentTextBlock.Text = LorePageText.EmptyLibraryNextStep;
                     CurrentPathTextBlock.Text = LorePageText.EmptyLibraryNextStep;
                     ShowReaderPlaceholder(
-                        "No documents found",
+                        LorePageText.EmptyLibraryNextStep,
                         LorePageText.EmptyLibraryNextStep);
                 }
 
