@@ -105,7 +105,9 @@ public static class RetailCareerUpdateGoodieStates
     /// (<c>Career.cpp:686 / 688 / 895-900</c>). After
     /// <c>GetAndResetGoodieNewCount</c> / <c>GetAndResetFirstGoodie</c>
     /// a replay <c>ApplyUpdate</c> leaves both at 0: the count add is
-    /// delta 0 and the latch is transition-only.
+    /// delta 0 and the latch is transition-only. Lost still runs this
+    /// body (<c>Career.cpp:382-385</c>) but world 100 stays incomplete,
+    /// so both globals stay ctor 0.
     /// <c>mPendingExtraGoodies</c> and episode instruction marks stay
     /// unclaimed.
     /// </summary>

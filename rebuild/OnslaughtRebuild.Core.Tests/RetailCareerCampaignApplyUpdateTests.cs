@@ -231,6 +231,42 @@ public sealed class RetailCareerCampaignApplyUpdateTests
     }
 
     /// <summary>
+    /// Lost still calls <c>UpdateGoodieStates</c> then returns
+    /// (<c>Career.cpp:382-385</c>). World 100 stays incomplete, so
+    /// <c>CountGoodies</c> does not rise and <c>new_goodie_count</c>
+    /// adds 0 (<c>Career.cpp:895-897</c>). <c>first_goodie</c> is
+    /// transition-only: goodie 0 was <c>GOODIE_NOT_DONE</c> and still
+    /// is (<c>Career.cpp:688 / 899-900</c>). The already-pinned Lost
+    /// goodie-state zeros do not name these two globals. Mutation: arm
+    /// <c>first_goodie</c> whenever goodie 0 was
+    /// <c>GOODIE_NOT_DONE</c> at entry. <c>mPendingExtraGoodies</c>
+    /// and episode instruction marks stay unclaimed. No new secondaries.
+    /// </summary>
+    [Fact]
+    public void Level100Lost_ApplyUpdateLeavesGoodieLatchesAtCtorZero()
+    {
+        RetailCareerCampaign career = RetailCareerReCalcLinks.CreateColdTrainingSlice();
+        RetailEndLevelSnapshot won = RetailFillOutEndLevelData.ForLevel100Won();
+        RetailEndLevelSnapshot lost = won with
+        {
+            FinalState = RetailCareerReCalcLinks.GameStateLevelLost,
+        };
+
+        Assert.Equal(0, career.Counters.NewGoodieCount);
+        Assert.Equal(0, career.Counters.FirstGoodie);
+
+        career.ApplyUpdate(lost);
+
+        Assert.Equal(0, career.Nodes.Find(100)!.Complete);
+        Assert.Equal(
+            RetailCareerGoodieState.Unknown,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.CompleteWorld100Bio));
+        Assert.Equal(0, career.Counters.NewGoodieCount);
+        Assert.Equal(0, career.Counters.FirstGoodie);
+        Assert.All(lost.SecondaryStatuses, status => Assert.Equal(0, status));
+    }
+
+    /// <summary>
     /// <c>GRADE(100) &gt;= C</c> is not <c>&gt;= B</c>. Ranking 0.25f is
     /// already pinned as C, so a Level 100 win at that ranking unlocks
     /// 0, 8, and 78 and leaves 121 / 164 at <c>GS_UNKNOWN</c>. Mutation:
