@@ -149,6 +149,8 @@ namespace OnslaughtCareerEditor.AppCore
             "BEA.exe.original.backup could not be found. Nothing was changed.";
         public const string TargetCannotUseLink = "That file cannot use a shortcut or link.";
         public const string FileCannotShareData = "That file cannot share its data with another file.";
+        public const string StagedFileVerificationFailed = "That staged file could not be verified.";
+        public const string PublishedFileDidNotMatch = "That published file did not match the staged file.";
         private const string BackupHashSuffix = ".sha256";
         private const string CatalogRelativePath = "patches/catalog/patches.v2.json";
         private const string ExpectedPatchCatalogSha256 = "48cebf987355622bb54c212d5af4705a6c80df468a25651773c6f41522619622";
@@ -1866,7 +1868,7 @@ namespace OnslaughtCareerEditor.AppCore
                     if (staged.Length != bytes.LongLength ||
                         !CryptographicOperations.FixedTimeEquals(stagedHash, SHA256.HashData(bytes)))
                     {
-                        throw new IOException($"Staged {label} verification failed.");
+                        throw new IOException(StagedFileVerificationFailed);
                     }
 
                     FileMutationSafety.ReleaseStagedFileQuarantine(staged);
@@ -1877,16 +1879,18 @@ namespace OnslaughtCareerEditor.AppCore
 
                 using SafeFileHandle handle = FileMutationSafety.OpenNoFollowReadHandle(destinationPath, label);
                 WindowsFileIdentity identity = FileMutationSafety.GetWindowsIdentity(handle, label);
-                if (OperatingSystem.IsWindows() && (identity.IsReparsePoint || identity.NumberOfLinks != 1))
-                    throw new IOException($"Published {label} has an unsafe file identity.");
+                if (OperatingSystem.IsWindows() && identity.IsReparsePoint)
+                    throw new IOException(TargetCannotUseLink);
+                if (OperatingSystem.IsWindows() && identity.NumberOfLinks != 1)
+                    throw new IOException(FileCannotShareData);
 
                 using var stream = new FileStream(handle, FileAccess.Read);
                 if (stream.Length > int.MaxValue)
-                    throw new IOException($"Published {label} is too large to verify.");
+                    throw new IOException(FileMutationSafety.FileTooLargeToRead);
                 byte[] readBack = new byte[checked((int)stream.Length)];
                 stream.ReadExactly(readBack);
                 if (!readBack.SequenceEqual(bytes))
-                    throw new IOException($"Published {label} verification did not match the staged bytes.");
+                    throw new IOException(PublishedFileDidNotMatch);
 
                 return readBack;
             }

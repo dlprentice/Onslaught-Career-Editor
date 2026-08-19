@@ -167,5 +167,11 @@ public class BinaryPatchCopyHonestyTests
         Assert.That(engine, Does.Not.Contain("Could not inspect hardlink count"));
         Assert.That(engine, Does.Not.Contain("Win32 error:"));
         Assert.That(engine, Does.Contain("FileCouldNotBeInspected"));
+        Assert.That(engine, Does.Not.Contain("Staged {label} verification failed."));
+        Assert.That(engine, Does.Not.Contain("Published {label} has an unsafe file identity."));
+        Assert.That(engine, Does.Not.Contain("Published {label} is too large to verify."));
+        Assert.That(engine, Does.Not.Contain("Published {label} verification did not match the staged bytes."));
+        Assert.That(engine, Does.Contain("StagedFileVerificationFailed"));
+        Assert.That(engine, Does.Contain("PublishedFileDidNotMatch"));
     }
 }
