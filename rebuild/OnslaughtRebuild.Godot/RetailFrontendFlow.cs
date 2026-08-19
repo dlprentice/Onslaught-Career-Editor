@@ -1581,9 +1581,15 @@ public sealed partial class RetailFrontendFlow : Control
             // is RetailMainMenuVersionOverlayWiden: after the enable-byte
             // store, push edx of that sprintf buffer and call
             // Text__AsciiToWideScratch. add esp,4 shows cdecl one-arg.
-            // EAX is the wide scratch pointer. The three leftover pushes
-            // stay on the stack; do not invent dest or wrap from them.
-            // Post-draw leftover is RetailMainMenuVersionOverlayFlags:
+            // EAX is the wide scratch pointer. Tail leftover is
+            // RetailMainMenuVersionOverlayTail: after add esp,4 the
+            // three leftover pushes remain as DrawTextDynamic's last
+            // three stack slots. The leftover float is past the
+            // below-zero / below-quarter / below-half arms, and the
+            // second leftover dword is zero so that colour arm is
+            // skipped. Do not invent dest, wrap, fade, or sheen from
+            // those slots. Post-draw leftover is
+            // RetailMainMenuVersionOverlayFlags:
             // after DrawTextDynamic, 0x004641FC/203/20A store
             // [0x00679B40]=1, [0x009C68AC]=0, [0x009C690D]=1 between
             // fcom [0.0] and fnstsw. That fcom is the already-owned

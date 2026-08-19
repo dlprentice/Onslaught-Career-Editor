@@ -102,6 +102,8 @@
              Link="godot-startup-source\RetailMainMenuVersionOverlayEnable.cs" />
     <Compile Include="..\OnslaughtRebuild.Godot\RetailMainMenuVersionOverlayWiden.cs"
              Link="godot-startup-source\RetailMainMenuVersionOverlayWiden.cs" />
+    <Compile Include="..\OnslaughtRebuild.Godot\RetailMainMenuVersionOverlayTail.cs"
+             Link="godot-startup-source\RetailMainMenuVersionOverlayTail.cs" />
     <Compile Include="..\OnslaughtRebuild.Godot\RetailMainMenuTitleLogoShadow.cs"
              Link="godot-startup-source\RetailMainMenuTitleLogoShadow.cs" />
     <Compile Include="..\OnslaughtRebuild.Godot\RetailMainMenuTitleLogoShadowZ.cs"
