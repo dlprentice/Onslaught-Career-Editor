@@ -1023,6 +1023,52 @@ public sealed class RetailCareerCampaignApplyUpdateTests
     }
 
     /// <summary>
+    /// <c>CountGoodies</c> counts <c>mState &gt;= GS_NEW</c>
+    /// (<c>Career.cpp:670-680</c>). Seeding the five first-play S slots
+    /// as <c>GS_OLD</c> therefore reads 5 before ApplyUpdate. Isolated
+    /// leftover <c>GS_OLD</c> <c>NewGoodieCount=0</c> does not uniquely
+    /// prove this: the delta is 0 whether <c>previouslyNew</c> is 0 or
+    /// 5. The latch names first-play Unknown-to-New. Replay names
+    /// already-<c>GS_NEW</c>. Leftover <c>GS_INSTRUCTIONS</c> names
+    /// the store-when-not-done side, not the count of leftover Old.
+    /// Mutation: count only <c>== GS_NEW</c>. Storing <c>GS_NEW</c>
+    /// even when <c>mState &gt; GS_INSTRUCTIONS</c> is not unique
+    /// versus
+    /// <c>Level100Won_ApplyUpdateDoesNotOverwriteAlreadyOldTrainingGoodies</c>.
+    /// <c>mPendingExtraGoodies</c> and episode instruction marks stay
+    /// unclaimed. No new secondaries.
+    /// </summary>
+    [Fact]
+    public void Level100Won_CountGoodiesCountsLeftoverOldTrainingGoodies()
+    {
+        RetailCareerCampaign career = RetailCareerReCalcLinks.CreateColdTrainingSlice();
+        career.Goodies.Set(
+            RetailCareerUpdateGoodieStates.CompleteWorld100Bio,
+            RetailCareerGoodieState.Old);
+        career.Goodies.Set(
+            RetailCareerUpdateGoodieStates.CompleteWorld100Second,
+            RetailCareerGoodieState.Old);
+        career.Goodies.Set(
+            RetailCareerUpdateGoodieStates.GradeCOnWorld100,
+            RetailCareerGoodieState.Old);
+        career.Goodies.Set(
+            RetailCareerUpdateGoodieStates.GradeBOnWorld100,
+            RetailCareerGoodieState.Old);
+        career.Goodies.Set(
+            RetailCareerUpdateGoodieStates.GradeAOnWorld100,
+            RetailCareerGoodieState.Old);
+        RetailEndLevelSnapshot snapshot = RetailFillOutEndLevelData.ForLevel100Won();
+
+        Assert.Equal(5, RetailCareerUpdateGoodieStates.CountGoodies(career));
+
+        career.ApplyUpdate(snapshot);
+
+        Assert.Equal(5, RetailCareerUpdateGoodieStates.CountGoodies(career));
+        Assert.Equal(1, career.Nodes.Find(100)!.Complete);
+        Assert.All(snapshot.SecondaryStatuses, status => Assert.Equal(0, status));
+    }
+
+    /// <summary>
     /// <c>SET_GOODIE_NEW</c> stores when <c>mState &lt;= GS_INSTRUCTIONS</c>
     /// (<c>Career.cpp:564-566</c>). Seeding the five first-play S slots
     /// as <c>GS_INSTRUCTIONS</c> therefore writes 2. Isolated

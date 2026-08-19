@@ -114,7 +114,11 @@ public sealed class RetailCareerGoodies
 /// <c>TOTAL_S_GRADES</c>, episode instruction marks, and the
 /// <c>mPendingExtraGoodies</c> latch stay unclaimed. The first-play
 /// CountGoodies delta into <c>new_goodie_count</c> is the already-cited
-/// Career.cpp:895-897 arm.
+/// Career.cpp:895-897 arm. Leftover <c>GS_OLD</c> on the five
+/// first-play S slots is counted before ApplyUpdate because
+/// <c>CountGoodies</c> uses <c>mState &gt;= GS_NEW</c>. Isolated
+/// leftover <c>GS_OLD</c> <c>NewGoodieCount=0</c> does not uniquely
+/// prove that count.
 /// </para>
 /// </remarks>
 public static class RetailCareerUpdateGoodieStates
@@ -182,7 +186,11 @@ public static class RetailCareerUpdateGoodieStates
     /// <c>GS_INSTRUCTIONS</c> writes 2 on ApplyUpdate and
     /// does not go through <c>TryApply</c>. FrontEndHandoff leftover
     /// <c>GS_INSTRUCTIONS</c> writes 2 because <c>TryApply</c> calls
-    /// ApplyUpdate. Do not invent
+    /// ApplyUpdate. Isolated leftover <c>GS_OLD</c> is counted
+    /// before ApplyUpdate because <c>CountGoodies</c> uses
+    /// <c>mState &gt;= GS_NEW</c>. Isolated leftover
+    /// <c>GS_OLD</c> <c>NewGoodieCount=0</c> does not uniquely
+    /// prove that count. Do not invent
     /// a world-110 FillOut or the rest of the table.
     /// <c>mPendingExtraGoodies</c> and episode instruction marks stay
     /// unclaimed.
@@ -245,7 +253,10 @@ public static class RetailCareerUpdateGoodieStates
 
     /// <summary>
     /// <c>CCareer::CountGoodies</c> — <c>Career.cpp:670-680</c>. Counts
-    /// slots whose <c>mState &gt;= GS_NEW</c>.
+    /// slots whose <c>mState &gt;= GS_NEW</c>. Leftover <c>GS_OLD</c>
+    /// on the five first-play S slots therefore reads 5 before
+    /// ApplyUpdate. Isolated leftover <c>GS_OLD</c>
+    /// <c>NewGoodieCount=0</c> does not uniquely prove that count.
     /// </summary>
     public static int CountGoodies(RetailCareerCampaign career)
     {
