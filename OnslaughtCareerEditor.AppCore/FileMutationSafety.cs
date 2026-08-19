@@ -40,6 +40,7 @@ namespace OnslaughtCareerEditor.AppCore
 
         internal const string FileCannotUseLink = "That file cannot use a shortcut or link.";
         internal const string FolderCannotUseLink = "That folder cannot use a shortcut or link.";
+        internal const string FileCannotShareData = "That file cannot share its data with another file.";
 
         internal static string NormalizeLocalPath(string path, string label)
         {
@@ -141,7 +142,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             WindowsFileIdentity identity = GetWindowsIdentity(path);
             if (identity.NumberOfLinks > 1)
-                throw new InvalidOperationException($"{label} is hardlinked to another file; refusing to mutate a shared file identity.");
+                throw new InvalidOperationException(FileCannotShareData);
         }
 
         internal static void RejectOutputInGameTree(string outputPath)
@@ -1317,7 +1318,7 @@ namespace OnslaughtCareerEditor.AppCore
                 FileShare.Read);
             WindowsFileIdentity outputIdentity = FileMutationSafety.GetWindowsIdentity(outputHandle, "output identity");
             if (OperatingSystem.IsWindows() && outputIdentity.NumberOfLinks > 1)
-                throw new InvalidOperationException("Output file is hardlinked to another file; refusing to replace a shared file identity.");
+                throw new InvalidOperationException(FileMutationSafety.FileCannotShareData);
 
             if (OperatingSystem.IsWindows() && _inputs.Values.Any(input => input.Identity.IsSameFile(outputIdentity)))
                 throw new InvalidOperationException("Refusing to patch in place. Output file must be different from every protected input file; aliased writes are also blocked.");

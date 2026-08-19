@@ -74,4 +74,14 @@ public class AssetCatalogFileSafetyHonestyTests
         Assert.That(source, Does.Not.Contain("{label} cannot be a symbolic link"));
         Assert.That(source, Does.Contain("FileMutationSafety.FileCannotUseLink"));
     }
+
+    [Test]
+    public void ASharedCatalogFileIsNamedWithoutCallingItAHardlink()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "AssetCatalogFileSafety.cs"));
+
+        Assert.That(source, Does.Not.Contain("cannot be hardlinked to another file."));
+        Assert.That(source, Does.Contain("FileMutationSafety.FileCannotShareData"));
+    }
 }

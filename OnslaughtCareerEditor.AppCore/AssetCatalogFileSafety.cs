@@ -187,7 +187,7 @@ namespace OnslaughtCareerEditor.AppCore
                     if (identity.IsReparsePoint)
                         throw new InvalidOperationException(FileMutationSafety.FileCannotUseLink);
                     if (OperatingSystem.IsWindows() && identity.NumberOfLinks > 1)
-                        throw new InvalidOperationException("The asset catalog file cannot be hardlinked to another file.");
+                        throw new InvalidOperationException(FileMutationSafety.FileCannotShareData);
 
                     string physicalCatalogPath = OperatingSystem.IsWindows()
                         ? FileMutationSafety.GetFinalLocalPath(handle, "Asset catalog file")
@@ -327,7 +327,7 @@ namespace OnslaughtCareerEditor.AppCore
                 if (identity.IsReparsePoint)
                     throw new InvalidOperationException(FileMutationSafety.FileCannotUseLink);
                 if (OperatingSystem.IsWindows() && identity.NumberOfLinks > 1)
-                    throw new InvalidOperationException($"{label} cannot be hardlinked to another file.");
+                    throw new InvalidOperationException(FileMutationSafety.FileCannotShareData);
 
                 string physicalPath = OperatingSystem.IsWindows()
                     ? FileMutationSafety.GetFinalLocalPath(handle, label)
