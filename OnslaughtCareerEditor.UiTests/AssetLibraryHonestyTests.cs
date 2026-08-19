@@ -97,4 +97,16 @@ public class AssetLibraryHonestyTests
         Assert.That(AssetLibraryPageText.NoExportSelectedStatus.ToLowerInvariant(), Does.Not.Contain("path"));
         Assert.That(AssetLibraryPageText.ExportCopiedStatus.ToLowerInvariant(), Does.Not.Contain("path"));
     }
+
+    [Test]
+    public void PathCardsAreLabeledAsFilesNotPaths()
+    {
+        string xaml = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI", "Pages", "AssetLibraryPage.xaml"));
+
+        Assert.That(xaml, Does.Not.Contain("Path details"));
+        Assert.That(xaml, Does.Not.Contain("Local export path"));
+        Assert.That(xaml, Does.Contain("File details"));
+        Assert.That(xaml, Does.Contain("Export file"));
+    }
 }

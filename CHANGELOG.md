@@ -150,7 +150,8 @@ live in `developer_state.json` and the campaign ledgers.
   names BEA.exe.original.backup, not a path. Home setup names a ready
   game folder, not a directory. Copying an Asset Library
   export names the file, not a path. A safe copy with no
-  careers names the next step, not the emptiness.
+  careers names the next step, not the emptiness. Asset Library file cards say
+  File details and Export file, not Path details.
 
 ## 1.0.11 — 2026-08-07
 
