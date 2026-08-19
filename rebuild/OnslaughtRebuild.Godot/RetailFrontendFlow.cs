@@ -920,15 +920,15 @@ public sealed partial class RetailFrontendFlow : Control
             return;
         }
 
-        // FrontEnd.cpp:551-552 — while mActivePage == FEP_TRANSITION the button
-        // action is never forwarded to a page. CFEPMain__Render corroborates from
-        // the other side: both of its hit-test blocks are guarded by
-        // `_DAT_005d8bb0 < transition` with _DAT_005d8bb0 = 0.9 (verified 0.9 in
-        // the pristine specimen's float pool), so retail additionally ignores the
-        // pointer over the last tenth of the reveal. Only the coarse page-level
-        // gate is ported; the 0.9 pointer gate is a CFEPMain detail this lane's
-        // hit-testing does not model.
-        if (_mainTransitionTime > 0)
+        // FrontEnd.cpp:551-552 — while mActivePage == FEP_TRANSITION the
+        // button action is never forwarded to a page. CFEPMain::Render
+        // hover is not ButtonPressed: 0x004630AC / 0x004631EF run when
+        // transition > 0.9 (fcomp [0x005D8BB0]; test ah,0x41 / jne skip).
+        // Motion is therefore allowed through; HandlePointerMotion applies
+        // the 0.9 gate. Confirm and HandleKey stay swallowed here.
+        if (RetailMainMenuHitTest.SwallowsFrontendInput(
+                _mainTransitionTime > 0,
+                inputEvent is InputEventMouseMotion))
         {
             return;
         }
@@ -2604,6 +2604,19 @@ public sealed partial class RetailFrontendFlow : Control
         }
 
         if (_session.Screen != RetailFrontendScreen.MainMenu)
+        {
+            return false;
+        }
+
+        // 0x004630AC / 0x004631EF: hover only when transition > 0.9.
+        // Language hover writes this+0x08 = -1; that is not a language
+        // swap and not a button confirm. Session cannot hold -1.
+        if (!RetailMainMenuHitTest.AcceptsHitTest(MainMenuTransition))
+        {
+            return false;
+        }
+
+        if (RetailMainMenuHitTest.LanguageHoverContains(design.X, design.Y))
         {
             return false;
         }

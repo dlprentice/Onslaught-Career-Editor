@@ -37,9 +37,10 @@ namespace OnslaughtRebuild.GodotClient;
 /// scales <c>DAT_0089D8A4</c>. That predicate is exposed so it cannot
 /// be mistaken for this gate. No fade is implemented.</para>
 ///
-/// <para>No Godot types. HandleKey, DrawLoading, DrawQuitConfirm, and
-/// DrawClickToStart stay untouched. HandlePointerConfirm is not the
-/// consumer — this is Render hover, not confirm.</para>
+/// <para>No Godot types. HandlePointerMotion is the consumer.
+/// HandleKey, DrawLoading, DrawQuitConfirm, DrawClickToStart, and
+/// HandlePointerConfirm stay untouched. Confirm is ButtonPressed,
+/// still blocked for the whole FEP_TRANSITION.</para>
 /// </summary>
 public static class RetailMainMenuHitTest
 {
@@ -90,6 +91,14 @@ public static class RetailMainMenuHitTest
     /// <c>test ah, 0x41 / jne skip</c> after <c>fcomp [0.9]</c>.
     /// </summary>
     public static bool AcceptsHitTest(float transition) => transition > Threshold;
+
+    /// <summary>
+    /// <c>FrontEnd.cpp:551-552</c> drops <c>ButtonPressed</c> for the
+    /// whole <c>FEP_TRANSITION</c>. Pointer motion is Render hover, not
+    /// a button, so it is not swallowed here.
+    /// </summary>
+    public static bool SwallowsFrontendInput(bool pageIsTransition, bool isPointerMotion) =>
+        pageIsTransition && !isPointerMotion;
 
     /// <summary>
     /// The third <c>0x005D8BB0</c> site: <c>test ah, 1 / je</c>.

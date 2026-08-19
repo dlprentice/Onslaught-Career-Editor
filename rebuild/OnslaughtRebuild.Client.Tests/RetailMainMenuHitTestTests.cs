@@ -30,8 +30,9 @@ namespace OnslaughtRebuild.Client.Tests;
 /// different predicate. This helper does not invent that fade.</para>
 ///
 /// <para>The mutations these cases kill are "ignore the last tenth",
-/// a confirm during FEP_TRANSITION, and wiring this gate through
-/// HandleKey / DrawLoading / DrawQuitConfirm / DrawClickToStart.</para>
+/// a confirm during FEP_TRANSITION, leaving HandlePointerMotion
+/// ungated, and wiring this gate through HandleKey / DrawLoading /
+/// DrawQuitConfirm / DrawClickToStart / HandlePointerConfirm.</para>
 /// </summary>
 public sealed class RetailMainMenuHitTestTests
 {
@@ -47,6 +48,29 @@ public sealed class RetailMainMenuHitTestTests
         Assert.False(RetailMainMenuHitTest.AcceptsHitTest(0.9f));
         Assert.True(RetailMainMenuHitTest.AcceptsHitTest(0.9000001f));
         Assert.True(RetailMainMenuHitTest.AcceptsHitTest(1f));
+    }
+
+    [Fact]
+    public void TransitionSwallowsButtonsButNotPointerMotion()
+    {
+        // FrontEnd.cpp:551-552. Motion is CFEPMain::Render hover.
+        Assert.True(RetailMainMenuHitTest.SwallowsFrontendInput(
+            pageIsTransition: true,
+            isPointerMotion: false));
+        Assert.False(RetailMainMenuHitTest.SwallowsFrontendInput(
+            pageIsTransition: true,
+            isPointerMotion: true));
+        Assert.False(RetailMainMenuHitTest.SwallowsFrontendInput(
+            pageIsTransition: false,
+            isPointerMotion: false));
+        Assert.False(RetailMainMenuHitTest.SwallowsFrontendInput(
+            pageIsTransition: false,
+            isPointerMotion: true));
+
+        // 50-frame SetPage(FEP_MAIN, 50): 45/50 = 0.9 skips, 46/50 runs.
+        Assert.False(RetailMainMenuHitTest.AcceptsHitTest(45f / 50f));
+        Assert.True(RetailMainMenuHitTest.AcceptsHitTest(46f / 50f));
+        Assert.False(RetailMainMenuHitTest.IsButtonPressed);
     }
 
     [Fact]
@@ -123,12 +147,40 @@ public sealed class RetailMainMenuHitTestTests
         Assert.DoesNotContain("TWIMTBP", flow);
     }
 
+    [Fact]
+    public void HandlePointerMotionWiresTheHitTestGate()
+    {
+        string flow = File.ReadAllText(
+            Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "RetailFrontendFlow.cs"));
+
+        string input = SliceUntil(flow, "public override void _Input", "public override void _Draw");
+        string motion = Slice(flow, "private bool HandlePointerMotion");
+
+        Assert.Contains("RetailMainMenuHitTest.SwallowsFrontendInput", input);
+        Assert.DoesNotContain("if (_mainTransitionTime > 0)", input);
+        Assert.Contains("RetailMainMenuHitTest.AcceptsHitTest", motion);
+        Assert.Contains("RetailMainMenuHitTest.LanguageHoverContains", motion);
+        Assert.DoesNotContain("Confirm()", motion);
+        Assert.DoesNotContain("SetLanguage", motion);
+        Assert.DoesNotContain("AcceptsTwinFade", motion);
+        Assert.DoesNotContain("TWIMTBP", flow);
+    }
+
     private static string Slice(string source, string signature)
     {
         int start = source.IndexOf(signature, StringComparison.Ordinal);
         Assert.True(start >= 0, signature);
         string rest = source[start..];
         int next = rest.IndexOf("\n    private ", signature.Length, StringComparison.Ordinal);
+        return next >= 0 ? rest[..next] : rest;
+    }
+
+    private static string SliceUntil(string source, string signature, string endSignature)
+    {
+        int start = source.IndexOf(signature, StringComparison.Ordinal);
+        Assert.True(start >= 0, signature);
+        string rest = source[start..];
+        int next = rest.IndexOf(endSignature, signature.Length, StringComparison.Ordinal);
         return next >= 0 ? rest[..next] : rest;
     }
 }
