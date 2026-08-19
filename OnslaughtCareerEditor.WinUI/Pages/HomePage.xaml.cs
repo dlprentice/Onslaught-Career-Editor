@@ -105,7 +105,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 HomeSetupActionButton.Content = "Choose game folder";
                 AutomationProperties.SetName(HomeSetupActionButton, "Choose game folder");
                 SetupTitleTextBlock.Text = "Setup not finished";
-                SetupStatusTextBlock.Text = "Game folder not set. The app needs the full Battle Engine Aquila folder for Media and playable safe copies.";
+                SetupStatusTextBlock.Text = "Game folder not set. " + GameDirectoryIdentityText.SnapshotNeedsFullInstall;
                 SetupGuidanceTextBlock.Text = "Save Lab still works with files you choose manually. Setting the folder also enables automatic save detection.";
                 return;
             }

@@ -271,6 +271,8 @@ public class GameDirectoryIdentityTextTests
         Assert.That(home, Does.Not.Contain("\"Not set yet\""));
         Assert.That(home, Does.Contain("GameDirectoryIdentityText.SnapshotNeedsFullInstall"));
         Assert.That(home, Does.Not.Contain("\"Needs the full install\""));
+        Assert.That(home, Does.Not.Contain("full Battle Engine Aquila folder"));
+        Assert.That(home, Does.Not.Contain("need the full install"));
     }
 
     private static string FindRepoRoot()

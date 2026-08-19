@@ -99,7 +99,8 @@ live in `developer_state.json` and the campaign ledgers.
   next step, not a dash. The game line on that card uses the same folder
   sentence. An incomplete install on that card names BEA.exe and data,
   not just "the full install." Choosing an incomplete folder on Home uses
-  that same sentence. A failed Game Options write that still looks
+  that same sentence. Home setup uses it when the folder is not set, not
+  "the full Battle Engine Aquila folder." A failed Game Options write that still looks
   like a dump uses the shared nothing-was-changed sentence. A failed
   focused Goodie write that still looks like a dump uses that same
   sentence. Save Editor refusals that used to say paths now name the
