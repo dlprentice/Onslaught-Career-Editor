@@ -180,6 +180,10 @@ namespace OnslaughtCareerEditor.AppCore
         public const string ControlOptionsBackupDetailsMissing = "That copy's controller details are missing backup details.";
         public const string ControlOptionsBackupSizeMismatch = "That copy's defaultoptions.bea backup size does not match.";
         public const string ControlOptionsBackupMismatch = "That copy's defaultoptions.bea backup no longer matches.";
+        public const string CopyPatchResultMissing = "That copy's details are missing their patch result.";
+        public const string CopyPatchDidNotSucceed = "That copy's details do not record a successful patch.";
+        public const string CopyPatchRowsMissing = "That copy's details are missing their patch rows.";
+        public const string CopyNeedsWindowedPatchSet = "That copy needs the windowed compatibility patch set.";
         public const string ProfileFolderInsideGame =
             "The app-owned profile folder must not sit inside the game folder.";
         public const string GameFolderInsideProfile =
@@ -1060,7 +1064,7 @@ namespace OnslaughtCareerEditor.AppCore
                 throw new FileNotFoundException(CopiedBeaMissing);
 
             if (!manifestRoot.TryGetProperty("patchResult", out JsonElement patchResultEl))
-                throw new InvalidOperationException("Playable copied game folder manifest is missing patch result metadata.");
+                throw new InvalidOperationException(CopyPatchResultMissing);
 
             bool requested = patchResultEl.TryGetProperty("requested", out JsonElement requestedEl) && requestedEl.GetBoolean();
             if (!requested)
@@ -1071,10 +1075,10 @@ namespace OnslaughtCareerEditor.AppCore
 
             bool success = patchResultEl.TryGetProperty("success", out JsonElement successEl) && successEl.GetBoolean();
             if (!success)
-                throw new InvalidOperationException("Playable copied game folder manifest does not record a successful patch result.");
+                throw new InvalidOperationException(CopyPatchDidNotSucceed);
 
             if (!patchResultEl.TryGetProperty("patchKeys", out JsonElement keysEl) || keysEl.ValueKind != JsonValueKind.Array)
-                throw new InvalidOperationException("Playable copied game folder manifest is missing patch keys.");
+                throw new InvalidOperationException(CopyPatchRowsMissing);
 
             string[] patchKeys = keysEl.EnumerateArray()
                 .Select(keyEl => keyEl.GetString())
@@ -1082,7 +1086,7 @@ namespace OnslaughtCareerEditor.AppCore
                 .Select(key => key!)
                 .ToArray();
             if (!s_windowedPatchKeys.All(required => patchKeys.Contains(required, StringComparer.OrdinalIgnoreCase)))
-                throw new InvalidOperationException("Playable copied game folder manifest patch keys do not include the windowed compatibility set.");
+                throw new InvalidOperationException(CopyNeedsWindowedPatchSet);
 
             IReadOnlyList<BinaryPatchSpec> selected = SelectPatchSpecs(patchKeys);
             byte[] data = File.ReadAllBytes(executablePath);

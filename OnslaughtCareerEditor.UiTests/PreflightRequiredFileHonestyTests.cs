@@ -326,6 +326,28 @@ public class PreflightRequiredFileHonestyTests
             Does.Not.Contain("manifest"));
         Assert.That(GameProfilePreflightService.ControlOptionsFileMismatch.ToLowerInvariant(),
             Does.Not.Contain("hash"));
+        Assert.That(source, Does.Contain("CopyPatchResultMissing"));
+        Assert.That(source, Does.Contain("CopyPatchDidNotSucceed"));
+        Assert.That(source, Does.Contain("CopyPatchRowsMissing"));
+        Assert.That(source, Does.Contain("CopyNeedsWindowedPatchSet"));
+        Assert.That(source, Does.Not.Contain("Playable copied game folder manifest is missing patch result"));
+        Assert.That(source, Does.Not.Contain("Playable copied game folder manifest does not record a successful patch"));
+        Assert.That(source, Does.Not.Contain("Playable copied game folder manifest is missing patch keys."));
+        Assert.That(source, Does.Not.Contain("Playable copied game folder manifest patch keys"));
+        Assert.That(GameProfilePreflightService.CopyPatchResultMissing,
+            Is.EqualTo("That copy's details are missing their patch result."));
+        Assert.That(GameProfilePreflightService.CopyPatchDidNotSucceed,
+            Is.EqualTo("That copy's details do not record a successful patch."));
+        Assert.That(GameProfilePreflightService.CopyPatchRowsMissing,
+            Is.EqualTo("That copy's details are missing their patch rows."));
+        Assert.That(GameProfilePreflightService.CopyNeedsWindowedPatchSet,
+            Is.EqualTo("That copy needs the windowed compatibility patch set."));
+        Assert.That(GameProfilePreflightService.CopyPatchResultMissing.ToLowerInvariant(),
+            Does.Not.Contain("playable"));
+        Assert.That(GameProfilePreflightService.CopyPatchRowsMissing.ToLowerInvariant(),
+            Does.Not.Contain("key"));
+        Assert.That(GameProfilePreflightService.CopyPatchDidNotSucceed.ToLowerInvariant(),
+            Does.Not.Contain("metadata"));
     }
 
     [Test]
