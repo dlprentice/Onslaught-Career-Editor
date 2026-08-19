@@ -99,8 +99,8 @@ Cheapest falsifier: file `0x0007ef20` is not `81 79 10 f0 4a a2 ca`,
 is not `c3`, **or** `0x0007efe8` is not `8b c1 c3`, **or** body
 SHA-256 is not `57cf35b2…8854`, **or** `tools/call_xref_scan.py` on
 `0x0047ef20` is not exactly `E8` at `0x0053a3ab` and `0x0053a602`,
-**or** `0x00053a3a6` is not `b9 c8 ad 6f 00 e8 70 4b f4 ff`, **or**
-`0x00053a5fd` is not `b9 c8 ad 6f 00 e8 19 49 f4 ff`, **or**
+**or** `0x0013a3a6` is not `b9 c8 ad 6f 00 e8 70 4b f4 ff`, **or**
+`0x0013a5fd` is not `b9 c8 ad 6f 00 e8 19 49 f4 ff`, **or**
 `0x0007ef40` is not `c7 01 a0 86 01 00`, **or** `0x0007efe1` is not
 `89 51 10`.
 

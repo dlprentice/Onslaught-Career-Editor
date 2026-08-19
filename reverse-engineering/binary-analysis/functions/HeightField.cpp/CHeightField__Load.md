@@ -49,8 +49,10 @@ are labels. Wave396 / decompiler text below is **not** this proof.
 SHA-256
 `ce5c79bbbcdbec27f0ca2cd082a49b639560cd09bafbc3fdddf4f4963dbb55a1`.
 Eleven `E8`, zero `E9`. One inbound `E8`: `0x004910d6` inside
-`CHeightField__DeserializeMapAndInitResources`. That body's sole
-inbound is `CEngine__Deserialize` `0x0044a72f`:
+`CHeightField__DeserializeMapAndInitResources`. First gates for that
+caller are
+[`CHeightField__DeserializeMapAndInitResources.md`](CHeightField__DeserializeMapAndInitResources.md).
+That body's sole inbound is `CEngine__Deserialize` `0x0044a72f`:
 
 ```
 push ebx
