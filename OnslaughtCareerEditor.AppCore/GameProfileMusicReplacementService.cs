@@ -74,6 +74,7 @@ namespace OnslaughtCareerEditor.AppCore
         public const string MusicDetailsUnsupported = "That copy's music details are out of date.";
         public const string MusicDetailsWrongTarget = "That copy's music details do not match the music file.";
         public const string MusicBackupMismatch = "That copy's music backup no longer matches.";
+        public const string MusicRestoreMismatch = "That copy's restored music file no longer matches.";
         private const string BackupSuffix = ".original.backup";
 
         private static readonly GameProfileMusicSwapPreset[] s_musicSwapPresets =
@@ -334,7 +335,7 @@ namespace OnslaughtCareerEditor.AppCore
             RejectMultipleHardLinks(targetPath, "Target music file");
             string restoredSha = ComputeSha256(File.ReadAllBytes(targetPath));
             if (!string.Equals(restoredSha, originalSha256, StringComparison.OrdinalIgnoreCase))
-                throw new IOException("Playable copied game folder music restore did not read back the expected original track hash.");
+                throw new IOException(MusicRestoreMismatch);
 
             RejectReparsePoint(manifestPath, "music replacement manifest");
             RejectMultipleHardLinks(manifestPath, "Music replacement manifest");

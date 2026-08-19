@@ -51,6 +51,15 @@ public class MusicReplacementManifestHonestyTests
             Does.Not.Contain("playable"));
         Assert.That(GameProfileMusicReplacementService.MusicBackupMismatch.ToLowerInvariant(),
             Does.Not.Contain("manifest"));
+        Assert.That(source, Does.Contain("MusicRestoreMismatch"));
+        Assert.That(source, Does.Not.Contain(
+            "Playable copied game folder music restore did not read back the expected original track hash."));
+        Assert.That(GameProfileMusicReplacementService.MusicRestoreMismatch,
+            Is.EqualTo("That copy's restored music file no longer matches."));
+        Assert.That(GameProfileMusicReplacementService.MusicRestoreMismatch.ToLowerInvariant(),
+            Does.Not.Contain("playable"));
+        Assert.That(GameProfileMusicReplacementService.MusicRestoreMismatch.ToLowerInvariant(),
+            Does.Not.Contain("hash"));
     }
 
     [Test]
