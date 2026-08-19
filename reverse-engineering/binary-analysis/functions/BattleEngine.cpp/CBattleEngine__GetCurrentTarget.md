@@ -14,7 +14,8 @@ This wake landed `97773418` `CBattleEngine__DisplayLock` and
 `9f66373e` `CBattleEngine__FireLock` — not redone. Cycle 88
 accepted FireLock. Did not adopt a C1 rename. Operator closed the
 unlabeled first-gates mill; this is the last open/opaque sibling of
-that named lock cohort.
+that named lock cohort. Cycle 89 accepted this byte note. This
+follow-on names rebuild owners only; it does not redo the body.
 
 > Address: `0x004071b0`
 
@@ -55,8 +56,8 @@ first finished live `mLocks` unit, else round-robins `mFiredLocks`
 using `mRecentLocks`. Retail inlines both walks with the same
 `+0x294` / `+0x2a4` sets FireLock uses.
 
-Rebuild owner: **none**. Same gap as FireLock / DisplayLock.
-Do not implement rebuild here.
+Rebuild mapping: `PARTIAL_CONTRACT` (named, not implemented). See
+the section below. Do not implement Core from this RE root.
 
 Cheapest falsifier: file `0x000071b0` is not `51`, **or**
 `0x00007305` is not `c3`, **or** `0x000071bb` is not
@@ -65,8 +66,38 @@ Cheapest falsifier: file `0x000071b0` is not `51`, **or**
 `0x004071b0` is not empty, **or** `0x001d8b08` is not
 `b0 71 40 00`, **or** a second encoding of that imm exists.
 
+## Rebuild mapping — 2026-08-19
+
+Grade: `PARTIAL_CONTRACT`. Not `REBUILD_READY`. Independently
+re-read official+twin `74154bfa` this wake (2506752 equal). Body
+SHA-256 still `311eadaf…79d4`. `call_xref_scan` still empty.
+File `0x001d8b08` still `b0 71 40 00`. Cycle 89 accepted this
+byte note. Origin even at `30ade64e`. Did not open Ghidra.
+Did not edit `rebuild/**`.
+
+Retail entity: `CBattleEngine` vtable slot 81 lock-set reader.
+Stuart architecture (not proof): `BattleEngine.cpp:913-977`.
+
+Nearest reconstruction owner: **none**. Core has no lock-set
+walk, no `+0x5e0` cursor, and no `+0x2b4` recent-lock word.
+
+Not the owner: Godot `Level100EffectCue.AquilaTargetLocked` in
+`rebuild/OnslaughtRebuild.Godot/Level100AudioCatalog.cs` is the
+homing-missile lock **sound**. HUD README: the canonical actor
+snapshot does not supply target lock. Do not treat that cue as
+this vtable reader.
+
+If L100 later owns player lock sets, this reader belongs next
+to that Core type — not in Godot. Focused test: none. L100
+card `t_aa5586e5` is on a playable training-path diet — do not
+implement lock sets from this mapping until that lane names
+the arm.
+
+Siblings: `CBattleEngine__FireLock` /
+`CBattleEngine__DisplayLock` in this folder.
+
 ## Functions
 
 | Address | Name | Byte evidence | Contract (confidence) |
 | --- | --- | --- | --- |
-| `0x004071b0` | `CBattleEngine__GetCurrentTarget` | `51 5657 8bb9e0050000 … 6639b1b4020000 … 59c3` (342 B) | incoming-ECX thiscall; bare ret ×3; 342 B; 0 E8/E9; 0 inbound; unique vtable slot 81 at `0x005d8b08`. HIGH on ABI, `+0x294`/`+0x2a4` walks, `+0x5e0` increment, `+0x2b4` word gate. **Not** on field names or rebuild parity. |
+| `0x004071b0` | `CBattleEngine__GetCurrentTarget` | `51 5657 8bb9e0050000 … 6639b1b4020000 … 59c3` (342 B) | incoming-ECX thiscall; bare ret ×3; 342 B; 0 E8/E9; 0 inbound; unique vtable slot 81 at `0x005d8b08`. HIGH on ABI, `+0x294`/`+0x2a4` walks, `+0x5e0` increment, `+0x2b4` word gate. Mapping `PARTIAL_CONTRACT`; no Core owner. **Not** on field names or rebuild parity. |
