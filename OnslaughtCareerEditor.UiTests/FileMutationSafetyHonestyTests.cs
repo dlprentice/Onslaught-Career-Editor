@@ -55,6 +55,10 @@ public class FileMutationSafetyHonestyTests
         Assert.That(source, Does.Contain("cannot use a drive-relative location."));
         Assert.That(source, Does.Contain("cannot use a UNC or network location."));
         Assert.That(source, Does.Contain("\"Protected input file\""));
+        Assert.That(source, Does.Not.Contain("{label} is required."));
+        Assert.That(source, Does.Not.Contain("{label} cannot use a Windows device location."));
+        Assert.That(source, Does.Contain("FileOrFolderRequired"));
+        Assert.That(source, Does.Contain("FileCannotUseDeviceLocation"));
     }
 
     [Test]

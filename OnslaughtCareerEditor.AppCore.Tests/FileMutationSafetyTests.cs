@@ -67,6 +67,27 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         }
 
         [Fact]
+        public void NormalizeLocalPath_NamesAFileNotATechnicalLabel()
+        {
+            ArgumentException blank = Assert.Throws<ArgumentException>(
+                () => FileMutationSafety.NormalizeLocalPath("  ", "Generated profile root"));
+
+            Assert.StartsWith(FileMutationSafety.FileOrFolderRequired, blank.Message);
+            Assert.Equal("path", blank.ParamName);
+            Assert.DoesNotContain("Generated profile root", blank.Message, StringComparison.Ordinal);
+
+            if (!OperatingSystem.IsWindows())
+                return;
+
+            InvalidOperationException device = Assert.Throws<InvalidOperationException>(
+                () => FileMutationSafety.NormalizeLocalPath(@"\\?\C:\gone.bes", "Generated profile root"));
+
+            Assert.Equal(FileMutationSafety.FileCannotUseDeviceLocation, device.Message);
+            Assert.DoesNotContain("Generated profile root", device.Message, StringComparison.Ordinal);
+            Assert.DoesNotContain("path", device.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
         public void PatchFile_RejectsNonBesOutput()
         {
             using TempMutationRoot root = TempMutationRoot.Create();

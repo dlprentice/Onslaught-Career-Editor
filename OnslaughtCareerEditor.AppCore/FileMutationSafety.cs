@@ -41,11 +41,16 @@ namespace OnslaughtCareerEditor.AppCore
         internal const string FileCannotUseLink = "That file cannot use a shortcut or link.";
         internal const string FolderCannotUseLink = "That folder cannot use a shortcut or link.";
         internal const string FileCannotShareData = "That file cannot share its data with another file.";
+        internal const string FileOrFolderRequired = "A file or folder is required.";
+        internal const string FileCannotUseDeviceLocation = "That file cannot use a Windows device location.";
+        internal const string FileCannotUseDriveRelativeLocation = "That file cannot use a drive-relative location.";
+        internal const string FileCannotUseNetworkLocation = "That file cannot use a UNC or network location.";
+        internal const string FileCannotUseAlternateStream = "That file cannot use an alternate data stream.";
 
         internal static string NormalizeLocalPath(string path, string label)
         {
             if (string.IsNullOrWhiteSpace(path))
-                throw new ArgumentException($"{label} is required.", nameof(path));
+                throw new ArgumentException(FileOrFolderRequired, nameof(path));
 
             string trimmed = path.Trim();
             if (OperatingSystem.IsWindows())
@@ -54,21 +59,21 @@ namespace OnslaughtCareerEditor.AppCore
                     trimmed.StartsWith(@"\\.\", StringComparison.Ordinal) ||
                     trimmed.StartsWith(@"\??\", StringComparison.Ordinal))
                 {
-                    throw new InvalidOperationException($"{label} cannot use a Windows device location.");
+                    throw new InvalidOperationException(FileCannotUseDeviceLocation);
                 }
 
                 if (Path.IsPathRooted(trimmed) && !Path.IsPathFullyQualified(trimmed))
-                    throw new InvalidOperationException($"{label} cannot use a drive-relative location.");
+                    throw new InvalidOperationException(FileCannotUseDriveRelativeLocation);
             }
 
             string fullPath = Path.GetFullPath(trimmed);
             if (OperatingSystem.IsWindows())
             {
                 if (fullPath.StartsWith(@"\\", StringComparison.Ordinal))
-                    throw new InvalidOperationException($"{label} cannot use a UNC or network location.");
+                    throw new InvalidOperationException(FileCannotUseNetworkLocation);
 
                 if (fullPath.IndexOf(':', startIndex: 2) >= 0)
-                    throw new InvalidOperationException($"{label} cannot use an alternate data stream.");
+                    throw new InvalidOperationException(FileCannotUseAlternateStream);
 
                 RejectReservedDosNames(fullPath, label);
             }
