@@ -47,6 +47,8 @@ public class MusicReplacementOggHonestyTests
 
         Assert.That(page, Does.Not.Contain("Staging one replacement OGG"));
         Assert.That(page, Does.Contain("Staging one replacement music file into the safe copy."));
+        Assert.That(page, Does.Not.Contain("safe-copy OGG track"));
+        Assert.That(page, Does.Contain("Copying one music file over another."));
         Assert.That(xaml, Does.Not.Contain("external replacement OGG"));
         Assert.That(xaml, Does.Contain("external replacement music file"));
     }

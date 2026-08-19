@@ -1816,7 +1816,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             PatchBenchRestoreMusicReplacementButton.IsEnabled = false;
             PatchBenchMusicReplacementStatus.Text = PatchBenchSafeCopyOutcomeText.BuildMusicStagingProgressStatus(copiedTrackSwap);
             OperationLogTextBox.Text = copiedTrackSwap
-                ? "Copying one safe-copy OGG track over another safe-copy OGG track. The original install stays unchanged."
+                ? "Copying one music file over another. The original install stays unchanged."
                 : "Staging one replacement music file into the safe copy. The original install stays unchanged.";
                 AppStatusService.SetStatus(copiedTrackSwap ? "Windowed & Mods: staging safe-copy music swap" : "Windowed & Mods: staging copied music bytes");
 
