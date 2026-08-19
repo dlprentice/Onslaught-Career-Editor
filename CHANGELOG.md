@@ -53,7 +53,8 @@ live in `developer_state.json` and the campaign ledgers.
   says the file was left as it is. Putting a career into a safe copy, or
   bringing one out, asks the same overwrite question. A failed stop of a
   copied game names the action and that nothing was changed, without the
-  exception.
+  exception. A failed backup of the installed game does the same. The
+  installed-game status line names the folder, not the path.
 
 ## 1.0.11 — 2026-08-07
 

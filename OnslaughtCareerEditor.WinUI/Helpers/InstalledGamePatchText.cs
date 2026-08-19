@@ -109,9 +109,14 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
 
         private static string DescribeWhere(string? exePath)
         {
-            return string.IsNullOrWhiteSpace(exePath)
-                ? string.Empty
-                : $" ({Path.GetDirectoryName(exePath)})";
+            if (string.IsNullOrWhiteSpace(exePath))
+            {
+                return string.Empty;
+            }
+
+            string? folder = Path.GetDirectoryName(exePath.Trim());
+            string name = Path.GetFileName(Path.TrimEndingDirectorySeparator(folder ?? string.Empty));
+            return string.IsNullOrWhiteSpace(name) ? string.Empty : $" ({name})";
         }
 
         /// <summary>

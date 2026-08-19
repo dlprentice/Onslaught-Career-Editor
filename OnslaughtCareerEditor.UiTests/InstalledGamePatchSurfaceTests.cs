@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using NUnit.Framework;
+using OnslaughtCareerEditor.AppCore;
 using OnslaughtCareerEditor.WinUI.Helpers;
 
 namespace OnslaughtCareerEditor.UiTests;
@@ -130,6 +131,31 @@ public class InstalledGamePatchSurfaceTests
             confirmation,
             Does.Contain("If the copy cannot be made, nothing is patched"),
             "The one thing somebody needs to believe is that a failed backup means a failed patch.");
+    }
+
+    [Test]
+    public void TheStatusLineNamesTheFolderNotThePath()
+    {
+        string path = Path.Combine("C:" + Path.DirectorySeparatorChar + "Steam", "steamapps", "common", "Battle Engine Aquila", "BEA.exe");
+        string status = InstalledGamePatchText.BuildStatusLine(InstalledGamePatchReadiness.CleanAndUnbackedUp, path);
+
+        Assert.That(status, Does.Contain("Battle Engine Aquila"));
+        Assert.That(status, Does.Not.Contain(path));
+        Assert.That(status, Does.Not.Contain("steamapps"));
+        Assert.That(status, Does.Not.Contain(":\\"));
+    }
+
+    [Test]
+    public void AFailedBackupNamesTheActionWithoutTheException()
+    {
+        Assert.That(BinaryPatchEngine.InstalledBackupFailed, Does.Contain("backup could not be made"));
+        Assert.That(BinaryPatchEngine.InstalledBackupFailed, Does.Contain("untouched"));
+        Assert.That(BinaryPatchEngine.InstalledBackupFailed, Does.Not.Contain(":\\"));
+        Assert.That(BinaryPatchEngine.InstalledBackupFailed.ToLowerInvariant(), Does.Not.Contain("exception"));
+
+        string engine = File.ReadAllText(Path.Combine(RepoRoot(), "OnslaughtCareerEditor.AppCore", "BinaryPatchEngine.cs"));
+        Assert.That(engine, Does.Contain("InstalledBackupFailed"));
+        Assert.That(engine, Does.Not.Contain("your game is untouched: {ex.Message}"));
     }
 
     [Test]
