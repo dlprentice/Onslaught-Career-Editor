@@ -2356,7 +2356,22 @@ public sealed partial class RetailFrontendFlow : Control
             // invent dest from 10.0.
             _ = RetailLevelSelectFsub10.Delta(
                 RetailLevelSelectFsub148.SettledPad);
-            DrawLevelNodeGraph();
+            // RetailLevelSelectLater148: later leftover after the
+            // 10.0 fsub is the second identical fld 148.0 /
+            // fsub [esi+0x3460] / fstp [esp+0x14] triple at
+            // 0x00460E24. Official 74154bfa independently
+            // re-read this cycle. First consumers are
+            // 0x00460E9D fcomp 0x00629390 and 0x00460EB0
+            // fcomp 0x00629394. The local is a later window,
+            // not dest. Do not invent dest from those
+            // compares. The [esp+0x94] fsub at 0x00460E34
+            // is later. Dest stays the measured node centres.
+            if (RetailLevelSelectLater148.Applies(
+                    RetailLevelSelectLater148.Pad(
+                        RetailLevelSelectLater148.SettledField)))
+            {
+                DrawLevelNodeGraph();
+            }
         }
 
         for (int index = 0; index < LevelColumnLabels.Length; index++)
