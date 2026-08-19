@@ -173,9 +173,10 @@ public static class RetailCareerUpdateGoodieStates
     /// <c>'E'</c> and goodie 1 stays <c>GS_UNKNOWN</c>. Leftover
     /// complete-110 plus ranking 0.25f opens
     /// <c>SET_GOODIE_NEW(1)</c> and <c>SET_GOODIE_NEW(79)</c>.
-    /// Isolated leftover C names 1, not 79. FrontEndHandoff leftover of that
-    /// C seed still opens 1 because <c>TryApply</c> calls
-    /// ApplyUpdate. Isolated leftover C does not go through
+    /// Isolated leftover C names 1, not 79. Isolated leftover C
+    /// concept-art names ApplyUpdate. FrontEndHandoff leftover of
+    /// that C seed still opens 1 and 79 because <c>TryApply</c>
+    /// calls ApplyUpdate. Isolated leftover C does not go through
     /// <c>TryApply</c>. First-play FrontEndHandoff still leaves
     /// goodie 1 at <c>GS_UNKNOWN</c> because world 110 is
     /// incomplete; isolated closed GRADE(110) does not go

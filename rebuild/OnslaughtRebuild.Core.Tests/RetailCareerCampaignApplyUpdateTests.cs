@@ -774,9 +774,11 @@ public sealed class RetailCareerCampaignApplyUpdateTests
     /// <summary>
     /// Leftover world-110 complete + C (ranking 0.25f already pinned)
     /// opens <c>Career.cpp:770</c> <c>SET_GOODIE_NEW(79)</c>. Isolated
-    /// leftover C names goodie 1, not 79. Isolated leftover C
-    /// CountGoodies is now 6 because this store is also New; that
-    /// count is not unique versus skip <c>SET_GOODIE_NEW(79)</c>.
+    /// leftover C names goodie 1, not 79. FrontEndHandoff
+    /// leftover of this seed now names 79 through <c>TryApply</c>.
+    /// Isolated leftover C CountGoodies is now 6 because this store
+    /// is also New; that count is not unique versus skip
+    /// <c>SET_GOODIE_NEW(79)</c>.
     /// Isolated leftover 14 CountGoodies uses ranking 0.0f so
     /// <c>GRADE(110) &gt;= C</c> stays closed. First-play closed
     /// GRADE(110) names goodie 1 and does not name 79. World 110 is
