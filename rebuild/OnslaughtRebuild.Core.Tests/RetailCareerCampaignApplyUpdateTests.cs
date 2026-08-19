@@ -122,6 +122,39 @@ public sealed class RetailCareerCampaignApplyUpdateTests
     }
 
     /// <summary>
+    /// <c>CCareer::Update</c> never writes <c>CCareerNode.mNumAttempts</c>
+    /// (<c>+0x38</c>). The only store is <c>CCareerNode::Blank</c>
+    /// (<c>Career.cpp:99</c> / <c>0x0041B740</c>). A leftover attempt
+    /// count on world 100 and world 110 therefore survives first-play
+    /// ApplyUpdate even though Complete / Ranking / CareerInProgress
+    /// change. Isolated Blank ctor 0 does not go through ApplyUpdate.
+    /// Existing Won ranking / Complete tests do not name <c>+0x38</c>.
+    /// Mutation: increment the finished node's <c>mNumAttempts</c>.
+    /// No new secondaries.
+    /// </summary>
+    [Fact]
+    public void Level100Won_ApplyUpdateDoesNotIncrementNumAttempts()
+    {
+        RetailCareerCampaign career = RetailCareerReCalcLinks.CreateColdTrainingSlice();
+        RetailCareerNode training = career.Nodes.Find(100)!;
+        RetailCareerNode next = career.Nodes.Find(110)!;
+        training.NumAttempts = 7;
+        next.NumAttempts = 11;
+        RetailEndLevelSnapshot snapshot = RetailFillOutEndLevelData.ForLevel100Won();
+
+        career.ApplyUpdate(snapshot);
+
+        Assert.Equal(1, training.Complete);
+        Assert.Equal(1.0f, training.Ranking);
+        Assert.Equal(7, training.NumAttempts);
+        Assert.Equal(0, next.Complete);
+        Assert.Equal(RetailCareerNode.BlankRanking, next.Ranking);
+        Assert.Equal(11, next.NumAttempts);
+        Assert.Equal(1, career.CareerInProgress);
+        Assert.All(snapshot.SecondaryStatuses, status => Assert.Equal(0, status));
+    }
+
+    /// <summary>
     /// <c>Career.cpp:405-406</c> stores <c>mRanking</c> only when the
     /// snapshot is strictly greater. A worse Level 100 replay therefore
     /// leaves the already-pinned first-play 1.0f / S in place. Mutation:

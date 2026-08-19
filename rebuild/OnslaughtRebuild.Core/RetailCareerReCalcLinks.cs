@@ -90,6 +90,13 @@ public sealed class RetailCareerNodeLink
 /// <c>BlankRanking</c> / grade E.
 /// </para>
 /// <para>
+/// <b><c>mNumAttempts</c> is not a store on this path.</b>
+/// <c>CCareer::Update</c> (<c>Career.cpp:379-418</c>) never writes
+/// <c>+0x38</c>. The only store is <c>CCareerNode::Blank</c>
+/// (<c>Career.cpp:99</c> / <c>0x0041B740</c>). A leftover attempt
+/// count on world 100 and world 110 survives first-play ApplyUpdate.
+/// </para>
+/// <para>
 /// <b>Base things land on world 110, not 100.</b>
 /// <c>Career.cpp:443-452</c> calls
 /// <c>UpdateBaseWorldExistsStuffForNode(GetNodeFromWorldNo(
@@ -241,7 +248,9 @@ public sealed class RetailCareerCampaign
     /// before that store and before <c>ReCalcLinks</c> /
     /// <c>UpdateBaseWorldExistsStuffForNode</c>
     /// (<c>Career.cpp:382-385</c> / <c>392</c> / <c>416</c> /
-    /// <c>443-452</c> / <c>519-527</c>).
+    /// <c>443-452</c> / <c>519-527</c>). This method does not write
+    /// <c>CCareerNode.mNumAttempts</c> (<c>+0x38</c>);
+    /// <c>Career.cpp:379-418</c> never does.
     /// </summary>
     public void ApplyUpdate(
         int finalState,
