@@ -1316,8 +1316,8 @@ namespace OnslaughtCareerEditor.AppCore
 
             var outSb = new StringBuilder();
             outSb.AppendLine("Patch apply complete.");
-            outSb.AppendLine($"Target: {exePath}");
-            outSb.AppendLine($"Backup: {backupPath}");
+            outSb.AppendLine($"Target: {TargetFileName}");
+            outSb.AppendLine($"Backup: {TargetFileName}{BackupSuffix}");
             outSb.AppendLine($"Target identity: {validation.info.IdentityLabel}");
             outSb.AppendLine("Selected patch bytes verified on disk.");
             outSb.AppendLine("Restore uses the first full-file backup snapshot, not per-patch undo.");
@@ -1459,8 +1459,8 @@ namespace OnslaughtCareerEditor.AppCore
             {
                 return (true,
                     "No changes needed. The BEA.exe-only copy already matches the verified backup snapshot.\n" +
-                    $"Target: {exePath}\n" +
-                    $"Backup source: {backupPath}");
+                    $"Target: {TargetFileName}\n" +
+                    $"Backup source: {TargetFileName}{BackupSuffix}");
             }
 
             byte[] restoredBytes;
@@ -1477,14 +1477,14 @@ namespace OnslaughtCareerEditor.AppCore
             {
                 return (false,
                     "Restore failed: on-disk verification did not match the backup snapshot.\n" +
-                    $"Target: {exePath}\n" +
-                    $"Backup source: {backupPath}");
+                    $"Target: {TargetFileName}\n" +
+                    $"Backup source: {TargetFileName}{BackupSuffix}");
             }
 
             return (true,
                 "Restore complete.\n" +
-                $"Target: {exePath}\n" +
-                $"Backup source: {backupPath}\n" +
+                $"Target: {TargetFileName}\n" +
+                $"Backup source: {TargetFileName}{BackupSuffix}\n" +
                 (unexpectedRestoreRows.Count > 0
                     ? "Recovery: unexpected current patch bytes were replaced from the verified full-file backup.\n"
                     : string.Empty) +
@@ -2228,8 +2228,9 @@ namespace OnslaughtCareerEditor.AppCore
 
         public static string RenderStateReport(string exePath, IReadOnlyList<BinaryPatchVerifyRow> rows, string summary)
         {
+            _ = exePath;
             var sb = new StringBuilder();
-            sb.AppendLine($"Target: {exePath}");
+            sb.AppendLine($"Target: {TargetFileName}");
             sb.AppendLine();
 
             foreach (var row in rows)

@@ -108,7 +108,9 @@ live in `developer_state.json` and the campaign ledgers.
   same kind of sentence. Game Options refusals that used to say
   paths now name the files. A focused Goodie patcher refusal does the
   same. A Media library with no tracks or cutscenes says to check the
-  game folder, instead of describing the emptiness.
+  game folder, instead of describing the emptiness. Windowed & Mods
+  apply and restore name BEA.exe and BEA.exe.original.backup, not the
+  full paths.
 
 ## 1.0.11 — 2026-08-07
 

@@ -74,4 +74,17 @@ public class BinaryPatchCopyHonestyTests
         Assert.That(profiles, Does.Not.Contain("Loaded safe-copy profile catalog from {catalogPath}"));
         Assert.That(profiles, Does.Contain("Loaded the safe-copy profile catalog."));
     }
+
+    [Test]
+    public void ApplyAndRestoreNameTheFilesNotThePaths()
+    {
+        string engine = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "BinaryPatchEngine.cs"));
+
+        Assert.That(engine, Does.Not.Contain("Target: {exePath}"));
+        Assert.That(engine, Does.Not.Contain("Backup: {backupPath}"));
+        Assert.That(engine, Does.Not.Contain("Backup source: {backupPath}"));
+        Assert.That(engine, Does.Contain("Target: {TargetFileName}"));
+        Assert.That(engine, Does.Contain("BEA.exe.original.backup"));
+    }
 }
