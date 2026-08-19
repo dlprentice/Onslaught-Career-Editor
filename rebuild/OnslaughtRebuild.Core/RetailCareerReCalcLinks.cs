@@ -116,7 +116,9 @@ public sealed class RetailCareerNodeLink
 /// <c>FillOutEndLevelData</c> — they are gated on a non-zero
 /// secondary count, so Level 100 never reaches them. The Level
 /// 100 goodie arms (0, 8, 78, 121, 164) are the already-pinned
-/// <see cref="RetailCareerUpdateGoodieStates"/> slice.
+/// <see cref="RetailCareerUpdateGoodieStates"/> slice. Goodie 1
+/// (<c>GRADE(110) &gt;= C</c>) stays closed on that path because
+/// world 110 is incomplete.
 /// </para>
 /// </remarks>
 public static class RetailCareerReCalcLinks

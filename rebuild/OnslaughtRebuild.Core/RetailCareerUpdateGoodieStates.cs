@@ -65,10 +65,13 @@ public sealed class RetailCareerGoodies
 /// <para>
 /// <b>A first-play S unlocks five slots.</b> <c>COMPLETE_LEVEL(100)</c>
 /// writes <c>GS_NEW</c> on 0 and 8. <c>GRADE(100) &gt;= C/B/A</c> writes
-/// 78, 121, and 164. <c>CGrade::operator&gt;=</c> treats <c>'S'</c> as
+/// 78, 121, and 164. <c>GRADE(110) &gt;= C</c> writes goodie 1, but
+/// world 110 stays incomplete / BlankRanking so that arm is the
+/// already-pinned incomplete <c>'E'</c> and goodie 1 stays
+/// <c>GS_UNKNOWN</c>. <c>CGrade::operator&gt;=</c> treats <c>'S'</c> as
 /// above every other grade, so the already-pinned FillOut 1.0f unlocks
-/// all five together. <c>SET_GOODIE_NEW</c> stores 2 only when
-/// <c>mState &lt;= GS_INSTRUCTIONS</c>.
+/// the five world-100 slots together. <c>SET_GOODIE_NEW</c> stores 2
+/// only when <c>mState &lt;= GS_INSTRUCTIONS</c>.
 /// </para>
 /// <para>
 /// <b>Do not invent the rest of the table.</b> Other worlds are not in
@@ -85,6 +88,9 @@ public static class RetailCareerUpdateGoodieStates
     /// <summary>Goodie 0 — complete world 100 — <c>Career.cpp:690</c>.</summary>
     public const int CompleteWorld100Bio = 0;
 
+    /// <summary>Goodie 1 — <c>GRADE(110) &gt;= C</c> — <c>Career.cpp:691</c>.</summary>
+    public const int GradeCOnWorld110 = 1;
+
     /// <summary>Goodie 8 — complete world 100 — <c>Career.cpp:698</c>.</summary>
     public const int CompleteWorld100Second = 8;
 
@@ -99,15 +105,18 @@ public static class RetailCareerUpdateGoodieStates
 
     /// <summary>
     /// The Level 100 arms of <c>CCareer::UpdateGoodieStates</c> —
-    /// <c>Career.cpp:690 / 698 / 769 / 813 / 857</c>, <c>0x0041c470</c>,
-    /// then the already-cited <c>CountGoodies</c> delta into
-    /// <c>new_goodie_count</c> and the goodie-0 <c>first_goodie</c> latch
-    /// (<c>Career.cpp:686 / 688 / 895-900</c>). After
-    /// <c>GetAndResetGoodieNewCount</c> / <c>GetAndResetFirstGoodie</c>
-    /// a replay <c>ApplyUpdate</c> leaves both at 0: the count add is
-    /// delta 0 and the latch is transition-only. Lost still runs this
-    /// body (<c>Career.cpp:382-385</c>) but world 100 stays incomplete,
-    /// so both globals stay ctor 0.
+    /// <c>Career.cpp:690 / 691 / 698 / 769 / 813 / 857</c>,
+    /// <c>0x0041c470</c>, then the already-cited <c>CountGoodies</c>
+    /// delta into <c>new_goodie_count</c> and the goodie-0
+    /// <c>first_goodie</c> latch (<c>Career.cpp:686 / 688 / 895-900</c>).
+    /// After <c>GetAndResetGoodieNewCount</c> /
+    /// <c>GetAndResetFirstGoodie</c> a replay <c>ApplyUpdate</c> leaves
+    /// both at 0: the count add is delta 0 and the latch is
+    /// transition-only. Lost still runs this body
+    /// (<c>Career.cpp:382-385</c>) but world 100 stays incomplete, so
+    /// both globals stay ctor 0. <c>GRADE(110) &gt;= C</c> stays closed
+    /// after first-play: world 110 is incomplete so the lookup is
+    /// <c>'E'</c> and goodie 1 stays <c>GS_UNKNOWN</c>.
     /// <c>mPendingExtraGoodies</c> and episode instruction marks stay
     /// unclaimed.
     /// </summary>
@@ -125,8 +134,9 @@ public static class RetailCareerUpdateGoodieStates
             career.Goodies.SetNewIfNotDone(CompleteWorld100Second);
         }
 
+        List<RetailWorldGradeNode> gradeNodes = GradeNodes(career);
         byte grade = RetailWorldGrade.GradeByteForWorld(
-            GradeNodes(career),
+            gradeNodes,
             RetailCareerReCalcLinks.TrainingWorldNumber);
         var held = new RetailGrade(unchecked((sbyte)grade));
         if (held.IsAtLeast(new RetailGrade((sbyte)'C')))
@@ -142,6 +152,15 @@ public static class RetailCareerUpdateGoodieStates
         if (held.IsAtLeast(new RetailGrade((sbyte)'A')))
         {
             career.Goodies.SetNewIfNotDone(GradeAOnWorld100);
+        }
+
+        byte grade110 = RetailWorldGrade.GradeByteForWorld(
+            gradeNodes,
+            RetailCareerReCalcLinks.TrainingLowerChildWorldNumber);
+        var held110 = new RetailGrade(unchecked((sbyte)grade110));
+        if (held110.IsAtLeast(new RetailGrade((sbyte)'C')))
+        {
+            career.Goodies.SetNewIfNotDone(GradeCOnWorld110);
         }
 
         career.Counters.NewGoodieCount += CountGoodies(career) - previouslyNew;

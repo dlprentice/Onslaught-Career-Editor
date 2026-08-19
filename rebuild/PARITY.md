@@ -1,7 +1,7 @@
 # Rebuild parity contract
 
 Status: active — what "1:1 behavioral and experiential parity" means operationally
-Last updated: 2026-08-19 (Level 100 ApplyUpdate mNumAttempts skip).
+Last updated: 2026-08-19 (Level 100 GRADE(110) goodie 1 stays closed).
 Evidence: SOURCE — authority order and the known divergences are
 recorded in `PROVENANCE.md` plus the Lost-countdown row of this table; gate capabilities are MEASURED claims of the
 tracked harnesses named in the table. Every row of *Carried retail contracts*
@@ -120,6 +120,7 @@ Owner paths are relative to the repository root; test names are relative to
 | `CCareer::UpdateGoodieStates` Level 100 A-grade band | Same body. Ranking 0.75f is already pinned as A. `GRADE(100) >= A` unlocks 164. Cite `0x0041f70e`. Iceberg store-0 and first-play elapsed stay unclaimed. No new secondaries | `rebuild/OnslaughtRebuild.Core/RetailCareerUpdateGoodieStates.cs` | `RetailCareerUpdateGoodieStates.Update` | `RetailCareerCampaignApplyUpdateTests.Level100Won_ApplyUpdateGradeAUnlocksTheATrainingGoodie` | 1 | skip the A arm |
 | `CCareer::UpdateGoodieStates` Level 100 E-grade Won | Same body. Ranking 0.0f is already pinned as E (`0x00421499` `mov al,0x45`). A zero-score FillOut still Wins, so `COMPLETE_LEVEL(100)` writes 0 and 8; `GRADE(100) >= C` stays closed. Cite `0x00421499` / `0x0041de68`. Iceberg store-0 and first-play elapsed stay unclaimed. No new secondaries | `rebuild/OnslaughtRebuild.Core/RetailCareerUpdateGoodieStates.cs` | `RetailCareerUpdateGoodieStates.Update` | `RetailCareerCampaignApplyUpdateTests.Level100Won_ApplyUpdateGradeEUnlocksOnlyTheCompleteTrainingGoodies` | 1 | unlock 78 on any complete |
 | `CCareer::UpdateGoodieStates` Level 100 D-grade band | Same body. Ranking 0.001f is already pinned as the score-time exact-D replacement (`0x3a83126f`). That is D (`'D' - floor(0.001*4)`), so `GRADE(100) >= C` stays closed. Iceberg store-0 and first-play elapsed stay unclaimed. No new secondaries | `rebuild/OnslaughtRebuild.Core/RetailCareerUpdateGoodieStates.cs` | `RetailCareerUpdateGoodieStates.Update` | `RetailCareerCampaignApplyUpdateTests.Level100Won_ApplyUpdateGradeDUnlocksOnlyTheCompleteTrainingGoodies` | 1 | treat any ranking above 0 as C |
+| `CCareer::UpdateGoodieStates` Level 100 GRADE(110) C-goodie | Same body. `Career.cpp:691` is `if (GRADE(110) >= GRADE_C) SET_GOODIE_NEW(1)`. After a C-grade Level 100 Won, world 110 is still incomplete / BlankRanking so `GRADE` is the already-pinned incomplete `'E'` (`0x0041C3FE`) and goodie 1 stays `GS_UNKNOWN`. Existing C-band tests unlock 78 and do not name goodie 1 or `NewGoodieCount`. A `GRADE(100)` mutation on the S path is not unique versus the latch count of 5. Do not invent the rest of the table. No new secondaries | `rebuild/OnslaughtRebuild.Core/RetailCareerUpdateGoodieStates.cs` | `RetailCareerUpdateGoodieStates.Update` | `RetailCareerCampaignApplyUpdateTests.Level100Won_ApplyUpdateGradeCLeavesTheWorld110CGoodieUnknown` | 1 | store `GS_NEW` on goodie 1 after the CountGoodies add |
 | `CCareer::UpdateGoodieStates` Level 100 new-goodie latch | Same body. `CountGoodies` (`Career.cpp:670-680`) counts `mState >= GS_NEW`. First-play S raises that count by five; `new_goodie_count` at `0x00662B20` adds the delta (`Career.cpp:895-897`) and `first_goodie` at `0x00662B24` latches because goodie 0 left `GOODIE_NOT_DONE` (`Career.cpp:688 / 899-900`). `mPendingExtraGoodies` and episode instruction marks stay unclaimed. No new secondaries | `rebuild/OnslaughtRebuild.Core/RetailCareerUpdateGoodieStates.cs` | `RetailCareerUpdateGoodieStates.CountGoodies` | `RetailCareerCampaignApplyUpdateTests.Level100Won_ApplyUpdateAddsFiveNewGoodiesAndLatchesFirstGoodie` | 1 | leave the globals at ctor 0 |
 | `CCareer::UpdateGoodieStates` Level 100 replay CountGoodies delta | Same body. A second `ApplyUpdate` of the already-pinned first-play S does not raise `CountGoodies`: `SET_GOODIE_NEW` stores only when `GOODIE_NOT_DONE` (`Career.cpp:564-566`). `new_goodie_count` therefore adds 0 (`Career.cpp:895-897`) and `first_goodie` stays latched. `mPendingExtraGoodies` and episode instruction marks stay unclaimed. No new secondaries | `rebuild/OnslaughtRebuild.Core/RetailCareerUpdateGoodieStates.cs` | `RetailCareerUpdateGoodieStates.Update` | `RetailCareerCampaignApplyUpdateTests.Level100Won_ApplyUpdateReplayDoesNotAddTheSameFirstPlayGoodiesAgain` | 1 | add `CountGoodies` without subtracting the previous total |
 | `CCareer::UpdateGoodieStates` Level 100 SET_GOODIE_NEW GS_OLD overwrite | Same body. Seeding the five first-play S slots as `GS_OLD` leaves them at 3: `SET_GOODIE_NEW` stores only when `GOODIE_NOT_DONE` (`Career.cpp:564-566`). Replay of already-`GS_NEW` does not uniquely prove this. `new_goodie_count` / `first_goodie` stay ctor 0 because CountGoodies does not rise and goodie 0 was already done. `mPendingExtraGoodies` and episode instruction marks stay unclaimed. No new secondaries | `rebuild/OnslaughtRebuild.Core/RetailCareerUpdateGoodieStates.cs` | `RetailCareerGoodies.SetNewIfNotDone` | `RetailCareerCampaignApplyUpdateTests.Level100Won_ApplyUpdateDoesNotOverwriteAlreadyOldTrainingGoodies` | 1 | store `GS_NEW` even when `mState > GS_INSTRUCTIONS` |
@@ -170,6 +171,9 @@ another implementation. The A-grade row names that same
 E-grade Won row names that same `Update` owner; it does not
 add another implementation. The D-grade row names that same
 `Update` owner; it does not add another implementation. The
+GRADE(110) C-goodie row names that same `Update` owner; it
+does not invent `COMPLETE_LEVEL(110)` or the rest of the
+table. The
 new-goodie latch row names `CountGoodies` on that same owner;
 `mPendingExtraGoodies` stays unclaimed. The
 replay CountGoodies-delta row names that same `Update` owner;
@@ -220,7 +224,7 @@ full-chain trace can reach the other sixteen, and the focused test is the
 only falsifier they have. That is exactly
 the precedent the jet-friction row set: a green replay suite there was
 *vacuous* with respect to the constant it was supposed to guard, because the
-jet throttle caps below the gate's band. The seventeenth through thirty-second
+jet throttle caps below the gate's band. The seventeenth through thirty-third
 rows' mutation kills were measured on 2026-08-18 and 2026-08-19 in this worktree; they are
 not among the 17 files
 under `local-lab/rebuild-parity-mutation-kills-2026-08-17/`.
