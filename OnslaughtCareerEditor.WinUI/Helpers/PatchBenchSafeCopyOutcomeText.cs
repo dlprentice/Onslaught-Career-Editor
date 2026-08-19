@@ -32,6 +32,9 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         public const string BeaExeOnlyCopyMustStayInside =
             "The BEA.exe-only copy must stay inside the workspace folder.";
 
+        public const string BeaExeOnlyCopyProtectedInstallFolder =
+            "The BEA.exe-only copy is under Program Files or another protected install folder. Work in a copy, or choose to patch your installed game - which takes a verified backup first.";
+
         /// <summary>
         /// Last operation for apply, verify, or restore. A dump can survive the
         /// path substitution, so name the refusal here.
@@ -46,6 +49,9 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
 
             if (string.Equals(message, BinaryPatchEngine.PatchTargetMustStayInsideWorkspaceFolder, StringComparison.Ordinal))
                 return BeaExeOnlyCopyMustStayInside;
+
+            if (string.Equals(message, BinaryPatchEngine.ProtectedInstallFolder, StringComparison.Ordinal))
+                return BeaExeOnlyCopyProtectedInstallFolder;
 
             return message;
         }
