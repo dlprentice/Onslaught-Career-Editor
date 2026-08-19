@@ -2169,7 +2169,7 @@ namespace OnslaughtCareerEditor.AppCore
             if (!IsSameOrUnderRoot(normalizedTarget, normalizedOutput) ||
                 string.Equals(normalizedTarget, normalizedOutput, StringComparison.OrdinalIgnoreCase))
             {
-                throw new InvalidOperationException("Refusing to clean a playable copied game folder target outside the app-owned output root.");
+                throw new InvalidOperationException(CopyMustStayInside);
             }
 
             Directory.Delete(normalizedTarget, recursive: true);

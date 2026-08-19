@@ -52,5 +52,7 @@ public class PreflightCopyContainmentHonestyTests
         Assert.That(source, Does.Contain("CopyMustStayInside"));
         Assert.That(source, Does.Not.Contain(
             "Refusing to delete a playable copied game folder outside the app-owned playable copied game folder root."));
+        Assert.That(source, Does.Not.Contain(
+            "Refusing to clean a playable copied game folder target outside the app-owned output root."));
     }
 }
