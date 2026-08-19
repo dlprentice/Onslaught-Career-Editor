@@ -218,6 +218,24 @@ public class GameDirectoryIdentityTextTests
 
         Assert.That(settings, Does.Contain("GameDirectoryIdentityText.BuildConfigPathSummary"));
         Assert.That(settings, Does.Not.Contain("ConfigPathTextBlock.Text = AppConfig.GetConfigPath()"));
+        Assert.That(settings, Does.Contain("GameDirectoryIdentityText.BuildFolderSummary"));
+        Assert.That(settings, Does.Not.Contain("GameDirectoryTextBox.Text = gameDir"));
+    }
+
+    [Test]
+    public void AGameFolderIsNamedByItsLeafNotThePath()
+    {
+        string path = @"C:\Games\Steam\steamapps\common\Battle Engine Aquila";
+        string leaf = GameDirectoryIdentityText.BuildFolderSummary(path, "Configured install");
+
+        Assert.That(leaf, Is.EqualTo("Battle Engine Aquila"));
+        Assert.That(leaf, Does.Not.Contain(path));
+        Assert.That(leaf, Does.Not.Contain(@":\"));
+        Assert.That(leaf, Does.Not.Contain("Games"));
+        Assert.That(
+            GameDirectoryIdentityText.BuildFolderSummary(@"C:\Games\Battle Engine Aquila\", "Configured install"),
+            Is.EqualTo("Battle Engine Aquila"));
+        Assert.That(GameDirectoryIdentityText.BuildFolderSummary("   ", "Configured install"), Is.EqualTo("Configured install"));
     }
 
     private static string FindRepoRoot()

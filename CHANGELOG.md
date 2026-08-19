@@ -29,7 +29,7 @@ live in `developer_state.json` and the campaign ledgers.
   A Media search with no hits now says to try another word or clear the search. Asset
   Library names the catalog and export by their last segments, not the full path. The
   footer tooltip names the game folder the same way. Settings names the
-  settings file by its last segments, not the full path. Windowed & Mods
+  settings file and the chosen install folder by their last segments, not the full path. Windowed & Mods
   Last operation and the safe-copy list do the same: a failure names the action
   and that nothing was changed, without the exception. Home setup failures
   keep the same sentence and drop the exception. Save Lab comparison/analysis

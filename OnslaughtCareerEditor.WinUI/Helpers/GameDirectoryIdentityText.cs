@@ -90,5 +90,20 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
 
             return $"{name} in {parent}";
         }
+
+        /// <summary>
+        /// Folder cards name the last path segment. The full path stays off the page.
+        /// </summary>
+        public static string BuildFolderSummary(string? path, string fallback)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                return fallback;
+            }
+
+            string trimmed = path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            string name = Path.GetFileName(trimmed);
+            return string.IsNullOrWhiteSpace(name) ? fallback : name;
+        }
     }
 }

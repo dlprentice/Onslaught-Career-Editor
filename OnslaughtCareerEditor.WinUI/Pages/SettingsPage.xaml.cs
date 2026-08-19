@@ -53,10 +53,12 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         {
             GameDirectoryInspection inspection = AppConfig.InspectGameDirectory(gameDir);
             bool isFullInstall = inspection.Status == GameDirectoryStatus.FullInstall;
-            GameDirectoryTextBox.Text = gameDir ?? string.Empty;
+            GameDirectoryTextBox.Text = string.IsNullOrWhiteSpace(gameDir)
+                ? string.Empty
+                : GameDirectoryIdentityText.BuildFolderSummary(gameDir, "Configured install");
             GameDirectorySummaryTextBlock.Text = string.IsNullOrWhiteSpace(gameDir)
                 ? "Not configured"
-                : BuildFolderSummary(gameDir, isFullInstall ? "Configured install" : "Saved folder needs review");
+                : GameDirectoryIdentityText.BuildFolderSummary(gameDir, isFullInstall ? "Configured install" : "Saved folder needs review");
             GameDirectoryRoleTextBlock.Text = string.IsNullOrWhiteSpace(gameDir)
                 ? "Choose your installed game folder. The app reads it to create playable copies, and only changes it if you ask it to."
                 : isFullInstall
@@ -197,7 +199,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
 
             string? firstDir = Path.GetDirectoryName(saves[0].Path);
-            SaveDirectoryTextBlock.Text = BuildFolderSummary(firstDir, "Detected save folder");
+            SaveDirectoryTextBlock.Text = GameDirectoryIdentityText.BuildFolderSummary(firstDir, "Detected save folder");
             SaveFileCountTextBlock.Text = $"Found {saves.Count} save/options file(s). Open Save Lab to inspect or patch copies; full local paths stay out of this summary.";
         }
 
@@ -336,18 +338,6 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         private void ReloadButton_Click(object sender, RoutedEventArgs e)
         {
             LoadSettings();
-        }
-
-        private static string BuildFolderSummary(string? path, string fallback)
-        {
-            if (string.IsNullOrWhiteSpace(path))
-            {
-                return fallback;
-            }
-
-            string trimmed = path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-            string name = Path.GetFileName(trimmed);
-            return string.IsNullOrWhiteSpace(name) ? fallback : name;
         }
     }
 }

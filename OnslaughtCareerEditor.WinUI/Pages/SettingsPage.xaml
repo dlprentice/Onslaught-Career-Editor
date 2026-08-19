@@ -64,12 +64,12 @@
                                     Click="AutoDetectGameDirectoryButton_Click" />
                         </Grid>
                     </Border>
-                    <controls:Expander Header="Path details"
+                    <controls:Expander Header="Folder name"
                                        AutomationProperties.AutomationId="SettingsGameDirectoryPathDetails"
                                        IsExpanded="False">
                         <TextBox x:Name="GameDirectoryTextBox"
                                  AutomationProperties.AutomationId="SettingsGameDirectoryPathTextBox"
-                                 Header="Full install path"
+                                 Header="Folder name"
                                  IsReadOnly="True" />
                     </controls:Expander>
                     <TextBlock x:Name="GameDirectoryStatusTextBlock"
