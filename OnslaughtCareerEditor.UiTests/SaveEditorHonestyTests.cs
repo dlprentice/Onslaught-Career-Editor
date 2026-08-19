@@ -95,8 +95,12 @@ public class SaveEditorHonestyTests
             var rows = SaveEditorAdvancedService.LoadMissionRankRows(truncated, out var status).ToArray();
 
             Assert.That(status.FileWasRead, Is.False);
-            Assert.That(status.Reason, Does.Contain("bytes"),
-                "A wrong-length file must be distinguishable from 'no file selected'.");
+            Assert.That(status.Reason, Is.EqualTo(SaveEditorAdvancedService.MissionGradesUnreadable));
+            Assert.That(status.Reason, Does.Contain("Nothing was changed"));
+            Assert.That(status.Reason, Does.Not.Contain("Mission grades were not read:"));
+            Assert.That(status.Reason, Does.Not.Contain("bytes"));
+            Assert.That(status.Reason, Does.Not.Contain(truncated));
+            Assert.That(status.Reason, Does.Not.Contain(":\\"));
             Assert.That(rows.All(row => row.CurrentRank == "-"), Is.True);
         }
         finally
@@ -386,6 +390,7 @@ public class SaveEditorHonestyTests
         Assert.That(source, Does.Not.Contain("Mission grades could not be read: {ex.Message}"));
         Assert.That(source, Does.Not.Contain("Kill counts could not be read: {ex.Message}"));
         Assert.That(source, Does.Not.Contain("Kill counts were not read:"));
+        Assert.That(source, Does.Not.Contain("Mission grades were not read:"));
         Assert.That(source, Does.Not.Contain("analysis.ErrorMessage"));
         Assert.That(SaveEditorAdvancedService.MissionGradesUnreadable, Does.Contain("Nothing was changed"));
         Assert.That(SaveEditorAdvancedService.KillCountsUnreadable, Does.Contain("Nothing was changed"));

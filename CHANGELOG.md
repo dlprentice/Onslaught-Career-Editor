@@ -127,7 +127,8 @@ live in `developer_state.json` and the campaign ledgers.
   path now name the files. Choosing BEA.exe on Windowed & Mods names
   the file, not a path. A Settings save list with no files names the
   game folder, not a path. Save Lab ready-state names the file, not a
-  path.
+  path. A Save Editor mission-grade read
+  that fails names the action, not the file size.
 
 ## 1.0.11 — 2026-08-07
 

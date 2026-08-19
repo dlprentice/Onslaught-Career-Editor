@@ -230,11 +230,9 @@ namespace OnslaughtCareerEditor.AppCore
                 {
                     // The analyzer understands the 0x2514 + 0x20*N size law, but every write path and
                     // this reader require exactly 10004 bytes. All 41 real specimens are 10004, so no
-                    // observed file lands here; failing closed stays correct, but it must say so
-                    // instead of returning blank rows that look like "no file selected".
-                    status = SaveEditorAdvancedReadStatus.NotRead(
-                        $"Mission grades were not read: this file is {buf.Length:N0} bytes and a career save is " +
-                        $"{BesFilePatcher.EXPECTED_FILE_SIZE:N0}.");
+                    // observed file lands here; failing closed stays correct. Name the action, not the
+                    // byte count, so a wrong-length file is not a second analyzer dump.
+                    status = SaveEditorAdvancedReadStatus.NotRead(MissionGradesUnreadable);
                     return rows;
                 }
 
