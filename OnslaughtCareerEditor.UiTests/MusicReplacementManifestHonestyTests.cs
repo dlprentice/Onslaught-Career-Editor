@@ -158,4 +158,25 @@ public class MusicReplacementManifestHonestyTests
         Assert.That(source, Does.Not.Contain("Win32 error:"));
         Assert.That(source, Does.Contain("FileCouldNotBeInspected"));
     }
+
+    [Test]
+    public void AnExistingManifestNamesTheFileNotCopiedMusicBytes()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot,
+            "OnslaughtCareerEditor.AppCore",
+            "GameProfileMusicReplacementService.cs"));
+
+        Assert.That(source, Does.Contain("MusicReplacementAlreadyActive"));
+        Assert.That(source, Does.Not.Contain("restore copied music bytes before staging another replacement"));
+        Assert.That(source, Does.Not.Contain("An active safe-copy music replacement manifest already exists"));
+        Assert.That(GameProfileMusicReplacementService.MusicReplacementAlreadyActive,
+            Is.EqualTo("That copy already has onslaught-music-replacement-manifest.json. Restore the music file first."));
+        Assert.That(GameProfileMusicReplacementService.MusicReplacementAlreadyActive,
+            Does.Contain(GameProfileMusicReplacementService.ManifestFileName));
+        Assert.That(GameProfileMusicReplacementService.MusicReplacementAlreadyActive.ToLowerInvariant(),
+            Does.Not.Contain("path"));
+        Assert.That(GameProfileMusicReplacementService.MusicReplacementAlreadyActive.ToLowerInvariant(),
+            Does.Not.Contain("bytes"));
+    }
 }

@@ -81,6 +81,8 @@ namespace OnslaughtCareerEditor.AppCore
         public const string MusicRestoreMismatch = "That copy's restored music file no longer matches.";
         public const string MusicTargetMismatch = "That music file no longer matches its backup.";
         public const string MusicRestored = "That music file was restored.";
+        public const string MusicReplacementAlreadyActive =
+            "That copy already has onslaught-music-replacement-manifest.json. Restore the music file first.";
         private const string BackupSuffix = ".original.backup";
 
         private static readonly GameProfileMusicSwapPreset[] s_musicSwapPresets =
@@ -221,12 +223,12 @@ namespace OnslaughtCareerEditor.AppCore
                 throw new InvalidOperationException(ReplacementMustNotBeTarget);
 
             string manifestPath = Path.Combine(safeRoot, ManifestFileName);
-            RejectExistingReparseAncestors(manifestPath, "music replacement manifest path");
+            RejectExistingReparseAncestors(manifestPath, "music replacement manifest");
             if (File.Exists(manifestPath))
             {
                 RejectReparsePoint(manifestPath, "music replacement manifest");
                 RejectMultipleHardLinks(manifestPath, "Music replacement manifest");
-                throw new InvalidOperationException("An active safe-copy music replacement manifest already exists; restore copied music bytes before staging another replacement.");
+                throw new InvalidOperationException(MusicReplacementAlreadyActive);
             }
 
             string backupPath = targetPath + BackupSuffix;
