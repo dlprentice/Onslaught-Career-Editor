@@ -48,4 +48,18 @@ public class BinaryPatchWorkspaceFolderHonestyTests
         Assert.That(source, Does.Contain("WorkspaceFolderRequired"));
         Assert.That(source, Does.Not.Contain("Patch target requires an app-owned workspace root."));
     }
+
+    [Test]
+    public void AProtectedInstallNamesTheFolderNotARoot()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot,
+            "OnslaughtCareerEditor.AppCore",
+            "BinaryPatchEngine.cs"));
+
+        Assert.That(source, Does.Contain("ProtectedInstallFolder"));
+        Assert.That(source, Does.Not.Contain("protected install root"));
+        Assert.That(BinaryPatchEngine.ProtectedInstallFolder, Does.Contain("protected install folder"));
+        Assert.That(BinaryPatchEngine.ProtectedInstallFolder.ToLowerInvariant(), Does.Not.Contain("root"));
+    }
 }
