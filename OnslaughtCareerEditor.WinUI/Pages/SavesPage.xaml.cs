@@ -161,7 +161,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 : "Choose a detected file";
             RestoreAnalyzerDetectedFileSelection(selectedPath);
             DetectedFilesStatusTextBlock.Text = _detectedFiles.Count == 0
-                ? "No save or options files were detected. Set the game directory in Settings or browse manually."
+                ? "No save or options files were detected. Set the game folder in Settings or browse manually."
                 : $"{_detectedFiles.Count} detected file(s) available.";
         }
 
@@ -215,7 +215,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 : "Choose a career save";
             RestoreEditorDetectedFileSelection(selectedPath);
             EditorDetectedFilesStatusTextBlock.Text = _editorDetectedFiles.Count == 0
-                ? "No .bes career saves were detected. Set the game directory in Settings or browse manually."
+                ? "No .bes career saves were detected. Set the game folder in Settings or browse manually."
                 : $"{_editorDetectedFiles.Count} detected career save(s) available.";
         }
 

@@ -46,7 +46,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 : "Choose an options file";
             RestoreConfigurationDetectedFileSelection(selectedPath);
             ConfigurationDetectedFilesStatusTextBlock.Text = _configurationDetectedFiles.Count == 0
-                ? "No .bea options files were detected. Set the game directory in Settings or browse manually."
+                ? "No .bea options files were detected. Set the game folder in Settings or browse manually."
                 : $"{_configurationDetectedFiles.Count} detected options file(s) available.";
         }
 

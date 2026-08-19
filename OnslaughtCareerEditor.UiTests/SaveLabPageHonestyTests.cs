@@ -104,6 +104,20 @@ public class SaveLabPageHonestyTests
     }
 
     [Test]
+    public void EmptyDetectedListsNameTheFolderNotADirectory()
+    {
+        string page = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI", "Pages", "SavesPage.xaml.cs"));
+        string options = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI", "Pages", "SavesPage.Configuration.cs"));
+
+        Assert.That(page, Does.Not.Contain("Set the game directory in Settings or browse manually."));
+        Assert.That(options, Does.Not.Contain("Set the game directory in Settings or browse manually."));
+        Assert.That(page, Does.Contain("Set the game folder in Settings or browse manually."));
+        Assert.That(options, Does.Contain("Set the game folder in Settings or browse manually."));
+    }
+
+    [Test]
     public void GameOptionsOutputHintNamesTheFileNotAPath()
     {
         string options = File.ReadAllText(Path.Combine(

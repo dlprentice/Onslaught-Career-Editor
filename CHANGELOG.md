@@ -128,7 +128,8 @@ live in `developer_state.json` and the campaign ledgers.
   the file, not a path. A Settings save list with no files names the
   game folder, not a path. Save Lab ready-state names the file, not a
   path. A Save Editor mission-grade read
-  that fails names the action, not the file size.
+  that fails names the action, not the file size. Empty Save Lab, Save
+  Editor, and Game Options lists name the game folder, not a directory.
 
 ## 1.0.11 — 2026-08-07
 
