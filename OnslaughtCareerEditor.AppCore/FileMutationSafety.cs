@@ -636,12 +636,12 @@ namespace OnslaughtCareerEditor.AppCore
             if (!Directory.Exists(normalizedSource))
                 throw new DirectoryNotFoundException("The staged package directory no longer exists.");
             if (Directory.Exists(normalizedDestination) || File.Exists(normalizedDestination))
-                throw new IOException("The published package path is no longer vacant.");
+                throw new IOException("The published package folder is no longer vacant.");
 
             string? destinationParent = Path.GetDirectoryName(normalizedDestination);
             string destinationName = Path.GetFileName(normalizedDestination);
             if (string.IsNullOrWhiteSpace(destinationParent) || string.IsNullOrWhiteSpace(destinationName))
-                throw new InvalidOperationException("The published package path is invalid.");
+                throw new InvalidOperationException("The published package folder is invalid.");
 
             if (!OperatingSystem.IsWindows())
             {
@@ -694,7 +694,7 @@ namespace OnslaughtCareerEditor.AppCore
             afterSourcePrepared?.Invoke(normalizedSource);
 
             if (Directory.Exists(physicalDestination) || File.Exists(physicalDestination))
-                throw new IOException("The published package path appeared during publication.");
+                throw new IOException("The published package folder appeared during publication.");
 
             RenameDirectoryHandle(sourceHandle, physicalDestination);
             WindowsFileIdentity publishedIdentity = GetWindowsIdentity(
@@ -708,7 +708,7 @@ namespace OnslaughtCareerEditor.AppCore
             if (!string.Equals(publishedPath, physicalDestination, PathComparison))
             {
                 throw new IOException(
-                    $"The published package directory resolved to '{publishedPath}' instead of '{physicalDestination}'.");
+                    "The published package folder did not stay in the expected place.");
             }
 
             try
