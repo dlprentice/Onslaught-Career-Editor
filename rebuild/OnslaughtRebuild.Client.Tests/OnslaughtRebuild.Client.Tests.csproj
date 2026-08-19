@@ -78,6 +78,8 @@
              Link="godot-startup-source\RetailMainMenuLanguageSine.cs" />
     <Compile Include="..\OnslaughtRebuild.Godot\RetailMainMenuLanguageBlink.cs"
              Link="godot-startup-source\RetailMainMenuLanguageBlink.cs" />
+    <Compile Include="..\OnslaughtRebuild.Godot\RetailMainMenuLanguageChevronColor.cs"
+             Link="godot-startup-source\RetailMainMenuLanguageChevronColor.cs" />
     <Compile Include="..\OnslaughtRebuild.Godot\RetailFrontendCursor.cs"
              Link="godot-startup-source\RetailFrontendCursor.cs" />
     <Compile Include="..\OnslaughtRebuild.Godot\RetailFeMessBox.cs"

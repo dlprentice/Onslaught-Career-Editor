@@ -1664,7 +1664,10 @@ public sealed partial class RetailFrontendFlow : Control
     /// session cannot hold this+0x08=-1, so this draw does not light that pack.
     /// Chevron visibility is RetailMainMenuLanguageBlink: fistp(mCounter) signed
     /// remainder 64, draw while below 50. Cold BSS 0 draws. The 2x copies stay
-    /// no-ops.
+    /// no-ops. Chevron colour at 0x0046336B / 0x004634F4 is
+    /// RetailMainMenuLanguageChevronColor: settled unselected submits
+    /// 0x3EFFFFFF, which is not capture ChromeTint 0x3E7F7F7F, so this
+    /// draw keeps ChromeTint and does not call SubmittedColor.
     /// </summary>
     private void DrawLanguageSelector(float fade)
     {
