@@ -71,6 +71,7 @@ namespace OnslaughtCareerEditor.AppCore
         public const string MusicSwapPresetUnknown = "That music swap is not available.";
         public const string MusicFileTooSmall = "That music file is too small.";
         public const string MusicFileNotOgg = "That music file is not an OGG.";
+        public const string MusicDetailsUnsupported = "That copy's music details are out of date.";
         private const string BackupSuffix = ".original.backup";
 
         private static readonly GameProfileMusicSwapPreset[] s_musicSwapPresets =
@@ -283,7 +284,7 @@ namespace OnslaughtCareerEditor.AppCore
                 ? schemaEl.GetString()
                 : null;
             if (!string.Equals(schema, SchemaVersion, StringComparison.Ordinal))
-                throw new InvalidOperationException("Playable copied game folder music replacement manifest has an unsupported schema.");
+                throw new InvalidOperationException(MusicDetailsUnsupported);
 
             string targetFileName = doc.RootElement.GetProperty("targetMusicFileName").GetString() ?? string.Empty;
             string targetRelative = doc.RootElement.GetProperty("targetRelativePath").GetString() ?? string.Empty;

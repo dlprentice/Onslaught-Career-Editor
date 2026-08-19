@@ -26,6 +26,15 @@ public class MusicReplacementManifestHonestyTests
             "Playable copied game folder music replacement manifest files do not match the target music file."));
         Assert.That(source, Does.Contain(
             "Music replacement manifest files must stay inside the copy."));
+        Assert.That(source, Does.Contain("MusicDetailsUnsupported"));
+        Assert.That(source, Does.Not.Contain(
+            "Playable copied game folder music replacement manifest has an unsupported schema."));
+        Assert.That(GameProfileMusicReplacementService.MusicDetailsUnsupported,
+            Is.EqualTo("That copy's music details are out of date."));
+        Assert.That(GameProfileMusicReplacementService.MusicDetailsUnsupported.ToLowerInvariant(),
+            Does.Not.Contain("playable"));
+        Assert.That(GameProfileMusicReplacementService.MusicDetailsUnsupported.ToLowerInvariant(),
+            Does.Not.Contain("schema"));
     }
 
     [Test]
