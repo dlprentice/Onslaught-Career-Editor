@@ -2405,13 +2405,29 @@ public sealed partial class RetailFrontendFlow : Control
                 // is 0x00460F5E mov [esp+0x28], 0. That
                 // is a later window on the same
                 // [esp+0x14] local, not dest. The later
-                // fmul 60.0 at 0x00460F73 is later. Do
-                // not invent dest from 610.0 or 0.0.
+                // fmul 60.0 at 0x00460F73 is
+                // RetailLevelSelectLater60. Do not invent
+                // dest from 610.0 or 0.0.
                 _ = RetailLevelSelectLater610.Applies(
                     RetailLevelSelectLater148.Pad(
                         RetailLevelSelectLater148.SettledField));
                 _ = RetailLevelSelectLater610.WindowHigh;
                 _ = RetailLevelSelectLater610.WindowLow;
+                // RetailLevelSelectLater60: later leftover
+                // after the later 610.0/0.0 pair is
+                // fild [esp+0x3C] / fmul [0x005DB538]
+                // (60.0) / fmul [0x005D85EC] (0.5) /
+                // fadd [0x005DB3E8] (320.0) / fstp
+                // [esp+0x18]. Official 74154bfa
+                // independently re-read this cycle. First
+                // store is 0x00460F85 fstp [esp+0x18].
+                // That is a scaled local, not dest. The
+                // later fld [esp+0x94] / fcomp 1.0 at
+                // 0x00460FD6 is later. Do not invent dest
+                // from 60.0, 0.5, or 320.0.
+                _ = RetailLevelSelectLater60.Factor;
+                _ = RetailLevelSelectLater60.Half;
+                _ = RetailLevelSelectLater60.Addend;
             }
         }
 

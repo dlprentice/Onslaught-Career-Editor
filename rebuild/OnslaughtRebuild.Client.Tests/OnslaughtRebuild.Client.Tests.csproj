@@ -152,6 +152,8 @@
              Link="godot-startup-source\RetailLevelSelectLaterOne.cs" />
     <Compile Include="..\OnslaughtRebuild.Godot\RetailLevelSelectLater610.cs"
              Link="godot-startup-source\RetailLevelSelectLater610.cs" />
+    <Compile Include="..\OnslaughtRebuild.Godot\RetailLevelSelectLater60.cs"
+             Link="godot-startup-source\RetailLevelSelectLater60.cs" />
     <Compile Include="..\OnslaughtRebuild.Godot\RetailFrontendCursor.cs"
              Link="godot-startup-source\RetailFrontendCursor.cs" />
     <Compile Include="..\OnslaughtRebuild.Godot\RetailFeMessBox.cs"
