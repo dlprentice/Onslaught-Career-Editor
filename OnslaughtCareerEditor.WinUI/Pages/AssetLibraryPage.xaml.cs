@@ -920,6 +920,11 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             return "Loading texture preview...";
         }
 
+        private static string BuildSidecarTexturePreviewStatus(string fileName)
+        {
+            return $"Asset Library: showing texture preview {fileName}";
+        }
+
         private void ConfigureSelectedModelLinkedTexture(
             AssetModelTextureLinks links,
             IReadOnlyList<AssetModelSidecarTexture> sidecarTextures)
@@ -1020,7 +1025,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 TexturePreviewImage.Source = new BitmapImage(new Uri(_selectedSidecarLease!.PhysicalPath));
                 TexturePreviewEmptyTextBlock.Visibility = Visibility.Collapsed;
                 PreviewTitleTextBlock.Text = BuildSidecarTexturePreviewTitle(_selectedModelSidecarTextureFileName);
-                AppStatusService.SetStatus($"Asset Library: previewing sidecar texture {_selectedModelSidecarTextureFileName}");
+                AppStatusService.SetStatus(BuildSidecarTexturePreviewStatus(_selectedModelSidecarTextureFileName));
             }
             catch (Exception ex) when (ex is ArgumentException or UriFormatException or IOException)
             {
