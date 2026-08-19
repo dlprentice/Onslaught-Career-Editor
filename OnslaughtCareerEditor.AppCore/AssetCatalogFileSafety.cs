@@ -340,7 +340,7 @@ namespace OnslaughtCareerEditor.AppCore
                     string.Equals(physicalPath, TrustedExportRoot, FileMutationSafety.PathComparison))
                 {
                     throw new InvalidOperationException(
-                        $"{label} resolves outside the selected generated export root.");
+                        $"{label} resolves outside the selected generated export folder.");
                 }
 
                 stream = new FileStream(handle, FileAccess.Read);
