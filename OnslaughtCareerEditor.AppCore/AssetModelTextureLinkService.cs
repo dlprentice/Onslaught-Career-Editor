@@ -16,7 +16,7 @@ namespace OnslaughtCareerEditor.AppCore
                 FileMutationSafety.PathComparer);
             string trustedRoot = FileMutationSafety.NormalizeLocalPath(
                 session.TrustedExportRoot,
-                "Trusted asset export root");
+                "generated export folder");
 
             foreach (string modelExportPath in modelExportPaths
                 .Where(static path => !string.IsNullOrWhiteSpace(path))
