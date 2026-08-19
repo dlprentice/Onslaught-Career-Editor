@@ -407,7 +407,7 @@ namespace OnslaughtCareerEditor.AppCore
                     if (!FileMutationSafety.IsSameOrUnderRoot(directoryLocks.PhysicalPath, trustedRoot))
                     {
                         throw new InvalidOperationException(
-                            "Model sidecar texture directory resolves outside the trusted generated export root.");
+                            "The model sidecar texture folder resolves outside the trusted generated export folder.");
                     }
 
                     var sidecars = new List<AssetModelSidecarTexture>();
