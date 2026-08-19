@@ -287,6 +287,9 @@ public sealed partial class RetailFrontendFlow
         // CMenuItem__Render dest leftover is RetailOptionsMenuItemDest:
         // incoming dest X minus integer-half SIZE.cx. Dest Y keeps the
         // row top. Nearby 5.0 is leftover min dest X, not dest Y.
+        // CMenuItemDropdown dest leftover is RetailOptionsDropdownDest:
+        // incoming dest X minus full SIZE.cx. Dest Y keeps the row top.
+        // Nearby 5.0 is leftover min dest X. Nearby 2.0 is not dest.
         float seconds = (float)_animationSeconds;
         Color color;
         if (row.Kind == RetailOptionsRowKind.Dropdown &&
@@ -349,17 +352,20 @@ public sealed partial class RetailFrontendFlow
             color);
 
     /// <summary>
-    /// Label right-aligned so its colon lands on the fixed column, value
-    /// left-aligned from it. Retail pins the colon ink at x315..317 and the value
-    /// ink at x322 on every such row, while the label's left edge varies from
-    /// x44 to x265 - so this is a two-column layout, not a centred one.
+    /// Label right-aligned on the incoming dest leftover. Value stays
+    /// on the measured left column. Dest Y keeps the row top.
     /// </summary>
     private void DrawLabelValueRow(string label, string value, float top, Color color)
     {
-        float labelWidth = MeasureText(label, 1f);
+        // Incoming dest X minus full SIZE.cx. Nearby leftover min dest X
+        // is not dest Y. Nearby 2.0 is not dest. The dest is already a
+        // whole pixel, so this is not a half-pixel origin. The 2px
+        // MeasureText residual stays open.
         DrawOptionsBodyText(
             label,
-            new Vector2(Mathf.Floor(OptionLabelRightX - labelWidth), top),
+            new Vector2(
+                RetailOptionsDropdownDest.DestX(OptionLabelRightX, (int)MeasureText(label, 1f)),
+                top),
             1f,
             color);
         DrawOptionsBodyText(value, new Vector2(OptionValueLeftX, top), 1f, color);
