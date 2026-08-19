@@ -78,6 +78,40 @@ public sealed class Level100WonCareerHandoffTests
     }
 
     /// <summary>
+    /// FrontEndHandoffReady applies the already-pinned FillOut 1.0f
+    /// ranking only onto world 100 (grade S). World 110 stays
+    /// <c>BlankRanking</c> / grade E. Mutation: stamping 1.0 onto the
+    /// unlocked child after <c>TryApply</c> fails the 110 equality.
+    /// Score-time, base-things, kills, and goodies stay unclaimed.
+    /// No new secondaries.
+    /// </summary>
+    [Fact]
+    public void FrontEndHandoffReadyAfterWon_StoresFillOutRankingOnlyOnWorld100()
+    {
+        Level100Mission mission = DriveReleasedFirstPlayToTerminal();
+
+        Assert.Equal(Level100MissionOutcome.Won, mission.Snapshot.Outcome);
+        Assert.Equal(
+            Level100MissionTerminalState.FrontEndHandoffReady,
+            mission.Snapshot.TerminalState);
+
+        RetailCareerNode training = mission.Career.Nodes.Find(100)!;
+        RetailCareerNode next = mission.Career.Nodes.Find(110)!;
+        Assert.Equal(1.0f, training.Ranking);
+        Assert.Equal(
+            RetailCareerGrade.PerfectGrade,
+            RetailCareerGrade.GradeByteFromRanking(training.Ranking));
+        Assert.Equal(RetailCareerNode.BlankRanking, next.Ranking);
+        Assert.Equal(
+            RetailCareerGrade.FailedGrade,
+            RetailCareerGrade.GradeByteFromRanking(next.Ranking));
+        Assert.Equal(0, next.Complete);
+        Assert.All(
+            RetailFillOutEndLevelData.ForLevel100Won().SecondaryStatuses,
+            status => Assert.Equal(0, status));
+    }
+
+    /// <summary>
     /// First-play <c>SetSlotSave</c> writes <c>SLOT_TUTORIAL_1..4</c>
     /// (63..66). FillOut copies those 32 words and <c>ApplyUpdate</c>
     /// assigns them over career <c>mSlots</c>, so a leftover bit dies.
