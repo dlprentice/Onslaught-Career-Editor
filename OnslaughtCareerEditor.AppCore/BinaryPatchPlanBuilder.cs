@@ -109,7 +109,7 @@ namespace OnslaughtCareerEditor.AppCore
                 "16:9 gameplay and modern mouse aiming",
                 "Copied executable and default options",
                 "Verified in copied Level 100 gameplay at 1600x900 on the supported Steam specimen.",
-                "Applies the complete 28-region aspect/FOV correction, launches the supported 1600x900 windowed baseline, selects the retail 16:9 option, and uses minimum mouse sensitivity in the app-owned copy.",
+                "Applies the complete 28-region aspect/FOV correction, launches the supported 1600x900 windowed baseline, selects the retail 16:9 option, and uses minimum mouse sensitivity in the safe copy.",
                 s_windowedCompatibilityKeys,
                 new[] { "-res", "1600", "900" },
                 new[] { "screenShape=1", "mouseLookSensitivity=0.1" },
