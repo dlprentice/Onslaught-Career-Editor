@@ -114,6 +114,7 @@ namespace OnslaughtCareerEditor.AppCore
         public const string TargetCopyExists = "That copy folder already exists.";
         public const string CopyFolderMissing = "That copy folder could not be found.";
         public const string SourceFolderMissing = "That game folder could not be found.";
+        public const string ProfileFolderRequired = "An app-owned profile folder is required.";
 
         /// <summary>
         /// The manifest every generated playable copied game folder carries. Its presence is what
@@ -326,7 +327,7 @@ namespace OnslaughtCareerEditor.AppCore
                 throw new InvalidOperationException("A destination file is required.");
 
             if (string.IsNullOrWhiteSpace(appOwnedRoot))
-                throw new InvalidOperationException("An app-owned workspace root is required.");
+                throw new InvalidOperationException(ProfileFolderRequired);
 
             if (string.IsNullOrWhiteSpace(expectedFileName))
                 throw new InvalidOperationException("Expected workspace file name is required.");
@@ -1880,7 +1881,7 @@ namespace OnslaughtCareerEditor.AppCore
         private static string NormalizeDirectoryForCreation(string path)
         {
             if (string.IsNullOrWhiteSpace(path))
-                throw new InvalidOperationException("An app-owned output root is required.");
+                throw new InvalidOperationException(ProfileFolderRequired);
 
             string normalized = Path.GetFullPath(path)
                 .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
@@ -2108,7 +2109,7 @@ namespace OnslaughtCareerEditor.AppCore
             SafeCopySaveDisposition saveDisposition)
         {
             if (string.IsNullOrWhiteSpace(appOwnedProfilesRoot))
-                throw new InvalidOperationException("An app-owned playable copied game folder root is required.");
+                throw new InvalidOperationException(ProfileFolderRequired);
 
             if (string.IsNullOrWhiteSpace(profileRoot))
                 throw new InvalidOperationException("A playable copied game folder is required.");
