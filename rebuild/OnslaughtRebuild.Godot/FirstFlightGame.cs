@@ -1290,10 +1290,10 @@ public sealed partial class FirstFlightGame : Node3D
     private void StartRetailStartupMedia()
     {
         // CGame::GetIntroFMV (game.cpp:1103-1119) is one retail flag. The
-        // reconstruction owner is RetailStartupSchedule.IsSuppressedByArguments
+        // reconstruction owner is RetailFrontendScenePath.IsStartupSuppressed
         // so --skipfmv, --smoke, capture, and --intro cannot drift from the
         // level-cutscene gate in RetailFrontendFlow.Cutscene.
-        bool suppressed = RetailStartupSchedule.IsSuppressedByArguments(
+        bool suppressed = RetailFrontendScenePath.IsStartupSuppressed(
             OS.GetCmdlineUserArgs());
         if (suppressed)
         {

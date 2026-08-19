@@ -3008,8 +3008,11 @@ public sealed partial class RetailFrontendFlow : Control
         {
             case RetailFrontendScreen.ClickToStart:
                 // CFEPIntro::Process 0x0051B801 submits (0,0,width,width,0x2C)
-                // — full window, not a glyph box. See RetailClickToStartInput.
-                if (!RetailClickToStartInput.AcceptsMouseAt(design.X, design.Y))
+                // — full window, not a glyph box. See RetailFrontendScenePath.
+                if (!RetailFrontendScenePath.AcceptsClickToStartMouse(
+                        _session.Screen,
+                        design.X,
+                        design.Y))
                 {
                     return false;
                 }
@@ -3022,7 +3025,7 @@ public sealed partial class RetailFrontendFlow : Control
 
             case RetailFrontendScreen.MainMenu:
                 int index = MainMenuIndexAt(design);
-                if (index < 0 || !_session.Items[index].IsAvailable)
+                if (!RetailFrontendScenePath.CanAcceptMainMenuRow(_session, index))
                 {
                     return false;
                 }
@@ -3168,6 +3171,14 @@ public sealed partial class RetailFrontendFlow : Control
         }
         if (IsKey(key, Key.Enter) || IsKey(key, Key.KpEnter) || IsKey(key, Key.Space))
         {
+            if (_session.Screen == RetailFrontendScreen.ClickToStart
+                && !RetailFrontendScenePath.AcceptsClickToStartKey(
+                    _session.Screen,
+                    ScanCodeFor(key)))
+            {
+                return true;
+            }
+
             Confirm();
             return true;
         }
@@ -3734,6 +3745,19 @@ public sealed partial class RetailFrontendFlow : Control
 
     private static bool IsKey(InputEventKey input, Key key) =>
         input.PhysicalKeycode == key || input.Keycode == key;
+
+    private static int ScanCodeFor(InputEventKey key)
+    {
+        Key code = key.PhysicalKeycode != Key.None ? key.PhysicalKeycode : key.Keycode;
+        return code switch
+        {
+            Key.Space => 0x39,
+            Key.Enter => 0x1C,
+            Key.Escape => 0x01,
+            Key.KpEnter => 0x9C,
+            _ => 0,
+        };
+    }
 
     private void RequestAudioCue(RetailFrontendAudioCue cue) =>
         AudioCueRequested?.Invoke(cue);
