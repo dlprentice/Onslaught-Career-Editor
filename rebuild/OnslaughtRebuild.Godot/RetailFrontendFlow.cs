@@ -2628,6 +2628,13 @@ public sealed partial class RetailFrontendFlow : Control
         switch (_session.Screen)
         {
             case RetailFrontendScreen.ClickToStart:
+                // CFEPIntro::Process 0x0051B801 submits (0,0,width,width,0x2C)
+                // — full window, not a glyph box. See RetailClickToStartInput.
+                if (!RetailClickToStartInput.AcceptsMouseAt(design.X, design.Y))
+                {
+                    return false;
+                }
+
                 Confirm();
                 return true;
 
