@@ -601,7 +601,7 @@ namespace OnslaughtCareerEditor.AppCore
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException or InvalidOperationException)
             {
-                return FallbackProfileCatalog($"Profile catalog read failed ({ex.Message}); using built-in safe-copy profile presets.");
+                return FallbackProfileCatalog("Profile catalog could not be read; using built-in safe-copy profile presets.");
             }
         }
 

@@ -35,4 +35,18 @@ public class BinaryPatchCopyHonestyTests
         Assert.That(engine, Does.Not.Contain("Patch target path could not be normalized: {ex.Message}"));
         Assert.That(engine, Does.Contain("That patch target could not be used. Nothing was changed."));
     }
+
+    [Test]
+    public void CatalogReadFallbackDoesNotDumpTheException()
+    {
+        string engine = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "BinaryPatchEngine.cs"));
+        string profiles = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "BinaryPatchPlanBuilder.cs"));
+
+        Assert.That(engine, Does.Not.Contain("Catalog read failed ({ex.Message})"));
+        Assert.That(engine, Does.Contain("Catalog could not be read; using built-in fallback patch specs."));
+        Assert.That(profiles, Does.Not.Contain("Profile catalog read failed ({ex.Message})"));
+        Assert.That(profiles, Does.Contain("Profile catalog could not be read; using built-in safe-copy profile presets."));
+    }
 }

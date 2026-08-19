@@ -738,12 +738,12 @@ namespace OnslaughtCareerEditor.AppCore
                     UsingFallback: false,
                     Status: $"Loaded patch catalog from {catalogPath}");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return new BinaryPatchCatalogLoadResult(
                     s_fallbackPatchSpecs,
                     UsingFallback: true,
-                    Status: $"Catalog read failed ({ex.Message}); using built-in fallback patch specs.");
+                    Status: "Catalog could not be read; using built-in fallback patch specs.");
             }
         }
 
