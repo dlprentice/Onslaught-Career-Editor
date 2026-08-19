@@ -182,7 +182,8 @@ live in `developer_state.json` and the campaign ledgers.
   resolved network or non-local drive refusal names the location,
   not a path. A music replacement manifest names the files, not a path.
   A Windowed & Mods create that cannot see the source game folder names
-  the next step, not the emptiness.
+  the next step, not the emptiness. A missing copy used to launch names
+  the folder, not a path.
 
 ## 1.0.11 — 2026-08-07
 

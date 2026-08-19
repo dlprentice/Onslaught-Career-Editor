@@ -542,7 +542,7 @@ namespace OnslaughtCareerEditor.AppCore
         private static GameProfileLaunchPlan BuildLaunchPlanCore(string gameRoot, IReadOnlyList<string> arguments)
         {
             if (string.IsNullOrWhiteSpace(gameRoot) || !Directory.Exists(gameRoot))
-                throw new DirectoryNotFoundException($"Playable copied game folder root does not exist: {gameRoot}");
+                throw new DirectoryNotFoundException(CopyFolderMissing);
 
             string resolvedGameRoot = NormalizeExistingDirectory(gameRoot);
             string executablePath = Path.Combine(resolvedGameRoot, "BEA.exe");
@@ -580,7 +580,7 @@ namespace OnslaughtCareerEditor.AppCore
             bool validateControlOptionsManifest)
         {
             if (string.IsNullOrWhiteSpace(gameRoot) || !Directory.Exists(gameRoot))
-                throw new DirectoryNotFoundException($"Playable copied game folder root does not exist: {gameRoot}");
+                throw new DirectoryNotFoundException(CopyFolderMissing);
 
             string resolvedGameRoot = NormalizeExistingDirectory(gameRoot);
             string manifestPath = Path.Combine(resolvedGameRoot, "onslaught-profile-manifest.json");
