@@ -392,6 +392,8 @@ public class SaveEditorHonestyTests
         Assert.That(source, Does.Not.Contain("Kill counts were not read:"));
         Assert.That(source, Does.Not.Contain("Mission grades were not read:"));
         Assert.That(source, Does.Not.Contain("analysis.ErrorMessage"));
+        Assert.That(source, Does.Not.Contain("No save is selected."));
+        Assert.That(source, Does.Not.Contain("The selected save file was not found."));
         Assert.That(SaveEditorAdvancedService.MissionGradesUnreadable, Does.Contain("Nothing was changed"));
         Assert.That(SaveEditorAdvancedService.KillCountsUnreadable, Does.Contain("Nothing was changed"));
         Assert.That(SaveEditorAdvancedService.MissionGradesUnreadable, Does.Not.Contain(":\\"));
@@ -566,5 +568,40 @@ public class SaveEditorHonestyTests
         Assert.That(empty, Does.Contain("No save is loaded"));
         Assert.That(empty, Does.Not.Contain("yet"));
         Assert.That(empty, Does.Contain("not a cumulative score"));
+    }
+
+    [Test]
+    public void AnEmptyAdvancedReadNamesTheNextStep()
+    {
+        SaveEditorAdvancedService.LoadMissionRankRows(null, out var rankStatus);
+        SaveEditorAdvancedService.LoadCategoryKillRows("   ", out var killStatus);
+
+        Assert.That(rankStatus.FileWasRead, Is.False);
+        Assert.That(killStatus.FileWasRead, Is.False);
+        Assert.That(rankStatus.Reason, Is.EqualTo(SaveEditorService.DescribeCareerSaveInputRejection(null)));
+        Assert.That(killStatus.Reason, Is.EqualTo(SaveEditorService.DescribeCareerSaveInputRejection("   ")));
+        Assert.That(rankStatus.Reason, Does.Contain("Choose"));
+        Assert.That(rankStatus.Reason, Does.Not.Contain("No save is selected"));
+        Assert.That(killStatus.Reason, Does.Not.Contain("No save is selected"));
+        Assert.That(rankStatus.Reason.ToLowerInvariant(), Does.Not.Contain("path"));
+        Assert.That(killStatus.Reason.ToLowerInvariant(), Does.Not.Contain("path"));
+    }
+
+    [Test]
+    public void AMissingAdvancedReadReusesInputMissing()
+    {
+        string missing = Path.Combine(Path.GetTempPath(), $"absent-{Guid.NewGuid():N}.bes");
+
+        SaveEditorAdvancedService.LoadMissionRankRows(missing, out var rankStatus);
+        SaveEditorAdvancedService.LoadCategoryKillRows(missing, out var killStatus);
+
+        Assert.That(rankStatus.FileWasRead, Is.False);
+        Assert.That(killStatus.FileWasRead, Is.False);
+        Assert.That(rankStatus.Reason, Is.EqualTo(SaveEditorService.InputMissing));
+        Assert.That(killStatus.Reason, Is.EqualTo(SaveEditorService.InputMissing));
+        Assert.That(rankStatus.Reason, Does.Not.Contain(missing));
+        Assert.That(killStatus.Reason, Does.Not.Contain(missing));
+        Assert.That(rankStatus.Reason, Does.Not.Contain("The selected save file was not found"));
+        Assert.That(rankStatus.Reason, Does.Contain("Nothing was changed"));
     }
 }

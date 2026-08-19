@@ -211,15 +211,11 @@ namespace OnslaughtCareerEditor.AppCore
                 });
             }
 
-            if (string.IsNullOrWhiteSpace(filePath))
+            if (string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath))
             {
-                status = SaveEditorAdvancedReadStatus.NotRead("No save is selected.");
-                return rows;
-            }
-
-            if (!File.Exists(filePath))
-            {
-                status = SaveEditorAdvancedReadStatus.NotRead("The selected save file was not found.");
+                status = SaveEditorAdvancedReadStatus.NotRead(
+                    SaveEditorService.DescribeCareerSaveInputRejection(filePath)
+                    ?? SaveEditorService.InputMissing);
                 return rows;
             }
 
@@ -272,42 +268,40 @@ namespace OnslaughtCareerEditor.AppCore
         {
             // These seeds are a starting point for the override boxes, never a claim about the file.
             int[] counts = CategoryDefinitions.Select(definition => definition.DefaultSeed).ToArray();
-            status = SaveEditorAdvancedReadStatus.NotRead("No save is selected.");
 
-            if (!string.IsNullOrWhiteSpace(filePath))
+            if (string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath))
             {
-                if (!File.Exists(filePath))
+                status = SaveEditorAdvancedReadStatus.NotRead(
+                    SaveEditorService.DescribeCareerSaveInputRejection(filePath)
+                    ?? SaveEditorService.InputMissing);
+            }
+            else
+            {
+                try
                 {
-                    status = SaveEditorAdvancedReadStatus.NotRead("The selected save file was not found.");
-                }
-                else
-                {
-                    try
+                    SaveAnalysis analysis = BesFilePatcher.AnalyzeSave(filePath);
+                    if (analysis.IsValid && analysis.KillCounts.Length >= CategoryDefinitions.Length)
                     {
-                        SaveAnalysis analysis = BesFilePatcher.AnalyzeSave(filePath);
-                        if (analysis.IsValid && analysis.KillCounts.Length >= CategoryDefinitions.Length)
+                        for (int i = 0; i < CategoryDefinitions.Length; i++)
                         {
-                            for (int i = 0; i < CategoryDefinitions.Length; i++)
-                            {
-                                counts[i] = analysis.KillCounts[i];
-                            }
+                            counts[i] = analysis.KillCounts[i];
+                        }
 
-                            status = SaveEditorAdvancedReadStatus.Read();
-                        }
-                        else
-                        {
-                            status = SaveEditorAdvancedReadStatus.NotRead(KillCountsUnreadable);
-                        }
+                        status = SaveEditorAdvancedReadStatus.Read();
                     }
-                    catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException
-                                                or NotSupportedException or InvalidDataException)
+                    else
                     {
-                        // Was `catch {}`. Falling through here left 100/100/25/40/20 in CurrentValue and
-                        // the UI printed them in its Current column as if the save had said so; worse,
-                        // GetSuggestedGlobalKillSeed then turned that fiction into the number an
-                        // unchecked-category patch wrote.
                         status = SaveEditorAdvancedReadStatus.NotRead(KillCountsUnreadable);
                     }
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException
+                                            or NotSupportedException or InvalidDataException)
+                {
+                    // Was `catch {}`. Falling through here left 100/100/25/40/20 in CurrentValue and
+                    // the UI printed them in its Current column as if the save had said so; worse,
+                    // GetSuggestedGlobalKillSeed then turned that fiction into the number an
+                    // unchecked-category patch wrote.
+                    status = SaveEditorAdvancedReadStatus.NotRead(KillCountsUnreadable);
                 }
             }
 
