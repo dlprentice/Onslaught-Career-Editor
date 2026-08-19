@@ -1687,10 +1687,10 @@ namespace OnslaughtCareerEditor.AppCore
 
                 return analysis;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 analysis.IsValid = false;
-                analysis.ErrorMessage = ex.Message;
+                analysis.ErrorMessage = SaveAnalyzerService.AnalysisFailed;
                 return analysis;
             }
         }
@@ -1852,9 +1852,9 @@ namespace OnslaughtCareerEditor.AppCore
 
                 return result;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                result.ErrorMessage = ex.Message;
+                result.ErrorMessage = SaveAnalyzerService.ComparisonFailed;
                 return result;
             }
         }

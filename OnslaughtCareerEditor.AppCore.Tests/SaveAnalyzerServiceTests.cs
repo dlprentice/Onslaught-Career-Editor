@@ -560,6 +560,57 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             Assert.Contains("FILE COMPARISON", document.ReportText);
         }
 
+        [Fact]
+        public void AnalyzeFile_MissingPath_DoesNotDumpThePathOrException()
+        {
+            string missing = Path.Combine(
+                "C:" + Path.DirectorySeparatorChar + "Users",
+                "player",
+                "Documents",
+                $"missing-career-{Guid.NewGuid():N}.bes");
+
+            SaveAnalyzerDocument document = SaveAnalyzerService.AnalyzeFile(missing, verbose: false, dumpMystery: false);
+
+            Assert.Contains("could not be analyzed", document.StatusText);
+            Assert.Contains("Nothing was changed", document.StatusText);
+            Assert.DoesNotContain(missing, document.StatusText);
+            Assert.DoesNotContain(missing, document.ReportText);
+            Assert.DoesNotContain(missing, document.SummaryNodes[0].Label);
+            Assert.DoesNotContain(":\\", document.StatusText);
+            Assert.DoesNotContain(":\\", document.ReportText);
+            Assert.DoesNotContain("Could not find file", document.StatusText, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("Could not find file", document.ReportText, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public void CompareFiles_MissingPath_DoesNotCallTheFilesIdenticalOrDumpThePath()
+        {
+            string missing = Path.Combine(
+                "C:" + Path.DirectorySeparatorChar + "Users",
+                "player",
+                "Documents",
+                $"missing-left-{Guid.NewGuid():N}.bes");
+            string alsoMissing = Path.Combine(
+                "C:" + Path.DirectorySeparatorChar + "Users",
+                "player",
+                "Documents",
+                $"missing-right-{Guid.NewGuid():N}.bes");
+
+            SaveAnalyzerDocument document = SaveAnalyzerService.CompareFiles(missing, alsoMissing);
+
+            Assert.Contains("could not be compared", document.StatusText);
+            Assert.Contains("Nothing was changed", document.StatusText);
+            Assert.DoesNotContain("identical", document.StatusText, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain(missing, document.StatusText);
+            Assert.DoesNotContain(alsoMissing, document.StatusText);
+            Assert.DoesNotContain(missing, document.ReportText);
+            Assert.DoesNotContain(alsoMissing, document.ReportText);
+            Assert.DoesNotContain(":\\", document.StatusText);
+            Assert.DoesNotContain(":\\", document.ReportText);
+            Assert.DoesNotContain("Could not find file", document.StatusText, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("Could not find file", document.ReportText, StringComparison.OrdinalIgnoreCase);
+        }
+
         private static void WriteGoodie(byte[] buffer, int goodieBase, int index, uint state)
         {
             BinaryPrimitives.WriteUInt32LittleEndian(buffer.AsSpan(goodieBase + index * 4, 4), state);

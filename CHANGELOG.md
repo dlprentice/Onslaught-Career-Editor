@@ -52,7 +52,9 @@ live in `developer_state.json` and the campaign ledgers.
   A failed playable-copy setup stays on the same "nothing was changed"
   note instead of the prepare message. Save Lab overwrite cancel
   says the file was left as it is. Putting a career into a safe copy, or
-  bringing one out, asks the same overwrite question. A failed stop of a
+  bringing one out, asks the same overwrite question. A missing or unreadable
+  analysis or compare file uses that same sentence instead of the exception, and
+  a failed compare is not called identical. A failed stop of a
   copied game names the action and that nothing was changed, without the
   exception. A failed backup of the installed game does the same. The
   installed-game status line names the folder, not the path.

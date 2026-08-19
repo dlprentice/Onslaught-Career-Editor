@@ -8,11 +8,9 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
     /// </summary>
     internal static class SaveLabPageText
     {
-        public const string ComparisonFailed =
-            "Those files could not be compared. Nothing was changed.";
+        public const string ComparisonFailed = SaveAnalyzerService.ComparisonFailed;
 
-        public const string AnalysisFailed =
-            "That file could not be analyzed. Nothing was changed.";
+        public const string AnalysisFailed = SaveAnalyzerService.AnalysisFailed;
 
         public const string BrowseOptionsFailed =
             "Could not browse for an options file. Nothing was changed.";

@@ -44,6 +44,12 @@ namespace OnslaughtCareerEditor.AppCore
 
     public static class SaveAnalyzerService
     {
+        public const string AnalysisFailed =
+            "That file could not be analyzed. Nothing was changed.";
+
+        public const string ComparisonFailed =
+            "Those files could not be compared. Nothing was changed.";
+
         private static readonly string[] KillCategories = { "Aircraft", "Vehicles", "Emplacements", "Infantry", "Mechs" };
 
         public static IReadOnlyList<SaveAnalyzerFileItem> GetDetectedFiles(string? gameDir = null)
@@ -129,7 +135,9 @@ namespace OnslaughtCareerEditor.AppCore
                     : "Single-file analysis: .bes career save view.",
                 StatusText = isValid
                     ? $"Save Analyzer: {analysis.CompletedNodes} missions, {analysis.CompletedLinks} links"
-                    : $"Save Analyzer: Invalid file - {analysis.ErrorMessage}",
+                    : string.Equals(analysis.ErrorMessage, AnalysisFailed, StringComparison.Ordinal)
+                        ? AnalysisFailed
+                        : $"Save Analyzer: Invalid file - {analysis.ErrorMessage}",
                 ReportText = BesFilePatcher.FormatAnalysisReport(analysis, verbose, dumpMystery),
                 Metrics = metrics,
                 SummaryNodes = BuildAnalysisSummaryNodes(analysis),
@@ -186,7 +194,9 @@ namespace OnslaughtCareerEditor.AppCore
                 Title = "File Comparison",
                 SummaryTitle = "Comparison Summary",
                 ModeText = "Comparison mode: summary counts and differing regions for the selected pair.",
-                StatusText = result.DifferingBytes == 0
+                StatusText = !string.IsNullOrWhiteSpace(result.ErrorMessage)
+                    ? result.ErrorMessage
+                    : result.DifferingBytes == 0
                     ? "Save Analyzer: Files are identical"
                     : $"Save Analyzer: Found {result.DifferingBytes} differing bytes in {result.DiffRanges.Count} regions",
                 ReportText = BesFilePatcher.FormatCompareReport(result, leftPath, rightPath),
