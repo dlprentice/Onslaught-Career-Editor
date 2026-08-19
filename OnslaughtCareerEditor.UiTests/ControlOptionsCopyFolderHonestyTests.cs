@@ -47,6 +47,10 @@ public class ControlOptionsCopyFolderHonestyTests
         Assert.That(source, Does.Contain("ProfileFolderRequired"));
         Assert.That(source, Does.Not.Contain("An app-owned safe game copy root is required."));
         Assert.That(source, Does.Not.Contain("Safe game copy root does not exist."));
+        Assert.That(source, Does.Not.Contain("app-owned safe game copy root"));
+        Assert.That(source, Does.Not.Contain("safe game copy root"));
+        Assert.That(source, Does.Contain("app-owned safe game copy folder"));
+        Assert.That(source, Does.Contain("Safe-copy control options require a generated profile under the app-owned safe game copy folder."));
     }
 
     [Test]

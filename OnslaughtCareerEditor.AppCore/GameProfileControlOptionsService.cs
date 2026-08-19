@@ -357,14 +357,14 @@ namespace OnslaughtCareerEditor.AppCore
 
             string resolvedAppRoot = NormalizeExistingDirectory(appOwnedProfilesRoot);
             string resolvedProfileRoot = NormalizeExistingDirectory(profileRoot);
-            RejectExistingReparseAncestors(resolvedAppRoot, "app-owned safe game copy root");
-            RejectExistingReparseAncestors(resolvedProfileRoot, "safe game copy root");
-            RejectReparsePoint(resolvedProfileRoot, "safe game copy root");
+            RejectExistingReparseAncestors(resolvedAppRoot, "app-owned safe game copy folder");
+            RejectExistingReparseAncestors(resolvedProfileRoot, "safe game copy folder");
+            RejectReparsePoint(resolvedProfileRoot, "safe game copy folder");
 
             if (!IsSameOrUnderRoot(resolvedProfileRoot, resolvedAppRoot) ||
                 string.Equals(resolvedProfileRoot, resolvedAppRoot, StringComparison.OrdinalIgnoreCase))
             {
-                throw new InvalidOperationException("Safe-copy control options require a generated profile under the app-owned safe game copy root.");
+                throw new InvalidOperationException("Safe-copy control options require a generated profile under the app-owned safe game copy folder.");
             }
 
             return resolvedProfileRoot;
