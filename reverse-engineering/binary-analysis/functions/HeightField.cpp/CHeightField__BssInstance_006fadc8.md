@@ -41,7 +41,10 @@ That wrapper is `mov ecx, 0x006fadc8` / `call 0x00490e10`
 `[+0x1028]` is a pointer: sample bodies `mov r32, [this+0x1028]`
 then a word load. Load overlays `push 1; push 0x13dc; push edi`
 at `0x0047f7d2`. `[+0x102c]` is a float: `fmul [ecx+0x102c]` at
-`0x0047ec3f`. No this-relative store of `+0x102c` was claimed here.
+`0x0047ec3f`. The dword is written by `CHeightField__Load`'s
+`CChunkReader__Read(this, 0x13dc, 1)` overlay at `0x0047f7dc`
+(`this` = `0x006fadc8` via `CEngine__Deserialize` `0x0044a72a`).
+No dedicated this-relative store of `+0x102c` exists in the image.
 
 This is the shared `this` of `0x0047eb00` / `0x0047eb80` /
 `0x0047ec60` / `0x00490a40`. Did not pile `CMonitor.cpp.md`.

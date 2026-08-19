@@ -1,7 +1,7 @@
 # CMonitor / CSPtrSet function map
 
 Status: active static function map
-Last updated: 2026-08-18 (SetReader + wrapper pool Initialise 40000 / teardown)
+Last updated: 2026-08-19 (0x0047ec60 roster pointer only)
 Source File: `C:\dev\ONSLAUGHT2\Monitor.h` (SEH `__FILE__` pointer `0x00622b80`
 read out of `AddDeletionEvent`) | Binary: BEA.exe, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
@@ -37,9 +37,13 @@ names.
 `CMonitor__UpdateTrackedList_620` (`0x0040ebf0`),
 `CMonitor__ClearCurrentTrackedEntryFlag60` (`0x00414010`),
 `CMonitor__Shutdown_Thunk` (`0x0046dbc0`),
-`CMonitor__SampleHeightfieldNormalAtXY` (`0x0047ec60`),
 `CMonitor__SpawnParticleEffectFromIndexedListInHeightBand` (`0x004ef120`),
 `CMonitor__UpdateTrackedRenderPair` (`0x005078f0`).
+
+`CMonitor__SampleHeightfieldNormalAtXY` (`0x0047ec60`) is **not** unmapped:
+the dedicated note is
+[`HeightField.cpp/CMonitor__SampleHeightfieldNormalAtXY.md`](HeightField.cpp/CMonitor__SampleHeightfieldNormalAtXY.md).
+Do not add a second contract here.
 
 ## Callers (direct `E8` rel32, whole-image scan)
 

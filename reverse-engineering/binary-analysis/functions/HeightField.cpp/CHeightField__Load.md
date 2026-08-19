@@ -36,6 +36,65 @@ Loads heightfield terrain data from a serialized level resource. Validates expec
 void __thiscall CHeightField__Load(void * this, void * chunk_reader);
 ```
 
+## MEASURED 2026-08-19 (overlay writes `+0x102c`)
+
+Independently re-read official specimen
+`local-lab/safe-copy-bea-pristine/BEA.exe.original.backup` =
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
+(2506752 bytes; pristine-target twin matches). No Ghidra. Table names
+are labels. Wave396 / decompiler text below is **not** this proof.
+
+`thiscall`, `ECX`→`EDI`. One stack arg (chunk reader) → `EBP`.
+`ret 4` at `0x0047f9af`. Body `0x0047f750`–`0x0047f9b1` is 610 bytes,
+SHA-256
+`ce5c79bbbcdbec27f0ca2cd082a49b639560cd09bafbc3fdddf4f4963dbb55a1`.
+Eleven `E8`, zero `E9`. One inbound `E8`: `0x004910d6` inside
+`CHeightField__DeserializeMapAndInitResources`. That body's sole
+inbound is `CEngine__Deserialize` `0x0044a72f`:
+
+```
+push ebx
+mov  ecx, 0x006fadc8
+call 0x00491060
+```
+
+So Load's `this` is the shared BSS instance.
+
+`CChunkReader__Read` (`0x00423960`) is `thiscall` `ret 0xc`:
+`dest, nbytes, count`; copies `nbytes*count` from `[reader+4]` via
+`CDXMemBuffer__Read` `0x00548570` and advances `[reader+8]`. Overlay:
+
+```
+push 1
+push 0x13dc
+push edi          ; dest = this
+mov  ecx, ebp
+call 0x00423960   ; 0x0047f7dc
+```
+
+That is the only image `0x13dc`-byte copy onto an object. It writes
+`[this+0x102c]` (scale). Image-wide, every instruction-aligned
+`disp32 0x102c` is a **load** (`fmul` ×5, `mov eax,[ebx+0x102c]`,
+`fld` ×2). No `mov`/`fstp`/`mov dword` store of `+0x102c`. Ctor
+`0x0047e870` zeros `+0x20`/`+0x24`/`+0x28..+0x1027`/`+0x1028` and
+does not touch `+0x102c`. After the overlay, Load replaces only
+`[+0x1028]` with `CDXMemoryManager__Alloc(0xa2000)` at `0x0047f8d2`.
+The authored float at overlay `+0x102c` is **not** read here.
+
+Cheapest falsifier: file `0x0007f750` is not `81 ec 14 01 00 00`,
+**or** `0x0007f9af` is not `c2 04 00`, **or** body
+`0x0007f750`–`0x0007f9b1` SHA-256 is not `ce5c79bb…55a1`, **or**
+`0x0007f7d2` is not `6a 01 68 dc 13 00 00 57`, **or**
+`tools/call_xref_scan.py` on `0x0047f750` is not exactly `E8` at
+`0x004910d6`, **or** `0x0004a72a` is not
+`b9 c8 ad 6f 00 e8 2c 69 04 00`, **or** `0x00023989` is not
+`c2 0c 00`, **or** any of the eight `2c 10 00 00` sites decodes as a
+store to `[reg+0x102c]`.
+
+| Address | Name | Byte evidence | Contract (confidence) |
+| --- | --- | --- | --- |
+| `0x0047f750` | `CHeightField__Load` | `81ec14010000 53 55 56 57 8bf9 … 6a01 68dc130000 57 … c20400` | thiscall; ret 4; 0x13dc overlay onto `this=0x006fadc8`; that write is the `+0x102c` scale. HIGH on ABI, inbound, overlay, image-wide load-only `+0x102c`. **Not** on the authored float or color/sample loops. |
+
 ## Wave396 Read-Back
 
 Wave396 corrected the undefined saved signature to a thiscall shape with one chunk-reader stack argument. Post-apply read-back validates the expected `0x13dc` structure size, calls `CHeightField__InitColorGradient`, allocates the `0xa2000`-byte height buffer, and reads repeated `9x9` tile blocks. This is saved static Ghidra metadata/read-back evidence only; it does not prove runtime terrain behavior or complete concrete field typing.
