@@ -35,6 +35,31 @@ public sealed class RetailFillOutEndLevelDataTests
     }
 
     /// <summary>
+    /// FillOut copies the ten primary <c>GetStatus()</c> words. After a
+    /// Level 100 win those are four <c>MOS_COMPLETE</c> (1) and six
+    /// unset slots — already pinned on
+    /// <see cref="RetailGameObjectiveCount.Level100WonPrimaryStatuses"/>.
+    /// That is not the rebuild mission enum's
+    /// <c>Level100PrimaryObjectiveStatus.Complete = 2</c>. Mutation:
+    /// writing 2 for complete fails the snapshot equality. Secondaries
+    /// stay unset; do not invent them.
+    /// </summary>
+    [Fact]
+    public void Level100Won_SnapshotCarriesFourMosCompletePrimariesNotTheMissionEnumTwo()
+    {
+        RetailEndLevelSnapshot snapshot = RetailFillOutEndLevelData.ForLevel100Won();
+
+        Assert.Equal(
+            RetailGameObjectiveCount.Level100WonPrimaryStatuses(),
+            snapshot.PrimaryStatuses);
+        Assert.Equal(new[] { 1, 1, 1, 1, 0, 0, 0, 0, 0, 0 }, snapshot.PrimaryStatuses);
+        Assert.DoesNotContain(
+            (int)Level100PrimaryObjectiveStatus.Complete,
+            snapshot.PrimaryStatuses);
+        Assert.All(snapshot.SecondaryStatuses, status => Assert.Equal(0, status));
+    }
+
+    /// <summary>
     /// <c>game.cpp:1028</c> is <c>if (GetNumSecondaryObjectives())</c>.
     /// Level 100's count is 0, so neither the 0.4 floor nor the 0.6 cap
     /// runs. Mutation: applying the failed-secondary 0.6 cap because the

@@ -3,9 +3,10 @@
 namespace OnslaughtRebuild.Core;
 
 /// <summary>
-/// The fields <c>CGame::FillOutEndLevelData</c> writes that
-/// <c>CCareer::Update</c> / <c>ReCalcLinks</c> actually read after a
-/// Level 100 win.
+/// The fields <c>CGame::FillOutEndLevelData</c> writes on a Level 100
+/// win. Career <c>Update</c> / <c>ReCalcLinks</c> consume the world,
+/// state, ranking, secondaries, kills, and slots; the primary table is
+/// copied too and is not a career input.
 /// </summary>
 public readonly record struct RetailEndLevelSnapshot(
     int WorldFinished,
@@ -13,7 +14,8 @@ public readonly record struct RetailEndLevelSnapshot(
     float Ranking,
     IReadOnlyList<int> SecondaryStatuses,
     IReadOnlyList<int> ThingsKilled,
-    IReadOnlyList<int> SlotWords);
+    IReadOnlyList<int> SlotWords,
+    IReadOnlyList<int> PrimaryStatuses);
 
 /// <summary>
 /// <c>CGame::FillOutEndLevelData</c> as it applies to a Level 100 Won —
@@ -31,6 +33,11 @@ public readonly record struct RetailEndLevelSnapshot(
 /// <b>Level 100 copies four primaries and no secondaries.</b>
 /// <c>mWorldFinished = mCurrentLevel</c> is 100.
 /// <c>mFinalState = mGameState</c> is <c>GAME_STATE_LEVEL_WON</c> (5).
+/// The ten primary <c>GetStatus()</c> words are four
+/// <c>MOS_COMPLETE</c> (1) then six unset — already pinned on
+/// <see cref="RetailGameObjectiveCount.Level100WonPrimaryStatuses"/>.
+/// That is not the rebuild mission enum's
+/// <c>Level100PrimaryObjectiveStatus.Complete = 2</c>.
 /// <c>mSecondaryObjectives</c> is the ten-entry array with every
 /// <c>GetStatus()</c> unset. Do not invent secondary content.
 /// </para>
@@ -105,7 +112,8 @@ public static class RetailFillOutEndLevelData
             ranking,
             UnsetSecondaryStatuses(),
             thingsKilled ?? new int[RetailCareerCounters.KilledTypeCount],
-            FirstPlayTutorialSlotWords());
+            FirstPlayTutorialSlotWords(),
+            RetailGameObjectiveCount.Level100WonPrimaryStatuses());
     }
 
     /// <summary>

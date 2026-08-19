@@ -40,8 +40,8 @@ namespace OnslaughtRebuild.Core;
 /// </para>
 /// <para>
 /// <b>Not established here.</b> The mission-layer enum mapping in
-/// <c>Level100Mission</c>. FillOut's array assignment itself.
-/// Score-time ranking.
+/// <c>Level100Mission</c>. Score-time ranking. Career does not
+/// consume the primary table.
 /// </para>
 /// </remarks>
 public static class RetailGameObjectiveCount
