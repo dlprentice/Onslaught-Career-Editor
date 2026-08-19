@@ -137,6 +137,9 @@ namespace OnslaughtCareerEditor.AppCore
         public const string CopiedBeaPatchApplyFailed = "Those patches could not be applied to that copy.";
         public const string RequiredPatchRowMissing = "A required patch row is missing.";
         public const string ProfileNeedsItsPatchRows = "That copy profile needs its exact patch rows.";
+        public const string UnsupportedLaunchArgument = "That launch argument is not supported.";
+        public const string UnexpectedLaunchArgumentValue = "That launch argument value is not expected.";
+        public const string LaunchArgumentNeedsANumber = "That launch argument needs a number.";
         public const string ProfileFolderInsideGame =
             "The app-owned profile folder must not sit inside the game folder.";
         public const string GameFolderInsideProfile =
@@ -1368,11 +1371,11 @@ namespace OnslaughtCareerEditor.AppCore
                 if (string.Equals(token, "-level", StringComparison.OrdinalIgnoreCase))
                 {
                     if (index + 1 >= arguments.Count)
-                        throw new InvalidOperationException($"{token.ToLowerInvariant()} requires a numeric value.");
+                        throw new InvalidOperationException(LaunchArgumentNeedsANumber);
 
                     string valueToken = arguments[++index]?.Trim() ?? string.Empty;
                     if (!int.TryParse(valueToken, out int value))
-                        throw new InvalidOperationException($"{token.ToLowerInvariant()} requires a numeric value.");
+                        throw new InvalidOperationException(LaunchArgumentNeedsANumber);
 
                     string normalizedToken = token.ToLowerInvariant();
                     if (value < 1 || value > 9999)
@@ -1384,9 +1387,9 @@ namespace OnslaughtCareerEditor.AppCore
                 }
 
                 if (token.StartsWith("-", StringComparison.Ordinal))
-                    throw new InvalidOperationException($"Unsupported launch argument '{token}'.");
+                    throw new InvalidOperationException(UnsupportedLaunchArgument);
 
-                throw new InvalidOperationException($"Unexpected launch argument value '{token}'.");
+                throw new InvalidOperationException(UnexpectedLaunchArgumentValue);
             }
 
             return normalized.ToArray();

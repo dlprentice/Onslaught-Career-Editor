@@ -1328,11 +1328,13 @@ namespace OnslaughtCareerEditor.AppCore.Tests
 
                 InvalidOperationException resourceBuildEx = Assert.Throws<InvalidOperationException>(() =>
                     GameProfilePreflightService.BuildLaunchPlan(result.TargetGameRoot, new[] { "-buildresources" }));
-                Assert.Contains("Unsupported launch argument", resourceBuildEx.Message);
+                Assert.Equal(GameProfilePreflightService.UnsupportedLaunchArgument, resourceBuildEx.Message);
+                Assert.DoesNotContain("-buildresources", resourceBuildEx.Message, StringComparison.OrdinalIgnoreCase);
 
                 InvalidOperationException demoRecordEx = Assert.Throws<InvalidOperationException>(() =>
                     GameProfilePreflightService.BuildLaunchPlan(result.TargetGameRoot, new[] { "-record", "demo.dem" }));
-                Assert.Contains("Unsupported launch argument", demoRecordEx.Message);
+                Assert.Equal(GameProfilePreflightService.UnsupportedLaunchArgument, demoRecordEx.Message);
+                Assert.DoesNotContain("-record", demoRecordEx.Message, StringComparison.OrdinalIgnoreCase);
 
                 foreach (string unsupportedFlag in new[]
                 {
@@ -1353,7 +1355,8 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 {
                     InvalidOperationException blockedEx = Assert.Throws<InvalidOperationException>(() =>
                         GameProfilePreflightService.BuildLaunchPlan(result.TargetGameRoot, new[] { unsupportedFlag }));
-                    Assert.Contains("Unsupported launch argument", blockedEx.Message);
+                    Assert.Equal(GameProfilePreflightService.UnsupportedLaunchArgument, blockedEx.Message);
+                    Assert.DoesNotContain(unsupportedFlag, blockedEx.Message, StringComparison.OrdinalIgnoreCase);
                 }
 
                 InvalidOperationException resolutionEx = Assert.Throws<InvalidOperationException>(() =>

@@ -344,7 +344,8 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                             LaunchArguments: new[] { "-devmode" }),
                         runner));
 
-                Assert.Contains("Unsupported launch argument", ex.Message);
+                Assert.Equal(GameProfilePreflightService.UnsupportedLaunchArgument, ex.Message);
+                Assert.DoesNotContain("-devmode", ex.Message, StringComparison.OrdinalIgnoreCase);
                 Assert.Empty(runner.Starts);
             }
             finally

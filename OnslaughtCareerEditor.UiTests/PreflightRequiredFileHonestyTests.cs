@@ -135,6 +135,16 @@ public class PreflightRequiredFileHonestyTests
             Is.EqualTo("That copy profile needs its exact patch rows."));
         Assert.That(GameProfilePreflightService.ProfileNeedsItsPatchRows.ToLowerInvariant(),
             Does.Not.Contain("proof"));
+        Assert.That(source, Does.Contain("UnsupportedLaunchArgument"));
+        Assert.That(source, Does.Contain("UnexpectedLaunchArgumentValue"));
+        Assert.That(source, Does.Contain("LaunchArgumentNeedsANumber"));
+        Assert.That(source, Does.Not.Contain("Unsupported launch argument '"));
+        Assert.That(source, Does.Not.Contain("Unexpected launch argument value '"));
+        Assert.That(source, Does.Not.Contain("requires a numeric value."));
+        Assert.That(GameProfilePreflightService.UnsupportedLaunchArgument,
+            Is.EqualTo("That launch argument is not supported."));
+        Assert.That(GameProfilePreflightService.UnsupportedLaunchArgument.ToLowerInvariant(),
+            Does.Not.Contain("path"));
         Assert.That(source, Does.Contain("CopiedBackupMissing"));
         Assert.That(source, Does.Contain("CopiedBackupHashMissing"));
         Assert.That(source, Does.Contain("CopiedBackupHashMismatch"));
