@@ -168,7 +168,9 @@ live in `developer_state.json` and the campaign ledgers.
   Putting a career in a safe copy when none
   exists names the next step, not the emptiness. A missing
   managed copy names the folder, not a directory. The Asset Library
-  catalog picker names catalog.json, not a path.
+  catalog picker names catalog.json, not a path. Windowed & Mods
+  source cards say Source file details, not a path. The replacement
+  picker names the .ogg file.
 
 ## 1.0.11 — 2026-08-07
 

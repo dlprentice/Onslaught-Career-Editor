@@ -1289,9 +1289,9 @@
                                                Style="{StaticResource SectionBodyTextStyle}" />
                                     <TextBox x:Name="PatchBenchMusicReplacementPath"
                                              AutomationProperties.AutomationId="PatchBenchMusicReplacementPath"
-                                             AutomationProperties.Name="Replacement track OGG path"
+                                             AutomationProperties.Name="Replacement track OGG file"
                                              TextChanged="MusicReplacementInput_TextChanged"
-                                             PlaceholderText="Path to replacement .ogg" />
+                                             PlaceholderText="Replacement .ogg file" />
                                     <TextBlock Text="Target must be an existing file in the safe copy's data\Music folder. Stop the safe copy before staging or restoring."
                                                Style="{StaticResource SectionBodyTextStyle}" />
                                     <StackPanel Spacing="10">
@@ -1355,10 +1355,10 @@
                                                                    Text="Select BEA.exe or BEA.exe.original.backup as read-only source"
                                                                    TextWrapping="WrapWholeWords" />
                                                     </Border>
-                                                    <Expander Header="Source path details">
+                                                    <Expander Header="Source file details">
                                                         <TextBox x:Name="SourceExePathTextBox"
                                                                  AutomationProperties.AutomationId="PatchBenchSourceExePath"
-                                                                 AutomationProperties.Name="Source executable path"
+                                                                 AutomationProperties.Name="Source executable file"
                                                                  TextChanged="SourceExePathTextBox_TextChanged"
                                                                  PlaceholderText="Select BEA.exe or BEA.exe.original.backup as read-only source" />
                                                     </Expander>
