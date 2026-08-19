@@ -30,4 +30,24 @@ public class MusicReplacementOggHonestyTests
         Assert.That(GameProfileMusicReplacementService.ReplacementMustNotBeTarget,
             Is.EqualTo("The replacement music file must not be the target music file."));
     }
+
+    [Test]
+    public void WindowedAndModsNamesAReplacementMusicFileNotAnOgg()
+    {
+        string page = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot,
+            "OnslaughtCareerEditor.WinUI",
+            "Pages",
+            "BinaryPatchesPage.xaml.cs"));
+        string xaml = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot,
+            "OnslaughtCareerEditor.WinUI",
+            "Pages",
+            "BinaryPatchesPage.xaml"));
+
+        Assert.That(page, Does.Not.Contain("Staging one replacement OGG"));
+        Assert.That(page, Does.Contain("Staging one replacement music file into the safe copy."));
+        Assert.That(xaml, Does.Not.Contain("external replacement OGG"));
+        Assert.That(xaml, Does.Contain("external replacement music file"));
+    }
 }

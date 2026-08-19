@@ -1203,7 +1203,7 @@
                                     <TextBlock Text="Swap music in safe copy"
                                                FontSize="16"
                                                FontWeight="SemiBold" />
-                                    <TextBlock Text="Swap one copied music track with another, or stage an external replacement OGG inside the safe copy. The original install is unchanged."
+                                    <TextBlock Text="Swap one copied music track with another, or stage an external replacement music file inside the safe copy. The original install is unchanged."
                                                Style="{StaticResource SectionBodyTextStyle}" />
                                     <TextBlock Text="Quick copied-track swap"
                                                Style="{StaticResource SectionBodyTextStyle}" />
