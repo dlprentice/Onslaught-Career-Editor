@@ -1572,8 +1572,10 @@ public sealed partial class RetailFrontendFlow : Control
             // sub 0x10, dest X push 0. That leftover is not a dest immediate.
             // 0x004641C4 push 0x3C23D70A is Z, not scale, so this draw keeps
             // VersionTint, Format, DestX, DestY(DesignHeight), and scale 1.0.
-            // The 2px MeasureText residual stays open; do not invent a kerning
-            // hack.
+            // Font leftover is RetailMainMenuVersionOverlayFont: push 1 selects
+            // FONT_SMALL / Font13PS at this+0x20, not this+0x1C. No measure
+            // call on the sprintf buffer. The 2px MeasureText
+            // residual stays open; do not invent a kerning hack.
             DrawText(
                 RetailMainMenuVersionOverlay.Format(
                     RetailMainMenuVersionOverlay.ImageInitialMajor,
