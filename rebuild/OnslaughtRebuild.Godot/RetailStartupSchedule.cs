@@ -449,10 +449,10 @@ public sealed class RetailStartupSchedule
     /// intro would have no observed path at all, which is exactly how
     /// <c>_feBackFrames</c> came to be loaded and never drawn.</para>
     ///
-    /// <para><b>Known duplication.</b>
-    /// <c>FirstFlightGame.StartRetailStartupMedia</c> still carries its own
-    /// inline copy of this rule. It should call this method; that file was owned
-    /// by another lane when this landed and was deliberately not edited.</para>
+    /// <para><c>FirstFlightGame.StartRetailStartupMedia</c> and the Level 100
+    /// intro cutscene both call this method. Attract restart still splits
+    /// smoke/capture from <c>-skipfmv</c> because that loop is not
+    /// <c>GetIntroFMV</c>.</para>
     /// </summary>
     public static bool IsSuppressedByArguments(IReadOnlyList<string> arguments)
     {

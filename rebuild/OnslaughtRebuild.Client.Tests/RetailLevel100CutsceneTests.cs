@@ -196,6 +196,30 @@ public sealed class RetailLevel100CutsceneTests
         Assert.True(RetailStartupSchedule.IsSuppressedByArguments(["--capture-plan=x"]));
     }
 
+    /// <summary>
+    /// <c>CGame::GetIntroFMV</c> (<c>references/Onslaught/game.cpp:1103-1119</c>)
+    /// is the one retail suppress owner. The reconstruction's owner is
+    /// <see cref="RetailStartupSchedule.IsSuppressedByArguments"/>. Cold-start
+    /// media must call that method rather than keep a second copy of the
+    /// <c>--skipfmv</c> / <c>--smoke</c> / capture / <c>--intro</c> rule.
+    /// </summary>
+    [Fact]
+    public void StartRetailStartupMediaUsesTheSharedSuppressOwner()
+    {
+        string game = File.ReadAllText(
+            Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "FirstFlightGame.cs"));
+        string method = ExtractMethod(game, "private void StartRetailStartupMedia()");
+
+        Assert.Contains(
+            "RetailStartupSchedule.IsSuppressedByArguments",
+            method,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "_skipStartupMedia || _smokeMode || _captureArgumentsPresent",
+            method,
+            StringComparison.Ordinal);
+    }
+
     [Fact]
     public void TheCutsceneSitsBetweenLoadingAndGameplay()
     {
@@ -537,5 +561,28 @@ public sealed class RetailLevel100CutsceneTests
         Assert.Equal(RetailFrontendScreen.Loading, frontend.Screen);
         Assert.True(frontend.ConsumeLevel100LaunchRequest());
         return frontend;
+    }
+
+    private static string ExtractMethod(string source, string signature)
+    {
+        int signatureIndex = source.IndexOf(signature, StringComparison.Ordinal);
+        Assert.True(signatureIndex >= 0, $"Missing method signature: {signature}");
+        int openingBrace = source.IndexOf('{', signatureIndex);
+        Assert.True(openingBrace >= 0, $"Missing method body: {signature}");
+
+        int depth = 0;
+        for (int index = openingBrace; index < source.Length; index++)
+        {
+            if (source[index] == '{')
+            {
+                depth++;
+            }
+            else if (source[index] == '}' && --depth == 0)
+            {
+                return source[(openingBrace + 1)..index];
+            }
+        }
+
+        throw new InvalidOperationException($"Unterminated method body: {signature}");
     }
 }

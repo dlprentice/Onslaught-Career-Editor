@@ -1289,8 +1289,12 @@ public sealed partial class FirstFlightGame : Node3D
     /// </summary>
     private void StartRetailStartupMedia()
     {
-        bool suppressed = !_forceStartupMedia &&
-            (_skipStartupMedia || _smokeMode || _captureArgumentsPresent);
+        // CGame::GetIntroFMV (game.cpp:1103-1119) is one retail flag. The
+        // reconstruction owner is RetailStartupSchedule.IsSuppressedByArguments
+        // so --skipfmv, --smoke, capture, and --intro cannot drift from the
+        // level-cutscene gate in RetailFrontendFlow.Cutscene.
+        bool suppressed = RetailStartupSchedule.IsSuppressedByArguments(
+            OS.GetCmdlineUserArgs());
         if (suppressed)
         {
             StartFrontendMusicAfterStartupMedia();
