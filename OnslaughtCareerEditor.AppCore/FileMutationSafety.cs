@@ -1088,7 +1088,7 @@ namespace OnslaughtCareerEditor.AppCore
                     if (_inputs.ContainsKey(path))
                         continue;
                     if (!File.Exists(path))
-                        throw new FileNotFoundException("Protected input file was not found.", path);
+                        throw new FileNotFoundException("That protected input file could not be found.");
 
                     FileMutationSafety.RejectReparsePoint(path, "Protected input file");
                     FileStream stream = new(

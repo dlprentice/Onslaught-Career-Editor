@@ -60,4 +60,16 @@ public class FileMutationSafetyHonestyTests
         Assert.That(source, Does.Contain("resolves to a network location."));
         Assert.That(source, Does.Contain("does not resolve to a local drive."));
     }
+
+    [Test]
+    public void AMissingProtectedInputDoesNotAttachTheFilePath()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "FileMutationSafety.cs"));
+
+        Assert.That(source, Does.Not.Contain(
+            "throw new FileNotFoundException(\"Protected input file was not found.\", path);"));
+        Assert.That(source, Does.Contain("That protected input file could not be found."));
+        Assert.That(source, Does.Not.Contain("FileNotFoundException(\"That protected input file could not be found.\","));
+    }
 }
