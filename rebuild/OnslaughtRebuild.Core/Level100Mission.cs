@@ -51,6 +51,7 @@ public sealed class Level100Mission
     private bool _tutorialStatusBars;
     private int _scoreDelta;
     private int _gameScore = RetailAddScore.LoadLevelZero;
+    private readonly Dictionary<int, int> _hudPartWords = new();
 
     /// <summary>
     /// The Core tick the most recently scheduled character message clears, or
@@ -199,6 +200,16 @@ public sealed class Level100Mission
     /// names the rebuild bool, not this store.
     /// </summary>
     public int FlightModeFlag => _flightModeFlag;
+
+    /// <summary>
+    /// <c>dword [index*4+0x008aa51c]</c> — Highlight stores 2,
+    /// UnHighlight stores 1. Isolated
+    /// <see cref="Level100HudEmphasisChanged.Emphasized"/> names
+    /// the rebuild bool, not this store. A part this mission
+    /// never wrote reads 0 here; that is not a BSS-init claim.
+    /// </summary>
+    public int HudPartWord(int partIndex) =>
+        _hudPartWords.TryGetValue(partIndex, out int word) ? word : 0;
 
     internal bool GameplayPaused => Level100MissionTiming.GameplayPaused(
         _outcome,
@@ -679,19 +690,13 @@ public sealed class Level100Mission
                 RequireArguments(command, arguments, 0);
                 UnsetNavigationObjective(RequireContext(execution));
                 return NativeResult.Void;
-            case 34: // HighlightHudPart
+            case 34: // HighlightHudPart — IScript__HighlightHudPart 0x00535e60
                 RequireArguments(command, arguments, 1);
-                _events.Add(new Level100HudEmphasisChanged(
-                    _tick,
-                    arguments[0].AsInteger(),
-                    true));
+                StoreHudPartWord(arguments[0].AsInteger(), highlight: true);
                 return NativeResult.Void;
-            case 35: // UnHighlightHudPart
+            case 35: // UnHighlightHudPart — IScript__UnHighlightHudPart 0x00535e80
                 RequireArguments(command, arguments, 1);
-                _events.Add(new Level100HudEmphasisChanged(
-                    _tick,
-                    arguments[0].AsInteger(),
-                    false));
+                StoreHudPartWord(arguments[0].AsInteger(), highlight: false);
                 return NativeResult.Void;
             case 36: // PlayCharMessageWait
                 RequireArguments(command, arguments, 3);
@@ -879,6 +884,23 @@ public sealed class Level100Mission
             _tick,
             actorId,
             Level100ActorCommand.UnsetObjective));
+    }
+
+    /// <summary>
+    /// Isolated <see cref="Level100HudEmphasisChanged.Emphasized"/>
+    /// names the rebuild bool. These stores are the official
+    /// immediates 2 then 1. Array extent stays unclaimed.
+    /// </summary>
+    private void StoreHudPartWord(int partIndex, bool highlight)
+    {
+        int current = HudPartWord(partIndex);
+        _hudPartWords[partIndex] = highlight
+            ? RetailHighlightHudPart.Highlight(current)
+            : RetailHighlightHudPart.Unhighlight(current);
+        _events.Add(new Level100HudEmphasisChanged(
+            _tick,
+            partIndex,
+            highlight));
     }
 
     private void SetPrimaryObjective(

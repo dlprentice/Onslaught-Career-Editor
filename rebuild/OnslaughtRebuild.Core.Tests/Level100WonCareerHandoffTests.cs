@@ -976,6 +976,43 @@ public sealed class Level100WonCareerHandoffTests
     }
 
     /// <summary>
+    /// <c>IScript::UnHighlightHudPart</c> at <c>0x00535e8c</c>
+    /// stores 1 after Highlight's 2. First-play init then the
+    /// dodge pair leave <c>HUD_COMPASS</c> at 1 before FillOut.
+    /// Isolated last <c>Emphasized</c> = false names the rebuild
+    /// bool and still passes if this store is skipped. Isolated
+    /// <see cref="RetailHighlightHudPart.Unhighlight"/> names
+    /// literal-1; skip UnHighlight after Highlight leaves 2.
+    /// Mutation: skip the UnHighlight store. Array extent and
+    /// state-1/2 HUD meaning stay unclaimed. ChargeWeapon stays
+    /// unclaimed. Live <c>GAME.mSlots</c> stay unclaimed. No new
+    /// secondaries.
+    /// </summary>
+    [Fact]
+    public void UnHighlightHudPart_FirstPlayWonWritesOneAtCompass()
+    {
+        Level100Mission mission = DriveReleasedFirstPlayUntilWon();
+
+        Assert.Equal(Level100MissionOutcome.Won, mission.Snapshot.Outcome);
+        Assert.Equal(
+            RetailHighlightHudPart.Unhighlighted,
+            mission.HudPartWord(RetailHighlightHudPart.CompassIndex));
+        Assert.Equal(
+            RetailHighlightHudPart.Unhighlight(RetailHighlightHudPart.Highlight(0)),
+            mission.HudPartWord(RetailHighlightHudPart.CompassIndex));
+        Assert.NotEqual(
+            RetailHighlightHudPart.Highlighted,
+            mission.HudPartWord(RetailHighlightHudPart.CompassIndex));
+        Assert.Contains(
+            mission.Snapshot.PendingEvents.OfType<Level100HudEmphasisChanged>(),
+            item => item.PartId == RetailHighlightHudPart.CompassIndex &&
+                    !item.Emphasized);
+        Assert.All(
+            RetailFillOutEndLevelData.ForLevel100Won().SecondaryStatuses,
+            status => Assert.Equal(0, status));
+    }
+
+    /// <summary>
     /// <c>CCareer::Update</c> at <c>0x0041BD06</c> is
     /// <c>cmp eax, 5</c> / <c>jne</c>. Lost is 4, so FillOut is never
     /// applied even if the handoff state is claimed. Mutation: dropping

@@ -1,7 +1,7 @@
 # Rebuild parity contract
 
 Status: active — what "1:1 behavioral and experiential parity" means operationally
-Last updated: 2026-08-19 (Level 100 IScript::EnableFlightMode stores 1 at CBattleEngine+0x58c).
+Last updated: 2026-08-19 (Level 100 IScript::HighlightHudPart stores 2 / UnHighlight stores 1 at [eax*4+0x008aa51c]).
 Evidence: SOURCE — authority order and the known divergences are
 recorded in `PROVENANCE.md` plus the Lost-countdown row of this table; gate capabilities are MEASURED claims of the
 tracked harnesses named in the table. Every row of *Carried retail contracts*
@@ -159,6 +159,7 @@ Owner paths are relative to the repository root; test names are relative to
 | `IScript::PrimaryObjectiveFailed` Level 100 init text dword | `0x0053445e` `89 78 04` = `mov [eax+4], edi` on specimen `74154bfa…`. Twin Complete at `0x005343fe`. Table base `lea eax, [eax*8+0x8a9adc]`. Level 100 `init()` stores `_100_OBJECTIVE_1..4` = 110325434 / 111145813 / 111966192 / 112786571 (first cited in `msl-scripting.md`; 2..4 from hash-pinned LevelScript). Isolated MOS-failed names state 2, not `+4`. Isolated FillOut Won names four `GetStatus()` words and does not copy the text dword. Live `GAME.mSlots` stay unclaimed. No new secondaries | `rebuild/OnslaughtRebuild.Core/RetailGameObjectiveCount.cs` | `RetailGameObjectiveCount.FromLevel100MissionPrimaryTextIds` | `Level100MissionTests.Init_PrimaryObjectiveFailedWritesRetailObjectiveTextDword` | 1 | leave the ten text words at 0 |
 | `IScript::AddScore` Level 100 incrementer | `0x005343c0` body `8b442404 8b08 8b11 ff5230 01058c9b8a00 c20c00` on specimen `74154bfa…`. `0x005343cb` is `01 05 8c 9b 8a 00` = `add [0x008a9b8c], eax` = `CGame+0xf4`. Source `game.h:210` is `mScore+=inScore`. LoadLevel writes 0. Isolated `ScoreDelta` = 50 names the rebuild accumulator; one live `AddScore(50)` is not unique versus replace. Isolated FillOut `ScoreWord` copies a parameterized dword. First-play elapsed and FillOut score stay unclaimed. Live `GAME.mSlots` stay unclaimed. No new secondaries | `rebuild/OnslaughtRebuild.Core/RetailAddScore.cs` | `RetailAddScore.Add` | `RetailAddScoreTests.Add_AddsTheDeltaOntoCGamePlusF4NotReplace` | 1 | replace so a second +50 stays 50 |
 | `IScript::EnableFlightMode` Level 100 flight flag | `0x00535070` body `8b4910f64134087405e8328cedffc20c00` on specimen `74154bfa…`. `0x00535079` is `e8 32 8c ed ff` = `call 0x0040dcb0` (W001 inbound). Callee `0x0040dcb0` is `c7 81 8c 05 00 00 01 00 00 00 c3` = `mov [ecx+0x58c], 1`. Isolated `FlightModeEnabled` = true names the rebuild bool; skip store Expected 1 Actual 0. One live store of 1 is not unique versus increment from 0. Wrapper gate `test [ecx+0x34], 8` and Disable clear / morph stay unclaimed. ChargeWeapon stays unclaimed. Live `GAME.mSlots` stay unclaimed. No new secondaries | `rebuild/OnslaughtRebuild.Core/RetailEnableFlightMode.cs` | `RetailEnableFlightMode.Enable` | `RetailEnableFlightModeTests.Enable_StoresLiteralOneAtCBattleEnginePlus58CNotIncrement` | 1 | increment so Enable(1) becomes 2 |
+| `IScript::HighlightHudPart` / `UnHighlightHudPart` Level 100 HUD words | `0x00535e60` body `8b4424048b088b11ff5230c704851ca58a0002000000c20c00` on specimen `74154bfa…` (25 B SHA-256 `d2a93e3b…e479fc39`). `0x00535e6c` is `c7 04 85 1c a5 8a 00 02 00 00 00` = `mov dword [eax*4+0x008aa51c], 2`. Twin `0x00535e80` SHA-256 `d273f5d1…c3c5a581` stores immediate 1, not 0. Isolated `Emphasized` true/false names the rebuild bitmask; skip UnHighlight after Highlight leaves 2. Array extent and state-1/2 HUD meaning stay unclaimed. ChargeWeapon stays unclaimed. Live `GAME.mSlots` stay unclaimed. No new secondaries | `rebuild/OnslaughtRebuild.Core/RetailHighlightHudPart.cs` | `RetailHighlightHudPart.Unhighlight` | `RetailHighlightHudPartTests.HighlightAndUnhighlight_StoreTwoThenOneNotBoolMask` | 1 | Unhighlight writes 0 so Unhighlight(2) becomes 0 |
 
 Two things this table deliberately does **not** claim. It does not claim these
 contracts are graded `REBUILD_READY`: that grade is a campaign artifact and
@@ -322,6 +323,13 @@ does not uniquely prove `mov [ecx+0x58c], 1`. One live
 store of 1 is not unique versus increment from 0.
 Wrapper gate `test [ecx+0x34], 8` and Disable clear /
 morph stay unclaimed. ChargeWeapon stays unclaimed.
+The HighlightHudPart / UnHighlightHudPart HUD-word row
+names `RetailHighlightHudPart.Unhighlight`; isolated
+`Emphasized` = false names the rebuild bool and does
+not uniquely prove `mov [eax*4+0x008aa51c], 1`. Skip
+UnHighlight after Highlight leaves 2. Array extent and
+state-1/2 HUD meaning stay unclaimed. ChargeWeapon
+stays unclaimed.
 The score-time arm row names `AfterScoreTimeArm` on
 the already-pinned FillOut owner; it does not rewrite
 `ForLevel100Won`. The score-percentage last-wins row names

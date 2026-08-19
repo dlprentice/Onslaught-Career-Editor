@@ -126,6 +126,58 @@ public sealed class Level100MissionTests
             status => Assert.Equal(0, status));
     }
 
+    /// <summary>
+    /// <c>IScript::UnHighlightHudPart</c> at <c>0x00535e8c</c>
+    /// is <c>mov dword [eax*4+0x008aa51c], 1</c>. Twin Highlight
+    /// at <c>0x00535e6c</c> stores 2. First-play <c>init()</c>
+    /// Highlights then UnHighlights <c>HUD_COMPASS</c> (2) and
+    /// <c>HUD_RADAR</c> (4) before Activate. Isolated last
+    /// <c>Emphasized</c> = false names the rebuild bool and
+    /// still passes if this store is skipped. Isolated
+    /// <see cref="RetailHighlightHudPart.Unhighlight"/> names
+    /// literal-1; skip UnHighlight after Highlight leaves 2.
+    /// Mutation: skip the UnHighlight store. Array extent and
+    /// state-1/2 HUD meaning stay unclaimed. Live
+    /// <c>GAME.mSlots</c> stay unclaimed. No new secondaries.
+    /// </summary>
+    [Fact]
+    public void Init_UnHighlightHudPartWritesOneAfterHighlightTwo()
+    {
+        Level100ActorDefinitionSet definitions = Level100TestActorDefinitions.Create();
+        var actors = new Level100ActorRegistry(definitions);
+        Level100ActorId player = actors.GetThingRef("Player 1")!.Value;
+        var mission = new Level100Mission(
+            actors,
+            player,
+            new Level100TutorialProgress(false, false, false, false));
+
+        const int settleTicks = 100 * SimulationConstants.TicksPerSecond;
+        for (int tick = 0; tick < settleTicks; tick++)
+        {
+            mission.AdvanceTick(SimulationConstants.MaximumHull);
+        }
+
+        Assert.Equal(
+            RetailHighlightHudPart.Unhighlighted,
+            mission.HudPartWord(RetailHighlightHudPart.CompassIndex));
+        Assert.Equal(
+            RetailHighlightHudPart.Unhighlighted,
+            mission.HudPartWord(RetailHighlightHudPart.RadarIndex));
+        Assert.Equal(
+            RetailHighlightHudPart.Unhighlight(RetailHighlightHudPart.Highlight(0)),
+            mission.HudPartWord(RetailHighlightHudPart.CompassIndex));
+        Assert.NotEqual(
+            RetailHighlightHudPart.Highlighted,
+            mission.HudPartWord(RetailHighlightHudPart.CompassIndex));
+        Assert.Contains(
+            mission.Snapshot.PendingEvents.OfType<Level100HudEmphasisChanged>(),
+            item => item.PartId == RetailHighlightHudPart.CompassIndex &&
+                    !item.Emphasized);
+        Assert.All(
+            RetailFillOutEndLevelData.ForLevel100Won().SecondaryStatuses,
+            status => Assert.Equal(0, status));
+    }
+
     [Fact]
     public void MissionNativeSetPos_CopiesGetPosPositionAndPreservesOtherPoseState()
     {
