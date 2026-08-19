@@ -50,18 +50,18 @@ namespace OnslaughtCareerEditor.AppCore
                     trimmed.StartsWith(@"\\.\", StringComparison.Ordinal) ||
                     trimmed.StartsWith(@"\??\", StringComparison.Ordinal))
                 {
-                    throw new InvalidOperationException($"{label} cannot use a Windows device path.");
+                    throw new InvalidOperationException($"{label} cannot use a Windows device location.");
                 }
 
                 if (Path.IsPathRooted(trimmed) && !Path.IsPathFullyQualified(trimmed))
-                    throw new InvalidOperationException($"{label} cannot use a drive-relative path.");
+                    throw new InvalidOperationException($"{label} cannot use a drive-relative location.");
             }
 
             string fullPath = Path.GetFullPath(trimmed);
             if (OperatingSystem.IsWindows())
             {
                 if (fullPath.StartsWith(@"\\", StringComparison.Ordinal))
-                    throw new InvalidOperationException($"{label} cannot use a UNC or network path.");
+                    throw new InvalidOperationException($"{label} cannot use a UNC or network location.");
 
                 if (fullPath.IndexOf(':', startIndex: 2) >= 0)
                     throw new InvalidOperationException($"{label} cannot use an alternate data stream.");
@@ -1084,7 +1084,7 @@ namespace OnslaughtCareerEditor.AppCore
                     if (string.IsNullOrWhiteSpace(candidate))
                         continue;
 
-                    string path = FileMutationSafety.NormalizeLocalPath(candidate, "Protected input path");
+                    string path = FileMutationSafety.NormalizeLocalPath(candidate, "Protected input file");
                     if (_inputs.ContainsKey(path))
                         continue;
                     if (!File.Exists(path))
@@ -1120,7 +1120,7 @@ namespace OnslaughtCareerEditor.AppCore
 
         internal byte[] ReadAllBytes(string path)
         {
-            string normalized = FileMutationSafety.NormalizeLocalPath(path, "Protected input path");
+            string normalized = FileMutationSafety.NormalizeLocalPath(path, "Protected input file");
             if (!_inputs.TryGetValue(normalized, out ProtectedInput? input))
                 throw new InvalidOperationException("The requested file is not held by this guarded transaction.");
 
@@ -1141,7 +1141,7 @@ namespace OnslaughtCareerEditor.AppCore
             string path,
             Action<string>? beforeCommittedOpen = null)
         {
-            string normalized = FileMutationSafety.NormalizeLocalPath(path, "Protected input path");
+            string normalized = FileMutationSafety.NormalizeLocalPath(path, "Protected input file");
             if (!_inputs.TryGetValue(normalized, out ProtectedInput? input))
                 throw new InvalidOperationException("The requested file is not held by this guarded transaction.");
 

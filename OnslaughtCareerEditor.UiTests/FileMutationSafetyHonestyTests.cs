@@ -32,4 +32,20 @@ public class FileMutationSafetyHonestyTests
         Assert.That(source, Does.Not.Contain("Output path must remain inside the verified app-owned profile root."));
         Assert.That(source, Does.Contain("The output file must remain inside the verified app-owned profile folder."));
     }
+
+    [Test]
+    public void ADeviceLocationRefusalDoesNotSayPath()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "FileMutationSafety.cs"));
+
+        Assert.That(source, Does.Not.Contain("cannot use a Windows device path."));
+        Assert.That(source, Does.Not.Contain("cannot use a drive-relative path."));
+        Assert.That(source, Does.Not.Contain("cannot use a UNC or network path."));
+        Assert.That(source, Does.Not.Contain("\"Protected input path\""));
+        Assert.That(source, Does.Contain("cannot use a Windows device location."));
+        Assert.That(source, Does.Contain("cannot use a drive-relative location."));
+        Assert.That(source, Does.Contain("cannot use a UNC or network location."));
+        Assert.That(source, Does.Contain("\"Protected input file\""));
+    }
 }
