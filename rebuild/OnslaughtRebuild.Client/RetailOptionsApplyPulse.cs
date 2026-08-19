@@ -94,10 +94,26 @@ public static class RetailOptionsApplyPulse
     public static float Scale255 => BitConverter.UInt32BitsToSingle(Scale255Bits);
 
     /// <summary>
+    /// <c>cmp [esi+0x1C], [esi+0x20] / je 0x004A3CBD</c> at
+    /// <c>0x004A3C69</c> in <c>CMenuItemDropdown::Render</c>. Committed
+    /// versus current after the optional GET resync. The cosine that
+    /// follows is this same pack, not a second formula.
+    /// </summary>
+    public const uint DropdownCompareSite = 0x004A3C69u;
+
+    /// <summary>
     /// <c>test al, al</c> after the <c>DAT_00704A88</c> load. Pending is
     /// the reconstructed flag, not a second reader of the BSS byte.
     /// </summary>
     public static bool ShouldPulse(bool pending) => pending;
+
+    /// <summary>
+    /// Per-row dropdown gate. Not <c>+0x25</c> — that byte is
+    /// <c>HasPendingSelectionChange</c> only. Render compares the two
+    /// selection dwords.
+    /// </summary>
+    public static bool DropdownRowIsPending(int committed, int current) =>
+        committed != current;
 
     /// <summary>
     /// Grey channel after <c>fistp</c> and <c>sub eax, ecx</c>. Time is

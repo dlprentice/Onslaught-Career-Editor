@@ -279,10 +279,13 @@ public sealed partial class RetailFrontendFlow
 
     private void DrawOptionRow(RetailOptionsRow row, float top, bool selected)
     {
-        // CApplyMenuItem::Render 0x004A4310: when DAT_00704A88 is set the
-        // Apply row's packed colour is the cosine, not the selected yellow.
-        // See RetailOptionsApplyPulse. Other rows keep the existing tints.
-        Color color = row.Action == RetailOptionsAction.Apply && _options.HasPendingChanges
+        // CApplyMenuItem::Render 0x004A4310 and CMenuItemDropdown::Render
+        // 0x004A3C69 share the same packed cosine. Apply uses the page
+        // DAT_00704A88 flag; a dropdown uses committed != current.
+        bool pulse = (row.Action == RetailOptionsAction.Apply && _options.HasPendingChanges) ||
+            (row.Kind == RetailOptionsRowKind.Dropdown &&
+             RetailOptionsApplyPulse.DropdownRowIsPending(row.CommittedIndex, row.CurrentIndex));
+        Color color = pulse
             ? RetailColor(RetailOptionsApplyPulse.PackedColor(true, (float)_animationSeconds))
             : selected ? OptionSelected : OptionNormal;
 

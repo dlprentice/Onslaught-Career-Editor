@@ -86,6 +86,26 @@ public sealed class RetailOptionsApplyPulseTests
     }
 
     [Fact]
+    public void DropdownPulseIsTheSameCosineGatedOnCommittedVersusCurrent()
+    {
+        // CMenuItemDropdown::Render 0x004A3C69: cmp [esi+0x1c],[esi+0x20] / je.
+        // The cosine that follows is the Apply pack, not a second formula.
+        Assert.Equal(0x004A3C69u, RetailOptionsApplyPulse.DropdownCompareSite);
+        Assert.False(RetailOptionsApplyPulse.DropdownRowIsPending(3, 3));
+        Assert.True(RetailOptionsApplyPulse.DropdownRowIsPending(3, 4));
+        Assert.Equal(
+            RetailOptionsApplyPulse.PackedColor(pending: true, 0.25f),
+            RetailOptionsApplyPulse.PackedColor(
+                RetailOptionsApplyPulse.DropdownRowIsPending(0, 1),
+                0.25f));
+        Assert.Equal(
+            0xFFFFFFFFu,
+            RetailOptionsApplyPulse.PackedColor(
+                RetailOptionsApplyPulse.DropdownRowIsPending(2, 2),
+                0.25f));
+    }
+
+    [Fact]
     public void DrawOptionRowUsesThePulseWhenApplyIsPending()
     {
         string options = File.ReadAllText(Path.Combine(
@@ -96,6 +116,7 @@ public sealed class RetailOptionsApplyPulseTests
         Assert.Contains("RetailOptionsApplyPulse.PackedColor", draw, StringComparison.Ordinal);
         Assert.Contains("RetailOptionsAction.Apply", draw, StringComparison.Ordinal);
         Assert.Contains("HasPendingChanges", draw, StringComparison.Ordinal);
+        Assert.Contains("DropdownRowIsPending", draw, StringComparison.Ordinal);
         Assert.DoesNotContain("HandleKey", draw, StringComparison.Ordinal);
         Assert.DoesNotContain("DrawLoading", draw, StringComparison.Ordinal);
         Assert.DoesNotContain("DrawQuitConfirm", draw, StringComparison.Ordinal);
