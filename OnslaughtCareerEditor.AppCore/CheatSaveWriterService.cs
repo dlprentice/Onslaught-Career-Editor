@@ -55,6 +55,8 @@ namespace OnslaughtCareerEditor.AppCore
     public static class CheatSaveWriterService
     {
         public const string WriteFailed = "Could not write that save. Nothing was changed.";
+        public const string DestinationFolderMissing =
+            "That folder could not be found. Choose a folder again.";
 
         private const string ProfileManifestFileName = "onslaught-profile-manifest.json";
         private const string SavegamesFolderName = "savegames";
@@ -172,7 +174,7 @@ namespace OnslaughtCareerEditor.AppCore
                     "Output folder");
                 if (!Directory.Exists(outputDirectory))
                 {
-                    return new CheatSaveWriteOutcome(false, "That folder does not exist any more.", null);
+                    return new CheatSaveWriteOutcome(false, DestinationFolderMissing, null);
                 }
 
                 string outputPath = FileMutationSafety.NormalizeLocalPath(
