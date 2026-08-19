@@ -55,4 +55,24 @@ public class AssetExportHonestyTests
         Assert.That(readability, Does.Contain("PngHeaderReader.ExportMissing"));
         Assert.That(page + fbx + png + catalog + readability, Does.Not.Contain("recorded local path"));
     }
+
+    [Test]
+    public void ARefusedTextureExportNamesTheFileNotATrustedRoot()
+    {
+        string readability = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "AssetCatalogReadabilityService.cs"));
+        string sentence = AssetCatalogReadabilityService.ExportCouldNotBeOpened;
+
+        Assert.That(readability, Does.Contain("ExportCouldNotBeOpened"));
+        Assert.That(readability, Does.Not.Contain("trusted-root"));
+        Assert.That(readability, Does.Not.Contain("file-identity validation"));
+        Assert.That(sentence, Is.EqualTo("That texture export could not be opened."));
+        Assert.That(sentence, Does.Contain("texture export"));
+        Assert.That(sentence.ToLowerInvariant(), Does.Not.Contain("trusted"));
+        Assert.That(sentence.ToLowerInvariant(), Does.Not.Contain("root"));
+        Assert.That(sentence.ToLowerInvariant(), Does.Not.Contain("path"));
+        Assert.That(sentence.ToLowerInvariant(), Does.Not.Contain("validation"));
+        Assert.That(sentence, Does.Not.Contain(":\\"));
+        Assert.That(sentence, Does.Not.Contain("/"));
+    }
 }

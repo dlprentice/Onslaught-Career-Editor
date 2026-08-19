@@ -715,7 +715,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 Assert.False(row.ReadablePng);
                 Assert.Null(row.Width);
                 Assert.Null(row.Height);
-                Assert.Contains("validation", row.Status, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(AssetCatalogReadabilityService.ExportCouldNotBeOpened, row.Status);
             }
             finally
             {
