@@ -78,6 +78,17 @@ namespace OnslaughtCareerEditor.AppCore
             return BuildCompareDocument(leftPath, rightPath, result);
         }
 
+        public static string BuildInfoTitle(SaveAnalyzerDocument document)
+        {
+            if (string.Equals(document.StatusText, ComparisonFailed, StringComparison.Ordinal))
+                return "Comparison failed";
+
+            if (string.Equals(document.StatusText, AnalysisFailed, StringComparison.Ordinal))
+                return "Analysis failed";
+
+            return document.IsComparisonMode ? "Comparison complete" : "Analysis complete";
+        }
+
         public static SaveAnalyzerDocument BuildAnalysisDocument(SaveAnalysis analysis, bool verbose, bool dumpMystery)
         {
             string fileName = Path.GetFileName(analysis.FilePath) ?? "Unknown file";

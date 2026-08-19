@@ -458,7 +458,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             PopulateSummaryTree(document.SummaryNodes);
 
             SetAnalyzerInfoBar(
-                document.IsComparisonMode ? "Comparison complete" : "Analysis complete",
+                SaveAnalyzerService.BuildInfoTitle(document),
                 document.StatusText,
                 document.ReportText.Contains("ERROR:", StringComparison.OrdinalIgnoreCase)
                     ? InfoBarSeverity.Warning

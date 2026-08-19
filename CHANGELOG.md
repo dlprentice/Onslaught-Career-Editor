@@ -111,7 +111,8 @@ live in `developer_state.json` and the campaign ledgers.
   game folder, instead of describing the emptiness. Windowed & Mods
   apply and restore name BEA.exe and BEA.exe.original.backup, not the
   full paths. A failed Save Analyzer compare names the action, not the
-  compare error, on the status line. Keeping careers and then deleting a
+  compare error, on the status line. A failed compare or analysis no
+  longer titles the banner complete. Keeping careers and then deleting a
   copy names a dumped removal without the path. A media-only install
   names the data folder, not media/data. A Cheats refresh
   that still finds no copies names the next step, not the emptiness. A
