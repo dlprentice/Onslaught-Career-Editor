@@ -151,6 +151,8 @@ namespace OnslaughtCareerEditor.AppCore
             "The backup hash file must stay inside the workspace folder.";
         public const string ProtectedInstallFolder =
             "Patch target is under Program Files or another protected install folder. Work in a copy, or choose to patch your installed game - which takes a verified backup first.";
+        public const string SteamAppsCommonInstall =
+            "Patch target is a steamapps/common/Battle Engine Aquila install. Work in a copy, or choose to patch your installed game - which takes a verified backup first.";
         public const string BackupFileMissing =
             "BEA.exe.original.backup could not be found. Nothing was changed.";
         public const string BackupHashWithoutBackup =
@@ -1600,7 +1602,7 @@ namespace OnslaughtCareerEditor.AppCore
                     return (false, ProtectedInstallFolder, null);
 
                 if (HasKnownSteamInstallShape(fullExePath) || HasKnownSteamInstallShape(fullRoot))
-                    return (false, "Patch target is a steamapps/common/Battle Engine Aquila install. Work in a copy, or choose to patch your installed game - which takes a verified backup first.", null);
+                    return (false, SteamAppsCommonInstall, null);
             }
 
             if (!IsPathUnderRoot(fullExePath, fullRoot))
