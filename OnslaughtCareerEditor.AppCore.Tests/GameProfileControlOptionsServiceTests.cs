@@ -604,6 +604,25 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             }
         }
 
+        [Fact]
+        public void ApplyToSafeCopy_AMissingFolderDoesNotDumpThePath()
+        {
+            string missing = Path.Combine(Path.GetTempPath(), $"onslaught-missing-copy-{Guid.NewGuid():N}");
+            string missingProfile = Path.Combine(missing, "copy");
+
+            DirectoryNotFoundException error = Assert.Throws<DirectoryNotFoundException>(() =>
+                GameProfileControlOptionsService.ApplyToSafeCopy(
+                    new GameProfileControlOptionsRequest(
+                        ProfileRoot: missingProfile,
+                        AppOwnedProfilesRoot: missing,
+                        MouseSensitivityOverride: GameProfileControlOptionsService.SharperMouseLookSensitivity)));
+
+            Assert.Equal(GameProfileControlOptionsService.FolderGone, error.Message);
+            Assert.DoesNotContain(missing, error.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain(":\\", error.Message);
+            Assert.DoesNotContain("Directory does not exist", error.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
         private static void PrepareSourceGameRoot(string sourceRoot)
         {
             Directory.CreateDirectory(sourceRoot);

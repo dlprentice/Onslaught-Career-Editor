@@ -68,6 +68,8 @@ namespace OnslaughtCareerEditor.AppCore
             FastMouseLookSensitivity,
         };
 
+        public const string FolderGone = "That folder could not be used.";
+
         public static GameProfileControlOptionsResult ApplyToSafeCopy(GameProfileControlOptionsRequest request)
         {
             bool hasKeybindOverrides = request.KeybindRows is { Count: > 0 } &&
@@ -393,7 +395,7 @@ namespace OnslaughtCareerEditor.AppCore
         private static string NormalizeExistingDirectory(string path)
         {
             if (!Directory.Exists(path))
-                throw new DirectoryNotFoundException($"Directory does not exist: {path}");
+                throw new DirectoryNotFoundException(FolderGone);
 
             return Path.GetFullPath(path)
                 .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
