@@ -151,4 +151,82 @@ public sealed class RetailCareerCampaignApplyUpdateTests
             RetailFillOutEndLevelData.ForLevel100Won().SecondaryStatuses,
             status => Assert.Equal(0, status));
     }
+
+    /// <summary>
+    /// Training is not exempt from <c>UpdateGoodieStates</c>
+    /// (<c>0x0041c470</c>; <c>Career.cpp:690 / 698 / 769 / 813 / 857</c>).
+    /// A first-play FillOut 1.0f is grade S, so complete-100 unlocks 0 and
+    /// 8 and <c>GRADE(100) &gt;= C/B/A</c> unlocks 78, 121, and 164.
+    /// Mutation: skipping the recompute after ApplyUpdate leaves those
+    /// five at <c>GS_UNKNOWN</c>. Score-time, base-things, and kill
+    /// totals stay unclaimed. No new secondaries.
+    /// </summary>
+    [Fact]
+    public void Level100Won_ApplyUpdateUnlocksTrainingGoodiesForAnS()
+    {
+        RetailCareerCampaign career = RetailCareerReCalcLinks.CreateColdTrainingSlice();
+        RetailEndLevelSnapshot snapshot = RetailFillOutEndLevelData.ForLevel100Won();
+
+        career.ApplyUpdate(snapshot);
+
+        Assert.Equal(1.0f, snapshot.Ranking);
+        Assert.Equal(
+            RetailCareerGrade.PerfectGrade,
+            RetailCareerGrade.GradeByteFromRanking(career.Nodes.Find(100)!.Ranking));
+        Assert.Equal(
+            RetailCareerGoodieState.New,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.CompleteWorld100Bio));
+        Assert.Equal(
+            RetailCareerGoodieState.New,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.CompleteWorld100Second));
+        Assert.Equal(
+            RetailCareerGoodieState.New,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeCOnWorld100));
+        Assert.Equal(
+            RetailCareerGoodieState.New,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeBOnWorld100));
+        Assert.Equal(
+            RetailCareerGoodieState.New,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeAOnWorld100));
+        Assert.Equal(0, career.Nodes.Find(110)!.Complete);
+        Assert.All(snapshot.SecondaryStatuses, status => Assert.Equal(0, status));
+    }
+
+    /// <summary>
+    /// Lost still calls <c>UpdateGoodieStates</c> (<c>Career.cpp:382-385</c>)
+    /// but world 100 is not complete, so <c>GRADE(100)</c> is the incomplete
+    /// <c>'E'</c> and none of 0 / 8 / 78 / 121 / 164 become
+    /// <c>GS_NEW</c>. Mutation: unlocking those five without the complete
+    /// / grade predicates would fail the zeros.
+    /// </summary>
+    [Fact]
+    public void Level100Lost_ApplyUpdateDoesNotUnlockTrainingGoodies()
+    {
+        RetailCareerCampaign career = RetailCareerReCalcLinks.CreateColdTrainingSlice();
+        RetailEndLevelSnapshot won = RetailFillOutEndLevelData.ForLevel100Won();
+        RetailEndLevelSnapshot lost = won with
+        {
+            FinalState = RetailCareerReCalcLinks.GameStateLevelLost,
+        };
+
+        career.ApplyUpdate(lost);
+
+        Assert.Equal(0, career.Nodes.Find(100)!.Complete);
+        Assert.Equal(
+            RetailCareerGoodieState.Unknown,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.CompleteWorld100Bio));
+        Assert.Equal(
+            RetailCareerGoodieState.Unknown,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.CompleteWorld100Second));
+        Assert.Equal(
+            RetailCareerGoodieState.Unknown,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeCOnWorld100));
+        Assert.Equal(
+            RetailCareerGoodieState.Unknown,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeBOnWorld100));
+        Assert.Equal(
+            RetailCareerGoodieState.Unknown,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeAOnWorld100));
+        Assert.All(lost.SecondaryStatuses, status => Assert.Equal(0, status));
+    }
 }

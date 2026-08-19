@@ -92,11 +92,12 @@ public sealed class RetailCareerNodeLink
 /// <para>
 /// <b>Not established here.</b> The world-500 slot arm
 /// (<c>Career.cpp:468-481</c>). <c>UpdateBaseWorldExistsStuffForNode</c>
-/// on <c>level_structure[0][3] == 110</c>. Goodie recomputation. The
-/// ranking clamp constants 0.4 / 0.6 inside
-/// <c>FillOutEndLevelData</c> — they are gated on a non-zero secondary
-/// count, so Level 100 never reaches them. Score-time, base-things
-/// contents, CPlayer kill readout, and goodies stay unclaimed.
+/// on <c>level_structure[0][3] == 110</c>. The ranking clamp constants
+/// 0.4 / 0.6 inside <c>FillOutEndLevelData</c> — they are gated on a
+/// non-zero secondary count, so Level 100 never reaches them.
+/// Score-time, base-things contents, and CPlayer kill readout stay
+/// unclaimed. The Level 100 goodie arms (0, 8, 78, 121, 164) are the
+/// already-pinned <see cref="RetailCareerUpdateGoodieStates"/> slice.
 /// </para>
 /// </remarks>
 public static class RetailCareerReCalcLinks
@@ -154,8 +155,8 @@ public static class RetailCareerReCalcLinks
 }
 
 /// <summary>
-/// The nodes, links, kill counters, and slots
-/// <see cref="RetailCareerReCalcLinks"/> mutates. Not a full
+/// The nodes, links, kill counters, slots, and Level 100 goodie
+/// arms <see cref="RetailCareerReCalcLinks"/> mutates. Not a full
 /// <c>CCareer</c> — only the fields the Level 100 Won path reads.
 /// </summary>
 public sealed class RetailCareerCampaign
@@ -173,6 +174,9 @@ public sealed class RetailCareerCampaign
 
     /// <summary><c>mSlots</c> — overwritten from FillOut on a Won update.</summary>
     public RetailCareerSlots Slots { get; } = new();
+
+    /// <summary><c>mGoodies</c> — recomputed after a Won or Lost update.</summary>
+    public RetailCareerGoodies Goodies { get; } = new();
 
     /// <summary><c>mCareerInProgress</c> — set only on a Won update.</summary>
     public int CareerInProgress { get; private set; }
@@ -218,6 +222,7 @@ public sealed class RetailCareerCampaign
     {
         if (finalState != RetailCareerReCalcLinks.GameStateLevelWon)
         {
+            RetailCareerUpdateGoodieStates.Update(this);
             return;
         }
 
@@ -242,6 +247,7 @@ public sealed class RetailCareerCampaign
         node.Complete = 1;
         CareerInProgress = 1;
         ReCalcLinks(worldFinished, secondaryObjectiveStatuses);
+        RetailCareerUpdateGoodieStates.Update(this);
     }
 
     /// <summary>
