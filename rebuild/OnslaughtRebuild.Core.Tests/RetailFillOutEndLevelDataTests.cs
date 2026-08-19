@@ -100,6 +100,34 @@ public sealed class RetailFillOutEndLevelDataTests
     }
 
     /// <summary>
+    /// FillOut walks Size=35 and stores 1 at 0..34 (including two
+    /// type-37 <c>CSafeSide</c>). Slots 35..287 stay 0. Mutation:
+    /// adopting the materializer's 33 visible units leaves index 33
+    /// and 34 unset. Iceberg player-kill store-0 stays open. Do not
+    /// invent secondaries.
+    /// </summary>
+    [Fact]
+    public void Level100Won_FillOutStoresOneForEachOfThirtyFiveBaseThings()
+    {
+        RetailEndLevelSnapshot snapshot = RetailFillOutEndLevelData.ForLevel100Won();
+
+        Assert.Equal(RetailCareerNode.BaseThingsExistsSize, snapshot.BaseThingsLeft.Count);
+        Assert.Equal(35, RetailFillOutEndLevelData.Level100BaseWorldThingCount);
+        Assert.NotEqual(33, RetailFillOutEndLevelData.Level100BaseWorldThingCount);
+        Assert.Equal(1, snapshot.BaseThingsLeft[33]);
+        Assert.Equal(1, snapshot.BaseThingsLeft[34]);
+        Assert.Equal(0, snapshot.BaseThingsLeft[35]);
+        Assert.Equal(35, snapshot.BaseThingsLeft.Count(value => value == 1));
+        Assert.All(
+            snapshot.BaseThingsLeft.Take(35),
+            value => Assert.Equal(1, value));
+        Assert.All(
+            snapshot.BaseThingsLeft.Skip(35),
+            value => Assert.Equal(0, value));
+        Assert.All(snapshot.SecondaryStatuses, status => Assert.Equal(0, status));
+    }
+
+    /// <summary>
     /// FillOut copies the ten primary <c>GetStatus()</c> words. After a
     /// Level 100 win those are four <c>MOS_COMPLETE</c> (1) and six
     /// unset slots — already pinned on

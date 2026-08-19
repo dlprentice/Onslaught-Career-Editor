@@ -15,7 +15,8 @@ public readonly record struct RetailEndLevelSnapshot(
     IReadOnlyList<int> SecondaryStatuses,
     IReadOnlyList<int> ThingsKilled,
     IReadOnlyList<int> SlotWords,
-    IReadOnlyList<int> PrimaryStatuses);
+    IReadOnlyList<int> PrimaryStatuses,
+    IReadOnlyList<int> BaseThingsLeft);
 
 /// <summary>
 /// <c>CGame::FillOutEndLevelData</c> as it applies to a Level 100 Won —
@@ -73,8 +74,11 @@ public readonly record struct RetailEndLevelSnapshot(
 /// snapshot ranking from an invented score.
 /// </para>
 /// <para>
-/// <b>Not established here.</b> Base-things copy. Kill readout from
-/// <c>CPlayer</c>. First-play elapsed and score.
+/// <b>Not established here.</b> Career
+/// <c>UpdateBaseWorldExistsStuffForNode</c> onto world 110. Kill
+/// readout from <c>CPlayer</c>. First-play elapsed and score. A
+/// player who wrecks an iceberg and still Wins would store 0 on
+/// those type-35 indices.
 /// </para>
 /// </remarks>
 public static class RetailFillOutEndLevelData
@@ -105,6 +109,13 @@ public static class RetailFillOutEndLevelData
     /// Last-wins RLWD int at the <c>this+0xfc</c> D-grade slot.
     /// </summary>
     public const int Level100DGradeScore = 70;
+
+    /// <summary>
+    /// <c>[0x0085515c]</c> after a first-play Level 100 Won — BSWD
+    /// At() membership (27 type-8 + 6 type-35 + 2 type-37
+    /// <c>CSafeSide</c>). Not the materializer's 33 visible units.
+    /// </summary>
+    public const int Level100BaseWorldThingCount = 35;
 
     /// <summary>Shipped Level 100 primary count — <c>LevelScript.msl</c>.</summary>
     public const int Level100PrimaryCount = 4;
@@ -138,6 +149,22 @@ public static class RetailFillOutEndLevelData
     }
 
     /// <summary>
+    /// FillOut <c>mBaseThingsLeft</c> after a first-play Level 100 Won
+    /// that does not wreck a list member. Size is 35; slots 0..34 are
+    /// 1; 35..287 stay 0. Iceberg player-kill store-0 stays open.
+    /// </summary>
+    public static int[] FirstPlayBaseThingsLeft()
+    {
+        var left = new int[RetailCareerNode.BaseThingsExistsSize];
+        for (int index = 0; index < Level100BaseWorldThingCount; index++)
+        {
+            left[index] = 1;
+        }
+
+        return left;
+    }
+
+    /// <summary>
     /// The post-Won snapshot Level 100 hands to career. Ranking defaults to
     /// the <c>mRanking=1.0f</c> store at <c>game.cpp:967</c> before the
     /// score-time arm; callers may override. First-play elapsed and score
@@ -155,7 +182,8 @@ public static class RetailFillOutEndLevelData
             UnsetSecondaryStatuses(),
             thingsKilled ?? new int[RetailCareerCounters.KilledTypeCount],
             FirstPlayTutorialSlotWords(),
-            RetailGameObjectiveCount.Level100WonPrimaryStatuses());
+            RetailGameObjectiveCount.Level100WonPrimaryStatuses(),
+            FirstPlayBaseThingsLeft());
     }
 
     /// <summary>
