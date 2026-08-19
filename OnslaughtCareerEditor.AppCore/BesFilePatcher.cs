@@ -535,8 +535,8 @@ namespace OnslaughtCareerEditor.AppCore
                     return PatchResult.Fail(discardedOverrideRequest);
                 }
 
-                inputPath = FileMutationSafety.NormalizeLocalPath(inputPath, "Input path");
-                outputPath = FileMutationSafety.NormalizeLocalPath(outputPath, "Output path");
+                inputPath = FileMutationSafety.NormalizeLocalPath(inputPath, "Input file");
+                outputPath = FileMutationSafety.NormalizeLocalPath(outputPath, "Output file");
                 ValidatePatchExtensions(inputPath, outputPath);
 
                 string? copyOptionsPath = CopyOptionsEntries || CopyOptionsTail
@@ -716,8 +716,8 @@ namespace OnslaughtCareerEditor.AppCore
                     return PatchResult.Fail("Select both input and output files before patching.");
                 }
 
-                inputPath = FileMutationSafety.NormalizeLocalPath(inputPath, "Input path");
-                outputPath = FileMutationSafety.NormalizeLocalPath(outputPath, "Output path");
+                inputPath = FileMutationSafety.NormalizeLocalPath(inputPath, "Input file");
+                outputPath = FileMutationSafety.NormalizeLocalPath(outputPath, "Output file");
                 if (!string.Equals(Path.GetExtension(inputPath), ".bes", StringComparison.OrdinalIgnoreCase) ||
                     !string.Equals(Path.GetExtension(outputPath), ".bes", StringComparison.OrdinalIgnoreCase))
                 {

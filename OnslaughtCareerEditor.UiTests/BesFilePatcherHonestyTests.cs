@@ -21,5 +21,9 @@ public class BesFilePatcherHonestyTests
         Assert.That(source, Does.Contain("Career save patching requires a .bes output file."));
         Assert.That(source, Does.Contain("Game options patching requires a .bea output file."));
         Assert.That(source, Does.Contain("Patching requires a .bes career save or .bea options input file."));
+        Assert.That(source, Does.Not.Contain("\"Input path\""));
+        Assert.That(source, Does.Not.Contain("\"Output path\""));
+        Assert.That(source, Does.Contain("\"Input file\""));
+        Assert.That(source, Does.Contain("\"Output file\""));
     }
 }

@@ -82,8 +82,8 @@ namespace OnslaughtCareerEditor.AppCore
         internal static bool AreLexicallySamePath(string left, string right)
         {
             return string.Equals(
-                NormalizeLocalPath(left, "Input path"),
-                NormalizeLocalPath(right, "Output path"),
+                NormalizeLocalPath(left, "Input file"),
+                NormalizeLocalPath(right, "Output file"),
                 PathComparison);
         }
 
@@ -433,7 +433,7 @@ namespace OnslaughtCareerEditor.AppCore
             string normalizedOutputDirectory = NormalizeLocalPath(outputDirectory, "Output folder");
             string expectedDirectory = NormalizeLocalPath(AppConfig.GetPatchedOutputDir(), "App-owned patched-output folder");
             if (!string.Equals(normalizedOutputDirectory, expectedDirectory, PathComparison))
-                throw new DirectoryNotFoundException("The selected output folder does not exist.");
+                throw new DirectoryNotFoundException("That folder could not be found. Choose a folder again.");
 
             var missingNames = new Stack<string>();
             string? existingAncestor = normalizedOutputDirectory;
@@ -472,7 +472,7 @@ namespace OnslaughtCareerEditor.AppCore
                         guardTargetMutation: true);
                     heldLocks.Add(nextLocks);
                     if (!string.Equals(nextLocks.PhysicalPath, Path.GetFullPath(nextPhysicalPath), PathComparison))
-                        throw new InvalidOperationException("App-owned output folder resolved outside its expected local path.");
+                        throw new InvalidOperationException("App-owned output folder resolved outside its expected local folder.");
 
                     currentPhysicalPath = nextLocks.PhysicalPath;
                     RejectOutputInGameTree(Path.Combine(currentPhysicalPath, ".onslaught-output-root-probe"));
@@ -1060,14 +1060,14 @@ namespace OnslaughtCareerEditor.AppCore
             IReadOnlyList<string?> protectedInputPaths,
             bool requireProtectedInput)
         {
-            OutputPath = FileMutationSafety.NormalizeLocalPath(outputPath, "Output path");
+            OutputPath = FileMutationSafety.NormalizeLocalPath(outputPath, "Output file");
             _authorization = authorization;
 
             try
             {
                 string? outputDirectory = Path.GetDirectoryName(OutputPath);
                 if (string.IsNullOrWhiteSpace(outputDirectory))
-                    throw new DirectoryNotFoundException("The selected output folder does not exist.");
+                    throw new DirectoryNotFoundException("That folder could not be found. Choose a folder again.");
 
                 string directoryToLock = Directory.Exists(outputDirectory)
                     ? outputDirectory

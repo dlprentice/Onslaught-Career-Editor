@@ -168,7 +168,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             try
             {
-                string inputPath = FileMutationSafety.NormalizeLocalPath(request.InputPath.Trim(), "Input path");
+                string inputPath = FileMutationSafety.NormalizeLocalPath(request.InputPath.Trim(), "Input file");
                 string outputDirectory = FileMutationSafety.NormalizeLocalPath(
                     request.OutputDirectory.Trim(),
                     "Output folder");
@@ -179,7 +179,7 @@ namespace OnslaughtCareerEditor.AppCore
 
                 string outputPath = FileMutationSafety.NormalizeLocalPath(
                     BuildOutputPath(outputDirectory, request.Name),
-                    "Output path");
+                    "Output file");
 
                 if (FileMutationSafety.AreLexicallySamePath(inputPath, outputPath))
                 {

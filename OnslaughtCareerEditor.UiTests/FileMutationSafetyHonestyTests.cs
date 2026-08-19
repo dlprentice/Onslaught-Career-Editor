@@ -31,6 +31,14 @@ public class FileMutationSafetyHonestyTests
         Assert.That(source, Does.Contain("The selected output file is a folder."));
         Assert.That(source, Does.Not.Contain("Output path must remain inside the verified app-owned profile root."));
         Assert.That(source, Does.Contain("The output file must remain inside the verified app-owned profile folder."));
+        Assert.That(source, Does.Not.Contain("The selected output folder does not exist."));
+        Assert.That(source, Does.Contain("That folder could not be found. Choose a folder again."));
+        Assert.That(source, Does.Not.Contain("expected local path."));
+        Assert.That(source, Does.Contain("expected local folder."));
+        Assert.That(source, Does.Not.Contain("\"Input path\""));
+        Assert.That(source, Does.Not.Contain("\"Output path\""));
+        Assert.That(source, Does.Contain("\"Input file\""));
+        Assert.That(source, Does.Contain("\"Output file\""));
     }
 
     [Test]

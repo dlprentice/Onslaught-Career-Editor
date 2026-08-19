@@ -379,8 +379,8 @@ namespace OnslaughtCareerEditor.AppCore
 
             try
             {
-                inputPath = FileMutationSafety.NormalizeLocalPath(inputPath, "Input path");
-                outputPath = FileMutationSafety.NormalizeLocalPath(outputPath, "Output path");
+                inputPath = FileMutationSafety.NormalizeLocalPath(inputPath, "Input file");
+                outputPath = FileMutationSafety.NormalizeLocalPath(outputPath, "Output file");
                 if (FileMutationSafety.AreLexicallySamePath(inputPath, outputPath))
                 {
                     return PatchResult.Fail("Output file must be different from input file. In-place save patching is blocked.");

@@ -377,6 +377,10 @@ public class SaveEditorHonestyTests
         Assert.That(source, Does.Not.Contain("input and output paths"));
         Assert.That(source, Does.Not.Contain("That path could not be read:"));
         Assert.That(source, Does.Not.Contain("That file could not be opened:"));
+        Assert.That(source, Does.Not.Contain("\"Input path\""));
+        Assert.That(source, Does.Not.Contain("\"Output path\""));
+        Assert.That(source, Does.Contain("\"Input file\""));
+        Assert.That(source, Does.Contain("\"Output file\""));
     }
 
     [Test]
