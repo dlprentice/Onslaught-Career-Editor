@@ -167,6 +167,43 @@ public sealed class RetailFillOutEndLevelDataTests
     }
 
     /// <summary>
+    /// Last-wins S is 210 at <c>this+0xf8</c>. Independently re-read
+    /// specimen <c>74154bfa…</c> and inflated <c>100_res_PC.aya</c>
+    /// <c>115ede05…2df4</c>: <c>0x0050d2f7</c>
+    /// <c>mov [0x008a9b90], edx</c> from RLWD payload <c>+0x147ae</c>
+    /// = 210. <c>0x0046d6e5</c> loads <c>[ebp+0xf8]</c>,
+    /// <c>0x0046d6f9</c> <c>cmp eax,ecx</c>, <c>0x0046d707</c>
+    /// <c>jl 0x0046d718</c> so equality stores <c>0x3f800000</c> at
+    /// <c>0x0046d709</c>. Not leftover BSWD 1000. First-play elapsed
+    /// and score stay unclaimed — this does not rewrite
+    /// <see cref="RetailFillOutEndLevelData.ForLevel100Won"/>.
+    /// Mutation: adopt leftover BSWD 1000. Do not invent secondaries.
+    /// </summary>
+    [Fact]
+    public void Level100Won_ScoreTimeArmStoresOneAtExactLastWinsS()
+    {
+        Assert.Equal(210, RetailFillOutEndLevelData.Level100SGradeScore);
+        Assert.NotEqual(1000, RetailFillOutEndLevelData.Level100SGradeScore);
+
+        float atS = RetailFillOutEndLevelData.AfterScoreTimeArm(
+            preArmRanking: 1.0f,
+            elapsedTime: 0.0f,
+            RetailFillOutEndLevelData.Level100FullScoreTime,
+            RetailFillOutEndLevelData.Level100PercentageScoreTime,
+            RetailFillOutEndLevelData.Level100ScorePercentage,
+            score: 210,
+            RetailFillOutEndLevelData.Level100SGradeScore,
+            RetailFillOutEndLevelData.Level100DGradeScore);
+
+        Assert.Equal(1.0f, atS);
+        Assert.NotEqual(140.0f / 930.0f, atS);
+        Assert.Equal(1.0f, RetailFillOutEndLevelData.ForLevel100Won().Ranking);
+        Assert.All(
+            RetailFillOutEndLevelData.ForLevel100Won().SecondaryStatuses,
+            status => Assert.Equal(0, status));
+    }
+
+    /// <summary>
     /// <c>game.cpp:967</c> stores <c>mRanking = 1.0f</c> before the
     /// score-time arm. Level 100's secondary count is 0, so the 0.4 / 0.6
     /// clamp never runs. Mutation: defaulting the snapshot ranking to the
