@@ -49,4 +49,29 @@ public class BinaryPatchCopyHonestyTests
         Assert.That(profiles, Does.Not.Contain("Profile catalog read failed ({ex.Message})"));
         Assert.That(profiles, Does.Contain("Profile catalog could not be read; using built-in safe-copy profile presets."));
     }
+
+    [Test]
+    public void FilesystemSafetyDoesNotDumpTheException()
+    {
+        string engine = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "BinaryPatchEngine.cs"));
+
+        Assert.That(engine, Does.Not.Contain("return (false, ex.Message);"));
+        Assert.That(engine, Does.Contain("WorkingCopyPathUnusable"));
+        Assert.That(engine, Does.Contain("That patch target could not be used. Nothing was changed."));
+    }
+
+    [Test]
+    public void LoadedCatalogStatusDoesNotIncludeAFullPath()
+    {
+        string engine = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "BinaryPatchEngine.cs"));
+        string profiles = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "BinaryPatchPlanBuilder.cs"));
+
+        Assert.That(engine, Does.Not.Contain("Loaded patch catalog from {catalogPath}"));
+        Assert.That(engine, Does.Contain("Loaded the patch catalog."));
+        Assert.That(profiles, Does.Not.Contain("Loaded safe-copy profile catalog from {catalogPath}"));
+        Assert.That(profiles, Does.Contain("Loaded the safe-copy profile catalog."));
+    }
 }

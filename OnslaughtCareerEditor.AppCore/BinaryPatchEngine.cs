@@ -736,7 +736,7 @@ namespace OnslaughtCareerEditor.AppCore
                 return new BinaryPatchCatalogLoadResult(
                     loaded.ToArray(),
                     UsingFallback: false,
-                    Status: $"Loaded patch catalog from {catalogPath}");
+                    Status: "Loaded the patch catalog.");
             }
             catch (Exception)
             {
@@ -2132,7 +2132,7 @@ namespace OnslaughtCareerEditor.AppCore
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
             {
-                return (false, ex.Message);
+                return (false, WorkingCopyPathUnusable);
             }
         }
 

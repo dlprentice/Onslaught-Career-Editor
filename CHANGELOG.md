@@ -92,7 +92,9 @@ live in `developer_state.json` and the campaign ledgers.
   Windowed & Mods quick-pick row names the refusal, not the catalog key.
   A Save Editor kill-count read that fails names the action, not the
   analyzer sentence. A missing Save Editor career save names that the
-  file could not be found, not a path.
+  file could not be found, not a path. A patch-target filesystem-safety
+  refusal uses the unusable-target sentence, without the exception. A
+  loaded patch or profile catalog is named without the file path.
 
 ## 1.0.11 — 2026-08-07
 

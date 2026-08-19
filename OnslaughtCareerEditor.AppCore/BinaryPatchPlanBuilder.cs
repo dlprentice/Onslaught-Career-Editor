@@ -597,7 +597,7 @@ namespace OnslaughtCareerEditor.AppCore
                     schemaVersion,
                     catalogHash,
                     UsingFallback: false,
-                    Status: $"Loaded safe-copy profile catalog from {catalogPath}");
+                    Status: "Loaded the safe-copy profile catalog.");
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException or InvalidOperationException)
             {
