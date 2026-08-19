@@ -41,6 +41,9 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         public const string ThatFileMustBeBeaExeOnlyCopy =
             "That file must be a BEA.exe-only copy.";
 
+        public const string BeaExeOnlyCopyUnusable =
+            "That BEA.exe-only copy could not be used. Nothing was changed.";
+
         /// <summary>
         /// Last operation for apply, verify, or restore. A dump can survive the
         /// path substitution, so name the refusal here.
@@ -64,6 +67,9 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
 
             if (string.Equals(message, BinaryPatchEngine.PatchTargetMustBeBeaExeOnlyCopy, StringComparison.Ordinal))
                 return ThatFileMustBeBeaExeOnlyCopy;
+
+            if (string.Equals(message, BinaryPatchEngine.WorkingCopyPathUnusable, StringComparison.Ordinal))
+                return BeaExeOnlyCopyUnusable;
 
             return message;
         }
