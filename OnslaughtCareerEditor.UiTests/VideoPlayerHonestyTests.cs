@@ -47,4 +47,15 @@ public class VideoPlayerHonestyTests
         Assert.That(player, Does.Not.Contain("Onslaught Career Editor"));
         Assert.That(playback, Does.Not.Contain("Onslaught Career Editor"));
     }
+
+    [Test]
+    public void ABlankVideoNamesTheFileNotAPath()
+    {
+        string player = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI", "VideoPlayerWindow.xaml.cs"));
+
+        Assert.That(player, Does.Not.Contain("Video path is required."));
+        Assert.That(player, Does.Contain("A video file is required."));
+        Assert.That(player.ToLowerInvariant(), Does.Not.Contain("video path"));
+    }
 }

@@ -74,7 +74,7 @@ namespace OnslaughtCareerEditor.WinUI
         {
             if (string.IsNullOrWhiteSpace(path))
             {
-                throw new ArgumentException("Video path is required.", nameof(path));
+                throw new ArgumentException("A video file is required.", nameof(path));
             }
 
             string fullPath = Path.GetFullPath(path);
