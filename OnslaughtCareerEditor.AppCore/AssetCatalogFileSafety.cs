@@ -202,7 +202,7 @@ namespace OnslaughtCareerEditor.AppCore
                         !FileMutationSafety.IsSameOrUnderRoot(physicalCatalogPath, _rootLocks.PhysicalPath))
                     {
                         throw new InvalidOperationException(
-                            "The asset catalog file resolves outside the selected generated export root.");
+                            "The asset catalog file resolves outside the selected generated export folder.");
                     }
 
                     _catalogStream = new FileStream(handle, FileAccess.Read);

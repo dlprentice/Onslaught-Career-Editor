@@ -42,5 +42,7 @@ public class AssetCatalogFileSafetyHonestyTests
         Assert.That(source, Does.Contain("The asset catalog folder resolves outside the selected generated export folder."));
         Assert.That(source, Does.Not.Contain("directory resolves outside the selected generated export root."));
         Assert.That(source, Does.Contain("folder resolves outside the selected generated export folder."));
+        Assert.That(source, Does.Not.Contain("The asset catalog file resolves outside the selected generated export root."));
+        Assert.That(source, Does.Contain("The asset catalog file resolves outside the selected generated export folder."));
     }
 }
