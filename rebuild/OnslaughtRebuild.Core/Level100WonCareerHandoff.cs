@@ -49,7 +49,12 @@ namespace OnslaughtRebuild.Core;
 /// leftover <c>GS_OLD</c> names ApplyUpdate and does not go
 /// through this seam. Existing FrontEndHandoff S goodies start
 /// <c>GS_UNKNOWN</c> and name them as New. Replay CountGoodies
-/// names already-<c>GS_NEW</c>.
+/// names already-<c>GS_NEW</c>. Leftover
+/// <c>GS_INSTRUCTIONS</c> on those five slots writes 2 through
+/// this seam: <c>SET_GOODIE_NEW</c> stores when
+/// <c>mState &lt;= GS_INSTRUCTIONS</c>. Isolated leftover
+/// <c>GS_INSTRUCTIONS</c> names ApplyUpdate and does not go
+/// through this seam.
 /// </para>
 /// <para>
 /// <b>Do not invent secondaries.</b> Level 100 ships four primaries and

@@ -101,8 +101,10 @@ public sealed class RetailCareerGoodies
 /// leftover <c>GS_OLD</c> through <c>TryApply</c> still leaves
 /// those five slots at 3. Isolated leftover <c>GS_OLD</c> names
 /// ApplyUpdate, not <c>TryApply</c>. Isolated leftover
-/// <c>GS_INSTRUCTIONS</c> names ApplyUpdate and does not go
-/// through <c>TryApply</c>. Existing FrontEndHandoff
+/// <c>GS_INSTRUCTIONS</c> names ApplyUpdate
+/// and does not go through <c>TryApply</c>. FrontEndHandoff
+/// leftover <c>GS_INSTRUCTIONS</c> writes 2 through
+/// <c>TryApply</c>. Existing FrontEndHandoff
 /// S goodies start <c>GS_UNKNOWN</c> and name them as New.
 /// </para>
 /// <para>
@@ -178,7 +180,9 @@ public static class RetailCareerUpdateGoodieStates
     /// Isolated leftover <c>GS_OLD</c> does not go through
     /// <c>TryApply</c>. Isolated leftover
     /// <c>GS_INSTRUCTIONS</c> writes 2 on ApplyUpdate and
-    /// does not go through <c>TryApply</c>. Do not invent
+    /// does not go through <c>TryApply</c>. FrontEndHandoff leftover
+    /// <c>GS_INSTRUCTIONS</c> writes 2 because <c>TryApply</c> calls
+    /// ApplyUpdate. Do not invent
     /// a world-110 FillOut or the rest of the table.
     /// <c>mPendingExtraGoodies</c> and episode instruction marks stay
     /// unclaimed.
