@@ -330,6 +330,46 @@ public sealed class RetailCareerCampaignApplyUpdateTests
     }
 
     /// <summary>
+    /// Ranking 0.0f is already pinned as <c>'E'</c> (<c>fcomp 0</c> /
+    /// <c>test ah,0x41</c> at <c>0x0042148c</c>; store <c>0x00421499</c>
+    /// <c>mov al,0x45</c>). A zero-score FillOut still Wins, so
+    /// <c>COMPLETE_LEVEL(100)</c> writes 0 and 8, but <c>GRADE(100) &gt;= C</c>
+    /// stays closed. Cite <c>0x00421499</c> / <c>0x0041de68</c>. Mutation:
+    /// unlocking 78 on any complete writes 2 into 78. Iceberg store-0 and
+    /// first-play elapsed stay unclaimed. No new secondaries.
+    /// </summary>
+    [Fact]
+    public void Level100Won_ApplyUpdateGradeEUnlocksOnlyTheCompleteTrainingGoodies()
+    {
+        RetailCareerCampaign career = RetailCareerReCalcLinks.CreateColdTrainingSlice();
+        RetailEndLevelSnapshot snapshot = RetailFillOutEndLevelData.ForLevel100Won(ranking: 0.0f);
+
+        career.ApplyUpdate(snapshot);
+
+        Assert.Equal(1, career.Nodes.Find(100)!.Complete);
+        Assert.Equal(0.0f, career.Nodes.Find(100)!.Ranking);
+        Assert.Equal(
+            RetailCareerGrade.FailedGrade,
+            RetailCareerGrade.GradeByteFromRanking(career.Nodes.Find(100)!.Ranking));
+        Assert.Equal(
+            RetailCareerGoodieState.New,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.CompleteWorld100Bio));
+        Assert.Equal(
+            RetailCareerGoodieState.New,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.CompleteWorld100Second));
+        Assert.Equal(
+            RetailCareerGoodieState.Unknown,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeCOnWorld100));
+        Assert.Equal(
+            RetailCareerGoodieState.Unknown,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeBOnWorld100));
+        Assert.Equal(
+            RetailCareerGoodieState.Unknown,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeAOnWorld100));
+        Assert.All(snapshot.SecondaryStatuses, status => Assert.Equal(0, status));
+    }
+
+    /// <summary>
     /// <c>ReCalcLinks</c> copies FillOut <c>mBaseThingsLeft</c> onto
     /// <c>level_structure[0][3] == 110</c>
     /// (<c>Career.cpp:443-452 / 519-527</c>). First-play is 1 at

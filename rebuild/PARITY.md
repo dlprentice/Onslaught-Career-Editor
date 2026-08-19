@@ -1,7 +1,7 @@
 # Rebuild parity contract
 
 Status: active — what "1:1 behavioral and experiential parity" means operationally
-Last updated: 2026-08-19 (Level 100 UpdateGoodieStates A-grade band).
+Last updated: 2026-08-19 (Level 100 UpdateGoodieStates E-grade Won).
 Evidence: SOURCE — authority order and the known divergences are
 recorded in `PROVENANCE.md` plus the Lost-countdown row of this table; gate capabilities are MEASURED claims of the
 tracked harnesses named in the table. Every row of *Carried retail contracts*
@@ -109,6 +109,7 @@ Owner paths are relative to the repository root; test names are relative to
 | `CCareer::UpdateGoodieStates` Level 100 grade bands | Same body. Ranking 0.25f is already pinned as C (`'D' - floor(0.25*4)`). `GRADE(100) >= C` unlocks 78; `>= B` / `>= A` stay closed so 121 and 164 stay `GS_UNKNOWN`. Score-time stays unclaimed. No new secondaries | `rebuild/OnslaughtRebuild.Core/RetailCareerUpdateGoodieStates.cs` | `RetailCareerUpdateGoodieStates.Update` | `RetailCareerCampaignApplyUpdateTests.Level100Won_ApplyUpdateGradeCUnlocksOnlyTheCTrainingGoodies` | 1 | unlock 121 / 164 on any complete |
 | `CCareer::UpdateGoodieStates` Level 100 B-grade band | Same body. Ranking 0.5f is already pinned as B. `GRADE(100) >= B` unlocks 121; `>= A` stays closed so 164 stays `GS_UNKNOWN`. Cite `0x0041ea4f` / `0x0041f70e`. Iceberg store-0 and first-play elapsed stay unclaimed. No new secondaries | `rebuild/OnslaughtRebuild.Core/RetailCareerUpdateGoodieStates.cs` | `RetailCareerUpdateGoodieStates.Update` | `RetailCareerCampaignApplyUpdateTests.Level100Won_ApplyUpdateGradeBUnlocksOnlyThroughTheBTrainingGoodies` | 1 | unlock 164 on B |
 | `CCareer::UpdateGoodieStates` Level 100 A-grade band | Same body. Ranking 0.75f is already pinned as A. `GRADE(100) >= A` unlocks 164. Cite `0x0041f70e`. Iceberg store-0 and first-play elapsed stay unclaimed. No new secondaries | `rebuild/OnslaughtRebuild.Core/RetailCareerUpdateGoodieStates.cs` | `RetailCareerUpdateGoodieStates.Update` | `RetailCareerCampaignApplyUpdateTests.Level100Won_ApplyUpdateGradeAUnlocksTheATrainingGoodie` | 1 | skip the A arm |
+| `CCareer::UpdateGoodieStates` Level 100 E-grade Won | Same body. Ranking 0.0f is already pinned as E (`0x00421499` `mov al,0x45`). A zero-score FillOut still Wins, so `COMPLETE_LEVEL(100)` writes 0 and 8; `GRADE(100) >= C` stays closed. Cite `0x00421499` / `0x0041de68`. Iceberg store-0 and first-play elapsed stay unclaimed. No new secondaries | `rebuild/OnslaughtRebuild.Core/RetailCareerUpdateGoodieStates.cs` | `RetailCareerUpdateGoodieStates.Update` | `RetailCareerCampaignApplyUpdateTests.Level100Won_ApplyUpdateGradeEUnlocksOnlyTheCompleteTrainingGoodies` | 1 | unlock 78 on any complete |
 | `CGame::FillOutEndLevelData` then `CCareer::UpdateGoodieStates` from Level 100 `FrontEndHandoffReady` | After the already-pinned Won countdown, first-play FillOut 1.0f / S unlocks goodies 0, 8, 78, 121, and 164. Cite `0x0041de68` / `0x0041ea4f` / `0x0041f70e`. Score-time / base-things / kill totals stay unclaimed. No new secondaries | `rebuild/OnslaughtRebuild.Core/Level100WonCareerHandoff.cs` | `Level100WonCareerHandoff.TryApply` | `Level100WonCareerHandoffTests.FrontEndHandoffReadyAfterWon_UnlocksTrainingGoodiesForAnS` | 1 | skip `ApplyUpdate` on the handoff |
 
 Two things this table deliberately does **not** claim. It does not claim these
@@ -143,6 +144,8 @@ already-pinned caller. The grade-band row names that same
 B-grade row names that same `Update` owner; it does not add
 another implementation. The A-grade row names that same
 `Update` owner; it does not add another implementation. The
+E-grade Won row names that same `Update` owner; it does not
+add another implementation. The
 FrontEndHandoff goodie row names the same `TryApply` owner as the
 Won handoff. The score-time arm row names `AfterScoreTimeArm` on
 the already-pinned FillOut owner; it does not rewrite
