@@ -115,14 +115,14 @@ namespace OnslaughtCareerEditor.WinUI
             string? gameDir = config.GetGameDirOrDetect(persistDetection: true) ?? config.GameDirectory;
             bool gameDirectoryReady = AppConfig.InspectGameDirectory(gameDir).Status == GameDirectoryStatus.FullInstall;
             string gameDirectoryLabel = gameDirectoryReady
-                ? BuildGameDirectoryLabel(gameDir)
+                ? ShellFooterText.BuildFolderLabel(gameDir)
                 : string.IsNullOrWhiteSpace(gameDir) ? "Not set" : "Needs review";
             GameDirectoryTextBlock.Text = gameDirectoryLabel;
             AutomationProperties.SetName(GameDirectoryTextBlock, $"Game folder: {gameDirectoryLabel}");
             ToolTipService.SetToolTip(
                 GameDirectoryTextBlock,
                 gameDirectoryReady
-                    ? gameDir
+                    ? ShellFooterText.DescribeReadyTooltip(gameDir)
                     : "Open Settings and choose the full Battle Engine Aquila install.");
             ToolTipService.SetToolTip(
                 ReviewSetupButton,
@@ -939,18 +939,6 @@ namespace OnslaughtCareerEditor.WinUI
             config.WindowWidth = Math.Clamp(size.Width, AppConfig.MinWindowWidth, AppConfig.MaxWindowWidth);
             config.WindowHeight = Math.Clamp(size.Height, AppConfig.MinWindowHeight, AppConfig.MaxWindowHeight);
             config.Save();
-        }
-
-        private static string BuildGameDirectoryLabel(string? gameDir)
-        {
-            if (string.IsNullOrWhiteSpace(gameDir))
-            {
-                return "Not set";
-            }
-
-            string trimmed = gameDir.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-            string folderName = Path.GetFileName(trimmed);
-            return string.IsNullOrWhiteSpace(folderName) ? "Configured" : folderName;
         }
 
         private void ReviewSetupButton_Click(object sender, RoutedEventArgs e)

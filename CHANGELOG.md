@@ -27,7 +27,8 @@ live in `developer_state.json` and the campaign ledgers.
   windows now use the public product name, Onslaught Toolkit. Media names the
   source folder and the selected file by their last segment, not the full path.
   A Media search with no hits now says to try another word or clear the search. Asset
-  Library names the catalog and export by their last segments, not the full path. Windowed & Mods
+  Library names the catalog and export by their last segments, not the full path. The
+  footer tooltip names the game folder the same way. Windowed & Mods
   Last operation and the safe-copy list do the same: a failure names the action
   and that nothing was changed, without the exception. Home setup failures
   keep the same sentence and drop the exception. Save Lab comparison/analysis

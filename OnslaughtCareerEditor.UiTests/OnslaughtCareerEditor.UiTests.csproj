@@ -45,6 +45,7 @@
     <Compile Include="..\OnslaughtCareerEditor.WinUI\Helpers\SaveLabPageText.cs" Link="WinUI\Helpers\SaveLabPageText.cs" />
     <Compile Include="..\OnslaughtCareerEditor.WinUI\Helpers\AssetLibraryPageText.cs" Link="WinUI\Helpers\AssetLibraryPageText.cs" />
     <Compile Include="..\OnslaughtCareerEditor.WinUI\Helpers\SaveRescuePageText.cs" Link="WinUI\Helpers\SaveRescuePageText.cs" />
+    <Compile Include="..\OnslaughtCareerEditor.WinUI\Helpers\ShellFooterText.cs" Link="WinUI\Helpers\ShellFooterText.cs" />
     <Compile Include="..\OnslaughtCareerEditor.WinUI\Helpers\SafeCopyManagerText.cs" Link="WinUI\Helpers\SafeCopyManagerText.cs" />
     <Compile Include="..\OnslaughtCareerEditor.WinUI\Models\SafeCopyManagerItem.cs" Link="WinUI\Models\SafeCopyManagerItem.cs" />
     <Compile Include="..\OnslaughtCareerEditor.WinUI\Models\SaveEditorFirstSaveJourneyState.cs" Link="WinUI\Models\SaveEditorFirstSaveJourneyState.cs" />
