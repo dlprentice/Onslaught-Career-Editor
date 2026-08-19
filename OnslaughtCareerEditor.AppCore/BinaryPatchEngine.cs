@@ -142,7 +142,7 @@ namespace OnslaughtCareerEditor.AppCore
         public const string WorkingCopyPathUnusable =
             "That patch target could not be used. Nothing was changed.";
         public const string WorkspaceFolderRequired =
-            "An app-owned workspace folder is required.";
+            "A workspace folder is required.";
         public const string PatchTargetMustStayInsideWorkspaceFolder =
             "Patch target must stay inside the workspace folder.";
         public const string BackupMustStayInsideWorkspaceFolder =

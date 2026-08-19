@@ -24,8 +24,9 @@ public class BinaryPatchWorkspaceFolderHonestyTests
 
             Assert.That(success, Is.False);
             Assert.That(message, Is.EqualTo(BinaryPatchEngine.WorkspaceFolderRequired));
-            Assert.That(message, Is.EqualTo("An app-owned workspace folder is required."));
+            Assert.That(message, Is.EqualTo("A workspace folder is required."));
             Assert.That(message, Does.Contain("workspace folder"));
+            Assert.That(message, Does.Not.Contain("app-owned"));
             Assert.That(message.ToLowerInvariant(), Does.Not.Contain("root"));
             Assert.That(message.ToLowerInvariant(), Does.Not.Contain("path"));
             Assert.That(message, Does.Not.Contain(folder));
