@@ -204,6 +204,41 @@ public sealed class RetailFillOutEndLevelDataTests
     }
 
     /// <summary>
+    /// Last-wins D is 70 at <c>this+0xfc</c>. Independently re-read
+    /// specimen <c>74154bfa…</c> and inflated <c>100_res_PC.aya</c>
+    /// <c>115ede05…2df4</c>: <c>0x0050d307</c>
+    /// <c>mov [0x008a9b94], edx</c> from RLWD payload <c>+0x147b2</c>
+    /// = 70. A fistp'd 70 against leftover BSWD 200 is strictly below
+    /// D and stores 0 at <c>0x0046d772</c>. First-play elapsed and
+    /// score stay unclaimed — this does not rewrite
+    /// <see cref="RetailFillOutEndLevelData.ForLevel100Won"/>.
+    /// Mutation: adopt leftover BSWD 200. Do not invent secondaries.
+    /// </summary>
+    [Fact]
+    public void Level100Won_ScoreTimeArmUsesLastWinsDSeventyNotLeftoverBswdTwoHundred()
+    {
+        Assert.Equal(70, RetailFillOutEndLevelData.Level100DGradeScore);
+        Assert.NotEqual(200, RetailFillOutEndLevelData.Level100DGradeScore);
+
+        float atLastWinsD = RetailFillOutEndLevelData.AfterScoreTimeArm(
+            preArmRanking: 1.0f,
+            elapsedTime: 0.0f,
+            RetailFillOutEndLevelData.Level100FullScoreTime,
+            RetailFillOutEndLevelData.Level100PercentageScoreTime,
+            RetailFillOutEndLevelData.Level100ScorePercentage,
+            score: 70,
+            RetailFillOutEndLevelData.Level100SGradeScore,
+            RetailFillOutEndLevelData.Level100DGradeScore);
+
+        Assert.Equal(0.001f, atLastWinsD);
+        Assert.NotEqual(0.0f, atLastWinsD);
+        Assert.Equal(1.0f, RetailFillOutEndLevelData.ForLevel100Won().Ranking);
+        Assert.All(
+            RetailFillOutEndLevelData.ForLevel100Won().SecondaryStatuses,
+            status => Assert.Equal(0, status));
+    }
+
+    /// <summary>
     /// <c>game.cpp:967</c> stores <c>mRanking = 1.0f</c> before the
     /// score-time arm. Level 100's secondary count is 0, so the 0.4 / 0.6
     /// clamp never runs. Mutation: defaulting the snapshot ranking to the
