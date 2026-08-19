@@ -556,7 +556,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                             AppOwnedProfilesRoot: nonCanonicalRoot,
                             MouseSensitivityOverride: GameProfileControlOptionsService.SharperMouseLookSensitivity)));
 
-                Assert.Contains("canonical app-owned GameProfiles root", error.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(FileMutationSafety.AppOwnedProfileFolderRequired, error.Message);
                 Assert.Equal(before, File.ReadAllBytes(optionsPath));
                 Assert.Empty(Directory.GetFiles(prepared.TargetGameRoot, "defaultoptions.bea.*.bak"));
             }

@@ -64,6 +64,8 @@ namespace OnslaughtCareerEditor.AppCore
         internal const string StagedOutputCouldNotBeCreated = "That staged output file could not be created.";
         internal const string StagedPackageCouldNotBePublished = "That staged package folder could not be published.";
         internal const string StagedOutputQuarantineCouldNotBeUpdated = "That staged output quarantine could not be updated.";
+        internal const string AppOwnedProfileFolderRequired = "Those changes need the app-owned profile folder.";
+        internal const string CopyMustStayInside = "That copy must stay inside the app-owned profile folder.";
 
         private static readonly HashSet<string> s_knownRefusals =
         [
@@ -92,6 +94,8 @@ namespace OnslaughtCareerEditor.AppCore
             StagedOutputCouldNotBeCreated,
             StagedPackageCouldNotBePublished,
             StagedOutputQuarantineCouldNotBeUpdated,
+            AppOwnedProfileFolderRequired,
+            CopyMustStayInside,
         ];
 
         internal static bool TryGetKnownRefusal(Exception error, out string? message)
@@ -346,8 +350,7 @@ namespace OnslaughtCareerEditor.AppCore
             string canonicalAppRoot = NormalizeLocalPath(AppConfig.GetGameProfilesDir(), "Canonical app-owned profiles root");
             if (!string.Equals(normalizedAppRoot, canonicalAppRoot, PathComparison))
             {
-                throw new InvalidOperationException(
-                    "Safe-copy mutation requires the canonical app-owned GameProfiles root.");
+                throw new InvalidOperationException(AppOwnedProfileFolderRequired);
             }
 
             DirectoryLockSet? appLocks = null;
@@ -361,8 +364,7 @@ namespace OnslaughtCareerEditor.AppCore
                 if (!IsSameOrUnderRoot(profileLocks.PhysicalPath, appLocks.PhysicalPath) ||
                     string.Equals(profileLocks.PhysicalPath, appLocks.PhysicalPath, PathComparison))
                 {
-                    throw new InvalidOperationException(
-                        "Generated profile root must remain below the canonical app-owned GameProfiles root.");
+                    throw new InvalidOperationException(CopyMustStayInside);
                 }
 
                 AppOwnedProfileMutationAuthorization authorization = new(

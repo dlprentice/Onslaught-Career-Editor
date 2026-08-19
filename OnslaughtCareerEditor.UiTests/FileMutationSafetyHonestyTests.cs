@@ -149,4 +149,19 @@ public class FileMutationSafetyHonestyTests
         Assert.That(source, Does.Contain("That file cannot share its data with another file."));
         Assert.That(source, Does.Not.Contain("is hardlinked to another file"));
     }
+
+    [Test]
+    public void AnAppOwnedProfileRefusalNamesTheFolderNotARoot()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "FileMutationSafety.cs"));
+
+        Assert.That(source, Does.Not.Contain("canonical app-owned GameProfiles root"));
+        Assert.That(source, Does.Not.Contain("Generated profile root must remain below"));
+        Assert.That(source, Does.Contain("AppOwnedProfileFolderRequired"));
+        Assert.That(source, Does.Contain("CopyMustStayInside"));
+        Assert.That(source, Does.Contain("Those changes need the app-owned profile folder."));
+        Assert.That(source, Does.Contain("That copy must stay inside the app-owned profile folder."));
+        Assert.That(source, Does.Not.Contain("GameProfiles root"));
+    }
 }
