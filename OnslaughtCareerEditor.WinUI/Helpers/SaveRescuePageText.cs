@@ -53,6 +53,9 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         public const string CopyNotMoveNote =
             "The career stays in the copy as well - this copies it out, it does not take it away.";
 
+        public const string CopyMustStayInside =
+            "That copy must stay inside the profile folder.";
+
         public static string BuildNoSavesNote(string copyDisplayName)
         {
             return string.IsNullOrWhiteSpace(copyDisplayName)
@@ -90,6 +93,9 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
 
                 if (string.IsNullOrWhiteSpace(result.Message) || LooksLikeAPathOrDump(result.Message))
                     return SafeCopySaveRescueService.CouldNotKeep;
+
+                if (string.Equals(result.Message, SafeCopySaveRescueService.CopyMustStayInside, StringComparison.Ordinal))
+                    return CopyMustStayInside;
 
                 return result.Message;
             }
