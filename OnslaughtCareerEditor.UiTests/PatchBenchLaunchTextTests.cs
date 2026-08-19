@@ -39,4 +39,18 @@ public class PatchBenchLaunchTextTests
         Assert.That(question, Does.Not.Contain("Users"));
         Assert.That(question, Does.Not.Contain("GameProfiles"));
     }
+
+    [Test]
+    public void MissingLaunchPlanNamesTheNextStep()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot,
+            "OnslaughtCareerEditor.WinUI",
+            "Helpers",
+            "PatchBenchLaunchText.cs"));
+
+        Assert.That(source, Does.Contain("Create a new safe copy before Play."));
+        Assert.That(source, Does.Not.Contain("Launch plan is not ready."));
+        Assert.That(source, Does.Not.Contain("Safe copy launch option needs review."));
+    }
 }
