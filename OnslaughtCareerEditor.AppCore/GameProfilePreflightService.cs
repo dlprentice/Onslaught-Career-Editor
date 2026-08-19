@@ -1322,8 +1322,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             if (!includeWindowedCompatibility && keys.Count > 0)
             {
-                throw new InvalidOperationException(
-                    "Playable copied game folder patch preparation requires the windowed compatibility patch set when any executable patch rows are selected.");
+                throw new InvalidOperationException(CopyNeedsWindowedPatchSet);
             }
 
             if (includeWindowedCompatibility)

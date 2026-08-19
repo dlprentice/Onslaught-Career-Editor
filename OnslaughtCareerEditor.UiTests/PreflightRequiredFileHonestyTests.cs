@@ -362,6 +362,12 @@ public class PreflightRequiredFileHonestyTests
             Does.Not.Contain("metadata"));
         Assert.That(GameProfilePreflightService.CopyBeaHashMissing.ToLowerInvariant(),
             Does.Not.Contain("full-file"));
+        Assert.That(source, Does.Not.Contain("Playable copied game folder patch preparation requires"));
+        Assert.That(source, Does.Contain("CopyNeedsWindowedPatchSet"));
+        Assert.That(GameProfilePreflightService.CopyNeedsWindowedPatchSet,
+            Is.EqualTo("That copy needs the windowed compatibility patch set."));
+        Assert.That(GameProfilePreflightService.CopyNeedsWindowedPatchSet.ToLowerInvariant(),
+            Does.Not.Contain("playable"));
     }
 
     [Test]
