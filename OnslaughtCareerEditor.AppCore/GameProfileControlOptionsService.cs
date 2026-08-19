@@ -71,6 +71,8 @@ namespace OnslaughtCareerEditor.AppCore
         public const string FolderGone = "That folder could not be used.";
         public const string CopyFolderMissing = "That copy folder could not be found.";
         public const string ProfileFolderRequired = "An app-owned profile folder is required.";
+        public const string CopyMustStayInside =
+            "That copy must stay inside the app-owned profile folder.";
         public const string OptionsFileMissing = "That copy is missing defaultoptions.bea.";
         public const string OptionsBackupMissing = "That copy is missing a defaultoptions.bea backup.";
         public const string CopyCannotUseLink = "That copy cannot use a shortcut or link.";
@@ -369,7 +371,7 @@ namespace OnslaughtCareerEditor.AppCore
             if (!IsSameOrUnderRoot(resolvedProfileRoot, resolvedAppRoot) ||
                 string.Equals(resolvedProfileRoot, resolvedAppRoot, StringComparison.OrdinalIgnoreCase))
             {
-                throw new InvalidOperationException("Safe-copy control options require a generated profile under the app-owned safe game copy folder.");
+                throw new InvalidOperationException(CopyMustStayInside);
             }
 
             return resolvedProfileRoot;
