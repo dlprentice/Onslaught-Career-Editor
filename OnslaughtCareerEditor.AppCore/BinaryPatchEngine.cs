@@ -153,6 +153,8 @@ namespace OnslaughtCareerEditor.AppCore
             "Patch target is under Program Files or another protected install folder. Work in a copy, or choose to patch your installed game - which takes a verified backup first.";
         public const string BackupFileMissing =
             "BEA.exe.original.backup could not be found. Nothing was changed.";
+        public const string BackupHashWithoutBackup =
+            "The backup hash file is here without BEA.exe.original.backup. Remove that leftover hash file. Nothing was changed.";
         public const string TargetCannotUseLink = "That file cannot use a shortcut or link.";
         public const string FileCannotShareData = "That file cannot share its data with another file.";
         public const string StagedFileVerificationFailed = "That staged file could not be verified.";
@@ -1616,7 +1618,7 @@ namespace OnslaughtCareerEditor.AppCore
                 return (false, filesystemSafety.message, null);
 
             if (File.Exists(backupHashPath) && !File.Exists(backupPath))
-                return (false, "Patch backup hash sidecar exists without its backup snapshot; remove the stale copied-workspace sidecar before applying patches.", null);
+                return (false, BackupHashWithoutBackup, null);
 
             if (requireCatalog && UsingFallbackCatalog && !target.AllowFallbackCatalogForTests)
                 return (false, "Patch catalog is unavailable; built-in fallback patch specs are verification-only for product mutation.", null);
