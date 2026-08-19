@@ -47,4 +47,16 @@ public class AssetCatalogFileSafetyHonestyTests
         Assert.That(source, Does.Not.Contain("{label} resolves outside the selected generated export root."));
         Assert.That(source, Does.Contain("{label} resolves outside the selected generated export folder."));
     }
+
+    [Test]
+    public void AMissingExportDoesNotAttachTheFilePath()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "AssetCatalogFileSafety.cs"));
+
+        Assert.That(source, Does.Not.Contain(
+            "throw new FileNotFoundException(\"The catalog export file does not exist.\", Path);"));
+        Assert.That(source, Does.Contain("That catalog export file could not be found."));
+        Assert.That(source, Does.Not.Contain("FileNotFoundException(\"That catalog export file could not be found.\","));
+    }
 }

@@ -446,7 +446,7 @@ namespace OnslaughtCareerEditor.AppCore
         internal AssetCatalogSourceEvidence Evidence { get; }
 
         internal Stream Stream => _stream
-            ?? throw new FileNotFoundException("The catalog export file does not exist.", Path);
+            ?? throw new FileNotFoundException("That catalog export file could not be found.");
 
         internal static AssetCatalogSourceRead Missing(
             string path,
