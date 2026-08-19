@@ -44,13 +44,15 @@ namespace OnslaughtRebuild.Client;
 ///
 /// <para><b>SET.</b> Official 74154bfa independently re-read:
 /// <c>0x0042D4D0</c> is <c>PlatformInput__PollMouseState</c>.
-/// <c>0x0042D4D6</c> is <c>xor ebx, ebx</c>.
-/// <c>0x0042D590</c> is <c>mov ecx, 1</c>.
-/// <c>0x0042D5C5</c> is <c>test ah, 0x80</c>.
-/// <c>0x0042D5C8</c> is <c>je 0x0042D5D8</c>.
-/// <c>0x0042D5CA</c> is <c>mov [0x0089BE28], ecx</c>.
-/// That is the right-mouse latch SET. A miss jumps to
-/// <c>0x0042D5D8</c> and skips the write of 1. Dest Y does not.
+/// <c>0x0042D4D6</c> is <c>xor ebx, ebx</c> (<c>33 db</c>).
+/// <c>0x0042D58F</c> is <c>mov ecx, 1</c> (<c>b9 01 00 00 00</c>).
+/// <c>0x0042D5CA</c> is <c>test ah, 0x80</c> (<c>f6 c4 80</c>).
+/// <c>0x0042D5CD</c> is <c>je +0x0e</c> (target <c>0x0042D5DD</c>).
+/// <c>0x0042D5CF</c> is the unique <c>mov [0x0089BE28], ecx</c>
+/// (<c>89 0d 28 be 89 00</c>, one image hit). Cycle 85 retargets the
+/// five published sites that sat mid-instruction. That is the
+/// right-mouse latch SET. A miss jumps to <c>0x0042D5DD</c> and skips
+/// the write of 1. Dest Y does not.
 /// Colour leftover already consults currentIndex. Hover leftover
 /// already owns <c>0x004A3FA6</c>. Click leftover already owns
 /// <c>0x004A4010</c>. Cancel leftover already owns the load at
@@ -77,26 +79,26 @@ public static class RetailFrontendLatchToButton
     /// <summary><c>xor ebx, ebx</c>. Clear path leftover, not dest.</summary>
     public const uint EbxZeroSite = 0x0042D4D6u;
 
-    /// <summary><c>mov ecx, 1</c>. SET value leftover. Not dest.</summary>
-    public const uint OneLoadSite = 0x0042D590u;
+    /// <summary><c>mov ecx, 1</c> at <c>0x0042D58F</c>. SET value leftover. Not dest.</summary>
+    public const uint OneLoadSite = 0x0042D58Fu;
 
     /// <summary>SET writes 1. Miss skips that write.</summary>
     public const uint SetValue = 1u;
 
-    /// <summary><c>test ah, 0x80</c>. Right-button leftover. Not dest.</summary>
-    public const uint RightMaskSite = 0x0042D5C5u;
+    /// <summary><c>test ah, 0x80</c> at <c>0x0042D5CA</c>. Right-button leftover. Not dest.</summary>
+    public const uint RightMaskSite = 0x0042D5CAu;
 
     /// <summary>AH bit 0x80. Right mouse. Not dest.</summary>
     public const byte RightButtonMask = 0x80;
 
-    /// <summary><c>je 0x0042D5D8</c>. Miss skips the SET leftover.</summary>
-    public const uint RightSkipSite = 0x0042D5C8u;
+    /// <summary><c>je +0x0e</c> at <c>0x0042D5CD</c>. Miss skips the SET leftover.</summary>
+    public const uint RightSkipSite = 0x0042D5CDu;
 
-    /// <summary>Miss target at <c>0x0042D5D8</c> skips the SET leftover.</summary>
-    public const uint RightMissTarget = 0x0042D5D8u;
+    /// <summary>Miss target at <c>0x0042D5DD</c> skips the SET leftover.</summary>
+    public const uint RightMissTarget = 0x0042D5DDu;
 
-    /// <summary><c>mov [0x0089BE28], ecx</c>. Latch-to-button SET leftover.</summary>
-    public const uint RightSetSite = 0x0042D5CAu;
+    /// <summary>Unique <c>mov [0x0089BE28], ecx</c> at <c>0x0042D5CF</c>. Latch-to-button SET leftover.</summary>
+    public const uint RightSetSite = 0x0042D5CFu;
 
     /// <summary>Latch at <c>0x0089BE28</c>. Already cancel leftover's load/clear.</summary>
     public const uint Latch = 0x0089BE28u;
@@ -164,7 +166,7 @@ public static class RetailFrontendLatchToButton
     /// <summary>SET does not write currentIndex. Dest Y does not either.</summary>
     public const bool UsesCurrentIndex = false;
 
-    /// <summary>0x0042D5CA is this leftover.</summary>
+    /// <summary>0x0042D5CF is this leftover.</summary>
     public const bool IsLatchSet = true;
 
     /// <summary>0x0053F2EB is already FMV skip OR.</summary>

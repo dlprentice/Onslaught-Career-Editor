@@ -6,9 +6,9 @@ namespace OnslaughtRebuild.Client.Tests;
 
 /// <summary>
 /// Pins the <c>PlatformInput__PollMouseState</c> latch-to-button SET of
-/// <c>0x0089BE28</c> after <c>0x0042D5C5</c> <c>test ah, 0x80</c> /
-/// <c>0x0042D5C8</c> <c>je</c> /
-/// <c>0x0042D5CA</c> <c>mov [0x0089BE28], ecx</c> — recovered from
+/// <c>0x0089BE28</c> after <c>0x0042D5CA</c> <c>test ah, 0x80</c> /
+/// <c>0x0042D5CD</c> <c>je +0x0e</c> /
+/// <c>0x0042D5CF</c> <c>mov [0x0089BE28], ecx</c> — recovered from
 /// official 74154bfa
 /// <c>local-lab/pristine-verification-2026-07-26/pristine-target/BEA.exe</c>,
 /// SHA-256 <c>74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750</c>
@@ -19,26 +19,28 @@ namespace OnslaughtRebuild.Client.Tests;
 ///
 /// <para>Official bytes independently re-read this cycle:
 /// <c>0x0042D4D0</c> <c>PlatformInput__PollMouseState</c>,
-/// <c>0x0042D4D6</c> <c>xor ebx, ebx</c>,
-/// <c>0x0042D590</c> <c>mov ecx, 1</c>,
-/// <c>0x0042D5C5</c> <c>test ah, 0x80</c>,
-/// <c>0x0042D5C8</c> <c>je 0x0042D5D8</c>,
-/// <c>0x0042D5CA</c> <c>mov [0x0089BE28], ecx</c>.
-/// That is the right-mouse latch SET. Dest Y does not. Colour leftover
-/// already consults currentIndex. Hover leftover already owns
-/// <c>0x004A3FA6</c>. Click leftover already owns <c>0x004A4010</c>.
-/// Cancel leftover already owns <c>0x004A4059</c> load/clear.
-/// Click-hit sound leftover already owns <c>0x004A403C</c>.
-/// FMV skip already owns the OR at <c>0x0053F2EB</c>. Dest is not 15.5,
-/// 322.5, 148.0, or the 2.0 constant. HandleOptionsPointerCancel
-/// consumes the leftover as the latch fed into cancel. Do not invent
-/// dest Y=5, dest X=5, dest Y=268, dest Y=284, dest Y=304, dest from
-/// the 2.0 constant, wrap, fade, sheen, or a 2px kerning hack. Do not
-/// change MeasureText. Do not redo dest leftovers, list colour, list
-/// hover, list click, list cancel, click-hit sound, Apply pulse,
-/// dropdown cosine, language pitch, or the 0x00463669 compare. Do not
-/// invent dest from 148.0. Do not invent that the third FMV latch is
-/// dest.</para>
+/// <c>0x0042D4D6</c> <c>xor ebx, ebx</c> (<c>33 db</c>),
+/// <c>0x0042D58F</c> <c>mov ecx, 1</c> (<c>b9 01 00 00 00</c>),
+/// <c>0x0042D5CA</c> <c>test ah, 0x80</c> (<c>f6 c4 80</c>),
+/// <c>0x0042D5CD</c> <c>je +0x0e</c> (target <c>0x0042D5DD</c>),
+/// <c>0x0042D5CF</c> unique <c>mov [0x0089BE28], ecx</c>
+/// (<c>89 0d 28 be 89 00</c>, one image hit). Cycle 85 retargets the
+/// five published sites that sat mid-instruction (0x0042D590 / 0x0042D5C5 /
+/// 0x0042D5C8 / 0x0042D5D8 / 0x0042D5CA-as-SET). That is the
+/// right-mouse latch SET. Dest Y does not. Colour leftover already
+/// consults currentIndex. Hover leftover already owns <c>0x004A3FA6</c>.
+/// Click leftover already owns <c>0x004A4010</c>. Cancel leftover
+/// already owns <c>0x004A4059</c> load/clear. Click-hit sound leftover
+/// already owns <c>0x004A403C</c>. FMV skip already owns the OR at
+/// <c>0x0053F2EB</c>. Dest is not 15.5, 322.5, 148.0, or the 2.0
+/// constant. HandleOptionsPointerCancel consumes the leftover as the
+/// latch fed into cancel. Do not invent dest Y=5, dest X=5, dest Y=268,
+/// dest Y=284, dest Y=304, dest from the 2.0 constant, wrap, fade,
+/// sheen, or a 2px kerning hack. Do not change MeasureText. Do not redo
+/// dest leftovers, list colour, list hover, list click, list cancel,
+/// click-hit sound, Apply pulse, dropdown cosine, language pitch, or
+/// the 0x00463669 compare. Do not invent dest from 148.0. Do not invent
+/// that the third FMV latch is dest.</para>
 /// </summary>
 public sealed class RetailFrontendLatchToButtonTests
 {
@@ -47,13 +49,13 @@ public sealed class RetailFrontendLatchToButtonTests
     {
         Assert.Equal(0x0042D4D0u, RetailFrontendLatchToButton.PollSite);
         Assert.Equal(0x0042D4D6u, RetailFrontendLatchToButton.EbxZeroSite);
-        Assert.Equal(0x0042D590u, RetailFrontendLatchToButton.OneLoadSite);
+        Assert.Equal(0x0042D58Fu, RetailFrontendLatchToButton.OneLoadSite);
         Assert.Equal(1u, RetailFrontendLatchToButton.SetValue);
-        Assert.Equal(0x0042D5C5u, RetailFrontendLatchToButton.RightMaskSite);
+        Assert.Equal(0x0042D5CAu, RetailFrontendLatchToButton.RightMaskSite);
         Assert.Equal(0x80u, RetailFrontendLatchToButton.RightButtonMask);
-        Assert.Equal(0x0042D5C8u, RetailFrontendLatchToButton.RightSkipSite);
-        Assert.Equal(0x0042D5D8u, RetailFrontendLatchToButton.RightMissTarget);
-        Assert.Equal(0x0042D5CAu, RetailFrontendLatchToButton.RightSetSite);
+        Assert.Equal(0x0042D5CDu, RetailFrontendLatchToButton.RightSkipSite);
+        Assert.Equal(0x0042D5DDu, RetailFrontendLatchToButton.RightMissTarget);
+        Assert.Equal(0x0042D5CFu, RetailFrontendLatchToButton.RightSetSite);
         Assert.Equal(0x0089BE28u, RetailFrontendLatchToButton.Latch);
         Assert.Equal(0x0089BDF8u, RetailFrontendLatchToButton.LeftLatch);
         Assert.Equal(0x0089BE10u, RetailFrontendLatchToButton.MiddleLatch);
