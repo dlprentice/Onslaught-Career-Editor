@@ -72,6 +72,7 @@ namespace OnslaughtCareerEditor.AppCore
     public static class GameProfileRuntimeService
     {
         public const string StopFailed = "Could not stop that copied game. Nothing was changed.";
+        public const string CopyFolderMissing = "That copy folder could not be found.";
 
         private static readonly TimeSpan s_defaultStopTimeout = TimeSpan.FromSeconds(3);
 
@@ -188,7 +189,7 @@ namespace OnslaughtCareerEditor.AppCore
                 throw new InvalidOperationException("An app-owned playable copied game folder root is required.");
 
             if (string.IsNullOrWhiteSpace(profileRoot))
-                throw new DirectoryNotFoundException("Playable copied game folder root does not exist.");
+                throw new DirectoryNotFoundException(CopyFolderMissing);
 
             string resolvedAppRoot = NormalizeExistingDirectory(appOwnedProfilesRoot);
             RejectExistingReparseAncestors(resolvedAppRoot, "app-owned playable copied game folder root");
@@ -201,7 +202,7 @@ namespace OnslaughtCareerEditor.AppCore
             }
 
             if (!Directory.Exists(resolvedProfileRoot))
-                throw new DirectoryNotFoundException($"Playable copied game folder root does not exist: {resolvedProfileRoot}");
+                throw new DirectoryNotFoundException(CopyFolderMissing);
 
             RejectExistingReparseAncestors(resolvedProfileRoot, "managed playable copied game folder");
             RejectReparsePoint(resolvedProfileRoot, "managed playable copied game folder");
