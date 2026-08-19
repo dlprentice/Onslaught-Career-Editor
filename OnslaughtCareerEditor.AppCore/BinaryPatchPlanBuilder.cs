@@ -65,6 +65,7 @@ namespace OnslaughtCareerEditor.AppCore
         public const string EnhancedPreviewProfileId = "enhanced-edition-preview";
         public const string DebugCameraPreviewProfileId = "debug-camera-preview";
         public const string CustomProfileId = "custom";
+        public const string PatchRowNotSelectable = "That patch row is not selectable.";
 
         private static readonly string[] s_windowedCompatibilityKeys =
         {
@@ -426,7 +427,7 @@ namespace OnslaughtCareerEditor.AppCore
                 !visibleSpecs.Any(spec => string.Equals(spec.Key, key, StringComparison.OrdinalIgnoreCase)));
             if (!string.IsNullOrWhiteSpace(unknownKey))
             {
-                return $"Unknown or hidden patch row is not selectable: {unknownKey}.";
+                return PatchRowNotSelectable;
             }
 
             var selected = visibleSpecs
