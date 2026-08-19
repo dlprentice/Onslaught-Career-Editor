@@ -79,5 +79,7 @@ public class FileMutationSafetyHonestyTests
             "throw new FileNotFoundException(\"Protected input file was not found.\", path);"));
         Assert.That(source, Does.Contain("That protected input file could not be found."));
         Assert.That(source, Does.Not.Contain("FileNotFoundException(\"That protected input file could not be found.\","));
+        Assert.That(source, Does.Not.Contain("{label} does not exist."));
+        Assert.That(source, Does.Contain("That folder could not be found."));
     }
 }

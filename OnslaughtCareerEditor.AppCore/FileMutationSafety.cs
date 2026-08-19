@@ -323,7 +323,7 @@ namespace OnslaughtCareerEditor.AppCore
         {
             string logicalPath = NormalizeLocalPath(directoryPath, label);
             if (!Directory.Exists(logicalPath))
-                throw new DirectoryNotFoundException($"{label} does not exist.");
+                throw new DirectoryNotFoundException("That folder could not be found.");
 
             if (!OperatingSystem.IsWindows())
             {
@@ -371,7 +371,7 @@ namespace OnslaughtCareerEditor.AppCore
                 }
 
                 if (logicalTargetHandle is null)
-                    throw new DirectoryNotFoundException($"{label} does not exist.");
+                    throw new DirectoryNotFoundException("That folder could not be found.");
 
                 string physicalPath = GetFinalLocalPath(logicalTargetHandle, label);
                 WindowsFileIdentity initialIdentity = GetWindowsIdentity(logicalTargetHandle, label);
