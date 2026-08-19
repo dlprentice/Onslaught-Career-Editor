@@ -71,7 +71,7 @@
                        AutomationProperties.AutomationId="MediaPageTitle"
                        AutomationProperties.HeadingLevel="Level1"
                        Style="{StaticResource SectionTitleTextStyle}" />
-            <TextBlock Text="Browse installed music, voice, cutscenes, and briefings from the current game directory. Audio and video now play inline on the page."
+            <TextBlock Text="Browse installed music, voice, cutscenes, and briefings from the current game folder. Audio and video now play inline on the page."
                        Style="{StaticResource SectionBodyTextStyle}" />
             <InfoBar x:Name="MediaStatusInfoBar"
                      AutomationProperties.AutomationId="MediaStatusInfoBar"
@@ -92,7 +92,7 @@
                 <TextBlock x:Name="MediaSummaryTextBlock"
                            Text="Loading media library..." />
                 <TextBlock x:Name="MediaGameDirectoryTextBlock"
-                           Text="Game directory not set" />
+                           Text="Game folder not set" />
             </StackPanel>
         </StackPanel>
 
@@ -257,7 +257,7 @@
                                                AutomationProperties.AutomationId="MediaAudioNowPlaying"
                                                FontSize="22"
                                                FontWeight="SemiBold"
-                                               Text="No track selected"
+                                               Text="Choose a track."
                                                TextWrapping="WrapWholeWords" />
                                     <TextBlock x:Name="AudioTranscriptTextBlock"
                                                AutomationProperties.AutomationId="MediaAudioTranscript"
@@ -385,7 +385,7 @@
                                                        Style="{StaticResource SectionBodyTextStyle}" />
                                         </StackPanel>
                                     </Border>
-                                    <controls:Expander Header="Path details"
+                                    <controls:Expander Header="Folder details"
                                                        IsExpanded="False">
                                         <TextBlock x:Name="AudioGameDirectoryPathTextBlock"
                                                    TextWrapping="WrapWholeWords"
@@ -393,7 +393,7 @@
                                     </controls:Expander>
                                     <StackPanel Orientation="Horizontal"
                                                 Spacing="8">
-                                        <Button Content="Browse Game Directory"
+                                        <Button Content="Browse Game Folder"
                                                 AutomationProperties.AutomationId="MediaAudioBrowseGameDirectoryButton"
                                                 Click="BrowseGameDirectoryButton_Click" />
                                         <Button Content="Reload Library"
@@ -548,7 +548,7 @@
                                                AutomationProperties.AutomationId="MediaVideoSelected"
                                                FontSize="22"
                                                FontWeight="SemiBold"
-                                               Text="No video selected"
+                                               Text="Choose a video."
                                                TextWrapping="WrapWholeWords" />
                                     <TextBlock x:Name="VideoPathTextBlock"
                                                AutomationProperties.AutomationId="MediaVideoSourceSummary"
@@ -585,7 +585,7 @@
                                                                Style="{StaticResource SectionBodyTextStyle}" />
                                                 </StackPanel>
                                             </Border>
-                                            <controls:Expander Header="Path details"
+                                            <controls:Expander Header="Folder details"
                                                                IsExpanded="False">
                                                 <TextBlock x:Name="VideoGameDirectoryPathTextBlock"
                                                            TextWrapping="WrapWholeWords"
@@ -593,7 +593,7 @@
                                             </controls:Expander>
                                             <StackPanel Orientation="Horizontal"
                                                         Spacing="8">
-                                                <Button Content="Browse Game Directory"
+                                                <Button Content="Browse Game Folder"
                                                         AutomationProperties.AutomationId="MediaVideoBrowseGameDirectoryButton"
                                                         Click="BrowseGameDirectoryButton_Click" />
                                                 <Button Content="Reload Library"

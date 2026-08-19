@@ -4,6 +4,13 @@ namespace OnslaughtCareerEditor.AppCore
     {
         public const int DefaultSampleLimit = 12;
 
+        /// <summary>
+        /// Name the texture export. The catch covers more than one refusal,
+        /// so do not invent a specific folder-check.
+        /// </summary>
+        public const string ExportCouldNotBeOpened =
+            "That texture export could not be opened.";
+
         public AssetCatalogReadability Build(AssetCatalogSnapshot snapshot, int sampleLimit = DefaultSampleLimit)
         {
             sampleLimit = Math.Clamp(sampleLimit, 0, 100);
@@ -48,7 +55,7 @@ namespace OnslaughtCareerEditor.AppCore
                 exportExists = source.Exists;
                 header = source.Exists
                     ? PngHeaderReader.Read(source.Stream)
-                    : new PngHeaderInfo(false, null, null, 0, "PNG export is not available at the recorded local path.");
+                    : new PngHeaderInfo(false, null, null, 0, PngHeaderReader.ExportMissing);
             }
             catch (Exception ex) when (ex is ArgumentException or IOException or InvalidOperationException or NotSupportedException or UnauthorizedAccessException)
             {
@@ -58,7 +65,7 @@ namespace OnslaughtCareerEditor.AppCore
                     null,
                     null,
                     0,
-                    "PNG export failed trusted-root and file-identity validation.");
+                    ExportCouldNotBeOpened);
             }
 
             return new AssetTextureReadabilityRow(

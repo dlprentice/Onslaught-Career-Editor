@@ -32,6 +32,12 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
             "Make a safe copy in Windowed & Mods, or press Choose a folder instead.";
 
         /// <summary>
+        /// The short InfoBar title when refresh still finds no copies. It
+        /// names the next step; the body is <see cref="NoSafeCopiesFoundNote"/>.
+        /// </summary>
+        public const string NoSafeCopiesFoundTitle = "Make a safe copy first.";
+
+        /// <summary>
         /// The short marker shown beside a cheat nobody has watched work, or null for one somebody
         /// has. This is the visible half of the evidence: the full sentence moves behind the
         /// disclosure, but a player must not have to open anything to learn that a switch has
@@ -114,7 +120,11 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
             return sentence;
         }
 
-        /// <summary>The chosen source save, named but never shown as a full path.</summary>
+        /// <summary>
+        /// The chosen source save, named but never shown as a full path. When the file can be
+        /// placed, this also says whether it sits in the installed game, a playable copy this
+        /// app made, or a folder the player chose. Classification is shared with Save Lab.
+        /// </summary>
         public static string BuildSourceSummary(string? sourcePath)
         {
             if (string.IsNullOrWhiteSpace(sourcePath))
@@ -122,7 +132,16 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
                 return "Press Choose a save and pick the career save you want to start from.";
             }
 
-            return $"Starting from {Path.GetFileName(sourcePath)}. It is copied, not changed.";
+            string name = Path.GetFileName(sourcePath);
+            string where = CareerSaveLocation.Classify(sourcePath) switch
+            {
+                CareerSaveLocationKind.InstalledGame => ", inside your installed game folder",
+                CareerSaveLocationKind.SafeCopy => ", inside a playable copy this app made",
+                CareerSaveLocationKind.ChosenFolder => ", in a folder you chose",
+                _ => string.Empty,
+            };
+
+            return $"Starting from {name}{where}. It is copied, not changed.";
         }
 
         public static string BuildDestinationSummary(CheatSaveTarget? safeCopy, string? chosenFolder)
@@ -134,6 +153,11 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
 
             if (!string.IsNullOrWhiteSpace(chosenFolder))
             {
+                if (CareerSaveLocation.Classify(chosenFolder) == CareerSaveLocationKind.InstalledGame)
+                {
+                    return CareerSaveLocation.InstalledDestinationRefused;
+                }
+
                 return $"Going into the folder \"{Path.GetFileName(Path.TrimEndingDirectorySeparator(chosenFolder))}\". "
                     + "Copy it into a safe copy's savegames folder when you want to play it.";
             }
@@ -169,6 +193,11 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
                 return "Choose where the new save should go.";
             }
 
+            if (CareerSaveLocation.Classify(destinationDirectory) == CareerSaveLocationKind.InstalledGame)
+            {
+                return "Choose a folder that is not inside the installed game.";
+            }
+
             return null;
         }
 
@@ -176,6 +205,43 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         {
             return $"{fileName} is already there. Replacing it cannot be undone. "
                 + "Rename yours instead if you want to keep both.";
+        }
+
+        /// <summary>
+        /// What Write just did. Named here so the page never paints
+        /// <see cref="CheatSaveWriteOutcome.Message"/>, which can still carry a
+        /// path from an input-rejection sentence.
+        /// </summary>
+        public static string DescribeWriteOutcome(CheatSaveWriteOutcome outcome)
+        {
+            if (outcome.Success)
+            {
+                if (!LooksLikeAPathOrDump(outcome.Message) && !string.IsNullOrWhiteSpace(outcome.Message))
+                    return outcome.Message;
+
+                string fileName = Path.GetFileName(outcome.OutputPath ?? string.Empty);
+                if (string.IsNullOrWhiteSpace(fileName))
+                    fileName = "that save";
+
+                return $"Wrote {fileName}. The save you started from was not touched.";
+            }
+
+            if (LooksLikeAPathOrDump(outcome.Message))
+                return CheatSaveWriterService.WriteFailed;
+
+            return string.IsNullOrWhiteSpace(outcome.Message)
+                ? CheatSaveWriterService.WriteFailed
+                : outcome.Message;
+        }
+
+        private static bool LooksLikeAPathOrDump(string? message)
+        {
+            if (string.IsNullOrWhiteSpace(message))
+                return false;
+
+            return message.Contains(":\\", StringComparison.Ordinal)
+                || message.Contains("Win32", StringComparison.OrdinalIgnoreCase)
+                || message.Contains("exception", StringComparison.OrdinalIgnoreCase);
         }
 
         private static string JoinReadable(IReadOnlyList<string> values)

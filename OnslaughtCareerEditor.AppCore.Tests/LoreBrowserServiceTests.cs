@@ -239,7 +239,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
 
             AssertSafeLorePackException(
                 ex,
-                "invalid document path",
+                "invalid document file",
                 relativePath,
                 firstForbiddenToken,
                 secondForbiddenToken,
@@ -326,7 +326,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
 
             InvalidDataException ex = Assert.Throws<InvalidDataException>(() => new LoreBrowserService().LoadIndex(_repoRoot));
 
-            AssertSafeLorePackException(ex, "duplicate document paths", duplicatePath, "DuplicateLeakProbe", "doc-two");
+            AssertSafeLorePackException(ex, "duplicate document files", duplicatePath, "DuplicateLeakProbe", "doc-two");
         }
 
         [Fact]
@@ -338,7 +338,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
 
             InvalidDataException ex = Assert.Throws<InvalidDataException>(() => new LoreBrowserService().LoadIndex(_repoRoot));
 
-            AssertSafeLorePackException(ex, "duplicate document paths", "CaseProbe", "caseprobe", "doc-two");
+            AssertSafeLorePackException(ex, "duplicate document files", "CaseProbe", "caseprobe", "doc-two");
         }
 
         [Fact]
@@ -587,7 +587,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
 
             InvalidDataException ex = Assert.Throws<InvalidDataException>(() => new LoreBrowserService().LoadIndex(_repoRoot));
 
-            AssertSafeLorePackException(ex, "duplicate document paths", "DuplicateIndexLeak", "doc-two-leak");
+            AssertSafeLorePackException(ex, "duplicate document files", "DuplicateIndexLeak", "doc-two-leak");
         }
 
         [Fact]
@@ -702,7 +702,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             WriteLorePackRows(new LorePackFixtureRow("doc-invalid", invalidPath, "# Invalid"));
             InvalidDataException ex = Assert.Throws<InvalidDataException>(() => service.LoadIndex(_repoRoot));
 
-            AssertSafeLorePackException(ex, "invalid document path", invalidPath, "LeakProbe", "..");
+            AssertSafeLorePackException(ex, "invalid document file", invalidPath, "LeakProbe", "..");
             Assert.False(service.DocumentExists(validSourcePath));
         }
 

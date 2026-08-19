@@ -88,7 +88,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                             LaunchArguments: Array.Empty<string>()),
                         runner));
 
-        Assert.Contains("app-owned playable copied game folder root", ex.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(GameProfileRuntimeService.CopyMustStayInside, ex.Message);
                 Assert.Empty(runner.Starts);
             }
             finally
@@ -133,7 +133,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                             LaunchArguments: Array.Empty<string>()),
                         runner));
 
-                Assert.Contains("current copied executable no longer matches", ex.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(GameProfilePreflightService.CopiedBeaPatchesMismatch, ex.Message);
                 Assert.Empty(runner.Starts);
             }
             finally
@@ -179,7 +179,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                             LaunchArguments: Array.Empty<string>()),
                         runner));
 
-                Assert.Contains("music replacement manifest hash", ex.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(GameProfilePreflightService.MusicFileMismatch, ex.Message);
                 Assert.Empty(runner.Starts);
             }
             finally
@@ -255,7 +255,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                             LaunchArguments: Array.Empty<string>()),
                         runner));
 
-                Assert.Contains("trusted clean Steam retail specimen", ex.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(GameProfilePreflightService.CopiedBackupNotRetail, ex.Message);
                 Assert.Empty(runner.Starts);
             }
             finally
@@ -304,7 +304,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                             LaunchArguments: Array.Empty<string>()),
                         runner));
 
-                Assert.Contains("trusted clean Steam retail specimen", ex.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(GameProfilePreflightService.CopiedBackupNotRetail, ex.Message);
                 Assert.Empty(runner.Starts);
             }
             finally
@@ -344,7 +344,8 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                             LaunchArguments: new[] { "-devmode" }),
                         runner));
 
-                Assert.Contains("Unsupported launch argument", ex.Message);
+                Assert.Equal(GameProfilePreflightService.UnsupportedLaunchArgument, ex.Message);
+                Assert.DoesNotContain("-devmode", ex.Message, StringComparison.OrdinalIgnoreCase);
                 Assert.Empty(runner.Starts);
             }
             finally
@@ -376,7 +377,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 InvalidOperationException ex = Assert.Throws<InvalidOperationException>(() =>
                     GameProfileRuntimeService.StopCopiedProfile(outside, outputRoot, runner));
 
-        Assert.Contains("managed playable copied game folder", ex.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(GameProfileRuntimeService.CopyMustStayInside, ex.Message);
                 Assert.Empty(runner.Stops);
             }
             finally
@@ -772,7 +773,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 InvalidOperationException ex = Assert.Throws<InvalidOperationException>(() =>
                     registry.Register(process, outsideProfilesRoot));
 
-                Assert.Contains("lease root", ex.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(GameProfileManagedProcessRegistry.LeaseFolderMismatch, ex.Message);
                 Assert.Empty(registry.Snapshot());
             }
             finally
@@ -1109,7 +1110,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             public GameProfileStopResult Stop(GameProfileManagedProcess process, TimeSpan gracefulTimeout)
             {
                 Stops.Add(process);
-        return new GameProfileStopResult(true, process.ProcessId, "Stopped managed playable copied game folder.");
+                return new GameProfileStopResult(true, process.ProcessId, GameProfileRuntimeService.CopyWasStopped);
             }
         }
 

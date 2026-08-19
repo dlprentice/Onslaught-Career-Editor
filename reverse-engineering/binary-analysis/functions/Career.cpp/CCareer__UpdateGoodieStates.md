@@ -65,6 +65,32 @@ Public-safe observations from the read-back:
 - The function updates the first-goodie flag global consumed by `CCareer__GetAndResetFirstGoodie`.
 - No game launch, rename map, signature edit, or executable patch was performed for this read-back.
 
+## Level 100 (training is not exempt)
+
+MEASURED 2026-08-19 against official specimen `74154bfa…7750`. Training
+skips **kill accumulation** (`CCareer__UpdateThingsKilled` `cmp eax, 0x64`
+at `0x0041c188`) but this body still runs. World `100` is not a special
+early-out.
+
+| Goodie | Retail site | Predicate |
+| --- | --- | --- |
+| 0 | walk `0x00660634` `cmp [edx], 0x64` / hit `0x0041c527` → `cmp [node+4], 1` then `[this+0x1f44] = 2` if state `<= 1` | complete world 100 |
+| 8 | same walk at `0x0041c7f2` / hit `0x0041c84f` → `[this+0x1f64] = 2` | complete world 100 |
+| 78 | `0x0041de68` `push 0x43` (`'C'`) `CGrade__ctor_char`; `push 0x64`; `CCareer_T3_0041c330`; `CGrade__operator_gte`; `CCareer__GetGoodiePtr(0x4e)` store `2` | `GRADE(100) >= C` |
+| 121 | `0x0041ea4f` `push 0x42` (`'B'`); same helpers; `GetGoodiePtr(0x79)` | `GRADE(100) >= B` |
+| 164 | `0x0041f70e` `push 0x41` (`'A'`); same helpers; `GetGoodiePtr(0xa4)` | `GRADE(100) >= A` |
+
+`CGrade::operator>=` treats `'S'` as above every other grade
+(`Career.h:35`). A FillOut ranking of `1.0f` that survives the
+score-time arm therefore unlocks 0, 8, 78, 121, and 164 together.
+`0x0041e4a7` `push 0x64` is `GetGoodiePtr(100)` (concept-art band), not
+world 100.
+
+Cheapest falsifier: `0x0001c4c7` is not `83 3a 64`, **or** `0x0001de68`
+is not `6a 43` (next insn is `lea ecx,[esp+0x16]` at `0x0001de6a`),
+**or** `0x0001ea4f` is not `6a 42` (the preceding byte is `00`), **or**
+`0x0001f70e` is not `6a 41`.
+
 ## Related Functions
 - [CCareer__Update](CCareer__Update.md) - Calls this after mission updates
 - [CCareer__UpdateThingsKilled](CCareer__UpdateThingsKilled.md) - Kill counts affect unlocks

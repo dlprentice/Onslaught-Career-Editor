@@ -157,10 +157,11 @@ public class SaveRescueSurfaceTests
     public void WithAnEmptyCopyTheSummaryNamesTheCopyRatherThanBlamingThePlayer()
     {
         var empty = new SafeCopySaveInventory(@"X:\copies\my-copy", "my-copy", Array.Empty<SafeCopySaveFile>());
+        string summary = SaveRescuePageText.BuildSelectionSummary(empty, null);
 
-        Assert.That(
-            SaveRescuePageText.BuildSelectionSummary(empty, null),
-            Is.EqualTo("my-copy has no careers in it yet."));
+        Assert.That(summary, Is.EqualTo("Play a career in my-copy, then look again."));
+        Assert.That(summary, Does.Not.Contain("yet").IgnoreCase);
+        Assert.That(SaveRescuePageText.BuildNoSavesNote(string.Empty), Is.EqualTo("Play a career in that copy, then look again."));
     }
 
     [Test]
@@ -180,7 +181,7 @@ public class SaveRescueSurfaceTests
     }
 
     [Test]
-    public void TheOutcomeNoteSaysWhereTheFileWentRatherThanJustSucceeding()
+    public void TheOutcomeNoteNamesTheFolderWithoutTheFullPath()
     {
         var result = new SafeCopySaveRescueResult(
             true,
@@ -188,7 +189,12 @@ public class SaveRescueSurfaceTests
             @"D:\my careers",
             new[] { new SafeCopySaveRescueFileOutcome("Maladim.bes", true, @"D:\my careers\Maladim.bes", "Kept.") });
 
-        Assert.That(SaveRescuePageText.BuildOutcomeNote(result), Does.Contain(@"D:\my careers"));
+        string note = SaveRescuePageText.BuildOutcomeNote(result);
+        Assert.That(note, Does.Contain("Kept 1 save from my-copy."));
+        Assert.That(note, Does.Contain("\"my careers\""));
+        Assert.That(note, Does.Not.Contain(@"D:\"));
+        Assert.That(note, Does.Not.Contain("/"));
+        Assert.That(note, Does.Not.Contain("\\"));
     }
 
     [Test]
@@ -203,5 +209,122 @@ public class SaveRescueSurfaceTests
         Assert.That(
             SaveRescuePageText.BuildOutcomeNote(result),
             Is.EqualTo("There is already a save called Maladim.bes in that folder."));
+    }
+
+    [Test]
+    public void AFailedRescueWithAPathUsesTheSharedFailureSentence()
+    {
+        var result = new SafeCopySaveRescueResult(
+            false,
+            @"Could not copy C:\Users\player\Documents\Maladim.bes (Win32 error 5).",
+            @"D:\my careers",
+            Array.Empty<SafeCopySaveRescueFileOutcome>());
+
+        string note = SaveRescuePageText.BuildOutcomeNote(result);
+
+        Assert.That(note, Is.EqualTo(SafeCopySaveRescueService.CouldNotKeep));
+        Assert.That(note, Does.Not.Contain(":\\"));
+        Assert.That(note.ToLowerInvariant(), Does.Not.Contain("win32"));
+        Assert.That(note, Does.Contain("Nothing was changed"));
+    }
+
+    [Test]
+    public void AnInstalledDestinationIsNamedAndBlocksTheWrite()
+    {
+        using var lab = new InstalledDestinationLab();
+        lab.MakeInstalledGame();
+        string savegames = Path.GetDirectoryName(lab.WriteSave("savegames", "career.bes"))!;
+
+        Assert.That(
+            SaveRescuePageText.DescribeDestinationRefusal(savegames),
+            Is.EqualTo(CareerSaveLocation.InstalledDestinationRefused));
+        Assert.That(
+            SaveRescuePageText.BuildOutcomeNote(new SafeCopySaveRescueResult(
+                false,
+                "Output paths inside a Battle Engine Aquila game folder are blocked.",
+                savegames,
+                Array.Empty<SafeCopySaveRescueFileOutcome>())),
+            Is.EqualTo(CareerSaveLocation.InstalledDestinationRefused));
+        Assert.That(CareerSaveLocation.InstalledDestinationRefused, Does.Contain("installed game"));
+        Assert.That(CareerSaveLocation.InstalledDestinationRefused.ToLowerInvariant(), Does.Contain("will not write"));
+        Assert.That(CareerSaveLocation.InstalledDestinationRefused, Does.Not.Contain(lab.Root));
+        Assert.That(CareerSaveLocation.InstalledDestinationRefused, Does.Not.Contain(":\\"));
+    }
+
+    [Test]
+    public void AChosenFolderIsNotCalledTheInstalledGame()
+    {
+        using var lab = new InstalledDestinationLab();
+        string keep = Path.GetDirectoryName(lab.WriteSave("Documents", "career.bes"))!;
+
+        Assert.That(SaveRescuePageText.DescribeDestinationRefusal(keep), Is.Null);
+        Assert.That(
+            SaveRescuePageText.BuildOutcomeNote(new SafeCopySaveRescueResult(
+                true,
+                "Kept 1 save from my-copy.",
+                keep,
+                Array.Empty<SafeCopySaveRescueFileOutcome>())),
+            Does.Contain("\"Documents\""));
+    }
+
+    [Test]
+    public void ThePageClassifiesTheChosenFolderBeforeItWrites()
+    {
+        string code = SavesPageCode();
+        Assert.That(code, Does.Contain("SaveRescuePageText.DescribeDestinationRefusal"));
+        Assert.That(code, Does.Contain("CareerSaveLocation.Classify").Or.Contain("DescribeDestinationRefusal"));
+    }
+
+    [Test]
+    public void AFailedRescueDoesNotDumpTheException()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "SafeCopySaveRescue.cs"));
+
+        Assert.That(source, Does.Contain("CouldNotKeep"));
+        Assert.That(source, Does.Contain("DescribeCaughtFailure"));
+        Assert.That(source, Does.Not.Contain("ex.Message,"));
+        Assert.That(source, Does.Not.Contain("ex.Message)"));
+        Assert.That(SafeCopySaveRescueService.CouldNotKeep, Does.Contain("Nothing was changed"));
+        Assert.That(SafeCopySaveRescueService.CouldNotKeep, Does.Not.Contain(":\\"));
+        Assert.That(SafeCopySaveRescueService.CouldNotKeep.ToLowerInvariant(), Does.Not.Contain("exception"));
+    }
+
+    private sealed class InstalledDestinationLab : IDisposable
+    {
+        public InstalledDestinationLab()
+        {
+            Root = Path.Combine(Path.GetTempPath(), $"bea-rescue-dest-{Guid.NewGuid():N}");
+            Directory.CreateDirectory(Root);
+        }
+
+        public string Root { get; }
+
+        public void MakeInstalledGame()
+        {
+            Directory.CreateDirectory(Path.Combine(Root, "data"));
+            File.WriteAllBytes(Path.Combine(Root, "BEA.exe"), new byte[16]);
+        }
+
+        public string WriteSave(string folder, string fileName)
+        {
+            string dir = Path.Combine(Root, folder);
+            Directory.CreateDirectory(dir);
+            string path = Path.Combine(dir, fileName);
+            File.WriteAllBytes(path, new byte[16]);
+            return path;
+        }
+
+        public void Dispose()
+        {
+            try
+            {
+                if (Directory.Exists(Root))
+                    Directory.Delete(Root, recursive: true);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+            }
+        }
     }
 }

@@ -230,6 +230,64 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         }
 
         [Fact]
+        public void BuildPrepareReceipt_NamesManualPatchRowsInsteadOfCatalogKeys()
+        {
+            BinaryPatchSpec windowed = BinaryPatchEngine.PatchSpecs.Single(spec =>
+                string.Equals(spec.Key, "force_windowed", StringComparison.Ordinal));
+            BinaryPatchSpec resolution = BinaryPatchEngine.PatchSpecs.Single(spec =>
+                string.Equals(spec.Key, "resolution_gate", StringComparison.Ordinal));
+            var result = new GameProfilePrepareResult(
+                GameProfilePreflightService.SchemaVersion,
+                DateTimeOffset.UnixEpoch,
+                Mutation: true,
+                SourceGameRoot: "selected-game-root",
+                TargetGameRoot: @"X:\AppOwnedProfiles\safe-game-copy-test",
+                ExecutablePath: @"X:\AppOwnedProfiles\safe-game-copy-test\BEA.exe",
+                Entries: new[]
+                {
+                    new GameProfileCopiedEntry("BEA.exe", @"C:\Source\BEA.exe", @"C:\Target\BEA.exe", Directory: false),
+                },
+                PatchResult: new GameProfilePatchResult(
+                    Requested: true,
+                    Success: true,
+                    PatchKeys: new[] { windowed.Key, resolution.Key },
+                    Message: "Selected patch bytes verified on disk."),
+                LaunchPlan: new GameProfileLaunchPlan(
+                    ExecutablePath: @"C:\Target\BEA.exe",
+                    WorkingDirectory: @"C:\Target",
+                    Arguments: Array.Empty<string>(),
+                    CommandPreview: "\"BEA.exe\""),
+                ProfilePresetId: null,
+                ProfilePresetDisplayName: null,
+                ProfilePresetProofStatus: null,
+                ProfileDefaultControllerConfiguration: null,
+                ProfileDefaultPersistControllerConfigInOptions: false,
+                ProfileDefaultMouseLookSensitivity: null,
+                ProfileDefaultScreenShape: null,
+                ProfilePresetModules: Array.Empty<SafeCopyProfileModule>(),
+                MusicSwapResult: null,
+                ManifestPath: @"C:\Target\onslaught-profile-manifest.json");
+
+            GameProfilePrepareReceipt receipt = GameProfilePreflightService.BuildPrepareReceipt(
+                result,
+                copiedSavegames: false,
+                controlOptionsResult: null);
+
+            Assert.Contains(
+                receipt.IncludedChanges,
+                change => change.Contains(windowed.DisplayName, StringComparison.Ordinal));
+            Assert.Contains(
+                receipt.IncludedChanges,
+                change => change.Contains(resolution.DisplayName, StringComparison.Ordinal));
+            string receiptText = FlattenPrepareReceipt(receipt);
+            Assert.DoesNotContain("force_windowed", receiptText, StringComparison.Ordinal);
+            Assert.DoesNotContain("resolution_gate", receiptText, StringComparison.Ordinal);
+            Assert.DoesNotContain(@"X:\AppOwnedProfiles", receiptText, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain(@"C:\Source", receiptText, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain(@"C:\Target", receiptText, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
         public void PrepareWindowedCompatibilityProfile_CopiesGameRootAppliesPatchAndLeavesSourceUnchanged()
         {
             string tempRoot = Path.Combine(Path.GetTempPath(), $"onslaught-profile-proof-{Guid.NewGuid():N}");
@@ -529,7 +587,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                             ApplyWindowedCompatibilityPatch: true,
                             AllowByteLayoutOnlyTarget: true)));
 
-                Assert.Contains("protected install root", ex.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(GameProfilePreflightService.ProfileFolderUnderProtectedInstall, ex.Message);
                 Assert.False(Directory.Exists(Path.Combine(outputRoot, "protected-output")));
             }
             finally
@@ -747,7 +805,10 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                             AllowByteLayoutOnlyTarget: true,
                             PatchKeys: BinaryPatchPlanBuilder.BuildSafeCopyProfilePatchKeys(BinaryPatchPlanBuilder.RecommendedProfileId),
                             ProfilePresetId: BinaryPatchPlanBuilder.EnhancedPreviewProfileId)));
-                Assert.Contains("exact proof-bounded patch row set", mismatch.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(GameProfilePreflightService.ProfileNeedsItsPatchRows, mismatch.Message);
+                Assert.Equal("That copy profile needs its exact patch rows.", mismatch.Message);
+                Assert.DoesNotContain("proof-bounded", mismatch.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.DoesNotContain("Enhanced", mismatch.Message, StringComparison.Ordinal);
             }
             finally
             {
@@ -938,7 +999,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
 
                 InvalidOperationException ex = Assert.Throws<InvalidOperationException>(() =>
                     GameProfilePreflightService.BuildLaunchPlan(result.TargetGameRoot));
-                Assert.Contains("music replacement manifest hash", ex.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(GameProfilePreflightService.MusicFileMismatch, ex.Message);
             }
             finally
             {
@@ -1108,7 +1169,9 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 InvalidOperationException ex = Assert.Throws<InvalidOperationException>(() =>
                     GameProfilePreflightService.ValidateExecutableSourceForWorkspaceCopy(linkedExe));
 
-                Assert.Contains("hardlinked", ex.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(GameProfilePreflightService.FileCannotShareData, ex.Message);
+                Assert.DoesNotContain("hardlinked", ex.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.DoesNotContain("identity", ex.Message, StringComparison.OrdinalIgnoreCase);
             }
             finally
             {
@@ -1170,7 +1233,9 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                         linkedRoot,
                         "BEA.exe"));
 
-                Assert.Contains("reparse", thrown.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Contains("shortcut or link", thrown.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.DoesNotContain("reparse", thrown.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.DoesNotContain("app-owned output root", thrown.Message, StringComparison.OrdinalIgnoreCase);
             }
             finally
             {
@@ -1263,11 +1328,13 @@ namespace OnslaughtCareerEditor.AppCore.Tests
 
                 InvalidOperationException resourceBuildEx = Assert.Throws<InvalidOperationException>(() =>
                     GameProfilePreflightService.BuildLaunchPlan(result.TargetGameRoot, new[] { "-buildresources" }));
-                Assert.Contains("Unsupported launch argument", resourceBuildEx.Message);
+                Assert.Equal(GameProfilePreflightService.UnsupportedLaunchArgument, resourceBuildEx.Message);
+                Assert.DoesNotContain("-buildresources", resourceBuildEx.Message, StringComparison.OrdinalIgnoreCase);
 
                 InvalidOperationException demoRecordEx = Assert.Throws<InvalidOperationException>(() =>
                     GameProfilePreflightService.BuildLaunchPlan(result.TargetGameRoot, new[] { "-record", "demo.dem" }));
-                Assert.Contains("Unsupported launch argument", demoRecordEx.Message);
+                Assert.Equal(GameProfilePreflightService.UnsupportedLaunchArgument, demoRecordEx.Message);
+                Assert.DoesNotContain("-record", demoRecordEx.Message, StringComparison.OrdinalIgnoreCase);
 
                 foreach (string unsupportedFlag in new[]
                 {
@@ -1288,7 +1355,8 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 {
                     InvalidOperationException blockedEx = Assert.Throws<InvalidOperationException>(() =>
                         GameProfilePreflightService.BuildLaunchPlan(result.TargetGameRoot, new[] { unsupportedFlag }));
-                    Assert.Contains("Unsupported launch argument", blockedEx.Message);
+                    Assert.Equal(GameProfilePreflightService.UnsupportedLaunchArgument, blockedEx.Message);
+                    Assert.DoesNotContain(unsupportedFlag, blockedEx.Message, StringComparison.OrdinalIgnoreCase);
                 }
 
                 InvalidOperationException resolutionEx = Assert.Throws<InvalidOperationException>(() =>
@@ -1297,7 +1365,46 @@ namespace OnslaughtCareerEditor.AppCore.Tests
 
                 InvalidOperationException manifestEx = Assert.Throws<InvalidOperationException>(() =>
                     GameProfilePreflightService.BuildLaunchPlan(sourceRoot, Array.Empty<string>()));
-        Assert.Contains("generated playable copied game folder manifest", manifestEx.Message);
+                Assert.Equal(GameProfilePreflightService.CopyManifestMissing, manifestEx.Message);
+                Assert.DoesNotContain("playable", manifestEx.Message, StringComparison.OrdinalIgnoreCase);
+            }
+            finally
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+        }
+
+        [Fact]
+        public void BuildLaunchPlan_CommandPreviewNamesTheFileNotTheFolder()
+        {
+            string tempRoot = Path.Combine(Path.GetTempPath(), $"onslaught-launch-preview-{Guid.NewGuid():N}");
+            string sourceRoot = Path.Combine(tempRoot, "source-game");
+            string outputRoot = Path.Combine(tempRoot, "profiles");
+            string sourceExe = PrepareSourceGameRoot(sourceRoot);
+
+            try
+            {
+                GameProfilePrepareResult result = GameProfilePreflightService.PrepareWindowedCompatibilityProfile(
+                    new GameProfilePrepareOptions(
+                        SourceGameRoot: sourceRoot,
+                        OutputRoot: outputRoot,
+                        ProfileName: "launch-preview",
+                        ExecutableOverridePath: sourceExe,
+                        ApplyWindowedCompatibilityPatch: false));
+
+                GameProfileLaunchPlan plan = GameProfilePreflightService.BuildLaunchPlan(result.TargetGameRoot);
+
+                Assert.Contains("Start-Process", plan.CommandPreview);
+                Assert.Contains("BEA.exe", plan.CommandPreview);
+                Assert.DoesNotContain(result.TargetGameRoot, plan.CommandPreview, StringComparison.OrdinalIgnoreCase);
+                Assert.DoesNotContain(result.ExecutablePath, plan.CommandPreview, StringComparison.OrdinalIgnoreCase);
+                Assert.DoesNotContain(":\\", plan.CommandPreview);
+                Assert.DoesNotContain("Users", plan.CommandPreview, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(result.ExecutablePath, plan.ExecutablePath);
+                Assert.Equal(result.TargetGameRoot, plan.WorkingDirectory);
             }
             finally
             {
@@ -1334,7 +1441,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
 
                 InvalidOperationException ex = Assert.Throws<InvalidOperationException>(() =>
                     GameProfilePreflightService.BuildLaunchPlan(result.TargetGameRoot, Array.Empty<string>()));
-                Assert.Contains("current copied executable no longer matches", ex.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(GameProfilePreflightService.CopiedBeaPatchesMismatch, ex.Message);
             }
             finally
             {
@@ -1448,7 +1555,11 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                             ApplyWindowedCompatibilityPatch: true,
                             AllowByteLayoutOnlyTarget: true)));
 
-                Assert.Contains("Required game directory", ex.Message);
+                Assert.Equal(GameProfilePreflightService.RequiredGameFolderMissing, ex.Message);
+                Assert.Equal("A required game folder is missing.", ex.Message);
+                Assert.DoesNotContain("data", ex.Message, StringComparison.Ordinal);
+                Assert.DoesNotContain("directory", ex.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.DoesNotContain("path", ex.Message, StringComparison.OrdinalIgnoreCase);
             }
             finally
             {
@@ -1527,7 +1638,8 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                             ApplyWindowedCompatibilityPatch: true,
                             AllowByteLayoutOnlyTarget: true)));
 
-                Assert.Contains("reparse", reparseEx.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Contains("shortcut or link", reparseEx.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.DoesNotContain("reparse", reparseEx.Message, StringComparison.OrdinalIgnoreCase);
             }
             finally
             {
@@ -1573,7 +1685,8 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                             ApplyWindowedCompatibilityPatch: true,
                             AllowByteLayoutOnlyTarget: true)));
 
-                Assert.Contains("hardlinked", ex.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(GameProfilePreflightService.FileCannotShareData, ex.Message);
+                Assert.DoesNotContain("hardlinked", ex.Message, StringComparison.OrdinalIgnoreCase);
                 Assert.False(Directory.Exists(Path.Combine(outputRoot, "exe-hardlink")));
             }
             finally
@@ -1621,7 +1734,8 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                             ApplyWindowedCompatibilityPatch: true,
                             AllowByteLayoutOnlyTarget: true)));
 
-                Assert.Contains("hardlinked", ex.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(GameProfilePreflightService.FileCannotShareData, ex.Message);
+                Assert.DoesNotContain("hardlinked", ex.Message, StringComparison.OrdinalIgnoreCase);
                 Assert.False(Directory.Exists(Path.Combine(outputRoot, "data-hardlink")));
             }
             finally
@@ -1665,7 +1779,8 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                             ApplyWindowedCompatibilityPatch: true,
                             AllowByteLayoutOnlyTarget: true)));
 
-                Assert.Contains("reparse", outputReparseEx.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Contains("shortcut or link", outputReparseEx.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.DoesNotContain("reparse", outputReparseEx.Message, StringComparison.OrdinalIgnoreCase);
                 Assert.False(Directory.Exists(Path.Combine(realOutputRoot, "profiles", "output-reparse")));
             }
             finally

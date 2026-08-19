@@ -443,8 +443,15 @@ namespace OnslaughtCareerEditor.AppCore
                     before);
             }
 
-            if (!EnsureWriteAccess(out string openFailure))
-                return new LiveTrainerWriteOutcome(false, openFailure, vital, value, before);
+            if (!EnsureWriteAccess(out _))
+            {
+                return new LiveTrainerWriteOutcome(
+                    false,
+                    "Could not open that copied game. Nothing was written.",
+                    vital,
+                    value,
+                    before);
+            }
 
             Span<byte> payload = stackalloc byte[4];
             BinaryPrimitives.WriteUInt32LittleEndian(payload, unchecked((uint)BitConverter.SingleToInt32Bits(value)));

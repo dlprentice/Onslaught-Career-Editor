@@ -52,7 +52,7 @@ public class WinUiSettingsInteractionSmokeTests
             Window window = WaitForMainWindow(app, automation);
 
             WaitForText(window, "Game Directory", TimeSpan.FromSeconds(20));
-            Assert.That(TryGetName(FindByAutomationId(window, "SettingsGameDirectorySummary")), Is.EqualTo("Not configured"));
+            Assert.That(TryGetName(FindByAutomationId(window, "SettingsGameDirectorySummary")), Is.EqualTo("Set the game folder first."));
             Assert.That(WindowContainsName(window, gameDirectory), Is.False, "The full install path should not be visible before expanding path details.");
 
             FindByAutomationId(window, "SettingsAutoDetectGameDirectoryButton").AsButton().Invoke();
@@ -69,7 +69,7 @@ public class WinUiSettingsInteractionSmokeTests
             Assert.That(role, Does.Contain("Read-only source material"));
 
             string status = TryGetName(FindByAutomationId(window, "SettingsGameDirectoryStatus")) ?? string.Empty;
-            Assert.That(status, Does.Contain("Valid game directory detected"));
+            Assert.That(status, Does.Contain("Valid game folder detected"));
 
             string saveCount = TryGetName(FindByAutomationId(window, "SettingsSaveFileCount")) ?? string.Empty;
             Assert.That(saveCount, Is.Not.Empty);
@@ -78,11 +78,13 @@ public class WinUiSettingsInteractionSmokeTests
 
             Assert.That(WindowContainsName(window, gameDirectory), Is.False, "Primary Settings UI should summarize the install without exposing the full path.");
 
-            ExpandPathDetails(window, "SettingsGameDirectoryPathDetails");
-            string fullPath = Retry.WhileNull(
-                () => TryGetTextBoxText(FindByAutomationId(window, "SettingsGameDirectoryPathTextBox")),
+            ExpandPathDetails(window, "SettingsGameDirectoryFolderDetails");
+            string folderName = Retry.WhileNull(
+                () => TryGetTextBoxText(FindByAutomationId(window, "SettingsGameDirectoryFolderTextBox")),
                 TimeSpan.FromSeconds(5)).Result ?? string.Empty;
-            Assert.That(Path.GetFullPath(fullPath), Is.EqualTo(Path.GetFullPath(gameDirectory)));
+            Assert.That(folderName, Is.EqualTo(expectedFolderName));
+            Assert.That(folderName, Does.Not.Contain(@":\"));
+            Assert.That(WindowContainsName(window, gameDirectory), Is.False, "Path details should name the folder, not the path.");
 
             string screenshotPath = Path.Combine(evidenceDir, "01-settings-auto-detected.png");
             window.Focus();

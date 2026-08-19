@@ -16,7 +16,7 @@ namespace OnslaughtCareerEditor.AppCore
                 FileMutationSafety.PathComparer);
             string trustedRoot = FileMutationSafety.NormalizeLocalPath(
                 session.TrustedExportRoot,
-                "Trusted asset export root");
+                "generated export folder");
 
             foreach (string modelExportPath in modelExportPaths
                 .Where(static path => !string.IsNullOrWhiteSpace(path))
@@ -407,7 +407,7 @@ namespace OnslaughtCareerEditor.AppCore
                     if (!FileMutationSafety.IsSameOrUnderRoot(directoryLocks.PhysicalPath, trustedRoot))
                     {
                         throw new InvalidOperationException(
-                            "Model sidecar texture directory resolves outside the trusted generated export root.");
+                            "The model sidecar texture folder resolves outside the generated export folder.");
                     }
 
                     var sidecars = new List<AssetModelSidecarTexture>();

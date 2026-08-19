@@ -136,6 +136,17 @@ namespace OnslaughtCareerEditor.AppCore
         /// </summary>
         public const string CareerSaveExtension = ".bes";
 
+        public const string CouldNotKeep = "Could not keep that career. Nothing was changed.";
+
+        public const string CopyFolderMissing = "That copy folder could not be found.";
+
+        public const string ProfileFolderRequired = "A profile folder is required.";
+
+        public const string CopyRequired = "A copy is required.";
+
+        public const string CopyMustStayInside =
+            "That copy must stay inside the app-owned profile folder.";
+
         /// <summary>
         /// Where the game keeps saves inside a copy. <c>savegames</c> is the Steam build's folder
         /// and is where everything this app writes goes; the rest are swept because a save that
@@ -345,6 +356,15 @@ namespace OnslaughtCareerEditor.AppCore
                         Array.Empty<SafeCopySaveRescueFileOutcome>());
                 }
 
+                if (LooksLikeInstalledGameDestination(destination))
+                {
+                    return new SafeCopySaveRescueResult(
+                        false,
+                        CareerSaveLocation.InstalledDestinationRefused,
+                        destination,
+                        Array.Empty<SafeCopySaveRescueFileOutcome>());
+                }
+
                 wanted = SelectRequested(inventory, request.FileNames);
                 if (wanted.Count == 0)
                 {
@@ -364,7 +384,7 @@ namespace OnslaughtCareerEditor.AppCore
             {
                 return new SafeCopySaveRescueResult(
                     false,
-                    ex.Message,
+                    DescribeCaughtFailure(ex),
                     request.DestinationDirectory,
                     Array.Empty<SafeCopySaveRescueFileOutcome>());
             }
@@ -411,7 +431,7 @@ namespace OnslaughtCareerEditor.AppCore
                                         or UnauthorizedAccessException or ArgumentException
                                         or DirectoryNotFoundException)
             {
-                return new SafeCopyRemovalResult(false, ex.Message, null, null);
+                return new SafeCopyRemovalResult(false, DescribeCaughtFailure(ex), null, null);
             }
 
             SafeCopySaveRescueResult? rescue = null;
@@ -450,8 +470,8 @@ namespace OnslaughtCareerEditor.AppCore
                 return new SafeCopyRemovalResult(
                     false,
                     rescue is null
-                        ? ex.Message
-                        : $"{rescue.Message} The copy could not be deleted: {ex.Message}",
+                        ? DescribeCaughtFailure(ex)
+                        : $"{rescue.Message} The copy could not be deleted. Nothing more was changed.",
                     rescue,
                     null);
             }
@@ -471,7 +491,7 @@ namespace OnslaughtCareerEditor.AppCore
             string outputPath = Path.Combine(destination, save.FileName);
             try
             {
-                outputPath = FileMutationSafety.NormalizeLocalPath(outputPath, "Destination path");
+                outputPath = FileMutationSafety.NormalizeLocalPath(outputPath, "Destination file");
 
                 if (File.Exists(outputPath) && !allowOverwrite)
                 {
@@ -490,8 +510,33 @@ namespace OnslaughtCareerEditor.AppCore
             catch (Exception ex) when (ex is ArgumentException or IOException or InvalidOperationException
                                         or NotSupportedException or UnauthorizedAccessException)
             {
-                return new SafeCopySaveRescueFileOutcome(save.FileName, false, outputPath, ex.Message);
+                return new SafeCopySaveRescueFileOutcome(save.FileName, false, outputPath, DescribeCaughtFailure(ex));
             }
+        }
+
+        /// <summary>
+        /// A folder picker usually returns an existing directory. Rescue also accepts a path it
+        /// would create, so walk up to the first ancestor that exists and classify that. Layout
+        /// only: this must not create the folder just to ask the question.
+        /// </summary>
+        private static bool LooksLikeInstalledGameDestination(string destination)
+        {
+            return CareerSaveLocation.ClassifyExisting(destination) == CareerSaveLocationKind.InstalledGame;
+        }
+
+        private static string DescribeCaughtFailure(Exception ex)
+        {
+            string message = ex.Message ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(message) || MessageLeaksPath(message))
+                return CouldNotKeep;
+
+            return message;
+        }
+
+        private static bool MessageLeaksPath(string message)
+        {
+            return message.Contains(":\\", StringComparison.Ordinal)
+                || message.Contains(":/", StringComparison.Ordinal);
         }
 
         /// <summary>
@@ -533,13 +578,13 @@ namespace OnslaughtCareerEditor.AppCore
         internal static string ValidateGeneratedProfile(string profileRoot, string appOwnedProfilesRoot)
         {
             if (string.IsNullOrWhiteSpace(appOwnedProfilesRoot))
-                throw new InvalidOperationException("An app-owned playable copied game folder root is required.");
+                throw new InvalidOperationException(ProfileFolderRequired);
 
             if (string.IsNullOrWhiteSpace(profileRoot))
-                throw new InvalidOperationException("A playable copied game folder is required.");
+                throw new InvalidOperationException(CopyRequired);
 
             if (!Directory.Exists(profileRoot))
-                throw new DirectoryNotFoundException($"Playable copied game folder does not exist: {profileRoot}");
+                throw new DirectoryNotFoundException(CopyFolderMissing);
 
             string normalizedRoot = FileMutationSafety.NormalizeLocalPath(
                 appOwnedProfilesRoot,
@@ -554,8 +599,7 @@ namespace OnslaughtCareerEditor.AppCore
             if (!FileMutationSafety.IsSameOrUnderRoot(normalizedProfile, normalizedRoot) ||
                 string.Equals(normalizedProfile, normalizedRoot, FileMutationSafety.PathComparison))
             {
-                throw new InvalidOperationException(
-                    "Refusing to read a playable copied game folder outside the app-owned playable copied game folder root.");
+                throw new InvalidOperationException(CopyMustStayInside);
             }
 
             string manifestPath = Path.Combine(
@@ -563,8 +607,7 @@ namespace OnslaughtCareerEditor.AppCore
                 GameProfilePreflightService.ProfileManifestFileName);
             if (!File.Exists(manifestPath))
             {
-                throw new InvalidOperationException(
-                    $"Not an app-generated playable copied game folder: {GameProfilePreflightService.ProfileManifestFileName} is missing.");
+                throw new InvalidOperationException(GameProfilePreflightService.CopyManifestMissing);
             }
 
             return normalizedProfile;

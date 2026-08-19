@@ -28,7 +28,7 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         public const string RefreshButtonText = "Look again";
 
         public const string EmptyNote =
-            "No safe copies yet. Create one above and it will show up here.";
+            "Create one above and it will show up here.";
 
         public const string DeleteDialogTitle = "Delete this copy?";
 
@@ -80,6 +80,56 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         public static string BuildDeletedNote(string displayName, string sizeText)
         {
             return $"Deleted {displayName} and freed {sizeText}.";
+        }
+
+        public static string DescribeLaunchFailure(string displayName)
+        {
+            return $"Could not launch {displayName}. Nothing was changed.";
+        }
+
+        public const string CheckFailure =
+            "That copy could not be checked. Nothing was changed.";
+
+        public const string CopyMustStayInside =
+            "That copy must stay inside the profile folder.";
+
+        public static string DescribeDeleteFailure(string displayName)
+        {
+            return $"Could not delete {displayName}. Nothing was changed.";
+        }
+
+        /// <summary>
+        /// What RescueThenDelete did. Named here so the page never paints a
+        /// <c>SafeCopyRemovalResult.Message</c> that still carries a dump.
+        /// </summary>
+        public static string DescribeRemovalOutcome(SafeCopyRemovalResult removal, string displayName, string sizeText)
+        {
+            if (removal.Success)
+            {
+                if (!LooksLikeAPathOrDump(removal.Message) && !string.IsNullOrWhiteSpace(removal.Message))
+                    return $"{removal.Message} Freed {sizeText}.";
+
+                return BuildDeletedNote(displayName, sizeText);
+            }
+
+            if (LooksLikeAPathOrDump(removal.Message) || string.IsNullOrWhiteSpace(removal.Message))
+                return DescribeDeleteFailure(displayName);
+
+            if (string.Equals(removal.Message, SafeCopySaveRescueService.CopyMustStayInside, StringComparison.Ordinal))
+                return CopyMustStayInside;
+
+            return removal.Message;
+        }
+
+        private static bool LooksLikeAPathOrDump(string? message)
+        {
+            if (string.IsNullOrWhiteSpace(message))
+                return false;
+
+            return message.Contains(":\\", StringComparison.Ordinal)
+                || message.Contains(":/", StringComparison.Ordinal)
+                || message.Contains("Win32", StringComparison.OrdinalIgnoreCase)
+                || message.Contains("exception", StringComparison.OrdinalIgnoreCase);
         }
 
         /// <summary>

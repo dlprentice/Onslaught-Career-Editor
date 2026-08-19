@@ -53,11 +53,14 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         public const string CopyNotMoveNote =
             "The career stays in the copy as well - this copies it out, it does not take it away.";
 
+        public const string CopyMustStayInside =
+            "That copy must stay inside the profile folder.";
+
         public static string BuildNoSavesNote(string copyDisplayName)
         {
             return string.IsNullOrWhiteSpace(copyDisplayName)
-                ? "That copy has no careers in it yet."
-                : $"{copyDisplayName} has no careers in it yet.";
+                ? "Play a career in that copy, then look again."
+                : $"Play a career in {copyDisplayName}, then look again.";
         }
 
         /// <summary>One line naming what is about to be copied and out of where.</summary>
@@ -77,15 +80,64 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
 
         /// <summary>
         /// What happened, in the voice the rest of the page uses: what landed, and where it is.
+        /// The folder is named, never shown as a full path.
         /// </summary>
         public static string BuildOutcomeNote(SafeCopySaveRescueResult result)
         {
             ArgumentNullException.ThrowIfNull(result);
 
             if (!result.Success)
-                return result.Message;
+            {
+                if (CareerSaveLocation.Classify(result.DestinationDirectory) == CareerSaveLocationKind.InstalledGame)
+                    return CareerSaveLocation.InstalledDestinationRefused;
 
-            return $"{result.Message} They are in {result.DestinationDirectory}.";
+                if (string.IsNullOrWhiteSpace(result.Message) || LooksLikeAPathOrDump(result.Message))
+                    return SafeCopySaveRescueService.CouldNotKeep;
+
+                if (string.Equals(result.Message, SafeCopySaveRescueService.CopyMustStayInside, StringComparison.Ordinal))
+                    return CopyMustStayInside;
+
+                return result.Message;
+            }
+
+            string leaf = FolderLeaf(result.DestinationDirectory);
+            return string.IsNullOrWhiteSpace(leaf)
+                ? $"{result.Message} They are in the folder you chose."
+                : $"{result.Message} They are in the folder \"{leaf}\".";
+        }
+
+        /// <summary>
+        /// Null when the write may proceed. The same installed-game sentence Cheats uses,
+        /// so a folder picker cannot become a second classifier.
+        /// </summary>
+        public static string? DescribeDestinationRefusal(string? folder)
+        {
+            return CareerSaveLocation.ClassifyExisting(folder) == CareerSaveLocationKind.InstalledGame
+                ? CareerSaveLocation.InstalledDestinationRefused
+                : null;
+        }
+
+        private static string FolderLeaf(string? path)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+                return string.Empty;
+
+            try
+            {
+                return Path.GetFileName(Path.TrimEndingDirectorySeparator(path.Trim()));
+            }
+            catch (ArgumentException)
+            {
+                return string.Empty;
+            }
+        }
+
+        private static bool LooksLikeAPathOrDump(string message)
+        {
+            return message.Contains(":\\", StringComparison.Ordinal)
+                || message.Contains(":/", StringComparison.Ordinal)
+                || message.Contains("Win32", StringComparison.OrdinalIgnoreCase)
+                || message.Contains("exception", StringComparison.OrdinalIgnoreCase);
         }
 
         /// <summary>How a career reads in the picker: its name, and when it was last played.</summary>

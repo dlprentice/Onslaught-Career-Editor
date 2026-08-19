@@ -228,16 +228,16 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     _snapshot = MediaCatalogSnapshot.Empty;
                     _hasLoaded = true;
                     ResetLibraryState();
-                    MediaSummaryTextBlock.Text = "Game directory not set";
-                    MediaGameDirectoryTextBlock.Text = "Set the game directory in Settings or browse here.";
-                    SetMediaDirectoryDisplay(gameDirectory, "Set the game directory in Settings or browse here before loading media.");
+                    MediaSummaryTextBlock.Text = "Game folder not set";
+                    MediaGameDirectoryTextBlock.Text = "Set the game folder in Settings or browse here.";
+                    SetMediaDirectoryDisplay(gameDirectory, "Set the game folder in Settings or browse here before loading media.");
                     ShowMediaStatus(
                         InfoBarSeverity.Informational,
                         "Point the app at your game folder",
                         "Media comes straight from your Battle Engine Aquila install. Choose that folder and the soundtrack, voice lines, cutscenes, and briefings appear here.",
                         showAction: true,
                         actionLabel: ChooseFolderActionLabel);
-                    AppStatusService.SetStatus("Media: game directory not configured");
+                    AppStatusService.SetStatus("Media: game folder not configured");
                     return;
                 }
 
@@ -246,7 +246,9 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 _snapshot = await Task.Run(() => _catalogService.Load(Path.GetFullPath(gameDirectory)));
                 _hasLoaded = true;
 
-                MediaGameDirectoryTextBlock.Text = _snapshot.GameDirectory;
+                MediaGameDirectoryTextBlock.Text = MediaPageText.BuildFolderSummary(
+                    _snapshot.GameDirectory,
+                    "Configured install");
                 MediaSummaryTextBlock.Text = $"{_snapshot.AudioItems.Count} audio items, {_snapshot.VideoItems.Count} videos";
                 SetMediaDirectoryDisplay(
                     _snapshot.GameDirectory,
@@ -258,7 +260,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
                 AppStatusService.SetStatus($"Media: {_snapshot.AudioItems.Count} audio items and {_snapshot.VideoItems.Count} videos ready");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 _snapshot = MediaCatalogSnapshot.Empty;
                 ResetLibraryState();
@@ -268,7 +270,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 ShowMediaStatus(
                     InfoBarSeverity.Error,
                     "Couldn't load your media",
-                    $"Nothing was changed. Check the game folder is reachable, then try again. Details: {ex.Message}",
+                    MediaPageText.LoadFailureMessage,
                     showAction: true,
                     actionLabel: RetryActionLabel);
                 AppStatusService.SetStatus("Media: load failed");
@@ -346,18 +348,16 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             SetSelectedVideo(null);
             StopAudioPlayback();
             StopVideoPlayback();
-            AddAudioPlaceholderNode("Game install not configured. Choose Settings or Browse Game Directory.");
-            AddVideoPlaceholderNode("Game install not configured. Choose Settings or Browse Game Directory.");
+            AddAudioPlaceholderNode(MediaPageText.GameFolderNotConfigured);
+            AddVideoPlaceholderNode(MediaPageText.GameFolderNotConfigured);
         }
 
         private void SetMediaDirectoryDisplay(string? fullPath, string status)
         {
             string summary = string.IsNullOrWhiteSpace(fullPath)
                 ? "Not configured"
-                : BuildFolderSummary(fullPath, "Configured install");
-            string detail = string.IsNullOrWhiteSpace(fullPath)
-                ? "No install path selected."
-                : fullPath;
+                : MediaPageText.BuildFolderSummary(fullPath, "Configured install");
+            string detail = MediaPageText.DescribeDirectoryDetail(fullPath);
 
             AudioGameDirectorySummaryTextBlock.Text = summary;
             VideoGameDirectorySummaryTextBlock.Text = summary;
@@ -549,10 +549,10 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 QueuePendingVideoPlayback();
                 return true;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 ResetInlineVideoPlayerAfterInitializationFailure();
-                _videoInitializationError = ex.Message;
+                _videoInitializationError = MediaPageText.InlineVideoUnavailableBody;
                 _pendingVideoPath = null;
                 UpdateVideoSurfaceState();
                 AppStatusService.SetStatus("Media: video player initialization failed");
@@ -765,11 +765,11 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 {
                     PlayInlineVideo(path);
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     ResetVideoPlaybackState(stopPlayer: false);
-                    VideoPathTextBlock.Text = "This video could not be played. Try another one, or check that the media files are intact.";
-                    AppStatusService.SetStatus($"Media: video playback failed - {ex.Message}");
+                    VideoPathTextBlock.Text = MediaPageText.VideoPlaybackFailedBody;
+                    AppStatusService.SetStatus(MediaPageText.VideoPlaybackFailedStatus);
                 }
             });
         }
@@ -914,10 +914,10 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                         AppStatusService.SetStatus($"Media: {next.Name}");
                         return;
                     }
-                    catch (Exception ex)
+                    catch (Exception)
                     {
                         _watchingTheStory = false;
-                        AppStatusService.SetStatus($"Media: stopped - {ex.Message}");
+                        AppStatusService.SetStatus(MediaPageText.StoryContinueFailedStatus);
                         return;
                     }
                 }
@@ -963,10 +963,10 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 _watchingTheStory = true;
                 AppStatusService.SetStatus($"Media: {first.Name}");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 _watchingTheStory = false;
-                AppStatusService.SetStatus($"Media: could not start - {ex.Message}");
+                AppStatusService.SetStatus(MediaPageText.StoryStartFailedStatus);
             }
         }
 
@@ -975,8 +975,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             DispatcherQueue.TryEnqueue(() =>
             {
                 ResetVideoPlaybackState(stopPlayer: false);
-                VideoPathTextBlock.Text = "Inline playback error.";
-                AppStatusService.SetStatus("Media: video playback failed");
+                VideoPathTextBlock.Text = MediaPageText.VideoPlaybackFailedBody;
+                AppStatusService.SetStatus(MediaPageText.VideoPlaybackFailedStatus);
             });
         }
 
@@ -1155,26 +1155,16 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         private string BuildAudioEmptyStateText(string search)
         {
-            if (string.IsNullOrWhiteSpace(_snapshot.GameDirectory))
-            {
-                return "Game install not configured. Choose Settings or Browse Game Directory.";
-            }
-
-            return string.IsNullOrWhiteSpace(search)
-                ? "No audio found in the current install."
-                : "No audio matches the current search.";
+            return MediaPageText.DescribeAudioEmptyState(
+                !string.IsNullOrWhiteSpace(_snapshot.GameDirectory),
+                search);
         }
 
         private string BuildVideoEmptyStateText(string search)
         {
-            if (string.IsNullOrWhiteSpace(_snapshot.GameDirectory))
-            {
-                return "Game install not configured. Choose Settings or Browse Game Directory.";
-            }
-
-            return string.IsNullOrWhiteSpace(search)
-                ? "No video found in the current install."
-                : "No video matches the current search.";
+            return MediaPageText.DescribeVideoEmptyState(
+                !string.IsNullOrWhiteSpace(_snapshot.GameDirectory),
+                search);
         }
 
         private void ApplyPendingVideoHandoff()
@@ -1314,28 +1304,16 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             return Path.GetFullPath(filePath);
         }
 
-        private static string BuildFolderSummary(string? path, string fallback)
-        {
-            if (string.IsNullOrWhiteSpace(path))
-            {
-                return fallback;
-            }
-
-            string trimmed = path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-            string name = Path.GetFileName(trimmed);
-            return string.IsNullOrWhiteSpace(name) ? fallback : name;
-        }
-
         private static string BuildAudioSelectionSummary(MediaAudioItem item)
         {
             string suffix = string.IsNullOrWhiteSpace(item.DurationLabel) ? string.Empty : $" • {item.DurationLabel}";
-            return $"{item.GroupName} • {Path.GetFileName(item.FilePath)}{suffix}";
+            return $"{item.GroupName} • {MediaPageText.BuildFileName(item.FilePath, item.Name)}{suffix}";
         }
 
         private static string BuildVideoSelectionSummary(MediaVideoItem item)
         {
             string suffix = string.IsNullOrWhiteSpace(item.SizeText) ? string.Empty : $" • {item.SizeText}";
-            return $"{item.SectionName} • {Path.GetFileName(item.FilePath)}{suffix}";
+            return $"{item.SectionName} • {MediaPageText.BuildFileName(item.FilePath, item.Name)}{suffix}";
         }
 
         private static string FormatMediaFileSize(long bytes)
@@ -1394,7 +1372,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         private void SetSelectedAudio(MediaAudioItem? item)
         {
             _selectedAudio = item;
-            AudioNowPlayingTextBlock.Text = item?.Name ?? "No track selected";
+            AudioNowPlayingTextBlock.Text = item?.Name ?? MediaPageText.NoTrackSelectedNextStep;
 
             // The words, when the game's own text table has them for this recording.
             string? spoken = item?.Transcript;
@@ -1412,7 +1390,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         private void SetSelectedVideo(MediaVideoItem? item)
         {
             _selectedVideo = item;
-            VideoSelectedTextBlock.Text = item?.Name ?? "No video selected";
+            VideoSelectedTextBlock.Text = item?.Name ?? MediaPageText.NoVideoSelectedNextStep;
             VideoPathTextBlock.Text = item == null
                 ? "Select a video from the left to start playback or reveal the file in Explorer."
                 : BuildVideoSelectionSummary(item);
@@ -1554,7 +1532,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             string fullPath = Path.GetFullPath(item.FilePath);
             if (!File.Exists(fullPath))
             {
-                throw new FileNotFoundException("The selected video file was not found.", fullPath);
+                throw new FileNotFoundException(MediaPageText.VideoFileMissing);
             }
 
             if (!EnsureInlineVideoPlayer())
@@ -1717,8 +1695,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             config.Save();
             AppConfigChangedService.NotifyChanged(config);
             App.MainWindowInstance.RefreshFooter();
-            MediaGameDirectoryTextBlock.Text = path;
-            AppStatusService.SetStatus("Media: game directory selected");
+            MediaGameDirectoryTextBlock.Text = MediaPageText.BuildFolderSummary(path, "Configured install");
+            AppStatusService.SetStatus("Media: game folder selected");
             await LoadMediaCatalogAsync();
         }
 
@@ -1853,11 +1831,11 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             {
                 StartAudioPlayback(_selectedAudio);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 StopAudioPlayback();
-                AudioPathTextBlock.Text = "This audio track could not be played. Try another one, or check that the media files are intact.";
-                AppStatusService.SetStatus($"Media: audio playback failed - {ex.Message}");
+                AudioPathTextBlock.Text = MediaPageText.AudioPlaybackFailedBody;
+                AppStatusService.SetStatus(MediaPageText.AudioPlaybackFailedStatus);
             }
         }
 
@@ -1872,11 +1850,11 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             {
                 StartVideoPlayback(_selectedVideo);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 StopVideoPlayback();
-                VideoPathTextBlock.Text = "This video could not be played. Try another one, or check that the media files are intact.";
-                AppStatusService.SetStatus($"Media: video playback failed - {ex.Message}");
+                VideoPathTextBlock.Text = MediaPageText.VideoPlaybackFailedBody;
+                AppStatusService.SetStatus(MediaPageText.VideoPlaybackFailedStatus);
             }
         }
 
@@ -1884,7 +1862,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         {
             if (_selectedAudio == null)
             {
-                AppStatusService.SetStatus("Media: no audio track selected");
+                AppStatusService.SetStatus(MediaPageText.NoTrackSelectedStatus);
                 return;
             }
 
@@ -1892,11 +1870,11 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             {
                 StartAudioPlayback(_selectedAudio);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 StopAudioPlayback();
-                AudioPathTextBlock.Text = "This audio track could not be played. Try another one, or check that the media files are intact.";
-                AppStatusService.SetStatus($"Media: audio playback failed - {ex.Message}");
+                AudioPathTextBlock.Text = MediaPageText.AudioPlaybackFailedBody;
+                AppStatusService.SetStatus(MediaPageText.AudioPlaybackFailedStatus);
             }
         }
 
@@ -1998,7 +1976,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         {
             if (_selectedVideo == null)
             {
-                AppStatusService.SetStatus("Media: no video selected");
+                AppStatusService.SetStatus(MediaPageText.NoVideoSelectedStatus);
                 return;
             }
 
@@ -2006,11 +1984,11 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             {
                 StartVideoPlayback(_selectedVideo);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 StopVideoPlayback();
-                VideoPathTextBlock.Text = "This video could not be played. Try another one, or check that the media files are intact.";
-                AppStatusService.SetStatus($"Media: video playback failed - {ex.Message}");
+                VideoPathTextBlock.Text = MediaPageText.VideoPlaybackFailedBody;
+                AppStatusService.SetStatus(MediaPageText.VideoPlaybackFailedStatus);
             }
         }
 

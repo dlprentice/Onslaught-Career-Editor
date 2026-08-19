@@ -223,6 +223,33 @@ public sealed class RetailCareerSlots
 
         return (_words[slot >> 5] & RetailCareerNode.MaskFor(slot)) != 0 ? 1 : 0;
     }
+
+    /// <summary>
+    /// The 32-dword assignment <c>CCareer::Update</c> uses for
+    /// <c>mSlots = END_LEVEL_DATA.mSlots</c> — <c>0x0041BD37</c>
+    /// <c>mov edx, 0x20</c> then <c>mov [eax], edi</c>. Words are
+    /// replaced, not OR-ed.
+    /// </summary>
+    public void CopyWords(IReadOnlyList<int> words)
+    {
+        if (words is null)
+        {
+            throw new ArgumentNullException(nameof(words));
+        }
+
+        if (words.Count != SlotWords)
+        {
+            throw new ArgumentException(
+                $"The copy loop at 0x0041BD37 runs {SlotWords} times; " +
+                "retail writes exactly that many dwords with no early exit.",
+                nameof(words));
+        }
+
+        for (int index = 0; index < SlotWords; index++)
+        {
+            _words[index] = words[index];
+        }
+    }
 }
 
 /// <summary>

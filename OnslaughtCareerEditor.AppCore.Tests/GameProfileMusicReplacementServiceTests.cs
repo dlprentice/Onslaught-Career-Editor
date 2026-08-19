@@ -304,7 +304,10 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                         outputRoot,
                         GameProfileMusicReplacementService.UseBea02ForBea01PresetId));
 
-                Assert.Contains("Preset replacement music file", ex.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(GameProfileMusicReplacementService.ReplacementMusicFileMissing, ex.Message);
+                Assert.Equal("That replacement music file could not be found.", ex.Message);
+                Assert.DoesNotContain("Preset", ex.Message, StringComparison.Ordinal);
+                Assert.Null(ex.FileName);
             }
             finally
             {
@@ -345,8 +348,9 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                         outputRoot,
                         GameProfileMusicReplacementService.UseBea02ForBea01PresetId));
 
-                Assert.Contains("Preset target music file", ex.Message, StringComparison.OrdinalIgnoreCase);
-                Assert.Contains("OggS", ex.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(GameProfileMusicReplacementService.MusicFileNotOgg, ex.Message);
+                Assert.DoesNotContain("OggS", ex.Message, StringComparison.Ordinal);
+                Assert.DoesNotContain("Preset", ex.Message, StringComparison.Ordinal);
             }
             finally
             {
@@ -389,7 +393,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                             TargetMusicFileName: targetName,
                             ReplacementOggPath: replacementPath)));
 
-                Assert.Contains("music file name", ex.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(GameProfileMusicReplacementService.TargetMusicFileNameInvalid, ex.Message);
             }
             finally
             {
@@ -421,7 +425,8 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                             TargetMusicFileName: "BEA_01(Master).ogg",
                             ReplacementOggPath: replacementPath)));
 
-        Assert.Contains("generated playable copied game folder manifest", ex.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(GameProfilePreflightService.CopyManifestMissing, ex.Message);
+                Assert.DoesNotContain("playable", ex.Message, StringComparison.OrdinalIgnoreCase);
             }
             finally
             {
@@ -491,7 +496,8 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                             TargetMusicFileName: "BEA_01(Master).ogg",
                             ReplacementOggPath: replacementPath)));
 
-                Assert.Contains("OggS", ex.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(GameProfileMusicReplacementService.MusicFileNotOgg, ex.Message);
+                Assert.DoesNotContain("OggS", ex.Message, StringComparison.Ordinal);
             }
             finally
             {
@@ -647,7 +653,8 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                             TargetMusicFileName: "BEA_01(Master).ogg",
                             ReplacementOggPath: replacementPath)));
 
-                Assert.Contains("hardlinked", ex.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(GameProfileMusicReplacementService.FileCannotShareData, ex.Message);
+                Assert.DoesNotContain("hardlinked", ex.Message, StringComparison.OrdinalIgnoreCase);
                 Assert.Equal(originalTrackBytes, File.ReadAllBytes(Path.Combine(profile.TargetGameRoot, "data", "Music", "BEA_01(Master).ogg")));
                 Assert.Equal("{}", File.ReadAllText(outsideManifestPath));
             }
@@ -706,7 +713,8 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                             SafeGameRoot: profile.TargetGameRoot,
                             AppOwnedProfilesRoot: outputRoot)));
 
-                Assert.Contains("hardlinked", ex.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(GameProfileMusicReplacementService.FileCannotShareData, ex.Message);
+                Assert.DoesNotContain("hardlinked", ex.Message, StringComparison.OrdinalIgnoreCase);
                 Assert.True(File.Exists(stage.ManifestPath));
                 Assert.Equal(replacementBytes, File.ReadAllBytes(stage.TargetPath));
             }
@@ -758,7 +766,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                             TargetMusicFileName: "BEA_01(Master).ogg",
                             ReplacementOggPath: secondReplacementPath)));
 
-                Assert.Contains("no longer matches", ex.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(GameProfileMusicReplacementService.MusicTargetMismatch, ex.Message);
                 Assert.Equal(OggBytes(0x44), File.ReadAllBytes(Path.Combine(profile.TargetGameRoot, "data", "Music", "BEA_01(Master).ogg")));
             }
             finally
@@ -971,7 +979,8 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                             TargetMusicFileName: "BEA_01(Master).ogg",
                             ReplacementOggPath: replacementPath)));
 
-                Assert.Contains("hardlinked", ex.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(GameProfileMusicReplacementService.FileCannotShareData, ex.Message);
+                Assert.DoesNotContain("hardlinked", ex.Message, StringComparison.OrdinalIgnoreCase);
                 Assert.Equal(OggBytes(0x11), File.ReadAllBytes(outsidePath));
             }
             finally
@@ -1026,7 +1035,8 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                             SafeGameRoot: profile.TargetGameRoot,
                             AppOwnedProfilesRoot: outputRoot)));
 
-                Assert.Contains("hardlinked", ex.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(GameProfileMusicReplacementService.FileCannotShareData, ex.Message);
+                Assert.DoesNotContain("hardlinked", ex.Message, StringComparison.OrdinalIgnoreCase);
                 Assert.Equal(OggBytes(0x44), File.ReadAllBytes(stage.TargetPath));
             }
             finally

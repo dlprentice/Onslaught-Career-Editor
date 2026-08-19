@@ -149,11 +149,11 @@
                             <TextBlock Text="Detected files"
                                        FontSize="18"
                                        FontWeight="SemiBold" />
-                            <TextBlock Text="Pick from detected save and options files, or refresh after changing the game directory in Settings."
+                            <TextBlock Text="Pick from detected save and options files, or refresh after changing the game folder in Settings."
                                        Style="{StaticResource SectionBodyTextStyle}" />
                             <ComboBox x:Name="DetectedFilesComboBox"
                                       AutomationProperties.AutomationId="SaveAnalyzerDetectedFilesComboBox"
-                                      PlaceholderText="No detected files yet"
+                                      PlaceholderText="Set the game folder in Settings, or browse for a file."
                                       DisplayMemberPath="DisplayName"
                                       SelectionChanged="DetectedFilesComboBox_SelectionChanged" />
                             <Button x:Name="RefreshDetectedFilesButton"
@@ -179,7 +179,7 @@
                                                FontSize="18"
                                                FontWeight="SemiBold" />
                                     <TextBox x:Name="FilePathTextBox"
-                                             AutomationProperties.AutomationId="SaveAnalyzerFilePath"
+                                             AutomationProperties.AutomationId="SaveAnalyzerInputFile"
                                              Header="Input file"
                                              TextChanged="FilePathTextBox_TextChanged" />
                                     <Grid ColumnSpacing="8">
@@ -227,7 +227,7 @@
                                                FontSize="16"
                                                FontWeight="SemiBold" />
                                     <TextBox x:Name="CompareFilePathTextBox"
-                                             AutomationProperties.AutomationId="SaveAnalyzerCompareFilePath"
+                                             AutomationProperties.AutomationId="SaveAnalyzerCompareFile"
                                              Header="Compare against"
                                              TextChanged="CompareFilePathTextBox_TextChanged" />
                                     <Grid ColumnSpacing="8">
@@ -298,7 +298,7 @@
                                               IsClosable="False"
                                               Severity="Informational"
                                               Title="Analyzer ready"
-                                              Message="Choose a detected or manual file path to inspect save structure, options state, and comparison data." />
+                                              Message="Choose a detected file or browse for a .bes or .bea file to inspect save structure, options, and comparison data." />
 
                             <Border x:Name="AnalyzerEmptyStateBorder"
                                     Style="{StaticResource SavesMetricCardStyle}">
@@ -453,7 +453,7 @@
                                           IsOpen="True"
                                           IsClosable="False"
                                           Severity="Informational"
-                                          Title="Save editor common path"
+                                          Title="Save Editor"
                                           Message="Edit career progress, goodies, mission ranks, and kills here. Startup settings, audio levels, and controls are in Game Options." />
 
                         <Border x:Name="SaveEditorFirstSaveGuide"
@@ -495,7 +495,7 @@
                                     <ComboBox x:Name="EditorDetectedFilesComboBox"
                                               AutomationProperties.AutomationId="SaveEditorDetectedFiles"
                                               Header="Detected career saves"
-                                              PlaceholderText="No detected career saves yet"
+                                              PlaceholderText="Set the game folder in Settings, or browse for a file."
                                               DisplayMemberPath="DisplayName"
                                               SelectionChanged="EditorDetectedFilesComboBox_SelectionChanged" />
                                     <TextBlock x:Name="EditorDetectedFilesStatusTextBlock"
@@ -508,6 +508,11 @@
                                              AutomationProperties.AutomationId="SaveEditorInputFile"
                                              Header="Input save"
                                              TextChanged="EditorPathTextBox_TextChanged" />
+                                    <TextBlock x:Name="EditorInputLocationTextBlock"
+                                               AutomationProperties.AutomationId="SaveEditorInputLocation"
+                                               Style="{StaticResource SectionBodyTextStyle}"
+                                               TextWrapping="WrapWholeWords"
+                                               Visibility="Collapsed" />
                                     <TextBox x:Name="EditorOutputFileTextBox"
                                              AutomationProperties.AutomationId="SaveEditorOutputFile"
                                              Header="Output save"
@@ -596,7 +601,7 @@
                                 <TextBlock Text="Focused Goodie state"
                                            FontSize="18"
                                            FontWeight="SemiBold" />
-                                <TextBlock Text="Write one documented Goodie dword without running the broad Goodies pass. IDs are zero-based. A Safe Game Copy destination must be one .bes file directly inside that verified profile's savegames folder; installed game folders and in-place output remain blocked."
+                                <TextBlock Text="Write one documented Goodie dword without running the broad Goodies pass. IDs are zero-based. A safe-copy destination must be one .bes file in that copy's savegames folder; installed game folders and in-place output remain blocked."
                                            Style="{StaticResource SectionBodyTextStyle}"
                                            TextWrapping="WrapWholeWords" />
                                 <Grid ColumnSpacing="12">
@@ -642,7 +647,7 @@
                                 <TextBlock Text="Patch sections"
                                            FontSize="18"
                                            FontWeight="SemiBold" />
-                                <TextBlock Text="Keep the common path explicit: choose only the save regions you want rewritten."
+                                <TextBlock Text="Choose only the save regions you want rewritten."
                                            Style="{StaticResource SectionBodyTextStyle}" />
                                 <Grid ColumnSpacing="12"
                                       RowSpacing="8">
@@ -693,11 +698,11 @@
                             <TextBlock x:Name="SaveEditorAdvancedOverridesStatus"
                                        AutomationProperties.AutomationId="SaveEditorAdvancedOverridesStatus"
                                        Style="{StaticResource SectionBodyTextStyle}"
-                                       Text="No advanced overrides active"
+                                       Text="Choose a mission rank or category kill to override."
                                        TextWrapping="WrapWholeWords" />
                             <Expander x:Name="SaveEditorAdvancedOverridesExpander"
                                       AutomationProperties.AutomationId="SaveEditorAdvancedOverridesExpander"
-                                      AutomationProperties.Name="Advanced: per-mission ranks and category kills. No advanced overrides active"
+                                      AutomationProperties.Name="Advanced: per-mission ranks and category kills. Choose a mission rank or category kill to override."
                                       Header="Advanced: per-mission ranks and category kills"
                                       IsExpanded="False">
                                 <Border Style="{StaticResource SavesSectionCardStyle}">
@@ -855,7 +860,7 @@
                                     <TextBlock x:Name="EditorPendingChangesTextBlock"
                                                AutomationProperties.AutomationId="SaveEditorPendingChanges"
                                                Style="{StaticResource SectionBodyTextStyle}"
-                                               Text="No pending save changes selected yet." />
+                                               Text="Select a change first." />
                                     <TextBlock x:Name="EditorSafetyHintTextBlock"
                                                AutomationProperties.AutomationId="SaveEditorSafetyHint"
                                                Style="{StaticResource SectionBodyTextStyle}"
@@ -1034,7 +1039,7 @@
                                     <ComboBox x:Name="ConfigurationDetectedFilesComboBox"
                                               AutomationProperties.AutomationId="ConfigurationDetectedFilesComboBox"
                                               Header="Detected options files"
-                                              PlaceholderText="No detected options files yet"
+                                              PlaceholderText="Set the game folder in Settings, or browse for a file."
                                               DisplayMemberPath="DisplayName"
                                               SelectionChanged="ConfigurationDetectedFilesComboBox_SelectionChanged" />
                                     <TextBlock x:Name="ConfigurationDetectedFilesStatusTextBlock"
@@ -1047,6 +1052,11 @@
                                              AutomationProperties.AutomationId="ConfigurationInputFile"
                                              Header="Input options file"
                                              TextChanged="ConfigurationPathTextBox_TextChanged" />
+                                    <TextBlock x:Name="ConfigurationInputLocationTextBlock"
+                                               AutomationProperties.AutomationId="ConfigurationInputLocation"
+                                               Style="{StaticResource SectionBodyTextStyle}"
+                                               TextWrapping="WrapWholeWords"
+                                               Visibility="Collapsed" />
                                     <TextBox x:Name="ConfigurationOutputFileTextBox"
                                              AutomationProperties.AutomationId="ConfigurationOutputFile"
                                              Header="Output options file"

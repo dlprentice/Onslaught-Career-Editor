@@ -84,6 +84,19 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         }
 
         [Fact]
+        public void ARefusedSizeNamesTheCopyNotTheTypedValue()
+        {
+            Assert.False(DisplayResolutionPreset.TryParse("huge", out _, out string? problem));
+            Assert.Equal(DisplayResolutionPreset.ResolutionNotASize, problem);
+            Assert.DoesNotContain("huge", problem);
+
+            Assert.False(DisplayResolutionPreset.TryParse("639x480", out _, out problem));
+            Assert.Equal(DisplayResolutionPreset.ResolutionOutOfRange, problem);
+            Assert.DoesNotContain("copied game", problem, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("copy", problem, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
         public void TheRefusedRangeMatchesTheCopiedGamesOwnLaunchValidator()
         {
             // GameProfilePreflightService rejects -res outside these bounds; if

@@ -111,6 +111,93 @@ namespace OnslaughtCareerEditor.AppCore
     public static class GameProfilePreflightService
     {
         public const string SchemaVersion = "winui-copied-game-profile.v1";
+        public const string TargetCopyExists = "That copy folder already exists.";
+        public const string CopyFolderMissing = "That copy folder could not be found.";
+        public const string CopiedBeaMissing = "That copy is missing BEA.exe.";
+        public const string SourceExecutableMissing = "That source executable could not be found.";
+        public const string Level100EnglishDatMissing = "That copy is missing english.dat.";
+        public const string Level100EnglishDatBackupMissing = "That copy is missing english.dat.original.backup.";
+        public const string Level100ResourceMissing = "That copy is missing 100_res_PC.aya.";
+        public const string Level100ResourceBackupMissing = "That copy is missing 100_res_PC.aya.original.backup.";
+        public const string SourceFolderMissing = "That game folder could not be found.";
+        public const string RequiredGameFolderMissing = "A required game folder is missing.";
+        public const string RequiredGameFileMissing = "A required game file is missing.";
+        public const string ProfileFolderRequired = "An app-owned profile folder is required.";
+        public const string WorkspaceFileMustStayInside = "The workspace file must stay inside the app-owned profile folder.";
+        public const string CopyMustStayInside = "That copy must stay inside the app-owned profile folder.";
+        public const string FileMustStayInsideCopy = "That file must stay inside the copy.";
+        public const string CopyCannotUseLink = "That copy cannot use a shortcut or link.";
+        public const string FileCannotShareData = "That file cannot share its data with another file.";
+        public const string CopiedBeaMismatch = "That copy's BEA.exe does not match this copy.";
+        public const string CopiedBackupMissing = "That copy is missing BEA.exe.original.backup.";
+        public const string CopiedBackupHashMissing = "That copy is missing the BEA.exe.original.backup hash file.";
+        public const string CopiedBackupHashMismatch = "That copy's BEA.exe.original.backup does not match its hash file.";
+        public const string CopiedBackupNotRetail = "That copy's BEA.exe.original.backup is not the known Steam retail file.";
+        public const string CopiedBeaPatchesMismatch = "That copy's BEA.exe no longer matches its patches.";
+        public const string CopiedBeaPatchApplyFailed = "Those patches could not be applied to that copy.";
+        public const string RequiredPatchRowMissing = "A required patch row is missing.";
+        public const string ProfileNeedsItsPatchRows = "That copy profile needs its exact patch rows.";
+        public const string UnsupportedLaunchArgument = "That launch argument is not supported.";
+        public const string UnexpectedLaunchArgumentValue = "That launch argument value is not expected.";
+        public const string LaunchArgumentNeedsANumber = "That launch argument needs a number.";
+        public const string CopyDetailsIncomplete = "That copy's details are incomplete.";
+        public const string CopyLaunchFolderMissing = "That copy is missing its launch folder.";
+        public const string CopyLaunchFolderMismatch = "That copy does not match this launch folder.";
+        public const string CopyManifestMissing = "That copy is missing onslaught-profile-manifest.json.";
+        public const string CopyManifestOutOfDate = "That copy's details file is out of date.";
+        public const string Level100TextDetailsInvalid = "That copy's Level 100 text details are invalid.";
+        public const string Level100TextDetailsUnsupported = "That copy's Level 100 text details are out of date.";
+        public const string Level100TextDetailsWrongTarget = "That copy's Level 100 text details do not target english.dat.";
+        public const string Level100TextBackupMismatch = "That copy's english.dat.original.backup no longer matches.";
+        public const string Level100TextFileMismatch = "That copy's english.dat no longer matches.";
+        public const string Level100TextSizeMismatch = "That copy's Level 100 text file sizes do not match.";
+        public const string Level100TextWrongId = "That copy's Level 100 text details name the wrong text.";
+        public const string Level100TextRangeMissing = "That copy's Level 100 text details are missing their changed range.";
+        public const string Level100TextRangeInvalid = "That copy's Level 100 text details have an invalid changed range.";
+        public const string Level100TextBytesMismatch = "That copy's Level 100 text no longer matches.";
+        public const string Level100EarlyFlightDetailsInvalid = "That copy's Level 100 early-flight details are invalid.";
+        public const string Level100EarlyFlightDetailsUnsupported = "That copy's Level 100 early-flight details are out of date.";
+        public const string Level100EarlyFlightDetailsWrongTarget = "That copy's Level 100 early-flight details do not target 100_res_PC.aya.";
+        public const string Level100EarlyFlightBackupMismatch = "That copy's 100_res_PC.aya.original.backup no longer matches.";
+        public const string Level100EarlyFlightFileMismatch = "That copy's 100_res_PC.aya no longer matches.";
+        public const string Level100EarlyFlightSizeMismatch = "That copy's Level 100 early-flight archive sizes do not match.";
+        public const string Level100EarlyFlightWrongCommand = "That copy's Level 100 early-flight details have the wrong command.";
+        public const string Level100EarlyFlightPayloadMismatch = "That copy's Level 100 early-flight payload no longer matches.";
+        public const string MusicDetailsInvalid = "That copy's music details are invalid.";
+        public const string MusicDetailsUnsupported = "That copy's music details are out of date.";
+        public const string MusicDetailsWrongTarget = "That copy's music details do not match the music file.";
+        public const string MusicFileMismatch = "That copy's music file no longer matches.";
+        public const string MusicBackupMismatch = "That copy's music backup no longer matches.";
+        public const string MusicBackupSizeMismatch = "That copy's music backup size does not match.";
+        public const string MusicFileSizeMismatch = "That copy's music file size does not match.";
+        public const string ControlOptionsDetailsInvalid = "That copy's defaultoptions.bea details are invalid.";
+        public const string ControlOptionsDetailsUnsupported = "That copy's defaultoptions.bea details are out of date.";
+        public const string ControlOptionsProofUnsupported = "That copy's defaultoptions.bea details cannot be used yet.";
+        public const string ControlOptionsDetailsWrongTarget = "That copy's controller details do not target defaultoptions.bea.";
+        public const string ControlOptionsFileMismatch = "That copy's defaultoptions.bea no longer matches.";
+        public const string ControlOptionsFileSizeMismatch = "That copy's defaultoptions.bea size does not match.";
+        public const string ControlOptionsRangesMissing = "That copy's controller details are missing their changed ranges.";
+        public const string ControlOptionsBackupDetailsMissing = "That copy's controller details are missing backup details.";
+        public const string ControlOptionsBackupSizeMismatch = "That copy's defaultoptions.bea backup size does not match.";
+        public const string ControlOptionsBackupMismatch = "That copy's defaultoptions.bea backup no longer matches.";
+        public const string CopyPatchResultMissing = "That copy's details are missing their patch result.";
+        public const string CopyPatchDidNotSucceed = "That copy's details do not record a successful patch.";
+        public const string CopyPatchRowsMissing = "That copy's details are missing their patch rows.";
+        public const string CopyNeedsWindowedPatchSet = "That copy needs the windowed compatibility patch set.";
+        public const string CopyBeaSizeMissing = "That copy's details are missing BEA.exe size.";
+        public const string CopyBeaHashMissing = "That copy's details are missing the BEA.exe hash.";
+        public const string CopyBeaSizeMismatch = "That copy's BEA.exe no longer matches its size.";
+        public const string CopyBeaHashMismatch = "That copy's BEA.exe no longer matches its hash.";
+        public const string SourceFileMustStayInsideGame = "That file must stay inside the game folder.";
+        public const string CopyRequired = "A copy is required.";
+        public const string ProfileFolderInsideGame =
+            "The app-owned profile folder must not sit inside the game folder.";
+        public const string GameFolderInsideProfile =
+            "The game folder must not sit inside the app-owned profile folder.";
+        public const string ProfileFolderUnderProtectedInstall =
+            "The app-owned profile folder must not sit under Program Files or another protected install folder.";
+        public const string ProfileFolderUnderSteamInstall =
+            "The app-owned profile folder must not sit under a steamapps/common/Battle Engine Aquila install folder.";
 
         /// <summary>
         /// The manifest every generated playable copied game folder carries. Its presence is what
@@ -178,7 +265,7 @@ namespace OnslaughtCareerEditor.AppCore
         public static GameProfilePrepareResult PrepareWindowedCompatibilityProfile(GameProfilePrepareOptions options)
         {
             if (string.IsNullOrWhiteSpace(options.SourceGameRoot) || !Directory.Exists(options.SourceGameRoot))
-                throw new DirectoryNotFoundException($"Source game root does not exist: {options.SourceGameRoot}");
+                throw new DirectoryNotFoundException(SourceFolderMissing);
 
             string profileName = options.ProfileName ?? string.Empty;
             if (!s_safeProfileName.IsMatch(profileName))
@@ -193,7 +280,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             string targetRoot = Path.GetFullPath(Path.Combine(outputRoot, profileName));
             if (Directory.Exists(targetRoot))
-                throw new InvalidOperationException($"Target playable copied game folder already exists: {targetRoot}");
+                throw new InvalidOperationException(TargetCopyExists);
             RejectExistingReparseAncestors(targetRoot, "playable copied game folder target");
 
             string executableSource = ResolveExecutableSource(sourceRoot, options.ExecutableOverridePath);
@@ -299,11 +386,11 @@ namespace OnslaughtCareerEditor.AppCore
         public static string ValidateExecutableSourceForWorkspaceCopy(string sourcePath)
         {
             if (string.IsNullOrWhiteSpace(sourcePath))
-                throw new InvalidOperationException("Executable source path is required.");
+                throw new InvalidOperationException("A source executable is required.");
 
             string fullPath = Path.GetFullPath(sourcePath);
             if (!File.Exists(fullPath))
-                throw new FileNotFoundException("Executable source was not found.", fullPath);
+                throw new FileNotFoundException(SourceExecutableMissing);
 
             if (!IsSupportedExecutableSourceName(Path.GetFileName(fullPath)))
                 throw new InvalidOperationException("Executable source must be named BEA.exe or BEA.exe.original.backup.");
@@ -320,10 +407,10 @@ namespace OnslaughtCareerEditor.AppCore
             string expectedFileName)
         {
             if (string.IsNullOrWhiteSpace(destinationPath))
-                throw new InvalidOperationException("Workspace destination path is required.");
+                throw new InvalidOperationException("A destination file is required.");
 
             if (string.IsNullOrWhiteSpace(appOwnedRoot))
-                throw new InvalidOperationException("An app-owned workspace root is required.");
+                throw new InvalidOperationException(ProfileFolderRequired);
 
             if (string.IsNullOrWhiteSpace(expectedFileName))
                 throw new InvalidOperationException("Expected workspace file name is required.");
@@ -341,7 +428,7 @@ namespace OnslaughtCareerEditor.AppCore
                     root.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar),
                     StringComparison.OrdinalIgnoreCase))
             {
-                throw new InvalidOperationException("Workspace destination must stay under the app-owned workspace root.");
+                throw new InvalidOperationException(WorkspaceFileMustStayInside);
             }
 
             RejectExistingReparseAncestors(destination, "app-owned workspace destination");
@@ -386,7 +473,7 @@ namespace OnslaughtCareerEditor.AppCore
                 : string.Join(" ", result.LaunchPlan.Arguments);
             string patchRows = result.PatchResult.PatchKeys.Count == 0
                 ? "No executable patch rows requested."
-                : $"{result.PatchResult.PatchKeys.Count}: {string.Join(", ", result.PatchResult.PatchKeys)}";
+                : $"{result.PatchResult.PatchKeys.Count}: {string.Join(", ", result.PatchResult.PatchKeys.Select(FormatReceiptPatchRowName))}";
 
             var lines = new List<GameProfileReceiptLine>
             {
@@ -422,7 +509,7 @@ namespace OnslaughtCareerEditor.AppCore
                     .Select(module => BuildReceiptIncludedChange(result, module, controlOptionsResult))
                     .ToArray()
                 : result.PatchResult.PatchKeys
-                    .Select(key => $"Patch row: {key}")
+                    .Select(key => $"Patch row: {FormatReceiptPatchRowName(key)}")
                     .ToArray();
             if (result.Level100TextModResult is not null)
             {
@@ -469,6 +556,15 @@ namespace OnslaughtCareerEditor.AppCore
                 lines,
                 includedChanges,
                 stillNotIncluded);
+        }
+
+        private static string FormatReceiptPatchRowName(string key)
+        {
+            BinaryPatchSpec? spec = BinaryPatchEngine.PatchSpecs.FirstOrDefault(candidate =>
+                string.Equals(candidate.Key, key, StringComparison.OrdinalIgnoreCase));
+            return !string.IsNullOrWhiteSpace(spec?.DisplayName)
+                ? spec.DisplayName
+                : "selected patch row";
         }
 
         private static string BuildReceiptIncludedChange(
@@ -530,18 +626,15 @@ namespace OnslaughtCareerEditor.AppCore
         private static GameProfileLaunchPlan BuildLaunchPlanCore(string gameRoot, IReadOnlyList<string> arguments)
         {
             if (string.IsNullOrWhiteSpace(gameRoot) || !Directory.Exists(gameRoot))
-                throw new DirectoryNotFoundException($"Playable copied game folder root does not exist: {gameRoot}");
+                throw new DirectoryNotFoundException(CopyFolderMissing);
 
             string resolvedGameRoot = NormalizeExistingDirectory(gameRoot);
             string executablePath = Path.Combine(resolvedGameRoot, "BEA.exe");
             if (!File.Exists(executablePath))
-                throw new FileNotFoundException("BEA.exe was not found under the copied game profile.", executablePath);
+                throw new FileNotFoundException(CopiedBeaMissing);
 
             string[] normalizedArguments = NormalizeLaunchArguments(arguments ?? Array.Empty<string>());
-            string argumentString = string.Join(" ", normalizedArguments);
-            string commandPreview = argumentString.Length == 0
-                ? $"Start-Process -FilePath \"{executablePath}\" -WorkingDirectory \"{resolvedGameRoot}\""
-                : $"Start-Process -FilePath \"{executablePath}\" -WorkingDirectory \"{resolvedGameRoot}\" -ArgumentList \"{argumentString}\"";
+            string commandPreview = BuildRedactedCommandPreview(normalizedArguments);
 
             return new GameProfileLaunchPlan(
                 ExecutablePath: executablePath,
@@ -571,12 +664,12 @@ namespace OnslaughtCareerEditor.AppCore
             bool validateControlOptionsManifest)
         {
             if (string.IsNullOrWhiteSpace(gameRoot) || !Directory.Exists(gameRoot))
-                throw new DirectoryNotFoundException($"Playable copied game folder root does not exist: {gameRoot}");
+                throw new DirectoryNotFoundException(CopyFolderMissing);
 
             string resolvedGameRoot = NormalizeExistingDirectory(gameRoot);
             string manifestPath = Path.Combine(resolvedGameRoot, "onslaught-profile-manifest.json");
             if (!File.Exists(manifestPath))
-                throw new InvalidOperationException("Launch plan requires a generated playable copied game folder manifest.");
+                throw new InvalidOperationException(CopyManifestMissing);
 
             using JsonDocument doc = JsonDocument.Parse(File.ReadAllText(manifestPath));
             string? schemaVersion = doc.RootElement.TryGetProperty("schemaVersion", out JsonElement schemaEl)
@@ -587,10 +680,10 @@ namespace OnslaughtCareerEditor.AppCore
                 : null;
 
             if (!string.Equals(schemaVersion, SchemaVersion, StringComparison.Ordinal))
-                throw new InvalidOperationException("Launch plan requires a current playable copied game folder manifest.");
+                throw new InvalidOperationException(CopyManifestOutOfDate);
 
             if (string.IsNullOrWhiteSpace(targetGameRoot))
-                throw new InvalidOperationException("Playable copied game folder manifest is missing its target root marker.");
+                throw new InvalidOperationException(CopyLaunchFolderMissing);
 
             if (!string.Equals(targetGameRoot, ".", StringComparison.Ordinal))
             {
@@ -598,7 +691,7 @@ namespace OnslaughtCareerEditor.AppCore
                     ? NormalizeExistingDirectory(targetGameRoot)
                     : NormalizeExistingDirectory(Path.Combine(resolvedGameRoot, targetGameRoot));
                 if (!string.Equals(resolvedManifestRoot, resolvedGameRoot, StringComparison.OrdinalIgnoreCase))
-                    throw new InvalidOperationException("Playable copied game folder manifest does not match the launch root.");
+                    throw new InvalidOperationException(CopyLaunchFolderMismatch);
             }
 
             ValidateManifestExecutableState(doc.RootElement, resolvedGameRoot);
@@ -625,33 +718,33 @@ namespace OnslaughtCareerEditor.AppCore
             }
 
             if (modEl.ValueKind != JsonValueKind.Object)
-                throw new InvalidOperationException("Playable copied game folder Level 100 text metadata is invalid.");
+                throw new InvalidOperationException(Level100TextDetailsInvalid);
 
             string schemaVersion = RequiredString(modEl, "schemaVersion", "Level 100 text metadata");
             if (!string.Equals(schemaVersion, Level100TextModSchemaVersion, StringComparison.Ordinal))
-                throw new InvalidOperationException("Playable copied game folder Level 100 text metadata has an unsupported schema.");
+                throw new InvalidOperationException(Level100TextDetailsUnsupported);
 
             string targetRelativePath = RequiredString(modEl, "targetRelativePath", "Level 100 text metadata");
             string backupRelativePath = RequiredString(modEl, "backupRelativePath", "Level 100 text metadata");
             if (!string.Equals(targetRelativePath, Level100EnglishDatRelativePath, StringComparison.OrdinalIgnoreCase) ||
                 !string.Equals(backupRelativePath, Level100EnglishDatBackupRelativePath, StringComparison.OrdinalIgnoreCase))
             {
-                throw new InvalidOperationException("Playable copied game folder Level 100 text metadata does not target the supported English language table.");
+                throw new InvalidOperationException(Level100TextDetailsWrongTarget);
             }
 
             string targetPath = ResolveProfileRelativePath(resolvedGameRoot, targetRelativePath, "Level 100 text target");
             string backupPath = ResolveProfileRelativePath(resolvedGameRoot, backupRelativePath, "Level 100 text backup");
             if (!File.Exists(targetPath))
-                throw new FileNotFoundException("Playable copied game folder Level 100 text target is missing.", targetPath);
+                throw new FileNotFoundException(Level100EnglishDatMissing);
             if (!File.Exists(backupPath))
-                throw new FileNotFoundException("Playable copied game folder Level 100 text backup is missing.", backupPath);
+                throw new FileNotFoundException(Level100EnglishDatBackupMissing);
 
             string originalSha256 = RequiredString(modEl, "originalSha256", "Level 100 text metadata");
             string modifiedSha256 = RequiredString(modEl, "modifiedSha256", "Level 100 text metadata");
             if (!string.Equals(ComputeSha256(backupPath), originalSha256, StringComparison.OrdinalIgnoreCase))
-                throw new InvalidOperationException("Playable copied game folder Level 100 text backup no longer matches its manifest hash.");
+                throw new InvalidOperationException(Level100TextBackupMismatch);
             if (!string.Equals(ComputeSha256(targetPath), modifiedSha256, StringComparison.OrdinalIgnoreCase))
-                throw new InvalidOperationException("Playable copied game folder Level 100 text target no longer matches its manifest hash.");
+                throw new InvalidOperationException(Level100TextFileMismatch);
 
             if (!modEl.TryGetProperty("originalSize", out JsonElement originalSizeEl) ||
                 !originalSizeEl.TryGetInt64(out long originalSize) ||
@@ -661,14 +754,14 @@ namespace OnslaughtCareerEditor.AppCore
                 new FileInfo(targetPath).Length != modifiedSize ||
                 originalSize != modifiedSize)
             {
-                throw new InvalidOperationException("Playable copied game folder Level 100 text file sizes do not match its fixed-size manifest contract.");
+                throw new InvalidOperationException(Level100TextSizeMismatch);
             }
 
             if (!modEl.TryGetProperty("textId", out JsonElement textIdEl) ||
                 !textIdEl.TryGetUInt32(out uint textId) ||
                 textId != Level100TutorialTextId)
             {
-                throw new InvalidOperationException("Playable copied game folder Level 100 text metadata has the wrong text ID.");
+                throw new InvalidOperationException(Level100TextWrongId);
             }
 
             if (!modEl.TryGetProperty("changedOffset", out JsonElement offsetEl) ||
@@ -676,7 +769,7 @@ namespace OnslaughtCareerEditor.AppCore
                 !modEl.TryGetProperty("changedByteCount", out JsonElement byteCountEl) ||
                 !byteCountEl.TryGetInt32(out int changedByteCount))
             {
-                throw new InvalidOperationException("Playable copied game folder Level 100 text metadata is missing its changed range.");
+                throw new InvalidOperationException(Level100TextRangeMissing);
             }
 
             byte[] originalBytes = Encoding.Unicode.GetBytes(Level100TutorialOriginalText);
@@ -685,7 +778,7 @@ namespace OnslaughtCareerEditor.AppCore
                 changedOffset < 0 ||
                 changedOffset > new FileInfo(targetPath).Length - changedByteCount)
             {
-                throw new InvalidOperationException("Playable copied game folder Level 100 text metadata has an invalid changed range.");
+                throw new InvalidOperationException(Level100TextRangeInvalid);
             }
 
             byte[] backupData = File.ReadAllBytes(backupPath);
@@ -693,7 +786,7 @@ namespace OnslaughtCareerEditor.AppCore
             if (!backupData.AsSpan(changedOffset, changedByteCount).SequenceEqual(originalBytes) ||
                 !targetData.AsSpan(changedOffset, changedByteCount).SequenceEqual(replacementBytes))
             {
-                throw new InvalidOperationException("Playable copied game folder Level 100 text bytes no longer match the expected original/replacement pair.");
+                throw new InvalidOperationException(Level100TextBytesMismatch);
             }
         }
 
@@ -706,33 +799,33 @@ namespace OnslaughtCareerEditor.AppCore
             }
 
             if (modEl.ValueKind != JsonValueKind.Object)
-                throw new InvalidOperationException("Playable copied game folder Level 100 early-flight metadata is invalid.");
+                throw new InvalidOperationException(Level100EarlyFlightDetailsInvalid);
 
             string schemaVersion = RequiredString(modEl, "schemaVersion", "Level 100 early-flight metadata");
             if (!string.Equals(schemaVersion, Level100EarlyFlightModSchemaVersion, StringComparison.Ordinal))
-                throw new InvalidOperationException("Playable copied game folder Level 100 early-flight metadata has an unsupported schema.");
+                throw new InvalidOperationException(Level100EarlyFlightDetailsUnsupported);
 
             string targetRelativePath = RequiredString(modEl, "targetRelativePath", "Level 100 early-flight metadata");
             string backupRelativePath = RequiredString(modEl, "backupRelativePath", "Level 100 early-flight metadata");
             if (!string.Equals(targetRelativePath, Level100ResourceArchiveRelativePath, StringComparison.OrdinalIgnoreCase) ||
                 !string.Equals(backupRelativePath, Level100ResourceArchiveBackupRelativePath, StringComparison.OrdinalIgnoreCase))
             {
-                throw new InvalidOperationException("Playable copied game folder Level 100 early-flight metadata does not target the supported mission archive.");
+                throw new InvalidOperationException(Level100EarlyFlightDetailsWrongTarget);
             }
 
             string targetPath = ResolveProfileRelativePath(resolvedGameRoot, targetRelativePath, "Level 100 early-flight target");
             string backupPath = ResolveProfileRelativePath(resolvedGameRoot, backupRelativePath, "Level 100 early-flight backup");
             if (!File.Exists(targetPath))
-                throw new FileNotFoundException("Playable copied game folder Level 100 early-flight target is missing.", targetPath);
+                throw new FileNotFoundException(Level100ResourceMissing);
             if (!File.Exists(backupPath))
-                throw new FileNotFoundException("Playable copied game folder Level 100 early-flight backup is missing.", backupPath);
+                throw new FileNotFoundException(Level100ResourceBackupMissing);
 
             string originalSha256 = RequiredString(modEl, "originalSha256", "Level 100 early-flight metadata");
             string modifiedSha256 = RequiredString(modEl, "modifiedSha256", "Level 100 early-flight metadata");
             if (!string.Equals(ComputeSha256(backupPath), originalSha256, StringComparison.OrdinalIgnoreCase))
-                throw new InvalidOperationException("Playable copied game folder Level 100 early-flight backup no longer matches its manifest hash.");
+                throw new InvalidOperationException(Level100EarlyFlightBackupMismatch);
             if (!string.Equals(ComputeSha256(targetPath), modifiedSha256, StringComparison.OrdinalIgnoreCase))
-                throw new InvalidOperationException("Playable copied game folder Level 100 early-flight target no longer matches its manifest hash.");
+                throw new InvalidOperationException(Level100EarlyFlightFileMismatch);
 
             if (!modEl.TryGetProperty("originalSize", out JsonElement originalSizeEl) ||
                 !originalSizeEl.TryGetInt64(out long originalSize) ||
@@ -741,7 +834,7 @@ namespace OnslaughtCareerEditor.AppCore
                 new FileInfo(backupPath).Length != originalSize ||
                 new FileInfo(targetPath).Length != modifiedSize)
             {
-                throw new InvalidOperationException("Playable copied game folder Level 100 early-flight archive sizes no longer match its manifest.");
+                throw new InvalidOperationException(Level100EarlyFlightSizeMismatch);
             }
 
             string originalPayloadSha256 = RequiredString(modEl, "originalPayloadSha256", "Level 100 early-flight metadata");
@@ -759,7 +852,7 @@ namespace OnslaughtCareerEditor.AppCore
                 !replacementCommandEl.TryGetInt32(out int replacementCommandIndex) ||
                 replacementCommandIndex != EnableFlightModeCommandIndex)
             {
-                throw new InvalidOperationException("Playable copied game folder Level 100 early-flight metadata has the wrong command substitution.");
+                throw new InvalidOperationException(Level100EarlyFlightWrongCommand);
             }
 
             byte[] originalPayload = ReadLevel100ResourceArchive(File.ReadAllBytes(backupPath)).Payload;
@@ -769,7 +862,7 @@ namespace OnslaughtCareerEditor.AppCore
             if (!string.Equals(ComputeSha256(originalPayload), originalPayloadSha256, StringComparison.OrdinalIgnoreCase) ||
                 !string.Equals(ComputeSha256(modifiedPayload), modifiedPayloadSha256, StringComparison.OrdinalIgnoreCase))
             {
-                throw new InvalidOperationException("Playable copied game folder Level 100 early-flight payload no longer matches its manifest hash.");
+                throw new InvalidOperationException(Level100EarlyFlightPayloadMismatch);
             }
 
             ValidateSinglePayloadByteChange(originalPayload, modifiedPayload);
@@ -788,7 +881,7 @@ namespace OnslaughtCareerEditor.AppCore
             }
             catch (JsonException ex)
             {
-                throw new InvalidOperationException("Playable copied game folder music replacement manifest is invalid JSON.", ex);
+                throw new InvalidOperationException(MusicDetailsInvalid, ex);
             }
 
             using (doc)
@@ -796,7 +889,7 @@ namespace OnslaughtCareerEditor.AppCore
                 JsonElement root = doc.RootElement;
                 string schemaVersion = RequiredString(root, "schemaVersion", "music replacement manifest");
                 if (!string.Equals(schemaVersion, GameProfileMusicReplacementService.SchemaVersion, StringComparison.Ordinal))
-                    throw new InvalidOperationException("Playable copied game folder music replacement manifest has an unsupported schema.");
+                    throw new InvalidOperationException(MusicDetailsUnsupported);
 
                 string targetMusicFileName = RequiredString(root, "targetMusicFileName", "music replacement manifest");
                 string targetRelativePath = RequiredString(root, "targetRelativePath", "music replacement manifest");
@@ -807,33 +900,33 @@ namespace OnslaughtCareerEditor.AppCore
                 string targetPath = ResolveProfileRelativePath(resolvedGameRoot, targetRelativePath, "music replacement target");
                 string backupPath = ResolveProfileRelativePath(resolvedGameRoot, backupRelativePath, "music replacement backup");
                 if (!string.Equals(Path.GetFileName(targetPath), targetMusicFileName, StringComparison.OrdinalIgnoreCase))
-                    throw new InvalidOperationException("Playable copied game folder music replacement manifest target file does not match its target name.");
+                    throw new InvalidOperationException(MusicDetailsWrongTarget);
 
                 if (!File.Exists(targetPath))
-                    throw new FileNotFoundException("Playable copied game folder music replacement target is missing.", targetPath);
+                    throw new FileNotFoundException(GameProfileMusicReplacementService.TargetMusicFileMissing);
                 if (!File.Exists(backupPath))
-                    throw new FileNotFoundException("Playable copied game folder music replacement backup is missing.", backupPath);
+                    throw new FileNotFoundException(GameProfileMusicReplacementService.MusicBackupMissing);
 
                 string actualTargetHash = ComputeSha256(targetPath);
                 if (!string.Equals(actualTargetHash, replacementSha256, StringComparison.OrdinalIgnoreCase))
-                    throw new InvalidOperationException("Playable copied game folder music replacement manifest hash does not match the staged target track.");
+                    throw new InvalidOperationException(MusicFileMismatch);
 
                 string actualBackupHash = ComputeSha256(backupPath);
                 if (!string.Equals(actualBackupHash, originalSha256, StringComparison.OrdinalIgnoreCase))
-                    throw new InvalidOperationException("Playable copied game folder music replacement manifest hash does not match the backup track.");
+                    throw new InvalidOperationException(MusicBackupMismatch);
 
                 if (root.TryGetProperty("originalSize", out JsonElement originalSizeEl) &&
                     originalSizeEl.TryGetInt64(out long originalSize) &&
                     new FileInfo(backupPath).Length != originalSize)
                 {
-                    throw new InvalidOperationException("Playable copied game folder music replacement backup size does not match manifest.");
+                    throw new InvalidOperationException(MusicBackupSizeMismatch);
                 }
 
                 if (root.TryGetProperty("replacementSize", out JsonElement replacementSizeEl) &&
                     replacementSizeEl.TryGetInt64(out long replacementSize) &&
                     new FileInfo(targetPath).Length != replacementSize)
                 {
-                    throw new InvalidOperationException("Playable copied game folder music replacement target size does not match manifest.");
+                    throw new InvalidOperationException(MusicFileSizeMismatch);
                 }
             }
         }
@@ -851,7 +944,7 @@ namespace OnslaughtCareerEditor.AppCore
             }
             catch (JsonException ex)
             {
-                throw new InvalidOperationException("Playable copied game folder control-options manifest is invalid JSON.", ex);
+                throw new InvalidOperationException(ControlOptionsDetailsInvalid, ex);
             }
 
             using (doc)
@@ -859,45 +952,45 @@ namespace OnslaughtCareerEditor.AppCore
                 JsonElement root = doc.RootElement;
                 string schemaVersion = RequiredString(root, "schemaVersion", "control-options manifest");
                 if (!string.Equals(schemaVersion, GameProfileControlOptionsService.ManifestSchemaVersion, StringComparison.Ordinal))
-                    throw new InvalidOperationException("Playable copied game folder control-options manifest has an unsupported schema.");
+                    throw new InvalidOperationException(ControlOptionsDetailsUnsupported);
 
                 string proofStatus = RequiredString(root, "proofStatus", "control-options manifest");
                 if (!string.Equals(proofStatus, GameProfileControlOptionsService.ProofStatusOptionsByteMaterializedOnly, StringComparison.Ordinal))
-                    throw new InvalidOperationException("Playable copied game folder control-options manifest has an unsupported proof status.");
+                    throw new InvalidOperationException(ControlOptionsProofUnsupported);
 
                 string targetPath = RequiredString(root, "targetPath", "control-options manifest");
                 string resolvedTargetPath = Path.GetFullPath(Path.Combine(resolvedGameRoot, targetPath));
                 string expectedOptionsPath = Path.Combine(resolvedGameRoot, "defaultoptions.bea");
                 if (!string.Equals(resolvedTargetPath, expectedOptionsPath, StringComparison.OrdinalIgnoreCase))
-                    throw new InvalidOperationException("Playable copied game folder control-options manifest target does not match defaultoptions.bea.");
+                    throw new InvalidOperationException(ControlOptionsDetailsWrongTarget);
 
                 if (!File.Exists(expectedOptionsPath))
-                    throw new FileNotFoundException("Playable copied game folder control-options target is missing.", expectedOptionsPath);
+                    throw new FileNotFoundException(GameProfileControlOptionsService.OptionsFileMissing);
 
                 string expectedHash = RequiredString(root, "hashAfter", "control-options manifest");
                 string actualHash = ComputeSha256(expectedOptionsPath);
                 if (!string.Equals(expectedHash, actualHash, StringComparison.OrdinalIgnoreCase))
-                    throw new InvalidOperationException("Playable copied game folder control-options manifest hash does not match defaultoptions.bea.");
+                    throw new InvalidOperationException(ControlOptionsFileMismatch);
 
                 if (root.TryGetProperty("optionsSize", out JsonElement sizeEl) &&
                     sizeEl.TryGetInt64(out long expectedSize) &&
                     new FileInfo(expectedOptionsPath).Length != expectedSize)
                 {
-                    throw new InvalidOperationException("Playable copied game folder control-options manifest size does not match defaultoptions.bea.");
+                    throw new InvalidOperationException(ControlOptionsFileSizeMismatch);
                 }
 
                 if (!root.TryGetProperty("changedRanges", out JsonElement rangesEl) ||
                     rangesEl.ValueKind != JsonValueKind.Array ||
                     rangesEl.GetArrayLength() == 0)
                 {
-                    throw new InvalidOperationException("Playable copied game folder control-options manifest is missing changed byte ranges.");
+                    throw new InvalidOperationException(ControlOptionsRangesMissing);
                 }
 
                 if (!root.TryGetProperty("backups", out JsonElement backupsEl) ||
                     backupsEl.ValueKind != JsonValueKind.Array ||
                     backupsEl.GetArrayLength() == 0)
                 {
-                    throw new InvalidOperationException("Playable copied game folder control-options manifest is missing backup metadata.");
+                    throw new InvalidOperationException(ControlOptionsBackupDetailsMissing);
                 }
 
                 foreach (JsonElement backupEl in backupsEl.EnumerateArray())
@@ -907,23 +1000,23 @@ namespace OnslaughtCareerEditor.AppCore
                     if (!IsSameOrUnderRoot(backupPath, resolvedGameRoot) ||
                         string.Equals(backupPath, resolvedGameRoot, StringComparison.OrdinalIgnoreCase))
                     {
-                        throw new InvalidOperationException("Playable copied game folder control-options backup path escapes the generated profile.");
+                        throw new InvalidOperationException(FileMustStayInsideCopy);
                     }
 
                     if (!File.Exists(backupPath))
-                        throw new FileNotFoundException("Playable copied game folder control-options backup is missing.", backupPath);
+                        throw new FileNotFoundException(GameProfileControlOptionsService.OptionsBackupMissing);
 
                     if (backupEl.TryGetProperty("size", out JsonElement backupSizeEl) &&
                         backupSizeEl.TryGetInt64(out long expectedBackupSize) &&
                         new FileInfo(backupPath).Length != expectedBackupSize)
                     {
-                        throw new InvalidOperationException("Playable copied game folder control-options backup size does not match manifest.");
+                        throw new InvalidOperationException(ControlOptionsBackupSizeMismatch);
                     }
 
                     string expectedBackupHash = RequiredString(backupEl, "sha256", "control-options backup");
                     string actualBackupHash = ComputeSha256(backupPath);
                     if (!string.Equals(expectedBackupHash, actualBackupHash, StringComparison.OrdinalIgnoreCase))
-                        throw new InvalidOperationException("Playable copied game folder control-options backup hash does not match manifest.");
+                        throw new InvalidOperationException(ControlOptionsBackupMismatch);
                 }
             }
         }
@@ -933,12 +1026,12 @@ namespace OnslaughtCareerEditor.AppCore
             if (!element.TryGetProperty(propertyName, out JsonElement child) ||
                 child.ValueKind != JsonValueKind.String)
             {
-                throw new InvalidOperationException($"Playable copied game folder {label} is missing {propertyName}.");
+                throw new InvalidOperationException(CopyDetailsIncomplete);
             }
 
             string? value = child.GetString();
             if (string.IsNullOrWhiteSpace(value))
-                throw new InvalidOperationException($"Playable copied game folder {label} has an empty {propertyName}.");
+                throw new InvalidOperationException(CopyDetailsIncomplete);
 
             return value;
         }
@@ -946,11 +1039,11 @@ namespace OnslaughtCareerEditor.AppCore
         private static string ResolveProfileRelativePath(string root, string relativePath, string label)
         {
             if (string.IsNullOrWhiteSpace(relativePath) || Path.IsPathFullyQualified(relativePath))
-                throw new InvalidOperationException($"Playable copied game folder {label} path must be package-relative.");
+                throw new InvalidOperationException(FileMustStayInsideCopy);
 
             string fullPath = Path.GetFullPath(Path.Combine(root, relativePath.Replace('/', Path.DirectorySeparatorChar)));
             if (!IsSameOrUnderRoot(fullPath, root) || string.Equals(fullPath, root, StringComparison.OrdinalIgnoreCase))
-                throw new InvalidOperationException($"Playable copied game folder {label} path escapes the generated profile.");
+                throw new InvalidOperationException(FileMustStayInsideCopy);
 
             return fullPath;
         }
@@ -969,15 +1062,15 @@ namespace OnslaughtCareerEditor.AppCore
                 if (string.IsNullOrWhiteSpace(manifestExePath) ||
                     !string.Equals(resolvedManifestExePath, executablePath, StringComparison.OrdinalIgnoreCase))
                 {
-                    throw new InvalidOperationException("Playable copied game folder manifest executable path does not match the launch root.");
+                    throw new InvalidOperationException(CopiedBeaMismatch);
                 }
             }
 
             if (!File.Exists(executablePath))
-                throw new FileNotFoundException("BEA.exe was not found under the copied game profile.", executablePath);
+                throw new FileNotFoundException(CopiedBeaMissing);
 
             if (!manifestRoot.TryGetProperty("patchResult", out JsonElement patchResultEl))
-                throw new InvalidOperationException("Playable copied game folder manifest is missing patch result metadata.");
+                throw new InvalidOperationException(CopyPatchResultMissing);
 
             bool requested = patchResultEl.TryGetProperty("requested", out JsonElement requestedEl) && requestedEl.GetBoolean();
             if (!requested)
@@ -988,10 +1081,10 @@ namespace OnslaughtCareerEditor.AppCore
 
             bool success = patchResultEl.TryGetProperty("success", out JsonElement successEl) && successEl.GetBoolean();
             if (!success)
-                throw new InvalidOperationException("Playable copied game folder manifest does not record a successful patch result.");
+                throw new InvalidOperationException(CopyPatchDidNotSucceed);
 
             if (!patchResultEl.TryGetProperty("patchKeys", out JsonElement keysEl) || keysEl.ValueKind != JsonValueKind.Array)
-                throw new InvalidOperationException("Playable copied game folder manifest is missing patch keys.");
+                throw new InvalidOperationException(CopyPatchRowsMissing);
 
             string[] patchKeys = keysEl.EnumerateArray()
                 .Select(keyEl => keyEl.GetString())
@@ -999,16 +1092,13 @@ namespace OnslaughtCareerEditor.AppCore
                 .Select(key => key!)
                 .ToArray();
             if (!s_windowedPatchKeys.All(required => patchKeys.Contains(required, StringComparer.OrdinalIgnoreCase)))
-                throw new InvalidOperationException("Playable copied game folder manifest patch keys do not include the windowed compatibility set.");
+                throw new InvalidOperationException(CopyNeedsWindowedPatchSet);
 
             IReadOnlyList<BinaryPatchSpec> selected = SelectPatchSpecs(patchKeys);
             byte[] data = File.ReadAllBytes(executablePath);
-            var (_, allPatched, rows) = BinaryPatchEngine.VerifyPatchSpecs(data, selected);
+            var (_, allPatched, _) = BinaryPatchEngine.VerifyPatchSpecs(data, selected);
             if (!allPatched)
-            {
-                string states = string.Join(", ", rows.Select(row => $"{row.Spec.Key}={BinaryPatchEngine.StateLabel(row.State)}"));
-                throw new InvalidOperationException($"The current copied executable no longer matches the manifest patch state: {states}");
-            }
+                throw new InvalidOperationException(CopiedBeaPatchesMismatch);
 
             ValidatePatchedExecutableAgainstBackupSnapshot(executablePath, selected);
         }
@@ -1017,21 +1107,23 @@ namespace OnslaughtCareerEditor.AppCore
         {
             string backupPath = BinaryPatchEngine.BuildBackupPath(executablePath);
             string backupHashPath = BinaryPatchEngine.BuildBackupHashPath(executablePath);
-            if (!File.Exists(backupPath) || !File.Exists(backupHashPath))
-                throw new InvalidOperationException("Playable copied game folder launch requires the copied executable backup snapshot and hash sidecar.");
+            if (!File.Exists(backupPath))
+                throw new InvalidOperationException(CopiedBackupMissing);
+            if (!File.Exists(backupHashPath))
+                throw new InvalidOperationException(CopiedBackupHashMissing);
 
             byte[] backupBytes = File.ReadAllBytes(backupPath);
             string expectedBackupHash = File.ReadAllText(backupHashPath).Trim();
             string actualBackupHash = ComputeSha256(backupPath);
             if (!string.Equals(expectedBackupHash, actualBackupHash, StringComparison.OrdinalIgnoreCase))
-                throw new InvalidOperationException("Playable copied game folder executable backup snapshot hash does not match its sidecar.");
+                throw new InvalidOperationException(CopiedBackupHashMismatch);
 
             var trustedHashes = selected
                 .SelectMany(spec => spec.TargetBinaryHashes ?? Array.Empty<string>())
                 .Where(hash => !string.IsNullOrWhiteSpace(hash))
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
             if (!trustedHashes.Contains(actualBackupHash))
-                throw new InvalidOperationException("Playable copied game folder executable backup snapshot is not a trusted clean Steam retail specimen.");
+                throw new InvalidOperationException(CopiedBackupNotRetail);
 
             long[] trustedSizes = selected
                 .Select(spec => spec.TargetBinarySize)
@@ -1040,14 +1132,11 @@ namespace OnslaughtCareerEditor.AppCore
                 .Distinct()
                 .ToArray();
             if (trustedSizes.Length == 0 || !trustedSizes.Contains(backupBytes.LongLength))
-                throw new InvalidOperationException("Playable copied game folder executable backup snapshot size is not a trusted clean Steam retail specimen.");
+                throw new InvalidOperationException(CopiedBackupNotRetail);
 
             var (_, _, backupRows) = BinaryPatchEngine.VerifyPatchSpecs(backupBytes, selected);
             if (backupRows.Any(row => row.State != BinaryPatchState.Original))
-            {
-                string states = string.Join(", ", backupRows.Select(row => $"{row.Spec.Key}={BinaryPatchEngine.StateLabel(row.State)}"));
-                throw new InvalidOperationException($"Playable copied game folder executable backup snapshot is not a clean base for selected patches: {states}");
-            }
+                throw new InvalidOperationException(CopiedBackupNotRetail);
 
             byte[] expectedPatchedBytes = backupBytes.ToArray();
             foreach (BinaryPatchSpec spec in selected)
@@ -1060,7 +1149,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             byte[] actualBytes = File.ReadAllBytes(executablePath);
             if (!actualBytes.SequenceEqual(expectedPatchedBytes))
-                throw new InvalidOperationException("The current copied executable no longer matches the backup-derived selected patch bytes.");
+                throw new InvalidOperationException(CopiedBeaPatchesMismatch);
         }
 
         private static void ValidateManifestExecutableIdentity(JsonElement manifestRoot, string executablePath)
@@ -1068,27 +1157,27 @@ namespace OnslaughtCareerEditor.AppCore
             if (!manifestRoot.TryGetProperty("executableSize", out JsonElement sizeEl) ||
                 !sizeEl.TryGetInt64(out long expectedSize))
             {
-                throw new InvalidOperationException("Playable copied game folder manifest is missing executable size metadata.");
+                throw new InvalidOperationException(CopyBeaSizeMissing);
             }
 
             if (!manifestRoot.TryGetProperty("executableSha256", out JsonElement hashEl) ||
                 hashEl.ValueKind != JsonValueKind.String ||
                 string.IsNullOrWhiteSpace(hashEl.GetString()))
             {
-                throw new InvalidOperationException("Playable copied game folder manifest is missing executable full-file hash metadata.");
+                throw new InvalidOperationException(CopyBeaHashMissing);
             }
 
             FileInfo info = new(executablePath);
             if (info.Length != expectedSize)
             {
-                throw new InvalidOperationException("The current copied executable no longer matches the manifest full-file size.");
+                throw new InvalidOperationException(CopyBeaSizeMismatch);
             }
 
             string expectedHash = hashEl.GetString()!.Trim();
             string actualHash = ComputeSha256(executablePath);
             if (!string.Equals(actualHash, expectedHash, StringComparison.OrdinalIgnoreCase))
             {
-                throw new InvalidOperationException("The current copied executable no longer matches the manifest full-file hash.");
+                throw new InvalidOperationException(CopyBeaHashMismatch);
             }
         }
 
@@ -1099,7 +1188,7 @@ namespace OnslaughtCareerEditor.AppCore
                 : Path.GetFullPath(executableOverridePath);
 
             if (!File.Exists(candidate))
-                throw new FileNotFoundException("BEA.exe source was not found.", candidate);
+                throw new FileNotFoundException(SourceExecutableMissing);
 
             if (!IsSupportedExecutableSourceName(Path.GetFileName(candidate)))
                 throw new InvalidOperationException("Executable source must be named BEA.exe or BEA.exe.original.backup.");
@@ -1122,26 +1211,26 @@ namespace OnslaughtCareerEditor.AppCore
         private static void ValidateRequiredSourceEntries(string sourceRoot, string executableSource, bool hasExecutableOverride)
         {
             if (!hasExecutableOverride && !File.Exists(Path.Combine(sourceRoot, "BEA.exe")))
-                throw new FileNotFoundException("Required game entry is missing: BEA.exe", Path.Combine(sourceRoot, "BEA.exe"));
+                throw new FileNotFoundException(SourceExecutableMissing);
 
             if (hasExecutableOverride && !File.Exists(executableSource))
-                throw new FileNotFoundException("Executable override is missing.", executableSource);
+                throw new FileNotFoundException(SourceExecutableMissing);
 
             foreach (string entry in s_requiredDirectoryEntries)
             {
                 string path = Path.Combine(sourceRoot, entry);
                 if (!Directory.Exists(path))
-                    throw new DirectoryNotFoundException($"Required game directory is missing: {entry}");
-                RejectReparsePoint(path, $"required game directory '{entry}'");
+                    throw new DirectoryNotFoundException(RequiredGameFolderMissing);
+                RejectReparsePoint(path, "required game folder");
             }
 
             foreach (string entry in s_requiredFileEntries)
             {
                 string path = Path.Combine(sourceRoot, entry);
                 if (!File.Exists(path))
-                    throw new FileNotFoundException($"Required game file is missing: {entry}", path);
-                RejectReparsePoint(path, $"required game file '{entry}'");
-                RejectMultipleHardLinks(path, $"Required game file '{entry}'");
+                    throw new FileNotFoundException(RequiredGameFileMissing);
+                RejectReparsePoint(path, "required game file");
+                RejectMultipleHardLinks(path, "required game file");
             }
         }
 
@@ -1165,10 +1254,12 @@ namespace OnslaughtCareerEditor.AppCore
                 string sourcePath = Path.Combine(sourceRoot, entry);
                 if (File.Exists(sourcePath) || Directory.Exists(sourcePath))
                 {
-                    RejectReparsePoint(sourcePath, $"game entry '{entry}'");
+                    RejectReparsePoint(
+                        sourcePath,
+                        Directory.Exists(sourcePath) ? "required game folder" : "required game file");
                     if (File.Exists(sourcePath))
                     {
-                        RejectMultipleHardLinks(sourcePath, $"Game entry '{entry}'");
+                        RejectMultipleHardLinks(sourcePath, "required game file");
                     }
 
                     entries.Add(new GameProfileCopiedEntry(
@@ -1210,15 +1301,12 @@ namespace OnslaughtCareerEditor.AppCore
                 selected);
 
             if (!success)
-                throw new InvalidOperationException($"Playable copied game folder patch apply failed: {message}");
+                throw new InvalidOperationException(CopiedBeaPatchApplyFailed);
 
             byte[] readback = File.ReadAllBytes(exePath);
-            var (_, allPatched, rows) = BinaryPatchEngine.VerifyPatchSpecs(readback, selected);
+            var (_, allPatched, _) = BinaryPatchEngine.VerifyPatchSpecs(readback, selected);
             if (!allPatched)
-            {
-                string states = string.Join(", ", rows.Select(row => $"{row.Spec.Key}={BinaryPatchEngine.StateLabel(row.State)}"));
-                throw new InvalidOperationException($"Playable copied game folder patch verification failed: {states}");
-            }
+                throw new InvalidOperationException(CopiedBeaPatchesMismatch);
 
             return new GameProfilePatchResult(
                 true,
@@ -1238,8 +1326,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             if (!includeWindowedCompatibility && keys.Count > 0)
             {
-                throw new InvalidOperationException(
-                    "Playable copied game folder patch preparation requires the windowed compatibility patch set when any executable patch rows are selected.");
+                throw new InvalidOperationException(CopyNeedsWindowedPatchSet);
             }
 
             if (includeWindowedCompatibility)
@@ -1260,7 +1347,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             SafeCopyProfilePreset preset = BinaryPatchPlanBuilder.GetSafeCopyProfilePreset(profilePresetId);
             if (!preset.IsSelectable)
-                throw new InvalidOperationException($"{preset.DisplayName} cannot be used to prepare a safe game copy.");
+                throw new InvalidOperationException(BinaryPatchPlanBuilder.ProfilePresetNotReady);
 
             string[] expectedKeys = BinaryPatchPlanBuilder.BuildSafeCopyProfilePatchKeys(preset.Id)
                 .OrderBy(key => key, StringComparer.OrdinalIgnoreCase)
@@ -1270,8 +1357,7 @@ namespace OnslaughtCareerEditor.AppCore
                 .ToArray();
             if (!expectedKeys.SequenceEqual(actualKeys, StringComparer.OrdinalIgnoreCase))
             {
-                throw new InvalidOperationException(
-                    $"{preset.DisplayName} profile requires its exact proof-bounded patch row set.");
+                throw new InvalidOperationException(ProfileNeedsItsPatchRows);
             }
 
             return preset;
@@ -1284,7 +1370,7 @@ namespace OnslaughtCareerEditor.AppCore
             foreach (string key in keys)
             {
                 if (!byKey.TryGetValue(key, out BinaryPatchSpec? spec))
-                    throw new InvalidOperationException($"Required patch catalog row is missing: {key}");
+                    throw new InvalidOperationException(RequiredPatchRowMissing);
                 selected.Add(spec);
             }
 
@@ -1334,11 +1420,11 @@ namespace OnslaughtCareerEditor.AppCore
                 if (string.Equals(token, "-level", StringComparison.OrdinalIgnoreCase))
                 {
                     if (index + 1 >= arguments.Count)
-                        throw new InvalidOperationException($"{token.ToLowerInvariant()} requires a numeric value.");
+                        throw new InvalidOperationException(LaunchArgumentNeedsANumber);
 
                     string valueToken = arguments[++index]?.Trim() ?? string.Empty;
                     if (!int.TryParse(valueToken, out int value))
-                        throw new InvalidOperationException($"{token.ToLowerInvariant()} requires a numeric value.");
+                        throw new InvalidOperationException(LaunchArgumentNeedsANumber);
 
                     string normalizedToken = token.ToLowerInvariant();
                     if (value < 1 || value > 9999)
@@ -1350,9 +1436,9 @@ namespace OnslaughtCareerEditor.AppCore
                 }
 
                 if (token.StartsWith("-", StringComparison.Ordinal))
-                    throw new InvalidOperationException($"Unsupported launch argument '{token}'.");
+                    throw new InvalidOperationException(UnsupportedLaunchArgument);
 
-                throw new InvalidOperationException($"Unexpected launch argument value '{token}'.");
+                throw new InvalidOperationException(UnexpectedLaunchArgumentValue);
             }
 
             return normalized.ToArray();
@@ -1369,7 +1455,7 @@ namespace OnslaughtCareerEditor.AppCore
             string targetPath = Path.Combine(targetRoot, Level100EnglishDatRelativePath.Replace('/', Path.DirectorySeparatorChar));
             string backupPath = Path.Combine(targetRoot, Level100EnglishDatBackupRelativePath.Replace('/', Path.DirectorySeparatorChar));
             if (!File.Exists(targetPath))
-                throw new FileNotFoundException("The copied game does not contain data\\language\\english.dat.", targetPath);
+                throw new FileNotFoundException(Level100EnglishDatMissing);
 
             RejectExistingReparseAncestors(targetPath, "Level 100 English language table path");
             RejectReparsePoint(targetPath, "Level 100 English language table");
@@ -1452,7 +1538,7 @@ namespace OnslaughtCareerEditor.AppCore
             string targetPath = Path.Combine(targetRoot, Level100ResourceArchiveRelativePath.Replace('/', Path.DirectorySeparatorChar));
             string backupPath = Path.Combine(targetRoot, Level100ResourceArchiveBackupRelativePath.Replace('/', Path.DirectorySeparatorChar));
             if (!File.Exists(targetPath))
-                throw new FileNotFoundException("The copied game does not contain data\\resources\\100_res_PC.aya.", targetPath);
+                throw new FileNotFoundException(Level100ResourceMissing);
 
             RejectExistingReparseAncestors(targetPath, "Level 100 mission archive path");
             RejectReparsePoint(targetPath, "Level 100 mission archive");
@@ -1840,12 +1926,12 @@ namespace OnslaughtCareerEditor.AppCore
         {
             if (IsSameOrUnderRoot(outputRoot, sourceRoot))
             {
-                throw new InvalidOperationException("The app-owned output root must not be inside the source game root.");
+                throw new InvalidOperationException(ProfileFolderInsideGame);
             }
 
             if (IsSameOrUnderRoot(sourceRoot, outputRoot))
             {
-                throw new InvalidOperationException("The source game root must not be inside the app-owned output root.");
+                throw new InvalidOperationException(GameFolderInsideProfile);
             }
         }
 
@@ -1853,12 +1939,12 @@ namespace OnslaughtCareerEditor.AppCore
         {
             if (IsPathUnderProtectedInstallRoot(outputRoot))
             {
-                throw new InvalidOperationException("The app-owned output root must not be under Program Files or another protected install root.");
+                throw new InvalidOperationException(ProfileFolderUnderProtectedInstall);
             }
 
             if (HasKnownSteamInstallShape(outputRoot))
             {
-                throw new InvalidOperationException("The app-owned output root must not be under a steamapps/common/Battle Engine Aquila install root.");
+                throw new InvalidOperationException(ProfileFolderUnderSteamInstall);
             }
         }
 
@@ -1871,7 +1957,7 @@ namespace OnslaughtCareerEditor.AppCore
         private static string NormalizeDirectoryForCreation(string path)
         {
             if (string.IsNullOrWhiteSpace(path))
-                throw new InvalidOperationException("An app-owned output root is required.");
+                throw new InvalidOperationException(ProfileFolderRequired);
 
             string normalized = Path.GetFullPath(path)
                 .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
@@ -1952,7 +2038,7 @@ namespace OnslaughtCareerEditor.AppCore
                 + Path.DirectorySeparatorChar;
         }
 
-        private static string BuildRedactedCommandPreview(IReadOnlyList<string> arguments)
+        public static string BuildRedactedCommandPreview(IReadOnlyList<string> arguments)
         {
             string argumentString = string.Join(" ", arguments);
             return argumentString.Length == 0
@@ -1974,14 +2060,14 @@ namespace OnslaughtCareerEditor.AppCore
         private static void RejectIfOutsideRoot(string path, string root)
         {
             if (!IsSameOrUnderRoot(path, root))
-                throw new InvalidOperationException("Playable copied game folder source traversal escaped the selected game root.");
+                throw new InvalidOperationException(SourceFileMustStayInsideGame);
         }
 
         private static void RejectReparsePoint(string path, string label)
         {
             FileAttributes attributes = File.GetAttributes(path);
             if ((attributes & FileAttributes.ReparsePoint) != 0)
-                throw new InvalidOperationException($"Playable copied game folder preparation refuses reparse points in {label}.");
+                throw new InvalidOperationException(CopyCannotUseLink);
         }
 
         private static void RejectMultipleHardLinks(string path, string label)
@@ -1991,7 +2077,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             uint linkCount = GetWindowsHardLinkCount(path);
             if (linkCount > 1)
-                throw new InvalidOperationException($"{label} is hardlinked to another file; refusing to copy a shared file identity into the playable copied game folder.");
+                throw new InvalidOperationException(FileCannotShareData);
         }
 
         private static uint GetWindowsHardLinkCount(string path)
@@ -2003,7 +2089,7 @@ namespace OnslaughtCareerEditor.AppCore
                 FileShare.ReadWrite | FileShare.Delete);
 
             if (!GetFileInformationByHandle(handle, out ByHandleFileInformation info))
-                throw new IOException($"Could not inspect hardlink count for playable copied game folder source. Win32 error: {Marshal.GetLastWin32Error()}");
+                throw new IOException(FileMutationSafety.FileCouldNotBeInspected, new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error()));
 
             return info.NumberOfLinks;
         }
@@ -2099,14 +2185,14 @@ namespace OnslaughtCareerEditor.AppCore
             SafeCopySaveDisposition saveDisposition)
         {
             if (string.IsNullOrWhiteSpace(appOwnedProfilesRoot))
-                throw new InvalidOperationException("An app-owned playable copied game folder root is required.");
+                throw new InvalidOperationException(ProfileFolderRequired);
 
             if (string.IsNullOrWhiteSpace(profileRoot))
-                throw new InvalidOperationException("A playable copied game folder is required.");
+                throw new InvalidOperationException(CopyRequired);
 
             string normalizedRoot = NormalizeDirectoryForCreation(appOwnedProfilesRoot);
             if (!Directory.Exists(profileRoot))
-                throw new DirectoryNotFoundException($"Playable copied game folder does not exist: {profileRoot}");
+                throw new DirectoryNotFoundException(CopyFolderMissing);
 
             string normalizedProfile = NormalizeExistingDirectory(profileRoot);
             RejectExistingReparseAncestors(normalizedRoot, "app-owned playable copied game folder root");
@@ -2116,15 +2202,13 @@ namespace OnslaughtCareerEditor.AppCore
             if (!IsSameOrUnderRoot(normalizedProfile, normalizedRoot) ||
                 string.Equals(normalizedProfile, normalizedRoot, StringComparison.OrdinalIgnoreCase))
             {
-                throw new InvalidOperationException(
-                    "Refusing to delete a playable copied game folder outside the app-owned playable copied game folder root.");
+                throw new InvalidOperationException(CopyMustStayInside);
             }
 
             string manifestPath = Path.Combine(normalizedProfile, ProfileManifestFileName);
             if (!File.Exists(manifestPath))
             {
-                throw new InvalidOperationException(
-                    $"Refusing to delete a folder that is not an app-generated playable copied game folder: {ProfileManifestFileName} is missing.");
+                throw new InvalidOperationException(CopyManifestMissing);
             }
 
             RejectReparsePoint(manifestPath, "playable copied game folder manifest");
@@ -2158,7 +2242,7 @@ namespace OnslaughtCareerEditor.AppCore
             if (!IsSameOrUnderRoot(normalizedTarget, normalizedOutput) ||
                 string.Equals(normalizedTarget, normalizedOutput, StringComparison.OrdinalIgnoreCase))
             {
-                throw new InvalidOperationException("Refusing to clean a playable copied game folder target outside the app-owned output root.");
+                throw new InvalidOperationException(CopyMustStayInside);
             }
 
             Directory.Delete(normalizedTarget, recursive: true);

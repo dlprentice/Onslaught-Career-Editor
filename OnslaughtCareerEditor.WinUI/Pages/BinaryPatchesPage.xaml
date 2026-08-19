@@ -50,8 +50,8 @@
                                FontWeight="SemiBold" />
                     <TextBlock Text="Steam/game install: read-only source for everything on this page except one thing. Patch my installed game, at the bottom, changes it on purpose - and copies your original BEA.exe first so you can put it back."
                                 Style="{StaticResource SectionBodyTextStyle}" />
-                    <TextBlock Text="Safe game copy: app-owned folder. This is what Play runs."
-                                Style="{StaticResource SectionBodyTextStyle}" />
+                    <TextBlock Text="Safe game copy: this copy folder. This is what Play runs."
+                               Style="{StaticResource SectionBodyTextStyle}" />
                     <TextBlock Text="Advanced BEA.exe-only copy: used for technical inspection and byte-level patching only. It is not a fully playable game folder."
                                Style="{StaticResource SectionBodyTextStyle}" />
                 </StackPanel>
@@ -247,8 +247,8 @@
                                                Style="{StaticResource SectionBodyTextStyle}" />
                                     <TextBlock x:Name="PatchBenchPlayerModsSelectionStatus"
                                                AutomationProperties.AutomationId="PatchBenchPlayerModsSelectionStatus"
-                                               AutomationProperties.Name="Player mods selected: none."
-                                               Text="Player mods selected: none."
+                                               AutomationProperties.Name="No player mods on. Turn one on above."
+                                               Text="No player mods on. Turn one on above."
                                                TextWrapping="WrapWholeWords" />
                                     <Grid ColumnSpacing="8"
                                           RowSpacing="8">
@@ -341,7 +341,7 @@
                             <TextBlock Text="Safe game copy"
                                        FontSize="16"
                                        FontWeight="SemiBold" />
-                            <TextBlock Text="Create a launchable app-owned game copy. The app applies the verified 16:9 gameplay correction, writes the copied 16:9 display option, and launches the tested 1600x900 windowed baseline; selected mods are added too. Savegames are optional, and the installed game is unchanged."
+                            <TextBlock Text="Create a launchable game copy. The app applies the verified 16:9 gameplay correction, writes the copied 16:9 display option, and launches the tested 1600x900 windowed baseline; selected mods are added too. Savegames are optional, and the installed game is unchanged."
                                        Style="{StaticResource SectionBodyTextStyle}" />
                             <TextBlock x:Name="PatchBenchSafeCopySourceStatus"
                                        AutomationProperties.AutomationId="PatchBenchSafeCopySourceStatus"
@@ -645,7 +645,7 @@
                             <TextBlock x:Name="PatchBenchSelectedProfileDetails"
                                        AutomationProperties.AutomationId="PatchBenchSelectedProfileDetails"
                                        AutomationProperties.Name="Selected safe-copy preset details"
-                                       Text="Selected safe-copy preset details: included changes, restore path, and limits update with the selected profile."
+                                       Text="Selected safe-copy preset details: included changes, restore steps, and limits update with the selected profile."
                                        TextWrapping="WrapWholeWords" />
                         </Expander>
                         <Expander x:Name="PatchBenchLabPatchExperimentsExpander"
@@ -1203,7 +1203,7 @@
                                     <TextBlock Text="Swap music in safe copy"
                                                FontSize="16"
                                                FontWeight="SemiBold" />
-                                    <TextBlock Text="Swap one copied music track with another, or stage an external replacement OGG inside the safe copy. The original install is unchanged."
+                                    <TextBlock Text="Swap one copied music track with another, or stage an external replacement music file inside the safe copy. The original install is unchanged."
                                                Style="{StaticResource SectionBodyTextStyle}" />
                                     <TextBlock Text="Quick copied-track swap"
                                                Style="{StaticResource SectionBodyTextStyle}" />
@@ -1285,14 +1285,14 @@
                                              AutomationProperties.Name="Target track in safe copy"
                                              TextChanged="MusicReplacementInput_TextChanged"
                                              PlaceholderText="Existing copied data\Music file, for example BEA_01(Master).ogg" />
-                                    <TextBlock Text="Replacement track (.ogg)"
+                                    <TextBlock Text="Replacement music file"
                                                Style="{StaticResource SectionBodyTextStyle}" />
                                     <TextBox x:Name="PatchBenchMusicReplacementPath"
-                                             AutomationProperties.AutomationId="PatchBenchMusicReplacementPath"
-                                             AutomationProperties.Name="Replacement track OGG path"
+                                             AutomationProperties.AutomationId="PatchBenchMusicReplacementFile"
+                                             AutomationProperties.Name="Replacement music file"
                                              TextChanged="MusicReplacementInput_TextChanged"
-                                             PlaceholderText="Path to replacement .ogg" />
-                                    <TextBlock Text="Target must be an existing file in the safe copy's data\Music folder. Stop the safe copy before staging or restoring."
+                                             PlaceholderText="Replacement music file" />
+                                    <TextBlock Text="Target must be an existing file in the safe copy's Music folder. Stop the safe copy before staging or restoring."
                                                Style="{StaticResource SectionBodyTextStyle}" />
                                     <StackPanel Spacing="10">
                                         <Button x:Name="PatchBenchStageMusicReplacementButton"
@@ -1329,7 +1329,7 @@
                                   IsExpanded="False">
                             <StackPanel Spacing="16"
                                         Margin="0,12,0,0">
-                                <TextBlock Text="This app-owned executable-copy workflow is separate from Safe Game Copy and never counts as a creation input."
+                                <TextBlock Text="This BEA.exe-only copy workflow is separate from Safe Game Copy and never counts as a creation input."
                                            Style="{StaticResource SectionBodyTextStyle}" />
                                 <Expander x:Name="PatchBenchAdvancedTechnicalExpander" Header="Advanced technical check, not needed to play"
                                           AutomationProperties.AutomationId="PatchBenchAdvancedTechnicalExpander"
@@ -1355,10 +1355,10 @@
                                                                    Text="Select BEA.exe or BEA.exe.original.backup as read-only source"
                                                                    TextWrapping="WrapWholeWords" />
                                                     </Border>
-                                                    <Expander Header="Source path details">
+                                                    <Expander Header="Source file details">
                                                         <TextBox x:Name="SourceExePathTextBox"
-                                                                 AutomationProperties.AutomationId="PatchBenchSourceExePath"
-                                                                 AutomationProperties.Name="Source executable path"
+                                                                 AutomationProperties.AutomationId="PatchBenchSourceExeFile"
+                                                                 AutomationProperties.Name="Source executable file"
                                                                  TextChanged="SourceExePathTextBox_TextChanged"
                                                                  PlaceholderText="Select BEA.exe or BEA.exe.original.backup as read-only source" />
                                                     </Expander>
@@ -1404,15 +1404,15 @@
                                                     </Border>
                                                     <Expander Header="BEA.exe-only copy details">
                                                         <TextBox x:Name="ExePathTextBox"
-                                                                 AutomationProperties.AutomationId="PatchBenchWorkingCopyPath"
-                                                                 AutomationProperties.Name="BEA.exe-only copy executable path"
+                                                                 AutomationProperties.AutomationId="PatchBenchWorkingCopyFile"
+                                                                 AutomationProperties.Name="BEA.exe-only copy executable file"
                                                                  IsReadOnly="True"
                                                                  TextChanged="ExePathTextBox_TextChanged"
                                                                  PlaceholderText="Create a copy before verifying or applying patches" />
                                                     </Expander>
                                                 </StackPanel>
                                                 <TextBlock x:Name="SelectionSummaryTextBlock"
-                                                           Text="No patches selected."
+                                                           Text="Choose at least one patch to continue."
                                                            Style="{StaticResource SectionBodyTextStyle}" />
                                                 <TextBlock Text="Advanced BEA.exe-only copies are for byte inspection and apply/restore checks. Restore or create a fresh copy before changing patch sets; this is not the normal launch path."
                                                            Style="{StaticResource SectionBodyTextStyle}" />

@@ -1,7 +1,7 @@
 # CScriptObjectCode function map
 
 Status: active static function map
-Last updated: 2026-08-18 (RETURN / CALLLOCAL / event names / 762-object trailer census)
+Last updated: 2026-08-18 (CThingPtr[+0x14] rebinds [this+4], not Print)
 Source File: `C:\dev\ONSLAUGHT2\MissionScript\ScriptObjectCode.cpp` (the
 VM's `__FILE__` chain is established by the adjacent
 [`ScriptObjectCode.cpp.md`](ScriptObjectCode.cpp.md) wave receipts) | Binary:
@@ -47,9 +47,10 @@ pointer used for its allocations is `0x00650040` =
 | `+0x14` | 13-dword event-id → PC table | ctor reads 13 dwords; `CallEvent` indexes `[obj+0x14+eventId*4]`. Static users of ids 0–7 are listed below; ids 8–12 have **no** direct `E8` to `CallEvent` |
 | `+0x48` | `CSPtrSet` of `CEventFunction` | ctor `call 0x004e5840` then `CSPtrSet__AddToTail` (`0x004e5b20`) |
 | `+0x58` | symbol table | ctor stores the `0x00539770` reader result (`mov [esi+0x58],eax` at `0x00538fab`) |
-| `+0x5c` | preamble-present dword (serialized) | ctor `lea eax,[esi+0x5c]; push 4; push eax; call 0x00548570` at `0x00539011`; `CallEvent` runs PC=0 iff this is nonzero and `+0x6c == 0` |
+| `+0x5c` | preamble-present dword (serialized) | ctor `lea eax,[esi+0x5c]; push 4; push eax; call 0x00548570` at `0x00539011`; `CallEvent`/`CallEventDirect` run PC=0 iff this is nonzero and `+0x6c == 0`. Shipped meaning: a (possibly empty) file-scope `vars` initializer prefix sits at PC=0. Authored field name still open |
 | `+0x60` | per-step trace dword (serialized) | ctor `lea edx,[esi+0x60]; push 4; push edx; call 0x00548570` at `0x00539004`; `Run` does `cmp dword [obj+0x60],1` at `0x00539ba4` |
 | `+0x64` | instruction-count copy | ctor `mov ecx,[esi+0xc]; mov [esi+0x64],ecx` at `0x0053901e` |
+| `+0x68` | owning `IScript*` | `IScript__Constructor` writes `mov [eventObj+0x68],this` at `0x005333f9`. Not a ctor-serialized field |
 | `+0x6c` | preamble-already-run flag | ctor zeroes it (`mov [esi+0x6c],ebp` with `ebp=0` at `0x00538f1a`); `CallEvent`/`CallEventDirect` write `1` after the PC=0 preamble |
 
 `CScriptObjectCode__Clone` copies the four trailer dwords on the success
@@ -66,10 +67,19 @@ arm at `0x00539265`.
 | `0x0052e0f0` | `CInstructionOP_RETURN__ExecutePop` | `578b7c2408 8b8724020000 85c0 7e72 … 898724020000 e85db30000 … ff5030 898714020000 … c7 00 f84a5e00 c7400401000000 e8c1b20000 … c20c00` | `ret 0xc`; `CInstructionOP_RETURN` vtable `0x005e4bd0[+0]`, the executor `Run` calls via `call [edx]` at `0x00539b9f` with `(vm, &stack, symbols)`. If `[vm+0x224] <= 0` it returns immediately. Else it decrements `+0x224`, `Pop`s (`0x00539470`), reads a scalar through the element's `vtable[+0x30]`, writes that value to `vm+0x214` (PC), deletes the element, and pushes an 8-byte `CInt` (`vptr 0x005e4af8`, value 1). HIGH. Reachable only after `CALLLOCAL` has incremented `+0x224`; a top-level `0x17` still exits `Run` without calling this function. |
 | `0x0052ec40` | `CInstructionOP_CALLLOCAL__VFunc_0_0052ec40` | `8b442404 8b4904 898814020000 8b8824020000 41 898824020000 c20c00` at file offset `0x0012ec40` | `ret 0xc`. `vm = arg0`; `PC = [instr+4]` (the attribute); `[vm+0x224]++`. This is `CInstructionOP_CALLLOCAL` vtable `0x005e4bb0[+0]`. The only interpreter increment of the return-depth guard. HIGH. |
 | `0x0052d990` | `FUN_0052d990` | `b819000000 c3` | `mov eax,0x19; ret` — 32-bit opcode getter at `CInstructionOP_CALLLOCAL` vtable `0x005e4bb0[+8]`. HIGH. |
-| `0x0052e0a0` | `CInstructionOP_PUSHPC__VFunc_0_0052e0a0` | `56 688f000000 8bf1 68c4c56400 6a18 6a08 … c700f84a5e00 894804 e84bb30000 … c20c00` | `ret 0xc`. Allocates an 8-byte `CInt` (`vptr 0x005e4af8`) whose value is the instruction attribute `[this+4]` and `Push`es it. That attribute is a stored PC, not the live `vm+0x214`. Together with `CALLLOCAL` this is the compiled call sequence (push return PC, then jump and increment depth). HIGH on the bytes; the authored pairing is MEDIUM until a shipped script is shown to emit `PUSHPC` immediately before `CALLLOCAL`. |
+| `0x0052e0a0` | `CInstructionOP_PUSHPC__VFunc_0_0052e0a0` | `56 688f000000 8bf1 68c4c56400 6a18 6a08 … c700f84a5e00 894804 e84bb30000 … c20c00` | `ret 0xc`. Allocates an 8-byte `CInt` (`vptr 0x005e4af8`) whose value is the instruction attribute `[this+4]` and `Push`es it. That attribute is a stored PC, not the live `vm+0x214`. Together with `CALLLOCAL` this is the compiled call sequence (push return PC, then jump and increment depth). HIGH on the bytes. The pairing is unused on the 762-object corpus (0× `0x19`, 0× `0x1a` in 55,836 instructions). |
+| `0x0052e2c0` | `CInstructionOP_PUSH__VFunc_00_0052e2c0` | `56 8bf1 8b4c2410 8b4604 50 e890b40000 50 8bce e868edffff 8b4c240c 50 e83eb10000 5e c20c00` at file offset `0x0012e2c0` | `ret 0xc`. `symbol = GetInstruction(symbols, [this+4])` (`0x00539760`); clone = `CAsmInstruction__GetAttributeValue(symbol)` (`0x0052d040`); `Push(stack, clone)` (`0x00539420`). HIGH. The 332 non-empty shipped preambles are this opcode paired with POP. |
+| `0x0052d040` | `CAsmInstruction__GetAttributeValue` | `8b442404 8b4808 85c9 7408 8b01 ff5048 c20400 … 6878c56400 … c700f84a5e00 c7400400000000 c20400` | `ret 4`; arg is a **symbol record**, not an instruction. If `[symbol+8]` clone via `vtable[+0x48]`. Else `CConsole__Printf` `"FATAL ERROR:  no data set for attribute '%s'"` (`0x0064c5f8`) and allocate an 8-byte `CInt` 0 (`vptr 0x005e4af8`). The live name is the table label; the body is a value-clone. HIGH on the bytes. |
+| `0x0052e2f0` | `CInstructionOP_POP__VFunc_0_0052e2f0` | `8b4104 8b4c240c 56 50 e862b40000 8bf0 8b4e08 85c9 7406 8b11 6a01 ff12 8b4c240c e85ab10000 894608 5e c20c00` | `ret 0xc`. `symbol = CScriptObjectCode__GetInstruction(symbols, attr)` (`0x00539760` = `[table][index]`); if `[symbol+8]` delete via `vtable[0](1)`; `[symbol+8] = Pop(stack)` (`0x00539470`). HIGH. All 128 shipped `hit` 13-slot bodies start with this opcode, so CallEvent id 4's argc=1 thing-ref lands in that local. File-scope `vars` init uses this; runtime `x = expr` uses GETTOP. |
+| `0x0052e9c0` | `CInstructionOP_GETTOP__VFunc_0_0052e9c0` | `8b4104 8b4c240c 56 50 e892ad0000 8bf0 8b4608 85c0 7518 8b4c240c 50 e8ffaa0000 8b10 8bc8 ff5248 894608 5e c20c00 8b4c240c 57 8b38 6a00 e8e3aa0000 8b4e08 50 ff5714 5f 5e c20c00` at file offset `0x0012e9c0` | `ret 0xc`. `symbol = GetInstruction(symbols, attr)`; peek = `GetTop(stack, 0)` (`0x005394e0`) — **does not pop**. If `[symbol+8] == 0`, clone peek via `vtable[+0x48]` into `[symbol+8]`; else `existing->vtable[+0x14](existing, peek)`. HIGH. CInt `+0x14` is `CIntDataType__Assign` `0x0052d2a0` (`rhs->+0x30` into `[this+4]`). CThingPtr `+0x14` is `0x0052f430` (table name `CThingPtrDataType__Print`): `thing* = rhs->vtable[+0x40]()` then `0x00401000(&this+4, thing*)` — unlink old via `CSPtrSet__Remove` `0x004e5bd0`, store, relink. The Print name is the table label, not the body. `player = GetPlayer(1)` is `CALL` / `GETTOP player` / `REMOVE_TOP`. 1904 shipped GETTOPs, all dest type 0, 0 OOB. |
+| `0x005394e0` | `CScriptObjectCode__GetTop` | `8b8100020000 8b542404 2bc2 85c0 7f18 52 68f4006500 6880f56600 e84082f0ff 83c40c 33c0 c20400 8b4481fc c20400` | `ret 4`; `this` = stack head. `idx = [head+0x200] - arg`; if `idx <= 0` print `"FATAL ERROR: Stack item does not exist in call to GetTop - %d"` (`0x006500f4`) and return 0; else return `[head + idx*4 - 4]`. Arg 0 is the top. HIGH. |
+| `0x0052ea10` | `CInstructionOP_POINTER__VFunc_0_0052ea10` | `8b4c2408 56 e856aa0000 8bf0 8bce 8b06 ff5040 8b4c2408 85f6 8b5108 8b4a68 894110 7408 8b16 6a01 8bce ff12 5e c20c00` at file offset `0x0012ea10` | `ret 0xc`. `Pop(stack)` (`0x00539470`); `eax = popped->vtable[+0x40]()`; `IScript* = [[vm+8]+0x68]`; `[IScript+0x10] = eax`; if popped non-null, `vtable[0](1)` delete. HIGH. Slot `+0x40` independently re-read on all six datatype vtables: `CThingPtrDataType` `0x005e4df8[+0x40] = 0x0052f540` `SharedVFunc__ReturnField04` (`mov eax,[ecx+4]; ret`) — the thing pointer; CInt/CFloat/CString/CBool/CPosition all `0x00405930` `SharedVFunc__ReturnZero` (`xor eax,eax; ret`) so a non-thing POINTER nulls `+0x10`. Constructor default of `+0x10` is the attached thing. `player.DisableFlightMode()` is PUSH player / POINTER / CALL. 950 shipped. |
+| `0x0052ea40` | `CInstructionOP_CALL__ExecuteCall` | `83ec18 … 8a4505 … e8fca90000 … 8b4210 85c0 0f858f000000 … 894810 … 8b4f08 894f10 … c20c00` at file offset `0x0012ea40` | `ret 0xc`. argc = `byte [instr+5]`, native = `byte [instr+4]`, pops argc into `0x0089c300`, indexes `0x0064ce20+id*64`. If `[IScript+0x10] != 0` dispatches the handler at descriptor `+0x30` (`0x0064ce50`). **Every exit** writes `[IScript+0x10] = [IScript+8]` (`mov [eax+0x10],ecx` at `0x0052eaf0` when `+0x10` was 0; `mov [edi+0x10],ecx` at `0x0052ebc5` on missing result; `0x0052ec32` on the push-result path). HIGH. POINTER's retarget lasts for that one native only. |
+| `0x00539760` | `CScriptObjectCode__GetInstruction` | `8b01 8b4c2404 8b0488 c20400` | `ret 4`. `return [this][index]`. Used as the symbol-table indexer by PUSH/POP. HIGH on the bytes; the name is the table label, not a claim that the table holds instructions. |
+| `0x00539470` | `CScriptObjectCode__Pop` | `8b8100020000 85c0 7515 689c006500 … 33c0 c3 48 898100020000 8b0481 c3` | Zero-arg. `this` = stack head. Empty (`[head+0x200]==0`) prints via `0x0065009c` and returns 0; else `--depth` and return `[head + depth*4]`. HIGH. |
 | `0x00539910` | `CScriptObjectCode__CopyState` | `8b7c240c 8bf1 8b4708 8d570c 894608 8b8f14020000 898e14020000 52 8d4e0c e81afaffff … 8b8718020000 898618020000 … c7861002000000000000 8bc6 … c20400` | `ret 4`, one arg = source. Copies `[src+8]`, `[src+0x214]` (PC), calls `CScriptObjectCode__RestoreStack` (`0x00539350`) with `(dst+0xc, src+0xc)`, then copies `+0x218`, `+0x220`, `+0x21c`, `+0x224`, and zeroes the running flag `+0x210`. Returns `this`. HIGH. |
 | `0x00539980` | `CScriptObjectCode__Reset` | `83c10c e958faffff` | Zero-arg tail: `add ecx,0xc; jmp 0x005393e0` = `CScriptObjectCode__ClearStack(this+0xc)`. HIGH. |
-| `0x00539990` | `CScriptObjectCode__CallEvent` | `8b860c020000 85c0 7412 6860016500 6880f56600 e8937df0ff … 8b7c240c 897e08 8b476c 85c0 752b 8b475c 85c0 7424 c7861402000000000000 … e81e010000 c7476c01000000 … 8b449114 83f8ff 898614020000 7525 …` | `ret 0x10`, four args `(eventObj, eventId, args[], argCount)`. If the operand stack is not empty (`[this+0x20c] != 0`) prints `"FATAL ERROR: stack not empty on call"` (`0x00650160`). Stores `[this+8] = eventObj`; if `eventObj->[+0x6c] == 0` and `eventObj->[+0x5c] != 0` runs the preamble (`PC = 0`, `Run`, then `eventObj->[+0x6c] = 1`). Resolves the entry `eventObj->[+0x14 + eventId*4]`; `-1` means no handler, in which case it deletes each arg element via `call [elem->vtable][0](elem, 1)` and returns. Otherwise sets `PC = entry`, pushes each arg with `CScriptObjectCode__Push` (`0x00539420`), and calls `Run`. HIGH on the dispatch; `+0x5c`/`+0x6c` are now owned (see the event-object table) and the preamble-present *meaning* of a nonzero `+0x5c` stays MEDIUM. |
+| `0x00539990` | `CScriptObjectCode__CallEvent` | `8b860c020000 85c0 7412 6860016500 6880f56600 e8937df0ff … 8b7c240c 897e08 8b476c 85c0 752b 8b475c 85c0 7424 c7861402000000000000 … e81e010000 c7476c01000000 … 8b449114 83f8ff 898614020000 7525 …` | `ret 0x10`, four args `(eventObj, eventId, args[], argCount)`. If the operand stack is not empty (`[this+0x20c] != 0`) prints `"FATAL ERROR: stack not empty on call"` (`0x00650160`, `CConsole__Printf` — does not abort). Stores `[this+8] = eventObj`; if `eventObj->[+0x6c] == 0` and `eventObj->[+0x5c] != 0` runs the preamble: `PC = 0`, snapshot `+0x21c = +0x20c` at `0x005399d7`, `Run` (`0x00539b00`), then `eventObj->[+0x6c] = 1`. Resolves the entry `eventObj->[+0x14 + eventId*4]`; `-1` means no handler, in which case it deletes each arg element via `call [elem->vtable][0](elem, 1)` and returns. Otherwise snapshots `+0x21c` again, pushes each arg with `CScriptObjectCode__Push` (`0x00539420`), and calls `Run`. HIGH. The shipped PC=0 body is file-scope `vars` init (below); it never leaves CALL args on the stack. |
 | `0x00539420` | `CScriptObjectCode__Push` | `8b4c2408 8b8600020000 890c86 8b8e00020000 41 898600020000 3d80000000 7e1f 6878006500 6880f56600 e8eb82f0ff … 48 898600020000 … c20400` | `ret 4`; `this` = the stack head (`this+0xc` of the VM). `sp = [head+0x200]; [head + sp*4] = arg; sp++`; if `sp > 0x80` (128) it prints `"FATAL ERROR: Stack out of memory"` (`0x00650078`) and decrements the depth back (the overflowing push is rejected). HIGH — the 128-slot stack ceiling the schema records is byte-verified here. |
 | `0x005393e0` | `CScriptObjectCode__ClearStack` | `8b8600020000 85c0 7423 … 8b4c86fc 85c9 7406 8b11 6a01 ff12 … 48 898600020000 75dd` | Zero-arg; walks the stack top-down, `call [elem->vtable][0](elem, 1)` for each non-null element, and zeroes the depth `+0x200`. HIGH. |
 | `0x00539350` | `CScriptObjectCode__RestoreStack` | `8b8600020000 85c0 7423 … 8b7c240c 33c9 8b8700020000 898600020000 7e2c … 8b2c02 8928 … c7870002000000000000 … c20400` | `ret 4`; `this` = destination head, arg = source head. First clears the destination (the same delete loop as `ClearStack`), then copies the source's depth and each element dword `[src + i*4] → [dst + i*4]` (a **shallow move** of the pointer array), and zeroes the source depth. HIGH. |
@@ -161,11 +171,14 @@ matching pair of `RETURN`:
 A whole-`.text` scan of `[reg+0x224]` in `0x0052d000..0x0053a200` finds
 exactly these interpreter writers: `ExecutePop` (read + decrement),
 `CALLLOCAL` (read + increment), `Run` (zero on entry + the `<= 0` stop
-test), `CopyState` (copy), and `InitRuntime` (zero). Five `IScript__*Wait`
-constructors (`PlayAnimationWait`, `PlayCharMessageWait`,
-`PlayPCharMessageWait`, `Pause`, `FollowWaypointWait`) write
-`[eax+0x224] = [0x0089c804]` while installing CVM vptr `0x005e4f1c` on a
-**new** object — that is construction, not an interpreter increment.
+test), `CopyState` (copy), and `InitRuntime` (zero). Five `IScript__*Wait` constructors
+(`PlayAnimationWait`, `PlayCharMessageWait`,
+`PlayPCharMessageWait`, `Pause`, `FollowWaypointWait`) allocate a
+**0x228-byte CVM**, `rep movsd` 0x81 stack dwords, copy this same
+six-dword tail, install vptr `0x005e4f1c`, then write live
+`[0x0089c800]=1` so `Run` yields. That is construction plus a stop,
+not an interpreter increment. See
+[`IScript.cpp.md`](IScript.cpp.md) → "Wait helpers".
 
 Cheapest falsifier: another instruction class whose executor writes
 `[vm+0x224]` outside that census, or a shipped script that returns from a
@@ -224,17 +237,182 @@ Shipped occupancy (safe-copy `local-lab/safe-copy-bea-pristine/data/Resources`,
 | 1 | `arrived` | **0** (all `-1`) | — |
 | 2 | `timer` | **0** (all `-1`) | — |
 | 3 | `died` | 265 | `5` 145 / `24` 113 / `23` 7 |
-| 4 | `hit` | 128 | all opcode `6` |
+| 4 | `hit` | 128 | all opcode `6` (POP → `symbol[attr]+8`) |
 | 5 | `started_dying` | 142 | `5` 99 / `24` 39 / `23` 4 |
 | 6 | `ready` | 6 | `5` 6 |
 | 7 | `shutdown` | 3 | `5` 3 |
 | 8–12 | `notdefined*` | **0** (all `-1`) | — |
 
-`CallEvent` already no-ops an IP of `-1`. So the eight IScript wrappers
-still *fire* ids 0–7, but shipped objects have no compiled body for
-`arrived` / `timer` / `notdefined*`. Do not invent where those handlers
-live (named `CEventFunction`s on `+0x48` are a candidate, not measured
-here).
+Independently re-counted 2026-08-18 (same parser, `ip != -1`). Opcode
+`5` = PUSH, `24` = CALL, `23` = RETURN. RETURN-first means `Run`
+sees opcode `0x17` with `[vm+0x224] <= 0` and **exits without**
+`ExecutePop` — an empty handler. 116 inits start that way
+(VitalBuilding / checkpoints / LevelScript / …); only 7 dieds
+(Checkpoint1 ×5, Lander, Lander2). Of the 13 `trailerB=0` inits,
+12 are RETURN-first.
+
+CALL-first inits (137): `CInstructionOP_CALL__ExecuteCall`
+(`0x0052ea40`) takes native id from `byte [instr+4]` and argc from
+`byte [instr+5]`, indexes `0x0064ce20 + id*64`. Top CALL-first
+natives (parser `natives.json`): `SetObjective` argc 0 ×86,
+`GetHealth` argc 1 ×26, `Deactivate` ×12, `Activate` ×4. PUSH-first
+is the arg-then-call shape.
+
+`CallEvent` already no-ops an IP of `-1`. The eight IScript wrappers still
+*fire* ids 0–7. Shipped objects have no compiled 13-slot body for
+`arrived` / `timer` / `notdefined*`. Those two names also do **not** live
+as `CEventFunction` listen-strings (measured below). The fire sites are:
+
+- **arrived (id 1).** Only `E8` to `IScript__CreateThingRef`
+  (`0x005335d0`) is `0x00538583` inside
+  `CScriptEventNB__UpdateWaypointFollowing`: the end-of-waypoint-chain
+  arm (`[this+0x14]` advanced to null and `[this+0x1c] == 0`). It boxes
+  `[IScript+0x24]` as a `CInt` (`vptr 0x005e4af8`) at BSS `0x0089c528`
+  and `CallEvent(eventObj, 1, &0x0089c528, 1)`. `FollowWaypoint`
+  (`0x00537d70`) is the writer of `+0x24` (`mov [esi+0x24],eax` at
+  `0x00537dc7` from `args[1]->vtable[+0x30]()`, which for `CInt` is
+  `SharedVFunc__ReturnField04_0052f540`). 19 shipped native-0 `CALL`s:
+ that second arg is always a `CInt` **0** (13) or **1** (6). Only
+ other `IScript+0x24` access in `0x00533000..0x00539000` is the
+ arrived() box. Flag=1: 600 Ship/Slave, 731/732 messages, 741/742
+ Marshall. On the
+ shipped corpus the lookup is always `-1`, so the wrapper deletes the
+ `CInt` and returns.
+- **timer (id 2).** `IScript__SetTimer` (`0x005358e0`, `ret 0xc`, zero
+  direct `E8` — registry command `"SetTimer"`) calls
+  `CEventManager__AddEvent_TimeFromNow` (`0x0044b2d0`) with event
+  **2002** (`push 0x7d2` at `0x005358fd`) against the same `IScript`.
+  `HandleMessage`'s 2002 arm then `CallEvent(eventObj, 2, &0x0089c528, 0)`.
+  Zero compiled `SetTimer` uses (native-corpus `DORMANT_CANDIDATE`) and
+  zero `SetTimer(` / `timer()` / `event("timer")` in 733 loose
+  `.msl`. The 2002 arm can still fire if something else schedules 2002;
+  the 13-slot body is still `-1`.
+
+### Named `CEventFunction` occupancy (the `+0x48` set)
+
+`CEventFunction__CEventFunction` (`0x0052fa70`, `ret 8`) is **not** an
+id-table writer. Independently re-read 2026-08-18 from file offset
+`0x0012fa70`:
+
+| Offset | Field | Witness |
+| --- | --- | --- |
+| `+0` | vptr `0x005e4ef8` | `mov [edi],0x5e4ef8` at `0x0052fabd` after the `CMonitor` base install |
+| `+8` | entry PC | `lea ecx,[edi+8]; push 4; push ecx; call 0x00548570` at `0x0052fab0` |
+| `+0xc` | `CSPtrSet` of name wrappers | `lea ecx,[edi+0xc]; call 0x004e5840`; each param is a symbol index resolved through `[owner+0x58]`, datatype **must** be `3` (`cmp eax,3` at `0x0052fb12`) else `"FATAL ERROR: Event Function was expecting a string"` (`0x0064cd38`) |
+| `+0x1c` | owner `CMissionScriptObjectCode*` | `mov [edi+0x1c],eax` at `0x0052fac3` |
+
+`CEventFunction__Execute` (`0x0052fda0`) is the **only** `E8` to
+`CallEventDirect` (`0x00539a60` at `0x0052fe24`):
+`CallEventDirect(owner=this+0x1c, entryPC=this+8, args=local[], count)`.
+`Execute` itself has exactly two `E8` sites, both already mapped:
+`CScriptEventNB__PostEvent` `0x00538c3b` and
+`CScriptEventNB__HandleEventMessage` `0x00538d68`. Named handlers
+therefore never consult the 13-slot table.
+
+Registration is `IScript__CallEvent0AndRegisterNestedListeners`
+(`0x00533500`): after `CallEvent(id=0)` it walks `eventObj+0x48` and
+for each function's `+0xc` name wrappers calls
+`CScriptEventNB__RegisterEventListener` (`0x00538960`) on singleton
+`0x0089c590` (`push name; push function` at `0x0053355d`). Only `E8` to
+`0x00533500` is `CComplexThing__HandleEvent` `0x004f4359` (message
+**2001** on a thing that has `[this+0x74]`).
+
+Same 762-object safe-copy parse, 0 failures:
+
+| | count |
+| --- | --- |
+| `CEventFunction` records | **994** |
+| objects with at least one | 386 |
+| objects with none | 376 |
+| unique listen-strings | 364 |
+| listen-string `arrived` | **0** |
+| listen-string `timer` | **0** |
+| listen-string `game playing` | 92 |
+
+Top listen-strings after `game playing`: `Target Emplacements` 17,
+`Marshall Destroyed` 14, `Lock Buildings` 11, `run away` 11. Strings
+that merely *contain* those words are different names (`Gill-M Arrived`
+8, `Carrier Arrived` 2, `Transports Arrived` 2, `Start Timer` 2,
+`Timer Pulse` 5, `Start Race Timer` 5) and are not id-1 / id-2.
+
+Spot-check (parser `read_event` vs the ctor reads above): `110` RLWD
+`Scout` has evtab died=`1` and one named handler `{entry:5, "game playing"}`;
+`200` RLWD `FighterAttack` has init=`1`, hit=`30`, and named entries
+2 / 9 / 16 / 23. The named PCs are not id-table slots.
+
+Every one of the 994 named entries is opcode `0x13`
+(`CInstructionOP_JMPFALSE`). Independently re-read executor
+`0x0052e950` (`ret 0xc`, file `0x0012e950`): `Pop` (`0x00539470`),
+`call [elem->vtable+0x3c]`, if AL is 0 write `instr+4` to `vm+0x214`
+(PC), then delete the element. All 994 jumps are **forward** (min
+delta 1, max 367, mode 6 with 127). `nparam` is 1 on every record.
+Zero named entries share a PC with a 13-slot IP.
+
+The popped value is a `CBoolDataType` (`vtable 0x005e4d50`, RTTI
+`.?AVCBoolDataType@@` — not a distinct `CEventFunctionParam` class).
+`Execute` installs that vtable on an 8-byte wrapper and copies
+`byte [listenerElement+0x14]` into `wrapper+4`. Slot `+0x3c` is
+`CBoolDataType__VFunc_15_0052e480` (`mov al,[ecx+4]; ret` at file
+`0x0012e480`). `PostEvent` / `HandleEventMessage` write
+`element+0x14 = 1` before `Execute`, so the posted path falls through
+into the body; a 0 skips to the attribute PC (the instruction after
+the handler). Scout: entry 5 `JMPFALSE 14`, body
+`PlayCharMessage` + `PostEvent("Enemy Engaged")`, target 14 is
+`op0d` immediately after.
+
+Immediately after the guard: PUSH 833 / CALL 147 / NOOP_0D 14
+(the 14 NOOP_0D rows are the empty delta-1 handlers). Walking past
+a leading PUSH run, **518** of 994 hit a `CALL` as the first
+native. Top shipped first-natives (parser `natives.json`, native 0
+=`FollowWaypoint`): `SetObjective` 75, `Pause` 68,
+`PlayCharMessageWait` 59, `Print` 47, `PlayCharMessage` 32,
+`SetAIState` 26, `GetThingRef` 25. This is occupancy, not a claim
+that those natives are the authored purpose of the event.
+
+Every named-event JMPFALSE target is opcode `0x0d`. Independently
+re-read 2026-08-18 (994/994, 0 oob). RTTI at vtable `0x005e4c70`
+(COLOC `0x00618e40` → `.?AVCInstructionOP_LABEL@@`): getter
+`FUN_0052dcd0` is `mov eax,0x0d; ret`; executor is
+`SharedVFunc__NoOp_Ret0C` (`0x00453ac0`, `ret 0xc`). Opcode
+`0x0e` is `.?AVCInstructionOP_REMOVE_TOP@@` (vtable `0x005e4c60`,
+COLOC `0x00618f30`): getter `FUN_0052dc80` is `mov eax,0x0e; ret`;
+executor `CInstructionOP_REMOVE_TOP__VFunc_0_0052e320` (`0x0052e320`)
+calls `CScriptObjectCode__RemoveTop` (`0x005394a0`) on the operand
+stack — dec depth, `vtable[0](elem, 1)` the discarded top, or
+print `FATAL ERROR: RemoveTop called on empty stack`
+(`0x006500c4`). Opcode immediately before the end-label: `0x0e`
+671 / `0x0d` 309 / `0x13` 14 (the empty delta-1 handlers). The
+309 are not adjacent handlers: every one is an internal join
+`LABEL` that a body `JMPFALSE` (255) or `JMP` (54) already
+targets, immediately followed by the handler's end `LABEL`.
+Zero unreferenced. The
+compiled shape is `JMPFALSE L` / body / optional `REMOVE_TOP` /
+`L: LABEL`. The skip lands on a no-op so the VM continues after
+the handler; `REMOVE_TOP` drops a leftover statement value so
+`CallEventDirect`'s exit-depth check can pass.
+
+Thing-side fire of the 13-slot ids (not IScript `HandleMessage`)
+is owned by [`CComplexThing.cpp.md`](CComplexThing.cpp.md):
+`SetScript` → thing-event 2001 → `CallEvent(id=0)` + register
+`+0x48` names; non-unit things then get thing-event 2003 →
+`CallEvent(id=6)`. `AddShutdownEvent` → `CallEvent(id=3)` then
+deletes the IScript and schedules thing-event 2000 →
+`CallEvent(id=7)` only if `+0x74` is still live (it is not, on
+that path). `Hit` → `CallEvent(id=4)`. `StartDieProcess` on
+`CComplexThing` cannot reach `CallEvent(id=5)` because it calls
+`AddShutdownEvent` first. The two reachable `CallEventId5` sites
+keep `+0x74` live: `CFeature__VFunc_50_0044cd80` (slot 50, no
+teardown) and `CUnit__MarkDestroyedAndCleanupLinks` (slot 50 of
+three unit vtables; fires after count teardown, before `+0x144`
+cleanup).
+
+733 loose `MissionScripts/**/*.msl` contain zero `arrived(`, `timer(`,
+`SetTimer(`, `event("arrived"`, or `event("timer"`.
+
+Cheapest falsifier: a shipped object whose 13-slot `arrived`/`timer` IP
+is not `-1`; a `CEventFunction` whose string symbol value is exactly
+`arrived` or `timer`; a second `E8` to `CreateThingRef` or
+`CallEventDirect`.
 
 Object trailers (ctor writes A → `+0x60`, B → `+0x5c`):
 
@@ -247,26 +425,115 @@ No shipped object has trailerA `== 1`, so the Run-time trace compare at
 `0x00539ba4` is off for the whole corpus. 715 objects have a one-time
 PC=0 preamble; 47 do not.
 
+Independently re-walked 2026-08-18 (same 762-object parser). `CallEvent`
+snapshots `+0x21c = +0x20c` before the preamble `Run`, so a leftover
+operand would print `"FATAL ERROR:  stack was different size when exiting"`
+(`0x00650188`) and then sit under the handler's second snapshot.
+
+Of the 715 `trailerB=1` objects:
+
+| PC=0 shape | n | Net stack at first `RETURN` |
+| --- | --- | --- |
+| `RETURN` (empty prefix) | 383 | 0 |
+| strict `(PUSH, POP)+` then `RETURN` | 332 | 0 |
+| any `CALL` / other opcode | **0** | — |
+
+770 PUSH / 770 POP, zero other opcodes in those prefixes. PUSH sources
+are typed consts (int 418 / bool 296 / float 56); every POP target is
+symbol type 0 (the uninitialized `vars` slot). 0 of 715 event IPs fall
+inside the prefix. 72 of the 715 have no 13-slot IP at all (named
+handlers only) and still carry `trailerB=1`.
+
+Runtime assignment is a different opcode. `CInstructionOP_GETTOP`
+(`0x0052e9c0`) peeks the top via `GetTop(stack, 0)` and writes
+`symbol[attr]+8` (first time: clone `vtable[+0x48]`; later:
+`vtable[+0x14]` assign). It does not pop — the statement's
+`REMOVE_TOP` discards the expression. On a live `CThingPtr` the
+`+0x14` body (`0x0052f430`, table name Print) rebinds `[this+4]`
+through `0x00401000` (unlink via `CSPtrSet__Remove` `0x004e5bd0`,
+store, relink) — not a print. Scout `AirborneDrone2` init:
+`SetObjective(); SetAllegiance(1); player = GetPlayer(1); Attack(player);`
+is CALL / REMOVE_TOP / PUSH 1 / CALL / REMOVE_TOP / PUSH 1 / CALL
+GetPlayer / **GETTOP player** / REMOVE_TOP / PUSH player / CALL Attack /
+REMOVE_TOP. 1904 shipped GETTOPs, every dest type 0. The 1148 type-0
+PUSHes whose symbol is never a POP dest (`player`, `target`,
+`component`, …) are GETTOP-assigned, not uninitialized reads.
+
+Method calls retarget the implicit thing. `CInstructionOP_POINTER`
+(`0x0052ea10`) Pops the receiver, calls `vtable[+0x40]`, writes that
+dword to `IScript+0x10` (via `eventObj+0x68`), and deletes the
+wrapper. 950 shipped. Scout `LevelScript` `player.DisableFlightMode()`
+is PUSH player / POINTER / CALL `DisableFlightMode`. A preceding CALL
+then POINTER is the no-temp shape (`GetThingRef(name).SetScript(...)`).
+Slot `+0x40` is now closed for the six shipped datatypes (thing-ptr
+returns `[this+4]`; the other five return 0). `ExecuteCall` restores
+`[IScript+0x10] = [IScript+8]` on every exit (`0x0052eaf0` /
+`0x0052ebc5` / `0x0052ec32`), so the retarget lasts for that one
+native only.
+
+So the preamble does **not** leave CALL args on the stack: it never
+contains CALL. It is the compiled file-scope initializer. Loose `*.msl`
+corroborates (not authority): `level100/BattleEngine.msl` `bool evading =
+FALSE;` is PUSH `const data731` (type 4, 0) / POP `evading`;
+`LevelScript.msl` `friendlyBuildingsHit = 0` / `aborted = FALSE` /
+`evaded = TRUE` / `evadeHits = 0` / `broken = FALSE;` are the five
+pairs at PC=0..9, and uninitialized `thing player` / `float playerHealth`
+do not appear.
+
+The 47 `trailerB=0` objects are the only ones with any event IP `== 0`
+(all 47). Their 0..first-`RETURN` range **is** the handler (35 IPs sit
+inside it). CALLs there are `PostEvent` ×34, `Print` ×4, `SetObjective`
+×1 — body code, not a skipped preamble. Net to first `RETURN` is 0 in
+all 47 as well.
+
+The 47 `trailerB=0` objects, independently re-listed 2026-08-18 from
+the same 762-object safe-copy parse (`ip != -1`):
+
+| Level | Name | n | Slots present | Instr |
+| --- | --- | --- | --- | --- |
+| 4 | `VitalBuilding` | 5 | init, died | 12 |
+| 10 | `Target1` / `Target2` / `Target3` | 8+8+8 | died | 4 |
+| 311, 312 | `ForsetiBuilding` / `ForsetiTurret` / `MuspellBuilding` | 3+3 | died | 4 |
+| 321, 322 | same three names | 3+3 | init, died | 5 |
+| 400 | `ImportantBuilding` | 1 | init, died | 9 |
+| 400 | `VitalBuilding` | 1 | init, died | 12 |
+| 521, 522 | `arachnid` / `gnat` | 2+2 | died | 16 |
+
+All 47 still have trailerA `0`. They are small died-focused
+templates (plus a few init+died). Occupancy only — no authored
+reason the compiler omitted the preamble.
+
 Cheapest falsifier for a missing static user of 8–12: another `E8` to `0x00539990`
-outside this census, or a `CallEventDirect` path that is really an id-table
-lookup in disguise.
+outside the eight-site census. `CallEventDirect` is not an id-table
+lookup: its only `E8` is `CEventFunction__Execute` passing `this+8`.
 
 ## Open questions (cheapest falsifier first)
 
 - Who increments `vm+0x224`: CLOSED — `CInstructionOP_CALLLOCAL__VFunc_0_0052ec40`
   (`0x0052ec40`) is the only interpreter increment. `PUSHPC`
   (`CInstructionOP_PUSHPC__VFunc_0_0052e0a0`) pushes the *attribute* as a
-  `CInt`; whether every shipped local-call site emits `PUSHPC` then
-  `CALLLOCAL` is still open (read one `MissionScripts/level***` stream).
+  `CInt`. Shipped pairing: **neither opcode occurs**. Same 762-object
+  parse, 55,836 instructions: counts for `0x19` CALLLOCAL and `0x1a`
+  PUSHPC are both 0. Also unused: `0x00` NOOP and `0x11`
+  COMPARE_NOT_EQUAL. Nested `ExecutePop` is therefore unreachable on
+  the corpus. Cheapest falsifier: one compiled object whose stream
+  contains opcode `0x19` or `0x1a`.
 - `+0x5c` / trailerB: CLOSED as the one-time PC=0 preamble flag.
-  Shipped split is 715 ones / 47 zeros (safe-copy census above). Authored
-  name of the field is still open.
+  Shipped split is 715 ones / 47 zeros. The 715 prefixes are either
+  empty `RETURN` (383) or balanced file-scope `PUSH const / POP var`
+  (332); 0 CALL; net stack 0/715; 0 event IPs inside the prefix.
+  Authored name of the field is still open. Cheapest falsifier: one
+  `trailerB=1` object whose 0..first-`RETURN` range contains CALL or
+  whose net stack at that `RETURN` is not 0.
 - trailerA / `+0x60`: CLOSED as 0 in all 762 shipped objects. The
   `== 1` trace compare is unused on the corpus.
 - The 13 event-id slots at `eventObj+0x14`. CLOSED: names and arities
   come from `.data` `0x0064fef8`; static users of 0–7 are the IScript
   wrappers above. Ids 8–12 (`notdefined4`–`notdefined8`) have no direct
-  `E8`. Handler bodies remain open.
+  `E8`. `arrived` / `timer` have no shipped 13-slot body and no
+  same-name `CEventFunction`; they fire (and no-op) from the waypoint
+  end-of-chain / `SetTimer`→2002 paths above. Authored arrival/delay
+  behavior on the corpus is the named-string set, not those two ids.
 - The second `.rdata` holder of `FUN_0052da00` at `0x005dab54`: CLOSED as
   `CWarspiteDomeBehaviourType` vtable `0x005dab50[+4]` (cohort census
   `col_ptr 0x005dab4c`). Same thunk body (`mov eax,0x17; ret`), different

@@ -60,6 +60,29 @@ namespace OnslaughtCareerEditor.AppCore
         public const string UseBea02ForBea01PresetId = "use-bea02-for-bea01";
         public const string UseBea01ForBea02PresetId = "use-bea01-for-bea02";
         public const string UseBea02ForBea04PresetId = "use-bea02-for-bea04";
+        public const string MusicFolderMissing = "That copy does not have a Music folder.";
+        public const string CopyFolderMissing = "That copy folder could not be found.";
+        public const string ProfileFolderMissing = "That app-owned profile folder could not be found.";
+        public const string TargetMusicFileMissing = "That target music file could not be found.";
+        public const string TargetMusicFileNameInvalid = "That target must be a single .ogg music file.";
+        public const string ReplacementMusicFileMissing = "That replacement music file could not be found.";
+        public const string ReplacementMusicFileRequired = "A replacement music file is required.";
+        public const string ReplacementMustNotBeTarget =
+            "The replacement music file must not be the target music file.";
+        public const string MusicBackupMissing = "That music backup file could not be found.";
+        public const string CopyCannotUseLink = "That copy cannot use a shortcut or link.";
+        public const string FileCannotShareData = "That file cannot share its data with another file.";
+        public const string MusicSwapPresetUnknown = "That music swap is not available.";
+        public const string MusicFileTooSmall = "That music file is too small.";
+        public const string MusicFileNotOgg = "That music file is not an OGG.";
+        public const string MusicDetailsUnsupported = "That copy's music details are out of date.";
+        public const string MusicDetailsWrongTarget = "That copy's music details do not match the music file.";
+        public const string MusicBackupMismatch = "That copy's music backup no longer matches.";
+        public const string MusicRestoreMismatch = "That copy's restored music file no longer matches.";
+        public const string MusicTargetMismatch = "That music file no longer matches its backup.";
+        public const string MusicRestored = "That music file was restored.";
+        public const string MusicReplacementAlreadyActive =
+            "That copy already has onslaught-music-replacement-manifest.json. Restore the music file first.";
         private const string BackupSuffix = ".original.backup";
 
         private static readonly GameProfileMusicSwapPreset[] s_musicSwapPresets =
@@ -99,7 +122,7 @@ namespace OnslaughtCareerEditor.AppCore
         {
             GameProfileMusicSwapPreset? preset = s_musicSwapPresets.FirstOrDefault(preset =>
                 string.Equals(preset.Id, presetId, StringComparison.OrdinalIgnoreCase));
-            return preset ?? throw new InvalidOperationException($"Unknown safe-copy music swap preset: {presetId}");
+            return preset ?? throw new InvalidOperationException(MusicSwapPresetUnknown);
         }
 
         public static GameProfileMusicReplacementOptions BuildSafeCopyMusicSwapPresetOptions(
@@ -113,14 +136,14 @@ namespace OnslaughtCareerEditor.AppCore
             string replacementFileName = ValidateTargetMusicFileName(preset.ReplacementMusicFileName);
             string musicDirectory = Path.Combine(safeRoot, "data", "Music");
             if (!Directory.Exists(musicDirectory))
-                throw new DirectoryNotFoundException("Playable copied game folder does not contain data\\Music.");
+                throw new DirectoryNotFoundException(MusicFolderMissing);
 
             string targetPath = Path.Combine(musicDirectory, targetFileName);
             string replacementPath = Path.Combine(musicDirectory, replacementFileName);
             if (!File.Exists(targetPath))
-                throw new FileNotFoundException("Preset target music file does not exist in the playable copied game folder.", targetPath);
+                throw new FileNotFoundException(TargetMusicFileMissing);
             if (!File.Exists(replacementPath))
-                throw new FileNotFoundException("Preset replacement music file does not exist in the playable copied game folder.", replacementPath);
+                throw new FileNotFoundException(ReplacementMusicFileMissing);
             if (string.Equals(Path.GetFullPath(targetPath), Path.GetFullPath(replacementPath), StringComparison.OrdinalIgnoreCase))
                 throw new InvalidOperationException("Safe-copy music swap preset target and replacement must be different copied tracks.");
 
@@ -143,7 +166,7 @@ namespace OnslaughtCareerEditor.AppCore
             string safeRoot = ValidateSafeGameRoot(safeGameRoot, appOwnedProfilesRoot);
             string musicDirectory = Path.Combine(safeRoot, "data", "Music");
             if (!Directory.Exists(musicDirectory))
-                throw new DirectoryNotFoundException("Playable copied game folder does not contain data\\Music.");
+                throw new DirectoryNotFoundException(MusicFolderMissing);
 
             RejectExistingReparseAncestors(musicDirectory, "music directory");
             RejectReparsePoint(musicDirectory, "music directory");
@@ -186,26 +209,26 @@ namespace OnslaughtCareerEditor.AppCore
             string targetFileName = ValidateTargetMusicFileName(options.TargetMusicFileName);
             string musicDirectory = Path.Combine(safeRoot, "data", "Music");
             if (!Directory.Exists(musicDirectory))
-                throw new DirectoryNotFoundException("Playable copied game folder does not contain data\\Music.");
+                throw new DirectoryNotFoundException(MusicFolderMissing);
 
             string targetPath = Path.Combine(musicDirectory, targetFileName);
             if (!File.Exists(targetPath))
-                throw new FileNotFoundException("Target music file does not exist in the playable copied game folder.", targetPath);
+                throw new FileNotFoundException(TargetMusicFileMissing);
             RejectExistingReparseAncestors(targetPath, "target music path");
             RejectReparsePoint(targetPath, "target music file");
             RejectMultipleHardLinks(targetPath, "Target music file");
 
             string replacementPath = ValidateReplacementOgg(options.ReplacementOggPath);
             if (string.Equals(Path.GetFullPath(replacementPath), Path.GetFullPath(targetPath), StringComparison.OrdinalIgnoreCase))
-                throw new InvalidOperationException("Replacement OGG path must not be the target music file.");
+                throw new InvalidOperationException(ReplacementMustNotBeTarget);
 
             string manifestPath = Path.Combine(safeRoot, ManifestFileName);
-            RejectExistingReparseAncestors(manifestPath, "music replacement manifest path");
+            RejectExistingReparseAncestors(manifestPath, "music replacement manifest");
             if (File.Exists(manifestPath))
             {
                 RejectReparsePoint(manifestPath, "music replacement manifest");
                 RejectMultipleHardLinks(manifestPath, "Music replacement manifest");
-                throw new InvalidOperationException("An active safe-copy music replacement manifest already exists; restore copied music bytes before staging another replacement.");
+                throw new InvalidOperationException(MusicReplacementAlreadyActive);
             }
 
             string backupPath = targetPath + BackupSuffix;
@@ -262,7 +285,7 @@ namespace OnslaughtCareerEditor.AppCore
             string safeRoot = ValidateSafeGameRoot(options.SafeGameRoot, options.AppOwnedProfilesRoot);
             string manifestPath = Path.Combine(safeRoot, ManifestFileName);
             if (!File.Exists(manifestPath))
-                throw new FileNotFoundException("Playable copied game folder music replacement manifest was not found.", manifestPath);
+                throw new FileNotFoundException("That copy is missing onslaught-music-replacement-manifest.json.");
             RejectExistingReparseAncestors(manifestPath, "music replacement manifest path");
             RejectReparsePoint(manifestPath, "music replacement manifest");
             RejectMultipleHardLinks(manifestPath, "Music replacement manifest");
@@ -272,7 +295,7 @@ namespace OnslaughtCareerEditor.AppCore
                 ? schemaEl.GetString()
                 : null;
             if (!string.Equals(schema, SchemaVersion, StringComparison.Ordinal))
-                throw new InvalidOperationException("Playable copied game folder music replacement manifest has an unsupported schema.");
+                throw new InvalidOperationException(MusicDetailsUnsupported);
 
             string targetFileName = doc.RootElement.GetProperty("targetMusicFileName").GetString() ?? string.Empty;
             string targetRelative = doc.RootElement.GetProperty("targetRelativePath").GetString() ?? string.Empty;
@@ -287,11 +310,11 @@ namespace OnslaughtCareerEditor.AppCore
             if (!string.Equals(Path.GetFullPath(manifestTargetPath), Path.GetFullPath(targetPath), StringComparison.OrdinalIgnoreCase) ||
                 !string.Equals(Path.GetFullPath(manifestBackupPath), Path.GetFullPath(backupPath), StringComparison.OrdinalIgnoreCase))
             {
-                throw new InvalidOperationException("Playable copied game folder music replacement manifest paths do not match the target music file.");
+                throw new InvalidOperationException(MusicDetailsWrongTarget);
             }
 
             if (!File.Exists(backupPath))
-                throw new FileNotFoundException("Playable copied game folder music backup was not found.", backupPath);
+                throw new FileNotFoundException(MusicBackupMissing);
             RejectExistingReparseAncestors(targetPath, "target music path");
             RejectExistingReparseAncestors(backupPath, "music backup path");
             RejectReparsePoint(targetPath, "target music file");
@@ -300,7 +323,7 @@ namespace OnslaughtCareerEditor.AppCore
             RejectMultipleHardLinks(backupPath, "Music backup file");
             string backupSha = ComputeSha256(File.ReadAllBytes(backupPath));
             if (!string.Equals(backupSha, originalSha256, StringComparison.OrdinalIgnoreCase))
-                throw new InvalidOperationException("Playable copied game folder music backup no longer matches the replacement manifest.");
+                throw new InvalidOperationException(MusicBackupMismatch);
 
             string tempPath = Path.Combine(
                 Path.GetDirectoryName(targetPath)!,
@@ -320,7 +343,7 @@ namespace OnslaughtCareerEditor.AppCore
             RejectMultipleHardLinks(targetPath, "Target music file");
             string restoredSha = ComputeSha256(File.ReadAllBytes(targetPath));
             if (!string.Equals(restoredSha, originalSha256, StringComparison.OrdinalIgnoreCase))
-                throw new IOException("Playable copied game folder music restore did not read back the expected original track hash.");
+                throw new IOException(MusicRestoreMismatch);
 
             RejectReparsePoint(manifestPath, "music replacement manifest");
             RejectMultipleHardLinks(manifestPath, "Music replacement manifest");
@@ -328,7 +351,7 @@ namespace OnslaughtCareerEditor.AppCore
             return new GameProfileMusicReplacementRestoreResult(
                 true,
                 targetFileName,
-                $"Playable copied game folder music replacement restored for {targetFileName}.");
+                MusicRestored);
         }
 
         private static void EnsureTargetMatchesBackupBeforeReplacement(string targetPath, string backupPath)
@@ -336,21 +359,21 @@ namespace OnslaughtCareerEditor.AppCore
             string targetSha = ComputeSha256(File.ReadAllBytes(targetPath));
             string backupSha = ComputeSha256(File.ReadAllBytes(backupPath));
             if (!string.Equals(targetSha, backupSha, StringComparison.OrdinalIgnoreCase))
-                throw new InvalidOperationException("Current copied-game music target no longer matches the original backup; restore before staging another replacement.");
+                throw new InvalidOperationException(MusicTargetMismatch);
         }
 
         private static string ValidateSafeGameRoot(string safeGameRoot, string appOwnedProfilesRoot)
         {
             if (string.IsNullOrWhiteSpace(safeGameRoot) || !Directory.Exists(safeGameRoot))
-                throw new DirectoryNotFoundException($"Playable copied game folder root does not exist: {safeGameRoot}");
+                throw new DirectoryNotFoundException(CopyFolderMissing);
             if (string.IsNullOrWhiteSpace(appOwnedProfilesRoot) || !Directory.Exists(appOwnedProfilesRoot))
-                throw new DirectoryNotFoundException($"App-owned profiles root does not exist: {appOwnedProfilesRoot}");
+                throw new DirectoryNotFoundException(ProfileFolderMissing);
 
             string root = NormalizeExistingDirectory(safeGameRoot);
             string profilesRoot = NormalizeExistingDirectory(appOwnedProfilesRoot);
             if (!IsSameOrUnderRoot(root, profilesRoot) ||
                 string.Equals(root, profilesRoot, StringComparison.OrdinalIgnoreCase))
-                throw new InvalidOperationException("Playable copied game folder must stay under the app-owned profiles root.");
+                throw new InvalidOperationException(GameProfilePreflightService.CopyMustStayInside);
 
             RejectExistingReparseAncestors(root, "playable copied game folder root");
             RejectReparsePoint(root, "playable copied game folder root");
@@ -369,7 +392,7 @@ namespace OnslaughtCareerEditor.AppCore
                 fileName.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 ||
                 !string.Equals(Path.GetExtension(fileName), ".ogg", StringComparison.OrdinalIgnoreCase))
             {
-                throw new InvalidOperationException("Target music file name must be a single .ogg file name under data\\Music.");
+                throw new InvalidOperationException(TargetMusicFileNameInvalid);
             }
 
             return fileName;
@@ -378,16 +401,16 @@ namespace OnslaughtCareerEditor.AppCore
         private static string ValidateReplacementOgg(string replacementPath)
         {
             if (string.IsNullOrWhiteSpace(replacementPath))
-                throw new InvalidOperationException("Replacement OGG path is required.");
+                throw new InvalidOperationException(ReplacementMusicFileRequired);
 
             string fullPath = Path.GetFullPath(replacementPath);
             if (!File.Exists(fullPath))
-                throw new FileNotFoundException("Replacement OGG file was not found.", fullPath);
+                throw new FileNotFoundException(ReplacementMusicFileMissing);
             if (!string.Equals(Path.GetExtension(fullPath), ".ogg", StringComparison.OrdinalIgnoreCase))
                 throw new InvalidOperationException("Replacement music file must use the .ogg extension.");
 
-            RejectExistingReparseAncestors(fullPath, "replacement OGG path");
-            RejectReparsePoint(fullPath, "replacement OGG file");
+            RejectExistingReparseAncestors(fullPath, "replacement music file");
+            RejectReparsePoint(fullPath, "replacement music file");
 
             ValidateOggHeader(fullPath, "Replacement music file");
 
@@ -400,21 +423,21 @@ namespace OnslaughtCareerEditor.AppCore
             using (FileStream stream = File.OpenRead(path))
             {
                 if (stream.Read(header, 0, header.Length) != header.Length)
-                    throw new InvalidOperationException($"{label} is too small.");
+                    throw new InvalidOperationException(MusicFileTooSmall);
             }
 
             if (header[0] != (byte)'O' || header[1] != (byte)'g' || header[2] != (byte)'g' || header[3] != (byte)'S')
-                throw new InvalidOperationException($"{label} must start with the OggS header.");
+                throw new InvalidOperationException(MusicFileNotOgg);
         }
 
         private static string ResolveManifestRelativePath(string safeRoot, string relativePath)
         {
             if (string.IsNullOrWhiteSpace(relativePath) || Path.IsPathFullyQualified(relativePath))
-                throw new InvalidOperationException("Music replacement manifest paths must be package-relative.");
+                throw new InvalidOperationException("Music replacement manifest files must stay inside the copy.");
 
             string fullPath = Path.GetFullPath(Path.Combine(safeRoot, relativePath.Replace('/', Path.DirectorySeparatorChar)));
             if (!IsSameOrUnderRoot(fullPath, safeRoot))
-                throw new InvalidOperationException("Music replacement manifest path escapes the playable copied game folder root.");
+                throw new InvalidOperationException("Music replacement manifest files must stay inside the copy.");
             return fullPath;
         }
 
@@ -506,7 +529,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             FileAttributes attributes = File.GetAttributes(path);
             if ((attributes & FileAttributes.ReparsePoint) != 0)
-                throw new InvalidOperationException($"Playable copied game folder music replacement refuses reparse points in {label}.");
+                throw new InvalidOperationException(CopyCannotUseLink);
         }
 
         private static void RejectExistingReparseAncestors(string path, string label)
@@ -536,7 +559,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             uint linkCount = GetWindowsHardLinkCount(path);
             if (linkCount > 1)
-                throw new InvalidOperationException($"{label} is hardlinked to another file; refusing to mutate a shared file identity.");
+                throw new InvalidOperationException(FileCannotShareData);
         }
 
         private static uint GetWindowsHardLinkCount(string path)
@@ -548,7 +571,7 @@ namespace OnslaughtCareerEditor.AppCore
                 FileShare.ReadWrite | FileShare.Delete);
 
             if (!GetFileInformationByHandle(handle, out ByHandleFileInformation info))
-                throw new IOException($"Could not inspect hardlink count for music replacement target. Win32 error: {Marshal.GetLastWin32Error()}");
+                throw new IOException(FileMutationSafety.FileCouldNotBeInspected, new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error()));
 
             return info.NumberOfLinks;
         }

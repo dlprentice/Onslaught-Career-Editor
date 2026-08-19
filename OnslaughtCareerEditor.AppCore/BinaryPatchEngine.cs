@@ -135,6 +135,35 @@ namespace OnslaughtCareerEditor.AppCore
     public static class BinaryPatchEngine
     {
         public const string BackupSuffix = ".original.backup";
+        public const string InstalledBackupFailed =
+            "The backup could not be made, so nothing was patched. Your game is untouched.";
+        public const string InstalledPathUnreadable =
+            "That game file could not be read. Nothing was changed.";
+        public const string WorkingCopyPathUnusable =
+            "That patch target could not be used. Nothing was changed.";
+        public const string WorkspaceFolderRequired =
+            "A workspace folder is required.";
+        public const string PatchTargetMustStayInsideWorkspaceFolder =
+            "Patch target must stay inside the workspace folder.";
+        public const string BackupMustStayInsideWorkspaceFolder =
+            "BEA.exe.original.backup must stay inside the workspace folder.";
+        public const string BackupHashMustStayInsideWorkspaceFolder =
+            "The backup hash file must stay inside the workspace folder.";
+        public const string ProtectedInstallFolder =
+            "Patch target is under Program Files or another protected install folder. Work in a copy, or choose to patch your installed game - which takes a verified backup first.";
+        public const string SteamAppsCommonInstall =
+            "Patch target is a steamapps/common/Battle Engine Aquila install. Work in a copy, or choose to patch your installed game - which takes a verified backup first.";
+        public const string PatchTargetMustBeBeaExeOnlyCopy =
+            "Patch target must be a BEA.exe-only copy.";
+        public const string BackupFileMissing =
+            "BEA.exe.original.backup could not be found. Nothing was changed.";
+        public const string BackupHashWithoutBackup =
+            "The backup hash file is here without BEA.exe.original.backup. Remove that leftover hash file. Nothing was changed.";
+        public const string BeaExeOnlyCopyIdentity = "BEA.exe-only copy";
+        public const string TargetCannotUseLink = "That file cannot use a shortcut or link.";
+        public const string FileCannotShareData = "That file cannot share its data with another file.";
+        public const string StagedFileVerificationFailed = "That staged file could not be verified.";
+        public const string PublishedFileDidNotMatch = "That published file did not match the staged file.";
         private const string BackupHashSuffix = ".sha256";
         private const string CatalogRelativePath = "patches/catalog/patches.v2.json";
         private const string ExpectedPatchCatalogSha256 = "48cebf987355622bb54c212d5af4705a6c80df468a25651773c6f41522619622";
@@ -730,14 +759,14 @@ namespace OnslaughtCareerEditor.AppCore
                 return new BinaryPatchCatalogLoadResult(
                     loaded.ToArray(),
                     UsingFallback: false,
-                    Status: $"Loaded patch catalog from {catalogPath}");
+                    Status: "Loaded the patch catalog.");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return new BinaryPatchCatalogLoadResult(
                     s_fallbackPatchSpecs,
                     UsingFallback: true,
-                    Status: $"Catalog read failed ({ex.Message}); using built-in fallback patch specs.");
+                    Status: "Catalog could not be read; using built-in fallback patch specs.");
             }
         }
 
@@ -1251,7 +1280,7 @@ namespace OnslaughtCareerEditor.AppCore
                 if (!backupIntegrity.success)
                 {
                     return (false,
-                        "Apply aborted: existing backup snapshot integrity could not be verified.\n" +
+                        "Apply aborted: BEA.exe.original.backup could not be checked.\n" +
                         backupIntegrity.message);
                 }
 
@@ -1259,7 +1288,7 @@ namespace OnslaughtCareerEditor.AppCore
                 if (!backupProvenance.success)
                 {
                     return (false,
-                        "Apply aborted: existing backup snapshot provenance could not be verified.\n" +
+                        "Apply aborted: BEA.exe.original.backup could not be used.\n" +
                         backupProvenance.message);
                 }
             }
@@ -1273,8 +1302,7 @@ namespace OnslaughtCareerEditor.AppCore
                 catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
                 {
                     return (false,
-                        "Apply aborted: the verified full-file backup could not be created, and the BEA.exe-only copy was not modified.\n" +
-                        ex.Message);
+                        "Apply aborted: the verified full-file backup could not be created, and the BEA.exe-only copy was not modified.");
                 }
             }
 
@@ -1297,8 +1325,7 @@ namespace OnslaughtCareerEditor.AppCore
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
             {
                 return (false,
-                    "Patch apply failed before atomic publication completed. The verified full-file backup remains available.\n" +
-                    ex.Message);
+                    "Patch apply failed before atomic publication completed. The verified full-file backup remains available.");
             }
             var (_, allPatchedAfterWrite, afterRows) = VerifyPatchSpecs(readBackData, selected);
             if (!allPatchedAfterWrite)
@@ -1312,8 +1339,8 @@ namespace OnslaughtCareerEditor.AppCore
 
             var outSb = new StringBuilder();
             outSb.AppendLine("Patch apply complete.");
-            outSb.AppendLine($"Target: {exePath}");
-            outSb.AppendLine($"Backup: {backupPath}");
+            outSb.AppendLine($"Target: {TargetFileName}");
+            outSb.AppendLine($"Backup: {TargetFileName}{BackupSuffix}");
             outSb.AppendLine($"Target identity: {validation.info.IdentityLabel}");
             outSb.AppendLine("Selected patch bytes verified on disk.");
             outSb.AppendLine("Restore uses the first full-file backup snapshot, not per-patch undo.");
@@ -1435,7 +1462,7 @@ namespace OnslaughtCareerEditor.AppCore
             string exePath = validation.info.ExePath;
             string backupPath = validation.info.BackupPath;
             if (!File.Exists(backupPath))
-                return (false, $"Backup file not found: {backupPath}");
+                return (false, BackupFileMissing);
 
             byte[] backupBytes = File.ReadAllBytes(backupPath);
             var backupIntegrity = ValidateBackupSnapshotIntegrity(validation.info.BackupHashPath, backupBytes);
@@ -1455,8 +1482,8 @@ namespace OnslaughtCareerEditor.AppCore
             {
                 return (true,
                     "No changes needed. The BEA.exe-only copy already matches the verified backup snapshot.\n" +
-                    $"Target: {exePath}\n" +
-                    $"Backup source: {backupPath}");
+                    $"Target: {TargetFileName}\n" +
+                    $"Backup source: {TargetFileName}{BackupSuffix}");
             }
 
             byte[] restoredBytes;
@@ -1467,21 +1494,20 @@ namespace OnslaughtCareerEditor.AppCore
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
             {
                 return (false,
-                    "Restore failed before atomic publication completed. The verified backup snapshot was left unchanged.\n" +
-                    ex.Message);
+                    "Restore failed before atomic publication completed. The verified backup snapshot was left unchanged.");
             }
             if (!restoredBytes.SequenceEqual(backupBytes))
             {
                 return (false,
                     "Restore failed: on-disk verification did not match the backup snapshot.\n" +
-                    $"Target: {exePath}\n" +
-                    $"Backup source: {backupPath}");
+                    $"Target: {TargetFileName}\n" +
+                    $"Backup source: {TargetFileName}{BackupSuffix}");
             }
 
             return (true,
                 "Restore complete.\n" +
-                $"Target: {exePath}\n" +
-                $"Backup source: {backupPath}\n" +
+                $"Target: {TargetFileName}\n" +
+                $"Backup source: {TargetFileName}{BackupSuffix}\n" +
                 (unexpectedRestoreRows.Count > 0
                     ? "Recovery: unexpected current patch bytes were replaced from the verified full-file backup.\n"
                     : string.Empty) +
@@ -1518,16 +1544,16 @@ namespace OnslaughtCareerEditor.AppCore
             IReadOnlyList<BinaryPatchSpec>? selected)
         {
             if (string.IsNullOrWhiteSpace(target.ExePath) || !File.Exists(target.ExePath))
-                return (false, "Select a valid BEA.exe path first.", null);
+                return (false, "Select a valid BEA.exe first.", null);
 
             if (!string.Equals(Path.GetFileName(target.ExePath), TargetFileName, StringComparison.OrdinalIgnoreCase))
-                return (false, "Patch target must be a BEA.exe-only copy.", null);
+                return (false, PatchTargetMustBeBeaExeOnlyCopy, null);
 
             // An installed-game permission carries its own root - the game folder it was granted
             // for - so a caller patching an install does not have to invent a workspace root it
             // does not have.
             if (string.IsNullOrWhiteSpace(target.AllowedRoot) && target.InstalledGame is null)
-                return (false, "Patch target requires an app-owned workspace root.", null);
+                return (false, WorkspaceFolderRequired, null);
 
             string fullExePath;
             string fullRoot;
@@ -1539,9 +1565,9 @@ namespace OnslaughtCareerEditor.AppCore
                         ? target.InstalledGame!.GameRoot
                         : target.AllowedRoot);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return (false, $"Patch target path could not be normalized: {ex.Message}", null);
+                return (false, WorkingCopyPathUnusable, null);
             }
 
             // An installed game is a legitimate target only when the caller is holding permission
@@ -1575,29 +1601,29 @@ namespace OnslaughtCareerEditor.AppCore
             if (!installedGameAuthorized)
             {
                 if (IsPathUnderProtectedInstallRoot(fullExePath) || IsPathUnderProtectedInstallRoot(fullRoot))
-                    return (false, "Patch target is under Program Files or another protected install root. Work in a copy, or choose to patch your installed game - which takes a verified backup first.", null);
+                    return (false, ProtectedInstallFolder, null);
 
                 if (HasKnownSteamInstallShape(fullExePath) || HasKnownSteamInstallShape(fullRoot))
-                    return (false, "Patch target is a steamapps/common/Battle Engine Aquila install. Work in a copy, or choose to patch your installed game - which takes a verified backup first.", null);
+                    return (false, SteamAppsCommonInstall, null);
             }
 
             if (!IsPathUnderRoot(fullExePath, fullRoot))
-                return (false, "Patch target must be inside the app-owned Patch Bench workspace.", null);
+                return (false, PatchTargetMustStayInsideWorkspaceFolder, null);
 
             string backupPath = BuildBackupPath(fullExePath);
             if (!IsPathUnderRoot(backupPath, fullRoot))
-                return (false, "Patch backup path must stay inside the app-owned Patch Bench workspace.", null);
+                return (false, BackupMustStayInsideWorkspaceFolder, null);
 
             string backupHashPath = BuildBackupHashPath(fullExePath);
             if (!IsPathUnderRoot(backupHashPath, fullRoot))
-                return (false, "Patch backup hash path must stay inside the app-owned Patch Bench workspace.", null);
+                return (false, BackupHashMustStayInsideWorkspaceFolder, null);
 
             var filesystemSafety = ValidatePatchFilesystemSafety(fullExePath, backupPath, backupHashPath, fullRoot);
             if (!filesystemSafety.success)
                 return (false, filesystemSafety.message, null);
 
             if (File.Exists(backupHashPath) && !File.Exists(backupPath))
-                return (false, "Patch backup hash sidecar exists without its backup snapshot; remove the stale copied-workspace sidecar before applying patches.", null);
+                return (false, BackupHashWithoutBackup, null);
 
             if (requireCatalog && UsingFallbackCatalog && !target.AllowFallbackCatalogForTests)
                 return (false, "Patch catalog is unavailable; built-in fallback patch specs are verification-only for product mutation.", null);
@@ -1605,7 +1631,7 @@ namespace OnslaughtCareerEditor.AppCore
             byte[] data = File.ReadAllBytes(fullExePath);
             string identityLabel = requireCatalog
                 ? ValidateTargetIdentity(data, selected ?? Array.Empty<BinaryPatchSpec>(), target)
-                : "app-owned Patch Bench BEA.exe-only copy";
+                : BeaExeOnlyCopyIdentity;
 
             if (identityLabel.Length == 0)
             {
@@ -1671,7 +1697,7 @@ namespace OnslaughtCareerEditor.AppCore
             }
             catch (Exception ex) when (ex is ArgumentException or IOException or NotSupportedException)
             {
-                return (false, $"That path could not be read: {ex.Message}", null);
+                return (false, InstalledPathUnreadable, null);
             }
 
             if (!string.Equals(Path.GetFileName(fullExePath), TargetFileName, StringComparison.OrdinalIgnoreCase))
@@ -1780,9 +1806,7 @@ namespace OnslaughtCareerEditor.AppCore
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
             {
-                return (false,
-                    $"The backup could not be made, so nothing was patched and your game is untouched: {ex.Message}",
-                    null);
+                return (false, InstalledBackupFailed, null);
             }
         }
 
@@ -1793,20 +1817,31 @@ namespace OnslaughtCareerEditor.AppCore
         /// </summary>
         public static bool LooksLikeCleanRetailExecutable(string exePath)
         {
+            return IdentifyRetailExecutable(exePath) == RetailExecutableIdentity.KnownCleanRetail;
+        }
+
+        /// <summary>
+        /// Classify a BEA.exe without writing. A locked or otherwise unreadable file is
+        /// <see cref="RetailExecutableIdentity.Unreadable"/>, not "already changed".
+        /// </summary>
+        public static RetailExecutableIdentity IdentifyRetailExecutable(string? exePath)
+        {
             try
             {
                 if (string.IsNullOrWhiteSpace(exePath) || !File.Exists(exePath))
-                    return false;
+                    return RetailExecutableIdentity.Missing;
 
                 if (new FileInfo(exePath).Length != KnownRetailSteamSize)
-                    return false;
+                    return RetailExecutableIdentity.DifferentFromKnownRetail;
 
                 byte[] bytes = File.ReadAllBytes(exePath);
-                return IsKnownCleanRetailSpecimen(bytes, ComputeSha256Hex(bytes));
+                return IsKnownCleanRetailSpecimen(bytes, ComputeSha256Hex(bytes))
+                    ? RetailExecutableIdentity.KnownCleanRetail
+                    : RetailExecutableIdentity.DifferentFromKnownRetail;
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
             {
-                return false;
+                return RetailExecutableIdentity.Unreadable;
             }
         }
 
@@ -1830,7 +1865,7 @@ namespace OnslaughtCareerEditor.AppCore
         {
             string? directory = Path.GetDirectoryName(destinationPath);
             if (string.IsNullOrWhiteSpace(directory) || !Directory.Exists(directory))
-                throw new DirectoryNotFoundException($"The containing folder for {label} does not exist.");
+                throw new DirectoryNotFoundException("That folder could not be found.");
 
             string stagedPath = Path.Combine(directory, $".onslaught-patch-{Guid.NewGuid():N}.tmp");
             bool stagedEntryExists = false;
@@ -1846,7 +1881,7 @@ namespace OnslaughtCareerEditor.AppCore
                     if (staged.Length != bytes.LongLength ||
                         !CryptographicOperations.FixedTimeEquals(stagedHash, SHA256.HashData(bytes)))
                     {
-                        throw new IOException($"Staged {label} verification failed.");
+                        throw new IOException(StagedFileVerificationFailed);
                     }
 
                     FileMutationSafety.ReleaseStagedFileQuarantine(staged);
@@ -1857,16 +1892,18 @@ namespace OnslaughtCareerEditor.AppCore
 
                 using SafeFileHandle handle = FileMutationSafety.OpenNoFollowReadHandle(destinationPath, label);
                 WindowsFileIdentity identity = FileMutationSafety.GetWindowsIdentity(handle, label);
-                if (OperatingSystem.IsWindows() && (identity.IsReparsePoint || identity.NumberOfLinks != 1))
-                    throw new IOException($"Published {label} has an unsafe file identity.");
+                if (OperatingSystem.IsWindows() && identity.IsReparsePoint)
+                    throw new IOException(TargetCannotUseLink);
+                if (OperatingSystem.IsWindows() && identity.NumberOfLinks != 1)
+                    throw new IOException(FileCannotShareData);
 
                 using var stream = new FileStream(handle, FileAccess.Read);
                 if (stream.Length > int.MaxValue)
-                    throw new IOException($"Published {label} is too large to verify.");
+                    throw new IOException(FileMutationSafety.FileTooLargeToRead);
                 byte[] readBack = new byte[checked((int)stream.Length)];
                 stream.ReadExactly(readBack);
                 if (!readBack.SequenceEqual(bytes))
-                    throw new IOException($"Published {label} verification did not match the staged bytes.");
+                    throw new IOException(PublishedFileDidNotMatch);
 
                 return readBack;
             }
@@ -1882,8 +1919,8 @@ namespace OnslaughtCareerEditor.AppCore
             if (!File.Exists(backupHashPath))
             {
                 return (false,
-                    "Restore aborted: backup snapshot integrity could not be verified.\n" +
-                    "The backup hash sidecar is missing, and the BEA.exe-only copy was not overwritten.");
+                    "Restore aborted: BEA.exe.original.backup could not be checked.\n" +
+                    "The backup hash file is missing, and the BEA.exe-only copy was not overwritten.");
             }
 
             string expected = File.ReadAllText(backupHashPath).Trim();
@@ -1891,7 +1928,7 @@ namespace OnslaughtCareerEditor.AppCore
             if (!string.Equals(expected, actual, StringComparison.OrdinalIgnoreCase))
             {
                 return (false,
-                    "Restore aborted: backup snapshot integrity check failed.\n" +
+                    "Restore aborted: BEA.exe.original.backup no longer matches its hash file.\n" +
                     "The BEA.exe-only copy was not overwritten.");
             }
 
@@ -1910,7 +1947,7 @@ namespace OnslaughtCareerEditor.AppCore
             if (!target.AllowByteLayoutOnlyTarget && (!trustedHash || !trustedSize))
             {
                 return (false,
-                    "Restore aborted: backup snapshot is not a trusted clean Steam retail BEA.exe specimen.\n" +
+                    "Restore aborted: BEA.exe.original.backup is not a Steam BEA.exe this app can restore.\n" +
                     "The BEA.exe-only copy was not overwritten.");
             }
 
@@ -2097,7 +2134,7 @@ namespace OnslaughtCareerEditor.AppCore
             try
             {
                 string rootPath = NormalizeExistingRootForAttributes(normalizedRoot);
-                RejectExistingReparseAncestors(rootPath, "app-owned Patch Bench workspace root");
+                RejectExistingReparseAncestors(rootPath, "workspace folder");
                 RejectExistingReparseAncestors(exePath, "patch target path");
                 RejectExistingReparseAncestors(backupPath, "patch backup path");
                 RejectReparsePoint(exePath, "patch target");
@@ -2120,7 +2157,10 @@ namespace OnslaughtCareerEditor.AppCore
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
             {
-                return (false, ex.Message);
+                if (ex.Message == FileCannotShareData || ex.Message == TargetCannotUseLink)
+                    return (false, ex.Message);
+
+                return (false, WorkingCopyPathUnusable);
             }
         }
 
@@ -2147,7 +2187,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             FileAttributes attributes = File.GetAttributes(path);
             if ((attributes & FileAttributes.ReparsePoint) != 0)
-                throw new InvalidOperationException($"Patch Bench refuses reparse points in {label}.");
+                throw new InvalidOperationException(TargetCannotUseLink);
         }
 
         private static void RejectExistingReparseAncestors(string path, string label)
@@ -2177,7 +2217,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             uint linkCount = GetWindowsHardLinkCount(path);
             if (linkCount > 1)
-                throw new InvalidOperationException($"{label} is hardlinked to another file; refusing to patch a shared file identity.");
+                throw new InvalidOperationException(FileCannotShareData);
         }
 
         private static uint GetWindowsHardLinkCount(string path)
@@ -2189,7 +2229,7 @@ namespace OnslaughtCareerEditor.AppCore
                 FileShare.ReadWrite | FileShare.Delete);
 
             if (!GetFileInformationByHandle(handle, out ByHandleFileInformation info))
-                throw new IOException($"Could not inspect hardlink count for patch target. Win32 error: {Marshal.GetLastWin32Error()}");
+                throw new IOException(FileMutationSafety.FileCouldNotBeInspected, new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error()));
 
             return info.NumberOfLinks;
         }
@@ -2216,8 +2256,9 @@ namespace OnslaughtCareerEditor.AppCore
 
         public static string RenderStateReport(string exePath, IReadOnlyList<BinaryPatchVerifyRow> rows, string summary)
         {
+            _ = exePath;
             var sb = new StringBuilder();
-            sb.AppendLine($"Target: {exePath}");
+            sb.AppendLine($"Target: {TargetFileName}");
             sb.AppendLine();
 
             foreach (var row in rows)

@@ -284,7 +284,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             RefreshComposition();
             SetStatus(
                 InfoBarSeverity.Informational,
-                _safeCopyTargets.Count == 0 ? "No safe copies yet" : "Ready",
+                _safeCopyTargets.Count == 0 ? CheatsPageText.NoSafeCopiesFoundTitle : "Ready",
                 _safeCopyTargets.Count == 0
                     ? CheatsPageText.NoSafeCopiesFoundNote
                     : $"Found {_safeCopyTargets.Count} safe {(_safeCopyTargets.Count == 1 ? "copy" : "copies")}.");
@@ -409,12 +409,12 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
                 if (outcome.Success)
                 {
-                    SetStatus(InfoBarSeverity.Success, "Done", outcome.Message);
+                    SetStatus(InfoBarSeverity.Success, "Done", CheatsPageText.DescribeWriteOutcome(outcome));
                     AppStatusService.SetStatus("Cheats: cheat save written");
                 }
                 else
                 {
-                    SetStatus(InfoBarSeverity.Warning, "Nothing written", outcome.Message);
+                    SetStatus(InfoBarSeverity.Warning, "Nothing written", CheatsPageText.DescribeWriteOutcome(outcome));
                 }
             }
             finally
@@ -478,8 +478,9 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             if (!outcome.Success || outcome.Session is null)
             {
                 _lastTrainerReading = null;
-                LiveTrainerAttachStatusTextBlock.Text = LiveTrainerPageText.BuildAttachSummary(false, null, outcome.Message);
-                SetLiveTrainerStatus(InfoBarSeverity.Warning, "Not watching", outcome.Message);
+                string refusal = LiveTrainerPageText.DescribeAttachRefusal(outcome.Decision.Refusal);
+                LiveTrainerAttachStatusTextBlock.Text = LiveTrainerPageText.BuildAttachSummary(false, null, refusal);
+                SetLiveTrainerStatus(InfoBarSeverity.Warning, "Not watching", refusal);
                 RefreshLiveTrainerControls();
                 return;
             }
@@ -489,7 +490,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             LiveTrainerAttachStatusTextBlock.Text = LiveTrainerPageText.BuildAttachSummary(
                 true,
                 LiveTrainerPageText.DescribeCopyName(registered.Process),
-                outcome.Message);
+                null);
 
             StartLiveTrainerTimer(LiveTrainerHold.IdleInterval);
             LiveTrainerTick();
@@ -604,7 +605,10 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     _suppressHoldToggleEvents = false;
                 }
 
-                SetLiveTrainerStatus(InfoBarSeverity.Informational, "Holding stopped", tick.Message);
+                SetLiveTrainerStatus(
+                    InfoBarSeverity.Informational,
+                    "Holding stopped",
+                    LiveTrainerPageText.DescribeHoldStop(tick));
             }
 
             StartLiveTrainerTimer(_trainerHold.IsHolding ? LiveTrainerHold.DefaultInterval : LiveTrainerHold.IdleInterval);
@@ -698,10 +702,11 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
 
             LiveTrainerWriteOutcome outcome = _trainerSession.Write(vital, (float)requested);
+            string note = LiveTrainerPageText.DescribeWriteOutcome(outcome);
             SetLiveTrainerStatus(
                 outcome.Success ? InfoBarSeverity.Success : InfoBarSeverity.Warning,
                 outcome.Success ? "Set" : "Nothing written",
-                outcome.Message);
+                note);
             LiveTrainerTick();
         }
 

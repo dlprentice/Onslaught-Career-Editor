@@ -206,9 +206,7 @@ reverse-engineering/binary-analysis/functions/GeneralVolume.cpp/CGeneralVolume__
 reverse-engineering/binary-analysis/functions/GeneralVolume.cpp/CGeneralVolume__InitRandomizedVelocityOffsets.md
 reverse-engineering/binary-analysis/functions/GroundUnit.cpp/SharedGroundUnit__VFunc_09_InitGroundedMotionComponents_0049f820.md
 reverse-engineering/binary-analysis/functions/Hazard.cpp/CHazard__VFunc02_CleanupWorldSoundAndLinkedState.md
-reverse-engineering/binary-analysis/functions/HeightField.cpp/CHeightField__InitColorGradient.md
 reverse-engineering/binary-analysis/functions/HeightField.cpp/CHeightField__Load.md
-reverse-engineering/binary-analysis/functions/HeightField.cpp/CHeightField__RecomputeGridExtentsAndHeightRange.md
 reverse-engineering/binary-analysis/functions/MCMech.cpp.md
 reverse-engineering/binary-analysis/functions/MCTentacle.cpp.md
 reverse-engineering/binary-analysis/functions/Mech.cpp/CMech__InitCockpit.md
@@ -275,7 +273,6 @@ reverse-engineering/binary-analysis/functions/game.cpp/CGame__DeclarePlayerDead.
 reverse-engineering/binary-analysis/functions/game.cpp/CGame__DoWeWantMesh.md
 reverse-engineering/binary-analysis/functions/game.cpp/CGame__DrawDebugStuff.md
 reverse-engineering/binary-analysis/functions/game.cpp/CGame__DrawGameStuff.md
-reverse-engineering/binary-analysis/functions/game.cpp/CGame__FillOutEndLevelData.md
 reverse-engineering/binary-analysis/functions/game.cpp/CGame__GetCamera.md
 reverse-engineering/binary-analysis/functions/game.cpp/CGame__GetController.md
 reverse-engineering/binary-analysis/functions/game.cpp/CGame__GetNumPrimaryObjectives.md

@@ -11,6 +11,16 @@ namespace OnslaughtCareerEditor.AppCore.Tests
     public sealed class SaveAnalyzerServiceTests
     {
         [Fact]
+        public void NoDetectedFilesNextStep_NamesTheNextStep()
+        {
+            Assert.Contains("Settings", SaveAnalyzerService.NoDetectedFilesNextStep);
+            Assert.Contains("browse", SaveAnalyzerService.NoDetectedFilesNextStep, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("No detected", SaveAnalyzerService.NoDetectedFilesNextStep);
+            Assert.DoesNotContain("path", SaveAnalyzerService.NoDetectedFilesNextStep, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain(":\\", SaveAnalyzerService.NoDetectedFilesNextStep);
+        }
+
+        [Fact]
         public void BuildDefaultSaveOutputPath_AppendsPatchedSuffix()
         {
             string output = SaveEditorService.BuildDefaultSaveOutputPath(@"C:\temp\career.bes", @"C:\safe-output");
@@ -92,6 +102,46 @@ namespace OnslaughtCareerEditor.AppCore.Tests
 
             Assert.False(result.Success);
             Assert.Contains("requires .bea/defaultoptions.bea", result.Message);
+        }
+
+        [Fact]
+        public void PatchConfiguration_MissingOrInvalidInputDoesNotDumpThePath()
+        {
+            string missing = Path.Combine(Path.GetTempPath(), $"absent-{Guid.NewGuid():N}.bea");
+            PatchResult missingResult = ConfigurationEditorService.PatchConfiguration(new ConfigurationPatchRequest
+            {
+                InputPath = missing,
+                OutputPath = Path.Combine(Path.GetTempPath(), "out.bea"),
+                SoundVolumeOverride = 0.8f
+            });
+
+            Assert.False(missingResult.Success);
+            Assert.Equal(ConfigurationEditorService.InputMissing, missingResult.Message);
+            Assert.DoesNotContain(missing, missingResult.Message);
+            Assert.DoesNotContain(":\\", missingResult.Message);
+            Assert.Contains("Nothing was changed", missingResult.Message);
+
+            string tempDir = Path.Combine(Path.GetTempPath(), $"oce-options-invalid-{Guid.NewGuid():N}");
+            Directory.CreateDirectory(tempDir);
+            try
+            {
+                string junk = Path.Combine(tempDir, "defaultoptions.bea");
+                File.WriteAllText(junk, "not a bea");
+                PatchResult invalid = ConfigurationEditorService.PatchConfiguration(new ConfigurationPatchRequest
+                {
+                    InputPath = junk,
+                    OutputPath = Path.Combine(tempDir, "out.bea"),
+                    SoundVolumeOverride = 0.8f
+                });
+
+                Assert.False(invalid.Success);
+                Assert.Equal(ConfigurationEditorService.InputInvalid, invalid.Message);
+                Assert.DoesNotContain(junk, invalid.Message);
+            }
+            finally
+            {
+                Directory.Delete(tempDir, recursive: true);
+            }
         }
 
         [Fact]
@@ -362,7 +412,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 Assert.False(analysis.IsValid);
                 Assert.False(analysis.VersionValid);
                 Assert.Contains("Invalid .bes version word", analysis.ErrorMessage);
-                Assert.Contains("Invalid file", document.StatusText);
+                Assert.Equal(SaveAnalyzerService.AnalysisFailed, document.StatusText);
                 Assert.Contains("Invalid .bes version word", document.ReportText);
             }
             finally
@@ -480,9 +530,65 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             SaveAnalyzerDocument document = SaveAnalyzerService.BuildAnalysisDocument(analysis, verbose: false, dumpMystery: false);
 
             Assert.Equal("Analysis: broken.bes", document.Title);
-            Assert.Contains("Invalid file", document.StatusText);
+            Assert.Equal(SaveAnalyzerService.AnalysisFailed, document.StatusText);
             Assert.Single(document.SummaryNodes);
-            Assert.Equal("Invalid file size", document.SummaryNodes[0].Label);
+            Assert.Equal(SaveAnalyzerService.AnalysisFailed, document.SummaryNodes[0].Label);
+            Assert.Contains("ERROR: Invalid file size", document.ReportText);
+        }
+
+        [Fact]
+        public void BuildAnalysisDocument_ForInvalidFileWithoutError_UsesAnalysisFailed()
+        {
+            SaveAnalysis analysis = new()
+            {
+                IsValid = false,
+                FilePath = @"C:\temp\broken.bes"
+            };
+
+            SaveAnalyzerDocument document = SaveAnalyzerService.BuildAnalysisDocument(analysis, verbose: false, dumpMystery: false);
+
+            Assert.Equal(SaveAnalyzerService.AnalysisFailed, document.StatusText);
+            Assert.Single(document.SummaryNodes);
+            Assert.Equal(SaveAnalyzerService.AnalysisFailed, document.SummaryNodes[0].Label);
+            Assert.DoesNotContain("No analysis available", document.SummaryNodes[0].Label);
+        }
+
+        [Fact]
+        public void BuildAnalysisDocument_DoesNotDumpTheAnalyzerErrorOnTheStatusLine()
+        {
+            SaveAnalysis analysis = new()
+            {
+                IsValid = false,
+                FilePath = @"C:\Games\Steam\steamapps\common\Battle Engine Aquila\career.bes",
+                ErrorMessage = "Invalid file size: 9,972 bytes (expected 10,004)"
+            };
+
+            SaveAnalyzerDocument document = SaveAnalyzerService.BuildAnalysisDocument(analysis, verbose: false, dumpMystery: false);
+
+            Assert.Equal(SaveAnalyzerService.AnalysisFailed, document.StatusText);
+            Assert.Contains("Nothing was changed", document.StatusText);
+            Assert.DoesNotContain("Invalid file size", document.StatusText);
+            Assert.DoesNotContain("Save Analyzer: Invalid file -", document.StatusText);
+            Assert.DoesNotContain(@"C:\Games", document.StatusText);
+            Assert.DoesNotContain(":\\", document.StatusText);
+            Assert.DoesNotContain(
+                "Invalid file size",
+                document.Metrics.Single(metric => metric.Label == "Missions").Detail ?? string.Empty);
+        }
+
+        [Fact]
+        public void BuildAnalysisDocument_DoesNotDumpTheAnalyzerErrorOnTheTree()
+        {
+            SaveAnalysis analysis = new()
+            {
+                IsValid = false,
+                FilePath = @"C:\Games\Steam\steamapps\common\Battle Engine Aquila\career.bes",
+                ErrorMessage = "Invalid file size: 9,972 bytes (expected 10,004)"
+            };
+
+            SaveAnalyzerDocument document = SaveAnalyzerService.BuildAnalysisDocument(analysis, verbose: false, dumpMystery: false);
+
+            Assert.Equal(SaveAnalyzerService.AnalysisFailed, document.SummaryNodes[0].Label);
             Assert.Contains("ERROR: Invalid file size", document.ReportText);
         }
 
@@ -518,6 +624,176 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             Assert.Equal("Goodie[10]", document.Metrics.Single(metric => metric.Label == "Top Region").Value);
             Assert.Contains(document.SummaryNodes, node => node.Label == "Comparison");
             Assert.Contains("FILE COMPARISON", document.ReportText);
+        }
+
+        [Fact]
+        public void BuildCompareDocument_DoesNotDumpTheCompareErrorOnTheStatusLine()
+        {
+            BesFilePatcher.CompareResult result = new()
+            {
+                File1Name = "left.bes",
+                File2Name = "right.bes",
+                File1Size = 9972,
+                File2Size = 10004,
+                DifferingBytes = 0,
+                ErrorMessage = "Invalid file size: 9,972 bytes (expected 10,004)"
+            };
+
+            SaveAnalyzerDocument document = SaveAnalyzerService.BuildCompareDocument(
+                @"C:\Games\Steam\steamapps\common\Battle Engine Aquila\left.bes",
+                @"C:\Games\Steam\steamapps\common\Battle Engine Aquila\right.bes",
+                result);
+
+            Assert.Equal(SaveAnalyzerService.ComparisonFailed, document.StatusText);
+            Assert.Contains("Nothing was changed", document.StatusText);
+            Assert.DoesNotContain("Invalid file size", document.StatusText);
+            Assert.DoesNotContain("identical", document.StatusText, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain(@"C:\Games", document.StatusText);
+            Assert.DoesNotContain(":\\", document.StatusText);
+            Assert.Contains("9,972", document.Metrics.Single(metric => metric.Label == "Size Match").Detail);
+            Assert.Contains("9,972", document.ReportText);
+            Assert.Equal("Comparison failed", SaveAnalyzerService.BuildInfoTitle(document));
+            Assert.DoesNotContain("complete", SaveAnalyzerService.BuildInfoTitle(document), StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public void BuildCompareDocument_DoesNotCallAFailedCompareIdenticalOnTheMetricCard()
+        {
+            BesFilePatcher.CompareResult result = new()
+            {
+                File1Name = "left.bes",
+                File2Name = "right.bes",
+                DifferingBytes = 0,
+                ErrorMessage = "Invalid file size: 9,972 bytes (expected 10,004)"
+            };
+
+            SaveAnalyzerDocument document = SaveAnalyzerService.BuildCompareDocument(
+                @"C:\temp\left.bes",
+                @"C:\temp\right.bes",
+                result);
+
+            SaveAnalyzerMetric topRegion = document.Metrics.Single(metric => metric.Label == "Top Region");
+            Assert.DoesNotContain("identical", topRegion.Detail, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("identical", topRegion.Value, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("could not be compared", topRegion.Detail, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public void BuildInfoTitle_KeepsCompleteWhenTheFilesDiffer()
+        {
+            BesFilePatcher.CompareResult result = new()
+            {
+                File1Name = "left.bes",
+                File2Name = "right.bes",
+                DifferingBytes = 32,
+                DiffRanges = new List<(int Start, int End)> { (10, 20) }
+            };
+
+            SaveAnalyzerDocument document = SaveAnalyzerService.BuildCompareDocument(
+                @"C:\temp\left.bes",
+                @"C:\temp\right.bes",
+                result);
+
+            Assert.Equal("Comparison complete", SaveAnalyzerService.BuildInfoTitle(document));
+        }
+
+        [Fact]
+        public void BuildInfoTitle_NamesAFailedAnalysisInsteadOfCallingItComplete()
+        {
+            SaveAnalysis analysis = new()
+            {
+                IsValid = false,
+                FilePath = @"C:\temp\broken.bes",
+                ErrorMessage = "Invalid file size: 9,972 bytes (expected 10,004)"
+            };
+
+            SaveAnalyzerDocument document = SaveAnalyzerService.BuildAnalysisDocument(analysis, verbose: false, dumpMystery: false);
+
+            Assert.Equal("Analysis failed", SaveAnalyzerService.BuildInfoTitle(document));
+            Assert.DoesNotContain("complete", SaveAnalyzerService.BuildInfoTitle(document), StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public void AnalyzeFile_MissingPath_DoesNotDumpThePathOrException()
+        {
+            string missing = Path.Combine(
+                "C:" + Path.DirectorySeparatorChar + "Users",
+                "player",
+                "Documents",
+                $"missing-career-{Guid.NewGuid():N}.bes");
+
+            SaveAnalyzerDocument document = SaveAnalyzerService.AnalyzeFile(missing, verbose: false, dumpMystery: false);
+
+            Assert.Contains("could not be analyzed", document.StatusText);
+            Assert.Contains("Nothing was changed", document.StatusText);
+            Assert.DoesNotContain(missing, document.StatusText);
+            Assert.DoesNotContain(missing, document.ReportText);
+            Assert.DoesNotContain(missing, document.SummaryNodes[0].Label);
+            Assert.DoesNotContain(":\\", document.StatusText);
+            Assert.DoesNotContain(":\\", document.ReportText);
+            Assert.DoesNotContain("Could not find file", document.StatusText, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("Could not find file", document.ReportText, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public void CompareFiles_MissingPath_DoesNotCallTheFilesIdenticalOrDumpThePath()
+        {
+            string missing = Path.Combine(
+                "C:" + Path.DirectorySeparatorChar + "Users",
+                "player",
+                "Documents",
+                $"missing-left-{Guid.NewGuid():N}.bes");
+            string alsoMissing = Path.Combine(
+                "C:" + Path.DirectorySeparatorChar + "Users",
+                "player",
+                "Documents",
+                $"missing-right-{Guid.NewGuid():N}.bes");
+
+            SaveAnalyzerDocument document = SaveAnalyzerService.CompareFiles(missing, alsoMissing);
+
+            Assert.Contains("could not be compared", document.StatusText);
+            Assert.Contains("Nothing was changed", document.StatusText);
+            Assert.DoesNotContain("identical", document.StatusText, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain(missing, document.StatusText);
+            Assert.DoesNotContain(alsoMissing, document.StatusText);
+            Assert.DoesNotContain(missing, document.ReportText);
+            Assert.DoesNotContain(alsoMissing, document.ReportText);
+            Assert.DoesNotContain(":\\", document.StatusText);
+            Assert.DoesNotContain(":\\", document.ReportText);
+            Assert.DoesNotContain("Could not find file", document.StatusText, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("Could not find file", document.ReportText, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public void FormatAnalysisReport_DoesNotDumpTheExceptionWhenBindingsCannotBeRead()
+        {
+            string source = File.ReadAllText(Path.Combine(
+                FindRepoRoot(),
+                "OnslaughtCareerEditor.AppCore",
+                "BesFilePatcher.cs"));
+
+            Assert.Contains("BindingsDecodeFailed", source);
+            Assert.DoesNotContain("Bindings decode failed: {ex.Message}", source);
+            Assert.Equal("Bindings could not be decoded.", BesFilePatcher.BindingsDecodeFailed);
+            Assert.DoesNotContain(":\\", BesFilePatcher.BindingsDecodeFailed);
+            Assert.DoesNotContain("/", BesFilePatcher.BindingsDecodeFailed);
+        }
+
+        private static string FindRepoRoot()
+        {
+            DirectoryInfo? current = new(AppContext.BaseDirectory);
+            while (current is not null)
+            {
+                if (File.Exists(Path.Combine(current.FullName, "package.json")) &&
+                    Directory.Exists(Path.Combine(current.FullName, "OnslaughtCareerEditor.AppCore")))
+                {
+                    return current.FullName;
+                }
+
+                current = current.Parent;
+            }
+
+            throw new InvalidOperationException("Could not find the repository root from the test directory.");
         }
 
         private static void WriteGoodie(byte[] buffer, int goodieBase, int index, uint state)

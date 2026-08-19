@@ -21,6 +21,12 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         /// cannot promise to put anything back and will not pretend otherwise.
         /// </summary>
         ChangedWithNothingToGoBackTo,
+
+        /// <summary>
+        /// The file is there but cannot be read right now. That is not the same as "already
+        /// changed" - the game being open is enough to lock BEA.exe.
+        /// </summary>
+        Unreadable,
     }
 
     /// <summary>
@@ -84,25 +90,39 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
             return readiness switch
             {
                 InstalledGamePatchReadiness.NoGameChosen =>
-                    "No installed game chosen yet. Pick your game folder in Settings, or browse to a BEA.exe below.",
+                    "Pick your game folder in Settings, or browse to a BEA.exe below.",
                 InstalledGamePatchReadiness.BackedUp =>
                     "Your original executable is saved beside the game as BEA.exe.original.backup. "
                         + "Patching from here can be undone.",
                 InstalledGamePatchReadiness.CleanAndUnbackedUp =>
-                    "Your game is as it shipped. Nothing has been backed up yet - patching will copy the original first.",
+                    "Your game is as it shipped. Nothing has been backed up. Patching will copy the original first.",
                 InstalledGamePatchReadiness.ChangedWithNothingToGoBackTo =>
-                    "Something has already changed this BEA.exe, and there is no original beside it. The app will not "
-                        + "copy a changed file and call it the original, so patching stays off until the game is "
-                        + "verified or reinstalled.",
+                    "Something has already changed this BEA.exe, and there is no original beside it. The app will not " +
+                        "copy a changed file and call it the original, so patching stays off until the game is " +
+                        "verified or reinstalled.",
+                InstalledGamePatchReadiness.Unreadable =>
+                    "The app could not read BEA.exe just now, so it cannot say whether this is as it shipped. " +
+                        "Patching stays off until the file can be read.",
                 _ => string.Empty,
             } + DescribeWhere(exePath);
         }
 
         private static string DescribeWhere(string? exePath)
         {
-            return string.IsNullOrWhiteSpace(exePath)
-                ? string.Empty
-                : $" ({Path.GetDirectoryName(exePath)})";
+            string name = FolderLeaf(exePath, string.Empty);
+            return string.IsNullOrWhiteSpace(name) ? string.Empty : $" ({name})";
+        }
+
+        private static string FolderLeaf(string? exePath, string fallback)
+        {
+            if (string.IsNullOrWhiteSpace(exePath))
+            {
+                return fallback;
+            }
+
+            string? folder = Path.GetDirectoryName(exePath.Trim());
+            string name = Path.GetFileName(Path.TrimEndingDirectorySeparator(folder ?? string.Empty));
+            return string.IsNullOrWhiteSpace(name) ? fallback : name;
         }
 
         /// <summary>
@@ -111,7 +131,7 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         /// </summary>
         public static string BuildPatchConfirmation(string exePath, string patchSummary)
         {
-            return $"This changes the game in:\n{Path.GetDirectoryName(exePath)}\n\n"
+            return $"This changes the game in:\n{FolderLeaf(exePath, "the selected game folder")}\n\n"
                 + $"Changes: {patchSummary}\n\n"
                 + "Your original executable is copied and checked before anything is written. If the copy cannot be "
                 + "made, nothing is patched. Put my game back returns it afterwards.";
@@ -119,7 +139,7 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
 
         public static string BuildRestoreConfirmation(string exePath)
         {
-            return $"This puts back the original executable in:\n{Path.GetDirectoryName(exePath)}\n\n"
+            return $"This puts back the original executable in:\n{FolderLeaf(exePath, "the selected game folder")}\n\n"
                 + RestoreScopeNote;
         }
 
@@ -129,7 +149,16 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         /// </summary>
         public static string BuildOutcomeNote(bool success, string message)
         {
-            return success ? message : $"Nothing was changed. {message}";
+            if (success || string.IsNullOrWhiteSpace(message))
+                return message;
+
+            if (message.Contains("Nothing was changed", StringComparison.OrdinalIgnoreCase)
+                || message.Contains("untouched", StringComparison.OrdinalIgnoreCase))
+            {
+                return message;
+            }
+
+            return $"Nothing was changed. {message}";
         }
 
         /// <summary>
@@ -170,9 +199,14 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
                     return InstalledGamePatchReadiness.BackedUp;
                 }
 
-                return BinaryPatchEngine.LooksLikeCleanRetailExecutable(exePath)
-                    ? InstalledGamePatchReadiness.CleanAndUnbackedUp
-                    : InstalledGamePatchReadiness.ChangedWithNothingToGoBackTo;
+                return BinaryPatchEngine.IdentifyRetailExecutable(exePath) switch
+                {
+                    RetailExecutableIdentity.KnownCleanRetail => InstalledGamePatchReadiness.CleanAndUnbackedUp,
+                    RetailExecutableIdentity.Unreadable => InstalledGamePatchReadiness.Unreadable,
+                    RetailExecutableIdentity.DifferentFromKnownRetail =>
+                        InstalledGamePatchReadiness.ChangedWithNothingToGoBackTo,
+                    _ => InstalledGamePatchReadiness.NoGameChosen,
+                };
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
             {

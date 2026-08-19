@@ -42,11 +42,11 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             _configurationDetectedFiles = ConfigurationEditorService.GetDetectedOptionsFiles(gameDir);
             ConfigurationDetectedFilesComboBox.ItemsSource = _configurationDetectedFiles;
             ConfigurationDetectedFilesComboBox.PlaceholderText = _configurationDetectedFiles.Count == 0
-                ? "No detected options files yet"
+                ? SaveAnalyzerService.NoDetectedFilesNextStep
                 : "Choose an options file";
             RestoreConfigurationDetectedFileSelection(selectedPath);
             ConfigurationDetectedFilesStatusTextBlock.Text = _configurationDetectedFiles.Count == 0
-                ? "No .bea options files were detected. Set the game directory in Settings or browse manually."
+                ? "No .bea options files were detected. Set the game folder in Settings or browse manually."
                 : $"{_configurationDetectedFiles.Count} detected options file(s) available.";
         }
 
@@ -99,9 +99,9 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     LoadConfigurationSnapshotIfPossible();
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                ConfigurationOutputTextBox.Text = $"Could not browse for options file.\n{ex.Message}";
+                ConfigurationOutputTextBox.Text = SaveLabPageText.BrowseOptionsFailed;
                 AppStatusService.SetStatus("Game Options: browse failed");
             }
         }
@@ -128,9 +128,9 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 ConfigurationOutputFileTextBox.Text = Path.Combine(folder, string.IsNullOrWhiteSpace(fileName) ? "defaultoptions.bea" : fileName);
                 UpdateConfigurationActionState();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                ConfigurationOutputTextBox.Text = $"Could not choose output folder.\n{ex.Message}";
+                ConfigurationOutputTextBox.Text = SaveLabPageText.ChooseOutputFailed;
                 AppStatusService.SetStatus("Game Options: output browse failed");
             }
         }
@@ -151,9 +151,9 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     UpdateConfigurationActionState();
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                ConfigurationOutputTextBox.Text = $"Could not browse for copy-source file.\n{ex.Message}";
+                ConfigurationOutputTextBox.Text = SaveLabPageText.BrowseCopySourceFailed;
                 AppStatusService.SetStatus("Game Options: copy-source browse failed");
             }
         }
@@ -246,9 +246,9 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 ConfigurationOutputTextBox.Text = "Loaded keybind overrides from the selected copy-source file.";
                 UpdateConfigurationActionState();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                ConfigurationOutputTextBox.Text = $"Error loading keybinds from copy source: {ex.Message}";
+                ConfigurationOutputTextBox.Text = SaveLabPageText.LoadKeybindsFailed;
                 UpdateConfigurationActionState();
             }
         }
@@ -281,11 +281,14 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 _configurationInputValid = false;
                 _configurationSnapshot = null;
                 _configurationKeybindRows.Clear();
+                ClearConfigurationInputLocation();
                 ConfigurationCurrentSettingsTextBlock.Text = "Select a .bea file to inspect the current boot-time global settings.";
                 ConfigurationCurrentTailTextBlock.Text = "Keybind and tail details will appear here after a valid options file is loaded.";
                 UpdateConfigurationActionState();
                 return;
             }
+
+            RenderConfigurationInputLocation(inputPath);
 
             try
             {
@@ -294,17 +297,33 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 RenderConfigurationSnapshot(_configurationSnapshot);
                 AppStatusService.SetStatus($"Game Options: loaded {Path.GetFileName(inputPath)}");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 _configurationInputValid = false;
                 _configurationSnapshot = null;
                 _configurationKeybindRows.Clear();
-                ConfigurationCurrentSettingsTextBlock.Text = $"Input is not ready: {ex.Message}";
+                ConfigurationCurrentSettingsTextBlock.Text = SaveLabPageText.InputNotReady;
                 ConfigurationCurrentTailTextBlock.Text = "Game Options expects a valid .bea / defaultoptions.bea snapshot.";
                 AppStatusService.SetStatus("Game Options: invalid input");
             }
 
             UpdateConfigurationActionState();
+        }
+
+        private void RenderConfigurationInputLocation(string inputPath)
+        {
+            CareerSaveLocationKind kind = CareerSaveLocation.Classify(inputPath);
+            string line = CareerSaveLocationText.Describe(kind, inputPath);
+            ConfigurationInputLocationTextBlock.Text = line;
+            ConfigurationInputLocationTextBlock.Visibility = string.IsNullOrWhiteSpace(line)
+                ? Visibility.Collapsed
+                : Visibility.Visible;
+        }
+
+        private void ClearConfigurationInputLocation()
+        {
+            ConfigurationInputLocationTextBlock.Text = string.Empty;
+            ConfigurationInputLocationTextBlock.Visibility = Visibility.Collapsed;
         }
 
         private void RenderConfigurationSnapshot(ConfigurationSnapshot snapshot)
@@ -383,9 +402,13 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             {
                 ConfigurationSafetyHintTextBlock.Text = "Copy-source toggles require a valid existing .bes or .bea file.";
             }
+            else if (SaveLabPageText.DescribeOutputRefusal(outputPath) is { } refusedOutput)
+            {
+                ConfigurationSafetyHintTextBlock.Text = refusedOutput;
+            }
             else if (!outputIsOptionsLike)
             {
-                ConfigurationSafetyHintTextBlock.Text = "Output path must remain a .bea / defaultoptions.bea path.";
+                ConfigurationSafetyHintTextBlock.Text = "The output file must remain a .bea / defaultoptions.bea file.";
             }
             else if (AreSamePaths(inputPath, outputPath))
             {
@@ -405,7 +428,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 controllerConfigValid &&
                 keybindErrors.Count == 0 &&
                 (!copyRequested || copySourcePathValid) &&
-                hasPending;
+                hasPending &&
+                SaveLabPageText.DescribeOutputRefusal(outputPath) is null;
 
             ConfigurationCopyOutputButton.IsEnabled = !string.IsNullOrWhiteSpace(ConfigurationOutputTextBox.Text);
         }
@@ -445,8 +469,10 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 if (File.Exists(request.OutputPath) &&
                     !await ConfirmAsync(
                         "Overwrite output file?",
-                        $"The output file already exists:\n{request.OutputPath}\n\nOverwrite it?"))
+                        SaveLabPageText.BuildOverwriteQuestion(request.OutputPath)))
                 {
+                    ConfigurationOutputTextBox.Text = SaveLabPageText.OverwriteCanceled;
+                    ConfigurationCopyOutputButton.IsEnabled = true;
                     AppStatusService.SetStatus("Game Options: overwrite canceled");
                     return;
                 }
@@ -467,8 +493,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
             catch (Exception ex) when (IsUserFacingConfigurationPatchException(ex))
             {
-                string detail = request is null ? ex.Message : RedactConfigurationPatchPaths(ex.Message, request);
-                string message = $"Game options patch failed.\n{detail}";
+                string message = SaveLabPageText.PatchFailed;
                 ConfigurationOutputTextBox.Text = message;
                 ConfigurationCopyOutputButton.IsEnabled = !string.IsNullOrWhiteSpace(message);
                 ConfigurationInfoBar.Title = "Game options patch failed";
@@ -507,11 +532,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     "The source options file was not modified.";
             }
 
-            string message = string.IsNullOrWhiteSpace(result.Message)
-                ? "The game options patch could not be completed."
-                : RedactConfigurationPatchPaths(result.Message, request);
-
-            return "Game options patch failed.\n" + message;
+            return SaveLabPageText.DescribeConfigurationPatchFailure(
+                RedactConfigurationPatchPaths(result.Message, request));
         }
 
         private static string RedactConfigurationPatchPaths(string message, ConfigurationPatchRequest request)

@@ -1,7 +1,7 @@
 # Function Notes
 
 Status: active — front door for the per-function RE note corpus
-Last updated: 2026-08-14
+Last updated: 2026-08-18
 Summary: what these notes are, which naming authority is current, how the
 2026-07-28 name corrections were made and what they rest on, and which of this
 corpus's known defects are still open.
@@ -27,8 +27,10 @@ Useful starting points:
   the instruction factory) plus its wiring:
   [`IScript.cpp.md`](IScript.cpp.md) (command registry and message dispatch),
   [`CScriptEventNB.cpp.md`](CScriptEventNB.cpp.md) (named events and the
-  message-0x7d0 fire path), and
-  [`EventFunction.cpp.md`](EventFunction.cpp.md) (named callbacks).
+  message-0x7d0 fire path),
+  [`EventFunction.cpp.md`](EventFunction.cpp.md) (named callbacks), and
+  [`CComplexThing.cpp.md`](CComplexThing.cpp.md) (thing attach:
+  `SetScript` → init/ready, shutdown/died/hit).
 
 Browse the directory tree for the complete retained set. Generated rollups and
 per-owner mirror indexes were removed; Git history preserves them if an old

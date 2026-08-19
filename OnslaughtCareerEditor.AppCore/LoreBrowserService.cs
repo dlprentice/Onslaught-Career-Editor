@@ -15,12 +15,12 @@ namespace OnslaughtCareerEditor.AppCore
         private const string LorePackNavigationScheme = "onslaught-lore";
         private const string MissingLoreBookMessage = "Lore content directory not found.";
         private const string InvalidLorePackDocumentIdMessage = "Lore content pack contains an invalid document identifier.";
-        private const string InvalidLorePackDocumentPathMessage = "Lore content pack contains an invalid document path.";
+        private const string InvalidLorePackDocumentPathMessage = "Lore content pack contains an invalid document file.";
         private const string InvalidLorePackIndexMessage = "Lore content pack index is invalid.";
         private const string InvalidLorePackContentMessage = "Lore content pack content is invalid.";
         private const string LorePackIndexContentMismatchMessage = "Lore content pack index and content do not match.";
         private const string DuplicateLorePackDocumentIdMessage = "Lore content pack contains duplicate document identifiers.";
-        private const string DuplicateLorePackDocumentPathMessage = "Lore content pack contains duplicate document paths.";
+        private const string DuplicateLorePackDocumentPathMessage = "Lore content pack contains duplicate document files.";
         private const string LorePackContentHashMismatchMessage = "Lore content pack content hash mismatch.";
         private const string LorePackSchema = "onslaught-lore-pack.v1";
         private const string HtmlDocumentReaderNotice =

@@ -68,7 +68,7 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
                 selected.Add("Level 100 early flight");
 
             return selected.Count == 0
-                ? "Player mods selected: none."
+                ? "No player mods on. Turn one on above."
                 : $"Player mods selected: {string.Join(", ", selected)}.";
         }
 

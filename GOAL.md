@@ -17,12 +17,15 @@
 > Godot rebuild, and the WinUI 3 app are coequal outcomes. A current goal chooses
 > focus, not standing rank. See [Revision history](#revision-history).
 >
-> Last updated: 2026-08-15. Current measured status belongs in
+> Last updated: 2026-08-18. Current measured status belongs in
 > [`CURRENT_CAPABILITIES.md`](CURRENT_CAPABILITIES.md) and
 > [`developer_state.json`](developer_state.json) (routing key
-> `current_re_authority`). Generation 73 is retained only as the exact
+> `current_re_authority`). Generation 31 **v2** is the campaign parent;
+> Generation 31 v1 is superseded. Generation 73 is retained only as the exact
 > projection oracle named by the post-loss claim-closure receipt; it is not a
-> campaign parent or authority.
+> campaign parent or authority. 729/729 is a 2026-08-17 Core-suite
+> measurement, not the live count (later pin 730/730). `F:\DS DEEP *` paths
+> are historical origins; the corpus is `local-lab\ds-deep-review*`.
 >
 > **The one mutable section is `## Current directive`.** An agent's standing
 > goal is a short proxy that points at it, so the directive can be revised as
@@ -285,10 +288,21 @@ progress, not completion.
 
 ### Current frontier
 
-Updated 2026-08-14 after the external-table boundary promotion and current
-`.text` ownership refresh, including the earlier 75-row MissionScript vocabulary
-and one-row explosion-factory promotions. Recording what closed is not narrowing
+Updated 2026-08-18 (pin hygiene). Recording what closed is not narrowing
 the mandate; the completion test and every clause above are unchanged.
+
+**2026-08-18 — stale pins superseded (do not revive).** Generation 31
+**v2** is the sole campaign parent (`generation-31-current-8329-db18624-v2`,
+READY `2e77c62d…4219`); every `generation-31-*-v1*` directory is renamed
+`*-superseded-by-v2-20260817`. The Core-suite pin is **730/730** on
+`a65826fa` (23 m 45 s); **729/729** is the earlier `fd5ab355` run and is
+not the live count — do not re-run the 25-minute suite unless a Core
+owner changed. Dated "lanes still running" / eight-lane / data34+trace-mine
+in-flight sentences are not a liveness oracle; read the Kanban board and
+`local-lab/hermes-kanban-campaign-2026-08-18/HANDOFF-CURRENT.md`.
+`F:\DS DEEP Review`, `F:\DS DEEP Review Extended`, and `F:\rows.tsv` no
+longer exist; use `local-lab\ds-deep-review\` and
+`local-lab\ds-deep-review-extended\`.
 
 **2026-08-17 — maintainer directive, goal reset, and corpus relocation.** The
 maintainer returned 2026-08-17 (~13:05 EDT) and directed: target the complete,
@@ -309,30 +323,12 @@ first REBUILD_READY rows) → slot-instrument reproducibility → arity-36 promo
 characterisation → falsifier close-out. Full-RE completion remains the standing
 mandate; this list is its current frontier.
 
-**2026-08-17 (autonomous shift) — bridge landed, corpus relocated, Gen 31 in
-cut.** The Generation 30 literal-pin carry bridge is committed (`a0a3987b`;
-`_verify_generation30_campaign_carry`, four mirror tests, frozen Gen-30 replay
-`CAMPAIGN_VERIFIED`). The slot-instrument visit-order question is settled with
-no flip: `0x00563d97` is DETERMINATE / LOWER_BOUND / 28 unresolved accesses /
-412 blocks; the arity-36 cohort still needs its spec re-derived on the current
-instrument before any ceremony. The DeepSeek corpus relocation is byte-verified:
-`local-lab\ds-deep-review\` (155,622 files, 532,623,995 bytes; tree SHA-256
-`9291c7ee…dfbf`), `local-lab\ds-deep-review-extended\` (95/95), and
-`local-lab\ds-deep-review-extended\rows.tsv` (SHA-256 `7530c0e5…d1b47`); the
-H: twin matches the same tree SHA, and the F:/H: sources are being staged
-recoverably into `D:\lab-quarantine\20260817\` before removal, leaving
-`F:\GhidraBackups` as the only retained F: content. Generation 31 inputs are
-staged (16 gate result JSONs and 16 SURVIVED probe-refuter findings, verified
-on disk), and the bespoke `tools\build_generation31_authority.py` is under
-integration review before it cuts all 16 rows onto the db.18624 seed in one
-generation: 14 rows raise C0_OPAQUE → C1_CANDIDATE_PARTIAL, row 13 carries its
-grade unchanged, the fresh second GetFriction row enters at C1_CANDIDATE_PARTIAL, and
-REBUILD_READY moves 0 → 16 with no other grade movement. The campaign model
-now admits the one measured two-owner contract pair (both GetFriction rows,
-distinct owners, terminal) behind `_validate_contract_owner_rows`. The
-remaining priority order is the Gen 31 authority ceremony → arity-36
-re-derivation/promotion → pointer/vftable cohort → runtime-witnessed name
-corrections → Level100 crash characterisation → falsifier close-out.
+**2026-08-17 (autonomous shift) — SUPERSEDED 2026-08-18.** This paragraph
+said Generation 31 was "in cut", F:/H: copies were "being staged", and
+arity-36 still needed re-derivation. All three are closed: Gen 31 **v2**
+is the authority, the F:/H: sources were staged then removed the same
+day, and arity-36 / name-cohort5 / vftable65 promoted to live. Keep the
+dated measurements below as history; do not resume from this paragraph.
 
 **Closed this session — do not re-derive:**
 
@@ -443,15 +439,17 @@ corrections → Level100 crash characterisation → falsifier close-out.
 
 1. **Carry bridge — DONE.** `_verify_generation30_campaign_carry` landed
    (`a0a3987b`) with literal pins from `77d6ae26…`, reproduced independently.
-2. **Generation 31 — CUT AND INDEPENDENTLY VERIFIED 2026-08-17.** The first 16
-   `REBUILD_READY` rows land on db.18624 (`6bd1f54a`): 14 rows raise
-   C0_OPAQUE → C1_CANDIDATE_PARTIAL, row 13 unchanged, the second GetFriction
-   row `C-2b931aa6…` enters C1. The integration owner re-ran the frozen
-   bootstrap with the measured on-disk pins: CAMPAIGN_VERIFIED, exit 0
-   (`local-lab\gen31-verify-measuredpins-2026-08-17.log`). Remaining Gen-31
-   ceremony steps (replica, cut-time Ghidra inspect receipts, POST
-   backup/tracked refresh, Gen-31 authority receipt) stay recorded in
-   `developer_state.json` and are the next ceremony.
+2. **Generation 31 — CUT AND INDEPENDENTLY VERIFIED 2026-08-17; v2 is
+   the authority.** The first 16 `REBUILD_READY` rows land on db.18624
+   (`6bd1f54a`): 14 rows raise C0_OPAQUE → C1_CANDIDATE_PARTIAL, row 13
+   unchanged, the second GetFriction row `C-2b931aa6…` enters C1. The
+   integration owner re-ran the frozen bootstrap with the measured
+   on-disk pins: CAMPAIGN_VERIFIED, exit 0
+   (`local-lab\gen31-verify-measuredpins-2026-08-17.log`). The leftover
+   v1 ceremony steps named here (replica, cut-time inspect receipts,
+   POST backup/tracked refresh, authority receipt) **completed the same
+   day as v2** — item 3. Do not treat v1 READY `b99b6e4f…` or a
+   "remaining ceremony" sentence as current.
 3. **Gen-31 ceremony — COMPLETE (v2 re-cut).** Canonical + replica rebuilt on
    the current tree after the Godot smoke repair moved the rebuild-source
    fingerprint, both frozen-verified CAMPAIGN_VERIFIED, all eight ledgers
@@ -495,10 +493,14 @@ corrections → Level100 crash characterisation → falsifier close-out.
    byte-cited C1/C2 slices and rebuild owners. Reasoned "this consumes X and
    decides Y" hypotheses with explicit confidence labels are progress; the
    cheapest falsifier travels with every row.
-9. **Core gate — GREEN 2026-08-17.** The full unfiltered Core suite passed in
-   one run (729/729, 25 m 30 s, exit 0; `local-lab\fullsuite-2026-08-17.log`)
-   and all four Level100 classes pass individually; the historical host deaths
-   stay attributed to environmental contention until reproduced.
+9. **Core gate — GREEN; later pin 730/730.** The full unfiltered Core
+   suite passed 729/729 on `fd5ab355` (25 m 30 s, exit 0;
+   `local-lab\fullsuite-2026-08-17.log`) and 730/730 on `a65826fa`
+   (23 m 45 s; the extra case is the first-flight fingerprint). A
+   2026-08-18 static recount on this tree is 369 `[Fact]` + 361
+   `[InlineData]` = 730 cases. Do not re-run the 25-minute suite unless
+   a Core owner changed. Historical host deaths stay attributed to
+   environmental contention until reproduced.
 10. **Organization and truth routing.** Consolidate the top-level, RE, and
     local-lab documents toward one current-truth path; implement the H:
     graveyard archival policy; land the D:/G: audit outcomes; keep
@@ -910,8 +912,15 @@ gate to `1_000` fails that test while the other 21 rows still pass, which proves
 both that the new test bites and that the pre-existing suite was blind to this
 constant.
 
-*One gate is genuinely unmet and is recorded rather than glossed.* The full
-unfiltered Core suite has never completed — with or without the change. The test
+*SUPERSEDED 2026-08-18 — this "never completed" claim is false.* The
+full unfiltered Core suite later passed 729/729 on `fd5ab355` and
+730/730 on `a65826fa`. The 582/~729 aborted run and the host-crash
+attribution below are a 2026-08-17 environmental observation, not the
+current gate. Do not treat them as a reason to re-run the 25-minute
+suite or to report the Core gate unmet.
+
+*One gate was unmet on the morning of 2026-08-17 and is recorded rather than glossed.* The full
+unfiltered Core suite had not then completed — with or without the change. The test
 host crashes (never an assertion) at wildly varying points, and it **reproduces
 on the pristine baseline with the change reverted**, so it is not a regression
 signal. Attribution is inference, not measurement: machine commit charge was
@@ -1543,9 +1552,16 @@ in write mode against live. Reversibility remains restore-from-backup only.
   into the repo.** The maintainer directed complete reverse engineering as the
   prime directive and authorized autonomous delegated execution for a ~5-hour
   window. `F:\DS DEEP Review`, `F:\DS DEEP Review Extended`, and `F:\rows.tsv`
-  are moved into gitignored `local-lab\` with byte-exact verification; F: is
-  cleared except `GhidraBackups`, and the H: twin is removed, only after each
-  copy verifies. The harness goal now proxies this directive.
+  were copied into gitignored `local-lab\` (`ds-deep-review`,
+  `ds-deep-review-extended`, plus `rows.tsv`) with byte-exact verification,
+  then staged out of F:/H: via `tools\lab_quarantine.py`. **As of 2026-08-18
+  those F: paths do not exist**; F: holds `GhidraBackups` only. The harness
+  goal now proxies this directive.
+- **2026-08-18 — pin hygiene only; mandate unchanged.** Generation 31 v1,
+  729/729 as a live Core count, dated "lanes still running" sentences, and
+  present-tense `F:\DS DEEP *` paths were superseded in place. The standing
+  constraints (pristine read-only, save preservation, no hard-delete, Core
+  determinism, one live-Ghidra lock, two-witness claims) are untouched.
 - **2026-08-16 — DS DEEP Review integration frontier recorded.** The maintainer
   set a long-horizon goal covering integration of the external
   `local-lab\ds-deep-review` drop alongside coequal rebuild advancement. That
