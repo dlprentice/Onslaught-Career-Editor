@@ -645,7 +645,7 @@
                             <TextBlock x:Name="PatchBenchSelectedProfileDetails"
                                        AutomationProperties.AutomationId="PatchBenchSelectedProfileDetails"
                                        AutomationProperties.Name="Selected safe-copy preset details"
-                                       Text="Selected safe-copy preset details: included changes, restore path, and limits update with the selected profile."
+                                       Text="Selected safe-copy preset details: included changes, restore steps, and limits update with the selected profile."
                                        TextWrapping="WrapWholeWords" />
                         </Expander>
                         <Expander x:Name="PatchBenchLabPatchExperimentsExpander"
@@ -1405,7 +1405,7 @@
                                                     <Expander Header="BEA.exe-only copy details">
                                                         <TextBox x:Name="ExePathTextBox"
                                                                  AutomationProperties.AutomationId="PatchBenchWorkingCopyPath"
-                                                                 AutomationProperties.Name="BEA.exe-only copy executable path"
+                                                                 AutomationProperties.Name="BEA.exe-only copy executable file"
                                                                  IsReadOnly="True"
                                                                  TextChanged="ExePathTextBox_TextChanged"
                                                                  PlaceholderText="Create a copy before verifying or applying patches" />

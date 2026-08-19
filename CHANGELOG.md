@@ -193,6 +193,8 @@ live in `developer_state.json` and the campaign ledgers.
   names the file, not a path. A missing copied music replacement
   or its backup names the file, not a path. A missing copied
   defaultoptions.bea or its backup names the file, not a path.
+  Windowed & Mods preset details name restore steps, not a path.
+  A BEA.exe-only copy names the file, not a path.
 
 ## 1.0.11 — 2026-08-07
 

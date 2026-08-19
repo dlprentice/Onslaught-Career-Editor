@@ -130,6 +130,10 @@ public class BinaryPatchCopyHonestyTests
         Assert.That(xaml, Does.Contain("Replacement track OGG file"));
         Assert.That(xaml, Does.Not.Contain("Source executable path"));
         Assert.That(xaml, Does.Contain("Source executable file"));
+        Assert.That(xaml, Does.Not.Contain("restore path"));
+        Assert.That(xaml, Does.Contain("restore steps"));
+        Assert.That(xaml, Does.Not.Contain("copy executable path"));
+        Assert.That(xaml, Does.Contain("copy executable file"));
     }
 
     [Test]
