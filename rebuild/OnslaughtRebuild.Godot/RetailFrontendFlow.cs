@@ -1660,9 +1660,9 @@ public sealed partial class RetailFrontendFlow : Control
     /// <paramref name="fade"/> is CFEPMain__Render's page fade. The language row is
     /// drawn inside the same loop as the menu labels and every one of its packed
     /// colours is multiplied by the same alpha byte, so it reveals with them. The
-    /// released row additionally carries a sine brightness pulse when it is the
-    /// selected row and two per-arrow blink timers; neither is modelled here, and
-    /// neither is introduced by this change.
+    /// selected-row sine at 0x0046319E is pinned by RetailMainMenuLanguageSine;
+    /// session cannot hold this+0x08=-1, so this draw does not light that pack.
+    /// Two per-arrow blink timers remain unmodelled and are not introduced here.
     /// </summary>
     private void DrawLanguageSelector(float fade)
     {

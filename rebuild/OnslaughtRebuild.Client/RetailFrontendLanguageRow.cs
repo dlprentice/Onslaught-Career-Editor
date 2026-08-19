@@ -91,9 +91,10 @@ namespace OnslaughtRebuild.Client;
 /// draws are absent from 119 of the 500 frames 2900-3399, and absent from frame
 /// 3500 of this same inventory, which is why that frame carries 35 draws and not
 /// 39. Neither period, duty cycle nor phase is recovered, and no blink is
-/// modelled. The released row additionally carries a brightness pulse when it is
-/// the selected row; that is not modelled either. Neither omission is introduced
-/// by this class — both predate it.</para>
+/// modelled. The selected-row sine is now pinned by
+/// <c>RetailMainMenuLanguageSine</c>; session cannot hold <c>this+0x08 = -1</c>
+/// so this class does not light it and does not invent <c>SetLanguage</c>.
+/// Neither omission is introduced by this class — both predate it.</para>
 /// </summary>
 public static class RetailFrontendLanguageRow
 {
