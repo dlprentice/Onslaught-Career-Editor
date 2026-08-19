@@ -279,7 +279,12 @@ public sealed partial class RetailFrontendFlow
 
     private void DrawOptionRow(RetailOptionsRow row, float top, bool selected)
     {
-        Color color = selected ? OptionSelected : OptionNormal;
+        // CApplyMenuItem::Render 0x004A4310: when DAT_00704A88 is set the
+        // Apply row's packed colour is the cosine, not the selected yellow.
+        // See RetailOptionsApplyPulse. Other rows keep the existing tints.
+        Color color = row.Action == RetailOptionsAction.Apply && _options.HasPendingChanges
+            ? RetailColor(RetailOptionsApplyPulse.PackedColor(true, (float)_animationSeconds))
+            : selected ? OptionSelected : OptionNormal;
 
         switch (row.Kind)
         {
