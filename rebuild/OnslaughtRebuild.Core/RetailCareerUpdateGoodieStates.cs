@@ -71,7 +71,9 @@ public sealed class RetailCareerGoodies
 /// <c>GS_UNKNOWN</c>. Leftover complete-110 plus ranking 0.25f
 /// (already pinned as C) opens the store. <c>COMPLETE_LEVEL(110)</c>
 /// writes goodie 14, but first-play leaves world 110 incomplete so
-/// that arm stays closed. <c>CGrade::operator&gt;=</c> treats <c>'S'</c> as
+/// that arm stays closed. Leftover complete-110 plus ranking 0.0f
+/// (already pinned as E) opens that store while
+/// <c>GRADE(110) &gt;= C</c> stays closed. <c>CGrade::operator&gt;=</c> treats <c>'S'</c> as
 /// above every other grade, so the already-pinned FillOut 1.0f unlocks
 /// the five world-100 slots together. <c>SET_GOODIE_NEW</c> stores 2
 /// only when <c>mState &lt;= GS_INSTRUCTIONS</c>.
@@ -126,7 +128,10 @@ public static class RetailCareerUpdateGoodieStates
     /// complete-110 plus ranking 0.25f opens
     /// <c>SET_GOODIE_NEW(1)</c>. <c>COMPLETE_LEVEL(110)</c> stays
     /// closed after first-play: world 110 is unlocked but still
-    /// incomplete, so goodie 14 stays <c>GS_UNKNOWN</c>. Do not invent
+    /// incomplete, so goodie 14 stays <c>GS_UNKNOWN</c>. Leftover
+    /// complete-110 plus ranking 0.0f (already pinned as E) opens
+    /// <c>SET_GOODIE_NEW(14)</c> while <c>GRADE(110) &gt;= C</c> stays
+    /// closed. Do not invent
     /// a world-110 FillOut or the rest of the table.
     /// <c>mPendingExtraGoodies</c> and episode instruction marks stay
     /// unclaimed.

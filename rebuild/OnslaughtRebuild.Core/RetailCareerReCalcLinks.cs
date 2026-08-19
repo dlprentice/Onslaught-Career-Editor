@@ -121,7 +121,8 @@ public sealed class RetailCareerNodeLink
 /// world 110 is incomplete; leftover complete-110 plus C opens
 /// the store. Goodie 14 (<c>COMPLETE_LEVEL(110)</c>) stays closed
 /// on first-play because world 110 is unlocked but still
-/// incomplete. Do not invent a world-110 FillOut.
+/// incomplete. Leftover complete-110 plus ranking 0.0f (already
+/// pinned as E) opens that store. Do not invent a world-110 FillOut.
 /// </para>
 /// </remarks>
 public static class RetailCareerReCalcLinks

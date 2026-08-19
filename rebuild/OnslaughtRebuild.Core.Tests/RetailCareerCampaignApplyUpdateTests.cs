@@ -541,9 +541,9 @@ public sealed class RetailCareerCampaignApplyUpdateTests
     /// after a Level 100 C-grade Won. World 110 is in the cold slice
     /// and ReCalcLinks unlocks it, but it stays incomplete, so goodie
     /// 14 stays <c>GS_UNKNOWN</c>. Existing GRADE(110) tests name
-    /// goodie 1 and do not name goodie 14. A leftover complete-110
-    /// seed would also open this store in retail; that store is not
-    /// named here. Mutation: store <c>GS_NEW</c> on goodie 14 after
+    /// goodie 1 and do not name goodie 14. Leftover complete-110 plus
+    /// ranking 0.0f (already pinned as E) now names the open store.
+    /// Mutation: store <c>GS_NEW</c> on goodie 14 after
     /// the CountGoodies add. Do not invent the rest of the table.
     /// No new secondaries.
     /// </summary>
@@ -566,6 +566,59 @@ public sealed class RetailCareerCampaignApplyUpdateTests
             career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeCOnWorld110));
         Assert.Equal(
             RetailCareerGoodieState.Unknown,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.CompleteWorld110));
+        Assert.All(snapshot.SecondaryStatuses, status => Assert.Equal(0, status));
+    }
+
+    /// <summary>
+    /// Leftover world-110 complete + E (ranking 0.0f already pinned)
+    /// opens <c>Career.cpp:704</c> <c>SET_GOODIE_NEW(14)</c>. Isolated
+    /// <c>CompleteFlagOf</c> / the closed first-play pin do not go
+    /// through leftover ApplyUpdate: deleting the
+    /// <c>COMPLETE_LEVEL(110)</c> arm still leaves goodie 14 at
+    /// <c>GS_UNKNOWN</c> on first-play. The leftover GRADE(110) C test
+    /// already seeds leftover complete-110 + 0.25f and now also opens
+    /// 14 in <c>Update()</c> but does not name goodie 14. Ranking 0.0f
+    /// keeps <c>GRADE(110) &gt;= C</c> closed so goodie 1 stays
+    /// <c>GS_UNKNOWN</c>. Cold-slice latch tests stay at 5 because they
+    /// do not seed leftover complete-110. Do not invent a world-110
+    /// FillOut or the rest of the table. Mutation: skip
+    /// <c>SET_GOODIE_NEW(14)</c> when <c>COMPLETE_LEVEL(110)</c>.
+    /// No new secondaries.
+    /// </summary>
+    [Fact]
+    public void Level100Won_ApplyUpdateLeftoverWorld110CompleteEUnlocksTheWorld110CompleteGoodie()
+    {
+        RetailCareerCampaign career = RetailCareerReCalcLinks.CreateColdTrainingSlice();
+        RetailCareerNode next = career.Nodes.Find(110)!;
+        next.Complete = 1;
+        next.Ranking = 0.0f;
+        RetailEndLevelSnapshot snapshot = RetailFillOutEndLevelData.ForLevel100Won(ranking: 0.25f);
+
+        career.ApplyUpdate(snapshot);
+
+        Assert.Equal(1, next.Complete);
+        Assert.Equal(0.0f, next.Ranking);
+        Assert.Equal(
+            RetailCareerGrade.FailedGrade,
+            RetailWorldGrade.GradeByteForWorld(
+                new[]
+                {
+                    new RetailWorldGradeNode(
+                        RetailCareerReCalcLinks.TrainingWorldNumber,
+                        career.Nodes.Find(100)!.Complete,
+                        career.Nodes.Find(100)!.Ranking),
+                    new RetailWorldGradeNode(next.WorldNumber, next.Complete, next.Ranking),
+                },
+                next.WorldNumber));
+        Assert.Equal(
+            RetailCareerGoodieState.New,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeCOnWorld100));
+        Assert.Equal(
+            RetailCareerGoodieState.Unknown,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeCOnWorld110));
+        Assert.Equal(
+            RetailCareerGoodieState.New,
             career.Goodies.Get(RetailCareerUpdateGoodieStates.CompleteWorld110));
         Assert.All(snapshot.SecondaryStatuses, status => Assert.Equal(0, status));
     }
