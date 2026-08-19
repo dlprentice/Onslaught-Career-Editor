@@ -49,6 +49,14 @@ namespace OnslaughtCareerEditor.AppCore
         internal const string FileCannotUseReservedDevice = "That file cannot use a reserved device name.";
         internal const string FileResolvesToNetwork = "That file resolves to a network location.";
         internal const string FileDoesNotResolveToLocalDrive = "That file does not resolve to a local drive.";
+        internal const string FolderChangedIdentity = "That folder changed identity while it was being secured.";
+        internal const string FolderChangedIdentityBeforeGuard = "That folder changed identity before its mutation guard was created.";
+        internal const string FileCouldNotBeInspected = "That file could not be inspected.";
+        internal const string FileCouldNotBeSecured = "That file could not be secured.";
+        internal const string FileCouldNotBeResolved = "That file could not be resolved.";
+        internal const string FolderCouldNotBeGuarded = "That folder could not be guarded against in-place change.";
+        internal const string FolderGuardCouldNotBeCreated = "That folder guard could not be created.";
+        internal const string FolderCouldNotBeSecuredForPublication = "That folder could not be secured for publication.";
 
         internal static string NormalizeLocalPath(string path, string label)
         {
@@ -323,7 +331,7 @@ namespace OnslaughtCareerEditor.AppCore
                 return default;
 
             if (!GetFileInformationByHandle(handle, out ByHandleFileInformation info))
-                throw new IOException($"Could not inspect {label}. Win32 error: {Marshal.GetLastWin32Error()}");
+                throw new IOException(FileCouldNotBeInspected, new Win32Exception(Marshal.GetLastWin32Error()));
 
             return new WindowsFileIdentity(
                 info.VolumeSerialNumber,
@@ -378,7 +386,7 @@ namespace OnslaughtCareerEditor.AppCore
                             PathComparison))
                     {
                         handle.Dispose();
-                        throw new InvalidOperationException($"{label} changed identity while it was being secured.");
+                        throw new InvalidOperationException(FolderChangedIdentity);
                     }
 
                     handles.Add(handle);
@@ -405,7 +413,7 @@ namespace OnslaughtCareerEditor.AppCore
                     if (!string.Equals(resolved, ancestor, PathComparison))
                     {
                         handle.Dispose();
-                        throw new InvalidOperationException($"{label} changed identity while it was being secured.");
+                        throw new InvalidOperationException(FolderChangedIdentity);
                     }
 
                     handles.Add(handle);
@@ -415,7 +423,7 @@ namespace OnslaughtCareerEditor.AppCore
                 if (!initialIdentity.IsSameFile(finalIdentity) ||
                     !string.Equals(GetFinalLocalPath(logicalTargetHandle, label), physicalPath, PathComparison))
                 {
-                    throw new InvalidOperationException($"{label} changed identity while it was being secured.");
+                    throw new InvalidOperationException(FolderChangedIdentity);
                 }
 
                 (SafeFileHandle Handle, string Path)? mutationSentinel = guardTargetMutation
@@ -516,7 +524,7 @@ namespace OnslaughtCareerEditor.AppCore
             {
                 int error = Marshal.GetLastWin32Error();
                 handle.Dispose();
-                throw new IOException($"Could not secure {label}. Win32 error: {error}", new Win32Exception(error));
+                throw new IOException(FileCouldNotBeSecured, new Win32Exception(error));
             }
 
             return handle;
@@ -539,7 +547,7 @@ namespace OnslaughtCareerEditor.AppCore
             {
                 int error = Marshal.GetLastWin32Error();
                 throw new IOException(
-                    $"Could not guard {label} against in-place directory mutation. Win32 error: {error}",
+                    FolderCouldNotBeGuarded,
                     new Win32Exception(error));
             }
 
@@ -553,7 +561,7 @@ namespace OnslaughtCareerEditor.AppCore
                     PathComparison))
             {
                 throw new InvalidOperationException(
-                    $"{label} changed identity before its mutation guard was created.");
+                    FolderChangedIdentityBeforeGuard);
             }
 
             string sentinelPath = Path.Combine(
@@ -572,7 +580,7 @@ namespace OnslaughtCareerEditor.AppCore
                 int error = Marshal.GetLastWin32Error();
                 sentinel.Dispose();
                 throw new IOException(
-                    $"Could not create {label} mutation guard. Win32 error: {error}",
+                    FolderGuardCouldNotBeCreated,
                     new Win32Exception(error));
             }
 
@@ -631,7 +639,7 @@ namespace OnslaughtCareerEditor.AppCore
             {
                 int error = Marshal.GetLastWin32Error();
                 handle.Dispose();
-                throw new IOException($"Could not secure {label}. Win32 error: {error}", new Win32Exception(error));
+                throw new IOException(FileCouldNotBeSecured, new Win32Exception(error));
             }
 
             return handle;
@@ -744,14 +752,14 @@ namespace OnslaughtCareerEditor.AppCore
             var buffer = new StringBuilder(512);
             uint length = GetFinalPathNameByHandleW(handle, buffer, (uint)buffer.Capacity, 0);
             if (length == 0)
-                throw new IOException($"Could not resolve {label}. Win32 error: {Marshal.GetLastWin32Error()}");
+                throw new IOException(FileCouldNotBeResolved, new Win32Exception(Marshal.GetLastWin32Error()));
 
             if (length >= buffer.Capacity)
             {
                 buffer.EnsureCapacity(checked((int)length + 1));
                 length = GetFinalPathNameByHandleW(handle, buffer, (uint)buffer.Capacity, 0);
                 if (length == 0 || length >= buffer.Capacity)
-                    throw new IOException($"Could not resolve {label}. Win32 error: {Marshal.GetLastWin32Error()}");
+                    throw new IOException(FileCouldNotBeResolved, new Win32Exception(Marshal.GetLastWin32Error()));
             }
 
             string resolved = buffer.ToString();
@@ -809,7 +817,7 @@ namespace OnslaughtCareerEditor.AppCore
             {
                 int error = Marshal.GetLastWin32Error();
                 handle.Dispose();
-                throw new IOException($"Could not secure {label} for publication. Win32 error: {error}", new Win32Exception(error));
+                throw new IOException(FolderCouldNotBeSecuredForPublication, new Win32Exception(error));
             }
 
             return handle;

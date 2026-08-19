@@ -2,6 +2,7 @@ using System.Buffers.Binary;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using Microsoft.Win32.SafeHandles;
 using OnslaughtCareerEditor.AppCore;
 using Xunit;
 
@@ -94,6 +95,39 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             Assert.Equal(FileMutationSafety.FileCannotUseReservedDevice, reserved.Message);
             Assert.DoesNotContain("Generated profile root", reserved.Message, StringComparison.Ordinal);
             Assert.DoesNotContain("NUL", reserved.Message, StringComparison.Ordinal);
+        }
+
+        [Fact]
+        public void GetWindowsIdentity_NamesTheFileNotAWin32Dump()
+        {
+            if (!OperatingSystem.IsWindows())
+                return;
+
+            using SafeFileHandle handle = new(IntPtr.Zero, ownsHandle: false);
+            IOException error = Assert.Throws<IOException>(
+                () => FileMutationSafety.GetWindowsIdentity(handle, "Generated profile root"));
+
+            Assert.Equal(FileMutationSafety.FileCouldNotBeInspected, error.Message);
+            Assert.DoesNotContain("Generated profile root", error.Message, StringComparison.Ordinal);
+            Assert.DoesNotContain("Win32", error.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("path", error.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public void OpenNoFollowReadHandle_NamesTheFileNotAWin32Dump()
+        {
+            if (!OperatingSystem.IsWindows())
+                return;
+
+            string missing = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"), "gone.bes");
+            IOException error = Assert.Throws<IOException>(
+                () => FileMutationSafety.OpenNoFollowReadHandle(missing, "Generated profile root"));
+
+            Assert.Equal(FileMutationSafety.FileCouldNotBeSecured, error.Message);
+            Assert.DoesNotContain("Generated profile root", error.Message, StringComparison.Ordinal);
+            Assert.DoesNotContain("Win32", error.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain(missing, error.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.IsType<Win32Exception>(error.InnerException);
         }
 
         [Fact]

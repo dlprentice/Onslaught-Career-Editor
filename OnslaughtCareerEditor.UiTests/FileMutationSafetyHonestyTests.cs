@@ -77,6 +77,26 @@ public class FileMutationSafetyHonestyTests
     }
 
     [Test]
+    public void AnIdentityChangeOrInspectFailureNamesTheFileNotALabel()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "FileMutationSafety.cs"));
+
+        Assert.That(source, Does.Not.Contain("{label} changed identity while it was being secured."));
+        Assert.That(source, Does.Not.Contain("{label} changed identity before its mutation guard was created."));
+        Assert.That(source, Does.Not.Contain("Could not inspect {label}. Win32 error:"));
+        Assert.That(source, Does.Not.Contain("Could not resolve {label}. Win32 error:"));
+        Assert.That(source, Does.Not.Contain("Could not secure {label}. Win32 error:"));
+        Assert.That(source, Does.Not.Contain("Could not guard {label}"));
+        Assert.That(source, Does.Not.Contain("Could not create {label} mutation guard"));
+        Assert.That(source, Does.Not.Contain("Could not secure {label} for publication"));
+        Assert.That(source, Does.Contain("FolderChangedIdentity"));
+        Assert.That(source, Does.Contain("FileCouldNotBeInspected"));
+        Assert.That(source, Does.Contain("That folder changed identity while it was being secured."));
+        Assert.That(source, Does.Contain("That file could not be inspected."));
+    }
+
+    [Test]
     public void AMissingProtectedInputDoesNotAttachTheFilePath()
     {
         string source = File.ReadAllText(Path.Combine(
