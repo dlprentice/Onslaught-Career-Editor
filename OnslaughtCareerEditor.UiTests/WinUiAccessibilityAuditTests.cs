@@ -101,9 +101,9 @@ public class WinUiAccessibilityAuditTests
             ],
             ["OnslaughtCareerEditor.WinUI/Pages/BinaryPatchesPage.xaml"] =
             [
-                "PatchBenchSourceExePath",
+                "PatchBenchSourceExeFile",
                 "PatchBenchCreateWorkingCopyButton",
-                "PatchBenchWorkingCopyPath",
+                "PatchBenchWorkingCopyFile",
                 "PatchBenchVerifyButton",
                 "PatchBenchApplyButton",
                 "PatchBenchRestoreButton",
@@ -148,7 +148,7 @@ public class WinUiAccessibilityAuditTests
                 "PatchBenchMusicReplacementTrackComboBox",
                 "PatchBenchStageCopiedTrackSwapButton",
                 "PatchBenchMusicTargetFileName",
-                "PatchBenchMusicReplacementPath",
+                "PatchBenchMusicReplacementFile",
                 "PatchBenchStageMusicReplacementButton",
                 "PatchBenchRestoreMusicReplacementButton",
                 "PatchBenchMusicReplacementStatus",

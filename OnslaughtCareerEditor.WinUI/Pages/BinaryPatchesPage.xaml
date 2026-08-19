@@ -1288,7 +1288,7 @@
                                     <TextBlock Text="Replacement track (.ogg)"
                                                Style="{StaticResource SectionBodyTextStyle}" />
                                     <TextBox x:Name="PatchBenchMusicReplacementPath"
-                                             AutomationProperties.AutomationId="PatchBenchMusicReplacementPath"
+                                             AutomationProperties.AutomationId="PatchBenchMusicReplacementFile"
                                              AutomationProperties.Name="Replacement track OGG file"
                                              TextChanged="MusicReplacementInput_TextChanged"
                                              PlaceholderText="Replacement .ogg file" />
@@ -1357,7 +1357,7 @@
                                                     </Border>
                                                     <Expander Header="Source file details">
                                                         <TextBox x:Name="SourceExePathTextBox"
-                                                                 AutomationProperties.AutomationId="PatchBenchSourceExePath"
+                                                                 AutomationProperties.AutomationId="PatchBenchSourceExeFile"
                                                                  AutomationProperties.Name="Source executable file"
                                                                  TextChanged="SourceExePathTextBox_TextChanged"
                                                                  PlaceholderText="Select BEA.exe or BEA.exe.original.backup as read-only source" />
@@ -1404,7 +1404,7 @@
                                                     </Border>
                                                     <Expander Header="BEA.exe-only copy details">
                                                         <TextBox x:Name="ExePathTextBox"
-                                                                 AutomationProperties.AutomationId="PatchBenchWorkingCopyPath"
+                                                                 AutomationProperties.AutomationId="PatchBenchWorkingCopyFile"
                                                                  AutomationProperties.Name="BEA.exe-only copy executable file"
                                                                  IsReadOnly="True"
                                                                  TextChanged="ExePathTextBox_TextChanged"

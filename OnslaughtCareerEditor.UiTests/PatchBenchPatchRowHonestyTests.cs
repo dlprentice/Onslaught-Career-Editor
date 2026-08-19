@@ -67,4 +67,21 @@ public class PatchBenchPatchRowHonestyTests
         Assert.That(page, Does.Not.Contain("does not have a usable source game folder"));
         Assert.That(helper, Does.Not.Contain("usable source game folder"));
     }
+
+    [Test]
+    public void SourceCopyAndMusicTextBoxesNameTheFileNotAPath()
+    {
+        string xaml = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot,
+            "OnslaughtCareerEditor.WinUI",
+            "Pages",
+            "BinaryPatchesPage.xaml"));
+
+        Assert.That(xaml, Does.Contain("AutomationProperties.AutomationId=\"PatchBenchMusicReplacementFile\""));
+        Assert.That(xaml, Does.Contain("AutomationProperties.AutomationId=\"PatchBenchSourceExeFile\""));
+        Assert.That(xaml, Does.Contain("AutomationProperties.AutomationId=\"PatchBenchWorkingCopyFile\""));
+        Assert.That(xaml, Does.Not.Contain("AutomationProperties.AutomationId=\"PatchBenchMusicReplacementPath\""));
+        Assert.That(xaml, Does.Not.Contain("AutomationProperties.AutomationId=\"PatchBenchSourceExePath\""));
+        Assert.That(xaml, Does.Not.Contain("AutomationProperties.AutomationId=\"PatchBenchWorkingCopyPath\""));
+    }
 }
