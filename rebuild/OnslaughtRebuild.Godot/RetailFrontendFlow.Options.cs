@@ -116,17 +116,12 @@ public sealed partial class RetailFrontendFlow
 
     // ---- Dropdown popup -------------------------------------------------
     //
-    // MEASURED on fep-options-sound-quality-dropdown-640x480.png. The panel is
-    // OPAQUE (proved by the subagent pass: 570 distinct background colours,
-    // luma 0..255, all mapping to the single value (40,56,104) - no blend can do
-    // that), its entries run on a 16px pitch that is unrelated to the page's 20,
-    // and the CURRENT entry sits at the expanded row's own baseline.
-    //   panel   x322.5..529.5, y259.5..307.5  (207 x 48 for three entries)
-    //   entries baselines 271 / 287 / 303, ink from x324
-    private const float DropdownPanelLeft = 322.5f;
+    // The panel is OPAQUE (proved by the subagent pass: 570 distinct background
+    // colours, luma 0..255, all mapping to the single value (40,56,104) - no
+    // blend can do that). Entries run on a 16px pitch that is unrelated to the
+    // page's 20. Dest and width are RetailOptionsDropdownPanelDest, not the
+    // measured 322.5 / 15.5 pair.
     private const float DropdownEntryPitch = 16f;
-    private const float DropdownPanelPad = 3f;
-    private const float DropdownPanelTopInset = 15.5f;
 
     // ---- Colours --------------------------------------------------------
     //
@@ -294,6 +289,9 @@ public sealed partial class RetailFrontendFlow
         // CMenuItemDropdown expanded list dest leftover is
         // RetailOptionsDropdownListDest: collapsed dest leftover plus the
         // pad leftover. Dest Y keeps the entry top. The pad constant is not dest.
+        // CMenuItemDropdown expanded panel dest leftover is
+        // RetailOptionsDropdownPanelDest: collapsed dest leftover, dest Y
+        // incoming minus integer-half of (count-1)*cy, width max cx plus 3.
         // CMenuItem__Render icon dest leftover is RetailOptionsMenuItemIconDest:
         // incoming dest X minus integer-half SIZE.cx via fsubr.
         // RetailOptionsMenuItemIconDest.DestX. Dest Y keeps the row
@@ -461,16 +459,19 @@ public sealed partial class RetailFrontendFlow
             widest = Mathf.Max(widest, MeasureText(row.StateLabel(i), 1f));
         }
 
-        // Retail anchors the panel on the LIST, not on the row: the CURRENT entry
-        // occupies the expanded row's own y and the rest fall above and below it.
-        // Measured on the three-state Sound quality frame with Medium selected:
-        // panel y259.5..307.5 against that row's cell top 275, i.e. first entry at
-        // 275 - 1*16 = 259 and 15.5 of inset.
+        // Retail anchors the panel dest leftover on incoming dest Y minus
+        // integer-half of (count-1)*cy. Dest X is the collapsed dest leftover.
+        // Width is max cx plus the add ebp,3 leftover. Dest is not the pad.
         float height = row.States.Count * DropdownEntryPitch;
-        float panelTop = top - DropdownPanelTopInset - (row.CurrentIndex * DropdownEntryPitch);
-
         DrawRect(
-            new Rect2(DropdownPanelLeft, panelTop, widest + DropdownPanelPad, height),
+            new Rect2(
+                RetailOptionsDropdownPanelDest.DestX(OptionLabelRightX),
+                RetailOptionsDropdownPanelDest.DestY(
+                    top,
+                    row.States.Count,
+                    (int)DropdownEntryPitch),
+                RetailOptionsDropdownPanelDest.Width((int)widest),
+                height),
             DropdownPanel);
 
         for (int i = 0; i < row.States.Count; i++)
@@ -711,7 +712,7 @@ public sealed partial class RetailFrontendFlow
             {
                 float entryTop = rowTop + ((i - expanded.CurrentIndex) * DropdownEntryPitch);
                 if (design.Y >= entryTop && design.Y < entryTop + DropdownEntryPitch &&
-                    design.X >= DropdownPanelLeft)
+                    design.X >= RetailOptionsDropdownPanelDest.DestX(OptionLabelRightX))
                 {
                     _options.SelectState(i);
                     ConfirmOptions();
