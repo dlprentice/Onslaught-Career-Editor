@@ -1140,8 +1140,8 @@ namespace OnslaughtCareerEditor.AppCore
             {
                 string path = Path.Combine(sourceRoot, entry);
                 if (!Directory.Exists(path))
-                    throw new DirectoryNotFoundException($"Required game directory is missing: {entry}");
-                RejectReparsePoint(path, $"required game directory '{entry}'");
+                    throw new DirectoryNotFoundException($"Required game folder is missing: {entry}");
+                RejectReparsePoint(path, $"required game folder '{entry}'");
             }
 
             foreach (string entry in s_requiredFileEntries)

@@ -1544,7 +1544,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                             ApplyWindowedCompatibilityPatch: true,
                             AllowByteLayoutOnlyTarget: true)));
 
-                Assert.Contains("Required game directory", ex.Message);
+                Assert.Contains("Required game folder", ex.Message);
             }
             finally
             {
