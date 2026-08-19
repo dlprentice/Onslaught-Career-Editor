@@ -163,6 +163,36 @@ public class SaveEditorHonestyTests
         }
     }
 
+    [Test]
+    public void AWrongSizeSaveDoesNotDumpTheAnalyzerErrorOnKillCounts()
+    {
+        string tempDir = Path.Combine(Path.GetTempPath(), $"onslaught-short-kills-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDir);
+        try
+        {
+            string truncated = Path.Combine(tempDir, "truncated.bes");
+            byte[] gold = File.ReadAllBytes(GoldSavePath);
+            File.WriteAllBytes(truncated, gold.AsSpan(0, gold.Length - 32).ToArray());
+
+            var rows = SaveEditorAdvancedService
+                .LoadCategoryKillRows(truncated, out var status)
+                .ToArray();
+
+            Assert.That(status.FileWasRead, Is.False);
+            Assert.That(status.Reason, Is.EqualTo(SaveEditorAdvancedService.KillCountsUnreadable));
+            Assert.That(status.Reason, Does.Contain("Nothing was changed"));
+            Assert.That(status.Reason, Does.Not.Contain("Kill counts were not read:"));
+            Assert.That(status.Reason, Does.Not.Contain("Invalid file size"));
+            Assert.That(status.Reason, Does.Not.Contain(truncated));
+            Assert.That(status.Reason, Does.Not.Contain(":\\"));
+            Assert.That(rows.All(row => !row.CurrentValueKnown), Is.True);
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
     // ---------------------------------------------------------------- D11
 
     [Test]
@@ -303,6 +333,8 @@ public class SaveEditorHonestyTests
         Assert.That(source, Does.Contain("KillCountsUnreadable"));
         Assert.That(source, Does.Not.Contain("Mission grades could not be read: {ex.Message}"));
         Assert.That(source, Does.Not.Contain("Kill counts could not be read: {ex.Message}"));
+        Assert.That(source, Does.Not.Contain("Kill counts were not read:"));
+        Assert.That(source, Does.Not.Contain("analysis.ErrorMessage"));
         Assert.That(SaveEditorAdvancedService.MissionGradesUnreadable, Does.Contain("Nothing was changed"));
         Assert.That(SaveEditorAdvancedService.KillCountsUnreadable, Does.Contain("Nothing was changed"));
         Assert.That(SaveEditorAdvancedService.MissionGradesUnreadable, Does.Not.Contain(":\\"));

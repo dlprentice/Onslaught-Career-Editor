@@ -298,11 +298,7 @@ namespace OnslaughtCareerEditor.AppCore
                         }
                         else
                         {
-                            status = SaveEditorAdvancedReadStatus.NotRead(
-                                string.Equals(analysis.ErrorMessage, SaveAnalyzerService.AnalysisFailed, StringComparison.Ordinal)
-                                    ? KillCountsUnreadable
-                                    : "Kill counts were not read: " +
-                                      (analysis.ErrorMessage ?? "this file is not a readable career save."));
+                            status = SaveEditorAdvancedReadStatus.NotRead(KillCountsUnreadable);
                         }
                     }
                     catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException
