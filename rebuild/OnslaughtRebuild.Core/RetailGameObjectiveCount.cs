@@ -42,10 +42,13 @@ namespace OnslaughtRebuild.Core;
 /// <b>The mission-layer enum is inverted.</b>
 /// <c>IScript::PrimaryObjectiveComplete</c> at <c>0x005343e0</c>
 /// writes state 1; <c>IScript::PrimaryObjectiveFailed</c> at
-/// <c>0x00534440</c> writes state 2. Rebuild
+/// <c>0x00534440</c> writes state 2. Both store the script
+/// string id at <c>[eax+4]</c> (<c>0x005343fe</c> /
+/// <c>0x0053445e</c>). Rebuild
 /// <c>Level100PrimaryObjectiveStatus</c> is Failed=1 / Complete=2.
-/// <see cref="FromLevel100MissionStatus"/> is the mapping.
-/// Score-time ranking stays unclaimed. Career does not consume
+/// <see cref="FromLevel100MissionStatus"/> is the status mapping.
+/// <see cref="FromLevel100MissionPrimaryTextIds"/> is the text
+/// dword. Score-time ranking stays unclaimed. Career does not consume
 /// the primary table.
 /// </para>
 /// </remarks>
@@ -68,6 +71,31 @@ public static class RetailGameObjectiveCount
 
     /// <summary>Shipped Level 100 secondary count — there are none.</summary>
     public const int Level100SecondaryCount = 0;
+
+    /// <summary>
+    /// <c>_100_OBJECTIVE_1</c> — <c>msl-scripting.md</c> and the
+    /// hash-pinned Level 100 <c>init()</c> <c>PrimaryObjectiveFailed(1, …)</c>.
+    /// Stored at <c>[eax+4]</c> (<c>0x0053445e</c>).
+    /// </summary>
+    public const int Level100InitObjectiveText1 = 110325434;
+
+    /// <summary>
+    /// Hash-pinned Level 100 <c>init()</c> text for objective 2.
+    /// Same <c>[eax+4]</c> store. Do not invent secondaries.
+    /// </summary>
+    public const int Level100InitObjectiveText2 = 111145813;
+
+    /// <summary>
+    /// Hash-pinned Level 100 <c>init()</c> text for objective 3.
+    /// Same <c>[eax+4]</c> store. Do not invent secondaries.
+    /// </summary>
+    public const int Level100InitObjectiveText3 = 111966192;
+
+    /// <summary>
+    /// Hash-pinned Level 100 <c>init()</c> text for objective 4.
+    /// Same <c>[eax+4]</c> store. Do not invent secondaries.
+    /// </summary>
+    public const int Level100InitObjectiveText4 = 112786571;
 
     /// <summary>
     /// <c>CGame::GetNumPrimaryObjectives</c> — <c>0x00472670</c>.
@@ -123,6 +151,35 @@ public static class RetailGameObjectiveCount
         }
 
         return statuses;
+    }
+
+    /// <summary>
+    /// Ten <c>CMissionObjective+4</c> text words from a live Level 100
+    /// snapshot. <c>IScript::PrimaryObjectiveFailed</c> at
+    /// <c>0x0053445e</c> is <c>mov [eax+4], edi</c>. Init writes
+    /// four authored text ids; the other six slots stay 0. Isolated
+    /// status mapping does not name this dword. Mutation: leave
+    /// every word at 0.
+    /// </summary>
+    public static int[] FromLevel100MissionPrimaryTextIds(
+        IReadOnlyList<Level100PrimaryObjectiveSnapshot> primaries)
+    {
+        ArgumentNullException.ThrowIfNull(primaries);
+
+        int[] texts = new int[ObjectiveSlotCount];
+        foreach (Level100PrimaryObjectiveSnapshot primary in primaries)
+        {
+            if (primary.Objective < 1 || primary.Objective > Level100PrimaryCount)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(primaries),
+                    $"Level 100 only authors objectives 1..{Level100PrimaryCount}.");
+            }
+
+            texts[primary.Objective - 1] = primary.TextId;
+        }
+
+        return texts;
     }
 
     /// <summary>

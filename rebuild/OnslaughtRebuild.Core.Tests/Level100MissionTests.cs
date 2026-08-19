@@ -71,6 +71,61 @@ public sealed class Level100MissionTests
             status => Assert.Equal(0, status));
     }
 
+    /// <summary>
+    /// <c>IScript::PrimaryObjectiveFailed</c> at <c>0x0053445e</c>
+    /// is <c>mov [eax+4], edi</c> — the second dword of the
+    /// stride-8 <c>CMissionObjective</c> at <c>0x008a9adc</c>.
+    /// Twin Complete at <c>0x005343fe</c>. Official
+    /// <c>74154bfa…</c>; A15 names "primary objective text +
+    /// state". <c>game.h</c> is
+    /// <c>Set(MOS_FAILED, string_id)</c>. Level 100
+    /// <c>init()</c> writes
+    /// <c>_100_OBJECTIVE_1..4</c> (110325434 cited in
+    /// <c>msl-scripting.md</c>; 2..4 from the hash-pinned
+    /// LevelScript). Isolated MOS-failed names state 2, not
+    /// <c>[eax+4]</c>. Isolated FillOut Won names four
+    /// <c>GetStatus()</c> words and does not copy the text
+    /// dword. Mutation: leave the ten text words at 0.
+    /// Live <c>GAME.mSlots</c> stay unclaimed. No new
+    /// secondaries.
+    /// </summary>
+    [Fact]
+    public void Init_PrimaryObjectiveFailedWritesRetailObjectiveTextDword()
+    {
+        Level100ActorDefinitionSet definitions = Level100TestActorDefinitions.Create();
+        var actors = new Level100ActorRegistry(definitions);
+        Level100ActorId player = actors.GetThingRef("Player 1")!.Value;
+        var mission = new Level100Mission(
+            actors,
+            player,
+            new Level100TutorialProgress(false, false, false, false));
+
+        int[] texts = RetailGameObjectiveCount.FromLevel100MissionPrimaryTextIds(
+            mission.Snapshot.PrimaryObjectives);
+        int[] mos = RetailGameObjectiveCount.FromLevel100MissionPrimaries(
+            mission.Snapshot.PrimaryObjectives);
+
+        Assert.Equal(
+            new[]
+            {
+                RetailGameObjectiveCount.Level100InitObjectiveText1,
+                RetailGameObjectiveCount.Level100InitObjectiveText2,
+                RetailGameObjectiveCount.Level100InitObjectiveText3,
+                RetailGameObjectiveCount.Level100InitObjectiveText4,
+                0, 0, 0, 0, 0, 0,
+            },
+            texts);
+        Assert.Equal(110325434, RetailGameObjectiveCount.Level100InitObjectiveText1);
+        Assert.NotEqual(RetailGameObjectiveCount.StatusFailed, texts[0]);
+        Assert.Equal(new[] { 2, 2, 2, 2, 0, 0, 0, 0, 0, 0 }, mos);
+        Assert.All(
+            RetailFillOutEndLevelData.ForLevel100Won().PrimaryStatuses,
+            status => Assert.NotEqual(RetailGameObjectiveCount.Level100InitObjectiveText1, status));
+        Assert.All(
+            RetailFillOutEndLevelData.ForLevel100Won().SecondaryStatuses,
+            status => Assert.Equal(0, status));
+    }
+
     [Fact]
     public void MissionNativeSetPos_CopiesGetPosPositionAndPreservesOtherPoseState()
     {
