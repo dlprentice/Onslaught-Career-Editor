@@ -30,6 +30,82 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         public const string EmptyNote =
             "Create one above and it will show up here.";
 
+        public const string CurrentPatchesNoExecutable =
+            "This copy has no BEA.exe, so its patches cannot be read.";
+
+        public const string CurrentPatchesUnreadable =
+            "This copy's current patch state could not be read.";
+
+        public const string CurrentPatchesInstalledGame =
+            "That is your installed game. This list only reads a copy.";
+
+        public const string CurrentPatchesAllOriginal =
+            "This copy still has original bytes for every listed catalog patch.";
+
+        public const string CurrentPatchesAllPatched =
+            "This copy already has every listed catalog patch.";
+
+        /// <summary>
+        /// What this copy's BEA.exe currently has for the listed catalog patches.
+        /// Names the patches, never the folder.
+        /// </summary>
+        public static string DescribeCurrentPatches(
+            BinaryPatchCopyInspectRefusal refusal,
+            IReadOnlyList<(string DisplayName, BinaryPatchState State)> rows)
+        {
+            return refusal switch
+            {
+                BinaryPatchCopyInspectRefusal.NoExecutable => CurrentPatchesNoExecutable,
+                BinaryPatchCopyInspectRefusal.Unreadable => CurrentPatchesUnreadable,
+                BinaryPatchCopyInspectRefusal.InstalledGame => CurrentPatchesInstalledGame,
+                _ => DescribeCurrentPatchRows(rows),
+            };
+        }
+
+        private static string DescribeCurrentPatchRows(
+            IReadOnlyList<(string DisplayName, BinaryPatchState State)> rows)
+        {
+            ArgumentNullException.ThrowIfNull(rows);
+            if (rows.Count == 0)
+                return CurrentPatchesAllOriginal;
+
+            string[] unexpected = rows
+                .Where(row => row.State is BinaryPatchState.Mismatch or BinaryPatchState.OutOfRange)
+                .Select(row => row.DisplayName)
+                .Where(name => !string.IsNullOrWhiteSpace(name))
+                .ToArray();
+            if (unexpected.Length > 0)
+            {
+                return unexpected.Length == 1
+                    ? $"This copy's bytes for {unexpected[0]} do not match original or patched."
+                    : $"This copy's bytes for {JoinNames(unexpected)} do not match original or patched.";
+            }
+
+            string[] patched = rows
+                .Where(row => row.State == BinaryPatchState.Patched)
+                .Select(row => row.DisplayName)
+                .Where(name => !string.IsNullOrWhiteSpace(name))
+                .ToArray();
+            if (patched.Length == 0)
+                return CurrentPatchesAllOriginal;
+            if (patched.Length == rows.Count)
+                return CurrentPatchesAllPatched;
+            if (patched.Length > 5)
+                return $"This copy already has {patched.Length} listed catalog patches.";
+
+            return $"This copy already has {JoinNames(patched)}.";
+        }
+
+        private static string JoinNames(IReadOnlyList<string> names)
+        {
+            if (names.Count == 1)
+                return names[0];
+            if (names.Count == 2)
+                return $"{names[0]} and {names[1]}";
+
+            return string.Join(", ", names.Take(names.Count - 1)) + ", and " + names[^1];
+        }
+
         public const string DeleteDialogTitle = "Delete this copy?";
 
         public const string KeepCareersButtonText = "Keep my careers";

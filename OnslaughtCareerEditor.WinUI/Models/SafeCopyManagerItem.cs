@@ -1,6 +1,9 @@
 using System;
 using System.Globalization;
+using System.IO;
+using System.Linq;
 using OnslaughtCareerEditor.AppCore;
+using OnslaughtCareerEditor.WinUI.Helpers;
 
 namespace OnslaughtCareerEditor.WinUI.Models
 {
@@ -33,8 +36,10 @@ namespace OnslaughtCareerEditor.WinUI.Models
             LaunchAutomationId = $"SafeCopyRowLaunch_{id}";
             OpenFolderAutomationId = $"SafeCopyRowOpenFolder_{id}";
             DeleteAutomationId = $"SafeCopyRowDelete_{id}";
+            PatchStateAutomationId = $"SafeCopyRowCurrentPatches_{id}";
 
             DetailText = BuildDetail(overview);
+            PatchStateText = DescribePatchState(overview);
         }
 
         public string DisplayName { get; }
@@ -57,12 +62,34 @@ namespace OnslaughtCareerEditor.WinUI.Models
 
         public string DeleteAutomationId { get; }
 
+        public string PatchStateText { get; }
+
+        public string PatchStateAutomationId { get; }
+
         /// <summary>The accessible name for this row's delete button, naming which copy it deletes.</summary>
         public string DeleteAccessibleName => $"Delete {DisplayName}";
 
         public string LaunchAccessibleName => $"Launch {DisplayName}";
 
         public string OpenFolderAccessibleName => $"Open the folder for {DisplayName}";
+
+        private static string DescribePatchState(SafeCopyOverview overview)
+        {
+            if (!overview.Playable)
+            {
+                return SafeCopyManagerText.DescribeCurrentPatches(
+                    BinaryPatchCopyInspectRefusal.NoExecutable,
+                    Array.Empty<(string, BinaryPatchState)>());
+            }
+
+            BinaryPatchCopyInspectResult inspect = BinaryPatchEngine.InspectCopyExecutable(
+                Path.Combine(overview.ProfileRoot, "BEA.exe"),
+                BinaryPatchPlanBuilder.GetVisibleSpecs());
+            var named = inspect.Rows
+                .Select(row => (row.Spec.DisplayName, row.State))
+                .ToArray();
+            return SafeCopyManagerText.DescribeCurrentPatches(inspect.Refusal, named);
+        }
 
         private static string BuildDetail(SafeCopyOverview overview)
         {

@@ -10,6 +10,9 @@ live in `developer_state.json` and the campaign ledgers.
 
 ## Unreleased
 
+- Your safe copies now says which listed catalog patches this copy already has,
+  by reading that copy's `BEA.exe`. Original, already-patched, and unmatched
+  bytes are named without a dump or a path. The installed game is not opened.
 - Cheats live trainer can hold life, energy, and shields together. One switch
   turns on the three existing holds at the values in the boxes. It is still a
   top-up, not a freeze: walker mode still needs energy held for shields to last,
