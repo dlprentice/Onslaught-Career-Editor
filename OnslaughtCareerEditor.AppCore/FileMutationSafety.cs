@@ -345,9 +345,9 @@ namespace OnslaughtCareerEditor.AppCore
             string profileRoot,
             string appOwnedProfilesRoot)
         {
-            string normalizedProfileRoot = NormalizeLocalPath(profileRoot, "Generated profile root");
-            string normalizedAppRoot = NormalizeLocalPath(appOwnedProfilesRoot, "App-owned profiles root");
-            string canonicalAppRoot = NormalizeLocalPath(AppConfig.GetGameProfilesDir(), "Canonical app-owned profiles root");
+            string normalizedProfileRoot = NormalizeLocalPath(profileRoot, "copy folder");
+            string normalizedAppRoot = NormalizeLocalPath(appOwnedProfilesRoot, "app-owned profile folder");
+            string canonicalAppRoot = NormalizeLocalPath(AppConfig.GetGameProfilesDir(), "app-owned profile folder");
             if (!string.Equals(normalizedAppRoot, canonicalAppRoot, PathComparison))
             {
                 throw new InvalidOperationException(AppOwnedProfileFolderRequired);
@@ -357,10 +357,10 @@ namespace OnslaughtCareerEditor.AppCore
             DirectoryLockSet? profileLocks = null;
             try
             {
-                appLocks = LockDirectoryTree(normalizedAppRoot, "App-owned profiles root");
+                appLocks = LockDirectoryTree(normalizedAppRoot, "app-owned profile folder");
                 RejectOutputInGameTree(Path.Combine(appLocks.PhysicalPath, ".onslaught-profile-root-probe"));
 
-                profileLocks = LockDirectoryTree(normalizedProfileRoot, "Generated profile root");
+                profileLocks = LockDirectoryTree(normalizedProfileRoot, "copy folder");
                 if (!IsSameOrUnderRoot(profileLocks.PhysicalPath, appLocks.PhysicalPath) ||
                     string.Equals(profileLocks.PhysicalPath, appLocks.PhysicalPath, PathComparison))
                 {

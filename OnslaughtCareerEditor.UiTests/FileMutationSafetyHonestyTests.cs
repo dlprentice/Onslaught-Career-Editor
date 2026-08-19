@@ -163,5 +163,10 @@ public class FileMutationSafetyHonestyTests
         Assert.That(source, Does.Contain("Those changes need the app-owned profile folder."));
         Assert.That(source, Does.Contain("That copy must stay inside the app-owned profile folder."));
         Assert.That(source, Does.Not.Contain("GameProfiles root"));
+        Assert.That(source, Does.Not.Contain("\"Generated profile root\""));
+        Assert.That(source, Does.Not.Contain("\"App-owned profiles root\""));
+        Assert.That(source, Does.Not.Contain("\"Canonical app-owned profiles root\""));
+        Assert.That(source, Does.Contain("\"copy folder\""));
+        Assert.That(source, Does.Contain("\"app-owned profile folder\""));
     }
 }
