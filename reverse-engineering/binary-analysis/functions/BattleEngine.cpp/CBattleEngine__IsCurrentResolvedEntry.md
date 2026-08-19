@@ -110,9 +110,9 @@ One inbound `.text` `E8`/`E9`: `CALL` at `0x005074bb` inside
 immediately before `FireLock` `0x005074c9`. Zero encodings of
 imm `10 73 40 00` in the image.
 
-Rebuild owner: **none**. Same gap as FireLock
-(`Level100ActorWeaponRuntime` scatter only). Do not implement
-rebuild here.
+Rebuild mapping: `PARTIAL_CONTRACT` (named, not implemented). See
+the section below. Same spawn inbound as FireLock. Do not
+implement Core from this RE root.
 
 Cheapest falsifier: file `0x00007310` is not `83 b9 60 02 00 00 03`,
 **or** `0x0000731f` is not `e8 ec b2 00 00`, **or** `0x0000732c`
@@ -121,6 +121,39 @@ is not `e8 ff cc 00 00`, **or** `0x00007340` is not `c2 04 00`,
 `tools/call_xref_scan.py` on `0x00407310` is not exactly one
 `CALL` at `0x005074bb`.
 
+## Rebuild mapping — 2026-08-19
+
+Grade: `PARTIAL_CONTRACT`. Not `REBUILD_READY`. Independently
+re-read official+twin `74154bfa` this wake (2506752 equal). Body
+SHA-256 still `e502e386…5931`. `call_xref_scan` still one `CALL`
+at `0x005074bb`. Cycle 89 accepted this byte note. Did not open
+Ghidra. Did not edit `rebuild/**`.
+
+Retail entity: player current-weapon identity gate used by
+`ProjectileBurst__SpawnFromCurrentPreset` immediately before
+`FireLock`. Stuart architecture (not proof):
+`BattleEngine.cpp:980-994`.
+
+Nearest reconstruction owner:
+`rebuild/OnslaughtRebuild.Core/Level100PlayerWeaponRuntime.cs`
+`GetCurrentWeapon(VehicleMode)`. `Simulation.TryFire` already
+uses that read to pick the jet/walker fire arm.
+
+Missing: the identity compare versus the spawn-weapon argument
+(`EAX != 0` and `EAX == [esp+4]`) that the sole inbound uses
+as the nonzero gate at `0x005074bb`. Core never asks that
+question because spawn already sits inside the selected-weapon
+arm.
+
+Godot: none. This is not a HUD draw.
+
+Focused test: none. L100 card `t_aa5586e5` is on a playable
+training-path diet — do not implement this gate from this
+mapping until that lane names the arm.
+
+Siblings: `CBattleEngine__FireLock` /
+`CBattleEngine__GetCurrentTarget` in this folder.
+
 | Address | Name | Byte evidence | Contract (confidence) |
 | --- | --- | --- | --- |
-| `0x00407310` | `CBattleEngine__DisplayLock` | `83b96002000003 750d … e8ecb20000 … e8ffcc0000 … b801000000 c20400` (56 B) | incoming-ECX thiscall; ret 0x4 ×2; 56 B; 2 E8 Jet/Walker `GetCurrentWeapon` / 0 E9; 1 inbound `0x005074bb`. HIGH on ABI, `+0x260==3` arm, EAX=1 iff current weapon equals stack arg. **Not** on part-pointer names or rebuild parity. |
+| `0x00407310` | `CBattleEngine__DisplayLock` | `83b96002000003 750d … e8ecb20000 … e8ffcc0000 … b801000000 c20400` (56 B) | incoming-ECX thiscall; ret 0x4 ×2; 56 B; 2 E8 Jet/Walker `GetCurrentWeapon` / 0 E9; 1 inbound `0x005074bb`. HIGH on ABI, `+0x260==3` arm, EAX=1 iff current weapon equals stack arg. Mapping `PARTIAL_CONTRACT` onto `Level100PlayerWeaponRuntime.GetCurrentWeapon`. **Not** on part-pointer names or rebuild parity. |
