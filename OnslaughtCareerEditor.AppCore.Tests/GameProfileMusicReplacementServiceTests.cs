@@ -393,7 +393,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                             TargetMusicFileName: targetName,
                             ReplacementOggPath: replacementPath)));
 
-                Assert.Contains("music file name", ex.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(GameProfileMusicReplacementService.TargetMusicFileNameInvalid, ex.Message);
             }
             finally
             {

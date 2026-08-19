@@ -64,6 +64,7 @@ namespace OnslaughtCareerEditor.AppCore
         public const string CopyFolderMissing = "That copy folder could not be found.";
         public const string ProfileFolderMissing = "That app-owned profile folder could not be found.";
         public const string TargetMusicFileMissing = "That target music file could not be found.";
+        public const string TargetMusicFileNameInvalid = "That target must be a single .ogg music file.";
         public const string ReplacementMusicFileMissing = "That replacement music file could not be found.";
         public const string MusicBackupMissing = "That music backup file could not be found.";
         public const string CopyCannotUseLink = "That copy cannot use a shortcut or link.";
@@ -386,7 +387,7 @@ namespace OnslaughtCareerEditor.AppCore
                 fileName.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 ||
                 !string.Equals(Path.GetExtension(fileName), ".ogg", StringComparison.OrdinalIgnoreCase))
             {
-                throw new InvalidOperationException("Target music file name must be a single .ogg file name under data\\Music.");
+                throw new InvalidOperationException(TargetMusicFileNameInvalid);
             }
 
             return fileName;
