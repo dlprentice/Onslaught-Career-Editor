@@ -19,6 +19,7 @@ namespace OnslaughtCareerEditor.AppCore
         public const string CopyFolderMissing = "That copy folder could not be found.";
         public const string CopyCannotUseLink = "That copy cannot use a shortcut or link.";
         public const string CopyProcessNotRegistered = "That copy is not registered with this session.";
+        public const string CopyBeaMustStayInside = "That copy's BEA.exe must stay in the copy.";
 
         private readonly object _gate = new();
         private readonly Dictionary<int, GameProfileRegisteredProcess> _processes = new();
@@ -180,7 +181,7 @@ namespace OnslaughtCareerEditor.AppCore
                 throw new InvalidOperationException(LeaseFolderMismatch);
 
             if (!TryBuildRegisteredProcess(process, appOwnedProfilesRoot, out GameProfileRegisteredProcess registered))
-                throw new InvalidOperationException("A managed playable copied game folder process must point at BEA.exe under the app-owned playable copied game folder.");
+                throw new InvalidOperationException(CopyBeaMustStayInside);
 
             lock (_gate)
             {

@@ -43,8 +43,13 @@ public class GameProfileManagedProcessHonestyTests
 
         Assert.That(source, Does.Not.Contain(
             "must point at BEA.exe under the app-owned playable copied game folder root."));
-        Assert.That(source, Does.Contain(
+        Assert.That(source, Does.Not.Contain(
             "must point at BEA.exe under the app-owned playable copied game folder."));
+        Assert.That(source, Does.Contain("CopyBeaMustStayInside"));
+        Assert.That(GameProfileManagedProcessRegistry.CopyBeaMustStayInside,
+            Is.EqualTo("That copy's BEA.exe must stay in the copy."));
+        Assert.That(GameProfileManagedProcessRegistry.CopyBeaMustStayInside.ToLowerInvariant(),
+            Does.Not.Contain("playable"));
     }
 
     [Test]
