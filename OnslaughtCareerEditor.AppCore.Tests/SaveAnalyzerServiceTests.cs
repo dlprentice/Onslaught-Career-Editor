@@ -611,6 +611,28 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         }
 
         [Fact]
+        public void BuildCompareDocument_DoesNotCallAFailedCompareIdenticalOnTheMetricCard()
+        {
+            BesFilePatcher.CompareResult result = new()
+            {
+                File1Name = "left.bes",
+                File2Name = "right.bes",
+                DifferingBytes = 0,
+                ErrorMessage = "Invalid file size: 9,972 bytes (expected 10,004)"
+            };
+
+            SaveAnalyzerDocument document = SaveAnalyzerService.BuildCompareDocument(
+                @"C:\temp\left.bes",
+                @"C:\temp\right.bes",
+                result);
+
+            SaveAnalyzerMetric topRegion = document.Metrics.Single(metric => metric.Label == "Top Region");
+            Assert.DoesNotContain("identical", topRegion.Detail, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("identical", topRegion.Value, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("could not be compared", topRegion.Detail, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
         public void BuildInfoTitle_KeepsCompleteWhenTheFilesDiffer()
         {
             BesFilePatcher.CompareResult result = new()

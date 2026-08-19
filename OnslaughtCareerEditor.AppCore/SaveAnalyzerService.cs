@@ -193,7 +193,9 @@ namespace OnslaughtCareerEditor.AppCore
                 {
                     Label = "Top Region",
                     Value = topRegion ?? "None",
-                    Detail = topRegion is null ? "files identical" : "highest differing byte count"
+                    Detail = !string.IsNullOrWhiteSpace(result.ErrorMessage)
+                        ? "could not be compared"
+                        : topRegion is null ? "files identical" : "highest differing byte count"
                 }
             };
 
