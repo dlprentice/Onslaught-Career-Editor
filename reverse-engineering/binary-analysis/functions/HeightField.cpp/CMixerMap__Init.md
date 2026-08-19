@@ -43,7 +43,8 @@ at `0x00640030`); if live, vector-ctor `0x00523210`/`0x00523200`
 over `0x1000` slots of stride `0x14` and `[this+0] = esi`. Second
 Alloc size `0x40000` then `[this+4] = eax`. Loop
 `esi += 0x14` until `0x14000` calling `0x00523190` at
-`[this+0]+esi`. Then `GetNext` / `Read([this+4], 1, 0x40000)`
+`[this+0]+esi` (first gates:
+[`CMixerMap__InitSlot.md`](CMixerMap__InitSlot.md)). Then `GetNext` / `Read([this+4], 1, 0x40000)`
 through the inbound stack arg in `EBX`. Callee bodies are **not**
 claimed. `0x00523200` has no table name.
 
