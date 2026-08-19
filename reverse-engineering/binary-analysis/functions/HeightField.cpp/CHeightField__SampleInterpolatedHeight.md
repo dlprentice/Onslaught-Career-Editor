@@ -18,7 +18,8 @@ fixed-point word. One stack arg is the Y word (`mov edi, [esp+0x10]`
 after three pushes). One `ret 4` at `0x0047eb7c`. Body
 `0x0047eb00`–`0x0047eb7e` is 126 bytes, SHA-256
 `1071aafbc5919071d180c303049a904473f3a907de6b497bdb4e7abb10e55f9a`.
-Next function is `0x0047eb80`.
+Next function is `0x0047eb80`
+([`CStaticShadows__SampleShadowHeightBilinear.md`](CStaticShadows__SampleShadowHeightBilinear.md)).
 
 EAX is a signed 16-bit bilinear sample from the word grid at
 `[this+0x1028]`:
