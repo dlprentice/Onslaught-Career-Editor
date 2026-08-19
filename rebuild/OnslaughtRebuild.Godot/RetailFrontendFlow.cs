@@ -18,7 +18,7 @@ public sealed partial class RetailFrontendFlow : Control
     private const float DesignWidth = 640f;
     private const float DesignHeight = 480f;
     private const float MenuColumnX = 219f;
-    private const float MenuStartY = 304f;
+    private static float MenuStartY => RetailMainMenuRowY.NonzeroSlotY;
     private const float MenuPitch = 20f;
     private const float MenuHitHalfWidth = 120f;
     // mustbe_Font13PS.tga — 256² atlas, 16px cells, 16 columns, ASCII-32 origin.
@@ -1395,7 +1395,10 @@ public sealed partial class RetailFrontendFlow : Control
         for (int index = 0; index < _session.Items.Count; index++)
         {
             RetailFrontendMenuItem item = _session.Items[index];
-            float rowY = MenuStartY + (index * MenuPitch);
+            // RetailMainMenuRowY: [esp+0x10] seeds 268 / index
+            // -1. Nonzero [0x0083D990] overwrites 304 / index 0.
+            // Dest Y keeps rowY - 8. Do not invent dest Y.
+            float rowY = RetailMainMenuRowY.NonzeroSlotY + (index * MenuPitch);
             bool selected = index == _session.SelectedMainIndex;
             // Draw the string as authored. english.json holds "Continue Game" /
             // "Load Game" in mixed case and retail renders them that way.
