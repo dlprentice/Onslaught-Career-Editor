@@ -79,4 +79,68 @@ public sealed class RetailConfirmedKillTests
             new[] { 0, 0, 0, 0, 0 },
             RetailFillOutEndLevelData.ForLevel100Won().ThingsKilled);
     }
+
+    /// <summary>
+    /// Same incrementer. Independently re-read specimen
+    /// <c>74154bfa…</c>: <c>0x004d30eb</c>
+    /// <c>test [eax+0x34],0x40000</c> / <c>inc [ecx+0x10]</c>.
+    /// Mutation: write that bit into slot 0. First-play totals stay
+    /// unclaimed. Do not invent secondaries.
+    /// </summary>
+    [Fact]
+    public void Level100Won_ConfirmedKillIncrementsSlotTwoOnFlag40000()
+    {
+        int[] after = RetailConfirmedKill.Apply(
+            RetailFillOutEndLevelData.FirstPlayThingsKilled(),
+            thingFlags: RetailConfirmedKill.Slot2Flag,
+            thingAllegiance: 1);
+
+        Assert.Equal(new[] { 0, 0, 1, 0, 0 }, after);
+        Assert.Equal(
+            new[] { 0, 0, 0, 0, 0 },
+            RetailFillOutEndLevelData.ForLevel100Won().ThingsKilled);
+        Assert.All(
+            RetailFillOutEndLevelData.ForLevel100Won().SecondaryStatuses,
+            status => Assert.Equal(0, status));
+    }
+
+    /// <summary>
+    /// Same incrementer. Independently re-read <c>0x004d30fa</c>
+    /// <c>test dh,0x40</c> = bit <c>0x4000</c> into <c>player+0x14</c>.
+    /// Mutation: write that bit into slot 0. First-play totals stay
+    /// unclaimed. Do not invent secondaries.
+    /// </summary>
+    [Fact]
+    public void Level100Won_ConfirmedKillIncrementsSlotThreeOnFlag4000()
+    {
+        int[] after = RetailConfirmedKill.Apply(
+            RetailFillOutEndLevelData.FirstPlayThingsKilled(),
+            thingFlags: RetailConfirmedKill.Slot3Flag,
+            thingAllegiance: 1);
+
+        Assert.Equal(new[] { 0, 0, 0, 1, 0 }, after);
+        Assert.Equal(
+            new[] { 0, 0, 0, 0, 0 },
+            RetailFillOutEndLevelData.ForLevel100Won().ThingsKilled);
+    }
+
+    /// <summary>
+    /// Same incrementer. Independently re-read <c>0x004d3105</c>
+    /// <c>test dh,8</c> = bit <c>0x800</c> into <c>player+0x18</c>.
+    /// Mutation: write that bit into slot 0. First-play totals stay
+    /// unclaimed. Do not invent secondaries.
+    /// </summary>
+    [Fact]
+    public void Level100Won_ConfirmedKillIncrementsSlotFourOnFlag800()
+    {
+        int[] after = RetailConfirmedKill.Apply(
+            RetailFillOutEndLevelData.FirstPlayThingsKilled(),
+            thingFlags: RetailConfirmedKill.Slot4Flag,
+            thingAllegiance: 1);
+
+        Assert.Equal(new[] { 0, 0, 0, 0, 1 }, after);
+        Assert.Equal(
+            new[] { 0, 0, 0, 0, 0 },
+            RetailFillOutEndLevelData.ForLevel100Won().ThingsKilled);
+    }
 }

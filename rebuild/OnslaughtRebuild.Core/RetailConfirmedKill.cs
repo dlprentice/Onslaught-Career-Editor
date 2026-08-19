@@ -33,6 +33,18 @@ public static class RetailConfirmedKill
     /// <summary><c>[thing+0x34]</c> bit that increments <c>player+8</c>.</summary>
     public const int Slot0Flag = 0x400;
 
+    /// <summary><c>[thing+0x34]</c> bit that increments <c>player+0xc</c>.</summary>
+    public const int Slot1Flag = 0x20000;
+
+    /// <summary><c>[thing+0x34]</c> bit that increments <c>player+0x10</c>.</summary>
+    public const int Slot2Flag = 0x40000;
+
+    /// <summary><c>[thing+0x34]</c> bit that increments <c>player+0x14</c>.</summary>
+    public const int Slot3Flag = 0x4000;
+
+    /// <summary><c>[thing+0x34]</c> bit that increments <c>player+0x18</c>.</summary>
+    public const int Slot4Flag = 0x800;
+
     /// <summary>
     /// Apply the caller gate then the five incrementer bits. Returns a
     /// new five-word vector. Does not mutate <paramref name="current"/>.
@@ -67,22 +79,22 @@ public static class RetailConfirmedKill
             next[0]++;
         }
 
-        if ((thingFlags & 0x20000) != 0)
+        if ((thingFlags & Slot1Flag) != 0)
         {
             next[1]++;
         }
 
-        if ((thingFlags & 0x40000) != 0)
+        if ((thingFlags & Slot2Flag) != 0)
         {
             next[2]++;
         }
 
-        if ((thingFlags & 0x4000) != 0)
+        if ((thingFlags & Slot3Flag) != 0)
         {
             next[3]++;
         }
 
-        if ((thingFlags & 0x800) != 0)
+        if ((thingFlags & Slot4Flag) != 0)
         {
             next[4]++;
         }
