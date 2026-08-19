@@ -183,7 +183,8 @@ live in `developer_state.json` and the campaign ledgers.
   not a path. A music replacement manifest names the files, not a path.
   A Windowed & Mods create that cannot see the source game folder names
   the next step, not the emptiness. A missing copy used to launch names
-  the folder, not a path.
+  the folder, not a path. A blank app-owned profile folder names the
+  folder, not a root.
 
 ## 1.0.11 — 2026-08-07
 
