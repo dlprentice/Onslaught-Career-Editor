@@ -94,6 +94,8 @@
              Link="godot-startup-source\RetailMainMenuVersionOverlay.cs" />
     <Compile Include="..\OnslaughtRebuild.Godot\RetailMainMenuTitleLogoShadow.cs"
              Link="godot-startup-source\RetailMainMenuTitleLogoShadow.cs" />
+    <Compile Include="..\OnslaughtRebuild.Godot\RetailMainMenuTitleLogoZ.cs"
+             Link="godot-startup-source\RetailMainMenuTitleLogoZ.cs" />
     <Compile Include="..\OnslaughtRebuild.Godot\RetailMainMenuSelectedIconColor.cs"
              Link="godot-startup-source\RetailMainMenuSelectedIconColor.cs" />
     <Compile Include="..\OnslaughtRebuild.Godot\RetailMainMenuSelectedIconShadow.cs"

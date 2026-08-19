@@ -86,7 +86,10 @@ public sealed class RetailMainMenuTitleLogoShadowTests
             "RetailMainMenuTitleLogoShadow.SubmittedColor",
             draw,
             StringComparison.Ordinal);
-        Assert.Contains("320f, 130f, 1f, 1f, TitleLogoTint", draw, StringComparison.Ordinal);
+        Assert.Contains("RetailMainMenuTitleLogoZ.DestX", draw, StringComparison.Ordinal);
+        Assert.Contains("RetailMainMenuTitleLogoZ.DestY", draw, StringComparison.Ordinal);
+        Assert.Contains("TitleLogoTint", draw, StringComparison.Ordinal);
+        Assert.Contains("1f,", draw, StringComparison.Ordinal);
         Assert.DoesNotContain("0.29", draw, StringComparison.Ordinal);
         Assert.DoesNotContain("SetLanguage", draw, StringComparison.Ordinal);
         Assert.DoesNotContain("AcceptsTwinFade", draw, StringComparison.Ordinal);

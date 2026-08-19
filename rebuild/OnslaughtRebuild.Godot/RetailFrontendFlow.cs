@@ -1638,14 +1638,26 @@ public sealed partial class RetailFrontendFlow : Control
         // so the draw keeps ShadowTint and does not call SubmittedColor.
         // dest==0x0c at 0x0046423D forces ESI=255. Body scale stays 1.0;
         // this is not a 29% scale. Body pack stays TitleLogoTint.
+        // DAT_0089D88C at 0x004642CE is RetailMainMenuTitleLogoZ:
+        // FrontEnd\v3\FE_BEA_Title2.tga via ebp+0x12C, then push
+        // 0x3F7FBE77, dest Y 130, dest X 320. That leftover is Z, not
+        // scale, so this draw keeps TitleLogoTint, scale 1.0, DestX,
+        // and DestY and does not treat the dword as a 29% title-logo.
+        // Nearby 0x3F866666 is already ShadowScaleBoost. Not a sheen.
         DrawSurfaceCentered(
             _titleLogo,
-            320f + (float)sharedShadow.X,
-            130f + (float)sharedShadow.Y,
+            RetailMainMenuTitleLogoZ.DestX + (float)sharedShadow.X,
+            RetailMainMenuTitleLogoZ.DestY + (float)sharedShadow.Y,
             ShadowScaleBoost,
             ShadowScaleBoost,
             ShadowTint);
-        DrawSurfaceCentered(_titleLogo, 320f, 130f, 1f, 1f, TitleLogoTint);
+        DrawSurfaceCentered(
+            _titleLogo,
+            RetailMainMenuTitleLogoZ.DestX,
+            RetailMainMenuTitleLogoZ.DestY,
+            1f,
+            1f,
+            TitleLogoTint);
     }
 
     /// <summary>
