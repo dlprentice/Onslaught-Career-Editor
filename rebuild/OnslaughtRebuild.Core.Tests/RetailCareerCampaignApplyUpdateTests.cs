@@ -685,6 +685,43 @@ public sealed class RetailCareerCampaignApplyUpdateTests
     }
 
     /// <summary>
+    /// <c>CountGoodies</c> iterates every slot
+    /// (<c>Career.cpp:670-680</c>). Leftover world-110 complete + E
+    /// (ranking 0.0f already pinned) writes <c>GS_NEW</c> on goodie 14
+    /// while a C-grade Level 100 Won writes 0 / 8 / 78, so the count is
+    /// 4. Isolated leftover 14 names the write of 14, not the count.
+    /// Isolated leftover Old / Instructions counts seed only the five
+    /// first-play S slots. Isolated C-grade does not name
+    /// <c>NewGoodieCount</c> (would be 3). Isolated S latch is 5
+    /// without leftover 14. Mutation: count only the five first-play S
+    /// slots. Skipping <c>SET_GOODIE_NEW(14)</c> is not unique versus
+    /// leftover 14. Do not invent a world-110 FillOut or the rest of
+    /// the table. <c>mPendingExtraGoodies</c> stays unclaimed. No new
+    /// secondaries.
+    /// </summary>
+    [Fact]
+    public void Level100Won_CountGoodiesCountsLeftoverWorld110CompleteGoodie()
+    {
+        RetailCareerCampaign career = RetailCareerReCalcLinks.CreateColdTrainingSlice();
+        RetailCareerNode next = career.Nodes.Find(110)!;
+        next.Complete = 1;
+        next.Ranking = 0.0f;
+        RetailEndLevelSnapshot snapshot = RetailFillOutEndLevelData.ForLevel100Won(ranking: 0.25f);
+
+        Assert.Equal(0, RetailCareerUpdateGoodieStates.CountGoodies(career));
+
+        career.ApplyUpdate(snapshot);
+
+        Assert.Equal(4, RetailCareerUpdateGoodieStates.CountGoodies(career));
+        Assert.Equal(4, career.Counters.NewGoodieCount);
+        Assert.Equal(1, career.Nodes.Find(100)!.Complete);
+        Assert.Equal(
+            RetailCareerGoodieState.New,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.CompleteWorld110));
+        Assert.All(snapshot.SecondaryStatuses, status => Assert.Equal(0, status));
+    }
+
+    /// <summary>
     /// <c>GRADE(100) &gt;= B</c> is not <c>&gt;= A</c>. Ranking 0.5f is
     /// already pinned as B, so a Level 100 win at that ranking unlocks
     /// 0, 8, 78, and 121 and leaves 164 at <c>GS_UNKNOWN</c>. Cite

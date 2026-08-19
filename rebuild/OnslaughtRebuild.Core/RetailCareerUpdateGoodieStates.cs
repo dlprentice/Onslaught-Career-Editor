@@ -268,7 +268,9 @@ public static class RetailCareerUpdateGoodieStates
     /// Leftover <c>GS_INSTRUCTIONS</c> on those five slots therefore
     /// reads 0 before ApplyUpdate. Isolated leftover
     /// <c>GS_INSTRUCTIONS</c> store names the write to 2, not that
-    /// pre-count.
+    /// pre-count. Leftover world-110 complete + E therefore reads 4
+    /// after ApplyUpdate because goodie 14 is also <c>GS_NEW</c>.
+    /// Isolated leftover 14 names the write of 14, not that count.
     /// </summary>
     public static int CountGoodies(RetailCareerCampaign career)
     {
