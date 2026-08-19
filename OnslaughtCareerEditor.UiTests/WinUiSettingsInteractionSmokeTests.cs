@@ -69,7 +69,7 @@ public class WinUiSettingsInteractionSmokeTests
             Assert.That(role, Does.Contain("Read-only source material"));
 
             string status = TryGetName(FindByAutomationId(window, "SettingsGameDirectoryStatus")) ?? string.Empty;
-            Assert.That(status, Does.Contain("Valid game directory detected"));
+            Assert.That(status, Does.Contain("Valid game folder detected"));
 
             string saveCount = TryGetName(FindByAutomationId(window, "SettingsSaveFileCount")) ?? string.Empty;
             Assert.That(saveCount, Is.Not.Empty);

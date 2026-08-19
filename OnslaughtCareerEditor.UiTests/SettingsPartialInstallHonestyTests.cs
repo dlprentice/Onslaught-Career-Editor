@@ -29,5 +29,9 @@ public class SettingsPartialInstallHonestyTests
         Assert.That(method, Does.Not.Contain("media/data"));
         Assert.That(method, Does.Not.Contain(@":\"));
         Assert.That(settings, Does.Not.Contain("media/data"));
+        Assert.That(settings, Does.Not.Contain("Partial game directory detected"));
+        Assert.That(settings, Does.Contain("Partial game folder detected"));
+        Assert.That(settings, Does.Not.Contain("Valid game directory detected"));
+        Assert.That(settings, Does.Contain("Valid game folder detected"));
     }
 }
