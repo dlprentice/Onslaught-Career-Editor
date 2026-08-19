@@ -140,6 +140,8 @@ live in `developer_state.json` and the campaign ledgers.
   install that has not been chosen names the next step, not the emptiness.
   A missing Asset Library export names the file, not a recorded path.
   A valid or partial install names the game folder, not a directory.
+  A Windowed & Mods custom-selection receipt names the patch rows, not
+  the catalog keys.
 
 ## 1.0.11 — 2026-08-07
 

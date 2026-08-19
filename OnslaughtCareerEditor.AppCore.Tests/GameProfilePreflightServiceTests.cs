@@ -230,6 +230,64 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         }
 
         [Fact]
+        public void BuildPrepareReceipt_NamesManualPatchRowsInsteadOfCatalogKeys()
+        {
+            BinaryPatchSpec windowed = BinaryPatchEngine.PatchSpecs.Single(spec =>
+                string.Equals(spec.Key, "force_windowed", StringComparison.Ordinal));
+            BinaryPatchSpec resolution = BinaryPatchEngine.PatchSpecs.Single(spec =>
+                string.Equals(spec.Key, "resolution_gate", StringComparison.Ordinal));
+            var result = new GameProfilePrepareResult(
+                GameProfilePreflightService.SchemaVersion,
+                DateTimeOffset.UnixEpoch,
+                Mutation: true,
+                SourceGameRoot: "selected-game-root",
+                TargetGameRoot: @"X:\AppOwnedProfiles\safe-game-copy-test",
+                ExecutablePath: @"X:\AppOwnedProfiles\safe-game-copy-test\BEA.exe",
+                Entries: new[]
+                {
+                    new GameProfileCopiedEntry("BEA.exe", @"C:\Source\BEA.exe", @"C:\Target\BEA.exe", Directory: false),
+                },
+                PatchResult: new GameProfilePatchResult(
+                    Requested: true,
+                    Success: true,
+                    PatchKeys: new[] { windowed.Key, resolution.Key },
+                    Message: "Selected patch bytes verified on disk."),
+                LaunchPlan: new GameProfileLaunchPlan(
+                    ExecutablePath: @"C:\Target\BEA.exe",
+                    WorkingDirectory: @"C:\Target",
+                    Arguments: Array.Empty<string>(),
+                    CommandPreview: "\"BEA.exe\""),
+                ProfilePresetId: null,
+                ProfilePresetDisplayName: null,
+                ProfilePresetProofStatus: null,
+                ProfileDefaultControllerConfiguration: null,
+                ProfileDefaultPersistControllerConfigInOptions: false,
+                ProfileDefaultMouseLookSensitivity: null,
+                ProfileDefaultScreenShape: null,
+                ProfilePresetModules: Array.Empty<SafeCopyProfileModule>(),
+                MusicSwapResult: null,
+                ManifestPath: @"C:\Target\onslaught-profile-manifest.json");
+
+            GameProfilePrepareReceipt receipt = GameProfilePreflightService.BuildPrepareReceipt(
+                result,
+                copiedSavegames: false,
+                controlOptionsResult: null);
+
+            Assert.Contains(
+                receipt.IncludedChanges,
+                change => change.Contains(windowed.DisplayName, StringComparison.Ordinal));
+            Assert.Contains(
+                receipt.IncludedChanges,
+                change => change.Contains(resolution.DisplayName, StringComparison.Ordinal));
+            string receiptText = FlattenPrepareReceipt(receipt);
+            Assert.DoesNotContain("force_windowed", receiptText, StringComparison.Ordinal);
+            Assert.DoesNotContain("resolution_gate", receiptText, StringComparison.Ordinal);
+            Assert.DoesNotContain(@"X:\AppOwnedProfiles", receiptText, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain(@"C:\Source", receiptText, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain(@"C:\Target", receiptText, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
         public void PrepareWindowedCompatibilityProfile_CopiesGameRootAppliesPatchAndLeavesSourceUnchanged()
         {
             string tempRoot = Path.Combine(Path.GetTempPath(), $"onslaught-profile-proof-{Guid.NewGuid():N}");

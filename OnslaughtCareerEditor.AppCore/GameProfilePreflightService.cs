@@ -386,7 +386,7 @@ namespace OnslaughtCareerEditor.AppCore
                 : string.Join(" ", result.LaunchPlan.Arguments);
             string patchRows = result.PatchResult.PatchKeys.Count == 0
                 ? "No executable patch rows requested."
-                : $"{result.PatchResult.PatchKeys.Count}: {string.Join(", ", result.PatchResult.PatchKeys)}";
+                : $"{result.PatchResult.PatchKeys.Count}: {string.Join(", ", result.PatchResult.PatchKeys.Select(FormatReceiptPatchRowName))}";
 
             var lines = new List<GameProfileReceiptLine>
             {
@@ -422,7 +422,7 @@ namespace OnslaughtCareerEditor.AppCore
                     .Select(module => BuildReceiptIncludedChange(result, module, controlOptionsResult))
                     .ToArray()
                 : result.PatchResult.PatchKeys
-                    .Select(key => $"Patch row: {key}")
+                    .Select(key => $"Patch row: {FormatReceiptPatchRowName(key)}")
                     .ToArray();
             if (result.Level100TextModResult is not null)
             {
@@ -469,6 +469,15 @@ namespace OnslaughtCareerEditor.AppCore
                 lines,
                 includedChanges,
                 stillNotIncluded);
+        }
+
+        private static string FormatReceiptPatchRowName(string key)
+        {
+            BinaryPatchSpec? spec = BinaryPatchEngine.PatchSpecs.FirstOrDefault(candidate =>
+                string.Equals(candidate.Key, key, StringComparison.OrdinalIgnoreCase));
+            return !string.IsNullOrWhiteSpace(spec?.DisplayName)
+                ? spec.DisplayName
+                : "selected patch row";
         }
 
         private static string BuildReceiptIncludedChange(
