@@ -84,4 +84,28 @@ public class LorePageHonestyTests
         Assert.That(code, Does.Contain("LorePageText.DocumentTooltipFallback"));
         Assert.That(code, Does.Not.Contain("return document.RelativePath;"));
     }
+
+    [Test]
+    public void AnEmptyLibrarySaysWhatToDoNext_RatherThanDescribingTheEmptiness()
+    {
+        string sentence = LorePageText.EmptyLibraryNextStep;
+
+        Assert.That(sentence, Does.Contain("Refresh"));
+        Assert.That(sentence, Does.Contain("library"));
+        Assert.That(sentence, Does.Not.Contain("did not produce"));
+        Assert.That(sentence, Does.Not.Contain("no documents").IgnoreCase);
+        Assert.That(sentence, Does.Not.Contain("/"));
+        Assert.That(sentence, Does.Not.Contain(":\\"));
+    }
+
+    [Test]
+    public void TheEmptyLibraryPathUsesTheSharedNextStep()
+    {
+        string code = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI", "Pages", "LorePage.xaml.cs"));
+
+        Assert.That(code, Does.Contain("LorePageText.EmptyLibraryNextStep"));
+        Assert.That(code, Does.Not.Contain("did not produce any readable documents"));
+        Assert.That(code, Does.Not.Contain("did not return any readable files"));
+    }
 }

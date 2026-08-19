@@ -130,10 +130,10 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 else
                 {
                     CurrentDocumentTextBlock.Text = "No documents found";
-                    CurrentPathTextBlock.Text = "The lore library did not produce any readable documents.";
+                    CurrentPathTextBlock.Text = LorePageText.EmptyLibraryNextStep;
                     ShowReaderPlaceholder(
                         "No documents found",
-                        "The lore reader is ready, but the current library scan did not return any readable files.");
+                        LorePageText.EmptyLibraryNextStep);
                 }
 
                 UpdateCounts();

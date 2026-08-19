@@ -11,6 +11,9 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         public const string EmptySearchNextStep =
             "Try another word, or clear the search.";
 
+        public const string EmptyLibraryNextStep =
+            "Refresh the library, or reinstall the app if this keeps happening.";
+
         public const string DocumentTooltipFallback = "Offline Lore document";
 
         public static string DescribeSearchStatus(string query, int matchCount)
