@@ -181,6 +181,8 @@ live in `developer_state.json` and the campaign ledgers.
   Staging music in a missing copy names the folder, not a path. A
   resolved network or non-local drive refusal names the location,
   not a path.
+  A Windowed & Mods create that cannot see the source game folder names
+  the next step, not the emptiness.
 
 ## 1.0.11 — 2026-08-07
 

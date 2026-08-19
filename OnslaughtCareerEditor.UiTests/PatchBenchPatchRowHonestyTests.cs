@@ -47,4 +47,24 @@ public class PatchBenchPatchRowHonestyTests
         Assert.That(xaml, Does.Contain("Choose at least one patch to continue."));
         Assert.That(xaml, Does.Not.Contain("No patches selected."));
     }
+
+    [Test]
+    public void AMissingSourceFolderSaysWhatToDoNext()
+    {
+        string page = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot,
+            "OnslaughtCareerEditor.WinUI",
+            "Pages",
+            "BinaryPatchesPage.xaml.cs"));
+        string helper = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot,
+            "OnslaughtCareerEditor.WinUI",
+            "Helpers",
+            "PatchBenchSafeCopyOutcomeText.cs"));
+
+        Assert.That(helper, Does.Contain("Choose a BEA.exe that sits in a game folder."));
+        Assert.That(page, Does.Contain("PatchBenchSafeCopyOutcomeText.SourceGameFolderMissing"));
+        Assert.That(page, Does.Not.Contain("does not have a usable source game folder"));
+        Assert.That(helper, Does.Not.Contain("usable source game folder"));
+    }
 }

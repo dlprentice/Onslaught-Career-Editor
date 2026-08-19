@@ -53,6 +53,9 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
 
         public const string PatchRowUnavailable = "That patch row is not available.";
 
+        public const string SourceGameFolderMissing =
+            "Choose a BEA.exe that sits in a game folder.";
+
         public static string BuildDefaultMusicReplacementStatus()
         {
             return $"No music swap staged. Staging only; {MusicPlaybackBoundaryClause}";

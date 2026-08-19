@@ -1430,7 +1430,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 string? sourceGameRoot = Path.GetDirectoryName(Path.GetFullPath(sourcePath));
                 if (string.IsNullOrWhiteSpace(sourceGameRoot) || !Directory.Exists(sourceGameRoot))
                 {
-                    OperationLogTextBox.Text = "The selected BEA.exe does not have a usable source game folder.";
+                    OperationLogTextBox.Text = PatchBenchSafeCopyOutcomeText.SourceGameFolderMissing;
                     AppStatusService.SetStatus("Windowed & Mods: safe copy source folder missing");
                     return;
                 }
