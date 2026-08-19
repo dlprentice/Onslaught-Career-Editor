@@ -1548,7 +1548,11 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                             ApplyWindowedCompatibilityPatch: true,
                             AllowByteLayoutOnlyTarget: true)));
 
-                Assert.Contains("Required game folder", ex.Message);
+                Assert.Equal(GameProfilePreflightService.RequiredGameFolderMissing, ex.Message);
+                Assert.Equal("A required game folder is missing.", ex.Message);
+                Assert.DoesNotContain("data", ex.Message, StringComparison.Ordinal);
+                Assert.DoesNotContain("directory", ex.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.DoesNotContain("path", ex.Message, StringComparison.OrdinalIgnoreCase);
             }
             finally
             {

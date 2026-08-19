@@ -50,6 +50,13 @@ public class PreflightRequiredFileHonestyTests
         Assert.That(source, Does.Not.Contain("Required game entry is missing: BEA.exe"));
         Assert.That(source, Does.Not.Contain("Executable override is missing."));
         Assert.That(source, Does.Not.Contain("FileNotFoundException($\"Required game file is missing: {entry}\", path)"));
+        Assert.That(source, Does.Not.Contain("Required game file is missing:"));
+        Assert.That(source, Does.Contain("RequiredGameFileMissing"));
+        Assert.That(source, Does.Not.Contain("required game file '{entry}'"));
+        Assert.That(GameProfilePreflightService.RequiredGameFileMissing,
+            Is.EqualTo("A required game file is missing."));
+        Assert.That(GameProfilePreflightService.RequiredGameFileMissing.ToLowerInvariant(),
+            Does.Not.Contain("path"));
         Assert.That(source, Does.Not.Contain("Level 100 text target is missing."));
         Assert.That(source, Does.Not.Contain("Level 100 text backup is missing."));
         Assert.That(source, Does.Not.Contain("Level 100 early-flight target is missing."));

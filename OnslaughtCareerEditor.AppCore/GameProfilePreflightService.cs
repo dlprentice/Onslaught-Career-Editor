@@ -120,6 +120,8 @@ namespace OnslaughtCareerEditor.AppCore
         public const string Level100ResourceMissing = "That copy is missing 100_res_PC.aya.";
         public const string Level100ResourceBackupMissing = "That copy is missing 100_res_PC.aya.original.backup.";
         public const string SourceFolderMissing = "That game folder could not be found.";
+        public const string RequiredGameFolderMissing = "A required game folder is missing.";
+        public const string RequiredGameFileMissing = "A required game file is missing.";
         public const string ProfileFolderRequired = "An app-owned profile folder is required.";
         public const string WorkspaceFileMustStayInside = "The workspace file must stay inside the app-owned profile folder.";
         public const string CopyMustStayInside = "That copy must stay inside the app-owned profile folder.";
@@ -1163,17 +1165,17 @@ namespace OnslaughtCareerEditor.AppCore
             {
                 string path = Path.Combine(sourceRoot, entry);
                 if (!Directory.Exists(path))
-                    throw new DirectoryNotFoundException($"Required game folder is missing: {entry}");
-                RejectReparsePoint(path, $"required game folder '{entry}'");
+                    throw new DirectoryNotFoundException(RequiredGameFolderMissing);
+                RejectReparsePoint(path, "required game folder");
             }
 
             foreach (string entry in s_requiredFileEntries)
             {
                 string path = Path.Combine(sourceRoot, entry);
                 if (!File.Exists(path))
-                    throw new FileNotFoundException($"Required game file is missing: {entry}");
-                RejectReparsePoint(path, $"required game file '{entry}'");
-                RejectMultipleHardLinks(path, $"Required game file '{entry}'");
+                    throw new FileNotFoundException(RequiredGameFileMissing);
+                RejectReparsePoint(path, "required game file");
+                RejectMultipleHardLinks(path, "required game file");
             }
         }
 
