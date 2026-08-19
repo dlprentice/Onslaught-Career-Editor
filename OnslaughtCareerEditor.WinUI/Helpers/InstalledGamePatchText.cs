@@ -149,7 +149,16 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         /// </summary>
         public static string BuildOutcomeNote(bool success, string message)
         {
-            return success ? message : $"Nothing was changed. {message}";
+            if (success || string.IsNullOrWhiteSpace(message))
+                return message;
+
+            if (message.Contains("Nothing was changed", StringComparison.OrdinalIgnoreCase)
+                || message.Contains("untouched", StringComparison.OrdinalIgnoreCase))
+            {
+                return message;
+            }
+
+            return $"Nothing was changed. {message}";
         }
 
         /// <summary>

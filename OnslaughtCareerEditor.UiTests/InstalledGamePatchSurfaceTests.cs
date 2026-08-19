@@ -368,4 +368,16 @@ public class InstalledGamePatchSurfaceTests
         Assert.That(code, Does.Not.Contain("applied ? $\"{authorizationMessage} Your game is patched.\" : applyMessage"));
         Assert.That(code, Does.Not.Contain("success ? \"Your game is back the way it was.\" : message"));
     }
+
+    [Test]
+    public void ANamedFailureIsNotSaidTwice()
+    {
+        string note = InstalledGamePatchText.BuildOutcomeNote(false, BinaryPatchEngine.InstalledPathUnreadable);
+
+        Assert.That(note, Is.EqualTo(BinaryPatchEngine.InstalledPathUnreadable));
+        Assert.That(note, Does.Contain("Nothing was changed"));
+        Assert.That(
+            note.Split("Nothing was changed", StringSplitOptions.None).Length - 1,
+            Is.EqualTo(1));
+    }
 }
