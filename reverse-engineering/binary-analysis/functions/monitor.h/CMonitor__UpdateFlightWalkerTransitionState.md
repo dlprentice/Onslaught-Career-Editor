@@ -45,3 +45,7 @@ Wave 390 corrected the old GillMHead-specific playback-helper label to the share
 - Does not prove runtime event behavior.
 - Does not mutate `BEA.exe`.
 - Does not apply a Ghidra rename map.
+
+The 2026-08-19 PE envelope lives in
+[`CBattleEngine__Morph.md`](../BattleEngine.cpp/CBattleEngine__Morph.md).
+This alias page is not rewritten.
