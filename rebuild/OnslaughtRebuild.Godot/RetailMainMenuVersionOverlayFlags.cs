@@ -29,7 +29,8 @@ namespace OnslaughtRebuild.GodotClient;
 /// <c>0x009C690D=1</c> pair already sits at the CFEPMain::Render
 /// prologue <c>0x00462D5E</c> / <c>0x00462D65</c>. The earlier
 /// <c>mov byte [0x00679B40], 0</c> at <c>0x00464180</c> (after
-/// sprintf, before dest/Z) is a sibling leftover, not this one.
+/// sprintf, before dest/Z) is already
+/// <see cref="RetailMainMenuVersionOverlayEnable"/>, not this one.
 /// A two-instruction reader at <c>0x00465F00</c> is
 /// <c>mov al, [0x00679B40]; ret</c>. Do not invent a meaning
 /// beyond the store bytes.</para>

@@ -98,6 +98,8 @@
              Link="godot-startup-source\RetailMainMenuVersionOverlayFont.cs" />
     <Compile Include="..\OnslaughtRebuild.Godot\RetailMainMenuVersionOverlayFlags.cs"
              Link="godot-startup-source\RetailMainMenuVersionOverlayFlags.cs" />
+    <Compile Include="..\OnslaughtRebuild.Godot\RetailMainMenuVersionOverlayEnable.cs"
+             Link="godot-startup-source\RetailMainMenuVersionOverlayEnable.cs" />
     <Compile Include="..\OnslaughtRebuild.Godot\RetailMainMenuTitleLogoShadow.cs"
              Link="godot-startup-source\RetailMainMenuTitleLogoShadow.cs" />
     <Compile Include="..\OnslaughtRebuild.Godot\RetailMainMenuTitleLogoShadowZ.cs"
