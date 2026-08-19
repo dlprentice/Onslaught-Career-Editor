@@ -943,7 +943,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         {
             if (_selectedModelLinkedTexture == null && string.IsNullOrWhiteSpace(_selectedModelSidecarTexturePath))
             {
-                AppStatusService.SetStatus("Asset Library: no linked texture is available for this model");
+                AppStatusService.SetStatus(AssetLibraryPageText.SidecarPreviewMissing);
                 return;
             }
 
@@ -970,7 +970,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             _selectedSidecarLease = null;
             if (string.IsNullOrWhiteSpace(_selectedModelSidecarTexturePath))
             {
-                AppStatusService.SetStatus("Asset Library: sidecar texture preview file is unavailable");
+                AppStatusService.SetStatus(AssetLibraryPageText.SidecarPreviewMissing);
                 return;
             }
 
@@ -984,7 +984,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 {
                     _selectedSidecarLease.Dispose();
                     _selectedSidecarLease = null;
-                    AppStatusService.SetStatus("Asset Library: sidecar texture preview file is unavailable");
+                    AppStatusService.SetStatus(AssetLibraryPageText.SidecarPreviewMissing);
                     return;
                 }
             }
