@@ -17,8 +17,10 @@ public class AssetCatalogFileSafetyHonestyTests
 
         Assert.That(source, Does.Not.Contain("Catalog export paths must remain below"));
         Assert.That(source, Does.Not.Contain("Catalog export paths must be bundle-root-relative."));
+        Assert.That(source, Does.Not.Contain("Catalog exports must be bundle-root-relative."));
+        Assert.That(source, Does.Contain("ExportsMustStayInside"));
         Assert.That(source, Does.Contain("Catalog exports must stay inside the selected generated export folder."));
-        Assert.That(source, Does.Contain("Catalog exports must be bundle-root-relative."));
+        Assert.That(source, Does.Not.Contain("bundle-root-relative."));
     }
 
     [Test]

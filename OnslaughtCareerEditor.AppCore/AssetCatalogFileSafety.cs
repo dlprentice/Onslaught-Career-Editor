@@ -13,6 +13,8 @@ namespace OnslaughtCareerEditor.AppCore
             "That catalog export folder resolves outside the selected generated export folder.";
         internal const string CatalogExportFileOutsideGenerated =
             "That catalog export file resolves outside the selected generated export folder.";
+        internal const string ExportsMustStayInside =
+            "Catalog exports must stay inside the selected generated export folder.";
 
         internal static AssetCatalogSelection? ResolveSelection(string? pathOrDirectory)
         {
@@ -96,8 +98,7 @@ namespace OnslaughtCareerEditor.AppCore
             if (!FileMutationSafety.IsSameOrUnderRoot(resolvedPath, normalizedRoot) ||
                 string.Equals(resolvedPath, normalizedRoot, FileMutationSafety.PathComparison))
             {
-                throw new InvalidOperationException(
-                    "Catalog exports must stay inside the selected generated export folder.");
+                throw new InvalidOperationException(ExportsMustStayInside);
             }
 
             return resolvedPath;
@@ -292,7 +293,7 @@ namespace OnslaughtCareerEditor.AppCore
             if (string.IsNullOrWhiteSpace(catalogPath))
                 return AssetCatalogSourceRead.Missing(string.Empty, AssetCatalogSourceEvidence.Missing);
             if (requireRelative && Path.IsPathRooted(catalogPath))
-                throw new InvalidOperationException("Catalog exports must be bundle-root-relative.");
+                throw new InvalidOperationException(AssetCatalogFileSafety.ExportsMustStayInside);
 
             string sourcePath = AssetCatalogFileSafety.ResolveSourcePath(TrustedExportRoot, catalogPath);
             FileMutationSafety.RejectOutputInGameTree(sourcePath);
