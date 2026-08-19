@@ -152,7 +152,7 @@ public class WinUiVisualSmokeTests
             evidenceDir,
             "04-asset-preview-scrolled.png",
             initialTag: "assets",
-            expectedText: "Copy path",
+            expectedText: "Copy file",
             initialAssetSubTab: 0,
             assetCatalogPath: assetCatalogFixture,
             beforeCapture: window => ScrollIntoViewByAutomationId(window, "AssetCopyExportPathButton"));

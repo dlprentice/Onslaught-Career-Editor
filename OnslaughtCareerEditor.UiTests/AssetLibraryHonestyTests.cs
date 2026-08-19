@@ -108,5 +108,7 @@ public class AssetLibraryHonestyTests
         Assert.That(xaml, Does.Not.Contain("Local export path"));
         Assert.That(xaml, Does.Contain("File details"));
         Assert.That(xaml, Does.Contain("Export file"));
+        Assert.That(xaml, Does.Not.Contain("Copy path"));
+        Assert.That(xaml, Does.Contain("Copy file"));
     }
 }

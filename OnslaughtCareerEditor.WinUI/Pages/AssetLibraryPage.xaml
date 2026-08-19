@@ -492,7 +492,7 @@
                                     Click="OpenInMediaButton_Click" />
                             <Button x:Name="CopyExportPathButton"
                                     AutomationProperties.AutomationId="AssetCopyExportPathButton"
-                                    Content="Copy path"
+                                    Content="Copy file"
                                     IsEnabled="False"
                                     Click="CopyExportPathButton_Click" />
                         </StackPanel>

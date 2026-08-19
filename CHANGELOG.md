@@ -159,7 +159,8 @@ live in `developer_state.json` and the campaign ledgers.
   refusal that already says nothing was changed is not said twice.
   Media folder cards say Folder details, not Path details. A
   live-trainer write block before the first reading names the next
-  step, not the emptiness.
+  step, not the emptiness. The Asset Library copy
+  button names the file, not a path.
 
 ## 1.0.11 — 2026-08-07
 
