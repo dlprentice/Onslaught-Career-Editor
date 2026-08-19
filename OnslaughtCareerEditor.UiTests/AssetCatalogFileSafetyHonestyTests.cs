@@ -139,4 +139,15 @@ public class AssetCatalogFileSafetyHonestyTests
         Assert.That(source, Does.Not.Contain("Snapshot trusted asset export root"));
         Assert.That(source, Does.Contain("\"generated export folder\""));
     }
+
+    [Test]
+    public void ACatalogWithoutIdentityNamesTheCatalogNotEvidence()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "AssetCatalogFileSafety.cs"));
+
+        Assert.That(source, Does.Not.Contain("trusted identity evidence"));
+        Assert.That(source, Does.Contain("CatalogIdentityMissing"));
+        Assert.That(source, Does.Contain("That catalog has no saved identity."));
+    }
 }

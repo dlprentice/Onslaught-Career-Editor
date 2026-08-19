@@ -23,6 +23,8 @@ namespace OnslaughtCareerEditor.AppCore
             "Catalog source access needs a loaded catalog and its generated export folder.";
         internal const string CatalogJsonMissing =
             "The catalog folder no longer has catalog.json.";
+        internal const string CatalogIdentityMissing =
+            "That catalog has no saved identity.";
 
         internal static AssetCatalogSelection? ResolveSelection(string? pathOrDirectory)
         {
@@ -268,7 +270,7 @@ namespace OnslaughtCareerEditor.AppCore
             if (_rootLocks is null || _catalogStream is null)
                 throw new ObjectDisposedException(nameof(AssetCatalogLoadSession));
             if (!evidence.IsPresent)
-                throw new InvalidOperationException("The catalog snapshot does not contain trusted identity evidence.");
+                throw new InvalidOperationException(AssetCatalogFileSafety.CatalogIdentityMissing);
 
             if (OperatingSystem.IsWindows() &&
                 (!_rootLocks.Identity.IsSameFile(evidence.RootIdentity) ||
