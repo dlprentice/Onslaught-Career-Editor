@@ -1,4 +1,5 @@
 {
+    "_HERMES_SLICE_20260818_FB670": "Hermes integration-owner. Independently re-read 74154bfa. 0x004fb670 ret 4, 9 inbound, EAX in {0,1,2}. Null/miss=2. Live +0x140: 0x005096a0/0x005099a0 vs 3D d. Else [+0x144]+0x3d0 +0x2c/+0x30. Fire wrappers reject nonzero. No Ghidra, no Core.",
     "_HERMES_SLICE_20260818_FCE40": "Hermes integration-owner. Independently re-read 74154bfa. Trio 0x004fce40/80/c0: ret 0x10, [this+0x208] then vfunc +0x14/+0x18/+0x1c. Slot 9 0/1/2 pick. No Ghidra, no Core.",
     "_HERMES_SLICE_20260818_44A850": "Hermes integration-owner. Independently re-read 74154bfa. 0x0044a850 twin of 0x0044a930: ret 4, 23 inbound. [this+0xc]==-1 or vfunc+0x160 zero-vec -> copy 4 dwords [owner+0x1c]. Else copy vfunc vec. No Ghidra, no Core.",
     "_HERMES_SLICE_20260818_44A930": "Hermes integration-owner. Independently re-read 74154bfa. 0x0044a930 thiscall ret 4, 12 inbound. [this+0xc]==-1 or vfunc+0x160 zero-vec -> copy 12 dwords [owner+0x3c]. Else copy vfunc matrix. Closes the previously unwalked fallback. No Ghidra, no Core.",
