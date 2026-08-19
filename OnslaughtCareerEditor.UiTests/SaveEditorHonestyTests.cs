@@ -537,4 +537,25 @@ public class SaveEditorHonestyTests
         int end = text.IndexOf(';', start);
         return text.Substring(start, end - start);
     }
+
+    [Test]
+    public void AnEmptyPendingSummarySaysWhatToDoNext()
+    {
+        string summary = SaveEditorService.BuildPendingChangesSummary(new SavePatchRequest
+        {
+            PatchNodes = false,
+            PatchLinks = false,
+            PatchGoodies = false,
+            PatchKills = false,
+        });
+
+        Assert.That(summary, Is.EqualTo(SaveEditorService.NoPendingChangesSelected));
+        Assert.That(summary, Does.Not.Contain("yet"));
+        Assert.That(summary, Does.Contain("change"));
+
+        string xaml = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI", "Pages", "SavesPage.xaml"));
+        Assert.That(xaml, Does.Contain(SaveEditorService.NoPendingChangesSelected));
+        Assert.That(xaml, Does.Not.Contain("No pending save changes selected yet"));
+    }
 }

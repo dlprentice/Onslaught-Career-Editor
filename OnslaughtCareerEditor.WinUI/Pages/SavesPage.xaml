@@ -860,7 +860,7 @@
                                     <TextBlock x:Name="EditorPendingChangesTextBlock"
                                                AutomationProperties.AutomationId="SaveEditorPendingChanges"
                                                Style="{StaticResource SectionBodyTextStyle}"
-                                               Text="No pending save changes selected yet." />
+                                               Text="Select a change first." />
                                     <TextBlock x:Name="EditorSafetyHintTextBlock"
                                                AutomationProperties.AutomationId="SaveEditorSafetyHint"
                                                Style="{StaticResource SectionBodyTextStyle}"

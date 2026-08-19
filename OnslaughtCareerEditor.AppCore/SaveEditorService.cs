@@ -55,6 +55,7 @@ namespace OnslaughtCareerEditor.AppCore
     {
         public const string InputMissing = "That career save could not be found. Nothing was changed.";
         public const string PathsUnusable = "Those career saves could not be used. Nothing was changed.";
+        public const string NoPendingChangesSelected = "Select a change first.";
 
         public static IReadOnlyList<SaveAnalyzerFileItem> GetDetectedCareerSaves(string? gameDir = null)
         {
@@ -290,7 +291,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             if (parts.Count == 0)
             {
-                return "No pending save changes selected yet.";
+                return NoPendingChangesSelected;
             }
 
             return "Pending: " + string.Join(", ", parts) + ".";
