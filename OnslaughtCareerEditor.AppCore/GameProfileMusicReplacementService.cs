@@ -385,7 +385,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             string fullPath = Path.GetFullPath(replacementPath);
             if (!File.Exists(fullPath))
-                throw new FileNotFoundException("Replacement OGG file was not found.", fullPath);
+                throw new FileNotFoundException("That replacement OGG file could not be found.");
             if (!string.Equals(Path.GetExtension(fullPath), ".ogg", StringComparison.OrdinalIgnoreCase))
                 throw new InvalidOperationException("Replacement music file must use the .ogg extension.");
 

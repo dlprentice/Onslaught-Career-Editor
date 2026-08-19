@@ -55,4 +55,18 @@ public class MusicReplacementManifestHonestyTests
         Assert.That(source, Does.Contain(
             "That copy is missing onslaught-music-replacement-manifest.json."));
     }
+
+    [Test]
+    public void AMissingReplacementOggDoesNotAttachTheFilePath()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot,
+            "OnslaughtCareerEditor.AppCore",
+            "GameProfileMusicReplacementService.cs"));
+
+        Assert.That(source, Does.Not.Contain(
+            "throw new FileNotFoundException(\"Replacement OGG file was not found.\", fullPath);"));
+        Assert.That(source, Does.Contain("That replacement OGG file could not be found."));
+        Assert.That(source, Does.Not.Contain("FileNotFoundException(\"That replacement OGG file could not be found.\","));
+    }
 }
