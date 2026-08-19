@@ -87,7 +87,8 @@ live in `developer_state.json` and the campaign ledgers.
   Game Options does the same for an options file that is not .bea.
   A failed Save Editor write that still looks like a dump uses that same
   kind of sentence. An empty Lore library says to refresh, instead of
-  describing the emptiness.
+  describing the emptiness. A missing Windowed & Mods quick-pick row
+  names the refusal, not the catalog key.
 
 ## 1.0.11 — 2026-08-07
 

@@ -15,6 +15,8 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
             return $"Could not {action}. Nothing was changed.";
         }
 
+        public const string PatchRowUnavailable = "That patch row is not available.";
+
         public static string BuildDefaultMusicReplacementStatus()
         {
             return $"No music swap staged. Staging only; {MusicPlaybackBoundaryClause}";

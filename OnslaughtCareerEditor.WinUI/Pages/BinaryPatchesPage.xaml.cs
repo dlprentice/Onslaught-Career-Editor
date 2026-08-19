@@ -831,7 +831,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 string.Equals(item.Spec.Key, key, StringComparison.OrdinalIgnoreCase));
             if (item is null)
             {
-                OperationLogTextBox.Text = $"Patch row is not available: {key}";
+                OperationLogTextBox.Text = PatchBenchSafeCopyOutcomeText.PatchRowUnavailable;
                 AppStatusService.SetStatus("Windowed & Mods: quick pick unavailable");
                 return;
             }
