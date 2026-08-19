@@ -124,6 +124,23 @@ public static class RetailFillOutEndLevelData
     /// <summary>Shipped Level 100 secondary count — there are none.</summary>
     public const int Level100SecondaryCount = 0;
 
+    /// <summary>
+    /// <c>CGame::Init</c> / restart store. <c>EndLevelData.h:27</c>
+    /// is 0 when no lost string is defined. <c>DeclareLevelWon</c>
+    /// <c>0x0046f2f0</c> writes <c>+0x28</c> and <c>+0x48</c> only —
+    /// not <c>+0x114</c>.
+    /// </summary>
+    public const int Level100WonLostReason = 0;
+
+    /// <summary>
+    /// FillOut copies <c>CGame+0x114</c> to <c>0x00672e2c</c>
+    /// (<c>0x0046d5d0</c>). A Level 100 Won still holds the init 0
+    /// because <c>DeclareLevelWon</c> does not write that slot.
+    /// Mutation: adopt a leftover lost-string id. First-play elapsed
+    /// and score stay unclaimed.
+    /// </summary>
+    public static int LostReasonWord(int gameLevelLostReason) => gameLevelLostReason;
+
     /// <summary>The ten unset <c>GetStatus()</c> words FillOut copies for Level 100.</summary>
     public static int[] UnsetSecondaryStatuses() =>
         new int[RetailEndLevelObjectives.SecondaryObjectiveCount];

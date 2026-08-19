@@ -371,6 +371,33 @@ public sealed class RetailFillOutEndLevelDataTests
     }
 
     /// <summary>
+    /// Independently re-read specimen <c>74154bfa…</c>:
+    /// <c>DeclareLevelWon</c> <c>0x0046f323</c> stores
+    /// <c>GAME_STATE_LEVEL_WON=5</c> at <c>+0x28</c> and
+    /// <c>0x0046f33a</c> stores 5.0f at <c>+0x48</c>. No store to
+    /// <c>+0x114</c>. FillOut <c>0x0046d5d0</c> copies that dword to
+    /// <c>0x00672e2c</c>. Init is 0 (<c>EndLevelData.h:27</c>).
+    /// Mutation: leftover lost-string id 123. First-play elapsed and
+    /// score stay unclaimed. Do not invent secondaries.
+    /// </summary>
+    [Fact]
+    public void Level100Won_FillOutLostReasonStaysInitZeroBecauseDeclareWonDoesNotWriteIt()
+    {
+        Assert.Equal(0, RetailFillOutEndLevelData.Level100WonLostReason);
+        Assert.Equal(
+            RetailFillOutEndLevelData.Level100WonLostReason,
+            RetailFillOutEndLevelData.LostReasonWord(
+                RetailFillOutEndLevelData.Level100WonLostReason));
+        Assert.NotEqual(
+            123,
+            RetailFillOutEndLevelData.LostReasonWord(
+                RetailFillOutEndLevelData.Level100WonLostReason));
+        Assert.All(
+            RetailFillOutEndLevelData.ForLevel100Won().SecondaryStatuses,
+            status => Assert.Equal(0, status));
+    }
+
+    /// <summary>
     /// FillOut copies the ten primary <c>GetStatus()</c> words. After a
     /// Level 100 win those are four <c>MOS_COMPLETE</c> (1) and six
     /// unset slots — already pinned on
