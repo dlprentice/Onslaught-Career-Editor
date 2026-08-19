@@ -298,4 +298,35 @@ public class SafeCopyManagerSurfaceTests
         Assert.That(code, Does.Not.Contain("{ex.Message}"));
         Assert.That(code, Does.Not.Contain("HResult"));
     }
+
+    [Test]
+    public void ADumpedRemovalNamesTheCopyAndDoesNotPaintTheDump()
+    {
+        var dump = new SafeCopyRemovalResult(
+            false,
+            @"Could not keep C:\Users\player\Documents\career.bes (Win32 error 5).",
+            null,
+            null);
+
+        string sentence = SafeCopyManagerText.DescribeRemovalOutcome(dump, "trainer-proof", "1.2 GB");
+
+        Assert.That(sentence, Is.EqualTo(SafeCopyManagerText.DescribeDeleteFailure("trainer-proof")));
+        Assert.That(sentence, Does.Not.Contain(":\\"));
+        Assert.That(sentence.ToLowerInvariant(), Does.Not.Contain("win32"));
+        Assert.That(sentence, Does.Contain("Nothing was changed"));
+    }
+
+    [Test]
+    public void RescueThenDeleteUsesTheNamedRemovalSentence()
+    {
+        string code = PageCode();
+        int start = code.IndexOf("private async System.Threading.Tasks.Task DeleteSafeCopyAsync", StringComparison.Ordinal);
+        int end = code.IndexOf("// ------------------------------------------ patching the game you installed", StringComparison.Ordinal);
+        Assert.That(start, Is.GreaterThanOrEqualTo(0));
+        Assert.That(end, Is.GreaterThan(start));
+
+        string method = code[start..end];
+        Assert.That(method, Does.Contain("SafeCopyManagerText.DescribeRemovalOutcome"));
+        Assert.That(method, Does.Not.Contain("removal.Message"));
+    }
 }

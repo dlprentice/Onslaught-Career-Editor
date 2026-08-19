@@ -111,7 +111,8 @@ live in `developer_state.json` and the campaign ledgers.
   game folder, instead of describing the emptiness. Windowed & Mods
   apply and restore name BEA.exe and BEA.exe.original.backup, not the
   full paths. A failed Save Analyzer compare names the action, not the
-  compare error, on the status line.
+  compare error, on the status line. Keeping careers and then deleting a
+  copy names a dumped removal without the path.
 
 ## 1.0.11 — 2026-08-07
 

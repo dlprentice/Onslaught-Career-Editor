@@ -2841,9 +2841,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     SafeCopyRemovalResult removal = await Task.Run(() =>
                         SafeCopySaveRescueService.RescueThenDelete(row.ProfileRoot, profilesRoot, keepCareersIn));
 
-                    ShowSafeCopyManagerNote(removal.Success
-                        ? $"{removal.Message} Freed {row.SizeText}."
-                        : removal.Message);
+                    ShowSafeCopyManagerNote(
+                        SafeCopyManagerText.DescribeRemovalOutcome(removal, row.DisplayName, row.SizeText));
                     AppStatusService.SetStatus(removal.Success
                         ? "Windowed & Mods: kept the careers and deleted the copy"
                         : "Windowed & Mods: the copy was not deleted");

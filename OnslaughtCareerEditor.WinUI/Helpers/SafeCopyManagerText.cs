@@ -96,6 +96,37 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         }
 
         /// <summary>
+        /// What RescueThenDelete did. Named here so the page never paints a
+        /// <c>SafeCopyRemovalResult.Message</c> that still carries a dump.
+        /// </summary>
+        public static string DescribeRemovalOutcome(SafeCopyRemovalResult removal, string displayName, string sizeText)
+        {
+            if (removal.Success)
+            {
+                if (!LooksLikeAPathOrDump(removal.Message) && !string.IsNullOrWhiteSpace(removal.Message))
+                    return $"{removal.Message} Freed {sizeText}.";
+
+                return BuildDeletedNote(displayName, sizeText);
+            }
+
+            if (LooksLikeAPathOrDump(removal.Message) || string.IsNullOrWhiteSpace(removal.Message))
+                return DescribeDeleteFailure(displayName);
+
+            return removal.Message;
+        }
+
+        private static bool LooksLikeAPathOrDump(string? message)
+        {
+            if (string.IsNullOrWhiteSpace(message))
+                return false;
+
+            return message.Contains(":\\", StringComparison.Ordinal)
+                || message.Contains(":/", StringComparison.Ordinal)
+                || message.Contains("Win32", StringComparison.OrdinalIgnoreCase)
+                || message.Contains("exception", StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
         /// The warning before creating a copy on a volume that cannot fit it.
         ///
         /// Null when there is room, or when free space could not be read - a drive that will not
