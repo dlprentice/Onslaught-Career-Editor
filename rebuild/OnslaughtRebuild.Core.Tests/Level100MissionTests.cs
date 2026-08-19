@@ -178,6 +178,58 @@ public sealed class Level100MissionTests
             status => Assert.Equal(0, status));
     }
 
+    /// <summary>
+    /// <c>IScript::PlayCharMessageWait</c> at <c>0x005376f9</c>
+    /// is <c>mov dword ptr [0x0089c800], 1</c>. Twin Pause at
+    /// <c>0x00537d55</c>. First-play <c>init()</c> issues six
+    /// <c>PlayCharMessageWait</c> calls before the script
+    /// idles (HUD_01 / HUD_02 / HUD_06 /
+    /// TUTORIAL_MESSAGE_LOG / TUTORIAL_TECHNICIAN_01 /
+    /// TUTORIAL_13_MOD). Isolated wait duration names the
+    /// rebuild sleep and still passes if this store is
+    /// skipped. Isolated <see cref="RetailIScriptWaitStop.Stop"/>
+    /// names literal-1; one live store of 1 is not unique
+    /// versus increment from 0. Mutation: increment so six
+    /// waits become 6. CVM snapshot / 0.05f /
+    /// FollowWaypointWait stay unclaimed. Live
+    /// <c>GAME.mSlots</c> stay unclaimed. No new secondaries.
+    /// </summary>
+    [Fact]
+    public void Init_PlayCharMessageWaitWritesOneAtCvmSingletonPlus220()
+    {
+        Level100ActorDefinitionSet definitions = Level100TestActorDefinitions.Create();
+        var actors = new Level100ActorRegistry(definitions);
+        Level100ActorId player = actors.GetThingRef("Player 1")!.Value;
+        var mission = new Level100Mission(
+            actors,
+            player,
+            new Level100TutorialProgress(false, false, false, false));
+
+        const int settleTicks = 100 * SimulationConstants.TicksPerSecond;
+        for (int tick = 0; tick < settleTicks; tick++)
+        {
+            mission.AdvanceTick(SimulationConstants.MaximumHull);
+        }
+
+        int waitCount = mission.Snapshot.PendingEvents
+            .OfType<Level100MessageRequested>()
+            .Count(item => item.ScriptWaitsForDuration);
+        Assert.True(waitCount > 1);
+        Assert.Equal(
+            RetailIScriptWaitStop.FlagStopped,
+            mission.WaitStopFlag);
+        Assert.Equal(
+            RetailIScriptWaitStop.Stop(RetailIScriptWaitStop.FlagIdle),
+            mission.WaitStopFlag);
+        Assert.NotEqual(waitCount, mission.WaitStopFlag);
+        Assert.NotEqual(
+            RetailIScriptWaitStop.FlagIdle,
+            mission.WaitStopFlag);
+        Assert.All(
+            RetailFillOutEndLevelData.ForLevel100Won().SecondaryStatuses,
+            status => Assert.Equal(0, status));
+    }
+
     [Fact]
     public void MissionNativeSetPos_CopiesGetPosPositionAndPreservesOtherPoseState()
     {

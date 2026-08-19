@@ -40,6 +40,7 @@ public sealed class Level100Mission
     private bool _playerActive = true;
     private bool _flightModeEnabled = true;
     private int _flightModeFlag = RetailEnableFlightMode.FlagDisabled;
+    private int _waitStopFlag = RetailIScriptWaitStop.FlagIdle;
     private Level100MissionWeaponAvailability _pulseCannonAvailability;
     private Level100MissionWeaponAvailability _twinVulcanAvailability;
     private Level100MissionWeaponAvailability _mechVulcanAvailability;
@@ -202,6 +203,16 @@ public sealed class Level100Mission
     /// names the rebuild bool, not this store.
     /// </summary>
     public int FlightModeFlag => _flightModeFlag;
+
+    /// <summary>
+    /// <c>0x0089c800</c> — the
+    /// <c>mov dword ptr [0x0089c800], 1</c> destination
+    /// on Pause / PlayCharMessageWait. Isolated
+    /// <see cref="Level100MissionTiming.PauseTicks"/> /
+    /// <see cref="Level100MissionTiming.MessagePlaybackTicks"/>
+    /// name the rebuild sleep, not this store.
+    /// </summary>
+    public int WaitStopFlag => _waitStopFlag;
 
     /// <summary>
     /// <c>dword [index*4+0x008aa51c]</c> — Highlight stores 2,
@@ -673,8 +684,9 @@ public sealed class Level100Mission
                     arguments[2].AsInteger(),
                     arguments[3].AsString()));
                 return NativeResult.Void;
-            case 4: // Pause
+            case 4: // Pause — IScript__Pause 0x00537c70
                 RequireArguments(command, arguments, 1);
+                StoreWaitStop();
                 return NativeResult.Waiting(
                     Level100ScriptWaitKind.Pause,
                     Level100MissionTiming.PauseTicks(arguments[0].AsFloat()),
@@ -834,6 +846,11 @@ public sealed class Level100Mission
         int speakerId = arguments[0].AsInteger();
         int messageId = arguments[1].AsInteger();
         _ = arguments[2].AsFloat();
+        if (waits)
+        {
+            StoreWaitStop();
+        }
+
         int ticks = Level100MissionTiming.MessagePlaybackTicks(messageId);
 
         int earliest = _messageBoxAllowedTick;
@@ -942,6 +959,17 @@ public sealed class Level100Mission
         _thingFlagWords[actorId.Value] = mark
             ? RetailSetObjective.Mark(current)
             : RetailSetObjective.Unmark(current);
+    }
+
+    /// <summary>
+    /// Isolated <see cref="Level100MissionTiming.PauseTicks"/>
+    /// and message duration stay the rebuild sleeps. This
+    /// store is official <c>mov [0x0089c800], 1</c>. CVM
+    /// snapshot / 0.05f / FollowWaypointWait stay unclaimed.
+    /// </summary>
+    private void StoreWaitStop()
+    {
+        _waitStopFlag = RetailIScriptWaitStop.Stop(_waitStopFlag);
     }
 
     /// <summary>
