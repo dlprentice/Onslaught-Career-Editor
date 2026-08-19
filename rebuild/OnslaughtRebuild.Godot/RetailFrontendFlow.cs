@@ -2334,7 +2334,20 @@ public sealed partial class RetailFrontendFlow : Control
         DrawRect(new Rect2(0f, 180f, DesignWidth, 1f), DevSelectGuide);
 
         DrawLevelSweepArcs();
-        DrawLevelNodeGraph();
+        // RetailLevelSelectFsub148: CFEPLevelSelect::Render leftover
+        // after the sliding-borders call is fld [0x005DB53C] (148.0)
+        // fsub [esi+0x3460] fstp [esp+0x14]. Official 74154bfa
+        // independently re-read this cycle. The local is a window,
+        // not dest. 0x00460BE4 fcomp 610.0 / 0x00460BF9 fcomp 0.0.
+        // Init fstp [esi+0x3460] at 0x00460464 follows fild of the
+        // zeroed [esi+0x3468]. Settled pad is 148.0 - 0. Dest stays
+        // the measured node centres. Do not invent dest from 148.0.
+        if (RetailLevelSelectFsub148.Applies(
+                RetailLevelSelectFsub148.Pad(
+                    RetailLevelSelectFsub148.SettledField)))
+        {
+            DrawLevelNodeGraph();
+        }
 
         for (int index = 0; index < LevelColumnLabels.Length; index++)
         {
@@ -2355,7 +2368,8 @@ public sealed partial class RetailFrontendFlow : Control
         // got_standard_SlidingTextBordersAndMask() returns TRUE for
         // (FrontEnd.cpp:783), which pins transition to 1 and therefore this
         // settled scale; the outside bracket only draws while dest == FEP_MAIN.
-        // The 148.0 fsub at 0x00460B66 is later and is not dest.
+        // The 148.0 fsub at 0x00460B66 is RetailLevelSelectFsub148
+        // and is not dest.
         //
         // MEASURED, and this page does NOT reproduce the 1.4 the FEP_DEVSELECT
         // build settled on: fitting the FE_select_level_bracket01 alpha mask over

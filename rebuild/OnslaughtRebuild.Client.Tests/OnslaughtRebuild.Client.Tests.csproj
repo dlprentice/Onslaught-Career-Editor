@@ -140,6 +140,8 @@
              Link="godot-startup-source\RetailMainMenuLeftTwinOverlay.cs" />
     <Compile Include="..\OnslaughtRebuild.Godot\RetailLevelSelectSlidingBorders.cs"
              Link="godot-startup-source\RetailLevelSelectSlidingBorders.cs" />
+    <Compile Include="..\OnslaughtRebuild.Godot\RetailLevelSelectFsub148.cs"
+             Link="godot-startup-source\RetailLevelSelectFsub148.cs" />
     <Compile Include="..\OnslaughtRebuild.Godot\RetailFrontendCursor.cs"
              Link="godot-startup-source\RetailFrontendCursor.cs" />
     <Compile Include="..\OnslaughtRebuild.Godot\RetailFeMessBox.cs"
