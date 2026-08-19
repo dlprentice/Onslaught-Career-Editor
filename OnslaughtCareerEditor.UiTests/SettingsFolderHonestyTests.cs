@@ -80,4 +80,17 @@ public class SettingsFolderHonestyTests
         Assert.That(xaml, Does.Not.Contain("SettingsGameDirectoryPathDetails"));
         Assert.That(xaml, Does.Not.Contain("SettingsGameDirectoryPathTextBox"));
     }
+
+    [Test]
+    public void SettingsFileDetailsNameTheFileNotAPath()
+    {
+        string xaml = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot,
+            "OnslaughtCareerEditor.WinUI",
+            "Pages",
+            "SettingsPage.xaml"));
+
+        Assert.That(xaml, Does.Contain("AutomationProperties.AutomationId=\"SettingsConfigFile\""));
+        Assert.That(xaml, Does.Not.Contain("SettingsConfigPath"));
+    }
 }

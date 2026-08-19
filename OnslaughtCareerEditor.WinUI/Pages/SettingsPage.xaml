@@ -163,7 +163,7 @@
                                    AutomationProperties.AutomationId="SettingsFileDetails"
                                    IsExpanded="False">
                     <TextBlock x:Name="ConfigPathTextBlock"
-                               AutomationProperties.AutomationId="SettingsConfigPath"
+                               AutomationProperties.AutomationId="SettingsConfigFile"
                                Style="{StaticResource SectionBodyTextStyle}" />
                 </controls:Expander>
             </StackPanel>
