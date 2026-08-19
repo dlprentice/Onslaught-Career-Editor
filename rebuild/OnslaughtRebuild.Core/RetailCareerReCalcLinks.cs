@@ -79,12 +79,22 @@ public sealed class RetailCareerNodeLink
 /// (<c>game.h:42-53</c>, <c>IScript</c> <c>cmp …,4</c>).
 /// </para>
 /// <para>
+/// <b>Ranking is written only onto the finished world.</b>
+/// <c>Career.cpp:396-406</c> looks up
+/// <c>GetNodeFromWorldNo(mWorldFinished)</c> and stores
+/// <c>mRanking</c> there when the snapshot is strictly greater. After
+/// a Level 100 win that is world 100 at the already-pinned 1.0f
+/// (grade S). Unlocking world 110 does not copy the ranking; that
+/// node stays <c>BlankRanking</c> / grade E.
+/// </para>
+/// <para>
 /// <b>Not established here.</b> The world-500 slot arm
 /// (<c>Career.cpp:468-481</c>). <c>UpdateBaseWorldExistsStuffForNode</c>
 /// on <c>level_structure[0][3] == 110</c>. Goodie recomputation. The
 /// ranking clamp constants 0.4 / 0.6 inside
 /// <c>FillOutEndLevelData</c> — they are gated on a non-zero secondary
-/// count, so Level 100 never reaches them.
+/// count, so Level 100 never reaches them. Score-time, base-things
+/// contents, CPlayer kill readout, and goodies stay unclaimed.
 /// </para>
 /// </remarks>
 public static class RetailCareerReCalcLinks

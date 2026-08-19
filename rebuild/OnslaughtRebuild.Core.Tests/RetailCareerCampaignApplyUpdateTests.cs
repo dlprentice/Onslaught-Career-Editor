@@ -88,4 +88,36 @@ public sealed class RetailCareerCampaignApplyUpdateTests
         Assert.All(won.SecondaryStatuses, status => Assert.Equal(0, status));
         Assert.All(completeTwo.SecondaryStatuses, status => Assert.Equal(0, status));
     }
+
+    /// <summary>
+    /// <c>CCareer::Update</c> writes <c>mRanking</c> only onto
+    /// <c>GetNodeFromWorldNo(mWorldFinished)</c> (<c>Career.cpp:396-406</c>).
+    /// The already-pinned FillOut 1.0f therefore lands on world 100
+    /// (grade S) and world 110 stays <c>BlankRanking</c> / grade E.
+    /// Mutation: copying the snapshot ranking onto the unlocked child
+    /// makes 110 read 1.0 / S. Score-time, base-things, kills, and
+    /// goodies stay unclaimed. No new secondaries.
+    /// </summary>
+    [Fact]
+    public void Level100Won_ApplyUpdateWritesRankingOnlyOnTheFinishedWorld()
+    {
+        RetailCareerCampaign career = RetailCareerReCalcLinks.CreateColdTrainingSlice();
+        RetailEndLevelSnapshot snapshot = RetailFillOutEndLevelData.ForLevel100Won();
+
+        career.ApplyUpdate(snapshot);
+
+        RetailCareerNode training = career.Nodes.Find(100)!;
+        RetailCareerNode next = career.Nodes.Find(110)!;
+        Assert.Equal(1.0f, snapshot.Ranking);
+        Assert.Equal(1.0f, training.Ranking);
+        Assert.Equal(
+            RetailCareerGrade.PerfectGrade,
+            RetailCareerGrade.GradeByteFromRanking(training.Ranking));
+        Assert.Equal(RetailCareerNode.BlankRanking, next.Ranking);
+        Assert.Equal(
+            RetailCareerGrade.FailedGrade,
+            RetailCareerGrade.GradeByteFromRanking(next.Ranking));
+        Assert.Equal(0, next.Complete);
+        Assert.All(snapshot.SecondaryStatuses, status => Assert.Equal(0, status));
+    }
 }
