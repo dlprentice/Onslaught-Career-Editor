@@ -198,6 +198,19 @@ public class InstalledGamePatchSurfaceTests
         });
     }
 
+    [Test]
+    public void AMissingInstallNamesTheNextStepNotTheEmptiness()
+    {
+        string status = InstalledGamePatchText.BuildStatusLine(InstalledGamePatchReadiness.NoGameChosen, null);
+
+        Assert.That(status, Does.Contain("Settings"));
+        Assert.That(status, Does.Contain("BEA.exe"));
+        Assert.That(status, Does.Not.Contain("yet").IgnoreCase);
+        Assert.That(status, Does.Not.Contain("No installed game chosen"));
+        Assert.That(status, Does.Not.Contain(":\\"));
+        Assert.That(status, Does.Not.Contain("/"));
+    }
+
     /// <summary>
     /// A changed executable with no original beside it is the state the app cannot rescue. Offering
     /// to patch it would be offering something that cannot be undone.

@@ -90,7 +90,7 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
             return readiness switch
             {
                 InstalledGamePatchReadiness.NoGameChosen =>
-                    "No installed game chosen yet. Pick your game folder in Settings, or browse to a BEA.exe below.",
+                    "Pick your game folder in Settings, or browse to a BEA.exe below.",
                 InstalledGamePatchReadiness.BackedUp =>
                     "Your original executable is saved beside the game as BEA.exe.original.backup. "
                         + "Patching from here can be undone.",
