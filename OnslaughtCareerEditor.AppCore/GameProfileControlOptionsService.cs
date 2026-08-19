@@ -451,7 +451,7 @@ namespace OnslaughtCareerEditor.AppCore
                 FileShare.ReadWrite | FileShare.Delete);
 
             if (!GetFileInformationByHandle(handle, out ByHandleFileInformation info))
-                throw new IOException($"Could not inspect hardlink count for safe-copy control options target. Win32 error: {Marshal.GetLastWin32Error()}");
+                throw new IOException(FileMutationSafety.FileCouldNotBeInspected, new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error()));
 
             return info.NumberOfLinks;
         }

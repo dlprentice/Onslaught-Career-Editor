@@ -101,5 +101,8 @@ public class MusicReplacementManifestHonestyTests
         Assert.That(source, Does.Contain("FileCannotShareData"));
         Assert.That(GameProfileMusicReplacementService.FileCannotShareData,
             Is.EqualTo("That file cannot share its data with another file."));
+        Assert.That(source, Does.Not.Contain("Could not inspect hardlink count"));
+        Assert.That(source, Does.Not.Contain("Win32 error:"));
+        Assert.That(source, Does.Contain("FileCouldNotBeInspected"));
     }
 }

@@ -164,5 +164,8 @@ public class BinaryPatchCopyHonestyTests
         Assert.That(engine, Does.Contain("FileCannotShareData"));
         Assert.That(engine, Does.Not.Contain("is hardlinked to another file"));
         Assert.That(engine, Does.Contain("That file cannot share its data with another file."));
+        Assert.That(engine, Does.Not.Contain("Could not inspect hardlink count"));
+        Assert.That(engine, Does.Not.Contain("Win32 error:"));
+        Assert.That(engine, Does.Contain("FileCouldNotBeInspected"));
     }
 }

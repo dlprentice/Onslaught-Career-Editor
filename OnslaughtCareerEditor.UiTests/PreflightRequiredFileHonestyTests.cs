@@ -102,6 +102,9 @@ public class PreflightRequiredFileHonestyTests
             Does.Not.Contain("hardlink"));
         Assert.That(GameProfilePreflightService.FileCannotShareData.ToLowerInvariant(),
             Does.Not.Contain("identity"));
+        Assert.That(source, Does.Not.Contain("Could not inspect hardlink count"));
+        Assert.That(source, Does.Not.Contain("Win32 error:"));
+        Assert.That(source, Does.Contain("FileCouldNotBeInspected"));
         Assert.That(source, Does.Not.Contain("manifest patch state:"));
         Assert.That(source, Does.Not.Contain("patch apply failed:"));
         Assert.That(source, Does.Not.Contain("patch verification failed:"));
