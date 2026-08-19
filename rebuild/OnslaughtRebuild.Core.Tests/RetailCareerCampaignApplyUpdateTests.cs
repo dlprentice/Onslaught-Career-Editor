@@ -55,4 +55,37 @@ public sealed class RetailCareerCampaignApplyUpdateTests
             RetailCareerNodeLink.Complete,
             career.GetLink(career.Nodes.Find(100)!.LowerLink)!.LinkType);
     }
+
+    /// <summary>
+    /// <c>CCareer::Update</c> never reads the primary table FillOut
+    /// copied. Writing the rebuild mission enum <c>Complete=2</c> into
+    /// that table must not change the graph. Mutation: requiring
+    /// <c>MOS_COMPLETE=1</c> before completing the node leaves 110
+    /// locked on the mission-enum snapshot. No new secondaries.
+    /// </summary>
+    [Fact]
+    public void Level100Won_ApplyUpdateDoesNotConsultPrimaryStatuses()
+    {
+        RetailCareerCampaign mosComplete = RetailCareerReCalcLinks.CreateColdTrainingSlice();
+        RetailCareerCampaign missionEnum = RetailCareerReCalcLinks.CreateColdTrainingSlice();
+        RetailEndLevelSnapshot won = RetailFillOutEndLevelData.ForLevel100Won();
+        RetailEndLevelSnapshot completeTwo = won with
+        {
+            PrimaryStatuses = new[] { 2, 2, 2, 2, 0, 0, 0, 0, 0, 0 },
+        };
+
+        mosComplete.ApplyUpdate(won);
+        missionEnum.ApplyUpdate(completeTwo);
+
+        RetailCareerNodeLink mosLower =
+            mosComplete.GetLink(mosComplete.Nodes.Find(100)!.LowerLink)!;
+        RetailCareerNodeLink enumLower =
+            missionEnum.GetLink(missionEnum.Nodes.Find(100)!.LowerLink)!;
+        Assert.Equal(1, mosComplete.Nodes.Find(100)!.Complete);
+        Assert.Equal(1, missionEnum.Nodes.Find(100)!.Complete);
+        Assert.Equal(RetailCareerNodeLink.Complete, mosLower.LinkType);
+        Assert.Equal(RetailCareerNodeLink.Complete, enumLower.LinkType);
+        Assert.All(won.SecondaryStatuses, status => Assert.Equal(0, status));
+        Assert.All(completeTwo.SecondaryStatuses, status => Assert.Equal(0, status));
+    }
 }
