@@ -114,6 +114,7 @@ namespace OnslaughtCareerEditor.AppCore
         public const string TargetCopyExists = "That copy folder already exists.";
         public const string CopyFolderMissing = "That copy folder could not be found.";
         public const string CopiedBeaMissing = "That copy is missing BEA.exe.";
+        public const string SourceExecutableMissing = "That source executable could not be found.";
         public const string SourceFolderMissing = "That game folder could not be found.";
         public const string ProfileFolderRequired = "An app-owned profile folder is required.";
         public const string WorkspaceFileMustStayInside = "The workspace file must stay inside the app-owned profile folder.";
@@ -318,7 +319,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             string fullPath = Path.GetFullPath(sourcePath);
             if (!File.Exists(fullPath))
-                throw new FileNotFoundException("Executable source was not found.", fullPath);
+                throw new FileNotFoundException(SourceExecutableMissing);
 
             if (!IsSupportedExecutableSourceName(Path.GetFileName(fullPath)))
                 throw new InvalidOperationException("Executable source must be named BEA.exe or BEA.exe.original.backup.");
