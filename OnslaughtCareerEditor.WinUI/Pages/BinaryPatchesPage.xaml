@@ -341,7 +341,7 @@
                             <TextBlock Text="Safe game copy"
                                        FontSize="16"
                                        FontWeight="SemiBold" />
-                            <TextBlock Text="Create a launchable app-owned game copy. The app applies the verified 16:9 gameplay correction, writes the copied 16:9 display option, and launches the tested 1600x900 windowed baseline; selected mods are added too. Savegames are optional, and the installed game is unchanged."
+                            <TextBlock Text="Create a launchable game copy. The app applies the verified 16:9 gameplay correction, writes the copied 16:9 display option, and launches the tested 1600x900 windowed baseline; selected mods are added too. Savegames are optional, and the installed game is unchanged."
                                        Style="{StaticResource SectionBodyTextStyle}" />
                             <TextBlock x:Name="PatchBenchSafeCopySourceStatus"
                                        AutomationProperties.AutomationId="PatchBenchSafeCopySourceStatus"
