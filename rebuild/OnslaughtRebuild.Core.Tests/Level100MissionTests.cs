@@ -15,6 +15,62 @@ public sealed class Level100MissionTests
     private static readonly Level100TutorialProgress CompletedTutorialSlots =
         new(Introduction: true, PulseCannon: true, VulcanCannon: true, StatusBars: true);
 
+    /// <summary>
+    /// <c>IScript::PrimaryObjectiveFailed</c> at <c>0x00534440</c>
+    /// writes state 2 (Wave580 plate; <c>MOS_FAILED</c> at
+    /// <c>0x004496FB</c>). Level 100 <c>init()</c> calls it for
+    /// objectives 1..4 before the first <c>PlayCharMessageWait</c>.
+    /// Rebuild <see cref="Level100PrimaryObjectiveStatus.Failed"/>
+    /// is 1, so an identity cast is not retail. Isolated FillOut
+    /// Won names four <c>MOS_COMPLETE</c> (1) and does not go
+    /// through init. <c>GetNumPrimaryObjectives</c> counting
+    /// non-zero is not unique versus mapping Failed to 1.
+    /// Mutation: identity-cast the mission enum. Do not invent
+    /// secondaries. Live <c>GAME.mSlots</c> stay unclaimed.
+    /// </summary>
+    [Fact]
+    public void Init_PrimaryObjectiveFailedWritesRetailMosFailedTwo()
+    {
+        Level100ActorDefinitionSet definitions = Level100TestActorDefinitions.Create();
+        var actors = new Level100ActorRegistry(definitions);
+        Level100ActorId player = actors.GetThingRef("Player 1")!.Value;
+        var mission = new Level100Mission(
+            actors,
+            player,
+            new Level100TutorialProgress(false, false, false, false));
+
+        int[] mos = RetailGameObjectiveCount.FromLevel100MissionPrimaries(
+            mission.Snapshot.PrimaryObjectives);
+
+        Assert.Equal(
+            RetailGameObjectiveCount.StatusFailed,
+            RetailGameObjectiveCount.FromLevel100MissionStatus(
+                Level100PrimaryObjectiveStatus.Failed));
+        Assert.Equal(
+            RetailGameObjectiveCount.StatusComplete,
+            RetailGameObjectiveCount.FromLevel100MissionStatus(
+                Level100PrimaryObjectiveStatus.Complete));
+        Assert.Equal(
+            RetailGameObjectiveCount.StatusNotDefined,
+            RetailGameObjectiveCount.FromLevel100MissionStatus(
+                Level100PrimaryObjectiveStatus.Uninitialized));
+        Assert.NotEqual(
+            RetailGameObjectiveCount.StatusFailed,
+            (int)Level100PrimaryObjectiveStatus.Failed);
+        Assert.Equal(new[] { 2, 2, 2, 2, 0, 0, 0, 0, 0, 0 }, mos);
+        Assert.Equal(
+            4,
+            RetailGameObjectiveCount.GetNumPrimaryObjectives(mos));
+        Assert.All(
+            mission.Snapshot.PrimaryObjectives,
+            objective => Assert.Equal(
+                Level100PrimaryObjectiveStatus.Failed,
+                objective.Status));
+        Assert.All(
+            RetailFillOutEndLevelData.ForLevel100Won().SecondaryStatuses,
+            status => Assert.Equal(0, status));
+    }
+
     [Fact]
     public void MissionNativeSetPos_CopiesGetPosPositionAndPreservesOtherPoseState()
     {

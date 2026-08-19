@@ -39,9 +39,14 @@ namespace OnslaughtRebuild.Core;
 /// and the 0.4 / 0.6 clamp is skipped — already pinned.
 /// </para>
 /// <para>
-/// <b>Not established here.</b> The mission-layer enum mapping in
-/// <c>Level100Mission</c>. Score-time ranking. Career does not
-/// consume the primary table.
+/// <b>The mission-layer enum is inverted.</b>
+/// <c>IScript::PrimaryObjectiveComplete</c> at <c>0x005343e0</c>
+/// writes state 1; <c>IScript::PrimaryObjectiveFailed</c> at
+/// <c>0x00534440</c> writes state 2. Rebuild
+/// <c>Level100PrimaryObjectiveStatus</c> is Failed=1 / Complete=2.
+/// <see cref="FromLevel100MissionStatus"/> is the mapping.
+/// Score-time ranking stays unclaimed. Career does not consume
+/// the primary table.
 /// </para>
 /// </remarks>
 public static class RetailGameObjectiveCount
@@ -75,6 +80,50 @@ public static class RetailGameObjectiveCount
     /// </summary>
     public static int GetNumSecondaryObjectives(IReadOnlyList<int> statuses) =>
         CountDefined(statuses);
+
+    /// <summary>
+    /// The mission-layer enum is inverted from retail MOS.
+    /// <c>IScript::PrimaryObjectiveComplete</c> at <c>0x005343e0</c>
+    /// writes state 1; <c>IScript::PrimaryObjectiveFailed</c> at
+    /// <c>0x00534440</c> writes state 2 (Wave580 plate). Rebuild
+    /// <see cref="Level100PrimaryObjectiveStatus.Failed"/> is 1 and
+    /// <see cref="Level100PrimaryObjectiveStatus.Complete"/> is 2.
+    /// Identity-cast is the mutation this mapping kills.
+    /// </summary>
+    public static int FromLevel100MissionStatus(Level100PrimaryObjectiveStatus status) =>
+        status switch
+        {
+            Level100PrimaryObjectiveStatus.Uninitialized => StatusNotDefined,
+            Level100PrimaryObjectiveStatus.Failed => StatusFailed,
+            Level100PrimaryObjectiveStatus.Complete => StatusComplete,
+            _ => throw new ArgumentOutOfRangeException(nameof(status)),
+        };
+
+    /// <summary>
+    /// Ten FillOut primary words from a live Level 100 snapshot.
+    /// Init writes four failed rows; a win later overwrites those
+    /// with complete. The other six slots stay the zero sentinel.
+    /// </summary>
+    public static int[] FromLevel100MissionPrimaries(
+        IReadOnlyList<Level100PrimaryObjectiveSnapshot> primaries)
+    {
+        ArgumentNullException.ThrowIfNull(primaries);
+
+        int[] statuses = new int[ObjectiveSlotCount];
+        foreach (Level100PrimaryObjectiveSnapshot primary in primaries)
+        {
+            if (primary.Objective < 1 || primary.Objective > Level100PrimaryCount)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(primaries),
+                    $"Level 100 only authors objectives 1..{Level100PrimaryCount}.");
+            }
+
+            statuses[primary.Objective - 1] = FromLevel100MissionStatus(primary.Status);
+        }
+
+        return statuses;
+    }
 
     /// <summary>
     /// The ten primary <c>GetStatus()</c> words FillOut copies after
