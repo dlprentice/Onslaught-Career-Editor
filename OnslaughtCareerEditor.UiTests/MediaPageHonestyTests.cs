@@ -138,6 +138,8 @@ public class MediaPageHonestyTests
         Assert.That(xaml, Does.Not.Contain("Browse Game Directory"));
         Assert.That(xaml, Does.Contain("Browse Game Folder"));
         Assert.That(xaml, Does.Contain("current game folder"));
+        Assert.That(xaml, Does.Not.Contain("Path details"));
+        Assert.That(xaml, Does.Contain("Folder details"));
     }
 
     [Test]

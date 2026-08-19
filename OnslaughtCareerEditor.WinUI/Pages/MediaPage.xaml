@@ -385,7 +385,7 @@
                                                        Style="{StaticResource SectionBodyTextStyle}" />
                                         </StackPanel>
                                     </Border>
-                                    <controls:Expander Header="Path details"
+                                    <controls:Expander Header="Folder details"
                                                        IsExpanded="False">
                                         <TextBlock x:Name="AudioGameDirectoryPathTextBlock"
                                                    TextWrapping="WrapWholeWords"
@@ -585,7 +585,7 @@
                                                                Style="{StaticResource SectionBodyTextStyle}" />
                                                 </StackPanel>
                                             </Border>
-                                            <controls:Expander Header="Path details"
+                                            <controls:Expander Header="Folder details"
                                                                IsExpanded="False">
                                                 <TextBlock x:Name="VideoGameDirectoryPathTextBlock"
                                                            TextWrapping="WrapWholeWords"

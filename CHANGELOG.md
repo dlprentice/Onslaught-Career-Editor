@@ -155,6 +155,7 @@ live in `developer_state.json` and the campaign ledgers.
   File details and Export file, not Path details. Media with no
   game folder set names the folder, not a directory. An installed-game
   refusal that already says nothing was changed is not said twice.
+  Media folder cards say Folder details, not Path details.
 
 ## 1.0.11 — 2026-08-07
 
