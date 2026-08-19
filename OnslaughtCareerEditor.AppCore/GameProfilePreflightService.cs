@@ -187,6 +187,7 @@ namespace OnslaughtCareerEditor.AppCore
         public const string CopyBeaSizeMissing = "That copy's details are missing BEA.exe size.";
         public const string CopyBeaHashMissing = "That copy's details are missing the BEA.exe hash.";
         public const string SourceFileMustStayInsideGame = "That file must stay inside the game folder.";
+        public const string CopyRequired = "A copy is required.";
         public const string ProfileFolderInsideGame =
             "The app-owned profile folder must not sit inside the game folder.";
         public const string GameFolderInsideProfile =
@@ -2185,7 +2186,7 @@ namespace OnslaughtCareerEditor.AppCore
                 throw new InvalidOperationException(ProfileFolderRequired);
 
             if (string.IsNullOrWhiteSpace(profileRoot))
-                throw new InvalidOperationException("A playable copied game folder is required.");
+                throw new InvalidOperationException(CopyRequired);
 
             string normalizedRoot = NormalizeDirectoryForCreation(appOwnedProfilesRoot);
             if (!Directory.Exists(profileRoot))

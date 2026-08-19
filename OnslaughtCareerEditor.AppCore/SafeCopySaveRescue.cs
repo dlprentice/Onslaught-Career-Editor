@@ -142,6 +142,8 @@ namespace OnslaughtCareerEditor.AppCore
 
         public const string ProfileFolderRequired = "An app-owned profile folder is required.";
 
+        public const string CopyRequired = "A copy is required.";
+
         public const string CopyMustStayInside =
             "That copy must stay inside the app-owned profile folder.";
 
@@ -579,7 +581,7 @@ namespace OnslaughtCareerEditor.AppCore
                 throw new InvalidOperationException(ProfileFolderRequired);
 
             if (string.IsNullOrWhiteSpace(profileRoot))
-                throw new InvalidOperationException("A playable copied game folder is required.");
+                throw new InvalidOperationException(CopyRequired);
 
             if (!Directory.Exists(profileRoot))
                 throw new DirectoryNotFoundException(CopyFolderMissing);

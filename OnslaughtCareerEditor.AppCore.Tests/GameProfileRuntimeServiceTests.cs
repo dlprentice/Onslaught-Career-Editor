@@ -377,7 +377,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 InvalidOperationException ex = Assert.Throws<InvalidOperationException>(() =>
                     GameProfileRuntimeService.StopCopiedProfile(outside, outputRoot, runner));
 
-        Assert.Contains("managed playable copied game folder", ex.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(GameProfileRuntimeService.CopyMustStayInside, ex.Message);
                 Assert.Empty(runner.Stops);
             }
             finally

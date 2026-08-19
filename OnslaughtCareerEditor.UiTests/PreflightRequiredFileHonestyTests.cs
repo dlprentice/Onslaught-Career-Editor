@@ -376,6 +376,12 @@ public class PreflightRequiredFileHonestyTests
             Does.Not.Contain("playable"));
         Assert.That(GameProfilePreflightService.SourceFileMustStayInsideGame.ToLowerInvariant(),
             Does.Not.Contain("traversal"));
+        Assert.That(source, Does.Contain("CopyRequired"));
+        Assert.That(source, Does.Not.Contain("A playable copied game folder is required."));
+        Assert.That(GameProfilePreflightService.CopyRequired,
+            Is.EqualTo("A copy is required."));
+        Assert.That(GameProfilePreflightService.CopyRequired.ToLowerInvariant(),
+            Does.Not.Contain("playable"));
     }
 
     [Test]
