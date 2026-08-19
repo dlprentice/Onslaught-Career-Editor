@@ -35,11 +35,58 @@ public sealed class RetailFillOutEndLevelDataTests
     }
 
     /// <summary>
+    /// Last LoadWorld on Level 100 is outer RLWD. <c>CGame+0x108/+0x10c</c>
+    /// are RLWD <c>+0x147ba/+0x147be</c> = 300.0 / 500.0, so
+    /// <c>test ah,0x41 / jne 0x0046d79b</c> does not skip. A zero score
+    /// against last-wins D=70 stores 0 at <c>0x0046d772</c> and jumps
+    /// past the 0.001 replacement. Mutation: inventing a skip leaves the
+    /// pre-arm 1.0f. First-play elapsed and score stay unclaimed — this
+    /// does not rewrite <see cref="RetailFillOutEndLevelData.ForLevel100Won"/>.
+    /// Do not invent secondaries.
+    /// </summary>
+    [Fact]
+    public void Level100Won_ScoreTimeArmRewritesAZeroScoreToZeroBecauseRlwdDeltaIsPositive()
+    {
+        Assert.False(
+            RetailFillOutEndLevelData.ScoreTimeArmSkips(
+                RetailFillOutEndLevelData.Level100FullScoreTime,
+                RetailFillOutEndLevelData.Level100PercentageScoreTime));
+
+        float early = RetailFillOutEndLevelData.AfterScoreTimeArm(
+            preArmRanking: 1.0f,
+            elapsedTime: 0.0f,
+            RetailFillOutEndLevelData.Level100FullScoreTime,
+            RetailFillOutEndLevelData.Level100PercentageScoreTime,
+            RetailFillOutEndLevelData.Level100ScorePercentage,
+            score: 0,
+            RetailFillOutEndLevelData.Level100SGradeScore,
+            RetailFillOutEndLevelData.Level100DGradeScore);
+        float late = RetailFillOutEndLevelData.AfterScoreTimeArm(
+            preArmRanking: 1.0f,
+            elapsedTime: 600.0f,
+            RetailFillOutEndLevelData.Level100FullScoreTime,
+            RetailFillOutEndLevelData.Level100PercentageScoreTime,
+            RetailFillOutEndLevelData.Level100ScorePercentage,
+            score: 0,
+            RetailFillOutEndLevelData.Level100SGradeScore,
+            RetailFillOutEndLevelData.Level100DGradeScore);
+
+        Assert.Equal(0.0f, early);
+        Assert.Equal(0.0f, late);
+        Assert.NotEqual(1.0f, early);
+        Assert.NotEqual(0.001f, early);
+        Assert.Equal(1.0f, RetailFillOutEndLevelData.ForLevel100Won().Ranking);
+        Assert.All(
+            RetailFillOutEndLevelData.ForLevel100Won().SecondaryStatuses,
+            status => Assert.Equal(0, status));
+    }
+
+    /// <summary>
     /// <c>game.cpp:967</c> stores <c>mRanking = 1.0f</c> before the
-    /// unclaimed score-time arm. Level 100's secondary count is 0, so
-    /// the 0.4 / 0.6 clamp never runs. Mutation: defaulting the snapshot
-    /// ranking to the failed-secondary 0.6 cap fails this equality.
-    /// Do not invent secondaries or score-time.
+    /// score-time arm. Level 100's secondary count is 0, so the 0.4 / 0.6
+    /// clamp never runs. Mutation: defaulting the snapshot ranking to the
+    /// failed-secondary 0.6 cap fails this equality. First-play elapsed
+    /// and score stay unclaimed. Do not invent secondaries.
     /// </summary>
     [Fact]
     public void Level100Won_SnapshotRankingIsThePreClampOnePointZero()

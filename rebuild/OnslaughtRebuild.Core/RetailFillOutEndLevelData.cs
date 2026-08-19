@@ -19,7 +19,9 @@ public readonly record struct RetailEndLevelSnapshot(
 
 /// <summary>
 /// <c>CGame::FillOutEndLevelData</c> as it applies to a Level 100 Won —
-/// the snapshot career consumes, not the score-time ranking arithmetic.
+/// the snapshot career consumes, plus the already-measured score-time
+/// rewrite. First-play elapsed and score stay unclaimed, so
+/// <see cref="ForLevel100Won"/> still carries the pre-arm 1.0f store.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -57,15 +59,53 @@ public readonly record struct RetailEndLevelSnapshot(
 /// The 0.4 / 0.6 immediates are therefore not claimed here.
 /// </para>
 /// <para>
-/// <b>Not established here.</b> The score-time multiplier at
-/// <c>game.cpp:988-1026</c> (<c>mFullScoreTime</c> /
-/// <c>mPercentageScoreTime</c>). Whether Level 100's authored times
-/// make that arm live. Base-things copy. The mission-path wire from
-/// <c>FrontEndHandoffReady</c>. Kill readout from <c>CPlayer</c>.
+/// <b>The score-time arm is live on Level 100.</b> Last
+/// <c>CWorld::LoadWorld</c> is the outer RLWD parse. <c>this+0x108</c>
+/// / <c>+0x10c</c> / <c>+0x110</c> are RLWD <c>+0x147ba</c> /
+/// <c>+0x147be</c> / next dword = 300.0 / 500.0 / 1.0, so
+/// <c>0x0046d638</c> <c>fld [this+0x10c]</c> / <c>fsub [this+0x108]</c>
+/// / <c>fcomp 0.0</c> / <c>test ah,0x41</c> / <c>jne 0x0046d79b</c>
+/// does not skip. Last-wins S/D ints at <c>this+0xf8/+0xfc</c> are
+/// 210 / 70. A zero score stores ranking 0 at <c>0x0046d772</c> and
+/// skips the <c>0x3a83126f</c> (0.001f) replacement that source
+/// <c>game.cpp:1021-1024</c> would apply after clamping −1. First-play
+/// elapsed and <c>this+0xf4</c> stay unclaimed — do not rewrite the
+/// snapshot ranking from an invented score.
+/// </para>
+/// <para>
+/// <b>Not established here.</b> Base-things copy. Kill readout from
+/// <c>CPlayer</c>. First-play elapsed and score.
 /// </para>
 /// </remarks>
 public static class RetailFillOutEndLevelData
 {
+    /// <summary>
+    /// Last-wins RLWD <c>+0x147ba</c> into <c>CGame+0x108</c>.
+    /// </summary>
+    public const float Level100FullScoreTime = 300.0f;
+
+    /// <summary>
+    /// Last-wins RLWD <c>+0x147be</c> into <c>CGame+0x10c</c>.
+    /// </summary>
+    public const float Level100PercentageScoreTime = 500.0f;
+
+    /// <summary>
+    /// Last-wins RLWD dword after the percentage time, into
+    /// <c>CGame+0x110</c>. With this 1.0 the time multiplier is
+    /// identically 1.0, so elapsed does not change the scaled score.
+    /// </summary>
+    public const float Level100ScorePercentage = 1.0f;
+
+    /// <summary>
+    /// Last-wins RLWD int at the <c>this+0xf8</c> S-grade slot.
+    /// </summary>
+    public const int Level100SGradeScore = 210;
+
+    /// <summary>
+    /// Last-wins RLWD int at the <c>this+0xfc</c> D-grade slot.
+    /// </summary>
+    public const int Level100DGradeScore = 70;
+
     /// <summary>Shipped Level 100 primary count — <c>LevelScript.msl</c>.</summary>
     public const int Level100PrimaryCount = 4;
 
@@ -100,7 +140,9 @@ public static class RetailFillOutEndLevelData
     /// <summary>
     /// The post-Won snapshot Level 100 hands to career. Ranking defaults to
     /// the <c>mRanking=1.0f</c> store at <c>game.cpp:967</c> before the
-    /// unclaimed score-time arm; callers may override.
+    /// score-time arm; callers may override. First-play elapsed and score
+    /// stay unclaimed, so this does not run
+    /// <see cref="AfterScoreTimeArm"/>.
     /// </summary>
     public static RetailEndLevelSnapshot ForLevel100Won(
         float ranking = 1.0f,
@@ -140,5 +182,110 @@ public static class RetailFillOutEndLevelData
             "when GetNumSecondaryObjectives() is non-zero. The 0.4 / 0.6 " +
             "immediates are not measured for this owner; Level 100 never " +
             "reaches that arm.");
+    }
+
+    /// <summary>
+    /// <c>0x0046d638</c> <c>fcomp 0.0</c> / <c>test ah,0x41</c> /
+    /// <c>jne 0x0046d79b</c> — skip when (percentage − full) ≤ 0.
+    /// </summary>
+    public static bool ScoreTimeArmSkips(float fullScoreTime, float percentageScoreTime)
+    {
+        return !(percentageScoreTime - fullScoreTime > 0.0f);
+    }
+
+    /// <summary>
+    /// Live score-time rewrite at <c>0x0046d659</c>–<c>0x0046d79b</c>.
+    /// A skip returns <paramref name="preArmRanking"/>. Below D stores
+    /// 0 and does not apply the 0.001 replacement.
+    /// </summary>
+    public static float AfterScoreTimeArm(
+        float preArmRanking,
+        float elapsedTime,
+        float fullScoreTime,
+        float percentageScoreTime,
+        float scorePercentage,
+        int score,
+        int sGradeScore,
+        int dGradeScore)
+    {
+        if (ScoreTimeArmSkips(fullScoreTime, percentageScoreTime))
+        {
+            return preArmRanking;
+        }
+
+        float multiplier;
+        if (elapsedTime < fullScoreTime)
+        {
+            multiplier = 1.0f;
+        }
+        else if (elapsedTime < percentageScoreTime)
+        {
+            float delta = percentageScoreTime - fullScoreTime;
+            multiplier = scorePercentage
+                - ((elapsedTime - percentageScoreTime) / delta)
+                * (1.0f - scorePercentage);
+        }
+        else
+        {
+            multiplier = scorePercentage;
+        }
+
+        if (!(multiplier <= 1.0f))
+        {
+            multiplier = 1.0f;
+        }
+        else if (multiplier < 0.0f)
+        {
+            multiplier = 0.0f;
+        }
+
+        int scaled = LowDwordOfFistp(score * (double)multiplier);
+        if (scaled >= sGradeScore)
+        {
+            return 1.0f;
+        }
+
+        if (scaled < dGradeScore)
+        {
+            return 0.0f;
+        }
+
+        float ranking = (scaled - (float)dGradeScore)
+            / (sGradeScore - (float)dGradeScore);
+        if (!(ranking <= 1.0f))
+        {
+            return 1.0f;
+        }
+
+        if (ranking < 0.0f)
+        {
+            return 0.0f;
+        }
+
+        if (ranking == 0.0f)
+        {
+            return PointZeroZeroOne;
+        }
+
+        return ranking;
+    }
+
+    private const float PointZeroZeroOne = 0.001f;
+
+    /// <summary>
+    /// <c>0x0046d6ed</c> <c>fistp qword ptr [esp+0x18]</c> under ambient
+    /// <c>/QIfist</c> — round-to-nearest-even, then the low dword.
+    /// </summary>
+    private static int LowDwordOfFistp(double value)
+    {
+        double rounded = Math.Round(value, MidpointRounding.ToEven);
+        if (double.IsNaN(rounded) ||
+            rounded < -9223372036854775808.0 ||
+            rounded >= 9223372036854775808.0)
+        {
+            return unchecked((int)long.MinValue);
+        }
+
+        return unchecked((int)(long)rounded);
     }
 }
