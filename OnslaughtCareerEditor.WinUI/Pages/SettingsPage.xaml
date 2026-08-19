@@ -43,7 +43,7 @@
                                            Style="{StaticResource SectionBodyTextStyle}" />
                                 <TextBlock x:Name="GameDirectorySummaryTextBlock"
                                            AutomationProperties.AutomationId="SettingsGameDirectorySummary"
-                                           Text="Not configured"
+                                           Text="Set the game folder first."
                                            FontSize="22"
                                            FontWeight="SemiBold" />
                                 <TextBlock x:Name="GameDirectoryRoleTextBlock"

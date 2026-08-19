@@ -52,7 +52,7 @@ public class WinUiSettingsInteractionSmokeTests
             Window window = WaitForMainWindow(app, automation);
 
             WaitForText(window, "Game Directory", TimeSpan.FromSeconds(20));
-            Assert.That(TryGetName(FindByAutomationId(window, "SettingsGameDirectorySummary")), Is.EqualTo("Not configured"));
+            Assert.That(TryGetName(FindByAutomationId(window, "SettingsGameDirectorySummary")), Is.EqualTo("Set the game folder first."));
             Assert.That(WindowContainsName(window, gameDirectory), Is.False, "The full install path should not be visible before expanding path details.");
 
             FindByAutomationId(window, "SettingsAutoDetectGameDirectoryButton").AsButton().Invoke();

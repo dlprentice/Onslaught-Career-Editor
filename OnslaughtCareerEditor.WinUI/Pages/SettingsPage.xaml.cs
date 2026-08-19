@@ -57,7 +57,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 ? string.Empty
                 : GameDirectoryIdentityText.BuildFolderSummary(gameDir, "Configured install");
             GameDirectorySummaryTextBlock.Text = string.IsNullOrWhiteSpace(gameDir)
-                ? "Not configured"
+                ? GameDirectoryIdentityText.SnapshotNeedsFolder
                 : GameDirectoryIdentityText.BuildFolderSummary(gameDir, isFullInstall ? "Configured install" : "Saved folder needs review");
             GameDirectoryRoleTextBlock.Text = string.IsNullOrWhiteSpace(gameDir)
                 ? "Choose your installed game folder. The app reads it to create playable copies, and only changes it if you ask it to."
