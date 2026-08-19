@@ -50,7 +50,9 @@ live in `developer_state.json` and the campaign ledgers.
   A failed playable-copy setup stays on the same "nothing was changed"
   note instead of the prepare message. Save Lab overwrite cancel
   says the file was left as it is. Putting a career into a safe copy, or
-  bringing one out, asks the same overwrite question.
+  bringing one out, asks the same overwrite question. A failed stop of a
+  copied game names the action and that nothing was changed, without the
+  exception.
 
 ## 1.0.11 — 2026-08-07
 

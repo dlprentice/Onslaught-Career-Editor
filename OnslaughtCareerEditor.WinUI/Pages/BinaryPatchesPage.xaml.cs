@@ -1703,7 +1703,9 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 PatchBenchCopiedProfileLaunchStatus.Text = result.Success
                     ? PatchBenchLaunchText.BuildBoundary("Managed safe copy process stopped.")
                     : "Managed safe copy process was not stopped.";
-                OperationLogTextBox.Text = result.Message;
+                OperationLogTextBox.Text = result.Success
+                    ? PatchBenchLaunchText.BuildBoundary("Managed safe copy process stopped.")
+                    : PatchBenchSafeCopyOutcomeText.DescribeCaughtFailure("stop the safe copy");
                 AppStatusService.SetStatus(result.Success ? "Windowed & Mods: safe copy stopped" : "Windowed & Mods: safe copy stop failed");
             }
             catch (Exception ex) when (IsUserFacingOperationException(ex))

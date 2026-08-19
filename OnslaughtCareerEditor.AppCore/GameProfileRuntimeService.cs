@@ -71,6 +71,8 @@ namespace OnslaughtCareerEditor.AppCore
 
     public static class GameProfileRuntimeService
     {
+        public const string StopFailed = "Could not stop that copied game. Nothing was changed.";
+
         private static readonly TimeSpan s_defaultStopTimeout = TimeSpan.FromSeconds(3);
 
         /// <summary>
@@ -326,7 +328,7 @@ namespace OnslaughtCareerEditor.AppCore
             }
             catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception)
             {
-                return new GameProfileStopResult(false, process.ProcessId, $"Could not stop managed playable copied game folder process: {ex.Message}");
+                return new GameProfileStopResult(false, process.ProcessId, GameProfileRuntimeService.StopFailed);
             }
 
             using (running)
@@ -402,7 +404,7 @@ namespace OnslaughtCareerEditor.AppCore
                 }
                 catch (Exception ex) when (ex is ArgumentException or InvalidOperationException or System.ComponentModel.Win32Exception)
                 {
-                    return new GameProfileStopResult(false, process.ProcessId, $"Could not stop managed playable copied game folder process: {ex.Message}");
+                    return new GameProfileStopResult(false, process.ProcessId, GameProfileRuntimeService.StopFailed);
                 }
             }
         }
