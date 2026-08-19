@@ -86,4 +86,6 @@ fifteen `E8`s
   and for `line+0x20`.
 - The four hit-declare predicates that jump to `0x00490cb3` (walked by
   child `t_34939b24`; not re-derived here).
-- Callee `0x0047eb00` (`CHeightField__SampleInterpolatedHeight`) body.
+- Callee `0x0047eb00` (`CHeightField__SampleInterpolatedHeight`) body:
+  CLOSED in
+  [`CHeightField__SampleInterpolatedHeight.md`](CHeightField__SampleInterpolatedHeight.md).
