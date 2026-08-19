@@ -75,6 +75,7 @@ namespace OnslaughtCareerEditor.AppCore
         public const string OptionsBackupMissing = "That copy is missing a defaultoptions.bea backup.";
         public const string CopyCannotUseLink = "That copy cannot use a shortcut or link.";
         public const string FileCannotShareData = "That file cannot share its data with another file.";
+        public const string UniqueFileCouldNotBeMade = "That file could not be created in that folder.";
 
         public static GameProfileControlOptionsResult ApplyToSafeCopy(GameProfileControlOptionsRequest request)
         {
@@ -207,7 +208,7 @@ namespace OnslaughtCareerEditor.AppCore
                     return path;
             }
 
-            throw new IOException($"Could not make a unique {prefix}{extension} in that folder.");
+            throw new IOException(UniqueFileCouldNotBeMade);
         }
 
         private static void WriteControlOptionsManifest(
