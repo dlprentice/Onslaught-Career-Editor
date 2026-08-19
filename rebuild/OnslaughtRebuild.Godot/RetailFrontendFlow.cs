@@ -2364,13 +2364,24 @@ public sealed partial class RetailFrontendFlow : Control
             // 0x00460E9D fcomp 0x00629390 and 0x00460EB0
             // fcomp 0x00629394. The local is a later window,
             // not dest. Do not invent dest from those
-            // compares. The [esp+0x94] fsub at 0x00460E34
-            // is later. Dest stays the measured node centres.
+            // compares. Dest stays the measured node centres.
             if (RetailLevelSelectLater148.Applies(
                     RetailLevelSelectLater148.Pad(
                         RetailLevelSelectLater148.SettledField)))
             {
                 DrawLevelNodeGraph();
+                // RetailLevelSelectLaterEsp94: later leftover
+                // after the later 148.0 triple is
+                // fld [esp+0x94] / fsub [0x005D8BC4] (0.75) /
+                // fmul [0x005D85BC] (4.0) / fcom [0x005D856C]
+                // (0.0). Official 74154bfa independently
+                // re-read this cycle. Different stack local,
+                // not dest. First store consumer is
+                // 0x00460E4D fst [esp+0x40]. The 255.0 fmul
+                // at 0x00460E77 is later. Do not invent dest
+                // from 0.75, 4.0, or 255.0.
+                _ = RetailLevelSelectLaterEsp94.Subtrahend;
+                _ = RetailLevelSelectLaterEsp94.Factor;
             }
         }
 
