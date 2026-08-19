@@ -1574,8 +1574,13 @@ public sealed partial class RetailFrontendFlow : Control
             // VersionTint, Format, DestX, DestY(DesignHeight), and scale 1.0.
             // Font leftover is RetailMainMenuVersionOverlayFont: push 1 selects
             // FONT_SMALL / Font13PS at this+0x20, not this+0x1C. No measure
-            // call on the sprintf buffer. The 2px MeasureText
-            // residual stays open; do not invent a kerning hack.
+            // call on the sprintf buffer. Post-draw leftover is
+            // RetailMainMenuVersionOverlayFlags: after DrawTextDynamic,
+            // 0x004641FC/203/20A store [0x00679B40]=1, [0x009C68AC]=0,
+            // [0x009C690D]=1 between fcom [0.0] and fnstsw. That fcom is
+            // the already-owned title-logo shadow clamp, not a version
+            // fade. The 2px MeasureText residual stays open; do not
+            // invent a fade or a kerning hack.
             DrawText(
                 RetailMainMenuVersionOverlay.Format(
                     RetailMainMenuVersionOverlay.ImageInitialMajor,
