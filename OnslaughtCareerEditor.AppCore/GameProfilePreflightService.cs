@@ -163,6 +163,13 @@ namespace OnslaughtCareerEditor.AppCore
         public const string Level100EarlyFlightSizeMismatch = "That copy's Level 100 early-flight archive sizes do not match.";
         public const string Level100EarlyFlightWrongCommand = "That copy's Level 100 early-flight details have the wrong command.";
         public const string Level100EarlyFlightPayloadMismatch = "That copy's Level 100 early-flight payload no longer matches.";
+        public const string MusicDetailsInvalid = "That copy's music details are invalid.";
+        public const string MusicDetailsUnsupported = "That copy's music details are out of date.";
+        public const string MusicDetailsWrongTarget = "That copy's music details do not match the music file.";
+        public const string MusicFileMismatch = "That copy's music file no longer matches.";
+        public const string MusicBackupMismatch = "That copy's music backup no longer matches.";
+        public const string MusicBackupSizeMismatch = "That copy's music backup size does not match.";
+        public const string MusicFileSizeMismatch = "That copy's music file size does not match.";
         public const string ProfileFolderInsideGame =
             "The app-owned profile folder must not sit inside the game folder.";
         public const string GameFolderInsideProfile =
@@ -854,7 +861,7 @@ namespace OnslaughtCareerEditor.AppCore
             }
             catch (JsonException ex)
             {
-                throw new InvalidOperationException("Playable copied game folder music replacement manifest is invalid JSON.", ex);
+                throw new InvalidOperationException(MusicDetailsInvalid, ex);
             }
 
             using (doc)
@@ -862,7 +869,7 @@ namespace OnslaughtCareerEditor.AppCore
                 JsonElement root = doc.RootElement;
                 string schemaVersion = RequiredString(root, "schemaVersion", "music replacement manifest");
                 if (!string.Equals(schemaVersion, GameProfileMusicReplacementService.SchemaVersion, StringComparison.Ordinal))
-                    throw new InvalidOperationException("Playable copied game folder music replacement manifest has an unsupported schema.");
+                    throw new InvalidOperationException(MusicDetailsUnsupported);
 
                 string targetMusicFileName = RequiredString(root, "targetMusicFileName", "music replacement manifest");
                 string targetRelativePath = RequiredString(root, "targetRelativePath", "music replacement manifest");
@@ -873,7 +880,7 @@ namespace OnslaughtCareerEditor.AppCore
                 string targetPath = ResolveProfileRelativePath(resolvedGameRoot, targetRelativePath, "music replacement target");
                 string backupPath = ResolveProfileRelativePath(resolvedGameRoot, backupRelativePath, "music replacement backup");
                 if (!string.Equals(Path.GetFileName(targetPath), targetMusicFileName, StringComparison.OrdinalIgnoreCase))
-                    throw new InvalidOperationException("Playable copied game folder music replacement manifest target file does not match its target name.");
+                    throw new InvalidOperationException(MusicDetailsWrongTarget);
 
                 if (!File.Exists(targetPath))
                     throw new FileNotFoundException(GameProfileMusicReplacementService.TargetMusicFileMissing);
@@ -882,24 +889,24 @@ namespace OnslaughtCareerEditor.AppCore
 
                 string actualTargetHash = ComputeSha256(targetPath);
                 if (!string.Equals(actualTargetHash, replacementSha256, StringComparison.OrdinalIgnoreCase))
-                    throw new InvalidOperationException("Playable copied game folder music replacement manifest hash does not match the staged target track.");
+                    throw new InvalidOperationException(MusicFileMismatch);
 
                 string actualBackupHash = ComputeSha256(backupPath);
                 if (!string.Equals(actualBackupHash, originalSha256, StringComparison.OrdinalIgnoreCase))
-                    throw new InvalidOperationException("Playable copied game folder music replacement manifest hash does not match the backup track.");
+                    throw new InvalidOperationException(MusicBackupMismatch);
 
                 if (root.TryGetProperty("originalSize", out JsonElement originalSizeEl) &&
                     originalSizeEl.TryGetInt64(out long originalSize) &&
                     new FileInfo(backupPath).Length != originalSize)
                 {
-                    throw new InvalidOperationException("Playable copied game folder music replacement backup size does not match manifest.");
+                    throw new InvalidOperationException(MusicBackupSizeMismatch);
                 }
 
                 if (root.TryGetProperty("replacementSize", out JsonElement replacementSizeEl) &&
                     replacementSizeEl.TryGetInt64(out long replacementSize) &&
                     new FileInfo(targetPath).Length != replacementSize)
                 {
-                    throw new InvalidOperationException("Playable copied game folder music replacement target size does not match manifest.");
+                    throw new InvalidOperationException(MusicFileSizeMismatch);
                 }
             }
         }

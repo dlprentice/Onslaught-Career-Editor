@@ -257,6 +257,36 @@ public class PreflightRequiredFileHonestyTests
             Does.Not.Contain("manifest"));
         Assert.That(GameProfilePreflightService.Level100EarlyFlightWrongCommand.ToLowerInvariant(),
             Does.Not.Contain("substitution"));
+        Assert.That(source, Does.Contain("MusicDetailsInvalid"));
+        Assert.That(source, Does.Contain("MusicDetailsUnsupported"));
+        Assert.That(source, Does.Contain("MusicDetailsWrongTarget"));
+        Assert.That(source, Does.Contain("MusicFileMismatch"));
+        Assert.That(source, Does.Contain("MusicBackupMismatch"));
+        Assert.That(source, Does.Contain("MusicBackupSizeMismatch"));
+        Assert.That(source, Does.Contain("MusicFileSizeMismatch"));
+        Assert.That(source, Does.Not.Contain("Playable copied game folder music replacement"));
+        Assert.That(GameProfilePreflightService.MusicDetailsInvalid,
+            Is.EqualTo("That copy's music details are invalid."));
+        Assert.That(GameProfilePreflightService.MusicDetailsUnsupported,
+            Is.EqualTo("That copy's music details are out of date."));
+        Assert.That(GameProfilePreflightService.MusicDetailsWrongTarget,
+            Is.EqualTo("That copy's music details do not match the music file."));
+        Assert.That(GameProfilePreflightService.MusicFileMismatch,
+            Is.EqualTo("That copy's music file no longer matches."));
+        Assert.That(GameProfilePreflightService.MusicBackupMismatch,
+            Is.EqualTo("That copy's music backup no longer matches."));
+        Assert.That(GameProfilePreflightService.MusicBackupSizeMismatch,
+            Is.EqualTo("That copy's music backup size does not match."));
+        Assert.That(GameProfilePreflightService.MusicFileSizeMismatch,
+            Is.EqualTo("That copy's music file size does not match."));
+        Assert.That(GameProfilePreflightService.MusicDetailsInvalid.ToLowerInvariant(),
+            Does.Not.Contain("playable"));
+        Assert.That(GameProfilePreflightService.MusicDetailsUnsupported.ToLowerInvariant(),
+            Does.Not.Contain("schema"));
+        Assert.That(GameProfilePreflightService.MusicFileMismatch.ToLowerInvariant(),
+            Does.Not.Contain("manifest"));
+        Assert.That(GameProfilePreflightService.MusicFileMismatch.ToLowerInvariant(),
+            Does.Not.Contain("hash"));
     }
 
     [Test]

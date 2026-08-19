@@ -179,7 +179,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                             LaunchArguments: Array.Empty<string>()),
                         runner));
 
-                Assert.Contains("music replacement manifest hash", ex.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(GameProfilePreflightService.MusicFileMismatch, ex.Message);
                 Assert.Empty(runner.Starts);
             }
             finally

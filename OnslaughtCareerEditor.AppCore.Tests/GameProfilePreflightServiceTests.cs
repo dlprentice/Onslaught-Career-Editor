@@ -999,7 +999,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
 
                 InvalidOperationException ex = Assert.Throws<InvalidOperationException>(() =>
                     GameProfilePreflightService.BuildLaunchPlan(result.TargetGameRoot));
-                Assert.Contains("music replacement manifest hash", ex.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(GameProfilePreflightService.MusicFileMismatch, ex.Message);
             }
             finally
             {
