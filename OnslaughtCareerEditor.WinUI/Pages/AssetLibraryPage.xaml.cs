@@ -910,6 +910,11 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             return $"Texture preview: {fileName}";
         }
 
+        private static string BuildSidecarTexturePreviewUnreadable()
+        {
+            return "Texture exists, but the preview could not be opened.";
+        }
+
         private void ConfigureSelectedModelLinkedTexture(
             AssetModelTextureLinks links,
             IReadOnlyList<AssetModelSidecarTexture> sidecarTextures)
@@ -1015,7 +1020,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             catch (Exception ex) when (ex is ArgumentException or UriFormatException or IOException)
             {
                 TexturePreviewImage.Source = null;
-                TexturePreviewEmptyTextBlock.Text = "Sidecar texture exists, but the preview could not be opened.";
+                TexturePreviewEmptyTextBlock.Text = BuildSidecarTexturePreviewUnreadable();
                 TexturePreviewEmptyTextBlock.Visibility = Visibility.Visible;
             }
         }
