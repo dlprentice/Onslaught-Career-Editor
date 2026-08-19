@@ -128,6 +128,30 @@ public sealed class RetailFillOutEndLevelDataTests
     }
 
     /// <summary>
+    /// Kill readout is ctor-zero plus <c>0x004d30d0</c> ConfirmedKill
+    /// increments, not an authored L100 constant. A first-play Won that
+    /// never takes that increment snapshots five zeros. Career still
+    /// skips world 100. Mutation: writing a non-zero authored vector
+    /// fails the zeros. Do not invent secondaries.
+    /// </summary>
+    [Fact]
+    public void Level100Won_FirstPlayKillReadoutIsFiveZerosUnlessConfirmedKill()
+    {
+        RetailEndLevelSnapshot snapshot = RetailFillOutEndLevelData.ForLevel100Won();
+
+        Assert.Equal(
+            new[] { 0, 0, 0, 0, 0 },
+            snapshot.ThingsKilled);
+        Assert.Equal(
+            RetailCareerCounters.KilledTypeCount,
+            snapshot.ThingsKilled.Count);
+        Assert.Equal(
+            RetailFillOutEndLevelData.FirstPlayThingsKilled(),
+            snapshot.ThingsKilled);
+        Assert.All(snapshot.SecondaryStatuses, status => Assert.Equal(0, status));
+    }
+
+    /// <summary>
     /// FillOut copies the ten primary <c>GetStatus()</c> words. After a
     /// Level 100 win those are four <c>MOS_COMPLETE</c> (1) and six
     /// unset slots — already pinned on

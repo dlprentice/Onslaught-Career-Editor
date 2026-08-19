@@ -75,10 +75,10 @@ public readonly record struct RetailEndLevelSnapshot(
 /// </para>
 /// <para>
 /// <b>Not established here.</b> Career
-/// <c>UpdateBaseWorldExistsStuffForNode</c> onto world 110. Kill
-/// readout from <c>CPlayer</c>. First-play elapsed and score. A
+/// <c>UpdateBaseWorldExistsStuffForNode</c> onto world 110. A
 /// player who wrecks an iceberg and still Wins would store 0 on
-/// those type-35 indices.
+/// those type-35 indices. First-play elapsed and score. ConfirmedKill
+/// increments when the player actually scores those bits.
 /// </para>
 /// </remarks>
 public static class RetailFillOutEndLevelData
@@ -165,6 +165,15 @@ public static class RetailFillOutEndLevelData
     }
 
     /// <summary>
+    /// FillOut copies five dwords from <c>player+8</c>. Those start at
+    /// ctor-zero and only <c>0x004d30d0</c> increments them. A first-play
+    /// Won that never takes ConfirmedKill is therefore five zeros.
+    /// Career still skips world 100.
+    /// </summary>
+    public static int[] FirstPlayThingsKilled() =>
+        new int[RetailCareerCounters.KilledTypeCount];
+
+    /// <summary>
     /// The post-Won snapshot Level 100 hands to career. Ranking defaults to
     /// the <c>mRanking=1.0f</c> store at <c>game.cpp:967</c> before the
     /// score-time arm; callers may override. First-play elapsed and score
@@ -180,7 +189,7 @@ public static class RetailFillOutEndLevelData
             RetailCareerReCalcLinks.GameStateLevelWon,
             ranking,
             UnsetSecondaryStatuses(),
-            thingsKilled ?? new int[RetailCareerCounters.KilledTypeCount],
+            thingsKilled ?? FirstPlayThingsKilled(),
             FirstPlayTutorialSlotWords(),
             RetailGameObjectiveCount.Level100WonPrimaryStatuses(),
             FirstPlayBaseThingsLeft());
