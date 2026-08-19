@@ -41,6 +41,8 @@ public class SettingsFolderHonestyTests
         Assert.That(page, Does.Not.Contain("Set the game directory to enable save/options file detection."));
         Assert.That(page, Does.Contain("Game folder not set"));
         Assert.That(page, Does.Contain("Set the game folder to find save and options files."));
+        Assert.That(page, Does.Not.Contain("No save/options files found"));
+        Assert.That(page, Does.Contain("GameDirectoryIdentityText.SnapshotSavesNone"));
     }
 
     [Test]

@@ -193,7 +193,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             var saves = AppConfig.FindSaveFiles(gameDir);
             if (saves.Count == 0)
             {
-                SaveDirectoryTextBlock.Text = "No save/options files found";
+                SaveDirectoryTextBlock.Text = GameDirectoryIdentityText.SnapshotSavesNone;
                 SaveFileCountTextBlock.Text = "Create a save/options file in-game first, or check the selected game folder.";
                 return;
             }
