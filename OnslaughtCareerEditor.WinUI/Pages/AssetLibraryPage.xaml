@@ -46,7 +46,7 @@
                     <TextBlock x:Name="CatalogStatusTextBlock"
                                AutomationProperties.AutomationId="AssetCatalogStatus"
                                Style="{StaticResource SectionBodyTextStyle}"
-                               Text="No generated catalog is loaded yet." />
+                               Text="Paste catalog.json, or browse to a generated export folder." />
                     <Border x:Name="CatalogFirstRunGuideBorder"
                             Background="{ThemeResource ShellMutedSurfaceBrush}"
                             BorderBrush="{ThemeResource ShellBorderBrush}"
