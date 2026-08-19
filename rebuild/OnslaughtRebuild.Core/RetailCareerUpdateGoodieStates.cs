@@ -34,6 +34,12 @@ public sealed class RetailCareerGoodies
     public int Get(int index) => _states[index];
 
     /// <summary>
+    /// Direct store of one <c>mGoodies[i].mState</c> dword. Tests seed
+    /// <c>GS_OLD</c> so <c>SET_GOODIE_NEW</c>'s overwrite guard is unique.
+    /// </summary>
+    public void Set(int index, int state) => _states[index] = state;
+
+    /// <summary>
     /// <c>SET_GOODIE_NEW</c> — <c>Career.cpp:566</c>. Stores
     /// <c>GS_NEW</c> only when <c>mState &lt;= GS_INSTRUCTIONS</c>.
     /// </summary>
