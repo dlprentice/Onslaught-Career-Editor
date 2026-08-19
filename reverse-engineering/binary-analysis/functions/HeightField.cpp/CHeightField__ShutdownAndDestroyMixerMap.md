@@ -28,7 +28,8 @@ jmp  0x00523230
 
 `0x0047e8a0` is the already-pinned
 `CHeightField__FreeOwnedBuffers_24_1028`. `0x00523230` is the table
-label `CMixerMap__Destroy`. That body is **not** claimed.
+label `CMixerMap__Destroy`. First gates are on
+`CMixerMap__Destroy.md`.
 
 One inbound `.text` `E8`, zero inbound `E9`: `0x0046ca0e` inside
 `CGame__Shutdown`. The site loads the BSS this first:
