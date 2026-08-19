@@ -48,4 +48,16 @@ public class FileMutationSafetyHonestyTests
         Assert.That(source, Does.Contain("cannot use a UNC or network location."));
         Assert.That(source, Does.Contain("\"Protected input file\""));
     }
+
+    [Test]
+    public void AResolvedNetworkLocationDoesNotSayPath()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "FileMutationSafety.cs"));
+
+        Assert.That(source, Does.Not.Contain("resolves to a network path."));
+        Assert.That(source, Does.Not.Contain("does not resolve to a local DOS drive path."));
+        Assert.That(source, Does.Contain("resolves to a network location."));
+        Assert.That(source, Does.Contain("does not resolve to a local drive."));
+    }
 }

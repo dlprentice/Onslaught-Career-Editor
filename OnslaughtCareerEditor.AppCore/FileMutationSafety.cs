@@ -741,7 +741,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             string resolved = buffer.ToString();
             if (resolved.StartsWith(@"\\?\UNC\", StringComparison.OrdinalIgnoreCase))
-                throw new InvalidOperationException($"{label} resolves to a network path.");
+                throw new InvalidOperationException($"{label} resolves to a network location.");
             if (resolved.StartsWith(@"\\?\", StringComparison.Ordinal))
                 resolved = resolved[4..];
             if (resolved.StartsWith(@"\??\", StringComparison.Ordinal))
@@ -751,7 +751,7 @@ namespace OnslaughtCareerEditor.AppCore
                 resolved[1] != ':' ||
                 (resolved[2] != Path.DirectorySeparatorChar && resolved[2] != Path.AltDirectorySeparatorChar))
             {
-                throw new InvalidOperationException($"{label} does not resolve to a local DOS drive path.");
+                throw new InvalidOperationException($"{label} does not resolve to a local drive.");
             }
 
             return TrimDirectoryPath(NormalizeLocalPath(resolved, label));
