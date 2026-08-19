@@ -60,6 +60,13 @@ public class MusicReplacementManifestHonestyTests
             Does.Not.Contain("playable"));
         Assert.That(GameProfileMusicReplacementService.MusicRestoreMismatch.ToLowerInvariant(),
             Does.Not.Contain("hash"));
+        Assert.That(source, Does.Contain("MusicRestored"));
+        Assert.That(source, Does.Not.Contain("Playable copied game folder music replacement restored for"));
+        Assert.That(source, Does.Not.Contain("music replacement restored for {targetFileName}"));
+        Assert.That(GameProfileMusicReplacementService.MusicRestored,
+            Is.EqualTo("That music file was restored."));
+        Assert.That(GameProfileMusicReplacementService.MusicRestored.ToLowerInvariant(),
+            Does.Not.Contain("playable"));
     }
 
     [Test]

@@ -75,6 +75,7 @@ namespace OnslaughtCareerEditor.AppCore
         public const string MusicDetailsWrongTarget = "That copy's music details do not match the music file.";
         public const string MusicBackupMismatch = "That copy's music backup no longer matches.";
         public const string MusicRestoreMismatch = "That copy's restored music file no longer matches.";
+        public const string MusicRestored = "That music file was restored.";
         private const string BackupSuffix = ".original.backup";
 
         private static readonly GameProfileMusicSwapPreset[] s_musicSwapPresets =
@@ -343,7 +344,7 @@ namespace OnslaughtCareerEditor.AppCore
             return new GameProfileMusicReplacementRestoreResult(
                 true,
                 targetFileName,
-                $"Playable copied game folder music replacement restored for {targetFileName}.");
+                MusicRestored);
         }
 
         private static void EnsureTargetMatchesBackupBeforeReplacement(string targetPath, string backupPath)
