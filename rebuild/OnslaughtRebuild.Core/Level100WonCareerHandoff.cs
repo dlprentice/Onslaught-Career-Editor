@@ -43,6 +43,13 @@ namespace OnslaughtRebuild.Core;
 /// Blank ctor 0 and existing FrontEndHandoff ranking /
 /// Complete / CareerInProgress / goodie tests do not name
 /// <c>+0x38</c>.
+/// Leftover <c>GS_OLD</c> on the five first-play S slots also
+/// survives this seam: <c>SET_GOODIE_NEW</c> stores only when
+/// <c>GOODIE_NOT_DONE</c> (<c>Career.cpp:564-566</c>). Isolated
+/// leftover <c>GS_OLD</c> names ApplyUpdate and does not go
+/// through this seam. Existing FrontEndHandoff S goodies start
+/// <c>GS_UNKNOWN</c> and name them as New. Replay CountGoodies
+/// names already-<c>GS_NEW</c>.
 /// </para>
 /// <para>
 /// <b>Do not invent secondaries.</b> Level 100 ships four primaries and

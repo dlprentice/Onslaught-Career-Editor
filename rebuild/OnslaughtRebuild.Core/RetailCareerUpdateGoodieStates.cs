@@ -91,7 +91,11 @@ public sealed class RetailCareerGoodies
 /// <c>CGrade::operator&gt;=</c> treats <c>'S'</c> as
 /// above every other grade, so the already-pinned FillOut 1.0f unlocks
 /// the five world-100 slots together. <c>SET_GOODIE_NEW</c> stores 2
-/// only when <c>mState &lt;= GS_INSTRUCTIONS</c>.
+/// only when <c>mState &lt;= GS_INSTRUCTIONS</c>. FrontEndHandoff
+/// leftover <c>GS_OLD</c> through <c>TryApply</c> still leaves
+/// those five slots at 3. Isolated leftover <c>GS_OLD</c> names
+/// ApplyUpdate, not <c>TryApply</c>. Existing FrontEndHandoff
+/// S goodies start <c>GS_UNKNOWN</c> and name them as New.
 /// </para>
 /// <para>
 /// <b>Do not invent the rest of the table.</b> Other worlds are not in
@@ -160,7 +164,11 @@ public static class RetailCareerUpdateGoodieStates
     /// not go through Lost ApplyUpdate. FrontEndHandoff leftover of
     /// the same seed still opens 14 because <c>TryApply</c> calls
     /// ApplyUpdate. Isolated leftover 14 and Lost leftover 14 do
-    /// not go through <c>TryApply</c>. Do not invent
+    /// not go through <c>TryApply</c>. FrontEndHandoff leftover
+    /// <c>GS_OLD</c> on the five first-play S slots still leaves
+    /// them at 3 because <c>TryApply</c> calls ApplyUpdate.
+    /// Isolated leftover <c>GS_OLD</c> does not go through
+    /// <c>TryApply</c>. Do not invent
     /// a world-110 FillOut or the rest of the table.
     /// <c>mPendingExtraGoodies</c> and episode instruction marks stay
     /// unclaimed.

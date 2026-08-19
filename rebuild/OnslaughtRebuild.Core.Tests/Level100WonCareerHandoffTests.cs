@@ -494,6 +494,78 @@ public sealed class Level100WonCareerHandoffTests
     }
 
     /// <summary>
+    /// FrontEndHandoff leftover <c>GS_OLD</c> on the five first-play S
+    /// slots survives first-play S through <c>TryApply</c>. Isolated
+    /// <c>Level100Won_ApplyUpdateDoesNotOverwriteAlreadyOldTrainingGoodies</c>
+    /// names <c>SET_GOODIE_NEW</c> does not overwrite <c>GS_OLD</c> on
+    /// ApplyUpdate and does not go through <c>TryApply</c>. Existing
+    /// FrontEndHandoff S goodies start <c>GS_UNKNOWN</c> and name them
+    /// as New. Replay CountGoodies names already-<c>GS_NEW</c> and
+    /// does not uniquely prove the <c>GS_OLD</c> store skip.
+    /// <c>SET_GOODIE_NEW</c> stores only when <c>GOODIE_NOT_DONE</c>
+    /// (<c>Career.cpp:564-566</c>). <c>new_goodie_count</c> /
+    /// <c>first_goodie</c> stay ctor 0 because CountGoodies does not
+    /// rise and goodie 0 was already done. Mutation: store
+    /// <c>GS_NEW</c> on the five slots after <c>TryApply</c> when they
+    /// were <c>GS_OLD</c>. Storing <c>GS_NEW</c> even when
+    /// <c>mState &gt; GS_INSTRUCTIONS</c> is not unique versus the
+    /// isolated pin. Skipping <c>ApplyUpdate</c> on the handoff is
+    /// not unique versus existing FrontEndHandoff tests (seeded
+    /// leftover stays 3 either way).
+    /// <c>mPendingExtraGoodies</c> and episode instruction marks stay
+    /// unclaimed. No new secondaries.
+    /// </summary>
+    [Fact]
+    public void FrontEndHandoffReadyAfterWon_DoesNotOverwriteAlreadyOldTrainingGoodies()
+    {
+        Level100Mission mission = DriveReleasedFirstPlayToTerminal(career =>
+        {
+            career.Goodies.Set(
+                RetailCareerUpdateGoodieStates.CompleteWorld100Bio,
+                RetailCareerGoodieState.Old);
+            career.Goodies.Set(
+                RetailCareerUpdateGoodieStates.CompleteWorld100Second,
+                RetailCareerGoodieState.Old);
+            career.Goodies.Set(
+                RetailCareerUpdateGoodieStates.GradeCOnWorld100,
+                RetailCareerGoodieState.Old);
+            career.Goodies.Set(
+                RetailCareerUpdateGoodieStates.GradeBOnWorld100,
+                RetailCareerGoodieState.Old);
+            career.Goodies.Set(
+                RetailCareerUpdateGoodieStates.GradeAOnWorld100,
+                RetailCareerGoodieState.Old);
+        });
+
+        Assert.Equal(Level100MissionOutcome.Won, mission.Snapshot.Outcome);
+        Assert.Equal(
+            Level100MissionTerminalState.FrontEndHandoffReady,
+            mission.Snapshot.TerminalState);
+
+        Assert.Equal(
+            RetailCareerGoodieState.Old,
+            mission.Career.Goodies.Get(RetailCareerUpdateGoodieStates.CompleteWorld100Bio));
+        Assert.Equal(
+            RetailCareerGoodieState.Old,
+            mission.Career.Goodies.Get(RetailCareerUpdateGoodieStates.CompleteWorld100Second));
+        Assert.Equal(
+            RetailCareerGoodieState.Old,
+            mission.Career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeCOnWorld100));
+        Assert.Equal(
+            RetailCareerGoodieState.Old,
+            mission.Career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeBOnWorld100));
+        Assert.Equal(
+            RetailCareerGoodieState.Old,
+            mission.Career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeAOnWorld100));
+        Assert.Equal(0, mission.Career.Counters.NewGoodieCount);
+        Assert.Equal(0, mission.Career.Counters.FirstGoodie);
+        Assert.Equal(1, mission.Career.Nodes.Find(100)!.Complete);
+        Assert.All(
+            RetailFillOutEndLevelData.ForLevel100Won().SecondaryStatuses,
+            status => Assert.Equal(0, status));
+    }
+
+    /// <summary>
     /// FrontEndHandoffReady applies the already-pinned
     /// <c>UpdateBaseWorldExistsStuffForNode</c> copy onto world 110.
     /// First-play zeros at 35..287 clear Blank's all-1s there; world
