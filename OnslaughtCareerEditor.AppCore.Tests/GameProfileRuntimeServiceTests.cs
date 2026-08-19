@@ -772,7 +772,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 InvalidOperationException ex = Assert.Throws<InvalidOperationException>(() =>
                     registry.Register(process, outsideProfilesRoot));
 
-                Assert.Contains("lease root", ex.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(GameProfileManagedProcessRegistry.LeaseFolderMismatch, ex.Message);
                 Assert.Empty(registry.Snapshot());
             }
             finally

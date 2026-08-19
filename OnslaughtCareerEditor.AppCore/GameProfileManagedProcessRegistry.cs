@@ -14,6 +14,8 @@ namespace OnslaughtCareerEditor.AppCore
     {
         public const string LeaseFileName = "onslaught-managed-processes.json";
         public const string LeaseSchemaVersion = "winui-managed-safe-copy-processes.v1";
+        public const string LeaseFolderMismatch =
+            "A managed copy must stay in this registry's profile folder.";
 
         private readonly object _gate = new();
         private readonly Dictionary<int, GameProfileRegisteredProcess> _processes = new();
@@ -172,7 +174,7 @@ namespace OnslaughtCareerEditor.AppCore
                 throw new InvalidOperationException("A managed playable copied game folder process requires an app-owned profile folder.");
 
             if (!LeaseRootMatches(appOwnedProfilesRoot))
-                throw new InvalidOperationException("A managed playable copied game folder process root must match the registry lease root.");
+                throw new InvalidOperationException(LeaseFolderMismatch);
 
             if (!TryBuildRegisteredProcess(process, appOwnedProfilesRoot, out GameProfileRegisteredProcess registered))
                 throw new InvalidOperationException("A managed playable copied game folder process must point at BEA.exe under the app-owned playable copied game folder.");
