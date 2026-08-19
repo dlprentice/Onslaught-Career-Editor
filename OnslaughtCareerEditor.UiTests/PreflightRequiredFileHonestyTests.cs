@@ -53,6 +53,7 @@ public class PreflightRequiredFileHonestyTests
         Assert.That(source, Does.Not.Contain("Required game file is missing:"));
         Assert.That(source, Does.Contain("RequiredGameFileMissing"));
         Assert.That(source, Does.Not.Contain("required game file '{entry}'"));
+        Assert.That(source, Does.Not.Contain("Game entry '{entry}'"));
         Assert.That(GameProfilePreflightService.RequiredGameFileMissing,
             Is.EqualTo("A required game file is missing."));
         Assert.That(GameProfilePreflightService.RequiredGameFileMissing.ToLowerInvariant(),

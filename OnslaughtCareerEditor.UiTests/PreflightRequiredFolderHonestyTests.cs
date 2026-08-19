@@ -24,6 +24,7 @@ public class PreflightRequiredFolderHonestyTests
         Assert.That(source, Does.Not.Contain("Required game directory is missing:"));
         Assert.That(source, Does.Not.Contain("required game directory '"));
         Assert.That(source, Does.Not.Contain("required game folder '{entry}'"));
+        Assert.That(source, Does.Not.Contain("game entry '{entry}'"));
         Assert.That(GameProfilePreflightService.RequiredGameFolderMissing,
             Is.EqualTo("A required game folder is missing."));
         Assert.That(GameProfilePreflightService.RequiredGameFolderMissing.ToLowerInvariant(),

@@ -1199,10 +1199,12 @@ namespace OnslaughtCareerEditor.AppCore
                 string sourcePath = Path.Combine(sourceRoot, entry);
                 if (File.Exists(sourcePath) || Directory.Exists(sourcePath))
                 {
-                    RejectReparsePoint(sourcePath, $"game entry '{entry}'");
+                    RejectReparsePoint(
+                        sourcePath,
+                        Directory.Exists(sourcePath) ? "required game folder" : "required game file");
                     if (File.Exists(sourcePath))
                     {
-                        RejectMultipleHardLinks(sourcePath, $"Game entry '{entry}'");
+                        RejectMultipleHardLinks(sourcePath, "required game file");
                     }
 
                     entries.Add(new GameProfileCopiedEntry(
