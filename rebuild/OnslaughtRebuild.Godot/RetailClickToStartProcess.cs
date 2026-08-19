@@ -59,7 +59,7 @@ public static class RetailClickToStartProcess
     /// </summary>
     public const uint ImageInitialFlag = 0u;
 
-    /// <summary><c>test eax,eax / je 0x0051B801</c> after the load of kind.</summary>
+    /// <summary><c>test eax,eax / je 0x0051B7BA</c> after the kind load.</summary>
     public const int KindZero = 0;
 
     /// <summary><c>cmp eax, 0x0A / je 0x0051B7DB</c> at <c>0x0051B7B3</c>.</summary>
