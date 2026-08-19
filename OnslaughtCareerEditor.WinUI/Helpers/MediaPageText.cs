@@ -104,7 +104,7 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         public static string DescribeDirectoryDetail(string? path)
         {
             return string.IsNullOrWhiteSpace(path)
-                ? "No install folder selected."
+                ? GameFolderNotConfigured
                 : BuildFolderSummary(path, "Configured install");
         }
     }

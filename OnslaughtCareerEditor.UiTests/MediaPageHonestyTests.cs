@@ -163,9 +163,23 @@ public class MediaPageHonestyTests
     {
         Assert.That(MediaPageText.BuildFolderSummary("   ", "Configured install"), Is.EqualTo("Configured install"));
         Assert.That(MediaPageText.BuildFolderSummary(null, "Configured install"), Is.EqualTo("Configured install"));
-        Assert.That(MediaPageText.DescribeDirectoryDetail(null), Does.Contain("folder"));
+        Assert.That(MediaPageText.DescribeDirectoryDetail(null), Does.Contain("folder").IgnoreCase);
         Assert.That(MediaPageText.DescribeDirectoryDetail(null), Does.Not.Contain(@":\"));
         Assert.That(MediaPageText.DescribeDirectoryDetail(@"D:\Steam\common\BEA"), Is.EqualTo("BEA"));
+    }
+
+    [Test]
+    public void AnUnsetFolderDetailSaysWhatToDoNext_RatherThanDescribingTheEmptiness()
+    {
+        Assert.That(MediaPageText.DescribeDirectoryDetail(null), Is.EqualTo(MediaPageText.GameFolderNotConfigured));
+        Assert.That(MediaPageText.DescribeDirectoryDetail("   "), Is.EqualTo(MediaPageText.GameFolderNotConfigured));
+        Assert.That(MediaPageText.DescribeDirectoryDetail(null), Does.Not.Contain("No install folder selected"));
+        Assert.That(MediaPageText.GameFolderNotConfigured, Does.Contain("Browse Game Folder"));
+        Assert.That(MediaPageText.GameFolderNotConfigured, Does.Not.Contain(@":\"));
+
+        string helper = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI", "Helpers", "MediaPageText.cs"));
+        Assert.That(helper, Does.Not.Contain("No install folder selected"));
     }
 
     [Test]
