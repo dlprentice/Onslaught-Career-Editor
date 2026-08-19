@@ -565,8 +565,9 @@ public class SaveEditorHonestyTests
     public void AnUnreadKillSummaryDoesNotSayYet()
     {
         string empty = SaveEditorAdvancedService.BuildKillSeedSummary(Array.Empty<SaveCategoryKillRow>());
-        Assert.That(empty, Does.Contain("No save is loaded"));
+        Assert.That(empty, Does.Contain("Choose a career save first"));
         Assert.That(empty, Does.Not.Contain("yet"));
+        Assert.That(empty, Does.Not.Contain("No save is loaded"));
         Assert.That(empty, Does.Contain("not a cumulative score"));
     }
 

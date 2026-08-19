@@ -349,7 +349,7 @@ namespace OnslaughtCareerEditor.AppCore
         {
             if (rows.Count == 0)
             {
-                return "No save is loaded. This field is only the write value used for unchecked categories; it is not a cumulative score.";
+                return "Choose a career save first. This field is only the write value used for unchecked categories; it is not a cumulative score.";
             }
 
             if (rows.Any(row => !row.CurrentValueKnown))
