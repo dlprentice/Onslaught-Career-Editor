@@ -128,6 +128,12 @@ namespace OnslaughtCareerEditor.AppCore
 
     public static class SaveEditorAdvancedService
     {
+        public const string MissionGradesUnreadable =
+            "Those mission grades could not be read. Nothing was changed.";
+
+        public const string KillCountsUnreadable =
+            "Those kill counts could not be read. Nothing was changed.";
+
         private const int NodeBaseOffset = 0x0006;
         private const int NodeSize = 64;
         private const int NodeCount = 100;
@@ -249,7 +255,7 @@ namespace OnslaughtCareerEditor.AppCore
             {
                 // Was `catch {}`. The rows returned here still read "-" in every Current column, which
                 // is honest only because the caller is now told why.
-                status = SaveEditorAdvancedReadStatus.NotRead($"Mission grades could not be read: {ex.Message}");
+                status = SaveEditorAdvancedReadStatus.NotRead(MissionGradesUnreadable);
                 return rows;
             }
 
@@ -293,8 +299,10 @@ namespace OnslaughtCareerEditor.AppCore
                         else
                         {
                             status = SaveEditorAdvancedReadStatus.NotRead(
-                                "Kill counts were not read: " +
-                                (analysis.ErrorMessage ?? "this file is not a readable career save."));
+                                string.Equals(analysis.ErrorMessage, SaveAnalyzerService.AnalysisFailed, StringComparison.Ordinal)
+                                    ? KillCountsUnreadable
+                                    : "Kill counts were not read: " +
+                                      (analysis.ErrorMessage ?? "this file is not a readable career save."));
                         }
                     }
                     catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException
@@ -304,7 +312,7 @@ namespace OnslaughtCareerEditor.AppCore
                         // the UI printed them in its Current column as if the save had said so; worse,
                         // GetSuggestedGlobalKillSeed then turned that fiction into the number an
                         // unchecked-category patch wrote.
-                        status = SaveEditorAdvancedReadStatus.NotRead($"Kill counts could not be read: {ex.Message}");
+                        status = SaveEditorAdvancedReadStatus.NotRead(KillCountsUnreadable);
                     }
                 }
             }

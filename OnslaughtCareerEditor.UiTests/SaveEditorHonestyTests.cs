@@ -105,6 +105,64 @@ public class SaveEditorHonestyTests
         }
     }
 
+    [Test]
+    public void AnUnreadableSaveDoesNotDumpTheExceptionOnMissionGrades()
+    {
+        string tempDir = Path.Combine(Path.GetTempPath(), $"onslaught-locked-grades-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDir);
+        try
+        {
+            string locked = Path.Combine(tempDir, "career.bes");
+            File.Copy(GoldSavePath, locked);
+
+            using (new FileStream(locked, FileMode.Open, FileAccess.Read, FileShare.None))
+            {
+                var rows = SaveEditorAdvancedService.LoadMissionRankRows(locked, out var status).ToArray();
+
+                Assert.That(status.FileWasRead, Is.False);
+                Assert.That(status.Reason, Is.EqualTo(SaveEditorAdvancedService.MissionGradesUnreadable));
+                Assert.That(status.Reason, Does.Contain("Nothing was changed"));
+                Assert.That(status.Reason, Does.Not.Contain(locked));
+                Assert.That(status.Reason, Does.Not.Contain(":\\"));
+                Assert.That(status.Reason, Does.Not.Contain(tempDir));
+                Assert.That(rows.All(row => row.CurrentRank == "-"), Is.True);
+            }
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    [Test]
+    public void AnUnreadableSaveDoesNotDumpTheExceptionOnKillCounts()
+    {
+        string tempDir = Path.Combine(Path.GetTempPath(), $"onslaught-locked-kills-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDir);
+        try
+        {
+            string locked = Path.Combine(tempDir, "career.bes");
+            File.Copy(GoldSavePath, locked);
+
+            using (new FileStream(locked, FileMode.Open, FileAccess.Read, FileShare.None))
+            {
+                var rows = SaveEditorAdvancedService.LoadCategoryKillRows(locked, out var status).ToArray();
+
+                Assert.That(status.FileWasRead, Is.False);
+                Assert.That(status.Reason, Is.EqualTo(SaveEditorAdvancedService.KillCountsUnreadable));
+                Assert.That(status.Reason, Does.Contain("Nothing was changed"));
+                Assert.That(status.Reason, Does.Not.Contain(locked));
+                Assert.That(status.Reason, Does.Not.Contain(":\\"));
+                Assert.That(status.Reason, Does.Not.Contain(tempDir));
+                Assert.That(rows.All(row => !row.CurrentValueKnown), Is.True);
+            }
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
     // ---------------------------------------------------------------- D11
 
     [Test]
@@ -233,6 +291,22 @@ public class SaveEditorHonestyTests
         Assert.That(source, Does.Contain("That file could not be opened."));
         Assert.That(source, Does.Not.Contain("That path could not be read:"));
         Assert.That(source, Does.Not.Contain("That file could not be opened:"));
+    }
+
+    [Test]
+    public void AdvancedReadRefusalsDoNotInterpolateTheException()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "SaveEditorAdvancedService.cs"));
+
+        Assert.That(source, Does.Contain("MissionGradesUnreadable"));
+        Assert.That(source, Does.Contain("KillCountsUnreadable"));
+        Assert.That(source, Does.Not.Contain("Mission grades could not be read: {ex.Message}"));
+        Assert.That(source, Does.Not.Contain("Kill counts could not be read: {ex.Message}"));
+        Assert.That(SaveEditorAdvancedService.MissionGradesUnreadable, Does.Contain("Nothing was changed"));
+        Assert.That(SaveEditorAdvancedService.KillCountsUnreadable, Does.Contain("Nothing was changed"));
+        Assert.That(SaveEditorAdvancedService.MissionGradesUnreadable, Does.Not.Contain(":\\"));
+        Assert.That(SaveEditorAdvancedService.KillCountsUnreadable, Does.Not.Contain(":\\"));
     }
 
     [Test]
