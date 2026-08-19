@@ -32,5 +32,7 @@ public class SaveRescueCopyFolderHonestyTests
         Assert.That(source, Does.Contain("CopyFolderMissing"));
         Assert.That(source, Does.Not.Contain("Playable copied game folder does not exist:"));
         Assert.That(source, Does.Not.Contain("{profileRoot}"));
+        Assert.That(source, Does.Not.Contain("\"Destination path\""));
+        Assert.That(source, Does.Contain("\"Destination file\""));
     }
 }

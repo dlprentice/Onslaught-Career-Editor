@@ -489,7 +489,7 @@ namespace OnslaughtCareerEditor.AppCore
             string outputPath = Path.Combine(destination, save.FileName);
             try
             {
-                outputPath = FileMutationSafety.NormalizeLocalPath(outputPath, "Destination path");
+                outputPath = FileMutationSafety.NormalizeLocalPath(outputPath, "Destination file");
 
                 if (File.Exists(outputPath) && !allowOverwrite)
                 {

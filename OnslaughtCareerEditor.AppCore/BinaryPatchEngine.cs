@@ -1848,7 +1848,7 @@ namespace OnslaughtCareerEditor.AppCore
         {
             string? directory = Path.GetDirectoryName(destinationPath);
             if (string.IsNullOrWhiteSpace(directory) || !Directory.Exists(directory))
-                throw new DirectoryNotFoundException($"The containing folder for {label} does not exist.");
+                throw new DirectoryNotFoundException("That folder could not be found.");
 
             string stagedPath = Path.Combine(directory, $".onslaught-patch-{Guid.NewGuid():N}.tmp");
             bool stagedEntryExists = false;

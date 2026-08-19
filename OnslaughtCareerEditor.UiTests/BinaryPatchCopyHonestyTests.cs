@@ -156,5 +156,7 @@ public class BinaryPatchCopyHonestyTests
         Assert.That(engine, Does.Not.Contain("Patch backup hash path must stay inside"));
         Assert.That(engine, Does.Contain("BEA.exe.original.backup must stay inside the app-owned Patch Bench workspace."));
         Assert.That(engine, Does.Contain("The backup hash file must stay inside the app-owned Patch Bench workspace."));
+        Assert.That(engine, Does.Not.Contain("The containing folder for {label} does not exist."));
+        Assert.That(engine, Does.Contain("That folder could not be found."));
     }
 }

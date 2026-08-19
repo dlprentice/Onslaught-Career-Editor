@@ -58,5 +58,9 @@ public class AssetCatalogFileSafetyHonestyTests
             "throw new FileNotFoundException(\"The catalog export file does not exist.\", Path);"));
         Assert.That(source, Does.Contain("That catalog export file could not be found."));
         Assert.That(source, Does.Not.Contain("FileNotFoundException(\"That catalog export file could not be found.\","));
+        Assert.That(source, Does.Not.Contain("\"Asset catalog path\""));
+        Assert.That(source, Does.Not.Contain("\"Catalog export path\""));
+        Assert.That(source, Does.Contain("\"Asset catalog\""));
+        Assert.That(source, Does.Contain("\"Catalog export file\""));
     }
 }

@@ -15,7 +15,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             try
             {
-                string selectedPath = FileMutationSafety.NormalizeLocalPath(pathOrDirectory, "Asset catalog path");
+                string selectedPath = FileMutationSafety.NormalizeLocalPath(pathOrDirectory, "Asset catalog");
                 if (File.Exists(selectedPath))
                 {
                     if (!string.Equals(Path.GetFileName(selectedPath), CatalogFileName, StringComparison.OrdinalIgnoreCase))
@@ -82,10 +82,10 @@ namespace OnslaughtCareerEditor.AppCore
             string normalizedRoot = FileMutationSafety.NormalizeLocalPath(trustedRoot, "Trusted asset export root");
             string normalizedPath = catalogPath.Replace('/', Path.DirectorySeparatorChar);
             string resolvedPath = Path.IsPathRooted(normalizedPath)
-                ? FileMutationSafety.NormalizeLocalPath(normalizedPath, "Catalog export path")
+                ? FileMutationSafety.NormalizeLocalPath(normalizedPath, "Catalog export file")
                 : FileMutationSafety.NormalizeLocalPath(
                     Path.Combine(normalizedRoot, normalizedPath),
-                    "Catalog export path");
+                    "Catalog export file");
 
             if (!FileMutationSafety.IsSameOrUnderRoot(resolvedPath, normalizedRoot) ||
                 string.Equals(resolvedPath, normalizedRoot, FileMutationSafety.PathComparison))
