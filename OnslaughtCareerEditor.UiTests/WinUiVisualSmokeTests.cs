@@ -737,7 +737,7 @@ public class WinUiVisualSmokeTests
         Assert.That(metadata, Does.Contain("polygon index entries"));
         string textureLinks = TryGetName(FindByAutomationId(window, "AssetModelTextureLinks")) ?? string.Empty;
         Assert.That(textureLinks, Does.Contain("direct catalog texture link"));
-        Assert.That(textureLinks, Does.Contain("Sidecar preview files"));
+        Assert.That(textureLinks, Does.Contain("Texture preview files"));
         Button openButton = FindByAutomationId(window, "AssetOpenExportButton").AsButton();
         Assert.That(openButton.IsEnabled, Is.True, $"Expected model export action to be enabled for {expectedTitle}.");
     }
@@ -766,7 +766,7 @@ public class WinUiVisualSmokeTests
         AssertSelectedTitle(window, expectedTitle);
         string textureLinks = TryGetName(FindByAutomationId(window, "AssetModelTextureLinks")) ?? string.Empty;
         Assert.That(textureLinks, Does.Contain("none are direct catalog rows"));
-        Assert.That(textureLinks, Does.Contain("Sidecar preview files: 1/1"));
+        Assert.That(textureLinks, Does.Contain("Texture preview files: 1/1"));
 
         AutomationElement sidecarButtonElement = FindByAutomationId(window, "AssetViewLinkedTextureButton");
         Button sidecarButton = sidecarButtonElement.AsButton();

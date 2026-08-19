@@ -902,7 +902,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         {
             return sidecarCount == 0
                 ? AssetLibraryPageText.SidecarPreviewMissing
-                : $"Sidecar preview files: {sidecarCount}/{bindingCount}.";
+                : $"Texture preview files: {sidecarCount}/{bindingCount}.";
         }
 
         private void ConfigureSelectedModelLinkedTexture(
