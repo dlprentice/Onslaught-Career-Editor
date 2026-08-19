@@ -1523,7 +1523,7 @@ namespace OnslaughtCareerEditor.AppCore
             IReadOnlyList<BinaryPatchSpec>? selected)
         {
             if (string.IsNullOrWhiteSpace(target.ExePath) || !File.Exists(target.ExePath))
-                return (false, "Select a valid BEA.exe path first.", null);
+                return (false, "Select a valid BEA.exe first.", null);
 
             if (!string.Equals(Path.GetFileName(target.ExePath), TargetFileName, StringComparison.OrdinalIgnoreCase))
                 return (false, "Patch target must be a BEA.exe-only copy.", null);

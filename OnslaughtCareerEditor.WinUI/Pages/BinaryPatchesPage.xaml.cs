@@ -1222,7 +1222,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         {
             if (LoadSourcePathFromConfig())
             {
-                AppStatusService.SetStatus("Windowed & Mods: loaded source path from shared settings");
+                AppStatusService.SetStatus("Windowed & Mods: loaded BEA.exe from Settings");
                 return;
             }
 

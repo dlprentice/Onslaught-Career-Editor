@@ -101,4 +101,18 @@ public class BinaryPatchCopyHonestyTests
         Assert.That(page, Does.Not.Contain("Backup file not found for the selected executable."));
         Assert.That(page, Does.Contain("BackupFileMissing"));
     }
+
+    [Test]
+    public void ChoosingBeaExeDoesNotCallItAPath()
+    {
+        string engine = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "BinaryPatchEngine.cs"));
+        string page = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI", "Pages", "BinaryPatchesPage.xaml.cs"));
+
+        Assert.That(engine, Does.Not.Contain("Select a valid BEA.exe path first."));
+        Assert.That(engine, Does.Contain("Select a valid BEA.exe first."));
+        Assert.That(page, Does.Not.Contain("loaded source path from shared settings"));
+        Assert.That(page, Does.Contain("Windowed & Mods: loaded BEA.exe from Settings"));
+    }
 }
