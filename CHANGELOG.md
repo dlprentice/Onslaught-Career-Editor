@@ -126,7 +126,8 @@ live in `developer_state.json` and the campaign ledgers.
   and Game Options patcher refusals that used to say an input or output
   path now name the files. Choosing BEA.exe on Windowed & Mods names
   the file, not a path. A Settings save list with no files names the
-  game folder, not a path.
+  game folder, not a path. Save Lab ready-state names the file, not a
+  path.
 
 ## 1.0.11 — 2026-08-07
 

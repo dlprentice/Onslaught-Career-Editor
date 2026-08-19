@@ -87,6 +87,23 @@ public class SaveLabPageHonestyTests
     }
 
     [Test]
+    public void AnalyzerReadyNamesTheFileNotAPath()
+    {
+        string page = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI", "Pages", "SavesPage.xaml.cs"));
+        string xaml = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI", "Pages", "SavesPage.xaml"));
+
+        const string ready =
+            "Choose a detected file or browse for a .bes or .bea file to inspect save structure, options, and comparison data.";
+
+        Assert.That(page, Does.Contain(ready));
+        Assert.That(xaml, Does.Contain(ready));
+        Assert.That(page, Does.Not.Contain("manual file path"));
+        Assert.That(xaml, Does.Not.Contain("manual file path"));
+    }
+
+    [Test]
     public void GameOptionsOutputHintNamesTheFileNotAPath()
     {
         string options = File.ReadAllText(Path.Combine(

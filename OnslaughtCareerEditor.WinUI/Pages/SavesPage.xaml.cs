@@ -498,7 +498,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             AnalyzerMetricsGrid.Opacity = 0;
             SetAnalyzerInfoBar(
                 "Analyzer ready",
-                "Choose a detected or manual file path to inspect save structure, options state, and comparison data.",
+                "Choose a detected file or browse for a .bes or .bea file to inspect save structure, options, and comparison data.",
                 InfoBarSeverity.Informational);
             AnalyzerTitleTextBlock.Text = "Save Analyzer";
             AnalyzerModeTextBlock.Text = "Single-file analysis: choose a .bes or .bea file to inspect.";

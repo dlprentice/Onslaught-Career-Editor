@@ -298,7 +298,7 @@
                                               IsClosable="False"
                                               Severity="Informational"
                                               Title="Analyzer ready"
-                                              Message="Choose a detected or manual file path to inspect save structure, options state, and comparison data." />
+                                              Message="Choose a detected file or browse for a .bes or .bea file to inspect save structure, options, and comparison data." />
 
                             <Border x:Name="AnalyzerEmptyStateBorder"
                                     Style="{StaticResource SavesMetricCardStyle}">
