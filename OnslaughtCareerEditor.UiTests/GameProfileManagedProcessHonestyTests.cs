@@ -63,4 +63,19 @@ public class GameProfileManagedProcessHonestyTests
         Assert.That(GameProfileManagedProcessRegistry.LeaseFolderMismatch.ToLowerInvariant(),
             Does.Not.Contain("path"));
     }
+
+    [Test]
+    public void AnUnregisteredCopyNamesTheCopyNotAPlayableProcess()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "GameProfileManagedProcessRegistry.cs"));
+
+        Assert.That(source, Does.Contain("CopyProcessNotRegistered"));
+        Assert.That(source, Does.Not.Contain(
+            "Playable copied game folder process is not registered with this app session."));
+        Assert.That(GameProfileManagedProcessRegistry.CopyProcessNotRegistered,
+            Is.EqualTo("That copy is not registered with this session."));
+        Assert.That(GameProfileManagedProcessRegistry.CopyProcessNotRegistered.ToLowerInvariant(),
+            Does.Not.Contain("playable"));
+    }
 }

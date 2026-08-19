@@ -18,6 +18,7 @@ namespace OnslaughtCareerEditor.AppCore
             "A managed copy must stay in this registry's profile folder.";
         public const string CopyFolderMissing = "That copy folder could not be found.";
         public const string CopyCannotUseLink = "That copy cannot use a shortcut or link.";
+        public const string CopyProcessNotRegistered = "That copy is not registered with this session.";
 
         private readonly object _gate = new();
         private readonly Dictionary<int, GameProfileRegisteredProcess> _processes = new();
@@ -207,7 +208,7 @@ namespace OnslaughtCareerEditor.AppCore
             {
                 if (!_processes.TryGetValue(process.ProcessId, out registered!))
                 {
-                    return new GameProfileStopResult(false, process.ProcessId, "Playable copied game folder process is not registered with this app session.");
+                    return new GameProfileStopResult(false, process.ProcessId, CopyProcessNotRegistered);
                 }
             }
 
