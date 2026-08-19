@@ -112,7 +112,8 @@ live in `developer_state.json` and the campaign ledgers.
   apply and restore name BEA.exe and BEA.exe.original.backup, not the
   full paths. A failed Save Analyzer compare names the action, not the
   compare error, on the status line. Keeping careers and then deleting a
-  copy names a dumped removal without the path.
+  copy names a dumped removal without the path. A media-only install
+  names the data folder, not media/data.
 
 ## 1.0.11 — 2026-08-07
 
