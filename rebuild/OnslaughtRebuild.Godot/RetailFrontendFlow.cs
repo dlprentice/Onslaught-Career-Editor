@@ -1345,12 +1345,16 @@ public sealed partial class RetailFrontendFlow : Control
         DrawRect(new Rect2(123f, 0f, 1f, DesignHeight), DevSelectGuide);
         DrawRect(new Rect2(0f, 180f, DesignWidth, 1f), DevSelectGuide);
 
-        // DAT_0089d7f0 Forseti writing chrome. Y is CFEPMain::Render 0x00462D46:
+        // DAT_0089D7F0 Forseti writing chrome. Y is CFEPMain::Render 0x00462D46:
         // 175 - fmod(mCounter * 0.3, 350), then +350 / +700. Cold BSS counter
         // is 0, which is the three settled tiles. Colour at 0x00462DE4 is
         // RetailMainMenuWritingColor: settled (255*63)<<16 | 0x00FFFFFF is
         // 0x3EFFFFFF, which is not capture ChromeTint 0x3E7F7F7F, so this
-        // draw keeps ChromeTint and does not call SubmittedColor.
+        // draw keeps ChromeTint and does not call SubmittedColor. Z/X at
+        // 0x00462DFF is RetailMainMenuWritingZ: three tiles push
+        // 0x3F666666 then dest 458. That leftover is Z, not scale, so the
+        // draw keeps scale 1.0 and TileX and does not treat the dword as
+        // a 29% title-logo. Not a sheen. ChromeTint stays put.
         var chromeTint = new Color(ChromeTint.R, ChromeTint.G, ChromeTint.B, ChromeTint.A * fade);
         float writingCounter = RetailMainMenuWritingScroll.ImageInitialCounter;
         DrawSurfaceCentered(
