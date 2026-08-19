@@ -137,4 +137,15 @@ public class LorePageHonestyTests
         Assert.That(page, Does.Not.Contain("The selected lore document was not found."));
         Assert.That(page, Does.Not.Contain("FileNotFoundException(\"The selected lore document was not found.\", documentKey)"));
     }
+
+    [Test]
+    public void AnEmptyDocumentSaysWhatToDoNext_RatherThanDescribingTheEmptiness()
+    {
+        string page = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI", "Pages", "LorePage.xaml.cs"));
+
+        Assert.That(page, Does.Not.Contain("Nothing to read here"));
+        Assert.That(page, Does.Not.Contain("contains no readable content"));
+        Assert.That(page, Does.Contain("LorePageText.EmptyLibraryNextStep"));
+    }
 }

@@ -335,8 +335,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 // A blank reader panel is exactly the failure this page was
                 // rebuilt to eliminate; say so rather than painting nothing.
                 ShowReaderPlaceholder(
-                    "Nothing to read here",
-                    "This Lore document loaded successfully but contains no readable content.");
+                    LorePageText.EmptyLibraryNextStep,
+                    LorePageText.EmptyLibraryNextStep);
                 return;
             }
 
