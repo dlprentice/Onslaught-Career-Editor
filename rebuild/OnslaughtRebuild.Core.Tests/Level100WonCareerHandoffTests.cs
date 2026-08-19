@@ -77,6 +77,78 @@ public sealed class Level100WonCareerHandoffTests
             status => Assert.Equal(0, status));
     }
 
+    /// <summary>
+    /// <c>CCareer::Update</c> at <c>0x0041BD06</c> is
+    /// <c>cmp eax, 5</c> / <c>jne</c>. Lost is 4, so FillOut is never
+    /// applied even if the handoff state is claimed. Mutation: dropping
+    /// the Won check from <see cref="Level100WonCareerHandoff.TryApply"/>
+    /// unlocks world 110 on Lost.
+    /// </summary>
+    [Fact]
+    public void LostDoesNotApplyFillOutEvenIfFrontEndHandoffReadyIsClaimed()
+    {
+        var handoff = new Level100WonCareerHandoff();
+
+        Assert.False(handoff.TryApply(
+            Level100MissionOutcome.Lost,
+            Level100MissionTerminalState.FrontEndHandoffReady));
+
+        RetailCareerNode training = handoff.Career.Nodes.Find(100)!;
+        RetailCareerNodeLink lower = handoff.Career.GetLink(training.LowerLink)!;
+        Assert.Equal(0, training.Complete);
+        Assert.Equal(0, handoff.Career.CareerInProgress);
+        Assert.Equal(RetailCareerNodeLink.NotComplete, lower.LinkType);
+    }
+
+    /// <summary>
+    /// Player-reproducible Lost: Broke-Tutorial reaches
+    /// <c>FailureMenuReady</c>, never <c>FrontEndHandoffReady</c>, and
+    /// the cold career stays locked. Mutation: calling
+    /// <c>TryApply</c> from the Lost countdown unlocks 110.
+    /// </summary>
+    [Fact]
+    public void BrokeTutorialLost_DoesNotApplyFillOutOrUnlockWorld110()
+    {
+        Level100ActorDefinitionSet definitions = Level100TestActorDefinitions.Create();
+        var actors = new Level100ActorRegistry(definitions);
+        var mission = new Level100Mission(
+            actors,
+            actors.GetThingRef("Player 1")!.Value);
+
+        Assert.True(mission.SubmitInput(Level100MissionInput.BrokeTutorial));
+
+        const int settleTicks = 100 * SimulationConstants.TicksPerSecond;
+        for (int tick = 0; tick < settleTicks; tick++)
+        {
+            mission.AdvanceTick(SimulationConstants.MaximumHull);
+            if (mission.Snapshot.TerminalState ==
+                Level100MissionTerminalState.FailureMenuReady)
+            {
+                break;
+            }
+        }
+
+        Assert.Equal(Level100MissionOutcome.Lost, mission.Snapshot.Outcome);
+        Assert.Equal(
+            Level100MissionFailureReason.TutorialBroken,
+            mission.Snapshot.FailureReason);
+        Assert.Equal(
+            Level100MissionTerminalState.FailureMenuReady,
+            mission.Snapshot.TerminalState);
+        Assert.NotEqual(
+            Level100MissionTerminalState.FrontEndHandoffReady,
+            mission.Snapshot.TerminalState);
+
+        RetailCareerNode training = mission.Career.Nodes.Find(100)!;
+        RetailCareerNodeLink lower = mission.Career.GetLink(training.LowerLink)!;
+        Assert.Equal(0, training.Complete);
+        Assert.Equal(0, mission.Career.CareerInProgress);
+        Assert.Equal(RetailCareerNodeLink.NotComplete, lower.LinkType);
+        Assert.All(
+            RetailFillOutEndLevelData.ForLevel100Won().SecondaryStatuses,
+            status => Assert.Equal(0, status));
+    }
+
     private static Level100Mission DriveReleasedFirstPlayToTerminal()
     {
         Level100ActorDefinitionSet definitions = Level100TestActorDefinitions.Create();
