@@ -197,6 +197,29 @@ public class GameDirectoryIdentityTextTests
         Assert.That(settings, Does.Contain("GameDirectoryIdentityText.MediaPersistFailed"));
     }
 
+    [Test]
+    public void TheSettingsFileIsNamedByItsLeafNotThePath()
+    {
+        string path = @"C:\Users\david\AppData\Local\OnslaughtCareerEditor\config.json";
+        string summary = GameDirectoryIdentityText.BuildConfigPathSummary(path);
+
+        Assert.That(summary, Is.EqualTo("config.json in OnslaughtCareerEditor"));
+        Assert.That(summary, Does.Not.Contain(path));
+        Assert.That(summary, Does.Not.Contain(@":\"));
+        Assert.That(summary, Does.Not.Contain("Users"));
+        Assert.That(GameDirectoryIdentityText.BuildConfigPathSummary("   "), Is.EqualTo("No settings file selected"));
+        Assert.That(GameDirectoryIdentityText.BuildConfigPathSummary(null), Does.Not.Contain(@":\"));
+    }
+
+    [Test]
+    public void SettingsPaintsTheConfigLeafNotThePath()
+    {
+        string settings = File.ReadAllText(Path.Combine(FindRepoRoot(), "OnslaughtCareerEditor.WinUI", "Pages", "SettingsPage.xaml.cs"));
+
+        Assert.That(settings, Does.Contain("GameDirectoryIdentityText.BuildConfigPathSummary"));
+        Assert.That(settings, Does.Not.Contain("ConfigPathTextBlock.Text = AppConfig.GetConfigPath()"));
+    }
+
     private static string FindRepoRoot()
     {
         DirectoryInfo? directory = new(TestContext.CurrentContext.TestDirectory);

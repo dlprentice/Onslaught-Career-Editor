@@ -43,7 +43,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             MediaPersistStatusTextBlock.Visibility = Visibility.Collapsed;
 
             UpdateSaveFileInfo(gameDir);
-            ConfigPathTextBlock.Text = AppConfig.GetConfigPath();
+            ConfigPathTextBlock.Text = GameDirectoryIdentityText.BuildConfigPathSummary(AppConfig.GetConfigPath());
 
             _isLoadingSettings = false;
             AppStatusService.SetStatus("Settings: loaded shared configuration");

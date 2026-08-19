@@ -1,3 +1,4 @@
+using System.IO;
 using OnslaughtCareerEditor.AppCore;
 
 namespace OnslaughtCareerEditor.WinUI.Helpers
@@ -67,6 +68,27 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
                 RetailExecutableIdentity.Unreadable => UnreadableHomeGuidance,
                 _ => defaultGuidance,
             };
+        }
+
+        /// <summary>
+        /// Settings-file details name the file and its parent folder. The full path stays off the page.
+        /// </summary>
+        public static string BuildConfigPathSummary(string? path)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                return "No settings file selected";
+            }
+
+            string trimmed = path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            string name = Path.GetFileName(trimmed);
+            string? parent = Path.GetFileName(Path.GetDirectoryName(trimmed) ?? string.Empty);
+            if (string.IsNullOrWhiteSpace(parent))
+            {
+                return string.IsNullOrWhiteSpace(name) ? "Settings file" : name;
+            }
+
+            return $"{name} in {parent}";
         }
     }
 }
