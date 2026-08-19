@@ -409,6 +409,31 @@ public sealed class RetailCareerCampaignApplyUpdateTests
     }
 
     /// <summary>
+    /// Career <c>UpdateThingsKilled</c> still <c>je</c>s world 100
+    /// (<c>cmp eax,0x64</c> at <c>0x0041c188</c>). A non-zero FillOut
+    /// kill vector — ConfirmedKill increments stay unclaimed as values —
+    /// must not accumulate. Mutation: dropping the equality skip writes
+    /// the first dword. Iceberg store-0 and first-play elapsed stay
+    /// unclaimed. No new secondaries.
+    /// </summary>
+    [Fact]
+    public void Level100Won_ApplyUpdateDoesNotAccumulateThingsKilledForWorld100()
+    {
+        RetailCareerCampaign career = RetailCareerReCalcLinks.CreateColdTrainingSlice();
+        int[] kills = { 1, 2, 3, 4, 5 };
+        RetailEndLevelSnapshot snapshot = RetailFillOutEndLevelData.ForLevel100Won(
+            thingsKilled: kills);
+
+        career.ApplyUpdate(snapshot);
+
+        Assert.Equal(100, snapshot.WorldFinished);
+        Assert.Equal(kills, snapshot.ThingsKilled);
+        Assert.Equal(new[] { 0, 0, 0, 0, 0 }, career.Counters.KilledThings);
+        Assert.Equal(1, career.Nodes.Find(100)!.Complete);
+        Assert.All(snapshot.SecondaryStatuses, status => Assert.Equal(0, status));
+    }
+
+    /// <summary>
     /// <c>ReCalcLinks</c> copies FillOut <c>mBaseThingsLeft</c> onto
     /// <c>level_structure[0][3] == 110</c>
     /// (<c>Career.cpp:443-452 / 519-527</c>). First-play is 1 at
