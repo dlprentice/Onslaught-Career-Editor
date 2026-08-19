@@ -1,7 +1,7 @@
 # Rebuild parity contract
 
 Status: active — what "1:1 behavioral and experiential parity" means operationally
-Last updated: 2026-08-19 (Level 100 FrontEndHandoff first-play closed GRADE(110) C concept-art goodie 79).
+Last updated: 2026-08-19 (Level 100 SetSlotSave persists SLOT_TUTORIAL_1..4 before ApplyUpdate).
 Evidence: SOURCE — authority order and the known divergences are
 recorded in `PROVENANCE.md` plus the Lost-countdown row of this table; gate capabilities are MEASURED claims of the
 tracked harnesses named in the table. Every row of *Carried retail contracts*
@@ -154,6 +154,7 @@ Owner paths are relative to the repository root; test names are relative to
 | `CGame::FillOutEndLevelData` then `CCareer::Update` Level 100 FrontEndHandoff leftover mNumAttempts skip | Same seam. Leftover 7 on world 100 and 11 on world 110 survive first-play S through `TryApply` because `Career.cpp:379-418` never writes `+0x38`. Isolated leftover 7 / 11 names ApplyUpdate and does not go through `TryApply`. Isolated Blank ctor 0 does not go through `TryApply`. Existing FrontEndHandoff ranking / Complete / CareerInProgress / goodie tests do not name `+0x38`. Incrementing inside ApplyUpdate is not unique versus the isolated pin. Skipping `ApplyUpdate` on the handoff is not unique versus existing FrontEndHandoff tests. No new secondaries | `rebuild/OnslaughtRebuild.Core/Level100WonCareerHandoff.cs` | `Level100WonCareerHandoff.TryApply` | `Level100WonCareerHandoffTests.FrontEndHandoffReadyAfterWon_DoesNotIncrementLeftoverNumAttempts` | 1 | increment the finished node after `TryApply` |
 | `CGame::FillOutEndLevelData` then `CCareer::UpdateGoodieStates` Level 100 FrontEndHandoff leftover SET_GOODIE_NEW GS_OLD overwrite | Same seam. Seeding the five first-play S slots as `GS_OLD` leaves them at 3 through `TryApply`: `SET_GOODIE_NEW` stores only when `GOODIE_NOT_DONE` (`Career.cpp:564-566`). Isolated leftover `GS_OLD` names ApplyUpdate and does not go through `TryApply`. Existing FrontEndHandoff S goodies start `GS_UNKNOWN` and name them as New. Replay CountGoodies names already-`GS_NEW`. `new_goodie_count` / `first_goodie` stay ctor 0. Storing `GS_NEW` even when `mState > GS_INSTRUCTIONS` is not unique versus the isolated pin. Skipping `ApplyUpdate` on the handoff is not unique versus existing FrontEndHandoff tests. `mPendingExtraGoodies` and episode instruction marks stay unclaimed. No new secondaries | `rebuild/OnslaughtRebuild.Core/Level100WonCareerHandoff.cs` | `Level100WonCareerHandoff.TryApply` | `Level100WonCareerHandoffTests.FrontEndHandoffReadyAfterWon_DoesNotOverwriteAlreadyOldTrainingGoodies` | 1 | store `GS_NEW` on the five slots after `TryApply` when they were `GS_OLD` |
 | `CGame::FillOutEndLevelData` then `CCareer::UpdateGoodieStates` Level 100 FrontEndHandoff leftover SET_GOODIE_NEW GS_INSTRUCTIONS store | Same seam. Seeding the five first-play S slots as `GS_INSTRUCTIONS` writes 2 through `TryApply`: `SET_GOODIE_NEW` stores when `mState <= GS_INSTRUCTIONS` (`Career.cpp:564-566`). Isolated leftover `GS_INSTRUCTIONS` names ApplyUpdate and does not go through `TryApply`. Isolated leftover `GS_OLD` and FrontEndHandoff leftover `GS_OLD` name the skip for state 3. FrontEndHandoff S starts `GS_UNKNOWN`. Replay names already-`GS_NEW`. Skipping `SET_GOODIE_NEW` when `mState == GS_INSTRUCTIONS` is not unique versus the isolated pin. Skipping `ApplyUpdate` on the handoff is not unique versus existing FrontEndHandoff tests. Do not invent `SET_GOODIE_INSTRUCTION` or episode instruction marks. `mPendingExtraGoodies` stays unclaimed. No new secondaries | `rebuild/OnslaughtRebuild.Core/Level100WonCareerHandoff.cs` | `Level100WonCareerHandoff.TryApply` | `Level100WonCareerHandoffTests.FrontEndHandoffReadyAfterWon_StoresNewOverInstructionTrainingGoodies` | 1 | restore the five slots to `GS_INSTRUCTIONS` after `TryApply` when they were `GS_INSTRUCTIONS` |
+| `IScript::SetSlotSave` Level 100 tutorial persist | `0x00533900` calls `CGame::SetSlot` `0x0046d3a0` then `CCareer::SetSlot` `0x004214e0`. First-play `SetSlotSave(SLOT_TUTORIAL_1..4, TRUE)` writes career bits 63..66 during the tutorial, before `DeclareLevelWon` and before FillOut / `ApplyUpdate`. Isolated FrontEndHandoff overwrite names the 32-dword assignment after `TryApply`; empty FillOut slot words still leave 63..66 set here. World 100 stays incomplete. Live `GAME.mSlots` stay unclaimed. No new secondaries | `rebuild/OnslaughtRebuild.Core/RetailSetSlotSave.cs` | `RetailSetSlotSave.PersistCareerSlot` | `Level100WonCareerHandoffTests.SetSlotSave_PersistsTutorialBitsBeforeApplyUpdate` | 1 | skip `PersistCareerSlot` so 63..66 stay 0 on `SuccessCountdown` |
 
 Two things this table deliberately does **not** claim. It does not claim these
 contracts are graded `REBUILD_READY`: that grade is a campaign artifact and
@@ -290,6 +291,11 @@ The FrontEndHandoff leftover SET_GOODIE_NEW GS_INSTRUCTIONS
 store row names that same `TryApply` owner; isolated leftover
 `GS_INSTRUCTIONS` names ApplyUpdate and does not uniquely
 prove the store through `TryApply`.
+The SetSlotSave persist row names `PersistCareerSlot` on
+`RetailSetSlotSave`; isolated FrontEndHandoff overwrite
+names the 32-dword assignment after `TryApply` and does
+not uniquely prove the mid-mission `CCareer::SetSlot`.
+Live `GAME.mSlots` stay unclaimed.
 The score-time arm row names `AfterScoreTimeArm` on
 the already-pinned FillOut owner; it does not rewrite
 `ForLevel100Won`. The score-percentage last-wins row names

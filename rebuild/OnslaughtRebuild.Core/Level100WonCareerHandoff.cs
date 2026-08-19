@@ -65,6 +65,12 @@ namespace OnslaughtRebuild.Core;
 /// through this seam.
 /// </para>
 /// <para>
+/// <b>SetSlotSave already persisted the four tutorial bits.</b>
+/// Isolated <see cref="RetailSetSlotSave.PersistCareerSlot"/> names
+/// that mid-mission store. This seam still overwrites the 32 words
+/// from FillOut. Live <c>GAME.mSlots</c> stay unclaimed.
+/// </para>
+/// <para>
 /// <b>Do not invent secondaries.</b> Level 100 ships four primaries and
 /// none. The snapshot's ten status words stay unset.
 /// </para>

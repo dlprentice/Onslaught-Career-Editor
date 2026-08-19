@@ -868,6 +868,50 @@ public sealed class Level100WonCareerHandoffTests
     }
 
     /// <summary>
+    /// <c>IScript::SetSlotSave</c> at <c>0x00533900</c> calls
+    /// <c>CCareer::SetSlot</c> immediately. First-play
+    /// <c>SetSlotSave(SLOT_TUTORIAL_1..4, TRUE)</c> therefore writes
+    /// bits 63..66 before <c>DeclareLevelWon</c> and before FillOut /
+    /// <c>ApplyUpdate</c>. Isolated FrontEndHandoff overwrite names
+    /// the 32-dword assignment after <c>TryApply</c> and does not
+    /// uniquely prove this persist: empty FillOut slot words still
+    /// leave 63..66 set here. Mutation: skip
+    /// <see cref="RetailSetSlotSave.PersistCareerSlot"/> so the four
+    /// bits stay 0 while <c>Complete</c> is still 0. Live
+    /// <c>GAME.mSlots</c> stay unclaimed. No new secondaries.
+    /// </summary>
+    [Fact]
+    public void SetSlotSave_PersistsTutorialBitsBeforeApplyUpdate()
+    {
+        Level100Mission mission = DriveReleasedFirstPlayUntilWon();
+
+        Assert.Equal(Level100MissionOutcome.Won, mission.Snapshot.Outcome);
+        Assert.Equal(
+            Level100MissionTerminalState.SuccessCountdown,
+            mission.Snapshot.TerminalState);
+        AssertCareerStillCold(mission.Career);
+        Assert.Equal(
+            1,
+            mission.Career.Slots.GetSlot(
+                RetailCareerSlotHandoff.TutorialIntroductionSlot));
+        Assert.Equal(
+            1,
+            mission.Career.Slots.GetSlot(
+                RetailCareerSlotHandoff.TutorialPulseCannonSlot));
+        Assert.Equal(
+            1,
+            mission.Career.Slots.GetSlot(
+                RetailCareerSlotHandoff.TutorialVulcanCannonSlot));
+        Assert.Equal(
+            1,
+            mission.Career.Slots.GetSlot(
+                RetailCareerSlotHandoff.TutorialStatusBarsSlot));
+        Assert.All(
+            RetailFillOutEndLevelData.ForLevel100Won().SecondaryStatuses,
+            status => Assert.Equal(0, status));
+    }
+
+    /// <summary>
     /// <c>CCareer::Update</c> at <c>0x0041BD06</c> is
     /// <c>cmp eax, 5</c> / <c>jne</c>. Lost is 4, so FillOut is never
     /// applied even if the handoff state is claimed. Mutation: dropping

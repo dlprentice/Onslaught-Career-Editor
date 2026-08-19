@@ -728,7 +728,7 @@ public sealed class Level100Mission
                 return new NativeResult(
                     Level100ScriptValue.Boolean(GetTutorialSlot(arguments[0].AsInteger())),
                     WaitRequest.None);
-            case 133: // SetSlotSave
+            case 133: // SetSlotSave — IScript__SetSlotSave 0x00533900
                 RequireArguments(command, arguments, 2);
                 SetTutorialSlot(arguments[0].AsInteger(), arguments[1].AsBoolean());
                 return NativeResult.Void;
@@ -943,6 +943,10 @@ public sealed class Level100Mission
                     $"Released Level 100 requested unknown saved slot {slot}.");
         }
 
+        // IScript::SetSlotSave at 0x00533900 also calls CCareer::SetSlot
+        // immediately. Isolated FrontEndHandoff overwrite names ApplyUpdate,
+        // not this persist. Live GAME.mSlots stay unclaimed.
+        RetailSetSlotSave.PersistCareerSlot(Career.Slots, slot, value);
         _events.Add(new Level100TutorialSlotSaved(_tick, slot));
     }
 
