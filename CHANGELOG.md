@@ -96,7 +96,8 @@ live in `developer_state.json` and the campaign ledgers.
   refusal uses the unusable-target sentence, without the exception. A
   loaded patch or profile catalog is named without the file path. Home
   names a missing folder, an empty save list, or a failed save count as a
-  next step, not a dash. A failed Game Options write that still looks
+  next step, not a dash. The game line on that card uses the same folder
+  sentence. A failed Game Options write that still looks
   like a dump uses the shared nothing-was-changed sentence. A failed
   focused Goodie write that still looks like a dump uses that same
   sentence.

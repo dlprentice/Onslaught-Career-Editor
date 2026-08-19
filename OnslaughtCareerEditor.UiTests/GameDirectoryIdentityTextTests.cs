@@ -262,6 +262,7 @@ public class GameDirectoryIdentityTextTests
         Assert.That(home, Does.Not.Contain("\"—\""));
         Assert.That(home, Does.Not.Contain("\"None yet\""));
         Assert.That(home, Does.Not.Contain("\"Unavailable\""));
+        Assert.That(home, Does.Not.Contain("\"Not set yet\""));
     }
 
     private static string FindRepoRoot()

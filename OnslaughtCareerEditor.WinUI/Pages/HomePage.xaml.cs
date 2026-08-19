@@ -46,7 +46,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
             HomeSnapshotGameTextBlock.Text = ready && !string.IsNullOrWhiteSpace(gameDir)
                 ? Path.GetFileName(gameDir.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar))
-                : "Not set yet";
+                : GameDirectoryIdentityText.SnapshotNeedsFolder;
 
             if (string.IsNullOrWhiteSpace(gameDir))
             {
