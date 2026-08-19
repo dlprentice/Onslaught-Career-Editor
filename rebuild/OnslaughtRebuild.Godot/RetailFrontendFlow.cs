@@ -1460,6 +1460,14 @@ public sealed partial class RetailFrontendFlow : Control
             rightArcBody,
             rightArcShadow,
             MainMenuRightDecorTwin(transition));
+        // Colour at 0x00463F83 is RetailMainMenuRightTwinOverlay: DAT_0089D8A4
+        // mode-4 at (457,355), z push 0x3E99999A (0.3) not scale. Settled 255
+        // submits 0xFEFFFFFF, which is not this BracketTint 0xFE7F7F7F, so
+        // the draw keeps BracketTint and does not call SubmittedColor. Gate
+        // 0x00463E8D skips the call once transition >= 0.9; settled frames
+        // never issue it. Not a sheen (that is 0x00464343 /
+        // TitleLogoReflectionLayer). Not a 29% title-logo scale. ChromeTint
+        // and ShadowTint stay put.
 
         if (iconFade > 0f)
         {
