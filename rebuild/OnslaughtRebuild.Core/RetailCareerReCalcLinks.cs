@@ -119,7 +119,9 @@ public sealed class RetailCareerNodeLink
 /// <see cref="RetailCareerUpdateGoodieStates"/> slice. Goodie 1
 /// (<c>GRADE(110) &gt;= C</c>) stays closed on first-play because
 /// world 110 is incomplete; leftover complete-110 plus C opens
-/// the store. Do not invent a world-110 FillOut.
+/// the store. Goodie 14 (<c>COMPLETE_LEVEL(110)</c>) stays closed
+/// on first-play because world 110 is unlocked but still
+/// incomplete. Do not invent a world-110 FillOut.
 /// </para>
 /// </remarks>
 public static class RetailCareerReCalcLinks

@@ -69,7 +69,9 @@ public sealed class RetailCareerGoodies
 /// world 110 stays incomplete / BlankRanking so that arm is the
 /// already-pinned incomplete <c>'E'</c> and goodie 1 stays
 /// <c>GS_UNKNOWN</c>. Leftover complete-110 plus ranking 0.25f
-/// (already pinned as C) opens the store. <c>CGrade::operator&gt;=</c> treats <c>'S'</c> as
+/// (already pinned as C) opens the store. <c>COMPLETE_LEVEL(110)</c>
+/// writes goodie 14, but first-play leaves world 110 incomplete so
+/// that arm stays closed. <c>CGrade::operator&gt;=</c> treats <c>'S'</c> as
 /// above every other grade, so the already-pinned FillOut 1.0f unlocks
 /// the five world-100 slots together. <c>SET_GOODIE_NEW</c> stores 2
 /// only when <c>mState &lt;= GS_INSTRUCTIONS</c>.
@@ -95,6 +97,9 @@ public static class RetailCareerUpdateGoodieStates
     /// <summary>Goodie 8 — complete world 100 — <c>Career.cpp:698</c>.</summary>
     public const int CompleteWorld100Second = 8;
 
+    /// <summary>Goodie 14 — complete world 110 — <c>Career.cpp:704</c>.</summary>
+    public const int CompleteWorld110 = 14;
+
     /// <summary>Goodie 78 — <c>GRADE(100) &gt;= C</c> — <c>Career.cpp:769</c>.</summary>
     public const int GradeCOnWorld100 = 78;
 
@@ -106,7 +111,7 @@ public static class RetailCareerUpdateGoodieStates
 
     /// <summary>
     /// The Level 100 arms of <c>CCareer::UpdateGoodieStates</c> —
-    /// <c>Career.cpp:690 / 691 / 698 / 769 / 813 / 857</c>,
+    /// <c>Career.cpp:690 / 691 / 698 / 704 / 769 / 813 / 857</c>,
     /// <c>0x0041c470</c>, then the already-cited <c>CountGoodies</c>
     /// delta into <c>new_goodie_count</c> and the goodie-0
     /// <c>first_goodie</c> latch (<c>Career.cpp:686 / 688 / 895-900</c>).
@@ -119,8 +124,10 @@ public static class RetailCareerUpdateGoodieStates
     /// after first-play: world 110 is incomplete so the lookup is
     /// <c>'E'</c> and goodie 1 stays <c>GS_UNKNOWN</c>. Leftover
     /// complete-110 plus ranking 0.25f opens
-    /// <c>SET_GOODIE_NEW(1)</c>; do not invent a world-110 FillOut
-    /// or <c>COMPLETE_LEVEL(110)</c>.
+    /// <c>SET_GOODIE_NEW(1)</c>. <c>COMPLETE_LEVEL(110)</c> stays
+    /// closed after first-play: world 110 is unlocked but still
+    /// incomplete, so goodie 14 stays <c>GS_UNKNOWN</c>. Do not invent
+    /// a world-110 FillOut or the rest of the table.
     /// <c>mPendingExtraGoodies</c> and episode instruction marks stay
     /// unclaimed.
     /// </summary>
@@ -136,6 +143,11 @@ public static class RetailCareerUpdateGoodieStates
         {
             career.Goodies.SetNewIfNotDone(CompleteWorld100Bio);
             career.Goodies.SetNewIfNotDone(CompleteWorld100Second);
+        }
+
+        if (career.Nodes.CompleteFlagOf(RetailCareerReCalcLinks.TrainingLowerChildWorldNumber) == 1)
+        {
+            career.Goodies.SetNewIfNotDone(CompleteWorld110);
         }
 
         List<RetailWorldGradeNode> gradeNodes = GradeNodes(career);

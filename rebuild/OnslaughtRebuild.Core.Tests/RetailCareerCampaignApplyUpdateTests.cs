@@ -494,9 +494,9 @@ public sealed class RetailCareerCampaignApplyUpdateTests
     /// not name the store: deleting the <c>GRADE(110)</c> arm still
     /// leaves goodie 1 at <c>GS_UNKNOWN</c>. Cold-slice latch tests
     /// stay at 5 because they do not seed leftover complete-110. Do
-    /// not invent a world-110 FillOut. Do not invent
-    /// <c>COMPLETE_LEVEL(110)</c> / goodie 14. Mutation: skip
-    /// <c>SET_GOODIE_NEW(1)</c> when <c>GRADE(110) &gt;= C</c>.
+    /// not invent a world-110 FillOut. The leftover
+    /// <c>COMPLETE_LEVEL(110)</c> store is not named here. Mutation:
+    /// skip <c>SET_GOODIE_NEW(1)</c> when <c>GRADE(110) &gt;= C</c>.
     /// No new secondaries.
     /// </summary>
     [Fact]
@@ -533,6 +533,40 @@ public sealed class RetailCareerCampaignApplyUpdateTests
         Assert.Equal(
             RetailCareerGoodieState.New,
             career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeCOnWorld110));
+        Assert.All(snapshot.SecondaryStatuses, status => Assert.Equal(0, status));
+    }
+
+    /// <summary>
+    /// <c>COMPLETE_LEVEL(110)</c> (<c>Career.cpp:704</c>) stays closed
+    /// after a Level 100 C-grade Won. World 110 is in the cold slice
+    /// and ReCalcLinks unlocks it, but it stays incomplete, so goodie
+    /// 14 stays <c>GS_UNKNOWN</c>. Existing GRADE(110) tests name
+    /// goodie 1 and do not name goodie 14. A leftover complete-110
+    /// seed would also open this store in retail; that store is not
+    /// named here. Mutation: store <c>GS_NEW</c> on goodie 14 after
+    /// the CountGoodies add. Do not invent the rest of the table.
+    /// No new secondaries.
+    /// </summary>
+    [Fact]
+    public void Level100Won_ApplyUpdateLeavesTheWorld110CompleteGoodieUnknown()
+    {
+        RetailCareerCampaign career = RetailCareerReCalcLinks.CreateColdTrainingSlice();
+        RetailEndLevelSnapshot snapshot = RetailFillOutEndLevelData.ForLevel100Won(ranking: 0.25f);
+
+        career.ApplyUpdate(snapshot);
+
+        RetailCareerNode next = career.Nodes.Find(110)!;
+        Assert.Equal(0, next.Complete);
+        Assert.Equal(RetailCareerNode.BlankRanking, next.Ranking);
+        Assert.Equal(
+            RetailCareerGoodieState.New,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeCOnWorld100));
+        Assert.Equal(
+            RetailCareerGoodieState.Unknown,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeCOnWorld110));
+        Assert.Equal(
+            RetailCareerGoodieState.Unknown,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.CompleteWorld110));
         Assert.All(snapshot.SecondaryStatuses, status => Assert.Equal(0, status));
     }
 
