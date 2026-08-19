@@ -57,9 +57,17 @@ materializer 33.
 
 First-play script does not kill a list member. FillOut therefore stores
 `1` at `0x006728f8+i*4` for `i=0..34` and leaves `35..287` untouched (0
-on a cold BSS). A player who destroys a type-35 iceberg *and still Wins*
-would flip those indices; that is not the first-play script contract and
-is not claimed. No TTD dword at FillOut was read.
+on a cold BSS). Type-35 rows 4–9 are allegiance 2, empty
+name/script/spawn, defs `Iceberg 1`/`2`/`3`/`4`/`2`/`4`. The create
+arm at `0x0050bdcc` `cmp eax, 0x23` builds an InitThing then, after
+the `DAT_00855404` name walk, `CreateFeature` `0x00510060` at
+`0x0050bf56` (installs vtable `0x005e45e0`). Feature slot 40
+`0x0044cd20` subtracts `[esp+8]` from `[this+0xe0]` when
+`[data+0x10]==0` and calls slot 50 if the result is `< 0`; slot 50
+sets `TF_DYING`. Init seeds `[this+0xe0]` from `[data+0x18]`. Empty
+iceberg scripts cannot post `Broke Tutorial`. L100
+`[data+0x10]` / `[data+0x18]` values and a TTD dword at FillOut are
+**not** claimed.
 
 ### Scalars, objectives, slots, kills
 
@@ -172,4 +180,4 @@ Cheapest falsifier: file `0x0006d470` is not `a1 5c 51 85 00`, **or**
 
 | Address | Name | Byte evidence | Contract (confidence) |
 | --- | --- | --- | --- |
-| `0x0046d470` | `CGame__FillOutEndLevelData` | `a15c518500 81ec10010000 3d20010000 … d9850c010000 d8a508010000 … c3` | thiscall; bare `ret`; 920 B. HIGH on ABI, L100 `Size=35`, RLWD `300/500` live score-time arm, kill copy from `player+8`. **Not** on an authored five-kill vector, iceberg-destroy store-0, or names for the other nine tail dwords. |
+| `0x0046d470` | `CGame__FillOutEndLevelData` | `a15c518500 81ec10010000 3d20010000 … d9850c010000 d8a508010000 … c3` | thiscall; bare `ret`; 920 B. HIGH on ABI, L100 `Size=35`, RLWD `300/500` live score-time arm, kill copy from `player+8`, type-35 → `CreateFeature` / slot-40 die trigger. **Not** on L100 iceberg `[data+0x10]` / `[data+0x18]`, a TTD dword, an authored five-kill vector, or names for the other nine tail dwords. |
