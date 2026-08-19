@@ -505,6 +505,40 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             Assert.Equal(LiveTrainerHold.DefaultInterval, LiveTrainerHold.ClampInterval(LiveTrainerHold.DefaultInterval));
         }
 
+        [Fact]
+        public void HoldingAllThreeIsAllOrNothing_ARefusedValueLeavesThePreviousHoldsAlone()
+        {
+            using var world = new TrainerWorld();
+            world.PutRunningMission(life: 42f, energy: 10f, shields: 5f, state: 2);
+            using LiveTrainerSession session = world.Attach();
+            var hold = new LiveTrainerHold(session);
+            Assert.True(hold.TryHold(LiveTrainerVital.Life, 80f, out _));
+
+            Assert.False(hold.TryHoldAll(100f, 100f, -1f, out string refusal));
+
+            Assert.Equal("A vital cannot be negative.", refusal);
+            Assert.True(hold.IsHolding);
+            Assert.Equal(80f, hold.Held[LiveTrainerVital.Life]);
+            Assert.False(hold.Held.ContainsKey(LiveTrainerVital.Energy));
+            Assert.False(hold.Held.ContainsKey(LiveTrainerVital.Shields));
+        }
+
+        [Fact]
+        public void HoldingAllThreeWritesLifeEnergyAndShieldsOnTheNextTick()
+        {
+            using var world = new TrainerWorld();
+            world.PutRunningMission(life: 42f, energy: 10f, shields: 5f, state: 2);
+            using LiveTrainerSession session = world.Attach();
+            var hold = new LiveTrainerHold(session);
+
+            Assert.True(hold.TryHoldAll(100f, 50f, 25f, out _));
+            LiveTrainerHoldTick result = hold.Tick();
+
+            Assert.Equal(3, result.Attempted);
+            Assert.Equal(3, result.Succeeded);
+            Assert.Equal(3, world.Memory.Writes.Count);
+        }
+
         // ============================================================ what is not offered
 
         [Fact]

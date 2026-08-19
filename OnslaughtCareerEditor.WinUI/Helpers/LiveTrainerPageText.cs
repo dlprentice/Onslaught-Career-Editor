@@ -225,6 +225,17 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
                 : $"1 - damage counts (bytes {vitals.Vulnerable.RawHex})";
         }
 
+        /// <summary>
+        /// One switch for the three holds. It stays on screen because it is a
+        /// control, not provenance, and because walker mode still needs energy
+        /// held for shields to last.
+        /// </summary>
+        public const string HoldAllHeadline =
+            "Hold life, energy, and shields together.";
+
+        public const string HoldAllNote =
+            "This turns on the three holds at the values in the boxes. Walker mode still copies energy over shields, so energy has to be held for shields to last. Jet mode still sets shields to zero every update. It is the same top-up as the switches above, not a freeze, and one hit big enough to kill you still will.";
+
         public const string NothingOfferedHeadline =
             "Ammunition and game speed are not offered.";
 

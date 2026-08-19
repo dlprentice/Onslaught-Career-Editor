@@ -10,6 +10,10 @@ live in `developer_state.json` and the campaign ledgers.
 
 ## Unreleased
 
+- Cheats live trainer can hold life, energy, and shields together. One switch
+  turns on the three existing holds at the values in the boxes. It is still a
+  top-up, not a freeze: walker mode still needs energy held for shields to last,
+  jet mode still zeros shields, and one hit big enough to kill still will.
 - Settings and Home now say whether the chosen `BEA.exe` is the known Steam
   retail file. A changed file is not called an original; a copy made from it
   is disclosed as carrying those changes. If the file cannot be read, the app

@@ -324,6 +324,7 @@ public class LiveTrainerPageHonestyTests
             "LiveTrainerLifeNumberBox", "LiveTrainerSetLifeButton", "LiveTrainerHoldLifeToggle",
             "LiveTrainerEnergyNumberBox", "LiveTrainerSetEnergyButton", "LiveTrainerHoldEnergyToggle",
             "LiveTrainerShieldsNumberBox", "LiveTrainerSetShieldsButton", "LiveTrainerHoldShieldsToggle",
+            "LiveTrainerHoldAllToggle",
         ];
 
         List<XElement> section = TrainerSectionElements().ToList();
@@ -355,6 +356,7 @@ public class LiveTrainerPageHonestyTests
                  {
                      "LiveTrainerSetLifeButton", "LiveTrainerSetEnergyButton", "LiveTrainerSetShieldsButton",
                      "LiveTrainerHoldLifeToggle", "LiveTrainerHoldEnergyToggle", "LiveTrainerHoldShieldsToggle",
+                     "LiveTrainerHoldAllToggle",
                  })
         {
             Assert.That(

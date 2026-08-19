@@ -660,6 +660,22 @@
                     </StackPanel>
 
                     <StackPanel Spacing="4">
+                        <ToggleSwitch x:Name="LiveTrainerHoldAllToggle"
+                                      AutomationProperties.AutomationId="LiveTrainerHoldAllToggle"
+                                      AutomationProperties.Name="Hold all three"
+                                      Header="Hold all three"
+                                      IsEnabled="False"
+                                      Toggled="LiveTrainerHoldAllToggle_Toggled" />
+                        <TextBlock x:Name="LiveTrainerHoldAllHeadlineTextBlock"
+                                   AutomationProperties.AutomationId="LiveTrainerHoldAllHeadline"
+                                   Style="{StaticResource SectionBodyTextStyle}" />
+                        <TextBlock x:Name="LiveTrainerHoldAllNoteTextBlock"
+                                   AutomationProperties.AutomationId="LiveTrainerHoldAllNote"
+                                   Style="{StaticResource SectionBodyTextStyle}"
+                                   TextWrapping="WrapWholeWords" />
+                    </StackPanel>
+
+                    <StackPanel Spacing="4">
                         <TextBlock x:Name="LiveTrainerNothingOfferedHeadlineTextBlock"
                                    AutomationProperties.AutomationId="LiveTrainerNothingOfferedHeadline"
                                    Style="{StaticResource SectionBodyTextStyle}" />
