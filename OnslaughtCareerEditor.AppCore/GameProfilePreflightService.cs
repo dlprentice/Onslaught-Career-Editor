@@ -125,6 +125,7 @@ namespace OnslaughtCareerEditor.AppCore
         public const string CopyMustStayInside = "That copy must stay inside the app-owned profile folder.";
         public const string FileMustStayInsideCopy = "That file must stay inside the copy.";
         public const string CopyCannotUseLink = "That copy cannot use a shortcut or link.";
+        public const string FileCannotShareData = "That file cannot share its data with another file.";
         public const string CopiedBeaMismatch = "That copy's BEA.exe does not match this copy.";
         public const string CopiedBackupMissing = "That copy is missing BEA.exe.original.backup.";
         public const string CopiedBackupHashMissing = "That copy is missing the BEA.exe.original.backup hash file.";
@@ -2019,7 +2020,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             uint linkCount = GetWindowsHardLinkCount(path);
             if (linkCount > 1)
-                throw new InvalidOperationException($"{label} is hardlinked to another file; refusing to copy a shared file identity into the playable copied game folder.");
+                throw new InvalidOperationException(FileCannotShareData);
         }
 
         private static uint GetWindowsHardLinkCount(string path)

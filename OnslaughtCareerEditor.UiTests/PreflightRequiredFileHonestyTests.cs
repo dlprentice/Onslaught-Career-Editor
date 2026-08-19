@@ -94,6 +94,14 @@ public class PreflightRequiredFileHonestyTests
         Assert.That(source, Does.Not.Contain("not a clean base for selected patches"));
         Assert.That(source, Does.Not.Contain("preparation refuses reparse points"));
         Assert.That(source, Does.Contain("CopyCannotUseLink"));
+        Assert.That(source, Does.Contain("FileCannotShareData"));
+        Assert.That(source, Does.Not.Contain("is hardlinked to another file"));
+        Assert.That(GameProfilePreflightService.FileCannotShareData,
+            Is.EqualTo("That file cannot share its data with another file."));
+        Assert.That(GameProfilePreflightService.FileCannotShareData.ToLowerInvariant(),
+            Does.Not.Contain("hardlink"));
+        Assert.That(GameProfilePreflightService.FileCannotShareData.ToLowerInvariant(),
+            Does.Not.Contain("identity"));
         Assert.That(source, Does.Not.Contain("manifest patch state:"));
         Assert.That(source, Does.Not.Contain("patch apply failed:"));
         Assert.That(source, Does.Not.Contain("patch verification failed:"));
