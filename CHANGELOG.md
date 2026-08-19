@@ -124,7 +124,8 @@ live in `developer_state.json` and the campaign ledgers.
   or restore uses the shared nothing-was-changed sentence. Career-save
   and Game Options patcher refusals that used to say an input or output
   path now name the files. Choosing BEA.exe on Windowed & Mods names
-  the file, not a path.
+  the file, not a path. A Settings save list with no files names the
+  game folder, not a path.
 
 ## 1.0.11 — 2026-08-07
 

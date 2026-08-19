@@ -25,4 +25,17 @@ public class SettingsFolderHonestyTests
         Assert.That(page, Does.Not.Contain("Directory does not exist."));
         Assert.That(page, Does.Not.Contain("game directory path is invalid"));
     }
+
+    [Test]
+    public void AnEmptySaveListNamesTheFolderNotAPath()
+    {
+        string page = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot,
+            "OnslaughtCareerEditor.WinUI",
+            "Pages",
+            "SettingsPage.xaml.cs"));
+
+        Assert.That(page, Does.Not.Contain("verify the selected install path."));
+        Assert.That(page, Does.Contain("check the selected game folder."));
+    }
 }
