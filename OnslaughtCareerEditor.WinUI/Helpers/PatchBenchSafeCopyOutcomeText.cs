@@ -115,7 +115,7 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
             string sourceName = FolderLeaf(sourceGameRoot, "the selected game folder");
             string destinationName = FolderLeaf(destinationRoot, "the app workspace");
             string body =
-                "The app will copy the selected game folder into its own safe workspace, then apply the verified profile and selected mods only inside that copy." +
+                "The app will copy the selected game folder into its own safe workspace, then apply the selected profile and selected mods only inside that copy." +
                 Environment.NewLine + Environment.NewLine +
                 "Source folder: " + sourceName +
                 Environment.NewLine + Environment.NewLine +
