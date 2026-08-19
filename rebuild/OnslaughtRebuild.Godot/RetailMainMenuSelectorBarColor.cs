@@ -10,10 +10,11 @@ namespace OnslaughtRebuild.GodotClient;
 /// File offset = VA − <c>0x400000</c>. Independently re-hashed this
 /// cycle (2,506,752 bytes).
 ///
-/// <para><b>Site.</b> <c>0x00462FB5</c> is <c>mov eax, esi</c> on
-/// the <c>ebx == [edi+8]</c> arm only. ESI is the icon-fade byte
-/// after the 0x00462F9C clamp, not the page-fade byte. Settled
-/// icon-fade is 255.</para>
+/// <para><b>Site.</b> <c>0x00462FB9</c> is <c>mov eax, esi</c> on
+/// the <c>ebx == [edi+8]</c> arm only. <c>0x00462FB5</c> is the
+/// preceding <c>fistp [esp+0x18]</c>, not this move. ESI is the
+/// icon-fade byte after the 0x00462F9C clamp, not the page-fade
+/// byte. Settled icon-fade is 255.</para>
 ///
 /// <para><b>Pack.</b> <c>shl eax, 7; sub esi; shl 16;
 /// and 0xFF000000</c> = <c>(esi * 127) &lt;&lt; 16</c> in the
@@ -28,10 +29,13 @@ namespace OnslaughtRebuild.GodotClient;
 /// </summary>
 public static class RetailMainMenuSelectorBarColor
 {
-    /// <summary><c>mov eax, esi</c> at <c>0x00462FB5</c>.</summary>
-    public const uint Site = 0x00462FB5u;
+    /// <summary><c>mov eax, esi</c> at <c>0x00462FB9</c>.</summary>
+    public const uint Site = 0x00462FB9u;
 
-    /// <summary><c>shl eax, 7</c> at <c>0x00462FB9</c>.</summary>
+    /// <summary><c>shl eax, 7</c> at <c>0x00462FBD</c>.</summary>
+    public const uint ShiftSite = 0x00462FBDu;
+
+    /// <summary><c>shl eax, 7</c>.</summary>
     public const int ShiftLeft = 7;
 
     /// <summary><c>and eax, 0xFF000000</c> at <c>0x00462FE6</c>.</summary>

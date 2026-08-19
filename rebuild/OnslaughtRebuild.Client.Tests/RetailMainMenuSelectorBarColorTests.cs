@@ -6,7 +6,7 @@ namespace OnslaughtRebuild.Client.Tests;
 
 /// <summary>
 /// Pins the CFEPMain::Render selector-bar colour at
-/// <c>0x00462FB5</c>, recovered from the pristine specimen
+/// <c>0x00462FB9</c>, recovered from the pristine specimen
 /// <c>local-lab/safe-copy-bea-pristine/BEA.exe.original.backup</c>,
 /// SHA-256 <c>74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750</c>
 /// (2,506,752 bytes, re-hashed this cycle). File offset = VA − <c>0x400000</c>.
@@ -21,7 +21,8 @@ public sealed class RetailMainMenuSelectorBarColorTests
     [Fact]
     public void SpecimenPackIsEsiTimesOneTwentySevenShiftedToAlpha()
     {
-        Assert.Equal(0x00462FB5u, RetailMainMenuSelectorBarColor.Site);
+        Assert.Equal(0x00462FB9u, RetailMainMenuSelectorBarColor.Site);
+        Assert.Equal(0x00462FBDu, RetailMainMenuSelectorBarColor.ShiftSite);
         Assert.Equal(0x7, RetailMainMenuSelectorBarColor.ShiftLeft);
         Assert.Equal(0xFF000000u, RetailMainMenuSelectorBarColor.AlphaMask);
         Assert.Equal(255, RetailMainMenuSelectorBarColor.ImageSettledFadeByte);
