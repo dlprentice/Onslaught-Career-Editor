@@ -267,6 +267,43 @@ public sealed class RetailCareerCampaignApplyUpdateTests
     }
 
     /// <summary>
+    /// <c>GRADE(100) &gt;= B</c> is not <c>&gt;= A</c>. Ranking 0.5f is
+    /// already pinned as B, so a Level 100 win at that ranking unlocks
+    /// 0, 8, 78, and 121 and leaves 164 at <c>GS_UNKNOWN</c>. Cite
+    /// <c>0x0041ea4f</c> / <c>0x0041f70e</c>. Mutation: unlocking 164
+    /// on B writes 2 into 164. Iceberg store-0 and first-play elapsed
+    /// stay unclaimed. No new secondaries.
+    /// </summary>
+    [Fact]
+    public void Level100Won_ApplyUpdateGradeBUnlocksOnlyThroughTheBTrainingGoodies()
+    {
+        RetailCareerCampaign career = RetailCareerReCalcLinks.CreateColdTrainingSlice();
+        RetailEndLevelSnapshot snapshot = RetailFillOutEndLevelData.ForLevel100Won(ranking: 0.5f);
+
+        career.ApplyUpdate(snapshot);
+
+        Assert.Equal(
+            (byte)'B',
+            RetailCareerGrade.GradeByteFromRanking(career.Nodes.Find(100)!.Ranking));
+        Assert.Equal(
+            RetailCareerGoodieState.New,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.CompleteWorld100Bio));
+        Assert.Equal(
+            RetailCareerGoodieState.New,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.CompleteWorld100Second));
+        Assert.Equal(
+            RetailCareerGoodieState.New,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeCOnWorld100));
+        Assert.Equal(
+            RetailCareerGoodieState.New,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeBOnWorld100));
+        Assert.Equal(
+            RetailCareerGoodieState.Unknown,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeAOnWorld100));
+        Assert.All(snapshot.SecondaryStatuses, status => Assert.Equal(0, status));
+    }
+
+    /// <summary>
     /// <c>ReCalcLinks</c> copies FillOut <c>mBaseThingsLeft</c> onto
     /// <c>level_structure[0][3] == 110</c>
     /// (<c>Career.cpp:443-452 / 519-527</c>). First-play is 1 at
