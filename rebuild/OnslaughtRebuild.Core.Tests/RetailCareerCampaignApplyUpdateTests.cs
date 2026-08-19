@@ -501,6 +501,52 @@ public sealed class RetailCareerCampaignApplyUpdateTests
         Assert.All(snapshot.SecondaryStatuses, status => Assert.Equal(0, status));
     }
 
+    /// <summary>
+    /// A second <c>ApplyUpdate</c> of the same first-play S does not
+    /// raise <c>CountGoodies</c>: <c>SET_GOODIE_NEW</c> stores only when
+    /// <c>GOODIE_NOT_DONE</c> (<c>Career.cpp:564-566</c>), so the five
+    /// already-<c>GS_NEW</c> slots stay put. The
+    /// <c>new_goodie_count</c> add is therefore delta 0
+    /// (<c>Career.cpp:895-897</c>) and <c>first_goodie</c> stays latched
+    /// because goodie 0 is no longer <c>GOODIE_NOT_DONE</c>
+    /// (<c>Career.cpp:688 / 899-900</c>). Mutation: add
+    /// <c>CountGoodies</c> without subtracting the previous total.
+    /// <c>mPendingExtraGoodies</c> and episode instruction marks stay
+    /// unclaimed. No new secondaries.
+    /// </summary>
+    [Fact]
+    public void Level100Won_ApplyUpdateReplayDoesNotAddTheSameFirstPlayGoodiesAgain()
+    {
+        RetailCareerCampaign career = RetailCareerReCalcLinks.CreateColdTrainingSlice();
+        RetailEndLevelSnapshot snapshot = RetailFillOutEndLevelData.ForLevel100Won();
+
+        career.ApplyUpdate(snapshot);
+        Assert.Equal(5, career.Counters.NewGoodieCount);
+        Assert.Equal(1, career.Counters.FirstGoodie);
+
+        career.ApplyUpdate(snapshot);
+
+        Assert.Equal(5, career.Counters.NewGoodieCount);
+        Assert.Equal(1, career.Counters.FirstGoodie);
+        Assert.Equal(
+            RetailCareerGoodieState.New,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.CompleteWorld100Bio));
+        Assert.Equal(
+            RetailCareerGoodieState.New,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.CompleteWorld100Second));
+        Assert.Equal(
+            RetailCareerGoodieState.New,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeCOnWorld100));
+        Assert.Equal(
+            RetailCareerGoodieState.New,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeBOnWorld100));
+        Assert.Equal(
+            RetailCareerGoodieState.New,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeAOnWorld100));
+        Assert.Equal(1, career.Nodes.Find(100)!.Complete);
+        Assert.All(snapshot.SecondaryStatuses, status => Assert.Equal(0, status));
+    }
+
     private static int CountExistingBaseThings(RetailCareerNode node)
     {
         int count = 0;
