@@ -108,6 +108,8 @@
              Link="godot-startup-source\RetailMainMenuLeftDecorOverlay.cs" />
     <Compile Include="..\OnslaughtRebuild.Godot\RetailMainMenuLeftTwinShadow.cs"
              Link="godot-startup-source\RetailMainMenuLeftTwinShadow.cs" />
+    <Compile Include="..\OnslaughtRebuild.Godot\RetailMainMenuLeftTwinOverlay.cs"
+             Link="godot-startup-source\RetailMainMenuLeftTwinOverlay.cs" />
     <Compile Include="..\OnslaughtRebuild.Godot\RetailFrontendCursor.cs"
              Link="godot-startup-source\RetailFrontendCursor.cs" />
     <Compile Include="..\OnslaughtRebuild.Godot\RetailFeMessBox.cs"
