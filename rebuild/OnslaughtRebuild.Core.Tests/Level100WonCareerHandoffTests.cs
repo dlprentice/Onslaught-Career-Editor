@@ -154,6 +154,71 @@ public sealed class Level100WonCareerHandoffTests
     }
 
     /// <summary>
+    /// <c>CGame::RestartLoopRunLevel</c> calls FillOut only after the
+    /// main loop quits (<c>game.cpp:1552</c>), and that quit waits for
+    /// the already-pinned 5.0 f Won store (<c>game.cpp:1997-2004</c>).
+    /// <c>CFrontEnd::Init</c> then calls <c>CAREER.Update</c>
+    /// (<c>FrontEnd.cpp:67</c>). Mutation: letting
+    /// <see cref="Level100WonCareerHandoff.TryApply"/> accept
+    /// <c>SuccessCountdown</c> unlocks world 110 before the overlay
+    /// elapses. Score-time, base-things, kills, and goodies stay
+    /// unclaimed. No new secondaries.
+    /// </summary>
+    [Fact]
+    public void SuccessCountdownDoesNotApplyFillOutEvenIfWonIsClaimed()
+    {
+        var handoff = new Level100WonCareerHandoff();
+
+        Assert.False(handoff.TryApply(
+            Level100MissionOutcome.Won,
+            Level100MissionTerminalState.SuccessCountdown));
+
+        AssertCareerStillCold(handoff.Career);
+        Assert.All(
+            RetailFillOutEndLevelData.ForLevel100Won().SecondaryStatuses,
+            status => Assert.Equal(0, status));
+    }
+
+    /// <summary>
+    /// First-play <c>LevelWon</c> starts the already-pinned 5.0 f
+    /// overlay and leaves the cold career locked until those ticks
+    /// elapse. Mutation: applying FillOut from <c>DeclareWon</c>
+    /// unlocks 110 while <c>SuccessCountdown</c> is still running.
+    /// </summary>
+    [Fact]
+    public void FrontEndHandoffReadyAfterWon_WaitsForTheFiveSecondCountdown()
+    {
+        Level100Mission mission = DriveReleasedFirstPlayUntilWon();
+
+        Assert.Equal(Level100MissionOutcome.Won, mission.Snapshot.Outcome);
+        Assert.Equal(
+            Level100MissionTerminalState.SuccessCountdown,
+            mission.Snapshot.TerminalState);
+        Assert.Equal(
+            RetailGameEndCountdown.WonTicks,
+            mission.Snapshot.TerminalTicksRemaining);
+        AssertCareerStillCold(mission.Career);
+
+        for (int tick = 0; tick < RetailGameEndCountdown.WonTicks; tick++)
+        {
+            mission.AdvanceTick(SimulationConstants.MaximumHull);
+        }
+
+        Assert.Equal(
+            Level100MissionTerminalState.FrontEndHandoffReady,
+            mission.Snapshot.TerminalState);
+        Assert.Equal(0, mission.Snapshot.TerminalTicksRemaining);
+        RetailCareerNode training = mission.Career.Nodes.Find(100)!;
+        RetailCareerNodeLink lower = mission.Career.GetLink(training.LowerLink)!;
+        Assert.Equal(1, training.Complete);
+        Assert.Equal(1, mission.Career.CareerInProgress);
+        Assert.Equal(RetailCareerNodeLink.Complete, lower.LinkType);
+        Assert.All(
+            RetailFillOutEndLevelData.ForLevel100Won().SecondaryStatuses,
+            status => Assert.Equal(0, status));
+    }
+
+    /// <summary>
     /// <c>CCareer::Update</c> at <c>0x0041BD06</c> is
     /// <c>cmp eax, 5</c> / <c>jne</c>. Lost is 4, so FillOut is never
     /// applied even if the handoff state is claimed. Mutation: dropping
@@ -225,7 +290,49 @@ public sealed class Level100WonCareerHandoffTests
             status => Assert.Equal(0, status));
     }
 
-    private static Level100Mission DriveReleasedFirstPlayToTerminal(
+    private static void AssertCareerStillCold(RetailCareerCampaign career)
+    {
+        RetailCareerNode training = career.Nodes.Find(100)!;
+        RetailCareerNodeLink lower = career.GetLink(training.LowerLink)!;
+        Assert.Equal(0, training.Complete);
+        Assert.Equal(0, career.CareerInProgress);
+        Assert.Equal(RetailCareerNodeLink.NotComplete, lower.LinkType);
+    }
+
+    private static Level100Mission DriveReleasedFirstPlayUntilWon()
+    {
+        Level100Mission mission = CreateFirstPlayMission();
+        const int settleTicks = 100 * SimulationConstants.TicksPerSecond;
+
+        Settle(mission, settleTicks);
+        for (int index = 0; index < ReleasedFirstPlayEvents.Length; index++)
+        {
+            string eventName = ReleasedFirstPlayEvents[index];
+            Assert.True(
+                mission.QueueExternalEvent(eventName),
+                $"The released LevelScript refused the event '{eventName}'.");
+            bool lastEvent = index == ReleasedFirstPlayEvents.Length - 1;
+            if (lastEvent)
+            {
+                for (int tick = 0; tick < settleTicks; tick++)
+                {
+                    mission.AdvanceTick(SimulationConstants.MaximumHull);
+                    if (mission.Snapshot.Outcome == Level100MissionOutcome.Won)
+                    {
+                        return mission;
+                    }
+                }
+
+                Assert.Fail("The released first-play script never declared Won.");
+            }
+
+            Settle(mission, settleTicks);
+        }
+
+        return mission;
+    }
+
+    private static Level100Mission CreateFirstPlayMission(
         Action<RetailCareerCampaign>? seedCareer = null)
     {
         Level100ActorDefinitionSet definitions = Level100TestActorDefinitions.Create();
@@ -237,6 +344,21 @@ public sealed class Level100WonCareerHandoffTests
             new Level100TutorialProgress(false, false, false, false),
             initialPlayerHealth: SimulationConstants.MaximumHull);
         seedCareer?.Invoke(mission.Career);
+        return mission;
+    }
+
+    private static void Settle(Level100Mission mission, int settleTicks)
+    {
+        for (int index = 0; index < settleTicks; index++)
+        {
+            mission.AdvanceTick(SimulationConstants.MaximumHull);
+        }
+    }
+
+    private static Level100Mission DriveReleasedFirstPlayToTerminal(
+        Action<RetailCareerCampaign>? seedCareer = null)
+    {
+        Level100Mission mission = CreateFirstPlayMission(seedCareer);
 
         const int settleTicks = 100 * SimulationConstants.TicksPerSecond;
         void Settle()

@@ -28,6 +28,14 @@ namespace OnslaughtRebuild.Core;
 /// from <c>Update</c> before the graph moves
 /// (<c>Career.cpp:382-385</c>).
 /// </para>
+/// <para>
+/// <b>SuccessCountdown does not take this path either.</b>
+/// <c>RestartLoopRunLevel</c> calls FillOut only after the main
+/// loop quits (<c>game.cpp:1552</c>), and that quit waits for the
+/// already-pinned 5.0 f Won store (<c>game.cpp:1997-2004</c>).
+/// <c>CFrontEnd::Init</c> then calls <c>CAREER.Update</c>
+/// (<c>FrontEnd.cpp:67</c>).
+/// </para>
 /// </remarks>
 public sealed class Level100WonCareerHandoff
 {

@@ -1,7 +1,7 @@
 # Rebuild parity contract
 
 Status: active — what "1:1 behavioral and experiential parity" means operationally
-Last updated: 2026-08-18 (Level 100 ApplyUpdate ranking does not downgrade).
+Last updated: 2026-08-19 (Level 100 SuccessCountdown does not ApplyUpdate).
 Evidence: SOURCE — authority order and the known divergences are
 recorded in `PROVENANCE.md` plus the Lost-countdown row of this table; gate capabilities are MEASURED claims of the
 tracked harnesses named in the table. Every row of *Carried retail contracts*
@@ -97,6 +97,7 @@ Owner paths are relative to the repository root; test names are relative to
 | `CCareer::Update` Level 100 ranking target | `Career.cpp:396-406` stores `mRanking` only on `GetNodeFromWorldNo(mWorldFinished)`. World 100 gets the already-pinned FillOut 1.0f (grade S). World 110 stays `BlankRanking` `-1.0f` (grade E) and incomplete | `rebuild/OnslaughtRebuild.Core/RetailCareerReCalcLinks.cs` | `RetailCareerCampaign.ApplyUpdate` | `RetailCareerCampaignApplyUpdateTests.Level100Won_ApplyUpdateWritesRankingOnlyOnTheFinishedWorld` | 1 | copy the snapshot ranking onto the unlocked child too |
 | `CGame::FillOutEndLevelData` then `CCareer::Update` Level 100 ranking target | `FrontEndHandoffReady` applies the already-pinned finished-world ranking: world 100 is 1.0f / S, world 110 stays `BlankRanking` / E. No new secondaries | `rebuild/OnslaughtRebuild.Core/Level100WonCareerHandoff.cs` | `Level100WonCareerHandoff.TryApply` | `Level100WonCareerHandoffTests.FrontEndHandoffReadyAfterWon_StoresFillOutRankingOnlyOnWorld100` | 1 | stamp FillOut ranking onto the unlocked child after `TryApply` |
 | `CCareer::Update` Level 100 ranking only-if-greater | `Career.cpp:405-406` stores `mRanking` only when the snapshot is strictly greater. A worse Level 100 replay leaves the already-pinned first-play 1.0f / S. Score-time stays unclaimed. No new secondaries | `rebuild/OnslaughtRebuild.Core/RetailCareerReCalcLinks.cs` | `RetailCareerCampaign.ApplyUpdate` | `RetailCareerCampaignApplyUpdateTests.Level100Won_ApplyUpdateDoesNotDowngradeAnExistingBetterRanking` | 1 | assign the snapshot ranking even when it is not greater |
+| `CGame::FillOutEndLevelData` then `CCareer::Update` wait for the Level 100 Won countdown | `RestartLoopRunLevel` FillOut at `game.cpp:1552` after the main loop quits; that quit waits for the already-pinned 5.0 f store (`game.cpp:1997-2004`). `CFrontEnd::Init` then calls `CAREER.Update` (`FrontEnd.cpp:67`). `TryApply` returns false on `SuccessCountdown`. Score-time stays unclaimed. No new secondaries | `rebuild/OnslaughtRebuild.Core/Level100WonCareerHandoff.cs` | `Level100WonCareerHandoff.TryApply` | `Level100WonCareerHandoffTests.SuccessCountdownDoesNotApplyFillOutEvenIfWonIsClaimed` | 1 | accept `SuccessCountdown` on `TryApply` |
 
 Two things this table deliberately does **not** claim. It does not claim these
 contracts are graded `REBUILD_READY`: that grade is a campaign artifact and
@@ -121,15 +122,17 @@ The ranking-target row names the same `ApplyUpdate` owner as the
 primary-status skip. The only-if-greater row names that same
 `ApplyUpdate` owner; it does not add another implementation. The
 FrontEndHandoff ranking-target row names the
-same `TryApply` owner as the Won handoff. Charge and the
+same `TryApply` owner as the Won handoff. The SuccessCountdown skip
+row names that same `TryApply` owner; it does not add another
+implementation. Charge and the
 career graph are not in `StateHasher` because they do not yet change fire,
 movement, or any other hashed field. So no cold-start or
 full-chain trace can reach the other sixteen, and the focused test is the
 only falsifier they have. That is exactly
 the precedent the jet-friction row set: a green replay suite there was
 *vacuous* with respect to the constant it was supposed to guard, because the
-jet throttle caps below the gate's band. The seventeenth through twenty-eighth
-rows' mutation kills were measured on 2026-08-18 in this worktree; they are
+jet throttle caps below the gate's band. The seventeenth through twenty-ninth
+rows' mutation kills were measured on 2026-08-18 and 2026-08-19 in this worktree; they are
 not among the 17 files
 under `local-lab/rebuild-parity-mutation-kills-2026-08-17/`.
 
