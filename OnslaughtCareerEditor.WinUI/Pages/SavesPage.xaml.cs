@@ -903,7 +903,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             IReadOnlyList<CheatSaveTarget> targets = CheatSaveWriterService.FindSafeCopyTargets();
             if (targets.Count == 0)
             {
-                ShowInstallNote("There is no safe copy yet. Make one in Windowed & Mods, then come back.");
+                ShowInstallNote("There is no safe copy. Make one in Windowed & Mods, then come back.");
                 return;
             }
 

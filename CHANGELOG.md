@@ -163,6 +163,8 @@ live in `developer_state.json` and the campaign ledgers.
   button names the file, not a path. Registering a
   managed copy names the app-owned profile folder, not a root. An empty
   Lore library names the next step, not the emptiness.
+  Putting a career in a safe copy when none
+  exists names the next step, not the emptiness.
 
 ## 1.0.11 — 2026-08-07
 

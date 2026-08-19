@@ -182,6 +182,19 @@ public class SaveLabPageHonestyTests
     }
 
     [Test]
+    public void PuttingASaveInASafeCopyNamesTheNextStepWhenThereIsNoCopy()
+    {
+        string code = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot,
+            "OnslaughtCareerEditor.WinUI",
+            "Pages",
+            "SavesPage.xaml.cs"));
+
+        Assert.That(code, Does.Not.Contain("There is no safe copy yet."));
+        Assert.That(code, Does.Contain("There is no safe copy. Make one in Windowed & Mods, then come back."));
+    }
+
+    [Test]
     public void ASaveEditorPatchDumpUsesTheSharedFailureSentence()
     {
         string dump = @"Could not write C:\Users\player\Documents\career.bes (Win32 error 5).";
