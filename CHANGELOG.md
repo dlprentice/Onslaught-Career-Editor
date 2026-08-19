@@ -100,7 +100,8 @@ live in `developer_state.json` and the campaign ledgers.
   sentence. A failed Game Options write that still looks
   like a dump uses the shared nothing-was-changed sentence. A failed
   focused Goodie write that still looks like a dump uses that same
-  sentence.
+  sentence. Save Editor refusals that used to say paths now name the
+  files.
 
 ## 1.0.11 — 2026-08-07
 

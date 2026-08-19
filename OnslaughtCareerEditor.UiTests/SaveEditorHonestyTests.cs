@@ -328,6 +328,38 @@ public class SaveEditorHonestyTests
     }
 
     [Test]
+    public void AWrongExtensionDoesNotNameAPathOnPatch()
+    {
+        string input = Path.Combine(Path.GetTempPath(), "career.txt");
+        string output = Path.Combine(Path.GetTempPath(), "out.txt");
+
+        PatchResult full = SaveEditorService.PatchSave(new SavePatchRequest
+        {
+            InputPath = input,
+            OutputPath = output,
+            PatchNodes = true,
+        });
+        PatchResult focused = SaveEditorService.PatchFocusedGoodieState(new FocusedGoodieStatePatchRequest
+        {
+            InputPath = input,
+            OutputPath = output,
+            GoodieId = 0,
+            State = MissionScriptGoodieState.New,
+        });
+
+        Assert.That(full.Success, Is.False);
+        Assert.That(focused.Success, Is.False);
+        Assert.That(full.Message, Does.Contain(".bes"));
+        Assert.That(focused.Message, Does.Contain(".bes"));
+        Assert.That(full.Message.ToLowerInvariant(), Does.Not.Contain("path"));
+        Assert.That(focused.Message.ToLowerInvariant(), Does.Not.Contain("path"));
+        Assert.That(full.Message, Does.Not.Contain(input));
+        Assert.That(focused.Message, Does.Not.Contain(output));
+        Assert.That(SaveEditorService.PathsUnusable.ToLowerInvariant(), Does.Not.Contain("path"));
+        Assert.That(SaveEditorService.PathsUnusable, Does.Contain("Nothing was changed"));
+    }
+
+    [Test]
     public void AnUnreadableCareerPathDoesNotDumpTheException()
     {
         string source = File.ReadAllText(Path.Combine(
@@ -337,6 +369,8 @@ public class SaveEditorHonestyTests
         Assert.That(source, Does.Contain("That file could not be opened."));
         Assert.That(source, Does.Contain("return InputMissing;"));
         Assert.That(source, Does.Not.Contain("No file exists at that path."));
+        Assert.That(source, Does.Not.Contain("Those save paths"));
+        Assert.That(source, Does.Not.Contain("input and output paths"));
         Assert.That(source, Does.Not.Contain("That path could not be read:"));
         Assert.That(source, Does.Not.Contain("That file could not be opened:"));
     }

@@ -54,7 +54,7 @@ namespace OnslaughtCareerEditor.AppCore
     public static class SaveEditorService
     {
         public const string InputMissing = "That career save could not be found. Nothing was changed.";
-        public const string PathsUnusable = "Those save paths could not be used. Nothing was changed.";
+        public const string PathsUnusable = "Those career saves could not be used. Nothing was changed.";
 
         public static IReadOnlyList<SaveAnalyzerFileItem> GetDetectedCareerSaves(string? gameDir = null)
         {
@@ -307,7 +307,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             if (!IsCareerSaveFilePath(inputPath) || !IsCareerSaveFilePath(outputPath))
             {
-                return PatchResult.Fail("Save Editor requires .bes career save input and output paths.");
+                return PatchResult.Fail("Save Editor requires .bes career save input and output files.");
             }
 
             try
@@ -362,7 +362,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             if (!IsCareerSaveFilePath(inputPath) || !IsCareerSaveFilePath(outputPath))
             {
-                return PatchResult.Fail("Focused Goodie state patching requires .bes input and output paths.");
+                return PatchResult.Fail("Focused Goodie state patching requires .bes input and output files.");
             }
 
             if ((uint)request.GoodieId >= MissionScriptGoodieStateSaveCodec.DisplayableGoodieCount)
