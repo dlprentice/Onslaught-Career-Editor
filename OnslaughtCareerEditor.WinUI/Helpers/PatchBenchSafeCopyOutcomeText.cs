@@ -221,6 +221,28 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
             return "Safe-copy music backup restore failed.";
         }
 
+        /// <summary>
+        /// Last operation names the restored track. The internal restore
+        /// sentence does not belong on the page.
+        /// </summary>
+        public static string BuildMusicRestoreOperationLog(string targetMusicFileName, bool success)
+        {
+            if (!success)
+            {
+                return DescribeCaughtFailure("restore the safe-copy music backup");
+            }
+
+            string name = string.IsNullOrWhiteSpace(targetMusicFileName)
+                ? string.Empty
+                : Path.GetFileName(targetMusicFileName.Trim());
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                name = "that track";
+            }
+
+            return $"Music backup restored for {name}. The original install stays unchanged.";
+        }
+
         private static string BuildSavegamesSummary(bool copiedSavegames)
         {
             return copiedSavegames

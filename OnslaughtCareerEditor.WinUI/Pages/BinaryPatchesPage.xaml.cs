@@ -1903,7 +1903,9 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
                 PatchBenchMusicReplacementStatus.Text =
                     PatchBenchSafeCopyOutcomeText.BuildMusicRestoreResultStatus(result.TargetMusicFileName, result.Success);
-                OperationLogTextBox.Text = result.Message;
+                OperationLogTextBox.Text = PatchBenchSafeCopyOutcomeText.BuildMusicRestoreOperationLog(
+                    result.TargetMusicFileName,
+                    result.Success);
                 AppStatusService.SetStatus(result.Success ? "Windowed & Mods: music backup restored" : "Windowed & Mods: music restore failed");
 
             }

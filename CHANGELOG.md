@@ -59,7 +59,9 @@ live in `developer_state.json` and the campaign ledgers.
   copied game names the action and that nothing was changed, without the
   exception. A failed backup of the installed game does the same, and an
   unreadable install path is named without the exception. The
-  installed-game status line names the folder, not the path.
+  installed-game status line names the folder, not the path. A restored
+  music backup names the track and that the install was not changed,
+  without the internal restore sentence.
 
 ## 1.0.11 — 2026-08-07
 
