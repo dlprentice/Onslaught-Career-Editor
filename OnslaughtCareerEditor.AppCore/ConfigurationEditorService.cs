@@ -134,7 +134,7 @@ namespace OnslaughtCareerEditor.AppCore
     {
         public const string InputMissing = "That options file could not be found. Nothing was changed.";
         public const string InputInvalid = "That file is not a valid game options file. Nothing was changed.";
-        public const string PathsUnusable = "Those options paths could not be used. Nothing was changed.";
+        public const string PathsUnusable = "Those options files could not be used. Nothing was changed.";
 
         private sealed record KeybindDefinition(
             string GroupLabel,
@@ -301,12 +301,12 @@ namespace OnslaughtCareerEditor.AppCore
             string outputPath = request.OutputPath?.Trim() ?? string.Empty;
             if (inputPath.Length == 0 || outputPath.Length == 0)
             {
-                return PatchResult.Fail("Select both input and output .bea paths before patching game options.");
+                return PatchResult.Fail("Select both input and output files before patching.");
             }
 
             if (!SaveEditorService.IsOptionsLikeFilePath(inputPath) || !SaveEditorService.IsOptionsLikeFilePath(outputPath))
             {
-                return PatchResult.Fail("Game Options requires .bea/defaultoptions.bea input and output paths.");
+                return PatchResult.Fail("Game Options requires .bea/defaultoptions.bea files.");
             }
 
             try

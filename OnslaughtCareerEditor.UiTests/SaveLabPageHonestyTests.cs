@@ -212,6 +212,22 @@ public class SaveLabPageHonestyTests
     }
 
     [Test]
+    public void GameOptionsRefusalsNameTheFilesNotThePaths()
+    {
+        Assert.That(ConfigurationEditorService.PathsUnusable.ToLowerInvariant(), Does.Not.Contain("path"));
+        Assert.That(ConfigurationEditorService.PathsUnusable, Does.Contain("Nothing was changed"));
+        Assert.That(ConfigurationEditorService.PathsUnusable, Does.Contain("options files"));
+
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "ConfigurationEditorService.cs"));
+
+        Assert.That(source, Does.Not.Contain("input and output .bea paths"));
+        Assert.That(source, Does.Not.Contain("input and output paths"));
+        Assert.That(source, Does.Contain("Select both input and output files before patching."));
+        Assert.That(source, Does.Contain("requires .bea/defaultoptions.bea"));
+    }
+
+    [Test]
     public void GameOptionsAsksBeforeItPatchesAndLeavesTheFileAloneOnCancel()
     {
         string options = File.ReadAllText(Path.Combine(
