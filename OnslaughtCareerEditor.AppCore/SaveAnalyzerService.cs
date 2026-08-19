@@ -114,7 +114,7 @@ namespace OnslaughtCareerEditor.AppCore
                 {
                     Label = "Missions",
                     Value = isValid ? $"{analysis.CompletedNodes}/{usedNodes}" : "Invalid",
-                    Detail = isValid ? "completed / used nodes" : analysis.ErrorMessage
+                    Detail = isValid ? "completed / used nodes" : null
                 },
                 new SaveAnalyzerMetric
                 {

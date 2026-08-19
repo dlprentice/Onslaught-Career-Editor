@@ -544,6 +544,9 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             Assert.DoesNotContain("Save Analyzer: Invalid file -", document.StatusText);
             Assert.DoesNotContain(@"C:\Games", document.StatusText);
             Assert.DoesNotContain(":\\", document.StatusText);
+            Assert.DoesNotContain(
+                "Invalid file size",
+                document.Metrics.Single(metric => metric.Label == "Missions").Detail ?? string.Empty);
         }
 
         [Fact]
