@@ -385,7 +385,7 @@ public class WinUiVisualSmokeTests
             evidenceDir,
             "asset-library-sidecar-texture.png",
             initialTag: "assets",
-            expectedText: "Sidecar texture preview: orphan_sidecar.png",
+            expectedText: "Texture preview: orphan_sidecar.png",
             settleMilliseconds: 1_000,
             initialAssetSubTab: 1,
             assetCatalogPath: assetCatalogFixture,
@@ -777,8 +777,7 @@ public class WinUiVisualSmokeTests
 
         _ = FindByAutomationId(window, "AssetTexturePreviewImage");
         string previewTitle = TryGetName(FindByAutomationId(window, "AssetPreviewTitle")) ?? string.Empty;
-        Assert.That(previewTitle, Does.Contain("Sidecar texture preview"));
-        Assert.That(previewTitle, Does.Contain(expectedFileName));
+        Assert.That(previewTitle, Is.EqualTo($"Texture preview: {expectedFileName}"));
     }
 
     private static void AssertGoodieModelSelection(Window window, string searchText, string expectedTitle)
