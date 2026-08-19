@@ -720,6 +720,7 @@ class FrameworkDerivationTests(unittest.TestCase):
             self.assertIn(f'"{cohort}"', derivation)
         for rehearsed_only in (
                 "name-cohort-waypoint-follow",
+                "name-cohort-round-dual-owner",
         ):
             self.assertNotIn(rehearsed_only, self.live,
                              "a rehearsed cohort is not an authorization")
