@@ -1,3 +1,5 @@
+using System.IO;
+
 namespace OnslaughtCareerEditor.WinUI.Helpers
 {
     /// <summary>
@@ -9,6 +11,8 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         public const string EmptySearchNextStep =
             "Try another word, or clear the search.";
 
+        public const string DocumentTooltipFallback = "Offline Lore document";
+
         public static string DescribeSearchStatus(string query, int matchCount)
         {
             if (matchCount <= 0)
@@ -17,6 +21,37 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
             }
 
             return $"Filtered results for \"{query}\".";
+        }
+
+        /// <summary>
+        /// The current-document tooltip names the file, not the lore-book folder
+        /// or a full path. The summary line already says which article this is.
+        /// </summary>
+        public static string BuildDocumentTooltip(string? title, string? relativePath, string? sourcePath = null)
+        {
+            string relativeLeaf = LeafName(relativePath);
+            if (!string.IsNullOrWhiteSpace(relativeLeaf))
+            {
+                return relativeLeaf;
+            }
+
+            if (!string.IsNullOrWhiteSpace(title))
+            {
+                return title.Trim();
+            }
+
+            string sourceLeaf = LeafName(sourcePath);
+            return string.IsNullOrWhiteSpace(sourceLeaf) ? DocumentTooltipFallback : sourceLeaf;
+        }
+
+        private static string LeafName(string? path)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                return string.Empty;
+            }
+
+            return Path.GetFileName(path.Trim().Replace('/', Path.DirectorySeparatorChar));
         }
     }
 }

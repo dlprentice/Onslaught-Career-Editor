@@ -43,4 +43,45 @@ public class LorePageHonestyTests
         Assert.That(code, Does.Contain("LorePageText.DescribeSearchStatus"));
         Assert.That(code, Does.Not.Contain("Filtered results for \\\"{query}\\\""));
     }
+
+    [Test]
+    public void ADocumentTooltipNamesTheFileNotTheFolder()
+    {
+        string tooltip = LorePageText.BuildDocumentTooltip(
+            "The Book",
+            "lore-book/BOOK.md",
+            @"C:\Games\Battle Engine Aquila\lore\BOOK.md");
+
+        Assert.That(tooltip, Is.EqualTo("BOOK.md"));
+        Assert.That(tooltip, Does.Not.Contain("lore-book"));
+        Assert.That(tooltip, Does.Not.Contain("/"));
+        Assert.That(tooltip, Does.Not.Contain("\\"));
+        Assert.That(tooltip, Does.Not.Contain(":\\"));
+        Assert.That(tooltip, Does.Not.Contain("C:"));
+    }
+
+    [Test]
+    public void ABlankRelativePathFallsBackToTheTitleThenTheSourceFile()
+    {
+        Assert.That(
+            LorePageText.BuildDocumentTooltip("Start Here", "   ", null),
+            Is.EqualTo("Start Here"));
+        Assert.That(
+            LorePageText.BuildDocumentTooltip(null, null, Path.Combine("C:" + Path.DirectorySeparatorChar, "lore", "Start-Here.md")),
+            Is.EqualTo("Start-Here.md"));
+        Assert.That(
+            LorePageText.BuildDocumentTooltip("  ", "", ""),
+            Is.EqualTo(LorePageText.DocumentTooltipFallback));
+    }
+
+    [Test]
+    public void TheReaderUsesTheSharedTooltipAndDoesNotPaintTheRelativePath()
+    {
+        string code = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI", "Pages", "LorePage.xaml.cs"));
+
+        Assert.That(code, Does.Contain("LorePageText.BuildDocumentTooltip"));
+        Assert.That(code, Does.Contain("LorePageText.DocumentTooltipFallback"));
+        Assert.That(code, Does.Not.Contain("return document.RelativePath;"));
+    }
 }

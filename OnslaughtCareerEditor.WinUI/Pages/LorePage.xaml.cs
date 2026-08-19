@@ -21,7 +21,6 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         private const string LoreHistoryFailureMessage = "That Lore history entry could not be reopened. Refresh the library and try again.";
         private const string LoreHomeFailureMessage = "The Lore home document could not be opened. Refresh the library and try again.";
         private const string LoreExternalOpenFailureMessage = "That Lore document could not be handed to your browser. Try again once the library has finished loading.";
-        private const string LoreDocumentTooltipFallback = "Offline Lore document";
 
         private readonly LoreBrowserService _service = new();
         private readonly Dictionary<string, LoreDocument> _documentLookup = new(StringComparer.OrdinalIgnoreCase);
@@ -827,21 +826,17 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         private string ResolveToolTipPath(string sourcePath)
         {
-            if (_documentLookup.TryGetValue(sourcePath, out LoreDocument? document) &&
-                !string.IsNullOrWhiteSpace(document.RelativePath))
+            if (_documentLookup.TryGetValue(sourcePath, out LoreDocument? document))
             {
-                return document.RelativePath;
+                return LorePageText.BuildDocumentTooltip(document.Title, document.RelativePath, sourcePath);
             }
 
             if (IsLorePackSourcePath(sourcePath))
             {
-                return LoreDocumentTooltipFallback;
+                return LorePageText.DocumentTooltipFallback;
             }
 
-            string fileName = Path.GetFileName(sourcePath);
-            return string.IsNullOrWhiteSpace(fileName)
-                ? LoreDocumentTooltipFallback
-                : fileName;
+            return LorePageText.BuildDocumentTooltip(title: null, relativePath: null, sourcePath);
         }
 
         private static string BuildNodeKey(LoreTreeItem item, string? parentKey, int index)

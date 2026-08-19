@@ -79,7 +79,8 @@ live in `developer_state.json` and the campaign ledgers.
   longer dumps the exception. A live-trainer read or hold stop names the
   status, not the internal read sentence. Installed-game patch and restore
   questions name the folder, not the path. A Save Analyzer report that
-  cannot decode keybinds names that, without the exception.
+  cannot decode keybinds names that, without the exception. A Lore document
+  tooltip names the file, not the lore-book folder.
 
 ## 1.0.11 — 2026-08-07
 
