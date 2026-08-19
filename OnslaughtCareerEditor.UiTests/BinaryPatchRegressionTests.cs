@@ -568,7 +568,9 @@ public class BinaryPatchRegressionTests
 
             var apply = BinaryPatchEngine.ApplyPatchesToFile(BuildTestTarget(exePath, allowedRoot), selected);
             Assert.That(apply.success, Is.False);
-            Assert.That(apply.message, Does.Contain("app-owned Patch Bench workspace"));
+            Assert.That(apply.message, Is.EqualTo(BinaryPatchEngine.PatchTargetMustStayInsideWorkspaceFolder));
+            Assert.That(apply.message, Does.Contain("workspace folder"));
+            Assert.That(apply.message, Does.Not.Contain("Patch Bench"));
             Assert.That(File.Exists(BinaryPatchEngine.BuildBackupPath(exePath)), Is.False);
         }
         finally

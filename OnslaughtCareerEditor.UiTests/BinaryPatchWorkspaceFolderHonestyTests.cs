@@ -50,6 +50,57 @@ public class BinaryPatchWorkspaceFolderHonestyTests
     }
 
     [Test]
+    public void ATargetOutsideTheWorkspaceFolderNamesTheFolderNotPatchBench()
+    {
+        string allowed = Path.Combine(Path.GetTempPath(), $"bea-workspace-allowed-{Guid.NewGuid():N}");
+        string outside = Path.Combine(Path.GetTempPath(), $"bea-workspace-outside-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(allowed);
+        Directory.CreateDirectory(outside);
+        string exePath = Path.Combine(outside, "BEA.exe");
+        File.WriteAllBytes(exePath, new byte[16]);
+        try
+        {
+            var restore = BinaryPatchEngine.RestoreFromBackup(
+                new BinaryPatchTargetOptions(exePath, AllowedRoot: allowed));
+
+            Assert.That(restore.success, Is.False);
+            Assert.That(restore.message, Is.EqualTo(BinaryPatchEngine.PatchTargetMustStayInsideWorkspaceFolder));
+            Assert.That(restore.message, Is.EqualTo("Patch target must stay inside the workspace folder."));
+            Assert.That(restore.message, Does.Contain("workspace folder"));
+            Assert.That(restore.message, Does.Not.Contain("Patch Bench"));
+            Assert.That(restore.message.ToLowerInvariant(), Does.Not.Contain("root"));
+            Assert.That(restore.message.ToLowerInvariant(), Does.Not.Contain("path"));
+            Assert.That(restore.message, Does.Not.Contain(allowed));
+            Assert.That(restore.message, Does.Not.Contain(outside));
+            Assert.That(restore.message, Does.Not.Contain(":\\"));
+        }
+        finally
+        {
+            Directory.Delete(allowed, recursive: true);
+            Directory.Delete(outside, recursive: true);
+        }
+    }
+
+    [Test]
+    public void ThePatchEngineDropsThePatchBenchWorkspaceSentence()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot,
+            "OnslaughtCareerEditor.AppCore",
+            "BinaryPatchEngine.cs"));
+
+        Assert.That(source, Does.Contain("PatchTargetMustStayInsideWorkspaceFolder"));
+        Assert.That(source, Does.Contain("BackupMustStayInsideWorkspaceFolder"));
+        Assert.That(source, Does.Contain("BackupHashMustStayInsideWorkspaceFolder"));
+        Assert.That(source, Does.Not.Contain("app-owned Patch Bench workspace."));
+        Assert.That(source, Does.Not.Contain("app-owned Patch Bench workspace root"));
+        Assert.That(BinaryPatchEngine.BackupMustStayInsideWorkspaceFolder,
+            Is.EqualTo("BEA.exe.original.backup must stay inside the workspace folder."));
+        Assert.That(BinaryPatchEngine.BackupHashMustStayInsideWorkspaceFolder,
+            Is.EqualTo("The backup hash file must stay inside the workspace folder."));
+    }
+
+    [Test]
     public void AProtectedInstallNamesTheFolderNotARoot()
     {
         string source = File.ReadAllText(Path.Combine(

@@ -143,6 +143,12 @@ namespace OnslaughtCareerEditor.AppCore
             "That patch target could not be used. Nothing was changed.";
         public const string WorkspaceFolderRequired =
             "An app-owned workspace folder is required.";
+        public const string PatchTargetMustStayInsideWorkspaceFolder =
+            "Patch target must stay inside the workspace folder.";
+        public const string BackupMustStayInsideWorkspaceFolder =
+            "BEA.exe.original.backup must stay inside the workspace folder.";
+        public const string BackupHashMustStayInsideWorkspaceFolder =
+            "The backup hash file must stay inside the workspace folder.";
         public const string ProtectedInstallFolder =
             "Patch target is under Program Files or another protected install folder. Work in a copy, or choose to patch your installed game - which takes a verified backup first.";
         public const string BackupFileMissing =
@@ -1595,15 +1601,15 @@ namespace OnslaughtCareerEditor.AppCore
             }
 
             if (!IsPathUnderRoot(fullExePath, fullRoot))
-                return (false, "Patch target must be inside the app-owned Patch Bench workspace.", null);
+                return (false, PatchTargetMustStayInsideWorkspaceFolder, null);
 
             string backupPath = BuildBackupPath(fullExePath);
             if (!IsPathUnderRoot(backupPath, fullRoot))
-                return (false, "BEA.exe.original.backup must stay inside the app-owned Patch Bench workspace.", null);
+                return (false, BackupMustStayInsideWorkspaceFolder, null);
 
             string backupHashPath = BuildBackupHashPath(fullExePath);
             if (!IsPathUnderRoot(backupHashPath, fullRoot))
-                return (false, "The backup hash file must stay inside the app-owned Patch Bench workspace.", null);
+                return (false, BackupHashMustStayInsideWorkspaceFolder, null);
 
             var filesystemSafety = ValidatePatchFilesystemSafety(fullExePath, backupPath, backupHashPath, fullRoot);
             if (!filesystemSafety.success)
@@ -2121,7 +2127,7 @@ namespace OnslaughtCareerEditor.AppCore
             try
             {
                 string rootPath = NormalizeExistingRootForAttributes(normalizedRoot);
-                RejectExistingReparseAncestors(rootPath, "app-owned Patch Bench workspace root");
+                RejectExistingReparseAncestors(rootPath, "workspace folder");
                 RejectExistingReparseAncestors(exePath, "patch target path");
                 RejectExistingReparseAncestors(backupPath, "patch backup path");
                 RejectReparsePoint(exePath, "patch target");
