@@ -1144,10 +1144,10 @@ namespace OnslaughtCareerEditor.AppCore
         private static void ValidateRequiredSourceEntries(string sourceRoot, string executableSource, bool hasExecutableOverride)
         {
             if (!hasExecutableOverride && !File.Exists(Path.Combine(sourceRoot, "BEA.exe")))
-                throw new FileNotFoundException("Required game entry is missing: BEA.exe", Path.Combine(sourceRoot, "BEA.exe"));
+                throw new FileNotFoundException(SourceExecutableMissing);
 
             if (hasExecutableOverride && !File.Exists(executableSource))
-                throw new FileNotFoundException("Executable override is missing.", executableSource);
+                throw new FileNotFoundException(SourceExecutableMissing);
 
             foreach (string entry in s_requiredDirectoryEntries)
             {
@@ -1161,7 +1161,7 @@ namespace OnslaughtCareerEditor.AppCore
             {
                 string path = Path.Combine(sourceRoot, entry);
                 if (!File.Exists(path))
-                    throw new FileNotFoundException($"Required game file is missing: {entry}", path);
+                    throw new FileNotFoundException($"Required game file is missing: {entry}");
                 RejectReparsePoint(path, $"required game file '{entry}'");
                 RejectMultipleHardLinks(path, $"Required game file '{entry}'");
             }

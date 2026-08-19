@@ -47,6 +47,9 @@ public class PreflightRequiredFileHonestyTests
         Assert.That(source, Does.Contain("SourceExecutableMissing"));
         Assert.That(source, Does.Not.Contain("FileNotFoundException(SourceExecutableMissing,"));
         Assert.That(source, Does.Not.Contain("BEA.exe source was not found."));
+        Assert.That(source, Does.Not.Contain("Required game entry is missing: BEA.exe"));
+        Assert.That(source, Does.Not.Contain("Executable override is missing."));
+        Assert.That(source, Does.Not.Contain("FileNotFoundException($\"Required game file is missing: {entry}\", path)"));
     }
 
     [Test]
