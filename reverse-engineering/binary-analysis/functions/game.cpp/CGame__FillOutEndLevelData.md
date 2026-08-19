@@ -161,7 +161,8 @@ Cheapest falsifier: file `0x0006d470` is not `a1 5c 51 85 00`, **or**
 `d9 1d a0 9b 8a 00`, **or** `0x0010d2ed` is not `d9 1d a4 9b 8a 00`,
 **or** L100 RLWD payload `+0x147ba` is not `00 00 96 43`, **or**
 `+0x147be` is not `00 00 fa 43`, **or** BSWD payload `+62` is not
-`uint16 35`, **or** `0x0010d00f` is not
+`00 00`, **or** BSWD payload `+68` is not `23 00` (`uint16 35`),
+**or** `0x0010d00f` is not
 `8d 8a c0 00 00 00 e8 06 8b fd ff`, **or** `0x000d27de` is not
 `89 46 08`, **or** `0x000d30dc` is not `ff 41 08`, **or**
 `tools/call_xref_scan.py` on `0x004d30d0` is not exactly `E8` at
