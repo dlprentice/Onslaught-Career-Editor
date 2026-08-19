@@ -284,6 +284,9 @@ public sealed partial class RetailFrontendFlow
         // 0x004A33FC after selected 0xFFFFCC00 / disabled 0x50505050.
         // CMenuItemDropdown::Render 0x004A3C69 uses the same cosine as
         // EDI itself — it does not call CMenuItem__Render.
+        // CMenuItem__Render dest leftover is RetailOptionsMenuItemDest:
+        // incoming dest X minus integer-half SIZE.cx. Dest Y keeps the
+        // row top. Nearby 5.0 is leftover min dest X, not dest Y.
         float seconds = (float)_animationSeconds;
         Color color;
         if (row.Kind == RetailOptionsRowKind.Dropdown &&
@@ -328,19 +331,20 @@ public sealed partial class RetailFrontendFlow
     }
 
     /// <summary>
-    /// Centred, floored to a whole pixel.
+    /// Centred on the incoming dest X leftover.
     ///
-    /// The floor is NOT cosmetic. A half-pixel origin makes Godot resample every
-    /// glyph, and the first capture of this page showed it: the bindings grid's
-    /// 4px-wide 'R' stem came out as a 5px run of half-intensity texels where
-    /// retail draws four full ones. Flooring reproduces retail's own ink columns
-    /// exactly - "Control configuration details" at x219, "Movement: Forward" at
-    /// x261, both measured off the retail frame.
+    /// CMenuItem__Render dest leftover is RetailOptionsMenuItemDest:
+    /// incoming dest X minus integer-half SIZE.cx. Dest Y keeps the
+    /// row top. Nearby leftover min dest X is not dest Y. The dest
+    /// is already a whole pixel, so this is not a half-pixel origin.
+    /// The 2px MeasureText residual stays open.
     /// </summary>
     private void DrawOptionTextCentered(string text, float top, Color color) =>
         DrawOptionsBodyText(
             text,
-            new Vector2(Mathf.Floor(OptionRowCenterX - (MeasureText(text, 1f) * 0.5f)), top),
+            new Vector2(
+                RetailOptionsMenuItemDest.DestX(OptionRowCenterX, (int)MeasureText(text, 1f)),
+                top),
             1f,
             color);
 
