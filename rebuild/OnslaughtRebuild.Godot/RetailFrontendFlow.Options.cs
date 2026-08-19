@@ -288,7 +288,10 @@ public sealed partial class RetailFrontendFlow
         // leftover. Dest Y keeps the row top. The pad constant is not dest.
         // CMenuItemDropdown expanded list dest leftover is
         // RetailOptionsDropdownListDest: collapsed dest leftover plus the
-        // pad leftover. Dest Y keeps the entry top. The pad constant is not dest.
+        // pad leftover. Dest is not the pad constant.
+        // CMenuItemDropdown expanded list dest Y leftover is
+        // RetailOptionsDropdownListDestY: panel dest leftover plus index
+        // times cy. Dest Y does not consult currentIndex.
         // CMenuItemDropdown expanded panel dest leftover is
         // RetailOptionsDropdownPanelDest: collapsed dest leftover, dest Y
         // incoming minus integer-half of (count-1)*cy, width max cx plus 3.
@@ -476,12 +479,19 @@ public sealed partial class RetailFrontendFlow
 
         for (int i = 0; i < row.States.Count; i++)
         {
-            float entryTop = top + ((i - row.CurrentIndex) * DropdownEntryPitch);
             // Incoming dest X plus collapsed pad plus the pad leftover.
-            // Dest is not the 2.0 constant. Dest Y keeps the entry top.
+            // Dest is not the pad constant. Dest Y is the panel dest
+            // leftover plus index times cy. Dest Y does not consult
+            // currentIndex.
             DrawOptionsBodyText(
                 row.StateLabel(i),
-                new Vector2(RetailOptionsDropdownListDest.DestX(OptionLabelRightX), entryTop),
+                new Vector2(
+                    RetailOptionsDropdownListDest.DestX(OptionLabelRightX),
+                    RetailOptionsDropdownListDestY.DestY(
+                        top,
+                        row.States.Count,
+                        (int)DropdownEntryPitch,
+                        i)),
                 1f,
                 i == row.CurrentIndex ? DropdownEntrySelected : DropdownEntry);
         }
@@ -710,7 +720,11 @@ public sealed partial class RetailFrontendFlow
             float rowTop = _options.RowTop(_options.SelectedIndex);
             for (int i = 0; i < expanded.States.Count; i++)
             {
-                float entryTop = rowTop + ((i - expanded.CurrentIndex) * DropdownEntryPitch);
+                float entryTop = RetailOptionsDropdownListDestY.DestY(
+                    rowTop,
+                    expanded.States.Count,
+                    (int)DropdownEntryPitch,
+                    i);
                 if (design.Y >= entryTop && design.Y < entryTop + DropdownEntryPitch &&
                     design.X >= RetailOptionsDropdownPanelDest.DestX(OptionLabelRightX))
                 {
