@@ -87,4 +87,18 @@ public class BinaryPatchCopyHonestyTests
         Assert.That(engine, Does.Contain("Target: {TargetFileName}"));
         Assert.That(engine, Does.Contain("BEA.exe.original.backup"));
     }
+
+    [Test]
+    public void AMissingBackupDoesNotDumpThePath()
+    {
+        string engine = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "BinaryPatchEngine.cs"));
+        string page = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI", "Pages", "BinaryPatchesPage.xaml.cs"));
+
+        Assert.That(engine, Does.Not.Contain("Backup file not found: {backupPath}"));
+        Assert.That(engine, Does.Contain("BEA.exe.original.backup could not be found. Nothing was changed."));
+        Assert.That(page, Does.Not.Contain("Backup file not found for the selected executable."));
+        Assert.That(page, Does.Contain("BackupFileMissing"));
+    }
 }

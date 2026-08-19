@@ -198,7 +198,9 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 new BinaryPatchTargetOptions(lab.ExePath, lab.GameRoot));
 
             Assert.False(success);
-            Assert.Contains("Backup file not found", message);
+            Assert.Equal(BinaryPatchEngine.BackupFileMissing, message);
+            Assert.DoesNotContain(lab.ExePath, message, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain(":\\", message);
         }
 
         [Fact]

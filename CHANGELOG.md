@@ -116,7 +116,8 @@ live in `developer_state.json` and the campaign ledgers.
   names the data folder, not media/data. A Cheats refresh
   that still finds no copies names the next step, not the emptiness. A
   write inside a Battle Engine Aquila game folder names the files, not
-  the output paths.
+  the output paths. A missing restore backup names
+  BEA.exe.original.backup, not the path.
 
 ## 1.0.11 — 2026-08-07
 

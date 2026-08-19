@@ -1363,7 +1363,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
             if (!File.Exists(BinaryPatchEngine.BuildBackupPath(exePath)))
             {
-                OperationLogTextBox.Text = "Backup file not found for the selected executable.";
+                OperationLogTextBox.Text = BinaryPatchEngine.BackupFileMissing;
                 AppStatusService.SetStatus("Windowed & Mods: backup not found");
                 UpdateControlState();
                 return;

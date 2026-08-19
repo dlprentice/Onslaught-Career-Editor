@@ -141,6 +141,8 @@ namespace OnslaughtCareerEditor.AppCore
             "That game file could not be read. Nothing was changed.";
         public const string WorkingCopyPathUnusable =
             "That patch target could not be used. Nothing was changed.";
+        public const string BackupFileMissing =
+            "BEA.exe.original.backup could not be found. Nothing was changed.";
         private const string BackupHashSuffix = ".sha256";
         private const string CatalogRelativePath = "patches/catalog/patches.v2.json";
         private const string ExpectedPatchCatalogSha256 = "48cebf987355622bb54c212d5af4705a6c80df468a25651773c6f41522619622";
@@ -1439,7 +1441,7 @@ namespace OnslaughtCareerEditor.AppCore
             string exePath = validation.info.ExePath;
             string backupPath = validation.info.BackupPath;
             if (!File.Exists(backupPath))
-                return (false, $"Backup file not found: {backupPath}");
+                return (false, BackupFileMissing);
 
             byte[] backupBytes = File.ReadAllBytes(backupPath);
             var backupIntegrity = ValidateBackupSnapshotIntegrity(validation.info.BackupHashPath, backupBytes);
