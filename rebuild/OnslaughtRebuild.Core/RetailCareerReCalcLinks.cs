@@ -121,7 +121,10 @@ public sealed class RetailCareerNodeLink
 /// world 110 is incomplete; leftover complete-110 plus C opens
 /// the store. FrontEndHandoff leftover of that C seed still
 /// opens it through <c>TryApply</c>. Isolated leftover C names
-/// ApplyUpdate. Goodie 14 (<c>COMPLETE_LEVEL(110)</c>) stays closed
+/// ApplyUpdate. First-play FrontEndHandoff still leaves goodie 1
+/// at <c>GS_UNKNOWN</c> because world 110 is incomplete; isolated
+/// closed GRADE(110) names ApplyUpdate, not <c>TryApply</c>.
+/// Goodie 14 (<c>COMPLETE_LEVEL(110)</c>) stays closed
 /// on first-play because world 110 is unlocked but still
 /// incomplete. Leftover complete-110 plus ranking 0.0f (already
 /// pinned as E) opens that store. Lost leftover of the same

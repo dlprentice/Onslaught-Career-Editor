@@ -26,7 +26,11 @@ namespace OnslaughtRebuild.Core;
 /// ranking 0.25f (already pinned as C) still opens
 /// <c>SET_GOODIE_NEW(1)</c> through the same seam. Isolated
 /// leftover C names ApplyUpdate; FrontEndHandoff leftover 14
-/// names 14, not 1.
+/// names 14, not 1. First-play through this seam leaves
+/// <c>GRADE(110) &gt;= C</c> closed: world 110 is incomplete so
+/// the lookup is the already-pinned incomplete <c>'E'</c> and
+/// goodie 1 stays <c>GS_UNKNOWN</c>. Isolated closed GRADE(110)
+/// names ApplyUpdate and does not go through this seam.
 /// </para>
 /// <para>
 /// <b>Do not invent secondaries.</b> Level 100 ships four primaries and
