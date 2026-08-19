@@ -152,6 +152,18 @@ public class PreflightRequiredFileHonestyTests
             Is.EqualTo("That copy's details are incomplete."));
         Assert.That(GameProfilePreflightService.CopyDetailsIncomplete.ToLowerInvariant(),
             Does.Not.Contain("path"));
+        Assert.That(source, Does.Contain("CopyLaunchFolderMissing"));
+        Assert.That(source, Does.Contain("CopyLaunchFolderMismatch"));
+        Assert.That(source, Does.Not.Contain("manifest is missing its target root marker"));
+        Assert.That(source, Does.Not.Contain("manifest does not match the launch root"));
+        Assert.That(GameProfilePreflightService.CopyLaunchFolderMissing,
+            Is.EqualTo("That copy is missing its launch folder."));
+        Assert.That(GameProfilePreflightService.CopyLaunchFolderMismatch,
+            Is.EqualTo("That copy does not match this launch folder."));
+        Assert.That(GameProfilePreflightService.CopyLaunchFolderMissing.ToLowerInvariant(),
+            Does.Not.Contain("playable"));
+        Assert.That(GameProfilePreflightService.CopyLaunchFolderMismatch.ToLowerInvariant(),
+            Does.Not.Contain("root"));
         Assert.That(source, Does.Contain("CopiedBackupMissing"));
         Assert.That(source, Does.Contain("CopiedBackupHashMissing"));
         Assert.That(source, Does.Contain("CopiedBackupHashMismatch"));

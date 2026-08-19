@@ -141,6 +141,8 @@ namespace OnslaughtCareerEditor.AppCore
         public const string UnexpectedLaunchArgumentValue = "That launch argument value is not expected.";
         public const string LaunchArgumentNeedsANumber = "That launch argument needs a number.";
         public const string CopyDetailsIncomplete = "That copy's details are incomplete.";
+        public const string CopyLaunchFolderMissing = "That copy is missing its launch folder.";
+        public const string CopyLaunchFolderMismatch = "That copy does not match this launch folder.";
         public const string ProfileFolderInsideGame =
             "The app-owned profile folder must not sit inside the game folder.";
         public const string GameFolderInsideProfile =
@@ -634,7 +636,7 @@ namespace OnslaughtCareerEditor.AppCore
                 throw new InvalidOperationException("Launch plan requires a current playable copied game folder manifest.");
 
             if (string.IsNullOrWhiteSpace(targetGameRoot))
-                throw new InvalidOperationException("Playable copied game folder manifest is missing its target root marker.");
+                throw new InvalidOperationException(CopyLaunchFolderMissing);
 
             if (!string.Equals(targetGameRoot, ".", StringComparison.Ordinal))
             {
@@ -642,7 +644,7 @@ namespace OnslaughtCareerEditor.AppCore
                     ? NormalizeExistingDirectory(targetGameRoot)
                     : NormalizeExistingDirectory(Path.Combine(resolvedGameRoot, targetGameRoot));
                 if (!string.Equals(resolvedManifestRoot, resolvedGameRoot, StringComparison.OrdinalIgnoreCase))
-                    throw new InvalidOperationException("Playable copied game folder manifest does not match the launch root.");
+                    throw new InvalidOperationException(CopyLaunchFolderMismatch);
             }
 
             ValidateManifestExecutableState(doc.RootElement, resolvedGameRoot);
