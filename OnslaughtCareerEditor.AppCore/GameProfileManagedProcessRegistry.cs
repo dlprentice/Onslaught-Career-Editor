@@ -21,6 +21,8 @@ namespace OnslaughtCareerEditor.AppCore
         public const string CopyProcessNotRegistered = "That copy is not registered with this session.";
         public const string CopyBeaMustStayInside = "That copy's BEA.exe must stay in the copy.";
         public const string ManagedCopyNeedsProfileFolder = "A managed copy needs an app-owned profile folder.";
+        public const string ManagedCopyLeaseOutOfDate = "That managed copy's session details are out of date.";
+        public const string ManagedCopyLeaseRowsMissing = "That managed copy's session details are missing their process rows.";
 
         private readonly object _gate = new();
         private readonly Dictionary<int, GameProfileRegisteredProcess> _processes = new();
@@ -263,14 +265,14 @@ namespace OnslaughtCareerEditor.AppCore
                 if (!string.Equals(schemaVersion, LeaseSchemaVersion, StringComparison.Ordinal))
                 {
                     shouldRewrite = true;
-                    throw new InvalidOperationException("Managed playable copied game folder lease schema is stale.");
+                    throw new InvalidOperationException(ManagedCopyLeaseOutOfDate);
                 }
 
                 if (!root.TryGetProperty("processes", out JsonElement processesEl) ||
                     processesEl.ValueKind != JsonValueKind.Array)
                 {
                     shouldRewrite = true;
-                    throw new InvalidOperationException("Managed playable copied game folder lease is missing process rows.");
+                    throw new InvalidOperationException(ManagedCopyLeaseRowsMissing);
                 }
 
                 lock (_gate)

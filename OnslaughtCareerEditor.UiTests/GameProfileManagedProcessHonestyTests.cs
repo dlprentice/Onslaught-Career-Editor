@@ -88,4 +88,24 @@ public class GameProfileManagedProcessHonestyTests
         Assert.That(GameProfileManagedProcessRegistry.CopyProcessNotRegistered.ToLowerInvariant(),
             Does.Not.Contain("playable"));
     }
+
+    [Test]
+    public void AStaleManagedSessionNamesTheCopyNotAPlayableLease()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "GameProfileManagedProcessRegistry.cs"));
+
+        Assert.That(source, Does.Contain("ManagedCopyLeaseOutOfDate"));
+        Assert.That(source, Does.Contain("ManagedCopyLeaseRowsMissing"));
+        Assert.That(source, Does.Not.Contain("Managed playable copied game folder lease schema is stale."));
+        Assert.That(source, Does.Not.Contain("Managed playable copied game folder lease is missing process rows."));
+        Assert.That(GameProfileManagedProcessRegistry.ManagedCopyLeaseOutOfDate,
+            Is.EqualTo("That managed copy's session details are out of date."));
+        Assert.That(GameProfileManagedProcessRegistry.ManagedCopyLeaseRowsMissing,
+            Is.EqualTo("That managed copy's session details are missing their process rows."));
+        Assert.That(GameProfileManagedProcessRegistry.ManagedCopyLeaseOutOfDate.ToLowerInvariant(),
+            Does.Not.Contain("playable"));
+        Assert.That(GameProfileManagedProcessRegistry.ManagedCopyLeaseRowsMissing.ToLowerInvariant(),
+            Does.Not.Contain("lease"));
+    }
 }
