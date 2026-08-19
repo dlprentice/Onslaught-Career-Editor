@@ -106,21 +106,23 @@ namespace OnslaughtRebuild.GodotClient;
 /// pointer. Paused gameplay and focus release continue to request
 /// <see cref="RetailFrontendCursorMode.Visible"/>.</para>
 ///
-/// <para><b>Remaining boundary.</b> The inventory above proves cursor draws on
-/// three retail boot pages, but those pages are owned here by
-/// <c>RetailStartupSequence</c> while this flow is hidden. This implementation
-/// therefore closes interactive frontend duplication and ordering only; it does
-/// not claim startup-media cursor parity.</para>
+/// <para><b>Boot pages 2-4 are this flow's ClickToStart page.</b> The three
+/// inventories that end on a 32x32 cursor at posted (0,0) are the CFEPIntro
+/// slam (<c>boot-second/third/fourth-page.csv</c>, A3 <c>-skipfmv</c>), not
+/// FMV beats. <see cref="RetailFrontendCursor.ShouldDrawOnFrontend"/> keeps
+/// that last draw; <see cref="RetailFrontendCursor.ShouldDrawOnStartupMedia"/>
+/// stays false because the 2026-07-28 FMV log is one video draw per frame.
+/// Do not invent a splash-beat cursor. Do not draw on boot-first or LOADING.</para>
 /// </summary>
 public sealed partial class RetailFrontendFlow
 {
     /// <summary>Quad edge in stage pixels. Measured 32x32 on all fourteen draws.</summary>
-    private const float MouseCursorSize = 32f;
+    private const float MouseCursorSize = RetailFrontendCursor.QuadSize;
 
     /// <summary>
     /// Sampled sub-rectangle of the 128x128 page: 0.96875 * 128 = 124 texels.
     /// </summary>
-    private const float MouseCursorSourceExtent = 124f;
+    private const float MouseCursorSourceExtent = RetailFrontendCursor.SourceExtent;
 
     private RetailMouseCursorLayer? _mouseCursorLayer;
     private Vector2? _captureMouseCursorDesignPosition;
@@ -158,9 +160,7 @@ public sealed partial class RetailFrontendFlow
 
         public override void _Draw()
         {
-            if (_owner._session.Screen is RetailFrontendScreen.Loading or
-                RetailFrontendScreen.IntroCutscene or
-                RetailFrontendScreen.Gameplay)
+            if (!RetailFrontendCursor.ShouldDrawOnFrontend(_owner._session.Screen))
             {
                 return;
             }

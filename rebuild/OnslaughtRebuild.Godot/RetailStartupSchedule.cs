@@ -449,10 +449,10 @@ public sealed class RetailStartupSchedule
     /// intro would have no observed path at all, which is exactly how
     /// <c>_feBackFrames</c> came to be loaded and never drawn.</para>
     ///
-    /// <para><b>Known duplication.</b>
-    /// <c>FirstFlightGame.StartRetailStartupMedia</c> still carries its own
-    /// inline copy of this rule. It should call this method; that file was owned
-    /// by another lane when this landed and was deliberately not edited.</para>
+    /// <para><c>FirstFlightGame.StartRetailStartupMedia</c> and the Level 100
+    /// intro cutscene both call this method. Attract restart still splits
+    /// smoke/capture from <c>-skipfmv</c> because that loop is not
+    /// <c>GetIntroFMV</c>.</para>
     /// </summary>
     public static bool IsSuppressedByArguments(IReadOnlyList<string> arguments)
     {
@@ -501,11 +501,48 @@ public sealed class RetailStartupSchedule
         return new RetailStartupSchedule(cue, clips);
     }
 
+    /// <summary>
+    /// Attract restart: <c>Play("ltlogo")</c> then <c>Play("openingfmv")</c>.
+    /// No splash beat, no publisher, no TWIMTBP. See
+    /// <see cref="RetailAttractLoop"/>.
+    /// </summary>
+    public static RetailStartupSchedule ForAttractRestart(
+        IReadOnlyDictionary<RetailStartupCue, RetailStartupClip> clips)
+    {
+        ArgumentNullException.ThrowIfNull(clips);
+        return new RetailStartupSchedule(clips, new AttractRestartMark());
+    }
+
     private RetailStartupSchedule(
         RetailStartupCue cue,
         IReadOnlyDictionary<RetailStartupCue, RetailStartupClip> clips)
     {
         TotalSeconds = AppendVideo(cue, clips, 0d);
+    }
+
+    private readonly struct AttractRestartMark
+    {
+    }
+
+    private RetailStartupSchedule(
+        IReadOnlyDictionary<RetailStartupCue, RetailStartupClip> clips,
+        AttractRestartMark _)
+    {
+        ArgumentNullException.ThrowIfNull(clips);
+
+        double cursor = 0d;
+        cursor = AppendVideo(RetailStartupCue.LostToysLogo, clips, cursor);
+        if (clips.ContainsKey(RetailStartupCue.LostToysLogo) &&
+            clips.ContainsKey(RetailStartupCue.OpeningMontage))
+        {
+            _beats.Add(new Beat(
+                RetailStartupFrameKind.Black, null, cursor, InterClipBlackSeconds,
+                false, 0d, 0));
+            cursor += InterClipBlackSeconds;
+        }
+
+        cursor = AppendVideo(RetailStartupCue.OpeningMontage, clips, cursor);
+        TotalSeconds = cursor;
     }
 
     /// <summary>Total length of the sequence, in seconds of injected time.</summary>
