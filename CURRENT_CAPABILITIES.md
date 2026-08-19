@@ -1,9 +1,9 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-08-17. The campaign authority is Generation 31 on exact
+Last updated: 2026-08-18. The campaign authority is Generation 31 **v2** on exact
 db.18624 geometry (8,329 functions; grades 8,088 OPAQUE / 231 C1 / 10 C2, with
-the first 16 contracts REBUILD_READY), re-grounded through the Generation-30
+the first 16 contracts REBUILD_READY; v1 READY `b99b6e4f…` is superseded), re-grounded through the Generation-30
 literal-pin carry bridge after the live and tracked Ghidra database reached
 **db.18627** through *eight* authorized promotions on 2026-08-17 — 41 boundary
 corrections, then 160 renames, then 294 ABI signature corrections, then the two
