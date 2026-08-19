@@ -744,12 +744,12 @@ namespace OnslaughtCareerEditor.AppCore
             {
                 using DirectoryLockSet trustedSourceLocks = LockDirectoryTree(
                     trustedSourceRoot,
-                    "Trusted asset export root");
+                    "generated export folder");
                 if (IsSameOrUnderRoot(physicalDestination, trustedSourceLocks.PhysicalPath) ||
                     IsSameOrUnderRoot(trustedSourceLocks.PhysicalPath, physicalDestination))
                 {
                     throw new InvalidOperationException(
-                        "The published package folder cannot overlap the trusted generated asset export folder.");
+                        "The published package folder cannot overlap the generated export folder.");
                 }
             }
 
