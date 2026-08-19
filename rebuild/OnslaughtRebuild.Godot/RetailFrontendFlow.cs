@@ -1460,6 +1460,15 @@ public sealed partial class RetailFrontendFlow : Control
             rightArcBody,
             rightArcShadow,
             MainMenuRightDecorTwin(transition));
+        // Colour at 0x00463F3F is RetailMainMenuRightTwinShadow: DAT_0089D8A4
+        // *63 alpha pack, dest fadd 462/365, z push 0x3EB33333 (0.35) not
+        // scale. Settled 255 submits 0x3E000000, which is this ShadowTint,
+        // so the draw keeps ShadowTint and does not call SubmittedColor.
+        // Same 0x00463E8D gate as the body overlay; settled frames skip.
+        // The 462/365 addends are the already-shipped ellipse centre —
+        // do not redo RetailFrontendDecorShadow. Not a sheen (that is
+        // 0x00464343 / TitleLogoReflectionLayer). Not a 29% title-logo
+        // scale. ChromeTint and BracketTint stay put.
         // Colour at 0x00463F83 is RetailMainMenuRightTwinOverlay: DAT_0089D8A4
         // mode-4 at (457,355), z push 0x3E99999A (0.3) not scale. Settled 255
         // submits 0xFEFFFFFF, which is not this BracketTint 0xFE7F7F7F, so
