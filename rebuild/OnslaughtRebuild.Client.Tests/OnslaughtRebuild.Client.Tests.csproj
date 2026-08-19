@@ -72,6 +72,8 @@
              Link="godot-startup-source\RetailClickToStartProcessHead.cs" />
     <Compile Include="..\OnslaughtRebuild.Godot\RetailMainMenuHitTest.cs"
              Link="godot-startup-source\RetailMainMenuHitTest.cs" />
+    <Compile Include="..\OnslaughtRebuild.Godot\RetailFrontendCursor.cs"
+             Link="godot-startup-source\RetailFrontendCursor.cs" />
     <Compile Include="..\OnslaughtRebuild.Godot\RetailFeMessBox.cs"
              Link="godot-startup-source\RetailFeMessBox.cs" />
   </ItemGroup>
@@ -98,6 +100,9 @@
              CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\OnslaughtRebuild.Godot\RetailFrontendFlow.cs"
              Link="godot-pause-source\RetailFrontendFlow.cs"
+             CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\OnslaughtRebuild.Godot\RetailFrontendFlow.Cursor.cs"
+             Link="godot-pause-source\RetailFrontendFlow.Cursor.cs"
              CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\OnslaughtRebuild.Godot\RetailStartupSequence.cs"
              Link="godot-pause-source\RetailStartupSequence.cs"
