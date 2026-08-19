@@ -146,4 +146,22 @@ public sealed class RetailClickToStartTitleTests
             RetailClickToStartTitle.BodyColor(page),
             RetailClickToStartTitle.SixthColor(page));
     }
+
+    [Fact]
+    public void DrawClickToStartCallsTheSixthPassInsteadOfFoldingItIntoTheFivePassSlam()
+    {
+        // CFEPIntro::Render 0x0051BD01 is a SECOND gate (2 < page < 2.25),
+        // not page*1.2 > 2. DrawClickToStart must consume ShouldDrawSixth /
+        // SixthPass / SixthScale / SixthColor rather than fold the z=0.02
+        // copy into Passes. Not attract splash. Not TWIMTBP.
+        string flow = File.ReadAllText(
+            Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "RetailFrontendFlow.cs"));
+
+        Assert.Contains("RetailClickToStartTitle.ShouldDrawSixth", flow);
+        Assert.Contains("RetailClickToStartTitle.SixthPass", flow);
+        Assert.Contains("RetailClickToStartTitle.SixthScale", flow);
+        Assert.Contains("RetailClickToStartTitle.SixthColor", flow);
+        Assert.DoesNotContain("vectorlosttoyssplash", flow);
+        Assert.DoesNotContain("TWIMTBP", flow);
+    }
 }

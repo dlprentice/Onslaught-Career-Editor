@@ -1064,6 +1064,21 @@ public sealed partial class RetailFrontendFlow : Control
                     RetailColor(pass.Outline ? outline : body));
             }
         }
+
+        // CFEPIntro::Render 0x0051BD01 sixth z=0.02 copy. Second gate:
+        // 2 < page < 2.25, not page*1.2 > 2. Dest (250, 290), sx=sy=1-v.
+        // Not folded into Passes.
+        if (RetailClickToStartTitle.ShouldDrawSixth(_clickPageSeconds))
+        {
+            float sixthScale = RetailClickToStartTitle.SixthScale(_clickPageSeconds);
+            DrawSurfaceCentered(
+                _titleLogo,
+                RetailClickToStartTitle.SixthPass.X,
+                RetailClickToStartTitle.SixthPass.Y,
+                sixthScale,
+                sixthScale,
+                RetailColor(RetailClickToStartTitle.SixthColor(_clickPageSeconds)));
+        }
     }
 
     /// <summary>The released clamp idiom, <c>_DAT_005d856c</c> / <c>_DAT_005d8568</c>.</summary>
