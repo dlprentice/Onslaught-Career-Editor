@@ -46,6 +46,9 @@ namespace OnslaughtCareerEditor.AppCore
         internal const string FileCannotUseDriveRelativeLocation = "That file cannot use a drive-relative location.";
         internal const string FileCannotUseNetworkLocation = "That file cannot use a UNC or network location.";
         internal const string FileCannotUseAlternateStream = "That file cannot use an alternate data stream.";
+        internal const string FileCannotUseReservedDevice = "That file cannot use a reserved device name.";
+        internal const string FileResolvesToNetwork = "That file resolves to a network location.";
+        internal const string FileDoesNotResolveToLocalDrive = "That file does not resolve to a local drive.";
 
         internal static string NormalizeLocalPath(string path, string label)
         {
@@ -753,7 +756,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             string resolved = buffer.ToString();
             if (resolved.StartsWith(@"\\?\UNC\", StringComparison.OrdinalIgnoreCase))
-                throw new InvalidOperationException($"{label} resolves to a network location.");
+                throw new InvalidOperationException(FileResolvesToNetwork);
             if (resolved.StartsWith(@"\\?\", StringComparison.Ordinal))
                 resolved = resolved[4..];
             if (resolved.StartsWith(@"\??\", StringComparison.Ordinal))
@@ -763,7 +766,7 @@ namespace OnslaughtCareerEditor.AppCore
                 resolved[1] != ':' ||
                 (resolved[2] != Path.DirectorySeparatorChar && resolved[2] != Path.AltDirectorySeparatorChar))
             {
-                throw new InvalidOperationException($"{label} does not resolve to a local drive.");
+                throw new InvalidOperationException(FileDoesNotResolveToLocalDrive);
             }
 
             return TrimDirectoryPath(NormalizeLocalPath(resolved, label));
@@ -905,7 +908,7 @@ namespace OnslaughtCareerEditor.AppCore
                 string trimmed = component.TrimEnd(' ', '.');
                 string stem = trimmed.Split('.', 2)[0];
                 if (s_reservedDosNames.Contains(stem))
-                    throw new InvalidOperationException($"{label} cannot use the reserved DOS device name '{stem}'.");
+                    throw new InvalidOperationException(FileCannotUseReservedDevice);
             }
         }
 

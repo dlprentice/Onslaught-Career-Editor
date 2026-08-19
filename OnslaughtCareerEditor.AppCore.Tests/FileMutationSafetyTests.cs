@@ -85,6 +85,15 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             Assert.Equal(FileMutationSafety.FileCannotUseDeviceLocation, device.Message);
             Assert.DoesNotContain("Generated profile root", device.Message, StringComparison.Ordinal);
             Assert.DoesNotContain("path", device.Message, StringComparison.OrdinalIgnoreCase);
+
+            InvalidOperationException reserved = Assert.Throws<InvalidOperationException>(
+                () => FileMutationSafety.NormalizeLocalPath(
+                    Path.Combine(Path.GetTempPath(), "NUL.bes"),
+                    "Generated profile root"));
+
+            Assert.Equal(FileMutationSafety.FileCannotUseReservedDevice, reserved.Message);
+            Assert.DoesNotContain("Generated profile root", reserved.Message, StringComparison.Ordinal);
+            Assert.DoesNotContain("NUL", reserved.Message, StringComparison.Ordinal);
         }
 
         [Fact]

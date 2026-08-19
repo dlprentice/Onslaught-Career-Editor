@@ -71,6 +71,9 @@ public class FileMutationSafetyHonestyTests
         Assert.That(source, Does.Not.Contain("does not resolve to a local DOS drive path."));
         Assert.That(source, Does.Contain("resolves to a network location."));
         Assert.That(source, Does.Contain("does not resolve to a local drive."));
+        Assert.That(source, Does.Not.Contain("{label} resolves to a network location."));
+        Assert.That(source, Does.Not.Contain("reserved DOS device name"));
+        Assert.That(source, Does.Contain("FileCannotUseReservedDevice"));
     }
 
     [Test]
