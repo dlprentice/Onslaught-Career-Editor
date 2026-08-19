@@ -17,7 +17,12 @@ public class GameProfileManagedProcessHonestyTests
             TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "GameProfileManagedProcessRegistry.cs"));
 
         Assert.That(source, Does.Not.Contain("requires an app-owned profile root."));
-        Assert.That(source, Does.Contain("requires an app-owned profile folder."));
+        Assert.That(source, Does.Not.Contain("A managed playable copied game folder process requires"));
+        Assert.That(source, Does.Contain("ManagedCopyNeedsProfileFolder"));
+        Assert.That(GameProfileManagedProcessRegistry.ManagedCopyNeedsProfileFolder,
+            Is.EqualTo("A managed copy needs an app-owned profile folder."));
+        Assert.That(GameProfileManagedProcessRegistry.ManagedCopyNeedsProfileFolder.ToLowerInvariant(),
+            Does.Not.Contain("playable"));
     }
 
     [Test]
