@@ -1532,6 +1532,75 @@ def _transform_obj_normal(
     return tuple(0.0 if abs(component / length) < 1e-15 else component / length for component in transformed)
 
 
+_TEXR_SLOT_SEMANTICS = (
+    "base",
+    "dot3Lighting",
+    "environmentReflection",
+    "disabledProjective",
+    "alphaOverlay",
+    "disabled",
+)
+
+
+def _material_layer_name(raw_texr_u32: tuple[int, ...], mesh: ParsedMesh) -> str:
+    """The `usemtl` / `newmtl` name for one six-slot TEXR signature.
+
+    Unresolved non-sentinel indices fail closed here so OBJ and MTL cannot
+    disagree about whether a slot is bindable.
+    """
+    if len(raw_texr_u32) != 6:
+        raise CmshProfileError("OBJ rejection", 0, "TEXR slot count")
+    for texture_index in raw_texr_u32:
+        if texture_index not in TEXR_SENTINEL_U32 and texture_index >= len(mesh.textures):
+            raise CmshProfileError("OBJ rejection", 0, "unresolved material texture")
+    return "layers-" + "-".join(f"{texture_index:08x}" for texture_index in raw_texr_u32)
+
+
+def emit_mtl(mesh: ParsedMesh) -> bytes:
+    """Wavefront MTL whose `newmtl` names match opt-in `emit_obj` `usemtl` lines.
+
+    `map_Kd` is the slot-0 (base) TEXB name when that slot is resolved. That is
+    a mesh-stated name, not a filesystem path: this function does not invent a
+    PNG location. Other resolved slots are comments only. Materials appear in
+    first-seen part/group order.
+    """
+    lines: list[str] = []
+    encoded_bytes = 0
+
+    def append_line(line: str) -> None:
+        nonlocal encoded_bytes
+        encoded_bytes = _checked_add(encoded_bytes, len(line.encode("utf-8")) + 1, MAX_OBJ, "MTL bytes")
+        lines.append(line)
+
+    seen: set[str] = set()
+    for part in mesh.parts:
+        for group in part.groups:
+            name = _material_layer_name(group.raw_texr_u32, mesh)
+            if name in seen:
+                continue
+            seen.add(name)
+            append_line(f"newmtl {name}")
+            base_name: str | None = None
+            for position, raw_u32 in enumerate(group.raw_texr_u32):
+                semantic = _TEXR_SLOT_SEMANTICS[position]
+                if raw_u32 in TEXR_SENTINEL_U32:
+                    append_line(f"# texr {position} {semantic} sentinel")
+                    continue
+                texture_name = mesh.textures[raw_u32].name
+                append_line(f"# texr {position} {semantic} {texture_name}")
+                if position == 0:
+                    base_name = texture_name
+            if base_name is not None:
+                append_line(f"map_Kd {base_name}")
+            append_line("")
+    result = ("\n".join(lines) + ("\n" if lines else "")).encode("utf-8")
+    if lines and len(result) != encoded_bytes:
+        raise CmshProfileError("OBJ rejection", 0, "MTL byte accounting")
+    if len(result) > MAX_OBJ:
+        raise CmshProfileError("limit exceeded", 0, "MTL bytes")
+    return result
+
+
 def emit_obj(
     mesh: ParsedMesh,
     *,
@@ -1650,11 +1719,7 @@ def emit_obj(
 
         for group in part.groups:
             if include_material_layer_groups:
-                for texture_index in group.raw_texr_u32:
-                    if texture_index not in TEXR_SENTINEL_U32 and texture_index >= len(mesh.textures):
-                        raise CmshProfileError("OBJ rejection", 0, "unresolved material texture")
-                signature = "-".join(f"{texture_index:08x}" for texture_index in group.raw_texr_u32)
-                append_line(f"usemtl layers-{signature}")
+                append_line(f"usemtl {_material_layer_name(group.raw_texr_u32, mesh)}")
             indices = group.indices
             for ordinal in range(len(indices) - 2):
                 if ordinal % 2 == 0:
