@@ -40,6 +40,7 @@ public sealed class Level100Mission
     private bool _playerActive = true;
     private bool _flightModeEnabled = true;
     private int _flightModeFlag = RetailEnableFlightMode.FlagDisabled;
+    private int _waitStopFlag = RetailIScriptWaitStop.FlagIdle;
     private Level100MissionWeaponAvailability _pulseCannonAvailability;
     private Level100MissionWeaponAvailability _twinVulcanAvailability;
     private Level100MissionWeaponAvailability _mechVulcanAvailability;
@@ -53,6 +54,7 @@ public sealed class Level100Mission
     private int _gameScore = RetailAddScore.LoadLevelZero;
     private readonly Dictionary<int, int> _hudPartWords = new();
     private readonly Dictionary<Level100MissionWeapon, int> _weaponActiveWords = new();
+    private readonly Dictionary<int, int> _thingFlagWords = new();
 
     /// <summary>
     /// The Core tick the most recently scheduled character message clears, or
@@ -203,6 +205,16 @@ public sealed class Level100Mission
     public int FlightModeFlag => _flightModeFlag;
 
     /// <summary>
+    /// <c>0x0089c800</c> — the
+    /// <c>mov dword ptr [0x0089c800], 1</c> destination
+    /// on Pause / PlayCharMessageWait. Isolated
+    /// <see cref="Level100MissionTiming.PauseTicks"/> /
+    /// <see cref="Level100MissionTiming.MessagePlaybackTicks"/>
+    /// name the rebuild sleep, not this store.
+    /// </summary>
+    public int WaitStopFlag => _waitStopFlag;
+
+    /// <summary>
     /// <c>dword [index*4+0x008aa51c]</c> — Highlight stores 2,
     /// UnHighlight stores 1. Isolated
     /// <see cref="Level100HudEmphasisChanged.Emphasized"/> names
@@ -222,6 +234,35 @@ public sealed class Level100Mission
     /// </summary>
     public int WeaponActiveWord(Level100MissionWeapon weapon) =>
         _weaponActiveWords.TryGetValue(weapon, out int word) ? word : 0;
+
+    /// <summary>
+    /// <c>CThing+0x2c</c> — SetObjective ORs 0x20,
+    /// UnsetObjective ANDs ~0x20. Isolated
+    /// <see cref="Level100ActorSnapshot.IsObjective"/> and
+    /// <see cref="Level100MissionSnapshot.NavigationObjective"/>
+    /// name the rebuild bool / string, not this store. A
+    /// thing this mission never marked reads 0 here; that
+    /// is not a noticeboard or TF_DYING claim.
+    /// </summary>
+    public int ThingFlagWord(string thingName)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(thingName);
+        Level100ActorId? actorId = _actors.GetThingRef(thingName);
+        if (!actorId.HasValue)
+        {
+            throw new InvalidOperationException(
+                $"Released Level 100 requested unknown thing '{thingName}'.");
+        }
+
+        return ThingFlagWord(actorId.Value);
+    }
+
+    /// <summary>
+    /// <c>CThing+0x2c</c> keyed by actor. See
+    /// <see cref="ThingFlagWord(string)"/>.
+    /// </summary>
+    public int ThingFlagWord(Level100ActorId actorId) =>
+        _thingFlagWords.TryGetValue(actorId.Value, out int word) ? word : 0;
 
     internal bool GameplayPaused => Level100MissionTiming.GameplayPaused(
         _outcome,
@@ -643,8 +684,9 @@ public sealed class Level100Mission
                     arguments[2].AsInteger(),
                     arguments[3].AsString()));
                 return NativeResult.Void;
-            case 4: // Pause
+            case 4: // Pause — IScript__Pause 0x00537c70
                 RequireArguments(command, arguments, 1);
+                StoreWaitStop();
                 return NativeResult.Waiting(
                     Level100ScriptWaitKind.Pause,
                     Level100MissionTiming.PauseTicks(arguments[0].AsFloat()),
@@ -686,7 +728,7 @@ public sealed class Level100Mission
                         _playerActorId,
                         _actors.GetThingTypeMask(_playerActorId)),
                     WaitRequest.None);
-            case 23: // SetObjective
+            case 23: // SetObjective — IScript__SetObjective 0x00535ed0
                 RequireArguments(command, arguments, 0);
                 SetNavigationObjective(RequireContext(execution));
                 return NativeResult.Void;
@@ -698,7 +740,7 @@ public sealed class Level100Mission
                 RequireArguments(command, arguments, 0);
                 SetActorActivation(RequireContext(execution), false);
                 return NativeResult.Void;
-            case 30: // UnsetObjective
+            case 30: // UnsetObjective — IScript__UnsetObjective 0x00535ee0
                 RequireArguments(command, arguments, 0);
                 UnsetNavigationObjective(RequireContext(execution));
                 return NativeResult.Void;
@@ -804,6 +846,11 @@ public sealed class Level100Mission
         int speakerId = arguments[0].AsInteger();
         int messageId = arguments[1].AsInteger();
         _ = arguments[2].AsFloat();
+        if (waits)
+        {
+            StoreWaitStop();
+        }
+
         int ticks = Level100MissionTiming.MessagePlaybackTicks(messageId);
 
         int earliest = _messageBoxAllowedTick;
@@ -876,6 +923,7 @@ public sealed class Level100Mission
     {
         string thingName = _actors.GetActor(actorId).Name;
         _navigationObjective = thingName;
+        StoreObjectiveFlag(actorId, mark: true);
         _events.Add(new Level100NavigationObjectiveChanged(_tick, thingName));
         _events.Add(new Level100ActorCommandRequested(
             _tick,
@@ -892,10 +940,36 @@ public sealed class Level100Mission
             _events.Add(new Level100NavigationObjectiveChanged(_tick, null));
         }
 
+        StoreObjectiveFlag(actorId, mark: false);
         _events.Add(new Level100ActorCommandRequested(
             _tick,
             actorId,
             Level100ActorCommand.UnsetObjective));
+    }
+
+    /// <summary>
+    /// Isolated <see cref="Level100ActorSnapshot.IsObjective"/>
+    /// and the navigation name stay the rebuild facts. These
+    /// stores are the official <c>or 0x20</c> / <c>and ~0x20</c>
+    /// at <c>CThing+0x2c</c>. Noticeboard stays unclaimed.
+    /// </summary>
+    private void StoreObjectiveFlag(Level100ActorId actorId, bool mark)
+    {
+        int current = ThingFlagWord(actorId);
+        _thingFlagWords[actorId.Value] = mark
+            ? RetailSetObjective.Mark(current)
+            : RetailSetObjective.Unmark(current);
+    }
+
+    /// <summary>
+    /// Isolated <see cref="Level100MissionTiming.PauseTicks"/>
+    /// and message duration stay the rebuild sleeps. This
+    /// store is official <c>mov [0x0089c800], 1</c>. CVM
+    /// snapshot / 0.05f / FollowWaypointWait stay unclaimed.
+    /// </summary>
+    private void StoreWaitStop()
+    {
+        _waitStopFlag = RetailIScriptWaitStop.Stop(_waitStopFlag);
     }
 
     /// <summary>

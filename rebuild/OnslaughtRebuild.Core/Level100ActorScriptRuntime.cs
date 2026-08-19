@@ -96,6 +96,9 @@ public sealed class Level100ActorScriptRuntime
     private long _nextSequence = 1;
     private int _tick;
     private bool _playerInJetMode;
+    private VehicleMode _playerMode;
+    private VehicleTransition _playerTransition;
+    private int _ticksSinceGroundContact;
     private bool _initializing;
     private Instance? _setup;
 
@@ -173,6 +176,17 @@ public sealed class Level100ActorScriptRuntime
     }
 
     public void SetPlayerInJetMode(bool inJetMode) => _playerInJetMode = inJetMode;
+
+    public void SetPlayerFlightState(
+        VehicleMode mode,
+        VehicleTransition transition,
+        int ticksSinceGroundContact)
+    {
+        _playerMode = mode;
+        _playerTransition = transition;
+        _ticksSinceGroundContact = ticksSinceGroundContact;
+        _playerInJetMode = mode == VehicleMode.Jet;
+    }
 
     public void AdvanceTick()
     {
@@ -348,6 +362,9 @@ public sealed class Level100ActorScriptRuntime
         _tick = snapshot.Tick;
         _nextSequence = snapshot.NextSequence;
         _playerInJetMode = snapshot.PlayerInJetMode;
+        _playerMode = snapshot.PlayerInJetMode ? VehicleMode.Jet : VehicleMode.Walker;
+        _playerTransition = VehicleTransition.None;
+        _ticksSinceGroundContact = 0;
         var sequences = new HashSet<long>();
 
         foreach (Level100ActorScriptInstanceSnapshot source in snapshot.Instances)
@@ -1069,10 +1086,16 @@ public sealed class Level100ActorScriptRuntime
                 RequireArguments(command, arguments, 0);
                 EmitCommand(RequireContext(execution).AsActorId(), Level100ActorScriptCommandKind.Stop);
                 return NativeResult.Void;
-            case 125: // InJetMode
+            case 125: // InJetMode — IScript__InJetMode 0x005380f0
                 RequireArguments(command, arguments, 0);
-                _ = RequireContext(execution);
-                return new NativeResult(Level100ScriptValue.Boolean(_playerInJetMode), WaitRequest.None);
+                return new NativeResult(
+                    Level100ScriptValue.Boolean(
+                        RetailIScriptInJetMode.Evaluate(
+                            RequireContext(execution).AsThingTypeMask(),
+                            _playerMode,
+                            _playerTransition,
+                            _ticksSinceGroundContact)),
+                    WaitRequest.None);
             case 135: // SetPos
                 _ = InvokePositionNative(
                     command,
@@ -1120,6 +1143,13 @@ public sealed class Level100ActorScriptRuntime
                     "Expected Mission native GetPos or SetPos.");
         }
     }
+
+    internal bool InvokeInJetModeNative(Level100ActorId receiver) =>
+        RetailIScriptInJetMode.Evaluate(
+            _actors.GetThingTypeMask(receiver),
+            _playerMode,
+            _playerTransition,
+            _ticksSinceGroundContact);
 
     /// <summary>
     /// Implements the bounded Mission-native objective-flag contract shared by
