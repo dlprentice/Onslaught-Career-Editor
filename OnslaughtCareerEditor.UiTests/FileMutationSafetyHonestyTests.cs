@@ -81,5 +81,12 @@ public class FileMutationSafetyHonestyTests
         Assert.That(source, Does.Not.Contain("FileNotFoundException(\"That protected input file could not be found.\","));
         Assert.That(source, Does.Not.Contain("{label} does not exist."));
         Assert.That(source, Does.Contain("That folder could not be found."));
+        Assert.That(source, Does.Not.Contain("cannot be a symbolic link, junction, or other reparse point."));
+        Assert.That(source, Does.Not.Contain("cannot contain a symbolic link, junction, or other reparse point."));
+        Assert.That(source, Does.Not.Contain("Committed output is a symbolic link, junction, or other reparse point."));
+        Assert.That(source, Does.Contain("FileCannotUseLink"));
+        Assert.That(source, Does.Contain("FolderCannotUseLink"));
+        Assert.That(source, Does.Contain("That file cannot use a shortcut or link."));
+        Assert.That(source, Does.Contain("That folder cannot use a shortcut or link."));
     }
 }

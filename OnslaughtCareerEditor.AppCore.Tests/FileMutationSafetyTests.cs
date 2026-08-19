@@ -10,6 +10,63 @@ namespace OnslaughtCareerEditor.AppCore.Tests
     public sealed class FileMutationSafetyTests
     {
         [Fact]
+        public void RejectReparsePoint_NamesAShortcutOrLinkNotALabel()
+        {
+            if (!OperatingSystem.IsWindows())
+                return;
+
+            using TempMutationRoot root = TempMutationRoot.Create();
+            string real = root.WriteValidFile("real.bes");
+            string link = Path.Combine(root.Path, "link.bes");
+            try
+            {
+                File.CreateSymbolicLink(link, real);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or PlatformNotSupportedException)
+            {
+                return;
+            }
+
+            InvalidOperationException error = Assert.Throws<InvalidOperationException>(
+                () => FileMutationSafety.RejectReparsePoint(link, "app-owned output root"));
+
+            Assert.Equal(FileMutationSafety.FileCannotUseLink, error.Message);
+            Assert.Equal("That file cannot use a shortcut or link.", error.Message);
+            Assert.DoesNotContain("app-owned output root", error.Message, StringComparison.Ordinal);
+            Assert.DoesNotContain("reparse", error.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("path", error.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public void RejectReparsePoint_NamesALinkedFolderNotALabel()
+        {
+            if (!OperatingSystem.IsWindows())
+                return;
+
+            using TempMutationRoot root = TempMutationRoot.Create();
+            string realDirectory = Path.Combine(root.Path, "real-folder");
+            string linkedDirectory = Path.Combine(root.Path, "linked-folder");
+            Directory.CreateDirectory(realDirectory);
+            try
+            {
+                Directory.CreateSymbolicLink(linkedDirectory, realDirectory);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or PlatformNotSupportedException)
+            {
+                return;
+            }
+
+            InvalidOperationException error = Assert.Throws<InvalidOperationException>(
+                () => FileMutationSafety.RejectReparsePoint(linkedDirectory, "app-owned output root"));
+
+            Assert.Equal(FileMutationSafety.FolderCannotUseLink, error.Message);
+            Assert.Equal("That folder cannot use a shortcut or link.", error.Message);
+            Assert.DoesNotContain("app-owned output root", error.Message, StringComparison.Ordinal);
+            Assert.DoesNotContain("reparse", error.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("path", error.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
         public void PatchFile_RejectsNonBesOutput()
         {
             using TempMutationRoot root = TempMutationRoot.Create();
@@ -220,7 +277,8 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                         });
                 });
 
-                Assert.Contains("reparse", error.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Contains("shortcut or link", error.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.DoesNotContain("reparse", error.Message, StringComparison.OrdinalIgnoreCase);
             }
             finally
             {
@@ -296,7 +354,8 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                     File.CreateSymbolicLink(committedPath, escaped);
                 }));
 
-            Assert.Contains("reparse", error.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("shortcut or link", error.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("reparse", error.Message, StringComparison.OrdinalIgnoreCase);
             Assert.Equal(before, File.ReadAllBytes(input));
             Assert.Equal(before, File.ReadAllBytes(escaped));
         }

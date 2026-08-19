@@ -38,6 +38,9 @@ namespace OnslaughtCareerEditor.AppCore
             ? StringComparer.OrdinalIgnoreCase
             : StringComparer.Ordinal;
 
+        internal const string FileCannotUseLink = "That file cannot use a shortcut or link.";
+        internal const string FolderCannotUseLink = "That folder cannot use a shortcut or link.";
+
         internal static string NormalizeLocalPath(string path, string label)
         {
             if (string.IsNullOrWhiteSpace(path))
@@ -123,7 +126,12 @@ namespace OnslaughtCareerEditor.AppCore
             }
 
             if ((attributes & FileAttributes.ReparsePoint) != 0)
-                throw new InvalidOperationException($"{label} cannot be a symbolic link, junction, or other reparse point.");
+            {
+                throw new InvalidOperationException(
+                    (attributes & FileAttributes.Directory) != 0
+                        ? FolderCannotUseLink
+                        : FileCannotUseLink);
+            }
         }
 
         internal static void RejectMultipleHardLinks(string path, string label)
@@ -350,8 +358,7 @@ namespace OnslaughtCareerEditor.AppCore
                     if (identity.IsReparsePoint)
                     {
                         handle.Dispose();
-                        throw new InvalidOperationException(
-                            $"{label} cannot contain a symbolic link, junction, or other reparse point.");
+                        throw new InvalidOperationException(FolderCannotUseLink);
                     }
 
                     string resolved = GetFinalLocalPath(handle, label);
@@ -382,8 +389,7 @@ namespace OnslaughtCareerEditor.AppCore
                     if (identity.IsReparsePoint)
                     {
                         handle.Dispose();
-                        throw new InvalidOperationException(
-                            $"{label} cannot contain a symbolic link, junction, or other reparse point.");
+                        throw new InvalidOperationException(FolderCannotUseLink);
                     }
 
                     string resolved = GetFinalLocalPath(handle, label);
@@ -1230,7 +1236,7 @@ namespace OnslaughtCareerEditor.AppCore
                 {
                     WindowsFileIdentity committedIdentity = FileMutationSafety.GetWindowsIdentity(committedHandle, "committed output identity");
                     if (OperatingSystem.IsWindows() && committedIdentity.IsReparsePoint)
-                        throw new IOException("Committed output is a symbolic link, junction, or other reparse point.");
+                        throw new IOException(FileMutationSafety.FileCannotUseLink);
                     if (OperatingSystem.IsWindows() && !tempIdentity.IsSameFile(committedIdentity))
                         throw new IOException("Committed output identity does not match the staged file.");
                     if (OperatingSystem.IsWindows() && committedIdentity.NumberOfLinks != 1)

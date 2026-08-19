@@ -1228,7 +1228,9 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                         linkedRoot,
                         "BEA.exe"));
 
-                Assert.Contains("reparse", thrown.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Contains("shortcut or link", thrown.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.DoesNotContain("reparse", thrown.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.DoesNotContain("app-owned output root", thrown.Message, StringComparison.OrdinalIgnoreCase);
             }
             finally
             {
@@ -1623,7 +1625,8 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                             ApplyWindowedCompatibilityPatch: true,
                             AllowByteLayoutOnlyTarget: true)));
 
-                Assert.Contains("reparse", reparseEx.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Contains("shortcut or link", reparseEx.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.DoesNotContain("reparse", reparseEx.Message, StringComparison.OrdinalIgnoreCase);
             }
             finally
             {
@@ -1761,7 +1764,8 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                             ApplyWindowedCompatibilityPatch: true,
                             AllowByteLayoutOnlyTarget: true)));
 
-                Assert.Contains("reparse", outputReparseEx.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Contains("shortcut or link", outputReparseEx.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.DoesNotContain("reparse", outputReparseEx.Message, StringComparison.OrdinalIgnoreCase);
                 Assert.False(Directory.Exists(Path.Combine(realOutputRoot, "profiles", "output-reparse")));
             }
             finally
