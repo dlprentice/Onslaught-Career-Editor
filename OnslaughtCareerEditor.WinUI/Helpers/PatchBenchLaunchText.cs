@@ -11,6 +11,8 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         private const string StaleSafeCopyLaunchStatus = "Selections changed after this safe copy was created. Create a new safe copy to apply the current optional mods/savegame/control choice.";
         private const string LaunchPlanNextStep = "Create a new safe copy before Play.";
 
+        public const string NoActiveCopiedGame = "Launch a safe copy first.";
+
         public static string BuildBoundary(string prefix)
         {
             return $"{prefix} This does not confirm it reached the menu, stayed windowed, rendered correctly, or played replacement music.";

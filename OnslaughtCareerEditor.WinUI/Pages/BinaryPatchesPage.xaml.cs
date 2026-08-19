@@ -1659,7 +1659,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         {
             if (_managedCopiedProfileProcess is null)
             {
-                PatchBenchCopiedProfileLaunchStatus.Text = "No managed safe copy process is active.";
+                PatchBenchCopiedProfileLaunchStatus.Text = PatchBenchLaunchText.NoActiveCopiedGame;
                 AppStatusService.SetStatus("Windowed & Mods: no safe copy process");
                 UpdateControlState();
                 return;

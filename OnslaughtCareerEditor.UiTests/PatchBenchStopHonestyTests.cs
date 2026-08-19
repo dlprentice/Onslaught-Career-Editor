@@ -55,4 +55,24 @@ public class PatchBenchStopHonestyTests
         Assert.That(method, Does.Not.Contain("OperationLogTextBox.Text = result.Message"));
         Assert.That(method, Does.Not.Contain("{ex.Message}"));
     }
+
+    [Test]
+    public void StoppingWithNoProcessSaysWhatToDoNext()
+    {
+        string page = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot,
+            "OnslaughtCareerEditor.WinUI",
+            "Pages",
+            "BinaryPatchesPage.xaml.cs"));
+        string helper = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot,
+            "OnslaughtCareerEditor.WinUI",
+            "Helpers",
+            "PatchBenchLaunchText.cs"));
+
+        Assert.That(helper, Does.Contain("NoActiveCopiedGame"));
+        Assert.That(helper, Does.Contain("Launch a safe copy first."));
+        Assert.That(page, Does.Contain("PatchBenchLaunchText.NoActiveCopiedGame"));
+        Assert.That(page, Does.Not.Contain("No managed safe copy process is active."));
+    }
 }
