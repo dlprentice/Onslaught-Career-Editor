@@ -41,5 +41,13 @@ public class PatchBenchCopyFolderHonestyTests
         Assert.That(GameProfileRuntimeService.CopyCannotUseLink,
             Is.EqualTo("That copy cannot use a shortcut or link."));
         Assert.That(GameProfileRuntimeService.CopyDidNotStart.ToLowerInvariant(), Does.Not.Contain("path"));
+        Assert.That(source, Does.Contain("CopiedBeaMissing"));
+        Assert.That(source, Does.Contain("CopyManifestMissing"));
+        Assert.That(source, Does.Not.Contain("Managed playable copied game folder requires BEA.exe."));
+        Assert.That(source, Does.Not.Contain("Managed playable copied game folder requires its generated manifest."));
+        Assert.That(GameProfilePreflightService.CopiedBeaMissing,
+            Is.EqualTo("That copy is missing BEA.exe."));
+        Assert.That(GameProfilePreflightService.CopyManifestMissing,
+            Is.EqualTo("That copy is missing onslaught-profile-manifest.json."));
     }
 }

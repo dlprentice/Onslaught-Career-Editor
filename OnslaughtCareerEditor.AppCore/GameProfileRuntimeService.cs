@@ -216,13 +216,13 @@ namespace OnslaughtCareerEditor.AppCore
             string exePath = Path.Combine(resolvedProfileRoot, "BEA.exe");
             string manifestPath = Path.Combine(resolvedProfileRoot, "onslaught-profile-manifest.json");
             if (!File.Exists(exePath))
-                throw new InvalidOperationException("Managed playable copied game folder requires BEA.exe.");
+                throw new InvalidOperationException(GameProfilePreflightService.CopiedBeaMissing);
 
             RejectReparsePoint(exePath, "managed playable copied game folder executable");
             if (requireGeneratedManifest)
             {
                 if (!File.Exists(manifestPath))
-                    throw new InvalidOperationException("Managed playable copied game folder requires its generated manifest.");
+                    throw new InvalidOperationException(GameProfilePreflightService.CopyManifestMissing);
 
                 RejectReparsePoint(manifestPath, "managed playable copied game folder manifest");
             }
