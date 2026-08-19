@@ -417,7 +417,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             string fullPath = Path.GetFullPath(Path.Combine(safeRoot, relativePath.Replace('/', Path.DirectorySeparatorChar)));
             if (!IsSameOrUnderRoot(fullPath, safeRoot))
-                throw new InvalidOperationException("Music replacement manifest path escapes the playable copied game folder root.");
+                throw new InvalidOperationException("Music replacement manifest files must stay inside the copy.");
             return fullPath;
         }
 
