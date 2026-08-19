@@ -194,6 +194,45 @@ public sealed class Level100WonCareerHandoffTests
     }
 
     /// <summary>
+    /// FrontEndHandoffReady applies the already-pinned
+    /// <c>UpdateBaseWorldExistsStuffForNode</c> copy onto world 110.
+    /// First-play zeros at 35..287 clear Blank's all-1s there; world
+    /// 100 stays Blank. Mutation: skipping <c>ApplyUpdate</c> on the
+    /// handoff leaves bit 35 set. Iceberg store-0 stays open. No new
+    /// secondaries.
+    /// </summary>
+    [Fact]
+    public void FrontEndHandoffReadyAfterWon_CopiesFillOutBaseThingsOntoWorld110()
+    {
+        Level100Mission mission = DriveReleasedFirstPlayToTerminal();
+
+        Assert.Equal(Level100MissionOutcome.Won, mission.Snapshot.Outcome);
+        Assert.Equal(
+            Level100MissionTerminalState.FrontEndHandoffReady,
+            mission.Snapshot.TerminalState);
+
+        RetailCareerNode training = mission.Career.Nodes.Find(100)!;
+        RetailCareerNode next = mission.Career.Nodes.Find(110)!;
+        Assert.Equal(
+            RetailCareerReCalcLinks.TrainingPrimaryBaseThingsWorldNumber,
+            next.WorldNumber);
+        Assert.Equal(1, next.DoesBaseThingExist(0));
+        Assert.Equal(1, next.DoesBaseThingExist(34));
+        Assert.Equal(0, next.DoesBaseThingExist(35));
+        Assert.Equal(0, next.DoesBaseThingExist(287));
+        Assert.Equal(
+            RetailFillOutEndLevelData.Level100BaseWorldThingCount,
+            CountExistingBaseThings(next));
+        Assert.Equal(
+            RetailCareerNode.BaseThingsExistsSize,
+            CountExistingBaseThings(training));
+        Assert.Equal(0, next.Complete);
+        Assert.All(
+            RetailFillOutEndLevelData.ForLevel100Won().SecondaryStatuses,
+            status => Assert.Equal(0, status));
+    }
+
+    /// <summary>
     /// <c>CGame::RestartLoopRunLevel</c> calls FillOut only after the
     /// main loop quits (<c>game.cpp:1552</c>), and that quit waits for
     /// the already-pinned 5.0 f Won store (<c>game.cpp:1997-2004</c>).
@@ -337,6 +376,17 @@ public sealed class Level100WonCareerHandoffTests
         Assert.Equal(0, training.Complete);
         Assert.Equal(0, career.CareerInProgress);
         Assert.Equal(RetailCareerNodeLink.NotComplete, lower.LinkType);
+    }
+
+    private static int CountExistingBaseThings(RetailCareerNode node)
+    {
+        int count = 0;
+        for (int offset = 0; offset < RetailCareerNode.BaseThingsExistsSize; offset++)
+        {
+            count += node.DoesBaseThingExist(offset);
+        }
+
+        return count;
     }
 
     private static Level100Mission DriveReleasedFirstPlayUntilWon()
