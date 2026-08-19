@@ -206,7 +206,6 @@ reverse-engineering/binary-analysis/functions/GeneralVolume.cpp/CGeneralVolume__
 reverse-engineering/binary-analysis/functions/GeneralVolume.cpp/CGeneralVolume__InitRandomizedVelocityOffsets.md
 reverse-engineering/binary-analysis/functions/GroundUnit.cpp/SharedGroundUnit__VFunc_09_InitGroundedMotionComponents_0049f820.md
 reverse-engineering/binary-analysis/functions/Hazard.cpp/CHazard__VFunc02_CleanupWorldSoundAndLinkedState.md
-reverse-engineering/binary-analysis/functions/HeightField.cpp/CHeightField__InitColorGradient.md
 reverse-engineering/binary-analysis/functions/HeightField.cpp/CHeightField__Load.md
 reverse-engineering/binary-analysis/functions/MCMech.cpp.md
 reverse-engineering/binary-analysis/functions/MCTentacle.cpp.md

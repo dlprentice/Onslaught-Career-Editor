@@ -47,8 +47,11 @@ jne  0x0047efe8
 ```
 
 `0xcaa24af0` is −5318008.0f if read as a float. The immediate exists
-**once** in the image, at this `cmp`. Who first plants that dword at
-`[+0x10]` is **not** claimed.
+**once** in the image, at this `cmp` (file `0x0007ef23`). Independently
+re-read after `t_d2298576`: no image `mov [reg+disp], 0xcaa24af0`, no
+abs store to `0x006fadd8` / `0x006fade8`, and official L100 CHFD
+`+0x10` is `0xc10d70a4` while `+0x20` is 0. After a real Load the
+early-out is taken.
 
 If the compare fails, EAX=`this` and the body writes nothing.
 
@@ -66,7 +69,9 @@ If it matches, the body seeds then optionally walks:
 Walk bounds: `ebp = [this+0x10c0]` (row count, signed `jle` skip if
 `<=0`), `ebx = [this+0x10bc]` (column count, same). Sample cursor
 `esi = [this+0x20]`, stride `add esi, 0x18`. Authored names for those
-three slots, and who writes `[+0x20]`, are **not** claimed.
+three slots are **not** claimed. After ctor zeros `[+0x20]`, the only
+image writer of that dword is Load's `0x13dc` overlay (`0x0007f7d2`
+`6a 01 68 dc 13 00 00 57`). Official L100 writes 0 there.
 
 Per cell:
 
@@ -108,4 +113,4 @@ SHA-256 is not `57cf35b2…8854`, **or** `tools/call_xref_scan.py` on
 
 | Address | Name | Byte evidence | Contract (confidence) |
 | --- | --- | --- | --- |
-| `0x0047ef20` | `CHeightField__RecomputeGridExtentsAndHeightRange` | `817910f04aa2ca 0f85bb000000 … c701a0860100 … 8bc15d c3 8bc1 c3` | thiscall; bare ret ×2; EAX=this; this imm `0x006fadc8` on both `E8`; dirty `[+0x10]==0xcaa24af0`; integer min/max at `+0/+4/+8/+0xc`; float max/min at `+0x18/+0x1c`; walk `[+0x10c0]`×`[+0x10bc]` at `[+0x20]` stride `0x18`. HIGH on ABI, inbound set, sentinel, seeds, both polarities, tail copies. **Not** on authored names, `[+0x20]` producer, or mesh meaning. |
+| `0x0047ef20` | `CHeightField__RecomputeGridExtentsAndHeightRange` | `817910f04aa2ca 0f85bb000000 … c701a0860100 … 8bc15d c3 8bc1 c3` | thiscall; bare ret ×2; EAX=this; this imm `0x006fadc8` on both `E8`; dirty `[+0x10]==0xcaa24af0`; integer min/max at `+0/+4/+8/+0xc`; float max/min at `+0x18/+0x1c`; walk `[+0x10c0]`×`[+0x10bc]` at `[+0x20]` stride `0x18`. HIGH on ABI, inbound set, sentinel, seeds, both polarities, tail copies, unique overlay as `[+0x20]` writer, no image plant of `0xcaa24af0`. **Not** on authored names or mesh meaning. |
