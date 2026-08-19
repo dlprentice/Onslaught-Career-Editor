@@ -890,7 +890,7 @@ namespace OnslaughtCareerEditor.WinUI
             args.Cancel = true;
             if (!await ConfirmCloseWithManagedSafeCopyAsync(activeSafeCopies.Count))
             {
-                AppStatusService.SetStatus("Close canceled: copied game still running");
+                AppStatusService.SetStatus("Safe copy is still running.");
                 return;
             }
 
