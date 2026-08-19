@@ -160,7 +160,8 @@ live in `developer_state.json` and the campaign ledgers.
   Media folder cards say Folder details, not Path details. A
   live-trainer write block before the first reading names the next
   step, not the emptiness. The Asset Library copy
-  button names the file, not a path.
+  button names the file, not a path. Registering a
+  managed copy names the app-owned profile folder, not a root.
 
 ## 1.0.11 — 2026-08-07
 

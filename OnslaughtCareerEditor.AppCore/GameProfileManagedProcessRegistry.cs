@@ -169,7 +169,7 @@ namespace OnslaughtCareerEditor.AppCore
         public void Register(GameProfileManagedProcess process, string appOwnedProfilesRoot)
         {
             if (string.IsNullOrWhiteSpace(appOwnedProfilesRoot))
-                throw new InvalidOperationException("A managed playable copied game folder process requires an app-owned profile root.");
+                throw new InvalidOperationException("A managed playable copied game folder process requires an app-owned profile folder.");
 
             if (!LeaseRootMatches(appOwnedProfilesRoot))
                 throw new InvalidOperationException("A managed playable copied game folder process root must match the registry lease root.");
