@@ -67,6 +67,7 @@ namespace OnslaughtCareerEditor.AppCore
         public const string CustomProfileId = "custom";
         public const string PatchRowNotSelectable = "That patch row is not selectable.";
         public const string ProfilePresetUnknown = "That copy profile is not available.";
+        public const string ProfilePresetNotReady = "That copy profile cannot be used yet.";
 
         private static readonly string[] s_windowedCompatibilityKeys =
         {
@@ -395,7 +396,7 @@ namespace OnslaughtCareerEditor.AppCore
             SafeCopyProfilePreset preset = GetSafeCopyProfilePreset(profileId);
             if (!preset.IsSelectable)
             {
-                throw new InvalidOperationException($"{preset.DisplayName} cannot produce patch keys yet.");
+                throw new InvalidOperationException(ProfilePresetNotReady);
             }
 
             return preset.PatchKeys.ToArray();

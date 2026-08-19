@@ -34,7 +34,16 @@ public class PatchBenchUnknownProfileHonestyTests
             "BinaryPatchPlanBuilder.cs"));
 
         Assert.That(source, Does.Contain("ProfilePresetUnknown"));
+        Assert.That(source, Does.Contain("ProfilePresetNotReady"));
         Assert.That(source, Does.Not.Contain("Unknown safe-copy profile preset:"));
         Assert.That(source, Does.Not.Contain("{profileId}"));
+        Assert.That(source, Does.Not.Contain("cannot produce patch keys"));
+        Assert.That(source, Does.Not.Contain("{preset.DisplayName}"));
+        Assert.That(BinaryPatchPlanBuilder.ProfilePresetNotReady,
+            Is.EqualTo("That copy profile cannot be used yet."));
+        Assert.That(BinaryPatchPlanBuilder.ProfilePresetNotReady.ToLowerInvariant(),
+            Does.Not.Contain("key"));
+        Assert.That(BinaryPatchPlanBuilder.ProfilePresetNotReady.ToLowerInvariant(),
+            Does.Not.Contain("path"));
     }
 }
