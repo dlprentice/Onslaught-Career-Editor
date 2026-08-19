@@ -52,5 +52,7 @@ public class BinaryPatchBackupHashHonestyTests
         Assert.That(source, Does.Contain("BackupHashWithoutBackup"));
         Assert.That(source, Does.Not.Contain("stale copied-workspace sidecar"));
         Assert.That(source, Does.Not.Contain("Patch backup hash sidecar exists without its backup snapshot"));
+        Assert.That(source, Does.Not.Contain("The backup hash sidecar is missing"));
+        Assert.That(source, Does.Contain("The backup hash file is missing, and the BEA.exe-only copy was not overwritten."));
     }
 }

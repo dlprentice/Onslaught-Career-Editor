@@ -1916,7 +1916,7 @@ namespace OnslaughtCareerEditor.AppCore
             {
                 return (false,
                     "Restore aborted: backup snapshot integrity could not be verified.\n" +
-                    "The backup hash sidecar is missing, and the BEA.exe-only copy was not overwritten.");
+                    "The backup hash file is missing, and the BEA.exe-only copy was not overwritten.");
             }
 
             string expected = File.ReadAllText(backupHashPath).Trim();

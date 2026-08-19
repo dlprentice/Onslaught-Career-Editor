@@ -234,7 +234,8 @@ public class BinaryPatchRegressionTests
 
             Assert.That(apply.success, Is.False);
             Assert.That(apply.message, Does.Contain("existing backup snapshot integrity"));
-            Assert.That(apply.message, Does.Contain("hash sidecar"));
+            Assert.That(apply.message, Does.Contain("hash file"));
+            Assert.That(apply.message, Does.Not.Contain("hash sidecar"));
             Assert.That(File.ReadAllBytes(exePath), Is.EqualTo(original), "Apply must not mutate when the pre-existing backup is not integrity-verified.");
         }
         finally
@@ -473,8 +474,9 @@ public class BinaryPatchRegressionTests
             var restore = BinaryPatchEngine.RestoreFromBackup(BuildTestTarget(exePath, tempDir));
 
             Assert.That(restore.success, Is.False);
-            Assert.That(restore.message, Does.Contain("hash sidecar"));
-            Assert.That(File.ReadAllBytes(exePath), Is.EqualTo(patchedBeforeRestore), "Restore must not overwrite from a backup without a hash sidecar.");
+            Assert.That(restore.message, Does.Contain("hash file"));
+            Assert.That(restore.message, Does.Not.Contain("hash sidecar"));
+            Assert.That(File.ReadAllBytes(exePath), Is.EqualTo(patchedBeforeRestore), "Restore must not overwrite from a backup without a hash file.");
         }
         finally
         {
