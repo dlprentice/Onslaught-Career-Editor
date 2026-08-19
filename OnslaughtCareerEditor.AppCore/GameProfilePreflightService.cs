@@ -538,10 +538,7 @@ namespace OnslaughtCareerEditor.AppCore
                 throw new FileNotFoundException("BEA.exe was not found under the copied game profile.", executablePath);
 
             string[] normalizedArguments = NormalizeLaunchArguments(arguments ?? Array.Empty<string>());
-            string argumentString = string.Join(" ", normalizedArguments);
-            string commandPreview = argumentString.Length == 0
-                ? $"Start-Process -FilePath \"{executablePath}\" -WorkingDirectory \"{resolvedGameRoot}\""
-                : $"Start-Process -FilePath \"{executablePath}\" -WorkingDirectory \"{resolvedGameRoot}\" -ArgumentList \"{argumentString}\"";
+            string commandPreview = BuildRedactedCommandPreview(normalizedArguments);
 
             return new GameProfileLaunchPlan(
                 ExecutablePath: executablePath,

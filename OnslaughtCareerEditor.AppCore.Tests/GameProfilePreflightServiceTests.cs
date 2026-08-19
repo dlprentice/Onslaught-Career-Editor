@@ -1309,6 +1309,44 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         }
 
         [Fact]
+        public void BuildLaunchPlan_CommandPreviewNamesTheFileNotTheFolder()
+        {
+            string tempRoot = Path.Combine(Path.GetTempPath(), $"onslaught-launch-preview-{Guid.NewGuid():N}");
+            string sourceRoot = Path.Combine(tempRoot, "source-game");
+            string outputRoot = Path.Combine(tempRoot, "profiles");
+            string sourceExe = PrepareSourceGameRoot(sourceRoot);
+
+            try
+            {
+                GameProfilePrepareResult result = GameProfilePreflightService.PrepareWindowedCompatibilityProfile(
+                    new GameProfilePrepareOptions(
+                        SourceGameRoot: sourceRoot,
+                        OutputRoot: outputRoot,
+                        ProfileName: "launch-preview",
+                        ExecutableOverridePath: sourceExe,
+                        ApplyWindowedCompatibilityPatch: false));
+
+                GameProfileLaunchPlan plan = GameProfilePreflightService.BuildLaunchPlan(result.TargetGameRoot);
+
+                Assert.Contains("Start-Process", plan.CommandPreview);
+                Assert.Contains("BEA.exe", plan.CommandPreview);
+                Assert.DoesNotContain(result.TargetGameRoot, plan.CommandPreview, StringComparison.OrdinalIgnoreCase);
+                Assert.DoesNotContain(result.ExecutablePath, plan.CommandPreview, StringComparison.OrdinalIgnoreCase);
+                Assert.DoesNotContain(":\\", plan.CommandPreview);
+                Assert.DoesNotContain("Users", plan.CommandPreview, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(result.ExecutablePath, plan.ExecutablePath);
+                Assert.Equal(result.TargetGameRoot, plan.WorkingDirectory);
+            }
+            finally
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+        }
+
+        [Fact]
         public void BuildLaunchPlan_RevalidatesManifestAndCurrentPatchBytes()
         {
             string tempRoot = Path.Combine(Path.GetTempPath(), $"onslaught-launch-revalidate-{Guid.NewGuid():N}");

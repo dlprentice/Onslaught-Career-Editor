@@ -69,7 +69,8 @@ live in `developer_state.json` and the campaign ledgers.
   music-swap note names the backup file the same way. A live-trainer attach
   refusal names why the copy was not opened, without the Win32
   dump or a path. A live-trainer write that cannot open the copy
-  names that refusal the same way, without the Win32 dump.
+  names that refusal the same way, without the Win32 dump. The launch
+  plan names BEA.exe, not the copy folder path.
 
 ## 1.0.11 — 2026-08-07
 
