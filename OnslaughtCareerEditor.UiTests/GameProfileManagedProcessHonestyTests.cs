@@ -27,7 +27,12 @@ public class GameProfileManagedProcessHonestyTests
             TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "GameProfileManagedProcessRegistry.cs"));
 
         Assert.That(source, Does.Not.Contain("Managed playable copied game folder directory does not exist."));
-        Assert.That(source, Does.Contain("Managed playable copied game folder does not exist."));
+        Assert.That(source, Does.Not.Contain("Managed playable copied game folder does not exist."));
+        Assert.That(source, Does.Contain("CopyFolderMissing"));
+        Assert.That(GameProfileManagedProcessRegistry.CopyFolderMissing,
+            Is.EqualTo("That copy folder could not be found."));
+        Assert.That(GameProfileManagedProcessRegistry.CopyFolderMissing.ToLowerInvariant(),
+            Does.Not.Contain("path"));
     }
 
     [Test]

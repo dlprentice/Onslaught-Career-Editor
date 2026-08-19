@@ -16,6 +16,7 @@ namespace OnslaughtCareerEditor.AppCore
         public const string LeaseSchemaVersion = "winui-managed-safe-copy-processes.v1";
         public const string LeaseFolderMismatch =
             "A managed copy must stay in this registry's profile folder.";
+        public const string CopyFolderMissing = "That copy folder could not be found.";
 
         private readonly object _gate = new();
         private readonly Dictionary<int, GameProfileRegisteredProcess> _processes = new();
@@ -483,7 +484,7 @@ namespace OnslaughtCareerEditor.AppCore
         private static string NormalizeExistingDirectory(string path)
         {
             if (string.IsNullOrWhiteSpace(path) || !Directory.Exists(path))
-                throw new DirectoryNotFoundException("Managed playable copied game folder does not exist.");
+                throw new DirectoryNotFoundException(CopyFolderMissing);
 
             return Path.GetFullPath(path)
                 .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
