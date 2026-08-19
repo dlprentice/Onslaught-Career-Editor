@@ -311,6 +311,67 @@ public sealed class RetailCareerCampaignApplyUpdateTests
     }
 
     /// <summary>
+    /// Lost returns before <c>ReCalcLinks</c> /
+    /// <c>UpdateBaseWorldExistsStuffForNode</c>
+    /// (<c>Career.cpp:382-385</c> / <c>416</c> / <c>443-452</c> /
+    /// <c>519-527</c>). FillOut still carries first-play 1 at 0..34 and
+    /// 0 at 35..287; ApplyUpdate does not copy them, so leftover Blank
+    /// all-1s on world 110 stay set. Isolated
+    /// <see cref="RetailCareerCampaign.UpdateBaseWorldExistsStuffForNode"/>
+    /// and <c>Level100Lost_DoesNotTouchTheTrainingGraph</c> do not name
+    /// leftover bits — the graph test passes no
+    /// <c>mBaseThingsLeft</c>. Existing Lost goodie / latch / mSlots
+    /// tests do not name them. Mutation: copy FillOut
+    /// <c>mBaseThingsLeft</c> onto world 110 on the Lost return. No new
+    /// secondaries.
+    /// </summary>
+    [Fact]
+    public void Level100Lost_ApplyUpdateDoesNotCopyFillOutBaseThingsOntoWorld110()
+    {
+        RetailCareerCampaign career = RetailCareerReCalcLinks.CreateColdTrainingSlice();
+        RetailEndLevelSnapshot won = RetailFillOutEndLevelData.ForLevel100Won();
+        RetailEndLevelSnapshot lost = won with
+        {
+            FinalState = RetailCareerReCalcLinks.GameStateLevelLost,
+        };
+
+        RetailCareerNode training = career.Nodes.Find(100)!;
+        RetailCareerNode next = career.Nodes.Find(110)!;
+        Assert.Equal(
+            RetailCareerReCalcLinks.TrainingPrimaryBaseThingsWorldNumber,
+            next.WorldNumber);
+        Assert.Equal(RetailCareerNode.BaseThingsExistsSize, lost.BaseThingsLeft.Count);
+        Assert.Equal(1, lost.BaseThingsLeft[0]);
+        Assert.Equal(1, lost.BaseThingsLeft[34]);
+        Assert.Equal(0, lost.BaseThingsLeft[35]);
+        Assert.Equal(0, lost.BaseThingsLeft[287]);
+        Assert.Equal(1, next.DoesBaseThingExist(35));
+        Assert.Equal(
+            RetailCareerNode.BaseThingsExistsSize,
+            CountExistingBaseThings(next));
+
+        career.ApplyUpdate(lost);
+
+        Assert.Equal(1, next.DoesBaseThingExist(0));
+        Assert.Equal(1, next.DoesBaseThingExist(34));
+        Assert.Equal(1, next.DoesBaseThingExist(35));
+        Assert.Equal(1, next.DoesBaseThingExist(287));
+        Assert.Equal(
+            RetailCareerNode.BaseThingsExistsSize,
+            CountExistingBaseThings(next));
+        Assert.Equal(
+            RetailCareerNode.BaseThingsExistsSize,
+            CountExistingBaseThings(training));
+        Assert.Equal(0, training.Complete);
+        Assert.Equal(0, next.Complete);
+        Assert.Equal(0, career.CareerInProgress);
+        Assert.Equal(
+            RetailCareerNodeLink.NotComplete,
+            career.GetLink(training.LowerLink)!.LinkType);
+        Assert.All(lost.SecondaryStatuses, status => Assert.Equal(0, status));
+    }
+
+    /// <summary>
     /// <c>GRADE(100) &gt;= C</c> is not <c>&gt;= B</c>. Ranking 0.25f is
     /// already pinned as C, so a Level 100 win at that ranking unlocks
     /// 0, 8, and 78 and leaves 121 / 164 at <c>GS_UNKNOWN</c>. Mutation:
