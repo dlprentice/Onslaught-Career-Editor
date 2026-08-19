@@ -78,6 +78,48 @@ public sealed class Level100WonCareerHandoffTests
     }
 
     /// <summary>
+    /// First-play <c>SetSlotSave</c> writes <c>SLOT_TUTORIAL_1..4</c>
+    /// (63..66). FillOut copies those 32 words and <c>ApplyUpdate</c>
+    /// assigns them over career <c>mSlots</c>, so a leftover bit dies.
+    /// Mutation: <c>ForLevel100Won</c> carrying empty slot words leaves
+    /// 63..66 unset after the handoff. No new secondaries.
+    /// </summary>
+    [Fact]
+    public void FrontEndHandoffReadyAfterWon_OverwritesCareerSlotsFromFillOutTutorialBits()
+    {
+        Level100Mission mission = DriveReleasedFirstPlayToTerminal(
+            career => career.Slots.SetSlot(1, 1));
+
+        Assert.Equal(Level100MissionOutcome.Won, mission.Snapshot.Outcome);
+        Assert.Equal(
+            Level100MissionTerminalState.FrontEndHandoffReady,
+            mission.Snapshot.TerminalState);
+
+        RetailEndLevelSnapshot snapshot = RetailFillOutEndLevelData.ForLevel100Won();
+        Assert.Equal(
+            snapshot.SlotWords,
+            mission.Career.Slots.Words);
+        Assert.Equal(0, mission.Career.Slots.GetSlot(1));
+        Assert.Equal(
+            1,
+            mission.Career.Slots.GetSlot(
+                RetailCareerSlotHandoff.TutorialIntroductionSlot));
+        Assert.Equal(
+            1,
+            mission.Career.Slots.GetSlot(
+                RetailCareerSlotHandoff.TutorialPulseCannonSlot));
+        Assert.Equal(
+            1,
+            mission.Career.Slots.GetSlot(
+                RetailCareerSlotHandoff.TutorialVulcanCannonSlot));
+        Assert.Equal(
+            1,
+            mission.Career.Slots.GetSlot(
+                RetailCareerSlotHandoff.TutorialStatusBarsSlot));
+        Assert.All(snapshot.SecondaryStatuses, status => Assert.Equal(0, status));
+    }
+
+    /// <summary>
     /// <c>CCareer::Update</c> at <c>0x0041BD06</c> is
     /// <c>cmp eax, 5</c> / <c>jne</c>. Lost is 4, so FillOut is never
     /// applied even if the handoff state is claimed. Mutation: dropping
@@ -149,7 +191,8 @@ public sealed class Level100WonCareerHandoffTests
             status => Assert.Equal(0, status));
     }
 
-    private static Level100Mission DriveReleasedFirstPlayToTerminal()
+    private static Level100Mission DriveReleasedFirstPlayToTerminal(
+        Action<RetailCareerCampaign>? seedCareer = null)
     {
         Level100ActorDefinitionSet definitions = Level100TestActorDefinitions.Create();
         var actors = new Level100ActorRegistry(definitions);
@@ -159,6 +202,7 @@ public sealed class Level100WonCareerHandoffTests
             player,
             new Level100TutorialProgress(false, false, false, false),
             initialPlayerHealth: SimulationConstants.MaximumHull);
+        seedCareer?.Invoke(mission.Career);
 
         const int settleTicks = 100 * SimulationConstants.TicksPerSecond;
         void Settle()
