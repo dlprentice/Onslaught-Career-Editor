@@ -163,7 +163,7 @@ namespace OnslaughtCareerEditor.AppCore
                 .Where(static path => !string.IsNullOrWhiteSpace(path))
                 .ToList();
             if (exportPaths.Distinct(FileMutationSafety.PathComparer).Count() != exportPaths.Count)
-                throw new InvalidOperationException("Asset catalog primary export paths must be unique.");
+                throw new InvalidOperationException("Asset catalog primary exports must be unique.");
             if (goodies.Select(static row => row.Index).Distinct().Count() != goodies.Count)
                 throw new InvalidOperationException("Asset catalog Goodie indexes must be unique.");
         }
