@@ -198,7 +198,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             string replacementPath = ValidateReplacementOgg(options.ReplacementOggPath);
             if (string.Equals(Path.GetFullPath(replacementPath), Path.GetFullPath(targetPath), StringComparison.OrdinalIgnoreCase))
-                throw new InvalidOperationException("Replacement OGG path must not be the target music file.");
+                throw new InvalidOperationException("The replacement OGG must not be the target music file.");
 
             string manifestPath = Path.Combine(safeRoot, ManifestFileName);
             RejectExistingReparseAncestors(manifestPath, "music replacement manifest path");
@@ -379,7 +379,7 @@ namespace OnslaughtCareerEditor.AppCore
         private static string ValidateReplacementOgg(string replacementPath)
         {
             if (string.IsNullOrWhiteSpace(replacementPath))
-                throw new InvalidOperationException("Replacement OGG path is required.");
+                throw new InvalidOperationException("A replacement OGG is required.");
 
             string fullPath = Path.GetFullPath(replacementPath);
             if (!File.Exists(fullPath))
