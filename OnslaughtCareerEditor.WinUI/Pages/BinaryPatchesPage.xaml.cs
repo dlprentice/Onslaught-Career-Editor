@@ -1489,7 +1489,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 PatchBenchCopiedProfileSummary.Text = "Creating safe game copy. This can take a few minutes for a full game folder...";
                 PatchBenchCopiedProfileLaunchPlan.Text = string.Empty;
                 PatchBenchCopiedProfileLaunchStatus.Text = PatchBenchLaunchText.BuildBoundary("No safe copy launch attempted.");
-                OperationLogTextBox.Text = "Preparing a safe game copy in the app-owned GameProfiles workspace. The selected Steam/game install stays unchanged.";
+                OperationLogTextBox.Text = "Preparing a safe game copy. The selected Steam/game install stays unchanged.";
                 AppStatusService.SetStatus("Windowed & Mods: preparing safe copy");
 
                 GameProfilePrepareResult result = await Task.Run(() =>
