@@ -481,7 +481,7 @@ namespace OnslaughtCareerEditor.AppCore
         private static string NormalizeExistingDirectory(string path)
         {
             if (string.IsNullOrWhiteSpace(path) || !Directory.Exists(path))
-                throw new DirectoryNotFoundException("Managed playable copied game folder directory does not exist.");
+                throw new DirectoryNotFoundException("Managed playable copied game folder does not exist.");
 
             return Path.GetFullPath(path)
                 .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
