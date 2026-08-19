@@ -60,6 +60,7 @@ namespace OnslaughtCareerEditor.AppCore
         public const string UseBea02ForBea01PresetId = "use-bea02-for-bea01";
         public const string UseBea01ForBea02PresetId = "use-bea01-for-bea02";
         public const string UseBea02ForBea04PresetId = "use-bea02-for-bea04";
+        public const string MusicFolderMissing = "That copy does not have a Music folder.";
         private const string BackupSuffix = ".original.backup";
 
         private static readonly GameProfileMusicSwapPreset[] s_musicSwapPresets =
@@ -113,7 +114,7 @@ namespace OnslaughtCareerEditor.AppCore
             string replacementFileName = ValidateTargetMusicFileName(preset.ReplacementMusicFileName);
             string musicDirectory = Path.Combine(safeRoot, "data", "Music");
             if (!Directory.Exists(musicDirectory))
-                throw new DirectoryNotFoundException("Playable copied game folder does not contain data\\Music.");
+                throw new DirectoryNotFoundException(MusicFolderMissing);
 
             string targetPath = Path.Combine(musicDirectory, targetFileName);
             string replacementPath = Path.Combine(musicDirectory, replacementFileName);
@@ -143,7 +144,7 @@ namespace OnslaughtCareerEditor.AppCore
             string safeRoot = ValidateSafeGameRoot(safeGameRoot, appOwnedProfilesRoot);
             string musicDirectory = Path.Combine(safeRoot, "data", "Music");
             if (!Directory.Exists(musicDirectory))
-                throw new DirectoryNotFoundException("Playable copied game folder does not contain data\\Music.");
+                throw new DirectoryNotFoundException(MusicFolderMissing);
 
             RejectExistingReparseAncestors(musicDirectory, "music directory");
             RejectReparsePoint(musicDirectory, "music directory");
@@ -186,7 +187,7 @@ namespace OnslaughtCareerEditor.AppCore
             string targetFileName = ValidateTargetMusicFileName(options.TargetMusicFileName);
             string musicDirectory = Path.Combine(safeRoot, "data", "Music");
             if (!Directory.Exists(musicDirectory))
-                throw new DirectoryNotFoundException("Playable copied game folder does not contain data\\Music.");
+                throw new DirectoryNotFoundException(MusicFolderMissing);
 
             string targetPath = Path.Combine(musicDirectory, targetFileName);
             if (!File.Exists(targetPath))
