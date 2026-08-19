@@ -596,7 +596,10 @@ public sealed class Simulation
                 pose.LinearVelocityMillimetersPerTick.X,
                 pose.LinearVelocityMillimetersPerTick.Z),
             pose.LinearVelocityMillimetersPerTick.Y);
-        _level100ActorScripts.SetPlayerInJetMode(_mode == VehicleMode.Jet);
+        _level100ActorScripts.SetPlayerFlightState(
+            _mode,
+            _transition,
+            _ticksSinceGroundContact);
     }
 
     private void DestroyLevel100PlayerActor()

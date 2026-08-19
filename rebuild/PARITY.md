@@ -1,7 +1,7 @@
 # Rebuild parity contract
 
 Status: active — what "1:1 behavioral and experiential parity" means operationally
-Last updated: 2026-08-19 (Level 100 IScript Wait stop-flag stores 1 at 0x0089c800).
+Last updated: 2026-08-19 (Level 100 IScript InJetMode type-8 + recency).
 Evidence: SOURCE — authority order and the known divergences are
 recorded in `PROVENANCE.md` plus the Lost-countdown row of this table; gate capabilities are MEASURED claims of the
 tracked harnesses named in the table. Every row of *Carried retail contracts*
@@ -163,6 +163,7 @@ Owner paths are relative to the repository root; test names are relative to
 | `IScript::EnableWeapon` Level 100 walker active flag | `0x00534fb0` body SHA-256 `b71e37ce…92766eb4` on specimen `74154bfa…`. `0x00534fce` is `ff 97 98 01 00 00` = `call [edi+0x198]`. Player override `0x0040dc30` (37 B SHA-256 `fa72dd3f…eb92f839`) forwards to walker `0x00414970`. `0x004149c7` is `c7 87 9c 00 00 00 01 00 00 00` = `mov [edi+0x9c], 1`. Isolated `Enabled` = true names the rebuild bool; skip store Expected 1 Actual 0. One live store of 1 is not unique versus increment from 0. Wrapper gate `test [eax+0x34], 0x10` and Disable store-0 / ChangeWeapon stay unclaimed. ChargeWeapon stays unclaimed. Live `GAME.mSlots` stay unclaimed. No new secondaries | `rebuild/OnslaughtRebuild.Core/RetailEnableWeapon.cs` | `RetailEnableWeapon.Enable` | `RetailEnableWeaponTests.Enable_StoresLiteralOneAtWeaponPlus9CNotIncrement` | 1 | increment so Enable(1) becomes 2 |
 | `IScript::SetObjective` / `UnsetObjective` Level 100 thing flag | `0x00535ed0` body `8b49106a01e896dafbffc20c00` on specimen `74154bfa…` (13 B SHA-256 `e1e368b8…a48f666b`). Twin Unset `0x00535ee0` pushes 0. Callee `0x004f3970` 61 B SHA-256 `da733fdd…353980b0`. `0x004f398e` is `80 4e 2c 20` = `or [esi+0x2c], 0x20`. Unset `0x004f39a5` is `80 66 2c df` = `and [esi+0x2c], 0xdf`. Isolated `IsObjective` / navigation name stay the rebuild bool / string; skip store Expected 0x20 Actual 0. One live store of 0x20 from 0 is not unique versus replace. Isolated Mark(0x04)=0x24. Noticeboard Add/Remove stay unclaimed. ChargeWeapon stays unclaimed. Live `GAME.mSlots` stay unclaimed. No new secondaries | `rebuild/OnslaughtRebuild.Core/RetailSetObjective.cs` | `RetailSetObjective.Mark` | `RetailSetObjectiveTests.MarkAndUnmark_OrBit20ThenClearItNotBoolReplace` | 1 | replace so Mark(0x04) becomes 0x20 |
 | `IScript::Pause` / `PlayCharMessageWait` Level 100 wait stop flag | `0x00537c70` through `ret 0xc` at `0x00537d66` (249 B SHA-256 `2bdf08ea…829f`) and `0x005375f0` through `ret 0xc` at `0x005377d5` (488 B SHA-256 `7d65b4bc…55e3`) on specimen `74154bfa…`. `0x00537d55` / `0x005376f9` are `c7 05 00 c8 89 00 01 00 00 00` = `mov [0x0089c800], 1` (singleton `+0x220`). Isolated `PauseTicks` / `MessagePlaybackTicks` name the rebuild sleep; skip store Expected 1 Actual 0. One live store of 1 is not unique versus increment from 0. First-play init issues six `PlayCharMessageWait`s; increment would be 6. CVM snapshot / 0.05f / FollowWaypointWait / PlayAnimationWait / Run-yield stay unclaimed. ChargeWeapon stays unclaimed. Live `GAME.mSlots` stay unclaimed. No new secondaries | `rebuild/OnslaughtRebuild.Core/RetailIScriptWaitStop.cs` | `RetailIScriptWaitStop.Stop` | `RetailIScriptWaitStopTests.Stop_StoresLiteralOneAtCvmSingletonPlus220NotIncrement` | 1 | increment so Stop(1) becomes 2 |
+| `IScript::InJetMode` Level 100 type+recency | `0x005380f0` through `ret 0xc` at `0x00538147` (90 B SHA-256 `0ae6c37d…866486f0`) on specimen `74154bfa…`. `0x005380f6` is `f6 41 34 08` = `test [ecx+0x34], 8`. Callee `0x00408120` (43 B SHA-256 `81ab0371…7fb7610e`) is walker `+0x260==2` and `now - +0xcc < 0.5f` at `0x005d85ec`. Wrapper `test eax,eax / jne` keeps FALSE when the callee is true. Isolated `JetModeState` names recency and still returns InJetMode for a non-BE jet. Isolated `PlayerInJetMode == (mode == Jet)` names the rebuild bool; an airborne walker is TRUE here and FALSE there. TargetZone2/3/4 `hit()` SET_CONTEXT the hitter then call this native. EnableFlightMode wrapper gate / Disable / lock-set / Move / Morph / UpdateCamera stay unclaimed. ChargeWeapon stays unclaimed. Live `GAME.mSlots` stay unclaimed. No new secondaries | `rebuild/OnslaughtRebuild.Core/RetailIScriptInJetMode.cs` | `RetailIScriptInJetMode.Evaluate` | `RetailIScriptInJetModeTests.Evaluate_IsFalseUnlessBattleEngineBit8AndNotARecentlyGroundedWalker` | 1 | skip `test [ecx+0x34], 8` so a non-BE jet is TRUE |
 
 Two things this table deliberately does **not** claim. It does not claim these
 contracts are graded `REBUILD_READY`: that grade is a campaign artifact and
@@ -356,6 +357,15 @@ store of 1 is not unique versus increment from 0.
 CVM snapshot / 0.05f / FollowWaypointWait /
 PlayAnimationWait / Run-yield stay unclaimed.
 ChargeWeapon stays unclaimed.
+The InJetMode type+recency row names
+`RetailIScriptInJetMode.Evaluate`; isolated
+`JetModeState` names recency without
+`test [ecx+0x34], 8`. Isolated
+`PlayerInJetMode == (mode == Jet)` names the
+rebuild bool. An airborne walker Battle Engine is
+TRUE here. EnableFlightMode wrapper gate /
+Disable / lock-set / Move / Morph / UpdateCamera
+stay unclaimed. ChargeWeapon stays unclaimed.
 The score-time arm row names `AfterScoreTimeArm` on
 the already-pinned FillOut owner; it does not rewrite
 `ForLevel100Won`. The score-percentage last-wins row names
