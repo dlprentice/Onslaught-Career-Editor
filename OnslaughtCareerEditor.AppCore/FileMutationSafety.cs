@@ -50,7 +50,7 @@ namespace OnslaughtCareerEditor.AppCore
         internal const string FileResolvesToNetwork = "That file resolves to a network location.";
         internal const string FileDoesNotResolveToLocalDrive = "That file does not resolve to a local drive.";
         internal const string OutputInsideGameFolder =
-            "Output files inside a Battle Engine Aquila game folder are blocked. Choose the app-owned patched-output folder or another non-game folder.";
+            "Output files inside a Battle Engine Aquila game folder are blocked. Choose the output folder or another non-game folder.";
         internal const string FolderChangedIdentity = "That folder changed identity while it was being secured.";
         internal const string FolderChangedIdentityBeforeGuard = "That folder changed identity before its mutation guard was created.";
         internal const string FileCouldNotBeInspected = "That file could not be inspected.";
