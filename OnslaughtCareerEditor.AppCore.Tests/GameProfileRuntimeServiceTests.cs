@@ -133,7 +133,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                             LaunchArguments: Array.Empty<string>()),
                         runner));
 
-                Assert.Contains("current copied executable no longer matches", ex.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(GameProfilePreflightService.CopiedBeaPatchesMismatch, ex.Message);
                 Assert.Empty(runner.Starts);
             }
             finally

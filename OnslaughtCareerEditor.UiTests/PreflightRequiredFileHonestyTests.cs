@@ -117,6 +117,7 @@ public class PreflightRequiredFileHonestyTests
         Assert.That(source, Does.Not.Contain("patch apply failed:"));
         Assert.That(source, Does.Not.Contain("patch verification failed:"));
         Assert.That(source, Does.Contain("CopiedBeaPatchesMismatch"));
+        Assert.That(source, Does.Not.Contain("backup-derived selected patch bytes"));
         Assert.That(source, Does.Contain("CopiedBeaPatchApplyFailed"));
         Assert.That(source, Does.Not.Contain("Required patch catalog row is missing:"));
         Assert.That(source, Does.Contain("RequiredPatchRowMissing"));
@@ -362,6 +363,18 @@ public class PreflightRequiredFileHonestyTests
             Does.Not.Contain("metadata"));
         Assert.That(GameProfilePreflightService.CopyBeaHashMissing.ToLowerInvariant(),
             Does.Not.Contain("full-file"));
+        Assert.That(source, Does.Contain("CopyBeaSizeMismatch"));
+        Assert.That(source, Does.Contain("CopyBeaHashMismatch"));
+        Assert.That(source, Does.Not.Contain("manifest full-file size"));
+        Assert.That(source, Does.Not.Contain("manifest full-file hash"));
+        Assert.That(GameProfilePreflightService.CopyBeaSizeMismatch,
+            Is.EqualTo("That copy's BEA.exe no longer matches its size."));
+        Assert.That(GameProfilePreflightService.CopyBeaHashMismatch,
+            Is.EqualTo("That copy's BEA.exe no longer matches its hash."));
+        Assert.That(GameProfilePreflightService.CopyBeaSizeMismatch.ToLowerInvariant(),
+            Does.Not.Contain("copied executable"));
+        Assert.That(GameProfilePreflightService.CopyBeaHashMismatch.ToLowerInvariant(),
+            Does.Not.Contain("manifest"));
         Assert.That(source, Does.Not.Contain("Playable copied game folder patch preparation requires"));
         Assert.That(source, Does.Contain("CopyNeedsWindowedPatchSet"));
         Assert.That(GameProfilePreflightService.CopyNeedsWindowedPatchSet,

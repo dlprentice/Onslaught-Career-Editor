@@ -1441,7 +1441,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
 
                 InvalidOperationException ex = Assert.Throws<InvalidOperationException>(() =>
                     GameProfilePreflightService.BuildLaunchPlan(result.TargetGameRoot, Array.Empty<string>()));
-                Assert.Contains("current copied executable no longer matches", ex.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(GameProfilePreflightService.CopiedBeaPatchesMismatch, ex.Message);
             }
             finally
             {

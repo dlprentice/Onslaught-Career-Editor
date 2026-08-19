@@ -186,6 +186,8 @@ namespace OnslaughtCareerEditor.AppCore
         public const string CopyNeedsWindowedPatchSet = "That copy needs the windowed compatibility patch set.";
         public const string CopyBeaSizeMissing = "That copy's details are missing BEA.exe size.";
         public const string CopyBeaHashMissing = "That copy's details are missing the BEA.exe hash.";
+        public const string CopyBeaSizeMismatch = "That copy's BEA.exe no longer matches its size.";
+        public const string CopyBeaHashMismatch = "That copy's BEA.exe no longer matches its hash.";
         public const string SourceFileMustStayInsideGame = "That file must stay inside the game folder.";
         public const string CopyRequired = "A copy is required.";
         public const string ProfileFolderInsideGame =
@@ -1147,7 +1149,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             byte[] actualBytes = File.ReadAllBytes(executablePath);
             if (!actualBytes.SequenceEqual(expectedPatchedBytes))
-                throw new InvalidOperationException("The current copied executable no longer matches the backup-derived selected patch bytes.");
+                throw new InvalidOperationException(CopiedBeaPatchesMismatch);
         }
 
         private static void ValidateManifestExecutableIdentity(JsonElement manifestRoot, string executablePath)
@@ -1168,14 +1170,14 @@ namespace OnslaughtCareerEditor.AppCore
             FileInfo info = new(executablePath);
             if (info.Length != expectedSize)
             {
-                throw new InvalidOperationException("The current copied executable no longer matches the manifest full-file size.");
+                throw new InvalidOperationException(CopyBeaSizeMismatch);
             }
 
             string expectedHash = hashEl.GetString()!.Trim();
             string actualHash = ComputeSha256(executablePath);
             if (!string.Equals(actualHash, expectedHash, StringComparison.OrdinalIgnoreCase))
             {
-                throw new InvalidOperationException("The current copied executable no longer matches the manifest full-file hash.");
+                throw new InvalidOperationException(CopyBeaHashMismatch);
             }
         }
 
