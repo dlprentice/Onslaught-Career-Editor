@@ -144,9 +144,9 @@ public static class RetailFillOutEndLevelData
     public static int LostReasonWord(int gameLevelLostReason) => gameLevelLostReason;
 
     /// <summary>
-    /// FillOut <c>0x0046d5cc</c> <c>mov [0x00672e24], eax</c> from
+    /// FillOut <c>0x0046d5cb</c> <c>mov [0x00672e24], eax</c> from
     /// <c>[ebp+0xf4]</c>. The score-time arm later fistp-rewrites
-    /// <c>CGame+0xf4</c> at <c>0x0046d701</c> and does not store
+    /// <c>CGame+0xf4</c> at <c>0x0046d6ff</c> and does not store
     /// <c>0x00672e24</c> again. First-play <c>this+0xf4</c> stays
     /// unclaimed — mutation: leftover 999, or the post-arm scaled
     /// score.
@@ -154,7 +154,7 @@ public static class RetailFillOutEndLevelData
     public static int ScoreWord(int gameScore) => gameScore;
 
     /// <summary>
-    /// FillOut <c>0x0046d5c6</c> <c>mov [0x00672e28], ecx</c> from
+    /// FillOut <c>0x0046d5c5</c> <c>mov [0x00672e28], ecx</c> from
     /// <c>[0x00672fd0]</c> (<c>EVENT_MANAGER.GetTime()</c>). The arm
     /// rereads that dword for the multiplier and never writes
     /// <c>0x00672e28</c> again. First-play elapsed stays unclaimed —
@@ -399,7 +399,7 @@ public static class RetailFillOutEndLevelData
     }
 
     /// <summary>
-    /// The fistp'd <c>CGame.mScore</c> rewrite at <c>0x0046d701</c>.
+    /// The fistp'd <c>CGame.mScore</c> rewrite at <c>0x0046d6ff</c>.
     /// FillOut does not copy this back to <c>0x00672e24</c>. A skip
     /// leaves the pre-arm score. Leftover <c>LoadLevel</c> 0.5 at
     /// elapsed 400 turns 140 into 105.

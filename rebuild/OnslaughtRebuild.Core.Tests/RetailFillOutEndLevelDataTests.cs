@@ -399,12 +399,12 @@ public sealed class RetailFillOutEndLevelDataTests
 
     /// <summary>
     /// Independently re-read specimen <c>74154bfa…</c>:
-    /// <c>0x0046d5b0</c> <c>mov ecx,[0x00672fd0]</c> /
-    /// <c>0x0046d5c0</c> <c>mov eax,[ebp+0xf4]</c> /
-    /// <c>0x0046d5c6</c> <c>mov [0x00672e28], ecx</c> /
-    /// <c>0x0046d5cc</c> <c>mov [0x00672e24], eax</c>. Those are the
+    /// <c>0x0046d5af</c> <c>mov ecx,[0x00672fd0]</c> /
+    /// <c>0x0046d5bf</c> <c>mov eax,[ebp+0xf4]</c> /
+    /// <c>0x0046d5c5</c> <c>mov [0x00672e28], ecx</c> /
+    /// <c>0x0046d5cb</c> <c>mov [0x00672e24], eax</c>. Those are the
     /// only FillOut stores of <c>mTimeTaken</c> / <c>mScore</c>. The
-    /// score-time arm's <c>0x0046d701</c> <c>mov [ebp+0xf4], eax</c>
+    /// score-time arm's <c>0x0046d6ff</c> <c>mov [ebp+0xf4], eax</c>
     /// rewrites <c>CGame.mScore</c> only. First-play elapsed and score
     /// stay unclaimed — this does not rewrite
     /// <see cref="RetailFillOutEndLevelData.ForLevel100Won"/>.
