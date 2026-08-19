@@ -273,6 +273,8 @@ public class GameDirectoryIdentityTextTests
         Assert.That(home, Does.Not.Contain("\"Needs the full install\""));
         Assert.That(home, Does.Not.Contain("full Battle Engine Aquila folder"));
         Assert.That(home, Does.Not.Contain("need the full install"));
+        Assert.That(home, Does.Not.Contain("Game directory configured"));
+        Assert.That(home, Does.Contain("Game folder ready"));
     }
 
     private static string FindRepoRoot()

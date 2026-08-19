@@ -330,7 +330,7 @@ public class WinUiHomeNavigationSmokeTests
             using (HomeNavigationSession readySession = LaunchHomeSession(stagingDirectory, readyGameDirectory, "ready", requireRepoBuild: true))
             {
                 Window window = readySession.Window;
-                WaitForText(window, "Game directory configured: full-game.", TimeSpan.FromSeconds(20));
+                WaitForText(window, "Game folder ready: full-game.", TimeSpan.FromSeconds(20));
 
                 Assert.That(FindByAutomationId(window, "HomeSetupTitle").Name, Is.EqualTo("Setup"));
                 AutomationElement patchBenchHeading = FindByAutomationId(window, "HomePatchModsTitle");
