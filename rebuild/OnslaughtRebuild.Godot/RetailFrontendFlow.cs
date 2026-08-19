@@ -1468,6 +1468,10 @@ public sealed partial class RetailFrontendFlow : Control
             // Pair C of the four the shadow law was recovered from: the
             // selected-row icon takes the SHARED (u,v) offset, the same vector as
             // the right arc, off the same body anchor (457,355).
+            // Colour at 0x0046407C is RetailMainMenuSelectedIconShadow: settled
+            // ((255<<6)-255)<<16 & 0xFF000000 is 0x3E000000, which is this
+            // ShadowTint, so the draw keeps ShadowTint and does not call
+            // SubmittedColor. Shadow scale stays ShadowScaleBoost (1.05).
             DrawSurfaceCentered(
                 icon,
                 rightArcShadow.X,
