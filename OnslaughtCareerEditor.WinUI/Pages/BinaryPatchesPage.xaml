@@ -1292,7 +1292,7 @@
                                              AutomationProperties.Name="Replacement music file"
                                              TextChanged="MusicReplacementInput_TextChanged"
                                              PlaceholderText="Replacement music file" />
-                                    <TextBlock Text="Target must be an existing file in the safe copy's data\Music folder. Stop the safe copy before staging or restoring."
+                                    <TextBlock Text="Target must be an existing file in the safe copy's Music folder. Stop the safe copy before staging or restoring."
                                                Style="{StaticResource SectionBodyTextStyle}" />
                                     <StackPanel Spacing="10">
                                         <Button x:Name="PatchBenchStageMusicReplacementButton"
