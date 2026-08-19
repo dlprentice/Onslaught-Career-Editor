@@ -100,7 +100,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 // the invitation and offers to find the folder automatically.
                 // This bar exists so keyboard and screen-reader users land on a
                 // setup action on arrival, so it should not restate the card.
-                HomeSetupInfoBar.Title = "Game folder not set";
+                HomeSetupInfoBar.Title = GameDirectoryIdentityText.SnapshotNeedsFolder;
                 HomeSetupInfoBar.Message = "Save Lab still opens files you pick yourself.";
                 HomeSetupActionButton.Content = "Choose game folder";
                 AutomationProperties.SetName(HomeSetupActionButton, "Choose game folder");

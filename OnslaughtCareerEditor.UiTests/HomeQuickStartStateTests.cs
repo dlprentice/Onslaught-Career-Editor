@@ -139,6 +139,8 @@ public class HomeQuickStartStateTests
             TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI", "Pages", "HomePage.xaml.cs"));
         Assert.That(code, Does.Contain("HomeQuickStartState.FailureNote"));
         Assert.That(code, Does.Contain("GameDirectoryIdentityText.SnapshotNeedsFullInstall"));
+        Assert.That(code, Does.Contain("HomeSetupInfoBar.Title = GameDirectoryIdentityText.SnapshotNeedsFolder"));
+        Assert.That(code, Does.Not.Contain("HomeSetupInfoBar.Title = \"Game folder not set\""));
         Assert.That(code, Does.Not.Contain("{ex.Message}"));
         Assert.That(code, Does.Not.Contain("PatchResult.Message"));
         Assert.That(code, Does.Not.Contain("could not save that location"));
