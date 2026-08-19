@@ -86,10 +86,12 @@ live in `developer_state.json` and the campaign ledgers.
   the output file, not a path, when the destination is not a career save.
   Game Options does the same for an options file that is not .bea.
   A failed Save Editor write that still looks like a dump uses that same
-  kind of sentence. An empty Lore library says to refresh, instead of
-  describing the emptiness. A missing Windowed & Mods quick-pick row
-  names the refusal, not the catalog key. A Save Editor kill-count
-  read that fails names the action, not the analyzer sentence.
+  kind of sentence. After that write, the journey names Put it in my
+  safe copy instead of telling the player to copy by hand. An empty Lore
+  library says to refresh, instead of describing the emptiness. A missing
+  Windowed & Mods quick-pick row names the refusal, not the catalog key.
+  A Save Editor kill-count read that fails names the action, not the
+  analyzer sentence.
 
 ## 1.0.11 — 2026-08-07
 

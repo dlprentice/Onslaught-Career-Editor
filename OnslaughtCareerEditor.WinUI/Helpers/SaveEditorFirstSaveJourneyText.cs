@@ -19,8 +19,8 @@ internal static class SaveEditorFirstSaveJourneyText
         if (state.HasCompletedCurrentPlan)
         {
             return state.CanRevealWrittenCopy
-                ? "Written copy ready. Show it in File Explorer, then manually copy it into a Safe Game Copy's savegames folder when ready to try it."
-                : "Written copy ready at the chosen destination. Manually copy it into a Safe Game Copy's savegames folder when ready to try it.";
+                ? "Written copy ready. Show it in File Explorer, or choose Put it in my safe copy after you close the copied game."
+                : "Written copy ready. Choose Put it in my safe copy after you close the copied game.";
         }
 
         if (!state.HasSelectedChanges)

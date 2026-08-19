@@ -36,6 +36,43 @@ public class SaveEditorFirstSaveJourneyTests
         Assert.That(SaveEditorFirstSaveJourneyText.BuildStatus(state), Does.Contain(expected));
     }
 
+    [Test]
+    public void AFinishedWriteNamesTheInstallButtonNotAManualCopy()
+    {
+        var canReveal = new SaveEditorFirstSaveJourneyState(true, true, true, true, true, true);
+        var noReveal = new SaveEditorFirstSaveJourneyState(true, true, true, true, true, false);
+
+        string reveal = SaveEditorFirstSaveJourneyText.BuildStatus(canReveal);
+        string hidden = SaveEditorFirstSaveJourneyText.BuildStatus(noReveal);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(reveal, Does.Contain("Written copy ready"));
+            Assert.That(hidden, Does.Contain("Written copy ready"));
+            Assert.That(reveal, Does.Contain("Put it in my safe copy"));
+            Assert.That(hidden, Does.Contain("Put it in my safe copy"));
+            Assert.That(reveal.ToLowerInvariant(), Does.Not.Contain("manually"));
+            Assert.That(hidden.ToLowerInvariant(), Does.Not.Contain("manually"));
+            Assert.That(reveal, Does.Not.Contain(":\\"));
+            Assert.That(hidden, Does.Not.Contain(":\\"));
+            Assert.That(reveal, Does.Not.Contain("savegames"));
+            Assert.That(hidden, Does.Not.Contain("savegames"));
+        });
+    }
+
+    [Test]
+    public void TheJourneyHelperDoesNotTellThePlayerToCopyByHand()
+    {
+        string helper = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot,
+            "OnslaughtCareerEditor.WinUI",
+            "Helpers",
+            "SaveEditorFirstSaveJourneyText.cs"));
+
+        Assert.That(helper, Does.Contain("Put it in my safe copy"));
+        Assert.That(helper.ToLowerInvariant(), Does.Not.Contain("manually copy"));
+    }
+
     [TestCase(0, 0, "No advanced overrides active")]
     [TestCase(1, 0, "1 mission override active")]
     [TestCase(0, 1, "1 category-kill override active")]
