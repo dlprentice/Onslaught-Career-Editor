@@ -109,7 +109,7 @@ namespace OnslaughtCareerEditor.WinUI.Models
                 "free_camera_keyboard_yaw_right_q_hook" => "Q can reach the copied-runtime Q-yaw-right free-camera hook path after the debug camera is toggled on.",
                 "free_camera_keyboard_pitch_up_q_hook" => "Q can reach the copied-runtime Q-pitch-up free-camera hook path after the debug camera is toggled on.",
                 "free_camera_keyboard_pitch_down_q_hook" => "Q can reach the copied-runtime Q-pitch-down free-camera hook path after the debug camera is toggled on.",
-                _ => "The selected bytes change only the copied executable.",
+                _ => "Those bytes change only the copied executable.",
             };
             VerifiedProof = spec.Key switch
             {
