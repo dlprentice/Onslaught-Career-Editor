@@ -32,5 +32,14 @@ public class PatchBenchCopyFolderHonestyTests
         Assert.That(source, Does.Contain("CopyFolderMissing"));
         Assert.That(source, Does.Not.Contain("Playable copied game folder root does not exist:"));
         Assert.That(source, Does.Not.Contain("{resolvedProfileRoot}"));
+        Assert.That(source, Does.Not.Contain("launch did not return a valid process id."));
+        Assert.That(source, Does.Not.Contain("launch did not start a process."));
+        Assert.That(source, Does.Not.Contain("refuses reparse points in {label}."));
+        Assert.That(source, Does.Contain("CopyDidNotStart"));
+        Assert.That(source, Does.Contain("CopyCannotUseLink"));
+        Assert.That(GameProfileRuntimeService.CopyDidNotStart, Is.EqualTo("That copy did not start."));
+        Assert.That(GameProfileRuntimeService.CopyCannotUseLink,
+            Is.EqualTo("That copy cannot use a shortcut or link."));
+        Assert.That(GameProfileRuntimeService.CopyDidNotStart.ToLowerInvariant(), Does.Not.Contain("path"));
     }
 }

@@ -76,6 +76,9 @@ namespace OnslaughtCareerEditor.AppCore
         public const string ProfileFolderRequired = "An app-owned profile folder is required.";
         public const string CopyMustStayInside =
             "Launch/stop requires a managed copy inside the app-owned profile folder.";
+        public const string CopyDidNotStart = "That copy did not start.";
+        public const string StopNeedsManagedCopy = "Stop needs a copy this app started.";
+        public const string CopyCannotUseLink = "That copy cannot use a shortcut or link.";
 
         private static readonly TimeSpan s_defaultStopTimeout = TimeSpan.FromSeconds(3);
 
@@ -154,7 +157,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             GameProfileProcessStartResult started = (runner ?? DefaultGameProfileProcessRunner.Instance).Start(request);
             if (started.ProcessId <= 0)
-                throw new InvalidOperationException("Playable copied game folder launch did not return a valid process id.");
+                throw new InvalidOperationException(CopyDidNotStart);
 
             return new GameProfileManagedProcess(
                 ProcessId: started.ProcessId,
@@ -178,7 +181,7 @@ namespace OnslaughtCareerEditor.AppCore
             if (!string.Equals(Path.GetFullPath(process.ExecutablePath), expectedExePath, StringComparison.OrdinalIgnoreCase) ||
                 !string.Equals(Path.GetFullPath(process.ManifestPath), expectedManifestPath, StringComparison.OrdinalIgnoreCase))
             {
-                throw new InvalidOperationException("Stop requires a managed playable copied game folder process record.");
+                throw new InvalidOperationException(StopNeedsManagedCopy);
             }
 
             return (runner ?? DefaultGameProfileProcessRunner.Instance).Stop(
@@ -252,7 +255,7 @@ namespace OnslaughtCareerEditor.AppCore
         {
             FileAttributes attributes = File.GetAttributes(path);
             if ((attributes & FileAttributes.ReparsePoint) != 0)
-                throw new InvalidOperationException($"Playable copied game folder runtime refuses reparse points in {label}.");
+                throw new InvalidOperationException(CopyCannotUseLink);
         }
 
         private static void RejectExistingReparseAncestors(string path, string label)
@@ -295,7 +298,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             Process? process = Process.Start(startInfo);
             if (process is null)
-                throw new InvalidOperationException("Playable copied game folder launch did not start a process.");
+                throw new InvalidOperationException(GameProfileRuntimeService.CopyDidNotStart);
 
             DateTimeOffset? startTime = null;
             try

@@ -33,6 +33,12 @@ public class PatchBenchStopHonestyTests
 
         Assert.That(code, Does.Contain("StopFailed"));
         Assert.That(code, Does.Not.Contain("{ex.Message}"));
+        Assert.That(code, Does.Not.Contain("Stop requires a managed playable copied game folder process record."));
+        Assert.That(code, Does.Contain("StopNeedsManagedCopy"));
+        Assert.That(GameProfileRuntimeService.StopNeedsManagedCopy,
+            Is.EqualTo("Stop needs a copy this app started."));
+        Assert.That(GameProfileRuntimeService.StopNeedsManagedCopy.ToLowerInvariant(),
+            Does.Not.Contain("path"));
     }
 
     [Test]
