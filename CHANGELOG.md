@@ -62,7 +62,8 @@ live in `developer_state.json` and the campaign ledgers.
   installed-game status line names the folder, not the path. A restored
   music backup names the track and that the install was not changed,
   without the internal restore sentence. Staging a copied track names the
-  two files the same way, not the Music folder path.
+  two files the same way, not the Music folder path. A prepared copy's
+  music-swap note names the backup file the same way.
 
 ## 1.0.11 — 2026-08-07
 

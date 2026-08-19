@@ -116,12 +116,52 @@ public class PatchBenchSafeCopyOutcomeTextTests
         Assert.That(question, Does.Not.Contain("Users"));
     }
 
+    [Test]
+    public void PreparedMusicSwapNamesTheBackupFileNotTheFolder()
+    {
+        object music = CreateMusicSwapTextState(
+            "BEA_01(Master).ogg",
+            "data/Music/BEA_01(Master).ogg.original.backup");
+        string summary = InvokeString("BuildPreparedSummary", CreatePreparedState(music));
+
+        Assert.That(summary, Does.Contain("BEA_01(Master).ogg"));
+        Assert.That(summary, Does.Contain("BEA_01(Master).ogg.original.backup"));
+        Assert.That(summary, Does.Not.Contain("data/Music"));
+        Assert.That(summary, Does.Not.Contain("data\\Music"));
+    }
+
     private static string InvokeString(string methodName, params object?[] arguments)
     {
         return (string)ReflectedWinUiTestSupport.InvokeRequiredStaticMethod(
             GetHelperType(),
             methodName,
             arguments);
+    }
+
+    private static object CreatePreparedState(object musicSwap)
+    {
+        Type stateType = ReflectedWinUiTestSupport.GetRequiredType(
+            "OnslaughtCareerEditor.WinUI.Models.PatchBenchSafeCopyOutcomeTextState",
+            ReflectedSafeCopyOutcomeSourcePaths);
+
+        return Activator.CreateInstance(
+            stateType,
+            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
+            binder: null,
+            args:
+            [
+                false,
+                null,
+                musicSwap,
+                "copy-one",
+                1,
+                "none",
+                "no launch modifiers",
+                false,
+                false,
+            ],
+            culture: null)
+            ?? throw new InvalidOperationException($"Could not create {stateType.FullName}.");
     }
 
     private static object CreateMusicSwapTextState(string targetMusicFileName, string backupRelativePath)

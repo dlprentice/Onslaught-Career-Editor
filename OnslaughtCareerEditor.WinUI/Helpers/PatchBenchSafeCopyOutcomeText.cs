@@ -280,7 +280,7 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         {
             return musicSwap is null
                 ? "Music swap: no copied-track swap staged during safe-copy creation."
-                : $"Music swap: copied-track swap staged for {musicSwap.TargetMusicFileName}; backup {musicSwap.BackupRelativePath}; runtime playback still needs live testing.";
+                : $"Music swap: copied-track swap staged for {musicSwap.TargetMusicFileName}; backup {TrackLeaf(musicSwap.BackupRelativePath, "the backup file")}; runtime playback still needs live testing.";
         }
 
         private static string BuildLevel100TextModSummary(bool applied)
