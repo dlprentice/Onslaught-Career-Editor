@@ -6,7 +6,7 @@ namespace OnslaughtRebuild.Client.Tests;
 
 /// <summary>
 /// Pins the CFEPMain::Render Forseti writing-chrome colour at
-/// <c>0x00462DE3</c>, recovered from the pristine specimen
+/// <c>0x00462DE4</c>, recovered from the pristine specimen
 /// <c>local-lab/safe-copy-bea-pristine/BEA.exe.original.backup</c>,
 /// SHA-256 <c>74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750</c>
 /// (2,506,752 bytes, re-hashed this cycle). File offset = VA − <c>0x400000</c>.
@@ -23,8 +23,8 @@ public sealed class RetailMainMenuWritingColorTests
     [Fact]
     public void SpecimenPackIsFadeTimesSixtyThreeOrWhiteRgb()
     {
-        Assert.Equal(0x00462DDCu, RetailMainMenuWritingColor.Site);
-        Assert.Equal(0x00462DE3u, RetailMainMenuWritingColor.ShiftSite);
+        Assert.Equal(0x00462DDDu, RetailMainMenuWritingColor.Site);
+        Assert.Equal(0x00462DE4u, RetailMainMenuWritingColor.ShiftSite);
         Assert.Equal(6, RetailMainMenuWritingColor.ShiftLeft);
         Assert.Equal(0x00FFFFFFu, RetailMainMenuWritingColor.RgbOr);
         Assert.Equal(255, RetailMainMenuWritingColor.ImageSettledFadeByte);

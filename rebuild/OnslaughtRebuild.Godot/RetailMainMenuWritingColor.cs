@@ -11,9 +11,11 @@ namespace OnslaughtRebuild.GodotClient;
 /// cycle (2,506,752 bytes).
 ///
 /// <para><b>Site.</b> After the 0x00462DD2 <c>fistp</c> of the page
-/// fade, <c>0x00462DDC</c> is <c>mov ecx, eax</c>.
-/// <c>0x00462DE3</c> is <c>shl ecx, 6; sub ecx, eax; shl 16</c>.
-/// <c>0x00462DF6</c> is <c>or esi, 0x00FFFFFF</c>. EAX is the
+/// fade, <c>0x00462DDD</c> is <c>mov ecx, eax</c>.
+/// <c>0x00462DE4</c> is <c>shl ecx, 6; sub ecx, eax; shl 16</c>.
+/// <c>0x00462DDF</c> is the intervening <c>push 0x3F800000</c>;
+/// <c>0x00462DE3</c> is that immediate's last byte, not the shl.
+/// EAX is the
 /// 0x00462D7A <c>(transition-0.75)*4</c> fade byte, clamped
 /// 0..255. Settled fade is 255.</para>
 ///
@@ -34,11 +36,11 @@ namespace OnslaughtRebuild.GodotClient;
 /// </summary>
 public static class RetailMainMenuWritingColor
 {
-    /// <summary><c>mov ecx, eax</c> at <c>0x00462DDC</c>.</summary>
-    public const uint Site = 0x00462DDCu;
+    /// <summary><c>mov ecx, eax</c> at <c>0x00462DDD</c>.</summary>
+    public const uint Site = 0x00462DDDu;
 
-    /// <summary><c>shl ecx, 6</c> at <c>0x00462DE3</c>.</summary>
-    public const uint ShiftSite = 0x00462DE3u;
+    /// <summary><c>shl ecx, 6</c> at <c>0x00462DE4</c>.</summary>
+    public const uint ShiftSite = 0x00462DE4u;
 
     /// <summary><c>shl ecx, 6</c>.</summary>
     public const int ShiftLeft = 6;

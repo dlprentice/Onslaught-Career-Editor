@@ -12,7 +12,7 @@ namespace OnslaughtRebuild.GodotClient;
 ///
 /// <para><b>Site.</b> <c>0x00462FB9</c> is <c>mov eax, esi</c> on
 /// the <c>ebx == [edi+8]</c> arm only. <c>0x00462FB5</c> is the
-/// preceding <c>fistp [esp+0x18]</c>, not this move. ESI is the
+/// preceding <c>fild [esp+0x18]</c>, not this move. ESI is the
 /// icon-fade byte after the 0x00462F9C clamp, not the page-fade
 /// byte. Settled icon-fade is 255.</para>
 ///

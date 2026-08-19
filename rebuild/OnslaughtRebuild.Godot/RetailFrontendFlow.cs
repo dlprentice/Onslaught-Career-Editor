@@ -1347,7 +1347,7 @@ public sealed partial class RetailFrontendFlow : Control
 
         // DAT_0089d7f0 Forseti writing chrome. Y is CFEPMain::Render 0x00462D46:
         // 175 - fmod(mCounter * 0.3, 350), then +350 / +700. Cold BSS counter
-        // is 0, which is the three settled tiles. Colour at 0x00462DE3 is
+        // is 0, which is the three settled tiles. Colour at 0x00462DE4 is
         // RetailMainMenuWritingColor: settled (255*63)<<16 | 0x00FFFFFF is
         // 0x3EFFFFFF, which is not capture ChromeTint 0x3E7F7F7F, so this
         // draw keeps ChromeTint and does not call SubmittedColor.
