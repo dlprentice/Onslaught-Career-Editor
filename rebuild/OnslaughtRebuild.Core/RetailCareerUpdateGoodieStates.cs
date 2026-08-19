@@ -76,6 +76,8 @@ public sealed class RetailCareerGoodies
 /// <c>GRADE(110) &gt;= C</c> stays closed. Lost leftover of the same
 /// seed still opens it because <c>CCareer::Update</c> still calls
 /// this body then returns (<c>Career.cpp:382-385</c>).
+/// FrontEndHandoff leftover of the same seed still opens it
+/// because <c>TryApply</c> calls ApplyUpdate.
 /// <c>CGrade::operator&gt;=</c> treats <c>'S'</c> as
 /// above every other grade, so the already-pinned FillOut 1.0f unlocks
 /// the five world-100 slots together. <c>SET_GOODIE_NEW</c> stores 2
@@ -137,7 +139,10 @@ public static class RetailCareerUpdateGoodieStates
     /// closed. Lost leftover of that same seed still opens 14
     /// because this body still runs on the Lost return
     /// (<c>Career.cpp:382-385</c>). Isolated Won leftover 14 does
-    /// not go through Lost ApplyUpdate. Do not invent
+    /// not go through Lost ApplyUpdate. FrontEndHandoff leftover of
+    /// the same seed still opens 14 because <c>TryApply</c> calls
+    /// ApplyUpdate. Isolated leftover 14 and Lost leftover 14 do
+    /// not go through <c>TryApply</c>. Do not invent
     /// a world-110 FillOut or the rest of the table.
     /// <c>mPendingExtraGoodies</c> and episode instruction marks stay
     /// unclaimed.

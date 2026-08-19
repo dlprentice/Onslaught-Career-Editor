@@ -1,7 +1,7 @@
 # Rebuild parity contract
 
 Status: active — what "1:1 behavioral and experiential parity" means operationally
-Last updated: 2026-08-19 (Level 100 Lost leftover COMPLETE_LEVEL(110) goodie 14 opens).
+Last updated: 2026-08-19 (Level 100 FrontEndHandoff leftover COMPLETE_LEVEL(110) goodie 14 opens).
 Evidence: SOURCE — authority order and the known divergences are
 recorded in `PROVENANCE.md` plus the Lost-countdown row of this table; gate capabilities are MEASURED claims of the
 tracked harnesses named in the table. Every row of *Carried retail contracts*
@@ -138,6 +138,7 @@ Owner paths are relative to the repository root; test names are relative to
 | `CBattleEngine::ConfirmedKill` Level 100 null player-reader skip | Independently re-read specimen: `0x0040a56d` `mov ecx,[ecx+0x574]` / `0x0040a573` `test ecx,ecx` / `je 0x0040a57d` skips `0x004d30d0`. Bytes are a null pointer, not source `ToRead()` dying-flag. First-play totals stay unclaimed. Iceberg store-0 stays open. No new secondaries | `rebuild/OnslaughtRebuild.Core/RetailConfirmedKill.cs` | `RetailConfirmedKill.Apply` | `RetailConfirmedKillTests.Level100Won_ConfirmedKillDoesNotIncrementWhenPlayerReaderIsNull` | 1 | increment even when the reader is null |
 | `CGame::FillOutEndLevelData` then `CCareer::UpdateGoodieStates` from Level 100 `FrontEndHandoffReady` | After the already-pinned Won countdown, first-play FillOut 1.0f / S unlocks goodies 0, 8, 78, 121, and 164. Cite `0x0041de68` / `0x0041ea4f` / `0x0041f70e`. Score-time / base-things / kill totals stay unclaimed. No new secondaries | `rebuild/OnslaughtRebuild.Core/Level100WonCareerHandoff.cs` | `Level100WonCareerHandoff.TryApply` | `Level100WonCareerHandoffTests.FrontEndHandoffReadyAfterWon_UnlocksTrainingGoodiesForAnS` | 1 | skip `ApplyUpdate` on the handoff |
 | `CGame::FillOutEndLevelData` then `CCareer::UpdateGoodieStates` Level 100 FrontEndHandoff latch | Same seam. First-play S raises `CountGoodies` by five; `new_goodie_count` at `0x00662B20` adds the delta (`Career.cpp:895-897`) and `first_goodie` at `0x00662B24` latches because goodie 0 left `GOODIE_NOT_DONE` (`Career.cpp:688 / 899-900`). Isolated ApplyUpdate latch does not go through `TryApply`. Existing FrontEndHandoff goodie-state test does not name these two globals. `mPendingExtraGoodies` and episode instruction marks stay unclaimed. No new secondaries | `rebuild/OnslaughtRebuild.Core/Level100WonCareerHandoff.cs` | `Level100WonCareerHandoff.TryApply` | `Level100WonCareerHandoffTests.FrontEndHandoffReadyAfterWon_AddsFiveNewGoodiesAndLatchesFirstGoodie` | 1 | clear both globals after `TryApply` |
+| `CGame::FillOutEndLevelData` then `CCareer::UpdateGoodieStates` Level 100 FrontEndHandoff leftover COMPLETE_LEVEL(110) goodie | Same seam. Leftover world-110 complete + ranking 0.0f (already pinned as E) opens `Career.cpp:704` through `TryApply`. Isolated leftover 14 names ApplyUpdate and does not go through `TryApply`. Lost leftover 14 names ApplyUpdate's Lost return, not `TryApply`. Existing FrontEndHandoff S goodies name 0/8/78/121/164, not 14. Ranking 0.0f keeps `GRADE(110) >= C` / goodie 1 closed. Do not invent a world-110 FillOut or the rest of the table. No new secondaries | `rebuild/OnslaughtRebuild.Core/Level100WonCareerHandoff.cs` | `Level100WonCareerHandoff.TryApply` | `Level100WonCareerHandoffTests.FrontEndHandoffReadyAfterWon_LeftoverWorld110CompleteEUnlocksTheWorld110CompleteGoodie` | 1 | clear goodie 14 after `TryApply` |
 
 Two things this table deliberately does **not** claim. It does not claim these
 contracts are graded `REBUILD_READY`: that grade is a campaign artifact and
@@ -211,6 +212,9 @@ FrontEndHandoff goodie row names the same `TryApply` owner as the
 Won handoff. The FrontEndHandoff latch row names that same
 `TryApply` owner; isolated ApplyUpdate latch and the
 FrontEndHandoff goodie-state test do not name the two globals.
+The FrontEndHandoff leftover COMPLETE_LEVEL(110) goodie row
+names that same `TryApply` owner; isolated leftover 14 and
+Lost leftover 14 do not go through `TryApply`.
 The score-time arm row names `AfterScoreTimeArm` on
 the already-pinned FillOut owner; it does not rewrite
 `ForLevel100Won`. The score-percentage last-wins row names

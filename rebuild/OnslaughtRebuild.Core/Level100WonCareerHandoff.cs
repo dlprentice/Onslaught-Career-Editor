@@ -19,6 +19,10 @@ namespace OnslaughtRebuild.Core;
 /// training slice. First-play S still carries the already-pinned
 /// <c>CountGoodies</c> delta into <c>new_goodie_count</c> /
 /// <c>first_goodie</c> through this <see cref="TryApply"/> seam.
+/// Leftover world-110 complete + ranking 0.0f (already pinned as
+/// E) still opens <c>SET_GOODIE_NEW(14)</c> through the same
+/// seam. Isolated leftover 14 names ApplyUpdate; Lost leftover
+/// 14 names the Lost return.
 /// </para>
 /// <para>
 /// <b>Do not invent secondaries.</b> Level 100 ships four primaries and

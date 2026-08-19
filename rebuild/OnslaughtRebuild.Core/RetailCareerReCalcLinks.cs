@@ -125,7 +125,10 @@ public sealed class RetailCareerNodeLink
 /// pinned as E) opens that store. Lost leftover of the same
 /// seed still opens it because <c>Update</c> still calls
 /// <c>UpdateGoodieStates</c> then returns
-/// (<c>Career.cpp:382-385</c>). Do not invent a world-110 FillOut.
+/// (<c>Career.cpp:382-385</c>). FrontEndHandoff leftover of
+/// the same seed still opens it through <c>TryApply</c>.
+/// Isolated leftover 14 names ApplyUpdate; Lost leftover 14
+/// names the Lost return. Do not invent a world-110 FillOut.
 /// </para>
 /// </remarks>
 public static class RetailCareerReCalcLinks
