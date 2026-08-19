@@ -1673,6 +1673,13 @@ public sealed partial class RetailFrontendFlow : Control
     /// <c>rowY - 16</c> lands the quad at y 288 for row 0; a D3D9 quad spanning
     /// [288,320) covers pixel rows 288..319, which is what a Godot Rect2 at
     /// y = 288, h = 32 covers.</para>
+    ///
+    /// <para>DAT_0089D89C at 0x00462FED is RetailMainMenuSelectorBarZ:
+    /// FrontEnd\v3\FE_BEA_title_text_box.tga via ebp+0x13C, then push
+    /// 0x3EA8F5C3 and dest 219. That leftover is Z, not scale, so this
+    /// draw keeps _titleTextBox, the measured ink+31 width, and DestX
+    /// and does not treat the dword as a 29% title-logo. Colour at
+    /// 0x00462FB9 stays RetailMainMenuSelectorBarColor. Not a sheen.</para>
     /// </summary>
     private void DrawMainMenuSelectorBar(float iconFade)
     {
@@ -1690,9 +1697,15 @@ public sealed partial class RetailFrontendFlow : Control
         float rowY = MenuStartY + (index * MenuPitch);
         float boxWidth = MeasureText(_menuText[_session.Items[index].Kind], 1f) + 31f;
 
+        // DAT_0089D89C at 0x00462FED is RetailMainMenuSelectorBarZ.
+        // 0x3EA8F5C3 leftover is Z, not scale. Dest X is this DestX.
         DrawTextureRect(
             _titleTextBox,
-            new Rect2(MenuColumnX - (boxWidth * 0.5f), rowY - 16f, boxWidth, 32f),
+            new Rect2(
+                RetailMainMenuSelectorBarZ.DestX - (boxWidth * 0.5f),
+                rowY - 16f,
+                boxWidth,
+                32f),
             false,
             new Color(
                 RetailColor(RetailMainMenuSelectorBarColor.SubmittedColor(
