@@ -21,6 +21,8 @@ namespace OnslaughtCareerEditor.AppCore
             "The generated export folder changed after the catalog was loaded.";
         internal const string CatalogSourceNeedsExportFolder =
             "Catalog source access needs a loaded catalog and its generated export folder.";
+        internal const string CatalogJsonMissing =
+            "The catalog folder no longer has catalog.json.";
 
         internal static AssetCatalogSelection? ResolveSelection(string? pathOrDirectory)
         {
@@ -488,7 +490,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             AssetCatalogSelection? selection = AssetCatalogFileSafety.ResolveSelection(snapshot.CatalogFilePath);
             if (selection is null)
-                throw new InvalidOperationException("The catalog no longer has the required generated bundle layout.");
+                throw new InvalidOperationException(AssetCatalogFileSafety.CatalogJsonMissing);
 
             AssetCatalogLoadSession? session = null;
             AssetCatalogSourceRead? source = null;

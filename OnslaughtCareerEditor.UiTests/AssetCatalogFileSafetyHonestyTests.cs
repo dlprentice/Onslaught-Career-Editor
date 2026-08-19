@@ -117,4 +117,15 @@ public class AssetCatalogFileSafetyHonestyTests
         Assert.That(source, Does.Contain(
             "Catalog source access needs a loaded catalog and its generated export folder."));
     }
+
+    [Test]
+    public void AMissingCatalogJsonNamesTheFolderNotABundleLayout()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "AssetCatalogFileSafety.cs"));
+
+        Assert.That(source, Does.Not.Contain("generated bundle layout"));
+        Assert.That(source, Does.Contain("CatalogJsonMissing"));
+        Assert.That(source, Does.Contain("The catalog folder no longer has catalog.json."));
+    }
 }
