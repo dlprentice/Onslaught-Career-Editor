@@ -139,6 +139,8 @@ namespace OnslaughtCareerEditor.AppCore
             "The backup could not be made, so nothing was patched. Your game is untouched.";
         public const string InstalledPathUnreadable =
             "That game file could not be read. Nothing was changed.";
+        public const string WorkingCopyPathUnusable =
+            "That patch target could not be used. Nothing was changed.";
         private const string BackupHashSuffix = ".sha256";
         private const string CatalogRelativePath = "patches/catalog/patches.v2.json";
         private const string ExpectedPatchCatalogSha256 = "48cebf987355622bb54c212d5af4705a6c80df468a25651773c6f41522619622";
@@ -1540,9 +1542,9 @@ namespace OnslaughtCareerEditor.AppCore
                         ? target.InstalledGame!.GameRoot
                         : target.AllowedRoot);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return (false, $"Patch target path could not be normalized: {ex.Message}", null);
+                return (false, WorkingCopyPathUnusable, null);
             }
 
             // An installed game is a legitimate target only when the caller is holding permission

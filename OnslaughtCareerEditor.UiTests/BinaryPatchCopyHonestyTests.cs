@@ -24,4 +24,15 @@ public class BinaryPatchCopyHonestyTests
         Assert.That(engine, Does.Contain("The verified full-file backup remains available"));
         Assert.That(engine, Does.Contain("The verified backup snapshot was left unchanged"));
     }
+
+    [Test]
+    public void AnUnusablePatchTargetDoesNotDumpTheException()
+    {
+        string engine = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "BinaryPatchEngine.cs"));
+
+        Assert.That(engine, Does.Contain("WorkingCopyPathUnusable"));
+        Assert.That(engine, Does.Not.Contain("Patch target path could not be normalized: {ex.Message}"));
+        Assert.That(engine, Does.Contain("That patch target could not be used. Nothing was changed."));
+    }
 }
