@@ -69,7 +69,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
 
             InvalidOperationException error = Assert.Throws<InvalidOperationException>(
                 () => SafeCopySaveRescueService.Inventory(outside, lab.ProfilesRoot));
-            Assert.Contains("outside the app-owned", error.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.Equal(SafeCopySaveRescueService.CopyMustStayInside, error.Message);
         }
 
         [Fact]
