@@ -57,5 +57,9 @@ public class BinaryPatchBackupHashHonestyTests
         Assert.That(source, Does.Not.Contain("backup snapshot integrity"));
         Assert.That(source, Does.Contain("BEA.exe.original.backup could not be checked"));
         Assert.That(source, Does.Contain("BEA.exe.original.backup no longer matches its hash file"));
+        Assert.That(source, Does.Not.Contain("backup snapshot provenance"));
+        Assert.That(source, Does.Not.Contain("trusted clean Steam retail BEA.exe specimen"));
+        Assert.That(source, Does.Contain("BEA.exe.original.backup could not be used"));
+        Assert.That(source, Does.Contain("BEA.exe.original.backup is not a Steam BEA.exe this app can restore"));
     }
 }

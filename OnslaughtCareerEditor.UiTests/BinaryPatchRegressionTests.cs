@@ -510,7 +510,9 @@ public class BinaryPatchRegressionTests
             var restore = BinaryPatchEngine.RestoreFromBackup(BuildTestTarget(exePath, tempDir, allowByteLayoutOnly: false));
 
             Assert.That(restore.success, Is.False);
-            Assert.That(restore.message, Does.Contain("trusted clean Steam retail BEA.exe"));
+            Assert.That(restore.message, Does.Contain("BEA.exe.original.backup is not a Steam BEA.exe this app can restore"));
+            Assert.That(restore.message, Does.Not.Contain("trusted clean"));
+            Assert.That(restore.message, Does.Not.Contain("specimen"));
             Assert.That(File.ReadAllBytes(exePath), Is.EqualTo(patchedBeforeRestore), "Restore must not overwrite from a backup with only self-authored sidecar provenance.");
         }
         finally

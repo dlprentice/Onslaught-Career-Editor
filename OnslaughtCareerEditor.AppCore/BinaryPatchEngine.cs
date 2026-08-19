@@ -1284,7 +1284,7 @@ namespace OnslaughtCareerEditor.AppCore
                 if (!backupProvenance.success)
                 {
                     return (false,
-                        "Apply aborted: existing backup snapshot provenance could not be verified.\n" +
+                        "Apply aborted: BEA.exe.original.backup could not be used.\n" +
                         backupProvenance.message);
                 }
             }
@@ -1943,7 +1943,7 @@ namespace OnslaughtCareerEditor.AppCore
             if (!target.AllowByteLayoutOnlyTarget && (!trustedHash || !trustedSize))
             {
                 return (false,
-                    "Restore aborted: backup snapshot is not a trusted clean Steam retail BEA.exe specimen.\n" +
+                    "Restore aborted: BEA.exe.original.backup is not a Steam BEA.exe this app can restore.\n" +
                     "The BEA.exe-only copy was not overwritten.");
             }
 
