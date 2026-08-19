@@ -44,5 +44,7 @@ public class BinaryPatchCopyIdentityHonestyTests
         Assert.That(page, Does.Contain("Create a BEA.exe-only copy before verification or patching."));
         Assert.That(page, Does.Contain("applied to the BEA.exe-only copy only"));
         Assert.That(page, Does.Contain("Replace(exePath, \"BEA.exe-only copy\""));
+        Assert.That(page, Does.Not.Contain("app advanced patch workspace"));
+        Assert.That(page, Does.Contain("This is a BEA.exe-only copy."));
     }
 }

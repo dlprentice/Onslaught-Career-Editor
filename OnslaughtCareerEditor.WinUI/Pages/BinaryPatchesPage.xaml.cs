@@ -2133,7 +2133,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
 
             return IsUsableWorkingCopy(path)
-                ? "BEA.exe in the app advanced patch workspace."
+                ? "This is a BEA.exe-only copy."
                 : "Create a BEA.exe-only copy before verification or patching.";
         }
 
