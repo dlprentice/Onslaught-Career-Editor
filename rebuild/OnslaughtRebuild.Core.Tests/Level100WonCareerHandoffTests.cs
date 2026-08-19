@@ -466,6 +466,72 @@ public sealed class Level100WonCareerHandoffTests
     }
 
     /// <summary>
+    /// <c>GRADE(110) &gt;= C</c> (<c>Career.cpp:770</c>) stays closed
+    /// after first-play S through <c>TryApply</c>. Isolated
+    /// <c>Level100Won_ApplyUpdateGradeCLeavesTheWorld110CConceptArtGoodieUnknown</c>
+    /// names ApplyUpdate and does not go through <c>TryApply</c>.
+    /// Leftover C FrontEndHandoff names goodie 79 as <c>GS_NEW</c>.
+    /// FrontEndHandoff closed GRADE(110) names 1, not 79. Existing
+    /// FrontEndHandoff S goodies name 0 / 8 / 78 / 121 / 164, not 79.
+    /// DriveReleasedFirstPlayToTerminal with no leftover seed leaves
+    /// world 110 incomplete so <c>GRADE</c> is the already-pinned
+    /// incomplete <c>'E'</c> (<c>0x0041C3FE</c>). Do not invent
+    /// <c>GRADE(110) &gt;= B</c> / <c>A</c> or a world-110 FillOut.
+    /// Mutation: store <c>GS_NEW</c> on goodie 79 after
+    /// <c>TryApply</c> when world 110 is incomplete. Skipping
+    /// <c>SET_GOODIE_NEW(79)</c> is not unique versus leftover C
+    /// concept-art. Skipping <c>ApplyUpdate</c> on the handoff is
+    /// not unique versus existing FrontEndHandoff tests. Storing
+    /// <c>GS_NEW</c> on goodie 79 after every <c>TryApply</c> is not
+    /// unique versus leftover C FrontEndHandoff. No new secondaries.
+    /// </summary>
+    [Fact]
+    public void FrontEndHandoffReadyAfterWon_LeavesTheWorld110CConceptArtGoodieUnknown()
+    {
+        Level100Mission mission = DriveReleasedFirstPlayToTerminal();
+
+        Assert.Equal(Level100MissionOutcome.Won, mission.Snapshot.Outcome);
+        Assert.Equal(
+            Level100MissionTerminalState.FrontEndHandoffReady,
+            mission.Snapshot.TerminalState);
+
+        RetailCareerNode next = mission.Career.Nodes.Find(110)!;
+        Assert.Equal(
+            RetailCareerGrade.PerfectGrade,
+            RetailCareerGrade.GradeByteFromRanking(
+                mission.Career.Nodes.Find(100)!.Ranking));
+        Assert.Equal(0, next.Complete);
+        Assert.Equal(RetailCareerNode.BlankRanking, next.Ranking);
+        Assert.Equal(
+            RetailWorldGrade.IncompleteGradeByte,
+            RetailWorldGrade.GradeByteForWorld(
+                new[]
+                {
+                    new RetailWorldGradeNode(
+                        RetailCareerReCalcLinks.TrainingWorldNumber,
+                        mission.Career.Nodes.Find(100)!.Complete,
+                        mission.Career.Nodes.Find(100)!.Ranking),
+                    new RetailWorldGradeNode(
+                        next.WorldNumber,
+                        next.Complete,
+                        next.Ranking),
+                },
+                next.WorldNumber));
+        Assert.Equal(
+            RetailCareerGoodieState.New,
+            mission.Career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeCOnWorld100));
+        Assert.Equal(
+            RetailCareerGoodieState.Unknown,
+            mission.Career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeCOnWorld110));
+        Assert.Equal(
+            RetailCareerGoodieState.Unknown,
+            mission.Career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeCConceptArtOnWorld110));
+        Assert.All(
+            RetailFillOutEndLevelData.ForLevel100Won().SecondaryStatuses,
+            status => Assert.Equal(0, status));
+    }
+
+    /// <summary>
     /// <c>COMPLETE_LEVEL(110)</c> (<c>Career.cpp:704</c>) stays closed
     /// after first-play S through <c>TryApply</c>. Isolated
     /// <c>Level100Won_ApplyUpdateLeavesTheWorld110CompleteGoodieUnknown</c>

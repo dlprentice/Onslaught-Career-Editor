@@ -184,7 +184,10 @@ public static class RetailCareerUpdateGoodieStates
     /// <c>TryApply</c>. First-play FrontEndHandoff still leaves
     /// goodie 1 at <c>GS_UNKNOWN</c> because world 110 is
     /// incomplete; isolated closed GRADE(110) does not go
-    /// through <c>TryApply</c>. <c>COMPLETE_LEVEL(110)</c> stays
+    /// through <c>TryApply</c>. First-play FrontEndHandoff still
+    /// leaves concept-art 79 at <c>GS_UNKNOWN</c>; isolated
+    /// first-play closed concept-art names ApplyUpdate, not
+    /// <c>TryApply</c>. <c>COMPLETE_LEVEL(110)</c> stays
     /// closed after first-play: world 110 is unlocked but still
     /// incomplete, so goodie 14 stays <c>GS_UNKNOWN</c>. Isolated
     /// closed COMPLETE_LEVEL(110) does not go through

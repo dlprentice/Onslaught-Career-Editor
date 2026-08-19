@@ -29,11 +29,16 @@ namespace OnslaughtRebuild.Core;
 /// names 14, not 1. Leftover of that same C seed still
 /// opens <c>SET_GOODIE_NEW(79)</c> through the same seam.
 /// Isolated leftover C 79 names ApplyUpdate; FrontEndHandoff
-/// leftover C names 1, not 79. First-play through this seam leaves
+/// leftover C names 1, not 79. Isolated first-play closed
+/// concept-art names ApplyUpdate and leaves 79 at
+/// <c>GS_UNKNOWN</c>. First-play through this seam leaves
 /// <c>GRADE(110) &gt;= C</c> closed: world 110 is incomplete so
 /// the lookup is the already-pinned incomplete <c>'E'</c> and
 /// goodie 1 stays <c>GS_UNKNOWN</c>. Isolated closed GRADE(110)
 /// names ApplyUpdate and does not go through this seam.
+/// First-play through this seam also leaves concept-art goodie
+/// 79 at <c>GS_UNKNOWN</c>. Isolated closed concept-art names
+/// ApplyUpdate and does not go through this seam.
 /// First-play through this seam also leaves
 /// <c>COMPLETE_LEVEL(110)</c> closed: world 110 is unlocked but
 /// still incomplete, so goodie 14 stays <c>GS_UNKNOWN</c>.
