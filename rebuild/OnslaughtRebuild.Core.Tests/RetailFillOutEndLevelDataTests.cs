@@ -338,6 +338,39 @@ public sealed class RetailFillOutEndLevelDataTests
     }
 
     /// <summary>
+    /// Independently re-read specimen <c>74154bfa…</c>:
+    /// <c>0x0046d5f9</c> <c>mov eax,[ebp+0x2a4]</c> /
+    /// <c>0x0046d5ff</c> <c>test eax,eax</c> / <c>je 0x0046d61d</c>
+    /// stores five zeros at <c>0x00672e30</c>. Live player copies
+    /// five dwords from <c>player+8</c> (<c>cmp eax,0x14</c>).
+    /// Mutation: copy leftover words when the player pointer is
+    /// null. First-play still has a live player 0. Do not invent
+    /// first-play totals or secondaries.
+    /// </summary>
+    [Fact]
+    public void Level100Won_FillOutStoresFiveZeroKillsWhenPlayerPointerIsNull()
+    {
+        int[] leftover = [1, 2, 3, 4, 5];
+
+        Assert.Equal(
+            new[] { 0, 0, 0, 0, 0 },
+            RetailFillOutEndLevelData.ThingsKilledReadout(
+                playerPresent: false,
+                playerKillWords: leftover));
+        Assert.Equal(
+            leftover,
+            RetailFillOutEndLevelData.ThingsKilledReadout(
+                playerPresent: true,
+                playerKillWords: leftover));
+        Assert.Equal(
+            new[] { 0, 0, 0, 0, 0 },
+            RetailFillOutEndLevelData.ForLevel100Won().ThingsKilled);
+        Assert.All(
+            RetailFillOutEndLevelData.ForLevel100Won().SecondaryStatuses,
+            status => Assert.Equal(0, status));
+    }
+
+    /// <summary>
     /// FillOut copies the ten primary <c>GetStatus()</c> words. After a
     /// Level 100 win those are four <c>MOS_COMPLETE</c> (1) and six
     /// unset slots — already pinned on

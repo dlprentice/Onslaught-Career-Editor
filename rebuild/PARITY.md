@@ -1,7 +1,7 @@
 # Rebuild parity contract
 
 Status: active — what "1:1 behavioral and experiential parity" means operationally
-Last updated: 2026-08-19 (Level 100 ConfirmedKill null player-reader skip).
+Last updated: 2026-08-19 (Level 100 FillOut player-null kill zeros).
 Evidence: SOURCE — authority order and the known divergences are
 recorded in `PROVENANCE.md` plus the Lost-countdown row of this table; gate capabilities are MEASURED claims of the
 tracked harnesses named in the table. Every row of *Carried retail contracts*
@@ -104,6 +104,7 @@ Owner paths are relative to the repository root; test names are relative to
 | `CCareer::UpdateBaseWorldExistsStuffForNode` after Level 100 Won | `Career.cpp:443-452` / `519-527`. `level_structure[0][3]==110` is the primary destination; `[0][4]==-1` so the secondary arm does not run. First-play zeros at `35..287` clear Blank's all-1s on world 110. World 100 stays Blank. Iceberg store-0 stays open. No new secondaries | `rebuild/OnslaughtRebuild.Core/RetailCareerReCalcLinks.cs` | `RetailCareerCampaign.UpdateBaseWorldExistsStuffForNode` | `RetailCareerCampaignApplyUpdateTests.Level100Won_ApplyUpdateCopiesFillOutBaseThingsOntoWorld110` | 1 | skip the copy (leave world 110 bit 35 set) |
 | `CGame::FillOutEndLevelData` then `CCareer::UpdateBaseWorldExistsStuffForNode` from Level 100 `FrontEndHandoffReady` | After the already-pinned Won countdown, first-play FillOut copies onto world 110. Mutation is skip `ApplyUpdate` on the handoff. Iceberg store-0 stays open. No new secondaries | `rebuild/OnslaughtRebuild.Core/Level100WonCareerHandoff.cs` | `Level100WonCareerHandoff.TryApply` | `Level100WonCareerHandoffTests.FrontEndHandoffReadyAfterWon_CopiesFillOutBaseThingsOntoWorld110` | 1 | skip `ApplyUpdate` on the handoff |
 | `CGame::FillOutEndLevelData` Level 100 first-play kills | Copy five dwords from `player+8` (`0x0046d60f`) if player 0 is live. `CPlayer__ctor` zeros `+8..+18`. Only `0x004d30d0` increments them. A first-play Won that never takes ConfirmedKill is `0,0,0,0,0`. Career `0x0041c180` still `je` world 100. No new secondaries | `rebuild/OnslaughtRebuild.Core/RetailFillOutEndLevelData.cs` | `RetailFillOutEndLevelData.FirstPlayThingsKilled` | `RetailFillOutEndLevelDataTests.Level100Won_FirstPlayKillReadoutIsFiveZerosUnlessConfirmedKill` | 1 | write a non-zero authored L100 kill vector |
+| `CGame::FillOutEndLevelData` Level 100 player-null kill zeros | Independently re-read specimen: `0x0046d5f9` `mov eax,[ebp+0x2a4]` / `0x0046d5ff` `test eax,eax` / `je 0x0046d61d` stores five zeros at `0x00672e30`. Live player copies five dwords from `player+8` (`cmp eax,0x14`). First-play still has a live player 0. Iceberg store-0 stays open. No new secondaries | `rebuild/OnslaughtRebuild.Core/RetailFillOutEndLevelData.cs` | `RetailFillOutEndLevelData.ThingsKilledReadout` | `RetailFillOutEndLevelDataTests.Level100Won_FillOutStoresFiveZeroKillsWhenPlayerPointerIsNull` | 1 | copy leftover words when the player pointer is null |
 | `CCareer::Update` ignores Level 100 primary statuses | FillOut copies four `MOS_COMPLETE=1` primaries, but `CCareer::Update` at `0x0041BD00` never reads that table. Writing mission-enum `Complete=2` does not change the graph | `rebuild/OnslaughtRebuild.Core/RetailCareerReCalcLinks.cs` | `RetailCareerCampaign.ApplyUpdate` | `RetailCareerCampaignApplyUpdateTests.Level100Won_ApplyUpdateDoesNotConsultPrimaryStatuses` | 1 | require `MOS_COMPLETE=1` before completing the node |
 | `CCareer::Update` Level 100 ranking target | `Career.cpp:396-406` stores `mRanking` only on `GetNodeFromWorldNo(mWorldFinished)`. World 100 gets the already-pinned FillOut 1.0f (grade S). World 110 stays `BlankRanking` `-1.0f` (grade E) and incomplete | `rebuild/OnslaughtRebuild.Core/RetailCareerReCalcLinks.cs` | `RetailCareerCampaign.ApplyUpdate` | `RetailCareerCampaignApplyUpdateTests.Level100Won_ApplyUpdateWritesRankingOnlyOnTheFinishedWorld` | 1 | copy the snapshot ranking onto the unlocked child too |
 | `CGame::FillOutEndLevelData` then `CCareer::Update` Level 100 ranking target | `FrontEndHandoffReady` applies the already-pinned finished-world ranking: world 100 is 1.0f / S, world 110 stays `BlankRanking` / E. No new secondaries | `rebuild/OnslaughtRebuild.Core/Level100WonCareerHandoff.cs` | `Level100WonCareerHandoff.TryApply` | `Level100WonCareerHandoffTests.FrontEndHandoffReadyAfterWon_StoresFillOutRankingOnlyOnWorld100` | 1 | stamp FillOut ranking onto the unlocked child after `TryApply` |
@@ -174,7 +175,9 @@ The remaining incrementer-slot row names that same
 The null player-reader row names that same `Apply`
 owner; first-play still has a live player 0.
 The TF_DYING store-0 row names `BaseThingLeftWord` on the
-already-pinned FillOut owner. Charge and the
+already-pinned FillOut owner. The player-null kill-zero row
+names `ThingsKilledReadout` on that same FillOut owner;
+first-play still has a live player 0. Charge and the
 career graph are not in `StateHasher` because they do not yet change fire,
 movement, or any other hashed field. So no cold-start or
 full-chain trace can reach the other sixteen, and the focused test is the

@@ -195,6 +195,38 @@ public static class RetailFillOutEndLevelData
         new int[RetailCareerCounters.KilledTypeCount];
 
     /// <summary>
+    /// FillOut kill copy. <c>0x0046d5ff</c> <c>test eax,eax</c> /
+    /// <c>je 0x0046d61d</c> stores five zeros. A live player copies
+    /// five dwords from <c>player+8</c>. First-play is the live
+    /// ctor-zero path. Do not invent those totals.
+    /// </summary>
+    public static int[] ThingsKilledReadout(
+        bool playerPresent,
+        IReadOnlyList<int>? playerKillWords = null)
+    {
+        var words = new int[RetailCareerCounters.KilledTypeCount];
+        if (!playerPresent)
+        {
+            return words;
+        }
+
+        IReadOnlyList<int> source = playerKillWords ?? FirstPlayThingsKilled();
+        if (source.Count != words.Length)
+        {
+            throw new ArgumentException(
+                $"FillOut copies {words.Length} kill dwords.",
+                nameof(playerKillWords));
+        }
+
+        for (int index = 0; index < words.Length; index++)
+        {
+            words[index] = source[index];
+        }
+
+        return words;
+    }
+
+    /// <summary>
     /// The post-Won snapshot Level 100 hands to career. Ranking defaults to
     /// the <c>mRanking=1.0f</c> store at <c>game.cpp:967</c> before the
     /// score-time arm; callers may override. First-play elapsed and score
