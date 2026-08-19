@@ -722,6 +722,53 @@ public sealed class RetailCareerCampaignApplyUpdateTests
     }
 
     /// <summary>
+    /// <c>CountGoodies</c> iterates every slot
+    /// (<c>Career.cpp:670-680</c>). Leftover world-110 complete + C
+    /// (ranking 0.25f already pinned) writes <c>GS_NEW</c> on goodie 1
+    /// and leftover 14, while a C-grade Level 100 Won writes 0 / 8 /
+    /// 78, so the count is 5. Isolated leftover C names the write of
+    /// 1, not the count. Isolated leftover 14 CountGoodies uses
+    /// ranking 0.0f so the count is 4. Isolated leftover Old /
+    /// Instructions counts seed only the five first-play S slots.
+    /// Isolated C-grade does not name <c>NewGoodieCount</c> (would be
+    /// 3). Isolated S latch is 5 without leftover 1 / 14. Mutation:
+    /// skip counting goodie 1. Skipping <c>SET_GOODIE_NEW(1)</c> is
+    /// not unique versus leftover C. Skipping
+    /// <c>SET_GOODIE_NEW(14)</c> is not unique versus leftover 14.
+    /// Counting only the five first-play S slots is not unique versus
+    /// leftover 14 CountGoodies. Do not invent a world-110 FillOut or
+    /// the rest of the table. <c>mPendingExtraGoodies</c> stays
+    /// unclaimed. No new secondaries.
+    /// </summary>
+    [Fact]
+    public void Level100Won_CountGoodiesCountsLeftoverWorld110GradeCGoodie()
+    {
+        RetailCareerCampaign career = RetailCareerReCalcLinks.CreateColdTrainingSlice();
+        RetailCareerNode next = career.Nodes.Find(110)!;
+        next.Complete = 1;
+        next.Ranking = 0.25f;
+        RetailEndLevelSnapshot snapshot = RetailFillOutEndLevelData.ForLevel100Won(ranking: 0.25f);
+
+        Assert.Equal(0, RetailCareerUpdateGoodieStates.CountGoodies(career));
+
+        career.ApplyUpdate(snapshot);
+
+        Assert.Equal(5, RetailCareerUpdateGoodieStates.CountGoodies(career));
+        Assert.Equal(5, career.Counters.NewGoodieCount);
+        Assert.Equal(1, career.Nodes.Find(100)!.Complete);
+        Assert.Equal(
+            RetailCareerGoodieState.New,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeCOnWorld110));
+        Assert.Equal(
+            RetailCareerGoodieState.New,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.CompleteWorld110));
+        Assert.Equal(
+            RetailCareerGoodieState.Unknown,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeBOnWorld100));
+        Assert.All(snapshot.SecondaryStatuses, status => Assert.Equal(0, status));
+    }
+
+    /// <summary>
     /// <c>GRADE(100) &gt;= B</c> is not <c>&gt;= A</c>. Ranking 0.5f is
     /// already pinned as B, so a Level 100 win at that ranking unlocks
     /// 0, 8, 78, and 121 and leaves 164 at <c>GS_UNKNOWN</c>. Cite

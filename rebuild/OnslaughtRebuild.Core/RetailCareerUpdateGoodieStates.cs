@@ -271,6 +271,10 @@ public static class RetailCareerUpdateGoodieStates
     /// pre-count. Leftover world-110 complete + E therefore reads 4
     /// after ApplyUpdate because goodie 14 is also <c>GS_NEW</c>.
     /// Isolated leftover 14 names the write of 14, not that count.
+    /// Leftover world-110 complete + C therefore reads 5 after
+    /// ApplyUpdate because goodie 1 is also <c>GS_NEW</c>. Isolated
+    /// leftover C names the write of 1, not that count. Isolated
+    /// leftover 14 CountGoodies uses ranking 0.0f so the count is 4.
     /// </summary>
     public static int CountGoodies(RetailCareerCampaign career)
     {
