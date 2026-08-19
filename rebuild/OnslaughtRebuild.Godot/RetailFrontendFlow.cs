@@ -1550,6 +1550,11 @@ public sealed partial class RetailFrontendFlow : Control
         // body is (64,2)-(576,258), centre (320,130) — this anchor exactly — and
         // its shadow takes the SHARED (u,v) offset off it, at the same 1.05 scale.
         // The (325,140) that stood here is that offset's time-mean.
+        // Colour at 0x0046424F is RetailMainMenuTitleLogoShadow: settled
+        // (255*63)<<16 & 0xFF000000 is 0x3E000000, which is this ShadowTint,
+        // so the draw keeps ShadowTint and does not call SubmittedColor.
+        // dest==0x0c at 0x0046423D forces ESI=255. Body scale stays 1.0;
+        // this is not a 29% scale. Body pack stays TitleLogoTint.
         DrawSurfaceCentered(
             _titleLogo,
             320f + (float)sharedShadow.X,
