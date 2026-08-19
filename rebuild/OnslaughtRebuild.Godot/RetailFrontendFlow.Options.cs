@@ -290,6 +290,11 @@ public sealed partial class RetailFrontendFlow
         // CMenuItemDropdown dest leftover is RetailOptionsDropdownDest:
         // incoming dest X minus full SIZE.cx. Dest Y keeps the row top.
         // Nearby 5.0 is leftover min dest X. Nearby 2.0 is not dest.
+        // CMenuItem__Render icon dest leftover is RetailOptionsMenuItemIconDest:
+        // incoming dest X minus integer-half SIZE.cx via fsubr.
+        // RetailOptionsMenuItemIconDest.DestX. Dest Y keeps the row
+        // top. No leftover min dest X. Nearby 20.0 is leftover
+        // label pitch, not dest. Do not invent a prefix draw.
         float seconds = (float)_animationSeconds;
         Color color;
         if (row.Kind == RetailOptionsRowKind.Dropdown &&
