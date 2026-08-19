@@ -69,4 +69,22 @@ public class MusicReplacementManifestHonestyTests
         Assert.That(source, Does.Contain("That replacement OGG file could not be found."));
         Assert.That(source, Does.Not.Contain("FileNotFoundException(\"That replacement OGG file could not be found.\","));
     }
+
+    [Test]
+    public void MissingCopiedMusicFilesDoNotAttachTheFilePath()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot,
+            "OnslaughtCareerEditor.AppCore",
+            "GameProfileMusicReplacementService.cs"));
+
+        Assert.That(source, Does.Contain("TargetMusicFileMissing"));
+        Assert.That(source, Does.Contain("ReplacementMusicFileMissing"));
+        Assert.That(source, Does.Contain("MusicBackupMissing"));
+        Assert.That(source, Does.Not.Contain("does not exist in the playable copied game folder."));
+        Assert.That(source, Does.Not.Contain("Playable copied game folder music backup was not found."));
+        Assert.That(source, Does.Not.Contain("FileNotFoundException(TargetMusicFileMissing,"));
+        Assert.That(source, Does.Not.Contain("FileNotFoundException(ReplacementMusicFileMissing,"));
+        Assert.That(source, Does.Not.Contain("FileNotFoundException(MusicBackupMissing,"));
+    }
 }

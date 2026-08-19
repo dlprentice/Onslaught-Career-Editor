@@ -63,6 +63,9 @@ namespace OnslaughtCareerEditor.AppCore
         public const string MusicFolderMissing = "That copy does not have a Music folder.";
         public const string CopyFolderMissing = "That copy folder could not be found.";
         public const string ProfileFolderMissing = "That app-owned profile folder could not be found.";
+        public const string TargetMusicFileMissing = "That target music file could not be found.";
+        public const string ReplacementMusicFileMissing = "That replacement music file could not be found.";
+        public const string MusicBackupMissing = "That music backup file could not be found.";
         private const string BackupSuffix = ".original.backup";
 
         private static readonly GameProfileMusicSwapPreset[] s_musicSwapPresets =
@@ -121,9 +124,9 @@ namespace OnslaughtCareerEditor.AppCore
             string targetPath = Path.Combine(musicDirectory, targetFileName);
             string replacementPath = Path.Combine(musicDirectory, replacementFileName);
             if (!File.Exists(targetPath))
-                throw new FileNotFoundException("Preset target music file does not exist in the playable copied game folder.", targetPath);
+                throw new FileNotFoundException(TargetMusicFileMissing);
             if (!File.Exists(replacementPath))
-                throw new FileNotFoundException("Preset replacement music file does not exist in the playable copied game folder.", replacementPath);
+                throw new FileNotFoundException(ReplacementMusicFileMissing);
             if (string.Equals(Path.GetFullPath(targetPath), Path.GetFullPath(replacementPath), StringComparison.OrdinalIgnoreCase))
                 throw new InvalidOperationException("Safe-copy music swap preset target and replacement must be different copied tracks.");
 
@@ -193,7 +196,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             string targetPath = Path.Combine(musicDirectory, targetFileName);
             if (!File.Exists(targetPath))
-                throw new FileNotFoundException("Target music file does not exist in the playable copied game folder.", targetPath);
+                throw new FileNotFoundException(TargetMusicFileMissing);
             RejectExistingReparseAncestors(targetPath, "target music path");
             RejectReparsePoint(targetPath, "target music file");
             RejectMultipleHardLinks(targetPath, "Target music file");
@@ -294,7 +297,7 @@ namespace OnslaughtCareerEditor.AppCore
             }
 
             if (!File.Exists(backupPath))
-                throw new FileNotFoundException("Playable copied game folder music backup was not found.", backupPath);
+                throw new FileNotFoundException(MusicBackupMissing);
             RejectExistingReparseAncestors(targetPath, "target music path");
             RejectExistingReparseAncestors(backupPath, "music backup path");
             RejectReparsePoint(targetPath, "target music file");
