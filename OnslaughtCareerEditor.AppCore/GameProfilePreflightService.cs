@@ -116,6 +116,7 @@ namespace OnslaughtCareerEditor.AppCore
         public const string SourceFolderMissing = "That game folder could not be found.";
         public const string ProfileFolderRequired = "An app-owned profile folder is required.";
         public const string WorkspaceFileMustStayInside = "The workspace file must stay inside the app-owned profile folder.";
+        public const string CopyMustStayInside = "That copy must stay inside the app-owned profile folder.";
 
         /// <summary>
         /// The manifest every generated playable copied game folder carries. Its presence is what
@@ -2127,8 +2128,7 @@ namespace OnslaughtCareerEditor.AppCore
             if (!IsSameOrUnderRoot(normalizedProfile, normalizedRoot) ||
                 string.Equals(normalizedProfile, normalizedRoot, StringComparison.OrdinalIgnoreCase))
             {
-                throw new InvalidOperationException(
-                    "Refusing to delete a playable copied game folder outside the app-owned playable copied game folder root.");
+                throw new InvalidOperationException(CopyMustStayInside);
             }
 
             string manifestPath = Path.Combine(normalizedProfile, ProfileManifestFileName);
