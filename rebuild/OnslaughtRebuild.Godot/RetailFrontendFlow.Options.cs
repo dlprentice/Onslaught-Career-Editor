@@ -771,6 +771,10 @@ public sealed partial class RetailFrontendFlow
             // RetailOptionsDropdownListClick: call 0x00469400 then write
             // currentIndex and the expand byte. That is click, not dest
             // and not colour. Hover leftover already owns 0x004A3FA6.
+            // CMenuItemDropdown click-hit sound leftover is
+            // RetailOptionsDropdownListClickSound: push 1 then
+            // call 0x00468770. That is not dest, not colour, not
+            // hover, not click, and not cancel.
             RetailOptionsRow expanded = _options.SelectedRow;
             float rowTop = _options.RowTop(_options.SelectedIndex);
             int labelCx = (int)MeasureText(expanded.Label, 1f);
@@ -792,7 +796,11 @@ public sealed partial class RetailFrontendFlow
                 }
 
                 _options.SelectState(i);
-                ConfirmOptions();
+                if (RetailOptionsDropdownListClickSound.Applies(hit: true))
+                {
+                    ConfirmOptions();
+                }
+
                 return true;
             }
             ConfirmOptions();
