@@ -154,6 +154,46 @@ public sealed class Level100WonCareerHandoffTests
     }
 
     /// <summary>
+    /// FrontEndHandoffReady after the released first-play script applies
+    /// the already-pinned FillOut 1.0f / S, so <c>UpdateGoodieStates</c>
+    /// writes <c>GS_NEW</c> on 0, 8, 78, 121, and 164. Mutation: skipping
+    /// <c>ApplyUpdate</c> on the handoff leaves those five at
+    /// <c>GS_UNKNOWN</c>. Score-time, base-things, and kill totals stay
+    /// unclaimed. No new secondaries.
+    /// </summary>
+    [Fact]
+    public void FrontEndHandoffReadyAfterWon_UnlocksTrainingGoodiesForAnS()
+    {
+        Level100Mission mission = DriveReleasedFirstPlayToTerminal();
+
+        Assert.Equal(Level100MissionOutcome.Won, mission.Snapshot.Outcome);
+        Assert.Equal(
+            Level100MissionTerminalState.FrontEndHandoffReady,
+            mission.Snapshot.TerminalState);
+        Assert.Equal(
+            RetailCareerGoodieState.New,
+            mission.Career.Goodies.Get(RetailCareerUpdateGoodieStates.CompleteWorld100Bio));
+        Assert.Equal(
+            RetailCareerGoodieState.New,
+            mission.Career.Goodies.Get(RetailCareerUpdateGoodieStates.CompleteWorld100Second));
+        Assert.Equal(
+            RetailCareerGoodieState.New,
+            mission.Career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeCOnWorld100));
+        Assert.Equal(
+            RetailCareerGoodieState.New,
+            mission.Career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeBOnWorld100));
+        Assert.Equal(
+            RetailCareerGoodieState.New,
+            mission.Career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeAOnWorld100));
+        Assert.Equal(
+            RetailCareerGrade.PerfectGrade,
+            RetailCareerGrade.GradeByteFromRanking(mission.Career.Nodes.Find(100)!.Ranking));
+        Assert.All(
+            RetailFillOutEndLevelData.ForLevel100Won().SecondaryStatuses,
+            status => Assert.Equal(0, status));
+    }
+
+    /// <summary>
     /// <c>CGame::RestartLoopRunLevel</c> calls FillOut only after the
     /// main loop quits (<c>game.cpp:1552</c>), and that quit waits for
     /// the already-pinned 5.0 f Won store (<c>game.cpp:1997-2004</c>).
