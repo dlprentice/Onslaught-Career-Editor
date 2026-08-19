@@ -2992,7 +2992,9 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 BinaryPatchEngine.ApplyPatchesToFile(target, selected));
 
             OperationLogTextBox.Text = FormatPatchLogForUi(applyMessage, exePath);
-            ShowInstalledGameNote(applied, applied ? $"{authorizationMessage} Your game is patched." : applyMessage);
+            ShowInstalledGameNote(applied, applied
+                ? $"{authorizationMessage} Your game is patched."
+                : PatchBenchSafeCopyOutcomeText.DescribeInstalledWriteFailure(applyMessage));
             AppStatusService.SetStatus(applied
                 ? "Windowed & Mods: your installed game is patched"
                 : "Windowed & Mods: patching your game did not complete");
@@ -3031,7 +3033,9 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     InstalledGame: authorization)));
 
             OperationLogTextBox.Text = FormatPatchLogForUi(message, exePath);
-            ShowInstalledGameNote(success, success ? "Your game is back the way it was." : message);
+            ShowInstalledGameNote(success, success
+                ? "Your game is back the way it was."
+                : PatchBenchSafeCopyOutcomeText.DescribeInstalledWriteFailure(message));
             AppStatusService.SetStatus(success
                 ? "Windowed & Mods: your game is back the way it was"
                 : "Windowed & Mods: could not put your game back");

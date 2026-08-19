@@ -346,4 +346,13 @@ public class InstalledGamePatchSurfaceTests
             Assert.That(patchBench, Does.Contain("copies your original executable first"));
         });
     }
+
+    [Test]
+    public void InstalledPatchAndRestoreUseTheNamedFailureSentence()
+    {
+        string code = PageCode();
+        Assert.That(code, Does.Contain("PatchBenchSafeCopyOutcomeText.DescribeInstalledWriteFailure"));
+        Assert.That(code, Does.Not.Contain("applied ? $\"{authorizationMessage} Your game is patched.\" : applyMessage"));
+        Assert.That(code, Does.Not.Contain("success ? \"Your game is back the way it was.\" : message"));
+    }
 }

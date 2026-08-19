@@ -1,4 +1,5 @@
 using OnslaughtCareerEditor.WinUI.Models;
+using System;
 using System.IO;
 
 namespace OnslaughtCareerEditor.WinUI.Helpers
@@ -13,6 +14,26 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         public static string DescribeCaughtFailure(string action)
         {
             return $"Could not {action}. Nothing was changed.";
+        }
+
+        /// <summary>
+        /// An installed-game write refusal. Named here so the page never paints
+        /// an apply or restore sentence that still carries a dump.
+        /// </summary>
+        public static string DescribeInstalledWriteFailure(string? message)
+        {
+            if (string.IsNullOrWhiteSpace(message) || LooksLikeAPathOrDump(message))
+                return DescribeCaughtFailure("change your installed game");
+
+            return message;
+        }
+
+        private static bool LooksLikeAPathOrDump(string message)
+        {
+            return message.Contains(":\\", StringComparison.Ordinal)
+                || message.Contains(":/", StringComparison.Ordinal)
+                || message.Contains("Win32", StringComparison.OrdinalIgnoreCase)
+                || message.Contains("exception", StringComparison.OrdinalIgnoreCase);
         }
 
         public const string PatchRowUnavailable = "That patch row is not available.";

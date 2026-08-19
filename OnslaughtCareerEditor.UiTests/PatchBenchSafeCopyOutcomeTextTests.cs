@@ -94,6 +94,22 @@ public class PatchBenchSafeCopyOutcomeTextTests
     }
 
     [Test]
+    public void ADumpedInstalledWriteUsesTheSharedFailureSentence()
+    {
+        string helper = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot,
+            "OnslaughtCareerEditor.WinUI",
+            "Helpers",
+            "PatchBenchSafeCopyOutcomeText.cs"));
+
+        Assert.That(helper, Does.Contain("DescribeInstalledWriteFailure"));
+        Assert.That(helper, Does.Contain("change your installed game"));
+        Assert.That(helper, Does.Contain("LooksLikeAPathOrDump"));
+        Assert.That(helper, Does.Contain("Nothing was changed"));
+        Assert.That(helper.ToLowerInvariant(), Does.Not.Contain("ex.Message"));
+    }
+
+    [Test]
     public void CreateConfirmationNamesTheFoldersNotThePaths()
     {
         string source = Path.Combine("C:" + Path.DirectorySeparatorChar + "Steam", "steamapps", "common", "Battle Engine Aquila");
