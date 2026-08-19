@@ -925,6 +925,11 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             return $"Asset Library: showing texture preview {fileName}";
         }
 
+        private static string BuildSidecarTexturePreviewButtonLabel()
+        {
+            return "Preview texture";
+        }
+
         private void ConfigureSelectedModelLinkedTexture(
             AssetModelTextureLinks links,
             IReadOnlyList<AssetModelSidecarTexture> sidecarTextures)
@@ -940,7 +945,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             _selectedModelSidecarTextureFileName = _selectedModelLinkedTexture == null ? sidecarTexture?.FileName ?? string.Empty : string.Empty;
 
             bool hasPreviewTarget = _selectedModelLinkedTexture != null || !string.IsNullOrWhiteSpace(_selectedModelSidecarTexturePath);
-            ViewLinkedTextureButton.Content = _selectedModelLinkedTexture == null ? "Preview sidecar texture" : "View linked texture";
+            ViewLinkedTextureButton.Content = _selectedModelLinkedTexture == null ? BuildSidecarTexturePreviewButtonLabel() : "View linked texture";
             ViewLinkedTextureButton.IsEnabled = hasPreviewTarget;
             ViewLinkedTextureButton.Visibility = !hasPreviewTarget
                 ? Visibility.Collapsed

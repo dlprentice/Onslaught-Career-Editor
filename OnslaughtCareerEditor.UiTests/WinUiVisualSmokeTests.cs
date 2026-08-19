@@ -771,7 +771,9 @@ public class WinUiVisualSmokeTests
         AutomationElement sidecarButtonElement = FindByAutomationId(window, "AssetViewLinkedTextureButton");
         Button sidecarButton = sidecarButtonElement.AsButton();
         Assert.That(sidecarButton.IsEnabled, Is.True, "Expected a sidecar-only model to offer a sidecar texture preview.");
-        Assert.That(TryGetName(sidecarButtonElement) ?? string.Empty, Does.Contain("Preview sidecar texture"));
+        string leftoverButtonName = TryGetName(sidecarButtonElement) ?? string.Empty;
+        Assert.That(leftoverButtonName, Does.Contain("Preview texture"));
+        Assert.That(leftoverButtonName.ToLowerInvariant(), Does.Not.Contain("sidecar"));
         sidecarButton.Invoke();
         Thread.Sleep(750);
 
