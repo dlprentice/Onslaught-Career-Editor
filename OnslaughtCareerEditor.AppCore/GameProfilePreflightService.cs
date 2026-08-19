@@ -136,6 +136,7 @@ namespace OnslaughtCareerEditor.AppCore
         public const string CopiedBeaPatchesMismatch = "That copy's BEA.exe no longer matches its patches.";
         public const string CopiedBeaPatchApplyFailed = "Those patches could not be applied to that copy.";
         public const string RequiredPatchRowMissing = "A required patch row is missing.";
+        public const string ProfileNeedsItsPatchRows = "That copy profile needs its exact patch rows.";
         public const string ProfileFolderInsideGame =
             "The app-owned profile folder must not sit inside the game folder.";
         public const string GameFolderInsideProfile =
@@ -1294,7 +1295,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             SafeCopyProfilePreset preset = BinaryPatchPlanBuilder.GetSafeCopyProfilePreset(profilePresetId);
             if (!preset.IsSelectable)
-                throw new InvalidOperationException($"{preset.DisplayName} cannot be used to prepare a safe game copy.");
+                throw new InvalidOperationException(BinaryPatchPlanBuilder.ProfilePresetNotReady);
 
             string[] expectedKeys = BinaryPatchPlanBuilder.BuildSafeCopyProfilePatchKeys(preset.Id)
                 .OrderBy(key => key, StringComparer.OrdinalIgnoreCase)
@@ -1304,8 +1305,7 @@ namespace OnslaughtCareerEditor.AppCore
                 .ToArray();
             if (!expectedKeys.SequenceEqual(actualKeys, StringComparer.OrdinalIgnoreCase))
             {
-                throw new InvalidOperationException(
-                    $"{preset.DisplayName} profile requires its exact proof-bounded patch row set.");
+                throw new InvalidOperationException(ProfileNeedsItsPatchRows);
             }
 
             return preset;

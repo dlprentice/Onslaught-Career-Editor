@@ -126,6 +126,15 @@ public class PreflightRequiredFileHonestyTests
             Does.Not.Contain("catalog"));
         Assert.That(GameProfilePreflightService.RequiredPatchRowMissing.ToLowerInvariant(),
             Does.Not.Contain("key"));
+        Assert.That(source, Does.Contain("ProfileNeedsItsPatchRows"));
+        Assert.That(source, Does.Contain("ProfilePresetNotReady"));
+        Assert.That(source, Does.Not.Contain("cannot be used to prepare a safe game copy."));
+        Assert.That(source, Does.Not.Contain("exact proof-bounded patch row set"));
+        Assert.That(source, Does.Not.Contain("{preset.DisplayName}"));
+        Assert.That(GameProfilePreflightService.ProfileNeedsItsPatchRows,
+            Is.EqualTo("That copy profile needs its exact patch rows."));
+        Assert.That(GameProfilePreflightService.ProfileNeedsItsPatchRows.ToLowerInvariant(),
+            Does.Not.Contain("proof"));
         Assert.That(source, Does.Contain("CopiedBackupMissing"));
         Assert.That(source, Does.Contain("CopiedBackupHashMissing"));
         Assert.That(source, Does.Contain("CopiedBackupHashMismatch"));

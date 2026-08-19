@@ -805,7 +805,10 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                             AllowByteLayoutOnlyTarget: true,
                             PatchKeys: BinaryPatchPlanBuilder.BuildSafeCopyProfilePatchKeys(BinaryPatchPlanBuilder.RecommendedProfileId),
                             ProfilePresetId: BinaryPatchPlanBuilder.EnhancedPreviewProfileId)));
-                Assert.Contains("exact proof-bounded patch row set", mismatch.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(GameProfilePreflightService.ProfileNeedsItsPatchRows, mismatch.Message);
+                Assert.Equal("That copy profile needs its exact patch rows.", mismatch.Message);
+                Assert.DoesNotContain("proof-bounded", mismatch.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.DoesNotContain("Enhanced", mismatch.Message, StringComparison.Ordinal);
             }
             finally
             {
