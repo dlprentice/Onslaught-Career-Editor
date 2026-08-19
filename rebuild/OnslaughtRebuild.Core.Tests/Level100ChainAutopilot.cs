@@ -127,6 +127,7 @@ internal sealed class Level100ChainAutopilot
         3 * SimulationConstants.TicksPerSecond / 2;
 
     private readonly ILevel100ChainHost _host;
+    private RetailCareerCampaign? _career;
     private readonly List<string> _log = [];
     private readonly SortedDictionary<int, int> _impactsByActor = [];
     private readonly Level100Terrain _terrain = Level100Terrain.Instance;
@@ -156,6 +157,22 @@ internal sealed class Level100ChainAutopilot
     internal IReadOnlyDictionary<int, int> ImpactsByActor => _impactsByActor;
 
     internal WorldSnapshot Snapshot => _host.Snapshot;
+
+    /// <summary>
+    /// Continues the same host after <see cref="Run"/> has already left
+    /// <c>Running</c>. The player-input Won e2e uses this for
+    /// <see cref="SimInput.Idle"/> through the already-pinned 5.0 f overlay.
+    /// </summary>
+    internal WorldSnapshot Step(SimInput input) => _host.Step(input);
+
+    /// <summary>
+    /// The same live career object the host's <see cref="Simulation"/> owns.
+    /// Assigned only on the direct-Core <see cref="Create"/> path.
+    /// </summary>
+    internal RetailCareerCampaign Career =>
+        _career ??
+        throw new InvalidOperationException(
+            "This driver has no live career; only Create() binds one.");
 
     /// <summary>
     /// One released actor round, recorded on the first tick it is visible in
@@ -366,6 +383,7 @@ internal sealed class Level100ChainAutopilot
                 simulation,
                 quantizeLookToClientPointerPath,
                 quantizeLookToIntegerMousePixels));
+        driver._career = simulation.Level100Career;
         driver._horizontalOnlyZoneHandoff = horizontalOnlyZoneHandoff;
         driver._beatNinePerturbation = lookPerturbation;
         return driver;
