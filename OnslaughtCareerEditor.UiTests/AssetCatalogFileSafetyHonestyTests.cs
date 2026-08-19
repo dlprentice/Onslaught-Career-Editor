@@ -89,4 +89,20 @@ public class AssetCatalogFileSafetyHonestyTests
         Assert.That(source, Does.Not.Contain("cannot be hardlinked to another file."));
         Assert.That(source, Does.Contain("FileMutationSafety.FileCannotShareData"));
     }
+
+    [Test]
+    public void ACatalogIdentityChangeNamesTheFolderNotARoot()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "AssetCatalogFileSafety.cs"));
+
+        Assert.That(source, Does.Not.Contain("The catalog root or catalog file changed identity"));
+        Assert.That(source, Does.Not.Contain("The catalog generated export root changed"));
+        Assert.That(source, Does.Contain("CatalogFolderChangedIdentity"));
+        Assert.That(source, Does.Contain("ExportFolderChanged"));
+        Assert.That(source, Does.Contain(
+            "The catalog folder or catalog.json changed identity after the catalog was loaded."));
+        Assert.That(source, Does.Contain(
+            "The generated export folder changed after the catalog was loaded."));
+    }
 }

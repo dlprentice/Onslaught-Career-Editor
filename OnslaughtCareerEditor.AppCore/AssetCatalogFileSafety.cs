@@ -15,6 +15,10 @@ namespace OnslaughtCareerEditor.AppCore
             "That catalog export file resolves outside the selected generated export folder.";
         internal const string ExportsMustStayInside =
             "Catalog exports must stay inside the selected generated export folder.";
+        internal const string CatalogFolderChangedIdentity =
+            "The catalog folder or catalog.json changed identity after the catalog was loaded.";
+        internal const string ExportFolderChanged =
+            "The generated export folder changed after the catalog was loaded.";
 
         internal static AssetCatalogSelection? ResolveSelection(string? pathOrDirectory)
         {
@@ -266,8 +270,7 @@ namespace OnslaughtCareerEditor.AppCore
                 (!_rootLocks.Identity.IsSameFile(evidence.RootIdentity) ||
                     !_catalogIdentity.IsSameFile(evidence.CatalogIdentity)))
             {
-                throw new InvalidOperationException(
-                    "The catalog root or catalog file changed identity after the catalog was loaded.");
+                throw new InvalidOperationException(AssetCatalogFileSafety.CatalogFolderChangedIdentity);
             }
 
             _catalogStream.Position = 0;
@@ -499,8 +502,7 @@ namespace OnslaughtCareerEditor.AppCore
                         expectedRoot,
                         FileMutationSafety.PathComparison))
                 {
-                    throw new InvalidOperationException(
-                        "The catalog generated export root changed after the catalog was loaded.");
+                    throw new InvalidOperationException(AssetCatalogFileSafety.ExportFolderChanged);
                 }
 
                 session.ValidateTrust(snapshot.TrustEvidence);
