@@ -470,6 +470,37 @@ public sealed class RetailCareerCampaignApplyUpdateTests
         Assert.All(snapshot.SecondaryStatuses, status => Assert.Equal(0, status));
     }
 
+    /// <summary>
+    /// After the already-pinned first-play S unlocks, <c>CountGoodies</c>
+    /// (<c>Career.cpp:670-680</c>) rises by five (<c>state &gt;= GS_NEW</c>).
+    /// <c>UpdateGoodieStates</c> then adds that delta to the
+    /// <c>new_goodie_count</c> global at <c>0x00662B20</c>
+    /// (<c>Career.cpp:686 / 895-897</c>) and latches <c>first_goodie</c>
+    /// because goodie 0 transitioned off <c>GOODIE_NOT_DONE</c>
+    /// (<c>Career.cpp:688 / 899-900</c>). Mutation: leave the globals at
+    /// ctor 0. <c>mPendingExtraGoodies</c> and episode instruction marks
+    /// stay unclaimed. No new secondaries.
+    /// </summary>
+    [Fact]
+    public void Level100Won_ApplyUpdateAddsFiveNewGoodiesAndLatchesFirstGoodie()
+    {
+        RetailCareerCampaign career = RetailCareerReCalcLinks.CreateColdTrainingSlice();
+        RetailEndLevelSnapshot snapshot = RetailFillOutEndLevelData.ForLevel100Won();
+
+        Assert.Equal(0, career.Counters.NewGoodieCount);
+        Assert.Equal(0, career.Counters.FirstGoodie);
+
+        career.ApplyUpdate(snapshot);
+
+        Assert.Equal(5, career.Counters.NewGoodieCount);
+        Assert.Equal(1, career.Counters.FirstGoodie);
+        Assert.Equal(
+            RetailCareerGoodieState.New,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.CompleteWorld100Bio));
+        Assert.Equal(1, career.Nodes.Find(100)!.Complete);
+        Assert.All(snapshot.SecondaryStatuses, status => Assert.Equal(0, status));
+    }
+
     private static int CountExistingBaseThings(RetailCareerNode node)
     {
         int count = 0;

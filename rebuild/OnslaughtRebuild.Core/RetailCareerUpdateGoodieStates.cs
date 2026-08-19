@@ -69,7 +69,9 @@ public sealed class RetailCareerGoodies
 /// the cold training slice; <c>COMPLETE_LEVEL</c> / <c>GRADE</c> of a
 /// missing world is a NULL deref at <c>0x0041C370</c>. Kill thresholds,
 /// <c>TOTAL_S_GRADES</c>, episode instruction marks, and the
-/// <c>new_goodie_count</c> latch stay unclaimed.
+/// <c>mPendingExtraGoodies</c> latch stay unclaimed. The first-play
+/// CountGoodies delta into <c>new_goodie_count</c> is the already-cited
+/// Career.cpp:895-897 arm.
 /// </para>
 /// </remarks>
 public static class RetailCareerUpdateGoodieStates
@@ -91,11 +93,20 @@ public static class RetailCareerUpdateGoodieStates
 
     /// <summary>
     /// The Level 100 arms of <c>CCareer::UpdateGoodieStates</c> —
-    /// <c>Career.cpp:690 / 698 / 769 / 813 / 857</c>, <c>0x0041c470</c>.
+    /// <c>Career.cpp:690 / 698 / 769 / 813 / 857</c>, <c>0x0041c470</c>,
+    /// then the already-cited <c>CountGoodies</c> delta into
+    /// <c>new_goodie_count</c> and the goodie-0 <c>first_goodie</c> latch
+    /// (<c>Career.cpp:686 / 688 / 895-900</c>).
+    /// <c>mPendingExtraGoodies</c> and episode instruction marks stay
+    /// unclaimed.
     /// </summary>
     public static void Update(RetailCareerCampaign career)
     {
         ArgumentNullException.ThrowIfNull(career);
+
+        int previouslyNew = CountGoodies(career);
+        bool goodieZeroWasNotDone =
+            career.Goodies.Get(CompleteWorld100Bio) <= RetailCareerGoodieState.Instructions;
 
         if (career.Nodes.CompleteFlagOf(RetailCareerReCalcLinks.TrainingWorldNumber) == 1)
         {
@@ -121,6 +132,33 @@ public static class RetailCareerUpdateGoodieStates
         {
             career.Goodies.SetNewIfNotDone(GradeAOnWorld100);
         }
+
+        career.Counters.NewGoodieCount += CountGoodies(career) - previouslyNew;
+        if (goodieZeroWasNotDone &&
+            career.Goodies.Get(CompleteWorld100Bio) > RetailCareerGoodieState.Instructions)
+        {
+            career.Counters.FirstGoodie = 1;
+        }
+    }
+
+    /// <summary>
+    /// <c>CCareer::CountGoodies</c> — <c>Career.cpp:670-680</c>. Counts
+    /// slots whose <c>mState &gt;= GS_NEW</c>.
+    /// </summary>
+    public static int CountGoodies(RetailCareerCampaign career)
+    {
+        ArgumentNullException.ThrowIfNull(career);
+
+        int total = 0;
+        for (int index = 0; index < career.Goodies.States.Count; index++)
+        {
+            if (career.Goodies.Get(index) >= RetailCareerGoodieState.New)
+            {
+                total++;
+            }
+        }
+
+        return total;
     }
 
     private static List<RetailWorldGradeNode> GradeNodes(RetailCareerCampaign career)
