@@ -26,4 +26,23 @@ public class BinaryPatchCopyIdentityHonestyTests
         Assert.That(BinaryPatchEngine.BeaExeOnlyCopyIdentity.ToLowerInvariant(),
             Does.Not.Contain("app-owned"));
     }
+
+    [Test]
+    public void WindowedAndModsNamesTheCopyNotAnAppOwnedCopy()
+    {
+        string page = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot,
+            "OnslaughtCareerEditor.WinUI",
+            "Pages",
+            "BinaryPatchesPage.xaml.cs"));
+
+        Assert.That(page, Does.Not.Contain("app-owned BEA.exe-only copy"));
+        Assert.That(page, Does.Not.Contain("Create an BEA.exe-only copy"));
+        Assert.That(page, Does.Contain("Create a BEA.exe-only copy before verification."));
+        Assert.That(page, Does.Contain("Create a BEA.exe-only copy before applying patches."));
+        Assert.That(page, Does.Contain("Create a BEA.exe-only copy before restoring patch backups."));
+        Assert.That(page, Does.Contain("Create a BEA.exe-only copy before verification or patching."));
+        Assert.That(page, Does.Contain("applied to the BEA.exe-only copy only"));
+        Assert.That(page, Does.Contain("Replace(exePath, \"BEA.exe-only copy\""));
+    }
 }

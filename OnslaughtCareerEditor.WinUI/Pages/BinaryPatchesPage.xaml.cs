@@ -1279,7 +1279,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             string exePath = (ExePathTextBox.Text ?? string.Empty).Trim();
             if (!IsUsableWorkingCopy(exePath))
             {
-                OperationLogTextBox.Text = "Create an app-owned BEA.exe-only copy before verification.";
+                OperationLogTextBox.Text = "Create a BEA.exe-only copy before verification.";
                 AppStatusService.SetStatus("Windowed & Mods: BEA.exe-only copy required");
                 UpdateControlState();
                 return;
@@ -1310,7 +1310,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             string exePath = (ExePathTextBox.Text ?? string.Empty).Trim();
             if (!IsUsableWorkingCopy(exePath))
             {
-                OperationLogTextBox.Text = "Create an app-owned BEA.exe-only copy before applying patches.";
+                OperationLogTextBox.Text = "Create a BEA.exe-only copy before applying patches.";
                 AppStatusService.SetStatus("Windowed & Mods: BEA.exe-only copy required");
                 UpdateControlState();
                 return;
@@ -1329,7 +1329,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             {
                 if (!await ConfirmAsync(
                         "Apply selected patches?",
-                        "The selected verified catalog patches will be applied to the app-owned BEA.exe-only copy only. The original BEA.exe stays unchanged. Restore uses the first full-file backup snapshot, not a per-patch undo."))
+                        "The selected verified catalog patches will be applied to the BEA.exe-only copy only. The original BEA.exe stays unchanged. Restore uses the first full-file backup snapshot, not a per-patch undo."))
                 {
                     AppStatusService.SetStatus("Windowed & Mods: apply canceled");
                     return;
@@ -1355,7 +1355,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             string exePath = (ExePathTextBox.Text ?? string.Empty).Trim();
             if (!IsUsableWorkingCopy(exePath))
             {
-                OperationLogTextBox.Text = "Create an app-owned BEA.exe-only copy before restoring patch backups.";
+                OperationLogTextBox.Text = "Create a BEA.exe-only copy before restoring patch backups.";
                 AppStatusService.SetStatus("Windowed & Mods: BEA.exe-only copy required");
                 UpdateControlState();
                 return;
@@ -2134,7 +2134,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
             return IsUsableWorkingCopy(path)
                 ? "BEA.exe in the app advanced patch workspace."
-                : "Create an app-owned BEA.exe-only copy before verification or patching.";
+                : "Create a BEA.exe-only copy before verification or patching.";
         }
 
         private string BuildPatchDisplayList(IEnumerable<string> patchKeys)
@@ -2335,7 +2335,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
             string backupPath = BinaryPatchEngine.BuildBackupPath(exePath);
             string formatted = named.Replace(backupPath, "BEA.exe-only backup snapshot", StringComparison.OrdinalIgnoreCase);
-            return formatted.Replace(exePath, "app-owned BEA.exe-only copy", StringComparison.OrdinalIgnoreCase);
+            return formatted.Replace(exePath, "BEA.exe-only copy", StringComparison.OrdinalIgnoreCase);
         }
 
         private static bool IsUsableWorkingCopy(string path)
