@@ -40,5 +40,8 @@ public class PreflightRequiredFileHonestyTests
 
         Assert.That(source, Does.Not.Contain("Executable source path is required."));
         Assert.That(source, Does.Not.Contain("Workspace destination path is required."));
+        Assert.That(source, Does.Not.Contain("BEA.exe was not found under the copied game profile."));
+        Assert.That(source, Does.Contain("CopiedBeaMissing"));
+        Assert.That(source, Does.Not.Contain("FileNotFoundException(CopiedBeaMissing,"));
     }
 }

@@ -113,6 +113,7 @@ namespace OnslaughtCareerEditor.AppCore
         public const string SchemaVersion = "winui-copied-game-profile.v1";
         public const string TargetCopyExists = "That copy folder already exists.";
         public const string CopyFolderMissing = "That copy folder could not be found.";
+        public const string CopiedBeaMissing = "That copy is missing BEA.exe.";
         public const string SourceFolderMissing = "That game folder could not be found.";
         public const string ProfileFolderRequired = "An app-owned profile folder is required.";
         public const string WorkspaceFileMustStayInside = "The workspace file must stay inside the app-owned profile folder.";
@@ -558,7 +559,7 @@ namespace OnslaughtCareerEditor.AppCore
             string resolvedGameRoot = NormalizeExistingDirectory(gameRoot);
             string executablePath = Path.Combine(resolvedGameRoot, "BEA.exe");
             if (!File.Exists(executablePath))
-                throw new FileNotFoundException("BEA.exe was not found under the copied game profile.", executablePath);
+                throw new FileNotFoundException(CopiedBeaMissing);
 
             string[] normalizedArguments = NormalizeLaunchArguments(arguments ?? Array.Empty<string>());
             string commandPreview = BuildRedactedCommandPreview(normalizedArguments);
@@ -994,7 +995,7 @@ namespace OnslaughtCareerEditor.AppCore
             }
 
             if (!File.Exists(executablePath))
-                throw new FileNotFoundException("BEA.exe was not found under the copied game profile.", executablePath);
+                throw new FileNotFoundException(CopiedBeaMissing);
 
             if (!manifestRoot.TryGetProperty("patchResult", out JsonElement patchResultEl))
                 throw new InvalidOperationException("Playable copied game folder manifest is missing patch result metadata.");
