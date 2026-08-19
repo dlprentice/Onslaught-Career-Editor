@@ -69,11 +69,11 @@ public sealed class RetailCareerGoodies
 /// <para>
 /// <b>A first-play S unlocks five slots.</b> <c>COMPLETE_LEVEL(100)</c>
 /// writes <c>GS_NEW</c> on 0 and 8. <c>GRADE(100) &gt;= C/B/A</c> writes
-/// 78, 121, and 164. <c>GRADE(110) &gt;= C</c> writes goodie 1, but
-/// world 110 stays incomplete / BlankRanking so that arm is the
-/// already-pinned incomplete <c>'E'</c> and goodie 1 stays
-/// <c>GS_UNKNOWN</c>. Leftover complete-110 plus ranking 0.25f
-/// (already pinned as C) opens the store. FrontEndHandoff leftover
+/// 78, 121, and 164. <c>GRADE(110) &gt;= C</c> writes goodie 1 and
+/// concept-art goodie 79, but world 110 stays incomplete / BlankRanking
+/// so that arm is the already-pinned incomplete <c>'E'</c> and both
+/// stay <c>GS_UNKNOWN</c>. Leftover complete-110 plus ranking 0.25f
+/// (already pinned as C) opens both stores. FrontEndHandoff leftover
 /// of that C seed still opens it because <c>TryApply</c> calls
 /// ApplyUpdate. Isolated leftover C names ApplyUpdate.
 /// First-play FrontEndHandoff still leaves goodie 1 at
@@ -133,6 +133,15 @@ public static class RetailCareerUpdateGoodieStates
     /// <summary>Goodie 1 — <c>GRADE(110) &gt;= C</c> — <c>Career.cpp:691</c>.</summary>
     public const int GradeCOnWorld110 = 1;
 
+    /// <summary>
+    /// Goodie 79 — concept-art <c>GRADE(110) &gt;= C</c> —
+    /// <c>Career.cpp:770</c>. Same predicate as
+    /// <see cref="GradeCOnWorld110"/>; first-play leaves world 110
+    /// incomplete so this stays <c>GS_UNKNOWN</c>. Leftover
+    /// complete-110 plus ranking 0.25f opens the store.
+    /// </summary>
+    public const int GradeCConceptArtOnWorld110 = 79;
+
     /// <summary>Goodie 8 — complete world 100 — <c>Career.cpp:698</c>.</summary>
     public const int CompleteWorld100Second = 8;
 
@@ -150,7 +159,7 @@ public static class RetailCareerUpdateGoodieStates
 
     /// <summary>
     /// The Level 100 arms of <c>CCareer::UpdateGoodieStates</c> —
-    /// <c>Career.cpp:690 / 691 / 698 / 704 / 769 / 813 / 857</c>,
+    /// <c>Career.cpp:690 / 691 / 698 / 704 / 769 / 770 / 813 / 857</c>,
     /// <c>0x0041c470</c>, then the already-cited <c>CountGoodies</c>
     /// delta into <c>new_goodie_count</c> and the goodie-0
     /// <c>first_goodie</c> latch (<c>Career.cpp:686 / 688 / 895-900</c>).
@@ -163,7 +172,8 @@ public static class RetailCareerUpdateGoodieStates
     /// after first-play: world 110 is incomplete so the lookup is
     /// <c>'E'</c> and goodie 1 stays <c>GS_UNKNOWN</c>. Leftover
     /// complete-110 plus ranking 0.25f opens
-    /// <c>SET_GOODIE_NEW(1)</c>. FrontEndHandoff leftover of that
+    /// <c>SET_GOODIE_NEW(1)</c> and <c>SET_GOODIE_NEW(79)</c>.
+    /// Isolated leftover C names 1, not 79. FrontEndHandoff leftover of that
     /// C seed still opens 1 because <c>TryApply</c> calls
     /// ApplyUpdate. Isolated leftover C does not go through
     /// <c>TryApply</c>. First-play FrontEndHandoff still leaves
@@ -249,6 +259,7 @@ public static class RetailCareerUpdateGoodieStates
         if (held110.IsAtLeast(new RetailGrade((sbyte)'C')))
         {
             career.Goodies.SetNewIfNotDone(GradeCOnWorld110);
+            career.Goodies.SetNewIfNotDone(GradeCConceptArtOnWorld110);
         }
 
         career.Counters.NewGoodieCount += CountGoodies(career) - previouslyNew;
@@ -271,10 +282,12 @@ public static class RetailCareerUpdateGoodieStates
     /// pre-count. Leftover world-110 complete + E therefore reads 4
     /// after ApplyUpdate because goodie 14 is also <c>GS_NEW</c>.
     /// Isolated leftover 14 names the write of 14, not that count.
-    /// Leftover world-110 complete + C therefore reads 5 after
-    /// ApplyUpdate because goodie 1 is also <c>GS_NEW</c>. Isolated
-    /// leftover C names the write of 1, not that count. Isolated
-    /// leftover 14 CountGoodies uses ranking 0.0f so the count is 4.
+    /// Leftover world-110 complete + C therefore reads 6 after
+    /// ApplyUpdate because goodie 1 and concept-art 79 are also
+    /// <c>GS_NEW</c>. Isolated leftover C names the write of 1, not
+    /// that count. Isolated leftover C concept-art names the write
+    /// of 79, not that count. Isolated leftover 14 CountGoodies uses
+    /// ranking 0.0f so the count is 4.
     /// </summary>
     public static int CountGoodies(RetailCareerCampaign career)
     {

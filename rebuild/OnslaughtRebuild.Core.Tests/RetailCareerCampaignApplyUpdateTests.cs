@@ -724,21 +724,24 @@ public sealed class RetailCareerCampaignApplyUpdateTests
     /// <summary>
     /// <c>CountGoodies</c> iterates every slot
     /// (<c>Career.cpp:670-680</c>). Leftover world-110 complete + C
-    /// (ranking 0.25f already pinned) writes <c>GS_NEW</c> on goodie 1
-    /// and leftover 14, while a C-grade Level 100 Won writes 0 / 8 /
-    /// 78, so the count is 5. Isolated leftover C names the write of
-    /// 1, not the count. Isolated leftover 14 CountGoodies uses
-    /// ranking 0.0f so the count is 4. Isolated leftover Old /
-    /// Instructions counts seed only the five first-play S slots.
-    /// Isolated C-grade does not name <c>NewGoodieCount</c> (would be
-    /// 3). Isolated S latch is 5 without leftover 1 / 14. Mutation:
-    /// skip counting goodie 1. Skipping <c>SET_GOODIE_NEW(1)</c> is
-    /// not unique versus leftover C. Skipping
-    /// <c>SET_GOODIE_NEW(14)</c> is not unique versus leftover 14.
-    /// Counting only the five first-play S slots is not unique versus
-    /// leftover 14 CountGoodies. Do not invent a world-110 FillOut or
-    /// the rest of the table. <c>mPendingExtraGoodies</c> stays
-    /// unclaimed. No new secondaries.
+    /// (ranking 0.25f already pinned) writes <c>GS_NEW</c> on goodie 1,
+    /// leftover 14, and leftover 79, while a C-grade Level 100 Won
+    /// writes 0 / 8 / 78, so the count is 6. Isolated leftover C
+    /// names the write of 1, not the count. Isolated leftover C
+    /// concept-art names the write of 79, not this count. Isolated
+    /// leftover 14 CountGoodies uses ranking 0.0f so the count is 4.
+    /// Isolated leftover Old / Instructions counts seed only the five
+    /// first-play S slots. Isolated C-grade does not name
+    /// <c>NewGoodieCount</c> (would be 3). Isolated S latch is 5
+    /// without leftover 1 / 14 / 79. Mutation: skip counting goodie
+    /// 1. Skipping <c>SET_GOODIE_NEW(1)</c> is not unique versus
+    /// leftover C. Skipping <c>SET_GOODIE_NEW(14)</c> is not unique
+    /// versus leftover 14. Skipping <c>SET_GOODIE_NEW(79)</c> is not
+    /// unique versus leftover C concept-art. Counting only the five
+    /// first-play S slots is not unique versus leftover 14
+    /// CountGoodies. Do not invent a world-110 FillOut or the rest of
+    /// the table. <c>mPendingExtraGoodies</c> stays unclaimed. No new
+    /// secondaries.
     /// </summary>
     [Fact]
     public void Level100Won_CountGoodiesCountsLeftoverWorld110GradeCGoodie()
@@ -753,8 +756,8 @@ public sealed class RetailCareerCampaignApplyUpdateTests
 
         career.ApplyUpdate(snapshot);
 
-        Assert.Equal(5, RetailCareerUpdateGoodieStates.CountGoodies(career));
-        Assert.Equal(5, career.Counters.NewGoodieCount);
+        Assert.Equal(6, RetailCareerUpdateGoodieStates.CountGoodies(career));
+        Assert.Equal(6, career.Counters.NewGoodieCount);
         Assert.Equal(1, career.Nodes.Find(100)!.Complete);
         Assert.Equal(
             RetailCareerGoodieState.New,
@@ -762,6 +765,60 @@ public sealed class RetailCareerCampaignApplyUpdateTests
         Assert.Equal(
             RetailCareerGoodieState.New,
             career.Goodies.Get(RetailCareerUpdateGoodieStates.CompleteWorld110));
+        Assert.Equal(
+            RetailCareerGoodieState.Unknown,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeBOnWorld100));
+        Assert.All(snapshot.SecondaryStatuses, status => Assert.Equal(0, status));
+    }
+
+    /// <summary>
+    /// Leftover world-110 complete + C (ranking 0.25f already pinned)
+    /// opens <c>Career.cpp:770</c> <c>SET_GOODIE_NEW(79)</c>. Isolated
+    /// leftover C names goodie 1, not 79. Isolated leftover C
+    /// CountGoodies is now 6 because this store is also New; that
+    /// count is not unique versus skip <c>SET_GOODIE_NEW(79)</c>.
+    /// Isolated leftover 14 CountGoodies uses ranking 0.0f so
+    /// <c>GRADE(110) &gt;= C</c> stays closed. First-play closed
+    /// GRADE(110) names goodie 1 and does not name 79. World 110 is
+    /// in the cold slice, so this is not a missing-world NULL deref.
+    /// Do not invent <c>GRADE(110) &gt;= B</c> / <c>A</c> or a
+    /// world-110 FillOut. Mutation: skip <c>SET_GOODIE_NEW(79)</c>
+    /// when <c>GRADE(110) &gt;= C</c>. Skipping
+    /// <c>SET_GOODIE_NEW(1)</c> is not unique versus leftover C.
+    /// <c>mPendingExtraGoodies</c> stays unclaimed. No new
+    /// secondaries.
+    /// </summary>
+    [Fact]
+    public void Level100Won_ApplyUpdateLeftoverWorld110CompleteCUnlocksTheWorld110CConceptArtGoodie()
+    {
+        RetailCareerCampaign career = RetailCareerReCalcLinks.CreateColdTrainingSlice();
+        RetailCareerNode next = career.Nodes.Find(110)!;
+        next.Complete = 1;
+        next.Ranking = 0.25f;
+        RetailEndLevelSnapshot snapshot = RetailFillOutEndLevelData.ForLevel100Won(ranking: 0.25f);
+
+        career.ApplyUpdate(snapshot);
+
+        Assert.Equal(1, next.Complete);
+        Assert.Equal(0.25f, next.Ranking);
+        Assert.Equal(
+            (byte)'C',
+            RetailWorldGrade.GradeByteForWorld(
+                new[]
+                {
+                    new RetailWorldGradeNode(
+                        RetailCareerReCalcLinks.TrainingWorldNumber,
+                        career.Nodes.Find(100)!.Complete,
+                        career.Nodes.Find(100)!.Ranking),
+                    new RetailWorldGradeNode(next.WorldNumber, next.Complete, next.Ranking),
+                },
+                next.WorldNumber));
+        Assert.Equal(
+            RetailCareerGoodieState.New,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeCOnWorld110));
+        Assert.Equal(
+            RetailCareerGoodieState.New,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeCConceptArtOnWorld110));
         Assert.Equal(
             RetailCareerGoodieState.Unknown,
             career.Goodies.Get(RetailCareerUpdateGoodieStates.GradeBOnWorld100));
