@@ -73,4 +73,18 @@ public class ControlOptionsCopyFolderHonestyTests
         Assert.That(missingCopy.Message, Does.Not.Contain(Path.GetTempPath()));
         Assert.That(missingCopy.Message, Does.Not.Contain(":\\"));
     }
+
+    [Test]
+    public void ASharedOptionsFileIsNamedWithoutCallingItAHardlink()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot,
+            "OnslaughtCareerEditor.AppCore",
+            "GameProfileControlOptionsService.cs"));
+
+        Assert.That(source, Does.Not.Contain("is hardlinked to another file"));
+        Assert.That(source, Does.Contain("FileCannotShareData"));
+        Assert.That(GameProfileControlOptionsService.FileCannotShareData,
+            Is.EqualTo("That file cannot share its data with another file."));
+    }
 }

@@ -412,7 +412,8 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                             AppOwnedProfilesRoot: outputRoot,
                             MouseSensitivityOverride: GameProfileControlOptionsService.SharperMouseLookSensitivity)));
 
-                Assert.Contains("hardlinked", ex.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(GameProfileControlOptionsService.FileCannotShareData, ex.Message);
+                Assert.DoesNotContain("hardlinked", ex.Message, StringComparison.OrdinalIgnoreCase);
                 Assert.Empty(Directory.GetFiles(prepared.TargetGameRoot, "defaultoptions.bea.*.bak"));
             }
             finally
@@ -462,7 +463,8 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                             AppOwnedProfilesRoot: outputRoot,
                             MouseSensitivityOverride: GameProfileControlOptionsService.SharperMouseLookSensitivity)));
 
-                Assert.Contains("hardlinked", ex.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal(GameProfileControlOptionsService.FileCannotShareData, ex.Message);
+                Assert.DoesNotContain("hardlinked", ex.Message, StringComparison.OrdinalIgnoreCase);
                 Assert.Equal(optionsBefore, File.ReadAllBytes(optionsPath));
                 Assert.Empty(Directory.GetFiles(prepared.TargetGameRoot, "defaultoptions.bea.*.bak"));
             }

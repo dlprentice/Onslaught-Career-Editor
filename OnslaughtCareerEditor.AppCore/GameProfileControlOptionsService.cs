@@ -74,6 +74,7 @@ namespace OnslaughtCareerEditor.AppCore
         public const string OptionsFileMissing = "That copy is missing defaultoptions.bea.";
         public const string OptionsBackupMissing = "That copy is missing a defaultoptions.bea backup.";
         public const string CopyCannotUseLink = "That copy cannot use a shortcut or link.";
+        public const string FileCannotShareData = "That file cannot share its data with another file.";
 
         public static GameProfileControlOptionsResult ApplyToSafeCopy(GameProfileControlOptionsRequest request)
         {
@@ -438,7 +439,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             uint linkCount = GetWindowsHardLinkCount(path);
             if (linkCount > 1)
-                throw new InvalidOperationException($"{label} is hardlinked to another file; refusing to mutate a shared file identity.");
+                throw new InvalidOperationException(FileCannotShareData);
         }
 
         private static uint GetWindowsHardLinkCount(string path)
