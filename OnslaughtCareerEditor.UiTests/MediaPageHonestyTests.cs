@@ -75,6 +75,8 @@ public class MediaPageHonestyTests
         Assert.That(code, Does.Contain("MediaPageText.DescribeAudioEmptyState"));
         Assert.That(code, Does.Contain("MediaPageText.DescribeVideoEmptyState"));
         Assert.That(code, Does.Not.Contain("matches the current search"));
+        Assert.That(code, Does.Not.Contain("No audio found in the current install"));
+        Assert.That(code, Does.Not.Contain("No video found in the current install"));
     }
 
     [Test]
@@ -93,14 +95,20 @@ public class MediaPageHonestyTests
     }
 
     [Test]
-    public void AnEmptyLibraryWithoutASearchKeepsTheInstallLine()
+    public void AnEmptyLibraryWithoutASearchSaysWhatToDoNext()
     {
         Assert.That(
             MediaPageText.DescribeAudioEmptyState(true, ""),
-            Does.Contain("No audio found"));
+            Is.EqualTo(MediaPageText.EmptyLibraryNextStep));
         Assert.That(
             MediaPageText.DescribeVideoEmptyState(true, "   "),
-            Does.Contain("No video found"));
+            Is.EqualTo(MediaPageText.EmptyLibraryNextStep));
+        Assert.That(MediaPageText.EmptyLibraryNextStep, Does.Contain("game folder"));
+        Assert.That(MediaPageText.EmptyLibraryNextStep, Does.Contain("another folder"));
+        Assert.That(MediaPageText.EmptyLibraryNextStep, Does.Not.Contain("No audio found"));
+        Assert.That(MediaPageText.EmptyLibraryNextStep, Does.Not.Contain("No video found"));
+        Assert.That(MediaPageText.EmptyLibraryNextStep, Does.Not.Contain(@":\"));
+        Assert.That(MediaPageText.EmptyLibraryNextStep, Does.Not.Contain("/"));
         Assert.That(
             MediaPageText.DescribeAudioEmptyState(false, "music"),
             Does.Contain("not configured"));

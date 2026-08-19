@@ -38,6 +38,9 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         public const string EmptySearchNextStep =
             "Try another word, or clear the search.";
 
+        public const string EmptyLibraryNextStep =
+            "Check the game folder still has its media files, or choose another folder.";
+
         public static string DescribeAudioEmptyState(bool hasGameDirectory, string? search)
         {
             if (!hasGameDirectory)
@@ -46,7 +49,7 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
             }
 
             return string.IsNullOrWhiteSpace(search)
-                ? "No audio found in the current install."
+                ? EmptyLibraryNextStep
                 : EmptySearchNextStep;
         }
 
@@ -58,7 +61,7 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
             }
 
             return string.IsNullOrWhiteSpace(search)
-                ? "No video found in the current install."
+                ? EmptyLibraryNextStep
                 : EmptySearchNextStep;
         }
 
