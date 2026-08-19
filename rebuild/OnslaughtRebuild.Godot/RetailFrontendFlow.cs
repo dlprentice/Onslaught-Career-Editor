@@ -1475,6 +1475,12 @@ public sealed partial class RetailFrontendFlow : Control
                 ShadowScaleBoost,
                 ShadowScaleBoost,
                 new Color(ShadowTint, ShadowTint.A * iconFade));
+            // Colour at 0x004640DC is RetailMainMenuSelectedIconColor: settled
+            // ((255<<8)-255)<<16 | 0x00FFFFFF is 0xFEFFFFFF, which is not
+            // this BracketTint 0xFE7F7F7F (frame 3000 draw 31), so the draw
+            // keeps BracketTint and does not call SubmittedColor. Body scale
+            // stays 1.0; this is not a 29% scale. ChromeTint and ShadowTint
+            // stay put.
             DrawSurfaceCentered(icon, 457f, 355f, 1f, 1f, new Color(iconTint, iconTint.A * iconFade));
         }
 
