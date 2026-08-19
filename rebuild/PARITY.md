@@ -99,6 +99,7 @@ Owner paths are relative to the repository root; test names are relative to
 | `CCareer::Update` Level 100 ranking only-if-greater | `Career.cpp:405-406` stores `mRanking` only when the snapshot is strictly greater. A worse Level 100 replay leaves the already-pinned first-play 1.0f / S. Score-time stays unclaimed. No new secondaries | `rebuild/OnslaughtRebuild.Core/RetailCareerReCalcLinks.cs` | `RetailCareerCampaign.ApplyUpdate` | `RetailCareerCampaignApplyUpdateTests.Level100Won_ApplyUpdateDoesNotDowngradeAnExistingBetterRanking` | 1 | assign the snapshot ranking even when it is not greater |
 | `CGame::FillOutEndLevelData` then `CCareer::Update` wait for the Level 100 Won countdown | `RestartLoopRunLevel` FillOut at `game.cpp:1552` after the main loop quits; that quit waits for the already-pinned 5.0 f store (`game.cpp:1997-2004`). `CFrontEnd::Init` then calls `CAREER.Update` (`FrontEnd.cpp:67`). `TryApply` returns false on `SuccessCountdown`. Score-time stays unclaimed. No new secondaries | `rebuild/OnslaughtRebuild.Core/Level100WonCareerHandoff.cs` | `Level100WonCareerHandoff.TryApply` | `Level100WonCareerHandoffTests.SuccessCountdownDoesNotApplyFillOutEvenIfWonIsClaimed` | 1 | accept `SuccessCountdown` on `TryApply` |
 | `CCareer::UpdateGoodieStates` after Level 100 Won | `0x0041c470`. Training is not an early-out. Re-read on specimen `74154bfa…`: `0x0041c4c7` `83 3a 64` = `cmp [edx], 0x64`; `0x0041de68` `6a 43` = `push 'C'`; `0x0041ea4f` `6a 42` = `push 'B'` (one byte after the note's `0x0041ea4e`); `0x0041f70e` `6a 41` = `push 'A'`. `COMPLETE_LEVEL(100)` stores `GS_NEW=2` on 0 and 8; `GRADE(100) >= C/B/A` stores 78 / 121 / 164. FillOut 1.0f is S so all five unlock. Score-time / base-things / kill totals stay unclaimed. No new secondaries | `rebuild/OnslaughtRebuild.Core/RetailCareerUpdateGoodieStates.cs` | `RetailCareerUpdateGoodieStates.Update` | `RetailCareerCampaignApplyUpdateTests.Level100Won_ApplyUpdateUnlocksTrainingGoodiesForAnS` | 1 | skip `UpdateGoodieStates` after a Won `ApplyUpdate` |
+| `CCareer::UpdateGoodieStates` Level 100 grade bands | Same body. Ranking 0.25f is already pinned as C (`'D' - floor(0.25*4)`). `GRADE(100) >= C` unlocks 78; `>= B` / `>= A` stay closed so 121 and 164 stay `GS_UNKNOWN`. Score-time stays unclaimed. No new secondaries | `rebuild/OnslaughtRebuild.Core/RetailCareerUpdateGoodieStates.cs` | `RetailCareerUpdateGoodieStates.Update` | `RetailCareerCampaignApplyUpdateTests.Level100Won_ApplyUpdateGradeCUnlocksOnlyTheCTrainingGoodies` | 1 | unlock 121 / 164 on any complete |
 
 Two things this table deliberately does **not** claim. It does not claim these
 contracts are graded `REBUILD_READY`: that grade is a campaign artifact and
@@ -127,14 +128,15 @@ same `TryApply` owner as the Won handoff. The SuccessCountdown skip
 row names that same `TryApply` owner; it does not add another
 implementation. The training-goodie row names
 `RetailCareerUpdateGoodieStates.Update`; `ApplyUpdate` is the
-already-pinned caller. Charge and the
+already-pinned caller. The grade-band row names that same
+`Update` owner; it does not add another implementation. Charge and the
 career graph are not in `StateHasher` because they do not yet change fire,
 movement, or any other hashed field. So no cold-start or
 full-chain trace can reach the other sixteen, and the focused test is the
 only falsifier they have. That is exactly
 the precedent the jet-friction row set: a green replay suite there was
 *vacuous* with respect to the constant it was supposed to guard, because the
-jet throttle caps below the gate's band. The seventeenth through thirtieth
+jet throttle caps below the gate's band. The seventeenth through thirty-first
 rows' mutation kills were measured on 2026-08-18 and 2026-08-19 in this worktree; they are
 not among the 17 files
 under `local-lab/rebuild-parity-mutation-kills-2026-08-17/`.
