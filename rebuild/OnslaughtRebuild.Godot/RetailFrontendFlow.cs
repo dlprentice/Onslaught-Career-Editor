@@ -1398,6 +1398,11 @@ public sealed partial class RetailFrontendFlow : Control
             // RetailMainMenuRowY: [esp+0x10] seeds 268 / index
             // -1. Nonzero [0x0083D990] overwrites 304 / index 0.
             // Dest Y keeps rowY - 8. Do not invent dest Y.
+            // RetailMainMenuLanguagePitch: language fall-through
+            // fld / fadd 36.0 at 0x00463647, then the shared
+            // tail. Reached from 0x004634EE and after 0x0046363B.
+            // Next slot is NonzeroSlotY. Dest Y keeps rowY - 8.
+            // Do not invent dest from 36.0 or the nearby 284 push.
             float rowY = RetailMainMenuRowY.NonzeroSlotY + (index * MenuPitch);
             bool selected = index == _session.SelectedMainIndex;
             // Draw the string as authored. english.json holds "Continue Game" /
