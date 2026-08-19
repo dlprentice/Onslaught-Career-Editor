@@ -82,6 +82,49 @@ public sealed class RetailFillOutEndLevelDataTests
     }
 
     /// <summary>
+    /// Last-wins RLWD dword after the percentage time is
+    /// <c>+0x147c2</c> = 1.0 into <c>CGame+0x110</c> (not the
+    /// <c>LoadLevel</c> leftover 0.5). Mid-band elapsed therefore does
+    /// not scale the score. Mutation: adopting 0.5 turns a 140 mid-band
+    /// score at elapsed 400 into ranking 0.25. First-play elapsed and
+    /// score stay unclaimed — this does not rewrite
+    /// <see cref="RetailFillOutEndLevelData.ForLevel100Won"/>. Do not
+    /// invent secondaries.
+    /// </summary>
+    [Fact]
+    public void Level100Won_ScoreTimeArmDoesNotScaleAMidScoreByElapsedBecauseScorePercentageIsOne()
+    {
+        const int midScore = 140;
+
+        float early = RetailFillOutEndLevelData.AfterScoreTimeArm(
+            preArmRanking: 1.0f,
+            elapsedTime: 0.0f,
+            RetailFillOutEndLevelData.Level100FullScoreTime,
+            RetailFillOutEndLevelData.Level100PercentageScoreTime,
+            RetailFillOutEndLevelData.Level100ScorePercentage,
+            score: midScore,
+            RetailFillOutEndLevelData.Level100SGradeScore,
+            RetailFillOutEndLevelData.Level100DGradeScore);
+        float midBand = RetailFillOutEndLevelData.AfterScoreTimeArm(
+            preArmRanking: 1.0f,
+            elapsedTime: 400.0f,
+            RetailFillOutEndLevelData.Level100FullScoreTime,
+            RetailFillOutEndLevelData.Level100PercentageScoreTime,
+            RetailFillOutEndLevelData.Level100ScorePercentage,
+            score: midScore,
+            RetailFillOutEndLevelData.Level100SGradeScore,
+            RetailFillOutEndLevelData.Level100DGradeScore);
+
+        Assert.Equal(0.5f, early);
+        Assert.Equal(0.5f, midBand);
+        Assert.NotEqual(0.25f, midBand);
+        Assert.Equal(1.0f, RetailFillOutEndLevelData.ForLevel100Won().Ranking);
+        Assert.All(
+            RetailFillOutEndLevelData.ForLevel100Won().SecondaryStatuses,
+            status => Assert.Equal(0, status));
+    }
+
+    /// <summary>
     /// <c>game.cpp:967</c> stores <c>mRanking = 1.0f</c> before the
     /// score-time arm. Level 100's secondary count is 0, so the 0.4 / 0.6
     /// clamp never runs. Mutation: defaulting the snapshot ranking to the
