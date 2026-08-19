@@ -118,6 +118,11 @@ public class SaveLabPageHonestyTests
         Assert.That(options, Does.Not.Contain("Set the game directory in Settings or browse manually."));
         Assert.That(page, Does.Contain("Set the game folder in Settings or browse manually."));
         Assert.That(options, Does.Contain("Set the game folder in Settings or browse manually."));
+
+        string xaml = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.WinUI", "Pages", "SavesPage.xaml"));
+        Assert.That(xaml, Does.Not.Contain("changing the game directory in Settings"));
+        Assert.That(xaml, Does.Contain("changing the game folder in Settings"));
     }
 
     [Test]

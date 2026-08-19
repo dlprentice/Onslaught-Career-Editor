@@ -149,7 +149,7 @@
                             <TextBlock Text="Detected files"
                                        FontSize="18"
                                        FontWeight="SemiBold" />
-                            <TextBlock Text="Pick from detected save and options files, or refresh after changing the game directory in Settings."
+                            <TextBlock Text="Pick from detected save and options files, or refresh after changing the game folder in Settings."
                                        Style="{StaticResource SectionBodyTextStyle}" />
                             <ComboBox x:Name="DetectedFilesComboBox"
                                       AutomationProperties.AutomationId="SaveAnalyzerDetectedFilesComboBox"
