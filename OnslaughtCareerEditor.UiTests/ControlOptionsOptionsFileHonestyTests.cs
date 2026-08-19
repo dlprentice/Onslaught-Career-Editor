@@ -20,6 +20,11 @@ public class ControlOptionsOptionsFileHonestyTests
         Assert.That(source, Does.Not.Contain(
             "throw new FileNotFoundException(\"Safe game copy is missing defaultoptions.bea.\", optionsPath);"));
         Assert.That(source, Does.Contain("That copy is missing defaultoptions.bea."));
+        Assert.That(source, Does.Contain("That copy is missing a defaultoptions.bea backup."));
+        Assert.That(source, Does.Contain("OptionsFileMissing"));
+        Assert.That(source, Does.Contain("OptionsBackupMissing"));
         Assert.That(source, Does.Not.Contain("FileNotFoundException(\"That copy is missing defaultoptions.bea.\","));
+        Assert.That(source, Does.Not.Contain("FileNotFoundException(OptionsFileMissing,"));
+        Assert.That(source, Does.Not.Contain("FileNotFoundException(OptionsBackupMissing,"));
     }
 }

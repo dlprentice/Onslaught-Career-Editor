@@ -898,7 +898,7 @@ namespace OnslaughtCareerEditor.AppCore
                     throw new InvalidOperationException("Playable copied game folder control-options manifest target does not match defaultoptions.bea.");
 
                 if (!File.Exists(expectedOptionsPath))
-                    throw new FileNotFoundException("Playable copied game folder control-options target is missing.", expectedOptionsPath);
+                    throw new FileNotFoundException(GameProfileControlOptionsService.OptionsFileMissing);
 
                 string expectedHash = RequiredString(root, "hashAfter", "control-options manifest");
                 string actualHash = ComputeSha256(expectedOptionsPath);
@@ -937,7 +937,7 @@ namespace OnslaughtCareerEditor.AppCore
                     }
 
                     if (!File.Exists(backupPath))
-                        throw new FileNotFoundException("Playable copied game folder control-options backup is missing.", backupPath);
+                        throw new FileNotFoundException(GameProfileControlOptionsService.OptionsBackupMissing);
 
                     if (backupEl.TryGetProperty("size", out JsonElement backupSizeEl) &&
                         backupSizeEl.TryGetInt64(out long expectedBackupSize) &&

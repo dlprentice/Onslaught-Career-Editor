@@ -71,6 +71,8 @@ namespace OnslaughtCareerEditor.AppCore
         public const string FolderGone = "That folder could not be used.";
         public const string CopyFolderMissing = "That copy folder could not be found.";
         public const string ProfileFolderRequired = "An app-owned profile folder is required.";
+        public const string OptionsFileMissing = "That copy is missing defaultoptions.bea.";
+        public const string OptionsBackupMissing = "That copy is missing a defaultoptions.bea backup.";
 
         public static GameProfileControlOptionsResult ApplyToSafeCopy(GameProfileControlOptionsRequest request)
         {
@@ -105,7 +107,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             string optionsPath = Path.Combine(profileRoot, "defaultoptions.bea");
             if (!File.Exists(optionsPath))
-                throw new FileNotFoundException("That copy is missing defaultoptions.bea.");
+                throw new FileNotFoundException(OptionsFileMissing);
 
             RejectReparsePoint(optionsPath, "safe-copy defaultoptions.bea");
             RejectMultipleHardLinks(optionsPath, "Safe-copy defaultoptions.bea");
