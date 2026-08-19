@@ -123,6 +123,8 @@ namespace OnslaughtCareerEditor.AppCore
         public const string ProfileFolderRequired = "An app-owned profile folder is required.";
         public const string WorkspaceFileMustStayInside = "The workspace file must stay inside the app-owned profile folder.";
         public const string CopyMustStayInside = "That copy must stay inside the app-owned profile folder.";
+        public const string FileMustStayInsideCopy = "That file must stay inside the copy.";
+        public const string CopiedBeaMismatch = "That copy's BEA.exe does not match this copy.";
         public const string ProfileFolderInsideGame =
             "The app-owned profile folder must not sit inside the game folder.";
         public const string GameFolderInsideProfile =
@@ -933,7 +935,7 @@ namespace OnslaughtCareerEditor.AppCore
                     if (!IsSameOrUnderRoot(backupPath, resolvedGameRoot) ||
                         string.Equals(backupPath, resolvedGameRoot, StringComparison.OrdinalIgnoreCase))
                     {
-                        throw new InvalidOperationException("Playable copied game folder control-options backup path escapes the generated profile.");
+                        throw new InvalidOperationException(FileMustStayInsideCopy);
                     }
 
                     if (!File.Exists(backupPath))
@@ -972,11 +974,11 @@ namespace OnslaughtCareerEditor.AppCore
         private static string ResolveProfileRelativePath(string root, string relativePath, string label)
         {
             if (string.IsNullOrWhiteSpace(relativePath) || Path.IsPathFullyQualified(relativePath))
-                throw new InvalidOperationException($"Playable copied game folder {label} path must be package-relative.");
+                throw new InvalidOperationException(FileMustStayInsideCopy);
 
             string fullPath = Path.GetFullPath(Path.Combine(root, relativePath.Replace('/', Path.DirectorySeparatorChar)));
             if (!IsSameOrUnderRoot(fullPath, root) || string.Equals(fullPath, root, StringComparison.OrdinalIgnoreCase))
-                throw new InvalidOperationException($"Playable copied game folder {label} path escapes the generated profile.");
+                throw new InvalidOperationException(FileMustStayInsideCopy);
 
             return fullPath;
         }
@@ -995,7 +997,7 @@ namespace OnslaughtCareerEditor.AppCore
                 if (string.IsNullOrWhiteSpace(manifestExePath) ||
                     !string.Equals(resolvedManifestExePath, executablePath, StringComparison.OrdinalIgnoreCase))
                 {
-                    throw new InvalidOperationException("Playable copied game folder manifest executable path does not match the launch root.");
+                    throw new InvalidOperationException(CopiedBeaMismatch);
                 }
             }
 

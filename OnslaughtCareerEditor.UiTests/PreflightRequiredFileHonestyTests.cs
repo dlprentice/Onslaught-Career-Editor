@@ -75,6 +75,19 @@ public class PreflightRequiredFileHonestyTests
         Assert.That(source, Does.Contain("OptionsBackupMissing"));
         Assert.That(source, Does.Not.Contain("FileNotFoundException(GameProfileControlOptionsService.OptionsFileMissing,"));
         Assert.That(source, Does.Not.Contain("FileNotFoundException(GameProfileControlOptionsService.OptionsBackupMissing,"));
+        Assert.That(source, Does.Not.Contain("path must be package-relative."));
+        Assert.That(source, Does.Not.Contain("path escapes the generated profile."));
+        Assert.That(source, Does.Not.Contain("manifest executable path does not match the launch root."));
+        Assert.That(source, Does.Contain("FileMustStayInsideCopy"));
+        Assert.That(source, Does.Contain("CopiedBeaMismatch"));
+        Assert.That(GameProfilePreflightService.FileMustStayInsideCopy,
+            Is.EqualTo("That file must stay inside the copy."));
+        Assert.That(GameProfilePreflightService.CopiedBeaMismatch,
+            Is.EqualTo("That copy's BEA.exe does not match this copy."));
+        Assert.That(GameProfilePreflightService.FileMustStayInsideCopy.ToLowerInvariant(),
+            Does.Not.Contain("path"));
+        Assert.That(GameProfilePreflightService.CopiedBeaMismatch.ToLowerInvariant(),
+            Does.Not.Contain("path"));
     }
 
     [Test]
