@@ -1188,7 +1188,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     preconditionsCurrent: false,
                     launcherSucceeded: false);
                 FailWrittenSaveReveal(
-                    "The written-copy details changed or the app-owned output is missing. Write the separate copy again before showing it.",
+                    "The written-copy details changed or the written save is missing. Write the separate copy again before showing it.",
                     clearCompletion: true);
                 return;
             }
@@ -1205,7 +1205,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             else
             {
                 FailWrittenSaveReveal(
-                    "File Explorer could not be opened. The successful written save remains unchanged in the app-owned output folder; try Show again.",
+                    "File Explorer could not be opened. The successful written save remains unchanged in the output folder; try Show again.",
                     clearCompletion: false);
             }
         }
