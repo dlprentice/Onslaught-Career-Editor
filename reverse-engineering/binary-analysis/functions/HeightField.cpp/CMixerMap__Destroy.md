@@ -9,8 +9,8 @@ Evidence: MEASURED — independently re-read 2026-08-19 from official
 `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`. Twin
 `local-lab/pristine-verification-2026-07-26/pristine-target/BEA.exe`
 matches. The Ghidra database was not opened. Table name is a research
-label. Slot contents and `CMixerMap__DestroySlot` are **not** this
-proof.
+label. Slot contents are **not** this proof. DestroySlot first
+gates are on [`CMixerMap__DestroySlot.md`](CMixerMap__DestroySlot.md).
 
 > Address: `0x00523230`
 
@@ -53,7 +53,8 @@ call 0x0055db0a
 
 `0x00523210` is table label `CMixerMap__DestroySlot`. It is a
 pushed callback, not an `E8`/`E9` (image scan of that VA is 0/0).
-Its body is **not** claimed. After the iterator returns, Free
+Its body is first-gated on
+[`CMixerMap__DestroySlot.md`](CMixerMap__DestroySlot.md). After the iterator returns, Free
 `eax-4` and `[this+0] = 0`.
 
 If `[this+4]` is live: `push` it, Free, then `[this+4] = 0`.
