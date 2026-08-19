@@ -225,7 +225,7 @@ namespace OnslaughtCareerEditor.AppCore
             {
                 return new[]
                 {
-                    Node(analysis.ErrorMessage ?? "No analysis available")
+                    Node(analysis.ErrorMessage ?? AnalysisFailed)
                 };
             }
 

@@ -537,6 +537,23 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         }
 
         [Fact]
+        public void BuildAnalysisDocument_ForInvalidFileWithoutError_UsesAnalysisFailed()
+        {
+            SaveAnalysis analysis = new()
+            {
+                IsValid = false,
+                FilePath = @"C:\temp\broken.bes"
+            };
+
+            SaveAnalyzerDocument document = SaveAnalyzerService.BuildAnalysisDocument(analysis, verbose: false, dumpMystery: false);
+
+            Assert.Equal(SaveAnalyzerService.AnalysisFailed, document.StatusText);
+            Assert.Single(document.SummaryNodes);
+            Assert.Equal(SaveAnalyzerService.AnalysisFailed, document.SummaryNodes[0].Label);
+            Assert.DoesNotContain("No analysis available", document.SummaryNodes[0].Label);
+        }
+
+        [Fact]
         public void BuildAnalysisDocument_DoesNotDumpTheAnalyzerErrorOnTheStatusLine()
         {
             SaveAnalysis analysis = new()
