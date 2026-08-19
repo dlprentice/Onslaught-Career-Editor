@@ -102,7 +102,10 @@ public static class RetailCareerUpdateGoodieStates
     /// <c>Career.cpp:690 / 698 / 769 / 813 / 857</c>, <c>0x0041c470</c>,
     /// then the already-cited <c>CountGoodies</c> delta into
     /// <c>new_goodie_count</c> and the goodie-0 <c>first_goodie</c> latch
-    /// (<c>Career.cpp:686 / 688 / 895-900</c>).
+    /// (<c>Career.cpp:686 / 688 / 895-900</c>). After
+    /// <c>GetAndResetGoodieNewCount</c> / <c>GetAndResetFirstGoodie</c>
+    /// a replay <c>ApplyUpdate</c> leaves both at 0: the count add is
+    /// delta 0 and the latch is transition-only.
     /// <c>mPendingExtraGoodies</c> and episode instruction marks stay
     /// unclaimed.
     /// </summary>

@@ -604,6 +604,41 @@ public sealed class RetailCareerCampaignApplyUpdateTests
         Assert.All(snapshot.SecondaryStatuses, status => Assert.Equal(0, status));
     }
 
+    /// <summary>
+    /// <c>GetAndResetGoodieNewCount</c> / <c>GetAndResetFirstGoodie</c>
+    /// (<c>Career.cpp:1411-1424</c>) consume the already-pinned first-play
+    /// latch. A second <c>ApplyUpdate</c> then leaves both globals at 0:
+    /// <c>CountGoodies</c> delta is 0 (<c>Career.cpp:895-897</c>) and
+    /// <c>first_goodie</c> is transition-only — goodie 0 is no longer
+    /// <c>GOODIE_NOT_DONE</c> at entry (<c>Career.cpp:688 / 899-900</c>).
+    /// Replay without reset does not uniquely prove this: it leaves the
+    /// latch at 1 either way. Mutation: re-arm <c>first_goodie</c> whenever
+    /// goodie 0 is currently <c>GS_NEW</c>. <c>mPendingExtraGoodies</c>
+    /// and episode instruction marks stay unclaimed. No new secondaries.
+    /// </summary>
+    [Fact]
+    public void Level100Won_ApplyUpdateReplayAfterGetAndResetLeavesGoodieLatchesClear()
+    {
+        RetailCareerCampaign career = RetailCareerReCalcLinks.CreateColdTrainingSlice();
+        RetailEndLevelSnapshot snapshot = RetailFillOutEndLevelData.ForLevel100Won();
+
+        career.ApplyUpdate(snapshot);
+        Assert.Equal(5, career.Counters.GetAndResetGoodieNewCount());
+        Assert.Equal(1, career.Counters.GetAndResetFirstGoodie());
+        Assert.Equal(0, career.Counters.NewGoodieCount);
+        Assert.Equal(0, career.Counters.FirstGoodie);
+
+        career.ApplyUpdate(snapshot);
+
+        Assert.Equal(0, career.Counters.NewGoodieCount);
+        Assert.Equal(0, career.Counters.FirstGoodie);
+        Assert.Equal(
+            RetailCareerGoodieState.New,
+            career.Goodies.Get(RetailCareerUpdateGoodieStates.CompleteWorld100Bio));
+        Assert.Equal(1, career.Nodes.Find(100)!.Complete);
+        Assert.All(snapshot.SecondaryStatuses, status => Assert.Equal(0, status));
+    }
+
     private static int CountExistingBaseThings(RetailCareerNode node)
     {
         int count = 0;
