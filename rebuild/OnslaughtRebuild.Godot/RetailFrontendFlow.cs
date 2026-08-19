@@ -2423,11 +2423,25 @@ public sealed partial class RetailFrontendFlow : Control
                 // store is 0x00460F85 fstp [esp+0x18].
                 // That is a scaled local, not dest. The
                 // later fld [esp+0x94] / fcomp 1.0 at
-                // 0x00460FD8 is later. Do not invent dest
-                // from 60.0, 0.5, or 320.0.
+                // 0x00460FD8 is
+                // RetailLevelSelectLaterEsp94One. Do not
+                // invent dest from 60.0, 0.5, or 320.0.
                 _ = RetailLevelSelectLater60.Factor;
                 _ = RetailLevelSelectLater60.Half;
                 _ = RetailLevelSelectLater60.Addend;
+                // RetailLevelSelectLaterEsp94One: later leftover
+                // after the later 60.0/0.5/320.0 scale is
+                // fld [esp+0x94] / fcomp [0x005D8568]
+                // (1.0). Official 74154bfa independently
+                // re-read this cycle. First consumer of
+                // the equal-1 fall-through is 0x00460FEC
+                // fld [esp+0x18]. That is a compare of
+                // the [esp+0x94] local, not dest. The
+                // later fadd 20.0 at 0x00460FF0 is later.
+                // Do not invent dest from 1.0 or 20.0.
+                _ = RetailLevelSelectLaterEsp94One.Applies(
+                    RetailLevelSelectLaterEsp94One.CompareOne);
+                _ = RetailLevelSelectLaterEsp94One.CompareOne;
             }
         }
 
