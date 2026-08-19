@@ -236,17 +236,17 @@ REHEARSAL_COHORTS: dict[str, dict] = {
         },
     },
     "name-cohort-placeholder-unique-owner": {
-        # PRE is current live POST (db.18630). DRAFT: not live-authorized
-        # until a reviewer GO on T3/VFuncSlot → Class__VFunc_N_addr.
-        "backup": BACKUPS / "2026-08-18-name-cohort-fun-unique-owner-post-live",
+        # PRE is the verified off-volume backup taken immediately before the
+        # 2026-08-18 live apply (db.18630). Replay against that PRE.
+        "backup": BACKUPS / "2026-08-18-name-cohort-placeholder-unique-owner-pre-live",
         "spec": SPECS / "name-cohort-placeholder-unique-owner.spec.tsv",
         "manifest": SPECS / "name-cohort-placeholder-unique-owner-manifest.tsv",
-        "rehearsalOnly": True,
+        "rehearsalOnly": False,
         "archived": {
-            "source": "REHEARSAL ONLY - not live-authorized "
-                      "(T3/VFuncSlot placeholder unique-owner; needs reviewer GO)",
+            "source": "local-lab/name-cohort-placeholder-unique-owner-ceremony-2026-08-18/"
+                      "{apply,readback}.json (live, 2026-08-18)",
             "rows": 7,
-            "applied": 0,
+            "applied": 7,
             "preFunctions": 8329, "postFunctions": 8329,
             "preInstructions": 551232, "postInstructions": 551232,
             "preReferences": 234558, "postReferences": 234558,
