@@ -7,7 +7,8 @@ namespace OnslaughtRebuild.GodotClient;
 /// <summary>
 /// The Godot scene's player-visible frontend path: Lost Toys / opening
 /// FMV / splash skip, then CFEPIntro click-to-start, then CFEPMain row
-/// accept (Campaign / Options / Exit).
+/// accept (Campaign / Options / Exit), then Options apply pulse and
+/// dropdown confirm / right-click cancel.
 ///
 /// <para>No Godot types. <see cref="RetailFrontendFlow"/> and
 /// <see cref="RetailStartupSequence"/> call the same accept/skip predicates
@@ -98,5 +99,50 @@ public sealed class RetailFrontendScenePath
 
         session.SelectMainIndex(index);
         return session.Confirm() == RetailFrontendSignal.PageChanged;
+    }
+
+    /// <summary>
+    /// Right-mouse latch SET into the expanded-list cancel leftover.
+    /// The helper fields sit idle on the frontend page.
+    /// </summary>
+    public static bool AcceptsOptionsPointerCancel(bool rightDown) =>
+        RetailOptionsDropdownListCancel.Applies(
+            helperNonzero: false,
+            latch: RetailFrontendLatchToButton.Set(rightDown));
+
+    public static bool ApplyPulseIsPending(RetailOptionsMenu menu)
+    {
+        ArgumentNullException.ThrowIfNull(menu);
+        return RetailOptionsApplyPulse.ShouldPulse(menu.HasPendingChanges);
+    }
+
+    public bool TryConfirmOptions(RetailOptionsMenu menu, out RetailOptionsSignal signal) =>
+        TryConfirmOptions(menu, StartupMediaActive, out signal);
+
+    public static bool TryConfirmOptions(
+        RetailOptionsMenu menu,
+        bool startupMediaActive,
+        out RetailOptionsSignal signal)
+    {
+        ArgumentNullException.ThrowIfNull(menu);
+        signal = RetailOptionsSignal.None;
+        if (startupMediaActive)
+        {
+            return false;
+        }
+
+        signal = menu.Confirm();
+        return signal != RetailOptionsSignal.None;
+    }
+
+    public bool TryCancelOptionsDropdown(RetailOptionsMenu menu, bool rightDown)
+    {
+        ArgumentNullException.ThrowIfNull(menu);
+        if (StartupMediaActive || !AcceptsOptionsPointerCancel(rightDown))
+        {
+            return false;
+        }
+
+        return menu.CancelExpanded();
     }
 }

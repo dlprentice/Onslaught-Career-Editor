@@ -7,7 +7,8 @@ namespace OnslaughtRebuild.Client.Tests;
 
 /// <summary>
 /// The player-visible cold-start path the Godot scene drives: Lost Toys /
-/// opening FMV / splash skip, then CFEPIntro click-to-start, then CFEPMain.
+/// opening FMV / splash skip, then CFEPIntro click-to-start, then CFEPMain,
+/// then Options apply pulse and dropdown confirm / right-click cancel.
 /// Isolated helper pins already exist. These cases kill a path that only
 /// those helpers know about, or a host that still uses
 /// <c>ConfirmForSmoke</c> instead of the same accept owner.
@@ -147,7 +148,88 @@ public sealed class RetailFrontendScenePathTests
 
         Assert.Contains("RetailFrontendScenePath.CanAcceptMainMenuRow", mainArm, StringComparison.Ordinal);
         Assert.DoesNotContain("RetailFrontendLatchToButton", mainArm, StringComparison.Ordinal);
-        Assert.Contains("RetailFrontendLatchToButton.Set", cancel, StringComparison.Ordinal);
+        Assert.Contains("RetailFrontendScenePath.AcceptsOptionsPointerCancel", cancel, StringComparison.Ordinal);
+        Assert.DoesNotContain("RetailFrontendLatchToButton.Set", mainArm, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void OptionsDeferredDropdownPulsesApplyUntilApplyAndRightClickCancels()
+    {
+        var path = new RetailFrontendScenePath();
+        var session = AfterClickToStart(path);
+        Assert.True(path.TryAcceptMainMenuRow(session, 5));
+        Assert.Equal(RetailFrontendScreen.Options, session.Screen);
+
+        var menu = new RetailOptionsMenu();
+        menu.Enter(RetailOptionsPage.Sound);
+        int soundQuality = IndexOfLabel(menu, "Sound quality:");
+        Assert.Equal(RetailOptionsApplyTiming.OnApply, menu.Rows[soundQuality].Timing);
+        Assert.True(menu.Hover(soundQuality));
+        Assert.True(path.TryConfirmOptions(menu, out RetailOptionsSignal expand));
+        Assert.Equal(RetailOptionsSignal.ValueChanged, expand);
+        Assert.True(menu.IsExpanded);
+
+        int committed = menu.SelectedRow.CommittedIndex;
+        int other = committed == 0 ? 1 : 0;
+        Assert.True(menu.SelectState(other));
+        Assert.True(path.TryConfirmOptions(menu, out RetailOptionsSignal closed));
+        Assert.Equal(RetailOptionsSignal.ValueChanged, closed);
+        Assert.False(menu.IsExpanded);
+        Assert.Equal(other, menu.Rows[soundQuality].CurrentIndex);
+        Assert.Equal(committed, menu.Rows[soundQuality].CommittedIndex);
+        Assert.Equal(0, menu.Settings.SoundQuality);
+        Assert.True(RetailFrontendScenePath.ApplyPulseIsPending(menu));
+        Assert.True(
+            RetailOptionsApplyPulse.DropdownRowIsPending(
+                menu.Rows[soundQuality].CommittedIndex,
+                menu.Rows[soundQuality].CurrentIndex));
+        Assert.NotEqual(
+            RetailOptionsApplyPulse.IdlePackedColor,
+            RetailOptionsApplyPulse.PackedColor(
+                RetailFrontendScenePath.ApplyPulseIsPending(menu),
+                0f));
+
+        int apply = IndexOfLabel(menu, "Apply");
+        Assert.True(menu.Hover(apply));
+        Assert.True(path.TryConfirmOptions(menu, out RetailOptionsSignal applied));
+        Assert.Equal(RetailOptionsSignal.Applied, applied);
+        Assert.False(RetailFrontendScenePath.ApplyPulseIsPending(menu));
+        Assert.Equal(other, menu.Settings.SoundQuality);
+
+        Assert.True(menu.Hover(soundQuality));
+        Assert.True(path.TryConfirmOptions(menu, out _));
+        int next = menu.SelectedRow.CurrentIndex == 0 ? 1 : 0;
+        Assert.True(menu.SelectState(next));
+        Assert.False(path.TryCancelOptionsDropdown(menu, rightDown: false));
+        Assert.True(menu.IsExpanded);
+        Assert.True(path.TryCancelOptionsDropdown(menu, rightDown: true));
+        Assert.False(menu.IsExpanded);
+        Assert.Equal(other, menu.SelectedRow.CurrentIndex);
+        Assert.False(RetailFrontendScenePath.AcceptsOptionsPointerCancel(rightDown: false));
+        Assert.True(RetailFrontendScenePath.AcceptsOptionsPointerCancel(rightDown: true));
+    }
+
+    [Fact]
+    public void FlowDrivesOptionsApplyConfirmAndRightClickCancelFromThePath()
+    {
+        string flow = ReadGodotSource("RetailFrontendFlow.cs");
+        string options = ReadGodotSource("RetailFrontendFlow.Options.cs");
+        string input = SliceUntil(flow, "public override void _Input", "public override void _Draw");
+        string confirm = Slice(options, "private void ConfirmOptions(");
+        string cancel = Slice(options, "private bool HandleOptionsPointerCancel");
+        string draw = Slice(options, "private void DrawOptionRow");
+        string pointerCancel = Slice(flow, "private bool HandlePointerCancel(");
+
+        Assert.Contains("MouseButton.Right", input, StringComparison.Ordinal);
+        Assert.Contains("HandlePointerCancel", input, StringComparison.Ordinal);
+        Assert.Contains("RetailFrontendScenePath.TryConfirmOptions", confirm, StringComparison.Ordinal);
+        Assert.Contains("RetailFrontendScenePath.AcceptsOptionsPointerCancel", cancel, StringComparison.Ordinal);
+        Assert.Contains("HandleOptionsPointerCancel", pointerCancel, StringComparison.Ordinal);
+        Assert.Contains("RetailOptionsApplyPulse.PackedColor", draw, StringComparison.Ordinal);
+        Assert.Contains("DropdownRowIsPending", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("RetailFrontendScenePath", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("ConfirmForSmoke", confirm, StringComparison.Ordinal);
+        Assert.DoesNotContain("RetailFrontendLatchToButton", Slice(flow, "private bool HandlePointerConfirm("), StringComparison.Ordinal);
     }
 
     private static RetailFrontendSession AfterClickToStart(RetailFrontendScenePath path)
@@ -157,6 +239,20 @@ public sealed class RetailFrontendScenePathTests
         Assert.True(path.TryAcceptClickToStartMouse(session, 320f, 240f));
         Assert.Equal(RetailFrontendScreen.MainMenu, session.Screen);
         return session;
+    }
+
+    private static int IndexOfLabel(RetailOptionsMenu menu, string label)
+    {
+        for (int i = 0; i < menu.Rows.Count; i++)
+        {
+            if (string.Equals(menu.Rows[i].Label, label, StringComparison.Ordinal))
+            {
+                return i;
+            }
+        }
+
+        Assert.Fail(label);
+        return -1;
     }
 
     private static string ReadGodotSource(string fileName) =>
@@ -187,5 +283,14 @@ public sealed class RetailFrontendScenePathTests
             caseLabel.Length,
             StringComparison.Ordinal);
         return next >= 0 ? arm[..next] : arm;
+    }
+
+    private static string SliceUntil(string source, string signature, string endSignature)
+    {
+        int start = source.IndexOf(signature, StringComparison.Ordinal);
+        Assert.True(start >= 0, signature);
+        string rest = source[start..];
+        int next = rest.IndexOf(endSignature, signature.Length, StringComparison.Ordinal);
+        return next >= 0 ? rest[..next] : rest;
     }
 }

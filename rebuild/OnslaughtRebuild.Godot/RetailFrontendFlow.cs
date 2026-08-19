@@ -943,6 +943,9 @@ public sealed partial class RetailFrontendFlow : Control
             InputEventMouseButton button when
                 button.Pressed && button.ButtonIndex == MouseButton.Left =>
                 HandlePointerConfirm(button.Position),
+            InputEventMouseButton button when
+                button.Pressed && button.ButtonIndex == MouseButton.Right =>
+                HandlePointerCancel(),
             InputEventKey key when key.Pressed && !key.Echo => HandleKey(key),
             _ => false,
         };
@@ -3119,6 +3122,16 @@ public sealed partial class RetailFrontendFlow : Control
             default:
                 return false;
         }
+    }
+
+    private bool HandlePointerCancel()
+    {
+        if (_session.Screen != RetailFrontendScreen.Options)
+        {
+            return false;
+        }
+
+        return HandleOptionsPointerCancel(rightDown: true);
     }
 
     private bool HandleKey(InputEventKey key)

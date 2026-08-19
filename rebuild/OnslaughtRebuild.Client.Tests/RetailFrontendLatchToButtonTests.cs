@@ -231,9 +231,7 @@ public sealed class RetailFrontendLatchToButtonTests
         string confirm = Slice(options, "private bool HandleOptionsPointerConfirm");
         string cancel = Slice(options, "private bool HandleOptionsPointerCancel");
 
-        Assert.Contains("RetailFrontendLatchToButton", cancel, StringComparison.Ordinal);
-        Assert.Contains("RetailFrontendLatchToButton.Set", cancel, StringComparison.Ordinal);
-        Assert.Contains("RetailOptionsDropdownListCancel.Applies", cancel, StringComparison.Ordinal);
+        Assert.Contains("RetailFrontendScenePath.AcceptsOptionsPointerCancel", cancel, StringComparison.Ordinal);
         Assert.DoesNotContain("RetailFrontendLatchToButton", motion, StringComparison.Ordinal);
         Assert.DoesNotContain("RetailFrontendLatchToButton", confirm, StringComparison.Ordinal);
         Assert.DoesNotContain("RetailFrontendLatchToButton", dropdown, StringComparison.Ordinal);
