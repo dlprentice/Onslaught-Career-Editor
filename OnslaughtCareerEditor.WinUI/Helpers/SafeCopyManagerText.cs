@@ -90,6 +90,9 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         public const string CheckFailure =
             "That copy could not be checked. Nothing was changed.";
 
+        public const string CopyMustStayInside =
+            "That copy must stay inside the profile folder.";
+
         public static string DescribeDeleteFailure(string displayName)
         {
             return $"Could not delete {displayName}. Nothing was changed.";
@@ -111,6 +114,9 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
 
             if (LooksLikeAPathOrDump(removal.Message) || string.IsNullOrWhiteSpace(removal.Message))
                 return DescribeDeleteFailure(displayName);
+
+            if (string.Equals(removal.Message, SafeCopySaveRescueService.CopyMustStayInside, StringComparison.Ordinal))
+                return CopyMustStayInside;
 
             return removal.Message;
         }
