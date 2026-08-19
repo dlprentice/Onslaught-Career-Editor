@@ -1,7 +1,7 @@
 # CComplexThing function map
 
 Status: active static function map
-Last updated: 2026-08-18 (CUnit slot 24 Return1f is 1.0f)
+Last updated: 2026-08-18 (CallEventId5 wrapper vs inner)
 Source File: `C:\dev\ONSLAUGHT2\thing.cpp` (SEH `__FILE__` pointer
 `0x006331c0` read out of `CComplexThing__SetScript`) | Binary: BEA.exe,
 SHA-256
@@ -109,6 +109,14 @@ re-read 2026-08-18:
 | --- | --- | --- | --- |
 | `0x0044cd80` | `CFeature__VFunc_50_0044cd80` | If `TF_DYING` already set, return 0. Else set bit2, `CallEventId5` if `+0x74`, return 1. No `AddShutdownEvent`. Zero direct `E8` — slot 50 of the `CFeature` vtable at `0x005e45e0` (COLOC `0x006184c0`). | live |
 | `0x004fd140` | `CUnit__MarkDestroyedAndCleanupLinks` | If `TF_DYING` already set, return 0. Unlink (`0x004e1130` on `0x00896988`), set bit2, optional `+0x164` count teardown, optional `+0x178` call `0x004443f0`, **then** `CallEventId5` if `+0x74`, then `+0x144` / `+0x18c` cleanup, return 1. Nine direct `E8`s. Slot 50 of three vtables (`0x005dd788` COLOC `0x00615728`, `0x005df998` COLOC `0x00617050`, `0x005e1490` COLOC `0x00617a30`). | live |
+
+Independently re-read 2026-08-18 (cycle 10): **zero** `.text` `E8`/`E9`
+land on the inner `CallEvent` site `0x00533685`. The three `E8`s land on
+wrapper `0x00533660` (`push 5` at `0x0053367d`) at `0x0044cd98` /
+`0x004fd1e8` / `0x004f444d`. Slot 14's nuller is
+`mov dword [esi+0x74], 0` at `0x004f43f4` (`c7 46 74 00 00 00 00`).
+A 32/30 slot-50 class census was reported by `t_f2e7ff28` and is
+**not** adopted here.
 
 So shipped `started_dying` bodies (142 objects) are reachable from
 feature/unit slot-50 overrides, not from `CComplexThing__StartDieProcess`.
