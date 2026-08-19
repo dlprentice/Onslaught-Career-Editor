@@ -310,6 +310,18 @@ public class SaveEditorHonestyTests
     }
 
     [Test]
+    public void APatchCatchDoesNotInterpolateTheException()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot, "OnslaughtCareerEditor.AppCore", "BesFilePatcher.cs"));
+
+        Assert.That(source, Does.Contain("PatchUnreadable"));
+        Assert.That(source, Does.Not.Contain("return PatchResult.Fail(ex.Message);"));
+        Assert.That(BesFilePatcher.PatchUnreadable, Does.Contain("Nothing was changed"));
+        Assert.That(BesFilePatcher.PatchUnreadable, Does.Not.Contain(":\\"));
+    }
+
+    [Test]
     public void AMissingSaveDoesNotDumpThePathOnPatch()
     {
         string missing = Path.Combine(Path.GetTempPath(), $"absent-{Guid.NewGuid():N}.bes");
@@ -325,6 +337,44 @@ public class SaveEditorHonestyTests
         Assert.That(result.Message, Does.Not.Contain(missing));
         Assert.That(result.Message, Does.Not.Contain(":\\"));
         Assert.That(result.Message, Does.Contain("Nothing was changed"));
+    }
+
+    [Test]
+    public void ALockedOutputDoesNotDumpTheExceptionOnPatch()
+    {
+        string tempDir = Path.Combine(Path.GetTempPath(), $"onslaught-locked-out-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDir);
+        try
+        {
+            string input = Path.Combine(tempDir, "career.bes");
+            string output = Path.Combine(tempDir, "out.bes");
+            File.Copy(GoldSavePath, input);
+            File.Copy(GoldSavePath, output);
+
+            using (new FileStream(output, FileMode.Open, FileAccess.Read, FileShare.None))
+            {
+                PatchResult result = SaveEditorService.PatchSave(new SavePatchRequest
+                {
+                    InputPath = input,
+                    OutputPath = output,
+                    PatchNodes = false,
+                    PatchLinks = true,
+                    PatchGoodies = false,
+                    PatchKills = false,
+                });
+
+                Assert.That(result.Success, Is.False);
+                Assert.That(result.Message, Is.EqualTo(BesFilePatcher.PatchUnreadable));
+                Assert.That(result.Message, Does.Contain("Nothing was changed"));
+                Assert.That(result.Message, Does.Not.Contain(output));
+                Assert.That(result.Message, Does.Not.Contain(":\\"));
+                Assert.That(result.Message, Does.Not.Contain(tempDir));
+            }
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
     }
 
     // --------------------------------------------- output-safety claim

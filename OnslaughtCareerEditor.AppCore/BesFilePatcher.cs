@@ -175,6 +175,9 @@ namespace OnslaughtCareerEditor.AppCore
             public BindingSlotOverride Slot1 { get; } = new();
         }
 
+        public const string PatchUnreadable =
+            "That file could not be patched. Nothing was changed.";
+
         // ---------- layout constants ----------
         // File format confirmed via Ghidra static analysis of BEA.exe (Feb 2026)
         //
@@ -679,9 +682,9 @@ namespace OnslaughtCareerEditor.AppCore
                 mutation.Commit(buf);
                 return PatchResult.Ok($"Successfully patched: {outputPath}");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return PatchResult.Fail(ex.Message);
+                return PatchResult.Fail(PatchUnreadable);
             }
         }
 
@@ -759,9 +762,9 @@ namespace OnslaughtCareerEditor.AppCore
                 mutation.Commit(buf);
                 return PatchResult.Ok($"Patched {statesByIndex.Count} Goodie state override(s): {outputPath}");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return PatchResult.Fail(ex.Message);
+                return PatchResult.Fail(PatchUnreadable);
             }
         }
 
