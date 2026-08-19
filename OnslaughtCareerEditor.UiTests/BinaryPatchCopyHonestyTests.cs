@@ -161,5 +161,8 @@ public class BinaryPatchCopyHonestyTests
         Assert.That(engine, Does.Not.Contain("Patch Bench refuses reparse points in {label}."));
         Assert.That(engine, Does.Contain("TargetCannotUseLink"));
         Assert.That(engine, Does.Contain("That file cannot use a shortcut or link."));
+        Assert.That(engine, Does.Contain("FileCannotShareData"));
+        Assert.That(engine, Does.Not.Contain("is hardlinked to another file"));
+        Assert.That(engine, Does.Contain("That file cannot share its data with another file."));
     }
 }

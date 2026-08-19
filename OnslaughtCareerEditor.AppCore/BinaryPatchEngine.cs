@@ -148,6 +148,7 @@ namespace OnslaughtCareerEditor.AppCore
         public const string BackupFileMissing =
             "BEA.exe.original.backup could not be found. Nothing was changed.";
         public const string TargetCannotUseLink = "That file cannot use a shortcut or link.";
+        public const string FileCannotShareData = "That file cannot share its data with another file.";
         private const string BackupHashSuffix = ".sha256";
         private const string CatalogRelativePath = "patches/catalog/patches.v2.json";
         private const string ExpectedPatchCatalogSha256 = "48cebf987355622bb54c212d5af4705a6c80df468a25651773c6f41522619622";
@@ -2139,6 +2140,9 @@ namespace OnslaughtCareerEditor.AppCore
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
             {
+                if (ex.Message == FileCannotShareData || ex.Message == TargetCannotUseLink)
+                    return (false, ex.Message);
+
                 return (false, WorkingCopyPathUnusable);
             }
         }
@@ -2196,7 +2200,7 @@ namespace OnslaughtCareerEditor.AppCore
 
             uint linkCount = GetWindowsHardLinkCount(path);
             if (linkCount > 1)
-                throw new InvalidOperationException($"{label} is hardlinked to another file; refusing to patch a shared file identity.");
+                throw new InvalidOperationException(FileCannotShareData);
         }
 
         private static uint GetWindowsHardLinkCount(string path)

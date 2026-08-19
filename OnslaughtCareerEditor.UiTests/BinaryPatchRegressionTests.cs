@@ -633,7 +633,8 @@ public class BinaryPatchRegressionTests
             var apply = BinaryPatchEngine.ApplyPatchesToFile(BuildTestTarget(linkedExe, allowedRoot), selected);
 
             Assert.That(apply.success, Is.False);
-            Assert.That(apply.message, Does.Contain("reparse"));
+            Assert.That(apply.message, Is.EqualTo(BinaryPatchEngine.TargetCannotUseLink));
+            Assert.That(apply.message, Does.Not.Contain("reparse"));
             Assert.That(File.ReadAllBytes(outsideExe), Is.EqualTo(original), "Linked outside executable must not be mutated.");
             Assert.That(File.Exists(BinaryPatchEngine.BuildBackupPath(linkedExe)), Is.False);
         }
@@ -673,7 +674,8 @@ public class BinaryPatchRegressionTests
             var apply = BinaryPatchEngine.ApplyPatchesToFile(BuildTestTarget(linkedExe, allowedRoot), selected);
 
             Assert.That(apply.success, Is.False);
-            Assert.That(apply.message, Does.Contain("hardlink").IgnoreCase);
+            Assert.That(apply.message, Is.EqualTo(BinaryPatchEngine.FileCannotShareData));
+            Assert.That(apply.message, Does.Not.Contain("hardlink").IgnoreCase);
             Assert.That(File.ReadAllBytes(outsideExe), Is.EqualTo(original), "Hardlinked outside executable must not be mutated.");
             Assert.That(File.Exists(BinaryPatchEngine.BuildBackupPath(linkedExe)), Is.False);
         }
