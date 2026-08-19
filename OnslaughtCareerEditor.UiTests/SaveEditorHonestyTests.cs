@@ -558,4 +558,13 @@ public class SaveEditorHonestyTests
         Assert.That(xaml, Does.Contain(SaveEditorService.NoPendingChangesSelected));
         Assert.That(xaml, Does.Not.Contain("No pending save changes selected yet"));
     }
+
+    [Test]
+    public void AnUnreadKillSummaryDoesNotSayYet()
+    {
+        string empty = SaveEditorAdvancedService.BuildKillSeedSummary(Array.Empty<SaveCategoryKillRow>());
+        Assert.That(empty, Does.Contain("No save is loaded"));
+        Assert.That(empty, Does.Not.Contain("yet"));
+        Assert.That(empty, Does.Contain("not a cumulative score"));
+    }
 }

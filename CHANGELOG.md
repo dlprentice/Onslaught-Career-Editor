@@ -108,7 +108,8 @@ live in `developer_state.json` and the campaign ledgers.
   name BEA.exe and data, not "the full install." An empty Save Editor
   patch summary says to select a change first, not that none are
   selected yet. An empty Game Options patch summary uses that same
-  sentence. A failed Game Options write that still looks
+  sentence. A kill-count summary with no save loaded names that,
+  not "loaded yet." A failed Game Options write that still looks
   like a dump uses the shared nothing-was-changed sentence. A failed
   focused Goodie write that still looks like a dump uses that same
   sentence. Save Editor refusals that used to say paths now name the
