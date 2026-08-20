@@ -17,15 +17,17 @@
 > Godot rebuild, and the WinUI 3 app are coequal outcomes. A current goal chooses
 > focus, not standing rank. See [Revision history](#revision-history).
 >
-> Last updated: 2026-08-18. Current measured status belongs in
+> Last updated: 2026-08-19. Current measured status belongs in
 > [`CURRENT_CAPABILITIES.md`](CURRENT_CAPABILITIES.md) and
 > [`developer_state.json`](developer_state.json) (routing key
 > `current_re_authority`). Generation 31 **v2** is the campaign parent;
 > Generation 31 v1 is superseded. Generation 73 is retained only as the exact
 > projection oracle named by the post-loss claim-closure receipt; it is not a
-> campaign parent or authority. 729/729 is a 2026-08-17 Core-suite
-> measurement, not the live count (later pin 730/730). `F:\DS DEEP *` paths
-> are historical origins; the corpus is `local-lab\ds-deep-review*`.
+> campaign parent or authority. 729/729 (`fd5ab355`) and 730/730
+> (`a65826fa`) are dated full-suite measurements, not a live inventory;
+> static Core cases after later L100 owners are 856 `[Fact]`+`[InlineData]`.
+> `F:\DS DEEP *` paths are historical origins; the corpus is
+> `local-lab\ds-deep-review*`.
 >
 > **The one mutable section is `## Current directive`.** An agent's standing
 > goal is a short proxy that points at it, so the directive can be revised as
@@ -294,12 +296,14 @@ the mandate; the completion test and every clause above are unchanged.
 **2026-08-18 — stale pins superseded (do not revive).** Generation 31
 **v2** is the sole campaign parent (`generation-31-current-8329-db18624-v2`,
 READY `2e77c62d…4219`); every `generation-31-*-v1*` directory is renamed
-`*-superseded-by-v2-20260817`. The Core-suite pin is **730/730** on
-`a65826fa` (23 m 45 s); **729/729** is the earlier `fd5ab355` run and is
-not the live count — do not re-run the 25-minute suite unless a Core
-owner changed. Dated "lanes still running" / eight-lane / data34+trace-mine
+`*-superseded-by-v2-20260817`. The last *measured* full Core suite is **730/730** on
+`a65826fa` (23 m 45 s); **729/729** is the earlier `fd5ab355` run.
+Neither is a live inventory: later L100 owners raised the static
+`[Fact]`+`[InlineData]` count to **856**. Do not re-run the 25-minute
+suite unless a Core owner changed; use the focused filter named by the
+owner. Dated "lanes still running" / eight-lane / data34+trace-mine
 in-flight sentences are not a liveness oracle; read the Kanban board and
-`local-lab/hermes-kanban-campaign-2026-08-18/HANDOFF-CURRENT.md`.
+`local-lab/hermes-kanban-campaign-2026-08-18/CHECKPOINT-2026-08-19-90pct.md`.
 `F:\DS DEEP Review`, `F:\DS DEEP Review Extended`, and `F:\rows.tsv` no
 longer exist; use `local-lab\ds-deep-review\` and
 `local-lab\ds-deep-review-extended\`.
@@ -321,7 +325,10 @@ bridge → Generation 31 on db.18624 (the 16 mutation-killed contracts become th
 first REBUILD_READY rows) → slot-instrument reproducibility → arity-36 promotion
 → pointer/vftable cohort → runtime-witnessed name corrections → Level100 crash
 characterisation → falsifier close-out. Full-RE completion remains the standing
-mandate; this list is its current frontier.
+mandate; this 2026-08-17 list is **not** the current frontier
+(SUPERSEDED 2026-08-19: carry bridge / Gen 31 v2 / arity-36 /
+name-cohort5 / vftable65 are closed). Named-system RE + playable
+startup→menu→L100 is the diet.
 
 **2026-08-17 (autonomous shift) — SUPERSEDED 2026-08-18.** This paragraph
 said Generation 31 was "in cut", F:/H: copies were "being staged", and
@@ -1562,6 +1569,10 @@ in write mode against live. Reversibility remains restore-from-backup only.
   present-tense `F:\DS DEEP *` paths were superseded in place. The standing
   constraints (pristine read-only, save preservation, no hard-delete, Core
   determinism, one live-Ghidra lock, two-witness claims) are untouched.
+- **2026-08-19 — 730 dated as last measured, not live; 2026-08-17 frontier
+  list marked superseded.** Static Core inventory after later L100 owners
+  is 856 `[Fact]`+`[InlineData]`. Handoff pointer is
+  `CHECKPOINT-2026-08-19-90pct.md`. Mandate unchanged.
 - **2026-08-16 — DS DEEP Review integration frontier recorded.** The maintainer
   set a long-horizon goal covering integration of the external
   `local-lab\ds-deep-review` drop alongside coequal rebuild advancement. That

@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-08-18. The campaign authority is Generation 31 **v2** on exact
+Last updated: 2026-08-19. The campaign authority is Generation 31 **v2** on exact
 db.18624 geometry (8,329 functions; grades 8,088 OPAQUE / 231 C1 / 10 C2, with
 the first 16 contracts REBUILD_READY; v1 READY `b99b6e4f…` is superseded), re-grounded through the Generation-30
 literal-pin carry bridge after the live and tracked Ghidra database reached
@@ -10,7 +10,9 @@ corrections, then 160 renames, then 294 ABI signature corrections, then the two
 sequential one-row ceremonies of the CTentacle factory-name chain, then the
 36-row abi-two-witness-arity36 SET_PROTOTYPE cohort, then the five-row
 runtime-witnessed name cohort, then the 65-slot RTTI vftable pointer cohort
-(data typing only; the campaign's db.18624 geometry is unaffected). Candidate Gen73 is
+(data typing only; the campaign's db.18624 geometry is unaffected). Live +
+`wt/bea-ghidra` later rolled to **db.18633** SET_NAME twins (unmerged;
+`main` still pins db.18627). Candidate Gen73 is
 projection-oracle only. Primary WinUI
 navigation was rechecked 2026-08-03 against the live shell (includes Cheats).
 The 2026-08-01 shell, appearance, Lore, Media, and four-run Level 100 reviews
@@ -267,6 +269,14 @@ generic automation workbench.
 reconstruction lane. `OnslaughtRebuild.Core` owns fixed-step simulation,
 snapshots, state hashing, and command-tape replay without presentation,
 filesystem, clock, process, network, or GPU dependencies.
+
+**2026-08-19 operator click-through (not training Won).** Godot 4.7.1
+mono on `main` showed night fortress → Aquila title art → main menu
+(New Game highlighted) → CHOOSE GAME NAME / BEA 1. `RetailFrontendScenePath`
+now also drives Loading → Gameplay. Scene-path tests 19/19 after that
+merge. L100 Core owners on `main` include EnableFlightMode, SetObjective
+OR 0x20, TargetZone InJetMode/Pause wait-stop. Walker bind still not
+in `FirstFlightWorldView`. WinUI GUI was not re-launched this pass.
 
 The Godot Level 100 Opening Slice now uses all 513×513 unit-lattice positions
 decoded from the released tiled Level 100 HFLD, plus the Federation walker/jet,
