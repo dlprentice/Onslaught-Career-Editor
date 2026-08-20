@@ -104,6 +104,13 @@ files keep the block.
 - Edit supported startup, audio, controller, and binding values in a copied
   `defaultoptions.bea`.
 - Compare files and inspect bounded structural details.
+- Name what the retail game asks for to unlock the focused Goodie, beside
+  that Goodie's current state — "How the game unlocks Goodie 000: Complete
+  level 100." The rules come from `GoodieUnlockRequirementService`, which
+  already carried them; reserved slots 233..299 say they are preserved
+  rather than earned, an unmapped ID says so instead of guessing, and the
+  service's RE evidence label is never painted. This needs no save: an
+  unlock rule is a property of the game, not of the file.
 
 AppCore starts from an existing retail-generated baseline, preserves file size
 and unknown bytes outside selected regions, stages output beside the
