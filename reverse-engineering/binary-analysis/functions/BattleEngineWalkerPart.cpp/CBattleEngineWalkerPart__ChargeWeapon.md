@@ -94,9 +94,28 @@ Retail entity: walker-part ChargeWeapon from the
 `[+0x260]==2` / `[+0x578]` dispatcher JMP. Stuart architecture
 (not proof): `BattleEngineWalkerPart.cpp:519-559`.
 
-Nearest reconstruction owner: **none**. L100 card `t_aa5586e5`
-is on a playable training-path diet — do not implement from this
-mapping until that lane names the arm.
+Nearest reconstruction owners (already exist; **none added**):
+
+1. Increment arm: `RetailWeaponCharge.Charge` via
+   `Simulation.TryChargeWeapon` →
+   `Level100PlayerWeaponRuntime.AdvanceCharge` on
+   `Level100PulseCannonCharge.CreatePod()`. That is the
+   already-counted `E8` `0x005068f0`. ReadyToCharge
+   `0x0050A080` (table
+   `TargetProfileContext__CanProceedByTargetRangeGate`),
+   store spend, overheat-to-fire, and Charged-2 round
+   select stay unclaimed — named open in
+   `Level100PulseCannonCharge.cs`. Do **not** equate that
+   table name to source `ReadyToCharge` here.
+2. Fire gate: `RetailWeaponFireGate.CanWalkerWeaponFire`
+   is the CanWeaponFire owner, not this body.
+3. Lock HUD: **none**. `CBattleEngine__FireLock` stays on
+   `Simulation.TryFire` / `LaunchWalkerRound`. Godot HUD
+   target-lock layers stay absent
+   (`rebuild/OnslaughtRebuild.Godot/Assets/Hud/README.md`).
+
+Do not implement from this RE root. L100 playable-training
+diet — comment only until that lane names the arm.
 
 Siblings: `CBattleEngineWalkerPart__FireWeapon` /
 `CBattleEngineWalkerPart__GetCurrentWeapon` /
