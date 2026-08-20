@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using OnslaughtCareerEditor.AppCore;
 
 namespace OnslaughtCareerEditor.WinUI.Helpers
@@ -112,5 +114,111 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
 
         public const string FocusedGoodieCurrentUnreadable =
             "This save's current Goodie state could not be read.";
+
+        /// <summary>
+        /// What this save already has for the listed missions. Shown next to
+        /// the Mission rank baseline so setting S is replacing named grades
+        /// rather than a blind wall. The per-mission Current column still
+        /// owns the row detail.
+        /// </summary>
+        public static string DescribeMissionRanksCurrent(IReadOnlyList<SaveMissionRankRow>? rows)
+        {
+            if (rows is null || rows.Count == 0)
+            {
+                return MissionRanksCurrentUnreadable;
+            }
+
+            Dictionary<string, int> counts = new(StringComparer.Ordinal);
+            foreach (SaveMissionRankRow row in rows)
+            {
+                string? label = ClassifyListedMissionRank(row.CurrentRank);
+                if (label is null)
+                {
+                    continue;
+                }
+
+                counts[label] = counts.TryGetValue(label, out int n) ? n + 1 : 1;
+            }
+
+            if (counts.Count == 0)
+            {
+                return MissionRanksCurrentUnreadable;
+            }
+
+            if (counts.Count == 1)
+            {
+                (string label, int n) = counts.First();
+                if (n == rows.Count && IsExactListedGrade(label))
+                {
+                    return $"This save has every listed mission at {label}.";
+                }
+            }
+
+            string[] parts = ListedGradeOrder
+                .Where(counts.ContainsKey)
+                .Select(label => $"{counts[label]} {label}")
+                .ToArray();
+            if (parts.Length == 0)
+            {
+                return MissionRanksCurrentUnreadable;
+            }
+
+            return $"This save's missions are {JoinReadable(parts)}.";
+        }
+
+        public const string MissionRanksCurrentUnreadable =
+            "This save's mission grades could not be read.";
+
+        private static readonly string[] ListedGradeOrder =
+        {
+            "S", "A", "B", "C", "D", "E", "No Grade",
+            "near S", "near A", "near B", "near C", "near D", "near E",
+            "unrecognized"
+        };
+
+        private static bool IsExactListedGrade(string label) =>
+            label is "S" or "A" or "B" or "C" or "D" or "E" or "No Grade";
+
+        private static string? ClassifyListedMissionRank(string? current)
+        {
+            string trimmed = (current ?? string.Empty).Trim();
+            if (trimmed.Length == 0 || trimmed == "-")
+            {
+                return null;
+            }
+
+            if (trimmed.Equals("NONE", StringComparison.OrdinalIgnoreCase))
+            {
+                return "No Grade";
+            }
+
+            foreach (string grade in new[] { "S", "A", "B", "C", "D", "E" })
+            {
+                if (trimmed.Equals(grade, StringComparison.OrdinalIgnoreCase))
+                {
+                    return grade;
+                }
+            }
+
+            if (trimmed.StartsWith("~", StringComparison.Ordinal)
+                && trimmed.Length >= 2
+                && "SABCDE".Contains(char.ToUpperInvariant(trimmed[1])))
+            {
+                return $"near {char.ToUpperInvariant(trimmed[1])}";
+            }
+
+            return "unrecognized";
+        }
+
+        private static string JoinReadable(IReadOnlyList<string> values)
+        {
+            return values.Count switch
+            {
+                0 => string.Empty,
+                1 => values[0],
+                2 => $"{values[0]} and {values[1]}",
+                _ => string.Join(", ", values.Take(values.Count - 1)) + " and " + values[^1],
+            };
+        }
     }
 }

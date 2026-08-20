@@ -82,6 +82,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 killSeedSummary
             }.Where(part => !string.IsNullOrWhiteSpace(part)).Select(part => part!).ToArray();
             EditorKillBaselineSummaryTextBlock.Text = string.Join(" ", noticeParts);
+            PaintMissionRanksCurrent(missionRankReadStatus.FileWasRead);
 
             if (SaveEditorAdvancedOverrideCarryOver.ShouldReseedGlobalKillValue(
                     _editorInputValid,
@@ -190,6 +191,29 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// What the opened save already has for listed mission grades. Empty
+        /// when no save is open; a refusal sentence when the file is there
+        /// but the grades cannot be shown.
+        /// </summary>
+        private void PaintMissionRanksCurrent(bool fileWasRead)
+        {
+            if (!_editorInputValid)
+            {
+                EditorMissionRanksCurrentTextBlock.Text = string.Empty;
+                return;
+            }
+
+            if (!fileWasRead)
+            {
+                EditorMissionRanksCurrentTextBlock.Text = SaveLabPageText.MissionRanksCurrentUnreadable;
+                return;
+            }
+
+            EditorMissionRanksCurrentTextBlock.Text =
+                SaveLabPageText.DescribeMissionRanksCurrent(_editorMissionRankRows);
         }
     }
 }

@@ -10,6 +10,9 @@ live in `developer_state.json` and the campaign ledgers.
 
 ## Unreleased
 
+- Save Lab Mission rank baseline now shows what the opened save already has
+  for its listed missions, so setting S is replacing named grades rather than
+  a blind wall.
 - Cheats live trainer can copy the numbers it is reading into the Set and Hold
   boxes. It does not write them back, and a hold already on stays at the old
   values until you switch it.
