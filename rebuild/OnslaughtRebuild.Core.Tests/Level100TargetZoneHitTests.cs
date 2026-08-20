@@ -46,6 +46,9 @@ public sealed class Level100TargetZoneHitTests
         runtime.InitializeReleasedScripts();
         actors.SetObjective(zone, true);
         actors.Activate(zone);
+        Assert.Equal(RetailSetObjective.MarkedBit, actors.FlagWord(zone));
+        Assert.Equal(RetailSetObjective.Mark(0), actors.FlagWord(zone));
+        Assert.NotEqual(0, actors.FlagWord(zone));
         int flagAfterInit = runtime.WaitStopFlag;
 
         runtime.SetPlayerFlightState(
@@ -79,6 +82,10 @@ public sealed class Level100TargetZoneHitTests
         Assert.Equal(
             ["Reached Target Zone 2"],
             ReachedEvents(runtime).Select(item => item.EventName).ToArray());
+        Assert.Equal(0, actors.FlagWord(zone));
+        Assert.Equal(
+            RetailSetObjective.Unmark(RetailSetObjective.MarkedBit),
+            actors.FlagWord(zone));
         Assert.Equal(RetailIScriptWaitStop.FlagStopped, runtime.WaitStopFlag);
         Assert.NotEqual(
             2,

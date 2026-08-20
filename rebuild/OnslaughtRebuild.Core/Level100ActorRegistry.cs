@@ -829,6 +829,7 @@ public sealed class Level100ActorRegistry
         internal bool IsStatic { get; init; }
         internal bool Active { get; set; }
         internal bool IsObjective { get; set; }
+        internal int FlagWord { get; set; }
         internal Level100ActorLifecycle Lifecycle { get; set; }
         internal int Health { get; set; }
         internal required Level100ActorPoseSnapshot Pose { get; set; }
@@ -976,6 +977,15 @@ public sealed class Level100ActorRegistry
 
     public uint GetThingTypeMask(Level100ActorId actorId) => Require(actorId).ThingTypeMask;
 
+    /// <summary>
+    /// Isolated <see cref="Level100ActorSnapshot.IsObjective"/> names
+    /// the rebuild bool. This is the
+    /// <c>or/and [esi+0x2c], 0x20</c> word actor-script
+    /// SetObjective / UnsetObjective write. Noticeboard stays
+    /// unclaimed.
+    /// </summary>
+    public int FlagWord(Level100ActorId actorId) => Require(actorId).FlagWord;
+
     public IReadOnlyList<Level100ActorId> SpawnThing(
         Level100ActorId ownerId,
         string definitionName,
@@ -1054,7 +1064,10 @@ public sealed class Level100ActorRegistry
                 "A destroyed Level 100 actor cannot become an objective.");
         }
 
-        actor.IsObjective = objective;
+        actor.FlagWord = objective
+            ? RetailSetObjective.Mark(actor.FlagWord)
+            : RetailSetObjective.Unmark(actor.FlagWord);
+        actor.IsObjective = (actor.FlagWord & RetailSetObjective.MarkedBit) != 0;
     }
 
     public void SetScript(Level100ActorId actorId, string scriptName)
@@ -1475,6 +1488,7 @@ public sealed class Level100ActorRegistry
         IsStatic = actor.IsStatic,
         Active = actor.Active,
         IsObjective = actor.IsObjective,
+        FlagWord = actor.IsObjective ? RetailSetObjective.MarkedBit : 0,
         Lifecycle = actor.Lifecycle,
         Health = actor.Health,
         Pose = actor.Pose,
