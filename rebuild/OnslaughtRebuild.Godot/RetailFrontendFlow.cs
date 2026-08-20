@@ -943,6 +943,9 @@ public sealed partial class RetailFrontendFlow : Control
             InputEventMouseButton button when
                 button.Pressed && button.ButtonIndex == MouseButton.Left =>
                 HandlePointerConfirm(button.Position),
+            InputEventMouseButton button when
+                button.Pressed && button.ButtonIndex == MouseButton.Right =>
+                HandlePointerCancel(),
             InputEventKey key when key.Pressed && !key.Echo => HandleKey(key),
             _ => false,
         };
@@ -2334,7 +2337,153 @@ public sealed partial class RetailFrontendFlow : Control
         DrawRect(new Rect2(0f, 180f, DesignWidth, 1f), DevSelectGuide);
 
         DrawLevelSweepArcs();
-        DrawLevelNodeGraph();
+        // RetailLevelSelectFsub148: CFEPLevelSelect::Render leftover
+        // after the sliding-borders call is fld [0x005DB53C] (148.0)
+        // fsub [esi+0x3460] fstp [esp+0x14]. Official 74154bfa
+        // independently re-read this cycle. The local is a window,
+        // not dest. 0x00460BE4 fcomp 610.0 / 0x00460BF9 fcomp 0.0.
+        // Init fstp [esi+0x3460] at 0x00460464 follows fild of the
+        // zeroed [esi+0x3468]. Settled pad is 148.0 - 0. Dest stays
+        // the measured node centres. Do not invent dest from 148.0.
+        if (RetailLevelSelectFsub148.Applies(
+                RetailLevelSelectFsub148.Pad(
+                    RetailLevelSelectFsub148.SettledField)))
+        {
+            // RetailLevelSelectFsub10: later leftover is
+            // fld [esp+0x14] / fsub [0x005D85CC] (10.0) /
+            // fstp [esp] before call 0x005563D0. Official
+            // 74154bfa independently re-read this cycle:
+            // 0x00460C94 is d825cc855d00 fsub, not fld.
+            // Settled 148.0-10.0 is 138.0. That is not dest.
+            // The 322.0 push at 0x00460CE1 is later. Do not
+            // invent dest from 10.0.
+            _ = RetailLevelSelectFsub10.Delta(
+                RetailLevelSelectFsub148.SettledPad);
+            // RetailLevelSelectLater148: later leftover after the
+            // 10.0 fsub is the second identical fld 148.0 /
+            // fsub [esi+0x3460] / fstp [esp+0x14] triple at
+            // 0x00460E24. Official 74154bfa independently
+            // re-read this cycle. First consumers are
+            // 0x00460E9D fcomp 0x00629390 and 0x00460EB0
+            // fcomp 0x00629394. The local is a later window,
+            // not dest. Do not invent dest from those
+            // compares. Dest stays the measured node centres.
+            if (RetailLevelSelectLater148.Applies(
+                    RetailLevelSelectLater148.Pad(
+                        RetailLevelSelectLater148.SettledField)))
+            {
+                DrawLevelNodeGraph();
+                // RetailLevelSelectLaterEsp94: later leftover
+                // after the later 148.0 triple is
+                // fld [esp+0x94] / fsub [0x005D8BC4] (0.75) /
+                // fmul [0x005D85BC] (4.0) / fcom [0x005D856C]
+                // (0.0). Official 74154bfa independently
+                // re-read this cycle. Different stack local,
+                // not dest. First store consumer is
+                // 0x00460E4D fst [esp+0x40]. Do not invent
+                // dest from 0.75 or 4.0.
+                _ = RetailLevelSelectLaterEsp94.Subtrahend;
+                _ = RetailLevelSelectLaterEsp94.Factor;
+                // RetailLevelSelectLaterOne: later leftover
+                // after the later [esp+0x94] shift is
+                // fcom [0x005D8568] (1.0) / fmul [0x005D8C70]
+                // (255.0). Official 74154bfa independently
+                // re-read this cycle. First store consumer is
+                // 0x00460E7F fistp [esp+0x4C]. That is a
+                // clamp-and-scale of the shifted local, not
+                // dest. The later 610.0/0.0 pair at
+                // 0x00460F30 is RetailLevelSelectLater610.
+                // Do not invent dest from 1.0 or 255.0.
+                // Do not invent a fade.
+                _ = RetailLevelSelectLaterOne.CompareOne;
+                _ = RetailLevelSelectLaterOne.Scale;
+                // RetailLevelSelectLater610: later leftover
+                // after the later 1.0 fcom is
+                // fld [esp+0x14] / fcomp [0x005DB5B0]
+                // (610.0) / fld [esp+0x14] /
+                // fcomp [0x005D856C] (0.0). Official
+                // 74154bfa independently re-read this
+                // cycle. First consumer is 0x00460F5A
+                // mov eax, [esi+ebx*4+0x4]. First store
+                // is 0x00460F5E mov [esp+0x28], 0. That
+                // is a later window on the same
+                // [esp+0x14] local, not dest. The later
+                // fmul 60.0 at 0x00460F73 is
+                // RetailLevelSelectLater60. Do not invent
+                // dest from 610.0 or 0.0.
+                _ = RetailLevelSelectLater610.Applies(
+                    RetailLevelSelectLater148.Pad(
+                        RetailLevelSelectLater148.SettledField));
+                _ = RetailLevelSelectLater610.WindowHigh;
+                _ = RetailLevelSelectLater610.WindowLow;
+                // RetailLevelSelectLater60: later leftover
+                // after the later 610.0/0.0 pair is
+                // fild [esp+0x3C] / fmul [0x005DB538]
+                // (60.0) / fmul [0x005D85EC] (0.5) /
+                // fadd [0x005DB3E8] (320.0) / fstp
+                // [esp+0x18]. Official 74154bfa
+                // independently re-read this cycle. First
+                // store is 0x00460F85 fstp [esp+0x18].
+                // That is a scaled local, not dest. The
+                // later fld [esp+0x94] / fcomp 1.0 at
+                // 0x00460FD8 is
+                // RetailLevelSelectLaterEsp94One. Do not
+                // invent dest from 60.0, 0.5, or 320.0.
+                _ = RetailLevelSelectLater60.Factor;
+                _ = RetailLevelSelectLater60.Half;
+                _ = RetailLevelSelectLater60.Addend;
+                // RetailLevelSelectLaterEsp94One: later leftover
+                // after the later 60.0/0.5/320.0 scale is
+                // fld [esp+0x94] / fcomp [0x005D8568]
+                // (1.0). Official 74154bfa independently
+                // re-read this cycle. First consumer of
+                // the equal-1 fall-through is 0x00460FEC
+                // fld [esp+0x18]. That is a compare of
+                // the [esp+0x94] local, not dest. The
+                // later fadd 20.0 at 0x00460FF0 is later.
+                // Do not invent dest from 1.0 or 20.0.
+                _ = RetailLevelSelectLaterEsp94One.Applies(
+                    RetailLevelSelectLaterEsp94One.CompareOne);
+                _ = RetailLevelSelectLaterEsp94One.CompareOne;
+                // RetailLevelSelectLater20: later leftover after
+                // the later [esp+0x94]/fcomp 1.0 compare is
+                // fld [esp+0x18] / fadd [0x005D857C] (20.0) /
+                // fstp [esp]. Official 74154bfa independently
+                // re-read this cycle. First store is 0x00460FF7
+                // fstp [esp]. That is an addend on the later-60
+                // local, not dest. The later second fadd 20.0 at
+                // 0x00460FFE is later. Do not invent dest from
+                // 20.0 or 1.0.
+                _ = RetailLevelSelectLater20.Offset(
+                    RetailLevelSelectLater60.Scaled(1));
+                _ = RetailLevelSelectLater20.Addend;
+                // RetailLevelSelectLaterFadd20: later leftover
+                // after the later first 20.0 addend is
+                // fld [esp+0x18] / fadd [0x005D857C] (20.0) /
+                // fstp [esp]. Official 74154bfa independently
+                // re-read this cycle. First store is 0x00461005
+                // fstp [esp]. That is a second addend on a later
+                // [esp+0x18] local, not dest. The later fsub
+                // 20.0 at 0x0046100C is later. Do not invent
+                // dest from 20.0 or 1.0.
+                _ = RetailLevelSelectLaterFadd20.Offset(
+                    RetailLevelSelectLater20.Offset(
+                        RetailLevelSelectLater60.Scaled(1)));
+                _ = RetailLevelSelectLaterFadd20.Addend;
+                // RetailLevelSelectLaterFsub20: later leftover
+                // after the later second 20.0 addend is
+                // fld [esp+0x20] / fsub [0x005D857C] (20.0) /
+                // fstp [esp]. Official 74154bfa independently
+                // re-read this cycle. First store is 0x00461013
+                // fstp [esp]. That is a subtrahend on a later
+                // [esp+0x20] local, not dest. The later second
+                // fsub 20.0 at 0x0046101A is later. Do not
+                // invent dest from 20.0 or 1.0.
+                _ = RetailLevelSelectLaterFsub20.Offset(
+                    RetailLevelSelectLater60.Scaled(1));
+                _ = RetailLevelSelectLaterFsub20.Subtrahend;
+            }
+        }
 
         for (int index = 0; index < LevelColumnLabels.Length; index++)
         {
@@ -2355,7 +2504,8 @@ public sealed partial class RetailFrontendFlow : Control
         // got_standard_SlidingTextBordersAndMask() returns TRUE for
         // (FrontEnd.cpp:783), which pins transition to 1 and therefore this
         // settled scale; the outside bracket only draws while dest == FEP_MAIN.
-        // The 148.0 fsub at 0x00460B66 is later and is not dest.
+        // The 148.0 fsub at 0x00460B66 is RetailLevelSelectFsub148
+        // and is not dest.
         //
         // MEASURED, and this page does NOT reproduce the 1.4 the FEP_DEVSELECT
         // build settled on: fitting the FE_select_level_bracket01 alpha mask over
@@ -2861,8 +3011,11 @@ public sealed partial class RetailFrontendFlow : Control
         {
             case RetailFrontendScreen.ClickToStart:
                 // CFEPIntro::Process 0x0051B801 submits (0,0,width,width,0x2C)
-                // — full window, not a glyph box. See RetailClickToStartInput.
-                if (!RetailClickToStartInput.AcceptsMouseAt(design.X, design.Y))
+                // — full window, not a glyph box. See RetailFrontendScenePath.
+                if (!RetailFrontendScenePath.AcceptsClickToStartMouse(
+                        _session.Screen,
+                        design.X,
+                        design.Y))
                 {
                     return false;
                 }
@@ -2875,7 +3028,7 @@ public sealed partial class RetailFrontendFlow : Control
 
             case RetailFrontendScreen.MainMenu:
                 int index = MainMenuIndexAt(design);
-                if (index < 0 || !_session.Items[index].IsAvailable)
+                if (!RetailFrontendScenePath.CanAcceptMainMenuRow(_session, index))
                 {
                     return false;
                 }
@@ -2903,8 +3056,10 @@ public sealed partial class RetailFrontendFlow : Control
                 // Chevron hit rects match the drawn chevrons.
                 if (new Rect2(0f, 430f, 46f, 48f).HasPoint(design))
                 {
-                    RetailFrontendSignal back = _session.Back();
-                    if (back == RetailFrontendSignal.None)
+                    if (!RetailFrontendScenePath.TryBackPage(
+                            _session,
+                            startupMediaActive: false,
+                            out RetailFrontendSignal back))
                     {
                         return false;
                     }
@@ -2925,8 +3080,10 @@ public sealed partial class RetailFrontendFlow : Control
                 // Chevron hit rects match the drawn chevrons, as on FEP_DEVSELECT.
                 if (new Rect2(0f, 430f, 48f, 48f).HasPoint(design))
                 {
-                    RetailFrontendSignal levelBack = _session.Back();
-                    if (levelBack == RetailFrontendSignal.None)
+                    if (!RetailFrontendScenePath.TryBackPage(
+                            _session,
+                            startupMediaActive: false,
+                            out RetailFrontendSignal levelBack))
                     {
                         return false;
                     }
@@ -2949,8 +3106,10 @@ public sealed partial class RetailFrontendFlow : Control
                 // clickable this lane models.
                 if (new Rect2(0f, 430f, 48f, 48f).HasPoint(design))
                 {
-                    RetailFrontendSignal pageBack = _session.Back();
-                    if (pageBack == RetailFrontendSignal.None)
+                    if (!RetailFrontendScenePath.TryBackPage(
+                            _session,
+                            startupMediaActive: false,
+                            out RetailFrontendSignal pageBack))
                     {
                         return false;
                     }
@@ -2969,6 +3128,16 @@ public sealed partial class RetailFrontendFlow : Control
             default:
                 return false;
         }
+    }
+
+    private bool HandlePointerCancel()
+    {
+        if (_session.Screen != RetailFrontendScreen.Options)
+        {
+            return false;
+        }
+
+        return HandleOptionsPointerCancel(rightDown: true);
     }
 
     private bool HandleKey(InputEventKey key)
@@ -3021,13 +3190,23 @@ public sealed partial class RetailFrontendFlow : Control
         }
         if (IsKey(key, Key.Enter) || IsKey(key, Key.KpEnter) || IsKey(key, Key.Space))
         {
+            if (_session.Screen == RetailFrontendScreen.ClickToStart
+                && !RetailFrontendScenePath.AcceptsClickToStartKey(
+                    _session.Screen,
+                    ScanCodeFor(key)))
+            {
+                return true;
+            }
+
             Confirm();
             return true;
         }
         if (IsKey(key, Key.Escape))
         {
-            RetailFrontendSignal signal = _session.Back();
-            if (signal != RetailFrontendSignal.None)
+            if (RetailFrontendScenePath.TryBackPage(
+                    _session,
+                    startupMediaActive: false,
+                    out RetailFrontendSignal signal))
             {
                 RequestAudioCue(RetailFrontendAudioCue.Back);
                 HandleNavigationSignal(signal);
@@ -3041,8 +3220,10 @@ public sealed partial class RetailFrontendFlow : Control
 
     private void Confirm()
     {
-        RetailFrontendSignal signal = _session.Confirm();
-        if (signal == RetailFrontendSignal.None)
+        if (!RetailFrontendScenePath.TryConfirmPage(
+                _session,
+                startupMediaActive: false,
+                out RetailFrontendSignal signal))
         {
             return;
         }
@@ -3587,6 +3768,19 @@ public sealed partial class RetailFrontendFlow : Control
 
     private static bool IsKey(InputEventKey input, Key key) =>
         input.PhysicalKeycode == key || input.Keycode == key;
+
+    private static int ScanCodeFor(InputEventKey key)
+    {
+        Key code = key.PhysicalKeycode != Key.None ? key.PhysicalKeycode : key.Keycode;
+        return code switch
+        {
+            Key.Space => 0x39,
+            Key.Enter => 0x1C,
+            Key.Escape => 0x01,
+            Key.KpEnter => 0x9C,
+            _ => 0,
+        };
+    }
 
     private void RequestAudioCue(RetailFrontendAudioCue cue) =>
         AudioCueRequested?.Invoke(cue);

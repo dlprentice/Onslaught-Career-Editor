@@ -235,7 +235,7 @@ public sealed class RetailOptionsDropdownListCancelTests
         string confirm = Slice(options, "private bool HandleOptionsPointerConfirm");
         string cancel = Slice(options, "private bool HandleOptionsPointerCancel");
 
-        Assert.Contains("RetailOptionsDropdownListCancel", cancel, StringComparison.Ordinal);
+        Assert.Contains("RetailFrontendScenePath.AcceptsOptionsPointerCancel", cancel, StringComparison.Ordinal);
         Assert.Contains("CancelExpanded", cancel, StringComparison.Ordinal);
         Assert.Contains("RetailFrontendAudioCue.Back", cancel, StringComparison.Ordinal);
         Assert.DoesNotContain("SelectState", cancel, StringComparison.Ordinal);

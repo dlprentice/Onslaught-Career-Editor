@@ -284,12 +284,17 @@ public sealed partial class RetailStartupSequence : Control
         bool abort = inputEvent switch
         {
             InputEventMouseButton button when button.Pressed =>
-                RetailFmvSkip.AcceptsMouseLatch(
+                RetailFrontendScenePath.AcceptsStartupSkip(
                     left: button.ButtonIndex == MouseButton.Left,
                     middle: button.ButtonIndex == MouseButton.Middle,
-                    right: button.ButtonIndex == MouseButton.Right),
+                    right: button.ButtonIndex == MouseButton.Right,
+                    dik: 0),
             InputEventKey key when key.Pressed && !key.Echo =>
-                RetailFmvSkip.AcceptsDefaultSkipScanCode(ScanCodeFor(key.Keycode)),
+                RetailFrontendScenePath.AcceptsStartupSkip(
+                    left: false,
+                    middle: false,
+                    right: false,
+                    dik: ScanCodeFor(key.Keycode)),
             _ => false,
         };
 

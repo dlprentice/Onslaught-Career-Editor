@@ -114,7 +114,7 @@ public sealed class RetailClickToStartInputTests
 
         // DrawClickToStart also has a ClickToStart case; this arm is the
         // pointer owner. A prompt/logo HasPoint here must fail.
-        Assert.Contains("RetailClickToStartInput.AcceptsMouseAt", arm);
+        Assert.Contains("RetailFrontendScenePath.AcceptsClickToStartMouse", arm);
         Assert.DoesNotContain("HasPoint(design)", arm);
         Assert.DoesNotContain("vectorlosttoyssplash", flow);
         Assert.DoesNotContain("TWIMTBP", flow);
