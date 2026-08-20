@@ -91,8 +91,7 @@ public sealed class RetailFmvSkipTests
         string sequence = File.ReadAllText(
             Path.Combine(AppContext.BaseDirectory, "godot-pause-source", "RetailStartupSequence.cs"));
 
-        Assert.Contains("RetailFmvSkip.AcceptsDefaultSkipScanCode", sequence);
-        Assert.Contains("RetailFmvSkip.AcceptsMouseLatch", sequence);
+        Assert.Contains("RetailFrontendScenePath.AcceptsStartupSkip", sequence);
         Assert.DoesNotContain("InputEventJoypadButton", sequence);
         // The withdrawn any-key arm.
         Assert.DoesNotContain("InputEventKey key => key.Pressed && !key.Echo,", sequence);

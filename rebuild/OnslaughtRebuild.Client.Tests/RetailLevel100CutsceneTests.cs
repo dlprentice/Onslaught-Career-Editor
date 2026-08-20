@@ -199,9 +199,10 @@ public sealed class RetailLevel100CutsceneTests
     /// <summary>
     /// <c>CGame::GetIntroFMV</c> (<c>references/Onslaught/game.cpp:1103-1119</c>)
     /// is the one retail suppress owner. The reconstruction's owner is
-    /// <see cref="RetailStartupSchedule.IsSuppressedByArguments"/>. Cold-start
-    /// media must call that method rather than keep a second copy of the
-    /// <c>--skipfmv</c> / <c>--smoke</c> / capture / <c>--intro</c> rule.
+    /// <see cref="RetailFrontendScenePath.IsStartupSuppressed"/>, which
+    /// forwards to <see cref="RetailStartupSchedule.IsSuppressedByArguments"/>.
+    /// Cold-start media must call that path rather than keep a second copy of
+    /// the <c>--skipfmv</c> / <c>--smoke</c> / capture / <c>--intro</c> rule.
     /// </summary>
     [Fact]
     public void StartRetailStartupMediaUsesTheSharedSuppressOwner()
@@ -211,7 +212,7 @@ public sealed class RetailLevel100CutsceneTests
         string method = ExtractMethod(game, "private void StartRetailStartupMedia()");
 
         Assert.Contains(
-            "RetailStartupSchedule.IsSuppressedByArguments",
+            "RetailFrontendScenePath.IsStartupSuppressed",
             method,
             StringComparison.Ordinal);
         Assert.DoesNotContain(

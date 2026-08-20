@@ -616,7 +616,7 @@ public sealed partial class RetailFrontendFlow
 
     internal void BackFromOptionsForCapture() => BackFromOptions();
 
-    internal bool CancelOptionsForCapture() => HandleOptionsPointerCancel();
+    internal bool CancelOptionsForCapture() => HandleOptionsPointerCancel(rightDown: true);
 
     // =====================================================================
     // Input
@@ -668,8 +668,10 @@ public sealed partial class RetailFrontendFlow
 
     private void ConfirmOptions()
     {
-        RetailOptionsSignal signal = _options.Confirm();
-        if (signal == RetailOptionsSignal.None)
+        if (!RetailFrontendScenePath.TryConfirmOptions(
+                _options,
+                startupMediaActive: false,
+                out RetailOptionsSignal signal))
         {
             return;
         }
@@ -695,8 +697,10 @@ public sealed partial class RetailFrontendFlow
             return;
         }
 
-        RetailFrontendSignal frontend = _session.Back();
-        if (frontend == RetailFrontendSignal.None)
+        if (!RetailFrontendScenePath.TryBackPage(
+                _session,
+                startupMediaActive: false,
+                out RetailFrontendSignal frontend))
         {
             return;
         }
@@ -848,7 +852,7 @@ public sealed partial class RetailFrontendFlow
         return true;
     }
 
-    private bool HandleOptionsPointerCancel()
+    private bool HandleOptionsPointerCancel(bool rightDown)
     {
         // CMenuItemDropdown post-loop cancel leftover is
         // RetailOptionsDropdownListCancel: call 0x0044DEA0 then, when
@@ -859,9 +863,7 @@ public sealed partial class RetailFrontendFlow
         // leftover is RetailFrontendLatchToButton: test ah, 0x80 then
         // mov [0x0089BE28], 1. That is the SET cancel leftover reads.
         // FMV skip already owns the OR at 0x0053F2EB.
-        if (!RetailOptionsDropdownListCancel.Applies(
-                RetailOptionsDropdownListCancel.HelperNonzero(0, 0),
-                latch: RetailFrontendLatchToButton.Set(rightDown: true)))
+        if (!RetailFrontendScenePath.AcceptsOptionsPointerCancel(rightDown))
         {
             return false;
         }

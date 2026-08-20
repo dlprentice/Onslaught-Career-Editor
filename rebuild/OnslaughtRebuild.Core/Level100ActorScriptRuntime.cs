@@ -99,6 +99,7 @@ public sealed class Level100ActorScriptRuntime
     private VehicleMode _playerMode;
     private VehicleTransition _playerTransition;
     private int _ticksSinceGroundContact;
+    private int _followLoopFlag = RetailIScriptFollowWaypoint.FlagIdle;
     private bool _initializing;
     private Instance? _setup;
 
@@ -174,6 +175,13 @@ public sealed class Level100ActorScriptRuntime
             _initializing = false;
         }
     }
+
+    /// <summary>
+    /// Isolated FollowWaypoint emit-command names the rebuild
+    /// path. This is the <c>IScript+0x18</c> literal-1 store.
+    /// FollowWaypointWait / CVM / <c>+0x1c</c> stay unclaimed.
+    /// </summary>
+    public int FollowLoopFlag => _followLoopFlag;
 
     public void SetPlayerInJetMode(bool inJetMode) => _playerInJetMode = inJetMode;
 
@@ -929,10 +937,15 @@ public sealed class Level100ActorScriptRuntime
     {
         switch (command)
         {
-            case 0: // FollowWaypoint
+            case 0: // FollowWaypoint — IScript__FollowWaypoint 0x00537d70
                 RequireArguments(command, arguments, 2);
                 EmitCommand(instance.ActorId, Level100ActorScriptCommandKind.FollowWaypoint,
                     argument: arguments[0].AsString(), scalar: arguments[1].AsInteger());
+                // Isolated emit-command names the rebuild path / flag.
+                // Isolated Start names literal-1; one live store of 1
+                // is not unique versus increment from 0. FollowWaypointWait
+                // early-out / CVM / +0x1c / AddEvent 2000 stay unclaimed.
+                _followLoopFlag = RetailIScriptFollowWaypoint.Start(_followLoopFlag);
                 return NativeResult.Void;
             case 1: // FollowWaypointWait
                 RequireArguments(command, arguments, 1);
@@ -1150,6 +1163,25 @@ public sealed class Level100ActorScriptRuntime
             _playerMode,
             _playerTransition,
             _ticksSinceGroundContact);
+
+    /// <summary>
+    /// Isolated emit-command names the rebuild path. This is
+    /// the <c>IScript+0x18</c> literal-1 store on native 0.
+    /// FollowWaypointWait stays unclaimed.
+    /// </summary>
+    internal int InvokeFollowWaypointNative(
+        Level100ActorId actor,
+        string path,
+        int flag)
+    {
+        EmitCommand(
+            actor,
+            Level100ActorScriptCommandKind.FollowWaypoint,
+            argument: path,
+            scalar: flag);
+        _followLoopFlag = RetailIScriptFollowWaypoint.Start(_followLoopFlag);
+        return _followLoopFlag;
+    }
 
     /// <summary>
     /// Implements the bounded Mission-native objective-flag contract shared by
