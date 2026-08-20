@@ -1,4 +1,6 @@
+using System;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -83,6 +85,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             }.Where(part => !string.IsNullOrWhiteSpace(part)).Select(part => part!).ToArray();
             EditorKillBaselineSummaryTextBlock.Text = string.Join(" ", noticeParts);
             PaintMissionRanksCurrent(missionRankReadStatus.FileWasRead);
+            PaintGoodiesCurrent();
 
             if (SaveEditorAdvancedOverrideCarryOver.ShouldReseedGlobalKillValue(
                     _editorInputValid,
@@ -214,6 +217,46 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
             EditorMissionRanksCurrentTextBlock.Text =
                 SaveLabPageText.DescribeMissionRanksCurrent(_editorMissionRankRows);
+        }
+
+        /// <summary>
+        /// What the opened save already has across every listed Goodie.
+        /// Empty when no save is open; a refusal sentence when the file is
+        /// there but the mix cannot be shown. Does not touch the focused
+        /// Goodie current-state line.
+        /// </summary>
+        private void PaintGoodiesCurrent()
+        {
+            if (!_editorInputValid)
+            {
+                EditorGoodiesCurrentTextBlock.Text = string.Empty;
+                return;
+            }
+
+            string inputPath = (EditorInputFileTextBox.Text ?? string.Empty).Trim();
+            try
+            {
+                if (!File.Exists(inputPath))
+                {
+                    EditorGoodiesCurrentTextBlock.Text = SaveLabPageText.GoodiesCurrentUnreadable;
+                    return;
+                }
+
+                byte[] buffer = File.ReadAllBytes(inputPath);
+                if (!MissionScriptGoodieStateSaveCodec.TryReadDisplayableCensus(
+                        buffer,
+                        out DisplayableGoodieCensus census))
+                {
+                    EditorGoodiesCurrentTextBlock.Text = SaveLabPageText.GoodiesCurrentUnreadable;
+                    return;
+                }
+
+                EditorGoodiesCurrentTextBlock.Text = SaveLabPageText.DescribeGoodiesCurrent(census);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
+            {
+                EditorGoodiesCurrentTextBlock.Text = SaveLabPageText.GoodiesCurrentUnreadable;
+            }
         }
     }
 }

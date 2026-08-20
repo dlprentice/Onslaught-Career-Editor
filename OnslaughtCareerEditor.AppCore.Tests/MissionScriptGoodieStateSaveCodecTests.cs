@@ -256,6 +256,34 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                 out _));
         }
 
+        [Fact]
+        public void TryReadDisplayableCensus_CountsDisplayableSlotsAndIgnoresReserved()
+        {
+            byte[] buffer = CreateCodecBuffer();
+            MissionScriptGoodieStateSaveCodec.SetDisplayableStateBySaveIndex(buffer, 1, MissionScriptGoodieState.Instructions);
+            MissionScriptGoodieStateSaveCodec.SetDisplayableStateBySaveIndex(buffer, 2, MissionScriptGoodieState.New);
+            MissionScriptGoodieStateSaveCodec.SetDisplayableStateBySaveIndex(buffer, 3, MissionScriptGoodieState.Old);
+            MissionScriptGoodieStateVector reserved = MissionScriptGoodieStateSaveCodec.GetVectorFromSaveIndex(233);
+            BinaryPrimitives.WriteUInt32LittleEndian(buffer.AsSpan(reserved.TrueViewDwordOffset, 4), 2);
+            MissionScriptGoodieStateVector unknown = MissionScriptGoodieStateSaveCodec.GetVectorFromSaveIndex(4);
+            BinaryPrimitives.WriteUInt32LittleEndian(buffer.AsSpan(unknown.TrueViewDwordOffset, 4), 99);
+
+            Assert.True(MissionScriptGoodieStateSaveCodec.TryReadDisplayableCensus(buffer, out DisplayableGoodieCensus census));
+            Assert.Equal(MissionScriptGoodieStateSaveCodec.DisplayableGoodieCount, census.Total);
+            Assert.Equal(229, census.Locked);
+            Assert.Equal(1, census.LockedWithHint);
+            Assert.Equal(1, census.New);
+            Assert.Equal(1, census.Old);
+            Assert.Equal(1, census.Unrecognized);
+        }
+
+        [Fact]
+        public void TryReadDisplayableCensus_RefusesAnInvalidContainer()
+        {
+            Assert.False(MissionScriptGoodieStateSaveCodec.TryReadDisplayableCensus(new byte[8], out DisplayableGoodieCensus census));
+            Assert.Equal(0, census.Total);
+        }
+
         public static IEnumerable<object[]> AllStorageScriptIndices()
         {
             for (int scriptIndex = 1; scriptIndex <= MissionScriptGoodieStateSaveCodec.GoodieStorageEntryCount; scriptIndex++)

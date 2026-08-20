@@ -576,6 +576,10 @@
                                                   OnContent="Gold NEW"
                                                   OffContent="Blue OLD"
                                                   Toggled="EditorQuickSettingToggled" />
+                                    <TextBlock x:Name="EditorGoodiesCurrentTextBlock"
+                                               AutomationProperties.AutomationId="SaveEditorGoodiesCurrent"
+                                               Style="{StaticResource SectionBodyTextStyle}"
+                                               TextWrapping="WrapWholeWords" />
                                     <CheckBox x:Name="EditorKeepUnoverriddenKillsCheckBox"
                                               AutomationProperties.AutomationId="SaveEditorKeepUnoverriddenKillsCheckBox"
                                               AutomationProperties.Name="Keep the kill counts this save already has"

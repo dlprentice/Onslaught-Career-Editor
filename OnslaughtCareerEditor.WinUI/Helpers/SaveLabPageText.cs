@@ -116,6 +116,47 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
             "This save's current Goodie state could not be read.";
 
         /// <summary>
+        /// What this save already has across every listed Goodie. Shown next
+        /// to Mark goodies as NEW so that bulk write is replacing a named
+        /// mix rather than a blind wall. The focused-Goodie line still owns
+        /// one ID.
+        /// </summary>
+        public static string DescribeGoodiesCurrent(DisplayableGoodieCensus? census)
+        {
+            if (census is null || census.Value.Total != MissionScriptGoodieStateSaveCodec.DisplayableGoodieCount)
+            {
+                return GoodiesCurrentUnreadable;
+            }
+
+            DisplayableGoodieCensus counts = census.Value;
+            (string Label, int Count)[] labeled =
+            {
+                (MissionScriptGoodieStateSaveCodec.GetStateLabel(MissionScriptGoodieState.Unknown), counts.Locked),
+                (MissionScriptGoodieStateSaveCodec.GetStateLabel(MissionScriptGoodieState.Instructions), counts.LockedWithHint),
+                (MissionScriptGoodieStateSaveCodec.GetStateLabel(MissionScriptGoodieState.New), counts.New),
+                (MissionScriptGoodieStateSaveCodec.GetStateLabel(MissionScriptGoodieState.Old), counts.Old),
+                ("unrecognized", counts.Unrecognized),
+            };
+
+            (string Label, int Count)[] present = labeled.Where(row => row.Count > 0).ToArray();
+            if (present.Length == 0)
+            {
+                return GoodiesCurrentUnreadable;
+            }
+
+            if (present.Length == 1 && present[0].Count == counts.Total && present[0].Label != "unrecognized")
+            {
+                return $"This save has every listed Goodie as {present[0].Label}.";
+            }
+
+            string[] parts = present.Select(row => $"{row.Count} {row.Label}").ToArray();
+            return $"This save's Goodies are {JoinReadable(parts)}.";
+        }
+
+        public const string GoodiesCurrentUnreadable =
+            "This save's Goodies could not be read.";
+
+        /// <summary>
         /// What this save already has for the listed missions. Shown next to
         /// the Mission rank baseline so setting S is replacing named grades
         /// rather than a blind wall. The per-mission Current column still

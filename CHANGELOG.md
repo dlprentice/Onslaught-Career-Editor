@@ -10,6 +10,9 @@ live in `developer_state.json` and the campaign ledgers.
 
 ## Unreleased
 
+- Save Lab Mark goodies as NEW now shows what the opened save already has
+  across every listed Goodie, so a gold or blue wall is replacing a named mix
+  rather than a blind set of dwords.
 - Save Lab Mission rank baseline now shows what the opened save already has
   for its listed missions, so setting S is replacing named grades rather than
   a blind wall.
