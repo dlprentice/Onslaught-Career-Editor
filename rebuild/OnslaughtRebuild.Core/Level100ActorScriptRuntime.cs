@@ -100,6 +100,7 @@ public sealed class Level100ActorScriptRuntime
     private VehicleTransition _playerTransition;
     private int _ticksSinceGroundContact;
     private int _followLoopFlag = RetailIScriptFollowWaypoint.FlagIdle;
+    private int _waitStopFlag = RetailIScriptWaitStop.FlagIdle;
     private bool _initializing;
     private Instance? _setup;
 
@@ -182,6 +183,14 @@ public sealed class Level100ActorScriptRuntime
     /// FollowWaypointWait / CVM / <c>+0x1c</c> stay unclaimed.
     /// </summary>
     public int FollowLoopFlag => _followLoopFlag;
+
+    /// <summary>
+    /// Isolated <see cref="Level100MissionTiming.PauseTicks"/> names
+    /// the rebuild sleep. This is the
+    /// <c>mov [0x0089c800], 1</c> store on actor-script Pause.
+    /// CVM snapshot / 0.05f / FollowWaypointWait stay unclaimed.
+    /// </summary>
+    public int WaitStopFlag => _waitStopFlag;
 
     public void SetPlayerInJetMode(bool inJetMode) => _playerInJetMode = inJetMode;
 
@@ -970,8 +979,14 @@ public sealed class Level100ActorScriptRuntime
                     RunReadyAfterSpawn(spawnedInstance);
                 }
                 return NativeResult.Void;
-            case 4: // Pause
+            case 4: // Pause — IScript__Pause 0x00537c70
                 RequireArguments(command, arguments, 1);
+                // Isolated PauseTicks names the rebuild sleep.
+                // Isolated Stop names LevelScript PlayCharMessageWait.
+                // TargetZone2/3/4 hit() Pause(0.5) is this store.
+                // CVM snapshot / 0.05f / FollowWaypointWait stay
+                // unclaimed. ChargeWeapon stays unclaimed.
+                _waitStopFlag = RetailIScriptWaitStop.Stop(_waitStopFlag);
                 return NativeResult.Pause(
                     Level100MissionTiming.PauseTicks(arguments[0].AsFloat()),
                     arguments[0].Scalar);

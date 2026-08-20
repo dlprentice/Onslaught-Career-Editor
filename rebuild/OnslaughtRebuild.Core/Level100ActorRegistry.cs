@@ -829,6 +829,7 @@ public sealed class Level100ActorRegistry
         internal bool IsStatic { get; init; }
         internal bool Active { get; set; }
         internal bool IsObjective { get; set; }
+        internal int FlagWord { get; set; }
         internal Level100ActorLifecycle Lifecycle { get; set; }
         internal int Health { get; set; }
         internal required Level100ActorPoseSnapshot Pose { get; set; }
@@ -976,6 +977,15 @@ public sealed class Level100ActorRegistry
 
     public uint GetThingTypeMask(Level100ActorId actorId) => Require(actorId).ThingTypeMask;
 
+    /// <summary>
+    /// Isolated <see cref="Level100ActorSnapshot.IsObjective"/> names
+    /// the rebuild bool. This is the
+    /// <c>or/and [esi+0x2c], 0x20</c> word actor-script
+    /// SetObjective / UnsetObjective write. Noticeboard stays
+    /// unclaimed.
+    /// </summary>
+    public int FlagWord(Level100ActorId actorId) => Require(actorId).FlagWord;
+
     public IReadOnlyList<Level100ActorId> SpawnThing(
         Level100ActorId ownerId,
         string definitionName,
@@ -1054,7 +1064,10 @@ public sealed class Level100ActorRegistry
                 "A destroyed Level 100 actor cannot become an objective.");
         }
 
-        actor.IsObjective = objective;
+        actor.FlagWord = objective
+            ? RetailSetObjective.Mark(actor.FlagWord)
+            : RetailSetObjective.Unmark(actor.FlagWord);
+        actor.IsObjective = (actor.FlagWord & RetailSetObjective.MarkedBit) != 0;
     }
 
     public void SetScript(Level100ActorId actorId, string scriptName)
@@ -1146,12 +1159,11 @@ public sealed class Level100ActorRegistry
         Level100MissionJetModeState entryJetModeState)
     {
         Actor actor = Require(actorId);
-        if (!actor.Trigger.HasValue || actor.TriggerEntered)
+        if (!actor.Trigger.HasValue || actor.TriggerEventDispatched)
         {
             return false;
         }
 
-        actor.TriggerEntered = true;
         actor.TriggerEntryJetModeState = entryJetModeState;
         EnqueueFact(Level100ActorFactKind.TriggerDispatchReady, actor.ActorId, null, 0);
         return true;
@@ -1160,11 +1172,13 @@ public sealed class Level100ActorRegistry
     public void MarkTriggerEventDispatched(Level100ActorId actorId)
     {
         Actor actor = Require(actorId);
-        if (!actor.Trigger.HasValue || !actor.TriggerEntered || actor.TriggerEventDispatched)
+        if (!actor.Trigger.HasValue || actor.TriggerEventDispatched)
         {
             throw new InvalidOperationException("Trigger dispatch is not ready.");
         }
 
+        actor.TriggerEntered = true;
+        actor.TriggerEntryJetModeState ??= Level100MissionJetModeState.NotInJetMode;
         actor.TriggerEventDispatched = true;
         actor.Active = false;
         actor.IsObjective = false;
@@ -1400,9 +1414,7 @@ public sealed class Level100ActorRegistry
                  actor.TriggerEntryJetModeState.HasValue ||
                  actor.TriggerEventDispatched)) ||
             (actor.Trigger.HasValue &&
-                ((!actor.TriggerEntered &&
-                    (actor.TriggerEntryJetModeState.HasValue ||
-                     actor.TriggerEventDispatched)) ||
+                ((actor.TriggerEventDispatched && !actor.TriggerEntered) ||
                  (actor.TriggerEntered && !actor.TriggerEntryJetModeState.HasValue))))
         {
             throw new ArgumentException(
@@ -1476,6 +1488,7 @@ public sealed class Level100ActorRegistry
         IsStatic = actor.IsStatic,
         Active = actor.Active,
         IsObjective = actor.IsObjective,
+        FlagWord = actor.IsObjective ? RetailSetObjective.MarkedBit : 0,
         Lifecycle = actor.Lifecycle,
         Health = actor.Health,
         Pose = actor.Pose,
