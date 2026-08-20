@@ -2679,17 +2679,23 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         private async System.Threading.Tasks.Task RefreshSafeCopyManagerAsync()
         {
             IReadOnlyList<SafeCopyOverview> copies;
+            Models.SafeCopyManagerItem[] items;
             try
             {
-                copies = await Task.Run(() => SafeCopyCatalogService.List());
+                (copies, items) = await Task.Run(() =>
+                {
+                    IReadOnlyList<SafeCopyOverview> listed = SafeCopyCatalogService.List();
+                    return (listed, listed.Select(copy => new Models.SafeCopyManagerItem(copy)).ToArray());
+                });
             }
             catch (Exception ex) when (IsUserFacingOperationException(ex))
             {
                 copies = Array.Empty<SafeCopyOverview>();
+                items = Array.Empty<Models.SafeCopyManagerItem>();
             }
 
             _safeCopyManagerRows = copies;
-            SafeCopyManagerList.ItemsSource = copies.Select(copy => new Models.SafeCopyManagerItem(copy)).ToArray();
+            SafeCopyManagerList.ItemsSource = items;
 
             string total = SafeCopyManagerText.BuildTotalLine(copies);
             SafeCopyManagerTotal.Text = total;

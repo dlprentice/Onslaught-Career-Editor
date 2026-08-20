@@ -21,6 +21,20 @@ namespace OnslaughtCareerEditor.AppCore
         bool IsReservedPreserve);
 
     /// <summary>
+    /// How many displayable Goodie dwords (save index 0..232) hold each
+    /// known state. Reserved slots 233..299 are never counted.
+    /// </summary>
+    public readonly record struct DisplayableGoodieCensus(
+        int Locked,
+        int LockedWithHint,
+        int New,
+        int Old,
+        int Unrecognized)
+    {
+        public int Total => Locked + LockedWithHint + New + Old + Unrecognized;
+    }
+
+    /// <summary>
     /// MissionScript SetGoodieState/GetGoodieState codec over the documented retail
     /// true-view CCareer Goodie storage. This is pure buffer math; it performs no
     /// file I/O and proves no runtime MissionScript behavior.
@@ -92,6 +106,86 @@ namespace OnslaughtCareerEditor.AppCore
         {
             MissionScriptGoodieStateVector vector = GetVectorFromSaveIndex(saveGoodieIndex);
             return GetStateAtVector(buffer, vector);
+        }
+
+        /// <summary>
+        /// Read one displayable Goodie dword without throwing. Save Lab uses this
+        /// to show the current state before a focused write.
+        /// </summary>
+        public static bool TryGetDisplayableStateBySaveIndex(
+            ReadOnlySpan<byte> buffer,
+            int saveGoodieIndex,
+            out MissionScriptGoodieState state)
+        {
+            state = default;
+            if ((uint)saveGoodieIndex >= DisplayableGoodieCount)
+            {
+                return false;
+            }
+
+            if (!IsValidCareerSaveContainer(buffer))
+            {
+                return false;
+            }
+
+            MissionScriptGoodieStateVector vector = GetVectorFromSaveIndex(saveGoodieIndex);
+            uint raw = BinaryPrimitives.ReadUInt32LittleEndian(buffer.Slice(vector.TrueViewDwordOffset, 4));
+            if (raw > MaxKnownStateValue)
+            {
+                return false;
+            }
+
+            state = (MissionScriptGoodieState)raw;
+            return true;
+        }
+
+        /// <summary>
+        /// Count every displayable Goodie dword. Unknown values are
+        /// <see cref="DisplayableGoodieCensus.Unrecognized"/> rather than a
+        /// refusal, so a mixed save still has a current-state sentence.
+        /// Reserved slots are not read.
+        /// </summary>
+        public static bool TryReadDisplayableCensus(
+            ReadOnlySpan<byte> buffer,
+            out DisplayableGoodieCensus census)
+        {
+            census = default;
+            if (!IsValidCareerSaveContainer(buffer))
+            {
+                return false;
+            }
+
+            int locked = 0;
+            int lockedWithHint = 0;
+            int nnew = 0;
+            int old = 0;
+            int unrecognized = 0;
+            for (int saveGoodieIndex = 0; saveGoodieIndex < DisplayableGoodieCount; saveGoodieIndex++)
+            {
+                MissionScriptGoodieStateVector vector = GetVectorFromSaveIndex(saveGoodieIndex);
+                uint raw = BinaryPrimitives.ReadUInt32LittleEndian(buffer.Slice(vector.TrueViewDwordOffset, 4));
+                switch (raw)
+                {
+                    case (uint)MissionScriptGoodieState.Unknown:
+                        locked++;
+                        break;
+                    case (uint)MissionScriptGoodieState.Instructions:
+                        lockedWithHint++;
+                        break;
+                    case (uint)MissionScriptGoodieState.New:
+                        nnew++;
+                        break;
+                    case (uint)MissionScriptGoodieState.Old:
+                        old++;
+                        break;
+                    default:
+                        unrecognized++;
+                        break;
+                }
+            }
+
+            census = new DisplayableGoodieCensus(locked, lockedWithHint, nnew, old, unrecognized);
+            return true;
         }
 
         public static void SetDisplayableStateByScriptIndex(Span<byte> buffer, int scriptIndex, MissionScriptGoodieState state)

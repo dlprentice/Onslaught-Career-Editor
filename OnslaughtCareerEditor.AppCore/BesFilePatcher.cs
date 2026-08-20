@@ -160,6 +160,19 @@ namespace OnslaughtCareerEditor.AppCore
         public List<MysteryRegionData> MysteryRegions { get; set; } = new();
     }
 
+    /// <summary>
+    /// How many used campaign-link slots hold each known type. Unused
+    /// slots (<c>mToNode == 0xFFFFFFFF</c>) are never counted.
+    /// </summary>
+    public readonly record struct DisplayableLinkCensus(
+        int StillLocked,
+        int Complete,
+        int Broken,
+        int Unrecognized)
+    {
+        public int Total => StillLocked + Complete + Broken + Unrecognized;
+    }
+
     public class BesFilePatcher
     {
         public sealed class BindingSlotOverride
@@ -309,6 +322,7 @@ namespace OnslaughtCareerEditor.AppCore
         public const int KILL_MECHS = 4;
 
         private const uint LINK_COMPLETE = 1;
+        private const uint LINK_BROKEN = 2;
 
         // Goodie states (true dword view)
         private const uint GOODIE_INSTRUCTIONS = 1;
@@ -780,6 +794,60 @@ namespace OnslaughtCareerEditor.AppCore
             {
                 return PatchResult.Fail(DescribeCaughtPatchFailure(ex));
             }
+        }
+
+        /// <summary>
+        /// Count every used campaign-link slot. Unused slots
+        /// (<c>mToNode == 0xFFFFFFFF</c>) are not read. Known types are
+        /// <c>CN_NOT_COMPLETE</c> (0), <c>CN_COMPLETE</c> (1), and
+        /// <c>CN_COMPLETE_BROKEN</c> (2). Other dwords are
+        /// <see cref="DisplayableLinkCensus.Unrecognized"/> rather than a
+        /// refusal, so a mixed save still has a current-state sentence.
+        /// </summary>
+        public static bool TryReadDisplayableLinkCensus(
+            ReadOnlySpan<byte> buffer,
+            out DisplayableLinkCensus census)
+        {
+            census = default;
+            if (buffer.Length != EXPECTED_FILE_SIZE
+                || BinaryPrimitives.ReadUInt16LittleEndian(buffer.Slice(0, 2)) != VERSION_WORD)
+            {
+                return false;
+            }
+
+            int stillLocked = 0;
+            int complete = 0;
+            int broken = 0;
+            int unrecognized = 0;
+            for (int l = 0; l < LINK_COUNT; l++)
+            {
+                int off = LINK_BASE + l * LINK_SIZE;
+                uint state = BinaryPrimitives.ReadUInt32LittleEndian(buffer.Slice(off, 4));
+                uint toNode = BinaryPrimitives.ReadUInt32LittleEndian(buffer.Slice(off + 4, 4));
+                if (toNode == 0xFFFFFFFF)
+                {
+                    continue;
+                }
+
+                switch (state)
+                {
+                    case 0:
+                        stillLocked++;
+                        break;
+                    case LINK_COMPLETE:
+                        complete++;
+                        break;
+                    case LINK_BROKEN:
+                        broken++;
+                        break;
+                    default:
+                        unrecognized++;
+                        break;
+                }
+            }
+
+            census = new DisplayableLinkCensus(stillLocked, complete, broken, unrecognized);
+            return true;
         }
 
         // ---------- helpers ----------

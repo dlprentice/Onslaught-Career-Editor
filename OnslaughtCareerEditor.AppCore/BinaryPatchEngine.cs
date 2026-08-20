@@ -45,6 +45,28 @@ namespace OnslaughtCareerEditor.AppCore
     public sealed record BinaryPatchVerifyRow(BinaryPatchSpec Spec, BinaryPatchState State);
 
     /// <summary>
+    /// Why a read-only inspect of one copy's executable did not produce catalog-patch states.
+    /// </summary>
+    public enum BinaryPatchCopyInspectRefusal
+    {
+        None,
+        NoExecutable,
+        Unreadable,
+        InstalledGame,
+    }
+
+    /// <summary>
+    /// One copy's current catalog-patch bytes. Read-only; a missing or installed-game path
+    /// is a refusal, not a guessed Original.
+    /// </summary>
+    public sealed record BinaryPatchCopyInspectResult(
+        BinaryPatchCopyInspectRefusal Refusal,
+        IReadOnlyList<BinaryPatchVerifyRow> Rows)
+    {
+        public bool Success => Refusal == BinaryPatchCopyInspectRefusal.None;
+    }
+
+    /// <summary>
     /// Permission to write to the executable of an installed game, which every other path here
     /// refuses outright.
     ///
@@ -1177,6 +1199,46 @@ namespace OnslaughtCareerEditor.AppCore
             if (allOriginal)
                 return BinaryPatchState.Original;
             return BinaryPatchState.Mismatch;
+        }
+
+        /// <summary>
+        /// Read one copy's executable and classify each listed catalog patch. Never writes.
+        /// The installed game is refused so a list of copies cannot inspect Steam.
+        /// </summary>
+        public static BinaryPatchCopyInspectResult InspectCopyExecutable(
+            string? exePath,
+            IReadOnlyList<BinaryPatchSpec> specs)
+        {
+            ArgumentNullException.ThrowIfNull(specs);
+
+            if (LiveTrainerAttachPolicy.LooksLikeAnInstalledGameDirectory(exePath))
+            {
+                return new BinaryPatchCopyInspectResult(
+                    BinaryPatchCopyInspectRefusal.InstalledGame,
+                    Array.Empty<BinaryPatchVerifyRow>());
+            }
+
+            if (string.IsNullOrWhiteSpace(exePath) || !File.Exists(exePath))
+            {
+                return new BinaryPatchCopyInspectResult(
+                    BinaryPatchCopyInspectRefusal.NoExecutable,
+                    Array.Empty<BinaryPatchVerifyRow>());
+            }
+
+            byte[] data;
+            try
+            {
+                data = File.ReadAllBytes(exePath);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException)
+            {
+                return new BinaryPatchCopyInspectResult(
+                    BinaryPatchCopyInspectRefusal.Unreadable,
+                    Array.Empty<BinaryPatchVerifyRow>());
+            }
+
+            var (_, _, rows) = VerifyPatchSpecs(data, specs);
+            return new BinaryPatchCopyInspectResult(BinaryPatchCopyInspectRefusal.None, rows);
         }
 
         public static (bool allKnown, bool allPatched, List<BinaryPatchVerifyRow> rows) VerifyPatchSpecs(

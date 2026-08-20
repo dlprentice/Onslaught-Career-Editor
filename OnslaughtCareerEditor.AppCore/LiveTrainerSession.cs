@@ -582,6 +582,27 @@ namespace OnslaughtCareerEditor.AppCore
             return true;
         }
 
+        /// <summary>
+        /// Hold life, energy, and shields together, or hold none of them.
+        /// The Cheats page's "Hold all three" switch uses this so a refused
+        /// third value cannot leave two holds running under a switch that said all.
+        /// </summary>
+        public bool TryHoldAll(float life, float energy, float shields, out string refusal)
+        {
+            if (!LiveTrainerPlausibility.IsWritableVital(life, out refusal)
+                || !LiveTrainerPlausibility.IsWritableVital(energy, out refusal)
+                || !LiveTrainerPlausibility.IsWritableVital(shields, out refusal))
+            {
+                return false;
+            }
+
+            _held[LiveTrainerVital.Life] = life;
+            _held[LiveTrainerVital.Energy] = energy;
+            _held[LiveTrainerVital.Shields] = shields;
+            _consecutiveFailures = 0;
+            return true;
+        }
+
         public void Release(LiveTrainerVital vital)
         {
             _held.Remove(vital);

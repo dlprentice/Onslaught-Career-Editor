@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Linq;
 using OnslaughtCareerEditor.AppCore;
 using Xunit;
@@ -159,6 +160,79 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             partialPatch[spec.FileOffset] = spec.Patched[0];
             Assert.Equal(BinaryPatchState.Mismatch, BinaryPatchEngine.GetPatchState(partialPatch, spec));
             Assert.False(BinaryPatchEngine.CurrentBytesContainOnlyKnownCatalogTransitions(partialPatch, backup, new[] { spec }));
+        }
+
+        [Fact]
+        public void InspectCopyExecutableRefusesAMissingFileWithoutGuessingOriginal()
+        {
+            BinaryPatchCopyInspectResult result = BinaryPatchEngine.InspectCopyExecutable(
+                Path.Combine(Path.GetTempPath(), "no-such-copy", "BEA.exe"),
+                new[] { MakeSpec() });
+
+            Assert.Equal(BinaryPatchCopyInspectRefusal.NoExecutable, result.Refusal);
+            Assert.False(result.Success);
+            Assert.Empty(result.Rows);
+        }
+
+        [Fact]
+        public void InspectCopyExecutableRefusesAnInstalledGamePathWithoutReadingIt()
+        {
+            string root = Path.Combine(Path.GetTempPath(), "inspect-installed-" + Guid.NewGuid().ToString("N"));
+            string exePath = Path.Combine(root, "steamapps", "common", "Battle Engine Aquila", "BEA.exe");
+            Directory.CreateDirectory(Path.GetDirectoryName(exePath)!);
+            File.WriteAllBytes(exePath, new byte[] { 0x4D, 0x5A });
+
+            try
+            {
+                BinaryPatchCopyInspectResult result = BinaryPatchEngine.InspectCopyExecutable(
+                    exePath,
+                    new[] { MakeSpec() });
+
+                Assert.Equal(BinaryPatchCopyInspectRefusal.InstalledGame, result.Refusal);
+                Assert.False(result.Success);
+                Assert.Empty(result.Rows);
+            }
+            finally
+            {
+                Directory.Delete(root, recursive: true);
+            }
+        }
+
+        [Fact]
+        public void InspectCopyExecutableReadsOriginalAndPatchedStatesFromACopyFile()
+        {
+            BinaryPatchSpec spec = MakeSpec() with
+            {
+                Dependencies = Array.Empty<string>(),
+                Conflicts = Array.Empty<string>(),
+                ExclusiveGroup = string.Empty,
+                RequiresWindowedPair = false,
+                AdditionalRegions = Array.Empty<BinaryPatchRegion>(),
+            };
+            string path = Path.Combine(Path.GetTempPath(), "inspect-copy-" + Guid.NewGuid().ToString("N") + ".bin");
+            byte[] original = new byte[spec.FileOffset + spec.Original.Length + 8];
+            spec.Original.CopyTo(original, spec.FileOffset);
+            File.WriteAllBytes(path, original);
+
+            try
+            {
+                BinaryPatchCopyInspectResult originalResult = BinaryPatchEngine.InspectCopyExecutable(path, new[] { spec });
+                Assert.True(originalResult.Success);
+                Assert.Equal(BinaryPatchCopyInspectRefusal.None, originalResult.Refusal);
+                Assert.Equal(BinaryPatchState.Original, Assert.Single(originalResult.Rows).State);
+
+                byte[] patched = original.ToArray();
+                spec.Patched.CopyTo(patched, spec.FileOffset);
+                File.WriteAllBytes(path, patched);
+
+                BinaryPatchCopyInspectResult patchedResult = BinaryPatchEngine.InspectCopyExecutable(path, new[] { spec });
+                Assert.True(patchedResult.Success);
+                Assert.Equal(BinaryPatchState.Patched, Assert.Single(patchedResult.Rows).State);
+            }
+            finally
+            {
+                File.Delete(path);
+            }
         }
 
         private static BinaryPatchSpec MakeSpec()

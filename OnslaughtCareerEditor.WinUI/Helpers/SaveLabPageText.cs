@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using OnslaughtCareerEditor.AppCore;
 
 namespace OnslaughtCareerEditor.WinUI.Helpers
@@ -99,6 +101,210 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
             }
 
             return CheatsPageText.BuildOverwriteQuestion(fileName);
+        }
+
+        /// <summary>
+        /// What this save already has for the focused Goodie. Shown next to the
+        /// write controls so a player can see the dword they are about to replace.
+        /// </summary>
+        public static string DescribeFocusedGoodieCurrent(int goodieId, MissionScriptGoodieState state)
+        {
+            return $"This save has Goodie {goodieId:000} as {MissionScriptGoodieStateSaveCodec.GetStateLabel(state)}.";
+        }
+
+        public const string FocusedGoodieCurrentUnreadable =
+            "This save's current Goodie state could not be read.";
+
+        /// <summary>
+        /// What this save already has across every listed Goodie. Shown next
+        /// to Mark goodies as NEW so that bulk write is replacing a named
+        /// mix rather than a blind wall. The focused-Goodie line still owns
+        /// one ID.
+        /// </summary>
+        public static string DescribeGoodiesCurrent(DisplayableGoodieCensus? census)
+        {
+            if (census is null || census.Value.Total != MissionScriptGoodieStateSaveCodec.DisplayableGoodieCount)
+            {
+                return GoodiesCurrentUnreadable;
+            }
+
+            DisplayableGoodieCensus counts = census.Value;
+            (string Label, int Count)[] labeled =
+            {
+                (MissionScriptGoodieStateSaveCodec.GetStateLabel(MissionScriptGoodieState.Unknown), counts.Locked),
+                (MissionScriptGoodieStateSaveCodec.GetStateLabel(MissionScriptGoodieState.Instructions), counts.LockedWithHint),
+                (MissionScriptGoodieStateSaveCodec.GetStateLabel(MissionScriptGoodieState.New), counts.New),
+                (MissionScriptGoodieStateSaveCodec.GetStateLabel(MissionScriptGoodieState.Old), counts.Old),
+                ("unrecognized", counts.Unrecognized),
+            };
+
+            (string Label, int Count)[] present = labeled.Where(row => row.Count > 0).ToArray();
+            if (present.Length == 0)
+            {
+                return GoodiesCurrentUnreadable;
+            }
+
+            if (present.Length == 1 && present[0].Count == counts.Total && present[0].Label != "unrecognized")
+            {
+                return $"This save has every listed Goodie as {present[0].Label}.";
+            }
+
+            string[] parts = present.Select(row => $"{row.Count} {row.Label}").ToArray();
+            return $"This save's Goodies are {JoinReadable(parts)}.";
+        }
+
+        public const string GoodiesCurrentUnreadable =
+            "This save's Goodies could not be read.";
+
+        /// <summary>
+        /// What this save already has for the listed missions. Shown next to
+        /// the Mission rank baseline so setting S is replacing named grades
+        /// rather than a blind wall. The per-mission Current column still
+        /// owns the row detail.
+        /// </summary>
+        public static string DescribeMissionRanksCurrent(IReadOnlyList<SaveMissionRankRow>? rows)
+        {
+            if (rows is null || rows.Count == 0)
+            {
+                return MissionRanksCurrentUnreadable;
+            }
+
+            Dictionary<string, int> counts = new(StringComparer.Ordinal);
+            foreach (SaveMissionRankRow row in rows)
+            {
+                string? label = ClassifyListedMissionRank(row.CurrentRank);
+                if (label is null)
+                {
+                    continue;
+                }
+
+                counts[label] = counts.TryGetValue(label, out int n) ? n + 1 : 1;
+            }
+
+            if (counts.Count == 0)
+            {
+                return MissionRanksCurrentUnreadable;
+            }
+
+            if (counts.Count == 1)
+            {
+                (string label, int n) = counts.First();
+                if (n == rows.Count && IsExactListedGrade(label))
+                {
+                    return $"This save has every listed mission at {label}.";
+                }
+            }
+
+            string[] parts = ListedGradeOrder
+                .Where(counts.ContainsKey)
+                .Select(label => $"{counts[label]} {label}")
+                .ToArray();
+            if (parts.Length == 0)
+            {
+                return MissionRanksCurrentUnreadable;
+            }
+
+            return $"This save's missions are {JoinReadable(parts)}.";
+        }
+
+        public const string MissionRanksCurrentUnreadable =
+            "This save's mission grades could not be read.";
+
+        /// <summary>
+        /// What this save already has for used campaign links. Shown next
+        /// to Patch links so that write is completing named remaining
+        /// locked links rather than a blind table. Unused slots are not
+        /// counted. Type 2 is the unused other parent route (broken line).
+        /// </summary>
+        public static string DescribeLinksCurrent(DisplayableLinkCensus? census)
+        {
+            if (census is null)
+            {
+                return LinksCurrentUnreadable;
+            }
+
+            DisplayableLinkCensus counts = census.Value;
+            if (counts.Total == 0)
+            {
+                return "This save has no listed links.";
+            }
+
+            (string Label, int Count)[] labeled =
+            {
+                ("still locked", counts.StillLocked),
+                ("complete", counts.Complete),
+                ("broken", counts.Broken),
+                ("unrecognized", counts.Unrecognized),
+            };
+
+            (string Label, int Count)[] present = labeled.Where(row => row.Count > 0).ToArray();
+            if (present.Length == 0)
+            {
+                return LinksCurrentUnreadable;
+            }
+
+            if (present.Length == 1 && present[0].Count == counts.Total && present[0].Label != "unrecognized")
+            {
+                return $"This save has every listed link {present[0].Label}.";
+            }
+
+            string[] parts = present.Select(row => $"{row.Count} {row.Label}").ToArray();
+            return $"This save's links are {JoinReadable(parts)}.";
+        }
+
+        public const string LinksCurrentUnreadable =
+            "This save's links could not be read.";
+
+        private static readonly string[] ListedGradeOrder =
+        {
+            "S", "A", "B", "C", "D", "E", "No Grade",
+            "near S", "near A", "near B", "near C", "near D", "near E",
+            "unrecognized"
+        };
+
+        private static bool IsExactListedGrade(string label) =>
+            label is "S" or "A" or "B" or "C" or "D" or "E" or "No Grade";
+
+        private static string? ClassifyListedMissionRank(string? current)
+        {
+            string trimmed = (current ?? string.Empty).Trim();
+            if (trimmed.Length == 0 || trimmed == "-")
+            {
+                return null;
+            }
+
+            if (trimmed.Equals("NONE", StringComparison.OrdinalIgnoreCase))
+            {
+                return "No Grade";
+            }
+
+            foreach (string grade in new[] { "S", "A", "B", "C", "D", "E" })
+            {
+                if (trimmed.Equals(grade, StringComparison.OrdinalIgnoreCase))
+                {
+                    return grade;
+                }
+            }
+
+            if (trimmed.StartsWith("~", StringComparison.Ordinal)
+                && trimmed.Length >= 2
+                && "SABCDE".Contains(char.ToUpperInvariant(trimmed[1])))
+            {
+                return $"near {char.ToUpperInvariant(trimmed[1])}";
+            }
+
+            return "unrecognized";
+        }
+
+        private static string JoinReadable(IReadOnlyList<string> values)
+        {
+            return values.Count switch
+            {
+                0 => string.Empty,
+                1 => values[0],
+                2 => $"{values[0]} and {values[1]}",
+                _ => string.Join(", ", values.Take(values.Count - 1)) + " and " + values[^1],
+            };
         }
     }
 }

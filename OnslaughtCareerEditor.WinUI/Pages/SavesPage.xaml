@@ -566,12 +566,20 @@
                                         <ComboBoxItem Content="No Grade" Tag="NONE" />
                                         <ComboBoxItem Content="Keep every grade this save already has" Tag="KEEP" />
                                     </ComboBox>
+                                    <TextBlock x:Name="EditorMissionRanksCurrentTextBlock"
+                                               AutomationProperties.AutomationId="SaveEditorMissionRanksCurrent"
+                                               Style="{StaticResource SectionBodyTextStyle}"
+                                               TextWrapping="WrapWholeWords" />
                                     <ToggleSwitch x:Name="EditorGoodiesAsNewToggle"
                                                   AutomationProperties.AutomationId="SaveEditorGoodiesAsNewToggle"
                                                   Header="Mark goodies as NEW"
                                                   OnContent="Gold NEW"
                                                   OffContent="Blue OLD"
                                                   Toggled="EditorQuickSettingToggled" />
+                                    <TextBlock x:Name="EditorGoodiesCurrentTextBlock"
+                                               AutomationProperties.AutomationId="SaveEditorGoodiesCurrent"
+                                               Style="{StaticResource SectionBodyTextStyle}"
+                                               TextWrapping="WrapWholeWords" />
                                     <CheckBox x:Name="EditorKeepUnoverriddenKillsCheckBox"
                                               AutomationProperties.AutomationId="SaveEditorKeepUnoverriddenKillsCheckBox"
                                               AutomationProperties.Name="Keep the kill counts this save already has"
@@ -628,6 +636,10 @@
                                         <ComboBoxItem Content="Old (blue)" Tag="3" />
                                     </ComboBox>
                                 </Grid>
+                                <TextBlock x:Name="EditorFocusedGoodieCurrentTextBlock"
+                                           AutomationProperties.AutomationId="SaveEditorFocusedGoodieCurrent"
+                                           Style="{StaticResource SectionBodyTextStyle}"
+                                           TextWrapping="WrapWholeWords" />
                                 <TextBlock x:Name="EditorFocusedGoodieStatusTextBlock"
                                            AutomationProperties.AutomationId="SaveEditorFocusedGoodieStatus"
                                            Style="{StaticResource SectionBodyTextStyle}"
@@ -691,6 +703,10 @@
                                               Checked="EditorKillsOnlyCheckBox_Changed"
                                               Unchecked="EditorKillsOnlyCheckBox_Changed" />
                                 </Grid>
+                                <TextBlock x:Name="EditorLinksCurrentTextBlock"
+                                           AutomationProperties.AutomationId="SaveEditorLinksCurrent"
+                                           Style="{StaticResource SectionBodyTextStyle}"
+                                           TextWrapping="WrapWholeWords" />
                             </StackPanel>
                         </Border>
 

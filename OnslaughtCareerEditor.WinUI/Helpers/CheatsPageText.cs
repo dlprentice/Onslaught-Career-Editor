@@ -144,6 +144,39 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
             return $"Starting from {name}{where}. It is copied, not changed.";
         }
 
+        /// <summary>
+        /// Which offered cheats this source save's name already switches on.
+        /// Cheats live in the file name, not the bytes, so copying Maladim.bes
+        /// to a new name drops God mode unless the player ticks it.
+        /// Empty when no save has been chosen.
+        /// </summary>
+        public static string DescribeSourceCheats(string? sourcePath)
+        {
+            if (string.IsNullOrWhiteSpace(sourcePath))
+            {
+                return string.Empty;
+            }
+
+            string name = Path.GetFileNameWithoutExtension(sourcePath);
+            IReadOnlyList<CheatCode> active = CheatSaveNameComposer.ActiveCheatsIn(name);
+            if (active.Count == 0)
+            {
+                return SourceCheatsNone;
+            }
+
+            string list = JoinReadable(active.Select(cheat => cheat.DisplayName).ToArray());
+            string keep = active.Count == 1
+                ? "Tick that cheat if you want the new name to keep it."
+                : "Tick those cheats if you want the new name to keep them.";
+            return $"This save already switches on {list}. {keep}";
+        }
+
+        /// <summary>
+        /// The source save's name does not contain any offered cheat code.
+        /// </summary>
+        public const string SourceCheatsNone =
+            "This save's name does not switch any of these cheats on.";
+
         public static string BuildDestinationSummary(CheatSaveTarget? safeCopy, string? chosenFolder)
         {
             if (safeCopy is not null)

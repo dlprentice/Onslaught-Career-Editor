@@ -10,6 +10,31 @@ live in `developer_state.json` and the campaign ledgers.
 
 ## Unreleased
 
+- Save Lab Patch links now shows what the opened save already has across
+  every used campaign link, so completing remaining locked links is
+  replacing a named mix rather than a blind table. Unused slots are not
+  counted. Broken is the unused other parent route on the campaign map.
+- Save Lab Mark goodies as NEW now shows what the opened save already has
+  across every listed Goodie, so a gold or blue wall is replacing a named mix
+  rather than a blind set of dwords.
+- Save Lab Mission rank baseline now shows what the opened save already has
+  for its listed missions, so setting S is replacing named grades rather than
+  a blind wall.
+- Cheats live trainer can copy the numbers it is reading into the Set and Hold
+  boxes. It does not write them back, and a hold already on stays at the old
+  values until you switch it.
+- Cheats now says which offered cheats the save you start from already switches on.
+  Those live in the file name, so a new name needs them ticked if you want to keep them.
+  The source file is still only copied.
+- Your safe copies now says which listed catalog patches this copy already has,
+  by reading that copy's `BEA.exe`. Original, already-patched, and unmatched
+  bytes are named without a dump or a path. The installed game is not opened.
+- Cheats live trainer can hold life, energy, and shields together. One switch
+  turns on the three existing holds at the values in the boxes. It is still a
+  top-up, not a freeze: walker mode still needs energy held for shields to last,
+  jet mode still zeros shields, and one hit big enough to kill still will.
+- Save Lab focused Goodie now shows what the opened save already has for that
+  ID, so a write is replacing a named state rather than a blind dword.
 - Settings and Home now say whether the chosen `BEA.exe` is the known Steam
   retail file. A changed file is not called an original; a copy made from it
   is disclosed as carrying those changes. If the file cannot be read, the app

@@ -580,6 +580,11 @@
                                                 <TextBlock Text="{Binding DetailText}"
                                                            Style="{StaticResource SectionBodyTextStyle}"
                                                            TextWrapping="WrapWholeWords" />
+                                                <TextBlock Text="{Binding PatchStateText}"
+                                                           AutomationProperties.AutomationId="{Binding PatchStateAutomationId}"
+                                                           AutomationProperties.Name="{Binding PatchStateText}"
+                                                           Style="{StaticResource SectionBodyTextStyle}"
+                                                           TextWrapping="WrapWholeWords" />
                                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                                     <Button AutomationProperties.AutomationId="{Binding LaunchAutomationId}"
                                                             AutomationProperties.Name="{Binding LaunchAccessibleName}"
@@ -1218,7 +1223,7 @@
                                             <TextBlock x:Name="PatchBenchMusicAudibleProofContractStatus"
                                                        AutomationProperties.AutomationId="PatchBenchMusicAudibleProofContractStatus"
                                                        AutomationProperties.Name="Music swap status"
-                                                       Text="A music swap modifies safe-copy files only. Audible proof still requires a bounded audio-output capture. Staging and CDB decode are not audible playback proof."
+                                                       Text="A music swap modifies safe-copy files only. Audible proof still requires a bounded audio-output capture. Staging and the copied game selecting the music file are not audible playback proof."
                                                        Style="{StaticResource SectionBodyTextStyle}"
                                                        FontWeight="SemiBold" />
                                             <TextBlock Text="Use Restore if you want to undo the staged track swap before testing."
@@ -1284,7 +1289,7 @@
                                              AutomationProperties.AutomationId="PatchBenchMusicTargetFileName"
                                              AutomationProperties.Name="Target track in safe copy"
                                              TextChanged="MusicReplacementInput_TextChanged"
-                                             PlaceholderText="Existing copied data\Music file, for example BEA_01(Master).ogg" />
+                                             PlaceholderText="Existing copied music file" />
                                     <TextBlock Text="Replacement music file"
                                                Style="{StaticResource SectionBodyTextStyle}" />
                                     <TextBox x:Name="PatchBenchMusicReplacementPath"

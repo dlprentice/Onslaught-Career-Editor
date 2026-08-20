@@ -225,6 +225,65 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             Assert.Throws<ArgumentOutOfRangeException>(() => MissionScriptGoodieStateSaveCodec.GetStateByScriptIndex(buffer, scriptIndex));
         }
 
+        [Fact]
+        public void TryGetDisplayableStateBySaveIndex_ReadsAKnownDwordWithoutThrowing()
+        {
+            byte[] buffer = CreateCodecBuffer();
+            MissionScriptGoodieStateSaveCodec.SetDisplayableStateBySaveIndex(buffer, 2, MissionScriptGoodieState.New);
+
+            Assert.True(MissionScriptGoodieStateSaveCodec.TryGetDisplayableStateBySaveIndex(
+                buffer,
+                2,
+                out MissionScriptGoodieState state));
+            Assert.Equal(MissionScriptGoodieState.New, state);
+        }
+
+        [Fact]
+        public void TryGetDisplayableStateBySaveIndex_RefusesAReservedSlotOrUnknownDword()
+        {
+            byte[] buffer = CreateCodecBuffer();
+            MissionScriptGoodieStateVector reserved = MissionScriptGoodieStateSaveCodec.GetVectorFromSaveIndex(233);
+            BinaryPrimitives.WriteUInt32LittleEndian(buffer.AsSpan(reserved.TrueViewDwordOffset, 4), 2);
+            Assert.False(MissionScriptGoodieStateSaveCodec.TryGetDisplayableStateBySaveIndex(buffer, 233, out _));
+
+            MissionScriptGoodieStateVector displayable = MissionScriptGoodieStateSaveCodec.GetVectorFromSaveIndex(2);
+            BinaryPrimitives.WriteUInt32LittleEndian(buffer.AsSpan(displayable.TrueViewDwordOffset, 4), 99);
+            Assert.False(MissionScriptGoodieStateSaveCodec.TryGetDisplayableStateBySaveIndex(buffer, 2, out _));
+
+            Assert.False(MissionScriptGoodieStateSaveCodec.TryGetDisplayableStateBySaveIndex(
+                new byte[8],
+                2,
+                out _));
+        }
+
+        [Fact]
+        public void TryReadDisplayableCensus_CountsDisplayableSlotsAndIgnoresReserved()
+        {
+            byte[] buffer = CreateCodecBuffer();
+            MissionScriptGoodieStateSaveCodec.SetDisplayableStateBySaveIndex(buffer, 1, MissionScriptGoodieState.Instructions);
+            MissionScriptGoodieStateSaveCodec.SetDisplayableStateBySaveIndex(buffer, 2, MissionScriptGoodieState.New);
+            MissionScriptGoodieStateSaveCodec.SetDisplayableStateBySaveIndex(buffer, 3, MissionScriptGoodieState.Old);
+            MissionScriptGoodieStateVector reserved = MissionScriptGoodieStateSaveCodec.GetVectorFromSaveIndex(233);
+            BinaryPrimitives.WriteUInt32LittleEndian(buffer.AsSpan(reserved.TrueViewDwordOffset, 4), 2);
+            MissionScriptGoodieStateVector unknown = MissionScriptGoodieStateSaveCodec.GetVectorFromSaveIndex(4);
+            BinaryPrimitives.WriteUInt32LittleEndian(buffer.AsSpan(unknown.TrueViewDwordOffset, 4), 99);
+
+            Assert.True(MissionScriptGoodieStateSaveCodec.TryReadDisplayableCensus(buffer, out DisplayableGoodieCensus census));
+            Assert.Equal(MissionScriptGoodieStateSaveCodec.DisplayableGoodieCount, census.Total);
+            Assert.Equal(229, census.Locked);
+            Assert.Equal(1, census.LockedWithHint);
+            Assert.Equal(1, census.New);
+            Assert.Equal(1, census.Old);
+            Assert.Equal(1, census.Unrecognized);
+        }
+
+        [Fact]
+        public void TryReadDisplayableCensus_RefusesAnInvalidContainer()
+        {
+            Assert.False(MissionScriptGoodieStateSaveCodec.TryReadDisplayableCensus(new byte[8], out DisplayableGoodieCensus census));
+            Assert.Equal(0, census.Total);
+        }
+
         public static IEnumerable<object[]> AllStorageScriptIndices()
         {
             for (int scriptIndex = 1; scriptIndex <= MissionScriptGoodieStateSaveCodec.GoodieStorageEntryCount; scriptIndex++)

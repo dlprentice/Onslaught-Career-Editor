@@ -247,6 +247,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             ComposedNameTextBlock.Text = CheatsPageText.BuildNameHeadline(composition);
             ComposedNameExplanationTextBlock.Text = CheatsPageText.BuildNameExplanation(composition);
             SourceSaveTextBlock.Text = CheatsPageText.BuildSourceSummary(_sourceSavePath);
+            SourceCheatsTextBlock.Text = CheatsPageText.DescribeSourceCheats(_sourceSavePath);
             DestinationTextBlock.Text = CheatsPageText.BuildDestinationSummary(
                 GetSelectedSafeCopy(),
                 GetSelectedSafeCopy() is null ? GetDestinationDirectory() : null);
@@ -438,6 +439,10 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             LiveTrainerEnergyEvidenceTextBlock.Text = LiveTrainerPageText.EnergyEvidenceNote;
             LiveTrainerShieldsHoldWarningTextBlock.Text = LiveTrainerPageText.ShieldsHoldWarning;
             LiveTrainerShieldsEvidenceTextBlock.Text = LiveTrainerPageText.ShieldsEvidenceNote;
+            LiveTrainerHoldAllHeadlineTextBlock.Text = LiveTrainerPageText.HoldAllHeadline;
+            LiveTrainerHoldAllNoteTextBlock.Text = LiveTrainerPageText.HoldAllNote;
+            LiveTrainerUseReadingsNoteTextBlock.Text = LiveTrainerPageText.UseReadingsNote;
+            LiveTrainerUseReadingsButton.Content = LiveTrainerPageText.UseReadingsButtonText;
             LiveTrainerStateEvidenceTextBlock.Text = LiveTrainerPageText.StateEvidenceNote;
             LiveTrainerHotkeyHeadlineTextBlock.Text = LiveTrainerPageText.HotkeysHeadline;
             LiveTrainerHotkeyNoteTextBlock.Text = LiveTrainerPageText.HotkeysNote;
@@ -532,6 +537,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 LiveTrainerHoldLifeToggle.IsOn = false;
                 LiveTrainerHoldEnergyToggle.IsOn = false;
                 LiveTrainerHoldShieldsToggle.IsOn = false;
+                LiveTrainerHoldAllToggle.IsOn = false;
 
                 // The music belongs to the attachment, not to the page. Leaving it playing after
                 // the game has gone would be the app performing enthusiasm at nothing.
@@ -593,17 +599,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
             if (tick.StoppedItself)
             {
-                _suppressHoldToggleEvents = true;
-                try
-                {
-                    LiveTrainerHoldLifeToggle.IsOn = false;
-                    LiveTrainerHoldEnergyToggle.IsOn = false;
-                    LiveTrainerHoldShieldsToggle.IsOn = false;
-                }
-                finally
-                {
-                    _suppressHoldToggleEvents = false;
-                }
+                SetHoldToggles(life: false, energy: false, shields: false, allThree: false);
 
                 SetLiveTrainerStatus(
                     InfoBarSeverity.Informational,
@@ -655,6 +651,14 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 LiveTrainerShieldsNumberBox,
                 LiveTrainerSetShieldsButton,
                 LiveTrainerHoldShieldsToggle);
+            LiveTrainerHoldAllToggle.IsEnabled =
+                canWrite
+                && vitals is not null
+                && vitals.Life.LooksLikeAVital
+                && vitals.Energy.LooksLikeAVital
+                && vitals.Shields.LooksLikeAVital;
+            LiveTrainerUseReadingsButton.IsEnabled =
+                canWrite && LiveTrainerPageText.TryCopyReadings(vitals, out _, out _, out _);
         }
 
         /// <summary>
@@ -677,6 +681,22 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             valueBox.IsEnabled = enabled;
             setButton.IsEnabled = enabled;
             holdToggle.IsEnabled = enabled;
+        }
+
+        private void LiveTrainerUseReadingsButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (!LiveTrainerPageText.TryCopyReadings(
+                    _lastTrainerReading?.Vitals,
+                    out float life,
+                    out float energy,
+                    out float shields))
+            {
+                return;
+            }
+
+            LiveTrainerLifeNumberBox.Value = life;
+            LiveTrainerEnergyNumberBox.Value = energy;
+            LiveTrainerShieldsNumberBox.Value = shields;
         }
 
         private void LiveTrainerSetLifeButton_Click(object sender, RoutedEventArgs e) =>
@@ -802,6 +822,91 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         private void LiveTrainerHoldShieldsToggle_Toggled(object sender, RoutedEventArgs e) =>
             ToggleLiveTrainerHold(LiveTrainerVital.Shields, LiveTrainerHoldShieldsToggle, LiveTrainerShieldsNumberBox);
 
+        private void LiveTrainerHoldAllToggle_Toggled(object sender, RoutedEventArgs e)
+        {
+            if (_suppressHoldToggleEvents || _trainerHold is null)
+            {
+                return;
+            }
+
+            if (!LiveTrainerHoldAllToggle.IsOn)
+            {
+                _trainerHold.ReleaseAll();
+                SetHoldToggles(life: false, energy: false, shields: false, allThree: false);
+                StartLiveTrainerTimer(LiveTrainerHold.IdleInterval);
+                return;
+            }
+
+            string refusal = "Type a number first.";
+            if (double.IsNaN(LiveTrainerLifeNumberBox.Value)
+                || double.IsNaN(LiveTrainerEnergyNumberBox.Value)
+                || double.IsNaN(LiveTrainerShieldsNumberBox.Value)
+                || !_trainerHold.TryHoldAll(
+                    (float)LiveTrainerLifeNumberBox.Value,
+                    (float)LiveTrainerEnergyNumberBox.Value,
+                    (float)LiveTrainerShieldsNumberBox.Value,
+                    out refusal))
+            {
+                _suppressHoldToggleEvents = true;
+                try
+                {
+                    LiveTrainerHoldAllToggle.IsOn = false;
+                }
+                finally
+                {
+                    _suppressHoldToggleEvents = false;
+                }
+
+                SetLiveTrainerStatus(
+                    InfoBarSeverity.Warning,
+                    "Not holding",
+                    string.IsNullOrWhiteSpace(refusal) ? "Type a number first." : refusal);
+                return;
+            }
+
+            SetHoldToggles(life: true, energy: true, shields: true, allThree: true);
+            StartLiveTrainerTimer(LiveTrainerHold.DefaultInterval);
+        }
+
+        /// <summary>
+        /// Keep the three holds and the all-three switch looking like one control.
+        /// Suppresses the toggled handlers so flipping the UI cannot start a second hold path.
+        /// </summary>
+        private void SetHoldToggles(bool life, bool energy, bool shields, bool allThree)
+        {
+            _suppressHoldToggleEvents = true;
+            try
+            {
+                LiveTrainerHoldLifeToggle.IsOn = life;
+                LiveTrainerHoldEnergyToggle.IsOn = energy;
+                LiveTrainerHoldShieldsToggle.IsOn = shields;
+                LiveTrainerHoldAllToggle.IsOn = allThree;
+            }
+            finally
+            {
+                _suppressHoldToggleEvents = false;
+            }
+        }
+
+        private void SyncHoldAllToggleFromIndividuals()
+        {
+            bool allOn = LiveTrainerHoldLifeToggle.IsOn
+                && LiveTrainerHoldEnergyToggle.IsOn
+                && LiveTrainerHoldShieldsToggle.IsOn;
+            if (LiveTrainerHoldAllToggle.IsOn == allOn)
+                return;
+
+            _suppressHoldToggleEvents = true;
+            try
+            {
+                LiveTrainerHoldAllToggle.IsOn = allOn;
+            }
+            finally
+            {
+                _suppressHoldToggleEvents = false;
+            }
+        }
+
         /// <summary>
         /// Claims the key combinations, and says so on the page - including which ones it could
         /// not get. A hotkey that looks live and does nothing is worse than no hotkey, because the
@@ -843,9 +948,13 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
             if (action == TrainerHotkeyAction.ReleaseAll)
             {
-                LiveTrainerHoldLifeToggle.IsOn = false;
-                LiveTrainerHoldEnergyToggle.IsOn = false;
-                LiveTrainerHoldShieldsToggle.IsOn = false;
+                _trainerHold.ReleaseAll();
+                SetHoldToggles(
+                    life: false,
+                    energy: false,
+                    shields: false,
+                    allThree: false);
+                StartLiveTrainerTimer(LiveTrainerHold.IdleInterval);
                 AppStatusService.SetStatus("Cheats: let go of everything");
                 return;
             }
@@ -876,6 +985,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             if (!toggle.IsOn)
             {
                 _trainerHold.Release(vital);
+                SyncHoldAllToggleFromIndividuals();
                 StartLiveTrainerTimer(_trainerHold.IsHolding ? LiveTrainerHold.DefaultInterval : LiveTrainerHold.IdleInterval);
                 return;
             }
@@ -902,6 +1012,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 return;
             }
 
+            SyncHoldAllToggleFromIndividuals();
             StartLiveTrainerTimer(LiveTrainerHold.DefaultInterval);
         }
 

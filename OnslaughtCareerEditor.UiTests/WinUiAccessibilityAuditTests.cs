@@ -54,6 +54,7 @@ public class WinUiAccessibilityAuditTests
                 "CheatsBoundaryReversibleNote",
                 "CheatsChooseSourceSaveButton",
                 "CheatsSourceSaveStatus",
+                "CheatsSourceAlreadyActive",
                 "CheatsAllGoodiesCheckBox",
                 "CheatsAllLevelsCheckBox",
                 "CheatsGodModeCheckBox",

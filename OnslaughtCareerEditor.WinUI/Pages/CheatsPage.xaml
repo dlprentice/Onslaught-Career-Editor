@@ -93,6 +93,10 @@
                                AutomationProperties.AutomationId="CheatsSourceSaveStatus"
                                Text="Press Choose a save and pick the career save you want to start from."
                                Style="{StaticResource SectionBodyTextStyle}" />
+                    <TextBlock x:Name="SourceCheatsTextBlock"
+                               AutomationProperties.AutomationId="CheatsSourceAlreadyActive"
+                               Style="{StaticResource SectionBodyTextStyle}"
+                               TextWrapping="WrapWholeWords" />
                 </StackPanel>
             </Border>
 
@@ -541,6 +545,20 @@
                     </Border>
 
                     <StackPanel Spacing="4">
+                        <Button x:Name="LiveTrainerUseReadingsButton"
+                                AutomationProperties.AutomationId="LiveTrainerUseReadingsButton"
+                                AutomationProperties.Name="Use these readings"
+                                Content="Use these readings"
+                                HorizontalAlignment="Left"
+                                IsEnabled="False"
+                                Click="LiveTrainerUseReadingsButton_Click" />
+                        <TextBlock x:Name="LiveTrainerUseReadingsNoteTextBlock"
+                                   AutomationProperties.AutomationId="LiveTrainerUseReadingsNote"
+                                   Style="{StaticResource SectionBodyTextStyle}"
+                                   TextWrapping="WrapWholeWords" />
+                    </StackPanel>
+
+                    <StackPanel Spacing="4">
                         <StackPanel Orientation="Horizontal"
                                     Spacing="10">
                             <NumberBox x:Name="LiveTrainerLifeNumberBox"
@@ -657,6 +675,22 @@
                                        AutomationProperties.AutomationId="LiveTrainerShieldsEvidence"
                                        Style="{StaticResource SectionBodyTextStyle}" />
                         </Expander>
+                    </StackPanel>
+
+                    <StackPanel Spacing="4">
+                        <ToggleSwitch x:Name="LiveTrainerHoldAllToggle"
+                                      AutomationProperties.AutomationId="LiveTrainerHoldAllToggle"
+                                      AutomationProperties.Name="Hold all three"
+                                      Header="Hold all three"
+                                      IsEnabled="False"
+                                      Toggled="LiveTrainerHoldAllToggle_Toggled" />
+                        <TextBlock x:Name="LiveTrainerHoldAllHeadlineTextBlock"
+                                   AutomationProperties.AutomationId="LiveTrainerHoldAllHeadline"
+                                   Style="{StaticResource SectionBodyTextStyle}" />
+                        <TextBlock x:Name="LiveTrainerHoldAllNoteTextBlock"
+                                   AutomationProperties.AutomationId="LiveTrainerHoldAllNote"
+                                   Style="{StaticResource SectionBodyTextStyle}"
+                                   TextWrapping="WrapWholeWords" />
                     </StackPanel>
 
                     <StackPanel Spacing="4">
