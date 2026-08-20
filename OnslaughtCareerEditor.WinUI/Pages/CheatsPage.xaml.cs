@@ -441,6 +441,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             LiveTrainerShieldsEvidenceTextBlock.Text = LiveTrainerPageText.ShieldsEvidenceNote;
             LiveTrainerHoldAllHeadlineTextBlock.Text = LiveTrainerPageText.HoldAllHeadline;
             LiveTrainerHoldAllNoteTextBlock.Text = LiveTrainerPageText.HoldAllNote;
+            LiveTrainerUseReadingsNoteTextBlock.Text = LiveTrainerPageText.UseReadingsNote;
+            LiveTrainerUseReadingsButton.Content = LiveTrainerPageText.UseReadingsButtonText;
             LiveTrainerStateEvidenceTextBlock.Text = LiveTrainerPageText.StateEvidenceNote;
             LiveTrainerHotkeyHeadlineTextBlock.Text = LiveTrainerPageText.HotkeysHeadline;
             LiveTrainerHotkeyNoteTextBlock.Text = LiveTrainerPageText.HotkeysNote;
@@ -655,6 +657,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 && vitals.Life.LooksLikeAVital
                 && vitals.Energy.LooksLikeAVital
                 && vitals.Shields.LooksLikeAVital;
+            LiveTrainerUseReadingsButton.IsEnabled =
+                canWrite && LiveTrainerPageText.TryCopyReadings(vitals, out _, out _, out _);
         }
 
         /// <summary>
@@ -677,6 +681,22 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             valueBox.IsEnabled = enabled;
             setButton.IsEnabled = enabled;
             holdToggle.IsEnabled = enabled;
+        }
+
+        private void LiveTrainerUseReadingsButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (!LiveTrainerPageText.TryCopyReadings(
+                    _lastTrainerReading?.Vitals,
+                    out float life,
+                    out float energy,
+                    out float shields))
+            {
+                return;
+            }
+
+            LiveTrainerLifeNumberBox.Value = life;
+            LiveTrainerEnergyNumberBox.Value = energy;
+            LiveTrainerShieldsNumberBox.Value = shields;
         }
 
         private void LiveTrainerSetLifeButton_Click(object sender, RoutedEventArgs e) =>

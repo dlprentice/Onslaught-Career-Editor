@@ -10,6 +10,9 @@ live in `developer_state.json` and the campaign ledgers.
 
 ## Unreleased
 
+- Cheats live trainer can copy the numbers it is reading into the Set and Hold
+  boxes. It does not write them back, and a hold already on stays at the old
+  values until you switch it.
 - Cheats now says which offered cheats the save you start from already switches on.
   Those live in the file name, so a new name needs them ticked if you want to keep them.
   The source file is still only copied.

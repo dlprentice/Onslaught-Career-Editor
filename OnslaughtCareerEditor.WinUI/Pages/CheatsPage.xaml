@@ -545,6 +545,20 @@
                     </Border>
 
                     <StackPanel Spacing="4">
+                        <Button x:Name="LiveTrainerUseReadingsButton"
+                                AutomationProperties.AutomationId="LiveTrainerUseReadingsButton"
+                                AutomationProperties.Name="Use these readings"
+                                Content="Use these readings"
+                                HorizontalAlignment="Left"
+                                IsEnabled="False"
+                                Click="LiveTrainerUseReadingsButton_Click" />
+                        <TextBlock x:Name="LiveTrainerUseReadingsNoteTextBlock"
+                                   AutomationProperties.AutomationId="LiveTrainerUseReadingsNote"
+                                   Style="{StaticResource SectionBodyTextStyle}"
+                                   TextWrapping="WrapWholeWords" />
+                    </StackPanel>
+
+                    <StackPanel Spacing="4">
                         <StackPanel Orientation="Horizontal"
                                     Spacing="10">
                             <NumberBox x:Name="LiveTrainerLifeNumberBox"

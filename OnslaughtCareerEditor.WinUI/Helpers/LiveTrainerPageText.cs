@@ -236,6 +236,43 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         public const string HoldAllNote =
             "This turns on the three holds at the values in the boxes. Walker mode still copies energy over shields, so energy has to be held for shields to last. Jet mode still sets shields to zero every update. It is the same top-up as the switches above, not a freeze, and one hit big enough to kill you still will.";
 
+        /// <summary>
+        /// Copies the live readout into the Set/Hold boxes. The boxes default
+        /// to 100, so without this a player watching life 20 has to type 20
+        /// before Set or Hold will keep that number.
+        /// </summary>
+        public const string UseReadingsButtonText = "Use these readings";
+
+        public const string UseReadingsNote =
+            "Copies the numbers above into the boxes. It does not write them back to the game, and it does not change a hold that is already on.";
+
+        /// <summary>
+        /// The three box values taken from a live reading. All three must look
+        /// like vitals, so a live 20 cannot mix with a leftover 100.
+        /// </summary>
+        public static bool TryCopyReadings(
+            LivePlayerVitals? vitals,
+            out float life,
+            out float energy,
+            out float shields)
+        {
+            life = 0f;
+            energy = 0f;
+            shields = 0f;
+            if (vitals is null
+                || !vitals.Life.LooksLikeAVital
+                || !vitals.Energy.LooksLikeAVital
+                || !vitals.Shields.LooksLikeAVital)
+            {
+                return false;
+            }
+
+            life = vitals.Life.AsSingle;
+            energy = vitals.Energy.AsSingle;
+            shields = vitals.Shields.AsSingle;
+            return true;
+        }
+
         public const string NothingOfferedHeadline =
             "Ammunition and game speed are not offered.";
 
