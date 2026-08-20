@@ -10,7 +10,8 @@ namespace OnslaughtRebuild.GodotClient;
 /// accept (Campaign / Options / Exit), then Options apply pulse and
 /// dropdown confirm / right-click cancel, then New Game campaign accept
 /// (DevSelect / LevelSelect / Briefing / Config / Loading), campaign
-/// Back, and QuitConfirm Yes/No.
+/// Back, QuitConfirm Yes/No, then Loading → Gameplay (and the
+/// intro-cutscene handoff).
 ///
 /// <para>No Godot types. <see cref="RetailFrontendFlow"/> and
 /// <see cref="RetailStartupSequence"/> call the same accept/skip predicates
@@ -172,6 +173,59 @@ public sealed class RetailFrontendScenePath
 
         return TryConfirmPage(session, StartupMediaActive, out signal)
             && signal is RetailFrontendSignal.PageChanged or RetailFrontendSignal.ExitRequested;
+    }
+
+    public bool TryCompleteLoading(RetailFrontendSession session, bool launchConsumed)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        return TryCompleteLoading(session, StartupMediaActive, launchConsumed);
+    }
+
+    /// <summary>
+    /// The host Loading → Gameplay handoff. <c>RetailFrontendFlow._Process</c>
+    /// calls this after the launch request is consumed and the world is ready,
+    /// when there is no intro cutscene to play.
+    /// </summary>
+    public static bool TryCompleteLoading(
+        RetailFrontendSession session,
+        bool startupMediaActive,
+        bool launchConsumed)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        if (startupMediaActive
+            || !launchConsumed
+            || session.Screen != RetailFrontendScreen.Loading)
+        {
+            return false;
+        }
+
+        session.CompleteLevel100Load();
+        return session.Screen == RetailFrontendScreen.Gameplay;
+    }
+
+    public bool TryCompleteIntroCutscene(RetailFrontendSession session)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        return TryCompleteIntroCutscene(session, StartupMediaActive);
+    }
+
+    /// <summary>
+    /// The host intro-cutscene → Gameplay handoff. Retail treats play-out and
+    /// abort the same; <c>RetailFrontendFlow.FinishLevel100IntroCutscene</c>
+    /// calls this.
+    /// </summary>
+    public static bool TryCompleteIntroCutscene(
+        RetailFrontendSession session,
+        bool startupMediaActive)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        if (startupMediaActive || session.Screen != RetailFrontendScreen.IntroCutscene)
+        {
+            return false;
+        }
+
+        session.CompleteLevel100IntroCutscene();
+        return session.Screen == RetailFrontendScreen.Gameplay;
     }
 
     public bool TryBack(RetailFrontendSession session)

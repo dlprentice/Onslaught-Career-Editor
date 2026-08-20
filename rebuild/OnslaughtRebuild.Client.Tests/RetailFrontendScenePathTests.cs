@@ -9,7 +9,8 @@ namespace OnslaughtRebuild.Client.Tests;
 /// The player-visible cold-start path the Godot scene drives: Lost Toys /
 /// opening FMV / splash skip, then CFEPIntro click-to-start, then CFEPMain,
 /// then Options apply pulse and dropdown confirm / right-click cancel,
-/// then New Game campaign accept, campaign Back, and QuitConfirm Yes/No.
+/// then New Game campaign accept, campaign Back, QuitConfirm Yes/No,
+/// then Loading → Gameplay (and the intro-cutscene handoff).
 /// Isolated helper pins already exist. These cases kill a path that only
 /// those helpers know about, or a host that still uses
 /// <c>ConfirmForSmoke</c> instead of the same accept owner.
@@ -370,6 +371,86 @@ public sealed class RetailFrontendScenePathTests
         Assert.True(path.TrySkipStartup(left: true, middle: false, right: false, dik: 0));
         Assert.True(path.TryBack(session));
         Assert.Equal(RetailFrontendScreen.MainMenu, session.Screen);
+    }
+
+    [Fact]
+    public void LoadingCompleteWalksToGameplayThroughThePath()
+    {
+        var path = new RetailFrontendScenePath();
+        var session = AfterClickToStart(path);
+        Assert.True(path.TryAcceptMainMenuRow(session, 0));
+        Assert.True(path.TryAcceptDevSelect(session));
+        Assert.True(path.TryAcceptLevelSelect(session));
+        Assert.True(path.TryAcceptMissionBriefing(session));
+        Assert.True(path.TryAcceptSelectConfiguration(session, out _));
+        Assert.Equal(RetailFrontendScreen.Loading, session.Screen);
+
+        Assert.False(path.TryCompleteLoading(session, launchConsumed: false));
+        Assert.Equal(RetailFrontendScreen.Loading, session.Screen);
+        Assert.True(session.ConsumeLevel100LaunchRequest());
+        Assert.True(path.TryCompleteLoading(session, launchConsumed: true));
+        Assert.Equal(RetailFrontendScreen.Gameplay, session.Screen);
+        Assert.False(path.TryCompleteLoading(session, launchConsumed: true));
+        Assert.Equal(RetailFrontendScreen.Gameplay, session.Screen);
+    }
+
+    [Fact]
+    public void StartupMediaBlocksLoadingCompleteUntilSkip()
+    {
+        var path = new RetailFrontendScenePath();
+        var session = new RetailFrontendSession();
+        path.Begin([]);
+        session.Confirm();
+        session.Confirm();
+        session.Confirm();
+        session.Confirm();
+        session.Confirm();
+        session.Confirm();
+        Assert.Equal(RetailFrontendScreen.Loading, session.Screen);
+        Assert.True(session.ConsumeLevel100LaunchRequest());
+        Assert.True(path.StartupMediaActive);
+        Assert.False(path.TryCompleteLoading(session, launchConsumed: true));
+        Assert.Equal(RetailFrontendScreen.Loading, session.Screen);
+
+        Assert.True(path.TrySkipStartup(left: true, middle: false, right: false, dik: 0));
+        Assert.True(path.TryCompleteLoading(session, launchConsumed: true));
+        Assert.Equal(RetailFrontendScreen.Gameplay, session.Screen);
+    }
+
+    [Fact]
+    public void FlowCompletesLoadingThroughThePath()
+    {
+        string flow = ReadGodotSource("RetailFrontendFlow.cs");
+        string process = Slice(flow, "public override void _Process(");
+        string cutscene = ReadGodotSource("RetailFrontendFlow.Cutscene.cs");
+        string finish = Slice(cutscene, "private void FinishLevel100IntroCutscene(");
+
+        Assert.Contains("RetailFrontendScenePath.TryCompleteLoading", process, StringComparison.Ordinal);
+        Assert.DoesNotContain("_session.CompleteLevel100Load()", process, StringComparison.Ordinal);
+        Assert.Contains("RetailFrontendScenePath.TryCompleteIntroCutscene", finish, StringComparison.Ordinal);
+        Assert.DoesNotContain("_session.CompleteLevel100IntroCutscene()", finish, StringComparison.Ordinal);
+        Assert.DoesNotContain("RetailLevelSelectLater", process, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void IntroCutsceneCompleteWalksToGameplayThroughThePath()
+    {
+        var path = new RetailFrontendScenePath();
+        var session = AfterClickToStart(path);
+        Assert.True(path.TryAcceptMainMenuRow(session, 0));
+        Assert.True(path.TryAcceptDevSelect(session));
+        Assert.True(path.TryAcceptLevelSelect(session));
+        Assert.True(path.TryAcceptMissionBriefing(session));
+        Assert.True(path.TryAcceptSelectConfiguration(session, out _));
+        Assert.True(session.ConsumeLevel100LaunchRequest());
+        session.BeginLevel100IntroCutscene();
+        Assert.Equal(RetailFrontendScreen.IntroCutscene, session.Screen);
+
+        Assert.False(path.TryCompleteLoading(session, launchConsumed: true));
+        Assert.Equal(RetailFrontendScreen.IntroCutscene, session.Screen);
+        Assert.True(path.TryCompleteIntroCutscene(session));
+        Assert.Equal(RetailFrontendScreen.Gameplay, session.Screen);
+        Assert.False(path.TryCompleteIntroCutscene(session));
     }
 
     [Fact]

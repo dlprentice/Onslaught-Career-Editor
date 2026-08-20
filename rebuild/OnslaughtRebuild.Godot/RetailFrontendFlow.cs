@@ -834,7 +834,14 @@ public sealed partial class RetailFrontendFlow : Control
                 // to play this falls through to the pre-existing handoff.
                 if (!TryBeginLevel100IntroCutscene())
                 {
-                    _session.CompleteLevel100Load();
+                    if (!RetailFrontendScenePath.TryCompleteLoading(
+                            _session,
+                            startupMediaActive: false,
+                            launchConsumed: _loadRequestRaised))
+                    {
+                        throw new InvalidOperationException(
+                            "Level 100 can complete only after its pending launch request is consumed.");
+                    }
                 }
             }
         }

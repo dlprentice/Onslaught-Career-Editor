@@ -128,7 +128,12 @@ public sealed partial class RetailFrontendFlow
             return;
         }
 
-        _session.CompleteLevel100IntroCutscene();
+        if (!RetailFrontendScenePath.TryCompleteIntroCutscene(
+                _session,
+                startupMediaActive: false))
+        {
+            return;
+        }
         _introCutscene?.QueueFree();
         _introCutscene = null;
 

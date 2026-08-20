@@ -205,6 +205,9 @@
     <Content Include="..\OnslaughtRebuild.Godot\RetailFrontendFlow.Options.cs"
              Link="godot-pause-source\RetailFrontendFlow.Options.cs"
              CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\OnslaughtRebuild.Godot\RetailFrontendFlow.Cutscene.cs"
+             Link="godot-pause-source\RetailFrontendFlow.Cutscene.cs"
+             CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\OnslaughtRebuild.Godot\FirstFlightPauseMenu.cs"
              Link="godot-pause-source\FirstFlightPauseMenu.cs"
              CopyToOutputDirectory="PreserveNewest" />
