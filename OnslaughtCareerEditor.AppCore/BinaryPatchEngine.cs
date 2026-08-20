@@ -2157,8 +2157,21 @@ namespace OnslaughtCareerEditor.AppCore
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
             {
-                if (ex.Message == FileCannotShareData || ex.Message == TargetCannotUseLink)
-                    return (false, ex.Message);
+                // Return the constants themselves rather than ex.Message. Both
+                // branches are reached only when the message already equals an
+                // app-authored sentence, so this is the same text - but it is
+                // now provably so at the call site, and the honesty guard in
+                // BinaryPatchCopyHonestyTests can keep forbidding a bare
+                // exception-message return without a false positive here.
+                if (ex.Message == FileCannotShareData)
+                {
+                    return (false, FileCannotShareData);
+                }
+
+                if (ex.Message == TargetCannotUseLink)
+                {
+                    return (false, TargetCannotUseLink);
+                }
 
                 return (false, WorkingCopyPathUnusable);
             }

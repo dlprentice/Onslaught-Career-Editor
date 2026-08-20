@@ -109,8 +109,15 @@ public class SaveRescueSurfaceTests
                 code,
                 Does.Contain("NeedsOverwriteConfirmation"),
                 "Replacing a file in the destination has to be asked about, never silent.");
+            // Same as the editor journey: the sentence lives in the shared
+            // helper now, so assert the route plus the helper's own output
+            // instead of grepping this page for the literal.
             Assert.That(
                 code,
+                Does.Contain("SaveLabPageText.BuildOverwriteQuestion"),
+                "The replace confirmation must come from the shared helper.");
+            Assert.That(
+                SaveLabPageText.BuildOverwriteQuestion("career.bes"),
                 Does.Contain("cannot be undone"),
                 "The replace confirmation must say what it costs.");
             Assert.That(

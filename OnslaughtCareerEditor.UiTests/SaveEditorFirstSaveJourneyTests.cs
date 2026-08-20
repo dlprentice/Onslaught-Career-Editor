@@ -424,7 +424,16 @@ public class SaveEditorFirstSaveJourneyTests
                 "Installing must reuse the guarded writer rather than a bare file copy.");
             Assert.That(code, Does.Contain("NeedsOverwriteConfirmation"),
                 "Replacing an existing save must be confirmed, never silent.");
-            Assert.That(code, Does.Contain("cannot be undone"),
+            // The warning itself moved into the shared helper, so grepping this
+            // page for the literal pinned a source LOCATION rather than the
+            // guarantee. Assert the page routes through the helper, and assert
+            // the helper's own output still says what the overwrite costs -
+            // which is what the player actually reads.
+            Assert.That(code, Does.Contain("SaveLabPageText.BuildOverwriteQuestion"),
+                "The overwrite confirmation must come from the shared helper.");
+            Assert.That(
+                SaveLabPageText.BuildOverwriteQuestion("career.bes"),
+                Does.Contain("cannot be undone"),
                 "The overwrite confirmation must say what it costs.");
         });
     }

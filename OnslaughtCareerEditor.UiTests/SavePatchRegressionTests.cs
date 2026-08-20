@@ -191,9 +191,19 @@ public class SavePatchRegressionTests
                 PatchKills = false,
             };
 
+            byte[] before = File.ReadAllBytes(input);
+
             var result = patcher.PatchFile(input, input);
             Assert.That(result.Success, Is.False, "Patcher must reject in-place writes.");
-            Assert.That(result.Message, Does.Contain("Refusing to patch in place").IgnoreCase);
+
+            // FileMutationSafety still throws "Refusing to patch in place",
+            // but the honesty policy deliberately stops that internal text
+            // reaching the player, so the surfaced sentence is the generic
+            // refusal. Assert what the user is actually told, and - more to
+            // the point - assert the guard's real contract: the input file is
+            // byte-for-byte untouched.
+            Assert.That(result.Message, Does.Contain("Nothing was changed."));
+            Assert.That(File.ReadAllBytes(input), Is.EqualTo(before));
         }
         finally
         {

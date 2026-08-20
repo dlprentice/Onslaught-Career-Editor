@@ -325,7 +325,13 @@ public class BinaryPatchRegressionTests
             var apply = BinaryPatchEngine.ApplyPatchesToFile(BuildTestTarget(exePath, tempDir), selected);
 
             Assert.That(apply.success, Is.False);
-            Assert.That(apply.message, Does.Contain("without its backup snapshot"));
+            // The honesty rewrite replaced the "sidecar exists without its
+            // backup snapshot" jargon with a named-file sentence, and
+            // BinaryPatchBackupHashHonestyTests now FORBIDS the old phrase -
+            // so asserting it here contradicted that test. Assert the shipped
+            // sentence instead; the refusal itself is asserted above and below.
+            Assert.That(apply.message, Does.Contain("without BEA.exe.original.backup"));
+            Assert.That(apply.message, Does.Contain("Nothing was changed."));
             Assert.That(File.ReadAllBytes(exePath), Is.EqualTo(original));
             Assert.That(File.Exists(BinaryPatchEngine.BuildBackupPath(exePath)), Is.False);
             Assert.That(File.ReadAllText(backupHashPath), Is.EqualTo("stale-sidecar"));
