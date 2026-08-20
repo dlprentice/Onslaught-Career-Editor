@@ -10,6 +10,9 @@ live in `developer_state.json` and the campaign ledgers.
 
 ## Unreleased
 
+- Cheats now says which offered cheats the save you start from already switches on.
+  Those live in the file name, so a new name needs them ticked if you want to keep them.
+  The source file is still only copied.
 - Your safe copies now says which listed catalog patches this copy already has,
   by reading that copy's `BEA.exe`. Original, already-patched, and unmatched
   bytes are named without a dump or a path. The installed game is not opened.

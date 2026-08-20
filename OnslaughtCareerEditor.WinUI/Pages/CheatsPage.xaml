@@ -93,6 +93,10 @@
                                AutomationProperties.AutomationId="CheatsSourceSaveStatus"
                                Text="Press Choose a save and pick the career save you want to start from."
                                Style="{StaticResource SectionBodyTextStyle}" />
+                    <TextBlock x:Name="SourceCheatsTextBlock"
+                               AutomationProperties.AutomationId="CheatsSourceAlreadyActive"
+                               Style="{StaticResource SectionBodyTextStyle}"
+                               TextWrapping="WrapWholeWords" />
                 </StackPanel>
             </Border>
 

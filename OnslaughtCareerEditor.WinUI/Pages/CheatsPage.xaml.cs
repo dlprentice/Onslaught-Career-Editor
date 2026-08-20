@@ -247,6 +247,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             ComposedNameTextBlock.Text = CheatsPageText.BuildNameHeadline(composition);
             ComposedNameExplanationTextBlock.Text = CheatsPageText.BuildNameExplanation(composition);
             SourceSaveTextBlock.Text = CheatsPageText.BuildSourceSummary(_sourceSavePath);
+            SourceCheatsTextBlock.Text = CheatsPageText.DescribeSourceCheats(_sourceSavePath);
             DestinationTextBlock.Text = CheatsPageText.BuildDestinationSummary(
                 GetSelectedSafeCopy(),
                 GetSelectedSafeCopy() is null ? GetDestinationDirectory() : null);
