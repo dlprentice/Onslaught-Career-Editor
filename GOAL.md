@@ -296,8 +296,10 @@ the mandate; the completion test and every clause above are unchanged.
 **2026-08-18 — stale pins superseded (do not revive).** Generation 31
 **v2** is the sole campaign parent (`generation-31-current-8329-db18624-v2`,
 READY `2e77c62d…4219`); every `generation-31-*-v1*` directory is renamed
-`*-superseded-by-v2-20260817`. The last *measured* full Core suite is **730/730** on
-`a65826fa` (23 m 45 s); **729/729** is the earlier `fd5ab355` run.
+`*-superseded-by-v2-20260817`. The full Core suite was RE-MEASURED 2026-08-19:
+**854 passed / 2 failed / 856 total** (34 m). 730/730 on `a65826fa` (23 m 45 s)
+and 729/729 on `fd5ab355` are retired history, not a live count, and the suite
+is **not green** — both failures are `Level100FullChainTests` trajectory pins.
 Neither is a live inventory: later L100 owners raised the static
 `[Fact]`+`[InlineData]` count to **856**. Do not re-run the 25-minute
 suite unless a Core owner changed; use the focused filter named by the
@@ -500,7 +502,8 @@ dated measurements below as history; do not resume from this paragraph.
    byte-cited C1/C2 slices and rebuild owners. Reasoned "this consumes X and
    decides Y" hypotheses with explicit confidence labels are progress; the
    cheapest falsifier travels with every row.
-9. **Core gate — GREEN; later pin 730/730.** The full unfiltered Core
+9. **Core gate — RED as of 2026-08-19 (854/2/856); the GREEN 730/730
+   claim below is retired history.** The full unfiltered Core
    suite passed 729/729 on `fd5ab355` (25 m 30 s, exit 0;
    `local-lab\fullsuite-2026-08-17.log`) and 730/730 on `a65826fa`
    (23 m 45 s; the extra case is the first-flight fingerprint). A

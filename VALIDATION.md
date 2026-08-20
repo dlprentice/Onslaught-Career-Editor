@@ -1,8 +1,9 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-08-19 (Core last *measured* full run 730/730 on `a65826fa`;
-do not treat 729 or 730 as a live inventory — static cases are 856).
+Last updated: 2026-08-19 (Core full suite RE-MEASURED: **854 passed / 2 failed
+/ 856**, 34 min. 730/730 on `a65826fa` is retired — it was 70 Core commits
+stale and the suite is not green.)
 Header fields under [`DOCUMENTATION.md`](DOCUMENTATION.md).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
@@ -21,7 +22,7 @@ options, not a required sequence.
 | CLI | `npm run test:cli` and the relevant AppCore test |
 | Lore inputs/reader | `npm run test:lore-pack` plus the LoreBrowserService tests |
 | Public payload/provenance boundary | `npm run test:safety` |
-| Rebuild Core | `npm run test:rebuild-core` — last *measured* full run **730/730** on `a65826fa` (729/729 is `fd5ab355`). Static `[Fact]`+`[InlineData]` inventory after later L100 owners is **856**. Do not re-run the 25-minute suite unless a Core owner actually changed; use the owner-named filter |
+| Rebuild Core | `npm run test:rebuild-core` — re-measured 2026-08-19: **854 passed / 2 failed / 856 total**, **34 minutes**. Total now equals the static `[Fact]`+`[InlineData]` inventory of 856. Both failures are `Level100FullChainTests`: `ChainAutopilot_ReachesWonByInputAlone` (tick pin 8404, actual 6572) and `BlasterMissLaw_SeparatesTheRunsOwnHitsFromItsMisses` (observed 153, range 154-162) — see `developer_state.json` `_CORE_SUITE_20260819`. Historical: 730/730 `a65826fa`, 729/729 `fd5ab355`; neither is a live count. Use the owner-named filter rather than re-running 34 minutes |
 | Rebuild client/adapters | `npm run test:rebuild-client` |
 | Godot toolchain or native behavior | the matching `test:rebuild-*` command; native smoke only when native behavior changed |
 | Frontend page drawing | `rebuild/tools/Capture-Frontend.ps1 -Plan mainmenu`, which now scores the capture against the retail reference and returns `FAIL` on regression. `npm run test:tools` covers the scorer itself |
