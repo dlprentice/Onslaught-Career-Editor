@@ -10,6 +10,10 @@ live in `developer_state.json` and the campaign ledgers.
 
 ## Unreleased
 
+- Save Lab Patch links now shows what the opened save already has across
+  every used campaign link, so completing remaining locked links is
+  replacing a named mix rather than a blind table. Unused slots are not
+  counted. Broken is the unused other parent route on the campaign map.
 - Save Lab Mark goodies as NEW now shows what the opened save already has
   across every listed Goodie, so a gold or blue wall is replacing a named mix
   rather than a blind set of dwords.

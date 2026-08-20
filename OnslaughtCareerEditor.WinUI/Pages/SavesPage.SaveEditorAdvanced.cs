@@ -86,6 +86,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             EditorKillBaselineSummaryTextBlock.Text = string.Join(" ", noticeParts);
             PaintMissionRanksCurrent(missionRankReadStatus.FileWasRead);
             PaintGoodiesCurrent();
+            PaintLinksCurrent();
 
             if (SaveEditorAdvancedOverrideCarryOver.ShouldReseedGlobalKillValue(
                     _editorInputValid,
@@ -256,6 +257,46 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
             {
                 EditorGoodiesCurrentTextBlock.Text = SaveLabPageText.GoodiesCurrentUnreadable;
+            }
+        }
+
+        /// <summary>
+        /// What the opened save already has across every used campaign
+        /// link. Empty when no save is open; a refusal sentence when the
+        /// file is there but the mix cannot be shown. Does not touch the
+        /// Goodie or mission-grade current-state lines.
+        /// </summary>
+        private void PaintLinksCurrent()
+        {
+            if (!_editorInputValid)
+            {
+                EditorLinksCurrentTextBlock.Text = string.Empty;
+                return;
+            }
+
+            string inputPath = (EditorInputFileTextBox.Text ?? string.Empty).Trim();
+            try
+            {
+                if (!File.Exists(inputPath))
+                {
+                    EditorLinksCurrentTextBlock.Text = SaveLabPageText.LinksCurrentUnreadable;
+                    return;
+                }
+
+                byte[] buffer = File.ReadAllBytes(inputPath);
+                if (!BesFilePatcher.TryReadDisplayableLinkCensus(
+                        buffer,
+                        out DisplayableLinkCensus census))
+                {
+                    EditorLinksCurrentTextBlock.Text = SaveLabPageText.LinksCurrentUnreadable;
+                    return;
+                }
+
+                EditorLinksCurrentTextBlock.Text = SaveLabPageText.DescribeLinksCurrent(census);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
+            {
+                EditorLinksCurrentTextBlock.Text = SaveLabPageText.LinksCurrentUnreadable;
             }
         }
     }

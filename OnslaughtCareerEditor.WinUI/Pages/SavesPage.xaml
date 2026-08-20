@@ -703,6 +703,10 @@
                                               Checked="EditorKillsOnlyCheckBox_Changed"
                                               Unchecked="EditorKillsOnlyCheckBox_Changed" />
                                 </Grid>
+                                <TextBlock x:Name="EditorLinksCurrentTextBlock"
+                                           AutomationProperties.AutomationId="SaveEditorLinksCurrent"
+                                           Style="{StaticResource SectionBodyTextStyle}"
+                                           TextWrapping="WrapWholeWords" />
                             </StackPanel>
                         </Border>
 

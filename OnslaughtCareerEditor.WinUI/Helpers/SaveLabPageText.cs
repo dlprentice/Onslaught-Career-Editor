@@ -210,6 +210,51 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
         public const string MissionRanksCurrentUnreadable =
             "This save's mission grades could not be read.";
 
+        /// <summary>
+        /// What this save already has for used campaign links. Shown next
+        /// to Patch links so that write is completing named remaining
+        /// locked links rather than a blind table. Unused slots are not
+        /// counted. Type 2 is the unused other parent route (broken line).
+        /// </summary>
+        public static string DescribeLinksCurrent(DisplayableLinkCensus? census)
+        {
+            if (census is null)
+            {
+                return LinksCurrentUnreadable;
+            }
+
+            DisplayableLinkCensus counts = census.Value;
+            if (counts.Total == 0)
+            {
+                return "This save has no listed links.";
+            }
+
+            (string Label, int Count)[] labeled =
+            {
+                ("still locked", counts.StillLocked),
+                ("complete", counts.Complete),
+                ("broken", counts.Broken),
+                ("unrecognized", counts.Unrecognized),
+            };
+
+            (string Label, int Count)[] present = labeled.Where(row => row.Count > 0).ToArray();
+            if (present.Length == 0)
+            {
+                return LinksCurrentUnreadable;
+            }
+
+            if (present.Length == 1 && present[0].Count == counts.Total && present[0].Label != "unrecognized")
+            {
+                return $"This save has every listed link {present[0].Label}.";
+            }
+
+            string[] parts = present.Select(row => $"{row.Count} {row.Label}").ToArray();
+            return $"This save's links are {JoinReadable(parts)}.";
+        }
+
+        public const string LinksCurrentUnreadable =
+            "This save's links could not be read.";
+
         private static readonly string[] ListedGradeOrder =
         {
             "S", "A", "B", "C", "D", "E", "No Grade",
