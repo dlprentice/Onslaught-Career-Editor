@@ -236,7 +236,24 @@ function Test-FirstFlightSmokeEvidence {
     # on current main). The native smoke's observed hash equals that pin, so
     # this is a sync to the already-landed deterministic state, not a re-pin of
     # a regression.
-    Assert-SmokeValue 'stateHash' 'c33268c199c8a3e77ab2de53d16eefc346b0abab3b6867a4d4379981d636cb4e' $report.stateHash
+    # MOVED 2026-08-19 by the Level 100 TargetZone hit() contract e633b511
+    # (merged as 9d399278). Unlike the two misses noted above, this file did
+    # NOT lag behind InteractiveSessionTests.cs: both pins went stale together
+    # at that merge and are repinned together here. git bisect over rebuild/
+    # (good 383d5b3e, bad 75ecbd2e) names e633b511 exactly - TriggerEntered
+    # moved from TryMarkTriggerDispatchReady to MarkTriggerEventDispatched,
+    # TriggerEntryJetModeState defaults to NotInJetMode on dispatch, and the
+    # actor-script Pause wait-stop flag was added. All three are serialized by
+    # StateHasher, so the canonical byte stream moved. Every other field below
+    # is unchanged, which is the evidence the tape still proves what it proved.
+    # CAVEAT for whoever repins next: the two-byte-identical-native-reports
+    # protocol described above no longer holds. Two consecutive runs measured
+    # 2026-08-19 agree on stateHash and on 84 of 86 fields, but the report is
+    # not byte-identical - level100PlayingMessageId and
+    # level100VoiceStartedMessageIds track which tutorial voice line is playing
+    # at an arbitrary wall moment. That is presentation timing, not simulation
+    # state, and it is why identical-report-sha is no longer an available gate.
+    Assert-SmokeValue 'stateHash' '1ee58e1d881486fe174ed476d993853daf1292e5738c6417a57210ea07735d19' $report.stateHash
     Assert-SmokeValue 'targetsDestroyed' 0 $report.targetsDestroyed
     Assert-SmokeValue 'mode' 'Walker' $report.mode
     Assert-SmokeValue 'level100OpeningTicksRemaining' 0 $report.level100OpeningTicksRemaining

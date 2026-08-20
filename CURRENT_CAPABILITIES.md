@@ -275,8 +275,34 @@ mono on `main` showed night fortress → Aquila title art → main menu
 (New Game highlighted) → CHOOSE GAME NAME / BEA 1. `RetailFrontendScenePath`
 now also drives Loading → Gameplay. Scene-path tests 19/19 after that
 merge. L100 Core owners on `main` include EnableFlightMode, SetObjective
-OR 0x20, TargetZone InJetMode/Pause wait-stop. Walker bind still not
-in `FirstFlightWorldView`. WinUI GUI was not re-launched this pass.
+OR 0x20, TargetZone InJetMode/Pause wait-stop. WinUI GUI was not
+re-launched this pass.
+
+**2026-08-19 evening — cold start to Level 100, in engine (still not
+training Won).**
+`Capture-Frontend.ps1 -Plan gameplay -Purpose production
+-RetailOffsetManifest …/level100-gameplay/manifest.json` drove the whole
+scripted traversal on `75ecbd2e` with a clean Godot source tree: click-to-start
+→ FEP_MAIN New Game → CHOOSE GAME NAME → level select → mission briefing →
+select configuration → Loading → Gameplay, then held Level 100 for 42 s.
+**92** shots at retail's realised level offsets, **0** screen mismatches, **0**
+missing, **0** wrong-size, `capturePurpose` `production`. In-level frames carry
+the released first-person cockpit, HUD reticle, scanner, portrait, and the
+tutorial subtitle line. `Level100WaterEnvelopeTests.CapturedWaterStaysInsideTheRetailEnvelope`
+**scored that capture and passed** — it was not skipped, so the retail water
+envelope was measured against rendered pixels, not asserted. The frontend
+parity scorer still reports UNSCORED for this plan because its reference set is
+the frontend page corpus, which holds no in-level page; that is a scope
+boundary, not a pass.
+
+The Aquila walker texture bind **is** wired in
+`FirstFlightWorldView.BuildPlayer`. `m_f_be1.msh.aya` uses TEXR indices
+{0, 1, 3} and the dictionary supplies all three (cockpit, BE_texB, BE_texA),
+leaving `unboundUsedIndices` empty in the asset-lab bind census;
+`RetailAquilaWalkerAsset` throws on an unmapped used index, so the walker
+rendering through all 92 production frames is the runtime witness. What is
+still not wired is the TEXB-name→file lookup, the decoded-PNG path, table rows
+2/4–7 (`Chrome3`, unused on this actor), and bones/skinning.
 
 The Godot Level 100 Opening Slice now uses all 513×513 unit-lattice positions
 decoded from the released tiled Level 100 HFLD, plus the Federation walker/jet,

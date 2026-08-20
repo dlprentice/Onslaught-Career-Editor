@@ -1967,9 +1967,37 @@ public sealed class InteractiveSessionTests
         // carry distinct yaw/pitch velocity. The mission and target assertions
         // above remain unchanged; this checksum also binds the advanced shared
         // RNG state and the four still-live projectile trajectories.
+        // MOVED 2026-08-19 by the Level 100 TargetZone hit() contract e633b511,
+        // which landed in the L100 merge 9d399278 and left BOTH pins stale.
+        // git bisect over rebuild/ (good 383d5b3e, bad 75ecbd2e, seven steps)
+        // names it exactly. Three future-affecting fields moved: TriggerEntered
+        // now flips in MarkTriggerEventDispatched instead of
+        // TryMarkTriggerDispatchReady, TriggerEntryJetModeState defaults to
+        // NotInJetMode on dispatch, and Level100ActorScriptRuntime gained the
+        // actor-script Pause wait-stop flag. StateHasher serializes all three,
+        // so the canonical byte stream moved.
+        // NOTHING THE TAPE PROVES CHANGED, and that is asserted above rather
+        // than argued: every firing-range, target, mode, and objective
+        // assertion in this method passed unchanged at the new value - the run
+        // failed only on this final checksum.
+        // Cross-checked against the native Godot host, which observes this same
+        // hash through a different frame clock;
+        // rebuild/tools/FirstFlightSmokeValidation.psm1 is repinned to it in
+        // this same commit and PASSES all its field assertions, tick 2148
+        // included.
+        // NOT repinned under the two-byte-identical-native-reports protocol
+        // quoted above, because that protocol can no longer be run as written:
+        // two consecutive native smoke runs now agree on stateHash and on 84 of
+        // 86 report fields but are NOT byte-identical. level100PlayingMessageId
+        // and level100VoiceStartedMessageIds differ between runs (293386 vs
+        // 296682) - the smoke samples which tutorial voice line is playing at an
+        // arbitrary wall moment, which is presentation timing and not simulation
+        // state. The deterministic evidence for this repin is therefore: the
+        // canonical stateHash is identical across both native runs and equal to
+        // the in-process tape, and git bisect names one behavioural cause.
         string finalStateHash = StateHasher.ComputeHex(session.CurrentSnapshot);
         Assert.Equal(
-            "c33268c199c8a3e77ab2de53d16eefc346b0abab3b6867a4d4379981d636cb4e",
+            "1ee58e1d881486fe174ed476d993853daf1292e5738c6417a57210ea07735d19",
             finalStateHash);
     }
 
