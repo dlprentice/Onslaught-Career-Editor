@@ -381,6 +381,11 @@ public sealed class Simulation
         UpdateMovement(playerInput);
         UpdateWalkerHydraulicCue();
         UpdateWalkerFeet();
+        // hit() InJetMode reads the actor-script flight state.
+        // Isolated JetModeState names the pre-filter; this sync
+        // is the same Evaluate the compiled TargetZone hit()
+        // calls, on this tick's movement, not last tick's.
+        SyncLevel100PlayerState();
         UpdateLevel100TriggerActors();
         UpdateResources(playerPartMoveStarted);
         TryChargeWeapon(playerInput);
@@ -846,7 +851,6 @@ public sealed class Simulation
                 {
                     Level100ActorSnapshot actor = _level100Actors.GetActor(actorId);
                     if (actor.Trigger.HasValue &&
-                        actor.TriggerEntered &&
                         !actor.TriggerEventDispatched)
                     {
                         _level100Actors.MarkTriggerEventDispatched(actorId);
@@ -3126,27 +3130,30 @@ public sealed class Simulation
             .Where(actor => actor.Trigger.HasValue && actor.Pose is not null)
             .OrderBy(actor => actor.ActorId.Value))
         {
-            if (trigger.TriggerEventDispatched || trigger.TriggerEntered)
+            if (trigger.TriggerEventDispatched)
             {
                 continue;
             }
 
-            Level100MissionJetModeState jetModeState =
-                Level100MissionTiming.JetModeState(
-                    _mode,
-                    _transition,
-                    _ticksSinceGroundContact);
+            bool inJetMode = RetailIScriptInJetMode.Evaluate(
+                _level100Actors.GetThingTypeMask(_level100PlayerActorId),
+                _mode,
+                _transition,
+                _ticksSinceGroundContact);
+            Level100MissionJetModeState jetModeState = inJetMode
+                ? Level100MissionJetModeState.InJetMode
+                : Level100MissionJetModeState.NotInJetMode;
             if (trigger.Active &&
                 (!Level100MissionTiming.RequiresNotInJetMode(trigger.Trigger!.Value) ||
-                 jetModeState ==
-                    Level100MissionJetModeState.NotInJetMode) &&
+                 !inJetMode) &&
                 IsWithinLevel100Trigger(
                     PlayerPosition,
                     PlayerElevationMillimeters,
                     trigger.Pose!.PositionMillimeters))
             {
                 // The side actor owns its factual overlap and released pause;
-                // LevelScript sees only the resulting named event.
+                // LevelScript sees only the resulting named event. TriggerEntered
+                // is not success — hit() Pause then PostEvent is.
                 _level100Actors.BeginTriggerDispatch(
                     trigger.ActorId,
                     jetModeState);

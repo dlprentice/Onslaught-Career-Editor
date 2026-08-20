@@ -1146,12 +1146,11 @@ public sealed class Level100ActorRegistry
         Level100MissionJetModeState entryJetModeState)
     {
         Actor actor = Require(actorId);
-        if (!actor.Trigger.HasValue || actor.TriggerEntered)
+        if (!actor.Trigger.HasValue || actor.TriggerEventDispatched)
         {
             return false;
         }
 
-        actor.TriggerEntered = true;
         actor.TriggerEntryJetModeState = entryJetModeState;
         EnqueueFact(Level100ActorFactKind.TriggerDispatchReady, actor.ActorId, null, 0);
         return true;
@@ -1160,11 +1159,13 @@ public sealed class Level100ActorRegistry
     public void MarkTriggerEventDispatched(Level100ActorId actorId)
     {
         Actor actor = Require(actorId);
-        if (!actor.Trigger.HasValue || !actor.TriggerEntered || actor.TriggerEventDispatched)
+        if (!actor.Trigger.HasValue || actor.TriggerEventDispatched)
         {
             throw new InvalidOperationException("Trigger dispatch is not ready.");
         }
 
+        actor.TriggerEntered = true;
+        actor.TriggerEntryJetModeState ??= Level100MissionJetModeState.NotInJetMode;
         actor.TriggerEventDispatched = true;
         actor.Active = false;
         actor.IsObjective = false;
@@ -1400,9 +1401,7 @@ public sealed class Level100ActorRegistry
                  actor.TriggerEntryJetModeState.HasValue ||
                  actor.TriggerEventDispatched)) ||
             (actor.Trigger.HasValue &&
-                ((!actor.TriggerEntered &&
-                    (actor.TriggerEntryJetModeState.HasValue ||
-                     actor.TriggerEventDispatched)) ||
+                ((actor.TriggerEventDispatched && !actor.TriggerEntered) ||
                  (actor.TriggerEntered && !actor.TriggerEntryJetModeState.HasValue))))
         {
             throw new ArgumentException(
