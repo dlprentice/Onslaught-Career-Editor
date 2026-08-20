@@ -9,7 +9,7 @@ namespace OnslaughtRebuild.Client.Tests;
 /// The player-visible cold-start path the Godot scene drives: Lost Toys /
 /// opening FMV / splash skip, then CFEPIntro click-to-start, then CFEPMain,
 /// then Options apply pulse and dropdown confirm / right-click cancel,
-/// then New Game campaign accept and QuitConfirm Yes/No.
+/// then New Game campaign accept, campaign Back, and QuitConfirm Yes/No.
 /// Isolated helper pins already exist. These cases kill a path that only
 /// those helpers know about, or a host that still uses
 /// <c>ConfirmForSmoke</c> instead of the same accept owner.
@@ -329,6 +329,70 @@ public sealed class RetailFrontendScenePathTests
         Assert.DoesNotContain("ConfirmForSmoke", confirm, StringComparison.Ordinal);
         Assert.DoesNotContain("RetailFrontendLatchToButton", confirm, StringComparison.Ordinal);
         Assert.DoesNotContain("RetailLevelSelectLater", confirm, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void CampaignBackWalksHomeThroughThePath()
+    {
+        var path = new RetailFrontendScenePath();
+        var session = AfterClickToStart(path);
+        Assert.True(path.TryAcceptMainMenuRow(session, 0));
+        Assert.True(path.TryAcceptDevSelect(session));
+        Assert.True(path.TryAcceptLevelSelect(session));
+        Assert.True(path.TryAcceptMissionBriefing(session));
+        Assert.Equal(RetailFrontendScreen.SelectConfiguration, session.Screen);
+
+        Assert.True(path.TryBack(session));
+        Assert.Equal(RetailFrontendScreen.MissionBriefing, session.Screen);
+        Assert.True(path.TryBack(session));
+        Assert.Equal(RetailFrontendScreen.LevelSelect, session.Screen);
+        Assert.True(path.TryBack(session));
+        Assert.Equal(RetailFrontendScreen.DevSelect, session.Screen);
+        Assert.True(path.TryBack(session));
+        Assert.Equal(RetailFrontendScreen.MainMenu, session.Screen);
+        Assert.False(path.TryBack(session));
+        Assert.Equal(RetailFrontendScreen.MainMenu, session.Screen);
+    }
+
+    [Fact]
+    public void StartupMediaBlocksCampaignBackUntilSkip()
+    {
+        var path = new RetailFrontendScenePath();
+        var session = new RetailFrontendSession();
+        path.Begin([]);
+        session.Confirm();
+        session.Confirm();
+        Assert.Equal(RetailFrontendScreen.DevSelect, session.Screen);
+        Assert.True(path.StartupMediaActive);
+        Assert.False(path.TryBack(session));
+        Assert.Equal(RetailFrontendScreen.DevSelect, session.Screen);
+
+        Assert.True(path.TrySkipStartup(left: true, middle: false, right: false, dik: 0));
+        Assert.True(path.TryBack(session));
+        Assert.Equal(RetailFrontendScreen.MainMenu, session.Screen);
+    }
+
+    [Fact]
+    public void FlowDrivesCampaignBackFromThePath()
+    {
+        string flow = ReadGodotSource("RetailFrontendFlow.cs");
+        string options = ReadGodotSource("RetailFrontendFlow.Options.cs");
+        string pointer = Slice(flow, "private bool HandlePointerConfirm(");
+        string key = Slice(flow, "private bool HandleKey(");
+        string backFromOptions = Slice(options, "private void BackFromOptions(");
+        string devArm = CaseArm(pointer, "case RetailFrontendScreen.DevSelect:");
+        string levelArm = CaseArm(pointer, "case RetailFrontendScreen.LevelSelect:");
+        string configArm = CaseArm(pointer, "case RetailFrontendScreen.SelectConfiguration:");
+
+        Assert.Contains("RetailFrontendScenePath.TryBackPage", key, StringComparison.Ordinal);
+        Assert.Contains("RetailFrontendScenePath.TryBackPage", devArm, StringComparison.Ordinal);
+        Assert.Contains("RetailFrontendScenePath.TryBackPage", levelArm, StringComparison.Ordinal);
+        Assert.Contains("RetailFrontendScenePath.TryBackPage", configArm, StringComparison.Ordinal);
+        Assert.Contains("RetailFrontendScenePath.TryBackPage", backFromOptions, StringComparison.Ordinal);
+        Assert.DoesNotContain("_session.Back()", key, StringComparison.Ordinal);
+        Assert.DoesNotContain("_session.Back()", pointer, StringComparison.Ordinal);
+        Assert.DoesNotContain("_session.Back()", backFromOptions, StringComparison.Ordinal);
+        Assert.DoesNotContain("RetailLevelSelectLater", key, StringComparison.Ordinal);
     }
 
     private static RetailFrontendSession AfterClickToStart(RetailFrontendScenePath path)

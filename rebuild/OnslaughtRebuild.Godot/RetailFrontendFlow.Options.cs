@@ -697,8 +697,10 @@ public sealed partial class RetailFrontendFlow
             return;
         }
 
-        RetailFrontendSignal frontend = _session.Back();
-        if (frontend == RetailFrontendSignal.None)
+        if (!RetailFrontendScenePath.TryBackPage(
+                _session,
+                startupMediaActive: false,
+                out RetailFrontendSignal frontend))
         {
             return;
         }

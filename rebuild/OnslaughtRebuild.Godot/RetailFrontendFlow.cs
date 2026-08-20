@@ -3056,8 +3056,10 @@ public sealed partial class RetailFrontendFlow : Control
                 // Chevron hit rects match the drawn chevrons.
                 if (new Rect2(0f, 430f, 46f, 48f).HasPoint(design))
                 {
-                    RetailFrontendSignal back = _session.Back();
-                    if (back == RetailFrontendSignal.None)
+                    if (!RetailFrontendScenePath.TryBackPage(
+                            _session,
+                            startupMediaActive: false,
+                            out RetailFrontendSignal back))
                     {
                         return false;
                     }
@@ -3078,8 +3080,10 @@ public sealed partial class RetailFrontendFlow : Control
                 // Chevron hit rects match the drawn chevrons, as on FEP_DEVSELECT.
                 if (new Rect2(0f, 430f, 48f, 48f).HasPoint(design))
                 {
-                    RetailFrontendSignal levelBack = _session.Back();
-                    if (levelBack == RetailFrontendSignal.None)
+                    if (!RetailFrontendScenePath.TryBackPage(
+                            _session,
+                            startupMediaActive: false,
+                            out RetailFrontendSignal levelBack))
                     {
                         return false;
                     }
@@ -3102,8 +3106,10 @@ public sealed partial class RetailFrontendFlow : Control
                 // clickable this lane models.
                 if (new Rect2(0f, 430f, 48f, 48f).HasPoint(design))
                 {
-                    RetailFrontendSignal pageBack = _session.Back();
-                    if (pageBack == RetailFrontendSignal.None)
+                    if (!RetailFrontendScenePath.TryBackPage(
+                            _session,
+                            startupMediaActive: false,
+                            out RetailFrontendSignal pageBack))
                     {
                         return false;
                     }
@@ -3197,8 +3203,10 @@ public sealed partial class RetailFrontendFlow : Control
         }
         if (IsKey(key, Key.Escape))
         {
-            RetailFrontendSignal signal = _session.Back();
-            if (signal != RetailFrontendSignal.None)
+            if (RetailFrontendScenePath.TryBackPage(
+                    _session,
+                    startupMediaActive: false,
+                    out RetailFrontendSignal signal))
             {
                 RequestAudioCue(RetailFrontendAudioCue.Back);
                 HandleNavigationSignal(signal);

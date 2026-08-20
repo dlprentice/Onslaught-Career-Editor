@@ -9,8 +9,8 @@ namespace OnslaughtRebuild.GodotClient;
 /// FMV / splash skip, then CFEPIntro click-to-start, then CFEPMain row
 /// accept (Campaign / Options / Exit), then Options apply pulse and
 /// dropdown confirm / right-click cancel, then New Game campaign accept
-/// (DevSelect / LevelSelect / Briefing / Config / Loading) and
-/// QuitConfirm Yes/No.
+/// (DevSelect / LevelSelect / Briefing / Config / Loading), campaign
+/// Back, and QuitConfirm Yes/No.
 ///
 /// <para>No Godot types. <see cref="RetailFrontendFlow"/> and
 /// <see cref="RetailStartupSequence"/> call the same accept/skip predicates
@@ -172,6 +172,44 @@ public sealed class RetailFrontendScenePath
 
         return TryConfirmPage(session, StartupMediaActive, out signal)
             && signal is RetailFrontendSignal.PageChanged or RetailFrontendSignal.ExitRequested;
+    }
+
+    public bool TryBack(RetailFrontendSession session)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        return TryBackPage(session, StartupMediaActive, out RetailFrontendSignal signal)
+            && signal == RetailFrontendSignal.PageChanged;
+    }
+
+    /// <summary>
+    /// The host Back path. Campaign chevrons and Escape call this from
+    /// <c>RetailFrontendFlow</c>; Options still pops its own stack first.
+    /// </summary>
+    public static bool TryBackPage(
+        RetailFrontendSession session,
+        bool startupMediaActive,
+        out RetailFrontendSignal signal)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        signal = RetailFrontendSignal.None;
+        if (startupMediaActive)
+        {
+            return false;
+        }
+
+        switch (session.Screen)
+        {
+            case RetailFrontendScreen.QuitConfirm:
+            case RetailFrontendScreen.DevSelect:
+            case RetailFrontendScreen.Options:
+            case RetailFrontendScreen.SelectConfiguration:
+            case RetailFrontendScreen.MissionBriefing:
+            case RetailFrontendScreen.LevelSelect:
+                signal = session.Back();
+                return signal != RetailFrontendSignal.None;
+            default:
+                return false;
+        }
     }
 
     /// <summary>
