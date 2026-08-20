@@ -99,6 +99,7 @@ public sealed class Simulation
     private int _twinVulcanReloadTicksRemaining;
     private int _level100OpeningTicksRemaining;
     private bool _level100FlightEnabled;
+    private int _flightModeFlag = RetailEnableFlightMode.FlagDisabled;
     private readonly Level100PlayerWeaponRuntime _level100PlayerWeapons = new();
     private int _level100HudEmphasisMask;
     private bool _walkerToJetUsesTakeoffLift;
@@ -143,7 +144,8 @@ public sealed class Simulation
     /// <summary>
     /// Measurement seam. Applies exactly the two <em>capability grants</em> the
     /// released LevelScript performs at the head of beat 6 —
-    /// <c>player.EnableFlightMode()</c> and, for one Target Zone,
+    /// <c>player.EnableFlightMode()</c> (including
+    /// <c>mov [ecx+0x58c], 1</c>) and, for one Target Zone,
     /// <c>target.SetObjective(); target.Activate();</c> — so that the three
     /// "fly there and land" legs can be measured while beats 3–5 are still
     /// mechanically blocked by causes outside this lane (Target Truck and
@@ -160,6 +162,12 @@ public sealed class Simulation
     internal void GrantFlightLegForMeasurement(Level100MissionTrigger trigger)
     {
         _level100FlightEnabled = true;
+        // Isolated Level100FlightEnabled names the rebuild bool.
+        // Isolated Enable names literal-1; one live store of 1 is
+        // not unique versus increment from 0. This is the same
+        // Enable LevelScript posts at beat 6. Disable's clear /
+        // morph stay unclaimed. ChargeWeapon stays unclaimed.
+        _flightModeFlag = RetailEnableFlightMode.Enable(_flightModeFlag);
         Level100ActorSnapshot zone = _level100Actors.Snapshot.Actors.Single(
             actor => actor.Trigger == trigger);
         _level100Actors.SetObjective(zone.ActorId, true);
@@ -168,6 +176,14 @@ public sealed class Simulation
 
     internal uint Level100PulseCannonChargeBits =>
         _level100PlayerWeapons.PulseCannonChargeBits;
+
+    /// <summary>
+    /// Isolated <see cref="WorldSnapshot.Level100FlightEnabled"/>
+    /// names the rebuild bool. This is official
+    /// <c>mov [ecx+0x58c], 1</c>. Disable's clear stays
+    /// unclaimed.
+    /// </summary>
+    internal int Level100FlightModeFlag => _flightModeFlag;
 
     /// <summary>
     /// Causal-probe seam for one terrain touchdown. It places the released
@@ -990,6 +1006,14 @@ public sealed class Simulation
                 break;
             case Level100FlightModeAvailabilityChanged flight:
                 _level100FlightEnabled = flight.Enabled;
+                if (flight.Enabled)
+                {
+                    // Isolated FlightModeEnabled names the rebuild
+                    // bool. Isolated Enable names literal-1. Disable's
+                    // clear / morph stay unclaimed.
+                    _flightModeFlag = RetailEnableFlightMode.Enable(_flightModeFlag);
+                }
+
                 if (!flight.Enabled &&
                     _mode == VehicleMode.Jet &&
                     _transition == VehicleTransition.None)
@@ -1079,6 +1103,7 @@ public sealed class Simulation
         if (_mode == VehicleMode.Walker)
         {
             if (!_level100FlightEnabled ||
+                _flightModeFlag != RetailEnableFlightMode.FlagEnabled ||
                 _energy < SimulationConstants.TransformEnergyThreshold ||
                 _walkerDashTicksRemaining > 0)
             {
@@ -3823,6 +3848,7 @@ public sealed class Simulation
         // for the same reason; the released `init()` disables it explicitly on
         // the first tick, so the observable start state is unchanged there.
         _level100FlightEnabled = true;
+        _flightModeFlag = RetailEnableFlightMode.FlagDisabled;
         _level100PlayerWeapons.ResetConfiguration();
         _level100HudEmphasisMask = 0;
         _walkerToJetUsesTakeoffLift = false;

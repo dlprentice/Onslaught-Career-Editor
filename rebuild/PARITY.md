@@ -1,7 +1,7 @@
 # Rebuild parity contract
 
 Status: active — what "1:1 behavioral and experiential parity" means operationally
-Last updated: 2026-08-19 (Level 100 TargetZone hit() InJetMode + Pause wait-stop).
+Last updated: 2026-08-19 (Level 100 EnableFlightMode +0x58c store on takeoff).
 Evidence: SOURCE — authority order and the known divergences are
 recorded in `PROVENANCE.md` plus the Lost-countdown row of this table; gate capabilities are MEASURED claims of the
 tracked harnesses named in the table. Every row of *Carried retail contracts*
@@ -166,6 +166,7 @@ Owner paths are relative to the repository root; test names are relative to
 | `IScript::InJetMode` Level 100 type+recency | `0x005380f0` through `ret 0xc` at `0x00538147` (90 B SHA-256 `0ae6c37d…866486f0`) on specimen `74154bfa…`. `0x005380f6` is `f6 41 34 08` = `test [ecx+0x34], 8`. Callee `0x00408120` (43 B SHA-256 `81ab0371…7fb7610e`) is walker `+0x260==2` and `now - +0xcc < 0.5f` at `0x005d85ec`. Wrapper `test eax,eax / jne` keeps FALSE when the callee is true. Isolated `JetModeState` names recency and still returns InJetMode for a non-BE jet. Isolated `PlayerInJetMode == (mode == Jet)` names the rebuild bool; an airborne walker is TRUE here and FALSE there. TargetZone2/3/4 `hit()` SET_CONTEXT the hitter then call this native. EnableFlightMode wrapper gate / Disable / lock-set / Move / Morph / UpdateCamera stay unclaimed. ChargeWeapon stays unclaimed. Live `GAME.mSlots` stay unclaimed. No new secondaries | `rebuild/OnslaughtRebuild.Core/RetailIScriptInJetMode.cs` | `RetailIScriptInJetMode.Evaluate` | `RetailIScriptInJetModeTests.Evaluate_IsFalseUnlessBattleEngineBit8AndNotARecentlyGroundedWalker` | 1 | skip `test [ecx+0x34], 8` so a non-BE jet is TRUE |
 | `IScript::FollowWaypoint` Level 100 start-follow flag | `0x00537d70` through `ret 0xc` at `0x00537e34` (199 B SHA-256 `6f03ae4a…ed9fd3`) on specimen `74154bfa…`. Twin official backup matches. `0x00537df7` is `b8 01 00 00 00` = `mov eax, 1`. `0x00537e20` is `89 46 18` = `mov [esi+0x18], eax`. Isolated FollowWaypoint emit-command names the rebuild path / flag 0; skip store Expected 1 Actual 0. One live store of 1 is not unique versus increment from 0. Level 100's one compiled native-0 site is AirborneDrone1 `ready()` `FollowWaypoint("Drone Path 1", 0)` on beat 7. FollowWaypointWait early-out / CVM / `+0x1c` / `+0x14` / `+0x24` / AddEvent 2000 stay unclaimed. ChargeWeapon stays unclaimed. Live `GAME.mSlots` stay unclaimed. No new secondaries | `rebuild/OnslaughtRebuild.Core/RetailIScriptFollowWaypoint.cs` | `RetailIScriptFollowWaypoint.Start` | `RetailIScriptFollowWaypointTests.Start_StoresLiteralOneAtIScriptPlus18NotIncrement` | 1 | increment so Start(1) becomes 2 |
 | `TargetZone2/3/4 hit()` InJetMode then Pause wait-stop | Compiled `hit()` SET_CONTEXT the hitter, `IsA(8)`, `InJetMode() == FALSE`, `Pause(0.5)`, then `PostEvent("Reached Target Zone N")`. Isolated `Evaluate` names type-8 without posting Reached. Isolated `JetModeState` names the old `TriggerEntered` pre-filter. Isolated `Stop` names LevelScript `PlayCharMessageWait`. Simulation now consults `Evaluate` on this tick's flight state; `TriggerEntered` is not success. Actor-script `SetObjective` ORs bit 0x20 on the same registry word `hit()` Unset clears. CVM snapshot / 0.05f / FollowWaypointWait / IsObjective HUD-reader of bit 0x20 stay unclaimed. ChargeWeapon / ReadyToCharge / Charged-2 stay unclaimed. Live `GAME.mSlots` stay unclaimed. No new secondaries | `rebuild/OnslaughtRebuild.Core/Simulation.cs` | `RetailIScriptInJetMode.Evaluate` | `Level100TargetZoneHitTests.TargetZone2_FallInAndLand_PostsReachedFromHitNotFromTriggerEntered` | 1 | keep `TriggerEntered` as success, or skip the actor Pause store |
+| `IScript::EnableFlightMode` Level 100 takeoff store | Same callee `mov [ecx+0x58c], 1`. Beat 6 Enable and `GrantFlightLegForMeasurement` now store that immediate on Simulation. Isolated `Level100FlightEnabled` / `FlightModeEnabled` name the rebuild bool and still pass if this store is skipped. Isolated `RetailEnableFlightMode.Enable` names literal-1 without takeoff. Mutation: skip the store so ToggleMode is rejected, or increment so a second Enable becomes 2. Wrapper gate `test [ecx+0x34], 8` and Disable clear / morph stay unclaimed. ChargeWeapon / ReadyToCharge / Charged-2 stay unclaimed. Live `GAME.mSlots` stay unclaimed. No new secondaries | `rebuild/OnslaughtRebuild.Core/Simulation.cs` | `RetailEnableFlightMode.Enable` | `Level100EnableFlightModeTests.GrantFlightLeg_StoresCBattleEnginePlus58CSoToggleModeCanTakeOff` | 1 | skip the `+0x58c` store so GrantFlight still sets the bool but ToggleMode is rejected |
 
 Two things this table deliberately does **not** claim. It does not claim these
 contracts are graded `REBUILD_READY`: that grade is a campaign artifact and
@@ -180,7 +181,10 @@ for the owner types: `Simulation.JetFrictionNumerator` is wired,
 when the player holds `SimActions.ChargeWeapon` on the Pulse Cannon Pod,
 `RetailIScriptInJetMode.Evaluate` and actor-script `RetailIScriptWaitStop.Stop`
 are reached from TargetZone2/3/4 `hit()` (Simulation no longer treats
-`TriggerEntered` as Reached),
+`TriggerEntered` as Reached), `RetailEnableFlightMode.Enable` is reached
+from Simulation takeoff after beat-6 Enable /
+`GrantFlightLegForMeasurement` (isolated `Level100FlightEnabled` still
+names the rebuild bool),
 `RetailGameEndCountdown.LostTicks` is reached from
 `Level100Mission.DeclareLost` on the released Broke-Tutorial /
 `LevelLostString` path, and `Level100WonCareerHandoff.TryApply` (which
@@ -330,8 +334,11 @@ The EnableFlightMode flight-flag row names
 `FlightModeEnabled` = true names the rebuild bool and
 does not uniquely prove `mov [ecx+0x58c], 1`. One live
 store of 1 is not unique versus increment from 0.
-Wrapper gate `test [ecx+0x34], 8` and Disable clear /
-morph stay unclaimed. ChargeWeapon stays unclaimed.
+The takeoff-store row names that same `Enable` owner on
+Simulation: skip store leaves `Level100FlightEnabled` true
+and ToggleMode rejected. Wrapper gate `test [ecx+0x34], 8`
+and Disable clear / morph stay unclaimed. ChargeWeapon
+stays unclaimed.
 The HighlightHudPart / UnHighlightHudPart HUD-word row
 names `RetailHighlightHudPart.Unhighlight`; isolated
 `Emphasized` = false names the rebuild bool and does
