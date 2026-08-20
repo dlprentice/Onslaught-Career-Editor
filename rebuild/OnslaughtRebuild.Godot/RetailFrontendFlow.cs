@@ -3212,8 +3212,10 @@ public sealed partial class RetailFrontendFlow : Control
 
     private void Confirm()
     {
-        RetailFrontendSignal signal = _session.Confirm();
-        if (signal == RetailFrontendSignal.None)
+        if (!RetailFrontendScenePath.TryConfirmPage(
+                _session,
+                startupMediaActive: false,
+                out RetailFrontendSignal signal))
         {
             return;
         }

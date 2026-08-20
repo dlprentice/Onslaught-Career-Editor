@@ -8,7 +8,8 @@ namespace OnslaughtRebuild.Client.Tests;
 /// <summary>
 /// The player-visible cold-start path the Godot scene drives: Lost Toys /
 /// opening FMV / splash skip, then CFEPIntro click-to-start, then CFEPMain,
-/// then Options apply pulse and dropdown confirm / right-click cancel.
+/// then Options apply pulse and dropdown confirm / right-click cancel,
+/// then New Game campaign accept and QuitConfirm Yes/No.
 /// Isolated helper pins already exist. These cases kill a path that only
 /// those helpers know about, or a host that still uses
 /// <c>ConfirmForSmoke</c> instead of the same accept owner.
@@ -230,6 +231,104 @@ public sealed class RetailFrontendScenePathTests
         Assert.DoesNotContain("RetailFrontendScenePath", draw, StringComparison.Ordinal);
         Assert.DoesNotContain("ConfirmForSmoke", confirm, StringComparison.Ordinal);
         Assert.DoesNotContain("RetailFrontendLatchToButton", Slice(flow, "private bool HandlePointerConfirm("), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void NewGameAcceptWalksToLevel100LaunchThroughThePath()
+    {
+        var path = new RetailFrontendScenePath();
+        var session = AfterClickToStart(path);
+
+        Assert.False(path.TryAcceptDevSelect(session));
+        Assert.Equal(RetailFrontendScreen.MainMenu, session.Screen);
+
+        Assert.True(path.TryAcceptMainMenuRow(session, 0));
+        Assert.Equal(RetailFrontendScreen.DevSelect, session.Screen);
+        Assert.Equal(RetailFrontendSession.DefaultGameName, session.GameName);
+
+        Assert.True(path.TryAcceptDevSelect(session));
+        Assert.Equal(RetailFrontendScreen.LevelSelect, session.Screen);
+        Assert.False(session.ConsumeLevel100LaunchRequest());
+
+        Assert.True(path.TryAcceptLevelSelect(session));
+        Assert.Equal(RetailFrontendScreen.MissionBriefing, session.Screen);
+
+        Assert.True(path.TryAcceptMissionBriefing(session));
+        Assert.Equal(RetailFrontendScreen.SelectConfiguration, session.Screen);
+
+        Assert.True(path.TryAcceptSelectConfiguration(session, out RetailFrontendSignal launch));
+        Assert.Equal(RetailFrontendSignal.Level100LaunchRequested, launch);
+        Assert.Equal(RetailFrontendScreen.Loading, session.Screen);
+        Assert.True(session.ConsumeLevel100LaunchRequest());
+
+        Assert.False(path.TryAcceptDevSelect(session));
+        Assert.False(path.TryAcceptLevelSelect(session));
+        Assert.False(path.TryAcceptMissionBriefing(session));
+        Assert.False(path.TryAcceptSelectConfiguration(session, out RetailFrontendSignal idle));
+        Assert.Equal(RetailFrontendSignal.None, idle);
+    }
+
+    [Fact]
+    public void StartupMediaBlocksCampaignAcceptUntilSkip()
+    {
+        var path = new RetailFrontendScenePath();
+        var session = new RetailFrontendSession();
+        path.Begin([]);
+        session.Confirm();
+        session.Confirm();
+        Assert.Equal(RetailFrontendScreen.DevSelect, session.Screen);
+        Assert.True(path.StartupMediaActive);
+
+        Assert.False(path.TryAcceptDevSelect(session));
+        Assert.Equal(RetailFrontendScreen.DevSelect, session.Screen);
+
+        Assert.True(path.TrySkipStartup(left: true, middle: false, right: false, dik: 0));
+        Assert.True(path.TryAcceptDevSelect(session));
+        Assert.Equal(RetailFrontendScreen.LevelSelect, session.Screen);
+    }
+
+    [Fact]
+    public void QuitConfirmYesExitsAndNoReturnsToMainMenu()
+    {
+        var path = new RetailFrontendScenePath();
+        var no = AfterClickToStart(path);
+        Assert.True(path.TryAcceptMainMenuRow(no, 6));
+        Assert.Equal(RetailFrontendScreen.QuitConfirm, no.Screen);
+        Assert.Equal(0, no.SelectedQuitConfirmIndex);
+        Assert.True(path.TryAcceptQuitConfirm(no, out RetailFrontendSignal cancelled));
+        Assert.Equal(RetailFrontendSignal.PageChanged, cancelled);
+        Assert.Equal(RetailFrontendScreen.MainMenu, no.Screen);
+
+        var yes = AfterClickToStart(path);
+        Assert.True(path.TryAcceptMainMenuRow(yes, 6));
+        Assert.True(yes.SelectQuitConfirmIndex(1));
+        Assert.True(path.TryAcceptQuitConfirm(yes, out RetailFrontendSignal exit));
+        Assert.Equal(RetailFrontendSignal.ExitRequested, exit);
+        Assert.Equal(RetailFrontendScreen.QuitConfirm, yes.Screen);
+    }
+
+    [Fact]
+    public void FlowConfirmsCampaignAndQuitThroughThePath()
+    {
+        string flow = ReadGodotSource("RetailFrontendFlow.cs");
+        string confirm = Slice(flow, "private void Confirm(");
+        string pointer = Slice(flow, "private bool HandlePointerConfirm(");
+        string key = Slice(flow, "private bool HandleKey(");
+        string devArm = CaseArm(pointer, "case RetailFrontendScreen.DevSelect:");
+        string levelArm = CaseArm(pointer, "case RetailFrontendScreen.LevelSelect:");
+        string configArm = CaseArm(pointer, "case RetailFrontendScreen.SelectConfiguration:");
+        string quitArm = CaseArm(pointer, "case RetailFrontendScreen.QuitConfirm:");
+
+        Assert.Contains("RetailFrontendScenePath.TryConfirmPage", confirm, StringComparison.Ordinal);
+        Assert.DoesNotContain("_session.Confirm()", confirm, StringComparison.Ordinal);
+        Assert.Contains("Confirm();", devArm, StringComparison.Ordinal);
+        Assert.Contains("Confirm();", levelArm, StringComparison.Ordinal);
+        Assert.Contains("Confirm();", configArm, StringComparison.Ordinal);
+        Assert.Contains("Confirm();", quitArm, StringComparison.Ordinal);
+        Assert.Contains("Confirm();", key, StringComparison.Ordinal);
+        Assert.DoesNotContain("ConfirmForSmoke", confirm, StringComparison.Ordinal);
+        Assert.DoesNotContain("RetailFrontendLatchToButton", confirm, StringComparison.Ordinal);
+        Assert.DoesNotContain("RetailLevelSelectLater", confirm, StringComparison.Ordinal);
     }
 
     private static RetailFrontendSession AfterClickToStart(RetailFrontendScenePath path)

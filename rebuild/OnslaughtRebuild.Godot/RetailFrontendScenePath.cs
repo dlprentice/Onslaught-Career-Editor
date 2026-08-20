@@ -8,7 +8,9 @@ namespace OnslaughtRebuild.GodotClient;
 /// The Godot scene's player-visible frontend path: Lost Toys / opening
 /// FMV / splash skip, then CFEPIntro click-to-start, then CFEPMain row
 /// accept (Campaign / Options / Exit), then Options apply pulse and
-/// dropdown confirm / right-click cancel.
+/// dropdown confirm / right-click cancel, then New Game campaign accept
+/// (DevSelect / LevelSelect / Briefing / Config / Loading) and
+/// QuitConfirm Yes/No.
 ///
 /// <para>No Godot types. <see cref="RetailFrontendFlow"/> and
 /// <see cref="RetailStartupSequence"/> call the same accept/skip predicates
@@ -98,7 +100,112 @@ public sealed class RetailFrontendScenePath
         }
 
         session.SelectMainIndex(index);
-        return session.Confirm() == RetailFrontendSignal.PageChanged;
+        return TryConfirmPage(session, StartupMediaActive, out RetailFrontendSignal signal)
+            && signal == RetailFrontendSignal.PageChanged;
+    }
+
+    public bool TryAcceptDevSelect(RetailFrontendSession session)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        if (session.Screen != RetailFrontendScreen.DevSelect)
+        {
+            return false;
+        }
+
+        return TryConfirmPage(session, StartupMediaActive, out RetailFrontendSignal signal)
+            && signal == RetailFrontendSignal.PageChanged
+            && session.Screen == RetailFrontendScreen.LevelSelect;
+    }
+
+    public bool TryAcceptLevelSelect(RetailFrontendSession session)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        if (session.Screen != RetailFrontendScreen.LevelSelect)
+        {
+            return false;
+        }
+
+        return TryConfirmPage(session, StartupMediaActive, out RetailFrontendSignal signal)
+            && signal == RetailFrontendSignal.PageChanged
+            && session.Screen == RetailFrontendScreen.MissionBriefing;
+    }
+
+    public bool TryAcceptMissionBriefing(RetailFrontendSession session)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        if (session.Screen != RetailFrontendScreen.MissionBriefing)
+        {
+            return false;
+        }
+
+        return TryConfirmPage(session, StartupMediaActive, out RetailFrontendSignal signal)
+            && signal == RetailFrontendSignal.PageChanged
+            && session.Screen == RetailFrontendScreen.SelectConfiguration;
+    }
+
+    public bool TryAcceptSelectConfiguration(
+        RetailFrontendSession session,
+        out RetailFrontendSignal signal)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        signal = RetailFrontendSignal.None;
+        if (session.Screen != RetailFrontendScreen.SelectConfiguration)
+        {
+            return false;
+        }
+
+        return TryConfirmPage(session, StartupMediaActive, out signal)
+            && signal == RetailFrontendSignal.Level100LaunchRequested
+            && session.Screen == RetailFrontendScreen.Loading;
+    }
+
+    public bool TryAcceptQuitConfirm(
+        RetailFrontendSession session,
+        out RetailFrontendSignal signal)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        signal = RetailFrontendSignal.None;
+        if (session.Screen != RetailFrontendScreen.QuitConfirm)
+        {
+            return false;
+        }
+
+        return TryConfirmPage(session, StartupMediaActive, out signal)
+            && signal is RetailFrontendSignal.PageChanged or RetailFrontendSignal.ExitRequested;
+    }
+
+    /// <summary>
+    /// The host Confirm path. Click-to-start and main-menu still gate with
+    /// <see cref="AcceptsClickToStartMouse"/> / <see cref="CanAcceptMainMenuRow"/>
+    /// first; campaign and quit pages call this from
+    /// <c>RetailFrontendFlow.Confirm</c>.
+    /// </summary>
+    public static bool TryConfirmPage(
+        RetailFrontendSession session,
+        bool startupMediaActive,
+        out RetailFrontendSignal signal)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        signal = RetailFrontendSignal.None;
+        if (startupMediaActive)
+        {
+            return false;
+        }
+
+        switch (session.Screen)
+        {
+            case RetailFrontendScreen.ClickToStart:
+            case RetailFrontendScreen.MainMenu:
+            case RetailFrontendScreen.QuitConfirm:
+            case RetailFrontendScreen.DevSelect:
+            case RetailFrontendScreen.LevelSelect:
+            case RetailFrontendScreen.MissionBriefing:
+            case RetailFrontendScreen.SelectConfiguration:
+                signal = session.Confirm();
+                return signal != RetailFrontendSignal.None;
+            default:
+                return false;
+        }
     }
 
     /// <summary>
