@@ -1418,6 +1418,31 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         /// there is no file to read; a refusal sentence when the file is there
         /// but the dword cannot be shown.
         /// </summary>
+        /// <summary>
+        /// What the retail game asks of a player to unlock the focused Goodie.
+        ///
+        /// Unlike the current-state line this needs no save: an unlock rule is a
+        /// property of the game, not of the file, so it paints as soon as the ID
+        /// is a real Goodie. It stays empty for an ID the codec would not accept,
+        /// which is the same silence the neighbouring line keeps.
+        /// </summary>
+        private string BuildFocusedGoodieUnlockText()
+        {
+            double rawId = EditorFocusedGoodieIdNumberBox.Value;
+            if (double.IsNaN(rawId) || double.IsInfinity(rawId) || rawId != Math.Truncate(rawId))
+            {
+                return string.Empty;
+            }
+
+            int goodieId = (int)rawId;
+            if ((uint)goodieId >= MissionScriptGoodieStateSaveCodec.DisplayableGoodieCount)
+            {
+                return string.Empty;
+            }
+
+            return SaveLabPageText.DescribeFocusedGoodieUnlock(goodieId);
+        }
+
         private string BuildFocusedGoodieCurrentText(string? inputPath)
         {
             if (string.IsNullOrWhiteSpace(inputPath))
@@ -1622,6 +1647,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 ? $"Ready to write only Goodie ID {focusedGoodieRequest!.GoodieId:000} as {MissionScriptGoodieStateSaveCodec.GetStateLabel(focusedGoodieRequest.State)}."
                 : "Choose a valid .bes input and a different .bes output to enable this one-field write.");
             EditorFocusedGoodieCurrentTextBlock.Text = BuildFocusedGoodieCurrentText(request.InputPath);
+            EditorFocusedGoodieUnlockTextBlock.Text = BuildFocusedGoodieUnlockText();
 
             Models.SaveEditorCompletionEvaluation completion = SaveEditorJourneyStateMachine.EvaluateCompletion(
                 _lastWrittenCompletion,

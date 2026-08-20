@@ -640,6 +640,10 @@
                                            AutomationProperties.AutomationId="SaveEditorFocusedGoodieCurrent"
                                            Style="{StaticResource SectionBodyTextStyle}"
                                            TextWrapping="WrapWholeWords" />
+                                <TextBlock x:Name="EditorFocusedGoodieUnlockTextBlock"
+                                           AutomationProperties.AutomationId="SaveEditorFocusedGoodieUnlock"
+                                           Style="{StaticResource SectionBodyTextStyle}"
+                                           TextWrapping="WrapWholeWords" />
                                 <TextBlock x:Name="EditorFocusedGoodieStatusTextBlock"
                                            AutomationProperties.AutomationId="SaveEditorFocusedGoodieStatus"
                                            Style="{StaticResource SectionBodyTextStyle}"

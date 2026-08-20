@@ -112,6 +112,35 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
             return $"This save has Goodie {goodieId:000} as {MissionScriptGoodieStateSaveCodec.GetStateLabel(state)}.";
         }
 
+        /// <summary>
+        /// How the retail game unlocks the focused Goodie.
+        ///
+        /// Shown beside the current-state line so a player editing a Goodie can
+        /// see what earning it would have required, instead of only the dword
+        /// they are about to replace. The unlock rules are already mapped in
+        /// <see cref="GoodieUnlockRequirementService"/>; nothing here recovers
+        /// or invents one. The service's EvidenceLabel is deliberately NOT
+        /// painted - "CCareer__UpdateGoodieStates 0x0041c470" is a research
+        /// pointer, not something a player should be shown.
+        /// </summary>
+        public static string DescribeFocusedGoodieUnlock(int goodieId)
+        {
+            GoodieUnlockRequirement requirement =
+                GoodieUnlockRequirementService.Describe(goodieId);
+
+            if (requirement == GoodieUnlockRequirement.Unknown)
+            {
+                return $"This project has not mapped what unlocks Goodie {goodieId:000} yet.";
+            }
+
+            if (requirement.Summary.StartsWith("Reserved save slot", StringComparison.Ordinal))
+            {
+                return $"Goodie {goodieId:000} is a reserved save slot. Its bytes are preserved, not earned.";
+            }
+
+            return $"How the game unlocks Goodie {goodieId:000}: {requirement.Summary}";
+        }
+
         public const string FocusedGoodieCurrentUnreadable =
             "This save's current Goodie state could not be read.";
 
