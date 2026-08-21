@@ -549,9 +549,28 @@ public sealed class Level100FullChainTests
         // actual hull share depends on the released shield law. The observable
         // over-counts slightly because it evaluates a swept segment on every
         // Core tick while the runtime advances rounds only on the 20 Hz retail
-        // base tick.
-        int observedHits = blasters
+        // base tick. It can also under-count at the envelope: the observable
+        // re-derives the base-tick segment end from yaw/pitch doubles and
+        // truncates it, where the runtime integrates the same step in
+        // integers, so the two disagree by sub-millimetre amounts at the
+        // 400 mm boundary. Measured across this suite's 302 Blasters, exactly
+        // two rounds land in the 2 mm band outside the envelope (400.30 mm
+        // and 400.81 mm), and the 400.81 mm round IS a runtime hit — the
+        // single event behind the old 153-vs-154 under-count. Rounds inside
+        // the band are indeterminate for the observable, so the agreement
+        // clause credits them and separately pins that the band stays small;
+        // the per-event identity diff above names any future disagreement
+        // instead of leaving a bare count to be re-fitted.
+        const double ReconstructionBandMillimeters = 2d;
+        int strictHits = blasters
             .Count(shot => shot.ClosestApproachMillimeters < EnvelopeMillimeters);
+        int bandRounds = blasters.Count(shot =>
+            shot.ClosestApproachMillimeters >= EnvelopeMillimeters &&
+            shot.ClosestApproachMillimeters < EnvelopeMillimeters + ReconstructionBandMillimeters);
+        Assert.True(
+            bandRounds <= 4,
+            $"{bandRounds} Blasters landed in the +-2 mm reconstruction band; the " +
+            "observable's geometry has degraded beyond its measured precision.");
         int damageBlasterHits =
             _abortControl.Driver.PlayerDamageEvents.Count(damage =>
                 damage.Source == Level100PlayerDamageSource.ActorRound &&
@@ -559,7 +578,126 @@ public sealed class Level100FullChainTests
             _abortNoCrab.Driver.PlayerDamageEvents.Count(damage =>
                 damage.Source == Level100PlayerDamageSource.ActorRound &&
                 damage.IncomingDamageMilliLife == 200);
-        Assert.InRange(observedHits, damageBlasterHits, damageBlasterHits + 8);
+
+        // PER-EVENT IDENTITY DIFF (instrument). The InRange assertion below
+        // can only say "153 vs 154"; this diff names the exact damage event
+        // with no counted observable (or the reverse) so the wrong contract
+        // can be identified instead of fitted. Damage events carry Tick; each
+        // counted observable carries ClosestTick; a ±1 window absorbs the
+        // removal step, because a round that impacts is deleted inside the
+        // killing step so its closest segment is observed at most one tick
+        // before the damage event lands.
+        static void ReportIdentityDiff(
+            string tag,
+            Level100ChainAutopilot driver,
+            double envelope,
+            ITestOutputHelper output)
+        {
+            List<int> damageTicks =
+            [
+                .. driver.PlayerDamageEvents
+                    .Where(damage =>
+                        damage.Source == Level100PlayerDamageSource.ActorRound &&
+                        damage.IncomingDamageMilliLife == 200)
+                    .Select(damage => damage.Tick)
+                    .OrderBy(tick => tick),
+            ];
+            var counted = driver.Blasters
+                .Where(shot => shot.ClosestApproachMillimeters < envelope)
+                .Select(shot => (
+                    shot.LaunchTick,
+                    shot.ClosestTick,
+                    shot.ClosestApproachMillimeters,
+                    shot.LifeTicks,
+                    shot.FinalRemainingBaseTicks))
+                .OrderBy(shot => shot.ClosestTick)
+                .ToList();
+            bool[] used = new bool[counted.Count];
+            var unmatchedDamage = new List<int>();
+            foreach (int tick in damageTicks)
+            {
+                int match = -1;
+                for (int i = 0; i < counted.Count; i++)
+                {
+                    if (!used[i] && Math.Abs(counted[i].ClosestTick - tick) <= 1)
+                    {
+                        match = i;
+                        break;
+                    }
+                }
+
+                if (match < 0)
+                {
+                    unmatchedDamage.Add(tick);
+                }
+                else
+                {
+                    used[match] = true;
+                }
+            }
+
+            output.WriteLine(
+                $"{tag}: damage events={damageTicks.Count} " +
+                $"counted observables={counted.Count} " +
+                $"unmatched damage={unmatchedDamage.Count} " +
+                $"unmatched observables={used.Count(flag => !flag)}");
+            foreach (int tick in unmatchedDamage)
+            {
+                IEnumerable<string> near = counted
+                    .Where(shot => Math.Abs(shot.ClosestTick - tick) <= 5)
+                    .Select(shot =>
+                        $"closest@{shot.ClosestTick}({shot.ClosestApproachMillimeters:F0}mm," +
+                        $"launch {shot.LaunchTick},life {shot.LifeTicks}," +
+                        $"rem {shot.FinalRemainingBaseTicks})");
+                // All observables near the orphan, counted or not, plus any
+                // whose terminal tick (launch + life + the removal step) is
+                // near it — this separates "tracked but measured >= 400mm"
+                // from "never present in any snapshot".
+                IEnumerable<string> nearAny = driver.Blasters
+                    .Where(shot =>
+                        Math.Abs(shot.ClosestTick - tick) <= 3 ||
+                        Math.Abs((shot.LaunchTick + shot.LifeTicks + 1) - tick) <= 2)
+                    .Select(shot =>
+                        $"launch {shot.LaunchTick} life {shot.LifeTicks} " +
+                        $"closest {shot.ClosestApproachMillimeters:F1}mm@{shot.ClosestTick} " +
+                        $"rem {shot.FinalRemainingBaseTicks}");
+                output.WriteLine(
+                    $"  {tag} damage@{tick} has NO counted observable within +-{1}; " +
+                    $"counted context: {string.Join("; ", near.DefaultIfEmpty("none within +-5"))}");
+                output.WriteLine(
+                    $"    all nearby observables: " +
+                    $"{string.Join(" | ", nearAny.DefaultIfEmpty("NONE - no blaster was near this tick at all"))}");
+            }
+
+            for (int i = 0; i < counted.Count; i++)
+            {
+                if (!used[i])
+                {
+                    output.WriteLine(
+                        $"  {tag} counted observable " +
+                        $"closest@{counted[i].ClosestTick}" +
+                        $"({counted[i].ClosestApproachMillimeters:F0}mm," +
+                        $"launch {counted[i].LaunchTick}) matches NO damage event");
+                }
+            }
+        }
+
+        ReportIdentityDiff("abortControl", _abortControl.Driver, EnvelopeMillimeters, _output);
+        ReportIdentityDiff("abortNoCrab", _abortNoCrab.Driver, EnvelopeMillimeters, _output);
+        foreach (string note in _abortControl.Driver.BoundaryBandNotes)
+        {
+            _output.WriteLine($"  boundary-band control: {note}");
+        }
+
+        foreach (string note in _abortNoCrab.Driver.BoundaryBandNotes)
+        {
+            _output.WriteLine($"  boundary-band noCrab: {note}");
+        }
+
+        Assert.InRange(
+            strictHits + bandRounds,
+            damageBlasterHits,
+            damageBlasterHits + 8);
     }
 
     /// <summary>

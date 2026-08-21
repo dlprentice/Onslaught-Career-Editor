@@ -540,7 +540,8 @@ internal sealed class Level100ChainAutopilot
         double PerpendicularSpeedMetersPerSecond,
         double ClosestApproachMillimeters,
         int LifeTicks,
-        int FinalRemainingBaseTicks);
+        int FinalRemainingBaseTicks,
+        int ClosestTick);
 
     private sealed class TrackedBlaster
     {
@@ -548,6 +549,7 @@ internal sealed class Level100ChainAutopilot
         public double LaunchSlantMeters;
         public double PerpendicularSpeed;
         public double Closest = double.MaxValue;
+        public int ClosestTick = -1;
         public SimVector3 Previous;
         public bool HasPrevious;
         public int LastSeenTick;
@@ -556,10 +558,18 @@ internal sealed class Level100ChainAutopilot
 
     private readonly Dictionary<int, TrackedBlaster> _liveBlasters = [];
     private readonly List<ObservedBlaster> _blasters = [];
+    private readonly List<string> _boundaryBandNotes = [];
     private SimVector3 _previousPlayerPoint;
     private bool _hasPreviousPlayerPoint;
 
     internal IReadOnlyList<ObservedBlaster> Blasters => _blasters;
+
+    /// <summary>
+    /// Diagnostic notes for rounds whose observable closest approach lands in
+    /// the 2 mm band just outside the contact envelope — where the swept
+    /// reconstruction and the runtime's integer boundary can disagree.
+    /// </summary>
+    internal IReadOnlyList<string> BoundaryBandNotes => _boundaryBandNotes;
 
     private readonly List<Level100PlayerDamageEvent> _playerDamageEvents = [];
 
@@ -659,10 +669,30 @@ internal sealed class Level100ChainAutopilot
                 (int)(round.PositionMillimeters.X + (directionX * BlasterStepMillimeters)),
                 (int)(round.PositionMillimeters.Y + (directionY * BlasterStepMillimeters)),
                 (int)(round.PositionMillimeters.Z + (directionZ * BlasterStepMillimeters)));
-            tracked.Closest = Math.Min(
-                tracked.Closest,
-                PointToSegmentMillimeters(
-                    playerPoint, round.PositionMillimeters, swept));
+            double candidate = PointToSegmentMillimeters(
+                playerPoint, round.PositionMillimeters, swept);
+            if (candidate < tracked.Closest)
+            {
+                tracked.Closest = candidate;
+                tracked.ClosestTick = state.Tick;
+            }
+
+            const double EnvelopeMM =
+                (double)SimulationConstants.Level100PlayerContactRadiusMillimeters;
+            if (candidate >= EnvelopeMM &&
+                candidate < EnvelopeMM + 2d &&
+                _boundaryBandNotes.Count < 16)
+            {
+                SimVector3 pose = player.Pose.PositionMillimeters;
+                _boundaryBandNotes.Add(
+                    $"tick {state.Tick} round {round.Id} closest {candidate:F2}mm " +
+                    $"simPoint=({playerPoint.X},{playerPoint.Y},{playerPoint.Z}) " +
+                    $"actorPose=({pose.X},{pose.Y},{pose.Z}) " +
+                    $"poseDelta={Distance(playerPoint, pose):F2} " +
+                    $"roundPos=({round.PositionMillimeters.X},{round.PositionMillimeters.Y},{round.PositionMillimeters.Z}) " +
+                    $"sweptEnd=({swept.X},{swept.Y},{swept.Z})");
+            }
+
             tracked.Previous = round.PositionMillimeters;
             tracked.HasPrevious = true;
         }
@@ -682,7 +712,8 @@ internal sealed class Level100ChainAutopilot
                 finished.PerpendicularSpeed,
                 finished.Closest,
                 finished.LastSeenTick - finished.LaunchTick,
-                finished.FinalRemainingBaseTicks));
+                finished.FinalRemainingBaseTicks,
+                finished.ClosestTick));
         }
     }
 
