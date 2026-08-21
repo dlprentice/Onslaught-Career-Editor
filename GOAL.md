@@ -178,9 +178,10 @@ reducer `21ad46fff9d2aec8034a4edcf2c83fad627c2fcae3a9a21ebac7e03976c7627b` —
 verify through the literal pinned command in
 [`developer_state.json`](developer_state.json) → `current_re_authority`.
 Generation 31 is the sole campaign parent, it carries the first 16
-`REBUILD_READY` contracts, and the next valid generation is 32. Live and
-tracked Ghidra are byte-identical twins
-at db.18627 (eight 2026-08-17 promotions; metadata and data typing only).
+`REBUILD_READY` contracts, and the next valid generation is 32. The tracked
+Ghidra snapshot is db.18627; the live project and the retained `wt/bea-ghidra`
+branch rolled to db.18633 on 2026-08-19 (unmerged — main does not carry it),
+so live and tracked are no longer twins.
 The campaign stays grounded on its frozen db.18624 geometry; a future
 generation re-grounding must target the then-current live geometry, and the
 database version is measured by inspection, never quoted.
@@ -502,15 +503,14 @@ dated measurements below as history; do not resume from this paragraph.
    byte-cited C1/C2 slices and rebuild owners. Reasoned "this consumes X and
    decides Y" hypotheses with explicit confidence labels are progress; the
    cheapest falsifier travels with every row.
-9. **Core gate — RED as of 2026-08-19 (854/2/856); the GREEN 730/730
-   claim below is retired history.** The full unfiltered Core
-   suite passed 729/729 on `fd5ab355` (25 m 30 s, exit 0;
-   `local-lab\fullsuite-2026-08-17.log`) and 730/730 on `a65826fa`
-   (23 m 45 s; the extra case is the first-flight fingerprint). A
-   2026-08-18 static recount on this tree is 369 `[Fact]` + 361
-   `[InlineData]` = 730 cases. Do not re-run the 25-minute suite unless
-   a Core owner changed. Historical host deaths stay attributed to
-   environmental contention until reproduced.
+9. **Core gate — RED as of 2026-08-19 (854/2/856), re-confirmed 2026-08-21.**
+   Both failures are `Level100FullChainTests`: the chain tick pin (expected
+   8404, actual 6572; the run still reaches Won at higher hull) and the
+   Blaster observable count (153 vs the 154-162 range). See
+   [`VALIDATION.md`](VALIDATION.md) and `developer_state.json` →
+   `_CORE_SUITE_20260819`. The retired 729/729 and 730/730 passes
+   (`fd5ab355`, `a65826fa`) are history. Historical host deaths stay
+   attributed to environmental contention until reproduced.
 10. **Organization and truth routing.** Consolidate the top-level, RE, and
     local-lab documents toward one current-truth path; implement the H:
     graveyard archival policy; land the D:/G: audit outcomes; keep
@@ -1633,15 +1633,11 @@ this standing campaign complete.
 
 Standing complete-RE progress is **not** the Gen10 handoff below and is no
 longer selected from the damaged Generation-73 candidate chain. Read
-`developer_state.json` → `current_re_authority`. As of 2026-08-14 the exact
-authority is canonical Generation 29 at
-`local-lab/re-campaign-incident-recovery-20260808-v1/generation-29-current-8329-db18618-v2/`:
-READY SHA-256 `fe61f69646c644a880134474869f1c577403e6aa5675730cd1f0c467660c9ac9`,
-frozen reducer ID
-`8b86f5b568067aa4cdb438b658cd95a2c118ce8f8ef2541899eaa67815832587`,
-and external authority receipt SHA-256
-`1156ee18875a2892e3fb580716acc0867fd318bc3d4b403813b83e381331e93e`.
-Its independent replica is reproduction-only. Generation 73 supplied a
+`developer_state.json` → `current_re_authority`. The single current authority is Generation 31 v2; its READY/reducer pins and
+verify command live only in `developer_state.json` → `current_re_authority`
+and are deliberately not restated here. The Generations 12-29 narrative that
+follows is a frozen 2026-08-14 historical record, not current authority.
+Generation 73 supplied a
 field-level projection oracle; Generations 12 through 23 then admitted bounded
 Damage/Hit field-write contracts, one replicated zero-shield ApplyDamage
 contract, the exact consumer-bound TokenArchive dispatch-table partition, and
@@ -1690,8 +1686,9 @@ rows, retires the one changed structural lineage, and preserves all 72
 scenarios without changing a semantic grade. Generation 29 then re-grounds the
 two D3DX-compatible functions on exact db.18618 geometry, accounts for all
 26,841 eligible Generation-28 carry rows, retires one changed lineage, and
-carries both new rows as OPAQUE/DARK without changing a semantic grade. The next
-valid campaign generation is 30.
+carries both new rows as OPAQUE/DARK without changing a semantic grade. At
+that freeze the next valid generation was 30; current authority and the next
+valid generation are owned by `current_re_authority` (Generation 31 v2; 32).
 The saved `VFuncSlot_00_004d9910` name and grade remain unchanged. The bounded
 addenda were appended to twelve exact live/tracked Ghidra comments only after
 backup, replica, rollback, adverse-control, readback, and restore gates; no

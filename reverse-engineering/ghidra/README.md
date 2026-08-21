@@ -110,8 +110,10 @@ read-only-reopened D: POST recovery for ceremony B
 (`D:\BEA-Ghidra-Backups\2026-08-17-tentacle-chain-b-post-live`), which reopened
 with program `BEA.exe`, md5 `3b456964020070efe696d2cc09464a55` and specimen
 sha256 `74154bfa…7750`.
-Future live work can make
-the snapshot lag again; each refresh remains a separately authorized promotion.
+Live work has since made the
+snapshot lag: the live project and the retained `wt/bea-ghidra` branch rolled
+to **db.18633** on 2026-08-19 (unmerged as of 2026-08-21; tracked main remains
+db.18627). Each refresh remains a separately authorized promotion.
 The current ignored live readback and tracked-restore receipts are respectively
 `local-lab/ghidra-hud-route-demotion-20260814-v1/runs/live-readback/targets.ready.json`
 (1,878 bytes, SHA-256 `c5da3f2136c430bb932c1f35b4c1c1e07d01fc12ab928cf6c370b8f2f509f163`)

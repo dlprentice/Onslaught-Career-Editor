@@ -1,7 +1,7 @@
 # Contributing
 
 Status: active — the contributor entry point
-Last updated: 2026-08-06.
+Last updated: 2026-08-21.
 Summary: what a focused change looks like here, what must never be added to the
 repository, and which checks a change owes.
 
@@ -90,8 +90,10 @@ Exporters must require explicit local inputs and a separate local output root.
 
 Use [`reverse-engineering/RE-INDEX.md`](reverse-engineering/RE-INDEX.md) to find
 the canonical evidence owner (**live tip first**; Gen10 blocks are historical).
-Complete-RE tip census is `developer_state.json` → `complete_re_tip_20260805`;
-prefer the named FINAL-3WAY-DELTA path over peer synths. Contract grades follow
+Complete-RE replay authority is `developer_state.json` →
+`current_re_authority`, verified through the command named there (see
+[`VALIDATION.md`](VALIDATION.md)); the historical `complete_re_tip_20260805`
+census key is superseded and no longer exists. Contract grades follow
 [`CONTRACTS.md`](CONTRACTS.md): C1 PE plates are partial candidates, not C2,
 not rebuild-ready, and not bulk Ghidra rename authority. Do not apply Ghidra
 mutations without separate authorization and the ghidra README promotion gate

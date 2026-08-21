@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-08-19. The campaign authority is Generation 31 **v2** on exact
+Last updated: 2026-08-21. The campaign authority is Generation 31 **v2** on exact
 db.18624 geometry (8,329 functions; grades 8,088 OPAQUE / 231 C1 / 10 C2, with
 the first 16 contracts REBUILD_READY; v1 READY `b99b6e4f…` is superseded), re-grounded through the Generation-30
 literal-pin carry bridge after the live and tracked Ghidra database reached
@@ -714,10 +714,13 @@ Read [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md) before changing this lane.
 
 ## Reverse engineering and proof campaign
 
-**Current replay authority (2026-08-14):** read `developer_state.json` →
+**Current replay authority:** read `developer_state.json` →
 `current_re_authority` before quoting generation or grade counts. Do not select
 the historical Gen10 or candidate Gen73 roots by generation number, ledger
-equality, or self-derived pins.
+equality, or self-derived pins. Current authority is **Generation 31 v2**
+(next valid generation 32; first 16 contracts REBUILD_READY). The table below
+is a **frozen 2026-08-14 Generation-29 snapshot** — its counts predate Gen 31
+(e.g. REBUILD_READY reads 0 there) and must not be quoted as current.
 
 | Metric | Canonical Gen29 |
 | --- | ---: |
@@ -734,7 +737,7 @@ equality, or self-derived pins.
 | Rebuild states | NOT_READY **14429**; PARTIAL_CONTRACT **8**; CONTRACT_ONLY **1**; REBUILD_READY **0** |
 | complete_RE | **false** |
 | READY / reducer | `fe61f696…c9ac9` / `8b86f5b5…2587` |
-| Next valid generation | **30** |
+| Next valid generation (at freeze) | **30** — current is **32** |
 
 **Mission `Damage` rebuild blocker cleared (2026-08-15) — campaign counts
 unchanged.** The single `CONTRACT_ONLY` row above is `C-8c445f1e27de9913`,
@@ -959,7 +962,8 @@ remains an open runtime front alongside the next impact-ranked contract/rebuild
 advance now carried by Generation 29. There is
 not yet a normalized corpus-wide semantic ledger, and no new trace is justified
 until existing evidence plus these instruments cannot answer a preregistered
-question. The next campaign generation is 30.
+question. The next valid campaign generation is **32**
+(`developer_state.json` → `current_re_authority`).
 
 ## Evidence boundary
 
