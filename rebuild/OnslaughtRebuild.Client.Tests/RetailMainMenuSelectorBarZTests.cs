@@ -148,8 +148,10 @@ public sealed class RetailMainMenuSelectorBarZTests
         Assert.DoesNotContain("RetailMainMenuSelectorBarZ", quit, StringComparison.Ordinal);
         string choice = Slice(flow, "private void DrawQuitConfirmChoice");
         Assert.DoesNotContain("RetailMainMenuSelectorBarZ", choice, StringComparison.Ordinal);
-        Assert.Contains("HighlightTint", choice, StringComparison.Ordinal);
-        Assert.Contains("_titleTextBox", choice, StringComparison.Ordinal);
+        // The cited FEMessBox chrome replaced the reconstruction-era
+        // HighlightTint/_titleTextBox markers when wt/t_7d9a828d merged.
+        Assert.Contains("RetailFeMessBox.HighlightColor", choice, StringComparison.Ordinal);
+        Assert.Contains("DrawFont22Text", choice, StringComparison.Ordinal);
     }
 
     private static string Slice(string source, string signature)

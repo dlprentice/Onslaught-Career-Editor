@@ -64,7 +64,9 @@ public sealed class RetailMainMenuSelectorBarColorTests
         Assert.DoesNotContain("RetailMainMenuSelectorBarColor", quit, StringComparison.Ordinal);
         string choice = Slice(flow, "private void DrawQuitConfirmChoice");
         Assert.DoesNotContain("RetailMainMenuSelectorBarColor", choice, StringComparison.Ordinal);
-        Assert.Contains("HighlightTint", choice, StringComparison.Ordinal);
+        // Cited FEMessBox chrome marker; HighlightTint was the reconstruction
+        // era marker superseded by the wt/t_7d9a828d merge.
+        Assert.Contains("RetailFeMessBox.HighlightColor", choice, StringComparison.Ordinal);
     }
 
     private static string Slice(string source, string signature)
