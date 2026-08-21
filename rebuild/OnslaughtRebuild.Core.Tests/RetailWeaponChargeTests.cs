@@ -201,4 +201,33 @@ public sealed class RetailWeaponChargeTests
             0x00000000u,
             BitConverter.SingleToUInt32Bits(RetailWeaponCharge.GetCharge(weapon)));
     }
+
+    // 0x0050A080: null +0xA0 returns true; otherwise now > +0x64 (test ah, 0x41).
+    // Equality is not ready. A rebuild that used `>=` would let Charge increment
+    // on the same tick Fire is first allowed again.
+    [Theory]
+    [InlineData(0.0f, 0.1f, false)]
+    [InlineData(0.1f, 0.1f, false)]
+    [InlineData(0.15f, 0.1f, true)]
+    public void ReadyToCharge_RequiresNowStrictlyAfterTheReadyTime(
+        float now,
+        float readyAt,
+        bool expected)
+    {
+        RetailWeaponChargeTable weapon = Weapon(0.0f, -1, 7, -1, -1, -1);
+        weapon.ReadyAtTime = readyAt;
+        weapon.ReadyToChargeGateActive = true;
+
+        Assert.Equal(expected, RetailWeaponCharge.ReadyToCharge(weapon, now));
+    }
+
+    [Fact]
+    public void ReadyToCharge_IsTrueWhenTheGateFieldIsClear()
+    {
+        RetailWeaponChargeTable weapon = Weapon(0.0f, -1, 7, -1, -1, -1);
+        weapon.ReadyAtTime = 100.0f;
+        weapon.ReadyToChargeGateActive = false;
+
+        Assert.True(RetailWeaponCharge.ReadyToCharge(weapon, 0.0f));
+    }
 }

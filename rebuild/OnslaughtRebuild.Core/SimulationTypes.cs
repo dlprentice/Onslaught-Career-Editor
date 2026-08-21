@@ -62,10 +62,12 @@ public enum Level100PlayerWeapon : byte
     None = 0,
 
     /// <summary>
-    /// `Pulse Cannon Pod` (data/default physics.dat @0x1746b). Charge level 0
-    /// selects weapon mode `Mech Pulse Cannon Charged` (@0x134eb), whose
+    /// `Pulse Cannon Pod` (data/default physics.dat @0x17463). Charge level 0
+    /// selects weapon mode `Mech Pulse Cannon Charged` (@0x134e3), whose
     /// CWeaponRound is `Mech Pulse Bolt Medium` and whose CWeaponLaunchSound is
     /// `BE Pulse Cannon Fire` (payload @0x13576) = sounds.sfx record 37.
+    /// Charge level 1 / FullyCharged selects `Mech Pulse Cannon Charged 2`
+    /// (@0x135b3), whose CWeaponRound is `Mech Pulse Bolt Large`.
     /// This is the weapon the released firing-range exercise enables
     /// (LevelScript.msl line 112).
     /// </summary>
@@ -248,7 +250,8 @@ public enum SimActions : ushort
     /// <c>BUTTON_MECH_CHARGE_GUN_POD</c> <c>0x13</c>, shipped row 10
     /// (<c>active=1</c>, mouse device <c>0x0f</c>). Held samples advance the
     /// current chargable walker weapon via
-    /// <see cref="RetailWeaponCharge.Charge"/>. ReadyToCharge, store spend,
+    /// <see cref="RetailWeaponCharge.Charge"/> once
+    /// <see cref="RetailWeaponCharge.ReadyToCharge"/> is true. Store spend,
     /// overheat-to-fire, and charge-level-1 round select remain open.
     /// </summary>
     ChargeWeapon = 1 << 5,
@@ -412,6 +415,7 @@ public enum Level100ProjectileKind : byte
     MechPulseBoltMedium = 1,
     MechBullet = 2,
     MechAirBullet = 3,
+    MechPulseBoltLarge = 4,
 }
 
 public sealed record ProjectileSnapshot(

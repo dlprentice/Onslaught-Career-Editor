@@ -26,6 +26,9 @@ internal sealed class Level100PlayerWeaponRuntime
     internal uint PulseCannonChargeBits =>
         BitConverter.SingleToUInt32Bits(_pulseCharge.Charge);
 
+    internal Level100ProjectileKind PulseFireRound =>
+        Level100PulseCannonCharge.SelectFireRound(_pulseCharge);
+
     internal Level100MissionWeapon WalkerSelectedWeapon =>
         WeaponAt(VehicleMode.Walker, _walkerSelection);
 
@@ -45,21 +48,32 @@ internal sealed class Level100PlayerWeaponRuntime
 
     /// <summary>
     /// The increment arm of <c>CBattleEngineWalkerPart::ChargeWeapon</c> at
-    /// <c>0x00413CF0</c> for Level 100's Pulse Cannon Pod. ReadyToCharge,
-    /// store spend, and overheat-to-fire are not modelled.
+    /// <c>0x00413CF0</c> for Level 100's Pulse Cannon Pod. Store spend and
+    /// overheat-to-fire are not modelled.
     /// </summary>
-    internal void AdvanceCharge(VehicleMode mode, VehicleTransition transition)
+    internal void AdvanceCharge(VehicleMode mode, VehicleTransition transition, float now)
     {
         if (mode != VehicleMode.Walker ||
             transition != VehicleTransition.None ||
             WalkerSelectedWeapon != Level100MissionWeapon.PulseCannonPod ||
             !_pulseCannonActive ||
+            !RetailWeaponCharge.ReadyToCharge(_pulseCharge, now) ||
             RetailWeaponCharge.FullyCharged(_pulseCharge))
         {
             return;
         }
 
         RetailWeaponCharge.Charge(_pulseCharge);
+    }
+
+    /// <summary>
+    /// Fire's store of <c>now + CWeaponReloadTime</c> into <c>weapon+0x64</c>.
+    /// ReadyToCharge stays false until engine time is strictly greater.
+    /// </summary>
+    internal void StampPulseReadyAt(float now)
+    {
+        _pulseCharge.ReadyAtTime =
+            (float)((double)now + (double)Level100PulseCannonCharge.ReloadTime);
     }
 
     internal Level100MissionWeapon GetCurrentWeapon(VehicleMode mode) => mode switch

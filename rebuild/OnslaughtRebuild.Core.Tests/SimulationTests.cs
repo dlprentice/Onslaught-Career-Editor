@@ -1525,6 +1525,60 @@ public sealed class SimulationTests
     }
 
     [Fact]
+    public void FireAtFullyCharged_LaunchesMechPulseBoltLarge()
+    {
+        Simulation tap = CreateFiringRangeExerciseSimulation();
+        WorldSnapshot tapFired = tap.Step(new SimInput(0, 0, SimActions.Fire));
+        Assert.Equal(
+            Level100ProjectileKind.MechPulseBoltMedium,
+            Assert.Single(tapFired.Projectiles).Kind);
+
+        Simulation charged = CreateFiringRangeExerciseSimulation();
+        var charge = new SimInput(0, 0, SimActions.ChargeWeapon);
+        charge.Validate();
+        for (int sample = 0; sample < 10; sample++)
+        {
+            charged.Step(charge);
+        }
+
+        Assert.Equal(0x42C80000u, charged.Level100PulseCannonChargeBits);
+        WorldSnapshot chargedFired = charged.Step(new SimInput(0, 0, SimActions.Fire));
+        Assert.Equal(
+            Level100ProjectileKind.MechPulseBoltLarge,
+            Assert.Single(chargedFired.Projectiles).Kind);
+    }
+
+    [Fact]
+    public void AfterPulseFire_ChargeWaitsUntilReloadStrictlyElapses()
+    {
+        Simulation simulation = CreateFiringRangeExerciseSimulation();
+        var charge = new SimInput(0, 0, SimActions.ChargeWeapon);
+        charge.Validate();
+
+        WorldSnapshot fired = simulation.Step(new SimInput(0, 0, SimActions.Fire));
+        Assert.Equal(
+            Level100PlayerWeapon.PulseCannonPod,
+            Assert.Single(fired.Level100WeaponFireEvents).Weapon);
+        Assert.Equal(SimulationConstants.PulseCannonReloadTicks, fired.FireCooldownTicksRemaining);
+        Assert.Equal(0x00000000u, simulation.Level100PulseCannonChargeBits);
+
+        // ReadyToCharge at 0x0050A080 is `now > weapon+0x64` (`test ah, 0x41`
+        // / jz). Fire stamps +0x64 = now + CWeaponReloadTime 0.1 s, so the
+        // equality tick (exactly 0.1 s / two 20 Hz updates later) is still
+        // blocked. Fire itself is already allowed on that tick; Charge is not.
+        simulation.Step(charge);
+        Assert.Equal(0x00000000u, simulation.Level100PulseCannonChargeBits);
+        Assert.Equal(1, simulation.Snapshot.FireCooldownTicksRemaining);
+
+        simulation.Step(charge);
+        Assert.Equal(0x00000000u, simulation.Level100PulseCannonChargeBits);
+        Assert.Equal(0, simulation.Snapshot.FireCooldownTicksRemaining);
+
+        simulation.Step(charge);
+        Assert.Equal(0x41200000u, simulation.Level100PulseCannonChargeBits);
+    }
+
+    [Fact]
     public void SnapshotCollections_DoNotExposeMutableArrays()
     {
         Simulation simulation = CreatePlayingSimulation();

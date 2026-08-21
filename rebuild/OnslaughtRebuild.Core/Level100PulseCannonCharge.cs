@@ -22,10 +22,17 @@ namespace OnslaughtRebuild.Core;
 /// <see cref="RetailWeaponCharge.CanCharge"/> is true.
 /// </para>
 /// <para>
-/// <b>Not established here.</b> <c>ReadyToCharge</c> at <c>0x0050A080</c>,
-/// the energy-store add of <c>CWeaponConsumption</c> 4.0, overheat-to-fire,
-/// and which round <c>Fire</c> selects at charge level 1. Those are the next
-/// ChargeWeapon arms, not this table.
+/// Fire at FullyCharged (charge &gt;= 100) selects the level-1 mode
+/// <c>Mech Pulse Cannon Charged 2</c> @<c>0x135b3</c>, whose
+/// <c>CWeaponRound</c> is <c>Mech Pulse Bolt Large</c> @<c>0xacda</c>.
+/// Tap-fire at charge 0 stays level 0 / Medium.
+/// </para>
+/// <para>
+/// <b>Not established here.</b> The energy-store add of
+/// <c>CWeaponConsumption</c> 0x40800000 = 4.0, overheat-to-fire,
+/// Charged 2's <c>CWeaponReloadTime</c> 0x3f000000 = 0.5 s, and Large's
+/// authored velocity/life/radius/damage (20 / 7 / 0.20 / 8.0) remain
+/// the next ChargeWeapon arms.
 /// </para>
 /// </remarks>
 public static class Level100PulseCannonCharge
@@ -37,6 +44,15 @@ public static class Level100PulseCannonCharge
     public const float ChargeRate = 10.0f;
 
     /// <summary>
+    /// <c>CWeaponReloadTime</c> on <c>Mech Pulse Cannon Charged</c> @0x134E3
+    /// — <c>0x3DCCCCCD</c> at file offset <c>0x1351D</c>.
+    /// </summary>
+    public const uint ReloadTimeBits = 0x3DCCCCCDu;
+
+    /// <summary>The same dword as a float — exactly 0.1 seconds.</summary>
+    public const float ReloadTime = 0.1f;
+
+    /// <summary>
     /// A rest-state Pulse Cannon Pod: rate 10.0, levels 0 and 1 present,
     /// live charge <c>+0.0f</c>.
     /// </summary>
@@ -46,9 +62,28 @@ public static class Level100PulseCannonCharge
         {
             ChargeRate = ChargeRate,
             Charge = BitConverter.UInt32BitsToSingle(0u),
+            ReadyAtTime = BitConverter.UInt32BitsToSingle(0u),
+            ReadyToChargeGateActive = true,
         };
         pod.Levels[0] = 0;
         pod.Levels[1] = 1;
         return pod;
+    }
+
+    /// <summary>
+    /// The round <c>CWeapon::Fire</c> launches for this pod. Charge 0 is
+    /// level 0 / <c>Mech Pulse Cannon Charged</c> / Medium. FullyCharged
+    /// (charge &gt;= MaxCharge 100) is level 1 / Charged 2 / Large.
+    /// </summary>
+    public static Level100ProjectileKind SelectFireRound(RetailWeaponChargeTable pod)
+    {
+        if (pod is null)
+        {
+            throw new ArgumentNullException(nameof(pod));
+        }
+
+        return RetailWeaponCharge.FullyCharged(pod)
+            ? Level100ProjectileKind.MechPulseBoltLarge
+            : Level100ProjectileKind.MechPulseBoltMedium;
     }
 }

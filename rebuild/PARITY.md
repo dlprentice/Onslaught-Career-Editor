@@ -1,7 +1,8 @@
 # Rebuild parity contract
 
 Status: active — what "1:1 behavioral and experiential parity" means operationally
-Last updated: 2026-08-19 (Level 100 EnableFlightMode +0x58c store on takeoff).
+Last updated: 2026-08-21 (merged wt/t_0bace7cd: Pulse Cannon ReadyToCharge
+gate and Charged-2 fire; earlier: Level 100 EnableFlightMode +0x58c store on takeoff).
 Evidence: SOURCE — authority order and the known divergences are
 recorded in `PROVENANCE.md` plus the Lost-countdown row of this table; gate capabilities are MEASURED claims of the
 tracked harnesses named in the table. Every row of *Carried retail contracts*
@@ -40,7 +41,8 @@ These are exceptions to record precisely, not templates for loose porting.
 ## Carried retail contracts — entity, owner, implementation, test
 
 Recorded 2026-08-17, with the Pulse Cannon increment, end-level countdown,
-ReCalcLinks, FillOut, and FrontEndHandoffReady career-handoff rows added 2026-08-18. Every retail anchor below was **re-derived from the
+ReCalcLinks, FillOut, and FrontEndHandoffReady career-handoff rows added 2026-08-18, and the
+Pulse Cannon ReadyToCharge / Charged-2 rows merged 2026-08-21. Every retail anchor below was **re-derived from the
 pristine specimen** for this table (PE headers parsed directly; flat mapping
 file offset = VA − 0x400000 for `.text`/`.rdata`/`.data`, whose raw ends are
 0x005D8000 / 0x00622000 / 0x00661000 — `.rsrc` is **not** flat and 0x00672FD0 is
@@ -179,6 +181,16 @@ simulation and replay path** — measured, by searching `Simulation.cs`,
 for the owner types: `Simulation.JetFrictionNumerator` is wired,
 `RetailWeaponCharge.Charge` is reached from `Simulation.TryChargeWeapon`
 when the player holds `SimActions.ChargeWeapon` on the Pulse Cannon Pod,
+`RetailWeaponCharge.ReadyToCharge` (`0x0050A080`, `test ah,0x41`) blocks that
+increment until engine time is strictly greater than the Fire-stamped
+`now + CWeaponReloadTime` (0.1 s on `Mech Pulse Cannon Charged`), and Fire at
+FullyCharged selects `Mech Pulse Cannon Charged 2` @`0x135b3` /
+`Mech Pulse Bolt Large` @`0xacda` of `default physics.dat` (`e1fb3ded…ada14`);
+tap-fire at charge 0 stays Medium. ReadyToCharge is pinned by
+`SimulationTests.AfterPulseFire_ChargeWaitsUntilReloadStrictlyElapses`;
+Charged-2 / Large fire is pinned by
+`SimulationTests.FireAtFullyCharged_LaunchesMechPulseBoltLarge` and
+`Level100PulseCannonChargeTests.FireAtFullyCharged_SelectsCharged2LargeBolt`,
 `RetailIScriptInJetMode.Evaluate` and actor-script `RetailIScriptWaitStop.Stop`
 are reached from TargetZone2/3/4 `hit()` (Simulation no longer treats
 `TriggerEntered` as Reached), `RetailEnableFlightMode.Enable` is reached
@@ -408,9 +420,11 @@ names `ThingsKilledReadout` on that same FillOut owner;
 first-play still has a live player 0. The pre-arm score/time
 row names `ScoreWord` / `TimeTakenWord` on that same FillOut
 owner; first-play elapsed and `this+0xf4` stay unclaimed.
-Charge and the
-career graph are not in `StateHasher` because they do not yet change fire,
-movement, or any other hashed field. So no cold-start or
+Charge is not in
+`StateHasher` as a field: the hashed field it now changes is projectile
+`Kind` (FullyCharged fires Large). The career graph is not in
+`StateHasher` because it does not change fire, movement, or any other
+hashed field. So no cold-start or
 full-chain trace can reach the other sixteen, and the focused test is the
 only falsifier they have. That is exactly
 the precedent the jet-friction row set: a green replay suite there was

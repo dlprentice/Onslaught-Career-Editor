@@ -57,6 +57,21 @@ public sealed class RetailWeaponChargeTable
 
     /// <summary><c>mCharge</c> — the float at <c>weapon + 0x60</c>.</summary>
     public float Charge { get; set; }
+
+    /// <summary>
+    /// Next-ready time — the float at <c>weapon + 0x64</c>. Fire stores
+    /// <c>now + CWeaponReloadTime</c> here; <see cref="RetailWeaponCharge.ReadyToCharge"/>
+    /// compares <c>DAT_00672FD0</c> against it.
+    /// </summary>
+    public float ReadyAtTime { get; set; }
+
+    /// <summary>
+    /// Whether <c>weapon + 0xA0</c> is non-zero. A configured Pulse Cannon Pod
+    /// carries a current weapon-mode pointer here, so the time compare runs.
+    /// A null field makes <see cref="RetailWeaponCharge.ReadyToCharge"/> return
+    /// true without looking at <see cref="ReadyAtTime"/>.
+    /// </summary>
+    public bool ReadyToChargeGateActive { get; set; } = true;
 }
 
 /// <summary>
@@ -146,9 +161,9 @@ public sealed class RetailWeaponChargeTable
 /// the reason <see cref="RetailWeaponStoreReadouts"/> sets out at length —
 /// binary64 carries more than twice binary32's significand, so the double
 /// rounding is innocuous for a single divide. <c>ReadyToCharge</c> at
-/// <c>0x0050A080</c>, the energy-store add of consumption, overheat-to-fire,
-/// and which round <c>Fire</c> selects at charge level 1 remain the next
-/// ChargeWeapon arms.
+/// <c>0x0050A080</c> gates the increment; the energy-store add of
+/// consumption and overheat-to-fire remain the next ChargeWeapon arms. Fire
+/// at FullyCharged selects Charged 2 / <c>Mech Pulse Bolt Large</c>.
 /// </para>
 /// </remarks>
 public static class RetailWeaponCharge
@@ -278,5 +293,39 @@ public static class RetailWeaponCharge
         }
 
         weapon.Charge = (float)((double)weapon.ChargeRate + (double)weapon.Charge);
+    }
+
+    /// <summary>
+    /// <c>CWeapon::ReadyToCharge</c> at <c>0x0050A080</c> in the pristine
+    /// <c>74154bfa…</c> image (35 bytes, <c>1ba024f1f14e…</c>). The Ghidra
+    /// name <c>TargetProfileContext__CanProceedByTargetRangeGate</c> is the
+    /// stale owner; <c>CBattleEngineWalkerPart::ChargeWeapon</c> at
+    /// <c>0x00413CF0</c> calls this on the current <c>CWeapon</c> as
+    /// <c>weapon-&gt;ReadyToCharge()</c>.
+    /// </summary>
+    /// <remarks>
+    /// <c>mov eax,[ecx+0xA0] / test eax,eax / jz ret1</c> then
+    /// <c>fld [0x00672FD0] / fcomp [ecx+0x64] / fnstsw ax / test ah,0x41 / jz
+    /// ret1 / xor eax,eax</c>. Returns false only when the +0xA0 field is
+    /// non-zero <b>and</b> engine time is ordered-less-or-equal to +0x64.
+    /// Equality is not ready: that is why Charge stays blocked on the tick
+    /// Fire is already allowed again.
+    /// </remarks>
+    public static bool ReadyToCharge(RetailWeaponChargeTable weapon, float now)
+    {
+        if (weapon is null)
+        {
+            throw new ArgumentNullException(nameof(weapon));
+        }
+
+        if (!weapon.ReadyToChargeGateActive)
+        {
+            return true;
+        }
+
+        // test ah, 0x41 / jz ret1: C0|C3 clear means ST > mem (now > ready).
+        // Unordered sets both bits and returns not-ready, matching `now > ready`
+        // in C# (NaN comparisons are false).
+        return now > weapon.ReadyAtTime;
     }
 }
