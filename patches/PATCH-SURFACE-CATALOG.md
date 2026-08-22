@@ -2539,6 +2539,12 @@ in `WALK-PENDING-SLOT.md`; §30 rows join the post-walk screening queue.
 
 ### Latete launch-crash mechanism IDENTIFIED (2026-08-22, offline static)
 
+Full-TSV integrity sweep (same session): all **259** non-placeholder data
+rows' `original_bytes` re-asserted against the pristine specimen in one pass
+(`_tsv_full_sweep.py`) — **0 mismatches**, 2 placeholder rows skipped by
+design (`unknown`/`none-*`). Every row stage_apply.py asserts at staging
+time is specimen-exact.
+
 Read-only subagent analysis, every load-bearing byte claim independently
 re-verified against the pristine specimen (`74154bfa…`):
 
