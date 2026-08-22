@@ -44,8 +44,13 @@ on the weapon. Loop.
 (`mConfiguration`, the offset `RetailWeaponStores` already pins);
 `list = config + 0x50` = the `SPtrSet<char*> mJetWeapons` member
 (`BattleEngineDataManager.h:27`; walker twin uses `+0x40` =
-`mWalkerWeapons` at `0x00414717`). Seed `cursor = [list+8]`;
-`payload = cursor ? [cursor] : 0`; null → jump to the exit at
+`mWalkerWeapons` at `0x00414717`, same `First()` shape). Retail inlines
+`GenericSPtrSet::First()` (`SPtrSet.h:40`): `ecx = [eax+0x50]` is
+**`mFirst` = `[list+0]`** (`0x00412695`), mirrored to the iterator slot
+`[list+8]` (`0x0041269d`), then `payload = ecx ? [ecx] : 0`
+(`0x004126a2`/`0x004126a6`). Seeding from `[list+8]` instead would be
+`Next()` semantics and would start a rebuild from a dirty iterator;
+null payload → jump to the exit at
 `0x00412790` (`[this+0x10] = 0; ret`) — an empty list still resets
 the current-weapon index.
 
@@ -105,7 +110,7 @@ Inbound `.text` rel32: **exactly two CALLs**
 | Site | Enclosing | Arm |
 | --- | --- | --- |
 | `0x00410268` | `CBattleEngineJetPart__ctor` `0x00410210` (`ret 0x4`) | constructor tail; `[esi+0x18] = arg` (mainPart) stored at `0x00410239`, immediately before |
-| `0x0040c695` | `CBattleEngine__UpdateConfiguration` `0x0040c650` (`ret`, sealed row tsv:229) | jet arm, guarded by `test [esi+0x57c],ecx / je`; the sibling walker arm `0x0040c6a4` calls `CBattleEngineWalkerPart__ResetConfiguration` `0x004146b0` |
+| `0x0040c695` | `CBattleEngine__UpdateConfiguration` `0x0040c650` (`ret`, sealed row tsv:229) | jet arm, guarded by `mov ecx,[esi+0x57c]; test ecx,ecx; je` (`0x0040c682`–`0x0040c693`); the sibling walker arm `0x0040c6a4` calls `CBattleEngineWalkerPart__ResetConfiguration` `0x004146b0` |
 
 Zero `E9` inbound; **zero imm32 encodings** of `0x00412650` anywhere in
 the image — this is not a vtable slot.
@@ -147,10 +152,10 @@ Two honest divergences:
    its runtime semantics stay unproven.
 2. **Retail mirrors the set cursor while draining** (`[this+0x08]`
    written each iteration where the source writes nothing visible).
-   Behaviorally equal for `GenericSPtrSet::First()` (`SPtrSet.h:37`
-   reads `mFirst`), so this is bookkeeping, not a behavior difference —
-   recorded because a rebuild copying the source verbatim would not
-   reproduce the stores.
+   Behaviorally equal for `GenericSPtrSet::First()` (`SPtrSet.h:40`
+   reads `mFirst`; `:37` is `RemoveAll()`), so this is bookkeeping, not
+   a behavior difference — recorded because a rebuild copying the
+   source verbatim would not reproduce the stores.
 
 Minor shape note: the jet has **no** primary/augmented-weapon phase; the
 walker twin continues past its list walk into `config+0x60`/`+0x64`
@@ -165,7 +170,7 @@ walker twin continues past its list walk into `config+0x60`/`+0x64`
 | `node+0x04` | `SPtrSetNode::mNext` | advance `0x00412763` |
 | `this+0x08` | `mWeapons.mIterator` (mirror kept warm) | `0x00412662` |
 | `this+0x10` | `mCurrentWeapon` | `0x00412785` / `0x00412790` |
-| `this+0x18` | `mMainPart` | `0x00412680` (also ctor `0x00410229`) |
+| `this+0x18` | `mMainPart` | `0x00412680` (also ctor store `mov [esi+0x18], eax` at `0x00410239`; `0x00410229` is `push edi`) |
 | `main+0x4b0` | `mConfiguration` | `0x0041268f` (matches `RetailWeaponStores`) |
 | `config+0x40` / `+0x50` | `mWalkerWeapons` / `mJetWeapons` `SPtrSet`s | walker `0x00414717`, jet `0x00412695` |
 | `config+0x60` / `+0x64` | `mPrimaryWeapon` / `mAugWeapon` name ptrs | walker twin `0x00414810/15` (not re-derived further) |
@@ -206,6 +211,14 @@ Any one of:
   callees `0x50f6d0`/`0x505e00`/`0x4e5b20`/`0x4146b0`),
   `tools/call_xref_scan.py` (`0x412650`, `0x50f6d0`, `0x4e5b20`),
   direct byte reads for the vtable words and the body hash.
+- Reviewer round-1 receipt (2026-08-22): Phase-2 seed rewritten as the
+  inlined `First()` it is (`mFirst = [list+0]` at `0x00412695`, mirror
+  at `0x0041269d`, payload conditional at `0x004126a2/a6`) — the
+  earlier "cursor = [list+8]" prose described `Next()` semantics; ctor
+  store cite finished at `0x00410239`; guard and line-cite shapes made
+  instruction-exact. Walker spawn push windows re-read this pass:
+  `or eax,-1` begins at `0x004147a7` (the earlier `0x004147a5` was a
+  mid-instruction window), `6a ff 50 e8` at `0x004147aa`.
 - Corroboration (not duplicated): W001 fullpass plate
   `ghidra-fullpass-findings/W001/primary/A11.md:182-193` — verdict ok,
   same boundary `0x00412650 → RET 0x00412799` (134 instr), same callers

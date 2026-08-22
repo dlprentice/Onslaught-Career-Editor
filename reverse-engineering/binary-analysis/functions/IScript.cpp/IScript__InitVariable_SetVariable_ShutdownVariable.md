@@ -27,9 +27,10 @@ No `FUN_*` milled; no Core owner invented.
 ## Headline finding (name vs. behavior)
 
 `mission-native-corpus-coverage-2026-08-15.tsv` rows 76–78 carry the
-names below with `currentGhidraName = FUN_*` and disposition
-`AUTHORED_UNOBSERVED` (76: 77 authored sites / 21 levels; 77: 146 / 18;
-78: 26 / 0). Both halves are confirmed this wake, plus one correction:
+names below with `currentGhidraName = FUN_*`; dispositions are
+`OBSERVED` for 76 (77 authored sites / 21 levels) and 77 (146 / 18),
+`AUTHORED_UNOBSERVED` for 78 (26 / 0). Those rows are confirmed this
+wake, plus one correction to their implied reading:
 
 - The **names** are retail-authentic: the strings sit consecutively in
   `.rdata` — `Shutdown(0x64f628) · ShutdownVariable(0x64f634) ·
@@ -46,7 +47,9 @@ names below with `currentGhidraName = FUN_*` and disposition
   streams store the matching name pointers into neighboring descriptor
   globals, each as a direct immediate store —
   `mov dword ptr [0x64e120], 0x64f654` (instruction at `0x131ac7`,
-  name immediate at `0x131acd`) just before the 0x536230 immediate;
+  VA `0x00531ac7`, bytes `c7 05 20 e1 64 00 54 f6 64 00`, name
+  immediate at `0x131acd`; the preceding instruction at `0x131ac1` is
+  `mov [0x64e11c], ebp`) just before the 0x536230 immediate;
   `mov dword ptr [0x64e160], 0x64f648` (instruction `0x131b90`,
   immediate `0x131b96`) just after the 0x536260 immediate;
   `mov dword ptr [0x64e1a0], 0x64f634` (instruction `0x131bd1`,
@@ -141,10 +144,12 @@ Per the sealed W008 decompiles (static, plate-bounded):
   (`state == 0`), storing id/string/state, zeroing both timing fields,
   seeding the default; **silently drops** when all four are busy.
 - `UpdateWorldTextSlotTiming(id, a, b)` updates **every** matching-id
-  slot's times; if the slot's primary-time field currently holds the
-  bit-pattern `4.2039e-45` (integer 3 — read as a sentinel/state check
-  in the decompile), `a` is treated as relative
-  (`new = DAT_00672fd0 + a`) instead of absolute, and `b` is ignored.
+  slot's times; if the slot's **state** field at `this+0x20c`
+  (`pfVar1[-0xc]`) currently holds the bit-pattern `4.2039e-45`
+  (integer 3), the primary time is treated as relative
+  (`new = DAT_00672fd0 + a` written to `+0x23c`) and the secondary
+  write (`b` → `+0x24c`) is skipped; otherwise both are stored
+  absolute.
 - `ClearWorldTextSlot(id)` sets `state = 0` for every matching-id slot,
   leaving the other fields in place.
 
@@ -220,8 +225,9 @@ Any one of:
   immediate other than `0x00855090` loaded into `ecx` before them, or
   evaluation vtable offsets other than `+0x30`/`+0x34`.
 - The string table loses its consecutive
-  `Surface · InitVariable · SetVariable · ShutdownVariable · Shutdown ·
-  GetEnergy` layout at `.rdata` `~0x24f5f4`–`0x24f674`, or either
+  `Shutdown · ShutdownVariable · SetVariable · InitVariable · Surface ·
+  Dive…` layout at `.rdata` `~0x24f628`–`0x24f674` (name VAs
+  `0x64f634`/`0x64f648`/`0x64f654`), or any
   registration immediate/name-pointer pair moves apart.
 - `tools/call_xref_scan.py` on the three VAs returns any rel32 caller.
 - A W008 plate revision renames or re-bounds the triple.
@@ -260,8 +266,17 @@ Any one of:
   `{0x0050d6a0, 0x0050d720, 0x0050d7a0}`, `.rdata` name run at
   `0x24f628`–`0x24f674` (laid down in descending corpus-index order),
   registration `c7 05` stores at `0x131ac7`/`0x131b90`/`0x131bd1`.
-  Three defects found and corrected in place: the original body hashes
+  Defects found and corrected in place: the original body hashes
   truncated each wrapper's `ret 0xc` tail by 2 bytes (lengths 36/55/23
   were wrong); the name run was described in ascending corpus order;
-  the InitVariable registration-store instruction address was
-  `0x131ac7` (immediate `0x131acd`), not `0x131ac1`/`0x131ac7`.
+  the InitVariable registration-store instruction address is
+  `0x131ac7` / VA `0x00531ac7` (immediate `0x131acd`), not
+  `0x131ac1`/`0x131ac7`.
+- 2026-08-22 (operator round-1 receipt) — corpus dispositions corrected:
+  rows 76/77 are `OBSERVED`, only row 78 is `AUTHORED_UNOBSERVED`
+  (re-read from the TSV this pass). Timing-arm sentinel re-attributed
+  to the slot **state** field at `this+0x20c` per the cited decompile.
+  Header-gate status for this note is unchanged (names-check
+  zero-assertion PASS); the repo-level `doc_header_check` exit is
+  currently owned by the ResetConfiguration backlog row, which this
+  lane must not edit — integration drops that line on land.
