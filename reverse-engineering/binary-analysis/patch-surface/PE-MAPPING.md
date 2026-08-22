@@ -53,10 +53,25 @@ Same BSS class (not file-patchable):
 | `0x008A9B2C` | secondary-objective array | — |
 | `0x00662560` | `SetGoodieState` dword table | — |
 | `0x008892D8` / `0x008892DC` | 47-row mapping table | — |
+| `0x008A9D3C` | player-camera / `GetPlayer` slot table | — |
+| `0x008A9D84` | MessageBox singleton | — |
+| `0x008A9D90` | `AddHelpMessage` singleton | — |
+| `0x00672FD0` | `GameTime` source | — |
+| `0x006FBDFC` | `GetWaterHeight` source | — |
+| `0x00662564` | `GetGoodieState` view (same table as `0x00662560`) | — |
+| `0x008AA51C` | `HighlightHudPart` dword table | — |
 
 `t_17fa180d` added the last five after the IScript / SendButtonAction
-pin. Same rule: never promote those VAs to a file row; patch the
-`.text` store or the `.text` jcc that consumes them.
+pin. `t_120c3e1b` added the GetPlayer / MessageBox / GameTime /
+GetWaterHeight / HighlightHud / GetGoodieState-view VAs. Same
+rule: never promote those VAs to a file row; patch the `.text`
+store or the `.text` jcc that consumes them.
+
+Weather dests `0x00660188` / `8C` / `90` / `98..A4` are
+**file-backed** `.data` (before `0x00661000`) but ship as zero
+and are written again by the init block at `0x00404A20`. They
+are not BSS; they are also not useful as file-data patches.
+Patch the init `mov` or the IScript `fstp`.
 
 ## Rule for later rows
 
