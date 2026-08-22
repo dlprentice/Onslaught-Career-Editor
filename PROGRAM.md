@@ -100,6 +100,48 @@ order:
    > and the one-line summary (`Ran N tests` / OK or FAILED / exit code) to
    > `local-lab/gen32-reseat-prep-20260821/run-count.txt` when it finishes.
    > No P1 receipt is claimed until that completed count exists.
+   >
+   > **EXECUTION STATE 2026-08-22 (run 712) — P1 CUT SEQUENCE COMPLETE.**
+   > Post-fix gate: full module ran 180 tests
+   > (`unittest-gen32-postfix-full.log`): 173 ok + the same 5 documented
+   > projection-chain errors + 2 frozen-bootstrap subprocess-timeout flakes
+   > that re-ran green standalone (byte-pinned historical reducers the diff
+   > cannot touch); accepted as the baseline failure family plus named
+   > load flakes. Fix layer landed `fd6d8145`: multi-owner sibling carry
+   > reattachment (`_reattach_multiowner_sibling_contracts`) + Gen32
+   > evidence refs as measured `path#sha256=…` tokens + zero UNSCORED
+   > adjudication rows (Gen-11 precedent). Dry-run green with zero new
+   > blockers (`local-lab/gen32-dryrun-20260822`). Canonical cut
+   > `generation-32-current-8329-db18625-v1` READY `08ed8964…`
+   > (9,539,597 B) and replica `…-replica-v1` READY `e8230547…`, reducer
+   > `4c465010…` in both; all EIGHT ledgers byte-identical across the two
+   > cuts and the two READYs differ only in generatedAtUtc/lastWriteUtc
+   > wall-clock fields the frozen replay normalizes
+   > (`gen32-ready-determinism-resolution-20260822.log`). Falsifiers:
+   > canonical and replica frozen-bootstrap full replays printed
+   > `CAMPAIGN_VERIFIED` exit 0 against freshly MEASURED pins
+   > (`falsifier-canonical/replica-20260822.txt`). Sealed closure stayed
+   > byte-identical `cfe90af3…`. Proof tools:
+   > `re_cexplosion_hit_runtime.py` verifies PASS end-to-end on the current
+   > tree; `re_cround_move_runtime.py` / `re_cround_handle_event_runtime.py`
+   > refuse exactly the two rebuild-source pins legitimately moved BEFORE
+   > the cut (50f871ec Aug-06, 383d5b3e Aug-14; the sealed Aug-12 proofs had
+   > stamped then-uncommitted working-tree blobs absent from git history)
+   > while every retail-side anchor matches and their forged-evidence
+   > selftests pass (6 and 9 attacks;
+   > `gen32-proof-tools-20260822.log`) — re-proofing those two tools
+   > against the moved owners is successor work, not a Gen32 gate.
+   > External authority receipt emitted
+   > (`generation-32-current-8329-db18625-authority.ready.json`, 3,612 B,
+   > `6238430d…`); `current_re_authority` repinned from on-disk truth:
+   > OPAQUE 203 (8088 − 7,885 admitted), functions C1_CANDIDATE_PARTIAL
+   > 8,116 + C2 10, adjudications 5,898, REBUILD_READY 16 preserved,
+   > nextValidGeneration 33, progressed-carry accounting 26,596/26,596
+   > accounted / 0 unaccounted including the reattached multi-owner sibling
+   > `C-2b931aa6e8e588c0`; the pinned verify command reproduces
+   > `CAMPAIGN_VERIFIED` (`gen32-repin-verify-20260822.log`; it needs the
+   > machine Python 3.14 — a 3.11 interpreter fails closed on the frozen
+   > reducer's 3.12+ f-string syntax). Pushed to origin/main.
 2. Bespoke `build_generation32_authority.py`: per-row gate = the 53
    receipt-file SHA-256 checks; grade movement computed from the live Gen 31
    ledger (the TSV's `gradeBefore` is known-drifted); zero collateral
