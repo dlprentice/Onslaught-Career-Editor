@@ -108,7 +108,7 @@ re-read 2026-08-18:
 | Address | Name | Body | `+0x74` at CallEventId5 |
 | --- | --- | --- | --- |
 | `0x0044cd80` | `CFeature__VFunc_50_0044cd80` | If `TF_DYING` already set, return 0. Else set bit2, `CallEventId5` if `+0x74`, return 1. No `AddShutdownEvent`. Zero direct `E8` — slot 50 of the `CFeature` vtable at `0x005e45e0` (COLOC `0x006184c0`). | live |
-| `0x004fd140` | `CUnit__MarkDestroyedAndCleanupLinks` | If `TF_DYING` already set, return 0. Unlink (`0x004e1130` on `0x00896988`), set bit2, optional `+0x164` count teardown, optional `+0x178` call `0x004443f0`, **then** `CallEventId5` if `+0x74`, then `+0x144` / `+0x18c` cleanup, return 1. Nine direct `E8`s. Slot 50 of three vtables (`0x005dd788` COLOC `0x00615728`, `0x005df998` COLOC `0x00617050`, `0x005e1490` COLOC `0x00617a30`). | live |
+| `0x004fd140` | `CUnit__MarkDestroyedAndCleanupLinks` | If `TF_DYING` already set, return 0. Kill sound samples for the unit (`0x004e1130` on `0x00896988`), set bit2, optional `+0x164` count teardown, optional `+0x178` call `0x004443f0`, **then** `CallEventId5` if `+0x74`, then `+0x144` / `+0x18c` cleanup, return 1. Seven outbound direct `E8`s; nine inbound rel32 `E8`s. Slot 50 of three vtables (`0x005dd788` COLOC `0x00615728`, `0x005df998` COLOC `0x00617050`, `0x005e1490` COLOC `0x00617a30`). | live |
 
 Independently re-read 2026-08-18 (cycle 10): **zero** `.text` `E8`/`E9`
 land on the inner `CallEvent` site `0x00533685`. The three `E8`s land on
