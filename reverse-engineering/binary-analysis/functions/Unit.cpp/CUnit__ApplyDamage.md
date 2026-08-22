@@ -106,7 +106,9 @@ Argument map (from the caller windows and body reads):
    `CDestructableSegmentsController__DamageSegmentByIndexAndUpdateThreshold`
    `0x00444030(controller, meshPartIndex, amount, src)` and jump straight
    to the epilogue — the shield/life code below does **not** run for
-   segmented units. Matches
+   segmented units. The callee itself is byte-pinned (2026-08-22) in
+   [`../DestructableSegmentsController.cpp/CDestructableSegmentsController__DamageSegmentByIndexAndUpdateThreshold.md`](../DestructableSegmentsController.cpp/CDestructableSegmentsController__DamageSegmentByIndexAndUpdateThreshold.md).
+   Matches
    [`../../destroyable-segments-static-contract.md`](../../destroyable-segments-static-contract.md)'s
    controller-dispatch row and CUnit__ApplyDamage forwarding row.
 9. **Shields before life** (`0x004f9de6`–`0x004f9e61`): first
