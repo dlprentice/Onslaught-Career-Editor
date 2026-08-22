@@ -110,6 +110,7 @@ PE mapping owner: [`../reverse-engineering/binary-analysis/patch-surface/PE-MAPP
 | 27 | Leftover IScript (dist / angle / slot / orient) | [§27](#27-leftover-iscript-dist--angle--slot--orient) | GetDistToObj / GetAngle always-0; TeleportOrientation vfunc; SetSlot call |
 | 28 | Walker dash CVars | [§28](#28-walker-dash-cvars) | `g_dash_*` file-backed defaults; not rewritten |
 | 29 | Hit-effect RGB defaults | [§29](#29-hit-effect-rgb-defaults) | `CEngine__Init` 200/150/150 stores |
+| 30 | Sound / zoom / blob init stores | [§30](#30-sound--zoom--blob-init-stores) | radio/HUD volume; zoom-fx enable; blob fade 30 |
 
 ---
 
@@ -1620,6 +1621,23 @@ anyway.
 `GetX`/`GetY`/`GetZ` unbox a vector and return one
 component; no one-instruction cheat.
 
+### 18.13 NumContained / GetThingRef
+
+`NumContained` `0x00535D70` walks a containment list and
+counts things with type bit 4 whose config name matches
+the unboxed string. Type-bit `je` at **`0x00535DB3`**
+(`74 44`) skips a candidate. NOP: scripts count things
+that lack bit 4 (still require a live config name).
+
+`GetThingRef` `0x005367C0` looks up by name via
+`0x0050AF70` (`this=0x00855090`, BSS) then `je` at
+**`0x005367F9`** (`0f 84 bf 00 00 00`) skips the box.
+Convert to `e9 c0 00 00 00 90`: scripts always see a
+null ref. NOP of that `je` would box a null lookup —
+not rowed.
+
+Confidence: **STATIC_ONLY**. Risk: medium.
+
 ### 18.11 SpawnersEmpty / SpawnersInUse
 
 Same shape as IsFiring: type-bit, helper, `setne cl`.
@@ -2298,6 +2316,47 @@ no `hiteffect` string. Console `set` can still overwrite
 the live fields after init.
 
 Confidence: **STATIC_ONLY**. Risk: low (visual only).
+
+---
+
+## 30. Sound / zoom / blob init stores
+
+These CVars live on **objects**, not file globals. Patch
+the `.text` stores that seed them. Stock
+`defaultoptions.bea` has no `snd_` / `zoomeffect` /
+`BlobShadow` strings.
+
+### 30.1 Radio / HUD message volumes
+
+`CSoundManager__Init` `0x004E00D0` writes then registers:
+
+| CVar | store VA | original | value | dest |
+|---|---|---|---|---|
+| `snd_radiomessagevolume` | `0x004E0210` | `c7 45 00 3d 0a d7 3e` | 0.42f | `[this+0x2c]` |
+| `snd_hudmessagevolume` | `0x004E0217` | `c7 03 66 66 e6 3e` | 0.45f | `[this+0x30]` |
+
+Example: either → 1.0f (`00 00 80 3f` in the imm32).
+Help strings are "The radio message volume" /
+"The HUD message volume".
+
+### 30.2 Zoom-effect enable
+
+`CScreenFx__InitZoomEffectCvar` `0x00551C90` writes
+`[this+0x10]=1` at **`0x00551CB6`** (`c6 00 01`) then
+registers `cg_zoomeffectenabled`. `c6 00 00` disables
+the zoom-lines overlay by default.
+
+### 30.3 Blob-shadow fade
+
+`CDXShadows__Init` `0x005520F0` writes
+`[this+0x08]=30.0f` at **`0x00552288`**
+(`c7 45 00 00 00 f0 41`) then registers
+`cg_BlobShadowFadeDist` (DXShadows note already names
+the 30.0 / `+0x08` pair). Example 30 → 60
+(`00 00 70 42`).
+
+Confidence for §30: **STATIC_ONLY**. Risk: low (mix /
+overlay / blob fade).
 
 ---
 
