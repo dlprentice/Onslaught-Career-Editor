@@ -870,6 +870,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
             PatchLabInspectorSearchBox.TextChanged += PatchLabInspectorSearchBox_TextChanged;
             ApplyPatchLabFilter();
+            InitializePatchLabCensus();
         }
 
         private void PatchLabInspectorSearchBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -936,6 +937,87 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         {
             return _allPatchItems.Any(item =>
                 string.Equals(item.Spec.Key, key, StringComparison.OrdinalIgnoreCase) && item.IsSelected);
+        }
+
+        private const int CensusUnfilteredPreviewLimit = 40;
+
+        private PatchCensusCatalog? _patchCensusCatalog;
+        private IReadOnlyList<PatchCensusRowModel> _patchCensusRows = Array.Empty<PatchCensusRowModel>();
+
+        private void InitializePatchLabCensus()
+        {
+            try
+            {
+                _patchCensusCatalog = PatchSurfaceCensusReader.Load();
+                _patchCensusRows = _patchCensusCatalog.Rows
+                    .Select((row, index) => new PatchCensusRowModel(row, index))
+                    .ToArray();
+            }
+            catch (Exception)
+            {
+                _patchCensusCatalog = null;
+                _patchCensusRows = Array.Empty<PatchCensusRowModel>();
+                PatchLabCensusStatus.Text = "The census TSV could not be inspected right now. Product catalog rows above are unchanged.";
+            }
+
+            PatchLabCensusSearchBox.TextChanged += PatchLabCensusSearchBox_TextChanged;
+            ApplyPatchLabCensusFilter();
+        }
+
+        private void PatchLabCensusSearchBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            ApplyPatchLabCensusFilter();
+        }
+
+        private void ApplyPatchLabCensusFilter()
+        {
+            if (_patchCensusCatalog is null)
+            {
+                PatchLabCensusList.ItemsSource = Array.Empty<PatchCensusRowModel>();
+                return;
+            }
+
+            if (!_patchCensusCatalog.Found)
+            {
+                PatchLabCensusList.ItemsSource = Array.Empty<PatchCensusRowModel>();
+                PatchLabCensusStatus.Text = _patchCensusCatalog.Status;
+                return;
+            }
+
+            string query = PatchLabCensusSearchBox.Text ?? string.Empty;
+            IReadOnlyList<PatchCensusRow> filtered = PatchSurfaceCensusReader.FilterRows(_patchCensusCatalog.Rows, query);
+            bool hasFilter = query.Trim().Length > 0;
+            int displayLimit = hasFilter ? filtered.Count : Math.Min(CensusUnfilteredPreviewLimit, filtered.Count);
+            PatchCensusRowModel[] models = _patchCensusRows
+                .Where(model => filtered.Contains(model.Row))
+                .Take(displayLimit)
+                .ToArray();
+
+            PatchLabCensusList.ItemsSource = models;
+
+            if (!hasFilter && filtered.Count == 0)
+            {
+                PatchLabCensusStatus.Text = _patchCensusCatalog.Status;
+            }
+            else if (!hasFilter && filtered.Count > CensusUnfilteredPreviewLimit)
+            {
+                PatchLabCensusStatus.Text =
+                    $"{_patchCensusCatalog.Status} Showing the first {models.Length} of {filtered.Count}. Type a filter to list more.";
+            }
+            else if (models.Length == 0)
+            {
+                PatchLabCensusStatus.Text =
+                    "No census candidate matches that filter. Try another word, or clear the filter.";
+            }
+            else if (hasFilter)
+            {
+                PatchLabCensusStatus.Text =
+                    $"{_patchCensusCatalog.Status} {models.Length} candidate{(models.Length == 1 ? "" : "s")} match{(models.Length == 1 ? "es" : "")} your filter.";
+            }
+            else
+            {
+                PatchLabCensusStatus.Text = _patchCensusCatalog.Status;
+            }
         }
 
         private void LocalMultiplayerProbeButton_Click(object sender, RoutedEventArgs e)

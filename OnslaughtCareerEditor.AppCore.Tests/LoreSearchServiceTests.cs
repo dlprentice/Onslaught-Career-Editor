@@ -157,5 +157,42 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             Assert.Empty(service.GetBacklinks(index, null));
             Assert.Empty(service.GetBacklinks(null, "anything"));
         }
+
+        [Fact]
+        public void Outline_ListsHeadingsInDocumentOrder()
+        {
+            WriteLore(("world-lore.md", "# World Lore\n\nIntro.\n\n## Planets\n\nText.\n\n### Forseti\n\nMore."));
+
+            LoreSearchService service = new(_browser);
+            LoreDocumentContent content = _browser.LoadDocumentContent(Path.Combine(_tempRoot, "lore", "world-lore.md"));
+            var outline = service.BuildOutline(content);
+
+            Assert.Equal(3, outline.Count);
+            Assert.Equal((1, "World Lore"), (outline[0].Level, outline[0].Text));
+            Assert.Equal((2, "Planets"), (outline[1].Level, outline[1].Text));
+            Assert.Equal((3, "Forseti"), (outline[2].Level, outline[2].Text));
+            Assert.All(outline, entry => Assert.False(string.IsNullOrWhiteSpace(entry.Id)));
+            Assert.Empty(service.BuildOutline(null));
+        }
+
+        [Fact]
+        public void OutgoingLinks_ListIncludedTargetsAndIgnoreExternal()
+        {
+            WriteLore(
+                ("world-lore.md", "# World Lore\n\nSee [characters](characters.md#chuck) and [GitHub](https://example.com)."),
+                ("characters.md", "# Characters"));
+
+            LoreSearchService service = new(_browser);
+            LoreIndex index = LoadIndex();
+            var outgoing = service.GetOutgoingLinks(index, Path.Combine(_tempRoot, "lore", "world-lore.md"));
+
+            LoreOutgoingLink link = Assert.Single(outgoing);
+            Assert.Equal("Characters", link.TargetDocumentTitle);
+            Assert.Contains("chuck", link.AnchorTargets);
+
+            Assert.Empty(service.GetOutgoingLinks(index, Path.Combine(_tempRoot, "lore", "characters.md")));
+            Assert.Empty(service.GetOutgoingLinks(null, "anything"));
+            Assert.Empty(service.GetOutgoingLinks(index, null));
+        }
     }
 }

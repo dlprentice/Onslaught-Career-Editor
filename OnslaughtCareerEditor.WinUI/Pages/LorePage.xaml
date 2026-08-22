@@ -272,6 +272,57 @@
                                 </ItemsControl>
                             </StackPanel>
                         </Expander>
+                        <Expander x:Name="LoreOutlineExpander"
+                                  AutomationProperties.AutomationId="LoreOutlineExpander"
+                                  AutomationProperties.Name="Headings on this page"
+                                  Header="On this page"
+                                  Margin="0,6,0,0"
+                                  IsExpanded="False">
+                            <StackPanel Spacing="4">
+                                <TextBlock x:Name="LoreOutlineStatus"
+                                           AutomationProperties.AutomationId="LoreOutlineStatus"
+                                           Style="{StaticResource SectionBodyTextStyle}"
+                                           TextWrapping="WrapWholeWords"
+                                           Text="Loading outline..." />
+                                <ItemsControl x:Name="LoreOutlineList"
+                                              AutomationProperties.AutomationId="LoreOutlineList">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="helpers:LoreOutlineEntryModel">
+                                            <HyperlinkButton AutomationProperties.AutomationId="LoreOutlineButton"
+                                                             AutomationProperties.Name="{Binding AccessibilityName}"
+                                                             Content="{Binding Text}"
+                                                             Margin="{Binding RowMargin}"
+                                                             Click="LoreOutlineButton_Click" />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Expander>
+                        <Expander x:Name="LoreOutgoingExpander"
+                                  AutomationProperties.AutomationId="LoreOutgoingExpander"
+                                  AutomationProperties.Name="Documents this page links to"
+                                  Header="This page links to"
+                                  Margin="0,6,0,0"
+                                  IsExpanded="False">
+                            <StackPanel Spacing="4">
+                                <TextBlock x:Name="LoreOutgoingStatus"
+                                           AutomationProperties.AutomationId="LoreOutgoingStatus"
+                                           Style="{StaticResource SectionBodyTextStyle}"
+                                           TextWrapping="WrapWholeWords"
+                                           Text="Loading outgoing links..." />
+                                <ItemsControl x:Name="LoreOutgoingList"
+                                              AutomationProperties.AutomationId="LoreOutgoingList">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="helpers:LoreOutgoingLinkModel">
+                                            <HyperlinkButton AutomationProperties.AutomationId="LoreOutgoingButton"
+                                                             AutomationProperties.Name="{Binding AccessibilityName}"
+                                                             Content="{Binding TargetDocumentTitle}"
+                                                             Click="LoreOutgoingButton_Click" />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Expander>
                     </StackPanel>
                 </Border>
 

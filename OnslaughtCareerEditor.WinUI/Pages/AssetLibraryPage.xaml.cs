@@ -133,6 +133,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             CatalogInputGrid.Visibility = Visibility.Collapsed;
             ChangeCatalogButton.Visibility = Visibility.Visible;
             ExportModdingManifestButton.Visibility = Visibility.Visible;
+            ExportModdingCatalogTsvButton.Visibility = Visibility.Visible;
             CatalogPathTextBox.Text = string.Empty;
             CatalogPathTextBox.PlaceholderText = "Paste catalog.json, or browse to a generated export folder";
             CatalogStatusTextBlock.Text = $"Catalog loaded: {AssetLibraryPageText.BuildPathSummary(_snapshot.CatalogFilePath)}";
@@ -254,6 +255,26 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
             CatalogStatusTextBlock.Text = result.Message;
             AppStatusService.SetStatus("Asset Library: modding manifest not written");
+        }
+
+        /// <summary>
+        /// Writes the spreadsheet-shaped catalog TSV beside the loaded catalog:
+        /// the same metadata as the JSON manifest, no game assets.
+        /// </summary>
+        private void ExportModdingCatalogTsvButton_Click(object sender, RoutedEventArgs e)
+        {
+            ModdingManifestExportResult result = ModdingManifestService.ExportCatalogTsv(_snapshot);
+            if (result.Success && !string.IsNullOrWhiteSpace(result.ManifestPath))
+            {
+                CatalogStatusTextBlock.Text =
+                    $"Modding catalog TSV written beside the catalog ({result.AssetCount} rows): "
+                    + AssetLibraryPageText.BuildPathSummary(result.ManifestPath);
+                AppStatusService.SetStatus("Asset Library: modding catalog TSV written");
+                return;
+            }
+
+            CatalogStatusTextBlock.Text = result.Message;
+            AppStatusService.SetStatus("Asset Library: modding catalog TSV not written");
         }
 
         private void TexturesTabButton_Click(object sender, RoutedEventArgs e)

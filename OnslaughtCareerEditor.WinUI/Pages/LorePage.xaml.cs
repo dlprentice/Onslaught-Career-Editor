@@ -333,6 +333,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             ScrollToAnchor(anchor);
 
             RefreshBacklinks(content.SourcePath);
+            RefreshOutline(content);
+            RefreshOutgoing(content.SourcePath);
             SyncTreeSelection(content.SourcePath);
             UpdateNavButtons();
             AppStatusService.SetStatus($"Lore: loaded {CurrentDocumentTextBlock.Text}");
@@ -1050,6 +1052,73 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             LoreBacklinksList.ItemsSource = models;
             LoreBacklinksStatus.Text =
                 $"{models.Length} document{(models.Length == 1 ? "" : "s")} link to this page:";
+        }
+
+        private void RefreshOutline(LoreDocumentContent content)
+        {
+            IReadOnlyList<LoreOutlineEntry> entries = _searchService.BuildOutline(content);
+            if (entries.Count == 0)
+            {
+                LoreOutlineList.ItemsSource = Array.Empty<LoreOutlineEntryModel>();
+                LoreOutlineStatus.Text = "This document has no headings yet.";
+                return;
+            }
+
+            var models = entries.Select(entry => new LoreOutlineEntryModel(entry)).ToArray();
+            LoreOutlineList.ItemsSource = models;
+            LoreOutlineStatus.Text =
+                $"{models.Length} heading{(models.Length == 1 ? "" : "s")} on this page:";
+        }
+
+        private void RefreshOutgoing(string sourcePath)
+        {
+            if (_index is null)
+            {
+                LoreOutgoingList.ItemsSource = Array.Empty<LoreOutgoingLinkModel>();
+                LoreOutgoingStatus.Text = "Outgoing links are unavailable for this library.";
+                return;
+            }
+
+            IReadOnlyList<LoreOutgoingLink> links = _searchService.GetOutgoingLinks(_index, sourcePath);
+            if (links.Count == 0)
+            {
+                LoreOutgoingList.ItemsSource = Array.Empty<LoreOutgoingLinkModel>();
+                LoreOutgoingStatus.Text = "This page does not link to another included document yet.";
+                return;
+            }
+
+            var models = links.Select(link => new LoreOutgoingLinkModel(link)).ToArray();
+            LoreOutgoingList.ItemsSource = models;
+            LoreOutgoingStatus.Text =
+                $"{models.Length} included document{(models.Length == 1 ? "" : "s")} linked from this page:";
+        }
+
+        private void LoreOutlineButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not FrameworkElement { DataContext: LoreOutlineEntryModel model })
+            {
+                return;
+            }
+
+            ScrollToAnchor(model.Entry.Id);
+        }
+
+        private async void LoreOutgoingButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not FrameworkElement { DataContext: LoreOutgoingLinkModel model })
+            {
+                return;
+            }
+
+            try
+            {
+                await LoadDocumentAsync(model.Link.TargetDocumentPath, anchor: null, addToHistory: true);
+            }
+            catch
+            {
+                ShowReaderPlaceholder("Could not open that link", LorePageText.DocumentLoadFailed);
+                AppStatusService.SetStatus("Lore: outgoing link failed to open");
+            }
         }
 
         private async void LoreBacklinkButton_Click(object sender, RoutedEventArgs e)

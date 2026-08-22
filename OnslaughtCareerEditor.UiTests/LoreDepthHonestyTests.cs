@@ -61,6 +61,19 @@ public class LoreDepthHonestyTests
     }
 
     [Test]
+    public void OutlineAndOutgoingPanelsNameEmptyStates()
+    {
+        string xaml = ReadWinUiFile(Path.Combine("Pages", "LorePage.xaml"));
+        string page = ReadWinUiFile(Path.Combine("Pages", "LorePage.xaml.cs"));
+
+        Assert.That(xaml, Does.Contain("LoreOutlineExpander"));
+        Assert.That(xaml, Does.Contain("LoreOutgoingExpander"));
+        Assert.That(page, Does.Contain("This document has no headings yet."));
+        Assert.That(page, Does.Contain("This page does not link to another included document yet."));
+        Assert.That(page, Does.Contain("Outgoing links are unavailable for this library."));
+    }
+
+    [Test]
     public void ReaderRendersAtTheChosenScale()
     {
         string renderer = ReadWinUiFile(Path.Combine("Helpers", "LoreDocumentRenderer.cs"));

@@ -82,6 +82,12 @@
                             Content="Export modding manifest"
                             Visibility="Collapsed"
                             Click="ExportModdingManifestButton_Click" />
+                    <Button x:Name="ExportModdingCatalogTsvButton"
+                            AutomationProperties.AutomationId="AssetExportModdingCatalogTsvButton"
+                            AutomationProperties.Name="Export catalog TSV: names, ids, and hashes only, no game assets"
+                            Content="Export catalog TSV"
+                            Visibility="Collapsed"
+                            Click="ExportModdingCatalogTsvButton_Click" />
                     <Expander x:Name="CatalogPathDetailsExpander"
                               Header="File details"
                               IsExpanded="False">

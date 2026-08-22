@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -42,6 +43,25 @@ namespace OnslaughtCareerEditor.AppCore
             new(false, message, null, 0);
     }
 
+    /// <summary>How many catalog rows of each kind exist, and how many have a player-exported file beside them.</summary>
+    public sealed record ModdingKindSummary(
+        int TextureCount,
+        int TextureExported,
+        int MeshCount,
+        int MeshExported,
+        int EmbeddedMeshCount,
+        int EmbeddedExported)
+    {
+        public int AssetCount => TextureCount + MeshCount + EmbeddedMeshCount;
+
+        public int ExportedCount => TextureExported + MeshExported + EmbeddedExported;
+
+        public string Describe() =>
+            $"{TextureCount} textures ({TextureExported} exported), " +
+            $"{MeshCount} meshes ({MeshExported} exported), " +
+            $"{EmbeddedMeshCount} embedded meshes ({EmbeddedExported} exported)";
+    }
+
     /// <summary>
     /// Writes an app-owned modding manifest beside a generated asset catalog the
     /// player has already exported with their own tools.
@@ -62,6 +82,11 @@ namespace OnslaughtCareerEditor.AppCore
             "Metadata only. This manifest lists names, ids, references, and hashes of files " +
             "you exported yourself. It contains no game assets; do not pair it with anything " +
             "that redistributes retail content.";
+
+        public const string CatalogTsvFileName = "modding-catalog.tsv";
+
+        public const string CatalogTsvHeader =
+            "catalog_id\tdisplay_name\tkind\tcanonical_ref\tsource_archive\texport_file_name\texport_present\texport_sha256\texport_length_bytes";
 
         private const string ManifestFileName = "modding-manifest.json";
 
@@ -180,15 +205,103 @@ namespace OnslaughtCareerEditor.AppCore
         }
 
         /// <summary>
+        /// Spreadsheet-shaped catalog for third-party authors: the same metadata
+        /// as the JSON manifest, tab-separated, no retail bytes.
+        /// </summary>
+        public static string BuildTsv(AssetCatalogSnapshot snapshot)
+        {
+            ModdingManifestDocument document = BuildDocument(snapshot);
+            var builder = new StringBuilder();
+            builder.AppendLine(CatalogTsvHeader);
+            foreach (ModdingManifestAsset asset in document.Assets)
+            {
+                builder.Append(EscapeTsv(asset.CatalogId)).Append('\t');
+                builder.Append(EscapeTsv(asset.DisplayName)).Append('\t');
+                builder.Append(EscapeTsv(asset.Kind)).Append('\t');
+                builder.Append(EscapeTsv(asset.CanonicalRef)).Append('\t');
+                builder.Append(EscapeTsv(asset.SourceArchive ?? string.Empty)).Append('\t');
+                builder.Append(EscapeTsv(asset.ExportFileName)).Append('\t');
+                builder.Append(asset.ExportPresent ? "true" : "false").Append('\t');
+                builder.Append(EscapeTsv(asset.ExportSha256 ?? string.Empty)).Append('\t');
+                builder.Append(asset.ExportLengthBytes.HasValue ? asset.ExportLengthBytes.Value.ToString() : string.Empty);
+                builder.AppendLine();
+            }
+
+            return builder.ToString();
+        }
+
+        /// <summary>
+        /// Writes <c>modding-catalog.tsv</c> beside the catalog through the same
+        /// guarded transaction as the JSON manifest.
+        /// </summary>
+        public static ModdingManifestExportResult ExportCatalogTsv(AssetCatalogSnapshot snapshot)
+        {
+            ArgumentNullException.ThrowIfNull(snapshot);
+
+            string catalogPath = snapshot.CatalogFilePath;
+            if (string.IsNullOrWhiteSpace(catalogPath) || !File.Exists(catalogPath))
+            {
+                return ModdingManifestExportResult.Failed(
+                    "Load a generated catalog first. The catalog TSV is written beside its catalog.json.");
+            }
+
+            try
+            {
+                string outputDirectory = Path.GetDirectoryName(Path.GetFullPath(catalogPath))!;
+                string outputPath = Path.Combine(outputDirectory, CatalogTsvFileName);
+                byte[] bytes = Encoding.UTF8.GetBytes(BuildTsv(snapshot));
+
+                using var transaction = FileMutationSafety.BeginGenerated(outputPath);
+                transaction.Commit(bytes);
+
+                ModdingKindSummary summary = BuildKindSummary(snapshot);
+                return new ModdingManifestExportResult(
+                    true,
+                    $"Wrote {CatalogTsvFileName} beside the catalog with {summary.AssetCount} asset rows ({summary.Describe()}).",
+                    outputPath,
+                    summary.AssetCount);
+            }
+            catch (Exception exception) when (
+                exception is IOException or UnauthorizedAccessException or InvalidOperationException)
+            {
+                return ModdingManifestExportResult.Failed(
+                    DescribeCaughtWriteFailure(exception, "catalog TSV"));
+            }
+        }
+
+        /// <summary>Counts catalog rows by kind and whether the player's export file is present.</summary>
+        public static ModdingKindSummary BuildKindSummary(AssetCatalogSnapshot snapshot)
+        {
+            ArgumentNullException.ThrowIfNull(snapshot);
+            return new ModdingKindSummary(
+                snapshot.Textures.Count,
+                snapshot.Textures.Count(texture => texture.ExportExists),
+                snapshot.LooseMeshes.Count,
+                snapshot.LooseMeshes.Count(mesh => mesh.ExportExists),
+                snapshot.EmbeddedMeshes.Count,
+                snapshot.EmbeddedMeshes.Count(mesh => mesh.ExportExists));
+        }
+
+        private static string EscapeTsv(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                return string.Empty;
+            }
+
+            return value.Replace('\t', ' ').Replace('\r', ' ').Replace('\n', ' ');
+        }
+
+        /// <summary>
         /// Known AppCore refusals are already user-facing sentences and pass through;
         /// anything else (raw OS errors included) collapses to one honest sentence
         /// that says nothing was changed.
         /// </summary>
-        private static string DescribeCaughtWriteFailure(Exception exception)
+        private static string DescribeCaughtWriteFailure(Exception exception, string outputName = "manifest")
         {
             return FileMutationSafety.TryGetKnownRefusal(exception, out string? message) && !string.IsNullOrWhiteSpace(message)
                 ? message
-                : "The manifest could not be written. Nothing was changed.";
+                : $"The {outputName} could not be written. Nothing was changed.";
         }
 
         private static string? TryHashExport(string exportPath, bool exportExists)

@@ -191,5 +191,78 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             Assert.True(second.Success, second.Message);
             Assert.Equal(first.ManifestPath, second.ManifestPath);
         }
+
+        [Fact]
+        public void BuildTsv_IsMetadataOnlyWithExactHeader()
+        {
+            string catalogDir = CreateExportRoot();
+            AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalogDir);
+
+            string tsv = ModdingManifestService.BuildTsv(snapshot);
+
+            Assert.StartsWith(ModdingManifestService.CatalogTsvHeader, tsv, StringComparison.Ordinal);
+            Assert.Contains("texture:textures/texture_one.tga", tsv, StringComparison.Ordinal);
+            Assert.Contains("mesh:ship_body.msh", tsv, StringComparison.Ordinal);
+            Assert.DoesNotContain("\x89PNG", tsv, StringComparison.Ordinal);
+            Assert.DoesNotContain("schema_version", tsv, StringComparison.Ordinal);
+        }
+
+        [Fact]
+        public void ExportCatalogTsv_WritesBesideCatalogAndRefusesEmpty()
+        {
+            string catalogDir = CreateExportRoot();
+            AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalogDir);
+
+            ModdingManifestExportResult result = ModdingManifestService.ExportCatalogTsv(snapshot);
+
+            Assert.True(result.Success, result.Message);
+            string tsvPath = Path.Combine(catalogDir, "modding-catalog.tsv");
+            Assert.Equal(tsvPath, result.ManifestPath);
+            Assert.True(File.Exists(tsvPath));
+            string body = File.ReadAllText(tsvPath);
+            Assert.Contains(ModdingManifestService.CatalogTsvHeader, body, StringComparison.Ordinal);
+            Assert.Contains("true", body, StringComparison.Ordinal);
+
+            ModdingManifestExportResult empty = ModdingManifestService.ExportCatalogTsv(AssetCatalogSnapshot.Empty);
+            Assert.False(empty.Success);
+            Assert.Contains("Load a generated catalog", empty.Message, StringComparison.Ordinal);
+        }
+
+        [Fact]
+        public void ExportCatalogTsv_RefusesACatalogInsideAGameTree()
+        {
+            string gameRoot = Path.Combine(_tempRoot, "game-tsv");
+            Directory.CreateDirectory(Path.Combine(gameRoot, "data"));
+            File.WriteAllText(Path.Combine(gameRoot, "BEA.exe"), "not really an executable");
+
+            string catalogDir = Path.Combine(gameRoot, "asset_catalog");
+            Directory.CreateDirectory(catalogDir);
+            File.WriteAllText(
+                Path.Combine(catalogDir, "catalog.json"),
+                "{\"schema_version\":2,\"path_contract\":\"bundle-root-relative\"}");
+
+            AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalogDir);
+            ModdingManifestExportResult result = ModdingManifestService.ExportCatalogTsv(snapshot);
+
+            Assert.False(result.Success);
+            Assert.Null(result.ManifestPath);
+            Assert.False(File.Exists(Path.Combine(catalogDir, "modding-catalog.tsv")));
+        }
+
+        [Fact]
+        public void BuildKindSummary_CountsExportedAndMissing()
+        {
+            string catalogDir = CreateExportRoot();
+            AssetCatalogSnapshot snapshot = new AssetCatalogService().Load(catalogDir);
+
+            ModdingKindSummary summary = ModdingManifestService.BuildKindSummary(snapshot);
+
+            Assert.Equal(1, summary.TextureCount);
+            Assert.Equal(1, summary.TextureExported);
+            Assert.Equal(1, summary.MeshCount);
+            Assert.True(summary.MeshExported is 0 or 1);
+            Assert.Equal(0, summary.EmbeddedMeshCount);
+            Assert.Contains("textures", summary.Describe(), StringComparison.Ordinal);
+        }
     }
 }

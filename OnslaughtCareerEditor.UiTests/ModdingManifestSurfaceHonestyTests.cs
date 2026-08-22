@@ -63,6 +63,21 @@ public class ModdingManifestSurfaceHonestyTests
     {
         string service = ReadSource("OnslaughtCareerEditor.AppCore", "ModdingManifestService.cs");
 
-        Assert.That(service, Does.Contain("The manifest could not be written. Nothing was changed."));
+        Assert.That(service, Does.Contain("The {outputName} could not be written. Nothing was changed."));
+    }
+
+    [Test]
+    public void CatalogTsvExportIsPresentWithAnHonestName()
+    {
+        string xaml = ReadSource("OnslaughtCareerEditor.WinUI", Path.Combine("Pages", "AssetLibraryPage.xaml"));
+        string service = ReadSource("OnslaughtCareerEditor.AppCore", "ModdingManifestService.cs");
+
+        Assert.That(xaml, Does.Contain("AssetExportModdingCatalogTsvButton"));
+        Assert.That(xaml, Does.Contain("Export catalog TSV"));
+        Assert.That(service, Does.Contain("modding-catalog.tsv"));
+        Assert.That(service, Does.Contain("catalog_id\\tdisplay_name\\tkind"));
+        Assert.That(service, Does.Contain("ExportCatalogTsv"));
+        Assert.That(service, Does.Contain("catalog TSV"));
+        Assert.That(service, Does.Contain("could not be written. Nothing was changed."));
     }
 }

@@ -28,6 +28,15 @@ namespace OnslaughtCareerEditor.AppCore
         string SourceDocumentTitle,
         IReadOnlyList<string> AnchorTargets);
 
+    /// <summary>One heading in the open document, for the on-this-page outline.</summary>
+    public sealed record LoreOutlineEntry(int Level, string Text, string Id);
+
+    /// <summary>One included document this page links to, plus the anchors it uses.</summary>
+    public sealed record LoreOutgoingLink(
+        string TargetDocumentPath,
+        string TargetDocumentTitle,
+        IReadOnlyList<string> AnchorTargets);
+
     /// <summary>
     /// Read-only lore depth services for the WinUI reader: whole-word full-text
     /// search over every included document with match snippets, and a cross-link
@@ -142,6 +151,85 @@ namespace OnslaughtCareerEditor.AppCore
             return index.ByTarget.TryGetValue(key, out IReadOnlyList<LoreBacklink>? links)
                 ? links
                 : Array.Empty<LoreBacklink>();
+        }
+
+        /// <summary>
+        /// Headings in document order for the on-this-page outline. Empty documents
+        /// and documents with no headings return an empty list.
+        /// </summary>
+        public IReadOnlyList<LoreOutlineEntry> BuildOutline(LoreDocumentContent? content)
+        {
+            if (content is null)
+            {
+                return Array.Empty<LoreOutlineEntry>();
+            }
+
+            var entries = new List<LoreOutlineEntry>();
+            CollectHeadings(content.Document.Blocks, entries);
+            return entries;
+        }
+
+        /// <summary>
+        /// Included documents this page links to, using the same resolver as the
+        /// backlink index. External, source, and same-page anchors stay out.
+        /// </summary>
+        public IReadOnlyList<LoreOutgoingLink> GetOutgoingLinks(LoreIndex? index, string? documentPath)
+        {
+            if (index is null || string.IsNullOrWhiteSpace(documentPath))
+            {
+                return Array.Empty<LoreOutgoingLink>();
+            }
+
+            Dictionary<string, List<string>> targetsByKey = CollectInternalLinkTargets(documentPath);
+            if (targetsByKey.Count == 0)
+            {
+                return Array.Empty<LoreOutgoingLink>();
+            }
+
+            var titleByKey = new Dictionary<string, (string Path, string Title)>(StringComparer.OrdinalIgnoreCase);
+            foreach (LoreDocument document in index.Documents)
+            {
+                titleByKey[_service.NormalizeDocumentKey(document.FilePath)] = (document.FilePath, document.Title);
+            }
+
+            var result = new List<LoreOutgoingLink>();
+            foreach (KeyValuePair<string, List<string>> entry in targetsByKey)
+            {
+                if (!titleByKey.TryGetValue(entry.Key, out (string Path, string Title) info))
+                {
+                    continue;
+                }
+
+                result.Add(new LoreOutgoingLink(
+                    info.Path,
+                    info.Title,
+                    entry.Value.Distinct(StringComparer.Ordinal).ToArray()));
+            }
+
+            return result;
+        }
+
+        private static void CollectHeadings(IReadOnlyList<LoreBlock> blocks, List<LoreOutlineEntry> entries)
+        {
+            foreach (LoreBlock block in blocks)
+            {
+                switch (block)
+                {
+                    case LoreHeadingBlock heading when !string.IsNullOrWhiteSpace(heading.Text):
+                        entries.Add(new LoreOutlineEntry(heading.Level, heading.Text, heading.Id));
+                        break;
+                    case LoreListBlock list:
+                        foreach (LoreListItem item in list.Items)
+                        {
+                            CollectHeadings(item.Blocks, entries);
+                        }
+
+                        break;
+                    case LoreQuoteBlock quote:
+                        CollectHeadings(quote.Blocks, entries);
+                        break;
+                }
+            }
         }
 
         private string GetPlainText(string filePath)
