@@ -1,7 +1,7 @@
 # Review protocol
 
 Status: active — situational, harness-agnostic reviewer guidance
-Last updated: 2026-08-12
+Last updated: 2026-08-22
 Summary: how to obtain useful independent review without turning a model matrix
 into authority or a mandatory ceremony.
 Evidence: MEASURED — maintainer direction and observed reviewer-harness behavior
@@ -59,12 +59,12 @@ These are available choices, not a required ranking or invocation checklist:
 | DeepSeek V4 Flash | Substantial independent architecture/refutation and bounded high-volume analysis | `max` |
 | Grok 4.6 | Independent RE synthesis, adversarial review, public-source research, and focused checks | `xhigh` |
 
-Opus 5 Max is the preferred external long-form reviewer when the question is
-important enough to justify its latency. Opus 5 Medium is useful when turnaround
-matters. Grok 4.6 XHigh is a strong independent view, not intrinsically more
-authoritative than the active agent or its native subagents. DeepSeek V4 Flash
-Max can provide a substantial independent review, but its report is still only
-a hypothesis until reproduced.
+The strongest long-form entry in the toolbox is the preferred external reviewer
+when the question is important enough to justify its latency; its faster tier is
+useful when turnaround matters. An independent synthesis entry is a strong view,
+not intrinsically more authoritative than the active agent or its native
+subagents. Any substantial independent review remains only a hypothesis until
+reproduced.
 
 ## DeepSeek through OpenCode
 
