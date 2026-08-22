@@ -455,6 +455,15 @@ public sealed class RetailFrontendSession
     /// <summary>The world the pending launch request will construct.</summary>
     public int ConsumeLaunchWorldNumber => SelectedWorldNumber;
 
+    /// <summary>
+    /// Whether this reconstruction can currently build
+    /// <see cref="SelectedWorldNumber"/>. World 100 is the only constructed
+    /// session owner; world 110 is admitted by Core and selectable after a
+    /// Won update, but it has no actor-definition projection yet.
+    /// </summary>
+    public bool SelectedWorldIsConstructible =>
+        SelectedWorldNumber == RetailWorldCatalog.RootWorldNumber;
+
     public void CompleteLevel100Load()
     {
         if (Screen != RetailFrontendScreen.Loading || _level100LaunchPending)
@@ -550,6 +559,54 @@ public sealed class RetailFrontendSession
         RequireLevel100Transition(nameof(LeaveLevel100ForMainMenu));
         ReturnToMainMenu();
         return RetailFrontendSignal.ReturnToMainMenuRequested;
+    }
+
+    /// <summary>
+    /// The post-Won frontend re-entry. Retail's PC
+    /// <c>CFrontEnd::Init</c> lands on <c>FEP_DEBRIEFING</c>
+    /// (<c>FrontEnd.cpp:233-269</c>); this lane does not compose that page
+    /// (no <c>FEPDebriefing.cpp</c> in the source drop, same gap as
+    /// <c>FEPLevelSelect.cpp</c>). The next campaign-choice page this
+    /// reconstruction owns is SELECT LEVEL, so that is where the player
+    /// returns — with the already-pinned FillOut Won update applied to the
+    /// selector's career. <c>SetCurrentLevelToHighestAvailable</c> is not in
+    /// the source drop and is not invented here: the highlight stays on the
+    /// root until the player selects the unlocked child.
+    /// </summary>
+    public bool TryAcceptWonHandoff(
+        Level100MissionOutcome outcome,
+        Level100MissionTerminalState terminalState)
+    {
+        if (Screen != RetailFrontendScreen.Gameplay ||
+            outcome != Level100MissionOutcome.Won ||
+            terminalState != Level100MissionTerminalState.FrontEndHandoffReady)
+        {
+            return false;
+        }
+
+        Career.ApplyUpdate(RetailFillOutEndLevelData.ForLevel100Won());
+        _level100LaunchPending = false;
+        _selectedConfigurationIndex = 0;
+        Level100IntroCutscenePending = true;
+        Screen = RetailFrontendScreen.LevelSelect;
+        return true;
+    }
+
+    /// <summary>
+    /// Backs out of Loading when the selected world is admitted by career
+    /// law but this reconstruction cannot yet construct it. The launch
+    /// request must already have been consumed.
+    /// </summary>
+    public bool ReturnUnconstructibleLaunchToLevelSelect()
+    {
+        if (Screen != RetailFrontendScreen.Loading || _level100LaunchPending)
+        {
+            return false;
+        }
+
+        Level100IntroCutscenePending = true;
+        Screen = RetailFrontendScreen.LevelSelect;
+        return true;
     }
 
     private void RequireLevel100Transition(string operation)

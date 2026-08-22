@@ -70,6 +70,63 @@ public sealed class RetailCampaignFlowTests
         Assert.False(frontend.SelectWorld(100));
     }
 
+    [Fact]
+    public void WonHandoff_ReturnsToLevelSelect_AndUnlocksWorld110()
+    {
+        var frontend = AtGameplay();
+
+        Assert.True(frontend.TryAcceptWonHandoff(
+            Level100MissionOutcome.Won,
+            Level100MissionTerminalState.FrontEndHandoffReady));
+        Assert.Equal(RetailFrontendScreen.LevelSelect, frontend.Screen);
+        Assert.True(RetailWorldCatalog.IsWorldSelectable(frontend.Career, 110));
+        Assert.Equal(100, frontend.ConsumeLaunchWorldNumber);
+        Assert.True(frontend.SelectedWorldIsConstructible);
+
+        Assert.True(frontend.SelectWorld(110));
+        Assert.Equal(110, frontend.ConsumeLaunchWorldNumber);
+        Assert.False(frontend.SelectedWorldIsConstructible);
+
+        DriveToLoading(frontend);
+        Assert.Equal(RetailFrontendSignal.LevelLaunchRequested, _lastConfirmSignal);
+        Assert.True(frontend.ConsumeLevel100LaunchRequest());
+        Assert.Equal(110, frontend.ConsumeLaunchWorldNumber);
+        Assert.True(frontend.ReturnUnconstructibleLaunchToLevelSelect());
+        Assert.Equal(RetailFrontendScreen.LevelSelect, frontend.Screen);
+        Assert.Equal(110, frontend.ConsumeLaunchWorldNumber);
+    }
+
+    [Fact]
+    public void WonHandoff_IsRejectedUnlessGameplayWonIsReady()
+    {
+        var frontend = AtLevelSelect();
+        Assert.False(frontend.TryAcceptWonHandoff(
+            Level100MissionOutcome.Won,
+            Level100MissionTerminalState.FrontEndHandoffReady));
+        Assert.False(RetailWorldCatalog.IsWorldSelectable(frontend.Career, 110));
+
+        DriveToLoading(frontend);
+        Assert.True(frontend.ConsumeLevel100LaunchRequest());
+        frontend.CompleteLevel100Load();
+        Assert.Equal(RetailFrontendScreen.Gameplay, frontend.Screen);
+
+        Assert.False(frontend.TryAcceptWonHandoff(
+            Level100MissionOutcome.Lost,
+            Level100MissionTerminalState.FrontEndHandoffReady));
+        Assert.Equal(RetailFrontendScreen.Gameplay, frontend.Screen);
+        Assert.False(RetailWorldCatalog.IsWorldSelectable(frontend.Career, 110));
+    }
+
+    private static RetailFrontendSession AtGameplay()
+    {
+        var frontend = AtLevelSelect();
+        DriveToLoading(frontend);
+        Assert.True(frontend.ConsumeLevel100LaunchRequest());
+        frontend.CompleteLevel100Load();
+        Assert.Equal(RetailFrontendScreen.Gameplay, frontend.Screen);
+        return frontend;
+    }
+
     private static RetailFrontendSignal _lastConfirmSignal;
 
     /// <summary>ClickToStart → MainMenu → DevSelect → LevelSelect.</summary>

@@ -192,8 +192,14 @@ completed incoming link points at it. The launch edge was renamed
 *constructs* is still Level 100 only: world-110's compiled scripts and
 heightfield are admitted by Core (below), but the world-110 session owner and
 its actor-definition projection do not exist yet, so the host cannot build that
-world. Selecting an unlocked non-100 world is honest law but not yet a playable
-path.*)
+world. After a Level 100 Won reaches `FrontEndHandoffReady`, the host returns
+the player to SELECT LEVEL with the FillOut update applied (retail's PC
+`CFrontEnd::Init` would land on `FEP_DEBRIEFING` first — that page is not
+composed here). World 110 is then selectable and the Episode-1 child node is
+clickable; launching it returns to SELECT LEVEL rather than constructing Level
+100 in its place. `SetCurrentLevelToHighestAvailable` is not in the source drop
+and is not invented — the highlight stays on the root until the player picks
+the child.*
 Each launch request makes the host construct a fresh canonical
 `InteractiveSession` from the materialized Level 100 actor definitions before
 gameplay activation. The frontend does not inspect
@@ -208,8 +214,10 @@ Continue resumes after a neutral input sample; Retry and Quit call those
 existing lifecycle seams after the audio owner completes its kill-then-Select
 exit boundary once. Message Log, Briefing, and the three settings rows remain
 visible but disabled until canonical integrated owners exist. The current
-opening slice does not synthesize terminal events, rank, kill summary, unlock,
-save, or campaign progression. `FrontendAudioCueRequested` is an observation
+opening slice does not synthesize terminal events, rank, kill summary, or
+save. Campaign progression after Won is the already-pinned FillOut update
+applied to the selector career, then SELECT LEVEL — not a synthesized
+debrief. `FrontendAudioCueRequested` is an observation
 seam; the existing Level 100 audio owner remains the sole playback owner.
 
 Core currently provides integer positions, opening tutorial/objective state,
