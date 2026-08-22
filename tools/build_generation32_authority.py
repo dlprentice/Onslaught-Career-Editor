@@ -459,6 +459,7 @@ def _apply_reseat_rows(
 
     grade_movements: list[dict] = []
     adjudication_rows: list[dict] = []
+    receipt_name_divergences: list[dict] = []
     changed_functions: set[str] = set()
     changed_contracts: set[str] = set()
 
@@ -493,6 +494,10 @@ def _apply_reseat_rows(
 
         sealed = sealed_by_va[order_row["entryVa"]]
         receipt_sources = order_row["receiptSources"]
+        # The row's own sealed-receipt stamp, measured against the on-disk
+        # receipt by the step-2 manifest join and re-verified by
+        # _validate_receipts_on_disk above — never hand-typed.
+        receipt_stamp = {"sha256": order_row["receiptSha256"]}
         entry_key = order_row["entryVa"].upper()
         if sources_is_weapon41(receipt_sources):
             weapon41 = receipt_rows[receipt_sources][entry_key]
@@ -539,10 +544,21 @@ def _apply_reseat_rows(
             )
         else:
             standard = receipt_rows[receipt_sources][entry_key]
+            # The dated receipts may carry the closure's disposable-project
+            # label (HYP__..., slot-style) instead of the reviewed tracked
+            # name; the closure report records both columns and states the
+            # HYP__ names "are kept as provenance only". Receipt identity is
+            # already enforced byte-for-byte by the per-row SHA-256 join, and
+            # no receipt name ever enters the ledger (naming authority stays
+            # untouched), so a name divergence is recorded, not refused.
             if standard["current_name"] != sealed["trackedName"]:
-                raise campaign.CampaignError(
-                    f"order {order_row['order']}: receipt name differs from "
-                    "the closure trackedName"
+                receipt_name_divergences.append(
+                    {
+                        "order": order_row["order"],
+                        "entryVa": order_row["entryVa"],
+                        "receiptName": standard["current_name"],
+                        "closureTrackedName": sealed["trackedName"],
+                    }
                 )
             execution_state = standard["execution_state"]
             inputs = standard["inputs"]
@@ -677,9 +693,11 @@ def _apply_reseat_rows(
         adjudication_rows.append(adjudications[-1])
 
     after = {name: _snapshot_ids(value) for name, value in rows.items()}
+    receipt_name_divergences.sort(key=lambda item: int(item["order"]))
     return {
         "gradeMovements": grade_movements,
         "adjudicationRows": adjudication_rows,
+        "receiptNameDivergences": receipt_name_divergences,
         "changedFunctions": changed_functions,
         "changedContracts": changed_contracts,
         "before": before,
@@ -881,6 +899,7 @@ def build(
                     )
                 ],
                 "gradeMovements": accounting["gradeMovements"],
+                "receiptNameDivergences": accounting["receiptNameDivergences"],
                 "zeroCollateral": collateral,
                 "semanticGradePolicy": (
                     "Every admitted row raises OPAQUE/C0_OPAQUE to "

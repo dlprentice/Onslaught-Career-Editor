@@ -2375,6 +2375,166 @@ class CampaignTests(unittest.TestCase):
             shutil.rmtree(parent, ignore_errors=True)
             shutil.rmtree(replay, ignore_errors=True)
 
+    def test_reseed_carry_accepts_the_gen31_second_contract_mint_alias(self) -> None:
+        """The Gen31 second-contract mint (sha256(entityKey|owner)[:16], used
+        once for the RetailJetFriction GetFriction ceremony row) is a verified
+        alias of the base contract-id derivation for the same exact entity, so
+        the reseed-carry exact-C1 geometry check must accept it instead of
+        refusing the whole carry."""
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            prior_source = root / "prior-source"
+            prior_source.mkdir()
+            prior_snapshot = make_snapshot(prior_source)
+            fresh_source = root / "fresh-source"
+            fresh_source.mkdir()
+            fresh_snapshot = make_snapshot(fresh_source)
+
+            prior = root / "prior"
+            prior_receipt = campaign.seed(prior_snapshot, prior)
+            functions = campaign._read_tsv(prior / "campaign-functions.tsv")
+            progressed_function = next(
+                row for row in functions if row["entryVa"] == "0x00401000"
+            )
+            entity = progressed_function["entityKey"]
+            progressed_function.update(
+                {
+                    "resolutionState": "CANDIDATE_CONTRACT",
+                    "semanticGrade": "C1_CANDIDATE_PARTIAL",
+                    "evidenceStates": campaign._union_semicolon(
+                        progressed_function["evidenceStates"],
+                        "CAMPAIGN_C1_OPAQUE_PE",
+                    ),
+                    "lastMeasurementDate": "2026-08-13",
+                }
+            )
+            write_tsv(
+                prior / "campaign-functions.tsv",
+                campaign.FUNCTION_COLUMNS,
+                functions,
+            )
+
+            contracts = campaign._read_tsv(prior / "campaign-contracts.tsv")
+            progressed_contract = next(
+                row for row in contracts if row["entityKey"] == entity
+            )
+            owner = "rebuild/OnslaughtRebuild.Core/RetailJetFriction.cs"
+            second_id = (
+                "C-"
+                + hashlib.sha256(f"{entity}|{owner}".encode("utf-8")).hexdigest()[:16]
+            )
+            progressed_contract.update(
+                {
+                    "contractId": second_id,
+                    "contractState": "CANDIDATE_NEEDS_REFUTER",
+                    "semanticGrade": "C1_CANDIDATE_PARTIAL",
+                    "receiver": "thiscall this in ecx",
+                    "inputs": "no stack args",
+                    "returns": "eax",
+                    "writes": "none",
+                    "sideEffects": "entity-bound static contract",
+                    "preconditions": "this valid",
+                    "failureModes": "none observed",
+                    "authorVerdict": "SUPPORTED_BY_PE_STATIC_SPINE",
+                    "runtimeVerdict": "UNSCORED",
+                    "refuterVerdict": "UNSCORED",
+                    "evidenceRefs": "proof#sha256=" + "d" * 64,
+                    "rebuildOwner": owner,
+                    "rebuildState": "PARTIAL_CONTRACT",
+                    "remainingUncertainty": "runtime refuter required",
+                    "lastMeasurementDate": "2026-08-13",
+                }
+            )
+            write_tsv(
+                prior / "campaign-contracts.tsv",
+                campaign.CONTRACT_COLUMNS,
+                contracts,
+            )
+
+            carried = root / "carried"
+            receipt = campaign.seed(
+                fresh_snapshot,
+                carried,
+                carry=prior,
+                _self_check=False,
+                _verified_carry_receipt=prior_receipt,
+            )
+        report = receipt["advance"]["carried"]
+        self.assertEqual(1, report["exactEntityC1FunctionContracts"])
+        self.assertEqual(1, report["newlyEligibleExactEntityC1FunctionContracts"])
+
+    def test_reseed_carry_still_refuses_a_non_mint_contract_id_change(self) -> None:
+        """Only the exact Generation 31 mint alias passes the exact-C1 identity
+        comparison; any other contractId change still refuses the reseed
+        carry."""
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            prior_source = root / "prior-source"
+            prior_source.mkdir()
+            prior_snapshot = make_snapshot(prior_source)
+            fresh_source = root / "fresh-source"
+            fresh_source.mkdir()
+            fresh_snapshot = make_snapshot(fresh_source)
+
+            prior = root / "prior"
+            prior_receipt = campaign.seed(prior_snapshot, prior)
+            functions = campaign._read_tsv(prior / "campaign-functions.tsv")
+            progressed_function = next(
+                row for row in functions if row["entryVa"] == "0x00401000"
+            )
+            entity = progressed_function["entityKey"]
+            progressed_function.update(
+                {
+                    "resolutionState": "CANDIDATE_CONTRACT",
+                    "semanticGrade": "C1_CANDIDATE_PARTIAL",
+                    "evidenceStates": campaign._union_semicolon(
+                        progressed_function["evidenceStates"],
+                        "CAMPAIGN_C1_OPAQUE_PE",
+                    ),
+                    "lastMeasurementDate": "2026-08-13",
+                }
+            )
+            write_tsv(
+                prior / "campaign-functions.tsv",
+                campaign.FUNCTION_COLUMNS,
+                functions,
+            )
+
+            contracts = campaign._read_tsv(prior / "campaign-contracts.tsv")
+            progressed_contract = next(
+                row for row in contracts if row["entityKey"] == entity
+            )
+            progressed_contract.update(
+                {
+                    "contractId": "C-0123456789abcdef",
+                    "contractState": "CANDIDATE_NEEDS_REFUTER",
+                    "semanticGrade": "C1_CANDIDATE_PARTIAL",
+                    "authorVerdict": "SUPPORTED_BY_PE_STATIC_SPINE",
+                    "evidenceRefs": "proof#sha256=" + "d" * 64,
+                    "lastMeasurementDate": "2026-08-13",
+                }
+            )
+            write_tsv(
+                prior / "campaign-contracts.tsv",
+                campaign.CONTRACT_COLUMNS,
+                contracts,
+            )
+
+            carried = root / "carried"
+            with self.assertRaisesRegex(
+                campaign.CampaignError,
+                "exact-entity C1 function/contract geometry differs",
+            ):
+                campaign.seed(
+                    fresh_snapshot,
+                    carried,
+                    carry=prior,
+                    _self_check=False,
+                    _verified_carry_receipt=prior_receipt,
+                )
+
     def test_generation32_builder_refuses_an_absent_prep_root(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             prep = Path(temporary) / "empty-prep"

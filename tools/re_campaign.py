@@ -7627,6 +7627,24 @@ def _function_geometry_is_exact(
     )
 
 
+def _second_contract_id_matches_mint(
+    entity_key: str, owner: str, contract_id: str
+) -> bool:
+    """True when contractId is exactly a Generation 31 second-contract mint.
+
+    The mint is ``"C-" + sha256("<entityKey>|<owner>")[:16]``
+    (``build_generation31_authority._mint_second_contract_id``); it was used
+    once in the promoted Gen31 authority — the RetailJetFriction-family
+    two-owner GetFriction ceremony row. Such an id is a verified alias of the
+    base ``_contract_id`` derivation for the same entity, never a different
+    identity.
+    """
+
+    if not owner or owner == "UNASSIGNED":
+        return False
+    return contract_id == "C-" + _sha256_text(f"{entity_key}|{owner}")[:16]
+
+
 def _exact_entity_c1_function_contracts(
     carried_functions: dict[str, dict[str, str]],
     carried_contracts: dict[str, dict[str, str]],
@@ -7647,7 +7665,15 @@ def _exact_entity_c1_function_contracts(
             prior_contract is None
             or current_function is None
             or current_contract is None
-            or prior_contract.get("contractId") != current_contract.get("contractId")
+            or not (
+                prior_contract.get("contractId")
+                == current_contract.get("contractId")
+                or _second_contract_id_matches_mint(
+                    entity,
+                    prior_contract.get("rebuildOwner", ""),
+                    prior_contract.get("contractId", ""),
+                )
+            )
             or not _function_geometry_is_exact(prior_function, current_function)
             or prior_contract.get("entryVa") != current_contract.get("entryVa")
             or prior_contract.get("currentName")
