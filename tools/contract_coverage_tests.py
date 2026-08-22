@@ -27,6 +27,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 TOOL = Path(__file__).resolve().parent / "contract_coverage.py"
@@ -45,6 +46,26 @@ def state_json(n_functions: int) -> str:
     }})
 
 REGISTER_HEADER = "entryVa\tname\tgrade\tresolution\tcontractState\tevidence\tgeneration\treadySha256"
+PRISTINE_IMAGE_SHA256 = (
+    "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
+)
+WAVE1_REVIEW_FLOOR_VAS = {
+    "0x00405a40", "0x00405ed0", "0x00405ef0", "0x00405f20", "0x00405f40",
+    "0x00405f50", "0x00405f60", "0x00405f80", "0x00406000", "0x004063a0",
+    "0x00407940", "0x00408150", "0x00409880", "0x0040a560", "0x0040e7d0",
+}
+WAVE1_PRESERVED_STATUS_BY_VA = {
+    "0x00405f00": "REVIEW_READY",
+    "0x00406020": "REVIEW_READY",
+    "0x00406040": "REVIEW_READY",
+    "0x00406050": "REVIEW_READY",
+    "0x00406560": "DISPUTED",
+    "0x00406fc0": "VERIFIED",
+    "0x00407310": "VERIFIED",
+    "0x004080f0": "REVIEW_READY",
+    "0x00409de0": "REVIEW_READY",
+    "0x0040e910": "REVIEW_READY",
+}
 
 
 def w(root: Path, rel: str, text: str) -> Path:
@@ -65,6 +86,53 @@ def make_corpus(root: Path, rows: list[str]) -> None:
     w(root, "reverse-engineering/EVIDENCE-REGISTER.tsv",
       "# bea.re.evidence-register.v2\n# generatedAtUtc: test\n" + REGISTER_HEADER + "\n"
       + "\n".join(rows) + "\n")
+
+
+def full_contract(name: str, va: str, evidence_grade: str = "MEASURED") -> str:
+    return f"""# {name}
+
+Status: active static contract (factory draft)
+Evidence: {evidence_grade} — focused coverage fixture.
+Source File: fixture.cpp | Binary: BEA.exe, SHA-256 `{PRISTINE_IMAGE_SHA256}`
+
+> Address: `{va}`
+
+## Identity
+- Body fixture SHA-256 `{'a' * 64}`.
+
+## Calling convention
+unknown
+
+## Prototype and parameter semantics
+unknown
+
+## Return value meaning
+unknown
+
+## Globals read/written
+not_applicable
+
+## Callees relied on / callers
+unknown
+
+## Behavior summary
+unknown
+
+## Error / edge behavior
+unknown
+
+## Runtime corroboration (TTD, bounded)
+not_determinable
+
+## Evidence
+Fixture evidence exists only for this focused scanner test.
+
+## Confidence
+2 - structurally complete fixture only.
+
+## Unresolved questions
+Semantic behavior remains unknown.
+"""
 
 
 def run_tool(root: Path) -> tuple[int, str, dict | None]:
@@ -266,6 +334,178 @@ def test_skeleton_is_the_honest_default() -> None:
         shutil.rmtree(root, ignore_errors=True)
 
 
+def test_valid_factory_contract_promotes_only_joined_skeleton() -> None:
+    root = Path(tempfile.mkdtemp(prefix="ccov-contract-"))
+    try:
+        make_corpus(root, [
+            base_register_row("0x00401000", "CFactory__Contracted"),
+            base_register_row("0x00401020", "CFactory__Untouched"),
+        ])
+        w(root,
+          "reverse-engineering/contracts/factory/"
+          "CFactory__Contracted__00401000.md",
+          full_contract("CFactory__Contracted", "0x00401000"))
+
+        code, out, payload = run_tool(root)
+        assert code == 0, out
+        contracted = status_of(payload, "CFactory__Contracted")
+        untouched = status_of(payload, "CFactory__Untouched")
+        assert contracted["status"] == "REVIEW_READY", contracted
+        assert contracted["witnessKinds"] == [], contracted
+        assert contracted["contracts"] == [
+            "reverse-engineering/contracts/factory/"
+            "CFactory__Contracted__00401000.md"
+        ], contracted
+        assert untouched["status"] == "SKELETON", untouched
+        assert untouched.get("contracts", []) == [], untouched
+        assert len(payload["functions"]) == 2
+        assert sum(payload["statusCounts"].values()) == 2
+    finally:
+        shutil.rmtree(root, ignore_errors=True)
+
+
+def test_factory_contract_preserves_stronger_status_and_measured_floor() -> None:
+    root = Path(tempfile.mkdtemp(prefix="ccov-contract-floor-"))
+    try:
+        make_corpus(root, [
+            base_register_row("0x00401000", "CFactory__InferredOnly"),
+            base_register_row("0x00401020", "CFactory__ReviewReady",
+                              grade="C1_CANDIDATE_PARTIAL"),
+            base_register_row(
+                "0x00401040", "CFactory__Verified",
+                evidence="BASELINE_STATIC;ANALYST_METADATA_ONLY;"
+                         "INDEPENDENT_REFUTATION_SURVIVED"),
+        ])
+        w(root,
+          "reverse-engineering/contracts/factory/"
+          "CFactory__InferredOnly__00401000.md",
+          full_contract("CFactory__InferredOnly", "0x00401000", "INFERRED"))
+        w(root,
+          "reverse-engineering/contracts/factory/"
+          "CFactory__ReviewReady__00401020.md",
+          full_contract("CFactory__ReviewReady", "0x00401020"))
+        w(root,
+          "reverse-engineering/contracts/factory/"
+          "CFactory__Verified__00401040.md",
+          full_contract("CFactory__Verified", "0x00401040"))
+
+        code, out, payload = run_tool(root)
+        assert code == 0, out
+        inferred = status_of(payload, "CFactory__InferredOnly")
+        review_ready = status_of(payload, "CFactory__ReviewReady")
+        verified = status_of(payload, "CFactory__Verified")
+        assert inferred["status"] == "SKELETON", inferred
+        assert "byte-read" not in inferred["evidenceClasses"], inferred
+        assert review_ready["status"] == "REVIEW_READY", review_ready
+        assert verified["status"] == "VERIFIED", verified
+        assert verified["witnessKinds"] == [], verified
+        assert len(payload["functions"]) == 3
+    finally:
+        shutil.rmtree(root, ignore_errors=True)
+
+
+def test_factory_contract_path_crlf_and_va_case_are_deterministic() -> None:
+    root = Path(tempfile.mkdtemp(prefix="ccov-contract-normalize-"))
+    try:
+        make_corpus(root, [
+            base_register_row("0X00401000", "CFactory__CanonicalInventoryName"),
+        ])
+        path = root / (
+            "reverse-engineering/contracts/MiXeD/"
+            "CFactory__ContractDocument__00401000.md"
+        )
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(
+            full_contract("CFactory__ContractDocument", "0x00401000")
+            .replace("\n", "\r\n").encode("utf-8")
+        )
+
+        code1, out1, payload1 = run_tool(root)
+        code2, out2, payload2 = run_tool(root)
+        assert code1 == code2 == 0, out1 + out2
+        row = status_of(payload1, "CFactory__CanonicalInventoryName")
+        assert row["status"] == "REVIEW_READY", row
+        assert row["contracts"] == [
+            "reverse-engineering/contracts/MiXeD/"
+            "CFactory__ContractDocument__00401000.md"
+        ], row
+        assert payload1["functions"] == payload2["functions"]
+        assert payload1["statusCounts"] == payload2["statusCounts"]
+    finally:
+        shutil.rmtree(root, ignore_errors=True)
+
+
+def test_invalid_factory_contracts_fail_closed_without_counting() -> None:
+    scenarios = []
+
+    def duplicate_va(root: Path) -> None:
+        make_corpus(root, [base_register_row("0x00401000", "CFactory__Inventory")])
+        w(root, "reverse-engineering/contracts/a/CFactory__First__00401000.md",
+          full_contract("CFactory__First", "0x00401000"))
+        w(root, "reverse-engineering/contracts/b/CFactory__Second__00401000.md",
+          full_contract("CFactory__Second", "0x00401000"))
+
+    scenarios.append(("duplicate-va", duplicate_va, "DUPLICATE_VA"))
+
+    def duplicate_name(root: Path) -> None:
+        make_corpus(root, [
+            base_register_row("0x00401000", "CFactory__InventoryA"),
+            base_register_row("0x00401020", "CFactory__InventoryB"),
+        ])
+        w(root,
+          "reverse-engineering/contracts/a/CFactory__DuplicateName__00401000.md",
+          full_contract("CFactory__DuplicateName", "0x00401000"))
+        w(root,
+          "reverse-engineering/contracts/b/cfactory__duplicatename__00401020.md",
+          full_contract("cfactory__duplicatename", "0x00401020"))
+
+    scenarios.append(("duplicate-name", duplicate_name, "DUPLICATE_NAME"))
+
+    def anonymous_name(root: Path) -> None:
+        make_corpus(root, [base_register_row("0x00401000", "CFactory__Inventory")])
+        w(root, "reverse-engineering/contracts/a/FUN_00401000__00401000.md",
+          full_contract("FUN_00401000", "0x00401000"))
+
+    scenarios.append(("anonymous-name", anonymous_name, "ANONYMOUS_NAME"))
+
+    def bad_filename_va(root: Path) -> None:
+        make_corpus(root, [base_register_row("0x00401000", "CFactory__Inventory")])
+        w(root, "reverse-engineering/contracts/a/CFactory__BadStem__00401020.md",
+          full_contract("CFactory__BadStem", "0x00401000"))
+
+    scenarios.append(("bad-filename-va", bad_filename_va, "VA_STEM_MISMATCH"))
+
+    def missing_structure(root: Path) -> None:
+        make_corpus(root, [base_register_row("0x00401000", "CFactory__Inventory")])
+        text = full_contract("CFactory__MissingSection", "0x00401000").replace(
+            "## Unresolved questions\nSemantic behavior remains unknown.\n", "")
+        w(root,
+          "reverse-engineering/contracts/a/CFactory__MissingSection__00401000.md",
+          text)
+
+    scenarios.append(("missing-structure", missing_structure, "MISSING_SECTION"))
+
+    def orphan_va(root: Path) -> None:
+        make_corpus(root, [base_register_row("0x00401000", "CFactory__Inventory")])
+        w(root, "reverse-engineering/contracts/a/CFactory__Orphan__00401020.md",
+          full_contract("CFactory__Orphan", "0x00401020"))
+
+    scenarios.append((
+        "orphan-va", orphan_va, "not present in the canonical function inventory"
+    ))
+
+    for label, arrange, expected in scenarios:
+        root = Path(tempfile.mkdtemp(prefix=f"ccov-contract-{label}-"))
+        try:
+            arrange(root)
+            code, out, payload = run_tool(root)
+            assert code == 2, (label, code, out)
+            assert expected in out, (label, expected, out)
+            assert payload is None, label
+        finally:
+            shutil.rmtree(root, ignore_errors=True)
+
+
 # ---------------------------------------------------------------------------
 # falsification: the honesty contract must actually bind
 # ---------------------------------------------------------------------------
@@ -385,22 +625,26 @@ def test_totals_always_add_up() -> None:
         shutil.rmtree(root, ignore_errors=True)
 
 
-def test_reruns_are_idempotent_except_stamps() -> None:
+def test_reruns_are_byte_identical_when_inputs_are_unchanged() -> None:
     root = Path(tempfile.mkdtemp(prefix="ccov-idem-"))
     try:
         make_full_corpus(root)
         code1, _, p1 = run_tool(root)
+        raw1 = (root / "out" / "coverage.json").read_bytes()
+        time.sleep(1.1)
         code2, _, p2 = run_tool(root)
+        raw2 = (root / "out" / "coverage.json").read_bytes()
         assert code1 == code2 == 0
         for key in ("schema", "statusCounts", "evidenceClassCounts", "functions"):
             assert p1[key] == p2[key], key
         assert p1["generatedAtUtc"]  # stamps exist
+        assert raw1 == raw2
     finally:
         shutil.rmtree(root, ignore_errors=True)
 
 
 # ---------------------------------------------------------------------------
-# real-corpus invariants (structural only; skipped when the corpus is absent)
+# real-corpus invariants and the fixed wave-1 join receipt
 # ---------------------------------------------------------------------------
 
 
@@ -410,25 +654,57 @@ def test_real_corpus_invariants() -> None:
     if not register.exists():
         print("SKIP real-corpus invariants (no register in this checkout)")
         return
-    proc = subprocess.run(
-        [sys.executable, str(TOOL), "--repo-root", str(repo),
-         "--out", str(repo / "reverse-engineering" / "contract-schema" / "coverage.json")],
-        capture_output=True, text=True, timeout=300)
-    out = proc.stdout + proc.stderr
-    assert proc.returncode == 0, out
-    payload = json.loads(
-        (repo / "reverse-engineering" / "contract-schema" / "coverage.json")
-        .read_text(encoding="utf-8"))
-    assert payload["schema"] == "bea.re.contract-coverage.v1"
-    assert payload["inputs"]["registerRows"] == payload["denominator"]["functions"]
-    assert sum(payload["statusCounts"].values()) == payload["denominator"]["functions"]
-    known = {"STALE", "DISPUTED", "BLOCKED", "VERIFIED", "REVIEW_READY",
-             "PROVISIONAL", "SKELETON"}
-    assert set(payload["statusCounts"]) <= known
-    for f in payload["functions"]:
-        assert f["status"] in known
-        assert isinstance(f["notes"], list)
-    assert payload["elapsedSeconds"] < 300, "corpus scan must stay well under 5 min"
+    out_dir = Path(tempfile.mkdtemp(prefix="ccov-real-"))
+    try:
+        out_path = out_dir / "coverage.json"
+        proc = subprocess.run(
+            [sys.executable, str(TOOL), "--repo-root", str(repo),
+             "--out", str(out_path)],
+            capture_output=True, text=True, timeout=300)
+        out = proc.stdout + proc.stderr
+        assert proc.returncode == 0, out
+        payload = json.loads(out_path.read_text(encoding="utf-8"))
+        assert payload["schema"] == "bea.re.contract-coverage.v1"
+        assert payload["inputs"]["registerRows"] == 8329
+        assert payload["inputs"]["contractFiles"] == 25
+        assert payload["inputs"]["contractRowsJoined"] == 25
+        assert payload["denominator"]["functions"] == 8329
+        assert len(payload["functions"]) == 8329
+        assert sum(payload["statusCounts"].values()) == 8329
+        assert payload["statusCounts"] == {
+            "STALE": 0,
+            "DISPUTED": 44,
+            "BLOCKED": 58,
+            "VERIFIED": 591,
+            "REVIEW_READY": 451,
+            "PROVISIONAL": 1,
+            "SKELETON": 7184,
+        }
+        known = {"STALE", "DISPUTED", "BLOCKED", "VERIFIED", "REVIEW_READY",
+                 "PROVISIONAL", "SKELETON"}
+        by_va = {row["va"]: row for row in payload["functions"]}
+        joined = {
+            row["va"] for row in payload["functions"] if row.get("contracts")
+        }
+        assert joined == WAVE1_REVIEW_FLOOR_VAS | set(WAVE1_PRESERVED_STATUS_BY_VA)
+        floor_rows = {
+            row["va"] for row in payload["functions"]
+            if "factory-contract-review-floor" in row["flags"]
+        }
+        assert floor_rows == WAVE1_REVIEW_FLOOR_VAS
+        for va in WAVE1_REVIEW_FLOOR_VAS:
+            assert by_va[va]["status"] == "REVIEW_READY", by_va[va]
+            assert by_va[va]["witnessKinds"] == [], by_va[va]
+        for va, expected_status in WAVE1_PRESERVED_STATUS_BY_VA.items():
+            assert by_va[va]["status"] == expected_status, by_va[va]
+            assert "factory-contract-review-floor" not in by_va[va]["flags"], by_va[va]
+        for row in payload["functions"]:
+            assert row["status"] in known
+            assert isinstance(row["notes"], list)
+            assert isinstance(row.get("contracts", []), list)
+        assert payload["elapsedSeconds"] < 300, "corpus scan must stay well under 5 min"
+    finally:
+        shutil.rmtree(out_dir, ignore_errors=True)
 
 
 def main() -> int:

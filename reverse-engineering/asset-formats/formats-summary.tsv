@@ -1,0 +1,20 @@
+format	file_count	decoder_va_or_unknown	contract_status
+aya-container-chunked-zlib	1361	inner-tag primitives CChunkReader__GetNext=0x00423910; CChunkReader__Read=0x00423960; imported uncompress=0x0055D5F2	outer-framing-complete
+lvlr-resource-tag-stream	301	CResourceAccumulator__ReadResourceFile=0x004D7200; CWorld__DeserializeWorld=0x0050B780; complete owner entry unknown	tag-census-complete-payloads-partial
+cmsh-mesh-and-animation	213	CMeshPart__LoadFromStream=0x004B27A0; CDXMeshVB__Load=0x0054E160; BuildStaticVB=0x0054C0A0; BuildSkeletalVB=0x0054C920	framing-and-selected-fields-bounded
+dds-texture-in-aya	847	LoadTextureFromFile=0x00557300; Deserialize=0x00559BE0; BuildDdsSurfaceNodeTree=0x0057BF1F; fallback decoder=0x0057CA6A	header-census-complete-pixels-open
+ogg-vorbis	3057	import thunks=0x0055D5FE..0x0055D688; COggLoader/OggVorbisStream/COggFileRead owner families	framing-metadata-bounded-full-decode-open
+xap-sample-bank	5	CSoundManager__LoadCompressedSampleBank/CPCSoundManager__DecodeADPCM family; exact owner VAs not pinned here	name-order-and-selected-decode-bounded
+sfx-text-catalog	1	source owner CEffect::LoadSFXFile; exact retail VA unknown	catalog-bank-bijection-bounded
+bink-video	66	CDXFrontEndVideo__Open=0x005412E0; InitVideo=0x00541430; Render=0x00541790; Update=0x00541D30	container-media-census-bounded
+language-dat-v3	6	CText__Init=0x004F21F0; CText__GetStringById=0x004F2580	layout-and-id-census-complete
+mission-txt	130	packed/loose runtime owner unknown	text-framing-only
+stf-text-symbol-table	96	CText ID consumer=0x004F2580; loose/packed selector unknown	five-nonempty-text-tables-signed-id-tool-gap
+msl-script	733	native registry=0x0064CE20 stride 0x40; VM owned elsewhere	language-owned-elsewhere
+battle-engine-config-dat	1	CBattleEngineData__LoadFromMemBuffer=0x0040F980	source-order-fields-bounded-reencoder-open
+default-physics-dat	1	CWorldPhysicsManager__ReloadDefaultPhysicsAndBattleEngineData=0x00510800	outer-statement-framing-complete-semantics-partial
+worldheaders-dat	1	CWorld__LoadWorldHeader=0x0050D4C0; config load/skip=0x0040F180/0x0040F260	byte-exact-layout
+Dial.raw	1	HUD compass consumer VA unknown	input-hash-and-frame-zero-bounded-layout-open
+particle-par	3	CParticleSet__LoadFromArchive=0x004CD7F0; CTokenArchive__ReadNextToken=0x004F57B0; 13 loaders=0x004C05C0..0x004C5730	grammar-factory-and-corpus-bounded
+splash-tga	1	startup consumer VA unknown	single-file-header-bounded
+textlist-h	1	generated-by-TextConvert.cpp	demo-era-generated-residue

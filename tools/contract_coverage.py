@@ -5,12 +5,14 @@
 WHAT THIS IS
 ------------
 The overlay scanner described by
-``reverse-engineering/contract-schema/SCHEMA.md``. It reads three existing
+``reverse-engineering/contract-schema/SCHEMA.md``. It reads four existing
 corpora -- the tracked evidence-register projection
 (``reverse-engineering/EVIDENCE-REGISTER.tsv``), the per-function notes under
 ``reverse-engineering/binary-analysis/functions/**``, and the dated manifest
-TSVs beside them -- applies the seven-status decision table with grep-grade
-rules only (no LLM calls, no network), and writes one JSON dashboard:
+TSVs beside them, plus schema-valid factory documents under
+``reverse-engineering/contracts/**`` -- applies the seven-status decision table
+with grep-grade rules only (no LLM calls, no network), and writes one JSON
+dashboard:
 
     reverse-engineering/contract-schema/coverage.json
 
@@ -27,8 +29,14 @@ HONESTY CONTRACT (do not weaken)
    second: witness kinds are distinct by construction.
 3. Every row records which notes fired, so any classification can be audited
    by hand against the canonical files.
-4. Fail closed: missing register, wrong row count, or unparsable denominator
-   exits 2 and writes nothing. A dashboard that cannot run is not published.
+4. Factory documents join existing inventory rows by normalized VA. They never
+   append a row, count as a promotion witness, or establish VERIFIED. A schema-
+   valid document reaches the REVIEW_READY floor only when its header carries
+   the same exact ``Evidence: MEASURED`` marker used for function notes.
+5. Fail closed: missing register, wrong row count, unparsable denominator, an
+   invalid/duplicate factory identity, or a factory VA absent from the canonical
+   inventory exits 2 and writes nothing. A dashboard that cannot run is not
+   published.
 
 USAGE
 -----
@@ -44,6 +52,13 @@ import re
 import sys
 import time
 from pathlib import Path
+
+from contract_factory_validate import (
+    collect_contract_files,
+    normalize_va,
+    parse_gitmodules_paths,
+    validate_file,
+)
 
 SCHEMA_ID = "bea.re.contract-coverage.v1"
 
@@ -76,6 +91,7 @@ DEFAULT_REGISTER = Path("reverse-engineering/EVIDENCE-REGISTER.tsv")
 DEFAULT_STATE = Path("developer_state.json")
 DEFAULT_NOTES_ROOT = Path("reverse-engineering/binary-analysis/functions")
 DEFAULT_MANIFESTS_ROOT = Path("reverse-engineering/binary-analysis")
+DEFAULT_CONTRACTS_ROOT = Path("reverse-engineering/contracts")
 DEFAULT_PATCH_TSV = Path("patches/patch-surface-rows.tsv")
 DEFAULT_OUT = Path("reverse-engineering/contract-schema/coverage.json")
 
@@ -251,6 +267,104 @@ def load_register(register_path: Path) -> list[dict]:
     return rows
 
 
+class FactoryContract:
+    __slots__ = ("rel", "review_ready_floor")
+
+    def __init__(self, rel: str, review_ready_floor: bool) -> None:
+        self.rel = rel
+        self.review_ready_floor = review_ready_floor
+
+
+def _contract_has_measured_header(path: Path) -> bool:
+    lines = path.read_text(encoding="utf-8").splitlines()
+    header_end = min(len(lines), 60)
+    for i, line in enumerate(lines[:header_end]):
+        if i > 0 and re.match(r"^\s{0,3}#{2,6}\s", line):
+            break
+        match = HEADER_GRADE_RE.match(line)
+        if match and match.group(1).upper() == "MEASURED":
+            return True
+    return False
+
+
+def load_factory_contracts(
+    repo_root: Path, register_rows: list[dict]
+) -> dict[str, FactoryContract]:
+    """Validate factory files and key them to existing inventory VAs only."""
+    contracts_root = repo_root / DEFAULT_CONTRACTS_ROOT
+    if not contracts_root.exists():
+        return {}
+    files = collect_contract_files([contracts_root])
+    if not files:
+        return {}
+
+    submodule_prefixes = parse_gitmodules_paths(repo_root)
+    reports = [
+        validate_file(
+            path,
+            path.relative_to(contracts_root).as_posix(),
+            submodule_prefixes,
+            repo_root,
+        )
+        for path in files
+    ]
+    diagnostics = [
+        f"{report.relative}:{violation.line}: [{violation.code}] {violation.message}"
+        for report in reports
+        for violation in report.violations
+    ]
+
+    va_claims: dict[str, tuple[str, int]] = {}
+    name_claims: dict[str, str] = {}
+    for report in reports:
+        if report.normalized_va is not None:
+            prior_va = va_claims.get(report.normalized_va)
+            if prior_va is not None:
+                diagnostics.append(
+                    f"{report.relative}:{max(report.address_line, 1)}: "
+                    f"[DUPLICATE_VA] VA {report.normalized_va} already claimed by "
+                    f"{prior_va[0]}:{prior_va[1]}"
+                )
+            else:
+                va_claims[report.normalized_va] = (
+                    report.relative, max(report.address_line, 1)
+                )
+        if report.tracked_name is not None:
+            name_key = report.tracked_name.casefold()
+            prior_name = name_claims.get(name_key)
+            if prior_name is not None:
+                diagnostics.append(
+                    f"{report.relative}:1: [DUPLICATE_NAME] tracked name "
+                    f"{report.tracked_name!r} already titled in {prior_name}"
+                )
+            else:
+                name_claims[name_key] = report.relative
+
+    if diagnostics:
+        raise ClassificationError(
+            "factory contract validation failed:\n" + "\n".join(sorted(diagnostics))
+        )
+
+    register_vas = {
+        normalized
+        for row in register_rows
+        if (normalized := normalize_va(row["entryVa"])) is not None
+    }
+    contracts: dict[str, FactoryContract] = {}
+    for report in reports:
+        va = report.normalized_va
+        if va is None or va not in register_vas:
+            raise ClassificationError(
+                f"factory contract {report.relative}: VA {va or '<invalid>'} is not "
+                "present in the canonical function inventory"
+            )
+        contracts[va] = FactoryContract(
+            (DEFAULT_CONTRACTS_ROOT / report.relative).as_posix(),
+            _contract_has_measured_header(report.path),
+        )
+    return contracts
+
+
 class Note:
     __slots__ = (
         "rel",
@@ -369,6 +483,7 @@ def classify_row(row: dict, ctx: dict) -> dict:
     kinds: set[str] = set()
     notes_fired: list[str] = []
     flags: list[str] = []
+    contract = ctx["contracts_by_va"].get(normalize_va(row["entryVa"]))
 
     reg_verified = any(REGISTER_VERIFIED_SUFFIX_RE.search(c) for c in classes_raw)
     reg_controlled = any(REGISTER_CONTROLLED_RUNTIME_RE.search(c) for c in classes_raw)
@@ -399,7 +514,7 @@ def classify_row(row: dict, ctx: dict) -> dict:
 
     covering: list[Note] = []
     seen_rels: set[str] = set()
-    for k in keys:
+    for k in sorted(keys):
         for note in ctx["key_index"].get(k, ()):
             if note.rel not in seen_rels:
                 seen_rels.add(note.rel)
@@ -413,6 +528,8 @@ def classify_row(row: dict, ctx: dict) -> dict:
         kinds.add("MANIFEST_WITNESS")
     if covering or (subject_note and subject_note.readback):
         classes.add("ghidra-readback")
+    if contract is not None and contract.review_ready_floor:
+        classes.add("byte-read")
 
     status: str | None = None
 
@@ -459,6 +576,9 @@ def classify_row(row: dict, ctx: dict) -> dict:
         elif note_measured and subject_note.second_witness:
             status = "REVIEW_READY"
             flags.append("note-second-witness-language")
+        elif contract is not None and contract.review_ready_floor:
+            status = "REVIEW_READY"
+            flags.append("factory-contract-review-floor")
 
     # 6. PROVISIONAL -- a measured byte contract covers this function.
     if status is None and (note_measured or reg_byte_read):
@@ -473,7 +593,10 @@ def classify_row(row: dict, ctx: dict) -> dict:
         if reg_baseline_only:
             flags.append("analyst-metadata-only")
 
-    return {
+    if contract is not None:
+        flags.append("factory-contract-joined")
+
+    result = {
         "va": row["entryVa"],
         "name": name,
         "status": status,
@@ -482,6 +605,9 @@ def classify_row(row: dict, ctx: dict) -> dict:
         "notes": sorted(set(notes_fired))[:8],
         "flags": flags,
     }
+    if contract is not None:
+        result["contracts"] = [contract.rel]
+    return result
 
 
 # ---------------------------------------------------------------------------
@@ -498,6 +624,8 @@ def build_coverage(repo_root: Path) -> dict:
             f"register rows {len(register_rows)} != pinned function denominator "
             f"{state['functions']} -- refusing to publish a partial dashboard"
         )
+
+    contracts_by_va = load_factory_contracts(repo_root, register_rows)
 
     # --- notes ---------------------------------------------------------------
     notes_root = repo_root / DEFAULT_NOTES_ROOT
@@ -538,6 +666,7 @@ def build_coverage(repo_root: Path) -> dict:
         "subjects_by_key": subjects_by_key,
         "key_index": key_index,
         "manifest_keys": manifest_keys,
+        "contracts_by_va": contracts_by_va,
     }
 
     results = [classify_row(row, ctx) for row in register_rows]
@@ -561,6 +690,8 @@ def build_coverage(repo_root: Path) -> dict:
             "noteFiles": len(notes),
             "manifestFilesWithNamedWitnesses": len(manifest_files),
             "manifestWitnessKeys": len(manifest_keys),
+            "contractFiles": len(contracts_by_va),
+            "contractRowsJoined": len(contracts_by_va),
         },
         "statusCounts": by_status,
         "evidenceClassCounts": class_counts,
@@ -570,9 +701,30 @@ def build_coverage(repo_root: Path) -> dict:
 
 
 def write_coverage(payload: dict, out_path: Path) -> None:
+    to_write = payload
+    if out_path.exists():
+        try:
+            previous = json.loads(out_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            previous = None
+        if isinstance(previous, dict):
+            stable_previous = {
+                key: value for key, value in previous.items()
+                if key not in {"generatedAtUtc", "elapsedSeconds"}
+            }
+            stable_current = {
+                key: value for key, value in payload.items()
+                if key not in {"generatedAtUtc", "elapsedSeconds"}
+            }
+            if stable_previous == stable_current:
+                to_write = dict(payload)
+                for key in ("generatedAtUtc", "elapsedSeconds"):
+                    if key in previous:
+                        to_write[key] = previous[key]
+
     out_path.parent.mkdir(parents=True, exist_ok=True)
     tmp = out_path.with_suffix(out_path.suffix + ".tmp")
-    tmp.write_text(json.dumps(payload, indent=1), encoding="utf-8")
+    tmp.write_text(json.dumps(to_write, indent=1), encoding="utf-8")
     tmp.replace(out_path)
 
 
