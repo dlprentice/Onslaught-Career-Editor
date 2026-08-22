@@ -28,8 +28,10 @@
     "prepare:rebuild-assets": "py -3 .\\rebuild\\tools\\materialize_retail_assets.py",
     "test:rebuild-core": "npm run prepare:rebuild-assets && dotnet test .\\rebuild\\OnslaughtRebuild.Core.Tests\\OnslaughtRebuild.Core.Tests.csproj --nologo",
     "test:rebuild-client": "npm run prepare:rebuild-assets && dotnet test .\\rebuild\\OnslaughtRebuild.Client.Tests\\OnslaughtRebuild.Client.Tests.csproj --nologo",
-    "test:rebuild": "npm run test:rebuild-core && npm run test:rebuild-client && py -3 .\\rebuild\\tools\\cmsh_static_preview_tests.py && pwsh -NoLogo -NoProfile -File .\\rebuild\\tools\\GodotToolchain.Tests.ps1",
+    "test:rebuild": "npm run test:rebuild-core && npm run test:rebuild-client && py -3 .\\rebuild\\tools\\cmsh_static_preview_tests.py && pwsh -NoLogo -NoProfile -File .\\rebuild\\tools\\GodotToolchain.Tests.ps1 && pwsh -NoLogo -NoProfile -File .\\rebuild\\tools\\Capture-Session.Tests.ps1",
     "run:rebuild-headless": "npm run prepare:rebuild-assets && dotnet run --project .\\rebuild\\OnslaughtRebuild.Headless\\OnslaughtRebuild.Headless.csproj --",
+    "test:capture-session": "pwsh -NoLogo -NoProfile -File .\\rebuild\\tools\\Capture-Session.Tests.ps1",
+    "capture:session": "pwsh -NoLogo -NoProfile -File .\\rebuild\\tools\\Capture-Session.ps1",
     "run:rebuild-godot": "pwsh -NoLogo -NoProfile -File .\\rebuild\\tools\\Run-FirstFlight.ps1",
     "test:rebuild-godot-smoke": "pwsh -NoLogo -NoProfile -File .\\rebuild\\tools\\Smoke-FirstFlight.ps1"
   }
