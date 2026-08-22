@@ -8,7 +8,8 @@ namespace OnslaughtCareerEditor.AppCore
     /// <summary>
     /// One candidate site from <c>patches/patch-surface-rows.tsv</c>. The nine
     /// fields are the census lane's columns exactly; this type does not invent a
-    /// tenth. Census rows are not product patches and cannot be staged.
+    /// tenth. Census rows are research experiments, not product patches; the
+    /// staging service can write them into a safe copy, never an installed game.
     /// </summary>
     public sealed record PatchCensusRow(
         string Va,
@@ -75,7 +76,8 @@ namespace OnslaughtCareerEditor.AppCore
     /// Read-only consumer of the census lane's <c>patches/patch-surface-rows.tsv</c>.
     /// The header and nine columns are the census owner's contract; this reader
     /// refuses a forked header instead of inventing a second format. Nothing here
-    /// writes, stages, or treats a census row as a product patch.
+    /// writes, or treats a census row as a product patch; staging is the separate
+    /// <see cref="PatchCensusStagingService"/>, safe copies only.
     /// </summary>
     public static class PatchSurfaceCensusReader
     {
@@ -172,7 +174,7 @@ namespace OnslaughtCareerEditor.AppCore
                     $" ({sourceKind}; MEASURED {rows.Count(row => string.Equals(row.Confidence, "MEASURED", StringComparison.OrdinalIgnoreCase))}" +
                     $", STATIC_ONLY {rows.Count(row => string.Equals(row.Confidence, "STATIC_ONLY", StringComparison.OrdinalIgnoreCase))}" +
                     $", SPECULATIVE {rows.Count(row => string.Equals(row.Confidence, "SPECULATIVE", StringComparison.OrdinalIgnoreCase))}" +
-                    "). These are not product patches and cannot be staged.";
+                    "). These are research experiments, not product patches: staging writes their bytes into a safe copy only.";
 
                 return new PatchCensusCatalog(true, status, sourceKind, rows);
             }

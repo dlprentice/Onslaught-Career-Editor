@@ -12,7 +12,18 @@ namespace OnslaughtCareerEditor.AppCore
         string SnippetBefore,
         string MatchedText,
         string SnippetAfter,
-        int OccurrenceCount);
+        int OccurrenceCount)
+    {
+        /// <summary>
+        /// The anchor id of the nearest heading above the match, so a reader can
+        /// open the document already scrolled to the passage. Empty when the
+        /// match falls before the first heading.
+        /// </summary>
+        public string SectionAnchor { get; init; } = string.Empty;
+
+        /// <summary>The heading text for <see cref="SectionAnchor"/>, or the empty string.</summary>
+        public string SectionHeading { get; init; } = string.Empty;
+    }
 
     /// <summary>
     /// The documents that link to one document, plus the anchors they use, so the
@@ -75,7 +86,16 @@ namespace OnslaughtCareerEditor.AppCore
             var hits = new List<LoreSearchHit>();
             foreach (LoreDocument document in index.Documents)
             {
-                string plainText = GetPlainText(document.FilePath);
+                LoreDocumentContent? content = TryLoadContent(document.FilePath);
+                if (content is null)
+                {
+                    continue;
+                }
+
+                var builder = new StringBuilder();
+                AppendBlocksText(builder, content.Document.Blocks);
+                string plainText = builder.ToString();
+
                 List<(int Start, int End)> occurrences = FindWholeWordOccurrences(plainText, trimmed);
                 if (occurrences.Count == 0)
                 {
@@ -85,13 +105,18 @@ namespace OnslaughtCareerEditor.AppCore
                 foreach ((int start, int end) in occurrences.Take(maxHitsPerDocument))
                 {
                     (string before, string matched, string after) = BuildSnippet(plainText, start, end);
+                    (string anchor, string sectionHeading) = FindSectionForOffset(content, start);
                     hits.Add(new LoreSearchHit(
                         document.FilePath,
                         document.Title,
                         before,
                         matched,
                         after,
-                        occurrences.Count));
+                        occurrences.Count)
+                    {
+                        SectionAnchor = anchor,
+                        SectionHeading = sectionHeading,
+                    });
                 }
             }
 
@@ -232,14 +257,46 @@ namespace OnslaughtCareerEditor.AppCore
             }
         }
 
-        private string GetPlainText(string filePath)
+        /// <summary>
+        /// Locates the heading that governs the text at <paramref name="offset"/>:
+        /// replays the exact flattening used for search over each top-level block,
+        /// keeping the most recent heading whose text starts at or before the
+        /// offset. Returns empty strings when the match sits above the first
+        /// heading.
+        /// </summary>
+        private static (string Anchor, string Heading) FindSectionForOffset(LoreDocumentContent content, int offset)
+        {
+            var scratch = new StringBuilder();
+            string anchor = string.Empty;
+            string heading = string.Empty;
+            int position = 0;
+
+            foreach (LoreBlock block in content.Document.Blocks)
+            {
+                if (position > offset)
+                {
+                    break;
+                }
+
+                if (block is LoreHeadingBlock headingBlock && !string.IsNullOrWhiteSpace(headingBlock.Text))
+                {
+                    anchor = headingBlock.Id;
+                    heading = headingBlock.Text;
+                }
+
+                scratch.Clear();
+                AppendBlocksText(scratch, new[] { block });
+                position += scratch.Length;
+            }
+
+            return (anchor, heading);
+        }
+
+        private LoreDocumentContent? TryLoadContent(string filePath)
         {
             try
             {
-                LoreDocumentContent content = _service.LoadDocumentContent(filePath);
-                var builder = new StringBuilder();
-                AppendBlocksText(builder, content.Document.Blocks);
-                return builder.ToString();
+                return _service.LoadDocumentContent(filePath);
             }
             catch (Exception exception) when (
                 exception is IOException or UnauthorizedAccessException or FileNotFoundException ||
@@ -247,7 +304,7 @@ namespace OnslaughtCareerEditor.AppCore
             {
                 // A document the reader cannot open contributes no search hits; that
                 // is the same boundary the tree itself shows.
-                return string.Empty;
+                return null;
             }
         }
 

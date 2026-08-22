@@ -216,7 +216,10 @@ namespace OnslaughtCareerEditor.AppCore
                 export.Exists,
                 GetInt(row, "source_aya_count"),
                 GetInt(row, "export_png_count"),
-                GetInt(row, "packed_text_ref_count") + GetInt(row, "gdie_ref_count"));
+                GetInt(row, "packed_text_ref_count") + GetInt(row, "gdie_ref_count"))
+            {
+                ExpectedExportSha256 = GetOptionalSha256(row, "export_sha256"),
+            };
         }
 
         private static AssetLooseMeshItem BuildLooseMeshItem(JsonElement row, AssetCatalogLoadSession session)
@@ -235,7 +238,10 @@ namespace OnslaughtCareerEditor.AppCore
                 GetInt(row, "packed_reference_count") + GetInt(row, "gdie_ref_count"),
                 export.Exists
                     ? FbxModelSummaryReader.Read(export.Stream)
-                    : AssetModelSummary.Unavailable(0, FbxModelSummaryReader.ExportMissing));
+                    : AssetModelSummary.Unavailable(0, FbxModelSummaryReader.ExportMissing))
+            {
+                ExpectedExportSha256 = GetOptionalSha256(row, "export_sha256"),
+            };
         }
 
         private static AssetEmbeddedMeshItem BuildEmbeddedMeshItem(JsonElement row, AssetCatalogLoadSession session)
@@ -252,7 +258,10 @@ namespace OnslaughtCareerEditor.AppCore
                 export.Exists,
                 export.Exists
                     ? FbxModelSummaryReader.Read(export.Stream)
-                    : AssetModelSummary.Unavailable(0, FbxModelSummaryReader.ExportMissing));
+                    : AssetModelSummary.Unavailable(0, FbxModelSummaryReader.ExportMissing))
+            {
+                ExpectedExportSha256 = GetOptionalSha256(row, "export_sha256"),
+            };
         }
 
         private static AssetGoodieItem BuildGoodieItem(JsonElement row)
@@ -320,6 +329,23 @@ namespace OnslaughtCareerEditor.AppCore
             return value.ValueKind == JsonValueKind.String
                 ? value.GetString() ?? string.Empty
                 : string.Empty;
+        }
+
+        private static string GetOptionalSha256(JsonElement element, string propertyName)
+        {
+            string value = GetString(element, propertyName).Trim().ToLowerInvariant();
+            if (string.IsNullOrEmpty(value))
+            {
+                return string.Empty;
+            }
+
+            if (value.Length != 64 || value.Any(character => !Uri.IsHexDigit(character)))
+            {
+                throw new InvalidOperationException(
+                    $"Asset catalog property '{propertyName}' must be a SHA-256 hex digest when present.");
+            }
+
+            return value;
         }
 
         private static int GetInt(JsonElement element, string propertyName, int fallback = 0)
@@ -471,7 +497,10 @@ namespace OnslaughtCareerEditor.AppCore
         bool ExportExists,
         int SourceFileCount,
         int ExportFileCount,
-        int PackedReferenceCount);
+        int PackedReferenceCount)
+    {
+        public string ExpectedExportSha256 { get; init; } = string.Empty;
+    }
 
     public sealed record AssetLooseMeshItem(
         string CatalogId,
@@ -483,7 +512,10 @@ namespace OnslaughtCareerEditor.AppCore
         int SourceFileCount,
         int ExportFileCount,
         int PackedReferenceCount,
-        AssetModelSummary ModelSummary);
+        AssetModelSummary ModelSummary)
+    {
+        public string ExpectedExportSha256 { get; init; } = string.Empty;
+    }
 
     public sealed record AssetEmbeddedMeshItem(
         string CatalogId,
@@ -493,7 +525,10 @@ namespace OnslaughtCareerEditor.AppCore
         string ExportPath,
         string ExportFileName,
         bool ExportExists,
-        AssetModelSummary ModelSummary);
+        AssetModelSummary ModelSummary)
+    {
+        public string ExpectedExportSha256 { get; init; } = string.Empty;
+    }
 
     public sealed record AssetGoodieItem(
         string CatalogId,

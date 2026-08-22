@@ -36,5 +36,22 @@ namespace OnslaughtCareerEditor.WinUI.Helpers
             var folder = await picker.PickSingleFolderAsync();
             return folder?.Path;
         }
+
+        public static async Task<string?> PickSaveFileAsync(
+            Window window,
+            string suggestedFileName,
+            string fileTypeDescription,
+            string fileType)
+        {
+            var picker = new FileSavePicker
+            {
+                SuggestedStartLocation = PickerLocationId.DocumentsLibrary,
+                SuggestedFileName = suggestedFileName,
+            };
+            picker.FileTypeChoices.Add(fileTypeDescription, [fileType]);
+            InitializeWithWindow.Initialize(picker, WindowNative.GetWindowHandle(window));
+            var file = await picker.PickSaveFileAsync();
+            return file?.Path;
+        }
     }
 }

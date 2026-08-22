@@ -1913,6 +1913,74 @@ namespace OnslaughtCareerEditor.AppCore
                    s_knownRetailSteamHashes.Contains(hash, StringComparer.OrdinalIgnoreCase);
         }
 
+        // ------------------------------------------------------------- census staging
+        //
+        // The Patch Lab's census staging writes candidate experiment bytes into an
+        // app-owned BEA.exe-only safe copy. It is deliberately built from the same
+        // primitives as the product apply path - the atomic verified publication, the
+        // reparse-point/hard-link filesystem safety walk, and the structural refusal
+        // of installed-game shapes - so there is exactly one implementation of each
+        // safety property. These wrappers exist so the census stager cannot grow a
+        // second, weaker copy of them.
+
+        /// <summary>
+        /// Atomic, hash-verified publication for census staging writes. Same-directory
+        /// staged file, flushed, compared byte-for-byte after the move.
+        /// </summary>
+        internal static byte[] PublishCensusStagingBytesAtomically(
+            string destinationPath,
+            byte[] bytes,
+            bool overwrite,
+            string label)
+        {
+            return PublishFileAtomically(destinationPath, bytes, overwrite, label);
+        }
+
+        /// <summary>
+        /// The same reparse-point, hard-link, and ancestor safety walk the product
+        /// apply path runs before touching a workspace executable.
+        /// </summary>
+        internal static (bool success, string message) ValidateCensusStagingFilesystemSafety(
+            string exePath,
+            string backupPath,
+            string backupHashPath,
+            string normalizedRoot)
+        {
+            return ValidatePatchFilesystemSafety(exePath, backupPath, backupHashPath, normalizedRoot);
+        }
+
+        /// <summary>
+        /// True when the path has the shape of a protected install folder or a known
+        /// Steam library layout. Census staging refuses these paths outright; only
+        /// the explicit <see cref="AuthorizeInstalledGameWrite"/> precondition model
+        /// may ever authorize an installed-game write, and census staging does not
+        /// use it - experiments go to safe copies only.
+        /// </summary>
+        internal static bool CensusStagingTargetHasForbiddenInstallShape(string fullPath)
+        {
+            return IsPathUnderProtectedInstallRoot(fullPath) || HasKnownSteamInstallShape(fullPath);
+        }
+
+        /// <summary>Workspace containment check for census staging targets.</summary>
+        internal static bool IsPathUnderRootPublic(string path, string root)
+        {
+            return IsPathUnderRoot(path, root);
+        }
+
+        /// <summary>Backup hash-sidecar integrity check reused by census staging.</summary>
+        internal static (bool success, string message) ValidateBackupSnapshotIntegrityInternal(
+            string backupHashPath,
+            byte[] backupBytes)
+        {
+            return ValidateBackupSnapshotIntegrity(backupHashPath, backupBytes);
+        }
+
+        /// <summary>Backup hash-sidecar writer reused by census staging.</summary>
+        internal static void WriteBackupHashInternal(string backupHashPath, byte[] backupBytes)
+        {
+            WriteBackupHash(backupHashPath, backupBytes);
+        }
+
         private static void WriteBackupHash(string backupHashPath, byte[] backupBytes)
         {
             byte[] hashBytes = Encoding.UTF8.GetBytes(ComputeSha256Hex(backupBytes));

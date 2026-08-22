@@ -28,6 +28,30 @@ public class LoreDepthHonestyTests
     }
 
     [Test]
+    public void SearchHitsOpenAtTheirSectionNotJustTheDocumentTop()
+    {
+        string xaml = ReadWinUiFile(Path.Combine("Pages", "LorePage.xaml"));
+        string page = ReadWinUiFile(Path.Combine("Pages", "LorePage.xaml.cs"));
+        string model = ReadWinUiFile(Path.Combine("Helpers", "LoreSearchHitModel.cs"));
+
+        Assert.Multiple(() =>
+        {
+            // The row names where the passage lives, visibly and to assistive
+            // technology, instead of offering only the document title.
+            Assert.That(
+                xaml,
+                Does.Contain("LoreSearchHitSectionHeading"),
+                "the per-hit section line must be a named element, not just painted");
+            Assert.That(model, Does.Contain("in section {hit.SectionHeading}"));
+
+            // And the click actually navigates there: the handler passes the
+            // hit's own anchor to LoadDocumentAsync rather than always null.
+            Assert.That(page, Does.Contain("model.Hit.SectionAnchor"));
+            Assert.That(page, Does.Contain("HasSectionTarget ? model.Hit.SectionAnchor : null"));
+        });
+    }
+
+    [Test]
     public void BacklinksPanelNamesBothEmptyStates()
     {
         string page = ReadWinUiFile(Path.Combine("Pages", "LorePage.xaml.cs"));

@@ -37,6 +37,9 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         private string _selectedModelSidecarTextureFileName = string.Empty;
         private SaveAnalysis? _goodieSaveAnalysis;
         private string _goodieSaveStatePath = string.Empty;
+        private readonly List<ModProjectSelectionEntry> _modProjectSelection = new();
+        private ModProjectSelectionEntry? _currentModProjectCandidate;
+        private ModProjectPlan? _modProjectPlan;
 
         public AssetLibraryPage()
         {
@@ -65,6 +68,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             else
             {
                 ResetSelection();
+                ResetModProjectPlanner(hasCatalog: false);
                 CatalogStatusTextBlock.Text = BuildMissingCatalogStatus(catalogToLoad);
                 CatalogSummaryTextBlock.Text = "Load a generated catalog to see textures, meshes, and goodies.";
                 CatalogCoverageTextBlock.Text = "Coverage summary appears after a generated catalog loads.";
@@ -125,6 +129,9 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 AppStatusService.SetStatus("Asset Library: catalog not found");
                 AssetItemsListView.ItemsSource = null;
                 ResetSelection();
+                ExportModdingManifestButton.Visibility = Visibility.Collapsed;
+                ExportModdingCatalogTsvButton.Visibility = Visibility.Collapsed;
+                ResetModProjectPlanner(hasCatalog: false);
                 UpdateAssetListNote(search: string.Empty, matchCount: 0);
                 return;
             }
@@ -142,6 +149,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 $"{_snapshot.Summary.TextureCount} textures, {_snapshot.Summary.LooseMeshCount} loose meshes, {_snapshot.Summary.EmbeddedMeshCount} embedded meshes, {_snapshot.Summary.GoodieCount} goodies";
             CatalogCoverageTextBlock.Text = BuildCatalogCoverageSummary();
             CatalogProvenanceTextBlock.Text = BuildCatalogProvenanceSummary();
+            ResetModProjectPlanner(hasCatalog: true);
             AppStatusService.SetStatus("Asset Library: catalog loaded");
 
             if (persist)
@@ -275,6 +283,209 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
             CatalogStatusTextBlock.Text = result.Message;
             AppStatusService.SetStatus("Asset Library: modding catalog TSV not written");
+        }
+
+        private void ResetModProjectPlanner(bool hasCatalog)
+        {
+            _modProjectSelection.Clear();
+            _modProjectPlan = null;
+            _currentModProjectCandidate = null;
+            ModProjectPlannerCardBorder.Visibility = hasCatalog ? Visibility.Visible : Visibility.Collapsed;
+            ModProjectSummaryTextBlock.Text = "No catalog rows are selected for this project plan.";
+            ModProjectProvenanceTextBlock.Text = "Catalog provenance appears after rows are selected.";
+            ModProjectItemsListView.ItemsSource = null;
+            ModProjectOutputPathTextBox.Text = string.Empty;
+            ModProjectStatusTextBlock.Text = hasCatalog
+                ? "Add rows from the loaded catalog, then choose where to write the plan receipt."
+                : "Load a generated catalog before planning a mod project.";
+            RemoveModProjectRowButton.IsEnabled = false;
+            ClearModProjectButton.IsEnabled = false;
+            UpdateModProjectActionState();
+        }
+
+        private void SetModProjectCandidate(ModProjectSelectionEntry? candidate)
+        {
+            _currentModProjectCandidate = candidate;
+            UpdateModProjectActionState();
+        }
+
+        private void AddCurrentToModProjectButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (_currentModProjectCandidate is null || ContainsModProjectSelection(_currentModProjectCandidate))
+            {
+                return;
+            }
+
+            if (_modProjectSelection.Count >= ModProjectPlannerService.MaxSelectedAssets)
+            {
+                ModProjectStatusTextBlock.Text =
+                    $"This project plan is limited to {ModProjectPlannerService.MaxSelectedAssets} catalog rows.";
+                return;
+            }
+
+            _modProjectSelection.Add(_currentModProjectCandidate);
+            RefreshModProjectPlan("Added the current catalog row to the plan receipt.");
+        }
+
+        private void RemoveModProjectRowButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (ModProjectItemsListView.SelectedItem is not ModProjectPlanRowViewModel selected)
+            {
+                return;
+            }
+
+            int index = _modProjectSelection.FindIndex(entry =>
+                SameModProjectIdentity(entry, new ModProjectSelectionEntry(selected.Kind, selected.CatalogId)));
+            if (index >= 0)
+            {
+                _modProjectSelection.RemoveAt(index);
+            }
+
+            RefreshModProjectPlan("Removed the selected row from the plan receipt.");
+        }
+
+        private void ClearModProjectButton_Click(object sender, RoutedEventArgs e)
+        {
+            _modProjectSelection.Clear();
+            RefreshModProjectPlan("Cleared the mod project plan receipt.");
+        }
+
+        private void ModProjectItemsListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            RemoveModProjectRowButton.IsEnabled = ModProjectItemsListView.SelectedItem is ModProjectPlanRowViewModel;
+        }
+
+        private async void BrowseModProjectOutputButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (App.MainWindowInstance == null)
+            {
+                ModProjectStatusTextBlock.Text = "The plan receipt file picker is not ready.";
+                return;
+            }
+
+            string? path = await PickerInterop.PickSaveFileAsync(
+                App.MainWindowInstance,
+                "mod-project-plan",
+                "JSON project plan receipt",
+                ".json");
+            if (!string.IsNullOrWhiteSpace(path))
+            {
+                ModProjectOutputPathTextBox.Text = path;
+            }
+        }
+
+        private void ModProjectOutputPathTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            UpdateModProjectActionState();
+        }
+
+        private void ExportModProjectPlanButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (_modProjectPlan is null)
+            {
+                ModProjectStatusTextBlock.Text = "Add at least one catalog row before exporting a plan receipt.";
+                return;
+            }
+
+            ModProjectPlanExportResult result = ModProjectPlannerService.Export(
+                _snapshot,
+                _modProjectPlan,
+                ModProjectOutputPathTextBox.Text,
+                includeTsv: ModProjectIncludeTsvCheckBox.IsChecked == true);
+            ModProjectStatusTextBlock.Text = result.Message;
+            AppStatusService.SetStatus(result.Success
+                ? "Asset Library: mod project plan receipt written"
+                : "Asset Library: mod project plan receipt not written");
+        }
+
+        private void RefreshModProjectPlan(string successStatus)
+        {
+            if (_modProjectSelection.Count == 0)
+            {
+                _modProjectPlan = null;
+                ModProjectSummaryTextBlock.Text = "No catalog rows are selected for this project plan.";
+                ModProjectProvenanceTextBlock.Text = "Catalog provenance appears after rows are selected.";
+                ModProjectItemsListView.ItemsSource = null;
+                ModProjectStatusTextBlock.Text = successStatus;
+                SetModProjectCandidate(_currentModProjectCandidate);
+                ClearModProjectButton.IsEnabled = false;
+                RemoveModProjectRowButton.IsEnabled = false;
+                UpdateModProjectActionState();
+                return;
+            }
+
+            try
+            {
+                _modProjectPlan = ModProjectPlannerService.BuildPlan(
+                    _snapshot,
+                    _modProjectSelection.ToArray());
+                string counts = string.Join(
+                    ", ",
+                    _modProjectPlan.KindCounts.Select(count => $"{count.Count} {BuildModProjectKindLabel(count.Kind, count.Count)}"));
+                ModProjectSummaryTextBlock.Text =
+                    $"{_modProjectPlan.SelectedCount} selected ({counts}); " +
+                    $"{_modProjectPlan.UnresolvedMetadataCount} with unresolved or missing local metadata.";
+                ModProjectProvenanceTextBlock.Text =
+                    $"Catalog {_modProjectPlan.CatalogFileName}; schema {_modProjectPlan.CatalogSchemaVersion}; " +
+                    $"{_modProjectPlan.CatalogPathContract}; SHA-256 {_modProjectPlan.CatalogSha256}.";
+                ModProjectItemsListView.ItemsSource = _modProjectPlan.Assets
+                    .Select(ModProjectPlanRowViewModel.FromAsset)
+                    .ToArray();
+                ModProjectStatusTextBlock.Text = successStatus;
+            }
+            catch (Exception exception) when (
+                exception is ArgumentException or IOException or InvalidOperationException or NotSupportedException or UnauthorizedAccessException)
+            {
+                _modProjectPlan = null;
+                ModProjectSummaryTextBlock.Text = "The selected rows could not be sealed into a plan receipt.";
+                ModProjectProvenanceTextBlock.Text = "Catalog or local export provenance must be reviewed before export.";
+                ModProjectItemsListView.ItemsSource = null;
+                ModProjectStatusTextBlock.Text = exception.Message;
+            }
+
+            SetModProjectCandidate(_currentModProjectCandidate);
+            ClearModProjectButton.IsEnabled = _modProjectSelection.Count > 0;
+            RemoveModProjectRowButton.IsEnabled = false;
+            UpdateModProjectActionState();
+        }
+
+        private void UpdateModProjectActionState()
+        {
+            bool candidateAlreadySelected = _currentModProjectCandidate is not null &&
+                ContainsModProjectSelection(_currentModProjectCandidate);
+            AddCurrentToModProjectButton.IsEnabled =
+                _currentModProjectCandidate is not null &&
+                !candidateAlreadySelected &&
+                _modProjectSelection.Count < ModProjectPlannerService.MaxSelectedAssets;
+            ExportModProjectPlanButton.IsEnabled =
+                _modProjectPlan is not null &&
+                !string.IsNullOrWhiteSpace(ModProjectOutputPathTextBox.Text);
+        }
+
+        private bool ContainsModProjectSelection(ModProjectSelectionEntry candidate)
+        {
+            return _modProjectSelection.Any(entry => SameModProjectIdentity(entry, candidate));
+        }
+
+        private static bool SameModProjectIdentity(
+            ModProjectSelectionEntry left,
+            ModProjectSelectionEntry right)
+        {
+            return string.Equals(left.Kind, right.Kind, StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(left.CatalogId, right.CatalogId, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string BuildModProjectKindLabel(string kind, int count)
+        {
+            string label = kind switch
+            {
+                "texture" => "texture",
+                "mesh" => "loose mesh",
+                "embedded-mesh" => "embedded mesh",
+                "goodie" => "Goodie",
+                _ => kind,
+            };
+            return count == 1 ? label : $"{label}s";
         }
 
         private void TexturesTabButton_Click(object sender, RoutedEventArgs e)
@@ -426,18 +637,23 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             switch (AssetItemsListView.SelectedItem)
             {
                 case AssetTextureItem texture:
+                    SetModProjectCandidate(new ModProjectSelectionEntry("texture", texture.CatalogId));
                     ShowTexture(texture);
                     break;
                 case AssetLooseMeshItem mesh:
+                    SetModProjectCandidate(new ModProjectSelectionEntry("mesh", mesh.CatalogId));
                     ShowLooseMesh(mesh);
                     break;
                 case AssetEmbeddedMeshItem mesh:
+                    SetModProjectCandidate(new ModProjectSelectionEntry("embedded-mesh", mesh.CatalogId));
                     ShowEmbeddedMesh(mesh);
                     break;
                 case AssetGoodieBrowserItem goodie:
+                    SetModProjectCandidate(new ModProjectSelectionEntry("goodie", goodie.CatalogItem.CatalogId));
                     ShowGoodie(goodie.CatalogItem, goodie.SaveState);
                     break;
                 default:
+                    SetModProjectCandidate(null);
                     ResetSelection();
                     break;
             }
@@ -805,6 +1021,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
 
         private void ResetSelection()
         {
+            SetModProjectCandidate(null);
             SelectedAssetTitleTextBlock.Text = "Choose an asset";
             SelectedAssetSummaryTextBlock.Text = "Pick a texture, mesh, or goodie to review local export status.";
             SelectedExportPathTextBlock.Text = string.Empty;
@@ -1420,6 +1637,34 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             Side,
             Top,
             Iso
+        }
+
+        private sealed record ModProjectPlanRowViewModel(
+            string Kind,
+            string CatalogId,
+            string DisplayName,
+            string Identity,
+            string ExportSummary,
+            string HashSummary)
+        {
+            public static ModProjectPlanRowViewModel FromAsset(ModProjectPlannedAsset asset)
+            {
+                string exportName = string.IsNullOrWhiteSpace(asset.ExportFileName)
+                    ? "no local export named"
+                    : asset.ExportFileName;
+                string exportSummary = asset.ExportPresent
+                    ? $"Local export present: {exportName}"
+                    : $"Local export missing or not applicable: {exportName}";
+                string expected = asset.ExpectedExportSha256 ?? "not provided by catalog";
+                string local = asset.ExportSha256 ?? "unresolved";
+                return new ModProjectPlanRowViewModel(
+                    asset.Kind,
+                    asset.CatalogId,
+                    asset.DisplayName,
+                    $"{asset.Kind}: {asset.CatalogId}",
+                    exportSummary,
+                    $"Expected SHA-256: {expected}; local SHA-256: {local}");
+            }
         }
 
         private sealed record AssetGoodieBrowserItem(AssetGoodieItem CatalogItem, GoodieStateDetail? SaveState)
