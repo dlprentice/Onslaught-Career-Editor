@@ -7526,6 +7526,85 @@ def _question_display_name_equivalence(
     }
 
 
+def _reattach_multiowner_sibling_contracts(
+    carried: dict[str, list[dict[str, str]]],
+    fresh: dict[str, list[dict[str, str]]],
+    function_by_entity: dict[str, dict[str, str]],
+    residual_by_entity: dict[str, dict[str, str]],
+    question_by_id: dict[str, dict[str, str]],
+    all_question_ids: set[str],
+) -> set[str]:
+    """Reattach carried second-owner terminal contracts the fresh frontier cannot seed.
+
+    A validated multi-owner entity (Generation 31: two REBUILD_READY owners of
+    CBattleEngineJetPart__GetFriction at 0x00411aa0 — the Simulation.cs
+    numerator and RetailJetFriction.GetFriction, both refuter-SURVIVED)
+    carries one contract per owner, while the freshly seeded frontier holds
+    exactly one structural contract per entity.  Without reattachment the
+    sibling terminal owner — and its SURVIVED adjudication — is silently
+    retired as a changed identity, regressing a measured runtime proof across
+    the reseat.  Every reattached row must reproduce the carried row exactly,
+    reference only live same-entity questions, sit beside its surviving base,
+    and make the whole group satisfy the identical terminal-multi-owner shape
+    _validate_contract_owner_rows enforces.  Returns the reattached contract
+    ids so downstream layers account for them explicitly.
+    """
+    carried_contracts_by_entity: dict[str, list[dict[str, str]]] = {}
+    for row in carried["contracts"]:
+        carried_contracts_by_entity.setdefault(
+            row.get("entityKey", ""), []
+        ).append(row)
+    fresh_contract_ids = {row["contractId"] for row in fresh["contracts"]}
+    reattached: set[str] = set()
+    for entity, siblings in sorted(carried_contracts_by_entity.items()):
+        if len(siblings) < 2:
+            continue
+        missing = [
+            row for row in siblings if row["contractId"] not in fresh_contract_ids
+        ]
+        if not missing:
+            continue
+        bases = [row for row in siblings if row["contractId"] in fresh_contract_ids]
+        if not bases:
+            continue
+        group = missing + bases
+        for row in group:
+            if not _contract_has_progress(row):
+                raise CampaignError(
+                    "campaign carry multi-owner group contains an unprogressed "
+                    f"row: {row['contractId']}"
+                )
+            if (
+                row.get("entityKey", "") not in function_by_entity
+                and row.get("entityKey", "") not in residual_by_entity
+            ):
+                raise CampaignError(
+                    "campaign carry multi-owner group names an unknown entity: "
+                    f"{row['entityKey']}"
+                )
+            for value in _state_values(
+                row.get("questionIds", ""),
+                f"multi-owner contract {row['contractId']} questions",
+            ):
+                twin = question_by_id.get(value)
+                if (
+                    value not in all_question_ids
+                    or twin is None
+                    or twin.get("entityKey") != entity
+                ):
+                    raise CampaignError(
+                        "campaign carry multi-owner contract references a missing "
+                        f"or crossed question: {row['contractId']} {value}"
+                    )
+        _validate_contract_owner_rows(group)
+        for row in missing:
+            copied = {field: row.get(field, "") for field in CONTRACT_COLUMNS}
+            fresh["contracts"].append(copied)
+            fresh_contract_ids.add(copied["contractId"])
+            reattached.add(copied["contractId"])
+    return reattached
+
+
 def _retired_reseed_relation_closure(
     carried: dict[str, list[dict[str, str]]],
     contract_entities: set[str],
@@ -7947,6 +8026,8 @@ def _merge_reseed_carry(
         "boundedZeroEventControls": [],
         "retiredChangedLabelOnlyContracts": 0,
         "retiredChangedLabelOnlyContractIdSetSha256": "",
+        "reattachedMultiOwnerContracts": 0,
+        "reattachedMultiOwnerContractIds": [],
         "progressedCarryAccounting": {},
     }
 
@@ -8294,6 +8375,28 @@ def _merge_reseed_carry(
                 f"campaign carry question has a missing parent: {row['questionId']}"
             )
 
+    # A validated multi-owner entity (Gen 31: the two REBUILD_READY owners of
+    # GetFriction 0x00411aa0) holds one contract per owner in the carried
+    # ledger, but the fresh structural frontier seeds exactly one per entity.
+    # Reattach the missing terminal siblings — and their SURVIVED
+    # adjudications further below — instead of retiring a measured runtime
+    # proof as a changed identity.
+    reattached_multiowner_contract_ids = _reattach_multiowner_sibling_contracts(
+        carried,
+        fresh,
+        function_by_entity,
+        residual_by_entity,
+        question_by_id,
+        all_question_ids,
+    )
+    contract_by_id = {row["contractId"]: row for row in fresh["contracts"]}
+    report["reattachedMultiOwnerContracts"] = len(
+        reattached_multiowner_contract_ids
+    )
+    report["reattachedMultiOwnerContractIds"] = sorted(
+        reattached_multiowner_contract_ids
+    )
+
     function_fields = (
         "nativeRegistryStatus",
         "resolutionState",
@@ -8403,6 +8506,14 @@ def _merge_reseed_carry(
         contract_id = prior["contractId"]
         if contract_id not in expected_contract_rows:
             continue
+        if contract_id in reattached_multiowner_contract_ids:
+            # Already reattached byte-for-byte with its owner group above;
+            # the single-row fresh lookup cannot see it and must not retire
+            # it as a changed identity.
+            record_disposition(
+                "contracts", contract_id, "CARRIED_MULTIOWNER_SIBLING"
+            )
+            continue
         current = contract_by_id.get(contract_id)
         if current is None or current.get("entityKey") != prior.get("entityKey"):
             report["staleContracts"] = int(report["staleContracts"]) + 1
@@ -8456,11 +8567,18 @@ def _merge_reseed_carry(
             prior.get("baseContractId") not in contract_by_id
             or prior.get("entityKey") not in contract_entities
         ) and prior.get("adjudicationId") not in retired_lineage_adjudication_ids:
-            report["staleAdjudications"] = int(report["staleAdjudications"]) + 1
-            record_disposition(
-                "adjudications", adjudication_id, "RETIRED_CHANGED_IDENTITY"
-            )
-            continue
+            if prior.get("baseContractId") in reattached_multiowner_contract_ids:
+                # The reattached terminal owner's SURVIVED adjudication: its
+                # base row exists only through the multi-owner reattachment.
+                pass
+            else:
+                report["staleAdjudications"] = int(
+                    report["staleAdjudications"]
+                ) + 1
+                record_disposition(
+                    "adjudications", adjudication_id, "RETIRED_CHANGED_IDENTITY"
+                )
+                continue
         if any(value not in all_question_ids for value in addressed + successors):
             raise CampaignError(
                 "campaign carry adjudication references a missing question: "

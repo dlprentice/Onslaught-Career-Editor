@@ -420,9 +420,15 @@ non-tree static-world mesh types, four `pinesnow` variants, and two target types
 remain bounded static conversions. The 1,481 pine placements use exact released
 meshes inside retail's **authored 30-unit** horizontal mesh-quality boundary —
 the image's own static initialiser, which is the Geometry detail = Medium arm —
-and exact six-view atlas geometry beyond it. A separate fast-tree owner adds its always-on
-camera-facing standing card and its camera-height-gated horizontal card. Its
-standing view uses a manifest-pinned phase-0 ordinal cycle only as a
+and exact six-view atlas geometry beyond it. There is no third fast-tree path:
+no always-on camera-facing standing card and no camera-height-gated horizontal
+card is drawn — the reconstruction's only pine representations are the gated
+close meshes and the six-view far imposters
+(`rebuild/OnslaughtRebuild.Client.Tests/Level100PineRepresentationTests.cs`
+forbids any third batch, `AddFastPineImposters`, and `camera_facing`). Retail's
+own separate fast-tree static path remains an unresolved retail finding,
+explicitly not drawn here. The standing-view manifest pins a phase-0 ordinal
+cycle only as a
 deterministic reconstruction; all 1,481 assignments and their four counts are
 checked. Steam's exact owner allocation/view sequence and address-selector
 phase remain unresolved. The
@@ -501,8 +507,11 @@ and both exact `SURF` shoreline bands. Its active reflection stage uses the
 released absolute-world `1/256` transform rather than the inactive advanced
 path's animated half-scale transform. Steam disables the wave stage before the
 main grid draw; the client applies its measured animation only to the authored
-shoreline passes, alongside the camera-height-scaled alpha-tested sun patch,
-late additive shore pass, released pass order, and measured animation rates. This reconstructs
+shoreline passes, alongside the camera-height-scaled alpha-tested sun patch, the
+bounded sun-glint subpass, the released pass order, and measured animation
+rates. There is no additive water pass
+(`rebuild/OnslaughtRebuild.Client.Tests/Level100WaterEnvelopeTests.cs` rejects
+any `blend_add` draw in the water source). This reconstructs
 the bounded active fixed-function path observed on the supported Steam specimen;
 it does not claim the inactive advanced path, dynamic scene reflection/refraction,
 or general renderer pixel identity. The detail texture uses the released

@@ -16,9 +16,11 @@ the entity's existing OPEN contract row takes
 ``contractState=CANDIDATE_NEEDS_REFUTER``, ``semanticGrade=C1_CANDIDATE_PARTIAL``,
 the seven bounded-static semantic fields from the receipt,
 ``refuterVerdict=UNSCORED``, its questionIds kept, and the receipt file appended
-to ``evidenceRefs``.  One fresh adjudication row
-(``refuterVerdict=UNSCORED``, ``terminalState=FUNCTION_BOUNDARY_C1_STATIC``) is
-recorded per admitted row.
+to ``evidenceRefs`` as a measured ``path#sha256=...`` token.  No adjudication
+rows are written: the Gen-11 precedent admits candidates purely through that
+row shape and records adjudications only for refuter outcomes (the live Gen 31
+ledger carries 5,898 SURVIVED adjudications, zero UNSCORED ones), and relation
+validation requires every addressed question to sit at CLOSED_<verdict>.
 
 Deliberate divergence from the Gen 11 precedent: names are NOT written.  The
 sealed closure carries dated 2026-08-10 inventory names; the live ledger holds
@@ -43,6 +45,7 @@ import csv
 import hashlib
 import json
 import os
+import re
 import shutil
 import sys
 import tempfile
@@ -89,7 +92,6 @@ C1_OR_STRONGER = {"C1", "C1_CANDIDATE_PARTIAL", "C2_BOUNDED_RUNTIME"}
 FUNCTION_EVIDENCE_TOKEN = "CAMPAIGN_C1_STATIC_RECEIPT"
 CONTRACT_STATE_AFTER = "CANDIDATE_NEEDS_REFUTER"
 GRADE_AFTER = "C1_CANDIDATE_PARTIAL"
-ADJUDICATION_TERMINAL_STATE = "FUNCTION_BOUNDARY_C1_STATIC"
 
 # The 51 newer standard receipts share the 15-column contracts.tsv shape;
 # cgame51 is the older 16-column variant (calls_and_order,
@@ -183,10 +185,6 @@ def _prep_default() -> Path:
     return _repo_root() / PREP_RELATIVE
 
 
-def _sha256_text(value: str) -> str:
-    return hashlib.sha256(value.encode("utf-8")).hexdigest()
-
-
 def _read_tsv_rows(path: Path) -> list[dict[str, str]]:
     return campaign._read_tsv(path)
 
@@ -245,32 +243,27 @@ def _load_receipt_manifest(prep: Path) -> dict[str, dict[str, str]]:
     return {row["receiptSources"]: row for row in rows}
 
 
-def _receipt_ref(sources: str) -> str:
-    return sources
+def _receipt_ref(sources: str, receipt_sha256: str) -> str:
+    """Evidence-ref token for an admitted row's receipt file.
+
+    Campaign relation validation requires every contract ``evidenceRefs``
+    token to end ``#sha256=<64 hex>`` (re_campaign
+    _validate_campaign_relations); a token without it fails closed on any
+    entity carrying MAINTAINER_GHIDRA_SEMANTIC_PROMOTED.  The hash is the
+    same pin already enforced byte-for-byte against disk at build time
+    (_validate_receipts_on_disk), so deriving the suffix from it stays
+    measured truth; refuse any malformed pin rather than emit an invalid
+    evidence reference.
+    """
+    if re.fullmatch(r"[0-9a-f]{64}", receipt_sha256) is None:
+        raise campaign.CampaignError(
+            f"receipt pin is not a lowercase sha-256 hex digest: {sources}"
+        )
+    return f"{sources}#sha256={receipt_sha256}"
 
 
 def sources_is_weapon41(sources: str) -> bool:
     return sources.endswith(WEAPON41_RECEIPT_NAME)
-
-
-def _adjudication_id(
-    parent_ready_sha: str,
-    order_row: dict[str, str],
-    receipt_stamp: dict,
-    overlay_identity: str,
-) -> str:
-    evidence_identity = "|".join(
-        (
-            order_row["entityKey"],
-            order_row["contractId"],
-            order_row["receiptSources"],
-            order_row["receiptSha256"],
-            overlay_identity,
-        )
-    )
-    return "A-" + _sha256_text(
-        "|".join((parent_ready_sha, evidence_identity, receipt_stamp["sha256"]))
-    )[:16]
 
 
 def _validate_order_against_sealed_closure(
@@ -439,13 +432,11 @@ def _apply_reseat_rows(
     order_rows: list[dict[str, str]],
     sealed_by_va: dict[str, dict[str, str]],
     receipt_rows: dict[str, dict[str, dict[str, str]]],
-    parent_ready_sha: str,
     measured_date: str,
 ) -> dict:
     """Apply the Gen-11-C1-shaped row layer to the seeded ledgers."""
     functions = rows["campaign-functions.tsv"]
     contracts = rows["campaign-contracts.tsv"]
-    adjudications = rows["campaign-adjudications.tsv"]
 
     before = {name: _snapshot_ids(value) for name, value in rows.items()}
 
@@ -458,7 +449,6 @@ def _apply_reseat_rows(
         )
 
     grade_movements: list[dict] = []
-    adjudication_rows: list[dict] = []
     receipt_name_divergences: list[dict] = []
     changed_functions: set[str] = set()
     changed_contracts: set[str] = set()
@@ -635,7 +625,7 @@ def _apply_reseat_rows(
         contract["questionIds"] = ";".join(question_ids_sorted)
         contract["evidenceRefs"] = campaign._append_state(
             contract.get("evidenceRefs", ""),
-            _receipt_ref(receipt_sources),
+            _receipt_ref(receipt_sources, order_row["receiptSha256"]),
         )
         contract["lastMeasurementDate"] = measured_date
         changed_contracts.add(contract_id)
@@ -650,53 +640,22 @@ def _apply_reseat_rows(
                 }
             )
 
-        # --- one fresh adjudication per row ---
-        overlay_identity = "|".join(
-            (
-                function["currentName"],
-                function["resolutionState"],
-                function["semanticGrade"],
-                contract["contractState"],
-                contract["semanticGrade"],
-            )
-        )
-        adjudication_id = _adjudication_id(
-            parent_ready_sha,
-            order_row,
-            receipt_stamp,
-            overlay_identity,
-        )
-        if any(
-            row.get("adjudicationId") == adjudication_id
-            for row in adjudications
-        ):
-            raise campaign.CampaignError(
-                f"order {order_row['order']}: adjudication already exists"
-            )
-        adjudications.append(
-            {
-                "adjudicationId": adjudication_id,
-                "baseContractId": contract_id,
-                "entityKey": entity_key,
-                "overlaySchema": ADVANCE_SCHEMA,
-                "overlayReadySha256": receipt_stamp["sha256"],
-                "questionIdsAddressed": contract["questionIds"],
-                "refuterVerdict": "UNSCORED",
-                "refuterEvidenceSha256": receipt_stamp["sha256"],
-                "semanticPromotionApplied": "true",
-                "terminalState": ADJUDICATION_TERMINAL_STATE,
-                "successorQuestionIds": contract["questionIds"],
-                "remainingUncertainty": contract["failureModes"],
-                "measuredAtUtc": measured_date,
-            }
-        )
-        adjudication_rows.append(adjudications[-1])
+        # No adjudication rows are written. The cited Gen-11 precedent
+        # (tools/re_gen73_reseal.py ~1000-1100) admits its 216 C1 candidates
+        # purely through the function+contract row shape — contract
+        # refuterVerdict=UNSCORED, state CANDIDATE_NEEDS_REFUTER, questions
+        # left OPEN — and records adjudications only when a refuter actually
+        # runs; the live Gen 31 ledger carries 5,898 SURVIVED adjudications
+        # and zero UNSCORED ones. _validate_campaign_relations enforces that
+        # every adjudication's addressed questions sit at CLOSED_<verdict>
+        # with matching lastOutcome and that semanticPromotionApplied ==
+        # (verdict == SURVIVED); an UNSCORED candidate admission satisfies
+        # none of that, and weakening those gates to admit it is refused.
 
     after = {name: _snapshot_ids(value) for name, value in rows.items()}
     receipt_name_divergences.sort(key=lambda item: int(item["order"]))
     return {
         "gradeMovements": grade_movements,
-        "adjudicationRows": adjudication_rows,
         "receiptNameDivergences": receipt_name_divergences,
         "changedFunctions": changed_functions,
         "changedContracts": changed_contracts,
@@ -819,7 +778,6 @@ def build(
         order_rows,
         sealed_by_va,
         receipt_rows,
-        parent_ready["sha256"],
         measured_date,
     )
 
@@ -830,9 +788,7 @@ def build(
         "campaign-contracts.tsv": set(accounting["changedContracts"]),
         "campaign-scenarios.tsv": set(),
         "campaign-levers.tsv": set(),
-        "campaign-adjudications.tsv": {
-            row["adjudicationId"] for row in accounting["adjudicationRows"]
-        },
+        "campaign-adjudications.tsv": set(),
         "campaign-supersessions.tsv": set(),
     }
     collateral = _zero_collateral_proof(seeded_rows, rows, changed_ids)
@@ -891,8 +847,6 @@ def build(
                         "entryVa": order_row["entryVa"],
                         "receiptSources": order_row["receiptSources"],
                         "receiptSha256": order_row["receiptSha256"],
-                        "refuterVerdict": "UNSCORED",
-                        "terminalState": ADJUDICATION_TERMINAL_STATE,
                     }
                     for order_row in sorted(
                         order_rows, key=lambda item: int(item["order"])

@@ -11,8 +11,8 @@ re-grounds on exact `db.18624` geometry through the Generation-30 literal-pin
 carry bridge and lands the first 16 `REBUILD_READY` contracts (14 rows raise
 C0_OPAQUE → C1_CANDIDATE_PARTIAL, one carries C1 unchanged, one fresh
 GetFriction row enters C1; independently verified CAMPAIGN_VERIFIED with the
-measured on-disk READY/reducer pins). The live and tracked Ghidra database is
-**`db.18627`** through *eight* authorized promotions on 2026-08-17 — 41 function
+measured on-disk READY/reducer pins). The tracked `main` snapshot of the Ghidra
+database is **`db.18627`** through *eight* authorized promotions on 2026-08-17 — 41 function
 boundary corrections recovering 3,293 bytes, then 158 function renames plus 2
 label renames, then 294 ABI signature corrections, then the two sequential
 one-row ceremonies of the
@@ -23,7 +23,12 @@ one-row ceremonies of the
 no name, body, or reference moved), then the five-row runtime-witnessed
 `name-cohort5` at `db.18626` (name-only), then the 65-slot RTTI vftable pointer
 cohort at `db.18627` (data typing only: 65 pointers typed with class-identity
-labels; zero function rows moved).
+labels; zero function rows moved). Since then, LIVE and the retained
+`wt/bea-ghidra` branch (tip `776b773d`, POST on D:/F:
+2026-08-19-name-cohort-round-dual-owner) have rolled together to unmerged
+**db.18633** SET_NAME twins; `main` still tracks db.18627 and does not carry
+that state. Before any live Ghidra write or promotion, re-measure PRE identity
+from the backups; do not infer equality from this file.
 Function count is
 unchanged at 8,329; instructions moved 551,143 → 551,232 and references
 234,478 → 234,493, and the last two ceremonies moved **no** structural metric at

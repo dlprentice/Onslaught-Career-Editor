@@ -1,0 +1,13 @@
+# P4 packet exporter — CGame level-flow smoke list (5 VAs)
+#
+# Named VA list for the P4 gate: the tracked CGame level-flow identities from
+# reverse-engineering/ghidra-functions.md ("Core object model" table), the
+# same family re-measured on wt/bea-re-named-systems (2026-08-22, e150939a).
+# One line per VA; '#' starts a comment. Consumed by tools/export_packets.py
+# and exercised end-to-end by tools/export_packets_tests.py.
+#
+0x00423bc0  # CLIParams__ParseCommandLine — 1,504-byte command-line parser
+0x0046c360  # CGame__Init — game initialization
+0x0046cdf0  # CGame__LoadLevel — level-selection/load entry
+0x0046dc30  # CGame__RestartLoopRunLevel — 1,531-byte restart/run loop
+0x0046e910  # CGame__Update — 1,382-byte update path
