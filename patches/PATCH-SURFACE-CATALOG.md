@@ -2,10 +2,12 @@
 
 Status: active — static census, Phase 2 runtime probes are a separate card
 Last updated: 2026-08-22
-Summary: first cut `t_7b48b14a` plus successor `t_14fcbbed` expansion.
+Summary: first cut `t_7b48b14a`, successor `t_14fcbbed`, then `t_17fa180d`
+(jet drain `fsub` / debug-button door / IScript mutators).
 Evidence: MEASURED — every non-unknown TSV `original_bytes` compared to the
 named specimen at write time; PE section table re-parsed; first-cut BSS
-god-flag row retracted.
+god-flag row retracted. `t_17fa180d` re-read JetPart::Move, SendButtonAction,
+and the 144-native handler heads from the same specimen.
 Specimen: `local-lab/pristine-verification-2026-07-26/pristine-target/BEA.exe`
 SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 (2,506,752 bytes).
@@ -29,8 +31,9 @@ PE mapping owner: [`../reverse-engineering/binary-analysis/patch-surface/PE-MAPP
   loader zero-fills them. Naive `VA − 0x400000` in that band lands in
   `.rsrc` raw or past EOF and is **not** the runtime global. See
   `reverse-engineering/binary-analysis/patch-surface/PE-MAPPING.md`.
-- TSV `original_bytes` for every non-`unknown-*` row were compared to the
-  specimen in the `t_14fcbbed` writer and refused on mismatch.
+- TSV `original_bytes` for every non-`unknown-*` / non-`none-*` row were
+  compared to the specimen in the `t_14fcbbed` writer and again in the
+  `t_17fa180d` writer and refused on mismatch.
 - Confidence vocabulary: MEASURED (byte + behavior evidence),
   STATIC_ONLY (byte evidence verified here; behavior inferred from pinned
   source or prior bounded observations), SPECULATIVE (site plausible,
@@ -45,13 +48,13 @@ PE mapping owner: [`../reverse-engineering/binary-analysis/patch-surface/PE-MAPP
 | # | System | Section | Notes |
 |---|--------|---------|------|
 | 1 | Mission timers | [§1](#1-mission-timers) | won-imm corrected to `0x0046F33D` |
-| 2 | Instant win / lose | [§2](#2-instant-win--lose) | debug arms still SPECULATIVE |
-| 3 | AI freeze (named tick call sites) | [§3](#3-ai-freeze-named-tick-call-sites) | per-unit think still absent |
+| 2 | Instant win / lose | [§2](#2-instant-win--lose) | WIN/LOSE BSS conjunct now pinned; mapping IDs still BSS |
+| 3 | AI freeze (named tick call sites) | [§3](#3-ai-freeze-named-tick-call-sites) | per-unit think still absent; SetAIState is a poke |
 | 4 | Physics constants | [§4](#4-physics-constants) | + friction rungs, COfG, zoom, water line |
-| 5 | Player resources & damage | [§5](#5-player-resources--damage) | Damage/water gates now pinned; BSS god-flag retracted |
+| 5 | Player resources & damage | [§5](#5-player-resources--damage) | Jet drain `fsubr` now pinned |
 | 6 | Weapons (fire gate, charge cap) | [§6](#6-weapons-fire-gate-charge-cap) | + FireWeapon/ChargeWeapon siblings |
 | 7 | Cheat flags | [§7](#7-cheat-flags) | + Maladim / latete call sites |
-| 8 | Debug leftovers (console) | [§8](#8-debug-leftovers-console) | reachability still unpinned |
+| 8 | Debug leftovers (console) | [§8](#8-debug-leftovers-console) | SendButtonAction door pinned; key→id still BSS |
 | 9 | Already-cataloged adjacent rows (pointer only) | [§9](#9-already-cataloged-adjacent-rows-pointer-only) | — |
 | 10 | Explicit non-surfaces | [§10](#10-explicit-non-surfaces) | BSS list expanded |
 | 11 | End-of-level ranking | [§11](#11-end-of-level-ranking) | FillOut stores |
@@ -60,6 +63,7 @@ PE mapping owner: [`../reverse-engineering/binary-analysis/patch-surface/PE-MAPP
 | 14 | Input / analogue | [§14](#14-input--analogue) | 0.001f scale |
 | 15 | Collision / camera knobs | [§15](#15-collision--camera-knobs) | COfG, movie zoom |
 | 16 | Script objective / pause flags | [§16](#16-script-objective--pause-flags) | or/and +0x2c, stop-flag |
+| 17 | IScript mutators (beyond the first-cut set) | [§17](#17-iscript-mutators-beyond-the-first-cut-set) | Die/health/weapon/spawner/objective/goodie + SetSpeed no-op |
 
 ---
 
@@ -217,39 +221,59 @@ as §2.4.
 
 | field | value |
 |---|---|
-| VA | `0x0046F945` (offset `0x0006F945`) |
-| original / patch | jump-table dispatch target inside `CGame::ReceiveButtonAction`; score-randomize + win flow per `functions/game.cpp/CGame__ReceiveButtonAction.md` button map |
+| jump-table slot | `[11]` at `0x0046FAD0` = `45 f9 46 00` → `0x0046F945` |
+| arm head | `0x0046F945`: `83 3d d0 2d 66 00 01` `cmp dword [0x00662DD0], 1` |
+| jcc | `0x0046F94C`: `0f 85 48 01 00 00` `jne` → skip the whole arm |
+| candidate | NOP×6 the jne — WIN proceeds without the BSS flag |
 
-No single-byte form is claimed: the arm is entered through the button
-dispatch switch. Reaching it requires the debug-button path (see §10.1).
-Recorded as surface identification only.
+Jump table at `0x0046FAA4` (15 dwords) was re-read 2026-08-22 and matches
+`CGame__ReceiveButtonAction.md` exactly. The WIN arm is **not** an unknown
+target: it first requires `[0x00662DD0]==1` (the same BSS conjunct as
+water-death, §5.3 / §10.2). That flag cannot be file-patched; the **jcc**
+can. After the conjunct the arm randomizes `mScore` in
+`[mDGradeScore, mSGradeScore)` and falls into the win flow.
 
-Confidence: **SPECULATIVE** (arm mapped; invocation reachability in retail
-unproven). Risk: n/a until a concrete byte plan exists. Cheapest
-verification: prove how button IDs reach `ReceiveButtonAction` in retail.
+Getting button id 11 into this function is a separate door (§8.3). No
+file-backed mapping row emitting ids 0–14 was found; the 47-row table at
+`0x008892DC` is BSS.
+
+Confidence: **STATIC_ONLY** (bytes + jump table + BSS conjunct). Risk:
+medium (still needs a mapping that emits 11). Cheapest verification: a
+copied build whose mapping emits 11, with the BSS flag left 0.
 
 ### 2.7 Debug-button lose — `BUTTON_LOOSE_LEVEL` arm
 
-Same posture as §2.6 at dispatch target `0x0046FA39`; ends in the
-`call DeclareLevelLost` measured at `0x0046FA7C`.
+| field | value |
+|---|---|
+| jump-table slot | `[12]` at `0x0046FAD4` = `39 fa 46 00` → `0x0046FA39` |
+| arm head | same `cmp dword [0x00662DD0], 1` |
+| jcc | `0x0046FA40`: `75 58` `jnz` skip |
+| extra | `cmp [esi+0x28], 3` / `jl` skip — still requires PLAYING-or-later |
 
-Confidence: **SPECULATIVE**. Cheapest verification: same as §2.6.
+Candidate: `75 58` → `EB 58` skips only the BSS conjunct (state gate
+remains). Ends in `DeclareLevelLost` at `0x0046FA7C`.
+
+Confidence: **STATIC_ONLY**. Same mapping-id caveat as §2.6.
 
 ### 2.8 Complete-all-objectives — `BUTTON_COMPLETE_ALL_OBJECTIVES` arm
 
-Dispatch target `0x0046F9F3`; prints "Completing all Objectives" and writes
-the objective state arrays (button-map note). The objective-array writes are
-the interesting patchable stores for objective-counter cheats, but they are
-inside a large arm without a pinned instruction-level map yet — left as an
-open row rather than guessed bytes.
+| field | value |
+|---|---|
+| jump-table slot | `[14]` at `0x0046FADC` = `f3 f9 46 00` → `0x0046F9F3` |
+| head | `push 0x0062C1DC` / `call CConsole::Printf` ("Completing all Objectives") |
+| store seed | `0x0046FA0F`: `bd 01 00 00 00` `mov ebp, 1` |
+| stores | loop of 10: `mov [eax], ebp` / `mov [eax+4], edx` (`edx=10`) at `this+0x4c` |
 
-Confidence: **SPECULATIVE**. Cheapest verification: pin the store
-instructions in that arm against the specimen.
+No BSS conjunct on this arm. Candidate: `mov ebp, 1` → `mov ebp, 0`
+makes the ten primary-array stores write 0. The first-cut "stores unpinned"
+hole is closed.
+
+Confidence: **STATIC_ONLY**. Same mapping-id caveat (button 14).
 
 Related predicate rows already carried elsewhere: the secondary-objective
 ranking clamp lives in `FillOutEndLevelData` (see §9) and the
 `CCareerNode` complete/link laws are in PARITY.md — those govern what a *win
-is worth*, not whether it fires.
+is worth*, not whether it fires. Scripted complete/fail stores are §17.7.
 
 ---
 
@@ -557,17 +581,12 @@ water probe on this card). Risk: medium.
 | values | `mGroundEnergyIncrease 0.05`, `mMinAirEnergyCost 0.005`, `mMaxAirEnergyCost 0.012` (jet drain measured −0.5625…−0.4713 u/s, pair energy-p02) |
 
 These live in shipped data files, NOT the exe — outside this card's
-exe-bytes scope, listed because the card names energy explicitly and the
-exe-side drain code paths (`SetInfinateEnergy 0x00405F20` stores the flag +
-refills from configuration; jet thrust drain interpolates min/max cost) are
-pinned enough to know a code-side "no drain" patch would sit in
-`JetPart::Move/Thrust` bodies that are mapped but not byte-pinned for this
-purpose. See
-`game-mechanics/jet-energy-drain-retail-to-core-translation-policy.md` and
-`energy-retail-to-core-translation-policy.md`.
+exe-bytes scope, listed because the card names energy explicitly. The
+exe drain path is now pinned in §5.8; the data-file min/max costs remain
+the cheap authored route for a *value* change.
 
-Confidence: **SPECULATIVE** as exe rows; the data-file route is the cheap
-one. Next instrument: pin the drain `fsub` sites in `JetPart::Move`.
+Confidence: data-file route is the cheap one; exe `fsub` is no longer
+the next instrument.
 
 ### 5.5 Shield efficiency — configuration-carried
 
@@ -603,13 +622,47 @@ the flag and still refill.
 Drain skip at `0x004137E0` (walker-range body):
 `mov eax,[ecx+0x160]; test eax,eax; 0x004137E8: 75 4e` — `jnz` skips the
 following drain arm. `75 4e` → `EB 4e` is file-expressible infinite
-energy without the flag. A jet-range sibling at `0x00410CA2`
-(`cmp [ecx+0x160],ebp / jnz`) is **not** rowed: polarity depends on
-whatever `ebp` holds.
+energy without the flag. The jet sibling is no longer "ebp-unknown":
+see §5.8.
 
-Confidence: **STATIC_ONLY**. Risk: medium. Jet `Move/Thrust` fsub sites
-remain a named next instrument (data-file min/max costs stay the cheap
-authored route).
+Confidence: **STATIC_ONLY**. Risk: medium.
+
+### 5.8 Jet energy drain — `CBattleEngineJetPart::Move`
+
+Body `0x00410C50`–`0x004114CA` (2171 B, SHA-256 `0de35d19…7484`) re-read
+from the named specimen. Prologue `xor ebp, ebp` at `0x00410C5A` — `ebp`
+is **0** for the whole Move. That closes the first-cut refusal of
+`0x00410CA2`.
+
+| site | VA | bytes | role |
+|---|---|---|---|
+| flag test | `0x00410CA2` | `39 a9 60 01 00 00` | `cmp [ecx+0x160], ebp` (`ecx` = `[ebx+0x18]` = BE) |
+| skip drain | `0x00410CA8` | `75 50` | `jnz` → `0x00410CFA` when `mInfinateEnergy != 0` |
+| zero-energy skip | `0x00410CBB` | `75 3d` | `jnz` after `fcomp [0x005D856C]` (0.0f) |
+| lerp | `0x00410CBD`… | `fld [config+0xc]` / `fld [config+0x8]` / `fsub st(1)` / `fmul [ebx+0x20]` / `fadd st(1)` | `config = [BE+0x4B0]`; `[JetPart+0x20]` is the interpolant |
+| store | `0x00410CD0` | `d8 a9 fc 00 00 00` `fsubr [ecx+0xfc]` then `fstp [ecx+0xfc]` | `energy := energy − lerp` |
+| floor | `0x00410CF4` | `89 a9 fc 00 00 00` | `mov [ecx+0xfc], ebp` when the post-drain compare is `< 0` |
+
+`[config+0x8]` / `[config+0xc]` are **not** named `mMinAirEnergyCost` /
+`mMaxAirEnergyCost` here. The layout candidate in
+`battleengine-config-values.md` starts `mLife` at `+0x1c`; those two
+dwords sit earlier. The lerp identity is: cost =
+`[cfg+0xc] + [JetPart+0x20] * ([cfg+0x8] − [cfg+0xc])`. Field names stay
+open. The shipped 0.005 / 0.012 values remain the data-file route (§5.4).
+
+A later `fsub` at `0x00410E3A` interpolates `[cfg+0]` / `[cfg+4]` into a
+direction/speed helper (`fsqrt` of a 3-vector). That is **not** an energy
+store.
+
+Candidates:
+
+- `75 50` → `EB 50` at `0x00410CA8` — always skip the drain (file-expressible
+  infinite jet energy; no flag required)
+- NOP the 12-byte `fsubr`+`fstp` at `0x00410CD0` — energy is never written
+  even if the flag test is taken
+
+Confidence: **STATIC_ONLY** (bytes + `ebp==0` + store identity). Risk:
+medium. Cheapest verification: copied jet; energy HUD under thrust.
 
 ---
 
@@ -750,15 +803,46 @@ trivial cosmetic rows not itemized.
 
 ### 8.2 Dev-mode gate posture
 
-The console/debug-button layer (§2.6–2.8) is reachable in principle through
-`ReceiveButtonAction` button IDs 0–14, but the retail invocation route
-(how a controller event carries a debug button ID) is not pinned. Until that
-route is proven, the honest statement is: console commands exist and are
-registered; the retail path to drive them is UNKNOWN_WITH_FALSIFIER
-(falsifier: trace a `ReceiveButtonAction` call with button≥11 in a controlled
-runtime — Phase 2).
+First-cut left the retail route to `ReceiveButtonAction` unpinned. It is
+now pinned; the remaining hole is the **key → button-id** binding, not
+the door.
 
-Confidence: **SPECULATIVE** (reachability). This bounds §§2.6–2.8.
+### 8.3 How a debug button id reaches `CGame::ReceiveButtonAction`
+
+Sole `.text` `E8` to `0x0046F7E0`: `0x0042E59D` inside
+`CController::SendButtonAction` `0x0042E4D0` (312 B,
+`controller-shared-semantics-2026-08-11.md`). `CPlayer::ReceiveButtonAction`
+`0x004D3110` has **zero** direct `E8`/`E9` (vtable only) and handles
+`BUTTON_PAUSE` (56), not ids 0–14.
+
+Inside `SendButtonAction`, after the three virtual-button words are ORed:
+
+| site | bytes | law |
+|---|---|---|
+| `0x0042E581` | `83 fb 10` | `cmp ebx, 0x10` |
+| `0x0042E584` | `7d 36` | `jge` → ordinary (player) path. Ids **0–15** stay on the CGame path |
+| `0x0042E58A` | `ff 52 14` | `call [edi+0x14]` on the current target |
+| `0x0042E58F` | `74 17` | `je` skip CGame if that vfunc returns 0 |
+| `0x0042E59D` | `e8 3e 12 04 00` | `call CGame::ReceiveButtonAction` (`this=0x008A9A98`) |
+
+DoMappings' 13 call sites all push the **runtime** action id from the
+current 32-byte mapping row (`[row+0x04]`), except the dual-Shift site
+at `0x0042E31E` which pushes immediate `0x2D`
+(`BUTTON_FRONTEND_CHEAT`) — not a debug id. The 47-row table base
+`0x008892D8` / view `0x008892DC` is BSS (§10.2). No file-backed
+template for those 47 action ids was found in this slice.
+
+Candidates (both high-consequence):
+
+- `7d 36` → `90 90` — **every** action id, including fire/morph, is
+  offered to CGame's 0–14 switch. Recorded so the door is named, not
+  as a product cheat.
+- `74 17` → `90 90` — still require id `< 16`, but call CGame even when
+  the target vfunc+0x14 returns 0.
+
+Confidence: **STATIC_ONLY**. The code path is pinned. Whether any of the
+47 retail rows emits ids 0–14 is still a runtime / initializer question
+(prior diagnostics never saw V-key god fire `ReceiveButtonAction`).
 
 ---
 
@@ -781,7 +865,9 @@ they are not re-rowed:
 
 ### 10.1 Debug-button reachability
 
-See §8.2 — the door exists, the handle is unpinned.
+See §8.3 — the door and the `<16` gate are pinned. The handle (a mapping
+row that emits ids 0–14) is still BSS. WIN/LOSE also require
+`[0x00662DD0]==1` (§2.6–2.7).
 
 ### 10.2 BSS globals (cannot be file-patched)
 
@@ -802,6 +888,11 @@ Confirmed BSS (not file-patchable):
 | `0x00672E20` | FillOut ranking destination |
 | `0x0089C800` | script pause stop-flag |
 | `0x008A9AC0` | `g_GameState` |
+| `0x008A9A98` | `CGame` singleton (`SetPlayerLives` `this`; RBA `this`) |
+| `0x008A9ADC` | primary-objective array (script Complete/Failed) |
+| `0x008A9B2C` | secondary-objective array |
+| `0x00662560` | `SetGoodieState` dword table |
+| `0x008892D8` / `0x008892DC` | 47-row mapping table (action id at `+0x04`) |
 
 Any "patch" of those file offsets is a no-op or resource corruption.
 
@@ -814,21 +905,21 @@ Patching those file bytes does nothing. (Their citations remain valid as
 
 ### 10.4 Unit AI "think" loops
 
-No distinct per-unit AI tick function surfaced in the evidence corpus — unit
-behavior runs through the CThing/CActor virtual update chain dispatched from
-the MainLoop/AdvanceTime heartbeats (§3). The maximal freeze primitives ARE
-§3.1–§3.3; finer granularity (per-squad aggression) would require pinning the
-virtual dispatch bodies, which is Phase-2-scale RE beyond this census.
-Named honestly as a coverage limit, not silently omitted.
+No distinct per-unit AI tick function surfaced. Unit behavior runs
+through the CThing/CActor virtual update chain dispatched from the
+MainLoop/AdvanceTime heartbeats (§3). `IScript::SetAIState` (`0x005361A0`)
+is a one-shot `call [thing.vtable+0xd8]` with a script int — a poke, not
+a tick. The maximal freeze primitives remain §3.1–§3.3. Named honestly
+as a coverage limit.
 
 ### 10.5 Spawn tables and caps
 
 Unit spawn composition comes from authored level data (`100_res_PC.aya`
-etc.), not exe tables — the exe-side lever is the FillOut/objective surface
-(§2) plus data-file editing (different lane). The 35-base-things census
-(`[0x0085515C]`=35 on first play) is measurement, not a patch point.
-No exe spawn-table rows exist to write; stated to close the card's coverage
-ask honestly.
+etc.), not exe tables. `IScript::SpawnThing` `0x00536CD0` is a large
+native (unboxes four script args, then a long world-spawn body) — not a
+table. `IScript::SetSpeed` is a 3-byte `ret 0xc` no-op (§17.9). The
+35-base-things census (`[0x0085515C]`=35 on first play) is measurement,
+not a patch point. No exe spawn-table rows exist to write.
 
 ---
 
@@ -1042,6 +1133,145 @@ Confidence: **STATIC_ONLY**. Risk: high.
 
 ---
 
+## 17. IScript mutators (beyond the first-cut set)
+
+The 144-entry registry
+(`ghidra-functions.md` Appendix A, base `0x0064CE20`, stride `0x40`)
+is name/handler evidence. First-cut rowed LevelWon/Lost/LostString,
+Enable/DisableFlight, AddScore, SetVulnerable, Pause, SetObjective,
+and SetSlotSave's callee. This slice pins the other **state-writing**
+natives that have a one-instruction file lever. Getters, camera, weather,
+and message/wait helpers are left as the next IScript pass — they are
+not silently omitted.
+
+Most mutators share a type-bit gate: `test byte [thing+0x34], 0x10` /
+`je skip`. NOP the `je` to run the write on things that lack bit 4.
+`EnableFlightMode` already uses bit 3 (`test …, 8`) the same way (§13.2).
+
+### 17.1 Die / HalfDestroy
+
+`IScript::Die` `0x00535CD0` (40 B): `AddEvent_AtTime(0x7d2, [this+0x10],
+NEXT_FRAME)` — `START_DIE_PROCESS` on the attached thing. Sole useful
+lever is the call at `0x00535CF2` (`e8 79 56 f1 ff`). NOP×5: scripts
+cannot schedule death. Zero inbound `E8` (native 13).
+
+`IScript::HalfDestroy` `0x00534370`: type-bit then `call 0x004F9430`
+(sole image `E8` of that helper). `0x00534377` `74 05` → `EB 05` never
+calls.
+
+### 17.2 Health / segment health / segment vulnerable
+
+`SetHealth` `0x00535C10`: type-bit `je` at **`0x00535C18`** (`74 27`),
+then `vtable+0x34` unbox, `fmul [[thing+0x164]+0xc0]`, `fstp [thing+0xf8]`.
+NOP the `je` to write the life-like float without bit 4.
+
+`SetAllSegmentsHealth` `0x00535500`: same type-bit at `0x00535508`
+(`74 20`), then `call 0x00444580` on `[thing+0x178]`.
+
+`SetAllSegmentsVulnerable` `0x00534390`: type-bit, unbox bool,
+`and eax, 0xff` at **`0x005343AF`**, `call 0x00444620`. Same force-FALSE
+shape as `SetVulnerable` (§13.4): `25 ff 00 00 00` → `33 c0 90 90 90`.
+
+### 17.3 Enable / Disable weapon
+
+Twins, 38 B each. Type-bit `je` then `vtable+0x38` (int unbox) then
+`call [thing.vtable+0x198]` / `+0x19c`.
+
+| native | je VA | original |
+|---|---|---|
+| EnableWeapon | `0x00534FBA` | `74 19` |
+| DisableWeapon | `0x00534FEA` | `74 19` |
+
+### 17.4 Enable / Disable spawner
+
+Same type-bit; helpers `0x004FE390` / `0x004FE3F0` are **sole** `E8`
+callers from these natives.
+
+| native | je VA | original |
+|---|---|---|
+| EnableSpawner | `0x0053501A` | `74 14` |
+| DisableSpawner | `0x0053504A` | `74 14` |
+
+This is the exe-side on/off for an already-placed spawner. It is **not**
+an exe spawn table (§10.5).
+
+### 17.5 SetAllegiance / SetStealth
+
+| native | je VA | original | tail |
+|---|---|---|---|
+| SetAllegiance | `0x0053556A` | `74 14` | `call 0x004FD830` (3 image `E8`) |
+| SetStealth | `0x0053553A` | `74 1c` | `vtable+0x34` float then `call [+0x1c8]` |
+
+### 17.6 SetPlayerLives
+
+`0x005338A0` unboxes two ints and `call 0x00472620`
+(`CGame::SetPlayerLives`, sole `E8`) with `this=0x008A9A98`. The callee
+writes `[this+0x290]` when arg0==1 and `[this+0x294]` when arg0==2.
+Destinations are BSS; NOP the call at `0x005338BD`.
+
+### 17.7 Objective complete / fail stores
+
+Four 41-byte twins. Unbox two ints; `lea eax, [eax*8 + base]`;
+`mov [eax+4], edi`; `mov dword [eax], imm`.
+
+| native | store VA | original | base |
+|---|---|---|---|
+| PrimaryObjectiveComplete | `0x00534402` | `c7 00 01 00 00 00` | `0x008A9ADC` |
+| SecondaryObjectiveComplete | `0x00534432` | same | `0x008A9B2C` |
+| PrimaryObjectiveFailed | `0x00534462` | `c7 00 02 00 00 00` | `0x008A9ADC` |
+| SecondaryObjectiveFailed | `0x00534492` | same | `0x008A9B2C` |
+
+NOP a complete-store to ignore script completion. Rewrite a fail-store
+`02` → `01` to record a scripted fail as complete. Destinations are BSS.
+
+### 17.8 SetGoodieState
+
+`0x00533A70`: unbox two ints, `mov [eax*4 + 0x00662560], edi` at
+`0x00533A87` (`89 3c 85 60 25 66 00`). Destination is BSS. NOP the
+store: scripts cannot write goodie state. Index convention stays with
+`missionscript-iscript-static-contract.md` (one-based script index).
+
+### 17.9 SetSpeed — declined no-op
+
+Handler `0x00453AC0` is `c2 0c 00` (`ret 0xc`) plus nops. Registry
+index 2. The existing Ghidra name `SharedVFunc__NoOp_Ret0C` is the
+honest identity. There is no speed immediate to patch. Rowed as
+understood-and-declined so the 144-native census does not re-open it.
+
+### 17.10 Activate / Deactivate / SetVisible
+
+| native | site | original | role |
+|---|---|---|---|
+| Activate | `0x00535D55` | `ff 50 58` | `call [eax+0x58]` |
+| Deactivate | `0x00535D65` | `ff 50 5c` | `call [eax+0x5c]` |
+| SetVisible | `0x00535EB3` | `75 0c` | after `cmp al, 1`: jne → hide (`+0x84`); NOP → always show (`+0x80`) |
+
+### 17.11 SetAIState — poke, not a tick
+
+`0x005361A0` unboxes an int and `call [thing.vtable+0xd8]` at
+`0x005361B8`. NOP the 6-byte call: scripts cannot poke AI state. This
+does **not** freeze per-unit think (§10.4).
+
+### 17.12 Land / Dive / Surface / Retreat / Deploy / Undeploy
+
+Type-bit then a vfunc or a named helper. NOP the `je` to run the
+command without the type test.
+
+| native | je VA | original | tail |
+|---|---|---|---|
+| Land | `0x005361D7` | `74 08` | `call [eax+0x174]` |
+| Dive | `0x005361FA` | `74 05` | `call 0x004EF000` (bit `0x10000000`) |
+| Surface | `0x0053621A` | `74 05` | `call 0x004EF050` (same bit) |
+| Retreat | `0x00535D37` | `74 08` | `call [eax+0x190]` |
+| Deploy | `0x00534F77` | `74 05` | `call 0x004FDE30` |
+| Undeploy | `0x00534F97` | `74 05` | `call 0x004FDE70` |
+
+Confidence for §17: **STATIC_ONLY** (handler heads + type-bit pattern +
+specimen bytes). Risk: medium for mutators that drop a type-bit guard
+(null-record / wrong-vtable crash is exactly what the `je` prevents).
+
+---
+
 ## Verification protocol (for any row promoted to Phase 2)
 
 1. Copy, never in-place: safe-copy through the app; pristine specimen stays
@@ -1057,12 +1287,11 @@ Confidence: **STATIC_ONLY**. Risk: high.
 
 ## Row inventory
 
-TSV: **70 data rows** (68 unique VAs). First-cut 34 minus retracted BSS
-god-flag, plus pinned Damage/water/energy, fire-gate siblings, Maladim /
-latete, FillOut / career / flight / analogue / COfG / zoom / friction /
-objective / pause.
+TSV: **102 data rows** (100 unique VAs). `t_14fcbbed` 70 minus three
+unknown debug-arm placeholders, plus pinned jet drain, SendButtonAction
+door, WIN/LOSE BSS jccs, COMPLETE seed, and the §17 IScript mutators.
 
-Confidence histogram: **MEASURED 22 / STATIC_ONLY 45 / SPECULATIVE 3**.
+Confidence histogram: **MEASURED 22 / STATIC_ONLY 80 / SPECULATIVE 0**.
 
 First-cut corrections landed here, not in `rebuild/**`:
 
@@ -1071,7 +1300,11 @@ First-cut corrections landed here, not in `rebuild/**`:
 - building ApplyDamage offset is `0x00017A16`, not `0x0007A16`
 - `g_bGodModeEnabled` is BSS; first-cut file row retracted
 - water conjunct is `[0x00662DD0]`, not `0x00662DF4`
+- jet `0x00410CA2` polarity is `ebp==0` (xor at `0x00410C5A`); first-cut left it unrowed
+- WIN/LOSE arms start with `cmp [0x00662DD0], 1`, not an unknown jump target
 
-Coverage limits that stay honest: no per-unit AI tick, no exe spawn
-tables, debug-button retail invocation unpinned, jet energy `fsub` sites
-unpinned, IScript natives beyond the rowed set not exhausted.
+Coverage limits that stay honest: no per-unit AI tick (SetAIState is a
+poke), no exe spawn tables (SpawnThing is a native; SetSpeed is a no-op),
+debug-button **key → id** still BSS (the SendButtonAction door is pinned),
+IScript getters/camera/weather/message natives not exhausted,
+`[config+0x8]/[+0xc]` field names open.

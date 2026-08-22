@@ -4,8 +4,8 @@ Status: active — BSS versus file-backed VAs for this image
 Last updated: 2026-08-22
 Summary: `file offset = VA − 0x400000` is only valid inside a section's
 raw range. `.data` VirtualSize is far larger than SizeOfRawData, so most
-runtime globals (including `g_bGodModeEnabled`) are BSS and are not
-file-patchable.
+runtime globals (including `g_bGodModeEnabled`, the mapping table, and
+the script objective / goodie arrays) are BSS and are not file-patchable.
 Evidence: MEASURED — PE section table and VA-to-file map re-read from the
 named specimen on 2026-08-22; hash matched.
 Specimen: `local-lab/pristine-verification-2026-07-26/pristine-target/BEA.exe`
@@ -48,6 +48,15 @@ Same BSS class (not file-patchable):
 | `0x00672E20` | FillOut ranking destination | — |
 | `0x0089C800` | script pause stop-flag | — |
 | `0x008A9AC0` | `g_GameState` | — |
+| `0x008A9A98` | `CGame` singleton (`SetPlayerLives` / RBA `this`) | — |
+| `0x008A9ADC` | primary-objective array | — |
+| `0x008A9B2C` | secondary-objective array | — |
+| `0x00662560` | `SetGoodieState` dword table | — |
+| `0x008892D8` / `0x008892DC` | 47-row mapping table | — |
+
+`t_17fa180d` added the last five after the IScript / SendButtonAction
+pin. Same rule: never promote those VAs to a file row; patch the
+`.text` store or the `.text` jcc that consumes them.
 
 ## Rule for later rows
 
