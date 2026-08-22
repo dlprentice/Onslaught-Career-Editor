@@ -2386,7 +2386,8 @@ Phase 2 adds four §30 init-store rows (see changelog):
 variant-B H1 falsifier row — third intentional multi-variant VA).
 
 Confidence histogram: **MEASURED 29 / STATIC_ONLY 227 / SPECULATIVE 0**
-(STATIC_ONLY 231 after the four §30 additions; no confidence changes).
+(STATIC_ONLY 232 after the four §30 additions and the latete variant-B
+falsifier row; no confidence changes).
 
 First-cut corrections landed here, not in `rebuild/**`:
 
