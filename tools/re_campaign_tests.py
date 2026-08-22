@@ -8,6 +8,7 @@ import functools
 import hashlib
 import json
 import os
+import re
 import shutil
 import struct
 import subprocess
@@ -1060,6 +1061,136 @@ class CampaignTests(unittest.TestCase):
         self.assertEqual("C2_BOUNDED_RUNTIME", damage["semanticGrade"])
         self.assertEqual("SURVIVED", damage["refuterVerdict"])
         self.assertEqual(1, len(adjudications))
+
+    def test_reseed_carry_reattaches_a_validated_multiowner_sibling_contract(
+        self,
+    ) -> None:
+        """A validated two-owner entity (Generation 31 GetFriction shape) keeps
+        both terminal rebuild-ready owners and both SURVIVED adjudications
+        across a reseed: the fresh frontier seeds one structural contract per
+        entity, so without reattachment the second owner would be silently
+        retired as a changed identity, regressing a measured runtime proof."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            base, _contract, overlay = make_imported_runtime_overlay(root)
+            addressed = campaign._read_tsv(overlay / "runtime-contracts.tsv")[0][
+                "questionIdsAddressed"
+            ]
+            adjudication = make_runtime_adjudication(
+                root, base, overlay, "SURVIVED"
+            )
+            progressed = root / "progressed"
+            campaign.advance_runtime_contract(base, overlay, adjudication, progressed)
+
+            # Shape the Damage owner into the validated terminal multi-owner
+            # form: two TERMINAL_REBUILD_READY rows with distinct owners, plus
+            # a second SURVIVED adjudication addressing the same closed
+            # question through the multi-owner exception.
+            contracts = campaign._read_tsv(progressed / "campaign-contracts.tsv")
+            damage = next(
+                row for row in contracts if row["nativeShippedName"] == "Damage"
+            )
+            sibling = {**damage, "contractId": "C-" + "b" * 16}
+            for row in (damage, sibling):
+                row["contractState"] = "TERMINAL_REBUILD_READY"
+                row["rebuildState"] = "REBUILD_READY"
+            sibling["rebuildOwner"] = damage["rebuildOwner"] + "Second"
+            campaign._write_tsv(
+                progressed / "campaign-contracts.tsv",
+                campaign.CONTRACT_COLUMNS,
+                contracts + [sibling],
+            )
+            adjudications = campaign._read_tsv(
+                progressed / "campaign-adjudications.tsv"
+            )
+            sibling_adjudication = {
+                **adjudications[0],
+                "adjudicationId": "A-" + "b" * 16,
+                "baseContractId": sibling["contractId"],
+                "questionIdsAddressed": addressed,
+                "successorQuestionIds": "",
+            }
+            campaign._write_tsv(
+                progressed / "campaign-adjudications.tsv",
+                campaign.ADJUDICATION_COLUMNS,
+                adjudications + [sibling_adjudication],
+            )
+            # Refresh the parent READY stamps/counts so the carry source stays
+            # self-consistent, and pass it as _verified_carry_receipt exactly
+            # like the Generation 32 builder does through its literal-pinned
+            # bridge (the generic carry verifier replays byte hashes and
+            # cannot see a hand-shaped fixture).
+            progressed_ready_path = progressed / "campaign.ready.json"
+            progressed_ready = json.loads(
+                progressed_ready_path.read_text(encoding="utf-8")
+            )
+            progressed_ready["counts"]["contracts"] += 1
+            progressed_ready["counts"]["adjudications"] += 1
+            for name in (
+                "campaign-contracts.tsv",
+                "campaign-adjudications.tsv",
+            ):
+                progressed_ready["outputs"][name] = {
+                    **campaign.coverage.file_stamp(progressed / name),
+                    "path": name,
+                }
+            progressed_ready_path.write_text(
+                json.dumps(progressed_ready), encoding="utf-8"
+            )
+
+            fresh_root = root / "fresh"
+            fresh_root.mkdir()
+            specimen_sha = sha256(root / "runtime-evidence" / "specimen.exe")
+            fresh_snapshot = make_snapshot(
+                fresh_root,
+                native_present=True,
+                native_name="Damage",
+                specimen_sha=specimen_sha,
+            )
+            carried = root / "carried"
+            carry_receipt = json.loads(
+                progressed_ready_path.read_text(encoding="utf-8")
+            )
+            # Production reaches a carried parent through a literal-pinned
+            # no-replay bridge; mirror that by substituting the carry-source
+            # verification with the prepared receipt.
+            with patch.object(
+                campaign,
+                "_verify_campaign_carry_source",
+                return_value=carry_receipt,
+            ):
+                receipt = campaign.seed(
+                    fresh_snapshot,
+                    carried,
+                    carry=progressed,
+                    _verified_carry_receipt=carry_receipt,
+                )
+                campaign.verify(carried)
+
+            carried_contracts = campaign._read_tsv(
+                carried / "campaign-contracts.tsv"
+            )
+            carried_ids = {row["contractId"] for row in carried_contracts}
+            carried_adjudications = {
+                row["adjudicationId"]
+                for row in campaign._read_tsv(
+                    carried / "campaign-adjudications.tsv"
+                )
+            }
+            self.assertIn(damage["contractId"], carried_ids)
+            self.assertIn(sibling["contractId"], carried_ids)
+            self.assertIn(adjudications[0]["adjudicationId"], carried_adjudications)
+            self.assertIn(
+                sibling_adjudication["adjudicationId"], carried_adjudications
+            )
+            self.assertEqual(
+                1,
+                receipt["advance"]["carried"]["reattachedMultiOwnerContracts"],
+            )
+            self.assertEqual(
+                [sibling["contractId"]],
+                receipt["advance"]["carried"]["reattachedMultiOwnerContractIds"],
+            )
 
     def test_reseed_carry_preserves_a_closed_generated_question_across_a_display_rename(
         self,
@@ -2374,6 +2505,124 @@ class CampaignTests(unittest.TestCase):
         finally:
             shutil.rmtree(parent, ignore_errors=True)
             shutil.rmtree(replay, ignore_errors=True)
+
+    def test_generation32_reseat_writes_wellformed_evidence_refs_on_promoted_entities(
+        self,
+    ) -> None:
+        """The reseat must append receipt evidence refs in the campaign-wide
+        ``path#sha256=<64 hex>`` token shape even on entities carrying
+        MAINTAINER_GHIDRA_SEMANTIC_PROMOTED: _validate_campaign_relations
+        enforces that regex on every contract of a promoted entity, so the
+        real-ledger self-check fails closed on a bare-path token (observed
+        2026-08-22 dry-run: CBattleEngine__StartLock)."""
+        import build_generation32_authority
+
+        sha = "b" * 64
+        self.assertEqual(
+            f"local-lab/x/contracts.tsv#sha256={sha}",
+            build_generation32_authority._receipt_ref(
+                "local-lab/x/contracts.tsv", sha
+            ),
+        )
+        with self.assertRaisesRegex(
+            campaign.CampaignError, "not a lowercase sha-256"
+        ):
+            build_generation32_authority._receipt_ref(
+                "local-lab/x/contracts.tsv", "NOTAHASH"
+            )
+
+        def _receipt_row(entry_va: str) -> dict[str, str]:
+            return {
+                "entry": entry_va,
+                "current_name": "SomeName",
+                "body_bytes": "155",
+                "execution_state": "OPAQUE",
+                "inputs": "i",
+                "returns": "r",
+                "state_writes": "w",
+                "calls_order": "c",
+                "bounded_static_contract": "b",
+                "confidence": "HIGH",
+                "uncertainty_cheapest_falsifier": "f",
+                "grade_before": "OPAQUE",
+                "grade_after": "C1_CANDIDATE_PARTIAL",
+                "name_or_comment_correction": "",
+                "evidence_refs": "",
+            }
+
+        entity = (
+            "CODE:74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e"
+            "1e7750:VA=0x00406fc0:RANGES=" + "5" * 64
+        )
+        contract_id = "C-aaaaaaaaaaaaaaaa"
+        question_id = "Q-bbbbbbbbbbbbbbbb"
+        order_row = {
+            "order": "1",
+            "entityKey": entity,
+            "contractId": contract_id,
+            "entryVa": "0x00406fc0",
+            "receiptSources": "local-lab/x/contracts.tsv",
+            "receiptSha256": sha,
+        }
+        sealed = {
+            "entryVa": "0x00406fc0",
+            "trackedName": "SomeName",
+            "sealedClass": "SEALED_STATIC_RECEIPT",
+            "contractId": contract_id,
+        }
+        function_row = {
+            "entityKey": entity,
+            "currentName": "SomeName",
+            "semanticGrade": "C0_OPAQUE",
+            "evidenceStates": "MAINTAINER_GHIDRA_SEMANTIC_PROMOTED",
+            "lastMeasurementDate": "2026-08-01",
+        }
+        contract_row = {
+            "contractId": contract_id,
+            "entityKey": entity,
+            "contractState": "OPEN",
+            "semanticGrade": "C0_OPAQUE",
+            "questionIds": question_id,
+            # Promoted-entity refs already satisfy the campaign-wide token
+            # regex; the appended receipt ref must not break that invariant.
+            "evidenceRefs": "proof#sha256=" + "d" * 64,
+        }
+        rows = {
+            "campaign-functions.tsv": [dict(function_row)],
+            "campaign-residuals.tsv": [],
+            "campaign-questions.tsv": [
+                {"questionId": question_id, "entityKey": entity}
+            ],
+            "campaign-scenarios.tsv": [],
+            "campaign-levers.tsv": [],
+            "campaign-contracts.tsv": [dict(contract_row)],
+            "campaign-adjudications.tsv": [],
+            "campaign-supersessions.tsv": [],
+        }
+        accounting = build_generation32_authority._apply_reseat_rows(
+            rows,
+            [order_row],
+            {"0x00406fc0": sealed},
+            {"local-lab/x/contracts.tsv": {"0X00406FC0": _receipt_row("x")}},
+            "2026-08-11",
+        )
+        written = rows["campaign-contracts.tsv"][0]["evidenceRefs"]
+        parts = campaign._state_values(
+            written, "contract evidenceRefs regression fixture"
+        )
+        self.assertEqual(2, len(parts))
+        for value in parts:
+            self.assertIsNotNone(
+                re.search(r"#sha256=[0-9a-fA-F]{64}$", value),
+                f"malformed evidence ref survived the reseat: {value}",
+            )
+        self.assertEqual(
+            f"local-lab/x/contracts.tsv#sha256={sha}", parts[-1]
+        )
+        self.assertEqual({contract_id}, accounting["changedContracts"])
+        # Candidate admissions write no adjudication rows (Gen-11 precedent;
+        # adjudications exist only for refuter outcomes).
+        self.assertEqual([], rows["campaign-adjudications.tsv"])
 
     def test_reseed_carry_accepts_the_gen31_second_contract_mint_alias(self) -> None:
         """The Gen31 second-contract mint (sha256(entityKey|owner)[:16], used

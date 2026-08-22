@@ -207,6 +207,57 @@ canary copy. Applied wave-specific
 mutations live in Git history. `ghidra_project_backup.py` and the provenance/
 rename guards operate only on explicitly selected local project roots.
 
+### Function-triage packets (P4)
+
+`tools/export_packets.py` is the batch function-triage packet exporter: it
+takes a VA list file and an output directory, invokes headless Ghidra **once**
+(`-readOnly -noanalysis`) over the whole list, and emits one stable-schema
+JSON packet per VA (`bea.re.triage-packet.v1`) — decompile slice, callers and
+callees (STATIC_DIRECT instruction flows), referenced defined strings with
+their referring functions, observed vtable-pointer evidence (slot-0 dword,
+executable-target test, data-referring functions, slot-minus-4 dword), and the
+campaign grade joined from the tracked closure TSV when present — plus a run
+manifest with per-packet SHA-256s and a `triage-ready.json` receipt published
+last as the commit marker. Every packet header carries the source image
+SHA-256; the specimen identity is `74154bfa…7750`.
+
+Read-only posture: the default target is the verified D: POST backup
+(`D:\BEA-Ghidra-Backups\2026-08-17-vftable65-post-live`, db.18627); pointing at
+the live maintainer project is refused unless `--allow-live-project` is passed,
+and every invocation stays `-readOnly -noanalysis`. Incremental: a re-run over
+the same output directory skips VAs whose packets already exist with the same
+image hash (and a live READY receipt) without launching Ghidra at all;
+`--force` removes matching-image packets first and re-cuts them, while a packet
+cut from a *different* image refuses rather than being silently overwritten.
+
+```powershell
+py -3 tools\export_packets.py tools\packet-va-cgame-level-flow.txt `
+  D:\packet-runs\cgame-level-flow
+py -3 tools\export_packets.py <addresses.txt> <out-dir> --dry-run
+```
+
+The named 5-VA smoke list `tools/packet-va-cgame-level-flow.txt` carries the
+tracked CGame level-flow identities from
+[`../reverse-engineering/ghidra-functions.md`](../reverse-engineering/ghidra-functions.md);
+it is the gate's example list and the smoke suite's fixture. The focused gate
+is:
+
+```powershell
+py -3 tools\export_packets_tests.py
+```
+
+The smoke suite needs no Ghidra: it drives the real driver against a fake
+headless that emits the same markers and file shapes, asserting the ONE-run
+gate, the `-readOnly -noanalysis` flags, post-run hash verification, skip/
+force/foreign-image incremental behavior, the live-project refusal, and the
+Java exporter's static contract (usage arity, READY marker, no mutation APIs).
+
+A requested VA with no function yields a `status=NOT_FUNCTION` packet rather
+than a silent skip; missing evidence inside a packet (failed decompile, absent
+closure row) is recorded as null/false fields, never omitted. Consumers reject
+a whole output directory until its `triage-ready.json` exists and all manifest
+hashes verify.
+
 `GhidraApplyTextGapBoundaries.java` is the narrow disposable-project owner for
 the reviewed 31-row PC `.text` gap manifest. It restricts disassembly and
 derived reference sources to the exact preregistered bodies, creates only
