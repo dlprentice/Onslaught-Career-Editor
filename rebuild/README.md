@@ -1,9 +1,9 @@
 # Onslaught Rebuild
 
 Status: early GPL reconstruction lane
-Last updated: 2026-07-29. Current startup/frontend, pine-detail, and
-mouse-sensitivity claims were re-reviewed. Other sections retain
-their narrower dated evidence boundaries.
+Last updated: 2026-08-22. The world-admission claims below (career-graph
+selector law, world-110 payload admission) are the newly re-reviewed surface.
+Other sections retain their narrower dated evidence boundaries.
 Summary: what the `rebuild/` lane is, who owns which assembly, and what the
 Level 100 Opening Slice does and does not currently do.
 [`PROVENANCE.md`](PROVENANCE.md) is the authority for its evidence boundary.
@@ -172,7 +172,7 @@ Controls:
 
 The frontend owns click-to-start, Main Menu, the Quit confirmation, DevSelect
 (retail's `CHOOSE GAME NAME` page, implemented visually and sequentially only —
-no save and no career persistence), Options, the Level 100-only selector,
+no save and no career persistence), Options, the career-law level selector,
 Mission Briefing, Select Configuration, Loading, and the Level 100 intro
 cutscene. The
 `RetailFrontendScreen` enum in
@@ -182,6 +182,24 @@ that list; read it rather than this sentence when the two disagree.
 Main Menu, the Level 100-only selector, and Loading." The word "only" made it a
 completeness claim and it was false — five further screens were already declared
 and shipping. Nothing was removed; the list was understated.*)
+(*Updated 2026-08-22: the selector is no longer Level-100-only by law. The
+session carries the released 43-node career graph
+(`OnslaughtRebuild.Core/RetailWorldCatalog.cs`, Stuart's pinned
+`Career.cpp:24-70`) and `SelectWorld` admits a world exactly when retail's
+measured ReCalcLinks unlock admits it — the root always, any other world once a
+completed incoming link points at it. The launch edge was renamed
+`LevelLaunchRequested` and carries `ConsumeLaunchWorldNumber`. What a launch
+*constructs* is still Level 100 only: world-110's compiled scripts and
+heightfield are admitted by Core (below), but the world-110 session owner and
+its actor-definition projection do not exist yet, so the host cannot build that
+world. After a Level 100 Won reaches `FrontEndHandoffReady`, the host returns
+the player to SELECT LEVEL with the FillOut update applied (retail's PC
+`CFrontEnd::Init` would land on `FEP_DEBRIEFING` first — that page is not
+composed here). World 110 is then selectable and the Episode-1 child node is
+clickable; launching it returns to SELECT LEVEL rather than constructing Level
+100 in its place. `SetCurrentLevelToHighestAvailable` is not in the source drop
+and is not invented — the highlight stays on the root until the player picks
+the child.*
 Each launch request makes the host construct a fresh canonical
 `InteractiveSession` from the materialized Level 100 actor definitions before
 gameplay activation. The frontend does not inspect
@@ -196,8 +214,10 @@ Continue resumes after a neutral input sample; Retry and Quit call those
 existing lifecycle seams after the audio owner completes its kill-then-Select
 exit boundary once. Message Log, Briefing, and the three settings rows remain
 visible but disabled until canonical integrated owners exist. The current
-opening slice does not synthesize terminal events, rank, kill summary, unlock,
-save, or campaign progression. `FrontendAudioCueRequested` is an observation
+opening slice does not synthesize terminal events, rank, kill summary, or
+save. Campaign progression after Won is the already-pinned FillOut update
+applied to the selector career, then SELECT LEVEL — not a synthesized
+debrief. `FrontendAudioCueRequested` is an observation
 seam; the existing Level 100 audio owner remains the sole playback owner.
 
 Core currently provides integer positions, opening tutorial/objective state,
@@ -209,6 +229,19 @@ Level 100 objective state are part of the snapshot/hash, and every input axis—
 look—is part of the trace. Walker acceleration is projected through the body's
 continuous deterministic yaw; only jet movement retains the older eight-way
 approximation.
+
+World admission is no longer Level-100-only in Core (2026-08-22): the released
+43-node career graph lives in `RetailWorldCatalog` with its selectability law,
+and world 110 — the second career node — is admitted from its own measured
+payloads. `materialize_retail_assets.py` pins `data/resources/110_res_PC.aya`
+(SHA-256 `4e041c75…3c2b`) and walks out its 13 version-50 script objects plus
+the HFLD envelope into `Assets/Level110/`; `Level100MissionProgram.LoadEmbedded`
+admits them per-world under the same hash law as Level 100 (world 110's
+LevelScript: 181 instructions, 92 symbols, five named events), and
+`Level100Terrain.World110` carries the heightfield under the same envelope law.
+No simulation consumes the world-110 payloads yet; no world-110 FillOut, VM
+run, or session owner exists. The pattern generalizes to further worlds by
+adding their pinned rows, not new code shapes.
 
 The walker now consumes the shipped Aquila configuration's exact `1.0/75`
 yaw-input gain instead of the older fitted `1.7/75` value. Terrain touchdown

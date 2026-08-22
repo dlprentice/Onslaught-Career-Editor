@@ -38,7 +38,7 @@ public sealed class RetailFrontendSessionTests
         Assert.Equal(RetailFrontendScreen.SelectConfiguration, frontend.Screen);
         Assert.False(frontend.ConsumeLevel100LaunchRequest());
 
-        Assert.Equal(RetailFrontendSignal.Level100LaunchRequested, frontend.Confirm());
+        Assert.Equal(RetailFrontendSignal.LevelLaunchRequested, frontend.Confirm());
         Assert.Equal(RetailFrontendScreen.Loading, frontend.Screen);
         Assert.Equal(0, frontend.SelectedConfigurationIndex);
         Assert.Equal("Aquila Prototype", frontend.SelectedConfiguration.AuthoredName);
@@ -279,7 +279,7 @@ public sealed class RetailFrontendSessionTests
         var frontend = AtGameplay();
 
         Assert.Equal(
-            RetailFrontendSignal.Level100LaunchRequested,
+            RetailFrontendSignal.LevelLaunchRequested,
             frontend.RestartLevel100());
         Assert.Equal(RetailFrontendScreen.Loading, frontend.Screen);
         Assert.True(frontend.ConsumeLevel100LaunchRequest());

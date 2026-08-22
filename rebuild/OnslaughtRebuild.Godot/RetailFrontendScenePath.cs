@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 using OnslaughtRebuild.Client;
+using OnslaughtRebuild.Core;
 
 namespace OnslaughtRebuild.GodotClient;
 
@@ -156,7 +157,7 @@ public sealed class RetailFrontendScenePath
         }
 
         return TryConfirmPage(session, StartupMediaActive, out signal)
-            && signal == RetailFrontendSignal.Level100LaunchRequested
+            && signal == RetailFrontendSignal.LevelLaunchRequested
             && session.Screen == RetailFrontendScreen.Loading;
     }
 
@@ -226,6 +227,20 @@ public sealed class RetailFrontendScenePath
 
         session.CompleteLevel100IntroCutscene();
         return session.Screen == RetailFrontendScreen.Gameplay;
+    }
+
+    /// <summary>
+    /// The host post-Won re-entry. Lands on SELECT LEVEL with the FillOut
+    /// Won update applied; does not invent <c>FEP_DEBRIEFING</c>.
+    /// </summary>
+    public static bool TryAcceptWonHandoff(
+        RetailFrontendSession session,
+        Level100MissionOutcome outcome,
+        Level100MissionTerminalState terminalState)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        return session.TryAcceptWonHandoff(outcome, terminalState)
+            && session.Screen == RetailFrontendScreen.LevelSelect;
     }
 
     public bool TryBack(RetailFrontendSession session)

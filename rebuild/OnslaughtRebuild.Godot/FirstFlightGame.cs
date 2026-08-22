@@ -213,6 +213,11 @@ public sealed partial class FirstFlightGame : Node3D
             _audio.CharacterMessagePlayback);
         _hud.Visible = _world.ShowHud;
 
+        if (!_smokeMode)
+        {
+            TryAcceptWonFrontendHandoff(result.CurrentSnapshot.Level100Mission);
+        }
+
         if (_smokeMode)
         {
             SampleSmokeVoiceProgress();
@@ -737,6 +742,16 @@ public sealed partial class FirstFlightGame : Node3D
     {
         try
         {
+            if (_frontend is not null && !_frontend.SelectedWorldIsConstructible)
+            {
+                // World 110 (and every later node) is selectable after a Won
+                // update, but this reconstruction still has only a Level 100
+                // session owner. Do not silently construct 100 in its place.
+                _frontend.ReturnUnconstructibleLaunchToLevelSelect();
+                _audio.StartFrontendMusic();
+                return;
+            }
+
             if (_level100WorldCreated)
             {
                 DestroyLevel100World();
@@ -752,6 +767,17 @@ public sealed partial class FirstFlightGame : Node3D
             GD.PushError($"Level 100 failed to load from the frontend: {exception.Message}");
             GetTree().Quit(4);
         }
+    }
+
+    private void TryAcceptWonFrontendHandoff(Level100MissionSnapshot mission)
+    {
+        if (mission.TerminalState != Level100MissionTerminalState.FrontEndHandoffReady ||
+            _frontend is null)
+        {
+            return;
+        }
+
+        _frontend.AcceptWonHandoff(mission.Outcome, mission.TerminalState);
     }
 
     private void StopFrontendMusicForLevelEntry()
