@@ -2415,3 +2415,81 @@ stay without a one-instruction cheat. `GetVariable` still dirties
 x87 if the helper is NOPed. SP aspect `0x005D8BC4` (0.75f,
 42 refs) is not a value row. FOGEND 10.0 is a sentinel ignored
 under EXP. `cg_meshtexturelodbias` stays unrowed (register-only).
+
+## Phase 2 runtime verification — changelog
+
+Runtime lane owner: kanban task `t_665c627a`. Copied-runtime only: every stage
+runs in the app-owned copy
+`%APPDATA%\OnslaughtCareerEditor\GameProfiles\ps2-baseline`, whose source tree
+was hash-verified against pristine specimen `74154bfa…`; the app's 29-row
+product baseline (`baseline-diff.tsv`) is re-applied beneath every census
+stage. Never the installed game, never `G:`. Instruments:
+`local-lab/patch-surface-phase2/{stage_apply,launch_copy,input_tap,grab_frame,stop_bea}.py`,
+JSON receipts alongside.
+
+### Batch 1 — cheat-gate trio launch-crash screening (2026-08-22)
+
+Protocol: `stage_apply.py` restores the copy's pristine backup, re-applies the
+product baseline, applies the selected census rows asserting each row's
+`original_bytes` against pristine first; launch detached with
+`-skipfmv -res 1600 900`; liveness checked at t=12s; 3 repeats per stage
+(earlier single >=60s watches agree).
+
+| Stage | Census rows | Result |
+|---|---|---|
+| baseline | none | ALIVE 4/4 |
+| maladim | 0x004CE31B | ALIVE 3/3 (+ earlier >=60s) |
+| turkey | 0x00461A6F | ALIVE 3/3 (+ earlier >=60s) |
+| pair | 0x004CE31B + 0x00461A6F | ALIVE 3/3 |
+| latete | 0x0045D80B | DEAD 6/6 (never reached t=12s) |
+| any stage containing latete | … + 0x0045D80B | DEAD consistently |
+
+Finding: `0x0045D80B` `e8->b8 01` **crashes the game during startup** — the
+forced eax=1 flows through the site's tail neg/sbb whose inverted/extended
+semantics the startup path cannot tolerate (matches the census's own warning).
+TSV row updated: risk=high LAUNCH CRASHER with the observation; confidence
+stays STATIC_ONLY because a crash verifies nothing about the intended effect.
+Maladim / TURKEY stay STATIC_ONLY until their named UI observations
+(God line visible / all-levels select) are observed via a menu walk.
+
+Session environment findings (route proven): message-transport window-message
+taps navigate retail menus (arrows need the extended-key lparam bit; ENTER
+enters pages; click-to-start via client-centre click); observation channel is
+PrintWindow frame grab + mean-RGB signatures; `-skipfmv` is required to reach
+the menu and stays on the copy only. An earlier trio "death" at 30-90s was
+shown to coincide with input-tap lapses (attract timeout), not bytes.
+PrintWindow later proved unreliable on this title (documented in
+`tools/d3d9-proxy/README.md`: the D3D9 back buffer is never composited into the
+window DC, and grabbing the window can stall its main loop) — the sanctioned
+observation channel is the d3d9-proxy Present-time back-buffer grab with the
+measured retail mean-RGB signatures (`Run-FrontendPageCapture.ps1`).
+
+### Batch 2 — gameplay-value + frontend clip rows launch-crash screening (2026-08-22)
+
+Protocol: identical to batch 1 (`stage_apply.py` pristine restore → product
+baseline → census rows asserted vs pristine → detached launch `-skipfmv -res
+1600 900`; liveness at t=12s and t=20s; 3 repeats per stage via
+`batch2_screen.py`, JSONL log + per-stage receipts alongside). Every stage was
+killed cleanly after observation; receipts name PIDs and terminal state.
+
+| Stage | Census rows | Result |
+|---|---|---|
+| b2-energy | 0x004137E8, 0x00410CA8, 0x00410CD0 (energy drain trio) | ALIVE 3/3 |
+| b2-clock | 0x005D8578 (CLOCK_TICK 0.05f→0.038f) | ALIVE 3/3 |
+| b2-freeze | 0x0046EB5D (FREEZE: AdvanceTime NOP) | ALIVE 3/3 |
+| b2-console | 0x0046C186, 0x0046C209 (console Win/Lose gates) | ALIVE 3/3 |
+| b2-immune | 0x004037BE, 0x004898B0, 0x0040819C, 0x00408189 (damage/water immunity quad) | ALIVE 3/3 |
+| b2-clips | 0x0045F06C, 0x0045F071, 0x00468626, 0x0045041D, 0x00450422, 0x004506DA, 0x004506DF, 0x005222AC, 0x005222B1 (§23 frontend far/near clip PUSHes ×9) | ALIVE 3/3 |
+
+Finding: **no new launch crashers** among the 20 rows screened — all six
+stages reached t=20s alive on every repeat. No TSV confidence promotions yet:
+crash-screening proves launch-safety only; each row still needs its named
+cheapest verification observed.
+
+Menu-walk progress (Maladim+TURKEY stage): the d3d9-proxy instrument navigated
+click-to-start → main menu under full occlusion (signatures hit at frames
+230/880). First keyboard walk landed one row low (DOWN×5+ENTER opened Quit's
+confirm dialog — initial selection is not New Game); corrected walk
+(DOWN×4+ENTER into Options, then Controller Options for the God line,
+level-select for TURKEY, Goodies page + §23 clip rows) is prepared but HELD
+pending the serialized-game slot (video task t_f372c455).
