@@ -2590,3 +2590,32 @@ no negative finding recorded from them. Corrected v2 plan (longer budget,
 ENTER/SPACE activation probes, click fallback on re-measured coordinates)
 staged in `WALK-PENDING-SLOT.md`. All BEA launches held again pending the
 video lane's explicit closed announcement.
+
+### Latete H1 falsifier — CONFIRMED; variant B promoted MEASURED (2026-08-22 ~16:20)
+
+Serialized slot explicitly released by reviewer (16:15); tasklist verified clear;
+origin/main merged first (`9c011152`, pushed). One BEA copy at a time throughout.
+
+Stage: `ps2-baseline` copy + TSV row `0x0045D80B` variant B only, applied over the
+29-row product baseline via `stage_apply.py` VA#2 selector; receipts show
+orig `e8807c0000f7d81bc0` → patched `83c404b80100000090` in all three reps,
+sha256_after `2d07696a…` identical across reps.
+
+Result (`batch2_screen.py --label latete-fix --vas 0x0045D80B#2 --repeats 3`,
+clean serialized slot): **ALIVE 3/3** at t=12 s and t=20 s
+(pids 5336 / 39968 / 20420, each killed cleanly at end of rep; tasklist clear after).
+
+Pre-registered decision rule (`WALK-PENDING-SLOT.md`): ALIVE ≥3/3 confirms H1;
+still-dead refutes. **H1 CONFIRMED** — variant A's launch crash was the stranded
+callee-cleaned stdcall argument skewing ESP, not the neg/sbb tail semantics.
+
+Bookkeeping:
+- TSV row `0x0045D80B` variant B promoted STATIC_ONLY → **MEASURED** (its named
+  cheapest_verification was copied-runtime liveness ALIVE ≥3/3, now observed);
+  risk rewritten from "untested falsifier" to low-moderate with the receipt.
+  Variant A row unchanged: risk=high LAUNCH CRASHER, stays STATIC_ONLY.
+- Open question carried forward: the goodies-unlock UI effect of variant B is
+  still unobserved (menu-walk pending) — liveness is measured, behavior is not.
+
+Process ledger this stage: 3 copies launched, 3 killed via instrument finally
+block, 0 left running (tasklist verified).
