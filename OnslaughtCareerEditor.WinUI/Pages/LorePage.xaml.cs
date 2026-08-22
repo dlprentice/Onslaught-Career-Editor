@@ -1,15 +1,16 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Windows.Foundation;
+using Windows.System;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using OnslaughtCareerEditor.AppCore;
 using OnslaughtCareerEditor.WinUI.Helpers;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using Windows.Foundation;
-using Windows.System;
 
 namespace OnslaughtCareerEditor.WinUI.Pages
 {
@@ -21,6 +22,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         private const string LoreExternalOpenFailureMessage = "That Lore document could not be handed to your browser. Try again once the library has finished loading.";
 
         private readonly LoreBrowserService _service = new();
+        private readonly LoreSearchService _searchService;
         private readonly Dictionary<string, LoreDocument> _documentLookup = new(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, TreeViewNode> _nodeByKey = new(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, TreeViewNode> _nodeByPath = new(StringComparer.OrdinalIgnoreCase);
@@ -38,10 +40,13 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         private bool _suppressHistory;
         private bool _suppressTreeSelection;
         private CancellationTokenSource? _searchFilterCancellation;
+        private LoreBacklinkIndex? _backlinkIndex;
+        private double _readerTextScale = 1.0;
 
         public LorePage()
         {
             InitializeComponent();
+            _searchService = new LoreSearchService(_service);
             Loaded += LorePage_Loaded;
             UpdateNavButtons();
             UpdateLibraryToggleButton();
@@ -101,6 +106,17 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 foreach (LoreDocument document in _index.Documents)
                 {
                     _documentLookup[document.FilePath] = document;
+                }
+
+                try
+                {
+                    _backlinkIndex = await Task.Run(() => _searchService.BuildBacklinkIndex(_index));
+                }
+                catch
+                {
+                    // Cross-links are depth on top of a working library; a failure to
+                    // build them must not fail the load. The expander says so itself.
+                    _backlinkIndex = null;
                 }
 
                 LibrarySummaryTextBlock.Text = _index.UsingContentPack
@@ -313,8 +329,12 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             ToolTipService.SetToolTip(CurrentPathTextBlock, ResolveToolTipPath(content.SourcePath));
 
             RenderCurrentDocument(content);
+            ApplyReaderTextScale();
             ScrollToAnchor(anchor);
 
+            RefreshBacklinks(content.SourcePath);
+            RefreshOutline(content);
+            RefreshOutgoing(content.SourcePath);
             SyncTreeSelection(content.SourcePath);
             UpdateNavButtons();
             AppStatusService.SetStatus($"Lore: loaded {CurrentDocumentTextBlock.Text}");
@@ -325,7 +345,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             LoreRenderedDocument rendered = LoreDocumentRenderer.Render(
                 content.Document,
                 ResolveImageBaseDirectory(content.SourcePath),
-                OnLoreLinkActivated);
+                OnLoreLinkActivated,
+                _readerTextScale);
 
             _anchorTargets = rendered.Anchors;
             ContentReader.Content = rendered.Root;
@@ -512,9 +533,65 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             {
                 await Task.Delay(180, cancellationToken);
                 await ApplyTreeFilterAsync(updateSelection: true, cancellationToken);
+                await ApplySearchHitsAsync(cancellationToken);
             }
             catch (OperationCanceledException)
             {
+            }
+        }
+
+        /// <summary>
+        /// Full-text matches for the current query, shown with snippets under the
+        /// tree. Runs after the tree filter on the same cancellation token so typing
+        /// stays responsive; a failure degrades the panel, never the library.
+        /// </summary>
+        private async Task ApplySearchHitsAsync(CancellationToken cancellationToken)
+        {
+            string query = (SearchTextBox.Text ?? string.Empty).Trim();
+            if (_index is null || query.Length == 0)
+            {
+                LoreSearchHitsList.ItemsSource = Array.Empty<LoreSearchHitModel>();
+                LoreSearchHitsStatus.Text = query.Length == 0
+                    ? "Type a word to find every document containing it, with the matching sentence."
+                    : "Load a library first.";
+                return;
+            }
+
+            LoreIndex index = _index;
+            IReadOnlyList<LoreSearchHit> hits = await Task.Run(
+                () => _searchService.SearchAllDocuments(index, query),
+                cancellationToken);
+
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var models = hits.Select(hit => new LoreSearchHitModel(hit)).ToArray();
+            LoreSearchHitsList.ItemsSource = models;
+            int documentCount = models.Select(model => model.Hit.DocumentPath).Distinct(StringComparer.OrdinalIgnoreCase).Count();
+            LoreSearchHitsStatus.Text = models.Length > 0
+                ? $"{models.Length} match{(models.Length == 1 ? "" : "es")} across {documentCount} document(s). Select one to open it."
+                : "No document contains that word in its text. Try another word, or clear the search.";
+        }
+
+        private async void LoreSearchHitButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not FrameworkElement { DataContext: LoreSearchHitModel model })
+            {
+                return;
+            }
+
+            try
+            {
+                _isDocumentLoading = true;
+                await LoadDocumentAsync(model.Hit.DocumentPath, anchor: null, addToHistory: true);
+            }
+            catch
+            {
+                ShowReaderPlaceholder("Could not open that match", LorePageText.DocumentLoadFailed);
+                AppStatusService.SetStatus("Lore: search hit failed to open");
+            }
+            finally
+            {
+                _isDocumentLoading = false;
             }
         }
 
@@ -901,6 +978,166 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         }
 
         private sealed record LoreHistoryEntry(string FilePath, string? Anchor);
+
+        /// <summary>
+        /// The A-/A+ reader control: re-renders the open document at a larger or
+        /// smaller text size. Steps are 10%; the renderer clamps the result. A
+        /// re-render failure keeps the previous page instead of tearing the reader.
+        /// </summary>
+        private async void ReaderTextSizeButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(_currentSourcePath) || _isDocumentLoading)
+            {
+                return;
+            }
+
+            bool grow = ReferenceEquals(sender, ReaderTextLargerButton);
+            double next = Math.Clamp(_readerTextScale + (grow ? 0.1 : -0.1), 0.7, 1.8);
+            if (Math.Abs(next - _readerTextScale) < 0.001)
+            {
+                return;
+            }
+
+            try
+            {
+                _isDocumentLoading = true;
+                _readerTextScale = next;
+                string anchorAtStart = _currentAnchor ?? string.Empty;
+
+                // Reload from the service so the document is re-rendered at the new
+                // size; history is not disturbed because it is the same document.
+                await LoadDocumentAsync(_currentSourcePath!, anchor: anchorAtStart, addToHistory: false);
+                AppStatusService.SetStatus($"Lore: text size {(grow ? "larger" : "smaller")} ({Math.Round(next * 100)}%)");
+            }
+            catch
+            {
+                ShowReaderPlaceholder("Could not change the text size", LorePageText.DocumentLoadFailed);
+                AppStatusService.SetStatus("Lore: text size change failed");
+            }
+            finally
+            {
+                _isDocumentLoading = false;
+            }
+        }
+
+        private void ApplyReaderTextScale()
+        {
+            // Kept as an explicit step after RenderCurrentDocument so future
+            // non-font scaling (spacing, tables) lands in one place.
+        }
+
+        /// <summary>
+        /// Fills the "What links here" panel for the open document from the index
+        /// built at library load. A missing index or an unlinked document each get
+        /// their own honest sentence instead of a blank panel.
+        /// </summary>
+        private void RefreshBacklinks(string sourcePath)
+        {
+            if (_backlinkIndex is null)
+            {
+                LoreBacklinksList.ItemsSource = Array.Empty<LoreBacklinkModel>();
+                LoreBacklinksStatus.Text = "Cross-links are unavailable for this library.";
+                return;
+            }
+
+            IReadOnlyList<LoreBacklink> backlinks = _searchService.GetBacklinks(_backlinkIndex, sourcePath);
+            if (backlinks.Count == 0)
+            {
+                LoreBacklinksList.ItemsSource = Array.Empty<LoreBacklinkModel>();
+                LoreBacklinksStatus.Text = "No included document links to this one yet.";
+                return;
+            }
+
+            var models = backlinks.Select(link => new LoreBacklinkModel(link)).ToArray();
+            LoreBacklinksList.ItemsSource = models;
+            LoreBacklinksStatus.Text =
+                $"{models.Length} document{(models.Length == 1 ? "" : "s")} link to this page:";
+        }
+
+        private void RefreshOutline(LoreDocumentContent content)
+        {
+            IReadOnlyList<LoreOutlineEntry> entries = _searchService.BuildOutline(content);
+            if (entries.Count == 0)
+            {
+                LoreOutlineList.ItemsSource = Array.Empty<LoreOutlineEntryModel>();
+                LoreOutlineStatus.Text = "This document has no headings yet.";
+                return;
+            }
+
+            var models = entries.Select(entry => new LoreOutlineEntryModel(entry)).ToArray();
+            LoreOutlineList.ItemsSource = models;
+            LoreOutlineStatus.Text =
+                $"{models.Length} heading{(models.Length == 1 ? "" : "s")} on this page:";
+        }
+
+        private void RefreshOutgoing(string sourcePath)
+        {
+            if (_index is null)
+            {
+                LoreOutgoingList.ItemsSource = Array.Empty<LoreOutgoingLinkModel>();
+                LoreOutgoingStatus.Text = "Outgoing links are unavailable for this library.";
+                return;
+            }
+
+            IReadOnlyList<LoreOutgoingLink> links = _searchService.GetOutgoingLinks(_index, sourcePath);
+            if (links.Count == 0)
+            {
+                LoreOutgoingList.ItemsSource = Array.Empty<LoreOutgoingLinkModel>();
+                LoreOutgoingStatus.Text = "This page does not link to another included document yet.";
+                return;
+            }
+
+            var models = links.Select(link => new LoreOutgoingLinkModel(link)).ToArray();
+            LoreOutgoingList.ItemsSource = models;
+            LoreOutgoingStatus.Text =
+                $"{models.Length} included document{(models.Length == 1 ? "" : "s")} linked from this page:";
+        }
+
+        private void LoreOutlineButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not FrameworkElement { DataContext: LoreOutlineEntryModel model })
+            {
+                return;
+            }
+
+            ScrollToAnchor(model.Entry.Id);
+        }
+
+        private async void LoreOutgoingButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not FrameworkElement { DataContext: LoreOutgoingLinkModel model })
+            {
+                return;
+            }
+
+            try
+            {
+                await LoadDocumentAsync(model.Link.TargetDocumentPath, anchor: null, addToHistory: true);
+            }
+            catch
+            {
+                ShowReaderPlaceholder("Could not open that link", LorePageText.DocumentLoadFailed);
+                AppStatusService.SetStatus("Lore: outgoing link failed to open");
+            }
+        }
+
+        private async void LoreBacklinkButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not FrameworkElement { DataContext: LoreBacklinkModel model })
+            {
+                return;
+            }
+
+            try
+            {
+                await LoadDocumentAsync(model.Link.SourceDocumentPath, anchor: null, addToHistory: true);
+            }
+            catch
+            {
+                ShowReaderPlaceholder("Could not open that link", LorePageText.DocumentLoadFailed);
+                AppStatusService.SetStatus("Lore: cross-link failed to open");
+            }
+        }
 
         private sealed class LoreTreeNodeTag
         {

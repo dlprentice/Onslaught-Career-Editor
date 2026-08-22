@@ -138,6 +138,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             PatchBenchMouseSensitivityPresetComboBox.SelectedIndex = DefaultMouseSensitivityPresetIndex;
             PatchBenchCreateMusicSwapPresetComboBox.SelectedIndex = NoCreateMusicSwapPresetIndex;
             PatchGroupsItemsControl.ItemsSource = _patchGroups;
+            InitializePatchLabInspector();
             InitializeResolutionChoices();
             ApplyProfileControlDefaults(BinaryPatchPlanBuilder.GetSafeCopyProfilePreset(BinaryPatchPlanBuilder.CompatibilityProfileId));
 
@@ -840,6 +841,183 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             InvalidateVerification();
             UpdateControlState();
             AppStatusService.SetStatus($"Windowed & Mods: {statusMessage}");
+        }
+
+        /// <summary>
+        /// The Lab's patch row inspector: a read-only view of every catalog row with
+        /// its exact bytes, evidence, and risk boundary. Staging routes through the
+        /// page's existing selection model - the same checkboxes, validation, and
+        /// guarded safe-copy apply path - so the inspector itself never writes.
+        /// </summary>
+        private PatchLabCatalog? _patchLabCatalog;
+        private IReadOnlyList<PatchLabRowModel> _patchLabRows = Array.Empty<PatchLabRowModel>();
+
+        private void InitializePatchLabInspector()
+        {
+            try
+            {
+                _patchLabCatalog = PatchSurfaceInspector.Load();
+                _patchLabRows = _patchLabCatalog.Rows.Select(row => new PatchLabRowModel(row)).ToArray();
+            }
+            catch (Exception)
+            {
+                // The inspector is optional depth on top of the working patch bench;
+                // a load failure must never take selection or safe copies down.
+                _patchLabCatalog = null;
+                _patchLabRows = Array.Empty<PatchLabRowModel>();
+                PatchLabInspectorStatus.Text = "The patch catalog could not be inspected right now. Safe-copy patching still works normally.";
+            }
+
+            PatchLabInspectorSearchBox.TextChanged += PatchLabInspectorSearchBox_TextChanged;
+            ApplyPatchLabFilter();
+            InitializePatchLabCensus();
+        }
+
+        private void PatchLabInspectorSearchBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            ApplyPatchLabFilter();
+        }
+
+        private void ApplyPatchLabFilter()
+        {
+            if (_patchLabCatalog is null)
+            {
+                PatchLabInspectorList.ItemsSource = Array.Empty<PatchLabRowModel>();
+                return;
+            }
+
+            string query = PatchLabInspectorSearchBox.Text ?? string.Empty;
+            IReadOnlyList<PatchLabRow> filtered = PatchSurfaceInspector.FilterRows(_patchLabCatalog.Rows, query);
+            PatchLabRowModel[] models = _patchLabRows
+                .Where(model => filtered.Any(row => string.Equals(row.Key, model.Key, StringComparison.OrdinalIgnoreCase)))
+                .ToArray();
+
+            PatchLabInspectorList.ItemsSource = models;
+
+            int hiddenCount = models.Count(model => model.Row.IsHiddenCompanion);
+            string countText = $"Inspecting {_patchLabRows.Count} patch rows ({_patchLabCatalog.TotalRegions} byte regions)";
+            if (_patchLabCatalog.UsingFallback)
+            {
+                countText += "; catalog prose unavailable, showing compiled row facts";
+            }
+
+            if (query.Trim().Length == 0 && models.Length == _patchLabRows.Count)
+            {
+                PatchLabInspectorStatus.Text =
+                    $"{countText}. {models.Length} shown, including {hiddenCount} hidden companion row{(hiddenCount == 1 ? "" : "s")} applied automatically with their visible rows.";
+            }
+            else if (models.Length == 0)
+            {
+                PatchLabInspectorStatus.Text =
+                    "No patch row matches that filter. Try another word, or clear the filter.";
+            }
+            else
+            {
+                PatchLabInspectorStatus.Text =
+                    $"{countText}. {models.Length} row{(models.Length == 1 ? "" : "s")} match{(models.Length == 1 ? "es" : "")} your filter.";
+            }
+        }
+
+        private void PatchLabStageButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not Button { DataContext: PatchLabRowModel model })
+            {
+                return;
+            }
+
+            SetVisiblePatchRowSelected(
+                model.Key,
+                isSelected: !IsPatchRowSelected(model.Key),
+                statusMessage: IsPatchRowSelected(model.Key)
+                    ? $"{model.Title} removed from the patch selection"
+                    : $"{model.Title} staged into the patch selection");
+        }
+
+        private bool IsPatchRowSelected(string key)
+        {
+            return _allPatchItems.Any(item =>
+                string.Equals(item.Spec.Key, key, StringComparison.OrdinalIgnoreCase) && item.IsSelected);
+        }
+
+        private const int CensusUnfilteredPreviewLimit = 40;
+
+        private PatchCensusCatalog? _patchCensusCatalog;
+        private IReadOnlyList<PatchCensusRowModel> _patchCensusRows = Array.Empty<PatchCensusRowModel>();
+
+        private void InitializePatchLabCensus()
+        {
+            try
+            {
+                _patchCensusCatalog = PatchSurfaceCensusReader.Load();
+                _patchCensusRows = _patchCensusCatalog.Rows
+                    .Select((row, index) => new PatchCensusRowModel(row, index))
+                    .ToArray();
+            }
+            catch (Exception)
+            {
+                _patchCensusCatalog = null;
+                _patchCensusRows = Array.Empty<PatchCensusRowModel>();
+                PatchLabCensusStatus.Text = "The census TSV could not be inspected right now. Product catalog rows above are unchanged.";
+            }
+
+            PatchLabCensusSearchBox.TextChanged += PatchLabCensusSearchBox_TextChanged;
+            ApplyPatchLabCensusFilter();
+        }
+
+        private void PatchLabCensusSearchBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            ApplyPatchLabCensusFilter();
+        }
+
+        private void ApplyPatchLabCensusFilter()
+        {
+            if (_patchCensusCatalog is null)
+            {
+                PatchLabCensusList.ItemsSource = Array.Empty<PatchCensusRowModel>();
+                return;
+            }
+
+            if (!_patchCensusCatalog.Found)
+            {
+                PatchLabCensusList.ItemsSource = Array.Empty<PatchCensusRowModel>();
+                PatchLabCensusStatus.Text = _patchCensusCatalog.Status;
+                return;
+            }
+
+            string query = PatchLabCensusSearchBox.Text ?? string.Empty;
+            IReadOnlyList<PatchCensusRow> filtered = PatchSurfaceCensusReader.FilterRows(_patchCensusCatalog.Rows, query);
+            bool hasFilter = query.Trim().Length > 0;
+            int displayLimit = hasFilter ? filtered.Count : Math.Min(CensusUnfilteredPreviewLimit, filtered.Count);
+            PatchCensusRowModel[] models = _patchCensusRows
+                .Where(model => filtered.Contains(model.Row))
+                .Take(displayLimit)
+                .ToArray();
+
+            PatchLabCensusList.ItemsSource = models;
+
+            if (!hasFilter && filtered.Count == 0)
+            {
+                PatchLabCensusStatus.Text = _patchCensusCatalog.Status;
+            }
+            else if (!hasFilter && filtered.Count > CensusUnfilteredPreviewLimit)
+            {
+                PatchLabCensusStatus.Text =
+                    $"{_patchCensusCatalog.Status} Showing the first {models.Length} of {filtered.Count}. Type a filter to list more.";
+            }
+            else if (models.Length == 0)
+            {
+                PatchLabCensusStatus.Text =
+                    "No census candidate matches that filter. Try another word, or clear the filter.";
+            }
+            else if (hasFilter)
+            {
+                PatchLabCensusStatus.Text =
+                    $"{_patchCensusCatalog.Status} {models.Length} candidate{(models.Length == 1 ? "" : "s")} match{(models.Length == 1 ? "es" : "")} your filter.";
+            }
+            else
+            {
+                PatchLabCensusStatus.Text = _patchCensusCatalog.Status;
+            }
         }
 
         private void LocalMultiplayerProbeButton_Click(object sender, RoutedEventArgs e)

@@ -132,6 +132,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             CatalogFirstRunGuideBorder.Visibility = Visibility.Collapsed;
             CatalogInputGrid.Visibility = Visibility.Collapsed;
             ChangeCatalogButton.Visibility = Visibility.Visible;
+            ExportModdingManifestButton.Visibility = Visibility.Visible;
+            ExportModdingCatalogTsvButton.Visibility = Visibility.Visible;
             CatalogPathTextBox.Text = string.Empty;
             CatalogPathTextBox.PlaceholderText = "Paste catalog.json, or browse to a generated export folder";
             CatalogStatusTextBlock.Text = $"Catalog loaded: {AssetLibraryPageText.BuildPathSummary(_snapshot.CatalogFilePath)}";
@@ -232,6 +234,47 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             CatalogInputGrid.Visibility = Visibility.Visible;
             ChangeCatalogButton.Visibility = Visibility.Collapsed;
             CatalogPathTextBox.Focus(FocusState.Programmatic);
+        }
+
+        /// <summary>
+        /// Writes the app-owned modding manifest beside the loaded catalog: names,
+        /// ids, references, and hashes of the player's own exported files. It never
+        /// copies game assets, so sharing it cannot substitute for owning the game.
+        /// </summary>
+        private void ExportModdingManifestButton_Click(object sender, RoutedEventArgs e)
+        {
+            ModdingManifestExportResult result = ModdingManifestService.Export(_snapshot);
+            if (result.Success && !string.IsNullOrWhiteSpace(result.ManifestPath))
+            {
+                CatalogStatusTextBlock.Text =
+                    $"Modding manifest written beside the catalog ({result.AssetCount} entries): "
+                    + AssetLibraryPageText.BuildPathSummary(result.ManifestPath);
+                AppStatusService.SetStatus("Asset Library: modding manifest written");
+                return;
+            }
+
+            CatalogStatusTextBlock.Text = result.Message;
+            AppStatusService.SetStatus("Asset Library: modding manifest not written");
+        }
+
+        /// <summary>
+        /// Writes the spreadsheet-shaped catalog TSV beside the loaded catalog:
+        /// the same metadata as the JSON manifest, no game assets.
+        /// </summary>
+        private void ExportModdingCatalogTsvButton_Click(object sender, RoutedEventArgs e)
+        {
+            ModdingManifestExportResult result = ModdingManifestService.ExportCatalogTsv(_snapshot);
+            if (result.Success && !string.IsNullOrWhiteSpace(result.ManifestPath))
+            {
+                CatalogStatusTextBlock.Text =
+                    $"Modding catalog TSV written beside the catalog ({result.AssetCount} rows): "
+                    + AssetLibraryPageText.BuildPathSummary(result.ManifestPath);
+                AppStatusService.SetStatus("Asset Library: modding catalog TSV written");
+                return;
+            }
+
+            CatalogStatusTextBlock.Text = result.Message;
+            AppStatusService.SetStatus("Asset Library: modding catalog TSV not written");
         }
 
         private void TexturesTabButton_Click(object sender, RoutedEventArgs e)
