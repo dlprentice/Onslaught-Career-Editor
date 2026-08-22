@@ -119,8 +119,10 @@ public sealed class RetailWorld110AdmissionTests
     [Fact]
     public void UnknownWorlds_AndUnknownScriptsAreRejected()
     {
+        // World 200 was admitted by the generalization slice; the next
+        // unmeasured world stays rejected.
         Assert.Throws<ArgumentOutOfRangeException>(
-            () => Level100MissionProgram.LoadEmbedded(200, "LevelScript"));
+            () => Level100MissionProgram.LoadEmbedded(210, "LevelScript"));
         Assert.Throws<ArgumentOutOfRangeException>(
             () => Level100MissionProgram.LoadEmbedded(110, "Nonexistent"));
     }

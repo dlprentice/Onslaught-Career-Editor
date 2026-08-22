@@ -92,6 +92,44 @@ WORLD110_HFLD_SIZE = 668_660
 WORLD110_HFLD_SHA256 = (
     "fd4d076a2926fbc473b7d364703bdbc0c8a0f7a638b0ab71b6f319374da033c2"
 )
+# World 200 — the third node of the released career graph (Stuart
+# Career.cpp level_structure[2], the Episode-1 continuation). Measured
+# 2026-08-22 from the retail install with the same readers as worlds 100
+# and 110. Three structural divergences from the first two nodes are
+# MEASURED, not assumed: (1) the level-world header's post-zeros word is
+# 2, not the 1 both earlier worlds carry; (2) this archive carries no HFLD
+# inside WRES/WRLD — its heightfield envelope sits inside the ERES chunk
+# and is found by the same whole-image tag/size/hash scan _extract_chunk
+# already performs for every Level 100 chunk; (3) the BSWD is world 200's
+# own 80,232-byte base world, not the byte-identical island world 110
+# shares with Level 100. The HFLD payload length still matches the shared
+# envelope law exactly (668,652), so the Core loader admits it unchanged.
+WORLD200_ARCHIVE = "data/resources/200_res_PC.aya"
+WORLD200_ARCHIVE_SHA256 = (
+    "99dbd433013822f7d83863fe9607448f4a80db69de347e01920e688c5022bb77"
+)
+LEVEL200_SCRIPT_ROOT = CORE_ASSETS / "Level200/Scripts"
+LEVEL200_SCRIPT_OBJECTS = (
+    ("EnemyLander", 1220, "2a2549d34e4fc580184cac46cf8eea3148dcb3592f57af0bcad7278b8985f637"),
+    ("EnemyLander2", 1333, "2b7bc41b9264ee8488301e8113994d1a3e8d4e51362f79f2f5a7b8c9c2c48036"),
+    ("EnergyMonitor", 793, "6fcbf190f980891cd15dba84f90c3addd213dc9ec3f0f42e9b6868a1d8125815"),
+    ("FighterAttack", 1221, "d26b78d8ec15c21bf359a8e76573f35a435430b5e22267b82d70d18fcd060511"),
+    ("Hangar", 811, "ac616a60b792422f9061e212f46656c60cd28cf62b48e88997aa51f2c5772483"),
+    ("HealthMonitor", 791, "17c00d84b473964cffdceacd5037102a62d05eaf8f9ba4b246f4b4cfa22eaf3a"),
+    ("LandingCraftAlpha", 2222, "63804faa4af57c6dfbaed9f1a3175c00874d9a08f47b03771d77369d9e366457"),
+    ("LandingCraftBeta", 2220, "c75d713729cc50d03f32f350cd6bfa96a28d5b77fe29e0ecc407ddedecbba3cd"),
+    ("LandingCraftDelta", 2876, "a48a36bf69ec3296e6d54ae5ca6704c676d3296f6fa2370cc48564265725f00b"),
+    ("LandingCraftGamma", 2308, "f2ff4fe3408915c1a8124139216023771f8cca8d3ee21da935f5ba03b09146ef"),
+    ("LevelScript", 10300, "ecba1e75c50563aa53821dd0c8e24e8ce932a6ed1e48aca9748e666859919737"),
+    ("Tatiana", 825, "439f99498e4d2ec4c6553d78e0517c05f924eb9b29e2daafae57bef35bf6ce36"),
+    ("VitalBuilding", 569, "956c17bdd26adcf74e0ed16eda55019b1c7fec2ac8ec583c46e9c1c078c193ee"),
+    ("WestAttacker", 392, "395c13f8f29427c09d0bcf5eb3bb1e28249b6cb933f39f7e24db49b27d236fad"),
+)
+LEVEL200_HEIGHTFIELD = CORE_ASSETS / "Level200/level200-heightfield.hfld.bin"
+WORLD200_HFLD_SIZE = 668_660
+WORLD200_HFLD_SHA256 = (
+    "1b8eb8584be552383f10b08c75d9f10e91708343f0e5ee085d5130d369f6b945"
+)
 BASE_ARCHIVE = "data/resources/base_res_PC.aya"
 BASE_ARCHIVE_SHA256 = "0ee8530874425cac759834872f5941bc4be086c40ce6b70553b5c6b539802883"
 SOUND_BANK = "data/sounds/sounds_english_pc.xap"
@@ -1159,6 +1197,12 @@ def _fixed_outputs() -> tuple[tuple[Path, str], ...]:
             for name, _, expected in LEVEL110_SCRIPT_OBJECTS
         ),
         (LEVEL110_HEIGHTFIELD, WORLD110_HFLD_SHA256),
+        # World 200's pinned script objects and heightfield.
+        *(
+            (LEVEL200_SCRIPT_ROOT / f"level200-{name}.mso.bin", expected)
+            for name, _, expected in LEVEL200_SCRIPT_OBJECTS
+        ),
+        (LEVEL200_HEIGHTFIELD, WORLD200_HFLD_SHA256),
         (FRONTEND_LOCALIZATION, FRONTEND_LOCALIZATION_SHA256),
         (FEBACK_STRIP, FEBACK_STRIP_SHA256),
         (LEVEL100_HUD_MANIFEST, LEVEL100_HUD_MANIFEST_SHA256),
@@ -4002,6 +4046,27 @@ def _materialize(game_root: Path, stage: Path) -> tuple[tuple[Path, str], ...]:
     )
     (stage / LEVEL110_HEIGHTFIELD).parent.mkdir(parents=True, exist_ok=True)
     (stage / LEVEL110_HEIGHTFIELD).write_bytes(world110_hfld)
+
+    # World 200: same readers, its own pinned archive, scripts and HFLD.
+    # The header walk asserts world 200's own post-zeros word (2), and the
+    # heightfield is found by the whole-image chunk scan because this
+    # archive packages it inside ERES rather than WRES/WRLD.
+    # The L100/110 outputs above are untouched by this block.
+    world200_archive = _read_exact(game_root / WORLD200_ARCHIVE, WORLD200_ARCHIVE_SHA256)
+    raw_world200 = inflate_aya_bytes(world200_archive)
+    world200_scripts = _parse_world_scripts(raw_world200, 200, LEVEL200_SCRIPT_OBJECTS)
+    for name, payload in world200_scripts.items():
+        script_target = stage / LEVEL200_SCRIPT_ROOT / f"level200-{name}.mso.bin"
+        script_target.parent.mkdir(parents=True, exist_ok=True)
+        script_target.write_bytes(payload)
+    world200_hfld = _extract_chunk(
+        raw_world200,
+        b"HFLD",
+        WORLD200_HFLD_SIZE,
+        WORLD200_HFLD_SHA256,
+    )
+    (stage / LEVEL200_HEIGHTFIELD).parent.mkdir(parents=True, exist_ok=True)
+    (stage / LEVEL200_HEIGHTFIELD).write_bytes(world200_hfld)
 
     chunk_data: dict[bytes, bytes] = {}
     for destination, tag, expected_size, expected in CHUNKS:

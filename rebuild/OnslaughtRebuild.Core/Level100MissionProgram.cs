@@ -32,8 +32,19 @@ internal sealed class Level100MissionProgram
     private const string World110ResourcePrefix =
         "OnslaughtRebuild.Core.Assets.Level110.Scripts.level110-";
 
+    /// <summary>
+    /// World 200's compiled scripts: same version-50 object layout, its own
+    /// hash-pinned payloads (materialized from
+    /// <c>data/resources/200_res_PC.aya</c>, archive SHA-256
+    /// <c>99dbd433…b77</c>), embedded under the Level200 resource prefix.
+    /// Nothing here reuses an earlier world's payload.
+    /// </summary>
+    private const string World200ResourcePrefix =
+        "OnslaughtRebuild.Core.Assets.Level200.Scripts.level200-";
+
     internal const int WorldNumber100 = 100;
     internal const int WorldNumber110 = 110;
+    internal const int WorldNumber200 = 200;
 
     /// <summary>
     /// World 110's released LevelScript events, measured out of the pinned
@@ -51,15 +62,79 @@ internal sealed class Level100MissionProgram
             ("Lander Withdraws", 170),
         ];
 
+    /// <summary>
+    /// World 200's released LevelScript structure, read straight out of the
+    /// pinned payload on 2026-08-22: 413 instructions, 169 symbols,
+    /// <c>builtin[0] == 21</c> with the other twelve built-ins -1, sixteen
+    /// named events carrying the same kind of descriptive string values as
+    /// every other measured world, and the initializer armed.
+    /// </summary>
+    private static readonly WorldLevelScriptPin s_world200LevelScriptEvents =
+        new(
+            413,
+            169,
+            [21, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
+            [
+                ("Alpha Down", 115),
+                ("Beta Down", 134),
+                ("Gamma Down", 153),
+                ("Delta Down", 172),
+                ("Landing Craft Safe", 186),
+                ("Check Transports", 197),
+                ("Start Invasion", 259),
+                ("New West Attacker", 275),
+                ("New West Lander", 283),
+                ("West Attacker Destroyed", 297),
+                ("West Lander Destroyed", 308),
+                ("Check West Forces", 325),
+                ("New Lander", 361),
+                ("Lander Empty", 375),
+                ("New Vital Building", 389),
+                ("Vital Building Destroyed", 397),
+            ]);
+
+    private sealed record WorldLevelScriptPin(
+        int Instructions,
+        int Symbols,
+        int[] BuiltIns,
+        (string Name, int InstructionPointer)[] Events);
+
     private static IReadOnlyDictionary<string, ProgramIdentity> ProgramsFor(
         int worldNumber) => worldNumber switch
     {
         WorldNumber100 => s_programs,
         WorldNumber110 => s_world110Programs,
+        WorldNumber200 => s_world200Programs,
         _ => throw new ArgumentOutOfRangeException(
             nameof(worldNumber),
             $"No admitted mission-program set for world {worldNumber}."),
     };
+
+    /// <summary>
+    /// World 200's fourteen script objects, measured 2026-08-22 from the
+    /// pinned <c>data/resources/200_res_PC.aya</c>. The set is world 200's
+    /// own: four landing crafts, two enemy landers, the monitors, the
+    /// fighter-attack and west-attacker behaviors, the hangar, Tatiana, the
+    /// vital building, and the 10,300-byte LevelScript.
+    /// </summary>
+    private static readonly IReadOnlyDictionary<string, ProgramIdentity> s_world200Programs =
+        new Dictionary<string, ProgramIdentity>(StringComparer.Ordinal)
+        {
+            ["EnemyLander"] = new(1220, "2a2549d34e4fc580184cac46cf8eea3148dcb3592f57af0bcad7278b8985f637"),
+            ["EnemyLander2"] = new(1333, "2b7bc41b9264ee8488301e8113994d1a3e8d4e51362f79f2f5a7b8c9c2c48036"),
+            ["EnergyMonitor"] = new(793, "6fcbf190f980891cd15dba84f90c3addd213dc9ec3f0f42e9b6868a1d8125815"),
+            ["FighterAttack"] = new(1221, "d26b78d8ec15c21bf359a8e76573f35a435430b5e22267b82d70d18fcd060511"),
+            ["Hangar"] = new(811, "ac616a60b792422f9061e212f46656c60cd28cf62b48e88997aa51f2c5772483"),
+            ["HealthMonitor"] = new(791, "17c00d84b473964cffdceacd5037102a62d05eaf8f9ba4b246f4b4cfa22eaf3a"),
+            ["LandingCraftAlpha"] = new(2222, "63804faa4af57c6dfbaed9f1a3175c00874d9a08f47b03771d77369d9e366457"),
+            ["LandingCraftBeta"] = new(2220, "c75d713729cc50d03f32f350cd6bfa96a28d5b77fe29e0ecc407ddedecbba3cd"),
+            ["LandingCraftDelta"] = new(2876, "a48a36bf69ec3296e6d54ae5ca6704c676d3296f6fa2370cc48564265725f00b"),
+            ["LandingCraftGamma"] = new(2308, "f2ff4fe3408915c1a8124139216023771f8cca8d3ee21da935f5ba03b09146ef"),
+            ["LevelScript"] = new(10300, "ecba1e75c50563aa53821dd0c8e24e8ce932a6ed1e48aca9748e666859919737"),
+            ["Tatiana"] = new(825, "439f99498e4d2ec4c6553d78e0517c05f924eb9b29e2daafae57bef35bf6ce36"),
+            ["VitalBuilding"] = new(569, "956c17bdd26adcf74e0ed16eda55019b1c7fec2ac8ec583c46e9c1c078c193ee"),
+            ["WestAttacker"] = new(392, "395c13f8f29427c09d0bcf5eb3bb1e28249b6cb933f39f7e24db49b27d236fad"),
+        };
 
     private static readonly IReadOnlyDictionary<string, ProgramIdentity> s_world110Programs =
         new Dictionary<string, ProgramIdentity>(StringComparer.Ordinal)
@@ -187,9 +262,12 @@ internal sealed class Level100MissionProgram
                 $"Unknown world {worldNumber} script '{name}'.");
         }
 
-        string resourcePrefix = worldNumber == WorldNumber110
-            ? World110ResourcePrefix
-            : ResourcePrefix;
+        string resourcePrefix = worldNumber switch
+        {
+            WorldNumber110 => World110ResourcePrefix,
+            WorldNumber200 => World200ResourcePrefix,
+            _ => ResourcePrefix,
+        };
         string resourceName =
             resourcePrefix + name + ".mso.bin";
         using Stream stream = Assembly.GetExecutingAssembly()
@@ -312,9 +390,18 @@ internal sealed class Level100MissionProgram
                 throw new InvalidDataException($"Invalid named event record {index}.");
             }
 
-            string? name = symbols[symbolOrdinal].InitialValue.Text;
-            if (symbols[symbolOrdinal].InitialValue.Type != Level100ScriptValueType.String ||
-                string.IsNullOrEmpty(name) ||
+            // Worlds 100 and 110 carry descriptive event strings in the
+            // symbol's VALUE; world 200's events name the compiler's own
+            // const-data symbols, so the NAME is the released identifier.
+            // Prefer the value text and fall back to the symbol name.
+            Level100ScriptValue value = symbols[symbolOrdinal].InitialValue;
+            string? name = value.Type == Level100ScriptValueType.String
+                ? value.Text
+                : null;
+            name = string.IsNullOrEmpty(name)
+                ? symbols[symbolOrdinal].Name
+                : name;
+            if (string.IsNullOrEmpty(name) ||
                 !events.TryAdd(name, instructionPointer))
             {
                 throw new InvalidDataException($"Invalid named event symbol {symbolOrdinal}.");
@@ -346,6 +433,29 @@ internal sealed class Level100MissionProgram
                     {
                         throw new InvalidDataException(
                             $"The released world-110 event '{name}' does not match " +
+                            $"instruction {instructionPointer}.");
+                    }
+                }
+            }
+            else if (worldNumber == WorldNumber200)
+            {
+                if (instructions.Length != s_world200LevelScriptEvents.Instructions ||
+                    symbols.Length != s_world200LevelScriptEvents.Symbols ||
+                    !builtInEvents.SequenceEqual(s_world200LevelScriptEvents.BuiltIns) ||
+                    events.Count != s_world200LevelScriptEvents.Events.Length ||
+                    runInitializer != 1)
+                {
+                    throw new InvalidDataException(
+                        "The released world-200 LevelScript structure changed.");
+                }
+
+                foreach ((string name, int instructionPointer) in
+                    s_world200LevelScriptEvents.Events)
+                {
+                    if (!events.TryGetValue(name, out int actual) || actual != instructionPointer)
+                    {
+                        throw new InvalidDataException(
+                            $"The released world-200 event '{name}' does not match " +
                             $"instruction {instructionPointer}.");
                     }
                 }
