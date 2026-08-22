@@ -72,6 +72,23 @@ order:
    > Bridge-commit acceptance is therefore: bridge tests green AND the
    > bootstrap's failure remains exactly the recorded precondition failure,
    > with no new failure mode.
+   >
+   > **EXECUTION STATE 2026-08-21 (handoff).** Step 1's bridge is LANDED at
+   > `be57e985`: `_verify_generation31_campaign_carry` admits the parent on
+   > its sealed literal-pinned authority **without** re-running the frozen
+   > chain (stamp `LITERAL_PINNED_SEALED_AUTHORITY_GENERATION31_NO_REPLAY`),
+   > because the sealed chain's Gen-24 projection `--check-current` anchor
+   > cannot be satisfied against legitimately moved sources. Consequence
+   > adopted: a Generation 32 full replay never reaches the projection, so
+   > **no projection refresh is needed** — the stale anchor retires with the
+   > Gen-31 chain, and the new authority's verify command replaces the
+   > broken Gen-31 command at repin. Pins were written from measured on-disk
+   > hashes (hand transcription was caught producing mangled SHAs — always
+   > derive pins programmatically). Before the builder lands: the full
+   > `tools/re_campaign_tests.py` module must complete once (interrupted at
+   > handoff; the only expected failure is the documented Gen-30 full-replay
+   > precondition error). Continuation detail lives in
+   > `local-lab/gen32-reseat-prep-20260821/README.md`.
 2. Bespoke `build_generation32_authority.py`: per-row gate = the 53
    receipt-file SHA-256 checks; grade movement computed from the live Gen 31
    ledger (the TSV's `gradeBefore` is known-drifted); zero collateral
