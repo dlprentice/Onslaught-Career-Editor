@@ -2381,8 +2381,11 @@ AddHelpMessage id-`jne`, `cg_meshsurfacelodbias`, three
 `CEngine__Init` hit-factor stores). Every non-unknown
 `original_bytes` was re-read from the named specimen
 (`242` prior compared, `0` mismatch, then `12` new).
+Phase 2 adds four §30 init-store rows (see changelog):
+**now 260 data rows / 258 unique VAs**.
 
-Confidence histogram: **MEASURED 29 / STATIC_ONLY 227 / SPECULATIVE 0**.
+Confidence histogram: **MEASURED 29 / STATIC_ONLY 227 / SPECULATIVE 0**
+(STATIC_ONLY 231 after the four §30 additions; no confidence changes).
 
 First-cut corrections landed here, not in `rebuild/**`:
 
@@ -2503,3 +2506,31 @@ confirm dialog — initial selection is not New Game); corrected walk
 (DOWN×4+ENTER into Options, then Controller Options for the God line,
 level-select for TURKEY, Goodies page + §23 clip rows) is prepared but HELD
 pending the serialized-game slot (video task t_f372c455).
+
+### Census writer pass — §30 init-store rows added (2026-08-22, offline)
+
+While BEA launches were held by the serialized-slot directive, the four §30
+init-store sites were verified against the pristine specimen
+(`74154bfae14ddc8e…`) and added as TSV rows — the first census writer pass of
+phase 2. Direct byte reads (`local-lab/patch-surface-phase2/_sec30_read.py`):
+
+| VA | file off | original | expect | MATCH |
+|---|---|---|---|---|
+| 0x004E0210 `CSoundManager::Init` radio vol seed `[this+0x2c]` | 0x000E0210 | `c745003d0ad73e` (0.42f) | catalog §30.1 | yes |
+| 0x004E0217 `CSoundManager::Init` HUD msg vol seed `[this+0x30]` | 0x000E0217 | `c7036666e63e` (0.45f) | catalog §30.1 | yes |
+| 0x00551CB6 `CScreenFx::InitZoomEffectCvar` default `[this+0x10]` | 0x00151CB6 | `c60001` (=1) | catalog §30.2 | yes |
+| 0x00552288 `CDXShadows::Init` blob-fade seed `[this+0x08]` | 0x00152288 | `c745000000f041` (30.0f) | catalog §30.3 | yes |
+
+All four matched the catalog byte-for-byte on first read; one earlier
+MISMATCH was this session's own script bug (file offset typed as
+VA−0x300000), corrected and re-verified — the specimen itself never
+disagreed with the catalog. The patched-byte examples follow the catalog's
+own suggestions (volumes → 1.0f, zoom-effect default → 0, blob fade
+30.0f → 60.0f). Rows are STATIC_ONLY / low risk; each names a copied-runtime
+cheapest_verification (registered cvar value via options UI, overlay
+presence on zoom-in, blob-shadow persistence distance). TSV now **260 data
+rows / 258 unique VAs**; mechanical validation clean (9 columns, hex/length
+parity, offset = VA−0x400000; the only flags are pre-existing census
+conventions: `unknown`/`none-*` placeholders and two intentional
+multi-variant VAs). No confidence changes. Batch-3 stage lists stand ready
+in `WALK-PENDING-SLOT.md`; §30 rows join the post-walk screening queue.
