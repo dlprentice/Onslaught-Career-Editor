@@ -242,9 +242,26 @@ internal sealed class RetailFrontendHarness
                     return Back();
                 }
 
-                if (HasPoint(595, 430, 45, 48, x, y) ||
-                    HasPoint(120, 265, 60, 60, x, y))
+                if (HasPoint(595, 430, 45, 48, x, y))
                 {
+                    Confirm();
+                    return true;
+                }
+
+                if (HasPoint(120, 265, 60, 60, x, y))
+                {
+                    _ = _session.SelectWorld(100);
+                    Confirm();
+                    return true;
+                }
+
+                if (HasPoint(180, 265, 60, 60, x, y))
+                {
+                    if (!_session.SelectWorld(110))
+                    {
+                        return false;
+                    }
+
                     Confirm();
                     return true;
                 }
@@ -298,7 +315,7 @@ internal sealed class RetailFrontendHarness
     /// <summary><c>RetailFrontendFlow.HandleNavigationSignal</c> (:2466-2475).</summary>
     private void HandleNavigationSignal(RetailFrontendSignal signal)
     {
-        if (signal != RetailFrontendSignal.Level100LaunchRequested)
+        if (signal != RetailFrontendSignal.LevelLaunchRequested)
         {
             return;
         }

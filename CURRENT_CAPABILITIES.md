@@ -85,6 +85,17 @@ Packaged lore documents have the repository's maintainer header block
 opens on the article rather than on repository bookkeeping. The tracked source
 files keep the block.
 
+The reader adds three depth surfaces. Full-text search hits list every included
+document containing the word, with the matching sentence as a snippet that opens
+the document. A "What links here" panel lists the documents whose internal links
+reach the open one, and the anchors they use. An "On this page" outline lists the
+open document's headings and jumps to them; "This page links to" lists included
+documents the open page points at. An A-/A+ control re-renders the
+open document at a reader-chosen text size (70%-180%, 10% steps). An empty
+result, an unlinked document, a document with no headings, and an unavailable
+cross-link index each say what happened and what to do next instead of going
+blank; a failed index build degrades the panel, never the library.
+
 ### Save Lab and Game Options
 
 - Analyze existing `.bes` career saves and `.bea` options files.
@@ -140,6 +151,17 @@ as immutable staging evidence; guarded launch validation remains strict.
   default; patching them is opt-in and takes a verified backup first.
 - Create an app-owned playable safe game copy.
 - Plan, apply, restore, and verify expected-byte catalog patches on that copy.
+- Inspect every catalog patch row — including hidden companion rows — with its
+  exact original and patched bytes, evidence references, confidence, rollback
+  strategy, and dependency/conflict graph, before anything is selected. Staging
+  a row from the inspector only ticks its box in the normal selection, so
+  verification and the guarded safe-copy apply path are unchanged; hidden
+  companion rows cannot be staged directly. The inspector is read-only: nothing
+  in it writes a file. When `patches/patch-surface-rows.tsv` is present in this
+  checkout or a sibling worktree, a second Lab panel lists those census
+  candidates with their VA, original/patched bytes, confidence, risk, and
+  cheapest verification. Census rows are not product patches and cannot be
+  staged; a missing file or empty filter says so instead of going blank.
 - Launch and stop only the copied-game process started by the app.
 - Keep BEA.exe-only technical copies separate from playable profiles.
 - A failed Last operation or safe-copy list action names what failed and that
@@ -248,12 +270,23 @@ online play. Host/Join, matchmaking, and new networking are unavailable.
 - Asset Library opens an existing generated catalog and previews supported
   PNG/FBX metadata, linked textures, and bounded wireframes. A search that
   matches nothing says to try another word or clear the search. It has no asset
-  importer, repacker, animation/bone pipeline, or material-package workflow.
+  importer, repacker, animation/bone pipeline, or material-package workflow. It
+  can also write an app-owned `modding-manifest.json` beside the loaded catalog:
+  catalog identity and hash plus per-asset names, ids, canonical references,
+  export file names, and SHA-256 of files the player exported with their own
+  tools. The manifest is metadata only — it contains no game assets, so sharing
+  it cannot substitute for owning the game — and the write goes through the same
+  guarded transaction as other app outputs, which refuses a game-tree
+  destination on its own. It can also write an app-owned `modding-catalog.tsv`
+  beside the same catalog: the same metadata as a tab-separated sheet for
+  third-party authors. That file is also metadata only and uses the same
+  guarded write path.
 - Lore searches and renders the canonical articles under [`lore/`](lore/_index.md)
   with tree navigation and Back/Forward/Home history. A search that matches
   nothing says to try another word or clear the search; it does not call the
   empty tree a filtered result. Portable builds generate a reader pack from
-  that single source rather than tracking a mirror.
+  that single source rather than tracking a mirror. The Lore depth surfaces are
+  described under [Lore](#lore).
 
 `tools/aya_archive_inventory.py` is a working read-only AYA structure scanner.
 The legacy AYA export bridge still depends on untracked local upstream binaries,

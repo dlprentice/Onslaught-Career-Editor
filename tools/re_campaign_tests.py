@@ -2242,6 +2242,343 @@ class CampaignTests(unittest.TestCase):
             verified["_carryBridge"],
         )
 
+    def test_generation32_replay_dispatch_runs_the_reseat_builder(self) -> None:
+        """The frozen replay of a Generation 32 receipt must run the reseat
+        builder against the literal-pinned Generation 31 bridge."""
+        import sys
+        import types
+
+        parent = Path(tempfile.mkdtemp(prefix="gen32-parent-"))
+        replay_dir = Path(tempfile.mkdtemp(prefix="gen32-replay-"))
+        snapshot_dir = Path(tempfile.mkdtemp(prefix="gen32-snap-"))
+        prep_dir = Path(tempfile.mkdtemp(prefix="gen32-prep-"))
+        captured: dict = {}
+
+        def _capture_build(parent_path, out, **kwargs):
+            captured["args"] = (parent_path, out)
+            captured["kwargs"] = kwargs
+            return {"generation": 32}
+
+        stub_module = types.ModuleType("build_generation32_authority")
+        stub_module.build = _capture_build
+        receipt = {
+            "generation": 32,
+            "parentCampaign": {
+                "path": str(parent),
+                "ready": {"bytes": 1, "sha256": "0" * 64},
+            },
+            "advance": {
+                "kind": campaign.GENERATION32_STATIC_RECEIPT_RESEAT_ADVANCE_KIND,
+                "schema": (
+                    campaign.GENERATION32_STATIC_RECEIPT_RESEAT_ADVANCE_SCHEMA
+                ),
+                "snapshot": {"path": str(snapshot_dir)},
+                "prepRoot": {"path": str(prep_dir)},
+            },
+        }
+        try:
+            (parent / "campaign.ready.json").write_text("{}", encoding="utf-8")
+            with patch.object(
+                campaign,
+                "_verify_generation31_campaign_carry",
+                return_value={"generation": 31},
+            ) as carry, patch.object(
+                campaign, "_require_file_stamp", return_value={}
+            ), patch.object(
+                campaign, "_compare_replayed_campaign", side_effect=RuntimeError
+            ), patch.dict(
+                sys.modules, {"build_generation32_authority": stub_module}
+            ):
+                with self.assertRaises(RuntimeError):
+                    campaign._replay_campaign_generation(replay_dir, receipt)
+            self.assertEqual(1, carry.call_count)
+            self.assertEqual(parent, captured["args"][0])
+            self.assertEqual(
+                {
+                    "snapshot": snapshot_dir,
+                    "prep": prep_dir,
+                    "_self_check": False,
+                    "_verified_parent_receipt": {"generation": 31},
+                },
+                captured["kwargs"],
+            )
+        finally:
+            shutil.rmtree(parent, ignore_errors=True)
+            shutil.rmtree(replay_dir, ignore_errors=True)
+            shutil.rmtree(snapshot_dir, ignore_errors=True)
+            shutil.rmtree(prep_dir, ignore_errors=True)
+
+    def test_generation32_reseal_advance_requires_its_schema(self) -> None:
+        advance = {
+            "kind": campaign.GENERATION32_STATIC_RECEIPT_RESEAT_ADVANCE_KIND,
+            "schema": "bea.re.not-the-generation32-schema",
+        }
+        with self.assertRaisesRegex(
+            campaign.CampaignError, "reseed lineage carry schema"
+        ):
+            campaign._validate_campaign_relations(
+                {
+                    "functions": [],
+                    "residuals": [],
+                    "questions": [],
+                    "scenarios": [],
+                    "levers": [],
+                    "contracts": [],
+                    "adjudications": [],
+                    "supersessions": [],
+                },
+                {
+                    "schema": campaign.SCHEMA,
+                    "generation": 32,
+                    "advance": advance,
+                },
+            )
+
+    def test_generation32_replay_rejects_a_wrong_advance_schema(self) -> None:
+        """The frozen replay of a Generation 32 receipt must refuse to run the
+        builder when the recorded advance schema is not the reseat schema."""
+
+        class _StopReplay(Exception):
+            pass
+
+        parent = Path(tempfile.mkdtemp(prefix="gen32-parent-"))
+        replay = Path(tempfile.mkdtemp(prefix="gen32-replay-"))
+        try:
+            (parent / "campaign.ready.json").write_text("{}", encoding="utf-8")
+            receipt = {
+                "generation": 32,
+                "parentCampaign": {
+                    "path": str(parent),
+                    "ready": {"bytes": 1, "sha256": "0" * 64},
+                },
+                "advance": {
+                    "kind": campaign.GENERATION32_STATIC_RECEIPT_RESEAT_ADVANCE_KIND,
+                    "schema": "bea.re.wrong",
+                },
+            }
+            with patch.object(
+                campaign,
+                "_verify_generation31_campaign_carry",
+                return_value={"generation": 31},
+            ), patch.object(
+                campaign, "_require_file_stamp", return_value={}
+            ), patch.object(
+                campaign,
+                "_compare_replayed_campaign",
+                side_effect=_StopReplay,
+            ):
+                with self.assertRaisesRegex(
+                    campaign.CampaignError, "static-receipt-reseat advance schema"
+                ):
+                    campaign._replay_campaign_generation(replay, receipt)
+        finally:
+            shutil.rmtree(parent, ignore_errors=True)
+            shutil.rmtree(replay, ignore_errors=True)
+
+    def test_reseed_carry_accepts_the_gen31_second_contract_mint_alias(self) -> None:
+        """The Gen31 second-contract mint (sha256(entityKey|owner)[:16], used
+        once for the RetailJetFriction GetFriction ceremony row) is a verified
+        alias of the base contract-id derivation for the same exact entity, so
+        the reseed-carry exact-C1 geometry check must accept it instead of
+        refusing the whole carry."""
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            prior_source = root / "prior-source"
+            prior_source.mkdir()
+            prior_snapshot = make_snapshot(prior_source)
+            fresh_source = root / "fresh-source"
+            fresh_source.mkdir()
+            fresh_snapshot = make_snapshot(fresh_source)
+
+            prior = root / "prior"
+            prior_receipt = campaign.seed(prior_snapshot, prior)
+            functions = campaign._read_tsv(prior / "campaign-functions.tsv")
+            progressed_function = next(
+                row for row in functions if row["entryVa"] == "0x00401000"
+            )
+            entity = progressed_function["entityKey"]
+            progressed_function.update(
+                {
+                    "resolutionState": "CANDIDATE_CONTRACT",
+                    "semanticGrade": "C1_CANDIDATE_PARTIAL",
+                    "evidenceStates": campaign._union_semicolon(
+                        progressed_function["evidenceStates"],
+                        "CAMPAIGN_C1_OPAQUE_PE",
+                    ),
+                    "lastMeasurementDate": "2026-08-13",
+                }
+            )
+            write_tsv(
+                prior / "campaign-functions.tsv",
+                campaign.FUNCTION_COLUMNS,
+                functions,
+            )
+
+            contracts = campaign._read_tsv(prior / "campaign-contracts.tsv")
+            progressed_contract = next(
+                row for row in contracts if row["entityKey"] == entity
+            )
+            owner = "rebuild/OnslaughtRebuild.Core/RetailJetFriction.cs"
+            second_id = (
+                "C-"
+                + hashlib.sha256(f"{entity}|{owner}".encode("utf-8")).hexdigest()[:16]
+            )
+            progressed_contract.update(
+                {
+                    "contractId": second_id,
+                    "contractState": "CANDIDATE_NEEDS_REFUTER",
+                    "semanticGrade": "C1_CANDIDATE_PARTIAL",
+                    "receiver": "thiscall this in ecx",
+                    "inputs": "no stack args",
+                    "returns": "eax",
+                    "writes": "none",
+                    "sideEffects": "entity-bound static contract",
+                    "preconditions": "this valid",
+                    "failureModes": "none observed",
+                    "authorVerdict": "SUPPORTED_BY_PE_STATIC_SPINE",
+                    "runtimeVerdict": "UNSCORED",
+                    "refuterVerdict": "UNSCORED",
+                    "evidenceRefs": "proof#sha256=" + "d" * 64,
+                    "rebuildOwner": owner,
+                    "rebuildState": "PARTIAL_CONTRACT",
+                    "remainingUncertainty": "runtime refuter required",
+                    "lastMeasurementDate": "2026-08-13",
+                }
+            )
+            write_tsv(
+                prior / "campaign-contracts.tsv",
+                campaign.CONTRACT_COLUMNS,
+                contracts,
+            )
+
+            carried = root / "carried"
+            receipt = campaign.seed(
+                fresh_snapshot,
+                carried,
+                carry=prior,
+                _self_check=False,
+                _verified_carry_receipt=prior_receipt,
+            )
+        report = receipt["advance"]["carried"]
+        self.assertEqual(1, report["exactEntityC1FunctionContracts"])
+        self.assertEqual(1, report["newlyEligibleExactEntityC1FunctionContracts"])
+
+    def test_reseed_carry_still_refuses_a_non_mint_contract_id_change(self) -> None:
+        """Only the exact Generation 31 mint alias passes the exact-C1 identity
+        comparison; any other contractId change still refuses the reseed
+        carry."""
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            prior_source = root / "prior-source"
+            prior_source.mkdir()
+            prior_snapshot = make_snapshot(prior_source)
+            fresh_source = root / "fresh-source"
+            fresh_source.mkdir()
+            fresh_snapshot = make_snapshot(fresh_source)
+
+            prior = root / "prior"
+            prior_receipt = campaign.seed(prior_snapshot, prior)
+            functions = campaign._read_tsv(prior / "campaign-functions.tsv")
+            progressed_function = next(
+                row for row in functions if row["entryVa"] == "0x00401000"
+            )
+            entity = progressed_function["entityKey"]
+            progressed_function.update(
+                {
+                    "resolutionState": "CANDIDATE_CONTRACT",
+                    "semanticGrade": "C1_CANDIDATE_PARTIAL",
+                    "evidenceStates": campaign._union_semicolon(
+                        progressed_function["evidenceStates"],
+                        "CAMPAIGN_C1_OPAQUE_PE",
+                    ),
+                    "lastMeasurementDate": "2026-08-13",
+                }
+            )
+            write_tsv(
+                prior / "campaign-functions.tsv",
+                campaign.FUNCTION_COLUMNS,
+                functions,
+            )
+
+            contracts = campaign._read_tsv(prior / "campaign-contracts.tsv")
+            progressed_contract = next(
+                row for row in contracts if row["entityKey"] == entity
+            )
+            progressed_contract.update(
+                {
+                    "contractId": "C-0123456789abcdef",
+                    "contractState": "CANDIDATE_NEEDS_REFUTER",
+                    "semanticGrade": "C1_CANDIDATE_PARTIAL",
+                    "authorVerdict": "SUPPORTED_BY_PE_STATIC_SPINE",
+                    "evidenceRefs": "proof#sha256=" + "d" * 64,
+                    "lastMeasurementDate": "2026-08-13",
+                }
+            )
+            write_tsv(
+                prior / "campaign-contracts.tsv",
+                campaign.CONTRACT_COLUMNS,
+                contracts,
+            )
+
+            carried = root / "carried"
+            with self.assertRaisesRegex(
+                campaign.CampaignError,
+                "exact-entity C1 function/contract geometry differs",
+            ):
+                campaign.seed(
+                    fresh_snapshot,
+                    carried,
+                    carry=prior,
+                    _self_check=False,
+                    _verified_carry_receipt=prior_receipt,
+                )
+
+    def test_generation32_builder_refuses_an_absent_prep_root(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            prep = Path(temporary) / "empty-prep"
+            prep.mkdir()
+            parent = Path(temporary) / "parent"
+            parent.mkdir()
+            (parent / "campaign.ready.json").write_text("{}", encoding="utf-8")
+            import build_generation32_authority
+
+            with patch.object(
+                campaign,
+                "_verify_generation31_campaign_carry",
+                return_value={
+                    "generation": 31,
+                    "_carryBridge": (
+                        "LITERAL_PINNED_SEALED_AUTHORITY_GENERATION31_NO_REPLAY"
+                    ),
+                },
+            ):
+                with self.assertRaisesRegex(
+                    campaign.CampaignError, "prep artifact"
+                ):
+                    build_generation32_authority.build(
+                        parent,
+                        Path(temporary) / "out",
+                        prep=prep,
+                    )
+
+    def test_generation32_builder_carries_the_sealed_closure_identity(self) -> None:
+        import build_generation32_authority
+
+        self.assertEqual(
+            "cfe90af382269cb2e64996d10df7777bd00fcd8e1844b9823ef74bc6199b8974",
+            build_generation32_authority.CLOSURE_SHA256,
+        )
+        self.assertEqual(
+            "GENERATION32_STATIC_RECEIPT_RESEAT",
+            build_generation32_authority.ADVANCE_KIND,
+        )
+        self.assertIn(
+            "generation32-static-receipt-reseat-builder",
+            {role for role, _relative, _source in campaign._reducer_sources()},
+        )
+
     def test_frozen_v5_bridge_rehashes_its_historical_reducer(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

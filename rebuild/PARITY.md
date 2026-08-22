@@ -169,13 +169,17 @@ Owner paths are relative to the repository root; test names are relative to
 | `IScript::FollowWaypoint` Level 100 start-follow flag | `0x00537d70` through `ret 0xc` at `0x00537e34` (199 B SHA-256 `6f03ae4a…ed9fd3`) on specimen `74154bfa…`. Twin official backup matches. `0x00537df7` is `b8 01 00 00 00` = `mov eax, 1`. `0x00537e20` is `89 46 18` = `mov [esi+0x18], eax`. Isolated FollowWaypoint emit-command names the rebuild path / flag 0; skip store Expected 1 Actual 0. One live store of 1 is not unique versus increment from 0. Level 100's one compiled native-0 site is AirborneDrone1 `ready()` `FollowWaypoint("Drone Path 1", 0)` on beat 7. FollowWaypointWait early-out / CVM / `+0x1c` / `+0x14` / `+0x24` / AddEvent 2000 stay unclaimed. ChargeWeapon stays unclaimed. Live `GAME.mSlots` stay unclaimed. No new secondaries | `rebuild/OnslaughtRebuild.Core/RetailIScriptFollowWaypoint.cs` | `RetailIScriptFollowWaypoint.Start` | `RetailIScriptFollowWaypointTests.Start_StoresLiteralOneAtIScriptPlus18NotIncrement` | 1 | increment so Start(1) becomes 2 |
 | `TargetZone2/3/4 hit()` InJetMode then Pause wait-stop | Compiled `hit()` SET_CONTEXT the hitter, `IsA(8)`, `InJetMode() == FALSE`, `Pause(0.5)`, then `PostEvent("Reached Target Zone N")`. Isolated `Evaluate` names type-8 without posting Reached. Isolated `JetModeState` names the old `TriggerEntered` pre-filter. Isolated `Stop` names LevelScript `PlayCharMessageWait`. Simulation now consults `Evaluate` on this tick's flight state; `TriggerEntered` is not success. Actor-script `SetObjective` ORs bit 0x20 on the same registry word `hit()` Unset clears. CVM snapshot / 0.05f / FollowWaypointWait / IsObjective HUD-reader of bit 0x20 stay unclaimed. ChargeWeapon / ReadyToCharge / Charged-2 stay unclaimed. Live `GAME.mSlots` stay unclaimed. No new secondaries | `rebuild/OnslaughtRebuild.Core/Simulation.cs` | `RetailIScriptInJetMode.Evaluate` | `Level100TargetZoneHitTests.TargetZone2_FallInAndLand_PostsReachedFromHitNotFromTriggerEntered` | 1 | keep `TriggerEntered` as success, or skip the actor Pause store |
 | `IScript::EnableFlightMode` Level 100 takeoff store | Same callee `mov [ecx+0x58c], 1`. Beat 6 Enable and `GrantFlightLegForMeasurement` now store that immediate on Simulation. Isolated `Level100FlightEnabled` / `FlightModeEnabled` name the rebuild bool and still pass if this store is skipped. Isolated `RetailEnableFlightMode.Enable` names literal-1 without takeoff. Mutation: skip the store so ToggleMode is rejected, or increment so a second Enable becomes 2. Wrapper gate `test [ecx+0x34], 8` and Disable clear / morph stay unclaimed. ChargeWeapon / ReadyToCharge / Charged-2 stay unclaimed. Live `GAME.mSlots` stay unclaimed. No new secondaries | `rebuild/OnslaughtRebuild.Core/Simulation.cs` | `RetailEnableFlightMode.Enable` | `Level100EnableFlightModeTests.GrantFlightLeg_StoresCBattleEnginePlus58CSoToggleModeCanTakeOff` | 1 | skip the `+0x58c` store so GrantFlight still sets the bool but ToggleMode is rejected |
+| Career level-select offer law (`level_structure` + measured `ReCalcLinks` unlock) | `references/Onslaught/Career.cpp:24-70` is the shipped 43-node table (`num_nodes = 43`, `Career.cpp:73`); the offer law is the already-pinned ReCalcLinks unlock (row `CCareer::ReCalcLinks` after Level 100 Won): a node is offered once an incoming link has left `CN_NOT_COMPLETE`, while the node's own `mComplete` stays 0; the cold-career default lands on the root (`Career.cpp:1065/1118`) | `rebuild/OnslaughtRebuild.Core/RetailWorldCatalog.cs` | `RetailWorldCatalog.IsWorldSelectable` | `RetailWorldCatalogTests.IsWorldSelectable_WonRootUnlocksWorld110ButNotDistantNodes` | 1 | also require the child node's own `mComplete != 0` — locks world 110 forever because the unlock leaves it 0 |
+| `CCareer::IsWorldLater` | `Career.cpp:324-374`: walk the `diesOn` node's subtree through lower then higher child links and answer whether the `current` node is inside it; the caller's own `currentNode != diesOnNode` guard makes equal worlds FALSE, and disjoint subtrees are FALSE because the walk never reaches them | `rebuild/OnslaughtRebuild.Core/RetailWorldCatalog.cs` | `RetailWorldCatalog.IsWorldLater` | `RetailWorldCatalogTests.IsWorldLater_MatchesSubtreeSemantics` | 1 | swap the arguments so the walk starts at `currentNode` (ancestor/descendant inverted) |
+| World-110 script-object admission (second career node, version-50 layout) | `data/resources/110_res_PC.aya` measured 2026-08-22, whole-archive SHA-256 `4e041c758b9d41ba18311b1fadeacb95fc31af51320861480b97033bc24e3c2b`; RLWD header `(3, 41, 110)`; 13 hash-pinned objects — LevelScript 5110 B `f5c157ba…22aa` with 181 instructions, 92 symbols, `builtin[0]=11`, five named events (`Enemy Engaged` 100, `Vital Building Destroyed` 134, `Lander Escaped` 145, `Lander Destroyed` 159, `Lander Withdraws` 170) | `rebuild/OnslaughtRebuild.Core/Level100MissionProgram.cs` | `Level100MissionProgram.LoadEmbedded(world, name)` | `RetailWorld110AdmissionTests.AllThirteenScriptObjects_AdmitWithTheirPinnedIdentities` | 1 | re-pin `beacon` to `Lander`'s payload hash (cross-object admission accepted) |
+| World-110 HFLD admission | Same archive; extracted envelope (tag + CHFD + HFDT) is 668660 B, SHA-256 `fd4d076a2926fbc473b7d364703bdbc0c8a0f7a638b0ab71b6f319374da033c2`; same CHFD format law as Level 100 (grid `0x89/0x94/0x1a8/0x168`, same scales) with height data differing from the first sample word — a distinct measured world under the shared envelope law, recorded via `PayloadSha256` | `rebuild/OnslaughtRebuild.Core/Level100Terrain.cs` | `Level100Terrain.World110` (per-world `LoadEmbedded(name, sha)`) | `RetailWorld110AdmissionTests.World110Heightfield_IsItsOwnHashPinnedEnvelope` | 1 | re-pin `World110SourceSha256` to Level 100's envelope hash (also failed `World110AndLevel100Terrains_AreDistinctMeasuredWorlds`) |
 
 Two things this table deliberately does **not** claim. It does not claim these
 contracts are graded `REBUILD_READY`: that grade is a campaign artifact and
 needs the ceremony in `tools/re_campaign.py`
 (`_validate_rebuild_ready_gate`), which stamps owner/test/project SHA-256s, a
 `rebuildMapping`, and a re-run of the focused test. And it does not claim replay
-coverage. **Sixteen of these twenty-two implementations are unreachable from the
+coverage. **Twenty of these twenty-six implementations are unreachable from the
 simulation and replay path** — measured, by searching `Simulation.cs`,
 `ReplayRunner.cs`, `CommandTape.cs`, `StateHasher.cs` and every `Level100*.cs`
 for the owner types: `Simulation.JetFrictionNumerator` is wired,
@@ -202,7 +206,11 @@ names the rebuild bool),
 `LevelLostString` path, and `Level100WonCareerHandoff.TryApply` (which
 calls the already-pinned `ForLevel100Won` / `ApplyUpdate`) is reached from
 `Level100Mission` when `FrontEndHandoffReady` follows Won, including the
-SimInput-only chain fixture that never posts a mission event. The Lost-skip
+SimInput-only chain fixture that never posts a mission event. The four
+world-admission rows added 2026-08-22 (`IsWorldSelectable`,
+`IsWorldLater`, per-world `LoadEmbedded`, `Level100Terrain.World110`)
+join the unreachable set: they are catalog/admission law, wired to tests and
+the frontend selector, but no simulation consumes them yet. The Lost-skip
 row names the same `TryApply` owner; it does not add a twenty-third
 implementation. The first-play slot row names
 `FirstPlayTutorialSlotWords` on the already-pinned FillOut owner.
@@ -425,12 +433,13 @@ Charge is not in
 `Kind` (FullyCharged fires Large). The career graph is not in
 `StateHasher` because it does not change fire, movement, or any other
 hashed field. So no cold-start or
-full-chain trace can reach the other sixteen, and the focused test is the
+full-chain trace can reach the other twenty, and the focused test is the
 only falsifier they have. That is exactly
 the precedent the jet-friction row set: a green replay suite there was
 *vacuous* with respect to the constant it was supposed to guard, because the
-jet throttle caps below the gate's band. The seventeenth through thirty-seventh
-rows' mutation kills were measured on 2026-08-18 and 2026-08-19 in this worktree; they are
+jet throttle caps below the gate's band. The seventeenth through
+forty-first rows' mutation kills were measured on 2026-08-18, 2026-08-19,
+and 2026-08-22 in this worktree; they are
 not among the 17 files
 under `local-lab/rebuild-parity-mutation-kills-2026-08-17/`.
 

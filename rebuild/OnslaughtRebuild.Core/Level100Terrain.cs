@@ -74,9 +74,11 @@ public sealed class Level100Terrain
         uint ambientColor,
         float sunPositionX,
         float sunPositionY,
-        float sunPositionZ)
+        float sunPositionZ,
+        string payloadSha256)
     {
         _heightSamples = heightSamples;
+        PayloadSha256 = payloadSha256;
         HeightScale = BitConverter.Int32BitsToSingle(heightScaleBits);
         (_heightScaleSignificand, _heightScaleDenominator) =
             DecodePositiveFloatScale(heightScaleBits);
@@ -96,6 +98,42 @@ public sealed class Level100Terrain
     }
 
     public static Level100Terrain Instance { get; } = LoadEmbedded();
+
+    /// <summary>
+    /// The world-110 heightfield, admitted by the same envelope/hash law as
+    /// <see cref="Instance"/>: extracted HFLD envelope (tag + CHFD + HFDT)
+    /// from <c>data/resources/110_res_PC.aya</c>, SHA-256
+    /// <c>FD4D076A…33C2</c>, materialized and embedded next to the Level 100
+    /// resource. Not consumed by any live simulation yet — the world-110
+    /// session owner does not exist — but the deterministic Core owner and its
+    /// hash pin land with the world-110 admission work so the future session
+    /// cannot invent a second sampler shape.
+    /// </summary>
+    public static Level100Terrain World110 { get; } = LoadEmbedded(
+        ResourceName110, SourceSha256110);
+
+    /// <summary>The world-110 HFLD resource name and its measured pin.</summary>
+    private const string ResourceName110 =
+        "OnslaughtRebuild.Core.Assets.Level110.level110-heightfield.hfld.bin";
+
+    /// <summary>
+    /// The world-110 heightfield's SHA-256, measured from the pinned
+    /// <c>data/resources/110_res_PC.aya</c> on 2026-08-22. Deliberately not
+    /// Level 100's <see cref="SourceSha256"/>: the two worlds are distinct
+    /// released envelopes under the same format law.
+    /// </summary>
+    public const string World110SourceSha256 =
+        "FD4D076A2926FBC473B7D364703BDBC0C8A0F7A638B0AB71B6F319374DA033C2";
+
+    private const string SourceSha256110 = World110SourceSha256;
+
+    /// <summary>
+    /// The SHA-256 of the envelope bytes this instance was actually loaded
+    /// from — the same string the loader compared against its expected pin
+    /// (the per-world <c>SourceSha256</c> / <c>World110SourceSha256</c>
+    /// constant). Records exactly which measured world each static admits.
+    /// </summary>
+    public string PayloadSha256 { get; }
 
     public float HeightScale { get; }
 
@@ -352,22 +390,24 @@ public sealed class Level100Terrain
                 Math.Max(1, forwardZ - backZ))));
     }
 
-    private static Level100Terrain LoadEmbedded()
+    private static Level100Terrain LoadEmbedded() => LoadEmbedded(ResourceName, SourceSha256);
+
+    private static Level100Terrain LoadEmbedded(string resourceName, string expectedSha256)
     {
         Assembly assembly = typeof(Level100Terrain).Assembly;
-        using Stream stream = assembly.GetManifestResourceStream(ResourceName) ??
-            throw new InvalidDataException("The retained Level 100 HFLD resource is missing.");
+        using Stream stream = assembly.GetManifestResourceStream(resourceName) ??
+            throw new InvalidDataException($"The retained heightfield resource '{resourceName}' is missing.");
         if (stream.Length != HfldPayloadSize + 8)
         {
-            throw new InvalidDataException("The retained Level 100 HFLD has an unexpected length.");
+            throw new InvalidDataException("The retained heightfield has an unexpected length.");
         }
 
         var source = new byte[stream.Length];
         stream.ReadExactly(source);
         string hash = Convert.ToHexString(SHA256.HashData(source));
-        if (!StringComparer.Ordinal.Equals(hash, SourceSha256))
+        if (!StringComparer.Ordinal.Equals(hash, expectedSha256))
         {
-            throw new InvalidDataException("The retained Level 100 HFLD hash does not match its provenance.");
+            throw new InvalidDataException("The retained heightfield hash does not match its provenance.");
         }
 
         if (ReadUInt32(source, 0) != s_hfldTag || ReadUInt32(source, 4) != HfldPayloadSize)
@@ -437,7 +477,8 @@ public sealed class Level100Terrain
             ReadUInt32(source, chfdPayloadOffset + AmbientColorOffset),
             sunPositionX,
             sunPositionY,
-            sunPositionZ);
+            sunPositionZ,
+            expectedSha256);
     }
 
     private int TileSample(

@@ -258,7 +258,7 @@ public sealed class RetailFrontendScenePathTests
         Assert.Equal(RetailFrontendScreen.SelectConfiguration, session.Screen);
 
         Assert.True(path.TryAcceptSelectConfiguration(session, out RetailFrontendSignal launch));
-        Assert.Equal(RetailFrontendSignal.Level100LaunchRequested, launch);
+        Assert.Equal(RetailFrontendSignal.LevelLaunchRequested, launch);
         Assert.Equal(RetailFrontendScreen.Loading, session.Screen);
         Assert.True(session.ConsumeLevel100LaunchRequest());
 

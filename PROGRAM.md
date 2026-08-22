@@ -89,6 +89,17 @@ order:
    > handoff; the only expected failure is the documented Gen-30 full-replay
    > precondition error). Continuation detail lives in
    > `local-lab/gen32-reseat-prep-20260821/README.md`.
+   >
+   > **EXECUTION STATE 2026-08-22 (run 693).** Builder + wiring + tests are
+   > LANDED on main as `01301e95`. Two in-session full-module baseline runs
+   > died with their agent sessions and record no count (superseded). The
+   > baseline was relaunched DETACHED from agent sessions via Windows Task
+   > Scheduler task `OnslaughtGen32Baseline` (start 2026-08-22 02:04 local):
+   > raw verbose log goes to
+   > `local-lab/gen32-reseat-prep-20260821/unittest-gen32-run-20260822b.log`
+   > and the one-line summary (`Ran N tests` / OK or FAILED / exit code) to
+   > `local-lab/gen32-reseat-prep-20260821/run-count.txt` when it finishes.
+   > No P1 receipt is claimed until that completed count exists.
 2. Bespoke `build_generation32_authority.py`: per-row gate = the 53
    receipt-file SHA-256 checks; grade movement computed from the live Gen 31
    ledger (the TSV's `gradeBefore` is known-drifted); zero collateral

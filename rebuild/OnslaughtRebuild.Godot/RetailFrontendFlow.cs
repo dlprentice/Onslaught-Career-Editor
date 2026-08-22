@@ -3,6 +3,7 @@
 using System.Text.Json;
 using Godot;
 using OnslaughtRebuild.Client;
+using OnslaughtRebuild.Core;
 
 namespace OnslaughtRebuild.GodotClient;
 
@@ -659,6 +660,49 @@ public sealed partial class RetailFrontendFlow : Control
         RetailFrontendSignal signal = _session.LeaveLevel100ForMainMenu();
         ResumeFrontendForNavigation(origin);
         HandleNavigationSignal(signal);
+        QueueRedraw();
+    }
+
+    /// <summary>
+    /// Post-Won re-entry: apply the FillOut update and return the player to
+    /// SELECT LEVEL. The host tears the Level 100 world down through the
+    /// existing <see cref="ReturnToMainMenuRequested"/> seam.
+    /// </summary>
+    public void AcceptWonHandoff(
+        Level100MissionOutcome outcome,
+        Level100MissionTerminalState terminalState)
+    {
+        RetailFrontendScreen origin = _session.Screen;
+        if (!RetailFrontendScenePath.TryAcceptWonHandoff(_session, outcome, terminalState))
+        {
+            return;
+        }
+
+        ResumeFrontendForNavigation(origin);
+        HandleNavigationSignal(RetailFrontendSignal.PageChanged);
+        ReturnToMainMenuRequested?.Invoke();
+        QueueRedraw();
+    }
+
+    internal int LaunchWorldNumber => _session.ConsumeLaunchWorldNumber;
+
+    internal bool SelectedWorldIsConstructible => _session.SelectedWorldIsConstructible;
+
+    /// <summary>
+    /// Loading admitted a world this reconstruction cannot build. Return to
+    /// SELECT LEVEL without constructing Level 100 in its place.
+    /// </summary>
+    public void ReturnUnconstructibleLaunchToLevelSelect()
+    {
+        if (!_session.ReturnUnconstructibleLaunchToLevelSelect())
+        {
+            throw new InvalidOperationException(
+                "An unconstructible launch can return only after its request was consumed.");
+        }
+
+        _loadRequestRaised = false;
+        _level100Ready = false;
+        _loadingFrames = 0;
         QueueRedraw();
     }
 
@@ -3133,12 +3177,36 @@ public sealed partial class RetailFrontendFlow : Control
                     QueueRedraw();
                     return true;
                 }
-                if (new Rect2(595f, 430f, 45f, 48f).HasPoint(design) ||
-                    new Rect2(120f, 265f, 60f, 60f).HasPoint(design))
+                if (new Rect2(595f, 430f, 45f, 48f).HasPoint(design))
                 {
                     Confirm();
                     return true;
                 }
+
+                // LevelNodes[0] at (148,320) — the root, world 100. The
+                // measured 60x60 hit box is unchanged.
+                if (new Rect2(120f, 265f, 60f, 60f).HasPoint(design))
+                {
+                    _ = _session.SelectWorld(RetailWorldCatalog.RootWorldNumber);
+                    Confirm();
+                    return true;
+                }
+
+                // LevelNodes[1] is one column pitch (60) to the right of the
+                // root — the first child in the measured Episode 1 graph,
+                // which the career table says is world 110. Locked until a
+                // Won update unlocks it; do not Confirm the root instead.
+                if (new Rect2(180f, 265f, 60f, 60f).HasPoint(design))
+                {
+                    if (!_session.SelectWorld(110))
+                    {
+                        return false;
+                    }
+
+                    Confirm();
+                    return true;
+                }
+
                 return false;
 
             case RetailFrontendScreen.MissionBriefing:
@@ -3332,7 +3400,7 @@ public sealed partial class RetailFrontendFlow : Control
 
     private void HandleNavigationSignal(RetailFrontendSignal signal)
     {
-        if (signal == RetailFrontendSignal.Level100LaunchRequested)
+        if (signal == RetailFrontendSignal.LevelLaunchRequested)
         {
             _loadRequestRaised = false;
             _level100Ready = false;
