@@ -168,10 +168,7 @@ as immutable staging evidence; guarded launch validation remains strict.
   snapshot before the first write, publishes atomically with on-disk readback,
   and records the batch in a sidecar manifest that Undo reverses byte for byte;
   whole-file Restore still swaps the executable from that same verified
-  snapshot. The panel lists each staged experiment by VA and effect — the same
-  receipt Undo reports when it reverses them — so what a copy holds is visible
-  per row, not summarized as a bare count. A missing TSV, an empty filter, and
-  a refused batch each say so
+  snapshot. A missing TSV, an empty filter, and a refused batch each say so
   instead of going blank; nothing is claimed as proven until the row's cheapest
   check is actually observed on the copied game.
 - Launch and stop only the copied-game process started by the app.
