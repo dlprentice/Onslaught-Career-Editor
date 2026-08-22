@@ -60,10 +60,18 @@ Same BSS class (not file-patchable):
 | `0x006FBDFC` | `GetWaterHeight` source | — |
 | `0x00662564` | `GetGoodieState` view (same table as `0x00662560`) | — |
 | `0x008AA51C` | `HighlightHudPart` dword table | — |
+| `0x008A9D9C` | `Rand` / `GetFloatRand` RNG object | — |
+| `0x006FADC8` | `GetMapHeight` world | — |
+| `0x008551C0` / `0x00855228` | `GetNumUnits` allegiance tables | — |
+| `0x00855090` | `InitVariable` / `PlayCutscene` lookup `this` | — |
+| `0x00672FC8` | `PostEvent` / `Shutdown` event-manager `this` | — |
 
 `t_17fa180d` added the last five after the IScript / SendButtonAction
 pin. `t_120c3e1b` added the GetPlayer / MessageBox / GameTime /
-GetWaterHeight / HighlightHud / GetGoodieState-view VAs. Same
+GetWaterHeight / HighlightHud / GetGoodieState-view VAs. `t_94b70425`
+added `Rand`/`GetFloatRand` `0x008A9D9C`, `GetMapHeight` `0x006FADC8`,
+the `GetNumUnits` tables `0x008551C0` / `0x00855228`, lookup
+`this` `0x00855090`, and event-manager `this` `0x00672FC8`. Same
 rule: never promote those VAs to a file row; patch the `.text`
 store or the `.text` jcc that consumes them.
 

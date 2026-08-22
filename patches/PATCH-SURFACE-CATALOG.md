@@ -4,13 +4,17 @@ Status: active — static census, Phase 2 runtime probes are a separate card
 Last updated: 2026-08-22
 Summary: first cut `t_7b48b14a`, then `t_14fcbbed`, `t_17fa180d` (jet drain /
 debug-button door / IScript mutators), then `t_120c3e1b` (config+0x8/+0xc
-named; IScript getters / camera / weather / message natives).
+named; IScript getters / camera / weather / message natives), then
+`t_94b70425` (remaining Initialise slots named; leftover IScript
+position / script / HUD / PlayCutscene one-instruction rows).
 Evidence: MEASURED — every non-unknown TSV `original_bytes` compared to the
 named specimen at write time; PE section table re-parsed; first-cut BSS
 god-flag row retracted. `t_17fa180d` re-read JetPart::Move, SendButtonAction,
 and the 144-native handler heads. `t_120c3e1b` re-read those TSV bytes again
 and the getter / camera / weather / message heads plus
 `CBattleEngineData::Initialise` / `LoadFromMemBuffer` from the same specimen.
+`t_94b70425` re-read those TSV bytes again and the leftover IScript heads
+plus the rest of Initialise / the versioned Load walks.
 Specimen: `local-lab/pristine-verification-2026-07-26/pristine-target/BEA.exe`
 SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 (2,506,752 bytes).
@@ -36,8 +40,8 @@ PE mapping owner: [`../reverse-engineering/binary-analysis/patch-surface/PE-MAPP
   `reverse-engineering/binary-analysis/patch-surface/PE-MAPPING.md`.
 - TSV `original_bytes` for every non-`unknown-*` / non-`none-*` row were
   compared to the specimen in the `t_14fcbbed` writer, again in the
-  `t_17fa180d` writer, and again in the `t_120c3e1b` writer and refused on
-  mismatch.
+  `t_17fa180d` writer, again in the `t_120c3e1b` writer, and again in the
+  `t_94b70425` writer and refused on mismatch.
 - Confidence vocabulary: MEASURED (byte + behavior evidence),
   STATIC_ONLY (byte evidence verified here; behavior inferred from pinned
   source or prior bounded observations), SPECULATIVE (site plausible,
@@ -67,11 +71,12 @@ PE mapping owner: [`../reverse-engineering/binary-analysis/patch-surface/PE-MAPP
 | 14 | Input / analogue | [§14](#14-input--analogue) | 0.001f scale |
 | 15 | Collision / camera knobs | [§15](#15-collision--camera-knobs) | COfG, movie zoom |
 | 16 | Script objective / pause flags | [§16](#16-script-objective--pause-flags) | or/and +0x2c, stop-flag + Wait twins |
-| 17 | IScript mutators (beyond the first-cut set) | [§17](#17-iscript-mutators-beyond-the-first-cut-set) | + MPDeclare / SetLockable / SetTimer / Damage / SetName / SetVelocity / Attack |
-| 18 | IScript getters / predicates | [§18](#18-iscript-getters--predicates) | Health/energy force-1.0; Exists/IsObjective/IsFiring/InJetMode/GetSlot |
+| 17 | IScript mutators (beyond the first-cut set) | [§17](#17-iscript-mutators-beyond-the-first-cut-set) | + Launch / Teleport / SetPos / SetScript / segment / variables / PostEvent |
+| 18 | IScript getters / predicates | [§18](#18-iscript-getters--predicates) | + GetNumber / GetSquad / GetTarget / Spawners* / IsA |
 | 19 | IScript camera | [§19](#19-iscript-camera) | GotoPlayer / ToggleCockpit / disable 3-/4-point pan |
 | 20 | Weather | [§20](#20-weather) | Rain/snow/lightning fstp + init stores; wind X |
-| 21 | IScript messages / wait | [§21](#21-iscript-messages--wait) | Wait-flag twins; SwitchMessages; PlayChar insert |
+| 21 | IScript messages / wait | [§21](#21-iscript-messages--wait) | Wait-flag twins; SwitchMessages; PlayChar insert; PlayCutscene call |
+| 22 | HUD highlight | [§22](#22-hud-highlight) | Highlight/UnHighlight stores; dest is BSS |
 
 ---
 
@@ -655,17 +660,41 @@ is **0** for the whole Move. That closes the first-cut refusal of
 **`mMinAirEnergyCost`**. `CBattleEngineData::Initialise` `0x0040F590`
 writes the Stuart-source defaults there (`0x0040F824`
 `mov [ebp+0xc], 0x3dcccccd` = 0.1f; `0x0040F82B`
-`mov [ebp+8], 0x3e99999a` = 0.3f). The same function writes
-`[ebp+0]=7.5f` (`mMaxAirVelocity`), `[ebp+4]=5.0f`
-(`mMinAirVelocity`), `[ebp+0x1c]=20.0f` (`mLife`),
-`[ebp+0x20]=2.5f` (`mEnergy`) — so the layout candidate that
-starts `mLife` at `+0x1c` is still right; these two dwords sit
-*before* `mLife`, not instead of it. `LoadFromMemBuffer` reads
-`+0x8` from the dat file in the unversioned prefix and reads
-`+0xc` when format `> 7`. Format `< 8` falls back to
-`mov [ebp+0xc], 0x3ba3d70a` (0.005f — the shipped Aquila
-Prototype min) and `mov [ebp+8], 0x3c75c28f` (0.015f). The
-lerp identity is: cost =
+`mov [ebp+8], 0x3e99999a` = 0.3f). The same function writes the rest
+of the constructor map below. `LoadFromMemBuffer` `0x0040F980` does
+**not** call Initialise — it frees via `0x0040F890` then reads the
+dat. Shipped profiles therefore overwrite these immediates. Do **not**
+TSV-row the Initialise stores as value cheats; the cheap value route
+is still the dat (§5.4). The names are the point of this cut.
+
+| offset | Initialise store | value | name | Load |
+|---|---|---|---|---|
+| `+0x00` | `0x0040F835` `00 00 f0 40` | 7.5f | `mMaxAirVelocity` | unversioned prefix |
+| `+0x04` | `0x0040F83C` `00 00 a0 40` | 5.0f | `mMinAirVelocity` | Initialise-named; versioned walk not re-opened |
+| `+0x08` | `0x0040F82B` `9a 99 99 3e` | 0.3f | `mMaxAirEnergyCost` | unversioned prefix |
+| `+0x0c` | `0x0040F824` `cd cc cc 3d` | 0.1f | `mMinAirEnergyCost` | format `> 7` (prior cut) |
+| `+0x10` | `0x0040F843` `00 00 80 40` | 4.0f | `mGroundVelocity` | unversioned prefix |
+| `+0x14` | `0x0040F84A` `00 00 00 40` | 2.0f | `mAirTurnRate` | unversioned prefix |
+| `+0x18` | `0x0040F851` `00 00 c0 3f` | 1.5f | `mGroundTurnRate` | unversioned prefix |
+| `+0x1c` | `0x0040F80F` `00 00 a0 41` | 20.0f | `mLife` | unversioned prefix |
+| `+0x20` | `0x0040F816` `00 00 20 40` | 2.5f | `mEnergy` | unversioned prefix |
+| `+0x24` | `0x0040F858` `00 00 b4 42` | 90.0f | `mShieldEfficiency` | format `> 1` at `0x0040FD0D` |
+| `+0x28` | `0x0040F81D` `0a d7 23 3c` | 0.01f | `mGroundEnergyIncrease` | unversioned prefix |
+| `+0x2c` | `0x0040F832` from eax=1.0f | 1.0f | `mMinTransformEnergy` | unversioned prefix |
+| `+0x30` | `0x0040F85F` `66 66 66 3f` | 0.9f | `mWalkFriction` | Initialise-named |
+| `+0x34` | `0x0040F866` `9a 99 19 3e` | 0.15f | `mMaxWalkVelocity` | Initialise-named |
+| `+0x38` | `0x0040F86D` from eax=1.0f | 1.0f | `mRollEnergyCost` | Initialise-named |
+| `+0x3c` | `0x0040F870` from eax=1.0f | 1.0f | `mLoopEnergyCost` | Initialise-named |
+| `+0x70`.. | store-heat loop `0x0040F74E` | 0 | `mStoreHeat[0..5]` | — |
+| `+0x88` | loop `0x0040F751` `00 00 7a 44` | 1000.0f | `mStoreValue[0..5]` | — |
+| `+0xa0` | `0x0040F87D` from ebx=0 | 0 | `mStealth` | format `> 2` at `0x0040FD21` |
+| `+0xa4` | `0x0040F873` | 1 | `mLanguageName` | — |
+| `+0xa8` | earlier alloc | `"Standard"` | `mConfigurationName` | format `> 4` string at `0x0040FCA9` |
+
+The layout candidate that starts `mLife` at `+0x1c` is still right;
+`+0x00..+0x18` sit *before* `mLife`. Format `< 8` still falls back to
+`mov [ebp+0xc], 0x3ba3d70a` (0.005f) and `mov [ebp+8], 0x3c75c28f`
+(0.015f). The lerp identity is: cost =
 `mMinAirEnergyCost + [JetPart+0x20] * (mMaxAirEnergyCost − mMinAirEnergyCost)`.
 The shipped 0.005 / 0.012 values remain the data-file route for a
 *value* change (§5.4); the exe lerp operands are now named.
@@ -920,6 +949,11 @@ Confirmed BSS (not file-patchable):
 | `0x00672FD0` | `GameTime` source |
 | `0x006FBDFC` | `GetWaterHeight` source |
 | `0x008AA51C` | `HighlightHudPart` dword table |
+| `0x008A9D9C` | `Rand` / `GetFloatRand` RNG object |
+| `0x006FADC8` | `GetMapHeight` world |
+| `0x008551C0` / `0x00855228` | `GetNumUnits` allegiance tables |
+| `0x00855090` | `InitVariable` / `PlayCutscene` lookup `this` |
+| `0x00672FC8` | `PostEvent` / `Shutdown` event-manager `this` |
 
 Any "patch" of those file offsets is a no-op or resource corruption.
 
@@ -1334,6 +1368,81 @@ NOP×6.
 | SetVelocity | `0x0053434B` | `74 1a` | `call [thing.vtable+0x70]` |
 | Attack | `0x00535FD2` | `74 47` | target must also have bit 4 (or the `0x20000000` alt) |
 
+### 17.18 Launch / TriggerHitEffect
+
+`Launch` `0x005344A0`: type-bit `je` at **`0x005344AD`** (`74 46`), then
+`[thing+0x164]` must be non-null and `[config+0xe0]==0x18`, then
+`call 0x004D36C0` at `0x005344F0`. NOP the `je` to try without bit 4
+(the config test still runs). NOP the call to stop scripted launches.
+
+`TriggerHitEffect` `0x00536CA0`: type-bit `je` at `0x00536CAA`
+(`74 1f`), unbox float, `call [thing.vtable+0x1ac]` at `0x00536CC5`.
+
+### 17.19 SetPos / Teleport / SetGoalPoint / Stop
+
+All four write a position through a vfunc. Destinations are the
+thing, not a file global.
+
+| native | site | original | role |
+|---|---|---|---|
+| SetPos | `0x00536C90` | `ff 52 50` | `call [edx+0x50]` |
+| Teleport | `0x00536A2B` | `ff 50 50` | same vfunc after a type-6 / name lookup |
+| SetGoalPoint | `0x00534F1C` | `ff 97 f4 00 00 00` | `call [edi+0xf4]` |
+| Stop | `0x00534F57` | `ff 90 f4 00 00 00` | same `+0xf4` with the thing's current `+0x1c` pose |
+
+`TeleportOrientation` multiplies three unboxed angles by
+`[0x005DC7B0]` = π/180 (8 refs). That float is shared — not rowed.
+
+### 17.20 SetScript / SetSpawnScript
+
+`SetScript` `0x00535C50` unboxes a string and `call 0x004F4230` at
+`0x00535C62`. `SetSpawnScript` `0x00535CA0` unboxes and
+`call [thing.vtable+0xfc]` at `0x00535CB8`. NOP either: scripts
+cannot rebind the attached / spawn script.
+
+### 17.21 Segment health / vulnerable
+
+Twins of §17.2. Type-bit then `[thing+0x178]` must be non-null.
+
+| native | je VA | original | tail |
+|---|---|---|---|
+| SetSegmentHealth | `0x00535488` | `74 2d` | `call 0x00444450` |
+| ResetSegmentHealth | `0x005354C8` | `74 2d` | `call 0x004444B0` |
+| SetSegmentVulnerable | `0x00534308` | `74 2f` | `and eax,0xff` at `0x00534325` then `call 0x004445B0` |
+
+Force-FALSE on the bool: `25 ff 00 00 00` → `33 c0 90 90 90`.
+
+### 17.22 PlayAnimation / SpawnParticle
+
+`PlayAnimation` `0x00535160`: `mov ecx,[thing+0x30]; test ecx,ecx;`
+`0x0053516C` `74 51` skips the whole play. `74 51` → `EB 51` is a
+safe disable (never look up / dispatch). NOP of that `je` would
+run the helper with a null controller — not rowed.
+
+`SpawnParticle` `0x00536B70` looks up by name via `0x004CD7A0`.
+`0x00536B9C` `75 1b` proceeds on a hit. `75 1b` → `EB 1b` always
+takes the error return.
+
+`SpawnEscapePod` `0x005371E0` is 556 B (construct + vslot). No
+one-instruction lever is claimed. `FollowWaypoint*` is a large
+lookup + pose write; declined this cut.
+
+### 17.23 SetVar / world variables / Shutdown / PostEvent
+
+| native | site | original | role |
+|---|---|---|---|
+| SetVar | `0x00534901` | `ff 92 f8 00 00 00` | `call [edx+0xf8]` |
+| InitVariable | `0x0053624D` | `e8 4e 74 fd ff` | `call 0x0050D6A0` (`this=0x00855090`, BSS) |
+| SetVariable | `0x0053628F` | `e8 8c 74 fd ff` | `call 0x0050D720` |
+| ShutdownVariable | `0x00536341` | `e8 5a 74 fd ff` | `call 0x0050D7A0` |
+| Shutdown | `0x00535D22` | `e8 49 56 f1 ff` | `AddEvent(0x7d0)` via `0x0044B370` |
+| PostEvent | `0x00538459` | `e8 12 2f f1 ff` | same helper, same event id |
+
+`0x00855090` / `0x00672FC8` are BSS; patch the calls.
+
+Confidence for §17.18–§17.23: **STATIC_ONLY**. Risk: medium
+(type-bit drops) / high for Shutdown (authored teardown).
+
 Confidence for §17: **STATIC_ONLY** (handler heads + type-bit pattern +
 specimen bytes). Risk: medium for mutators that drop a type-bit guard
 (null-record / wrong-vtable crash is exactly what the `je` prevents).
@@ -1431,6 +1540,53 @@ force the TRUE arm.
 `[index*4+0x00662564]` (one-based; same table as §17.8).
 `GetWaterHeight` flds BSS `0x006FBDFC`. `GameTime` flds BSS
 `0x00672FD0`. Those four stay honest non-surfaces.
+
+### 18.9 GetNumber / GetSquad / GetTarget / GetWeaponName
+
+| native | je VA | original | note |
+|---|---|---|---|
+| GetNumber | `0x0053598D` | `74 06` | bit `0x80000`; else `[thing+0x270]` |
+| GetSquad | `0x005365E5` | `74 06` | bit 4; else `[thing+0x148]` |
+| GetTarget | `0x005366E4` | `74 0a` | bit 4; else `vfunc+0x144` |
+| GetWeaponName | `0x0053568E` | `74 6e` | bit 3 (BE), then `0x0040C570` |
+
+### 18.10 GetSafePos / GetComponent
+
+`GetSafePos` `0x005350B0`: type-bit `je` at `0x005350D7`
+(`74 1a`) skips `vfunc+0x1b8` and boxes the zeroed stack
+vector. NOP to run the helper without bit 4.
+
+`GetComponent` `0x005349B0`: type-bit `je` at `0x005349D9`
+(`74 19`) skips `0x004FD8D0` and logs. NOP to look up
+anyway.
+
+`GetMapHeight` flds through BSS `0x006FADC8` — no file row.
+`GetX`/`GetY`/`GetZ` unbox a vector and return one
+component; no one-instruction cheat.
+
+### 18.11 SpawnersEmpty / SpawnersInUse
+
+Same shape as IsFiring: type-bit, helper, `setne cl`.
+
+| native | je VA | setne VA | helper |
+|---|---|---|---|
+| SpawnersEmpty | `0x00535A9A` | `0x00535ACB` | `0x004FD7E0` |
+| SpawnersInUse | `0x00535AFA` | `0x00535B2B` | `0x004FD7A0` |
+
+`0f 95 c1` → `b1 01 90`. `GetNumUnits` indexes BSS
+`[ebx*4+0x008551C0]` / `+0x00855228` — no file row.
+
+### 18.12 IsA
+
+`0x00536350` unboxes an int mask, `test [thing+0x34], eax`,
+`je` at **`0x00536365`** (`74 3a`) takes the box-FALSE arm.
+NOP → always TRUE.
+
+`Rand` / `GetFloatRand` load BSS `[0x008A9D9C]` then an LCG.
+The `[0,1)` scale at `0x005D8D54` (`1/65536`, **46 refs**) is
+shared — not rowed.
+
+Confidence for §18.9–§18.12: **STATIC_ONLY**.
 
 Confidence for §18: **STATIC_ONLY**. Risk: medium for type-bit
 drops; low-medium for bool forces.
@@ -1544,12 +1700,41 @@ then `jne` skip. `call 0x0047FB00` at `0x00533B5D` is the
 push. NOP the call.
 
 `Print` / `PrintText` / `AddMessage` stay pointer-only (debug
-console / fixed-source queue). `PlayCutscene` is a lookup +
-`call 0x0043F340` with a type-bit `0x10000` gate — not rowed
-this cut.
+console / fixed-source queue).
+
+### 21.6 PlayCutscene
+
+`0x00535890` unboxes a string, looks up via `0x0050AF70`
+(`this=0x00855090`, BSS), then `test [obj+0x34], 0x10000`.
+`je` at **`0x005358B4`** (`74 0b`) skips
+`call 0x0043F340` at `0x005358B8`. NOP the `je` to call
+even without the cutscene bit. NOP the call: scripts cannot
+start a cutscene. The lookup table is runtime; this is the
+file lever the prior cut left pointer-only.
 
 Confidence for §21: **STATIC_ONLY**. Risk: high for wait-flag
-NOPs; medium for dropping queued lines.
+NOPs; medium for dropping queued lines / cutscenes.
+
+---
+
+## 22. HUD highlight
+
+`HighlightHudPart` `0x00535E60` and `UnHighlightHudPart`
+`0x00535E80` are 22-byte twins. Unbox int, then an unchecked
+`mov [eax*4 + 0x008AA51C], imm`. Destination is BSS
+(2 address refs — only these two stores). Patch the stores.
+
+| native | store VA | original |
+|---|---|---|
+| HighlightHudPart | `0x00535E6B` | `c7 04 85 1c a5 8a 00 02 00 00 00` (imm 2) |
+| UnHighlightHudPart | `0x00535E8B` | same form, imm 1 |
+
+NOP the 11-byte store: that native becomes a no-op. Rewrite
+imm `02` → `01` to make Highlight behave like UnHighlight.
+The bound on `eax` is still open (static-contract note);
+an out-of-range index writes past the table.
+
+Confidence: **STATIC_ONLY**. Risk: low-medium.
 
 ---
 
@@ -1568,12 +1753,13 @@ NOPs; medium for dropping queued lines.
 
 ## Row inventory
 
-TSV: **147 data rows** (145 unique VAs). `t_17fa180d` 102 plus 45
-from this cut (getters / camera / weather / message / leftover
-mutators). Every non-unknown `original_bytes` was re-read from
-the named specimen.
+TSV: **184 data rows** (182 unique VAs). `t_120c3e1b` 147 plus 37
+from this cut (HUD / PlayCutscene / leftover IScript
+position-script-segment-variable-getter rows). Every
+non-unknown `original_bytes` was re-read from the named
+specimen (`145` prior compared, `0` mismatch, then `37` new).
 
-Confidence histogram: **MEASURED 22 / STATIC_ONLY 125 / SPECULATIVE 0**.
+Confidence histogram: **MEASURED 22 / STATIC_ONLY 162 / SPECULATIVE 0**.
 
 First-cut corrections landed here, not in `rebuild/**`:
 
@@ -1588,8 +1774,12 @@ First-cut corrections landed here, not in `rebuild/**`:
 Coverage limits that stay honest: no per-unit AI tick (SetAIState is a
 poke), no exe spawn tables (SpawnThing is a native; SetSpeed is a no-op),
 debug-button **key → id** still BSS (the SendButtonAction door is pinned).
-`[config+0x8]/[+0xc]` are now named (`mMaxAirEnergyCost` /
-`mMinAirEnergyCost`). Getters/camera/weather/message have one-instruction
-rows; `GetPlayer` / `GetGoodieState` / `GetWaterHeight` / `GameTime`
-remain BSS-sourced. Print/PrintText/AddMessage/PlayCutscene are still
-pointer-only.
+Initialise now names the remaining constructor slots (`mLife` /
+`mEnergy` / velocities / turn rates / shield / stealth / store
+loop); shipped dats still overwrite them. Getters/camera/weather/message
+already had one-instruction rows; this cut adds HUD stores,
+PlayCutscene, Teleport/SetPos, SetScript, segment twins, world
+variables, and leftover predicates. `GetPlayer` / `GetGoodieState` /
+`GetWaterHeight` / `GameTime` remain BSS-sourced. Print/PrintText/
+AddMessage are still pointer-only. `Rand`/`GetFloatRand`/`GetMapHeight`/
+`GetNumUnits` are BSS-sourced.
