@@ -1,12 +1,12 @@
 {
  "schema": "bea.re.contract-coverage.v1",
- "generatedAtUtc": "2026-08-22T17:25:03Z",
+ "generatedAtUtc": "2026-08-22T19:51:54Z",
  "denominator": {
   "functions": 8329,
   "contracts": 14365,
-  "generation": 31,
+  "generation": 32,
   "lineageId": "incident-20260806-recovery-v1",
-  "readySha256": "2e77c62d236edacbe4974ca844a6ac0b692e84b3259b884b8afc25a29aad4219"
+  "readySha256": "08ed89644ed25feb9e85fefb5b31ab2bdecbbd91b8aca720e20c53a7fbc5e73f"
  },
  "inputs": {
   "register": "reverse-engineering/EVIDENCE-REGISTER.tsv",
@@ -32,7 +32,7 @@
   "ghidra-readback": 2419,
   "name-only": 7199
  },
- "elapsedSeconds": 1.943,
+ "elapsedSeconds": 14.188,
  "functions": [
   {
    "va": "0x00401000",
@@ -62587,7 +62587,7 @@
    ],
    "witnessKinds": [],
    "notes": [
-    "reverse-engineering/binary-analysis/functions/ScriptEventNB.cpp.md"
+    "reverse-engineering/binary-analysis/functions/_index.md"
    ],
    "flags": []
   },
