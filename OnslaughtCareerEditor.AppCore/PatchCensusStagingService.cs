@@ -349,8 +349,39 @@ namespace OnslaughtCareerEditor.AppCore
                 return PatchCensusStagingResult.Empty;
             }
 
+            // Defense-in-depth: StageBatch re-runs the structural refusals
+            // BuildStagingPlan made, because a plan object can arrive stale,
+            // hand-built, or aimed at a different path than the one it was
+            // validated against. Nothing here trusts the caller's earlier walk.
+            if (!string.Equals(Path.GetFileName(fullExePath), TargetFileName, StringComparison.OrdinalIgnoreCase))
+            {
+                return new PatchCensusStagingResult(
+                    false,
+                    $"The census experiment writes to {TargetFileName}. Choose the safe copy's executable itself.",
+                    Array.Empty<string>());
+            }
+
+            if (BinaryPatchEngine.CensusStagingTargetHasForbiddenInstallShape(fullExePath))
+            {
+                return new PatchCensusStagingResult(false, ForbiddenInstallShapeMessage, Array.Empty<string>());
+            }
+
+            if (!BinaryPatchEngine.IsPathUnderRootPublic(fullExePath, normalizedRoot))
+            {
+                return new PatchCensusStagingResult(
+                    false,
+                    "That safe copy is not inside the app-owned patch workspace, so nothing was changed.",
+                    Array.Empty<string>());
+            }
+
             string backupPath = BinaryPatchEngine.BuildBackupPath(fullExePath);
             string backupHashPath = BinaryPatchEngine.BuildBackupHashPath(fullExePath);
+            var filesystemSafety = BinaryPatchEngine.ValidateCensusStagingFilesystemSafety(
+                fullExePath, backupPath, backupHashPath, normalizedRoot);
+            if (!filesystemSafety.success)
+            {
+                return new PatchCensusStagingResult(false, filesystemSafety.message, Array.Empty<string>());
+            }
 
             byte[] data;
             try
@@ -533,7 +564,6 @@ namespace OnslaughtCareerEditor.AppCore
             }
 
             var plannedWrites = new List<(int Offset, byte[] Original, PatchCensusStagedEntry Entry)>();
-            var summaries = new List<string>();
             foreach (PatchCensusStagedEntry entry in manifest.Entries)
             {
                 if (!TryParseOffset(entry.Offset, out int offset) ||
@@ -665,13 +695,13 @@ namespace OnslaughtCareerEditor.AppCore
                 return new PatchCensusStagingResult(
                     true,
                     "Census experiments reversed and verified on disk, but the undo manifest could not be cleared. Whole-file Restore still works.",
-                    summaries);
+                    SummariesFor(plannedWrites));
             }
 
             return new PatchCensusStagingResult(
                 true,
                 $"{plannedWrites.Count} census experiment{(plannedWrites.Count == 1 ? "" : "s")} reversed in the safe copy and verified on disk. Restore can still swap the whole executable from its backup.",
-                summaries);
+                SummariesFor(plannedWrites));
         }
 
         /// <summary>Reads the sidecar manifest for this safe copy, if any.</summary>
@@ -770,6 +800,14 @@ namespace OnslaughtCareerEditor.AppCore
         {
             return candidates
                 .Select(candidate => $"{candidate.Row.Va}: {candidate.Row.Effect}")
+                .ToArray();
+        }
+
+        private static IReadOnlyList<string> SummariesFor(
+            List<(int Offset, byte[] Original, PatchCensusStagedEntry Entry)> writes)
+        {
+            return writes
+                .Select(write => $"{write.Entry.Va}: {write.Entry.Effect}")
                 .ToArray();
         }
 

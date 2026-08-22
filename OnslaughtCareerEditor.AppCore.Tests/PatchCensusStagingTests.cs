@@ -196,6 +196,90 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         }
 
         [Fact]
+        public void Undo_NamesEveryExperimentItReversed_InItsSummaries()
+        {
+            byte[] data = ExeBytes();
+            int firstOffset = DistinctTestOffset(data);
+            int secondOffset = firstOffset - 0x400;
+            var first = Row("0x00999999", $"0x{firstOffset:X8}", "7575", "9090", effect: "first experiment");
+            var second = Row("0x00AAAAAA", $"0x{secondOffset:X8}", "7575", "eb1e", effect: "second experiment");
+
+            PatchCensusStagingPlan plan = PatchCensusStagingService.BuildStagingPlan(
+                new[] { first, second }, _exePath, _workspaceRoot);
+            Assert.True(plan.Success, plan.Message);
+            Assert.True(PatchCensusStagingService.StageBatch(plan, _exePath, _workspaceRoot).Success);
+
+            PatchCensusStagingResult undo = PatchCensusStagingService.UndoAll(_exePath, _workspaceRoot);
+            Assert.True(undo.Success, undo.Message);
+
+            // The undo result names what it reversed, in the same VA: effect form
+            // staging uses, so callers can show an honest per-row receipt.
+            Assert.Equal(2, undo.AppliedSummaries.Count);
+            Assert.Contains("0x00999999: first experiment", undo.AppliedSummaries);
+            Assert.Contains("0x00AAAAAA: second experiment", undo.AppliedSummaries);
+        }
+
+        /// <summary>
+        /// StageBatch re-runs the structural refusals itself instead of trusting
+        /// plan.Success: a hand-built plan aimed at a known Steam install shape
+        /// must be refused by the service even though the plan object says it is
+        /// valid and the bytes on disk match.
+        /// </summary>
+        [Fact]
+        public void StageBatch_RefusesAnInstallShapedTarget_EvenWithAHandbuiltValidPlan()
+        {
+            string steamDir = Path.Combine(
+                _tempRoot, "fabricated", "steamapps", "common", "Battle Engine Aquila");
+            Directory.CreateDirectory(steamDir);
+            string steamExe = Path.Combine(steamDir, "BEA.exe");
+
+            // The decoy carries the exact original bytes the candidate expects,
+            // so only the structural walk stands between this call and a write.
+            byte[] data = new byte[0x2000];
+            Array.Fill(data, (byte)0x75);
+            File.WriteAllBytes(steamExe, data);
+
+            var row = Row("0x00999999", "0x00001000", "7575", "9090");
+            var candidate = new PatchCensusStagingCandidate(row, 0x1000, new byte[] { 0x75, 0x75 }, new byte[] { 0x90, 0x90 });
+            var forgedPlan = new PatchCensusStagingPlan(true, "hand-forged", new[] { candidate });
+
+            PatchCensusStagingResult result = PatchCensusStagingService.StageBatch(forgedPlan, steamExe, _workspaceRoot);
+
+            Assert.False(result.Success);
+            Assert.Equal(PatchCensusStagingService.ForbiddenInstallShapeMessage, result.Message);
+            Assert.False(File.Exists(BinaryPatchEngine.BuildBackupPath(steamExe)), "a refused batch must not leave a backup behind");
+            Assert.Equal(data, File.ReadAllBytes(steamExe));
+        }
+
+        /// <summary>
+        /// The same defense-in-depth for workspace containment: StageBatch refuses
+        /// a hand-built plan aimed anywhere outside the app-owned patch workspace,
+        /// without relying on the planner to have caught it.
+        /// </summary>
+        [Fact]
+        public void StageBatch_RefusesATargetOutsideTheWorkspace_EvenWithAHandbuiltValidPlan()
+        {
+            string outsideDir = Path.Combine(_tempRoot, "outside");
+            Directory.CreateDirectory(outsideDir);
+            string outsideExe = Path.Combine(outsideDir, "BEA.exe");
+
+            byte[] data = new byte[0x2000];
+            Array.Fill(data, (byte)0x75);
+            File.WriteAllBytes(outsideExe, data);
+
+            var row = Row("0x00999999", "0x00001000", "7575", "9090");
+            var candidate = new PatchCensusStagingCandidate(row, 0x1000, new byte[] { 0x75, 0x75 }, new byte[] { 0x90, 0x90 });
+            var forgedPlan = new PatchCensusStagingPlan(true, "hand-forged", new[] { candidate });
+
+            PatchCensusStagingResult result = PatchCensusStagingService.StageBatch(forgedPlan, outsideExe, _workspaceRoot);
+
+            Assert.False(result.Success);
+            Assert.Contains("not inside the app-owned patch workspace", result.Message, StringComparison.Ordinal);
+            Assert.False(File.Exists(BinaryPatchEngine.BuildBackupPath(outsideExe)), "a refused batch must not leave a backup behind");
+            Assert.Equal(data, File.ReadAllBytes(outsideExe));
+        }
+
+        [Fact]
         public void Undo_WithoutManifest_SaysSoAndChangesNothing()
         {
             byte[] before = ExeBytes();

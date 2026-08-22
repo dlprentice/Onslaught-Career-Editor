@@ -111,4 +111,24 @@ public class PatchLabCensusHonestyTests
         Assert.That(service, Does.Contain("on-disk verification"));
         Assert.That(service, Does.Contain("census-staged.v1"));
     }
+
+    [Test]
+    public void StagedExperimentsShowAsNamedReceiptsNotJustACount()
+    {
+        // The receipt surface: what the copy holds and what Undo will reverse is
+        // visible per row ("VA: effect"), not summarized as a bare count.
+        string xaml = ReadWinUiFile(Path.Combine("Pages", "BinaryPatchesPage.xaml"));
+        string page = ReadWinUiFile(Path.Combine("Pages", "BinaryPatchesPage.xaml.cs"));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(xaml, Does.Contain("PatchLabCensusStagedList"));
+            Assert.That(
+                xaml,
+                Does.Contain("Census experiments currently staged in this safe copy"),
+                "the list must be named for assistive technology, not just painted");
+            Assert.That(page, Does.Contain("manifest.Entries.Select(entry => $\"{entry.Va}: {entry.Effect}\")"));
+            Assert.That(page, Does.Contain("result.AppliedSummaries.Select(s => \"  • \" + s)"));
+        });
+    }
 }

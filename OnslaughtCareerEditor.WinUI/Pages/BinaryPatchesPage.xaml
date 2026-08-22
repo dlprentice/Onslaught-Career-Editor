@@ -862,6 +862,18 @@
                                            Style="{StaticResource SectionBodyTextStyle}"
                                            TextWrapping="WrapWholeWords"
                                            Text="Census experiments are written into the safe copy only, never the installed game." />
+                                <ItemsControl x:Name="PatchLabCensusStagedList"
+                                              AutomationProperties.AutomationId="PatchLabCensusStagedList"
+                                              AutomationProperties.Name="Census experiments currently staged in this safe copy">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding}"
+                                                       FontFamily="Consolas"
+                                                       FontSize="12"
+                                                       TextWrapping="WrapWholeWords" />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
                             </StackPanel>
                         </Expander>
                         <Expander x:Name="PatchBenchLabPatchExperimentsExpander"

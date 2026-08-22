@@ -1105,6 +1105,13 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 ? PatchCensusStagingService.ReadManifest(exePath)
                 : PatchCensusStagingManifest.None;
 
+            // The staged list is the receipt surface: it names every experiment
+            // this copy currently holds, in the same "VA: effect" form staging and
+            // undo use, so what Undo will reverse is visible before it runs.
+            PatchLabCensusStagedList.ItemsSource = manifest.Present && manifest.Entries.Count > 0
+                ? manifest.Entries.Select(entry => $"{entry.Va}: {entry.Effect}").ToArray()
+                : Array.Empty<string>();
+
             PatchLabCensusStageButton.IsEnabled = hasSafeCopy && selected.Length > 0 && plan.Success;
             PatchLabCensusUndoButton.IsEnabled = hasSafeCopy && manifest.Present && manifest.Entries.Count > 0;
 
@@ -1225,7 +1232,10 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 PatchCensusStagingResult result = PatchCensusStagingService.UndoAll(exePath, GetPatchWorkspaceRoot());
                 _censusStagingResultMessage = result.Message;
                 PatchLabCensusStagingStatus.Text = result.Message;
-                OperationLogTextBox.Text = result.Message;
+                OperationLogTextBox.Text = result.Success && result.AppliedSummaries.Count > 0
+                    ? result.Message + Environment.NewLine
+                        + string.Join(Environment.NewLine, result.AppliedSummaries.Select(s => "  • " + s))
+                    : result.Message;
                 InvalidateVerification();
                 AppStatusService.SetStatus(result.Success
                     ? "Windowed & Mods: census experiments undone"

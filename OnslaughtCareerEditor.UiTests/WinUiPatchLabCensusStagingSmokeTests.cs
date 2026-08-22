@@ -134,6 +134,17 @@ public class WinUiPatchLabCensusStagingSmokeTests
             Assert.That(manifest.Present, Is.True, "the undo manifest must exist after staging");
             Assert.That(manifest.Entries.Count, Is.GreaterThanOrEqualTo(1));
 
+            // The receipt list names each staged experiment per row, matching the
+            // sidecar manifest on disk - not just a count sentence.
+            string expectedReceipt = $"{manifest.Entries[0].Va}: {manifest.Entries[0].Effect}";
+            AutomationElement stagedList = FindByAutomationId(window, "PatchLabCensusStagedList");
+            bool receiptShown = Retry.WhileFalse(
+                () => DescendantNames(stagedList).Any(name =>
+                    string.Equals(name, expectedReceipt, StringComparison.Ordinal)),
+                TimeSpan.FromSeconds(10)).Success;
+            Assert.That(receiptShown, Is.True,
+                $"expected the staged receipt '{expectedReceipt}' listed in PatchLabCensusStagedList.");
+
             // Undo through the app, then disk truth again: byte-identical reversal.
             InvokeByAutomationId(window, "PatchLabCensusUndoButton");
             AcceptContentDialog(window, "Undo experiments");
@@ -166,8 +177,37 @@ public class WinUiPatchLabCensusStagingSmokeTests
     private static string FindFirstMeasuredCensusCheckBoxId(string censusStatus)
     {
         // The smoke drives a real checkbox by automation id. Row order follows the
-        // TSV, and the sample/real TSVs both lead with MEASURED low-risk rows; the
-        // first checkbox of the filtered list is PatchCensusCheck_000.
+        // TSV, and the sample/real TSVs both lead with MEASURED low-risk rows, so
+        // the first row of the filtered list is the first measured one and its
+        // checkbox id follows PatchCensusRowModel's PatchCensusCheck_{index:D3}
+        // contract. The status text is parsed rather than trusted: if it stops
+        // naming MEASURED rows, this fails loudly instead of staging a
+        // STATIC_ONLY or SPECULATIVE experiment by accident.
+        const string marker = "MEASURED ";
+        int measuredIndex = censusStatus.IndexOf(marker, StringComparison.OrdinalIgnoreCase);
+        Assert.That(
+            measuredIndex,
+            Is.GreaterThanOrEqualTo(0),
+            $"Census status must name MEASURED rows for this smoke to pick one, got: {censusStatus}");
+        int countStart = measuredIndex + marker.Length;
+        int digitsEnd = countStart;
+        while (digitsEnd < censusStatus.Length && char.IsAsciiDigit(censusStatus[digitsEnd]))
+        {
+            digitsEnd++;
+        }
+
+        Assert.That(
+            digitsEnd,
+            Is.GreaterThan(countStart),
+            $"Census status must give the MEASURED count, got: {censusStatus}");
+        int measuredCount = int.Parse(
+            censusStatus[countStart..digitsEnd],
+            System.Globalization.CultureInfo.InvariantCulture);
+        Assert.That(
+            measuredCount,
+            Is.GreaterThanOrEqualTo(1),
+            "The census must contain at least one MEASURED row for this smoke to stage.");
+
         return "PatchCensusCheck_000";
     }
 
@@ -205,6 +245,25 @@ public class WinUiPatchLabCensusStagingSmokeTests
         catch
         {
             return null;
+        }
+    }
+
+    /// <summary>
+    /// Collects the UIA names of an element's descendants (bounded, for list
+    /// receipt assertions). Returns names in tree order; duplicates preserved.
+    /// </summary>
+    private static System.Collections.Generic.IReadOnlyList<string> DescendantNames(AutomationElement element)
+    {
+        try
+        {
+            return element.FindAllDescendants()
+                .Select(candidate => TryGetName(candidate) ?? string.Empty)
+                .Where(name => name.Length > 0)
+                .ToArray();
+        }
+        catch
+        {
+            return Array.Empty<string>();
         }
     }
 
