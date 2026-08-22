@@ -5,8 +5,8 @@
   measured RE evidence. Where an article disagrees with a measurement under
   [`reverse-engineering/`](../reverse-engineering/RE-INDEX.md), **the
   measurement wins** and the article is the side that gets corrected.
-- **Last updated:** 2026-08-13
-- **Summary:** navigation to the 12 lore articles in this directory, plus
+- **Last updated:** 2026-08-22
+- **Summary:** navigation to the 15 lore articles in this directory, plus
   pointers to the RE and roadmap indexes.
 
 A comprehensive record of Battle Engine Aquila (2003), Lost Toys Ltd., and the people who made it. This documentation preserves development history, in-game lore, community discoveries, and developer insights that would otherwise be lost.
@@ -22,6 +22,9 @@ A comprehensive record of Battle Engine Aquila (2003), Lost Toys Ltd., and the p
 | [world-lore.md](world-lore.md) | Planet Allium, Forseti vs Muspell factions, geography, story |
 | [characters.md](characters.md) | All eight retail character-profile entries and their evidence boundary |
 | [the-campaign.md](the-campaign.md) | Campaign shape, mission numbering, live mission list from your install |
+| [worlds.md](worlds.md) | All 43 career nodes and all 23 additional shipped numeric worlds, with bounded TTD fingerprints |
+| [units-and-mechs.md](units-and-mechs.md) | Complete 160-name unit-record census, 25 behaviour types, and boss/class families |
+| [weapons.md](weapons.md) | Complete 139-name weapon-record census and the measured weapon/mode/round/explosion chain |
 | [battle-engine-tech.md](battle-engine-tech.md) | In-universe Aquila program memo, mech technology lore |
 | [development-history.md](development-history.md) | Timeline, GDM post-mortem, what went right/wrong, port history |
 | [technical-deep-dive.md](technical-deep-dive.md) | Constraints, memory management, cross-platform architecture |
@@ -42,6 +45,8 @@ A comprehensive record of Battle Engine Aquila (2003), Lost Toys Ltd., and the p
 ### The Game
 - [Release dates by platform](game-overview.md#release-information)
 - [Battle Engine types (Pulsar, Blazer, Lancer, Sniper)](game-overview.md#battle-engine-types)
+- [Shipped Battle Engine profiles and the complete unit roster](units-and-mechs.md)
+- [Player, enemy, and boss weapons](weapons.md)
 - [In-game cheat codes (overview)](game-overview.md#in-game-cheat-codes)
 - [In-game cheat codes (RE details)](../reverse-engineering/game-mechanics/cheat-codes.md)
 
@@ -49,6 +54,7 @@ A comprehensive record of Battle Engine Aquila (2003), Lost Toys Ltd., and the p
 - [The Forseti faction](world-lore.md#the-forseti)
 - [The Muspell faction](world-lore.md#the-muspell)
 - [The Sohra Treaty](world-lore.md#the-sohra-treaty)
+- [Every shipped numeric world](worlds.md)
 
 ### Development
 - [GDM Post-Mortem (What Went Right)](development-history.md#what-went-right)
