@@ -2534,3 +2534,47 @@ parity, offset = VA−0x400000; the only flags are pre-existing census
 conventions: `unknown`/`none-*` placeholders and two intentional
 multi-variant VAs). No confidence changes. Batch-3 stage lists stand ready
 in `WALK-PENDING-SLOT.md`; §30 rows join the post-walk screening queue.
+
+### Latete launch-crash mechanism IDENTIFIED (2026-08-22, offline static)
+
+Read-only subagent analysis, every load-bearing byte claim independently
+re-verified against the pristine specimen (`74154bfa…`):
+
+- Enclosing function of `0x0045D80B` is **`CFEPGoodies::Process` @
+  `0x0045D7E0`** (vtable slot +8 at `.rdata:0x5DB9A0`; prologue
+  `sub esp,0x114` ESP-only frame), not `ButtonPressed`.
+- The call's argument `push 05` sits at `0x0045D7FD` immediately before it;
+  `IsCheatActive @0x00465490` is **callee-cleaned** (both epilogues
+  `c2 04 00`, i.e. `ret 4`). Deleting the call strands the pushed arg:
+  ESP stays −4 through the rest of the tick — every `[esp+k]` local access
+  misreads — and the function's exit (`pop edi/esi/ebp/ebx;
+  add esp,0x114; ret 4` @ `0x45DF31..37`) pops a skewed chain ending in a
+  garbage return address. Deterministic wild-EIP on Process's **first
+  pre-menu tick** ⇒ DEAD <10 s exactly as observed.
+- Siblings are safe because their enclosing functions never execute before
+  the menu: TURKEY `0x00461A6F` lives in `Career_IsWorldUnlocked`
+  (`0x00461A50`); Maladim `0x004CE31B` sits on the pause-menu path.
+  Precedent agrees: the documented MALLOY patch of call #1 in this same
+  function carries an explicit `add esp,4` stack repair.
+- Subagent citation corrections found during verification: its claimed
+  Process epilogue (`add esp,0x78; ret 8`) belongs to the previous
+  function's tail at `0x45D69C`, not to Process; and its proposed falsifier
+  bytes would leave the retained `neg eax` storing −1 into `[0x6798B4]`
+  (truthy but not the claimed value) — a repaired row must place
+  `add esp,4` before the tail stores.
+- Cheapest runtime falsifier when the serialized slot next frees: patch
+  site+arg window `e8807c0000f7d8` → `83c404b8010000009090` (add esp,4;
+  mov eax,1; nop nop) and predict ALIVE ≥3/3. If still dead, H1 is wrong.
+
+### Menu-walk status after first clean-slot run (2026-08-22)
+
+Run 1 (pid 24508, occluded=False fg=True): boot→click-to-start→main-menu
+proven again; **DOWN×4 lands selection on Options — visually confirmed** in
+captured frames. Posted ENTER did not activate the row within the run's
+window and the fixed `-Seconds 90` instrument budget truncated the walk
+mid-step (budget must exceed walk length by ≥60 s). Runs 2–4 overlapped the
+video lane's TAKE 4 (`occluded=True fg=False`) and are VOID as observations;
+no negative finding recorded from them. Corrected v2 plan (longer budget,
+ENTER/SPACE activation probes, click fallback on re-measured coordinates)
+staged in `WALK-PENDING-SLOT.md`. All BEA launches held again pending the
+video lane's explicit closed announcement.
