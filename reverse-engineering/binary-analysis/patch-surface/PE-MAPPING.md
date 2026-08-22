@@ -1,0 +1,56 @@
+# Patch-surface PE mapping (pristine specimen)
+
+Status: active — BSS versus file-backed VAs for this image
+Last updated: 2026-08-22
+Summary: `file offset = VA − 0x400000` is only valid inside a section's
+raw range. `.data` VirtualSize is far larger than SizeOfRawData, so most
+runtime globals (including `g_bGodModeEnabled`) are BSS and are not
+file-patchable.
+Evidence: MEASURED — PE section table and VA-to-file map re-read from the
+named specimen on 2026-08-22; hash matched.
+Specimen: `local-lab/pristine-verification-2026-07-26/pristine-target/BEA.exe`
+SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
+(2,506,752 bytes).
+
+## Parsed section table
+
+Re-read 2026-08-22 from the named specimen (2,506,752 bytes; hash match).
+PE32, `image_base=0x00400000`, four sections:
+
+| name | VA | VirtualSize | raw | SizeOfRawData | file-backed VA end |
+|---|---|---|---|---|---|
+| `.text` | `0x00401000` | `0x1D6F9D` | `0x1000` | `0x1D7000` | `0x005D8000` |
+| `.rdata` | `0x005D8000` | `0x4985C` | `0x1D8000` | `0x4A000` | `0x00622000` |
+| `.data` | `0x00622000` | `0x3B2614` | `0x222000` | `0x3F000` | `0x00661000` |
+| `.rsrc` | `0x009D5000` | `0x2F50` | `0x261000` | `0x3000` | `0x009D8000` |
+
+`.data` virtual end is `0x009D4614`. Everything from `0x00661000` through
+that virtual end is **BSS**: the loader zero-fills it; those VAs have no
+file bytes. A naive `VA − 0x400000` landing past `0x00261000` hits
+`.rsrc` raw (or past EOF), not the runtime global.
+
+## Consequence for the first-cut census
+
+`t_7b48b14a` rowed `g_bGodModeEnabled` `0x00662AB4` as a file-born TRUE
+patch. That VA maps into `.data` BSS (`delta 0x40AB4` ≥ raw `0x3F000`).
+The zeros previously read at file `0x262AB4` are `.rsrc` bytes, not the
+flag. File-patching them would corrupt resources and would not set god
+mode. Successor `t_14fcbbed` retracts that TSV row.
+
+Same BSS class (not file-patchable):
+
+| VA | first-cut label | refs of the address dword |
+|---|---|---|
+| `0x00662AB4` | `g_bGodModeEnabled` | 1 |
+| `0x00662DD0` | water-death conjunct (not `0x00662DF4`) | 10 |
+| `0x00662DF4` | claimed `g_bDevModeEnabled`; file-flat bytes are UTF-16 `scen` in `.rsrc` | 39 |
+| `0x00679EC1` | `g_bAllCheatsEnabled` | — |
+| `0x00672E20` | FillOut ranking destination | — |
+| `0x0089C800` | script pause stop-flag | — |
+| `0x008A9AC0` | `g_GameState` | — |
+
+## Rule for later rows
+
+A candidate VA is file-patchable only when it falls in a section's
+`[VA, VA + SizeOfRawData)` range. Prefer `.text` instruction patches and
+`.rdata` private constants. Never promote a BSS global to a file row.
