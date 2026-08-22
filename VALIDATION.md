@@ -3,9 +3,11 @@
 Status: active — the gate-selection table
 Last updated: 2026-08-21 (Core full suite re-measured after the
 wt/t_0bace7cd + t_7d9a828d merges and the Blaster explanation:
-**862 passed / 1 failed / 863**, 27 m 40 s. The single failure is the
-`ChainAutopilot_ReachesWonByInputAlone` tick pin — see
-`developer_state.json` → `_CORE_SUITE_20260821`.)
+**862 passed / 1 failed / 863**, 27 m 40 s; the single remaining failure —
+the chain tick pin — was then resolved with a tick-pin-only bisect receipt
+and re-pinned (`Level100FullChainTests` class filter 5/5). Both former
+failures are explained, not re-fitted — see `developer_state.json` →
+`_TICK_BISECT_RESOLVED_20260821` and `_CORE_SUITE_20260821`.)
 Header fields under [`DOCUMENTATION.md`](DOCUMENTATION.md).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
@@ -24,7 +26,7 @@ options, not a required sequence.
 | CLI | `npm run test:cli` and the relevant AppCore test |
 | Lore inputs/reader | `npm run test:lore-pack` plus the LoreBrowserService tests |
 | Public payload/provenance boundary | `npm run test:safety` |
-| Rebuild Core | `npm run test:rebuild-core` — re-measured 2026-08-21: **862 passed / 1 failed / 863 total**, **27 m 40 s** (grew from 856 by the wt/t_0bace7cd + t_7d9a828d merges and the Blaster identity-diff work). The one failure is `Level100FullChainTests.ChainAutopilot_ReachesWonByInputAlone` (tick pin 8404, actual 6572; run reaches Won at higher hull; tick-pin-only bisect in progress) — see `developer_state.json` → `_CORE_SUITE_20260821`. Historical: 854/2/856 (2026-08-19), 730/730 `a65826fa`, 729/729 `fd5ab355`; neither is a live count. Use the owner-named filter rather than re-running 28 minutes |
+| Rebuild Core | `npm run test:rebuild-core` — measured 2026-08-21: **862 passed / 1 failed / 863 total**, **27 m 40 s** (grew from 856 by the wt/t_0bace7cd + t_7d9a828d merges and the Blaster identity-diff work). The one measured failure — `Level100FullChainTests.ChainAutopilot_ReachesWonByInputAlone` — was then RESOLVED with a tick-pin-only bisect (boundary e633b511; receipts `local-lab/chain-tick-bisect-20260821/`) and re-pinned with the measured attribution; class filter 5/5 after. Both former failures are explained (Blaster: observable reconstruction band, commit 87498824; tick: evidenced TargetZone hit()/InJetMode route change) — see `developer_state.json` → `_TICK_BISECT_RESOLVED_20260821`. Historical: 854/2/856 (2026-08-19), 730/730 `a65826fa`, 729/729 `fd5ab355`; neither is a live count. Use the owner-named filter rather than re-running 28 minutes |
 | Rebuild client/adapters | `npm run test:rebuild-client` |
 | Godot toolchain or native behavior | the matching `test:rebuild-*` command; native smoke only when native behavior changed |
 | Frontend page drawing | `rebuild/tools/Capture-Frontend.ps1 -Plan mainmenu`, which now scores the capture against the retail reference and returns `FAIL` on regression. `npm run test:tools` covers the scorer itself |

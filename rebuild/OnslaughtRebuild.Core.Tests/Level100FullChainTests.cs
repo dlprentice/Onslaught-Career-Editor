@@ -292,16 +292,27 @@ public sealed class Level100FullChainTests
     /// then. <c>LevelWon()</c> is called by the released
     /// <c>event("Reached Target Zone 4")</c> and by nothing else.</para>
     ///
-    /// <para><b>Current measured branch, 2026-08-14.</b> With actor impacts
-    /// routed through the released shield/damage funnel and walker recharge
-    /// gated by the pristine 0.3-second ground-contact comparison, and with the
-    /// Aquila's shipped 1/75-radian walker yaw authority and per-projectile
-    /// player-weapon scatter, beat 9 destroys all six wave-2 drones. The
-    /// sub-40 % emergency poll never posts
-    /// <c>Abort Airborne Drones</c>; objective 4 completes normally, and the run
-    /// reaches <c>Won</c> at t8404 with 8,428 milli-life. The prior abort-path
-    /// trajectories remain dated evidence in the local-lab reports, not the
-    /// active expectation of this test.</para>
+    /// <para><b>Current measured branch, re-pinned 2026-08-21 with a bisect
+    /// receipt.</b> The 2026-08-14 branch (pinned at 383d5b3e "Model player
+    /// weapon scatter") reached <c>Won</c> at t8404 with 8,428 milli-life.
+    /// Across 4a978c5b..988f2db0 the evidenced InJetMode contract cluster
+    /// left that route unreachable — the chain exhausted its budget stuck at
+    /// Target Zone 2 in walker mode — and e633b511 ("Pin Level 100
+    /// TargetZone hit() InJetMode and Pause wait-stop") restored winning by
+    /// a different, contract-correct route: the modern trajectory (Won at
+    /// t6572, hull 18,244) first exists at e633b511 and is stable through
+    /// HEAD. Established by a tick-pin-only bisect (predicate greps the
+    /// 8404 assertion itself; commits where the chain cannot win are skips,
+    /// because they have no tick to drift): e633b511 BAD with Expected 8404
+    /// / Actual 6572 at this file's tick pin, hull 18244; last GOOD
+    /// ancestor b56cd36a; all nine commits between are skips. Re-pinning is
+    /// justified by that measured attribution — these are evidenced retail
+    /// contract changes, not a silent regression. The OPEN parity question
+    /// (whether training now plays easier than retail, hull 18,244 vs the
+    /// route's old 8,428) is unchanged and belongs to the Level 100 lane
+    /// with retail-side evidence. The prior abort-path trajectories remain
+    /// dated evidence in the local-lab reports, not the active expectation
+    /// of this test.</para>
     /// </summary>
     [Fact]
     public void ChainAutopilot_ReachesWonByInputAlone()
@@ -388,8 +399,8 @@ public sealed class Level100FullChainTests
             Level100PrimaryObjectiveStatus.Complete,
             final.Level100Mission.PrimaryObjectives
                 .Single(objective => objective.Objective == 4).Status);
-        Assert.Equal(8_404, final.Tick);
-        Assert.Equal(8_428, final.Hull);
+        Assert.Equal(6_572, final.Tick);
+        Assert.Equal(18_244, final.Hull);
     }
 
     /// <summary>
