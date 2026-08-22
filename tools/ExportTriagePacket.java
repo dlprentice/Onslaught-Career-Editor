@@ -264,6 +264,15 @@ public class ExportTriagePacket extends GhidraScript {
     private String decompile(Function function) {
         DecompInterface decompiler = new DecompInterface();
         decompiler.setOptions(new DecompileOptions());
+        // Without openProgram the interface has no data-type manager and every
+        // decompileFunction call fails with a null dtmanage (measured
+        // 2026-08-22); openProgram is what binds the slicer to this program.
+        if (!decompiler.openProgram(currentProgram)) {
+            println("TRIAGE_PACKET_DECOMPILE_OPEN_FAILED at " + hex(function.getEntryPoint())
+                + ": " + decompiler.getLastMessage());
+            decompiler.dispose();
+            return null;
+        }
         try {
             DecompileResults results =
                 decompiler.decompileFunction(function, 120, monitor);
