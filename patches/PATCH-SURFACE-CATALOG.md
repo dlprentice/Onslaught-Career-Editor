@@ -2711,3 +2711,25 @@ An initial dash pilot reached one clean rep then hit a staging-time file-lock
 before rep 2; no second launch occurred, and the full `b3-dash-clean` 3/3 above
 supersedes it. **No new launch crashers; no confidence promotions from
 crash-safety alone.**
+
+### Batch 4 — mesh-quality launch-crash screen (2026-08-22)
+
+The serialized copied-runtime slot was leased explicitly for one coherent
+first-row stage over the 29-row product baseline:
+
+`0x004DD6D4`, `0x004DD709`, `0x004DD741`, `0x004DD6DE`, `0x004DD713`,
+`0x004DD74B`, `0x00631E8C`, `0x00631E90`, and `0x00631EA0`.
+
+The pristine backup re-asserted SHA-256 `74154bfa…` before staging. Receipts
+`receipts-b4-mesh-quality-r1..r3.json` each verified all nine original/patched
+byte pairs and produced identical staged SHA-256 `664465e5…`. PIDs
+40680 / 46072 / 39496 were each alive at t=12 s and t=20 s, with
+`collision=false`, `killed=true`, writable-target readback, and an empty
+terminal game-process list: **ALIVE 3/3**.
+
+The process guard was also extended to recognize the Mono Godot console image
+before this stage. Browser/Chrome and the capture proxy were not used; proxy
+and machine-wide BEA/Godot checks were clear before and after the run. The copy
+was restored to the 29-row product baseline afterward (cleanup SHA-256
+`b49378d6…`). **No confidence promotions:** launch-safety does not observe any
+row's named mesh/LOD behavior.
