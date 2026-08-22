@@ -6,7 +6,10 @@ Summary: first cut `t_7b48b14a`, then `t_14fcbbed`, `t_17fa180d` (jet drain /
 debug-button door / IScript mutators), then `t_120c3e1b` (config+0x8/+0xc
 named; IScript getters / camera / weather / message natives), then
 `t_94b70425` (remaining Initialise slots named; leftover IScript
-position / script / HUD / PlayCutscene one-instruction rows).
+position / script / HUD / PlayCutscene one-instruction rows), then
+`t_94ad2658` (gameplay/frontend far-plane PUSHes, zoom bound stores,
+SetQualityLevel / CRTTree / occupancy-slope writers, FollowWaypoint
+vfunc, IsNumberBetween, SpawnEscapePod skip).
 Evidence: MEASURED — every non-unknown TSV `original_bytes` compared to the
 named specimen at write time; PE section table re-parsed; first-cut BSS
 god-flag row retracted. `t_17fa180d` re-read JetPart::Move, SendButtonAction,
@@ -14,7 +17,10 @@ and the 144-native handler heads. `t_120c3e1b` re-read those TSV bytes again
 and the getter / camera / weather / message heads plus
 `CBattleEngineData::Initialise` / `LoadFromMemBuffer` from the same specimen.
 `t_94b70425` re-read those TSV bytes again and the leftover IScript heads
-plus the rest of Initialise / the versioned Load walks.
+plus the rest of Initialise / the versioned Load walks. `t_94ad2658`
+re-read those TSV bytes again and the CDXEngine / frontend projection
+PUSHes, ZoomIn/Out/AutoZoomOut stores, `CRTMesh__SetQualityLevel`,
+`CRTTree__Init`, and `CWorld__InitLODLists` from the same specimen.
 Specimen: `local-lab/pristine-verification-2026-07-26/pristine-target/BEA.exe`
 SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 (2,506,752 bytes).
@@ -40,8 +46,9 @@ PE mapping owner: [`../reverse-engineering/binary-analysis/patch-surface/PE-MAPP
   `reverse-engineering/binary-analysis/patch-surface/PE-MAPPING.md`.
 - TSV `original_bytes` for every non-`unknown-*` / non-`none-*` row were
   compared to the specimen in the `t_14fcbbed` writer, again in the
-  `t_17fa180d` writer, again in the `t_120c3e1b` writer, and again in the
-  `t_94b70425` writer and refused on mismatch.
+  `t_17fa180d` writer, again in the `t_120c3e1b` writer, again in the
+  `t_94b70425` writer, and again in the `t_94ad2658` writer and refused
+  on mismatch.
 - Confidence vocabulary: MEASURED (byte + behavior evidence),
   STATIC_ONLY (byte evidence verified here; behavior inferred from pinned
   source or prior bounded observations), SPECULATIVE (site plausible,
@@ -69,7 +76,7 @@ PE mapping owner: [`../reverse-engineering/binary-analysis/patch-surface/PE-MAPP
 | 12 | Career graph / goodies / kills | [§12](#12-career-graph--goodies--kills) | Update / SetSlot / GRADE |
 | 13 | Flight / script enable | [§13](#13-flight--script-enable) | DisableFlight NOP, AddScore, SetVulnerable |
 | 14 | Input / analogue | [§14](#14-input--analogue) | 0.001f scale |
-| 15 | Collision / camera knobs | [§15](#15-collision--camera-knobs) | COfG, movie zoom |
+| 15 | Collision / camera knobs | [§15](#15-collision--camera-knobs) | COfG, movie zoom; gameplay far/zoom in §23 |
 | 16 | Script objective / pause flags | [§16](#16-script-objective--pause-flags) | or/and +0x2c, stop-flag + Wait twins |
 | 17 | IScript mutators (beyond the first-cut set) | [§17](#17-iscript-mutators-beyond-the-first-cut-set) | + Launch / Teleport / SetPos / SetScript / segment / variables / PostEvent |
 | 18 | IScript getters / predicates | [§18](#18-iscript-getters--predicates) | + GetNumber / GetSquad / GetTarget / Spawners* / IsA |
@@ -77,6 +84,9 @@ PE mapping owner: [`../reverse-engineering/binary-analysis/patch-surface/PE-MAPP
 | 20 | Weather | [§20](#20-weather) | Rain/snow/lightning fstp + init stores; wind X |
 | 21 | IScript messages / wait | [§21](#21-iscript-messages--wait) | Wait-flag twins; SwitchMessages; PlayChar insert; PlayCutscene call |
 | 22 | HUD highlight | [§22](#22-hud-highlight) | Highlight/UnHighlight stores; dest is BSS |
+| 23 | Camera projection / zoom bounds | [§23](#23-camera-projection--zoom-bounds) | far-plane PUSHes; ZoomIn 0.4 / ZoomOut 1.0; aspect jcc |
+| 24 | Mesh quality / occupancy slopes | [§24](#24-mesh-quality--occupancy-slopes) | SetQualityLevel writers; CRTTree 45; InitLODLists 35/45/60 |
+| 25 | Leftover IScript (waypoint / range / escape) | [§25](#25-leftover-iscript-waypoint--range--escape) | FollowWaypoint vfunc; IsNumberBetween; SpawnEscapePod |
 
 ---
 
@@ -954,6 +964,9 @@ Confirmed BSS (not file-patchable):
 | `0x008551C0` / `0x00855228` | `GetNumUnits` allegiance tables |
 | `0x00855090` | `InitVariable` / `PlayCutscene` lookup `this` |
 | `0x00672FC8` | `PostEvent` / `Shutdown` event-manager `this` |
+| `0x00662F10` | `CRTTree__Init` 45.0 override flag |
+| `0x009C7558` | `SetQualityLevel` lod-table dest |
+| `0x00809598` | occupancy bitplane scratch |
 
 Any "patch" of those file offsets is a no-op or resource corruption.
 
@@ -1152,6 +1165,7 @@ low-medium.
 `CMovieCamera::GetZoom` `fmul [0x005D9338]` at `0x0041A681` then
 `fmul [0x005D85EC]` (0.5f, **409 refs** — do not touch). `0x005D9338` =
 `61 0b 36 3c` = 1/90, **sole ref**. Example: 1/45 doubles FOV.
+Gameplay zoom bounds and the world far-plane PUSH are §23.
 
 Confidence: **MEASURED**. Risk: low.
 
@@ -1423,9 +1437,9 @@ run the helper with a null controller — not rowed.
 `0x00536B9C` `75 1b` proceeds on a hit. `75 1b` → `EB 1b` always
 takes the error return.
 
-`SpawnEscapePod` `0x005371E0` is 556 B (construct + vslot). No
-one-instruction lever is claimed. `FollowWaypoint*` is a large
-lookup + pose write; declined this cut.
+`SpawnEscapePod` `0x005371E0` is 556 B (construct + vslot). The
+skip-if-no-controller `je` is now rowed in §25. `FollowWaypoint*`
+goal write is the same `vfunc+0xf4` as SetGoalPoint; also §25.
 
 ### 17.23 SetVar / world variables / Shutdown / PostEvent
 
@@ -1738,6 +1752,208 @@ Confidence: **STATIC_ONLY**. Risk: low-medium.
 
 ---
 
+## 23. Camera projection / zoom bounds
+
+World and frontend far clips are **PUSH immediates** into
+`CDXEngine__SetProjectionMatrix` `0x00550B10`, not `.rdata`
+dwords. The four image occurrences of `00 00 2f 44` (700.0f)
+are three of those PUSHes plus one unused-looking `.rdata`
+slot at `0x005DB3B0` (2 address refs — not rowed). The three
+`00 c0 da 45` (7000.0f) hits are all frontend PUSHes.
+
+### 23.1 Gameplay far plane
+
+`CDXEngine__Render` `0x0053E2E0` world pass:
+`0x0053E665` `68 00 00 2f 44` = `push 0x442F0000` (700.0f),
+then `call 0x00550B10`. Independently documented in
+`player-camera-attach-and-mesh-hfov-2026-07-26.md` and
+`view-distance-and-lod-constants-2026-07-25.md`. Rewrite
+the imm32 `00 00 2f 44` → `00 00 af 44` (1400.0f) to push
+the clip out. Sky uses a computed far, not this PUSH.
+
+Confidence: **MEASURED** (bytes + two independent notes +
+named caller). Risk: medium (culling / fog / imposters were
+authored against 700).
+
+### 23.2 Frontend far 700
+
+Same PUSH encoding, different callers:
+
+| site | owner |
+|---|---|
+| `0x0045F06C` | `CFEPGoodies__Render` |
+| `0x00468626` | `CFrontEnd__RenderStart` |
+
+Goodies also pushes near `0x3E4CCCCD` (0.2f) immediately
+after. Same 700→1400 rewrite.
+
+Confidence: **STATIC_ONLY**. Risk: low-medium.
+
+### 23.3 Frontend far 7000
+
+| site | owner |
+|---|---|
+| `0x0045041D` | `CFEPBEConfig__PushProjectionMatrixForRender` |
+| `0x004506DA` | `CFEPBEConfig__Render` |
+| `0x005222AC` | `CFEPWingmen__Render` |
+
+`68 00 c0 da 45` → `68 00 c0 5a 46` (14000.0f). These are
+menu 3D stages, not the in-level camera.
+
+Confidence: **STATIC_ONLY**. Risk: low.
+
+### 23.4 ZoomIn / ZoomOut / AutoZoomOut
+
+`[BE+0x2cc]` is `mDesiredZoom`. Unzoomed play is 1.0f;
+ZoomIn writes 0.4f. Bodies re-read from the specimen
+(`CBattleEngine__ZoomIn` 39 B, `ZoomOut` 39 B,
+`AutoZoomOut` 11 B).
+
+| site | original | role |
+|---|---|---|
+| `0x00409EDB` | `c7 86 cc 02 00 00 cd cc cc 3e` | ZoomIn store 0.4f |
+| `0x00409ED9` | `75 0a` | skip store unless `[weapon+0xa4]+0x34 == 1` |
+| `0x00409EAB` | `c7 86 cc 02 00 00 00 00 80 3f` | ZoomOut store 1.0f |
+| `0x00409EA9` | `75 0a` | same weapon-type gate |
+| `0x00409E80` | `c7 81 cc 02 00 00 00 00 80 3f` | AutoZoomOut store 1.0f, no gate |
+
+Rewrite 0.4f → 0.2f (`cd cc 4c 3e`) for a tighter inset.
+Rewrite 1.0f → 2.0f (`00 00 00 40`) for a wider zoom-out.
+NOP a `75 0a` to store even when the current weapon record
+is missing or not type 1. `CBattleEngine__Morph`
+`0x0040A5FD` is the same 10-byte 1.0f store with **no**
+gate — NOP it to keep the current zoom across a morph.
+`CBattleEngine__Init` copies EDI into `+0x2c8/+0x2cc/+0x2d0`
+(the 1.0f lives in EDI, not at those VAs).
+
+Confidence: **MEASURED** for the three named zoom bodies
+(function notes + this re-read). STATIC_ONLY for Morph.
+Risk: low / medium for ungating ZoomIn.
+
+### 23.5 Aspect jcc — do not value-patch 0.75
+
+`CCamera__GetAspectRatio` `0x0041B070`: MP helper
+`0x004725D0` then `je` at **`0x0041B07C`** (`74 07`) to
+`fld [0x005D8BC4]` = 0.75f (SP, helper returned 0).
+Fall-through loads `[0x005D85EC]` = 0.5f (**409 refs** —
+already forbidden). `0x005D8BC4` itself has **42 address
+refs** — not a private aspect knob. `74 07` → `EB 07`
+forces the 0.75f SP arm even in MP. NOP the `je` to fall
+through to 0.5f on SP too (squashed FOV).
+
+Confidence: **MEASURED** (bytes + documented 0.75/0.5 pair).
+Risk: medium (42-ref 0.75 must stay; only the jcc is rowed).
+
+---
+
+## 24. Mesh quality / occupancy slopes
+
+`g_MeshQualityDistance` `0x006321A0` is **file-backed**
+`.data` (ships 30.0f) but `CRTMesh__SetQualityLevel`
+`0x004DD6B0` rewrites it, and `CRTTree__Init` may force
+45.0f. File-patching the dword is a no-op after options
+apply. Patch the **writers**.
+
+### 24.1 `CRTMesh__SetQualityLevel` distance stores
+
+Arg 0/1/2. Each arm is four `mov [imm32], imm32` then
+`CVar__SetValueRounded`. Distance dest `0x006321A0` is
+file-backed; sibling dest `0x009C7558` is **BSS** (patch
+the store, never the VA).
+
+| level | store VA | original imm | value |
+|---|---|---|---|
+| 2 (high) | `0x004DD6CA` | `00 00 8c 42` | 70.0f |
+| 1 | `0x004DD6FF` | `00 00 f0 41` | 30.0f |
+| 0 (low) | `0x004DD737` | `00 00 20 41` | 10.0f |
+
+Example: high 70 → 140 (`00 00 0c 43`). The same arms also
+write lod-bias `0x00631E88` (0.3 / 1.0 / 3.0) and scale
+`0x00630E0C` (2.0 / 1.0 / 0.1) — those dests are
+file-backed but rewritten here; not separately rowed.
+
+`GetQualityLevel` `0x004DD770` classifies the live distance
+against `0x005D85D4` = 15.0f (**50 refs**) and
+`0x005D8610` = 40.0f (**30 refs**). Do not patch those
+floats.
+
+### 24.2 `CRTTree__Init` 45.0 override
+
+`0x004DD82E` `test [0x00662F10], eax` (BSS flag, 2 refs)
+then `je` at **`0x004DD830`** (`74 0a`) skips
+`mov [0x006321A0], 45.0f` at `0x004DD832`. NOP the 10-byte
+store: trees no longer clamp the cull distance to 45.
+NOP the `je` to always write 45 (overrides the quality
+level). Destination is the same file-backed dword §24.1
+writes.
+
+### 24.3 Occupancy slope thresholds
+
+`CWorld__InitLODLists` `0x0050D580` allocates three
+`0x2004` bitplanes and calls
+`CWorld__InitOccupancyBitplanes` `0x004BC260` with a
+degree immediate. Callee `fmul [0x005DC7B0]` (π/180,
+**8 refs** — already declined as shared) and stores
+radians at `[bitplane+0x2000]`. Patch the PUSHes:
+
+| plane | PUSH VA | original | degrees | dest |
+|---|---|---|---|---|
+| 0 | `0x0050D5C4` | `68 00 00 0c 42` | 35.0f | `[world+0x200]` |
+| 1 | `0x0050D60D` | `68 00 00 34 42` | 45.0f | `[world+0x204]` |
+| 2 | `0x0050D656` | `68 00 00 70 42` | 60.0f | `[world+0x208]` |
+
+Example: 35 → 20 (`68 00 00 a0 41`). This changes which
+tiles count as blocked, not draw distance.
+
+Confidence for §24: **STATIC_ONLY**. Risk: medium (cull /
+pathing authored against these numbers).
+
+---
+
+## 25. Leftover IScript (waypoint / range / escape)
+
+### 25.1 FollowWaypoint / FollowWaypointWait
+
+Both look up a waypoint then `call [thing.vtable+0xf4]` —
+the same SetGoalPoint slot already rowed in §17.19.
+
+| native | site | original |
+|---|---|---|
+| FollowWaypoint | `0x00537DE4` | `ff 90 f4 00 00 00` |
+| FollowWaypointWait | `0x00537ED9` | `ff 92 f4 00 00 00` |
+
+NOP×6: the lookup still runs; the goal is not posted.
+Wait may still raise the pause flag (see §16.2).
+
+### 25.2 IsNumberBetween
+
+`0x005347B0` unboxes three floats and does two ordered
+compares. First fail `je` at **`0x005347D4`** (`74 27`)
+goes to the swapped-range pair. The TRUE box is the
+`push 0x2A4` at `0x005347F6`. `74 27` → `EB 20` jumps
+straight to that push (rel8 from `0x005347D6` to
+`0x005347F6`). Scripts then always see TRUE.
+
+### 25.3 SpawnEscapePod disable
+
+`0x005371E0` is 556 B. `test [thing+0x30], ecx` then
+`je` at **`0x00537207`** (`0f 84 e6 01 00 00`) skips the
+whole construct to `0x005373F3`. Convert to
+`e9 e7 01 00 00 90` (`jmp` + pad): scripts cannot spawn
+an escape pod. NOP of that `je` would run the construct
+with a null controller — not rowed.
+
+`GetX` / `GetY` / `GetZ` / `CreatePosition` / `GetPos` /
+`GetAngle` still have no one-instruction cheat (unbox +
+rebuild / pose copy). `GetVariable` looks up through BSS
+`0x00855090` and `fstp`s the helper return — not rowed
+(NOP of the call leaves a dirty x87 stack).
+
+Confidence for §25: **STATIC_ONLY**. Risk: medium
+(authored escort / range / bail-out scripts).
+
+---
+
 ## Verification protocol (for any row promoted to Phase 2)
 
 1. Copy, never in-place: safe-copy through the app; pristine specimen stays
@@ -1753,13 +1969,14 @@ Confidence: **STATIC_ONLY**. Risk: low-medium.
 
 ## Row inventory
 
-TSV: **184 data rows** (182 unique VAs). `t_120c3e1b` 147 plus 37
-from this cut (HUD / PlayCutscene / leftover IScript
-position-script-segment-variable-getter rows). Every
-non-unknown `original_bytes` was re-read from the named
-specimen (`145` prior compared, `0` mismatch, then `37` new).
+TSV: **208 data rows** (206 unique VAs). `t_94b70425` 184 plus 24
+from this cut (far-plane PUSHes / zoom stores / quality and
+occupancy writers / FollowWaypoint / IsNumberBetween /
+SpawnEscapePod). Every non-unknown `original_bytes` was
+re-read from the named specimen (`182` prior compared,
+`0` mismatch, then `24` new).
 
-Confidence histogram: **MEASURED 22 / STATIC_ONLY 162 / SPECULATIVE 0**.
+Confidence histogram: **MEASURED 27 / STATIC_ONLY 181 / SPECULATIVE 0**.
 
 First-cut corrections landed here, not in `rebuild/**`:
 
@@ -1774,12 +1991,13 @@ First-cut corrections landed here, not in `rebuild/**`:
 Coverage limits that stay honest: no per-unit AI tick (SetAIState is a
 poke), no exe spawn tables (SpawnThing is a native; SetSpeed is a no-op),
 debug-button **key → id** still BSS (the SendButtonAction door is pinned).
-Initialise now names the remaining constructor slots (`mLife` /
-`mEnergy` / velocities / turn rates / shield / stealth / store
-loop); shipped dats still overwrite them. Getters/camera/weather/message
-already had one-instruction rows; this cut adds HUD stores,
-PlayCutscene, Teleport/SetPos, SetScript, segment twins, world
-variables, and leftover predicates. `GetPlayer` / `GetGoodieState` /
+Initialise constructor slots stay named; shipped dats still overwrite
+them. Getters/camera/weather/message/HUD already had one-instruction
+rows. This cut adds the far-plane PUSHes, zoom bound stores, quality
+and occupancy writers, FollowWaypoint `vfunc+0xf4`, IsNumberBetween,
+and SpawnEscapePod's skip-`je`. `GetPlayer` / `GetGoodieState` /
 `GetWaterHeight` / `GameTime` remain BSS-sourced. Print/PrintText/
 AddMessage are still pointer-only. `Rand`/`GetFloatRand`/`GetMapHeight`/
-`GetNumUnits` are BSS-sourced.
+`GetNumUnits` are BSS-sourced. `GetX`/`GetY`/`GetZ`/`GetPos`/
+`CreatePosition`/`GetAngle`/`GetVariable` stay without a one-instruction
+cheat. SP aspect `0x005D8BC4` (0.75f, 42 refs) is not a value row.

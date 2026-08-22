@@ -65,21 +65,33 @@ Same BSS class (not file-patchable):
 | `0x008551C0` / `0x00855228` | `GetNumUnits` allegiance tables | — |
 | `0x00855090` | `InitVariable` / `PlayCutscene` lookup `this` | — |
 | `0x00672FC8` | `PostEvent` / `Shutdown` event-manager `this` | — |
+| `0x00662F10` | `CRTTree__Init` 45.0 override flag | 2 |
+| `0x009C7558` | `SetQualityLevel` lod-table dest | 6 |
+| `0x00809598` | occupancy bitplane scratch | — |
 
 `t_17fa180d` added the last five after the IScript / SendButtonAction
 pin. `t_120c3e1b` added the GetPlayer / MessageBox / GameTime /
 GetWaterHeight / HighlightHud / GetGoodieState-view VAs. `t_94b70425`
 added `Rand`/`GetFloatRand` `0x008A9D9C`, `GetMapHeight` `0x006FADC8`,
 the `GetNumUnits` tables `0x008551C0` / `0x00855228`, lookup
-`this` `0x00855090`, and event-manager `this` `0x00672FC8`. Same
-rule: never promote those VAs to a file row; patch the `.text`
-store or the `.text` jcc that consumes them.
+`this` `0x00855090`, and event-manager `this` `0x00672FC8`. `t_94ad2658`
+added CRTTree 45-override flag `0x00662F10`, quality-table dest
+`0x009C7558`, and occupancy scratch `0x00809598`. Same rule: never
+promote those VAs to a file row; patch the `.text` store or the
+`.text` jcc that consumes them.
 
 Weather dests `0x00660188` / `8C` / `90` / `98..A4` are
 **file-backed** `.data` (before `0x00661000`) but ship as zero
 and are written again by the init block at `0x00404A20`. They
 are not BSS; they are also not useful as file-data patches.
 Patch the init `mov` or the IScript `fstp`.
+
+`g_MeshQualityDistance` `0x006321A0`, `cg_meshlodbias`
+`0x00631E88`, and scale `0x00630E0C` are file-backed and ship
+non-zero, but `CRTMesh__SetQualityLevel` / `CRTTree__Init`
+overwrite them. Patch those writers. SP aspect `0x005D8BC4`
+(0.75f) is file-backed with **42** address refs — not a value
+row; patch `CCamera__GetAspectRatio`'s `je`.
 
 ## Rule for later rows
 
