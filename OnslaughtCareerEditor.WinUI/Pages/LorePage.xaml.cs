@@ -582,7 +582,11 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             try
             {
                 _isDocumentLoading = true;
-                await LoadDocumentAsync(model.Hit.DocumentPath, anchor: null, addToHistory: true);
+                // A hit is a location, not just a document: when AppCore located
+                // the passage's section, open scrolled to that heading instead of
+                // at the top of a long page. Anchor-less hits behave as before.
+                string? anchor = model.HasSectionTarget ? model.Hit.SectionAnchor : null;
+                await LoadDocumentAsync(model.Hit.DocumentPath, anchor: anchor, addToHistory: true);
             }
             catch
             {

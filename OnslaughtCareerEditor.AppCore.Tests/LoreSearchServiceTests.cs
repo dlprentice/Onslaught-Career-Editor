@@ -48,6 +48,47 @@ namespace OnslaughtCareerEditor.AppCore.Tests
         }
 
         [Fact]
+        public void Search_EachHitNamesTheSectionItFallsUnder()
+        {
+            WriteLore(
+                ("world-lore.md", "# World Lore\n\n## Planets\n\nForseti orbits far out.\n\n## Engines\n\nThe Aquila is a battle engine."),
+                ("characters.md", "An Aquila flies before this file's first heading.\n\n# Characters\n\nAquila is the pilot."));
+
+            LoreSearchService service = new(_browser);
+            var hits = service.SearchAllDocuments(LoadIndex(), "Aquila");
+
+            // Deep in the document, the governing section is the nearest heading
+            // above the match - here the "Engines" H2, not the document title.
+            LoreSearchHit engineHit = Assert.Single(hits, hit =>
+                hit.DocumentTitle == "World Lore");
+            Assert.Equal("Engines", engineHit.SectionHeading);
+            Assert.Equal("engines", engineHit.SectionAnchor, ignoreCase: true);
+
+            // Prose above a file's very first heading has no section at all: the
+            // fields stay empty instead of inventing one. Among the two Characters
+            // hits, exactly the pre-heading one carries no section target.
+            LoreSearchHit preHeadingHit = Assert.Single(hits, hit =>
+                hit.DocumentTitle == "Characters" && hit.SectionHeading.Length == 0);
+            Assert.Equal(string.Empty, preHeadingHit.SectionAnchor);
+        }
+
+        [Fact]
+        public void Search_SectionTargetSurvivesListsTablesAndQuotes()
+        {
+            WriteLore(("world-lore.md", "# World Lore\n\n## Gear\n\n| Item | Note |\n| --- | --- |\n| Harpoon | starter |\n\n> A quoted harpoon note.\n\n- a harpoon list item\n\nClosing paragraph about the harpoon."));
+
+            LoreSearchService service = new(_browser);
+            var hits = service.SearchAllDocuments(LoadIndex(), "harpoon");
+
+            Assert.NotEmpty(hits);
+            Assert.All(hits, hit =>
+            {
+                Assert.Equal("Gear", hit.SectionHeading);
+                Assert.Equal("gear", hit.SectionAnchor, ignoreCase: true);
+            });
+        }
+
+        [Fact]
         public void Search_FindsWholeWordsOnly_WithSnippetsAndCounts()
         {
             WriteLore(

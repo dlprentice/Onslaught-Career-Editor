@@ -125,6 +125,12 @@
                                                                    FontWeight="SemiBold"
                                                                    FontSize="13"
                                                                    TextWrapping="WrapWholeWords" />
+                                                        <TextBlock x:Name="LoreSearchHitSectionHeading"
+                                                                   x:Load="{x:Bind HasSectionTarget}"
+                                                                   FontSize="11"
+                                                                   Foreground="{ThemeResource ShellMutedTextBrush}"
+                                                                   TextWrapping="WrapWholeWords"
+                                                                   Text="{x:Bind SectionLine}" />
                                                         <TextBlock FontSize="12"
                                                                    Foreground="{ThemeResource ShellMutedTextBrush}"
                                                                    TextWrapping="WrapWholeWords">
