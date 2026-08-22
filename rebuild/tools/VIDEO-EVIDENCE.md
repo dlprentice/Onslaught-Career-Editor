@@ -19,8 +19,10 @@ exists — and so the recording, not a memory of it, is what gets reviewed.
 
 1. `rebuild/tools/Capture-Session.ps1` records ONE window (matched by visible
    title substring) as a fixed screen rectangle at 15 fps to `.mp4`, via
-   `ffmpeg -f gdigrab`. No audio. The mouse cursor is drawn, so scripted input
-   is on camera.
+   `ffmpeg -f gdigrab`. No audio. The mouse cursor is drawn, so physical or
+   window-coordinate cursor motion is visible. A posted background message has
+   no physical click indicator; when one is used, the entry cites its
+   instrument receipt and states that bounded ambiguity.
 2. The script writes a sidecar `<clip>.manifest.json` next to the clip: clip
    SHA-256, byte count, resolved window title and hwnd, captured rectangle,
    frame rate, duration, UTC start/finish, and the exact ffmpeg arguments.
@@ -90,27 +92,44 @@ from the clip alone using the Script and Frames prove fields.
   does.
 - Subject: rebuild — tracked launch via `npm run run:rebuild-godot`
   (Run-FirstFlight.ps1, mono engine, window title "Onslaught Rebuild - Battle
-  Engine Aquila").
+  Engine Aquila (DEBUG)").
 - Script: verified no other BEA.exe held the serialized-game slot; launched
-  the rebuild (one tracked launch); recorded the rebuild window with
-  Capture-Session.ps1 for the traversal; performed click-to-start on camera;
-  stopped recording after the main menu settled; closed the rebuild.
-- Clip: local-lab/video-evidence/rebuild-click-to-start-mainmenu.mp4
-- SHA-256: recorded in the clip manifest at capture time; see
-  `<clip>.manifest.json` in local-lab (hash re-verified at entry filing).
-- Frames prove: pending first recording — the serialized-game slot was held by
-  another lane at protocol-writing time (BEA.exe PID 28856,
-  GameProfiles\ps2-baseline). This entry is completed with frame timestamps
-  by the first recorded traversal; until then it is a registered claim, not
-  evidence.
-- Reviewer: pending.
+  the tracked rebuild (one launch); an untracked watcher classified the
+  frontend bands (dark cinematic <50 mean luma; white-flood logo card >15000
+  bright pixels; beach click-to-start page 800..2000), waited for a fresh page
+  birth, spawned Capture-Session.ps1 at page age 4.3 s, then posted one
+  background WM_MOUSEMOVE / WM_LBUTTONDOWN / WM_LBUTTONUP sequence to the
+  rebuild window centre 1.2 s after recorder-process spawn. ffmpeg startup
+  means those wall-clock offsets are not clip PTS. The recording ran its full
+  15 s with the menu stable; the rebuild process was closed after review.
+- Clip: local-lab/video-evidence/e0001-final.mp4
+- SHA-256: 1cf9aa6f8ac762e094c9cfd69017cf98d3619de7589ec01954f7ccbad3308ccf
+  (1,285,081 bytes; sidecar `e0001-final.mp4.manifest.json`: hwnd 2296416,
+  source rect x=320 y=161 1296x759, encoded 1296x758 by even scaling, 15 fps,
+  15.00 s, draw_mouse, no audio, start 2026-08-22T20:00:19Z; hash recomputed
+  independently at entry filing and matches the manifest).
+- Frames prove: t=0.10 s shows the literal `Click to start` prompt inside the
+  capture rect with no covering window; t=0.80 s shows the selectable main
+  menu (`New Game` highlighted; `Continue Game` / `Load Game` /
+  `Multiplayer` / `Goodies` / `Options` / `Quit`), no item occluded; the
+  menu stays stable through the end of the clip. The clip proves the visible
+  prompt-to-menu traversal. The watcher receipt identifies the sole input as
+  the posted click between those observed states; the clip has no physical
+  click indicator, so it does not independently identify the input method.
+- Reviewer: PASS — independent steward multimodal review of the actual clip:
+  frame extraction with pixel inspection at t=0.10 s and t=0.80 s, plus a
+  20-tile 10 fps contact sheet of the first 2 s (prompt in tiles 1–4, menu
+  from tile 8 onward). History: TAKE 1 (predecessor card) proved
+  cold-boot→click-to-start; TAKE 3 was withdrawn after frame-level review
+  showed its click landed before the prompt; TAKE 5 false-arm spoiled;
+  TAKE 6 (this entry) is the filed traversal evidence.
 
 ## Reviewing a clip
 
 Watch the clip against the entry's Script. Confirm, at named timestamps: the
-window title/rect in the manifest matches the subject; the scripted input
-lands (cursor visible); the claimed transition completes; no unexplained
-occlusion or window move spoils the rectangle. Record the review verdict and
-timestamps in the entry's Reviewer field. A clip that fails any of these is
-spoiled: mark the entry superseded and re-record; never edit the claim to fit
-the footage.
+window title/rect in the manifest matches the subject; physical input lands
+(cursor visible), or a posted-message receipt is cited with its bounded
+ambiguity; the claimed transition completes; no unexplained occlusion or
+window move spoils the rectangle. Record the review verdict and timestamps in
+the entry's Reviewer field. A clip that fails any of these is spoiled: mark
+the entry superseded and re-record; never edit the claim to fit the footage.
