@@ -147,7 +147,7 @@ Any one of:
   `0x0046cbec` are mid-instruction bytes of the
   `SetLoadingFraction`/world-teardown window, not code).
 - Corroboration (not duplicated):
-  [`../cgame-level-lifecycle-semantics-2026-08-11.md`](../cgame-level-lifecycle-semantics-2026-08-11.md)
+  [`../../cgame-level-lifecycle-semantics-2026-08-11.md`](../../cgame-level-lifecycle-semantics-2026-08-11.md)
   (released-ordering claim + demo twin status);
   [`../CEventManager.cpp.md`](../CEventManager.cpp.md) pins
   `0x00672fc8`; `IScript__SetTimer.md` pins the same singleton from

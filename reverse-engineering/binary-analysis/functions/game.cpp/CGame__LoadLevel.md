@@ -147,7 +147,7 @@ Any one of:
   compiler-generated alloc-null fallback joins inside this body, not
   missing functions).
 - Corroboration (not duplicated):
-  [`../cgame-level-lifecycle-semantics-2026-08-11.md`](../cgame-level-lifecycle-semantics-2026-08-11.md)
+  [`../../cgame-level-lifecycle-semantics-2026-08-11.md`](../../cgame-level-lifecycle-semantics-2026-08-11.md)
   bounds this body's demo twin;
-  [`IScript__GetVariable.md`](IScript.cpp/IScript__GetVariable.md)
+  [`IScript__GetVariable.md`](../IScript.cpp/IScript__GetVariable.md)
   independently pins `0x00855090` as the `CWorld` singleton.

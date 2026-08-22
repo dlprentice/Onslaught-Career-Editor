@@ -4,9 +4,7 @@
 
 Status: active static function note
 Last updated: 2026-08-22
-Source File: none — `SetSnowDensity` and the `atm_snowdensity` console
-variable are absent from `references/Onslaught/` (checked 2026-08-22) |
-Binary: BEA.exe pristine specimen
+Source File: none — `SetSnowDensity` and the `atm_snowdensity` console variable are absent from `references/Onslaught/` (checked 2026-08-22) | | Binary: BEA.exe pristine specimen
 `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 Summary: Mission-native 44, registered as `SetSnowDensity`: one float

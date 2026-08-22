@@ -127,7 +127,7 @@ Any one of:
   name-table resolution (`tools/xref_targets.py`).
 - Corroboration (not duplicated): Wave1003 boundary evidence recorded
   in this note's prior revision and in
-  [`../ghidra-full-reaudit-closeout-2026-07-13.md`](../ghidra-full-reaudit-closeout-2026-07-13.md)-adjacent
+  [`../../ghidra-full-reaudit-closeout-2026-07-13.md`](../../ghidra-full-reaudit-closeout-2026-07-13.md)-adjacent
   material;
-  [`../cgame-level-lifecycle-semantics-2026-08-11.md`](../cgame-level-lifecycle-semantics-2026-08-11.md)
+  [`../../cgame-level-lifecycle-semantics-2026-08-11.md`](../../cgame-level-lifecycle-semantics-2026-08-11.md)
   bounds the demo twin.

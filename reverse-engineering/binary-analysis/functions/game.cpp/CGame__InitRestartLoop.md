@@ -152,9 +152,9 @@ Any one of:
   `0x0046c63d…0x0046c7f4` are the eight alloc-failure `jmp +2` joins
   decoded in context, not code entries).
 - Corroboration (not duplicated):
-  [`../cgame-level-lifecycle-semantics-2026-08-11.md`](../cgame-level-lifecycle-semantics-2026-08-11.md)
+  [`../../cgame-level-lifecycle-semantics-2026-08-11.md`](../../cgame-level-lifecycle-semantics-2026-08-11.md)
   (ownership list, seed claim);
-  [`IScript__SetTimer.md`](IScript.cpp/IScript__SetTimer.md) pins the
+  [`IScript__SetTimer.md`](../IScript.cpp/IScript__SetTimer.md) pins the
   same `AddEvent_TimeFromNow` ABI from the native side;
-  [`../RetailEventScheduler.cs`](../../../rebuild/OnslaughtRebuild.Core/RetailEventScheduler.cs)
+  [`../RetailEventScheduler.cs`](../../../../rebuild/OnslaughtRebuild.Core/RetailEventScheduler.cs)
   encodes the callee's admission laws with tests.

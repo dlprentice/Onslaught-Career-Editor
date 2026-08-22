@@ -24,7 +24,7 @@ above, verified before reading) with capstone 5.0.7 disassembly of the
 whole body (`local-lab/famA/RunLevel.txt`), raw byte reads (body hash,
 float constants, `.rdata` strings), and a whole-`.text` rel32 xref scan
 (`local-lab/famA_xrefs.py`). Call targets resolved against
-[`../ghidra-function-name-table-2026-08-17.tsv`](../ghidra-function-name-table-2026-08-17.tsv).
+[`../../ghidra-function-name-table-2026-08-17.tsv`](../../ghidra-function-name-table-2026-08-17.tsv).
 No `FUN_*` milled; no Core owner invented.
 Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`,
 SHA-256
@@ -124,7 +124,7 @@ frontend-loop's quit-code consumer, matching `EQuitType` from
 `references/Onslaught/game.cpp:1573` is the source twin; the released
 body matches its shape (one-off init/resources, restart loop, load-error
 handling, exact `EQuitType` return) as recorded in
-[`../cgame-level-lifecycle-semantics-2026-08-11.md`](../cgame-level-lifecycle-semantics-2026-08-11.md)
+[`../../cgame-level-lifecycle-semantics-2026-08-11.md`](../../cgame-level-lifecycle-semantics-2026-08-11.md)
 (`SOURCE_ID_RETAIL_BODY_DEMO_ENTRY`). What this wake adds from bytes:
 the demo five-restart cap, the per-attempt texture-loader placement
 inside the loop (not in one-off setup), the `QT_LOAD_ERROR` string-id
@@ -170,7 +170,7 @@ Any one of:
   (`local-lab/famA_xrefs.py`), and name-table resolution
   (`tools/xref_targets.py`).
 - Corroboration (not duplicated):
-  [`../cgame-level-lifecycle-semantics-2026-08-11.md`](../cgame-level-lifecycle-semantics-2026-08-11.md)
+  [`../../cgame-level-lifecycle-semantics-2026-08-11.md`](../../cgame-level-lifecycle-semantics-2026-08-11.md)
   fixed the six-function decomposition and demo-twin status;
   `CGame__Init.md`, `CGame__InitRestartLoop.md`,
   `CGame__LoadResources.md`, `CGame__RestartLoopRunLevel.md`,

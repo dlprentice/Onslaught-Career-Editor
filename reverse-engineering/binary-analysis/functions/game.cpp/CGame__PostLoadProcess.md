@@ -142,7 +142,7 @@ Any one of:
   scan flagged — `0x0046d0be/0x0046d0f6` — are compiler joins inside
   this body).
 - Corroboration (not duplicated):
-  [`../cgame-level-lifecycle-semantics-2026-08-11.md`](../cgame-level-lifecycle-semantics-2026-08-11.md)
+  [`../../cgame-level-lifecycle-semantics-2026-08-11.md`](../../cgame-level-lifecycle-semantics-2026-08-11.md)
   bounds the demo twin of this body;
   [`CGame__LoadLevel.md`](CGame__LoadLevel.md) pins the player-count
   and player/controller arrays this loop consumes.

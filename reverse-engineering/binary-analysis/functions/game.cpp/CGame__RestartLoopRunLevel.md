@@ -172,7 +172,7 @@ Any one of:
   `0x0046ddc0`, `0x0046e180`, etc. are intra-body jump/call targets of
   this function, not missing functions).
 - Corroboration (not duplicated):
-  [`../cgame-level-lifecycle-semantics-2026-08-11.md`](../cgame-level-lifecycle-semantics-2026-08-11.md)
+  [`../../cgame-level-lifecycle-semantics-2026-08-11.md`](../../cgame-level-lifecycle-semantics-2026-08-11.md)
   (decomposition, demo divergence, CMusic CDB provenance note);
   [`CGame__MainLoop.md`](CGame__MainLoop.md),
   [`CGame__Update.md`](CGame__Update.md),

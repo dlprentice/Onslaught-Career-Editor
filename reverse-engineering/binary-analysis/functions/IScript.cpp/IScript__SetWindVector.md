@@ -4,9 +4,7 @@
 
 Status: active static function note
 Last updated: 2026-08-22
-Source File: none — `SetWindVector` and the `atm_windvector` console
-variable are absent from `references/Onslaught/` (checked 2026-08-22) |
-Binary: BEA.exe pristine specimen
+Source File: none — `SetWindVector` and the `atm_windvector` console variable are absent from `references/Onslaught/` (checked 2026-08-22) | | Binary: BEA.exe pristine specimen
 `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 Summary: Mission-native 42, registered as `SetWindVector`, writes the
@@ -190,5 +188,5 @@ Any one of:
   [`IScript__SetSnowDensity.md`](IScript__SetSnowDensity.md),
   [`IScript__SetLightningDensity.md`](IScript__SetLightningDensity.md)
   share the registration block and the Atmospherics cell block;
-  [`../cgame-level-lifecycle-semantics-2026-08-11.md`](../cgame-level-lifecycle-semantics-2026-08-11.md)
+  [`../../cgame-level-lifecycle-semantics-2026-08-11.md`](../../cgame-level-lifecycle-semantics-2026-08-11.md)
   is unrelated but shares the specimen.

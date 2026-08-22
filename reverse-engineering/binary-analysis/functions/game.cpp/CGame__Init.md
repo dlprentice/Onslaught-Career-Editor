@@ -124,6 +124,6 @@ Any one of:
   (`tools/xref_targets.py`; all ten call targets resolved to named
   functions).
 - Corroboration (not duplicated):
-  [`../cgame-level-lifecycle-semantics-2026-08-11.md`](../cgame-level-lifecycle-semantics-2026-08-11.md)
+  [`../../cgame-level-lifecycle-semantics-2026-08-11.md`](../../cgame-level-lifecycle-semantics-2026-08-11.md)
   (`NORMALIZED_IDENTICAL` demo twin);
   [`CGame__RunLevel.md`](CGame__RunLevel.md) pins the caller context.
