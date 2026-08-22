@@ -57,6 +57,21 @@ order:
    still print `CAMPAIGN_VERIFIED` after the bridge lands. (Negative
    control already observed 2026-08-21: the bootstrap fails closed on a
    wrong pin.)
+
+   > **AMENDMENT 2026-08-21 (measured before any P1 write).** The pinned
+   > replay is **not green today and was not green before this program
+   > started**: the bootstrap fails closed at Generation 24's projected
+   > replay because the projection's current-source pin for
+   > `SimulationTests.cs` (`bbb31414…`, as of the Aug-17 Gen 31 cut) was
+   > legitimately moved by main `4be6931a` (Aug 19) and again by the
+   > P0 pulse merge. See `developer_state.json` →
+   > `_P1_PRECONDITION_FINDING_20260821` for the measured history. The
+   > projection is working as designed — moved pinned sources force a
+   > re-cut — so Generation 32 additionally refreshes the projection pins
+   > to cut-time identities with a documented Aug-17→cut relationship.
+   > Bridge-commit acceptance is therefore: bridge tests green AND the
+   > bootstrap's failure remains exactly the recorded precondition failure,
+   > with no new failure mode.
 2. Bespoke `build_generation32_authority.py`: per-row gate = the 53
    receipt-file SHA-256 checks; grade movement computed from the live Gen 31
    ledger (the TSV's `gradeBefore` is known-drifted); zero collateral
