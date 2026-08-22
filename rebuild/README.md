@@ -240,8 +240,12 @@ admits them per-world under the same hash law as Level 100 (world 110's
 LevelScript: 181 instructions, 92 symbols, five named events), and
 `Level100Terrain.World110` carries the heightfield under the same envelope law.
 No simulation consumes the world-110 payloads yet; no world-110 FillOut, VM
-run, or session owner exists. The pattern generalizes to further worlds by
-adding their pinned rows, not new code shapes.
+run, or session owner exists. The level-world actor table is now measured
+(40 RLWD initial actors, header `(2, 0, 40)`; types 19 and 28 are trailers
+Level 100 does not use) and the BSWD island is byte-identical to Level 100
+(`04c5a383…10f4`). RLWD ordinal 0 is the LevelScript object, not a Battle
+Engine — there is no authored Player 1 to construct. The pattern generalizes to
+further worlds by adding their pinned rows, not new code shapes.
 
 The walker now consumes the shipped Aquila configuration's exact `1.0/75`
 yaw-input gain instead of the older fitted `1.7/75` value. Terrain touchdown
