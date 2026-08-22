@@ -67,9 +67,13 @@ pristine specimen* `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`*,
 SHA-256* `74154bfa…`*, read again during this pass; the released out-of-box
 Geometry detail arm is Medium. Offset table and the proof that*
 `defaultoptions.bea` *is run state:* [`PROVENANCE.md`](PROVENANCE.md)*.*) The
-separate fast-tree owner adds one camera-facing standing card at every range
-and its height-gated horizontal card above the released 20-unit camera/ground
-delta. The converted meshes render with
+reconstruction draws no third fast-tree path: no always-on camera-facing
+standing card and no height-gated horizontal card is rendered — the only pine
+representations are the gated close meshes and the six-face far imposters
+(`rebuild/OnslaughtRebuild.Client.Tests/Level100PineRepresentationTests.cs`
+forbids any third batch, `AddFastPineImposters`, and `camera_facing`). Retail's
+own separate fast-tree static findings stay an unresolved retail path, not
+drawn by the reconstruction. The converted meshes render with
 their active retained retail material passes and
 follow the released PC ambient, opposing sun/anti-sun, and `MODULATE2X` path
 rather than approximate Godot PBR values. The
