@@ -83,6 +83,7 @@ SUITES: tuple[tuple[str, ...], ...] = (
     ("tools/ttd_pipeline_contract_tests.py",),
     ("tools/parity_lab_tests.py",),
     ("tools/re_coverage_ledger_tests.py",),
+    ("tools/contract_coverage_tests.py",),
     ("tools/re_campaign_tests.py",),
     ("tools/re_campaign_historical_source_projection_v2_tests.py",),
     ("tools/re_evidence_register_export_tests.py",),
