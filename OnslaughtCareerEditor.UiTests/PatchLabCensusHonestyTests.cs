@@ -4,9 +4,9 @@ using NUnit.Framework;
 namespace OnslaughtCareerEditor.UiTests;
 
 /// <summary>
-/// Census candidates in the Patch Lab consume the census lane's TSV shape only:
-/// they cannot be staged, they never write, and a miss or empty filter says what
-/// to do next.
+/// Census candidates in the Patch Lab are research experiments staged into a safe
+/// copy only: the surface never writes an installed game, a miss or empty filter
+/// says what to do next, and every row names what staging would change.
 /// </summary>
 public class PatchLabCensusHonestyTests
 {
@@ -19,18 +19,33 @@ public class PatchLabCensusHonestyTests
     }
 
     [Test]
-    public void CensusSurfaceNamesTheTsvAndRefusesStaging()
+    public void CensusSurfaceNamesTheTsvAndStagesIntoSafeCopiesOnly()
     {
         string xaml = ReadWinUiFile(Path.Combine("Pages", "BinaryPatchesPage.xaml"));
         string page = ReadWinUiFile(Path.Combine("Pages", "BinaryPatchesPage.xaml.cs"));
         string model = ReadWinUiFile(Path.Combine("Models", "PatchCensusRowModel.cs"));
 
         Assert.That(xaml, Does.Contain("PatchLabCensusExpander"));
-        Assert.That(xaml, Does.Contain("not product patches"));
-        Assert.That(xaml, Does.Not.Contain("PatchCensusStage"));
-        Assert.That(page, Does.Contain("PatchSurfaceCensusReader.Load()"));
-        Assert.That(model, Does.Contain("Census candidate, not a product patch"));
-        Assert.That(model, Does.Not.Contain("CanBeStaged"));
+        Assert.That(xaml, Does.Contain("staged into a safe copy only"));
+        Assert.That(xaml, Does.Contain("PatchLabCensusStageButton"));
+        Assert.That(xaml, Does.Contain("PatchLabCensusUndoButton"));
+        Assert.Multiple(() =>
+        {
+            Assert.That(xaml, Does.Not.Contain("PatchCensusStage_"));
+            Assert.That(page, Does.Contain("PatchSurfaceCensusReader.Load()"));
+            Assert.That(model, Does.Contain("not a product patch; stages into a safe copy only"));
+            Assert.That(model, Does.Not.Contain("CanBeStaged"));
+        });
+    }
+
+    [Test]
+    public void StagingCopyNeverTargetsTheInstalledGame()
+    {
+        string page = ReadWinUiFile(Path.Combine("Pages", "BinaryPatchesPage.xaml.cs"));
+        string xaml = ReadWinUiFile(Path.Combine("Pages", "BinaryPatchesPage.xaml"));
+
+        Assert.That(xaml, Does.Contain("never the installed game"));
+        Assert.That(page, Does.Contain("written into the safe copy only, never the installed game"));
     }
 
     [Test]
@@ -52,8 +67,48 @@ public class PatchLabCensusHonestyTests
 
         Assert.That(reader, Does.Contain("RequiredColumns"));
         Assert.That(reader, Does.Contain("cheapest_verification"));
-        Assert.That(reader, Does.Not.Contain("File.Write"));
-        Assert.That(reader, Does.Not.Contain("File.Copy"));
-        Assert.That(reader, Does.Not.Contain("BeginGenerated"));
+        Assert.Multiple(() =>
+        {
+            Assert.That(reader, Does.Not.Contain("File.Write"));
+            Assert.That(reader, Does.Not.Contain("File.Copy"));
+            Assert.That(reader, Does.Not.Contain("BeginGenerated"));
+        });
+    }
+
+    [Test]
+    public void StagingServiceRefusesInstalledGameShapesStructurally()
+    {
+        string engine = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot,
+            "OnslaughtCareerEditor.AppCore",
+            "BinaryPatchEngine.cs"));
+        string service = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot,
+            "OnslaughtCareerEditor.AppCore",
+            "PatchCensusStagingService.cs"));
+
+        // The structural refusal is shared with the product apply path; the census
+        // stager never obtains an InstalledGameWriteAuthorization at all.
+        Assert.That(service, Does.Contain("CensusStagingTargetHasForbiddenInstallShape"));
+        Assert.That(engine, Does.Contain("internal static bool CensusStagingTargetHasForbiddenInstallShape"));
+        Assert.Multiple(() =>
+        {
+            Assert.That(service, Does.Contain("never written to an installed game"));
+            Assert.That(service, Does.Not.Contain("AuthorizeInstalledGameWrite("));
+        });
+    }
+
+    [Test]
+    public void StagingWritesAreAtomicWithVerifiedBackupBeforeFirstWrite()
+    {
+        string service = File.ReadAllText(Path.Combine(
+            TestFixturePaths.RepoRoot,
+            "OnslaughtCareerEditor.AppCore",
+            "PatchCensusStagingService.cs"));
+
+        Assert.That(service, Does.Contain("PublishCensusStagingBytesAtomically"));
+        Assert.That(service, Does.Contain("pre-experiment backup snapshot"));
+        Assert.That(service, Does.Contain("on-disk verification"));
+        Assert.That(service, Does.Contain("census-staged.v1"));
     }
 }

@@ -50,7 +50,8 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             Assert.Equal(2, catalog.MeasuredCount);
             Assert.Equal(2, catalog.StaticOnlyCount);
             Assert.Equal(0, catalog.SpeculativeCount);
-            Assert.Contains("cannot be staged", catalog.Status, StringComparison.Ordinal);
+            Assert.Contains("research experiments", catalog.Status, StringComparison.Ordinal);
+            Assert.Contains("safe copy only", catalog.Status, StringComparison.Ordinal);
 
             PatchCensusRow first = catalog.Rows[0];
             Assert.Equal("0x0046F4A8", first.Va);
@@ -153,7 +154,8 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             }
 
             Assert.True(catalog.Rows.Count > 0, catalog.Status);
-            Assert.Contains("cannot be staged", catalog.Status, StringComparison.Ordinal);
+            Assert.Contains("research experiments", catalog.Status, StringComparison.Ordinal);
+            Assert.Contains("safe copy only", catalog.Status, StringComparison.Ordinal);
             Assert.All(catalog.Rows, row =>
             {
                 Assert.StartsWith("0x", row.Va, StringComparison.OrdinalIgnoreCase);

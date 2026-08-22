@@ -403,6 +403,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             AutomationProperties.SetName(PatchBenchLabSelectionStatus, PatchBenchLabSelectionStatus.Text);
             UpdateChoiceVisualState(visibleSelectedKeys);
             UpdateLaunchPresetVisualState();
+            UpdatePatchLabCensusStagingControls();
 
             SelectionSummaryTextBlock.Text =
                 PatchBenchSelectedProfileText.BuildAdvancedCopySelectionSummary(selectedProfileTextState);
@@ -944,6 +945,13 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         private PatchCensusCatalog? _patchCensusCatalog;
         private IReadOnlyList<PatchCensusRowModel> _patchCensusRows = Array.Empty<PatchCensusRowModel>();
 
+        /// <summary>
+        /// The last stage/undo outcome, held so later control-state refreshes keep
+        /// showing what happened instead of overwriting it with the standing
+        /// sentence. Cleared when the selection changes.
+        /// </summary>
+        private string? _censusStagingResultMessage;
+
         private void InitializePatchLabCensus()
         {
             try
@@ -960,6 +968,11 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 PatchLabCensusStatus.Text = "The census TSV could not be inspected right now. Product catalog rows above are unchanged.";
             }
 
+            foreach (PatchCensusRowModel model in _patchCensusRows)
+            {
+                model.PropertyChanged += PatchCensusRowModel_PropertyChanged;
+            }
+
             PatchLabCensusSearchBox.TextChanged += PatchLabCensusSearchBox_TextChanged;
             ApplyPatchLabCensusFilter();
         }
@@ -967,6 +980,17 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         private void PatchLabCensusSearchBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             ApplyPatchLabCensusFilter();
+        }
+
+        private void PatchCensusRowModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (string.Equals(e.PropertyName, nameof(PatchCensusRowModel.IsSelectedForStaging), StringComparison.Ordinal))
+            {
+                // A new selection starts a new staging context; the previous
+                // operation's result no longer describes what is on screen.
+                _censusStagingResultMessage = null;
+                UpdatePatchLabCensusStagingControls();
+            }
         }
 
         private void ApplyPatchLabCensusFilter()
@@ -1018,6 +1042,202 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             {
                 PatchLabCensusStatus.Text = _patchCensusCatalog.Status;
             }
+
+            UpdatePatchLabCensusStagingControls();
+        }
+
+        /// <summary>
+        /// Refreshes the census staging summary, button availability, and staging
+        /// status line from the current selection, safe copy, and manifest. Runs on
+        /// every census checkbox change and on every control-state refresh; it never
+        /// writes anything.
+        /// </summary>
+        private void UpdatePatchLabCensusStagingControls()
+        {
+            if (_patchCensusCatalog is null || !_patchCensusCatalog.Found)
+            {
+                PatchLabCensusStagingSummary.Text = string.Empty;
+                PatchLabCensusStageButton.IsEnabled = false;
+                PatchLabCensusUndoButton.IsEnabled = false;
+                return;
+            }
+
+            string exePath = (ExePathTextBox.Text ?? string.Empty).Trim();
+            bool hasSafeCopy = IsUsableWorkingCopy(exePath);
+            var selected = _patchCensusRows.Where(model => model.IsSelectedForStaging).ToArray();
+
+            var selectedRows = selected.Select(model => model.Row).ToArray();
+            PatchCensusStagingPlan plan = selected.Length > 0 && hasSafeCopy
+                ? PatchCensusStagingService.BuildStagingPlan(selectedRows, exePath, GetPatchWorkspaceRoot())
+                : PatchCensusStagingPlan.Empty;
+
+            if (selected.Length == 0)
+            {
+                PatchLabCensusStagingSummary.Text = hasSafeCopy
+                    ? "Select census experiments above, then stage them into this safe copy."
+                    : "Create or choose a BEA.exe-only safe copy above first; then select census experiments to stage.";
+            }
+            else if (!hasSafeCopy)
+            {
+                PatchLabCensusStagingSummary.Text =
+                    $"{selected.Length} experiment{(selected.Length == 1 ? "" : "s")} selected. Create or choose a BEA.exe-only safe copy above first - census experiments are written into a safe copy only.";
+            }
+            else if (plan.Success)
+            {
+                var lines = new List<string>
+                {
+                    $"{plan.Candidates.Count} experiment{(plan.Candidates.Count == 1 ? "" : "s")} checked against the safe copy. Staging will:",
+                };
+                foreach (PatchCensusStagingCandidate candidate in plan.Candidates)
+                {
+                    lines.Add($"  • {candidate.Row.Va} at file offset {candidate.Row.Offset}: {candidate.Row.Effect}. In player terms: {BuildCensusPlayerTermsLine(candidate.Row.Effect)}");
+                }
+
+                lines.Add("A verified backup snapshot is created first if one does not exist yet; Undo reverses exactly these bytes afterwards.");
+                PatchLabCensusStagingSummary.Text = string.Join(Environment.NewLine, lines);
+            }
+            else
+            {
+                PatchLabCensusStagingSummary.Text = plan.Message;
+            }
+
+            PatchCensusStagingManifest manifest = hasSafeCopy
+                ? PatchCensusStagingService.ReadManifest(exePath)
+                : PatchCensusStagingManifest.None;
+
+            PatchLabCensusStageButton.IsEnabled = hasSafeCopy && selected.Length > 0 && plan.Success;
+            PatchLabCensusUndoButton.IsEnabled = hasSafeCopy && manifest.Present && manifest.Entries.Count > 0;
+
+            string undoStatus = !hasSafeCopy
+                ? string.Empty
+                : manifest.Present && manifest.Entries.Count > 0
+                    ? $" This copy holds {manifest.Entries.Count} staged census experiment{(manifest.Entries.Count == 1 ? "" : "s")} that Undo can reverse."
+                    : string.Empty;
+            PatchLabCensusStagingStatus.Text =
+                _censusStagingResultMessage ??
+                ("Census experiments are written into the safe copy only, never the installed game." + undoStatus);
+        }
+
+        private static string BuildCensusPlayerTermsLine(string effect)
+        {
+            // The census lane's own words are already player-facing ("Lost-countdown
+            // 2.0f -> 5.0f"); what we add is the honest frame: what changes, where it
+            // shows up, and that nothing is proven until observed in the copied game.
+            string trimmed = effect.Trim();
+            return trimmed.EndsWith(".", StringComparison.Ordinal) ? trimmed : trimmed + ".";
+        }
+
+        private async void PatchLabCensusStageButton_Click(object sender, RoutedEventArgs e)
+        {
+            string exePath = (ExePathTextBox.Text ?? string.Empty).Trim();
+            if (!IsUsableWorkingCopy(exePath))
+            {
+                OperationLogTextBox.Text = PatchCensusStagingService.NoSafeCopyMessage;
+                AppStatusService.SetStatus("Windowed & Mods: safe copy required for census experiments");
+                UpdateControlState();
+                return;
+            }
+
+            PatchCensusRowModel[] selected = _patchCensusRows.Where(model => model.IsSelectedForStaging).ToArray();
+            if (selected.Length == 0)
+            {
+                OperationLogTextBox.Text = "Select at least one census experiment to stage.";
+                AppStatusService.SetStatus("Windowed & Mods: no census rows selected");
+                return;
+            }
+
+            PatchCensusStagingPlan plan = PatchCensusStagingService.BuildStagingPlan(
+                selected.Select(model => model.Row).ToArray(),
+                exePath,
+                GetPatchWorkspaceRoot());
+            if (!plan.Success)
+            {
+                PatchLabCensusStagingStatus.Text = plan.Message;
+                OperationLogTextBox.Text = plan.Message;
+                AppStatusService.SetStatus("Windowed & Mods: census experiments need review");
+                UpdateControlState();
+                return;
+            }
+
+            try
+            {
+                var effects = new StringBuilder();
+                foreach (PatchCensusStagingCandidate candidate in plan.Candidates)
+                {
+                    effects.AppendLine($"  • {candidate.Row.Va} ({candidate.Row.Confidence}, risk {candidate.Row.Risk}): {candidate.Row.Effect}");
+                }
+
+                if (!await ConfirmAsync(
+                        $"Stage {plan.Candidates.Count} census experiment{(plan.Candidates.Count == 1 ? "" : "s")}?",
+                        "These research bytes will be written into the BEA.exe-only safe copy above - never your installed game:" +
+                        Environment.NewLine + effects.ToString() + Environment.NewLine +
+                        "A verified backup snapshot is created first if needed, and Undo reverses exactly these bytes. These are unproven experiments: run each row's cheapest check before believing any benefit.",
+                        primaryButtonText: "Stage into safe copy"))
+                {
+                    AppStatusService.SetStatus("Windowed & Mods: census staging canceled");
+                    return;
+                }
+
+                PatchCensusStagingResult result = PatchCensusStagingService.StageBatch(plan, exePath, GetPatchWorkspaceRoot());
+                _censusStagingResultMessage = result.Message;
+                PatchLabCensusStagingStatus.Text = result.Message;
+                OperationLogTextBox.Text = result.Message;
+                InvalidateVerification();
+                AppStatusService.SetStatus(result.Success
+                    ? "Windowed & Mods: census experiments staged"
+                    : "Windowed & Mods: census staging did not run");
+            }
+            catch (Exception ex) when (IsUserFacingOperationException(ex))
+            {
+                OperationLogTextBox.Text = PatchBenchSafeCopyOutcomeText.DescribeCaughtFailure("stage the census experiments");
+                AppStatusService.SetStatus("Windowed & Mods: census staging failed");
+            }
+
+            UpdateControlState();
+        }
+
+        private async void PatchLabCensusUndoButton_Click(object sender, RoutedEventArgs e)
+        {
+            string exePath = (ExePathTextBox.Text ?? string.Empty).Trim();
+            if (!IsUsableWorkingCopy(exePath))
+            {
+                OperationLogTextBox.Text = PatchCensusStagingService.NoSafeCopyMessage;
+                AppStatusService.SetStatus("Windowed & Mods: safe copy required for census undo");
+                UpdateControlState();
+                return;
+            }
+
+            try
+            {
+                PatchCensusStagingManifest manifest = PatchCensusStagingService.ReadManifest(exePath);
+                int entryCount = manifest.Entries.Count;
+                if (!await ConfirmAsync(
+                        "Undo staged census experiments?",
+                        entryCount > 0
+                            ? $"The {entryCount} recorded census experiment{(entryCount == 1 ? "" : "s")} in this safe copy's executable will be reversed byte for byte. The installed game stays untouched."
+                            : "There is no census experiment manifest for this copy, so there is nothing to undo.",
+                        primaryButtonText: "Undo experiments"))
+                {
+                    AppStatusService.SetStatus("Windowed & Mods: census undo canceled");
+                    return;
+                }
+
+                PatchCensusStagingResult result = PatchCensusStagingService.UndoAll(exePath, GetPatchWorkspaceRoot());
+                _censusStagingResultMessage = result.Message;
+                PatchLabCensusStagingStatus.Text = result.Message;
+                OperationLogTextBox.Text = result.Message;
+                InvalidateVerification();
+                AppStatusService.SetStatus(result.Success
+                    ? "Windowed & Mods: census experiments undone"
+                    : "Windowed & Mods: census undo refused");
+            }
+            catch (Exception ex) when (IsUserFacingOperationException(ex))
+            {
+                OperationLogTextBox.Text = PatchBenchSafeCopyOutcomeText.DescribeCaughtFailure("undo the census experiments");
+                AppStatusService.SetStatus("Windowed & Mods: census undo failed");
+            }
+
+            UpdateControlState();
         }
 
         private void LocalMultiplayerProbeButton_Click(object sender, RoutedEventArgs e)

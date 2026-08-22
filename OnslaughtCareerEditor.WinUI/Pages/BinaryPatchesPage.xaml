@@ -763,13 +763,16 @@
                         </Expander>
                         <Expander x:Name="PatchLabCensusExpander"
                                   AutomationProperties.AutomationId="PatchLabCensusExpander"
-                                  AutomationProperties.Name="Open the census candidates: sites from patch-surface-rows.tsv, not product patches"
-                                  Header="Patch Lab: census candidates (not product patches)"
+                                  AutomationProperties.Name="Open the census candidates: experiment sites from patch-surface-rows.tsv, staged into a safe copy only"
+                                  Header="Patch Lab: census candidates (experiments, staged into a safe copy only)"
                                   IsExpanded="False">
                             <StackPanel Spacing="12"
                                         Margin="0,12,0,0">
-                                <TextBlock Text="Candidate sites from the census lane's patch-surface-rows.tsv when that file is present. They are not in the product catalog, cannot be staged, and do not write anything. The nine columns are the census owner's; this surface does not invent a second format."
-                                           Style="{StaticResource SectionBodyTextStyle}" />
+                                <TextBlock x:Name="PatchLabCensusIntro"
+                                           AutomationProperties.AutomationId="PatchLabCensusIntro"
+                                           Text="Candidate sites from the census lane's patch-surface-rows.tsv when that file is present. These are research experiments, not product patches: staging writes their bytes into the BEA.exe-only safe copy above so you can run the row's cheapest check yourself. Your installed game is never written; the safe copy gets a verified backup snapshot first, and Undo reverses exactly the staged bytes. The nine columns are the census owner's; this surface does not invent a second format."
+                                           Style="{StaticResource SectionBodyTextStyle}"
+                                           TextWrapping="WrapWholeWords" />
                                 <TextBox x:Name="PatchLabCensusSearchBox"
                                          AutomationProperties.AutomationId="PatchLabCensusSearchBox"
                                          AutomationProperties.Name="Filter census candidates by VA, effect, confidence, or risk"
@@ -787,12 +790,10 @@
                                             <StackPanel Spacing="6"
                                                         Margin="0,0,0,10"
                                                         Padding="12">
-                                                <TextBlock Text="{Binding Effect}"
-                                                           FontSize="14"
-                                                           FontWeight="SemiBold"
-                                                           TextWrapping="WrapWholeWords"
-                                                           AutomationProperties.AutomationId="{Binding CensusRowAutomationId}"
-                                                           AutomationProperties.Name="{Binding AccessibilityName}" />
+                                                <CheckBox Content="{Binding Effect}"
+                                                          IsChecked="{Binding IsSelectedForStaging, Mode=TwoWay}"
+                                                          AutomationProperties.AutomationId="{Binding CensusRowCheckBoxAutomationId}"
+                                                          AutomationProperties.Name="{Binding AccessibilityName}" />
                                                 <TextBlock Text="{Binding Va}"
                                                            FontFamily="Consolas"
                                                            FontSize="12" />
@@ -830,10 +831,37 @@
                                                            FontSize="12"
                                                            TextWrapping="WrapWholeWords"
                                                            Foreground="{ThemeResource ShellMutedTextBrush}" />
+                                                <TextBlock Text="{Binding PlayerEffectSummary}"
+                                                           FontSize="12"
+                                                           TextWrapping="WrapWholeWords" />
                                             </StackPanel>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
+                                <TextBlock x:Name="PatchLabCensusStagingSummary"
+                                           AutomationProperties.AutomationId="PatchLabCensusStagingSummary"
+                                           Style="{StaticResource SectionBodyTextStyle}"
+                                           TextWrapping="WrapWholeWords"
+                                           Text="Select census rows above to see what staging would change." />
+                                <StackPanel Orientation="Horizontal"
+                                            Spacing="8">
+                                    <Button x:Name="PatchLabCensusStageButton"
+                                            AutomationProperties.AutomationId="PatchLabCensusStageButton"
+                                            AutomationProperties.Name="Stage selected into safe copy: writes the selected census experiments into the BEA.exe-only safe copy"
+                                            Content="Stage selected into safe copy"
+                                            Click="PatchLabCensusStageButton_Click" />
+                                    <Button x:Name="PatchLabCensusUndoButton"
+                                            AutomationProperties.AutomationId="PatchLabCensusUndoButton"
+                                            AutomationProperties.Name="Undo staged census experiments: reverses every staged census experiment in this safe copy"
+                                            Content="Undo staged census experiments"
+                                            Click="PatchLabCensusUndoButton_Click" />
+                                </StackPanel>
+                                <TextBlock x:Name="PatchLabCensusStagingStatus"
+                                           AutomationProperties.AutomationId="PatchLabCensusStagingStatus"
+                                           AutomationProperties.LiveSetting="Polite"
+                                           Style="{StaticResource SectionBodyTextStyle}"
+                                           TextWrapping="WrapWholeWords"
+                                           Text="Census experiments are written into the safe copy only, never the installed game." />
                             </StackPanel>
                         </Expander>
                         <Expander x:Name="PatchBenchLabPatchExperimentsExpander"

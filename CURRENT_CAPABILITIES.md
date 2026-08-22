@@ -159,9 +159,18 @@ as immutable staging evidence; guarded launch validation remains strict.
   companion rows cannot be staged directly. The inspector is read-only: nothing
   in it writes a file. When `patches/patch-surface-rows.tsv` is present in this
   checkout or a sibling worktree, a second Lab panel lists those census
-  candidates with their VA, original/patched bytes, confidence, risk, and
-  cheapest verification. Census rows are not product patches and cannot be
-  staged; a missing file or empty filter says so instead of going blank.
+  candidates with their VA, original/patched bytes, confidence, risk, cheapest
+  verification, and what the row would change in player terms. Census rows are
+  research experiments, not product patches: staging writes their bytes into the
+  app-owned BEA.exe-only safe copy only — installed-game shapes are refused
+  structurally, and the installed game is never written. Staging verifies every
+  selected row's original bytes in the copy first, creates the verified backup
+  snapshot before the first write, publishes atomically with on-disk readback,
+  and records the batch in a sidecar manifest that Undo reverses byte for byte;
+  whole-file Restore still swaps the executable from that same verified
+  snapshot. A missing TSV, an empty filter, and a refused batch each say so
+  instead of going blank; nothing is claimed as proven until the row's cheapest
+  check is actually observed on the copied game.
 - Launch and stop only the copied-game process started by the app.
 - Keep BEA.exe-only technical copies separate from playable profiles.
 - A failed Last operation or safe-copy list action names what failed and that
