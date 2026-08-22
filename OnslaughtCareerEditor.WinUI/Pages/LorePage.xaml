@@ -5,6 +5,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:controls="using:Microsoft.UI.Xaml.Controls"
+    xmlns:helpers="using:OnslaughtCareerEditor.WinUI.Helpers"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
     <Grid Padding="20,18,20,20"
@@ -53,6 +54,7 @@
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
 
                             <StackPanel Grid.Row="0"
@@ -93,11 +95,55 @@
                                       SelectionMode="Single"
                                       ItemInvoked="DocumentTree_ItemInvoked"
                                       SelectionChanged="DocumentTree_SelectionChanged" />
+
+                            <Expander x:Name="LoreSearchHitsExpander"
+                                      AutomationProperties.AutomationId="LoreSearchHitsExpander"
+                                      AutomationProperties.Name="Full-text search matches with snippets"
+                                      Header="Search matches in document text"
+                                      Grid.Row="3"
+                                      Margin="0,4,0,0"
+                                      IsExpanded="False">
+                                <StackPanel Spacing="8">
+                                    <TextBlock x:Name="LoreSearchHitsStatus"
+                                               AutomationProperties.AutomationId="LoreSearchHitsStatus"
+                                               AutomationProperties.LiveSetting="Polite"
+                                               Style="{StaticResource SectionBodyTextStyle}"
+                                               Text="Type a word to find every document containing it, with the matching sentence." />
+                                    <ItemsControl x:Name="LoreSearchHitsList"
+                                                  AutomationProperties.AutomationId="LoreSearchHitsList">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="helpers:LoreSearchHitModel">
+                                                <Button AutomationProperties.AutomationId="LoreSearchHitButton"
+                                                        AutomationProperties.Name="{Binding AccessibilityName}"
+                                                        HorizontalAlignment="Stretch"
+                                                        HorizontalContentAlignment="Stretch"
+                                                        Margin="0,0,0,6"
+                                                        Padding="10,8"
+                                                        Click="LoreSearchHitButton_Click">
+                                                    <StackPanel Spacing="2">
+                                                        <TextBlock Text="{Binding DocumentTitle}"
+                                                                   FontWeight="SemiBold"
+                                                                   FontSize="13"
+                                                                   TextWrapping="WrapWholeWords" />
+                                                        <TextBlock FontSize="12"
+                                                                   Foreground="{ThemeResource ShellMutedTextBrush}"
+                                                                   TextWrapping="WrapWholeWords">
+                                                            <Run Text="{Binding SnippetBefore, Mode=OneWay}" />
+                                                            <Run Text="{Binding MatchedText, Mode=OneWay}"
+                                                                 FontWeight="SemiBold" />
+                                                            <Run Text="{Binding SnippetAfter, Mode=OneWay}" />
+                                                        </TextBlock>
+                                                    </StackPanel>
+                                                </Button>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </Expander>
                         </Grid>
                     </Border>
                 </Grid>
             </controls:SplitView.Pane>
-
             <Grid RowSpacing="12">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
@@ -164,15 +210,68 @@
                         Margin="0,0,0,12"
                         Padding="16">
                     <StackPanel Spacing="4">
-                        <TextBlock x:Name="CurrentDocumentTextBlock"
-                                   AutomationProperties.AutomationId="LoreCurrentDocumentTitle"
-                                   FontSize="22"
-                                   FontWeight="SemiBold"
-                                   Text="Select a document" />
-                        <TextBlock x:Name="CurrentPathTextBlock"
-                                   AutomationProperties.AutomationId="LoreCurrentDocumentSummary"
-                                   Style="{StaticResource SectionBodyTextStyle}"
-                                   Text="Included Lore opens here; Source and External links may open your browser." />
+                        <Grid ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Spacing="4">
+                                <TextBlock x:Name="CurrentDocumentTextBlock"
+                                           AutomationProperties.AutomationId="LoreCurrentDocumentTitle"
+                                           FontSize="22"
+                                           FontWeight="SemiBold"
+                                           Text="Select a document" />
+                                <TextBlock x:Name="CurrentPathTextBlock"
+                                           AutomationProperties.AutomationId="LoreCurrentDocumentSummary"
+                                           Style="{StaticResource SectionBodyTextStyle}"
+                                           Text="Included Lore opens here; Source and External links may open your browser." />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1"
+                                        Orientation="Horizontal"
+                                        Spacing="8"
+                                        VerticalAlignment="Top">
+                                <TextBlock Text="Text size"
+                                           VerticalAlignment="Center"
+                                           Foreground="{ThemeResource ShellMutedTextBrush}" />
+                                <Button x:Name="ReaderTextSmallerButton"
+                                        AutomationProperties.AutomationId="LoreTextSmallerButton"
+                                        AutomationProperties.Name="A-: make lore text smaller"
+                                        Content="A-"
+                                        MinWidth="44"
+                                        Click="ReaderTextSizeButton_Click" />
+                                <Button x:Name="ReaderTextLargerButton"
+                                        AutomationProperties.AutomationId="LoreTextLargerButton"
+                                        AutomationProperties.Name="A+: make lore text larger"
+                                        Content="A+"
+                                        MinWidth="44"
+                                        Click="ReaderTextSizeButton_Click" />
+                            </StackPanel>
+                        </Grid>
+                        <Expander x:Name="LoreBacklinksExpander"
+                                  AutomationProperties.AutomationId="LoreBacklinksExpander"
+                                  AutomationProperties.Name="Documents that link to this one"
+                                  Header="What links here"
+                                  Margin="0,6,0,0"
+                                  IsExpanded="False">
+                            <StackPanel Spacing="4">
+                                <TextBlock x:Name="LoreBacklinksStatus"
+                                           AutomationProperties.AutomationId="LoreBacklinksStatus"
+                                           Style="{StaticResource SectionBodyTextStyle}"
+                                           TextWrapping="WrapWholeWords"
+                                           Text="Loading cross-links..." />
+                                <ItemsControl x:Name="LoreBacklinksList"
+                                              AutomationProperties.AutomationId="LoreBacklinksList">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="helpers:LoreBacklinkModel">
+                                            <HyperlinkButton AutomationProperties.AutomationId="LoreBacklinkButton"
+                                                             AutomationProperties.Name="{Binding AccessibilityName}"
+                                                             Content="{Binding SourceDocumentTitle}"
+                                                             Click="LoreBacklinkButton_Click" />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Expander>
                     </StackPanel>
                 </Border>
 

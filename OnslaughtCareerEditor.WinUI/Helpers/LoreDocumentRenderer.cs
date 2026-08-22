@@ -45,7 +45,28 @@ internal static class LoreDocumentRenderer
         ArgumentNullException.ThrowIfNull(document);
         ArgumentNullException.ThrowIfNull(linkActivated);
 
-        return new Renderer(baseDirectory, linkActivated).Build(document);
+        return Render(document, baseDirectory, linkActivated, textScale: 1.0);
+    }
+
+    /// <summary>
+    /// Renders at a reader-chosen text scale (1.0 is the default size; each step of
+    /// the page's A-/A+ control moves it by 10%). Anchors and link handling are
+    /// unchanged by the scale.
+    /// </summary>
+    public static LoreRenderedDocument Render(
+        LoreDocumentModel document,
+        string? baseDirectory,
+        Action<string> linkActivated,
+        double textScale)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        ArgumentNullException.ThrowIfNull(linkActivated);
+        if (!double.IsFinite(textScale) || textScale <= 0)
+        {
+            textScale = 1.0;
+        }
+
+        return new Renderer(baseDirectory, linkActivated, textScale).Build(document);
     }
 
     private sealed class Renderer
@@ -54,12 +75,14 @@ internal static class LoreDocumentRenderer
 
         private readonly string? _baseDirectory;
         private readonly Action<string> _linkActivated;
+        private readonly double _textScale;
         private readonly Dictionary<string, FrameworkElement> _anchors = new(StringComparer.OrdinalIgnoreCase);
 
-        public Renderer(string? baseDirectory, Action<string> linkActivated)
+        public Renderer(string? baseDirectory, Action<string> linkActivated, double textScale)
         {
             _baseDirectory = string.IsNullOrWhiteSpace(baseDirectory) ? null : baseDirectory;
             _linkActivated = linkActivated;
+            _textScale = Math.Clamp(textScale, 0.7, 1.8);
         }
 
         public LoreRenderedDocument Build(LoreDocumentModel document)
@@ -108,7 +131,7 @@ internal static class LoreDocumentRenderer
             {
                 IsTextSelectionEnabled = true,
                 TextWrapping = TextWrapping.Wrap,
-                FontSize = HeadingFontSize(heading.Level),
+                FontSize = Scale(HeadingFontSize(heading.Level)),
                 FontWeight = FontWeights.SemiBold,
                 Margin = new Thickness(0, heading.Level <= 2 ? 10 : 6, 0, 0)
             };
@@ -145,7 +168,7 @@ internal static class LoreDocumentRenderer
 
             Paragraph paragraph = new()
             {
-                LineHeight = 22
+                LineHeight = Scale(22)
             };
 
             foreach (Inline inline in BuildInlines(inlines))
@@ -525,6 +548,9 @@ internal static class LoreDocumentRenderer
                 _ => 15
             };
         }
+
+        /// <summary>Scales reader font sizes by the chosen text scale.</summary>
+        private double Scale(double size) => Math.Round(size * _textScale, 1);
 
         private static AutomationHeadingLevel ToHeadingLevel(int level)
         {
