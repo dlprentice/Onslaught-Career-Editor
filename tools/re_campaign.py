@@ -72,6 +72,12 @@ GENERATION31_REBUILD_READY_ADVANCE_KIND = "GENERATION31_REBUILD_READY_SIXTEEN"
 GENERATION31_REBUILD_READY_ADVANCE_SCHEMA = (
     "bea.re.generation31-rebuild-ready-advance.v1"
 )
+GENERATION32_STATIC_RECEIPT_RESEAT_ADVANCE_KIND = (
+    "GENERATION32_STATIC_RECEIPT_RESEAT"
+)
+GENERATION32_STATIC_RECEIPT_RESEAT_ADVANCE_SCHEMA = (
+    "bea.re.generation32-static-receipt-reseat-advance.v1"
+)
 REFUTER_SUBJECT_SCHEMA = "bea.re.refuter-subject.v1"
 REBUILD_GATE_SCHEMA = "bea.re.rebuild-parity-gate.v2"
 REBUILD_RESULT_SCHEMA = "bea.re.rebuild-parity-result.v2"
@@ -1582,6 +1588,11 @@ def _reducer_sources() -> list[tuple[str, str, Path]]:
             "generation31-rebuild-ready-builder",
             "_reducer/tools/build_generation31_authority.py",
             Path(__file__).resolve().with_name("build_generation31_authority.py"),
+        ),
+        (
+            "generation32-static-receipt-reseat-builder",
+            "_reducer/tools/build_generation32_authority.py",
+            Path(__file__).resolve().with_name("build_generation32_authority.py"),
         ),
     ]
 
@@ -3754,12 +3765,17 @@ def _validate_campaign_relations(
         _integer(receipt.get("generation"), -1) > 0
         and isinstance(current_advance, dict)
         and current_advance.get("kind")
-        in {CAMPAIGN_RESEED_KIND, GENERATION31_REBUILD_READY_ADVANCE_KIND}
+        in {
+            CAMPAIGN_RESEED_KIND,
+            GENERATION31_REBUILD_READY_ADVANCE_KIND,
+            GENERATION32_STATIC_RECEIPT_RESEAT_ADVANCE_KIND,
+        }
     )
     if reseed_lineage:
         if current_advance.get("schema") not in {
             CAMPAIGN_RESEED_SCHEMA,
             GENERATION31_REBUILD_READY_ADVANCE_SCHEMA,
+            GENERATION32_STATIC_RECEIPT_RESEAT_ADVANCE_SCHEMA,
         }:
             raise CampaignError(
                 "campaign reseed lineage carry schema is unsupported"
@@ -8881,6 +8897,8 @@ def _replay_campaign_generation(campaign: Path, receipt: dict) -> None:
                 parent_receipt = _verify_generation30_campaign_carry(
                     parent_path
                 )
+            elif kind == GENERATION32_STATIC_RECEIPT_RESEAT_ADVANCE_KIND:
+                parent_receipt = _verify_generation31_campaign_carry(parent_path)
             elif kind == TTD_CALL_CONTEXT_ADVANCE_KIND:
                 parent_receipt = _verify_ttd_call_context_parent_campaign(
                     parent_path
@@ -8961,6 +8979,37 @@ def _replay_campaign_generation(campaign: Path, receipt: dict) -> None:
                 import build_generation31_authority
 
                 build_generation31_authority.build(
+                    parent_path,
+                    replay,
+                    snapshot=snapshot,
+                    prep=prep_root,
+                    _self_check=False,
+                    _verified_parent_receipt=parent_receipt,
+                )
+            elif kind == GENERATION32_STATIC_RECEIPT_RESEAT_ADVANCE_KIND:
+                if (
+                    advance.get("schema")
+                    != GENERATION32_STATIC_RECEIPT_RESEAT_ADVANCE_SCHEMA
+                ):
+                    raise CampaignError(
+                        "Generation 32 static-receipt-reseat advance schema "
+                        "is unsupported"
+                    )
+                snapshot_spec = _runtime_mapping(
+                    advance.get("snapshot"), "Generation 32 snapshot"
+                )
+                snapshot = _resolve_repo_or_absolute(
+                    snapshot_spec.get("path"), "Generation 32 snapshot"
+                )
+                prep_spec = _runtime_mapping(
+                    advance.get("prepRoot"), "Generation 32 prep root"
+                )
+                prep_root = _resolve_repo_or_absolute(
+                    prep_spec.get("path"), "Generation 32 prep root"
+                )
+                import build_generation32_authority
+
+                build_generation32_authority.build(
                     parent_path,
                     replay,
                     snapshot=snapshot,

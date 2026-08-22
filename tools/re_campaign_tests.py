@@ -2242,6 +2242,183 @@ class CampaignTests(unittest.TestCase):
             verified["_carryBridge"],
         )
 
+    def test_generation32_replay_dispatch_runs_the_reseat_builder(self) -> None:
+        """The frozen replay of a Generation 32 receipt must run the reseat
+        builder against the literal-pinned Generation 31 bridge."""
+        import sys
+        import types
+
+        parent = Path(tempfile.mkdtemp(prefix="gen32-parent-"))
+        replay_dir = Path(tempfile.mkdtemp(prefix="gen32-replay-"))
+        snapshot_dir = Path(tempfile.mkdtemp(prefix="gen32-snap-"))
+        prep_dir = Path(tempfile.mkdtemp(prefix="gen32-prep-"))
+        captured: dict = {}
+
+        def _capture_build(parent_path, out, **kwargs):
+            captured["args"] = (parent_path, out)
+            captured["kwargs"] = kwargs
+            return {"generation": 32}
+
+        stub_module = types.ModuleType("build_generation32_authority")
+        stub_module.build = _capture_build
+        receipt = {
+            "generation": 32,
+            "parentCampaign": {
+                "path": str(parent),
+                "ready": {"bytes": 1, "sha256": "0" * 64},
+            },
+            "advance": {
+                "kind": campaign.GENERATION32_STATIC_RECEIPT_RESEAT_ADVANCE_KIND,
+                "schema": (
+                    campaign.GENERATION32_STATIC_RECEIPT_RESEAT_ADVANCE_SCHEMA
+                ),
+                "snapshot": {"path": str(snapshot_dir)},
+                "prepRoot": {"path": str(prep_dir)},
+            },
+        }
+        try:
+            (parent / "campaign.ready.json").write_text("{}", encoding="utf-8")
+            with patch.object(
+                campaign,
+                "_verify_generation31_campaign_carry",
+                return_value={"generation": 31},
+            ) as carry, patch.object(
+                campaign, "_require_file_stamp", return_value={}
+            ), patch.object(
+                campaign, "_compare_replayed_campaign", side_effect=RuntimeError
+            ), patch.dict(
+                sys.modules, {"build_generation32_authority": stub_module}
+            ):
+                with self.assertRaises(RuntimeError):
+                    campaign._replay_campaign_generation(replay_dir, receipt)
+            self.assertEqual(1, carry.call_count)
+            self.assertEqual(parent, captured["args"][0])
+            self.assertEqual(
+                {
+                    "snapshot": snapshot_dir,
+                    "prep": prep_dir,
+                    "_self_check": False,
+                    "_verified_parent_receipt": {"generation": 31},
+                },
+                captured["kwargs"],
+            )
+        finally:
+            shutil.rmtree(parent, ignore_errors=True)
+            shutil.rmtree(replay_dir, ignore_errors=True)
+            shutil.rmtree(snapshot_dir, ignore_errors=True)
+            shutil.rmtree(prep_dir, ignore_errors=True)
+
+    def test_generation32_reseal_advance_requires_its_schema(self) -> None:
+        advance = {
+            "kind": campaign.GENERATION32_STATIC_RECEIPT_RESEAT_ADVANCE_KIND,
+            "schema": "bea.re.not-the-generation32-schema",
+        }
+        with self.assertRaisesRegex(
+            campaign.CampaignError, "reseed lineage carry schema"
+        ):
+            campaign._validate_campaign_relations(
+                {
+                    "functions": [],
+                    "residuals": [],
+                    "questions": [],
+                    "scenarios": [],
+                    "levers": [],
+                    "contracts": [],
+                    "adjudications": [],
+                    "supersessions": [],
+                },
+                {
+                    "schema": campaign.SCHEMA,
+                    "generation": 32,
+                    "advance": advance,
+                },
+            )
+
+    def test_generation32_replay_rejects_a_wrong_advance_schema(self) -> None:
+        """The frozen replay of a Generation 32 receipt must refuse to run the
+        builder when the recorded advance schema is not the reseat schema."""
+
+        class _StopReplay(Exception):
+            pass
+
+        parent = Path(tempfile.mkdtemp(prefix="gen32-parent-"))
+        replay = Path(tempfile.mkdtemp(prefix="gen32-replay-"))
+        try:
+            (parent / "campaign.ready.json").write_text("{}", encoding="utf-8")
+            receipt = {
+                "generation": 32,
+                "parentCampaign": {
+                    "path": str(parent),
+                    "ready": {"bytes": 1, "sha256": "0" * 64},
+                },
+                "advance": {
+                    "kind": campaign.GENERATION32_STATIC_RECEIPT_RESEAT_ADVANCE_KIND,
+                    "schema": "bea.re.wrong",
+                },
+            }
+            with patch.object(
+                campaign,
+                "_verify_generation31_campaign_carry",
+                return_value={"generation": 31},
+            ), patch.object(
+                campaign, "_require_file_stamp", return_value={}
+            ), patch.object(
+                campaign,
+                "_compare_replayed_campaign",
+                side_effect=_StopReplay,
+            ):
+                with self.assertRaisesRegex(
+                    campaign.CampaignError, "static-receipt-reseat advance schema"
+                ):
+                    campaign._replay_campaign_generation(replay, receipt)
+        finally:
+            shutil.rmtree(parent, ignore_errors=True)
+            shutil.rmtree(replay, ignore_errors=True)
+
+    def test_generation32_builder_refuses_an_absent_prep_root(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            prep = Path(temporary) / "empty-prep"
+            prep.mkdir()
+            parent = Path(temporary) / "parent"
+            parent.mkdir()
+            (parent / "campaign.ready.json").write_text("{}", encoding="utf-8")
+            import build_generation32_authority
+
+            with patch.object(
+                campaign,
+                "_verify_generation31_campaign_carry",
+                return_value={
+                    "generation": 31,
+                    "_carryBridge": (
+                        "LITERAL_PINNED_SEALED_AUTHORITY_GENERATION31_NO_REPLAY"
+                    ),
+                },
+            ):
+                with self.assertRaisesRegex(
+                    campaign.CampaignError, "prep artifact"
+                ):
+                    build_generation32_authority.build(
+                        parent,
+                        Path(temporary) / "out",
+                        prep=prep,
+                    )
+
+    def test_generation32_builder_carries_the_sealed_closure_identity(self) -> None:
+        import build_generation32_authority
+
+        self.assertEqual(
+            "cfe90af382269cb2e64996d10df7777bd00fcd8e1844b9823ef74bc6199b8974",
+            build_generation32_authority.CLOSURE_SHA256,
+        )
+        self.assertEqual(
+            "GENERATION32_STATIC_RECEIPT_RESEAT",
+            build_generation32_authority.ADVANCE_KIND,
+        )
+        self.assertIn(
+            "generation32-static-receipt-reseat-builder",
+            {role for role, _relative, _source in campaign._reducer_sources()},
+        )
+
     def test_frozen_v5_bridge_rehashes_its_historical_reducer(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
