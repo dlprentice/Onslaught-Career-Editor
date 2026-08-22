@@ -14,7 +14,10 @@ vfunc, IsNumberBetween, SpawnEscapePod skip), then `t_70f01f80`
 qword, landscape texture-LOD radii, SpawnThing skip, IsEnemy type-bit), then
 `t_5129ab1b` (GetDistToObj / GetAngle / TeleportOrientation / SetSlot call,
 CGame::SetSlot 256-guard, PlayPCharMessage insert, SetQualityLevel lod-bias
-and scale stores, impostor / debris / mesh-LOD CVar defaults).
+and scale stores, impostor / debris / mesh-LOD CVar defaults), then
+`t_aacb4492` (walker `g_dash_*` CVar defaults, PlaySample 0.7f PUSH,
+AddHelpMessage id-`jne`, `cg_meshsurfacelodbias`, CEngine hit-effect RGB
+stores).
 Evidence: MEASURED — every non-unknown TSV `original_bytes` compared to the
 named specimen at write time; PE section table re-parsed; first-cut BSS
 god-flag row retracted. `t_17fa180d` re-read JetPart::Move, SendButtonAction,
@@ -32,7 +35,10 @@ fcomp cluster, SpawnThing skip-`je`, and IsEnemy type-bit from the
 same specimen. `t_5129ab1b` re-read those TSV bytes again (223 compared,
 0 mismatch) and the leftover IScript heads, `CGame__SetSlot`,
 SetQualityLevel sibling stores, and the impostor / debris / mesh-LOD
-CVar dwords from the same specimen.
+CVar dwords from the same specimen. `t_aacb4492` re-read those TSV
+bytes again (242 compared, 0 mismatch) and the six `g_dash_*` dests,
+PlaySample PUSH stack, AddHelpMessage `jne`, `cg_meshsurfacelodbias`
+consumer, and `CEngine__Init` hit-factor stores from the same specimen.
 Specimen: `local-lab/pristine-verification-2026-07-26/pristine-target/BEA.exe`
 SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 (2,506,752 bytes).
@@ -60,8 +66,8 @@ PE mapping owner: [`../reverse-engineering/binary-analysis/patch-surface/PE-MAPP
   compared to the specimen in the `t_14fcbbed` writer, again in the
   `t_17fa180d` writer, again in the `t_120c3e1b` writer, again in the
   `t_94b70425` writer, again in the `t_94ad2658` writer, again in
-  the `t_70f01f80` writer, and again in the `t_5129ab1b` writer and
-  refused on mismatch.
+  the `t_70f01f80` writer, again in the `t_5129ab1b` writer, and
+  again in the `t_aacb4492` writer and refused on mismatch.
 - Confidence vocabulary: MEASURED (byte + behavior evidence),
   STATIC_ONLY (byte evidence verified here; behavior inferred from pinned
   source or prior bounded observations), SPECULATIVE (site plausible,
@@ -95,13 +101,15 @@ PE mapping owner: [`../reverse-engineering/binary-analysis/patch-surface/PE-MAPP
 | 18 | IScript getters / predicates | [§18](#18-iscript-getters--predicates) | + GetNumber / GetSquad / GetTarget / Spawners* / IsA; IsEnemy type-bit now rowed |
 | 19 | IScript camera | [§19](#19-iscript-camera) | GotoPlayer / ToggleCockpit / disable 3-/4-point pan |
 | 20 | Weather | [§20](#20-weather) | Rain/snow/lightning fstp + init stores; wind X |
-| 21 | IScript messages / wait | [§21](#21-iscript-messages--wait) | Wait-flag twins; SwitchMessages; PlayChar / PlayPChar insert; PlayCutscene call |
+| 21 | IScript messages / wait | [§21](#21-iscript-messages--wait) | Wait-flag twins; SwitchMessages; PlayChar / PlayPChar insert; PlayCutscene call; PlaySample 0.7f; AddHelp id-jne |
 | 22 | HUD highlight | [§22](#22-hud-highlight) | Highlight/UnHighlight stores; dest is BSS |
 | 23 | Camera projection / zoom bounds | [§23](#23-camera-projection--zoom-bounds) | far-plane PUSHes; HUD/compass 100; sky far qword; leftover nears |
-| 24 | Mesh quality / occupancy slopes | [§24](#24-mesh-quality--occupancy-slopes) | SetQualityLevel writers + lod-bias/scale; CRTTree 45; InitLODLists; landscape radii; impostor/debris/mesh-LOD CVar defaults |
+| 24 | Mesh quality / occupancy slopes | [§24](#24-mesh-quality--occupancy-slopes) | SetQualityLevel writers + lod-bias/scale; CRTTree 45; InitLODLists; landscape radii; impostor/debris/mesh-LOD CVar defaults; surface lod-bias |
 | 25 | Leftover IScript (waypoint / range / escape) | [§25](#25-leftover-iscript-waypoint--range--escape) | FollowWaypoint vfunc; IsNumberBetween; SpawnEscapePod; SpawnThing skip |
 | 26 | Fog sentinel (declined) | [§26](#26-fog-sentinel-declined) | FOGEND 10.0 is ignored under EXP |
 | 27 | Leftover IScript (dist / angle / slot / orient) | [§27](#27-leftover-iscript-dist--angle--slot--orient) | GetDistToObj / GetAngle always-0; TeleportOrientation vfunc; SetSlot call |
+| 28 | Walker dash CVars | [§28](#28-walker-dash-cvars) | `g_dash_*` file-backed defaults; not rewritten |
+| 29 | Hit-effect RGB defaults | [§29](#29-hit-effect-rgb-defaults) | `CEngine__Init` 200/150/150 stores |
 
 ---
 
@@ -1741,13 +1749,20 @@ pause flag (§16.2) even if the insert is NOPed.
 
 `0x005381F0` pushes a stack of volume/id immediates (including
 `0x3f800000` = 1.0f and `0x3f333333` = 0.7f) and
-`call 0x004E0A90` at `0x00538226`. NOP the call.
+`call 0x004E0A90` at `0x00538226`. NOP the call (already
+rowed). The 0.7f PUSH at **`0x00538215`** (`68 33 33 33 3f`)
+is the first float after the owner / name unbox — the
+script-native volume. `68 33 33 33 3f` → `68 00 00 80 3f`
+(1.0f). The later 1.0f / −1.0f PUSHes stay unrowed (fade /
+range sentinels; not re-opened as volume).
 
 ### 21.5 AddHelpMessage
 
 `0x00533B30`: `[0x008A9D90]` (BSS); unbox; `cmp eax, 0x2321c8`
 then `jne` skip. `call 0x0047FB00` at `0x00533B5D` is the
-push. NOP the call.
+push. NOP the call. The id-`jne` at **`0x00533B4B`**
+(`75 15`) is now rowed: NOP it and every unboxed id still
+calls the helper (the 0x2321c8 filter is dropped).
 
 `Print` / `PrintText` / `AddMessage` stay pointer-only (debug
 console / fixed-source queue).
@@ -2082,11 +2097,16 @@ through the registered pointer.
 | `cg_debrisfadeend` | `0x00628304` | `00 00 a0 41` | 20.0f | 3 |
 | `cg_meshlodmedthreshold` | `0x00631E8C` | `00 00 20 41` | 10.0f | 2 |
 | `cg_meshlodlowthreshold` | `0x00631E90` | `00 00 a0 41` | 20.0f | 2 |
+| `cg_meshsurfacelodbias` | `0x00631EA0` | `00 00 c8 43` | 400.0f | 2 |
 
 Example: impostor start 39 → 78 (`00 00 9c 42`).
 `cg_meshtexturelodbias` `0x00631E9C` (100.0, 1 ref —
-register only) and `cg_meshsurfacelodbias` `0x00631EA0`
-(400.0, 2 refs) stay unrowed this cut.
+register only) stays unrowed. `cg_meshsurfacelodbias`
+`0x00631EA0` (400.0, 2 refs) is now rowed: the second
+ref is `fdivr` at `0x004DCDD6` inside
+`CRTMesh__VFunc_2` `0x004DCBA0`. Example 400 → 800
+(`00 00 48 44`). `SetQualityLevel` does not rewrite it.
+Stock `defaultoptions.bea` has no `cg_meshsurface` string.
 
 Confidence: **STATIC_ONLY**. Risk: medium (authored against
 39/40 and 15/20; console can still overwrite).
@@ -2210,6 +2230,77 @@ Confidence for §27: **STATIC_ONLY**. Risk: medium
 
 ---
 
+## 28. Walker dash CVars
+
+`CBattleEngine` ctor `0x00412BC0` (caller `CBattleEngine__Init`)
+registers six `g_dash_*` CVars. Destinations are file-backed
+`.data` before `0x00661000`. `CBattleEngineJetPart__ResetConfiguration`
+and `CBattleEngineWalkerPart__ResetConfiguration` do **not**
+rewrite them. Stock `defaultoptions.bea` has no `g_dash` string.
+Console `set` can still overwrite through the registered pointer.
+
+Shipped help strings name the defaults (including the source
+typo `sepecial`). Stuart-note
+`reverse-engineering/source-code/gameplay/battle-system.md`
+already pins `mDashVelocity` 25.0 and `mDashLength` 15 frames.
+
+Consumers (all `fld` / `fcomp` / `mov` reads, no dest writes):
+
+- `CBattleEngineWalkerPart__Forward` `0x00412D80`
+- `CBattleEngineWalkerPart__Backward` `0x00412F70`
+- `CBattleEngineWalkerPart__StrafeLeft` `0x00413160`
+- `CBattleEngineWalkerPart__StrafeRight` `0x00413360`
+- friction compare in `CBattleEngineWalkerPart__Move` `0x00413760`
+
+| CVar | VA | original | value | .text refs |
+|---|---|---|---|---|
+| `g_dash_start` | `0x006236B0` | `66 66 66 3f` | 0.9f | 7 |
+| `g_dash_end` | `0x006236B4` | `cd cc 4c 3f` | 0.8f | 7 |
+| `g_dash_time` | `0x006236AC` | `cd cc 4c 3e` | 0.2f | 9 |
+| `g_dash_length` | `0x006236B8` | `0f 00 00 00` | 15 | 5 |
+| `g_dash_friction` | `0x006236BC` | `05 00 00 00` | 5 | 2 |
+| `g_dash_velocity` | `0x006236C0` | `00 00 c8 41` | 25.0f | 5 |
+
+Roles from the help strings (not invented): start/end are
+stick-axis gates (0..1); time is the double-tap window;
+length is locked-control turns; friction is remaining turns
+when the stop-you compare starts (`cmp [part+0x44], friction`
+/ `jge` skip); velocity is the boost kick.
+
+Examples: start 0.9 → 0.5 (`00 00 00 3f`); time 0.2 → 0.5
+(`00 00 00 3f`); length 15 → 30 (`1e 00 00 00`); friction
+5 → 1 (`01 00 00 00`, full-speed until the last turn);
+velocity 25 → 50 (`00 00 48 42`).
+
+Confidence: **STATIC_ONLY** (bytes + shipped help + named
+Forward/Back/Strafe/Move consumers + source 25.0/15). Risk:
+medium (authored double-tap window / boost feel).
+
+---
+
+## 29. Hit-effect RGB defaults
+
+`CEngine__Init` `0x004499D0` (`engine.cpp`) writes three
+int factors then `CConsole__RegisterVariable`s them as
+`cg_hiteffectfactorr/g/b` ("/100"). Destinations are
+**object fields** (`this+0x48c` / `this+0x490` / `this+0x494`),
+not file globals. Patch the **stores**:
+
+| channel | store VA | original | value |
+|---|---|---|---|
+| R | `0x00449A1E` | `c7 00 c8 00 00 00` | 200 |
+| G | `0x00449A24` | `c7 07 96 00 00 00` | 150 |
+| B | `0x00449A2A` | `c7 03 96 00 00 00` | 150 |
+
+Example: R 200 → 0 (`c7 00 00 00 00 00`) kills the red
+channel of the hit flash. Stock `defaultoptions.bea` has
+no `hiteffect` string. Console `set` can still overwrite
+the live fields after init.
+
+Confidence: **STATIC_ONLY**. Risk: low (visual only).
+
+---
+
 ## Verification protocol (for any row promoted to Phase 2)
 
 1. Copy, never in-place: safe-copy through the app; pristine specimen stays
@@ -2225,15 +2316,14 @@ Confidence for §27: **STATIC_ONLY**. Risk: medium
 
 ## Row inventory
 
-TSV: **244 data rows** (242 unique VAs). `t_70f01f80` 225 plus 19
-from this cut (GetDistToObj / GetAngle / TeleportOrientation /
-SetSlot call, CGame::SetSlot 256-guard, PlayPCharMessage insert,
-six SetQualityLevel lod-bias/scale stores, seven impostor /
-debris / mesh-LOD CVar defaults). Every non-unknown
+TSV: **256 data rows** (254 unique VAs). `t_5129ab1b` 244 plus 12
+from this cut (six `g_dash_*` dests, PlaySample 0.7f PUSH,
+AddHelpMessage id-`jne`, `cg_meshsurfacelodbias`, three
+`CEngine__Init` hit-factor stores). Every non-unknown
 `original_bytes` was re-read from the named specimen
-(`223` prior compared, `0` mismatch, then `19` new).
+(`242` prior compared, `0` mismatch, then `12` new).
 
-Confidence histogram: **MEASURED 29 / STATIC_ONLY 215 / SPECULATIVE 0**.
+Confidence histogram: **MEASURED 29 / STATIC_ONLY 227 / SPECULATIVE 0**.
 
 First-cut corrections landed here, not in `rebuild/**`:
 
@@ -2254,7 +2344,10 @@ GetDistToObj / GetAngle always-0, TeleportOrientation's `+0x54`,
 IScript::SetSlot's `CGame` call, CGame::SetSlot's 256-guard,
 PlayPCharMessage's insert twin, SetQualityLevel's lod-bias and
 scale stores, and the impostor / debris / mesh-LOD CVar defaults
-that SetQualityLevel does not rewrite. `GetPlayer` /
+that SetQualityLevel does not rewrite. This cut adds the six
+walker `g_dash_*` file-backed defaults, PlaySample's 0.7f volume
+PUSH, AddHelpMessage's id-`jne`, `cg_meshsurfacelodbias`, and
+the `CEngine__Init` hit-factor RGB stores. `GetPlayer` /
 `GetGoodieState` / `GetWaterHeight` / `GameTime` remain
 BSS-sourced. Print/PrintText/AddMessage are still pointer-only.
 `Rand`/`GetFloatRand`/`GetMapHeight`/`GetNumUnits` are BSS-sourced.
@@ -2262,4 +2355,4 @@ BSS-sourced. Print/PrintText/AddMessage are still pointer-only.
 stay without a one-instruction cheat. `GetVariable` still dirties
 x87 if the helper is NOPed. SP aspect `0x005D8BC4` (0.75f,
 42 refs) is not a value row. FOGEND 10.0 is a sentinel ignored
-under EXP. Texture/surface lod-bias CVars stay unrowed.
+under EXP. `cg_meshtexturelodbias` stays unrowed (register-only).

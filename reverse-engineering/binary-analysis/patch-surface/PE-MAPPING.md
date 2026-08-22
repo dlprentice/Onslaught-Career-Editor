@@ -9,7 +9,9 @@ the script objective / goodie arrays) are BSS and are not file-patchable.
 Evidence: MEASURED — PE section table and VA-to-file map re-read from the
 named specimen on 2026-08-22; hash matched. `t_5129ab1b` added the
 impostor / debris / mesh-LOD CVar dwords as file-backed `.data` (not BSS;
-not rewritten by SetQualityLevel).
+not rewritten by SetQualityLevel). `t_aacb4492` added the six
+`g_dash_*` dests (file-backed `.data`; not rewritten by
+ResetConfiguration) and `cg_meshsurfacelodbias` `0x00631EA0`.
 Specimen: `local-lab/pristine-verification-2026-07-26/pristine-target/BEA.exe`
 SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 (2,506,752 bytes).
@@ -112,8 +114,11 @@ lod-bias / scale stores now rowed too). Impostor / debris /
 mesh-LOD-threshold CVars are file-backed and are **not**
 rewritten by SetQualityLevel — the file dword is the live
 default (`0x00631E94` / `98`, `0x006282FC` / `00` / `04`,
-`0x00631E8C` / `90`). Console registration takes a pointer
-and can still overwrite. SP aspect `0x005D8BC4`
+`0x00631E8C` / `90` / `A0`). Console registration takes a pointer
+and can still overwrite. The six `g_dash_*` dests
+`0x006236AC` / `B0` / `B4` / `B8` / `BC` / `C0` are
+file-backed and are **not** rewritten by ResetConfiguration.
+SP aspect `0x005D8BC4`
 (0.75f) is file-backed with **42** address refs — not a value
 row; patch `CCamera__GetAspectRatio`'s `je`.
 
