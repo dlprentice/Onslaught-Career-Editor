@@ -145,13 +145,16 @@ Air: fighters, bombers, dive bombers and ground-attack aircraft share the
 (`CSpawner*` value records, lane T6) to materialize squads.
 
 Sea: boats (`CBoat`, `CBoatAI`), carriers (`CCarrier`, `CCarrierAI` — the
-mobile bases you defend and attack), mines (`CMine`, proximity-triggered via
-`CRoundProximity`-style logic), and the submarine (below).
+mobile bases you defend and attack), mines (`CMine`), and the submarine
+(below). The separate `CRoundProximity` round-definition type does not by
+itself establish how `CMine` detects targets.
 
 ## The bosses
 
-Each boss owns a full subsystem — guide + AI + behaviour type + dedicated
-`.cpp` — visible in both RTTI and the pinned source corpus:
+Boss evidence is uneven. The entries below report only the owners actually
+surfaced by RTTI, behaviour tables, shipped strings, mission data, or the
+pinned source corpus; evidence for one boss family does not fill gaps in
+another:
 
 - **Thunderhead** (episode 3) — `CThunderHead`, `CThunderheadGuide`,
   `ThunderHead.cpp`. The walking flame-boss: four-legged like the player's
@@ -167,20 +170,23 @@ Each boss owns a full subsystem — guide + AI + behaviour type + dedicated
   between waypoints while submerged, surfaces to fight (level-500 MSL shows
   `Dive()`/`Surface()` plus teleport travel). Its sinking gates the sub branch
   of the campaign graph (slot-62 flag, see
-  [worlds.md](worlds.md#episode-5--worlds-500-524-the-branching-war)).
+  [worlds.md](worlds.md#world-500-career-node-23)).
 - **HiveBoss** (episode 5) — `CHiveBoss`, `CHiveBossGuide`, behaviour id 0x0e.
   The swarm-mother: segment machinery shares the destructible-segments
   controller the player's parts use. TTD batch-3 pins its exclusive functions
   (`CHiveBoss__SetVar`, tail-jmp motion accumulator).
 - **Carver** (episode 6) — `CCarver`, `CCarverAI`, `CCarverGuide`,
-  `Carver.cpp`, behaviour id 0x12. Not a monster — an enemy Battle Engine
-  pilot, Lewis Carver (fiction: [characters.md](characters.md#lewis-carver-antagonist)),
-  whose machine flies with full player-grade mechanics because it *is* one.
+  `Carver.cpp`, behaviour id 0x12. Fiction identifies the enemy Battle Engine
+  pilot as Lewis Carver
+  ([characters.md](characters.md#lewis-carver-antagonist)). The distinct
+  Carver runtime family does not by itself establish equivalence with the
+  player's flight mechanics.
 - **Gill-M** (underwater) — `CGillM`, `CGillMAI`, `CGillMHead`, `CGillMHeadAI`,
   behaviour id 0x13. Named after programmer Stuart Gillam ("The Gill-m was
   named after me... wasn't my choice" —
   [cut-content-secrets.md](cut-content-secrets.md#gill-m-boss-named-after-stuart)).
-  The head is its own AI object — shoot the head, not the body.
+  The head has separate class and AI owners; their exact damage and
+  vulnerability relationship remains unmeasured.
 - **Fenrir** (episodes 731/732 → 741/742) — `CFenrir`, `CFenrirMainGunAI`,
   `Fenrir.cpp`-era scripts, behaviour id 0x16. A flying fortress built from
   indexed destructible components: turrets 1-10, main gun 11, plane launchers
@@ -192,7 +198,7 @@ Each boss owns a full subsystem — guide + AI + behaviour type + dedicated
   `CMCSentinel` motion controller, behaviour id 0x14, with turret/barrel
   transform updates exclusive to 8xx captures. The post-mortem's admiration
   ("the coolest to look at") lands here —
-  [development-history.md](development-history.md#sentinel-appreciation).
+  [development-history.md](development-history.md#development-anecdotes-from-stuart-june-2022).
 - **Tentacle kin** (8xx) — `CTentacle`, `CTentacleAI`, `CTentacleGuide`,
   `CComponentTentacle`, `CMCTentacle`. Episode-8-exclusive factory chain in
   the coverage mine. The separate sea-monster recollection has not been bound
