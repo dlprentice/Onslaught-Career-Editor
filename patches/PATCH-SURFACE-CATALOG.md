@@ -2382,7 +2382,8 @@ AddHelpMessage id-`jne`, `cg_meshsurfacelodbias`, three
 `original_bytes` was re-read from the named specimen
 (`242` prior compared, `0` mismatch, then `12` new).
 Phase 2 adds four §30 init-store rows (see changelog):
-**now 260 data rows / 258 unique VAs**.
+**now 260 data rows / 258 unique VAs** (261 rows after the latete
+variant-B H1 falsifier row — third intentional multi-variant VA).
 
 Confidence histogram: **MEASURED 29 / STATIC_ONLY 227 / SPECULATIVE 0**
 (STATIC_ONLY 231 after the four §30 additions; no confidence changes).
