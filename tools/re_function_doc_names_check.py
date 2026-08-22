@@ -82,6 +82,13 @@ DEFAULT_TABLE = (
 ZERO_ASSERTION_ALLOWLIST = {
     "Bomber.cpp.md",
     "Career.cpp/CCareer__GetUnlockedGoodieCount.md",
+    # IScript natives 76-78 trio note: deliberately multi-address
+    # (0x00536230/0x00536260/0x00536330) with coverage-corpus string-table
+    # labels, so it asserts no single current name for one heading. Root fix
+    # belongs to that note's owner (split into per-native notes or add a
+    # current-name assertion); until then it is an explicit non-identity
+    # exception like the entries above.
+    "IScript.cpp/IScript__InitVariable_SetVariable_ShutdownVariable.md",
 }
 
 SYMBOL = r"[A-Za-z_][A-Za-z0-9_@.]*"
