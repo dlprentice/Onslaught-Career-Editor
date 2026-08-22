@@ -298,7 +298,7 @@ internal sealed class RetailFrontendHarness
     /// <summary><c>RetailFrontendFlow.HandleNavigationSignal</c> (:2466-2475).</summary>
     private void HandleNavigationSignal(RetailFrontendSignal signal)
     {
-        if (signal != RetailFrontendSignal.Level100LaunchRequested)
+        if (signal != RetailFrontendSignal.LevelLaunchRequested)
         {
             return;
         }

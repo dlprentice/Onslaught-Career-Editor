@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+using OnslaughtRebuild.Core;
+
 namespace OnslaughtRebuild.Client;
 
 /// <summary>
@@ -73,6 +75,15 @@ public sealed class RetailFrontendSession
     private bool _level100LaunchPending;
     private string _gameName = DefaultGameName;
     private int _selectedConfigurationIndex;
+
+    /// <summary>
+    /// The career world the level selector has chosen and the launch request
+    /// will carry. Bounded by <see cref="RetailWorldCatalog"/> admission: the
+    /// released selector only offers worlds an incoming completed link has
+    /// unlocked, so this value is always constructible-by-law even when the
+    /// reconstruction cannot yet build that world's content.
+    /// </summary>
+    public int SelectedWorldNumber { get; private set; } = RetailWorldCatalog.RootWorldNumber;
 
     public RetailFrontendScreen Screen { get; private set; } = RetailFrontendScreen.ClickToStart;
 
@@ -265,6 +276,38 @@ public sealed class RetailFrontendSession
         return true;
     }
 
+    /// <summary>
+    /// Selects the world the level selector highlights.
+    ///
+    /// <para>Admission is the released law, not a reconstruction preference:
+    /// <see cref="RetailWorldCatalog.IsWorldSelectable"/> accepts a world only
+    /// when a completed incoming link unlocks it (or it is the root). The
+    /// selector's default is retail's cold-career default, the root world.
+    /// </para>
+    /// </summary>
+    public bool SelectWorld(int worldNumber)
+    {
+        if (Screen != RetailFrontendScreen.LevelSelect ||
+            worldNumber == SelectedWorldNumber ||
+            !RetailWorldCatalog.IsWorldSelectable(Career, worldNumber))
+        {
+            return false;
+        }
+
+        SelectedWorldNumber = worldNumber;
+        return true;
+    }
+
+    /// <summary>
+    /// The career graph the selection is admitted against. The Level 100
+    /// mission owns the only live <see cref="RetailCareerCampaign"/>, but the
+    /// selector must answer before any world is constructed — retail's own
+    /// selector reads the loaded career, which on a cold start is the cold
+    /// slice. This is that cold slice, shared and read-only in practice.
+    /// </summary>
+    public RetailCareerCampaign Career { get; } =
+        RetailCareerReCalcLinks.CreateColdTrainingSlice();
+
     public RetailFrontendSignal Confirm()
     {
         UnavailableSelection = null;
@@ -343,7 +386,7 @@ public sealed class RetailFrontendSession
             case RetailFrontendScreen.SelectConfiguration:
                 Screen = RetailFrontendScreen.Loading;
                 _level100LaunchPending = true;
-                return RetailFrontendSignal.Level100LaunchRequested;
+                return RetailFrontendSignal.LevelLaunchRequested;
 
             default:
                 return RetailFrontendSignal.None;
@@ -408,6 +451,9 @@ public sealed class RetailFrontendSession
         _level100LaunchPending = false;
         return true;
     }
+
+    /// <summary>The world the pending launch request will construct.</summary>
+    public int ConsumeLaunchWorldNumber => SelectedWorldNumber;
 
     public void CompleteLevel100Load()
     {
@@ -493,7 +539,7 @@ public sealed class RetailFrontendSession
         RequireLevel100Transition(nameof(RestartLevel100));
         Screen = RetailFrontendScreen.Loading;
         _level100LaunchPending = true;
-        return RetailFrontendSignal.Level100LaunchRequested;
+        return RetailFrontendSignal.LevelLaunchRequested;
     }
 
     /// <summary>
@@ -613,7 +659,14 @@ public enum RetailFrontendSignal
     None,
     PageChanged,
     Unavailable,
-    Level100LaunchRequested,
+
+    /// <summary>
+    /// The Select-Configuration confirm edge. Carries
+    /// <see cref="RetailFrontendSession.SelectedWorldNumber"/> as the world to
+    /// construct. Named for the released page flow (any career level), not for
+    /// the one world the reconstruction currently builds.
+    /// </summary>
+    LevelLaunchRequested,
     ReturnToMainMenuRequested,
     ExitRequested,
 }

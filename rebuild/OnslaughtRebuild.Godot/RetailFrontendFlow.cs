@@ -3332,7 +3332,7 @@ public sealed partial class RetailFrontendFlow : Control
 
     private void HandleNavigationSignal(RetailFrontendSignal signal)
     {
-        if (signal == RetailFrontendSignal.Level100LaunchRequested)
+        if (signal == RetailFrontendSignal.LevelLaunchRequested)
         {
             _loadRequestRaised = false;
             _level100Ready = false;

@@ -23,6 +23,9 @@
     <EmbeddedResource Include="Assets\Level100\Scripts\*.mso.bin" />
     <EmbeddedResource Include="Assets\Level100\level100-contact-owners.json"
                       LogicalName="OnslaughtRebuild.Core.Assets.Level100.level100-contact-owners.json" />
+    <EmbeddedResource Include="Assets\Level110\level110-heightfield.hfld.bin"
+                      LogicalName="OnslaughtRebuild.Core.Assets.Level110.level110-heightfield.hfld.bin" />
+    <EmbeddedResource Include="Assets\Level110\Scripts\*.mso.bin" />
   </ItemGroup>
 
 </Project>

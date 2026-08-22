@@ -20,6 +20,65 @@ internal sealed class Level100MissionProgram
     private const string ResourcePrefix =
         "OnslaughtRebuild.Core.Assets.Level100.Scripts.level100-";
 
+    /// <summary>
+    /// World 110's compiled scripts: same version-50 object layout, its own
+    /// hash-pinned payloads (materialized from
+    /// <c>data/resources/110_res_PC.aya</c>, archive SHA-256
+    /// <c>4e041c75…3c2b</c>), embedded under the Level110 resource prefix.
+    /// The measured LevelScript structure pin lives in
+    /// <c>s_world110LevelScriptEvents</c>; nothing here reuses a Level
+    /// 100 payload.
+    /// </summary>
+    private const string World110ResourcePrefix =
+        "OnslaughtRebuild.Core.Assets.Level110.Scripts.level110-";
+
+    internal const int WorldNumber100 = 100;
+    internal const int WorldNumber110 = 110;
+
+    /// <summary>
+    /// World 110's released LevelScript events, measured out of the pinned
+    /// payload on 2026-08-22: five named events at these instruction pointers,
+    /// <c>builtin[0] == 11</c> with the other twelve built-ins -1, 92 symbols,
+    /// and the initializer armed.
+    /// </summary>
+    private static readonly (string Name, int InstructionPointer)[]
+        s_world110LevelScriptEvents =
+        [
+            ("Enemy Engaged", 100),
+            ("Vital Building Destroyed", 134),
+            ("Lander Escaped", 145),
+            ("Lander Destroyed", 159),
+            ("Lander Withdraws", 170),
+        ];
+
+    private static IReadOnlyDictionary<string, ProgramIdentity> ProgramsFor(
+        int worldNumber) => worldNumber switch
+    {
+        WorldNumber100 => s_programs,
+        WorldNumber110 => s_world110Programs,
+        _ => throw new ArgumentOutOfRangeException(
+            nameof(worldNumber),
+            $"No admitted mission-program set for world {worldNumber}."),
+    };
+
+    private static readonly IReadOnlyDictionary<string, ProgramIdentity> s_world110Programs =
+        new Dictionary<string, ProgramIdentity>(StringComparer.Ordinal)
+        {
+            ["beacon"] = new(200, "8e75c80c01e8def1841c51a9234cc14d33590d4a9a031e087db0325762c35be7"),
+            ["Lander"] = new(1331, "faa88a9341d3043826c44f0a483ec707d2cbb0b834b00061a8efa903244d91a8"),
+            ["Lander2"] = new(1142, "2a3ca550f3965d4d5b1508287cf1c4b71b9638732ce3422d4a415cc7adfa6da0"),
+            ["Lander3"] = new(381, "f004ee4da79b59f410aab8129d358bbe956c8529e99e417ca8d32bd5425295f6"),
+            ["LevelScript"] = new(5110, "f5c157ba2c6a9acbee78d895a25be82252951b93bdfdd8886a79ecd7bfe222aa"),
+            ["MuspellFighter"] = new(428, "eb436aa1a01d989910f6bb89ebfebc66d0987ff2959d3c6b32e1936666f9e8f4"),
+            ["MuspellFighter1"] = new(429, "b3104aa1e827488eadb280a91cf5196a5ff033e2d298eb2e26dc692a3694c7bc"),
+            ["MuspellFighter2"] = new(429, "606e4df72110f95fcb132871b84ee35c151d918a11e568b4cdda17fbb379a7e4"),
+            ["Scout"] = new(603, "a9d861d83ff26bb1ad793426832491939c243250b412c84336a2c6edff6908f2"),
+            ["Setup"] = new(1203, "c17c5a3b14e4f03394beacd21949943da52b74f558e4a4bb6557ec50296816bb"),
+            ["Victory"] = new(1600, "281aae6c239801748e649662917ecdbfcccb648130c87f6318cd4dbbbb7c061e"),
+            ["VitalBuilding"] = new(2415, "712bac0b6b8177fcbafc3ceaf4d0768375e22cce465513125f06f712ca23dea5"),
+            ["Weather"] = new(249, "42ff6dc591660f0f08faecad2d144cffc863dd95e41bc4397fde29553c6b02bc"),
+        };
+
     private static readonly IReadOnlyDictionary<string, ProgramIdentity> s_programs =
         new Dictionary<string, ProgramIdentity>(StringComparer.Ordinal)
         {
@@ -105,29 +164,48 @@ internal sealed class Level100MissionProgram
 
     internal static IReadOnlyCollection<string> ProgramNames => s_programs.Keys.ToArray();
 
+    /// <summary>The admitted script-object names of one world.</summary>
+    internal static IReadOnlyCollection<string> ProgramNamesFor(int worldNumber) =>
+        ProgramsFor(worldNumber).Keys.ToArray();
+
     internal static Level100MissionProgram LoadEmbedded() => LoadEmbedded("LevelScript");
 
-    internal static Level100MissionProgram LoadEmbedded(string name)
+    internal static Level100MissionProgram LoadEmbedded(string name) =>
+        LoadEmbedded(WorldNumber100, name);
+
+    /// <summary>
+    /// Loads one admitted script object of <paramref name="worldNumber"/>.
+    /// The single-argument overloads keep the Level 100 runtime call sites
+    /// unchanged; world 110 admission is explicit and per-world.
+    /// </summary>
+    internal static Level100MissionProgram LoadEmbedded(int worldNumber, string name)
     {
-        if (!s_programs.TryGetValue(name, out ProgramIdentity expected))
+        if (!ProgramsFor(worldNumber).TryGetValue(name, out ProgramIdentity expected))
         {
-            throw new ArgumentOutOfRangeException(nameof(name), $"Unknown Level 100 script '{name}'.");
+            throw new ArgumentOutOfRangeException(
+                nameof(name),
+                $"Unknown world {worldNumber} script '{name}'.");
         }
 
-        string resourceName = ResourcePrefix + name + ".mso.bin";
+        string resourcePrefix = worldNumber == WorldNumber110
+            ? World110ResourcePrefix
+            : ResourcePrefix;
+        string resourceName =
+            resourcePrefix + name + ".mso.bin";
         using Stream stream = Assembly.GetExecutingAssembly()
             .GetManifestResourceStream(resourceName)
             ?? throw new InvalidOperationException(
-                $"The materialized Level 100 {name} object is missing. " +
+                $"The materialized world {worldNumber} {name} object is missing. " +
                 "Run rebuild/tools/materialize_retail_assets.py against the supported Steam install.");
         using var memory = new MemoryStream(expected.Length);
         stream.CopyTo(memory);
-        return Parse(memory.ToArray(), name, expected);
+        return Parse(memory.ToArray(), name, worldNumber, expected);
     }
 
     private static Level100MissionProgram Parse(
         byte[] payload,
         string expectedName,
+        int worldNumber,
         ProgramIdentity expected)
     {
         string actualHash = Convert.ToHexString(SHA256.HashData(payload)).ToLowerInvariant();
@@ -135,7 +213,7 @@ internal sealed class Level100MissionProgram
             !StringComparer.Ordinal.Equals(actualHash, expected.Sha256))
         {
             throw new InvalidDataException(
-                $"The materialized Level 100 {expectedName} object is not the supported Steam payload.");
+                $"The materialized world {worldNumber} {expectedName} object is not the supported Steam payload.");
         }
 
         var reader = new Level100ObjectReader(payload);
@@ -252,19 +330,41 @@ internal sealed class Level100MissionProgram
 
         if (StringComparer.Ordinal.Equals(expectedName, "LevelScript"))
         {
-            if (instructions.Length != 884 || symbols.Length != 334 ||
+            if (worldNumber == WorldNumber110)
+            {
+                if (instructions.Length != 181 || symbols.Length != 92 ||
+                    builtInEvents[0] != 11 || builtInEvents.Skip(1).Any(value => value != -1) ||
+                    events.Count != s_world110LevelScriptEvents.Length || runInitializer != 1)
+                {
+                    throw new InvalidDataException(
+                        "The released world-110 LevelScript structure changed.");
+                }
+
+                foreach ((string name, int instructionPointer) in s_world110LevelScriptEvents)
+                {
+                    if (!events.TryGetValue(name, out int actual) || actual != instructionPointer)
+                    {
+                        throw new InvalidDataException(
+                            $"The released world-110 event '{name}' does not match " +
+                            $"instruction {instructionPointer}.");
+                    }
+                }
+            }
+            else if (instructions.Length != 884 || symbols.Length != 334 ||
                 builtInEvents[0] != 11 || builtInEvents.Skip(1).Any(value => value != -1) ||
                 events.Count != s_levelScriptEvents.Length || runInitializer != 1)
             {
                 throw new InvalidDataException("The released LevelScript structure changed.");
             }
-
-            foreach ((string name, int instructionPointer) in s_levelScriptEvents)
+            else
             {
-                if (!events.TryGetValue(name, out int actual) || actual != instructionPointer)
+                foreach ((string name, int instructionPointer) in s_levelScriptEvents)
                 {
-                    throw new InvalidDataException(
-                        $"The released event '{name}' does not match instruction {instructionPointer}.");
+                    if (!events.TryGetValue(name, out int actual) || actual != instructionPointer)
+                    {
+                        throw new InvalidDataException(
+                            $"The released event '{name}' does not match instruction {instructionPointer}.");
+                    }
                 }
             }
         }

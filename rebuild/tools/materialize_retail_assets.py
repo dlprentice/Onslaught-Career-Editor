@@ -59,6 +59,39 @@ LEVEL100_SCRIPT_OBJECTS = (
     ("Weather", 540, "369ca18aba315a853404779b931d45bed0d692d5bad38536a41c4d4706650ce4"),
 )
 LEVEL100_SCRIPT_SHA256 = {name: sha256 for name, _, sha256 in LEVEL100_SCRIPT_OBJECTS}
+
+# World 110 — the second node of the released career graph (Stuart
+# Career.cpp level_structure[1]). Measured 2026-08-22 straight from the
+# retail install with the same readers as Level 100: the compressed
+# archive hash below pins the whole input; the script objects were walked
+# out of its RLWD with _skip_level100_script_object (the version-50
+# layout is shared) and the HFLD envelope extracted the same way as
+# CHUNKS[0]. Nothing here is derived from the Level 100 payloads.
+WORLD110_ARCHIVE = "data/resources/110_res_PC.aya"
+WORLD110_ARCHIVE_SHA256 = (
+    "4e041c758b9d41ba18311b1fadeacb95fc31af51320861480b97033bc24e3c2b"
+)
+LEVEL110_SCRIPT_ROOT = CORE_ASSETS / "Level110/Scripts"
+LEVEL110_SCRIPT_OBJECTS = (
+    ("beacon", 200, "8e75c80c01e8def1841c51a9234cc14d33590d4a9a031e087db0325762c35be7"),
+    ("Lander", 1331, "faa88a9341d3043826c44f0a483ec707d2cbb0b834b00061a8efa903244d91a8"),
+    ("Lander2", 1142, "2a3ca550f3965d4d5b1508287cf1c4b71b9638732ce3422d4a415cc7adfa6da0"),
+    ("Lander3", 381, "f004ee4da79b59f410aab8129d358bbe956c8529e99e417ca8d32bd5425295f6"),
+    ("LevelScript", 5110, "f5c157ba2c6a9acbee78d895a25be82252951b93bdfdd8886a79ecd7bfe222aa"),
+    ("MuspellFighter", 428, "eb436aa1a01d989910f6bb89ebfebc66d0987ff2959d3c6b32e1936666f9e8f4"),
+    ("MuspellFighter1", 429, "b3104aa1e827488eadb280a91cf5196a5ff033e2d298eb2e26dc692a3694c7bc"),
+    ("MuspellFighter2", 429, "606e4df72110f95fcb132871b84ee35c151d918a11e568b4cdda17fbb379a7e4"),
+    ("Scout", 603, "a9d861d83ff26bb1ad793426832491939c243250b412c84336a2c6edff6908f2"),
+    ("Setup", 1203, "c17c5a3b14e4f03394beacd21949943da52b74f558e4a4bb6557ec50296816bb"),
+    ("Victory", 1600, "281aae6c239801748e649662917ecdbfcccb648130c87f6318cd4dbbbb7c061e"),
+    ("VitalBuilding", 2415, "712bac0b6b8177fcbafc3ceaf4d0768375e22cce465513125f06f712ca23dea5"),
+    ("Weather", 249, "42ff6dc591660f0f08faecad2d144cffc863dd95e41bc4397fde29553c6b02bc"),
+)
+LEVEL110_HEIGHTFIELD = CORE_ASSETS / "Level110/level110-heightfield.hfld.bin"
+WORLD110_HFLD_SIZE = 668_660
+WORLD110_HFLD_SHA256 = (
+    "fd4d076a2926fbc473b7d364703bdbc0c8a0f7a638b0ab71b6f319374da033c2"
+)
 BASE_ARCHIVE = "data/resources/base_res_PC.aya"
 BASE_ARCHIVE_SHA256 = "0ee8530874425cac759834872f5941bc4be086c40ce6b70553b5c6b539802883"
 SOUND_BANK = "data/sounds/sounds_english_pc.xap"
@@ -1120,6 +1153,12 @@ def _fixed_outputs() -> tuple[tuple[Path, str], ...]:
             (LEVEL100_SCRIPT_ROOT / f"level100-{name}.mso.bin", expected)
             for name, _, expected in LEVEL100_SCRIPT_OBJECTS
         ),
+        # World 110's pinned script objects and heightfield.
+        *(
+            (LEVEL110_SCRIPT_ROOT / f"level110-{name}.mso.bin", expected)
+            for name, _, expected in LEVEL110_SCRIPT_OBJECTS
+        ),
+        (LEVEL110_HEIGHTFIELD, WORLD110_HFLD_SHA256),
         (FRONTEND_LOCALIZATION, FRONTEND_LOCALIZATION_SHA256),
         (FEBACK_STRIP, FEBACK_STRIP_SHA256),
         (LEVEL100_HUD_MANIFEST, LEVEL100_HUD_MANIFEST_SHA256),
@@ -1583,23 +1622,27 @@ def _skip_level100_script_object(reader: _WorldReader) -> tuple[str, int]:
     return name, payload_end
 
 
-def _parse_level_world_scripts(
+def _parse_world_scripts(
     raw_level: bytes,
-) -> tuple[_WorldReader, dict[str, bytes]]:
+    world_number: int,
+    script_objects: tuple[tuple[str, int, str], ...],
+) -> dict[str, bytes]:
     rlwd = _chunk_payload(_chunk_payload(_chunk_payload(raw_level, b"WRES"), b"WRLD"), b"RLWD")
     reader = _WorldReader(rlwd)
     if (
         reader.uint16() != 50
-        or tuple(reader.int32() for _ in range(3)) != (3, 41, 100)
+        or tuple(reader.int32() for _ in range(3)) != (3, 41, world_number)
         or reader.int32() != 1
         or reader.string8() != "Aquila Prototype"
         or tuple(reader.int32() for _ in range(4)) != (0, 0, 0, 0)
         or reader.int32() != 1
-        or reader.int32() != len(LEVEL100_SCRIPT_NAMES)
+        or reader.int32() != len(script_objects)
     ):
-        raise RuntimeError("Level 100 level-world header is not the supported version-50 layout")
+        raise RuntimeError(
+            f"world {world_number} level-world header is not the supported version-50 layout"
+        )
     scripts: dict[str, bytes] = {}
-    for expected_name, expected_size, expected_hash in LEVEL100_SCRIPT_OBJECTS:
+    for expected_name, expected_size, expected_hash in script_objects:
         start = reader.position
         name, payload_end = _skip_level100_script_object(reader)
         payload = rlwd[start:payload_end]
@@ -1610,10 +1653,30 @@ def _parse_level_world_scripts(
             or name in scripts
         ):
             raise RuntimeError(
-                f"Level 100 compiled script {expected_name} changed "
+                f"world {world_number} compiled script {expected_name} changed "
                 f"(name={name!r}, size={len(payload)}, SHA-256={_sha256(payload)})"
             )
         scripts[name] = payload
+    return scripts
+
+
+def _parse_level_world_scripts(
+    raw_level: bytes,
+) -> tuple[_WorldReader, dict[str, bytes]]:
+    rlwd = _chunk_payload(_chunk_payload(_chunk_payload(raw_level, b"WRES"), b"WRLD"), b"RLWD")
+    scripts = _parse_world_scripts(raw_level, 100, LEVEL100_SCRIPT_OBJECTS)
+    reader = _WorldReader(rlwd)
+    reader.uint16()
+    for _ in range(3):
+        reader.int32()
+    reader.int32()
+    reader.string8()
+    for _ in range(4):
+        reader.int32()
+    reader.int32()
+    reader.int32()
+    for expected_name in LEVEL100_SCRIPT_NAMES:
+        _skip_level100_script_object(reader)
     return reader, scripts
 
 
@@ -3921,6 +3984,24 @@ def _materialize(game_root: Path, stage: Path) -> tuple[tuple[Path, str], ...]:
         script_target = stage / LEVEL100_SCRIPT_ROOT / f"level100-{name}.mso.bin"
         script_target.parent.mkdir(parents=True, exist_ok=True)
         script_target.write_bytes(payload)
+
+    # World 110: same readers, its own pinned archive, scripts and HFLD.
+    # The L100 outputs above are untouched by this block.
+    world110_archive = _read_exact(game_root / WORLD110_ARCHIVE, WORLD110_ARCHIVE_SHA256)
+    raw_world110 = inflate_aya_bytes(world110_archive)
+    world110_scripts = _parse_world_scripts(raw_world110, 110, LEVEL110_SCRIPT_OBJECTS)
+    for name, payload in world110_scripts.items():
+        script_target = stage / LEVEL110_SCRIPT_ROOT / f"level110-{name}.mso.bin"
+        script_target.parent.mkdir(parents=True, exist_ok=True)
+        script_target.write_bytes(payload)
+    world110_hfld = _extract_chunk(
+        raw_world110,
+        b"HFLD",
+        WORLD110_HFLD_SIZE,
+        WORLD110_HFLD_SHA256,
+    )
+    (stage / LEVEL110_HEIGHTFIELD).parent.mkdir(parents=True, exist_ok=True)
+    (stage / LEVEL110_HEIGHTFIELD).write_bytes(world110_hfld)
 
     chunk_data: dict[bytes, bytes] = {}
     for destination, tag, expected_size, expected in CHUNKS:

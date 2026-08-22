@@ -156,7 +156,7 @@ public sealed class RetailFrontendScenePath
         }
 
         return TryConfirmPage(session, StartupMediaActive, out signal)
-            && signal == RetailFrontendSignal.Level100LaunchRequested
+            && signal == RetailFrontendSignal.LevelLaunchRequested
             && session.Screen == RetailFrontendScreen.Loading;
     }
 
