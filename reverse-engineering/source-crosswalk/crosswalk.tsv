@@ -1,0 +1,1176 @@
+# bea.source-crosswalk.v1
+# Source-to-binary crosswalk of the pinned reference sources
+# (references/Onslaught) against the pristine retail specimen.
+# Specimen: BEA.exe.original.backup SHA-256 74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750
+# Generated: 2026-08-22 (UTC) by the t_a520a048 gold-set calibration lane.
+# Classifications: SOURCE_EXACT (named identity + tracked evidence
+#   asserting source-body agreement) | SOURCE_ANALOG (named identity
+#   without a tracked source-body-agreement claim, incl. truncated-name
+#   candidates) | NO_MATCH_FOUND (no binary-side evidence under any
+#   candidate name) | NOT_IN_RETAIL (Xbox-guarded source region with no
+#   binary-side evidence). Evidence paths are repo-relative and exist.
+file	function	src_line	classification	va_or_empty	evidence_path
+BattleEngine.cpp	CBattleEngine::Init	63	SOURCE_EXACT	0x00404dd0	reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__Init.md
+BattleEngine.cpp	CBattleEngine::~dtor	356	SOURCE_ANALOG	0x00405f60	
+BattleEngine.cpp	CBattleEngine::Shutdown	407	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::Activate	429	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::Deactivate	436	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::GetMaxLife	443	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::GetRenderPos	449	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::GetRenderOrientation	461	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::CalculatePitch	488	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::SetCollisionShape	495	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::MassiveHackPutUsInRightMesh	508	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::GetAltitudeAboveGround	579	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::HandleLocks	586	SOURCE_ANALOG	0x00406560	
+BattleEngine.cpp	CBattleEngine::GetClosestLockableUnit	755	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::StartLock	801	SOURCE_ANALOG	0x00406fc0	
+BattleEngine.cpp	CBattleEngine::CountLocks	828	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::FireLock	842	SOURCE_ANALOG	0x00407060	reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__FireLock.md
+BattleEngine.cpp	CBattleEngine::FiredAt	869	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::LockHit	882	SOURCE_ANALOG	0x00407140	reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__LockHit.md
+BattleEngine.cpp	CBattleEngine::Locked	900	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::GetCurrentTarget	913	SOURCE_ANALOG	0x004071b0	reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__GetCurrentTarget.md
+BattleEngine.cpp	CBattleEngine::DisplayLock	980	SOURCE_ANALOG	0x00407310	
+BattleEngine.cpp	CBattleEngine::LocksFinished	997	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::Hit	1014	SOURCE_ANALOG	0x00407350	reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__Hit.md
+BattleEngine.cpp	CBattleEngine::Gravity	1064	SOURCE_ANALOG	0x004074d0	reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__Gravity.md
+BattleEngine.cpp	CBattleEngine::AddShockShake	1094	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::UpdateRotation	1119	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::IsWalking	1238	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::DeclareInWater	1249	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::Move	1270	SOURCE_ANALOG	0x004081c0	reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__Move.md
+BattleEngine.cpp	CBattleEngine::HandleSounds	1763	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::IsStandingOnAMoveingObject	1891	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::GetLocalLastFrameMovement	1903	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::ZoomModifier	1913	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::AutoZoomOut	1919	SOURCE_ANALOG	0x00409e80	reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__AutoZoomOut.md
+BattleEngine.cpp	CBattleEngine::ZoomOut	1925	SOURCE_ANALOG	0x00409e90	reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__ZoomOut.md
+BattleEngine.cpp	CBattleEngine::ZoomIn	1937	SOURCE_ANALOG	0x00409ec0	reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__ZoomIn.md
+BattleEngine.cpp	CBattleEngine::ChargeWeapon	1949	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::FireWeapon	1958	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::ChangeWeapon	1973	SOURCE_ANALOG	0x00409f70	reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__ChangeWeapon.md
+BattleEngine.cpp	CBattleEngine::LoseWeaponCharge	2020	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::ConfirmedKill	2029	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::Morph	2038	SOURCE_ANALOG	0x0040a580	reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__Morph.md
+BattleEngine.cpp	CBattleEngine::Damage	2127	SOURCE_ANALOG	0x0040a890	reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__Damage.md
+BattleEngine.cpp	CBattleEngine::GetRequiresPolyBucket	2244	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::Rearm	2256	SOURCE_ANALOG	0x0040ac50	
+BattleEngine.cpp	CBattleEngine::CalcUnitOverCrossHair	2278	SOURCE_ANALOG	0x0040acc0	reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__CalcUnitOverCrossHair.md
+BattleEngine.cpp	CBattleEngine::GetThingOverCrossHair	2347	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::UpdateAutoAim	2366	SOURCE_ANALOG	0x0040b120	reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__UpdateAutoAim.md
+BattleEngine.cpp	CBattleEngine::HandleAutoAim	2446	SOURCE_ANALOG	0x0040b6d0	reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__HandleAutoAim.md
+BattleEngine.cpp	CBattleEngine::StartDieProcess	2617	SOURCE_ANALOG	0x0040bfd0	
+BattleEngine.cpp	CBattleEngine::HandleIncomingMissle	2654	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::HandleEvent	2665	SOURCE_ANALOG	0x0040c180	reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__HandleEvent.md
+BattleEngine.cpp	CBattleEngine::WeaponFired	2713	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::RecoilWeapon	2732	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::GetCurrentWeapon	2740	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::IsWeaponOverheated	2749	SOURCE_ANALOG	0x0040c3a0	reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__IsWeaponOverheated.md
+BattleEngine.cpp	CBattleEngine::GetWeaponAmmoPercentage	2758	SOURCE_ANALOG	0x0040c3c0	reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__GetWeaponAmmoPercentage.md
+BattleEngine.cpp	CBattleEngine::GetWeaponAmmoCount	2777	SOURCE_ANALOG	0x0040c460	reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__GetWeaponAmmoCount.md
+BattleEngine.cpp	CBattleEngine::IsEnergyWeapon	2786	SOURCE_ANALOG	0x0040c480	reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__IsEnergyWeapon.md
+BattleEngine.cpp	CBattleEngine::GetWeaponCharge	2795	SOURCE_ANALOG	0x0040c4a0	reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__GetWeaponCharge.md
+BattleEngine.cpp	CBattleEngine::GetWeaponName	2819	SOURCE_ANALOG	0x0040c550	reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__GetWeaponName.md
+BattleEngine.cpp	CBattleEngine::GetWeaponPhysicsName	2828	SOURCE_ANALOG	0x0040c570	reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__GetWeaponPhysicsName.md
+BattleEngine.cpp	CBattleEngine::GetWeaponIconName	2837	SOURCE_ANALOG	0x0040c590	reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__GetWeaponIconName.md
+BattleEngine.cpp	CBattleEngine::GetWeaponReadiness	2846	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::WhereIsCurrentWeaponAttached	2855	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::FullHealth	2864	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::NeedsRearm	2873	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::GetMaxEnergy	2888	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::ConfigurationUp	2894	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::ConfigurationDown	2900	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::UpdateConfiguration	2906	SOURCE_ANALOG	0x0040c650	
+BattleEngine.cpp	CBattleEngine::DeclareOnObject	2940	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::DeclareOnGround	2949	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::GetLaunchPosition	3000	SOURCE_ANALOG	0x0040c990	
+BattleEngine.cpp	CBattleEngine::AccumulateResources	3073	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::HandleCloak	3096	SOURCE_ANALOG	0x0040d4d0	
+BattleEngine.cpp	CBattleEngine::Cloak	3105	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::Decloak	3115	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::Render	3122	NO_MATCH_FOUND		
+BattleEngine.cpp	CLockInfo::GetLockPercentage	3142	SOURCE_ANALOG	0x0040d5b0	
+BattleEngine.cpp	CLockInfo::Fired	3153	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::PlayHudSample	3161	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::PlayHudSample	3180	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::GetInterpolatedEulerOrientation	3187	SOURCE_ANALOG	0x0040d660	
+BattleEngine.cpp	CBattleEngine::GetInterpolatedAutoAimPos	3199	SOURCE_ANALOG	0x0040d7c0	
+BattleEngine.cpp	CBattleEngine::GetInterpolatedTrackingPos	3217	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::EnableWeapon	3229	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::DisableWeapon	3237	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::CountActiveWeapons	3245	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::EnableFlightMode	3254	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::DisableFlightMode	3260	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::HostileEnvironment	3269	SOURCE_ANALOG	0x0040dce0	
+BattleEngine.cpp	CBattleEngine::TestDanger	3281	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::AugmentWeapon	3302	SOURCE_ANALOG	0x0040de40	
+BattleEngine.cpp	CBattleEngine::UnaugmentWeapon	3329	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::GetRadius	3347	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::COfGHeight	3356	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::Explode	3362	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::CanBeLocked	3388	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::IsFiring	3412	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::ToggleCockpit	3421	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::GetBeamPosition	3428	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::GetThreat	3442	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::GetImportance	3453	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::GetInitialLife	3462	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::AddDamageFlash	3468	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::ProcessDamageFlashes	3485	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::ActivateThrusters	3502	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::DeactivateThrusters	3531	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::HandleEngines	3559	NO_MATCH_FOUND		
+BattleEngine.cpp	CBattleEngine::FinishedPlayingCurrentAnimation	3617	SOURCE_ANALOG	0x0040eeb0	reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__FinishedPlayingCurrentAnimation.md
+BattleEngine.cpp	CBattleEngine::GroundParticleEffect	3638	SOURCE_ANALOG	0x0040ef20	reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__GroundParticleEffect.md
+BattleEngine.cpp	CBattleEngine::WeaponOverheated	3668	NO_MATCH_FOUND		
+BattleEngineConfigurations.cpp	UBattleEngineConfigurations::Initialise	8	NO_MATCH_FOUND		
+BattleEngineConfigurations.cpp	UBattleEngineConfigurations::ShutDown	16	NO_MATCH_FOUND		
+BattleEngineConfigurations.cpp	UBattleEngineConfigurations::Load	30	NO_MATCH_FOUND		
+BattleEngineConfigurations.cpp	UBattleEngineConfigurations::Skip	56	NO_MATCH_FOUND		
+BattleEngineConfigurations.cpp	UBattleEngineConfigurations::GetConfiguration	80	NO_MATCH_FOUND		
+BattleEngineDataManager.cpp	CBattleEngineData::CBattleEngineData	14	SOURCE_ANALOG	0x0040f520	
+BattleEngineDataManager.cpp	CBattleEngineData::Initialise	30	SOURCE_ANALOG	0x0040f590	
+BattleEngineDataManager.cpp	CBattleEngineData::Shutdown	101	SOURCE_ANALOG	0x0040f890	
+BattleEngineDataManager.cpp	CBattleEngineData::Load	148	NO_MATCH_FOUND		
+BattleEngineDataManager.cpp	CBattleEngineData::AccumulateResources	449	NO_MATCH_FOUND		
+BattleEngineDataManager.cpp	CBattleEngineData::Skip	517	NO_MATCH_FOUND		
+BattleEngineDataManager.cpp	CBattleEngineData::Load	588	NO_MATCH_FOUND		
+BattleEngineDataManager.cpp	CBattleEngineData::Save	870	NO_MATCH_FOUND		
+BattleEngineJetPart.cpp	CBattleEngineJetPart::CBattleEngineJetPart	29	SOURCE_ANALOG	0x00410210	reverse-engineering/binary-analysis/functions/BattleEngineJetPart.cpp/CBattleEngineJetPart__ctor.md
+BattleEngineJetPart.cpp	CBattleEngineJetPart::~dtor	54	NO_MATCH_FOUND		
+BattleEngineJetPart.cpp	CBattleEngineJetPart::Thrust	64	SOURCE_ANALOG	0x00410310	reverse-engineering/binary-analysis/functions/BattleEngineJetPart.cpp/CBattleEngineJetPart__Thrust.md
+BattleEngineJetPart.cpp	CBattleEngineJetPart::Turn	109	SOURCE_ANALOG	0x00410490	reverse-engineering/binary-analysis/functions/BattleEngineJetPart.cpp/CBattleEngineJetPart__Turn.md
+BattleEngineJetPart.cpp	CBattleEngineJetPart::Pitch	150	SOURCE_ANALOG	0x00410670	reverse-engineering/binary-analysis/functions/BattleEngineJetPart.cpp/CBattleEngineJetPart__Pitch.md
+BattleEngineJetPart.cpp	CBattleEngineJetPart::YawLeft	174	SOURCE_ANALOG	0x00410740	reverse-engineering/binary-analysis/functions/BattleEngineJetPart.cpp/CBattleEngineJetPart__YawLeft.md
+BattleEngineJetPart.cpp	CBattleEngineJetPart::YawRight	240	SOURCE_ANALOG	0x004109d0	reverse-engineering/binary-analysis/functions/BattleEngineJetPart.cpp/CBattleEngineJetPart__YawRight.md
+BattleEngineJetPart.cpp	CBattleEngineJetPart::Move	305	SOURCE_ANALOG	0x00410c50	reverse-engineering/binary-analysis/functions/BattleEngineJetPart.cpp/CBattleEngineJetPart__Move.md
+BattleEngineJetPart.cpp	CBattleEngineJetPart::Gravity	507	SOURCE_ANALOG	0x004114d0	reverse-engineering/binary-analysis/functions/BattleEngineJetPart.cpp/CBattleEngineJetPart__Gravity.md
+BattleEngineJetPart.cpp	CBattleEngineJetPart::HandleSkimming	516	SOURCE_ANALOG	0x00411500	reverse-engineering/binary-analysis/functions/BattleEngineJetPart.cpp/CBattleEngineJetPart__HandleSkimming.md
+BattleEngineJetPart.cpp	CBattleEngineJetPart::HandleGroundEffect	546	SOURCE_ANALOG	0x00411630	
+BattleEngineJetPart.cpp	CBattleEngineJetPart::GetFriction	609	SOURCE_ANALOG	0x00411aa0	
+BattleEngineJetPart.cpp	CBattleEngineJetPart::GetIsDoingSpecialAirMove	638	SOURCE_ANALOG	0x00411b70	
+BattleEngineJetPart.cpp	CBattleEngineJetPart::FireWeapon	647	NO_MATCH_FOUND		
+BattleEngineJetPart.cpp	CBattleEngineJetPart::ChargeWeapon	659	NO_MATCH_FOUND		
+BattleEngineJetPart.cpp	CBattleEngineJetPart::ChangeWeapon	701	SOURCE_ANALOG	0x00411e70	reverse-engineering/binary-analysis/functions/BattleEngineJetPart.cpp/CBattleEngineJetPart__ChangeWeapon.md
+BattleEngineJetPart.cpp	CBattleEngineJetPart::GetWeapon	741	NO_MATCH_FOUND		
+BattleEngineJetPart.cpp	CBattleEngineJetPart::CountWeapons	758	NO_MATCH_FOUND		
+BattleEngineJetPart.cpp	CBattleEngineJetPart::LoseWeaponCharge	769	SOURCE_ANALOG	0x00412000	
+BattleEngineJetPart.cpp	CBattleEngineJetPart::WeaponFired	776	SOURCE_ANALOG	0x00412050	reverse-engineering/binary-analysis/functions/BattleEngineJetPart.cpp/CBattleEngineJetPart__WeaponFired.md
+BattleEngineJetPart.cpp	CBattleEngineJetPart::GetWeaponAmmoPercentage	826	SOURCE_ANALOG	0x004121b0	reverse-engineering/binary-analysis/functions/BattleEngineJetPart.cpp/CBattleEngineJetPart__GetWeaponAmmoPercentage.md
+BattleEngineJetPart.cpp	CBattleEngineJetPart::GetWeaponAmmoCount	847	NO_MATCH_FOUND		
+BattleEngineJetPart.cpp	CBattleEngineJetPart::IsEnergyWeapon	861	SOURCE_ANALOG	0x004122b0	reverse-engineering/binary-analysis/functions/BattleEngineJetPart.cpp/CBattleEngineJetPart__IsEnergyWeapon.md
+BattleEngineJetPart.cpp	CBattleEngineJetPart::IsWeaponOverheated	870	SOURCE_ANALOG	0x00412310	reverse-engineering/binary-analysis/functions/BattleEngineJetPart.cpp/CBattleEngineJetPart__IsWeaponOverheated.md
+BattleEngineJetPart.cpp	CBattleEngineJetPart::GetWeaponCharge	879	SOURCE_ANALOG	0x00412370	reverse-engineering/binary-analysis/functions/BattleEngineJetPart.cpp/CBattleEngineJetPart__GetWeaponCharge.md
+BattleEngineJetPart.cpp	CBattleEngineJetPart::GetWeaponReadiness	888	NO_MATCH_FOUND		
+BattleEngineJetPart.cpp	CBattleEngineJetPart::GetWeaponName	900	NO_MATCH_FOUND		
+BattleEngineJetPart.cpp	CBattleEngineJetPart::GetWeaponPhysicsName	909	SOURCE_ANALOG	0x00412480	reverse-engineering/binary-analysis/functions/BattleEngineJetPart.cpp/CBattleEngineJetPart__GetWeaponPhysicsName.md
+BattleEngineJetPart.cpp	CBattleEngineJetPart::GetWeaponIconName	918	SOURCE_ANALOG	0x00412520	reverse-engineering/binary-analysis/functions/BattleEngineJetPart.cpp/CBattleEngineJetPart__GetWeaponIconName.md
+BattleEngineJetPart.cpp	CBattleEngineJetPart::WhereIsCurrentWeaponAttached	927	NO_MATCH_FOUND		
+BattleEngineJetPart.cpp	CBattleEngineJetPart::CanWeaponFire	936	SOURCE_ANALOG	0x00412570	reverse-engineering/binary-analysis/functions/BattleEngineJetPart.cpp/CBattleEngineJetPart__CanWeaponFire.md
+BattleEngineJetPart.cpp	CBattleEngineJetPart::GetCurrentWeapon	961	SOURCE_ANALOG	0x00412610	
+BattleEngineJetPart.cpp	CBattleEngineJetPart::ResetConfiguration	977	SOURCE_ANALOG	0x00412650	reverse-engineering/binary-analysis/functions/BattleEngineJetPart.cpp/CBattleEngineJetPart__ResetConfiguration.md
+BattleEngineJetPart.cpp	CBattleEngineJetPart::AccumulateResources	1006	NO_MATCH_FOUND		
+BattleEngineJetPart.cpp	CBattleEngineJetPart::EnableWeapon	1019	NO_MATCH_FOUND		
+BattleEngineJetPart.cpp	CBattleEngineJetPart::DisableWeapon	1030	NO_MATCH_FOUND		
+BattleEngineJetPart.cpp	CBattleEngineJetPart::AutoLevel	1049	SOURCE_ANALOG	0x00412900	
+BattleEngineJetPart.cpp	CBattleEngineJetPart::IsFiring	1064	NO_MATCH_FOUND		
+BattleEngineJetPart.cpp	CBattleEngineJetPart::CountActiveWeapons	1078	NO_MATCH_FOUND		
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::UpdateWalkCycle	38	SOURCE_ANALOG	0x00412ad0	
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::CBattleEngineWalkerPart	61	SOURCE_ANALOG	0x00412bc0	
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::~dtor	92	NO_MATCH_FOUND		
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::GetCurrentAccleration	107	NO_MATCH_FOUND		
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::Forward	119	SOURCE_ANALOG	0x00412d80	
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::Backward	168	SOURCE_ANALOG	0x00412f70	
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::StrafeLeft	214	SOURCE_ANALOG	0x00413160	
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::StrafeRight	265	SOURCE_ANALOG	0x00413360	
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::GetIsDoingSpecialWalkerMove	320	SOURCE_ANALOG	0x004135d0	
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::ActivateLandingJets	330	SOURCE_ANALOG	0x004135e0	
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::Rotate	347	NO_MATCH_FOUND		
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::Pitch	353	NO_MATCH_FOUND		
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::Move	361	SOURCE_ANALOG	0x00413760	reverse-engineering/binary-analysis/functions/BattleEngineWalkerPart.cpp/CBattleEngineWalkerPart__Move.md
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::GoingIntoWater	442	SOURCE_ANALOG	0x00413a70	
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::ShouldSlide	464	NO_MATCH_FOUND		
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::Slide	478	SOURCE_ANALOG	0x00413b90	
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::FireWeapon	507	SOURCE_ANALOG	0x00413cc0	reverse-engineering/binary-analysis/functions/BattleEngineWalkerPart.cpp/CBattleEngineWalkerPart__FireWeapon.md
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::ChargeWeapon	519	SOURCE_ANALOG	0x00413cf0	reverse-engineering/binary-analysis/functions/BattleEngineWalkerPart.cpp/CBattleEngineWalkerPart__ChargeWeapon.md
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::ChangeWeapon	562	SOURCE_ANALOG	0x00413eb0	reverse-engineering/binary-analysis/functions/BattleEngineWalkerPart.cpp/CBattleEngineWalkerPart__ChangeWeapon.md
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::LoseWeaponCharge	602	NO_MATCH_FOUND		
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::GetCurrentWeapon	609	SOURCE_ANALOG	0x00414030	reverse-engineering/binary-analysis/functions/BattleEngineWalkerPart.cpp/CBattleEngineWalkerPart__GetCurrentWeapon.md
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::GetWeapon	644	NO_MATCH_FOUND		
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::CountWeapons	672	NO_MATCH_FOUND		
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::WeaponFired	686	SOURCE_ANALOG	0x004140d0	reverse-engineering/binary-analysis/functions/BattleEngineWalkerPart.cpp/CBattleEngineWalkerPart__WeaponFired.md
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::GetWeaponAmmoPercentage	826	SOURCE_ANALOG	0x00414410	reverse-engineering/binary-analysis/functions/BattleEngineWalkerPart.cpp/CBattleEngineWalkerPart__GetWeaponAmmoPercentage.md
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::GetWeaponAmmoCount	847	SOURCE_ANALOG	0x00414470	reverse-engineering/binary-analysis/functions/BattleEngineWalkerPart.cpp/CBattleEngineWalkerPart__GetWeaponAmmoCount.md
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::IsEnergyWeapon	861	SOURCE_ANALOG	0x004144c0	reverse-engineering/binary-analysis/functions/BattleEngineWalkerPart.cpp/CBattleEngineWalkerPart__IsEnergyWeapon.md
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::IsWeaponOverheated	870	SOURCE_ANALOG	0x004144f0	reverse-engineering/binary-analysis/functions/BattleEngineWalkerPart.cpp/CBattleEngineWalkerPart__IsWeaponOverheated.md
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::GetWeaponCharge	879	SOURCE_ANALOG	0x00414520	reverse-engineering/binary-analysis/functions/BattleEngineWalkerPart.cpp/CBattleEngineWalkerPart__GetWeaponCharge.md
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::GetWeaponReadiness	888	NO_MATCH_FOUND		
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::GetWeaponName	900	SOURCE_ANALOG	0x004145a0	reverse-engineering/binary-analysis/functions/BattleEngineWalkerPart.cpp/CBattleEngineWalkerPart__GetWeaponName.md
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::GetWeaponPhysicsName	909	SOURCE_ANALOG	0x004145d0	reverse-engineering/binary-analysis/functions/BattleEngineWalkerPart.cpp/CBattleEngineWalkerPart__GetWeaponPhysicsName.md
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::GetWeaponIconName	918	SOURCE_ANALOG	0x00414610	reverse-engineering/binary-analysis/functions/BattleEngineWalkerPart.cpp/CBattleEngineWalkerPart__GetWeaponIconName.md
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::WhereIsCurrentWeaponAttached	927	NO_MATCH_FOUND		
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::CanWeaponFire	936	SOURCE_ANALOG	0x00414630	reverse-engineering/binary-analysis/functions/BattleEngineWalkerPart.cpp/CBattleEngineWalkerPart__CanWeaponFire.md
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::ResetConfiguration	964	SOURCE_ANALOG	0x004146b0	reverse-engineering/binary-analysis/functions/BattleEngineWalkerPart.cpp/CBattleEngineWalkerPart__ResetConfiguration.md
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::AccumulateResources	1016	NO_MATCH_FOUND		
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::EnableWeapon	1030	NO_MATCH_FOUND		
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::DisableWeapon	1045	NO_MATCH_FOUND		
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::IsFiring	1071	NO_MATCH_FOUND		
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::CountActiveWeapons	1085	NO_MATCH_FOUND		
+CLIParams.cpp	CCLIParams::CCLIParams	18	NO_MATCH_FOUND		
+CLIParams.cpp	CCLIParams::GetParams	85	NO_MATCH_FOUND		
+CLIParams.cpp	CCLIParams::GetParams	390	NO_MATCH_FOUND		
+Camera.cpp	CCamera::GetYaw	23	NO_MATCH_FOUND		
+Camera.cpp	CThingCamera::GetPos	42	NO_MATCH_FOUND		
+Camera.cpp	CThingCamera::GetOrientation	60	NO_MATCH_FOUND		
+Camera.cpp	CThingCamera::GetOldPos	72	NO_MATCH_FOUND		
+Camera.cpp	CThingCamera::GetOldOrientation	90	NO_MATCH_FOUND		
+Camera.cpp	CThingCamera::GetZoom	102	NO_MATCH_FOUND		
+Camera.cpp	CThingCamera::GetOldZoom	116	NO_MATCH_FOUND		
+Camera.cpp	CThingCamera::GetShowHUD	132	NO_MATCH_FOUND		
+Camera.cpp	CThing3rdPersonCamera::CThing3rdPersonCamera	156	SOURCE_ANALOG	0x00418ef0	
+Camera.cpp	CThing3rdPersonCamera::~dtor	175	SOURCE_ANALOG	0x00419140	
+Camera.cpp	CThing3rdPersonCamera::GetPos	184	NO_MATCH_FOUND		
+Camera.cpp	CThing3rdPersonCamera::GetOldPos	217	NO_MATCH_FOUND		
+Camera.cpp	CThing3rdPersonCamera::GetOrientation	246	NO_MATCH_FOUND		
+Camera.cpp	CThing3rdPersonCamera::GetOldOrientation	270	NO_MATCH_FOUND		
+Camera.cpp	CThing3rdPersonCamera::GetZoom	293	NO_MATCH_FOUND		
+Camera.cpp	CThing3rdPersonCamera::GetOldZoom	307	NO_MATCH_FOUND		
+Camera.cpp	CThing3rdPersonCamera::GetShowHUD	323	NO_MATCH_FOUND		
+Camera.cpp	mLength	348	NO_MATCH_FOUND		
+Camera.cpp	CPanCamera::~dtor	359	SOURCE_ANALOG	0x00419a60	
+Camera.cpp	CPanCamera::Update	366	SOURCE_ANALOG	0x00419b00	
+Camera.cpp	CPanCamera::GetPos	397	SOURCE_ANALOG	0x00419d40	
+Camera.cpp	CPanCamera::GetOrientation	403	SOURCE_ANALOG	0x00419d70	
+Camera.cpp	CPanCamera::GetOldPos	409	SOURCE_ANALOG	0x00419d90	
+Camera.cpp	CPanCamera::GetOldOrientation	415	SOURCE_ANALOG	0x00419dc0	
+Camera.cpp	CPanCamera::HandleEvent	422	SOURCE_ANALOG	0x00419de0	
+Camera.cpp	CViewPointCamera::CViewPointCamera	447	SOURCE_ANALOG	0x00419e00	
+Camera.cpp	CViewPointCamera::GetPos	472	NO_MATCH_FOUND		
+Camera.cpp	CViewPointCamera::GetOrientation	505	NO_MATCH_FOUND		
+Camera.cpp	CViewPointCamera::GetOldOrientation	524	NO_MATCH_FOUND		
+Camera.cpp	CViewPointCamera::GetOldPos	531	NO_MATCH_FOUND		
+Camera.cpp	CViewPointCamera::GetZoom	537	NO_MATCH_FOUND		
+Camera.cpp	CViewPointCamera::GetShowHUD	543	NO_MATCH_FOUND		
+Camera.cpp	CMovieCamera::CMovieCamera	552	SOURCE_ANALOG	0x0041a210	
+Camera.cpp	CMovieCamera::GetPos	566	SOURCE_ANALOG	0x0041a3f0	
+Camera.cpp	CMovieCamera::GetOrientation	598	SOURCE_ANALOG	0x0041a530	
+Camera.cpp	CMovieCamera::GetZoom	629	SOURCE_ANALOG	0x0041a630	
+Camera.cpp	CMovieCamera::GetOldZoom	669	SOURCE_ANALOG	0x0041a6e0	
+Camera.cpp	CMovieCamera::GetShowHUD	675	SOURCE_ANALOG	0x0041a200	
+Camera.cpp	CMovieCamera::GetCameraNumber	681	NO_MATCH_FOUND		
+Camera.cpp	CMovieCamera::GetOldOrientation	699	SOURCE_ANALOG	0x0041a6f0	
+Camera.cpp	CMovieCamera::GetOldPos	706	SOURCE_ANALOG	0x0041a710	
+Camera.cpp	mPos	719	NO_MATCH_FOUND		
+Camera.cpp	CControllableCamera::PrepareForInterpolation	730	NO_MATCH_FOUND		
+Camera.cpp	CControllableCamera::ReceiveButtonAction	745	NO_MATCH_FOUND		
+Camera.cpp	CInterpolatedCamera::CInterpolatedCamera	819	SOURCE_ANALOG	0x0041ad30	
+Camera.cpp	CInterpolatedCamera::Mirror	842	NO_MATCH_FOUND		
+Camera.cpp	CCamera::GetAspectRatio	852	SOURCE_ANALOG	0x0041b070	
+Career.cpp	CCareerNode::CCareerNode	86	NO_MATCH_FOUND		
+Career.cpp	CCareerNode::Blank	93	SOURCE_EXACT	0x0041b740	reverse-engineering/binary-analysis/functions/Career.cpp/CCareerNode__Blank.md
+Career.cpp	CCareerNode::DoesBaseThingExist	117	NO_MATCH_FOUND		
+Career.cpp	CCareerNode::SetBaseThingExistTo	133	SOURCE_EXACT	0x0041b770	reverse-engineering/binary-analysis/functions/Career.cpp/CCareerNode__SetBaseThingExistTo.md
+Career.cpp	CCareerNodeLink::GetToNode	160	NO_MATCH_FOUND		
+Career.cpp	CCareer::CCareer	168	NO_MATCH_FOUND		
+Career.cpp	CCareer::GetLevelStructure	181	SOURCE_EXACT	0x0041b7b0	reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__GetLevelStructure.md
+Career.cpp	CCareer::Blank	190	SOURCE_EXACT	0x0041b7c0	reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__Blank.md
+Career.cpp	CCareer::GetNodeFromWorldNo	237	SOURCE_ANALOG	0x0041b8f0	reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-17.tsv
+Career.cpp	CCareerNode::GetChildNodes	253	NO_MATCH_FOUND		
+Career.cpp	CCareerNode::GetChildLinks	268	SOURCE_EXACT	0x0041b940	reverse-engineering/binary-analysis/functions/Career.cpp/CCareerNode__GetChildLinks.md
+Career.cpp	CCareerNode::GetParentLinks	278	SOURCE_EXACT	0x0041b9f0	reverse-engineering/binary-analysis/functions/Career.cpp/CCareerNode__GetParentLinks.md
+Career.cpp	CCareer::DoesBaseThingExist	307	SOURCE_EXACT	0x0041bb20	reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__DoesBaseThingExist.md
+Career.cpp	CCareer::IsWorldLater	324	SOURCE_EXACT	0x0041bbb0	reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__IsWorldLater.md
+Career.cpp	CCareer::Later	341	SOURCE_EXACT	0x0041bc60	reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__Later.md
+Career.cpp	CCareer::Update	379	SOURCE_EXACT	0x0041bd00	reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__Update.md
+Career.cpp	CCareer::ReCalcLinks	423	SOURCE_EXACT	0x0041bdf0	reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__ReCalcLinks.md
+Career.cpp	CCareer::UpdateBaseWorldExistsStuffForNode	519	SOURCE_ANALOG	0x0041bd00	reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-17.tsv
+Career.cpp	CCareer::GetNumKilled	531	NO_MATCH_FOUND		
+Career.cpp	CCareer::UpdateThingsKilled	538	SOURCE_EXACT	0x0041c180	reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__UpdateThingsKilled.md
+Career.cpp	TOTAL_A_GRADES	592	NO_MATCH_FOUND		
+Career.cpp	TOTAL_C_GRADES	608	NO_MATCH_FOUND		
+Career.cpp	TOTAL_S_GRADES	624	SOURCE_EXACT	0x0041c240	reverse-engineering/binary-analysis/functions/Career.cpp/TOTAL_S_GRADES.md
+Career.cpp	GRADE	640	NO_MATCH_FOUND		
+Career.cpp	GRADE_OR_EVO	659	NO_MATCH_FOUND		
+Career.cpp	CCareer::CountGoodies	670	SOURCE_EXACT	0x0041c450	reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__CountGoodies.md
+Career.cpp	CCareer::UpdateGoodieStates	684	SOURCE_EXACT	0x0041c470	reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__UpdateGoodieStates.md
+Career.cpp	CCareer::Load	1040	SOURCE_ANALOG	0x00421200	reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__Load.md;reverse-engineering/binary-analysis/career-save-format-semantics-2026-08-11.tsv
+Career.cpp	CCareer::Save	1068	SOURCE_ANALOG	0x00421350	reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__Save.md;reverse-engineering/binary-analysis/career-save-format-semantics-2026-08-11.tsv
+Career.cpp	current_version_stamp	1086	NO_MATCH_FOUND		
+Career.cpp	CCareer::Load	1095	SOURCE_ANALOG	0x00421200	reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__Load.md;reverse-engineering/binary-analysis/career-save-format-semantics-2026-08-11.tsv
+Career.cpp	CCareer::Save	1128	SOURCE_ANALOG	0x00421350	reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__Save.md;reverse-engineering/binary-analysis/career-save-format-semantics-2026-08-11.tsv
+Career.cpp	CCareer::SizeOfSaveGame	1151	NO_MATCH_FOUND		
+Career.cpp	CCareer::GetGradeFromRanking	1178	SOURCE_EXACT	0x00421470	reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__GetGradeFromRanking.md;reverse-engineering/binary-analysis/career-save-format-semantics-2026-08-11.tsv
+Career.cpp	CCareer::Log	1213	NO_MATCH_FOUND		
+Career.cpp	CCareer::PrintNodesStatus	1317	NO_MATCH_FOUND		
+Career.cpp	CCareer::GetSlot	1357	NO_MATCH_FOUND		
+Career.cpp	CCareer::SetSlot	1379	SOURCE_EXACT	0x004214e0	reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__SetSlot.md
+Career.cpp	CCareer::GetAndResetGoodieNewCount	1411	SOURCE_EXACT	0x00421550	reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__GetAndResetGoodieNewCount.md
+Career.cpp	CCareer::GetAndResetFirstGoodie	1419	SOURCE_EXACT	0x00421560	reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__GetAndResetFirstGoodie.md
+Career.cpp	CCareer::IsEpisodeAvailable	1428	SOURCE_EXACT	0x00421570	reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__IsEpisodeAvailable.md
+Controller.cpp	CController::CController	22	SOURCE_ANALOG	0x005145f0	reverse-engineering/binary-analysis/controller-shared-semantics-2026-08-11.tsv
+Controller.cpp	CController::ResetInactivityTimer	41	NO_MATCH_FOUND		
+Controller.cpp	CController::SetNonInteractiveSection	47	SOURCE_EXACT	0x0042d7d0	reverse-engineering/binary-analysis/controller-shared-semantics-2026-08-11.tsv
+Controller.cpp	CController::InactivityMeansQuitGame	87	SOURCE_EXACT	0x0042d810	reverse-engineering/binary-analysis/functions/Controller.cpp/CController__InactivityMeansQuitGame.md;reverse-engineering/binary-analysis/controller-shared-semantics-2026-08-11.tsv
+Controller.cpp	CController::StartRecording	120	SOURCE_ANALOG	0x0042d8a0	reverse-engineering/binary-analysis/controller-shared-semantics-2026-08-11.tsv
+Controller.cpp	CController::StartPlayback	128	SOURCE_EXACT	0x0042d8c0	reverse-engineering/binary-analysis/controller-shared-semantics-2026-08-11.tsv
+Controller.cpp	CController::~dtor	136	SOURCE_EXACT	0x0042d8e0	reverse-engineering/binary-analysis/controller-shared-semantics-2026-08-11.tsv
+Controller.cpp	CController::Flush	148	SOURCE_EXACT	0x0042d9d0	reverse-engineering/binary-analysis/controller-shared-semantics-2026-08-11.tsv
+Controller.cpp	CController::CalcNumMappings	168	NO_MATCH_FOUND		
+Controller.cpp	CController::RepeatOccured	190	NO_MATCH_FOUND		
+Controller.cpp	CController::DoMappings	218	SOURCE_ANALOG	0x0042db40	reverse-engineering/binary-analysis/controller-shared-semantics-2026-08-11.tsv
+Controller.cpp	CController::GetAnalogueValueForButton	421	NO_MATCH_FOUND		
+Controller.cpp	CController::GetToControl	437	SOURCE_EXACT	0x0042e4b0	reverse-engineering/binary-analysis/functions/Controller.cpp/CController__GetToControl.md;reverse-engineering/binary-analysis/controller-shared-semantics-2026-08-11.tsv
+Controller.cpp	CController::SendButtonAction	443	SOURCE_EXACT	0x0042e4d0	reverse-engineering/binary-analysis/functions/Controller.cpp/CController__GetToControl.md;reverse-engineering/binary-analysis/controller-shared-semantics-2026-08-11.tsv
+Controller.cpp	CController::SetToControl	491	SOURCE_EXACT	0x0042e610	reverse-engineering/binary-analysis/controller-shared-semantics-2026-08-11.tsv
+Controller.cpp	CController::SetReverseLookYAxis	499	NO_MATCH_FOUND		
+Controller.cpp	CController::RelinquishControl	517	SOURCE_EXACT	0x0042e6e0	reverse-engineering/binary-analysis/controller-shared-semantics-2026-08-11.tsv
+Controller.cpp	CController::SetVibration	540	SOURCE_EXACT	0x0042e750	reverse-engineering/binary-analysis/controller-shared-semantics-2026-08-11.tsv
+DXEngine.cpp	CDXEngine::CDXEngine	71	NO_MATCH_FOUND		
+DXEngine.cpp	CDXEngine::~dtor	84	NO_MATCH_FOUND		
+DXEngine.cpp	CDXEngine::ShutDown	90	NO_MATCH_FOUND		
+DXEngine.cpp	con_setgammabias	113	NO_MATCH_FOUND		
+DXEngine.cpp	CDXEngine::SetGammaBias	126	NO_MATCH_FOUND		
+DXEngine.cpp	CDXEngine::Init	150	SOURCE_ANALOG	0x0053d5f0	
+DXEngine.cpp	CDXEngine::InitResources	207	SOURCE_ANALOG	0x0053d6d0	
+DXEngine.cpp	CDXEngine::DrawDebugCuboid	224	NO_MATCH_FOUND		
+DXEngine.cpp	CDXEngine::DrawDebugLine	301	NO_MATCH_FOUND		
+DXEngine.cpp	CDXEngine::RenderArrow	313	SOURCE_ANALOG	0x0053e2e0	reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-17.tsv
+DXEngine.cpp	CDXEngine::PreRender	375	SOURCE_ANALOG	0x0053e220	reverse-engineering/binary-analysis/functions/engine.cpp/CDXEngine__PreRender.md
+DXEngine.cpp	draw_sun_test_sprite	445	NOT_IN_RETAIL		
+DXEngine.cpp	CDXEngine::ShutdownRestartLoop	566	SOURCE_ANALOG	0x0053d3e0	reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-17.tsv
+DXEngine.cpp	draw_fairly_late_stuff	575	NO_MATCH_FOUND		
+DXEngine.cpp	CDXEngine::Render	637	SOURCE_EXACT	0x0053e2e0	reverse-engineering/binary-analysis/functions/engine.cpp/CDXEngine__Render.md
+DXEngine.cpp	where_hit	1133	NOT_IN_RETAIL		
+DXEngine.cpp	copy_back_to_front	1156	NOT_IN_RETAIL		
+DXEngine.cpp	CDXEngine::PostRender	1279	SOURCE_EXACT	0x0053ecc0	reverse-engineering/binary-analysis/functions/engine.cpp/CDXEngine__PostRender.md
+DXEngine.cpp	CDXEngine::SetBlurAlpha	1543	NO_MATCH_FOUND		
+DXEngine.cpp	CDXEngine::GetDetailLevel	1551	NO_MATCH_FOUND		
+DXEngine.cpp	CDXEngine::ReallySetDefaultMaterial	1556	NO_MATCH_FOUND		
+DXEngine.cpp	CDXEngine::SetModulate2X	1562	NO_MATCH_FOUND		
+DXEngine.cpp	CDXEngine::AccumulateResources	1577	NO_MATCH_FOUND		
+DXFrontend.cpp	CDXFrontEnd::RenderParticles	21	NO_MATCH_FOUND		
+DXFrontend.cpp	CDXFrontEnd::RenderStaticScreen	103	NO_MATCH_FOUND		
+DXFrontend.cpp	CDXFrontEnd::RenderStart	135	SOURCE_ANALOG	0x00540f70	
+DXFrontend.cpp	CDXFrontEnd::RenderEnd	150	NO_MATCH_FOUND		
+DXGame.cpp	CDXGame::DumpTimeRecords	30	NO_MATCH_FOUND		
+DXGame.cpp	CDXGame::AddTimeStatus	113	NO_MATCH_FOUND		
+DXMemBuffer.cpp	CDXMemBuffer::SetNextReadBufferSize	32	NO_MATCH_FOUND		
+DXMemBuffer.cpp	CDXMemBuffer::CDXMemBuffer	49	SOURCE_EXACT	0x00547d70	reverse-engineering/binary-analysis/pc-memory-io-semantics-2026-08-11.tsv
+DXMemBuffer.cpp	CDXMemBuffer::~dtor	57	NO_MATCH_FOUND		
+DXMemBuffer.cpp	CDXMemBuffer::InitFromMem	65	NO_MATCH_FOUND		
+DXMemBuffer.cpp	data_bad	113	NO_MATCH_FOUND		
+DXMemBuffer.cpp	CDXMemBuffer::InitFromFile	119	SOURCE_EXACT	0x00547ec0	reverse-engineering/binary-analysis/pc-memory-io-semantics-2026-08-11.tsv
+DXMemBuffer.cpp	CDXMemBuffer::ConvertFromWritingToReading	250	NO_MATCH_FOUND		
+DXMemBuffer.cpp	eval_crc	259	NO_MATCH_FOUND		
+DXMemBuffer.cpp	how_bad_is_that	274	NO_MATCH_FOUND		
+DXMemBuffer.cpp	CDXMemBuffer::LoadNextBlock	302	NO_MATCH_FOUND		
+DXMemBuffer.cpp	CDXMemBuffer::GetFileSize	330	SOURCE_EXACT	0x005482c0	reverse-engineering/binary-analysis/pc-memory-io-semantics-2026-08-11.tsv
+DXMemBuffer.cpp	CDXMemBuffer::Skip	352	SOURCE_EXACT	0x005482d0	reverse-engineering/binary-analysis/pc-memory-io-semantics-2026-08-11.tsv
+DXMemBuffer.cpp	CDXMemBuffer::Read	394	SOURCE_EXACT	0x00548570	reverse-engineering/binary-analysis/pc-memory-io-semantics-2026-08-11.tsv
+DXMemBuffer.cpp	CDXMemBuffer::ReadString	467	SOURCE_ANALOG	0x00548570	reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-17.tsv
+DXMemBuffer.cpp	write_crc_data	513	NO_MATCH_FOUND		
+DXMemBuffer.cpp	CDXMemBuffer::Write	533	NO_MATCH_FOUND		
+DXMemBuffer.cpp	CDXMemBuffer::Close	574	SOURCE_EXACT	0x00548c00	reverse-engineering/binary-analysis/pc-memory-io-semantics-2026-08-11.tsv
+DXMemBuffer.cpp	CDXMemBuffer::DeclareInvalidData	618	NO_MATCH_FOUND		
+DXMemBuffer.cpp	CDXMemBuffer::EndOfFile	628	NO_MATCH_FOUND		
+DXMemoryManager.cpp	CDXMemoryManager::CDXMemoryManager	27	SOURCE_EXACT	0x00548d70	reverse-engineering/binary-analysis/pc-memory-io-semantics-2026-08-11.tsv
+DXMemoryManager.cpp	CDXMemoryManager::~dtor	56	NO_MATCH_FOUND		
+DXMemoryManager.cpp	CDXMemoryManager::Shutdown	151	SOURCE_ANALOG	0x005490c0	reverse-engineering/binary-analysis/pc-memory-io-semantics-2026-08-11.tsv
+DXMemoryManager.cpp	CDXMemoryManager::Alloc	163	SOURCE_EXACT	0x005490e0	reverse-engineering/binary-analysis/pc-memory-io-semantics-2026-08-11.tsv
+DXMemoryManager.cpp	CDXMemoryManager::ReAlloc	199	SOURCE_EXACT	0x005491b0	reverse-engineering/binary-analysis/pc-memory-io-semantics-2026-08-11.tsv
+DXMemoryManager.cpp	CDXMemoryManager::DoesExist	221	NO_MATCH_FOUND		
+DXMemoryManager.cpp	CDXMemoryManager::Free	247	SOURCE_EXACT	0x00549220	reverse-engineering/binary-analysis/pc-memory-io-semantics-2026-08-11.tsv
+DXMemoryManager.cpp	CDXMemoryManager::Cleanup	277	NO_MATCH_FOUND		
+DXMemoryManager.cpp	CDXMemoryManager::FreeAll	291	SOURCE_ANALOG	0x00549220	reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-17.tsv
+DXMemoryManager.cpp	CDXMemoryManager::Validate	298	NO_MATCH_FOUND		
+DXMemoryManager.cpp	CDXMemoryManager::OutputMap	320	NO_MATCH_FOUND		
+DXMemoryManager.cpp	CDXMemoryManager::PrintStats	330	SOURCE_ANALOG	0x00549290	reverse-engineering/binary-analysis/pc-memory-io-semantics-2026-08-11.tsv
+DXMemoryManager.cpp	CDXMemoryManager::OutputStats	356	SOURCE_EXACT	0x005492b0	reverse-engineering/binary-analysis/pc-memory-io-semantics-2026-08-11.tsv
+DXMemoryManager.cpp	CDXMemoryManager::OutputBlocks	362	NO_MATCH_FOUND		
+DXMemoryManager.cpp	CDXMemoryManager::CalcAndShowDeltas	368	SOURCE_ANALOG	0x005492d0	reverse-engineering/binary-analysis/pc-memory-io-semantics-2026-08-11.tsv
+DXMemoryManager.cpp	CDXMemoryManager::GetVBDataUsedSize	385	NOT_IN_RETAIL		
+DXMemoryManager.cpp	CDXMemoryManager::LogDebugStats	392	SOURCE_ANALOG	0x00549310	reverse-engineering/binary-analysis/pc-memory-io-semantics-2026-08-11.tsv
+EditorD3DApp.cpp	CEditorD3DApp::CEditorD3DApp	37	NO_MATCH_FOUND		
+EditorD3DApp.cpp	WndProc	73	NO_MATCH_FOUND		
+EditorD3DApp.cpp	CEditorD3DApp::Create	85	NO_MATCH_FOUND		
+EditorD3DApp.cpp	SortModesCallback	177	NO_MATCH_FOUND		
+EditorD3DApp.cpp	CEditorD3DApp::BuildDeviceList	199	NO_MATCH_FOUND		
+EditorD3DApp.cpp	CEditorD3DApp::FindDepthStencilFormat	488	NO_MATCH_FOUND		
+EditorD3DApp.cpp	CEditorD3DApp::MsgProc	585	NO_MATCH_FOUND		
+EditorD3DApp.cpp	CEditorD3DApp::Initialize3DEnvironment	824	NO_MATCH_FOUND		
+EditorD3DApp.cpp	CEditorD3DApp::Resize3DEnvironment	1006	NO_MATCH_FOUND		
+EditorD3DApp.cpp	CEditorD3DApp::ToggleFullscreen	1060	NO_MATCH_FOUND		
+EditorD3DApp.cpp	CEditorD3DApp::ForceWindowed	1138	NO_MATCH_FOUND		
+EditorD3DApp.cpp	CEditorD3DApp::AdjustWindowForChange	1212	NO_MATCH_FOUND		
+EditorD3DApp.cpp	CEditorD3DApp::UserSelectNewDevice	1235	NO_MATCH_FOUND		
+EditorD3DApp.cpp	CEditorD3DApp::SelectDeviceProc	1291	NO_MATCH_FOUND		
+EditorD3DApp.cpp	CEditorD3DApp::Pause	1707	NO_MATCH_FOUND		
+EditorD3DApp.cpp	CEditorD3DApp::Cleanup3DEnvironment	1737	NO_MATCH_FOUND		
+EditorD3DApp.cpp	CEditorD3DApp::DisplayErrorMsg	1764	NO_MATCH_FOUND		
+EndLevelData.cpp	CEndLevelData::CEndLevelData	11	NO_MATCH_FOUND		
+EndLevelData.cpp	CEndLevelData::IsAllSecondaryObjectivesComplete	21	SOURCE_ANALOG	0x004496e0	reverse-engineering/binary-analysis/functions/EndLevelData.cpp/CEndLevelData__IsAllSecondaryObjectivesComplete.md
+FEPGoodies.cpp	COUNT_TOTAL_A_GRADES	42	NO_MATCH_FOUND		
+FEPGoodies.cpp	COUNT_TOTAL_S_GRADES	57	NO_MATCH_FOUND		
+FEPGoodies.cpp	CGoodieData::GetMethod	72	NO_MATCH_FOUND		
+FEPGoodies.cpp	get_goodie_number	393	SOURCE_ANALOG	0x0045cb80	reverse-engineering/binary-analysis/functions/FEPGoodies.cpp/get_goodie_number.md
+FEPGoodies.cpp	get_goodie_state	443	NO_MATCH_FOUND		
+FEPGoodies.cpp	set_goodie_state	457	NO_MATCH_FOUND		
+FEPGoodies.cpp	CFEPGoodies::ResetGoodyState	467	NO_MATCH_FOUND		
+FEPGoodies.cpp	CFEPGoodies::Init	489	SOURCE_ANALOG	0x0045c7a0	
+FEPGoodies.cpp	get_goodie_texture_hack	512	NO_MATCH_FOUND		
+FEPGoodies.cpp	get_goodie_mesh_hack	684	NO_MATCH_FOUND		
+FEPGoodies.cpp	get_goodie_background_hack	744	NO_MATCH_FOUND		
+FEPGoodies.cpp	get_goodie_type_hack	801	NO_MATCH_FOUND		
+FEPGoodies.cpp	get_goodie_text_type_hack	848	NO_MATCH_FOUND		
+FEPGoodies.cpp	get_goodie_num_texts	860	NO_MATCH_FOUND		
+FEPGoodies.cpp	get_goodie_title	879	NO_MATCH_FOUND		
+FEPGoodies.cpp	get_goodie_text	901	NO_MATCH_FOUND		
+FEPGoodies.cpp	get_goodie_fmv	952	NO_MATCH_FOUND		
+FEPGoodies.cpp	get_goodie_fmv_localised	974	NO_MATCH_FOUND		
+FEPGoodies.cpp	get_goodie_level	989	NO_MATCH_FOUND		
+FEPGoodies.cpp	CFEPGoodies::Serialise	1004	NO_MATCH_FOUND		
+FEPGoodies.cpp	CFEPGoodies::Deserialise	1153	SOURCE_ANALOG	0x0045c870	reverse-engineering/binary-analysis/functions/FEPGoodies.cpp/CFEPGoodies__Deserialise.md
+FEPGoodies.cpp	CFEPGoodies::Shutdown	1226	SOURCE_ANALOG	0x0045c9e0	
+FEPGoodies.cpp	CFEPGoodies::StartLoadingGoody	1232	SOURCE_ANALOG	0x0045c9f0	reverse-engineering/binary-analysis/functions/FEPGoodies.cpp/CFEPGoodies__StartLoadingGoody.md
+FEPGoodies.cpp	CFEPGoodies::LoadingGoodyPoll	1281	SOURCE_ANALOG	0x0045cc10	reverse-engineering/binary-analysis/functions/FEPGoodies.cpp/CFEPGoodies__LoadingGoodyPoll.md
+FEPGoodies.cpp	CFEPGoodies::FreeUpGoodyResources	1310	SOURCE_ANALOG	0x0045cd10	reverse-engineering/binary-analysis/functions/FEPGoodies.cpp/CFEPGoodies__FreeUpGoodyResources.md
+FEPGoodies.cpp	CFEPGoodies::ButtonPressed	1339	SOURCE_ANALOG	0x0045cde0	reverse-engineering/binary-analysis/functions/FEPGoodies.cpp/CFEPGoodies__ButtonPressed.md
+FEPGoodies.cpp	CFEPGoodies::Process	1546	SOURCE_ANALOG	0x0045d7e0	reverse-engineering/binary-analysis/functions/FEPGoodies.cpp/CFEPGoodies__Process.md
+FEPGoodies.cpp	CFEPGoodies::RenderPreCommon	1718	SOURCE_ANALOG	0x0045e0d0	reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-17.tsv
+FEPGoodies.cpp	CFEPGoodies::GoodieX	1759	NO_MATCH_FOUND		
+FEPGoodies.cpp	CFEPGoodies::GoodieY	1765	NO_MATCH_FOUND		
+FEPGoodies.cpp	CFEPGoodies::BuildAllResources	1773	NO_MATCH_FOUND		
+FEPGoodies.cpp	goodies_prepare_projection	1790	NO_MATCH_FOUND		
+FEPGoodies.cpp	goodies_restore_projection	1800	NO_MATCH_FOUND		
+FEPGoodies.cpp	goodies_prepare_projection	1808	NO_MATCH_FOUND		
+FEPGoodies.cpp	goodies_restore_projection	1818	NO_MATCH_FOUND		
+FEPGoodies.cpp	CFEPGoodies::Render	1825	SOURCE_ANALOG	0x0045e0d0	
+FEPGoodies.cpp	CFEPGoodies::TransitionNotification	2521	SOURCE_ANALOG	0x0045ffa0	
+FEPGoodies.cpp	CFEPGoodies::EvaluateDest	2529	NO_MATCH_FOUND		
+FEPLoadGame.cpp	CFEPLoadGame::Init	12	SOURCE_ANALOG	0x00461c40	reverse-engineering/binary-analysis/functions/FEPLoadGame.cpp/CFEPLoadGame__Init.md;reverse-engineering/binary-analysis/frontend-save-load-semantics-2026-08-11.tsv
+FEPLoadGame.cpp	CFEPLoadGame::Shutdown	24	NO_MATCH_FOUND		
+FEPLoadGame.cpp	CFEPLoadGame::ButtonPressed	29	SOURCE_ANALOG	0x00461c60	reverse-engineering/binary-analysis/functions/FEPLoadGame.cpp/CFEPLoadGame__ButtonPressed.md;reverse-engineering/binary-analysis/frontend-save-load-semantics-2026-08-11.tsv
+FEPLoadGame.cpp	CFEPLoadGame::Process	73	SOURCE_ANALOG	0x00461d60	reverse-engineering/binary-analysis/functions/FEPLoadGame.cpp/CFEPLoadGame__Process.md;reverse-engineering/binary-analysis/frontend-save-load-semantics-2026-08-11.tsv
+FEPLoadGame.cpp	CFEPLoadGame::RenderPreCommon	88	SOURCE_ANALOG	0x00461d90	reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-17.tsv
+FEPLoadGame.cpp	CFEPLoadGame::Render	93	SOURCE_ANALOG	0x00461d90	reverse-engineering/binary-analysis/functions/FEPLoadGame.cpp/CFEPLoadGame__Render.md;reverse-engineering/binary-analysis/frontend-save-load-semantics-2026-08-11.tsv
+FEPLoadGame.cpp	CFEPLoadGame::TransitionNotification	118	NO_MATCH_FOUND		
+FEPLoadGame.cpp	CFEPLoadGame::StartLoad	128	NO_MATCH_FOUND		
+FEPSaveGame.cpp	CFEPSaveGame::Init	14	SOURCE_ANALOG	0x00464620	reverse-engineering/binary-analysis/functions/FEPSaveGame.cpp/CFEPSaveGame__Init.md;reverse-engineering/binary-analysis/frontend-save-load-semantics-2026-08-11.tsv
+FEPSaveGame.cpp	CFEPSaveGame::Shutdown	23	NO_MATCH_FOUND		
+FEPSaveGame.cpp	CFEPSaveGame::ButtonPressed	28	SOURCE_ANALOG	0x00464630	reverse-engineering/binary-analysis/functions/FEPSaveGame.cpp/CFEPSaveGame__ButtonPressed.md;reverse-engineering/binary-analysis/frontend-save-load-semantics-2026-08-11.tsv
+FEPSaveGame.cpp	CFEPSaveGame::Process	73	SOURCE_ANALOG	0x00464730	reverse-engineering/binary-analysis/functions/FEPSaveGame.cpp/CFEPSaveGame__Process.md;reverse-engineering/binary-analysis/frontend-save-load-semantics-2026-08-11.tsv
+FEPSaveGame.cpp	CFEPSaveGame::RenderPreCommon	171	SOURCE_ANALOG	0x00464a80	reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-17.tsv
+FEPSaveGame.cpp	CFEPSaveGame::Render	176	SOURCE_ANALOG	0x00464a80	reverse-engineering/binary-analysis/functions/FEPSaveGame.cpp/CFEPSaveGame__Render.md;reverse-engineering/binary-analysis/frontend-save-load-semantics-2026-08-11.tsv
+FEPSaveGame.cpp	CFEPSaveGame::TransitionNotification	200	NO_MATCH_FOUND		
+FEPSaveGame.cpp	CFEPSaveGame::RemovedMUWhinge	207	SOURCE_ANALOG	0x00464b30	reverse-engineering/binary-analysis/functions/FEPSaveGame.cpp/CFEPSaveGame__RemovedMUWhinge.md;reverse-engineering/binary-analysis/frontend-save-load-semantics-2026-08-11.tsv
+FEPSaveGame.cpp	ask_if_you_want_to_overwrite	229	NO_MATCH_FOUND		
+FEPSaveGame.cpp	CFEPSaveGame::AskIfYouWantToDelete	236	SOURCE_ANALOG	0x00464bc0	reverse-engineering/binary-analysis/functions/FEPSaveGame.cpp/CFEPSaveGame__AskIfYouWantToDelete.md;reverse-engineering/binary-analysis/frontend-save-load-semantics-2026-08-11.tsv
+FEPSaveGame.cpp	CFEPSaveGame::CreateSave	304	SOURCE_ANALOG	0x00464c50	reverse-engineering/binary-analysis/functions/FEPSaveGame.cpp/CFEPSaveGame__CreateSave.md;reverse-engineering/binary-analysis/frontend-save-load-semantics-2026-08-11.tsv
+FEPSaveGame.cpp	CFEPSaveGame::IsCheatActive	545	NO_MATCH_FOUND		
+FrontEnd.cpp	mAllLevelsCheatActive	37	NO_MATCH_FOUND		
+FrontEnd.cpp	CFrontEnd::Init	49	SOURCE_ANALOG	0x004662a0	reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__Init.md
+FrontEnd.cpp	CFrontEnd::SerialiseState	358	NO_MATCH_FOUND		
+FrontEnd.cpp	CFrontEnd::Shutdown	384	NO_MATCH_FOUND		
+FrontEnd.cpp	CFrontEnd::GetPlayer0ControllerPort	444	SOURCE_ANALOG	0x00466980	reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__GetPlayer0ControllerPort.md
+FrontEnd.cpp	CFrontEnd::GetPortFromController	452	NO_MATCH_FOUND		
+FrontEnd.cpp	CFrontEnd::NumControllersPresent	464	SOURCE_ANALOG	0x00466990	reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__NumControllersPresent.md
+FrontEnd.cpp	CFrontEnd::ReceiveButtonAction	477	SOURCE_ANALOG	0x004669a0	reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__ReceiveButtonAction.md
+FrontEnd.cpp	CFrontEnd::SetLanguage	557	SOURCE_ANALOG	0x00466ab0	reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__SetLanguage.md
+FrontEnd.cpp	CFrontEnd::SetPage	563	SOURCE_ANALOG	0x00466ae0	reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__SetPage.md
+FrontEnd.cpp	CFrontEnd::Process	595	SOURCE_ANALOG	0x00466ba0	reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__Process.md
+FrontEnd.cpp	CFrontEnd::DrawLine	717	SOURCE_ANALOG	0x00466de0	reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__DrawLine.md
+FrontEnd.cpp	CFrontEnd::DrawBox	737	SOURCE_ANALOG	0x00466e70	reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__DrawBox.md
+FrontEnd.cpp	CFrontEnd::DrawPanel	749	SOURCE_ANALOG	0x00467010	reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__DrawPanel.md
+FrontEnd.cpp	CFrontEnd::DrawBarGraph	763	SOURCE_ANALOG	0x004670b0	reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__DrawBarGraph.md
+FrontEnd.cpp	got_standard_SlidingTextBordersAndMask	778	NO_MATCH_FOUND		
+FrontEnd.cpp	check_draw_twice	799	NO_MATCH_FOUND		
+FrontEnd.cpp	CFrontEnd::DrawSlidingTextBordersAndMask	807	SOURCE_ANALOG	0x00467200	reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__DrawSlidingTextBordersAndMask.md
+FrontEnd.cpp	CFrontEnd::DrawStandardVideoBackground	1023	NO_MATCH_FOUND		
+FrontEnd.cpp	CFrontEnd::RenderSlidingScreen	1048	SOURCE_ANALOG	0x00468200	reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-17.tsv
+FrontEnd.cpp	CFrontEnd::DrawBar	1073	SOURCE_ANALOG	0x00467ae0	reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__DrawBar.md
+FrontEnd.cpp	CFrontEnd::DrawTitleBar	1107	SOURCE_ANALOG	0x00467bd0	reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__DrawTitleBar.md
+FrontEnd.cpp	CFrontEnd::EnableAdditiveAlpha	1231	SOURCE_ANALOG	0x004681c0	reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__EnableAdditiveAlpha.md
+FrontEnd.cpp	CFrontEnd::EnableModulateAlpha	1238	SOURCE_ANALOG	0x004681e0	reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__EnableModulateAlpha.md
+FrontEnd.cpp	CFrontEnd::ForceDisplay	1246	NO_MATCH_FOUND		
+FrontEnd.cpp	CFrontEnd::Render	1259	SOURCE_ANALOG	0x00468200	reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__Render.md
+FrontEnd.cpp	build_fe_resource	1366	NO_MATCH_FOUND		
+FrontEnd.cpp	build_fe_resources	1378	NO_MATCH_FOUND		
+FrontEnd.cpp	CFrontEnd::Run	1399	SOURCE_ANALOG	0x004684d0	reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__Run.md
+FrontEnd.cpp	CFrontEnd::UpdateCamera	1460	SOURCE_ANALOG	0x004685a0	reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__UpdateCamera.md
+FrontEnd.cpp	CFrontEnd::RenderStart	1469	SOURCE_ANALOG	0x004685f0	reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__RenderStart.md
+FrontEnd.cpp	CFrontEnd::RenderEnd	1528	SOURCE_ANALOG	0x00468200	reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-17.tsv
+FrontEnd.cpp	CFrontEnd::GetShadowOffsetX	1559	SOURCE_ANALOG	0x00468730	reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__GetShadowOffsetX.md
+FrontEnd.cpp	CFrontEnd::GetShadowOffsetY	1565	SOURCE_ANALOG	0x00468750	reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__GetShadowOffsetY.md
+FrontEnd.cpp	CFrontEnd::StartMCOperation	1571	NO_MATCH_FOUND		
+FrontEnd.cpp	CFrontEnd::EndMCOperation	1583	NO_MATCH_FOUND		
+FrontEnd.cpp	CFrontEnd::PlaySound	1603	SOURCE_ANALOG	0x00468770	reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__PlaySound.md
+FrontEnd.cpp	CFrontEnd::GetSoundName	1617	NO_MATCH_FOUND		
+InitThing.cpp	SpawnInitThing	10	NO_MATCH_FOUND		
+InitThing.cpp	mAttachScriptsToUnits	80	NO_MATCH_FOUND		
+InitThing.cpp	CInitThing::Save	90	NO_MATCH_FOUND		
+InitThing.cpp	CInitThing::Load	126	NO_MATCH_FOUND		
+InitThing.cpp	CSpawnerInitThing::Save	314	NO_MATCH_FOUND		
+InitThing.cpp	CSpawnerInitThing::Load	342	NO_MATCH_FOUND		
+InitThing.cpp	CCutsceneInitThing::Save	509	NO_MATCH_FOUND		
+InitThing.cpp	CCutsceneInitThing::Load	531	NO_MATCH_FOUND		
+InitThing.cpp	CStartInitThing::Save	569	NO_MATCH_FOUND		
+InitThing.cpp	CStartInitThing::Load	578	NO_MATCH_FOUND		
+InitThing.cpp	CTreeInitThing::Save	591	NO_MATCH_FOUND		
+InitThing.cpp	CTreeInitThing::Load	605	NO_MATCH_FOUND		
+InitThing.cpp	CSquadInitThing::Save	623	NO_MATCH_FOUND		
+InitThing.cpp	CSquadInitThing::Load	632	NO_MATCH_FOUND		
+InitThing.cpp	CWallInitThing::Save	644	NO_MATCH_FOUND		
+InitThing.cpp	CWallInitThing::Load	661	NO_MATCH_FOUND		
+InitThing.cpp	CSphereTriggerInitThing::Save	683	NO_MATCH_FOUND		
+InitThing.cpp	CSphereTriggerInitThing::Load	691	NO_MATCH_FOUND		
+MemoryCard.cpp	CMemoryCard::CardBeenUnpluggedSinceLastTimeIAsked	8	NO_MATCH_FOUND		
+MemoryManager.cpp	GRAB_MUTEX	29	NO_MATCH_FOUND		
+MemoryManager.cpp	RELEASE_MUTEX	57	NO_MATCH_FOUND		
+MemoryManager.cpp	CMutexGrabber	72	NO_MATCH_FOUND		
+MemoryManager.cpp	CMemoryBlock::Init	249	NO_MATCH_FOUND		
+MemoryManager.cpp	CMemoryBlock::Resize	266	NO_MATCH_FOUND		
+MemoryManager.cpp	CMemoryBlock::SetUsed	273	NO_MATCH_FOUND		
+MemoryManager.cpp	CMemoryHeap::CMemoryHeap	291	SOURCE_ANALOG	0x004a1390	
+MemoryManager.cpp	in_free_list	429	NO_MATCH_FOUND		
+MemoryManager.cpp	CMemoryHeap::FreeTiny	448	SOURCE_ANALOG	0x004a1570	
+MemoryManager.cpp	CMemoryHeap::ReallocTiny	471	SOURCE_ANALOG	0x004a15a0	
+MemoryManager.cpp	CMemoryHeap::AllocTiny	502	SOURCE_ANALOG	0x004a1810	reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-17.tsv
+MemoryManager.cpp	CMemoryHeap::FlagAsBaseSet	520	NO_MATCH_FOUND		
+MemoryManager.cpp	CMemoryHeap::ClearToBaseSet	534	NO_MATCH_FOUND		
+MemoryManager.cpp	CMemoryHeap::Shutdown	568	SOURCE_ANALOG	0x004a17b0	
+MemoryManager.cpp	CMemoryHeap::Alloc	613	SOURCE_ANALOG	0x004a1810	
+MemoryManager.cpp	CMemoryHeap::ReAlloc	805	SOURCE_ANALOG	0x004a1c40	
+MemoryManager.cpp	CMemoryHeap::Free	828	SOURCE_ANALOG	0x004a1ca0	
+MemoryManager.cpp	CMemoryHeap::AddToFreeList	856	SOURCE_ANALOG	0x004a1d60	
+MemoryManager.cpp	CMemoryHeap::SetMerge	975	SOURCE_ANALOG	0x004a1ea0	
+MemoryManager.cpp	CMemoryHeap::Cleanup	1039	SOURCE_ANALOG	0x004a1640	
+MemoryManager.cpp	CMemoryHeap::FreeAll	1147	SOURCE_ANALOG	0x004a1ca0	reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-17.tsv
+MemoryManager.cpp	CMemoryHeap::Validate	1153	NO_MATCH_FOUND		
+MemoryManager.cpp	CMemoryHeap::OutputStats	1224	SOURCE_ANALOG	0x004a1f60	
+MemoryManager.cpp	CMemoryHeap::CalcSmallBlocksLeft	1278	NO_MATCH_FOUND		
+MemoryManager.cpp	CMemoryHeap::PrintStats	1291	SOURCE_ANALOG	0x004a2190	
+MemoryManager.cpp	CMemoryHeap::LogStats	1362	SOURCE_ANALOG	0x004a2460	
+MemoryManager.cpp	CMemoryHeap::CalcAndShowDeltas	1412	SOURCE_ANALOG	0x004a25c0	
+MemoryManager.cpp	CMemoryHeap::OutputBlocks	1439	NO_MATCH_FOUND		
+MemoryManager.cpp	CMemoryHeap::OutputMap	1494	NO_MATCH_FOUND		
+MemoryManager.cpp	CMemoryHeap::GetFreeBlock	1545	NO_MATCH_FOUND		
+MemoryManager.cpp	CMemoryHeap::FindLargestFree	1573	NO_MATCH_FOUND		
+MemoryManager.cpp	CMemoryHeap::FindSmallestFree	1588	NO_MATCH_FOUND		
+MemoryManager.cpp	CMemoryManager::TagMem	1622	NO_MATCH_FOUND		
+MemoryManager.cpp	CMemoryManager::UnTagMem	1647	NO_MATCH_FOUND		
+MemoryManager.cpp	CMemoryHeap::DumpMap	1663	SOURCE_ANALOG	0x004a2660	
+MemoryManager.cpp	CMemoryManager::FlagAsBaseSet	1741	SOURCE_ANALOG	0x004a2a20	
+MemoryManager.cpp	CMemoryManager::FlagBlockAsBaseSet	1753	NO_MATCH_FOUND		
+MemoryManager.cpp	CMemoryManager::ClearToBaseSet	1763	NO_MATCH_FOUND		
+MemoryManager.cpp	CMemoryManager::DumpMemory	1775	SOURCE_ANALOG	0x004a2a80	
+Music.cpp	con_m_play	15	NO_MATCH_FOUND		
+Music.cpp	con_m_stop	32	NO_MATCH_FOUND		
+Music.cpp	con_m_add	39	NO_MATCH_FOUND		
+Music.cpp	con_m_adddir	56	NO_MATCH_FOUND		
+Music.cpp	con_m_clear	73	NO_MATCH_FOUND		
+Music.cpp	con_m_playtype	80	NO_MATCH_FOUND		
+Music.cpp	CMusic::Initialise	111	NO_MATCH_FOUND		
+Music.cpp	CMusic::Shutdown	144	SOURCE_EXACT	0x004bb400	reverse-engineering/binary-analysis/cmusic-shared-semantics-2026-08-11.tsv
+Music.cpp	CMusic::DeviceChangeTrack	166	NO_MATCH_FOUND		
+Music.cpp	CMusic::Play	182	SOURCE_EXACT	0x004bb450	reverse-engineering/binary-analysis/cmusic-shared-semantics-2026-08-11.tsv
+Music.cpp	CMusic::Stop	202	SOURCE_EXACT	0x004bb490	reverse-engineering/binary-analysis/cmusic-shared-semantics-2026-08-11.tsv
+Music.cpp	CMusic::FadeVolumes	214	SOURCE_EXACT	0x004bb4b0	reverse-engineering/binary-analysis/cmusic-shared-semantics-2026-08-11.tsv
+Music.cpp	CMusic::UpdateStatus	242	SOURCE_ANALOG	0x004bb530	reverse-engineering/binary-analysis/cmusic-shared-semantics-2026-08-11.tsv
+Music.cpp	CMusic::AddToPlayList	306	SOURCE_EXACT	0x004bb6b0	reverse-engineering/binary-analysis/cmusic-shared-semantics-2026-08-11.tsv
+Music.cpp	CMusic::AddDirectoryExtsToPlaylist	366	NO_MATCH_FOUND		
+Music.cpp	CMusic::AddDirectoryToPlaylist	373	NO_MATCH_FOUND		
+Music.cpp	CMusic::WipePlayList	385	NO_MATCH_FOUND		
+Music.cpp	CMusic::GetRandomSong	405	NO_MATCH_FOUND		
+Music.cpp	CMusic::PlayFromList	430	SOURCE_ANALOG	0x004bb7e0	reverse-engineering/binary-analysis/cmusic-shared-semantics-2026-08-11.tsv
+Music.cpp	CMusic::GetTrackForCredits	460	NO_MATCH_FOUND		
+Music.cpp	CMusic::GetTrackForFrontEnd	466	NO_MATCH_FOUND		
+Music.cpp	CMusic::GetSong	476	NO_MATCH_FOUND		
+Music.cpp	CMusic::PlaySelection	493	SOURCE_ANALOG	0x004bb8c0	reverse-engineering/binary-analysis/cmusic-shared-semantics-2026-08-11.tsv
+Music.cpp	CMusic::SetVolume	557	SOURCE_ANALOG	0x004bba10	reverse-engineering/binary-analysis/cmusic-shared-semantics-2026-08-11.tsv
+Music.cpp	CMusicMenu::GetNumEntries	577	NO_MATCH_FOUND		
+Music.cpp	CMusicMenu::GetEntry	593	NO_MATCH_FOUND		
+Music.cpp	CMusicMenu::OnClick	635	NO_MATCH_FOUND		
+PCController.cpp	CController::mMappings	15	NO_MATCH_FOUND		
+PCController.cpp	CController	144	NO_MATCH_FOUND		
+PCController.cpp	CPCController::GetJoyAnalogueLeftX	152	SOURCE_ANALOG	0x00514640	
+PCController.cpp	CPCController::GetJoyAnalogueLeftY	162	SOURCE_ANALOG	0x00514670	
+PCController.cpp	CPCController::GetJoyAnalogueRightX	174	SOURCE_ANALOG	0x005146a0	
+PCController.cpp	CPCController::GetJoyAnalogueRightY	184	SOURCE_ANALOG	0x005146d0	
+PCController.cpp	CPCController::RecordControllerState	196	SOURCE_ANALOG	0x00514720	
+PCController.cpp	CPCController::ReadControllerState	209	SOURCE_ANALOG	0x00514760	
+PCEngine.cpp	CPCEngine::CPCEngine	69	NO_MATCH_FOUND		
+PCEngine.cpp	CPCEngine::~dtor	83	NO_MATCH_FOUND		
+PCEngine.cpp	CPCEngine::ShutDown	88	NO_MATCH_FOUND		
+PCEngine.cpp	con_setgammabias	110	NO_MATCH_FOUND		
+PCEngine.cpp	CPCEngine::SetGammaBias	123	NO_MATCH_FOUND		
+PCEngine.cpp	CPCEngine::Init	147	NO_MATCH_FOUND		
+PCEngine.cpp	CPCEngine::InitResources	198	NO_MATCH_FOUND		
+PCEngine.cpp	CPCEngine::DrawDebugCuboid	211	NO_MATCH_FOUND		
+PCEngine.cpp	CPCEngine::DrawDebugLine	288	NO_MATCH_FOUND		
+PCEngine.cpp	CPCEngine::RenderArrow	300	NO_MATCH_FOUND		
+PCEngine.cpp	CPCEngine::PreRender	355	NO_MATCH_FOUND		
+PCEngine.cpp	CPCEngine::Render	392	NO_MATCH_FOUND		
+PCEngine.cpp	CPCEngine::PostRender	834	NO_MATCH_FOUND		
+PCEngine.cpp	CPCEngine::SetBlurAlpha	995	NO_MATCH_FOUND		
+PCEngine.cpp	CPCEngine::GetDetailLevel	1003	NO_MATCH_FOUND		
+PCEngine.cpp	CPCEngine::SetDefaultMaterial	1009	NO_MATCH_FOUND		
+PCEngine.cpp	CPCEngine::SetModulate2X	1015	NO_MATCH_FOUND		
+PCEngine.cpp	CPCEngine::AccumulateResources	1027	NO_MATCH_FOUND		
+PCFrontend.cpp	CPCFrontEnd::RenderParticles	23	NO_MATCH_FOUND		
+PCFrontend.cpp	CPCFrontEnd::RenderStaticScreen	36	NO_MATCH_FOUND		
+PCFrontend.cpp	CPCFrontEnd::PlaySound	67	NO_MATCH_FOUND		
+PCFrontend.cpp	CPCFrontEnd::GetSoundName	75	NO_MATCH_FOUND		
+PCFrontend.cpp	CPCFrontEnd::RenderStart	92	NO_MATCH_FOUND		
+PCFrontend.cpp	CPCFrontEnd::RenderEnd	107	NO_MATCH_FOUND		
+PCGame.cpp	CPCGame::DrawGameStuff	29	NO_MATCH_FOUND		
+PCGame.cpp	CPCGame::DumpTimeRecords	182	NO_MATCH_FOUND		
+PCGame.cpp	CPCGame::AddTimeStatus	265	NO_MATCH_FOUND		
+PCMemoryCard.cpp	CPCMemoryCard::AccumulateResources	10	NO_MATCH_FOUND		
+PCPlatform.cpp	CPCPlatform::Init	22	NO_MATCH_FOUND		
+PCPlatform.cpp	CPCPlatform::InitFonts	82	NO_MATCH_FOUND		
+PCPlatform.cpp	CPCPlatform::Shutdown	132	NO_MATCH_FOUND		
+PCPlatform.cpp	CPCPlatform::Process	144	SOURCE_ANALOG		reverse-engineering/binary-analysis/functions/Platform.cpp/PLATFORM__Process.md
+PCPlatform.cpp	CPCPlatform::BeginScene	159	SOURCE_ANALOG		reverse-engineering/binary-analysis/functions/Platform.cpp/PLATFORM__BeginScene.md;reverse-engineering/binary-analysis/functions/Platform.cpp/PLATFORM__EndScene.md
+PCPlatform.cpp	CPCPlatform::EndScene	165	SOURCE_ANALOG		reverse-engineering/binary-analysis/functions/Platform.cpp/PLATFORM__EndScene.md;reverse-engineering/binary-analysis/functions/Platform.cpp/PLATFORM__BeginScene.md
+PCPlatform.cpp	CPCPlatform::DeviceFlip	171	SOURCE_ANALOG		reverse-engineering/binary-analysis/functions/Platform.cpp/PLATFORM__EndScene.md
+PCPlatform.cpp	CPCPlatform::ClearScreen	180	SOURCE_ANALOG		reverse-engineering/binary-analysis/functions/Platform.cpp/PLATFORM__ClearScreen.md
+PCPlatform.cpp	CPCPlatform::GetScreenWidth	186	SOURCE_ANALOG		reverse-engineering/binary-analysis/functions/Platform.cpp/PLATFORM__ClearScreen.md
+PCPlatform.cpp	CPCPlatform::GetScreenHeight	192	NO_MATCH_FOUND		
+PCPlatform.cpp	CPCPlatform::GetFPS	198	NO_MATCH_FOUND		
+PCPlatform.cpp	CPCPlatform::UpdateJoystick	206	NO_MATCH_FOUND		
+PCPlatform.cpp	CPCPlatform::KeyOn	216	NO_MATCH_FOUND		
+PCPlatform.cpp	CPCPlatform::KeyOnce	222	NO_MATCH_FOUND		
+PCPlatform.cpp	CPCPlatform::FlushInputBuffers	228	NO_MATCH_FOUND		
+PCPlatform.cpp	CPCPlatform::SetKeytrap	234	NO_MATCH_FOUND		
+PCPlatform.cpp	CPCPlatform::GetSysTimeFloat	241	SOURCE_ANALOG		reverse-engineering/binary-analysis/functions/Platform.cpp/PLATFORM__GetSysTimeFloat.md
+PCPlatform.cpp	CPCPlatform::TriggerRumble	265	NO_MATCH_FOUND		
+PCPlatform.cpp	CPCPlatform::SetRumbleEnabled	272	NO_MATCH_FOUND		
+PCPlatform.cpp	CPCPlatform::SetVertexShadersEnabled	279	NO_MATCH_FOUND		
+PCPlatform.cpp	CPCPlatform::FMatrixToD3DMatrix	286	NO_MATCH_FOUND		
+PCPlatform.cpp	CPCPlatform::Font	300	NO_MATCH_FOUND		
+PCPlatform.cpp	CPCPlatform::Ask	318	NO_MATCH_FOUND		
+PCPlatform.cpp	CPCPlatform::MakeD3DViewport	328	NO_MATCH_FOUND		
+PCPlatform.cpp	CPCPlatform::SetViewport	340	NO_MATCH_FOUND		
+PCPlatform.cpp	CPCPlatform::GetWindowWidth	351	NO_MATCH_FOUND		
+PCPlatform.cpp	CPCPlatform::GetWindowHeight	358	NO_MATCH_FOUND		
+PCPlatform.cpp	CPCPlatform::Serialize	366	NO_MATCH_FOUND		
+PCPlatform.cpp	CPCPlatform::Deserialize	397	NO_MATCH_FOUND		
+PCPlatform.cpp	CPCPlatform::AccumulateResources	458	NO_MATCH_FOUND		
+PCPlatform.cpp	CPCPlatform::SetRegKey	464	NO_MATCH_FOUND		
+PCPlatform.cpp	CPCPlatform::GetRegKey	484	NO_MATCH_FOUND		
+Platform.cpp	CPlatform::Flip	14	NO_MATCH_FOUND		
+Player.cpp	mNumber	25	NO_MATCH_FOUND		
+Player.cpp	CPlayer::~dtor	38	SOURCE_ANALOG	0x004d2810	reverse-engineering/binary-analysis/functions/Player.cpp/CPlayer__dtor.md
+Player.cpp	CPlayer::Init	46	SOURCE_ANALOG	0x004d28a0	
+Player.cpp	CPlayer::GotoFPView	54	SOURCE_ANALOG	0x004d28c0	
+Player.cpp	CPlayer::Goto3rdPersonView	63	SOURCE_ANALOG	0x004d29c0	
+Player.cpp	CPlayer::GotoControlView	72	SOURCE_ANALOG	0x004d2a50	
+Player.cpp	CPlayer::GetCurrentViewPoint	88	SOURCE_ANALOG	0x004d2a70	
+Player.cpp	CPlayer::GetCurrentViewOrientation	101	SOURCE_ANALOG	0x004d2ae0	
+Player.cpp	CPlayer::GetOldCurrentViewPoint	115	SOURCE_ANALOG	0x004d2b40	
+Player.cpp	CPlayer::GetOldCurrentViewOrientation	128	SOURCE_ANALOG	0x004d2bb0	
+Player.cpp	CPlayer::SetPreferedControlViewMode	142	NO_MATCH_FOUND		
+Player.cpp	CPlayer::GotoPanView	152	SOURCE_EXACT	0x004d2c10	reverse-engineering/binary-analysis/functions/Player.cpp/CPlayer__GotoPanView.md
+Player.cpp	CPlayer::HandleEvent	199	NO_MATCH_FOUND		
+Player.cpp	CPlayer::SetIsGod	221	NO_MATCH_FOUND		
+Player.cpp	CPlayer::WipeStats	247	NO_MATCH_FOUND		
+Player.cpp	CPlayer::AssignBattleEngine	254	SOURCE_ANALOG	0x004d3080	reverse-engineering/binary-analysis/functions/Player.cpp/CPlayer__AssignBattleEngine.md
+Player.cpp	CPlayer::KilledEnemyThing	270	NO_MATCH_FOUND		
+Player.cpp	CPlayer::ReceiveButtonAction	283	SOURCE_ANALOG	0x004d3110	
+ResourceAccumulator.cpp	CResourceAccumulator::CResourceAccumulator	58	NO_MATCH_FOUND		
+ResourceAccumulator.cpp	CResourceAccumulator::~dtor	78	NO_MATCH_FOUND		
+ResourceAccumulator.cpp	CResourceAccumulator::AddMesh	82	NO_MATCH_FOUND		
+ResourceAccumulator.cpp	CResourceAccumulator::AddTexture	112	NO_MATCH_FOUND		
+ResourceAccumulator.cpp	basic_resource_filename	159	NO_MATCH_FOUND		
+ResourceAccumulator.cpp	CResourceAccumulator::GetFileName	178	NO_MATCH_FOUND		
+ResourceAccumulator.cpp	set_kempy_compression	210	NO_MATCH_FOUND		
+ResourceAccumulator.cpp	CResourceAccumulator::WriteResources	231	NO_MATCH_FOUND		
+ResourceAccumulator.cpp	CResourceAccumulator::ReadResources	732	NO_MATCH_FOUND		
+SPtrSet.cpp	mSize	27	NO_MATCH_FOUND		
+SPtrSet.cpp	mSize	38	NO_MATCH_FOUND		
+SPtrSet.cpp	GenericSPtrSet::Shutdown	70	NO_MATCH_FOUND		
+SPtrSet.cpp	GenericSPtrSet::ClearAnyDynamicCreatedNodes	93	NO_MATCH_FOUND		
+SPtrSet.cpp	GenericSPtrSet::Init	128	NO_MATCH_FOUND		
+SPtrSet.cpp	GenericSPtrSet::Add	154	NO_MATCH_FOUND		
+SPtrSet.cpp	GenericSPtrSet::Append	201	NO_MATCH_FOUND		
+SPtrSet.cpp	GenericSPtrSet::Remove	252	NO_MATCH_FOUND		
+SPtrSet.cpp	GenericSPtrSet::Contains	295	NO_MATCH_FOUND		
+SPtrSet.cpp	GenericSPtrSet::~dtor	308	NO_MATCH_FOUND		
+SPtrSet.cpp	GenericSPtrSet::RemoveAll	318	NO_MATCH_FOUND		
+SPtrSet.cpp	GenericSPtrSet::At	335	NO_MATCH_FOUND		
+SoundManager.cpp	CSample::~dtor	25	NO_MATCH_FOUND		
+SoundManager.cpp	con_playsnd	50	NO_MATCH_FOUND		
+SoundManager.cpp	CSoundManager::Init	59	SOURCE_EXACT	0x004e00d0	reverse-engineering/binary-analysis/csoundmanager-shared-semantics-2026-08-11.tsv
+SoundManager.cpp	CSoundManager::UpdateVolumeForAllSoundEvents	129	SOURCE_EXACT	0x004e0300	reverse-engineering/binary-analysis/csoundmanager-shared-semantics-2026-08-11.tsv
+SoundManager.cpp	CSoundManager::SetMasterVolume	156	SOURCE_ANALOG	0x004e04c0	reverse-engineering/binary-analysis/csoundmanager-shared-semantics-2026-08-11.tsv
+SoundManager.cpp	CSoundManager::DeleteAllSamples	178	SOURCE_EXACT	0x004e06b0	reverse-engineering/binary-analysis/csoundmanager-shared-semantics-2026-08-11.tsv
+SoundManager.cpp	CSoundManager::Shutdown	194	SOURCE_EXACT	0x004e06e0	reverse-engineering/binary-analysis/csoundmanager-shared-semantics-2026-08-11.tsv
+SoundManager.cpp	CSoundManager::Reset	231	NO_MATCH_FOUND		
+SoundManager.cpp	CSoundManager::CreateSample	248	SOURCE_EXACT	0x004e0890	reverse-engineering/binary-analysis/csoundmanager-shared-semantics-2026-08-11.tsv
+SoundManager.cpp	CSoundManager::GetSample	300	NO_MATCH_FOUND		
+SoundManager.cpp	CSoundManager::PlayNamedSample	337	SOURCE_EXACT	0x004e0a90	reverse-engineering/binary-analysis/csoundmanager-shared-semantics-2026-08-11.tsv
+SoundManager.cpp	CSoundManager::PlaySample	359	SOURCE_EXACT	0x004e0b30	reverse-engineering/binary-analysis/csoundmanager-shared-semantics-2026-08-11.tsv
+SoundManager.cpp	CSoundManager::GetVolumeForPos	402	NO_MATCH_FOUND		
+SoundManager.cpp	CSoundManager::StartSoundEvent	451	SOURCE_EXACT	0x004e0bd0	reverse-engineering/binary-analysis/csoundmanager-shared-semantics-2026-08-11.tsv
+SoundManager.cpp	CSoundManager::StopSoundEvent	547	SOURCE_EXACT	0x004e0f70	reverse-engineering/binary-analysis/csoundmanager-shared-semantics-2026-08-11.tsv
+SoundManager.cpp	CSoundManager::CalculatePan	567	NO_MATCH_FOUND		
+SoundManager.cpp	CSoundManager::GetSoundEvent	598	NO_MATCH_FOUND		
+SoundManager.cpp	CSoundManager::DeleteSoundEvent	648	NO_MATCH_FOUND		
+SoundManager.cpp	CSoundManager::SortEventList	669	SOURCE_EXACT	0x004e1040	reverse-engineering/binary-analysis/csoundmanager-shared-semantics-2026-08-11.tsv
+SoundManager.cpp	CSoundManager::Fade	760	NO_MATCH_FOUND		
+SoundManager.cpp	CSoundManager::KillSamplesForThing	797	SOURCE_EXACT	0x004e1130	reverse-engineering/binary-analysis/csoundmanager-shared-semantics-2026-08-11.tsv
+SoundManager.cpp	CSoundManager::KillSample	814	SOURCE_EXACT	0x004e1190	reverse-engineering/binary-analysis/csoundmanager-shared-semantics-2026-08-11.tsv
+SoundManager.cpp	CSoundManager::KillAllInstancesOfSample	833	SOURCE_EXACT	0x004e1200	reverse-engineering/binary-analysis/csoundmanager-shared-semantics-2026-08-11.tsv
+SoundManager.cpp	CSoundManager::FadeTo	851	SOURCE_EXACT	0x004e1260	reverse-engineering/binary-analysis/csoundmanager-shared-semantics-2026-08-11.tsv
+SoundManager.cpp	CSoundManager::FadeAllSamples	874	NO_MATCH_FOUND		
+SoundManager.cpp	CSoundManager::KillAllSamples	888	SOURCE_EXACT	0x004e12b0	reverse-engineering/binary-analysis/csoundmanager-shared-semantics-2026-08-11.tsv
+SoundManager.cpp	CSoundManager::PauseAllSamples	905	SOURCE_EXACT	0x004e1300	reverse-engineering/binary-analysis/csoundmanager-shared-semantics-2026-08-11.tsv
+SoundManager.cpp	CSoundManager::UnPauseAllSamples	922	SOURCE_EXACT	0x004e1330	reverse-engineering/binary-analysis/csoundmanager-shared-semantics-2026-08-11.tsv
+SoundManager.cpp	CSoundManager::UpdateSoundPosition	939	SOURCE_EXACT	0x004e1360	reverse-engineering/binary-analysis/csoundmanager-shared-semantics-2026-08-11.tsv
+SoundManager.cpp	CSoundManager::IsSamplePlaying	1044	NO_MATCH_FOUND		
+SoundManager.cpp	CSoundManager::StopSample	1065	SOURCE_EXACT	0x004e1800	reverse-engineering/binary-analysis/csoundmanager-shared-semantics-2026-08-11.tsv
+SoundManager.cpp	CSoundManager::GetSoundEventForThing	1089	SOURCE_EXACT	0x004e1880	reverse-engineering/binary-analysis/csoundmanager-shared-semantics-2026-08-11.tsv
+SoundManager.cpp	CSoundManager::SetPitch	1110	SOURCE_EXACT	0x004e18d0	reverse-engineering/binary-analysis/csoundmanager-shared-semantics-2026-08-11.tsv
+SoundManager.cpp	CSoundManager::GetEffectByName	1124	SOURCE_EXACT	0x004e1910	reverse-engineering/binary-analysis/csoundmanager-shared-semantics-2026-08-11.tsv
+SoundManager.cpp	CSoundManager::PlayNamedEffect	1134	NO_MATCH_FOUND		
+SoundManager.cpp	CSoundManager::PlayEffect	1150	SOURCE_EXACT	0x004e1940	reverse-engineering/binary-analysis/csoundmanager-shared-semantics-2026-08-11.tsv
+SoundManager.cpp	CSoundManager::IsEffectPlaying	1205	SOURCE_EXACT	0x004e1ab0	reverse-engineering/binary-analysis/csoundmanager-shared-semantics-2026-08-11.tsv
+SoundManager.cpp	CSoundManager::UpdateStatus	1224	SOURCE_EXACT	0x004e1b20	reverse-engineering/binary-analysis/functions/SoundManager.cpp/CSoundManager__UpdateStatus.md;reverse-engineering/binary-analysis/csoundmanager-shared-semantics-2026-08-11.tsv
+SoundManager.cpp	CSoundManager::GetDebugMenuText	1416	SOURCE_EXACT	0x004e2360	reverse-engineering/binary-analysis/csoundmanager-shared-semantics-2026-08-11.tsv
+SoundManager.cpp	CSoundManagerDebugMenu::GetEntry	1481	NO_MATCH_FOUND		
+SoundManager.cpp	CSoundManagerDebugMenu::GetNumEntries	1488	NO_MATCH_FOUND		
+SoundManager.cpp	CEffect::ReadLine	1495	NO_MATCH_FOUND		
+SoundManager.cpp	CEffect::LoadSFXFile	1508	SOURCE_ANALOG	0x004e2530	
+SoundManager.cpp	CEffect::GetEffectByName	1618	SOURCE_ANALOG	0x004e2a90	
+SoundManager.cpp	CEffect::DeleteAllEffects	1679	NO_MATCH_FOUND		
+SoundManager.cpp	CSoundEvent::CSoundEvent	1693	NO_MATCH_FOUND		
+SoundManager.cpp	CSoundEvent::~dtor	1700	NO_MATCH_FOUND		
+SoundManager.cpp	CEffect::PrecacheAll	1707	NO_MATCH_FOUND		
+XBoxMemoryCard.cpp	CXBoxSaveHeader::CreateHeader	35	NOT_IN_RETAIL		
+XBoxMemoryCard.cpp	CXBoxSaveHeader::CheckHeader	47	NOT_IN_RETAIL		
+XBoxMemoryCard.cpp	CXBoxMemoryCard::InitialiseOnce	69	NOT_IN_RETAIL		
+XBoxMemoryCard.cpp	CXBoxMemoryCard::Initialise	89	NOT_IN_RETAIL		
+XBoxMemoryCard.cpp	CXBoxMemoryCard::Shutdown	96	NOT_IN_RETAIL		
+XBoxMemoryCard.cpp	CXBoxMemoryCard::GetNumCards	110	NOT_IN_RETAIL		
+XBoxMemoryCard.cpp	CXBoxMemoryCard::IsHDDAvailable	118	NOT_IN_RETAIL		
+XBoxMemoryCard.cpp	CXBoxMemoryCard::GetCardType	125	NOT_IN_RETAIL		
+XBoxMemoryCard.cpp	CXBoxMemoryCard::GetPort	137	NOT_IN_RETAIL		
+XBoxMemoryCard.cpp	CXBoxMemoryCard::GetSlot	151	NOT_IN_RETAIL		
+XBoxMemoryCard.cpp	CXBoxMemoryCard::UpdateCardSaveInfo	161	NOT_IN_RETAIL		
+XBoxMemoryCard.cpp	CXBoxMemoryCard::GetMountedCardFreeAndTotalBytes	196	NOT_IN_RETAIL		
+XBoxMemoryCard.cpp	CXBoxMemoryCard::UpdateCardInfo	229	NOT_IN_RETAIL		
+XBoxMemoryCard.cpp	CXBoxMemoryCard::GetCardInfo	418	NOT_IN_RETAIL		
+XBoxMemoryCard.cpp	CXBoxMemoryCard::GetCardName	437	NOT_IN_RETAIL		
+XBoxMemoryCard.cpp	CXBoxMemoryCard::GetCardName2	447	NOT_IN_RETAIL		
+XBoxMemoryCard.cpp	CXBoxMemoryCard::GetCardOrPreviousCardName2	470	NOT_IN_RETAIL		
+XBoxMemoryCard.cpp	CXBoxMemoryCard::Format	493	NOT_IN_RETAIL		
+XBoxMemoryCard.cpp	CXBoxMemoryCard::Unformat	501	NOT_IN_RETAIL		
+XBoxMemoryCard.cpp	CXBoxMemoryCard::GetNumSaves	509	NOT_IN_RETAIL		
+XBoxMemoryCard.cpp	CXBoxMemoryCard::GetSaveName	520	NOT_IN_RETAIL		
+XBoxMemoryCard.cpp	CXBoxMemoryCard::WriteSaveImage	531	NOT_IN_RETAIL		
+XBoxMemoryCard.cpp	count_num_files	576	NOT_IN_RETAIL		
+XBoxMemoryCard.cpp	CXBoxMemoryCard::CountNumHardDriveFiles	601	NOT_IN_RETAIL		
+XBoxMemoryCard.cpp	CXBoxMemoryCard::CreateSave	608	NOT_IN_RETAIL		
+XBoxMemoryCard.cpp	CXBoxMemoryCard::DeleteSave	782	NOT_IN_RETAIL		
+XBoxMemoryCard.cpp	CXBoxMemoryCard::WriteSave	850	NOT_IN_RETAIL		
+XBoxMemoryCard.cpp	CXBoxMemoryCard::ReadSave	980	NOT_IN_RETAIL		
+XBoxMemoryCard.cpp	CXBoxMemoryCard::GetSaveSize	1120	NOT_IN_RETAIL		
+XBoxMemoryCard.cpp	CXBoxMemoryCard::FormatInt	1148	NOT_IN_RETAIL		
+XBoxMemoryCard.cpp	CXBoxMemoryCard::MakeHumanReadableSize	1178	NOT_IN_RETAIL		
+XBoxMemoryCard.cpp	CXBoxMemoryCard::PeekAtInsertions	1208	NOT_IN_RETAIL		
+XBoxMemoryCard.cpp	CXBoxMemoryCard::Update	1226	NOT_IN_RETAIL		
+XBoxMemoryCard.cpp	CXBoxMemoryCard::MountGetDriveLetterAndUnmount	1298	NOT_IN_RETAIL		
+XBoxMemoryCard.cpp	CXBoxMemoryCard::CardBeenUnpluggedSinceLastTimeIAsked	1316	NOT_IN_RETAIL		
+XBoxMemoryCard.cpp	CXBoxMemoryCard::SerialiseForReboot	1396	NOT_IN_RETAIL		
+activereader.cpp	CGenericActiveReader::SetReader	8	SOURCE_ANALOG	0x00401000	
+actor.cpp	CActor::Init	15	SOURCE_ANALOG	0x004011e0	
+actor.cpp	CActor::~dtor	45	SOURCE_ANALOG	0x004015c0	
+actor.cpp	CActor::LowFidelityMove	54	NO_MATCH_FOUND		
+actor.cpp	CActor::Move	74	SOURCE_ANALOG	0x004015e0	
+actor.cpp	CActor::MoveTo	178	SOURCE_ANALOG	0x004015e0	reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-17.tsv
+actor.cpp	CActor::Teleport	185	NO_MATCH_FOUND		
+actor.cpp	CActor::TeleportOrientation	205	SOURCE_ANALOG	0x004019b0	
+actor.cpp	CActor::AddMoveEvent	213	NO_MATCH_FOUND		
+actor.cpp	CActor::HandleEvent	230	SOURCE_ANALOG	0x004019e0	
+actor.cpp	CActor::GetFractionTime	262	SOURCE_ANALOG	0x00401b50	
+actor.cpp	CActor::GetRenderPos	283	SOURCE_ANALOG	0x00401be0	
+actor.cpp	CActor::GetRenderOrientation	291	SOURCE_ANALOG	0x00401c50	
+actor.cpp	CActor::IsOnGround	326	NO_MATCH_FOUND		
+actor.cpp	CActor::IsInWater	332	NO_MATCH_FOUND		
+actor.cpp	CActor::IsOnObject	338	NO_MATCH_FOUND		
+actor.cpp	CActor::DeclareOnGround	344	NO_MATCH_FOUND		
+actor.cpp	CActor::DeclareInWater	350	NO_MATCH_FOUND		
+actor.cpp	CActor::DeclareOnObject	356	NO_MATCH_FOUND		
+actor.cpp	CActor::StickToGround	362	SOURCE_ANALOG	0x00402030	
+chunker.cpp	CChunker::CChunker	7	NO_MATCH_FOUND		
+chunker.cpp	CChunker::~dtor	16	NO_MATCH_FOUND		
+chunker.cpp	CChunker::Open	22	NO_MATCH_FOUND		
+chunker.cpp	CChunker::Close	34	NO_MATCH_FOUND		
+chunker.cpp	CChunker::ReSize	46	NO_MATCH_FOUND		
+chunker.cpp	CChunker::Start	56	NO_MATCH_FOUND		
+chunker.cpp	CChunker::End	69	NO_MATCH_FOUND		
+chunker.cpp	CChunker::Write	85	NO_MATCH_FOUND		
+chunker.cpp	CChunkReader::CChunkReader	96	SOURCE_ANALOG	0x004237d0	
+chunker.cpp	CChunkReader::~dtor	102	NO_MATCH_FOUND		
+chunker.cpp	CChunkReader::Open	108	NO_MATCH_FOUND		
+chunker.cpp	CChunkReader::Open	123	NO_MATCH_FOUND		
+chunker.cpp	CChunkReader::Close	138	SOURCE_ANALOG	0x00423900	
+chunker.cpp	CChunkReader::GetNext	151	SOURCE_ANALOG	0x00423910	reverse-engineering/binary-analysis/functions/ChunkReader.cpp/CChunkReader__GetNext.md
+chunker.cpp	CChunkReader::Read	180	SOURCE_ANALOG	0x00423960	reverse-engineering/binary-analysis/functions/ChunkReader.cpp/CChunkReader__Read.md
+chunker.cpp	CChunkReader::Skip	189	SOURCE_ANALOG	0x00423990	
+chunker.cpp	CChunkReader::WhereAmI	197	NO_MATCH_FOUND		
+d3dapp.cpp	CD3DApplication::CD3DApplication	43	NO_MATCH_FOUND		
+d3dapp.cpp	WndProc	79	NO_MATCH_FOUND		
+d3dapp.cpp	CD3DApplication::Create	91	SOURCE_ANALOG	0x005290a0	
+d3dapp.cpp	SortModesCallback	188	NO_MATCH_FOUND		
+d3dapp.cpp	CD3DApplication::BuildDeviceList	210	SOURCE_ANALOG	0x00529350	
+d3dapp.cpp	CD3DApplication::FindDepthStencilFormat	506	SOURCE_ANALOG	0x0052a830	
+d3dapp.cpp	CD3DApplication::MsgProc	603	SOURCE_ANALOG	0x0052aaf0	
+d3dapp.cpp	CD3DApplication::Initialize3DEnvironment	857	SOURCE_ANALOG	0x0052af00	
+d3dapp.cpp	CD3DApplication::Resize3DEnvironment	1042	SOURCE_ANALOG	0x0052b760	
+d3dapp.cpp	CD3DApplication::ToggleFullscreen	1096	SOURCE_ANALOG	0x0052b840	
+d3dapp.cpp	CD3DApplication::ForceWindowed	1177	SOURCE_ANALOG	0x0052ba50	
+d3dapp.cpp	CD3DApplication::AdjustWindowForChange	1251	NO_MATCH_FOUND		
+d3dapp.cpp	CD3DApplication::UserSelectNewDevice	1274	NO_MATCH_FOUND		
+d3dapp.cpp	CD3DApplication::SelectDeviceProc	1332	SOURCE_ANALOG	0x0052bc80	
+d3dapp.cpp	CD3DApplication::Pause	1748	NO_MATCH_FOUND		
+d3dapp.cpp	CD3DApplication::Cleanup3DEnvironment	1778	SOURCE_ANALOG	0x0052c430	
+d3dapp.cpp	CD3DApplication::DisplayErrorMsg	1817	SOURCE_ANALOG	0x0052c4f0	
+engine.cpp	CEngine::CEngine	41	SOURCE_ANALOG	0x00449820	
+engine.cpp	CEngine::Shutdown	69	SOURCE_ANALOG	0x00449890	
+engine.cpp	CEngine::Init	104	SOURCE_ANALOG	0x004499d0	
+engine.cpp	CEngine::InitResources	194	SOURCE_ANALOG	0x00449d50	
+engine.cpp	CEngine::AccumulateResources	210	NO_MATCH_FOUND		
+engine.cpp	CEngine::LoadAllNamedMeshes	229	SOURCE_ANALOG	0x00449dc0	
+engine.cpp	CEngine::ResetNamedMeshes	255	NO_MATCH_FOUND		
+engine.cpp	CEngine::AddNewGlobalNamedMesh	261	NO_MATCH_FOUND		
+engine.cpp	CEngine::GetViewMatrixFromCamera	293	SOURCE_ANALOG	0x00449ef0	
+engine.cpp	CEngine::SetViewpoint	304	SOURCE_ANALOG	0x0044a020	
+engine.cpp	CEngine::GetRenderTime	315	NO_MATCH_FOUND		
+engine.cpp	CEngine::SetNumViewpoints	322	NO_MATCH_FOUND		
+engine.cpp	CEngine::SelectViewpoint	329	SOURCE_ANALOG	0x0044a0d0	
+engine.cpp	CEngine::ResetPos	342	SOURCE_ANALOG	0x0044a110	
+engine.cpp	CEngine::InitDamageSystem	350	SOURCE_ANALOG	0x0044a130	
+engine.cpp	CEngine::BuildLevelSpecifics	369	NO_MATCH_FOUND		
+engine.cpp	CEngine::UpdatePos	386	SOURCE_EXACT	0x0044a1c0	reverse-engineering/binary-analysis/functions/engine.cpp/CEngine__UpdatePos.md
+engine.cpp	CEngine::LoadMixers	396	SOURCE_ANALOG	0x0044a1f0	
+engine.cpp	CEngine::SetKempyCube	417	SOURCE_ANALOG	0x0044a2a0	
+engine.cpp	CEngine::SetWater	424	SOURCE_ANALOG	0x0044a2c0	
+engine.cpp	CEngine::SetupLights	431	SOURCE_ANALOG	0x0044a2d0	
+engine.cpp	CEngine::LogLight	564	NO_MATCH_FOUND		
+engine.cpp	CEngine::SwitchAllLights	571	NO_MATCH_FOUND		
+engine.cpp	CEngine::EnableAlpha	580	NO_MATCH_FOUND		
+engine.cpp	CEngine::EnableAdditiveAlpha	589	NO_MATCH_FOUND		
+engine.cpp	CEngine::DisableAlpha	599	NO_MATCH_FOUND		
+engine.cpp	CEngine::SetTreeAlphaMode	606	NO_MATCH_FOUND		
+engine.cpp	CEngine::DisableLighting	622	NO_MATCH_FOUND		
+engine.cpp	CEngine::EnableLighting	628	NO_MATCH_FOUND		
+engine.cpp	CEngine::SetSky	635	NO_MATCH_FOUND		
+engine.cpp	CEngine::UpdateArea	640	NO_MATCH_FOUND		
+engine.cpp	CEngine::Serialize	648	NO_MATCH_FOUND		
+engine.cpp	CEngine::Deserialize	668	SOURCE_ANALOG	0x0044a6e0	
+engine.cpp	CEngine::GetCursorOffsetMatrix	700	NO_MATCH_FOUND		
+event.cpp	CEvent::CEvent	13	NO_MATCH_FOUND		
+eventmanager.cpp	CEventManager::CEventManager	25	SOURCE_EXACT	0x0044afa0	reverse-engineering/binary-analysis/event-manager-scheduler-semantics-2026-08-11.tsv
+eventmanager.cpp	CEventManager::~dtor	33	SOURCE_EXACT	0x0044b000	reverse-engineering/binary-analysis/event-manager-scheduler-semantics-2026-08-11.tsv
+eventmanager.cpp	CEventManager::Init	41	SOURCE_EXACT	0x0044b060	reverse-engineering/binary-analysis/event-manager-scheduler-semantics-2026-08-11.tsv
+eventmanager.cpp	CEventManager::Shutdown	72	SOURCE_EXACT	0x0044b1f0	reverse-engineering/binary-analysis/event-manager-scheduler-semantics-2026-08-11.tsv
+eventmanager.cpp	CEventManager::GetNextFreeEvent	112	SOURCE_EXACT	0x0044b2a0	reverse-engineering/binary-analysis/event-manager-scheduler-semantics-2026-08-11.tsv
+eventmanager.cpp	CEventManager::FreeEvent	129	NO_MATCH_FOUND		
+eventmanager.cpp	CEventManager::AddEvent	143	NO_MATCH_FOUND		
+eventmanager.cpp	CEventManager::AddEvent	152	NO_MATCH_FOUND		
+eventmanager.cpp	CEventManager::AddEvent	170	NO_MATCH_FOUND		
+eventmanager.cpp	CEventManager::Update	284	SOURCE_EXACT	0x0044b5c0	reverse-engineering/binary-analysis/event-manager-scheduler-semantics-2026-08-11.tsv
+eventmanager.cpp	CEventManager::AdvanceTime	293	SOURCE_EXACT	0x0044b600	reverse-engineering/binary-analysis/event-manager-scheduler-semantics-2026-08-11.tsv
+eventmanager.cpp	CEventManager::Flush	311	SOURCE_EXACT	0x0044b640	reverse-engineering/binary-analysis/event-manager-scheduler-semantics-2026-08-11.tsv
+eventmanager.cpp	CEventManager::LogEvent	423	NO_MATCH_FOUND		
+eventmanager.cpp	CEventManager::LogEventManager	497	NO_MATCH_FOUND		
+game.cpp	con_map	84	SOURCE_EXACT	0x0046be10	reverse-engineering/binary-analysis/functions/game.cpp/con_map.md
+game.cpp	con_resetmemsizes	100	SOURCE_EXACT	0x0046be80	reverse-engineering/binary-analysis/functions/game.cpp/con_resetmemsizes.md
+game.cpp	con_dumptextures	109	SOURCE_EXACT	0x0046bea0	reverse-engineering/binary-analysis/functions/game.cpp/con_dumptextures.md
+game.cpp	con_dumptimerecords	117	SOURCE_EXACT	0x0046bed0	reverse-engineering/binary-analysis/functions/game.cpp/con_dumptimerecords.md
+game.cpp	con_remotecameraon	129	SOURCE_EXACT	0x0046bef0	reverse-engineering/binary-analysis/functions/game.cpp/con_remotecameraon.md
+game.cpp	con_remotecameraoff	149	SOURCE_EXACT	0x0046c0b0	reverse-engineering/binary-analysis/functions/game.cpp/con_remotecameraoff.md
+game.cpp	con_navmapon	170	SOURCE_EXACT	0x0046c120	reverse-engineering/binary-analysis/functions/game.cpp/con_navmapon.md;reverse-engineering/binary-analysis/cgame-level-lifecycle-semantics-2026-08-11.tsv
+game.cpp	con_navmapoff	177	SOURCE_EXACT	0x0046c150	reverse-engineering/binary-analysis/functions/game.cpp/con_navmapoff.md;reverse-engineering/binary-analysis/cgame-level-lifecycle-semantics-2026-08-11.tsv
+game.cpp	con_win	184	SOURCE_EXACT	0x0046c180	reverse-engineering/binary-analysis/functions/game.cpp/con_win.md;reverse-engineering/binary-analysis/cgame-level-lifecycle-semantics-2026-08-11.tsv
+game.cpp	con_lose	190	SOURCE_EXACT	0x0046c200	reverse-engineering/binary-analysis/functions/game.cpp/con_lose.md;reverse-engineering/binary-analysis/cgame-level-lifecycle-semantics-2026-08-11.tsv
+game.cpp	con_buildresources	197	NO_MATCH_FOUND		
+game.cpp	CGame::CGame	216	SOURCE_ANALOG	0x0046c210	reverse-engineering/binary-analysis/cgame-level-lifecycle-semantics-2026-08-11.tsv
+game.cpp	CGame::~dtor	237	SOURCE_ANALOG	0x0046c2d0	reverse-engineering/binary-analysis/cgame-level-lifecycle-semantics-2026-08-11.tsv
+game.cpp	CGame::Init	246	SOURCE_EXACT	0x0046c360	reverse-engineering/binary-analysis/functions/game.cpp/CGame__Init.md;reverse-engineering/binary-analysis/cgame-level-lifecycle-semantics-2026-08-11.tsv
+game.cpp	CGame::InitRestartLoop	292	SOURCE_EXACT	0x0046c430	reverse-engineering/binary-analysis/functions/game.cpp/CGame__InitRestartLoop.md;reverse-engineering/binary-analysis/cgame-level-lifecycle-semantics-2026-08-11.tsv
+game.cpp	CGame::Shutdown	414	SOURCE_EXACT	0x0046c990	reverse-engineering/binary-analysis/functions/game.cpp/CGame__Shutdown.md;reverse-engineering/binary-analysis/cgame-level-lifecycle-semantics-2026-08-11.tsv
+game.cpp	CGame::ShutdownRestartLoop	530	SOURCE_EXACT	0x0046ca70	reverse-engineering/binary-analysis/functions/game.cpp/CGame__ShutdownRestartLoop.md;reverse-engineering/binary-analysis/cgame-level-lifecycle-semantics-2026-08-11.tsv
+game.cpp	CGame::LoadResources	624	SOURCE_EXACT	0x0046cd30	reverse-engineering/binary-analysis/functions/game.cpp/CGame__LoadResources.md
+game.cpp	CGame::InitOneOffResources	662	SOURCE_ANALOG	0x0046c360	reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-17.tsv
+game.cpp	CGame::InitRestartResources	674	SOURCE_ANALOG	0x0046c360	reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-17.tsv
+game.cpp	CGame::LoadLevel	685	SOURCE_EXACT	0x0046cdf0	reverse-engineering/binary-analysis/functions/game.cpp/CGame__LoadLevel.md
+game.cpp	CGame::PostLoadProcess	764	SOURCE_EXACT	0x0046d040	reverse-engineering/binary-analysis/functions/game.cpp/CGame__PostLoadProcess.md
+game.cpp	CGame::SetSlot	853	SOURCE_EXACT	0x0046d3a0	reverse-engineering/binary-analysis/functions/Script.cpp/CGame__SetSlot.md
+game.cpp	CGame::GetSlot	887	SOURCE_EXACT	0x0046d410	reverse-engineering/binary-analysis/functions/Script.cpp/CGame__GetSlot.md
+game.cpp	CGame::FillOutEndLevelData	910	SOURCE_ANALOG	0x0046d470	reverse-engineering/binary-analysis/functions/game.cpp/CGame__FillOutEndLevelData.md
+game.cpp	CGame::BuildResources	1049	NO_MATCH_FOUND		
+game.cpp	CGame::GetIntroFMV	1103	NO_MATCH_FOUND		
+game.cpp	CGame::RunIntroFMV	1122	SOURCE_ANALOG	0x0046d890	reverse-engineering/binary-analysis/functions/game.cpp/CGame__RunIntroFMV.md
+game.cpp	CGame::RunOutroFMV	1156	SOURCE_ANALOG	0x0046d9f0	reverse-engineering/binary-analysis/functions/game.cpp/CGame__RunOutroFMV.md
+game.cpp	ReceiveButtonAction	1240	NO_MATCH_FOUND		
+game.cpp	CGame::RestartLoopRunLevel	1260	SOURCE_EXACT	0x0046dc30	reverse-engineering/binary-analysis/functions/game.cpp/CGame__RestartLoopRunLevel.md;reverse-engineering/binary-analysis/cgame-level-lifecycle-semantics-2026-08-11.tsv
+game.cpp	CGame::RunLevel	1573	SOURCE_EXACT	0x0046e240	reverse-engineering/binary-analysis/functions/game.cpp/CGame__RunLevel.md;reverse-engineering/binary-analysis/cgame-level-lifecycle-semantics-2026-08-11.tsv
+game.cpp	CGame::Render	1704	SOURCE_EXACT	0x0046e460	reverse-engineering/binary-analysis/functions/game.cpp/CGame__Render.md
+game.cpp	CGame::Update	1836	SOURCE_EXACT	0x0046e910	reverse-engineering/binary-analysis/functions/game.cpp/CGame__Update.md
+game.cpp	CGame::PreRun	2063	NO_MATCH_FOUND		
+game.cpp	CGame::MainLoop	2076	SOURCE_EXACT	0x0046eee0	reverse-engineering/binary-analysis/functions/game.cpp/CGame__MainLoop.md
+game.cpp	CGame::ProcessDebug	2298	NO_MATCH_FOUND		
+game.cpp	CGame::GetCamera	2372	SOURCE_EXACT	0x0046f2c0	reverse-engineering/binary-analysis/functions/game.cpp/CGame__GetCamera.md
+game.cpp	CGame::SetCamera	2378	SOURCE_EXACT	0x0046f2d0	reverse-engineering/binary-analysis/functions/game.cpp/CGame__SetCamera.md
+game.cpp	CGame::DeclareLevelWon	2384	SOURCE_EXACT	0x0046f2f0	reverse-engineering/binary-analysis/functions/game.cpp/CGame__DeclareLevelWon.md
+game.cpp	CGame::MPDeclarePlayerWon	2417	SOURCE_EXACT	0x0046f360	reverse-engineering/binary-analysis/functions/game.cpp/CGame__MPDeclarePlayerWon.md
+game.cpp	CGame::MPDeclareGameDrawn	2446	SOURCE_EXACT	0x0046f3e0	reverse-engineering/binary-analysis/functions/game.cpp/CGame__MPDeclareGameDrawn.md
+game.cpp	CGame::DeclareLevelLost	2466	SOURCE_EXACT	0x0046f430	reverse-engineering/binary-analysis/functions/game.cpp/CGame__DeclareLevelLost.md
+game.cpp	CGame::DeclarePlayerDead	2503	SOURCE_ANALOG	0x0046f550	reverse-engineering/binary-analysis/functions/game.cpp/CGame__DeclarePlayerDead.md
+game.cpp	CWorld::kSinglePlayer	2521	NO_MATCH_FOUND		
+game.cpp	CWorld::kCooperativeMultiplayer	2533	NO_MATCH_FOUND		
+game.cpp	CWorld::kVersusMultiplayer	2548	NO_MATCH_FOUND		
+game.cpp	CGame::ReceiveButtonAction	2566	SOURCE_EXACT	0x0046f7e0	reverse-engineering/binary-analysis/functions/game.cpp/CGame__ReceiveButtonAction.md
+game.cpp	CGame::UnPause	2732	SOURCE_EXACT	0x0046fae0	reverse-engineering/binary-analysis/functions/game.cpp/CGame__UnPause.md
+game.cpp	CGame::Pause	2743	SOURCE_EXACT	0x0046fb00	reverse-engineering/binary-analysis/functions/game.cpp/CGame__Pause.md
+game.cpp	CGame::ToggleDebugUnitForward	2781	SOURCE_ANALOG	0x0046fb80	reverse-engineering/binary-analysis/functions/game.cpp/CGame__ToggleDebugUnitForward.md
+game.cpp	CGame::ToggleDebugUnitBackward	2828	SOURCE_ANALOG	0x0046fc40	reverse-engineering/binary-analysis/functions/game.cpp/CGame__ToggleDebugUnitBackward.md
+game.cpp	CGame::ToggleDebugSquadBackward	2880	SOURCE_ANALOG	0x0046fd40	reverse-engineering/binary-analysis/functions/game.cpp/CGame__ToggleDebugSquadBackward.md
+game.cpp	CGame::ToggleDebugSquadForward	2931	SOURCE_ANALOG	0x0046fe20	reverse-engineering/binary-analysis/functions/game.cpp/CGame__ToggleDebugSquadForward.md
+game.cpp	CGame::PreRender	2975	NO_MATCH_FOUND		
+game.cpp	CGame::StartPanState	3002	NO_MATCH_FOUND		
+game.cpp	CGame::StartPlayingState	3025	SOURCE_EXACT	0x0046fec0	reverse-engineering/binary-analysis/functions/game.cpp/CGame__StartPlayingState.md
+game.cpp	CGame::HandleEvent	3035	SOURCE_EXACT	0x0046ff10	reverse-engineering/binary-analysis/functions/game.cpp/CGame__HandleEvent.md
+game.cpp	CGame::RespawnPlayer	3094	SOURCE_EXACT	0x00470120	reverse-engineering/binary-analysis/functions/game.cpp/CGame__RespawnPlayer.md
+game.cpp	CWorld::kCooperativeMultiplayer	3106	NO_MATCH_FOUND		
+game.cpp	CWorld::kVersusMultiplayer	3129	NO_MATCH_FOUND		
+game.cpp	CGame::ToggleFreeCameraOn	3240	SOURCE_ANALOG	0x00470430	reverse-engineering/binary-analysis/functions/game.cpp/CGame__ToggleFreeCameraOn.md
+game.cpp	CGame::ToggleFreeCameraOff	3270	NO_MATCH_FOUND		
+game.cpp	CGame::GetController	3302	SOURCE_EXACT	0x004705d0	reverse-engineering/binary-analysis/functions/game.cpp/CGame__GetController.md
+game.cpp	CGame::SetCurrentCamera	3308	SOURCE_EXACT	0x004705e0	reverse-engineering/binary-analysis/functions/game.cpp/CGame__SetCurrentCamera.md
+game.cpp	CGame::DrawDebugStuff	3339	SOURCE_ANALOG	0x00470650	reverse-engineering/binary-analysis/functions/game.cpp/CGame__DrawDebugStuff.md
+game.cpp	draw_end_level_darkener	3508	NO_MATCH_FOUND		
+game.cpp	CGame::DrawGameStuff	3524	SOURCE_ANALOG	0x004714c0	reverse-engineering/binary-analysis/functions/game.cpp/CGame__DrawGameStuff.md
+game.cpp	CGame::DoWeWantMesh	3998	SOURCE_ANALOG	0x00472570	reverse-engineering/binary-analysis/functions/game.cpp/CGame__DoWeWantMesh.md
+game.cpp	CGame::IsMultiplayer	4011	SOURCE_ANALOG	0x004725d0	reverse-engineering/binary-analysis/functions/game.cpp/CGame__IsMultiplayer.md
+game.cpp	CGame::GetPlayerLives	4021	SOURCE_ANALOG	0x004725f0	reverse-engineering/binary-analysis/functions/game.cpp/CGame__GetPlayerLives.md
+game.cpp	CGame::SetPlayerLives	4033	SOURCE_ANALOG	0x00472620	
+game.cpp	CGame::IsRunningResources	4044	SOURCE_ANALOG	0x00472650	reverse-engineering/binary-analysis/functions/game.cpp/CGame__IsRunningResources.md
+game.cpp	CGame::GetNumPrimaryObjectives	4056	SOURCE_ANALOG	0x00472670	reverse-engineering/binary-analysis/functions/game.cpp/CGame__GetNumPrimaryObjectives.md
+game.cpp	CGame::GetNumSecondaryObjectives	4069	SOURCE_ANALOG	0x00472690	reverse-engineering/binary-analysis/functions/game.cpp/CGame__GetNumSecondaryObjectives.md
+game.cpp	ReceiveButtonAction	4094	NO_MATCH_FOUND		
+game.cpp	CGame::RollCredits	4107	SOURCE_ANALOG	0x004726b0	reverse-engineering/binary-analysis/functions/game.cpp/CGame__RollCredits.md
+ltshell.cpp	resolvesymbolmodule	96	NO_MATCH_FOUND		
+ltshell.cpp	resolvesymbolname	112	NO_MATCH_FOUND		
+ltshell.cpp	resolvesymbolline	134	NO_MATCH_FOUND		
+ltshell.cpp	resolvesymbolinfo	162	NO_MATCH_FOUND		
+ltshell.cpp	ExceptionHandler	172	NO_MATCH_FOUND		
+ltshell.cpp	ExitCode	471	NO_MATCH_FOUND		
+ltshell.cpp	WinMain	489	NO_MATCH_FOUND		
+ltshell.cpp	con_whatami	536	NO_MATCH_FOUND		
+ltshell.cpp	PCLTShell::MainLoop	541	NO_MATCH_FOUND		
+ltshell.cpp	PCLTShell::SetupSystemMessageHandler	579	NO_MATCH_FOUND		
+ltshell.cpp	PCLTShell::HandlingSystemStuff	594	NO_MATCH_FOUND		
+ltshell.cpp	PCLTShell::DisplayScreen	707	NO_MATCH_FOUND		
+ltshell.cpp	PCLTShell::~dtor	797	NO_MATCH_FOUND		
+ltshell.cpp	PCLTShell::InitDeviceObjects	807	NO_MATCH_FOUND		
+ltshell.cpp	PCLTShell::RestoreDeviceObjects	850	NO_MATCH_FOUND		
+ltshell.cpp	PCLTShell::InvalidateDeviceObjects	869	NO_MATCH_FOUND		
+ltshell.cpp	PCLTShell::DeleteDeviceObjects	885	NO_MATCH_FOUND		
+ltshell.cpp	PCLTShell::FinalCleanup	915	NO_MATCH_FOUND		
+ltshell.cpp	PCLTShell::ConfirmDevice	931	SOURCE_ANALOG	0x00512c40	
+ltshell.cpp	PCLTShell::RemoveDeviceObject	985	NO_MATCH_FOUND		
+ltshell.cpp	PCLTShell::MsgProc	1008	NO_MATCH_FOUND		
+ltshell.cpp	PCLTShell::FlushInputBuffers	1074	NO_MATCH_FOUND		
+ltshell.cpp	PCLTShell::EnumJoysticksCallback	1089	NO_MATCH_FOUND		
+ltshell.cpp	PCLTShell::EnumAxesCallback	1112	NO_MATCH_FOUND		
+ltshell.cpp	PCLTShell::EnumEffectsProc	1160	NO_MATCH_FOUND		
+ltshell.cpp	PCLTShell::InitDirectInput	1213	NO_MATCH_FOUND		
+ltshell.cpp	PCLTShell::InitialiseRumble	1316	NO_MATCH_FOUND		
+ltshell.cpp	PCLTShell::TriggerRumble	1345	NO_MATCH_FOUND		
+ltshell.cpp	PCLTShell::UpdateJoystick	1362	NO_MATCH_FOUND		
+ltshell.cpp	PCLTShell::FreeDirectInput	1438	NO_MATCH_FOUND		
+ltshell.cpp	PCLTShell::DeadZone	1452	NO_MATCH_FOUND		
+ltshell.cpp	PCLTShell::ForceFile	1468	NO_MATCH_FOUND		
+ltshell.cpp	PCLTShell::DumpScreen	1477	NO_MATCH_FOUND		
+ltshell.cpp	PCLTShell::SetKeytrap	1499	NO_MATCH_FOUND		
+ltshell.cpp	PCLTShell::InvalidateAllStates	1504	NO_MATCH_FOUND		
+ltshell.cpp	PCLTShell::CheckD3DState	1670	NO_MATCH_FOUND		
+ltshell.cpp	PCLTShell::GetBPP	1723	NO_MATCH_FOUND		
+ltshell.cpp	PCLTShell::IsThisAGeForce3	1742	NO_MATCH_FOUND		
+ltshell.cpp	PCLTShell::ShowGFXCardInfo	1770	NO_MATCH_FOUND		
+ltshell.cpp	PCLTShell::TriggerQuit	1791	NO_MATCH_FOUND		
+ltshell.cpp	PCLTShell::GetDisplayFormat	1804	NO_MATCH_FOUND		
+ltshell.cpp	PCLTShell::D3D_CreateVertexBuffer	1809	NO_MATCH_FOUND		
+ltshell.cpp	PCLTShell::D3D_ReleaseVertexBuffer	1815	NO_MATCH_FOUND		
+pcsoundmanager.cpp	CPCSample::~dtor	25	SOURCE_ANALOG	0x005168d0	reverse-engineering/binary-analysis/cpcsoundmanager-backend-semantics-2026-08-11.tsv
+pcsoundmanager.cpp	CPCSoundManager::DeviceInit	36	NO_MATCH_FOUND		
+pcsoundmanager.cpp	CPCSoundManager::DeviceShutdown	116	SOURCE_EXACT	0x005171e0	reverse-engineering/binary-analysis/cpcsoundmanager-backend-semantics-2026-08-11.tsv
+pcsoundmanager.cpp	CPCSoundManager::DeviceReset	135	SOURCE_EXACT	0x00517260	reverse-engineering/binary-analysis/cpcsoundmanager-backend-semantics-2026-08-11.tsv
+pcsoundmanager.cpp	CPCSoundManager::LoadNewSample	151	NO_MATCH_FOUND		
+pcsoundmanager.cpp	CPCSoundManager::PlaySound	228	SOURCE_EXACT	0x00517790	reverse-engineering/binary-analysis/cpcsoundmanager-backend-semantics-2026-08-11.tsv
+pcsoundmanager.cpp	CPCSoundManager::UnPauseSound	280	SOURCE_EXACT	0x00517960	reverse-engineering/binary-analysis/cpcsoundmanager-backend-semantics-2026-08-11.tsv
+pcsoundmanager.cpp	CPCSoundManager::PauseSound	297	SOURCE_EXACT	0x00517990	reverse-engineering/binary-analysis/cpcsoundmanager-backend-semantics-2026-08-11.tsv
+pcsoundmanager.cpp	CPCSoundManager::StopSound	311	SOURCE_EXACT	0x005179b0	reverse-engineering/binary-analysis/cpcsoundmanager-backend-semantics-2026-08-11.tsv
+pcsoundmanager.cpp	CPCSoundManager::UpdateGlobals	324	SOURCE_EXACT	0x00517a20	reverse-engineering/binary-analysis/cpcsoundmanager-backend-semantics-2026-08-11.tsv
+pcsoundmanager.cpp	CPCSoundManager::UpdateSound	362	SOURCE_EXACT	0x00517ae0	reverse-engineering/binary-analysis/cpcsoundmanager-backend-semantics-2026-08-11.tsv
+pcsoundmanager.cpp	CPCSoundManager::UpdatesDone	434	SOURCE_EXACT	0x00517c40	reverse-engineering/binary-analysis/cpcsoundmanager-backend-semantics-2026-08-11.tsv
+pcsoundmanager.cpp	CPCSoundManager::GetSampleDataAtTime	444	NO_MATCH_FOUND		
+pcsoundmanager.cpp	CPCSoundManager::GetSampleDataAtSample	457	NO_MATCH_FOUND		
+pcsoundmanager.cpp	CPCSoundManager::GetSampleLength	468	SOURCE_EXACT	0x00517c60	reverse-engineering/binary-analysis/cpcsoundmanager-backend-semantics-2026-08-11.tsv
+pcsoundmanager.cpp	CPCSoundManager::GetSampleLengthInSamples	477	SOURCE_ANALOG	0x00517c60	reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-17.tsv
+pcsoundmanager.cpp	CPCSoundManager::FindFreeChannel	486	SOURCE_EXACT	0x00517cb0	reverse-engineering/binary-analysis/cpcsoundmanager-backend-semantics-2026-08-11.tsv
+scheduledevent.cpp	CScheduledEvent::Set	17	SOURCE_EXACT	0x004de1f0	reverse-engineering/binary-analysis/functions/scheduledevent.cpp/CScheduledEvent__Set.md;reverse-engineering/binary-analysis/event-manager-scheduler-semantics-2026-08-11.tsv
+scheduledevent.cpp	CScheduledEvent::~dtor	30	SOURCE_EXACT	0x004de230	reverse-engineering/binary-analysis/functions/scheduledevent.cpp/CScheduledEvent__dtor.md;reverse-engineering/binary-analysis/event-manager-scheduler-semantics-2026-08-11.tsv
+thing.cpp	CThing::CThing	28	NO_MATCH_FOUND		
+thing.cpp	CThing::Init	40	SOURCE_ANALOG	0x004f34a0	
+thing.cpp	CThing::InitRenderThing	92	SOURCE_ANALOG	0x004f35d0	
+thing.cpp	CThing::Shutdown	102	SOURCE_ANALOG	0x004f3600	
+thing.cpp	CThing::~dtor	116	SOURCE_ANALOG	0x004f3480	
+thing.cpp	CThing::Render	133	SOURCE_ANALOG	0x004f36d0	
+thing.cpp	CThing::RenderImposter	150	SOURCE_ANALOG	0x004f3710	
+thing.cpp	CThing::HandleEvent	159	SOURCE_ANALOG	0x004f3730	
+thing.cpp	CThing::AddShutdownEvent	183	NO_MATCH_FOUND		
+thing.cpp	CThing::StartDieProcess	193	NO_MATCH_FOUND		
+thing.cpp	CThing::DrawDebugCuboid	207	SOURCE_ANALOG	0x004f37c0	
+thing.cpp	CThing::GetBoundingRadius	254	SOURCE_ANALOG	0x004f3940	
+thing.cpp	CThing::SetObjective	269	SOURCE_ANALOG	0x004f3970	
+thing.cpp	CThing::UpdatePosition	290	SOURCE_ANALOG	0x004f39b0	
+thing.cpp	CThing::InitCollisionSeekingThing	300	SOURCE_ANALOG	0x004f39c0	
+thing.cpp	CThing::GetCentrePos	342	SOURCE_ANALOG	0x004f3ac0	
+thing.cpp	CThing::StickToGround	400	SOURCE_ANALOG	0x004f3c50	
+thing.cpp	CThing::SitOnGround	407	NO_MATCH_FOUND		
+thing.cpp	CThing::GetRenderThingFrameIncrement	414	SOURCE_ANALOG	0x004f3c80	
+thing.cpp	CThing::MoveTo	423	SOURCE_ANALOG	0x004f3cb0	
+thing.cpp	CThing::Teleport	430	SOURCE_ANALOG	0x004f3ce0	
+thing.cpp	CThing::GetCSPT	441	NO_MATCH_FOUND		
+thing.cpp	CThing::GetTopPos	472	NO_MATCH_FOUND		
+thing.cpp	CThing::GetBoundingBox	497	NO_MATCH_FOUND		
+thing.cpp	CThing::DrawDebugStuff	507	NO_MATCH_FOUND		
+thing.cpp	CThing::DrawDebugStuff3d	513	SOURCE_ANALOG	0x004f3d30	
+thing.cpp	CThing::AccumulateResources	527	NO_MATCH_FOUND		
+thing.cpp	CThing::IncreaseThingCounter	536	NO_MATCH_FOUND		
+thing.cpp	CThing::IsOverWater	543	SOURCE_ANALOG	0x004f3de0	
+thing.cpp	CComplexThing::CComplexThing	563	NO_MATCH_FOUND		
+thing.cpp	CComplexThing::~dtor	576	SOURCE_ANALOG	0x004f3ee0	
+thing.cpp	CComplexThing::Init	591	SOURCE_ANALOG	0x004f3fd0	
+thing.cpp	CComplexThing::SetName	613	SOURCE_ANALOG	0x004f4120	
+thing.cpp	CComplexThing::Shutdown	633	SOURCE_ANALOG	0x004f41b0	
+thing.cpp	CComplexThing::SetScript	651	SOURCE_ANALOG	0x004f4230	
+thing.cpp	CComplexThing::HandleEvent	674	SOURCE_ANALOG	0x004f4300	
+thing.cpp	CComplexThing::AddShutdownEvent	711	SOURCE_ANALOG	0x004f43d0	
+thing.cpp	CComplexThing::StartDieProcess	728	SOURCE_ANALOG	0x004f4430	
+thing.cpp	CComplexThing::TeleportOrientation	742	SOURCE_ANALOG	0x004f4460	
+thing.cpp	CComplexThing::Hit	748	SOURCE_ANALOG	0x004f4480	
+thing.cpp	CComplexThing::SetAnimMode	763	SOURCE_ANALOG	0x004f44a0	
+thing.cpp	CComplexThing::GetAnimModeByName	776	NO_MATCH_FOUND		
+thing.cpp	CComplexThing::SetAnimMode	788	SOURCE_ANALOG	0x004f44a0	
+thing.cpp	CComplexThing::FinishedPlayingCurrentAnimation	795	SOURCE_ANALOG	0x004f45a0	
+thing.cpp	CComplexThing::GetRenderFrame	807	NO_MATCH_FOUND		
+thing.cpp	CComplexThing::AccumulateResources	817	NO_MATCH_FOUND		
+thing.cpp	CComplexThing::SetVar	827	SOURCE_ANALOG	0x004f45e0	
+Array.h	operator_subscript	103	NO_MATCH_FOUND		
+Array.h	operator_subscript	117	NO_MATCH_FOUND		
+BattleEngine.h	CLockInfo	55	NO_MATCH_FOUND		
+BattleEngine.h	SetConfiguration	218	NO_MATCH_FOUND		
+BattleEngineDataManager.h	SetConfigurationName	57	NO_MATCH_FOUND		
+BattleEngineDataManager.h	AddJetWeapon	73	NO_MATCH_FOUND		
+BattleEngineDataManager.h	RemoveJetWeapon	82	NO_MATCH_FOUND		
+BattleEngineDataManager.h	RenameJetWeapon	102	NO_MATCH_FOUND		
+BattleEngineDataManager.h	AddMechWeapon	125	NO_MATCH_FOUND		
+BattleEngineDataManager.h	RemoveMechWeapon	134	NO_MATCH_FOUND		
+BattleEngineDataManager.h	RenameWalkerWeapon	154	NO_MATCH_FOUND		
+BattleEngineDataManager.h	SetExplosion	177	NO_MATCH_FOUND		
+BattleEngineDataManager.h	SetAugWeapon	193	NO_MATCH_FOUND		
+BattleEngineDataManager.h	SetPrimaryWeapon	209	NO_MATCH_FOUND		
+BattleEngineDataManager.h	SetCockpit	225	NO_MATCH_FOUND		
+BattleEngineDataManager.h	Shutdown	249	NO_MATCH_FOUND		
+BattleEngineDataManager.h	Initialise	259	NO_MATCH_FOUND		
+BattleEngineDataManager.h	GetConfiguration	272	NO_MATCH_FOUND		
+BattleEngineDataManager.h	GetConfiguration	289	NO_MATCH_FOUND		
+BattleEngineDataManager.h	Load	301	NO_MATCH_FOUND		
+BattleEngineDataManager.h	AccumulateResources	319	NO_MATCH_FOUND		
+BattleEngineDataManager.h	Skip	327	NO_MATCH_FOUND		
+BattleEngineDataManager.h	Load	338	NO_MATCH_FOUND		
+BattleEngineDataManager.h	Save	356	NO_MATCH_FOUND		
+BattleEngineDataManager.h	AddConfiguration	364	NO_MATCH_FOUND		
+BattleEngineDataManager.h	RemoveConfiguration	382	NO_MATCH_FOUND		
+BattleEngineDataManager.h	RenameConfiguration	397	NO_MATCH_FOUND		
+BattleEngineDataManager.h	ConfigurationExists	406	NO_MATCH_FOUND		
+BattleEngineDataManager.h	GetConfiguration	418	NO_MATCH_FOUND		
+Controller.h	SetButton	211	NO_MATCH_FOUND		
+Controller.h	UnsetButton	222	NO_MATCH_FOUND		
+Controller.h	IsButtonSet	233	NO_MATCH_FOUND		
+Controller.h	IsButtonOldSet	246	NO_MATCH_FOUND		
+DXEngine.h	GetDefaultTexture	49	NO_MATCH_FOUND		
+DXMemoryManager.h	IsThingHeapNearlyFull	45	NO_MATCH_FOUND		
+DXMemoryManager.h	IsThingHeapFull	57	NO_MATCH_FOUND		
+FEPGoodies.h	CGoodieData	23	NO_MATCH_FOUND		
+InitThing.h	Initialise	76	NO_MATCH_FOUND		
+InitThing.h	Copy	144	NO_MATCH_FOUND		
+InitThing.h	Load	170	NO_MATCH_FOUND		
+InitThing.h	CTreeInitThing	366	NO_MATCH_FOUND		
+InitThing.h	Copy	379	NO_MATCH_FOUND		
+InitThing.h	Load	391	NO_MATCH_FOUND		
+InitThing.h	mSquadDelay	422	NO_MATCH_FOUND		
+InitThing.h	Copy	435	NO_MATCH_FOUND		
+InitThing.h	Load	454	NO_MATCH_FOUND		
+InitThing.h	CSquadInitThing	630	NO_MATCH_FOUND		
+InitThing.h	Copy	645	NO_MATCH_FOUND		
+InitThing.h	Copy	651	NO_MATCH_FOUND		
+InitThing.h	Load	665	NO_MATCH_FOUND		
+InitThing.h	CWallInitThing	685	NO_MATCH_FOUND		
+InitThing.h	Copy	699	NO_MATCH_FOUND		
+InitThing.h	Load	709	NO_MATCH_FOUND		
+InitThing.h	CCutsceneInitThing	738	NO_MATCH_FOUND		
+InitThing.h	Copy	751	NO_MATCH_FOUND		
+InitThing.h	Load	764	NO_MATCH_FOUND		
+InitThing.h	CStartInitThing	797	NO_MATCH_FOUND		
+InitThing.h	Copy	810	NO_MATCH_FOUND		
+InitThing.h	Load	819	NO_MATCH_FOUND		
+InitThing.h	CSphereTriggerInitThing	838	NO_MATCH_FOUND		
+InitThing.h	Copy	850	NO_MATCH_FOUND		
+InitThing.h	Load	858	NO_MATCH_FOUND		
+InitThing.h	CUnitInitThing	871	NO_MATCH_FOUND		
+InitThing.h	Copy	876	NO_MATCH_FOUND		
+InitThing.h	CRoundInitThing	895	NO_MATCH_FOUND		
+InitThing.h	CBattleEngineInitThing	908	NO_MATCH_FOUND		
+InitThing.h	CExplosionInitThing	921	NO_MATCH_FOUND		
+InitThing.h	CFeatureInitThing	952	NO_MATCH_FOUND		
+InitThing.h	CHazardInitThing	963	NO_MATCH_FOUND		
+MemoryCard.h	GetHumanReadableError	65	NO_MATCH_FOUND		
+MemoryManager.h	SetBaseSet	236	NO_MATCH_FOUND		
+MemoryManager.h	IsTiny	308	NO_MATCH_FOUND		
+MemoryManager.h	CMemoryTag	380	NO_MATCH_FOUND		
+MemoryManager.h	CMemoryManager	395	NO_MATCH_FOUND		
+Music.h	CSong	19	NO_MATCH_FOUND		
+Music.h	CMusic	51	NO_MATCH_FOUND		
+PCMemoryCard.h	GetCardInfo	18	NO_MATCH_FOUND		
+PCMemoryCard.h	GetCardOrPreviousCardName2	30	NO_MATCH_FOUND		
+PCMemoryCard.h	GetCardName	35	NO_MATCH_FOUND		
+PCMemoryCard.h	GetCardType	40	NO_MATCH_FOUND		
+PCMemoryCard.h	Format	46	NO_MATCH_FOUND		
+PCMemoryCard.h	Unformat	50	NO_MATCH_FOUND		
+PCMemoryCard.h	GetNumSaves	55	NO_MATCH_FOUND		
+PCMemoryCard.h	GetSaveName	60	NO_MATCH_FOUND		
+PCMemoryCard.h	CreateSave	65	NO_MATCH_FOUND		
+PCMemoryCard.h	DeleteSave	70	NO_MATCH_FOUND		
+PCMemoryCard.h	WriteSave	75	NO_MATCH_FOUND		
+PCMemoryCard.h	ReadSave	79	NO_MATCH_FOUND		
+PCMemoryCard.h	GetSaveSize	84	NO_MATCH_FOUND		
+PCMemoryCard.h	MakeHumanReadableSize	89	NO_MATCH_FOUND		
+PCPlatform.h	CPCPlatform	60	NO_MATCH_FOUND		
+SoundManager.h	CEffect	46	NO_MATCH_FOUND		
+SoundManager.h	CSample	106	NO_MATCH_FOUND		
+SoundManager.h	CSoundManager	176	NO_MATCH_FOUND		
+game.h	CGame::CalcRenderFrameFraction	386	NO_MATCH_FOUND		
+game.h	CGame::GetFrameRenderFraction	404	NO_MATCH_FOUND		
+game.h	CGame::GetFrameRenderFraction2	410	NO_MATCH_FOUND		
+ltshell.h	DisableSmallTextures	145	NO_MATCH_FOUND		
+ltshell.h	DisableTextureCompression	152	NO_MATCH_FOUND		
+pcsoundmanager.h	CPCSample	27	NO_MATCH_FOUND		
+pcsoundmanager.h	CPCSoundManager	45	NO_MATCH_FOUND		
+thing.h	CThing::GetOrientation	309	NO_MATCH_FOUND		
