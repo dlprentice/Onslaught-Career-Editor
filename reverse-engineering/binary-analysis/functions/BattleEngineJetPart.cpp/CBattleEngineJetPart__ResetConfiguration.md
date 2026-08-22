@@ -104,15 +104,20 @@ measured.
 
 ## Callers and callees
 
-Inbound `.text` rel32: **exactly two CALLs**
-(`tools/call_xref_scan.py`):
+Inbound `.text` rel32: **exactly two CALLs** — re-verified 2026-08-22
+against the pristine specimen with an independent whole-`.text` scan
+(`local-lab/famC_verify.py`): body hash re-confirmed
+`e26aade4…c9aa` over `0x00412650`–`0x00412799`, exactly two inbound
+`E8`, **zero** imm32 encodings image-wide (still not a vtable slot),
+and the current name-table row `0x00412650 CBattleEngineJetPart__ResetConfiguration`
+end `0x00412799` unchanged.
 
 | Site | Enclosing | Arm |
 | --- | --- | --- |
-| `0x00410268` | `CBattleEngineJetPart__ctor` `0x00410210` (`ret 0x4`) | constructor tail; `[esi+0x18] = arg` (mainPart) stored at `0x00410239`, immediately before |
-| `0x0040c695` | `CBattleEngine__UpdateConfiguration` `0x0040c650` (`ret`, sealed row tsv:229) | jet arm, guarded by `mov ecx,[esi+0x57c]; test ecx,ecx; je` (`0x0040c682`–`0x0040c693`); the sibling walker arm `0x0040c6a4` calls `CBattleEngineWalkerPart__ResetConfiguration` `0x004146b0` |
+| `0x00410268` | `CBattleEngineJetPart__ctor` `0x00410210` (`ret 0x4`) | constructor tail; the `[esi+0x10..0x44]` field-clear block (`mov [esi+off], edi/eax`) runs immediately before, then the call, then `[esi+0x48] = edi` after — the mount is the ctor's last initialization step |
+| `0x0040c695` | `CBattleEngine__UpdateConfiguration` `0x0040c650` (`ret`, sealed row tsv:229) | jet arm: config fetched via `0x0040f2f0`, `[esi+0x4b0]` change-guard compares old vs new config pointer, new config's name/primary fields stored to `[esi+0xfc]/[+0xf8]`, then `ecx = [esi+0x57c]; test; je` guard and the call (`0x0040c682`–`0x0040c695`); the sibling walker arm `0x0040c6a4` calls `CBattleEngineWalkerPart__ResetConfiguration` `0x004146b0` under the mirrored `[esi+0x578]` guard |
 
-Zero `E9` inbound; **zero imm32 encodings** of `0x00412650` anywhere in
+Zero `E9` inbound; zero imm32 encodings of `0x00412650` anywhere in
 the image — this is not a vtable slot.
 
 Callees: `CSPtrSet__Remove` `0x004e5bd0`;
@@ -180,15 +185,30 @@ walker twin continues past its list walk into `config+0x60`/`+0x64`
 
 ## Rebuild mapping
 
-Nearest reconstruction owner: **none added.** `RetailWeaponSelection.cs`
-(`RetailMountedWeapon`, `RetailWeaponCycle`) and `RetailWeaponStores.cs`
-model selection and readouts over an *already-mounted* set; nothing in
-Core yet models mounting. This contract is the mount law a future owner
-needs: configuration name list × weapon factory → ordered mounted set +
-`currentIndex = 0`, with the drain-before-rebuild rule on configuration
-change and the current-weapon reset even on empty. Per lane rules no Core
-file was edited from this RE root; the focused-test step is deferred until
-an owner exists to pin (documented here rather than silently skipped).
+**Update 2026-08-22 (Family C pass): a Core owner has now landed.**
+`rebuild/OnslaughtRebuild.Core/Level100PlayerWeaponRuntime.cs` models
+the Level 100 slice of this contract: `ResetConfiguration()` sets all
+four weapons active and both selections to slot zero
+(`_walkerSelection = 0; _jetSelection = 0`), matching the retail
+"append in configuration order, `mCurrentWeapon = 0` even when the
+list is empty" tail, and `Simulation.cs` invokes it on attempt reset —
+the same two call sites as retail (construction and configuration
+change). The focused test exists:
+`Level100PlayerWeaponRuntimeTests.ResetConfiguration_SelectsFirstReleasedSlotAndActivatesAllWeapons`
+pins selection-to-slot-zero and start-enabled across a reset after
+deactivations.
+
+What that owner intentionally does **not** model: the drain-and-remount
+object lifecycle (`CSPtrSet__Remove` + deleting dtor + factory spawn +
+`Init`), which Level 100 never exercises mid-attempt because its
+configuration never changes. The mount law for a changing
+configuration remains unowned — `RetailWeaponSelection.cs` /
+`RetailWeaponStores.cs` still model readouts over an *already-mounted*
+set only, and per lane rules no Core file was edited from this RE root.
+The caller evidence above is what a future mount-law owner must honor:
+ctor-tail placement, config-pointer change guard at `[esi+0x4b0]`,
+and the `[esi+0x57c]`/`[esi+0x578]` part-presence guards on the two
+arms.
 
 ## Cheapest falsifier
 
