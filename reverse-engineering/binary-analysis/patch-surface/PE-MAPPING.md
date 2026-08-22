@@ -7,7 +7,9 @@ raw range. `.data` VirtualSize is far larger than SizeOfRawData, so most
 runtime globals (including `g_bGodModeEnabled`, the mapping table, and
 the script objective / goodie arrays) are BSS and are not file-patchable.
 Evidence: MEASURED — PE section table and VA-to-file map re-read from the
-named specimen on 2026-08-22; hash matched.
+named specimen on 2026-08-22; hash matched. `t_5129ab1b` added the
+impostor / debris / mesh-LOD CVar dwords as file-backed `.data` (not BSS;
+not rewritten by SetQualityLevel).
 Specimen: `local-lab/pristine-verification-2026-07-26/pristine-target/BEA.exe`
 SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 (2,506,752 bytes).
@@ -105,7 +107,13 @@ Patch the init `mov` or the IScript `fstp`.
 `g_MeshQualityDistance` `0x006321A0`, `cg_meshlodbias`
 `0x00631E88`, and scale `0x00630E0C` are file-backed and ship
 non-zero, but `CRTMesh__SetQualityLevel` / `CRTTree__Init`
-overwrite them. Patch those writers. SP aspect `0x005D8BC4`
+overwrite them. Patch those writers (distance already rowed;
+lod-bias / scale stores now rowed too). Impostor / debris /
+mesh-LOD-threshold CVars are file-backed and are **not**
+rewritten by SetQualityLevel — the file dword is the live
+default (`0x00631E94` / `98`, `0x006282FC` / `00` / `04`,
+`0x00631E8C` / `90`). Console registration takes a pointer
+and can still overwrite. SP aspect `0x005D8BC4`
 (0.75f) is file-backed with **42** address refs — not a value
 row; patch `CCamera__GetAspectRatio`'s `je`.
 

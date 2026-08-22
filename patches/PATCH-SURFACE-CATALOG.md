@@ -11,7 +11,10 @@ position / script / HUD / PlayCutscene one-instruction rows), then
 SetQualityLevel / CRTTree / occupancy-slope writers, FollowWaypoint
 vfunc, IsNumberBetween, SpawnEscapePod skip), then `t_70f01f80`
 (leftover SetProjectionMatrix nears / HUD+compass far 100 / sky far
-qword, landscape texture-LOD radii, SpawnThing skip, IsEnemy type-bit).
+qword, landscape texture-LOD radii, SpawnThing skip, IsEnemy type-bit), then
+`t_5129ab1b` (GetDistToObj / GetAngle / TeleportOrientation / SetSlot call,
+CGame::SetSlot 256-guard, PlayPCharMessage insert, SetQualityLevel lod-bias
+and scale stores, impostor / debris / mesh-LOD CVar defaults).
 Evidence: MEASURED — every non-unknown TSV `original_bytes` compared to the
 named specimen at write time; PE section table re-parsed; first-cut BSS
 god-flag row retracted. `t_17fa180d` re-read JetPart::Move, SendButtonAction,
@@ -26,7 +29,10 @@ PUSHes, ZoomIn/Out/AutoZoomOut stores, `CRTMesh__SetQualityLevel`,
 `t_70f01f80` re-read those TSV bytes again (206 compared, 0 mismatch)
 and the nine `SetProjectionMatrix` callers, sky-far qword, UpdateLOD
 fcomp cluster, SpawnThing skip-`je`, and IsEnemy type-bit from the
-same specimen.
+same specimen. `t_5129ab1b` re-read those TSV bytes again (223 compared,
+0 mismatch) and the leftover IScript heads, `CGame__SetSlot`,
+SetQualityLevel sibling stores, and the impostor / debris / mesh-LOD
+CVar dwords from the same specimen.
 Specimen: `local-lab/pristine-verification-2026-07-26/pristine-target/BEA.exe`
 SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 (2,506,752 bytes).
@@ -53,8 +59,9 @@ PE mapping owner: [`../reverse-engineering/binary-analysis/patch-surface/PE-MAPP
 - TSV `original_bytes` for every non-`unknown-*` / non-`none-*` row were
   compared to the specimen in the `t_14fcbbed` writer, again in the
   `t_17fa180d` writer, again in the `t_120c3e1b` writer, again in the
-  `t_94b70425` writer, again in the `t_94ad2658` writer, and again in
-  the `t_70f01f80` writer and refused on mismatch.
+  `t_94b70425` writer, again in the `t_94ad2658` writer, again in
+  the `t_70f01f80` writer, and again in the `t_5129ab1b` writer and
+  refused on mismatch.
 - Confidence vocabulary: MEASURED (byte + behavior evidence),
   STATIC_ONLY (byte evidence verified here; behavior inferred from pinned
   source or prior bounded observations), SPECULATIVE (site plausible,
@@ -79,7 +86,7 @@ PE mapping owner: [`../reverse-engineering/binary-analysis/patch-surface/PE-MAPP
 | 9 | Already-cataloged adjacent rows (pointer only) | [§9](#9-already-cataloged-adjacent-rows-pointer-only) | — |
 | 10 | Explicit non-surfaces | [§10](#10-explicit-non-surfaces) | BSS list expanded |
 | 11 | End-of-level ranking | [§11](#11-end-of-level-ranking) | FillOut stores |
-| 12 | Career graph / goodies / kills | [§12](#12-career-graph--goodies--kills) | Update / SetSlot / GRADE |
+| 12 | Career graph / goodies / kills | [§12](#12-career-graph--goodies--kills) | Update / SetSlot / GRADE; CGame::SetSlot 256-guard |
 | 13 | Flight / script enable | [§13](#13-flight--script-enable) | DisableFlight NOP, AddScore, SetVulnerable |
 | 14 | Input / analogue | [§14](#14-input--analogue) | 0.001f scale |
 | 15 | Collision / camera knobs | [§15](#15-collision--camera-knobs) | COfG, movie zoom; gameplay far/zoom in §23 |
@@ -88,12 +95,13 @@ PE mapping owner: [`../reverse-engineering/binary-analysis/patch-surface/PE-MAPP
 | 18 | IScript getters / predicates | [§18](#18-iscript-getters--predicates) | + GetNumber / GetSquad / GetTarget / Spawners* / IsA; IsEnemy type-bit now rowed |
 | 19 | IScript camera | [§19](#19-iscript-camera) | GotoPlayer / ToggleCockpit / disable 3-/4-point pan |
 | 20 | Weather | [§20](#20-weather) | Rain/snow/lightning fstp + init stores; wind X |
-| 21 | IScript messages / wait | [§21](#21-iscript-messages--wait) | Wait-flag twins; SwitchMessages; PlayChar insert; PlayCutscene call |
+| 21 | IScript messages / wait | [§21](#21-iscript-messages--wait) | Wait-flag twins; SwitchMessages; PlayChar / PlayPChar insert; PlayCutscene call |
 | 22 | HUD highlight | [§22](#22-hud-highlight) | Highlight/UnHighlight stores; dest is BSS |
 | 23 | Camera projection / zoom bounds | [§23](#23-camera-projection--zoom-bounds) | far-plane PUSHes; HUD/compass 100; sky far qword; leftover nears |
-| 24 | Mesh quality / occupancy slopes | [§24](#24-mesh-quality--occupancy-slopes) | SetQualityLevel writers; CRTTree 45; InitLODLists 35/45/60; landscape radii |
+| 24 | Mesh quality / occupancy slopes | [§24](#24-mesh-quality--occupancy-slopes) | SetQualityLevel writers + lod-bias/scale; CRTTree 45; InitLODLists; landscape radii; impostor/debris/mesh-LOD CVar defaults |
 | 25 | Leftover IScript (waypoint / range / escape) | [§25](#25-leftover-iscript-waypoint--range--escape) | FollowWaypoint vfunc; IsNumberBetween; SpawnEscapePod; SpawnThing skip |
 | 26 | Fog sentinel (declined) | [§26](#26-fog-sentinel-declined) | FOGEND 10.0 is ignored under EXP |
+| 27 | Leftover IScript (dist / angle / slot / orient) | [§27](#27-leftover-iscript-dist--angle--slot--orient) | GetDistToObj / GetAngle always-0; TeleportOrientation vfunc; SetSlot call |
 
 ---
 
@@ -1102,6 +1110,18 @@ Confidence: **STATIC_ONLY**. Risk: medium.
 
 Confidence: **STATIC_ONLY**. Risk: low.
 
+### 12.7 `CGame::SetSlot` 256-bit guard
+
+`CGame__SetSlot` `0x0046D3A0` is the runtime-only writer
+(`CGame+0x308`, 256 bits). `IScript::SetSlot` calls it at
+`0x005338F2`; `SetSlotSave` calls it then `CCareer::SetSlot`.
+`0x0046D3AB`: `3d 00 01 00 00` (`cmp eax,0x100`) / `jge`.
+Same rewrite as §12.2: `3d 00 04 00 00`. Career persist is
+still gated by the already-rowed CCareer guard. Destination
+is on the BSS `CGame` singleton; patch the compare.
+
+Confidence: **STATIC_ONLY**. Risk: low.
+
 ---
 
 ## 13. Flight / script enable
@@ -1412,8 +1432,11 @@ thing, not a file global.
 | SetGoalPoint | `0x00534F1C` | `ff 97 f4 00 00 00` | `call [edi+0xf4]` |
 | Stop | `0x00534F57` | `ff 90 f4 00 00 00` | same `+0xf4` with the thing's current `+0x1c` pose |
 
-`TeleportOrientation` multiplies three unboxed angles by
-`[0x005DC7B0]` = π/180 (8 refs). That float is shared — not rowed.
+`TeleportOrientation` `0x00536A60` multiplies three unboxed
+angles by `[0x005DC7B0]` = π/180 (8 refs — shared, not
+rowed) then `call [thing.vtable+0x54]` at **`0x00536B62`**.
+NOP×3: scripts cannot set facing. That call is the
+orientation sibling of SetPos's `+0x50`.
 
 ### 17.20 SetScript / SetSpawnScript
 
@@ -1708,9 +1731,11 @@ call at `0x005342CA` / `0x005342EA`.
 `mission-script-command-registry-2026-08-12.md`) then
 `call 0x004B7CA0` at `0x005375D2`
 (`InsertQueuedMessageSortedAndMaybeAdvance`). NOP the insert:
-the line is constructed and not queued. The two `Wait` forms
-and `PlayPChar*` are the same insert family; one
-representative is rowed.
+the line is constructed and not queued. `PlayPCharMessage`
+`0x005377E0` is the same insert at **`0x005378C1`**
+(`e8 da 03 f8 ff` → same `0x004B7CA0`). Now rowed as the
+priority-line twin. The two `Wait` forms still raise the
+pause flag (§16.2) even if the insert is NOPed.
 
 ### 21.4 PlaySample
 
@@ -1957,9 +1982,20 @@ the store, never the VA).
 | 0 (low) | `0x004DD737` | `00 00 20 41` | 10.0f |
 
 Example: high 70 → 140 (`00 00 0c 43`). The same arms also
-write lod-bias `0x00631E88` (0.3 / 1.0 / 3.0) and scale
-`0x00630E0C` (2.0 / 1.0 / 0.1) — those dests are
-file-backed but rewritten here; not separately rowed.
+write lod-bias `0x00631E88` and scale `0x00630E0C`. Those
+dests are file-backed but rewritten here — patch the
+**stores**, now rowed:
+
+| level | lod-bias VA | original imm | value | scale VA | original imm | value |
+|---|---|---|---|---|---|---|
+| 2 (high) | `0x004DD6D4` | `9a 99 99 3e` | 0.3f | `0x004DD6DE` | `00 00 00 40` | 2.0f |
+| 1 | `0x004DD709` | `00 00 80 3f` | 1.0f | `0x004DD713` | `00 00 80 3f` | 1.0f |
+| 0 (low) | `0x004DD741` | `00 00 40 40` | 3.0f | `0x004DD74B` | `cd cc cc 3d` | 0.1f |
+
+Example: high lod-bias 0.3 → 0.1 (`cd cc cc 3d`); high
+scale 2.0 → 4.0 (`00 00 80 40`). The lod-table dest
+`0x009C7558` is still BSS (patch those stores only if a
+later cut needs the classify table).
 
 `GetQualityLevel` `0x004DD770` classifies the live distance
 against `0x005D85D4` = 15.0f (**50 refs**) and
@@ -2017,14 +2053,43 @@ has 6 address refs, all inside this function. Example
 0.03 → 0.01 (`0a d7 23 3c`). The other 0.03f
 (`0x005D87C0`, 20 refs) stays forbidden.
 
-`cg_imposterfadestart` `0x00631E94` (39.0) and the debris
-CVar defaults are file-backed and ship non-zero, but
-options / `CVar` registration consume the addresses.
-Not rowed this cut (same posture as `g_MeshQualityDistance`
-before the writers were pinned).
+Impostor / debris / mesh-LOD CVar defaults are now §24.5
+(they are **not** rewritten by SetQualityLevel).
 
 Confidence: **STATIC_ONLY**. Risk: medium (texture pop /
 cache authored against 128/64/32).
+
+### 24.5 Impostor / debris / mesh-LOD CVar defaults
+
+Unlike `g_MeshQualityDistance` / `cg_meshlodbias` / scale,
+these dwords are **not** rewritten by
+`CRTMesh__SetQualityLevel`. `CDebris__Init` `0x004411A0`
+and `CRTMesh__Init` `0x004DC370` only
+`CConsole__RegisterVariable` them (pointer to the
+file-backed float). Stock `defaultoptions.bea` has no
+`cg_` / impostor / debris name strings and no IEEE 39.0 /
+15.0 / 20.0. The 40.0 at options `0x26D6` is the quality
+lod-table 40.0 (`0x009C7558` BSS dest), not
+`cg_imposterfadeend`. Console `set` can still overwrite
+through the registered pointer.
+
+| CVar | VA | original | value | .text refs |
+|---|---|---|---|---|
+| `cg_imposterfadestart` | `0x00631E94` | `00 00 1c 42` | 39.0f | 6 |
+| `cg_imposterfadeend` | `0x00631E98` | `00 00 20 42` | 40.0f | 4 |
+| `cg_debrisarea` | `0x006282FC` | `00 00 a0 41` | 20.0f | 9 |
+| `cg_debrisfadestart` | `0x00628300` | `00 00 70 41` | 15.0f | 5 |
+| `cg_debrisfadeend` | `0x00628304` | `00 00 a0 41` | 20.0f | 3 |
+| `cg_meshlodmedthreshold` | `0x00631E8C` | `00 00 20 41` | 10.0f | 2 |
+| `cg_meshlodlowthreshold` | `0x00631E90` | `00 00 a0 41` | 20.0f | 2 |
+
+Example: impostor start 39 → 78 (`00 00 9c 42`).
+`cg_meshtexturelodbias` `0x00631E9C` (100.0, 1 ref —
+register only) and `cg_meshsurfacelodbias` `0x00631EA0`
+(400.0, 2 refs) stay unrowed this cut.
+
+Confidence: **STATIC_ONLY**. Risk: medium (authored against
+39/40 and 15/20; console can still overwrite).
 
 ---
 
@@ -2061,11 +2126,15 @@ whole construct to `0x005373F3`. Convert to
 an escape pod. NOP of that `je` would run the construct
 with a null controller — not rowed.
 
-`GetX` / `GetY` / `GetZ` / `CreatePosition` / `GetPos` /
-`GetAngle` still have no one-instruction cheat (unbox +
-rebuild / pose copy). `GetVariable` looks up through BSS
-`0x00855090` and `fstp`s the helper return — not rowed
-(NOP of the call leaves a dirty x87 stack).
+`GetX` / `GetY` / `GetZ` / `CreatePosition` / `GetPos`
+still have no one-instruction cheat (unbox + rebuild /
+pose copy). `SetX` / `SetY` / `SetZ` are the same
+constructor family (unbox, overwrite one component,
+allocate a boxed position) — not thing mutators.
+`GetAngle`'s skip-`je` is now §27.2. `GetVariable` looks
+up through BSS `0x00855090` and `fstp`s the helper
+return — not rowed (NOP of the call leaves a dirty x87
+stack).
 
 ### 25.4 SpawnThing disable
 
@@ -2101,6 +2170,46 @@ next cut does not re-open the 10.0 store.
 
 ---
 
+## 27. Leftover IScript (dist / angle / slot / orient)
+
+### 27.1 GetDistToObj always-0
+
+`0x00536070` copies `this+0x10` pose, then
+`call [arg.vtable+0x40]`. `test eax,eax` /
+`jne` at **`0x005360A2`** (`75 4c`) takes the
+distance-compute arm at `0x005360F0`. Fall-through
+boxes 0. NOP the `jne`: scripts always see 0
+(proximity tests of the form `GetDistToObj < N`
+become TRUE). `75 4c` → `EB 4c` would compute on a
+failed lookup — not rowed.
+
+### 27.2 GetAngle always-0
+
+`0x00534680` inits a boxed float to 0, looks up the
+arg via `vfunc+0x40`, then `je` at **`0x0053469A`**
+(`0f 84 82 00 00 00`) skips the fpatan arm to the
+allocator. Convert to `e9 83 00 00 00 90`: scripts
+always see 0. The wrap constants at `0x005D85C8` /
+`0x005D85E4` / `0x005D85E0` are shared — not value-rowed.
+
+### 27.3 TeleportOrientation disable
+
+See §17.19. The one-instruction site is
+`0x00536B62` `ff 52 54`.
+
+### 27.4 SetSlot disable
+
+`IScript::SetSlot` `0x005338D0` unboxes int+bool then
+`call CGame__SetSlot` at **`0x005338F2`**. NOP×5:
+scripts cannot write `CGame+0x308`. `SetSlotSave`
+still has its own `CGame` + `CCareer` calls. The
+256-guard on `CGame__SetSlot` is §12.7.
+
+Confidence for §27: **STATIC_ONLY**. Risk: medium
+(authored proximity / facing / slot scripts).
+
+---
+
 ## Verification protocol (for any row promoted to Phase 2)
 
 1. Copy, never in-place: safe-copy through the app; pristine specimen stays
@@ -2116,14 +2225,15 @@ next cut does not re-open the 10.0 store.
 
 ## Row inventory
 
-TSV: **225 data rows** (223 unique VAs). `t_94ad2658` 208 plus 17
-from this cut (HUD/compass far 100, leftover nears, sky far
-qword, landscape texture-LOD radii / 0.03 smoothing,
-SpawnThing skip, IsEnemy type-bit, FOGEND declined). Every
-non-unknown `original_bytes` was re-read from the named
-specimen (`206` prior compared, `0` mismatch, then `17` new).
+TSV: **244 data rows** (242 unique VAs). `t_70f01f80` 225 plus 19
+from this cut (GetDistToObj / GetAngle / TeleportOrientation /
+SetSlot call, CGame::SetSlot 256-guard, PlayPCharMessage insert,
+six SetQualityLevel lod-bias/scale stores, seven impostor /
+debris / mesh-LOD CVar defaults). Every non-unknown
+`original_bytes` was re-read from the named specimen
+(`223` prior compared, `0` mismatch, then `19` new).
 
-Confidence histogram: **MEASURED 29 / STATIC_ONLY 196 / SPECULATIVE 0**.
+Confidence histogram: **MEASURED 29 / STATIC_ONLY 215 / SPECULATIVE 0**.
 
 First-cut corrections landed here, not in `rebuild/**`:
 
@@ -2139,14 +2249,17 @@ Coverage limits that stay honest: no per-unit AI tick (SetAIState is a
 poke), no exe spawn **tables** (SpawnThing's skip-`je` is now a
 disable; SetSpeed is a no-op), debug-button **key → id** still BSS
 (the SendButtonAction door is pinned). Initialise constructor slots
-stay named; shipped dats still overwrite them. This cut adds the
-leftover `SetProjectionMatrix` nears, HUD/compass far 100, the sky
-far qword, UpdateLOD's private 16384/4096/1024 radii and 0.03
-smoothing, SpawnThing's skip-`je`, and IsEnemy's type-bit `je`.
-`GetPlayer` / `GetGoodieState` / `GetWaterHeight` / `GameTime` remain
+stay named; shipped dats still overwrite them. This cut adds
+GetDistToObj / GetAngle always-0, TeleportOrientation's `+0x54`,
+IScript::SetSlot's `CGame` call, CGame::SetSlot's 256-guard,
+PlayPCharMessage's insert twin, SetQualityLevel's lod-bias and
+scale stores, and the impostor / debris / mesh-LOD CVar defaults
+that SetQualityLevel does not rewrite. `GetPlayer` /
+`GetGoodieState` / `GetWaterHeight` / `GameTime` remain
 BSS-sourced. Print/PrintText/AddMessage are still pointer-only.
 `Rand`/`GetFloatRand`/`GetMapHeight`/`GetNumUnits` are BSS-sourced.
-`GetX`/`GetY`/`GetZ`/`GetPos`/`CreatePosition`/`GetAngle`/`GetVariable`
-stay without a one-instruction cheat. SP aspect `0x005D8BC4` (0.75f,
+`GetX`/`GetY`/`GetZ`/`GetPos`/`CreatePosition`/`SetX`/`SetY`/`SetZ`
+stay without a one-instruction cheat. `GetVariable` still dirties
+x87 if the helper is NOPed. SP aspect `0x005D8BC4` (0.75f,
 42 refs) is not a value row. FOGEND 10.0 is a sentinel ignored
-under EXP. Impostor/debris CVar defaults stay unrowed.
+under EXP. Texture/surface lod-bias CVars stay unrowed.
