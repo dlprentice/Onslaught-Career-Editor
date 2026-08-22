@@ -2563,8 +2563,12 @@ re-verified against the pristine specimen (`74154bfa…`):
   (truthy but not the claimed value) — a repaired row must place
   `add esp,4` before the tail stores.
 - Cheapest runtime falsifier when the serialized slot next frees: patch
-  site+arg window `e8807c0000f7d8` → `83c404b8010000009090` (add esp,4;
-  mov eax,1; nop nop) and predict ALIVE ≥3/3. If still dead, H1 is wrong.
+  window `e8807c0000f7d81bc0` → `83c404b80100000090`
+  (add esp,4; mov eax,1; nop — 9 bytes ↔ 9 bytes, ESP rebalanced before the
+  untouched `bb 0000803f / f7 d8 / a3 b4986700` tail stores −1, truthy, into
+  `[0x6798B4]`) and predict ALIVE ≥3/3. If still dead, H1 is wrong.
+  Added as TSV row `0x0045D80B` variant B (`e44aab9d` follow-up) so one
+  `batch2_screen.py --label latete-fix --vas 0x0045D80B-fix` run decides.
 
 ### Menu-walk status after first clean-slot run (2026-08-22)
 
