@@ -80,8 +80,15 @@ Argument map:
      game terms: the owner callback triggers once remaining subtree life
      drops under 30% of the cached metric (unless every core child is
      already gone).
-   The identity of the `[ctrl+0x10]` object and which class owns slot `0xc8`
-   remain unproven (honest unknown; the unit itself is a candidate).
+   `[ctrl+0x10]` is now byte-proved as the containing CUnit-derived host.
+   The controller constructor has exactly two callers: CBuilding and
+   CHiveBoss construction paths pass their host in arg 1, then store the
+   returned controller at `[host+0x178]`. Slot `0xc8` is unit slot 50:
+   CBuilding vtable `0x005d8eb4` entry `0x005d8f7c` points to
+   `CBuilding__VFunc_50_00417a40`; CHiveBoss entry `0x005e17a8` points to
+   `CHiveBoss__MaybeScheduleEvent1388ForField74_004802f0`. Both functions
+   begin by calling `CUnit__MarkDestroyedAndCleanupLinks`, resolving the
+   callback as the concrete host destruction entry for both owners.
 5. **Half-metric latch** (`0x004440d1`–`0x0044414d`), reached from stages 1,
    2, and 4: if `[ctrl+0x2c] == 1` already, nothing runs. Two structurally
    identical any-active scans over the array `[ctrl+0x4]`, count
@@ -102,9 +109,12 @@ Argument map:
      so the reachable law is simply: **live segments whose summed remaining
      life have fallen below half the cached metric → latch**; the
      all-inactive pairing (`1.0 < 1.0×0.5`) can never fire.
-   Who reads `[ctrl+0x2c]` afterwards is not in this wake's census — honest
-   unknown (AI eligibility is the plausible consumer per the sibling names
-   below, unproven).
+   A concrete reader is now proved: `CBuilding__VFunc_37_00418100` loads
+   `[building+0x178]`, returns when `[controller+0x2c] == 1`, and otherwise
+   tail-jumps `CThing__RenderImposter 0x004f3710`. Its complete 22-byte body
+   hashes `9c4caee0613ad3e46fdf06e763d56bff497fe8290f1be209290d4605d4fbe94a`.
+   This proves latch-driven imposter-render suppression for CBuilding; it
+   is not an exhaustive consumer census.
 
 ## Callees (all five `E8`)
 
@@ -169,9 +179,9 @@ sealed c1-closure row (below).
 | `[this+0x4]` | segment pointer array | indexed fetch `0x0044404a`, both scans |
 | `[this+0x8]` | segment count | loop bounds `0x004440d6`, `0x0044410b` |
 | `[this+0xc]` | root/core segment handed to gates and sums | `0x00444063`, `0x00444103` |
-| `[this+0x10]` | owner/object receiving vtable call `+0xc8` | `0x0044408e` |
+| `[this+0x10]` | owning CBuilding/CHiveBoss host receiving unit slot-50 (`+0xc8`) destruction call | constructor/caller/vtable provenance; `0x0044408e` |
 | `[this+0x18]` | cached health metric (seeded at init from `GetTotalHealth`, see [`GetTotalHealth`](CDestroyableSegment__GetTotalHealth.md)) | thresholds `0x0044406f`, `0x00444138` |
-| `[this+0x2c]` | half-metric latch (one-shot) | test `0x004440d1`, store `0x0044414c` |
+| `[this+0x2c]` | half-metric latch (one-shot); value 1 suppresses CBuilding slot-37 imposter render path | test `0x004440d1`, store `0x0044414c`, reader `0x0041810a` |
 | child `[+0xc]` | remaining segment life | base slot-3 body |
 | child `[+0x14]` | last-damage time (global snapshot) | base slot-3 body |
 | child `[+0x18]` | last-damage amount | base slot-3 body |
@@ -234,3 +244,9 @@ Any one of:
   [`CDestroyableSegment__SumActiveValueRecursive.md`](CDestroyableSegment__SumActiveValueRecursive.md),
   [`CDestroyableCoreSegment__AreCoreChildrenDestroyed.md`](CDestroyableCoreSegment__AreCoreChildrenDestroyed.md),
   [`CDestroyableSegment__GetTotalHealth.md`](CDestroyableSegment__GetTotalHealth.md).
+- 2026-08-22 continuation — resolved both carried controller questions from
+  pristine bytes: constructor callers at `0x00417223` / `0x0047fe99`,
+  CBuilding/HiveBoss slot-50 entries `0x005d8f7c` / `0x005e17a8`, and
+  latch reader `CBuilding__VFunc_37_00418100` (22-byte hash above). See
+  [`CDestructableSegmentsController__TriggerCoreCascadeIfEligible.md`](CDestructableSegmentsController__TriggerCoreCascadeIfEligible.md)
+  for the complete callback/cascade chain.

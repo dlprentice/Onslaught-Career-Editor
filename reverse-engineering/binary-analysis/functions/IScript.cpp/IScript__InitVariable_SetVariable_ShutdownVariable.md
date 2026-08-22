@@ -1,6 +1,8 @@
 # IScript natives 76–78 — `InitVariable` / `SetVariable` / `ShutdownVariable` drive the CWorld four-slot message store
 
-> Address: `0x00536230` / `0x00536260` / `0x00536330`
+> Addresses: `0x00536230` (`IScript__InitVariable`),
+> `0x00536260` (`IScript__SetVariable`), and
+> `0x00536330` (`IScript__ShutdownVariable`)
 
 Status: active static function note
 Last updated: 2026-08-22

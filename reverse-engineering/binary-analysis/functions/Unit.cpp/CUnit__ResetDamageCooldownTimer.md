@@ -53,9 +53,14 @@ Exactly **one** inbound rel32 image-wide: the reset gate at
 [`CUnit__ApplyDamage`](CUnit__ApplyDamage.md) `0x004f9add`, which calls it
 only when `[unit+0x148]` is live, source flags bit 2 is clear, and
 `[src+0xec]+0x34` bit 4 is set. Zero imm32 sites. The reader of
-`[unit+0x88]` is not in this wake's census — honest unknown; cheapest
-instrument is an operand scan for `[reg+0x88]` float compares against
-`[0x00672fd0]`.
+`[unit+0x88]` remains an honest unknown. The proposed focused instrument
+was run in the 2026-08-22 continuation: a whole-function capstone census
+for an x87 `[reg+0x88]` operand in a body that also references global time
+`0x00672fd0` returned zero candidates. That negative heuristic is not an
+exhaustive proof of no reader. The `+0x88` load inside
+`CUnitAI__CanUseIndexedSegmentEntry 0x00444f20` is separately disproved as
+the cooldown: it supplies an integer alias index immediately consumed by
+the controller segment array.
 
 ## Pinned-source status
 
