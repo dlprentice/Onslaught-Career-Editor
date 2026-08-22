@@ -32,9 +32,12 @@ names below with `currentGhidraName = FUN_*` and disposition
 78: 26 / 0). Both halves are confirmed this wake, plus one correction:
 
 - The **names** are retail-authentic: the strings sit consecutively in
-  `.rdata` — `…Surface(75) · InitVariable(0x64f654) · SetVariable(0x64f648)
-  · ShutdownVariable(0x64f634) · Shutdown(79) · GetEnergy(80)…` around
-  offset `0x24f534`–`0x24f674` — matching the corpus's numeric order.
+  `.rdata` — `Shutdown(0x64f628) · ShutdownVariable(0x64f634) ·
+  SetVariable(0x64f648) · InitVariable(0x64f654) · Surface(0x64f664) ·
+  Dive…` around offset `0x24f628`–`0x24f674`, i.e. the run is laid down
+  in **descending** corpus-index order (75 `Surface` … 80 `GetEnergy`
+  reads upward) but each name's pointer address matches its corpus
+  index's neighbor set exactly.
 - The **registration block binds each name to these exact handlers**:
   in the same code region that stores handler immediates
   (`mov ebp, 0x00536230` at `0x131ad7`, `mov ebp, 0x00536260` at
@@ -42,8 +45,8 @@ names below with `currentGhidraName = FUN_*` and disposition
   `mov ebp, 0x00535d00` = native 79 `Shutdown`), adjacent instruction
   streams store the matching name pointers into neighboring descriptor
   globals, each as a direct immediate store —
-  `mov dword ptr [0x64e120], 0x64f654` (instruction at `0x131ac1`,
-  name immediate at `0x131ac7`) just before the 0x536230 immediate;
+  `mov dword ptr [0x64e120], 0x64f654` (instruction at `0x131ac7`,
+  name immediate at `0x131acd`) just before the 0x536230 immediate;
   `mov dword ptr [0x64e160], 0x64f648` (instruction `0x131b90`,
   immediate `0x131b96`) just after the 0x536260 immediate;
   `mov dword ptr [0x64e1a0], 0x64f634` (instruction `0x131bd1`,
@@ -65,10 +68,11 @@ vtable slots evaluate them, bare work performed, then `ret 0xc`
 (the dispatcher's 3-dword frame). Zero direct `E8` calls inside the
 VM-facing sections; all callee dispatch is vtable or immediate-address.
 
-### Native 76 `InitVariable(textIdExpr, stateExpr)` — `0x00536230`, 36 bytes
+### Native 76 `InitVariable(textIdExpr, stateExpr)` — `0x00536230`, 38 bytes
 
-Body `0x00536230`–`0x00536253`, SHA-256
-`f9601ce9b9986322784554181f263b3c1dcf22dc80e4dbf9245fc66ce076188a`.
+Body `0x00536230`–`0x00536255` through the complete `ret 0xc`
+(`5e c2 0c 00`), SHA-256
+`e4c8a9c6e626c3f33f1976d9b970a61a3920e6449766c765e74144f4291070c7`.
 
 1. `eax = [esp+4]` (vm); `ecx = [vm+4]`, `esi = [vm+0]`.
 2. `[ecx] → vtable; call [+0x30]` — scalar evaluation of stack element 2;
@@ -81,10 +85,11 @@ Body `0x00536230`–`0x00536253`, SHA-256
    inbound CALL from `0x0053624d`).
 5. `pop esi; ret 0xc`. Trailing NOP pad to `0x00536260`.
 
-### Native 77 `SetVariable(textIdExpr, floatAExpr, floatBExpr)` — `0x00536260`, 55 bytes
+### Native 77 `SetVariable(textIdExpr, floatAExpr, floatBExpr)` — `0x00536260`, 57 bytes
 
-Body `0x00536260`–`0x00536296`, SHA-256
-`ba6b750b7fb24457c5101714b7c3731a2cee107f5c7d0ee33193c1b9535bcf84`.
+Body `0x00536260`–`0x00536298` through the complete `ret 0xc`
+(`5f 5e c2 0c 00`), SHA-256
+`8eba20521dcb6055b6ff5adb4b8be13f695a0f18aeae7f541322191a3a6b3f72`.
 
 1. `eax = [esp+4]`; `edi = [vm+0]`, `esi = [vm+4]`, `ecx = [vm+8]`.
 2. `[ecx] → call [+0x34]` — **float** evaluation of element 3; stored
@@ -101,10 +106,11 @@ Body `0x00536260`–`0x00536296`, SHA-256
 Argument order note: element 1 supplies the id matched against stored
 slots; elements 2 and 3 supply the two timing floats, in that order.
 
-### Native 78 `ShutdownVariable(idExpr)` — `0x00536330`, 23 bytes
+### Native 78 `ShutdownVariable(idExpr)` — `0x00536330`, 25 bytes
 
-Body `0x00536330`–`0x00536346`, SHA-256
-`33491944083d41b67941f148950e84e526e00f8803104b76ce9288fb86bb8861`.
+Body `0x00536330`–`0x00536348` through the complete `ret 0xc`
+(`c2 0c 00`), SHA-256
+`8528e59270e85931174a2e6a4977dd30bd76b6ead40fecdb5006b4690eb705d4`.
 
 1. `eax = [esp+4]`; `ecx = [vm+0]`; `[ecx] → call [+0x30]` — scalar id.
 2. `push eax; mov ecx, 0x855090; call 0x50d7a0` —
@@ -205,9 +211,9 @@ triple, not variable-store names.
 
 Any one of:
 
-- Body SHA-256 mismatch: `0x00536230`(36 B)
-  `f9601ce9…076188a`; `0x00536260`(55 B) `ba6b750b…35bcf84`;
-  `0x00536330`(23 B) `33491944…88bb861` — or any body ending other than
+- Body SHA-256 mismatch: `0x00536230`(38 B)
+  `e4c8a9c6…91070c7`; `0x00536260`(57 B) `8eba2052…a6b3f72`;
+  `0x00536330`(25 B) `8528e592…eb705d4` — or any body ending other than
   `ret 0xc` (`5e c2 0c 00` / `5f 5e c2 0c 00` / `c2 0c 00`).
 - `tools/disasm_va.py` shows a different call target than
   `{0x0050d6a0, 0x0050d720, 0x0050d7a0}` from the three wrappers, an
@@ -247,3 +253,15 @@ Any one of:
   `reverse-engineering/binary-analysis/mission-native-corpus-coverage-2026-08-15.tsv`
   rows 76–78 (indices/names/authored counts confirmed; behavior labels
   corrected by this note).
+- 2026-08-22 (review pass) — independent reviewer spot-check re-measured
+  every claim from the same pristine specimen: full-body hashes through
+  the complete `ret 0xc` (38/57/25 B, values above), exactly one
+  image-wide imm32 per handler VA, callee targets
+  `{0x0050d6a0, 0x0050d720, 0x0050d7a0}`, `.rdata` name run at
+  `0x24f628`–`0x24f674` (laid down in descending corpus-index order),
+  registration `c7 05` stores at `0x131ac7`/`0x131b90`/`0x131bd1`.
+  Three defects found and corrected in place: the original body hashes
+  truncated each wrapper's `ret 0xc` tail by 2 bytes (lengths 36/55/23
+  were wrong); the name run was described in ascending corpus order;
+  the InitVariable registration-store instruction address was
+  `0x131ac7` (immediate `0x131acd`), not `0x131ac1`/`0x131ac7`.
