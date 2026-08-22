@@ -2444,11 +2444,21 @@ product baseline, applies the selected census rows asserting each row's
 | latete | 0x0045D80B | DEAD 6/6 (never reached t=12s) |
 | any stage containing latete | … + 0x0045D80B | DEAD consistently |
 
-Finding: `0x0045D80B` `e8->b8 01` **crashes the game during startup** — the
-forced eax=1 flows through the site's tail neg/sbb whose inverted/extended
-semantics the startup path cannot tolerate (matches the census's own warning).
-TSV row updated: risk=high LAUNCH CRASHER with the observation; confidence
-stays STATIC_ONLY because a crash verifies nothing about the intended effect.
+Finding: `0x0045D80B` `e8->b8 01` **crashes the game during startup**
+(empirical: DEAD 6/6). Follow-up byte read (pristine specimen, sha256-verified)
+of the site: all three cheat-gate call sites target the same helper
+`IsCheatActive` at `0x00465490`; turkey/maladim tails are `85 c0` test +
+plain jcc (clean force), while the latete tail is
+`f7 d8 1b c0 bb 0000803f f7 d8 a3 b4986700`
+(`neg eax; sbb eax,eax; mov ebx,1.0f; neg eax; mov [0x006798B4],eax`) —
+that chain reduces ANY nonzero return to a stored 1, so the forced
+`mov eax,1` is arithmetically indistinguishable from a TRUE return at this
+site. The launch-crash mechanism is therefore NOT the immediate tail
+arithmetic; it must lie in side effects the removed call performed or in the
+enclosing function's wider contract (identifying the enclosing function and
+all consumers of `[0x006798B4]` is the open question). TSV row updated:
+risk=high LAUNCH CRASHER with the observation; confidence stays STATIC_ONLY
+because a crash verifies nothing about the intended effect.
 Maladim / TURKEY stay STATIC_ONLY until their named UI observations
 (God line visible / all-levels select) are observed via a menu walk.
 
