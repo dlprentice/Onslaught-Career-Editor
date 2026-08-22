@@ -71,14 +71,30 @@ Same BSS class (not file-patchable):
 
 `t_17fa180d` added the last five after the IScript / SendButtonAction
 pin. `t_120c3e1b` added the GetPlayer / MessageBox / GameTime /
-GetWaterHeight / HighlightHud / GetGoodieState-view VAs. `t_94b70425`
-added `Rand`/`GetFloatRand` `0x008A9D9C`, `GetMapHeight` `0x006FADC8`,
+GetWaterHeight / HighlightHud / GetGoodieState-view VAs.
+`t_94b70425` added `Rand`/`GetFloatRand` `0x008A9D9C`, `GetMapHeight` `0x006FADC8`,
 the `GetNumUnits` tables `0x008551C0` / `0x00855228`, lookup
 `this` `0x00855090`, and event-manager `this` `0x00672FC8`. `t_94ad2658`
 added CRTTree 45-override flag `0x00662F10`, quality-table dest
 `0x009C7558`, and occupancy scratch `0x00809598`. Same rule: never
 promote those VAs to a file row; patch the `.text` store or the
 `.text` jcc that consumes them.
+
+Private `.rdata` added this cut (file-backed, patch the dword /
+qword — they are not BSS):
+
+| VA | role | address refs |
+|---|---|---|
+| `0x005E4FD8` | sky/Kempy far = `sqrt(double)` | 1 |
+| `0x005E50F0` | UpdateLOD root 16384.0 | 1 |
+| `0x005E50EC` | UpdateLOD level-1 4096.0 | 1 |
+| `0x005E50E8` | UpdateLOD level-2 1024.0 | 1 |
+| `0x005E50C8` | UpdateLOD camera smoothing 0.03f | 6 (all UpdateLOD) |
+
+Shared, do not value-patch: UpdateLOD shift 60/28/12 at
+`0x005DB538` / `0x005DBE34` / `0x005DB4E8`; the other 0.03f
+at `0x005D87C0` (20 refs). FOGEND dest is `this+0xE20` on
+the engine object, not a global.
 
 Weather dests `0x00660188` / `8C` / `90` / `98..A4` are
 **file-backed** `.data` (before `0x00661000`) but ship as zero

@@ -9,7 +9,9 @@ named; IScript getters / camera / weather / message natives), then
 position / script / HUD / PlayCutscene one-instruction rows), then
 `t_94ad2658` (gameplay/frontend far-plane PUSHes, zoom bound stores,
 SetQualityLevel / CRTTree / occupancy-slope writers, FollowWaypoint
-vfunc, IsNumberBetween, SpawnEscapePod skip).
+vfunc, IsNumberBetween, SpawnEscapePod skip), then `t_70f01f80`
+(leftover SetProjectionMatrix nears / HUD+compass far 100 / sky far
+qword, landscape texture-LOD radii, SpawnThing skip, IsEnemy type-bit).
 Evidence: MEASURED — every non-unknown TSV `original_bytes` compared to the
 named specimen at write time; PE section table re-parsed; first-cut BSS
 god-flag row retracted. `t_17fa180d` re-read JetPart::Move, SendButtonAction,
@@ -21,6 +23,10 @@ plus the rest of Initialise / the versioned Load walks. `t_94ad2658`
 re-read those TSV bytes again and the CDXEngine / frontend projection
 PUSHes, ZoomIn/Out/AutoZoomOut stores, `CRTMesh__SetQualityLevel`,
 `CRTTree__Init`, and `CWorld__InitLODLists` from the same specimen.
+`t_70f01f80` re-read those TSV bytes again (206 compared, 0 mismatch)
+and the nine `SetProjectionMatrix` callers, sky-far qword, UpdateLOD
+fcomp cluster, SpawnThing skip-`je`, and IsEnemy type-bit from the
+same specimen.
 Specimen: `local-lab/pristine-verification-2026-07-26/pristine-target/BEA.exe`
 SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 (2,506,752 bytes).
@@ -47,8 +53,8 @@ PE mapping owner: [`../reverse-engineering/binary-analysis/patch-surface/PE-MAPP
 - TSV `original_bytes` for every non-`unknown-*` / non-`none-*` row were
   compared to the specimen in the `t_14fcbbed` writer, again in the
   `t_17fa180d` writer, again in the `t_120c3e1b` writer, again in the
-  `t_94b70425` writer, and again in the `t_94ad2658` writer and refused
-  on mismatch.
+  `t_94b70425` writer, again in the `t_94ad2658` writer, and again in
+  the `t_70f01f80` writer and refused on mismatch.
 - Confidence vocabulary: MEASURED (byte + behavior evidence),
   STATIC_ONLY (byte evidence verified here; behavior inferred from pinned
   source or prior bounded observations), SPECULATIVE (site plausible,
@@ -79,14 +85,15 @@ PE mapping owner: [`../reverse-engineering/binary-analysis/patch-surface/PE-MAPP
 | 15 | Collision / camera knobs | [§15](#15-collision--camera-knobs) | COfG, movie zoom; gameplay far/zoom in §23 |
 | 16 | Script objective / pause flags | [§16](#16-script-objective--pause-flags) | or/and +0x2c, stop-flag + Wait twins |
 | 17 | IScript mutators (beyond the first-cut set) | [§17](#17-iscript-mutators-beyond-the-first-cut-set) | + Launch / Teleport / SetPos / SetScript / segment / variables / PostEvent |
-| 18 | IScript getters / predicates | [§18](#18-iscript-getters--predicates) | + GetNumber / GetSquad / GetTarget / Spawners* / IsA |
+| 18 | IScript getters / predicates | [§18](#18-iscript-getters--predicates) | + GetNumber / GetSquad / GetTarget / Spawners* / IsA; IsEnemy type-bit now rowed |
 | 19 | IScript camera | [§19](#19-iscript-camera) | GotoPlayer / ToggleCockpit / disable 3-/4-point pan |
 | 20 | Weather | [§20](#20-weather) | Rain/snow/lightning fstp + init stores; wind X |
 | 21 | IScript messages / wait | [§21](#21-iscript-messages--wait) | Wait-flag twins; SwitchMessages; PlayChar insert; PlayCutscene call |
 | 22 | HUD highlight | [§22](#22-hud-highlight) | Highlight/UnHighlight stores; dest is BSS |
-| 23 | Camera projection / zoom bounds | [§23](#23-camera-projection--zoom-bounds) | far-plane PUSHes; ZoomIn 0.4 / ZoomOut 1.0; aspect jcc |
-| 24 | Mesh quality / occupancy slopes | [§24](#24-mesh-quality--occupancy-slopes) | SetQualityLevel writers; CRTTree 45; InitLODLists 35/45/60 |
-| 25 | Leftover IScript (waypoint / range / escape) | [§25](#25-leftover-iscript-waypoint--range--escape) | FollowWaypoint vfunc; IsNumberBetween; SpawnEscapePod |
+| 23 | Camera projection / zoom bounds | [§23](#23-camera-projection--zoom-bounds) | far-plane PUSHes; HUD/compass 100; sky far qword; leftover nears |
+| 24 | Mesh quality / occupancy slopes | [§24](#24-mesh-quality--occupancy-slopes) | SetQualityLevel writers; CRTTree 45; InitLODLists 35/45/60; landscape radii |
+| 25 | Leftover IScript (waypoint / range / escape) | [§25](#25-leftover-iscript-waypoint--range--escape) | FollowWaypoint vfunc; IsNumberBetween; SpawnEscapePod; SpawnThing skip |
+| 26 | Fog sentinel (declined) | [§26](#26-fog-sentinel-declined) | FOGEND 10.0 is ignored under EXP |
 
 ---
 
@@ -990,7 +997,8 @@ as a coverage limit.
 
 Unit spawn composition comes from authored level data (`100_res_PC.aya`
 etc.), not exe tables. `IScript::SpawnThing` `0x00536CD0` is a large
-native (unboxes four script args, then a long world-spawn body) — not a
+native (unboxes four script args, then a long world-spawn body). The
+no-controller skip-`je` is now rowed in §25.4 as a **disable**, not a
 table. `IScript::SetSpeed` is a 3-byte `ret 0xc` no-op (§17.9). The
 35-base-things census (`[0x0085515C]`=35 on first play) is measurement,
 not a patch point. No exe spawn-table rows exist to write.
@@ -1547,7 +1555,10 @@ physics".
 Both test type bit 4 then `[thing+0x138]` (same allegiance
 dword as `ConfirmedKill`, §12.5). Friendly is `== 0`; Enemy is
 `== 1`. NOP the type-bit `je` and/or the allegiance `jne` to
-force the TRUE arm.
+force the TRUE arm. IsFriendly's type-bit `je` at
+`0x00537FD7` was already rowed. This cut rows IsEnemy's
+type-bit `je` at **`0x00538067`** (`74 43` → `90 90`). The
+allegiance `jne` at `0x00538070` was already rowed.
 
 `GetPlayer` (`0x005363E0`) indexes BSS `[eax*4+0x008A9D3C]`
 — no file row. `GetGoodieState` loads BSS
@@ -1844,6 +1855,84 @@ through to 0.5f on SP too (squashed FOV).
 Confidence: **MEASURED** (bytes + documented 0.75/0.5 pair).
 Risk: medium (42-ref 0.75 must stay; only the jcc is rowed).
 
+### 23.6 HUD overlay far / near
+
+`CHud__RenderTargetIndicatorOverlay` `0x00482590` is the
+fifth `SetProjectionMatrix` caller. Signature
+`(this, near_z, far_z, viewport_w, viewport_h)` `RET 0x10`
+(`d3d-fog-render-state-static-contract-2026-07-25.md`).
+Pushes, right-to-left:
+
+| site | original | role |
+|---|---|---|
+| `0x00482B45` | `68 cd cc 4c 3e` | viewport_h 0.2f |
+| `0x00482B4C` | `68 cd cc 4c 3e` | viewport_w 0.2f |
+| `0x00482B51` | `68 00 00 c8 42` | far 100.0f |
+| `0x00482B56` | `68 cd cc 4c 3e` | near 0.2f |
+
+View-distance note already named HUD overlay far as 100.
+Rewrite far `00 00 c8 42` → `00 00 48 43` (200.0f). Rewrite
+near `cd cc 4c 3e` → `cd cc cc 3d` (0.1f). The two 0.2f
+viewport PUSHes change `near/vw` scale (FOV-like); not
+separately rowed.
+
+Confidence: **STATIC_ONLY** (named body + this re-read +
+the 100.0 note). Risk: low-medium (overlay depth only).
+
+### 23.7 Compass overlay far / near
+
+`CDXCompass__RenderWorldSpaceOverlay` `0x0053CE00`:
+
+| site | original | role |
+|---|---|---|
+| `0x0053CEC7` | `68 00 00 c8 42` | far 100.0f |
+| `0x0053CECC` | `68 00 00 00 3f` | near 0.5f |
+
+Viewport w/h are computed (`fild` × `0x005DB05C`, 3 refs —
+not rowed). Same 100→200 and near 0.5→0.1 rewrites.
+
+Confidence: **STATIC_ONLY**. Risk: low.
+
+### 23.8 Sky / Kempy far qword and near 1.0
+
+`CDXEngine__Render` sky pass (the other projection in the
+same function as §23.1):
+
+- near `PUSH 0x3f800000` at **`0x0053E619`**
+- far = `sqrt(qword [0x005E4FD8])`
+
+The qword is **225065536.0** (`00 00 00 80 74 d4 aa 41`);
+`sqrt` = 15002.184… Sole address ref is the `fld qword`
+at `0x0053E5EB`. File-backed `.rdata`. Rewrite the 8-byte
+double; example `00 00 00 80 74 d4 ca 41` = 900262144.0
+(`sqrt` ≈ 30004, 2× far). Near 1.0 → 0.1 is
+`68 00 00 80 3f` → `68 cd cc cc 3d`.
+
+Confidence: **MEASURED** (bytes + fog-contract naming +
+sole qword ref). Risk: medium (cube/sky authored against
+~15000).
+
+### 23.9 Remaining frontend near-plane PUSHes
+
+The three 7000.0 far callers already rowed in §23.3 also
+push near 1.0f immediately after the far:
+
+| site | owner |
+|---|---|
+| `0x00450422` | `CFEPBEConfig__PushProjectionMatrixForRender` |
+| `0x004506DF` | `CFEPBEConfig__Render` |
+| `0x005222B1` | `CFEPWingmen__Render` |
+
+`68 00 00 80 3f` → `68 cd cc cc 3d` (0.1f). Completes the
+nine image `E8`s of `SetProjectionMatrix`. Goodies near
+0.2f at **`0x0045F071`** (already noted in §23.2, not
+previously rowed) uses the same 0.2→0.1 rewrite.
+
+World near is `[CDXEngine+0x430]`, not an immediate — no
+file row.
+
+Confidence: **STATIC_ONLY**. Risk: low.
+
 ---
 
 ## 24. Mesh quality / occupancy slopes
@@ -1905,8 +1994,37 @@ radians at `[bitplane+0x2000]`. Patch the PUSHes:
 Example: 35 → 20 (`68 00 00 a0 41`). This changes which
 tiles count as blocked, not draw distance.
 
-Confidence for §24: **STATIC_ONLY**. Risk: medium (cull /
-pathing authored against these numbers).
+### 24.4 Landscape texture-LOD radii
+
+`CDXLandscape__UpdateLOD` `0x00546B40` classifies the
+camera-shifted radius² against three **private** `.rdata`
+floats (1 address ref each, all `fcomp` in this body):
+
+| VA | original | value | role (view-distance note) |
+|---|---|---|---|
+| `0x005E50F0` | `00 00 80 46` | 16384.0 = 128² | root texture-cache radius² |
+| `0x005E50EC` | `00 00 80 45` | 4096.0 = 64² | texture level 1 threshold² |
+| `0x005E50E8` | `00 00 80 44` | 1024.0 = 32² | texture level 2 threshold² |
+
+Example: 16384 → 65536 (`00 00 80 47`). The 256.0 = 16²
+slot is a shared `.rdata` (many .text immediates) — not
+rowed. Forward-shift 60/28/12 live at `0x005DB538` (37
+refs), `0x005DBE34` (10 refs), `0x005DB4E8` (12 refs) —
+do not value-patch those.
+
+Camera smoothing 0.03f at **`0x005E50C8`** (`8f c2 f5 3c`)
+has 6 address refs, all inside this function. Example
+0.03 → 0.01 (`0a d7 23 3c`). The other 0.03f
+(`0x005D87C0`, 20 refs) stays forbidden.
+
+`cg_imposterfadestart` `0x00631E94` (39.0) and the debris
+CVar defaults are file-backed and ship non-zero, but
+options / `CVar` registration consume the addresses.
+Not rowed this cut (same posture as `g_MeshQualityDistance`
+before the writers were pinned).
+
+Confidence: **STATIC_ONLY**. Risk: medium (texture pop /
+cache authored against 128/64/32).
 
 ---
 
@@ -1949,8 +2067,37 @@ rebuild / pose copy). `GetVariable` looks up through BSS
 `0x00855090` and `fstp`s the helper return — not rowed
 (NOP of the call leaves a dirty x87 stack).
 
+### 25.4 SpawnThing disable
+
+`0x00536CD0` is the large world-spawn native (§10.5).
+After unboxing four script args it
+`test [thing+0x30], ecx` then `je` at **`0x00536D1A`**
+(`0f 84 af 04 00 00`) skips the whole construct to
+`0x005371CF`. Same shape as SpawnEscapePod. Convert to
+`e9 b0 04 00 00 90` (`jmp` + pad): scripts cannot spawn
+a thing. This is **not** an exe spawn table — composition
+still comes from authored level data. It is the native's
+skip door.
+
 Confidence for §25: **STATIC_ONLY**. Risk: medium
-(authored escort / range / bail-out scripts).
+(authored escort / range / bail-out / spawn scripts).
+
+---
+
+## 26. Fog sentinel (declined)
+
+`CDXEngine__InitTransformCaches` `0x005508E0` writes
+`[this+0xE20] = 10.0f` at `0x00550A32` (`c7 80 20 0e 00
+00 00 00 20 41`) and `[this+0xE1C] = edx` (0) as
+FOGSTART. Those fields flush as `D3DRS_FOGEND` /
+`FOGSTART`. Retail fog mode is `D3DFOG_EXP`; D3D
+**ignores** start/end under EXP
+(`d3d-fog-render-state-static-contract-2026-07-25.md`).
+The water pass rewrites the same 10.0 sentinel and is
+similarly dead. Density comes from `MAP+0x1098` at
+render time (`0x0053E5D7` `fld [0x006FBE60]`). No
+worthwhile exe fog-distance lever. Recorded so the
+next cut does not re-open the 10.0 store.
 
 ---
 
@@ -1969,14 +2116,14 @@ Confidence for §25: **STATIC_ONLY**. Risk: medium
 
 ## Row inventory
 
-TSV: **208 data rows** (206 unique VAs). `t_94b70425` 184 plus 24
-from this cut (far-plane PUSHes / zoom stores / quality and
-occupancy writers / FollowWaypoint / IsNumberBetween /
-SpawnEscapePod). Every non-unknown `original_bytes` was
-re-read from the named specimen (`182` prior compared,
-`0` mismatch, then `24` new).
+TSV: **225 data rows** (223 unique VAs). `t_94ad2658` 208 plus 17
+from this cut (HUD/compass far 100, leftover nears, sky far
+qword, landscape texture-LOD radii / 0.03 smoothing,
+SpawnThing skip, IsEnemy type-bit, FOGEND declined). Every
+non-unknown `original_bytes` was re-read from the named
+specimen (`206` prior compared, `0` mismatch, then `17` new).
 
-Confidence histogram: **MEASURED 27 / STATIC_ONLY 181 / SPECULATIVE 0**.
+Confidence histogram: **MEASURED 29 / STATIC_ONLY 196 / SPECULATIVE 0**.
 
 First-cut corrections landed here, not in `rebuild/**`:
 
@@ -1989,15 +2136,17 @@ First-cut corrections landed here, not in `rebuild/**`:
 - WIN/LOSE arms start with `cmp [0x00662DD0], 1`, not an unknown jump target
 
 Coverage limits that stay honest: no per-unit AI tick (SetAIState is a
-poke), no exe spawn tables (SpawnThing is a native; SetSpeed is a no-op),
-debug-button **key → id** still BSS (the SendButtonAction door is pinned).
-Initialise constructor slots stay named; shipped dats still overwrite
-them. Getters/camera/weather/message/HUD already had one-instruction
-rows. This cut adds the far-plane PUSHes, zoom bound stores, quality
-and occupancy writers, FollowWaypoint `vfunc+0xf4`, IsNumberBetween,
-and SpawnEscapePod's skip-`je`. `GetPlayer` / `GetGoodieState` /
-`GetWaterHeight` / `GameTime` remain BSS-sourced. Print/PrintText/
-AddMessage are still pointer-only. `Rand`/`GetFloatRand`/`GetMapHeight`/
-`GetNumUnits` are BSS-sourced. `GetX`/`GetY`/`GetZ`/`GetPos`/
-`CreatePosition`/`GetAngle`/`GetVariable` stay without a one-instruction
-cheat. SP aspect `0x005D8BC4` (0.75f, 42 refs) is not a value row.
+poke), no exe spawn **tables** (SpawnThing's skip-`je` is now a
+disable; SetSpeed is a no-op), debug-button **key → id** still BSS
+(the SendButtonAction door is pinned). Initialise constructor slots
+stay named; shipped dats still overwrite them. This cut adds the
+leftover `SetProjectionMatrix` nears, HUD/compass far 100, the sky
+far qword, UpdateLOD's private 16384/4096/1024 radii and 0.03
+smoothing, SpawnThing's skip-`je`, and IsEnemy's type-bit `je`.
+`GetPlayer` / `GetGoodieState` / `GetWaterHeight` / `GameTime` remain
+BSS-sourced. Print/PrintText/AddMessage are still pointer-only.
+`Rand`/`GetFloatRand`/`GetMapHeight`/`GetNumUnits` are BSS-sourced.
+`GetX`/`GetY`/`GetZ`/`GetPos`/`CreatePosition`/`GetAngle`/`GetVariable`
+stay without a one-instruction cheat. SP aspect `0x005D8BC4` (0.75f,
+42 refs) is not a value row. FOGEND 10.0 is a sentinel ignored
+under EXP. Impostor/debris CVar defaults stay unrowed.
