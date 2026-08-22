@@ -11,6 +11,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
@@ -168,7 +169,135 @@
             </Grid>
         </Border>
 
-        <Grid Grid.Row="2"
+        <Border x:Name="ModProjectPlannerCardBorder"
+                Grid.Row="2"
+                Style="{StaticResource SectionCardStyle}"
+                Visibility="Collapsed">
+            <Grid RowSpacing="10"
+                  ColumnSpacing="16">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="0.95*" />
+                    <ColumnDefinition Width="1.35*" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.ColumnSpan="2"
+                            Spacing="3">
+                    <TextBlock Text="Mod project manifest planner"
+                               FontSize="18"
+                               FontWeight="SemiBold" />
+                    <TextBlock AutomationProperties.AutomationId="AssetModProjectBoundary"
+                               Style="{StaticResource SectionBodyTextStyle}"
+                               Text="Select up to 100 catalog rows for a metadata-only plan receipt. It is not an asset pack, not an installer, and not a compatibility guarantee; it copies no game assets."
+                               TextWrapping="WrapWholeWords" />
+                </StackPanel>
+
+                <StackPanel Grid.Row="1"
+                            Spacing="5">
+                    <TextBlock x:Name="ModProjectSummaryTextBlock"
+                               AutomationProperties.AutomationId="AssetModProjectSummary"
+                               Style="{StaticResource SectionBodyTextStyle}"
+                               Text="No catalog rows are selected for this project plan." />
+                    <TextBlock x:Name="ModProjectProvenanceTextBlock"
+                               AutomationProperties.AutomationId="AssetModProjectProvenance"
+                               FontFamily="Consolas"
+                               FontSize="12"
+                               Text="Catalog provenance appears after rows are selected."
+                               TextWrapping="WrapWholeWords" />
+                    <StackPanel Orientation="Horizontal"
+                                Spacing="8">
+                        <Button x:Name="AddCurrentToModProjectButton"
+                                AutomationProperties.AutomationId="AssetAddCurrentToModProjectButton"
+                                AutomationProperties.Name="Add current row to mod project plan receipt"
+                                Content="Add current row"
+                                IsEnabled="False"
+                                Click="AddCurrentToModProjectButton_Click" />
+                        <Button x:Name="RemoveModProjectRowButton"
+                                AutomationProperties.AutomationId="AssetRemoveModProjectRowButton"
+                                Content="Remove plan row"
+                                IsEnabled="False"
+                                Click="RemoveModProjectRowButton_Click" />
+                        <Button x:Name="ClearModProjectButton"
+                                AutomationProperties.AutomationId="AssetClearModProjectButton"
+                                Content="Clear plan"
+                                IsEnabled="False"
+                                Click="ClearModProjectButton_Click" />
+                    </StackPanel>
+                </StackPanel>
+
+                <StackPanel Grid.Row="1"
+                            Grid.Column="1"
+                            Spacing="7">
+                    <Grid ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Name="ModProjectOutputPathTextBox"
+                                 AutomationProperties.AutomationId="AssetModProjectOutputFileTextBox"
+                                 PlaceholderText="Choose a .json project plan receipt file"
+                                 TextChanged="ModProjectOutputPathTextBox_TextChanged" />
+                        <Button Grid.Column="1"
+                                AutomationProperties.AutomationId="AssetBrowseModProjectOutputButton"
+                                Content="Browse"
+                                Click="BrowseModProjectOutputButton_Click" />
+                    </Grid>
+                    <StackPanel Orientation="Horizontal"
+                                Spacing="10">
+                        <CheckBox x:Name="ModProjectIncludeTsvCheckBox"
+                                  AutomationProperties.AutomationId="AssetModProjectIncludeTsvCheckBox"
+                                  Content="Optional TSV beside the JSON receipt"
+                                  IsChecked="True" />
+                        <Button x:Name="ExportModProjectPlanButton"
+                                AutomationProperties.AutomationId="AssetExportModProjectPlanButton"
+                                AutomationProperties.Name="Export project plan as a metadata-only receipt with no game assets"
+                                Content="Export project plan"
+                                IsEnabled="False"
+                                Style="{StaticResource PrimaryActionButtonStyle}"
+                                Click="ExportModProjectPlanButton_Click" />
+                    </StackPanel>
+                    <TextBlock x:Name="ModProjectStatusTextBlock"
+                               AutomationProperties.AutomationId="AssetModProjectStatus"
+                               Style="{StaticResource SectionBodyTextStyle}"
+                               Text="Add rows from the loaded catalog, then choose where to write the plan receipt."
+                               TextWrapping="WrapWholeWords" />
+                </StackPanel>
+
+                <ListView x:Name="ModProjectItemsListView"
+                          Grid.Row="2"
+                          Grid.ColumnSpan="2"
+                          AutomationProperties.AutomationId="AssetModProjectItemsList"
+                          AutomationProperties.Name="Selected mod project plan rows"
+                          MaxHeight="180"
+                          SelectionChanged="ModProjectItemsListView_SelectionChanged">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Padding="4,6"
+                                        Spacing="1">
+                                <TextBlock Text="{Binding DisplayName}"
+                                           FontWeight="SemiBold" />
+                                <TextBlock Text="{Binding Identity}"
+                                           FontFamily="Consolas"
+                                           FontSize="12" />
+                                <TextBlock Text="{Binding ExportSummary}"
+                                           FontSize="12"
+                                           Foreground="{ThemeResource ShellMutedTextBrush}" />
+                                <TextBlock Text="{Binding HashSummary}"
+                                           FontFamily="Consolas"
+                                           FontSize="11"
+                                           TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="3"
               ColumnSpacing="14">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="1.05*" />
