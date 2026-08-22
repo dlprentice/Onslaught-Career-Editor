@@ -19,10 +19,11 @@ that dispatcher’s **first** overlay after shared sprite state is
 already-pinned BattleEngine lock sets at `this+0x294` then
 `this+0x2a4` (hud `+0x50` is that BattleEngine), calls
 `CLockInfo__GetLockPercentage` (`0x0040d5b0`) on each live
-`CLockInfo`, and draws the `hud\\v3\\hud_lock_on_piece{1,2,3}.tga`
-trio while the percentage is `< 1.0` or the
-`hud_lock_on_pieces_all` / `hud_target_lockedon_red` pair once it is
-not. The percentage formula is byte-identical to Stuart
+`CLockInfo`, and draws lock art from those percentages: acquiring
+locks use piece1/2/3 while `< 1.0` and pieces_all + lockedon_red
+once complete; fired locks always draw lockedon_red and add the
+piece trio only while `< 1.0`. The percentage formula is
+byte-identical to Stuart
 `CLockInfo::GetLockPercentage`:
 `(mTime + GetFrameRenderFraction * CLOCK_TICK − mStart) / (mFinish − mStart)`
 clamped at `1.0f`. No `FUN_*` milled; no Core owner invented.
@@ -118,7 +119,8 @@ Body `0x00486e00`–`0x004879d6` inclusive through bare `ret`, SHA-256
 `60b658929ae75c144054bf6e37423e322af0ae14b6c6adf850c1d2c68b4e3325`.
 902 Capstone insns; 48 `E8`, 3 `E9`. Incoming-ECX thiscall; zero
 stack args. Sole inbound `E8` is the dispatcher site above. Neighbor
-is three `nop` then `CHud__RenderOverlayForViewpoint`.
+is nine `nop` (`0x004879d7`–`0x004879df`) then
+`CHud__RenderOverlayForViewpoint`.
 
 **Prologue (not the lock walk).** Copies three 16-dword matrices
 keyed by `[hud+0x58]`, applies overlay sprite state, ticks
@@ -156,9 +158,22 @@ nonzero loops to `0x00486f38`.
 
 **Fired-lock walk (`0x004871e0`).**
 `ebx = [hud+0x50] + 0x2a4`, same First/Next shape, same
-`GetLockPercentage` at `0x004872b2`, same `< 1.0` vs completed
-split. The `+0x294` / `+0x2a4` pair is the occupancy FireLock /
-StartLock already pinned.
+`GetLockPercentage` at `0x004872b2`. It is **not** the acquiring
+walk’s exclusive split. After the getter:
+
+1. The body always `DrawSpriteEx`s `[hud+0x1b4]`
+   (`hud_target_lockedon_red.tga`) at `0x00487316`–`0x00487332`
+   (percentage is scaled by `0.5f` / `1.0f − pct` for size/alpha;
+   packing is not claimed).
+2. Then `fcomp [0x005d8568]` / `test ah, 1` / `je 0x0048748e`
+   (Next). Percentage `>= 1.0` stops there.
+3. Percentage `< 1.0` also draws the piece trio
+   `[hud+0x1c8/0x1cc/0x1d0]` (`0x00487360`, `0x004873d6`,
+   `0x00487459`).
+
+`[hud+0x1b0]` (`hud_lock_on_pieces_all.tga`) is **not** read on
+this walk. The `+0x294` / `+0x2a4` pair is still the occupancy
+FireLock / StartLock already pinned.
 
 **After both lock walks** the body walks the world unit set
 (`[0x00855140]` cursor) and may call `CThing__GetCentrePos`
@@ -166,8 +181,9 @@ StartLock already pinned.
 this proof.
 
 HIGH on the two set bases, First/Next, both `GetLockPercentage`
-sites, the `< 1.0` discriminator, the five hud texture slots, and
-the unique inbound. Not claimed: DrawSpriteEx argument packing,
+sites, the acquiring-walk `< 1.0` exclusive split, the fired-walk
+always-`+0x1b4` then maybe-pieces split, the five hud texture
+slots (with `+0x1b0` acquiring-only), and the unique inbound. Not claimed: DrawSpriteEx argument packing,
 the `0x3c54fdf4` depth immediate, ARGB construction
 (`0xffffff` / `0xc8ffffff` / `0x80ff5555` are present as immediates
 only), or the third walk.
@@ -298,7 +314,10 @@ Godot HUD target-lock layers stay absent. This wake adds the
 - percentage =
   `(mTime + frameFraction * 0.05 − mStart) / (mFinish − mStart)`,
   clamp at 1, no floor at 0;
-- `< 1` draws piece1/2/3; `>= 1` draws pieces_all + lockedon_red;
+- acquiring (`+0x294`): `< 1` draws piece1/2/3; `>= 1` draws
+  pieces_all + lockedon_red;
+- fired (`+0x2a4`): always lockedon_red; `< 1` adds piece1/2/3;
+  pieces_all is not on this walk;
 - do not route lock art through `SelectMarkerTextureIndexByUnitFlags`
   or through `DisplayLock`.
 
@@ -350,5 +369,13 @@ Any one of:
   the WorldTargetSprites “lock-list walk” label; this wake
   re-derived both lock walks and the percentage formula from the
   image, so those contracts are no longer plate-only.
+- 2026-08-22 (review) — independent re-read of official+twin
+  `74154bfa` reproduced the three body hashes through their
+  terminators, getter operands, both getter xrefs, dispatcher
+  14-`E8` order, LoadTextures slot pairing, and SelectMarker’s
+  four radar-only callers. Defects corrected in place: the fired
+  walk is not the acquiring exclusive split (always `+0x1b4`,
+  pieces only while `< 1.0`, no `+0x1b0`); neighbor pad is nine
+  `nop`, not three.
 - Does not redo DisplayLock, FireLock, StartLock, LockHit, or
   IScript natives 76–81.
