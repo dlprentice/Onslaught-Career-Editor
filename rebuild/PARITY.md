@@ -487,7 +487,8 @@ Honest boundaries of this run:
 
 Open gaps this run names (recorded, not closed):
 
-1. **Selector name band does not follow the selection.**
+1. **Selector name band does not follow the selection.** —
+   **CLOSED 2026-08-22, same day (see the section below).**
    `DrawLevelSelect` paints `_level100Text` ("1.00 - Training Level", the
    released localization row, `Assets/Frontend/english.json`,
    sourceSha256 `789ecff6…`) unconditionally at (130, 156.8). With the ship
@@ -499,7 +500,75 @@ Open gaps this run names (recorded, not closed):
 2. **MISSION BRIEFING for world 110 composes Level 100's copy.** The page
    shown at frame 396 pairs the Training Level name with the Tatiana
    tutorial body. World-110-authored briefing content is not consumed by any
-   owner yet.
+   owner yet. —
+   **CLOSED 2026-08-22, same day (see the section below).**
+
+## Closing the two selector/briefing gaps (2026-08-22, later same day)
+
+Both gaps shared one root: the reconstruction only ever decoded TEN strings
+out of the released English language table, so it had no per-world text to
+draw. The table itself (`data/language/english.dat`, SHA-256 `789ecff6…`,
+v3, count 2571) carries far more:
+
+- **Per-world name rows.** N.NN-titled strings exist for every node of the
+  career graph — `1.00 - Training Level` (the already-pinned
+  `level100` row), `1.10 - Blackout`, `2.00 - Interception`, … through
+  `8.00 - The Sentinel Awakes`. The materializer now refuses a document
+  that lacks any of them.
+- **Briefing pages in pool-authoring order.** The table's text IDs are a
+  hash-scrambled space with no pinned derivation (none invented), but the
+  TEXT POOL preserves authoring order, and from world 100's Tatiana pair
+  onward it is consecutive nine-slot groups in career-node order: two body
+  paragraphs plus reserved empties. World 110's group carries its own
+  authored copy ("Communications with the mainland have been lost…" /
+  "Defend the base and prevent the invasion force…"), byte-present in the
+  shipped data all along. Exactly four worlds (611/612/621/622) carry a
+  measured third paragraph; every other reserved slot in every group is
+  empty. MEASURED 2026-08-22 from the pinned table by
+  `materialize_retail_assets.py::_frontend_world_strings_bytes`; the whole
+  document is exact-reproduced at SHA-256 `ffe3d3f8…5408`
+  (`Assets/Frontend/english-worlds.json`).
+
+What changed, by owner:
+
+- `materialize_retail_assets.py` — new decoder above; also fixes the
+  committed-but-broken world-200 admission walk (its RLWD post-zeros word
+  is measurably **2**, not the 1 worlds 100/110 carry — read from the
+  pristine install's `200_res_PC.aya` this run; the comment block already
+  recorded the divergence but the header assert still hard-coded 1, so the
+  pushed branch could not reproduce its own pins). Materialization now
+  reproduces 370 exact files again.
+- `RetailFrontendWorldStrings.cs` (Core) — the 43 name rows and 43 briefing
+  bodies as generated literals (mechanically generated from the pinned JSON,
+  never hand-typed); empty means draw-nothing.
+- `RetailFrontendSession.cs` (Client) — `SelectedLevelName` and
+  `SelectedBriefingBody` expose the SELECTED node's rows.
+- `RetailFrontendFlow.cs` (Godot) — the SELECT LEVEL band draws
+  `_session.SelectedLevelName` instead of the unconditional `_level100Text`;
+  MISSION BRIEFING draws `_session.SelectedLevelName` +
+  `_session.SelectedBriefingBody` wrapped greedily at the measured 286px ink
+  ceiling (`WrapBriefingParagraphs`), with the transcribed literal demoted
+  to the world-100 receipt; `LoadLocalization` cross-checks english.json's
+  `level100` row against the decoded table.
+
+Honest boundaries of this closure:
+
+- **Gap 1's law is measured-consistent, not source-proven.** The band
+  following the selection is inferred from shipped data (a name row exists
+  for every selectable node) because `FEPLevelSelect.cpp` remains absent
+  from the source drop and no retail capture of a selected non-root node
+  exists here. If a future capture shows retail pinning "1.00" while the
+  ship marker sits elsewhere, this inference is falsified and reverts.
+- **World-100 pixels are unchanged by construction**: cold selection IS
+  world 100, whose row and wrapped body reproduce the transcribed lines the
+  2026-08-22 probe screen-matched. No tracked GUI launch was spent proving
+  what the session tests already pin mechanically.
+- **Wrapping for worlds other than 100 is law-driven, not pixel-measured**:
+  no retail reference frame shows another world's briefing page. The breaks
+  follow the same greedy 286px rule that reproduces world 100's transcribed
+  breaks exactly; they are not claimed to match unobserved retail pixels.
+- The briefing VIDEO inset (PC_&lt;world&gt;_exact.vid) remains undrawn;
+  nothing here changes that earlier finding.
 
 ## Parity dimensions and their gates
 

@@ -85,6 +85,29 @@ public sealed class RetailFrontendSession
     /// </summary>
     public int SelectedWorldNumber { get; private set; } = RetailWorldCatalog.RootWorldNumber;
 
+    /// <summary>
+    /// The released selector name row of <see cref="SelectedWorldNumber"/>
+    /// ("1.00 - Training Level", "1.10 - Blackout", …), from the pinned
+    /// English language table (see
+    /// <see cref="RetailFrontendWorldStrings"/>). The level-select name band
+    /// and the briefing page both draw the SELECTED node's row; the band
+    /// following the selection is measured-consistent with retail (PARITY.md,
+    /// 2026-08-22) rather than source-proven — FEPLevelSelect.cpp is not in
+    /// the source drop.
+    /// </summary>
+    public string SelectedLevelName =>
+        RetailFrontendWorldStrings.LevelName(SelectedWorldNumber)
+            ?? string.Empty;
+
+    /// <summary>
+    /// The released MISSION BRIEFING body paragraphs for
+    /// <see cref="SelectedWorldNumber"/>, in authored order, empty when the
+    /// language table carries no copy for that world. Callers must not fall
+    /// back to another world's text.
+    /// </summary>
+    public IReadOnlyList<string> SelectedBriefingBody =>
+        RetailFrontendWorldStrings.Briefing(SelectedWorldNumber);
+
     public RetailFrontendScreen Screen { get; private set; } = RetailFrontendScreen.ClickToStart;
 
     public int SelectedMainIndex { get; private set; }
