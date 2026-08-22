@@ -110,6 +110,7 @@ PE mapping owner: [`../reverse-engineering/binary-analysis/patch-surface/PE-MAPP
 | 27 | Leftover IScript (dist / angle / slot / orient) | [§27](#27-leftover-iscript-dist--angle--slot--orient) | GetDistToObj / GetAngle always-0; TeleportOrientation vfunc; SetSlot call |
 | 28 | Walker dash CVars | [§28](#28-walker-dash-cvars) | `g_dash_*` file-backed defaults; not rewritten |
 | 29 | Hit-effect RGB defaults | [§29](#29-hit-effect-rgb-defaults) | `CEngine__Init` 200/150/150 stores |
+| 30 | Sound / zoom / blob init stores | [§30](#30-sound--zoom--blob-init-stores) | radio/HUD volume; zoom-fx enable; blob fade 30 |
 
 ---
 
@@ -830,30 +831,39 @@ select shows all missions in a copied build.
 
 ### 7.2–7.6 Per-site cheat forcing
 
-Each call-site row above can be NOP'd (×5) to disable that specific cheat
-check (hardening) or forced (`B8 01 00 00 00` mov eax,1 replacing the call…
-not recommended — the MALLOY site's tail `f7 d8 1b c0`
-(`neg eax; sbb eax,eax`) builds the boolean from the return value, so
-return-value forcing needs care per site). One representative row is tracked
-(TURKEY site, the cleanest: pure call → test → jcc consumer) rather than five
-near-duplicates:
+Every call pushes one cheat index and calls `IsCheatActive`, whose two exits are
+both `ret 4`. Replacing only the five-byte call with `mov eax,1` therefore
+strands the callee-cleaned argument. That variant is now retained only as the
+unsafe falsified form; a force-TRUE patch must repair ESP at the site. TURKEY
+and Maladim have a plain `test eax,eax` consumer, so their same-length repaired
+form is `83 c4 04 b0 01` (`add esp,4; mov al,1`):
 
 | field | value |
 |---|---|
 | VA | `0x00461A6F` |
 | original | `e8 1c 3a 00 00` |
-| candidate patch | `B8 01 00 00 00` = `mov eax,1` (force cheat-active) |
+| unsafe variant A | `B8 01 00 00 00` — omits cleanup; do not use |
+| repaired variant B | `83 C4 04 B0 01` — restore ESP, force the following test true |
 
-Confidence: **STATIC_ONLY** (consumer shape verified for TURKEY site; the
-other four sites need the same per-site consumer read before forcing).
-Risk: medium.
+`Career_IsWorldUnlocked 0x00461A50` is SEH-framed: it pushes index 1 at
+`0x00461A6D`, and its positive exit restores `fs:[0]` from `[esp+0x10]`,
+adds `0x1c`, then `ret 4`. Variant A skews that frame. Variant B was observed
+in a clean copied-runtime walk: all 12 visible Episode-1 nodes rendered
+available, and selecting the distant `(508,321)` node reached mission briefing
+`3.00 - Liberation of Russo` (PIDs 29920 / 9932; no overlap; terminal
+process count zero). **Variant B confidence: MEASURED.** Risk: low-moderate.
+Variant A stays STATIC_ONLY / high risk.
 
 ### 7.3 latete site
 
-`0x0045D80B`: `e8 80 7c 00 00` followed by the same `f7 d8 1b c0` tail as
-MALLOY. TSV rows `B8 01 00 00 00` as a candidate; do **not** productize
-without a consumer re-read (the tail inverts/extends the boolean). MALLOY
-itself stays pointer-only (§9) because the product catalog already owns
+`0x0045D80B`: variant A `B8 01 00 00 00` is a measured launch crasher because
+it strands index 5 inside ESP-only `CFEPGoodies::Process`. Repaired variant B
+uses the nine-byte window `e8807c0000f7d81bc0` →
+`83c404b80100000090`; it was ALIVE 3/3 and confirmed the stack-corruption H1
+(full receipt in the changelog). Matched default-slot and late-slot Goodies
+captures later showed no defensible unlock/state difference from baseline, so
+its MEASURED scope remains liveness/mechanism, not the intended Goodies effect.
+MALLOY itself stays pointer-only (§9) because the product catalog already owns
 `0x0045D7F4`.
 
 ### 7.7 God-flag UI gate — Maladim site
@@ -863,13 +873,21 @@ itself stays pointer-only (§9) because the product catalog already owns
 | VA | `0x004CE31B` |
 | original | `e8 70 71 f9 ff` |
 | consumer | `85 c0` / `0f 84 86 00 00 00` (jz skip the Controller Options God line) |
-| candidate | `B8 01 00 00 00` — God OFF/ON appears on a normal-named save |
+| unsafe variant A | `B8 01 00 00 00` — omits cleanup; do not use |
+| repaired variant B | `83 C4 04 B0 01` — restore ESP, force the following test true |
 
-No `neg/sbb` tail here — clean force. Does **not** by itself write
-`mVulnerable`; it only unhides the toggle that the Dec 2025 / Mar 2026
-tests already showed changes combat damage.
+No `neg/sbb` tail here, but the index-3 push at `0x004CE314` still requires
+repair: `PauseMenu__Init 0x004CDE60` is a large SEH-framed function whose
+epilogue restores `fs:[0]` from `[esp+0x20]`, adds `0x20`, then `ret 4`.
+Variant A caused the clean copied runtime to exit when Options activated.
+Variant B reached frontend Options → Controller Options and visibly rendered
+`God OFF` as the third settings row on a normal-named save (PID 32116; no
+overlap; terminal process count zero). It does **not** itself write
+`mVulnerable`; it only unhides the toggle that the Dec 2025 / Mar 2026 tests
+already showed changes combat damage.
 
-Confidence: **STATIC_ONLY**. Risk: low.
+**Variant B confidence: MEASURED.** Risk: low-moderate. Variant A stays
+STATIC_ONLY / high risk.
 
 ---
 
@@ -1620,6 +1638,23 @@ anyway.
 `GetX`/`GetY`/`GetZ` unbox a vector and return one
 component; no one-instruction cheat.
 
+### 18.13 NumContained / GetThingRef
+
+`NumContained` `0x00535D70` walks a containment list and
+counts things with type bit 4 whose config name matches
+the unboxed string. Type-bit `je` at **`0x00535DB3`**
+(`74 44`) skips a candidate. NOP: scripts count things
+that lack bit 4 (still require a live config name).
+
+`GetThingRef` `0x005367C0` looks up by name via
+`0x0050AF70` (`this=0x00855090`, BSS) then `je` at
+**`0x005367F9`** (`0f 84 bf 00 00 00`) skips the box.
+Convert to `e9 c0 00 00 00 90`: scripts always see a
+null ref. NOP of that `je` would box a null lookup —
+not rowed.
+
+Confidence: **STATIC_ONLY**. Risk: medium.
+
 ### 18.11 SpawnersEmpty / SpawnersInUse
 
 Same shape as IsFiring: type-bit, helper, `setne cl`.
@@ -2301,6 +2336,47 @@ Confidence: **STATIC_ONLY**. Risk: low (visual only).
 
 ---
 
+## 30. Sound / zoom / blob init stores
+
+These CVars live on **objects**, not file globals. Patch
+the `.text` stores that seed them. Stock
+`defaultoptions.bea` has no `snd_` / `zoomeffect` /
+`BlobShadow` strings.
+
+### 30.1 Radio / HUD message volumes
+
+`CSoundManager__Init` `0x004E00D0` writes then registers:
+
+| CVar | store VA | original | value | dest |
+|---|---|---|---|---|
+| `snd_radiomessagevolume` | `0x004E0210` | `c7 45 00 3d 0a d7 3e` | 0.42f | `[this+0x2c]` |
+| `snd_hudmessagevolume` | `0x004E0217` | `c7 03 66 66 e6 3e` | 0.45f | `[this+0x30]` |
+
+Example: either → 1.0f (`00 00 80 3f` in the imm32).
+Help strings are "The radio message volume" /
+"The HUD message volume".
+
+### 30.2 Zoom-effect enable
+
+`CScreenFx__InitZoomEffectCvar` `0x00551C90` writes
+`[this+0x10]=1` at **`0x00551CB6`** (`c6 00 01`) then
+registers `cg_zoomeffectenabled`. `c6 00 00` disables
+the zoom-lines overlay by default.
+
+### 30.3 Blob-shadow fade
+
+`CDXShadows__Init` `0x005520F0` writes
+`[this+0x08]=30.0f` at **`0x00552288`**
+(`c7 45 00 00 00 f0 41`) then registers
+`cg_BlobShadowFadeDist` (DXShadows note already names
+the 30.0 / `+0x08` pair). Example 30 → 60
+(`00 00 70 42`).
+
+Confidence for §30: **STATIC_ONLY**. Risk: low (mix /
+overlay / blob fade).
+
+---
+
 ## Verification protocol (for any row promoted to Phase 2)
 
 1. Copy, never in-place: safe-copy through the app; pristine specimen stays
@@ -2322,8 +2398,15 @@ AddHelpMessage id-`jne`, `cg_meshsurfacelodbias`, three
 `CEngine__Init` hit-factor stores). Every non-unknown
 `original_bytes` was re-read from the named specimen
 (`242` prior compared, `0` mismatch, then `12` new).
+Phase 2 adds four §30 init-store rows plus repaired variants for latete,
+TURKEY, and Maladim (see changelog): **now 263 data rows / 258 unique VAs**;
+five VAs intentionally carry multiple mutually exclusive variants.
 
-Confidence histogram: **MEASURED 29 / STATIC_ONLY 227 / SPECULATIVE 0**.
+Current confidence histogram: **MEASURED 32 / STATIC_ONLY 231 /
+SPECULATIVE 0**. The phase-1 baseline was 29 / 227; §30 added four
+STATIC_ONLY rows, latete variant B added one row and later promoted on its
+pre-registered liveness falsifier, and the TURKEY/Maladim repaired variants
+added and promoted on their named copied-runtime UI observations.
 
 First-cut corrections landed here, not in `rebuild/**`:
 
@@ -2356,3 +2439,297 @@ stay without a one-instruction cheat. `GetVariable` still dirties
 x87 if the helper is NOPed. SP aspect `0x005D8BC4` (0.75f,
 42 refs) is not a value row. FOGEND 10.0 is a sentinel ignored
 under EXP. `cg_meshtexturelodbias` stays unrowed (register-only).
+
+## Phase 2 runtime verification — changelog
+
+Runtime lane owner: kanban task `t_665c627a`. Copied-runtime only: every stage
+runs in the app-owned copy
+`%APPDATA%\OnslaughtCareerEditor\GameProfiles\ps2-baseline`, whose source tree
+was hash-verified against pristine specimen `74154bfa…`; the app's 29-row
+product baseline (`baseline-diff.tsv`) is re-applied beneath every census
+stage. Never the installed game, never `G:`. Instruments:
+`local-lab/patch-surface-phase2/{stage_apply,launch_copy,input_tap,grab_frame,stop_bea}.py`,
+JSON receipts alongside.
+
+### Batch 1 — cheat-gate trio launch-crash screening (2026-08-22)
+
+Protocol: `stage_apply.py` restores the copy's pristine backup, re-applies the
+product baseline, applies the selected census rows asserting each row's
+`original_bytes` against pristine first; launch detached with
+`-skipfmv -res 1600 900`; liveness checked at t=12s; 3 repeats per stage
+(earlier single >=60s watches agree).
+
+| Stage | Census rows | Result |
+|---|---|---|
+| baseline | none | ALIVE 4/4 |
+| maladim | 0x004CE31B | ALIVE 3/3 (+ earlier >=60s) |
+| turkey | 0x00461A6F | ALIVE 3/3 (+ earlier >=60s) |
+| pair | 0x004CE31B + 0x00461A6F | ALIVE 3/3 |
+| latete | 0x0045D80B | DEAD 6/6 (never reached t=12s) |
+| any stage containing latete | … + 0x0045D80B | DEAD consistently |
+
+Finding: `0x0045D80B` `e8->b8 01` **crashes the game during startup**
+(empirical: DEAD 6/6). Follow-up byte read (pristine specimen, sha256-verified)
+of the site: all three cheat-gate call sites target the same helper
+`IsCheatActive` at `0x00465490`; turkey/maladim tails are `85 c0` test +
+plain jcc (clean force), while the latete tail is
+`f7 d8 1b c0 bb 0000803f f7 d8 a3 b4986700`
+(`neg eax; sbb eax,eax; mov ebx,1.0f; neg eax; mov [0x006798B4],eax`) —
+that chain reduces ANY nonzero return to a stored 1, so the forced
+`mov eax,1` is arithmetically indistinguishable from a TRUE return at this
+site. The launch-crash mechanism is therefore NOT the immediate tail
+arithmetic; it must lie in side effects the removed call performed or in the
+enclosing function's wider contract (identifying the enclosing function and
+all consumers of `[0x006798B4]` is the open question). TSV row updated:
+risk=high LAUNCH CRASHER with the observation; confidence stays STATIC_ONLY
+because a crash verifies nothing about the intended effect.
+Maladim / TURKEY stay STATIC_ONLY until their named UI observations
+(God line visible / all-levels select) are observed via a menu walk.
+
+Session environment findings (route proven): message-transport window-message
+taps navigate retail menus (arrows need the extended-key lparam bit; ENTER
+enters pages; click-to-start via client-centre click); observation channel is
+PrintWindow frame grab + mean-RGB signatures; `-skipfmv` is required to reach
+the menu and stays on the copy only. An earlier trio "death" at 30-90s was
+shown to coincide with input-tap lapses (attract timeout), not bytes.
+PrintWindow later proved unreliable on this title (documented in
+`tools/d3d9-proxy/README.md`: the D3D9 back buffer is never composited into the
+window DC, and grabbing the window can stall its main loop) — the sanctioned
+observation channel is the d3d9-proxy Present-time back-buffer grab with the
+measured retail mean-RGB signatures (`Run-FrontendPageCapture.ps1`).
+
+### Batch 2 — gameplay-value + frontend clip rows launch-crash screening (2026-08-22)
+
+Protocol: identical to batch 1 (`stage_apply.py` pristine restore → product
+baseline → census rows asserted vs pristine → detached launch `-skipfmv -res
+1600 900`; liveness at t=12s and t=20s; 3 repeats per stage via
+`batch2_screen.py`, JSONL log + per-stage receipts alongside). Every stage was
+killed cleanly after observation; receipts name PIDs and terminal state.
+
+| Stage | Census rows | Result |
+|---|---|---|
+| b2-energy | 0x004137E8, 0x00410CA8, 0x00410CD0 (energy drain trio) | ALIVE 3/3 |
+| b2-clock | 0x005D8578 (CLOCK_TICK 0.05f→0.038f) | ALIVE 3/3 |
+| b2-freeze | 0x0046EB5D (FREEZE: AdvanceTime NOP) | ALIVE 3/3 |
+| b2-console | 0x0046C186, 0x0046C209 (console Win/Lose gates) | ALIVE 3/3 |
+| b2-immune | 0x004037BE, 0x004898B0, 0x0040819C, 0x00408189 (damage/water immunity quad) | ALIVE 3/3 |
+| b2-clips | 0x0045F06C, 0x0045F071, 0x00468626, 0x0045041D, 0x00450422, 0x004506DA, 0x004506DF, 0x005222AC, 0x005222B1 (§23 frontend far/near clip PUSHes ×9) | ALIVE 3/3 |
+
+Finding: **no new launch crashers** among the 20 rows screened — all six
+stages reached t=20s alive on every repeat. No TSV confidence promotions yet:
+crash-screening proves launch-safety only; each row still needs its named
+cheapest verification observed.
+
+Menu-walk progress (Maladim+TURKEY stage): the d3d9-proxy instrument navigated
+click-to-start → main menu under full occlusion (signatures hit at frames
+230/880). First keyboard walk landed one row low (DOWN×5+ENTER opened Quit's
+confirm dialog — initial selection is not New Game); corrected walk
+(DOWN×4+ENTER into Options, then Controller Options for the God line,
+level-select for TURKEY, Goodies page + §23 clip rows) is prepared but HELD
+pending the serialized-game slot (video task t_f372c455).
+
+### Census writer pass — §30 init-store rows added (2026-08-22, offline)
+
+While BEA launches were held by the serialized-slot directive, the four §30
+init-store sites were verified against the pristine specimen
+(`74154bfae14ddc8e…`) and added as TSV rows — the first census writer pass of
+phase 2. Direct byte reads (`local-lab/patch-surface-phase2/_sec30_read.py`):
+
+| VA | file off | original | expect | MATCH |
+|---|---|---|---|---|
+| 0x004E0210 `CSoundManager::Init` radio vol seed `[this+0x2c]` | 0x000E0210 | `c745003d0ad73e` (0.42f) | catalog §30.1 | yes |
+| 0x004E0217 `CSoundManager::Init` HUD msg vol seed `[this+0x30]` | 0x000E0217 | `c7036666e63e` (0.45f) | catalog §30.1 | yes |
+| 0x00551CB6 `CScreenFx::InitZoomEffectCvar` default `[this+0x10]` | 0x00151CB6 | `c60001` (=1) | catalog §30.2 | yes |
+| 0x00552288 `CDXShadows::Init` blob-fade seed `[this+0x08]` | 0x00152288 | `c745000000f041` (30.0f) | catalog §30.3 | yes |
+
+All four matched the catalog byte-for-byte on first read; one earlier
+MISMATCH was this session's own script bug (file offset typed as
+VA−0x300000), corrected and re-verified — the specimen itself never
+disagreed with the catalog. The patched-byte examples follow the catalog's
+own suggestions (volumes → 1.0f, zoom-effect default → 0, blob fade
+30.0f → 60.0f). Rows are STATIC_ONLY / low risk; each names a copied-runtime
+cheapest_verification (registered cvar value via options UI, overlay
+presence on zoom-in, blob-shadow persistence distance). TSV now **260 data
+rows / 258 unique VAs**; mechanical validation clean (9 columns, hex/length
+parity, offset = VA−0x400000; the only flags are pre-existing census
+conventions: `unknown`/`none-*` placeholders and two intentional
+multi-variant VAs). No confidence changes. Batch-3 stage lists stand ready
+in `WALK-PENDING-SLOT.md`; §30 rows join the post-walk screening queue.
+
+### Latete launch-crash mechanism IDENTIFIED (2026-08-22, offline static)
+
+Full-TSV integrity sweep (same session): all **259** non-placeholder data
+rows' `original_bytes` re-asserted against the pristine specimen in one pass
+(`_tsv_full_sweep.py`) — **0 mismatches**, 2 placeholder rows skipped by
+design (`unknown`/`none-*`). Every row stage_apply.py asserts at staging
+time is specimen-exact.
+
+Read-only subagent analysis, every load-bearing byte claim independently
+re-verified against the pristine specimen (`74154bfa…`):
+
+- Enclosing function of `0x0045D80B` is **`CFEPGoodies::Process` @
+  `0x0045D7E0`** (vtable slot +8 at `.rdata:0x5DB9A0`; prologue
+  `sub esp,0x114` ESP-only frame), not `ButtonPressed`.
+- The call's argument `push 05` sits at `0x0045D7FD` immediately before it;
+  `IsCheatActive @0x00465490` is **callee-cleaned** (both epilogues
+  `c2 04 00`, i.e. `ret 4`). Deleting the call strands the pushed arg:
+  ESP stays −4 through the rest of the tick — every `[esp+k]` local access
+  misreads — and the function's exit (`pop edi/esi/ebp/ebx;
+  add esp,0x114; ret 4` @ `0x45DF31..37`) pops a skewed chain ending in a
+  garbage return address. Deterministic wild-EIP on Process's **first
+  pre-menu tick** ⇒ DEAD <10 s exactly as observed.
+- Siblings are safe because their enclosing functions never execute before
+  the menu: TURKEY `0x00461A6F` lives in `Career_IsWorldUnlocked`
+  (`0x00461A50`); Maladim `0x004CE31B` sits on the pause-menu path.
+  Precedent agrees: the documented MALLOY patch of call #1 in this same
+  function carries an explicit `add esp,4` stack repair.
+- Subagent citation corrections found during verification: its claimed
+  Process epilogue (`add esp,0x78; ret 8`) belongs to the previous
+  function's tail at `0x45D69C`, not to Process; and its proposed falsifier
+  bytes would leave the retained `neg eax` storing −1 into `[0x6798B4]`
+  (truthy but not the claimed value) — a repaired row must place
+  `add esp,4` before the tail stores.
+- Cheapest runtime falsifier when the serialized slot next frees: patch
+  window `e8807c0000f7d81bc0` → `83c404b80100000090`
+  (add esp,4; mov eax,1; nop — 9 bytes ↔ 9 bytes, ESP rebalanced before the
+  untouched `bb 0000803f / f7 d8 / a3 b4986700` tail stores −1, truthy, into
+  `[0x6798B4]`) and predict ALIVE ≥3/3. If still dead, H1 is wrong.
+  Added as TSV row `0x0045D80B` variant B (`e44aab9d` follow-up) so one
+  `batch2_screen.py --label latete-fix --vas 0x0045D80B-fix` run decides.
+
+### Menu-walk status after first clean-slot run (2026-08-22)
+
+Run 1 (pid 24508, occluded=False fg=True): boot→click-to-start→main-menu
+proven again; **DOWN×4 lands selection on Options — visually confirmed** in
+captured frames. Posted ENTER did not activate the row within the run's
+window and the fixed `-Seconds 90` instrument budget truncated the walk
+mid-step (budget must exceed walk length by ≥60 s). Runs 2–4 overlapped the
+video lane's TAKE 4 (`occluded=True fg=False`) and are VOID as observations;
+no negative finding recorded from them. Corrected v2 plan (longer budget,
+ENTER/SPACE activation probes, click fallback on re-measured coordinates)
+staged in `WALK-PENDING-SLOT.md`. All BEA launches held again pending the
+video lane's explicit closed announcement.
+
+### Latete H1 falsifier — CONFIRMED; variant B promoted MEASURED (2026-08-22 ~16:20)
+
+Serialized slot explicitly released by reviewer (16:15); tasklist verified clear;
+origin/main merged first (`9c011152`, pushed). One BEA copy at a time throughout.
+
+Stage: `ps2-baseline` copy + TSV row `0x0045D80B` variant B only, applied over the
+29-row product baseline via `stage_apply.py` VA#2 selector; receipts show
+orig `e8807c0000f7d81bc0` → patched `83c404b80100000090` in all three reps,
+sha256_after `2d07696a…` identical across reps.
+
+Result (`batch2_screen.py --label latete-fix --vas 0x0045D80B#2 --repeats 3`,
+clean serialized slot): **ALIVE 3/3** at t=12 s and t=20 s
+(pids 5336 / 39968 / 20420, each killed cleanly at end of rep; tasklist clear after).
+
+Pre-registered decision rule (`WALK-PENDING-SLOT.md`): ALIVE ≥3/3 confirms H1;
+still-dead refutes. **H1 CONFIRMED** — variant A's launch crash was the stranded
+callee-cleaned stdcall argument skewing ESP, not the neg/sbb tail semantics.
+
+Bookkeeping:
+- TSV row `0x0045D80B` variant B promoted STATIC_ONLY → **MEASURED** (its named
+  cheapest_verification was copied-runtime liveness ALIVE ≥3/3, now observed);
+  risk rewritten from "untested falsifier" to low-moderate with the receipt.
+  Variant A row unchanged: risk=high LAUNCH CRASHER, stays STATIC_ONLY.
+- The later Goodies menu walk observed no defensible state change versus
+  matched baseline on either the default or late slot; liveness/mechanism is
+  measured, while the intended Goodies behavior remains unproved.
+
+Process ledger this stage: 3 copies launched, 3 killed via instrument finally
+block, 0 left running (tasklist verified).
+
+### Menu walks — repaired TURKEY/Maladim variants promoted (2026-08-22)
+
+The original five-byte `mov eax,1` variants were re-read before further UI
+work. Both also omit the callee-cleaned index argument: TURKEY pushes 1 at
+`0x00461A6D`; Maladim pushes 3 at `0x004CE314`; `IsCheatActive` exits with
+`ret 4`. Two same-length repaired TSV variants were added:
+
+| Site | Original | Repaired variant B |
+|---|---|---|
+| TURKEY `0x00461A6F` | `e81c3a0000` | `83c404b001` (`add esp,4; mov al,1`) |
+| Maladim `0x004CE31B` | `e87071f9ff` | `83c404b001` (`add esp,4; mov al,1`) |
+
+Copied-runtime Present-grab results, each staged alone over the 29-row product
+baseline and guarded by a machine-wide one-process ledger:
+
+- **Maladim variant B MEASURED:** PID 32116 navigated main menu → Options →
+  Controller Options. Frames `f016950.png` / `f017970.png` visibly render
+  `God OFF` as the third settings row on a normal-named save. Instrument rc=0,
+  no overlap, terminal game-process count zero, proxy absent.
+- **TURKEY variant B MEASURED:** PID 29920 reached SELECT LEVEL with all 12
+  visible Episode-1 nodes cyan/available. Confirmatory PID 9932 selected the
+  distant node `(508,321)` and reached mission briefing
+  `3.00 - Liberation of Russo`. No overlap; terminal game-process count zero;
+  proxy absent.
+
+The unsafe variant-A rows remain STATIC_ONLY / high risk. A collided Maladim
+attempt (subject PID 40392 plus transient second PIDs) and its overlapping
+captures were explicitly marked **VOID** before these clean runs; none of its
+pixels or negative observations contributed to either promotion.
+
+### Walk C — Goodies and frontend clips (2026-08-22)
+
+- Nine §23 frontend projection rows were staged together (sha256_after
+  `04631388…`) and PID 45844 rendered the Goodies page cleanly. Product-baseline
+  PID 49932 supplied the matched page reference. Side-by-side and pixel-diff
+  review found no defensible clip/geometry shift: static UI/crop aligned, while
+  differences were rotating-preview phase/lighting only. **No clip row
+  promoted**; all nine remain STATIC_ONLY.
+- Latete variant B was compared against product baseline on both the default
+  Goodies slot (PID 37288) and late row-4/column-9 slot `(508,388)` (PID 49716;
+  baseline PID 32784). Both matched in visible lock/state semantics; the
+  selection-ring/global-lighting differences were not an unlock. Its MEASURED
+  scope remains the ALIVE-3/3 stack-mechanism falsifier, not the intended UI
+  effect.
+
+Every admissible run above had exactly one BEA PID, no concurrent Godot, and a
+verified zero-process terminal readback. Any proxy-removal delay was cleared
+and verified absent before the next launch.
+
+### Batch 3 — launch-crash screening (2026-08-22)
+
+Protocol: pristine restore → 29-row product baseline → named census rows with
+specimen-byte assertions; detached `-skipfmv -res 1600 900`; liveness at t=12s
+and t=20s; three repeats. The hardened screen driver aborts on a second BEA or
+any Godot process, waits for `BEA.exe` to become writable between reps, and
+records terminal process state.
+
+| Stage | Census rows | PIDs | Result |
+|---|---|---|---|
+| b3-quality | 0x004DD6CA, 0x004DD6FF, 0x004DD737, 0x004DD832, 0x0050D5C4, 0x0050D60D, 0x0050D656 | 26496 / 31284 / 42288 | ALIVE 3/3 |
+| b3-dash-clean | 0x006236B0, 0x006236B4, 0x006236AC, 0x006236B8, 0x006236BC, 0x006236C0 | 50972 / 48940 / 44620 | ALIVE 3/3 |
+| b3-zoom | 0x00409ED9, 0x00409EA9, 0x0040A5FD, 0x00482B51, 0x00482B56, 0x00551CB6 | 47068 / 25944 / 49252 | ALIVE 3/3 |
+| b3-grades | 0x0041DE68, 0x0041EA4F, 0x0041F70E | 34604 / 50552 / 33964 | ALIVE 3/3 |
+| b3-hud | 0x00535E6B, 0x00535E8B, 0x00538215, 0x00449A1E, 0x00449A24, 0x00449A2A, 0x004E0210, 0x004E0217, 0x00552288 | 38612 / 49436 / 24824 | ALIVE 3/3 |
+
+All 15 accepted reps report `collision=false`, alive at both checkpoints,
+`killed=true`, empty terminal game-process lists, and writable-target readback.
+An initial dash pilot reached one clean rep then hit a staging-time file-lock
+before rep 2; no second launch occurred, and the full `b3-dash-clean` 3/3 above
+supersedes it. **No new launch crashers; no confidence promotions from
+crash-safety alone.**
+
+### Batch 4 — mesh-quality launch-crash screen (2026-08-22)
+
+The serialized copied-runtime slot was leased explicitly for one coherent
+first-row stage over the 29-row product baseline:
+
+`0x004DD6D4`, `0x004DD709`, `0x004DD741`, `0x004DD6DE`, `0x004DD713`,
+`0x004DD74B`, `0x00631E8C`, `0x00631E90`, and `0x00631EA0`.
+
+The pristine backup re-asserted SHA-256 `74154bfa…` before staging. Receipts
+`receipts-b4-mesh-quality-r1..r3.json` each verified all nine original/patched
+byte pairs and produced identical staged SHA-256 `664465e5…`. PIDs
+40680 / 46072 / 39496 were each alive at t=12 s and t=20 s, with
+`collision=false`, `killed=true`, writable-target readback, and an empty
+terminal game-process list: **ALIVE 3/3**.
+
+The process guard was also extended to recognize the Mono Godot console image
+before this stage. Browser/Chrome and the capture proxy were not used; proxy
+and machine-wide BEA/Godot checks were clear before and after the run. The copy
+was restored to the 29-row product baseline afterward (cleanup SHA-256
+`b49378d6…`). **No confidence promotions:** launch-safety does not observe any
+row's named mesh/LOD behavior.
