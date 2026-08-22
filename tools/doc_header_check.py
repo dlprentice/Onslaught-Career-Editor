@@ -105,6 +105,7 @@ GOVERNANCE_PATHS = frozenset(
         "DOCUMENTATION.md",
         "GOAL.md",
         "LOCAL_LAB_OVERLAY.md",
+        "PROGRAM.md",
         "README.MD",
         "README.RELEASE.md",
         "SECURITY.md",
@@ -978,6 +979,7 @@ def _self_test() -> int:
     # classification
     class_cases = [
         ("GOAL.md", CLASS_GOVERNANCE),
+        ("PROGRAM.md", CLASS_GOVERNANCE),
         ("rebuild/PROVENANCE.md", CLASS_GOVERNANCE),
         ("reverse-engineering/RE-INDEX.md", CLASS_INDEX),
         ("reverse-engineering/save-file/_index.md", CLASS_INDEX),
