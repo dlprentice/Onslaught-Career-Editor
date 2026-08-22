@@ -1,6 +1,6 @@
 {
  "schema": "bea.re.contract-coverage.v1",
- "generatedAtUtc": "2026-08-22T19:51:54Z",
+ "generatedAtUtc": "2026-08-22T23:08:42Z",
  "denominator": {
   "functions": 8329,
   "contracts": 14365,
@@ -13,26 +13,28 @@
   "registerRows": 8329,
   "noteFiles": 752,
   "manifestFilesWithNamedWitnesses": 36,
-  "manifestWitnessKeys": 144
+  "manifestWitnessKeys": 144,
+  "contractFiles": 25,
+  "contractRowsJoined": 25
  },
  "statusCounts": {
   "STALE": 0,
   "DISPUTED": 44,
   "BLOCKED": 58,
   "VERIFIED": 591,
-  "REVIEW_READY": 436,
+  "REVIEW_READY": 451,
   "PROVISIONAL": 1,
-  "SKELETON": 7199
+  "SKELETON": 7184
  },
  "evidenceClassCounts": {
-  "byte-read": 614,
+  "byte-read": 631,
   "ttd-capture": 5,
   "pinned-source-line": 7,
   "controlled-runtime": 22,
   "ghidra-readback": 2419,
-  "name-only": 7199
+  "name-only": 7184
  },
- "elapsedSeconds": 14.188,
+ "elapsedSeconds": 1.495,
  "functions": [
   {
    "va": "0x00401000",
@@ -1678,13 +1680,19 @@
   {
    "va": "0x00405a40",
    "name": "CBattleEngine__dtor_base",
-   "status": "SKELETON",
+   "status": "REVIEW_READY",
    "evidenceClasses": [
-    "name-only"
+    "byte-read"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-review-floor",
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/battleengine/CBattleEngine__dtor_base__00405a40.md"
+   ]
   },
   {
    "va": "0x00405d80",
@@ -1887,13 +1895,19 @@
   {
    "va": "0x00405ed0",
    "name": "CBattleEngine__VFunc_7_00405ed0",
-   "status": "SKELETON",
+   "status": "REVIEW_READY",
    "evidenceClasses": [
-    "name-only"
+    "byte-read"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-review-floor",
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/battleengine/CBattleEngine__VFunc_7_00405ed0__00405ed0.md"
+   ]
   },
   {
    "va": "0x00405ee0",
@@ -1911,14 +1925,18 @@
   {
    "va": "0x00405ef0",
    "name": "CBattleEngine__VFunc_15_00405ef0",
-   "status": "SKELETON",
+   "status": "REVIEW_READY",
    "evidenceClasses": [
-    "name-only"
+    "byte-read"
    ],
    "witnessKinds": [],
    "notes": [],
    "flags": [
-    "analyst-metadata-only"
+    "factory-contract-review-floor",
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/battleengine/CBattleEngine__VFunc_15_00405ef0__00405ef0.md"
    ]
   },
   {
@@ -1930,77 +1948,114 @@
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/battleengine/CBattleEngine__VFunc_38_00405f00__00405f00.md"
+   ]
   },
   {
    "va": "0x00405f20",
    "name": "CBattleEngine__VFunc_85_00405f20",
-   "status": "SKELETON",
+   "status": "REVIEW_READY",
    "evidenceClasses": [
-    "name-only"
-   ],
-   "witnessKinds": [],
-   "notes": [],
-   "flags": []
-  },
-  {
-   "va": "0x00405f40",
-   "name": "CBattleEngine__VFunc_43_00405f40",
-   "status": "SKELETON",
-   "evidenceClasses": [
-    "name-only"
+    "byte-read"
    ],
    "witnessKinds": [],
    "notes": [],
    "flags": [
-    "analyst-metadata-only"
+    "factory-contract-review-floor",
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/battleengine/CBattleEngine__VFunc_85_00405f20__00405f20.md"
+   ]
+  },
+  {
+   "va": "0x00405f40",
+   "name": "CBattleEngine__VFunc_43_00405f40",
+   "status": "REVIEW_READY",
+   "evidenceClasses": [
+    "byte-read"
+   ],
+   "witnessKinds": [],
+   "notes": [],
+   "flags": [
+    "factory-contract-review-floor",
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/battleengine/CBattleEngine__VFunc_43_00405f40__00405f40.md"
    ]
   },
   {
    "va": "0x00405f50",
    "name": "CBattleEngine__VFunc_91_00405f50",
-   "status": "SKELETON",
+   "status": "REVIEW_READY",
    "evidenceClasses": [
-    "name-only"
+    "byte-read"
    ],
    "witnessKinds": [],
    "notes": [],
    "flags": [
-    "analyst-metadata-only"
+    "factory-contract-review-floor",
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/battleengine/CBattleEngine__VFunc_91_00405f50__00405f50.md"
    ]
   },
   {
    "va": "0x00405f60",
    "name": "CBattleEngine__scalar_deleting_dtor",
-   "status": "SKELETON",
+   "status": "REVIEW_READY",
    "evidenceClasses": [
-    "name-only"
+    "byte-read"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-review-floor",
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/battleengine/CBattleEngine__scalar_deleting_dtor__00405f60.md"
+   ]
   },
   {
    "va": "0x00405f80",
    "name": "CBattleEngine__FinalizeLinkedSetAndVFunc02",
-   "status": "SKELETON",
+   "status": "REVIEW_READY",
    "evidenceClasses": [
-    "name-only"
+    "byte-read"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-review-floor",
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/battleengine/CBattleEngine__FinalizeLinkedSetAndVFunc02__00405f80.md"
+   ]
   },
   {
    "va": "0x00406000",
    "name": "CBattleEngine__VFunc_22_00406000",
-   "status": "SKELETON",
+   "status": "REVIEW_READY",
    "evidenceClasses": [
-    "name-only"
+    "byte-read"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-review-floor",
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/battleengine/CBattleEngine__VFunc_22_00406000__00406000.md"
+   ]
   },
   {
    "va": "0x00406020",
@@ -2011,7 +2066,12 @@
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/battleengine/CBattleEngine__VFunc_23_00406020__00406020.md"
+   ]
   },
   {
    "va": "0x00406040",
@@ -2022,7 +2082,12 @@
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/battleengine/CBattleEngine__GetTrackedPositionX_00406040__00406040.md"
+   ]
   },
   {
    "va": "0x00406050",
@@ -2033,7 +2098,12 @@
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/battleengine/CBattleEngine__VFunc_0_00406050__00406050.md"
+   ]
   },
   {
    "va": "0x004060b0",
@@ -2065,14 +2135,18 @@
   {
    "va": "0x004063a0",
    "name": "CBattleEngine__GetFloatAt0x118_AsDouble",
-   "status": "SKELETON",
+   "status": "REVIEW_READY",
    "evidenceClasses": [
-    "name-only"
+    "byte-read"
    ],
    "witnessKinds": [],
    "notes": [],
    "flags": [
-    "analyst-metadata-only"
+    "factory-contract-review-floor",
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/battleengine/CBattleEngine__GetFloatAt0x118_AsDouble__004063a0.md"
    ]
   },
   {
@@ -2108,13 +2182,19 @@
    "name": "CBattleEngine__HandleLocks",
    "status": "DISPUTED",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [
     "reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__UpdateAutoTargetSetAndFireProjectiles.md"
    ],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/battleengine/CBattleEngine__HandleLocks__00406560.md"
+   ]
   },
   {
    "va": "0x00406d20",
@@ -2176,13 +2256,18 @@
    "name": "CBattleEngine__StartLock",
    "status": "VERIFIED",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback",
     "pinned-source-line"
    ],
    "witnessKinds": [],
    "notes": [],
    "flags": [
-    "register-promotion-or-adjudication"
+    "register-promotion-or-adjudication",
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/battleengine/CBattleEngine__StartLock__00406fc0.md"
    ]
   },
   {
@@ -2250,7 +2335,11 @@
    "witnessKinds": [],
    "notes": [],
    "flags": [
-    "register-promotion-or-adjudication"
+    "register-promotion-or-adjudication",
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/battleengine/CBattleEngine__DisplayLock__00407310.md"
    ]
   },
   {
@@ -2308,15 +2397,19 @@
   {
    "va": "0x00407940",
    "name": "CBattleEngine__RandomizeOffsets4B8_4C0",
-   "status": "SKELETON",
+   "status": "REVIEW_READY",
    "evidenceClasses": [
-    "ghidra-readback",
-    "name-only"
+    "byte-read",
+    "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
    "flags": [
-    "analyst-metadata-only"
+    "factory-contract-review-floor",
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/battleengine/CBattleEngine__RandomizeOffsets4B8_4C0__00407940.md"
    ]
   },
   {
@@ -2345,7 +2438,12 @@
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/battleengine/CBattleEngine__IsWalkerGroundedOrCollision__004080f0.md"
+   ]
   },
   {
    "va": "0x00408120",
@@ -2364,15 +2462,19 @@
   {
    "va": "0x00408150",
    "name": "CBattleEngine__ProcessStateSwapAndDeathChecks",
-   "status": "SKELETON",
+   "status": "REVIEW_READY",
    "evidenceClasses": [
-    "ghidra-readback",
-    "name-only"
+    "byte-read",
+    "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
    "flags": [
-    "analyst-metadata-only"
+    "factory-contract-review-floor",
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/battleengine/CBattleEngine__ProcessStateSwapAndDeathChecks__00408150.md"
    ]
   },
   {
@@ -2432,13 +2534,19 @@
   {
    "va": "0x00409880",
    "name": "CBattleEngine__GetLastValidRangeStep100",
-   "status": "SKELETON",
+   "status": "REVIEW_READY",
    "evidenceClasses": [
-    "name-only"
+    "byte-read"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-review-floor",
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/battleengine/CBattleEngine__GetLastValidRangeStep100__00409880.md"
+   ]
   },
   {
    "va": "0x004098b0",
@@ -2499,7 +2607,12 @@
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/battleengine/CBattleEngine__VFunc_25_00409de0__00409de0.md"
+   ]
   },
   {
    "va": "0x00409e60",
@@ -2610,14 +2723,20 @@
   {
    "va": "0x0040a560",
    "name": "CBattleEngine__VFunc_101_0040a560",
-   "status": "SKELETON",
+   "status": "REVIEW_READY",
    "evidenceClasses": [
-    "ghidra-readback",
-    "name-only"
+    "byte-read",
+    "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-review-floor",
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/battleengine/CBattleEngine__VFunc_101_0040a560__0040a560.md"
+   ]
   },
   {
    "va": "0x0040a580",
@@ -3419,14 +3538,18 @@
   {
    "va": "0x0040e7d0",
    "name": "CBattleEngine__VFunc_104_0040e7d0",
-   "status": "SKELETON",
+   "status": "REVIEW_READY",
    "evidenceClasses": [
-    "name-only"
+    "byte-read"
    ],
    "witnessKinds": [],
    "notes": [],
    "flags": [
-    "analyst-metadata-only"
+    "factory-contract-review-floor",
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/battleengine/CBattleEngine__VFunc_104_0040e7d0__0040e7d0.md"
    ]
   },
   {
@@ -3472,7 +3595,12 @@
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/battleengine/CBattleEngine__GetGroundedControlFactor__0040e910.md"
+   ]
   },
   {
    "va": "0x0040e940",

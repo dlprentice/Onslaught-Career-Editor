@@ -3,8 +3,9 @@
 Status: active — overlay model for contract coverage measurement
 Last updated: 2026-08-22
 Summary: maps a seven-state contract-status vocabulary onto what the existing
-function notes, the evidence register, and the campaign TSV manifests already
-express, so coverage becomes measurable without rewriting a single note.
+function notes, evidence register, campaign TSV manifests, and validated
+factory contracts already express, so coverage becomes measurable without
+rewriting a single note or double-counting a function.
 Evidence: MEASURED — every marker pattern below was measured against the live
 corpus on 2026-08-22 (`grep` distributions recorded in the sections that use
 them): 427 of 752 note files carry `Evidence: MEASURED`, register evidence
@@ -13,13 +14,14 @@ implementation gates were counted by the shipped scanner.
 
 ## Why an overlay
 
-The repository already holds its ground truth in three places: the per-function
+The repository already holds its ground truth in four places: the per-function
 notes under `reverse-engineering/binary-analysis/functions/**` (canonical,
 owned by their named-system lanes), the tracked evidence-register projection
 (`reverse-engineering/EVIDENCE-REGISTER.tsv`, one row per function in the
 current_re_authority generation), and the dated TSV manifests beside it
-(promotion cohorts, witness tables, patch census). None of those formats
-changes because of this document.
+(promotion cohorts, witness tables, patch census), plus mechanically validated
+factory documents under `reverse-engineering/contracts/**`. None of those
+formats changes because of this document.
 
 What was missing is a single measurable question: **for each of the pinned
 functions and contracts, how far has the evidence actually gotten?** The
@@ -50,7 +52,7 @@ therefore outrank everything.
 | DISPUTED | A claim about this function was contested and the contest is part of the record. | Withdrawn-filename addenda: the 2026-07-28 name-correction tables quoting superseded labels; "proven false and withdrawn"; interpretation "withdrawn pending a fresh body-level semantic review". This is DISPUTED *history*, not necessarily a dead end — the note usually carries the corrected successor. |
 | BLOCKED | Acting on the contract is explicitly gated on an external condition. | Notes that forbid implementing or widening until another lane resolves: "do not implement Core from this RE root", "remains blocked", "do not implement from this mapping until that lane names the arm". Narrow markers only — scope discipline phrased as "did not X" is not a block. |
 | VERIFIED | The contract has two independent witnesses or went through a promotion/adjudication gate. | Register evidence classes ending in PROMOTED (maintainer Ghidra boundary cohort ceremonies: backup, dry/apply/readback, tracked refresh), SURVIVED (independent-refutation and probe-refuter adjudications), or REPLICATED (TTD write replication with controls). Also: two distinct witness kinds — a MEASURED byte-read note *and* a manifest witness row, or either *and* controlled-runtime register evidence. |
-| REVIEW_READY | The contract is fully written down and bounded, awaiting its promotion gate. | Register grade C1_CANDIDATE_PARTIAL or C2_BOUNDED_RUNTIME; or a MEASURED byte-read note that additionally carries second-witness language (twin re-read, independently reproduced, cross-build pair) without a formal promotion receipt. |
+| REVIEW_READY | The contract is fully written down and bounded, awaiting its promotion gate. | Register grade C1_CANDIDATE_PARTIAL or C2_BOUNDED_RUNTIME; a MEASURED byte-read note that additionally carries second-witness language (twin re-read, independently reproduced, cross-build pair) without a formal promotion receipt; or a factory document that passes the full structural gate and carries the exact header marker `Evidence: MEASURED`. Factory validation is only a review floor, never a promotion witness. |
 | PROVISIONAL | At least one measured fact is pinned, but the contract is not complete. | The per-function envelope notes: `Evidence: MEASURED`, body SHA-256, ret/prologue bytes, cheapest falsifier — PE-envelope contracts that stop short of full field-level semantics (grade PARTIAL_CONTRACT mappings live here). |
 | SKELETON | Identity only: the function is accounted for but no measured contract exists here. | Everything else, by construction: FUN_* rows with analyst metadata only; wave read-back notes that save names/signatures/comments ("Saved/read-back") without behavioral claims; envelope-only mentions; untouched register OPAQUE rows. This is expected to be the largest bucket and saying so precisely is the point of the dashboard. |
 
@@ -104,6 +106,15 @@ Inputs, in read order:
    `independentReDerivation`). A manifest row witnessing register name/liveName
    contributes one `MANIFEST_WITNESS` kind and a `MEASURED` confidence
    contributes toward PROVISIONAL.
+4. **Factory contracts** — every `*.md` under
+   `reverse-engineering/contracts/**` is validated with the factory schema gate,
+   including canonical filename/address identity, required structure, anonymous
+   names, and cohort-wide case-folded name/normalized-VA uniqueness. Each valid
+   document joins exactly one existing register row by normalized VA. A VA not
+   present in the register fails closed. The exact preamble marker
+   `Evidence: MEASURED` supplies a `byte-read` class and REVIEW_READY floor; no
+   prose is interpreted, no witness kind is added, and stronger existing status
+   is preserved.
 
 Decision, per register row, first match wins:
 
@@ -115,6 +126,7 @@ VERIFIED     >=2 distinct witness kinds
              OR register evidence class ~ /(PROMOTED|SURVIVED|REPLICATED)$/
 REVIEW_READY register grade in {C1_CANDIDATE_PARTIAL, C2_BOUNDED_RUNTIME}
              OR note MEASURED + second-witness language
+             OR schema-valid factory contract + exact header Evidence: MEASURED
 PROVISIONAL  note MEASURED covers the name
 SKELETON     otherwise (honest default)
 ```
@@ -128,11 +140,15 @@ twice never promotes.
 
 `reverse-engineering/contract-schema/coverage.json`, schema
 `bea.re.contract-coverage.v1`: denominator block echoed from the pinned
-authority, per-status counts, per-class counts, and a per-function array
-(`va`, `name`, `status`, `evidenceClasses`, `witnessKinds`, `notes`, `flags`).
-The scanner exits non-zero if the register is missing, the row count does not
-equal the pinned function denominator, or a note parse raises — it fails closed
-rather than publishing a partial dashboard.
+authority, per-status counts, per-class counts, factory file/join counts, and a
+per-function array (`va`, `name`, `status`, `evidenceClasses`, `witnessKinds`,
+`notes`, `flags`, and an optional non-empty `contracts` list). The scanner exits
+non-zero if the register is
+missing, the row count does not equal the pinned function denominator, a note
+parse raises, or a factory document is invalid, duplicated, or orphaned — it
+fails closed rather than publishing a partial dashboard. Re-running unchanged
+inputs preserves the prior timestamp/runtime stamps so the generated JSON is
+byte-identical.
 
 ## Limits, stated plainly
 
