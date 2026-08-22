@@ -121,6 +121,14 @@ public sealed partial class FrontendCaptureRig : Node
     /// </summary>
     private const int MainMenuSweepLastFrame = 129 + 480;
 
+    /// <summary>
+    /// The design point inside the Episode-1 (world 110) node's 60x60 hit box
+    /// on FEP_LEVEL_SELECT: the node rect is (180,265,60,60), so (210,295) is
+    /// its centre. Pinned once so the click, the parked capture cursor, and the
+    /// drawn node cannot drift apart.
+    /// </summary>
+    private static readonly Vector2 LevelNode110Click = new(210f, 295f);
+
     private static readonly (int Frame, string Label, RetailFrontendScreen? Screen)[] StartupPlan =
     [
         (12, "01-click-early", RetailFrontendScreen.ClickToStart),
@@ -188,6 +196,54 @@ public sealed partial class FrontendCaptureRig : Node
         (368, "confirm"), // level select Level 100 -> mission briefing
         (428, "confirm"), // mission briefing -> select configuration
         (488, "confirm"), // select configuration -> loading
+    ];
+
+    /// <summary>
+    /// The world-110 admission probe: New Game → SELECT LEVEL, the Episode-1
+    /// node clicked while the career is still cold (rejected by the released
+    /// unlock law), the pinned FillOut Won update applied through the labeled
+    /// capture seam, the same node clicked again (now admitted), CONFIRM
+    /// through MISSION BRIEFING and SELECT CONFIGURATION into LOADING, and the
+    /// host's refuse-to-fake return to SELECT LEVEL.
+    ///
+    /// <para>The hit points are design coordinates consumed by
+    /// <see cref="RetailFrontendFlow.AcceptDesignPointerConfirm"/> — the same
+    /// body a real mouse click drives.</para>
+    /// </summary>
+    private static readonly (int Frame, string Label, RetailFrontendScreen? Screen)[] WorldSelectPlan =
+    [
+        (12, "01-click-early", RetailFrontendScreen.ClickToStart),
+        (120, "02-click-settled", RetailFrontendScreen.ClickToStart),
+        (132, "03-main-menu-entry", RetailFrontendScreen.MainMenu),
+        (252, "04-dev-select-entry", RetailFrontendScreen.DevSelect),
+        (312, "05-level-select-cold", RetailFrontendScreen.LevelSelect),
+        (360, "06-level-select-cold-settled", RetailFrontendScreen.LevelSelect),
+        // A click on the Episode-1 node at (210,295) while the career is cold:
+        // SelectWorld(110) must fail and nothing may advance.
+        (372, "07-cold-node-click-rejected", RetailFrontendScreen.LevelSelect),
+        // The pinned FillOut Won update applied through the capture seam.
+        (384, "08-won-career-applied", RetailFrontendScreen.LevelSelect),
+        // The same node now admitted: select + Confirm -> MISSION BRIEFING.
+        (396, "09-mission-briefing-for-110", RetailFrontendScreen.MissionBriefing),
+        (412, "10-select-configuration", RetailFrontendScreen.SelectConfiguration),
+        // LOADING admits world 110, the host refuses to fake it, and the
+        // player is returned to SELECT LEVEL. LOADING itself lives ~2 frames
+        // and is deliberately not scheduled.
+        (432, "11-returned-to-selector-not-faked", RetailFrontendScreen.LevelSelect),
+        (468, "12-selector-settled-after-refusal", RetailFrontendScreen.LevelSelect),
+    ];
+
+    private static readonly (int Frame, string Action)[] WorldSelectSteps =
+    [
+        (128, "confirm"),           // click-to-start -> main menu
+        (248, "confirm"),           // main menu New Game -> FEP_DEVSELECT
+        (308, "confirm"),           // CHOOSE GAME NAME -> level select (cold)
+        (368, "level-click=110"),   // cold: SelectWorld(110) fails, page unchanged
+        (380, "won-update"),        // pinned FillOut Won update via the capture seam
+        (392, "level-click=110"),   // admitted: select world 110 + Confirm -> briefing
+        (408, "confirm"),           // mission briefing -> select configuration
+        (424, "confirm"),           // select configuration -> loading (world 110 pending)
+                                    // host refuses the unconstructible launch -> SELECT LEVEL
     ];
 
     public static bool TryCreate(
@@ -264,10 +320,10 @@ public sealed partial class FrontendCaptureRig : Node
             throw new ArgumentException("Capture mode requires an absolute --capture-dir path.");
         }
 
-        if (plan is not ("startup" or "gameplay" or "mainmenu" or "options"))
+        if (plan is not ("startup" or "gameplay" or "mainmenu" or "options" or "worldselect"))
         {
             throw new ArgumentException(
-                $"Unknown capture plan '{plan}'. Known plans: startup, gameplay, mainmenu, options.");
+                $"Unknown capture plan '{plan}'. Known plans: startup, gameplay, mainmenu, options, worldselect.");
         }
 
         rig = new FrontendCaptureRig
@@ -444,6 +500,21 @@ public sealed partial class FrontendCaptureRig : Node
 
             _plannedShots = _shots.Count;
         }
+        else if (_planName == "worldselect")
+        {
+            // The world-110 admission probe asserts the released selector law
+            // on the pixels a player sees. The cold click must NOT change the
+            // page, so shot 07 pins LevelSelect; everything downstream of the
+            // Won update pins the page the flow actually owes.
+            foreach ((int frame, string label, RetailFrontendScreen? screen) in WorldSelectPlan)
+            {
+                _shots.Add(new Shot(frame, label, screen, null, null));
+            }
+
+            _frontend.SetMouseCursorDesignPositionForCapture(
+                new Vector2(LevelNode110Click.X, LevelNode110Click.Y));
+            _plannedShots = _shots.Count;
+        }
         else
         {
             foreach ((int frame, string label, RetailFrontendScreen? screen) in StartupPlan)
@@ -458,15 +529,17 @@ public sealed partial class FrontendCaptureRig : Node
         // proven path from cold start to Level 100, and reusing it means the
         // in-level capture cannot disagree with the frontend capture about how
         // the level was entered. The mainmenu plan takes only the first confirm,
-        // because it must STAY on FEP_MAIN for the whole sweep.
-        foreach ((int frame, string action) in
-            _planName == "options" ? OptionsSteps : StartupSteps)
+        // because it must STAY on FEP_MAIN for the whole sweep. The worldselect
+        // plan carries its own steps (see WorldSelectSteps).
+        IEnumerable<(int Frame, string Action)> steps = _planName switch
         {
-            if (_planName == "mainmenu" && frame > StartupSteps[0].Frame)
-            {
-                break;
-            }
-
+            "options" => OptionsSteps,
+            "worldselect" => WorldSelectSteps,
+            "mainmenu" => StartupSteps.Take(1),
+            _ => StartupSteps,
+        };
+        foreach ((int frame, string action) in steps)
+        {
             _steps.Add(new Step(frame, action));
         }
 
@@ -618,6 +691,18 @@ public sealed partial class FrontendCaptureRig : Node
                 {
                     _frontend.SelectOptionsRowForCapture(
                         int.Parse(action["options-select=".Length..]));
+                    break;
+                }
+                if (action.StartsWith("level-click=", System.StringComparison.Ordinal))
+                {
+                    // The same body a real click on the level-select page
+                    // drives: hit tests, SelectWorld admission, Confirm.
+                    _frontend.AcceptDesignPointerConfirm(LevelNode110Click);
+                    break;
+                }
+                if (action == "won-update")
+                {
+                    _frontend.ApplyWonCareerUpdateForCapture();
                     break;
                 }
                 throw new ArgumentException($"Unknown capture action '{action}'.");
@@ -773,6 +858,27 @@ public sealed partial class FrontendCaptureRig : Node
                 "left the loading signature 107,115,125')";
             manifest["referenceSet"] =
                 "local-lab/retail-reference-pristine/level100-gameplay/manifest.json";
+        }
+
+        if (_planName == "worldselect")
+        {
+            // Honesty fields for the one thing this plan does that no released
+            // input sequence could do in a bounded capture: the Won update is
+            // the pinned FillOut snapshot applied through a labeled capture
+            // seam, not a mission flown to FrontEndHandoffReady. A reader of
+            // the unlocked-node shots must know that.
+            manifest["wonUpdateSource"] =
+                "RetailFillOutEndLevelData.ForLevel100Won via " +
+                "RetailFrontendFlow.ApplyWonCareerUpdateForCapture (capture seam; " +
+                "not a mission run to FrontEndHandoffReady)";
+            manifest["clickedNode"] = "Episode 1 (world 110), design rect (180,265,60,60)";
+            manifest["clickPoint"] = new Dictionary<string, float>
+            {
+                ["x"] = LevelNode110Click.X,
+                ["y"] = LevelNode110Click.Y,
+            };
+            manifest["launchWorldNumber"] = _frontend.SelectedWorldNumberForCapture;
+            manifest["constructible"] = _frontend.SelectedWorldIsConstructible;
         }
 
         File.WriteAllText(

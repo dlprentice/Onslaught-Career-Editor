@@ -1,8 +1,10 @@
 # Rebuild parity contract
 
 Status: active — what "1:1 behavioral and experiential parity" means operationally
-Last updated: 2026-08-21 (merged wt/t_0bace7cd: Pulse Cannon ReadyToCharge
-gate and Charged-2 fire; earlier: Level 100 EnableFlightMode +0x58c store on takeoff).
+Last updated: 2026-08-22 (world-110 frontend admission probe recorded below
+the carried-contracts tables; earlier: merged wt/t_0bace7cd Pulse Cannon
+ReadyToCharge gate and Charged-2 fire; Level 100 EnableFlightMode +0x58c
+store on takeoff).
 Evidence: SOURCE — authority order and the known divergences are
 recorded in `PROVENANCE.md` plus the Lost-countdown row of this table; gate capabilities are MEASURED claims of the
 tracked harnesses named in the table. Every row of *Carried retail contracts*
@@ -443,6 +445,62 @@ and 2026-08-22 in this worktree; they are
 not among the 17 files
 under `local-lab/rebuild-parity-mutation-kills-2026-08-17/`.
 
+## Frontend admission probe: world 110 (2026-08-22)
+
+Recorded from tracked run
+`local-lab/godot-captures/20260822-142227-worldselect/`
+(`capture-manifest.json`, plan `worldselect`, purpose `probe`, engine
+4.7.1-stable, viewport 640x480, source commit d2e448f7). One serialized
+Godot launch walked NEW GAME → CHOOSE GAME NAME → SELECT LEVEL and clicked
+the Episode-1 node at design (210,295) — the centre of its measured
+(180,265,60,60) hit box — through
+`RetailFrontendFlow.AcceptDesignPointerConfirm`, the same pointer-confirm
+body a real mouse click drives. All twelve scheduled shots landed on their
+expected screens (`screenMatched` true throughout; scorer verdict UNSCORED
+because this worktree carries no retail reference set, which is correct —
+nothing below is a visual-parity claim against retail).
+
+| Frame | Shot | What the player sees |
+|---|---|---|
+| 312/360 | cold selector | SELECT LEVEL with the root node lit (cyan glow, inner ring detail) and every other node faint; name band reads "Episode 1" / "1.00 - Training Level"; ship marker parked on the root |
+| 372 | cold Episode-1 click | rejected — the page does not change, the root stays lit, no dialog. `SelectWorld(110)` fails on the released unlock law against the cold career |
+| 384 | Won update applied | identical pixels to 372 except the now-unlocked state beneath; the Episode-1 node is clickable but not yet restyled until selected |
+| 396 | briefing for 110 | MISSION BRIEFING reached by confirming the Episode-1 node — admission succeeded, launch world number 110 recorded in the manifest |
+| 412 | select configuration | the normal second pre-load page |
+| 432/468 | refusal return | back on SELECT LEVEL: the ship marker sits on the **second** node, the root node now wears its completed-marker styling, and NO error dialog, loading remnant, or faked level appears. The host refused to construct Level 100 in place of world 110 |
+
+Honest boundaries of this run:
+
+- The unlock was produced by applying the already-pinned
+  `RetailFillOutEndLevelData.ForLevel100Won()` + `ApplyUpdate` through a
+  labeled capture seam (`RetailFrontendFlow.ApplyWonCareerUpdateForCapture`),
+  NOT by flying the Level 100 mission to `FrontEndHandoffReady` inside one
+  bounded capture. The manifest stamps `wonUpdateSource` with exactly that
+  provenance. The same career law is otherwise carried by
+  `RetailCampaignFlowTests` (client) and
+  `Level100PlayerInputWonHandoffTests` (Core, SimInput-only Won). No product
+  path calls the seam.
+- World 110 was **not played**. This reconstruction has no world-110 session
+  owner; the pinned refuse-to-fake behavior returning the player to
+  SELECT LEVEL is itself the finding. Admission is now exercised end-to-end;
+  construction is not.
+
+Open gaps this run names (recorded, not closed):
+
+1. **Selector name band does not follow the selection.**
+   `DrawLevelSelect` paints `_level100Text` ("1.00 - Training Level", the
+   released localization row, `Assets/Frontend/english.json`,
+   sourceSha256 `789ecff6…`) unconditionally at (130, 156.8). With the ship
+   marker on Episode 1 — including after the refusal returns — the band
+   still reads the Training Level name. Whether retail retitles this band
+   per selected node is UNMEASURED: `FEPLevelSelect.cpp` is not in the
+   source drop and no post-Won retail capture exists here. A candidate
+   divergence, deliberately not promoted to the measured-divergence table.
+2. **MISSION BRIEFING for world 110 composes Level 100's copy.** The page
+   shown at frame 396 pairs the Training Level name with the Tatiana
+   tutorial body. World-110-authored briefing content is not consumed by any
+   owner yet.
+
 ## Parity dimensions and their gates
 
 | Dimension | What it means | Current gate | What the gate does / does not prove |
@@ -451,7 +509,7 @@ under `local-lab/rebuild-parity-mutation-kills-2026-08-17/`.
 | **Visual frame** | Rendered output matches retail within tolerance | `Capture-Frontend.ps1 -Plan mainmenu` + `score_frontend_capture.py` + `frontend-regions-*.json`, `gameplay-regions-level100.json` | Proves region-level visual regression against captured retail references. The JSON thresholds are **regression ceilings, not parity claims** (rebuild README is explicit) |
 | **Audio** | Playback behavior matches retail | None (no automated audio gate) | Not gradeable today |
 | **Timing / feel** | Response latency, animation cadence feel equivalent | None dedicated | Not gradeable today; 20 Hz step + floor semantics are the strongest proxy |
-| **Content completeness** | All retail content reachable/present | Materializer hash checks (200+ pinned inputs), level-100 slice | Proves the retail inputs consumed are byte-exact. Does NOT prove every level plays |
+| **Content completeness** | All retail content reachable/present | Materializer hash checks (200+ pinned inputs), level-100 slice; world-110 frontend admission probed (see the 2026-08-22 probe above) | Proves the retail inputs consumed are byte-exact, and that world 110 is admitted and honestly refused rather than faked. Does NOT prove every level plays |
 
 ## The honest reading
 

@@ -21,7 +21,11 @@ param(
     # 'options' walks FEP_OPTIONS and its three subpages, one settled shot each,
     # so they can be compared to the retail frames in
     # local-lab/retail-captures-options-pause-2026-07-27/.
-    [ValidateSet('startup', 'gameplay', 'mainmenu', 'options')]
+    # 'worldselect' is the world-110 admission probe: New Game -> SELECT LEVEL,
+    # the Episode-1 node clicked cold (rejected), the pinned FillOut Won update
+    # applied through the capture seam, the node admitted, CONFIRM into LOADING,
+    # and the host's refuse-to-fake return to SELECT LEVEL.
+    [ValidateSet('startup', 'gameplay', 'mainmenu', 'options', 'worldselect')]
     [string]$Plan = 'startup',
     [string]$Resolution = '640x480',
     # gameplay plan only. Point this at
@@ -57,8 +61,11 @@ Set-StrictMode -Version Latest
 
 # The gameplay plan holds Level 100 for 42 s of engine time plus the ~8 s
 # frontend traversal, so the frontend default would abort it mid-timeline.
+# worldselect ends around frame 468 like startup but keeps the window alive
+# through the refuse-to-fake return, so it gets the same headroom as options.
 if ($TimeoutSeconds -le 0) {
-    $TimeoutSeconds = if ($Plan -eq 'gameplay') { 600 } else { 120 }
+    $TimeoutSeconds = if ($Plan -eq 'gameplay') { 600 }
+        elseif ($Plan -eq 'worldselect') { 180 } else { 120 }
 }
 
 if ([string]::IsNullOrWhiteSpace($OutputDirectory)) {

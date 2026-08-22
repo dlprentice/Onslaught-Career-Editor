@@ -31,6 +31,7 @@
     "test:rebuild": "npm run test:rebuild-core && npm run test:rebuild-client && py -3 .\\rebuild\\tools\\cmsh_static_preview_tests.py && pwsh -NoLogo -NoProfile -File .\\rebuild\\tools\\GodotToolchain.Tests.ps1",
     "run:rebuild-headless": "npm run prepare:rebuild-assets && dotnet run --project .\\rebuild\\OnslaughtRebuild.Headless\\OnslaughtRebuild.Headless.csproj --",
     "run:rebuild-godot": "pwsh -NoLogo -NoProfile -File .\\rebuild\\tools\\Run-FirstFlight.ps1",
-    "test:rebuild-godot-smoke": "pwsh -NoLogo -NoProfile -File .\\rebuild\\tools\\Smoke-FirstFlight.ps1"
+    "test:rebuild-godot-smoke": "pwsh -NoLogo -NoProfile -File .\\rebuild\\tools\\Smoke-FirstFlight.ps1",
+    "capture:frontend": "pwsh -NoLogo -NoProfile -File .\\rebuild\\tools\\Capture-Frontend.ps1"
   }
 }

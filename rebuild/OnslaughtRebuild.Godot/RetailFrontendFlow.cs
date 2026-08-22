@@ -718,6 +718,25 @@ public sealed partial class RetailFrontendFlow : Control
     }
 
     /// <summary>
+    /// Applies the released post-Won FillOut update to the selector's career
+    /// during a capture probe. This is the same
+    /// <see cref="RetailFillOutEndLevelData.ForLevel100Won"/> plus
+    /// <c>ApplyUpdate</c> pair the host applies when the Level 100 mission
+    /// reaches <c>FrontEndHandoffReady</c> (<see cref="AcceptWonHandoff"/>);
+    /// it is invoked here directly only because a bounded frontend capture
+    /// cannot fly the whole mission to a real Won. Probe-only: no product
+    /// path calls it.
+    /// </summary>
+    internal void ApplyWonCareerUpdateForCapture()
+    {
+        _session.Career.ApplyUpdate(RetailFillOutEndLevelData.ForLevel100Won());
+        QueueRedraw();
+    }
+
+    /// <summary>The world the level selector currently highlights.</summary>
+    internal int SelectedWorldNumberForCapture => _session.SelectedWorldNumber;
+
+    /// <summary>
     /// Hides and freezes the frontend while retail's cold-start media owns the
     /// screen.
     ///
@@ -3091,7 +3110,17 @@ public sealed partial class RetailFrontendFlow : Control
 
     private bool HandlePointerConfirm(Vector2 position)
     {
-        Vector2 design = ToDesignPosition(position);
+        return AcceptDesignPointerConfirm(ToDesignPosition(position));
+    }
+
+    /// <summary>
+    /// The released pointer-confirm path in 640x480 design coordinates. The
+    /// capture rig calls this directly with pinned design points so a probe
+    /// exercises literally the same hit tests as a real click; the product
+    /// input path reaches it through <see cref="HandlePointerConfirm"/>.
+    /// </summary>
+    internal bool AcceptDesignPointerConfirm(Vector2 design)
+    {
         switch (_session.Screen)
         {
             case RetailFrontendScreen.ClickToStart:
