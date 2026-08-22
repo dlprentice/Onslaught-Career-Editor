@@ -146,9 +146,9 @@ REPO_PINS: dict[str, tuple[int, str]] = {
     "reverse-engineering/binary-analysis/pc-demo-retail-virtual-target-map-2026-08-11.tsv": (1_204_103, "ba2db0551beeed458ea6265b87d1a5cf93bc2dd2c464da3f7f0c6702a4d4c750"),
     "reverse-engineering/binary-analysis/function-c1-closure-2026-08-11.tsv": (3_288_437, "cfe90af382269cb2e64996d10df7777bd00fcd8e1844b9823ef74bc6199b8974"),
     "reverse-engineering/binary-analysis/ghidra-function-name-table-2026-07-27.tsv": (475_327, "44f49ca1ccb326b5fb425e1639b6a0650565d7567a6afae96f28414aa9e68b11"),
-    "rebuild/OnslaughtRebuild.Core/Level100ActorWeaponRuntime.cs": (31_466, "7942536b60d3bab2d0e534f2030fa74b4329b3bf9c2c19324e244c91aa33597b"),
-    "rebuild/OnslaughtRebuild.Core.Tests/Level100ActorWeaponTests.cs": (17_883, "2232bde202407035adc81317058b5594ad69e038d0889e8fb2762058d7e7529c"),
-    "tools/Invoke-TtdCallContextV2.ps1": (89_821, "2fd3cfb962e19820fce8b0890f6b0e803255cde34f14bc9c1bcd3246f4f17bc3"),
+    "rebuild/OnslaughtRebuild.Core/Level100ActorWeaponRuntime.cs": (32_010, "8f8692250e70eea6bea0702dfd56d1c3c90ad17dd8dffd65acf639cec4ba6197"),
+    "rebuild/OnslaughtRebuild.Core.Tests/Level100ActorWeaponTests.cs": (17_484, "cb64be81481a0d6712a13d7f7a16449974d38ba047617444b6f96c9d024c2bfc"),
+    "tools/Invoke-TtdCallContextV2.ps1": (91_832, "0017181805a38cebfa82cd0ddd802aa7a23f06fda39f03ecc201729e4ad185d7"),
     "tools/ttd_pipeline_contract_tests.py": (203_517, "5b577e04e441b822b3bb30287f53402fb0be606b57a2078e8fde62f05e56c2b4"),
 }
 
