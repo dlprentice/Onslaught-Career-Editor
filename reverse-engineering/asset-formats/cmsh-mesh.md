@@ -47,13 +47,17 @@ numbers are not comparable to the older 5,494-chunk shallow summary:
 | `CMSH` | 213 | 213 | mesh stream owner |
 | `CMST` | 213 | 213 | texture-list/root metadata |
 | `MESP` | 3,774 | 213 | mesh-part wrapper |
+| `PMVB` | 3,774 | 213 | per-part vertex-buffer container; child geometry schema is profile-bounded |
 | `MSHT` | 887 | 213 | material/texture block |
+| `TEXB` | 887 | 213 | texture binding; fixed 128-byte name decoded, remaining fields partial |
 | `BBOX` | 7,974 | 213 | part bounds records |
 | `CMSP` / `CMVB` | 3,774 each | 213 | part state / vertex-buffer owner |
 | `IBUF` / `MMPT` / `TEXR` / `VBUF` | 2,593 each | 213 | geometry/material arrays |
 | `CHLD` / `PRNT` | 1,296 / 3,561 | 155 each | hierarchy relations |
 | `REFR` | 388 | 44 | part instancing/reference |
 | `VHFM` / `HORI` / `HPOS` | 3,774 each | 213 | vertex/orientation/position frame lanes |
+| `CPOS` | 3,736 | 213 | derived model-space position cache, indexed by virtual frame |
+| `CORI` | 2,514 | 213 | derived model-space orientation cache, indexed by virtual frame |
 | `HFOV` | 17 | 17 | camera field-of-view frames |
 | `BONE` / `PMS2` | 7 each | 7 | bone/skeletal lane |
 | `CAMD` / `CEMT` | 61 / 126 | 61 / 126 | camera/end metadata |
@@ -64,6 +68,10 @@ numbers are not comparable to the older 5,494-chunk shallow summary:
 | `PBET` / `PBSQ` | 46,043 each | 213 | opaque PB-family element streams |
 | `CPBT` / `PBFK` / `PBKT` / `PBPN` / `PLQT` / `SIZS` | 1,782 each | 213 | bounded vocabulary; semantics incomplete |
 
+The `CPOS` / `CORI` cache interpretation comes from the exhaustive 213-mesh
+composition check in
+[`cmsh-cpos-cori-identity-2026-07-25.md`](../binary-analysis/cmsh-cpos-cori-identity-2026-07-25.md);
+the occurrence and file counts above come from the current aggregate census.
 PB* recognition is not a decoded schema. The cheapest next artifact is a
 per-instance geometry ledger with offset, length, parent tag, consumer, and
 opaque-byte disposition.
