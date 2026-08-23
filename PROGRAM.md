@@ -209,9 +209,11 @@ note.
 Remaining `_HERMES_SLICE_*`: 492 keys across later batches;
 `current_re_authority`, `_RECURSIVE_RE_CAMPAIGN_2026_08_02`, `goal_status`,
 and every other key untouched. Gates: JSON valid at 574 keys;
-`git grep -F` finds zero tracked hits for 24 of the 25 keys and exactly one
-deliberate residual hit — the moved-history heading inside
-`IScript__VFunc_2_00533810.md` naming `_HERMES_SLICE_20260819_533810`; docs
+`git grep -F` finds zero tracked hits for 24 of the 25 keys; for
+`_HERMES_SLICE_20260819_533810` it returns three raw hits — this receipt's
+own two prose mentions (the census sentence above and this gate summary)
+plus the single substantive deliberate residual, the moved-history heading
+inside `IScript__VFunc_2_00533810.md`; docs
 sub-gates green (doc headers
 2,009 files / 0 violations; re-function-doc-names 2,040 assertions DRIFTED=0;
 evidence-register header current; current-authority PASS).
