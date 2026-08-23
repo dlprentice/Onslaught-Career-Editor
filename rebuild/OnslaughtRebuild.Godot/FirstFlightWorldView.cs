@@ -51,8 +51,6 @@ public sealed partial class FirstFlightWorldView : Node3D
     // tick, so a player-relative jump beyond one stride is a stance reset
     // rather than motion and must not be smeared.
     private const float RetailWalkerFootTeleportMeters = 3f;
-    private const float RetailOpeningPanSeconds = 6f;
-    private const float RetailOpeningCameraHandoffSeconds = 5.95f;
     private const float RetailAquilaAnimationHz = 20f;
     private const float RetailJetWalkToFlySeconds = 25f / RetailAquilaAnimationHz;
     private const float RetailJetFlyToWalkSeconds = 25f / RetailAquilaAnimationHz;
@@ -125,6 +123,9 @@ public sealed partial class FirstFlightWorldView : Node3D
         new Vector3(-0.03870098f, 0.99919593f, 0.01047720f),
         new Vector3(-0.02999347f, -0.01164191f, 0.99948227f));
 
+    private readonly AttachedPanCameraState _cameraState = new(
+        SimulationConstants.Level100OpeningPanTicks,
+        Level100MissionTiming.ReleasedEventFrameTicks);
     private readonly Dictionary<int, Node3D> _projectiles = [];
     private readonly Dictionary<int, Level100ProjectileTrailHistory>
         _projectileTrails = [];
@@ -229,7 +230,7 @@ public sealed partial class FirstFlightWorldView : Node3D
 
     public bool ShowHud { get; private set; }
 
-    public bool OpeningPanActive => !ShowHud;
+    public bool OpeningPanActive { get; private set; }
 
     public void Initialize(WorldSnapshot snapshot)
     {
@@ -281,24 +282,17 @@ public sealed partial class FirstFlightWorldView : Node3D
 
         UpdateWalkerPose(previous, current, interpolationAlpha, playerYaw, resetJump);
         UpdateAquilaTransitionPresentation(current, frameDelta);
-        float openingElapsedTicks = GetOpeningElapsedTicks(previous, current, interpolationAlpha);
-        float openingElapsedSeconds = openingElapsedTicks / SimulationConstants.TicksPerSecond;
-        ShowHud = openingElapsedSeconds >= RetailOpeningCameraHandoffSeconds;
+        _cameraState.Advance(previous, current);
+        AttachedPanCameraViewSnapshot cameraSnapshot =
+            _cameraState.Sample(interpolationAlpha);
+        ShowHud = cameraSnapshot.HudVisible;
+        OpeningPanActive = cameraSnapshot.OpeningPanActive;
         UpdatePlayerShape(current, ShowHud);
         UpdateLevel100Targets(previous, current, interpolationAlpha);
         UpdateProjectiles(previous, current, interpolationAlpha);
-        float zoom = Mathf.Lerp(
-            previous.ZoomPermille,
-            current.ZoomPermille,
-            interpolationAlpha) / SimulationConstants.ZoomScale;
-        _camera.Size = 2f * _camera.Near * RetailTanVerticalHalfFov * zoom;
-        UpdateCamera(
-            playerPosition,
-            playerYaw,
-            playerPitch,
-            playerRoll,
-            openingElapsedSeconds,
-            ShowHud);
+        _camera.Size =
+            2f * _camera.Near * RetailTanVerticalHalfFov * cameraSnapshot.Zoom;
+        UpdateCamera(cameraSnapshot);
         IReadOnlyList<Level100TerrainTileSelection> terrainSelection =
             _level100Terrain.Update(_camera);
         _level100TerrainAppearance.Update(terrainSelection, frameDelta);
@@ -1878,42 +1872,12 @@ public sealed partial class FirstFlightWorldView : Node3D
             -(projectile.Position.Z - projectile.Velocity.Z) * UnitsToMeters);
     }
 
-    private void UpdateCamera(
-        Vector3 playerGroundPosition,
-        float yaw,
-        float pitch,
-        float roll,
-        float openingElapsedSeconds,
-        bool attachedView)
+    private void UpdateCamera(AttachedPanCameraViewSnapshot cameraSnapshot)
     {
-        float pitchCos = Mathf.Cos(pitch);
-        var forward = new Vector3(
-            -Mathf.Sin(yaw) * pitchCos,
-            -Mathf.Sin(pitch),
-            -Mathf.Cos(yaw) * pitchCos);
-        var right = new Vector3(Mathf.Cos(yaw), 0f, -Mathf.Sin(yaw));
-        Vector3 levelUp = right.Cross(forward).Normalized();
-        Vector3 bodyUp =
-            (levelUp * Mathf.Cos(roll)) +
-            (right * Mathf.Sin(roll));
-        Vector3 centerOfGravity = playerGroundPosition +
-            (Vector3.Up * RetailWalkerCenterOfGravityHeight);
-
-        if (attachedView)
-        {
-            _camera.Position = centerOfGravity;
-            _camera.LookAt(centerOfGravity + forward, bodyUp);
-        }
-        else
-        {
-            Vector3 point0 = centerOfGravity + (forward * 10f) + (Vector3.Up * 4.3f);
-            Vector3 point1 = centerOfGravity + (right * 5f) - (Vector3.Up * 1.3f);
-            Vector3 point2 = centerOfGravity - (forward * 9f) + (Vector3.Up * 1.3f);
-            Vector3 point3 = centerOfGravity - (forward * 2.5f);
-            float fraction = Mathf.Clamp(openingElapsedSeconds / RetailOpeningPanSeconds, 0f, 0.999999f);
-            _camera.Position = EvaluateRetailOpeningSpline(point0, point1, point2, point3, fraction);
-            _camera.LookAt(centerOfGravity, Vector3.Up);
-        }
+        _camera.Position = ToGodot(cameraSnapshot.Pose.Position);
+        Vector3 forward = ToGodot(cameraSnapshot.Pose.Forward);
+        Vector3 up = ToGodot(cameraSnapshot.Pose.Up);
+        _camera.LookAt(_camera.Position + forward, up);
 
         _level100Sky.Position = _camera.Position;
         _level100Sun.Update(_camera.Position);
@@ -1946,47 +1910,8 @@ public sealed partial class FirstFlightWorldView : Node3D
         _camera.FrustumOffset = new Vector2(-offset, offset);
     }
 
-    private static float GetOpeningElapsedTicks(
-        WorldSnapshot previous,
-        WorldSnapshot current,
-        float interpolationAlpha)
-    {
-        float previousElapsed = SimulationConstants.Level100OpeningPanTicks -
-            previous.Level100OpeningTicksRemaining;
-        float currentElapsed = SimulationConstants.Level100OpeningPanTicks -
-            current.Level100OpeningTicksRemaining;
-        if (currentElapsed < previousElapsed)
-        {
-            return currentElapsed;
-        }
-
-        return Mathf.Lerp(previousElapsed, currentElapsed, interpolationAlpha);
-    }
-
-    private static Vector3 EvaluateRetailOpeningSpline(
-        Vector3 point0,
-        Vector3 point1,
-        Vector3 point2,
-        Vector3 point3,
-        float fraction)
-    {
-        // Steam CBSpline uses order 3 with knots [0,0,0,1,2,2,2] for these
-        // four points, so the released path is a clamped quadratic B-spline.
-        float u = fraction * 2f;
-        if (u < 1f)
-        {
-            float oneMinusU = 1f - u;
-            return (point0 * oneMinusU * oneMinusU) +
-                (point1 * (2f * u - 1.5f * u * u)) +
-                (point2 * (0.5f * u * u));
-        }
-
-        float twoMinusU = 2f - u;
-        float uMinusOne = u - 1f;
-        return (point1 * (0.5f * twoMinusU * twoMinusU)) +
-            (point2 * (2f * twoMinusU - 1.5f * twoMinusU * twoMinusU)) +
-            (point3 * (uMinusOne * uMinusOne));
-    }
+    private static Vector3 ToGodot(Level100RenderVector3 value) =>
+        new(value.X, value.Y, value.Z);
 
     private static Vector3 ToPlayerWorld(WorldSnapshot snapshot)
     {
