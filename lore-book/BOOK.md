@@ -6,7 +6,7 @@
   [`lore/`](../lore/_index.md) with no tracked mirror. The link list below is
   also the reading order: the builder derives each document's position from it,
   so moving a line here moves the document in the reader.
-- **Last updated:** 2026-08-01
+- **Last updated:** 2026-08-22
 - **Summary:** the front door — what this is, the shelves, and where to start.
 
 In 2003 a studio in Guildford shipped a game about a walking machine that could
@@ -34,6 +34,8 @@ happened more than once; what those articles used to say is kept out of your way
   sold, and how it landed.
 - [The campaign](../lore/the-campaign.md) — how it is shaped, and the mission
   list read from your own copy of the game.
+- [The platforms](../lore/platform-content-variants.md) — which mission,
+  character and world content is shared, and where the released bytes differ.
 - [The war](../lore/world-lore.md) — Allium, the Forseti and the Muspell, and the
   treaty that failed.
 - [The people in it](../lore/characters.md) — Hawk Winter, Tatiana Kiralova,

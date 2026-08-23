@@ -1,7 +1,7 @@
 # Build and dump matrix
 
 Status: active, bounded archive identity census
-Last updated: 2026-08-13
+Last updated: 2026-08-22
 Specimen: pristine PC `BEA.exe`, 2,506,752 bytes, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`;
 PS2 executable identities are listed in their measured rows below.
@@ -136,6 +136,13 @@ also differs in resources `612`, `856`, `863`, `goodie_124`, and cutscene
 `24.bik`; those five Korea/USA pairs were cryptographically identical and the
 Europe versions distinct. Configuration, default physics, and American/English
 language samples are exact across all three regions.
+
+The bounded
+[`platform content crosswalk`](PLATFORM_CONTENT_CROSSWALK.md) expands that
+sample to all six language members in all three regions: every same-language
+member is byte-identical. It also decodes PC versus Xbox and finds the same 43
+mission titles in every language, with Xbox's 2,537 IDs forming a strict subset
+of PC's 2,571.
 
 This makes Korea-versus-USA XBE code the cheapest regional comparison: data is
 held constant to the strongest currently measured boundary.

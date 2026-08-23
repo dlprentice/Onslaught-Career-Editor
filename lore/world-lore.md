@@ -3,10 +3,9 @@
 - **Status:** live preservation record — mostly **in-universe fiction** drawn
   from the game's own story material, with two out-of-universe sections clearly
   marked as such ("The Vegetable Naming Scheme", "Faction Design Philosophy"),
-  which are developer recollection. Nothing here is a claim about the shipped
-  executable. Header block added 2026-07-28; no claim in this file was changed,
-  so the date below is still the date of the last content change.
-- **Last updated:** 2026-03-12
+  which are developer recollection. The platform note is measured against named
+  PC and PS2 manuals. Nothing here is a claim about the shipped executable.
+- **Last updated:** 2026-08-22
 - **Summary:** Planet Allium, the Forseti and Muspell factions, the Sohra Treaty,
   and the war the campaign takes place in.
 
@@ -15,6 +14,12 @@
 Battle Engine Aquila takes place on an Earth-like planet called **Allium** in the **Porrum system**.
 
 > Over recent decades, dramatic changes to the climate have caused the sea level to rise severely. The rising waters have reduced landmasses considerably and packed the population into ever-decreasing habitable areas. Land is scarce and, as such, a valuable commodity.
+
+The English PC manual and the USA PlayStation 2 manual independently print
+this same foundation: Allium and Porrum, the Forseti and Muspell, the
+Ampeloprasum Archipelago, the Sohra Treaty of 1174, and Kensor. The PS2 OCR
+sidecar's `Rensor` is a scan error; the page and map both visibly read
+**Kensor**. See [the platform content crosswalk](platform-content-variants.md).
 
 Only **13 islands** scattered across the surface remain. The entire game takes place on islands due to **engine limitations** (not story choice).
 
