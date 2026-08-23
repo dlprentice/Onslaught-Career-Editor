@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Read-only CMSH animation, skinning, LVLR-membership, and MSL-use census.
+"""Read-only CMSH/LVLR/WRES/physics instance and MSL-use census.
 
 The report contains names, counts, hashes, and relative source coordinates; it
 never emits retail payload bytes. Generated reports must stay under an ignored
@@ -13,9 +13,11 @@ import argparse
 import collections
 import hashlib
 import json
+import math
 import os
 from pathlib import Path, PureWindowsPath
 import re
+import struct
 import sys
 from typing import Any
 
@@ -31,8 +33,14 @@ from aya_archive_inventory import (  # noqa: E402
 from aya_cross_platform_compare import logical_key  # noqa: E402
 from safe_generated_output import SecuredOutputRoot  # noqa: E402
 
-SCHEMA = "onslaught.cmsh-animation-usage-census.v1"
+SCHEMA = "onslaught.cmsh-animation-usage-census.v2"
 INDEX_SCHEMA = "onslaught.asset-mirror-index.v1"
+PMS2_HEADER_BYTES = 309
+PHYSICS_MESH_FIELDS = {
+    1: (9, 8),   # Unit record -> CUnitMesh -> WRES unit/init record.
+    8: (2, 35),  # Feature record -> CFeatureMesh -> WRES feature record.
+}
+EMBEDDED_CONTAINERS = {b"MESH", b"PMSH", b"IMPS", b"SURF", b"LNDS", b"OBJS", b"BLDS"}
 ANIMATION_CALL = re.compile(
     r'\b(PlayAnimationWait|PlayAnimation)\s*\(\s*"([^"]+)"\s*,\s*'
     r"([A-Za-z0-9_]+)\s*,\s*([A-Za-z0-9_]+)\s*\)",
@@ -160,6 +168,552 @@ def _animation_calls(script_root: Path) -> dict[str, object]:
     }
 
 
+def _take_c_string(data: bytes, offset: int, role: str) -> tuple[str, int]:
+    end = data.find(b"\0", offset)
+    if end < 0:
+        raise ValueError(f"{role} is not NUL-terminated")
+    try:
+        value = data[offset:end].decode("ascii")
+    except UnicodeDecodeError as error:
+        raise ValueError(f"{role} is not ASCII") from error
+    return value, end + 1
+
+
+def _physics_mesh_definitions(data: bytes) -> dict[str, object]:
+    """Read only the Unit/Feature definition fields that own mesh names."""
+
+    if len(data) < 6 or struct.unpack_from("<H", data, 0)[0] != 0x12:
+        raise ValueError("unsupported physics-definition framing")
+    offset = 2
+    record_count = 0
+    definitions: dict[str, list[dict[str, object]]] = collections.defaultdict(list)
+    while True:
+        if offset + 4 > len(data):
+            raise ValueError("physics-definition table has no terminal marker")
+        if struct.unpack_from("<i", data, offset)[0] == -1:
+            offset += 4
+            break
+        if record_count >= 10_000 or offset + 8 > len(data):
+            raise ValueError("physics-definition record limit or header failure")
+        record_type, _declared_size = struct.unpack_from("<II", data, offset)
+        offset += 8
+        name, offset = _take_c_string(data, offset, "physics definition name")
+        relevant = PHYSICS_MESH_FIELDS.get(record_type)
+        mesh_value: str | None = None
+        field_count = 0
+        while True:
+            if field_count >= 1_024 or offset + 8 > len(data):
+                raise ValueError(f"physics definition {name!r} has invalid field framing")
+            field_id, size = struct.unpack_from("<II", data, offset)
+            offset += 8
+            end = offset + size
+            if size > 1_048_576 or end + 4 > len(data):
+                raise ValueError(f"physics definition {name!r} has an overrun field")
+            value = data[offset:end]
+            offset = end
+            marker = struct.unpack_from("<i", data, offset)[0]
+            offset += 4
+            field_count += 1
+            if relevant is not None and field_id == relevant[0]:
+                if mesh_value is not None:
+                    raise ValueError(f"physics definition {name!r} repeats its mesh field")
+                mesh_value, consumed = _take_c_string(value, 0, f"physics mesh for {name!r}")
+                if consumed != len(value):
+                    raise ValueError(f"physics mesh for {name!r} has trailing bytes")
+            if marker == -1:
+                break
+            if marker != 0:
+                raise ValueError(f"physics definition {name!r} has invalid continuation")
+        if relevant is not None and mesh_value:
+            mesh_field_id, wres_thing_type = relevant
+            candidate = {
+                "mesh": mesh_value,
+                "meshFieldId": mesh_field_id,
+                "physicsRecordType": record_type,
+                "wresThingType": wres_thing_type,
+            }
+            if candidate in definitions[name]:
+                raise ValueError(f"physics definition {name!r} repeats a mesh candidate")
+            definitions[name].append(candidate)
+        record_count += 1
+    if offset != len(data):
+        raise ValueError("physics-definition table has trailing bytes")
+    return {
+        "recordCount": record_count,
+        "definitions": {
+            name: sorted(rows, key=lambda row: (int(row["wresThingType"]), int(row["meshFieldId"])))
+            for name, rows in sorted(definitions.items(), key=lambda item: item[0].casefold())
+        },
+    }
+
+
+def _scan_wres_definition_instances(
+    body: bytes,
+    definitions: dict[str, list[dict[str, object]]],
+    level: str,
+    world_kind: str,
+) -> dict[str, object]:
+    """Find bounded Unit/Feature records by their physics-definition string."""
+
+    instances: list[dict[str, object]] = []
+    marker_candidates = 0
+    rejected = 0
+    for definition, candidates in definitions.items():
+        encoded = definition.encode("ascii")
+        if len(encoded) > 255:
+            raise ValueError(f"physics definition is too long for WRES string8: {definition!r}")
+        marker = bytes((len(encoded),)) + encoded
+        cursor = 0
+        while True:
+            definition_offset = body.find(marker, cursor)
+            if definition_offset < 0:
+                break
+            cursor = definition_offset + 1
+            marker_candidates += 1
+            definition_end = definition_offset + len(marker)
+            if definition_offset < 9 or definition_end + 4 > len(body):
+                rejected += 1
+                continue
+            active_offset = definition_offset - 8
+            attach_offset = definition_offset - 4
+            spawn_end = active_offset - 1
+            if body[spawn_end] != 0:
+                rejected += 1
+                continue
+            name_end = body.rfind(b"\0", 0, spawn_end)
+            script_end = body.rfind(b"\0", 0, name_end)
+            if name_end < 0 or script_end < 0:
+                rejected += 1
+                continue
+            script_start = script_end
+            while script_start > 0 and 0x20 <= body[script_start - 1] < 0x7F:
+                script_start -= 1
+            record_offset = script_start - 40
+            if record_offset < 0:
+                rejected += 1
+                continue
+            thing_type = struct.unpack_from("<i", body, record_offset)[0]
+            owned_candidates = [
+                row for row in candidates if int(row["wresThingType"]) == thing_type
+            ]
+            if len(owned_candidates) != 1:
+                rejected += 1
+                continue
+            position = list(struct.unpack_from("<3f", body, record_offset + 4))
+            orientation = list(struct.unpack_from("<3f", body, record_offset + 16))
+            mesh_number, allegiance, target = struct.unpack_from(
+                "<3i", body, record_offset + 28
+            )
+            active = struct.unpack_from("<i", body, active_offset)[0]
+            attach_scripts = struct.unpack_from("<i", body, attach_offset)[0]
+            trailer = struct.unpack_from("<i", body, definition_end)[0]
+            try:
+                script = body[script_start:script_end].decode("ascii")
+                name = body[script_end + 1:name_end].decode("ascii")
+                spawn_script = body[name_end + 1:spawn_end].decode("ascii")
+            except UnicodeDecodeError:
+                rejected += 1
+                continue
+            if (
+                not all(math.isfinite(value) for value in (*position, *orientation))
+                or active not in (0, 1)
+                or attach_scripts not in (0, 1)
+                or trailer != -1
+            ):
+                rejected += 1
+                continue
+            instances.append(
+                {
+                    "active": bool(active),
+                    "allegiance": allegiance,
+                    "attachScripts": bool(attach_scripts),
+                    "definition": definition,
+                    "level": level,
+                    "meshNumber": mesh_number,
+                    "name": name,
+                    "orientation": orientation,
+                    "physicsMeshCandidates": owned_candidates,
+                    "position": position,
+                    "recordOffset": record_offset,
+                    "script": script,
+                    "spawnScript": spawn_script,
+                    "target": target,
+                    "thingType": thing_type,
+                    "worldKind": world_kind,
+                }
+            )
+    instances.sort(key=lambda row: int(row["recordOffset"]))
+    starts = [int(row["recordOffset"]) for row in instances]
+    if len(starts) != len(set(starts)):
+        raise ValueError(f"level {level} {world_kind} repeats a WRES record offset")
+    return {
+        "instances": instances,
+        "markerCandidates": marker_candidates,
+        "rejectedCandidates": rejected,
+    }
+
+
+def _structural_chunks(data: bytes) -> list[tuple[bytes, bytes]] | None:
+    rows: list[tuple[bytes, bytes]] = []
+    offset = 0
+    while offset < len(data):
+        if offset + 8 > len(data):
+            return None
+        tag = data[offset:offset + 4]
+        if not all(0x20 <= value < 0x7F for value in tag):
+            return None
+        size = struct.unpack_from("<I", data, offset + 4)[0]
+        end = offset + 8 + size
+        if end > len(data):
+            return None
+        rows.append((tag, data[offset + 8:end]))
+        offset = end
+    return rows or None
+
+
+def _direct_embedded_cmsh(payload: bytes) -> bytes:
+    found: list[bytes] = []
+
+    def descend(data: bytes, depth: int) -> None:
+        if depth > 10:
+            raise ValueError("embedded CMSH container depth exceeds ten")
+        rows = _structural_chunks(data)
+        if rows is None:
+            return
+        for tag, child in rows:
+            if tag == b"PMS2":
+                if (
+                    len(child) >= PMS2_HEADER_BYTES + 380
+                    and child[PMS2_HEADER_BYTES:PMS2_HEADER_BYTES + 4] == b"CMSH"
+                    and struct.unpack_from("<I", child, PMS2_HEADER_BYTES + 4)[0] == 372
+                ):
+                    found.append(child[PMS2_HEADER_BYTES:])
+            elif tag in EMBEDDED_CONTAINERS:
+                descend(child, depth + 1)
+
+    descend(payload, 0)
+    if len(found) != 1:
+        raise ValueError(f"expected exactly one direct embedded CMSH, found {len(found)}")
+    return found[0]
+
+
+def _cmsh_core(stream: bytes) -> bytes:
+    if (
+        len(stream) < 380
+        or stream[:4] != b"CMSH"
+        or struct.unpack_from("<I", stream, 4)[0] != 372
+    ):
+        raise ValueError("embedded mesh is not a bounded CMSH stream")
+    texture_count = struct.unpack_from("<I", stream, 0x0C)[0]
+    part_count = struct.unpack_from("<I", stream, 0x164)[0]
+    offset = 380
+
+    def consume(expected: bytes) -> None:
+        nonlocal offset
+        if offset + 8 > len(stream) or stream[offset:offset + 4] != expected:
+            raise ValueError(f"CMSH core expected {expected.decode('ascii')} at {offset}")
+        size = struct.unpack_from("<I", stream, offset + 4)[0]
+        end = offset + 8 + size
+        if end > len(stream):
+            raise ValueError("CMSH core child overruns its stream")
+        offset = end
+
+    consume(b"CMST")
+    for _ in range(texture_count):
+        consume(b"MSHT")
+    for _ in range(part_count):
+        consume(b"MESP")
+    return stream[:offset]
+
+
+def _normalized_cmsh_core_sha256(stream: bytes) -> str:
+    core = bytearray(_cmsh_core(stream))
+    core[44:344] = b"\0" * 300
+    return hashlib.sha256(core).hexdigest()
+
+
+def _chunk_payload(data: bytes, tag: str, role: str) -> bytes:
+    matches = []
+    for chunk in parse_top_level_chunks(data):
+        if chunk.tag == tag:
+            matches.append(data[chunk.offset + 8:chunk.offset + 8 + chunk.size])
+    if len(matches) != 1:
+        raise ValueError(f"{role} expected one {tag} chunk, found {len(matches)}")
+    return matches[0]
+
+
+def _normalized_mesh_identity(value: str) -> str:
+    name = _normalized_basename(value)
+    return name if name.endswith(".msh") else name + ".msh"
+
+
+def _loose_mesh_key(value: str) -> str:
+    return ("m_" + _normalized_mesh_identity(value) + ".aya").casefold()
+
+
+def _world_instance_join(
+    data_root: Path,
+    meshes: list[tuple[dict[str, object], Any]],
+    membership: dict[str, object],
+    animation_calls: dict[str, object],
+) -> dict[str, object]:
+    physics_path = data_root / "default physics.dat"
+    physics = _physics_mesh_definitions(read_held_archive(physics_path))
+    definitions = physics["definitions"]
+    loose_lookup: dict[str, str] = {}
+    mesh_metadata: dict[str, dict[str, object]] = {}
+    loose_core_lookup: dict[str, list[str]] = collections.defaultdict(list)
+    mesh_root = data_root / "resources" / "meshes"
+    for record, _mesh in meshes:
+        file_name = str(record["file"])
+        key = file_name.casefold()
+        if key in loose_lookup:
+            raise ValueError(f"duplicate loose mesh filename: {file_name}")
+        loose_lookup[key] = file_name
+        mesh_metadata[file_name] = {
+            "boneCarriers": len(record["boneCarriers"]),
+            "motionClass": record["motionClass"],
+            "movingParts": len(record["movingParts"]),
+        }
+        loose_stream = inflate_aya_bytes(read_held_archive(mesh_root / file_name))
+        loose_core_lookup[_normalized_cmsh_core_sha256(loose_stream)].append(file_name)
+
+    membership_lookup: dict[tuple[str, str], list[dict[str, object]]] = collections.defaultdict(list)
+    for row in membership["rows"]:
+        display_name = str(row["displayName"])
+        if display_name:
+            membership_lookup[(str(row["level"]), _normalized_mesh_identity(display_name))].append(row)
+
+    script_files: dict[str, str] = {}
+    script_root = data_root / "MissionScripts"
+    for path in sorted(script_root.rglob("*.msl"), key=lambda item: item.as_posix().casefold()):
+        coordinate = path.relative_to(data_root).as_posix()
+        key = coordinate.casefold()
+        if key in script_files:
+            raise ValueError(f"duplicate MSL coordinate: {coordinate}")
+        script_files[key] = coordinate
+    call_counts: collections.Counter[str] = collections.Counter(
+        str(row["script"]).casefold() for row in animation_calls["rows"]
+    )
+
+    instances: list[dict[str, object]] = []
+    unresolved: list[dict[str, object]] = []
+    anonymous_rows: list[dict[str, object]] = []
+    marker_candidates = 0
+    rejected_candidates = 0
+    resource_root = data_root / "resources"
+    archives = sorted(
+        (
+            path
+            for path in resource_root.glob("*_res_PC.aya")
+            if path.name.split("_", 1)[0].isdigit()
+        ),
+        key=lambda item: item.name.casefold(),
+    )
+    for path in archives:
+        level = path.name.split("_", 1)[0]
+        raw = inflate_aya_bytes(read_held_archive(path))
+        wres = _chunk_payload(raw, "WRES", f"level {level}")
+        wrld = _chunk_payload(wres, "WRLD", f"level {level} WRES")
+        for world_chunk in parse_top_level_chunks(wrld):
+            if world_chunk.tag not in ("BSWD", "RLWD"):
+                continue
+            body = wrld[
+                world_chunk.offset + 8:world_chunk.offset + 8 + world_chunk.size
+            ]
+            scanned = _scan_wres_definition_instances(
+                body,
+                definitions,
+                level,
+                world_chunk.tag,
+            )
+            marker_candidates += int(scanned["markerCandidates"])
+            rejected_candidates += int(scanned["rejectedCandidates"])
+            for instance in scanned["instances"]:
+                candidates = []
+                for candidate in instance.pop("physicsMeshCandidates"):
+                    mesh_name = str(candidate["mesh"])
+                    rows = membership_lookup.get(
+                        (level, _normalized_mesh_identity(mesh_name)),
+                        [],
+                    )
+                    loose_mesh = loose_lookup.get(_loose_mesh_key(mesh_name))
+                    candidates.append((candidate, rows, loose_mesh))
+                exact = [
+                    item for item in candidates if len(item[1]) == 1 and item[2] is not None
+                ]
+                if len(exact) != 1:
+                    unresolved.append(
+                        {
+                            "definition": instance["definition"],
+                            "level": level,
+                            "recordOffset": instance["recordOffset"],
+                            "worldKind": instance["worldKind"],
+                        }
+                    )
+                    continue
+                candidate, level_rows, loose_mesh = exact[0]
+                instance.update(
+                    {
+                        "levelMeshChunkIndex": level_rows[0]["chunkIndex"],
+                        "logicalMethod": level_rows[0]["logicalMethod"],
+                        "looseMesh": loose_mesh,
+                        "meshFieldId": candidate["meshFieldId"],
+                        "meshFieldValue": candidate["mesh"],
+                        "physicsRecordType": candidate["physicsRecordType"],
+                    }
+                )
+                instance.update(mesh_metadata[str(loose_mesh)])
+                script_file = None
+                if instance["script"]:
+                    script_file = script_files.get(
+                        f"missionscripts/level{level}/{instance['script']}.msl".casefold()
+                    )
+                instance["scriptFile"] = script_file
+                instance["animationCallSites"] = (
+                    call_counts.get(str(script_file).casefold(), 0) if script_file else 0
+                )
+                instances.append(instance)
+
+        for chunk in parse_top_level_chunks(raw):
+            if chunk.tag != "MESH":
+                continue
+            payload = raw[chunk.offset + 8:chunk.offset + 8 + chunk.size]
+            _logical, display_name, method = logical_key("MESH", payload)
+            if display_name:
+                continue
+            stream = _direct_embedded_cmsh(payload)
+            parsed = parse_cmsh_stream(stream)
+            parts = parsed.file_parts()
+            motion_class, _moving = _motion_class(parts)
+            core = _cmsh_core(stream)
+            normalized = _normalized_cmsh_core_sha256(stream)
+            anonymous_rows.append(
+                {
+                    "boneCarriers": sum(bool(part.bones) for part in parts),
+                    "chunkIndex": chunk.index,
+                    "coreBytes": len(core),
+                    "coreSha256": hashlib.sha256(core).hexdigest(),
+                    "displayName": display_name,
+                    "internalName": parsed.name,
+                    "level": level,
+                    "logicalMethod": method,
+                    "looseCoreMatches": sorted(loose_core_lookup.get(normalized, [])),
+                    "motionClass": motion_class,
+                    "normalizedCoreSha256": normalized,
+                    "partCount": len(parts),
+                    "streamBytes": len(stream),
+                    "streamSha256": hashlib.sha256(stream).hexdigest(),
+                }
+            )
+
+    instances.sort(
+        key=lambda row: (
+            str(row["level"]),
+            str(row["worldKind"]),
+            int(row["recordOffset"]),
+        )
+    )
+    anonymous_rows.sort(key=lambda row: (str(row["level"]), int(row["chunkIndex"])))
+    direct_instances = [row for row in instances if int(row["animationCallSites"]) > 0]
+    direct_call_files = {
+        str(row["scriptFile"]).casefold() for row in direct_instances if row["scriptFile"]
+    }
+    authored_call_files = {
+        str(row["script"]).casefold() for row in animation_calls["rows"]
+    }
+    unjoined_files = sorted(authored_call_files - direct_call_files)
+    unjoined_sites = sum(call_counts[file_name] for file_name in unjoined_files)
+    absent_loose = sorted(set(mesh_metadata) - set(membership["levelsByLooseMesh"]))
+    absent_use = {
+        file_name: [
+            {
+                "definition": row["definition"],
+                "level": row["level"],
+                "recordOffset": row["recordOffset"],
+                "worldKind": row["worldKind"],
+            }
+            for row in instances
+            if row["looseMesh"] == file_name
+        ]
+        for file_name in absent_loose
+    }
+    summary = {
+        "activeInstances": sum(bool(row["active"]) for row in instances),
+        "archives": len(archives),
+        "boneCarrierInstances": sum(bool(row["boneCarriers"]) for row in instances),
+        "directScriptInstances": sum(row["scriptFile"] is not None for row in instances),
+        "instances": len(instances),
+        "instancesByKind": dict(collections.Counter(str(row["worldKind"]) for row in instances)),
+        "instancesByThingType": {
+            str(key): value
+            for key, value in sorted(collections.Counter(int(row["thingType"]) for row in instances).items())
+        },
+        "meshNumberCounts": {
+            str(key): value
+            for key, value in sorted(collections.Counter(int(row["meshNumber"]) for row in instances).items())
+        },
+        "motionClassCounts": dict(
+            collections.Counter(str(row["motionClass"]) for row in instances)
+        ),
+        "physicsDefinitionNames": len(definitions),
+        "physicsRecords": int(physics["recordCount"]),
+        "resolvedNamedLevelMeshInstances": len(instances),
+        "uniqueDefinitions": len({str(row["definition"]) for row in instances}),
+        "uniqueLooseMeshes": len({str(row["looseMesh"]) for row in instances}),
+        "unresolvedResourceInstances": len(unresolved),
+        "unresolvedScriptInstances": sum(
+            bool(row["script"]) and row["scriptFile"] is None for row in instances
+        ),
+    }
+    anonymous_summary = {
+        "archives": len({str(row["level"]) for row in anonymous_rows}),
+        "boneCarrierRows": sum(bool(row["boneCarriers"]) for row in anonymous_rows),
+        "internalNameCounts": dict(
+            collections.Counter(str(row["internalName"]) for row in anonymous_rows)
+        ),
+        "looseCoreMatches": sum(len(row["looseCoreMatches"]) for row in anonymous_rows),
+        "motionClassCounts": dict(
+            collections.Counter(str(row["motionClass"]) for row in anonymous_rows)
+        ),
+        "partCountCounts": {
+            str(key): value
+            for key, value in sorted(collections.Counter(int(row["partCount"]) for row in anonymous_rows).items())
+        },
+        "rows": len(anonymous_rows),
+        "uniqueCoreHashes": len({str(row["coreSha256"]) for row in anonymous_rows}),
+        "uniqueStreamHashes": len({str(row["streamSha256"]) for row in anonymous_rows}),
+    }
+    animation_summary = {
+        "authoredCallFiles": len(authored_call_files),
+        "authoredCallSites": int(animation_calls["sites"]),
+        "directInstanceCallFiles": len(direct_call_files),
+        "directInstanceCallSites": sum(int(row["animationCallSites"]) for row in direct_instances),
+        "directInstances": len(direct_instances),
+        "unjoinedCallFiles": len(unjoined_files),
+        "unjoinedCallSites": unjoined_sites,
+    }
+    return {
+        "absentLooseWresInstances": absent_use,
+        "animationJoin": {
+            "summary": animation_summary,
+            "unjoinedFiles": unjoined_files,
+        },
+        "anonymousEmbedded": {
+            "rows": anonymous_rows,
+            "summary": anonymous_summary,
+        },
+        "instances": instances,
+        "looseMeshesWithoutNamedMembership": absent_loose,
+        "scanBoundary": {
+            "markerCandidates": marker_candidates,
+            "rejectedCandidates": rejected_candidates,
+        },
+        "summary": summary,
+        "unresolvedResourceInstances": unresolved,
+    }
+
+
 def _level_mesh_membership(
     resource_root: Path,
     meshes: list[tuple[dict[str, object], Any]],
@@ -265,13 +819,24 @@ def build_census(data_root: Path, mirror_index: Path | None = None) -> dict[str,
     mesh_root = data_root / "resources" / "meshes"
     resource_root = data_root / "resources"
     script_root = data_root / "MissionScripts"
-    if not mesh_root.is_dir() or not resource_root.is_dir() or not script_root.is_dir():
-        raise ValueError("data root does not contain resources/meshes, resources, and MissionScripts")
+    physics_path = data_root / "default physics.dat"
+    if (
+        not mesh_root.is_dir()
+        or not resource_root.is_dir()
+        or not script_root.is_dir()
+        or not physics_path.is_file()
+    ):
+        raise ValueError(
+            "data root does not contain resources/meshes, resources, "
+            "MissionScripts, and default physics.dat"
+        )
 
     mesh_paths = sorted(mesh_root.glob("*.msh.aya"), key=lambda item: item.name.casefold())
     parsed = [_mesh_record(path) for path in mesh_paths]
     mesh_records = [record for record, _mesh in parsed]
     membership = _level_mesh_membership(resource_root, parsed)
+    calls = _animation_calls(script_root)
+    world_instances = _world_instance_join(data_root, parsed, membership, calls)
     scripts = sorted(script_root.rglob("*.msl"), key=lambda item: item.as_posix().casefold())
     numeric_archives = sorted(
         (
@@ -282,7 +847,11 @@ def build_census(data_root: Path, mirror_index: Path | None = None) -> dict[str,
         key=lambda item: item.name.casefold(),
     )
     verification = (
-        _verify_index(data_root, mirror_index, [*mesh_paths, *numeric_archives, *scripts])
+        _verify_index(
+            data_root,
+            mirror_index,
+            [*mesh_paths, *numeric_archives, *scripts, physics_path],
+        )
         if mirror_index is not None
         else None
     )
@@ -307,7 +876,8 @@ def build_census(data_root: Path, mirror_index: Path | None = None) -> dict[str,
         "meshSummary": summary,
         "meshes": mesh_records,
         "levelMeshMembership": membership,
-        "missionAnimationCalls": _animation_calls(script_root),
+        "missionAnimationCalls": calls,
+        "worldInstanceJoin": world_instances,
     }
 
 
@@ -353,6 +923,17 @@ def main(argv: list[str] | None = None) -> int:
     )
     calls = report["missionAnimationCalls"]
     print(f"MSL animation calls: {calls['sites']} sites in {calls['files']} files")
+    world = report["worldInstanceJoin"]
+    print(
+        "WRES definition instances: "
+        f"{world['summary']['resolvedNamedLevelMeshInstances']}/"
+        f"{world['summary']['instances']} joined to named LVLR rows and loose CMSH"
+    )
+    print(
+        "Anonymous embedded CMSH: "
+        f"{world['anonymousEmbedded']['summary']['rows']} empty-name rows, "
+        f"{world['anonymousEmbedded']['summary']['looseCoreMatches']} loose-core matches"
+    )
     print(output)
     return 0
 

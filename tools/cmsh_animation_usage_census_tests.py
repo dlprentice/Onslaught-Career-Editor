@@ -6,6 +6,7 @@ from __future__ import annotations
 import collections
 import os
 from pathlib import Path
+import struct
 from types import SimpleNamespace
 import tempfile
 import unittest
@@ -69,6 +70,126 @@ class MissionAnimationCallTests(unittest.TestCase):
         self.assertEqual({"Idle": 1, "Hit": 1}, report["tokenCounts"])
 
 
+def _chunk(tag: bytes, payload: bytes) -> bytes:
+    return tag + struct.pack("<I", len(payload)) + payload
+
+
+def _physics_fixture(*records: tuple[int, str, dict[int, bytes]]) -> bytes:
+    output = bytearray(struct.pack("<H", 0x12))
+    for record_type, name, fields in records:
+        body = bytearray(name.encode("ascii") + b"\0")
+        for index, (field_id, value) in enumerate(fields.items()):
+            body.extend(struct.pack("<II", field_id, len(value)))
+            body.extend(value)
+            body.extend(struct.pack("<i", -1 if index + 1 == len(fields) else 0))
+        output.extend(struct.pack("<II", record_type, len(body)))
+        output.extend(body)
+    output.extend(struct.pack("<i", -1))
+    return bytes(output)
+
+
+def _world_instance(
+    thing_type: int,
+    definition: str,
+    *,
+    name: str,
+    script: str,
+    active: int = 1,
+) -> bytes:
+    return b"".join(
+        (
+            struct.pack(
+                "<i6f3i",
+                thing_type,
+                1.25,
+                2.5,
+                -3.75,
+                0.5,
+                0.0,
+                0.0,
+                0,
+                2,
+                -1,
+            ),
+            script.encode("ascii") + b"\0",
+            name.encode("ascii") + b"\0",
+            b"\0",
+            struct.pack("<iiB", active, 0, len(definition)),
+            definition.encode("ascii"),
+            struct.pack("<i", -1),
+        )
+    )
+
+
+class WorldInstanceParsingTests(unittest.TestCase):
+    def test_physics_unit_and_feature_mesh_fields_keep_their_owners_distinct(self) -> None:
+        data = _physics_fixture(
+            (1, "Building", {9: b"tower.msh\0"}),
+            (8, "Ice", {2: b"iceberg1.msh\0"}),
+        )
+
+        parsed = census._physics_mesh_definitions(data)
+
+        self.assertEqual(2, parsed["recordCount"])
+        self.assertEqual(
+            {
+                "Building": [
+                    {
+                        "mesh": "tower.msh",
+                        "meshFieldId": 9,
+                        "physicsRecordType": 1,
+                        "wresThingType": 8,
+                    }
+                ],
+                "Ice": [
+                    {
+                        "mesh": "iceberg1.msh",
+                        "meshFieldId": 2,
+                        "physicsRecordType": 8,
+                        "wresThingType": 35,
+                    }
+                ],
+            },
+            parsed["definitions"],
+        )
+
+    def test_definition_instance_scan_recovers_transform_names_and_script(self) -> None:
+        definitions = census._physics_mesh_definitions(
+            _physics_fixture(
+                (1, "Building", {9: b"tower.msh\0"}),
+                (8, "Ice", {2: b"iceberg1.msh\0"}),
+            )
+        )["definitions"]
+        prefix = b"not a record\0"
+        body = prefix + _world_instance(8, "Building", name="Tower 01", script="Tower")
+        body += _world_instance(35, "Ice", name="", script="")
+        body += b"\x08Building"  # marker-shaped noise must not become an instance
+
+        scanned = census._scan_wres_definition_instances(body, definitions, "123", "RLWD")
+
+        self.assertEqual(3, scanned["markerCandidates"])
+        self.assertEqual(1, scanned["rejectedCandidates"])
+        self.assertEqual(2, len(scanned["instances"]))
+        building, feature = scanned["instances"]
+        self.assertEqual(len(prefix), building["recordOffset"])
+        self.assertEqual([1.25, 2.5, -3.75], building["position"])
+        self.assertEqual([0.5, 0.0, 0.0], building["orientation"])
+        self.assertEqual("Tower 01", building["name"])
+        self.assertEqual("Tower", building["script"])
+        self.assertEqual(8, building["thingType"])
+        self.assertEqual(35, feature["thingType"])
+
+    def test_anonymous_mesh_body_requires_one_structural_pms2_owner(self) -> None:
+        cmsh = b"CMSH" + struct.pack("<I", 372) + (b"\0" * 372)
+        payload = _chunk(b"PMSH", _chunk(b"PMS2", (b"\0" * 309) + cmsh))
+
+        self.assertEqual(cmsh, census._direct_embedded_cmsh(payload))
+        with self.assertRaisesRegex(ValueError, "exactly one direct embedded CMSH"):
+            census._direct_embedded_cmsh(
+                payload + _chunk(b"PMSH", _chunk(b"PMS2", (b"\0" * 309) + cmsh))
+            )
+
+
 class OutputBoundaryTests(unittest.TestCase):
     def test_generated_report_must_stay_under_an_ignored_output_root(self) -> None:
         self.assertTrue(census._output_is_ignored(census.ROOT / "local-lab/run/census.json"))
@@ -103,7 +224,7 @@ class ShippedAnimationUsageCensusTests(unittest.TestCase):
             "c45722aeed52e77788c7886cb30b813900d3516b1c387983c442d2b02d4fe4b9",
             verification["indexSha256"],
         )
-        self.assertEqual(1_012, verification["verifiedFiles"])
+        self.assertEqual(1_013, verification["verifiedFiles"])
 
     def test_loose_animation_lane_population_is_exact(self) -> None:
         self.assertEqual(
@@ -263,6 +384,93 @@ class ShippedAnimationUsageCensusTests(unittest.TestCase):
                 "TRUE,TRUE": 24,
             },
             calls["flagCounts"],
+        )
+
+    def test_wres_definition_instances_join_physics_lvlr_loose_cmsh_and_pose(self) -> None:
+        joined = self.report["worldInstanceJoin"]
+        self.assertEqual(
+            {
+                "activeInstances": 4_029,
+                "archives": 66,
+                "boneCarrierInstances": 0,
+                "directScriptInstances": 730,
+                "instances": 4_090,
+                "instancesByKind": {"BSWD": 2_731, "RLWD": 1_359},
+                "instancesByThingType": {"8": 3_578, "35": 512},
+                "meshNumberCounts": {"0": 4_090},
+                "motionClassCounts": {
+                    "all-moving-maps-close": 129,
+                    "mixed-moving-map-closure": 1,
+                    "no-moving-map-closes": 1_182,
+                    "no-nontrivial-frame-map": 2_778,
+                },
+                "physicsDefinitionNames": 201,
+                "physicsRecords": 777,
+                "resolvedNamedLevelMeshInstances": 4_090,
+                "uniqueDefinitions": 134,
+                "uniqueLooseMeshes": 115,
+                "unresolvedResourceInstances": 0,
+                "unresolvedScriptInstances": 85,
+            },
+            joined["summary"],
+        )
+        level100 = [row for row in joined["instances"] if row["level"] == "100"]
+        self.assertEqual(38, len(level100))
+        self.assertEqual({"BSWD": 33, "RLWD": 5}, collections.Counter(row["worldKind"] for row in level100))
+
+    def test_empty_lvlr_names_are_anonymous_embedded_cmsh_not_loose_aliases(self) -> None:
+        anonymous = self.report["worldInstanceJoin"]["anonymousEmbedded"]
+        self.assertEqual(
+            {
+                "archives": 53,
+                "boneCarrierRows": 41,
+                "internalNameCounts": {"": 53},
+                "looseCoreMatches": 0,
+                "motionClassCounts": {
+                    "mixed-moving-map-closure": 41,
+                    "no-nontrivial-frame-map": 12,
+                },
+                "partCountCounts": {"1": 12, "23": 19, "25": 17, "27": 3, "28": 2},
+                "rows": 53,
+                "uniqueCoreHashes": 52,
+                "uniqueStreamHashes": 53,
+            },
+            anonymous["summary"],
+        )
+        self.assertTrue(all(not row["displayName"] for row in anonymous["rows"]))
+        self.assertTrue(all(not row["internalName"] for row in anonymous["rows"]))
+        self.assertTrue(all(not row["looseCoreMatches"] for row in anonymous["rows"]))
+
+    def test_wres_join_bounds_animation_calls_and_the_eight_absent_loose_meshes(self) -> None:
+        joined = self.report["worldInstanceJoin"]
+        self.assertEqual(
+            {
+                "authoredCallFiles": 15,
+                "authoredCallSites": 56,
+                "directInstanceCallFiles": 3,
+                "directInstanceCallSites": 22,
+                "directInstances": 3,
+                "unjoinedCallFiles": 12,
+                "unjoinedCallSites": 34,
+            },
+            joined["animationJoin"]["summary"],
+        )
+        self.assertEqual(
+            [
+                "m_PS2_Normal_Logo3.MSH.aya",
+                "m_be_trans.msh.aya",
+                "m_be_transm.msh.aya",
+                "m_default.msh.aya",
+                "m_f_truck.msh.aya",
+                "m_m_battleship.msh.aya",
+                "m_m_truck.msh.aya",
+                "m_panorama.msh.aya",
+            ],
+            joined["looseMeshesWithoutNamedMembership"],
+        )
+        self.assertEqual(
+            {name: [] for name in joined["looseMeshesWithoutNamedMembership"]},
+            joined["absentLooseWresInstances"],
         )
 
 

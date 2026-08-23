@@ -152,9 +152,10 @@ The address summary is in
   32.05% of 100,813,615 stream bytes to typed model state and 67.95% to honest
   opaque carry-through; byte identity is not semantic completeness.
 - [`tools/cmsh_animation_usage_census.py`](../../tools/cmsh_animation_usage_census.py)
-  joins the loose frame/skeleton lanes to numeric-LVLR `MESH` membership and
-  authored MSL animation calls, with synthetic can-fail tests and an optional
-  hash-pinned full-corpus gate.
+  joins the loose frame/skeleton lanes to numeric-LVLR `MESH` membership,
+  definition-bearing WRES placements through physics mesh fields, and bounded
+  authored MSL animation calls. The hash-pinned full-corpus gate also parses the
+  53 anonymous direct embedded bodies without assigning guessed loose names.
 - The dedicated rebuild Aquila consumer is exact and specimen-bounded; it is not
   a general CMSH importer.
 
@@ -179,6 +180,7 @@ The address summary is in
 
 The container walk, corpus population, tag counts, hierarchy/reference shapes,
 selected geometry fields, pose-map dimensions, bone-to-part names, palette-slot
-indices, and numeric-LVLR membership are bounded. Named clips, weights/blending,
-general scheduling/rendering, complete scene dependencies, collision,
+indices, numeric-LVLR membership, 4,090 WRES definition joins, and 53 anonymous
+embedded bodies are bounded. Named clips, weights/blending, other WRES/spawn
+owners, general scheduling/rendering, complete scene dependencies, collision,
 malformed-input behavior, pixels, and parity are open.

@@ -51,6 +51,7 @@ non-additive.
 | --- | --- | ---: | --- |
 | PC AYA chunked-zlib | [aya-container.md](aya-container.md) | 1,361 | outer framing complete |
 | LVLR resource streams | [lvlr-archive.md](lvlr-archive.md) | 301 | tag census complete; schemas partial |
+| Numeric WRES Unit/Feature placements | [wres-instance-join.md](wres-instance-join.md) | 66 archives / 4,090 joins | definition, transform, state, physics mesh, and named-CMSH edge bounded |
 | CMSH meshes + embedded animation | [cmsh-mesh.md](cmsh-mesh.md) + [animation/usage](cmsh-animation-usage.md) | 213 | framing, pose lanes, bone indices, and selected usage bounded |
 | DDS textures + texture-backed fonts | [dds-texture.md](dds-texture.md) | 847 | header census complete |
 | Ogg/XAP/SFX audio | [ogg-audio.md](ogg-audio.md) | 3,057 + 5 + 1 | framing and identity joins bounded |
@@ -66,7 +67,8 @@ MSL scripts are counted here but remain owned by
 MissionScript VM contracts. There is no standalone `.anim` family: animation
 is embedded in CMSH (`VHFM`/`HORI`/`HPOS`/`HFOV`/bone lanes); the
 [focused contract](cmsh-animation-usage.md) separates those stored lanes from
-LVLR membership and MSL name requests. There is no loose
+LVLR membership, the bounded [WRES instance edge](wres-instance-join.md), and
+MSL name requests. There is no loose
 font-file family: installed font glyph resources live in texture assets and the
 retail image also has a GDI/texture font owner.
 
@@ -89,6 +91,6 @@ The complete four-DLL ordinal/RVA export appendix is
 The shallow tree listing is now routed into discrete contracts with counts,
 container layouts, bounded field meanings, decoder/consumer anchors, tools, and
 open questions. This is not atom-level semantic completion: LVLR payloads,
-CMSH PB* families, animation/skinning, texture pixels/fonts, media selection,
-malformed-input behavior, and full runtime/rebuild parity remain explicitly
-open.
+CMSH PB* families, named clips and blend/interpolation semantics, non-Unit/
+Feature WRES records, texture pixels/fonts, media selection, malformed-input
+behavior, and full runtime/rebuild parity remain explicitly open.
