@@ -197,6 +197,48 @@ stop spawning fresh cdb sessions. Gate: index build completes over the
 corpus and answers one preregistered cross-trace question that today
 requires a fresh `ttd_query.ps1` session.
 
+**2026-08-23 — P5 gate receipt (wt/t_ad6d1e50, corrected on wt/t_e30c197b).**
+The gate closed by extending the canonical family, not replacing it:
+`tools/ttd_coverage_index.py` (build + query) and its focused suite consume
+the existing read-only receipts in place. Build over `G:\bea-ttd` validated
+all **72 receipts** (66 campaign + 2 pilot + 1 pilot-replicate + 3
+level521-native takes; the same set the authoritative `exec-coverage-index.tsv`
+join was built from), 481,127 range rows, union 803,629 bytes — byte-equal to
+the ds-deep stats union, so the two instruments agree on corpus identity.
+Receipt-set hash (sorted relpath+sha256 lines):
+`926b6ec66befc8e0060d49efc6c00d485ab6a6ed563b55c79d86bf829b7d5c39`. Two
+consecutive builds were byte-identical (file SHA-256 `925a6dc9…3eef`,
+canonical content binding `6931b976…282a`). The build is fail-closed on
+malformed, duplicate, out-of-domain, or self-disagreeing rows; unreadable
+subtrees fail rather than disappearing; full module identity, gap accounting,
+and required hit/miss controls are bound across receipts. Quarantined-counter
+and timer-stopped trace classes are recorded verbatim rather than silently
+dropped or amnestied. Independent review RED on the original tip (`7408b7d2`)
+proved deep readback still accepted a re-bound Windows drive-absolute receipt
+(`C:/evil/coverage.jsonl`) and a wrong-basename receipt
+(`level-clean/not-coverage.txt`) after both hashes were honestly recomputed;
+the correction adds canonical per-trace receipt-path validation (relative,
+forward-slash, normalized, no drive/UNC/rooted/parent syntax, basename must
+be `coverage.jsonl`) enforced before membership at readback and at build, with
+re-bound semantic readback tests reproducing both RED indexes exactly and a
+shape matrix over the accepted/rejected path forms. All corpus hashes,
+memberships, and the preregistered answer are unchanged by the correction —
+only the fail-closed surface moved.
+
+Preregistered query answered from receipts only (no cdb session): of the nine
+FireLock body PCs (`0x00407060…0x00407134`, note `CBattleEngine__FireLock.md`),
+only the entry `0x00407060` appears in any retained trace — the three played
+level521-native takes — and the other eight appear nowhere; ApplyDamage
+must-hit control `0x004f9a90` hit 21 traces; current-time BSS must-miss
+control `0x00672fd0` hit none. Query-input SHA-256 (ordered address list plus
+both controls) is
+`35867093cf21ab89a1bc2946e8aaeb5c8a06b925ea3d5b4a6accd2103edaa9bd`. A
+raw-JSON cross-walk reproduced every membership. This is a per-byte coverage
+answer about retained traces, not a contract-grade change. Focused gate:
+`py -3 tools\ttd_coverage_index_tests.py` (53/53 after the canonical-path
+correction), registered in `npm run test:tools`; documented in
+[`tools/README.md`](tools/README.md) § wholesale instruments.
+
 ### P6 — Campaign bookkeeping relief
 
 Batch-close the ~2,600 already-triaged-out questions as terminal with their
