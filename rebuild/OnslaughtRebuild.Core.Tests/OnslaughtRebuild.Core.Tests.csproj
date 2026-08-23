@@ -37,6 +37,9 @@
 
   <ItemGroup>
     <Content Include="..\scenarios\*.json" Link="scenarios\%(Filename)%(Extension)" CopyToOutputDirectory="Always" />
+    <Content Include="..\..\tests_shared\fixtures\gold_career_save.bin"
+             Link="fixtures\gold_career_save.bin"
+             CopyToOutputDirectory="Always" />
     <Content Include="..\OnslaughtRebuild.Core\**\*.cs"
              Exclude="..\OnslaughtRebuild.Core\bin\**;..\OnslaughtRebuild.Core\obj\**"
              Link="core-source\%(RecursiveDir)%(Filename)%(Extension)"

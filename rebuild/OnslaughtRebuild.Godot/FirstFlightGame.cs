@@ -34,6 +34,7 @@ public sealed partial class FirstFlightGame : Node3D
     private FirstFlightPauseMenu _pauseView = null!;
     private Level100HudAssetCatalog _hudAssetCatalog = null!;
     private RetailFrontendFlow? _frontend;
+    private RetailCareerDescriptor? _selectedCareer;
     private bool _level100WorldCreated;
     private bool _gameplayActive;
     private bool _pauseExitAudioCompleted;
@@ -82,6 +83,14 @@ public sealed partial class FirstFlightGame : Node3D
 
     public event Action<RetailFrontendAudioCue>? FrontendAudioCueRequested;
 
+    internal RetailCareerDescriptor? SelectedCareer => _selectedCareer;
+
+    private void SelectCareer(RetailCareerDescriptor selectedCareer)
+    {
+        ArgumentNullException.ThrowIfNull(selectedCareer);
+        _selectedCareer = selectedCareer;
+    }
+
     public override void _Ready()
     {
         try
@@ -97,8 +106,11 @@ public sealed partial class FirstFlightGame : Node3D
             AddChild(_audio);
             _hudAssetCatalog = Level100HudAssetCatalog.Load();
 
+            IReadOnlyList<RetailCareerDescriptor> careerDescriptors =
+                RetailCareerLoadAdapter.ReadExplicitSelections(OS.GetCmdlineUserArgs());
             _frontend = new RetailFrontendFlow { Name = "RetailStartupFrontend" };
-            _frontend.Initialize();
+            _frontend.Initialize(careerDescriptors);
+            _frontend.CareerSelected += SelectCareer;
             _frontend.Level100LoadingStarted += StopFrontendMusicForLevelEntry;
             _frontend.Level100LoadRequested += LoadLevel100FromFrontend;
             _frontend.GameplayActivated += ActivateFrontendGameplay;

@@ -46,6 +46,8 @@
              Link="godot-startup-source\RetailStartupSchedule.cs" />
     <Compile Include="..\OnslaughtRebuild.Godot\RetailStartupMediaIndex.cs"
              Link="godot-startup-source\RetailStartupMediaIndex.cs" />
+    <Compile Include="..\OnslaughtRebuild.Godot\RetailCareerLoadAdapter.cs"
+             Link="godot-startup-source\RetailCareerLoadAdapter.cs" />
     <!-- CFEPIntro this+0x18 clock. Godot-free so the click-to-start prompt
          blink can be pinned without an engine; DrawClickToStart is the consumer. -->
     <Compile Include="..\OnslaughtRebuild.Godot\RetailClickToStartPrompt.cs"
@@ -171,6 +173,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="..\..\tests_shared\fixtures\gold_career_save.bin"
+             Link="fixtures\gold_career_save.bin"
+             CopyToOutputDirectory="Always" />
     <Content Include="..\OnslaughtRebuild.Client\**\*.cs"
              Exclude="..\OnslaughtRebuild.Client\bin\**;..\OnslaughtRebuild.Client\obj\**"
              Link="client-source\%(RecursiveDir)%(Filename)%(Extension)"

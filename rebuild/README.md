@@ -1,8 +1,8 @@
 # Onslaught Rebuild
 
 Status: early GPL reconstruction lane
-Last updated: 2026-08-22. The world-admission claims below (career-graph
-selector law, world-110 payload admission) are the newly re-reviewed surface.
+Last updated: 2026-08-22. The career read/load frontend slice and world-admission
+claims below are the newly re-reviewed surface.
 Other sections retain their narrower dated evidence boundaries.
 Summary: what the `rebuild/` lane is, who owns which assembly, and what the
 Level 100 Opening Slice does and does not currently do.
@@ -31,9 +31,12 @@ of readiness tooling.
 The current Godot app is the **Level 100 Opening Slice**. With locally
 materialized media, a plain launch plays the released Lost Toys logo, opening
 montage, and splash before click-to-start, v3 main-menu language, retail's
-career-name page, a Level 100-only level selector, the mission-briefing and
+career-name/load page, the career-law level selector, the mission-briefing and
 select-configuration pages, and loading. Loading constructs the Level 100
-world; the first-time intro then plays before gameplay activation.
+world; the first-time intro then plays before gameplay activation. Repeating
+`--career-save=<path>` opts in exact named career files for the Load Game list;
+the host performs no directory or installed-save discovery and never writes
+those files.
 `--skipfmv`, smoke, and capture modes suppress those video sequences. Their
 Bink audio streams are not decoded, so video playback is currently silent.
 (*Extended 2026-07-28: this read "click-to-start page, v3 main-menu language, a
@@ -175,10 +178,9 @@ Controls:
 ## Current truth
 
 The frontend owns click-to-start, Main Menu, the Quit confirmation, DevSelect
-(retail's `CHOOSE GAME NAME` page, implemented visually and sequentially only —
-no save and no career persistence), Options, the career-law level selector,
-Mission Briefing, Select Configuration, Loading, and the Level 100 intro
-cutscene. The
+(retail's `CHOOSE GAME NAME` surface for a new name or an injected read-only
+career selection), Options, the career-law level selector, Mission Briefing,
+Select Configuration, Loading, and the Level 100 intro cutscene. The
 `RetailFrontendScreen` enum in
 `rebuild/OnslaughtRebuild.Client/RetailFrontendSession.cs` is authoritative for
 that list; read it rather than this sentence when the two disagree.
@@ -186,6 +188,20 @@ that list; read it rather than this sentence when the two disagree.
 Main Menu, the Level 100-only selector, and Loading." The word "only" made it a
 completeness claim and it was false — five further screens were already declared
 and shipping. Nothing was removed; the list was understated.*)
+`RetailCareerSaveCodec` is a deterministic Core reader over a caller-supplied
+byte span. It accepts only the measured 10,004-byte / `0x4BD1` PC container,
+validates the 43 campaign nodes and 86 structural link rows, retains a private
+copy of every byte (including reserved/options/tail bytes), and exposes the
+current completion/grade, Goodie-count, selectable-world, and latest-selectable
+summary. It has no load-by-path, serializer, or write API. Tests use only
+`tests_shared/fixtures/gold_career_save.bin` (10,004 bytes, SHA-256
+`0c17e47db9d666e9b26ef88d43d0a25e7cbfbf4f88c8005cc748965050e506fb`).
+The Godot adapter reads only repeated explicit `--career-save=<path>` arguments
+and injects slot/name descriptors into Client in argument order. Load Game then
+owns bounded selection, accept/back, and a one-shot selected-career handoff;
+there is still no implicit save scan, save creation, overwrite, autosave,
+debrief persistence, or options-tail application. A loaded model remains
+immutable; merging a later Won update back into that model is also still open.
 (*Updated 2026-08-22: the selector is no longer Level-100-only by law. The
 session carries the released 43-node career graph
 (`OnslaughtRebuild.Core/RetailWorldCatalog.cs`, Stuart's pinned
@@ -207,7 +223,7 @@ the child.*
 Each launch request makes the host construct a fresh canonical
 `InteractiveSession` from the materialized Level 100 actor definitions before
 gameplay activation. The frontend does not inspect
-`WorldSnapshot.Level100Mission` or own gameplay, save, result, or later
+`WorldSnapshot.Level100Mission` or own gameplay, save writes, result, or later
 campaign-selection state. `RestartLevel100` returns through the same Loading
 edge; `LeaveLevel100ForMainMenu` disposes the active world and returns to the
 same frontend shell.
@@ -219,7 +235,7 @@ existing lifecycle seams after the audio owner completes its kill-then-Select
 exit boundary once. Message Log, Briefing, and the three settings rows remain
 visible but disabled until canonical integrated owners exist. The current
 opening slice does not synthesize terminal events, rank, kill summary, or
-save. Campaign progression after Won is the already-pinned FillOut update
+save writes. Campaign progression after Won is the already-pinned FillOut update
 applied to the selector career, then SELECT LEVEL — not a synthesized
 debrief. `FrontendAudioCueRequested` is an observation
 seam; the existing Level 100 audio owner remains the sole playback owner.

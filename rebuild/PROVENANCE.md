@@ -1,9 +1,9 @@
 # Rebuild Provenance
 
 Status: active implementation boundary
-Last updated: 2026-07-29. Current startup/frontend, partial-source inventory,
-frontend-asset, mouse-sensitivity, and retained-particle claims were
-re-reviewed. Other sections retain their narrower dated evidence boundaries.
+Last updated: 2026-08-22. Current career read/load, startup/frontend,
+partial-source inventory, frontend-asset, mouse-sensitivity, and retained-particle
+claims were re-reviewed. Other sections retain their narrower dated evidence boundaries.
 Summary: the licence boundary, permitted evidence, and authority order for the
 `rebuild/` reconstruction lane, plus what the current slice actually covers.
 
@@ -131,8 +131,8 @@ The normal Godot entry path now belongs to a presentation-only frontend state
 machine outside Core. With locally materialized media, a plain launch plays the
 released Lost Toys logo, opening montage, and splash before click-to-start, then
 exposes the released main-menu entries, a quit confirmation, retail's
-`CHOOSE GAME NAME` career-name page (visual and sequential only — no save and no
-career persistence), an Options page, a world-100-only level selector, the
+`CHOOSE GAME NAME` career-name/load page (new-name entry plus caller-injected,
+read-only career descriptors), an Options page, the career-law level selector, the
 mission-briefing and select-configuration pages, the released loading image, the
 released Level 100 intro cutscene,
 and one lifecycle seam that constructs, replaces, or disposes the existing
@@ -141,6 +141,23 @@ Level 100 session/world. The `RetailFrontendScreen` enum in
 that list; re-read it rather than quoting this sentence. `--skipfmv`, smoke,
 and capture modes suppress the reconstructed video sequences. Their Bink audio
 streams are not decoded, so video playback is currently silent.
+
+The career reader ports Stuart's raw version-plus-`CCareer` shape
+(`Career.cpp:1084-1163`, `Career.h:76-207`) and applies only measured PC deltas:
+the version is the released 16-bit `0x4BD1`, the fixed career block is `0x24BC`
+bytes, and 16 active option records plus the `0x56` tail make the supported
+container 10,004 bytes. `RetailCareerSaveCodec` accepts supplied bytes only,
+retains the entire container privately, rejects wrong length/version or a
+structurally inconsistent 43-node/86-link graph, and has no serializer. The
+reviewed fixture is `tests_shared/fixtures/gold_career_save.bin`, SHA-256
+`0c17e47db9d666e9b26ef88d43d0a25e7cbfbf4f88c8005cc748965050e506fb`.
+Stuart's `FEPLoadGame.h:32-35` owns separate slot/name identity and
+`FEPLoadGame.cpp:128-153` owns its selected-career handoff shape; Client receives
+those descriptors already read. Godot recognizes only explicit repeated
+`--career-save=<path>` arguments and performs no directory or installed-save
+scan. This is read/load selection only: no serializer, write, overwrite,
+autosave, default-options apply, debrief persistence, loaded-model Won merge,
+or full Career parity.
 
 The Level-100 configuration page now owns the one row named by the released
 `WorldHeaders.dat`: page-list index 0 selects `Aquila Prototype`, catalog record
