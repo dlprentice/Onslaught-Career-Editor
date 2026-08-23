@@ -95,7 +95,7 @@ The bounded TTD table contains these exact rows; they establish only execution/c
 - Session `all level-openings`; question `corpus-open-core`; value: invariant across all 66 openings; 244,305 cumulative covered bytes; evidence `name=CWorld__LoadWorld`.
 
 ## Evidence
-- Writer-task authority: task `t_efc238f0`, cohort 7 immutable manifest SHA-256 `6737c4da288324f6bb1e0f6d5e4411a0158a9eda8dd878e05058b839108be98e`, row 25; specimen `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750` and proposed promotion false. The task comment/independent-review receipts are the durable manifest authority; no writer-local scratch path is claimed as tracked evidence.
+- Writer-task authority: task `t_efc238f0`, cohort 7 immutable manifest SHA-256 `d2ac6ace069c4ff409cd9aaec49022fb08589f5637367a823baa4b65053cc9ef`, row 25; specimen `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750` and proposed promotion false. The task comment/independent-review receipts are the durable manifest authority; no writer-local scratch path is claimed as tracked evidence.
 - Packet `D:/packet-runs/wave1-contracts-20260822/packet-0x0050b9c0.json` (`bea.re.triage-packet.v1`, status `READY`, image `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`); packet decompile SHA-256 `9a1f5629cc5e2c5f383f3bc38237d1d7740192c1abde151285806b3c894460b6`.
 - Digest derivation: closure SHA-256 hashes canonical range text `0050b9c0:0050d4b1;`; packet SHA-256 hashes that range text followed by exact pristine bytes; raw SHA-256 hashes only those bytes.
 - Closure execution state `OPEN_EXECUTED` and confidence `MEDIUM`; these are inherited bounded grades, not this factory's promotion decision.

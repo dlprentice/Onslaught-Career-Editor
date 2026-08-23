@@ -72,12 +72,12 @@ The bounded TTD table contains these exact rows; they establish only execution/c
 - Session `level521-native-20260802-0018-take4, level521-native-20260802-0018-take2, level521-native-20260802-0018-take1`; question `corpus-combat-only`; value: combat-exclusive; 3,122 covered bytes; evidence `name=CBattleEngine__GetLaunchPosition`.
 
 ## Evidence
-- Writer-task authority: task `t_efc238f0`, cohort 7 immutable manifest SHA-256 `6737c4da288324f6bb1e0f6d5e4411a0158a9eda8dd878e05058b839108be98e`, row 11; specimen `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750` and proposed promotion false. The task comment/independent-review receipts are the durable manifest authority; no writer-local scratch path is claimed as tracked evidence.
+- Writer-task authority: task `t_efc238f0`, cohort 7 immutable manifest SHA-256 `d2ac6ace069c4ff409cd9aaec49022fb08589f5637367a823baa4b65053cc9ef`, row 11; specimen `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750` and proposed promotion false. The task comment/independent-review receipts are the durable manifest authority; no writer-local scratch path is claimed as tracked evidence.
 - Packet `D:/packet-runs/wave1-contracts-20260822/packet-0x0040c990.json` (`bea.re.triage-packet.v1`, status `READY`, image `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`); packet decompile SHA-256 `0fd28d203f78bc257cda169707dadddaff0749195e6d1e500c88407b522bb272`.
 - Digest derivation: closure SHA-256 hashes canonical range text `0040c990:0040d0ef;`; packet SHA-256 hashes that range text followed by exact pristine bytes; raw SHA-256 hashes only those bytes.
 - Closure execution state `PARTIAL` and confidence `MEDIUM_HIGH`; these are inherited bounded grades, not this factory's promotion decision.
 - Packet stringRefs: empty.
-- Source crosswalk: `references/Onslaught/BattleEngine.cpp` `CBattleEngine::GetLaunchPosition` line 3000 (`SOURCE_ANALOG`), evidence not supplied in this crosswalk row. This is source/name architecture evidence at the stated class, not independent retail behavior proof.
+- Source crosswalk: `references/Onslaught/BattleEngine.cpp` `CBattleEngine::GetLaunchPosition` line 3000 (`SOURCE_ANALOG`), evidence `reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-17.tsv`, `reverse-engineering/binary-analysis/function-c1-closure-2026-08-11.tsv`, `reverse-engineering/source-crosswalk/audit/remediation-wave1.tsv`. This is source/name architecture evidence at the stated class, not independent retail behavior proof.
 
 ## Confidence
 1 — exact identity, contiguous pristine bytes, digest derivations, signature text, and structured edge inventory are reconciled; field-level semantics and runtime causality remain bounded to the packet/decompile and any cited source/TTD rows. A packet/canonical name discrepancy forces confidence 0. Proposed promotion: false.
