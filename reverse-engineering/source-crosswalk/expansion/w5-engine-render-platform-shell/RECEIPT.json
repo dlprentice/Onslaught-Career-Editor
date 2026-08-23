@@ -56,7 +56,7 @@
   "hashes": {
     "REBUILD-DELTA.md": "efcb95cc7a33291bb88797467b7d009e23c662e7330c1d1b8e1f7b83aebdd366",
     "RETAIL-DELTA.tsv": "e72edc4060aafa94b2a15b1ec978a8ed95d1d8cc0a8bb9a9be5241af38db4a03",
-    "SOURCE-CONTRACT.md": "301f975fc4301fe40b5c26724f80577dd2bd4de7afb3bfcba068923754697aea",
+    "SOURCE-CONTRACT.md": "a01dc91f5e4caee9bb28959ad7e83de2025cd391c9f6232231f5cea7887b8c49",
     "base_crosswalk.tsv": "e37f13b37e9ce9d712174e35b86fc1f7ebcfc693fe9957448a8f39ff03829479",
     "definitions.tsv": "074385f8fd1de291f55dec9c565beb07aad87a3e6adfa4767515b8b23c357060",
     "function-c1-closure-2026-08-11.tsv": "cfe90af382269cb2e64996d10df7777bd00fcd8e1844b9823ef74bc6199b8974",

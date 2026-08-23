@@ -127,7 +127,7 @@ does not establish retail membership.
 This follows the source-synthesis warning that `d3dapp.*` and
 `EditorD3DApp.*` are mutually selected framework bases and that one guarded
 region must not classify an entire source unit
-([`stuart-source-synthesis.md:2212-2219`](../../source-code/stuart-source-synthesis.md#L2212-L2219)).
+([`stuart-source-synthesis.md:2212-2219`](../../../source-code/stuart-source-synthesis.md#L2212-L2219)).
 
 ## Source architecture and algorithms
 
@@ -141,7 +141,7 @@ stubs. They are defaults, not evidence that the retail `PCLTShell` overrides do
 nothing. The promoted shell table independently identifies retail
 `InitDeviceObjects`, `RestoreDeviceObjects`, `InvalidateDeviceObjects`,
 `DeleteDeviceObjects`, and `FinalCleanup` as nontrivial selected overrides
-([`pcltshell-vtable-semantics-2026-08-11.tsv`](../../binary-analysis/pcltshell-vtable-semantics-2026-08-11.tsv)).
+([`pcltshell-vtable-semantics-2026-08-11.tsv`](../../../binary-analysis/pcltshell-vtable-semantics-2026-08-11.tsv)).
 
 `GetHWnd` is a direct handle read. `ForceToWindow` calls
 `ToggleFullscreen` only when `m_bWindowed` is false
@@ -183,7 +183,7 @@ depth buffer, selects fullscreen, clears the joypad count, and leaves texture
 compression enabled ([`ltshell.cpp:774-795`](../../../../references/Onslaught/ltshell.cpp#L774-L795)).
 W008 confirms the corresponding retail base/vtable/field-clear/title-copy
 shape without proving byte equality
-([`W008/adversarial/B15.md:164-171`](../../binary-analysis/ghidra-fullpass-findings/W008/adversarial/B15.md#L164-L171)).
+([`W008/adversarial/B15.md:164-171`](../../../binary-analysis/ghidra-fullpass-findings/W008/adversarial/B15.md#L164-L171)).
 
 The source's cached setters dispatch only on a value change; force setters write
 unconditionally; `SRS_Ret` caches only a successful HRESULT
@@ -200,7 +200,7 @@ Input has two distinct laws:
 
 W009 proves the corresponding retail held read and consume-and-clear bodies at
 `0x00515970` and `0x00515980`
-([`W009/primary/A04.md:30-54`](../../binary-analysis/ghidra-fullpass-findings/W009/primary/A04.md#L30-L54)).
+([`W009/primary/A04.md:30-54`](../../../binary-analysis/ghidra-fullpass-findings/W009/primary/A04.md#L30-L54)).
 The joystick helpers separately encode rising, held, and falling edges by
 comparing old/current button bytes
 ([`ltshell.h:306-319`](../../../../references/Onslaught/ltshell.h#L306-L319));
@@ -214,7 +214,7 @@ accessors ([`PCPlatform.h:101-150`](../../../../references/Onslaught/PCPlatform.
 `CPlatform__Font @ 0x00515A70` is not assigned to the no-argument `Font()` row:
 the retail function takes a font id and selects four slots, so its ABI/body
 contradicts this direct default-font accessor
-([`W009/primary/A04.md:95-106`](../../binary-analysis/ghidra-fullpass-findings/W009/primary/A04.md#L95-L106)).
+([`W009/primary/A04.md:95-106`](../../../binary-analysis/ghidra-fullpass-findings/W009/primary/A04.md#L95-L106)).
 
 `CResourceAccumulator` uses fixed 100-mesh/1,000-texture arrays, a post-increment
 resource id, target platform/level fields, static file handles/name, last-loaded
@@ -241,7 +241,7 @@ row remains an evidence-backed bounded no-match rather than taking the name hit.
 | `ltshell.h:292 PCLTShell::xKeyOnce` | `0x00515980 PlatformInput__ConsumeKeyOnce` | Read-and-clear agrees statically |
 
 The 0x00513A50 row deliberately cites the measured role rather than promoting
-its known-false live label; [`ghidra-functions.md:1613-1618`](../../ghidra-functions.md#L1613-L1618)
+its known-false live label; [`ghidra-functions.md:1613-1618`](../../../ghidra-functions.md#L1613-L1618)
 is the tracked correction owner.
 
 ## Negative and ambiguity controls
