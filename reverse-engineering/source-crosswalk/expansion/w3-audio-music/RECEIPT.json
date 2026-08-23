@@ -284,7 +284,7 @@
     "two populated VAs are unique and were previously resolved in current name/closure and Generation-32 catalogs",
     "21 NO_MATCH rows retain bounded negative semantics; no binary absence is claimed",
     "canonical 1,149-row crosswalk hash is unchanged",
-    "all 28 predecessor artifacts hash-read back exactly",
+    "all 27 predecessor artifacts hash-read back exactly",
     "receipt projection is canonical over stable keys, predecessor hashes, outputs, and reuse counts"
   ],
   "wave": {
