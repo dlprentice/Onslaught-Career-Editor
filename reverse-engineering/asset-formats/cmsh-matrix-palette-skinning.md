@@ -8,12 +8,14 @@ Verdict: **The seven shipped `BONE` carriers use one static 48-byte vertex form
 and GPU-side `vs_1_1` skinning. Each vertex stores three floating-point palette
 offsets, each exactly `3 * BONE-array index`; no per-vertex scalar weight is
 serialized. The retail linked shader computes the slot-0 transform and discards
-it, doubles slot 1, and adds slot 2. Because every palette matrix is uploaded
-pre-scaled by `1/3`, the executed position weights are exactly
-`(0, 2/3, 1/3)` for `(slot0, slot1, slot2)`, not symmetric slot
+it, doubles slot 1, and adds slot 2. `CMeshRenderer__RenderMeshCore` pre-scales
+every palette element by binary32 `0x3EAAAAAB` (the nearest float to `1/3`), so
+the executed position coefficients are exactly `(0, 2s, s)` for
+`s = float32(0x3EAAAAAB)`, conventionally `(0, 2/3, 1/3)`, not symmetric slot
 multiplicity. The renderer samples every indexed part once at frame zero and
-again at the current interpolated pose before constructing and uploading the
-palette.**
+again at the current interpolated pose, constructs and scales the palette, and
+copies it to the renderer global. The shader-constant owner later uploads that
+already-scaled palette.**
 Evidence: MEASURED — corpus-static, pristine-retail-static, and copied-runtime
 evidence converge: the
 tracked deterministic instrument hash-verifies all 213 loose CMSH files, the
@@ -25,7 +27,7 @@ pristine `BEA.exe.original.backup` SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 Machine-readable receipt:
 [`cmsh-matrix-palette-skinning.tsv`](cmsh-matrix-palette-skinning.tsv),
-SHA-256 `e506c5bfa5381cf2b349b3a0ea20eacd14761e66fab09648dc47d1349073c1ce`.
+SHA-256 `f98b2c7e501cf90702aba65481f3e879eadcc30a51f40dfa2d08c74b8b76a3af`.
 
 No retail payload, executable byte range, shader token stream, capture frame, or
 raw vertex row is tracked. The named safe copy, mirror, and capture corpus were
@@ -45,7 +47,7 @@ instance.
 | **REUSED** | [`cmsh-mesh.md`](cmsh-mesh.md), [`cmsh-animation-usage.md`](cmsh-animation-usage.md), and [`wres-instance-join.md`](wres-instance-join.md) | `c3ff3bd118c6cf6d9905906b5a9bb0d207488bacfc02b0b497c89015d38202be`, `310f030dad3a21fda8105082fe6d32e943cb96e912f58f1ac02c8cb3d8b5dda0`, `b6845a82849eb17eb39c751e388eb803096426c51a02963ee7cd82f1974ba588` | Reused the seven-carrier denominator, BONE-to-part names, 9,609 scaled slots, and bounded world membership. |
 | **REUSED** | [`cmsh_static_preview.py`](../../rebuild/tools/cmsh_static_preview.py), [`cmsh_animation_usage_census.py`](../../tools/cmsh_animation_usage_census.py), and [`cmsh-cpos-cori-identity-2026-07-25.md`](../binary-analysis/cmsh-cpos-cori-identity-2026-07-25.md) | `efd14ff88315408d656e5b3605e1b3dab4a3e323118f5997934cb936f48f1cc7`, `510e03e5066f71ba1a89d604eefccb126589fcc16d27f339b90007526b02ec6c`, `8cc27f8d467628d158b3595813ad5e0c98ef123da273ceb22b38f686daf85259` | Reused fail-closed parsing, mesh/part identity, and the proof that CPOS/CORI are derived caches rather than bind matrices. |
 | **EXTENDED** | ignored `local-lab/PUZZLE-SKIN-WEIGHTS-2026-07-31.md` | `f894982b2d2bc71a1eadcf0990ecb588170313a9637706035a818b6d339150c5` | Retained its corrected executed shader law, then added exact current file/hash verification, complete TSV accounting, focused tests, and explicit bind/current consumer boundaries. |
-| **NEW_MEASUREMENT** | [`tools/cmsh_skinning_contract.py`](../../tools/cmsh_skinning_contract.py) + focused tests | deterministic JSON `a4ef38dff962d39375f39711c6d40a9abba4707a9da89525eb2f164c86faa371`; TSV `e506c5bfa5381cf2b349b3a0ea20eacd14761e66fab09648dc47d1349073c1ce`, each reproduced twice | Re-read all 213 hash-pinned meshes, five raw pristine function ranges, six linked skinning shaders, 1,344 palette rows, and both exact Level-800 static VBs. |
+| **NEW_MEASUREMENT** | [`tools/cmsh_skinning_contract.py`](../../tools/cmsh_skinning_contract.py) + focused tests | deterministic JSON `e6f70ecf12add31d7e5d6a5508cec4d93c4fa9c69de68d889d07e4bebcef54dd`; TSV `f98b2c7e501cf90702aba65481f3e879eadcc30a51f40dfa2d08c74b8b76a3af`, each reproduced twice | Re-read all 213 hash-pinned meshes, five raw pristine function ranges, the renderer scale/copy loop, six linked skinning shaders, 1,344 palette rows, and both exact Level-800 static VBs. |
 
 The ignored decompile predecessors were also pinned before use:
 `CMeshPart__LoadVerticesWithBones` `47d2cae5254c2b82a92943a3b7e212d85f96108456a277380ed64473c69e5aa2`,
@@ -105,8 +107,10 @@ c[10 + q + 2]
 ```
 
 Let `P_i` be the unscaled bind-to-current 3x4 position transform the renderer
-constructs for BONE entry `i`. Retail uploads `M_i = (1/3) * P_i`, including the
-translation component. The six hash-pinned linked skinning shaders all execute:
+constructs for BONE entry `i`, and let
+`s = float32(0x3EAAAAAB) = 0.3333333432674408`. Retail places
+`M_i = s * P_i` in the palette, including the translation component. The six
+hash-pinned linked skinning shaders all execute:
 
 ```text
 slot 0: r0.xyz = M[s0] * position       # computed, then overwritten
@@ -120,10 +124,11 @@ Therefore the exact released **position** law is:
 
 ```text
 position' = 2 * M[s1] * position + M[s2] * position
-          = (2/3) * P[s1] * position + (1/3) * P[s2] * position
+          = (2s) * P[s1] * position + s * P[s2] * position
 ```
 
-The effective slot weights are **`(0, 2/3, 1/3)`**. Slot 0 has no position
+The exact binary32-derived slot coefficients are **`(0, 2s, s)`**; this document
+uses `(0, 2/3, 1/3)` as the readable rational shorthand. Slot 0 has no position
 contribution. This equals symmetric multiplicity only for some patterns:
 
 | Shape | Executed result |
@@ -148,13 +153,22 @@ indexed CMSP parts:
    with the frame-zero path for each BONE part. This is the bind/rest sample.
 2. It calls the same pose builder again at `0x0054A786` with current frame,
    interpolation, and controller inputs. This is the current sample.
-3. The body constructs one 4x4 palette matrix from those samples, scales all 16
-   elements by `1/3`, and copies the matrices to the global palette later
-   uploaded from `c10` in three-register rows.
+3. The body constructs one 4x4 palette matrix from those samples. The exact
+   `0x0054B0AD..0x0054B224` loop (376 bytes, raw SHA-256
+   `362f12c6af54fcff8a238c5badfee7d5f7794b362af58a6585099e74821ebee2`)
+   performs 16 `FMUL [0x005D8608]` operations in
+   `0x0054B0C3..0x0054B216` (340 bytes, raw SHA-256
+   `bac577a59b294c03e71d6b99ed33b018f8ffc1b6d6b7a20f4e7c15d407876772`).
+   VA `0x005D8608` contains binary32 `0x3EAAAAAB`. The loop then copies the
+   scaled 16-float matrix with `REP MOVSD @ 0x0054B217` to the palette rooted at
+   global `0x009C69D4`.
 4. `CVertexShader__ApplyCustomRenderStateShaderConstants @ 0x00502920`
-   uploads the palette. Four exact `0x3EAAAAAB` immediate stores create the
-   diagonal one-third scale, and the copied-runtime rows independently measure
-   norms `0.333333222..0.333333423`.
+   does **not** perform that palette scaling. Its four exact `0x3EAAAAAB`
+   immediate stores at `0x00502ECF`, `0x00502F06`, `0x00502F3D`, and
+   `0x00502F74` create a separate diagonal constant uploaded at `c7-c9`. The
+   `0x00502FDD..0x00503074` path reads/transposes the already-scaled
+   `0x009C69D4` palette and uploads it from `c10`. Copied-runtime rows
+   independently measure norms `0.333333222..0.333333423`.
 
 This proves the **frame-zero bind role**, **current interpolated role**, and
 **one-third pre-scale**. The dense untyped matrix body has not been reduced to a
@@ -173,8 +187,8 @@ relocation-normalized hashes in broader function ledgers.
 | --- | --- | --- |
 | `CMeshPart__LoadVerticesWithBones` | `0x004AFBB0`, 3,139 bytes, `2e2541a66ff58b4e6fff4aced3fdbfb685c6628e641134d600fd395dd3a7b316` | Legacy/dev input path normalizes weights, greedily selects three influences by subtracting exact `1/3`, and establishes the exporter fingerprint; it is not the shipped CMSH VBUF consumer. |
 | `CMCMech__BuildInterpolatedPoseAndAnchor` | `0x004B0FB0`, 2,692 bytes, `54997c37d712cfcdb7ab8cb6980eb5c4624fa387a227ad442dd984d13ddf1d4c` | Shared frame-zero/current pose sampler used by the palette constructor. |
-| `CVertexShader__ApplyCustomRenderStateShaderConstants` | `0x00502920`, 4,512 bytes, `f5625793a5e4493280d3d380ec81488e9fb7e10f4d1a2b5ce8ab94c4b9bd5e34` | Scales and uploads the matrix palette from the renderer globals. |
-| `CMeshRenderer__RenderMeshCore` | `0x00549570`, 8,844 bytes, `e1371a73aaa0da2f502b54d4eb830f50b6913662cce6416ac057a361b298d2fb` | Exact skeletal render consumer: samples bind/current poses, builds palette matrices, and dispatches layer rendering. |
+| `CVertexShader__ApplyCustomRenderStateShaderConstants` | `0x00502920`, 4,512 bytes, `f5625793a5e4493280d3d380ec81488e9fb7e10f4d1a2b5ce8ab94c4b9bd5e34` | Builds/uploads the separate c7-c9 one-third diagonal, then reads/transposes and uploads the renderer's already-scaled global palette to c10+. |
+| `CMeshRenderer__RenderMeshCore` | `0x00549570`, 8,844 bytes, `e1371a73aaa0da2f502b54d4eb830f50b6913662cce6416ac057a361b298d2fb` | Exact skeletal render consumer: samples bind/current poses, builds each palette matrix, scales all 16 elements through `0x005D8608`, copies it to `0x009C69D4`, and dispatches layer rendering. |
 | `CDXMeshVB__BuildSkeletalVB` | `0x0054C920`, 2,254 bytes, `fa71ca9eee533a891fbf1658145f70578546e7be43a4ef294d89db07a73ef8f0` | Builds the static 48-byte skeletal VB; exact `FILD` + multiply-by-`3.0f` emits the three palette offsets. |
 
 `CDXMeshVB__VFunc_1_0054D210` dispatches to `BuildSkeletalVB` at
@@ -228,10 +242,10 @@ py -3 tools/cmsh_skinning_contract.py `
 py -3 tools/cmsh_skinning_contract_tests.py
 ```
 
-Two independent runs produced byte-identical JSON and TSV. JSON was 17,323 bytes,
-SHA-256 `a4ef38dff962d39375f39711c6d40a9abba4707a9da89525eb2f164c86faa371`;
-TSV was 12,640 bytes, SHA-256
-`e506c5bfa5381cf2b349b3a0ea20eacd14761e66fab09648dc47d1349073c1ce`.
+Two independent runs produced byte-identical JSON and TSV. JSON was 18,011 bytes,
+SHA-256 `e6f70ecf12add31d7e5d6a5508cec4d93c4fa9c69de68d889d07e4bebcef54dd`;
+TSV was 12,827 bytes, SHA-256
+`f98b2c7e501cf90702aba65481f3e879eadcc30a51f40dfa2d08c74b8b76a3af`.
 Generated reports are restricted to ignored `local-lab` or `.artifacts` paths.
 The tracked TSV is the exact generated public-safe receipt.
 

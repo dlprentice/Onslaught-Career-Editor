@@ -221,6 +221,22 @@ _SPECIMEN_VARS = (
 
 @unittest.skipUnless(all(os.environ.get(name) for name in _SPECIMEN_VARS), "local skinning corpus not configured")
 class SpecimenBoundTests(unittest.TestCase):
+    def test_renderer_palette_scale_pin_rejects_targeted_fmul_drift(self) -> None:
+        pristine = contract.PeImage(
+            contract._read(Path(os.environ["ONSLAUGHT_PRISTINE_EXE"]))
+        )
+
+        class DriftedPe:
+            def read_va(self, va: int, size: int) -> bytes:
+                payload = bytearray(pristine.read_va(va, size))
+                target_va = 0x0054B0CA
+                if va <= target_va < va + size:
+                    payload[target_va - va] ^= 0x01
+                return bytes(payload)
+
+        with self.assertRaisesRegex(ValueError, "renderer palette-scale block"):
+            contract.verify_renderer_palette_scale(DriftedPe())
+
     def test_build_contract_closes_the_exact_bounded_family(self) -> None:
         report = contract.build_contract(
             Path(os.environ["ONSLAUGHT_GAME_DATA"]),
@@ -234,6 +250,27 @@ class SpecimenBoundTests(unittest.TestCase):
         )
 
         self.assertEqual("onslaught.cmsh-matrix-palette-skinning.v1", report["schema"])
+        self.assertEqual(
+            {
+                "owner": "CMeshRenderer__RenderMeshCore",
+                "constantVa": "0x005d8608",
+                "constantBits": "0x3eaaaaab",
+                "scaleInstructionCount": 16,
+                "matrixElementsPerPaletteEntry": 16,
+                "destinationGlobalVa": "0x009c69d4",
+            },
+            {
+                key: report["staticRuntime"]["rendererPaletteScale"][key]
+                for key in (
+                    "owner",
+                    "constantVa",
+                    "constantBits",
+                    "scaleInstructionCount",
+                    "matrixElementsPerPaletteEntry",
+                    "destinationGlobalVa",
+                )
+            },
+        )
         self.assertEqual(
             {
                 "meshesScanned": 213,
@@ -264,6 +301,10 @@ class SpecimenBoundTests(unittest.TestCase):
         tsv = contract.render_tsv(report)
         self.assertTrue(tsv.startswith("row_id\trow_kind\tsubject\t"))
         self.assertIn("FORMULA-EXECUTED\tformula\tthree-slot position combine", tsv)
+        self.assertIn(
+            "renderer=0x0054b0ad..0x0054b224; constant=0x005d8608/0x3eaaaaab; 16 FMULs",
+            tsv,
+        )
         self.assertIn("BIND-CURRENT\tbind-current\tretail palette construction", tsv)
         self.assertNotIn("C:/", tsv)
         self.assertNotIn("G:/", tsv)

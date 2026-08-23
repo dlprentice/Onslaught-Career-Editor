@@ -131,10 +131,11 @@ shipped slot words are exact non-negative multiples of three; division by three
 produces an in-range index into that part's `BONE` array. Every declared bone
 slot is used by at least one vertex in each of the seven meshes. The dedicated
 [matrix-palette contract](cmsh-matrix-palette-skinning.md) now proves the GPU
-consumer, c10 palette, one-third pre-scale, frame-zero/current pose roles, and
-released position weights `(0, 2/3, 1/3)`: slot 0 is computed then discarded,
-slot 1 is doubled, and slot 2 is added. Exact typed bind-product order and the
-normal-combine block remain open.
+consumer, c10 palette, renderer-owned binary32 one-third pre-scale,
+frame-zero/current pose roles, and released position coefficients `(0, 2s, s)`
+for `s = float32(0x3EAAAAAB)` (rational shorthand `(0, 2/3, 1/3)`): slot 0 is
+computed then discarded, slot 1 is doubled, and slot 2 is added. Exact typed
+bind-product order and the normal combine remain open.
 
 The runtime also uses semantic part names outside this serialized skinning
 array. `CMCTentacle__Init @ 0x0049CC40` searches names such as `tentacle`,
@@ -209,8 +210,8 @@ than being attached to the parent CMSH by guesswork.
 | `0x004F44A0` | `CComplexThing__SetAnimMode` | lazy `CAnimation` allocation and forwarding |
 | `0x005351D0` | `IScript__PlayAnimationWait` | name lookup, play dispatch, VM stop, completion-resume contract |
 | `0x0054C920` | `CDXMeshVB__BuildSkeletalVB` | skeletal vertex-buffer construction route |
-| `0x00549570` | `CMeshRenderer__RenderMeshCore` | samples each BONE part at frame zero/current pose and constructs the palette |
-| `0x00502920` | `CVertexShader__ApplyCustomRenderStateShaderConstants` | one-third scales and uploads the c10 matrix palette |
+| `0x00549570` | `CMeshRenderer__RenderMeshCore` | samples each BONE part at frame zero/current pose, constructs the palette, scales all 16 matrix elements by `[0x005D8608]`, and copies it to `0x009C69D4` |
+| `0x00502920` | `CVertexShader__ApplyCustomRenderStateShaderConstants` | uploads a separate c7-c9 one-third diagonal, then reads/transposes and uploads the already-scaled global palette to c10+ |
 | `0x0049CC40` | `CMCTentacle__Init` | semantic part-name scan and controller-owned bone/spline buffers |
 
 These anchors demonstrate consumers and call shapes. They do not prove that the

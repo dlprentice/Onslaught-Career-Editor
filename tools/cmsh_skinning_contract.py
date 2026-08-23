@@ -48,6 +48,13 @@ FUNCTION_PINS = (
     ("CMeshRenderer__RenderMeshCore", 0x00549570, 8844, "e1371a73aaa0da2f502b54d4eb830f50b6913662cce6416ac057a361b298d2fb"),
     ("CDXMeshVB__BuildSkeletalVB", 0x0054C920, 2254, "fa71ca9eee533a891fbf1658145f70578546e7be43a4ef294d89db07a73ef8f0"),
 )
+RENDERER_PALETTE_SCALE_CONSTANT_VA = 0x005D8608
+RENDERER_PALETTE_LOOP_VA = 0x0054B0AD
+RENDERER_PALETTE_LOOP_BYTES = 376
+RENDERER_PALETTE_LOOP_SHA256 = "362f12c6af54fcff8a238c5badfee7d5f7794b362af58a6585099e74821ebee2"
+RENDERER_PALETTE_SCALE_VA = 0x0054B0C3
+RENDERER_PALETTE_SCALE_BYTES = 340
+RENDERER_PALETTE_SCALE_SHA256 = "bac577a59b294c03e71d6b99ed33b018f8ffc1b6d6b7a20f4e7c15d407876772"
 EXPECTED_MESH_SUMMARY = {
     "meshesScanned": 213,
     "skinnedMeshes": 7,
@@ -136,6 +143,63 @@ class PeImage:
             raise ValueError(f"0x{call_va:08x} is not an E8 rel32 call")
         displacement = struct.unpack_from("<i", instruction, 1)[0]
         return call_va + 5 + displacement
+
+
+def verify_renderer_palette_scale(pe: PeImage) -> dict[str, object]:
+    """Pin the renderer-owned 16-element one-third scale and global copy loop."""
+
+    constant_bits = struct.unpack(
+        "<I", pe.read_va(RENDERER_PALETTE_SCALE_CONSTANT_VA, 4)
+    )[0]
+    if constant_bits != 0x3EAAAAAB:
+        raise ValueError(
+            "renderer palette-scale constant mismatch at "
+            f"0x{RENDERER_PALETTE_SCALE_CONSTANT_VA:08x}"
+        )
+    loop = pe.read_va(RENDERER_PALETTE_LOOP_VA, RENDERER_PALETTE_LOOP_BYTES)
+    loop_sha256 = _sha256_bytes(loop)
+    if loop_sha256 != RENDERER_PALETTE_LOOP_SHA256:
+        raise ValueError(f"renderer palette-scale block hash mismatch: {loop_sha256}")
+    scale = pe.read_va(RENDERER_PALETTE_SCALE_VA, RENDERER_PALETTE_SCALE_BYTES)
+    scale_sha256 = _sha256_bytes(scale)
+    if scale_sha256 != RENDERER_PALETTE_SCALE_SHA256:
+        raise ValueError(f"renderer palette-scale instruction range mismatch: {scale_sha256}")
+    fmul = bytes.fromhex("d80d08865d00")
+    structural_pins = (
+        ("global palette base", bytes.fromhex("bbd4699c00"), 1),
+        (
+            "scaled matrix copy setup",
+            bytes.fromhex("b9100000008db424840100008bfb83c240"),
+            1,
+        ),
+        ("global palette stride", bytes.fromhex("83c340"), 1),
+        (
+            "scaled matrix copy and loop tail",
+            bytes.fromhex("f3a53b85c00000000f8c8dfeffff"),
+            1,
+        ),
+    )
+    if scale.count(fmul) != 16:
+        raise ValueError("renderer palette-scale block does not contain 16 one-third multiplies")
+    for role, expected, count in structural_pins:
+        if loop.count(expected) != count:
+            raise ValueError(f"renderer palette-scale block {role} mismatch")
+    return {
+        "owner": "CMeshRenderer__RenderMeshCore",
+        "constantVa": f"0x{RENDERER_PALETTE_SCALE_CONSTANT_VA:08x}",
+        "constantBits": f"0x{constant_bits:08x}",
+        "constantFloat32": struct.unpack("<f", struct.pack("<I", constant_bits))[0],
+        "loopVa": f"0x{RENDERER_PALETTE_LOOP_VA:08x}",
+        "loopEndVa": f"0x{RENDERER_PALETTE_LOOP_VA + RENDERER_PALETTE_LOOP_BYTES - 1:08x}",
+        "loopBytes": RENDERER_PALETTE_LOOP_BYTES,
+        "loopSha256": loop_sha256,
+        "scaleVa": f"0x{RENDERER_PALETTE_SCALE_VA:08x}",
+        "scaleBytes": RENDERER_PALETTE_SCALE_BYTES,
+        "scaleSha256": scale_sha256,
+        "scaleInstructionCount": 16,
+        "matrixElementsPerPaletteEntry": 16,
+        "destinationGlobalVa": "0x009c69d4",
+    }
 
 
 def classify_shader_tokens(tokens: tuple[int, ...]) -> str | None:
@@ -557,6 +621,7 @@ def _verify_executable(path: Path) -> dict[str, object]:
     if sha256 != PRISTINE_SHA256:
         raise ValueError(f"pristine executable hash mismatch: {sha256}")
     pe = PeImage(data)
+    renderer_palette_scale = verify_renderer_palette_scale(pe)
     functions: list[dict[str, object]] = []
     for name, va, size, expected_sha256 in FUNCTION_PINS:
         actual = pe.range_sha256(va, size)
@@ -581,7 +646,7 @@ def _verify_executable(path: Path) -> dict[str, object]:
             raise ValueError(f"{role} opcode mismatch at 0x{va:08x}")
         opcodes.append({"role": role, "va": f"0x{va:08x}", "bytesHex": actual.hex()})
     constants = (
-        ("one-third", 0x005DC680, 0x3EAAAAAB),
+        ("quantizer-one-third", 0x005DC680, 0x3EAAAAAB),
         ("slot-stride-three", 0x005D8CC0, 0x40400000),
     )
     constant_rows: list[dict[str, object]] = []
@@ -623,6 +688,7 @@ def _verify_executable(path: Path) -> dict[str, object]:
     return {
         "specimenSha256": sha256,
         "functions": functions,
+        "rendererPaletteScale": renderer_palette_scale,
         "opcodes": opcodes,
         "constants": constant_rows,
         "calls": calls,
@@ -731,6 +797,7 @@ def build_contract(
     mismatches = int(runtime_readback["mismatchedFieldWords"])
     if unclassified or mismatches:
         raise ValueError("bounded tested-field family is not closed")
+    palette_scale = float(static["rendererPaletteScale"]["constantFloat32"])
     return {
         "schema": SCHEMA,
         "meshFamily": mesh_family,
@@ -740,9 +807,10 @@ def build_contract(
         "formula": {
             "paletteAddress": "c[10 + storedSlot + row], storedSlot = 3 * BONE-array index",
             "executedPosition": "2 * T[slot1] * position + T[slot2] * position",
-            "executedSlotWeights": [0.0, 2.0 / 3.0, 1.0 / 3.0],
+            "executedSlotWeights": [0.0, 2.0 * palette_scale, palette_scale],
             "bindRole": "renderer samples each BONE part at frame zero and again at the current interpolated pose before building the palette",
-            "paletteScale": 1.0 / 3.0,
+            "paletteScale": palette_scale,
+            "paletteScaleBits": static["rendererPaletteScale"]["constantBits"],
         },
         "unknowns": [
             "The dense retail matrix-construction body proves frame-zero/current-pose roles, but its exact row/column multiplication order is not promoted beyond those calls.",
@@ -800,6 +868,7 @@ def render_tsv(report: dict[str, object]) -> str:
             )
         )
     formula = report["formula"]
+    renderer_scale = report["staticRuntime"]["rendererPaletteScale"]
     rows.extend(
         [
             (
@@ -822,19 +891,19 @@ def render_tsv(report: dict[str, object]) -> str:
             (
                 "FORMULA-SCALE", "formula", "palette weight scale", "STATIC_PLUS_RUNTIME",
                 report["staticRuntime"]["specimenSha256"],
-                f"{report['runtimeCaptures']['summary']['paletteRows']} captured palette rows",
-                "all measured linear rows at one-third scale",
-                f"palette scale={formula['paletteScale']}; slot weights={formula['executedSlotWeights']}",
-                "renderer scales every 4x4 palette element; shader sums 2+1 terms",
+                f"{renderer_scale['scaleInstructionCount']} renderer FMULs; {report['runtimeCaptures']['summary']['paletteRows']} captured palette rows",
+                "actual renderer scale/copy block pinned; all measured linear rows at one-third scale",
+                f"palette scale={formula['paletteScale']} ({formula['paletteScaleBits']}); slot weights={formula['executedSlotWeights']}",
+                f"renderer={renderer_scale['loopVa']}..{renderer_scale['loopEndVa']}; constant={renderer_scale['constantVa']}/{renderer_scale['constantBits']}; 16 FMULs; copies scaled matrix to {renderer_scale['destinationGlobalVa']}; shader sums 2+1 terms",
                 "raw float capture precision remains bounded by logger output",
-                "one palette row outside the float32 one-third envelope or an unscaled renderer path",
+                "renderer scale constant/block/copy drift, or one palette row outside the float32 one-third envelope",
             ),
             (
                 "BIND-CURRENT", "bind-current", "retail palette construction", "RETAIL_STATIC",
                 report["staticRuntime"]["specimenSha256"],
                 "one frame-zero and one current-pose sample per BONE part",
                 "roles and call sites classified", formula["bindRole"],
-                "CMeshRenderer__RenderMeshCore samples frame zero and current interpolation before scaling/upload",
+                "CMeshRenderer__RenderMeshCore samples frame zero/current interpolation, scales/copies the palette, then ApplyCustom uploads it",
                 report["unknowns"][0],
                 "a typed instruction-level reduction or controlled trace that yields different bind/current algebra",
             ),
