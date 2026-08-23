@@ -180,6 +180,31 @@ delete; the file's own `_maintenance` key mandates this). Gate: JSON valid,
 `npm run test:docs` clean, every repointed reference re-resolved, and the
 file's size/key-count reduction measured and recorded here.
 
+**2026-08-23 — P3 batch 1 gate receipt (wt/t_40c27403, `caf42f67` rebased as
+`c75127e2`).** Moved exactly 25 `_HERMES_SLICE_20260819_*` keys into their
+already-existing owning function notes under
+[`reverse-engineering/binary-analysis/functions/`](reverse-engineering/binary-analysis/functions/)
+(24 notes already carried every distinctive token — body SHA-256 prefix, byte
+count, E8/E9 counts, steward cycle id, landed/task hex ids — checked
+programmatically; one gap in `IScript__VFunc_2_00533810.md` was closed by a
+verbatim dated append of the slice string before key removal). Surgical span
+deletion only: the file is not byte-reproducible by `json.dumps(indent=2)`
+(+1,375 B measured drift), so exactly the 25 single-line key entries were
+removed with zero insertions and every surviving key verified value-identical.
+Measured: `developer_state.json` **939,162 → 928,237 B, raw delta −10,925 B**
+(exactly the removed physical-line bytes; the preflight's −9,500 B serialized
+simulation was invalid and is superseded by this receipt); **4,575 → 4,550
+lines**; **599 → 574 top-level keys**; SHA-256 `43f97e7686eb4c6c…b6199` →
+`802bf97c04ba189b…524aa`. History moved, never deleted: all 25 slice values
+survive verbatim in their owning tracked notes. Census: zero tracked exact-key
+references to any of the 25 keys outside `developer_state.json` itself.
+Remaining `_HERMES_SLICE_*`: 492 keys across later batches;
+`current_re_authority`, `_RECURSIVE_RE_CAMPAIGN_2026_08_02`, `goal_status`,
+and every other key untouched. Gates: JSON valid at 574 keys;
+`git grep -F` zero hits for all 25 keys; docs sub-gates green (doc headers
+2,009 files / 0 violations; re-function-doc-names 2,040 assertions DRIFTED=0;
+evidence-register header current; current-authority PASS).
+
 ### P4 — Batch function-triage packet exporter
 
 One headless Ghidra run emits per-function packets (decompile, xrefs,
