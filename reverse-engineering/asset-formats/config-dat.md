@@ -2,9 +2,9 @@
 
 Status: active format contract — three unrelated DAT schemas plus one RAW asset;
 never use a generic `.dat` parser
-Date: 2026-08-22
-Verdict: worldheaders is byte-exact and the other three root files have bounded
-framing/fields without flattening their unrelated schemas.
+Date: 2026-08-23
+Verdict: worldheaders and the hash-pinned Battle Engine configuration baseline
+are byte-exact; the other two root files retain bounded, unrelated contracts.
 Evidence: MEASURED — all nine mirror-index `.dat` rows and the one `.raw` row
 were rechecked. Six DATs belong to
 [localization-text.md](localization-text.md); this file owns the remaining three
@@ -18,7 +18,7 @@ retail VAs cite `BEA.exe.original.backup`, SHA-256
 
 | File | Bytes | SHA-256 | Contract state |
 | --- | ---: | --- | --- |
-| `battle engine configurations.dat` | 1,514 | `58722b12a04cae97ad2163acb2cc2c1699f95a0688318bd8a86696714d94454a` | source-order fields bounded; no general re-encoder |
+| `battle engine configurations.dat` | 1,514 | `58722b12a04cae97ad2163acb2cc2c1699f95a0688318bd8a86696714d94454a` | hash-gated version-12 parser/re-encoder; unknown spans retained raw |
 | `default physics.dat` | 175,603 | `e1fb3dedbeb29b4b4151da2c8cbbdc940b716b1a2321e1d6a9ba1542c74ada14` | complete outer statement framing; semantics partial |
 | `worldheaders.dat` | 4,783 | `34f2f45027a165fedde0e306b61fbabf64332724ced1e7a763103248fea07524` | byte-exact parser/re-encoder |
 | `Dial.raw` | 8,192 | `2c57b657b92cd8bd73ca8c8986e8ce60aaffb065fdde09940053a2dd6d59671c` | exact bounded HUD input; general layout open |
@@ -56,18 +56,25 @@ load/skip at `0x0040F180` / `0x0040F260`, and lookup at `0x0040F2F0`.
 
 ## `battle engine configurations.dat`
 
-A source-order reader consumes all 1,514 bytes as six version-12 profiles:
-Racer, Standard, Sniper, Aquila Prototype, Laser, and Blaster. Bounded fields
-include life/energy, ground/air velocity, shield/stealth, weapon arrays,
-cockpit identity, language IDs, and explosion identity. Selected common values
-and profile rows are retained in
-[`installed-corpus-census.md`](../installed-corpus-census.md).
+[`tools/battle_engine_config_decode.py`](../../tools/battle_engine_config_decode.py)
+consumes and re-encodes all 1,514 bytes as six version-12 profiles: Racer,
+Standard, Sniper, Aquila Prototype, Laser, and Blaster. Exact-mode identity is
+the hash above plus record starts `0x004`, `0x0D4`, `0x1EE`, `0x2D2`, `0x3DE`,
+and `0x4DD`; parsing and encoding are in-memory and expose no installation-write
+or patch-authorisation path. The public-safe
+[`battle-engine-config-layout.tsv`](battle-engine-config-layout.tsv) covers all
+1,514 bytes through 248 explicit spans with zero gap or overlap while retaining
+689 unknown bytes raw and withholding their payload from the TSV. Supported
+scalar/name/store spans cite existing shipped-byte owners; unadjudicated strings
+and the final integer remain explicit `UNKNOWN` spans with offset, width,
+raw-byte preservation, and a cheapest falsifier.
 
 `CBattleEngineData__LoadFromMemBuffer @ 0x0040F980` is a 1,939-byte static field
-consumer with 42 `CDXMemBuffer__Read` calls. The file still lacks a standalone
-general parser, byte-exact re-encoder, opaque-field preservation model, and
-complete profile-selection behavior. `Paladin Prototype` appears in world 001's
-header but not among the six records.
+consumer with 42 `CDXMemBuffer__Read` calls. Its unchecked legacy-version and
+malformed-input behavior is not reproduced: this public tool fails closed on
+wrong version, truncation, trailing slack, invalid framing, and exact-mode hash
+drift. Complete profile-selection behavior remains outside this format owner.
+`Paladin Prototype` appears in world 001's header but not among the six records.
 
 ## `default physics.dat`
 
@@ -103,8 +110,8 @@ retains the exact hash as a bounded consumer, not a general RAW decoder.
 ## Open questions and falsifiers
 
 - Name the four world-header trailing fields only after static/runtime evidence.
-- Build a baseline-preserving Battle Engine config parser/re-encoder and resolve
-  `Paladin Prototype` without synthesizing missing content.
+- Adjudicate the remaining `UNKNOWN` Battle Engine spans and resolve `Paladin
+  Prototype` without synthesizing missing content.
 - Produce a type/value ledger for all 6,803 physics nodes and trace one value per
   family to behavior.
 - Recover `Dial.raw` dimensions, frames, palette/lookup, and orientation from the
@@ -112,6 +119,7 @@ retains the exact hash as a bounded consumer, not a general RAW decoder.
 
 ## Claim boundary
 
-World-header layout is byte-exact; Battle Engine config and physics outer fields
-are bounded; Dial is exact-input only. Complete semantics, runtime selection,
-malformed-input behavior, and parity remain open.
+World-header layout and the exact shipped Battle Engine configuration baseline
+are byte-exact; physics outer fields are bounded; Dial is exact-input only.
+Unknown configuration-span semantics, runtime selection, retail malformed-input
+behavior, and parity remain open.
