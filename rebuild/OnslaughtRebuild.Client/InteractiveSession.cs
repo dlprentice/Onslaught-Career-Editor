@@ -156,6 +156,8 @@ public sealed class InteractiveSession
 
     public long InterpolationPhase => _interpolationPhase;
 
+    public PlatformInputEdgeState PlatformInput { get; } = new();
+
     public InteractivePauseReason PauseReasons => _pauseReasons;
 
     public bool IsPaused => _pauseReasons != InteractivePauseReason.None;
@@ -403,6 +405,7 @@ public sealed class InteractiveSession
 
     private void ClearInputState()
     {
+        PlatformInput.Reset();
         _input = InteractiveInput.Idle;
         _toggleEdgePending = false;
         _resetEdgePending = false;
@@ -454,6 +457,7 @@ public sealed class InteractiveSession
 
         if (IsPaused)
         {
+            PlatformInput.AdvanceFrame();
             return new FrameAdvanceResult(
                 0,
                 false,
@@ -655,6 +659,7 @@ public sealed class InteractiveSession
         _undeliveredAquilaFlightEvents.Clear();
         _undeliveredLevel100DestructionEvents.Clear();
         _undeliveredLevel100WeaponFireEvents.Clear();
+        PlatformInput.AdvanceFrame();
         return result;
     }
 
