@@ -1,0 +1,301 @@
+{
+  "authorities": {
+    "base_commit": "784367bd43f9ec13125521b00fe0c8352670ffdd",
+    "base_crosswalk_sha256": "e37f13b37e9ce9d712174e35b86fc1f7ebcfc693fe9957448a8f39ff03829479",
+    "generation32_ready_sha256": "08ed89644ed25feb9e85fefb5b31ab2bdecbbd91b8aca720e20c53a7fbc5e73f",
+    "generation32_reducer_id": "4c465010b3240d476eb15c89fcfa51cd155936316e897e6f6a7b450df5944db3",
+    "retail_specimen_sha256": "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750",
+    "source_commit": "5352a81cdb838b145a57f7febc5d9fc4b0129ebb"
+  },
+  "counts": {
+    "by_file": {
+      "Music.h": 6,
+      "SoundManager.h": 15,
+      "pcsoundmanager.h": 2
+    },
+    "definitions": 23,
+    "duplicate_stable_keys": 0,
+    "populated_vas": 2,
+    "retail_classification": {
+      "NO_MATCH_FOUND": 21,
+      "SOURCE_ANALOG": 1,
+      "SOURCE_EXACT": 1
+    },
+    "retail_delta": {
+      "NOT_SELECTED_TARGET": 0,
+      "RETAIL_UNRESOLVED": 2,
+      "SOURCE_AGREES": 2,
+      "SOURCE_DIVERGES": 1,
+      "SOURCE_ONLY": 18
+    },
+    "source_files": 3,
+    "unique_populated_vas": 2
+  },
+  "deterministic_projection_sha256": "598621c98480004bf89f8ba6bf20c39d5d0a33132de8852a004b28eb2394e508",
+  "outputs": {
+    "REBUILD-DELTA.md": {
+      "bytes": 6855,
+      "sha256": "f6df13628edbebe1b844bf373ed358490d1bc9d7c8b9dca43ce2c1145ed7a0ff"
+    },
+    "RETAIL-DELTA.tsv": {
+      "bytes": 8732,
+      "sha256": "865885ad104e4840c1eb507e99288da7fd194a24b1dd46c76f30ddb1eaa396be"
+    },
+    "SOURCE-CONTRACT.md": {
+      "bytes": 9998,
+      "sha256": "e91e4a4907c5c08c39607e0d7051e7e765937a50b9f614cea4ed1a0f9f492d32"
+    },
+    "definitions.tsv": {
+      "bytes": 15372,
+      "sha256": "debf05d070f6e9bc54ac73d07a98eeca773db083ff0b9e5eb55612a28682384d"
+    }
+  },
+  "reuse": {
+    "counts": {
+      "artifacts": {
+        "EXTENDED": 5,
+        "NEW_MEASUREMENT": 0,
+        "REUSED": 27
+      },
+      "definitions": {
+        "EXTENDED": 23,
+        "NEW_MEASUREMENT": 0,
+        "REUSED": 0
+      }
+    },
+    "predecessors": [
+      {
+        "disposition": "REUSED",
+        "path": "local-lab/hermes-kanban-campaign-2026-08-22/source-first-expansion/PLAN.md",
+        "role": "wave partition narrative",
+        "sha256": "604d5db76ecc9811b55321c5ec443f346c9be32515b6d8ed526142622d7ec393"
+      },
+      {
+        "disposition": "REUSED",
+        "path": "local-lab/hermes-kanban-campaign-2026-08-22/source-first-expansion/partition.tsv",
+        "role": "all 634 stable identities and W3 readiness",
+        "sha256": "bc36791975f43d5da6b584727df3eb7d29402e18c550dd3d96e01bba0c301fde"
+      },
+      {
+        "disposition": "REUSED",
+        "path": "local-lab/hermes-kanban-campaign-2026-08-22/source-first-expansion/sample.tsv",
+        "role": "cold-check and constructor controls",
+        "sha256": "5235ff8e61fd12d9e4b17caf256d06c4a693cfd50bcce20d20261f42f21813bb"
+      },
+      {
+        "disposition": "REUSED",
+        "path": "local-lab/hermes-kanban-campaign-2026-08-22/source-first-expansion/manifest.json",
+        "role": "plan count and input-hash authority",
+        "sha256": "6f58de995a27a0088749f40e06907969d3213872b40d1bf0bb450afda1fd216e"
+      },
+      {
+        "disposition": "REUSED",
+        "path": "local-lab/hermes-kanban-campaign-2026-08-22/source-first-expansion/EXECUTION.md",
+        "role": "exclusive root, outputs, reuse and review gate",
+        "sha256": "12a0f72ea2b1606ee673824ee801586cefe815e0aa899d2fe55073e7c4509f18"
+      },
+      {
+        "disposition": "REUSED",
+        "path": "local-lab/INDEX.md",
+        "role": "current local corpus routing",
+        "sha256": "c35c1a488db8e34213b263ffe83e09c64f698ab99e07a94268301b8aaa81a53e"
+      },
+      {
+        "disposition": "REUSED",
+        "path": "local-lab/CORPUS-HYGIENE-2026-08-22.md",
+        "role": "reuse and no-retirement boundary",
+        "sha256": "7d1efa6ade8b5054e5e4aa52b8c2697c0865de8c80492425125807a68a7520f0"
+      },
+      {
+        "disposition": "REUSED",
+        "path": "local-lab/INDEX-CATALOG-2026-08-17.md",
+        "role": "historical audio/options predecessor routing",
+        "sha256": "8d50dc0d0fcfcae2fc1e64c77f20ee0c0bcc9be6cd4bb9f54065f2f543051040"
+      },
+      {
+        "disposition": "REUSED",
+        "path": "local-lab/re-campaign-incident-recovery-20260808-v1/generation-32-current-8329-db18625-v1/campaign.ready.json",
+        "role": "current Generation-32 READY catalog",
+        "sha256": "08ed89644ed25feb9e85fefb5b31ab2bdecbbd91b8aca720e20c53a7fbc5e73f"
+      },
+      {
+        "disposition": "REUSED",
+        "path": "reverse-engineering/EVIDENCE-REGISTER.tsv",
+        "role": "current tracked VA disposition",
+        "sha256": "4862fc61391c9bf65cd7183752e99b9b02b6bfb721e5b4b5c1e7c5fae5b885b4"
+      },
+      {
+        "disposition": "REUSED",
+        "path": "reverse-engineering/contract-schema/coverage.json",
+        "role": "current contract coverage projection",
+        "sha256": "a8feb9ed2a8c96c29b0c5226b5d3b5849f9599635c9790fef03a41f786dc2f42"
+      },
+      {
+        "disposition": "REUSED",
+        "path": "tools/build_generation32_authority.py",
+        "role": "current catalog builder searched by tool",
+        "sha256": "0569a14502bc4142ba1f1472dc1ce2257b3df36a0f59c81b39bcea6c950260f6"
+      },
+      {
+        "disposition": "REUSED",
+        "path": "reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-17.tsv",
+        "role": "8,329-row current name projection",
+        "sha256": "4590dff93f4ee85c5a5c3450139b2e696118646af3401f6eb9719dc4237d3213"
+      },
+      {
+        "disposition": "REUSED",
+        "path": "reverse-engineering/binary-analysis/function-c1-closure-2026-08-11.tsv",
+        "role": "8,136-row static closure",
+        "sha256": "cfe90af382269cb2e64996d10df7777bd00fcd8e1844b9823ef74bc6199b8974"
+      },
+      {
+        "disposition": "REUSED",
+        "path": "reverse-engineering/binary-analysis/cmusic-shared-semantics-2026-08-11.tsv",
+        "role": "shared music retail deltas",
+        "sha256": "c8809f2387567fa4e5911a0840489e6d4ce9ae998038b6926c603a1dcfbe7742"
+      },
+      {
+        "disposition": "REUSED",
+        "path": "reverse-engineering/binary-analysis/cpcmusic-vtable-semantics-2026-08-11.tsv",
+        "role": "PC music ABI and vtable",
+        "sha256": "ef8024010651d241965e15118512a1a8e260a3c3fe24a31ce689d38b08d869b1"
+      },
+      {
+        "disposition": "REUSED",
+        "path": "reverse-engineering/binary-analysis/cpcsoundmanager-backend-semantics-2026-08-11.tsv",
+        "role": "PC sound backend and exact stub",
+        "sha256": "1d2ee5e9040c6e232a8b56339f9905444655ae030df6ed85240a792cb9ac8fb2"
+      },
+      {
+        "disposition": "REUSED",
+        "path": "reverse-engineering/binary-analysis/csoundmanager-shared-semantics-2026-08-11.tsv",
+        "role": "shared sound policy and volume delta",
+        "sha256": "162a2f355f672d00a4672254f8729f2bb607e1f8a89d5fc55fb1e99e6a30faa8"
+      },
+      {
+        "disposition": "REUSED",
+        "path": "reverse-engineering/binary-analysis/ghidra-fullpass-findings/W007/adversarial/B05.md",
+        "role": "CEffect deleting-wrapper boundary",
+        "sha256": "80d12e5e45cefc7118016de15ff92751b0edc902ebcfd2b882922145e6e5d4ab"
+      },
+      {
+        "disposition": "REUSED",
+        "path": "reverse-engineering/source-code/stuart-source-synthesis.md",
+        "role": "existing source architecture synthesis",
+        "sha256": "62c53e7e266b774c0d1ebe5c433203b9be08a972b911964ab3423fdbb86b417f"
+      },
+      {
+        "disposition": "REUSED",
+        "path": "references/Onslaught/Music.h",
+        "role": "pinned source definitions",
+        "sha256": "8715ff13802163367e2e6009c1a14124cb8cf7d76de5135a3fa2548a449ad27a"
+      },
+      {
+        "disposition": "REUSED",
+        "path": "references/Onslaught/pcsoundmanager.h",
+        "role": "pinned PC source definitions",
+        "sha256": "ed7770ae596f1ec9f348fc4e3b29852d5f20ea76fa73f0078de6170963bc361c"
+      },
+      {
+        "disposition": "REUSED",
+        "path": "references/Onslaught/SoundManager.h",
+        "role": "pinned shared source definitions",
+        "sha256": "c1710946f0e62a09b5788462e2754f239d8c5de1cbd29f6d938483514838cdad"
+      },
+      {
+        "disposition": "REUSED",
+        "path": "rebuild/OnslaughtRebuild.Godot/Level100Audio.cs",
+        "role": "current playback owner",
+        "sha256": "847fe0dc2116e4d9b97ea16cf85136c5283314538e9dfc5bd46f36be4e27b7fb"
+      },
+      {
+        "disposition": "REUSED",
+        "path": "rebuild/OnslaughtRebuild.Godot/Level100AudioCatalog.cs",
+        "role": "current cue and option-law owner",
+        "sha256": "b8ce4b23768797908a64693ed7254f3c2cad839414837dc61e7c3bfd7885542d"
+      },
+      {
+        "disposition": "REUSED",
+        "path": "rebuild/OnslaughtRebuild.Client.Tests/Level100AudioCatalogTests.cs",
+        "role": "current focused tests and stale curve pin",
+        "sha256": "1d72cd29987fca34fe1935413d85b99400ca2297583fdc46b4490ad1c96ddb30"
+      },
+      {
+        "disposition": "REUSED",
+        "path": "rebuild/PROVENANCE.md",
+        "role": "current rebuild authority and stale curve prose",
+        "sha256": "2d2eba138128c004eba3222610841a3b9deeddfec11163a48d025c0b1ba584c0"
+      }
+    ],
+    "rule": "All 23 shared-partition identities are EXTENDED with contracts/deltas; no row or artifact claims a new binary measurement.",
+    "search_preflight": {
+      "artifact_hashes": [
+        "bc36791975f43d5da6b584727df3eb7d29402e18c550dd3d96e01bba0c301fde",
+        "4590dff93f4ee85c5a5c3450139b2e696118646af3401f6eb9719dc4237d3213",
+        "cfe90af382269cb2e64996d10df7777bd00fcd8e1844b9823ef74bc6199b8974"
+      ],
+      "catalog_findings": "INDEX-CATALOG routes to existing Level100 audio parity/options work; no stable-key/hash/tool duplicate root was found.",
+      "ps2": "NOT_USED; generic PS2 crosswalk is closed and no remaining explicit PS2 boundary is part of W3.",
+      "retail_vas": [
+        "0x004e0820",
+        "0x00517290"
+      ],
+      "stable_keys": 23,
+      "subsystem": [
+        "audio",
+        "music",
+        "CMusic",
+        "CPCMusic",
+        "CSoundManager",
+        "CPCSoundManager"
+      ],
+      "tools": [
+        "build-crosswalk-expansion-plan.py",
+        "tools/build_generation32_authority.py"
+      ],
+      "tracked_findings": "Exact/analog VAs already exist in Generation-32/EVIDENCE-REGISTER, name/closure, semantic tables, and W007/W009 reviews; no generic rediscovery performed."
+    },
+    "superseded_predecessors": [
+      {
+        "disposition": "MECHANICAL_PARTITION_ONLY",
+        "identity": "f6d6d6ad45b712597083f237902dad0719e9f7df",
+        "superseded_by": "7ac8247416764f41ffa92313aa82393856beae38 merged in 784367bd43f9ec13125521b00fe0c8352670ffdd"
+      },
+      {
+        "disposition": "CONTRADICTED_STALE_CLAIM",
+        "identity": "shared tangent option conversion in current rebuild code/tests/provenance",
+        "superseded_by": "promoted 0x004e04c0 sound and 0x004bba10 music retail/demo semantic rows; implementation remains follow-up work"
+      }
+    ]
+  },
+  "schema": "bea.source-crosswalk.expansion-wave-receipt.v1",
+  "scope": {
+    "canonical_crosswalk_modified": false,
+    "canonical_report_modified": false,
+    "deletes_moves_or_retirement": false,
+    "new_local_lab_root": false,
+    "out_of_wave_rows_modified": 0,
+    "owned_paths_only": true
+  },
+  "validation": [
+    "HEAD and pinned source resolve exact required commits",
+    "durable partition W3 stable-key set equals definitions.tsv exactly (23 unique rows)",
+    "classification and retail-delta counts reconcile to 23",
+    "two populated VAs are unique and were previously resolved in current name/closure and Generation-32 catalogs",
+    "21 NO_MATCH rows retain bounded negative semantics; no binary absence is claimed",
+    "canonical 1,149-row crosswalk hash is unchanged",
+    "all 28 predecessor artifacts hash-read back exactly",
+    "receipt projection is canonical over stable keys, predecessor hashes, outputs, and reuse counts"
+  ],
+  "wave": {
+    "id": "W3_AUDIO_COMPLETE_OWNER_FAMILY",
+    "receipt_root": "reverse-engineering/source-crosswalk/expansion/w3-audio-music",
+    "source_file_set_sha256": "eecc712a1bf95da7cae1a14533d622abea735dc4fa2fdc703505422d6b0a6ac7",
+    "source_files": [
+      "Music.h",
+      "pcsoundmanager.h",
+      "SoundManager.h"
+    ],
+    "title": "Complete audio/music owner family"
+  }
+}
