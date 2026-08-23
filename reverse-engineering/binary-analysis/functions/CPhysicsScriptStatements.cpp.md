@@ -1,6 +1,9 @@
 # CPhysicsScriptStatements.cpp function map
 
 Status: active static function map
+Last updated: 2026-08-23
+Summary: the canonical address, registry, serialization, property-apply, copy,
+and teardown map for retail PhysicsScript definition records.
 
 This page retains the address, signature, serialization, registry, apply, and
 destructor relationships that support the PhysicsScript parser/schema and
@@ -100,7 +103,7 @@ the invented method spelling, nothing else.
 | `0x004317a0` | `void __cdecl CHazardStatement__CreateAndRegisterByName(char * name)` | Creates a `0x1c` hazard-like record by name and appends it to `DAT_00855408`. |
 | `0x00431870` | `int __fastcall CHazardStatement__GetSerializedSize(void * this)` | Recovered top-level hazard-statement serialized-size body. |
 | `0x004318f0` | `void __thiscall CHazardStatement__LoadFromMemBuffer(void * this, void * memBuffer)` | Recovered top-level hazard-statement load body; dispatches type-9 child load helpers or skips unknown payload bytes. |
-| `0x00431bb0` | `void * __cdecl CPhysicsScriptStatements__CreateStatementType2(int valueType)` | Type-2/unit value factory over value type ids through `0x46`; exact value classes/layouts remain unproven. |
+| `0x00431bb0` | `void * __cdecl CPhysicsScriptStatements__CreateStatementType2(int valueType)` | Type-2/unit value factory over value type ids through `0x46`; type `0x41` now has strict `CUnitShatter` RTTI/vtable closure, while other exact value classes/layouts remain bounded by their own rows. |
 | `0x00434300` | `void * __cdecl CPhysicsScriptStatements__CreateStatementType3(int valueType)` | Type-3/weapon value factory over observed value ids `0x74` through `0x81`; exact value classes/layouts remain unproven. |
 | `0x00435010` | `void * __cdecl CPhysicsScriptStatements__CreateStatementType4(int valueType)` | Type-4/weapon-mode value factory over observed value ids `0x1` through `0x26`; exact value classes/layouts remain unproven. |
 | `0x00437490` | `void * __cdecl CPhysicsScriptStatements__CreateStatementType5(int valueType)` | Type-5/round value factory over observed value ids `0x1` through `0x26`; exact value classes/layouts remain unproven. |
@@ -158,6 +161,7 @@ the invented method spelling, nothing else.
 | `0x00432c00` | `void __thiscall CUnitSoundMaterial__ApplyToUnitData(void * this, void * unitData, void * context)` | Applies the rounded scalar at `this + 0x8` into unit data/init-like field `+0xe4`. |
 | `0x00432c60` | `void __thiscall CUnitStandingLegPlacementArea__ApplyToUnitData(void * this, void * unitData)` | Wave947 recovered this apply helper from vtable `0x005d9c24` slot 1 / DATA xref `0x005d9c28`; copies the value at `this+0x8` to unit/init-like field `+0x150`. |
 | `0x00432c70` | `void __thiscall CUnitMaxLegsLifted__ApplyToUnitData(void * this, void * unitData, void * context)` | Applies the rounded scalar at `this + 0x8` into unit data/init-like field `+0x140`. |
+| `0x00432dc0` | `void __thiscall CUnitShatter__VFunc_1_00432dc0(void * this, void * unitData)` | Strict `CUnitShatter` vtable `0x005d9b34` slot 1. It truth-reduces the four-byte payload at `this+0x8` and writes exactly `0` or `1` to Unit-definition field `+0x130`; vtable slots 2/3 are the four-byte size/read helpers `0x004db8c0` / `0x00434b60`. The RTTI property name is retail-authentic; exact C++ member spelling remains unavailable. |
 | `0x00432f10` | `void __thiscall CUnitStrafeChange__ApplyToUnitData(void * this, void * unitData)` | Wave947 recovered this apply helper from vtable `0x005d9bac` slot 1 / DATA xref `0x005d9bb0`; copies the value at `this+0x8` to unit/init-like field `+0x180`. |
 | `0x00432f50` | `void __thiscall CUnitNavMap__ApplyToUnitData(void * this, void * unitData)` | Wave947 recovered this apply helper from vtable `0x005d9b98` slot 1 / DATA xref `0x005d9b9c`; applies the child value at `this+0x8` and writes the result to unit/init-like field `+0xfc`. |
 | `0x00432f70` | `void __thiscall CUnitNavMap__LoadFromMemBuffer(void * this, void * memBuffer)` | Reads a child statement type and dispatches `CreateStatementType14`; stores the child statement at `+0x8`. |
@@ -341,11 +345,46 @@ the invented method spelling, nothing else.
 | `0x00431b30` | `void * __thiscall CHazardStatement__scalar_deleting_dtor(void * this, int flags)` | Scalar-deleting wrapper around `CHazardStatement__dtor`. |
 | `0x00431b50` | `void __fastcall CHazardStatement__dtor(void * this)` | Corrected from constructor-like label; deletes child pointer at `+0x10c` and restores the base vtable. |
 
-## Adjacent Component Copy Helper
+## Unit-definition `+0x130` lifecycle — 2026-08-23
+
+The field is part of the `0x1ac`-byte Unit/definition record registered in
+`DAT_008553fc`, not a runtime-owned loot table. The byte-closed lifecycle is:
+
+1. `CUnitAI__CreateAndRegisterByName 0x0042ee90` allocates the record and
+   appends it to `DAT_008553fc`; `CUnitAI__InitDefaults 0x0042efd0` writes zero
+   to `+0x130` at `0x0042f18a`.
+2. Type-2 Unit-value factory jump-table entry `0x00432a08` maps case `0x41` to
+   constructor block `0x00432342`, which installs strict `CUnitShatter` vtable
+   `0x005d9b34` and stores type `0x41`. Its slot 3 reads exactly four payload
+   bytes to `this+8`, and slot 1 writes `1` at `0x00432dcb` for any nonzero
+   payload or `0` at `0x00432ddc` for zero. The stored field domain is therefore
+   exactly `{0,1}`; the serialized input has two observed equivalence classes,
+   zero/nonzero.
+3. `CUnitBasedOn__VFunc_1 0x004332e0` resolves the named source from that same
+   registry through the load at `0x004332eb`. Its null path calls shared
+   deep-copy helper `0x00433390` with zero at `0x00433365`; its match path calls
+   the same helper with the resolved source at `0x00433378`. That helper reads
+   source `+0x130` at `0x00433b4d` and writes destination `+0x130` at
+   `0x00433b53`; a missing source reaches the helper's null no-op rather than
+   fabricating a value.
+4. `CUnit__ctor_base 0x004f7e90` clears runtime `[unit+0x164]`.
+   `CUnit__Init 0x004f86d0` reads `[init+0x3bc]` and attaches that shared
+   definition pointer at `[unit+0x164]`; no per-Unit copy of `+0x130` occurs.
+5. `CWorldPhysicsManager__ClearAndFreeAllDefinitionLists 0x00510a90` removes
+   every `DAT_008553fc` entry, calls the shared entry teardown `0x005110f0`,
+   frees the record, clears/frees the set, and zeros `DAT_008553fc`. The scalar
+   field has no separate destructor; its lifetime ends with the definition.
+
+Adverse control: adjacent Unit-definition property `+0x128` is written by
+strict `CUnitIndiscriminate` slot 1 `0x00432d90` at `0x00432d9b/0x00432dac`.
+It is not part of the `CUnitShatter` site set. The focused verifier is
+[`tools/re_cmech_profile_field.py`](../../../tools/re_cmech_profile_field.py).
+
+## Shared Unit/Component definition copy helper
 
 | Address | Saved signature | Current evidence |
 | --- | --- | --- |
-| `0x00433390` | `void __thiscall CComponentBasedOn__CopyFrom(void * this, void * sourceComponent)` | Deep-copy helper for component-based statement resource fields. It clones scalar fields, owned string/resource pointer fields through `OID__FreeObject` / `OID__AllocObject`, rebuilds linked/list members including `this+0x5c` through `CSPtrSet__AddToTail`, and copies a fixed dword block beginning at `this+0x164`. Wave 335 corrected the stale extra `param_N` argument; caller decompile read-back for `CComponentBasedOn__VFunc_01_0043db90` now passes only the destination and source/null. |
+| `0x00433390` | `void __thiscall CComponentBasedOn__CopyFrom(void * this, void * sourceDefinition)` | Shared `0x1ac`-record deep-copy helper used by both `CUnitBasedOn__VFunc_1 0x004332e0` and `CComponentBasedOn__VFunc_01_0043db90`. It clones scalar fields (including raw dword `+0x130`), owned string/resource pointer fields through `OID__FreeObject` / `OID__AllocObject`, and linked/list members including `this+0x5c` through `CSPtrSet__AddToTail`. Wave 335 corrected the stale extra `param_N` argument; this field pass corrects the older component-only ownership gloss without renaming the saved symbol. |
 
 
 ## Claim boundary
