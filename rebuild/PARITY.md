@@ -1,7 +1,8 @@
 # Rebuild parity contract
 
 Status: active — what "1:1 behavioral and experiential parity" means operationally
-Last updated: 2026-08-22 (selector/briefing per-world string law; earlier:
+Last updated: 2026-08-23 (Thing/Actor base-state seam; earlier:
+selector/briefing per-world string law;
 merged wt/t_0bace7cd Pulse Cannon ReadyToCharge gate and Charged-2 fire;
 Level 100 EnableFlightMode +0x58c store on takeoff).
 Evidence: SOURCE — authority order and the known divergences are
@@ -513,6 +514,14 @@ Honest boundaries of this closure:
   exactly; they are not claimed to match unobserved retail pixels.
 - The briefing VIDEO inset (`PC_<world>_exact.vid`) remains undrawn; nothing
   here changes that earlier finding.
+
+Thing/Actor base state is no longer absent: Core now owns source-backed
+visibility/dying/shutdown flags, current/old pose, linear/angular velocity, the
+source-composed actor lineage mask, and exact contact-time bits through
+ThingActorBaseState. Level100ActorRegistry consumes that owner while preserving
+its released leaf type-mask projection, setup/teleport pose reset, and existing
+full-stop behavior. Render/audio virtual defaults and a generic gameplay
+framework remain open.
 
 ## Parity dimensions and their gates
 
