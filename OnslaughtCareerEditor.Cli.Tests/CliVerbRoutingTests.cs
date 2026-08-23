@@ -19,6 +19,7 @@ namespace OnslaughtCareerEditor.Cli.Tests
         [InlineData("patch")]
         [InlineData("process")]
         [InlineData("version")]
+        [InlineData("lore")]
         public void EveryTopLevelVerbIsRoutedAndDocumented(string verb)
         {
             CliRun help = Cli.Run("--help");
@@ -55,6 +56,8 @@ namespace OnslaughtCareerEditor.Cli.Tests
         [InlineData("patch", "restore")]
         [InlineData("process", "list")]
         [InlineData("process", "stop")]
+        [InlineData("lore", "search")]
+        [InlineData("lore", "show")]
         public void EverySubVerbExists(string verb, string subVerb)
         {
             CliRun listing = Cli.Run(verb, "--help");

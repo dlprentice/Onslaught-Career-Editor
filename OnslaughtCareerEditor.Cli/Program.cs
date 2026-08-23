@@ -31,6 +31,7 @@ namespace OnslaughtCareerEditor.AppCore
         private static readonly HashSet<string> VerbNames = new(StringComparer.OrdinalIgnoreCase)
         {
             "config", "saves", "goodies", "options", "copy", "patch", "process", "trainer", "version",
+            "lore",
         };
 
         [STAThread]
@@ -109,6 +110,7 @@ namespace OnslaughtCareerEditor.AppCore
             root.AddCommand(BuildPatchCommand(contextFactory, Json));
             root.AddCommand(BuildProcessCommand(contextFactory, Json));
             root.AddCommand(BuildTrainerCommand(contextFactory, Json));
+            root.AddCommand(BuildLoreCommand(contextFactory, Json));
 
             var version = new Command("version", "Show the tool version and catalog identities.");
             version.SetHandler((InvocationContext c) =>
@@ -710,6 +712,38 @@ namespace OnslaughtCareerEditor.AppCore
             trainer.AddCommand(music);
 
             return trainer;
+        }
+
+        // ------------------------------------------------------------------ lore
+
+        private static Command BuildLoreCommand(Func<bool, CliContext> factory, Func<InvocationContext, bool> json)
+        {
+            var lore = new Command(
+                "lore",
+                "Search and read the packaged Lore library. Quiet, read-only parity with the GUI reader.");
+
+            var rootOption = new Option<string?>(
+                "--root",
+                "Folder holding the lore content (a directory containing 'lore', 'lore-book' or 'lore-pack'). Defaults to the location discovered from the tool's own install.");
+
+            var queryArg = new Argument<string?>("query", () => null, "Whole-word text to search for.");
+            var search = new Command("search", "Full-text search across every included document. Exit 0 even when nothing matches.")
+            { queryArg, rootOption };
+            search.SetHandler((InvocationContext c) => c.ExitCode = LoreVerbs.Search(
+                factory(json(c)),
+                c.ParseResult.GetValueForArgument(queryArg),
+                c.ParseResult.GetValueForOption(rootOption)));
+            lore.AddCommand(search);
+
+            var documentArg = new Argument<string?>("document", () => null, "Document key as lore search and the GUI address it (printed key, lore-pack:// key, or relative path of an indexed document). Keys resolve through the loaded index only; anything else - including a file that merely exists - is exit 2.");
+            var show = new Command("show", "Show one document: title, outline and plain text.") { documentArg, rootOption };
+            show.SetHandler((InvocationContext c) => c.ExitCode = LoreVerbs.Show(
+                factory(json(c)),
+                c.ParseResult.GetValueForArgument(documentArg),
+                c.ParseResult.GetValueForOption(rootOption)));
+            lore.AddCommand(show);
+
+            return lore;
         }
 
         /// <summary>
