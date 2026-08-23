@@ -402,6 +402,131 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             }
         }
 
+        [Fact]
+        public void LoadReadOnly_MissingConfigReturnsDefaultsWithoutCreatingAnyDirectory()
+        {
+            string? previous = Environment.GetEnvironmentVariable(ConfigRootEnvironmentVariable);
+            string root = Path.Combine(Path.GetTempPath(), $"onslaught-config-readonly-{Guid.NewGuid():N}");
+
+            try
+            {
+                Environment.SetEnvironmentVariable(ConfigRootEnvironmentVariable, root);
+
+                AppConfig config = AppConfig.LoadReadOnly();
+
+                Assert.Equal(-1, config.LastTab);
+                Assert.False(Directory.Exists(root));
+                Assert.False(Directory.Exists(AppConfig.GetConfigDirPath()));
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable(ConfigRootEnvironmentVariable, previous);
+                if (Directory.Exists(root))
+                {
+                    Directory.Delete(root, recursive: true);
+                }
+            }
+        }
+
+        [Fact]
+        public void LoadReadOnly_ReadsCurrentConfigWithoutWritingAnything()
+        {
+            string? previous = Environment.GetEnvironmentVariable(ConfigRootEnvironmentVariable);
+            string root = Path.Combine(Path.GetTempPath(), $"onslaught-config-readonly-current-{Guid.NewGuid():N}");
+
+            try
+            {
+                Environment.SetEnvironmentVariable(ConfigRootEnvironmentVariable, root);
+                string configDir = Path.Combine(root, "OnslaughtCareerEditor");
+                Directory.CreateDirectory(configDir);
+                string configPath = Path.Combine(configDir, "config.json");
+                File.WriteAllText(configPath, "{ \"lastTab\": 3 }");
+                byte[] before = File.ReadAllBytes(configPath);
+
+                AppConfig config = AppConfig.LoadReadOnly();
+
+                Assert.Equal(3, config.LastTab);
+                Assert.Equal(before, File.ReadAllBytes(configPath));
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable(ConfigRootEnvironmentVariable, previous);
+                if (Directory.Exists(root))
+                {
+                    Directory.Delete(root, recursive: true);
+                }
+            }
+        }
+
+        [Fact]
+        public void LoadReadOnly_ReadsLegacyConfigWithoutMigratingOrCreatingTheCurrentLayout()
+        {
+            string? previous = Environment.GetEnvironmentVariable(ConfigRootEnvironmentVariable);
+            string root = Path.Combine(Path.GetTempPath(), $"onslaught-config-readonly-legacy-{Guid.NewGuid():N}");
+
+            try
+            {
+                Environment.SetEnvironmentVariable(ConfigRootEnvironmentVariable, root);
+                string legacyDir = Path.Combine(root, "onslaught-career-editor");
+                Directory.CreateDirectory(legacyDir);
+                string legacyPath = Path.Combine(legacyDir, "config.json");
+                File.WriteAllText(legacyPath, "{ \"lastTab\": 4 }");
+                byte[] before = File.ReadAllBytes(legacyPath);
+
+                AppConfig config = AppConfig.LoadReadOnly();
+
+                // The legacy values are readable, and nothing else happened: no migration write,
+                // no current-layout directory appearing next to the legacy one. Probed through
+                // plain paths - GetConfigPath() itself would create the directory it points at.
+                Assert.Equal(4, config.LastTab);
+                Assert.Equal(before, File.ReadAllBytes(legacyPath));
+                Assert.False(File.Exists(Path.Combine(root, "OnslaughtCareerEditor", "config.json")));
+                Assert.Equal(
+                    new[] { "onslaught-career-editor" },
+                    Directory.GetDirectories(root).Select(Path.GetFileName).OrderBy(name => name));
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable(ConfigRootEnvironmentVariable, previous);
+                if (Directory.Exists(root))
+                {
+                    Directory.Delete(root, recursive: true);
+                }
+            }
+        }
+
+        [Fact]
+        public void Load_StillMigratesLegacyConfigOnce()
+        {
+            string? previous = Environment.GetEnvironmentVariable(ConfigRootEnvironmentVariable);
+            string root = Path.Combine(Path.GetTempPath(), $"onslaught-config-migrate-{Guid.NewGuid():N}");
+
+            try
+            {
+                Environment.SetEnvironmentVariable(ConfigRootEnvironmentVariable, root);
+                string legacyDir = Path.Combine(root, "onslaught-career-editor");
+                Directory.CreateDirectory(legacyDir);
+                string legacyPath = Path.Combine(legacyDir, "config.json");
+                File.WriteAllText(legacyPath, "{ \"lastTab\": 5 }");
+
+                Assert.Equal(5, AppConfig.Load().LastTab);
+
+                // Load keeps its long-standing carry-forward contract: the current layout now
+                // exists and later reads take the fast path. LoadReadOnly is the variant that
+                // must not do this.
+                Assert.True(File.Exists(AppConfig.GetConfigPath()));
+                Assert.Equal(5, AppConfig.Load().LastTab);
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable(ConfigRootEnvironmentVariable, previous);
+                if (Directory.Exists(root))
+                {
+                    Directory.Delete(root, recursive: true);
+                }
+            }
+        }
+
         private static void WriteValidSaveLikeFile(string path)
         {
             byte[] data = new byte[10_004];
