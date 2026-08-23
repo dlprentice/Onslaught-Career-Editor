@@ -11,8 +11,9 @@ Source File: none — `Unit.cpp` is absent from `references/Onslaught/`
 Summary: shared CUnit slot-0 event handler. It switches on signed 16-bit event
 IDs 4001–4005, with direct arms for 4001, 4003, 4004, and 4005; 4002 and all
 other values fall through `CActor__HandleEvent`. Event `0x0fa4` (4004) calls
-`CUnit__SpawnProfileDropPickup` and then virtual slot 14. For CComponent and
-CGillMHead that slot is `CComplexThing__AddShutdownEvent`, so their delayed 4004
+`CUnit__SpawnProfileDropPickup` and then virtual slot 14. The proved
+CComponent/CGillMHead and CWarspite/CGillM/CThunderHead/CMech producer vtables
+resolve that slot to `CComplexThing__AddShutdownEvent`, so their delayed 4004
 is a drop-plus-shutdown-finalization trigger, not an unresolved no-op.
 Evidence: MEASURED — pristine identity, complete-body decode/hash, jump-table
 readback, whole-`.text` rel32 census, image-wide operand census, strict relevant
@@ -60,10 +61,17 @@ Relevant strict vtable reads are:
 | CComponent / `0x005e3d40` | `CUnit__HandleEvent 0x004f9820` | `CComplexThing__AddShutdownEvent 0x004f43d0` |
 | CGillMHead / `0x005e41f8` | `CUnit__HandleEvent 0x004f9820` | `CComplexThing__AddShutdownEvent 0x004f43d0` |
 | CPod / `0x005dff8c` | `CUnit__HandleEvent 0x004f9820` | `CComplexThing__AddShutdownEvent 0x004f43d0` |
+| CWarspite / `0x005e0684` | `CUnit__HandleEvent 0x004f9820` | `CComplexThing__AddShutdownEvent 0x004f43d0` |
+| CGillM / `0x005e0b30` | `CUnit__HandleEvent 0x004f9820` | `CComplexThing__AddShutdownEvent 0x004f43d0` |
+| CThunderHead / `0x005e0fe0` | `CUnit__HandleEvent 0x004f9820` | `CComplexThing__AddShutdownEvent 0x004f43d0` |
+| CMech / `0x005e3074` | `CUnit__HandleEvent 0x004f9820` | `CComplexThing__AddShutdownEvent 0x004f43d0` |
 
 The CComponent scheduler therefore reaches this exact arm after its 7.0-second
-manager-clock delay. The slot-14 callee calls the script event-id-3/delete path
-when applicable, sets TF_DECLARED_SHUTDOWN, and schedules thing-event 2000 at
+manager-clock delay. The separately closed
+[`CMech__VFunc_50_004a00a0`](../Mech.cpp/CMech__VFunc_50_004a00a0.md)
+producer reaches it after 3.5 seconds for each of the four Mech-family vtables
+above. The slot-14 callee calls the script event-id-3/delete path when
+applicable, sets TF_DECLARED_SHUTDOWN, and schedules thing-event 2000 at
 `NEXT_FRAME`; that downstream tuple and 2000 consumer are owned by
 [`CComplexThing.cpp.md`](../CComplexThing.cpp.md).
 
@@ -74,7 +82,7 @@ The pristine image contains three little-endian `a4 0f 00 00` occurrences:
 | Immediate site | Owner / classification | Exact tuple context |
 | --- | --- | --- |
 | `0x0042898d` | [`CComponent__HandleTriggerEventAndMoveToOffset`](../Component.cpp/CComponent__HandleTriggerEventAndMoveToOffset.md) | `AddEvent_AtTime(4004, component, mTime+7.0f, 0, null, null)` at `0x00428997` |
-| `0x004a0103` | `CMech__VFunc_50_004a00a0` | after fresh `CGroundUnit__MarkDestroyedAndResetState` and `CUnit__ReleaseChildUnits`, `AddEvent_AtTime(4004, mech, mTime+3.5f, 0, null, null)` at `0x004a010d` |
+| `0x004a0103` | [`CMech__VFunc_50_004a00a0`](../Mech.cpp/CMech__VFunc_50_004a00a0.md) | after fresh `CGroundUnit__MarkDestroyedAndResetState` and `CUnit__ReleaseChildUnits`, `AddEvent_AtTime(4004, mech, mTime+3.5f, 0, null, null)` at `0x004a010d` |
 | `0x005c6928` | `HResultToString` | `mov ecx,0xfa4` in an HRESULT switch; not an event or scheduler call |
 
 Thus there are exactly **two** event-4004 producers in pristine `.text`, both
@@ -96,8 +104,8 @@ CUnit__HandleEvent
   -> receiver virtual slot 2
 ```
 
-CComponent, CGillMHead, and CPod slot 2 is
-`CUnit__VFunc02_CleanupWorldLinksAndForward 0x004f95d0`. The shared event
+CComponent, CGillMHead, CPod, CWarspite, CGillM, CThunderHead, and CMech slot-2
+entries are `CUnit__VFunc02_CleanupWorldLinksAndForward 0x004f95d0`. The shared event
 manager only delivers slot 0; the ID interpretation and these class effects
 belong to the handler chain.
 
@@ -128,7 +136,7 @@ The whole-`.text` rel32 census finds four direct callers:
 Scheduled events normally arrive virtually, not through those calls. The
 image-wide operand census finds **28** `.rdata` dwords equal to `0x004f9820`,
 all slot-0 entries in the current static closure; the relevant CComponent,
-CGillMHead, and CPod entries are listed above.
+CGillMHead, CPod, and four Mech-family entries are listed above.
 
 ## Manager boundary and failure behavior
 
@@ -160,8 +168,8 @@ Any one of:
   `CUnit__SpawnProfileDropPickup` followed by receiver slot 14.
 - The 4004 operand census stops being the two scheduler pushes plus the one
   unrelated HRESULT constant above.
-- CComponent/CGillMHead slot 0 or slot 14 no longer resolves to the named
-  handler/callee pair above.
+- CComponent/CGillMHead or any of the four Mech-family slot 0 / slot 14 pairs no
+  longer resolves to the named handler/callee pair above.
 - Event 2000 no longer follows the Unit → Actor → ComplexThing shutdown chain.
 
 ## Reproduction

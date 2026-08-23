@@ -1,7 +1,7 @@
 # CEventManager / CScheduledEvent function map
 
 Status: active static function map
-Last updated: 2026-08-22 (cleanup-event queue/dispatch boundary closed)
+Last updated: 2026-08-22 (CMech cleanup-event arm closed)
 Source File: `C:\dev\ONSLAUGHT2\EventManager.cpp` (SEH `__FILE__` pointer `0x005d250c` in `Init`; see the map below) | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 Evidence: MEASURED — every byte below was re-read from the pristine specimen at
 file offset VA − 0x400000. The rebuild already owns one of these laws
@@ -49,7 +49,7 @@ a REBUILD_READY row): the event number is a 16-bit word.
 ## Cleanup-event queue / dispatch boundary
 
 The manager does not assign global semantics to numeric IDs. It stores the
-low 16 bits and later invokes the target's virtual slot 0. Two now-closed
+low 16 bits and later invokes the target's virtual slot 0. The now-closed
 Unit-family chains demonstrate the boundary:
 
 - [`CComponent__HandleTriggerEventAndMoveToOffset`](Component.cpp/CComponent__HandleTriggerEventAndMoveToOffset.md)
@@ -58,6 +58,13 @@ Unit-family chains demonstrate the boundary:
   and fires after 140 fixed 0.05-second advances. Component slot 0 is
   [`CUnit__HandleEvent`](Unit.cpp/CUnit__HandleEvent.md); its 4004 arm performs
   the profile-drop call and virtual slot-14 shutdown scheduling.
+- [`CMech__VFunc_50_004a00a0`](Mech.cpp/CMech__VFunc_50_004a00a0.md)
+  queues `(4004, mech, mTime+3.5f, priority 0, data null, reuse null)` only
+  after its null-`[profile+0x130]` path reports a fresh ground-unit transition
+  and releases child units. The 3.5-second delay uses ring offset 69 and fires
+  after 70 fixed advances. CWarspite, CGillM, CThunderHead, and CMech all place
+  `CUnit__HandleEvent` in slot 0 and `CComplexThing__AddShutdownEvent` in slot
+  14, closing the same delayed profile-drop plus shutdown-finalization path.
 - [`CUnit__ResetDeploymentGraphAndScheduleEvent`](Unit.cpp/CUnit__ResetDeploymentGraphAndScheduleEvent.md),
   called by the CComponent both-zero and CPod fresh arms, queues
   `(2000, unit, mTime+0.05f, priority 0, data null, reuse null)`. That near-time
@@ -66,10 +73,10 @@ Unit-family chains demonstrate the boundary:
   receiver's slot-2 cleanup.
 
 These producers receive no success value. If insertion fails after their local
-cleanup (invalid manager or exhausted event pool), the manager logs/returns and
-the caller does not roll back. Null target and over-limit time are silent
-non-insertions. The tuple/effects belong to the named Unit-family notes; ring,
-clock, allocation, order, and slot-0 delivery belong here.
+cleanup or child release (invalid manager or exhausted event pool), the manager
+logs/returns and the caller does not roll back. Null target and over-limit time
+are silent non-insertions. The tuple/effects belong to the named Unit-family
+notes; ring, clock, allocation, order, and slot-0 delivery belong here.
 
 ## Callers and lifecycle (byte-cited)
 
