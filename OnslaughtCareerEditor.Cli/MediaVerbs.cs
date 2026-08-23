@@ -48,10 +48,12 @@ namespace OnslaughtCareerEditor.Cli
                 }
             }
 
-            // Explicit --game-dir wins; otherwise resolve exactly like saves list does.
+            // Explicit --game-dir wins; otherwise resolve exactly like saves list does, but
+            // strictly read-only: answering must not create the config directory or migrate a
+            // legacy config as a side effect.
             string? effectiveDir = !string.IsNullOrWhiteSpace(gameDirOption)
                 ? gameDirOption
-                : AppConfig.Load().GetGameDir() ?? AppConfig.DetectGameDirectory();
+                : AppConfig.LoadReadOnly().GetGameDir() ?? AppConfig.DetectGameDirectory();
 
             if (effectiveDir is null)
             {

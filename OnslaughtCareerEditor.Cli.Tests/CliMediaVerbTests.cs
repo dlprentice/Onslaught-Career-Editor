@@ -417,6 +417,77 @@ namespace OnslaughtCareerEditor.Cli.Tests
             Assert.Equal(first.StdErr, second.StdErr);
         }
 
+        /// <summary>
+        /// The binding no-write contract: a media list that answers from default resolution must
+        /// leave the app config root exactly as it found it. <see cref="AppConfig.Load"/> creates
+        /// the config directory as a side effect of reading; the verb resolves through
+        /// <see cref="AppConfig.LoadReadOnly"/> instead, so even a fresh nonexistent root stays
+        /// nonexistent when the command ends in the usage verdict.
+        /// </summary>
+        [Fact]
+        public void MissingGameDirDefaultResolutionLeavesAFreshConfigRootNonexistent()
+        {
+            string? previousRoot = Environment.GetEnvironmentVariable("ONSLAUGHT_APP_CONFIG_ROOT");
+            try
+            {
+                string root = Path.Combine(
+                    Path.GetTempPath(), "onslaught-cli-media-configroot", Guid.NewGuid().ToString("N"));
+                Environment.SetEnvironmentVariable("ONSLAUGHT_APP_CONFIG_ROOT", root);
+
+                using (var scratch = new CliScratch())
+                using (new DetectionPin(scratch.Path_("nowhere")))
+                {
+                    CliRun run = Cli.Run("media", "list", "--json");
+
+                    Assert.Equal(1, run.ExitCode);
+                    Assert.Empty(run.StdErr);
+
+                    JsonElement envelope = run.Envelope();
+                    Assert.False(envelope.GetProperty("ok").GetBoolean());
+                    Assert.Equal("usage", envelope.GetProperty("error").GetProperty("kind").GetString());
+                }
+
+                Assert.False(Directory.Exists(root));
+                Assert.False(Directory.Exists(Path.Combine(root, "OnslaughtCareerEditor")));
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable("ONSLAUGHT_APP_CONFIG_ROOT", previousRoot);
+            }
+        }
+
+        /// <summary>
+        /// Control for the regression above: an explicit --game-dir never touches configuration at
+        /// all. A second fresh config root stays nonexistent while the same command succeeds.
+        /// </summary>
+        [Fact]
+        public void ExplicitGameDirControlLeavesASecondFreshConfigRootNonexistent()
+        {
+            string? previousRoot = Environment.GetEnvironmentVariable("ONSLAUGHT_APP_CONFIG_ROOT");
+            try
+            {
+                string root = Path.Combine(
+                    Path.GetTempPath(), "onslaught-cli-media-control-root", Guid.NewGuid().ToString("N"));
+                Environment.SetEnvironmentVariable("ONSLAUGHT_APP_CONFIG_ROOT", root);
+
+                using var tree = NewPopulatedTree();
+                Dictionary<string, (long Length, long LastWriteTicks)> before = tree.Snapshot();
+
+                CliRun run = Cli.Run("media", "list", "--game-dir", tree.Root, "--json");
+
+                Assert.Equal(0, run.ExitCode);
+                Assert.Empty(run.StdErr);
+                Assert.True(run.Envelope().GetProperty("ok").GetBoolean());
+
+                Assert.False(Directory.Exists(root));
+                Assert.Equal(before, tree.Snapshot());
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable("ONSLAUGHT_APP_CONFIG_ROOT", previousRoot);
+            }
+        }
+
         private static Dictionary<string, JsonElement> ByName(JsonElement array)
         {
             var byName = new Dictionary<string, JsonElement>(StringComparer.Ordinal);

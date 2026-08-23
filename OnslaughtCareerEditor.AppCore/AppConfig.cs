@@ -153,35 +153,69 @@ namespace OnslaughtCareerEditor.AppCore
         /// </summary>
         public static AppConfig Load()
         {
-            string configPath = GetConfigPath();
+            string configPath = GetConfigPath(); // Also ensures the config directory exists
             string legacyPath = GetLegacyConfigPath();
+            string? loadPath = FindExistingConfigPath(configPath, legacyPath);
 
-            string? loadPath = null;
+            if (loadPath != null && TryReadConfig(loadPath, out AppConfig? config))
+            {
+                // Legacy layouts are carried forward exactly once: reading a pre-parity config
+                // writes the current layout so every later read takes the fast path.
+                if (loadPath == legacyPath && !File.Exists(configPath))
+                {
+                    config.Save();
+                }
+                return config;
+            }
+            return new AppConfig();
+        }
+
+        /// <summary>
+        /// Load configuration from disk without side effects: no directory is created, and a
+        /// legacy config is read as-is rather than migrated to the current layout. Defaults are
+        /// returned when no config exists. Read-only commands resolve through this so that
+        /// answering a question never writes configuration state as a side effect.
+        /// </summary>
+        public static AppConfig LoadReadOnly()
+        {
+            string? loadPath = FindExistingConfigPath(
+                Path.Combine(GetConfigDirPath(), ConfigFileName),
+                GetLegacyConfigPath());
+
+            if (loadPath != null && TryReadConfig(loadPath, out AppConfig? config))
+            {
+                return config;
+            }
+            return new AppConfig();
+        }
+
+        /// <summary>
+        /// Which file Load's selection rule reads: the current config when it exists, else the
+        /// legacy config when that exists, else nothing. Pure filesystem inspection.
+        /// </summary>
+        private static string? FindExistingConfigPath(string configPath, string legacyPath)
+        {
             if (File.Exists(configPath))
             {
-                loadPath = configPath;
+                return configPath;
             }
-            else if (File.Exists(legacyPath))
-            {
-                loadPath = legacyPath;
-            }
+            return File.Exists(legacyPath) ? legacyPath : null;
+        }
 
+        private static bool TryReadConfig(string? loadPath, [System.Diagnostics.CodeAnalysis.MaybeNullWhen(false)] out AppConfig config)
+        {
             if (loadPath != null)
             {
                 try
                 {
                     string json = File.ReadAllText(loadPath);
-                    var config = JsonSerializer.Deserialize<AppConfig>(json);
-                    if (config != null)
+                    AppConfig? loaded = JsonSerializer.Deserialize<AppConfig>(json);
+                    if (loaded != null)
                     {
-                        config.NormalizeForUse();
-                        if (loadPath == legacyPath && !File.Exists(configPath))
-                        {
-                            config.Save();
-                        }
-                        return config;
+                        loaded.NormalizeForUse();
+                        config = loaded;
+                        return true;
                     }
-                    return new AppConfig();
                 }
                 catch (JsonException ex)
                 {
@@ -192,7 +226,9 @@ namespace OnslaughtCareerEditor.AppCore
                     Debug.WriteLine($"Config load failed (IO error): {ex.Message}");
                 }
             }
-            return new AppConfig();
+
+            config = new AppConfig();
+            return false;
         }
 
         /// <summary>
