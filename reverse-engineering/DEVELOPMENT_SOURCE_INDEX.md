@@ -1,7 +1,7 @@
 # Development source index
 
 Status: active, prioritized source/provenance index
-Last updated: 2026-08-11
+Last updated: 2026-08-22
 Summary: first-party and technical-development evidence for Battle Engine
 Aquila, separated from later reporting, inferred binary behavior, and fictional
 in-universe lore. Original archive material remains read-only under
@@ -85,6 +85,13 @@ and the 28-row
 hashes, inner-image hashes, filesystem identity, and executable identity remain
 separate. Same game/region names are not sufficient duplicate evidence.
 
+The successor
+[`platform content crosswalk`](PLATFORM_CONTENT_CROSSWALK.md) reads all six
+language members in all three Xbox regions and compares them to pristine PC by
+text ID, text, audio identifier, mission-title shape, and character-profile
+field. It also closes the strict 66-world-ID presence set while retaining the
+known regional AYA byte differences.
+
 ## Priority 3 — first-party public material
 
 ### Official Lost Toys / BEA website archive
@@ -117,6 +124,9 @@ Root: `G:\BEA ROMS\Lore\04_Manuals_and_Docs`
 Use for credits/roles, release/legal data, controls, mission/vehicle/weapon and
 character terminology, and regional feature differences. Manual prose proves
 documented player-facing behavior, not the internal implementation by itself.
+The platform content crosswalk now checks the PC English and PS2 USA setting
+sections against their exact source files and corrects one OCR-only `Rensor`
+misread by direct page inspection: the printed name is **Kensor**.
 
 ### Official and press visual material
 

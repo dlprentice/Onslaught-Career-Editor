@@ -3,10 +3,12 @@
 - **Status:** live preservation record — **in-universe fiction**. The detailed
   prose below was originally transcribed from Lost Toys' archived profiles page;
   it has now been checked against the retail English string table and corrected
-  where the two texts differ. It is not executable-behaviour evidence.
-- **Last updated:** 2026-08-13
+  where the two texts differ. The complete 96-field English shelf is also exact
+  between PC and Xbox. It is not executable-behaviour evidence.
+- **Last updated:** 2026-08-22
 - **Summary:** all eight retail character-profile entries; four retain detailed
-  prose and four are recorded as a bounded stat census.
+  prose and four are recorded as a bounded stat census, with the PC/Xbox
+  platform boundary measured.
 
 ## Evidence boundary
 
@@ -18,6 +20,14 @@ article covered only the four profiles on Lost Toys' archived marketing page;
 the retail table additionally contains Jason Lorenzo, Tara Fox, Billy Casbah
 and Archanus Surt. Long retail strings are not newly copied here: the additional
 four are represented by their short factual stat rows only.
+
+The Xbox Europe, Korea, and USA English tables are byte-identical, and all 96
+named profile fields match the PC English table text-for-text. American has two
+profile-field variants and German one; French, Italian, and Spanish match their
+PC counterparts across this shelf. See
+[The Same War on Different Platforms](platform-content-variants.md). This proves
+the English profiles are not a PC-port addition; it does not prove normal
+unlock or display reachability.
 
 The `media/portraits/*.gif` paths cited per detailed profile are ignored,
 maintainer-local archive paths and are absent from a clone.
