@@ -383,13 +383,7 @@ public sealed partial class Level100ActorMechanics
         Level100ActorPoseSnapshot pose = _actors.GetPose(state.ActorId);
         if (!TryGetPlaneGuideTarget(state, out SimVector2 guideTarget))
         {
-            _actors.SetPose(
-                state.ActorId,
-                pose with
-                {
-                    LinearVelocityMillimetersPerTick = SimVector3.Zero,
-                    AngularVelocityMicroRadiansPerTick = SimVector3.Zero,
-                });
+            _actors.StopMotion(state.ActorId);
             return;
         }
 
@@ -433,7 +427,7 @@ public sealed partial class Level100ActorMechanics
             checked(pose.PositionMillimeters.X + velocity.X),
             checked(pose.PositionMillimeters.Y + velocity.Y),
             checked(pose.PositionMillimeters.Z + velocity.Z));
-        _actors.SetPose(
+        _actors.AdvancePose(
             state.ActorId,
             pose with
             {
@@ -705,7 +699,7 @@ public sealed partial class Level100ActorMechanics
                 new SimVector2(nextX, nextZ)) +
             motion.CoreGroundOriginOffsetMillimeters!.Value);
         var nextPosition = new SimVector3(nextX, nextY, nextZ);
-        _actors.SetPose(
+        _actors.AdvancePose(
             state.ActorId,
             guidedPose with
             {
@@ -946,17 +940,7 @@ public sealed partial class Level100ActorMechanics
 
     private void ZeroActorVelocity(Level100ActorId actorId)
     {
-        Level100ActorPoseSnapshot pose =
-            _actors.GetPose(actorId);
-        _actors.SetPose(
-            actorId,
-            pose with
-            {
-                LinearVelocityMillimetersPerTick =
-                    SimVector3.Zero,
-                AngularVelocityMicroRadiansPerTick =
-                    SimVector3.Zero,
-            });
+        _actors.StopMotion(actorId);
     }
 
     private static void SetStoppedIntent(ActorState state)

@@ -1995,9 +1995,17 @@ public sealed class InteractiveSessionTests
         // state. The deterministic evidence for this repin is therefore: the
         // canonical stateHash is identical across both native runs and equal to
         // the in-process tape, and git bisect names one behavioural cause.
+        // MOVED 2026-08-23 by StateHasher v42. The reusable Thing/Actor base
+        // state now serializes each actor's source flags, current/old pose,
+        // velocity, full lineage mask, and exact contact-time bits. The
+        // firing-range, target, mode, waypoint, and objective assertions above
+        // are unchanged; focused Core tests separately prove that changing only
+        // a retained contact timestamp moves the hash and that identical runs
+        // repeat exactly. No native Godot run is claimed for this Core-only
+        // structural repin.
         string finalStateHash = StateHasher.ComputeHex(session.CurrentSnapshot);
         Assert.Equal(
-            "1ee58e1d881486fe174ed476d993853daf1292e5738c6417a57210ea07735d19",
+            "78925d85570ed1e0930728292b585042fc3b164ebdf978233efa3f0e5d625123",
             finalStateHash);
     }
 

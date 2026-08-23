@@ -8,6 +8,121 @@ namespace OnslaughtRebuild.Core.Tests;
 public sealed class Level100ActorRegistryTests
 {
     [Fact]
+    public void ReleasedRegistry_ConsumesBaseStateAndPreservesLeafMaskCompatibility()
+    {
+        Level100ActorDefinitionSet definitions = Level100TestActorDefinitions.Create();
+        var registry = new Level100ActorRegistry(definitions);
+        Level100ActorId player = registry.GetThingRef("Player 1")!.Value;
+        Level100ActorSnapshot legacy = registry.GetActor(player);
+
+        ThingActorBaseStateSnapshot initial = registry.GetBaseState(player);
+        Assert.Equal(
+            Level100ReleasedThingTypeMasks.BattleEngine,
+            legacy.ThingTypeMask);
+        Assert.Equal(0x8000000Bu, initial.ThingTypeMask);
+        Assert.Equal(legacy.Pose.PositionMillimeters, initial.CurrentPose.PositionMillimeters);
+        Assert.Equal(initial.CurrentPose, initial.OldPose);
+        Assert.Equal(legacy.Pose.LinearVelocityMillimetersPerTick, initial.Velocity);
+
+        registry.MakeInvisible(player);
+        registry.DeclareOnGround(player, BitConverter.SingleToInt32Bits(12.5f));
+        Assert.True(registry.ReportStartedDying(player));
+
+        ThingActorBaseStateSnapshot changed = registry.GetBaseState(player);
+        Assert.True(changed.IsInvisible);
+        Assert.True(changed.IsDying);
+        Assert.True(changed.IsShuttingDown);
+        Assert.Equal(
+            BitConverter.SingleToInt32Bits(12.5f),
+            changed.LastTimeOnGroundFloatBits);
+        Assert.Equal(
+            Level100ActorLifecycle.StartedDying,
+            registry.GetActor(player).Lifecycle);
+
+        Level100ActorRegistrySnapshot snapshot = registry.Snapshot;
+        var restored = new Level100ActorRegistry(definitions, snapshot);
+        Assert.Equal(changed, restored.GetBaseState(player));
+        Assert.Equal(snapshot.BaseStates, restored.Snapshot.BaseStates);
+
+        WorldSnapshot world = new Simulation(0x100u, definitions).Snapshot;
+        Assert.Equal(
+            StateHasher.ComputeHex(world with { Level100Actors = snapshot }),
+            StateHasher.ComputeHex(world with { Level100Actors = restored.Snapshot }));
+    }
+
+    [Fact]
+    public void CanonicalHash_RetainsThingActorBaseStateAndRepeatsExactly()
+    {
+        Level100ActorDefinitionSet definitions = Level100TestActorDefinitions.Create();
+        WorldSnapshot first = new Simulation(0xBACEu, definitions).Snapshot;
+        WorldSnapshot second = new Simulation(0xBACEu, definitions).Snapshot;
+        string canonical = StateHasher.ComputeHex(first);
+
+        Assert.Equal(canonical, StateHasher.ComputeHex(second));
+
+        Level100ActorBaseStateSnapshot firstActor = first.Level100Actors.BaseStates[0];
+        ThingActorBaseStateSnapshot state = firstActor.State;
+        ThingActorBaseStateSnapshot[] variants =
+        [
+            state with { Flags = ThingActorFlags.Invisible },
+            state with
+            {
+                CurrentPose = state.CurrentPose with
+                {
+                    PositionMillimeters = state.CurrentPose.PositionMillimeters with
+                    {
+                        X = state.CurrentPose.PositionMillimeters.X + 1,
+                    },
+                },
+            },
+            state with
+            {
+                OldPose = state.OldPose with
+                {
+                    PositionMillimeters = state.OldPose.PositionMillimeters with
+                    {
+                        Z = state.OldPose.PositionMillimeters.Z + 1,
+                    },
+                },
+            },
+            state with { Velocity = new SimVector3(1, 2, 3) },
+            state with { AngularVelocity = new SimVector3(4, 5, 6) },
+            state with
+            {
+                ThingTypeMask = state.ThingTypeMask ^
+                    Level100ReleasedThingTypeMasks.Ammunition,
+            },
+            state with
+            {
+                LastTimeOnGroundFloatBits = BitConverter.SingleToInt32Bits(1.0f),
+            },
+            state with
+            {
+                LastTimeInWaterFloatBits = BitConverter.SingleToInt32Bits(2.0f),
+            },
+            state with
+            {
+                LastTimeOnObjectFloatBits = BitConverter.SingleToInt32Bits(3.0f),
+            },
+        ];
+
+        Assert.All(variants, variant =>
+        {
+            Level100ActorRegistrySnapshot changedRegistry = first.Level100Actors with
+            {
+                BaseStates = first.Level100Actors.BaseStates
+                    .Select(item => item.ActorId == firstActor.ActorId
+                        ? item with { State = variant }
+                        : item)
+                    .ToArray(),
+            };
+            Assert.NotEqual(
+                canonical,
+                StateHasher.ComputeHex(first with { Level100Actors = changedRegistry }));
+        });
+    }
+
+    [Fact]
     public void ReleasedRegistry_ResolvesStableActorsAndRoundTripsAllMutableState()
     {
         Level100ActorDefinitionSet definitions = Level100TestActorDefinitions.Create();

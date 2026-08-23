@@ -818,17 +818,33 @@ public sealed record Level100ActorSnapshot(
     Level100MissionJetModeState? TriggerEntryJetModeState,
     bool TriggerEventDispatched);
 
+public sealed record Level100ActorBaseStateSnapshot(
+    Level100ActorId ActorId,
+    ThingActorBaseStateSnapshot State);
+
 public sealed record Level100ActorRegistrySnapshot(
     string DefinitionSetIdentitySha256,
     int NextActorId,
     long NextFactSequence,
     IReadOnlyList<Level100ActorSnapshot> Actors,
-    IReadOnlyList<Level100ActorFactSnapshot> PendingFacts);
+    IReadOnlyList<Level100ActorFactSnapshot> PendingFacts,
+    IReadOnlyList<Level100ActorBaseStateSnapshot> BaseStates);
 
 /// <summary>
 /// Native Level 100 object identity and lifecycle owner. It contains no
 /// movement, AI, collision, damage, or mission progression policy.
 /// </summary>
+/// <remarks>
+/// The source-shaped <see cref="ThingActorBaseState"/> is canonical mutable
+/// base state. Three Level-100 compatibility projections are intentional:
+/// <see cref="Level100ActorSnapshot.ThingTypeMask"/> remains the pre-existing
+/// leaf-bit contract while the base snapshot carries the full actor lineage;
+/// public <see cref="SetPose"/> is a setup/teleport reset that collapses old and
+/// current pose while mechanics uses <see cref="AdvancePose"/>; and mechanics
+/// stop clears angular velocity after the source CActor linear-velocity stop.
+/// Existing Active/lifecycle behavior is retained rather than replaced by a
+/// second gameplay framework.
+/// </remarks>
 public sealed class Level100ActorRegistry
 {
     private sealed class Actor
@@ -839,7 +855,6 @@ public sealed class Level100ActorRegistry
         internal string? DefinitionName { get; init; }
         internal string? ScriptName { get; set; }
         internal string? MeshBinding { get; init; }
-        internal uint ThingTypeMask { get; init; }
         internal Level100ActorId? SpawnOwnerId { get; init; }
         internal string? SpawnerName { get; init; }
         internal bool IsStatic { get; init; }
@@ -848,7 +863,7 @@ public sealed class Level100ActorRegistry
         internal int FlagWord { get; set; }
         internal Level100ActorLifecycle Lifecycle { get; set; }
         internal int Health { get; set; }
-        internal required Level100ActorPoseSnapshot Pose { get; set; }
+        internal required ThingActorBaseState BaseState { get; init; }
         internal Level100MissionTargetGroup TargetGroup { get; init; }
         internal int TargetOrdinal { get; init; }
         internal Level100MissionTrigger? Trigger { get; init; }
@@ -898,24 +913,39 @@ public sealed class Level100ActorRegistry
         _nextFactSequence = snapshot.NextFactSequence;
         ArgumentNullException.ThrowIfNull(snapshot.Actors);
         ArgumentNullException.ThrowIfNull(snapshot.PendingFacts);
+        ArgumentNullException.ThrowIfNull(snapshot.BaseStates);
         if (snapshot.Actors.Any(actor => actor is null) ||
-            snapshot.PendingFacts.Any(fact => fact is null))
+            snapshot.PendingFacts.Any(fact => fact is null) ||
+            snapshot.BaseStates.Any(item => item is null || item.State is null))
         {
             throw new ArgumentException(
                 "Actor registry snapshot contains a null record.",
                 nameof(snapshot));
         }
 
+        Dictionary<int, ThingActorBaseStateSnapshot> baseStates =
+            snapshot.BaseStates.ToDictionary(
+                item => item.ActorId.Value,
+                item => item.State);
+        if (baseStates.Count != snapshot.BaseStates.Count)
+        {
+            throw new ArgumentException(
+                "Actor registry snapshot has duplicate Thing/Actor base state.",
+                nameof(snapshot));
+        }
+
         foreach (Level100ActorSnapshot actor in snapshot.Actors.OrderBy(item => item.ActorId.Value))
         {
             if (actor.ActorId.Value <= 0 || actor.ActorId.Value >= _nextActorId ||
-                !_actors.TryAdd(actor.ActorId.Value, RestoreActor(actor)))
+                !baseStates.TryGetValue(actor.ActorId.Value, out ThingActorBaseStateSnapshot? baseState) ||
+                !_actors.TryAdd(actor.ActorId.Value, RestoreActor(actor, baseState)))
             {
                 throw new ArgumentException("Actor registry snapshot has invalid identities.", nameof(snapshot));
             }
         }
 
         if (_actors.Count != _nextActorId - 1 ||
+            baseStates.Count != _actors.Count ||
             definitions.Actors.Any(definition =>
                 _actors.Values.Count(actor =>
                     !actor.SpawnOwnerId.HasValue &&
@@ -930,7 +960,10 @@ public sealed class Level100ActorRegistry
 
         foreach (Actor actor in _actors.Values)
         {
-            ValidateRestoredActor(actor, snapshot);
+            ValidateRestoredActor(
+                actor,
+                snapshot.Actors.Single(item => item.ActorId == actor.ActorId),
+                snapshot);
         }
 
         if (_actors.Values
@@ -955,7 +988,8 @@ public sealed class Level100ActorRegistry
                 (item.Kind != Level100ActorFactKind.Hit &&
                     (item.OtherActorId.HasValue || item.OtherThingTypeMask != 0)) ||
                 (item.Kind == Level100ActorFactKind.Hit && item.OtherActorId.HasValue &&
-                    _actors[item.OtherActorId.Value.Value].ThingTypeMask != item.OtherThingTypeMask)) ||
+                    SpecificThingTypeMask(_actors[item.OtherActorId.Value.Value]) !=
+                        item.OtherThingTypeMask)) ||
             _pendingFacts.Select(item => item.Sequence).Distinct().Count() != _pendingFacts.Count)
         {
             throw new ArgumentException("Actor registry snapshot has invalid fact sequencing.", nameof(snapshot));
@@ -967,7 +1001,12 @@ public sealed class Level100ActorRegistry
         _nextActorId,
         _nextFactSequence,
         Array.AsReadOnly(_actors.Values.Select(SnapshotActor).ToArray()),
-        Array.AsReadOnly(_pendingFacts.OrderBy(item => item.Sequence).ToArray()));
+        Array.AsReadOnly(_pendingFacts.OrderBy(item => item.Sequence).ToArray()),
+        Array.AsReadOnly(_actors.Values
+            .Select(actor => new Level100ActorBaseStateSnapshot(
+                actor.ActorId,
+                actor.BaseState.Snapshot))
+            .ToArray()));
 
     public Level100ActorId? GetThingRef(string name)
     {
@@ -981,8 +1020,11 @@ public sealed class Level100ActorRegistry
     public Level100ActorSnapshot GetActor(Level100ActorId actorId) =>
         SnapshotActor(Require(actorId));
 
+    public ThingActorBaseStateSnapshot GetBaseState(Level100ActorId actorId) =>
+        Require(actorId).BaseState.Snapshot;
+
     internal Level100ActorPoseSnapshot GetPose(Level100ActorId actorId) =>
-        Require(actorId).Pose;
+        ToLevel100Pose(Require(actorId).BaseState.Snapshot);
 
     internal int GetHealth(Level100ActorId actorId) => Require(actorId).Health;
 
@@ -991,7 +1033,8 @@ public sealed class Level100ActorRegistry
     internal Level100ActorLifecycle GetLifecycle(Level100ActorId actorId) =>
         Require(actorId).Lifecycle;
 
-    public uint GetThingTypeMask(Level100ActorId actorId) => Require(actorId).ThingTypeMask;
+    public uint GetThingTypeMask(Level100ActorId actorId) =>
+        SpecificThingTypeMask(Require(actorId));
 
     /// <summary>
     /// Isolated <see cref="Level100ActorSnapshot.IsObjective"/> names
@@ -1027,6 +1070,8 @@ public sealed class Level100ActorRegistry
 
         int ordinal = AllocateMissionOrdinal(definition);
         Level100ActorId actorId = AllocateId();
+        Level100ActorPoseSnapshot pose =
+            SeatOnGround(definitionName, definition.InitialPose);
         _actors.Add(actorId.Value, new Actor
         {
             ActorId = actorId,
@@ -1035,14 +1080,13 @@ public sealed class Level100ActorRegistry
             DefinitionName = definitionName,
             ScriptName = scriptName,
             MeshBinding = definition.MeshBinding,
-            ThingTypeMask = definition.ThingTypeMask,
             SpawnOwnerId = ownerId,
             SpawnerName = spawnerName,
             IsStatic = false,
             Active = definition.Active,
             Lifecycle = Level100ActorLifecycle.Alive,
             Health = ReleasedInitialHealth(definitionName, definition.InitialHealth),
-            Pose = SeatOnGround(definitionName, definition.InitialPose),
+            BaseState = CreateBaseState(pose, definition.ThingTypeMask),
             TargetGroup = definition.TargetGroup,
             TargetOrdinal = ordinal,
         });
@@ -1097,6 +1141,10 @@ public sealed class Level100ActorRegistry
         Require(actorId).ScriptName = scriptName;
     }
 
+    /// <summary>
+    /// Level-100 setup/test relocation. This deliberately resets old and
+    /// current pose together; movement ticks use <see cref="AdvancePose"/>.
+    /// </summary>
     public void SetPose(Level100ActorId actorId, Level100ActorPoseSnapshot pose)
     {
         ArgumentNullException.ThrowIfNull(pose);
@@ -1105,8 +1153,76 @@ public sealed class Level100ActorRegistry
             throw new ArgumentException("Actor pose basis must contain finite values.", nameof(pose));
         }
 
-        Require(actorId).Pose = pose;
+        Actor actor = Require(actorId);
+        actor.BaseState.ResetPose(ToBasePose(pose));
+        actor.BaseState.SetVelocity(pose.LinearVelocityMillimetersPerTick);
+        actor.BaseState.SetAngularVelocity(pose.AngularVelocityMicroRadiansPerTick);
     }
+
+    /// <summary>
+    /// Movement-owned pose update. Unlike public <see cref="SetPose"/>, this
+    /// preserves the previous current pose as CActor's old pose.
+    /// </summary>
+    internal void AdvancePose(Level100ActorId actorId, Level100ActorPoseSnapshot pose)
+    {
+        ArgumentNullException.ThrowIfNull(pose);
+        if (!HasFinitePose(pose))
+        {
+            throw new ArgumentException("Actor pose basis must contain finite values.", nameof(pose));
+        }
+
+        Actor actor = Require(actorId);
+        actor.BaseState.AdvancePose(ToBasePose(pose));
+        actor.BaseState.SetVelocity(pose.LinearVelocityMillimetersPerTick);
+        actor.BaseState.SetAngularVelocity(pose.AngularVelocityMicroRadiansPerTick);
+    }
+
+    /// <summary>
+    /// Same-tick synchronization after <see cref="AdvancePose"/> has already
+    /// captured old pose, or a velocity/orientation-only update.
+    /// </summary>
+    internal void UpdateCurrentPose(
+        Level100ActorId actorId,
+        Level100ActorPoseSnapshot pose)
+    {
+        ArgumentNullException.ThrowIfNull(pose);
+        if (!HasFinitePose(pose))
+        {
+            throw new ArgumentException("Actor pose basis must contain finite values.", nameof(pose));
+        }
+
+        Actor actor = Require(actorId);
+        actor.BaseState.UpdateCurrentPose(ToBasePose(pose));
+        actor.BaseState.SetVelocity(pose.LinearVelocityMillimetersPerTick);
+        actor.BaseState.SetAngularVelocity(pose.AngularVelocityMicroRadiansPerTick);
+    }
+
+    /// <summary>
+    /// Level-100 compatibility adapter. Source CActor::Stop zeros only linear
+    /// velocity; existing mechanics has always stopped both linear and angular
+    /// reported velocity, so it calls the source law and then clears angular.
+    /// </summary>
+    internal void StopMotion(Level100ActorId actorId)
+    {
+        Actor actor = Require(actorId);
+        actor.BaseState.Stop();
+        actor.BaseState.SetAngularVelocity(SimVector3.Zero);
+    }
+
+    public void MakeVisible(Level100ActorId actorId) =>
+        Require(actorId).BaseState.MakeVisible();
+
+    public void MakeInvisible(Level100ActorId actorId) =>
+        Require(actorId).BaseState.MakeInvisible();
+
+    public void DeclareOnGround(Level100ActorId actorId, int eventTimeFloatBits) =>
+        Require(actorId).BaseState.DeclareOnGround(eventTimeFloatBits);
+
+    public void DeclareInWater(Level100ActorId actorId, int eventTimeFloatBits) =>
+        Require(actorId).BaseState.DeclareInWater(eventTimeFloatBits);
+
+    public void DeclareOnObject(Level100ActorId actorId, int eventTimeFloatBits) =>
+        Require(actorId).BaseState.DeclareOnObject(eventTimeFloatBits);
 
     public void SetHealth(Level100ActorId actorId, int health)
     {
@@ -1131,7 +1247,7 @@ public sealed class Level100ActorRegistry
 
         if (otherActorId.HasValue)
         {
-            uint actorMask = Require(otherActorId.Value).ThingTypeMask;
+            uint actorMask = SpecificThingTypeMask(Require(otherActorId.Value));
             if (otherThingTypeMask != 0 && otherThingTypeMask != actorMask)
             {
                 throw new ArgumentException("A hit source actor and type mask disagree.");
@@ -1150,6 +1266,11 @@ public sealed class Level100ActorRegistry
             return false;
         }
 
+        if (!actor.BaseState.StartDieProcess())
+        {
+            throw new InvalidOperationException(
+                "Level 100 lifecycle diverged from its Thing/Actor base state.");
+        }
         actor.Lifecycle = Level100ActorLifecycle.StartedDying;
         EnqueueFact(Level100ActorFactKind.StartedDying, actorId, null, 0);
         return true;
@@ -1164,6 +1285,7 @@ public sealed class Level100ActorRegistry
         }
 
         actor.Lifecycle = Level100ActorLifecycle.Destroyed;
+        actor.BaseState.DeclareShutdown();
         actor.Active = false;
         actor.IsObjective = false;
         EnqueueFact(Level100ActorFactKind.Died, actorId, null, 0);
@@ -1398,23 +1520,43 @@ public sealed class Level100ActorRegistry
             DefinitionName = definition.DefinitionName,
             ScriptName = definition.ScriptName,
             MeshBinding = definition.MeshBinding,
-            ThingTypeMask = definition.ThingTypeMask,
             IsStatic = definition.IsStatic,
             Active = definition.Active,
             Lifecycle = Level100ActorLifecycle.Alive,
             Health = definition.InitialHealth,
-            Pose = pose,
+            BaseState = CreateBaseState(pose, definition.ThingTypeMask),
             TargetGroup = definition.TargetGroup,
             TargetOrdinal = definition.TargetOrdinal,
             Trigger = definition.Trigger,
         };
 
-    private void ValidateRestoredActor(Actor actor, Level100ActorRegistrySnapshot snapshot)
+    private void ValidateRestoredActor(
+        Actor actor,
+        Level100ActorSnapshot source,
+        Level100ActorRegistrySnapshot snapshot)
     {
-        if (actor.Pose is null ||
-            !HasFinitePose(actor.Pose) ||
+        if (source.Pose is null ||
+            !HasFinitePose(source.Pose) ||
             actor.Health < 0 ||
             !Enum.IsDefined(actor.Lifecycle) ||
+            source.Pose.PositionMillimeters !=
+                actor.BaseState.Snapshot.CurrentPose.PositionMillimeters ||
+            source.Pose.BasisFloatBits !=
+                actor.BaseState.Snapshot.CurrentPose.BasisFloatBits ||
+            source.Pose.LinearVelocityMillimetersPerTick !=
+                actor.BaseState.Snapshot.Velocity ||
+            source.Pose.AngularVelocityMicroRadiansPerTick !=
+                actor.BaseState.Snapshot.AngularVelocity ||
+            actor.BaseState.Snapshot.ThingTypeMask !=
+                (source.ThingTypeMask | ThingActorTypeMasks.ActorLineage) ||
+            (actor.Lifecycle == Level100ActorLifecycle.Alive &&
+                (actor.BaseState.Snapshot.IsDying ||
+                 actor.BaseState.Snapshot.IsShuttingDown)) ||
+            (actor.Lifecycle == Level100ActorLifecycle.StartedDying &&
+                (!actor.BaseState.Snapshot.IsDying ||
+                 !actor.BaseState.Snapshot.IsShuttingDown)) ||
+            (actor.Lifecycle == Level100ActorLifecycle.Destroyed &&
+                !actor.BaseState.Snapshot.IsShuttingDown) ||
             (actor.Lifecycle == Level100ActorLifecycle.Destroyed &&
                 (actor.Active || actor.IsObjective)) ||
             !Enum.IsDefined(actor.TargetGroup) ||
@@ -1453,7 +1595,7 @@ public sealed class Level100ActorRegistry
                 !StringComparer.Ordinal.Equals(actor.ScriptName, definition.ScriptName) ||
                 !StringComparer.Ordinal.Equals(actor.SpawnerName, definition.SpawnerName) ||
                 !StringComparer.Ordinal.Equals(actor.MeshBinding, definition.MeshBinding) ||
-                actor.ThingTypeMask != definition.ThingTypeMask ||
+                source.ThingTypeMask != definition.ThingTypeMask ||
                 actor.IsStatic ||
                 actor.TargetGroup != definition.TargetGroup ||
                 (definition.TargetGroup == Level100MissionTargetGroup.None &&
@@ -1478,7 +1620,7 @@ public sealed class Level100ActorRegistry
             !StringComparer.Ordinal.Equals(actor.Name, actorDefinition.Name) ||
             !StringComparer.Ordinal.Equals(actor.DefinitionName, actorDefinition.DefinitionName) ||
             !StringComparer.Ordinal.Equals(actor.MeshBinding, actorDefinition.MeshBinding) ||
-            actor.ThingTypeMask != actorDefinition.ThingTypeMask ||
+            source.ThingTypeMask != actorDefinition.ThingTypeMask ||
             actor.IsStatic != actorDefinition.IsStatic ||
             actor.TargetGroup != actorDefinition.TargetGroup ||
             actor.TargetOrdinal != actorDefinition.TargetOrdinal ||
@@ -1490,7 +1632,9 @@ public sealed class Level100ActorRegistry
         }
     }
 
-    private static Actor RestoreActor(Level100ActorSnapshot actor) => new()
+    private static Actor RestoreActor(
+        Level100ActorSnapshot actor,
+        ThingActorBaseStateSnapshot baseState) => new()
     {
         ActorId = actor.ActorId,
         DefinitionIdentity = actor.DefinitionIdentity,
@@ -1498,7 +1642,6 @@ public sealed class Level100ActorRegistry
         DefinitionName = actor.DefinitionName,
         ScriptName = actor.ScriptName,
         MeshBinding = actor.MeshBinding,
-        ThingTypeMask = actor.ThingTypeMask,
         SpawnOwnerId = actor.SpawnOwnerId,
         SpawnerName = actor.SpawnerName,
         IsStatic = actor.IsStatic,
@@ -1507,7 +1650,7 @@ public sealed class Level100ActorRegistry
         FlagWord = actor.IsObjective ? RetailSetObjective.MarkedBit : 0,
         Lifecycle = actor.Lifecycle,
         Health = actor.Health,
-        Pose = actor.Pose,
+        BaseState = new ThingActorBaseState(baseState),
         TargetGroup = actor.TargetGroup,
         TargetOrdinal = actor.TargetOrdinal,
         Trigger = actor.Trigger,
@@ -1523,7 +1666,7 @@ public sealed class Level100ActorRegistry
         actor.DefinitionName,
         actor.ScriptName,
         actor.MeshBinding,
-        actor.ThingTypeMask,
+        SpecificThingTypeMask(actor),
         actor.SpawnOwnerId,
         actor.SpawnerName,
         actor.IsStatic,
@@ -1531,11 +1674,35 @@ public sealed class Level100ActorRegistry
         actor.IsObjective,
         actor.Lifecycle,
         actor.Health,
-        actor.Pose,
+        ToLevel100Pose(actor.BaseState.Snapshot),
         actor.TargetGroup,
         actor.TargetOrdinal,
         actor.Trigger,
         actor.TriggerEntered,
         actor.TriggerEntryJetModeState,
         actor.TriggerEventDispatched);
+
+    private static ThingActorBaseState CreateBaseState(
+        Level100ActorPoseSnapshot pose,
+        uint specificTypeMask) => new(
+            ToBasePose(pose),
+            pose.LinearVelocityMillimetersPerTick,
+            pose.AngularVelocityMicroRadiansPerTick,
+            specificTypeMask);
+
+    private static ThingActorPoseSnapshot ToBasePose(
+        Level100ActorPoseSnapshot pose) => new(
+            pose.PositionMillimeters,
+            pose.BasisFloatBits);
+
+    private static Level100ActorPoseSnapshot ToLevel100Pose(
+        ThingActorBaseStateSnapshot state) => new(
+            state.CurrentPose.PositionMillimeters,
+            state.CurrentPose.BasisFloatBits,
+            state.Velocity,
+            state.AngularVelocity);
+
+    private static uint SpecificThingTypeMask(Actor actor) =>
+        actor.BaseState.Snapshot.ThingTypeMask &
+        Level100ReleasedThingTypeMasks.ProvenBits;
 }
