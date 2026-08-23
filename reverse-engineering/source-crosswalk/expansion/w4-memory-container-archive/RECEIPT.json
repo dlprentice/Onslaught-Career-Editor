@@ -10,7 +10,7 @@
     "result": "No separate W4 predecessor receipt root exists in INDEX-CATALOG; the hash-pinned tracked/local authorities listed under reuse_accounting were reused instead of opening a parallel corpus lane.",
     "searched": [
       "tracked owners by W4 subsystem and stable key",
-      "tracked owners by 0x004a13b0/0x004e5840/0x004e5850/0x004e58a0",
+      "tracked owners by the six populated analog VAs plus the eleven named/folded pointer-wrapper candidates",
       "INDEX-CATALOG-2026-08-17.md by subsystem, stable key, VA, artifact hash, and tool name"
     ],
     "storage_mutation": "NONE; no local-lab move/delete/quarantine/graveyard action was performed."
@@ -18,23 +18,24 @@
   "counts": {
     "definitions": 94,
     "input_readiness": {
-      "AMBIGUOUS_OVERLOAD_MACRO_NONFUNCTION": 21,
+      "AMBIGUOUS_OVERLOAD_MACRO_NONFUNCTION": 29,
       "EXTERNAL_PROOF_REQUIRED": 3,
-      "NAMED_RETAIL_ANALOG_PRECISE_TARGET": 1,
-      "SOURCE_ONLY_BOUNDED_NO_MATCH": 69
+      "NAMED_RETAIL_ANALOG_PRECISE_TARGET": 3,
+      "SOURCE_ONLY_BOUNDED_NO_MATCH": 59
     },
     "populated_va_collisions": 0,
-    "populated_vas": 4,
+    "populated_vas": 6,
     "retail_classifications": {
+      "CANDIDATE_UNRESOLVED": 11,
       "NOT_IN_RETAIL": 7,
-      "NO_MATCH_FOUND": 83,
-      "SOURCE_ANALOG": 4
+      "NO_MATCH_FOUND": 70,
+      "SOURCE_ANALOG": 6
     },
     "retail_delta_status": {
       "NOT_SELECTED_TARGET": 7,
-      "RETAIL_UNRESOLVED": 19,
-      "SOURCE_AGREES": 4,
-      "SOURCE_ONLY": 64
+      "RETAIL_UNRESOLVED": 27,
+      "SOURCE_AGREES": 6,
+      "SOURCE_ONLY": 54
     },
     "source_files": 11,
     "stable_key_duplicates": 0
@@ -63,21 +64,21 @@
     "Every row carries source algorithm, fields/constants, side effects, retail evidence/falsifier, and rebuild disposition.",
     "Every populated VA is unique within W4.",
     "Canonical crosswalk.tsv and REPORT.md are outside the owned root and unchanged by this generator.",
-    "SOURCE_ANALOG claims are bounded; NO_MATCH_FOUND never claims binary absence."
+    "SOURCE_ANALOG claims are bounded; CANDIDATE_UNRESOLVED rows keep VAs empty until template/source identity is unique; NO_MATCH_FOUND never claims binary absence."
   ],
   "outputs_sha256": {
     "REBUILD-DELTA.md": "236e44478ef7175b50dd7d4ca2c92d5090f570130dc30a0f09c77c0c2a4c089e",
-    "RETAIL-DELTA.tsv": "343bbee4b46a8f28e777f1ed4c011af0066851b75045479b46f8b9005447c3d2",
-    "SOURCE-CONTRACT.md": "94b76d9cb1b61bef193248a3205bec0e188634eb414acffb84915ed5b812ccc2",
-    "definitions.tsv": "b9a0288a4042ef58dea258de80b790d370bddee5f99da72ce37286cff1e3760f"
+    "RETAIL-DELTA.tsv": "afa3d47077c140f8b659f70bb0923233da31e333c577484b09c5c214d8fb094d",
+    "SOURCE-CONTRACT.md": "d30d6d5105bb51ad8cc36831d2f402fb4adceab464cdea54a10ae682fd824361",
+    "definitions.tsv": "132315189eb7897efc9708fbfea868f9c120d1389bdee786137d49db5e5350a7"
   },
   "owned_root": "reverse-engineering/source-crosswalk/expansion/w4-memory-container-archive",
   "reuse_accounting": {
     "artifacts": {
       "EXTENDED": 5,
       "NEW_MEASUREMENT": 0,
-      "REUSED": 12,
-      "basis": "Twelve hash-pinned predecessor authorities feed five W4 receipt artifacts (definitions, source contract, retail delta, rebuild delta, and receipt)."
+      "REUSED": 19,
+      "basis": "Nineteen hash-pinned predecessor authorities feed five W4 receipt artifacts (definitions, source contract, retail delta, rebuild delta, and receipt)."
     },
     "definitions": {
       "EXTENDED": 94,
@@ -137,6 +138,41 @@
         "sha256": "64233148bf680e63eee28484b7851ddf7b011f587bbc7b4bef97e63ae6d85b8c"
       },
       {
+        "path": "reverse-engineering/binary-analysis/ghidra-fullpass-findings/W007/adversarial/B07.md",
+        "role": "Independent pointer-set body/ABI confirmation for typed-wrapper candidate audit.",
+        "sha256": "5bdca84cb82ee2de0e57a0029dbb524c682dcb9cb6c163c629a599bb2b27603b"
+      },
+      {
+        "path": "reverse-engineering/binary-analysis/ghidra-fullpass-findings/W001/primary/A06.md",
+        "role": "Primary exact field/body review for CSPtrSet First and Next.",
+        "sha256": "0c11a77c9d078be61058c4aad356de6a9600be21314ff6f49378eaae7f1439d4"
+      },
+      {
+        "path": "reverse-engineering/binary-analysis/ghidra-fullpass-findings/W001/adversarial/B06.md",
+        "role": "Independent exact field/body confirmation for CSPtrSet First and Next.",
+        "sha256": "f6af1498b1f7e2d04279cd7ff58cf6c784e82e0398d879e8bfc7fe13db511bcd"
+      },
+      {
+        "path": "reverse-engineering/binary-analysis/ghidra-fullpass-findings/W002/primary/A11.md",
+        "role": "Primary proof that 0x0042f220 is a CSPtrSet Clear thunk to 0x004e5c60.",
+        "sha256": "f5e829da132323b7b4514a8d3ff993e99db2867defe07e22aa5206969ae90ba3"
+      },
+      {
+        "path": "reverse-engineering/binary-analysis/ghidra-fullpass-findings/W002/adversarial/B11.md",
+        "role": "Independent confirmation of the shared CSPtrSet Clear thunk.",
+        "sha256": "ad10bd96b35a3efd4f56e3d0c52fc610f34524c7d940f695e11ec2873b3ffedc"
+      },
+      {
+        "path": "reverse-engineering/binary-analysis/ghidra-fullpass-findings/W008/primary/A08.md",
+        "role": "Primary proof that 0x00505d00 is a thin generic CSPtrSet Init wrapper.",
+        "sha256": "f9b2737307369b686ecf2166acd981e3857b18598ad5fd7ea42e80320fd49410"
+      },
+      {
+        "path": "reverse-engineering/binary-analysis/ghidra-fullpass-findings/W008/adversarial/B08.md",
+        "role": "Independent confirmation of the shared 0x00505d00 constructor wrapper and broad fan-in.",
+        "sha256": "75c6cb6cb3dea3b504ec2c024a060e40231a4235ca491635d23b3b0bf9a50430"
+      },
+      {
         "path": "rebuild/OnslaughtRebuild.Core/RetailChunkReader.cs",
         "role": "Existing deterministic read-side chunk and resident-buffer owner.",
         "sha256": "9046205bb141e51d95d079159c5e6684e9573bbec7601424e83c085bde32a83c"
@@ -149,10 +185,11 @@
     ]
   },
   "review": {
-    "cold_read_all_source_analog_rows": 4,
+    "cold_read_all_source_analog_rows": 6,
+    "cold_read_candidate_unresolved_rows": 11,
     "cold_read_not_selected_target_rows": 7,
     "deterministic_replay": {
-      "comparison": "Definitions and RETAIL-DELTA were byte-identical across two consecutive generator replays; SOURCE/REBUILD received header-only compliance fixes, then all five final artifacts passed repeated SHA-256 readback.",
+      "comparison": "Definitions and RETAIL-DELTA were byte-identical across two consecutive canonical parse-and-serialize replays; all five final artifacts passed repeated SHA-256 readback.",
       "runs": 2,
       "status": "PASS"
     },
@@ -160,7 +197,7 @@
     "required": true
   },
   "validation": {
-    "w4_receipt_validator": "PASS: exact 94-row partition equality, 11-file set, source-anchor readback, evidence-path resolution, overload/conditional controls, 4 unique analog VAs joined to current name/closure, 7 exact PC target exclusions, output/predecessor hashes, and reuse counts.",
+    "w4_receipt_validator": "PASS: exact 94-row partition equality, 11-file set, source-anchor readback, evidence-path resolution, overload/conditional controls, 6 unique analog VAs joined to current name/closure, 11 empty-VA candidate-unresolved typed wrappers with explicit folding/identity falsifiers, 7 exact PC target exclusions, output/predecessor hashes, and reuse counts.",
     "documentation_headers": "PASS: 0 violations after self-test.",
     "function_name_drift": "PASS: 2,039 gated assertions resolved, 0 drifted, 0 unresolved.",
     "evidence_register_header": "PASS: EVIDENCE_REGISTER_HEADER_CURRENT.",

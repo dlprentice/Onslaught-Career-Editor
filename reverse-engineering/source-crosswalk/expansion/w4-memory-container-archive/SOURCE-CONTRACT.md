@@ -156,12 +156,26 @@ observable ordering, first-match removal, and iteration invalidation where a
 consumer depends on them; it should not reproduce raw pointer ownership or the
 static allocator.
 
-Tracked full-pass evidence gives bounded released analogs for the three omitted
-out-of-line source rows: three-field initialization at `0x004e5840`,
-copy-and-append at `0x004e5850`, and clear-then-append assignment at
-`0x004e58a0`. The evidence explicitly leaves template-instantiation ownership
-and runtime pool behavior unproved, so the receipt classifies them as analogs,
-not exact bodies.
+Tracked full-pass evidence gives bounded released analogs for five generic
+source rows: three-field initialization at `0x004e5840`, copy-and-append at
+`0x004e5850`, clear-then-append assignment at `0x004e58a0`, internal-cursor
+reset at `0x00406d20`, and cursor advance through node `+4` at `0x00406d30`.
+The W001 primary and adversarial reads independently confirm the exact
+source-visible `First`/`Next` field shapes (`this+8 = *this`, then
+`this+8 = *(node+4)`) and null-return behavior. Retail type spelling,
+source-coordinate ownership, and runtime pool behavior remain unproved, so the
+receipt classifies all five as analogs rather than exact bodies.
+
+The adjacent typed wrappers are not generic negatives. Current evidence exposes
+competing bodies for their generic operations (`0x004e5850`, `0x004e58a0`,
+`0x004e5a80` through `0x004e5c90`, and `0x00406d20`/`0x00406d30`) plus the
+six-instruction `CSPtrSet__ctor` Init wrapper at `0x00505d00`; clear also has a
+proved thunk at `0x0042f220`. None carries a template argument or source
+coordinate that uniquely assigns it to the universal `SPtrSet<T>` row rather
+than the generic base body or one folded instantiation. Those rows therefore
+stay `CANDIDATE_UNRESOLVED` with empty VAs. Only wrappers without a surviving
+named candidate (`DeleteAll`, `Size`, and `Last`) remain bounded source-only
+rows.
 
 ## CLI lifetime edge
 
