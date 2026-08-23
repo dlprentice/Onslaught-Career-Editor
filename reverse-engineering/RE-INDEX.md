@@ -1,44 +1,16 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-08-18
+Last updated: 2026-08-23
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
-Current replay authority is Generation 31 **v2** via
-`developer_state.json` → `current_re_authority`; Generation 73 is a projection
-oracle only, and the Generation-10 block below is historical. Generation 31
-re-grounds on exact `db.18624` geometry through the Generation-30 literal-pin
-carry bridge and lands the first 16 `REBUILD_READY` contracts (14 rows raise
-C0_OPAQUE → C1_CANDIDATE_PARTIAL, one carries C1 unchanged, one fresh
-GetFriction row enters C1; independently verified CAMPAIGN_VERIFIED with the
-measured on-disk READY/reducer pins). The tracked `main` snapshot of the Ghidra
-database is **`db.18627`** through *eight* authorized promotions on 2026-08-17 — 41 function
-boundary corrections recovering 3,293 bytes, then 158 function renames plus 2
-label renames, then 294 ABI signature corrections, then the two sequential
-one-row ceremonies of the
-[CTentacle factory-name chain](binary-analysis/tentacle-factory-name-chain-2026-08-17.md)
-(`0x004f07e0` → `CTentacle__CreateTentacleGuide` at `db.18623`, then
-`0x004f0860` → `CTentacle__CreateTentacleAI` at `db.18624`), then the 36-row
-`abi-two-witness-arity36` SET_PROTOTYPE cohort at `db.18625` (signature-only;
-no name, body, or reference moved), then the five-row runtime-witnessed
-`name-cohort5` at `db.18626` (name-only), then the 65-slot RTTI vftable pointer
-cohort at `db.18627` (data typing only: 65 pointers typed with class-identity
-labels; zero function rows moved). Since then, LIVE and the retained
-`wt/bea-ghidra` branch (tip `776b773d`, POST on D:/F:
-2026-08-19-name-cohort-round-dual-owner) have rolled together to unmerged
-**db.18633** SET_NAME twins; `main` still tracks db.18627 and does not carry
-that state. Before any live Ghidra write or promotion, re-measure PRE identity
-from the backups; do not infer equality from this file.
-Function count is
-unchanged at 8,329; instructions moved 551,143 → 551,232 and references
-234,478 → 234,493, and the last two ceremonies moved **no** structural metric at
-all — each measured one changed function row, zero non-target movement, and zero
-movement in all 29 program-scope metrics.
-**Do not re-ground a generation onto `db.18618` or `db.18622`, and do not read
-Generation 29/30 names as current** — the current name projection is
-[`ghidra-function-name-table-2026-08-17.tsv`](binary-analysis/ghidra-function-name-table-2026-08-17.tsv),
-re-projected 2026-08-17 from the name-cohort5 live POST readback at `db.18626`
-(SHA-256 `4590dff9…`).
+Select complete-RE campaign authority only through `developer_state.json` →
+`current_re_authority`; it owns generation, exact geometry, READY/reducer pins,
+grades, verify command, and next-valid generation. Select rolling tracked/live
+Ghidra state through [`ghidra/README.md`](ghidra/README.md) plus fresh PRE
+inspection. Generation 73 is a projection oracle only, and dated generation or
+database narratives below are historical. Never infer live/tracked equality or
+re-ground a campaign from a number copied out of this index.
 
 **Measure that version; do not quote it.** Ceremonies run concurrently here and
 each one rolls the database file version — and opening a project *without*
@@ -46,13 +18,14 @@ each one rolls the database file version — and opening a project *without*
 any `db.NNNNN` written in this file is a record of the past, not a reading of the
 present: establish it by inspection as an identity step, and argue
 tracked-versus-live equality **semantically**, via a full readback bit-identical
-at program scope and across all 8,329 function rows, never by file digest.
+at program scope and across the freshly inspected function population, never by
+file digest.
 
 This directory preserves evidence that materially supports the toolkit,
 rebuild, modding work, or contributor understanding. Git history holds completed
 waves, superseded plans, and generated accounting.
 
-**Every authority figure under "Current static authority" below is dated
+**Every authority figure under "Dated static measurements" below is dated
 2026-07-27 and must be re-measured before it is used.** The residual, both
 denominators, and each per-ledger count are readings taken against a live
 maintainer database that has moved since. The section says so ledger by ledger;
@@ -108,17 +81,10 @@ This block selects the immutable semantic campaign parent; it does not describe
 the rolling Ghidra database. Read the
 [`canonical Ghidra owner`](ghidra/README.md) for the current structural snapshot
 and latest backed-up live promotion. Select campaign authority from
-`developer_state.json` → `current_re_authority`: canonical Generation 31 **v2** at
-`local-lab/re-campaign-incident-recovery-20260808-v1/generation-31-current-8329-db18624-v2/`,
-READY `2e77c62d236edacbe4974ca844a6ac0b692e84b3259b884b8afc25a29aad4219`,
-frozen reducer `21ad46fff9d2aec8034a4edcf2c83fad627c2fcae3a9a21ebac7e03976c7627b`.
-v1 READY `b99b6e4f…` and every `generation-31-*-v1*` directory are superseded.
-It contains 8,329 functions: 231 C1, ten bounded C2, and 8,088 OPAQUE. Its
-14,365 contracts split as 14,123 `C0_OPAQUE`, 232 C1, and ten C2, and the
-first 16 contracts are `REBUILD_READY` (rebuild ledger: 14,340 NOT_READY, 8
-PARTIAL_CONTRACT, 1 CONTRACT_ONLY, 16 REBUILD_READY). Its 6,035 residuals
-contain 154 open dark rows, with the other 5,881 terminal. The per-generation
-narrative below remains the historical record of how those grades were earned.
+`developer_state.json` → `current_re_authority`. Do not restate its volatile
+generation, paths, hashes, grades, or next-valid value here. The
+per-generation narrative below is the historical record of how earlier grades
+were earned; it is not an authority selector.
 Generation 12 admitted bounded `CBattleEngine::Damage`/`Hit` field
 writes and a partial rebuild mapping; Generation 13 admitted one replicated
 zero-shield `CUnit::ApplyDamage` entry/write contract and its exact overkill
@@ -184,7 +150,7 @@ readback, backup-restore, and tracked-snapshot-restore gates; names,
 signatures, boundaries, executable bytes, instructions, data, symbols, and
 references did not change. Generation 73 remains a projection oracle, never a
 parent or authority. Generation 24 then reseeded those exact claims onto all
-8,280 then-current db.18613 function identities. It accounts for all 27,780 eligible
+8,280 db.18613 function identities active at that cut. It accounts for all 27,780 eligible
 Generation-23 carry rows, includes the 154 added structural identities as
 OPAQUE, and makes no new semantic, runtime, Ghidra, executable, or rebuild
 claim. Generation 25 then re-grounds the five repaired bodies on exact
@@ -208,7 +174,7 @@ changed structural lineage, and preserves all 72 scenarios without changing a
 semantic grade. Generation 29 then re-grounds the two D3DX-compatible functions
 on exact `db.18618` geometry, accounts for all 26,841 eligible Generation-28
 carry rows with zero unaccounted, retires one changed lineage, and carries the
-new rows as OPAQUE/DARK. The next valid campaign generation is 30. Model review is
+new rows as OPAQUE/DARK. The next valid campaign generation at that freeze was 30. Model review is
 situational and harness-agnostic under `REVIEW-PROTOCOL.md`.
 
 A separately reviewed, non-parent
@@ -224,7 +190,7 @@ accounts for its 8,136-function population at 8,129 bounded C1 and seven
 bounded C2 functions, with zero static `OPAQUE` rows in that population. It joins 53 disjoint
 sealed receipts covering 7,945 functions, ten post-Gen19 Mission-native
 boundaries, and 181 pre-existing C1/C2 rows. This is a distinct authority for
-static-envelope accounting; Generation 29 is the current replay owner and
+static-envelope accounting; Generation 29 was the replay owner at that freeze and
 carries Generation 28's admitted campaign state unchanged in semantic grade
 onto exact 8,329-row `db.18618` geometry. See the
 [closure report](binary-analysis/function-c1-closure-2026-08-11.md) for exact
@@ -251,7 +217,7 @@ was independently reviewed, then applied once through a fresh PRE backup,
 current-state replicas, one live save, separate readback, POST backup, and
 tracked restore. The resulting
 [live-promotion report](binary-analysis/text-gap-missing-function-ghidra-live-promotion-2026-08-14.md)
-advanced the then-current saved census to **8,201 internal functions**, preserved all
+advanced the saved census at that cut to **8,201 internal functions**, preserved all
 8,170 PRE rows exactly, and added only the 31 reviewed default-metadata bodies.
 The separate [library classification](binary-analysis/text-gap-library-function-classification-2026-08-13.md)
 bounds their CRT/AMD/IJG provider-compatible identities; it does not make them
@@ -293,7 +259,7 @@ re-grounded the byte-identical live/tracked 8,280-function db.18614 PRE and
 reproduced the exact 8,304-function prospective POST on two fresh disposable
 copies. It granted no mutation authority. The completed
 [JPEG/IJG live-promotion report](binary-analysis/jpeg-ijg-callback-ghidra-live-promotion-2026-08-14.md)
-records the then-current 8,304-function db.18615 result: all 8,280 PRE rows remain exact,
+records the 8,304-function db.18615 result at that cut: all 8,280 PRE rows remain exact,
 24 default-metadata functions add 38 ranges and 14,817 owned bytes, and
 live/tracked/POST recovery are byte-identical.
 
@@ -488,15 +454,17 @@ successor):** the shipped PC executable passes `__FILE__` and `__LINE__` to its
 debug allocator, so the image names its own authored source paths. The
 [receipt-pinned predecessor](binary-analysis/pc-native-source-coordinates-2026-08-12.md)
 recovers 1,559 coordinates over 149 used authored paths, landing in 827 of the
-then-current 8,136 functions. Its tool bytes remain historical evidence. The
+8,136 functions then in that pinned population. Its tool bytes remain historical
+evidence. The
 [versioned dataflow successor](binary-analysis/pc-native-source-coordinates-2026-08-13.md)
 first preserves the reviewed
 [1,840-row stack-stable intermediate](binary-analysis/pc-native-source-coordinates-stack-stable-2026-08-13.tsv),
-then reaches **1,863 coordinates in 1,002 current functions**. Its 23 genuine
+then reaches **1,863 coordinates in 1,002 functions in its pinned population**.
+Its 23 genuine
 additions are 22 rows from correcting the source-path index from 164 to 166
 image paths and one CFG-predecessor FILE/line plate; tested register/ESP-relative
 forms contribute zero retail rows. All accepted retail rows still carry their
-arguments as immediate pushes. The current manifest uses 165 of the 166 indexed
+arguments as immediate pushes. That dated manifest uses 165 of the 166 indexed
 paths. It sees 2,040 direct known-consumer calls over projection hulls but 2,039
 with exact-range-contained consumers; the sole inherited hull-only call is
 reported explicitly and none of the 23 additions depends on it. Both input
@@ -537,8 +505,8 @@ the synchronized PC-retail database.
 ## Historical Gen10 dual-authority / TTD admission (2026-08-04)
 
 Generation 10 remains a valid **historical frozen-integrity**
-function/range/contract admission for Level 521 call-context evidence, not the
-current replay authority:
+function/range/contract admission for Level 521 call-context evidence and is
+excluded from live authority selection:
 `local-lab/ttd-call-context-level521-impact-generation10-20260804-v1/generation-10-ttd-call-context-observation-v2/`:
 8,124 functions, 6,117 exact `.text` residuals, 15,241 open/closed questions,
 72 scenarios, 915 levers, 14,241 contracts, 6 adjudications, and 584 exact
@@ -635,7 +603,8 @@ Current local boundaries that materially change the discovery lane:
   SHA-256 `63099dbf88d031bcbc186303627f6692e157cc80a270670018a5ed68744ff2b4`,
   rederives 1,870 exact embedded `__FILE__` plates into 162 canonical paths:
   151 CPP translation units and 11 headers. Exact fragmented-body joins touch
-  987 current functions and 20 residual entities; 368 functions have direct CPP
+  987 functions in that pinned population and 20 residual entities; 368
+  functions have direct CPP
   anchors. Closed spans and neighbours remain order priors, headers never own a
   translation unit, and the owner-crossing call at `0x00437A3A` stays open.
   Replay with the frozen `source-unit-owner.py`; the tool assigns no names and
@@ -736,9 +705,9 @@ Current local boundaries that materially change the discovery lane:
 These paths are ignored and absent from a fresh clone. They are routing pointers,
 not substitutes for re-running their verifiers.
 
-## Current static authority
+## Dated static measurements and live authority routing
 
-### The name-grading residual — current figure, and the flag it requires
+### The name-grading residual — frozen 2026-07-27 figure and required flag
 
 **`1,867` of a human-namable `6,376` = 29.3 %**, as of 2026-07-27.
 
@@ -758,8 +727,8 @@ being recovered**, which is exactly the trap this metric sets.
 
 *(Added 2026-07-27. The per-ledger figures below are dated snapshots against the
 **6,969**-function inventory and are quoted as those ledgers state them; they
-are not the current figure. The tracked `ghidra/` snapshot now has a separately
-read-back 8,280-row name projection dated 2026-08-14; the frozen 8,136-row
+are not a live figure. A separately read-back 8,280-row projection was recorded
+on 2026-08-14; the frozen 8,136-row
 2026-08-12 table and July 7,555-row table
 remains a dated artifact. Historical live/snapshot distinction and mutation-
 wave reconciliation are tracked in [`ghidra-functions.md`](ghidra-functions.md);
@@ -784,8 +753,8 @@ different failure modes and only the first was being tested.)*
   incomplete. 468,804 exported instructions verified against the pristine binary
   with **0 byte mismatches**, 6,351 of 6,411 functions fully clean — but only
   **79.8268 % of `.text` was covered by those 6,411 historical bodies**.
-  [Current `.text` body ownership](binary-analysis/current-text-ownership-2026-08-13.md)
-  now supersedes that metric for present use: all 8,329 saved functions and
+  [Dated 2026-08-14 `.text` body ownership](binary-analysis/current-text-ownership-2026-08-13.md)
+  superseded that metric at its cut: all 8,329 then-saved functions and
   8,459 exact ranges own 1,811,691 / 1,929,117 bytes = 93.912966399%, with
   zero overlap. The 117,426-byte gap is separately partitioned by current
   listing state and discovery evidence; this remains structural body ownership,
@@ -826,7 +795,7 @@ different failure modes and only the first was being tested.)*
   and records the 13 renames applied to the live database. Honest residual **as
   that ledger states it**: 1,866 of a human-namable 5,790 (the ledger's own
   §"honest residual"; a demotion inside the same wave took it from 1,865 to
-  1,866). **Snapshot, not current** — see the current figure above:
+  1,866). **Snapshot, not live authority** — the 2026-07-27 measurement above is
   **1,867 of 6,376**, with `--reference-source references/Onslaught`.
 - [The second demotion — `0x005386d0`, and the residual goes up again](binary-analysis/name-grading-ledger-2026-07-27-demotion2.md)
   — 2026-07-27. Amends the 07-26 ledger **in two cells only**: the false name
@@ -842,7 +811,8 @@ different failure modes and only the first was being tested.)*
   external-parameter propagation, variadic override, and a combined pass) left
   the residual **unmoved: 1,866 before and 1,866 after**, that pair being the
   experiment's own canary measurement against its then-baseline of 1,866, before
-  the `0x005386d0` demotion above. **The current residual is 1,867 of 6,376**;
+  the `0x005386d0` demotion above. **The dated 2026-07-27 residual is 1,867 of
+  6,376**;
   the "does not reduce" verdict is what carries forward, not the baseline.
   The Instruction Finder
   recovered ~4,404 bytes of real application code but those land in `UNNAMED`,
@@ -990,8 +960,8 @@ Machine-readable siblings, for consumers that should not be parsing prose:
   — a **candidate**, as its own filename says; not an accepted contract.
 - [Retail specimen manifest](binary-analysis/retail-specimen-manifest-2026-03-14.json)
 - [2026-08-17 function name table](binary-analysis/ghidra-function-name-table-2026-08-17.tsv)
-  — the current 8,329-row address-to-name authority, re-projected from the
-  read-only **db.18624** live POST readback of the CTentacle factory-name
+  — a dated 8,329-row address-to-name projection from the read-only **db.18624**
+  live POST readback of the CTentacle factory-name
   chain's ceremony B. It carries the four HUD route demotions, the
   158 renames of the 2026-08-17 name cohort, and the chain's two rows
   (`0x004f07e0` `CTentacle__CreateTentacleGuide`, `0x004f0860`

@@ -1,19 +1,13 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-08-21. The campaign authority is Generation 31 **v2** on exact
-db.18624 geometry (8,329 functions; grades 8,088 OPAQUE / 231 C1 / 10 C2, with
-the first 16 contracts REBUILD_READY; v1 READY `b99b6e4f…` is superseded), re-grounded through the Generation-30
-literal-pin carry bridge after the live and tracked Ghidra database reached
-**db.18627** through *eight* authorized promotions on 2026-08-17 — 41 boundary
-corrections, then 160 renames, then 294 ABI signature corrections, then the two
-sequential one-row ceremonies of the CTentacle factory-name chain, then the
-36-row abi-two-witness-arity36 SET_PROTOTYPE cohort, then the five-row
-runtime-witnessed name cohort, then the 65-slot RTTI vftable pointer cohort
-(data typing only; the campaign's db.18624 geometry is unaffected). Live +
-`wt/bea-ghidra` later rolled to **db.18633** SET_NAME twins (unmerged;
-`main` still pins db.18627). Candidate Gen73 is
-projection-oracle only. Primary WinUI
+Last updated: 2026-08-23. Read `developer_state.json` →
+`current_re_authority` for the campaign generation, exact geometry,
+READY/reducer pins, grades, verify command, and next-valid generation. Read
+`reverse-engineering/ghidra/README.md` plus a fresh database inspection for
+rolling tracked/live Ghidra state; this capability narrative deliberately does
+not duplicate those volatile values. Candidate Gen73 is projection-oracle only.
+Primary WinUI
 navigation was rechecked 2026-08-03 against the live shell (includes Cheats).
 The 2026-08-01 shell, appearance, Lore, Media, and four-run Level 100 reviews
 retain their stated boundaries. Other rebuild and save/patch claims not
@@ -768,10 +762,8 @@ Read [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md) before changing this lane.
 **Current replay authority:** read `developer_state.json` →
 `current_re_authority` before quoting generation or grade counts. Do not select
 the historical Gen10 or candidate Gen73 roots by generation number, ledger
-equality, or self-derived pins. Current authority is **Generation 31 v2**
-(next valid generation 32; first 16 contracts REBUILD_READY). The table below
-is a **frozen 2026-08-14 Generation-29 snapshot** — its counts predate Gen 31
-(e.g. REBUILD_READY reads 0 there) and must not be quoted as current.
+equality, or self-derived pins. The table below is a **frozen 2026-08-14
+Generation-29 snapshot** and must not be quoted as current.
 
 | Metric | Canonical Gen29 |
 | --- | ---: |
@@ -782,13 +774,13 @@ is a **frozen 2026-08-14 Generation-29 snapshot** — its counts predate Gen 31
 | function_semantic OPAQUE | **8102** |
 | contract_C0_OPAQUE | **14211** (second opacity axis) |
 | Residuals | **6109** = 153 open dark + 860 terminal bounded ambiguity + 30 terminal data + 5066 terminal padding |
-| OPEN residual | **153** current-geometry rows; not a semantic regression |
+| OPEN residual | **153** then-geometry rows; not a semantic regression |
 | Other ledgers | questions **15399**; scenarios **72**; levers **903**; contracts **14438**; adjudications **5957**; supersessions **592** |
 | Progressed carry | **26841 / 26841**, zero unaccounted |
 | Rebuild states | NOT_READY **14429**; PARTIAL_CONTRACT **8**; CONTRACT_ONLY **1**; REBUILD_READY **0** |
 | complete_RE | **false** |
 | READY / reducer | `fe61f696…c9ac9` / `8b86f5b5…2587` |
-| Next valid generation (at freeze) | **30** — current is **32** |
+| Next valid generation (at freeze) | **30** — live value is state-owned |
 
 **Mission `Damage` rebuild blocker cleared (2026-08-15) — campaign counts
 unchanged.** The single `CONTRACT_ONLY` row above is `C-8c445f1e27de9913`,
@@ -815,21 +807,21 @@ proving the wrapper's `+0xA0` slot resolves to `CBattleEngine::Damage
 @ 0x004F9A90` for the measured unit receiver, joining three existing contracts.
 Details in
 [`IScript.cpp.md`](reverse-engineering/binary-analysis/functions/IScript.cpp.md).
-**The table above is deliberately not edited.** Generation 29 is frozen, so the
-campaign still reports `CONTRACT_ONLY 1` until a Generation 30 re-grounds it;
-the rebuild layer and the campaign layer are reported separately on purpose.
+**The table above is deliberately not edited.** It records the frozen
+Generation-29 campaign state; successor state is selected through
+`current_re_authority`. The rebuild and campaign layers remain separate.
 
 **Tracked static-envelope closure (2026-08-11):** the separate reviewed
 [`function-c1-closure-2026-08-11.tsv`](reverse-engineering/binary-analysis/function-c1-closure-2026-08-11.tsv)
 accounts for its dated 8,136-function population as **8,129 C1**, **7 C2**,
 and **0 static OPAQUE**. A separately reviewed 34-row addendum extends bounded
 static accounting through the prior 8,170-row state at **8,163 C1 + 7 C2**.
-The saved structural census reached **8,327** after the later 31 text-gap, 79
-external-table, 24 JPEG/IJG callback, and 23 CRT P0 admissions. A subsequent
-two-function D3DX promotion advances the rolling state to **8,329/db.18618**.
-Generation 29 is the frozen 8,329-row semantic authority on exact db.18618
-geometry: it retains all 203 later structural identities honestly as campaign
-OPAQUE rows where they lack a semantic grade.
+At the 2026-08-14 cut, the saved structural census had reached **8,327** after
+the later 31 text-gap, 79 external-table, 24 JPEG/IJG callback, and 23 CRT P0
+admissions. A subsequent two-function D3DX promotion advanced that dated state
+to **8,329/db.18618**. Generation 29 is a frozen 8,329-row historical authority
+on exact db.18618 geometry: it retains all 203 then-later structural identities
+honestly as campaign OPAQUE rows where they lack a semantic grade.
 The five-body
 repair advanced Ghidra to `db.18614`; the JPEG/IJG promotion advanced it to
 `db.18615`; the CRT P0 promotion advanced it to `db.18616`; and the later CRT
@@ -837,7 +829,7 @@ EH parent repair advanced it to `db.18617` and 93.900110776% saved-body
 ownership without adding a function. Generation 28 re-grounded that repaired
 parent on db.18617, retired its one changed lineage explicitly, and accounted
 for 26,845/26,845 eligible Generation-27 carry rows while preserving all 72
-scenarios. The D3DX promotion then advances current saved-body ownership to
+scenarios. The D3DX promotion then advanced that dated saved-body ownership to
 93.912966399% without changing instructions, references, or a PRE row.
 Generation 29 re-grounded the D3DX pair, retired one changed lineage, and
 accounted for 26,841/26,841 eligible Generation-28 carry rows. It carries the
@@ -1010,11 +1002,11 @@ These instruments do not infer function boundaries, C++ receivers, argument or
 return types, semantics, or parity. Static/source/RTTI evidence supplied joins
 for early data-write plates. Focused player-damage / Level 521 successor work
 remains an open runtime front alongside the next impact-ranked contract/rebuild
-advance now carried by Generation 29. There is
+advance documented by the frozen Generation-29 snapshot. There is
 not yet a normalized corpus-wide semantic ledger, and no new trace is justified
 until existing evidence plus these instruments cannot answer a preregistered
-question. The next valid campaign generation is **32**
-(`developer_state.json` → `current_re_authority`).
+question. The live next-valid generation is owned only by
+`developer_state.json` → `current_re_authority`.
 
 ## Evidence boundary
 

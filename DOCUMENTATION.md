@@ -251,9 +251,9 @@ ledger from being read as retracted.
 ## Scope
 
 Applies to **tracked** files only; the file list comes from `git ls-files`.
-The live checker currently classifies 1,034 documents and defers 471
-pre-standard documents. Run it for exact current counts; this file does not
-freeze the total.
+The live checker classifies the tracked corpus and defers the explicit
+pre-standard backlog. Run it for exact counts; this file deliberately does not
+copy them.
 
 **`local-lab/` is out of scope, deliberately.** It is gitignored, so it is
 structurally invisible to the checker, and it is additionally excluded by path so
@@ -272,11 +272,19 @@ their own source notes rather than the RE-finding header schema), `references/`
 
 ```powershell
 py -3 tools\doc_header_check.py              # gate
-py -3 tools\doc_header_check.py --self-test  # 44 cases, no repository needed
+py -3 tools\doc_header_check.py --self-test  # self-tests, no repository needed
 py -3 tools\doc_header_check.py --show-backlog
 npm run test:doc-headers                     # both of the above, wired
-npm run test:docs                            # links, headers, function-name drift
+npm run test:docs                            # links, headers, names, authority drift
 ```
+
+`tools/doc_current_authority_check.py` is the living-authority ratchet. It
+rejects root/RE synthesis documents that copy a numbered "current generation",
+next-valid generation, rolling `db.N`, current/rolling Ghidra population or
+body-accounting counts, or stale live/readback selectors instead of pointing to
+`developer_state.json` → `current_re_authority` and
+`reverse-engineering/ghidra/README.md`. Dated findings keep their exact historical
+numbers; living front doors must not turn those snapshots back into live claims.
 
 Reachability is a separate diagnostic:
 `py -3 tools\md_reachability_check.py`. It is not part of `npm run test:docs`.
