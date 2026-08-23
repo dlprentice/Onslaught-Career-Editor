@@ -1,4 +1,4 @@
-# CMSH stores pose lanes and skeleton part indices; LVLR and MSL expose usage
+# CMSH stores pose lanes; LVLR, WRES, physics, and MSL expose bounded usage
 
 Status: active bounded animation, skinning, and authored-usage contract
 Date: 2026-08-22
@@ -6,14 +6,18 @@ Verdict: the 213 loose CMSH meshes contain 3,774 part tracks; 64 meshes and 659
 parts have non-trivial `VHFM` maps, exactly seven meshes carry one `BONE` array,
 and exactly 17 camera parts carry one `HFOV` value. Across the 66 numeric LVLR
 archives, 3,432 of 3,485 `MESH` rows join by authored name to 205 loose meshes;
-the other 53 rows have an empty name. The 733 loose MSL files contain 56 active
-`PlayAnimation*` calls in 15 files. These are storage and authored-reference
-contracts, not proof that every named track is scheduled or rendered.
+the other 53 rows each own an anonymous embedded CMSH. The WRES/physics join now
+connects 4,090 definition-bearing placements to exactly one named level row and
+one loose CMSH. The 733 loose MSL files contain 56 active `PlayAnimation*`
+calls in 15 files; 22 sites join through script strings on three WRES instances.
+These are storage and authored-reference contracts, not proof that every named
+track is scheduled or rendered.
 Evidence: MEASURED — `tools/cmsh_animation_usage_census.py` parsed and
-hash-verified 213 meshes, 66 numeric LVLR archives, and 733 MSL files (1,012
-inputs) against `G:\bea-asset-mirror\INDEX.jsonl`; the focused ten-test gate
-reproduces the counts, names, joins, and can-fail controls. Retail consumer VAs
-come from the cited pristine-binary notes and remain static evidence.
+hash-verified 213 meshes, 66 numeric LVLR archives, 733 MSL files, and
+`default physics.dat` (1,013 inputs) against
+`G:\bea-asset-mirror\INDEX.jsonl`; the focused 16-test gate reproduces the
+counts, names, joins, and can-fail controls. Retail consumer VAs come from the
+cited pristine-binary notes and remain static evidence.
 Specimen: `G:\bea-asset-mirror\INDEX.jsonl`, SHA-256
 `c45722aeed52e77788c7886cb30b813900d3516b1c387983c442d2b02d4fe4b9`;
 retail VAs cite `BEA.exe.original.backup`, SHA-256
@@ -21,13 +25,14 @@ retail VAs cite `BEA.exe.original.backup`, SHA-256
 
 ## Scope and identity
 
-The selected 1,012 files match the mirror index row-for-row by SHA-256:
+The selected 1,013 files match the mirror index row-for-row by SHA-256:
 
 | Input lane | Files | Role in this contract |
 | --- | ---: | --- |
 | `resources/meshes/*.msh.aya` | 213 | loose CMSH pose, hierarchy, camera, and skinning census |
 | numeric `resources/NNN_res_PC.aya` | 66 | LVLR `MESH` authored-name membership |
 | `MissionScripts/**/*.msl` | 733 | authored `PlayAnimation` / `PlayAnimationWait` call sites |
+| `default physics.dat` | 1 | Unit/Feature definition-to-mesh fields used by WRES records |
 
 The AYA outer envelope remains owned by [aya-container.md](aya-container.md),
 the CMSH stream by [cmsh-mesh.md](cmsh-mesh.md), and the LVLR stream by
@@ -67,12 +72,15 @@ Classifying only the byte-map shape gives:
 | mixed closing/non-closing maps | 12 | both shapes occur in one mesh |
 
 Closure is a byte property, not a universal playback instruction. Level 100 is
-the one stronger cross-field result: the three running WRES facilities
+the strongest scheduling cross-field result: the three running WRES facilities
 `FB_Docks`, `FB_radar_station`, and `FB_Solar_Pod` have cyclic maps, while the
 three inactive turret placements `ft_blaster`, `ft_pulse`, and `ft_sam` have
 saturating maps. That join is pinned independently by
-`Level100StaticWorldAnimationTests`; it must not be generalized to the other 60
-numeric worlds without their WRES scheduler/active fields.
+`Level100StaticWorldAnimationTests`. The all-world
+[WRES instance join](wres-instance-join.md) now proves placement/active fields:
+all 129 all-closing placements are active, but so are 1,142 non-closing and
+2,758 static placements. Active state alone therefore does not generalize the
+Level 100 playback decision.
 
 `CMSP+0xB4` (`aFrames`) remains unnamed. Its complete value population is
 **0=1,987, 1=1,760, 2=27**. Twenty-six of the 27 value-2 parts are in meshes with
@@ -152,8 +160,10 @@ dormant content remain separate routes.
 The all-301 LVLR top-level census contains 3,492 `MESH` chunks. The difference
 is seven Goodie-archive mesh rows; this document's 3,485 denominator is the
 numeric-world slice, not a correction to [lvlr-archive.md](lvlr-archive.md).
-`MESH` membership proves a resource is packed with a level. It does not prove a
-WRES placement, spawn, render, or animation schedule.
+`MESH` membership alone proves only that a resource is packed with a level. The
+dedicated [WRES instance contract](wres-instance-join.md) closes 4,090
+definition-bearing Unit/Feature placements through physics mesh fields. Other
+WRES types, dynamic spawns, rendering, and animation scheduling remain separate.
 
 ## Authored MSL animation calls
 
@@ -177,10 +187,12 @@ that the name is resolved through `CMesh__FindAnimationIndexByName`, and that
 completion resumes a saved VM snapshot. See
 [IScript__PlayAnimationWait.md](../binary-analysis/functions/IScript.cpp/IScript__PlayAnimationWait.md).
 
-This pass does not join every script file to a WRES object and mesh. The MSL
-coordinate proves an authored name request; the LVLR coordinate proves archive
-membership. Treating those two sets as an instance-level edge without parsing
-WRES would invent the missing relation.
+The WRES pass joins **22 sites in three files** directly to three placements:
+Level 500 Rocket Base and Level 521/522 Hive Boss. The other 34 sites in 12
+files include component `SetScript` routes (`MainGun`, `GillM*`, and `Vent`) and
+Level 530 scripts with no numeric resource archive. A component index is not a
+proved component-definition/mesh edge, so those calls remain explicit rather
+than being attached to the parent CMSH by guesswork.
 
 ## Retail consumer anchors
 
@@ -221,7 +233,7 @@ $env:ONSLAUGHT_ASSET_INDEX = "G:\bea-asset-mirror\INDEX.jsonl"
 py -3 tools/cmsh_animation_usage_census_tests.py
 ```
 
-A clean clone runs four synthetic can-fail tests and skips the six
+A clean clone runs seven synthetic can-fail tests and skips the nine
 specimen-bound tests when those two inputs are absent.
 
 ## Open questions and cheapest falsifiers
@@ -236,9 +248,10 @@ specimen-bound tests when those two inputs are absent.
 - **Three-slot skinning:** close the shader/palette consumer that combines the
   three scaled indices, then use one disposable copied-profile skeletal capture
   to falsify the recovered blend. Do not edit the pristine shelf.
-- **World instance edges:** parse WRES object records across all 66 numeric
-  worlds and join definition, mesh, script, active state, and placement. Until
-  then, LVLR membership and MSL calls remain separate edges.
+- **Other WRES/component edges:** the type-8/type-35 definition family is now
+  closed across all 66 numeric worlds. Sequentially frame the remaining record
+  types and join component `SetScript` indices through component definitions
+  before assigning the other 34 MSL call sites to meshes.
 - **Scheduling:** compare a closing-map and a non-closing-map mesh under one
   copied-runtime trace before generalizing the Level 100 active/loop relation.
 - **Nested identity:** normalize the 15 loose-nested and 139 embedded CMSH
@@ -249,7 +262,8 @@ specimen-bound tests when those two inputs are absent.
 ## Claim boundary
 
 Pose-table dimensions, frame-map range/shape, bone-to-part naming, palette-slot
-indices, camera-lane values, numeric-LVLR membership, and loose-MSL call sites are
+indices, camera-lane values, numeric-LVLR membership, 4,090 definition-bearing
+world-instance joins, 53 anonymous embedded bodies, and loose-MSL call sites are
 bounded. Named-clip serialization, weights/blending, bind pose, interpolation,
-world-instance joins, general scheduling, malformed-input behavior, runtime
-rendering, and parity remain open.
+other WRES/component/dynamic-spawn joins, general scheduling, malformed-input
+behavior, runtime rendering, and parity remain open.

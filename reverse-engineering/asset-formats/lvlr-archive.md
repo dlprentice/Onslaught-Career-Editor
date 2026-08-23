@@ -3,8 +3,9 @@
 Status: active format contract — complete outer/tag census; most payload schemas
 remain owner-specific or open
 Date: 2026-08-22
-Verdict: all 301 streams and 23,884 top-level tags are accounted for; most
-payload schemas and world dependencies remain partial.
+Verdict: all 301 streams and 23,884 top-level tags are accounted for; the
+numeric WRES Unit/Feature instance join is bounded, while most other payload
+schemas and world dependencies remain partial.
 Evidence: MEASURED — all 301 mirror-index archive rows inflate to `LVLR`; the
 complete earlier top-level chunk census is cited below.
 Specimen: `G:\bea-asset-mirror\INDEX.jsonl`, SHA-256
@@ -86,10 +87,15 @@ coverage claim.
 - The [CMSH animation/usage census](cmsh-animation-usage.md) decodes the
   validated `PMSH[/PMS2]` logical name on all 3,485 `MESH` rows in the 66 numeric
   archives: 3,432 rows join to 205 loose meshes and 53 have an empty name. This
-  proves numeric-archive membership, not a WRES placement, spawn, or animation
-  schedule. The seven additional all-LVLR `MESH` rows are in Goodie archives.
-- Level 100/base/frontend have deep owner-specific work; the other worlds are
-  primarily structural inventory.
+  proves numeric-archive membership. The dedicated
+  [WRES instance join](wres-instance-join.md) then closes 4,090 type-8/type-35
+  definition records through physics mesh fields to one named row and one loose
+  CMSH each. The 53 empty rows each own an anonymous embedded CMSH but retain no
+  exact WRES/name key. The seven additional all-LVLR `MESH` rows are in Goodie
+  archives.
+- Level 100/base/frontend retain deeper owner-specific work. All 66 numeric
+  worlds now have the bounded WRES Unit/Feature slice above; their remaining
+  record families and dependencies are primarily structural inventory.
 
 ## Retail decoder anchors
 
@@ -118,12 +124,16 @@ raw-stream admission, records exact chunk geometry, and labels embedded CMSH
 bodies candidate-only. `tools/aya_corpus_chunk_inventory.py` supplies corpus
 aggregation. Cross-platform comparison tools add PC/Xbox geometry evidence but
 do not turn differing payloads into decoded semantics.
+[`tools/cmsh_animation_usage_census.py`](../../tools/cmsh_animation_usage_census.py)
+adds the guarded WRES/physics/named-MESH/loose-CMSH join and structurally parses
+the 53 direct anonymous `PMS2+309` bodies without naming them.
 
 ## Open questions and falsifiers
 
 - Build a per-tag-instance ledger of offsets, lengths, schemas, opaque ranges,
   references, and exact consumer VAs for all 23,884 chunks.
-- Close packed mission/object representation and packed-versus-loose precedence.
+- Close the non-Unit/Feature WRES records, component/dynamic-spawn ownership,
+  packed mission/object representation, and packed-versus-loose precedence.
 - Join every world to meshes, textures, physics, scripts, audio, localization,
   videos, and Goodie/career state.
 - Trace one non-Level-100 world with a different tag shape before generalizing
@@ -133,6 +143,7 @@ do not turn differing payloads into decoded semantics.
 
 ## Claim boundary
 
-The 301-file population, AYA framing, top-level geometry, and selected owner
-relations are settled. General LVLR field semantics, dependency graphs, runtime
-selection/failure behavior, and parity are open.
+The 301-file population, AYA framing, top-level geometry, 4,090 numeric WRES
+Unit/Feature joins, and 53 anonymous embedded CMSH bodies are settled. General
+LVLR field semantics, other WRES/object dependencies, anonymous body names,
+runtime selection/failure behavior, and parity are open.
