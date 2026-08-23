@@ -239,10 +239,19 @@ public sealed class Level100ActorDefinitionSet
         IEnumerable<Level100ActorDefinition> actors,
         IEnumerable<Level100SpawnDefinition> spawns,
         IEnumerable<Level100WaypointPathDefinition>? waypointPaths = null,
-        IEnumerable<Level100ActorMotionDefinition>? motionDefinitions = null)
+        IEnumerable<Level100ActorMotionDefinition>? motionDefinitions = null,
+        int worldNumber = RetailWorldCatalog.RootWorldNumber)
     {
         ArgumentNullException.ThrowIfNull(actors);
         ArgumentNullException.ThrowIfNull(spawns);
+        if (RetailWorldCatalog.Find(worldNumber) is null)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(worldNumber),
+                $"World {worldNumber} is not a released career node.");
+        }
+
+        WorldNumber = worldNumber;
 
         Level100ActorDefinition[] actorArray = actors.ToArray();
         Level100SpawnDefinition[] spawnArray = spawns.ToArray();
@@ -398,6 +407,13 @@ public sealed class Level100ActorDefinitionSet
         _motionDefinitions;
 
     public string IdentitySha256 { get; }
+
+    /// <summary>
+    /// The career world these definitions were built for. Defaults to the
+    /// graph root. The set shape is shared; the world number is what stops
+    /// a world-110 projection from being silently treated as Level 100.
+    /// </summary>
+    public int WorldNumber { get; }
 
     public Level100WaypointPathDefinition GetWaypointPath(string name) =>
         _waypointPathsByName.TryGetValue(name, out Level100WaypointPathDefinition? path)
