@@ -106,11 +106,25 @@ with that provenance rather than promoted to released-runtime behavior:
 
 There is no standalone `.anim` file family in the 5,464-file mirror. Animation
 is embedded in CMSH: `VHFM`, `HORI`, `HPOS`, `HFOV`, `BONE`, and related tags.
+The dedicated
+[animation, skeleton, and authored-usage contract](cmsh-animation-usage.md)
+hash-verifies the 213 loose meshes, 66 numeric LVLR archives, and 733 MSL files.
+It measures 64 meshes / 659 parts with non-trivial `VHFM` maps, seven one-part
+`BONE` carriers, 17 one-value camera `HFOV` lanes, 3,432 named numeric-LVLR
+membership joins, and 56 authored `PlayAnimation*` calls. Those are storage and
+reference contracts, not universal scheduling or render proof.
 The retail image has no `HFOV` fourcc literal because
 `CMeshPart__LoadFromStream @ 0x004B27A0` consumes the keyframe sequence largely
 positionally. The measured note
 [`player-camera-attach-and-mesh-hfov-2026-07-26.md`](../binary-analysis/player-camera-attach-and-mesh-hfov-2026-07-26.md)
 bounds that one path; it does not close general animation.
+
+The seven `BONE` arrays are now bounded as same-mesh part indices: exactly part
+1 carries 14, 18, or 19 indices, and the indexed CMSP part names form either a
+`Bip01` humanoid skeleton or the Sentinel arm's `Bone01`…`Bone14` chain. In the
+48-byte vertex form, the three words at `+0x0C` are exact `BONE index × 3`
+matrix-palette slots. Their blending/weight semantics and bind matrices remain
+open.
 
 Retail static routes include:
 
@@ -137,6 +151,10 @@ The address summary is in
   byte-round-trip all 367 measured streams. The byte-accounting gate attributes
   32.05% of 100,813,615 stream bytes to typed model state and 67.95% to honest
   opaque carry-through; byte identity is not semantic completeness.
+- [`tools/cmsh_animation_usage_census.py`](../../tools/cmsh_animation_usage_census.py)
+  joins the loose frame/skeleton lanes to numeric-LVLR `MESH` membership and
+  authored MSL animation calls, with synthetic can-fail tests and an optional
+  hash-pinned full-corpus gate.
 - The dedicated rebuild Aquila consumer is exact and specimen-bounded; it is not
   a general CMSH importer.
 
@@ -144,10 +162,14 @@ The address summary is in
 
 - Name every PB* payload field by joining one exact part to its retail consumer;
   tag frequency alone is insufficient.
-- Recover bone indices/weights, bind pose, animation interpolation, and malformed
-  hierarchy behavior for the seven bone-bearing files.
-- Establish the 48-byte vertex extension and all topology/FVF combinations with
-  a cross-check between bytes, static loader branches, and rendered output.
+- Recover the three-slot blend/weight rule, bind pose, animation interpolation,
+  and malformed hierarchy behavior for the seven bone-bearing files. Bone and
+  palette-slot indices themselves are now bounded by the dedicated contract.
+- Establish every remaining topology/FVF combination with a cross-check between
+  bytes, static loader branches, and rendered output.
+- Trace the population of the runtime named-animation table at
+  `CMesh+0x14/+0x18`; MSL requests and `VHFM` pose maps are separate evidence
+  until their exact frame-range records are joined.
 - Resolve the apparent repeated `BBOX` writer behavior without assuming it is a
   harmless exporter bug.
 - Test a non-Level-100 static mesh and one skeletal mesh in a disposable copied
@@ -156,6 +178,7 @@ The address summary is in
 ## Claim boundary
 
 The container walk, corpus population, tag counts, hierarchy/reference shapes,
-and selected geometry fields are bounded. Complete scene dependencies,
-animation, skinning, collision, malformed-input behavior, pixels, and parity are
-open.
+selected geometry fields, pose-map dimensions, bone-to-part names, palette-slot
+indices, and numeric-LVLR membership are bounded. Named clips, weights/blending,
+general scheduling/rendering, complete scene dependencies, collision,
+malformed-input behavior, pixels, and parity are open.
