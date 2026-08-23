@@ -1,6 +1,6 @@
 {
  "schema": "bea.re.contract-coverage.v1",
- "generatedAtUtc": "2026-08-23T11:35:31Z",
+ "generatedAtUtc": "2026-08-23T12:28:34Z",
  "denominator": {
   "functions": 8329,
   "contracts": 14365,
@@ -14,8 +14,8 @@
   "noteFiles": 802,
   "manifestFilesWithNamedWitnesses": 36,
   "manifestWitnessKeys": 144,
-  "contractFiles": 275,
-  "contractRowsJoined": 275
+  "contractFiles": 300,
+  "contractRowsJoined": 300
  },
  "statusCounts": {
   "STALE": 1,
@@ -27,14 +27,14 @@
   "SKELETON": 86
  },
  "evidenceClassCounts": {
-  "byte-read": 899,
+  "byte-read": 924,
   "ttd-capture": 5,
   "pinned-source-line": 7,
   "controlled-runtime": 22,
   "ghidra-readback": 2565,
   "name-only": 86
  },
- "elapsedSeconds": 2.499,
+ "elapsedSeconds": 47.234,
  "functions": [
   {
    "va": "0x00401000",
@@ -66334,11 +66334,17 @@
    "name": "CFastVB__ConvertTexelVectorDomain",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__ConvertTexelVectorDomain__00581279.md"
+   ]
   },
   {
    "va": "0x0058183d",
@@ -66408,11 +66414,17 @@
    "name": "CFastVB__TexelUnpackProfile__ZeroTexelsMatchingKeyColor",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__TexelUnpackProfile__ZeroTexelsMatchingKeyColor__00581e1c.md"
+   ]
   },
   {
    "va": "0x00581e8c",
@@ -66438,64 +66450,113 @@
    "va": "0x00582244",
    "name": "CFastVB__PackTexels_Dither_Bits8_8_8_BGR",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__PackTexels_Dither_Bits8_8_8_BGR__00582244.md"
+   ]
   },
   {
    "va": "0x00582355",
    "name": "CFastVB__PackTexels_Dither_Bits8_8_8_8_ARGB",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__PackTexels_Dither_Bits8_8_8_8_ARGB__00582355.md"
+   ]
   },
   {
    "va": "0x0058249e",
    "name": "CFastVB__PackTexels_Dither_Bits8_8_8_8_XRGB",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__PackTexels_Dither_Bits8_8_8_8_XRGB__0058249e.md"
+   ]
   },
   {
    "va": "0x005825c3",
    "name": "CFastVB__PackTexels_Dither_Bits5_6_5",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__PackTexels_Dither_Bits5_6_5__005825c3.md"
+   ]
   },
   {
    "va": "0x005826e8",
    "name": "CFastVB__PackTexels_Dither_Bits5_5_5",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__PackTexels_Dither_Bits5_5_5__005826e8.md"
+   ]
   },
   {
    "va": "0x0058280d",
    "name": "CFastVB__PackTexels_Dither_A1R5G5B5",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__PackTexels_Dither_A1R5G5B5__0058280d.md"
+   ]
   },
   {
    "va": "0x00582950",
    "name": "CFastVB__PackTexels_Dither_A4R4G4B4",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__PackTexels_Dither_A4R4G4B4__00582950.md"
+   ]
   },
   {
    "va": "0x00582a99",
@@ -66609,19 +66670,33 @@
    "va": "0x00583891",
    "name": "CFastVB__PackTexels_Dither_L8",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__PackTexels_Dither_L8__00583891.md"
+   ]
   },
   {
    "va": "0x00583979",
    "name": "CFastVB__PackTexels_Dither_A8L8",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__PackTexels_Dither_A8L8__00583979.md"
+   ]
   },
   {
    "va": "0x00583a94",
@@ -66681,28 +66756,49 @@
    "va": "0x00584144",
    "name": "CFastVB__PackTexels_Dither_Bits16_16",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__PackTexels_Dither_Bits16_16__00584144.md"
+   ]
   },
   {
    "va": "0x0058423f",
    "name": "CFastVB__PackTexels_Dither_Bits2_10_10_10",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__PackTexels_Dither_Bits2_10_10_10__0058423f.md"
+   ]
   },
   {
    "va": "0x0058439e",
    "name": "CFastVB__PackTexels_Dither_Bits16_16_16_16",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__PackTexels_Dither_Bits16_16_16_16__0058439e.md"
+   ]
   },
   {
    "va": "0x00584535",
@@ -66825,91 +66921,161 @@
    "va": "0x00584d78",
    "name": "CFastVB__UnpackTexels_Bits565ToFloat4",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__UnpackTexels_Bits565ToFloat4__00584d78.md"
+   ]
   },
   {
    "va": "0x00584e32",
    "name": "CFastVB__UnpackTexels_Bits555ToFloat4_AlphaOne",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__UnpackTexels_Bits555ToFloat4_AlphaOne__00584e32.md"
+   ]
   },
   {
    "va": "0x00584ee9",
    "name": "CFastVB__UnpackTexels_Bits1555ToFloat4",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__UnpackTexels_Bits1555ToFloat4__00584ee9.md"
+   ]
   },
   {
    "va": "0x00584fae",
    "name": "CFastVB__UnpackTexels_Bits4444ToFloat4",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__UnpackTexels_Bits4444ToFloat4__00584fae.md"
+   ]
   },
   {
    "va": "0x00585072",
    "name": "CFastVB__UnpackTexels_Bits2_10_10_10_ToFloat4",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__UnpackTexels_Bits2_10_10_10_ToFloat4__00585072.md"
+   ]
   },
   {
    "va": "0x00585161",
    "name": "CFastVB__UnpackTexels_Bits8888ToFloat4",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__UnpackTexels_Bits8888ToFloat4__00585161.md"
+   ]
   },
   {
    "va": "0x00585220",
    "name": "CFastVB__UnpackTexels_Bits888ToFloat4_AlphaOne",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__UnpackTexels_Bits888ToFloat4_AlphaOne__00585220.md"
+   ]
   },
   {
    "va": "0x005852d5",
    "name": "CFastVB__UnpackTexels_Bits16_16_ToFloat4_RG",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__UnpackTexels_Bits16_16_ToFloat4_RG__005852d5.md"
+   ]
   },
   {
    "va": "0x00585380",
    "name": "CFastVB__UnpackTexels_Bits2_10_10_10_ToFloat4_Alt",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__UnpackTexels_Bits2_10_10_10_ToFloat4_Alt__00585380.md"
+   ]
   },
   {
    "va": "0x0058546f",
    "name": "CFastVB__UnpackTexels_Bits16_16_16_16_ToFloat4",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__UnpackTexels_Bits16_16_16_16_ToFloat4__0058546f.md"
+   ]
   },
   {
    "va": "0x00585576",
@@ -67023,10 +67189,17 @@
    "va": "0x005859d8",
    "name": "CFastVB__UnpackTexels_L8ToFloat4",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__UnpackTexels_L8ToFloat4__005859d8.md"
+   ]
   },
   {
    "va": "0x00585a5f",
