@@ -53,8 +53,8 @@ Nullability, invalid-state behavior, allocation failure, indirect-call failure, 
 No TTD execution row exists for this VA in the bounded `ttd-deep-mine/values.tsv` corpus. This absence is not a dormancy claim and supplies no runtime semantic proof.
 
 ## Evidence
-- Immutable manifest `.scratch/wave2/manifests/cohort-5.json`, row 6; manifest specimen `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750` and proposed promotion false.
-- Packet `.scratch/wave2/packets/packet-0x00410c50.json` (`bea.re.triage-packet.v1`, status `READY`, image `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`); packet decompile SHA-256 `53ba67c74d460a90c3129d98bdb85b582107fafb067da0ae3cc3a48b77dc5592`.
+- Writer-task authority: task `t_efc238f0`, corrected cohort-5 immutable manifest SHA-256 `a501cc526ae9f6caed0e4e42581ac21cabd87aa03a3eb4266432bdb7fd1ed7a8`, row 6; specimen `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750` and proposed promotion false. Review card `t_b435bd68` preserves the superseded manifest and exact RED/correction receipt; no writer-local scratch path is claimed as tracked evidence.
+- Packet `D:/packet-runs/wave2-contracts-20260822/packet-0x00410c50.json` (`bea.re.triage-packet.v1`, status `READY`, image `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`); packet decompile SHA-256 `53ba67c74d460a90c3129d98bdb85b582107fafb067da0ae3cc3a48b77dc5592`.
 - Digest derivation: closure SHA-256 hashes canonical range text `00410c50:004114ca;`; packet SHA-256 hashes that range text followed by exact pristine bytes; raw SHA-256 hashes only those bytes.
 - Closure execution state `PARTIAL` and confidence `MEDIUM_STATIC`; these are inherited bounded grades, not this factory's promotion decision.
 - Packet stringRefs: empty.

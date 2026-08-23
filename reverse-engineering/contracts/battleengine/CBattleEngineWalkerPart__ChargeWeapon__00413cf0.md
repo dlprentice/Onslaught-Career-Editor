@@ -52,7 +52,7 @@ The bounded TTD table contains these exact rows; they establish only execution/c
 - Session `level521-native-20260802-0018-take4, level521-native-20260802-0018-take2, level521-native-20260802-0018-take1`; question `corpus-combat-only`; value: combat-exclusive; 372 covered bytes; evidence `name=CBattleEngineWalkerPart__ChargeWeapon`.
 
 ## Evidence
-- Immutable manifest `.scratch/wave2/manifests/cohort-5.json`, row 22; manifest specimen `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750` and proposed promotion false.
+- Writer-task authority: task `t_efc238f0`, corrected cohort-5 immutable manifest SHA-256 `a501cc526ae9f6caed0e4e42581ac21cabd87aa03a3eb4266432bdb7fd1ed7a8`, row 22; specimen `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750` and proposed promotion false. Review card `t_b435bd68` preserves the superseded manifest and exact RED/correction receipt; no writer-local scratch path is claimed as tracked evidence.
 - Packet `D:/packet-runs/wave1-contracts-20260822/packet-0x00413cf0.json` (`bea.re.triage-packet.v1`, status `READY`, image `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`); packet decompile SHA-256 `417020b7ca6b1917517eb04f72da6a41d3f24f7ed871f70808200f22da67a27a`.
 - Digest derivation: closure SHA-256 hashes canonical range text `00413cf0:00413ea6;`; packet SHA-256 hashes that range text followed by exact pristine bytes; raw SHA-256 hashes only those bytes.
 - Closure execution state `unknown` and confidence `unknown`; these are inherited bounded grades, not this factory's promotion decision.
