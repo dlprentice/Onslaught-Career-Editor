@@ -4,8 +4,9 @@
 - **Evidence:** MEASURED — every envelope and exit code below was produced by running the
   command against this build on 2026-08-01 and pasting its output back in. The
   "what is not here" list was produced by enumerating the verb tree against the GUI's
-  pages, not from recollection. The `lore` verbs joined on 2026-08-23; their envelopes
-  and exit codes below were produced the same way, against this build.
+  pages, not from recollection. The `lore` verbs joined on 2026-08-23 and the `media`
+  verbs joined the same day; their envelopes and exit codes below were produced the
+  same way, against this build.
 - **Last updated:** 2026-08-23
 - **Summary:** the envelope, the exit codes, the whole verb surface, and one session
   that works start to finish.
@@ -100,6 +101,7 @@ already answered.
 | `process` | `list`, `stop <pid>` |
 | `trainer` | `status`, `read`, `set`, `hold`, `music` |
 | `lore` | `search <query>`, `show <document>` |
+| `media` | `list [audio\|video]` |
 
 `lore` reads the packaged Lore library — the same
 [`LoreBrowserService`](OnslaughtCareerEditor.AppCore/LoreBrowserService.cs) +
@@ -120,6 +122,45 @@ lore search aquila --json        -> 0     17 documents searched, 29 hits, ordere
 lore show lore/characters.md     -> 0     159 text lines: title, 7-entry outline, body; stderr empty
 lore show lore/no-such-doc.md    -> 2     ran fine; that key names no indexed document
 lore search                      -> 1     usage error: "A search query is required."
+```
+
+`media list` reads the game's audio/video catalog — the same
+[`MediaCatalogService`](OnslaughtCareerEditor.AppCore/MediaCatalogService.cs) snapshot the
+GUI Media page draws, with mission names joined from the game's own language file and
+voice-line transcripts from its text table. Nothing is written anywhere and no audio or
+video bytes are ever emitted. The game folder resolves the way `saves list` resolves it:
+the configured game directory, then auto-detection; pass `--game-dir <dir>` to override
+for one invocation. A directory that is not an installation (no `BEA.exe` + `data`) is
+exit 2, a verdict about the data rather than a bad call.
+
+Measured against this build:
+
+```
+media list --game-dir <dir> --json   -> 0     both sections: counts, groups, transcripts
+media list audio --game-dir <dir> --json
+                                     -> 0     the audio section only, video absent
+media list --game-dir <dir>          -> 0     text mode: grouped banner, no paths printed
+media list --game-dir ./empty        -> 2     ran fine; that directory is not an installation
+```
+
+In JSON each item carries its name, group/section, sort order, duration label, game-relative
+file label, and transcript when the game's text table carries one — never an absolute path.
+Text output is a quiet grouped listing that names media, not file locations.
+
+```json
+{
+  "audioCount": 3,
+  "audio": [
+    {
+      "name": "512_TATIANA_NEW_1",
+      "groupName": "Mission 512",
+      "groupSortOrder": 512,
+      "durationLabel": "",
+      "file": "data/sounds/english/MessageBox/512_TATIANA_NEW_1.ogg",
+      "transcript": "Hawk, Billy! What are you two doing?"
+    }
+  ]
+}
 ```
 
 Two roots exist and are never the same place: `copy` works under `GameProfiles`, whole
@@ -156,12 +197,10 @@ present unless told either `--keep-saves-in <dir>` or `--discard-saves`.
 
 ## What is not here
 
-The GUI can do these and the CLI cannot, as of 2026-08-01. Listed because a gap nobody
+The GUI can do these and the CLI cannot, as of 2026-08-23. Listed because a gap nobody
 wrote down is a gap nobody closes:
 
 - **Cheats** — composing a cheat-named save copy. No verb.
-- **Media** — the catalog, mission names, and voice-line transcripts. No verb, though
-  `GameTextCatalog` is the service behind them.
 - **Trainer hotkeys and music playback** — `trainer music --out <file>` renders the tune
   to disk; playing it is the app's job.
 

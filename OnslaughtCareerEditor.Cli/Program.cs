@@ -32,6 +32,7 @@ namespace OnslaughtCareerEditor.AppCore
         {
             "config", "saves", "goodies", "options", "copy", "patch", "process", "trainer", "version",
             "lore",
+            "media",
         };
 
         [STAThread]
@@ -111,6 +112,7 @@ namespace OnslaughtCareerEditor.AppCore
             root.AddCommand(BuildProcessCommand(contextFactory, Json));
             root.AddCommand(BuildTrainerCommand(contextFactory, Json));
             root.AddCommand(BuildLoreCommand(contextFactory, Json));
+            root.AddCommand(BuildMediaCommand(contextFactory, Json));
 
             var version = new Command("version", "Show the tool version and catalog identities.");
             version.SetHandler((InvocationContext c) =>
@@ -744,6 +746,36 @@ namespace OnslaughtCareerEditor.AppCore
             lore.AddCommand(show);
 
             return lore;
+        }
+
+        // ------------------------------------------------------------------ media
+
+        private static Command BuildMediaCommand(Func<bool, CliContext> factory, Func<InvocationContext, bool> json)
+        {
+            var media = new Command(
+                "media",
+                "List the game's audio and video catalog, with mission names from the game's own language file and voice-line transcripts. Quiet, read-only parity with the GUI Media page.");
+
+            var filterArg = new Argument<string?>(
+                "filter",
+                () => null,
+                "Optional section: 'audio' or 'video'. Omit it to list both.");
+
+            var gameDirOption = new Option<string?>(
+                "--game-dir",
+                "Game installation folder. Defaults to the configured game directory, then auto-detection - the same resolution 'saves list' uses.");
+
+            var list = new Command(
+                "list",
+                "List catalog entries: name, group/section, duration or size label, transcript when the game's text table carries one. Never emits media bytes.")
+            { filterArg, gameDirOption };
+            list.SetHandler((InvocationContext c) => c.ExitCode = MediaVerbs.List(
+                factory(json(c)),
+                c.ParseResult.GetValueForArgument(filterArg),
+                c.ParseResult.GetValueForOption(gameDirOption)));
+            media.AddCommand(list);
+
+            return media;
         }
 
         /// <summary>
