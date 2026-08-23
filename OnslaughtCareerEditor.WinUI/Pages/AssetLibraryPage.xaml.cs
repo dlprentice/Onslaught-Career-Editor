@@ -40,6 +40,8 @@ namespace OnslaughtCareerEditor.WinUI.Pages
         private readonly List<ModProjectSelectionEntry> _modProjectSelection = new();
         private ModProjectSelectionEntry? _currentModProjectCandidate;
         private ModProjectPlan? _modProjectPlan;
+        private ModProjectRevalidationReview? _manifestReview;
+        private string _manifestReviewPath = string.Empty;
 
         public AssetLibraryPage()
         {
@@ -69,6 +71,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             {
                 ResetSelection();
                 ResetModProjectPlanner(hasCatalog: false);
+                ResetManifestReview(hasCatalog: false);
                 CatalogStatusTextBlock.Text = BuildMissingCatalogStatus(catalogToLoad);
                 CatalogSummaryTextBlock.Text = "Load a generated catalog to see textures, meshes, and goodies.";
                 CatalogCoverageTextBlock.Text = "Coverage summary appears after a generated catalog loads.";
@@ -132,6 +135,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 ExportModdingManifestButton.Visibility = Visibility.Collapsed;
                 ExportModdingCatalogTsvButton.Visibility = Visibility.Collapsed;
                 ResetModProjectPlanner(hasCatalog: false);
+                ResetManifestReview(hasCatalog: false);
                 UpdateAssetListNote(search: string.Empty, matchCount: 0);
                 return;
             }
@@ -150,6 +154,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             CatalogCoverageTextBlock.Text = BuildCatalogCoverageSummary();
             CatalogProvenanceTextBlock.Text = BuildCatalogProvenanceSummary();
             ResetModProjectPlanner(hasCatalog: true);
+            ResetManifestReview(hasCatalog: true);
             AppStatusService.SetStatus("Asset Library: catalog loaded");
 
             if (persist)
@@ -486,6 +491,155 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 _ => kind,
             };
             return count == 1 ? label : $"{label}s";
+        }
+
+        private void ResetManifestReview(bool hasCatalog)
+        {
+            _manifestReview = null;
+            _manifestReviewPath = string.Empty;
+            ManifestReviewCardBorder.Visibility = hasCatalog ? Visibility.Visible : Visibility.Collapsed;
+            ManifestReviewInputPathTextBox.Text = string.Empty;
+            ManifestReviewOutputPathTextBox.Text = string.Empty;
+            ManifestReviewSummaryTextBlock.Text = "No planner manifest has been reviewed against the loaded catalog.";
+            ManifestReviewProvenanceTextBlock.Text = "Original manifest and current catalog provenance appear after review.";
+            ManifestReviewItemsListView.ItemsSource = null;
+            ManifestReviewStatusTextBlock.Text = hasCatalog
+                ? "Choose an existing mod project plan JSON manifest, then run the metadata-only drift review."
+                : "Load a generated catalog before reviewing a planner manifest.";
+            UpdateManifestReviewActionState();
+        }
+
+        private async void BrowseManifestReviewInputButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (App.MainWindowInstance == null)
+            {
+                ManifestReviewStatusTextBlock.Text = "The planner manifest file picker is not ready.";
+                return;
+            }
+
+            string? path = await PickerInterop.PickFileAsync(App.MainWindowInstance, [".json"]);
+            if (!string.IsNullOrWhiteSpace(path))
+            {
+                ManifestReviewInputPathTextBox.Text = path;
+            }
+        }
+
+        private void ManifestReviewInputPathTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (!string.Equals(
+                    ManifestReviewInputPathTextBox.Text?.Trim(),
+                    _manifestReviewPath,
+                    StringComparison.Ordinal))
+            {
+                _manifestReview = null;
+                ManifestReviewSummaryTextBlock.Text = "Run the review to compare this planner manifest with the loaded catalog.";
+                ManifestReviewProvenanceTextBlock.Text = "Original manifest and current catalog provenance appear after review.";
+                ManifestReviewItemsListView.ItemsSource = null;
+            }
+
+            UpdateManifestReviewActionState();
+        }
+
+        private void ReviewManifestButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                string manifestPath = ManifestReviewInputPathTextBox.Text?.Trim() ?? string.Empty;
+                ModProjectRevalidationReview review = ModProjectManifestRevalidationService.Review(
+                    _snapshot,
+                    manifestPath);
+                _manifestReview = review;
+                _manifestReviewPath = manifestPath;
+                ManifestReviewSummaryTextBlock.Text =
+                    $"{review.ReviewedCount} reviewed: {review.UnchangedCount} unchanged; " +
+                    $"{review.CatalogDriftedCount} catalog-drifted; {review.MissingCount} missing; " +
+                    $"{review.AmbiguousOrDuplicateCount} ambiguous/duplicate; " +
+                    $"{review.LocalExportMissingCount} local-export missing; " +
+                    $"{review.LocalHashMismatchCount} local-hash mismatch.";
+                string provenanceState = review.CatalogProvenanceChanged ? "changed" : "unchanged";
+                ManifestReviewProvenanceTextBlock.Text =
+                    $"Original manifest {review.OriginalManifest.ManifestFileName}; manifest SHA-256 {review.OriginalManifest.ManifestSha256}; " +
+                    $"planned catalog {review.OriginalManifest.CatalogFileName}, schema {review.OriginalManifest.CatalogSchemaVersion}, " +
+                    $"{review.OriginalManifest.CatalogPathContract}, SHA-256 {review.OriginalManifest.CatalogSha256}. " +
+                    $"Current catalog {review.CurrentCatalog.CatalogFileName}, schema {review.CurrentCatalog.CatalogSchemaVersion}, " +
+                    $"{review.CurrentCatalog.CatalogPathContract}, SHA-256 {review.CurrentCatalog.CatalogSha256}. " +
+                    $"Catalog provenance is {provenanceState}; this is the explicit review state for receipt export.";
+                ManifestReviewItemsListView.ItemsSource = review.Entries
+                    .Select(ManifestReviewRowViewModel.FromEntry)
+                    .ToArray();
+                ManifestReviewStatusTextBlock.Text = review.AmbiguousOrDuplicateCount > 0
+                    ? "Review complete, but ambiguous or duplicate identities block receipt export. Resolve them and review again."
+                    : "Review complete. Choose a new JSON path to export this exact metadata-only review receipt.";
+                AppStatusService.SetStatus("Asset Library: planner manifest drift review complete");
+            }
+            catch (Exception exception) when (
+                exception is ArgumentException or IOException or InvalidOperationException or NotSupportedException or UnauthorizedAccessException)
+            {
+                _manifestReview = null;
+                _manifestReviewPath = string.Empty;
+                ManifestReviewSummaryTextBlock.Text = "The planner manifest could not be reviewed.";
+                ManifestReviewProvenanceTextBlock.Text = "No receipt can be exported until a supported manifest and current catalog are reviewed.";
+                ManifestReviewItemsListView.ItemsSource = null;
+                ManifestReviewStatusTextBlock.Text = exception.Message;
+                AppStatusService.SetStatus("Asset Library: planner manifest drift review refused");
+            }
+
+            UpdateManifestReviewActionState();
+        }
+
+        private async void BrowseManifestReviewOutputButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (App.MainWindowInstance == null)
+            {
+                ManifestReviewStatusTextBlock.Text = "The review receipt file picker is not ready.";
+                return;
+            }
+
+            string? path = await PickerInterop.PickSaveFileAsync(
+                App.MainWindowInstance,
+                "mod-project-revalidation-receipt",
+                "JSON manifest review receipt",
+                ".json");
+            if (!string.IsNullOrWhiteSpace(path))
+            {
+                ManifestReviewOutputPathTextBox.Text = path;
+            }
+        }
+
+        private void ManifestReviewOutputPathTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            UpdateManifestReviewActionState();
+        }
+
+        private void ExportManifestReviewReceiptButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (_manifestReview is null)
+            {
+                ManifestReviewStatusTextBlock.Text = "Run the manifest drift review before exporting a receipt.";
+                return;
+            }
+
+            ModProjectRevalidationExportResult result = ModProjectManifestRevalidationService.Export(
+                _snapshot,
+                _manifestReviewPath,
+                _manifestReview,
+                ManifestReviewOutputPathTextBox.Text,
+                includeTsv: ManifestReviewIncludeTsvCheckBox.IsChecked == true);
+            ManifestReviewStatusTextBlock.Text = result.Message;
+            AppStatusService.SetStatus(result.Success
+                ? "Asset Library: manifest revalidation review receipt written"
+                : "Asset Library: manifest revalidation review receipt not written");
+        }
+
+        private void UpdateManifestReviewActionState()
+        {
+            bool hasCatalog = !string.IsNullOrWhiteSpace(_snapshot.CatalogFilePath);
+            ReviewManifestButton.IsEnabled = hasCatalog &&
+                !string.IsNullOrWhiteSpace(ManifestReviewInputPathTextBox.Text);
+            ExportManifestReviewReceiptButton.IsEnabled =
+                _manifestReview is not null &&
+                _manifestReview.AmbiguousOrDuplicateCount == 0 &&
+                !string.IsNullOrWhiteSpace(ManifestReviewOutputPathTextBox.Text);
         }
 
         private void TexturesTabButton_Click(object sender, RoutedEventArgs e)
@@ -1664,6 +1818,51 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     $"{asset.Kind}: {asset.CatalogId}",
                     exportSummary,
                     $"Expected SHA-256: {expected}; local SHA-256: {local}");
+            }
+        }
+
+        private sealed record ManifestReviewRowViewModel(
+            string DisplayName,
+            string Identity,
+            string StatusLabel,
+            string Detail,
+            string HashSummary)
+        {
+            public static ManifestReviewRowViewModel FromEntry(ModProjectRevalidationEntry entry)
+            {
+                var statusParts = new List<string>();
+                if (entry.CatalogDrifted)
+                {
+                    statusParts.Add("Catalog drifted");
+                }
+                if (entry.Missing)
+                {
+                    statusParts.Add("Missing");
+                }
+                if (entry.AmbiguousOrDuplicate)
+                {
+                    statusParts.Add("Ambiguous / duplicate");
+                }
+                if (entry.LocalExportMissing)
+                {
+                    statusParts.Add("Local export missing");
+                }
+                if (entry.LocalHashMismatch)
+                {
+                    statusParts.Add("Local hash mismatch");
+                }
+
+                string status = statusParts.Count == 0
+                    ? "Unchanged"
+                    : string.Join(" + ", statusParts);
+                string manifestHash = entry.ManifestExportSha256 ?? "unresolved";
+                string currentHash = entry.CurrentExportSha256 ?? "unresolved";
+                return new ManifestReviewRowViewModel(
+                    entry.DisplayName,
+                    $"{entry.Kind}: {entry.CatalogId}",
+                    status,
+                    entry.Detail,
+                    $"Manifest local SHA-256: {manifestHash}; current local SHA-256: {currentHash}");
             }
         }
 

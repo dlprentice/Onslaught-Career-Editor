@@ -260,6 +260,18 @@ namespace OnslaughtCareerEditor.AppCore
                 requireProtectedInput: false);
         }
 
+        internal static GuardedFileMutation BeginGeneratedVacant(
+            string outputPath,
+            params string?[] protectedInputPaths)
+        {
+            return new GuardedFileMutation(
+                outputPath,
+                authorization: null,
+                protectedInputPaths,
+                requireProtectedInput: false,
+                requireVacantOutput: true);
+        }
+
         internal static GuardedFileMutation BeginInAppOwnedProfile(
             string outputPath,
             AppOwnedProfileMutationAuthorization authorization,
@@ -1132,16 +1144,19 @@ namespace OnslaughtCareerEditor.AppCore
         private FileMutationSafety.DirectoryLockSet? _outputDirectoryLocks;
         private FileStream? _committedStream;
         private string _physicalOutputPath = string.Empty;
+        private readonly bool _requireVacantOutput;
         private bool _committed;
 
         internal GuardedFileMutation(
             string outputPath,
             FileMutationSafety.AppOwnedProfileMutationAuthorization? authorization,
             IReadOnlyList<string?> protectedInputPaths,
-            bool requireProtectedInput)
+            bool requireProtectedInput,
+            bool requireVacantOutput = false)
         {
             OutputPath = FileMutationSafety.NormalizeLocalPath(outputPath, "Output file");
             _authorization = authorization;
+            _requireVacantOutput = requireVacantOutput;
 
             try
             {
@@ -1207,14 +1222,18 @@ namespace OnslaughtCareerEditor.AppCore
             return ReadAllBytes(input.Stream, "Protected input");
         }
 
-        internal void Commit(byte[] bytes, Action<string>? beforeCommittedOpen = null)
+        internal void Commit(
+            byte[] bytes,
+            Action<string>? beforeCommittedOpen = null,
+            Action<string>? beforePublish = null)
         {
             ArgumentNullException.ThrowIfNull(bytes);
             CommitCore(
                 write: destination => destination.Write(bytes),
                 expectedLength: bytes.LongLength,
                 expectedHash: SHA256.HashData(bytes),
-                beforeCommittedOpen: beforeCommittedOpen);
+                beforeCommittedOpen: beforeCommittedOpen,
+                beforePublish: beforePublish);
         }
 
         internal void CommitFromProtectedInput(
@@ -1232,7 +1251,8 @@ namespace OnslaughtCareerEditor.AppCore
                 write: destination => input.Stream.CopyTo(destination),
                 expectedLength: input.Stream.Length,
                 expectedHash: expectedHash,
-                beforeCommittedOpen: beforeCommittedOpen);
+                beforeCommittedOpen: beforeCommittedOpen,
+                beforePublish: null);
         }
 
         internal void CommitFromHeldSource(
@@ -1252,14 +1272,16 @@ namespace OnslaughtCareerEditor.AppCore
                 write: destination => source.CopyTo(destination),
                 expectedLength: source.Length,
                 expectedHash: expectedHash,
-                beforeCommittedOpen: beforeCommittedOpen);
+                beforeCommittedOpen: beforeCommittedOpen,
+                beforePublish: null);
         }
 
         private void CommitCore(
             Action<FileStream> write,
             long expectedLength,
             byte[] expectedHash,
-            Action<string>? beforeCommittedOpen)
+            Action<string>? beforeCommittedOpen,
+            Action<string>? beforePublish)
         {
             if (_committed)
                 throw new InvalidOperationException("This guarded transaction has already committed.");
@@ -1296,9 +1318,11 @@ namespace OnslaughtCareerEditor.AppCore
                 }
 
                 ValidateDestination();
+                beforePublish?.Invoke(_physicalOutputPath);
+                ValidateDestination();
                 FileMutationSafety.ReleaseStagedFileQuarantine(temp);
                 temp.Dispose();
-                File.Move(tempPath, _physicalOutputPath, overwrite: true);
+                File.Move(tempPath, _physicalOutputPath, overwrite: !_requireVacantOutput);
                 tempEntryExists = false;
                 beforeCommittedOpen?.Invoke(_physicalOutputPath);
 
@@ -1383,6 +1407,8 @@ namespace OnslaughtCareerEditor.AppCore
                 throw new InvalidOperationException("The selected output file is a folder.");
             if (!File.Exists(_physicalOutputPath))
                 return;
+            if (_requireVacantOutput)
+                throw new IOException("The selected output file is no longer vacant.");
 
             using SafeFileHandle outputHandle = File.OpenHandle(
                 _physicalOutputPath,

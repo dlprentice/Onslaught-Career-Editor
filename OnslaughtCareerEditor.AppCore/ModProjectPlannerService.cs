@@ -178,7 +178,7 @@ namespace OnslaughtCareerEditor.AppCore
                 ContentBoundary);
         }
 
-        private static void ValidateCatalogProvenance(AssetCatalogSnapshot snapshot)
+        internal static void ValidateCatalogProvenance(AssetCatalogSnapshot snapshot)
         {
             AssetCatalogSelection? selection = AssetCatalogFileSafety.ResolveSelection(snapshot.CatalogFilePath);
             if (selection is null)
