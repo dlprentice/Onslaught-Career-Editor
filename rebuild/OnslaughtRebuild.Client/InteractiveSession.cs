@@ -861,8 +861,20 @@ public static class TapeFile
     /// refusal throws before a byte of tape JSON is produced, so a failed call
     /// leaves the destination untouched.
     /// </summary>
-    public static void WriteNew(string path, CommandTape tape)
+    public static void WriteNew(string path, CommandTape tape) =>
+        WriteNew(path, tape, []);
+
+    /// <summary>
+    /// As <see cref="WriteNew(string, CommandTape)"/>, with caller-known
+    /// protected roots (a supplied game root, save root) additionally refused
+    /// as destinations.
+    /// </summary>
+    public static void WriteNew(
+        string path,
+        CommandTape tape,
+        IReadOnlyList<string> knownProtectedRoots)
     {
+        ArgumentNullException.ThrowIfNull(knownProtectedRoots);
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
         ArgumentNullException.ThrowIfNull(tape);
 
@@ -873,6 +885,14 @@ public static class TapeFile
                 "Command tapes require an absolute .json destination path; career saves and retail files are never valid destinations.",
                 nameof(path));
         }
+
+        // Fail-closed destination boundary: canonicalize and refuse protected
+        // storage BEFORE any parent directory is created or the destination is
+        // opened. A fresh absolute .json that lexical checks alone would admit
+        // must still be refused when it lies inside a retail install or career
+        // save layout, or behind an existing reparse-point ancestor.
+        string fullPath = Path.GetFullPath(path);
+        EnsureSafeDestination(fullPath, knownProtectedRoots);
 
         if (File.Exists(path))
         {
@@ -897,5 +917,104 @@ public static class TapeFile
         byte[] bytes = Encoding.UTF8.GetBytes(CommandTapeCodec.Serialize(tape));
         stream.Write(bytes);
         stream.Flush(flushToDisk: true);
+    }
+
+    /// <summary>
+    /// The fail-closed destination boundary. Runs before any directory
+    /// creation or file open and refuses a canonicalized destination that
+    /// (1) is the same as or under any caller-known protected root, (2) has an
+    /// existing ancestor carrying the retail-install shape — <c>BEA.exe</c>
+    /// beside a <c>data</c> directory — or (3) reaches through an existing
+    /// reparse point / symbolic link ancestor, which could divert a
+    /// lexical-safe path into protected storage. Every refusal throws before
+    /// the destination's parents are created.
+    /// </summary>
+    private static void EnsureSafeDestination(
+        string fullPath,
+        IReadOnlyList<string> knownProtectedRoots)
+    {
+        // OS-appropriate comparison: Windows paths are case-insensitive and
+        // separator-agnostic; elsewhere ordinal exact form rules.
+        bool osSensitive = OperatingSystem.IsWindows();
+        StringComparer comparer = osSensitive
+            ? StringComparer.OrdinalIgnoreCase
+            : StringComparer.Ordinal;
+
+        string? currentDirectory = Path.GetDirectoryName(fullPath);
+        while (!string.IsNullOrEmpty(currentDirectory))
+        {
+            if (osSensitive)
+            {
+                currentDirectory = currentDirectory.TrimEnd(
+                    Path.DirectorySeparatorChar,
+                    Path.AltDirectorySeparatorChar);
+                if (string.IsNullOrEmpty(currentDirectory))
+                {
+                    break;
+                }
+            }
+
+            // Caller-known roots: refuse when the destination is inside one,
+            // exactly as canonicalized.
+            foreach (string knownRoot in knownProtectedRoots)
+            {
+                if (string.IsNullOrWhiteSpace(knownRoot))
+                {
+                    continue;
+                }
+
+                string canonicalKnownRoot = Path.GetFullPath(knownRoot)
+                    .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                bool sameAsRoot = comparer.Equals(currentDirectory, canonicalKnownRoot) ||
+                    comparer.Equals(fullPath, canonicalKnownRoot);
+                bool underRoot = currentDirectory.StartsWith(
+                    canonicalKnownRoot + Path.DirectorySeparatorChar,
+                    osSensitive ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+                if (sameAsRoot || underRoot)
+                {
+                    throw new ArgumentException(
+                        "Command tape persistence refuses destinations at or under a supplied game or save root " +
+                        $"'{knownRoot}'); retail installs and career saves are never valid recording targets.");
+                }
+            }
+
+            // Existing retail-install shape: BEA.exe directly beside a data
+            // directory marks a retail install root regardless of whether this
+            // host ever saw the real game there.
+            string beaCandidate = Path.Combine(currentDirectory, "BEA.exe");
+            string dataCandidate = Path.Combine(currentDirectory, "data");
+            if (File.Exists(beaCandidate) && Directory.Exists(dataCandidate))
+            {
+                throw new ArgumentException(
+                    $"Command tape persistence refuses destinations inside a retail install layout ('{currentDirectory}'); " +
+                    "retail files are never valid recording targets.");
+            }
+
+            // Existing reparse-point ancestor: a junction or symlink above the
+            // destination could resolve into protected storage even though the
+            // written path looks safe lexically. Fail closed instead. A
+            // non-null immediate target proves this path segment IS a link.
+            FileSystemInfo? immediateLinkTarget;
+            try
+            {
+                immediateLinkTarget =
+                    Directory.ResolveLinkTarget(currentDirectory, returnFinalTarget: false);
+            }
+            catch (IOException)
+            {
+                // A path with unreadable metadata stays subject to the
+                // remaining checks; only a PROVEN reparse point refuses here.
+                immediateLinkTarget = null;
+            }
+
+            if (immediateLinkTarget is not null)
+            {
+                throw new ArgumentException(
+                    $"Command tape persistence refuses destinations behind a reparse point or symbolic link ('{currentDirectory}'); " +
+                    "a linked path can escape into career saves or a retail install.");
+            }
+
+            currentDirectory = Path.GetDirectoryName(currentDirectory);
+        }
     }
 }

@@ -473,4 +473,165 @@ public sealed class HeadlessApplicationTests
             }
         }
     }
+
+    // ------------------------------------------------------------------
+    // P8 correction (task t_877b3e70): fail-closed destination boundary.
+    // A fresh absolute .json is REFUSED before any directory creation or
+    // file open when it lies inside a retail-install layout (an existing
+    // ancestor holding BEA.exe beside a data directory) or behind an
+    // existing reparse-point ancestor, and the refusals leave neither the
+    // target nor any missing target parent behind. An ordinary fresh
+    // destination outside protected storage stays allowed.
+    // ------------------------------------------------------------------
+
+    private static CommandTape BoundaryProbeTape() => new(
+        CommandTape.CurrentSchemaVersion,
+        "boundary-probe",
+        3,
+        1,
+        null,
+        null,
+        []);
+
+    [Fact]
+    public void TapeFileWriteNew_RejectsFreshJsonUnderSyntheticRetailInstallShape()
+    {
+        string retailRoot = Path.Combine(
+            Path.GetTempPath(),
+            $"onslaught-rebuild-retail-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(Path.Combine(retailRoot, "data"));
+        // Synthetic markers only: the boundary keys on the retail-install
+        // SHAPE (BEA.exe beside a data directory), never on retail bytes.
+        File.WriteAllText(Path.Combine(retailRoot, "BEA.exe"), "synthetic");
+
+        try
+        {
+            // Inside the existing fake retail data directory...
+            string dataDestination = Path.Combine(retailRoot, "data", "recording.json");
+            Assert.Throws<ArgumentException>(
+                () => TapeFile.WriteNew(dataDestination, BoundaryProbeTape()));
+            Assert.False(File.Exists(dataDestination));
+
+            // ...and under a career-save-style directory whose parents do not
+            // exist yet: the refusal must fire before Directory.CreateDirectory.
+            string saveDestination = Path.Combine(retailRoot, "savegames", "nested", "tape.json");
+            Assert.Throws<ArgumentException>(
+                () => TapeFile.WriteNew(saveDestination, BoundaryProbeTape()));
+            Assert.False(File.Exists(saveDestination));
+            Assert.False(Directory.Exists(Path.Combine(retailRoot, "savegames")));
+        }
+        finally
+        {
+            Directory.Delete(retailRoot, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void TapeFileWriteNew_RejectsExistingReparsePointAncestors_WhereSupported()
+    {
+        string baseRoot = Path.Combine(
+            Path.GetTempPath(),
+            $"onslaught-rebuild-link-{Guid.NewGuid():N}");
+        string plainTarget = Path.Combine(baseRoot, "plain-target");
+        Directory.CreateDirectory(plainTarget);
+        string link = Path.Combine(baseRoot, "link");
+        if (!TryCreateReparseDirectoryLink(link, plainTarget))
+        {
+            // This host cannot mint junctions or symlinks for the test user.
+            // The card scopes the reparse control to "where supported"; the
+            // ordinary-destination control still pins the safe path.
+            Directory.Delete(baseRoot, recursive: true);
+            return;
+        }
+
+        try
+        {
+            string destination = Path.Combine(link, "recording.json");
+
+            ArgumentException refused = Assert.Throws<ArgumentException>(
+                () => TapeFile.WriteNew(destination, BoundaryProbeTape()));
+
+            Assert.Contains("reparse", refused.Message, StringComparison.Ordinal);
+            // Nothing may land through the link either.
+            Assert.False(File.Exists(Path.Combine(plainTarget, "recording.json")));
+        }
+        finally
+        {
+            // Remove the junction itself before the recursive sweep; on some
+            // hosts .NET's recursive delete denies the reparse point directly.
+            if (Directory.Exists(link))
+            {
+                Directory.Delete(link, recursive: false);
+            }
+
+            Directory.Delete(baseRoot, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void TapeFileWriteNew_AllowsOrdinaryFreshDestinationOutsideProtectedStorage()
+    {
+        string ordinaryRoot = Path.Combine(
+            Path.GetTempPath(),
+            $"onslaught-rebuild-ordinary-{Guid.NewGuid():N}");
+        string unrelatedProtectedRoot = Path.Combine(
+            Path.GetTempPath(),
+            $"onslaught-rebuild-unrelated-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(unrelatedProtectedRoot);
+        string destination = Path.Combine(ordinaryRoot, "sessions", "ordinary.tape.json");
+
+        try
+        {
+            // Supplying a protected root that the destination has nothing to
+            // do with must not disturb the ordinary safe write.
+            TapeFile.WriteNew(destination, BoundaryProbeTape(), [unrelatedProtectedRoot]);
+
+            Assert.True(File.Exists(destination));
+            Assert.Equal(
+                CommandTape.IdentityOf(BoundaryProbeTape()),
+                CommandTape.IdentityOf(CommandTapeCodec.Deserialize(File.ReadAllText(destination))));
+        }
+        finally
+        {
+            Directory.Delete(ordinaryRoot, recursive: true);
+            Directory.Delete(unrelatedProtectedRoot, recursive: true);
+        }
+    }
+
+    private static bool TryCreateReparseDirectoryLink(string linkPath, string targetPath)
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            // A junction needs neither elevation nor developer mode; cmd's
+            // mklink /J mints one deterministically.
+            using var process = System.Diagnostics.Process.Start(
+                new System.Diagnostics.ProcessStartInfo(
+                    "cmd.exe",
+                    $"/c mklink /J \"{linkPath}\" \"{targetPath}\"")
+                {
+                    CreateNoWindow = true,
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                });
+            if (process is null)
+            {
+                return false;
+            }
+
+            process.WaitForExit(15_000);
+            return process.ExitCode == 0 && Directory.Exists(linkPath);
+        }
+
+        try
+        {
+            Directory.CreateSymbolicLink(linkPath, targetPath);
+            return Directory.Exists(linkPath);
+        }
+        catch (Exception exception) when (
+            exception is IOException or UnauthorizedAccessException or NotSupportedException)
+        {
+            return false;
+        }
+    }
 }
