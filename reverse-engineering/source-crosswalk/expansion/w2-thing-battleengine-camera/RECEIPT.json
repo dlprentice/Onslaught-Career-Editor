@@ -1,0 +1,228 @@
+{
+  "collision_policy": {
+    "allowed_groups": {
+      "0x004040a0": [
+        "CThing::GetRenderPos",
+        "CThing::GetRenderStartPos",
+        "CThing::GetRenderEndPos"
+      ],
+      "0x0043e9f0": [
+        "CThing::GetSoundPos",
+        "CThing::GetOldPos"
+      ],
+      "0x0043ea20": [
+        "CComplexThing::GetSoundOrientation",
+        "CComplexThing::GetOldOrientation"
+      ]
+    },
+    "rule": "Promoted SOURCE_FOLDED many-to-one source aliases are recorded separately; any repeated populated VA outside those exact semantic groups is a collision and fails.",
+    "status": "PASS"
+  },
+  "corpus_reuse": {
+    "definitions": {
+      "EXTENDED": 155,
+      "NEW_MEASUREMENT": 0,
+      "REUSED": 46
+    },
+    "index_catalog_search": {
+      "crosswalk_tool_lines": 0,
+      "representative_stable_key_lines": 0,
+      "representative_va_lines": 0,
+      "sealed_wave_hash_lines": 0,
+      "subsystem_lines": 13
+    },
+    "new_measurement_boundary": "None: source lexical-owner extension and joins over existing tracked/local authorities only; no specimen/runtime/Ghidra/PS2/raw-drive measurement.",
+    "output_artifacts": {
+      "EXTENDED": 5,
+      "NEW_MEASUREMENT": 0,
+      "REUSED": 0
+    },
+    "predecessor_paths_sha256": {
+      "local-lab/hermes-kanban-campaign-2026-08-22/source-first-expansion/EXECUTION.md": "12a0f72ea2b1606ee673824ee801586cefe815e0aa899d2fe55073e7c4509f18",
+      "local-lab/hermes-kanban-campaign-2026-08-22/source-first-expansion/PLAN.md": "604d5db76ecc9811b55321c5ec443f346c9be32515b6d8ed526142622d7ec393",
+      "local-lab/hermes-kanban-campaign-2026-08-22/source-first-expansion/manifest.json": "6f58de995a27a0088749f40e06907969d3213872b40d1bf0bb450afda1fd216e",
+      "local-lab/hermes-kanban-campaign-2026-08-22/source-first-expansion/partition.tsv": "bc36791975f43d5da6b584727df3eb7d29402e18c550dd3d96e01bba0c301fde",
+      "local-lab/hermes-kanban-campaign-2026-08-22/source-first-expansion/sample.tsv": "5235ff8e61fd12d9e4b17caf256d06c4a693cfd50bcce20d20261f42f21813bb",
+      "local-lab/pc-layout-thing-complexthing-20260813-v1/results-g/results.ready.json": "e788ffde077c9c861d9163a7526964917cc1747c9c69f6287d9e919a1e399efa",
+      "local-lab/re-campaign-incident-recovery-20260808-v1/generation-32-current-8329-db18625-v1/campaign.ready.json": "08ed89644ed25feb9e85fefb5b31ab2bdecbbd91b8aca720e20c53a7fbc5e73f",
+      "rebuild/OnslaughtRebuild.Client/InteractiveSession.cs": "a6d1a09970b1641d1435046229b8c326ca85fb9a620e59434d81065e0912eb72",
+      "rebuild/OnslaughtRebuild.Core/Level100ActorMechanics.cs": "ed64a842d59f2cd812f6eb49bf4529794b2fadb8ad1ed21dae6c3910742f6eeb",
+      "rebuild/OnslaughtRebuild.Core/Level100ActorRegistry.cs": "0fa559798f3f809df0d595a9972b9762ce0f3d237a751a153ef4f7b4da360839",
+      "rebuild/OnslaughtRebuild.Core/Level100PlayerDamage.cs": "a9ed7758d722d4925f7d954511bb1a7bc6c0e3cc5a1454778ddcb734ffd874ad",
+      "rebuild/OnslaughtRebuild.Core/RetailBattleEngineAugment.cs": "f7a1aba2bc4b169c9ace4ca21463ba5eeae45810b23b4f21c77862249fd08798",
+      "rebuild/OnslaughtRebuild.Core/RetailBattleEngineCloak.cs": "f885a1d3895abd7b1da28bb7e78cea218188697775fedadcd8983eb6b21a9943",
+      "rebuild/OnslaughtRebuild.Core/RetailBattleEngineConfigurations.cs": "f5be8a6d833dce796f8e155f26f8f28b3a4ebb68e3879059e5c947788443cf02",
+      "rebuild/OnslaughtRebuild.Core/RetailBattleEngineGravity.cs": "87d56600ac6f8a1afa8b9941e7351324047de68694d3a8014e3a85667af64f11",
+      "rebuild/OnslaughtRebuild.Core/RetailBattleEngineInterpolation.cs": "3c30bf5ba5786ebb963b132c2617304bc834063a25f67d7cccfdee63d07090d1",
+      "rebuild/OnslaughtRebuild.Core/RetailCameraLaws.cs": "1614b15f9f7f97ab7456ae575a7f9cc4f0e0c604d4897877544205953399367e",
+      "rebuild/OnslaughtRebuild.Core/RetailJetAutoLevel.cs": "f18d95e5d9ea7bed55296873521b7792b5ce0ad809d37b8b439ea48f530677ec",
+      "rebuild/OnslaughtRebuild.Core/RetailJetFriction.cs": "7ec2b298986f76e4f7f1e6f541ee02b9088865231313700bc7691090f4b7b740",
+      "rebuild/OnslaughtRebuild.Core/RetailJetThrust.cs": "829aa80a42820e57d6206f660cb21239a3085b8c37734b18e858138b8728933b",
+      "rebuild/OnslaughtRebuild.Core/RetailWalkerWaterEntry.cs": "3d0192718bae77e5066cfd7631c79afe3ee26f474d2964adc3a44478d4b223d0",
+      "rebuild/OnslaughtRebuild.Core/RetailWeaponCharge.cs": "da5fb133eff9dcf357fb68a34b2f698dfc493fe2db2e2df80d54ccf9655936d0",
+      "rebuild/OnslaughtRebuild.Core/RetailWeaponSelection.cs": "798bb688ac87057a68a8c1b505888b493b83eb63d37e008a754e3eaf962d3571",
+      "rebuild/OnslaughtRebuild.Core/RetailWeaponStores.cs": "a24c9d48c304765037d2d4bb52f2197c32130f78b68848ddadd37bca999fe61b",
+      "rebuild/OnslaughtRebuild.Core/Simulation.cs": "c4fdce1be96bc7c76dbc917a4014acd684db2ad0ff35f15ff9d45d5e62d4076e",
+      "rebuild/OnslaughtRebuild.Godot/FirstFlightGame.cs": "f73286857a56dc4b008b02ef36f74c6b30e1af786ec9e38152ebcf9c75299498",
+      "rebuild/OnslaughtRebuild.Godot/FirstFlightWorldView.cs": "0b74789767cff5a4a468fe4a5fadb73164842daad0b67d3fe715d7b9440f527a",
+      "reverse-engineering/EVIDENCE-REGISTER.tsv": "4862fc61391c9bf65cd7183752e99b9b02b6bfb721e5b4b5c1e7c5fae5b885b4",
+      "reverse-engineering/binary-analysis/cactor-vtable-semantics-2026-08-11.tsv": "04bc840d8904c527d1c04ab278419cc4309f8a6cf368f63caddfdeba7ce4188e",
+      "reverse-engineering/binary-analysis/cbattleengine-vtable-semantics-2026-08-11.tsv": "1bf959a26bc390b8b6d3dfb44eef543b64d2d93839dfc5efe2356314fc429e4e",
+      "reverse-engineering/binary-analysis/ccomplexthing-vtable-semantics-2026-08-11.tsv": "c77047776dea687cd57e69b2c92d64fa7f83acf9dd6bf9565573d0a35eafd0cb",
+      "reverse-engineering/binary-analysis/cthing-vtable-semantics-2026-08-11.tsv": "5ae2f7aa713f549153de959b1a022489f09a297502b21b9ae447284ab79df710",
+      "reverse-engineering/binary-analysis/function-c1-closure-2026-08-11.tsv": "cfe90af382269cb2e64996d10df7777bd00fcd8e1844b9823ef74bc6199b8974",
+      "reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-17.tsv": "4590dff93f4ee85c5a5c3450139b2e696118646af3401f6eb9719dc4237d3213",
+      "reverse-engineering/source-crosswalk/REPORT.md": "a9a3d29a18655ef97e61591610c2721d934112b2a7a58acf264debe11a798c7f",
+      "reverse-engineering/source-crosswalk/audit/remediation-wave1.tsv": "af3bfd09649236570e316014419ae4596918eb91930fc2caebf4f790df77d764",
+      "reverse-engineering/source-crosswalk/crosswalk.tsv": "e37f13b37e9ce9d712174e35b86fc1f7ebcfc693fe9957448a8f39ff03829479"
+    },
+    "preflight_files_read": [
+      "local-lab/INDEX.md",
+      "local-lab/INDEX-CATALOG-2026-08-17.md",
+      "local-lab/CORPUS-HYGIENE-2026-08-22.md",
+      "local-lab/hermes-kanban-campaign-2026-08-22/source-first-expansion/EXECUTION.md"
+    ],
+    "reused_predecessor_artifacts": 37
+  },
+  "counts": {
+    "definitions": 201,
+    "direct_qualified_name_candidate_rows": 9,
+    "populated_va_collisions": 0,
+    "populated_va_rows": 37,
+    "resolved_lexical_owners": 155,
+    "resolved_owners": {
+      "CActor": 11,
+      "CAnimalInitThing": 1,
+      "CBattleEngine": 47,
+      "CBattleEngineJetPart": 5,
+      "CBattleEngineWalkerPart": 5,
+      "CCamera": 4,
+      "CComplexThing": 14,
+      "CControllableCamera": 10,
+      "CGenericCamera": 5,
+      "CInitCSThing": 1,
+      "CInitThing": 1,
+      "CInterpolatedCamera": 4,
+      "CPanCamera": 3,
+      "CSpawnerInitThing": 1,
+      "CThing": 83,
+      "CThing3rdPersonCamera": 2,
+      "CThingCamera": 2,
+      "UBattleEngineConfigurations": 1,
+      "UBattleEngineDataManager": 1
+    },
+    "retail_classification": {
+      "NO_MATCH_FOUND": 164,
+      "SOURCE_ANALOG": 5,
+      "SOURCE_EXACT": 32
+    },
+    "retail_delta_status": {
+      "RETAIL_UNRESOLVED": 7,
+      "SOURCE_AGREES": 32,
+      "SOURCE_ONLY": 162
+    },
+    "source_files": {
+      "BattleEngine.h": 47,
+      "BattleEngineConfigurations.h": 1,
+      "BattleEngineDataManager.h": 1,
+      "BattleEngineJetPart.h": 5,
+      "BattleEngineWalkerPart.h": 5,
+      "Camera.cpp": 2,
+      "Camera.h": 28,
+      "InitThing.cpp": 1,
+      "InitThing.h": 3,
+      "actor.h": 11,
+      "thing.h": 97
+    },
+    "source_folded_alias_groups": {
+      "0x004040a0": 3,
+      "0x0043e9f0": 2,
+      "0x0043ea20": 2
+    },
+    "stable_key_duplicates": 0,
+    "unresolved_owners": 0
+  },
+  "input_hashes": {
+    "partition.tsv": "bc36791975f43d5da6b584727df3eb7d29402e18c550dd3d96e01bba0c301fde",
+    "reverse-engineering/EVIDENCE-REGISTER.tsv": "4862fc61391c9bf65cd7183752e99b9b02b6bfb721e5b4b5c1e7c5fae5b885b4",
+    "reverse-engineering/binary-analysis/cactor-vtable-semantics-2026-08-11.tsv": "04bc840d8904c527d1c04ab278419cc4309f8a6cf368f63caddfdeba7ce4188e",
+    "reverse-engineering/binary-analysis/cbattleengine-vtable-semantics-2026-08-11.tsv": "1bf959a26bc390b8b6d3dfb44eef543b64d2d93839dfc5efe2356314fc429e4e",
+    "reverse-engineering/binary-analysis/ccomplexthing-vtable-semantics-2026-08-11.tsv": "c77047776dea687cd57e69b2c92d64fa7f83acf9dd6bf9565573d0a35eafd0cb",
+    "reverse-engineering/binary-analysis/cthing-vtable-semantics-2026-08-11.tsv": "5ae2f7aa713f549153de959b1a022489f09a297502b21b9ae447284ab79df710",
+    "reverse-engineering/binary-analysis/function-c1-closure-2026-08-11.tsv": "cfe90af382269cb2e64996d10df7777bd00fcd8e1844b9823ef74bc6199b8974",
+    "reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-17.tsv": "4590dff93f4ee85c5a5c3450139b2e696118646af3401f6eb9719dc4237d3213",
+    "reverse-engineering/source-crosswalk/REPORT.md": "a9a3d29a18655ef97e61591610c2721d934112b2a7a58acf264debe11a798c7f",
+    "reverse-engineering/source-crosswalk/audit/remediation-wave1.tsv": "af3bfd09649236570e316014419ae4596918eb91930fc2caebf4f790df77d764",
+    "reverse-engineering/source-crosswalk/crosswalk.tsv": "e37f13b37e9ce9d712174e35b86fc1f7ebcfc693fe9957448a8f39ff03829479"
+  },
+  "out_of_wave_readback": {
+    "base_crosswalk_rows": 1149,
+    "crosswalk_report_sha256": "a9a3d29a18655ef97e61591610c2721d934112b2a7a58acf264debe11a798c7f",
+    "crosswalk_sha256": "e37f13b37e9ce9d712174e35b86fc1f7ebcfc693fe9957448a8f39ff03829479",
+    "w2_keys_already_in_base": 0
+  },
+  "output_hashes": {
+    "REBUILD-DELTA.md": "bee06d33ab37481c675510768d7f7eb4242d85a8a386e3cbee71739175bd13c1",
+    "RETAIL-DELTA.tsv": "e90352c35767ec4cb357656b82d925a80b5cc958772833f904cfad459c1235b4",
+    "SOURCE-CONTRACT.md": "0651e8c8fe3071ef7833b63c7ed43d0217153f6807c602f11957faf7bbc338ef",
+    "definitions.tsv": "a6a3eeac2714f9cf2b7469cd6b6a53f08e913a0741cc0536d6fa369d60eaccf2"
+  },
+  "projection": {
+    "byte_identical_outputs": 5,
+    "deterministic_replays": 2,
+    "generator_path": "%LOCALAPPDATA%/Temp/build_w2_expansion.py",
+    "generator_sha256": "e744a2786599971716d16ad9e9adcf39ef406b4941347764e6a5741d88516e19",
+    "validator_path": "%LOCALAPPDATA%/Temp/validate_w2_expansion.py",
+    "validator_sha256": "38e5d9135e0d456f6c79d44788b82eae575776932ece7eca0dfb8c4476f0ba98"
+  },
+  "repository_parent": "784367bd43f9ec13125521b00fe0c8352670ffdd",
+  "schema": "bea.source-crosswalk.expansion-wave.v1",
+  "scope": {
+    "canonical_crosswalk_written": false,
+    "canonical_report_written": false,
+    "deleted_moved_staged_or_retired": 0,
+    "owned_root": "reverse-engineering/source-crosswalk/expansion/w2-thing-battleengine-camera",
+    "ps2_or_raw_drive_work": 0,
+    "source_file_set_sha256": "e56344ca63a1a1a42b63a39cec9ceb55356e9751a3c1cf83e33ef04707d62837",
+    "source_files": [
+      "actor.h",
+      "BattleEngine.h",
+      "BattleEngineConfigurations.h",
+      "BattleEngineDataManager.h",
+      "BattleEngineJetPart.h",
+      "BattleEngineWalkerPart.h",
+      "Camera.cpp",
+      "Camera.h",
+      "InitThing.cpp",
+      "InitThing.h",
+      "thing.h"
+    ]
+  },
+  "source_commit": "5352a81cdb838b145a57f7febc5d9fc4b0129ebb",
+  "source_file_hashes": {
+    "BattleEngine.h": "84c88f5526e951389683e1fb132f70d7f1935139e582c8d9a8d41b2b6b516ccd",
+    "BattleEngineConfigurations.h": "719607d23852e3d8bb3ee51a3de1706241b58b1bd906a32ef855694413242ecf",
+    "BattleEngineDataManager.h": "c6ca67b80f07543275fb83d2f3b549ef971b90aafcd9221d8e9efb864f48d081",
+    "BattleEngineJetPart.h": "bcb0d95871fdc7e101bffb25320761ef08ab9bdbf05b056044a752aca640de96",
+    "BattleEngineWalkerPart.h": "5acb9c0809fe084c57c437b1dfc70298523ff6e4ca83ac9b8e1c11f003e58f10",
+    "Camera.cpp": "5ee6f4c7bfa509f9cf528bbf09fc7396851d7dcf9232b798ab3e82f0db09d994",
+    "Camera.h": "4db54ca64ebb1b635a474a46a6dbe75175f0a713eb7f1191e463b087546cbdb4",
+    "InitThing.cpp": "bb919d980ef7c1e2d05686da8ff58cad46983c0558bd7f4deb554767f299f678",
+    "InitThing.h": "5a7132f3d0fe5f95a8696675c99ef19fa6ddcc941d9065c7efd3018beab82fef",
+    "actor.h": "0af427656cfb9dbbc1afb9a207d0ac6c1deea944e44b05019bfad30315e3f2cf",
+    "thing.h": "cf0c15e24869d57ab354251f465aee6dc1780c6f7c557fec27d081d71a46e8fe"
+  },
+  "specimen_sha256": "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750",
+  "validation": [
+    "PASS: exact 201-row stable-key subset from the sealed 634-row partition",
+    "PASS: exact eleven-file set and source-file-set hash",
+    "PASS: 155 macro-ownerless AST labels resolved lexically; zero unresolved owners",
+    "PASS: corpus reuse classified as 46 REUSED / 155 EXTENDED / 0 NEW_MEASUREMENT definitions and 0/5/0 output artifacts",
+    "PASS: all 201 target-branch stacks are all-target (header include guard only where applicable)",
+    "PASS: all 37 exact/analog evidence paths exist and cite their populated VA",
+    "PASS: every populated VA exists in the current 8,329-row name table, 8,136-row closure, and Generation-32 evidence register",
+    "PASS: populated-VA repeats are exactly three promoted SOURCE_FOLDED groups",
+    "PASS: all W2 file/line keys remain omitted from the untouched 1,149-row canonical base"
+  ],
+  "wave": "w2-thing-battleengine-camera"
+}
