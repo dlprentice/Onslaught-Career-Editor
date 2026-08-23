@@ -49,10 +49,15 @@ not establish its Steam depot identity.
 
 ---
 
-## Current complete-RE replay authority (2026-08-14) — read first
+## Current complete-RE replay authority — dynamic pointer
 
-Current authority is **not** the Gen10 block below or candidate Gen73. Re-read
-`developer_state.json` → `current_re_authority`. Canonical Gen29 has
+Read `developer_state.json` → `current_re_authority` for the live campaign path,
+generation, pins, grades, verify command, and next-valid generation. The Gen10
+block and candidate Gen73 are not authority selectors.
+
+## Historical Generation-29 snapshot (2026-08-14)
+
+The frozen Gen29 campaign had
 functions=**8,329**, C1=**217**, C2=**10**, function semantic
 OPAQUE=**8,102**, contract C0_OPAQUE=**14,211**, OPEN residual=**153**
 (all dark; none executed), complete_RE=**false**, and REBUILD_READY=**0**.
@@ -78,7 +83,7 @@ changed lineage, and carries both additions as OPAQUE/DARK. No semantic grade
 moves.
 External effects, event 4002, field meanings, broader populations, source
 spelling, and direct rebuild parity remain open. The next valid campaign
-generation is 30. The separate 8,136-row static-envelope closure, 34-row
+generation at that freeze was 30. The separate 8,136-row static-envelope closure, 34-row
 MissionScript addendum, 31 text-gap classifications, and 79 ungraded external-
 table rows remain distinct static evidence. C1 is not C2 runtime proof or
 parity, and bounded C2 is not rebuild-ready.

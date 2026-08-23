@@ -613,14 +613,35 @@ def test_reruns_are_byte_identical_when_inputs_are_unchanged() -> None:
         make_full_corpus(root)
         code1, _, p1 = run_tool(root)
         raw1 = (root / "out" / "coverage.json").read_bytes()
+        report1 = (root / "reverse-engineering" / "contract-schema" / "COVERAGE-REPORT.md").read_bytes()
         time.sleep(1.1)
         code2, _, p2 = run_tool(root)
         raw2 = (root / "out" / "coverage.json").read_bytes()
+        report2 = (root / "reverse-engineering" / "contract-schema" / "COVERAGE-REPORT.md").read_bytes()
         assert code1 == code2 == 0
         for key in ("schema", "statusCounts", "evidenceClassCounts", "functions"):
             assert p1[key] == p2[key], key
         assert p1["generatedAtUtc"]  # stamps exist
         assert raw1 == raw2
+        assert report1 == report2
+    finally:
+        shutil.rmtree(root, ignore_errors=True)
+
+
+def test_markdown_report_matches_payload() -> None:
+    root = Path(tempfile.mkdtemp(prefix="ccov-report-"))
+    try:
+        make_full_corpus(root)
+        code, out, payload = run_tool(root)
+        assert code == 0, out
+        report = (root / "reverse-engineering" / "contract-schema" / "COVERAGE-REPORT.md").read_text(encoding="utf-8")
+        assert "Status: generated contract-status dashboard; do not hand-edit" in report
+        assert f"- Functions: **{payload['denominator']['functions']:,}**" in report
+        assert f"- Contracts: **{payload['denominator']['contracts']:,}**" in report
+        for status, count in payload["statusCounts"].items():
+            assert f"| {status} | {count:,} |" in report
+        assert f"| Factory contract files | {payload['inputs']['contractFiles']:,} |" in report
+        assert f"| Factory contract rows joined | {payload['inputs']['contractRowsJoined']:,} |" in report
     finally:
         shutil.rmtree(root, ignore_errors=True)
 

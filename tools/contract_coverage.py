@@ -94,6 +94,7 @@ DEFAULT_MANIFESTS_ROOT = Path("reverse-engineering/binary-analysis")
 DEFAULT_CONTRACTS_ROOT = Path("reverse-engineering/contracts")
 DEFAULT_PATCH_TSV = Path("patches/patch-surface-rows.tsv")
 DEFAULT_OUT = Path("reverse-engineering/contract-schema/coverage.json")
+DEFAULT_REPORT_OUT = Path("reverse-engineering/contract-schema/COVERAGE-REPORT.md")
 
 # ---------------------------------------------------------------------------
 # register evidence-class families (measured from the live register
@@ -700,7 +701,7 @@ def build_coverage(repo_root: Path) -> dict:
     }
 
 
-def write_coverage(payload: dict, out_path: Path) -> None:
+def write_coverage(payload: dict, out_path: Path) -> dict:
     to_write = payload
     if out_path.exists():
         try:
@@ -726,12 +727,83 @@ def write_coverage(payload: dict, out_path: Path) -> None:
     tmp = out_path.with_suffix(out_path.suffix + ".tmp")
     tmp.write_text(json.dumps(to_write, indent=1), encoding="utf-8")
     tmp.replace(out_path)
+    return to_write
+
+
+def render_markdown_report(payload: dict) -> str:
+    total = sum(payload["statusCounts"].values())
+    denominator = payload["denominator"]
+    inputs = payload["inputs"]
+    generated_date = str(payload["generatedAtUtc"])[:10]
+    lines = [
+        "# Contract coverage",
+        "",
+        "Status: generated contract-status dashboard; do not hand-edit",
+        f"Last updated: {generated_date}",
+        "Summary: mechanical status distribution over the campaign's pinned function",
+        "denominator, generated from the evidence register, notes, manifests, and",
+        "validated factory contracts.",
+        "Evidence: MEASURED — `tools/contract_coverage.py`; exact row-level inputs and",
+        "classification flags are retained in `coverage.json`.",
+        "",
+        "> **Generated file.** Re-run `py -3 tools/contract_coverage.py`. Do not copy",
+        "> these moving counts into another living document.",
+        "",
+        "## Denominator",
+        "",
+        f"- Campaign generation: `{denominator['generation']}`",
+        f"- Functions: **{denominator['functions']:,}**",
+        f"- Contracts: **{denominator['contracts']:,}**",
+        f"- Lineage: `{denominator['lineageId']}`",
+        f"- READY SHA-256: `{denominator['readySha256']}`",
+        "",
+        "## Status distribution",
+        "",
+        "| Status | Count | Share |",
+        "| --- | ---: | ---: |",
+    ]
+    for status in STATUSES:
+        count = payload["statusCounts"][status]
+        share = (100.0 * count / total) if total else 0.0
+        lines.append(f"| {status} | {count:,} | {share:.1f}% |")
+    lines.extend([
+        "",
+        "## Input census",
+        "",
+        "| Input | Count |",
+        "| --- | ---: |",
+        f"| Evidence-register rows | {inputs['registerRows']:,} |",
+        f"| Function-note files | {inputs['noteFiles']:,} |",
+        f"| Manifest files with named witnesses | {inputs['manifestFilesWithNamedWitnesses']:,} |",
+        f"| Manifest witness keys | {inputs['manifestWitnessKeys']:,} |",
+        f"| Factory contract files | {inputs['contractFiles']:,} |",
+        f"| Factory contract rows joined | {inputs['contractRowsJoined']:,} |",
+        "",
+        "## Reading contract",
+        "",
+        "- This dashboard measures evidence held, not complete semantic understanding.",
+        "- A factory contract joins one canonical VA but does not promote `VERIFIED`",
+        "  without the required independent witness or promotion receipt.",
+        "- `REVIEW_READY` includes bounded static/runtime candidates; it is not parity.",
+        "- `SKELETON` means the overlay found no stronger current marker.",
+        "- The row-level `coverage.json` is canonical for auditing an individual status.",
+        "",
+    ])
+    return "\n".join(lines)
+
+
+def write_markdown_report(payload: dict, out_path: Path) -> None:
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = out_path.with_suffix(out_path.suffix + ".tmp")
+    tmp.write_text(render_markdown_report(payload), encoding="utf-8")
+    tmp.replace(out_path)
 
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--repo-root", type=Path, default=Path(__file__).resolve().parents[1])
     ap.add_argument("--out", type=Path, default=None, help="output path override")
+    ap.add_argument("--report-out", type=Path, default=None, help="Markdown report path override")
     ap.add_argument("--stdout", action="store_true", help="print distribution, skip write")
     args = ap.parse_args(argv)
 
@@ -752,8 +824,11 @@ def main(argv: list[str] | None = None) -> int:
     if args.stdout:
         return 0
     out = args.out if args.out is not None else args.repo_root / DEFAULT_OUT
-    write_coverage(payload, out)
+    report_out = args.report_out if args.report_out is not None else args.repo_root / DEFAULT_REPORT_OUT
+    written_payload = write_coverage(payload, out)
+    write_markdown_report(written_payload, report_out)
     print(f"wrote {out.as_posix()}")
+    print(f"wrote {report_out.as_posix()}")
     return 0
 
 

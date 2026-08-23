@@ -1,42 +1,15 @@
 # Battle Engine Aquila's 8,329-function Ghidra corpus is deeply mapped, not atom-complete
 
-Status: active canonical synthesis of the current executable-analysis state; raw
+Status: active canonical synthesis of executable-analysis evidence; raw
 machine exports remain the address-level evidence behind this human-readable
 master
-Last updated: 2026-08-14 (two D3DX-compatible bodies promoted on db.18618)
-Verdict: **The verified live and tracked databases now contain 8,329 internal
-function boundaries. The latest separately backed-up ceremony added exact
-DEFAULT-source functions at `0x00595FC9` and `0x00596028` while preserving all
-8,327 PRE function rows exactly. Fresh-process readback proves 8,459 exact
-ranges and an ownership gain of 248 bytes to 1,811,691. Program bytes, defined
-data, stored non-function symbols, comments, instructions, and references
-remained exact. It promoted no semantic name, runtime behavior contract, or
-original linker spelling.
-The dated 8,136-row closure plus the 34-row MissionScript addendum still account
-for the preceding 8,170-row state at 8,163 C1 plus seven C2. The 31 text-gap
-additions have separate provider-compatible static classifications; the 79
-external-table rows, 24 JPEG/IJG rows, 23 CRT P0 rows, and two newer D3DX
-structural rows remain ungraded.
-None of these later cohorts has been silently inserted into that frozen grade
-projection. This is not the campaign-grade scoreboard below.
-Canonical Generation 29 is the frozen semantic campaign authority at 8,329
-function identities plus 6,109 exact residual entities, sealed on exact
-db.18618 geometry. It carries all 26,841 eligible Generation-28 progress rows
-with zero unaccounted, explicitly retires one changed structural lineage,
-preserves all 72 scenarios, and carries the D3DX pair as OPAQUE/DARK without
-silently upgrading a static or semantic grade.
-Semantics remain the hard problem: 14,211 of 14,438 contract
-rows are `C0_OPAQUE`,
-217 are `C1_CANDIDATE_PARTIAL`, ten are `C2_BOUNDED_RUNTIME`, and none is
-rebuild-ready. The authored Mission
-`Damage` chain, three Level 521 call-context contracts, and one separately
-re-proved zero-shield ApplyDamage path, and the replicated script-visible SetPos
-position-copy path plus one non-null sole-node `CBattleEngine::LockHit` removal
-path, ten retained-trace `CExplosion` internal slot-40 carrier calls, 7,513
-strict-`CRound` slot-66 call-entry pairs, and 2,555 strict-`CRound` slot-0
-call-entry-arm paths have crossed bounded runtime gates. This
-file is the integrated narrative and queue, not a
-claim that those gaps are solved.**
+Last updated: 2026-08-23. Campaign authority is selected only
+through `developer_state.json` → `current_re_authority`; rolling Ghidra state is
+selected through [`ghidra/README.md`](ghidra/README.md) and fresh inspection.
+Verdict: **The 8,329-function corpus has broad architectural recovery and deep
+islands of exact semantics, but substantial address-level and behavioral work
+remains. Dated campaign and database snapshots below preserve how individual
+claims were earned; they are not live routing or a semantic-completion score.**
 
 Evidence: MEASURED — the pristine specimen, verified live-promotion POST
 readback, authoritative Generation-26 campaign bundle, tracked Ghidra snapshot,
@@ -178,11 +151,14 @@ not establish its Steam depot identity.
 
 ---
 
-## Current complete-RE replay authority (2026-08-14) — read this first
+## Current complete-RE replay authority — dynamic pointer
 
-The campaign census below this pointer is a historical Generation-10
-snapshot. Current authority is canonical Generation **29**, selected
-only by `developer_state.json` → `current_re_authority`:
+Select campaign authority only from `developer_state.json` →
+`current_re_authority`. It owns generation, campaign path, READY/reducer pins,
+grades, rebuild states, verify command, and next-valid generation. Do not copy
+those values into this synthesis.
+
+## Historical Generation-29 snapshot (2026-08-14)
 
 | Metric | Canonical Gen29 |
 |--------|------------------|
@@ -237,7 +213,7 @@ open. The bounded addenda were appended to twelve exact live/tracked Ghidra
 comments after replica, rollback, adverse-control, readback, and restore gates;
 no name, signature, boundary, executable-byte, instruction, data, symbol, or
 reference change occurred. Generation 24 then reseeded those exact claims onto
-all 8,280 then-current db.18613 function identities. It adds the 154 post-Gen23
+all 8,280 db.18613 function identities active at that cut. It adds the 154 post-Gen23
 structural identities as OPAQUE, accounts for all 27,780 eligible carry rows,
 and makes no new semantic, runtime, Ghidra, executable, or rebuild claim. The
 later body-only db.18614 promotion preserves every function identity but must be
@@ -381,11 +357,10 @@ loads, interprets, simulates, and renders that corpus.
 | **UNKNOWN** | Not established. The needed static read, capture, or test is stated where material. |
 | **HISTORICAL** | Correct only for a dated database/export or retained as provenance; not current identity authority. |
 
-### Current authority in one sentence
+### Authority routing in one sentence
 
-Use canonical Generation 29 for campaign function/residual and contract state,
-the separately verified 2026-08-14 db.18618 live POST and tracked snapshot for
-current Ghidra state, the unpatched baseline image for bytes and
+Use `developer_state.json` → `current_re_authority` for campaign state,
+`ghidra/README.md` plus fresh inspection for rolling Ghidra state, the unpatched baseline image for bytes and
 shipped tables, RTTI/source strings for identity evidence, controlled copied-
 runtime work for behavior, and this document for the reviewed synthesis and
 open queue. Use the 2026-07-27 7,555-row table only for a clearly dated
@@ -410,13 +385,13 @@ comparison.
 - [Superseded claims](#appendix-d-superseded-claims-that-must-not-return)
 - [Evidence map](#appendix-e-evidence-map)
 
-## Executive state
+## Dated executive snapshot (2026-08-14)
 
-| Question | Current exact answer |
+| Question | Dated answer |
 | --- | --- |
 | Static retail specimen | 2,506,752-byte x86 PE, SHA-256 `74154bfa…e7750`; D3D9 retail build |
-| Latest verified live readback | 8,329 functions after the D3DX two-function promotion; latest TSV SHA-256 `7b343b3578a01562daca02ec431586cf39e042d0daab9d6aa9448b779f880ef0` |
-| Current live function inventory | 8,329 rows; all 8,327 PRE rows exact, two DEFAULT-source rows added, and live/tracked/POST recovery synchronized |
+| Verified D3DX-era live readback | 8,329 functions after the D3DX two-function promotion; TSV SHA-256 `7b343b3578a01562daca02ec431586cf39e042d0daab9d6aa9448b779f880ef0` |
+| D3DX-era function inventory | 8,329 rows; all 8,327 PRE rows exact, two DEFAULT-source rows added, and live/tracked/POST recovery synchronized at that cut |
 | Dated semantic/name-table baseline | 7,555 functions; 3,181,359-byte TSV; SHA-256 `45cba656…0a462` |
 | Current distinct function names | 8,320; nine names occur at two addresses |
 | Explicit `FUN_*` names | 1,036 |
@@ -469,7 +444,7 @@ own the durable specimen warning.
 | Tracked Program objects | `BEA.exe` and `BEA_Widescreen.exe` | Do not silently assume an export came from the unpatched baseline Program |
 | Live maintainer project | `C:\Users\david\Ghidra\Projects`, active Ghidra 12.1.2 | Current working database; mutation requires separate authority |
 | Latest live readback | `local-lab/ghidra-d3dx-gap-two-boundary-live-promotion-db18617-20260814-v1/runs/live-readback/functions.tsv`, SHA-256 `7b343b35…ef0` | Current 8,329-row internal-function metadata; 8,329 is the current discovered census, not a final ceiling |
-| Current tracked name table | `reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-13.tsv`, 8,329 rows, SHA-256 `6b54dc94…d2b8` | Deterministic projection of the separately read-back live database |
+| Dated tracked name table | `reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-13.tsv`, 8,329 rows, SHA-256 `6b54dc94…d2b8` | Deterministic projection of the separately read-back database at that cut |
 | Frozen 2026-08-12 name table | `reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-12.tsv`, 8,136 rows, SHA-256 `a6f10251…193f` | Retained byte-exact for Generations 20–23 and receipt-pinned instruments |
 | Mutated dated name table | `reverse-engineering/binary-analysis/ghidra-function-name-table-2026-07-27.tsv`, 7,555 rows, current SHA-256 `44f49ca1…e68b11`; original sealed content was `2dfe0b97…f0b84` | Historical artifact later rewritten in 54 name rows. Retained byte-exact only because Generations 20–23 pin the mutated bytes; neither hash is a current name oracle |
 | Fullpass discovery corpus | `reverse-engineering/binary-analysis/ghidra-fullpass-findings/` | Dated 6,411-function reviews; never a live name oracle |
@@ -2990,5 +2965,5 @@ four refuted HUD labels awaiting convention-safe replacements
 bounded runtime questions with explicit falsifiers
 ```
 
-That is the canonical Generation-29 baseline; Generation 30 is the next valid
-campaign only after a new mechanically complete advance.
+That is the frozen historical Generation-29 baseline. Live campaign routing is
+owned only by `developer_state.json` → `current_re_authority`.

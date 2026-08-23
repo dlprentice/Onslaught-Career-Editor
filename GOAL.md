@@ -17,15 +17,15 @@
 > Godot rebuild, and the WinUI 3 app are coequal outcomes. A current goal chooses
 > focus, not standing rank. See [Revision history](#revision-history).
 >
-> Last updated: 2026-08-19. Current measured status belongs in
+> Last updated: 2026-08-23. Current measured status belongs in
 > [`CURRENT_CAPABILITIES.md`](CURRENT_CAPABILITIES.md) and
 > [`developer_state.json`](developer_state.json) (routing key
-> `current_re_authority`). Generation 31 **v2** is the campaign parent;
-> Generation 31 v1 is superseded. Generation 73 is retained only as the exact
-> projection oracle named by the post-loss claim-closure receipt; it is not a
-> campaign parent or authority. 729/729 (`fd5ab355`) and 730/730
-> (`a65826fa`) are dated full-suite measurements, not a live inventory;
-> static Core cases after later L100 owners are 856 `[Fact]`+`[InlineData]`.
+> `current_re_authority`). That object alone owns the campaign generation,
+> READY/reducer pins, grades, verify command, and next-valid generation; do not
+> copy those volatile values into this standing goal. Generation 73 is retained
+> only as the projection oracle named by the post-loss claim-closure receipt;
+> it is not a campaign parent or authority. Dated full-suite counts remain
+> historical measurements, not a live inventory.
 > `F:\DS DEEP *` paths are historical origins; the corpus is
 > `local-lab\ds-deep-review*`.
 >
@@ -169,22 +169,15 @@ reverse engineering.
 
 ### Ground yourself before acting
 
-Confirm HEAD is at or beyond `c4722b7a`. Confirm the pristine specimen SHA-256
-`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`. The current
-campaign authority is Generation 31 v2, cut on exact db.18624 geometry through
-the Generation-30 literal-pin carry bridge: READY
-`2e77c62d236edacbe4974ca844a6ac0b692e84b3259b884b8afc25a29aad4219`, pinned
-reducer `21ad46fff9d2aec8034a4edcf2c83fad627c2fcae3a9a21ebac7e03976c7627b` —
-verify through the literal pinned command in
-[`developer_state.json`](developer_state.json) → `current_re_authority`.
-Generation 31 is the sole campaign parent, it carries the first 16
-`REBUILD_READY` contracts, and the next valid generation is 32. The tracked
-Ghidra snapshot is db.18627; the live project and the retained `wt/bea-ghidra`
-branch rolled to db.18633 on 2026-08-19 (unmerged — main does not carry it),
-so live and tracked are no longer twins.
-The campaign stays grounded on its frozen db.18624 geometry; a future
-generation re-grounding must target the then-current live geometry, and the
-database version is measured by inspection, never quoted.
+Confirm HEAD and the pristine specimen SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`. Then read
+and run the literal verify command in
+[`developer_state.json`](developer_state.json) → `current_re_authority`; that
+single object owns the campaign parent, exact geometry, READY/reducer pins,
+grades, rebuild states, and next-valid generation. Read
+[`reverse-engineering/ghidra/README.md`](reverse-engineering/ghidra/README.md)
+and inspect the databases for rolling tracked/live Ghidra state. Never quote a
+database version or infer live/tracked equality from this goal.
 Generation 73 is a projection oracle and the DeepSeek drop's verdict layer is
 an index, never a campaign parent or authority.
 
@@ -1500,20 +1493,20 @@ in write mode against live. Reversibility remains restore-from-backup only.
   The frontier now moves to `.text` boundary/body recovery, the Generation-24
   carry refusal, and coherent semantic/runtime/rebuild depth; no campaign grade
   or completion condition changed.
-- **2026-08-14 — current geometry reseeded as Generation 24.** The literal-
+- **2026-08-14 — the then-active geometry was reseeded as Generation 24.** The literal-
   pinned canonical and reproduction-only replica replays account for all 8,280
-  current functions and all 27,780 eligible Generation-23 carry rows. The 154
+  functions in that cut and all 27,780 eligible Generation-23 carry rows. The 154
   structural additions enter the campaign as OPAQUE; no semantic, runtime,
   Ghidra, executable, rebuild, or completion claim was added. The next valid
-  campaign generation is 25.
+  campaign generation at that freeze was 25.
 - **2026-08-14 — five body fragments promoted.** A separately backed-up live
   ceremony repaired five existing bodies without changing the 8,280-function
   count. Exact body ownership advances by 1,258 bytes to 93.072115377%, the
   live/tracked project advances to `db.18614`, and all 8,275 non-target rows
   remain byte-identical. Generation 24 stays frozen on its `db.18613` input;
-  the next campaign must re-ground the current geometry rather than repinning
+  the next campaign had to re-ground that geometry rather than repinning
   that reducer.
-- **2026-08-14 — then-current db.18614 geometry reseeded as Generation 25.** Two
+- **2026-08-14 — db.18614 geometry reseeded as Generation 25.** Two
   independent snapshots and canonical/replica full replays agree at 8,280
   functions. All 27,089 eligible Generation-24 carry rows are accounted for;
   16 changed structural lineages are retired explicitly and one new 12-byte
@@ -1524,7 +1517,7 @@ in write mode against live. Reversibility remains restore-from-backup only.
   8,304/db.18615 while preserving every PRE row. It added 38 exact body ranges
   and 14,817 owned `.text` bytes, reaching 93.840186987%. Generation 25 remains
   frozen and a successor campaign must re-ground the new structural geometry.
-- **2026-08-14 — current db.18615 geometry reseeded as Generation 26.** Two
+- **2026-08-14 — db.18615 geometry reseeded as Generation 26.** Two
   independent snapshots and canonical/replica full replays agree at 8,304
   functions. All 27,025 eligible Generation-25 carry rows are accounted for;
   eight changed structural lineages are retired explicitly and the 24 new
@@ -1536,7 +1529,7 @@ in write mode against live. Reversibility remains restore-from-backup only.
   8,327/db.18616 while preserving every PRE row. It added 24 exact body ranges
   and 1,131 owned `.text` bytes, reaching 93.898814846%. Generation 26 remains
   frozen.
-- **2026-08-14 — then-current db.18616 geometry reseeded as Generation 27.** Two
+- **2026-08-14 — db.18616 geometry reseeded as Generation 27.** Two
   independent snapshots and canonical/replica full replays agree at 8,327
   functions. All 26,993 eligible Generation-26 carry rows are accounted for;
   37 changed structural lineages are retired explicitly and the 23 new CRT rows
@@ -1629,14 +1622,14 @@ this standing campaign complete.
 
 ---
 
-## Current replay authority (do not restate volatile counts here)
+## Replay authority routing (do not restate volatile counts here)
 
 Standing complete-RE progress is **not** the Gen10 handoff below and is no
 longer selected from the damaged Generation-73 candidate chain. Read
-`developer_state.json` → `current_re_authority`. The single current authority is Generation 31 v2; its READY/reducer pins and
-verify command live only in `developer_state.json` → `current_re_authority`
-and are deliberately not restated here. The Generations 12-29 narrative that
-follows is a frozen 2026-08-14 historical record, not current authority.
+`developer_state.json` → `current_re_authority`. Its generation, READY/reducer
+pins, grades, verify command, and next-valid generation live only there and are
+deliberately not restated here. The Generations 12-29 narrative that
+follows is a frozen 2026-08-14 historical record, not a live selector.
 Generation 73 supplied a
 field-level projection oracle; Generations 12 through 23 then admitted bounded
 Damage/Hit field-write contracts, one replicated zero-shield ApplyDamage
@@ -1663,7 +1656,7 @@ event-4000 sequence because the two sessions differ in writers, values, and
 order. External effects, event 2000, event 4002, field meanings, broader
 populations, original source spelling, and direct rebuild parity remain open.
 Generation 24 then reseeded those exact Generation-23 claims onto the
-then-current 8,280-function/db.18613 geometry: all 27,780 eligible carry rows are accounted
+then-active 8,280-function/db.18613 geometry: all 27,780 eligible carry rows are accounted
 for, the 154 added structural identities enter as OPAQUE, and no new semantic,
 runtime, Ghidra, executable, or rebuild claim is made. Its 105 open residuals
 (101 dark and four executed) reflect that sealed geometry rather than loss of the
@@ -1687,8 +1680,8 @@ scenarios without changing a semantic grade. Generation 29 then re-grounds the
 two D3DX-compatible functions on exact db.18618 geometry, accounts for all
 26,841 eligible Generation-28 carry rows, retires one changed lineage, and
 carries both new rows as OPAQUE/DARK without changing a semantic grade. At
-that freeze the next valid generation was 30; current authority and the next
-valid generation are owned by `current_re_authority` (Generation 31 v2; 32).
+that freeze the next valid generation was 30; live authority and the next-valid
+value are owned only by `current_re_authority`.
 The saved `VFuncSlot_00_004d9910` name and grade remain unchanged. The bounded
 addenda were appended to twelve exact live/tracked Ghidra comments only after
 backup, replica, rollback, adverse-control, readback, and restore gates; no

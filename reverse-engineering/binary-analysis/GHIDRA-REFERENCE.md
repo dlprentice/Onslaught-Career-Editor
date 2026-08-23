@@ -7,6 +7,11 @@ metadata projections are the explicit tracked evidence exceptions.
 
 ## Current authority
 
+Select campaign state only through `developer_state.json` →
+`current_re_authority`. Select rolling tracked/live Ghidra state through
+[`../ghidra/README.md`](../ghidra/README.md) plus fresh inspection. The dated
+history below is evidence chronology, not a live routing table.
+
 The [2026-07-13 full re-audit closeout](ghidra-full-reaudit-closeout-2026-07-13.md)
 verified the trusted 6,411-address snapshots, reviewed the 459-address metadata
 delta, and independently re-reviewed 92 unique correction targets. Ninety-one
@@ -51,8 +56,8 @@ layouts, or behaviors are proven.
 > to 8,329/db.18618 and exact ownership to 93.912966399%. The latest
 > project state is owned by
 > [`../ghidra/README.md`](../ghidra/README.md).
-> The current saved census and lower bound are 8,329, not a ceiling. The current
-> 8,329-row db.18618 projection and live-state
+> The D3DX-era saved census and lower bound were 8,329, not a ceiling. That
+> 8,329-row db.18618 projection and its live-state
 > receipts are reconciled in
 > [`../../../ghidra-functions.md`](../ghidra-functions.md); the 6,411- and
 > 7,555-row states remain dated history only.
