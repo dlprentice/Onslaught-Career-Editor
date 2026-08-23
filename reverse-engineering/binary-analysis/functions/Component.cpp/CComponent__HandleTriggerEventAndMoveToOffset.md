@@ -52,13 +52,35 @@ every fresh-transition continuation.
    `(+0x1c,+0x20)`. Normalize that 2D vector using exact constants `1.0f` and
    `0.0f` at `0x005d8568/0x005d856c`; a zero length leaves `(ux,uy)=(0,0)`.
 
-   Call the linked object's virtual byte offset `+0x6c` (slot 27) with a local
-   four-dword output. The immediately preceding named sibling at `0x004287c0`
-   proves this same slot receives and writes such a destination buffer. Let
+   The stack operands in this arm require tracking the argument pushes rather
+   than treating every printed `[esp+N]` as one fixed local. Define `F` as ESP
+   immediately after `push esi` at `0x00428803`. The normalization stores `uy`
+   at `[F+0x0c]` (`0x00428883`, then `0x004288be` on the nonzero route), stores
+   zero at `[F+0x10]` (`0x0042886f`/`0x004288ac`), and leaves `ux` in ST(0).
+   At `0x004288d7`, pushing the slot-27 destination changes ESP to `P=F-4`.
+   Therefore the scaling block maps as follows:
+
+   | Instructions | Printed operand | Stable-frame value |
+   | --- | --- | --- |
+   | `0x004288f6`–`0x004288fc` | `[P+0x1c]` | `[F+0x18] = 0.4*ux` |
+   | `0x00428900`–`0x0042890a` | `[P+0x10]` -> `[P+0x20]` | `[F+0x0c]` -> `[F+0x1c] = 0.4*uy` |
+   | `0x0042890e`–`0x00428918` | `[P+0x14]` -> `[P+0x24]` | `[F+0x10]` -> `[F+0x20] = 0` |
+
+   Thus the operand printed as `[esp+0x14]` at `0x0042890e` aliases the proved
+   zero local, not unwritten `[F+0x14]`; `[F+0x14]` is not read by this arm.
+   The one-explicit-argument MSVC `__thiscall` is callee-clean: this body has no
+   caller adjustment, and the immediately preceding sibling at `0x004287c0`
+   uses the same push/call shape for slot 27. ESP is consequently back at `F`
+   after `0x0042891c`, so the reads at `0x0042891f`, `0x00428925`, and
+   `0x00428934` consume the initialized `[F+0x18]`, `[F+0x1c]`, and
+   `[F+0x20]` values above.
+
+   Slot 27 receives a local four-dword destination. The sibling at
+   `0x004287c0` proves the same slot writes such a destination buffer. Let
    `(rx,ry,rz)` be the first three floats at the pointer this call returns in
    EAX; this note does not assume that return aliases the supplied buffer or
-   invent the slot's source virtual name. Using exact `0.4f` at `0x005d8c40`,
-   form:
+   invent the slot's source virtual name. With exact `0.4f` at `0x005d8c40`,
+   the push-aware transfer derives:
 
    ```text
    out.x = rx + 0.4*ux + 0.4*linked[0x40]
@@ -132,15 +154,20 @@ Any one of:
   CGillMHead slot-50 dwords above.
 - Either profile route skips shared cleanup, shared result 0 reaches child/
   helper/move/event work, or a fresh route returns anything other than 1.
-- The move stops using the exact normalized XY/`0.4f` formula, or event
-  `0x0fa4` stops using `mTime+7.0f`.
+- The slot-27 argument push no longer gives `P=F-4`, its callee-clean return no
+  longer restores `F`, the three post-call reads stop resolving to initialized
+  `[F+0x18/+0x1c/+0x20]`, or the derived normalized-XY/`0.4f` formula changes.
+- Event `0x0fa4` stops using `mTime+7.0f`.
 
 ## Receipts
 
 - 2026-08-22 — official pristine specimen above, SHA verified before reading.
   Reproduced the complete body/hash, five direct calls, two indirect calls,
   zero inbound rel32 references, two strict slot-50 entries, both shared-gate
-  sites, exact vector formula, and exact event tuple with read-only
-  PE/capstone/RTTI probes.
+  sites, exact event tuple, and the vector formula with a push-aware FPU/local
+  replay. In particular, the slot-27 argument changes `F` to `P=F-4`; the
+  apparent `[esp+0x14]` read is initialized `[F+0x10]`, and the post-call
+  `[esp+0x18]` read is initialized `[F+0x18]`. Read-only PE/capstone/RTTI probes
+  were used throughout.
 - Related contract:
   [`../Unit.cpp/CUnit__MarkDestroyedAndCleanupLinks.md`](../Unit.cpp/CUnit__MarkDestroyedAndCleanupLinks.md).
