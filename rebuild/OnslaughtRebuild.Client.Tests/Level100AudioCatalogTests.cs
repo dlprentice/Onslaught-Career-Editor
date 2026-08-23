@@ -595,6 +595,8 @@ public sealed class Level100AudioCatalogTests
         Assert.Throws<ArgumentOutOfRangeException>(() =>
             Level100AudioCatalog.ToRetailSoundMasterVolume(float.NaN));
         Assert.Throws<ArgumentOutOfRangeException>(() =>
+            Level100AudioCatalog.ToRetailSoundMasterVolume(-0.01f));
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
             Level100AudioCatalog.ToRetailSoundMasterVolume(1.01f));
     }
 
@@ -660,6 +662,41 @@ public sealed class Level100AudioCatalogTests
             "Level100AudioCatalog.ToRetailMusicSetVolume(optionValue);",
             "if (GodotObject.IsInstanceValid(_music))",
             "_music.VolumeDb = MixedMusicVolumeDb();");
+    }
+
+    [Fact]
+    public void MusicOptionChange_PreservesTheRawCareerFloatWhileChangingRoundedState()
+    {
+        var menu = new RetailOptionsMenu();
+        menu.Enter(RetailOptionsPage.Sound);
+        Assert.True(menu.MoveSelection(1));
+        Assert.Equal("Music Volume", menu.SelectedRow.Label);
+
+        int originalSetVolume = Level100AudioCatalog.ToRetailMusicSetVolume(
+            menu.Settings.MusicVolume);
+        Assert.True(menu.Adjust(-1));
+
+        const float expectedRawCareerValue = 0.8f;
+        Assert.Equal(expectedRawCareerValue, menu.Settings.MusicVolume);
+        int changedSetVolume = Level100AudioCatalog.ToRetailMusicSetVolume(
+            menu.Settings.MusicVolume);
+        Assert.Equal(114, originalSetVolume);
+        Assert.Equal(102, changedSetVolume);
+        Assert.NotEqual(originalSetVolume, changedSetVolume);
+        Assert.NotEqual(changedSetVolume / 127f, menu.Settings.MusicVolume);
+        Assert.Equal(expectedRawCareerValue, menu.Settings.MusicVolume);
+
+        string applyOptions = MethodBody(
+            ReadGodotSource("FirstFlightGame.cs"),
+            "private void ApplyOptionsSettings(RetailOptionsSettings settings)");
+        Assert.Contains(
+            "_audio.SetMusicOption(settings.MusicVolume);",
+            applyOptions,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "ToRetailMusicSetVolume",
+            applyOptions,
+            StringComparison.Ordinal);
     }
 
     // Every Level 100 mix level is reproduced from two released facts rather
@@ -765,6 +802,7 @@ public sealed class Level100AudioCatalogTests
     [Theory]
     [InlineData(0f, 0)]
     [InlineData(0.1f, 13)]
+    [InlineData(2.5f / 127f, 2)] // ToEven = 2; AwayFromZero = 3.
     [InlineData(0.5f, 64)]
     [InlineData(0.8f, 102)]
     [InlineData(0.9f, 114)]

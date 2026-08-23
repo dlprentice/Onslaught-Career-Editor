@@ -1228,9 +1228,9 @@ public sealed partial class Level100Audio : Node3D
     // (references/Onslaught/pcsoundmanager.cpp:405-412): it had no saturation
     // plateau, it was logarithmic where retail is linear in dB below the knee,
     // and it compressed Level 100's dynamic range to roughly a third of
-    // retail's. Every level was wrong and the RELATIVE balance was wrong by up
-    // to ~14 dB between cues seconds apart - the Pulse Cannon report sat only
-    // 3.7 dB below the jet engine loop where retail puts it 17 dB below.
+    // retail's. Every level was wrong and the RELATIVE balance was wrong: under
+    // the released direct 0.8 sound master, the Pulse Cannon report computes
+    // 14 dB below the jet engine loop rather than the old adapter's 3.7 dB.
     //
     // `sourceVolume` is retail's `v`, and it is NOT one value. See
     // Level100AudioCatalog.RetailUntrackedSourceVolume (127, an event with a
