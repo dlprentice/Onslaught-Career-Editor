@@ -164,16 +164,16 @@
   "output_hashes": {
     "REBUILD-DELTA.md": "bee06d33ab37481c675510768d7f7eb4242d85a8a386e3cbee71739175bd13c1",
     "RETAIL-DELTA.tsv": "e90352c35767ec4cb357656b82d925a80b5cc958772833f904cfad459c1235b4",
-    "SOURCE-CONTRACT.md": "0651e8c8fe3071ef7833b63c7ed43d0217153f6807c602f11957faf7bbc338ef",
-    "definitions.tsv": "a6a3eeac2714f9cf2b7469cd6b6a53f08e913a0741cc0536d6fa369d60eaccf2"
+    "SOURCE-CONTRACT.md": "f385b56c3d5fd01d66aa710276cc6a545382dca4db3746c17194f0964d041814",
+    "definitions.tsv": "d516756db15e51d2be4bf64798df48e3e1c716cb33f687c00a8dff5c90896693"
   },
   "projection": {
     "byte_identical_outputs": 5,
     "deterministic_replays": 2,
     "generator_path": "%LOCALAPPDATA%/Temp/build_w2_expansion.py",
-    "generator_sha256": "e744a2786599971716d16ad9e9adcf39ef406b4941347764e6a5741d88516e19",
+    "generator_sha256": "8229993599c52a0a88610332e236a60dce707936c51ff89b04b59064dd9005ca",
     "validator_path": "%LOCALAPPDATA%/Temp/validate_w2_expansion.py",
-    "validator_sha256": "38e5d9135e0d456f6c79d44788b82eae575776932ece7eca0dfb8c4476f0ba98"
+    "validator_sha256": "170fe23ab4d8940b6f97725ce702fa602a8b080cb0688dd13f0f29047a267199"
   },
   "repository_parent": "784367bd43f9ec13125521b00fe0c8352670ffdd",
   "schema": "bea.source-crosswalk.expansion-wave.v1",

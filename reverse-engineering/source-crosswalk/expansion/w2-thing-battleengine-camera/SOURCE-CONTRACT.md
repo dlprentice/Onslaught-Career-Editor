@@ -23,7 +23,7 @@ Before this tracked root was written, the lane read `local-lab/INDEX.md`, `CORPU
 - `EXTENDED`: 155 macro-ownerless definitions add the source-lexical owner repair and rerun qualified semantic/name joins.
 - `NEW_MEASUREMENT`: 0 definitions. No pristine bytes, runtime, Ghidra, browser, GUI, PS2 corpus, or raw G: corpus was opened.
 - The plan's `PLAN.md`, `partition.tsv`, `sample.tsv`, `manifest.json`, and `EXECUTION.md` are exact reused predecessors. Current Generation 32 is reused through tracked `EVIDENCE-REGISTER.tsv` plus the local `campaign.ready.json` hash recorded in `RECEIPT.json`.
-- Deterministic projection used `%LOCALAPPDATA%/Temp/build_w2_expansion.py` (SHA-256 `e744a2786599971716d16ad9e9adcf39ef406b4941347764e6a5741d88516e19`); independent structural/hash validation used `%LOCALAPPDATA%/Temp/validate_w2_expansion.py` (SHA-256 `38e5d9135e0d456f6c79d44788b82eae575776932ece7eca0dfb8c4476f0ba98`). Two fresh projection roots were byte-identical for all five outputs before tracked write.
+- Deterministic projection used `%LOCALAPPDATA%/Temp/build_w2_expansion.py` (SHA-256 `8229993599c52a0a88610332e236a60dce707936c51ff89b04b59064dd9005ca`); independent structural/hash validation used `%LOCALAPPDATA%/Temp/validate_w2_expansion.py` (SHA-256 `170fe23ab4d8940b6f97725ce702fa602a8b080cb0688dd13f0f29047a267199`). Two fresh projection roots were byte-identical for all five outputs before tracked write.
 - No repository or evidence-corpus files were deleted, moved, staged, retired, or written outside the exclusive W2 tracked root; deterministic preflight outputs stayed under `%LOCALAPPDATA%/Temp`. H: retirement and generic PS2 crosswalk work are not part of this lane.
 
 ## Stable identity and lexical owner repair
