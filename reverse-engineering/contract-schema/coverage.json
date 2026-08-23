@@ -1,6 +1,6 @@
 {
  "schema": "bea.re.contract-coverage.v1",
- "generatedAtUtc": "2026-08-23T03:09:28Z",
+ "generatedAtUtc": "2026-08-23T11:35:31Z",
  "denominator": {
   "functions": 8329,
   "contracts": 14365,
@@ -14,8 +14,8 @@
   "noteFiles": 802,
   "manifestFilesWithNamedWitnesses": 36,
   "manifestWitnessKeys": 144,
-  "contractFiles": 150,
-  "contractRowsJoined": 150
+  "contractFiles": 275,
+  "contractRowsJoined": 275
  },
  "statusCounts": {
   "STALE": 1,
@@ -27,14 +27,14 @@
   "SKELETON": 86
  },
  "evidenceClassCounts": {
-  "byte-read": 792,
+  "byte-read": 899,
   "ttd-capture": 5,
   "pinned-source-line": 7,
   "controlled-runtime": 22,
-  "ghidra-readback": 2557,
+  "ghidra-readback": 2565,
   "name-only": 86
  },
- "elapsedSeconds": 2.555,
+ "elapsedSeconds": 2.499,
  "functions": [
   {
    "va": "0x00401000",
@@ -1165,13 +1165,19 @@
    "name": "CBattleEngine__Init",
    "status": "BLOCKED",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [
     "reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__Init.md"
    ],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/engine-world/CBattleEngine__Init__00404dd0.md"
+   ]
   },
   {
    "va": "0x00405900",
@@ -1349,7 +1355,9 @@
    "va": "0x00405d90",
    "name": "CUnit__ReturnField130PackedConst_00405d90",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "ghidra-readback"
+   ],
    "witnessKinds": [],
    "notes": [],
    "flags": []
@@ -1732,11 +1740,17 @@
    "name": "CBattleEngine__UpdateWeaponEffect",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/engine-world/CBattleEngine__UpdateWeaponEffect__004063b0.md"
+   ]
   },
   {
    "va": "0x00406460",
@@ -1867,7 +1881,12 @@
    "notes": [
     "reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__LockHit.md"
    ],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/engine-world/CBattleEngine__LockHit__00407140.md"
+   ]
   },
   {
    "va": "0x004071b0",
@@ -1884,7 +1903,12 @@
    "notes": [
     "reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__GetCurrentTarget.md"
    ],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/engine-world/CBattleEngine__GetCurrentTarget__004071b0.md"
+   ]
   },
   {
    "va": "0x00407310",
@@ -1921,7 +1945,12 @@
    "notes": [
     "reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__Hit.md"
    ],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/engine-world/CBattleEngine__Hit__00407350.md"
+   ]
   },
   {
    "va": "0x004074d0",
@@ -2040,13 +2069,19 @@
    "name": "CBattleEngine__Move",
    "status": "DISPUTED",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [
     "reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__Move.md"
    ],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/engine-world/CBattleEngine__Move__004081c0.md"
+   ]
   },
   {
    "va": "0x00409760",
@@ -2122,11 +2157,17 @@
    "name": "CLine__ctor_copy",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/render-platform/CLine__ctor_copy__004098e0.md"
+   ]
   },
   {
    "va": "0x00409950",
@@ -2283,7 +2324,12 @@
    "notes": [
     "reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__Morph.md"
    ],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/engine-world/CBattleEngine__Morph__0040a580.md"
+   ]
   },
   {
    "va": "0x0040a890",
@@ -2301,7 +2347,12 @@
    "notes": [
     "reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__Damage.md"
    ],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/engine-world/CBattleEngine__Damage__0040a890.md"
+   ]
   },
   {
    "va": "0x0040ac30",
@@ -2407,12 +2458,18 @@
    "name": "CBattleEngine__StartDieProcess",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback",
     "ttd-capture"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/engine-world/CBattleEngine__StartDieProcess__0040bfd0.md"
+   ]
   },
   {
    "va": "0x0040c180",
@@ -2444,7 +2501,12 @@
    "notes": [
     "reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__CanSpawnBurstForResolvedEntry.md"
    ],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/engine-world/CBattleEngine__CanSpawnBurstForResolvedEntry__0040c2e0.md"
+   ]
   },
   {
    "va": "0x0040c340",
@@ -2701,10 +2763,17 @@
    "va": "0x0040c990",
    "name": "CBattleEngine__GetLaunchPosition",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/engine-world/CBattleEngine__GetLaunchPosition__0040c990.md"
+   ]
   },
   {
    "va": "0x0040d0f0",
@@ -2789,10 +2858,17 @@
    "va": "0x0040d470",
    "name": "CLine__ctor_fromEndpoints",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/render-platform/CLine__ctor_fromEndpoints__0040d470.md"
+   ]
   },
   {
    "va": "0x0040d4d0",
@@ -2895,10 +2971,17 @@
    "va": "0x0040da30",
    "name": "CBattleEngine__BuildInterpolatedWorldTransform",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/engine-world/CBattleEngine__BuildInterpolatedWorldTransform__0040da30.md"
+   ]
   },
   {
    "va": "0x0040dc30",
@@ -7079,19 +7162,33 @@
    "va": "0x00423680",
    "name": "CFrameTimer__Start",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/render-platform/CFrameTimer__Start__00423680.md"
+   ]
   },
   {
    "va": "0x00423720",
    "name": "CFrameTimer__Frame",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/render-platform/CFrameTimer__Frame__00423720.md"
+   ]
   },
   {
    "va": "0x004237d0",
@@ -9367,7 +9464,8 @@
    "name": "CUnitAI__InitDefaults",
    "status": "REVIEW_READY",
    "evidenceClasses": [
-    "byte-read"
+    "byte-read",
+    "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
@@ -10652,7 +10750,9 @@
    "va": "0x00432d90",
    "name": "CUnitIndiscriminate__VFunc_1_00432d90",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "ghidra-readback"
+   ],
    "witnessKinds": [],
    "notes": [],
    "flags": []
@@ -10661,7 +10761,9 @@
    "va": "0x00432dc0",
    "name": "CUnitShatter__VFunc_1_00432dc0",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "ghidra-readback"
+   ],
    "witnessKinds": [],
    "notes": [],
    "flags": []
@@ -10933,7 +11035,9 @@
    "va": "0x004332e0",
    "name": "CUnitBasedOn__VFunc_1_004332e0",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "ghidra-readback"
+   ],
    "witnessKinds": [],
    "notes": [],
    "flags": []
@@ -16123,16 +16227,24 @@
    "va": "0x0044b930",
    "name": "CExplosion__VFunc_9_0044b930",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/render-platform/CExplosion__VFunc_9_0044b930__0044b930.md"
+   ]
   },
   {
    "va": "0x0044bf10",
    "name": "CExplosion__VFunc_39_0044bf10",
    "status": "VERIFIED",
    "evidenceClasses": [
+    "byte-read",
     "controlled-runtime"
    ],
    "witnessKinds": [
@@ -16140,7 +16252,11 @@
    ],
    "notes": [],
    "flags": [
-    "register-promotion-or-adjudication"
+    "register-promotion-or-adjudication",
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/render-platform/CExplosion__VFunc_39_0044bf10__0044bf10.md"
    ]
   },
   {
@@ -16442,11 +16558,17 @@
    "name": "CFrontEnd__InitPageStateDefaults",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/frontend/CFrontEnd__InitPageStateDefaults__0044d320.md"
+   ]
   },
   {
    "va": "0x0044d390",
@@ -16461,39 +16583,66 @@
    "va": "0x0044d560",
    "name": "CFrontEnd__UpdateFadeStateMachineAlpha",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/frontend/CFrontEnd__UpdateFadeStateMachineAlpha__0044d560.md"
+   ]
   },
   {
    "va": "0x0044d6f0",
    "name": "CFrontEnd__RenderAndProcessModalPanel",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/frontend/CFrontEnd__RenderAndProcessModalPanel__0044d6f0.md"
+   ]
   },
   {
    "va": "0x0044dd60",
    "name": "CFrontEnd__HandleModalPanelButton",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/frontend/CFrontEnd__HandleModalPanelButton__0044dd60.md"
+   ]
   },
   {
    "va": "0x0044dea0",
    "name": "CFrontEnd__IsMouseInputReady",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/frontend/CFrontEnd__IsMouseInputReady__0044dea0.md"
+   ]
   },
   {
    "va": "0x0044dec0",
@@ -17050,11 +17199,17 @@
    "name": "CFrontEnd__RenderVideoQuadScaledToWindow",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/frontend/CFrontEnd__RenderVideoQuadScaledToWindow__00452ce0.md"
+   ]
   },
   {
    "va": "0x00452da0",
@@ -17095,10 +17250,17 @@
    "va": "0x00452df0",
    "name": "CFrontEnd__RenderOverlayEffects",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/frontend/CFrontEnd__RenderOverlayEffects__00452df0.md"
+   ]
   },
   {
    "va": "0x00452fd0",
@@ -18900,11 +19062,17 @@
    "name": "CFrontEnd__Init",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/frontend/CFrontEnd__Init__004662a0.md"
+   ]
   },
   {
    "va": "0x00466880",
@@ -18920,121 +19088,187 @@
    "name": "CFrontEnd__GetPlayer0ControllerPort",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/frontend/CFrontEnd__GetPlayer0ControllerPort__00466980.md"
+   ]
   },
   {
    "va": "0x00466990",
    "name": "CFrontEnd__NumControllersPresent",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/frontend/CFrontEnd__NumControllersPresent__00466990.md"
+   ]
   },
   {
    "va": "0x004669a0",
    "name": "CFrontEnd__ReceiveButtonAction",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/frontend/CFrontEnd__ReceiveButtonAction__004669a0.md"
+   ]
   },
   {
    "va": "0x00466ab0",
    "name": "CFrontEnd__SetLanguage",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/frontend/CFrontEnd__SetLanguage__00466ab0.md"
+   ]
   },
   {
    "va": "0x00466ae0",
    "name": "CFrontEnd__SetPage",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/frontend/CFrontEnd__SetPage__00466ae0.md"
+   ]
   },
   {
    "va": "0x00466ba0",
    "name": "CFrontEnd__Process",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/frontend/CFrontEnd__Process__00466ba0.md"
+   ]
   },
   {
    "va": "0x00466de0",
    "name": "CFrontEnd__DrawLine",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/frontend/CFrontEnd__DrawLine__00466de0.md"
+   ]
   },
   {
    "va": "0x00466e70",
    "name": "CFrontEnd__DrawBox",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/frontend/CFrontEnd__DrawBox__00466e70.md"
+   ]
   },
   {
    "va": "0x00467010",
    "name": "CFrontEnd__DrawPanel",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/frontend/CFrontEnd__DrawPanel__00467010.md"
+   ]
   },
   {
    "va": "0x004670b0",
    "name": "CFrontEnd__DrawBarGraph",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/frontend/CFrontEnd__DrawBarGraph__004670b0.md"
+   ]
   },
   {
    "va": "0x00467200",
    "name": "CFrontEnd__DrawSlidingTextBordersAndMask",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/frontend/CFrontEnd__DrawSlidingTextBordersAndMask__00467200.md"
+   ]
   },
   {
    "va": "0x004679a0",
@@ -19052,66 +19286,102 @@
    "name": "CFrontEnd__RenderPreCommonFade",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/frontend/CFrontEnd__RenderPreCommonFade__004679e0.md"
+   ]
   },
   {
    "va": "0x00467ae0",
    "name": "CFrontEnd__DrawBar",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/frontend/CFrontEnd__DrawBar__00467ae0.md"
+   ]
   },
   {
    "va": "0x00467bd0",
    "name": "CFrontEnd__DrawTitleBar",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/frontend/CFrontEnd__DrawTitleBar__00467bd0.md"
+   ]
   },
   {
    "va": "0x004681c0",
    "name": "CFrontEnd__EnableAdditiveAlpha",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/frontend/CFrontEnd__EnableAdditiveAlpha__004681c0.md"
+   ]
   },
   {
    "va": "0x004681e0",
    "name": "CFrontEnd__EnableModulateAlpha",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/frontend/CFrontEnd__EnableModulateAlpha__004681e0.md"
+   ]
   },
   {
    "va": "0x00468200",
    "name": "CFrontEnd__Render",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/frontend/CFrontEnd__Render__00468200.md"
+   ]
   },
   {
    "va": "0x004684d0",
@@ -19632,7 +19902,12 @@
     "NOTE_MEASURED"
    ],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/engine-world/CGame__Init__0046c360.md"
+   ]
   },
   {
    "va": "0x0046c430",
@@ -19660,7 +19935,12 @@
     "NOTE_MEASURED"
    ],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/engine-world/CGame__Shutdown__0046c990.md"
+   ]
   },
   {
    "va": "0x0046ca70",
@@ -19688,7 +19968,12 @@
     "NOTE_MEASURED"
    ],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/engine-world/CGame__LoadResources__0046cd30.md"
+   ]
   },
   {
    "va": "0x0046cdf0",
@@ -19702,7 +19987,12 @@
     "NOTE_MEASURED"
    ],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/engine-world/CGame__LoadLevel__0046cdf0.md"
+   ]
   },
   {
    "va": "0x0046d040",
@@ -19716,7 +20006,12 @@
     "NOTE_MEASURED"
    ],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/engine-world/CGame__PostLoadProcess__0046d040.md"
+   ]
   },
   {
    "va": "0x0046d270",
@@ -19772,7 +20067,12 @@
     "NOTE_MEASURED"
    ],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/engine-world/CGame__FillOutEndLevelData__0046d470.md"
+   ]
   },
   {
    "va": "0x0046d810",
@@ -19881,7 +20181,12 @@
     "NOTE_MEASURED"
    ],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/engine-world/CGame__RestartLoopRunLevel__0046dc30.md"
+   ]
   },
   {
    "va": "0x0046e240",
@@ -19895,7 +20200,12 @@
     "NOTE_MEASURED"
    ],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/engine-world/CGame__RunLevel__0046e240.md"
+   ]
   },
   {
    "va": "0x0046e460",
@@ -19959,11 +20269,17 @@
    "name": "CGame__DeclareLevelWon",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/engine-world/CGame__DeclareLevelWon__0046f2f0.md"
+   ]
   },
   {
    "va": "0x0046f360",
@@ -19992,11 +20308,17 @@
    "name": "CGame__DeclareLevelLost",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/engine-world/CGame__DeclareLevelLost__0046f430.md"
+   ]
   },
   {
    "va": "0x0046f550",
@@ -26197,7 +26519,9 @@
    "va": "0x0049fdb0",
    "name": "CMech__VFunc_71_SpawnGenericMeshBreakEffects_0049fdb0",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "ghidra-readback"
+   ],
    "witnessKinds": [],
    "notes": [],
    "flags": []
@@ -29960,10 +30284,17 @@
    "va": "0x004c0150",
    "name": "CParticle__ApplyParentTransformOrStoreLink",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/particle-runtime/CParticle__ApplyParentTransformOrStoreLink__004c0150.md"
+   ]
   },
   {
    "va": "0x004c0370",
@@ -30803,22 +31134,34 @@
    "name": "CParticle__Destroy",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/particle-runtime/CParticle__Destroy__004cae50.md"
+   ]
   },
   {
    "va": "0x004caed0",
    "name": "CParticle__SetParticleResource",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/particle-runtime/CParticle__SetParticleResource__004caed0.md"
+   ]
   },
   {
    "va": "0x004caf30",
@@ -30836,11 +31179,17 @@
    "name": "CParticleManager__CleanupHandles",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/particle-runtime/CParticleManager__CleanupHandles__004caf60.md"
+   ]
   },
   {
    "va": "0x004cb040",
@@ -30869,11 +31218,17 @@
    "name": "CParticleManager__PruneDeadOwnerLinks",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/particle-runtime/CParticleManager__PruneDeadOwnerLinks__004cb080.md"
+   ]
   },
   {
    "va": "0x004cb0b0",
@@ -30890,117 +31245,197 @@
    "va": "0x004cb0e0",
    "name": "CParticleManager__Init",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/particle-runtime/CParticleManager__Init__004cb0e0.md"
+   ]
   },
   {
    "va": "0x004cb1b0",
    "name": "CParticleManager__Shutdown",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/particle-runtime/CParticleManager__Shutdown__004cb1b0.md"
+   ]
   },
   {
    "va": "0x004cb210",
    "name": "CParticleManager__Update",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/particle-runtime/CParticleManager__Update__004cb210.md"
+   ]
   },
   {
    "va": "0x004cb300",
    "name": "CParticleManager__InterpolatePositions",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/particle-runtime/CParticleManager__InterpolatePositions__004cb300.md"
+   ]
   },
   {
    "va": "0x004cb3d0",
    "name": "CParticleManager__CreateEffect",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/particle-runtime/CParticleManager__CreateEffect__004cb3d0.md"
+   ]
   },
   {
    "va": "0x004cb5c0",
    "name": "CParticleManager__AllocateParticle",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/particle-runtime/CParticleManager__AllocateParticle__004cb5c0.md"
+   ]
   },
   {
    "va": "0x004cb920",
    "name": "CParticleManager__UpdateParticleAndRecycleIfDead",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/particle-runtime/CParticleManager__UpdateParticleAndRecycleIfDead__004cb920.md"
+   ]
   },
   {
    "va": "0x004cba30",
    "name": "CParticleManager__ProjectPointToTerrainWithRadiusClamp",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/particle-runtime/CParticleManager__ProjectPointToTerrainWithRadiusClamp__004cba30.md"
+   ]
   },
   {
    "va": "0x004cba90",
    "name": "CParticleManager__ComputeMinCameraDistanceSqForParticle",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/particle-runtime/CParticleManager__ComputeMinCameraDistanceSqForParticle__004cba90.md"
+   ]
   },
   {
    "va": "0x004cbc60",
    "name": "CParticleManager__UpdateRenderNodesAndResetState",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/particle-runtime/CParticleManager__UpdateRenderNodesAndResetState__004cbc60.md"
+   ]
   },
   {
    "va": "0x004cbca0",
    "name": "CParticleManager__UpdateParticles",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/render-platform/CParticleManager__UpdateParticles__004cbca0.md"
+   ]
   },
   {
    "va": "0x004cbe30",
    "name": "CParticleManager__PruneDeadParticles",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/particle-runtime/CParticleManager__PruneDeadParticles__004cbe30.md"
+   ]
   },
   {
    "va": "0x004cbed0",
@@ -31051,42 +31486,67 @@
    "name": "CParticleManager__DestroyParticleSetList",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/particle-runtime/CParticleManager__DestroyParticleSetList__004cbff0.md"
+   ]
   },
   {
    "va": "0x004cc020",
    "name": "CParticleSet__CreateByType",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/render-platform/CParticleSet__CreateByType__004cc020.md"
+   ]
   },
   {
    "va": "0x004cc850",
    "name": "CParticleSet__Init",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/particle-runtime/CParticleSet__Init__004cc850.md"
+   ]
   },
   {
    "va": "0x004cc870",
    "name": "CParticleSet__dtor_base",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/particle-runtime/CParticleSet__dtor_base__004cc870.md"
+   ]
   },
   {
    "va": "0x004cc880",
@@ -31173,10 +31633,17 @@
    "va": "0x004ccb40",
    "name": "CParticleSet__shared_scalar_deleting_dtor",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/particle-runtime/CParticleSet__shared_scalar_deleting_dtor__004ccb40.md"
+   ]
   },
   {
    "va": "0x004ccb60",
@@ -31470,19 +31937,33 @@
    "va": "0x004cd290",
    "name": "CParticleSet__InitType11",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/particle-runtime/CParticleSet__InitType11__004cd290.md"
+   ]
   },
   {
    "va": "0x004cd2d0",
    "name": "CParticleSet__InitType12",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/particle-runtime/CParticleSet__InitType12__004cd2d0.md"
+   ]
   },
   {
    "va": "0x004cd300",
@@ -31524,10 +32005,17 @@
    "va": "0x004cd3c0",
    "name": "CParticleSet__InitType13",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/particle-runtime/CParticleSet__InitType13__004cd3c0.md"
+   ]
   },
   {
    "va": "0x004cd540",
@@ -31575,29 +32063,46 @@
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/particle-runtime/CParticleSet__FindByNameAndTrackLinkSlot__004cd7a0.md"
+   ]
   },
   {
    "va": "0x004cd7f0",
    "name": "CParticleSet__LoadFromArchive",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/render-platform/CParticleSet__LoadFromArchive__004cd7f0.md"
+   ]
   },
   {
    "va": "0x004cda60",
    "name": "CParticleSet__LoadParticleSetFile",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/particle-runtime/CParticleSet__LoadParticleSetFile__004cda60.md"
+   ]
   },
   {
    "va": "0x004cdb90",
@@ -34780,20 +35285,33 @@
    "name": "CRTTree__VFuncSlot02_BuildRenderOutputs",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/render-platform/CRTTree__VFuncSlot02_BuildRenderOutputs__004dd960.md"
+   ]
   },
   {
    "va": "0x004ddfd0",
    "name": "CRTTree__Destructor",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/render-platform/CRTTree__Destructor__004ddfd0.md"
+   ]
   },
   {
    "va": "0x004de050",
@@ -37277,11 +37795,17 @@
    "name": "D3DStateCache__UseDefaultRenderState",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/render-platform/D3DStateCache__UseDefaultRenderState__004eb1e0.md"
+   ]
   },
   {
    "va": "0x004eb9a0",
@@ -38376,11 +38900,17 @@
    "name": "CThing__dtor_base",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/engine-world/CThing__dtor_base__004f3640.md"
+   ]
   },
   {
    "va": "0x004f36d0",
@@ -39113,11 +39643,17 @@
    "name": "CTree__dtor_base",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/render-platform/CTree__dtor_base__004f63c0.md"
+   ]
   },
   {
    "va": "0x004f6430",
@@ -39199,11 +39735,17 @@
    "name": "CTree__UpdateFallingTree",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/render-platform/CTree__UpdateFallingTree__004f6b80.md"
+   ]
   },
   {
    "va": "0x004f6fd0",
@@ -42131,11 +42673,17 @@
    "name": "ProjectileBurst__SpawnFromCurrentPreset",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/render-platform/ProjectileBurst__SpawnFromCurrentPreset__005069f0.md"
+   ]
   },
   {
    "va": "0x005078b0",
@@ -42223,10 +42771,17 @@
    "va": "0x00509c80",
    "name": "CBattleEngine__ComputeProjectileMetricFromTargetProfile",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/engine-world/CBattleEngine__ComputeProjectileMetricFromTargetProfile__00509c80.md"
+   ]
   },
   {
    "va": "0x00509e40",
@@ -42544,13 +43099,19 @@
    "name": "CWorld__LoadWorld",
    "status": "DISPUTED",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [
     "reverse-engineering/binary-analysis/functions/World.cpp/CWorld__LoadWorld.md"
    ],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/engine-world/CWorld__LoadWorld__0050b9c0.md"
+   ]
   },
   {
    "va": "0x0050d4c0",
@@ -44036,7 +44597,9 @@
    "va": "0x00510a90",
    "name": "CWorldPhysicsManager__ClearAndFreeAllDefinitionLists",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "ghidra-readback"
+   ],
    "witnessKinds": [],
    "notes": [],
    "flags": []
@@ -44098,7 +44661,9 @@
    "va": "0x005110f0",
    "name": "CWorldPhysicsManager__FreeThingOrComponentDefinitionEntry",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "ghidra-readback"
+   ],
    "witnessKinds": [],
    "notes": [],
    "flags": []
@@ -44667,10 +45232,17 @@
    "va": "0x005138b0",
    "name": "D3DStateCache__SetState114Cached",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/render-platform/D3DStateCache__SetState114Cached__005138b0.md"
+   ]
   },
   {
    "va": "0x00513930",
@@ -46043,58 +46615,98 @@
    "name": "CFastVB__Create",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__Create__0051a270.md"
+   ]
   },
   {
    "va": "0x0051a340",
    "name": "CFastVB__Destroy",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__Destroy__0051a340.md"
+   ]
   },
   {
    "va": "0x0051a380",
    "name": "CFastVB__LockAligned",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__LockAligned__0051a380.md"
+   ]
   },
   {
    "va": "0x0051a430",
    "name": "CFastVB__Lock",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/render-platform/CFastVB__Lock__0051a430.md"
+   ]
   },
   {
    "va": "0x0051a510",
    "name": "CFastVB__Render",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__Render__0051a510.md"
+   ]
   },
   {
    "va": "0x0051a6a0",
    "name": "CFastVB__RenderTriangleStripImmediate",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__RenderTriangleStripImmediate__0051a6a0.md"
+   ]
   },
   {
    "va": "0x0051a700",
@@ -47081,7 +47693,12 @@
     "NOTE_MEASURED"
    ],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/render-platform/CMixerMap__InitSlot__00523190.md"
+   ]
   },
   {
    "va": "0x00523210",
@@ -47095,7 +47712,12 @@
     "NOTE_MEASURED"
    ],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/render-platform/CMixerMap__DestroySlot__00523210.md"
+   ]
   },
   {
    "va": "0x00523230",
@@ -47123,7 +47745,12 @@
     "NOTE_MEASURED"
    ],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/render-platform/CMixerMap__Init__005232b0.md"
+   ]
   },
   {
    "va": "0x005233c0",
@@ -47948,11 +48575,17 @@
    "name": "CD3DApplication__BuildDeviceList",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/render-platform/CD3DApplication__BuildDeviceList__00529350.md"
+   ]
   },
   {
    "va": "0x0052a830",
@@ -48023,11 +48656,17 @@
    "name": "CD3DApplication__Initialize3DEnvironment",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/render-platform/CD3DApplication__Initialize3DEnvironment__0052af00.md"
+   ]
   },
   {
    "va": "0x0052b760",
@@ -57402,22 +58041,34 @@
    "name": "CDXTrees__Render",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/render-platform/CDXTrees__Render__0055aa10.md"
+   ]
   },
   {
    "va": "0x0055ae40",
    "name": "CDXTrees__HideTree",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/render-platform/CDXTrees__HideTree__0055ae40.md"
+   ]
   },
   {
    "va": "0x0055af90",
@@ -62250,10 +62901,17 @@
    "va": "0x0056f280",
    "name": "CFastVB__CountWordElements",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__CountWordElements__0056f280.md"
+   ]
   },
   {
    "va": "0x0056f2a0",
@@ -62269,11 +62927,17 @@
    "name": "CFastVB__CopyWordRangeToBufferAndAdvanceEnd",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__CopyWordRangeToBufferAndAdvanceEnd__0056f4b0.md"
+   ]
   },
   {
    "va": "0x0056f4e0",
@@ -62313,19 +62977,33 @@
    "va": "0x0056f540",
    "name": "CFastVB__FindEdgeRecord",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__FindEdgeRecord__0056f540.md"
+   ]
   },
   {
    "va": "0x0056f580",
    "name": "CFastVB__ResolveOppositeAdjacencyRecord",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__ResolveOppositeAdjacencyRecord__0056f580.md"
+   ]
   },
   {
    "va": "0x0056f5c0",
@@ -62340,46 +63018,81 @@
    "va": "0x0056f620",
    "name": "CFastVB__BuildTriangleAdjacency",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__BuildTriangleAdjacency__0056f620.md"
+   ]
   },
   {
    "va": "0x0056fce0",
    "name": "CFastVB__SelectTriangleWithMaxOpenEdges",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__SelectTriangleWithMaxOpenEdges__0056fce0.md"
+   ]
   },
   {
    "va": "0x0056fdc0",
    "name": "CFastVB__SelectNextStripTriangle",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__SelectNextStripTriangle__0056fdc0.md"
+   ]
   },
   {
    "va": "0x0056fe70",
    "name": "CFastVB__AreTriangleVertexSetsEquivalent",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__AreTriangleVertexSetsEquivalent__0056fe70.md"
+   ]
   },
   {
    "va": "0x0056fec0",
    "name": "CFastVB__GetSharedVerticesBetweenTriangles",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__GetSharedVerticesBetweenTriangles__0056fec0.md"
+   ]
   },
   {
    "va": "0x0056ff40",
@@ -62394,10 +63107,17 @@
    "va": "0x00570000",
    "name": "CFastVB__BuildTriangleStripFromSeedRecord",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__BuildTriangleStripFromSeedRecord__00570000.md"
+   ]
   },
   {
    "va": "0x00570870",
@@ -62412,10 +63132,17 @@
    "va": "0x005708a0",
    "name": "CFastVB__InsertStripCandidatesIntoBuffer_005708a0",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__InsertStripCandidatesIntoBuffer_005708a0__005708a0.md"
+   ]
   },
   {
    "va": "0x00570a90",
@@ -62448,10 +63175,17 @@
    "va": "0x00570dd0",
    "name": "CFastVB__MergeAndOrderStripBatches_Impl_00570dd0",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__MergeAndOrderStripBatches_Impl_00570dd0__00570dd0.md"
+   ]
   },
   {
    "va": "0x00571060",
@@ -62475,19 +63209,33 @@
    "va": "0x005710d0",
    "name": "CFastVB__EmitTriangleStripIndexBuffer",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__EmitTriangleStripIndexBuffer__005710d0.md"
+   ]
   },
   {
    "va": "0x005715b0",
    "name": "CFastVB__BuildStripBatchesFromIndexBuffer",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__BuildStripBatchesFromIndexBuffer__005715b0.md"
+   ]
   },
   {
    "va": "0x00571870",
@@ -62511,10 +63259,17 @@
    "va": "0x005718c0",
    "name": "CFastVB__MergeAndOrderStripBatches",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__MergeAndOrderStripBatches__005718c0.md"
+   ]
   },
   {
    "va": "0x005721f0",
@@ -69281,37 +70036,65 @@
    "va": "0x00596480",
    "name": "CFastVB__PackClampedRgbToR5G6B5",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__PackClampedRgbToR5G6B5__00596480.md"
+   ]
   },
   {
    "va": "0x00596589",
    "name": "CFastVB__SolveScalarEndpointPairFromSamples",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__SolveScalarEndpointPairFromSamples__00596589.md"
+   ]
   },
   {
    "va": "0x005968a4",
    "name": "CFastVB__SolveVectorEndpointPairFromSamples",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__SolveVectorEndpointPairFromSamples__005968a4.md"
+   ]
   },
   {
    "va": "0x00596e23",
    "name": "CFastVB__QuantizeScalarBlockIndices",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/render-platform/CFastVB__QuantizeScalarBlockIndices__00596e23.md"
+   ]
   },
   {
    "va": "0x0059764a",
@@ -69355,21 +70138,34 @@
    "va": "0x00597a61",
    "name": "CFastVB__PackScalarBlock_4BitEndpoints",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__PackScalarBlock_4BitEndpoints__00597a61.md"
+   ]
   },
   {
    "va": "0x00597b87",
    "name": "CFastVB__PackScalarBlock_InterpolatedEndpoints",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__PackScalarBlock_InterpolatedEndpoints__00597b87.md"
+   ]
   },
   {
    "va": "0x00598010",

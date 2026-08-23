@@ -624,6 +624,10 @@ def test_reruns_are_byte_identical_when_inputs_are_unchanged() -> None:
         assert p1["generatedAtUtc"]  # stamps exist
         assert raw1 == raw2
         assert report1 == report2
+        assert b"\r\n" not in raw1
+        assert b"\r\n" not in report1
+        assert b"\n" in raw1
+        assert b"\n" in report1
     finally:
         shutil.rmtree(root, ignore_errors=True)
 

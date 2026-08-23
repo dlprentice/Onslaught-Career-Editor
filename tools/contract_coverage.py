@@ -725,7 +725,7 @@ def write_coverage(payload: dict, out_path: Path) -> dict:
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     tmp = out_path.with_suffix(out_path.suffix + ".tmp")
-    tmp.write_text(json.dumps(to_write, indent=1), encoding="utf-8")
+    tmp.write_text(json.dumps(to_write, indent=1), encoding="utf-8", newline="\n")
     tmp.replace(out_path)
     return to_write
 
@@ -795,7 +795,7 @@ def render_markdown_report(payload: dict) -> str:
 def write_markdown_report(payload: dict, out_path: Path) -> None:
     out_path.parent.mkdir(parents=True, exist_ok=True)
     tmp = out_path.with_suffix(out_path.suffix + ".tmp")
-    tmp.write_text(render_markdown_report(payload), encoding="utf-8")
+    tmp.write_text(render_markdown_report(payload), encoding="utf-8", newline="\n")
     tmp.replace(out_path)
 
 
