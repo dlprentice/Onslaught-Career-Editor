@@ -151,6 +151,33 @@ public sealed class SimulationTests
     }
 
     [Fact]
+    public void PlayerBaseState_CapturesPreviousPoseOncePerSimulationTick()
+    {
+        Simulation simulation = CreatePlayingSimulation();
+        Level100ActorId player = simulation.Snapshot.Level100Actors.Actors
+            .Single(actor =>
+                actor.ThingTypeMask == Level100ReleasedThingTypeMasks.BattleEngine)
+            .ActorId;
+        ThingActorBaseStateSnapshot before = simulation.Snapshot.Level100Actors.BaseStates
+            .Single(item => item.ActorId == player)
+            .State;
+
+        WorldSnapshot moved = simulation.Step(new SimInput(0, 1));
+
+        ThingActorBaseStateSnapshot after = moved.Level100Actors.BaseStates
+            .Single(item => item.ActorId == player)
+            .State;
+        Assert.Equal(before.CurrentPose, after.OldPose);
+        Assert.NotEqual(after.OldPose, after.CurrentPose);
+
+        WorldSnapshot next = simulation.Step(SimInput.Idle);
+        ThingActorBaseStateSnapshot nextState = next.Level100Actors.BaseStates
+            .Single(item => item.ActorId == player)
+            .State;
+        Assert.Equal(after.CurrentPose, nextState.OldPose);
+    }
+
+    [Fact]
     public void CanonicalHashRetainsResetBaselineGroundDeltaAndExactFootPhase()
     {
         Simulation simulation = CreatePlayingSimulation();

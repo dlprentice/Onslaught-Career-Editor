@@ -10,10 +10,15 @@ release packages and remain copyright of their respective rights holders;
 Steam's `-skipfmv` path begins at the released click-to-start page. An ordinary
 launch first streams the startup movie from the ignored, locally materialized
 startup cache; briefing and outcome movies remain outside this bounded lane.
-New Game, Options and Quit are the working main-menu actions. Continue, Load
-Game, Multiplayer and Goodies are visible and enter no page in this lane. Only
-Continue Game is drawn dim; the other four are drawn bright exactly like Quit.
-Level select exposes only `1.00 - Training Level` (world 100).
+New Game, Load Game, Options and Quit are working main-menu actions. Load Game
+reuses the career-name/list surface over caller-injected read-only descriptors;
+repeating `--career-save=<path>` is the Godot host's only input adapter. It reads
+those exact named files and performs no save-directory discovery or writes.
+Continue, Multiplayer and Goodies remain visible; only Continue is drawn dim.
+Core/Client can carry any loaded career's suggested world and applies the
+released unlock law. The current Godot selector does not render that general
+state or traverse it by keyboard: its pointer path exposes only world 100 and
+unlocked world 110, while the host constructs only world 100.
 
 > **Corrected 2026-07-28 — both halves of this were false at HEAD.** The
 > paragraph above previously read "New Game and Quit are the only working
@@ -32,15 +37,16 @@ Level select exposes only `1.00 - Training Level` (world 100).
 > `../../RetailFrontendFlow.Options.cs`. In the same file's `MainMenuItems`, only
 > `ContinueGame` carries `IsAvailable: false`; `LoadGame`, `Multiplayer`,
 > `Goodies` and `Options` all carry `IsAvailable: true`, under a comment stating
-> that this is measured from the pristine 640×480 main-menu capture. Load Game,
-> Multiplayer and Goodies fall through to `RetailFrontendSignal.None`, which is
-> why they are described as entering no page rather than as unavailable.
+> that this is measured from the pristine 640×480 main-menu capture. Load Game
+> now routes to the injected career-list mode and emits a one-shot selected-career
+> handoff; Multiplayer and Goodies still fall through to
+> `RetailFrontendSignal.None`.
 
 This lane ends when Loading hands a fresh canonical Level 100 session to the
 gameplay host. The gameplay pause owner's Retry and Quit actions reuse that
 loading/Main Menu lifecycle. Mission outcomes, terminal overlays, later
-CFEPDebriefing, saves, and subsequent campaign selection remain outside this
-lane.
+CFEPDebriefing, save writes/autosave, and persistent subsequent-campaign updates
+remain outside this lane.
 
 ## Materialized inputs
 
@@ -83,6 +89,7 @@ lane.
 | `SoundEffects/select.wav` | Exact 44.1 kHz PCM decode of XAP record 43, `Front End\N_FE_select`; consumed by the integrating audio lane, not this flow | `F84144C80405FE9F745B8CF4BD352D7FA4F8C0A8BA481C770C2C7C0A9053ADE1` |
 | `SoundEffects/back.wav` | Exact 44.1 kHz PCM decode of XAP record 41, `Front End\N_FE_back`; consumed by the integrating audio lane, not this flow | `133B78E813C6B393BE4DBA1D263F69513958B0AB827D6603F952D6E0A82BA02B` |
 | `english.json` | Ten menu/launch strings decoded from English `english.dat` SHA-256 `789ECFF619D077092769DF281C540D138A25FCC74D70023466A604888E59371A` | `B27D7B1B3F8CD8AA22B664CACF7C87A8B0907C7DEA4C4F07DFF8DA763DBB70F3` |
+| `english-worlds.json` | Per-world selector names and briefing body slots decoded from the same `english.dat` (pool-authoring-order slot law; see `materialize_retail_assets.py::_frontend_world_strings_bytes`) | `FFE3D3F88E07D5F29D21D26EF07BF056D153B622416110250DC1C78BF2C35408` |
 | `Music/frontend-track-08.ogg` | Exact copy of `data/Music/BEA_09(Master).ogg`, the released `MUS_FRONTEND` zero-based track 8 of the alphabetical `data\music` `*.ogg` playlist | `4F6166F655E62DEC6993643A8A860BDEA0ABB7D853AD443F5D03E95368BE93A1` |
 
 ### Six rows added 2026-07-28

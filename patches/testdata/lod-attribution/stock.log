@@ -1,0 +1,24 @@
+# SYNTHETIC TEST FIXTURE — not retail evidence
+# bea-d3d9-proxy v2
+# time=2026-08-22T00:00:00 pid=1111
+# exe=C:\Copied\BEA.exe
+# cfg firstframe=100 maxframes=3 maxverts=64 noverts=1 strictcov=1
+# gating vdrawfirst=0 vdrawlast=4294967295 vminverts=0 vfvf=0x0 vbudget=0 vdedup=0 digest=1 texhash=1
+T hash serial=7 h=1111111111111111 bytes=262144 256x256 fmt=21
+M 10 view m=1.000000,0.000000,0.000000,0.000000,0.000000,1.000000,0.000000,0.000000,0.000000,0.000000,1.000000,0.000000,0.000000,0.000000,-50.000000,1.000000
+M 11 proj m=1.000000,0.000000,0.000000,0.000000,0.000000,1.333333,0.000000,0.000000,0.000000,0.000000,1.000100,1.000000,0.000000,0.000000,-0.100010,0.000000
+M 12 world0 m=1.000000,0.000000,0.000000,0.000000,0.000000,1.000000,0.000000,0.000000,0.000000,0.000000,1.000000,0.000000,5.000000,0.000000,30.000000,1.000000
+D 100 0 DIP prim=TRILIST primc=100 verts=80 basevtx=0 minvtx=0 startidx=0 fvf=0x152 decl=0x00000000 vs=0x00000000 ps=0x00000000 s0=(vb=0x01010101,off=0,stride=36) tex0=0x02020202:256x256:fmt21:lv9:#7:h=1111111111111111 tex1=0x0 ab=0 sb=1 db=0 bop=1 at=0 aref=0 afunc=8 z=1 zw=1 zf=4 tfactor=0xFFFFFFFF~ cull=3 lit=1 fog=1 s0.cop=4/2,1 s0.aop=2/2,1 s1.cop=1 s1.aop=1 vp=(0,0,640x480) s0.addr=1/1 s0.filt=2/2/2 w=12 v=10 p=11
+G 100 0 vb real=0x01010101 gen=1 off=0 n=80 bytes=2880 h=AAAAAAAAAAAAAAAA unlocks=1 lastunlock=0 stride=36 xyz min=(-2.0000,-1.0000,-3.0000) max=(2.0000,4.0000,3.0000)
+G 100 0 ib real=0x03030303 gen=2 off=0 n=300 bytes=600 h=BBBBBBBBBBBBBBBB unlocks=1 lastunlock=0 esz=2
+P 100 draws=1
+D 101 0 DIP prim=TRILIST primc=100 verts=80 basevtx=0 minvtx=0 startidx=0 fvf=0x152 decl=0x00000000 vs=0x00000000 ps=0x00000000 s0=(vb=0x01010101,off=0,stride=36) tex0=0x02020202:256x256:fmt21:lv9:#7:h=1111111111111111 tex1=0x0 ab=0 sb=1 db=0 bop=1 at=0 aref=0 afunc=8 z=1 zw=1 zf=4 tfactor=0xFFFFFFFF~ cull=3 lit=1 fog=1 s0.cop=4/2,1 s0.aop=2/2,1 s1.cop=1 s1.aop=1 vp=(0,0,640x480) s0.addr=1/1 s0.filt=2/2/2 w=12 v=10 p=11
+G 101 0 vb real=0x01010101 gen=1 off=0 n=80 bytes=2880 h=AAAAAAAAAAAAAAAA unlocks=1 lastunlock=0 stride=36 xyz min=(-2.0000,-1.0000,-3.0000) max=(2.0000,4.0000,3.0000)
+G 101 0 ib real=0x03030303 gen=2 off=0 n=300 bytes=600 h=BBBBBBBBBBBBBBBB unlocks=1 lastunlock=0 esz=2
+P 101 draws=1
+D 102 0 DIP prim=TRILIST primc=100 verts=80 basevtx=0 minvtx=0 startidx=0 fvf=0x152 decl=0x00000000 vs=0x00000000 ps=0x00000000 s0=(vb=0x01010101,off=0,stride=36) tex0=0x02020202:256x256:fmt21:lv9:#7:h=1111111111111111 tex1=0x0 ab=0 sb=1 db=0 bop=1 at=0 aref=0 afunc=8 z=1 zw=1 zf=4 tfactor=0xFFFFFFFF~ cull=3 lit=1 fog=1 s0.cop=4/2,1 s0.aop=2/2,1 s1.cop=1 s1.aop=1 vp=(0,0,640x480) s0.addr=1/1 s0.filt=2/2/2 w=12 v=10 p=11
+G 102 0 vb real=0x01010101 gen=1 off=0 n=80 bytes=2880 h=AAAAAAAAAAAAAAAA unlocks=1 lastunlock=0 stride=36 xyz min=(-2.0000,-1.0000,-3.0000) max=(2.0000,4.0000,3.0000)
+G 102 0 ib real=0x03030303 gen=2 off=0 n=300 bytes=600 h=BBBBBBBBBBBBBBBB unlocks=1 lastunlock=0 esz=2
+P 102 draws=1
+# refusals total=0 warnings=0
+# detach

@@ -5,7 +5,7 @@
 The current source tree and release packages do not include these files. This
 bounded recipe reads a user-provided Battle Engine Aquila installation,
 verifies the supported Steam data, and writes only the known frontend,
-Level 100, and Aquila assets to ignored paths.
+Level 100, later-world admission, and Aquila assets to local paths.
 """
 
 from __future__ import annotations
@@ -23,11 +23,56 @@ import sys
 import tempfile
 import zlib
 from pathlib import Path
+from typing import NamedTuple
 
 
 ROOT = Path(__file__).resolve().parents[2]
 GODOT_ASSETS = Path("rebuild/OnslaughtRebuild.Godot/Assets")
 CORE_ASSETS = Path("rebuild/OnslaughtRebuild.Core/Assets")
+
+
+class _WorldLevelHeader(NamedTuple):
+    """Exact RLWD preamble variant before the compiled script objects."""
+
+    version: int
+    header_words: tuple[int, int]
+    names: tuple[str, ...]
+    trailing_words: tuple[int, int, int, int, int]
+
+
+class _WorldAdmission(NamedTuple):
+    """One later world's hash-pinned materialization recipe."""
+
+    world_number: int
+    archive: str
+    archive_sha256: str
+    script_root: Path
+    script_objects: tuple[tuple[str, int, str], ...]
+    heightfield: Path
+    hfld_size: int
+    hfld_sha256: str
+    level_header: _WorldLevelHeader
+
+
+COMMON_WORLD_LEVEL_HEADER = _WorldLevelHeader(
+    50,
+    (3, 41),
+    ("Aquila Prototype",),
+    (0, 0, 0, 0, 1),
+)
+WORLD200_LEVEL_HEADER = _WorldLevelHeader(
+    50,
+    (3, 41),
+    ("Aquila Prototype",),
+    (0, 0, 0, 0, 2),
+)
+WORLD300_LEVEL_HEADER = _WorldLevelHeader(
+    50,
+    (3, 47),
+    ("Standard", "Laser", "Blaster"),
+    (1, 1, 1, 0, 3),
+)
+
 LEVEL_ARCHIVE = "data/resources/100_res_PC.aya"
 LEVEL_ARCHIVE_SHA256 = "ed6350c0e214d00ab1bf6a7bd137fba3e77d0afe19a6dc4c0607f56ac037496a"
 LEVEL100_SCRIPT_ROOT = CORE_ASSETS / "Level100/Scripts"
@@ -64,8 +109,8 @@ LEVEL100_SCRIPT_SHA256 = {name: sha256 for name, _, sha256 in LEVEL100_SCRIPT_OB
 # Career.cpp level_structure[1]). Measured 2026-08-22 straight from the
 # retail install with the same readers as Level 100: the compressed
 # archive hash below pins the whole input; the script objects were walked
-# out of its RLWD with _skip_level100_script_object (the version-50
-# layout is shared) and the HFLD envelope extracted the same way as
+# out of its RLWD with _skip_level100_script_object (the compiled-object
+# body framing is shared) and the HFLD envelope extracted the same way as
 # CHUNKS[0]. Nothing here is derived from the Level 100 payloads.
 WORLD110_ARCHIVE = "data/resources/110_res_PC.aya"
 WORLD110_ARCHIVE_SHA256 = (
@@ -91,6 +136,107 @@ LEVEL110_HEIGHTFIELD = CORE_ASSETS / "Level110/level110-heightfield.hfld.bin"
 WORLD110_HFLD_SIZE = 668_660
 WORLD110_HFLD_SHA256 = (
     "fd4d076a2926fbc473b7d364703bdbc0c8a0f7a638b0ab71b6f319374da033c2"
+)
+# World 200 — the third node of the released career graph (Stuart
+# Career.cpp level_structure[2], the Episode-1 continuation). Measured
+# 2026-08-22 from the retail install with the same readers as worlds 100
+# and 110. Two structural divergences from the first two nodes are
+# MEASURED, not assumed: (1) the level-world header's post-zeros word is
+# 2, not the 1 both earlier worlds carry; (2) the BSWD is world 200's
+# own 80,232-byte base world, not the byte-identical island world 110
+# shares with Level 100. The HFLD payload length still matches the shared
+# envelope law exactly (668,652), and the whole-image owner scan places it
+# in ERES just like worlds 100 and 110, so the Core loader admits it unchanged.
+WORLD200_ARCHIVE = "data/resources/200_res_PC.aya"
+WORLD200_ARCHIVE_SHA256 = (
+    "99dbd433013822f7d83863fe9607448f4a80db69de347e01920e688c5022bb77"
+)
+LEVEL200_SCRIPT_ROOT = CORE_ASSETS / "Level200/Scripts"
+LEVEL200_SCRIPT_OBJECTS = (
+    ("EnemyLander", 1220, "2a2549d34e4fc580184cac46cf8eea3148dcb3592f57af0bcad7278b8985f637"),
+    ("EnemyLander2", 1333, "2b7bc41b9264ee8488301e8113994d1a3e8d4e51362f79f2f5a7b8c9c2c48036"),
+    ("EnergyMonitor", 793, "6fcbf190f980891cd15dba84f90c3addd213dc9ec3f0f42e9b6868a1d8125815"),
+    ("FighterAttack", 1221, "d26b78d8ec15c21bf359a8e76573f35a435430b5e22267b82d70d18fcd060511"),
+    ("Hangar", 811, "ac616a60b792422f9061e212f46656c60cd28cf62b48e88997aa51f2c5772483"),
+    ("HealthMonitor", 791, "17c00d84b473964cffdceacd5037102a62d05eaf8f9ba4b246f4b4cfa22eaf3a"),
+    ("LandingCraftAlpha", 2222, "63804faa4af57c6dfbaed9f1a3175c00874d9a08f47b03771d77369d9e366457"),
+    ("LandingCraftBeta", 2220, "c75d713729cc50d03f32f350cd6bfa96a28d5b77fe29e0ecc407ddedecbba3cd"),
+    ("LandingCraftDelta", 2876, "a48a36bf69ec3296e6d54ae5ca6704c676d3296f6fa2370cc48564265725f00b"),
+    ("LandingCraftGamma", 2308, "f2ff4fe3408915c1a8124139216023771f8cca8d3ee21da935f5ba03b09146ef"),
+    ("LevelScript", 10300, "ecba1e75c50563aa53821dd0c8e24e8ce932a6ed1e48aca9748e666859919737"),
+    ("Tatiana", 825, "439f99498e4d2ec4c6553d78e0517c05f924eb9b29e2daafae57bef35bf6ce36"),
+    ("VitalBuilding", 569, "956c17bdd26adcf74e0ed16eda55019b1c7fec2ac8ec583c46e9c1c078c193ee"),
+    ("WestAttacker", 392, "395c13f8f29427c09d0bcf5eb3bb1e28249b6cb933f39f7e24db49b27d236fad"),
+)
+LEVEL200_HEIGHTFIELD = CORE_ASSETS / "Level200/level200-heightfield.hfld.bin"
+WORLD200_HFLD_SIZE = 668_660
+WORLD200_HFLD_SHA256 = (
+    "1b8eb8584be552383f10b08c75d9f10e91708343f0e5ee085d5130d369f6b945"
+)
+# World 300 — the next admitted main-episode payload. Its script objects
+# retain the measured compiled-object framing, but its version-50 RLWD
+# preamble is NOT the worlds-100/110/200 preamble: header words (3, 47,
+# 300), three names (Standard/Laser/Blaster), and trailing words
+# (1, 1, 1, 0, 3). The exact variant is data above rather than another
+# optional argument grafted onto the earlier one-name law. After the eight
+# scripts the actor header is (10, 0, 36). HFLD remains the 668,660-byte
+# framed envelope inside ERES; BSWD is world 300's own 77,113-byte payload
+# inside WRES (SHA-256 3c153d55…0dfc).
+WORLD300_ARCHIVE = "data/resources/300_res_PC.aya"
+WORLD300_ARCHIVE_SHA256 = (
+    "7293bcbe3cbb6c88b2e19a287cb53de132a8bcadd6c2736b0da7483726c9efe4"
+)
+LEVEL300_SCRIPT_ROOT = CORE_ASSETS / "Level300/Scripts"
+LEVEL300_SCRIPT_OBJECTS = (
+    ("dropship", 399, "a76ac1d6f6bb9b7f360b9c95fc5a22b5f7acdb179e81b567f8b6c2e96cd37ce2"),
+    ("ForsetiUnit", 1079, "fd7503a2fb3e2b5effae99266387d05b63d08fa2e90ea7b5de731a92aae564e9"),
+    ("Level300script", 11293, "eeec860d3fc946e1aec578f99b086d29c4fcf25967b8e32738ef3bbb0aeb88e5"),
+    ("messages", 2028, "638158eefba79f0af19667be9864464002b34c3646b8b39f2725e90aedaaa5b5"),
+    ("oforce", 374, "186962832481999c34bb0761a4dbc406d9fa333e362259ed9ea80c5d2a83f8bf"),
+    ("outpostsphere", 2896, "5f06d5ded0ca5005898726955ef056761e1964aac7827edc3c2e9f7b0eb51691"),
+    ("Tank", 249, "432f3fe2a26a544e5c1cbd97d378e28f673c9d09bf1b64feb6984821ef30d81f"),
+    ("TankFactory", 577, "16e49cdfd7405ad41a055b1f73ae57daf90bc7135384576536c3051594e05252"),
+)
+LEVEL300_HEIGHTFIELD = CORE_ASSETS / "Level300/level300-heightfield.hfld.bin"
+WORLD300_HFLD_SIZE = 668_660
+WORLD300_HFLD_SHA256 = (
+    "68a181f9ec3099a0be52bf4a063350a35e43c20664f2e07572bdb44d472acb1a"
+)
+
+LATER_WORLD_ADMISSIONS = (
+    _WorldAdmission(
+        110,
+        WORLD110_ARCHIVE,
+        WORLD110_ARCHIVE_SHA256,
+        LEVEL110_SCRIPT_ROOT,
+        LEVEL110_SCRIPT_OBJECTS,
+        LEVEL110_HEIGHTFIELD,
+        WORLD110_HFLD_SIZE,
+        WORLD110_HFLD_SHA256,
+        COMMON_WORLD_LEVEL_HEADER,
+    ),
+    _WorldAdmission(
+        200,
+        WORLD200_ARCHIVE,
+        WORLD200_ARCHIVE_SHA256,
+        LEVEL200_SCRIPT_ROOT,
+        LEVEL200_SCRIPT_OBJECTS,
+        LEVEL200_HEIGHTFIELD,
+        WORLD200_HFLD_SIZE,
+        WORLD200_HFLD_SHA256,
+        WORLD200_LEVEL_HEADER,
+    ),
+    _WorldAdmission(
+        300,
+        WORLD300_ARCHIVE,
+        WORLD300_ARCHIVE_SHA256,
+        LEVEL300_SCRIPT_ROOT,
+        LEVEL300_SCRIPT_OBJECTS,
+        LEVEL300_HEIGHTFIELD,
+        WORLD300_HFLD_SIZE,
+        WORLD300_HFLD_SHA256,
+        WORLD300_LEVEL_HEADER,
+    ),
 )
 BASE_ARCHIVE = "data/resources/base_res_PC.aya"
 BASE_ARCHIVE_SHA256 = "0ee8530874425cac759834872f5941bc4be086c40ce6b70553b5c6b539802883"
@@ -126,6 +272,25 @@ LEVEL100_HUD_MANIFEST_SHA256 = (
 FRONTEND_LOCALIZATION = GODOT_ASSETS / "Frontend/english.json"
 FRONTEND_LOCALIZATION_SHA256 = (
     "b27d7b1b3f8cd8aa22b664cacf7c87a8b0907c7dea4c4f07dff8da763dbb70f3"
+)
+# The released 43-node career graph (Stuart Career.cpp:24-70), world column
+# in node order — the same table RetailWorldCatalog pins. It orders the
+# briefing-slot groups below and cross-checks the level-name rows.
+CAREER_WORLD_ORDER: tuple[int, ...] = (
+    100, 110, 200, 211, 212, 221, 222, 231, 232,
+    300, 311, 312, 321, 322, 331, 332,
+    400, 411, 412, 421, 422, 431, 432,
+    500, 511, 512, 521, 522, 523, 524,
+    600, 611, 612, 621, 622,
+    700, 710, 720, 731, 732, 741, 742, 800,
+)
+# Per-world frontend strings decoded from the same English language table:
+# the selector's per-node name rows ("1.00 - Training Level", "1.10 -
+# Blackout", …) and each career world's two briefing body slots. Measured
+# 2026-08-22; see _frontend_world_strings_bytes for the slot law.
+FRONTEND_WORLD_STRINGS = GODOT_ASSETS / "Frontend/english-worlds.json"
+FRONTEND_WORLD_STRINGS_SHA256 = (
+    "ffe3d3f88e07d5f29d21d26ef07bf056d153b622416110250dc1c78bf2c35408"
 )
 # CFEPMain underlay: data/video/FEBack128.vid (BIKi 128² @30fps) decoded to a
 # lean rgb24 strip at the SHIPPED rate for Godot Control draw (stretched to the
@@ -1146,6 +1311,17 @@ def _fixed_outputs() -> tuple[tuple[Path, str], ...]:
         (path, expected) for path, _, expected in DIRECT_ASSETS + FRONTEND_ASSETS
     )
     chunks = tuple((path, expected) for path, _, _, expected in CHUNKS)
+    later_worlds: list[tuple[Path, str]] = []
+    for admission in LATER_WORLD_ADMISSIONS:
+        later_worlds.extend(
+            (
+                admission.script_root
+                / f"level{admission.world_number}-{name}.mso.bin",
+                expected,
+            )
+            for name, _, expected in admission.script_objects
+        )
+        later_worlds.append((admission.heightfield, admission.hfld_sha256))
     derived = (
         (ROOT_TERRAIN_TEXTURE, ROOT_TERRAIN_TEXTURE_SHA256),
         (TERRAIN_HIERARCHY_SOURCE, TERRAIN_HIERARCHY_SOURCE_SHA256),
@@ -1153,13 +1329,9 @@ def _fixed_outputs() -> tuple[tuple[Path, str], ...]:
             (LEVEL100_SCRIPT_ROOT / f"level100-{name}.mso.bin", expected)
             for name, _, expected in LEVEL100_SCRIPT_OBJECTS
         ),
-        # World 110's pinned script objects and heightfield.
-        *(
-            (LEVEL110_SCRIPT_ROOT / f"level110-{name}.mso.bin", expected)
-            for name, _, expected in LEVEL110_SCRIPT_OBJECTS
-        ),
-        (LEVEL110_HEIGHTFIELD, WORLD110_HFLD_SHA256),
+        *later_worlds,
         (FRONTEND_LOCALIZATION, FRONTEND_LOCALIZATION_SHA256),
+        (FRONTEND_WORLD_STRINGS, FRONTEND_WORLD_STRINGS_SHA256),
         (FEBACK_STRIP, FEBACK_STRIP_SHA256),
         (LEVEL100_HUD_MANIFEST, LEVEL100_HUD_MANIFEST_SHA256),
     )
@@ -1626,20 +1798,27 @@ def _parse_world_scripts(
     raw_level: bytes,
     world_number: int,
     script_objects: tuple[tuple[str, int, str], ...],
+    level_header: _WorldLevelHeader = COMMON_WORLD_LEVEL_HEADER,
 ) -> dict[str, bytes]:
     rlwd = _chunk_payload(_chunk_payload(_chunk_payload(raw_level, b"WRES"), b"WRLD"), b"RLWD")
     reader = _WorldReader(rlwd)
+    version = reader.uint16()
+    header_words = tuple(reader.int32() for _ in range(3))
+    name_count = reader.int32()
+    names = tuple(reader.string8() for _ in range(name_count))
+    trailing_words = tuple(reader.int32() for _ in range(5))
+    script_count = reader.int32()
     if (
-        reader.uint16() != 50
-        or tuple(reader.int32() for _ in range(3)) != (3, 41, world_number)
-        or reader.int32() != 1
-        or reader.string8() != "Aquila Prototype"
-        or tuple(reader.int32() for _ in range(4)) != (0, 0, 0, 0)
-        or reader.int32() != 1
-        or reader.int32() != len(script_objects)
+        version != level_header.version
+        or header_words != (*level_header.header_words, world_number)
+        or names != level_header.names
+        or trailing_words != level_header.trailing_words
+        or script_count != len(script_objects)
     ):
         raise RuntimeError(
-            f"world {world_number} level-world header is not the supported version-50 layout"
+            f"world {world_number} level-world header changed "
+            f"(version={version}, words={header_words}, names={names}, "
+            f"trailing={trailing_words}, scripts={script_count})"
         )
     scripts: dict[str, bytes] = {}
     for expected_name, expected_size, expected_hash in script_objects:
@@ -3499,6 +3678,164 @@ def _frontend_localization_bytes(data: bytes) -> bytes:
     return output
 
 
+def _frontend_world_strings_bytes(data: bytes) -> bytes:
+    """Decode the per-world selector names and briefing slots.
+
+    The language table's text IDs are a hash-scrambled space (no derivation
+    is pinned here and none is invented), but the TEXT POOL preserves the
+    authoring order, and that order carries two regular structures:
+
+    1. The level-name rows: N.NN-titled strings ("1.00 - Training Level",
+       "1.10 - Blackout", …) whose NN parts are exactly the career worlds of
+       RetailWorldCatalog. They are matched by title pattern, not by ID.
+    2. Briefing pages in career order: consecutive pool slots in groups of
+       nine — two body paragraphs followed by seven reserved empties —
+       beginning at world 100 ("Tatiana will take you through …" +
+       "Listen to her advice …", byte-identical to the transcription already
+       drawn on FEP_BRIEFING). Group k belongs to the k-th node of
+       s_levelStructure that owns a briefing video under data/video/
+       briefings/ (PC_<world>_exact.vid). Worlds without authored copy keep
+       empty slots; the decoder emits those as empty strings rather than
+       inventing text.
+
+    Everything is emitted with the same exact-reproduction discipline as the
+    menu table: this function's whole document is hash-pinned by
+    FRONTEND_WORLD_STRINGS_SHA256.
+    """
+    if (
+        len(data) < 16
+        or struct.unpack_from("<I", data, 0)[0] != 0xFFFFFFBB
+        or struct.unpack_from("<I", data, 4)[0] != 3
+    ):
+        raise RuntimeError("unsupported English language-table framing")
+
+    count = struct.unpack_from("<I", data, 8)[0]
+    entries_offset = 12
+    text_pool_offset = entries_offset + count * 12 + 4
+
+    def read_string(text_offset_words: int) -> str:
+        position = text_pool_offset + text_offset_words * 2
+        code_units: list[int] = []
+        for _ in range(8192):
+            if position + 2 > len(data):
+                raise RuntimeError("truncated English language-table text pool")
+            code_unit = struct.unpack_from("<H", data, position)[0]
+            position += 2
+            if code_unit == 0:
+                break
+            code_units.append(code_unit)
+        return struct.pack(f"<{len(code_units)}H", *code_units).decode("utf-16le")
+
+    pool_entries: list[tuple[int, str]] = []
+    for index in range(count):
+        entry_offset = entries_offset + index * 12
+        text_id, text_offset_words = struct.unpack_from("<II", data, entry_offset)
+        pool_entries.append((text_offset_words, read_string(text_offset_words)))
+    pool_entries.sort(key=lambda entry: entry[0])
+
+    # Level-name rows, keyed by their world number.
+    name_pattern = re.compile(r"^(\d{1,2})\.(\d{2}) - .+$")
+    level_names: dict[str, str] = {}
+    for _, text in pool_entries:
+        match = name_pattern.match(text)
+        if match is None:
+            continue
+        world_number = int(match.group(1)) * 100 + int(match.group(2))
+        key = f"{world_number}"
+        if key in level_names:
+            raise RuntimeError(f"duplicate level-name row for world {world_number}")
+        level_names[key] = text
+
+    missing_catalog_names = [
+        world
+        for world in CAREER_WORLD_ORDER
+        if f"{world}" not in level_names
+    ]
+    if missing_catalog_names:
+        raise RuntimeError(
+            "English table lacks level-name rows for career worlds: "
+            + ", ".join(str(world) for world in missing_catalog_names)
+        )
+
+    # Briefing groups: walk the pool from world 100's Tatiana paragraph,
+    # located by its exact released text. Each group is nine slots; the
+    # first two carry the page.
+    tatiana_index = next(
+        (
+            position
+            for position, (_, text) in enumerate(pool_entries)
+            if text.startswith("Tatiana will take you through the basics")
+        ),
+        None,
+    )
+    if tatiana_index is None:
+        raise RuntimeError("English table lost the world-100 briefing marker")
+
+    briefings: dict[str, list[str]] = {}
+    cursor = tatiana_index
+    for group_index, world in enumerate(CAREER_WORLD_ORDER):
+        if cursor + 9 > len(pool_entries):
+            raise RuntimeError(
+                f"English table ends before briefing group {group_index} "
+                f"(world {world})"
+            )
+        group = pool_entries[cursor : cursor + 9]
+        primary = group[0][1]
+        secondary = group[1][1]
+        tertiary = group[2][1]
+        reserved = [text for _, text in group[3:]]
+        if group_index == 0 and not primary.startswith("Tatiana will"):
+            raise RuntimeError("world-100 briefing slot moved")
+        # MEASURED 2026-08-22: exactly four worlds carry a third paragraph,
+        # the two Tara-rescue epilogue variants of episode six; every other
+        # group's third slot and every group's slots four through nine are
+        # empty. Emitting the third slot only where retail authored one.
+        if tertiary and world not in (611, 612, 621, 622):
+            raise RuntimeError(
+                f"briefing group {group_index} (world {world}) has an "
+                "unexpected third paragraph"
+            )
+        if not tertiary and world in (611, 612, 621, 622):
+            raise RuntimeError(
+                f"briefing group {group_index} (world {world}) lost its "
+                "measured third paragraph"
+            )
+        briefings[f"{world}"] = (
+            [primary, secondary] if not tertiary
+            else [primary, secondary, tertiary]
+        )
+        if any(reserved):
+            raise RuntimeError(
+                f"briefing group {group_index} (world {world}) has non-empty "
+                "reserved slots; the nine-slot law does not hold"
+            )
+        cursor += 9
+
+    known_pair = briefings["100"]
+    if known_pair[1] != "Listen to her advice and try to keep Colonel Kramer happy.":
+        raise RuntimeError(
+            "the world-100 second briefing slot is no longer the Kramer line"
+        )
+
+    document = {
+        "culture": "en",
+        "schema": "onslaught.frontend-world-strings.v1",
+        "sourceSha256": ENGLISH_LANGUAGE_TABLE_SHA256,
+        "levelNames": level_names,
+        "briefings": briefings,
+    }
+    output = (
+        json.dumps(document, sort_keys=True, separators=(",", ":")) + "\n"
+    ).encode("utf-8")
+    actual = _sha256(output)
+    if actual != FRONTEND_WORLD_STRINGS_SHA256:
+        raise RuntimeError(
+            "frontend world strings did not reproduce exactly "
+            f"(SHA-256 {actual})"
+        )
+    return output
+
+
 def _require_chunk(source: bytes, offset: int, tag: bytes, payload_size: int) -> int:
     if (
         offset < 0
@@ -3965,6 +4302,10 @@ def _materialize(game_root: Path, stage: Path) -> tuple[tuple[Path, str], ...]:
     frontend_localization_target = stage / FRONTEND_LOCALIZATION
     frontend_localization_target.parent.mkdir(parents=True, exist_ok=True)
     frontend_localization_target.write_bytes(frontend_localization)
+    frontend_world_strings = _frontend_world_strings_bytes(english_table)
+    frontend_world_strings_target = stage / FRONTEND_WORLD_STRINGS
+    frontend_world_strings_target.parent.mkdir(parents=True, exist_ok=True)
+    frontend_world_strings_target.write_bytes(frontend_world_strings)
     _materialize_feback_strip(game_root, stage)
     hud_manifest_hash = _materialize_level100_hud_manifest(stage)
     if hud_manifest_hash != LEVEL100_HUD_MANIFEST_SHA256:
@@ -3985,23 +4326,38 @@ def _materialize(game_root: Path, stage: Path) -> tuple[tuple[Path, str], ...]:
         script_target.parent.mkdir(parents=True, exist_ok=True)
         script_target.write_bytes(payload)
 
-    # World 110: same readers, its own pinned archive, scripts and HFLD.
-    # The L100 outputs above are untouched by this block.
-    world110_archive = _read_exact(game_root / WORLD110_ARCHIVE, WORLD110_ARCHIVE_SHA256)
-    raw_world110 = inflate_aya_bytes(world110_archive)
-    world110_scripts = _parse_world_scripts(raw_world110, 110, LEVEL110_SCRIPT_OBJECTS)
-    for name, payload in world110_scripts.items():
-        script_target = stage / LEVEL110_SCRIPT_ROOT / f"level110-{name}.mso.bin"
-        script_target.parent.mkdir(parents=True, exist_ok=True)
-        script_target.write_bytes(payload)
-    world110_hfld = _extract_chunk(
-        raw_world110,
-        b"HFLD",
-        WORLD110_HFLD_SIZE,
-        WORLD110_HFLD_SHA256,
-    )
-    (stage / LEVEL110_HEIGHTFIELD).parent.mkdir(parents=True, exist_ok=True)
-    (stage / LEVEL110_HEIGHTFIELD).write_bytes(world110_hfld)
+    # Later admitted worlds share one materialization owner. Their exact RLWD
+    # preamble variants are data in LATER_WORLD_ADMISSIONS; adding a world must
+    # not copy another extraction block or weaken its header assertions.
+    for admission in LATER_WORLD_ADMISSIONS:
+        archive = _read_exact(
+            game_root / admission.archive,
+            admission.archive_sha256,
+        )
+        raw_world = inflate_aya_bytes(archive)
+        scripts = _parse_world_scripts(
+            raw_world,
+            admission.world_number,
+            admission.script_objects,
+            admission.level_header,
+        )
+        for name, payload in scripts.items():
+            script_target = (
+                stage
+                / admission.script_root
+                / f"level{admission.world_number}-{name}.mso.bin"
+            )
+            script_target.parent.mkdir(parents=True, exist_ok=True)
+            script_target.write_bytes(payload)
+        heightfield = _extract_chunk(
+            raw_world,
+            b"HFLD",
+            admission.hfld_size,
+            admission.hfld_sha256,
+        )
+        heightfield_target = stage / admission.heightfield
+        heightfield_target.parent.mkdir(parents=True, exist_ok=True)
+        heightfield_target.write_bytes(heightfield)
 
     chunk_data: dict[bytes, bytes] = {}
     for destination, tag, expected_size, expected in CHUNKS:

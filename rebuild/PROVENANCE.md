@@ -1,9 +1,9 @@
 # Rebuild Provenance
 
 Status: active implementation boundary
-Last updated: 2026-07-29. Current startup/frontend, partial-source inventory,
-frontend-asset, mouse-sensitivity, and retained-particle claims were
-re-reviewed. Other sections retain their narrower dated evidence boundaries.
+Last updated: 2026-08-22. Current career read/load, startup/frontend,
+partial-source inventory, frontend-asset, mouse-sensitivity, and retained-particle
+claims were re-reviewed. Other sections retain their narrower dated evidence boundaries.
 Summary: the licence boundary, permitted evidence, and authority order for the
 `rebuild/` reconstruction lane, plus what the current slice actually covers.
 
@@ -131,9 +131,10 @@ The normal Godot entry path now belongs to a presentation-only frontend state
 machine outside Core. With locally materialized media, a plain launch plays the
 released Lost Toys logo, opening montage, and splash before click-to-start, then
 exposes the released main-menu entries, a quit confirmation, retail's
-`CHOOSE GAME NAME` career-name page (visual and sequential only — no save and no
-career persistence), an Options page, a world-100-only level selector, the
-mission-briefing and select-configuration pages, the released loading image, the
+`CHOOSE GAME NAME` career-name/load page (new-name entry plus caller-injected,
+read-only career descriptors), an Options page, Client's career-law selection
+state, the bounded Godot level-selector page, the mission-briefing and
+select-configuration pages, the released loading image, the
 released Level 100 intro cutscene,
 and one lifecycle seam that constructs, replaces, or disposes the existing
 Level 100 session/world. The `RetailFrontendScreen` enum in
@@ -141,6 +142,28 @@ Level 100 session/world. The `RetailFrontendScreen` enum in
 that list; re-read it rather than quoting this sentence. `--skipfmv`, smoke,
 and capture modes suppress the reconstructed video sequences. Their Bink audio
 streams are not decoded, so video playback is currently silent.
+
+The career reader ports Stuart's raw version-plus-`CCareer` shape
+(`Career.cpp:1084-1163`, `Career.h:76-207`) and applies only measured PC deltas:
+the version is the released 16-bit `0x4BD1`, the fixed career block is `0x24BC`
+bytes, and 16 active option records plus the `0x56` tail make the supported
+container 10,004 bytes. `RetailCareerSaveCodec` accepts supplied bytes only,
+retains the entire container privately, rejects wrong length/version or a
+structurally inconsistent 43-node/86-link graph, and has no serializer. The
+reviewed fixture is `tests_shared/fixtures/gold_career_save.bin`, SHA-256
+`0c17e47db9d666e9b26ef88d43d0a25e7cbfbf4f88c8005cc748965050e506fb`.
+Stuart's `FEPLoadGame.h:32-35` owns separate slot/name identity and
+`FEPLoadGame.cpp:128-153` owns its selected-career handoff shape; Client receives
+those descriptors already read. Godot recognizes only explicit repeated
+`--career-save=<path>` arguments and performs no directory or installed-save
+scan. This is read/load selection only: no serializer, write, overwrite,
+autosave, default-options apply, debrief persistence, loaded-model Won merge,
+or full Career parity.
+Core/Client can carry any loaded career's `SuggestedWorldNumber`, and
+`SelectWorld` applies the released career unlock law. The current Godot page
+does not project that general state: it does not read `SelectedWorldNumber` for
+rendering or implement LevelSelect keyboard traversal, its pointer path exposes
+only world 100 and unlocked world 110, and the host constructs only world 100.
 
 The Level-100 configuration page now owns the one row named by the released
 `WorldHeaders.dat`: page-list index 0 selects `Aquila Prototype`, catalog record
@@ -160,7 +183,11 @@ requests localized string index `0x77` (`Click to start`). Main-menu evidence is
 the vtable at `0x005DBAE4`, input/action/render entries
 `0x00462250`/`0x004623E0`/`0x00462D40`, and Stuart's `FrontEnd.cpp` and
 `PCFrontend.cpp`. Level select uses Steam input/render entries
-`0x004606B0`/`0x00460B40`; only released world 100 is exposed. The loading page
+`0x004606B0`/`0x00460B40`. The reconstruction's Core/Client state applies the
+career unlock law and can carry any loaded `SuggestedWorldNumber`; its current
+Godot page neither renders that general selection nor traverses it by keyboard.
+The pointer path exposes only world 100 and unlocked world 110, and the host
+constructs only world 100. The loading page
 uses the exact image and `Loading...` text established by
 `CConsole__RenderLoadingScreen` (`0x0042C810`). The Options page is retail's
 own rather than a new surface: read from the pristine specimen
@@ -965,9 +992,11 @@ message clips queue by exact retained ID, while frontend and pause lifecycles
 call the same adapter directly. No playback edge is inferred from a presentation
 snapshot delta. Script waits and playback-duration gates remain deterministic
 mission state.
-The PC `SetMasterVolume` tangent curve and externally supplied game-sound mix
-are presentation-only adapter inputs, so audio applies but never advances a
-failure fade or other ducking timeline.
+Released PC `CSoundManager::SetMasterVolume` at `0x004E04C0` stores the supplied
+sound-option float directly; the retained-source tangent curve was not shipped.
+That direct master value and the externally supplied game-sound mix are
+presentation-only adapter inputs, so audio applies but never advances a failure
+fade or other ducking timeline.
 
 Tracked Steam function summaries for `PauseMenu__Init` at `0x004CDE60`,
 `CPauseMenu__Render` at `0x004D11D0`, input dispatch at `0x004D15D0`, action
@@ -993,9 +1022,12 @@ Stuart's Level 100 entry calls `PlaySelection(MUS_TUTORIAL)`. The playlist is
 alphabetically ordered and `GetSong` is zero-based, so selection index `3`
 resolves to exact `data/Music/BEA_04(Master).ogg` (SHA-256
 `32D3E338964D74F50D0094536C585375F1E14AA2BAE6087487803F3529EAF360`).
-Selection playback repeats that track at completion. Music has its own tangent-
-curved option volume, remains outside `PauseAllSamples`, and is stopped by the
-level-exit owner.
+Selection playback repeats that track at completion. Released
+`CMusic::SetVolume` at `0x004BBA10` stores `round(option * 127)` as its integer
+set volume while preserving the original career float. The adapter normalizes
+that integer only at the Godot presentation boundary; this is not a claim about
+DirectSound or audible-volume parity. Music remains outside `PauseAllSamples`
+and is stopped by the level-exit owner.
 
 A shallow read-only parse of the supported copied `default physics.dat`
 correlates the Level 100 unit, weapon-mode, and explosion assignments. It

@@ -21,8 +21,8 @@ public sealed class RetailFrontendSession
         // Measured from the pristine 640x480 main-menu capture: only Continue Game
         // is drawn dim (no career in progress); Load Game, Multiplayer, Goodies and
         // Options are drawn in the normal bright colour exactly like Quit.
-        // Confirming a page this reconstruction has not built yet falls through to
-        // RetailFrontendSignal.None below, so nothing navigates and nothing throws.
+        // Multiplayer and Goodies still fall through to None. Load Game now
+        // enters the injected read-only career-list mode below.
         new(RetailFrontendMenuItemKind.NewGame, IsAvailable: true),
         new(RetailFrontendMenuItemKind.ContinueGame, IsAvailable: false),
         new(RetailFrontendMenuItemKind.LoadGame, IsAvailable: true),
@@ -32,16 +32,6 @@ public sealed class RetailFrontendSession
         new(RetailFrontendMenuItemKind.Quit, IsAvailable: true),
     ];
 
-    /// <summary>
-    /// Careers this bounded lane knows about on the FEP_DEVSELECT page.
-    ///
-    /// Retail lists the saved careers found on the selected device. This lane
-    /// deliberately carries NO save/career persistence (see
-    /// local-lab/STARTUP-FLOW-FINDINGS-2026-07-25.md, "Decision taken"), so the
-    /// list is structurally present and always empty. That is a bounded absence,
-    /// not a claim that retail shows an empty list.
-    /// </summary>
-    private static readonly string[] NoCareers = [];
 
     // Level 100's WorldHeaders record names exactly one configuration, so its
     // page-list index is 0; Aquila Prototype is separately catalog record 3 in
@@ -73,8 +63,24 @@ public sealed class RetailFrontendSession
     public const int MaxGameNameLength = 20;
 
     private bool _level100LaunchPending;
+    private RetailCareerDescriptor? _activeLoadedCareer;
+    private RetailCareerDescriptor? _selectedCareerLoadRequest;
+    private readonly IReadOnlyList<RetailCareerDescriptor> _careerDescriptors;
+    private readonly IReadOnlyList<string> _careerNames;
     private string _gameName = DefaultGameName;
     private int _selectedConfigurationIndex;
+
+    /// <summary>
+    /// Creates the presentation state over caller-supplied, already-read career
+    /// descriptors. Storage discovery and byte reads remain outside Client.
+    /// Input order is retained as the storage/page order.
+    /// </summary>
+    public RetailFrontendSession(IEnumerable<RetailCareerDescriptor>? careerDescriptors = null)
+    {
+        RetailCareerDescriptor[] descriptors = careerDescriptors?.ToArray() ?? [];
+        _careerDescriptors = Array.AsReadOnly(descriptors);
+        _careerNames = Array.AsReadOnly(descriptors.Select(descriptor => descriptor.Name).ToArray());
+    }
 
     /// <summary>
     /// The career world the level selector has chosen and the launch request
@@ -84,6 +90,29 @@ public sealed class RetailFrontendSession
     /// reconstruction cannot yet build that world's content.
     /// </summary>
     public int SelectedWorldNumber { get; private set; } = RetailWorldCatalog.RootWorldNumber;
+
+    /// <summary>
+    /// The released selector name row of <see cref="SelectedWorldNumber"/>
+    /// ("1.00 - Training Level", "1.10 - Blackout", …), from the pinned
+    /// English language table (see
+    /// <see cref="RetailFrontendWorldStrings"/>). The level-select name band
+    /// and the briefing page both draw the SELECTED node's row; the band
+    /// following the selection is measured-consistent with retail (PARITY.md,
+    /// 2026-08-22) rather than source-proven — FEPLevelSelect.cpp is not in
+    /// the source drop.
+    /// </summary>
+    public string SelectedLevelName =>
+        RetailFrontendWorldStrings.LevelName(SelectedWorldNumber)
+            ?? string.Empty;
+
+    /// <summary>
+    /// The released MISSION BRIEFING body paragraphs for
+    /// <see cref="SelectedWorldNumber"/>, in authored order, empty when the
+    /// language table carries no copy for that world. Callers must not fall
+    /// back to another world's text.
+    /// </summary>
+    public IReadOnlyList<string> SelectedBriefingBody =>
+        RetailFrontendWorldStrings.Briefing(SelectedWorldNumber);
 
     public RetailFrontendScreen Screen { get; private set; } = RetailFrontendScreen.ClickToStart;
 
@@ -113,8 +142,14 @@ public sealed class RetailFrontendSession
 
     public RetailFrontendMenuItemKind? UnavailableSelection { get; private set; }
 
+    /// <summary>Injected career descriptors in deterministic page order.</summary>
+    public IReadOnlyList<RetailCareerDescriptor> CareerDescriptors => _careerDescriptors;
+
     /// <summary>Career rows drawn in the FEP_DEVSELECT list panel.</summary>
-    public IReadOnlyList<string> CareerNames => NoCareers;
+    public IReadOnlyList<string> CareerNames => _careerNames;
+
+    public RetailFrontendCareerPageMode CareerPageMode { get; private set; } =
+        RetailFrontendCareerPageMode.New;
 
     /// <summary>Highlighted career row, or -1 when no row is highlighted.</summary>
     public int SelectedCareerIndex { get; private set; } = -1;
@@ -146,6 +181,7 @@ public sealed class RetailFrontendSession
     public bool AppendGameNameCharacter(char character)
     {
         if (Screen != RetailFrontendScreen.DevSelect ||
+            CareerPageMode != RetailFrontendCareerPageMode.New ||
             _gameName.Length >= MaxGameNameLength ||
             character is < ' ' or > '~')
         {
@@ -159,7 +195,9 @@ public sealed class RetailFrontendSession
     /// <summary>Backspaces one character out of the name field.</summary>
     public bool RemoveGameNameCharacter()
     {
-        if (Screen != RetailFrontendScreen.DevSelect || _gameName.Length == 0)
+        if (Screen != RetailFrontendScreen.DevSelect ||
+            CareerPageMode != RetailFrontendCareerPageMode.New ||
+            _gameName.Length == 0)
         {
             return false;
         }
@@ -287,9 +325,12 @@ public sealed class RetailFrontendSession
     /// </summary>
     public bool SelectWorld(int worldNumber)
     {
+        bool selectable = _activeLoadedCareer is not null
+            ? _activeLoadedCareer.Career.IsWorldSelectable(worldNumber)
+            : RetailWorldCatalog.IsWorldSelectable(Career, worldNumber);
         if (Screen != RetailFrontendScreen.LevelSelect ||
             worldNumber == SelectedWorldNumber ||
-            !RetailWorldCatalog.IsWorldSelectable(Career, worldNumber))
+            !selectable)
         {
             return false;
         }
@@ -334,6 +375,25 @@ public sealed class RetailFrontendSession
                     // and the pristine 640x480 capture of the page that follows
                     // New Game is the "CHOOSE GAME NAME" screen.
                     Screen = RetailFrontendScreen.DevSelect;
+                    CareerPageMode = RetailFrontendCareerPageMode.New;
+                    _activeLoadedCareer = null;
+                    _selectedCareerLoadRequest = null;
+                    SelectedWorldNumber = RetailWorldCatalog.RootWorldNumber;
+                    SelectedCareerIndex = -1;
+                    _gameName = DefaultGameName;
+                    return RetailFrontendSignal.PageChanged;
+                }
+
+                if (SelectedMainItem.Kind == RetailFrontendMenuItemKind.LoadGame)
+                {
+                    // CFEPLoadGame::Init clears mSaveGameNumber to -1
+                    // (FEPLoadGame.cpp:12-20). The caller has already supplied
+                    // descriptors from an explicit, app-safe read boundary;
+                    // Client owns only their deterministic page order.
+                    Screen = RetailFrontendScreen.DevSelect;
+                    CareerPageMode = RetailFrontendCareerPageMode.Load;
+                    _activeLoadedCareer = null;
+                    _selectedCareerLoadRequest = null;
                     SelectedCareerIndex = -1;
                     _gameName = DefaultGameName;
                     return RetailFrontendSignal.PageChanged;
@@ -366,6 +426,21 @@ public sealed class RetailFrontendSession
                 return RetailFrontendSignal.ExitRequested;
 
             case RetailFrontendScreen.DevSelect:
+                if (CareerPageMode == RetailFrontendCareerPageMode.Load)
+                {
+                    if (SelectedCareerIndex < 0)
+                    {
+                        UnavailableSelection = RetailFrontendMenuItemKind.LoadGame;
+                        return RetailFrontendSignal.Unavailable;
+                    }
+
+                    _activeLoadedCareer = _careerDescriptors[SelectedCareerIndex];
+                    _selectedCareerLoadRequest = _activeLoadedCareer;
+                    SelectedWorldNumber = _activeLoadedCareer.Career.SuggestedWorldNumber;
+                    Screen = RetailFrontendScreen.LevelSelect;
+                    return RetailFrontendSignal.CareerLoadRequested;
+                }
+
                 Screen = RetailFrontendScreen.LevelSelect;
                 return RetailFrontendSignal.PageChanged;
 
@@ -406,6 +481,9 @@ public sealed class RetailFrontendSession
         if (Screen == RetailFrontendScreen.DevSelect)
         {
             Screen = RetailFrontendScreen.MainMenu;
+            CareerPageMode = RetailFrontendCareerPageMode.New;
+            _activeLoadedCareer = null;
+            _selectedCareerLoadRequest = null;
             SelectedCareerIndex = -1;
             _gameName = DefaultGameName;
             return RetailFrontendSignal.PageChanged;
@@ -450,6 +528,19 @@ public sealed class RetailFrontendSession
 
         _level100LaunchPending = false;
         return true;
+    }
+
+    /// <summary>
+    /// Consumes the selected descriptor once. This mirrors the source page's
+    /// copy of <c>mSaveGameNumber</c> and <c>mSaveGameName</c> before its storage
+    /// transaction (<c>FEPLoadGame.cpp:128-153</c>) without putting filesystem
+    /// work in Client.
+    /// </summary>
+    public RetailCareerDescriptor? ConsumeSelectedCareerLoadRequest()
+    {
+        RetailCareerDescriptor? request = _selectedCareerLoadRequest;
+        _selectedCareerLoadRequest = null;
+        return request;
     }
 
     /// <summary>The world the pending launch request will construct.</summary>
@@ -624,6 +715,9 @@ public sealed class RetailFrontendSession
         SelectedQuitConfirmIndex = 0;
         UnavailableSelection = null;
         SelectedCareerIndex = -1;
+        CareerPageMode = RetailFrontendCareerPageMode.New;
+        _activeLoadedCareer = null;
+        _selectedCareerLoadRequest = null;
         _selectedConfigurationIndex = 0;
         _gameName = DefaultGameName;
         _level100LaunchPending = false;
@@ -650,6 +744,23 @@ public sealed record RetailFrontendBattleEngineConfiguration(
     RetailFrontendWeaponConfiguration JetPrimary,
     RetailFrontendWeaponConfiguration JetSecondary);
 
+/// <summary>
+/// Frontend identity supplied alongside an already-read career. Stuart's
+/// <c>CFEPLoadGame</c> carries both <c>mSaveGameNumber</c> and
+/// <c>mSaveGameName</c> (<c>FEPLoadGame.h:32-35</c>); neither lives in the
+/// serialized <c>CCareer</c> bytes.
+/// </summary>
+public sealed record RetailCareerDescriptor(
+    int? SlotNumber,
+    string Name,
+    RetailCareerSave Career);
+
+public enum RetailFrontendCareerPageMode
+{
+    New,
+    Load,
+}
+
 public enum RetailFrontendScreen
 {
     ClickToStart,
@@ -658,8 +769,9 @@ public enum RetailFrontendScreen
 
     /// <summary>
     /// Retail FEP_DEVSELECT — the "CHOOSE GAME NAME" page New Game enters
-    /// (references/Onslaught/FrontEnd.cpp:120/182/782). Implemented here
-    /// visually and sequentially only: no save or career persistence.
+    /// (references/Onslaught/FrontEnd.cpp:120/182/782). The same composed list
+    /// surface carries injected read-only Load Game descriptors; no discovery,
+    /// save write, or career persistence occurs here.
     /// </summary>
     DevSelect,
 
@@ -716,6 +828,7 @@ public enum RetailFrontendSignal
     None,
     PageChanged,
     Unavailable,
+    CareerLoadRequested,
 
     /// <summary>
     /// The Select-Configuration confirm edge. Carries

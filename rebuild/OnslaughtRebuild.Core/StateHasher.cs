@@ -24,6 +24,11 @@ public static class StateHasher
         using (var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true))
         {
             writer.Write(s_magic);
+            // 42: records the reusable Thing/Actor base-state projection. Old
+            // pose drives interpolation, contact timestamps and flags are
+            // retained source state, and the source-composed inheritance mask
+            // is distinct from Level 100's legacy leaf-bit projection.
+            //
             // 41: records the retained directional damage-flash list. Its
             // timestamp and order affect future strict one-per-update expiry,
             // so a per-tick presentation event cannot reconstruct this state.
@@ -85,7 +90,7 @@ public static class StateHasher
             // 31: added the ordered Level100WeaponFireEvents stream. Every
             // hashed tick gains its four-byte count, so this bump moves every
             // pinned hash regardless of whether a weapon fires.
-            writer.Write(41);
+            writer.Write(42);
             writer.Write(state.Tick);
             writer.Write(state.Seed);
             writer.Write(state.InitialLevel100TutorialProgress.Introduction);
@@ -426,6 +431,30 @@ public static class StateHasher
             }
 
             writer.Write(actor.TriggerEventDispatched);
+        }
+
+        ArgumentNullException.ThrowIfNull(registry.BaseStates);
+        Level100ActorBaseStateSnapshot[] baseStates = registry.BaseStates
+            .OrderBy(item => item.ActorId.Value)
+            .ToArray();
+        writer.Write(baseStates.Length);
+        foreach (Level100ActorBaseStateSnapshot item in baseStates)
+        {
+            ArgumentNullException.ThrowIfNull(item);
+            ArgumentNullException.ThrowIfNull(item.State);
+            ThingActorBaseStateSnapshot state = item.State;
+            writer.Write(item.ActorId.Value);
+            writer.Write((ushort)state.Flags);
+            WriteVector(writer, state.CurrentPose.PositionMillimeters);
+            WriteBasis(writer, state.CurrentPose.BasisFloatBits);
+            WriteVector(writer, state.OldPose.PositionMillimeters);
+            WriteBasis(writer, state.OldPose.BasisFloatBits);
+            WriteVector(writer, state.Velocity);
+            WriteVector(writer, state.AngularVelocity);
+            writer.Write(state.ThingTypeMask);
+            writer.Write(state.LastTimeOnGroundFloatBits);
+            writer.Write(state.LastTimeInWaterFloatBits);
+            writer.Write(state.LastTimeOnObjectFloatBits);
         }
 
         Level100ActorFactSnapshot[] pendingFacts = registry.PendingFacts

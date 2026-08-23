@@ -109,12 +109,8 @@ public sealed class Level100Terrain
     /// hash pin land with the world-110 admission work so the future session
     /// cannot invent a second sampler shape.
     /// </summary>
-    public static Level100Terrain World110 { get; } = LoadEmbedded(
-        ResourceName110, SourceSha256110);
-
-    /// <summary>The world-110 HFLD resource name and its measured pin.</summary>
-    private const string ResourceName110 =
-        "OnslaughtRebuild.Core.Assets.Level110.level110-heightfield.hfld.bin";
+    public static Level100Terrain World110 { get; } = LoadEmbeddedWorld(
+        110, World110SourceSha256);
 
     /// <summary>
     /// The world-110 heightfield's SHA-256, measured from the pinned
@@ -125,7 +121,42 @@ public sealed class Level100Terrain
     public const string World110SourceSha256 =
         "FD4D076A2926FBC473B7D364703BDBC0C8A0F7A638B0AB71B6F319374DA033C2";
 
-    private const string SourceSha256110 = World110SourceSha256;
+    /// <summary>
+    /// The world-200 heightfield, admitted by the same envelope/hash law:
+    /// the extracted HFLD envelope from
+    /// <c>data/resources/200_res_PC.aya</c>, SHA-256 <c>1B8EB858…B945</c>.
+    /// The whole-image owner scan places it inside ERES, as it does for worlds
+    /// 100 and 110; the payload length is the same 668,652-byte envelope law,
+    /// so this loader admits it unchanged.
+    /// Not consumed by any live simulation yet — the world-200 session owner
+    /// does not exist — but the deterministic Core owner and its hash pin
+    /// land with the world-200 admission work.
+    /// </summary>
+    public static Level100Terrain World200 { get; } = LoadEmbeddedWorld(
+        200, World200SourceSha256);
+
+    /// <summary>
+    /// The world-200 heightfield's SHA-256, measured from the pinned
+    /// <c>data/resources/200_res_PC.aya</c> (archive SHA-256
+    /// <c>99dbd433…b77</c>) on 2026-08-22. Distinct from Level 100's and
+    /// world 110's envelopes under the same format law.
+    /// </summary>
+    public const string World200SourceSha256 =
+        "1B8EB8584BE552383F10B08C75D9F10E91708343F0E5EE085D5130D369F6B945";
+
+    /// <summary>
+    /// World 300's independently measured HFLD envelope, extracted from ERES
+    /// in <c>data/resources/300_res_PC.aya</c> (archive SHA-256
+    /// <c>7293bcbe…9efe4</c>). Its payload retains the common 668,652-byte HFLD
+    /// law even though the enclosing RLWD header is a distinct three-name
+    /// variant. No live simulation consumes this terrain yet.
+    /// </summary>
+    public static Level100Terrain World300 { get; } = LoadEmbeddedWorld(
+        300, World300SourceSha256);
+
+    /// <summary>The exact framed world-300 HFLD envelope SHA-256.</summary>
+    public const string World300SourceSha256 =
+        "68A181F9EC3099A0BE52BF4A063350A35E43C20664F2E07572BDB44D472ACB1A";
 
     /// <summary>
     /// The SHA-256 of the envelope bytes this instance was actually loaded
@@ -391,6 +422,12 @@ public sealed class Level100Terrain
     }
 
     private static Level100Terrain LoadEmbedded() => LoadEmbedded(ResourceName, SourceSha256);
+
+    private static Level100Terrain LoadEmbeddedWorld(int worldNumber, string expectedSha256) =>
+        LoadEmbedded(
+            $"OnslaughtRebuild.Core.Assets.Level{worldNumber}." +
+            $"level{worldNumber}-heightfield.hfld.bin",
+            expectedSha256);
 
     private static Level100Terrain LoadEmbedded(string resourceName, string expectedSha256)
     {

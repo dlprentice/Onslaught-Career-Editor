@@ -1,7 +1,7 @@
 format	file_count	decoder_va_or_unknown	contract_status
 aya-container-chunked-zlib	1361	inner-tag primitives CChunkReader__GetNext=0x00423910; CChunkReader__Read=0x00423960; imported uncompress=0x0055D5F2	outer-framing-complete
 lvlr-resource-tag-stream	301	CResourceAccumulator__ReadResourceFile=0x004D7200; CWorld__DeserializeWorld=0x0050B780; complete owner entry unknown	tag-census-complete-payloads-partial
-cmsh-mesh-and-animation	213	CMeshPart__LoadFromStream=0x004B27A0; CDXMeshVB__Load=0x0054E160; BuildStaticVB=0x0054C0A0; BuildSkeletalVB=0x0054C920	framing-and-selected-fields-bounded
+cmsh-mesh-and-animation	213	CMeshPart__LoadFromStream=0x004B27A0; CDXMeshVB__Load=0x0054E160; BuildStaticVB=0x0054C0A0; BuildSkeletalVB=0x0054C920; RenderMeshCore=0x00549570	framing-pose-and-position-skinning-bounded
 dds-texture-in-aya	847	LoadTextureFromFile=0x00557300; Deserialize=0x00559BE0; BuildDdsSurfaceNodeTree=0x0057BF1F; fallback decoder=0x0057CA6A	header-census-complete-pixels-open
 ogg-vorbis	3057	import thunks=0x0055D5FE..0x0055D688; COggLoader/OggVorbisStream/COggFileRead owner families	framing-metadata-bounded-full-decode-open
 xap-sample-bank	5	CSoundManager__LoadCompressedSampleBank/CPCSoundManager__DecodeADPCM family; exact owner VAs not pinned here	name-order-and-selected-decode-bounded

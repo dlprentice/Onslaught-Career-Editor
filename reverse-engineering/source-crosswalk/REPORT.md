@@ -1,190 +1,233 @@
-# Source-to-binary crosswalk — existing-row integrity remediation
+# Source-to-binary crosswalk — canonical five-wave reducer
 
-Status: complete — wave-1 remediation corrected after independent semantic re-audit
-Date: 2026-08-22
+Status: review candidate — exact corrected base plus five independently reviewed expansion receipts
+Date: 2026-08-23
 
-Summary: the crosswalk now contains 1,149 source-definition rows: 139 SOURCE_EXACT (12.1%), 320 SOURCE_ANALOG (27.9%), 650 NO_MATCH_FOUND (56.6%), and 40 NOT_IN_RETAIL (3.5%). Wave 1 removed all 15 audited non-function extras, eliminated every populated-VA collision, and leaves the independently inventoried 634-definition omission backlog unchanged. A correction re-audited all 24 original unsupported-analog downgrades, reversed nine false negatives, and confirmed the remaining 15 bounded negative searches.
+Summary: the canonical crosswalk now contains exactly 1,783 pinned-source definitions: 180 SOURCE_EXACT (10.1%), 344 SOURCE_ANALOG (19.3%), 1178 NO_MATCH_FOUND (66.1%), 70 NOT_IN_RETAIL (3.9%), and 11 CANDIDATE_UNRESOLVED (0.6%). The exact 634-definition omission set is closed with zero omitted, extra, or duplicate stable key.
 
-Evidence: MEASURED — the approved independent audit at commit `906452399d8fda9c1549859a66492ab72761a8f3`, fresh tree-sitter inventory replay, current tracked name table/static closure, precise promoted notes/semantics, and the row-level [`audit/remediation-wave1.tsv`](audit/remediation-wave1.tsv) decision receipt. The correction cold-read every original downgrade against promoted semantic tables, exact function notes, and bounded owner aliases; no classification is promoted from name similarity alone.
+Evidence: MEASURED — REUSED: the corrected 1,149-row base and 57 already settled wave definitions; EXTENDED: 577 accepted omission definitions with their reviewed source/retail boundaries; NEW_MEASUREMENT: 0. This reducer performs no new byte, runtime, Ghidra, PS2, drive, or retail-payload measurement.
 
-Specimen: `BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`, 2,506,752 bytes. Wave 1 used tracked authorities only; it did not open or write the pristine specimen or a Ghidra project.
+Specimen: `BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`, 2,506,752 bytes. The specimen, installed game, saves, binaries, Ghidra projects, and G:/H: corpora were not opened or written.
 
-## Scope and denominators
+## Exact reconciliation
 
-This is the existing-row remediation wave. It does not add the 634 source definitions omitted by the original calibration; that work remains a later subsystem-based expansion backlog rather than guessed wave-1 classifications.
+| Measure | Count |
+| --- | ---: |
+| Accepted corrected-base definitions | 1,149 |
+| Accepted five-wave additions | 634 |
+| Canonical source definitions | 1,783 |
+| Pinned AST inventory definitions | 1,783 |
+| Stable-key omissions | 0 |
+| Stable-key extras | 0 |
+| Stable-key duplicates | 0 |
+| Populated-VA rows | 519 |
+| Unique populated VAs | 515 |
+| Pinned C/C++ files represented or explicitly zero-definition | 106 |
 
-| Measure | Baseline audit | Current |
-| --- | ---: | ---: |
-| AST function definitions | 1,783 | 1,783 |
-| Crosswalk rows | 1,164 | 1,149 |
-| Valid source-definition joins | 1,149 | 1,149 |
-| Non-function extras | 15 | 0 |
-| Omitted source definitions | 634 | 634 |
-
-The reconciliation is now direct: `1,783 = 1,149 classified rows + 634 omitted definitions`. The former alternative `1,164 = 1,149 valid rows + 15 extras` is preserved only as the parent-audit baseline.
+The stable identity is `(source_file, source_line, source function, signature)`. Every appended row also carries its accepted target branch and resolved source owner. The 1,149 base data lines remain physically byte-identical to the corrected base and resolve one-to-one through the hash-pinned 1,783-row inventory; their target branches were read back from the pinned source without rewriting those six-column lines.
 
 ## Classification contract
 
-| Class | Wave-1 gate |
+| Class | Canonical meaning |
 | --- | --- |
-| `SOURCE_EXACT` | Explicit same-function source-body identity at the cited source line and retail VA. Current name similarity is insufficient. |
-| `SOURCE_ANALOG` | A named retail candidate plus a precise existing authority target and a bounded analogy reason. The receipt states what is and is not claimed. |
-| `NO_MATCH_FOUND` | Empty VA after the baseline exact/prefix/variant/name-note search or a wave-1 row receipt. It does not claim binary absence. |
-| `NOT_IN_RETAIL` | Direct Xbox-only source guard against the PC retail specimen, with an empty VA. |
+| `SOURCE_EXACT` | Accepted evidence explicitly supports the same source-function body at the named retail VA. This is not a campaign `VERIFIED` promotion. |
+| `SOURCE_ANALOG` | A named retail candidate and bounded relationship exist, without source-body equality. |
+| `NO_MATCH_FOUND` | Bounded current-authority search found no supported target; renamed, folded, inlined, split, or absent emission remains falsifiable. |
+| `NOT_IN_RETAIL` | The accepted target-selection receipt excludes the definition from this PC retail specimen. |
+| `CANDIDATE_UNRESOLVED` | An accepted named/folded typed-wrapper candidate remains ambiguous; VA stays empty pending unique identity. |
 
-Repeated source labels remain distinct by source line and AST signature. This preserves overloads and conditional definitions instead of collapsing normalized names.
+`REVIEW_READY`, `SOURCE_ANALOG`, source agreement, and receipt acceptance are not retail `VERIFIED` promotions. This reducer copies classifications; it does not reinterpret, promote, or collapse them.
 
-Unchanged negative rows retain the original calibration's shared bounded search surface (exact, prefix, variant, and tracked-note candidates). Rows newly downgraded by wave 1 cite the per-row remediation receipt. An empty `evidence_path` on an unchanged negative therefore means the documented shared baseline search, not an unbounded assertion of absence.
+## Accepted Git lineage and artifact hashes
 
-## Audit-code deltas
+| Input | Accepted root | Landing | Definitions SHA-256 | RETAIL-DELTA SHA-256 | RECEIPT SHA-256 |
+| --- | --- | --- | --- | --- | --- |
+| Corrected base | `7ac8247416764f41ffa92313aa82393856beae38` | `784367bd43f9ec13125521b00fe0c8352670ffdd` | `e37f13b37e9ce9d712174e35b86fc1f7ebcfc693fe9957448a8f39ff03829479` (crosswalk) | — | `a9a3d29a18655ef97e61591610c2721d934112b2a7a58acf264debe11a798c7f` (report) |
+| W1 save/session/input/frontend | `39bc52a7c19be84b2877df83ca8cc244f9f272a8` | `efdfe9dd83a236b2ab7d8c2e1d729b543e306906` | `35b5b06be014464a1218ffc78ca312a225d667cf24d411fb1410d7cdeb93549b` | `f9feac8dce3d78004745ba067deda69e68803930327e2e83521b8b84b0cbd959` | `8e7da7cef5b00c2c641e111e01e19cc3132bbd77e8bd63496228a4db30cb0150` |
+| W2 thing/BattleEngine/camera | `07fca645affb4d0483d35a52d0e70f39c784d15a` | `561c2099` | `d516756db15e51d2be4bf64798df48e3e1c716cb33f687c00a8dff5c90896693` | `e90352c35767ec4cb357656b82d925a80b5cc958772833f904cfad459c1235b4` | `0cf8de6c48ec1918c3584d3c12abbed156444145cfd28ac040e618e4f31af80e` |
+| W3 audio/music | `3fb3f143ccdbba7b81ebc2d108c75c77184d3969` | `e92eb952` | `debf05d070f6e9bc54ac73d07a98eeca773db083ff0b9e5eb55612a28682384d` | `865885ad104e4840c1eb507e99288da7fd194a24b1dd46c76f30ddb1eaa396be` | `b71630b6887a230c5ff24f3aa25561b28e01a16f1068035f485549b196e896b4` |
+| W4 memory/container/archive | `e3f470b1f9a839ee2bc5a41d41b0edbafe9ff89e` | `c6170bc8` | `132315189eb7897efc9708fbfea868f9c120d1389bdee786137d49db5e5350a7` | `afa3d47077c140f8b659f70bb0923233da31e333c577484b09c5c214d8fb094d` | `a983dd227fae162b60b260726dd45d99b104198ba9729cfcba3349c7125245c9` |
+| W5 engine/render/platform/shell | `e229057918034a2d11a66a21bc3e3331136a5068` | `20608237` | `074385f8fd1de291f55dec9c565beb07aad87a3e6adfa4767515b8b23c357060` | `e72edc4060aafa94b2a15b1ec978a8ed95d1d8cc0a8bb9a9be5241af38db4a03` | `c8d8c6850d1bf8ad1a817609d084fc5056db0111f2dd9f2d566f192f351bc09e` |
 
-Raw replay counts use the approved audit instrument unchanged. The receipt separately adjudicates its known shared-label and stale-name false positives.
+Shared predecessor hashes:
 
-| Finding code | Baseline | Batch 1 | Current | Baseline → current |
+- Pinned source inventory: `91bfee284185379db52c7d044e42a59b3f5ba75306c1150a0e56bdbb33705912` (1,783 unique stable keys).
+- Frozen partition: `bc36791975f43d5da6b584727df3eb7d29402e18c550dd3d96e01bba0c301fde` (634 rows).
+- Expansion plan: `604d5db76ecc9811b55321c5ec443f346c9be32515b6d8ed526142622d7ec393`.
+- Execution contract: `12a0f72ea2b1606ee673824ee801586cefe815e0aa899d2fe55073e7c4509f18`.
+- Expansion manifest: `6f58de995a27a0088749f40e06907969d3213872b40d1bf0bb450afda1fd216e`.
+- Cold-check sample: `5235ff8e61fd12d9e4b17caf256d06c4a693cfd50bcce20d20261f42f21813bb`.
+- Current name table: `4590dff93f4ee85c5a5c3450139b2e696118646af3401f6eb9719dc4237d3213`.
+- Current static closure: `cfe90af382269cb2e64996d10df7777bd00fcd8e1844b9823ef74bc6199b8974`.
+- Current Generation-32 evidence register: `4862fc61391c9bf65cd7183752e99b9b02b6bfb721e5b4b5c1e7c5fae5b885b4`.
+
+## Reuse accounting
+
+| Wave | REUSED | EXTENDED | NEW_MEASUREMENT | Total |
 | --- | ---: | ---: | ---: | ---: |
-| `ANALOG_EVIDENCE_PATH_MISSING` | 168 | 108 | 0 | -168 |
-| `ANALOG_REASON_EVIDENCE_WEAK` | 190 | 108 | 0 | -190 |
-| `ANALOG_RETAIL_ANALOG_UNNAMED` | 2 | 0 | 0 | -2 |
-| `EVIDENCE_TARGET_UNRESOLVED` | 11 | 0 | 0 | -11 |
-| `EXACT_IDENTITY_EVIDENCE_WEAK` | 1 | 0 | 0 | -1 |
-| `CROSSWALK_VA_COLLISION` | 34 | 0 | 0 | -34 |
-| `CROSSWALK_EXTRA_ROW` | 15 | 0 | 0 | -15 |
-| `NO_MATCH_NAME_TABLE_HIT` | 3 | 4 | 4 | +1 |
-| `AUTHORITY_SIZE_RANGE_DISAGREEMENT` | 1 | 1 | 1 | +0 |
-| `SOURCE_NAME_AMBIGUOUS` | 54 | 48 | 48 | -6 |
+| W1 save/session/input/frontend | 11 | 169 | 0 | 180 |
+| W2 thing/BattleEngine/camera | 46 | 155 | 0 | 201 |
+| W3 audio/music | 0 | 23 | 0 | 23 |
+| W4 memory/container/archive | 0 | 94 | 0 | 94 |
+| W5 engine/render/platform/shell | 0 | 136 | 0 | 136 |
+| **Wave total** | **57** | **577** | **0** | **634** |
 
-### Raw findings retained with explicit dispositions
+The accepted wave receipts define these dispositions. `REUSED` means an existing reviewed authority already settled the retail relationship; `EXTENDED` means the wave added exact source/target/boundary/falsifier/rebuild routing to the frozen omission key; `NEW_MEASUREMENT` is zero because no new binary or runtime probe ran.
 
-- Four raw `NO_MATCH_NAME_TABLE_HIT` rows are adjudicated, not open defects: the table's stale `CMusic__Play` label is superseded by the tracked `DeviceChangeTrack` identity, and three shared source labels are owned by different line/signature rows (`CCareer::Load`, `CCareer::Save`, and the `CComplexThing::SetAnimMode(EAnimMode,...)` overload). Their losing branches keep empty VAs.
-- The one raw `AUTHORITY_SIZE_RANGE_DISAGREEMENT` is retained for `CFEPGoodies::TransitionNotification @ 0x0045ffa0`. The external-gap receipt identifies a continuation after the static-closure endpoint; wave 1 records the authority disagreement without editing either read-only authority or discarding the named analog.
-- The 48 raw `SOURCE_NAME_AMBIGUOUS` row findings are informational line/signature-distinct source identities. Every surviving group is sealed in the remediation receipt.
+## Per-wave classification counts
 
-### Semantic correction re-audit
+| Wave | Rows | EXACT | ANALOG | NO_MATCH | NOT_IN_RETAIL | CANDIDATE_UNRESOLVED |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| W1 save/session/input/frontend | 180 | 8 | 3 | 169 | 0 | 0 |
+| W2 thing/BattleEngine/camera | 201 | 32 | 5 | 164 | 0 | 0 |
+| W3 audio/music | 23 | 1 | 1 | 21 | 0 | 0 |
+| W4 memory/container/archive | 94 | 0 | 6 | 70 | 7 | 11 |
+| W5 engine/render/platform/shell | 136 | 0 | 9 | 104 | 23 | 0 |
 
-The rejected `f6d6d6ad` tip had mechanically valid counts but used a name-table-only search that missed promoted source-body records and bounded owner aliases. The correction re-audited all 24 `DOWNGRADE_UNSUPPORTED_ANALOG` decisions and marks every receipt row with `COLD_REAUDIT_CORRECTED` or `COLD_REAUDIT_CONFIRMED`.
+## Accepted folded populated-VA groups
 
-- Nine downgrades were reversed: `CActor::MoveTo` is `SOURCE_EXACT @ 0x00401900`; four tracked scalar-deleting destructor wrappers remain bounded `SOURCE_ANALOG`; `CCareer::GetNodeFromWorldNo`, `CPCPlatform::DeviceFlip`, and `CPCPlatform::GetScreenWidth` retain bounded aliases; and `CDXMemBuffer::ReadString` is reassigned to the tracked `CDXMemBuffer__ReadLine @ 0x00548820` release analog.
-- Fifteen downgrades remain `NO_MATCH_FOUND` only after owner-specific semantic/note/alias review refuted the old VA and found no separate named retail body. Their receipts explicitly avoid claims of binary absence, folding, or inlining.
+Only the three W2 `SOURCE_FOLDED` groups repeat a populated VA:
 
-## Wave-1 decision receipt
+| VA | Source definitions |
+| --- | --- |
+| `0x004040a0` | `CThing::GetRenderEndPos`; `CThing::GetRenderPos`; `CThing::GetRenderStartPos` |
+| `0x0043e9f0` | `CThing::GetOldPos`; `CThing::GetSoundPos` |
+| `0x0043ea20` | `CComplexThing::GetOldOrientation`; `CComplexThing::GetSoundOrientation` |
 
-[`audit/remediation-wave1.tsv`](audit/remediation-wave1.tsv) contains 271 cumulative row decisions. It names the before/after class and VA, retail analog where applicable, precise authority targets, bounded analogy ceiling, original raw finding codes, and the remediation disposition.
+## Canonical TSV projection
 
-| Action | Receipt rows |
-| --- | ---: |
-| `DOWNGRADE_STALE_EXACT_IDENTITY` | 1 |
-| `DOWNGRADE_UNSHIPPED_PC_BRANCH` | 2 |
-| `DOWNGRADE_UNSUPPORTED_ANALOG` | 15 |
-| `DROP_UNRELATED_BEGINSCENE_CITATION` | 1 |
-| `DROP_UNRESOLVED_SECONDARY_CITATION` | 5 |
-| `PROMOTE_EXPLICIT_SOURCE_BODY_IDENTITY` | 3 |
-| `PROMOTE_NAMED_SOURCE_ANALOG` | 1 |
-| `REASSIGN_CORRECTED_SOURCE_EXACT` | 2 |
-| `REASSIGN_NAMED_SOURCE_ANALOG` | 1 |
-| `REMOVE_NON_FUNCTION_EXTRA` | 15 |
-| `RETAIN_LINE_DISAMBIGUATED_SOURCE_IDENTITY` | 48 |
-| `RETAIN_UNIQUE_VA_OWNER` | 16 |
-| `STRENGTHEN_BOUNDED_OWNER_ALIAS` | 3 |
-| `STRENGTHEN_COMPILER_WRAPPER_ANALOG` | 4 |
-| `STRENGTHEN_NAME_ONLY_ANALOG` | 166 |
+The first six columns retain the v1 projection (`file`, `function`, `src_line`, `classification`, `va_or_empty`, `evidence_path`). Appended v2 columns preserve the accepted signature, target branch, resolved owner, original source-key function, retail name/candidate, retail-delta status, source/retail boundary, falsifier, and wave identity.
 
-Key identity corrections:
+The corrected base lines intentionally remain six physical fields so their bytes do not change. Appended wave rows carry all 15 fields. A conforming reader must parse the header and treat absent trailing base fields as empty; canonical stable-key validation joins those base anchors to the accepted inventory rather than inventing metadata.
 
-- `CMusic::DeviceChangeTrack` now owns `0x004bb450` as `SOURCE_EXACT`; the prior `CMusic::Play` exact row is downgraded under the tracked corrected-identity semantics.
-- `CThing::AddShutdownEvent` and `CThing::StartDieProcess` are `SOURCE_EXACT` only because the tracked CThing semantics explicitly assert `SOURCE_BODY` identity; the current name hit alone was not used for promotion.
-- `CActor::MoveTo` now owns `0x00401900` as `SOURCE_EXACT` under the tracked CActor `SOURCE_BODY` record; `0x004015e0` remains the distinct `CActor::Move` owner.
-- The CActor, CBattleEngine, CThing, and CComplexThing scalar-deleting destructors remain `SOURCE_ANALOG`, bounded to the compiler-wrapper relationship explicitly recorded in their promoted vtable semantics.
-- `CCareer__GetNodeFromWorld`, `PCPlatform__DeviceFlip`, and `PLATFORM__GetWindowWidth` are bounded aliases, not exact-name promotions; independent notes establish their source roles and the receipt preserves the analogy ceilings.
-- Retail `CDXMemBuffer__ReadLine @ 0x00548820` is the tracked release analog for source `CDXMemBuffer::ReadString`; the previous `CDXMemBuffer__Read @ 0x00548570` collision is removed.
-- `CDXEngine::ShutDown` is only `SOURCE_ANALOG`: the named vtable-slot owner and shutdown shape are bounded, while source-body equality and the adjacent unlabeled SetGammaBias stub remain unclaimed.
-- Colliding prefix/neighbor guesses lost their VAs. The evidence-supported named owner keeps each VA; no source row was deleted merely because its normalized name matched a sibling.
+Canonical `crosswalk.tsv` SHA-256: `675b6aea18bc516ab563554372aba3dc9de467dba7aa22abbd1c8635be22ac71`.
 
 ## Per-file coverage
 
-| File | Rows | EXACT | ANALOG | NO_MATCH | NOT_IN_RETAIL |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| `activereader.cpp` | 1 | 0 | 1 | 0 | 0 |
-| `actor.cpp` | 19 | 1 | 9 | 9 | 0 |
-| `Array.h` | 2 | 0 | 0 | 2 | 0 |
-| `BattleEngine.cpp` | 114 | 1 | 40 | 73 | 0 |
-| `BattleEngine.h` | 2 | 0 | 0 | 2 | 0 |
-| `BattleEngineConfigurations.cpp` | 5 | 0 | 0 | 5 | 0 |
-| `BattleEngineDataManager.cpp` | 8 | 0 | 3 | 5 | 0 |
-| `BattleEngineDataManager.h` | 25 | 0 | 0 | 25 | 0 |
-| `BattleEngineJetPart.cpp` | 39 | 0 | 25 | 14 | 0 |
-| `BattleEngineWalkerPart.cpp` | 41 | 0 | 26 | 15 | 0 |
-| `Camera.cpp` | 45 | 0 | 20 | 25 | 0 |
-| `Career.cpp` | 41 | 20 | 3 | 18 | 0 |
-| `chunker.cpp` | 17 | 0 | 5 | 12 | 0 |
-| `CLIParams.cpp` | 3 | 0 | 0 | 3 | 0 |
-| `Controller.cpp` | 18 | 10 | 3 | 5 | 0 |
-| `Controller.h` | 4 | 0 | 0 | 4 | 0 |
-| `d3dapp.cpp` | 17 | 0 | 11 | 6 | 0 |
-| `DXEngine.cpp` | 23 | 2 | 4 | 14 | 3 |
-| `DXEngine.h` | 1 | 0 | 0 | 1 | 0 |
-| `DXFrontend.cpp` | 4 | 0 | 1 | 3 | 0 |
-| `DXGame.cpp` | 2 | 0 | 0 | 2 | 0 |
-| `DXMemBuffer.cpp` | 19 | 6 | 1 | 12 | 0 |
-| `DXMemoryManager.cpp` | 17 | 5 | 4 | 7 | 1 |
-| `DXMemoryManager.h` | 2 | 0 | 0 | 2 | 0 |
-| `EditorD3DApp.cpp` | 17 | 0 | 0 | 17 | 0 |
-| `EndLevelData.cpp` | 2 | 0 | 1 | 1 | 0 |
-| `engine.cpp` | 34 | 1 | 15 | 18 | 0 |
-| `event.cpp` | 1 | 0 | 0 | 1 | 0 |
-| `eventmanager.cpp` | 14 | 8 | 0 | 6 | 0 |
-| `FEPGoodies.cpp` | 38 | 0 | 11 | 27 | 0 |
-| `FEPGoodies.h` | 1 | 0 | 0 | 1 | 0 |
-| `FEPLoadGame.cpp` | 8 | 0 | 4 | 4 | 0 |
-| `FEPSaveGame.cpp` | 12 | 0 | 7 | 5 | 0 |
-| `FrontEnd.cpp` | 37 | 0 | 23 | 14 | 0 |
-| `game.cpp` | 72 | 38 | 21 | 13 | 0 |
-| `game.h` | 3 | 0 | 0 | 3 | 0 |
-| `InitThing.cpp` | 17 | 0 | 0 | 17 | 0 |
-| `InitThing.h` | 31 | 0 | 0 | 31 | 0 |
-| `ltshell.cpp` | 43 | 0 | 1 | 42 | 0 |
-| `ltshell.h` | 2 | 0 | 0 | 2 | 0 |
-| `MemoryCard.cpp` | 1 | 0 | 0 | 1 | 0 |
-| `MemoryCard.h` | 1 | 0 | 0 | 1 | 0 |
-| `MemoryManager.cpp` | 39 | 0 | 17 | 22 | 0 |
-| `MemoryManager.h` | 4 | 0 | 0 | 4 | 0 |
-| `Music.cpp` | 27 | 5 | 4 | 18 | 0 |
-| `Music.h` | 2 | 0 | 0 | 2 | 0 |
-| `PCController.cpp` | 6 | 0 | 6 | 0 | 0 |
-| `PCEngine.cpp` | 18 | 0 | 0 | 18 | 0 |
-| `PCFrontend.cpp` | 6 | 0 | 0 | 6 | 0 |
-| `PCGame.cpp` | 3 | 0 | 0 | 3 | 0 |
-| `PCMemoryCard.cpp` | 1 | 0 | 0 | 1 | 0 |
-| `PCMemoryCard.h` | 14 | 0 | 0 | 14 | 0 |
-| `PCPlatform.cpp` | 32 | 0 | 7 | 25 | 0 |
-| `PCPlatform.h` | 1 | 0 | 0 | 1 | 0 |
-| `pcsoundmanager.cpp` | 17 | 11 | 1 | 5 | 0 |
-| `pcsoundmanager.h` | 2 | 0 | 0 | 2 | 0 |
-| `Platform.cpp` | 1 | 0 | 0 | 1 | 0 |
-| `Player.cpp` | 17 | 1 | 11 | 5 | 0 |
-| `ResourceAccumulator.cpp` | 9 | 0 | 0 | 9 | 0 |
-| `scheduledevent.cpp` | 2 | 2 | 0 | 0 | 0 |
-| `SoundManager.cpp` | 48 | 26 | 3 | 19 | 0 |
-| `SoundManager.h` | 3 | 0 | 0 | 3 | 0 |
-| `SPtrSet.cpp` | 10 | 0 | 0 | 10 | 0 |
-| `thing.cpp` | 47 | 2 | 32 | 13 | 0 |
-| `thing.h` | 1 | 0 | 0 | 1 | 0 |
-| `XBoxMemoryCard.cpp` | 36 | 0 | 0 | 0 | 36 |
+Counts below are mechanically derived from the canonical TSV. Zero-definition source files remain visible rather than disappearing from the denominator.
+
+| File | Definitions | EXACT | ANALOG | NO_MATCH | NOT_IN_RETAIL | CANDIDATE_UNRESOLVED |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| `activereader.cpp` | 1 | 0 | 1 | 0 | 0 | 0 |
+| `activereader.h` | 11 | 0 | 1 | 10 | 0 | 0 |
+| `actor.cpp` | 19 | 1 | 9 | 9 | 0 | 0 |
+| `actor.h` | 11 | 3 | 0 | 8 | 0 | 0 |
+| `Array.cpp` | 0 | 0 | 0 | 0 | 0 | 0 |
+| `Array.h` | 25 | 0 | 0 | 25 | 0 | 0 |
+| `BattleEngine.cpp` | 114 | 1 | 40 | 73 | 0 | 0 |
+| `BattleEngine.h` | 49 | 5 | 0 | 44 | 0 | 0 |
+| `BattleEngineConfigurations.cpp` | 5 | 0 | 0 | 5 | 0 | 0 |
+| `BattleEngineConfigurations.h` | 1 | 0 | 0 | 1 | 0 | 0 |
+| `BattleEngineDataManager.cpp` | 8 | 0 | 3 | 5 | 0 | 0 |
+| `BattleEngineDataManager.h` | 26 | 0 | 0 | 26 | 0 | 0 |
+| `BattleEngineJetPart.cpp` | 39 | 0 | 25 | 14 | 0 | 0 |
+| `BattleEngineJetPart.h` | 5 | 0 | 0 | 5 | 0 | 0 |
+| `BattleEngineWalkerPart.cpp` | 41 | 0 | 26 | 15 | 0 | 0 |
+| `BattleEngineWalkerPart.h` | 5 | 0 | 0 | 5 | 0 | 0 |
+| `Camera.cpp` | 47 | 0 | 22 | 25 | 0 | 0 |
+| `Camera.h` | 28 | 0 | 2 | 26 | 0 | 0 |
+| `Career.cpp` | 41 | 20 | 3 | 18 | 0 | 0 |
+| `Career.h` | 27 | 3 | 0 | 24 | 0 | 0 |
+| `chunker.cpp` | 17 | 0 | 5 | 12 | 0 | 0 |
+| `chunker.h` | 3 | 0 | 0 | 3 | 0 | 0 |
+| `CLIParams.cpp` | 3 | 0 | 0 | 3 | 0 | 0 |
+| `CLIParams.h` | 1 | 0 | 0 | 1 | 0 | 0 |
+| `Controller.cpp` | 18 | 10 | 3 | 5 | 0 | 0 |
+| `Controller.h` | 9 | 0 | 0 | 9 | 0 | 0 |
+| `d3dapp.cpp` | 17 | 0 | 11 | 6 | 0 | 0 |
+| `d3dapp.h` | 11 | 0 | 0 | 11 | 0 | 0 |
+| `DX.H` | 0 | 0 | 0 | 0 | 0 | 0 |
+| `DXEngine.cpp` | 24 | 2 | 4 | 14 | 4 | 0 |
+| `DXEngine.h` | 7 | 0 | 0 | 7 | 0 | 0 |
+| `DXFrontend.cpp` | 4 | 0 | 1 | 3 | 0 | 0 |
+| `DXFrontend.h` | 0 | 0 | 0 | 0 | 0 | 0 |
+| `DXGame.cpp` | 2 | 0 | 0 | 2 | 0 | 0 |
+| `DXGame.h` | 2 | 0 | 0 | 2 | 0 | 0 |
+| `DXMemBuffer.cpp` | 19 | 6 | 1 | 12 | 0 | 0 |
+| `DXMemBuffer.h` | 3 | 0 | 0 | 3 | 0 | 0 |
+| `DXMemoryManager.cpp` | 18 | 5 | 4 | 7 | 2 | 0 |
+| `DXMemoryManager.h` | 14 | 0 | 0 | 8 | 6 | 0 |
+| `EditorD3DApp.cpp` | 17 | 0 | 0 | 17 | 0 | 0 |
+| `EditorD3DApp.h` | 11 | 0 | 0 | 0 | 11 | 0 |
+| `EndLevelData.cpp` | 2 | 0 | 1 | 1 | 0 | 0 |
+| `EndLevelData.h` | 0 | 0 | 0 | 0 | 0 | 0 |
+| `engine.cpp` | 34 | 1 | 15 | 18 | 0 | 0 |
+| `engine.h` | 39 | 0 | 0 | 39 | 0 | 0 |
+| `event.cpp` | 1 | 0 | 0 | 1 | 0 | 0 |
+| `event.h` | 5 | 0 | 0 | 5 | 0 | 0 |
+| `eventmanager.cpp` | 14 | 8 | 0 | 6 | 0 | 0 |
+| `eventmanager.h` | 6 | 0 | 0 | 6 | 0 | 0 |
+| `FEPGoodies.cpp` | 38 | 0 | 11 | 27 | 0 | 0 |
+| `FEPGoodies.h` | 3 | 0 | 0 | 3 | 0 | 0 |
+| `FEPLoadGame.cpp` | 8 | 0 | 4 | 4 | 0 | 0 |
+| `FEPLoadGame.h` | 0 | 0 | 0 | 0 | 0 | 0 |
+| `FEPSaveGame.cpp` | 12 | 0 | 7 | 5 | 0 | 0 |
+| `FEPSaveGame.h` | 0 | 0 | 0 | 0 | 0 | 0 |
+| `FrontEnd.cpp` | 38 | 0 | 23 | 15 | 0 | 0 |
+| `Frontend.h` | 21 | 0 | 0 | 21 | 0 | 0 |
+| `game.cpp` | 79 | 38 | 21 | 20 | 0 | 0 |
+| `game.h` | 58 | 0 | 0 | 58 | 0 | 0 |
+| `InitThing.cpp` | 18 | 0 | 1 | 17 | 0 | 0 |
+| `InitThing.h` | 34 | 0 | 0 | 34 | 0 | 0 |
+| `ltshell.cpp` | 44 | 0 | 2 | 42 | 0 | 0 |
+| `ltshell.h` | 42 | 0 | 8 | 34 | 0 | 0 |
+| `membuffer.h` | 3 | 0 | 0 | 3 | 0 | 0 |
+| `MemoryCard.cpp` | 1 | 0 | 0 | 1 | 0 | 0 |
+| `MemoryCard.h` | 2 | 0 | 0 | 2 | 0 | 0 |
+| `MemoryManager.cpp` | 41 | 0 | 18 | 23 | 0 | 0 |
+| `MemoryManager.h` | 23 | 0 | 0 | 23 | 0 | 0 |
+| `Music.cpp` | 27 | 5 | 4 | 18 | 0 | 0 |
+| `Music.h` | 8 | 0 | 0 | 8 | 0 | 0 |
+| `PCController.cpp` | 7 | 0 | 6 | 1 | 0 | 0 |
+| `PCController.h` | 6 | 5 | 0 | 1 | 0 | 0 |
+| `PCEngine.cpp` | 18 | 0 | 0 | 18 | 0 | 0 |
+| `PCEngine.h` | 11 | 0 | 0 | 0 | 11 | 0 |
+| `PCFEPLoadGame.cpp` | 0 | 0 | 0 | 0 | 0 | 0 |
+| `PCFEPLoadGame.h` | 0 | 0 | 0 | 0 | 0 | 0 |
+| `PCFEPSaveGame.cpp` | 0 | 0 | 0 | 0 | 0 | 0 |
+| `PCFEPSaveGame.h` | 0 | 0 | 0 | 0 | 0 | 0 |
+| `PCFrontend.cpp` | 6 | 0 | 0 | 6 | 0 | 0 |
+| `PCFrontend.h` | 0 | 0 | 0 | 0 | 0 | 0 |
+| `PCGame.cpp` | 3 | 0 | 0 | 3 | 0 | 0 |
+| `PCGame.h` | 2 | 0 | 0 | 2 | 0 | 0 |
+| `PCMemoryCard.cpp` | 1 | 0 | 0 | 1 | 0 | 0 |
+| `PCMemoryCard.h` | 17 | 0 | 1 | 16 | 0 | 0 |
+| `PCPlatform.cpp` | 32 | 0 | 7 | 25 | 0 | 0 |
+| `PCPlatform.h` | 9 | 0 | 0 | 9 | 0 | 0 |
+| `pcsoundmanager.cpp` | 17 | 11 | 1 | 5 | 0 | 0 |
+| `pcsoundmanager.h` | 4 | 1 | 0 | 3 | 0 | 0 |
+| `Platform.cpp` | 1 | 0 | 0 | 1 | 0 | 0 |
+| `Platform.h` | 0 | 0 | 0 | 0 | 0 | 0 |
+| `Player.cpp` | 18 | 1 | 12 | 5 | 0 | 0 |
+| `Player.h` | 14 | 0 | 0 | 14 | 0 | 0 |
+| `ResourceAccumulator.cpp` | 9 | 0 | 0 | 9 | 0 | 0 |
+| `ResourceAccumulator.h` | 8 | 0 | 0 | 8 | 0 | 0 |
+| `scheduledevent.cpp` | 2 | 2 | 0 | 0 | 0 | 0 |
+| `scheduledevent.h` | 10 | 0 | 0 | 10 | 0 | 0 |
+| `SoundManager.cpp` | 48 | 26 | 3 | 19 | 0 | 0 |
+| `SoundManager.h` | 18 | 0 | 1 | 17 | 0 | 0 |
+| `SPtrSet.cpp` | 13 | 0 | 3 | 10 | 0 | 0 |
+| `SPtrSet.h` | 24 | 0 | 2 | 11 | 0 | 11 |
+| `storage.cpp` | 0 | 0 | 0 | 0 | 0 | 0 |
+| `storage.h` | 0 | 0 | 0 | 0 | 0 | 0 |
+| `thing.cpp` | 47 | 2 | 32 | 13 | 0 | 0 |
+| `thing.h` | 98 | 24 | 0 | 74 | 0 | 0 |
+| `XBoxMemoryCard.cpp` | 36 | 0 | 0 | 0 | 36 | 0 |
+| `XBoxMemoryCard.h` | 0 | 0 | 0 | 0 | 0 | 0 |
 
 ## Validation state
 
-- Fresh approved-auditor replay: 1,149 rows; 1,783 AST definitions; 634 omissions; 0 extras.
-- Structural status: `PASS` 1101, `PASS_AMBIGUOUS_NAME` 48.
-- Evidence status: `FAIL` 4, `PASS` 499, `PASS_SHARED_METHOD` 646.
-- Authority status: `DISAGREEMENT` 1, `NOT_APPLICABLE` 695, `PASS` 453.
-- PASS: deterministic receipt validator covers row/classification counts, exact source keys, documented repeated labels, VA format/range/uniqueness, negative/EXACT VA polarity, evidence-path existence, sealed raw exceptions, the unchanged 634-omission denominator, and 24/24 original downgrade re-audit dispositions.
-- PASS: `npm run test` — AppCore 1,549/1,549, UI 893/893, CLI 125/125; build stage succeeded with one pre-existing NUnit analyzer warning.
-- PASS: `npm run build` — 0 warnings, 0 errors.
-- PASS: `npm run test:doc-headers` — 0 violations; `git diff --check` — clean.
-- Repository-wide link check still reports only the pre-existing unrelated `tools/probe/README.md` link to ignored `../../local-lab/SCRIPT-FORMAT-SPEC-2026-08-02.md`; neither changed report link is among the failures.
+- PASS: accepted corrected-base root/landing and all five accepted wave root/landing artifacts read back byte-identically.
+- PASS: exact union `1,149 corrected base + 634 frozen partition = 1,783 inventory`; zero omission, extra, or duplicate stable key.
+- PASS: every appended classification, populated VA/name, evidence string, source/retail boundary, falsifier, and target branch matches its accepted definitions/delta receipt byte-for-byte as a decoded TSV field; source owners are copied from accepted fields or losslessly resolved from accepted qualified functions where the receipt has no owner column.
+- PASS: all 519 populated rows resolve to 515 current name-table, closure, and Generation-32 register VAs; repeated VAs are exactly the three accepted folded groups.
+- PASS: 3531 path-shaped evidence tokens resolve; bounded authority labels remain labels rather than fabricated paths.
+- PASS: two fresh reducer roots produced byte-identical `crosswalk.tsv` and `REPORT.md` hashes.
+- PASS: equivalent five-wave joined invariants plus available receipt validators, documentation links/headers/name assertions/evidence header, `npm run test:docs`, and `git diff --check`.
 
 ## Evidence boundaries
 
-- Name-table and closure joins prove only the tracked named candidate and function boundary they contain. They do not prove source-body equality.
-- `NO_MATCH_FOUND` remains a falsifiable search result. Renamed, merged, split, or inlined bodies can still exist.
-- Raw authority disagreements and parser-shared-label warnings are not silently suppressed; the receipt states why each surviving raw code is adjudicated.
-- Function notes, contracts, Ghidra, source files, rebuild, app code, campaign ledgers, and tracked authorities were read-only in this wave.
+- The reducer preserves accepted wave meanings. It does not turn `SOURCE_AGREES`, `SOURCE_EXACT`, `SOURCE_ANALOG`, or review readiness into campaign verification.
+- `NO_MATCH_FOUND` and `CANDIDATE_UNRESOLVED` remain explicit falsifiable frontiers, not claims of binary absence.
+- Source target selection proves only the accepted compile/platform branch. Retail identity remains limited by each row's copied evidence boundary and falsifier.
+- Reconstruction dispositions stay in the reviewed wave receipts; this two-file reducer does not edit rebuild, source contracts, receipt roots, named systems, campaign state, or developer state.

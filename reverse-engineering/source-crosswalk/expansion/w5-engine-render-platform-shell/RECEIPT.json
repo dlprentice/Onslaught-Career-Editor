@@ -1,0 +1,84 @@
+{
+  "base_commit": "784367bd43f9ec13125521b00fe0c8352670ffdd",
+  "counts": {
+    "base_va_collisions": 0,
+    "definitions": 136,
+    "populated_va_collisions": 0,
+    "populated_vas": 9,
+    "retail_classifications": {
+      "NOT_IN_RETAIL": 23,
+      "NO_MATCH_FOUND": 104,
+      "SOURCE_ANALOG": 9
+    },
+    "retail_delta_statuses": {
+      "NOT_SELECTED_TARGET": 23,
+      "RETAIL_UNRESOLVED": 14,
+      "SOURCE_AGREES": 3,
+      "SOURCE_DIVERGES": 6,
+      "SOURCE_ONLY": 90
+    },
+    "reuse_disposition_artifacts": {
+      "EXTENDED": 6,
+      "NEW_MEASUREMENT": 0,
+      "REUSED": 13
+    },
+    "reuse_disposition_definitions": {
+      "EXTENDED": 136,
+      "NEW_MEASUREMENT": 0,
+      "REUSED": 0
+    },
+    "source_files": {
+      "DXEngine.cpp": 1,
+      "DXEngine.h": 6,
+      "EditorD3DApp.h": 11,
+      "PCEngine.h": 11,
+      "PCPlatform.h": 8,
+      "ResourceAccumulator.h": 8,
+      "d3dapp.h": 11,
+      "engine.h": 39,
+      "ltshell.cpp": 1,
+      "ltshell.h": 40
+    },
+    "stable_key_duplicates": 0
+  },
+  "guards": {
+    "binary_or_ghidra_mutation": false,
+    "canonical_crosswalk_unchanged": true,
+    "canonical_report_unchanged": true,
+    "exact_w5_file_set": true,
+    "files_deleted_moved_or_retired": false,
+    "generation32_catalogs_reused": true,
+    "new_generic_ps2_work": false,
+    "new_measurement_performed": false,
+    "retail_payloads_added": false,
+    "source_line_readback": true
+  },
+  "hashes": {
+    "REBUILD-DELTA.md": "efcb95cc7a33291bb88797467b7d009e23c662e7330c1d1b8e1f7b83aebdd366",
+    "RETAIL-DELTA.tsv": "e72edc4060aafa94b2a15b1ec978a8ed95d1d8cc0a8bb9a9be5241af38db4a03",
+    "SOURCE-CONTRACT.md": "a01dc91f5e4caee9bb28959ad7e83de2025cd391c9f6232231f5cea7887b8c49",
+    "base_crosswalk.tsv": "e37f13b37e9ce9d712174e35b86fc1f7ebcfc693fe9957448a8f39ff03829479",
+    "definitions.tsv": "074385f8fd1de291f55dec9c565beb07aad87a3e6adfa4767515b8b23c357060",
+    "function-c1-closure-2026-08-11.tsv": "cfe90af382269cb2e64996d10df7777bd00fcd8e1844b9823ef74bc6199b8974",
+    "ghidra-function-name-table-2026-08-17.tsv": "4590dff93f4ee85c5a5c3450139b2e696118646af3401f6eb9719dc4237d3213",
+    "validate.py": "2ab68c929e72f2ade4cd396c8055e9cc75814225c4498e47e6b616f90a07cfcc"
+  },
+  "predecessors": {
+    "local-lab/hermes-kanban-campaign-2026-08-22/source-first-expansion/EXECUTION.md": "12a0f72ea2b1606ee673824ee801586cefe815e0aa899d2fe55073e7c4509f18",
+    "local-lab/hermes-kanban-campaign-2026-08-22/source-first-expansion/PLAN.md": "604d5db76ecc9811b55321c5ec443f346c9be32515b6d8ed526142622d7ec393",
+    "local-lab/hermes-kanban-campaign-2026-08-22/source-first-expansion/manifest.json": "6f58de995a27a0088749f40e06907969d3213872b40d1bf0bb450afda1fd216e",
+    "local-lab/hermes-kanban-campaign-2026-08-22/source-first-expansion/partition.tsv": "bc36791975f43d5da6b584727df3eb7d29402e18c550dd3d96e01bba0c301fde",
+    "reverse-engineering/binary-analysis/function-c1-closure-2026-08-11.tsv": "cfe90af382269cb2e64996d10df7777bd00fcd8e1844b9823ef74bc6199b8974",
+    "reverse-engineering/binary-analysis/ghidra-fullpass-findings/W008/adversarial/B15.md": "a57fb6c7d35eefc4384f7faf56cb79aee77d0c9897d1c4aefe0f3ea770e3e7fd",
+    "reverse-engineering/binary-analysis/ghidra-fullpass-findings/W009/primary/A01.md": "bc1727dfb86d7f9f9aecf27a487e04796bfcf0986ace61cc82970578b9cb68b7",
+    "reverse-engineering/binary-analysis/ghidra-fullpass-findings/W009/primary/A02.md": "59524647a4f21496ad8a3f1247aecd2354b02119115796b61cbe2eee809abba8",
+    "reverse-engineering/binary-analysis/ghidra-fullpass-findings/W009/primary/A04.md": "70ebd87bd8905e7202dd439b3386739023573d95e8c6729237dece1a8911ed61",
+    "reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-17.tsv": "4590dff93f4ee85c5a5c3450139b2e696118646af3401f6eb9719dc4237d3213",
+    "reverse-engineering/binary-analysis/pcltshell-vtable-semantics-2026-08-11.tsv": "c1510d9baa0d6a633bf0d9514b7fc9ce3a5eb32070e1643181467ae2cffe7d1b",
+    "reverse-engineering/source-code/stuart-source-synthesis.md": "62c53e7e266b774c0d1ebe5c433203b9be08a972b911964ab3423fdbb86b417f",
+    "reverse-engineering/source-crosswalk/crosswalk.tsv": "e37f13b37e9ce9d712174e35b86fc1f7ebcfc693fe9957448a8f39ff03829479"
+  },
+  "schema": "bea.source-crosswalk.expansion-wave.v1",
+  "source_commit": "5352a81cdb838b145a57f7febc5d9fc4b0129ebb",
+  "wave": "W5_ENGINE_RENDER_PLATFORM_SHELL"
+}

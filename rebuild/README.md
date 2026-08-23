@@ -1,8 +1,8 @@
 # Onslaught Rebuild
 
 Status: early GPL reconstruction lane
-Last updated: 2026-08-22. The world-admission claims below (career-graph
-selector law, world-110 payload admission) are the newly re-reviewed surface.
+Last updated: 2026-08-22. The career read/load frontend slice and world-admission
+claims below are the newly re-reviewed surface.
 Other sections retain their narrower dated evidence boundaries.
 Summary: what the `rebuild/` lane is, who owns which assembly, and what the
 Level 100 Opening Slice does and does not currently do.
@@ -31,9 +31,12 @@ of readiness tooling.
 The current Godot app is the **Level 100 Opening Slice**. With locally
 materialized media, a plain launch plays the released Lost Toys logo, opening
 montage, and splash before click-to-start, v3 main-menu language, retail's
-career-name page, a Level 100-only level selector, the mission-briefing and
-select-configuration pages, and loading. Loading constructs the Level 100
-world; the first-time intro then plays before gameplay activation.
+career-name/load page, the bounded Godot level selector, the mission-briefing
+and select-configuration pages, and loading. Loading constructs the Level 100
+world; the first-time intro then plays before gameplay activation. Repeating
+`--career-save=<path>` opts in exact named career files for the Load Game list;
+the host performs no directory or installed-save discovery and never writes
+those files.
 `--skipfmv`, smoke, and capture modes suppress those video sequences. Their
 Bink audio streams are not decoded, so video playback is currently silent.
 (*Extended 2026-07-28: this read "click-to-start page, v3 main-menu language, a
@@ -175,10 +178,10 @@ Controls:
 ## Current truth
 
 The frontend owns click-to-start, Main Menu, the Quit confirmation, DevSelect
-(retail's `CHOOSE GAME NAME` page, implemented visually and sequentially only —
-no save and no career persistence), Options, the career-law level selector,
-Mission Briefing, Select Configuration, Loading, and the Level 100 intro
-cutscene. The
+(retail's `CHOOSE GAME NAME` surface for a new name or an injected read-only
+career selection), Options, Client's career-law selection state, the bounded
+Godot level-selector page, Mission Briefing, Select Configuration, Loading, and
+the Level 100 intro cutscene. The
 `RetailFrontendScreen` enum in
 `rebuild/OnslaughtRebuild.Client/RetailFrontendSession.cs` is authoritative for
 that list; read it rather than this sentence when the two disagree.
@@ -186,6 +189,25 @@ that list; read it rather than this sentence when the two disagree.
 Main Menu, the Level 100-only selector, and Loading." The word "only" made it a
 completeness claim and it was false — five further screens were already declared
 and shipping. Nothing was removed; the list was understated.*)
+`RetailCareerSaveCodec` is a deterministic Core reader over a caller-supplied
+byte span. It accepts only the measured 10,004-byte / `0x4BD1` PC container,
+validates the 43 campaign nodes and 86 structural link rows, retains a private
+copy of every byte (including reserved/options/tail bytes), and exposes the
+current completion/grade, Goodie-count, selectable-world, and latest-selectable
+summary. It has no load-by-path, serializer, or write API. Tests use only
+`tests_shared/fixtures/gold_career_save.bin` (10,004 bytes, SHA-256
+`0c17e47db9d666e9b26ef88d43d0a25e7cbfbf4f88c8005cc748965050e506fb`).
+The Godot adapter reads only repeated explicit `--career-save=<path>` arguments
+and injects slot/name descriptors into Client in argument order. Load Game then
+owns bounded selection, accept/back, and a one-shot selected-career handoff;
+there is still no implicit save scan, save creation, overwrite, autosave,
+debrief persistence, or options-tail application. A loaded model remains
+immutable; merging a later Won update back into that model is also still open.
+Core/Client can carry any loaded career's `SuggestedWorldNumber`, and
+`SelectWorld` applies the released career unlock law. The current Godot page
+does not project that general state: it does not read `SelectedWorldNumber` for
+rendering or implement LevelSelect keyboard traversal, its pointer path exposes
+only world 100 and unlocked world 110, and the host constructs only world 100.
 (*Updated 2026-08-22: the selector is no longer Level-100-only by law. The
 session carries the released 43-node career graph
 (`OnslaughtRebuild.Core/RetailWorldCatalog.cs`, Stuart's pinned
@@ -207,7 +229,7 @@ the child.*
 Each launch request makes the host construct a fresh canonical
 `InteractiveSession` from the materialized Level 100 actor definitions before
 gameplay activation. The frontend does not inspect
-`WorldSnapshot.Level100Mission` or own gameplay, save, result, or later
+`WorldSnapshot.Level100Mission` or own gameplay, save writes, result, or later
 campaign-selection state. `RestartLevel100` returns through the same Loading
 edge; `LeaveLevel100ForMainMenu` disposes the active world and returns to the
 same frontend shell.
@@ -219,7 +241,7 @@ existing lifecycle seams after the audio owner completes its kill-then-Select
 exit boundary once. Message Log, Briefing, and the three settings rows remain
 visible but disabled until canonical integrated owners exist. The current
 opening slice does not synthesize terminal events, rank, kill summary, or
-save. Campaign progression after Won is the already-pinned FillOut update
+save writes. Campaign progression after Won is the already-pinned FillOut update
 applied to the selector career, then SELECT LEVEL — not a synthesized
 debrief. `FrontendAudioCueRequested` is an observation
 seam; the existing Level 100 audio owner remains the sole playback owner.
@@ -236,16 +258,57 @@ approximation.
 
 World admission is no longer Level-100-only in Core (2026-08-22): the released
 43-node career graph lives in `RetailWorldCatalog` with its selectability law,
-and world 110 — the second career node — is admitted from its own measured
-payloads. `materialize_retail_assets.py` pins `data/resources/110_res_PC.aya`
+world 110 — the second career node — is admitted from its own measured
+payloads, world 200 — the third node — joins it, and the separately measured
+world-300 main-episode payload is admitted without pretending its enclosing
+level-world header shares the earlier shape.
+`materialize_retail_assets.py` pins `data/resources/110_res_PC.aya`
 (SHA-256 `4e041c75…3c2b`) and walks out its 13 version-50 script objects plus
 the HFLD envelope into `Assets/Level110/`; `Level100MissionProgram.LoadEmbedded`
 admits them per-world under the same hash law as Level 100 (world 110's
 LevelScript: 181 instructions, 92 symbols, five named events), and
 `Level100Terrain.World110` carries the heightfield under the same envelope law.
 No simulation consumes the world-110 payloads yet; no world-110 FillOut, VM
-run, or session owner exists. The pattern generalizes to further worlds by
-adding their pinned rows, not new code shapes.
+run, or session owner exists. The level-world actor table is now measured
+(40 RLWD initial actors, header `(2, 0, 40)`; types 19 and 28 are trailers
+Level 100 does not use) and the BSWD island is byte-identical to Level 100
+(`04c5a383…10f4`). RLWD ordinal 0 is the LevelScript object, not a Battle
+Engine — there is no authored Player 1 to construct.
+
+World 200 (2026-08-22) generalizes that pattern and measures three places the
+shared law needed refining: `data/resources/200_res_PC.aya` (SHA-256
+`99dbd433…b77`) yields fourteen script objects into `Assets/Level200/`
+(LevelScript: 413 instructions, 169 symbols, sixteen named events), the HFLD
+envelope — found inside ERES by the same whole-image tag/size/hash scan as
+worlds 100 and 110 — lands in
+`Level100Terrain.World200`, and `RetailWorld200LevelActors` pins the census:
+actor header `(3, 0, 54)`, post-zeros word **2** (earlier worlds carry 1),
+and an own 80,232-byte BSWD (`9c0575ea…adba`) instead of the shared island.
+The named-event identifier source is now value-text-first with symbol-name
+fallback in `Level100MissionProgram.Parse`, which worlds 100/110 satisfy
+unchanged. No world-200 actor-table record walk has been completed yet; no
+simulation consumes any of these payloads, and there is still exactly one
+constructed session owner (Level 100).
+
+World 300 (2026-08-22) is the explicit falsifier for treating "version 50" as
+one RLWD preamble. `data/resources/300_res_PC.aya` (SHA-256
+`7293bcbe…9efe4`, 1,927,844 bytes) carries header words `(3, 47, 300)`, then
+three names — `Standard`, `Laser`, `Blaster` — and trailing words
+`(1, 1, 1, 0, 3)`, where worlds 100/110/200 carry `(3, 41, world)`, one
+`Aquila Prototype` name, and zeroes before the final variant word. The
+materializer therefore models an exact `_WorldLevelHeader` per variant and
+drives all later-world extraction from `LATER_WORLD_ADMISSIONS`; it does not
+copy a third extraction block or weaken the header check. Its eight hash-pinned
+compiled objects land in `Assets/Level300/`; the main object is released as
+`Level300script`, not `LevelScript` (448 instructions, 197 symbols, ten named
+events). The 668,660-byte framed HFLD remains inside ERES
+(`68a181f9…acb1a`), while WRES owns world 300's distinct 77,113-byte BSWD
+payload (`3c153d55…0dfc`). The actor header after the script region is
+`(10, 0, 36)`. `RetailWorldCatalog.FindPayloadCensus(300)` pins those measured
+facts without naming the unknown header words. No complete per-type walk of
+the 36 actor records is promoted: the partial probe reaches a type-38 trailer
+whose wider record law is unresolved. No world-300 VM run, actor projection,
+or session owner exists, and the only constructed world remains Level 100.
 
 The walker now consumes the shipped Aquila configuration's exact `1.0/75`
 yaw-input gain instead of the older fitted `1.7/75` value. Terrain touchdown

@@ -264,6 +264,14 @@ public sealed partial class RetailFrontendFlow : Control
     private const float BriefingBodyLeft = 80f;
     private const float BriefingBodyTop = 163.5f;
     private const float BriefingBodyPitch = 16f;
+
+    /// <summary>
+    /// The widest briefing line retail drew: the pristine capture's longest
+    /// line carries 286px of this renderer's advances (283px measured ink,
+    /// within the known +2..+6 overshoot). WrapBriefingParagraphs breaks a
+    /// candidate line only when it would exceed this.
+    /// </summary>
+    private const float BriefingBodyInkCeiling = 286f;
     // Retail's blank line does NOT advance a full 16: measured ink tops run
     // 167,183,199,215,231,247 then 273,289, so the paragraph break adds 10 on
     // top of the line the last paragraph line already advanced (247+16+10=273).
@@ -291,10 +299,12 @@ public sealed partial class RetailFrontendFlow : Control
     private const float LoadingBarHeight = 25f;
 
     /// <summary>
-    /// The briefing body, transcribed from the pristine capture. There is no
-    /// resolved string id for it in the materialized table, so this is the one
-    /// literal block on the page that is not localization-backed — the same
-    /// position "Episode 1" is in on FEP_LEVEL_SELECT.
+    /// The briefing body, transcribed from the pristine capture. The
+    /// localization backing for it WAS later found — english.dat carries the
+    /// full sentences (pool slots after 0x015F8838/0x01625641) — so this
+    /// literal is now only the world-100 receipt used when no session body
+    /// is available, and the wrap-law test target: WrapBriefingParagraphs
+    /// must reproduce these breaks from the table text.
     ///
     /// The transcription is corroborated, not assumed: summing this renderer's
     /// per-glyph advances for each line against the measured retail ink widths
@@ -553,7 +563,7 @@ public sealed partial class RetailFrontendFlow : Control
     private int _mainTransitionCount;
     private int _mainTransitionTime;
 
-    private readonly RetailFrontendSession _session = new();
+    private RetailFrontendSession _session = new();
     private readonly Dictionary<RetailFrontendMenuItemKind, string> _menuText = [];
 
     private Texture2D _clickBackground = null!;
@@ -583,6 +593,10 @@ public sealed partial class RetailFrontendFlow : Control
     private Texture2D[] _menuIcons = [];
     private int[] _glyphWidths = [];
     private string _selectLevelText = string.Empty;
+    // The level-select name band and the briefing page draw the SELECTED
+    // node's row through _session.SelectedLevelName; this field stays as the
+    // localization-table load receipt (english.json "level100") and feeds
+    // nothing on its own.
     private string _level100Text = string.Empty;
     private string _loadingText = string.Empty;
     // Localization__GetStringById(0xe4) — English table in BEA.exe, not english.dat.
@@ -611,19 +625,23 @@ public sealed partial class RetailFrontendFlow : Control
 
     public event Action? ReturnToMainMenuRequested;
 
+    public event Action<RetailCareerDescriptor>? CareerSelected;
+
     public event Action<RetailFrontendAudioCue>? AudioCueRequested;
 
     public event Action<RetailFrontendCursorMode>? CursorModeRequested;
 
     internal RetailFrontendScreen CurrentScreen => _session.Screen;
 
-    public void Initialize()
+    public void Initialize(IReadOnlyList<RetailCareerDescriptor> careerDescriptors)
     {
         if (_initialized)
         {
             throw new InvalidOperationException("The retail frontend is already initialized.");
         }
 
+        ArgumentNullException.ThrowIfNull(careerDescriptors);
+        _session = new RetailFrontendSession(careerDescriptors);
         LoadLocalization();
         LoadTextures();
         _feBackFrames = LoadFeBackFrames();
@@ -2192,10 +2210,13 @@ public sealed partial class RetailFrontendFlow : Control
     }
 
     /// <summary>
-    /// Retail FEP_DEVSELECT — the "CHOOSE GAME NAME" page reached from New Game.
+    /// Retail FEP_DEVSELECT — the "CHOOSE GAME NAME" page reached from New Game
+    /// and Load Game.
     ///
-    /// Implemented visually and sequentially only; this lane carries no save or
-    /// career persistence, so the career list is structurally present and empty.
+    /// New mode renders the editable name field; Load mode renders caller-injected
+    /// read-only career rows. Client owns bounded row selection, accept/back, and
+    /// the selected-career handoff. This lane carries no career persistence or
+    /// implicit save discovery.
     ///
     /// Geometry is MEASURED from the pristine 640x480 retail capture
     /// local-lab/retail-reference-pristine/choose-game-name/choose-game-name-640x480.png
@@ -2226,9 +2247,9 @@ public sealed partial class RetailFrontendFlow : Control
     /// </summary>
     private void DrawDevSelect()
     {
-        // Settled: this lane models no transition into FEP_DEVSELECT, and its
-        // entry length is not evidenced. Passing 1 keeps this page byte-identical
-        // to what it drew before the transition machine existed.
+        // Settled: the transition length into FEP_DEVSELECT is not evidenced.
+        // Passing 1 keeps its settled rendering while both New Game and Load Game
+        // use the Client-owned page state.
         DrawMainUnderlay(1f);
 
         // Faint crosshair guides, present on this page and on the retail main
@@ -2625,8 +2646,13 @@ public sealed partial class RetailFrontendFlow : Control
             new Vector2(LevelSelectEpisodeLeft, LevelSelectEpisodeTop),
             LevelSelectBodyScale,
             Colors.White);
+        // The name band follows the SELECTED node: the language table carries
+        // an N.NN row for every career world (english-worlds.json slot law),
+        // and retail's own selector reads the loaded career — the band showing
+        // the selected node's row is the only law consistent with shipped
+        // data (PARITY.md 2026-08-22; FEPLevelSelect.cpp is not in the drop).
         DrawText(
-            _level100Text,
+            _session.SelectedLevelName,
             new Vector2(LevelSelectEpisodeLeft, LevelSelectLevelNameTop),
             LevelSelectBodyScale,
             ReleasedSelected);
@@ -2858,14 +2884,24 @@ public sealed partial class RetailFrontendFlow : Control
         DrawHeaderBarTitle(MissionBriefingTitle);
 
         DrawFont22Text(
-            _level100Text,
+            _session.SelectedLevelName,
             new Vector2(BriefingLevelNameLeft, BriefingLevelNameTop),
             BriefingLevelNameScaleX,
             BriefingLevelNameScaleY,
             ReleasedTitleText);
 
+        // The briefing body is the SELECTED world's own authored pair from
+        // the language table (nine-slot pool law; worlds 611/612/621/622
+        // carry a measured third paragraph). The static transcription below
+        // stays only as the byte-identical world-100 receipt for the case
+        // where no localization document is loaded; an empty session body
+        // must draw NOTHING, never another world's copy.
+        IReadOnlyList<string> briefingBody =
+            _session.SelectedBriefingBody.Count > 0
+                ? _session.SelectedBriefingBody
+                : BriefingBody;
         float y = BriefingBodyTop;
-        foreach (string line in BriefingBody)
+        foreach (string line in WrapBriefingParagraphs(briefingBody))
         {
             if (line.Length == 0)
             {
@@ -2878,6 +2914,56 @@ public sealed partial class RetailFrontendFlow : Control
         }
 
         DrawPageChevrons();
+    }
+
+    /// <summary>
+    /// Word-wraps the briefing paragraphs at the measured retail ink ceiling.
+    ///
+    /// The pristine capture's longest briefing line carries 286px of this
+    /// renderer's advances (283px measured ink, within the known +2..+6
+    /// overshoot), so 286 is the widest line retail drew. Greedy wrapping —
+    /// keep adding words while the line fits, else break — reproduces world
+    /// 100's transcribed breaks exactly under that ceiling (asserted by
+    /// <c>RetailFrontendFlowWrapTests</c>); other worlds get the same law
+    /// rather than invented breaks.
+    /// </summary>
+    private IReadOnlyList<string> WrapBriefingParagraphs(
+        IReadOnlyList<string> paragraphs)
+    {
+        var lines = new List<string>();
+        foreach (string paragraph in paragraphs)
+        {
+            if (paragraph.Length == 0)
+            {
+                lines.Add(string.Empty);
+                continue;
+            }
+
+            string current = string.Empty;
+            foreach (string word in paragraph.Split(' '))
+            {
+                string candidate = current.Length == 0
+                    ? word
+                    : current + " " + word;
+                if (current.Length > 0 &&
+                    MeasureText(candidate, 1f) > BriefingBodyInkCeiling)
+                {
+                    lines.Add(current);
+                    current = word;
+                }
+                else
+                {
+                    current = candidate;
+                }
+            }
+
+            if (current.Length > 0)
+            {
+                lines.Add(current);
+            }
+        }
+
+        return lines;
     }
 
     /// <summary>
@@ -3258,8 +3344,8 @@ public sealed partial class RetailFrontendFlow : Control
             return HandleOptionsKey(key);
         }
 
-        // The FEP_DEVSELECT name field is editable; retail pre-fills it from the
-        // highlighted list entry and lets the player type over it.
+        // New-career FEP_DEVSELECT is editable; Load mode mirrors the selected
+        // injected save name and RetailFrontendSession rejects edits.
         if (_session.Screen == RetailFrontendScreen.DevSelect)
         {
             if (IsKey(key, Key.Backspace))
@@ -3414,6 +3500,15 @@ public sealed partial class RetailFrontendFlow : Control
             CursorModeRequested?.Invoke(RetailFrontendCursorMode.Custom);
             ReturnToMainMenuRequested?.Invoke();
         }
+        else if (signal == RetailFrontendSignal.CareerLoadRequested)
+        {
+            RetailCareerDescriptor selectedCareer =
+                _session.ConsumeSelectedCareerLoadRequest()
+                ?? throw new InvalidOperationException(
+                    "CareerLoadRequested did not carry a selected career descriptor.");
+            CareerSelected?.Invoke(selectedCareer);
+            CursorModeRequested?.Invoke(RetailFrontendCursorMode.Custom);
+        }
         else if (signal == RetailFrontendSignal.PageChanged)
         {
             CursorModeRequested?.Invoke(RetailFrontendCursorMode.Custom);
@@ -3491,7 +3586,15 @@ public sealed partial class RetailFrontendFlow : Control
         // Messbox copy is Localization id 0xe4 (EXE table), not drawn on the row.
         _menuText.Add(RetailFrontendMenuItemKind.Quit, RequiredString(strings, "quit"));
         _selectLevelText = RequiredString(strings, "selectLevel");
+        // The band and briefing draw the SELECTED node's row through
+        // RetailFrontendWorldStrings; this load receipt stays as the proof
+        // the menu table itself is present and identity-checked.
         _level100Text = RequiredString(strings, "level100");
+        if (_level100Text != OnslaughtRebuild.Core.RetailFrontendWorldStrings.LevelName(100))
+        {
+            throw new InvalidDataException(
+                "english.json level100 row diverged from the decoded world-strings table.");
+        }
         _loadingText = RequiredString(strings, "loading");
     }
 

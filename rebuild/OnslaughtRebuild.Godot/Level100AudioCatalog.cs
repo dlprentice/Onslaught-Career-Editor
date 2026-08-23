@@ -506,7 +506,31 @@ public static class Level100AudioCatalog
         _ => throw new ArgumentOutOfRangeException(nameof(cue)),
     };
 
-    public static float ToRetailOptionMix(float optionValue)
+    /// <summary>
+    /// Released <c>CSoundManager::SetMasterVolume</c> at <c>0x004E04C0</c>:
+    /// store the supplied option float directly. The retained PC tangent curve
+    /// is a source/release divergence and is not applied here.
+    /// </summary>
+    public static float ToRetailSoundMasterVolume(float optionValue)
+    {
+        ValidateAudioOption(optionValue);
+        return optionValue;
+    }
+
+    /// <summary>
+    /// Released <c>CMusic::SetVolume</c> at <c>0x004BBA10</c>: round the supplied
+    /// option float multiplied by 127 into the integer set-volume field. The
+    /// original float remains the career value outside this presentation owner.
+    /// </summary>
+    public static int ToRetailMusicSetVolume(float optionValue)
+    {
+        ValidateAudioOption(optionValue);
+        return checked((int)MathF.Round(
+            optionValue * 127f,
+            MidpointRounding.ToEven));
+    }
+
+    private static void ValidateAudioOption(float optionValue)
     {
         if (!float.IsFinite(optionValue) || optionValue is < 0f or > 1f)
         {
@@ -515,11 +539,6 @@ public static class Level100AudioCatalog
                 optionValue,
                 "Audio option values must be finite and between zero and one.");
         }
-
-        const float curve = 1.38f;
-        float mix = 1f -
-            (MathF.Tan((1f - optionValue) * curve) / MathF.Tan(curve));
-        return Math.Clamp(mix, 0f, 1f);
     }
 
     // ------------------------------------------------------------------

@@ -26,6 +26,38 @@ public sealed record RetailWorldNode(
     int SecondaryBaseWorld);
 
 /// <summary>
+/// Exact measured RLWD preamble before one world's compiled script objects.
+/// The words are intentionally unnamed: available evidence proves their
+/// serialized values and position, not their retail field identities.
+/// </summary>
+public sealed record RetailWorldLevelHeader(
+    int Version,
+    IReadOnlyList<int> HeaderWords,
+    IReadOnlyList<string> Names,
+    IReadOnlyList<int> TrailingWords);
+
+/// <summary>
+/// Bounded payload census for a measured career world. A census admits bytes
+/// and structure only; it does not claim a constructible simulation session.
+/// </summary>
+public sealed record RetailWorldPayloadCensus(
+    int WorldNumber,
+    int ArchiveBytes,
+    string ArchiveSha256,
+    int LevelWorldBytes,
+    RetailWorldLevelHeader LevelHeader,
+    int ScriptObjectCount,
+    int ActorHeaderA,
+    int ActorHeaderB,
+    int InitialActorCount,
+    string HeightfieldOwnerTag,
+    int HeightfieldEnvelopeBytes,
+    string HeightfieldEnvelopeSha256,
+    string BaseWorldOwnerTag,
+    int BaseWorldPayloadBytes,
+    string BaseWorldPayloadSha256);
+
+/// <summary>
 /// The released 43-node career graph and the world laws that hang off it.
 ///
 /// <para><b>Authority.</b> The table is Stuart's pinned
@@ -120,7 +152,45 @@ public static class RetailWorldCatalog
                 row.SecondaryBase))
             .ToArray();
 
+    /// <summary>
+    /// Generalized census entries added after the earlier specialized
+    /// world-110/world-200 measurements. This is deliberately not a claim that
+    /// every graph node has been measured. World 300 is the first payload whose
+    /// three-name/non-zero RLWD preamble falsified the old shared-header model.
+    /// </summary>
+    private static readonly RetailWorldPayloadCensus[] s_payloadCensuses =
+    [
+        new(
+            300,
+            1_927_844,
+            "7293BCBE3CBB6C88B2E19A287CB53DE132A8BCADD6C2736B0DA7483726C9EFE4",
+            78_848,
+            new RetailWorldLevelHeader(
+                50,
+                [3, 47, 300],
+                ["Standard", "Laser", "Blaster"],
+                [1, 1, 1, 0, 3]),
+            8,
+            10,
+            0,
+            36,
+            "ERES",
+            668_660,
+            "68A181F9EC3099A0BE52BF4A063350A35E43C20664F2E07572BDB44D472ACB1A",
+            "WRES",
+            77_113,
+            "3C153D55605B9E82A8827640D8E11084514F949E043200E9141B2185256C0DFC"),
+    ];
+
     public static IReadOnlyList<RetailWorldNode> Nodes => s_nodes;
+
+    /// <summary>
+    /// Non-exhaustive measured payload censuses. Graph membership remains
+    /// authoritative in <see cref="Nodes"/>; a row here does not make a world
+    /// constructible.
+    /// </summary>
+    public static IReadOnlyList<RetailWorldPayloadCensus> MeasuredPayloadCensuses =>
+        s_payloadCensuses;
 
     /// <summary>
     /// The released level-archive law: every career world's resources ship as
@@ -134,6 +204,10 @@ public static class RetailWorldCatalog
 
     public static RetailWorldNode? Find(int worldNumber) =>
         s_nodes.FirstOrDefault(node => node.WorldNumber == worldNumber);
+
+    /// <summary>Finds a measured payload census without inventing missing rows.</summary>
+    public static RetailWorldPayloadCensus? FindPayloadCensus(int worldNumber) =>
+        s_payloadCensuses.FirstOrDefault(census => census.WorldNumber == worldNumber);
 
     /// <summary>Column 1 of the finished node's row — the primary next world.</summary>
     public static int? LowerChildWorld(int worldNumber) => ChildWorld(Find(worldNumber)?.LowerChildIndex);

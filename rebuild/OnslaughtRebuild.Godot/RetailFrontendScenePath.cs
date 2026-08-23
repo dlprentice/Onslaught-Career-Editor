@@ -8,7 +8,7 @@ namespace OnslaughtRebuild.GodotClient;
 /// <summary>
 /// The Godot scene's player-visible frontend path: Lost Toys / opening
 /// FMV / splash skip, then CFEPIntro click-to-start, then CFEPMain row
-/// accept (Campaign / Options / Exit), then Options apply pulse and
+/// accept (Campaign / Load / Options / Exit), then Options apply pulse and
 /// dropdown confirm / right-click cancel, then New Game campaign accept
 /// (DevSelect / LevelSelect / Briefing / Config / Loading), campaign
 /// Back, QuitConfirm Yes/No, then Loading → Gameplay (and the
@@ -115,7 +115,7 @@ public sealed class RetailFrontendScenePath
         }
 
         return TryConfirmPage(session, StartupMediaActive, out RetailFrontendSignal signal)
-            && signal == RetailFrontendSignal.PageChanged
+            && signal is RetailFrontendSignal.PageChanged or RetailFrontendSignal.CareerLoadRequested
             && session.Screen == RetailFrontendScreen.LevelSelect;
     }
 

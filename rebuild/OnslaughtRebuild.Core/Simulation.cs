@@ -229,7 +229,8 @@ public sealed class Simulation
             new SimVector2(position.X, position.Z),
             position.Y,
             new SimVector2(velocity.X, velocity.Z),
-            velocity.Y);
+            velocity.Y,
+            transitionPose: false);
     }
 
     /// <summary>
@@ -568,7 +569,8 @@ public sealed class Simulation
         SimVector2 position,
         int elevationMillimeters,
         SimVector2 velocity,
-        int verticalVelocityMillimetersPerTick)
+        int verticalVelocityMillimetersPerTick,
+        bool transitionPose = true)
     {
         FixedBodyBasis body = GetBodyBasis();
         long upX = ((long)body.ForwardY * body.RightZ) -
@@ -595,22 +597,28 @@ public sealed class Simulation
             Bits(rightX), Bits(upComponentX), Bits(forwardX),
             Bits(rightY), Bits(upComponentY), Bits(forwardY),
             Bits(rightZ), Bits(upComponentZ), Bits(forwardZ));
-        _level100Actors.SetPose(
-            _level100PlayerActorId,
-            new Level100ActorPoseSnapshot(
-                new SimVector3(
-                    position.X,
-                    elevationMillimeters,
-                    position.Z),
-                basis,
-                new SimVector3(
-                    velocity.X,
-                    verticalVelocityMillimetersPerTick,
-                    velocity.Z),
-                new SimVector3(
-                    _walkerPitchVelocityMicroRadPerTick,
-                    _walkerYawVelocityMicroRadPerTick,
-                    _rollVelocityMicroRadPerTick)));
+        var pose = new Level100ActorPoseSnapshot(
+            new SimVector3(
+                position.X,
+                elevationMillimeters,
+                position.Z),
+            basis,
+            new SimVector3(
+                velocity.X,
+                verticalVelocityMillimetersPerTick,
+                velocity.Z),
+            new SimVector3(
+                _walkerPitchVelocityMicroRadPerTick,
+                _walkerYawVelocityMicroRadPerTick,
+                _rollVelocityMicroRadPerTick));
+        if (transitionPose)
+        {
+            _level100Actors.AdvancePose(_level100PlayerActorId, pose);
+        }
+        else
+        {
+            _level100Actors.UpdateCurrentPose(_level100PlayerActorId, pose);
+        }
     }
 
     private void SyncLevel100PlayerState()
@@ -624,7 +632,8 @@ public sealed class Simulation
             new SimVector2(
                 pose.LinearVelocityMillimetersPerTick.X,
                 pose.LinearVelocityMillimetersPerTick.Z),
-            pose.LinearVelocityMillimetersPerTick.Y);
+            pose.LinearVelocityMillimetersPerTick.Y,
+            transitionPose: false);
         _level100ActorScripts.SetPlayerFlightState(
             _mode,
             _transition,
@@ -1315,7 +1324,8 @@ public sealed class Simulation
             PlayerPosition,
             PlayerElevationMillimeters,
             retainedVelocity,
-            verticalVelocity);
+            verticalVelocity,
+            transitionPose: false);
     }
 
     private void UpdateTransitionMovement()
@@ -3890,7 +3900,8 @@ public sealed class Simulation
             _playerGroundElevationMillimeters +
                 Level100Terrain.WalkerCenterOfGravityMillimeters,
             SimVector2.Zero,
-            0);
+            0,
+            transitionPose: false);
         BuildWalkerFeet();
         _level100ActorScripts = new Level100ActorScriptRuntime(
             _level100Actors,
