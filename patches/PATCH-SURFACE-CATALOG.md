@@ -2733,3 +2733,50 @@ and machine-wide BEA/Godot checks were clear before and after the run. The copy
 was restored to the 29-row product baseline afterward (cleanup SHA-256
 `b49378d6…`). **No confidence promotions:** launch-safety does not observe any
 row's named mesh/LOD behavior.
+
+### Batch 5 — bounded mesh/LOD behavior attempt (2026-08-22)
+
+This wave tried to observe the nine Batch-4 rows without treating their already
+closed launch-safety screen as behavior evidence. Every run used only the
+app-owned `ps2-baseline` copy; pristine backup SHA-256 `74154bfa…`, the 29-row
+product baseline, copied options, and both real copied saves were asserted and
+snapshotted before mutation. Browser and global input were not used.
+
+The six `CRTMesh::SetQualityLevel` lod-bias/scale writers first required a
+visible frontend Geometry-detail transition. PID 15252 and the later route
+calibration PID 2688 were marked **VOID** before Level 100 because neither
+performed that transition. Corrected stock PID 20928 reached Video Options;
+its target-window receipt read back cursor globals `(350,233)` on the visible
+`Geometry detail: Medium` row and delivered extended RIGHT
+(`lParam 0x014D0001`). The retained page and options tail nevertheless stayed
+Medium (`30/1/1/30`), so the writer invocation prerequisite failed. No pixels
+from these runs test `0x004DD6D4`, `0x004DD709`, `0x004DD741`, `0x004DD6DE`,
+`0x004DD713`, or `0x004DD74B`; all six remain STATIC_ONLY. Their cheapest
+falsifier still begins with a captured Geometry transition and matching tail
+readback before any visual comparison.
+
+The non-rewritten `cg_meshlodmedthreshold` row `0x00631E8C` then received one
+isolated A/B. Stock PID 48560 used 10.0f. PID 4108 staged only that row to
+20.0f, with exact readback and staged executable SHA-256 `c771c1c1…`. Both ran
+the same stock-high `-skipfmv -level 100`, no-input 75-second capture and ended
+with `collision=false`. The intro sequences entered at different Present-frame
+phases; retained image offsets were dominated by camera-pan/lighting phase, and
+the capture did not emit per-frame camera-transform or matched draw/mesh
+identity. Therefore no defensible outward medium-LOD swap was isolated and
+`0x00631E8C` remains STATIC_ONLY.
+
+The shared attribution prerequisite had failed, so the serialized steward
+stopped the method rather than repeat the same non-falsifying screenshot fit for
+`0x00631E90` or `0x00631EA0`. Those rows also remain STATIC_ONLY. Their TSV
+verification fields now state the required next instrument explicitly: a
+transform-pinned static Level-100 camera with matched draw/mesh identity.
+
+After every completed control the copy was restored and read back: product
+`BEA.exe` SHA-256 `b49378d6…`, `defaultoptions.bea` SHA-256 `6ffcd7b6…`
+(`70/0.3/2/40`), both copied saves SHA-256 `9aec08ac…`, capture proxy absent,
+and zero BEA/Godot/WinUI processes. Retained local receipts live under
+`local-lab/patch-surface-phase2/lod-behavior-wave/`. **No confidence changes:**
+the histogram remains 32 MEASURED / 231 STATIC_ONLY. The exact tracked scope is
+this receipt plus the three verification-text edits in
+`patches/patch-surface-rows.tsv`; no catalog JSON or product implementation
+changed.
