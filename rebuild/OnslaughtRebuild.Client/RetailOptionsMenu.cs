@@ -15,12 +15,14 @@ namespace OnslaughtRebuild.Client;
 /// <c>local-lab/OPTIONS-PAGE-RECOVERY-2026-07-27.md</c>; the pixels are the nine
 /// PNGs in <c>local-lab/retail-captures-options-pause-2026-07-27/</c>.
 ///
-/// What IS in the drop, and is ported here rather than re-derived, is everything
-/// the page writes to: the career option fields and their defaults
-/// (<c>Career.h:201-207</c>, <c>Career.cpp:173-177</c>), the two volume curves
-/// (<c>SoundManager.cpp:156-173</c>, <c>Music.cpp:557-573</c>), the invert-Y
-/// pitch negation (<c>Player.cpp:325-332</c>), and the four controller
-/// configurations (<c>PCController.cpp:91-136</c>).
+/// What IS in the drop, and is ported here rather than re-derived, is the career
+/// option fields and their defaults (<c>Career.h:201-207</c>,
+/// <c>Career.cpp:173-177</c>), the invert-Y pitch negation
+/// (<c>Player.cpp:325-332</c>), and the four controller configurations
+/// (<c>PCController.cpp:91-136</c>). Released PC volume setters diverge from the
+/// retained curves: sound stores the supplied float directly, while music stores
+/// <c>round(volume * 127)</c> and preserves the original career float. Downstream
+/// device math and audible parity remain unproved.
 ///
 /// <para><b>What retail proves about the tree's shape.</b></para>
 /// One <c>PauseMenu__Init</c> (<c>0x004CDE60</c>) builds both the in-game pause
@@ -521,14 +523,12 @@ public sealed class RetailOptionsMenu
     public static float VolumeValue(int index) =>
         Math.Clamp(index, 0, VolumeMaxValue) / (float)VolumeMaxValue;
 
-    // The PC master-volume curve is deliberately NOT reproduced here.
-    // references/Onslaught/SoundManager.cpp:161-165 and Music.cpp:562-567 both
-    // write the RAW slider value back to the career and apply tan(x*1.38) only on
-    // the way to the mixer, so the option value is the sourced quantity and the
-    // mix is derived from it. This lane already owns that derivation once, in
-    // Level100AudioCatalog.ToRetailOptionMix; a second copy here would be the
-    // "two copies of one fact drift" hazard the audio owner's own comment warns
-    // about. These rows store the slider position and the audio owner curves it.
+    // These rows retain the raw slider/career float. Released PC conversion
+    // splits downstream: CSoundManager::SetMasterVolume at 0x004E04C0 stores the
+    // sound float directly, while CMusic::SetVolume at 0x004BBA10 stores
+    // round(volume * 127) and preserves the original career float. The Godot
+    // audio owner adapts those distinct values at its presentation boundary;
+    // this Client lane does not infer DirectSound or audible-volume device math.
 
     /// <summary>
     /// Move an expanded dropdown's pending selection straight to
@@ -1114,8 +1114,9 @@ public sealed record RetailOptionsHostCapabilities(
 public sealed class RetailOptionsSettings
 {
     /// <summary>
-    /// <c>references/Onslaught/Career.cpp:173</c>. The curve is applied on the way
-    /// to the mixer, never to the stored value.
+    /// <c>references/Onslaught/Career.cpp:173</c> supplies the authored raw career
+    /// value. Released <c>CSoundManager::SetMasterVolume</c> at <c>0x004E04C0</c>
+    /// stores that supplied float directly; the retained curve is not applied.
     /// </summary>
     public float SoundVolume { get; set; } = 0.8f;
 
