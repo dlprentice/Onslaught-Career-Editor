@@ -7,8 +7,9 @@
   disagree, the measurement wins.
 - **Last updated:** 2026-08-22
 - **Summary:** all 43 career nodes and all 23 additional numeric worlds shipped
-  in the pristine PC resource shelf, with one section per world and an honest
-  boundary between graph fact, observed mechanics, and unknown purpose.
+  in the pristine PC resource shelf, plus the two distinct PS2-only world
+  containers, with an honest boundary between graph fact, observed mechanics,
+  and unknown purpose.
 
 ## What a world is
 
@@ -26,10 +27,12 @@ are:
 A strict read-only basename census finds this exact same 66-ID set in Xbox
 Europe, Korea, and USA. PS2 differs: its exact `DATA0.NYO` index has 67 numeric
 resource names, sharing 65 IDs with PC/Xbox, adding `000` and `888`, and omitting
-a numeric `201_res_PS2.aya` row. These are presence facts, not career-node or
-byte-parity claims; the purpose and reach of `000`/`888` remain unknown. Xbox
-Europe also has different resource bytes for 612, 856, and 863. See [The Same
-War on Different Platforms](platform-content-variants.md).
+a numeric `201_res_PS2.aya` row. The nested world records prove that these are
+three distinct identities: PS2 world 0, PS2 multiplayer world 888, and PC/Xbox
+world 201. They are not sentinels, global/default containers, or aliases. Their
+normal reach is still narrower than their presence. Xbox Europe also has
+different resource bytes for 612, 856, and 863. See [The Same War on Different
+Platforms](platform-content-variants.md).
 
 Only 43 of those IDs occur in the compiled `level_structure` career graph. The
 other 23 are real shipped worlds but are not career nodes. Presence is not an
@@ -310,14 +313,41 @@ terminates the 43-node career table. It is also the first member of the broader
 8xx runtime comparison set, where MCTentacle/Sentinel variants are distinctive.
 No graph evidence connects 800 to 850.
 
+## PS2-only numeric worlds
+
+These two containers are not part of the PC shelf's 23-world non-career count.
+Their exact roles come from the nested PS2 `WRES/WRLD` data, the shared retail
+world-header table, and named script/resource surfaces.
+
+### World 0 — PS2-only numeric container
+
+`000_res_PS2.aya` identifies itself as `WDAT=(-1,0)` and header id 0. It is a
+mode-0 world with Blaster, Laser, Sniper, and Standard configurations, all eleven
+expected top-level resource families, and no compiled script objects. PS2 has
+separate `base`, `Frontend`, and `Loading` archives, so world 0 is not an alias
+for those global/default containers. The PC install retains only an empty
+`level000/text.stf`; normal reach and intended purpose remain unknown.
+
+### World 888 — PS2-only multiplayer container
+
+`888_res_PS2.aya` identifies itself as `WDAT=(-1,888)`, header id 888, and mode
+2. Retail treats world modes 1/2 and level numbers 850-899 as multiplayer. The
+archive carries three compiled scripts, `fenrir-multiplayer.msh`, and Ventura
+mesh/texture names; the matching loose scripts name Fenrir and Venturer and
+post opposing win events. The normal multiplayer selector stops at 879, so the
+container is real while its ordinary frontend route remains unproved.
+
 ## Shipped non-career worlds — 23 numeric archives
 
 ### World 201 — non-career 2xx world
 
-Not present in `level_structure`; a shipped numeric resource and retained
-opening nevertheless exist. The opening covered 605,880 executable bytes,
-including the round/explosion damage path, and belongs to the 2xx
-`Attack`/`GetEnergy` comparison range. Its normal unlock route is unknown.
+Not present in `level_structure`; distinct PC and Xbox numeric resources and a
+retained PC opening nevertheless exist. Both containers identify world 201,
+mode 0, the `Aquila Prototype` configuration, and 13 compiled scripts. The PC
+loose shelf has 16 files and its level script reuses Level 200's text table. The
+opening covered 605,880 executable bytes, including the round/explosion damage
+path, and belongs to the 2xx `Attack`/`GetEnergy` comparison range. PS2 has no
+numeric 201 row. Normal PC/Xbox frontend reach and any PS2 route remain unknown.
 
 ### World 850 — non-career 8xx world
 
@@ -438,14 +468,17 @@ last numeric world shipped in the PC resource shelf.
 
 - A numeric resource and a successful forced opening do not establish normal
   frontend reachability. That remains open for 201 and 850-866.
+- PS2 world 0's identity is settled but its purpose and normal reach are not.
+  PS2 world 888 is structurally multiplayer, but the ordinary selector's
+  850-879 range does not expose 888.
 - The 8xx and 9xx family fingerprints are range-level observations. They must
   not be rewritten as “every world contains this boss/mode.”
 - Mission titles are intentionally read from the user's own language data by
   the app rather than copied into this repository; see
   [the-campaign.md](the-campaign.md).
-- The retail shelf measured here contains no numeric worlds below 100, no 888,
-  and no 956/958. Older directory-census prose that mentions such numbers is
-  not evidence that corresponding pristine PC resource archives ship.
+- The pristine PC shelf measured here contains no numeric worlds below 100, no
+  888, and no 956/958. PS2's proved `000`/`888` containers do not create
+  corresponding PC resource archives.
 
 ## Sources
 
@@ -462,6 +495,10 @@ last numeric world shipped in the PC resource shelf.
   [battleengine-config-values.md](../reverse-engineering/quick-reference/battleengine-config-values.md).
 - Cross-region Xbox level-resource differences:
   [BUILD_AND_DUMP_MATRIX.md](../reverse-engineering/BUILD_AND_DUMP_MATRIX.md).
+- PS2 `000`/`888` and PC/Xbox `201` world-role parse and no-payload receipt:
+  [PLATFORM_CONTENT_CROSSWALK.md](../reverse-engineering/PLATFORM_CONTENT_CROSSWALK.md)
+  and
+  [resource-id-roles-000-888-201-2026-08-22.tsv](../reverse-engineering/resource-id-roles-000-888-201-2026-08-22.tsv).
 - Place names and story framing: [world-lore.md](world-lore.md) and
   [characters.md](characters.md); those are lore/prose sources, not executable
   evidence.

@@ -7,7 +7,8 @@
   [platform content crosswalk](../reverse-engineering/PLATFORM_CONTENT_CROSSWALK.md).
 - **Last updated:** 2026-08-22
 - **Summary:** what PC, Xbox, and PS2 really share — one 43-title campaign and
-  one setting, alongside a distinct PS2 resource-name set and regional assets.
+  one setting, alongside distinct real worlds 0, 888, and 201 and regional
+  assets that must not be flattened into aliases.
 
 Battle Engine Aquila was built for several machines, then ported to PC. That
 makes an ordinary lore question surprisingly technical: is a name part of the
@@ -77,11 +78,31 @@ listed in [The Worlds of the Campaign](worlds.md). PS2 is not the same set.
 Its exact RCDF index has **67** numeric resource names: 65 shared with PC/Xbox,
 PS2-only `000` and `888`, and no `201_res_PS2.aya` counterpart.
 
-Those are index identities, not career nodes or asset-parity claims. The purpose
-and reachability of `000` and `888` remain unknown. Xbox Europe has different
-resource bytes for worlds 612, 856, and 863 even though the world numbers remain
-present. It also has a different goodie-124 resource and a different cutscene
-24. Korea and USA match each other for those five files.
+Opening the three-ID family settles what the filenames represent:
+
+- **PS2 `000` is world 0.** Its nested world record says id 0, mode 0, four
+  Battle Engine configurations, and no compiled script objects. Separate PS2
+  `base`, `Frontend`, and `Loading` archives rule out a global/default-container
+  alias. What world 0 was for, and whether a player could normally reach it,
+  remain unknown.
+- **PS2 `888` is a multiplayer world.** Its nested record says id 888 and mode
+  2, the retail multiplayer predicate accepts mode 2 and levels 850 through
+  899, and its three scripts and named resources pair Fenrir with Venturer. The
+  regular multiplayer selector stops at 879, so this proves a shipped world,
+  not a normal menu route.
+- **PC/Xbox `201` is world 201.** Both containers carry the same id-201,
+  mode-0, Aquila Prototype header and 13 compiled scripts. It is not in the
+  career graph. PS2 has no numeric 201 member, and no measured evidence says
+  whether that authored scenario exists there by another route.
+
+The different world IDs, modes, headers, script counts, WRES hashes, and logical
+asset sets refute a `000`/`888`/`201` packaging-alias theory. They do not turn
+any of the three into a newly proved career mission.
+
+Xbox Europe still has different resource bytes for worlds 612, 856, and 863
+even though the world numbers remain present. It also has a different
+goodie-124 resource and a different cutscene 24. Korea and USA match each other
+for those five files.
 
 A reconstruction can therefore share the campaign graph and world names while
 still needing platform- or region-specific content packages.
@@ -99,10 +120,11 @@ PC text is corrected, nor that Xbox is canonical.
 
 ## What remains unknown
 
-The PS2 RCDF index and six canonical language tables are now decoded far enough
-for this crosswalk. The other 4,154 indexed payloads were not opened here, and
-the measurement does not prove runtime language selection, `000`/`888`
-reachability, or how PC/Xbox world 201 is routed on PS2.
+The PS2 RCDF index, six canonical language tables, and two targeted numeric
+world members are now decoded far enough for this crosswalk. The other 4,152
+indexed payloads were not opened here. The measurement does not prove runtime
+language selection, world-0 purpose, normal world-888 frontend reach, or how
+PC/Xbox world 201 is routed on PS2.
 
 Matching language metadata also does not prove that voice files or videos match
 across machines. Those are separate assets with their own evidence.
