@@ -273,6 +273,25 @@ FRONTEND_LOCALIZATION = GODOT_ASSETS / "Frontend/english.json"
 FRONTEND_LOCALIZATION_SHA256 = (
     "b27d7b1b3f8cd8aa22b664cacf7c87a8b0907c7dea4c4f07dff8da763dbb70f3"
 )
+# The released 43-node career graph (Stuart Career.cpp:24-70), world column
+# in node order — the same table RetailWorldCatalog pins. It orders the
+# briefing-slot groups below and cross-checks the level-name rows.
+CAREER_WORLD_ORDER: tuple[int, ...] = (
+    100, 110, 200, 211, 212, 221, 222, 231, 232,
+    300, 311, 312, 321, 322, 331, 332,
+    400, 411, 412, 421, 422, 431, 432,
+    500, 511, 512, 521, 522, 523, 524,
+    600, 611, 612, 621, 622,
+    700, 710, 720, 731, 732, 741, 742, 800,
+)
+# Per-world frontend strings decoded from the same English language table:
+# the selector's per-node name rows ("1.00 - Training Level", "1.10 -
+# Blackout", …) and each career world's two briefing body slots. Measured
+# 2026-08-22; see _frontend_world_strings_bytes for the slot law.
+FRONTEND_WORLD_STRINGS = GODOT_ASSETS / "Frontend/english-worlds.json"
+FRONTEND_WORLD_STRINGS_SHA256 = (
+    "ffe3d3f88e07d5f29d21d26ef07bf056d153b622416110250dc1c78bf2c35408"
+)
 # CFEPMain underlay: data/video/FEBack128.vid (BIKi 128² @30fps) decoded to a
 # lean rgb24 strip at the SHIPPED rate for Godot Control draw (stretched to the
 # 640×480 stage).
@@ -1312,6 +1331,7 @@ def _fixed_outputs() -> tuple[tuple[Path, str], ...]:
         ),
         *later_worlds,
         (FRONTEND_LOCALIZATION, FRONTEND_LOCALIZATION_SHA256),
+        (FRONTEND_WORLD_STRINGS, FRONTEND_WORLD_STRINGS_SHA256),
         (FEBACK_STRIP, FEBACK_STRIP_SHA256),
         (LEVEL100_HUD_MANIFEST, LEVEL100_HUD_MANIFEST_SHA256),
     )
@@ -3658,6 +3678,164 @@ def _frontend_localization_bytes(data: bytes) -> bytes:
     return output
 
 
+def _frontend_world_strings_bytes(data: bytes) -> bytes:
+    """Decode the per-world selector names and briefing slots.
+
+    The language table's text IDs are a hash-scrambled space (no derivation
+    is pinned here and none is invented), but the TEXT POOL preserves the
+    authoring order, and that order carries two regular structures:
+
+    1. The level-name rows: N.NN-titled strings ("1.00 - Training Level",
+       "1.10 - Blackout", …) whose NN parts are exactly the career worlds of
+       RetailWorldCatalog. They are matched by title pattern, not by ID.
+    2. Briefing pages in career order: consecutive pool slots in groups of
+       nine — two body paragraphs followed by seven reserved empties —
+       beginning at world 100 ("Tatiana will take you through …" +
+       "Listen to her advice …", byte-identical to the transcription already
+       drawn on FEP_BRIEFING). Group k belongs to the k-th node of
+       s_levelStructure that owns a briefing video under data/video/
+       briefings/ (PC_<world>_exact.vid). Worlds without authored copy keep
+       empty slots; the decoder emits those as empty strings rather than
+       inventing text.
+
+    Everything is emitted with the same exact-reproduction discipline as the
+    menu table: this function's whole document is hash-pinned by
+    FRONTEND_WORLD_STRINGS_SHA256.
+    """
+    if (
+        len(data) < 16
+        or struct.unpack_from("<I", data, 0)[0] != 0xFFFFFFBB
+        or struct.unpack_from("<I", data, 4)[0] != 3
+    ):
+        raise RuntimeError("unsupported English language-table framing")
+
+    count = struct.unpack_from("<I", data, 8)[0]
+    entries_offset = 12
+    text_pool_offset = entries_offset + count * 12 + 4
+
+    def read_string(text_offset_words: int) -> str:
+        position = text_pool_offset + text_offset_words * 2
+        code_units: list[int] = []
+        for _ in range(8192):
+            if position + 2 > len(data):
+                raise RuntimeError("truncated English language-table text pool")
+            code_unit = struct.unpack_from("<H", data, position)[0]
+            position += 2
+            if code_unit == 0:
+                break
+            code_units.append(code_unit)
+        return struct.pack(f"<{len(code_units)}H", *code_units).decode("utf-16le")
+
+    pool_entries: list[tuple[int, str]] = []
+    for index in range(count):
+        entry_offset = entries_offset + index * 12
+        text_id, text_offset_words = struct.unpack_from("<II", data, entry_offset)
+        pool_entries.append((text_offset_words, read_string(text_offset_words)))
+    pool_entries.sort(key=lambda entry: entry[0])
+
+    # Level-name rows, keyed by their world number.
+    name_pattern = re.compile(r"^(\d{1,2})\.(\d{2}) - .+$")
+    level_names: dict[str, str] = {}
+    for _, text in pool_entries:
+        match = name_pattern.match(text)
+        if match is None:
+            continue
+        world_number = int(match.group(1)) * 100 + int(match.group(2))
+        key = f"{world_number}"
+        if key in level_names:
+            raise RuntimeError(f"duplicate level-name row for world {world_number}")
+        level_names[key] = text
+
+    missing_catalog_names = [
+        world
+        for world in CAREER_WORLD_ORDER
+        if f"{world}" not in level_names
+    ]
+    if missing_catalog_names:
+        raise RuntimeError(
+            "English table lacks level-name rows for career worlds: "
+            + ", ".join(str(world) for world in missing_catalog_names)
+        )
+
+    # Briefing groups: walk the pool from world 100's Tatiana paragraph,
+    # located by its exact released text. Each group is nine slots; the
+    # first two carry the page.
+    tatiana_index = next(
+        (
+            position
+            for position, (_, text) in enumerate(pool_entries)
+            if text.startswith("Tatiana will take you through the basics")
+        ),
+        None,
+    )
+    if tatiana_index is None:
+        raise RuntimeError("English table lost the world-100 briefing marker")
+
+    briefings: dict[str, list[str]] = {}
+    cursor = tatiana_index
+    for group_index, world in enumerate(CAREER_WORLD_ORDER):
+        if cursor + 9 > len(pool_entries):
+            raise RuntimeError(
+                f"English table ends before briefing group {group_index} "
+                f"(world {world})"
+            )
+        group = pool_entries[cursor : cursor + 9]
+        primary = group[0][1]
+        secondary = group[1][1]
+        tertiary = group[2][1]
+        reserved = [text for _, text in group[3:]]
+        if group_index == 0 and not primary.startswith("Tatiana will"):
+            raise RuntimeError("world-100 briefing slot moved")
+        # MEASURED 2026-08-22: exactly four worlds carry a third paragraph,
+        # the two Tara-rescue epilogue variants of episode six; every other
+        # group's third slot and every group's slots four through nine are
+        # empty. Emitting the third slot only where retail authored one.
+        if tertiary and world not in (611, 612, 621, 622):
+            raise RuntimeError(
+                f"briefing group {group_index} (world {world}) has an "
+                "unexpected third paragraph"
+            )
+        if not tertiary and world in (611, 612, 621, 622):
+            raise RuntimeError(
+                f"briefing group {group_index} (world {world}) lost its "
+                "measured third paragraph"
+            )
+        briefings[f"{world}"] = (
+            [primary, secondary] if not tertiary
+            else [primary, secondary, tertiary]
+        )
+        if any(reserved):
+            raise RuntimeError(
+                f"briefing group {group_index} (world {world}) has non-empty "
+                "reserved slots; the nine-slot law does not hold"
+            )
+        cursor += 9
+
+    known_pair = briefings["100"]
+    if known_pair[1] != "Listen to her advice and try to keep Colonel Kramer happy.":
+        raise RuntimeError(
+            "the world-100 second briefing slot is no longer the Kramer line"
+        )
+
+    document = {
+        "culture": "en",
+        "schema": "onslaught.frontend-world-strings.v1",
+        "sourceSha256": ENGLISH_LANGUAGE_TABLE_SHA256,
+        "levelNames": level_names,
+        "briefings": briefings,
+    }
+    output = (
+        json.dumps(document, sort_keys=True, separators=(",", ":")) + "\n"
+    ).encode("utf-8")
+    actual = _sha256(output)
+    if actual != FRONTEND_WORLD_STRINGS_SHA256:
+        raise RuntimeError(
+            "frontend world strings did not reproduce exactly "
+            f"(SHA-256 {actual})"
+        )
+    return output
+
+
 def _require_chunk(source: bytes, offset: int, tag: bytes, payload_size: int) -> int:
     if (
         offset < 0
@@ -4124,6 +4302,10 @@ def _materialize(game_root: Path, stage: Path) -> tuple[tuple[Path, str], ...]:
     frontend_localization_target = stage / FRONTEND_LOCALIZATION
     frontend_localization_target.parent.mkdir(parents=True, exist_ok=True)
     frontend_localization_target.write_bytes(frontend_localization)
+    frontend_world_strings = _frontend_world_strings_bytes(english_table)
+    frontend_world_strings_target = stage / FRONTEND_WORLD_STRINGS
+    frontend_world_strings_target.parent.mkdir(parents=True, exist_ok=True)
+    frontend_world_strings_target.write_bytes(frontend_world_strings)
     _materialize_feback_strip(game_root, stage)
     hud_manifest_hash = _materialize_level100_hud_manifest(stage)
     if hud_manifest_hash != LEVEL100_HUD_MANIFEST_SHA256:
