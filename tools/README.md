@@ -59,6 +59,10 @@ install anything by themselves.
 - `aya_archive_inventory.py`, `aya_cross_platform_compare.py`, and
   `aya_texture_fidelity_census.py` provide fail-closed AYA inventory,
   cross-platform pairing, and stored-texture geometry/block comparison.
+- `cmsh_animation_usage_census.py` performs a read-only, optionally
+  mirror-hash-verified join across loose CMSH pose/skeleton lanes, numeric-LVLR
+  `MESH` membership, and authored MSL animation calls. Its JSON output is
+  restricted to ignored `local-lab` or `.artifacts` paths.
 - `export_game_assets.py`, `export_asset_catalog.py`,
   `export_language_corpus.py`, and `export_video_manifest.py` operate on
   user-supplied local inputs and write to a separate local output root.

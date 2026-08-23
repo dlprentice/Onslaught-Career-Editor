@@ -51,7 +51,7 @@ non-additive.
 | --- | --- | ---: | --- |
 | PC AYA chunked-zlib | [aya-container.md](aya-container.md) | 1,361 | outer framing complete |
 | LVLR resource streams | [lvlr-archive.md](lvlr-archive.md) | 301 | tag census complete; schemas partial |
-| CMSH meshes + embedded animation | [cmsh-mesh.md](cmsh-mesh.md) | 213 | framing/selected fields bounded |
+| CMSH meshes + embedded animation | [cmsh-mesh.md](cmsh-mesh.md) + [animation/usage](cmsh-animation-usage.md) | 213 | framing, pose lanes, bone indices, and selected usage bounded |
 | DDS textures + texture-backed fonts | [dds-texture.md](dds-texture.md) | 847 | header census complete |
 | Ogg/XAP/SFX audio | [ogg-audio.md](ogg-audio.md) | 3,057 + 5 + 1 | framing and identity joins bounded |
 | Bink video | [bink-video.md](bink-video.md) | 66 | container/media census bounded |
@@ -64,7 +64,9 @@ non-additive.
 MSL scripts are counted here but remain owned by
 [`game-assets/msl-scripting.md`](../game-assets/msl-scripting.md) and the
 MissionScript VM contracts. There is no standalone `.anim` family: animation
-is embedded in CMSH (`VHFM`/`HORI`/`HPOS`/`HFOV`/bone lanes). There is no loose
+is embedded in CMSH (`VHFM`/`HORI`/`HPOS`/`HFOV`/bone lanes); the
+[focused contract](cmsh-animation-usage.md) separates those stored lanes from
+LVLR membership and MSL name requests. There is no loose
 font-file family: installed font glyph resources live in texture assets and the
 retail image also has a GDI/texture font owner.
 
