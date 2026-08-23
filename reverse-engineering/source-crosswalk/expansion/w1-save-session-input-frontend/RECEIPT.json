@@ -1,0 +1,196 @@
+{
+  "authority_hashes": {
+    "canonical_crosswalk_tsv": "e37f13b37e9ce9d712174e35b86fc1f7ebcfc693fe9957448a8f39ff03829479",
+    "canonical_report_md": "a9a3d29a18655ef97e61591610c2721d934112b2a7a58acf264debe11a798c7f",
+    "generation32_campaign_functions_tsv": "a63f42e331c265c94866ae944abc74e6a985dfb590f87419309c24932a951c63",
+    "generation32_campaign_ready_json": "08ed89644ed25feb9e85fefb5b31ab2bdecbbd91b8aca720e20c53a7fbc5e73f",
+    "generation32_evidence_register_tsv": "4862fc61391c9bf65cd7183752e99b9b02b6bfb721e5b4b5c1e7c5fae5b885b4",
+    "generation32_reducer_id": "4c465010b3240d476eb15c89fcfa51cd155936316e897e6f6a7b450df5944db3",
+    "name_table_tsv": "4590dff93f4ee85c5a5c3450139b2e696118646af3401f6eb9719dc4237d3213",
+    "reviewed_plan_partition_tsv": "bc36791975f43d5da6b584727df3eb7d29402e18c550dd3d96e01bba0c301fde",
+    "selection_tsv": "8690611e37b2bede04a57844df59bbb014fd4d1637577a31f27ba6ffd100f045",
+    "source_files": {
+      "Career.h": "a17ac88e6569ad0eca8a87b72c709f43b2d60220655e23c84883d2485e4469e9",
+      "Controller.h": "74fd5ad844b36fa9ccf470c591014e94b6306e80046a314a00215b6cc65f679f",
+      "DXGame.h": "90e5290cbad017e4f8ebd0626e3087bd2314f6b080a70c6e1870fb9e18d011b3",
+      "FEPGoodies.h": "b03caf0728288bf680d53dd28100fa6e76cd28f49cdbe95e8b7d8296860ef4c7",
+      "FrontEnd.cpp": "663ed9ee48d544f6a22b1ed12b80348e76b5a0f94a745d65513681f8c16549e9",
+      "Frontend.h": "308af7d9dc8d9c1d82d614300280960f7cd0290a2ca5e16ab5991538758d3560",
+      "MemoryCard.h": "80c489b2ca21afe735fc87baa14a893b64bbe0b6da34664683cee047b4aede50",
+      "PCController.cpp": "1dced6baf6b16e9ed387a83627f2156f8230b42558259ae374fb7813fb93c3a9",
+      "PCController.h": "9c9e5c85409f426d6062acaa5f16247a1ed80ea9e317ec62ea43c3b9f363c4aa",
+      "PCGame.h": "aeaabc956f37596e6df1260088ab4a83c122c2367a9bf76fcc172a6c7053683a",
+      "PCMemoryCard.h": "fef1349d7b239e821d4d7539e60c97539f47a30f54c15b8793eaf524a8cc4384",
+      "Player.cpp": "4e8cbdeea4ee337a663a6af42ea8b2f666581e6aac57ed262a02ed7af896e444",
+      "Player.h": "1969670b1e558f90b32a470c7b1e003ad1b3ad0af632ac09152bb52790fc512f",
+      "activereader.h": "26fa65da89d5dda48080eb26dbbb2fad59c0e5c831b0b5b8b403e4bbda544c1f",
+      "event.h": "411b3ac014b66a455cae8d47186f660253553aa798802368d84db42f43744232",
+      "eventmanager.h": "57f39c8c9b3c413c16d0fc2b75237b1b045cd1754fd7245f871639b7518f5afc",
+      "game.cpp": "7f6932e001f0c57938dd49aba07ab1cd05239e7a038096fb25310a34e9a4ef4e",
+      "game.h": "62769facf15f44a5a1c0f96f1a4ce7374787364cbef48c92240619749e909ad8",
+      "scheduledevent.h": "1f568c7e1b71a4fbbf98e59a3c3ee55a71d60c0aa4313e1620426f3e52d0e4b1"
+    },
+    "static_closure_tsv": "cfe90af382269cb2e64996d10df7777bd00fcd8e1844b9823ef74bc6199b8974"
+  },
+  "base_commit": "784367bd43f9ec13125521b00fe0c8352670ffdd",
+  "counts": {
+    "definitions": 180,
+    "populated_va_collisions": 0,
+    "populated_vas": 11,
+    "readiness": {
+      "AMBIGUOUS_OVERLOAD_MACRO_NONFUNCTION": 12,
+      "EXISTING_EXACT_RETAIL_NOTE_VA": 8,
+      "EXTERNAL_PROOF_REQUIRED": 9,
+      "NAMED_RETAIL_ANALOG_PRECISE_TARGET": 3,
+      "SOURCE_ONLY_BOUNDED_NO_MATCH": 148
+    },
+    "rebuild_disposition": {
+      "NO_DIRECT_PORT": 4,
+      "PARTIAL_OWNER_PRESENT": 161,
+      "PORTED_SOURCE_SHAPE": 15
+    },
+    "retail_classification": {
+      "NO_MATCH_FOUND": 169,
+      "SOURCE_ANALOG": 3,
+      "SOURCE_EXACT": 8
+    },
+    "retail_delta": {
+      "RETAIL_UNRESOLVED": 23,
+      "SOURCE_AGREES": 8,
+      "SOURCE_DIVERGES": 1,
+      "SOURCE_ONLY": 148
+    },
+    "reuse": {
+      "artifacts": {
+        "EXTENDED": 7,
+        "NEW_MEASUREMENT": 0,
+        "REUSED": 1
+      },
+      "definitions": {
+        "EXTENDED": 169,
+        "NEW_MEASUREMENT": 0,
+        "REUSED": 11
+      }
+    },
+    "stable_key_duplicates": 0
+  },
+  "executed_gates": {
+    "deterministic_replay": "PASS: generate.py --check twice",
+    "doc_headers": "PASS: 0 violations",
+    "evidence_register_header": "PASS: current Generation-32 header",
+    "function_doc_names": "PASS: 2,039/2,039 gated assertions; 0 drift",
+    "generator_unit_tests": "PASS: 15/15",
+    "git_diff_check": "PASS",
+    "npm_build": "PASS: 0 warnings, 0 errors",
+    "npm_test": "PASS: AppCore 1,580; UI 901; CLI 125; one pre-existing NUnit2007 build warning",
+    "npm_test_docs": "BASELINE-RED before headers: 31 pre-existing broken local links, none under the W1 receipt root; the downstream header/name/register gates were run independently and passed"
+  },
+  "output_hashes": {
+    "definitions_tsv": "35b5b06be014464a1218ffc78ca312a225d667cf24d411fb1410d7cdeb93549b",
+    "generate_py": "47511bf2f0d96bd0ea105534bde23d70ae34577530af3b2cba453ba925df472f",
+    "rebuild_delta_md": "a9247aede71329067bcabc687020aa63c99b8e954cb0bc906bb7a7899ca55742",
+    "retail_delta_tsv": "f9feac8dce3d78004745ba067deda69e68803930327e2e83521b8b84b0cbd959",
+    "source_contract_md": "c284f135459447b23f25cd50c1dc03b2ecbef2f52bd3f25cbf8070bca98e1b38",
+    "test_generate_py": "01b2d420303b95014f1643f0e74f13bb167af366dd4d8b279d9d167ad1325344"
+  },
+  "reuse": {
+    "artifact_dispositions": {
+      "REBUILD-DELTA.md": "EXTENDED",
+      "RECEIPT.json": "EXTENDED",
+      "RETAIL-DELTA.tsv": "EXTENDED",
+      "SOURCE-CONTRACT.md": "EXTENDED",
+      "definitions.tsv": "EXTENDED",
+      "generate.py": "EXTENDED",
+      "selection.tsv": "REUSED",
+      "test_generate.py": "EXTENDED"
+    },
+    "definition_disposition_basis": "REUSED means the reviewed plan plus existing exact/analog retail authority already settled the 11 populated rows; EXTENDED means this wave added source-body, target-branch, falsifier, and rebuild-disposition fields to 169 reviewed omission rows; NEW_MEASUREMENT is zero because no new byte, runtime, Ghidra, or specimen probe ran.",
+    "predecessors": [
+      {
+        "path": "local-lab/hermes-kanban-campaign-2026-08-22/source-first-expansion/PLAN.md",
+        "role": "reviewed subsystem partition and wave contract",
+        "sha256": "604d5db76ecc9811b55321c5ec443f346c9be32515b6d8ed526142622d7ec393"
+      },
+      {
+        "path": "local-lab/hermes-kanban-campaign-2026-08-22/source-first-expansion/partition.tsv",
+        "role": "reviewed 634-row stable-key/readiness authority; selection.tsv is its exact W1 subset",
+        "sha256": "bc36791975f43d5da6b584727df3eb7d29402e18c550dd3d96e01bba0c301fde"
+      },
+      {
+        "path": "local-lab/hermes-kanban-campaign-2026-08-22/source-first-expansion/sample.tsv",
+        "role": "prior cold checks including every W1 exact/analog row and representative unresolved rows",
+        "sha256": "5235ff8e61fd12d9e4b17caf256d06c4a693cfd50bcce20d20261f42f21813bb"
+      },
+      {
+        "path": "local-lab/hermes-kanban-campaign-2026-08-22/source-first-expansion/manifest.json",
+        "role": "shared plan count/hash manifest",
+        "sha256": "6f58de995a27a0088749f40e06907969d3213872b40d1bf0bb450afda1fd216e"
+      },
+      {
+        "path": "reverse-engineering/EVIDENCE-REGISTER.tsv",
+        "role": "tracked Generation-32 register projection for all 11 populated VAs",
+        "sha256": "4862fc61391c9bf65cd7183752e99b9b02b6bfb721e5b4b5c1e7c5fae5b885b4"
+      },
+      {
+        "path": "local-lab/re-campaign-incident-recovery-20260808-v1/generation-32-current-8329-db18625-v1/campaign-functions.tsv",
+        "role": "Generation-32 function closure for all 11 populated VAs",
+        "sha256": "a63f42e331c265c94866ae944abc74e6a985dfb590f87419309c24932a951c63"
+      },
+      {
+        "path": "local-lab/re-campaign-incident-recovery-20260808-v1/generation-32-current-8329-db18625-v1/campaign.ready.json",
+        "role": "current campaign READY and reducer pin",
+        "sha256": "08ed89644ed25feb9e85fefb5b31ab2bdecbbd91b8aca720e20c53a7fbc5e73f"
+      },
+      {
+        "path": "reverse-engineering/source-crosswalk/audit/REPORT.md",
+        "role": "tracked predecessor AST audit receipt; records the original scratch parser hash and sealed inventory outputs without claiming the retired scratch path still exists",
+        "sha256": "861c4ffd9c7cdd6da181dfb4a5572a49c9d3c22422d8794352393339fa127792"
+      }
+    ],
+    "ps2_disposition": "NOT_USED: W1 is shared/PC save-session-input-frontend work and opens no PS2 boundary; the closed 520e9bfa->cbafa266->51ffe3d6 generic PS2 chain was not repeated."
+  },
+  "schema": "bea.source-crosswalk.expansion-wave.v1",
+  "scope": {
+    "binary_written": false,
+    "canonical_crosswalk_written": false,
+    "canonical_report_written": false,
+    "ghidra_written": false,
+    "rebuild_written": false,
+    "receipt_root": "reverse-engineering/source-crosswalk/expansion/w1-save-session-input-frontend",
+    "source_file_set_sha256": "72fb22a1716dcb87059f9af9b93e9c9c9d8415a85b64399828003ea2b36e5381",
+    "source_files": [
+      "activereader.h",
+      "Career.h",
+      "Controller.h",
+      "DXGame.h",
+      "event.h",
+      "eventmanager.h",
+      "FEPGoodies.h",
+      "FrontEnd.cpp",
+      "Frontend.h",
+      "game.cpp",
+      "game.h",
+      "MemoryCard.h",
+      "PCController.cpp",
+      "PCController.h",
+      "PCGame.h",
+      "PCMemoryCard.h",
+      "Player.cpp",
+      "Player.h",
+      "scheduledevent.h"
+    ]
+  },
+  "source_commit": "5352a81cdb838b145a57f7febc5d9fc4b0129ebb",
+  "specimen_sha256": "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750",
+  "validation": [
+    "180 unique stable keys exactly cover the reviewed W1 19-file set",
+    "source anchors and balanced bodies read from pinned source commit 5352a81c",
+    "8 SOURCE_EXACT and 3 SOURCE_ANALOG VAs resolve in both the 8,329-row name table and 8,136-row closure",
+    "all 11 populated VAs resolve in the Generation-32 evidence register and campaign-functions closure",
+    "every populated VA resolves a precise evidence path containing that VA",
+    "zero populated-VA collisions",
+    "canonical crosswalk and canonical REPORT hashes remain equal to landed corrected base",
+    "all outputs are deterministic under generate.py --check"
+  ],
+  "wave": "W1_SAVE_SESSION_INPUT_FRONTEND"
+}
