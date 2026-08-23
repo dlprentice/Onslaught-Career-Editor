@@ -610,6 +610,22 @@ def render_receipt_json(parsed: BattleEngineConfigFile, source: bytes) -> str:
     return json.dumps(receipt, indent=2, sort_keys=True) + "\n"
 
 
+def _canonicalize_checked_layout(data: bytes) -> bytes:
+    """Normalize Git checkout newlines without hiding other byte drift.
+
+    The renderer's contract is UTF-8 with LF terminators. A checked-out TSV may
+    be CRLF on Windows, so that one transport-only rewrite is admitted. Bare CR
+    remains an error instead of becoming a second ambiguous text convention.
+    """
+
+    canonical = data.replace(b"\r\n", b"\n")
+    if b"\r" in canonical:
+        raise BattleEngineConfigError(
+            "checked layout contains a bare CR; expected canonical LF or CRLF"
+        )
+    return canonical
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description=(
@@ -650,7 +666,9 @@ def main(argv: list[str] | None = None) -> int:
 
         layout = render_layout_tsv(parsed, exact_baseline=arguments.exact)
         if arguments.check_layout is not None:
-            expected_layout = arguments.check_layout.read_bytes()
+            expected_layout = _canonicalize_checked_layout(
+                arguments.check_layout.read_bytes()
+            )
             actual_layout = layout.encode("utf-8")
             if actual_layout != expected_layout:
                 raise BattleEngineConfigError(
@@ -658,9 +676,12 @@ def main(argv: list[str] | None = None) -> int:
                 )
 
         if arguments.layout_tsv:
-            sys.stdout.write(layout)
+            payload = layout
         else:
-            sys.stdout.write(render_receipt_json(parsed, data))
+            payload = render_receipt_json(parsed, data)
+        # Bypass platform text-mode newline translation: CLI stdout is the same
+        # canonical UTF-8/LF byte form hashed by the in-process renderers.
+        sys.stdout.buffer.write(payload.encode("utf-8"))
         return 0
     except (BattleEngineConfigError, OSError) as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
