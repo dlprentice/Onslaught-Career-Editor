@@ -3,6 +3,7 @@ from __future__ import annotations
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 import generate
 
@@ -10,6 +11,9 @@ import generate
 ROOT = Path(__file__).resolve().parent
 REPOSITORY = generate.repo_root()
 SOURCE_ROOT = generate.find_source_root(REPOSITORY)
+REDUCER_COMMIT = "8c427167457eadcd711e5ef20ea95c1847259fdb"
+REDUCER_CROSSWALK_SHA256 = "675b6aea18bc516ab563554372aba3dc9de467dba7aa22abbd1c8635be22ac71"
+REDUCER_REPORT_SHA256 = "882aacdd83e8c4fe79763aa59b84bbe43bb1d0e88c337eb900ed76acaf9a86ba"
 
 
 class GenerateWaveReceiptTests(unittest.TestCase):
@@ -43,6 +47,44 @@ class GenerateWaveReceiptTests(unittest.TestCase):
 
         self.assertNotIn(b"\r\n", generated)
         self.assertEqual(tracked, generated)
+
+    def test_live_canonical_advance_does_not_change_tracked_w1_outputs(self) -> None:
+        live_crosswalk = REPOSITORY / generate.CROSSWALK_PATH
+        live_report = REPOSITORY / generate.REPORT_PATH
+        self.assertEqual(REDUCER_CROSSWALK_SHA256, generate.sha256(live_crosswalk))
+        self.assertEqual(REDUCER_REPORT_SHA256, generate.sha256(live_report))
+        self.assertNotEqual(generate.EXPECTED_CROSSWALK_SHA256, generate.sha256(live_crosswalk))
+        self.assertNotEqual(generate.EXPECTED_REPORT_SHA256, generate.sha256(live_report))
+
+        generate.check_tracked(ROOT, REPOSITORY, SOURCE_ROOT)
+
+    def test_wrong_historical_landing_pin_fails_closed(self) -> None:
+        with patch.object(generate, "BASE_COMMIT", REDUCER_COMMIT):
+            with tempfile.TemporaryDirectory() as temporary:
+                with self.assertRaisesRegex(
+                    AssertionError,
+                    "historical authority hash mismatch.*crosswalk.tsv",
+                ):
+                    generate.generate(
+                        ROOT / "selection.tsv",
+                        REPOSITORY,
+                        SOURCE_ROOT,
+                        Path(temporary),
+                    )
+
+    def test_missing_historical_base_pin_fails_closed(self) -> None:
+        with patch.object(generate, "ACCEPTED_BASE_COMMIT", "0" * 40):
+            with tempfile.TemporaryDirectory() as temporary:
+                with self.assertRaisesRegex(
+                    AssertionError,
+                    "historical authority unavailable.*crosswalk.tsv",
+                ):
+                    generate.generate(
+                        ROOT / "selection.tsv",
+                        REPOSITORY,
+                        SOURCE_ROOT,
+                        Path(temporary),
+                    )
 
     def test_readiness_projects_to_conservative_crosswalk_class(self) -> None:
         self.assertEqual(
