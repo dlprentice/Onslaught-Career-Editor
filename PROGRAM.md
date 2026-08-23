@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: active — the work-queue ledger for the maintainer's standing program
-Last updated: 2026-08-21
+Last updated: 2026-08-23
 Summary: what the current program has completed, what is next, and the gate
 that completes each item. This file owns **queue state and receipts only** —
 it never restates campaign counts, capability claims, validation choices, or
@@ -161,16 +161,47 @@ order:
 
 ### P2 — `wt/bea-ghidra` promotion (db.18632/33) through the full gate
 
-The last unmerged branch. Full
+**Live-ceremony portion COMPLETED 2026-08-18/19 (historical).** The six-row
+CMissile+CRound `name-cohort-round-dual-owner` SET_NAME family carried its own
+family-specific reviewer GO (not an earlier or other-family GO), and the live
+ceremony ran through the full gate — verified PRE backup → exact measured
+identity → isolated rehearsal → family-specific reviewer GO → live apply →
+separate-process readback → verified D POST → F twin → tracked refresh on byte
+equality. Together with the five preceding shared-framework cohorts
+(`varargs-cohort2`, unique-owner, fun-unique-owner,
+placeholder-unique-owner, cockpit-dual-owner) this rolled tracked/live
+`db.18627` → **`db.18633`** with internal functions held at 8,329. The
+canonical owner [`reverse-engineering/ghidra/README.md`](reverse-engineering/ghidra/README.md)
+holds the current pins; this ledger records completion only.
+
+**Remaining P2 work is offline integration/repair only (no further live
+ceremony):** carry the corrected candidate (`wt/t_a5329ed3` @ `f17e5716`,
+which separates the historical db.18623 reproduction geometry from the
+db.18627 live-ceremony authority and fails closed on swapped/stale identities)
+onto fresh main, reconcile the two conflicted documentation owners, and repin
+the stale state selector. Receipt:
+
+**2026-08-23 — P2 integration receipt (wt/t_57e0ae2f over fresh main
+`67d9d610`).** Transplanted the corrected candidate's 18 clean paths blob-exact:
+snapshot renames `db.18626→db.18633` / `db.18627→db.18632`, the six new
+cohort spec+manifest pairs, the varargs-cohort2 spec correction,
+`GhidraApplyCohortManifestLive.java`, `ghidra_cohort_replay.py`, and
+`ghidra_cohort_framework_tests.py`. Manually reconciled both merge conflicts:
+[`RE-INDEX.md`](reverse-engineering/RE-INDEX.md) keeps its selector-only shape
+and gains the db.18633 lineage as historical narrative only;
 [`reverse-engineering/ghidra/README.md`](reverse-engineering/ghidra/README.md)
-ceremony (identity → backup → isolated scratch → dry-run → apply → readback
-→ tracked refresh on byte equality), including the reviewer GO on the six
-CMissile+CRound dual-owner SET_NAME rows. Operator authorization to proceed
-through the gate was given by the maintainer on 2026-08-21 (standing goal);
-the reviewer GO is still required before any live write. After merge:
-resolve the db.18627/db.18633 documentation lag in
-[`GOAL.md`](GOAL.md)/[`RE-INDEX.md`](reverse-engineering/RE-INDEX.md) and
-`latestLiveGhidraState`.
+takes the candidate's db.18633 payload/history/recovery pins, drops the
+obsolete branch-lag prose, and adds one normative ordered ceremony (verified PRE
+backup → exact identity → isolated rehearsal → family-specific reviewer GO →
+live apply → separate-process readback → verified D POST → optional F twin only
+if policy permits → tracked refresh only on byte equality; G: read-only, H:
+no write, never rewrite ACLs/ownership). `latestLiveGhidraState` repinned to
+db.18633 / 187,501,445 bytes / inventory `df4527a9…`. Gates: docs/JSON/link
+checks clean, `git diff --check` clean, 85/85 framework tests with zero skips,
+seven manifest pins match, and
+`py -3 tools/ghidra_cohort_replay.py --verdict` exits 0 on canonical copied
+receipts only — no live or headless Ghidra process, no volume write, no main
+merge.
 
 ### P3 — `developer_state.json` split
 

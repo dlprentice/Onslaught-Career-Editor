@@ -27,13 +27,15 @@
 # about either function may move: name, body, comment, tags, calling convention
 # and every other frozen column are gated over all 8,329 functions.
 #
-# PRE PINS ARE db.18623-ERA AND WILL GO STALE.  They were MEASURED by this
-# framework's own `census` mode on a replica restored from
-# D:\BEA-Ghidra-Backups\2026-08-17-tentacle-chain-a-post-live, the newest verified
-# off-volume backup when this spec was written.  Live moved to db.18623 the same
-# day and a second tentacle ceremony was queued behind it, so a live apply MUST
-# take its own fresh PRE backup and re-measure these pins first.  This spec has
-# been REHEARSED ONLY; the live twin's compiled allowlist does not contain it.
+# PRE PINS RE-MEASURED 2026-08-18 by this framework's own `census` mode on a
+# replica restored from D:\BEA-Ghidra-Backups\2026-08-17-vftable65-post-live
+# (db.18627, then the live twin). vftable65 typed 65 pointer slots and moved
+# the structural counts (refs 234493->234558, definedData 48583->48648,
+# undefinedData 3907629->3907369) without touching function names, bodies, or
+# frozen function columns; name/body/frozen digests therefore equal the
+# name-cohort5 POST. A live apply still takes its own fresh PRE backup and
+# must re-measure if live has moved again. This spec is rehearsed against the
+# current replica before any live grant.
 cohortId	varargs-cohort2
 cohortTitle	2 byte-proven variadic prototypes, varargs axis only
 
@@ -48,13 +50,13 @@ verb	SET_PROTOTYPE
 
 preFunctions	8329
 preInstructions	551232
-preReferences	234493
-preDefinedData	48583
-preUndefinedData	3907629
+preReferences	234558
+preDefinedData	48648
+preUndefinedData	3907369
 preBookmarks	2301
-preFunctionNameDigest	8485ddc93d736caa39fc73be624fb5078a5836635f29a3bbcb6bb253c5c7b027
+preFunctionNameDigest	94d97aab6f578fe5b1b86f8a759b0257c5518d53c9d836107bae361faacca4c9
 preFunctionBodyDigest	cb96581a599479d8aa57c2319a5e110226969934c2c14797a2575c689537a9be
-preFrozenDigest	b1a31f0b84706edc33e42eff372204384e21219d27c84b61db3c7c3b853da1c0
+preFrozenDigest	2b23493d13d4ebc231f8b8dab5b3c68cd21c51e7dd8726fa2591a095ee33458f
 
 # A prototype change moves no structural metric - that is what the completed
 # 294-row ceremony measured - so POST repeats PRE.  The name and body digests
@@ -64,11 +66,11 @@ preFrozenDigest	b1a31f0b84706edc33e42eff372204384e21219d27c84b61db3c7c3b853da1c0
 # the POST collateral census still compares every frozen column on all 8,329 rows.
 postFunctions	8329
 postInstructions	551232
-postReferences	234493
-postDefinedData	48583
-postUndefinedData	3907629
+postReferences	234558
+postDefinedData	48648
+postUndefinedData	3907369
 postBookmarks	2301
-postFunctionNameDigest	8485ddc93d736caa39fc73be624fb5078a5836635f29a3bbcb6bb253c5c7b027
+postFunctionNameDigest	94d97aab6f578fe5b1b86f8a759b0257c5518d53c9d836107bae361faacca4c9
 postFunctionBodyDigest	cb96581a599479d8aa57c2319a5e110226969934c2c14797a2575c689537a9be
 
 manifestSha256	1d42ec00a6772f6b27fd6a33e6284609f114da34ad9bf9e0b7ce82d8854f1290

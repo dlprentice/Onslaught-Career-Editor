@@ -876,12 +876,34 @@ Current per-function notes live under
 | Discovery findings | [`binary-analysis/ghidra-fullpass-findings/`](binary-analysis/ghidra-fullpass-findings/) | Tracked wave reviews (W001–W018) |
 | Correction ops | `local-lab/ghidra-fullpass-2026-07-23/` (gitignored) | Queues, dual QC, apply logs; closeout 2026-07-25 |
 | Live applied DB | Maintainer Ghidra Projects (machine-local) | Working database that may receive dual-cleared applies |
-| Tracked snapshot | [`ghidra/`](ghidra/README.md) (snapshot date 2026-08-14) | Distributable reviewed snapshot; exact to the verified live state at promotion time |
+| Tracked snapshot | [`ghidra/`](ghidra/README.md) (snapshot date 2026-08-19) | Distributable reviewed snapshot; exact to the verified live state at promotion time |
 
 Host install paths, headless entry, and local project layout:
 [`ghidra/README.md`](ghidra/README.md). Expedition overlays stay under ignored
 `local-lab/`; do not treat discovery notes as proof that the tracked snapshot
 or live DB was mutated.
+
+**Tracked-snapshot lineage 2026-08-18/19 (historical, not a selector).** After
+the eight 2026-08-17 promotions ended at `db.18627`, six further separately
+authorized shared-framework ceremonies rolled the tracked/live database to
+**`db.18633`**: the two-row `varargs-cohort2` `SET_PROTOTYPE` (sprintf /
+`CConsole__AddString` varargs axis) → `db.18628`, the 12-row
+`name-cohort-unique-owner` `SET_NAME` → `db.18629`, the 8-row
+`name-cohort-fun-unique-owner` → `db.18630`, the 7-row
+`name-cohort-placeholder-unique-owner` → `db.18631`, the 3-row
+`name-cohort-cockpit-dual-owner` → `db.18632`, and the 6-row CMissile+CRound
+dual-owner sibling-prefix `name-cohort-round-dual-owner` → `db.18633`, each run
+with verified PRE backup, measured identity, isolated rehearsal, family-specific
+reviewer GO, live apply, separate-process readback, and restore-proven D: POST;
+internal functions stayed **8,329** throughout. The refreshed tracked snapshot
+was measured at 19 files / 187,501,445 bytes, canonical inventory SHA-256
+`df4527a9…`, rolling `db.18633.gbf` (`73bf683b…`) with prior `db.18632.gbf`
+(`3334bd33…`) retained; the offline replay verdict over the canonical copied
+receipts reproduces both the historical db.18623 rehearsal geometry and the
+separate db.18627 live-ceremony geometry fail-closed. This paragraph records
+history only; select rolling tracked/live state through
+[`ghidra/README.md`](ghidra/README.md) plus fresh PRE inspection, never from a
+number quoted here.
 
 ## Patch recipes — analysis documents, not write authorization
 

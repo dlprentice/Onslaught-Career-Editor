@@ -148,29 +148,151 @@ COHORTS: dict[str, dict] = {
 SANDBOX_BACKUP = BACKUPS / "2026-08-17-abi-signature-cohort294-post-live"
 
 # ---------------------------------------------------------------------------
-# REHEARSAL-ONLY cohorts.  These have NOT been promoted: the entry exists so the
-# ceremony modes can be run against a replica and graded, and nothing here is a
-# live authorization (the live twin's compiled allowlist is the only one).
+# Completed cohorts that started as rehearsal-only and were later promoted.
+# varargs-cohort2 was rehearsed 2026-08-17 against db.18623 and promoted
+# 2026-08-18 against a fresh db.18627 PRE. The live twin's compiled allowlist
+# is still the only live authorization.
 REHEARSAL_COHORTS: dict[str, dict] = {
     "varargs-cohort2": {
-        # PRE is the newest verified off-volume backup at the time of rehearsal.
-        # A live ceremony must take its own fresh PRE backup and re-pin: the
-        # tentacle chain advanced live past this state on the same day.
-        "backup": BACKUPS / "2026-08-17-tentacle-chain-a-post-live",   # db.18623
+        # PRE is the verified off-volume backup taken immediately before the
+        # 2026-08-18 live apply (db.18627). Replay against that PRE, not the
+        # older tentacle-chain snapshot.
+        "backup": BACKUPS / "2026-08-18-varargs-cohort2-pre-live",   # db.18627
         "spec": SPECS / "varargs-cohort2.spec.tsv",
         "manifest": (REPO / "reverse-engineering" / "binary-analysis"
                      / "varargs-cohort2-promotion-manifest-2026-08-17.tsv"),
-        "rehearsalOnly": True,
+        "rehearsalOnly": False,
         "archived": {
-            "source": "REHEARSAL ONLY - no completed ceremony to compare to",
+            "source": "local-lab/varargs-cohort2-ceremony-2026-08-18/"
+                      "{apply,readback}.json (live, 2026-08-18)",
             "rows": 2,
             "applied": 2,
             "preFunctions": 8329, "postFunctions": 8329,
             "preInstructions": 551232, "postInstructions": 551232,
-            "preReferences": 234493, "postReferences": 234493,
+            "preReferences": 234558, "postReferences": 234558,
             "preBookmarks": 2301, "postBookmarks": 2301,
-            "preDefinedData": 48583, "postDefinedData": 48583,
-            "preUndefinedData": 3907629, "postUndefinedData": 3907629,
+            "preDefinedData": 48648, "postDefinedData": 48648,
+            "preUndefinedData": 3907369, "postUndefinedData": 3907369,
+        },
+    },
+    "name-cohort-waypoint-follow": {
+        # PRE is current live POST (db.18628). DRAFT: identity/dry PASS,
+        # no live grant — still waiting on a runtime vptr watch.
+        "backup": BACKUPS / "2026-08-18-varargs-cohort2-post-live",
+        "spec": SPECS / "name-cohort-waypoint-follow.spec.tsv",
+        "manifest": SPECS / "name-cohort-waypoint-follow-manifest.tsv",
+        "rehearsalOnly": True,
+        "archived": {
+            "source": "REHEARSAL ONLY - identity/dry PASS 2026-08-18; "
+                      "not live-authorized (no runtime receiver witness)",
+            "rows": 1,
+            "applied": 0,
+            "preFunctions": 8329, "postFunctions": 8329,
+            "preInstructions": 551232, "postInstructions": 551232,
+            "preReferences": 234558, "postReferences": 234558,
+            "preBookmarks": 2301, "postBookmarks": 2301,
+            "preDefinedData": 48648, "postDefinedData": 48648,
+            "preUndefinedData": 3907369, "postUndefinedData": 3907369,
+        },
+    },
+    "name-cohort-unique-owner": {
+        # PRE is the verified off-volume backup taken immediately before the
+        # 2026-08-18 live apply (db.18628). Replay against that PRE.
+        "backup": BACKUPS / "2026-08-18-name-cohort-unique-owner-pre-live",
+        "spec": SPECS / "name-cohort-unique-owner.spec.tsv",
+        "manifest": SPECS / "name-cohort-unique-owner-manifest.tsv",
+        "rehearsalOnly": False,
+        "archived": {
+            "source": "local-lab/name-cohort-unique-owner-ceremony-2026-08-18/"
+                      "{apply,readback}.json (live, 2026-08-18)",
+            "rows": 12,
+            "applied": 12,
+            "preFunctions": 8329, "postFunctions": 8329,
+            "preInstructions": 551232, "postInstructions": 551232,
+            "preReferences": 234558, "postReferences": 234558,
+            "preBookmarks": 2301, "postBookmarks": 2301,
+            "preDefinedData": 48648, "postDefinedData": 48648,
+            "preUndefinedData": 3907369, "postUndefinedData": 3907369,
+        },
+    },
+    "name-cohort-fun-unique-owner": {
+        # PRE is the verified off-volume backup taken immediately before the
+        # 2026-08-18 live apply (db.18629). Replay against that PRE.
+        "backup": BACKUPS / "2026-08-18-name-cohort-fun-unique-owner-pre-live",
+        "spec": SPECS / "name-cohort-fun-unique-owner.spec.tsv",
+        "manifest": SPECS / "name-cohort-fun-unique-owner-manifest.tsv",
+        "rehearsalOnly": False,
+        "archived": {
+            "source": "local-lab/name-cohort-fun-unique-owner-ceremony-2026-08-18/"
+                      "{apply,readback}.json (live, 2026-08-18)",
+            "rows": 8,
+            "applied": 8,
+            "preFunctions": 8329, "postFunctions": 8329,
+            "preInstructions": 551232, "postInstructions": 551232,
+            "preReferences": 234558, "postReferences": 234558,
+            "preBookmarks": 2301, "postBookmarks": 2301,
+            "preDefinedData": 48648, "postDefinedData": 48648,
+            "preUndefinedData": 3907369, "postUndefinedData": 3907369,
+        },
+    },
+    "name-cohort-placeholder-unique-owner": {
+        # PRE is the verified off-volume backup taken immediately before the
+        # 2026-08-18 live apply (db.18630). Replay against that PRE.
+        "backup": BACKUPS / "2026-08-18-name-cohort-placeholder-unique-owner-pre-live",
+        "spec": SPECS / "name-cohort-placeholder-unique-owner.spec.tsv",
+        "manifest": SPECS / "name-cohort-placeholder-unique-owner-manifest.tsv",
+        "rehearsalOnly": False,
+        "archived": {
+            "source": "local-lab/name-cohort-placeholder-unique-owner-ceremony-2026-08-18/"
+                      "{apply,readback}.json (live, 2026-08-18)",
+            "rows": 7,
+            "applied": 7,
+            "preFunctions": 8329, "postFunctions": 8329,
+            "preInstructions": 551232, "postInstructions": 551232,
+            "preReferences": 234558, "postReferences": 234558,
+            "preBookmarks": 2301, "postBookmarks": 2301,
+            "preDefinedData": 48648, "postDefinedData": 48648,
+            "preUndefinedData": 3907369, "postUndefinedData": 3907369,
+        },
+    },
+    "name-cohort-cockpit-dual-owner": {
+        # PRE is the verified off-volume backup taken immediately before the
+        # 2026-08-18 live apply (db.18631). Replay against that PRE.
+        "backup": BACKUPS / "2026-08-18-name-cohort-cockpit-dual-owner-pre-live",
+        "spec": SPECS / "name-cohort-cockpit-dual-owner.spec.tsv",
+        "manifest": SPECS / "name-cohort-cockpit-dual-owner-manifest.tsv",
+        "rehearsalOnly": False,
+        "archived": {
+            "source": "local-lab/name-cohort-cockpit-dual-owner-ceremony-2026-08-18/"
+                      "{apply,readback}.json (live, 2026-08-18)",
+            "rows": 3,
+            "applied": 3,
+            "preFunctions": 8329, "postFunctions": 8329,
+            "preInstructions": 551232, "postInstructions": 551232,
+            "preReferences": 234558, "postReferences": 234558,
+            "preBookmarks": 2301, "postBookmarks": 2301,
+            "preDefinedData": 48648, "postDefinedData": 48648,
+            "preUndefinedData": 3907369, "postUndefinedData": 3907369,
+        },
+    },
+    "name-cohort-round-dual-owner": {
+        # PRE is the verified off-volume backup taken immediately before the
+        # 2026-08-19 live apply (db.18632). Replay against that PRE.
+        "backup": BACKUPS / "2026-08-19-name-cohort-round-dual-owner-pre-live",
+        "spec": SPECS / "name-cohort-round-dual-owner.spec.tsv",
+        "manifest": SPECS / "name-cohort-round-dual-owner-manifest.tsv",
+        "rehearsalOnly": False,
+        "archived": {
+            "source": "local-lab/name-cohort-round-dual-owner-ceremony-2026-08-19/"
+                      "{apply,readback}.json (live, 2026-08-19)",
+            "rows": 6,
+            "applied": 6,
+            "preFunctions": 8329, "postFunctions": 8329,
+            "preInstructions": 551232, "postInstructions": 551232,
+            "preReferences": 234558, "postReferences": 234558,
+            "preBookmarks": 2301, "postBookmarks": 2301,
+            "preDefinedData": 48648, "postDefinedData": 48648,
+            "preUndefinedData": 3907369, "postUndefinedData": 3907369,
         },
     },
 }
@@ -793,15 +915,399 @@ def run_probes(which: str) -> int:
 
 # ------------------------------------------------------------------ verdict
 
+VARARGS_GEOMETRY_FIELDS = (
+    "preReferences", "postReferences",
+    "preDefinedData", "postDefinedData",
+    "preUndefinedData", "postUndefinedData",
+)
+VARARGS_HISTORICAL_GEOMETRY = {
+    "preReferences": 234493, "postReferences": 234493,
+    "preDefinedData": 48583, "postDefinedData": 48583,
+    "preUndefinedData": 3907629, "postUndefinedData": 3907629,
+}
+VARARGS_DB18627_GEOMETRY = {
+    "preReferences": 234558, "postReferences": 234558,
+    "preDefinedData": 48648, "postDefinedData": 48648,
+    "preUndefinedData": 3907369, "postUndefinedData": 3907369,
+}
+VARARGS_PROGRAM_SHA256 = (
+    "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750")
+VARARGS_MANIFEST_SHA256 = (
+    "1d42ec00a6772f6b27fd6a33e6284609f114da34ad9bf9e0b7ce82d8854f1290")
+VARARGS_HISTORICAL_PROJECT = (
+    r"C:\Users\david\AppData\Local\Temp\claude"
+    r"\C--Users-david-source-Onslaught-Career-Editor"
+    r"\6174219b-0c29-4056-883b-580c862ff182\scratchpad"
+    r"\cohort-rehearsal\replicas\varargs-cohort2\BEA.rep")
+VARARGS_LIVE_PROJECT = r"C:\Users\david\Ghidra\Projects\BEA.rep"
+
+# These are two different valid sources, not six values to hand-fit.  The first
+# is the archived 2026-08-17 rehearsal against the tentacle-chain db.18623
+# snapshot.  The second is what a fresh replay now produces from the verified
+# db.18627 PRE used by the 2026-08-18 live ceremony.  `replica-pre-tree.json`
+# selects the authority before any structural value is compared.
+VARARGS_OFFLINE_AUTHORITIES = {
+    r"d:\bea-ghidra-backups\2026-08-17-tentacle-chain-a-post-live": {
+        "name": "historical-db.18623-rehearsal",
+        "files": 19,
+        "bytes": 187403141,
+        "treeDigest":
+            "b2e775dd5dc20b55fa04c36e8a44baaaa42eef4db385e7c6bf8e61f1852654fc",
+        "snapshot": {
+            "name": "db.18623.gbf", "bytes": 68550656,
+            "sha256":
+                "24fba0b59fcf9a1331788c1c00e01e57b46bb240e83bddf1d80e02c4f4b2cc1d",
+        },
+        "geometry": VARARGS_HISTORICAL_GEOMETRY,
+        "specSha256":
+            "993ce4ba620a4ad0cf5067de0cf011bfd9d3e3f32fba7a4f00ce93320b6400ba",
+        "applierSha256":
+            "38b72195fd87b808b915d63d559d70054b9fd3bb6580c094e165ffb98468100f",
+    },
+    r"d:\bea-ghidra-backups\2026-08-18-varargs-cohort2-pre-live": {
+        "name": "current-db.18627-reproduction",
+        "files": 19,
+        "bytes": 187485061,
+        "snapshot": {
+            "name": "db.18627.gbf", "bytes": 68599808,
+            "sha256":
+                "63c6d7076a67757c1eaa81324320e32ef806bb6fe3d2987ef77e0ae2ad5def85",
+        },
+        "geometry": VARARGS_DB18627_GEOMETRY,
+        # A newly generated receipt must identify the currently checked-out
+        # spec/applier, not the archived 2026-08-17 bytes.
+        "specSha256": None,
+        "applierSha256": None,
+    },
+}
+
+VARARGS_LIVE_RECEIPT_IDENTITY = {
+    "framework": "bea.ghidra.cohort-framework.live.v1",
+    "policy": "LIVE_AUTHORIZED_PER_COHORT",
+    "projectDir": VARARGS_LIVE_PROJECT,
+    "spec.sha256":
+        "50146e3910b9669152ddf6d80c49aa3de7684894f1a9d506c2924c805e4d3c31",
+    "applier.script": "GhidraApplyCohortManifestLive.java",
+    "applier.sha256":
+        "be114a5d22d1df92340d55e73c31f5b023c8dafc57e24958c78de2cbc8b09e7c",
+}
+
+_MISSING = object()
+
+
+def _normalise_authority_path(value: object) -> str:
+    out = str(value).replace("/", "\\").rstrip("\\").lower()
+    while "\\\\" in out:
+        out = out.replace("\\\\", "\\")
+    return out
+
+
+def _offline_authority_from_backup(value: object) -> dict | None:
+    wanted = _normalise_authority_path(value)
+    for path, authority in VARARGS_OFFLINE_AUTHORITIES.items():
+        if _normalise_authority_path(path) == wanted:
+            return authority
+    return None
+
+
+def _nested_value(doc: object, field: str) -> object:
+    cur = doc
+    for part in field.split("."):
+        if not isinstance(cur, dict) or part not in cur:
+            return _MISSING
+        cur = cur[part]
+    return cur
+
+
+def _authority_expect(problems: list[str], authority: str, role: str,
+                      doc: dict, field: str, expected: object) -> None:
+    actual = _nested_value(doc, field)
+    if actual is _MISSING:
+        problems.append(
+            f"VARARGS_AUTHORITY_MISSING authority={authority} role={role} "
+            f"field={field}")
+    elif actual != expected:
+        problems.append(
+            f"VARARGS_AUTHORITY_MISMATCH authority={authority} role={role} "
+            f"field={field} expected={expected!r} actual={actual!r}")
+
+
+def _authority_expect_path(problems: list[str], authority: str, role: str,
+                           doc: dict, field: str, expected: str) -> None:
+    actual = _nested_value(doc, field)
+    if actual is _MISSING:
+        problems.append(
+            f"VARARGS_AUTHORITY_MISSING authority={authority} role={role} "
+            f"field={field}")
+    elif _normalise_authority_path(actual) != _normalise_authority_path(expected):
+        problems.append(
+            f"VARARGS_AUTHORITY_MISMATCH authority={authority} role={role} "
+            f"field={field} expected={expected!r} actual={actual!r}")
+
+
+def _load_authority_json(path: Path, authority: str, role: str,
+                         problems: list[str]) -> dict | None:
+    if not path.is_file():
+        problems.append(
+            f"VARARGS_AUTHORITY_MISSING authority={authority} role={role} "
+            f"path={path}")
+        return None
+    try:
+        loaded = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        problems.append(
+            f"VARARGS_AUTHORITY_INVALID authority={authority} role={role} "
+            f"path={path} error={exc}")
+        return None
+    if not isinstance(loaded, dict):
+        problems.append(
+            f"VARARGS_AUTHORITY_INVALID authority={authority} role={role} "
+            f"path={path} error=top-level JSON is not an object")
+        return None
+    return loaded
+
+
+def _validate_varargs_receipt(problems: list[str], authority: str, role: str,
+                              doc: dict, geometry: dict[str, int],
+                              identity: dict[str, object]) -> None:
+    expected = {
+        **identity,
+        "cohortId": "varargs-cohort2",
+        "mode": role,
+        "reversibility": "CEREMONY_LEVEL_RESTORE_FROM_VERIFIED_PRE_BACKUP",
+        "manifest.bytes": 1279,
+        "manifest.sha256": VARARGS_MANIFEST_SHA256,
+        "program.name": "BEA.exe",
+        "program.md5": "3b456964020070efe696d2cc09464a55",
+        "program.sha256": VARARGS_PROGRAM_SHA256,
+        "counts.rows": 2,
+        "committed": role == "apply",
+        "result": "PASS",
+    }
+    for field, value in expected.items():
+        if field == "projectDir":
+            _authority_expect_path(
+                problems, authority, role, doc, field, str(value))
+        else:
+            _authority_expect(problems, authority, role, doc, field, value)
+    for field in VARARGS_GEOMETRY_FIELDS:
+        _authority_expect(
+            problems, authority, role, doc, f"counts.{field}", geometry[field])
+
+
+def _validate_varargs_backup_ready(problems: list[str], role: str, doc: dict,
+                                   root: str, total: int,
+                                   db_files: dict[str, tuple[int, str]]) -> None:
+    authority = "live-db.18627-ceremony"
+    expected = {
+        "schemaVersion": "onslaught-ghidra-project-backup.v2",
+        "copyComparison.matches": True,
+        "sourceStable": True,
+        "readonlyOpen.opened": True,
+        "readonlyOpen.contentStable": True,
+        "readonlyOpen.observedProgramName": "BEA.exe",
+        "readonlyOpen.observedProgramMd5": "3b456964020070efe696d2cc09464a55",
+        "readonlyOpen.observedProgramSha256": VARARGS_PROGRAM_SHA256,
+        "readonlyOpen.postOpenComparison.matches": True,
+        "source.fileCount": 19,
+        "source.totalBytes": total,
+        "source.structurallyComplete": True,
+    }
+    for field, value in expected.items():
+        _authority_expect(problems, authority, role, doc, field, value)
+    _authority_expect_path(problems, authority, role, doc, "source.root", root)
+
+    rows = _nested_value(doc, "source.files")
+    if rows is _MISSING:
+        problems.append(
+            f"VARARGS_AUTHORITY_MISSING authority={authority} role={role} "
+            "field=source.files")
+        return
+    if not isinstance(rows, list):
+        problems.append(
+            f"VARARGS_AUTHORITY_MISMATCH authority={authority} role={role} "
+            f"field=source.files expected='list' actual={type(rows).__name__!r}")
+        return
+    by_name = {}
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        name = str(row.get("relative_path", "")).replace("\\", "/").rsplit("/", 1)[-1]
+        if name:
+            by_name[name] = row
+    for name, (size, sha) in db_files.items():
+        row = by_name.get(name)
+        if row is None:
+            problems.append(
+                f"VARARGS_AUTHORITY_MISSING authority={authority} role={role} "
+                f"field=source.files[{name}]")
+            continue
+        _authority_expect(
+            problems, authority, role, row, "size", size)
+        actual = _nested_value(row, "sha256")
+        if actual is _MISSING:
+            problems.append(
+                f"VARARGS_AUTHORITY_MISSING authority={authority} role={role} "
+                f"field=source.files[{name}].sha256")
+        elif actual != sha:
+            problems.append(
+                f"VARARGS_AUTHORITY_MISMATCH authority={authority} role={role} "
+                f"field=source.files[{name}].sha256 expected={sha!r} actual={actual!r}")
+
+
+def _varargs_offline_authority(receipts_root: Path) -> dict | None:
+    path = receipts_root / "varargs-cohort2" / "replica-pre-tree.json"
+    if not path.is_file():
+        return None
+    try:
+        pre = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    return _offline_authority_from_backup(pre.get("backup"))
+
+
+def validate_varargs_authorities(receipts_root: Path = RECEIPTS,
+                                  local_lab_root: Path | None = None) -> list[str]:
+    """Validate historical reproduction and later live authority separately.
+
+    No receipt can select its authority from the six values being graded.  The
+    exact restored-backup path in `replica-pre-tree.json` selects either the
+    archived db.18623 rehearsal or a fresh db.18627 reproduction first.  The
+    live ceremony is always checked independently through its apply/readback and
+    verified PRE/POST backup receipts.  Missing, swapped, or unknown identities
+    fail closed with field-specific diagnostics.
+    """
+    local_lab = local_lab_root or (REPO / "local-lab")
+    problems: list[str] = []
+    offline_root = receipts_root / "varargs-cohort2"
+    live_root = local_lab / "varargs-cohort2-ceremony-2026-08-18"
+
+    pre = _load_authority_json(
+        offline_root / "replica-pre-tree.json", "varargs-offline-reproduction",
+        "replica-pre", problems)
+    offline_authority = None
+    if pre is not None:
+        backup = _nested_value(pre, "backup")
+        offline_authority = _offline_authority_from_backup(backup)
+        if offline_authority is None:
+            expected_paths = sorted(
+                _normalise_authority_path(p) for p in VARARGS_OFFLINE_AUTHORITIES)
+            problems.append(
+                "VARARGS_AUTHORITY_MISMATCH authority=varargs-offline-reproduction "
+                "role=replica-pre field=backup expected="
+                f"{expected_paths!r} actual={backup!r}")
+        else:
+            name = offline_authority["name"]
+            for field in ("files", "bytes"):
+                _authority_expect(
+                    problems, name, "replica-pre", pre, field,
+                    offline_authority[field])
+            if "treeDigest" in offline_authority:
+                _authority_expect(
+                    problems, name, "replica-pre", pre, "treeDigest",
+                    offline_authority["treeDigest"])
+
+    selected_name = (offline_authority["name"] if offline_authority
+                     else "varargs-offline-reproduction")
+    offline_apply = _load_authority_json(
+        offline_root / "apply.json", selected_name, "apply", problems)
+    offline_readback = _load_authority_json(
+        offline_root / "readback.json", selected_name, "readback", problems)
+    if offline_authority is not None:
+        spec_sha = offline_authority["specSha256"] or sha256_file(
+            SPECS / "varargs-cohort2.spec.tsv")
+        applier_sha = offline_authority["applierSha256"] or sha256_file(
+            TOOLS / "GhidraApplyCohortManifest.java")
+        identity = {
+            "framework": "bea.ghidra.cohort-framework.v1",
+            "policy": "LIVE_FORBIDDEN",
+            "projectDir": VARARGS_HISTORICAL_PROJECT,
+            "spec.sha256": spec_sha,
+            "applier.script": "GhidraApplyCohortManifest.java",
+            "applier.sha256": applier_sha,
+        }
+        for role, doc in (("apply", offline_apply),
+                          ("readback", offline_readback)):
+            if doc is not None:
+                _validate_varargs_receipt(
+                    problems, selected_name, role, doc,
+                    offline_authority["geometry"], identity)
+
+    live_docs = {
+        "apply": _load_authority_json(
+            live_root / "apply.json", "live-db.18627-ceremony", "apply", problems),
+        "readback": _load_authority_json(
+            live_root / "readback.json", "live-db.18627-ceremony", "readback",
+            problems),
+    }
+    for role, doc in live_docs.items():
+        if doc is not None:
+            _validate_varargs_receipt(
+                problems, "live-db.18627-ceremony", role, doc,
+                VARARGS_DB18627_GEOMETRY, VARARGS_LIVE_RECEIPT_IDENTITY)
+
+    pre_ready = _load_authority_json(
+        live_root / "pre-backup-restore.ready.json", "live-db.18627-ceremony",
+        "pre-backup", problems)
+    post_ready = _load_authority_json(
+        live_root / "post-backup-restore.ready.json", "live-db.18627-ceremony",
+        "post-backup", problems)
+    db18627 = (68599808,
+               "63c6d7076a67757c1eaa81324320e32ef806bb6fe3d2987ef77e0ae2ad5def85")
+    if pre_ready is not None:
+        _validate_varargs_backup_ready(
+            problems, "pre-backup", pre_ready,
+            r"D:\BEA-Ghidra-Backups\2026-08-18-varargs-cohort2-pre-live",
+            187485061,
+            {"db.18626.gbf": (
+                 68583424,
+                 "fdd94fbcc6ff39189f193f39333990453c7762360dc32e4df48b3107c95fa46f"),
+             "db.18627.gbf": db18627})
+    if post_ready is not None:
+        _validate_varargs_backup_ready(
+            problems, "post-backup", post_ready,
+            r"D:\BEA-Ghidra-Backups\2026-08-18-varargs-cohort2-post-live",
+            187501445,
+            {"db.18627.gbf": db18627,
+             "db.18628.gbf": (
+                 68599808,
+                 "966b61ab3e0aa4e4d1f8fbba5ccd8f00c8ceb28997328f1c2fda82d94dfda09e")})
+    return problems
+
+
+def _varargs_reproduction_expected(receipts_root: Path) -> dict[str, object]:
+    authority = _varargs_offline_authority(receipts_root)
+    if authority is None:
+        # The separate authority validator will fail closed; this fallback only
+        # keeps the generic receipt grader structurally total.
+        authority = next(
+            a for a in VARARGS_OFFLINE_AUTHORITIES.values()
+            if a["name"] == "current-db.18627-reproduction")
+    geometry = authority["geometry"]
+    return {
+        "source": authority["name"],
+        "rows": 2,
+        "applied": 2,
+        "preFunctions": 8329, "postFunctions": 8329,
+        "preInstructions": 551232, "postInstructions": 551232,
+        **geometry,
+        "preBookmarks": 2301, "postBookmarks": 2301,
+    }
+
+
 def verdict() -> int:
-    problems = 0
+    authority_diagnostics = validate_varargs_authorities(RECEIPTS, REPO / "local-lab")
+    problems = len(authority_diagnostics)
     report: dict[str, dict] = {}
     for name, cfg in COHORTS.items():
-        arch = cfg["archived"]
+        arch = (_varargs_reproduction_expected(RECEIPTS)
+                if name == "varargs-cohort2" else cfg["archived"])
         out = RECEIPTS / name
         apply_json = out / "apply.json"
         read_json = out / "readback.json"
         entry: dict[str, object] = {"archivedSource": arch["source"]}
+        if name == "varargs-cohort2":
+            entry["liveCeremonySource"] = cfg["archived"]["source"]
         if not apply_json.exists():
             entry["status"] = "NOT_RUN"
             report[name] = entry
@@ -890,6 +1396,18 @@ def verdict() -> int:
         problems += len(divergences)
         report[name] = entry
 
+    report["varargs-authorities"] = {
+        "status": "VALIDATED" if not authority_diagnostics else "DIVERGED",
+        "checks": 7,
+        "historicalReproduction":
+            "db.18623 rehearsal selected by replica-pre backup identity",
+        "liveCeremony":
+            "db.18627 PRE plus live apply/readback plus verified PRE/POST backups",
+        "divergences": [
+            {"field": "authority", "archived": "valid", "framework": diagnostic}
+            for diagnostic in authority_diagnostics
+        ],
+    }
     RECEIPTS.mkdir(parents=True, exist_ok=True)
     (RECEIPTS / "verdict.json").write_text(
         json.dumps(report, indent=2, default=str), encoding="utf-8")

@@ -60,10 +60,17 @@ from __future__ import annotations
 
 import difflib
 import hashlib
+import io
 import json
 import sys
+import tempfile
 import unittest
+from contextlib import redirect_stdout
+from copy import deepcopy
 from pathlib import Path
+from unittest import mock
+
+from tools import ghidra_cohort_replay as replay
 
 TOOLS = Path(__file__).resolve().parent
 REPO = TOOLS.parent
@@ -110,12 +117,49 @@ REQUIRED_LIVE_PROJECT_DIR = r"c:\users\david\ghidra\projects\bea.rep"
 # measured pre/post pins. vftable-cohort65 is granted 2026-08-17 after the full
 # rehearsal on a db.18626 replica: dry/apply/readback all PASS (65 RTTI vftable
 # slots typed, 0 function rows changed, 65 symbols added, memory digest frozen).
+# varargs-cohort2 is granted 2026-08-18 after the full rehearsal on a db.18627
+# replica: census/identity/dry/apply/readback all PASS (2 rows, 8327 untouched,
+# columnsMoved={signatureShape=2, varArgs=2}).
+# name-cohort-unique-owner is granted 2026-08-18 after reviewer t_393ec4d8 GO
+# on the unique-RTTI-owner / vtable-slot grade (same class as the name-cohort5
+# slotfix row): replica census/identity/dry/apply/readback PASS on a db.18628
+# copy (12 rows, 8317 untouched, columnsMoved={name=12}).
+# name-cohort-fun-unique-owner is granted 2026-08-18 after reviewer t_d5861b30 GO
+# on the same unique-RTTI-owner / vtable-slot grade (FUN_ leftovers named
+# Class__VFunc_N_addr): replica census/identity/dry/apply/readback PASS on a
+# db.18629 copy (8 rows, 8321 untouched, columnsMoved={name=8, symbolSource=8}).
+# name-cohort-placeholder-unique-owner is granted 2026-08-18 after reviewer
+# t_7781a811 GO on the same unique-RTTI-owner / vtable-slot grade (T3/VFuncSlot
+# leftovers named Class__VFunc_N_addr): replica census/identity/dry/apply/
+# readback PASS on a db.18630 copy (7 rows, 8322 untouched,
+# columnsMoved={name=7}).
+# name-cohort-cockpit-dual-owner is granted 2026-08-18 after reviewer
+# t_75e4ccdd GO on t_05ad0583: FUN_ owned by exactly two RTTI classes at the
+# same slot of one table pair, named Class__VFunc_N_addr after a sibling
+# shared slot of that pair. Replica census/identity/dry/apply/readback PASS
+# on a db.18631 copy (3 rows, 8326 untouched,
+# columnsMoved={name=3, symbolSource=3}). Not a blank check for other
+# dual-owner leftovers.
+# name-cohort-round-dual-owner is granted 2026-08-19 after reviewer
+# t_dfd691a2 GO on t_22b107dc: VFuncSlot_* owned by exactly two RTTI
+# classes at the same slot of one table pair, named Class__VFunc_N_addr
+# after a sibling shared slot of that pair already Class__VFunc_N_addr.
+# Replica census/identity/dry/apply/readback PASS on a db.18632 copy
+# (6 rows, 8323 untouched, columnsMoved={name=6}). Not unique-owner.
+# Not the t_75e4ccdd cockpit FUN_ family. Not a blank check for other
+# dual-owner leftovers.
 LIVE_GRANTED_COHORTS = [
     "boundary-cohort41", "name-cohort160", "abi-cohort294",
     "tentacle-chain-a", "tentacle-chain-b",
     "abi-two-witness-arity36",
     "name-cohort5-runtime-witnessed",
     "vftable-cohort65",
+    "varargs-cohort2",
+    "name-cohort-unique-owner",
+    "name-cohort-fun-unique-owner",
+    "name-cohort-placeholder-unique-owner",
+    "name-cohort-cockpit-dual-owner",
+    "name-cohort-round-dual-owner",
 ]
 PROGRAM_SHA256 = (
     "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
@@ -520,6 +564,12 @@ LIVE_ALLOWLISTED_EDITS: list[tuple[str, str, str]] = [
         '        "abi-two-witness-arity36",\n'
         '        "name-cohort5-runtime-witnessed",\n'
         '        "vftable-cohort65",\n'
+        '        "varargs-cohort2",\n'
+        '        "name-cohort-unique-owner",\n'
+        '        "name-cohort-fun-unique-owner",\n'
+        '        "name-cohort-placeholder-unique-owner",\n'
+        '        "name-cohort-cockpit-dual-owner",\n'
+        '        "name-cohort-round-dual-owner",\n'
         "    };\n",
     ),
     (
@@ -685,7 +735,9 @@ class FrameworkDerivationTests(unittest.TestCase):
         derivation = "".join(after for _r, _b, after in LIVE_ALLOWLISTED_EDITS)
         for cohort in LIVE_GRANTED_COHORTS:
             self.assertIn(f'"{cohort}"', derivation)
-        for rehearsed_only in ("varargs-cohort2",):
+        for rehearsed_only in (
+                "name-cohort-waypoint-follow",
+        ):
             self.assertNotIn(rehearsed_only, self.live,
                              "a rehearsed cohort is not an authorization")
 
@@ -1355,6 +1407,262 @@ class NegativeControlTests(unittest.TestCase):
                        'out.add("callingConvention")',
                        'out.add("namespace")'):
             self.assertTrue(banned not in block, banned)
+
+
+class VarargsAuthorityVerdictTests(unittest.TestCase):
+    """Historical db.18623 replay and db.18627 live receipts stay distinct.
+
+    Commit 8a23b337 correctly repinned the spec/live ceremony after vftable65,
+    but the ignored reproduction lane still contains the earlier db.18623
+    rehearsal.  The verdict must identify each receipt set before comparing its
+    six structural values; otherwise either valid authority looks stale.
+    """
+
+    HISTORICAL_GEOMETRY = {
+        "preReferences": 234493, "postReferences": 234493,
+        "preDefinedData": 48583, "postDefinedData": 48583,
+        "preUndefinedData": 3907629, "postUndefinedData": 3907629,
+    }
+    LIVE_GEOMETRY = {
+        "preReferences": 234558, "postReferences": 234558,
+        "preDefinedData": 48648, "postDefinedData": 48648,
+        "preUndefinedData": 3907369, "postUndefinedData": 3907369,
+    }
+
+    def setUp(self) -> None:
+        # Keep even unit-test scratch inside this card's isolated child worktree.
+        self.temp = tempfile.TemporaryDirectory(
+            prefix=".varargs-authority-test-", dir=REPO)
+        self.root = Path(self.temp.name)
+        self.receipts = self.root / "receipts"
+        self.local_lab = self.root / "local-lab"
+        self.offline = self.receipts / "varargs-cohort2"
+        self.live = self.local_lab / "varargs-cohort2-ceremony-2026-08-18"
+        self.offline.mkdir(parents=True)
+        self.live.mkdir(parents=True)
+        self.docs = self._baseline_docs()
+        self._write_docs()
+
+    def tearDown(self) -> None:
+        self.temp.cleanup()
+
+    @staticmethod
+    def _receipt(authority: str, mode: str, geometry: dict[str, int]) -> dict:
+        historical = authority == "historical"
+        return {
+            "framework": ("bea.ghidra.cohort-framework.v1" if historical
+                          else "bea.ghidra.cohort-framework.live.v1"),
+            "policy": "LIVE_FORBIDDEN" if historical else "LIVE_AUTHORIZED_PER_COHORT",
+            "cohortId": "varargs-cohort2",
+            "mode": mode,
+            "generatedAtUtc": ("2026-08-17T15:46:59.471725400Z"
+                               if historical and mode == "apply"
+                               else "2026-08-17T15:47:28.619997700Z"
+                               if historical
+                               else "2026-08-18T21:24:39.937621100Z"
+                               if mode == "apply"
+                               else "2026-08-18T21:25:10.890310700Z"),
+            "projectDir": (
+                r"C:\Users\david\AppData\Local\Temp\claude\C--Users-david-source-Onslaught-Career-Editor\6174219b-0c29-4056-883b-580c862ff182\scratchpad\cohort-rehearsal\replicas\varargs-cohort2\BEA.rep"
+                if historical else r"C:\Users\david\Ghidra\Projects\BEA.rep"),
+            "reversibility": "CEREMONY_LEVEL_RESTORE_FROM_VERIFIED_PRE_BACKUP",
+            "applier": {
+                "script": ("GhidraApplyCohortManifest.java" if historical
+                           else "GhidraApplyCohortManifestLive.java"),
+                "sha256": ("38b72195fd87b808b915d63d559d70054b9fd3bb6580c094e165ffb98468100f"
+                           if historical else
+                           "be114a5d22d1df92340d55e73c31f5b023c8dafc57e24958c78de2cbc8b09e7c"),
+            },
+            "spec": {"sha256": (
+                "993ce4ba620a4ad0cf5067de0cf011bfd9d3e3f32fba7a4f00ce93320b6400ba"
+                if historical else
+                "50146e3910b9669152ddf6d80c49aa3de7684894f1a9d506c2924c805e4d3c31")},
+            "manifest": {
+                "bytes": 1279,
+                "sha256": "1d42ec00a6772f6b27fd6a33e6284609f114da34ad9bf9e0b7ce82d8854f1290",
+            },
+            "program": {
+                "name": "BEA.exe",
+                "md5": "3b456964020070efe696d2cc09464a55",
+                "sha256": PROGRAM_SHA256,
+            },
+            "counts": {"rows": 2, **geometry},
+            "committed": mode == "apply",
+            "result": "PASS",
+        }
+
+    @staticmethod
+    def _ready(root: str, total: int,
+               db_files: list[tuple[str, int, str]]) -> dict:
+        return {
+            "schemaVersion": "onslaught-ghidra-project-backup.v2",
+            "copyComparison": {"matches": True},
+            "sourceStable": True,
+            "readonlyOpen": {
+                "opened": True,
+                "contentStable": True,
+                "observedProgramName": "BEA.exe",
+                "observedProgramMd5": "3b456964020070efe696d2cc09464a55",
+                "observedProgramSha256": PROGRAM_SHA256,
+                "postOpenComparison": {"matches": True},
+            },
+            "source": {
+                "root": root,
+                "fileCount": 19,
+                "totalBytes": total,
+                "structurallyComplete": True,
+                "files": [
+                    {"relative_path": (
+                        "BEA.rep/idata/00/~00000000.db/" + name),
+                     "size": size, "sha256": sha}
+                    for name, size, sha in db_files
+                ],
+            },
+        }
+
+    def _baseline_docs(self) -> dict[str, dict]:
+        db18627 = (
+            "db.18627.gbf", 68599808,
+            "63c6d7076a67757c1eaa81324320e32ef806bb6fe3d2987ef77e0ae2ad5def85")
+        return {
+            "offline-pre": {
+                "backup": "D:\\BEA-Ghidra-Backups\\2026-08-17-tentacle-chain-a-post-live",
+                "files": 19,
+                "bytes": 187403141,
+                "treeDigest": "b2e775dd5dc20b55fa04c36e8a44baaaa42eef4db385e7c6bf8e61f1852654fc",
+            },
+            "offline-apply": self._receipt(
+                "historical", "apply", self.HISTORICAL_GEOMETRY),
+            "offline-readback": self._receipt(
+                "historical", "readback", self.HISTORICAL_GEOMETRY),
+            "live-apply": self._receipt("live", "apply", self.LIVE_GEOMETRY),
+            "live-readback": self._receipt(
+                "live", "readback", self.LIVE_GEOMETRY),
+            "live-pre": self._ready(
+                r"D:\BEA-Ghidra-Backups\2026-08-18-varargs-cohort2-pre-live",
+                187485061,
+                [("db.18626.gbf", 68583424,
+                  "fdd94fbcc6ff39189f193f39333990453c7762360dc32e4df48b3107c95fa46f"),
+                 db18627]),
+            "live-post": self._ready(
+                r"D:\BEA-Ghidra-Backups\2026-08-18-varargs-cohort2-post-live",
+                187501445,
+                [db18627,
+                 ("db.18628.gbf", 68599808,
+                  "966b61ab3e0aa4e4d1f8fbba5ccd8f00c8ceb28997328f1c2fda82d94dfda09e")]),
+        }
+
+    def _write_docs(self) -> None:
+        paths = {
+            "offline-pre": self.offline / "replica-pre-tree.json",
+            "offline-apply": self.offline / "apply.json",
+            "offline-readback": self.offline / "readback.json",
+            "live-apply": self.live / "apply.json",
+            "live-readback": self.live / "readback.json",
+            "live-pre": self.live / "pre-backup-restore.ready.json",
+            "live-post": self.live / "post-backup-restore.ready.json",
+        }
+        for role, path in paths.items():
+            path.write_text(json.dumps(self.docs[role]), encoding="utf-8")
+
+    def _validate(self) -> list[str]:
+        self._write_docs()
+        return replay.validate_varargs_authorities(self.receipts, self.local_lab)
+
+    def _run_verdict(self) -> tuple[int, str, dict]:
+        self._write_docs()
+        output = io.StringIO()
+        with mock.patch.object(replay, "RECEIPTS", self.receipts), \
+                mock.patch.object(replay, "REPO", self.root), \
+                redirect_stdout(output):
+            rc = replay.verdict()
+        report = json.loads((self.receipts / "verdict.json").read_text(
+            encoding="utf-8"))
+        return rc, output.getvalue(), report
+
+    def test_separate_historical_and_live_geometry_is_valid(self) -> None:
+        self.assertEqual(self._validate(), [])
+
+    def test_wrong_db18627_snapshot_is_refused(self) -> None:
+        files = self.docs["live-pre"]["source"]["files"]
+        row = next(r for r in files if r["relative_path"].endswith("db.18627.gbf"))
+        row["sha256"] = "00" * 32
+        problems = self._validate()
+        self.assertIn(
+            "VARARGS_AUTHORITY_MISMATCH authority=live-db.18627-ceremony "
+            "role=pre-backup field=source.files[db.18627.gbf].sha256 "
+            "expected='63c6d7076a67757c1eaa81324320e32ef806bb6fe3d2987ef77e0ae2ad5def85' "
+            "actual='" + "00" * 32 + "'", problems)
+
+    def test_wrong_receipt_identity_is_refused(self) -> None:
+        self.docs["offline-apply"] = deepcopy(self.docs["live-apply"])
+        problems = self._validate()
+        self.assertIn(
+            "VARARGS_AUTHORITY_MISMATCH authority=historical-db.18623-rehearsal "
+            "role=apply field=framework expected='bea.ghidra.cohort-framework.v1' "
+            "actual='bea.ghidra.cohort-framework.live.v1'", problems)
+
+    def test_wrong_receipt_identity_makes_verdict_exit_nonzero(self) -> None:
+        self.docs["offline-apply"] = deepcopy(self.docs["live-apply"])
+        rc, output, report = self._run_verdict()
+        self.assertEqual(rc, 1)
+        diagnostic = (
+            "VARARGS_AUTHORITY_MISMATCH authority=historical-db.18623-rehearsal "
+            "role=apply field=framework expected='bea.ghidra.cohort-framework.v1' "
+            "actual='bea.ghidra.cohort-framework.live.v1'")
+        self.assertIn(diagnostic, output)
+        self.assertEqual(report["varargs-authorities"]["status"], "DIVERGED")
+
+    def test_swapped_historical_and_live_geometry_is_refused(self) -> None:
+        for role in ("offline-apply", "offline-readback"):
+            self.docs[role]["counts"].update(self.LIVE_GEOMETRY)
+        for role in ("live-apply", "live-readback"):
+            self.docs[role]["counts"].update(self.HISTORICAL_GEOMETRY)
+        problems = self._validate()
+        self.assertIn(
+            "VARARGS_AUTHORITY_MISMATCH authority=historical-db.18623-rehearsal "
+            "role=apply field=counts.preReferences expected=234493 actual=234558",
+            problems)
+        self.assertIn(
+            "VARARGS_AUTHORITY_MISMATCH authority=live-db.18627-ceremony "
+            "role=apply field=counts.preReferences expected=234558 actual=234493",
+            problems)
+
+    def test_stale_six_value_set_is_refused_as_six_named_fields(self) -> None:
+        self.docs["live-apply"]["counts"].update(self.HISTORICAL_GEOMETRY)
+        problems = [p for p in self._validate()
+                    if "authority=live-db.18627-ceremony role=apply field=counts." in p]
+        self.assertEqual(len(problems), 6, problems)
+
+    def test_missing_geometry_field_is_refused(self) -> None:
+        del self.docs["live-apply"]["counts"]["preDefinedData"]
+        self.assertIn(
+            "VARARGS_AUTHORITY_MISSING authority=live-db.18627-ceremony "
+            "role=apply field=counts.preDefinedData", self._validate())
+
+    def test_one_value_tamper_is_refused_with_exact_diagnostic(self) -> None:
+        self.docs["live-readback"]["counts"]["postReferences"] += 1
+        self.assertIn(
+            "VARARGS_AUTHORITY_MISMATCH authority=live-db.18627-ceremony "
+            "role=readback field=counts.postReferences expected=234558 actual=234559",
+            self._validate())
+
+    def test_one_value_tamper_makes_verdict_exit_nonzero(self) -> None:
+        self.docs["live-readback"]["counts"]["postReferences"] += 1
+        rc, output, report = self._run_verdict()
+        self.assertEqual(rc, 1)
+        self.assertIn(
+            "VARARGS_AUTHORITY_MISMATCH authority=live-db.18627-ceremony "
+            "role=readback field=counts.postReferences expected=234558 actual=234559",
+            output)
+        self.assertEqual(report["varargs-authorities"]["status"], "DIVERGED")
+
+    def test_missing_receipt_file_fails_closed(self) -> None:
+        (self.live / "readback.json").unlink()
+        self.assertIn(
+            "VARARGS_AUTHORITY_MISSING authority=live-db.18627-ceremony "
+            "role=readback path=" + str(self.live / "readback.json"),
+            replay.validate_varargs_authorities(self.receipts, self.local_lab))
 
 
 class ReplayReceiptTests(unittest.TestCase):
