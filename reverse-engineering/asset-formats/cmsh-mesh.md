@@ -1,11 +1,12 @@
 # CMSH tagged mesh-stream contract
 
 Status: active format contract — complete corpus framing and bounded field
-semantics; animation/skinning/general scene import remain partial
-Date: 2026-08-22
+semantics; position skinning is closed while animation/general scene import
+remain partial
+Date: 2026-08-23
 Verdict: all 213 mesh streams frame and their complete tag population is
-counted; selected geometry is bounded while PB*, animation, and skinning remain
-partial.
+counted; selected geometry and the seven-file position-skinning family are
+bounded while PB*, animation scheduling, and normal blending remain partial.
 Evidence: MEASURED — all 213 mirror-index mesh rows were re-aggregated on
 2026-08-22. Field names below are either measured by repository parsers or
 explicitly attributed to Stuart's AYAResourceExtractor lineage.
@@ -96,8 +97,10 @@ with that provenance rather than promoted to released-runtime behavior:
   `REFR` is one referenced-part index used by repeated geometry.
 - `IBUF` is a `u16` index array. The common vertex form is 36 bytes:
   `float3 position`, `float3 normal`, packed ARGB, `float u`, `float v`.
-  A 48-byte form adds twelve bytes whose exact bone-weight interpretation is
-  not fully established.
+  A 48-byte form adds three float matrix-palette offsets. Each is exactly
+  `3 *` an in-range index in that part's `BONE` array. The released position
+  blend is owned by the focused
+  [matrix-palette contract](cmsh-matrix-palette-skinning.md).
 - `TEXR` stores six texture IDs. `TEXB` includes a fixed 128-byte texture name.
 - Triangle strips and 16-bit indices are supported by the extractor path;
   not every topology is proved supported by the retail runtime or rebuild.
@@ -123,8 +126,11 @@ The seven `BONE` arrays are now bounded as same-mesh part indices: exactly part
 1 carries 14, 18, or 19 indices, and the indexed CMSP part names form either a
 `Bip01` humanoid skeleton or the Sentinel arm's `Bone01`…`Bone14` chain. In the
 48-byte vertex form, the three words at `+0x0C` are exact `BONE index × 3`
-matrix-palette slots. Their blending/weight semantics and bind matrices remain
-open.
+matrix-palette slots. The
+[focused position-skinning contract](cmsh-matrix-palette-skinning.md) proves
+GPU-side c10 palette addressing, frame-zero/current pose roles, one-third
+palette scale, and the released asymmetric slot weights `(0, 2/3, 1/3)`.
+Typed bind-product order and the normal-combine block remain open.
 
 Retail static routes include:
 
@@ -163,9 +169,11 @@ The address summary is in
 
 - Name every PB* payload field by joining one exact part to its retail consumer;
   tag frequency alone is insufficient.
-- Recover the three-slot blend/weight rule, bind pose, animation interpolation,
-  and malformed hierarchy behavior for the seven bone-bearing files. Bone and
-  palette-slot indices themselves are now bounded by the dedicated contract.
+- Reduce the frame-zero/current palette-construction body to reviewed typed
+  matrix-order notation, decode the normal-combine block, observe one infantry
+  draw, and preserve malformed hierarchy behavior for disposable copied-profile
+  tests. The position blend and slot indices are closed by the dedicated
+  matrix-palette contract.
 - Establish every remaining topology/FVF combination with a cross-check between
   bytes, static loader branches, and rendered output.
 - Trace the population of the runtime named-animation table at
@@ -180,7 +188,8 @@ The address summary is in
 
 The container walk, corpus population, tag counts, hierarchy/reference shapes,
 selected geometry fields, pose-map dimensions, bone-to-part names, palette-slot
-indices, numeric-LVLR membership, 4,090 WRES definition joins, and 53 anonymous
-embedded bodies are bounded. Named clips, weights/blending, other WRES/spawn
-owners, general scheduling/rendering, complete scene dependencies, collision,
+indices, the seven-file position blend, numeric-LVLR membership, 4,090 WRES
+definition joins, and 53 anonymous embedded bodies are bounded. Named clips,
+normal blending, exact typed bind-product order, other WRES/spawn owners,
+general scheduling/rendering, complete scene dependencies, collision,
 malformed-input behavior, pixels, and parity are open.

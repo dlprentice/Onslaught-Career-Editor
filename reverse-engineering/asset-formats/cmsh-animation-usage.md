@@ -1,7 +1,7 @@
 # CMSH stores pose lanes; LVLR, WRES, physics, and MSL expose bounded usage
 
-Status: active bounded animation, skinning, and authored-usage contract
-Date: 2026-08-22
+Status: active bounded animation, position-skinning, and authored-usage contract
+Date: 2026-08-23
 Verdict: the 213 loose CMSH meshes contain 3,774 part tracks; 64 meshes and 659
 parts have non-trivial `VHFM` maps, exactly seven meshes carry one `BONE` array,
 and exactly 17 camera parts carry one `HFOV` value. Across the 66 numeric LVLR
@@ -10,8 +10,9 @@ the other 53 rows each own an anonymous embedded CMSH. The WRES/physics join now
 connects 4,090 definition-bearing placements to exactly one named level row and
 one loose CMSH. The 733 loose MSL files contain 56 active `PlayAnimation*`
 calls in 15 files; 22 sites join through script strings on three WRES instances.
-These are storage and authored-reference contracts, not proof that every named
-track is scheduled or rendered.
+The focused matrix-palette pass additionally closes the seven-file released
+position blend. These remain storage and authored-reference contracts, not proof
+that every named track is scheduled or rendered.
 Evidence: MEASURED — `tools/cmsh_animation_usage_census.py` parsed and
 hash-verified 213 meshes, 66 numeric LVLR archives, 733 MSL files, and
 `default physics.dat` (1,013 inputs) against
@@ -128,9 +129,13 @@ index in the same mesh; the indexed part's 32-byte CMSP name is the bone name.
 The 48-byte skinned vertex form has three float words at `+0x0C`. All 9,609
 shipped slot words are exact non-negative multiples of three; division by three
 produces an in-range index into that part's `BONE` array. Every declared bone
-slot is used by at least one vertex in each of the seven meshes. This bounds
-matrix-palette addressing. It does **not** establish weights, blending, bind
-matrices, or how the three slots combine; those remain open.
+slot is used by at least one vertex in each of the seven meshes. The dedicated
+[matrix-palette contract](cmsh-matrix-palette-skinning.md) now proves the GPU
+consumer, c10 palette, renderer-owned binary32 one-third pre-scale,
+frame-zero/current pose roles, and released position coefficients `(0, 2s, s)`
+for `s = float32(0x3EAAAAAB)` (rational shorthand `(0, 2/3, 1/3)`): slot 0 is
+computed then discarded, slot 1 is doubled, and slot 2 is added. Exact typed
+bind-product order and the normal combine remain open.
 
 The runtime also uses semantic part names outside this serialized skinning
 array. `CMCTentacle__Init @ 0x0049CC40` searches names such as `tentacle`,
@@ -205,6 +210,8 @@ than being attached to the parent CMSH by guesswork.
 | `0x004F44A0` | `CComplexThing__SetAnimMode` | lazy `CAnimation` allocation and forwarding |
 | `0x005351D0` | `IScript__PlayAnimationWait` | name lookup, play dispatch, VM stop, completion-resume contract |
 | `0x0054C920` | `CDXMeshVB__BuildSkeletalVB` | skeletal vertex-buffer construction route |
+| `0x00549570` | `CMeshRenderer__RenderMeshCore` | samples each BONE part at frame zero/current pose, constructs the palette, scales all 16 matrix elements by `[0x005D8608]`, and copies it to `0x009C69D4` |
+| `0x00502920` | `CVertexShader__ApplyCustomRenderStateShaderConstants` | uploads a separate c7-c9 one-third diagonal, then reads/transposes and uploads the already-scaled global palette to c10+ |
 | `0x0049CC40` | `CMCTentacle__Init` | semantic part-name scan and controller-owned bone/spline buffers |
 
 These anchors demonstrate consumers and call shapes. They do not prove that the
@@ -245,9 +252,10 @@ specimen-bound tests when those two inputs are absent.
 - **`aFrames`:** join `CMSP+0xB4` to the exact `CMeshPart__LoadFromStream` branch
   and one downstream reader; its current distribution refutes a simple visible-
   key-count label.
-- **Three-slot skinning:** close the shader/palette consumer that combines the
-  three scaled indices, then use one disposable copied-profile skeletal capture
-  to falsify the recovered blend. Do not edit the pristine shelf.
+- **Remaining skinning:** reduce the proved frame-zero/current palette builder
+  to typed matrix-order notation, decode normal deformation, obtain a raw
+  48-byte runtime VB comparison, and observe one infantry draw. Position weights
+  and the two Sentinel runtime instances are closed by the focused contract.
 - **Other WRES/component edges:** the type-8/type-35 definition family is now
   closed across all 66 numeric worlds. Sequentially frame the remaining record
   types and join component `SetScript` indices through component definitions
@@ -262,8 +270,10 @@ specimen-bound tests when those two inputs are absent.
 ## Claim boundary
 
 Pose-table dimensions, frame-map range/shape, bone-to-part naming, palette-slot
-indices, camera-lane values, numeric-LVLR membership, 4,090 definition-bearing
+indices, released position weights/blending, frame-zero/current palette roles,
+camera-lane values, numeric-LVLR membership, 4,090 definition-bearing
 world-instance joins, 53 anonymous embedded bodies, and loose-MSL call sites are
-bounded. Named-clip serialization, weights/blending, bind pose, interpolation,
-other WRES/component/dynamic-spawn joins, general scheduling, malformed-input
-behavior, runtime rendering, and parity remain open.
+bounded. Named-clip serialization, normal blending, exact typed bind-product
+order, interpolation, other WRES/component/dynamic-spawn joins, general
+scheduling, malformed-input behavior, wider runtime rendering, and parity remain
+open.
