@@ -260,9 +260,9 @@ The current layers must remain separate:
 | MSVC exception/unwind funclets in saved Ghidra | 1,179 | Compiler machinery; not gameplay-semantic closure |
 | Literal `FUN_<address>` names in saved Ghidra | 1,036 | The separate 34-row new-function vocabulary ceremony replaced those defaults; the 31 text-gap, 79 external-table, 24 JPEG/IJG, 23 CRT P0, and two D3DX structural rows retain default names except the CRT thunk that displays its target's saved name |
 | Static-envelope accounting | 8,170 rows: 8,163 C1 + 7 C2 | Dated 8,136-row table plus reviewed 34-row addendum; excludes the 31 text-gap, 79 external-table, 24 JPEG/IJG, 23 CRT P0, and two D3DX rows |
-| Canonical campaign | 8,329 rows: 217 C1 + 10 C2 + 8,102 OPAQUE | Frozen Gen29 db.18618 authority; 26,841/26,841 eligible carry rows accounted for |
-| Canonical residual ledger | 6,109 rows: 153 open dark + 860 terminal bounded ambiguity + 30 terminal data + 5,066 terminal padding | The 153 open rows describe sealed Generation-29 geometry, not semantic regression |
-| Canonical rebuild states | 14,429 NOT_READY + 8 PARTIAL_CONTRACT + 1 CONTRACT_ONLY + 0 REBUILD_READY | Contract mapping state, not implementation parity |
+| Dated Generation-29 campaign | 8,329 rows: 217 C1 + 10 C2 + 8,102 OPAQUE | Frozen Gen29 db.18618 receipt; 26,841/26,841 eligible carry rows accounted for |
+| Dated Generation-29 residual ledger | 6,109 rows: 153 open dark + 860 terminal bounded ambiguity + 30 terminal data + 5,066 terminal padding | The 153 open rows describe sealed Generation-29 geometry, not semantic regression |
+| Dated Generation-29 rebuild states | 14,429 NOT_READY + 8 PARTIAL_CONTRACT + 1 CONTRACT_ONLY + 0 REBUILD_READY | Contract mapping state, not implementation parity |
 | Mission native registry | 144 unique names / 144 unique handlers | Finite shipped registry |
 | Registry handlers already modeled in Ghidra | 144 | 110 pre-existing plus 34 separately promoted callable entries |
 | Registry handlers awaiting Ghidra boundary creation | 0 | Tier-2 registry names are complete; signatures and runtime semantics remain separate gates |
@@ -273,13 +273,14 @@ The saved-name projection is
 missing-boundary proof
 is under `local-lab/mission-registry-missing-functions-20260813-v1/` and
 reproduces byte-identically. Older 7,555-row and 86-missing figures below are
-historical measurements only, not current planning denominators.
+historical measurements only, not live planning denominators.
 
 This correction illustrates why the pipeline binds every result to an inventory
 hash. A queue generated against one inventory cannot silently become current.
 
 The important conclusion is that “rename every `FUN_*` function” remains too
-narrow: 1,034 current defaults are only a naming state, and thousands of
+narrow: the literal defaults in that dated projection are only a naming state,
+and thousands of
 descriptive or hypothesis names still require evidence appropriate to their
 claim. The Mission cohort kept boundary creation separate from both the 75-row
 existing-entry and 34-row new-entry Tier-2 normalizations so structural
@@ -1823,7 +1824,7 @@ Measured corpus:
 | Targets absent even by case-insensitive basename | 202 |
 | Steam source basenames proven by strings but absent from drop | 134 |
 | Distinct scoped owner/member keys | 970 |
-| Convention-aware lexical overlaps with current Ghidra | 429 |
+| Convention-aware lexical overlaps with the dated Ghidra projection | 429 |
 
 All 52 implementation units include absent `common.h`. The tree has no solution,
 project, Makefile, build flags, tests, or depot identity. It contains D3D8-era,
@@ -2662,7 +2663,7 @@ Audio:
 - adjudicate the current source-ported attenuation that unpatched baseline bytes
   refute.
 
-## Present RE and rebuild state through this lens
+## Dated RE and rebuild snapshot through this lens
 
 ### Executable/Ghidra
 
@@ -2702,12 +2703,12 @@ Open or concerning:
 - at least six live names are directly contradicted by byte/RTTI evidence;
 - D3D/cockpit/tree correction clusters remain;
 - the registry/table discovery universe has no denominator;
-- current saved-body ownership is exact, but 117,426 `.text` bytes remain
+- the 2026-08-14 saved-body ownership receipt is exact, but 117,426 `.text` bytes remained
   outside function bodies and final function discovery has no ceiling.
 
 The historical 6,411-body `.text` coverage was 1,539,953 / 1,929,117 =
-79.8268%. The [current accounting](binary-analysis/current-text-ownership-2026-08-13.md)
-supersedes it for present use: 8,329 saved functions / 8,459 ranges own
+79.8268%. The [dated 2026-08-14 accounting](binary-analysis/current-text-ownership-2026-08-13.md)
+superseded it at that cut: 8,329 saved functions / 8,459 ranges owned
 1,811,691 bytes = 93.912966399%, with zero overlap. The remaining 117,426 bytes
 are listing-partitioned into loose instructions, defined data, and unclassified
 content. This closes body-range accounting only; code/data truth, exact missing
@@ -2855,7 +2856,7 @@ feature denominator remains unknown until the manifest exists.
 
 ### M0 — dated 7,555-row static graph foundation: complete
 
-- [x] the then-current 7,555-row inventory frozen;
+- [x] the dated 7,555-row inventory frozen;
 - [x] exact static/runtime derivation measured;
 - [x] 7,672 exact Ghidra ranges exported;
 - [x] 14,142 direct-call edges exported;

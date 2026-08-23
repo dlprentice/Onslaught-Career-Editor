@@ -155,10 +155,11 @@ artefact and must never ship as authored behaviour.
 
 ### Mandate
 
-Reverse the retail binary to completion as the prime directive. Drive every one
-of the current 8,329 functions — and every later-admitted boundary — toward a
-defensible terminal state: a C2/REBUILD_READY contract, or an explicit open
-question with its cheapest falsifier and next instrument. Every claim is
+Reverse the retail binary to completion as the prime directive. Drive every
+function admitted by the rolling Ghidra authority — and every later-admitted
+boundary — toward a defensible terminal state: a C2/REBUILD_READY contract, or
+an explicit open question with its cheapest falsifier and next instrument.
+Every claim is
 byte-proven and two-witness gated; the Godot rebuild and the WinUI toolkit
 consume this work as coequal outcomes. Advance through successive mechanically
 verified generations and framework-gated Ghidra promotions, maximizing
@@ -183,20 +184,16 @@ an index, never a campaign parent or authority.
 
 ### Never collapse the evidence layers
 
-Static-envelope closure covers the dated 8,136-function census against which it
-was sealed. A later 34-row Mission-registry addendum bounds the resulting
-8,170-row state at C1 static and a separate metadata ceremony records only its
-Tier-2 registry vocabulary. Later ceremonies admitted 31 text-gap, 79
-external-table, 24 JPEG/IJG callback, and 23 CRT P0 runtime boundaries, so the
-saved structural census reached 8,327. The later D3DX ceremony adds two more
-DEFAULT-source rows, so the rolling census is now 8,329. The 31 have bounded
-provider-compatible classifications; the 79, JPEG/IJG 24, CRT 23, and two
-D3DX rows remain default-metadata structural rows. Generation 29 represents
-all 203 current post-Generation-23 rows as OPAQUE where no stronger semantic
-grade exists.
-All remain outside the frozen static-grade projection. None of
-these counts is a final ceiling,
-semantic recovery, or reversal. The PC demo
+Static-envelope closure covers the dated census against which it was sealed.
+Later Mission-registry, text-gap, external-table, JPEG/IJG, CRT, and D3DX
+ceremonies are retained as exact dated evidence in *Directive revisions* below;
+their then-current population and body counts are not a live selector. Read
+[`reverse-engineering/ghidra/README.md`](reverse-engineering/ghidra/README.md)
+plus a fresh inspection for the rolling structural census and body ownership.
+Those structural admissions remain distinct from semantic grades, and the
+frozen Generation-29 projection records its then-admitted rows as OPAQUE where
+no stronger semantic grade existed. None of those historical counts is a final
+ceiling, semantic recovery, or reversal. The PC demo
 partition and the instruction-local Xbox source-line anchors are oracles, never
 denominators for retail completion. Generation 29 carries Generation 28's
 admitted campaign state onto exact db.18618 geometry without changing a
@@ -287,11 +284,13 @@ progress, not completion.
 Updated 2026-08-18 (pin hygiene). Recording what closed is not narrowing
 the mandate; the completion test and every clause above are unchanged.
 
-**2026-08-18 — stale pins superseded (do not revive).** Generation 31
-**v2** is the sole campaign parent (`generation-31-current-8329-db18624-v2`,
+**2026-08-18 — stale pins superseded (do not revive).** At that cut, Generation
+31 **v2** superseded the v1 directories (`generation-31-current-8329-db18624-v2`,
 READY `2e77c62d…4219`); every `generation-31-*-v1*` directory is renamed
 `*-superseded-by-v2-20260817`. The full Core suite was RE-MEASURED 2026-08-19:
-**854 passed / 2 failed / 856 total** (34 m). 730/730 on `a65826fa` (23 m 45 s)
+This is a frozen receipt, not a live campaign selector; use
+`developer_state.json` → `current_re_authority`. **854 passed / 2 failed / 856
+total** (34 m). 730/730 on `a65826fa` (23 m 45 s)
 and 729/729 on `fd5ab355` are retired history, not a live count, and the suite
 is **not green** — both failures are `Level100FullChainTests` trajectory pins.
 Neither is a live inventory: later L100 owners raised the static
@@ -366,9 +365,11 @@ dated measurements below as history; do not resume from this paragraph.
   tracked refresh, and restore probes. They advance the structural census to
   8,280 while preserving every 8,201 PRE row, but add no semantic grade,
   original linker identity, runtime contract, or rebuild mapping.
-- Current saved-body `.text` ownership is independently closed at 1,811,691 /
-  1,929,117 bytes = 93.912966399% across 8,329 functions / 8,459 exact ranges,
-  with zero overlap. The five reviewed current-function jump fragments are now
+- The exact 2026-08-14 saved-body `.text` ownership receipt remains independently
+  closed and reproducible, but is historical rather than a live count. Read
+  `reverse-engineering/ghidra/README.md` plus a fresh inspection before quoting
+  the rolling population, range, byte, or gap totals. At that cut, the five
+  reviewed current-function jump fragments were
   repaired existing bodies; the 24 reviewed JPEG/IJG callbacks are now exact
   default-metadata functions; and the 23 reviewed CRT P0 entries are now exact
   default-metadata functions. The later 25-byte CRT EH repair joins one split
@@ -1547,7 +1548,7 @@ in write mode against live. Reversibility remains restore-from-backup only.
 - **2026-08-14 — two D3DX-compatible boundaries promoted to db.18618.** A
   separately backed one-save ceremony adds exact DEFAULT-source functions at
   `0x00595FC9` and `0x00596028`, preserves every 8,327 PRE row, advances the
-  rolling census to 8,329 functions / 8,459 ranges, and raises saved-body
+  then structural census to 8,329 functions / 8,459 ranges, and raises saved-body
   ownership by 248 bytes to 93.912966399%. Generation 28 remains frozen on its
   prior db.18617 geometry; the two new rows receive no semantic or runtime grade
   here.

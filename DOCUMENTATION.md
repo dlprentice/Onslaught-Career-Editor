@@ -280,7 +280,8 @@ npm run test:docs                            # links, headers, names, authority 
 
 `tools/doc_current_authority_check.py` is the living-authority ratchet. It
 rejects root/RE synthesis documents that copy a numbered "current generation",
-next-valid generation, or rolling `db.N` instead of pointing to
+next-valid generation, rolling `db.N`, current/rolling Ghidra population or
+body-accounting counts, or stale live/readback selectors instead of pointing to
 `developer_state.json` → `current_re_authority` and
 `reverse-engineering/ghidra/README.md`. Dated findings keep their exact historical
 numbers; living front doors must not turn those snapshots back into live claims.

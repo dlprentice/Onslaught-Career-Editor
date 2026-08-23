@@ -2,10 +2,12 @@
 """Reject volatile authority restatements in living documentation owners.
 
 The exact campaign generation, READY/reducer pins, and next-valid generation are
-owned by developer_state.json -> current_re_authority. The rolling Ghidra state
-is owned by reverse-engineering/ghidra/README.md plus fresh inspection. Living
-front doors must point to those owners rather than copy values that immediately
-age. Dated findings and explicitly historical tables are outside this gate.
+owned by developer_state.json -> current_re_authority. The rolling Ghidra state,
+including population/body counts and live selectors, is owned by
+reverse-engineering/ghidra/README.md plus fresh inspection. Living front doors
+must point to those owners rather than copy values that immediately age. Dated
+findings and explicitly historical tables may keep exact values, but must label
+them as dated/frozen instead of promoting them back to current state.
 """
 from __future__ import annotations
 
@@ -54,6 +56,41 @@ RULES = (
             r"[^.\n]{0,100}?\bdb\.\d+\b"
         ),
     ),
+    (
+        "EXPLICIT_CURRENT_POPULATION",
+        re.compile(
+            r"(?is)\bcurrent\s+(?:saved\s+|tracked\s+|live\s+|discovered\s+){0,2}"
+            r"\d[\d,]*(?:-(?:row|entry)|\s+(?:functions?|rows?|entries?))\b"
+        ),
+    ),
+    (
+        "EXPLICIT_CURRENT_ACCOUNTING",
+        re.compile(
+            r"(?is)\bcurrent\s+(?:saved-body\s+)?(?:`?\.text`?\s+)?"
+            r"(?:body\s+|function\s+)?(?:ownership|coverage|population|census|accounting)\b"
+            r".{0,180}?\b\d[\d,]*(?:\.\d+)?%?\b"
+        ),
+    ),
+    (
+        "EXPLICIT_ROLLING_COUNT",
+        re.compile(
+            r"(?is)\brolling\s+(?:census|state|count|accounting)\b"
+            r".{0,120}?\b(?:db\.)?\d[\d,]*\b"
+        ),
+    ),
+    (
+        "STALE_LIVE_SELECTOR",
+        re.compile(
+            r"(?im)^(?:[ \t]*[|>*-][ \t]*)*(?:latest\s+live\s+readback|"
+            r"current\s+tracked\s+name\s+projection|current\s+live\s+Ghidra\s+readback)\b"
+        ),
+    ),
+    (
+        "SOLE_NAMED_CAMPAIGN_PARENT",
+        re.compile(
+            r"(?is)\bsole\s+campaign\s+parent\s*\([^\n)]*\bgeneration-\d+[^\n)]*\)"
+        ),
+    ),
 )
 
 
@@ -85,6 +122,52 @@ def self_test() -> int:
         "canonical shorthand fails": ("Use canonical Gen29 for campaign state.\n", 1),
         "next generation fails": ("The next valid campaign generation is 33.\n", 1),
         "current database fails": ("The current tracked Ghidra state is db.18627.\n", 1),
+        "current function count fails": ("Drive every one of the current 8,329 functions.\n", 1),
+        "current row count fails": ("Current 8,329-row internal-function metadata.\n", 1),
+        "rolling census fails": ("The rolling census is now 8,329.\n", 1),
+        "rolling state fails": ("The rolling state advances to 8,329/db.18618.\n", 1),
+        "current ownership fails": (
+            "Current saved-body `.text` ownership is 1,811,691 / 1,929,117 bytes.\n",
+            1,
+        ),
+        "current accounting fails": (
+            "The current accounting supersedes it: 8,329 saved functions.\n",
+            1,
+        ),
+        "multiline current ownership fails": (
+            "Current `.text` body ownership supersedes the old metric for present use:\n"
+            "8,329 saved functions and 8,459 exact ranges own 1,811,691 bytes.\n",
+            1,
+        ),
+        "multiline current accounting fails": (
+            "The current accounting supersedes it for present use:\n"
+            "8,329 saved functions / 8,459 ranges own 1,811,691 bytes.\n",
+            1,
+        ),
+        "latest readback selector fails": (
+            "| Latest live readback | local-lab/example/functions.tsv |\n",
+            1,
+        ),
+        "tracked projection selector fails": (
+            "| Current tracked name projection | dated-table.tsv |\n",
+            1,
+        ),
+        "live Ghidra selector fails": (
+            "| Current live Ghidra readback | local-lab/example/functions.tsv |\n",
+            1,
+        ),
+        "named sole parent fails": (
+            "The sole campaign parent (`generation-31-current-8329-db18624-v2`) is pinned.\n",
+            1,
+        ),
+        "dated population passes": (
+            "The dated 2026-08-14 readback contained 8,329 functions.\n",
+            0,
+        ),
+        "frozen accounting passes": (
+            "Frozen 2026-08-14 body accounting was 1,811,691 bytes.\n",
+            0,
+        ),
     }
     failed = False
     for name, (text, expected) in cases.items():

@@ -774,7 +774,7 @@ Generation-29 snapshot** and must not be quoted as current.
 | function_semantic OPAQUE | **8102** |
 | contract_C0_OPAQUE | **14211** (second opacity axis) |
 | Residuals | **6109** = 153 open dark + 860 terminal bounded ambiguity + 30 terminal data + 5066 terminal padding |
-| OPEN residual | **153** current-geometry rows; not a semantic regression |
+| OPEN residual | **153** then-geometry rows; not a semantic regression |
 | Other ledgers | questions **15399**; scenarios **72**; levers **903**; contracts **14438**; adjudications **5957**; supersessions **592** |
 | Progressed carry | **26841 / 26841**, zero unaccounted |
 | Rebuild states | NOT_READY **14429**; PARTIAL_CONTRACT **8**; CONTRACT_ONLY **1**; REBUILD_READY **0** |
@@ -816,12 +816,12 @@ Generation-29 campaign state; successor state is selected through
 accounts for its dated 8,136-function population as **8,129 C1**, **7 C2**,
 and **0 static OPAQUE**. A separately reviewed 34-row addendum extends bounded
 static accounting through the prior 8,170-row state at **8,163 C1 + 7 C2**.
-The saved structural census reached **8,327** after the later 31 text-gap, 79
-external-table, 24 JPEG/IJG callback, and 23 CRT P0 admissions. A subsequent
-two-function D3DX promotion advances the rolling state to **8,329/db.18618**.
-Generation 29 is a frozen 8,329-row historical authority on exact db.18618
-geometry: it retains all 203 then-later structural identities honestly as campaign
-OPAQUE rows where they lack a semantic grade.
+At the 2026-08-14 cut, the saved structural census had reached **8,327** after
+the later 31 text-gap, 79 external-table, 24 JPEG/IJG callback, and 23 CRT P0
+admissions. A subsequent two-function D3DX promotion advanced that dated state
+to **8,329/db.18618**. Generation 29 is a frozen 8,329-row historical authority
+on exact db.18618 geometry: it retains all 203 then-later structural identities
+honestly as campaign OPAQUE rows where they lack a semantic grade.
 The five-body
 repair advanced Ghidra to `db.18614`; the JPEG/IJG promotion advanced it to
 `db.18615`; the CRT P0 promotion advanced it to `db.18616`; and the later CRT
@@ -829,7 +829,7 @@ EH parent repair advanced it to `db.18617` and 93.900110776% saved-body
 ownership without adding a function. Generation 28 re-grounded that repaired
 parent on db.18617, retired its one changed lineage explicitly, and accounted
 for 26,845/26,845 eligible Generation-27 carry rows while preserving all 72
-scenarios. The D3DX promotion then advances current saved-body ownership to
+scenarios. The D3DX promotion then advanced that dated saved-body ownership to
 93.912966399% without changing instructions, references, or a PRE row.
 Generation 29 re-grounded the D3DX pair, retired one changed lineage, and
 accounted for 26,841/26,841 eligible Generation-28 carry rows. It carries the
