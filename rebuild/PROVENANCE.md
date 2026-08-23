@@ -1,9 +1,10 @@
 # Rebuild Provenance
 
 Status: active implementation boundary
-Last updated: 2026-08-22. Current career read/load, startup/frontend,
-partial-source inventory, frontend-asset, mouse-sensitivity, and retained-particle
-claims were re-reviewed. Other sections retain their narrower dated evidence boundaries.
+Last updated: 2026-08-23. Current Thing/Actor base-state, career read/load,
+startup/frontend, partial-source inventory, frontend-asset, mouse-sensitivity,
+and retained-particle claims were re-reviewed. Other sections retain their
+narrower dated evidence boundaries.
 Summary: the licence boundary, permitted evidence, and authority order for the
 `rebuild/` reconstruction lane, plus what the current slice actually covers.
 
@@ -1078,6 +1079,14 @@ claiming bit-identical collision geometry. The canonical actor registry remains 
 sole owner of identity, definition/mesh binding, active state, full pose,
 velocity, health and lifecycle; destruction reports hit/dying/died facts back
 through that owner.
+
+The Thing/Actor base-state seam is source-first from pinned references/Onslaught
+commit 5352a81cdb838b145a57f7febc5d9fc4b0129ebb
+(thing.h/thing.cpp/actor.h/actor.cpp) and reviewed W2 receipt
+07fca645affb4d0483d35a52d0e70f39c784d15a, merged by
+561c2099acaaec7b2bc65e19b45cc734121967e1. Retail identity comes from the
+promoted CThing/CComplexThing/CActor semantic tables; this implementation made
+no new specimen, runtime, Ghidra, GUI, or raw-corpus measurement.
 
 Both isolated runs then repeated the released zero-target continuation: player
 power changed to `0`, `TUTORIAL_VULCAN_CANNON` played after the script's
