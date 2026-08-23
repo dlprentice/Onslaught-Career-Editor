@@ -106,26 +106,16 @@ public sealed partial class Level100Audio : Node3D
     // A fresh career therefore reads 8/10 and 9/10 on the Options bars, not
     // 10/10.
     //
-    // UNIT, and it is not the obvious one. These fields hold the POST-CURVE
-    // mix, which is what :563 and :569 assign via ToRetailOptionMix. 0.8f and
-    // 0.9f are the retail OPTION VALUES and must be pushed through the same
-    // curve; writing them here raw was a defect on 2026-07-27, caught in
-    // review, and it left the game measurably quiet:
-    //
-    //   ToRetailOptionMix(0.8) = 1 - tan(0.276)/tan(1.38) = 0.94530
-    //       20*log10(0.94530/0.8) = 1.45 dB too quiet
-    //   ToRetailOptionMix(0.9) = 1 - tan(0.138)/tan(1.38) = 0.97317
-    //       20*log10(0.97317/0.9) = 0.68 dB too quiet
-    //
-    // Calling the curve rather than pasting 0.94530f/0.97317f is deliberate:
-    // the option value is the sourced quantity, the mix is derived, and a
-    // pasted derived constant silently goes stale if the curve is ever
-    // corrected. Level100AudioCatalogTests pins both the curve and these two
-    // defaults, because nothing caught this the first time.
-    private float _soundOptionMix =
-        Level100AudioCatalog.ToRetailOptionMix(RetailSoundOptionValue);
-    private float _musicOptionMix =
-        Level100AudioCatalog.ToRetailOptionMix(RetailMusicOptionValue);
+    // The released PC setters do NOT share the retained-source tangent curve.
+    // CSoundManager::SetMasterVolume (retail 0x004E04C0) stores the supplied
+    // float directly. CMusic::SetVolume (retail 0x004BBA10) rounds option*127
+    // into its integer set-volume field while preserving the original career
+    // float. Keep those differently typed laws visible rather than hiding them
+    // behind a shared "mix" helper.
+    private float _soundMasterVolume =
+        Level100AudioCatalog.ToRetailSoundMasterVolume(RetailSoundOptionValue);
+    private int _musicSetVolume =
+        Level100AudioCatalog.ToRetailMusicSetVolume(RetailMusicOptionValue);
 
     /// <summary>
     /// Retail's authored cold-start sound option value, <c>CCareer::CCareer</c>
@@ -756,13 +746,13 @@ public sealed partial class Level100Audio : Node3D
 
     public void SetMasterSoundOption(float optionValue)
     {
-        _soundOptionMix = Level100AudioCatalog.ToRetailOptionMix(optionValue);
+        _soundMasterVolume = Level100AudioCatalog.ToRetailSoundMasterVolume(optionValue);
         ApplyMixVolumes();
     }
 
     public void SetMusicOption(float optionValue)
     {
-        _musicOptionMix = Level100AudioCatalog.ToRetailOptionMix(optionValue);
+        _musicSetVolume = Level100AudioCatalog.ToRetailMusicSetVolume(optionValue);
         if (GodotObject.IsInstanceValid(_music))
         {
             _music.VolumeDb = MixedMusicVolumeDb();
@@ -1247,17 +1237,15 @@ public sealed partial class Level100Audio : Node3D
     // null owner) and RetailListenerSourceVolume (100, a tracked event on the
     // listener). Spatial emitters take RetailSourceVolumeForDistance instead.
     //
-    // NOTE the interaction with the cold-start option values: `_soundOptionMix`
-    // is the POST-CURVE mix, so the plateau is reached at a combined multiplier
-    // of 0.5, which with retail's authored 0.8 sound option is a pre-mix volume
-    // of 0.529. ToRetailOptionMix and the 0.8/0.9 defaults are untouched by
-    // this change; they feed it unchanged.
+    // `_soundMasterVolume` is the supplied option float itself: promoted retail
+    // SetMasterVolume at 0x004E04C0 stores it directly rather than applying the
+    // retained-source tangent curve.
     private float MixedSoundVolumeDb(float baseVolume, bool gameplay, int sourceVolume) =>
         Level100AudioCatalog.RetailVolumeDb(
             sourceVolume,
             baseVolume,
             Level100AudioCatalog.RetailUnfadedSubVolume,
-            _soundOptionMix,
+            _soundMasterVolume,
             gameplay ? _gameplayMix : 1f);
 
     // A spatial emitter's source volume is retail's GetVolumeForPos rather than
@@ -1274,7 +1262,7 @@ public sealed partial class Level100Audio : Node3D
             Level100AudioCatalog.RetailSourceVolumeForDistance(distanceUnits),
             baseVolume,
             subVolume,
-            _soundOptionMix,
+            _soundMasterVolume,
             _gameplayMix);
 
     // Retail measures from GAME.GetCamera(0)->GetPos()
@@ -1310,8 +1298,13 @@ public sealed partial class Level100Audio : Node3D
         }
     }
 
+    // CMusic's released shared policy supplies only the rounded 0..127 set
+    // volume. Normalizing that integer for Godot is an adapter boundary, not a
+    // claim about the still-ungraded DirectSound device-volume or audible law.
     private float MixedMusicVolumeDb() =>
-        _musicOptionMix <= 0f ? -80f : Mathf.LinearToDb(_musicOptionMix);
+        _musicSetVolume <= 0
+            ? -80f
+            : Mathf.LinearToDb(_musicSetVolume / 127f);
 
     private static void ValidateLinearMix(float value, string parameterName)
     {

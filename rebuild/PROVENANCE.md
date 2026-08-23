@@ -992,9 +992,11 @@ message clips queue by exact retained ID, while frontend and pause lifecycles
 call the same adapter directly. No playback edge is inferred from a presentation
 snapshot delta. Script waits and playback-duration gates remain deterministic
 mission state.
-The PC `SetMasterVolume` tangent curve and externally supplied game-sound mix
-are presentation-only adapter inputs, so audio applies but never advances a
-failure fade or other ducking timeline.
+Released PC `CSoundManager::SetMasterVolume` at `0x004E04C0` stores the supplied
+sound-option float directly; the retained-source tangent curve was not shipped.
+That direct master value and the externally supplied game-sound mix are
+presentation-only adapter inputs, so audio applies but never advances a failure
+fade or other ducking timeline.
 
 Tracked Steam function summaries for `PauseMenu__Init` at `0x004CDE60`,
 `CPauseMenu__Render` at `0x004D11D0`, input dispatch at `0x004D15D0`, action
@@ -1020,9 +1022,12 @@ Stuart's Level 100 entry calls `PlaySelection(MUS_TUTORIAL)`. The playlist is
 alphabetically ordered and `GetSong` is zero-based, so selection index `3`
 resolves to exact `data/Music/BEA_04(Master).ogg` (SHA-256
 `32D3E338964D74F50D0094536C585375F1E14AA2BAE6087487803F3529EAF360`).
-Selection playback repeats that track at completion. Music has its own tangent-
-curved option volume, remains outside `PauseAllSamples`, and is stopped by the
-level-exit owner.
+Selection playback repeats that track at completion. Released
+`CMusic::SetVolume` at `0x004BBA10` stores `round(option * 127)` as its integer
+set volume while preserving the original career float. The adapter normalizes
+that integer only at the Godot presentation boundary; this is not a claim about
+DirectSound or audible-volume parity. Music remains outside `PauseAllSamples`
+and is stopped by the level-exit owner.
 
 A shallow read-only parse of the supported copied `default physics.dat`
 correlates the Level 100 unit, weapon-mode, and explosion assignments. It

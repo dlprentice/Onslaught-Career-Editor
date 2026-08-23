@@ -587,43 +587,25 @@ public sealed class Level100AudioCatalogTests
     }
 
     [Fact]
-    public void AudioOptionCurve_MatchesReleasedEndpointsAndRejectsInvalidValues()
+    public void SoundMasterOption_UsesTheReleasedDirectFloatAndRejectsInvalidValues()
     {
-        Assert.Equal(0f, Level100AudioCatalog.ToRetailOptionMix(0f));
-        Assert.Equal(1f, Level100AudioCatalog.ToRetailOptionMix(1f));
-        Assert.InRange(Level100AudioCatalog.ToRetailOptionMix(0.5f), 0f, 1f);
+        Assert.Equal(0f, Level100AudioCatalog.ToRetailSoundMasterVolume(0f));
+        Assert.Equal(0.8f, Level100AudioCatalog.ToRetailSoundMasterVolume(0.8f));
+        Assert.Equal(1f, Level100AudioCatalog.ToRetailSoundMasterVolume(1f));
         Assert.Throws<ArgumentOutOfRangeException>(() =>
-            Level100AudioCatalog.ToRetailOptionMix(float.NaN));
+            Level100AudioCatalog.ToRetailSoundMasterVolume(float.NaN));
         Assert.Throws<ArgumentOutOfRangeException>(() =>
-            Level100AudioCatalog.ToRetailOptionMix(1.01f));
+            Level100AudioCatalog.ToRetailSoundMasterVolume(1.01f));
     }
 
-    // Regression fence for a unit error that shipped on 2026-07-27 and was
-    // caught in review rather than by a test.
-    //
-    // Retail's authored cold-start values are OPTION VALUES -
-    // CCareer::CCareer (references/Onslaught/Career.cpp:173-174,
-    // mSoundVolume=0.8f / mMusicVolume=0.9f), corroborated by the pristine
-    // specimen's own initialisers in CCareer::StaticInitDefaults 0x0041B6A0
-    // (mov [0x00662AAC], 0.8f at 0x0041B70D; mov [0x00662AB0], 0.9f at
-    // 0x0041B717).
-    //
-    // Level100Audio's _soundOptionMix/_musicOptionMix fields hold the
-    // POST-CURVE mix. Assigning 0.8f/0.9f into them directly is therefore a
-    // unit error, and a quiet one - it under-drives the game by 1.45 dB and
-    // 0.68 dB, which no existing assertion noticed because the endpoint test
-    // above only pins ToRetailOptionMix(0) and (1).
-    //
-    // This test fails on the raw-literal form and on any drift in the curve.
     [Fact]
-    public void ColdStartOptionMixes_PushRetailOptionValuesThroughTheCurve()
+    public void ColdStartOptionState_UsesTheDistinctReleasedSoundAndMusicLaws()
     {
         const float retailSoundOption = 0.8f;
         const float retailMusicOption = 0.9f;
+        string audio = ReadGodotSource("Level100Audio.cs")
+            .Replace("\r\n", "\n", StringComparison.Ordinal);
 
-        string audio = ReadGodotSource("Level100Audio.cs");
-
-        // The option values must still be the sourced retail quantities.
         Assert.Contains(
             $"RetailSoundOptionValue = {retailSoundOption:0.0}f",
             audio,
@@ -632,41 +614,52 @@ public sealed class Level100AudioCatalogTests
             $"RetailMusicOptionValue = {retailMusicOption:0.0}f",
             audio,
             StringComparison.Ordinal);
-
-        // ...and they must reach the fields THROUGH the curve, not raw.
         Assert.Contains(
-            "_soundOptionMix =\r\n        Level100AudioCatalog.ToRetailOptionMix(RetailSoundOptionValue)"
-                .Replace("\r\n", "\n", StringComparison.Ordinal),
-            audio.Replace("\r\n", "\n", StringComparison.Ordinal),
+            "_soundMasterVolume =\n        " +
+            "Level100AudioCatalog.ToRetailSoundMasterVolume(RetailSoundOptionValue)",
+            audio,
             StringComparison.Ordinal);
         Assert.Contains(
-            "_musicOptionMix =\r\n        Level100AudioCatalog.ToRetailOptionMix(RetailMusicOptionValue)"
-                .Replace("\r\n", "\n", StringComparison.Ordinal),
-            audio.Replace("\r\n", "\n", StringComparison.Ordinal),
+            "_musicSetVolume =\n        " +
+            "Level100AudioCatalog.ToRetailMusicSetVolume(RetailMusicOptionValue)",
+            audio,
             StringComparison.Ordinal);
 
-        // The exact defect that shipped: the option value written straight in.
-        Assert.DoesNotContain(
-            "_soundOptionMix = 0.8f", audio, StringComparison.Ordinal);
-        Assert.DoesNotContain(
-            "_musicOptionMix = 0.9f", audio, StringComparison.Ordinal);
+        Assert.Equal(
+            retailSoundOption,
+            Level100AudioCatalog.ToRetailSoundMasterVolume(retailSoundOption));
+        Assert.Equal(
+            114,
+            Level100AudioCatalog.ToRetailMusicSetVolume(retailMusicOption));
+    }
 
-        // And the curve must actually attenuate less than the raw value would,
-        // by the measured amount. This is the half that cannot be satisfied by
-        // renaming things.
-        float soundMix = Level100AudioCatalog.ToRetailOptionMix(retailSoundOption);
-        float musicMix = Level100AudioCatalog.ToRetailOptionMix(retailMusicOption);
+    [Fact]
+    public void SoundOptionChange_StoresTheDirectMasterAndReappliesTheMix()
+    {
+        string setter = MethodBody(
+            ReadGodotSource("Level100Audio.cs"),
+            "public void SetMasterSoundOption(float optionValue)");
 
-        Assert.Equal(0.9453f, soundMix, 4);
-        Assert.Equal(0.9732f, musicMix, 4);
+        AssertOccursInOrder(
+            setter,
+            "_soundMasterVolume = " +
+            "Level100AudioCatalog.ToRetailSoundMasterVolume(optionValue);",
+            "ApplyMixVolumes();");
+    }
 
-        double soundDecibelsQuieterIfRaw =
-            20d * Math.Log10(soundMix / retailSoundOption);
-        double musicDecibelsQuieterIfRaw =
-            20d * Math.Log10(musicMix / retailMusicOption);
+    [Fact]
+    public void MusicOptionChange_StoresTheRoundedSetVolumeAndUpdatesThePlayer()
+    {
+        string setter = MethodBody(
+            ReadGodotSource("Level100Audio.cs"),
+            "public void SetMusicOption(float optionValue)");
 
-        Assert.Equal(1.45d, soundDecibelsQuieterIfRaw, 2);
-        Assert.Equal(0.68d, musicDecibelsQuieterIfRaw, 2);
+        AssertOccursInOrder(
+            setter,
+            "_musicSetVolume = " +
+            "Level100AudioCatalog.ToRetailMusicSetVolume(optionValue);",
+            "if (GodotObject.IsInstanceValid(_music))",
+            "_music.VolumeDb = MixedMusicVolumeDb();");
     }
 
     // Every Level 100 mix level is reproduced from two released facts rather
@@ -769,21 +762,34 @@ public sealed class Level100AudioCatalogTests
         Assert.Equal(0.70f, Level100AudioCatalog.RetailDefaultEffectVolume);
     }
 
-    // CSoundManager::SetMasterVolume's non-PS2 branch is
-    // mMasterVolume = 1 - tan((1 - val) * 1.38f) / tan(1.38f).
     [Theory]
-    [InlineData(0.25f)]
-    [InlineData(0.5f)]
-    [InlineData(0.75f)]
-    public void AudioOptionCurveMatchesTheReleasedTangentLaw(float optionValue)
+    [InlineData(0f, 0)]
+    [InlineData(0.1f, 13)]
+    [InlineData(0.5f, 64)]
+    [InlineData(0.8f, 102)]
+    [InlineData(0.9f, 114)]
+    [InlineData(1f, 127)]
+    public void MusicOption_UsesTheReleasedRoundedSetVolumeDeterministically(
+        float optionValue,
+        int expectedSetVolume)
     {
-        float expected = 1f -
-            (MathF.Tan((1f - optionValue) * 1.38f) / MathF.Tan(1.38f));
-
         Assert.Equal(
-            expected,
-            Level100AudioCatalog.ToRetailOptionMix(optionValue),
-            5);
+            expectedSetVolume,
+            Level100AudioCatalog.ToRetailMusicSetVolume(optionValue));
+        Assert.Equal(
+            expectedSetVolume,
+            Level100AudioCatalog.ToRetailMusicSetVolume(optionValue));
+    }
+
+    [Fact]
+    public void MusicOption_RejectsValuesOutsideTheReleasedOptionBounds()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            Level100AudioCatalog.ToRetailMusicSetVolume(float.NaN));
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            Level100AudioCatalog.ToRetailMusicSetVolume(-0.01f));
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            Level100AudioCatalog.ToRetailMusicSetVolume(1.01f));
     }
 
     // ==================================================================
@@ -791,8 +797,8 @@ public sealed class Level100AudioCatalogTests
     // See local-lab/AUDIO-PARITY-LAWS-2026-07-27.md.
     // ==================================================================
 
-    /// <summary>ToRetailOptionMix(0.8f), retail's cold-start sound option.</summary>
-    private const float ColdStartSoundMix = 0.945312f;
+    /// <summary>Retail's directly stored cold-start sound master volume.</summary>
+    private const float ColdStartSoundMasterVolume = 0.8f;
 
     // LAW 1. CSoundManager::Fade, references/Onslaught/SoundManager.cpp:760-793.
     //
@@ -864,7 +870,7 @@ public sealed class Level100AudioCatalogTests
     }
 
     // The player-visible half of law 1: the RELATIVE balance of the two loudest
-    // things in Level 100's flight segment. Retail puts the jet engine 17 dB
+    // things in Level 100's flight segment. Retail puts the jet engine 14 dB
     // above the Pulse Cannon report. Mathf.LinearToDb put them 3.7 dB apart
     // (-6.51 vs -10.25), so the weapon dominated a mix retail has the engine
     // dominate. Both cues sit on the listener, so both take source volume 100.
@@ -880,18 +886,18 @@ public sealed class Level100AudioCatalogTests
             Level100AudioCatalog.RetailListenerSourceVolume,
             engine,
             Level100AudioCatalog.RetailUnfadedSubVolume,
-            ColdStartSoundMix,
+            ColdStartSoundMasterVolume,
             1f);
         float weaponDb = Level100AudioCatalog.RetailVolumeDb(
             Level100AudioCatalog.RetailListenerSourceVolume,
             weapon,
             Level100AudioCatalog.RetailUnfadedSubVolume,
-            ColdStartSoundMix,
+            ColdStartSoundMasterVolume,
             1f);
 
-        Assert.Equal(-3.0f, engineDb, 3);
-        Assert.Equal(-20.0f, weaponDb, 3);
-        Assert.Equal(17.0f, engineDb - weaponDb, 3);
+        Assert.Equal(-10.0f, engineDb, 3);
+        Assert.Equal(-24.0f, weaponDb, 3);
+        Assert.Equal(14.0f, engineDb - weaponDb, 3);
     }
 
     [Fact]
@@ -1070,25 +1076,36 @@ public sealed class Level100AudioCatalogTests
     }
 
     // The adapter half of all three laws. Level100Audio.cs is Godot-typed and
-    // cannot be compiled into this project, so it is asserted as source text -
-    // the same technique ColdStartOptionMixes_PushRetailOptionValuesThroughTheCurve
-    // already uses on the same file.
+    // cannot be compiled into this project, so it is asserted as source text.
     [Fact]
     public void Level100Audio_AppliesTheThreeReleasedLawsAndNotTheInventedOnes()
     {
         string audio = ReadGodotSource("Level100Audio.cs");
 
         // Law 1: the linear->dB conversion is gone from the SOUND path. The one
-        // surviving use is music, which is CMusic and never passes through
-        // CSoundManager::Fade at all.
+        // surviving use is the Godot presentation boundary for CMusic's released
+        // integer set volume; no DirectSound device-volume parity is inferred.
         Assert.Equal(1, CountOccurrences(audio, "Mathf.LinearToDb("));
         Assert.Contains(
-            "Mathf.LinearToDb(_musicOptionMix)",
+            "Mathf.LinearToDb(_musicSetVolume / 127f)",
             audio,
             StringComparison.Ordinal);
         Assert.Contains(
             "Level100AudioCatalog.RetailVolumeDb(",
             audio,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain("ToRetailOptionMix", audio, StringComparison.Ordinal);
+        Assert.Contains(
+            "_soundMasterVolume",
+            MethodBody(
+                audio,
+                "private float MixedSoundVolumeDb(float baseVolume, bool gameplay, int sourceVolume)"),
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "_soundMasterVolume",
+            MethodBody(
+                audio,
+                "private float SpatialVolumeDb("),
             StringComparison.Ordinal);
 
         // Law 2: the invented distances are gone, Godot's model is off, and the
