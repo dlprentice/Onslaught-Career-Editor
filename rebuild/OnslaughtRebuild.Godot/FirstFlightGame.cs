@@ -260,11 +260,20 @@ public sealed partial class FirstFlightGame : Node3D
             return;
         }
 
+        ObservePlatformInputEvent(inputEvent);
+
         bool authenticPausePressed =
             (inputEvent is InputEventKey pauseKey &&
-                pauseKey.Pressed && !pauseKey.Echo && IsKey(pauseKey, Key.Escape)) ||
+                pauseKey.Pressed &&
+                !pauseKey.Echo &&
+                IsKey(pauseKey, Key.Escape) &&
+                _session.PlatformInput.ConsumeKeyOnce(PlatformKeyCode(pauseKey)) != 0) ||
             (inputEvent is InputEventJoypadButton pauseButton &&
-                pauseButton.Pressed && pauseButton.ButtonIndex == JoyButton.Start);
+                pauseButton.Pressed &&
+                pauseButton.ButtonIndex == JoyButton.Start &&
+                _session.PlatformInput.IsJoyButtonRising(
+                    pauseButton.Device,
+                    (int)pauseButton.ButtonIndex));
         if (authenticPausePressed)
         {
             if (_pauseMenu.IsOpen)
@@ -359,6 +368,11 @@ public sealed partial class FirstFlightGame : Node3D
             return;
         }
 
+        if (_session.PlatformInput.ConsumeKeyOnce(PlatformKeyCode(keyEvent)) == 0)
+        {
+            return;
+        }
+
         bool togglePressed = inputEvent.IsActionPressed(ToggleModeAction) ||
             IsKey(keyEvent, Key.Q);
         bool resetPressed = inputEvent.IsActionPressed(ResetAction) ||
@@ -394,12 +408,11 @@ public sealed partial class FirstFlightGame : Node3D
         // press reaches depends on whether retail's GetKeyOnce (vtable +0x18)
         // consumes the key-down flag. Stuart's PC path does consume it
         // (references/Onslaught/ltshell.h:292,
-        // `BYTE a=KeyWasDown[c]; KeyWasDown[c]=0; return a;`), which would give
-        // the whole press to row 17. That body is not in the drop for retail
-        // and is not decompiled, so Escape's routing is unresolved. Escape
-        // already opens this build's authentic pause menu, which is the same
-        // key's other shipped meaning; leave it there until the edge model is
-        // settled.
+        // `BYTE a=KeyWasDown[c]; KeyWasDown[c]=0; return a;`), and retail's
+        // 0x00515980 body independently confirms the consume-and-clear law.
+        // Binding-table ownership/order is still unresolved, so that does not
+        // prove which shared Escape consumer runs first. This adapter preserves
+        // its established pause-first route and consumes the byte there.
         //
         // Core ignores this action outside the opening pan
         // (references/Onslaught/Player.cpp:311), so Space keeps meaning fire
@@ -683,6 +696,32 @@ public sealed partial class FirstFlightGame : Node3D
 
     private static bool IsKey(InputEventKey input, Key key) =>
         input.PhysicalKeycode == key || input.Keycode == key;
+
+    private void ObservePlatformInputEvent(InputEvent inputEvent)
+    {
+        if (inputEvent is InputEventKey key)
+        {
+            _session.PlatformInput.ObserveKey(
+                PlatformKeyCode(key),
+                key.Pressed,
+                key.Echo);
+        }
+        else if (inputEvent is InputEventJoypadButton joyButton)
+        {
+            _session.PlatformInput.ObserveJoyButton(
+                joyButton.Device,
+                (int)joyButton.ButtonIndex,
+                joyButton.Pressed ? byte.MaxValue : (byte)0);
+        }
+    }
+
+    private static int PlatformKeyCode(InputEventKey input)
+    {
+        Key code = input.PhysicalKeycode != Key.None
+            ? input.PhysicalKeycode
+            : input.Keycode;
+        return unchecked((int)code);
+    }
 
     private static InteractiveInput SampleInput()
     {
