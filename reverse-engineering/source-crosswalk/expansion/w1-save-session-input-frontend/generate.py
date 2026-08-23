@@ -14,6 +14,7 @@ from pathlib import Path
 
 
 WAVE_ID = "W1_SAVE_SESSION_INPUT_FRONTEND"
+ACCEPTED_BASE_COMMIT = "7ac8247416764f41ffa92313aa82393856beae38"
 BASE_COMMIT = "784367bd43f9ec13125521b00fe0c8352670ffdd"
 SOURCE_COMMIT = "5352a81cdb838b145a57f7febc5d9fc4b0129ebb"
 SPECIMEN_SHA256 = "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
@@ -28,6 +29,8 @@ GENERATION32_READY_SHA256 = "08ed89644ed25feb9e85fefb5b31ab2bdecbbd91b8aca720e20
 GENERATION32_REDUCER_ID = "4c465010b3240d476eb15c89fcfa51cd155936316e897e6f6a7b450df5944db3"
 EXPECTED_EVIDENCE_REGISTER_SHA256 = "4862fc61391c9bf65cd7183752e99b9b02b6bfb721e5b4b5c1e7c5fae5b885b4"
 EXPECTED_GENERATION32_FUNCTIONS_SHA256 = "a63f42e331c265c94866ae944abc74e6a985dfb590f87419309c24932a951c63"
+CROSSWALK_PATH = "reverse-engineering/source-crosswalk/crosswalk.tsv"
+REPORT_PATH = "reverse-engineering/source-crosswalk/REPORT.md"
 
 EXACT = "EXISTING_EXACT_RETAIL_NOTE_VA"
 ANALOG = "NAMED_RETAIL_ANALOG_PRECISE_TARGET"
@@ -148,6 +151,41 @@ def sha256(path: Path) -> str:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def sha256_bytes(content: bytes) -> str:
+    return hashlib.sha256(content).hexdigest()
+
+
+def git_blob(repository: Path, commit: str, relative_path: str) -> bytes:
+    result = subprocess.run(
+        ["git", "-C", str(repository), "cat-file", "blob", f"{commit}:{relative_path}"],
+        check=False,
+        capture_output=True,
+    )
+    if result.returncode != 0:
+        raise AssertionError(
+            f"historical authority unavailable at {commit}:{relative_path}"
+        )
+    return result.stdout
+
+
+def historical_authority_hashes(repository: Path) -> dict[str, str]:
+    expected_hashes = {
+        CROSSWALK_PATH: EXPECTED_CROSSWALK_SHA256,
+        REPORT_PATH: EXPECTED_REPORT_SHA256,
+    }
+    verified_hashes: dict[str, str] = {}
+    for commit in (ACCEPTED_BASE_COMMIT, BASE_COMMIT):
+        for relative_path, expected in expected_hashes.items():
+            actual = sha256_bytes(git_blob(repository, commit, relative_path))
+            if actual != expected:
+                raise AssertionError(
+                    f"historical authority hash mismatch at {commit}:{relative_path}: "
+                    f"expected {expected}, got {actual}"
+                )
+            verified_hashes[relative_path] = actual
+    return verified_hashes
 
 
 def git_head(path: Path) -> str:
@@ -621,8 +659,7 @@ def generate(selection_path: Path, repository: Path, source_root: Path, output: 
     rows = read_tsv(selection_path)
     _validate_selection(rows)
 
-    crosswalk = repository / "reverse-engineering/source-crosswalk/crosswalk.tsv"
-    canonical_report = repository / "reverse-engineering/source-crosswalk/REPORT.md"
+    historical_hashes = historical_authority_hashes(repository)
     name_table = repository / "reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-17.tsv"
     closure = repository / "reverse-engineering/binary-analysis/function-c1-closure-2026-08-11.tsv"
     evidence_register = repository / "reverse-engineering/EVIDENCE-REGISTER.tsv"
@@ -634,8 +671,6 @@ def generate(selection_path: Path, repository: Path, source_root: Path, output: 
     generation32_functions = generation32_root / "campaign-functions.tsv"
     generation32_ready = generation32_root / "campaign.ready.json"
     expected_hashes = {
-        crosswalk: EXPECTED_CROSSWALK_SHA256,
-        canonical_report: EXPECTED_REPORT_SHA256,
         name_table: EXPECTED_NAME_TABLE_SHA256,
         closure: EXPECTED_CLOSURE_SHA256,
         evidence_register: EXPECTED_EVIDENCE_REGISTER_SHA256,
@@ -825,8 +860,8 @@ def generate(selection_path: Path, repository: Path, source_root: Path, output: 
             },
         },
         "authority_hashes": {
-            "canonical_crosswalk_tsv": sha256(crosswalk),
-            "canonical_report_md": sha256(canonical_report),
+            "canonical_crosswalk_tsv": historical_hashes[CROSSWALK_PATH],
+            "canonical_report_md": historical_hashes[REPORT_PATH],
             "name_table_tsv": sha256(name_table),
             "static_closure_tsv": sha256(closure),
             "generation32_evidence_register_tsv": sha256(evidence_register),
