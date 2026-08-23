@@ -250,13 +250,16 @@ its acceptance gate.
 
 ## The actual closure gap
 
-The current layers must remain separate:
+The following table is a frozen 2026-08-14 historical snapshot whose measured
+layers must remain separate. It is not current routing. For the rolling Ghidra
+population, read [`ghidra/README.md`](ghidra/README.md) and inspect the saved
+project afresh.
 
-| Population | Current count | Meaning |
+| Population in frozen 2026-08-14 snapshot | Frozen 2026-08-14 count | Historical meaning |
 | --- | ---: | --- |
-| Saved Ghidra function entries | 8,329 | Exact 2026-08-14 live/tracked readback; includes the 34 registry-callable, 31 text-gap, 79 external-table, 24 JPEG/IJG, 23 CRT P0, and two D3DX boundaries |
-| Reviewed 79-row structural cohort still outside Ghidra | 0 | The external-table cohort completed its separate backed live admission |
-| Defensible saved census/lower bound | **8,329** | Not a final ceiling |
+| Saved Ghidra function entries | 8,329 | Exact dated readback; includes the 34 registry-callable, 31 text-gap, 79 external-table, 24 JPEG/IJG, 23 CRT P0, and two D3DX boundaries |
+| Reviewed 79-row structural cohort still outside Ghidra | 0 | The external-table cohort had completed its separate backed admission by this snapshot |
+| Defensible saved census/lower bound | **8,329** | Historical lower bound, not a final ceiling |
 | MSVC exception/unwind funclets in saved Ghidra | 1,179 | Compiler machinery; not gameplay-semantic closure |
 | Literal `FUN_<address>` names in saved Ghidra | 1,036 | The separate 34-row new-function vocabulary ceremony replaced those defaults; the 31 text-gap, 79 external-table, 24 JPEG/IJG, 23 CRT P0, and two D3DX structural rows retain default names except the CRT thunk that displays its target's saved name |
 | Static-envelope accounting | 8,170 rows: 8,163 C1 + 7 C2 | Dated 8,136-row table plus reviewed 34-row addendum; excludes the 31 text-gap, 79 external-table, 24 JPEG/IJG, 23 CRT P0, and two D3DX rows |

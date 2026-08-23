@@ -64,6 +64,12 @@ RULES = (
         ),
     ),
     (
+        "CURRENT_COUNT_TABLE",
+        re.compile(
+            r"(?im)^[ \t]*\|\s*[^|\r\n]+\|\s*current\s+count\s*\|[^\r\n]*\|[ \t]*$"
+        ),
+    ),
+    (
         "EXPLICIT_CURRENT_ACCOUNTING",
         re.compile(
             r"(?is)\bcurrent\s+(?:saved-body\s+)?(?:`?\.text`?\s+)?"
@@ -126,6 +132,23 @@ def self_test() -> int:
         "current row count fails": ("Current 8,329-row internal-function metadata.\n", 1),
         "rolling census fails": ("The rolling census is now 8,329.\n", 1),
         "rolling state fails": ("The rolling state advances to 8,329/db.18618.\n", 1),
+        "contextual current-count table fails": (
+            "The current layers must remain separate:\n\n"
+            "| Population | Current count | Meaning |\n"
+            "| --- | ---: | --- |\n"
+            "| Saved Ghidra function entries | 8,329 | Exact 2026-08-14 live/tracked readback |\n"
+            "| Reviewed 79-row structural cohort still outside Ghidra | 0 | Completed admission |\n"
+            "| Defensible saved census/lower bound | **8,329** | Not a final ceiling |\n",
+            1,
+        ),
+        "frozen historical count table passes": (
+            "This is a frozen 2026-08-14 historical snapshot, not current authority:\n\n"
+            "| Population | Frozen 2026-08-14 count | Historical meaning |\n"
+            "| --- | ---: | --- |\n"
+            "| Saved Ghidra function entries | 8,329 | Dated readback |\n"
+            "| Defensible saved census/lower bound | **8,329** | Historical lower bound |\n",
+            0,
+        ),
         "current ownership fails": (
             "Current saved-body `.text` ownership is 1,811,691 / 1,929,117 bytes.\n",
             1,
