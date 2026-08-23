@@ -82,6 +82,7 @@ SUITES: tuple[tuple[str, ...], ...] = (
     ("tools/ghidra_function_fragment_range_scratch_authority_tests.py",),
     ("tools/ghidra_function_fragment_range_live_authority_tests.py",),
     ("tools/ttd_pipeline_contract_tests.py",),
+    ("tools/ttd_coverage_index_tests.py",),
     ("tools/parity_lab_tests.py",),
     ("tools/export_packets_tests.py",),
     ("tools/re_coverage_ledger_tests.py",),

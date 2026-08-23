@@ -706,6 +706,26 @@ tool's own documentation, not here.
   **Standing caveat: TTD recording requires an elevated token**, and this
   machine has no `TTDService`. Start an unattended campaign from one elevated
   shell; the manual attach helper raises UAC for an individual capture.
+- `ttd_coverage_index.py` (P5) — the offline cross-trace query root over the
+  retained exec-coverage receipts. `build` walks a receipts root (the canonical
+  corpus is `G:\bea-ttd`, read-only), validates every `coverage.jsonl`
+  fail-closed (per-row byte/VA/RVA arithmetic, module-span domain bounds,
+  exact gap accounting and required controls, full module identity, summary
+  agreement, assertion re-derivation, trace-name and module-base uniqueness,
+  and unreadable-subtree refusal), and emits one deterministic, byte-stable
+  index whose `receipt_set_sha256` binds every consumed receipt file hash and
+  whose `content_sha256` binds the complete readback. Every per-trace receipt
+  path in an index is canonically validated before membership — relative,
+  forward-slash, normalized, no Windows drive/UNC/rooted or parent syntax,
+  basename exactly `coverage.jsonl` — so a re-bound path cannot redirect an
+  answer to bytes the index's hashes do not describe. `query` deeply
+  revalidates that index before answering arbitrary VA/RVA lists with
+  per-address trace membership plus must-hit / must-miss controls; it launches
+  no debugger and never records. The preregistered first question (which
+  retained traces contain any of the nine FireLock PCs, with ApplyDamage as
+  must-hit and current-time BSS as must-miss) is answered in PROGRAM.md P5.
+  Focused gate: `py -3 tools\ttd_coverage_index_tests.py` (registered in
+  `npm run test:tools`).
 - `Record-Level521Session.ps1` / `Test-Level521NativeCoverage.ps1` —
   a played, attach-recorded session on level 521 and its verification.
   Seventeen MissionScript natives are authored in level 521's shipped scripts
