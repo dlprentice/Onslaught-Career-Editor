@@ -14,7 +14,9 @@ call `CUnit__MarkDestroyedAndCleanupLinks` exactly once. An already-dying result
 returns 0 without component work. A fresh transition either resets the unit's
 deployment graph, releases child units and moves through linked-object vector
 slots, or releases child units and schedules event `0x0fa4` at `mTime+7.0f`.
-Every fresh arm returns 1.
+That event's shared CUnit arm performs the profile-drop call and virtual
+shutdown scheduling; it is no longer an unresolved handler. Every fresh arm
+returns 1.
 Evidence: MEASURED — pristine SHA verified before complete-body disassembly and
 raw hashing, whole-`.text` rel32 scan, image-wide aligned-imm32 census, strict
 MSVC RTTI/vtable readback, exact constant reads, and complete direct/indirect-
@@ -40,8 +42,11 @@ every fresh-transition continuation.
 2. **Both-zero deployment-graph arm** (`0x00428822`–`0x0042883b`): call
    [`CUnit__MarkDestroyedAndCleanupLinks`](../Unit.cpp/CUnit__MarkDestroyedAndCleanupLinks.md).
    A 0 result joins the common 0 return. A 1 result calls current saved
-   `CUnit__ResetDeploymentGraphAndScheduleEvent 0x004fd040`, then returns
-   explicit 1. This arm does **not** call `CUnit__ReleaseChildUnits` directly.
+   [`CUnit__ResetDeploymentGraphAndScheduleEvent`](../Unit.cpp/CUnit__ResetDeploymentGraphAndScheduleEvent.md)
+   `0x004fd040`, then returns explicit 1. This arm does **not** call
+   `CUnit__ReleaseChildUnits` directly. The helper queues thing-event 2000
+   (`SHUTDOWN`) for this component at `mTime+0.05f`; that tuple and dispatch
+   path are helper-owned.
 3. **Other-combination shared gate and child release**
    (`0x0042883c`–`0x00428855`): call the same shared CUnit cleanup at
    `0x0042883e`. A 0 result returns 0. On 1, call
@@ -95,15 +100,17 @@ every fresh-transition continuation.
    (`0x00428971`–`0x004289a5`): because the both-zero case already returned,
    this route has profile `+0x124` live. Schedule event `0x0fa4` through
    `CEventManager__AddEvent_AtTime 0x0044b370` for the component at BSS
-   `CEventManager::mTime 0x00672fd0` plus exact `7.0f` (`0x005d8c48`), with the
-   remaining tuple slots zero. Then return 1.
+   `CEventManager::mTime 0x00672fd0` plus exact `7.0f` (`0x005d8c48`). The
+   complete tuple is `(event=4004, target=this, time=&local(mTime+7.0f),
+   priority=0, data=null, reuse=null)`. Then return 1 regardless of the
+   source-void scheduler's queue outcome.
 
 ## Outbound calls
 
 | Site | Callee / role |
 | --- | --- |
 | `0x00428822`, `0x0042883e` | `CUnit__MarkDestroyedAndCleanupLinks 0x004fd140`; mutually exclusive sites |
-| `0x0042882d` | `CUnit__ResetDeploymentGraphAndScheduleEvent 0x004fd040` |
+| `0x0042882d` | [`CUnit__ResetDeploymentGraphAndScheduleEvent`](../Unit.cpp/CUnit__ResetDeploymentGraphAndScheduleEvent.md) `0x004fd040` |
 | `0x00428850` | `CUnit__ReleaseChildUnits 0x004fcfe0` |
 | `0x0042891c` | indirect linked-object slot 27 (`vtable+0x6c`) with output buffer |
 | `0x00428964` | indirect component slot 28 (`vtable+0x70`) with computed XYZ |
@@ -123,6 +130,31 @@ the strict RTTI census resolves both as byte offset `+0xc8`, slot 50:
 Thus this body is reached virtually for both proved classes in the pristine
 image, not by a direct rel32 caller.
 
+## Event 0x0FA4 consumer and queue boundary
+
+The pristine operand census has exactly two event-producing `push 0x0fa4`
+sites: this one and `CMech__VFunc_50_004a00a0`; a third raw `0x0fa4` occurrence
+is an unrelated `HResultToString` comparison. The CMech producer uses
+`mTime+3.5f`; this component uses `mTime+7.0f`. Both target the scheduling
+receiver itself with priority/data/reuse zero.
+
+At fixed manager time, 7.0 seconds maps to ring offset
+`floor((7.0-0.001)*20)=139` from the current insertion bucket and fires after
+140 `AdvanceTime` ticks. `CEventManager__Flush` calls target slot 0; both the
+CComponent and CGillMHead vtables place
+[`CUnit__HandleEvent`](../Unit.cpp/CUnit__HandleEvent.md) `0x004f9820` there.
+Its 4004 arm calls `CUnit__SpawnProfileDropPickup`, then receiver slot 14.
+Both vtables resolve slot 14 to
+`CComplexThing__AddShutdownEvent 0x004f43d0`, which schedules thing-event 2000
+(`SHUTDOWN`) for `NEXT_FRAME`. The shared manager owns allocation, ring order,
+and slot-0 delivery; this component owns only the fresh-arm tuple above, while
+the CUnit/ComplexThing handlers own the delayed effects.
+
+`AddEvent_AtTime` has no status result. Invalid-manager and pool-exhaustion
+paths log and return; null-target and over-1,000,000-second paths return without
+queueing. This wrapper still returns 1 after the call and does not roll back its
+already-completed child release if insertion fails.
+
 ## Shared versus component-specific law
 
 The TF_DYING guard/store, sound stop, profile accounting, destroyable-segment
@@ -139,10 +171,11 @@ same 0 polarity; no fresh arm returns anything other than 1.
   `+0x198` remain unproved.
 - The concrete type of `[component+0x26c]` and source virtual names for slots 27
   and 28 remain unresolved; only exact traffic and arithmetic are pinned.
-- The runtime handler/gameplay meaning of event `0x0fa4` is not established by
-  this body.
-- The separately named deployment-graph helper owns its internal node/script/
-  event-2000 teardown; this wrapper proves only its conditional invocation.
+- The absent `Unit.cpp` event-enum spelling for 4004 remains unknown. Its retail
+  handler effect is proved; runtime presentation and rebuild parity are not.
+- The separately named deployment-graph helper owns its node/script/drop/
+  event-2000 teardown and failure boundary; this wrapper proves its
+  fresh-only conditional invocation.
 
 ## Cheapest falsifier
 
@@ -157,7 +190,8 @@ Any one of:
 - The slot-27 argument push no longer gives `P=F-4`, its callee-clean return no
   longer restores `F`, the three post-call reads stop resolving to initialized
   `[F+0x18/+0x1c/+0x20]`, or the derived normalized-XY/`0.4f` formula changes.
-- Event `0x0fa4` stops using `mTime+7.0f`.
+- Event `0x0fa4` stops using the exact tuple above, or CComponent/CGillMHead
+  slot 0 no longer reaches CUnit's 4004 drop-plus-slot-14 arm.
 
 ## Receipts
 
@@ -169,5 +203,9 @@ Any one of:
   apparent `[esp+0x14]` read is initialized `[F+0x10]`, and the post-call
   `[esp+0x18]` read is initialized `[F+0x18]`. Read-only PE/capstone/RTTI probes
   were used throughout.
+- 2026-08-22 event-chain closure — re-read both event-4004 producers, the
+  manager queue/failure law, CComponent/CGillMHead slots 0/14, CUnit's exact
+  4004 arm, and the downstream 2000 shutdown dispatch. The authored 4004 enum
+  spelling remains unknown; the delayed drop-plus-shutdown effect does not.
 - Related contract:
   [`../Unit.cpp/CUnit__MarkDestroyedAndCleanupLinks.md`](../Unit.cpp/CUnit__MarkDestroyedAndCleanupLinks.md).
