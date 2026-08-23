@@ -2780,3 +2780,55 @@ the histogram remains 32 MEASURED / 231 STATIC_ONLY. The exact tracked scope is
 this receipt plus the three verification-text edits in
 `patches/patch-surface-rows.tsv`; no catalog JSON or product implementation
 changed.
+
+### Batch 6 — camera/draw attribution prerequisite (offline, 2026-08-22)
+
+[`LOD-ATTRIBUTION.md`](LOD-ATTRIBUTION.md) now defines and self-tests the bounded
+comparison required before another mesh-LOD product run. It uses existing proxy
+v2 `M` / `D` / per-draw `G` / texture-hash records; no proxy extension or product
+row is staged by this step. Camera identity is the canonical direct view plus
+projection value held across at least three consecutive presented frames. A
+unique world/texture/material draw anchor, including canonical texture factor
+and any active direct stage-0 texture matrix plus flags, then matches the placed
+draw while a separate VB/IB content identity records the selected mesh.
+
+The fail-closed comparator rejects zero-frame draw windows (the exact Batch-5
+gap), missing or derived transforms, provisional or incomplete digests, bound
+textures without content hashes, duplicate anchors, sidecar/log hash drift,
+unknown texture factors, nonzero/invalid untracked-matrix state, partial or
+invalid active texture transforms, content after terminal `# detach`, process
+collision, non-terminal state, and proxy-removal failure. Its synthetic fixtures
+intentionally vary all process-local ids while retaining one exact camera/draw
+identity. A fully comparable no-delta pair is preserved as an exact negative
+rather than promoted. This offline prerequisite changes no confidence:
+`0x00631E8C`, `0x00631E90`, and `0x00631EA0` remain **STATIC_ONLY** until one
+serialized copied-runtime row isolates their named effect under this gate.
+
+### Batch 7 — transform-pinned family aborted on process collision (2026-08-22)
+
+Runtime successor `t_9212cc37` received the sole product lease for exactly one
+`0x00631E8C` stock/staged family. Its immediate stock preflight was terminal zero
+for BEA, WinUI, Godot, and testhost; product `b49378d6…`, pristine
+`74154bfa…`, options `6ffcd7b6…`, and both copied saves `9aec08ac…` all matched
+before launch. Stock PID 31232 was preregistered with executable role, exact
+`-skipfmv -level 100` arguments, and proxy-v2 frame window 2850..3149
+(digest, texture hash, and strict coverage enabled; no vertex dump).
+
+The run is **VOID**, not a stock control. Foreign testhost PID 31568 appeared
+during the registration interval: the driver observed it in the same run ledger,
+set `collision=true`, and could not prove that its lifetime began only after BEA
+was terminal. The fail-closed path posted `WM_CLOSE`; BEA exited 0 without a
+forced kill, the 205,830-byte / 2,576-line log ended in `# detach`, and the proxy
+was removed. Because the process guard fired before `firstframe=2850`, the log
+contains zero `P`, `D`, `M`, or `G` records and says nothing about camera, draw,
+mesh, or LOD behavior. Its SHA-256 is `72fb2e21…`.
+
+The one-family/no-retry contract then stopped the method: no staged bytes were
+applied and no staged process launched. A full snapshot restore independently
+read back product `b49378d6…`, options `6ffcd7b6…`, both saves `9aec08ac…`,
+terminal-zero process state, and proxy absence. The machine-readable error
+receipt is retained under
+`local-lab/patch-surface-phase2/lod-attribution/medthreshold-family-20260822/`.
+This is a process-collision error only, not an exact LOD negative; the TSV stays
+unchanged at 32 MEASURED / 231 STATIC_ONLY, and `0x00631E8C` retains its existing
+transform-pinned falsifier.
