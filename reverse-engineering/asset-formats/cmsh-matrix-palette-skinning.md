@@ -1,8 +1,9 @@
 # CMSH matrix-palette skinning and retail blend contract
 
-Status: active bounded retail contract — serialized position skinning, palette
-construction roles, and the executed position blend are closed; normal blending
-and exact typed matrix-order notation remain open
+Status: active bounded P1 retail contract — serialized position skinning,
+palette roles, and the executed position blend are closed; typed matrix order
+and normal dataflow are closed by the focused
+[P2 successor](cmsh-matrix-normal-deformation.md)
 Date: 2026-08-23
 Verdict: **The seven shipped `BONE` carriers use one static 48-byte vertex form
 and GPU-side `vs_1_1` skinning. Each vertex stores three floating-point palette
@@ -170,13 +171,12 @@ indexed CMSP parts:
    `0x009C69D4` palette and uploads it from `c10`. Copied-runtime rows
    independently measure norms `0.333333222..0.333333423`.
 
-This proves the **frame-zero bind role**, **current interpolated role**, and
-**one-third pre-scale**. The dense untyped matrix body has not been reduced to a
-reviewed row/column multiplication equation, so the exact notation/order of the
-bind-to-current product remains **UNKNOWN**. `P_i` above deliberately names the
-observed output of that construction rather than inventing an order. CPOS/CORI
-are not substitutes: the loader recomputes those derived model-space caches
-before use.
+This P1 proves the **frame-zero bind role**, **current interpolated role**, and
+**one-third pre-scale**. Its notation intentionally left the dense product
+untyped; the [P2 successor](cmsh-matrix-normal-deformation.md) now reduces that
+body to the row-vector product `T_bind^-1 * R_bind^-1 * R_current * T_current`.
+CPOS/CORI are not substitutes: the loader recomputes those derived model-space
+caches before use.
 
 ## Exact consumers and call sites
 
@@ -251,10 +251,9 @@ The tracked TSV is the exact generated public-safe receipt.
 
 ## Remaining unknowns and focused falsifiers
 
-1. **Exact matrix notation/order:** frame-zero/current roles and output are proved,
-   but row/column multiplication notation is not. Falsifier: typed
-   instruction-level reduction of the bounded palette block, or a controlled
-   matrix trace that disagrees with the proposed product.
+1. **Exact matrix notation/order:** closed by the
+   [P2 successor](cmsh-matrix-normal-deformation.md), including non-commuting
+   product/transpose/inverse controls.
 2. **Low-order VB bytes:** all 5,604 printed field words agree, not the raw byte
    stream. Falsifier: enable the existing exact hexdump path for recognized FVF
    `0x15A` and compare all `467 * 48` bytes.
@@ -265,10 +264,9 @@ The tracked TSV is the exact generated public-safe receipt.
    611 links the shader, but no infantry draw was captured. Falsifier: one copied
    runtime capture that joins a named infantry instance to FVF `0x15A`, c10
    palette, and the same shader core.
-5. **Normal deformation:** the normal field is decoded and read back, but this
-   contract decodes only the exact position combine. Falsifier: decode the linked
-   normal block and compare one transformed runtime normal against the captured
-   palette.
+5. **Normal deformation:** closed at the linked-token dataflow boundary by the
+   P2 successor: the normal-bearing variant lights serialized `v3` directly and
+   reads zero c10 palette rows. Runtime normal/pixel observation remains open.
 
 ## Claim boundary
 
@@ -278,8 +276,9 @@ palette scale; the released asymmetric position law; frame-zero/current pose
 roles; exact static consumers/call sites; two bounded runtime instances; and the
 three-capture shader/palette denominator.
 
-Open: exact typed bind-product order, normal blending, raw runtime VB byte
-identity, infantry draw observation, malformed-input behavior, shader intent,
-other platforms/builds, and rebuild parity. No claim here adds `CCUS`, `BONW`,
-or `BONS`, generalizes beyond the named PC specimen, or treats a source/exporter
-formula as released behavior.
+Outside this P1 scope but closed by P2: exact typed bind-product order and the
+released linked-shader normal dataflow. Open: raw runtime VB byte identity,
+runtime normal/pixel observation, infantry draw observation, malformed-input
+behavior, shader intent, other platforms/builds, and rebuild parity. No claim
+here adds `CCUS`, `BONW`, or `BONS`, generalizes beyond the named PC specimen,
+or treats a source/exporter formula as released behavior.

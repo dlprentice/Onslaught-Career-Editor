@@ -52,7 +52,7 @@ non-additive.
 | PC AYA chunked-zlib | [aya-container.md](aya-container.md) | 1,361 | outer framing complete |
 | LVLR resource streams | [lvlr-archive.md](lvlr-archive.md) | 301 | tag census complete; schemas partial |
 | Numeric WRES Unit/Feature placements | [wres-instance-join.md](wres-instance-join.md) | 66 archives / 4,090 joins | definition, transform, state, physics mesh, and named-CMSH edge bounded |
-| CMSH meshes + embedded animation | [cmsh-mesh.md](cmsh-mesh.md) + [animation/usage](cmsh-animation-usage.md) + [matrix-palette skinning](cmsh-matrix-palette-skinning.md) | 213 | framing, pose lanes, bone indices, released position blend, and selected usage bounded |
+| CMSH meshes + embedded animation | [cmsh-mesh.md](cmsh-mesh.md) + [animation/usage](cmsh-animation-usage.md) + [position skinning](cmsh-matrix-palette-skinning.md) + [typed matrix/normal law](cmsh-matrix-normal-deformation.md) | 213 | framing, pose lanes, bone indices, typed bind/current palette order, released position/normal laws, and selected usage bounded |
 | DDS textures + texture-backed fonts | [dds-texture.md](dds-texture.md) | 847 | header census complete |
 | Ogg/XAP/SFX audio | [ogg-audio.md](ogg-audio.md) | 3,057 + 5 + 1 | framing and identity joins bounded |
 | Bink video | [bink-video.md](bink-video.md) | 66 | container/media census bounded |
@@ -70,7 +70,10 @@ is embedded in CMSH (`VHFM`/`HORI`/`HPOS`/`HFOV`/bone lanes); the
 LVLR membership, the bounded [WRES instance edge](wres-instance-join.md), and
 MSL name requests. The separate
 [matrix-palette contract](cmsh-matrix-palette-skinning.md) closes the seven-file
-GPU position blend without generalizing normal deformation or scheduling. There
+GPU position blend; its focused
+[typed-order/normal successor](cmsh-matrix-normal-deformation.md) closes the
+bind/current product and exact linked-shader normal dataflow without
+generalizing scheduling. There
 is no loose
 font-file family: installed font glyph resources live in texture assets and the
 retail image also has a GDI/texture font owner.

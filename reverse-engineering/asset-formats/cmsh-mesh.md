@@ -1,12 +1,12 @@
 # CMSH tagged mesh-stream contract
 
 Status: active format contract — complete corpus framing and bounded field
-semantics; position skinning is closed while animation/general scene import
-remain partial
+semantics; position and linked-shader normal skinning laws are closed while
+animation/general scene import remain partial
 Date: 2026-08-23
 Verdict: all 213 mesh streams frame and their complete tag population is
-counted; selected geometry and the seven-file position-skinning family are
-bounded while PB*, animation scheduling, and normal blending remain partial.
+counted; selected geometry and the seven-file skinning family are bounded while
+PB* and animation scheduling remain partial.
 Evidence: MEASURED — all 213 mirror-index mesh rows were re-aggregated on
 2026-08-22. Field names below are either measured by repository parsers or
 explicitly attributed to Stuart's AYAResourceExtractor lineage.
@@ -129,8 +129,10 @@ The seven `BONE` arrays are now bounded as same-mesh part indices: exactly part
 matrix-palette slots. The
 [focused position-skinning contract](cmsh-matrix-palette-skinning.md) proves
 GPU-side c10 palette addressing, frame-zero/current pose roles, one-third
-palette scale, and the released asymmetric slot weights `(0, 2/3, 1/3)`.
-Typed bind-product order and the normal-combine block remain open.
+palette scale, and the released asymmetric slot weights `(0, 2/3, 1/3)`. Its
+[typed-order/normal successor](cmsh-matrix-normal-deformation.md) proves the
+row-vector bind/current product and that the normal-bearing linked shader uses
+serialized `v3` directly with no c10 palette deformation.
 
 Retail static routes include:
 
@@ -169,11 +171,10 @@ The address summary is in
 
 - Name every PB* payload field by joining one exact part to its retail consumer;
   tag frequency alone is insufficient.
-- Reduce the frame-zero/current palette-construction body to reviewed typed
-  matrix-order notation, decode the normal-combine block, observe one infantry
-  draw, and preserve malformed hierarchy behavior for disposable copied-profile
-  tests. The position blend and slot indices are closed by the dedicated
-  matrix-palette contract.
+- Observe one infantry draw and preserve malformed hierarchy behavior for
+  disposable copied-profile tests. Position blend, slot indices, typed palette
+  order, and linked-shader normal dataflow are closed by the two dedicated
+  skinning contracts.
 - Establish every remaining topology/FVF combination with a cross-check between
   bytes, static loader branches, and rendered output.
 - Trace the population of the runtime named-animation table at
@@ -188,8 +189,8 @@ The address summary is in
 
 The container walk, corpus population, tag counts, hierarchy/reference shapes,
 selected geometry fields, pose-map dimensions, bone-to-part names, palette-slot
-indices, the seven-file position blend, numeric-LVLR membership, 4,090 WRES
-definition joins, and 53 anonymous embedded bodies are bounded. Named clips,
-normal blending, exact typed bind-product order, other WRES/spawn owners,
+indices, the seven-file position blend, typed bind/current order, released
+normal dataflow, numeric-LVLR membership, 4,090 WRES definition joins, and 53
+anonymous embedded bodies are bounded. Named clips, other WRES/spawn owners,
 general scheduling/rendering, complete scene dependencies, collision,
 malformed-input behavior, pixels, and parity are open.
