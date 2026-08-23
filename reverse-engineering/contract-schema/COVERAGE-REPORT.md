@@ -39,8 +39,8 @@ classification flags are retained in `coverage.json`.
 | Function-note files | 802 |
 | Manifest files with named witnesses | 36 |
 | Manifest witness keys | 144 |
-| Factory contract files | 325 |
-| Factory contract rows joined | 325 |
+| Factory contract files | 350 |
+| Factory contract rows joined | 350 |
 
 ## Reading contract
 

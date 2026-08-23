@@ -1,6 +1,6 @@
 {
  "schema": "bea.re.contract-coverage.v1",
- "generatedAtUtc": "2026-08-23T13:27:43Z",
+ "generatedAtUtc": "2026-08-23T17:31:00Z",
  "denominator": {
   "functions": 8329,
   "contracts": 14365,
@@ -14,8 +14,8 @@
   "noteFiles": 802,
   "manifestFilesWithNamedWitnesses": 36,
   "manifestWitnessKeys": 144,
-  "contractFiles": 325,
-  "contractRowsJoined": 325
+  "contractFiles": 350,
+  "contractRowsJoined": 350
  },
  "statusCounts": {
   "STALE": 1,
@@ -27,14 +27,14 @@
   "SKELETON": 86
  },
  "evidenceClassCounts": {
-  "byte-read": 949,
+  "byte-read": 974,
   "ttd-capture": 5,
   "pinned-source-line": 7,
   "controlled-runtime": 22,
   "ghidra-readback": 2565,
   "name-only": 86
  },
- "elapsedSeconds": 1.535,
+ "elapsedSeconds": 1.781,
  "functions": [
   {
    "va": "0x00401000",
@@ -67659,11 +67659,17 @@
    "name": "CFastVB__TexelUnpackProfile_005ea0b8__ctor",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__TexelUnpackProfile_005ea0b8__ctor__005865ed.md"
+   ]
   },
   {
    "va": "0x00586609",
@@ -67678,19 +67684,33 @@
    "va": "0x0058669a",
    "name": "CFastVB__InitTexelUnpackVTable_005ea0c8",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__InitTexelUnpackVTable_005ea0c8__0058669a.md"
+   ]
   },
   {
    "va": "0x005866b6",
    "name": "CFastVB__InitTexelUnpackVTable_005ea0d8",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__InitTexelUnpackVTable_005ea0d8__005866b6.md"
+   ]
   },
   {
    "va": "0x005866d2",
@@ -67705,10 +67725,17 @@
    "va": "0x0058675f",
    "name": "CFastVB__InitTexelUnpackVTable_005ea0e8",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__InitTexelUnpackVTable_005ea0e8__0058675f.md"
+   ]
   },
   {
    "va": "0x0058677b",
@@ -67724,11 +67751,17 @@
    "name": "CFastVB__TexelUnpackProfile_005ea0f8__ctor",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__TexelUnpackProfile_005ea0f8__ctor__005867d2.md"
+   ]
   },
   {
    "va": "0x005867ee",
@@ -67770,19 +67803,33 @@
    "va": "0x00586978",
    "name": "CFastVB__TexelUnpackProfile_005ea108__ctor",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__TexelUnpackProfile_005ea108__ctor__00586978.md"
+   ]
   },
   {
    "va": "0x00586994",
    "name": "CFastVB__InitTexelUnpackVTable_005ea118",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__InitTexelUnpackVTable_005ea118__00586994.md"
+   ]
   },
   {
    "va": "0x005869b0",
@@ -67797,10 +67844,17 @@
    "va": "0x00586a55",
    "name": "CFastVB__TexelUnpackProfile_005ea128__ctor",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__TexelUnpackProfile_005ea128__ctor__00586a55.md"
+   ]
   },
   {
    "va": "0x00586a71",
@@ -67815,28 +67869,49 @@
    "va": "0x00586b63",
    "name": "CFastVB__TexelUnpackProfile_005ea148__ctor",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__TexelUnpackProfile_005ea148__ctor__00586b63.md"
+   ]
   },
   {
    "va": "0x00586b7f",
    "name": "CFastVB__TexelUnpackProfile_005ea158__ctor",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__TexelUnpackProfile_005ea158__ctor__00586b7f.md"
+   ]
   },
   {
    "va": "0x00586b9b",
    "name": "CFastVB__TexelUnpackProfile_005ea168__ctor",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__TexelUnpackProfile_005ea168__ctor__00586b9b.md"
+   ]
   },
   {
    "va": "0x00586bb7",
@@ -67851,37 +67926,65 @@
    "va": "0x00586ec7",
    "name": "CFastVB__InitTexelUnpackVTable_005ea198",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__InitTexelUnpackVTable_005ea198__00586ec7.md"
+   ]
   },
   {
    "va": "0x00586ee3",
    "name": "CFastVB__TexelUnpackProfile_005ea1a8__ctor",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__TexelUnpackProfile_005ea1a8__ctor__00586ee3.md"
+   ]
   },
   {
    "va": "0x00586eff",
    "name": "CFastVB__TexelUnpackProfile_005ea1b8__ctor",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__TexelUnpackProfile_005ea1b8__ctor__00586eff.md"
+   ]
   },
   {
    "va": "0x00586f1b",
    "name": "CFastVB__TexelUnpackProfile_005ea1c8__ctor",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__TexelUnpackProfile_005ea1c8__ctor__00586f1b.md"
+   ]
   },
   {
    "va": "0x00586f37",
@@ -67896,28 +67999,49 @@
    "va": "0x00587303",
    "name": "CFastVB__TexelUnpackProfile_005ea1f4__ctor",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__TexelUnpackProfile_005ea1f4__ctor__00587303.md"
+   ]
   },
   {
    "va": "0x00587322",
    "name": "CFastVB__TexelUnpackProfile_005ea204__ctor",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__TexelUnpackProfile_005ea204__ctor__00587322.md"
+   ]
   },
   {
    "va": "0x0058733e",
    "name": "CFastVB__TexelUnpackProfile_005ea214__ctor",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__TexelUnpackProfile_005ea214__ctor__0058733e.md"
+   ]
   },
   {
    "va": "0x0058735a",
@@ -67950,28 +68074,49 @@
    "va": "0x00587663",
    "name": "CFastVB__TexelCodecProfile_005ea224__ctor",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__TexelCodecProfile_005ea224__ctor__00587663.md"
+   ]
   },
   {
    "va": "0x0058767b",
    "name": "CFastVB__TexelCodecProfile_005ea234__ctor",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__TexelCodecProfile_005ea234__ctor__0058767b.md"
+   ]
   },
   {
    "va": "0x00587693",
    "name": "CFastVB__TexelCodecProfile_005ea244__ctor",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__TexelCodecProfile_005ea244__ctor__00587693.md"
+   ]
   },
   {
    "va": "0x005876ab",
@@ -68006,37 +68151,65 @@
    "va": "0x00587dd6",
    "name": "CFastVB__TexelUnpackProfileRegistry_005ea254__ctor",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__TexelUnpackProfileRegistry_005ea254__ctor__00587dd6.md"
+   ]
   },
   {
    "va": "0x00587dee",
    "name": "CFastVB__InitTexelUnpackVTable_005ea264",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__InitTexelUnpackVTable_005ea264__00587dee.md"
+   ]
   },
   {
    "va": "0x00587e06",
    "name": "CFastVB__InitTexelUnpackVTable_005ea274",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__InitTexelUnpackVTable_005ea274__00587e06.md"
+   ]
   },
   {
    "va": "0x00587e1e",
    "name": "CFastVB__TexelUnpackProfileRegistry_005ea284__ctor",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/fast-vertex-buffer/CFastVB__TexelUnpackProfileRegistry_005ea284__ctor__00587e1e.md"
+   ]
   },
   {
    "va": "0x00587e36",
