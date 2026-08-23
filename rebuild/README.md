@@ -31,8 +31,8 @@ of readiness tooling.
 The current Godot app is the **Level 100 Opening Slice**. With locally
 materialized media, a plain launch plays the released Lost Toys logo, opening
 montage, and splash before click-to-start, v3 main-menu language, retail's
-career-name/load page, the career-law level selector, the mission-briefing and
-select-configuration pages, and loading. Loading constructs the Level 100
+career-name/load page, the bounded Godot level selector, the mission-briefing
+and select-configuration pages, and loading. Loading constructs the Level 100
 world; the first-time intro then plays before gameplay activation. Repeating
 `--career-save=<path>` opts in exact named career files for the Load Game list;
 the host performs no directory or installed-save discovery and never writes
@@ -179,8 +179,9 @@ Controls:
 
 The frontend owns click-to-start, Main Menu, the Quit confirmation, DevSelect
 (retail's `CHOOSE GAME NAME` surface for a new name or an injected read-only
-career selection), Options, the career-law level selector, Mission Briefing,
-Select Configuration, Loading, and the Level 100 intro cutscene. The
+career selection), Options, Client's career-law selection state, the bounded
+Godot level-selector page, Mission Briefing, Select Configuration, Loading, and
+the Level 100 intro cutscene. The
 `RetailFrontendScreen` enum in
 `rebuild/OnslaughtRebuild.Client/RetailFrontendSession.cs` is authoritative for
 that list; read it rather than this sentence when the two disagree.
@@ -202,6 +203,11 @@ owns bounded selection, accept/back, and a one-shot selected-career handoff;
 there is still no implicit save scan, save creation, overwrite, autosave,
 debrief persistence, or options-tail application. A loaded model remains
 immutable; merging a later Won update back into that model is also still open.
+Core/Client can carry any loaded career's `SuggestedWorldNumber`, and
+`SelectWorld` applies the released career unlock law. The current Godot page
+does not project that general state: it does not read `SelectedWorldNumber` for
+rendering or implement LevelSelect keyboard traversal, its pointer path exposes
+only world 100 and unlocked world 110, and the host constructs only world 100.
 (*Updated 2026-08-22: the selector is no longer Level-100-only by law. The
 session carries the released 43-node career graph
 (`OnslaughtRebuild.Core/RetailWorldCatalog.cs`, Stuart's pinned

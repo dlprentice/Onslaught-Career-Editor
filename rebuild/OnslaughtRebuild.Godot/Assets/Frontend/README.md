@@ -15,8 +15,10 @@ reuses the career-name/list surface over caller-injected read-only descriptors;
 repeating `--career-save=<path>` is the Godot host's only input adapter. It reads
 those exact named files and performs no save-directory discovery or writes.
 Continue, Multiplayer and Goodies remain visible; only Continue is drawn dim.
-The career-law selector can expose loaded/unlocked worlds, while the host still
-constructs only world 100.
+Core/Client can carry any loaded career's suggested world and applies the
+released unlock law. The current Godot selector does not render that general
+state or traverse it by keyboard: its pointer path exposes only world 100 and
+unlocked world 110, while the host constructs only world 100.
 
 > **Corrected 2026-07-28 — both halves of this were false at HEAD.** The
 > paragraph above previously read "New Game and Quit are the only working

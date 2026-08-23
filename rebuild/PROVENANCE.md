@@ -132,8 +132,9 @@ machine outside Core. With locally materialized media, a plain launch plays the
 released Lost Toys logo, opening montage, and splash before click-to-start, then
 exposes the released main-menu entries, a quit confirmation, retail's
 `CHOOSE GAME NAME` career-name/load page (new-name entry plus caller-injected,
-read-only career descriptors), an Options page, the career-law level selector, the
-mission-briefing and select-configuration pages, the released loading image, the
+read-only career descriptors), an Options page, Client's career-law selection
+state, the bounded Godot level-selector page, the mission-briefing and
+select-configuration pages, the released loading image, the
 released Level 100 intro cutscene,
 and one lifecycle seam that constructs, replaces, or disposes the existing
 Level 100 session/world. The `RetailFrontendScreen` enum in
@@ -158,6 +159,11 @@ those descriptors already read. Godot recognizes only explicit repeated
 scan. This is read/load selection only: no serializer, write, overwrite,
 autosave, default-options apply, debrief persistence, loaded-model Won merge,
 or full Career parity.
+Core/Client can carry any loaded career's `SuggestedWorldNumber`, and
+`SelectWorld` applies the released career unlock law. The current Godot page
+does not project that general state: it does not read `SelectedWorldNumber` for
+rendering or implement LevelSelect keyboard traversal, its pointer path exposes
+only world 100 and unlocked world 110, and the host constructs only world 100.
 
 The Level-100 configuration page now owns the one row named by the released
 `WorldHeaders.dat`: page-list index 0 selects `Aquila Prototype`, catalog record
@@ -177,7 +183,11 @@ requests localized string index `0x77` (`Click to start`). Main-menu evidence is
 the vtable at `0x005DBAE4`, input/action/render entries
 `0x00462250`/`0x004623E0`/`0x00462D40`, and Stuart's `FrontEnd.cpp` and
 `PCFrontend.cpp`. Level select uses Steam input/render entries
-`0x004606B0`/`0x00460B40`; only released world 100 is exposed. The loading page
+`0x004606B0`/`0x00460B40`. The reconstruction's Core/Client state applies the
+career unlock law and can carry any loaded `SuggestedWorldNumber`; its current
+Godot page neither renders that general selection nor traverses it by keyboard.
+The pointer path exposes only world 100 and unlocked world 110, and the host
+constructs only world 100. The loading page
 uses the exact image and `Loading...` text established by
 `CConsole__RenderLoadingScreen` (`0x0042C810`). The Options page is retail's
 own rather than a new surface: read from the pristine specimen

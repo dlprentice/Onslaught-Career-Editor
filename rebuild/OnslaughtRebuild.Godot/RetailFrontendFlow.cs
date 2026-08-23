@@ -2196,10 +2196,13 @@ public sealed partial class RetailFrontendFlow : Control
     }
 
     /// <summary>
-    /// Retail FEP_DEVSELECT — the "CHOOSE GAME NAME" page reached from New Game.
+    /// Retail FEP_DEVSELECT — the "CHOOSE GAME NAME" page reached from New Game
+    /// and Load Game.
     ///
-    /// Implemented visually and sequentially only; this lane carries no save or
-    /// career persistence, so the career list is structurally present and empty.
+    /// New mode renders the editable name field; Load mode renders caller-injected
+    /// read-only career rows. Client owns bounded row selection, accept/back, and
+    /// the selected-career handoff. This lane carries no career persistence or
+    /// implicit save discovery.
     ///
     /// Geometry is MEASURED from the pristine 640x480 retail capture
     /// local-lab/retail-reference-pristine/choose-game-name/choose-game-name-640x480.png
@@ -2230,9 +2233,9 @@ public sealed partial class RetailFrontendFlow : Control
     /// </summary>
     private void DrawDevSelect()
     {
-        // Settled: this lane models no transition into FEP_DEVSELECT, and its
-        // entry length is not evidenced. Passing 1 keeps this page byte-identical
-        // to what it drew before the transition machine existed.
+        // Settled: the transition length into FEP_DEVSELECT is not evidenced.
+        // Passing 1 keeps its settled rendering while both New Game and Load Game
+        // use the Client-owned page state.
         DrawMainUnderlay(1f);
 
         // Faint crosshair guides, present on this page and on the retail main
