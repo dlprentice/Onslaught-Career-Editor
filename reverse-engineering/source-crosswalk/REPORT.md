@@ -1,9 +1,9 @@
 # Source-to-binary crosswalk — existing-row integrity remediation
 
-Status: active — wave-1 batch-1 checkpoint
+Status: complete — wave-1 existing-row remediation
 Date: 2026-08-22
 
-Summary: the crosswalk now contains 1,149 source-definition rows: 138 SOURCE_EXACT (12.0%), 313 SOURCE_ANALOG (27.2%), 658 NO_MATCH_FOUND (57.3%), and 40 NOT_IN_RETAIL (3.5%). Wave 1 removed all 15 audited non-function extras, eliminated every populated-VA collision, and leaves the independently inventoried 634-definition omission backlog unchanged. 108 weak analog-reason rows remain for batch 2.
+Summary: the crosswalk now contains 1,149 source-definition rows: 138 SOURCE_EXACT (12.0%), 312 SOURCE_ANALOG (27.2%), 659 NO_MATCH_FOUND (57.4%), and 40 NOT_IN_RETAIL (3.5%). Wave 1 removed all 15 audited non-function extras, eliminated every populated-VA collision, and leaves the independently inventoried 634-definition omission backlog unchanged. All audited weak analog-reason/path findings are resolved.
 
 Evidence: MEASURED — the approved independent audit at commit `906452399d8fda9c1549859a66492ab72761a8f3`, fresh tree-sitter inventory replay, current tracked name table/static closure, precise promoted notes/semantics, and the row-level [`audit/remediation-wave1.tsv`](audit/remediation-wave1.tsv) decision receipt. No classification is promoted from name similarity alone.
 
@@ -29,10 +29,12 @@ The reconciliation is now direct: `1,783 = 1,149 classified rows + 634 omitted d
 | --- | --- |
 | `SOURCE_EXACT` | Explicit same-function source-body identity at the cited source line and retail VA. Current name similarity is insufficient. |
 | `SOURCE_ANALOG` | A named retail candidate plus a precise existing authority target and a bounded analogy reason. The receipt states what is and is not claimed. |
-| `NO_MATCH_FOUND` | A bounded negative search receipt with an empty VA. It does not claim binary absence. |
+| `NO_MATCH_FOUND` | Empty VA after the baseline exact/prefix/variant/name-note search or a wave-1 row receipt. It does not claim binary absence. |
 | `NOT_IN_RETAIL` | Direct Xbox-only source guard against the PC retail specimen, with an empty VA. |
 
 Repeated source labels remain distinct by source line and AST signature. This preserves overloads and conditional definitions instead of collapsing normalized names.
+
+Unchanged negative rows retain the original calibration's shared bounded search surface (exact, prefix, variant, and tracked-note candidates). Rows newly downgraded by wave 1 cite the per-row remediation receipt. An empty `evidence_path` on an unchanged negative therefore means the documented shared baseline search, not an unbounded assertion of absence.
 
 ## Audit-code deltas
 
@@ -40,8 +42,8 @@ Raw replay counts use the approved audit instrument unchanged. The receipt separ
 
 | Finding code | Baseline | Batch 1 | Current | Baseline → current |
 | --- | ---: | ---: | ---: | ---: |
-| `ANALOG_EVIDENCE_PATH_MISSING` | 168 | 108 | 108 | -60 |
-| `ANALOG_REASON_EVIDENCE_WEAK` | 190 | 108 | 108 | -82 |
+| `ANALOG_EVIDENCE_PATH_MISSING` | 168 | 108 | 0 | -168 |
+| `ANALOG_REASON_EVIDENCE_WEAK` | 190 | 108 | 0 | -190 |
 | `ANALOG_RETAIL_ANALOG_UNNAMED` | 2 | 0 | 0 | -2 |
 | `EVIDENCE_TARGET_UNRESOLVED` | 11 | 0 | 0 | -11 |
 | `EXACT_IDENTITY_EVIDENCE_WEAK` | 1 | 0 | 0 | -1 |
@@ -59,13 +61,13 @@ Raw replay counts use the approved audit instrument unchanged. The receipt separ
 
 ## Wave-1 decision receipt
 
-[`audit/remediation-wave1.tsv`](audit/remediation-wave1.tsv) contains 163 cumulative row decisions. It names the before/after class and VA, retail analog where applicable, precise authority targets, bounded analogy ceiling, original raw finding codes, and the remediation disposition.
+[`audit/remediation-wave1.tsv`](audit/remediation-wave1.tsv) contains 271 cumulative row decisions. It names the before/after class and VA, retail analog where applicable, precise authority targets, bounded analogy ceiling, original raw finding codes, and the remediation disposition.
 
 | Action | Receipt rows |
 | --- | ---: |
 | `DOWNGRADE_STALE_EXACT_IDENTITY` | 1 |
 | `DOWNGRADE_UNSHIPPED_PC_BRANCH` | 2 |
-| `DOWNGRADE_UNSUPPORTED_ANALOG` | 23 |
+| `DOWNGRADE_UNSUPPORTED_ANALOG` | 24 |
 | `DROP_UNRELATED_BEGINSCENE_CITATION` | 1 |
 | `DROP_UNRESOLVED_SECONDARY_CITATION` | 5 |
 | `PROMOTE_EXPLICIT_SOURCE_BODY_IDENTITY` | 2 |
@@ -74,7 +76,7 @@ Raw replay counts use the approved audit instrument unchanged. The receipt separ
 | `REMOVE_NON_FUNCTION_EXTRA` | 15 |
 | `RETAIN_LINE_DISAMBIGUATED_SOURCE_IDENTITY` | 48 |
 | `RETAIN_UNIQUE_VA_OWNER` | 16 |
-| `STRENGTHEN_NAME_ONLY_ANALOG` | 59 |
+| `STRENGTHEN_NAME_ONLY_ANALOG` | 166 |
 
 Key identity corrections:
 
@@ -113,7 +115,7 @@ Key identity corrections:
 | `DXMemoryManager.h` | 2 | 0 | 0 | 2 | 0 |
 | `EditorD3DApp.cpp` | 17 | 0 | 0 | 17 | 0 |
 | `EndLevelData.cpp` | 2 | 0 | 1 | 1 | 0 |
-| `engine.cpp` | 34 | 1 | 14 | 19 | 0 |
+| `engine.cpp` | 34 | 1 | 15 | 18 | 0 |
 | `event.cpp` | 1 | 0 | 0 | 1 | 0 |
 | `eventmanager.cpp` | 14 | 8 | 0 | 6 | 0 |
 | `FEPGoodies.cpp` | 38 | 0 | 11 | 27 | 0 |
@@ -150,7 +152,7 @@ Key identity corrections:
 | `SoundManager.cpp` | 48 | 26 | 3 | 19 | 0 |
 | `SoundManager.h` | 3 | 0 | 0 | 3 | 0 |
 | `SPtrSet.cpp` | 10 | 0 | 0 | 10 | 0 |
-| `thing.cpp` | 47 | 2 | 32 | 13 | 0 |
+| `thing.cpp` | 47 | 2 | 30 | 15 | 0 |
 | `thing.h` | 1 | 0 | 0 | 1 | 0 |
 | `XBoxMemoryCard.cpp` | 36 | 0 | 0 | 0 | 36 |
 
@@ -158,9 +160,13 @@ Key identity corrections:
 
 - Fresh approved-auditor replay: 1,149 rows; 1,783 AST definitions; 634 omissions; 0 extras.
 - Structural status: `PASS` 1101, `PASS_AMBIGUOUS_NAME` 48.
-- Evidence status: `FAIL` 112, `PASS` 383, `PASS_SHARED_METHOD` 654.
-- Authority status: `DISAGREEMENT` 1, `NOT_APPLICABLE` 703, `PASS` 445.
-- Required handoff gates: deterministic receipt validator, documentation/header checks, `git diff --check`, exact owned scope, pushed-ref readback, and unchanged 634-omission denominator.
+- Evidence status: `FAIL` 4, `PASS` 490, `PASS_SHARED_METHOD` 655.
+- Authority status: `DISAGREEMENT` 1, `NOT_APPLICABLE` 704, `PASS` 444.
+- PASS: deterministic receipt validator covers row/classification counts, exact source keys, documented repeated labels, VA format/range/uniqueness, negative/EXACT VA polarity, evidence-path existence, sealed raw exceptions, and the unchanged 634-omission denominator.
+- PASS: `npm run test` — AppCore 1,549/1,549, UI 893/893, CLI 125/125; build stage succeeded with one pre-existing NUnit analyzer warning.
+- PASS: `npm run build` — 0 warnings, 0 errors.
+- PASS: `npm run test:doc-headers` — 0 violations; `git diff --check` — clean.
+- Repository-wide link check still reports only the pre-existing unrelated `tools/probe/README.md` link to ignored `../../local-lab/SCRIPT-FORMAT-SPEC-2026-08-02.md`; neither changed report link is among the failures.
 
 ## Evidence boundaries
 
