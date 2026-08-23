@@ -2,7 +2,7 @@
 # Source-to-binary crosswalk of the pinned reference sources
 # (references/Onslaught) against the pristine retail specimen.
 # Specimen: BEA.exe.original.backup SHA-256 74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750
-# Generated: 2026-08-22 (UTC) by t_a520a048; existing-row integrity remediated by t_205b0bf8 wave 1.
+# Generated: 2026-08-22 (UTC) by t_a520a048; existing-row integrity remediated by t_205b0bf8 wave 1 and semantically corrected by t_497a7f9f.
 # Classifications: SOURCE_EXACT requires explicit same-function source-body identity;
 #   SOURCE_ANALOG requires a named retail candidate plus a bounded analogy reason;
 #   NO_MATCH_FOUND records a bounded negative search, not binary absence;
@@ -10,7 +10,7 @@
 # Wave-1 row decisions resolve through reverse-engineering/source-crosswalk/audit/remediation-wave1.tsv; all evidence paths are repo-relative precise targets.
 file	function	src_line	classification	va_or_empty	evidence_path
 BattleEngine.cpp	CBattleEngine::Init	63	SOURCE_EXACT	0x00404dd0	reverse-engineering/binary-analysis/functions/BattleEngine.cpp/CBattleEngine__Init.md
-BattleEngine.cpp	CBattleEngine::~dtor	356	NO_MATCH_FOUND		reverse-engineering/source-crosswalk/audit/remediation-wave1.tsv
+BattleEngine.cpp	CBattleEngine::~dtor	356	SOURCE_ANALOG	0x00405f60	reverse-engineering/binary-analysis/cbattleengine-vtable-semantics-2026-08-11.tsv;reverse-engineering/source-crosswalk/audit/remediation-wave1.tsv
 BattleEngine.cpp	CBattleEngine::Shutdown	407	NO_MATCH_FOUND		
 BattleEngine.cpp	CBattleEngine::Activate	429	NO_MATCH_FOUND		
 BattleEngine.cpp	CBattleEngine::Deactivate	436	NO_MATCH_FOUND		
@@ -272,7 +272,7 @@ Career.cpp	CCareerNodeLink::GetToNode	160	NO_MATCH_FOUND
 Career.cpp	CCareer::CCareer	168	NO_MATCH_FOUND		
 Career.cpp	CCareer::GetLevelStructure	181	SOURCE_EXACT	0x0041b7b0	reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__GetLevelStructure.md
 Career.cpp	CCareer::Blank	190	SOURCE_EXACT	0x0041b7c0	reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__Blank.md
-Career.cpp	CCareer::GetNodeFromWorldNo	237	NO_MATCH_FOUND		reverse-engineering/source-crosswalk/audit/remediation-wave1.tsv
+Career.cpp	CCareer::GetNodeFromWorldNo	237	SOURCE_ANALOG	0x0041b8f0	reverse-engineering/binary-analysis/functions/Career.cpp/CCareer__GetNodeFromWorld.md;reverse-engineering/binary-analysis/ghidra-fullpass-findings/W002/primary/A01.md;reverse-engineering/source-crosswalk/audit/remediation-wave1.tsv
 Career.cpp	CCareerNode::GetChildNodes	253	NO_MATCH_FOUND		
 Career.cpp	CCareerNode::GetChildLinks	268	SOURCE_EXACT	0x0041b940	reverse-engineering/binary-analysis/functions/Career.cpp/CCareerNode__GetChildLinks.md
 Career.cpp	CCareerNode::GetParentLinks	278	SOURCE_EXACT	0x0041b9f0	reverse-engineering/binary-analysis/functions/Career.cpp/CCareerNode__GetParentLinks.md
@@ -365,7 +365,7 @@ DXMemBuffer.cpp	CDXMemBuffer::LoadNextBlock	302	NO_MATCH_FOUND
 DXMemBuffer.cpp	CDXMemBuffer::GetFileSize	330	SOURCE_EXACT	0x005482c0	reverse-engineering/binary-analysis/pc-memory-io-semantics-2026-08-11.tsv
 DXMemBuffer.cpp	CDXMemBuffer::Skip	352	SOURCE_EXACT	0x005482d0	reverse-engineering/binary-analysis/pc-memory-io-semantics-2026-08-11.tsv
 DXMemBuffer.cpp	CDXMemBuffer::Read	394	SOURCE_EXACT	0x00548570	reverse-engineering/binary-analysis/pc-memory-io-semantics-2026-08-11.tsv
-DXMemBuffer.cpp	CDXMemBuffer::ReadString	467	NO_MATCH_FOUND		reverse-engineering/source-crosswalk/audit/remediation-wave1.tsv
+DXMemBuffer.cpp	CDXMemBuffer::ReadString	467	SOURCE_ANALOG	0x00548820	reverse-engineering/binary-analysis/pc-memory-io-semantics-2026-08-11.tsv;reverse-engineering/source-crosswalk/audit/remediation-wave1.tsv
 DXMemBuffer.cpp	write_crc_data	513	NO_MATCH_FOUND		
 DXMemBuffer.cpp	CDXMemBuffer::Write	533	NO_MATCH_FOUND		
 DXMemBuffer.cpp	CDXMemBuffer::Close	574	SOURCE_EXACT	0x00548c00	reverse-engineering/binary-analysis/pc-memory-io-semantics-2026-08-11.tsv
@@ -626,9 +626,9 @@ PCPlatform.cpp	CPCPlatform::Shutdown	132	NO_MATCH_FOUND
 PCPlatform.cpp	CPCPlatform::Process	144	SOURCE_ANALOG		reverse-engineering/binary-analysis/functions/Platform.cpp/PLATFORM__Process.md
 PCPlatform.cpp	CPCPlatform::BeginScene	159	SOURCE_ANALOG		reverse-engineering/binary-analysis/functions/Platform.cpp/PLATFORM__BeginScene.md;reverse-engineering/binary-analysis/functions/Platform.cpp/PLATFORM__EndScene.md
 PCPlatform.cpp	CPCPlatform::EndScene	165	SOURCE_ANALOG		reverse-engineering/binary-analysis/functions/Platform.cpp/PLATFORM__EndScene.md
-PCPlatform.cpp	CPCPlatform::DeviceFlip	171	NO_MATCH_FOUND		reverse-engineering/source-crosswalk/audit/remediation-wave1.tsv
+PCPlatform.cpp	CPCPlatform::DeviceFlip	171	SOURCE_ANALOG	0x005158f0	reverse-engineering/binary-analysis/ghidra-fullpass-findings/W009/primary/A03.md;reverse-engineering/binary-analysis/ghidra-fullpass-findings/W009/adversarial/B03.md;reverse-engineering/source-crosswalk/audit/remediation-wave1.tsv
 PCPlatform.cpp	CPCPlatform::ClearScreen	180	SOURCE_ANALOG		reverse-engineering/binary-analysis/functions/Platform.cpp/PLATFORM__ClearScreen.md
-PCPlatform.cpp	CPCPlatform::GetScreenWidth	186	NO_MATCH_FOUND		reverse-engineering/source-crosswalk/audit/remediation-wave1.tsv
+PCPlatform.cpp	CPCPlatform::GetScreenWidth	186	SOURCE_ANALOG	0x00515940	reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-17.tsv;reverse-engineering/binary-analysis/function-c1-closure-2026-08-11.tsv;reverse-engineering/source-crosswalk/audit/remediation-wave1.tsv
 PCPlatform.cpp	CPCPlatform::GetScreenHeight	192	NO_MATCH_FOUND		
 PCPlatform.cpp	CPCPlatform::GetFPS	198	NO_MATCH_FOUND		
 PCPlatform.cpp	CPCPlatform::UpdateJoystick	206	NO_MATCH_FOUND		
@@ -775,10 +775,10 @@ XBoxMemoryCard.cpp	CXBoxMemoryCard::CardBeenUnpluggedSinceLastTimeIAsked	1316	NO
 XBoxMemoryCard.cpp	CXBoxMemoryCard::SerialiseForReboot	1396	NOT_IN_RETAIL		
 activereader.cpp	CGenericActiveReader::SetReader	8	SOURCE_ANALOG	0x00401000	reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-17.tsv;reverse-engineering/binary-analysis/function-c1-closure-2026-08-11.tsv;reverse-engineering/source-crosswalk/audit/remediation-wave1.tsv
 actor.cpp	CActor::Init	15	SOURCE_ANALOG	0x004011e0	reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-17.tsv;reverse-engineering/binary-analysis/function-c1-closure-2026-08-11.tsv;reverse-engineering/source-crosswalk/audit/remediation-wave1.tsv
-actor.cpp	CActor::~dtor	45	NO_MATCH_FOUND		reverse-engineering/source-crosswalk/audit/remediation-wave1.tsv
+actor.cpp	CActor::~dtor	45	SOURCE_ANALOG	0x004015c0	reverse-engineering/binary-analysis/cactor-vtable-semantics-2026-08-11.tsv;reverse-engineering/source-crosswalk/audit/remediation-wave1.tsv
 actor.cpp	CActor::LowFidelityMove	54	NO_MATCH_FOUND		
 actor.cpp	CActor::Move	74	SOURCE_ANALOG	0x004015e0	reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-17.tsv;reverse-engineering/binary-analysis/function-c1-closure-2026-08-11.tsv;reverse-engineering/source-crosswalk/audit/remediation-wave1.tsv
-actor.cpp	CActor::MoveTo	178	NO_MATCH_FOUND		reverse-engineering/source-crosswalk/audit/remediation-wave1.tsv
+actor.cpp	CActor::MoveTo	178	SOURCE_EXACT	0x00401900	reverse-engineering/binary-analysis/cactor-vtable-semantics-2026-08-11.tsv;reverse-engineering/source-crosswalk/audit/remediation-wave1.tsv
 actor.cpp	CActor::Teleport	185	NO_MATCH_FOUND		
 actor.cpp	CActor::TeleportOrientation	205	SOURCE_ANALOG	0x004019b0	reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-17.tsv;reverse-engineering/binary-analysis/function-c1-closure-2026-08-11.tsv;reverse-engineering/source-crosswalk/audit/remediation-wave1.tsv
 actor.cpp	CActor::AddMoveEvent	213	NO_MATCH_FOUND		
@@ -1014,7 +1014,7 @@ thing.cpp	CThing::CThing	28	NO_MATCH_FOUND
 thing.cpp	CThing::Init	40	SOURCE_ANALOG	0x004f34a0	reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-17.tsv;reverse-engineering/binary-analysis/function-c1-closure-2026-08-11.tsv;reverse-engineering/source-crosswalk/audit/remediation-wave1.tsv
 thing.cpp	CThing::InitRenderThing	92	SOURCE_ANALOG	0x004f35d0	reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-17.tsv;reverse-engineering/binary-analysis/function-c1-closure-2026-08-11.tsv;reverse-engineering/source-crosswalk/audit/remediation-wave1.tsv
 thing.cpp	CThing::Shutdown	102	SOURCE_ANALOG	0x004f3600	reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-17.tsv;reverse-engineering/binary-analysis/function-c1-closure-2026-08-11.tsv;reverse-engineering/source-crosswalk/audit/remediation-wave1.tsv
-thing.cpp	CThing::~dtor	116	NO_MATCH_FOUND		reverse-engineering/source-crosswalk/audit/remediation-wave1.tsv
+thing.cpp	CThing::~dtor	116	SOURCE_ANALOG	0x004f3480	reverse-engineering/binary-analysis/cthing-vtable-semantics-2026-08-11.tsv;reverse-engineering/source-crosswalk/audit/remediation-wave1.tsv
 thing.cpp	CThing::Render	133	SOURCE_ANALOG	0x004f36d0	reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-17.tsv;reverse-engineering/binary-analysis/function-c1-closure-2026-08-11.tsv;reverse-engineering/source-crosswalk/audit/remediation-wave1.tsv
 thing.cpp	CThing::RenderImposter	150	SOURCE_ANALOG	0x004f3710	reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-17.tsv;reverse-engineering/binary-analysis/function-c1-closure-2026-08-11.tsv;reverse-engineering/source-crosswalk/audit/remediation-wave1.tsv
 thing.cpp	CThing::HandleEvent	159	SOURCE_ANALOG	0x004f3730	reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-17.tsv;reverse-engineering/binary-analysis/function-c1-closure-2026-08-11.tsv;reverse-engineering/source-crosswalk/audit/remediation-wave1.tsv
@@ -1040,7 +1040,7 @@ thing.cpp	CThing::AccumulateResources	527	NO_MATCH_FOUND
 thing.cpp	CThing::IncreaseThingCounter	536	NO_MATCH_FOUND		
 thing.cpp	CThing::IsOverWater	543	SOURCE_ANALOG	0x004f3de0	reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-17.tsv;reverse-engineering/binary-analysis/function-c1-closure-2026-08-11.tsv;reverse-engineering/source-crosswalk/audit/remediation-wave1.tsv
 thing.cpp	CComplexThing::CComplexThing	563	NO_MATCH_FOUND		
-thing.cpp	CComplexThing::~dtor	576	NO_MATCH_FOUND		reverse-engineering/source-crosswalk/audit/remediation-wave1.tsv
+thing.cpp	CComplexThing::~dtor	576	SOURCE_ANALOG	0x004f3ee0	reverse-engineering/binary-analysis/ccomplexthing-vtable-semantics-2026-08-11.tsv;reverse-engineering/source-crosswalk/audit/remediation-wave1.tsv
 thing.cpp	CComplexThing::Init	591	SOURCE_ANALOG	0x004f3fd0	reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-17.tsv;reverse-engineering/binary-analysis/function-c1-closure-2026-08-11.tsv;reverse-engineering/source-crosswalk/audit/remediation-wave1.tsv
 thing.cpp	CComplexThing::SetName	613	SOURCE_ANALOG	0x004f4120	reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-17.tsv;reverse-engineering/binary-analysis/function-c1-closure-2026-08-11.tsv;reverse-engineering/source-crosswalk/audit/remediation-wave1.tsv
 thing.cpp	CComplexThing::Shutdown	633	SOURCE_ANALOG	0x004f41b0	reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-17.tsv;reverse-engineering/binary-analysis/function-c1-closure-2026-08-11.tsv;reverse-engineering/source-crosswalk/audit/remediation-wave1.tsv
