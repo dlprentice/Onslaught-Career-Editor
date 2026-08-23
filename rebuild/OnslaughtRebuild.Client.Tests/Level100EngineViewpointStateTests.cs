@@ -118,6 +118,45 @@ public sealed class Level100EngineViewpointStateTests
             name => name.Contains("Direct3D", StringComparison.OrdinalIgnoreCase));
     }
 
+    [Fact]
+    public void FirstFlightWorldView_ConsumesTheSelectedByValueEngineSnapshot()
+    {
+        string source = File.ReadAllText(Path.Combine(
+            LocateGodotDirectory(),
+            "FirstFlightWorldView.cs"));
+
+        Assert.Contains(
+            "private readonly Level100EngineViewpointState _engineViewpointState = new(\n        RetailNearPlane,\n        RetailFarPlane);",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "private const float RetailNearPlane = 0.1f;",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "private const float RetailFarPlane = 700f;",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "EngineViewpointSnapshot selectedViewpoint =\n            _engineViewpointState.Bind(cameraSnapshot);",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "Near = selectedViewpoint.NearPlane,",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "Far = selectedViewpoint.FarPlane,",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "2f * selectedViewpoint.NearPlane * RetailTanVerticalHalfFov * cameraSnapshot.Zoom;",
+            source,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain("Near = 0.1f,", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("Far = 700f,", source, StringComparison.Ordinal);
+    }
+
     private static string ReplayHash(int thingId)
     {
         Level100EngineViewpointState engine = CreateEngine();
@@ -145,4 +184,23 @@ public sealed class Level100EngineViewpointStateTests
                 new Level100ActorId(thingId),
                 ClientCameraPose.Identity,
                 new Level100RenderVector3(1f, 0f, 0f)));
+
+    private static string LocateGodotDirectory()
+    {
+        DirectoryInfo? directory = new(AppContext.BaseDirectory);
+        while (directory is not null)
+        {
+            string candidate = Path.Combine(
+                directory.FullName,
+                "OnslaughtRebuild.Godot");
+            if (File.Exists(Path.Combine(candidate, "FirstFlightWorldView.cs")))
+            {
+                return candidate;
+            }
+            directory = directory.Parent;
+        }
+
+        throw new DirectoryNotFoundException(
+            $"Could not locate OnslaughtRebuild.Godot above {AppContext.BaseDirectory}.");
+    }
 }

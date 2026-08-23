@@ -31,6 +31,8 @@ public sealed partial class FirstFlightWorldView : Node3D
     // angle, and the offset below has to be expressed in those units, so the
     // tangent is the primitive and the degree figure above is its label.
     private const float RetailTanVerticalHalfFov = 0.75f;
+    private const float RetailNearPlane = 0.1f;
+    private const float RetailFarPlane = 700f;
     // Retail rasterises through Direct3D 9, whose pixel-centre convention puts
     // the same geometry half a pixel down and right of where a modern
     // rasteriser puts it. Measured, not assumed: high-pass registration of the
@@ -126,6 +128,9 @@ public sealed partial class FirstFlightWorldView : Node3D
     private readonly AttachedPanCameraState _cameraState = new(
         SimulationConstants.Level100OpeningPanTicks,
         Level100MissionTiming.ReleasedEventFrameTicks);
+    private readonly Level100EngineViewpointState _engineViewpointState = new(
+        RetailNearPlane,
+        RetailFarPlane);
     private readonly Dictionary<int, Node3D> _projectiles = [];
     private readonly Dictionary<int, Level100ProjectileTrailHistory>
         _projectileTrails = [];
@@ -285,13 +290,15 @@ public sealed partial class FirstFlightWorldView : Node3D
         _cameraState.Advance(previous, current);
         AttachedPanCameraViewSnapshot cameraSnapshot =
             _cameraState.Sample(interpolationAlpha);
+        EngineViewpointSnapshot selectedViewpoint =
+            _engineViewpointState.Bind(cameraSnapshot);
         ShowHud = cameraSnapshot.HudVisible;
         OpeningPanActive = cameraSnapshot.OpeningPanActive;
         UpdatePlayerShape(current, ShowHud);
         UpdateLevel100Targets(previous, current, interpolationAlpha);
         UpdateProjectiles(previous, current, interpolationAlpha);
         _camera.Size =
-            2f * _camera.Near * RetailTanVerticalHalfFov * cameraSnapshot.Zoom;
+            2f * selectedViewpoint.NearPlane * RetailTanVerticalHalfFov * cameraSnapshot.Zoom;
         UpdateCamera(cameraSnapshot);
         IReadOnlyList<Level100TerrainTileSelection> terrainSelection =
             _level100Terrain.Update(_camera);
@@ -709,12 +716,14 @@ public sealed partial class FirstFlightWorldView : Node3D
 
     private void BuildCamera()
     {
+        EngineViewpointSnapshot selectedViewpoint =
+            _engineViewpointState.SelectedSnapshot;
         _camera = new Camera3D
         {
             Name = "RetailOpeningAndFirstPersonCamera",
             Fov = RetailVerticalFovDegrees,
-            Near = 0.1f,
-            Far = 700f,
+            Near = selectedViewpoint.NearPlane,
+            Far = selectedViewpoint.FarPlane,
             Current = true,
         };
         // Frustum rather than Perspective only so the half-pixel translation
