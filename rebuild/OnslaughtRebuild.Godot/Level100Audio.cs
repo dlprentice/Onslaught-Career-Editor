@@ -2,6 +2,7 @@
 
 using System.Buffers.Binary;
 using Godot;
+using OnslaughtRebuild.Client;
 using OnslaughtRebuild.Core;
 
 namespace OnslaughtRebuild.GodotClient;
@@ -50,6 +51,7 @@ public sealed partial class Level100Audio : Node3D
     private readonly Dictionary<AudioStreamPlayer3D, float> _gameplayBaseVolumes = [];
     private readonly Dictionary<AudioStreamPlayer, float> _terminalBaseVolumes = [];
     private readonly Dictionary<AudioStreamPlayer, float> _frontendBaseVolumes = [];
+    private readonly RetailMusicPolicy _musicPolicy = new();
 
     private AudioStreamPlayer _tutorialVoice = null!;
 
@@ -60,7 +62,7 @@ public sealed partial class Level100Audio : Node3D
     private AudioStreamPlayer _music = null!;
     private AudioStreamOggVorbis? _tutorialMusicStream;
     private AudioStreamOggVorbis? _frontendMusicStream;
-    private string? _activeMusicPath;
+    private double _musicUpdateAccumulatorSeconds;
     private Node3D? _aquila;
     private Level100ActorId? _aquilaActorId;
     private AudioStreamPlayer3D? _aquilaFlightLoop;
@@ -114,8 +116,6 @@ public sealed partial class Level100Audio : Node3D
     // behind a shared "mix" helper.
     private float _soundMasterVolume =
         Level100AudioCatalog.ToRetailSoundMasterVolume(RetailSoundOptionValue);
-    private int _musicSetVolume =
-        Level100AudioCatalog.ToRetailMusicSetVolume(RetailMusicOptionValue);
 
     /// <summary>
     /// Retail's authored cold-start sound option value, <c>CCareer::CCareer</c>
@@ -187,13 +187,15 @@ public sealed partial class Level100Audio : Node3D
         {
             Name = "RetailMusic",
             ProcessMode = ProcessModeEnum.Always,
-            VolumeDb = MixedMusicVolumeDb(),
+            VolumeDb = MusicVolumeDb(_musicPolicy.CurrentVolume),
         };
+        _music.Finished += HandleMusicFinished;
         AddChild(_music);
     }
 
     public override void _Process(double delta)
     {
+        AdvanceMusicPolicy(delta);
         if (_gameplayPaused)
         {
             return;
@@ -240,18 +242,16 @@ public sealed partial class Level100Audio : Node3D
         }
     }
 
-    public void StartTutorialMusic() =>
-        PlayMusic(
-            Level100AudioCatalog.TutorialMusic,
-            ref _tutorialMusicStream);
+    public void StartTutorialMusic() => PlayMusic(
+        RetailMusicSelection.Tutorial,
+        Level100AudioCatalog.TutorialMusic);
 
     // CFrontEnd::Init (FrontEnd.cpp:332-333, retail 0x004662a0) starts
     // MUS_FRONTEND once for the whole frontend, so one call covers click-to-start
     // through briefing.
-    public void StartFrontendMusic() =>
-        PlayMusic(
-            Level100AudioCatalog.FrontendMusic,
-            ref _frontendMusicStream);
+    public void StartFrontendMusic() => PlayMusic(
+        RetailMusicSelection.Frontend,
+        Level100AudioCatalog.FrontendMusic);
 
     public void StopTutorialMusic() => StopMusic();
 
@@ -260,33 +260,104 @@ public sealed partial class Level100Audio : Node3D
     private bool MusicPlaying(Level100MusicRecipe recipe) =>
         GodotObject.IsInstanceValid(_music) &&
         _music.Playing &&
-        StringComparer.Ordinal.Equals(_activeMusicPath, recipe.ResourcePath);
+        _musicPolicy.IsPlaying &&
+        StringComparer.Ordinal.Equals(
+            _musicPolicy.CurrentTrackIdentity,
+            recipe.ResourcePath);
 
-    // Selection playback loops: at track end CMusic::UpdateStatus re-enters
-    // PlaySelection with fade 0 (Music.cpp:298-299, retail 0x004bb530), and both
-    // MUS_FRONTEND and MUS_TUTORIAL resolve to a fixed index, so the same track
-    // restarts. Godot's stream-level Loop reproduces that.
+    // At track end CMusic::UpdateStatus re-enters PlaySelection with fade 0
+    // (Music.cpp:298-299, retail 0x004bb530). The Client policy owns that replay;
+    // the Godot stream remains a non-looping decoder/device adapter.
     private void PlayMusic(
-        Level100MusicRecipe recipe,
-        ref AudioStreamOggVorbis? cachedStream)
+        RetailMusicSelection selection,
+        Level100MusicRecipe recipe)
     {
         if (MusicPlaying(recipe))
         {
             return;
         }
 
-        cachedStream ??= LoadOgg(recipe.ResourcePath, looping: true);
-        _music.Stream = cachedStream;
-        _activeMusicPath = recipe.ResourcePath;
-        _music.VolumeDb = MixedMusicVolumeDb();
-        _music.Play();
+        ApplyMusicActions(_musicPolicy.PlaySelection(
+            selection,
+            recipe.ResourcePath));
     }
 
     private void StopMusic()
     {
-        _music.Stop();
-        _music.Stream = null;
-        _activeMusicPath = null;
+        ApplyMusicActions(_musicPolicy.Kill());
+        _musicUpdateAccumulatorSeconds = 0d;
+    }
+
+    private void HandleMusicFinished()
+    {
+        ApplyMusicActions(_musicPolicy.HandleTrackFinished());
+    }
+
+    // The deterministic policy owns update order and integer steps. This adapter
+    // only schedules those steps on the existing presentation update cadence;
+    // it does not claim decoder, DirectSound, or audible timing parity.
+    private void AdvanceMusicPolicy(double delta)
+    {
+        if (!double.IsFinite(delta) || delta <= 0d || !_musicPolicy.IsPlaying)
+        {
+            return;
+        }
+
+        _musicUpdateAccumulatorSeconds += delta;
+        while (_musicUpdateAccumulatorSeconds >= RetailSoundUpdateSeconds &&
+               _musicPolicy.IsPlaying)
+        {
+            _musicUpdateAccumulatorSeconds -= RetailSoundUpdateSeconds;
+            ApplyMusicActions(_musicPolicy.AdvanceFadeStep());
+        }
+    }
+
+    private void ApplyMusicActions(IReadOnlyList<RetailMusicAction> actions)
+    {
+        foreach (RetailMusicAction action in actions)
+        {
+            switch (action.Kind)
+            {
+                case RetailMusicActionKind.SetVolume:
+                    _music.VolumeDb = MusicVolumeDb(action.Volume);
+                    break;
+                case RetailMusicActionKind.Stop:
+                    _music.Stop();
+                    _music.Stream = null;
+                    break;
+                case RetailMusicActionKind.Play:
+                    _music.Stream = MusicStream(action.TrackIdentity ??
+                        throw new InvalidOperationException(
+                            "A music play action requires a track identity."));
+                    _music.Play();
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(action));
+            }
+        }
+    }
+
+    private AudioStreamOggVorbis MusicStream(string trackIdentity)
+    {
+        if (StringComparer.Ordinal.Equals(
+                trackIdentity,
+                Level100AudioCatalog.TutorialMusic.ResourcePath))
+        {
+            return _tutorialMusicStream ??=
+                LoadOgg(trackIdentity, looping: false);
+        }
+        if (StringComparer.Ordinal.Equals(
+                trackIdentity,
+                Level100AudioCatalog.FrontendMusic.ResourcePath))
+        {
+            return _frontendMusicStream ??=
+                LoadOgg(trackIdentity, looping: false);
+        }
+
+        throw new ArgumentOutOfRangeException(
+            nameof(trackIdentity),
+            trackIdentity,
+            "The Level 100 adapter received an unowned music identity.");
     }
 
     public void BindAquila(
@@ -752,11 +823,7 @@ public sealed partial class Level100Audio : Node3D
 
     public void SetMusicOption(float optionValue)
     {
-        _musicSetVolume = Level100AudioCatalog.ToRetailMusicSetVolume(optionValue);
-        if (GodotObject.IsInstanceValid(_music))
-        {
-            _music.VolumeDb = MixedMusicVolumeDb();
-        }
+        _musicPolicy.SetConfiguredVolume(optionValue);
     }
 
     public void SetGameplayMix(float linearMix)
@@ -1298,13 +1365,12 @@ public sealed partial class Level100Audio : Node3D
         }
     }
 
-    // CMusic's released shared policy supplies only the rounded 0..127 set
-    // volume. Normalizing that integer for Godot is an adapter boundary, not a
-    // claim about the still-ungraded DirectSound device-volume or audible law.
-    private float MixedMusicVolumeDb() =>
-        _musicSetVolume <= 0
+    // Normalizing CMusic's current 0..127 integer for Godot is an adapter
+    // boundary, not a claim about DirectSound device-volume or audible parity.
+    private static float MusicVolumeDb(int volume) =>
+        volume <= 0
             ? -80f
-            : Mathf.LinearToDb(_musicSetVolume / 127f);
+            : Mathf.LinearToDb(volume / (float)RetailMusicPolicy.FullVolume);
 
     private static void ValidateLinearMix(float value, string parameterName)
     {
