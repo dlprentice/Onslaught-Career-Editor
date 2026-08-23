@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+using OnslaughtRebuild.Client;
 using OnslaughtRebuild.GodotClient;
 
 namespace OnslaughtRebuild.Client.Tests;
@@ -472,22 +473,29 @@ public sealed class Level100AudioCatalogTests
 
         Assert.Equal("MUS_TUTORIAL", music.RetailSelection);
         Assert.Equal(3, music.RetailTrackIndex);
+        Assert.Equal(
+            RetailMusicPolicy.TrackIndex(RetailMusicSelection.Tutorial),
+            music.RetailTrackIndex);
         Assert.Equal("data/Music/BEA_04(Master).ogg", music.RetailSourceName);
         Assert.Equal(
             "res://Assets/Level100/Music/tutorial-track-03.ogg",
             music.ResourcePath);
     }
 
-    // The recovered MUS_FRONTEND law, in one place: which track, that it loops,
-    // and that level entry stops it before the tutorial track starts.
+    // The recovered MUS_FRONTEND law, in one place: which track, that selection
+    // end replays it through shared policy, and that level entry stops it before
+    // the tutorial track starts.
     // Evidence for each clause is cited in Level100AudioCatalog.FrontendMusic.
     [Fact]
-    public void FrontendMusic_IsTrackEightLoopedAndStoppedOnLevelEntry()
+    public void FrontendMusic_IsTrackEightReplayedAndStoppedOnLevelEntry()
     {
         Level100MusicRecipe music = Level100AudioCatalog.FrontendMusic;
 
         Assert.Equal("MUS_FRONTEND", music.RetailSelection);
         Assert.Equal(8, music.RetailTrackIndex);
+        Assert.Equal(
+            RetailMusicPolicy.TrackIndex(RetailMusicSelection.Frontend),
+            music.RetailTrackIndex);
         Assert.Equal("data/Music/BEA_09(Master).ogg", music.RetailSourceName);
         Assert.Equal(
             "res://Assets/Frontend/Music/frontend-track-08.ogg",
@@ -513,8 +521,9 @@ public sealed class Level100AudioCatalogTests
             "data/Music/" +
                 playlist[Level100AudioCatalog.TutorialMusic.RetailTrackIndex]);
 
-        // The exact retail source must be materialized, and the frontend track
-        // must load looping and stop at level entry before the tutorial track.
+        // The exact retail source must be materialized. Selection replay belongs
+        // to RetailMusicPolicy, not the decoder stream, and level entry stops the
+        // frontend selection before the tutorial selection starts.
         string audio = ReadGodotSource("Level100Audio.cs");
         string game = ReadGodotSource("FirstFlightGame.cs");
         string frontend = ReadGodotSource("RetailFrontendFlow.cs");
@@ -522,8 +531,20 @@ public sealed class Level100AudioCatalogTests
 
         Assert.Contains(music.RetailSourceName, materializer, StringComparison.Ordinal);
         Assert.Contains(
-            "LoadOgg(recipe.ResourcePath, looping: true)",
+            "private readonly RetailMusicPolicy _musicPolicy = new();",
             audio,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "_music.Finished += HandleMusicFinished;",
+            audio,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "ApplyMusicActions(_musicPolicy.HandleTrackFinished());",
+            MethodBody(audio, "private void HandleMusicFinished()"),
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "LoadOgg(trackIdentity, looping: false)",
+            MethodBody(audio, "private AudioStreamOggVorbis MusicStream(string trackIdentity)"),
             StringComparison.Ordinal);
         string ready = MethodBody(game, "public override void _Ready()");
         string startupComplete = MethodBody(
@@ -622,8 +643,7 @@ public sealed class Level100AudioCatalogTests
             audio,
             StringComparison.Ordinal);
         Assert.Contains(
-            "_musicSetVolume =\n        " +
-            "Level100AudioCatalog.ToRetailMusicSetVolume(RetailMusicOptionValue)",
+            "private readonly RetailMusicPolicy _musicPolicy = new();",
             audio,
             StringComparison.Ordinal);
 
@@ -633,6 +653,9 @@ public sealed class Level100AudioCatalogTests
         Assert.Equal(
             114,
             Level100AudioCatalog.ToRetailMusicSetVolume(retailMusicOption));
+        var policy = new RetailMusicPolicy();
+        Assert.Equal(retailMusicOption, policy.ConfiguredVolume);
+        Assert.Equal(114, policy.SetVolume);
     }
 
     [Fact]
@@ -650,18 +673,17 @@ public sealed class Level100AudioCatalogTests
     }
 
     [Fact]
-    public void MusicOptionChange_StoresTheRoundedSetVolumeAndUpdatesThePlayer()
+    public void MusicOptionChange_HandsTheRawFloatToTheSharedPolicy()
     {
         string setter = MethodBody(
             ReadGodotSource("Level100Audio.cs"),
             "public void SetMusicOption(float optionValue)");
 
-        AssertOccursInOrder(
+        Assert.Contains(
+            "_musicPolicy.SetConfiguredVolume(optionValue);",
             setter,
-            "_musicSetVolume = " +
-            "Level100AudioCatalog.ToRetailMusicSetVolume(optionValue);",
-            "if (GodotObject.IsInstanceValid(_music))",
-            "_music.VolumeDb = MixedMusicVolumeDb();");
+            StringComparison.Ordinal);
+        Assert.DoesNotContain("ToRetailMusicSetVolume", setter, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -1139,7 +1161,7 @@ public sealed class Level100AudioCatalogTests
         // integer set volume; no DirectSound device-volume parity is inferred.
         Assert.Equal(1, CountOccurrences(audio, "Mathf.LinearToDb("));
         Assert.Contains(
-            "Mathf.LinearToDb(_musicSetVolume / 127f)",
+            "Mathf.LinearToDb(volume / (float)RetailMusicPolicy.FullVolume)",
             audio,
             StringComparison.Ordinal);
         Assert.Contains(
