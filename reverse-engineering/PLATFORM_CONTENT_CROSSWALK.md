@@ -4,21 +4,25 @@ Status: active, bounded platform/content finding
 Date: 2026-08-22
 Summary: PS2's six canonical language tables are byte-identical to PC, all three
 platforms carry the same 43 mission titles, and the English character profiles
-agree; the PS2 resource-name set differs from the shared PC/Xbox 66-world set.
+agree; PS2-only `000` and `888` and PC/Xbox-only `201` are three distinct world
+containers rather than sentinels, global/default files, or packaging aliases.
 Evidence: MEASURED — complete v3 decode of eighteen PC/Xbox/PS2 language tables,
 SHA-256 of all 18 Xbox regional language members, streamed SHA-256 of both PS2
 retail ISOs and all six regional RCDF package instances, complete PC/Xbox/PS2
-numeric-resource basename censuses, and page-image inspection of the PS2 USA
-manual.
+numeric-resource basename censuses, strict AYA/WRES world-identity parses for
+`000`/`888`/`201`, complete logical-name comparison against the 302-member Xbox
+AYA shelf, byte-exact `worldheaders.dat` replay, loose-script manifests, and
+page-image inspection of the PS2 USA manual.
 Specimen: pristine PC language tables headed by English SHA-256
 `789ecff619d077092769df281c540d138a25fcc74d70023466a604888e59371a`;
 Xbox Europe/Korea/USA extracted-game ZIP members; PS2 Europe/USA inner ISOs
 SHA-256 `060d883b…9da52` / `3e1fffa9…7ce6`; PS2 USA text PDF SHA-256
 `cc4b1e0fc79517ac55f21a0fdf2be17c20d7bb878c413b7bd72c641798163ccb`.
 Verdict: the 43-title and six-language PC tables are exact authored data inside
-both PS2 retail regions, while Xbox retains a 34-ID subset and PS2's numeric
-resource set contains `000` and `888` where the PC/Xbox set instead contains
-`201`.
+both PS2 retail regions, while Xbox retains a 34-ID subset. PS2 `000` is a real
+mode-0 world-0 container of still-unknown purpose; PS2 `888` is a real mode-2
+multiplayer world; PC/Xbox `201` is a real mode-0 world absent from PS2's numeric
+resource shelf. None is an alias for another member of this three-ID family.
 
 ## Scope and method
 
@@ -43,20 +47,35 @@ unsigned 32-bit values. That last step is deliberately independent of the
 known unsigned-only regex bug in `tools/language_dat_decode.py`; this result does
 not close that tool bug.
 
-For PS2, the pass parsed the ISO9660 primary volume descriptor and root, hashed
-each `DATA*.NYO` extent, then parsed the package's `RCDF` header and tail index.
+For PS2, the language-table pass parsed the ISO9660 primary volume descriptor
+and root, hashed each `DATA*.NYO` extent, then parsed the package's `RCDF` header
+and tail index.
 The index is exact and self-bounding: a count followed by 264-byte
-path/offset/size rows. Only the six canonical `\data\language\*.dat` members
-were extracted into ignored local-lab and decoded. Other payload formats stayed
-unopened; their paths, sizes, package hashes, and index hashes remain exact.
+path/offset/size rows. At that stage only the six canonical
+`\data\language\*.dat` members were extracted into ignored local-lab and
+decoded; the later bounded world-role follow-up is described below.
 
 The original PC/Xbox/manual receipt is
 [`platform-content-crosswalk-2026-08-22.tsv`](platform-content-crosswalk-2026-08-22.tsv).
 The 13-row PS2 package/member receipt is
 [`ps2-packed-content-parity-2026-08-22.tsv`](ps2-packed-content-parity-2026-08-22.tsv).
+The six-row no-payload world-role receipt is
+[`resource-id-roles-000-888-201-2026-08-22.tsv`](resource-id-roles-000-888-201-2026-08-22.tsv).
 Raw decoded strings, extracted language members, RCDF indexes, and the page
 render remain ignored under `local-lab/platform-content-crosswalk-2026-08-22/`
-and `local-lab/ps2-packed-content-parity-2026-08-22/`.
+and `local-lab/ps2-packed-content-parity-2026-08-22/`. The extracted `000`/`888`
+members, strict chunk observations, Xbox comparison rows, and script manifests
+remain ignored under `local-lab/resource-id-roles-2026-08-22/`.
+
+The world-role follow-up re-streamed and re-hashed the complete PS2 USA ISO,
+extracted only the two bounded numeric members, admitted every byte through the
+strict raw-tag-stream parser, and then parsed `WRES -> WRLD -> WDAT/RLWD`. It
+also decoded PC and Xbox `201` through their explicit envelopes, compared the
+PS2 logical texture/mesh names against every AYA member in the Xbox USA ZIP,
+round-tripped the 4,783-byte PC `worldheaders.dat`, and hashed the three matching
+loose MissionScripts directories. Logical-name overlap is only a refuter here;
+the nested world IDs, header fields, modes, and script counts carry the identity
+finding.
 
 ## Language-table result
 
@@ -127,16 +146,21 @@ worlds. The PS2 `DATA0.NYO` index instead has **67** numeric
 `*_res_PS2.aya` rows. Sixty-five IDs are shared with PC/Xbox; PS2 adds
 `000` and `888`, while PC/Xbox `201` has no PS2 numeric-resource row.
 
-The two PS2-only rows are exact index facts:
+The second pass resolves the container roles without inventing normal reach:
 
-- `\data\Resources\000_res_PS2.aya`, 11,432,464 bytes, package offset
-  1,666,965,504;
-- `\data\Resources\888_res_PS2.aya`, 17,638,345 bytes, package offset
-  329,324,544.
+| Resource | Exact nested identity | Authored/container role | Reach boundary |
+| --- | --- | --- | --- |
+| PS2 `000` | 11,432,464 bytes, SHA-256 `fdd9aa99…ce058`; `WDAT=(-1,0)`; RLWD version 48, header id 0, mode field 0; configurations Blaster/Laser/Sniper/Standard; 0 compiled scripts | A real world-0 AYA with all eleven expected top-level resource families, 245 TEXT and 25 MESH chunks. It is not `base`, `Frontend`, or `Loading`: PS2 carries separate RCDF rows for all three. | Its PC loose shelf is one empty `level000/text.stf`. No normal gameplay, developer-page, or tool route is proved, so purpose remains unresolved. |
+| PS2 `888` | 17,638,345 bytes, SHA-256 `a3a2f8fc…eea96`; `WDAT=(-1,888)`; RLWD version 50, header id 888, mode field 2; Standard/Laser/Blaster; 3 compiled scripts | A real multiplayer world-888 AYA. The 272 logical asset occurrences include `fenrir-multiplayer.msh` and the `f_ventura*` family; the six-file loose shelf names Fenrir, Venturer, and opposing win events. | Retail `CWorld__IsMultiplayerMode` accepts mode 1 or 2, and `CGame__IsMultiplayer` accepts levels 850..899. The normal multiplayer frontend is narrower at 850..879, so 888 is not proved normally selectable. |
+| PC/Xbox `201` | PC/Xbox both carry `WDAT=(2,201)`, RLWD version 50, header id 201, mode field 0, Aquila Prototype, and 13 compiled scripts | A real world-201 container on both platforms, not a set marker. PC also installs a 16-file `level201` source shelf whose `LevelScript.msl` reuses `Level200/text.stf`. | It is absent from the 43-node career graph. The retail PC parser accepts `-level N`, but normal PC/Xbox frontend reach and PS2 routing are not proved. |
 
-Their purpose and runtime reach are unknown. Presence is not a career-node,
-unlock, or exclusive-content claim, and absence of `201_res_PS2.aya` does not
-prove that PS2 lacks the corresponding authored scenario under another route.
+The PS2 paths remain exact RCDF facts: `000` is at package offset
+1,666,965,504 and `888` at 329,324,544. Their `WRES`, world IDs, modes,
+configurations, script counts, hashes, and logical-asset multisets all differ
+from PC/Xbox `201`; neither has an exact `WRES` match anywhere in the complete
+302-member Xbox AYA shelf. This falsifies sentinel/global/default and
+three-member packaging-alias classifications. It does **not** prove that PS2
+lacks the authored scenario represented by world 201 under some other route.
 
 Presence is not cross-platform byte equality. The existing regional hash matrix
 proves that Xbox Europe has different bytes for worlds 612, 856, and 863 while
@@ -185,16 +209,23 @@ spelling differences likewise do not establish divergent lore.
   96-row contract. Xbox American and German variants remain platform-sensitive.
 - The numeric world-resource set is not universal: PC/Xbox have 66, PS2 has 67,
   and only 65 IDs are shared across all measured platforms.
+- Preserve `000`, `888`, and `201` as separate authored world identities. Do not
+  normalize the platform delta by renaming one archive to another: their nested
+  world IDs, modes, configurations, script surfaces, and resource content differ.
 - The PC/PS2 table's 34 extra frontend IDs relative to Xbox must not inflate the
   mission, character, or lore denominator.
 
 ## Open boundaries and falsifiers
 
 - The six PS2 canonical language members were decoded, but runtime
-  language-selection reach was not traced. The other 4,154 RCDF index rows were
-  classified by path/size only; their payload formats remain unopened.
-- The purpose and reachability of PS2 resource IDs `000` and `888`, and the
-  routing of PC/Xbox `201` on PS2, remain open.
+  language-selection reach was not traced. Two targeted world members were then
+  opened; the other 4,152 RCDF index rows remain classified by path/size only.
+- `000` is proved as world 0, but its purpose and normal reach remain open.
+- `888` is proved as a mode-2 multiplayer world with Fenrir/Venturer content;
+  its normal frontend reach and intended shipping role remain open because the
+  regular multiplayer selector stops at 879.
+- PC/Xbox `201` is proved as a real mode-0 world on both platforms. Its normal
+  frontend reach and the route, if any, to corresponding PS2 content remain open.
 - PS2 CHD-to-ISO equivalence remains open; this pass uses the already-anchored
   inner ISOs only.
 - Xbox Korea versus USA content equality outside the 18 language members and
