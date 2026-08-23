@@ -32,8 +32,33 @@ not_applicable (void); several inner paths early-return.
   time-base interpretation comes from surrounding counted names and remains unproved here.
 
 ## Callees relied on / callers
-Callees (packet, STATIC_DIRECT; labels are counted names): `CSPtrSet__First/Next/Remove`, `Vec3__SetXYZ`, `Vec3__NormalizeInPlace`, `CBattleEngine__SelectNearestForwardTargetFromGlobalSet` 0x00406da0 ×3, `CBattleEngine__StartLock` 0x00406fc0 ×4, `CBattleEngine__CalcUnitOverCrossHair` 0x0040acc0 ×1, JetPart/WalkerPart GetCurrentWeapon + CanWeaponFire, `TargetSet__AnyUnitTargetTimeoutBeforeProfileLimit` 0x00414b30 ×2, `CGenericActiveReader__dtor` ×2, `CUnit__IsCandidateSideCompatibleForTargeting` 0x004fd3d0 ×2, `CWeapon__GetDistanceProfileField{90,94,98,9C,A0,A8}` and `CWeapon__DoesTargetMaskMatchDistanceProfile`, `TargetProfileContext__IsEligibleByDistanceBucketOrRange` 0x00509f70 ×1, `CDXMemoryManager__Free` 0x00549220 ×2. Two indirect virtual calls: target vtable slot +0x16c on a locked unit; plus part-level dispatch through GetCurrentWeapon/CanWeaponFire pairs.
-Callers (packet): `CBattleEngine__Move` 0x004081c0 ×1 site (via instruction flow).
+- Callees (packet structured array; labels are counted names):
+  - `Vec3__SetXYZ` `0x00401ec0` ×3 (STATIC_DIRECT).
+  - `CSPtrSet__First` `0x00406d20` ×5 (STATIC_DIRECT).
+  - `CSPtrSet__Next` `0x00406d30` ×4 (STATIC_DIRECT).
+  - `Vec3__NormalizeInPlace` `0x00406d50` ×1 (STATIC_DIRECT).
+  - `CBattleEngine__SelectNearestForwardTargetFromGlobalSet` `0x00406da0` ×3 (STATIC_DIRECT).
+  - `CBattleEngine__StartLock` `0x00406fc0` ×4 (STATIC_DIRECT).
+  - `CBattleEngine__CalcUnitOverCrossHair` `0x0040acc0` ×1 (STATIC_DIRECT).
+  - `CBattleEngineJetPart__CanWeaponFire` `0x00412570` ×1 (STATIC_DIRECT).
+  - `CBattleEngineJetPart__GetCurrentWeapon` `0x00412610` ×1 (STATIC_DIRECT).
+  - `CBattleEngineWalkerPart__GetCurrentWeapon` `0x00414030` ×1 (STATIC_DIRECT).
+  - `CBattleEngineWalkerPart__CanWeaponFire` `0x00414630` ×1 (STATIC_DIRECT).
+  - `TargetSet__AnyUnitTargetTimeoutBeforeProfileLimit` `0x00414b30` ×2 (STATIC_DIRECT).
+  - `CGenericActiveReader__dtor` `0x0044b1d0` ×2 (STATIC_DIRECT).
+  - `CSPtrSet__Remove` `0x004e5bd0` ×2 (STATIC_DIRECT).
+  - `CUnit__IsCandidateSideCompatibleForTargeting` `0x004fd3d0` ×2 (STATIC_DIRECT).
+  - `CWeapon__DoesTargetMaskMatchDistanceProfile` `0x005061f0` ×2 (STATIC_DIRECT).
+  - `CWeapon__GetDistanceProfileField90` `0x00506350` ×2 (STATIC_DIRECT).
+  - `CWeapon__GetDistanceProfileField94` `0x00506440` ×4 (STATIC_DIRECT).
+  - `CWeapon__GetDistanceProfileFieldA8` `0x00506530` ×1 (STATIC_DIRECT).
+  - `CWeapon__GetDistanceProfileField98` `0x00506620` ×3 (STATIC_DIRECT).
+  - `CWeapon__GetDistanceProfileField9C` `0x00506710` ×4 (STATIC_DIRECT).
+  - `CWeapon__GetDistanceProfileFieldA0` `0x00506800` ×1 (STATIC_DIRECT).
+  - `TargetProfileContext__IsEligibleByDistanceBucketOrRange` `0x00509f70` ×1 (STATIC_DIRECT).
+  - `CDXMemoryManager__Free` `0x00549220` ×2 (STATIC_DIRECT).
+- Callers (packet structured array): `CBattleEngine__Move` `0x004081c0` ×1 site (via instruction flow).
+- Two indirect virtual calls are visible outside the packet's structured direct-callee array: target vtable slot +0x16c on a locked unit, plus part-level dispatch through the GetCurrentWeapon/CanWeaponFire pairs.
 
 ## Behavior summary
 Lock maintenance + acquisition for the current weapon:
