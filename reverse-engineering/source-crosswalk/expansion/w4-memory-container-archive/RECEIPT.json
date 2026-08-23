@@ -1,0 +1,213 @@
+{
+  "base_commit": "784367bd43f9ec13125521b00fe0c8352670ffdd",
+  "corpus_preflight": {
+    "ps2_use": "NONE; no generic PS2 crosswalk work or PS2 claim is present.",
+    "read": [
+      "local-lab/INDEX.md",
+      "local-lab/CORPUS-HYGIENE-2026-08-22.md",
+      "local-lab/hermes-kanban-campaign-2026-08-22/source-first-expansion/EXECUTION.md"
+    ],
+    "result": "No separate W4 predecessor receipt root exists in INDEX-CATALOG; the hash-pinned tracked/local authorities listed under reuse_accounting were reused instead of opening a parallel corpus lane.",
+    "searched": [
+      "tracked owners by W4 subsystem and stable key",
+      "tracked owners by the six populated analog VAs plus the eleven named/folded pointer-wrapper candidates",
+      "INDEX-CATALOG-2026-08-17.md by subsystem, stable key, VA, artifact hash, and tool name"
+    ],
+    "storage_mutation": "NONE; no local-lab move/delete/quarantine/graveyard action was performed."
+  },
+  "counts": {
+    "definitions": 94,
+    "input_readiness": {
+      "AMBIGUOUS_OVERLOAD_MACRO_NONFUNCTION": 29,
+      "EXTERNAL_PROOF_REQUIRED": 3,
+      "NAMED_RETAIL_ANALOG_PRECISE_TARGET": 3,
+      "SOURCE_ONLY_BOUNDED_NO_MATCH": 59
+    },
+    "populated_va_collisions": 0,
+    "populated_vas": 6,
+    "retail_classifications": {
+      "CANDIDATE_UNRESOLVED": 11,
+      "NOT_IN_RETAIL": 7,
+      "NO_MATCH_FOUND": 70,
+      "SOURCE_ANALOG": 6
+    },
+    "retail_delta_status": {
+      "NOT_SELECTED_TARGET": 7,
+      "RETAIL_UNRESOLVED": 27,
+      "SOURCE_AGREES": 6,
+      "SOURCE_ONLY": 54
+    },
+    "source_files": 11,
+    "stable_key_duplicates": 0
+  },
+  "input": {
+    "partition_sha256": "bc36791975f43d5da6b584727df3eb7d29402e18c550dd3d96e01bba0c301fde",
+    "source_file_set_sha256": "25684708dda947c22d2fd060847dd1d0c63587e0f30f90bd7770f20aca8a6ef9",
+    "source_files_sha256": {
+      "Array.h": "2b0c078cf1a7df5fecdaa9c87c5c60aba641fd8f553f6817dc90442e7b0aa734",
+      "CLIParams.h": "01e866b7d30febcf5b3aa1941de536d68f331b9aad4e8e8129f2b8275b7d54f2",
+      "DXMemBuffer.h": "6f28f9cffa0217bf48d18c6845620ea687d69c6227b34f6eb8416b5176e874ee",
+      "DXMemoryManager.cpp": "990dd061c1daccc15b507f29fc78a1720ecd1b93ae136bc17ab4bc92daebf33a",
+      "DXMemoryManager.h": "d7b91718358fa0ebca22c063c77b0889fae435a29de5b5ffa856737e25034938",
+      "MemoryManager.cpp": "37fdced978973171bee88a90ed939cd6436afe2a4c1f50a3d05d9938033ec654",
+      "MemoryManager.h": "e79fad7403fdd759828745a322b7adc00065ed88f29be1623588a1f3499ec0f7",
+      "SPtrSet.cpp": "49d40aa009dab4d0747560d30be27814fe6bc18a59b301860fa18a59a7644623",
+      "SPtrSet.h": "2ab86140cd8df5ad035b297bbbab737e0c75fc5d88245873c8972b462e47d029",
+      "chunker.h": "157a307d18f0544da7d7bc695fd7b73b05e215e99c672461ff99bfeb0e172421",
+      "membuffer.h": "1abb71e636ba182b1e3f5d74c42cdb691146faefc47959442333bd4ebbf23d9c"
+    }
+  },
+  "invariants": [
+    "The 94 stable keys are unique and exactly equal the W4 partition subset.",
+    "The eleven source files exactly equal the frozen W4 file set.",
+    "All source anchors resolve to non-empty lines in pinned source.",
+    "Every row carries source algorithm, fields/constants, side effects, retail evidence/falsifier, and rebuild disposition.",
+    "Every populated VA is unique within W4.",
+    "Canonical crosswalk.tsv and REPORT.md are outside the owned root and unchanged by this generator.",
+    "SOURCE_ANALOG claims are bounded; CANDIDATE_UNRESOLVED rows keep VAs empty until template/source identity is unique; NO_MATCH_FOUND never claims binary absence."
+  ],
+  "outputs_sha256": {
+    "REBUILD-DELTA.md": "236e44478ef7175b50dd7d4ca2c92d5090f570130dc30a0f09c77c0c2a4c089e",
+    "RETAIL-DELTA.tsv": "afa3d47077c140f8b659f70bb0923233da31e333c577484b09c5c214d8fb094d",
+    "SOURCE-CONTRACT.md": "d30d6d5105bb51ad8cc36831d2f402fb4adceab464cdea54a10ae682fd824361",
+    "definitions.tsv": "132315189eb7897efc9708fbfea868f9c120d1389bdee786137d49db5e5350a7"
+  },
+  "owned_root": "reverse-engineering/source-crosswalk/expansion/w4-memory-container-archive",
+  "reuse_accounting": {
+    "artifacts": {
+      "EXTENDED": 5,
+      "NEW_MEASUREMENT": 0,
+      "REUSED": 19,
+      "basis": "Nineteen hash-pinned predecessor authorities feed five W4 receipt artifacts (definitions, source contract, retail delta, rebuild delta, and receipt)."
+    },
+    "definitions": {
+      "EXTENDED": 94,
+      "NEW_MEASUREMENT": 0,
+      "REUSED": 0,
+      "basis": "Every W4 stable key is reused from the frozen partition and extended with source algorithm/fields/side effects, retail disposition/falsifier, and rebuild routing; no new binary or runtime measurement was taken."
+    },
+    "predecessors": [
+      {
+        "path": "local-lab/hermes-kanban-campaign-2026-08-22/source-first-expansion/partition.tsv",
+        "role": "Frozen 634-definition partition and exact W4 stable-key subset.",
+        "sha256": "bc36791975f43d5da6b584727df3eb7d29402e18c550dd3d96e01bba0c301fde"
+      },
+      {
+        "path": "local-lab/hermes-kanban-campaign-2026-08-22/source-first-expansion/manifest.json",
+        "role": "Shared source-expansion counts, hashes, and wave manifest.",
+        "sha256": "6f58de995a27a0088749f40e06907969d3213872b40d1bf0bb450afda1fd216e"
+      },
+      {
+        "path": "local-lab/re-campaign-incident-recovery-20260808-v1/generation-32-current-8329-db18625-authority.ready.json",
+        "role": "Generation-32 READY authority and sealed-closure pin.",
+        "sha256": "6238430dffb5c80517e17411db7e4505250b01f7226bcc982af675b0fe776b37"
+      },
+      {
+        "path": "reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-17.tsv",
+        "role": "Current 8,329-row named retail function table.",
+        "sha256": "4590dff93f4ee85c5a5c3450139b2e696118646af3401f6eb9719dc4237d3213"
+      },
+      {
+        "path": "reverse-engineering/binary-analysis/function-c1-closure-2026-08-11.tsv",
+        "role": "Generation-32 sealed static closure reused for VA/name/range joins.",
+        "sha256": "cfe90af382269cb2e64996d10df7777bd00fcd8e1844b9823ef74bc6199b8974"
+      },
+      {
+        "path": "reverse-engineering/source-crosswalk/crosswalk.tsv",
+        "role": "Corrected landed 1,149-row canonical base; read-only in W4.",
+        "sha256": "e37f13b37e9ce9d712174e35b86fc1f7ebcfc693fe9957448a8f39ff03829479"
+      },
+      {
+        "path": "reverse-engineering/source-crosswalk/audit/REPORT.md",
+        "role": "Stable-key omission inventory and ambiguity boundary.",
+        "sha256": "861c4ffd9c7cdd6da181dfb4a5572a49c9d3c22422d8794352393339fa127792"
+      },
+      {
+        "path": "reverse-engineering/binary-analysis/pc-memory-io-semantics-2026-08-11.tsv",
+        "role": "Promoted released-PC buffer/manager semantic table.",
+        "sha256": "7ed6c00658136481416365769fe679377e3bcf11dc0b919352a1812d39ee66c9"
+      },
+      {
+        "path": "reverse-engineering/binary-analysis/ghidra-fullpass-findings/W005/adversarial/B13.md",
+        "role": "Cold static review for CMemoryHeap__Init and adjacent allocator bodies.",
+        "sha256": "feab89a49376279ea2c453002f11923db003678d972896db0b1d4ad0f635cfb3"
+      },
+      {
+        "path": "reverse-engineering/binary-analysis/ghidra-fullpass-findings/W007/primary/A07.md",
+        "role": "Cold static pointer-set body/ABI review.",
+        "sha256": "64233148bf680e63eee28484b7851ddf7b011f587bbc7b4bef97e63ae6d85b8c"
+      },
+      {
+        "path": "reverse-engineering/binary-analysis/ghidra-fullpass-findings/W007/adversarial/B07.md",
+        "role": "Independent pointer-set body/ABI confirmation for typed-wrapper candidate audit.",
+        "sha256": "5bdca84cb82ee2de0e57a0029dbb524c682dcb9cb6c163c629a599bb2b27603b"
+      },
+      {
+        "path": "reverse-engineering/binary-analysis/ghidra-fullpass-findings/W001/primary/A06.md",
+        "role": "Primary exact field/body review for CSPtrSet First and Next.",
+        "sha256": "0c11a77c9d078be61058c4aad356de6a9600be21314ff6f49378eaae7f1439d4"
+      },
+      {
+        "path": "reverse-engineering/binary-analysis/ghidra-fullpass-findings/W001/adversarial/B06.md",
+        "role": "Independent exact field/body confirmation for CSPtrSet First and Next.",
+        "sha256": "f6af1498b1f7e2d04279cd7ff58cf6c784e82e0398d879e8bfc7fe13db511bcd"
+      },
+      {
+        "path": "reverse-engineering/binary-analysis/ghidra-fullpass-findings/W002/primary/A11.md",
+        "role": "Primary proof that 0x0042f220 is a CSPtrSet Clear thunk to 0x004e5c60.",
+        "sha256": "f5e829da132323b7b4514a8d3ff993e99db2867defe07e22aa5206969ae90ba3"
+      },
+      {
+        "path": "reverse-engineering/binary-analysis/ghidra-fullpass-findings/W002/adversarial/B11.md",
+        "role": "Independent confirmation of the shared CSPtrSet Clear thunk.",
+        "sha256": "ad10bd96b35a3efd4f56e3d0c52fc610f34524c7d940f695e11ec2873b3ffedc"
+      },
+      {
+        "path": "reverse-engineering/binary-analysis/ghidra-fullpass-findings/W008/primary/A08.md",
+        "role": "Primary proof that 0x00505d00 is a thin generic CSPtrSet Init wrapper.",
+        "sha256": "f9b2737307369b686ecf2166acd981e3857b18598ad5fd7ea42e80320fd49410"
+      },
+      {
+        "path": "reverse-engineering/binary-analysis/ghidra-fullpass-findings/W008/adversarial/B08.md",
+        "role": "Independent confirmation of the shared 0x00505d00 constructor wrapper and broad fan-in.",
+        "sha256": "75c6cb6cb3dea3b504ec2c024a060e40231a4235ca491635d23b3b0bf9a50430"
+      },
+      {
+        "path": "rebuild/OnslaughtRebuild.Core/RetailChunkReader.cs",
+        "role": "Existing deterministic read-side chunk and resident-buffer owner.",
+        "sha256": "9046205bb141e51d95d079159c5e6684e9573bbec7601424e83c085bde32a83c"
+      },
+      {
+        "path": "rebuild/OnslaughtRebuild.Core.Tests/RetailChunkReaderTests.cs",
+        "role": "Existing focused parity tests and mutation boundary.",
+        "sha256": "56cb40f8c92f7142127687065e157e5036fc9a8df38b2dc3a33ecef2d054d4dd"
+      }
+    ]
+  },
+  "review": {
+    "cold_read_all_source_analog_rows": 6,
+    "cold_read_candidate_unresolved_rows": 11,
+    "cold_read_not_selected_target_rows": 7,
+    "deterministic_replay": {
+      "comparison": "Definitions and RETAIL-DELTA were byte-identical across two consecutive canonical parse-and-serialize replays; all five final artifacts passed repeated SHA-256 readback.",
+      "runs": 2,
+      "status": "PASS"
+    },
+    "representative_negative_rows_required": true,
+    "required": true
+  },
+  "validation": {
+    "w4_receipt_validator": "PASS: exact 94-row partition equality, 11-file set, source-anchor readback, evidence-path resolution, overload/conditional controls, 6 unique analog VAs joined to current name/closure, 11 empty-VA candidate-unresolved typed wrappers with explicit folding/identity falsifiers, 7 exact PC target exclusions, output/predecessor hashes, and reuse counts.",
+    "documentation_headers": "PASS: 0 violations after self-test.",
+    "function_name_drift": "PASS: 2,039 gated assertions resolved, 0 drifted, 0 unresolved.",
+    "evidence_register_header": "PASS: EVIDENCE_REGISTER_HEADER_CURRENT.",
+    "markdown_links": "BASELINE_ONLY: changed W4 documents introduce no broken link; repository check retains only tools/probe/README.md -> ../../local-lab/SCRIPT-FORMAT-SPEC-2026-08-02.md in this isolated worktree.",
+    "git_diff_check": "PASS.",
+    "out_of_scope_product_suite": "CANCELLED_BY_OPERATOR_SCOPE_STOP; neither PASS nor FAIL and not a W4 gate. Readback found bash/testhost/dotnet PIDs 43696, 49836, 47636, and 51328 terminal (no matching tasks)."
+  },
+  "schema": "bea.source-crosswalk.expansion-wave.v1",
+  "source_commit": "5352a81cdb838b145a57f7febc5d9fc4b0129ebb",
+  "specimen_sha256": "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750",
+  "status": "REVIEW_CANDIDATE",
+  "wave": "W4_MEMORY_CONTAINER_ARCHIVE"
+}
