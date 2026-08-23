@@ -130,12 +130,15 @@ The 48-byte skinned vertex form has three float words at `+0x0C`. All 9,609
 shipped slot words are exact non-negative multiples of three; division by three
 produces an in-range index into that part's `BONE` array. Every declared bone
 slot is used by at least one vertex in each of the seven meshes. The dedicated
-[matrix-palette contract](cmsh-matrix-palette-skinning.md) now proves the GPU
-consumer, c10 palette, renderer-owned binary32 one-third pre-scale,
-frame-zero/current pose roles, and released position coefficients `(0, 2s, s)`
-for `s = float32(0x3EAAAAAB)` (rational shorthand `(0, 2/3, 1/3)`): slot 0 is
-computed then discarded, slot 1 is doubled, and slot 2 is added. Exact typed
-bind-product order and the normal combine remain open.
+[matrix-palette contract](cmsh-matrix-palette-skinning.md) proves the GPU
+consumer, c10 palette, renderer-owned binary32 one-third pre-scale, and
+released position coefficients `(0, 2s, s)` for
+`s = float32(0x3EAAAAAB)`. Its focused
+[typed-order/normal successor](cmsh-matrix-normal-deformation.md) closes the
+row-vector bind/current product as `T_bind^-1 * R_bind^-1 * R_current *
+T_current` and proves that the normal-bearing linked shader lights serialized
+`v3` directly with zero c10 palette rows, slot weights, translation, or normal
+normalization.
 
 The runtime also uses semantic part names outside this serialized skinning
 array. `CMCTentacle__Init @ 0x0049CC40` searches names such as `tentacle`,
@@ -252,10 +255,10 @@ specimen-bound tests when those two inputs are absent.
 - **`aFrames`:** join `CMSP+0xB4` to the exact `CMeshPart__LoadFromStream` branch
   and one downstream reader; its current distribution refutes a simple visible-
   key-count label.
-- **Remaining skinning:** reduce the proved frame-zero/current palette builder
-  to typed matrix-order notation, decode normal deformation, obtain a raw
-  48-byte runtime VB comparison, and observe one infantry draw. Position weights
-  and the two Sentinel runtime instances are closed by the focused contract.
+- **Remaining skinning:** obtain a raw 48-byte runtime VB comparison and observe
+  one infantry draw. Position weights, typed palette order, released normal
+  dataflow, and the two Sentinel runtime instances are closed by the two focused
+  skinning contracts.
 - **Other WRES/component edges:** the type-8/type-35 definition family is now
   closed across all 66 numeric worlds. Sequentially frame the remaining record
   types and join component `SetScript` indices through component definitions
@@ -269,11 +272,11 @@ specimen-bound tests when those two inputs are absent.
 
 ## Claim boundary
 
-Pose-table dimensions, frame-map range/shape, bone-to-part naming, palette-slot
-indices, released position weights/blending, frame-zero/current palette roles,
-camera-lane values, numeric-LVLR membership, 4,090 definition-bearing
-world-instance joins, 53 anonymous embedded bodies, and loose-MSL call sites are
-bounded. Named-clip serialization, normal blending, exact typed bind-product
-order, interpolation, other WRES/component/dynamic-spawn joins, general
+Pose-table dimensions, frame-map range/shape, bone-to-part names, palette-slot
+indices, released position weights/blending, typed frame-zero/current palette
+order, released normal dataflow, camera-lane values, numeric-LVLR membership,
+4,090 definition-bearing world-instance joins, 53 anonymous embedded bodies,
+and loose-MSL call sites are bounded. Named-clip serialization, interpolation,
+other WRES/component/dynamic-spawn joins, general
 scheduling, malformed-input behavior, wider runtime rendering, and parity remain
 open.
