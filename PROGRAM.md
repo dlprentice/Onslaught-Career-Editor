@@ -195,9 +195,17 @@ Measured: `developer_state.json` **939,162 → 928,237 B, raw delta −10,925 B*
 (exactly the removed physical-line bytes; the preflight's −9,500 B serialized
 simulation was invalid and is superseded by this receipt); **4,575 → 4,550
 lines**; **599 → 574 top-level keys**; SHA-256 `43f97e7686eb4c6c…b6199` →
-`802bf97c04ba189b…524aa`. History moved, never deleted: all 25 slice values
-survive verbatim in their owning tracked notes. Census: zero tracked exact-key
-references to any of the 25 keys outside `developer_state.json` itself.
+`802bf97c04ba189b…524aa`. History moved, never deleted: all 25 destination
+notes preserve their slice's distinctive facts (body SHA-256 prefix, byte
+count, E8/E9 counts, steward cycle id, landed/task hex ids); the one note
+whose recorded history was incomplete (`IScript__VFunc_2_00533810.md`)
+additionally carries the full original slice value appended verbatim under
+its dated moved-history heading — the other 24 preserve the required facts
+without restating the serialized value word-for-word. Census: zero tracked
+exact-key references to any of the 25 keys outside `developer_state.json`
+itself, except one deliberate residual — that same mandated moved-history
+heading names `_HERMES_SLICE_20260819_533810` inside its own destination
+note.
 Remaining `_HERMES_SLICE_*`: 492 keys across later batches;
 `current_re_authority`, `_RECURSIVE_RE_CAMPAIGN_2026_08_02`, `goal_status`,
 and every other key untouched. Gates: JSON valid at 574 keys;
