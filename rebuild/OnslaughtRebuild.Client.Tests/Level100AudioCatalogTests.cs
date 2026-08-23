@@ -699,6 +699,20 @@ public sealed class Level100AudioCatalogTests
             StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void FirstFlightOptionsBoundaryDoesNotRepeatTheRetainedTangentClaim()
+    {
+        string game = ReadGodotSource("FirstFlightGame.cs");
+
+        Assert.DoesNotContain("tan(x*1.38)", game, StringComparison.Ordinal);
+        Assert.Contains("sound stores that float", game, StringComparison.Ordinal);
+        Assert.Contains("music stores round(volume * 127)", game, StringComparison.Ordinal);
+        Assert.Contains(
+            "Downstream device math and audible parity are still",
+            game,
+            StringComparison.Ordinal);
+    }
+
     // Every Level 100 mix level is reproduced from two released facts rather
     // than chosen: the integer volume/pitch fields of the matching
     // data/sounds/sounds.sfx record (version 103, 170 records), and

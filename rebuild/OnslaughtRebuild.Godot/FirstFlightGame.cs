@@ -1166,11 +1166,12 @@ public sealed partial class FirstFlightGame : Node3D
     /// <summary>
     /// The options rows that HAVE a consumer, pushed to their owners.
     ///
-    /// The two volume rows hand the RAW slider value to the audio owner, which is
-    /// what references/Onslaught/SoundManager.cpp:170 and Music.cpp:572 do -
-    /// retail stores the slider position and applies tan(x*1.38) only on the way
-    /// to the mixer, so this must not pre-curve it. Mouse sensitivity goes to the
-    /// session's pointer axis, where 7.0 reproduces the existing 91/3000 exactly.
+    /// The two volume rows hand the RAW slider value to the audio owner. Released
+    /// PC behavior diverges from the retained curves: sound stores that float
+    /// directly, while music stores round(volume * 127) and preserves the raw
+    /// career/slider float. Downstream device math and audible parity are still
+    /// unknown. Mouse sensitivity goes to the session's pointer axis, where 7.0
+    /// reproduces the existing 91/3000 exactly.
     /// Every other row is presented and remembered but has no owner yet.
     /// </summary>
     private void ApplyOptionsSettings(RetailOptionsSettings settings)
