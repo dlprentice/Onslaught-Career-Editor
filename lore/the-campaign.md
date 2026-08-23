@@ -35,10 +35,10 @@ after things have gone worse. Those are marked in the list below.
 Mission numbers are what the app uses when it talks to the game, which is why
 Save Lab and the Media page show them beside the names.
 
-The measured PC and Xbox language tables carry the same 43 mission codes and
-titles in American, English, French, German, Italian, and Spanish. Xbox Europe,
-Korea, and USA carry byte-identical copies of all six tables. PlayStation 2
-retail data remains outside that byte-level comparison; see
+The measured PC, Xbox, and PlayStation 2 language tables carry the same 43
+mission codes and titles in American, English, French, German, Italian, and
+Spanish. PS2's canonical tables are byte-identical to PC; Xbox Europe, Korea,
+and USA carry byte-identical copies of the smaller Xbox tables. See
 [The Same War on Different Platforms](platform-content-variants.md).
 
 ## The missions

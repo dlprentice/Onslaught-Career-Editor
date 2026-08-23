@@ -4,7 +4,8 @@
   from the game's own story material, with two out-of-universe sections clearly
   marked as such ("The Vegetable Naming Scheme", "Faction Design Philosophy"),
   which are developer recollection. The platform note is measured against named
-  PC and PS2 manuals. Nothing here is a claim about the shipped executable.
+  PC and PS2 manuals and the canonical PS2/PC English table. Nothing here is a
+  claim about the shipped executable.
 - **Last updated:** 2026-08-22
 - **Summary:** Planet Allium, the Forseti and Muspell factions, the Sohra Treaty,
   and the war the campaign takes place in.
@@ -19,7 +20,9 @@ The English PC manual and the USA PlayStation 2 manual independently print
 this same foundation: Allium and Porrum, the Forseti and Muspell, the
 Ampeloprasum Archipelago, the Sohra Treaty of 1174, and Kensor. The PS2 OCR
 sidecar's `Rensor` is a scan error; the page and map both visibly read
-**Kensor**. See [the platform content crosswalk](platform-content-variants.md).
+**Kensor**. Both PS2 retail regions also carry a canonical English language
+table byte-identical to PC, so the matching in-game names are no longer a
+manual-only inference. See [the platform content crosswalk](platform-content-variants.md).
 
 Only **13 islands** scattered across the surface remain. The entire game takes place on islands due to **engine limitations** (not story choice).
 

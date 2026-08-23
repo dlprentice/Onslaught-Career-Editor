@@ -22,7 +22,7 @@ A comprehensive record of Battle Engine Aquila (2003), Lost Toys Ltd., and the p
 | [world-lore.md](world-lore.md) | Planet Allium, Forseti vs Muspell factions, geography, story |
 | [characters.md](characters.md) | All eight retail character-profile entries and their evidence boundary |
 | [the-campaign.md](the-campaign.md) | Campaign shape, mission numbering, live mission list from your install |
-| [platform-content-variants.md](platform-content-variants.md) | Which setting, mission, character, and world content is shared or variant across PC, Xbox, and measured PS2 material |
+| [platform-content-variants.md](platform-content-variants.md) | Which setting, mission, character, and world content is shared or variant across PC, Xbox, and PS2 packed content |
 | [worlds.md](worlds.md) | All 43 career nodes and all 23 additional shipped numeric worlds, with bounded TTD fingerprints |
 | [units-and-mechs.md](units-and-mechs.md) | Complete 160-name unit-record census, 25 behaviour types, and boss/class families |
 | [weapons.md](weapons.md) | Complete 139-name weapon-record census and the measured weapon/mode/round/explosion chain |

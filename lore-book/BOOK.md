@@ -35,7 +35,8 @@ happened more than once; what those articles used to say is kept out of your way
 - [The campaign](../lore/the-campaign.md) — how it is shaped, and the mission
   list read from your own copy of the game.
 - [The platforms](../lore/platform-content-variants.md) — which mission,
-  character and world content is shared, and where the released bytes differ.
+  character and world content is shared, including the packed PS2 shelf, and
+  where the released bytes differ.
 - [The war](../lore/world-lore.md) — Allium, the Forseti and the Muspell, and the
   treaty that failed.
 - [The people in it](../lore/characters.md) — Hawk Winter, Tatiana Kiralova,

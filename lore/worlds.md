@@ -24,9 +24,12 @@ are:
 `100 110 200 201 211 212 221 222 231 232 300 311 312 321 322 331 332 400 411 412 421 422 431 432 500 511 512 521 522 523 524 600 611 612 621 622 700 710 720 731 732 741 742 800 850 851 852 853 854 855 856 857 858 859 860 861 862 863 864 865 866 901 902 903 904 905`.
 
 A strict read-only basename census finds this exact same 66-ID set in Xbox
-Europe, Korea, and USA. This is a cross-platform identity result, not byte
-parity: Xbox Europe has different resource bytes for 612, 856, and 863. See
-[The Same War on Different Platforms](platform-content-variants.md).
+Europe, Korea, and USA. PS2 differs: its exact `DATA0.NYO` index has 67 numeric
+resource names, sharing 65 IDs with PC/Xbox, adding `000` and `888`, and omitting
+a numeric `201_res_PS2.aya` row. These are presence facts, not career-node or
+byte-parity claims; the purpose and reach of `000`/`888` remain unknown. Xbox
+Europe also has different resource bytes for 612, 856, and 863. See [The Same
+War on Different Platforms](platform-content-variants.md).
 
 Only 43 of those IDs occur in the compiled `level_structure` career graph. The
 other 23 are real shipped worlds but are not career nodes. Presence is not an
