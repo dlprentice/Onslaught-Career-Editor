@@ -258,16 +258,57 @@ approximation.
 
 World admission is no longer Level-100-only in Core (2026-08-22): the released
 43-node career graph lives in `RetailWorldCatalog` with its selectability law,
-and world 110 — the second career node — is admitted from its own measured
-payloads. `materialize_retail_assets.py` pins `data/resources/110_res_PC.aya`
+world 110 — the second career node — is admitted from its own measured
+payloads, world 200 — the third node — joins it, and the separately measured
+world-300 main-episode payload is admitted without pretending its enclosing
+level-world header shares the earlier shape.
+`materialize_retail_assets.py` pins `data/resources/110_res_PC.aya`
 (SHA-256 `4e041c75…3c2b`) and walks out its 13 version-50 script objects plus
 the HFLD envelope into `Assets/Level110/`; `Level100MissionProgram.LoadEmbedded`
 admits them per-world under the same hash law as Level 100 (world 110's
 LevelScript: 181 instructions, 92 symbols, five named events), and
 `Level100Terrain.World110` carries the heightfield under the same envelope law.
 No simulation consumes the world-110 payloads yet; no world-110 FillOut, VM
-run, or session owner exists. The pattern generalizes to further worlds by
-adding their pinned rows, not new code shapes.
+run, or session owner exists. The level-world actor table is now measured
+(40 RLWD initial actors, header `(2, 0, 40)`; types 19 and 28 are trailers
+Level 100 does not use) and the BSWD island is byte-identical to Level 100
+(`04c5a383…10f4`). RLWD ordinal 0 is the LevelScript object, not a Battle
+Engine — there is no authored Player 1 to construct.
+
+World 200 (2026-08-22) generalizes that pattern and measures three places the
+shared law needed refining: `data/resources/200_res_PC.aya` (SHA-256
+`99dbd433…b77`) yields fourteen script objects into `Assets/Level200/`
+(LevelScript: 413 instructions, 169 symbols, sixteen named events), the HFLD
+envelope — found inside ERES by the same whole-image tag/size/hash scan as
+worlds 100 and 110 — lands in
+`Level100Terrain.World200`, and `RetailWorld200LevelActors` pins the census:
+actor header `(3, 0, 54)`, post-zeros word **2** (earlier worlds carry 1),
+and an own 80,232-byte BSWD (`9c0575ea…adba`) instead of the shared island.
+The named-event identifier source is now value-text-first with symbol-name
+fallback in `Level100MissionProgram.Parse`, which worlds 100/110 satisfy
+unchanged. No world-200 actor-table record walk has been completed yet; no
+simulation consumes any of these payloads, and there is still exactly one
+constructed session owner (Level 100).
+
+World 300 (2026-08-22) is the explicit falsifier for treating "version 50" as
+one RLWD preamble. `data/resources/300_res_PC.aya` (SHA-256
+`7293bcbe…9efe4`, 1,927,844 bytes) carries header words `(3, 47, 300)`, then
+three names — `Standard`, `Laser`, `Blaster` — and trailing words
+`(1, 1, 1, 0, 3)`, where worlds 100/110/200 carry `(3, 41, world)`, one
+`Aquila Prototype` name, and zeroes before the final variant word. The
+materializer therefore models an exact `_WorldLevelHeader` per variant and
+drives all later-world extraction from `LATER_WORLD_ADMISSIONS`; it does not
+copy a third extraction block or weaken the header check. Its eight hash-pinned
+compiled objects land in `Assets/Level300/`; the main object is released as
+`Level300script`, not `LevelScript` (448 instructions, 197 symbols, ten named
+events). The 668,660-byte framed HFLD remains inside ERES
+(`68a181f9…acb1a`), while WRES owns world 300's distinct 77,113-byte BSWD
+payload (`3c153d55…0dfc`). The actor header after the script region is
+`(10, 0, 36)`. `RetailWorldCatalog.FindPayloadCensus(300)` pins those measured
+facts without naming the unknown header words. No complete per-type walk of
+the 36 actor records is promoted: the partial probe reaches a type-38 trailer
+whose wider record law is unresolved. No world-300 VM run, actor projection,
+or session owner exists, and the only constructed world remains Level 100.
 
 The walker now consumes the shipped Aquila configuration's exact `1.0/75`
 yaw-input gain instead of the older fitted `1.7/75` value. Terrain touchdown

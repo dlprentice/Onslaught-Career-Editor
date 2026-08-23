@@ -84,6 +84,8 @@ tmp*/
 # or separately provided assets belong in their normal source-owning path.
 /rebuild/OnslaughtRebuild.Core/Assets/Level100/**
 /rebuild/OnslaughtRebuild.Core/Assets/Level110/**
+/rebuild/OnslaughtRebuild.Core/Assets/Level200/**
+/rebuild/OnslaughtRebuild.Core/Assets/Level300/**
 /rebuild/OnslaughtRebuild.Godot/Assets/Aquila/**
 /rebuild/OnslaughtRebuild.Godot/Assets/Frontend/**
 /rebuild/OnslaughtRebuild.Godot/Assets/Hud/**
