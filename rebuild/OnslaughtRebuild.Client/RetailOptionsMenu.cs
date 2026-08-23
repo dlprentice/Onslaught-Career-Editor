@@ -521,14 +521,12 @@ public sealed class RetailOptionsMenu
     public static float VolumeValue(int index) =>
         Math.Clamp(index, 0, VolumeMaxValue) / (float)VolumeMaxValue;
 
-    // The PC master-volume curve is deliberately NOT reproduced here.
-    // references/Onslaught/SoundManager.cpp:161-165 and Music.cpp:562-567 both
-    // write the RAW slider value back to the career and apply tan(x*1.38) only on
-    // the way to the mixer, so the option value is the sourced quantity and the
-    // mix is derived from it. This lane already owns that derivation once, in
-    // Level100AudioCatalog.ToRetailOptionMix; a second copy here would be the
-    // "two copies of one fact drift" hazard the audio owner's own comment warns
-    // about. These rows store the slider position and the audio owner curves it.
+    // These rows retain the raw slider/career float. Released PC conversion
+    // splits downstream: CSoundManager::SetMasterVolume at 0x004E04C0 stores the
+    // sound float directly, while CMusic::SetVolume at 0x004BBA10 stores
+    // round(volume * 127) and preserves the original career float. The Godot
+    // audio owner adapts those distinct values at its presentation boundary;
+    // this Client lane does not infer DirectSound or audible-volume device math.
 
     /// <summary>
     /// Move an expanded dropdown's pending selection straight to
