@@ -8,6 +8,64 @@ namespace OnslaughtRebuild.Core.Tests;
 public sealed class Level100ActorMechanicsTests
 {
     [Fact]
+    public void Mechanics_AdvancesBasePoseAndKeepsTheLevel100FullStopDivergence()
+    {
+        Level100ActorDefinitionSet definitions = Level100TestActorDefinitions.Create();
+        var actors = new Level100ActorRegistry(definitions);
+        var mechanics = new Level100ActorMechanics(actors, definitions);
+        Level100ActorId factory = actors.GetThingRef("Tank Factory")!.Value;
+        Level100ActorId target = Assert.Single(actors.SpawnThing(
+            factory,
+            "Target Tank",
+            "SpawnerA",
+            1,
+            "TargetTank1"));
+        Level100WaypointPointDefinition destination = definitions
+            .GetWaypointPath("Target Tank Path 1")
+            .ChainPoint(0);
+        Level100ActorPoseSnapshot aligned = actors.GetActor(target).Pose with
+        {
+            PositionMillimeters = new SimVector3(
+                destination.PositionMillimeters.X,
+                700,
+                0),
+            BasisFloatBits = IdentityBasis(),
+            LinearVelocityMillimetersPerTick = SimVector3.Zero,
+            AngularVelocityMicroRadiansPerTick = SimVector3.Zero,
+        };
+        actors.SetPose(target, aligned);
+        mechanics.ApplyCommand(Command(
+            1,
+            target,
+            Level100ActorScriptCommandKind.FollowWaypoint,
+            argument: "Target Tank Path 1"));
+        ThingActorBaseStateSnapshot before = actors.GetBaseState(target);
+
+        Assert.Empty(mechanics.AdvanceTick());
+
+        ThingActorBaseStateSnapshot moved = actors.GetBaseState(target);
+        Assert.Equal(before.CurrentPose, moved.OldPose);
+        Assert.NotEqual(moved.OldPose, moved.CurrentPose);
+        Assert.Equal(actors.GetActor(target).Pose.PositionMillimeters, moved.CurrentPose.PositionMillimeters);
+
+        Level100ActorPoseSnapshot moving = actors.GetActor(target).Pose with
+        {
+            LinearVelocityMillimetersPerTick = new SimVector3(1, 2, 3),
+            AngularVelocityMicroRadiansPerTick = new SimVector3(4, 5, 6),
+        };
+        actors.SetPose(target, moving);
+        mechanics.ApplyCommand(Command(
+            2,
+            target,
+            Level100ActorScriptCommandKind.Stop));
+
+        ThingActorBaseStateSnapshot stopped = actors.GetBaseState(target);
+        Assert.Equal(SimVector3.Zero, stopped.Velocity);
+        Assert.Equal(SimVector3.Zero, stopped.AngularVelocity);
+        Assert.Equal(moving.PositionMillimeters, stopped.CurrentPose.PositionMillimeters);
+    }
+
+    [Fact]
     public void GroundVehicle_AdvancesAtRetailCadenceAndUsesCoreGroundOriginOffset()
     {
         Level100ActorDefinitionSet definitions =
