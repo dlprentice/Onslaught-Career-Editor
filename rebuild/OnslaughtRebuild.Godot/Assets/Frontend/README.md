@@ -10,10 +10,15 @@ release packages and remain copyright of their respective rights holders;
 Steam's `-skipfmv` path begins at the released click-to-start page. An ordinary
 launch first streams the startup movie from the ignored, locally materialized
 startup cache; briefing and outcome movies remain outside this bounded lane.
-New Game, Options and Quit are the working main-menu actions. Continue, Load
-Game, Multiplayer and Goodies are visible and enter no page in this lane. Only
-Continue Game is drawn dim; the other four are drawn bright exactly like Quit.
-Level select exposes only `1.00 - Training Level` (world 100).
+New Game, Load Game, Options and Quit are working main-menu actions. Load Game
+reuses the career-name/list surface over caller-injected read-only descriptors;
+repeating `--career-save=<path>` is the Godot host's only input adapter. It reads
+those exact named files and performs no save-directory discovery or writes.
+Continue, Multiplayer and Goodies remain visible; only Continue is drawn dim.
+Core/Client can carry any loaded career's suggested world and applies the
+released unlock law. The current Godot selector does not render that general
+state or traverse it by keyboard: its pointer path exposes only world 100 and
+unlocked world 110, while the host constructs only world 100.
 
 > **Corrected 2026-07-28 — both halves of this were false at HEAD.** The
 > paragraph above previously read "New Game and Quit are the only working
@@ -32,15 +37,16 @@ Level select exposes only `1.00 - Training Level` (world 100).
 > `../../RetailFrontendFlow.Options.cs`. In the same file's `MainMenuItems`, only
 > `ContinueGame` carries `IsAvailable: false`; `LoadGame`, `Multiplayer`,
 > `Goodies` and `Options` all carry `IsAvailable: true`, under a comment stating
-> that this is measured from the pristine 640×480 main-menu capture. Load Game,
-> Multiplayer and Goodies fall through to `RetailFrontendSignal.None`, which is
-> why they are described as entering no page rather than as unavailable.
+> that this is measured from the pristine 640×480 main-menu capture. Load Game
+> now routes to the injected career-list mode and emits a one-shot selected-career
+> handoff; Multiplayer and Goodies still fall through to
+> `RetailFrontendSignal.None`.
 
 This lane ends when Loading hands a fresh canonical Level 100 session to the
 gameplay host. The gameplay pause owner's Retry and Quit actions reuse that
 loading/Main Menu lifecycle. Mission outcomes, terminal overlays, later
-CFEPDebriefing, saves, and subsequent campaign selection remain outside this
-lane.
+CFEPDebriefing, save writes/autosave, and persistent subsequent-campaign updates
+remain outside this lane.
 
 ## Materialized inputs
 

@@ -553,7 +553,7 @@ public sealed partial class RetailFrontendFlow : Control
     private int _mainTransitionCount;
     private int _mainTransitionTime;
 
-    private readonly RetailFrontendSession _session = new();
+    private RetailFrontendSession _session = new();
     private readonly Dictionary<RetailFrontendMenuItemKind, string> _menuText = [];
 
     private Texture2D _clickBackground = null!;
@@ -611,19 +611,23 @@ public sealed partial class RetailFrontendFlow : Control
 
     public event Action? ReturnToMainMenuRequested;
 
+    public event Action<RetailCareerDescriptor>? CareerSelected;
+
     public event Action<RetailFrontendAudioCue>? AudioCueRequested;
 
     public event Action<RetailFrontendCursorMode>? CursorModeRequested;
 
     internal RetailFrontendScreen CurrentScreen => _session.Screen;
 
-    public void Initialize()
+    public void Initialize(IReadOnlyList<RetailCareerDescriptor> careerDescriptors)
     {
         if (_initialized)
         {
             throw new InvalidOperationException("The retail frontend is already initialized.");
         }
 
+        ArgumentNullException.ThrowIfNull(careerDescriptors);
+        _session = new RetailFrontendSession(careerDescriptors);
         LoadLocalization();
         LoadTextures();
         _feBackFrames = LoadFeBackFrames();
@@ -2192,10 +2196,13 @@ public sealed partial class RetailFrontendFlow : Control
     }
 
     /// <summary>
-    /// Retail FEP_DEVSELECT — the "CHOOSE GAME NAME" page reached from New Game.
+    /// Retail FEP_DEVSELECT — the "CHOOSE GAME NAME" page reached from New Game
+    /// and Load Game.
     ///
-    /// Implemented visually and sequentially only; this lane carries no save or
-    /// career persistence, so the career list is structurally present and empty.
+    /// New mode renders the editable name field; Load mode renders caller-injected
+    /// read-only career rows. Client owns bounded row selection, accept/back, and
+    /// the selected-career handoff. This lane carries no career persistence or
+    /// implicit save discovery.
     ///
     /// Geometry is MEASURED from the pristine 640x480 retail capture
     /// local-lab/retail-reference-pristine/choose-game-name/choose-game-name-640x480.png
@@ -2226,9 +2233,9 @@ public sealed partial class RetailFrontendFlow : Control
     /// </summary>
     private void DrawDevSelect()
     {
-        // Settled: this lane models no transition into FEP_DEVSELECT, and its
-        // entry length is not evidenced. Passing 1 keeps this page byte-identical
-        // to what it drew before the transition machine existed.
+        // Settled: the transition length into FEP_DEVSELECT is not evidenced.
+        // Passing 1 keeps its settled rendering while both New Game and Load Game
+        // use the Client-owned page state.
         DrawMainUnderlay(1f);
 
         // Faint crosshair guides, present on this page and on the retail main
@@ -3258,8 +3265,8 @@ public sealed partial class RetailFrontendFlow : Control
             return HandleOptionsKey(key);
         }
 
-        // The FEP_DEVSELECT name field is editable; retail pre-fills it from the
-        // highlighted list entry and lets the player type over it.
+        // New-career FEP_DEVSELECT is editable; Load mode mirrors the selected
+        // injected save name and RetailFrontendSession rejects edits.
         if (_session.Screen == RetailFrontendScreen.DevSelect)
         {
             if (IsKey(key, Key.Backspace))
@@ -3413,6 +3420,15 @@ public sealed partial class RetailFrontendFlow : Control
         {
             CursorModeRequested?.Invoke(RetailFrontendCursorMode.Custom);
             ReturnToMainMenuRequested?.Invoke();
+        }
+        else if (signal == RetailFrontendSignal.CareerLoadRequested)
+        {
+            RetailCareerDescriptor selectedCareer =
+                _session.ConsumeSelectedCareerLoadRequest()
+                ?? throw new InvalidOperationException(
+                    "CareerLoadRequested did not carry a selected career descriptor.");
+            CareerSelected?.Invoke(selectedCareer);
+            CursorModeRequested?.Invoke(RetailFrontendCursorMode.Custom);
         }
         else if (signal == RetailFrontendSignal.PageChanged)
         {

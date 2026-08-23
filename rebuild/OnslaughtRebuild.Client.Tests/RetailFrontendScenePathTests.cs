@@ -117,7 +117,7 @@ public sealed class RetailFrontendScenePathTests
     }
 
     [Fact]
-    public void MainMenuAcceptChangesCampaignOptionsAndExitPages()
+    public void MainMenuAcceptChangesCampaignLoadOptionsAndExitPages()
     {
         var path = new RetailFrontendScenePath();
         var campaign = AfterClickToStart(path);
@@ -135,8 +135,11 @@ public sealed class RetailFrontendScenePathTests
         var continueGame = AfterClickToStart(path);
         Assert.False(path.TryAcceptMainMenuRow(continueGame, 1));
         Assert.Equal(RetailFrontendScreen.MainMenu, continueGame.Screen);
-        Assert.False(path.TryAcceptMainMenuRow(continueGame, 2));
-        Assert.Equal(RetailFrontendScreen.MainMenu, continueGame.Screen);
+
+        var loadGame = AfterClickToStart(path);
+        Assert.True(path.TryAcceptMainMenuRow(loadGame, 2));
+        Assert.Equal(RetailFrontendScreen.DevSelect, loadGame.Screen);
+        Assert.Equal(RetailFrontendCareerPageMode.Load, loadGame.CareerPageMode);
     }
 
     [Fact]

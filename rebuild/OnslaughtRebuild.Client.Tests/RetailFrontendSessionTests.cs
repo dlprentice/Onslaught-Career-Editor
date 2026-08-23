@@ -75,12 +75,12 @@ public sealed class RetailFrontendSessionTests
     }
 
     [Fact]
-    public void DevSelectCarriesNoCareerPersistenceAndOffersTheReleasedDefaultName()
+    public void DevSelectWithoutInjectedCareersOffersTheReleasedDefaultName()
     {
         RetailFrontendSession frontend = AtDevSelect();
 
-        // This lane deliberately implements FEP_DEVSELECT visually and
-        // sequentially only, so no careers are ever enumerated.
+        // A plain session performs no implicit save discovery. Callers inject
+        // already-read descriptors explicitly when they want Load Game rows.
         Assert.Empty(frontend.CareerNames);
         Assert.Equal(-1, frontend.SelectedCareerIndex);
         Assert.False(frontend.SelectCareerIndex(0));
