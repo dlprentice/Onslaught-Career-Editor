@@ -264,6 +264,14 @@ public sealed partial class RetailFrontendFlow : Control
     private const float BriefingBodyLeft = 80f;
     private const float BriefingBodyTop = 163.5f;
     private const float BriefingBodyPitch = 16f;
+
+    /// <summary>
+    /// The widest briefing line retail drew: the pristine capture's longest
+    /// line carries 286px of this renderer's advances (283px measured ink,
+    /// within the known +2..+6 overshoot). WrapBriefingParagraphs breaks a
+    /// candidate line only when it would exceed this.
+    /// </summary>
+    private const float BriefingBodyInkCeiling = 286f;
     // Retail's blank line does NOT advance a full 16: measured ink tops run
     // 167,183,199,215,231,247 then 273,289, so the paragraph break adds 10 on
     // top of the line the last paragraph line already advanced (247+16+10=273).
@@ -291,10 +299,12 @@ public sealed partial class RetailFrontendFlow : Control
     private const float LoadingBarHeight = 25f;
 
     /// <summary>
-    /// The briefing body, transcribed from the pristine capture. There is no
-    /// resolved string id for it in the materialized table, so this is the one
-    /// literal block on the page that is not localization-backed — the same
-    /// position "Episode 1" is in on FEP_LEVEL_SELECT.
+    /// The briefing body, transcribed from the pristine capture. The
+    /// localization backing for it WAS later found — english.dat carries the
+    /// full sentences (pool slots after 0x015F8838/0x01625641) — so this
+    /// literal is now only the world-100 receipt used when no session body
+    /// is available, and the wrap-law test target: WrapBriefingParagraphs
+    /// must reproduce these breaks from the table text.
     ///
     /// The transcription is corroborated, not assumed: summing this renderer's
     /// per-glyph advances for each line against the measured retail ink widths
@@ -583,6 +593,10 @@ public sealed partial class RetailFrontendFlow : Control
     private Texture2D[] _menuIcons = [];
     private int[] _glyphWidths = [];
     private string _selectLevelText = string.Empty;
+    // The level-select name band and the briefing page draw the SELECTED
+    // node's row through _session.SelectedLevelName; this field stays as the
+    // localization-table load receipt (english.json "level100") and feeds
+    // nothing on its own.
     private string _level100Text = string.Empty;
     private string _loadingText = string.Empty;
     // Localization__GetStringById(0xe4) — English table in BEA.exe, not english.dat.
@@ -2632,8 +2646,13 @@ public sealed partial class RetailFrontendFlow : Control
             new Vector2(LevelSelectEpisodeLeft, LevelSelectEpisodeTop),
             LevelSelectBodyScale,
             Colors.White);
+        // The name band follows the SELECTED node: the language table carries
+        // an N.NN row for every career world (english-worlds.json slot law),
+        // and retail's own selector reads the loaded career — the band showing
+        // the selected node's row is the only law consistent with shipped
+        // data (PARITY.md 2026-08-22; FEPLevelSelect.cpp is not in the drop).
         DrawText(
-            _level100Text,
+            _session.SelectedLevelName,
             new Vector2(LevelSelectEpisodeLeft, LevelSelectLevelNameTop),
             LevelSelectBodyScale,
             ReleasedSelected);
@@ -2865,14 +2884,24 @@ public sealed partial class RetailFrontendFlow : Control
         DrawHeaderBarTitle(MissionBriefingTitle);
 
         DrawFont22Text(
-            _level100Text,
+            _session.SelectedLevelName,
             new Vector2(BriefingLevelNameLeft, BriefingLevelNameTop),
             BriefingLevelNameScaleX,
             BriefingLevelNameScaleY,
             ReleasedTitleText);
 
+        // The briefing body is the SELECTED world's own authored pair from
+        // the language table (nine-slot pool law; worlds 611/612/621/622
+        // carry a measured third paragraph). The static transcription below
+        // stays only as the byte-identical world-100 receipt for the case
+        // where no localization document is loaded; an empty session body
+        // must draw NOTHING, never another world's copy.
+        IReadOnlyList<string> briefingBody =
+            _session.SelectedBriefingBody.Count > 0
+                ? _session.SelectedBriefingBody
+                : BriefingBody;
         float y = BriefingBodyTop;
-        foreach (string line in BriefingBody)
+        foreach (string line in WrapBriefingParagraphs(briefingBody))
         {
             if (line.Length == 0)
             {
@@ -2885,6 +2914,56 @@ public sealed partial class RetailFrontendFlow : Control
         }
 
         DrawPageChevrons();
+    }
+
+    /// <summary>
+    /// Word-wraps the briefing paragraphs at the measured retail ink ceiling.
+    ///
+    /// The pristine capture's longest briefing line carries 286px of this
+    /// renderer's advances (283px measured ink, within the known +2..+6
+    /// overshoot), so 286 is the widest line retail drew. Greedy wrapping —
+    /// keep adding words while the line fits, else break — reproduces world
+    /// 100's transcribed breaks exactly under that ceiling (asserted by
+    /// <c>RetailFrontendFlowWrapTests</c>); other worlds get the same law
+    /// rather than invented breaks.
+    /// </summary>
+    private IReadOnlyList<string> WrapBriefingParagraphs(
+        IReadOnlyList<string> paragraphs)
+    {
+        var lines = new List<string>();
+        foreach (string paragraph in paragraphs)
+        {
+            if (paragraph.Length == 0)
+            {
+                lines.Add(string.Empty);
+                continue;
+            }
+
+            string current = string.Empty;
+            foreach (string word in paragraph.Split(' '))
+            {
+                string candidate = current.Length == 0
+                    ? word
+                    : current + " " + word;
+                if (current.Length > 0 &&
+                    MeasureText(candidate, 1f) > BriefingBodyInkCeiling)
+                {
+                    lines.Add(current);
+                    current = word;
+                }
+                else
+                {
+                    current = candidate;
+                }
+            }
+
+            if (current.Length > 0)
+            {
+                lines.Add(current);
+            }
+        }
+
+        return lines;
     }
 
     /// <summary>
@@ -3507,7 +3586,15 @@ public sealed partial class RetailFrontendFlow : Control
         // Messbox copy is Localization id 0xe4 (EXE table), not drawn on the row.
         _menuText.Add(RetailFrontendMenuItemKind.Quit, RequiredString(strings, "quit"));
         _selectLevelText = RequiredString(strings, "selectLevel");
+        // The band and briefing draw the SELECTED node's row through
+        // RetailFrontendWorldStrings; this load receipt stays as the proof
+        // the menu table itself is present and identity-checked.
         _level100Text = RequiredString(strings, "level100");
+        if (_level100Text != OnslaughtRebuild.Core.RetailFrontendWorldStrings.LevelName(100))
+        {
+            throw new InvalidDataException(
+                "english.json level100 row diverged from the decoded world-strings table.");
+        }
         _loadingText = RequiredString(strings, "loading");
     }
 

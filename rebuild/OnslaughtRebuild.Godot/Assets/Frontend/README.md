@@ -89,6 +89,7 @@ remain outside this lane.
 | `SoundEffects/select.wav` | Exact 44.1 kHz PCM decode of XAP record 43, `Front End\N_FE_select`; consumed by the integrating audio lane, not this flow | `F84144C80405FE9F745B8CF4BD352D7FA4F8C0A8BA481C770C2C7C0A9053ADE1` |
 | `SoundEffects/back.wav` | Exact 44.1 kHz PCM decode of XAP record 41, `Front End\N_FE_back`; consumed by the integrating audio lane, not this flow | `133B78E813C6B393BE4DBA1D263F69513958B0AB827D6603F952D6E0A82BA02B` |
 | `english.json` | Ten menu/launch strings decoded from English `english.dat` SHA-256 `789ECFF619D077092769DF281C540D138A25FCC74D70023466A604888E59371A` | `B27D7B1B3F8CD8AA22B664CACF7C87A8B0907C7DEA4C4F07DFF8DA763DBB70F3` |
+| `english-worlds.json` | Per-world selector names and briefing body slots decoded from the same `english.dat` (pool-authoring-order slot law; see `materialize_retail_assets.py::_frontend_world_strings_bytes`) | `FFE3D3F88E07D5F29D21D26EF07BF056D153B622416110250DC1C78BF2C35408` |
 | `Music/frontend-track-08.ogg` | Exact copy of `data/Music/BEA_09(Master).ogg`, the released `MUS_FRONTEND` zero-based track 8 of the alphabetical `data\music` `*.ogg` playlist | `4F6166F655E62DEC6993643A8A860BDEA0ABB7D853AD443F5D03E95368BE93A1` |
 
 ### Six rows added 2026-07-28

@@ -1,8 +1,9 @@
 # Rebuild parity contract
 
 Status: active — what "1:1 behavioral and experiential parity" means operationally
-Last updated: 2026-08-21 (merged wt/t_0bace7cd: Pulse Cannon ReadyToCharge
-gate and Charged-2 fire; earlier: Level 100 EnableFlightMode +0x58c store on takeoff).
+Last updated: 2026-08-22 (selector/briefing per-world string law; earlier:
+merged wt/t_0bace7cd Pulse Cannon ReadyToCharge gate and Charged-2 fire;
+Level 100 EnableFlightMode +0x58c store on takeoff).
 Evidence: SOURCE — authority order and the known divergences are
 recorded in `PROVENANCE.md` plus the Lost-countdown row of this table; gate capabilities are MEASURED claims of the
 tracked harnesses named in the table. Every row of *Carried retail contracts*
@@ -442,6 +443,76 @@ forty-first rows' mutation kills were measured on 2026-08-18, 2026-08-19,
 and 2026-08-22 in this worktree; they are
 not among the 17 files
 under `local-lab/rebuild-parity-mutation-kills-2026-08-17/`.
+
+## Closing the two selector/briefing gaps (2026-08-22)
+
+A reviewed selector run exposed two reconstruction gaps: the SELECT LEVEL name
+band was pinned to world 100 after another node was selected, and MISSION
+BRIEFING composed world 100's Tatiana copy for world 110. Both shared one root:
+the reconstruction only ever decoded TEN strings out of the released English
+language table, so it had no per-world text to draw. The table itself
+(`data/language/english.dat`, SHA-256 `789ecff6…`, v3, count 2571) carries far
+more:
+
+- **Per-world name rows.** N.NN-titled strings exist for every node of the
+  career graph — `1.00 - Training Level` (the already-pinned
+  `level100` row), `1.10 - Blackout`, `2.00 - Interception`, … through
+  `8.00 - The Sentinel Awakes`. The materializer now refuses a document
+  that lacks any of them.
+- **Briefing pages in pool-authoring order.** The table's text IDs are a
+  hash-scrambled space with no pinned derivation (none invented), but the
+  TEXT POOL preserves authoring order, and from world 100's Tatiana pair
+  onward it is consecutive nine-slot groups in career-node order: two body
+  paragraphs plus reserved empties. World 110's group carries its own
+  authored copy ("Communications with the mainland have been lost…" /
+  "Defend the base and prevent the invasion force…"), byte-present in the
+  shipped data all along. Exactly four worlds (611/612/621/622) carry a
+  measured third paragraph; every other reserved slot in every group is
+  empty. MEASURED 2026-08-22 from the pinned table by
+  `materialize_retail_assets.py::_frontend_world_strings_bytes`; the whole
+  document is exact-reproduced at SHA-256 `ffe3d3f8…5408`
+  (`Assets/Frontend/english-worlds.json`).
+
+What changed, by owner:
+
+- `materialize_retail_assets.py` — the decoder above. Latest-main
+  materialization reproduces 379 exact files, including the new pinned JSON.
+  The landed shared later-world owner still admits worlds 200 and 300 through
+  their own `_WorldLevelHeader` rows; the selector merge neither duplicates nor
+  weakens those header, script, HFLD, BSWD, actor, or hash assertions.
+- `RetailFrontendWorldStrings.cs` (Core) — the 43 name rows and 43 briefing
+  bodies as generated literals (mechanically generated from the pinned JSON,
+  never hand-typed); empty means draw-nothing.
+- `RetailFrontendSession.cs` (Client) — `SelectedLevelName` and
+  `SelectedBriefingBody` expose the SELECTED node's rows without replacing the
+  caller-injected read-only career descriptor/selection/handoff state.
+- `RetailFrontendFlow.cs` (Godot) — the SELECT LEVEL band draws
+  `_session.SelectedLevelName` instead of the unconditional `_level100Text`;
+  MISSION BRIEFING draws `_session.SelectedLevelName` plus
+  `_session.SelectedBriefingBody` wrapped greedily at the measured 286px ink
+  ceiling (`WrapBriefingParagraphs`), with the transcribed literal demoted
+  to the world-100 receipt; `LoadLocalization` cross-checks english.json's
+  `level100` row against the decoded table. The injected career list and its
+  selected-career handoff remain the page's source.
+
+Honest boundaries of this closure:
+
+- **The selector-band law is measured-consistent, not source-proven.** The
+  band following the selection is inferred from shipped data (a name row exists
+  for every selectable node) because `FEPLevelSelect.cpp` remains absent from
+  the source drop and no retail capture of a selected non-root node exists here.
+  If a future capture shows retail pinning "1.00" while the ship marker sits
+  elsewhere, this inference is falsified and reverts.
+- **World-100 pixels are unchanged by construction**: cold selection is world
+  100, whose row and wrapped body reproduce the transcribed lines the earlier
+  probe screen-matched. No GUI launch was spent proving what the session tests
+  already pin mechanically.
+- **Wrapping for worlds other than 100 is law-driven, not pixel-measured**: no
+  retail reference frame shows another world's briefing page. The breaks follow
+  the same greedy 286px rule that reproduces world 100's transcribed breaks
+  exactly; they are not claimed to match unobserved retail pixels.
+- The briefing VIDEO inset (`PC_<world>_exact.vid`) remains undrawn; nothing
+  here changes that earlier finding.
 
 ## Parity dimensions and their gates
 
