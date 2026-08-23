@@ -1,0 +1,84 @@
+# Placeholder unique-owner SET_NAME leftover (6 T3 + 1 VFuncSlot).
+# Not on the live allowlist until a reviewer GO on the question:
+# is T3-without-Class__ / VFuncSlot_ → Class__VFunc_N_addr the same
+# unique-RTTI-owner / vtable-slot grade as name-cohort-fun-unique-owner
+# and the already-landed CFEPIntro T3 rows (SubObj4034_T3 → CFEPIntro__VFunc)?
+#
+# Population: every live T3 or VFuncSlot_* name whose only strict RTTI
+# vtable owner is a single class, re-measured 2026-08-18 with
+# tools/re_rtti_vtables.py against specimen 74154bfa…7750
+# (667 TDs / 724 COLs / 11777 slots). Overlay of the landed 12 Class__
+# + 8 FUN_ unique-owner rows. This is the entire leftover set of that
+# shape (7 rows). LandscapeDetail_SetLevel/GetLevel stay out: they
+# already carry invented method suffixes (different leftover class).
+# Multi-owner FUN_ (CCockpit+CDXCockpit / CPDModifier+CParticleDescriptor),
+# waypoint 0x00538470, CMusic__Play, Goto3/4, and
+# CSpawnerThng__FindSpawnerByName stay out.
+#
+# Prior reviewers excluded "T3 leftovers without Class__ prefix" from
+# token-only T3→T3 swaps. This cohort is not that: every proposed name
+# is Class__VFunc_N_addr with a unique owner and a free proposed name.
+#
+# PRE pins copied from the measured name-cohort-fun-unique-owner POST
+# (db.18630). Replica must reproduce them before dry/apply.
+# POST name/frozen digests are filled after replica apply + census.
+cohortId	name-cohort-placeholder-unique-owner
+cohortTitle	7 unique-RTTI-owner T3/VFuncSlot name corrections, name only (rehearsal)
+
+programName	BEA.exe
+programMd5	3b456964020070efe696d2cc09464a55
+programSha256	74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750
+imageBase	00400000
+language	x86:LE:32:default
+compilerSpec	windows
+
+verb	SET_NAME
+
+preFunctions	8329
+preInstructions	551232
+preReferences	234558
+preDefinedData	48648
+preUndefinedData	3907369
+preBookmarks	2301
+preFunctionNameDigest	d6d500787b47367c55ef79b4a13433a2a2fb91f37a5186d0c02bb94961f90746
+preFunctionBodyDigest	cb96581a599479d8aa57c2319a5e110226969934c2c14797a2575c689537a9be
+preFrozenDigest	cb9618b7371ab2a8b823283b8e28e661bdc3ff1cbf3e54a9b2f1faf6651fae14
+
+# Structural POST repeats PRE (SET_NAME moves no instruction/data/bookmark
+# count). Name and frozen POST digests measured 2026-08-18 by replica apply
+# then a separate-process census on that applied replica
+# (local-lab/name-cohort-placeholder-unique-owner-rehearsal-2026-08-18/receipts/
+# {apply,census}.log). Body digest unchanged. Frozen moves because the 7
+# placeholder names change (columnsMoved name only; already user-defined).
+postFunctions	8329
+postInstructions	551232
+postReferences	234558
+postDefinedData	48648
+postUndefinedData	3907369
+postBookmarks	2301
+postFunctionNameDigest	fadad23cc507f0575764b8302fe26b97c16332249a1ce44b07a5da3825cb3a9c
+postFunctionBodyDigest	cb96581a599479d8aa57c2319a5e110226969934c2c14797a2575c689537a9be
+postFrozenDigest	7943423b52b78f0f1a4166870073ff650e72ee3bd53b035ae89e4e074d1c0103
+
+manifestSha256	8a57fdaa6c01d162e1e1aebeaf69d9c47697843d5b7cf05fb11f55b272357d06
+manifestBytes	2530
+manifestRows	7
+manifestColumns	9
+manifestHeaderPipe	addr|provenance|liveKind|currentNameLive|proposedName|tier|anchorKind|anchorEvidence|reason
+
+col.addr	addr
+col.liveKind	liveKind
+col.currentName	currentNameLive
+col.proposedName	proposedName
+
+unique	addr
+unique	proposedName
+unique	currentName
+noCycle	proposedName:currentName
+enum	liveKind=FUNCTION,SYMBOL:Label
+enum	provenance=PROMOTE,DEMOTE,SLOTFIX
+
+expectedTargetsChanged	7
+expectedFunctionsUntouched	8322
+expectedSymbolsAdded	7
+expectedSymbolsRemoved	7

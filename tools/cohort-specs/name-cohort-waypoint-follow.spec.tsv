@@ -1,0 +1,66 @@
+# DRAFT / REHEARSAL ONLY. Do not apply to live Ghidra. Not on the live allowlist.
+# Name-only SET_NAME for one mis-owned function. Two independent static
+# witnesses from the pristine specimen; no retained TTD/call-context hit on
+# 0x00538470 (161-VA census + 96 call-context.jsonl files). The name-cohort
+# contract this lock inherited still requires a runtime receiver watch before
+# a live grant.
+#
+# PRE pins MEASURED 2026-08-18 by GhidraApplyCohortManifest.java census on the
+# varargs-cohort2 POST replica (same geometry as live db.18628).
+# Specimen 74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750.
+cohortId	name-cohort-waypoint-follow
+cohortTitle	1 static-witnessed name correction, name only (DRAFT — do not apply)
+
+programName	BEA.exe
+programMd5	3b456964020070efe696d2cc09464a55
+programSha256	74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750
+imageBase	00400000
+language	x86:LE:32:default
+compilerSpec	windows
+
+verb	SET_NAME
+
+preFunctions	8329
+preInstructions	551232
+preReferences	234558
+preDefinedData	48648
+preUndefinedData	3907369
+preBookmarks	2301
+preFunctionNameDigest	94d97aab6f578fe5b1b86f8a759b0257c5518d53c9d836107bae361faacca4c9
+preFunctionBodyDigest	cb96581a599479d8aa57c2319a5e110226969934c2c14797a2575c689537a9be
+preFrozenDigest	4c81b617e59f0f25f00577e4ce88e6e77a62abee158fe41698337dd1c9fcca93
+
+# Structural POST repeats PRE (SET_NAME moves no instruction/data/bookmark
+# count). postFunctionNameDigest and postFrozenDigest are omitted on purpose:
+# they cannot be known without a rehearsal apply, and inventing them is a fake
+# pin. A later live grant re-measures after a green replica apply.
+postFunctions	8329
+postInstructions	551232
+postReferences	234558
+postDefinedData	48648
+postUndefinedData	3907369
+postBookmarks	2301
+postFunctionBodyDigest	cb96581a599479d8aa57c2319a5e110226969934c2c14797a2575c689537a9be
+
+manifestSha256	7ae4144b3dfead0b64a33949b1341cbeade2190a8d7ae484470919f4f9934f90
+manifestBytes	616
+manifestRows	1
+manifestColumns	9
+manifestHeaderPipe	addr|provenance|liveKind|currentNameLive|proposedName|tier|anchorKind|anchorEvidence|reason
+
+col.addr	addr
+col.liveKind	liveKind
+col.currentName	currentNameLive
+col.proposedName	proposedName
+
+unique	addr
+unique	proposedName
+unique	currentName
+noCycle	proposedName:currentName
+enum	liveKind=FUNCTION,SYMBOL:Label
+enum	provenance=PROMOTE,DEMOTE,SLOTFIX
+
+expectedTargetsChanged	1
+expectedFunctionsUntouched	8328
+expectedSymbolsAdded	1
+expectedSymbolsRemoved	1
