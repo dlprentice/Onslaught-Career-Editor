@@ -1,0 +1,255 @@
+# CMSH stores pose lanes and skeleton part indices; LVLR and MSL expose usage
+
+Status: active bounded animation, skinning, and authored-usage contract
+Date: 2026-08-22
+Verdict: the 213 loose CMSH meshes contain 3,774 part tracks; 64 meshes and 659
+parts have non-trivial `VHFM` maps, exactly seven meshes carry one `BONE` array,
+and exactly 17 camera parts carry one `HFOV` value. Across the 66 numeric LVLR
+archives, 3,432 of 3,485 `MESH` rows join by authored name to 205 loose meshes;
+the other 53 rows have an empty name. The 733 loose MSL files contain 56 active
+`PlayAnimation*` calls in 15 files. These are storage and authored-reference
+contracts, not proof that every named track is scheduled or rendered.
+Evidence: MEASURED — `tools/cmsh_animation_usage_census.py` parsed and
+hash-verified 213 meshes, 66 numeric LVLR archives, and 733 MSL files (1,012
+inputs) against `G:\bea-asset-mirror\INDEX.jsonl`; the focused ten-test gate
+reproduces the counts, names, joins, and can-fail controls. Retail consumer VAs
+come from the cited pristine-binary notes and remain static evidence.
+Specimen: `G:\bea-asset-mirror\INDEX.jsonl`, SHA-256
+`c45722aeed52e77788c7886cb30b813900d3516b1c387983c442d2b02d4fe4b9`;
+retail VAs cite `BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+## Scope and identity
+
+The selected 1,012 files match the mirror index row-for-row by SHA-256:
+
+| Input lane | Files | Role in this contract |
+| --- | ---: | --- |
+| `resources/meshes/*.msh.aya` | 213 | loose CMSH pose, hierarchy, camera, and skinning census |
+| numeric `resources/NNN_res_PC.aya` | 66 | LVLR `MESH` authored-name membership |
+| `MissionScripts/**/*.msl` | 733 | authored `PlayAnimation` / `PlayAnimationWait` call sites |
+
+The AYA outer envelope remains owned by [aya-container.md](aya-container.md),
+the CMSH stream by [cmsh-mesh.md](cmsh-mesh.md), and the LVLR stream by
+[lvlr-archive.md](lvlr-archive.md). This pass read the pristine safe-copy data
+and the mirror index only. It launched no executable, modified no retail file,
+and tracks no asset or extracted payload.
+
+The wider parser gate still accounts for **367** CMSH streams: 213 loose, 15
+reachable through loose post-body siblings, and 139 embedded in numeric LVLR
+archives. The detailed counts below deliberately use the 213 loose files, where
+one stable source filename, one internal CMSH name, and one mirror hash identify
+each authored mesh without treating a nested copy as another independent asset.
+
+## Pose and frame properties
+
+Every loose part has one bounded local-pose lane:
+
+| Field/chunk | Measured layout and role |
+| --- | --- |
+| `CMSP+0xB8` | `vFrames`, the length of `VHFM` |
+| `CMSP+0xBC` | `hFrames`, the number of authored `HORI`/`HPOS` poses |
+| `VHFM` | `vFrames` bytes; each byte is in `[0,hFrames)` and selects one hierarchy pose |
+| `HORI` | `hFrames × 48`; three basis rows of three floats plus one carried word per row |
+| `HPOS` | `hFrames × 16`; three position floats plus one carried word |
+| `CPOS` / `CORI` | per-virtual-frame composed model-space caches, sometimes collapsed to one static record |
+| `HFOV` | when present, one float per hierarchy pose on a camera part |
+
+Across 3,774 parts, the largest `vFrames` is **501** and the largest `hFrames`
+is **250**. Exactly **659 parts in 64 meshes** use more than one `VHFM` value.
+Classifying only the byte-map shape gives:
+
+| Loose-mesh class | Meshes | What the classification says |
+| --- | ---: | --- |
+| no non-trivial frame map | 149 | every part selects one hierarchy-pose index, even when `vFrames > 1` |
+| every moving map closes on its first index | 15 | each moving part has `VHFM[0] == VHFM[-1]` |
+| no moving map closes on its first index | 37 | each moving part ends on a different index |
+| mixed closing/non-closing maps | 12 | both shapes occur in one mesh |
+
+Closure is a byte property, not a universal playback instruction. Level 100 is
+the one stronger cross-field result: the three running WRES facilities
+`FB_Docks`, `FB_radar_station`, and `FB_Solar_Pod` have cyclic maps, while the
+three inactive turret placements `ft_blaster`, `ft_pulse`, and `ft_sam` have
+saturating maps. That join is pinned independently by
+`Level100StaticWorldAnimationTests`; it must not be generalized to the other 60
+numeric worlds without their WRES scheduler/active fields.
+
+`CMSP+0xB4` (`aFrames`) remains unnamed. Its complete value population is
+**0=1,987, 1=1,760, 2=27**. Twenty-six of the 27 value-2 parts are in meshes with
+no non-trivial `VHFM` map, so the field is not safely describable as the number
+of visible key poses or named clips.
+
+The format still stores no frame rate. A downstream 20 Hz playback decision is
+engine evidence, not a value read from CMSH.
+
+## Camera lane
+
+Exactly 17 meshes carry `HFOV`, always on a part named `Camera01`, and every one
+contains one finite float:
+
+| Stored value | Camera parts |
+| ---: | ---: |
+| `180.0` | 2 |
+| `90.0` | 13 |
+| `75.78888702392578` | 1 |
+| `34.70261001586914` | 1 |
+
+`CMeshPart__LoadFromStream @ 0x004B27A0` loads the positional
+`HORI`/`HPOS`/`HFOV` sequence. The only proved post-load `HFOV` reader is in
+`CRTCutscene__BuildCurrentFrameOutputs`: it maps a virtual frame through `VHFM`
+and returns that hierarchy pose's FOV parameter. The player cockpit does not use
+its `Camera01` `HFOV`; the complete bounded path is
+[player-camera-attach-and-mesh-hfov-2026-07-26.md](../binary-analysis/player-camera-attach-and-mesh-hfov-2026-07-26.md).
+
+## Skeleton and skinning lane
+
+There is no separate loose skeleton family. In each of the seven skinned CMSH
+files, exactly **part 1** owns one `BONE` array. Each `BONE` element is a part
+index in the same mesh; the indexed part's 32-byte CMSP name is the bone name.
+
+| Mesh | Bones | Naming contract | Numeric LVLR membership |
+| --- | ---: | --- | ---: |
+| `m_f_dtroop.msh.aya` | 18 | `Bip01` humanoid parts | 6 archives |
+| `m_ftrooper.msh.aya` | 18 | `Bip01` humanoid parts | 43 archives |
+| `m_mcommando.msh.aya` | 18 | `Bip01` humanoid parts | 9 archives |
+| `m_mfiredude.msh.aya` | 19 | `Bip01` humanoid parts, including left/right clavicle | 23 archives |
+| `m_mgrunt.msh.aya` | 19 | `Bip01` humanoid parts, including left/right clavicle | 39 archives |
+| `m_Sentinel Arm Big.msh.aya` | 14 | `Bone01`…`Bone14`; serialized slot order places `Bone12` before `Bone11` | 1 archive (`800`) |
+| `m_Sentinel Arm Small.msh.aya` | 14 | `Bone01`…`Bone14` in numeric order | 1 archive (`800`) |
+
+The 48-byte skinned vertex form has three float words at `+0x0C`. All 9,609
+shipped slot words are exact non-negative multiples of three; division by three
+produces an in-range index into that part's `BONE` array. Every declared bone
+slot is used by at least one vertex in each of the seven meshes. This bounds
+matrix-palette addressing. It does **not** establish weights, blending, bind
+matrices, or how the three slots combine; those remain open.
+
+The runtime also uses semantic part names outside this serialized skinning
+array. `CMCTentacle__Init @ 0x0049CC40` searches names such as `tentacle`,
+`tether`, `head`, `tethercp`, `headcp`, and the `bone` prefix for a separate
+spline/controller path. That static consumer is documented in
+[MCTentacle.cpp.md](../binary-analysis/functions/MCTentacle.cpp.md); name matching
+does not turn every similarly named part into a `BONE` entry.
+
+## LVLR authored mesh membership
+
+The 66 numeric LVLR archives contain **3,485** top-level `MESH` chunks. The
+validated logical-name route is `PMSH/PMS2:name@0x10` when the inner wrapper is
+present, otherwise `PMSH:name@0x08`. Prefixing the authored name with the loose
+shelf's `m_` convention joins:
+
+- **3,432 occurrences** to **205 distinct loose meshes**;
+- **53 occurrences** whose authored name is empty;
+- zero non-empty unresolved names.
+
+Eight loose meshes are absent from numeric-LVLR `MESH` membership:
+`m_be_trans`, `m_be_transm`, `m_default`, `m_f_truck`, `m_m_battleship`,
+`m_m_truck`, `m_panorama`, and `m_PS2_Normal_Logo3` (suffixes omitted here for
+readability). Absence from this one membership set does not prove an asset is
+unused: base/frontend loading, executable defaults, another container, and
+dormant content remain separate routes.
+
+The all-301 LVLR top-level census contains 3,492 `MESH` chunks. The difference
+is seven Goodie-archive mesh rows; this document's 3,485 denominator is the
+numeric-world slice, not a correction to [lvlr-archive.md](lvlr-archive.md).
+`MESH` membership proves a resource is packed with a level. It does not prove a
+WRES placement, spawn, render, or animation schedule.
+
+## Authored MSL animation calls
+
+The 733 loose MSL files contain **56 active call sites in 15 files across nine
+level directories** after stripping `//` comments:
+
+| Command | Sites |
+| --- | ---: |
+| `PlayAnimation` | 32 |
+| `PlayAnimationWait` | 24 |
+
+The exact authored token spellings are `open` 12, `opening` 12, `closed` 10,
+`closing` 8, `Idle` 8, `Hit` 2, and one each of `Activate`, `Activated`,
+`Opening`, and `Open`. Case variants are retained because they are authored
+bytes; the retail name lookup itself uses `stricmp`.
+
+The two argument-word combinations are `(FALSE,FALSE)` 2, `(FALSE,TRUE)` 8,
+`(TRUE,FALSE)` 22, and `(TRUE,TRUE)` 24. Their friendly meanings remain open.
+`IScript__PlayAnimationWait @ 0x005351D0` proves only that both are byte-masked,
+that the name is resolved through `CMesh__FindAnimationIndexByName`, and that
+completion resumes a saved VM snapshot. See
+[IScript__PlayAnimationWait.md](../binary-analysis/functions/IScript.cpp/IScript__PlayAnimationWait.md).
+
+This pass does not join every script file to a WRES object and mesh. The MSL
+coordinate proves an authored name request; the LVLR coordinate proves archive
+membership. Treating those two sets as an instance-level edge without parsing
+WRES would invent the missing relation.
+
+## Retail consumer anchors
+
+| VA | Static identity | Bounded contribution |
+| --- | --- | --- |
+| `0x004B27A0` | `CMeshPart__LoadFromStream` | positional `VHFM`/`HORI`/`HPOS`/`HFOV` and cache load |
+| `0x004AA630` | `CMesh__FindAnimationIndexByName` | case-insensitive search of count `+0x14`, table `+0x18`, stride `0x24`; returns the record's `+0x10` value or `-1` |
+| `0x00404790` | `CAnimation__Process` | advances animation state and calls owner vtable `+0xEC` on the observed completion path |
+| `0x00404860` | `CAnimation__SetAnimMode` | mode/reset/force-looped setup through the render-frame increment path |
+| `0x004F44A0` | `CComplexThing__SetAnimMode` | lazy `CAnimation` allocation and forwarding |
+| `0x005351D0` | `IScript__PlayAnimationWait` | name lookup, play dispatch, VM stop, completion-resume contract |
+| `0x0054C920` | `CDXMeshVB__BuildSkeletalVB` | skeletal vertex-buffer construction route |
+| `0x0049CC40` | `CMCTentacle__Init` | semantic part-name scan and controller-owned bone/spline buffers |
+
+These anchors demonstrate consumers and call shapes. They do not prove that the
+CMSH frame chunks themselves contain the runtime table of named clips. This pass
+found no bounded named-clip field in `VHFM`/`HORI`/`HPOS`; the origin and complete
+layout of the `CMesh+0x14/+0x18` table remain open.
+
+## Reproduce
+
+The tracked scanner accepts an explicit user-supplied data root, verifies every
+selected file against the optional mirror index, and refuses to publish outside
+an ignored `local-lab` or `.artifacts` path:
+
+```powershell
+py -3 tools/cmsh_animation_usage_census.py `
+  --data-root "<safe-copy>\data" `
+  --mirror-index "G:\bea-asset-mirror\INDEX.jsonl" `
+  --json-out "local-lab\cmsh-animation-usage\census.json"
+```
+
+Focused gate with the local corpus enabled:
+
+```powershell
+$env:ONSLAUGHT_GAME_DATA = "<safe-copy>\data"
+$env:ONSLAUGHT_ASSET_INDEX = "G:\bea-asset-mirror\INDEX.jsonl"
+py -3 tools/cmsh_animation_usage_census_tests.py
+```
+
+A clean clone runs four synthetic can-fail tests and skips the six
+specimen-bound tests when those two inputs are absent.
+
+## Open questions and cheapest falsifiers
+
+- **Named clips and frame ranges:** trace every write to `CMesh+0x14/+0x18`
+  during one mesh load, then join each 0x24-byte record to the frame interval the
+  render-frame path selects. A name lookup alone does not locate the table's
+  serialized owner.
+- **`aFrames`:** join `CMSP+0xB4` to the exact `CMeshPart__LoadFromStream` branch
+  and one downstream reader; its current distribution refutes a simple visible-
+  key-count label.
+- **Three-slot skinning:** close the shader/palette consumer that combines the
+  three scaled indices, then use one disposable copied-profile skeletal capture
+  to falsify the recovered blend. Do not edit the pristine shelf.
+- **World instance edges:** parse WRES object records across all 66 numeric
+  worlds and join definition, mesh, script, active state, and placement. Until
+  then, LVLR membership and MSL calls remain separate edges.
+- **Scheduling:** compare a closing-map and a non-closing-map mesh under one
+  copied-runtime trace before generalizing the Level 100 active/loop relation.
+- **Nested identity:** normalize the 15 loose-nested and 139 embedded CMSH
+  streams onto loose names/hashes before counting them as variants or copies.
+- **Malformed hierarchy behavior:** use only a disposable copied profile for a
+  cycle, out-of-range `BONE`, or out-of-range `VHFM` test.
+
+## Claim boundary
+
+Pose-table dimensions, frame-map range/shape, bone-to-part naming, palette-slot
+indices, camera-lane values, numeric-LVLR membership, and loose-MSL call sites are
+bounded. Named-clip serialization, weights/blending, bind pose, interpolation,
+world-instance joins, general scheduling, malformed-input behavior, runtime
+rendering, and parity remain open.

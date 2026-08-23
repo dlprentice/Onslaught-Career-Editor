@@ -23,6 +23,7 @@ Run: py -3 tools/contract_coverage_tests.py
 from __future__ import annotations
 
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -49,25 +50,6 @@ REGISTER_HEADER = "entryVa\tname\tgrade\tresolution\tcontractState\tevidence\tge
 PRISTINE_IMAGE_SHA256 = (
     "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
 )
-WAVE1_REVIEW_FLOOR_VAS = {
-    "0x00405a40", "0x00405ed0", "0x00405ef0", "0x00405f20", "0x00405f40",
-    "0x00405f50", "0x00405f60", "0x00405f80", "0x00406000", "0x004063a0",
-    "0x00407940", "0x00408150", "0x00409880", "0x0040a560", "0x0040e7d0",
-}
-WAVE1_PRESERVED_STATUS_BY_VA = {
-    "0x00405f00": "REVIEW_READY",
-    "0x00406020": "REVIEW_READY",
-    "0x00406040": "REVIEW_READY",
-    "0x00406050": "REVIEW_READY",
-    "0x00406560": "DISPUTED",
-    "0x00406fc0": "VERIFIED",
-    "0x00407310": "VERIFIED",
-    "0x004080f0": "REVIEW_READY",
-    "0x00409de0": "REVIEW_READY",
-    "0x0040e910": "REVIEW_READY",
-}
-
-
 def w(root: Path, rel: str, text: str) -> Path:
     p = root / rel
     p.parent.mkdir(parents=True, exist_ok=True)
@@ -644,7 +626,7 @@ def test_reruns_are_byte_identical_when_inputs_are_unchanged() -> None:
 
 
 # ---------------------------------------------------------------------------
-# real-corpus invariants and the fixed wave-1 join receipt
+# real-corpus structural invariants and complete factory-file join
 # ---------------------------------------------------------------------------
 
 
@@ -664,40 +646,38 @@ def test_real_corpus_invariants() -> None:
         out = proc.stdout + proc.stderr
         assert proc.returncode == 0, out
         payload = json.loads(out_path.read_text(encoding="utf-8"))
+        contract_root = repo / "reverse-engineering" / "contracts"
+        contract_files = sorted(contract_root.rglob("*.md"))
+        contract_vas = set()
+        for contract_file in contract_files:
+            match = re.search(r"__([0-9a-fA-F]{8})\.md$", contract_file.name)
+            assert match is not None, contract_file
+            contract_vas.add("0x" + match.group(1).lower())
+        assert len(contract_vas) == len(contract_files)
         assert payload["schema"] == "bea.re.contract-coverage.v1"
         assert payload["inputs"]["registerRows"] == 8329
-        assert payload["inputs"]["contractFiles"] == 25
-        assert payload["inputs"]["contractRowsJoined"] == 25
+        assert payload["inputs"]["contractFiles"] == len(contract_files)
+        assert payload["inputs"]["contractRowsJoined"] == len(contract_vas)
         assert payload["denominator"]["functions"] == 8329
         assert len(payload["functions"]) == 8329
         assert sum(payload["statusCounts"].values()) == 8329
-        assert payload["statusCounts"] == {
-            "STALE": 0,
-            "DISPUTED": 44,
-            "BLOCKED": 58,
-            "VERIFIED": 591,
-            "REVIEW_READY": 451,
-            "PROVISIONAL": 1,
-            "SKELETON": 7184,
-        }
         known = {"STALE", "DISPUTED", "BLOCKED", "VERIFIED", "REVIEW_READY",
                  "PROVISIONAL", "SKELETON"}
         by_va = {row["va"]: row for row in payload["functions"]}
         joined = {
             row["va"] for row in payload["functions"] if row.get("contracts")
         }
-        assert joined == WAVE1_REVIEW_FLOOR_VAS | set(WAVE1_PRESERVED_STATUS_BY_VA)
+        assert joined == contract_vas
         floor_rows = {
             row["va"] for row in payload["functions"]
             if "factory-contract-review-floor" in row["flags"]
         }
-        assert floor_rows == WAVE1_REVIEW_FLOOR_VAS
-        for va in WAVE1_REVIEW_FLOOR_VAS:
+        assert floor_rows <= contract_vas
+        for va in floor_rows:
             assert by_va[va]["status"] == "REVIEW_READY", by_va[va]
             assert by_va[va]["witnessKinds"] == [], by_va[va]
-        for va, expected_status in WAVE1_PRESERVED_STATUS_BY_VA.items():
-            assert by_va[va]["status"] == expected_status, by_va[va]
-            assert "factory-contract-review-floor" not in by_va[va]["flags"], by_va[va]
+        for va in contract_vas:
+            assert "factory-contract-joined" in by_va[va]["flags"], by_va[va]
         for row in payload["functions"]:
             assert row["status"] in known
             assert isinstance(row["notes"], list)

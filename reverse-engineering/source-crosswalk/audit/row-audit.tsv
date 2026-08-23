@@ -1,0 +1,1165 @@
+source_file	source_function	classification	va	structural_status	evidence_status	authority_status	finding_code	finding_detail
+BattleEngine.cpp	CBattleEngine::Init	SOURCE_EXACT	0x00404dd0	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::~dtor	SOURCE_ANALOG	0x00405f60	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+BattleEngine.cpp	CBattleEngine::Shutdown	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::Activate	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::Deactivate	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::GetMaxLife	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::GetRenderPos	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::GetRenderOrientation	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::CalculatePitch	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::SetCollisionShape	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::MassiveHackPutUsInRightMesh	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::GetAltitudeAboveGround	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::HandleLocks	SOURCE_ANALOG	0x00406560	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+BattleEngine.cpp	CBattleEngine::GetClosestLockableUnit	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::StartLock	SOURCE_ANALOG	0x00406fc0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+BattleEngine.cpp	CBattleEngine::CountLocks	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::FireLock	SOURCE_ANALOG	0x00407060	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::FiredAt	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::LockHit	SOURCE_ANALOG	0x00407140	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::Locked	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::GetCurrentTarget	SOURCE_ANALOG	0x004071b0	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::DisplayLock	SOURCE_ANALOG	0x00407310	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+BattleEngine.cpp	CBattleEngine::LocksFinished	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::Hit	SOURCE_ANALOG	0x00407350	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::Gravity	SOURCE_ANALOG	0x004074d0	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::AddShockShake	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::UpdateRotation	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::IsWalking	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::DeclareInWater	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::Move	SOURCE_ANALOG	0x004081c0	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::HandleSounds	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::IsStandingOnAMoveingObject	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::GetLocalLastFrameMovement	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::ZoomModifier	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::AutoZoomOut	SOURCE_ANALOG	0x00409e80	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::ZoomOut	SOURCE_ANALOG	0x00409e90	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::ZoomIn	SOURCE_ANALOG	0x00409ec0	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::ChargeWeapon	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::FireWeapon	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::ChangeWeapon	SOURCE_ANALOG	0x00409f70	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::LoseWeaponCharge	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::ConfirmedKill	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::Morph	SOURCE_ANALOG	0x0040a580	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::Damage	SOURCE_ANALOG	0x0040a890	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::GetRequiresPolyBucket	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::Rearm	SOURCE_ANALOG	0x0040ac50	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+BattleEngine.cpp	CBattleEngine::CalcUnitOverCrossHair	SOURCE_ANALOG	0x0040acc0	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::GetThingOverCrossHair	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::UpdateAutoAim	SOURCE_ANALOG	0x0040b120	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::HandleAutoAim	SOURCE_ANALOG	0x0040b6d0	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::StartDieProcess	SOURCE_ANALOG	0x0040bfd0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+BattleEngine.cpp	CBattleEngine::HandleIncomingMissle	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::HandleEvent	SOURCE_ANALOG	0x0040c180	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::WeaponFired	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::RecoilWeapon	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::GetCurrentWeapon	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::IsWeaponOverheated	SOURCE_ANALOG	0x0040c3a0	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::GetWeaponAmmoPercentage	SOURCE_ANALOG	0x0040c3c0	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::GetWeaponAmmoCount	SOURCE_ANALOG	0x0040c460	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::IsEnergyWeapon	SOURCE_ANALOG	0x0040c480	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::GetWeaponCharge	SOURCE_ANALOG	0x0040c4a0	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::GetWeaponName	SOURCE_ANALOG	0x0040c550	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::GetWeaponPhysicsName	SOURCE_ANALOG	0x0040c570	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::GetWeaponIconName	SOURCE_ANALOG	0x0040c590	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::GetWeaponReadiness	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::WhereIsCurrentWeaponAttached	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::FullHealth	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::NeedsRearm	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::GetMaxEnergy	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::ConfigurationUp	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::ConfigurationDown	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::UpdateConfiguration	SOURCE_ANALOG	0x0040c650	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+BattleEngine.cpp	CBattleEngine::DeclareOnObject	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::DeclareOnGround	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::GetLaunchPosition	SOURCE_ANALOG	0x0040c990	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+BattleEngine.cpp	CBattleEngine::AccumulateResources	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::HandleCloak	SOURCE_ANALOG	0x0040d4d0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+BattleEngine.cpp	CBattleEngine::Cloak	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::Decloak	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::Render	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CLockInfo::GetLockPercentage	SOURCE_ANALOG	0x0040d5b0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+BattleEngine.cpp	CLockInfo::Fired	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::PlayHudSample	NO_MATCH_FOUND		PASS_AMBIGUOUS_NAME	PASS_SHARED_METHOD	NOT_APPLICABLE	SOURCE_NAME_AMBIGUOUS	SOURCE_NAME_AMBIGUOUS: same file/function label occurs at lines 3161,3180; kept distinct by line
+BattleEngine.cpp	CBattleEngine::PlayHudSample	NO_MATCH_FOUND		PASS_AMBIGUOUS_NAME	PASS_SHARED_METHOD	NOT_APPLICABLE	SOURCE_NAME_AMBIGUOUS	SOURCE_NAME_AMBIGUOUS: same file/function label occurs at lines 3161,3180; kept distinct by line
+BattleEngine.cpp	CBattleEngine::GetInterpolatedEulerOrientation	SOURCE_ANALOG	0x0040d660	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+BattleEngine.cpp	CBattleEngine::GetInterpolatedAutoAimPos	SOURCE_ANALOG	0x0040d7c0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+BattleEngine.cpp	CBattleEngine::GetInterpolatedTrackingPos	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::EnableWeapon	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::DisableWeapon	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::CountActiveWeapons	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::EnableFlightMode	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::DisableFlightMode	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::HostileEnvironment	SOURCE_ANALOG	0x0040dce0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+BattleEngine.cpp	CBattleEngine::TestDanger	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::AugmentWeapon	SOURCE_ANALOG	0x0040de40	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+BattleEngine.cpp	CBattleEngine::UnaugmentWeapon	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::GetRadius	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::COfGHeight	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::Explode	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::CanBeLocked	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::IsFiring	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::ToggleCockpit	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::GetBeamPosition	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::GetThreat	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::GetImportance	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::GetInitialLife	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::AddDamageFlash	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::ProcessDamageFlashes	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::ActivateThrusters	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::DeactivateThrusters	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::HandleEngines	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::FinishedPlayingCurrentAnimation	SOURCE_ANALOG	0x0040eeb0	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::GroundParticleEffect	SOURCE_ANALOG	0x0040ef20	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngine.cpp	CBattleEngine::WeaponOverheated	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineConfigurations.cpp	UBattleEngineConfigurations::Initialise	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineConfigurations.cpp	UBattleEngineConfigurations::ShutDown	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineConfigurations.cpp	UBattleEngineConfigurations::Load	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineConfigurations.cpp	UBattleEngineConfigurations::Skip	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineConfigurations.cpp	UBattleEngineConfigurations::GetConfiguration	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineDataManager.cpp	CBattleEngineData::CBattleEngineData	SOURCE_ANALOG	0x0040f520	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+BattleEngineDataManager.cpp	CBattleEngineData::Initialise	SOURCE_ANALOG	0x0040f590	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+BattleEngineDataManager.cpp	CBattleEngineData::Shutdown	SOURCE_ANALOG	0x0040f890	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+BattleEngineDataManager.cpp	CBattleEngineData::Load	NO_MATCH_FOUND		PASS_AMBIGUOUS_NAME	PASS_SHARED_METHOD	NOT_APPLICABLE	SOURCE_NAME_AMBIGUOUS	SOURCE_NAME_AMBIGUOUS: same file/function label occurs at lines 148,588; kept distinct by line
+BattleEngineDataManager.cpp	CBattleEngineData::AccumulateResources	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineDataManager.cpp	CBattleEngineData::Skip	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineDataManager.cpp	CBattleEngineData::Load	NO_MATCH_FOUND		PASS_AMBIGUOUS_NAME	PASS_SHARED_METHOD	NOT_APPLICABLE	SOURCE_NAME_AMBIGUOUS	SOURCE_NAME_AMBIGUOUS: same file/function label occurs at lines 148,588; kept distinct by line
+BattleEngineDataManager.cpp	CBattleEngineData::Save	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineJetPart.cpp	CBattleEngineJetPart::CBattleEngineJetPart	SOURCE_ANALOG	0x00410210	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngineJetPart.cpp	CBattleEngineJetPart::~dtor	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineJetPart.cpp	CBattleEngineJetPart::Thrust	SOURCE_ANALOG	0x00410310	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngineJetPart.cpp	CBattleEngineJetPart::Turn	SOURCE_ANALOG	0x00410490	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngineJetPart.cpp	CBattleEngineJetPart::Pitch	SOURCE_ANALOG	0x00410670	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngineJetPart.cpp	CBattleEngineJetPart::YawLeft	SOURCE_ANALOG	0x00410740	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngineJetPart.cpp	CBattleEngineJetPart::YawRight	SOURCE_ANALOG	0x004109d0	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngineJetPart.cpp	CBattleEngineJetPart::Move	SOURCE_ANALOG	0x00410c50	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngineJetPart.cpp	CBattleEngineJetPart::Gravity	SOURCE_ANALOG	0x004114d0	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngineJetPart.cpp	CBattleEngineJetPart::HandleSkimming	SOURCE_ANALOG	0x00411500	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngineJetPart.cpp	CBattleEngineJetPart::HandleGroundEffect	SOURCE_ANALOG	0x00411630	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+BattleEngineJetPart.cpp	CBattleEngineJetPart::GetFriction	SOURCE_ANALOG	0x00411aa0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+BattleEngineJetPart.cpp	CBattleEngineJetPart::GetIsDoingSpecialAirMove	SOURCE_ANALOG	0x00411b70	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+BattleEngineJetPart.cpp	CBattleEngineJetPart::FireWeapon	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineJetPart.cpp	CBattleEngineJetPart::ChargeWeapon	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineJetPart.cpp	CBattleEngineJetPart::ChangeWeapon	SOURCE_ANALOG	0x00411e70	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngineJetPart.cpp	CBattleEngineJetPart::GetWeapon	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineJetPart.cpp	CBattleEngineJetPart::CountWeapons	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineJetPart.cpp	CBattleEngineJetPart::LoseWeaponCharge	SOURCE_ANALOG	0x00412000	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+BattleEngineJetPart.cpp	CBattleEngineJetPart::WeaponFired	SOURCE_ANALOG	0x00412050	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngineJetPart.cpp	CBattleEngineJetPart::GetWeaponAmmoPercentage	SOURCE_ANALOG	0x004121b0	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngineJetPart.cpp	CBattleEngineJetPart::GetWeaponAmmoCount	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineJetPart.cpp	CBattleEngineJetPart::IsEnergyWeapon	SOURCE_ANALOG	0x004122b0	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngineJetPart.cpp	CBattleEngineJetPart::IsWeaponOverheated	SOURCE_ANALOG	0x00412310	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngineJetPart.cpp	CBattleEngineJetPart::GetWeaponCharge	SOURCE_ANALOG	0x00412370	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngineJetPart.cpp	CBattleEngineJetPart::GetWeaponReadiness	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineJetPart.cpp	CBattleEngineJetPart::GetWeaponName	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineJetPart.cpp	CBattleEngineJetPart::GetWeaponPhysicsName	SOURCE_ANALOG	0x00412480	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngineJetPart.cpp	CBattleEngineJetPart::GetWeaponIconName	SOURCE_ANALOG	0x00412520	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngineJetPart.cpp	CBattleEngineJetPart::WhereIsCurrentWeaponAttached	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineJetPart.cpp	CBattleEngineJetPart::CanWeaponFire	SOURCE_ANALOG	0x00412570	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngineJetPart.cpp	CBattleEngineJetPart::GetCurrentWeapon	SOURCE_ANALOG	0x00412610	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+BattleEngineJetPart.cpp	CBattleEngineJetPart::ResetConfiguration	SOURCE_ANALOG	0x00412650	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngineJetPart.cpp	CBattleEngineJetPart::AccumulateResources	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineJetPart.cpp	CBattleEngineJetPart::EnableWeapon	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineJetPart.cpp	CBattleEngineJetPart::DisableWeapon	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineJetPart.cpp	CBattleEngineJetPart::AutoLevel	SOURCE_ANALOG	0x00412900	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+BattleEngineJetPart.cpp	CBattleEngineJetPart::IsFiring	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineJetPart.cpp	CBattleEngineJetPart::CountActiveWeapons	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::UpdateWalkCycle	SOURCE_ANALOG	0x00412ad0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::CBattleEngineWalkerPart	SOURCE_ANALOG	0x00412bc0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::~dtor	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::GetCurrentAccleration	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::Forward	SOURCE_ANALOG	0x00412d80	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::Backward	SOURCE_ANALOG	0x00412f70	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::StrafeLeft	SOURCE_ANALOG	0x00413160	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::StrafeRight	SOURCE_ANALOG	0x00413360	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::GetIsDoingSpecialWalkerMove	SOURCE_ANALOG	0x004135d0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::ActivateLandingJets	SOURCE_ANALOG	0x004135e0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::Rotate	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::Pitch	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::Move	SOURCE_ANALOG	0x00413760	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::GoingIntoWater	SOURCE_ANALOG	0x00413a70	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::ShouldSlide	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::Slide	SOURCE_ANALOG	0x00413b90	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::FireWeapon	SOURCE_ANALOG	0x00413cc0	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::ChargeWeapon	SOURCE_ANALOG	0x00413cf0	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::ChangeWeapon	SOURCE_ANALOG	0x00413eb0	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::LoseWeaponCharge	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::GetCurrentWeapon	SOURCE_ANALOG	0x00414030	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::GetWeapon	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::CountWeapons	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::WeaponFired	SOURCE_ANALOG	0x004140d0	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::GetWeaponAmmoPercentage	SOURCE_ANALOG	0x00414410	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::GetWeaponAmmoCount	SOURCE_ANALOG	0x00414470	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::IsEnergyWeapon	SOURCE_ANALOG	0x004144c0	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::IsWeaponOverheated	SOURCE_ANALOG	0x004144f0	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::GetWeaponCharge	SOURCE_ANALOG	0x00414520	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::GetWeaponReadiness	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::GetWeaponName	SOURCE_ANALOG	0x004145a0	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::GetWeaponPhysicsName	SOURCE_ANALOG	0x004145d0	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::GetWeaponIconName	SOURCE_ANALOG	0x00414610	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::WhereIsCurrentWeaponAttached	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::CanWeaponFire	SOURCE_ANALOG	0x00414630	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::ResetConfiguration	SOURCE_ANALOG	0x004146b0	PASS	PASS	PASS	OK	No row-level finding.
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::AccumulateResources	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::EnableWeapon	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::DisableWeapon	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::IsFiring	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineWalkerPart.cpp	CBattleEngineWalkerPart::CountActiveWeapons	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+CLIParams.cpp	CCLIParams::CCLIParams	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+CLIParams.cpp	CCLIParams::GetParams	NO_MATCH_FOUND		PASS_AMBIGUOUS_NAME	PASS_SHARED_METHOD	NOT_APPLICABLE	SOURCE_NAME_AMBIGUOUS	SOURCE_NAME_AMBIGUOUS: same file/function label occurs at lines 85,390; kept distinct by line
+CLIParams.cpp	CCLIParams::GetParams	NO_MATCH_FOUND		PASS_AMBIGUOUS_NAME	PASS_SHARED_METHOD	NOT_APPLICABLE	SOURCE_NAME_AMBIGUOUS	SOURCE_NAME_AMBIGUOUS: same file/function label occurs at lines 85,390; kept distinct by line
+Camera.cpp	CCamera::GetYaw	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Camera.cpp	CThingCamera::GetPos	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Camera.cpp	CThingCamera::GetOrientation	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Camera.cpp	CThingCamera::GetOldPos	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Camera.cpp	CThingCamera::GetOldOrientation	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Camera.cpp	CThingCamera::GetZoom	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Camera.cpp	CThingCamera::GetOldZoom	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Camera.cpp	CThingCamera::GetShowHUD	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Camera.cpp	CThing3rdPersonCamera::CThing3rdPersonCamera	SOURCE_ANALOG	0x00418ef0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+Camera.cpp	CThing3rdPersonCamera::~dtor	SOURCE_ANALOG	0x00419140	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+Camera.cpp	CThing3rdPersonCamera::GetPos	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Camera.cpp	CThing3rdPersonCamera::GetOldPos	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Camera.cpp	CThing3rdPersonCamera::GetOrientation	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Camera.cpp	CThing3rdPersonCamera::GetOldOrientation	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Camera.cpp	CThing3rdPersonCamera::GetZoom	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Camera.cpp	CThing3rdPersonCamera::GetOldZoom	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Camera.cpp	CThing3rdPersonCamera::GetShowHUD	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Camera.cpp	mLength	NO_MATCH_FOUND		FAIL	PASS_SHARED_METHOD	NOT_APPLICABLE	CROSSWALK_EXTRA_ROW	CROSSWALK_EXTRA_ROW: no matching AST function definition at Camera.cpp:348
+Camera.cpp	CPanCamera::~dtor	SOURCE_ANALOG	0x00419a60	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+Camera.cpp	CPanCamera::Update	SOURCE_ANALOG	0x00419b00	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+Camera.cpp	CPanCamera::GetPos	SOURCE_ANALOG	0x00419d40	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+Camera.cpp	CPanCamera::GetOrientation	SOURCE_ANALOG	0x00419d70	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+Camera.cpp	CPanCamera::GetOldPos	SOURCE_ANALOG	0x00419d90	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+Camera.cpp	CPanCamera::GetOldOrientation	SOURCE_ANALOG	0x00419dc0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+Camera.cpp	CPanCamera::HandleEvent	SOURCE_ANALOG	0x00419de0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+Camera.cpp	CViewPointCamera::CViewPointCamera	SOURCE_ANALOG	0x00419e00	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+Camera.cpp	CViewPointCamera::GetPos	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Camera.cpp	CViewPointCamera::GetOrientation	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Camera.cpp	CViewPointCamera::GetOldOrientation	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Camera.cpp	CViewPointCamera::GetOldPos	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Camera.cpp	CViewPointCamera::GetZoom	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Camera.cpp	CViewPointCamera::GetShowHUD	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Camera.cpp	CMovieCamera::CMovieCamera	SOURCE_ANALOG	0x0041a210	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+Camera.cpp	CMovieCamera::GetPos	SOURCE_ANALOG	0x0041a3f0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+Camera.cpp	CMovieCamera::GetOrientation	SOURCE_ANALOG	0x0041a530	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+Camera.cpp	CMovieCamera::GetZoom	SOURCE_ANALOG	0x0041a630	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+Camera.cpp	CMovieCamera::GetOldZoom	SOURCE_ANALOG	0x0041a6e0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+Camera.cpp	CMovieCamera::GetShowHUD	SOURCE_ANALOG	0x0041a200	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+Camera.cpp	CMovieCamera::GetCameraNumber	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Camera.cpp	CMovieCamera::GetOldOrientation	SOURCE_ANALOG	0x0041a6f0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+Camera.cpp	CMovieCamera::GetOldPos	SOURCE_ANALOG	0x0041a710	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+Camera.cpp	mPos	NO_MATCH_FOUND		FAIL	PASS_SHARED_METHOD	NOT_APPLICABLE	CROSSWALK_EXTRA_ROW	CROSSWALK_EXTRA_ROW: no matching AST function definition at Camera.cpp:719
+Camera.cpp	CControllableCamera::PrepareForInterpolation	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Camera.cpp	CControllableCamera::ReceiveButtonAction	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Camera.cpp	CInterpolatedCamera::CInterpolatedCamera	SOURCE_ANALOG	0x0041ad30	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+Camera.cpp	CInterpolatedCamera::Mirror	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Camera.cpp	CCamera::GetAspectRatio	SOURCE_ANALOG	0x0041b070	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+Career.cpp	CCareerNode::CCareerNode	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Career.cpp	CCareerNode::Blank	SOURCE_EXACT	0x0041b740	PASS	PASS	PASS	OK	No row-level finding.
+Career.cpp	CCareerNode::DoesBaseThingExist	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Career.cpp	CCareerNode::SetBaseThingExistTo	SOURCE_EXACT	0x0041b770	PASS	PASS	PASS	OK	No row-level finding.
+Career.cpp	CCareerNodeLink::GetToNode	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Career.cpp	CCareer::CCareer	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Career.cpp	CCareer::GetLevelStructure	SOURCE_EXACT	0x0041b7b0	PASS	PASS	PASS	OK	No row-level finding.
+Career.cpp	CCareer::Blank	SOURCE_EXACT	0x0041b7c0	PASS	PASS	PASS	OK	No row-level finding.
+Career.cpp	CCareer::GetNodeFromWorldNo	SOURCE_ANALOG	0x0041b8f0	PASS	FAIL	PASS	ANALOG_REASON_EVIDENCE_WEAK	ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+Career.cpp	CCareerNode::GetChildNodes	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Career.cpp	CCareerNode::GetChildLinks	SOURCE_EXACT	0x0041b940	PASS	PASS	PASS	OK	No row-level finding.
+Career.cpp	CCareerNode::GetParentLinks	SOURCE_EXACT	0x0041b9f0	PASS	PASS	PASS	OK	No row-level finding.
+Career.cpp	CCareer::DoesBaseThingExist	SOURCE_EXACT	0x0041bb20	PASS	PASS	PASS	OK	No row-level finding.
+Career.cpp	CCareer::IsWorldLater	SOURCE_EXACT	0x0041bbb0	PASS	PASS	PASS	OK	No row-level finding.
+Career.cpp	CCareer::Later	SOURCE_EXACT	0x0041bc60	PASS	PASS	PASS	OK	No row-level finding.
+Career.cpp	CCareer::Update	SOURCE_EXACT	0x0041bd00	PASS	PASS	DISAGREEMENT	CROSSWALK_VA_COLLISION	CROSSWALK_VA_COLLISION: VA 0x0041bd00 is shared by 2 rows: Career.cpp:379:CCareer::Update, Career.cpp:519:CCareer::UpdateBaseWorldExistsStuffForNode
+Career.cpp	CCareer::ReCalcLinks	SOURCE_EXACT	0x0041bdf0	PASS	PASS	PASS	OK	No row-level finding.
+Career.cpp	CCareer::UpdateBaseWorldExistsStuffForNode	SOURCE_ANALOG	0x0041bd00	PASS	FAIL	DISAGREEMENT	ANALOG_REASON_EVIDENCE_WEAK;CROSSWALK_VA_COLLISION	CROSSWALK_VA_COLLISION: VA 0x0041bd00 is shared by 2 rows: Career.cpp:379:CCareer::Update, Career.cpp:519:CCareer::UpdateBaseWorldExistsStuffForNode | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+Career.cpp	CCareer::GetNumKilled	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Career.cpp	CCareer::UpdateThingsKilled	SOURCE_EXACT	0x0041c180	PASS	PASS	PASS	OK	No row-level finding.
+Career.cpp	TOTAL_A_GRADES	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Career.cpp	TOTAL_C_GRADES	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Career.cpp	TOTAL_S_GRADES	SOURCE_EXACT	0x0041c240	PASS	PASS	PASS	OK	No row-level finding.
+Career.cpp	GRADE	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Career.cpp	GRADE_OR_EVO	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Career.cpp	CCareer::CountGoodies	SOURCE_EXACT	0x0041c450	PASS	PASS	PASS	OK	No row-level finding.
+Career.cpp	CCareer::UpdateGoodieStates	SOURCE_EXACT	0x0041c470	PASS	PASS	PASS	OK	No row-level finding.
+Career.cpp	CCareer::Load	SOURCE_ANALOG	0x00421200	PASS_AMBIGUOUS_NAME	PASS	DISAGREEMENT	CROSSWALK_VA_COLLISION;SOURCE_NAME_AMBIGUOUS	SOURCE_NAME_AMBIGUOUS: same file/function label occurs at lines 1040,1095; kept distinct by line | CROSSWALK_VA_COLLISION: VA 0x00421200 is shared by 2 rows: Career.cpp:1040:CCareer::Load, Career.cpp:1095:CCareer::Load
+Career.cpp	CCareer::Save	SOURCE_ANALOG	0x00421350	PASS_AMBIGUOUS_NAME	PASS	DISAGREEMENT	CROSSWALK_VA_COLLISION;SOURCE_NAME_AMBIGUOUS	SOURCE_NAME_AMBIGUOUS: same file/function label occurs at lines 1068,1128; kept distinct by line | CROSSWALK_VA_COLLISION: VA 0x00421350 is shared by 2 rows: Career.cpp:1068:CCareer::Save, Career.cpp:1128:CCareer::Save
+Career.cpp	current_version_stamp	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Career.cpp	CCareer::Load	SOURCE_ANALOG	0x00421200	PASS_AMBIGUOUS_NAME	PASS	DISAGREEMENT	CROSSWALK_VA_COLLISION;SOURCE_NAME_AMBIGUOUS	SOURCE_NAME_AMBIGUOUS: same file/function label occurs at lines 1040,1095; kept distinct by line | CROSSWALK_VA_COLLISION: VA 0x00421200 is shared by 2 rows: Career.cpp:1040:CCareer::Load, Career.cpp:1095:CCareer::Load
+Career.cpp	CCareer::Save	SOURCE_ANALOG	0x00421350	PASS_AMBIGUOUS_NAME	PASS	DISAGREEMENT	CROSSWALK_VA_COLLISION;SOURCE_NAME_AMBIGUOUS	SOURCE_NAME_AMBIGUOUS: same file/function label occurs at lines 1068,1128; kept distinct by line | CROSSWALK_VA_COLLISION: VA 0x00421350 is shared by 2 rows: Career.cpp:1068:CCareer::Save, Career.cpp:1128:CCareer::Save
+Career.cpp	CCareer::SizeOfSaveGame	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Career.cpp	CCareer::GetGradeFromRanking	SOURCE_EXACT	0x00421470	PASS	FAIL	PASS	EVIDENCE_TARGET_UNRESOLVED	EVIDENCE_TARGET_UNRESOLVED: no VA/source-anchor row in reverse-engineering/binary-analysis/career-save-format-semantics-2026-08-11.tsv
+Career.cpp	CCareer::Log	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Career.cpp	CCareer::PrintNodesStatus	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Career.cpp	CCareer::GetSlot	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Career.cpp	CCareer::SetSlot	SOURCE_EXACT	0x004214e0	PASS	PASS	PASS	OK	No row-level finding.
+Career.cpp	CCareer::GetAndResetGoodieNewCount	SOURCE_EXACT	0x00421550	PASS	PASS	PASS	OK	No row-level finding.
+Career.cpp	CCareer::GetAndResetFirstGoodie	SOURCE_EXACT	0x00421560	PASS	PASS	PASS	OK	No row-level finding.
+Career.cpp	CCareer::IsEpisodeAvailable	SOURCE_EXACT	0x00421570	PASS	PASS	PASS	OK	No row-level finding.
+Controller.cpp	CController::CController	SOURCE_ANALOG	0x005145f0	PASS	PASS	PASS	OK	No row-level finding.
+Controller.cpp	CController::ResetInactivityTimer	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Controller.cpp	CController::SetNonInteractiveSection	SOURCE_EXACT	0x0042d7d0	PASS	PASS	PASS	OK	No row-level finding.
+Controller.cpp	CController::InactivityMeansQuitGame	SOURCE_EXACT	0x0042d810	PASS	PASS	PASS	OK	No row-level finding.
+Controller.cpp	CController::StartRecording	SOURCE_ANALOG	0x0042d8a0	PASS	PASS	PASS	OK	No row-level finding.
+Controller.cpp	CController::StartPlayback	SOURCE_EXACT	0x0042d8c0	PASS	PASS	PASS	OK	No row-level finding.
+Controller.cpp	CController::~dtor	SOURCE_EXACT	0x0042d8e0	PASS	PASS	PASS	OK	No row-level finding.
+Controller.cpp	CController::Flush	SOURCE_EXACT	0x0042d9d0	PASS	PASS	PASS	OK	No row-level finding.
+Controller.cpp	CController::CalcNumMappings	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Controller.cpp	CController::RepeatOccured	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Controller.cpp	CController::DoMappings	SOURCE_ANALOG	0x0042db40	PASS	PASS	PASS	OK	No row-level finding.
+Controller.cpp	CController::GetAnalogueValueForButton	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Controller.cpp	CController::GetToControl	SOURCE_EXACT	0x0042e4b0	PASS	PASS	PASS	OK	No row-level finding.
+Controller.cpp	CController::SendButtonAction	SOURCE_EXACT	0x0042e4d0	PASS	PASS	PASS	OK	No row-level finding.
+Controller.cpp	CController::SetToControl	SOURCE_EXACT	0x0042e610	PASS	PASS	PASS	OK	No row-level finding.
+Controller.cpp	CController::SetReverseLookYAxis	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Controller.cpp	CController::RelinquishControl	SOURCE_EXACT	0x0042e6e0	PASS	PASS	PASS	OK	No row-level finding.
+Controller.cpp	CController::SetVibration	SOURCE_EXACT	0x0042e750	PASS	PASS	PASS	OK	No row-level finding.
+DXEngine.cpp	CDXEngine::CDXEngine	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+DXEngine.cpp	CDXEngine::~dtor	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+DXEngine.cpp	CDXEngine::ShutDown	NO_MATCH_FOUND		PASS	FAIL	NOT_APPLICABLE	NO_MATCH_NAME_TABLE_HIT	NO_MATCH_NAME_TABLE_HIT: normalized current name-table hit(s): 0x0053d3e0:CDXEngine__Shutdown
+DXEngine.cpp	con_setgammabias	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+DXEngine.cpp	CDXEngine::SetGammaBias	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+DXEngine.cpp	CDXEngine::Init	SOURCE_ANALOG	0x0053d5f0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+DXEngine.cpp	CDXEngine::InitResources	SOURCE_ANALOG	0x0053d6d0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+DXEngine.cpp	CDXEngine::DrawDebugCuboid	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+DXEngine.cpp	CDXEngine::DrawDebugLine	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+DXEngine.cpp	CDXEngine::RenderArrow	SOURCE_ANALOG	0x0053e2e0	PASS	FAIL	DISAGREEMENT	ANALOG_REASON_EVIDENCE_WEAK;CROSSWALK_VA_COLLISION	CROSSWALK_VA_COLLISION: VA 0x0053e2e0 is shared by 2 rows: DXEngine.cpp:313:CDXEngine::RenderArrow, DXEngine.cpp:637:CDXEngine::Render | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+DXEngine.cpp	CDXEngine::PreRender	SOURCE_ANALOG	0x0053e220	PASS	PASS	PASS	OK	No row-level finding.
+DXEngine.cpp	draw_sun_test_sprite	NOT_IN_RETAIL		PASS	PASS	NOT_APPLICABLE	OK	No row-level finding.
+DXEngine.cpp	CDXEngine::ShutdownRestartLoop	SOURCE_ANALOG	0x0053d3e0	PASS	FAIL	PASS	ANALOG_REASON_EVIDENCE_WEAK	ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+DXEngine.cpp	draw_fairly_late_stuff	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+DXEngine.cpp	CDXEngine::Render	SOURCE_EXACT	0x0053e2e0	PASS	PASS	DISAGREEMENT	CROSSWALK_VA_COLLISION	CROSSWALK_VA_COLLISION: VA 0x0053e2e0 is shared by 2 rows: DXEngine.cpp:313:CDXEngine::RenderArrow, DXEngine.cpp:637:CDXEngine::Render
+DXEngine.cpp	where_hit	NOT_IN_RETAIL		PASS	PASS	NOT_APPLICABLE	OK	No row-level finding.
+DXEngine.cpp	copy_back_to_front	NOT_IN_RETAIL		PASS	PASS	NOT_APPLICABLE	OK	No row-level finding.
+DXEngine.cpp	CDXEngine::PostRender	SOURCE_EXACT	0x0053ecc0	PASS	PASS	PASS	OK	No row-level finding.
+DXEngine.cpp	CDXEngine::SetBlurAlpha	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+DXEngine.cpp	CDXEngine::GetDetailLevel	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+DXEngine.cpp	CDXEngine::ReallySetDefaultMaterial	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+DXEngine.cpp	CDXEngine::SetModulate2X	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+DXEngine.cpp	CDXEngine::AccumulateResources	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+DXFrontend.cpp	CDXFrontEnd::RenderParticles	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+DXFrontend.cpp	CDXFrontEnd::RenderStaticScreen	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+DXFrontend.cpp	CDXFrontEnd::RenderStart	SOURCE_ANALOG	0x00540f70	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+DXFrontend.cpp	CDXFrontEnd::RenderEnd	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+DXGame.cpp	CDXGame::DumpTimeRecords	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+DXGame.cpp	CDXGame::AddTimeStatus	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+DXMemBuffer.cpp	CDXMemBuffer::SetNextReadBufferSize	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+DXMemBuffer.cpp	CDXMemBuffer::CDXMemBuffer	SOURCE_EXACT	0x00547d70	PASS	PASS	PASS	OK	No row-level finding.
+DXMemBuffer.cpp	CDXMemBuffer::~dtor	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+DXMemBuffer.cpp	CDXMemBuffer::InitFromMem	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+DXMemBuffer.cpp	data_bad	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+DXMemBuffer.cpp	CDXMemBuffer::InitFromFile	SOURCE_EXACT	0x00547ec0	PASS	PASS	PASS	OK	No row-level finding.
+DXMemBuffer.cpp	CDXMemBuffer::ConvertFromWritingToReading	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+DXMemBuffer.cpp	eval_crc	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+DXMemBuffer.cpp	how_bad_is_that	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+DXMemBuffer.cpp	CDXMemBuffer::LoadNextBlock	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+DXMemBuffer.cpp	CDXMemBuffer::GetFileSize	SOURCE_EXACT	0x005482c0	PASS	PASS	PASS	OK	No row-level finding.
+DXMemBuffer.cpp	CDXMemBuffer::Skip	SOURCE_EXACT	0x005482d0	PASS	PASS	PASS	OK	No row-level finding.
+DXMemBuffer.cpp	CDXMemBuffer::Read	SOURCE_EXACT	0x00548570	PASS	PASS	DISAGREEMENT	CROSSWALK_VA_COLLISION	CROSSWALK_VA_COLLISION: VA 0x00548570 is shared by 2 rows: DXMemBuffer.cpp:394:CDXMemBuffer::Read, DXMemBuffer.cpp:467:CDXMemBuffer::ReadString
+DXMemBuffer.cpp	CDXMemBuffer::ReadString	SOURCE_ANALOG	0x00548570	PASS	FAIL	DISAGREEMENT	ANALOG_REASON_EVIDENCE_WEAK;CROSSWALK_VA_COLLISION	CROSSWALK_VA_COLLISION: VA 0x00548570 is shared by 2 rows: DXMemBuffer.cpp:394:CDXMemBuffer::Read, DXMemBuffer.cpp:467:CDXMemBuffer::ReadString | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+DXMemBuffer.cpp	write_crc_data	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+DXMemBuffer.cpp	CDXMemBuffer::Write	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+DXMemBuffer.cpp	CDXMemBuffer::Close	SOURCE_EXACT	0x00548c00	PASS	PASS	PASS	OK	No row-level finding.
+DXMemBuffer.cpp	CDXMemBuffer::DeclareInvalidData	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+DXMemBuffer.cpp	CDXMemBuffer::EndOfFile	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+DXMemoryManager.cpp	CDXMemoryManager::CDXMemoryManager	SOURCE_EXACT	0x00548d70	PASS	PASS	PASS	OK	No row-level finding.
+DXMemoryManager.cpp	CDXMemoryManager::~dtor	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+DXMemoryManager.cpp	CDXMemoryManager::Shutdown	SOURCE_ANALOG	0x005490c0	PASS	PASS	PASS	OK	No row-level finding.
+DXMemoryManager.cpp	CDXMemoryManager::Alloc	SOURCE_EXACT	0x005490e0	PASS	PASS	PASS	OK	No row-level finding.
+DXMemoryManager.cpp	CDXMemoryManager::ReAlloc	SOURCE_EXACT	0x005491b0	PASS	PASS	PASS	OK	No row-level finding.
+DXMemoryManager.cpp	CDXMemoryManager::DoesExist	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+DXMemoryManager.cpp	CDXMemoryManager::Free	SOURCE_EXACT	0x00549220	PASS	PASS	DISAGREEMENT	CROSSWALK_VA_COLLISION	CROSSWALK_VA_COLLISION: VA 0x00549220 is shared by 2 rows: DXMemoryManager.cpp:247:CDXMemoryManager::Free, DXMemoryManager.cpp:291:CDXMemoryManager::FreeAll
+DXMemoryManager.cpp	CDXMemoryManager::Cleanup	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+DXMemoryManager.cpp	CDXMemoryManager::FreeAll	SOURCE_ANALOG	0x00549220	PASS	FAIL	DISAGREEMENT	ANALOG_REASON_EVIDENCE_WEAK;CROSSWALK_VA_COLLISION	CROSSWALK_VA_COLLISION: VA 0x00549220 is shared by 2 rows: DXMemoryManager.cpp:247:CDXMemoryManager::Free, DXMemoryManager.cpp:291:CDXMemoryManager::FreeAll | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+DXMemoryManager.cpp	CDXMemoryManager::Validate	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+DXMemoryManager.cpp	CDXMemoryManager::OutputMap	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+DXMemoryManager.cpp	CDXMemoryManager::PrintStats	SOURCE_ANALOG	0x00549290	PASS	PASS	PASS	OK	No row-level finding.
+DXMemoryManager.cpp	CDXMemoryManager::OutputStats	SOURCE_EXACT	0x005492b0	PASS	PASS	PASS	OK	No row-level finding.
+DXMemoryManager.cpp	CDXMemoryManager::OutputBlocks	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+DXMemoryManager.cpp	CDXMemoryManager::CalcAndShowDeltas	SOURCE_ANALOG	0x005492d0	PASS	PASS	PASS	OK	No row-level finding.
+DXMemoryManager.cpp	CDXMemoryManager::GetVBDataUsedSize	NOT_IN_RETAIL		PASS	PASS	NOT_APPLICABLE	OK	No row-level finding.
+DXMemoryManager.cpp	CDXMemoryManager::LogDebugStats	SOURCE_ANALOG	0x00549310	PASS	PASS	PASS	OK	No row-level finding.
+EditorD3DApp.cpp	CEditorD3DApp::CEditorD3DApp	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+EditorD3DApp.cpp	WndProc	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+EditorD3DApp.cpp	CEditorD3DApp::Create	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+EditorD3DApp.cpp	SortModesCallback	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+EditorD3DApp.cpp	CEditorD3DApp::BuildDeviceList	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+EditorD3DApp.cpp	CEditorD3DApp::FindDepthStencilFormat	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+EditorD3DApp.cpp	CEditorD3DApp::MsgProc	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+EditorD3DApp.cpp	CEditorD3DApp::Initialize3DEnvironment	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+EditorD3DApp.cpp	CEditorD3DApp::Resize3DEnvironment	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+EditorD3DApp.cpp	CEditorD3DApp::ToggleFullscreen	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+EditorD3DApp.cpp	CEditorD3DApp::ForceWindowed	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+EditorD3DApp.cpp	CEditorD3DApp::AdjustWindowForChange	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+EditorD3DApp.cpp	CEditorD3DApp::UserSelectNewDevice	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+EditorD3DApp.cpp	CEditorD3DApp::SelectDeviceProc	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+EditorD3DApp.cpp	CEditorD3DApp::Pause	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+EditorD3DApp.cpp	CEditorD3DApp::Cleanup3DEnvironment	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+EditorD3DApp.cpp	CEditorD3DApp::DisplayErrorMsg	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+EndLevelData.cpp	CEndLevelData::CEndLevelData	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+EndLevelData.cpp	CEndLevelData::IsAllSecondaryObjectivesComplete	SOURCE_ANALOG	0x004496e0	PASS	PASS	PASS	OK	No row-level finding.
+FEPGoodies.cpp	COUNT_TOTAL_A_GRADES	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+FEPGoodies.cpp	COUNT_TOTAL_S_GRADES	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+FEPGoodies.cpp	CGoodieData::GetMethod	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+FEPGoodies.cpp	get_goodie_number	SOURCE_ANALOG	0x0045cb80	PASS	PASS	PASS	OK	No row-level finding.
+FEPGoodies.cpp	get_goodie_state	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+FEPGoodies.cpp	set_goodie_state	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+FEPGoodies.cpp	CFEPGoodies::ResetGoodyState	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+FEPGoodies.cpp	CFEPGoodies::Init	SOURCE_ANALOG	0x0045c7a0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+FEPGoodies.cpp	get_goodie_texture_hack	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+FEPGoodies.cpp	get_goodie_mesh_hack	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+FEPGoodies.cpp	get_goodie_background_hack	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+FEPGoodies.cpp	get_goodie_type_hack	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+FEPGoodies.cpp	get_goodie_text_type_hack	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+FEPGoodies.cpp	get_goodie_num_texts	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+FEPGoodies.cpp	get_goodie_title	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+FEPGoodies.cpp	get_goodie_text	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+FEPGoodies.cpp	get_goodie_fmv	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+FEPGoodies.cpp	get_goodie_fmv_localised	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+FEPGoodies.cpp	get_goodie_level	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+FEPGoodies.cpp	CFEPGoodies::Serialise	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+FEPGoodies.cpp	CFEPGoodies::Deserialise	SOURCE_ANALOG	0x0045c870	PASS	PASS	PASS	OK	No row-level finding.
+FEPGoodies.cpp	CFEPGoodies::Shutdown	SOURCE_ANALOG	0x0045c9e0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+FEPGoodies.cpp	CFEPGoodies::StartLoadingGoody	SOURCE_ANALOG	0x0045c9f0	PASS	PASS	PASS	OK	No row-level finding.
+FEPGoodies.cpp	CFEPGoodies::LoadingGoodyPoll	SOURCE_ANALOG	0x0045cc10	PASS	PASS	PASS	OK	No row-level finding.
+FEPGoodies.cpp	CFEPGoodies::FreeUpGoodyResources	SOURCE_ANALOG	0x0045cd10	PASS	PASS	PASS	OK	No row-level finding.
+FEPGoodies.cpp	CFEPGoodies::ButtonPressed	SOURCE_ANALOG	0x0045cde0	PASS	PASS	PASS	OK	No row-level finding.
+FEPGoodies.cpp	CFEPGoodies::Process	SOURCE_ANALOG	0x0045d7e0	PASS	PASS	PASS	OK	No row-level finding.
+FEPGoodies.cpp	CFEPGoodies::RenderPreCommon	SOURCE_ANALOG	0x0045e0d0	PASS	FAIL	DISAGREEMENT	ANALOG_REASON_EVIDENCE_WEAK;CROSSWALK_VA_COLLISION	CROSSWALK_VA_COLLISION: VA 0x0045e0d0 is shared by 2 rows: FEPGoodies.cpp:1718:CFEPGoodies::RenderPreCommon, FEPGoodies.cpp:1825:CFEPGoodies::Render | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+FEPGoodies.cpp	CFEPGoodies::GoodieX	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+FEPGoodies.cpp	CFEPGoodies::GoodieY	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+FEPGoodies.cpp	CFEPGoodies::BuildAllResources	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+FEPGoodies.cpp	goodies_prepare_projection	NO_MATCH_FOUND		PASS_AMBIGUOUS_NAME	PASS_SHARED_METHOD	NOT_APPLICABLE	SOURCE_NAME_AMBIGUOUS	SOURCE_NAME_AMBIGUOUS: same file/function label occurs at lines 1790,1808; kept distinct by line
+FEPGoodies.cpp	goodies_restore_projection	NO_MATCH_FOUND		PASS_AMBIGUOUS_NAME	PASS_SHARED_METHOD	NOT_APPLICABLE	SOURCE_NAME_AMBIGUOUS	SOURCE_NAME_AMBIGUOUS: same file/function label occurs at lines 1800,1818; kept distinct by line
+FEPGoodies.cpp	goodies_prepare_projection	NO_MATCH_FOUND		PASS_AMBIGUOUS_NAME	PASS_SHARED_METHOD	NOT_APPLICABLE	SOURCE_NAME_AMBIGUOUS	SOURCE_NAME_AMBIGUOUS: same file/function label occurs at lines 1790,1808; kept distinct by line
+FEPGoodies.cpp	goodies_restore_projection	NO_MATCH_FOUND		PASS_AMBIGUOUS_NAME	PASS_SHARED_METHOD	NOT_APPLICABLE	SOURCE_NAME_AMBIGUOUS	SOURCE_NAME_AMBIGUOUS: same file/function label occurs at lines 1800,1818; kept distinct by line
+FEPGoodies.cpp	CFEPGoodies::Render	SOURCE_ANALOG	0x0045e0d0	PASS	FAIL	DISAGREEMENT	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK;CROSSWALK_VA_COLLISION	CROSSWALK_VA_COLLISION: VA 0x0045e0d0 is shared by 2 rows: FEPGoodies.cpp:1718:CFEPGoodies::RenderPreCommon, FEPGoodies.cpp:1825:CFEPGoodies::Render | ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+FEPGoodies.cpp	CFEPGoodies::TransitionNotification	SOURCE_ANALOG	0x0045ffa0	PASS	FAIL	DISAGREEMENT	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK;AUTHORITY_SIZE_RANGE_DISAGREEMENT	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy | AUTHORITY_SIZE_RANGE_DISAGREEMENT: bodyMax name-table=0x00460041 closure=0x0046001c; closure bodyBytes=125; grade=C1_CANDIDATE_PARTIAL
+FEPGoodies.cpp	CFEPGoodies::EvaluateDest	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+FEPLoadGame.cpp	CFEPLoadGame::Init	SOURCE_ANALOG	0x00461c40	PASS	PASS	PASS	OK	No row-level finding.
+FEPLoadGame.cpp	CFEPLoadGame::Shutdown	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+FEPLoadGame.cpp	CFEPLoadGame::ButtonPressed	SOURCE_ANALOG	0x00461c60	PASS	PASS	PASS	OK	No row-level finding.
+FEPLoadGame.cpp	CFEPLoadGame::Process	SOURCE_ANALOG	0x00461d60	PASS	PASS	PASS	OK	No row-level finding.
+FEPLoadGame.cpp	CFEPLoadGame::RenderPreCommon	SOURCE_ANALOG	0x00461d90	PASS	FAIL	DISAGREEMENT	ANALOG_REASON_EVIDENCE_WEAK;CROSSWALK_VA_COLLISION	CROSSWALK_VA_COLLISION: VA 0x00461d90 is shared by 2 rows: FEPLoadGame.cpp:88:CFEPLoadGame::RenderPreCommon, FEPLoadGame.cpp:93:CFEPLoadGame::Render | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+FEPLoadGame.cpp	CFEPLoadGame::Render	SOURCE_ANALOG	0x00461d90	PASS	PASS	DISAGREEMENT	CROSSWALK_VA_COLLISION	CROSSWALK_VA_COLLISION: VA 0x00461d90 is shared by 2 rows: FEPLoadGame.cpp:88:CFEPLoadGame::RenderPreCommon, FEPLoadGame.cpp:93:CFEPLoadGame::Render
+FEPLoadGame.cpp	CFEPLoadGame::TransitionNotification	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+FEPLoadGame.cpp	CFEPLoadGame::StartLoad	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+FEPSaveGame.cpp	CFEPSaveGame::Init	SOURCE_ANALOG	0x00464620	PASS	PASS	PASS	OK	No row-level finding.
+FEPSaveGame.cpp	CFEPSaveGame::Shutdown	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+FEPSaveGame.cpp	CFEPSaveGame::ButtonPressed	SOURCE_ANALOG	0x00464630	PASS	PASS	PASS	OK	No row-level finding.
+FEPSaveGame.cpp	CFEPSaveGame::Process	SOURCE_ANALOG	0x00464730	PASS	PASS	PASS	OK	No row-level finding.
+FEPSaveGame.cpp	CFEPSaveGame::RenderPreCommon	SOURCE_ANALOG	0x00464a80	PASS	FAIL	DISAGREEMENT	ANALOG_REASON_EVIDENCE_WEAK;CROSSWALK_VA_COLLISION	CROSSWALK_VA_COLLISION: VA 0x00464a80 is shared by 2 rows: FEPSaveGame.cpp:171:CFEPSaveGame::RenderPreCommon, FEPSaveGame.cpp:176:CFEPSaveGame::Render | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+FEPSaveGame.cpp	CFEPSaveGame::Render	SOURCE_ANALOG	0x00464a80	PASS	PASS	DISAGREEMENT	CROSSWALK_VA_COLLISION	CROSSWALK_VA_COLLISION: VA 0x00464a80 is shared by 2 rows: FEPSaveGame.cpp:171:CFEPSaveGame::RenderPreCommon, FEPSaveGame.cpp:176:CFEPSaveGame::Render
+FEPSaveGame.cpp	CFEPSaveGame::TransitionNotification	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+FEPSaveGame.cpp	CFEPSaveGame::RemovedMUWhinge	SOURCE_ANALOG	0x00464b30	PASS	PASS	PASS	OK	No row-level finding.
+FEPSaveGame.cpp	ask_if_you_want_to_overwrite	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+FEPSaveGame.cpp	CFEPSaveGame::AskIfYouWantToDelete	SOURCE_ANALOG	0x00464bc0	PASS	PASS	PASS	OK	No row-level finding.
+FEPSaveGame.cpp	CFEPSaveGame::CreateSave	SOURCE_ANALOG	0x00464c50	PASS	PASS	PASS	OK	No row-level finding.
+FEPSaveGame.cpp	CFEPSaveGame::IsCheatActive	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+FrontEnd.cpp	mAllLevelsCheatActive	NO_MATCH_FOUND		FAIL	PASS_SHARED_METHOD	NOT_APPLICABLE	CROSSWALK_EXTRA_ROW	CROSSWALK_EXTRA_ROW: no matching AST function definition at FrontEnd.cpp:37
+FrontEnd.cpp	CFrontEnd::Init	SOURCE_ANALOG	0x004662a0	PASS	PASS	PASS	OK	No row-level finding.
+FrontEnd.cpp	CFrontEnd::SerialiseState	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+FrontEnd.cpp	CFrontEnd::Shutdown	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+FrontEnd.cpp	CFrontEnd::GetPlayer0ControllerPort	SOURCE_ANALOG	0x00466980	PASS	PASS	PASS	OK	No row-level finding.
+FrontEnd.cpp	CFrontEnd::GetPortFromController	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+FrontEnd.cpp	CFrontEnd::NumControllersPresent	SOURCE_ANALOG	0x00466990	PASS	PASS	PASS	OK	No row-level finding.
+FrontEnd.cpp	CFrontEnd::ReceiveButtonAction	SOURCE_ANALOG	0x004669a0	PASS	PASS	PASS	OK	No row-level finding.
+FrontEnd.cpp	CFrontEnd::SetLanguage	SOURCE_ANALOG	0x00466ab0	PASS	PASS	PASS	OK	No row-level finding.
+FrontEnd.cpp	CFrontEnd::SetPage	SOURCE_ANALOG	0x00466ae0	PASS	PASS	PASS	OK	No row-level finding.
+FrontEnd.cpp	CFrontEnd::Process	SOURCE_ANALOG	0x00466ba0	PASS	PASS	PASS	OK	No row-level finding.
+FrontEnd.cpp	CFrontEnd::DrawLine	SOURCE_ANALOG	0x00466de0	PASS	PASS	PASS	OK	No row-level finding.
+FrontEnd.cpp	CFrontEnd::DrawBox	SOURCE_ANALOG	0x00466e70	PASS	PASS	PASS	OK	No row-level finding.
+FrontEnd.cpp	CFrontEnd::DrawPanel	SOURCE_ANALOG	0x00467010	PASS	PASS	PASS	OK	No row-level finding.
+FrontEnd.cpp	CFrontEnd::DrawBarGraph	SOURCE_ANALOG	0x004670b0	PASS	PASS	PASS	OK	No row-level finding.
+FrontEnd.cpp	got_standard_SlidingTextBordersAndMask	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+FrontEnd.cpp	check_draw_twice	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+FrontEnd.cpp	CFrontEnd::DrawSlidingTextBordersAndMask	SOURCE_ANALOG	0x00467200	PASS	PASS	PASS	OK	No row-level finding.
+FrontEnd.cpp	CFrontEnd::DrawStandardVideoBackground	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+FrontEnd.cpp	CFrontEnd::RenderSlidingScreen	SOURCE_ANALOG	0x00468200	PASS	FAIL	DISAGREEMENT	ANALOG_REASON_EVIDENCE_WEAK;CROSSWALK_VA_COLLISION	CROSSWALK_VA_COLLISION: VA 0x00468200 is shared by 3 rows: FrontEnd.cpp:1048:CFrontEnd::RenderSlidingScreen, FrontEnd.cpp:1259:CFrontEnd::Render, FrontEnd.cpp:1528:CFrontEnd::RenderEnd | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+FrontEnd.cpp	CFrontEnd::DrawBar	SOURCE_ANALOG	0x00467ae0	PASS	PASS	PASS	OK	No row-level finding.
+FrontEnd.cpp	CFrontEnd::DrawTitleBar	SOURCE_ANALOG	0x00467bd0	PASS	PASS	PASS	OK	No row-level finding.
+FrontEnd.cpp	CFrontEnd::EnableAdditiveAlpha	SOURCE_ANALOG	0x004681c0	PASS	PASS	PASS	OK	No row-level finding.
+FrontEnd.cpp	CFrontEnd::EnableModulateAlpha	SOURCE_ANALOG	0x004681e0	PASS	PASS	PASS	OK	No row-level finding.
+FrontEnd.cpp	CFrontEnd::ForceDisplay	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+FrontEnd.cpp	CFrontEnd::Render	SOURCE_ANALOG	0x00468200	PASS	PASS	DISAGREEMENT	CROSSWALK_VA_COLLISION	CROSSWALK_VA_COLLISION: VA 0x00468200 is shared by 3 rows: FrontEnd.cpp:1048:CFrontEnd::RenderSlidingScreen, FrontEnd.cpp:1259:CFrontEnd::Render, FrontEnd.cpp:1528:CFrontEnd::RenderEnd
+FrontEnd.cpp	build_fe_resource	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+FrontEnd.cpp	build_fe_resources	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+FrontEnd.cpp	CFrontEnd::Run	SOURCE_ANALOG	0x004684d0	PASS	PASS	PASS	OK	No row-level finding.
+FrontEnd.cpp	CFrontEnd::UpdateCamera	SOURCE_ANALOG	0x004685a0	PASS	PASS	PASS	OK	No row-level finding.
+FrontEnd.cpp	CFrontEnd::RenderStart	SOURCE_ANALOG	0x004685f0	PASS	PASS	PASS	OK	No row-level finding.
+FrontEnd.cpp	CFrontEnd::RenderEnd	SOURCE_ANALOG	0x00468200	PASS	FAIL	DISAGREEMENT	ANALOG_REASON_EVIDENCE_WEAK;CROSSWALK_VA_COLLISION	CROSSWALK_VA_COLLISION: VA 0x00468200 is shared by 3 rows: FrontEnd.cpp:1048:CFrontEnd::RenderSlidingScreen, FrontEnd.cpp:1259:CFrontEnd::Render, FrontEnd.cpp:1528:CFrontEnd::RenderEnd | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+FrontEnd.cpp	CFrontEnd::GetShadowOffsetX	SOURCE_ANALOG	0x00468730	PASS	PASS	PASS	OK	No row-level finding.
+FrontEnd.cpp	CFrontEnd::GetShadowOffsetY	SOURCE_ANALOG	0x00468750	PASS	PASS	PASS	OK	No row-level finding.
+FrontEnd.cpp	CFrontEnd::StartMCOperation	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+FrontEnd.cpp	CFrontEnd::EndMCOperation	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+FrontEnd.cpp	CFrontEnd::PlaySound	SOURCE_ANALOG	0x00468770	PASS	PASS	PASS	OK	No row-level finding.
+FrontEnd.cpp	CFrontEnd::GetSoundName	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+InitThing.cpp	SpawnInitThing	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+InitThing.cpp	mAttachScriptsToUnits	NO_MATCH_FOUND		FAIL	PASS_SHARED_METHOD	NOT_APPLICABLE	CROSSWALK_EXTRA_ROW	CROSSWALK_EXTRA_ROW: no matching AST function definition at InitThing.cpp:80
+InitThing.cpp	CInitThing::Save	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+InitThing.cpp	CInitThing::Load	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+InitThing.cpp	CSpawnerInitThing::Save	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+InitThing.cpp	CSpawnerInitThing::Load	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+InitThing.cpp	CCutsceneInitThing::Save	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+InitThing.cpp	CCutsceneInitThing::Load	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+InitThing.cpp	CStartInitThing::Save	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+InitThing.cpp	CStartInitThing::Load	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+InitThing.cpp	CTreeInitThing::Save	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+InitThing.cpp	CTreeInitThing::Load	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+InitThing.cpp	CSquadInitThing::Save	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+InitThing.cpp	CSquadInitThing::Load	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+InitThing.cpp	CWallInitThing::Save	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+InitThing.cpp	CWallInitThing::Load	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+InitThing.cpp	CSphereTriggerInitThing::Save	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+InitThing.cpp	CSphereTriggerInitThing::Load	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+MemoryCard.cpp	CMemoryCard::CardBeenUnpluggedSinceLastTimeIAsked	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+MemoryManager.cpp	GRAB_MUTEX	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+MemoryManager.cpp	RELEASE_MUTEX	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+MemoryManager.cpp	CMutexGrabber	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+MemoryManager.cpp	CMemoryBlock::Init	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+MemoryManager.cpp	CMemoryBlock::Resize	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+MemoryManager.cpp	CMemoryBlock::SetUsed	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+MemoryManager.cpp	CMemoryHeap::CMemoryHeap	SOURCE_ANALOG	0x004a1390	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+MemoryManager.cpp	in_free_list	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+MemoryManager.cpp	CMemoryHeap::FreeTiny	SOURCE_ANALOG	0x004a1570	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+MemoryManager.cpp	CMemoryHeap::ReallocTiny	SOURCE_ANALOG	0x004a15a0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+MemoryManager.cpp	CMemoryHeap::AllocTiny	SOURCE_ANALOG	0x004a1810	PASS	FAIL	DISAGREEMENT	ANALOG_REASON_EVIDENCE_WEAK;CROSSWALK_VA_COLLISION	CROSSWALK_VA_COLLISION: VA 0x004a1810 is shared by 2 rows: MemoryManager.cpp:502:CMemoryHeap::AllocTiny, MemoryManager.cpp:613:CMemoryHeap::Alloc | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+MemoryManager.cpp	CMemoryHeap::FlagAsBaseSet	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+MemoryManager.cpp	CMemoryHeap::ClearToBaseSet	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+MemoryManager.cpp	CMemoryHeap::Shutdown	SOURCE_ANALOG	0x004a17b0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+MemoryManager.cpp	CMemoryHeap::Alloc	SOURCE_ANALOG	0x004a1810	PASS	FAIL	DISAGREEMENT	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK;CROSSWALK_VA_COLLISION	CROSSWALK_VA_COLLISION: VA 0x004a1810 is shared by 2 rows: MemoryManager.cpp:502:CMemoryHeap::AllocTiny, MemoryManager.cpp:613:CMemoryHeap::Alloc | ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+MemoryManager.cpp	CMemoryHeap::ReAlloc	SOURCE_ANALOG	0x004a1c40	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+MemoryManager.cpp	CMemoryHeap::Free	SOURCE_ANALOG	0x004a1ca0	PASS	FAIL	DISAGREEMENT	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK;CROSSWALK_VA_COLLISION	CROSSWALK_VA_COLLISION: VA 0x004a1ca0 is shared by 2 rows: MemoryManager.cpp:828:CMemoryHeap::Free, MemoryManager.cpp:1147:CMemoryHeap::FreeAll | ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+MemoryManager.cpp	CMemoryHeap::AddToFreeList	SOURCE_ANALOG	0x004a1d60	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+MemoryManager.cpp	CMemoryHeap::SetMerge	SOURCE_ANALOG	0x004a1ea0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+MemoryManager.cpp	CMemoryHeap::Cleanup	SOURCE_ANALOG	0x004a1640	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+MemoryManager.cpp	CMemoryHeap::FreeAll	SOURCE_ANALOG	0x004a1ca0	PASS	FAIL	DISAGREEMENT	ANALOG_REASON_EVIDENCE_WEAK;CROSSWALK_VA_COLLISION	CROSSWALK_VA_COLLISION: VA 0x004a1ca0 is shared by 2 rows: MemoryManager.cpp:828:CMemoryHeap::Free, MemoryManager.cpp:1147:CMemoryHeap::FreeAll | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+MemoryManager.cpp	CMemoryHeap::Validate	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+MemoryManager.cpp	CMemoryHeap::OutputStats	SOURCE_ANALOG	0x004a1f60	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+MemoryManager.cpp	CMemoryHeap::CalcSmallBlocksLeft	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+MemoryManager.cpp	CMemoryHeap::PrintStats	SOURCE_ANALOG	0x004a2190	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+MemoryManager.cpp	CMemoryHeap::LogStats	SOURCE_ANALOG	0x004a2460	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+MemoryManager.cpp	CMemoryHeap::CalcAndShowDeltas	SOURCE_ANALOG	0x004a25c0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+MemoryManager.cpp	CMemoryHeap::OutputBlocks	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+MemoryManager.cpp	CMemoryHeap::OutputMap	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+MemoryManager.cpp	CMemoryHeap::GetFreeBlock	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+MemoryManager.cpp	CMemoryHeap::FindLargestFree	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+MemoryManager.cpp	CMemoryHeap::FindSmallestFree	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+MemoryManager.cpp	CMemoryManager::TagMem	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+MemoryManager.cpp	CMemoryManager::UnTagMem	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+MemoryManager.cpp	CMemoryHeap::DumpMap	SOURCE_ANALOG	0x004a2660	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+MemoryManager.cpp	CMemoryManager::FlagAsBaseSet	SOURCE_ANALOG	0x004a2a20	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+MemoryManager.cpp	CMemoryManager::FlagBlockAsBaseSet	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+MemoryManager.cpp	CMemoryManager::ClearToBaseSet	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+MemoryManager.cpp	CMemoryManager::DumpMemory	SOURCE_ANALOG	0x004a2a80	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+Music.cpp	con_m_play	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Music.cpp	con_m_stop	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Music.cpp	con_m_add	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Music.cpp	con_m_adddir	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Music.cpp	con_m_clear	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Music.cpp	con_m_playtype	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Music.cpp	CMusic::Initialise	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Music.cpp	CMusic::Shutdown	SOURCE_EXACT	0x004bb400	PASS	PASS	PASS	OK	No row-level finding.
+Music.cpp	CMusic::DeviceChangeTrack	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Music.cpp	CMusic::Play	SOURCE_EXACT	0x004bb450	PASS	FAIL	PASS	EXACT_IDENTITY_EVIDENCE_WEAK	EXACT_IDENTITY_EVIDENCE_WEAK: cited evidence does not explicitly join this source function/line to the retail VA
+Music.cpp	CMusic::Stop	SOURCE_EXACT	0x004bb490	PASS	PASS	PASS	OK	No row-level finding.
+Music.cpp	CMusic::FadeVolumes	SOURCE_EXACT	0x004bb4b0	PASS	PASS	PASS	OK	No row-level finding.
+Music.cpp	CMusic::UpdateStatus	SOURCE_ANALOG	0x004bb530	PASS	PASS	PASS	OK	No row-level finding.
+Music.cpp	CMusic::AddToPlayList	SOURCE_EXACT	0x004bb6b0	PASS	PASS	PASS	OK	No row-level finding.
+Music.cpp	CMusic::AddDirectoryExtsToPlaylist	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Music.cpp	CMusic::AddDirectoryToPlaylist	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Music.cpp	CMusic::WipePlayList	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Music.cpp	CMusic::GetRandomSong	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Music.cpp	CMusic::PlayFromList	SOURCE_ANALOG	0x004bb7e0	PASS	PASS	PASS	OK	No row-level finding.
+Music.cpp	CMusic::GetTrackForCredits	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Music.cpp	CMusic::GetTrackForFrontEnd	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Music.cpp	CMusic::GetSong	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Music.cpp	CMusic::PlaySelection	SOURCE_ANALOG	0x004bb8c0	PASS	PASS	PASS	OK	No row-level finding.
+Music.cpp	CMusic::SetVolume	SOURCE_ANALOG	0x004bba10	PASS	PASS	PASS	OK	No row-level finding.
+Music.cpp	CMusicMenu::GetNumEntries	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Music.cpp	CMusicMenu::GetEntry	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Music.cpp	CMusicMenu::OnClick	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCController.cpp	CController::mMappings	NO_MATCH_FOUND		FAIL	PASS_SHARED_METHOD	NOT_APPLICABLE	CROSSWALK_EXTRA_ROW	CROSSWALK_EXTRA_ROW: no matching AST function definition at PCController.cpp:15
+PCController.cpp	CController	NO_MATCH_FOUND		FAIL	PASS_SHARED_METHOD	NOT_APPLICABLE	CROSSWALK_EXTRA_ROW	CROSSWALK_EXTRA_ROW: no matching AST function definition at PCController.cpp:144
+PCController.cpp	CPCController::GetJoyAnalogueLeftX	SOURCE_ANALOG	0x00514640	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+PCController.cpp	CPCController::GetJoyAnalogueLeftY	SOURCE_ANALOG	0x00514670	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+PCController.cpp	CPCController::GetJoyAnalogueRightX	SOURCE_ANALOG	0x005146a0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+PCController.cpp	CPCController::GetJoyAnalogueRightY	SOURCE_ANALOG	0x005146d0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+PCController.cpp	CPCController::RecordControllerState	SOURCE_ANALOG	0x00514720	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+PCController.cpp	CPCController::ReadControllerState	SOURCE_ANALOG	0x00514760	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+PCEngine.cpp	CPCEngine::CPCEngine	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCEngine.cpp	CPCEngine::~dtor	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCEngine.cpp	CPCEngine::ShutDown	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCEngine.cpp	con_setgammabias	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCEngine.cpp	CPCEngine::SetGammaBias	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCEngine.cpp	CPCEngine::Init	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCEngine.cpp	CPCEngine::InitResources	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCEngine.cpp	CPCEngine::DrawDebugCuboid	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCEngine.cpp	CPCEngine::DrawDebugLine	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCEngine.cpp	CPCEngine::RenderArrow	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCEngine.cpp	CPCEngine::PreRender	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCEngine.cpp	CPCEngine::Render	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCEngine.cpp	CPCEngine::PostRender	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCEngine.cpp	CPCEngine::SetBlurAlpha	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCEngine.cpp	CPCEngine::GetDetailLevel	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCEngine.cpp	CPCEngine::SetDefaultMaterial	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCEngine.cpp	CPCEngine::SetModulate2X	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCEngine.cpp	CPCEngine::AccumulateResources	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCFrontend.cpp	CPCFrontEnd::RenderParticles	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCFrontend.cpp	CPCFrontEnd::RenderStaticScreen	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCFrontend.cpp	CPCFrontEnd::PlaySound	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCFrontend.cpp	CPCFrontEnd::GetSoundName	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCFrontend.cpp	CPCFrontEnd::RenderStart	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCFrontend.cpp	CPCFrontEnd::RenderEnd	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCGame.cpp	CPCGame::DrawGameStuff	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCGame.cpp	CPCGame::DumpTimeRecords	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCGame.cpp	CPCGame::AddTimeStatus	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCMemoryCard.cpp	CPCMemoryCard::AccumulateResources	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCPlatform.cpp	CPCPlatform::Init	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCPlatform.cpp	CPCPlatform::InitFonts	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCPlatform.cpp	CPCPlatform::Shutdown	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCPlatform.cpp	CPCPlatform::Process	SOURCE_ANALOG		PASS	PASS	NOT_APPLICABLE	OK	No row-level finding.
+PCPlatform.cpp	CPCPlatform::BeginScene	SOURCE_ANALOG		PASS	PASS	NOT_APPLICABLE	OK	No row-level finding.
+PCPlatform.cpp	CPCPlatform::EndScene	SOURCE_ANALOG		PASS	FAIL	NOT_APPLICABLE	EVIDENCE_TARGET_UNRESOLVED	EVIDENCE_TARGET_UNRESOLVED: file exists but lacks a matching VA/source anchor plus function identity: reverse-engineering/binary-analysis/functions/Platform.cpp/PLATFORM__BeginScene.md
+PCPlatform.cpp	CPCPlatform::DeviceFlip	SOURCE_ANALOG		PASS	FAIL	NOT_APPLICABLE	ANALOG_REASON_EVIDENCE_WEAK;ANALOG_RETAIL_ANALOG_UNNAMED;EVIDENCE_TARGET_UNRESOLVED	EVIDENCE_TARGET_UNRESOLVED: file exists but lacks a matching VA/source anchor plus function identity: reverse-engineering/binary-analysis/functions/Platform.cpp/PLATFORM__EndScene.md | ANALOG_RETAIL_ANALOG_UNNAMED: no named retail analog is resolved for this row | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+PCPlatform.cpp	CPCPlatform::ClearScreen	SOURCE_ANALOG		PASS	PASS	NOT_APPLICABLE	OK	No row-level finding.
+PCPlatform.cpp	CPCPlatform::GetScreenWidth	SOURCE_ANALOG		PASS	FAIL	NOT_APPLICABLE	ANALOG_REASON_EVIDENCE_WEAK;ANALOG_RETAIL_ANALOG_UNNAMED;EVIDENCE_TARGET_UNRESOLVED	EVIDENCE_TARGET_UNRESOLVED: file exists but lacks a matching VA/source anchor plus function identity: reverse-engineering/binary-analysis/functions/Platform.cpp/PLATFORM__ClearScreen.md | ANALOG_RETAIL_ANALOG_UNNAMED: no named retail analog is resolved for this row | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+PCPlatform.cpp	CPCPlatform::GetScreenHeight	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCPlatform.cpp	CPCPlatform::GetFPS	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCPlatform.cpp	CPCPlatform::UpdateJoystick	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCPlatform.cpp	CPCPlatform::KeyOn	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCPlatform.cpp	CPCPlatform::KeyOnce	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCPlatform.cpp	CPCPlatform::FlushInputBuffers	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCPlatform.cpp	CPCPlatform::SetKeytrap	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCPlatform.cpp	CPCPlatform::GetSysTimeFloat	SOURCE_ANALOG		PASS	PASS	NOT_APPLICABLE	OK	No row-level finding.
+PCPlatform.cpp	CPCPlatform::TriggerRumble	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCPlatform.cpp	CPCPlatform::SetRumbleEnabled	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCPlatform.cpp	CPCPlatform::SetVertexShadersEnabled	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCPlatform.cpp	CPCPlatform::FMatrixToD3DMatrix	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCPlatform.cpp	CPCPlatform::Font	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCPlatform.cpp	CPCPlatform::Ask	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCPlatform.cpp	CPCPlatform::MakeD3DViewport	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCPlatform.cpp	CPCPlatform::SetViewport	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCPlatform.cpp	CPCPlatform::GetWindowWidth	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCPlatform.cpp	CPCPlatform::GetWindowHeight	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCPlatform.cpp	CPCPlatform::Serialize	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCPlatform.cpp	CPCPlatform::Deserialize	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCPlatform.cpp	CPCPlatform::AccumulateResources	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCPlatform.cpp	CPCPlatform::SetRegKey	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCPlatform.cpp	CPCPlatform::GetRegKey	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Platform.cpp	CPlatform::Flip	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Player.cpp	mNumber	NO_MATCH_FOUND		FAIL	PASS_SHARED_METHOD	NOT_APPLICABLE	CROSSWALK_EXTRA_ROW	CROSSWALK_EXTRA_ROW: no matching AST function definition at Player.cpp:25
+Player.cpp	CPlayer::~dtor	SOURCE_ANALOG	0x004d2810	PASS	PASS	PASS	OK	No row-level finding.
+Player.cpp	CPlayer::Init	SOURCE_ANALOG	0x004d28a0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+Player.cpp	CPlayer::GotoFPView	SOURCE_ANALOG	0x004d28c0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+Player.cpp	CPlayer::Goto3rdPersonView	SOURCE_ANALOG	0x004d29c0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+Player.cpp	CPlayer::GotoControlView	SOURCE_ANALOG	0x004d2a50	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+Player.cpp	CPlayer::GetCurrentViewPoint	SOURCE_ANALOG	0x004d2a70	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+Player.cpp	CPlayer::GetCurrentViewOrientation	SOURCE_ANALOG	0x004d2ae0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+Player.cpp	CPlayer::GetOldCurrentViewPoint	SOURCE_ANALOG	0x004d2b40	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+Player.cpp	CPlayer::GetOldCurrentViewOrientation	SOURCE_ANALOG	0x004d2bb0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+Player.cpp	CPlayer::SetPreferedControlViewMode	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Player.cpp	CPlayer::GotoPanView	SOURCE_EXACT	0x004d2c10	PASS	PASS	PASS	OK	No row-level finding.
+Player.cpp	CPlayer::HandleEvent	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Player.cpp	CPlayer::SetIsGod	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Player.cpp	CPlayer::WipeStats	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Player.cpp	CPlayer::AssignBattleEngine	SOURCE_ANALOG	0x004d3080	PASS	PASS	PASS	OK	No row-level finding.
+Player.cpp	CPlayer::KilledEnemyThing	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Player.cpp	CPlayer::ReceiveButtonAction	SOURCE_ANALOG	0x004d3110	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+ResourceAccumulator.cpp	CResourceAccumulator::CResourceAccumulator	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+ResourceAccumulator.cpp	CResourceAccumulator::~dtor	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+ResourceAccumulator.cpp	CResourceAccumulator::AddMesh	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+ResourceAccumulator.cpp	CResourceAccumulator::AddTexture	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+ResourceAccumulator.cpp	basic_resource_filename	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+ResourceAccumulator.cpp	CResourceAccumulator::GetFileName	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+ResourceAccumulator.cpp	set_kempy_compression	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+ResourceAccumulator.cpp	CResourceAccumulator::WriteResources	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+ResourceAccumulator.cpp	CResourceAccumulator::ReadResources	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+SPtrSet.cpp	mSize	NO_MATCH_FOUND		FAIL	PASS_SHARED_METHOD	NOT_APPLICABLE	CROSSWALK_EXTRA_ROW;SOURCE_NAME_AMBIGUOUS	CROSSWALK_EXTRA_ROW: no matching AST function definition at SPtrSet.cpp:27 | SOURCE_NAME_AMBIGUOUS: same file/function label occurs at lines 27,38; kept distinct by line
+SPtrSet.cpp	mSize	NO_MATCH_FOUND		FAIL	PASS_SHARED_METHOD	NOT_APPLICABLE	CROSSWALK_EXTRA_ROW;SOURCE_NAME_AMBIGUOUS	CROSSWALK_EXTRA_ROW: no matching AST function definition at SPtrSet.cpp:38 | SOURCE_NAME_AMBIGUOUS: same file/function label occurs at lines 27,38; kept distinct by line
+SPtrSet.cpp	GenericSPtrSet::Shutdown	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+SPtrSet.cpp	GenericSPtrSet::ClearAnyDynamicCreatedNodes	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+SPtrSet.cpp	GenericSPtrSet::Init	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+SPtrSet.cpp	GenericSPtrSet::Add	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+SPtrSet.cpp	GenericSPtrSet::Append	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+SPtrSet.cpp	GenericSPtrSet::Remove	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+SPtrSet.cpp	GenericSPtrSet::Contains	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+SPtrSet.cpp	GenericSPtrSet::~dtor	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+SPtrSet.cpp	GenericSPtrSet::RemoveAll	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+SPtrSet.cpp	GenericSPtrSet::At	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+SoundManager.cpp	CSample::~dtor	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+SoundManager.cpp	con_playsnd	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+SoundManager.cpp	CSoundManager::Init	SOURCE_EXACT	0x004e00d0	PASS	PASS	PASS	OK	No row-level finding.
+SoundManager.cpp	CSoundManager::UpdateVolumeForAllSoundEvents	SOURCE_EXACT	0x004e0300	PASS	PASS	PASS	OK	No row-level finding.
+SoundManager.cpp	CSoundManager::SetMasterVolume	SOURCE_ANALOG	0x004e04c0	PASS	PASS	PASS	OK	No row-level finding.
+SoundManager.cpp	CSoundManager::DeleteAllSamples	SOURCE_EXACT	0x004e06b0	PASS	PASS	PASS	OK	No row-level finding.
+SoundManager.cpp	CSoundManager::Shutdown	SOURCE_EXACT	0x004e06e0	PASS	PASS	PASS	OK	No row-level finding.
+SoundManager.cpp	CSoundManager::Reset	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+SoundManager.cpp	CSoundManager::CreateSample	SOURCE_EXACT	0x004e0890	PASS	PASS	PASS	OK	No row-level finding.
+SoundManager.cpp	CSoundManager::GetSample	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+SoundManager.cpp	CSoundManager::PlayNamedSample	SOURCE_EXACT	0x004e0a90	PASS	PASS	PASS	OK	No row-level finding.
+SoundManager.cpp	CSoundManager::PlaySample	SOURCE_EXACT	0x004e0b30	PASS	PASS	PASS	OK	No row-level finding.
+SoundManager.cpp	CSoundManager::GetVolumeForPos	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+SoundManager.cpp	CSoundManager::StartSoundEvent	SOURCE_EXACT	0x004e0bd0	PASS	PASS	PASS	OK	No row-level finding.
+SoundManager.cpp	CSoundManager::StopSoundEvent	SOURCE_EXACT	0x004e0f70	PASS	PASS	PASS	OK	No row-level finding.
+SoundManager.cpp	CSoundManager::CalculatePan	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+SoundManager.cpp	CSoundManager::GetSoundEvent	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+SoundManager.cpp	CSoundManager::DeleteSoundEvent	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+SoundManager.cpp	CSoundManager::SortEventList	SOURCE_EXACT	0x004e1040	PASS	PASS	PASS	OK	No row-level finding.
+SoundManager.cpp	CSoundManager::Fade	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+SoundManager.cpp	CSoundManager::KillSamplesForThing	SOURCE_EXACT	0x004e1130	PASS	PASS	PASS	OK	No row-level finding.
+SoundManager.cpp	CSoundManager::KillSample	SOURCE_EXACT	0x004e1190	PASS	PASS	PASS	OK	No row-level finding.
+SoundManager.cpp	CSoundManager::KillAllInstancesOfSample	SOURCE_EXACT	0x004e1200	PASS	PASS	PASS	OK	No row-level finding.
+SoundManager.cpp	CSoundManager::FadeTo	SOURCE_EXACT	0x004e1260	PASS	PASS	PASS	OK	No row-level finding.
+SoundManager.cpp	CSoundManager::FadeAllSamples	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+SoundManager.cpp	CSoundManager::KillAllSamples	SOURCE_EXACT	0x004e12b0	PASS	PASS	PASS	OK	No row-level finding.
+SoundManager.cpp	CSoundManager::PauseAllSamples	SOURCE_EXACT	0x004e1300	PASS	PASS	PASS	OK	No row-level finding.
+SoundManager.cpp	CSoundManager::UnPauseAllSamples	SOURCE_EXACT	0x004e1330	PASS	PASS	PASS	OK	No row-level finding.
+SoundManager.cpp	CSoundManager::UpdateSoundPosition	SOURCE_EXACT	0x004e1360	PASS	PASS	PASS	OK	No row-level finding.
+SoundManager.cpp	CSoundManager::IsSamplePlaying	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+SoundManager.cpp	CSoundManager::StopSample	SOURCE_EXACT	0x004e1800	PASS	PASS	PASS	OK	No row-level finding.
+SoundManager.cpp	CSoundManager::GetSoundEventForThing	SOURCE_EXACT	0x004e1880	PASS	PASS	PASS	OK	No row-level finding.
+SoundManager.cpp	CSoundManager::SetPitch	SOURCE_EXACT	0x004e18d0	PASS	PASS	PASS	OK	No row-level finding.
+SoundManager.cpp	CSoundManager::GetEffectByName	SOURCE_EXACT	0x004e1910	PASS	PASS	PASS	OK	No row-level finding.
+SoundManager.cpp	CSoundManager::PlayNamedEffect	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+SoundManager.cpp	CSoundManager::PlayEffect	SOURCE_EXACT	0x004e1940	PASS	PASS	PASS	OK	No row-level finding.
+SoundManager.cpp	CSoundManager::IsEffectPlaying	SOURCE_EXACT	0x004e1ab0	PASS	PASS	PASS	OK	No row-level finding.
+SoundManager.cpp	CSoundManager::UpdateStatus	SOURCE_EXACT	0x004e1b20	PASS	PASS	PASS	OK	No row-level finding.
+SoundManager.cpp	CSoundManager::GetDebugMenuText	SOURCE_EXACT	0x004e2360	PASS	PASS	PASS	OK	No row-level finding.
+SoundManager.cpp	CSoundManagerDebugMenu::GetEntry	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+SoundManager.cpp	CSoundManagerDebugMenu::GetNumEntries	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+SoundManager.cpp	CEffect::ReadLine	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+SoundManager.cpp	CEffect::LoadSFXFile	SOURCE_ANALOG	0x004e2530	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+SoundManager.cpp	CEffect::GetEffectByName	SOURCE_ANALOG	0x004e2a90	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+SoundManager.cpp	CEffect::DeleteAllEffects	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+SoundManager.cpp	CSoundEvent::CSoundEvent	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+SoundManager.cpp	CSoundEvent::~dtor	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+SoundManager.cpp	CEffect::PrecacheAll	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+XBoxMemoryCard.cpp	CXBoxSaveHeader::CreateHeader	NOT_IN_RETAIL		PASS	PASS	NOT_APPLICABLE	OK	No row-level finding.
+XBoxMemoryCard.cpp	CXBoxSaveHeader::CheckHeader	NOT_IN_RETAIL		PASS	PASS	NOT_APPLICABLE	OK	No row-level finding.
+XBoxMemoryCard.cpp	CXBoxMemoryCard::InitialiseOnce	NOT_IN_RETAIL		PASS	PASS	NOT_APPLICABLE	OK	No row-level finding.
+XBoxMemoryCard.cpp	CXBoxMemoryCard::Initialise	NOT_IN_RETAIL		PASS	PASS	NOT_APPLICABLE	OK	No row-level finding.
+XBoxMemoryCard.cpp	CXBoxMemoryCard::Shutdown	NOT_IN_RETAIL		PASS	PASS	NOT_APPLICABLE	OK	No row-level finding.
+XBoxMemoryCard.cpp	CXBoxMemoryCard::GetNumCards	NOT_IN_RETAIL		PASS	PASS	NOT_APPLICABLE	OK	No row-level finding.
+XBoxMemoryCard.cpp	CXBoxMemoryCard::IsHDDAvailable	NOT_IN_RETAIL		PASS	PASS	NOT_APPLICABLE	OK	No row-level finding.
+XBoxMemoryCard.cpp	CXBoxMemoryCard::GetCardType	NOT_IN_RETAIL		PASS	PASS	NOT_APPLICABLE	OK	No row-level finding.
+XBoxMemoryCard.cpp	CXBoxMemoryCard::GetPort	NOT_IN_RETAIL		PASS	PASS	NOT_APPLICABLE	OK	No row-level finding.
+XBoxMemoryCard.cpp	CXBoxMemoryCard::GetSlot	NOT_IN_RETAIL		PASS	PASS	NOT_APPLICABLE	OK	No row-level finding.
+XBoxMemoryCard.cpp	CXBoxMemoryCard::UpdateCardSaveInfo	NOT_IN_RETAIL		PASS	PASS	NOT_APPLICABLE	OK	No row-level finding.
+XBoxMemoryCard.cpp	CXBoxMemoryCard::GetMountedCardFreeAndTotalBytes	NOT_IN_RETAIL		PASS	PASS	NOT_APPLICABLE	OK	No row-level finding.
+XBoxMemoryCard.cpp	CXBoxMemoryCard::UpdateCardInfo	NOT_IN_RETAIL		PASS	PASS	NOT_APPLICABLE	OK	No row-level finding.
+XBoxMemoryCard.cpp	CXBoxMemoryCard::GetCardInfo	NOT_IN_RETAIL		PASS	PASS	NOT_APPLICABLE	OK	No row-level finding.
+XBoxMemoryCard.cpp	CXBoxMemoryCard::GetCardName	NOT_IN_RETAIL		PASS	PASS	NOT_APPLICABLE	OK	No row-level finding.
+XBoxMemoryCard.cpp	CXBoxMemoryCard::GetCardName2	NOT_IN_RETAIL		PASS	PASS	NOT_APPLICABLE	OK	No row-level finding.
+XBoxMemoryCard.cpp	CXBoxMemoryCard::GetCardOrPreviousCardName2	NOT_IN_RETAIL		PASS	PASS	NOT_APPLICABLE	OK	No row-level finding.
+XBoxMemoryCard.cpp	CXBoxMemoryCard::Format	NOT_IN_RETAIL		PASS	PASS	NOT_APPLICABLE	OK	No row-level finding.
+XBoxMemoryCard.cpp	CXBoxMemoryCard::Unformat	NOT_IN_RETAIL		PASS	PASS	NOT_APPLICABLE	OK	No row-level finding.
+XBoxMemoryCard.cpp	CXBoxMemoryCard::GetNumSaves	NOT_IN_RETAIL		PASS	PASS	NOT_APPLICABLE	OK	No row-level finding.
+XBoxMemoryCard.cpp	CXBoxMemoryCard::GetSaveName	NOT_IN_RETAIL		PASS	PASS	NOT_APPLICABLE	OK	No row-level finding.
+XBoxMemoryCard.cpp	CXBoxMemoryCard::WriteSaveImage	NOT_IN_RETAIL		PASS	PASS	NOT_APPLICABLE	OK	No row-level finding.
+XBoxMemoryCard.cpp	count_num_files	NOT_IN_RETAIL		PASS	PASS	NOT_APPLICABLE	OK	No row-level finding.
+XBoxMemoryCard.cpp	CXBoxMemoryCard::CountNumHardDriveFiles	NOT_IN_RETAIL		PASS	PASS	NOT_APPLICABLE	OK	No row-level finding.
+XBoxMemoryCard.cpp	CXBoxMemoryCard::CreateSave	NOT_IN_RETAIL		PASS	PASS	NOT_APPLICABLE	OK	No row-level finding.
+XBoxMemoryCard.cpp	CXBoxMemoryCard::DeleteSave	NOT_IN_RETAIL		PASS	PASS	NOT_APPLICABLE	OK	No row-level finding.
+XBoxMemoryCard.cpp	CXBoxMemoryCard::WriteSave	NOT_IN_RETAIL		PASS	PASS	NOT_APPLICABLE	OK	No row-level finding.
+XBoxMemoryCard.cpp	CXBoxMemoryCard::ReadSave	NOT_IN_RETAIL		PASS	PASS	NOT_APPLICABLE	OK	No row-level finding.
+XBoxMemoryCard.cpp	CXBoxMemoryCard::GetSaveSize	NOT_IN_RETAIL		PASS	PASS	NOT_APPLICABLE	OK	No row-level finding.
+XBoxMemoryCard.cpp	CXBoxMemoryCard::FormatInt	NOT_IN_RETAIL		PASS	PASS	NOT_APPLICABLE	OK	No row-level finding.
+XBoxMemoryCard.cpp	CXBoxMemoryCard::MakeHumanReadableSize	NOT_IN_RETAIL		PASS	PASS	NOT_APPLICABLE	OK	No row-level finding.
+XBoxMemoryCard.cpp	CXBoxMemoryCard::PeekAtInsertions	NOT_IN_RETAIL		PASS	PASS	NOT_APPLICABLE	OK	No row-level finding.
+XBoxMemoryCard.cpp	CXBoxMemoryCard::Update	NOT_IN_RETAIL		PASS	PASS	NOT_APPLICABLE	OK	No row-level finding.
+XBoxMemoryCard.cpp	CXBoxMemoryCard::MountGetDriveLetterAndUnmount	NOT_IN_RETAIL		PASS	PASS	NOT_APPLICABLE	OK	No row-level finding.
+XBoxMemoryCard.cpp	CXBoxMemoryCard::CardBeenUnpluggedSinceLastTimeIAsked	NOT_IN_RETAIL		PASS	PASS	NOT_APPLICABLE	OK	No row-level finding.
+XBoxMemoryCard.cpp	CXBoxMemoryCard::SerialiseForReboot	NOT_IN_RETAIL		PASS	PASS	NOT_APPLICABLE	OK	No row-level finding.
+activereader.cpp	CGenericActiveReader::SetReader	SOURCE_ANALOG	0x00401000	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+actor.cpp	CActor::Init	SOURCE_ANALOG	0x004011e0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+actor.cpp	CActor::~dtor	SOURCE_ANALOG	0x004015c0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+actor.cpp	CActor::LowFidelityMove	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+actor.cpp	CActor::Move	SOURCE_ANALOG	0x004015e0	PASS	FAIL	DISAGREEMENT	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK;CROSSWALK_VA_COLLISION	CROSSWALK_VA_COLLISION: VA 0x004015e0 is shared by 2 rows: actor.cpp:74:CActor::Move, actor.cpp:178:CActor::MoveTo | ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+actor.cpp	CActor::MoveTo	SOURCE_ANALOG	0x004015e0	PASS	FAIL	DISAGREEMENT	ANALOG_REASON_EVIDENCE_WEAK;CROSSWALK_VA_COLLISION	CROSSWALK_VA_COLLISION: VA 0x004015e0 is shared by 2 rows: actor.cpp:74:CActor::Move, actor.cpp:178:CActor::MoveTo | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+actor.cpp	CActor::Teleport	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+actor.cpp	CActor::TeleportOrientation	SOURCE_ANALOG	0x004019b0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+actor.cpp	CActor::AddMoveEvent	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+actor.cpp	CActor::HandleEvent	SOURCE_ANALOG	0x004019e0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+actor.cpp	CActor::GetFractionTime	SOURCE_ANALOG	0x00401b50	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+actor.cpp	CActor::GetRenderPos	SOURCE_ANALOG	0x00401be0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+actor.cpp	CActor::GetRenderOrientation	SOURCE_ANALOG	0x00401c50	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+actor.cpp	CActor::IsOnGround	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+actor.cpp	CActor::IsInWater	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+actor.cpp	CActor::IsOnObject	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+actor.cpp	CActor::DeclareOnGround	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+actor.cpp	CActor::DeclareInWater	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+actor.cpp	CActor::DeclareOnObject	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+actor.cpp	CActor::StickToGround	SOURCE_ANALOG	0x00402030	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+chunker.cpp	CChunker::CChunker	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+chunker.cpp	CChunker::~dtor	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+chunker.cpp	CChunker::Open	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+chunker.cpp	CChunker::Close	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+chunker.cpp	CChunker::ReSize	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+chunker.cpp	CChunker::Start	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+chunker.cpp	CChunker::End	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+chunker.cpp	CChunker::Write	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+chunker.cpp	CChunkReader::CChunkReader	SOURCE_ANALOG	0x004237d0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+chunker.cpp	CChunkReader::~dtor	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+chunker.cpp	CChunkReader::Open	NO_MATCH_FOUND		PASS_AMBIGUOUS_NAME	PASS_SHARED_METHOD	NOT_APPLICABLE	SOURCE_NAME_AMBIGUOUS	SOURCE_NAME_AMBIGUOUS: same file/function label occurs at lines 108,123; kept distinct by line
+chunker.cpp	CChunkReader::Open	NO_MATCH_FOUND		PASS_AMBIGUOUS_NAME	PASS_SHARED_METHOD	NOT_APPLICABLE	SOURCE_NAME_AMBIGUOUS	SOURCE_NAME_AMBIGUOUS: same file/function label occurs at lines 108,123; kept distinct by line
+chunker.cpp	CChunkReader::Close	SOURCE_ANALOG	0x00423900	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+chunker.cpp	CChunkReader::GetNext	SOURCE_ANALOG	0x00423910	PASS	PASS	PASS	OK	No row-level finding.
+chunker.cpp	CChunkReader::Read	SOURCE_ANALOG	0x00423960	PASS	PASS	PASS	OK	No row-level finding.
+chunker.cpp	CChunkReader::Skip	SOURCE_ANALOG	0x00423990	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+chunker.cpp	CChunkReader::WhereAmI	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+d3dapp.cpp	CD3DApplication::CD3DApplication	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+d3dapp.cpp	WndProc	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+d3dapp.cpp	CD3DApplication::Create	SOURCE_ANALOG	0x005290a0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+d3dapp.cpp	SortModesCallback	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+d3dapp.cpp	CD3DApplication::BuildDeviceList	SOURCE_ANALOG	0x00529350	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+d3dapp.cpp	CD3DApplication::FindDepthStencilFormat	SOURCE_ANALOG	0x0052a830	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+d3dapp.cpp	CD3DApplication::MsgProc	SOURCE_ANALOG	0x0052aaf0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+d3dapp.cpp	CD3DApplication::Initialize3DEnvironment	SOURCE_ANALOG	0x0052af00	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+d3dapp.cpp	CD3DApplication::Resize3DEnvironment	SOURCE_ANALOG	0x0052b760	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+d3dapp.cpp	CD3DApplication::ToggleFullscreen	SOURCE_ANALOG	0x0052b840	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+d3dapp.cpp	CD3DApplication::ForceWindowed	SOURCE_ANALOG	0x0052ba50	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+d3dapp.cpp	CD3DApplication::AdjustWindowForChange	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+d3dapp.cpp	CD3DApplication::UserSelectNewDevice	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+d3dapp.cpp	CD3DApplication::SelectDeviceProc	SOURCE_ANALOG	0x0052bc80	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+d3dapp.cpp	CD3DApplication::Pause	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+d3dapp.cpp	CD3DApplication::Cleanup3DEnvironment	SOURCE_ANALOG	0x0052c430	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+d3dapp.cpp	CD3DApplication::DisplayErrorMsg	SOURCE_ANALOG	0x0052c4f0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+engine.cpp	CEngine::CEngine	SOURCE_ANALOG	0x00449820	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+engine.cpp	CEngine::Shutdown	SOURCE_ANALOG	0x00449890	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+engine.cpp	CEngine::Init	SOURCE_ANALOG	0x004499d0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+engine.cpp	CEngine::InitResources	SOURCE_ANALOG	0x00449d50	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+engine.cpp	CEngine::AccumulateResources	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+engine.cpp	CEngine::LoadAllNamedMeshes	SOURCE_ANALOG	0x00449dc0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+engine.cpp	CEngine::ResetNamedMeshes	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+engine.cpp	CEngine::AddNewGlobalNamedMesh	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+engine.cpp	CEngine::GetViewMatrixFromCamera	SOURCE_ANALOG	0x00449ef0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+engine.cpp	CEngine::SetViewpoint	SOURCE_ANALOG	0x0044a020	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+engine.cpp	CEngine::GetRenderTime	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+engine.cpp	CEngine::SetNumViewpoints	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+engine.cpp	CEngine::SelectViewpoint	SOURCE_ANALOG	0x0044a0d0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+engine.cpp	CEngine::ResetPos	SOURCE_ANALOG	0x0044a110	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+engine.cpp	CEngine::InitDamageSystem	SOURCE_ANALOG	0x0044a130	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+engine.cpp	CEngine::BuildLevelSpecifics	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+engine.cpp	CEngine::UpdatePos	SOURCE_EXACT	0x0044a1c0	PASS	PASS	PASS	OK	No row-level finding.
+engine.cpp	CEngine::LoadMixers	SOURCE_ANALOG	0x0044a1f0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+engine.cpp	CEngine::SetKempyCube	SOURCE_ANALOG	0x0044a2a0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+engine.cpp	CEngine::SetWater	SOURCE_ANALOG	0x0044a2c0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+engine.cpp	CEngine::SetupLights	SOURCE_ANALOG	0x0044a2d0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+engine.cpp	CEngine::LogLight	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+engine.cpp	CEngine::SwitchAllLights	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+engine.cpp	CEngine::EnableAlpha	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+engine.cpp	CEngine::EnableAdditiveAlpha	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+engine.cpp	CEngine::DisableAlpha	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+engine.cpp	CEngine::SetTreeAlphaMode	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+engine.cpp	CEngine::DisableLighting	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+engine.cpp	CEngine::EnableLighting	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+engine.cpp	CEngine::SetSky	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+engine.cpp	CEngine::UpdateArea	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+engine.cpp	CEngine::Serialize	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+engine.cpp	CEngine::Deserialize	SOURCE_ANALOG	0x0044a6e0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+engine.cpp	CEngine::GetCursorOffsetMatrix	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+event.cpp	CEvent::CEvent	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+eventmanager.cpp	CEventManager::CEventManager	SOURCE_EXACT	0x0044afa0	PASS	PASS	PASS	OK	No row-level finding.
+eventmanager.cpp	CEventManager::~dtor	SOURCE_EXACT	0x0044b000	PASS	PASS	PASS	OK	No row-level finding.
+eventmanager.cpp	CEventManager::Init	SOURCE_EXACT	0x0044b060	PASS	PASS	PASS	OK	No row-level finding.
+eventmanager.cpp	CEventManager::Shutdown	SOURCE_EXACT	0x0044b1f0	PASS	PASS	PASS	OK	No row-level finding.
+eventmanager.cpp	CEventManager::GetNextFreeEvent	SOURCE_EXACT	0x0044b2a0	PASS	PASS	PASS	OK	No row-level finding.
+eventmanager.cpp	CEventManager::FreeEvent	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+eventmanager.cpp	CEventManager::AddEvent	NO_MATCH_FOUND		PASS_AMBIGUOUS_NAME	PASS_SHARED_METHOD	NOT_APPLICABLE	SOURCE_NAME_AMBIGUOUS	SOURCE_NAME_AMBIGUOUS: same file/function label occurs at lines 143,152,170; kept distinct by line
+eventmanager.cpp	CEventManager::AddEvent	NO_MATCH_FOUND		PASS_AMBIGUOUS_NAME	PASS_SHARED_METHOD	NOT_APPLICABLE	SOURCE_NAME_AMBIGUOUS	SOURCE_NAME_AMBIGUOUS: same file/function label occurs at lines 143,152,170; kept distinct by line
+eventmanager.cpp	CEventManager::AddEvent	NO_MATCH_FOUND		PASS_AMBIGUOUS_NAME	PASS_SHARED_METHOD	NOT_APPLICABLE	SOURCE_NAME_AMBIGUOUS	SOURCE_NAME_AMBIGUOUS: same file/function label occurs at lines 143,152,170; kept distinct by line
+eventmanager.cpp	CEventManager::Update	SOURCE_EXACT	0x0044b5c0	PASS	PASS	PASS	OK	No row-level finding.
+eventmanager.cpp	CEventManager::AdvanceTime	SOURCE_EXACT	0x0044b600	PASS	PASS	PASS	OK	No row-level finding.
+eventmanager.cpp	CEventManager::Flush	SOURCE_EXACT	0x0044b640	PASS	PASS	PASS	OK	No row-level finding.
+eventmanager.cpp	CEventManager::LogEvent	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+eventmanager.cpp	CEventManager::LogEventManager	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+game.cpp	con_map	SOURCE_EXACT	0x0046be10	PASS	PASS	PASS	OK	No row-level finding.
+game.cpp	con_resetmemsizes	SOURCE_EXACT	0x0046be80	PASS	PASS	PASS	OK	No row-level finding.
+game.cpp	con_dumptextures	SOURCE_EXACT	0x0046bea0	PASS	PASS	PASS	OK	No row-level finding.
+game.cpp	con_dumptimerecords	SOURCE_EXACT	0x0046bed0	PASS	PASS	PASS	OK	No row-level finding.
+game.cpp	con_remotecameraon	SOURCE_EXACT	0x0046bef0	PASS	PASS	PASS	OK	No row-level finding.
+game.cpp	con_remotecameraoff	SOURCE_EXACT	0x0046c0b0	PASS	PASS	PASS	OK	No row-level finding.
+game.cpp	con_navmapon	SOURCE_EXACT	0x0046c120	PASS	FAIL	PASS	EVIDENCE_TARGET_UNRESOLVED	EVIDENCE_TARGET_UNRESOLVED: no VA/source-anchor row in reverse-engineering/binary-analysis/cgame-level-lifecycle-semantics-2026-08-11.tsv
+game.cpp	con_navmapoff	SOURCE_EXACT	0x0046c150	PASS	FAIL	PASS	EVIDENCE_TARGET_UNRESOLVED	EVIDENCE_TARGET_UNRESOLVED: no VA/source-anchor row in reverse-engineering/binary-analysis/cgame-level-lifecycle-semantics-2026-08-11.tsv
+game.cpp	con_win	SOURCE_EXACT	0x0046c180	PASS	FAIL	PASS	EVIDENCE_TARGET_UNRESOLVED	EVIDENCE_TARGET_UNRESOLVED: no VA/source-anchor row in reverse-engineering/binary-analysis/cgame-level-lifecycle-semantics-2026-08-11.tsv
+game.cpp	con_lose	SOURCE_EXACT	0x0046c200	PASS	FAIL	PASS	EVIDENCE_TARGET_UNRESOLVED	EVIDENCE_TARGET_UNRESOLVED: no VA/source-anchor row in reverse-engineering/binary-analysis/cgame-level-lifecycle-semantics-2026-08-11.tsv
+game.cpp	con_buildresources	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+game.cpp	CGame::CGame	SOURCE_ANALOG	0x0046c210	PASS	FAIL	PASS	ANALOG_REASON_EVIDENCE_WEAK;EVIDENCE_TARGET_UNRESOLVED	EVIDENCE_TARGET_UNRESOLVED: no VA/source-anchor row in reverse-engineering/binary-analysis/cgame-level-lifecycle-semantics-2026-08-11.tsv | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+game.cpp	CGame::~dtor	SOURCE_ANALOG	0x0046c2d0	PASS	FAIL	PASS	ANALOG_REASON_EVIDENCE_WEAK;EVIDENCE_TARGET_UNRESOLVED	EVIDENCE_TARGET_UNRESOLVED: no VA/source-anchor row in reverse-engineering/binary-analysis/cgame-level-lifecycle-semantics-2026-08-11.tsv | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+game.cpp	CGame::Init	SOURCE_EXACT	0x0046c360	PASS	PASS	DISAGREEMENT	CROSSWALK_VA_COLLISION	CROSSWALK_VA_COLLISION: VA 0x0046c360 is shared by 3 rows: game.cpp:246:CGame::Init, game.cpp:662:CGame::InitOneOffResources, game.cpp:674:CGame::InitRestartResources
+game.cpp	CGame::InitRestartLoop	SOURCE_EXACT	0x0046c430	PASS	PASS	PASS	OK	No row-level finding.
+game.cpp	CGame::Shutdown	SOURCE_EXACT	0x0046c990	PASS	PASS	PASS	OK	No row-level finding.
+game.cpp	CGame::ShutdownRestartLoop	SOURCE_EXACT	0x0046ca70	PASS	PASS	PASS	OK	No row-level finding.
+game.cpp	CGame::LoadResources	SOURCE_EXACT	0x0046cd30	PASS	PASS	PASS	OK	No row-level finding.
+game.cpp	CGame::InitOneOffResources	SOURCE_ANALOG	0x0046c360	PASS	FAIL	DISAGREEMENT	ANALOG_REASON_EVIDENCE_WEAK;CROSSWALK_VA_COLLISION	CROSSWALK_VA_COLLISION: VA 0x0046c360 is shared by 3 rows: game.cpp:246:CGame::Init, game.cpp:662:CGame::InitOneOffResources, game.cpp:674:CGame::InitRestartResources | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+game.cpp	CGame::InitRestartResources	SOURCE_ANALOG	0x0046c360	PASS	FAIL	DISAGREEMENT	ANALOG_REASON_EVIDENCE_WEAK;CROSSWALK_VA_COLLISION	CROSSWALK_VA_COLLISION: VA 0x0046c360 is shared by 3 rows: game.cpp:246:CGame::Init, game.cpp:662:CGame::InitOneOffResources, game.cpp:674:CGame::InitRestartResources | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+game.cpp	CGame::LoadLevel	SOURCE_EXACT	0x0046cdf0	PASS	PASS	PASS	OK	No row-level finding.
+game.cpp	CGame::PostLoadProcess	SOURCE_EXACT	0x0046d040	PASS	PASS	PASS	OK	No row-level finding.
+game.cpp	CGame::SetSlot	SOURCE_EXACT	0x0046d3a0	PASS	PASS	PASS	OK	No row-level finding.
+game.cpp	CGame::GetSlot	SOURCE_EXACT	0x0046d410	PASS	PASS	PASS	OK	No row-level finding.
+game.cpp	CGame::FillOutEndLevelData	SOURCE_ANALOG	0x0046d470	PASS	PASS	PASS	OK	No row-level finding.
+game.cpp	CGame::BuildResources	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+game.cpp	CGame::GetIntroFMV	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+game.cpp	CGame::RunIntroFMV	SOURCE_ANALOG	0x0046d890	PASS	PASS	PASS	OK	No row-level finding.
+game.cpp	CGame::RunOutroFMV	SOURCE_ANALOG	0x0046d9f0	PASS	PASS	PASS	OK	No row-level finding.
+game.cpp	ReceiveButtonAction	NO_MATCH_FOUND		PASS_AMBIGUOUS_NAME	PASS_SHARED_METHOD	NOT_APPLICABLE	SOURCE_NAME_AMBIGUOUS	SOURCE_NAME_AMBIGUOUS: same file/function label occurs at lines 1240,4094; kept distinct by line
+game.cpp	CGame::RestartLoopRunLevel	SOURCE_EXACT	0x0046dc30	PASS	PASS	PASS	OK	No row-level finding.
+game.cpp	CGame::RunLevel	SOURCE_EXACT	0x0046e240	PASS	PASS	PASS	OK	No row-level finding.
+game.cpp	CGame::Render	SOURCE_EXACT	0x0046e460	PASS	PASS	PASS	OK	No row-level finding.
+game.cpp	CGame::Update	SOURCE_EXACT	0x0046e910	PASS	PASS	PASS	OK	No row-level finding.
+game.cpp	CGame::PreRun	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+game.cpp	CGame::MainLoop	SOURCE_EXACT	0x0046eee0	PASS	PASS	PASS	OK	No row-level finding.
+game.cpp	CGame::ProcessDebug	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+game.cpp	CGame::GetCamera	SOURCE_EXACT	0x0046f2c0	PASS	PASS	PASS	OK	No row-level finding.
+game.cpp	CGame::SetCamera	SOURCE_EXACT	0x0046f2d0	PASS	PASS	PASS	OK	No row-level finding.
+game.cpp	CGame::DeclareLevelWon	SOURCE_EXACT	0x0046f2f0	PASS	PASS	PASS	OK	No row-level finding.
+game.cpp	CGame::MPDeclarePlayerWon	SOURCE_EXACT	0x0046f360	PASS	PASS	PASS	OK	No row-level finding.
+game.cpp	CGame::MPDeclareGameDrawn	SOURCE_EXACT	0x0046f3e0	PASS	PASS	PASS	OK	No row-level finding.
+game.cpp	CGame::DeclareLevelLost	SOURCE_EXACT	0x0046f430	PASS	PASS	PASS	OK	No row-level finding.
+game.cpp	CGame::DeclarePlayerDead	SOURCE_ANALOG	0x0046f550	PASS	PASS	PASS	OK	No row-level finding.
+game.cpp	CWorld::kSinglePlayer	NO_MATCH_FOUND		FAIL	PASS_SHARED_METHOD	NOT_APPLICABLE	CROSSWALK_EXTRA_ROW	CROSSWALK_EXTRA_ROW: no matching AST function definition at game.cpp:2521
+game.cpp	CWorld::kCooperativeMultiplayer	NO_MATCH_FOUND		FAIL	PASS_SHARED_METHOD	NOT_APPLICABLE	CROSSWALK_EXTRA_ROW;SOURCE_NAME_AMBIGUOUS	CROSSWALK_EXTRA_ROW: no matching AST function definition at game.cpp:2533 | SOURCE_NAME_AMBIGUOUS: same file/function label occurs at lines 2533,3106; kept distinct by line
+game.cpp	CWorld::kVersusMultiplayer	NO_MATCH_FOUND		FAIL	PASS_SHARED_METHOD	NOT_APPLICABLE	CROSSWALK_EXTRA_ROW;SOURCE_NAME_AMBIGUOUS	CROSSWALK_EXTRA_ROW: no matching AST function definition at game.cpp:2548 | SOURCE_NAME_AMBIGUOUS: same file/function label occurs at lines 2548,3129; kept distinct by line
+game.cpp	CGame::ReceiveButtonAction	SOURCE_EXACT	0x0046f7e0	PASS	PASS	PASS	OK	No row-level finding.
+game.cpp	CGame::UnPause	SOURCE_EXACT	0x0046fae0	PASS	PASS	PASS	OK	No row-level finding.
+game.cpp	CGame::Pause	SOURCE_EXACT	0x0046fb00	PASS	PASS	PASS	OK	No row-level finding.
+game.cpp	CGame::ToggleDebugUnitForward	SOURCE_ANALOG	0x0046fb80	PASS	PASS	PASS	OK	No row-level finding.
+game.cpp	CGame::ToggleDebugUnitBackward	SOURCE_ANALOG	0x0046fc40	PASS	PASS	PASS	OK	No row-level finding.
+game.cpp	CGame::ToggleDebugSquadBackward	SOURCE_ANALOG	0x0046fd40	PASS	PASS	PASS	OK	No row-level finding.
+game.cpp	CGame::ToggleDebugSquadForward	SOURCE_ANALOG	0x0046fe20	PASS	PASS	PASS	OK	No row-level finding.
+game.cpp	CGame::PreRender	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+game.cpp	CGame::StartPanState	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+game.cpp	CGame::StartPlayingState	SOURCE_EXACT	0x0046fec0	PASS	PASS	PASS	OK	No row-level finding.
+game.cpp	CGame::HandleEvent	SOURCE_EXACT	0x0046ff10	PASS	PASS	PASS	OK	No row-level finding.
+game.cpp	CGame::RespawnPlayer	SOURCE_EXACT	0x00470120	PASS	PASS	PASS	OK	No row-level finding.
+game.cpp	CWorld::kCooperativeMultiplayer	NO_MATCH_FOUND		FAIL	PASS_SHARED_METHOD	NOT_APPLICABLE	CROSSWALK_EXTRA_ROW;SOURCE_NAME_AMBIGUOUS	CROSSWALK_EXTRA_ROW: no matching AST function definition at game.cpp:3106 | SOURCE_NAME_AMBIGUOUS: same file/function label occurs at lines 2533,3106; kept distinct by line
+game.cpp	CWorld::kVersusMultiplayer	NO_MATCH_FOUND		FAIL	PASS_SHARED_METHOD	NOT_APPLICABLE	CROSSWALK_EXTRA_ROW;SOURCE_NAME_AMBIGUOUS	CROSSWALK_EXTRA_ROW: no matching AST function definition at game.cpp:3129 | SOURCE_NAME_AMBIGUOUS: same file/function label occurs at lines 2548,3129; kept distinct by line
+game.cpp	CGame::ToggleFreeCameraOn	SOURCE_ANALOG	0x00470430	PASS	PASS	PASS	OK	No row-level finding.
+game.cpp	CGame::ToggleFreeCameraOff	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+game.cpp	CGame::GetController	SOURCE_EXACT	0x004705d0	PASS	PASS	PASS	OK	No row-level finding.
+game.cpp	CGame::SetCurrentCamera	SOURCE_EXACT	0x004705e0	PASS	PASS	PASS	OK	No row-level finding.
+game.cpp	CGame::DrawDebugStuff	SOURCE_ANALOG	0x00470650	PASS	PASS	PASS	OK	No row-level finding.
+game.cpp	draw_end_level_darkener	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+game.cpp	CGame::DrawGameStuff	SOURCE_ANALOG	0x004714c0	PASS	PASS	PASS	OK	No row-level finding.
+game.cpp	CGame::DoWeWantMesh	SOURCE_ANALOG	0x00472570	PASS	PASS	PASS	OK	No row-level finding.
+game.cpp	CGame::IsMultiplayer	SOURCE_ANALOG	0x004725d0	PASS	PASS	PASS	OK	No row-level finding.
+game.cpp	CGame::GetPlayerLives	SOURCE_ANALOG	0x004725f0	PASS	PASS	PASS	OK	No row-level finding.
+game.cpp	CGame::SetPlayerLives	SOURCE_ANALOG	0x00472620	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+game.cpp	CGame::IsRunningResources	SOURCE_ANALOG	0x00472650	PASS	PASS	PASS	OK	No row-level finding.
+game.cpp	CGame::GetNumPrimaryObjectives	SOURCE_ANALOG	0x00472670	PASS	PASS	PASS	OK	No row-level finding.
+game.cpp	CGame::GetNumSecondaryObjectives	SOURCE_ANALOG	0x00472690	PASS	PASS	PASS	OK	No row-level finding.
+game.cpp	ReceiveButtonAction	NO_MATCH_FOUND		PASS_AMBIGUOUS_NAME	PASS_SHARED_METHOD	NOT_APPLICABLE	SOURCE_NAME_AMBIGUOUS	SOURCE_NAME_AMBIGUOUS: same file/function label occurs at lines 1240,4094; kept distinct by line
+game.cpp	CGame::RollCredits	SOURCE_ANALOG	0x004726b0	PASS	PASS	PASS	OK	No row-level finding.
+ltshell.cpp	resolvesymbolmodule	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+ltshell.cpp	resolvesymbolname	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+ltshell.cpp	resolvesymbolline	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+ltshell.cpp	resolvesymbolinfo	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+ltshell.cpp	ExceptionHandler	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+ltshell.cpp	ExitCode	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+ltshell.cpp	WinMain	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+ltshell.cpp	con_whatami	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+ltshell.cpp	PCLTShell::MainLoop	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+ltshell.cpp	PCLTShell::SetupSystemMessageHandler	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+ltshell.cpp	PCLTShell::HandlingSystemStuff	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+ltshell.cpp	PCLTShell::DisplayScreen	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+ltshell.cpp	PCLTShell::~dtor	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+ltshell.cpp	PCLTShell::InitDeviceObjects	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+ltshell.cpp	PCLTShell::RestoreDeviceObjects	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+ltshell.cpp	PCLTShell::InvalidateDeviceObjects	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+ltshell.cpp	PCLTShell::DeleteDeviceObjects	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+ltshell.cpp	PCLTShell::FinalCleanup	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+ltshell.cpp	PCLTShell::ConfirmDevice	SOURCE_ANALOG	0x00512c40	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+ltshell.cpp	PCLTShell::RemoveDeviceObject	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+ltshell.cpp	PCLTShell::MsgProc	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+ltshell.cpp	PCLTShell::FlushInputBuffers	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+ltshell.cpp	PCLTShell::EnumJoysticksCallback	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+ltshell.cpp	PCLTShell::EnumAxesCallback	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+ltshell.cpp	PCLTShell::EnumEffectsProc	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+ltshell.cpp	PCLTShell::InitDirectInput	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+ltshell.cpp	PCLTShell::InitialiseRumble	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+ltshell.cpp	PCLTShell::TriggerRumble	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+ltshell.cpp	PCLTShell::UpdateJoystick	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+ltshell.cpp	PCLTShell::FreeDirectInput	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+ltshell.cpp	PCLTShell::DeadZone	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+ltshell.cpp	PCLTShell::ForceFile	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+ltshell.cpp	PCLTShell::DumpScreen	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+ltshell.cpp	PCLTShell::SetKeytrap	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+ltshell.cpp	PCLTShell::InvalidateAllStates	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+ltshell.cpp	PCLTShell::CheckD3DState	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+ltshell.cpp	PCLTShell::GetBPP	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+ltshell.cpp	PCLTShell::IsThisAGeForce3	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+ltshell.cpp	PCLTShell::ShowGFXCardInfo	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+ltshell.cpp	PCLTShell::TriggerQuit	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+ltshell.cpp	PCLTShell::GetDisplayFormat	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+ltshell.cpp	PCLTShell::D3D_CreateVertexBuffer	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+ltshell.cpp	PCLTShell::D3D_ReleaseVertexBuffer	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+pcsoundmanager.cpp	CPCSample::~dtor	SOURCE_ANALOG	0x005168d0	PASS	FAIL	PASS	ANALOG_REASON_EVIDENCE_WEAK;EVIDENCE_TARGET_UNRESOLVED	EVIDENCE_TARGET_UNRESOLVED: no VA/source-anchor row in reverse-engineering/binary-analysis/cpcsoundmanager-backend-semantics-2026-08-11.tsv | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+pcsoundmanager.cpp	CPCSoundManager::DeviceInit	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+pcsoundmanager.cpp	CPCSoundManager::DeviceShutdown	SOURCE_EXACT	0x005171e0	PASS	PASS	PASS	OK	No row-level finding.
+pcsoundmanager.cpp	CPCSoundManager::DeviceReset	SOURCE_EXACT	0x00517260	PASS	PASS	PASS	OK	No row-level finding.
+pcsoundmanager.cpp	CPCSoundManager::LoadNewSample	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+pcsoundmanager.cpp	CPCSoundManager::PlaySound	SOURCE_EXACT	0x00517790	PASS	PASS	PASS	OK	No row-level finding.
+pcsoundmanager.cpp	CPCSoundManager::UnPauseSound	SOURCE_EXACT	0x00517960	PASS	PASS	PASS	OK	No row-level finding.
+pcsoundmanager.cpp	CPCSoundManager::PauseSound	SOURCE_EXACT	0x00517990	PASS	PASS	PASS	OK	No row-level finding.
+pcsoundmanager.cpp	CPCSoundManager::StopSound	SOURCE_EXACT	0x005179b0	PASS	PASS	PASS	OK	No row-level finding.
+pcsoundmanager.cpp	CPCSoundManager::UpdateGlobals	SOURCE_EXACT	0x00517a20	PASS	PASS	PASS	OK	No row-level finding.
+pcsoundmanager.cpp	CPCSoundManager::UpdateSound	SOURCE_EXACT	0x00517ae0	PASS	PASS	PASS	OK	No row-level finding.
+pcsoundmanager.cpp	CPCSoundManager::UpdatesDone	SOURCE_EXACT	0x00517c40	PASS	PASS	PASS	OK	No row-level finding.
+pcsoundmanager.cpp	CPCSoundManager::GetSampleDataAtTime	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+pcsoundmanager.cpp	CPCSoundManager::GetSampleDataAtSample	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+pcsoundmanager.cpp	CPCSoundManager::GetSampleLength	SOURCE_EXACT	0x00517c60	PASS	PASS	DISAGREEMENT	CROSSWALK_VA_COLLISION	CROSSWALK_VA_COLLISION: VA 0x00517c60 is shared by 2 rows: pcsoundmanager.cpp:468:CPCSoundManager::GetSampleLength, pcsoundmanager.cpp:477:CPCSoundManager::GetSampleLengthInSamples
+pcsoundmanager.cpp	CPCSoundManager::GetSampleLengthInSamples	SOURCE_ANALOG	0x00517c60	PASS	FAIL	DISAGREEMENT	ANALOG_REASON_EVIDENCE_WEAK;CROSSWALK_VA_COLLISION	CROSSWALK_VA_COLLISION: VA 0x00517c60 is shared by 2 rows: pcsoundmanager.cpp:468:CPCSoundManager::GetSampleLength, pcsoundmanager.cpp:477:CPCSoundManager::GetSampleLengthInSamples | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+pcsoundmanager.cpp	CPCSoundManager::FindFreeChannel	SOURCE_EXACT	0x00517cb0	PASS	PASS	PASS	OK	No row-level finding.
+scheduledevent.cpp	CScheduledEvent::Set	SOURCE_EXACT	0x004de1f0	PASS	PASS	PASS	OK	No row-level finding.
+scheduledevent.cpp	CScheduledEvent::~dtor	SOURCE_EXACT	0x004de230	PASS	PASS	PASS	OK	No row-level finding.
+thing.cpp	CThing::CThing	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+thing.cpp	CThing::Init	SOURCE_ANALOG	0x004f34a0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+thing.cpp	CThing::InitRenderThing	SOURCE_ANALOG	0x004f35d0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+thing.cpp	CThing::Shutdown	SOURCE_ANALOG	0x004f3600	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+thing.cpp	CThing::~dtor	SOURCE_ANALOG	0x004f3480	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+thing.cpp	CThing::Render	SOURCE_ANALOG	0x004f36d0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+thing.cpp	CThing::RenderImposter	SOURCE_ANALOG	0x004f3710	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+thing.cpp	CThing::HandleEvent	SOURCE_ANALOG	0x004f3730	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+thing.cpp	CThing::AddShutdownEvent	NO_MATCH_FOUND		PASS	FAIL	NOT_APPLICABLE	NO_MATCH_NAME_TABLE_HIT	NO_MATCH_NAME_TABLE_HIT: normalized current name-table hit(s): 0x004f3760:CThing__AddShutdownEvent_004f3760
+thing.cpp	CThing::StartDieProcess	NO_MATCH_FOUND		PASS	FAIL	NOT_APPLICABLE	NO_MATCH_NAME_TABLE_HIT	NO_MATCH_NAME_TABLE_HIT: normalized current name-table hit(s): 0x004f37a0:CThing__StartDieProcess_004f37a0
+thing.cpp	CThing::DrawDebugCuboid	SOURCE_ANALOG	0x004f37c0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+thing.cpp	CThing::GetBoundingRadius	SOURCE_ANALOG	0x004f3940	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+thing.cpp	CThing::SetObjective	SOURCE_ANALOG	0x004f3970	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+thing.cpp	CThing::UpdatePosition	SOURCE_ANALOG	0x004f39b0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+thing.cpp	CThing::InitCollisionSeekingThing	SOURCE_ANALOG	0x004f39c0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+thing.cpp	CThing::GetCentrePos	SOURCE_ANALOG	0x004f3ac0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+thing.cpp	CThing::StickToGround	SOURCE_ANALOG	0x004f3c50	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+thing.cpp	CThing::SitOnGround	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+thing.cpp	CThing::GetRenderThingFrameIncrement	SOURCE_ANALOG	0x004f3c80	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+thing.cpp	CThing::MoveTo	SOURCE_ANALOG	0x004f3cb0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+thing.cpp	CThing::Teleport	SOURCE_ANALOG	0x004f3ce0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+thing.cpp	CThing::GetCSPT	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+thing.cpp	CThing::GetTopPos	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+thing.cpp	CThing::GetBoundingBox	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+thing.cpp	CThing::DrawDebugStuff	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+thing.cpp	CThing::DrawDebugStuff3d	SOURCE_ANALOG	0x004f3d30	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+thing.cpp	CThing::AccumulateResources	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+thing.cpp	CThing::IncreaseThingCounter	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+thing.cpp	CThing::IsOverWater	SOURCE_ANALOG	0x004f3de0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+thing.cpp	CComplexThing::CComplexThing	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+thing.cpp	CComplexThing::~dtor	SOURCE_ANALOG	0x004f3ee0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+thing.cpp	CComplexThing::Init	SOURCE_ANALOG	0x004f3fd0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+thing.cpp	CComplexThing::SetName	SOURCE_ANALOG	0x004f4120	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+thing.cpp	CComplexThing::Shutdown	SOURCE_ANALOG	0x004f41b0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+thing.cpp	CComplexThing::SetScript	SOURCE_ANALOG	0x004f4230	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+thing.cpp	CComplexThing::HandleEvent	SOURCE_ANALOG	0x004f4300	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+thing.cpp	CComplexThing::AddShutdownEvent	SOURCE_ANALOG	0x004f43d0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+thing.cpp	CComplexThing::StartDieProcess	SOURCE_ANALOG	0x004f4430	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+thing.cpp	CComplexThing::TeleportOrientation	SOURCE_ANALOG	0x004f4460	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+thing.cpp	CComplexThing::Hit	SOURCE_ANALOG	0x004f4480	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+thing.cpp	CComplexThing::SetAnimMode	SOURCE_ANALOG	0x004f44a0	PASS_AMBIGUOUS_NAME	FAIL	DISAGREEMENT	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK;CROSSWALK_VA_COLLISION;SOURCE_NAME_AMBIGUOUS	SOURCE_NAME_AMBIGUOUS: same file/function label occurs at lines 763,788; kept distinct by line | CROSSWALK_VA_COLLISION: VA 0x004f44a0 is shared by 2 rows: thing.cpp:763:CComplexThing::SetAnimMode, thing.cpp:788:CComplexThing::SetAnimMode | ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+thing.cpp	CComplexThing::GetAnimModeByName	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+thing.cpp	CComplexThing::SetAnimMode	SOURCE_ANALOG	0x004f44a0	PASS_AMBIGUOUS_NAME	FAIL	DISAGREEMENT	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK;CROSSWALK_VA_COLLISION;SOURCE_NAME_AMBIGUOUS	SOURCE_NAME_AMBIGUOUS: same file/function label occurs at lines 763,788; kept distinct by line | CROSSWALK_VA_COLLISION: VA 0x004f44a0 is shared by 2 rows: thing.cpp:763:CComplexThing::SetAnimMode, thing.cpp:788:CComplexThing::SetAnimMode | ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+thing.cpp	CComplexThing::FinishedPlayingCurrentAnimation	SOURCE_ANALOG	0x004f45a0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+thing.cpp	CComplexThing::GetRenderFrame	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+thing.cpp	CComplexThing::AccumulateResources	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+thing.cpp	CComplexThing::SetVar	SOURCE_ANALOG	0x004f45e0	PASS	FAIL	PASS	ANALOG_EVIDENCE_PATH_MISSING;ANALOG_REASON_EVIDENCE_WEAK	ANALOG_EVIDENCE_PATH_MISSING: SOURCE_ANALOG has no evidence_path | ANALOG_REASON_EVIDENCE_WEAK: no cited bounded reason explains the source-to-retail analogy
+Array.h	operator_subscript	NO_MATCH_FOUND		PASS_AMBIGUOUS_NAME	PASS_SHARED_METHOD	NOT_APPLICABLE	SOURCE_NAME_AMBIGUOUS	SOURCE_NAME_AMBIGUOUS: same file/function label occurs at lines 103,117; kept distinct by line
+Array.h	operator_subscript	NO_MATCH_FOUND		PASS_AMBIGUOUS_NAME	PASS_SHARED_METHOD	NOT_APPLICABLE	SOURCE_NAME_AMBIGUOUS	SOURCE_NAME_AMBIGUOUS: same file/function label occurs at lines 103,117; kept distinct by line
+BattleEngine.h	CLockInfo	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngine.h	SetConfiguration	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineDataManager.h	SetConfigurationName	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineDataManager.h	AddJetWeapon	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineDataManager.h	RemoveJetWeapon	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineDataManager.h	RenameJetWeapon	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineDataManager.h	AddMechWeapon	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineDataManager.h	RemoveMechWeapon	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineDataManager.h	RenameWalkerWeapon	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineDataManager.h	SetExplosion	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineDataManager.h	SetAugWeapon	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineDataManager.h	SetPrimaryWeapon	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineDataManager.h	SetCockpit	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineDataManager.h	Shutdown	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineDataManager.h	Initialise	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineDataManager.h	GetConfiguration	NO_MATCH_FOUND		PASS_AMBIGUOUS_NAME	PASS_SHARED_METHOD	NOT_APPLICABLE	SOURCE_NAME_AMBIGUOUS	SOURCE_NAME_AMBIGUOUS: same file/function label occurs at lines 272,289,418; kept distinct by line
+BattleEngineDataManager.h	GetConfiguration	NO_MATCH_FOUND		PASS_AMBIGUOUS_NAME	PASS_SHARED_METHOD	NOT_APPLICABLE	SOURCE_NAME_AMBIGUOUS	SOURCE_NAME_AMBIGUOUS: same file/function label occurs at lines 272,289,418; kept distinct by line
+BattleEngineDataManager.h	Load	NO_MATCH_FOUND		PASS_AMBIGUOUS_NAME	PASS_SHARED_METHOD	NOT_APPLICABLE	SOURCE_NAME_AMBIGUOUS	SOURCE_NAME_AMBIGUOUS: same file/function label occurs at lines 301,338; kept distinct by line
+BattleEngineDataManager.h	AccumulateResources	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineDataManager.h	Skip	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineDataManager.h	Load	NO_MATCH_FOUND		PASS_AMBIGUOUS_NAME	PASS_SHARED_METHOD	NOT_APPLICABLE	SOURCE_NAME_AMBIGUOUS	SOURCE_NAME_AMBIGUOUS: same file/function label occurs at lines 301,338; kept distinct by line
+BattleEngineDataManager.h	Save	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineDataManager.h	AddConfiguration	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineDataManager.h	RemoveConfiguration	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineDataManager.h	RenameConfiguration	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineDataManager.h	ConfigurationExists	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+BattleEngineDataManager.h	GetConfiguration	NO_MATCH_FOUND		PASS_AMBIGUOUS_NAME	PASS_SHARED_METHOD	NOT_APPLICABLE	SOURCE_NAME_AMBIGUOUS	SOURCE_NAME_AMBIGUOUS: same file/function label occurs at lines 272,289,418; kept distinct by line
+Controller.h	SetButton	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Controller.h	UnsetButton	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Controller.h	IsButtonSet	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Controller.h	IsButtonOldSet	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+DXEngine.h	GetDefaultTexture	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+DXMemoryManager.h	IsThingHeapNearlyFull	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+DXMemoryManager.h	IsThingHeapFull	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+FEPGoodies.h	CGoodieData	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+InitThing.h	Initialise	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+InitThing.h	Copy	NO_MATCH_FOUND		PASS_AMBIGUOUS_NAME	PASS_SHARED_METHOD	NOT_APPLICABLE	SOURCE_NAME_AMBIGUOUS	SOURCE_NAME_AMBIGUOUS: same file/function label occurs at lines 144,379,435,645,651,699,751,810,850,876; kept distinct by line
+InitThing.h	Load	NO_MATCH_FOUND		PASS_AMBIGUOUS_NAME	PASS_SHARED_METHOD	NOT_APPLICABLE	SOURCE_NAME_AMBIGUOUS	SOURCE_NAME_AMBIGUOUS: same file/function label occurs at lines 170,391,454,665,709,764,819,858; kept distinct by line
+InitThing.h	CTreeInitThing	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+InitThing.h	Copy	NO_MATCH_FOUND		PASS_AMBIGUOUS_NAME	PASS_SHARED_METHOD	NOT_APPLICABLE	SOURCE_NAME_AMBIGUOUS	SOURCE_NAME_AMBIGUOUS: same file/function label occurs at lines 144,379,435,645,651,699,751,810,850,876; kept distinct by line
+InitThing.h	Load	NO_MATCH_FOUND		PASS_AMBIGUOUS_NAME	PASS_SHARED_METHOD	NOT_APPLICABLE	SOURCE_NAME_AMBIGUOUS	SOURCE_NAME_AMBIGUOUS: same file/function label occurs at lines 170,391,454,665,709,764,819,858; kept distinct by line
+InitThing.h	mSquadDelay	NO_MATCH_FOUND		FAIL	PASS_SHARED_METHOD	NOT_APPLICABLE	CROSSWALK_EXTRA_ROW	CROSSWALK_EXTRA_ROW: no matching AST function definition at InitThing.h:422
+InitThing.h	Copy	NO_MATCH_FOUND		PASS_AMBIGUOUS_NAME	PASS_SHARED_METHOD	NOT_APPLICABLE	SOURCE_NAME_AMBIGUOUS	SOURCE_NAME_AMBIGUOUS: same file/function label occurs at lines 144,379,435,645,651,699,751,810,850,876; kept distinct by line
+InitThing.h	Load	NO_MATCH_FOUND		PASS_AMBIGUOUS_NAME	PASS_SHARED_METHOD	NOT_APPLICABLE	SOURCE_NAME_AMBIGUOUS	SOURCE_NAME_AMBIGUOUS: same file/function label occurs at lines 170,391,454,665,709,764,819,858; kept distinct by line
+InitThing.h	CSquadInitThing	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+InitThing.h	Copy	NO_MATCH_FOUND		PASS_AMBIGUOUS_NAME	PASS_SHARED_METHOD	NOT_APPLICABLE	SOURCE_NAME_AMBIGUOUS	SOURCE_NAME_AMBIGUOUS: same file/function label occurs at lines 144,379,435,645,651,699,751,810,850,876; kept distinct by line
+InitThing.h	Copy	NO_MATCH_FOUND		PASS_AMBIGUOUS_NAME	PASS_SHARED_METHOD	NOT_APPLICABLE	SOURCE_NAME_AMBIGUOUS	SOURCE_NAME_AMBIGUOUS: same file/function label occurs at lines 144,379,435,645,651,699,751,810,850,876; kept distinct by line
+InitThing.h	Load	NO_MATCH_FOUND		PASS_AMBIGUOUS_NAME	PASS_SHARED_METHOD	NOT_APPLICABLE	SOURCE_NAME_AMBIGUOUS	SOURCE_NAME_AMBIGUOUS: same file/function label occurs at lines 170,391,454,665,709,764,819,858; kept distinct by line
+InitThing.h	CWallInitThing	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+InitThing.h	Copy	NO_MATCH_FOUND		PASS_AMBIGUOUS_NAME	PASS_SHARED_METHOD	NOT_APPLICABLE	SOURCE_NAME_AMBIGUOUS	SOURCE_NAME_AMBIGUOUS: same file/function label occurs at lines 144,379,435,645,651,699,751,810,850,876; kept distinct by line
+InitThing.h	Load	NO_MATCH_FOUND		PASS_AMBIGUOUS_NAME	PASS_SHARED_METHOD	NOT_APPLICABLE	SOURCE_NAME_AMBIGUOUS	SOURCE_NAME_AMBIGUOUS: same file/function label occurs at lines 170,391,454,665,709,764,819,858; kept distinct by line
+InitThing.h	CCutsceneInitThing	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+InitThing.h	Copy	NO_MATCH_FOUND		PASS_AMBIGUOUS_NAME	PASS_SHARED_METHOD	NOT_APPLICABLE	SOURCE_NAME_AMBIGUOUS	SOURCE_NAME_AMBIGUOUS: same file/function label occurs at lines 144,379,435,645,651,699,751,810,850,876; kept distinct by line
+InitThing.h	Load	NO_MATCH_FOUND		PASS_AMBIGUOUS_NAME	PASS_SHARED_METHOD	NOT_APPLICABLE	SOURCE_NAME_AMBIGUOUS	SOURCE_NAME_AMBIGUOUS: same file/function label occurs at lines 170,391,454,665,709,764,819,858; kept distinct by line
+InitThing.h	CStartInitThing	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+InitThing.h	Copy	NO_MATCH_FOUND		PASS_AMBIGUOUS_NAME	PASS_SHARED_METHOD	NOT_APPLICABLE	SOURCE_NAME_AMBIGUOUS	SOURCE_NAME_AMBIGUOUS: same file/function label occurs at lines 144,379,435,645,651,699,751,810,850,876; kept distinct by line
+InitThing.h	Load	NO_MATCH_FOUND		PASS_AMBIGUOUS_NAME	PASS_SHARED_METHOD	NOT_APPLICABLE	SOURCE_NAME_AMBIGUOUS	SOURCE_NAME_AMBIGUOUS: same file/function label occurs at lines 170,391,454,665,709,764,819,858; kept distinct by line
+InitThing.h	CSphereTriggerInitThing	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+InitThing.h	Copy	NO_MATCH_FOUND		PASS_AMBIGUOUS_NAME	PASS_SHARED_METHOD	NOT_APPLICABLE	SOURCE_NAME_AMBIGUOUS	SOURCE_NAME_AMBIGUOUS: same file/function label occurs at lines 144,379,435,645,651,699,751,810,850,876; kept distinct by line
+InitThing.h	Load	NO_MATCH_FOUND		PASS_AMBIGUOUS_NAME	PASS_SHARED_METHOD	NOT_APPLICABLE	SOURCE_NAME_AMBIGUOUS	SOURCE_NAME_AMBIGUOUS: same file/function label occurs at lines 170,391,454,665,709,764,819,858; kept distinct by line
+InitThing.h	CUnitInitThing	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+InitThing.h	Copy	NO_MATCH_FOUND		PASS_AMBIGUOUS_NAME	PASS_SHARED_METHOD	NOT_APPLICABLE	SOURCE_NAME_AMBIGUOUS	SOURCE_NAME_AMBIGUOUS: same file/function label occurs at lines 144,379,435,645,651,699,751,810,850,876; kept distinct by line
+InitThing.h	CRoundInitThing	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+InitThing.h	CBattleEngineInitThing	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+InitThing.h	CExplosionInitThing	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+InitThing.h	CFeatureInitThing	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+InitThing.h	CHazardInitThing	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+MemoryCard.h	GetHumanReadableError	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+MemoryManager.h	SetBaseSet	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+MemoryManager.h	IsTiny	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+MemoryManager.h	CMemoryTag	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+MemoryManager.h	CMemoryManager	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Music.h	CSong	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+Music.h	CMusic	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCMemoryCard.h	GetCardInfo	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCMemoryCard.h	GetCardOrPreviousCardName2	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCMemoryCard.h	GetCardName	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCMemoryCard.h	GetCardType	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCMemoryCard.h	Format	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCMemoryCard.h	Unformat	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCMemoryCard.h	GetNumSaves	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCMemoryCard.h	GetSaveName	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCMemoryCard.h	CreateSave	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCMemoryCard.h	DeleteSave	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCMemoryCard.h	WriteSave	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCMemoryCard.h	ReadSave	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCMemoryCard.h	GetSaveSize	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCMemoryCard.h	MakeHumanReadableSize	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+PCPlatform.h	CPCPlatform	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+SoundManager.h	CEffect	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+SoundManager.h	CSample	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+SoundManager.h	CSoundManager	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+game.h	CGame::CalcRenderFrameFraction	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+game.h	CGame::GetFrameRenderFraction	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+game.h	CGame::GetFrameRenderFraction2	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+ltshell.h	DisableSmallTextures	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+ltshell.h	DisableTextureCompression	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+pcsoundmanager.h	CPCSample	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+pcsoundmanager.h	CPCSoundManager	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.
+thing.h	CThing::GetOrientation	NO_MATCH_FOUND		PASS	PASS_SHARED_METHOD	NOT_APPLICABLE	OK	No row-level finding.

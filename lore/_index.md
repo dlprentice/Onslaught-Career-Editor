@@ -6,7 +6,7 @@
   [`reverse-engineering/`](../reverse-engineering/RE-INDEX.md), **the
   measurement wins** and the article is the side that gets corrected.
 - **Last updated:** 2026-08-22
-- **Summary:** navigation to the 15 lore articles in this directory, plus
+- **Summary:** navigation to the 16 lore articles in this directory, plus
   pointers to the RE and roadmap indexes.
 
 A comprehensive record of Battle Engine Aquila (2003), Lost Toys Ltd., and the people who made it. This documentation preserves development history, in-game lore, community discoveries, and developer insights that would otherwise be lost.
@@ -22,6 +22,7 @@ A comprehensive record of Battle Engine Aquila (2003), Lost Toys Ltd., and the p
 | [world-lore.md](world-lore.md) | Planet Allium, Forseti vs Muspell factions, geography, story |
 | [characters.md](characters.md) | All eight retail character-profile entries and their evidence boundary |
 | [the-campaign.md](the-campaign.md) | Campaign shape, mission numbering, live mission list from your install |
+| [platform-content-variants.md](platform-content-variants.md) | Which setting, mission, character, and world content is shared or variant across PC, Xbox, and PS2 packed content |
 | [worlds.md](worlds.md) | All 43 career nodes and all 23 additional shipped numeric worlds, with bounded TTD fingerprints |
 | [units-and-mechs.md](units-and-mechs.md) | Complete 160-name unit-record census, 25 behaviour types, and boss/class families |
 | [weapons.md](weapons.md) | Complete 139-name weapon-record census and the measured weapon/mode/round/explosion chain |
@@ -54,6 +55,7 @@ A comprehensive record of Battle Engine Aquila (2003), Lost Toys Ltd., and the p
 - [The Forseti faction](world-lore.md#the-forseti)
 - [The Muspell faction](world-lore.md#the-muspell)
 - [The Sohra Treaty](world-lore.md#the-sohra-treaty)
+- [What is shared or different between platforms](platform-content-variants.md)
 - [Every shipped numeric world](worlds.md)
 
 ### Development

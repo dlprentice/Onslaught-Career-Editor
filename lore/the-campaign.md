@@ -5,7 +5,7 @@
   not shipped with this app.** It is read out of your own installed copy each
   time you open this page, so what you see is your game's text rather than
   someone's transcription of it.
-- **Last updated:** 2026-08-02
+- **Last updated:** 2026-08-22
 - **Summary:** how the campaign is shaped, what the mission numbering means, and
   the mission list read live from your install.
 
@@ -34,6 +34,12 @@ after things have gone worse. Those are marked in the list below.
 
 Mission numbers are what the app uses when it talks to the game, which is why
 Save Lab and the Media page show them beside the names.
+
+The measured PC, Xbox, and PlayStation 2 language tables carry the same 43
+mission codes and titles in American, English, French, German, Italian, and
+Spanish. PS2's canonical tables are byte-identical to PC; Xbox Europe, Korea,
+and USA carry byte-identical copies of the smaller Xbox tables. See
+[The Same War on Different Platforms](platform-content-variants.md).
 
 ## The missions
 

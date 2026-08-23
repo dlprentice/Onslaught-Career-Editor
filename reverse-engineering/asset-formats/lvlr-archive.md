@@ -83,6 +83,11 @@ coverage claim.
 - Embedded `MESH` bodies may be carved only as candidates until their exact
   enclosing boundary/dependencies are proved. `TEXT` can own serialized texture
   metadata and must not be interpreted as arbitrary prose.
+- The [CMSH animation/usage census](cmsh-animation-usage.md) decodes the
+  validated `PMSH[/PMS2]` logical name on all 3,485 `MESH` rows in the 66 numeric
+  archives: 3,432 rows join to 205 loose meshes and 53 have an empty name. This
+  proves numeric-archive membership, not a WRES placement, spawn, or animation
+  schedule. The seven additional all-LVLR `MESH` rows are in Goodie archives.
 - Level 100/base/frontend have deep owner-specific work; the other worlds are
   primarily structural inventory.
 
