@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+using System.Text;
 using OnslaughtRebuild.Core;
 
 namespace OnslaughtRebuild.Client;
@@ -134,6 +135,8 @@ public sealed class InteractiveSession
     private long _movementPulseEdgesConsumed;
     private long _cappedFrameCount;
     private long _droppedElapsedTicks;
+    private CommandTapeRecorder? _recorder;
+    private int _recordedTicks;
 
     public InteractiveSession(uint seed, Level100ActorDefinitionSet level100ActorDefinitions)
     {
@@ -148,6 +151,42 @@ public sealed class InteractiveSession
             CurrentSnapshot.Level100DestructionEvents);
         _undeliveredLevel100WeaponFireEvents.AddRange(
             CurrentSnapshot.Level100WeaponFireEvents);
+    }
+
+    /// <summary>
+    /// The SimInput Core consumed on the most recent simulation step: post
+    /// quantise (pointer motion already converted to the analogue permille
+    /// axis), post pulse merge, and with every consumed edge folded in. This
+    /// is exactly what a replay must feed Core to reproduce this session, and
+    /// it is what <see cref="CommandTapeRecorder.Observe"/> records.
+    /// </summary>
+    public SimInput? LastConsumedInput { get; private set; }
+
+    /// <summary>
+    /// Enables tape recording for the whole session: every simulation step
+    /// feeds its consumed input to <paramref name="recorder"/>. It must be
+    /// enabled with an empty recorder before tick 0; there is deliberately no
+    /// retroactive or partial-session capture that could invent pre-enable
+    /// input. Recording is deterministic and in-process only; persisting the
+    /// finished tape is the caller's decision via
+    /// <see cref="TapeFile.WriteNew"/>.
+    /// </summary>
+    public void EnableRecording(CommandTapeRecorder recorder)
+    {
+        ArgumentNullException.ThrowIfNull(recorder);
+        if (_recorder is not null && !ReferenceEquals(_recorder, recorder))
+        {
+            throw new InvalidOperationException(
+                "This session is already recording to another CommandTapeRecorder.");
+        }
+
+        if (CurrentSnapshot.Tick != 0 || recorder.NextTick != 0)
+        {
+            throw new InvalidOperationException(
+                "Recording must be enabled with an empty recorder before the session's first simulation tick.");
+        }
+
+        _recorder = recorder;
     }
 
     public WorldSnapshot PreviousSnapshot { get; private set; }
@@ -552,6 +591,15 @@ public sealed class InteractiveSession
             }
 
             SimActions actions = firePulse ? SimActions.Fire : SimActions.None;
+            // The shipped rows sample BUTTON_MECH_CHARGE_GUN_POD as a held
+            // mouse level (row 10) and BUTTON_MECH_FIRE_GUN_POD as the release
+            // edge immediately after it (row 11). InteractiveInput.FireHeld is
+            // that physical button level, so the same press charges on every
+            // held tick and its falling edge fires once.
+            if (_input.FireHeld)
+            {
+                actions |= SimActions.ChargeWeapon;
+            }
             if (_input.LandingJetsHeld)
             {
                 actions |= SimActions.LandingJets;
@@ -623,16 +671,23 @@ public sealed class InteractiveSession
             // Held digital look is level-sampled. Pointer motion enters as the
             // whole-pixel analogue axis retail reads out of the cursor, and
             // recenters across steps.
+            SimInput consumedInput = new(
+                moveX,
+                moveZ,
+                actions,
+                lookX,
+                lookY,
+                pointerLookX,
+                pointerLookY);
             CurrentSnapshot = _simulation.Step(
-                new SimInput(
-                    moveX,
-                    moveZ,
-                    actions,
-                    lookX,
-                    lookY,
-                    pointerLookX,
-                    pointerLookY),
+                consumedInput,
                 firstStep ? level100Facts : null);
+            LastConsumedInput = consumedInput;
+            if (_recorder is not null)
+            {
+                _recorder.Observe(_recordedTicks++, consumedInput);
+            }
+
             level100MissionEvents.AddRange(CurrentSnapshot.Level100MissionEvents);
             aquilaFlightEvents.AddRange(CurrentSnapshot.AquilaFlightEventLog);
             level100DestructionEvents.AddRange(
@@ -785,5 +840,62 @@ public sealed class InteractiveSession
             ? (scaled + (PointerAxisDenominator / 2)) / PointerAxisDenominator
             : (scaled - (PointerAxisDenominator / 2)) / PointerAxisDenominator;
         return (short)Math.Clamp(rounded, -1_000, 1_000);
+    }
+}
+
+/// <summary>
+/// The create-new / no-overwrite persistence control for command tapes, owned
+/// by the Client so the headless tooling and the Godot client share one
+/// refusal path (Core itself is filesystem-free by contract and test). Every
+/// write goes through <see cref="System.IO.FileMode.CreateNew"/>, so an
+/// existing file at the destination path can never be opened for writing,
+/// truncated, or replaced. Callers hand this a path the user chose explicitly;
+/// there is deliberately no discovery or default destination anywhere in this
+/// owner.
+/// </summary>
+public static class TapeFile
+{
+    /// <summary>
+    /// Persists <paramref name="tape"/> as LF-canonical JSON, creating missing
+    /// parent directories, and refuses any path that already exists. The
+    /// refusal throws before a byte of tape JSON is produced, so a failed call
+    /// leaves the destination untouched.
+    /// </summary>
+    public static void WriteNew(string path, CommandTape tape)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        ArgumentNullException.ThrowIfNull(tape);
+
+        if (!Path.IsPathFullyQualified(path) ||
+            !string.Equals(Path.GetExtension(path), ".json", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new ArgumentException(
+                "Command tapes require an absolute .json destination path; career saves and retail files are never valid destinations.",
+                nameof(path));
+        }
+
+        if (File.Exists(path))
+        {
+            throw new IOException(
+                $"Command tape persistence refuses to overwrite '{path}'. Choose a fresh destination path.");
+        }
+
+        string? directory = Path.GetDirectoryName(Path.GetFullPath(path));
+        if (!string.IsNullOrEmpty(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
+
+        // CreateNew is the load-bearing control: it fails at the OS level if
+        // anything raced the File.Exists check above, so the no-overwrite
+        // guarantee does not depend on either check alone.
+        using FileStream stream = new(
+            path,
+            FileMode.CreateNew,
+            FileAccess.Write,
+            FileShare.None);
+        byte[] bytes = Encoding.UTF8.GetBytes(CommandTapeCodec.Serialize(tape));
+        stream.Write(bytes);
+        stream.Flush(flushToDisk: true);
     }
 }

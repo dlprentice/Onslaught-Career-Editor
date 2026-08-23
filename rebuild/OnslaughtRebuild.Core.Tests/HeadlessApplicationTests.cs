@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 using System.Text.Json;
+using OnslaughtRebuild.Client;
 using OnslaughtRebuild.Core;
 using OnslaughtRebuild.Headless;
+using OnslaughtRebuild.TestSupport;
 
 namespace OnslaughtRebuild.Core.Tests;
 
@@ -249,5 +251,226 @@ public sealed class HeadlessApplicationTests
             $"onslaught-rebuild-test-{Guid.NewGuid():N}.json");
         File.WriteAllText(path, content);
         return path;
+    }
+
+    private static Level100ActorDefinitionSet LoadMaterializedActorDefinitions()
+    {
+        string path = Path.Combine(
+            AppContext.BaseDirectory,
+            "Assets",
+            "Level100",
+            "StaticWorld",
+            "level100-static-world.json");
+        return Level100ActorDefinitionManifest.Decode(File.ReadAllBytes(path));
+    }
+
+    // ------------------------------------------------------------------
+    // P8 stage 1: a recorded v5 tape replays under --expect, and the
+    // create-new / no-overwrite persistence control refuses an existing
+    // destination before any bytes are touched.
+    // ------------------------------------------------------------------
+
+    [Fact]
+    public void RecordedTape_RoundTripsThroughHeadlessExpectGate()
+    {
+        const uint seed = 23;
+        const long oneCoreStepTicks = 500_000;
+        // The REAL materialized Level 100 manifest, exactly what
+        // HeadlessApplication.LoadActorDefinitions resolves — a recorded tape
+        // only replays under the same actor set it was captured with.
+        var definitions = LoadMaterializedActorDefinitions();
+        var recorder = new CommandTapeRecorder();
+        var session = new InteractiveSession(seed, definitions);
+        session.EnableRecording(recorder);
+
+        const int firstRunControlTick = 665;
+        for (int tick = 0; tick < firstRunControlTick; tick++)
+        {
+            session.AdvanceFrameTicks(oneCoreStepTicks);
+        }
+        Assert.True(session.CurrentSnapshot.Level100PlayerControlEnabled);
+
+        // Tick 665: pointer motion becomes the deterministic post-quantise
+        // analogue permille axis; movement and the physical fire-button level
+        // are sampled, and one zoom edge is consumed.
+        session.QueuePointerMotionMilliPixels(9_000, -4_000);
+        session.QueueZoomIn();
+        session.ObserveInput(new InteractiveInput(0, 1, true, false, false));
+        session.AdvanceFrameTicks(oneCoreStepTicks);
+        SimInput firstConsumed = Assert.NotNull(session.LastConsumedInput);
+        Assert.True(firstConsumed.HasAction(SimActions.ChargeWeapon));
+        Assert.True(firstConsumed.HasAction(SimActions.ZoomIn));
+        Assert.NotEqual(0, firstConsumed.LookXAnalogPermille);
+        Assert.NotEqual(0, firstConsumed.LookYAnalogPermille);
+
+        // Tick 666 stays held: ChargeWeapon is a level and can coalesce with
+        // otherwise-identical input; the zoom edge does not repeat.
+        session.AdvanceFrameTicks(oneCoreStepTicks);
+        SimInput heldConsumed = Assert.NotNull(session.LastConsumedInput);
+        Assert.True(heldConsumed.HasAction(SimActions.ChargeWeapon));
+        Assert.False(heldConsumed.HasAction(SimActions.ZoomIn));
+
+        // Tick 667 releases the same physical button (one Fire edge), consumes
+        // a movement pulse and the opposite zoom edge. These exact edge bits
+        // must survive the tape round trip as one-tick spans.
+        session.ObserveInput(InteractiveInput.Idle);
+        session.QueueMovementPulse(1, 0);
+        session.QueueZoomOut();
+        session.AdvanceFrameTicks(oneCoreStepTicks);
+        SimInput releasedConsumed = Assert.NotNull(session.LastConsumedInput);
+        Assert.True(releasedConsumed.HasAction(SimActions.Fire));
+        Assert.True(releasedConsumed.HasAction(SimActions.ZoomOut));
+        Assert.Equal(1, releasedConsumed.MoveX);
+
+        WorldSnapshot final = session.CurrentSnapshot;
+        CommandTape probe = CommandTapeCodec.Deserialize(
+            CommandTapeCodec.Serialize(recorder.Build("probe", seed)));
+        string traceHash = ReplayRunner.Run(probe, definitions).TraceHash;
+        CommandTape tape = CommandTapeCodec.Deserialize(
+            CommandTapeCodec.Serialize(recorder.Build(
+                "recorded-headless",
+                seed,
+                final.Tick,
+                StateHasher.ComputeHex(final),
+                traceHash)));
+        string tapePath = WriteTemporaryTape(CommandTapeCodec.Serialize(tape));
+
+        // Capture-side equivalence before the file-level gate: serializing and
+        // deserializing preserves the session's final and trace hashes.
+        ReplayResult replayed = ReplayRunner.Run(tape, definitions);
+        Assert.Equal(traceHash, replayed.TraceHash);
+        Assert.Equal(StateHasher.ComputeHex(final), replayed.FinalStateHash);
+
+        try
+        {
+            using var output = new StringWriter();
+            using var error = new StringWriter();
+
+            int exitCode = HeadlessApplication.Run(
+                ["--tape", tapePath, "--expect", traceHash, "--repeat", "2"],
+                output,
+                error);
+
+            Assert.Equal(0, exitCode);
+            Assert.Equal(string.Empty, error.ToString());
+            using JsonDocument result = JsonDocument.Parse(output.ToString());
+            Assert.True(result.RootElement.GetProperty("traceHashVerified").GetBoolean());
+        }
+        finally
+        {
+            File.Delete(tapePath);
+        }
+    }
+
+    [Fact]
+    public void TapeFileWriteNew_RefusesToOverwriteAnExistingTape()
+    {
+        var first = new CommandTape(
+            CommandTape.CurrentSchemaVersion,
+            "first-write",
+            5,
+            1,
+            null,
+            null,
+            [new CommandSpan(0, 1, 0, 1)]);
+        var second = new CommandTape(
+            CommandTape.CurrentSchemaVersion,
+            "second-write",
+            7,
+            2,
+            null,
+            null,
+            []);
+
+        string directory = Path.Combine(
+            Path.GetTempPath(),
+            $"onslaught-rebuild-record-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            string path = Path.Combine(directory, "recorded.tape.json");
+
+            TapeFile.WriteNew(path, first);
+            long lengthBefore = new FileInfo(path).Length;
+
+            IOException refused = Assert.Throws<IOException>(
+                () => TapeFile.WriteNew(path, second));
+
+            Assert.Contains("refuses to overwrite", refused.Message, StringComparison.Ordinal);
+            Assert.Equal(lengthBefore, new FileInfo(path).Length);
+            Assert.Equal(
+                "first-write",
+                CommandTapeCodec.Deserialize(File.ReadAllText(path)).Name);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void TapeFileWriteNew_RejectsCareerSaveAndRetailFileDestinations()
+    {
+        var tape = new CommandTape(
+            CommandTape.CurrentSchemaVersion,
+            "path-boundary",
+            3,
+            1,
+            null,
+            null,
+            []);
+        string root = Path.Combine(
+            Path.GetTempPath(),
+            $"onslaught-rebuild-record-boundary-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(root);
+        try
+        {
+            string careerSave = Path.Combine(root, "career.bes");
+            string retailExecutable = Path.Combine(root, "BEA.exe");
+
+            Assert.Throws<ArgumentException>(() => TapeFile.WriteNew(careerSave, tape));
+            Assert.Throws<ArgumentException>(() => TapeFile.WriteNew(retailExecutable, tape));
+            Assert.False(File.Exists(careerSave));
+            Assert.False(File.Exists(retailExecutable));
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void TapeFileWriteNew_CreatesMissingDirectoriesAndPersistsLfCanonicalJson()
+    {
+        var tape = new CommandTape(
+            CommandTape.CurrentSchemaVersion,
+            "nested",
+            3,
+            1,
+            null,
+            null,
+            []);
+        string root = Path.Combine(
+            Path.GetTempPath(),
+            $"onslaught-rebuild-record-{Guid.NewGuid():N}");
+        string path = Path.Combine(root, "deep", "recorded.tape.json");
+        try
+        {
+            TapeFile.WriteNew(path, tape);
+
+            string json = File.ReadAllText(path);
+            Assert.DoesNotContain("\r", json, StringComparison.Ordinal);
+            Assert.EndsWith("\n", json, StringComparison.Ordinal);
+            Assert.Equal(
+                CommandTape.IdentityOf(tape),
+                CommandTape.IdentityOf(CommandTapeCodec.Deserialize(json)));
+        }
+        finally
+        {
+            if (Directory.Exists(root))
+            {
+                Directory.Delete(root, recursive: true);
+            }
+        }
     }
 }

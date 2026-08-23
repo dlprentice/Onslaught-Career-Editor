@@ -526,4 +526,310 @@ public sealed class ReplayTests
         string path = Path.Combine(AppContext.BaseDirectory, "scenarios", "first-flight.v1.json");
         return CommandTapeCodec.Deserialize(File.ReadAllText(path));
     }
+
+    // ------------------------------------------------------------------
+    // P8 stage 1: CommandTape v5 (ChargeWeapon held, ZoomIn/ZoomOut edges)
+    // and the recorder/builder seam. The pre-existing tests above stay on
+    // CommandTape.CurrentSchemaVersion; these pin the new wire contract.
+    // ------------------------------------------------------------------
+
+    /// <summary>
+    /// v4 -&gt; v5, 2026-08-23: <c>CommandSpan.ChargeWeapon</c> (held) and
+    /// <c>CommandSpan.ZoomIn</c>/<c>CommandSpan.ZoomOut</c> (one-tick edges)
+    /// were added so a recorded human tape can carry the complete consumed
+    /// action set. Compatibility is the explicit migrate/read policy: a v4
+    /// document is upgraded in place by <see cref="CommandTapeCodec.Deserialize"/>
+    /// because its field set is a strict subset of v5's, while any other
+    /// unknown schema still fails closed (see Level100SkipPanningTests.
+    /// ATapeWrittenUnderTheOldSchemaIsRejectedRatherThanMisparsed, which pins
+    /// the same law for v3).
+    /// </summary>
+    [Fact]
+    public void V5_UpgradesAV4TapeExplicitlyWithoutReinterpretingFields()
+    {
+        const string v4 = """
+            {
+              "schemaVersion": "onslaught-rebuild-command-tape.v4",
+              "name": "v4-tape",
+              "seed": 1,
+              "durationTicks": 10,
+              "expectedFinalStateHash": null,
+              "expectedTraceHash": null,
+              "spans": [
+                {
+                  "startTick": 0, "durationTicks": 1, "moveX": 0, "moveZ": 1,
+                  "lookXAnalogPermille": 365, "landingJets": true
+                }
+              ]
+            }
+            """;
+
+        CommandTape tape = CommandTapeCodec.Deserialize(v4);
+
+        // The upgrade stamps current identity and preserves every v4 field's
+        // meaning exactly; no v5-only field appears from nowhere.
+        Assert.Equal(CommandTape.CurrentSchemaVersion, tape.SchemaVersion);
+        CommandSpan span = tape.Spans[0];
+        Assert.Equal(0, span.MoveX);
+        Assert.Equal(1, span.MoveZ);
+        Assert.Equal(365, span.LookXAnalogPermille);
+        Assert.True(span.LandingJets);
+        Assert.False(span.ChargeWeapon);
+        Assert.False(span.ZoomIn);
+        Assert.False(span.ZoomOut);
+
+        // Re-serializing writes the current schema with identical content.
+        CommandTape readBack = CommandTapeCodec.Deserialize(
+            CommandTapeCodec.Serialize(tape));
+        Assert.Equal(CommandTape.IdentityOf(tape), CommandTape.IdentityOf(readBack));
+
+        const string falseIdentity = """
+            {
+              "schemaVersion": "onslaught-rebuild-command-tape.v4",
+              "name": "false-v4-identity",
+              "seed": 1,
+              "durationTicks": 1,
+              "spans": [
+                {
+                  "startTick": 0, "durationTicks": 1, "moveX": 0, "moveZ": 0,
+                  "zoomIn": true
+                }
+              ]
+            }
+            """;
+        InvalidDataException rejected = Assert.Throws<InvalidDataException>(
+            () => CommandTapeCodec.Deserialize(falseIdentity));
+        Assert.Contains("v5-only", rejected.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void V5_ChargeWeaponAndZoomEdgesRoundTripWithTheirActionKinds()
+    {
+        var source = new CommandTape(
+            CommandTape.CurrentSchemaVersion,
+            "v5-actions",
+            1,
+            4,
+            null,
+            null,
+            [
+                new CommandSpan(0, 2, 0, 0, ChargeWeapon: true),
+                new CommandSpan(2, 1, 0, 0, ZoomIn: true),
+                new CommandSpan(3, 1, 0, 0, ZoomOut: true),
+            ]);
+
+        string json = CommandTapeCodec.Serialize(source);
+        Assert.Contains("\"chargeWeapon\": true", json, StringComparison.Ordinal);
+        Assert.Contains("\"zoomIn\": true", json, StringComparison.Ordinal);
+        Assert.Contains("\"zoomOut\": true", json, StringComparison.Ordinal);
+
+        CommandTape tape = CommandTapeCodec.Deserialize(json);
+        Assert.True(tape.Spans[0].ChargeWeapon);
+        Assert.True(tape.Spans[0].ToInput().HasAction(SimActions.ChargeWeapon));
+        Assert.True(tape.Spans[1].ZoomIn);
+        Assert.True(tape.Spans[1].ToInput().HasAction(SimActions.ZoomIn));
+        Assert.True(tape.Spans[2].ZoomOut);
+        Assert.True(tape.Spans[2].ToInput().HasAction(SimActions.ZoomOut));
+    }
+
+    [Fact]
+    public void V5_MultiTickZoomEdgeIsRejectedLikeEveryOtherEdgeAction()
+    {
+        var held = new CommandTape(
+            CommandTape.CurrentSchemaVersion,
+            "held-zoom-out",
+            1,
+            2,
+            null,
+            null,
+            [new CommandSpan(0, 2, 0, 0, ZoomOut: true)]);
+
+        Assert.Throws<InvalidDataException>(held.Validate);
+    }
+
+    [Fact]
+    public void Recorder_CoalescesContiguousIdenticalInputsIntoSortedNonOverlappingSpans()
+    {
+        var recorder = new CommandTapeRecorder();
+        for (int tick = 0; tick < 3; tick++)
+        {
+            recorder.Observe(tick, new SimInput(1, 1, SimActions.ChargeWeapon, 1, 0, 250, -125));
+        }
+
+        // The look axes decay to zero on the fourth tick while the charge
+        // level stays held: a different input, so the run splits there and the
+        // tail keeps only what is still nonzero.
+        recorder.Observe(3, new SimInput(0, 0, SimActions.ChargeWeapon));
+
+        CommandTape tape = recorder.Build("coalesce", 9u);
+
+        Assert.Equal(9u, tape.Seed);
+        Assert.Equal(4, tape.DurationTicks);
+        Assert.Equal(2, tape.Spans.Count);
+        CommandSpan held = tape.Spans[0];
+        Assert.Equal((0, 3), (held.StartTick, held.DurationTicks));
+        Assert.Equal(1, held.MoveX);
+        Assert.True(held.ChargeWeapon);
+        Assert.Equal(250, held.LookXAnalogPermille);
+        Assert.Equal(-125, held.LookYAnalogPermille);
+
+        // Sorted and non-overlapping by construction, but validated anyway.
+        tape.Validate();
+    }
+
+    [Fact]
+    public void Recorder_PreservesExactTickBoundariesWhenInputsChange()
+    {
+        var recorder = new CommandTapeRecorder();
+        recorder.Observe(0, new SimInput(0, 1));
+        recorder.Observe(1, new SimInput(0, 1));
+        recorder.Observe(2, new SimInput(1, 0));
+
+        CommandTape tape = recorder.Build("boundaries", 3);
+
+        Assert.Equal(2, tape.Spans.Count);
+        Assert.Equal((0, 2), (tape.Spans[0].StartTick, tape.Spans[0].DurationTicks));
+        Assert.Equal((2, 1), (tape.Spans[1].StartTick, tape.Spans[1].DurationTicks));
+    }
+
+    [Fact]
+    public void Recorder_RejectsSkippedOrRepeatedObservations()
+    {
+        var skipped = new CommandTapeRecorder();
+        skipped.Observe(0, SimInput.Idle);
+
+        ArgumentException gap = Assert.Throws<ArgumentException>(
+            () => skipped.Observe(2, SimInput.Idle));
+        Assert.Contains("tick 1", gap.Message, StringComparison.Ordinal);
+
+        var repeated = new CommandTapeRecorder();
+        repeated.Observe(0, SimInput.Idle);
+        repeated.Observe(1, SimInput.Idle);
+        ArgumentException duplicate = Assert.Throws<ArgumentException>(
+            () => repeated.Observe(1, SimInput.Idle));
+        Assert.Contains("already observed", duplicate.Message, StringComparison.Ordinal);
+
+        var first = new CommandTapeRecorder();
+        ArgumentException start = Assert.Throws<ArgumentException>(
+            () => first.Observe(3, SimInput.Idle));
+        Assert.Contains("tick 0 was never observed", start.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Recorder_DerivesTapeIdentityFromLfCanonicalJson()
+    {
+        var recorder = new CommandTapeRecorder();
+        recorder.Observe(0, new SimInput(0, 1));
+
+        CommandTape tape = recorder.Build("identity", 1);
+        string canonical =
+            CommandTapeCodec.Serialize(tape).ReplaceLineEndings("\n");
+        string identity = Convert.ToHexString(
+            System.Security.Cryptography.SHA256.HashData(
+                System.Text.Encoding.UTF8.GetBytes(canonical)))
+            .ToLowerInvariant();
+
+        Assert.Equal(identity, CommandTape.IdentityOf(tape));
+    }
+
+    [Fact]
+    public void RecordedSpans_ReplayToTheirRecordedTraceUnderRunner()
+    {
+        // Warm to first control, then record eight consumed ticks carrying a
+        // held charge level plus pointer-look axes. The recorder observes the
+        // whole session from tick 0 — warmup included, exactly as a real
+        // capture does — so the recorded tape replays to exactly the hashes
+        // observed at capture time.
+        const uint seed = 11;
+        var definitions = ActorDefinitions;
+        var simulation = new Simulation(seed, definitions);
+        var recorder = new CommandTapeRecorder();
+        for (int tick = 0; tick < WarmupTicksForRecording; tick++)
+        {
+            simulation.Step(SimInput.Idle);
+            recorder.Observe(tick, SimInput.Idle);
+        }
+
+        WorldSnapshot final = simulation.Snapshot;
+        for (int offset = 0; offset < 8; offset++)
+        {
+            var input = new SimInput(
+                0,
+                1,
+                SimActions.ChargeWeapon | SimActions.LandingJets,
+                0,
+                0,
+                365,
+                -183);
+            final = simulation.Step(input);
+            recorder.Observe(WarmupTicksForRecording + offset, input);
+        }
+
+        string traceHash = ReplayRunner.Run(
+                recorder.Build("trace-probe", seed),
+                definitions)
+            .TraceHash;
+
+        CommandTape tape = recorder.Build(
+            "recorded-replay",
+            seed,
+            final.Tick,
+            StateHasher.ComputeHex(final),
+            traceHash);
+
+        ReplayResult replayed = ReplayRunner.Run(
+            CommandTapeCodec.Deserialize(CommandTapeCodec.Serialize(tape)),
+            definitions);
+
+        Assert.Equal(traceHash, replayed.TraceHash);
+        Assert.Equal(StateHasher.ComputeHex(final), replayed.FinalStateHash);
+    }
+
+    /// <summary>
+    /// The recorder's merge law, pinned directly on
+    /// <see cref="CommandTapeBuilder.Merge"/>: contiguous identical inputs form
+    /// one span, a changed input splits the run at its own tick, a held level
+    /// and an edge can share one tick's input, and all-idle runs are dropped.
+    /// </summary>
+    [Fact]
+    public void Builder_MergesIdenticalRunsSplitsOnChangeAndDropsIdle()
+    {
+        var observations = new List<(int Tick, SimInput Input)>
+        {
+            (0, new SimInput(0, 1)),
+            (1, new SimInput(0, 1)),
+            (2, SimInput.Idle),
+            (3, new SimInput(1, 0, SimActions.Fire | SimActions.ZoomIn)),
+        };
+
+        List<CommandSpan> spans = CommandTapeBuilder.Merge(observations);
+
+        Assert.Equal(2, spans.Count);
+        Assert.Equal((0, 2), (spans[0].StartTick, spans[0].DurationTicks));
+        Assert.Equal(1, spans[0].MoveZ);
+        Assert.Equal((3, 1), (spans[1].StartTick, spans[1].DurationTicks));
+        Assert.True(spans[1].Fire);
+        Assert.True(spans[1].ZoomIn);
+        Assert.True(spans[1].ToInput().HasAction(SimActions.Fire));
+
+        // Identical edge inputs on adjacent ticks MUST remain two one-tick
+        // spans; coalescing them would violate the v5 edge law.
+        List<CommandSpan> adjacentEdges = CommandTapeBuilder.Merge(
+        [
+            (0, new SimInput(0, 0, SimActions.ZoomIn)),
+            (1, new SimInput(0, 0, SimActions.ZoomIn)),
+        ]);
+        Assert.Equal(2, adjacentEdges.Count);
+        Assert.All(adjacentEdges, span => Assert.Equal(1, span.DurationTicks));
+
+        // An idle-only observation list produces a valid empty tape.
+        List<CommandSpan> idleOnly = CommandTapeBuilder.Merge(
+        [
+            (0, SimInput.Idle),
+            (1, SimInput.Idle),
+        ]);
+        Assert.Empty(idleOnly);
+    }
+
+    private const int WarmupTicksForRecording = 1004;
 }
