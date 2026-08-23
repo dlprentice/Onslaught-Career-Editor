@@ -46,3 +46,7 @@ contains a second `10 38 53 00`.
 | Address | Name | Byte evidence | Contract (confidence) |
 | --- | --- | --- | --- |
 | `0x00533810` | `IScript__VFunc_2_00533810` | `833dc09a8a0004 750a b9e0c58900 e95d610000 8b410c 6a00 6828c58900 6a07 … e856610000 c3` | thiscall; bare ret; 43 B; 1 E9 Reset `0x00539980` if `[0x008a9ac0]==4`; 1 E8 CallEvent `0x00539990` with imm 7; 0 inbound E8/E9; unique imm at `0x005e4f10`. HIGH on ABI, that cmp, that push 7, inbound-empty. **Not** on callee bodies, authored event name, or vtable identity. |
+
+## Moved from developer_state.json (_HERMES_SLICE_20260819_533810) — original wording preserved (2026-08-23):
+
+Hermes integration-owner. Independently re-read official 74154bfa. VM-family 0x00533810 thiscall bare ret, 43 B sha 390b0606, 1 E9 Reset 0x00539980 when [0x008a9ac0]==4, 1 E8 CallEvent 0x00539990 push 7, 0 inbound E8/E9. Unique imm at 0x005e4f10. New folder — did not pile IScript.cpp.md. Steward cycle 34 forbade completing this keep-going root. Did not steal t_f082a4e9 / t_9e2c3720 / t_11bcf1cf. No Ghidra, no Core.
