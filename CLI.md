@@ -4,8 +4,9 @@
 - **Evidence:** MEASURED — every envelope and exit code below was produced by running the
   command against this build on 2026-08-01 and pasting its output back in. The
   "what is not here" list was produced by enumerating the verb tree against the GUI's
-  pages, not from recollection.
-- **Last updated:** 2026-08-01
+  pages, not from recollection. The `lore` verbs joined on 2026-08-23; their envelopes
+  and exit codes below were produced the same way, against this build.
+- **Last updated:** 2026-08-23
 - **Summary:** the envelope, the exit codes, the whole verb surface, and one session
   that works start to finish.
 
@@ -98,6 +99,28 @@ already answered.
 | `patch install` | `status`, `backup`, `apply --yes`, `restore` |
 | `process` | `list`, `stop <pid>` |
 | `trainer` | `status`, `read`, `set`, `hold`, `music` |
+| `lore` | `search <query>`, `show <document>` |
+
+`lore` reads the packaged Lore library — the same
+[`LoreBrowserService`](OnslaughtCareerEditor.AppCore/LoreBrowserService.cs) +
+`LoreSearchService` pair the GUI reader uses, with nothing written anywhere. By default
+the library is the one discovered from the tool's own location (the repository's tracked
+corpus in a dev checkout); pass `--root <dir>` to point at a folder containing `lore/`,
+`lore-book/`, or a `lore-pack`. Search is whole-word and returns snippets in index
+document order; an empty result set is exit 0 with `hitCount: 0`, not an error.
+`lore show` resolves only members of the loaded index: an indexed absolute key, an indexed
+relative/display key, or a `lore-pack://` key when a pack is present. A filesystem path
+that merely exists but is absent from that index is not read; it returns exit 2 like any
+other key that names no indexed document.
+
+Measured against this build:
+
+```
+lore search aquila --json        -> 0     17 documents searched, 29 hits, ordered snippets
+lore show lore/characters.md     -> 0     159 text lines: title, 7-entry outline, body; stderr empty
+lore show lore/no-such-doc.md    -> 2     ran fine; that key names no indexed document
+lore search                      -> 1     usage error: "A search query is required."
+```
 
 Two roots exist and are never the same place: `copy` works under `GameProfiles`, whole
 playable game folders; `patch` works under `PatchBench`, `BEA.exe`-only working copies.
@@ -139,8 +162,6 @@ wrote down is a gap nobody closes:
 - **Cheats** — composing a cheat-named save copy. No verb.
 - **Media** — the catalog, mission names, and voice-line transcripts. No verb, though
   `GameTextCatalog` is the service behind them.
-- **Lore** — the packaged reader. Build the pack with
-  `py -3 tools/winui_lore_pack_builder.py --build`.
 - **Trainer hotkeys and music playback** — `trainer music --out <file>` renders the tune
   to disk; playing it is the app's job.
 
