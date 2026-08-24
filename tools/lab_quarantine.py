@@ -146,6 +146,47 @@ def _classify_entry(entry: os.DirEntry) -> str | None:
     return None
 
 
+def _describe_path_state(path: Path) -> str:
+    """Human-readable no-follow state of ``path``'s final component."""
+
+    try:
+        mode = path.lstat().st_mode
+    except OSError:
+        return "absent"
+    import stat as stat_module
+
+    if stat_module.S_ISLNK(mode):
+        return "symbolic link"
+    if stat_module.S_ISDIR(mode):
+        return "a directory"
+    return "a non-directory"
+
+
+def _reprove_plain_directory(path: Path) -> None:
+    """Freshly prove ``path`` is STILL a plain directory -- right now.
+
+    An earlier "plain" verdict is stale the moment it is written down: a
+    queued pathname can be replaced by a directory symlink/junction (or
+    vanish) between its classification and its turn for descent. This is
+    the fresh final-component truth that must gate EVERY scandir/descent:
+    any reparse answer refuses before the target is enumerated, and a path
+    that can no longer be proven a plain directory at all fails closed.
+    """
+
+    if _is_reparse_point(path) or _lstat_is_reparse_point(path):
+        raise RuntimeError(
+            f"fail-closed: directory pathname {path} became a reparse point "
+            "after it was classified; quarantine refuses to descend into or "
+            "enumerate through its target"
+        )
+    if not path.is_dir():
+        raise RuntimeError(
+            f"fail-closed: directory pathname {path} is no longer a provably "
+            f"plain directory ({_describe_path_state(path)}); quarantine "
+            "traversal refuses a replaced or vanished directory"
+        )
+
+
 def _scan_plain_children(directory: Path) -> list[tuple[Path, str]]:
     """One no-follow scandir of ``directory``, classified and fail-closed.
 
@@ -188,11 +229,17 @@ def _iter_plain_files(root: Path):
     Explicit no-follow walk: each entry is classified from its own link
     stat BEFORE any descent, so external content behind a junction or
     symlink is neither opened nor hashed. Scan failures refuse immediately.
+    A queued pathname is freshly reproved as still-plain when it is popped
+    for descent -- classification truth from when it was queued is stale by
+    then, so a child replaced by a reparse after its parent's scan refuses
+    before any target scandir.
     """
 
+    _reprove_plain_directory(root)
     pending = [root]
     while pending:
         current = pending.pop()
+        _reprove_plain_directory(current)
         for child_path, kind in _scan_plain_children(current):
             if kind == "dir":
                 pending.append(child_path)
@@ -214,6 +261,17 @@ def _reparse_census(root: Path) -> list[str]:
     pending = [root]
     while pending:
         current = pending.pop()
+        # Fresh descent-time reproof: a queued pathname may have been
+        # replaced by a reparse (or vanished) after its parent's
+        # classification. Refuse BEFORE any scandir can touch its target;
+        # the census reports the hit rather than enumerating through it.
+        try:
+            _reprove_plain_directory(current)
+        except RuntimeError:
+            if current == root:
+                raise
+            found.append(current.relative_to(root).as_posix())
+            continue
         try:
             scan = os.scandir(current)
             try:
@@ -390,7 +448,12 @@ def _identity(root: Path) -> tuple[int, int, str]:
     blessed as staged evidence. The root itself, any nested entry that
     cannot be proven a plain directory or file, and any scan failure all
     refuse before any hashing; tree identity over a reparse-containing
-    tree is undefined for quarantine purposes.
+    tree is undefined for quarantine purposes. Every queued directory
+    pathname is freshly reproved as still-plain when popped for descent,
+    and every yielded file slot again immediately before its open and its
+    size stat -- classification truth is stale by operation time, so a
+    replacement that lands after a parent scan refuses before any target
+    scandir/open/stat/hash.
     """
 
     if _is_reparse_point(root):
@@ -401,6 +464,16 @@ def _identity(root: Path) -> tuple[int, int, str]:
     total_bytes = 0
     digest = hashlib.sha256()
     for path in sorted(_iter_plain_files(root)):
+        # Operation-boundary reproof of the yielded file slot: its plain
+        # verdict is as stale as any queued directory's -- a swap that
+        # lands after classification must never be opened, statted, or
+        # hashed. Fresh final-component truth LAST at each boundary.
+        if _is_reparse_point(path) or _lstat_is_reparse_point(path):
+            raise RuntimeError(
+                f"fail-closed: yielded path {path} became a reparse point "
+                "after it was classified; quarantine refuses to open, stat, "
+                "or hash through its target"
+            )
         rel = path.relative_to(root).as_posix()
         data_sha = hashlib.sha256()
         with path.open("rb") as stream:
@@ -411,6 +484,12 @@ def _identity(root: Path) -> tuple[int, int, str]:
         digest.update(data_sha.hexdigest().encode("utf-8"))
         digest.update(b"\0")
         count += 1
+        if _is_reparse_point(path) or _lstat_is_reparse_point(path):
+            raise RuntimeError(
+                f"fail-closed: yielded path {path} became a reparse point "
+                "after it was opened; quarantine refuses to bless bytes read "
+                "through a replacement"
+            )
         total_bytes += path.stat().st_size
     return count, total_bytes, digest.hexdigest()
 
