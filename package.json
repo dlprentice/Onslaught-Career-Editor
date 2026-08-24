@@ -1,7 +1,7 @@
 {
   "name": "onslaught-career-editor-workspace",
   "private": true,
-  "version": "1.0.11",
+  "version": "1.0.12",
   "description": "WinUI-first workspace for the Onslaught Toolkit.",
   "packageManager": "npm@11.12.1",
   "engines": {

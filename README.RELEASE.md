@@ -9,9 +9,10 @@ The supported downloadable shape is an unsigned, self-contained Windows x64
 portable ZIP. It is not an installer, MSIX, Store package, signed artifact, or
 SmartScreen/reputation claim.
 
-The candidate contains:
+The candidate contains one `Onslaught-Toolkit/` wrapper folder. Inside that
+wrapper:
 
-- `Launch Onslaught Toolkit.cmd` at the ZIP root;
+- `Launch Onslaught Toolkit.cmd`;
 - the self-contained WinUI payload under `app/`;
 - `LICENSE`, the generated third-party notices and license bundle, and the
   package README;

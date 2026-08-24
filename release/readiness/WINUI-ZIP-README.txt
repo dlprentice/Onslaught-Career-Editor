@@ -3,7 +3,8 @@ Onslaught Toolkit - WinUI ZIP Package
 
 This ZIP package is the non-cert distribution shape for the WinUI 3 app.
 It is not an installer, MSIX package, Microsoft Store package, or signed
-installer release.
+installer release. Everything lives under one Onslaught-Toolkit\ folder so
+Extract Here does not spill app\ into the folder you extracted into.
 
 Onslaught Toolkit is an unofficial community project. It is not affiliated
 with or endorsed by the game's publishers or rights holders. This package does
@@ -13,9 +14,9 @@ Quick start
 -----------
 
 1. Extract the whole ZIP to a writable folder.
-2. Run Launch Onslaught Toolkit.cmd from the extracted top-level folder.
+2. Open the Onslaught-Toolkit folder and run Launch Onslaught Toolkit.cmd.
 3. If the launcher is blocked by local policy, run
-   app\OnslaughtCareerEditor.WinUI.exe directly.
+   app\OnslaughtCareerEditor.WinUI.exe from that same folder.
 4. Keep the files together; do not move the executable away from the
    app folder and its support files.
 
@@ -116,16 +117,18 @@ What this package shape proves
 ------------------------------
 
 The repository ZIP probe builds disposable WinUI publish output, stages a
-friendly portable root with this README, LICENSE, THIRD_PARTY_LICENSES\,
-Launch Onslaught Toolkit.cmd, app\, lore-book\, and lore-pack\, creates this
-ZIP, writes a SHA-256 sidecar,
+friendly portable root under one Onslaught-Toolkit\ wrapper with this README,
+LICENSE, THIRD_PARTY_LICENSES\, Launch Onslaught Toolkit.cmd, app\,
+lore-book\, and lore-pack\, creates this ZIP, writes a SHA-256 sidecar,
 rejects Explorer-unsafe long ZIP entry paths, verifies the generated Lore pack
 schema/hashes/content safety, rejects raw deep lore-book mirror leakage,
 extracts the ZIP, launches the extracted app from app\, runs native launch
 smoke, runs extracted app Home navigation smoke, runs extracted-package Lore
-reader smoke, runs representative Media smoke when a local game install is
-available, and confirms no WinUI process remains. The probe also rejects raw
-publish layouts that expose DLLs or executables at the ZIP root.
+reader smoke, completes one generated-synthetic Safe Copy Manager workflow
+with stale-input and source/output-alias negative controls, runs
+representative Media smoke when a local game install is available, and
+confirms no WinUI process remains. The probe also rejects raw publish layouts
+that expose DLLs or executables at the ZIP root.
 
 What this package shape does not prove
 --------------------------------------
