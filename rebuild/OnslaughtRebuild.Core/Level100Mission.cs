@@ -408,6 +408,57 @@ public sealed class Level100Mission
         return result;
     }
 
+    /// <summary>
+    /// Bounded deterministic instrument for the exact world-110 authored
+    /// native-84 sequence at instructions 64..67. The ordinary session remains
+    /// suspended at its first Pause; this executes only the two constant loads,
+    /// the native call, and its void-result pop against that hash-pinned program.
+    /// </summary>
+    internal void RunWorld110SecondaryObjectiveCompleteInstrument()
+    {
+        const int FirstInstruction = 64;
+        const int EndInstruction = 68;
+        const string World110LevelScriptSha256 =
+            "f5c157ba2c6a9acbee78d895a25be82252951b93bdfdd8886a79ecd7bfe222aa";
+
+        Continuation? openingWait = _continuations.SingleOrDefault();
+        if (_worldNumber != Level100MissionProgram.WorldNumber110 ||
+            !StringComparer.Ordinal.Equals(_program.Sha256, World110LevelScriptSha256) ||
+            _tick != 0 ||
+            _activeExecution is not null ||
+            openingWait is null ||
+            openingWait.WaitKind != Level100ScriptWaitKind.Pause ||
+            openingWait.Execution.InstructionPointer != 35)
+        {
+            throw new InvalidOperationException(
+                "The world-110 native-84 instrument requires the untouched first-Pause session.");
+        }
+
+        var execution = new Execution(
+            "<world-110 native-84 instrument>",
+            FirstInstruction);
+        while (execution.InstructionPointer < EndInstruction)
+        {
+            Level100Instruction instruction =
+                _program.Instructions[execution.InstructionPointer++];
+            WaitRequest wait = ExecuteInstruction(execution, instruction);
+            if (wait.Kind != Level100ScriptWaitKind.None)
+            {
+                throw new InvalidOperationException(
+                    "The authored world-110 native-84 instrument unexpectedly waited.");
+            }
+        }
+
+        if (execution.InstructionPointer != EndInstruction ||
+            execution.Stack.Count != 0 ||
+            execution.CallContext is not null ||
+            execution.Stopped)
+        {
+            throw new InvalidOperationException(
+                "The authored world-110 native-84 sequence did not consume two arguments and one void result.");
+        }
+    }
+
     public void AdvanceTick(int latestPlayerHealth)
     {
         if (latestPlayerHealth < 0)
@@ -787,6 +838,12 @@ public sealed class Level100Mission
             case 83: // PrimaryObjectiveComplete
                 RequireArguments(command, arguments, 2);
                 SetPrimaryObjective(arguments, Level100PrimaryObjectiveStatus.Complete);
+                return NativeResult.Void;
+            case 84: // SecondaryObjectiveComplete — IScript__SecondaryObjectiveComplete 0x00534410
+                RequireArguments(command, arguments, 2);
+                _secondaryObjectives.SetComplete(
+                    arguments[0].AsInteger(),
+                    arguments[1].AsInteger());
                 return NativeResult.Void;
             case 85: // AddScore — IScript__AddScore 0x005343c0
                 RequireArguments(command, arguments, 1);

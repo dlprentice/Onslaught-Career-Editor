@@ -119,8 +119,8 @@ public readonly record struct RetailSecondaryObjectiveSnapshot(
 
 /// <summary>
 /// Deterministic owner for the released ten-entry secondary-objective array.
-/// The current mission VM wires only the measured native-88 failure store;
-/// complete-state dispatch remains a separate future admission.
+/// Native 84 and native 88 write the measured complete and failed states into
+/// this same distinct array.
 /// </summary>
 internal sealed class RetailSecondaryObjectiveState
 {
@@ -137,7 +137,16 @@ internal sealed class RetailSecondaryObjectiveState
     internal IReadOnlyList<RetailSecondaryObjectiveSnapshot> Snapshot =>
         Array.AsReadOnly(_objectives.ToArray());
 
-    internal void SetFailed(int index, int textId)
+    internal void SetComplete(int index, int textId) =>
+        Set(index, textId, RetailSecondaryObjectiveStatus.Complete);
+
+    internal void SetFailed(int index, int textId) =>
+        Set(index, textId, RetailSecondaryObjectiveStatus.Failed);
+
+    private void Set(
+        int index,
+        int textId,
+        RetailSecondaryObjectiveStatus status)
     {
         if ((uint)index >= Count)
         {
@@ -149,7 +158,7 @@ internal sealed class RetailSecondaryObjectiveState
         _objectives[index] = new RetailSecondaryObjectiveSnapshot(
             index,
             textId,
-            RetailSecondaryObjectiveStatus.Failed);
+            status);
     }
 }
 

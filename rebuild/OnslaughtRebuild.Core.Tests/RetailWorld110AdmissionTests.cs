@@ -208,6 +208,89 @@ public sealed class RetailWorld110AdmissionTests
     }
 
     /// <summary>
+    /// The exact world-110 LevelScript really contains native 84 at instruction
+    /// 66 with attribute <c>0x00000254</c>, fed by slot 1 and text id 114309509.
+    /// The ordinary opening remains stopped at the first Pause (instruction 34),
+    /// so this test uses the explicitly named bounded Core instrument to execute
+    /// only authored instructions 64..67. It does not claim the opening path has
+    /// reached that later branch.
+    /// </summary>
+    [Fact]
+    public void AuthoredWorld110Native84Branch_CompletesTheFailedSlotAndChangesTheCanonicalHash()
+    {
+        Level100MissionProgram program =
+            Level100MissionProgram.LoadEmbedded(World110, "LevelScript");
+        (Level100Instruction Instruction, int Index) native84 = program.Instructions
+            .Select((instruction, index) => (instruction, index))
+            .Single(item =>
+                item.instruction.Opcode == 24 &&
+                (item.instruction.Attribute & 0xff) == 84);
+        Assert.Equal(66, native84.Index);
+        Assert.Equal(0x00000254, native84.Instruction.Attribute);
+        Assert.Equal(new Level100Instruction(5, 46), program.Instructions[64]);
+        Assert.Equal(new Level100Instruction(5, 47), program.Instructions[65]);
+        Assert.Equal(1, program.Symbols[46].InitialValue.AsInteger());
+        Assert.Equal(114309509, program.Symbols[47].InitialValue.AsInteger());
+        Assert.Equal(new Level100Instruction(14, -1), program.Instructions[67]);
+
+        Level100ActorDefinitionSet definitions = CreateWorld110Definitions();
+        Level100Mission CreateMission()
+        {
+            var actors = new Level100ActorRegistry(definitions);
+            return new Level100Mission(
+                actors,
+                actors.GetThingRef("Player 1")!.Value,
+                worldNumber: World110);
+        }
+
+        Level100Mission mission = CreateMission();
+        Level100MissionSnapshot before = mission.Snapshot;
+        Level100ScriptContinuationSnapshot openingWait = Assert.Single(before.Continuations);
+        Assert.Equal(Level100ScriptWaitKind.Pause, openingWait.WaitKind);
+        Assert.Equal(35, openingWait.Execution.InstructionPointer);
+        Assert.Equal(RetailSecondaryObjectiveStatus.Failed, before.SecondaryObjectives[1].Status);
+
+        mission.RunWorld110SecondaryObjectiveCompleteInstrument();
+
+        Level100MissionSnapshot after = mission.Snapshot;
+        Assert.Equal(
+            new RetailSecondaryObjectiveSnapshot(
+                1,
+                114309509,
+                RetailSecondaryObjectiveStatus.Complete),
+            after.SecondaryObjectives[1]);
+        Assert.Equal(
+            before.SecondaryObjectives.Where(item => item.Index != 1),
+            after.SecondaryObjectives.Where(item => item.Index != 1));
+        Level100ScriptContinuationSnapshot afterWait = Assert.Single(after.Continuations);
+        Assert.Equal(openingWait.Sequence, afterWait.Sequence);
+        Assert.Equal(openingWait.DueTick, afterWait.DueTick);
+        Assert.Equal(openingWait.WaitKind, afterWait.WaitKind);
+        Assert.Equal(openingWait.WaitArgument, afterWait.WaitArgument);
+        Assert.Equal(openingWait.Execution.EventName, afterWait.Execution.EventName);
+        Assert.Equal(
+            openingWait.Execution.InstructionPointer,
+            afterWait.Execution.InstructionPointer);
+        Assert.Equal(before.PendingMessages.ToArray(), after.PendingMessages.ToArray());
+        Assert.Equal(before.Tick, after.Tick);
+
+        Level100Mission repeat = CreateMission();
+        repeat.RunWorld110SecondaryObjectiveCompleteInstrument();
+        Assert.Equal(after.SecondaryObjectives, repeat.Snapshot.SecondaryObjectives);
+
+        WorldSnapshot envelope = new Simulation(
+            1,
+            definitions,
+            worldNumber: World110).Snapshot;
+        string failedHash = StateHasher.ComputeHex(envelope with { Level100Mission = before });
+        string completeHash = StateHasher.ComputeHex(envelope with { Level100Mission = after });
+        string repeatHash = StateHasher.ComputeHex(
+            envelope with { Level100Mission = repeat.Snapshot });
+        Assert.NotEqual(failedHash, completeHash);
+        Assert.Equal(completeHash, repeatHash);
+    }
+
+    /// <summary>
     /// A session's requested world and its definition-set stamp are one
     /// fail-closed identity. The fixture projection is deliberately otherwise
     /// byte-identical, so these assertions cannot pass because unrelated actor
