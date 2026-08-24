@@ -168,20 +168,45 @@ class ResumeStageTests(unittest.TestCase):
         self.assertEqual(expected_sha, quarantine.tree_sha256(dest))
         self.assertEqual([row], self.manifest_rows())
 
-    def test_hash_gate_refuses_same_size_same_mtime_corruption(self) -> None:
-        # The falsification: stat-based retention alone would bless a
-        # same-size, same-mtime but WRONG-byte file. Only the tree-hash gate
-        # catches it, so the gate must refuse BEFORE manifest or removal.
-        source, dest, _ = self.make_source_and_partial(complete_dest=True)
+    def test_resume_repairs_same_size_same_mtime_corruption_in_one_pass(self) -> None:
+        # Reviewer RED falsification (6e672378): a dest file can share
+        # size+mtime with its source yet hold different bytes. Retention is
+        # BYTE-VERIFIED, so ONE resume pass must re-copy it and converge to
+        # exact identity -- not retain the bad file forever.
+        source, dest, expected_sha = self.make_source_and_partial(complete_dest=True)
         victim = dest / "nested" / "b.bin"
         before = victim.stat().st_mtime_ns
-        victim.write_bytes(b"BETA-GAMMA")  # same length, different bytes
-        os.utime(victim, ns=(before, before))  # keep mtime identical
+        victim.write_bytes(b"BETA-GAMMA")  # same length (10), different bytes
+        os.utime(victim, ns=(before, before))  # mtime identical to source
 
-        with self.assertRaises(SystemExit):
-            quarantine.resume(source, dest, reason="hash gate")
+        self.assertTrue(quarantine._file_bytes_differ(source / "nested" / "b.bin", victim))
 
-        self.assertTrue(source.exists(), "source preserved on gate failure")
+        row = quarantine.resume(source, dest, reason="same-stat corruption repair")
+
+        self.assertFalse(source.exists())
+        self.assertEqual(expected_sha, quarantine.tree_sha256(dest))
+        self.assertEqual(15, row["bytes"])
+        self.assertEqual([row], self.manifest_rows())
+
+    def test_unrepairable_copy_failure_gates_with_no_removal_no_manifest(self) -> None:
+        # If the copy layer cannot repair a mismatch (here: copy2 sabotaged
+        # so the dest keeps wrong bytes), the identity gate must refuse
+        # BEFORE any manifest append or removal, leaving BOTH sides intact.
+        source, dest, _ = self.make_source_and_partial(complete_dest=True)
+        victim = dest / "nested" / "b.bin"
+        victim.write_bytes(b"BETA-GAMMA")  # same size, different bytes
+
+        real_copy2 = quarantine.shutil.copy2
+
+        def sabotaged_copy2(src, dst, **kwargs):  # noqa: ANN001,ANN003
+            real_copy2(src, dst, **kwargs)
+            Path(dst).write_bytes(b"STILL-WRONG")  # same length as b"beta-gamma"
+
+        with mock.patch.object(quarantine.shutil, "copy2", sabotaged_copy2):
+            with self.assertRaises(SystemExit):
+                quarantine.resume(source, dest, reason="sabotaged repair")
+
+        self.assertTrue(source.exists(), "no removal on unrepaired mismatch")
         self.assertTrue(dest.is_dir())
         self.assert_no_manifest()
 

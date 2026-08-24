@@ -8,8 +8,9 @@ moves a path to D:\\lab-quarantine\\<date>\\ preserving relative structure
 plus a manifest row (original path, sha256 of the whole tree, bytes, reason,
 staged-at). ``restore`` moves it back. ``resume <source> <dest>`` finishes an
 interrupted ``stage`` whose destination partial already exists on D:
-(timeout-killed copy run): it retains verified bytes, copies only what is
-missing, gates on exact file-count + byte-total + tree-hash identity, appends
+(timeout-killed copy run): it retains byte-verified files, re-copies
+missing or mismatched ones, gates on exact file-count + byte-total +
+tree-hash identity, appends
 ONE manifest row with stage()'s schema, reads it back, freshly re-hashes BOTH
 sides, then removes the proven source with a DOS-read-only-only handler that
 aborts on reparse, sharing, or ACL failures. It never restarts the copy from
@@ -81,12 +82,29 @@ def _is_reparse_point(path: Path) -> bool:
     return attributes is None or bool(attributes & FILE_ATTRIBUTE_REPARSE_POINT)
 
 
+def _file_bytes_differ(source_file: Path, dest_file: Path) -> bool:
+    """True at the first differing byte; streaming, so no whole-file loads."""
+
+    with source_file.open("rb") as source_stream, dest_file.open("rb") as dest_stream:
+        while True:
+            source_chunk = source_stream.read(1024 * 1024)
+            dest_chunk = dest_stream.read(1024 * 1024)
+            if source_chunk != dest_chunk:
+                return True
+            if not source_chunk:
+                return False
+
+
 def _resume_copy_tree(source: Path, dest: Path) -> dict:
     """Finish an interrupted copytree without ever restarting from scratch.
 
-    Retains files whose size+mtime already match (shutil.copy2 semantics),
-    re-copies missing or mismatched ones, and skips reparse points entirely
-    (a staged quarantine copy records plain files and directories only).
+    Retention is BYTE-VERIFIED: a destination file is kept only when its
+    size+mtime match the source AND a streaming comparison proves the bytes
+    are identical; anything missing or mismatched is re-copied
+    (shutil.copy2 semantics). This makes resume converge even when a
+    corrupted partial file happens to share size+mtime with its source.
+    Reparse points are never copied nor descended (a staged quarantine copy
+    records plain files and directories only).
     """
 
     retained = recopied_mismatched = copied_missing = skipped_reparse = 0
@@ -111,7 +129,8 @@ def _resume_copy_tree(source: Path, dest: Path) -> dict:
                 copied_missing += 1
                 continue
             if (source_stat.st_size == dest_stat.st_size
-                    and source_stat.st_mtime == dest_stat.st_mtime):
+                    and source_stat.st_mtime == dest_stat.st_mtime
+                    and not _file_bytes_differ(source_file, dest_file)):
                 retained += 1
             else:
                 shutil.copy2(source_file, dest_file)
@@ -214,12 +233,12 @@ def _remove_tree_readonly_only(root: Path) -> None:
 def resume(source: Path, dest: Path, *, reason: str) -> dict:
     """Audited completion of an interrupted ``stage`` into an existing D partial.
 
-    Completes ``dest`` from its original ``source`` (retaining verified bytes,
-    copying only what is missing), gates on exact file-count + byte-total +
-    tree-hash identity, appends ONE manifest row identical to stage()'s schema,
-    reads it back, freshly re-hashes BOTH sides, removes the proven source with
-    a DOS-read-only-only handler, and returns the receipt. Every gate fails
-    closed before any destructive step.
+    Completes ``dest`` from its original ``source`` (retaining only
+    byte-verified files, re-copying what is missing or mismatched), gates on
+    exact file-count + byte-total + tree-hash identity, appends ONE manifest
+    row identical to stage()'s schema, reads it back, freshly re-hashes BOTH
+    sides, removes the proven source with a DOS-read-only-only handler, and
+    returns the receipt. Every gate fails closed before any destructive step.
     """
 
     source = source.resolve()
