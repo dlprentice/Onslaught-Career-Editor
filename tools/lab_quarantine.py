@@ -6,7 +6,15 @@ Durable rule (maintainer FRAGO 2026-08-06, after the re-campaign fixture
 loss): nothing under local-lab/ is ever hard-deleted in one step. ``stage``
 moves a path to D:\\lab-quarantine\\<date>\\ preserving relative structure
 plus a manifest row (original path, sha256 of the whole tree, bytes, reason,
-staged-at). ``restore`` moves it back. ``purge`` (explicit, separate command)
+staged-at). ``restore`` moves it back. ``resume <source> <dest>`` finishes an
+interrupted ``stage`` whose destination partial already exists on D:
+(timeout-killed copy run): it retains verified bytes, copies only what is
+missing, gates on exact file-count + byte-total + tree-hash identity, appends
+ONE manifest row with stage()'s schema, reads it back, freshly re-hashes BOTH
+sides, then removes the proven source with a DOS-read-only-only handler that
+aborts on reparse, sharing, or ACL failures. It never restarts the copy from
+scratch and fails closed before every destructive step. ``purge``
+(explicit, separate command)
 removes a staged item ONLY when space pressure requires it and the manifest
 row is confirmed; purged rows are rewritten to a purge log with the same
 identity so recovery by name remains possible for as long as the drive
@@ -20,7 +28,9 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import inspect
 import json
+import os
 import shutil
 import sys
 import uuid
@@ -31,9 +41,247 @@ QUARANTINE_ROOT = Path(r"D:\lab-quarantine")
 MANIFEST = QUARANTINE_ROOT / "manifest.jsonl"
 PURGE_LOG = QUARANTINE_ROOT / "purge.log"
 
+FILE_ATTRIBUTE_READONLY = 0x1
+FILE_ATTRIBUTE_REPARSE_POINT = 0x400
+
 
 def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+def _file_attributes(path: Path) -> int | None:
+    """DOS file attributes via GetFileAttributesW; None if the path is gone."""
+
+    if os.name != "nt":
+        import stat as stat_module
+
+        try:
+            mode = path.lstat().st_mode
+        except OSError:
+            return None
+        attributes = 0
+        if stat_module.S_ISLNK(mode):
+            attributes |= FILE_ATTRIBUTE_REPARSE_POINT
+        if not (mode & (stat_module.S_IWUSR | stat_module.S_IWGRP | stat_module.S_IWOTH)):
+            attributes |= FILE_ATTRIBUTE_READONLY
+        return attributes
+    import ctypes
+
+    attributes = ctypes.windll.kernel32.GetFileAttributesW(str(path))
+    return None if attributes == 0xFFFFFFFF else attributes
+
+
+def _is_reparse_point(path: Path) -> bool:
+    """True for junctions/symlinks: never copied, never descended, never cleared."""
+
+    try:
+        attributes = _file_attributes(path)
+    except OSError:
+        return True
+    return attributes is None or bool(attributes & FILE_ATTRIBUTE_REPARSE_POINT)
+
+
+def _resume_copy_tree(source: Path, dest: Path) -> dict:
+    """Finish an interrupted copytree without ever restarting from scratch.
+
+    Retains files whose size+mtime already match (shutil.copy2 semantics),
+    re-copies missing or mismatched ones, and skips reparse points entirely
+    (a staged quarantine copy records plain files and directories only).
+    """
+
+    retained = recopied_mismatched = copied_missing = skipped_reparse = 0
+    for dirpath, dirnames, filenames in os.walk(source):
+        source_dir = Path(dirpath)
+        dest_dir = dest / source_dir.relative_to(source)
+        dest_dir.mkdir(parents=True, exist_ok=True)
+        # Never descend into junctions/symlinks; the real target stays untouched.
+        dirnames[:] = [d for d in dirnames
+                       if not _is_reparse_point(source_dir / d)]
+        for name in filenames:
+            source_file = source_dir / name
+            dest_file = dest_dir / name
+            if _is_reparse_point(source_file):
+                skipped_reparse += 1
+                continue
+            try:
+                source_stat = source_file.stat()
+                dest_stat = dest_file.stat()
+            except FileNotFoundError:
+                shutil.copy2(source_file, dest_file)
+                copied_missing += 1
+                continue
+            if (source_stat.st_size == dest_stat.st_size
+                    and source_stat.st_mtime == dest_stat.st_mtime):
+                retained += 1
+            else:
+                shutil.copy2(source_file, dest_file)
+                recopied_mismatched += 1
+    return {
+        "retained": retained,
+        "recopiedMismatched": recopied_mismatched,
+        "copiedMissing": copied_missing,
+        "skippedReparse": skipped_reparse,
+    }
+
+
+def _identity(root: Path) -> tuple[int, int, str]:
+    """(files, bytes, tree_sha256) using stage()'s exact identity semantics."""
+
+    count = 0
+    total_bytes = 0
+    digest = hashlib.sha256()
+    for path in sorted(root.rglob("*")):
+        if not path.is_file():
+            continue
+        rel = path.relative_to(root).as_posix()
+        data_sha = hashlib.sha256()
+        with path.open("rb") as stream:
+            for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+                data_sha.update(chunk)
+        digest.update(rel.encode("utf-8"))
+        digest.update(b"\0")
+        digest.update(data_sha.hexdigest().encode("utf-8"))
+        digest.update(b"\0")
+        count += 1
+        total_bytes += path.stat().st_size
+    return count, total_bytes, digest.hexdigest()
+
+
+def _append_manifest_row(row: dict) -> None:
+    """Append exactly one manifest row, then read it back from disk.
+
+    Fails closed unless the on-disk manifest contains this row verbatim and
+    still contains every pre-existing row.
+    """
+
+    before = MANIFEST.read_text(encoding="utf-8").splitlines() if MANIFEST.exists() else []
+    with MANIFEST.open("a", encoding="utf-8") as stream:
+        stream.write(json.dumps(row) + "\n")
+        stream.flush()
+        os.fsync(stream.fileno())
+    after = MANIFEST.read_text(encoding="utf-8").splitlines()
+    parsed_after = [json.loads(line) for line in after if line.strip()]
+    row_lines = [line for line in after
+                 if line.strip() and json.loads(line)["id"] == row["id"]]
+    if (
+        len(row_lines) != 1
+        or json.loads(row_lines[0]) != row
+        or [json.loads(line) for line in before if line.strip()] != parsed_after[:-1]
+    ):
+        raise RuntimeError(
+            f"manifest append failed readback for id {row['id']}; "
+            "no removal was performed"
+        )
+
+
+def _remove_tree_readonly_only(root: Path) -> None:
+    """rmtree that clears ONLY the DOS read-only bit on failure paths.
+
+    Any other failure (reparse point encountered, sharing violation, ACL
+    denial, missing parent) aborts with the original error untouched.
+    Uses ``onexc`` where available (Python >= 3.12; ``onerror`` was removed
+    in 3.14) and falls back to ``onerror`` elsewhere.
+    """
+
+    def _retry(function, path, exc):  # noqa: ANN001 - shutil callback shape
+        attrs = _file_attributes(Path(path))
+        if (
+            function is os.unlink
+            and attrs is not None
+            and attrs & FILE_ATTRIBUTE_READONLY
+            and not attrs & FILE_ATTRIBUTE_REPARSE_POINT
+        ):
+            if os.name == "nt":
+                import ctypes
+
+                ctypes.windll.kernel32.SetFileAttributesW(
+                    str(path), attrs & ~FILE_ATTRIBUTE_READONLY)
+            else:
+                os.chmod(path, 0o644)
+            function(path)
+            return
+        raise exc
+
+    if "onexc" in inspect.signature(shutil.rmtree).parameters:
+        shutil.rmtree(root, onexc=_retry)
+    else:  # Python < 3.12: exc_info-tuple callback
+        shutil.rmtree(
+            root,
+            onerror=lambda function, path, exc_info: _retry(function, path, exc_info[1]),
+        )
+
+
+def resume(source: Path, dest: Path, *, reason: str) -> dict:
+    """Audited completion of an interrupted ``stage`` into an existing D partial.
+
+    Completes ``dest`` from its original ``source`` (retaining verified bytes,
+    copying only what is missing), gates on exact file-count + byte-total +
+    tree-hash identity, appends ONE manifest row identical to stage()'s schema,
+    reads it back, freshly re-hashes BOTH sides, removes the proven source with
+    a DOS-read-only-only handler, and returns the receipt. Every gate fails
+    closed before any destructive step.
+    """
+
+    source = source.resolve()
+    dest = dest.resolve()
+    if not QUARANTINE_ROOT.exists():
+        raise SystemExit(f"quarantine root missing: {QUARANTINE_ROOT} (is D: mounted?)")
+    if not source.exists():
+        raise SystemExit(f"source does not exist: {source}")
+    if not dest.is_dir():
+        raise SystemExit(f"destination partial missing (never restart stage): {dest}")
+    for base in (QUARANTINE_ROOT.resolve(),):
+        if not (source.is_relative_to(base) and dest.is_relative_to(base)):
+            raise SystemExit(
+                "refusing to operate outside the quarantine root "
+                f"(source={source}, dest={dest}, root={base})"
+            )
+    if source == dest or dest.is_relative_to(source):
+        raise SystemExit(f"destination must be distinct from source: {dest}")
+    rows = ([json.loads(line) for line in MANIFEST.read_text(encoding="utf-8").splitlines() if line.strip()]
+            if MANIFEST.exists() else [])
+    if any(r.get("staged") == str(dest) for r in rows):
+        raise SystemExit(f"destination is already manifested: {dest}")
+
+    stats = _resume_copy_tree(source, dest)
+
+    source_identity = _identity(source)
+    dest_identity = _identity(dest)
+    if source_identity != dest_identity:
+        raise SystemExit(
+            "resumed quarantine copy does not reproduce the source identity: "
+            f"source={source_identity} staged={dest_identity} "
+            f"(stats={stats}); both sides preserved, nothing removed"
+        )
+
+    row = {
+        "id": dest.name,
+        "original": str(source),
+        "staged": str(dest),
+        "stagedAtUtc": utc_now(),
+        "bytes": dest_identity[1],
+        "sha256": dest_identity[2],
+        "reason": reason,
+    }
+    _append_manifest_row(row)
+
+    # Fresh dual rehash AFTER the append: prove both trees still carry the
+    # gated identity before any destructive step.
+    recheck_source = _identity(source)
+    recheck_dest = _identity(dest)
+    if recheck_source != source_identity or recheck_dest != dest_identity:
+        raise RuntimeError(
+            "post-append rehash mismatch: "
+            f"source={recheck_source} dest={recheck_dest} "
+            f"(gated={source_identity}); row and BOTH copies preserved"
+        )
+    _remove_tree_readonly_only(source)
+    if source.exists() or not dest.exists():
+        raise RuntimeError(
+            f"removal verification failed: source_exists={source.exists()} "
+            f"dest_exists={dest.exists()}; manifest row retained"
+        )
+    return row
 
 
 def tree_sha256(root: Path) -> str:
@@ -150,6 +398,13 @@ def main(argv: list[str] | None = None) -> int:
     p_stage = sub.add_parser("stage")
     p_stage.add_argument("path")
     p_stage.add_argument("--reason", required=True)
+    p_resume = sub.add_parser(
+        "resume",
+        help="audited completion of an interrupted stage into an existing "
+             "D:\\lab-quarantine partial (never restarts from scratch)")
+    p_resume.add_argument("source", help="the original un-removed source path")
+    p_resume.add_argument("dest", help="the existing interrupted-stage partial under D:\\lab-quarantine")
+    p_resume.add_argument("--reason", required=True)
     p_restore = sub.add_parser("restore")
     p_restore.add_argument("id")
     p_purge = sub.add_parser("purge")
@@ -160,6 +415,8 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "stage":
         row = stage(Path(args.path), reason=args.reason)
+    elif args.command == "resume":
+        row = resume(Path(args.source), Path(args.dest), reason=args.reason)
     elif args.command == "restore":
         row = restore(args.id)
     elif args.command == "purge":
