@@ -52,6 +52,7 @@ public sealed class Simulation
     private readonly List<Level100ActorScriptCommand> _level100ActorScriptCommands = [];
     private readonly Level100TutorialProgress _level100TutorialProgress;
     private readonly Level100ActorDefinitionSet _level100ActorDefinitions;
+    private readonly int _worldNumber;
     private Level100Mission _level100Mission = null!;
     private Level100ActorRegistry _level100Actors = null!;
     private Level100ActorScriptRuntime _level100ActorScripts = null!;
@@ -122,7 +123,8 @@ public sealed class Simulation
     public Simulation(
         uint seed,
         Level100ActorDefinitionSet level100ActorDefinitions,
-        Level100TutorialProgress tutorialProgress = default)
+        Level100TutorialProgress tutorialProgress = default,
+        int worldNumber = Level100MissionProgram.WorldNumber100)
     {
         if (seed == 0)
         {
@@ -132,9 +134,28 @@ public sealed class Simulation
         _seed = seed;
         _level100ActorDefinitions = level100ActorDefinitions ??
             throw new ArgumentNullException(nameof(level100ActorDefinitions));
+        if (worldNumber != Level100MissionProgram.WorldNumber100 &&
+            worldNumber != Level100MissionProgram.WorldNumber110)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(worldNumber),
+                $"World {worldNumber} has no admitted mission session.");
+        }
+
+        if (_level100ActorDefinitions.WorldNumber != worldNumber)
+        {
+            throw new ArgumentException(
+                $"The actor definitions carry world {_level100ActorDefinitions.WorldNumber}, not the requested world {worldNumber}.",
+                nameof(level100ActorDefinitions));
+        }
+
+        _worldNumber = worldNumber;
         _level100TutorialProgress = tutorialProgress;
         ResetDynamicState();
     }
+
+    /// <summary>The career world whose mission program this session executes.</summary>
+    public int WorldNumber => _worldNumber;
 
     public WorldSnapshot Snapshot => CreateSnapshot();
 
@@ -4079,7 +4100,8 @@ public sealed class Simulation
             _level100Actors,
             _level100PlayerActorId,
             _level100TutorialProgress,
-            PlayerHull);
+            PlayerHull,
+            _worldNumber);
         SyncLevel100PlayerState();
         PumpLevel100EventBus();
     }

@@ -1,7 +1,8 @@
 # Rebuild parity contract
 
 Status: active — what "1:1 behavioral and experiential parity" means operationally
-Last updated: 2026-08-23 (Thing/Actor base-state seam; earlier:
+Last updated: 2026-08-24 (bounded world-110 native-88 session; earlier:
+Thing/Actor base-state seam;
 selector/briefing per-world string law;
 merged wt/t_0bace7cd Pulse Cannon ReadyToCharge gate and Charged-2 fire;
 Level 100 EnableFlightMode +0x58c store on takeoff).
@@ -44,7 +45,8 @@ These are exceptions to record precisely, not templates for loose porting.
 
 Recorded 2026-08-17, with the Pulse Cannon increment, end-level countdown,
 ReCalcLinks, FillOut, and FrontEndHandoffReady career-handoff rows added 2026-08-18, and the
-Pulse Cannon ReadyToCharge / Charged-2 rows merged 2026-08-21. Every retail anchor below was **re-derived from the
+Pulse Cannon ReadyToCharge / Charged-2 rows merged 2026-08-21, and the bounded
+world-110 native-88/session rows added 2026-08-24. Every retail anchor below was **re-derived from the
 pristine specimen** for this table (PE headers parsed directly; flat mapping
 file offset = VA − 0x400000 for `.text`/`.rdata`/`.data`, whose raw ends are
 0x005D8000 / 0x00622000 / 0x00661000 — `.rsrc` is **not** flat and 0x00672FD0 is
@@ -175,14 +177,16 @@ Owner paths are relative to the repository root; test names are relative to
 | `CCareer::IsWorldLater` | `Career.cpp:324-374`: walk the `diesOn` node's subtree through lower then higher child links and answer whether the `current` node is inside it; the caller's own `currentNode != diesOnNode` guard makes equal worlds FALSE, and disjoint subtrees are FALSE because the walk never reaches them | `rebuild/OnslaughtRebuild.Core/RetailWorldCatalog.cs` | `RetailWorldCatalog.IsWorldLater` | `RetailWorldCatalogTests.IsWorldLater_MatchesSubtreeSemantics` | 1 | swap the arguments so the walk starts at `currentNode` (ancestor/descendant inverted) |
 | World-110 script-object admission (second career node, version-50 layout) | `data/resources/110_res_PC.aya` measured 2026-08-22, whole-archive SHA-256 `4e041c758b9d41ba18311b1fadeacb95fc31af51320861480b97033bc24e3c2b`; RLWD header `(3, 41, 110)`; 13 hash-pinned objects — LevelScript 5110 B `f5c157ba…22aa` with 181 instructions, 92 symbols, `builtin[0]=11`, five named events (`Enemy Engaged` 100, `Vital Building Destroyed` 134, `Lander Escaped` 145, `Lander Destroyed` 159, `Lander Withdraws` 170) | `rebuild/OnslaughtRebuild.Core/Level100MissionProgram.cs` | `Level100MissionProgram.LoadEmbedded(world, name)` | `RetailWorld110AdmissionTests.AllThirteenScriptObjects_AdmitWithTheirPinnedIdentities` | 1 | re-pin `beacon` to `Lander`'s payload hash (cross-object admission accepted) |
 | World-110 HFLD admission | Same archive; extracted envelope (tag + CHFD + HFDT) is 668660 B, SHA-256 `fd4d076a2926fbc473b7d364703bdbc0c8a0f7a638b0ab71b6f319374da033c2`; same CHFD format law as Level 100 (grid `0x89/0x94/0x1a8/0x168`, same scales) with height data differing from the first sample word — a distinct measured world under the shared envelope law, recorded via `PayloadSha256` | `rebuild/OnslaughtRebuild.Core/Level100Terrain.cs` | `Level100Terrain.World110` (per-world `LoadEmbedded(name, sha)`) | `RetailWorld110AdmissionTests.World110Heightfield_IsItsOwnHashPinnedEnvelope` | 1 | re-pin `World110SourceSha256` to Level 100's envelope hash (also failed `World110AndLevel100Terrains_AreDistinctMeasuredWorlds`) |
+| `IScript::SecondaryObjectiveFailed` native 88 | Stuart `game.h:22-24,179-187` owns ten zero-based secondary slots and `SetSecondaryObjectiveFailed(int num, int string_id)`. Pristine `0x00534470` unboxes two integers, writes text at `[0x008A9B2C + num*8 + 4]`, then stores `MOS_FAILED=2` at `[0x008A9B2C + num*8]`; the exact world-110 LevelScript has one native-88 instruction at index 22, attribute `0x00000258`, fed by slot `1` and `_110_SECONDARY_1=114309509` | `rebuild/OnslaughtRebuild.Core/Level100MissionTypes.cs` and `rebuild/OnslaughtRebuild.Core/Level100Mission.cs` | `RetailSecondaryObjectiveState.SetFailed`; `Level100Mission.InvokeNative` case 88 | `Level100MissionTests.SecondaryObjectiveFailed_WritesTheIndexedRetailSlotAndRejectsSwappedOrOutOfRangeArguments` | 1 | write `Complete=1` instead of `Failed=2` (observed Expected Failed / Actual Complete); swapped text/index and both range edges are also rejected without mutation |
+| World-110 bounded mission-session step | Exact `f5c157ba…22aa` program: native 88 at instruction 22, first `Pause` at instruction 34. The intervening non-waiting `_110_PROTECT` message id 8444036 maps to exact retail `110_protect.ogg`, SHA-256 `03f1fc8e…35d3`, 172,496 samples at 44.1 kHz; the retained duration law gives 90 ticks. Definition/world mismatches fail in both directions. The stamped Level 100 fixture is an execution instrument, not authored world-110 content | `rebuild/OnslaughtRebuild.Core/Level100Mission.cs`, `rebuild/OnslaughtRebuild.Core/Simulation.cs`, and `rebuild/OnslaughtRebuild.Core/Level100MissionTiming.cs` | explicit world-110 constructors; `Level100MissionTiming.MessagePlaybackTicks` | `RetailWorld110AdmissionTests.MissionConstructor_World110CrossesNative88AndStopsAtItsFirstLegitimateWait` | 1 | change the measured `_110_PROTECT` duration from 90 to 91 ticks (observed Expected 90 / Actual 91) |
 
 Two things this table deliberately does **not** claim. It does not claim these
 contracts are graded `REBUILD_READY`: that grade is a campaign artifact and
 needs the ceremony in `tools/re_campaign.py`
 (`_validate_rebuild_ready_gate`), which stamps owner/test/project SHA-256s, a
 `rebuildMapping`, and a re-run of the focused test. And it does not claim replay
-coverage. **Twenty of these twenty-six implementations are unreachable from the
-simulation and replay path** — measured, by searching `Simulation.cs`,
+coverage. **Many carried implementations remain unreachable from the
+simulation and replay path** — measured by searching `Simulation.cs`,
 `ReplayRunner.cs`, `CommandTape.cs`, `StateHasher.cs` and every `Level100*.cs`
 for the owner types: `Simulation.JetFrictionNumerator` is wired,
 `RetailWeaponCharge.Charge` is reached from `Simulation.TryChargeWeapon`
@@ -208,11 +212,13 @@ names the rebuild bool),
 `LevelLostString` path, and `Level100WonCareerHandoff.TryApply` (which
 calls the already-pinned `ForLevel100Won` / `ApplyUpdate`) is reached from
 `Level100Mission` when `FrontEndHandoffReady` follows Won, including the
-SimInput-only chain fixture that never posts a mission event. The four
-world-admission rows added 2026-08-22 (`IsWorldSelectable`,
-`IsWorldLater`, per-world `LoadEmbedded`, `Level100Terrain.World110`)
-join the unreachable set: they are catalog/admission law, wired to tests and
-the frontend selector, but no simulation consumes them yet. The Lost-skip
+SimInput-only chain fixture that never posts a mission event. Of the four
+world-admission rows added 2026-08-22, `IsWorldSelectable`,
+`IsWorldLater`, and `Level100Terrain.World110` remain catalog/admission law;
+the bounded world-110 simulation now consumes per-world `LoadEmbedded` but
+still does not consume world-110 terrain. The native-88 secondary state and
+schema-43 hash projection are reached only by that explicit Core instrument;
+the Godot host remains world-100-only. The Lost-skip
 row names the same `TryApply` owner; it does not add a twenty-third
 implementation. The first-play slot row names
 `FirstPlayTutorialSlotWords` on the already-pinned FillOut owner.

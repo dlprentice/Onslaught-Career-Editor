@@ -12,6 +12,7 @@ public sealed class Level100Mission
     private readonly Level100MissionProgram _program;
     private readonly Level100ActorRegistry _actors;
     private readonly Level100ActorId _playerActorId;
+    private readonly int _worldNumber;
     private readonly Level100ScriptValue[] _locals;
     private readonly Queue<QueuedEvent> _eventQueue = new();
     private readonly Queue<PendingMessage> _pendingMessages = new();
@@ -24,6 +25,7 @@ public sealed class Level100Mission
         new(3, 0, Level100PrimaryObjectiveStatus.Uninitialized),
         new(4, 0, Level100PrimaryObjectiveStatus.Uninitialized),
     ];
+    private readonly RetailSecondaryObjectiveState _secondaryObjectives = new();
 
     private Execution? _activeExecution;
     private long _nextSequence = 1;
@@ -90,14 +92,24 @@ public sealed class Level100Mission
         Level100ActorRegistry actors,
         Level100ActorId playerActorId,
         Level100TutorialProgress tutorialProgress = default,
-        int initialPlayerHealth = SimulationConstants.MaximumHull)
+        int initialPlayerHealth = SimulationConstants.MaximumHull,
+        int worldNumber = Level100MissionProgram.WorldNumber100)
     {
         if (initialPlayerHealth <= 0)
         {
             throw new ArgumentOutOfRangeException(nameof(initialPlayerHealth));
         }
 
-        _program = Level100MissionProgram.LoadEmbedded();
+        if (worldNumber != Level100MissionProgram.WorldNumber100 &&
+            worldNumber != Level100MissionProgram.WorldNumber110)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(worldNumber),
+                $"World {worldNumber} has no admitted mission session.");
+        }
+
+        _worldNumber = worldNumber;
+        _program = Level100MissionProgram.LoadEmbedded(worldNumber, "LevelScript");
         _actors = actors ?? throw new ArgumentNullException(nameof(actors));
         _playerActorId = playerActorId;
         if (_actors.GetThingTypeMask(_playerActorId) !=
@@ -107,6 +119,14 @@ public sealed class Level100Mission
                 "The canonical Level 100 player must carry the released Battle Engine type bit.",
                 nameof(playerActorId));
         }
+
+        if (_actors.Definitions.WorldNumber != worldNumber)
+        {
+            throw new ArgumentException(
+                $"The actor definitions carry world {_actors.Definitions.WorldNumber}, not the requested world {worldNumber}.",
+                nameof(actors));
+        }
+
         _locals = _program.Symbols.Select(symbol => symbol.InitialValue).ToArray();
         _initialPlayerHealth = initialPlayerHealth;
         _latestPlayerHealth = initialPlayerHealth;
@@ -128,9 +148,13 @@ public sealed class Level100Mission
     /// </summary>
     public RetailCareerCampaign Career => _wonCareerHandoff.Career;
 
+    /// <summary>The career world whose hash-pinned mission program is running.</summary>
+    public int WorldNumber => _worldNumber;
+
     public Level100MissionSnapshot Snapshot => new(
         _tick,
-        Level100MissionProgram.ExpectedSha256,
+        _program.Sha256,
+        _worldNumber,
         _initializerRan,
         _outcome == Level100MissionOutcome.Running,
         _nextSequence,
@@ -182,6 +206,7 @@ public sealed class Level100Mission
             item.Objective,
             item.TextId,
             item.Status)).ToArray(),
+        _secondaryObjectives.Snapshot,
         _events.ToArray(),
         _messageClearTick,
         _pendingMessages.Select(item => item.Message).ToArray(),
@@ -777,6 +802,12 @@ public sealed class Level100Mission
             case 87: // PrimaryObjectiveFailed
                 RequireArguments(command, arguments, 2);
                 SetPrimaryObjective(arguments, Level100PrimaryObjectiveStatus.Failed);
+                return NativeResult.Void;
+            case 88: // SecondaryObjectiveFailed — IScript__SecondaryObjectiveFailed 0x00534470
+                RequireArguments(command, arguments, 2);
+                _secondaryObjectives.SetFailed(
+                    arguments[0].AsInteger(),
+                    arguments[1].AsInteger());
                 return NativeResult.Void;
             case 98: // EnableWeapon — IScript__EnableWeapon 0x00534fb0
                 RequireArguments(command, arguments, 1);

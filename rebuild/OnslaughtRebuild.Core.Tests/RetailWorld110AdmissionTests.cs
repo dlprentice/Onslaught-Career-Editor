@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 using OnslaughtRebuild.Core;
+using OnslaughtRebuild.TestSupport;
 
 namespace OnslaughtRebuild.Core.Tests;
 
@@ -15,6 +16,22 @@ namespace OnslaughtRebuild.Core.Tests;
 public sealed class RetailWorld110AdmissionTests
 {
     private const int World110 = 110;
+
+    /// <summary>
+    /// A world-110-stamped projection of the proven Level 100 test fixture.
+    /// It is a bounded session instrument only: the actor/spawn/path content
+    /// remains the Level 100 fixture and makes no world-110 static-world claim.
+    /// </summary>
+    internal static Level100ActorDefinitionSet CreateWorld110Definitions()
+    {
+        Level100ActorDefinitionSet root = Level100TestActorDefinitions.Create();
+        return new Level100ActorDefinitionSet(
+            root.Actors,
+            root.Spawns,
+            root.WaypointPaths,
+            root.MotionDefinitions,
+            worldNumber: World110);
+    }
 
     [Fact]
     public void AllThirteenScriptObjects_AdmitWithTheirPinnedIdentities()
@@ -125,6 +142,122 @@ public sealed class RetailWorld110AdmissionTests
             () => Level100MissionProgram.LoadEmbedded(210, "LevelScript"));
         Assert.Throws<ArgumentOutOfRangeException>(
             () => Level100MissionProgram.LoadEmbedded(110, "Nonexistent"));
+    }
+
+    /// <summary>
+    /// This run re-derived native 88 directly from the exact 5,110-byte
+    /// <c>f5c157ba…22aa</c> LevelScript: instruction 22 has attribute
+    /// <c>0x00000258</c> (two arguments, void result), after loads of integer
+    /// slot 1 and text id 114309509; instruction 34 is the first Pause. The
+    /// source signature is <c>SetSecondaryObjectiveFailed(int num,
+    /// int string_id)</c>, and the retail body writes state 2 plus the text
+    /// dword into the distinct ten-slot secondary array. Construction must
+    /// therefore cross native 88 and stop at that first legitimate wait,
+    /// rather than treating an unsupported-native exception as admission.
+    /// </summary>
+    [Fact]
+    public void MissionConstructor_World110CrossesNative88AndStopsAtItsFirstLegitimateWait()
+    {
+        Level100MissionProgram program =
+            Level100MissionProgram.LoadEmbedded(World110, "LevelScript");
+        (Level100Instruction Instruction, int Index) native88 = program.Instructions
+            .Select((instruction, index) => (instruction, index))
+            .Single(item =>
+                item.instruction.Opcode == 24 &&
+                (item.instruction.Attribute & 0xff) == 88);
+        Assert.Equal(22, native88.Index);
+        Assert.Equal(0x00000258, native88.Instruction.Attribute);
+        Assert.Equal(1, program.Symbols[20].InitialValue.AsInteger());
+        Assert.Equal(114309509, program.Symbols[21].InitialValue.AsInteger());
+        Assert.Equal(24, program.Instructions[34].Opcode);
+        Assert.Equal(4, program.Instructions[34].Attribute & 0xff);
+
+        Level100ActorDefinitionSet definitions = CreateWorld110Definitions();
+        var actors = new Level100ActorRegistry(definitions);
+        Level100ActorId player = actors.GetThingRef("Player 1")!.Value;
+
+        var mission = new Level100Mission(
+            actors,
+            player,
+            tutorialProgress: default,
+            initialPlayerHealth: SimulationConstants.MaximumHull,
+            worldNumber: World110);
+
+        Level100MissionSnapshot snapshot = mission.Snapshot;
+        Assert.Equal(World110, mission.WorldNumber);
+        Assert.Equal(
+            "f5c157ba2c6a9acbee78d895a25be82252951b93bdfdd8886a79ecd7bfe222aa",
+            snapshot.ProgramSha256);
+        Assert.True(snapshot.InitializerRan);
+        Level100ScriptContinuationSnapshot wait = Assert.Single(snapshot.Continuations);
+        Assert.Equal(Level100ScriptWaitKind.Pause, wait.WaitKind);
+        Assert.Equal(35, wait.Execution.InstructionPointer);
+        Level100MessageRequested protectMessage = Assert.Single(snapshot.PendingMessages);
+        Assert.Equal(8444036, protectMessage.MessageId);
+        Assert.False(protectMessage.ScriptWaitsForDuration);
+        Assert.Equal(90, protectMessage.ExpectedPlaybackTicks);
+        Assert.Equal(
+            new RetailSecondaryObjectiveSnapshot(
+                1,
+                114309509,
+                RetailSecondaryObjectiveStatus.Failed),
+            snapshot.SecondaryObjectives[1]);
+        Assert.All(
+            snapshot.SecondaryObjectives.Where(item => item.Index != 1),
+            item => Assert.Equal(RetailSecondaryObjectiveStatus.NotDefined, item.Status));
+    }
+
+    /// <summary>
+    /// A session's requested world and its definition-set stamp are one
+    /// fail-closed identity. The fixture projection is deliberately otherwise
+    /// byte-identical, so these assertions cannot pass because unrelated actor
+    /// content happens to differ.
+    /// </summary>
+    [Fact]
+    public void MissionAndSimulation_RejectDefinitionWorldMismatchesInBothDirections()
+    {
+        Level100ActorDefinitionSet root = Level100TestActorDefinitions.Create();
+        var rootActors = new Level100ActorRegistry(root);
+        Level100ActorId rootPlayer = rootActors.GetThingRef("Player 1")!.Value;
+        Level100ActorDefinitionSet world110 = CreateWorld110Definitions();
+        var world110Actors = new Level100ActorRegistry(world110);
+        Level100ActorId world110Player = world110Actors.GetThingRef("Player 1")!.Value;
+
+        Assert.Throws<ArgumentException>(() =>
+            new Level100Mission(
+                rootActors,
+                rootPlayer,
+                worldNumber: World110));
+        Assert.Throws<ArgumentException>(() =>
+            new Level100Mission(
+                world110Actors,
+                world110Player,
+                worldNumber: Level100MissionProgram.WorldNumber100));
+        Assert.Throws<ArgumentException>(() =>
+            new Simulation(1, root, worldNumber: World110));
+        Assert.Throws<ArgumentException>(() =>
+            new Simulation(
+                1,
+                world110,
+                worldNumber: Level100MissionProgram.WorldNumber100));
+    }
+
+    [Fact]
+    public void MissionAndSimulation_RejectWorldsWithoutAnAdmittedSession()
+    {
+        Level100ActorDefinitionSet root = Level100TestActorDefinitions.Create();
+        var actors = new Level100ActorRegistry(root);
+        Level100ActorId player = actors.GetThingRef("Player 1")!.Value;
+
+        ArgumentOutOfRangeException missionFailure =
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+                new Level100Mission(actors, player, worldNumber: 210));
+        ArgumentOutOfRangeException simulationFailure =
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+                new Simulation(1, root, worldNumber: 210));
+
+        Assert.Equal("worldNumber", missionFailure.ParamName);
+        Assert.Equal("worldNumber", simulationFailure.ParamName);
     }
 
     /// <summary>

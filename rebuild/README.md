@@ -1,8 +1,9 @@
 # Onslaught Rebuild
 
 Status: early GPL reconstruction lane
-Last updated: 2026-08-22. The career read/load frontend slice and world-admission
-claims below are the newly re-reviewed surface.
+Last updated: 2026-08-24. The bounded world-110 native-88 Core session,
+career read/load frontend slice, and world-admission claims below are the newly
+re-reviewed surface.
 Other sections retain their narrower dated evidence boundaries.
 Summary: what the `rebuild/` lane is, who owns which assembly, and what the
 Level 100 Opening Slice does and does not currently do.
@@ -216,9 +217,11 @@ measured ReCalcLinks unlock admits it — the root always, any other world once 
 completed incoming link points at it. The launch edge was renamed
 `LevelLaunchRequested` and carries `ConsumeLaunchWorldNumber`. What a launch
 *constructs* is still Level 100 only: world-110's compiled scripts and
-heightfield are admitted by Core (below), but the world-110 session owner and
-its actor-definition projection do not exist yet, so the host cannot build that
-world. After a Level 100 Won reaches `FrontEndHandoffReady`, the host returns
+heightfield are admitted by Core (below), and a bounded Core-only session now
+steps its LevelScript against a world-stamped copy of the Level 100 test
+fixture. The authored world-110 actor-definition projection and Godot lifecycle
+still do not exist, so the host cannot build that world. After a Level 100 Won
+reaches `FrontEndHandoffReady`, the host returns
 the player to SELECT LEVEL with the FillOut update applied (retail's PC
 `CFrontEnd::Init` would land on `FEP_DEBRIEFING` first — that page is not
 composed here). World 110 is then selectable and the Episode-1 child node is
@@ -268,8 +271,13 @@ the HFLD envelope into `Assets/Level110/`; `Level100MissionProgram.LoadEmbedded`
 admits them per-world under the same hash law as Level 100 (world 110's
 LevelScript: 181 instructions, 92 symbols, five named events), and
 `Level100Terrain.World110` carries the heightfield under the same envelope law.
-No simulation consumes the world-110 payloads yet; no world-110 FillOut, VM
-run, or session owner exists. The level-world actor table is now measured
+An explicit Core-only session now consumes the world-110 LevelScript through its
+first `Pause` and one idle step. Native 88 writes the measured failed secondary
+slot, and StateHasher schema 43 binds the non-root world and all ten secondary
+records while default world 100 stays byte-identical on schema 42. This session
+deliberately stamps the existing Level 100 test definitions: no product/Godot
+simulation consumes world-110 terrain or authored actors, and no world-110
+FillOut or full mission run exists. The level-world actor table is measured
 (40 RLWD initial actors, header `(2, 0, 40)`; types 19 and 28 are trailers
 Level 100 does not use) and the BSWD island is byte-identical to Level 100
 (`04c5a383…10f4`). RLWD ordinal 0 is the LevelScript object, not a Battle
@@ -287,8 +295,8 @@ and an own 80,232-byte BSWD (`9c0575ea…adba`) instead of the shared island.
 The named-event identifier source is now value-text-first with symbol-name
 fallback in `Level100MissionProgram.Parse`, which worlds 100/110 satisfy
 unchanged. No world-200 actor-table record walk has been completed yet; no
-simulation consumes any of these payloads, and there is still exactly one
-constructed session owner (Level 100).
+simulation consumes any of these payloads, and the only product/Godot session
+owner remains Level 100.
 
 World 300 (2026-08-22) is the explicit falsifier for treating "version 50" as
 one RLWD preamble. `data/resources/300_res_PC.aya` (SHA-256
@@ -308,7 +316,8 @@ payload (`3c153d55…0dfc`). The actor header after the script region is
 facts without naming the unknown header words. No complete per-type walk of
 the 36 actor records is promoted: the partial probe reaches a type-38 trailer
 whose wider record law is unresolved. No world-300 VM run, actor projection,
-or session owner exists, and the only constructed world remains Level 100.
+or session owner exists, and the only constructed product world remains Level
+100.
 
 The walker now consumes the shipped Aquila configuration's exact `1.0/75`
 yaw-input gain instead of the older fitted `1.7/75` value. Terrain touchdown

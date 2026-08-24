@@ -16,6 +16,44 @@ public sealed class Level100MissionTests
         new(Introduction: true, PulseCannon: true, VulcanCannon: true, StatusBars: true);
 
     /// <summary>
+    /// Stuart's <c>game.h:22-24,179-187</c> owns ten secondary slots and
+    /// passes <c>(num, string_id)</c> straight to the distinct secondary
+    /// array. The pristine native-88 body at <c>0x00534470</c> unboxes those
+    /// two integers, writes the text dword at <c>+4</c>, then writes
+    /// <c>MOS_FAILED=2</c> at <c>0x008A9B2C + num*8</c>. This adverse control
+    /// proves that the first argument remains the zero-based slot index: the
+    /// measured world-110 text id must be rejected if it is swapped into that
+    /// position, and no prior slot may change on a rejected write.
+    /// </summary>
+    [Fact]
+    public void SecondaryObjectiveFailed_WritesTheIndexedRetailSlotAndRejectsSwappedOrOutOfRangeArguments()
+    {
+        var objectives = new RetailSecondaryObjectiveState();
+
+        objectives.SetFailed(1, 114309509);
+
+        Assert.Equal(RetailSecondaryObjectiveState.Count, objectives.Snapshot.Count);
+        Assert.Equal(
+            new RetailSecondaryObjectiveSnapshot(
+                1,
+                114309509,
+                RetailSecondaryObjectiveStatus.Failed),
+            objectives.Snapshot[1]);
+        Assert.All(
+            objectives.Snapshot.Where(item => item.Index != 1),
+            item => Assert.Equal(RetailSecondaryObjectiveStatus.NotDefined, item.Status));
+
+        RetailSecondaryObjectiveSnapshot[] beforeRejectedWrites =
+            objectives.Snapshot.ToArray();
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            objectives.SetFailed(114309509, 1));
+        Assert.Throws<ArgumentOutOfRangeException>(() => objectives.SetFailed(-1, 7));
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            objectives.SetFailed(RetailSecondaryObjectiveState.Count, 7));
+        Assert.Equal(beforeRejectedWrites, objectives.Snapshot);
+    }
+
+    /// <summary>
     /// <c>IScript::PrimaryObjectiveFailed</c> at <c>0x00534440</c>
     /// writes state 2 (Wave580 plate; <c>MOS_FAILED</c> at
     /// <c>0x004496FB</c>). Level 100 <c>init()</c> calls it for

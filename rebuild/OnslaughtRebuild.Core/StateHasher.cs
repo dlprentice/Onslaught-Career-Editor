@@ -24,6 +24,16 @@ public static class StateHasher
         using (var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true))
         {
             writer.Write(s_magic);
+            bool usesWorldMissionSchema = UsesWorldMissionSchema(state.Level100Mission);
+            // 43: the multi-world mission extension. It records the requested
+            // career world and all ten retail secondary-objective slots. The
+            // schema is selected for every non-root mission, and for any root
+            // snapshot whose secondary state is non-default, so no
+            // future-affecting value can hide behind the compatibility path.
+            // A default world-100 mission deliberately remains schema 42 and
+            // emits byte-for-byte the old canonical layout, preserving every
+            // established root-world hash.
+            //
             // 42: records the reusable Thing/Actor base-state projection. Old
             // pose drives interpolation, contact timestamps and flags are
             // retained source state, and the source-composed inheritance mask
@@ -90,7 +100,7 @@ public static class StateHasher
             // 31: added the ordered Level100WeaponFireEvents stream. Every
             // hashed tick gains its four-byte count, so this bump moves every
             // pinned hash regardless of whether a weapon fires.
-            writer.Write(42);
+            writer.Write(usesWorldMissionSchema ? 43 : 42);
             writer.Write(state.Tick);
             writer.Write(state.Seed);
             writer.Write(state.InitialLevel100TutorialProgress.Introduction);
@@ -183,7 +193,10 @@ public static class StateHasher
             writer.Write(state.ZoomPermille);
             writer.Write(state.DesiredZoomPermille);
             writer.Write(state.Level100HudEmphasisMask);
-            WriteLevel100Mission(writer, state.Level100Mission);
+            WriteLevel100Mission(
+                writer,
+                state.Level100Mission,
+                usesWorldMissionSchema);
             WriteLevel100Events(writer, state.Level100MissionEvents);
             WriteLevel100ActorRegistry(writer, state.Level100Actors);
             WriteLevel100Destruction(
@@ -232,6 +245,15 @@ public static class StateHasher
         }
 
         return stream.ToArray();
+    }
+
+    private static bool UsesWorldMissionSchema(Level100MissionSnapshot mission)
+    {
+        ArgumentNullException.ThrowIfNull(mission);
+        return mission.WorldNumber != Level100MissionProgram.WorldNumber100 ||
+               mission.SecondaryObjectives.Any(objective =>
+                   objective.TextId != 0 ||
+                   objective.Status != RetailSecondaryObjectiveStatus.NotDefined);
     }
 
     private static void WriteVector(BinaryWriter writer, SimVector2 vector)
@@ -560,12 +582,17 @@ public static class StateHasher
 
     private static void WriteLevel100Mission(
         BinaryWriter writer,
-        Level100MissionSnapshot mission)
+        Level100MissionSnapshot mission,
+        bool usesWorldMissionSchema)
     {
         ArgumentNullException.ThrowIfNull(mission);
 
         writer.Write(mission.Tick);
         writer.Write(mission.ProgramSha256);
+        if (usesWorldMissionSchema)
+        {
+            writer.Write(mission.WorldNumber);
+        }
         writer.Write(mission.InitializerRan);
         writer.Write(mission.IsRunning);
         writer.Write(mission.NextSequence);
@@ -626,6 +653,17 @@ public static class StateHasher
             writer.Write(objective.Objective);
             writer.Write(objective.TextId);
             writer.Write((int)objective.Status);
+        }
+
+        if (usesWorldMissionSchema)
+        {
+            writer.Write(mission.SecondaryObjectives.Count);
+            foreach (RetailSecondaryObjectiveSnapshot objective in mission.SecondaryObjectives)
+            {
+                writer.Write(objective.Index);
+                writer.Write(objective.TextId);
+                writer.Write((int)objective.Status);
+            }
         }
 
         WriteLevel100Events(writer, mission.PendingEvents);
