@@ -1,7 +1,7 @@
 # CMonitor / CSPtrSet function map
 
 Status: active static function map
-Last updated: 2026-08-19 (0x0047ec60 roster pointer only)
+Last updated: 2026-08-24 (AddDeletionEvent retained-runtime C2 falsifier)
 Source File: `C:\dev\ONSLAUGHT2\Monitor.h` (SEH `__FILE__` pointer `0x00622b80`
 read out of `AddDeletionEvent`) | Binary: BEA.exe, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
@@ -81,6 +81,31 @@ Pinned GPL `references/Onslaught/activereader.cpp` names the architecture
 (`RemoveDeletionEvent(this)` / `AddDeletionEvent(this)` / `ToReadDied`
 `{ mToRead = NULL }`) and is **not** the retail proof. Retail `SetReader`
 inlines `CSPtrSet__Remove` instead of calling `DeleteDeletionEvent`.
+
+## `AddDeletionEvent` retained-runtime boundary (2026-08-24)
+
+The dedicated contract is
+[`CMonitor__AddDeletionEvent__00401040.md`](../../contracts/engine-world/CMonitor__AddDeletionEvent__00401040.md).
+Its retained-evidence audit is **RED for C2**; Generation 32 remains
+`C1_CANDIDATE_PARTIAL` / `OPEN_EXECUTED`, and no VERIFIED count changes here.
+
+Two independent, hash-bound coverage recordings (Level-512 opening trace
+`3D3A118F…4808` and Level-521 native take 4 `45AB0429…74AC2`) execute exactly
+`[0x00401040,0x00401091)` plus `[0x00401093,0x004010be)`: 124 of the 126 body
+bytes. Against the exact disassembly this proves that each recording contains
+execution of the successful lazy-allocation body through `CSPtrSet__Init` and
+the `[this+4]` store, plus execution of the common insertion/return bytes. The
+only unobserved instruction is the two-byte allocation-failure `XOR ESI,ESI`
+at `0x00401091`.
+
+That coverage is a byte union, not a call envelope. The retained call-context
+catalog has no target row for `AddDeletionEvent`, `DeleteDeletionEvent`, or
+`CSPtrSet__AddToHead`. Two READY SetReader slices carry independent null-rebind
+envelopes, but neither reads old/new set state. Therefore retained evidence
+does **not** prove AddDeletionEvent receiver continuity, reader-cell identity,
+`monitor+0x04` before/after values, an already-initialized insertion, wrapper
+payload equality through `0x004010bb`, or a removal can-fail control. Static
+source analogy and call sites do not fill those runtime cells.
 
 ## Open questions (cheapest falsifier first)
 
