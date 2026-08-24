@@ -44,8 +44,9 @@ call-context JSONLs. Thus this task's final disposition is `REUSED 16 /
 EXTENDED 0 / NEW_MEASUREMENT 4`; none of the four measurements is a new replay
 or capture.
 
-## Identity and static contract
+## Identity
 
+- Body `[0x00401040,0x004010bd]`, one range, 126 bytes, 39 instructions; raw pristine-body SHA-256 `b9d3c4afa0c93e5eccdcfbdfabc974da517d24c4172fde6f3a65628127701017`.
 - Exact body: `[0x00401040,0x004010bd]`, one range, 126 bytes, 39 instructions,
   range-set SHA-256
   `209fb6083af63fd9265f4a1e90f21da8a2543c91539f98cdecc05f602c270606`.
@@ -74,7 +75,79 @@ or capture.
   the event-delivery implementation are absent, so source analogy cannot
   promote this retail function.
 
-## Retained runtime evidence
+## Calling convention
+
+`__thiscall`: `this` arrives in `ECX`, the one explicit dword argument is at
+`[entry ESP+4]`, and `RET 0x4` at `0x004010bb` performs callee cleanup. The
+retained runtime corpus does not establish receiver or argument continuity for
+any target invocation.
+
+## Prototype and parameter semantics
+
+```c
+void __thiscall CMonitor__AddDeletionEvent(void * this, void * readerCell)
+```
+
+- `this` is the statically typed receiver; `[this+4]` is treated as the lazy
+  `CSPtrSet` pointer. A concrete runtime receiver identity is unknown because no
+  retained target entry snapshot exists.
+- `readerCell` is the one stack dword passed to `CSPtrSet__AddToHead`; static
+  callee analysis says that dword becomes the wrapper payload. Its concrete
+  runtime identity, ownership, nullability, and lifetime are not_determinable
+  from the retained target coverage.
+
+## Return value meaning
+
+The prototype returns `void`; no semantic return value is established or
+claimed. Exact target return continuity through `0x004010bb` remains MISSING,
+so incidental register contents at return are not a contract.
+
+## Globals read/written
+
+- The null path references memory-manager singleton `0x009c3df0` for the
+  `0x18`-byte allocation and source-path data `0x00622b80` (`Monitor.h`, line
+  94). Effects internal to the allocator are not_determinable here.
+- `[this+4]` is a receiver field, not a global; its store is statically mapped.
+  No direct global write by this body is established. Additional indirect
+  global effects inside callees are unknown.
+
+## Callees relied on / callers
+
+- Direct callees are `CDXMemoryManager__Alloc @ 0x005490e0` on the null path,
+  `CSPtrSet__Init @ 0x004e5840` after successful allocation, and
+  `CSPtrSet__AddToHead @ 0x004e5a80` on the common path.
+- The whole-image direct-call scan names three callers:
+  `CGenericActiveReader__SetReader` at call site `0x0040102a`,
+  `CThing3rdPersonCamera__ctor` at `0x00418f39`, and
+  `CScriptEventNB__RegisterEventListener` at `0x00538a85`.
+- These are static edge identities. Indirect/inlined equivalents, concrete
+  runtime caller-to-entry association, and whole-lifetime ordering remain
+  unknown.
+
+## Behavior summary
+
+- Statically, the body tests `[this+4]`, lazily allocates and initializes a
+  `CSPtrSet` when that field is null, stores the resulting pointer, and then
+  calls `CSPtrSet__AddToHead` with the explicit argument.
+- Generation 32 remains `C1_CANDIDATE_PARTIAL` / `OPEN_EXECUTED`. The two
+  retained products each contribute the same 124/126-byte union, but byte-union
+  coverage is not one causal call envelope and cannot establish receiver,
+  argument, state-transition, payload, or return continuity.
+- All eight stateful witnesses in the C2 falsifier matrix remain MISSING. No
+  VERIFIED/C2 or count promotion is made, and neither source equivalence nor
+  whole-lifetime semantics is claimed.
+
+## Error / edge behavior
+
+The allocation-failure instruction at `[0x00401091,0x00401093)` is the only
+unobserved body range. Static control flow sets the candidate set pointer to
+zero and reaches the common store/insertion path, but the resulting behavior
+inside `CSPtrSet__AddToHead` is unknown. Invalid receivers, null or duplicate
+arguments, allocation/callee failure consequences, concurrency, rollback, and
+initialized-set insertion at runtime are not_determinable from the retained
+evidence.
+
+## Runtime corroboration (TTD, bounded)
 
 ### Two coverage recordings reach the successful lazy path
 
@@ -184,11 +257,44 @@ above and the two unique path scopes (lazy allocation and initialized insertion)
 are both witnessed. If either recording lacks the initialized path, that is an
 honest bounded corpus gap, not permission to infer it.
 
-## Confidence and open boundary
+## Evidence
 
-Confidence remains **1 / C1**: exact identity, body bytes, ABI shape, static
+- The exact pristine-byte function map, direct callee identities, and
+  whole-image direct callers are owned by
+  `reverse-engineering/binary-analysis/functions/CMonitor.cpp.md`.
+- The bounded source analogy and absent Monitor.h boundary are owned by
+  `reverse-engineering/source-code/io/event-system.md` and
+  `reverse-engineering/source-code/stuart-source-synthesis.md`; neither is
+  source-equivalence proof.
+- The current Generation-32 grade/state projection is retained in
+  `reverse-engineering/EVIDENCE-REGISTER.tsv`. The four hash-bound runtime
+  products and receipts are enumerated above; their ignored evidence payloads
+  are not claimed as tracked repository paths.
+- No replay, recording, native execution, or new evidence measurement was
+  performed for this schema correction. The exact body, range-set,
+  disassembly, recording-receipt, coverage, call-context, and SetReader receipt
+  hashes above remain unchanged.
+
+## Confidence
+
+1 — confidence remains **1 / C1**: exact identity, body bytes, ABI shape, static
 allocation/insertion law, source analogy, and two successful-lazy coverage
 routes are reconciled. Runtime receiver/cell continuity, concrete before/after
 state, initialized insertion, removal behavior, allocation failure, duplicate
 registration, whole-lifetime semantics, concurrency, and rebuild parity remain
 open. The cheapest sufficient instrument above is the exact next step.
+
+## Unresolved questions
+
+- Every one of the eight stateful witnesses in the C2 falsifier matrix remains
+  MISSING, including two complete target envelopes, exact receiver/argument
+  continuity, both set-state branches, payload-through-return identity, and a
+  can-fail removal control.
+- Allocation-failure consequences, duplicate registration, concurrency,
+  removal behavior, and rebuild parity remain unknown.
+- `Monitor.h` and the event-delivery implementation remain absent; source
+  equivalence and whole-lifetime semantics are not established.
+- Cheapest sufficient falsifier: the serialized read-only offline TTD replay
+  plate specified above, including independent wrong-receiver,
+  wrong-reader-cell/payload, wrong-return-PC, cross-invocation, missing-memory,
+  and coverage-only rejection controls.
