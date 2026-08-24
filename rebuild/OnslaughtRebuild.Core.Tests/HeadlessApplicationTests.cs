@@ -39,12 +39,15 @@ public sealed class HeadlessApplicationTests
         // 2836905711) for this revision, per rebuild/DETERMINISM.md: a
         // behavior change that legitimately moves Core's trace must re-pin
         // these two values in the same commit as the behavior change. The
+        // bcda0aa7 change moved this fingerprint through StateHasher v42's
+        // ordered BaseStates projection plus AdvancePose/UpdateCurrentPose
+        // old-pose retention; this correction records that deliberate re-pin.
         // native Godot smoke pins the 2148-tick rendered path separately.
         using var output = new StringWriter();
         using var error = new StringWriter();
 
         int exitCode = HeadlessApplication.Run(
-            ["--expect", "efc818f7708bea67ecaffb5e6acc6807c90f29e7499a69f1891ff407f8388014", "--repeat", "2"],
+            ["--expect", "14417c11ba4ecccdaa51bca9df93f805cba0368fcb520fd4d18899a5348e3831", "--repeat", "2"],
             output,
             error);
 
@@ -54,10 +57,10 @@ public sealed class HeadlessApplicationTests
         Assert.True(result.RootElement.GetProperty("traceHashChecked").GetBoolean());
         Assert.True(result.RootElement.GetProperty("traceHashVerified").GetBoolean());
         Assert.Equal(
-            "efc818f7708bea67ecaffb5e6acc6807c90f29e7499a69f1891ff407f8388014",
+            "14417c11ba4ecccdaa51bca9df93f805cba0368fcb520fd4d18899a5348e3831",
             result.RootElement.GetProperty("traceHash").GetString());
         Assert.Equal(
-            "0c034978c006049e57833564aba0b10cad00c87e61d5658737e13cc6a389f6ce",
+            "546e71d41159503bbcb43eaa75444b158dd313cbd2fc5d6762d288ee4e6627b5",
             result.RootElement.GetProperty("finalStateHash").GetString());
         Assert.Equal(string.Empty, error.ToString());
     }
