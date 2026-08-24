@@ -1141,6 +1141,65 @@ public sealed class SimulationTests
         Assert.Single(simulation.Step(new SimInput(0, 0, SimActions.Fire)).Projectiles);
     }
 
+    /// <summary>
+    /// Retail does not launch an adjustable weapon parallel to the centre-screen
+    /// ray. <c>CBattleEngine::GetLaunchPosition</c> traces from the current camera
+    /// view and rotates the physical cockpit emitter toward that hit point before
+    /// projectile inaccuracy is applied. The Pulse Cannon inherits
+    /// <c>CWeaponAdjustAim = true</c>; its shipped record carries no override.
+    /// </summary>
+    [Fact]
+    public void PulseCannonEmitter_ConvergesOnTheCameraReticleContact()
+    {
+        Simulation simulation = CreateFiringRangeExerciseSimulation();
+        Level100ActorSnapshot target = simulation.Snapshot.Level100Actors.Actors
+            .Single(actor => actor.Name == "Target Tank #23");
+        AimReticleAtActor(simulation, target, heightAboveOriginMillimeters: 600);
+
+        int healthBefore = target.Health;
+        WorldSnapshot state = simulation.Step(new SimInput(0, 0, SimActions.Fire));
+        Assert.Single(state.Projectiles);
+        for (int tick = 0; tick < 20 && state.Projectiles.Count > 0; tick++)
+        {
+            state = simulation.Step(SimInput.Idle);
+        }
+
+        Level100ActorSnapshot after = state.Level100Actors.Actors
+            .Single(actor => actor.ActorId == target.ActorId);
+        Assert.Empty(state.Projectiles);
+        Assert.Equal(healthBefore - 1_800, after.Health);
+        Assert.Equal(Level100ActorLifecycle.Alive, after.Lifecycle);
+        Assert.Equal(Level100MissionOutcome.Running, state.Level100Mission.Outcome);
+    }
+
+    [Theory]
+    [InlineData(-300)]
+    [InlineData(3_000)]
+    public void PulseCannonEmitter_DoesNotSnapMissesOutsideTheContactVolume(
+        int heightAboveOriginMillimeters)
+    {
+        Simulation simulation = CreateFiringRangeExerciseSimulation();
+        Level100ActorSnapshot target = simulation.Snapshot.Level100Actors.Actors
+            .Single(actor => actor.Name == "Target Tank #23");
+        AimReticleAtActor(
+            simulation,
+            target,
+            heightAboveOriginMillimeters);
+
+        WorldSnapshot state = simulation.Step(new SimInput(0, 0, SimActions.Fire));
+        for (int tick = 0; tick < 120 && state.Projectiles.Count > 0; tick++)
+        {
+            state = simulation.Step(SimInput.Idle);
+        }
+
+        Level100ActorSnapshot after = state.Level100Actors.Actors
+            .Single(actor => actor.ActorId == target.ActorId);
+        Assert.Empty(state.Projectiles);
+        Assert.Equal(target.Health, after.Health);
+        Assert.Equal(Level100ActorLifecycle.Alive, after.Lifecycle);
+        Assert.Equal(Level100MissionOutcome.Running, state.Level100Mission.Outcome);
+    }
+
     [Fact]
     public void Level100SimulationFailureTape_FirstRunRetainsLossTextAndExactTicks()
     {
@@ -1840,6 +1899,57 @@ public sealed class SimulationTests
         throw new Xunit.Sdk.XunitException(
             $"Could not settle the deterministic walker heading: error={finalError:F6}, " +
             $"velocity={final.WalkerYawVelocityMicroRadPerTick}.");
+    }
+
+    private static void AimReticleAtActor(
+        Simulation simulation,
+        Level100ActorSnapshot target,
+        int heightAboveOriginMillimeters)
+    {
+        SimVector3 position = target.Pose.PositionMillimeters;
+        for (int tick = 0; tick < 1_200; tick++)
+        {
+            WorldSnapshot state = simulation.Snapshot;
+            double deltaX = (double)position.X - state.PlayerPosition.X;
+            double deltaZ = (double)position.Z - state.PlayerPosition.Z;
+            double horizontal = Math.Sqrt((deltaX * deltaX) + (deltaZ * deltaZ));
+            double yawError = NormalizeRadians(
+                Math.Atan2(-deltaX, deltaZ) -
+                (state.FacingYawMicroRad / 1_000_000d));
+            double pitchError =
+                -Math.Atan2(
+                    position.Y + heightAboveOriginMillimeters -
+                        state.PlayerElevationMillimeters,
+                    Math.Max(1.0, horizontal)) -
+                (state.FacingPitchMicroRad / 1_000_000d);
+            if (Math.Abs(yawError) < 0.002d &&
+                Math.Abs(pitchError) < 0.002d &&
+                Math.Abs(state.WalkerYawVelocityMicroRadPerTick) < 500 &&
+                Math.Abs(state.WalkerPitchVelocityMicroRadPerTick) < 500)
+            {
+                return;
+            }
+
+            double yawDemand = yawError -
+                ((state.WalkerYawVelocityMicroRadPerTick / 1_000_000d) * 5d);
+            double pitchDemand = pitchError -
+                ((state.WalkerPitchVelocityMicroRadPerTick / 1_000_000d) * 5d);
+            int yawResponsePermille = (int)(
+                yawDemand * 45_334d * 1_000d /
+                SimulationConstants.WalkerYawInputMicroRadPerTick);
+            int pitchResponsePermille = (int)(pitchDemand * 4_000d);
+            simulation.Step(new SimInput(
+                0,
+                0,
+                SimActions.None,
+                0,
+                0,
+                LookAxisCommand.ForResponsePermille(yawResponsePermille),
+                LookAxisCommand.ForResponsePermille(pitchResponsePermille)));
+        }
+
+        throw new Xunit.Sdk.XunitException(
+            "Could not settle the reticle on the requested Level 100 actor contact.");
     }
 
     private static double NormalizeRadians(double value)
