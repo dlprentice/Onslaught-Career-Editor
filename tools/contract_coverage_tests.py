@@ -817,13 +817,24 @@ def test_real_corpus_invariants() -> None:
     out_dir = Path(tempfile.mkdtemp(prefix="ccov-real-"))
     try:
         out_path = out_dir / "coverage.json"
+        report_path = out_dir / "COVERAGE-REPORT.md"
+        tracked_paths = (
+            repo / "reverse-engineering" / "contract-schema" / "coverage.json",
+            repo / "reverse-engineering" / "contract-schema" / "COVERAGE-REPORT.md",
+        )
+        tracked_blobs = {path: path.read_bytes() for path in tracked_paths}
         proc = subprocess.run(
             [sys.executable, str(TOOL), "--repo-root", str(repo),
-             "--out", str(out_path)],
+             "--out", str(out_path), "--report-out", str(report_path)],
             capture_output=True, text=True, timeout=300)
         out = proc.stdout + proc.stderr
         assert proc.returncode == 0, out
+        for path, before in tracked_blobs.items():
+            assert path.read_bytes() == before, f"real-corpus self-test modified {path}"
+        assert out_path.is_file(), "isolated coverage JSON was not written"
+        assert report_path.is_file(), "isolated Markdown report was not written"
         payload = json.loads(out_path.read_text(encoding="utf-8"))
+        report = report_path.read_text(encoding="utf-8")
         contract_root = repo / "reverse-engineering" / "contracts"
         contract_files = sorted(contract_root.rglob("*.md"))
         contract_vas = set()
@@ -839,6 +850,9 @@ def test_real_corpus_invariants() -> None:
         assert payload["denominator"]["functions"] == 8329
         assert len(payload["functions"]) == 8329
         assert sum(payload["statusCounts"].values()) == 8329
+        assert f"- Functions: **{payload['denominator']['functions']:,}**" in report
+        for status, count in payload["statusCounts"].items():
+            assert f"| {status} | {count:,} |" in report
         known = {"STALE", "DISPUTED", "BLOCKED", "VERIFIED", "REVIEW_READY",
                  "PROVISIONAL", "SKELETON"}
         by_va = {row["va"]: row for row in payload["functions"]}
