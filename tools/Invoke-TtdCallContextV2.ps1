@@ -560,8 +560,15 @@ function Assert-CallContextRelationships {
         [Parameter(Mandatory = $true)]$Invocations,
         [Parameter(Mandatory = $true)]$GapSummary,
         [Parameter(Mandatory = $true)]$Summary,
-        [Parameter(Mandatory = $true)][int]$ExpectedStackBytes
+        [Parameter(Mandatory = $true)][int]$ExpectedStackBytes,
+        [string]$Schema = 'bea.ttd.call-context.v3'
     )
+
+    if (@('bea.ttd.call-context.v2', 'bea.ttd.call-context.v3') -cnotcontains
+        $Schema) {
+        throw "Unsupported call-context relationship schema: $Schema"
+    }
+    $legacyV2 = $Schema -ceq 'bea.ttd.call-context.v2'
 
     $eventCallCounts = [uint64[]]::new($Targets.Count)
     $eventEntryCounts = [uint64[]]::new($Targets.Count)
@@ -585,14 +592,17 @@ function Assert-CallContextRelationships {
         if ((Get-RequiredIndex $target 'target_index' "target $index") -ne $index) {
             throw "Call-context target indexes are not contiguous at $index."
         }
-        foreach ($field in @(
+        $targetCountFields = @(
                 'observed_entry_count',
                 'observed_call_count',
                 'observed_return_count',
                 'observed_call_entry_pair_count',
                 'observed_validated_return_count',
-                'observed_orphan_return_count',
-                'observed_gap_free_envelope_count')) {
+                'observed_gap_free_envelope_count')
+        if (-not $legacyV2) {
+            $targetCountFields += 'observed_orphan_return_count'
+        }
+        foreach ($field in $targetCountFields) {
             Get-RequiredUInt64 $target $field "target $index" | Out-Null
         }
         $entryRva = Assert-HexText $target 'entry_rva' "target $index"
@@ -660,12 +670,18 @@ function Assert-CallContextRelationships {
         if ($targetIndex -lt 0 -or $targetIndex -ge $Targets.Count) {
             throw "Call-context event $index has an invalid target index."
         }
-        $eventEpoch = Get-RequiredUInt64 $event 'association_epoch' "event $index"
-        if ($havePriorEventEpoch -and $eventEpoch -lt $priorEventEpoch) {
-            throw "Call-context event epochs decrease at event $index."
+        $eventEpoch = if ($legacyV2) {
+            [uint64]0
+        } else {
+            Get-RequiredUInt64 $event 'association_epoch' "event $index"
         }
-        $priorEventEpoch = $eventEpoch
-        $havePriorEventEpoch = $true
+        if (-not $legacyV2) {
+            if ($havePriorEventEpoch -and $eventEpoch -lt $priorEventEpoch) {
+                throw "Call-context event epochs decrease at event $index."
+            }
+            $priorEventEpoch = $eventEpoch
+            $havePriorEventEpoch = $true
+        }
         switch ($eventType) {
             'call' { $eventCallCounts[$targetIndex]++ }
             'entry' { $eventEntryCounts[$targetIndex]++ }
@@ -870,7 +886,8 @@ function Assert-CallContextRelationships {
             [int]$InvocationIndex,
             [int]$TargetIndex,
             [uint64]$Thread,
-            [uint64]$AssociationEpoch
+            [uint64]$AssociationEpoch,
+            [bool]$LegacySchemaV2
         )
 
         if ($EventIndex -lt 0 -or $EventIndex -ge $Events.Count) {
@@ -885,8 +902,9 @@ function Assert-CallContextRelationships {
             $eventTargetIndex -ne $TargetIndex -or
             (Get-RequiredUInt32TextScalar `
                 $event 'unique_thread_id' "event $EventIndex") -ne $Thread -or
-            (Get-RequiredUInt64 $event 'association_epoch' "event $EventIndex") -ne
-                $AssociationEpoch -or
+            (-not $LegacySchemaV2 -and
+             (Get-RequiredUInt64 $event 'association_epoch' "event $EventIndex") -ne
+                $AssociationEpoch) -or
             $null -eq $eventInvocationIndex -or
             $eventInvocationIndex -ne $InvocationIndex) {
             throw "Invocation $InvocationIndex has a broken $ExpectedType backlink."
@@ -904,8 +922,11 @@ function Assert-CallContextRelationships {
         }
         $thread = Get-RequiredUInt32TextScalar `
             $invocation 'unique_thread_id' "invocation $index"
-        $associationEpoch = Get-RequiredUInt64 `
-            $invocation 'association_epoch' "invocation $index"
+        $associationEpoch = if ($legacyV2) {
+            [uint64]0
+        } else {
+            Get-RequiredUInt64 $invocation 'association_epoch' "invocation $index"
+        }
         $call = Get-NullableIndex $invocation 'call_event_index' "invocation $index"
         $entry = Get-NullableIndex $invocation 'entry_event_index' "invocation $index"
         $returned = Get-NullableIndex $invocation 'return_event_index' "invocation $index"
@@ -916,13 +937,16 @@ function Assert-CallContextRelationships {
         $grade = Get-RequiredString $invocation 'grade' "invocation $index"
 
         if ($null -ne $call) {
-            Assert-LinkedEvent $call 'call' $index $targetIndex $thread $associationEpoch
+            Assert-LinkedEvent $call 'call' $index $targetIndex $thread `
+                $associationEpoch $legacyV2
         }
         if ($null -ne $entry) {
-            Assert-LinkedEvent $entry 'entry' $index $targetIndex $thread $associationEpoch
+            Assert-LinkedEvent $entry 'entry' $index $targetIndex $thread `
+                $associationEpoch $legacyV2
         }
         if ($null -ne $returned) {
-            Assert-LinkedEvent $returned 'return' $index $targetIndex $thread $associationEpoch
+            Assert-LinkedEvent $returned 'return' $index $targetIndex $thread `
+                $associationEpoch $legacyV2
         }
 
         $callEntrySemantics = $false
@@ -1047,92 +1071,94 @@ function Assert-CallContextRelationships {
         }
     }
 
-    # The native collector keeps one pending call plus a LIFO stack of entered
-    # invocations per thread. Every association-epoch transition clears both.
-    # Replay that state so locally self-consistent rows cannot be reassigned to
-    # calls or returns the collector itself could not have paired.
-    $pendingByThread = @{}
-    $activeByThread = @{}
-    $replayedAssociationEpoch = [uint64]0
-    $haveReplayedAssociationEpoch = $false
-    for ($index = 0; $index -lt $Events.Count; $index++) {
-        $event = $Events[$index]
-        $eventEpoch = Get-RequiredUInt64 $event 'association_epoch' "event $index"
-        if (-not $haveReplayedAssociationEpoch -or
-            $eventEpoch -ne $replayedAssociationEpoch) {
-            $pendingByThread = @{}
-            $activeByThread = @{}
-            $replayedAssociationEpoch = $eventEpoch
-            $haveReplayedAssociationEpoch = $true
-        }
-        $eventType = Get-RequiredString $event 'event_type' "event $index"
-        $thread = Get-RequiredUInt32TextScalar `
-            $event 'unique_thread_id' "event $index"
-        $threadKey = $thread.ToString(
-            [System.Globalization.CultureInfo]::InvariantCulture)
-        $linkedInvocation = Get-NullableIndex `
-            $event 'invocation_index' "event $index"
+    # Schema v3 exposes association epochs, so replay the collector's pending
+    # call/LIFO state. Legacy v2 intentionally did not serialize those epochs;
+    # its exact backlinks, raw call-entry-return semantics, and aggregate
+    # accounting remain independently checked above and below.
+    if (-not $legacyV2) {
+        $pendingByThread = @{}
+        $activeByThread = @{}
+        $replayedAssociationEpoch = [uint64]0
+        $haveReplayedAssociationEpoch = $false
+        for ($index = 0; $index -lt $Events.Count; $index++) {
+            $event = $Events[$index]
+            $eventEpoch = Get-RequiredUInt64 $event 'association_epoch' "event $index"
+            if (-not $haveReplayedAssociationEpoch -or
+                $eventEpoch -ne $replayedAssociationEpoch) {
+                $pendingByThread = @{}
+                $activeByThread = @{}
+                $replayedAssociationEpoch = $eventEpoch
+                $haveReplayedAssociationEpoch = $true
+            }
+            $eventType = Get-RequiredString $event 'event_type' "event $index"
+            $thread = Get-RequiredUInt32TextScalar `
+                $event 'unique_thread_id' "event $index"
+            $threadKey = $thread.ToString(
+                [System.Globalization.CultureInfo]::InvariantCulture)
+            $linkedInvocation = Get-NullableIndex `
+                $event 'invocation_index' "event $index"
 
-        if ($eventType -ceq 'call') {
+            if ($eventType -ceq 'call') {
+                if ($null -eq $linkedInvocation) {
+                    throw "Call-context call event $index lacks an invocation backlink."
+                }
+                if ($pendingByThread.ContainsKey($threadKey)) {
+                    $displacedInvocation = [int]$pendingByThread[$threadKey]
+                    if (-not (Get-RequiredBoolean `
+                        $Invocations[$displacedInvocation] 'continuity_break_crossed' `
+                        "invocation $displacedInvocation")) {
+                        throw "Call-context call event $index contradicts native pending-call association."
+                    }
+                }
+                $pendingByThread[$threadKey] = [int]$linkedInvocation
+                continue
+            }
+
+            if ($eventType -ceq 'entry') {
+                if ($null -eq $linkedInvocation) {
+                    throw "Call-context entry event $index lacks an invocation backlink."
+                }
+                $grade = Get-RequiredString `
+                    $Invocations[$linkedInvocation] 'grade' "invocation $linkedInvocation"
+                if ($grade -ceq 'CALL_ENTRY' -or $grade -ceq 'CALL_ENTRY_RETURN') {
+                    if (-not $pendingByThread.ContainsKey($threadKey) -or
+                        [int]$pendingByThread[$threadKey] -ne $linkedInvocation) {
+                        throw "Call-context entry event $index contradicts native pending-call association."
+                    }
+                    if (-not $activeByThread.ContainsKey($threadKey)) {
+                        $activeByThread[$threadKey] =
+                            [System.Collections.Generic.List[int]]::new()
+                    }
+                    $activeByThread[$threadKey].Add([int]$linkedInvocation)
+                } elseif ($grade -cne 'ENTRY_ONLY') {
+                    throw "Call-context entry event $index has an impossible association grade."
+                }
+                $pendingByThread.Remove($threadKey)
+                continue
+            }
+
+            if ($eventType -cne 'return') {
+                continue
+            }
+            $expectedInvocation = $null
+            if ($activeByThread.ContainsKey($threadKey)) {
+                $active = $activeByThread[$threadKey]
+                if ($active.Count -gt 0) {
+                    $expectedInvocation = [int]$active[$active.Count - 1]
+                    $active.RemoveAt($active.Count - 1)
+                }
+            }
             if ($null -eq $linkedInvocation) {
-                throw "Call-context call event $index lacks an invocation backlink."
-            }
-            if ($pendingByThread.ContainsKey($threadKey)) {
-                $displacedInvocation = [int]$pendingByThread[$threadKey]
-                if (-not (Get-RequiredBoolean `
-                    $Invocations[$displacedInvocation] 'continuity_break_crossed' `
-                    "invocation $displacedInvocation")) {
-                    throw "Call-context call event $index contradicts native pending-call association."
+                if ($null -ne $expectedInvocation -and
+                    $null -ne (Get-NullableIndex `
+                        $Invocations[$expectedInvocation] 'return_event_index' `
+                        "invocation $expectedInvocation")) {
+                    throw "Call-context orphan return event $index contradicts native LIFO association."
                 }
+            } elseif ($null -eq $expectedInvocation -or
+                $linkedInvocation -ne $expectedInvocation) {
+                throw "Call-context return event $index contradicts native LIFO association."
             }
-            $pendingByThread[$threadKey] = [int]$linkedInvocation
-            continue
-        }
-
-        if ($eventType -ceq 'entry') {
-            if ($null -eq $linkedInvocation) {
-                throw "Call-context entry event $index lacks an invocation backlink."
-            }
-            $grade = Get-RequiredString `
-                $Invocations[$linkedInvocation] 'grade' "invocation $linkedInvocation"
-            if ($grade -ceq 'CALL_ENTRY' -or $grade -ceq 'CALL_ENTRY_RETURN') {
-                if (-not $pendingByThread.ContainsKey($threadKey) -or
-                    [int]$pendingByThread[$threadKey] -ne $linkedInvocation) {
-                    throw "Call-context entry event $index contradicts native pending-call association."
-                }
-                if (-not $activeByThread.ContainsKey($threadKey)) {
-                    $activeByThread[$threadKey] =
-                        [System.Collections.Generic.List[int]]::new()
-                }
-                $activeByThread[$threadKey].Add([int]$linkedInvocation)
-            } elseif ($grade -cne 'ENTRY_ONLY') {
-                throw "Call-context entry event $index has an impossible association grade."
-            }
-            $pendingByThread.Remove($threadKey)
-            continue
-        }
-
-        if ($eventType -cne 'return') {
-            continue
-        }
-        $expectedInvocation = $null
-        if ($activeByThread.ContainsKey($threadKey)) {
-            $active = $activeByThread[$threadKey]
-            if ($active.Count -gt 0) {
-                $expectedInvocation = [int]$active[$active.Count - 1]
-                $active.RemoveAt($active.Count - 1)
-            }
-        }
-        if ($null -eq $linkedInvocation) {
-            if ($null -ne $expectedInvocation -and
-                $null -ne (Get-NullableIndex `
-                    $Invocations[$expectedInvocation] 'return_event_index' `
-                    "invocation $expectedInvocation")) {
-                throw "Call-context orphan return event $index contradicts native LIFO association."
-            }
-        } elseif ($null -eq $expectedInvocation -or
-            $linkedInvocation -ne $expectedInvocation) {
-            throw "Call-context return event $index contradicts native LIFO association."
         }
     }
 
@@ -1151,8 +1177,12 @@ function Assert-CallContextRelationships {
             $target 'observed_call_count' "target $index"
         $observedReturns = Get-RequiredUInt64 `
             $target 'observed_return_count' "target $index"
-        $observedOrphans = Get-RequiredUInt64 `
-            $target 'observed_orphan_return_count' "target $index"
+        $observedOrphans = if ($legacyV2) {
+            $orphanReturnCounts[$index]
+        } else {
+            Get-RequiredUInt64 `
+                $target 'observed_orphan_return_count' "target $index"
+        }
         if ($observedEntries -ne $eventEntryCounts[$index] -or
             $observedCalls -ne $eventCallCounts[$index] -or
             $observedReturns -ne $eventReturnCounts[$index] -or
@@ -1195,11 +1225,15 @@ function Assert-CallContextRelationships {
     }
     if ((Get-RequiredUInt64 $Summary 'call_entry_pair_count' 'summary') -ne $pairTotal -or
         (Get-RequiredUInt64 $Summary 'validated_return_count' 'summary') -ne $returnTotal -or
-        (Get-RequiredUInt64 $Summary 'raw_return_count' 'summary') -ne $rawReturnTotal -or
-        (Get-RequiredUInt64 $Summary 'orphan_return_count' 'summary') -ne
-            $orphanReturnTotal -or
         (Get-RequiredUInt64 $Summary 'gap_free_envelope_count' 'summary') -ne $gapFreeTotal) {
         throw 'Call-context summary aggregates disagree with the invocation rows.'
+    }
+    if (-not $legacyV2 -and
+        ((Get-RequiredUInt64 $Summary 'raw_return_count' 'summary') -ne
+            $rawReturnTotal -or
+         (Get-RequiredUInt64 $Summary 'orphan_return_count' 'summary') -ne
+            $orphanReturnTotal)) {
+        throw 'Call-context summary return aggregates disagree with the event rows.'
     }
     if ($rawReturnTotal -ne
         (Add-UInt64Checked $returnTotal $orphanReturnTotal `
@@ -1217,22 +1251,26 @@ function Assert-CallContextRelationships {
         throw 'Call-context summary flags disagree with target, pairing, ordering, or event rows.'
     }
 
-    $associationBarrierCount = [uint64]0
-    foreach ($part in @(
-            (Get-RequiredUInt64 $GapSummary 'kind_context_switch' 'gap summary'),
-            (Get-RequiredUInt64 $GapSummary 'kind_unrecorded' 'gap summary'),
-            (Get-RequiredUInt64 $GapSummary 'kind_large' 'gap summary'),
-            (Get-RequiredUInt64 $Summary 'continuity_break_callbacks' 'summary'))) {
-        $associationBarrierCount = Add-UInt64Checked `
-            $associationBarrierCount $part 'association barrier total'
-    }
-    $recordedBarriers = Get-RequiredUInt64 `
-        $Summary 'association_barrier_count' 'summary'
-    $finalAssociationEpoch = Get-RequiredUInt64 `
-        $Summary 'final_association_epoch' 'summary'
-    if ($recordedBarriers -ne $associationBarrierCount -or
-        $finalAssociationEpoch -ne $associationBarrierCount) {
-        throw 'Call-context association-barrier accounting does not close.'
+    $associationBarrierCount = $null
+    $finalAssociationEpoch = $null
+    if (-not $legacyV2) {
+        $associationBarrierCount = [uint64]0
+        foreach ($part in @(
+                (Get-RequiredUInt64 $GapSummary 'kind_context_switch' 'gap summary'),
+                (Get-RequiredUInt64 $GapSummary 'kind_unrecorded' 'gap summary'),
+                (Get-RequiredUInt64 $GapSummary 'kind_large' 'gap summary'),
+                (Get-RequiredUInt64 $Summary 'continuity_break_callbacks' 'summary'))) {
+            $associationBarrierCount = Add-UInt64Checked `
+                $associationBarrierCount $part 'association barrier total'
+        }
+        $recordedBarriers = Get-RequiredUInt64 `
+            $Summary 'association_barrier_count' 'summary'
+        $finalAssociationEpoch = Get-RequiredUInt64 `
+            $Summary 'final_association_epoch' 'summary'
+        if ($recordedBarriers -ne $associationBarrierCount -or
+            $finalAssociationEpoch -ne $associationBarrierCount) {
+            throw 'Call-context association-barrier accounting does not close.'
+        }
     }
     $gapKindTotal = [uint64]0
     foreach ($part in @(
@@ -1280,16 +1318,18 @@ function Assert-CallContextRelationships {
     if ((Get-RequiredUInt64 $GapSummary 'total' 'gap summary') -ne $gapEventTotal) {
         throw 'Call-context gap total disagrees with its event partition.'
     }
-    foreach ($event in $Events) {
-        if ((Get-RequiredUInt64 $event 'association_epoch' 'event') -gt
-            $finalAssociationEpoch) {
-            throw 'Call-context event epoch exceeds the final association epoch.'
+    if (-not $legacyV2) {
+        foreach ($event in $Events) {
+            if ((Get-RequiredUInt64 $event 'association_epoch' 'event') -gt
+                $finalAssociationEpoch) {
+                throw 'Call-context event epoch exceeds the final association epoch.'
+            }
         }
-    }
-    foreach ($invocation in $Invocations) {
-        if ((Get-RequiredUInt64 $invocation 'association_epoch' 'invocation') -gt
-            $finalAssociationEpoch) {
-            throw 'Call-context invocation epoch exceeds the final association epoch.'
+        foreach ($invocation in $Invocations) {
+            if ((Get-RequiredUInt64 $invocation 'association_epoch' 'invocation') -gt
+                $finalAssociationEpoch) {
+                throw 'Call-context invocation epoch exceeds the final association epoch.'
+            }
         }
     }
 
@@ -1728,11 +1768,18 @@ $events = [System.Collections.Generic.List[object]]::new()
 $invocations = [System.Collections.Generic.List[object]]::new()
 $lineCount = 0
 $kinds = [System.Collections.Generic.List[string]]::new()
+$callContextSchema = $null
 foreach ($line in [System.IO.File]::ReadLines($contextPath)) {
     $lineCount++
     $row = $line | ConvertFrom-Json -Depth 40
-    if ((Get-RequiredString $row 'schema' "line $lineCount") -cne
-            'bea.ttd.call-context.v3') {
+    $rowSchema = Get-RequiredString $row 'schema' "line $lineCount"
+    if ($null -eq $callContextSchema) {
+        if (@('bea.ttd.call-context.v2', 'bea.ttd.call-context.v3') -cnotcontains
+            $rowSchema) {
+            throw "Unexpected call-context schema on line $lineCount."
+        }
+        $callContextSchema = $rowSchema
+    } elseif ($rowSchema -cne $callContextSchema) {
         throw "Unexpected call-context schema on line $lineCount."
     }
     $kind = Get-RequiredString $row 'kind' "line $lineCount"
@@ -1775,8 +1822,6 @@ if ((Get-RequiredString $metadata 'processor_architecture' 'metadata') -cne 'x86
         'callback-position-at-call-instruction' -or
     (Get-RequiredString $metadata 'return_phase' 'metadata') -cne
         'callback-position-at-ret-instruction' -or
-    (Get-RequiredString $metadata 'association_policy' 'metadata') -cne
-        'global-epoch-breaks-on-every-non-no-gap-and-continuity-callback' -or
     (Get-RequiredString $metadata 'raw_value_policy' 'metadata') -cne
         'untyped-registers-and-bytes' -or
     (Get-RequiredString $metadata 'window_semantics' 'metadata') -cne
@@ -1800,6 +1845,11 @@ if ((Get-RequiredString $metadata 'processor_architecture' 'metadata') -cne 'x86
         ('0x{0:X}' -f [Convert]::ToUInt64($targetPe.checksum.Substring(2), 16))) {
     throw 'Call-context metadata disagrees with the trace, mode, or PE identity.'
 }
+if ($callContextSchema -ceq 'bea.ttd.call-context.v3' -and
+    (Get-RequiredString $metadata 'association_policy' 'metadata') -cne
+        'global-epoch-breaks-on-every-non-no-gap-and-continuity-callback') {
+    throw 'Call-context metadata has an unexpected association policy.'
+}
 if ([System.IO.Path]::GetFullPath(
         (Get-RequiredString $metadata 'trace' 'metadata')) -ine $tracePath -or
     [System.IO.Path]::GetFullPath(
@@ -1818,7 +1868,8 @@ $relationshipCounts = Assert-CallContextRelationships `
     -Invocations @($invocations) `
     -GapSummary $gapSummary `
     -Summary $summary `
-    -ExpectedStackBytes $StackBytes
+    -ExpectedStackBytes $StackBytes `
+    -Schema $callContextSchema
 $replayBoundary = Assert-CallContextReplayBoundary `
     -Metadata $metadata `
     -Summary $summary `
@@ -1914,7 +1965,7 @@ $receipt = [ordered]@{
         path = $contextFacts.path
         bytes = $contextFacts.bytes
         sha256 = $contextFacts.sha256
-        schemaVersion = 'bea.ttd.call-context.v3'
+        schemaVersion = $callContextSchema
         lineCount = $lineCount
         targetCount = $targets.Count
         eventCount = $events.Count

@@ -173,6 +173,12 @@ WITNESS_COLUMN_CANDIDATES = (
     "verdict",
     "agreesWithNote",
 )
+RUNTIME_EVIDENCE_COLUMN_CANDIDATES = ("runtimeEvidence",)
+MANIFEST_RUNTIME_EVIDENCE_CLASSES = {
+    "TTD_CALL_CONTEXT_REPLICATED": frozenset(
+        {"controlled-runtime", "ttd-capture"}
+    ),
+}
 WITNESS_STRONG_VALUES = frozenset(
     {"MEASURED", "YES", "PASS", "PROVED", "COMPLETE_ENUMERATION"}
 )
@@ -429,9 +435,13 @@ def parse_note(path: Path, rel: str) -> Note:
     return note
 
 
-def load_manifest_witness_keys(paths: list[Path]) -> tuple[set[str], list[str]]:
-    """Keys (names/VAs) carrying a strong witness value in a manifest TSV."""
+def load_manifest_witness_keys(
+    paths: list[Path],
+) -> tuple[set[str], set[str], set[str], list[str]]:
+    """Strong manifest keys plus explicit controlled-runtime/TTD subsets."""
     keys: set[str] = set()
+    controlled_runtime_keys: set[str] = set()
+    ttd_keys: set[str] = set()
     files_used: list[str] = []
     for path in paths:
         try:
@@ -449,8 +459,13 @@ def load_manifest_witness_keys(paths: list[Path]) -> tuple[set[str], list[str]]:
         if name_col is None:
             continue
         witness_col = next((c for c in WITNESS_COLUMN_CANDIDATES if c in header), None)
+        runtime_col = next(
+            (c for c in RUNTIME_EVIDENCE_COLUMN_CANDIDATES if c in header),
+            None,
+        )
         name_idx = header.index(name_col)
         w_idx = header.index(witness_col) if witness_col in header else None
+        runtime_idx = header.index(runtime_col) if runtime_col in header else None
         files_used.append(path.as_posix())
         for line in lines[1:]:
             cells = line.split("\t")
@@ -463,10 +478,24 @@ def load_manifest_witness_keys(paths: list[Path]) -> tuple[set[str], list[str]]:
             )
             if not strong:
                 continue
-            keys |= name_keys(cells[name_idx])
+            row_keys = name_keys(cells[name_idx])
             for cell in cells:
-                keys |= text_va_keys(cell)
-    return keys, files_used
+                row_keys |= text_va_keys(cell)
+            keys |= row_keys
+            runtime_evidence = (
+                cells[runtime_idx].strip()
+                if runtime_idx is not None and len(cells) > runtime_idx
+                else ""
+            )
+            runtime_classes = MANIFEST_RUNTIME_EVIDENCE_CLASSES.get(
+                runtime_evidence,
+                frozenset(),
+            )
+            if "controlled-runtime" in runtime_classes:
+                controlled_runtime_keys |= row_keys
+            if "ttd-capture" in runtime_classes:
+                ttd_keys |= row_keys
+    return keys, controlled_runtime_keys, ttd_keys, files_used
 
 
 # ---------------------------------------------------------------------------
@@ -527,6 +556,10 @@ def classify_row(row: dict, ctx: dict) -> dict:
         kinds.add("NOTE_MEASURED")
     if manifest_hit := any(k in ctx["manifest_keys"] for k in keys):
         kinds.add("MANIFEST_WITNESS")
+    if any(k in ctx["manifest_controlled_runtime_keys"] for k in keys):
+        classes.add("controlled-runtime")
+    if any(k in ctx["manifest_ttd_keys"] for k in keys):
+        classes.add("ttd-capture")
     if covering or (subject_note and subject_note.readback):
         classes.add("ghidra-readback")
     if contract is not None and contract.review_ready_floor:
@@ -660,13 +693,20 @@ def build_coverage(repo_root: Path) -> dict:
     patch_tsv = repo_root / DEFAULT_PATCH_TSV
     if patch_tsv.exists():
         manifest_paths.append(patch_tsv)
-    manifest_keys, manifest_files = load_manifest_witness_keys(manifest_paths)
+    (
+        manifest_keys,
+        manifest_controlled_runtime_keys,
+        manifest_ttd_keys,
+        manifest_files,
+    ) = load_manifest_witness_keys(manifest_paths)
 
     ctx = {
         "subjects": subjects,
         "subjects_by_key": subjects_by_key,
         "key_index": key_index,
         "manifest_keys": manifest_keys,
+        "manifest_controlled_runtime_keys": manifest_controlled_runtime_keys,
+        "manifest_ttd_keys": manifest_ttd_keys,
         "contracts_by_va": contracts_by_va,
     }
 

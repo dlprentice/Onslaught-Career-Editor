@@ -277,6 +277,159 @@ def test_verified_from_register_replication_suffix() -> None:
         shutil.rmtree(root, ignore_errors=True)
 
 
+def test_manifest_runtime_replication_surfaces_controlled_ttd_classes() -> None:
+    root = Path(tempfile.mkdtemp(prefix="ccov-manifest-runtime-"))
+    try:
+        make_corpus(
+            root,
+            [base_register_row("0x00401000", "CManifestRuntime__Replicated")],
+        )
+        w(
+            root,
+            "reverse-engineering/binary-analysis/functions/"
+            "CManifestRuntime__Replicated.md",
+            "# CManifestRuntime__Replicated\n\n"
+            "> Address: `0x00401000`\n"
+            "Evidence: MEASURED — exact wrapper receipt independently reproduced.\n",
+        )
+        w(
+            root,
+            "reverse-engineering/binary-analysis/runtime-promotion.tsv",
+            "entryVa\tliveName\texactness\truntimeEvidence\n"
+            "0x00401000\tCManifestRuntime__Replicated\tMEASURED\t"
+            "TTD_CALL_CONTEXT_REPLICATED\n",
+        )
+        code, out, payload = run_tool(root)
+        assert code == 0, out
+        row = status_of(payload, "CManifestRuntime__Replicated")
+        assert row["status"] == "VERIFIED", row
+        assert "controlled-runtime" in row["evidenceClasses"], row
+        assert "ttd-capture" in row["evidenceClasses"], row
+        assert row["witnessKinds"] == ["MANIFEST_WITNESS", "NOTE_MEASURED"], row
+    finally:
+        shutil.rmtree(root, ignore_errors=True)
+
+
+def test_manifest_runtime_evidence_alone_cannot_verify() -> None:
+    root = Path(tempfile.mkdtemp(prefix="ccov-manifest-runtime-alone-"))
+    try:
+        make_corpus(
+            root,
+            [base_register_row("0x00401000", "CManifestRuntime__Alone")],
+        )
+        w(
+            root,
+            "reverse-engineering/binary-analysis/runtime-promotion.tsv",
+            "entryVa\tliveName\texactness\truntimeEvidence\n"
+            "0x00401000\tCManifestRuntime__Alone\tMEASURED\t"
+            "TTD_CALL_CONTEXT_REPLICATED\n",
+        )
+        code, out, payload = run_tool(root)
+        assert code == 0, out
+        row = status_of(payload, "CManifestRuntime__Alone")
+        assert row["status"] == "SKELETON", row
+        assert row["witnessKinds"] == ["MANIFEST_WITNESS"], row
+        assert "controlled-runtime" in row["evidenceClasses"], row
+        assert "ttd-capture" in row["evidenceClasses"], row
+    finally:
+        shutil.rmtree(root, ignore_errors=True)
+
+
+def test_non_strong_manifest_cannot_add_runtime_authority() -> None:
+    root = Path(tempfile.mkdtemp(prefix="ccov-manifest-runtime-weak-"))
+    try:
+        make_corpus(
+            root,
+            [base_register_row("0x00401000", "CManifestRuntime__Weak")],
+        )
+        w(
+            root,
+            "reverse-engineering/binary-analysis/functions/CManifestRuntime__Weak.md",
+            "# CManifestRuntime__Weak\n\n"
+            "> Address: `0x00401000`\n"
+            "Evidence: MEASURED — focused fixture.\n",
+        )
+        w(
+            root,
+            "reverse-engineering/binary-analysis/runtime-promotion.tsv",
+            "entryVa\tliveName\texactness\truntimeEvidence\n"
+            "0x00401000\tCManifestRuntime__Weak\tINFERRED\t"
+            "TTD_CALL_CONTEXT_REPLICATED\n",
+        )
+        code, out, payload = run_tool(root)
+        assert code == 0, out
+        row = status_of(payload, "CManifestRuntime__Weak")
+        assert row["status"] == "PROVISIONAL", row
+        assert row["witnessKinds"] == ["NOTE_MEASURED"], row
+        assert "controlled-runtime" not in row["evidenceClasses"], row
+        assert "ttd-capture" not in row["evidenceClasses"], row
+    finally:
+        shutil.rmtree(root, ignore_errors=True)
+
+
+def test_manifest_runtime_evidence_vocabulary_fails_closed() -> None:
+    root = Path(tempfile.mkdtemp(prefix="ccov-manifest-runtime-vocab-"))
+    try:
+        names_and_values = [
+            ("CManifestRuntime__BareBound", "RUNTIME_BOUNDED"),
+            ("CManifestRuntime__UnknownTtd", "TTD_UNKNOWN_UNSUPPORTED"),
+            ("CManifestRuntime__ArbitraryReplication", "WHATEVER_REPLICATED"),
+            ("CManifestRuntime__LowercaseAlias", "ttd_call_context_replicated"),
+            ("CManifestRuntime__MixedCaseAlias", "Ttd_Call_Context_Replicated"),
+        ]
+        make_corpus(
+            root,
+            [
+                base_register_row(f"0x{0x00401000 + i * 0x20:08x}", name)
+                for i, (name, _) in enumerate(names_and_values)
+            ],
+        )
+        rows = ["entryVa\tliveName\texactness\truntimeEvidence"]
+        rows.extend(
+            f"0x{0x00401000 + i * 0x20:08x}\t{name}\tMEASURED\t{value}"
+            for i, (name, value) in enumerate(names_and_values)
+        )
+        w(
+            root,
+            "reverse-engineering/binary-analysis/runtime-promotion.tsv",
+            "\n".join(rows) + "\n",
+        )
+        code, out, payload = run_tool(root)
+        assert code == 0, out
+        for name, _ in names_and_values:
+            row = status_of(payload, name)
+            assert row["status"] == "SKELETON", row
+            assert row["witnessKinds"] == ["MANIFEST_WITNESS"], row
+            assert "controlled-runtime" not in row["evidenceClasses"], row
+            assert "ttd-capture" not in row["evidenceClasses"], row
+    finally:
+        shutil.rmtree(root, ignore_errors=True)
+
+
+def test_strong_manifest_without_runtime_evidence_preserves_witness_only() -> None:
+    root = Path(tempfile.mkdtemp(prefix="ccov-manifest-no-runtime-"))
+    try:
+        make_corpus(
+            root,
+            [base_register_row("0x00401000", "CManifestRuntime__Absent")],
+        )
+        w(
+            root,
+            "reverse-engineering/binary-analysis/static-promotion.tsv",
+            "entryVa\tliveName\texactness\n"
+            "0x00401000\tCManifestRuntime__Absent\tCOMPLETE_ENUMERATION\n",
+        )
+        code, out, payload = run_tool(root)
+        assert code == 0, out
+        row = status_of(payload, "CManifestRuntime__Absent")
+        assert row["status"] == "SKELETON", row
+        assert row["witnessKinds"] == ["MANIFEST_WITNESS"], row
+        assert "controlled-runtime" not in row["evidenceClasses"], row
+        assert "ttd-capture" not in row["evidenceClasses"], row
+    finally:
+        shutil.rmtree(root, ignore_errors=True)
+
+
 def test_review_ready_from_campaign_grade() -> None:
     root = Path(tempfile.mkdtemp(prefix="ccov-rev-"))
     try:
