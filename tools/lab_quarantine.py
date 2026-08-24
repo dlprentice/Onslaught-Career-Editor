@@ -9,9 +9,12 @@ plus a manifest row (original path, sha256 of the whole tree, bytes, reason,
 staged-at). ``restore`` moves it back. ``resume <source> <dest>`` finishes an
 interrupted ``stage`` whose destination partial already exists on D:
 (timeout-killed copy run): it retains byte-verified files, re-copies
-missing or mismatched ones, gates on exact file-count + byte-total +
+missing or mismatched ones, refuses ANY reparse point found in either tree
+(no-follow census before the copy, re-checked at the manifest boundary and
+again immediately before removal), gates on exact file-count + byte-total +
 tree-hash identity, appends
-ONE manifest row with stage()'s schema, reads it back, freshly re-hashes BOTH
+ONE manifest row with stage()'s schema (refusing duplicate ids before
+writing), reads it back, freshly re-hashes BOTH
 sides, then removes the proven source with a DOS-read-only-only handler that
 aborts on reparse, sharing, or ACL failures. It never restarts the copy from
 scratch and fails closed before every destructive step. ``purge``
@@ -82,6 +85,50 @@ def _is_reparse_point(path: Path) -> bool:
     return attributes is None or bool(attributes & FILE_ATTRIBUTE_REPARSE_POINT)
 
 
+def _reparse_census(root: Path) -> list[str]:
+    """No-follow inventory of every reparse point at/under ``root``.
+
+    Returns relative POSIX paths ("." denotes the root itself). Enumeration
+    never descends into a reparse entry, so scanning cannot traverse a
+    junction/symlink target. A directory that cannot be scanned fails closed.
+    """
+
+    if _is_reparse_point(root):
+        return ["."]
+    found: list[str] = []
+    pending = [root]
+    while pending:
+        current = pending.pop()
+        try:
+            entries = list(os.scandir(current))
+        except OSError as error:
+            raise RuntimeError(
+                f"reparse census could not scan directory {current}: {error}"
+            ) from None
+        for entry in entries:
+            entry_path = Path(entry.path)
+            if _is_reparse_point(entry_path):
+                found.append(entry_path.relative_to(root).as_posix())
+            elif entry.is_dir():
+                pending.append(entry_path)
+    return sorted(found)
+
+
+def _refuse_tree_reparses(side: str, root: Path) -> None:
+    """Fail closed when ``side``'s tree (root included) holds any reparse."""
+
+    found = _reparse_census(root)
+    if not found:
+        return
+    listing = ", ".join(found[:10])
+    more = "" if len(found) <= 10 else f" (+{len(found) - 10} more)"
+    raise SystemExit(
+        f"fail-closed: {side} tree contains reparse point(s) [{listing}{more}] "
+        f"under {root}: quarantine resume refuses to descend, copy through, or "
+        "remove any reparse; both trees are left untouched"
+    )
+
+
 def _file_bytes_differ(source_file: Path, dest_file: Path) -> bool:
     """True at the first differing byte; streaming, so no whole-file loads."""
 
@@ -103,24 +150,66 @@ def _resume_copy_tree(source: Path, dest: Path) -> dict:
     are identical; anything missing or mismatched is re-copied
     (shutil.copy2 semantics). This makes resume converge even when a
     corrupted partial file happens to share size+mtime with its source.
-    Reparse points are never copied nor descended (a staged quarantine copy
-    records plain files and directories only).
+
+    Reparse points are refused on BOTH sides and never copied, descended,
+    or written through. Callers run a no-follow census of both trees before
+    this walk; the walk itself re-verifies every destination ancestor and
+    each entry it is about to touch, raising SystemExit the moment any
+    reparse appears in either tree (including the roots). A staged
+    quarantine copy therefore records plain files and directories only --
+    and a source reparse can never be silently skipped and later cleared
+    by the removal step.
     """
 
-    retained = recopied_mismatched = copied_missing = skipped_reparse = 0
+    retained = recopied_mismatched = copied_missing = 0
+
+    def refuse(reason: str, path: Path) -> None:
+        raise SystemExit(
+            f"fail-closed: {reason} reparse point at {path}: quarantine copy "
+            "refuses to open, create through, or traverse it; the copy pass "
+            "stopped before completing and nothing was appended or removed"
+        )
+
+    if _is_reparse_point(source):
+        refuse("source root", source)
+    if _is_reparse_point(dest):
+        refuse("destination root", dest)
     for dirpath, dirnames, filenames in os.walk(source):
         source_dir = Path(dirpath)
         dest_dir = dest / source_dir.relative_to(source)
+        # No-follow mirror of the walk onto the destination side: every
+        # existing destination ancestor of the current pair must still be a
+        # plain non-reparse directory before anything may be created through
+        # or beneath it (missing ancestors are created fresh just below).
+        ancestor = dest
+        for part in source_dir.relative_to(source).parts:
+            ancestor /= part
+            if os.path.lexists(ancestor) and _is_reparse_point(ancestor):
+                refuse("destination ancestor became a", ancestor)
+        if os.path.lexists(dest_dir):
+            if _is_reparse_point(dest_dir):
+                refuse("destination directory became a", dest_dir)
+            if not dest_dir.is_dir():
+                raise SystemExit(
+                    f"fail-closed: destination path is not a directory: {dest_dir}; "
+                    "the interrupted-stage layout cannot be reconciled"
+                )
         dest_dir.mkdir(parents=True, exist_ok=True)
-        # Never descend into junctions/symlinks; the real target stays untouched.
-        dirnames[:] = [d for d in dirnames
-                       if not _is_reparse_point(source_dir / d)]
+        if _is_reparse_point(dest_dir):  # post-create re-verification
+            refuse("destination directory became a", dest_dir)
+        # Any reparse in the SOURCE tree refuses outright: silently skipping
+        # would let a later removal clear the reparse together with its tree.
+        for name in dirnames:
+            candidate = source_dir / name
+            if _is_reparse_point(candidate):
+                refuse("source directory", candidate)
         for name in filenames:
             source_file = source_dir / name
             dest_file = dest_dir / name
             if _is_reparse_point(source_file):
-                skipped_reparse += 1
-                continue
+                refuse("source file", source_file)
+            if os.path.lexists(dest_file) and _is_reparse_point(dest_file):
+                refuse("destination file", dest_file)
             try:
                 source_stat = source_file.stat()
                 dest_stat = dest_file.stat()
@@ -139,17 +228,30 @@ def _resume_copy_tree(source: Path, dest: Path) -> dict:
         "retained": retained,
         "recopiedMismatched": recopied_mismatched,
         "copiedMissing": copied_missing,
-        "skippedReparse": skipped_reparse,
     }
 
 
 def _identity(root: Path) -> tuple[int, int, str]:
-    """(files, bytes, tree_sha256) using stage()'s exact identity semantics."""
+    """(files, bytes, tree_sha256) using stage()'s exact identity semantics.
 
+    Refuses rather than silently following or ignoring reparse entries:
+    tree identity over a reparse-containing tree is undefined for
+    quarantine purposes, and hashing through one would bless external
+    content as staged evidence.
+    """
+
+    if _is_reparse_point(root):
+        raise RuntimeError(
+            f"identity computation refused: tree root itself is a reparse point: {root}"
+        )
     count = 0
     total_bytes = 0
     digest = hashlib.sha256()
     for path in sorted(root.rglob("*")):
+        if _is_reparse_point(path):
+            raise RuntimeError(
+                f"identity computation refused: reparse point present in tree: {path}"
+            )
         if not path.is_file():
             continue
         rel = path.relative_to(root).as_posix()
@@ -169,11 +271,22 @@ def _identity(root: Path) -> tuple[int, int, str]:
 def _append_manifest_row(row: dict) -> None:
     """Append exactly one manifest row, then read it back from disk.
 
-    Fails closed unless the on-disk manifest contains this row verbatim and
-    still contains every pre-existing row.
+    Refuses BEFORE writing when the manifest already contains ``row["id"]``
+    (ids are the unique authority): the manifest is left byte-for-byte
+    unchanged. Otherwise fails closed unless the on-disk manifest contains
+    this row verbatim and still contains every pre-existing row.
     """
 
     before = MANIFEST.read_text(encoding="utf-8").splitlines() if MANIFEST.exists() else []
+    if any(
+        json.loads(line).get("id") == row["id"]
+        for line in before
+        if line.strip()
+    ):
+        raise RuntimeError(
+            f"manifest append refused before writing: id {row['id']} already "
+            "exists; manifest left byte-for-byte unchanged, nothing appended"
+        )
     with MANIFEST.open("a", encoding="utf-8") as stream:
         stream.write(json.dumps(row) + "\n")
         stream.flush()
@@ -239,6 +352,14 @@ def resume(source: Path, dest: Path, *, reason: str) -> dict:
     row identical to stage()'s schema, reads it back, freshly re-hashes BOTH
     sides, removes the proven source with a DOS-read-only-only handler, and
     returns the receipt. Every gate fails closed before any destructive step.
+
+    Reparse points refuse the run untouched wherever they appear: a no-follow
+    census of BOTH trees runs before the copy, re-runs at the manifest
+    boundary, and re-runs immediately before removal; the copy layer itself
+    re-verifies every destination ancestor and entry it touches. Manifest
+    ids are the unique authority: an existing id under a different staged
+    path refuses before any append, leaving the manifest byte-for-byte
+    unchanged.
     """
 
     source = source.resolve()
@@ -247,8 +368,18 @@ def resume(source: Path, dest: Path, *, reason: str) -> dict:
         raise SystemExit(f"quarantine root missing: {QUARANTINE_ROOT} (is D: mounted?)")
     if not source.exists():
         raise SystemExit(f"source does not exist: {source}")
+    if not source.is_dir():
+        raise SystemExit(f"source is not a directory: {source}")
+    if _is_reparse_point(source):
+        raise SystemExit(
+            f"fail-closed: source root is a reparse point: {source}; refusing "
+            "to enumerate, copy, or remove through it")
     if not dest.is_dir():
         raise SystemExit(f"destination partial missing (never restart stage): {dest}")
+    if _is_reparse_point(dest):
+        raise SystemExit(
+            f"fail-closed: destination root is a reparse point: {dest}; refusing "
+            "to create or copy through it")
     for base in (QUARANTINE_ROOT.resolve(),):
         if not (source.is_relative_to(base) and dest.is_relative_to(base)):
             raise SystemExit(
@@ -257,10 +388,23 @@ def resume(source: Path, dest: Path, *, reason: str) -> dict:
             )
     if source == dest or dest.is_relative_to(source):
         raise SystemExit(f"destination must be distinct from source: {dest}")
+
+    # No-follow reparse census of BOTH trees before any copy mutation.
+    _refuse_tree_reparses("source", source)
+    _refuse_tree_reparses("destination", dest)
+
     rows = ([json.loads(line) for line in MANIFEST.read_text(encoding="utf-8").splitlines() if line.strip()]
             if MANIFEST.exists() else [])
     if any(r.get("staged") == str(dest) for r in rows):
         raise SystemExit(f"destination is already manifested: {dest}")
+    if any(r.get("id") == dest.name for r in rows):
+        conflicting = sorted({
+            str(r.get("staged")) for r in rows if r.get("id") == dest.name
+        })
+        raise SystemExit(
+            f"manifest id already exists: id={dest.name} staged={conflicting}; "
+            "ids are the unique authority, refusing to append a second row"
+        )
 
     stats = _resume_copy_tree(source, dest)
 
@@ -272,6 +416,10 @@ def resume(source: Path, dest: Path, *, reason: str) -> dict:
             f"source={source_identity} staged={dest_identity} "
             f"(stats={stats}); both sides preserved, nothing removed"
         )
+
+    # Re-check reparse freedom at the safety boundary before the append.
+    _refuse_tree_reparses("source", source)
+    _refuse_tree_reparses("destination", dest)
 
     row = {
         "id": dest.name,
@@ -294,6 +442,10 @@ def resume(source: Path, dest: Path, *, reason: str) -> dict:
             f"source={recheck_source} dest={recheck_dest} "
             f"(gated={source_identity}); row and BOTH copies preserved"
         )
+
+    # Final reparse freedom re-check immediately before removal.
+    _refuse_tree_reparses("source", source)
+    _refuse_tree_reparses("destination", dest)
     _remove_tree_readonly_only(source)
     if source.exists() or not dest.exists():
         raise RuntimeError(

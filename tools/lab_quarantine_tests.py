@@ -7,6 +7,7 @@ import json
 import os
 import shutil
 import stat
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -387,6 +388,397 @@ class ResumeStageTests(unittest.TestCase):
             ("blob.bin\0".encode("utf-8")
              + hashlib.sha256(payload * 3).hexdigest().encode("utf-8")
              + b"\0")) .hexdigest()), (count, total, sha))
+
+
+class ReparseAndDuplicateIdRefusalTests(unittest.TestCase):
+    """Falsification gates for the reviewer RED on 17a71be0 (t_c7571db2).
+
+    Three binding defects closed here: (1) a destination-side reparse made
+    its external target writable through the resume copy path; (2) a source
+    reparse was silently skipped during the copy and then CLEARED by the
+    removal step; (3) a pre-existing manifest id under a different staged
+    path could gain a second equal-id row before readback failure. Each test
+    constructs the defect and asserts refusal BEFORE any mutation.
+
+    Real directory junctions and (when the platform allows unprivileged
+    creation) directory symlinks exercise the true reparse code paths;
+    mock-flagged entries cover shapes the host cannot construct.
+    """
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        root = Path(self._tmp.name)
+        self.root = root
+        self.quarantine_root = root / "quarantine"
+        self.quarantine_root.mkdir()
+        patcher = mock.patch.multiple(
+            quarantine,
+            QUARANTINE_ROOT=self.quarantine_root,
+            MANIFEST=self.quarantine_root / "manifest.jsonl",
+            PURGE_LOG=self.quarantine_root / "purge.log",
+        )
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        self.symlink_capable = self._probe_symlink_capability()
+
+    # -- reparse construction helpers ---------------------------------------
+
+    def _probe_symlink_capability(self) -> bool:
+        """One cheap creation probe; unprivileged Windows usually refuses."""
+
+        probe = self.root / "symlink-capability-probe"
+        probe.mkdir()
+        try:
+            os.symlink(probe, probe / "link", target_is_directory=True)
+        except OSError:
+            return False
+        finally:
+            self.remove_dir_link(probe / "link")
+        return True
+
+    def constructible_kinds(self) -> list[str]:
+        """Junction is always available; symlink only when creation works."""
+
+        kinds = ["junction"]
+        if self.symlink_capable:
+            kinds.insert(0, "directory-symlink")
+        return kinds
+
+    def make_dir_link(self, link: Path, target: Path, kind: str) -> None:
+        if kind == "directory-symlink":
+            os.symlink(target, link, target_is_directory=True)
+        else:
+            assert kind == "junction"
+            completed = subprocess.run(
+                ["cmd.exe", "/d", "/c", "mklink", "/J", str(link), str(target)],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+        self.assertTrue(os.path.lexists(link))
+
+    @staticmethod
+    def remove_dir_link(link: Path) -> None:
+        if os.path.lexists(link):
+            try:
+                os.unlink(link)
+            except OSError:
+                os.rmdir(link)
+
+    def make_source_and_partial(self):
+        source = self.quarantine_root / "20260823" / "c45-src"
+        dest = self.quarantine_root / "20260824" / "4d82-c45-src"
+        for tree in (source, dest):
+            if tree.exists():
+                shutil.rmtree(tree)
+        (source / "nested").mkdir(parents=True)
+        (source / "a.bin").write_bytes(b"alpha")
+        (source / "nested" / "b.bin").write_bytes(b"beta-gamma")
+        shutil.copytree(source, dest)
+        (dest / "nested" / "b.bin").unlink()  # simulate the timeout kill
+        return source, dest
+
+    def manifest_bytes(self) -> bytes:
+        if not quarantine.MANIFEST.exists():
+            return b""
+        return quarantine.MANIFEST.read_bytes()
+
+    def manifest_rows(self) -> list[dict]:
+        if not quarantine.MANIFEST.exists():
+            return []
+        return [
+            json.loads(line)
+            for line in quarantine.MANIFEST.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+
+    # -- (a) destination-side reparse must never be written through ----------
+
+    @unittest.skipUnless(os.name == "nt", "reparse-point semantics")
+    def test_destination_nested_reparse_refuses_before_any_mutation(self) -> None:
+        if not self.symlink_capable:
+            self.skipTest(
+                "directory symlinks unavailable unprivileged; junction variant "
+                "still runs in its own subTest below")
+
+        for kind in self.constructible_kinds():
+            with self.subTest(kind=kind):
+                source, dest = self.make_source_and_partial()
+                target = self.root / f"external-pristine-target-{kind}"
+                target.mkdir()
+                missing = source / "nested" / "b.bin"  # copy2 would create it
+                link = dest / "nested"
+                # The partial's plain nested directory gives way to the
+                # hostile reparse before resume runs (the defect scenario).
+                shutil.rmtree(dest / "nested")
+                self.make_dir_link(link, target, kind)
+                try:
+                    with self.assertRaises(SystemExit):
+                        quarantine.resume(source, dest, reason=f"dest {kind} probe")
+
+                    # The external target received NOTHING.
+                    self.assertEqual([], list(target.rglob("*")),
+                                     "external junction/symlink target mutated")
+                    # The reparse itself is still exactly where it was.
+                    self.assertTrue(os.path.lexists(link))
+                    # No manifest row, source preserved untouched.
+                    self.assertListEqual([], self.manifest_rows())
+                    self.assertTrue(source.exists())
+                    self.assertTrue(missing.exists(), "source untouched by refusal")
+                finally:
+                    self.remove_dir_link(link)
+
+    def test_destination_reparse_census_refuses_before_copy_pass(self) -> None:
+        # Gate proof at the census boundary: the pre-copy census must find a
+        # nested destination reparse before ANY copying runs (mock-flagged
+        # shape, so this holds even off-Windows).
+        source, dest = self.make_source_and_partial()
+        target = self.root / "census-target"
+        target.mkdir()
+        link = dest / "nested"
+
+        def fake_is_reparse(path) -> bool:
+            return Path(path) == link
+
+        with mock.patch.object(quarantine, "_is_reparse_point", fake_is_reparse):
+            with self.assertRaises(SystemExit) as caught:
+                quarantine.resume(source, dest, reason="census gate")
+        self.assertIn("destination tree contains reparse point", str(caught.exception))
+        self.assertIn("nested", str(caught.exception))
+        self.assertFalse((dest / "nested" / "b.bin").exists(),
+                         "missing payload was copied despite the census refusal")
+
+    # -- (b) source reparse aborts untouched ---------------------------------
+
+    @unittest.skipUnless(os.name == "nt", "reparse-point semantics")
+    def test_source_reparse_refuses_with_no_row_no_removal(self) -> None:
+        if not self.symlink_capable:
+            self.skipTest(
+                "directory symlinks unavailable unprivileged; junction variant "
+                "still runs in its own subTest below")
+
+        for kind in self.constructible_kinds():
+            with self.subTest(kind=kind):
+                source, dest = self.make_source_and_partial()
+                target = self.root / f"source-reparse-target-{kind}"
+                target.mkdir()
+                link = source / "evidence-junction"
+                self.make_dir_link(link, target, kind)
+                try:
+                    with self.assertRaises(SystemExit):
+                        quarantine.resume(source, dest, reason=f"src {kind} probe")
+
+                    self.assertTrue(source.exists(), "source tree removed despite reparse")
+                    self.assertTrue(os.path.lexists(link),
+                                    "the reparse itself was cleared")
+                    self.assertTrue(target.is_dir())
+                    self.assertEqual([], self.manifest_rows(),
+                                     "manifest row appended anyway")
+                finally:
+                    self.remove_dir_link(link)
+
+    def test_source_file_reparse_refuses_before_append(self) -> None:
+        # A reparse FLAG on a real source file must refuse outright --
+        # silent skipping would let the later removal clear it.
+        source, dest = self.make_source_and_partial()
+        (source / "linked.bin").write_bytes(b"linked payload")
+        link = source / "linked.bin"
+
+        def fake_is_reparse(path) -> bool:
+            return Path(path) == link
+
+        with mock.patch.object(quarantine, "_is_reparse_point", fake_is_reparse):
+            with self.assertRaises(SystemExit) as caught:
+                quarantine.resume(source, dest, reason="file reparse probe")
+        self.assertIn("source tree contains reparse point", str(caught.exception))
+        self.assertTrue(source.exists())
+        self.assertTrue((source / "linked.bin").exists(),
+                        "flagged entry vanished despite the refusal")
+        self.assertEqual([], self.manifest_rows())
+
+    # -- (c) duplicate manifest id refuses pre-append ------------------------
+
+    def test_preexisting_duplicate_id_refused_before_append_byte_identical(self) -> None:
+        source, dest = self.make_source_and_partial()
+        existing = {
+            "id": dest.name,
+            "original": r"D:\lab-quarantine\old-source",
+            "staged": r"D:\lab-quarantine\old-different-destination",
+            "stagedAtUtc": "earlier",
+            "bytes": 1,
+            "sha256": "old",
+            "reason": "pre-existing id",
+        }
+        quarantine.MANIFEST.write_text(json.dumps(existing) + "\n", encoding="utf-8")
+        before_bytes = self.manifest_bytes()
+
+        with self.assertRaises(SystemExit):
+            quarantine.resume(source, dest, reason="duplicate id probe")
+
+        self.assertEqual(before_bytes, self.manifest_bytes(),
+                         "manifest changed despite duplicate-id refusal")
+        rows = self.manifest_rows()
+        self.assertEqual([existing], rows)
+        self.assertEqual(1, sum(1 for r in rows if r["id"] == dest.name))
+
+        # The append routine itself must hold the same line even when called
+        # directly: no caller can slip a second equal-id row past it.
+        with self.assertRaises(RuntimeError):
+            quarantine._append_manifest_row({
+                **existing,
+                "staged": str(dest),
+                "reason": "second row attempt",
+            })
+        self.assertEqual(before_bytes, self.manifest_bytes())
+
+    def test_duplicate_id_preflight_runs_before_the_copy_pass(self) -> None:
+        # Order matters: the id authority must refuse before any copying.
+        source, dest = self.make_source_and_partial()
+        existing = {
+            "id": dest.name,
+            "original": "elsewhere",
+            "staged": r"D:\lab-quarantine\other",
+            "stagedAtUtc": "earlier",
+            "bytes": 1,
+            "sha256": "x",
+            "reason": "pre-existing id",
+        }
+        quarantine.MANIFEST.write_text(json.dumps(existing) + "\n", encoding="utf-8")
+
+        def sabotaged_copy2(src, dst, **kwargs):  # noqa: ANN001,ANN003
+            raise AssertionError("copy2 ran despite duplicate-id preflight")
+
+        with mock.patch.object(quarantine.shutil, "copy2", sabotaged_copy2):
+            with self.assertRaises(SystemExit):
+                quarantine.resume(source, dest, reason="order probe")
+
+        self.assertFalse((dest / "nested" / "b.bin").exists(),
+                         "missing file was copied despite the duplicate-id refusal")
+
+    # -- boundary re-checks ---------------------------------------------------
+
+    def test_boundary_check_refuses_a_late_source_reparse_before_append(self) -> None:
+        # A reparse appearing after the copy converged must be caught by the
+        # safety boundary BEFORE the manifest row is written -- whether by
+        # the boundary census (SystemExit) or the identity guard
+        # (RuntimeError); either way: no row, both sides preserved.
+        source, dest = self.make_source_and_partial()
+        state = {"copy_completed": False}
+
+        real_resume_copy_tree = quarantine._resume_copy_tree
+
+        def spy_then_inject(source_arg, dest_arg):
+            result = real_resume_copy_tree(source_arg, dest_arg)
+            state["copy_completed"] = True
+            target = self.root / "late-target"
+            target.mkdir(exist_ok=True)
+            self.make_dir_link(source / "late-junction", target, "junction")
+            self.addCleanup(self.remove_dir_link, source / "late-junction")
+            return result
+
+        with mock.patch.object(quarantine, "_resume_copy_tree", spy_then_inject):
+            with self.assertRaises((SystemExit, RuntimeError)):
+                quarantine.resume(source, dest, reason="late injection probe")
+
+        self.assertTrue(state["copy_completed"])
+        self.assertEqual([], self.manifest_rows(), "row appended past the boundary")
+        self.assertTrue(source.exists())
+        self.assertTrue(os.path.lexists(source / "late-junction"))
+
+    def test_final_census_refuses_immediately_before_removal(self) -> None:
+        # A reparse injected after the append's dual rehash must stop the
+        # removal itself: the row and BOTH copies stay, the reparse survives.
+        source, dest = self.make_source_and_partial()
+        real_identity = quarantine._identity
+        state = {"identity_calls": 0}
+
+        def counting_identity(root):
+            result = real_identity(root)
+            state["identity_calls"] += 1
+            if state["identity_calls"] == 4:
+                # Both gate identities (2) and the post-append dual rehash
+                # (2 more) are done; only the final pre-removal census and
+                # the removal remain ahead.
+                target = self.root / "very-late-target"
+                target.mkdir(exist_ok=True)
+                self.make_dir_link(source / "last-second-junction", target, "junction")
+                self.addCleanup(self.remove_dir_link, source / "last-second-junction")
+            return result
+
+        with mock.patch.object(quarantine, "_identity", counting_identity):
+            with self.assertRaises((SystemExit, RuntimeError)):
+                quarantine.resume(source, dest, reason="pre-removal injection probe")
+
+        self.assertGreaterEqual(state["identity_calls"], 4,
+                                "removal attempted before the gated identities")
+        self.assertEqual(1, len(self.manifest_rows()),
+                         "row should already be appended when removal is refused")
+        self.assertTrue(source.exists(), "removal must not proceed over a reparse")
+        self.assertTrue(os.path.lexists(source / "last-second-junction"),
+                        "injected reparse was consumed by the removal")
+        self.assertTrue(dest.is_dir())
+
+    # -- roots ----------------------------------------------------------------
+
+    @unittest.skipUnless(os.name == "nt", "reparse-point semantics")
+    def test_source_root_itself_being_a_reparse_refuses(self) -> None:
+        source, dest = self.make_source_and_partial()
+        target = self.root / "root-replace-target"
+        target.mkdir()
+        moved_aside = self.root / "real-source-moved-aside"
+        source.rename(moved_aside)
+        self.make_dir_link(source, target, "junction")
+        try:
+            with self.assertRaises(SystemExit):
+                quarantine.resume(source, dest, reason="root reparse probe")
+            self.assertEqual([], self.manifest_rows())
+            self.assertTrue(dest.is_dir())
+        finally:
+            self.remove_dir_link(source)
+            moved_aside.rename(source)
+
+    @unittest.skipUnless(os.name == "nt", "reparse-point semantics")
+    def test_destination_root_itself_being_a_reparse_refuses(self) -> None:
+        source, dest = self.make_source_and_partial()
+        target = self.root / "dest-root-replace-target"
+        target.mkdir()
+        moved_aside = self.root / "real-dest-moved-aside"
+        dest.rename(moved_aside)
+        self.make_dir_link(dest, target, "junction")
+        try:
+            with self.assertRaises(SystemExit):
+                quarantine.resume(source, dest, reason="dest root reparse probe")
+            self.assertEqual([], self.manifest_rows())
+            self.assertTrue(source.exists())
+            self.assertEqual([], list(target.rglob("*")))
+        finally:
+            self.remove_dir_link(dest)
+            moved_aside.rename(dest)
+
+    # -- happy paths unchanged -------------------------------------------------
+
+    def test_ordinary_happy_path_still_completes_exactly_once(self) -> None:
+        source, dest = self.make_source_and_partial()
+        expected_sha = quarantine.tree_sha256(source)
+
+        row = quarantine.resume(source, dest, reason="ordinary happy path")
+
+        self.assertFalse(source.exists())
+        self.assertEqual(expected_sha, quarantine.tree_sha256(dest))
+        self.assertEqual(expected_sha, row["sha256"])
+        self.assertEqual([row], self.manifest_rows())
+
+    @unittest.skipUnless(os.name == "nt", "DOS attribute semantics")
+    def test_dos_readonly_happy_path_still_completes(self) -> None:
+        source, dest = self.make_source_and_partial()
+        stubborn = source / "nested" / "b.bin"
+        os.chmod(stubborn, stat.S_IREAD)
+
+        row = quarantine.resume(source, dest, reason="readonly retry")
+
+        self.assertFalse(source.exists())
+        self.assertEqual([row], self.manifest_rows())
 
 
 if __name__ == "__main__":
