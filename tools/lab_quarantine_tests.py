@@ -1685,5 +1685,349 @@ class PostReproofOperationBoundTests(unittest.TestCase):
             self.remove_dir_link(slot)
 
 
+class IntermediateAncestorSwapPinChainTests(unittest.TestCase):
+    """Falsification gates for the independent RED on exact fb7bf802.
+
+    Binding defect (review t_8d02a607, review_ancestor_pin_chain_probes.py,
+    0/6 contract_pass, twice byte-identical): the final-component pins close
+    the parent directory before queued descendants are scanned/read --
+    ``_iter_plain_files`` released each current pin before queued descent,
+    ``_identity`` exhausted/sorted all pathnames before file opens, and
+    ``_reparse_census`` closed the current pin before later descendant
+    processing. A real already-scanned ancestor could therefore be renamed
+    away and replaced by a directory symlink/junction immediately before a
+    descendant pin; ``FILE_FLAG_OPEN_REPARSE_POINT`` protects only the FINAL
+    component, so the plain descendant inside the external target was
+    accepted, scanned, opened, and hashed (identity (1,52,ac77a0be...) /
+    (1,42,5deb6832...), census []).
+
+    These gates fire the swap at the EXACT descendant pin seams -- identity
+    child-directory pin, census child pin, file pin -- and require the
+    ancestor replacement to be BLOCKED (by live replacement-denying pins on
+    every ancestor) or refused before any external target scandir/open/hash.
+    Real directory symlinks AND junctions exercise the true Windows reparse
+    code paths; every host-supported kind runs (zero supported-form skips).
+    """
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.root = Path(self._tmp.name)
+
+    # -- fixture helpers ----------------------------------------------------
+
+    def _symlink_capable(self) -> bool:
+        probe = self.root / "capability-probe"
+        probe.mkdir()
+        try:
+            os.symlink(probe, probe / "link", target_is_directory=True)
+        except OSError:
+            return False
+        finally:
+            self.remove_dir_link(probe / "link")
+        return True
+
+    def constructible_kinds(self) -> list[str]:
+        kinds = []
+        if self._symlink_capable():
+            kinds.append("directory-symlink")
+        if os.name == "nt":
+            kinds.append("junction")
+        return kinds
+
+    @staticmethod
+    def make_dir_link(link: Path, target: Path, kind: str) -> None:
+        if kind == "directory-symlink":
+            os.symlink(target, link, target_is_directory=True)
+        else:
+            assert kind == "junction"
+            subprocess.run(
+                ["cmd.exe", "/d", "/c", "mklink", "/J", str(link), str(target)],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+        assert os.path.lexists(link)
+
+    @staticmethod
+    def remove_dir_link(link: Path) -> None:
+        if os.path.lexists(link):
+            try:
+                os.unlink(link)
+            except OSError:
+                os.rmdir(link)
+
+    @classmethod
+    def attempt_ancestor_swap(
+        cls, tree: Path, aside: Path, external: Path, kind: str, state: dict
+    ) -> None:
+        state["swap_attempted"] = True
+        try:
+            tree.rename(aside)
+        except OSError:
+            # Live replacement-denying pins on the ancestor chain deny the
+            # rename outright: the verified name->object binding cannot
+            # change hands while any descendant operation is queued.
+            state["swap_blocked"] = True
+            return
+        cls.make_dir_link(tree, external, kind)
+        state["swap_succeeded"] = True
+
+    @classmethod
+    def restore_tree(cls, tree: Path, aside: Path) -> None:
+        if os.path.lexists(tree) and aside.exists():
+            cls.remove_dir_link(tree)
+        if aside.exists() and not tree.exists():
+            aside.rename(tree)
+
+    @staticmethod
+    def base_state() -> dict:
+        return {
+            "swap_attempted": False,
+            "swap_succeeded": False,
+            "swap_blocked": False,
+        }
+
+    # -- (1) identity: swap immediately before the child-directory pin ------
+
+    def test_identity_ancestor_swap_at_child_directory_pin_blocked(self) -> None:
+        kinds = self.constructible_kinds()
+        if not kinds:
+            self.fail("no directory-reparse construction is supported on this host")
+        for kind in kinds:
+            with self.subTest(kind=kind):
+                base = self.root / f"chain-id-dir-{kind}"
+                tree, aside, external = (
+                    base / "tree",
+                    base / "tree-original",
+                    base / "external",
+                )
+                (tree / "child").mkdir(parents=True)
+                (external / "child").mkdir(parents=True)
+                secret = external / "child" / "external-secret.bin"
+                secret.write_bytes(
+                    b"must-never-be-opened-through-an-intermediate-reparse"
+                )
+                state = {
+                    **self.base_state(),
+                    "scanned_external_child": False,
+                    "opened_external_file": False,
+                }
+                real_factory = quarantine._pinned_plain_directory
+                real_scandir = quarantine.os.scandir
+                real_pin_open = quarantine._windows_pin_open
+
+                def pin_with_attack(path: Path):
+                    if (
+                        Path(path) == tree / "child"
+                        and not state["swap_attempted"]
+                    ):
+                        self.attempt_ancestor_swap(
+                            tree, aside, external, kind, state
+                        )
+                    return real_factory(path)
+
+                def recording_scandir(path):
+                    if state["swap_succeeded"] and Path(path) == tree / "child":
+                        state["scanned_external_child"] = True
+                    return real_scandir(path)
+
+                def recording_pin_open(path: Path, *, directory: bool):
+                    if (
+                        state["swap_succeeded"]
+                        and Path(path) == tree / "child" / secret.name
+                    ):
+                        state["opened_external_file"] = True
+                    return real_pin_open(path, directory=directory)
+
+                raised = None
+                identity = None
+                try:
+                    with mock.patch.object(
+                        quarantine, "_pinned_plain_directory", pin_with_attack
+                    ), mock.patch.object(
+                        quarantine.os, "scandir", recording_scandir
+                    ), mock.patch.object(
+                        quarantine, "_windows_pin_open", recording_pin_open
+                    ):
+                        try:
+                            identity = quarantine._identity(tree)
+                        except BaseException as error:
+                            raised = f"{type(error).__name__}: {error}"
+                finally:
+                    self.restore_tree(tree, aside)
+
+                self.assertTrue(
+                    state["swap_attempted"],
+                    "descendant child-directory pin seam never reached",
+                )
+                self.assertTrue(
+                    state["swap_blocked"] or raised is not None,
+                    f"already-scanned ancestor was renamed away and replaced "
+                    f"and traversal continued through the replacement "
+                    f"(identity={identity!r}, raised={raised!r})",
+                )
+                self.assertFalse(
+                    state["scanned_external_child"],
+                    "external descendant directory was scandir'd through the "
+                    "swapped-in intermediate reparse",
+                )
+                self.assertFalse(
+                    state["opened_external_file"],
+                    "external descendant file was opened through the "
+                    "swapped-in intermediate reparse",
+                )
+                self.assertTrue(
+                    secret.read_bytes().startswith(b"must-never"),
+                    "external target content was disturbed",
+                )
+
+    # -- (2) census: swap immediately before the census child pin ------------
+
+    def test_census_ancestor_swap_at_child_directory_pin_blocked(self) -> None:
+        kinds = self.constructible_kinds()
+        if not kinds:
+            self.fail("no directory-reparse construction is supported on this host")
+        for kind in kinds:
+            with self.subTest(kind=kind):
+                base = self.root / f"chain-census-{kind}"
+                tree, aside, external = (
+                    base / "tree",
+                    base / "tree-original",
+                    base / "external",
+                )
+                (tree / "child").mkdir(parents=True)
+                (external / "child").mkdir(parents=True)
+                (external / "child" / "external-secret.bin").write_bytes(
+                    b"external"
+                )
+                state = {**self.base_state(), "scanned_external_child": False}
+                real_factory = quarantine._pinned_plain_directory
+                real_scandir = quarantine.os.scandir
+
+                def pin_with_attack(path: Path):
+                    if (
+                        Path(path) == tree / "child"
+                        and not state["swap_attempted"]
+                    ):
+                        self.attempt_ancestor_swap(
+                            tree, aside, external, kind, state
+                        )
+                    return real_factory(path)
+
+                def recording_scandir(path):
+                    if state["swap_succeeded"] and Path(path) == tree / "child":
+                        state["scanned_external_child"] = True
+                    return real_scandir(path)
+
+                raised = None
+                found = None
+                try:
+                    with mock.patch.object(
+                        quarantine, "_pinned_plain_directory", pin_with_attack
+                    ), mock.patch.object(
+                        quarantine.os, "scandir", recording_scandir
+                    ):
+                        try:
+                            found = quarantine._reparse_census(tree)
+                        except BaseException as error:
+                            raised = f"{type(error).__name__}: {error}"
+                finally:
+                    self.restore_tree(tree, aside)
+
+                self.assertTrue(
+                    state["swap_attempted"],
+                    "census child-directory pin seam never reached",
+                )
+                self.assertTrue(
+                    state["swap_blocked"] or raised is not None or bool(found),
+                    f"census neither blocked nor reported/refused the "
+                    f"intermediate-ancestor replacement "
+                    f"(found={found!r}, raised={raised!r})",
+                )
+                self.assertFalse(
+                    state["scanned_external_child"],
+                    "census scandir'd the external target through the "
+                    "swapped-in intermediate reparse",
+                )
+
+    # -- (3) identity: swap immediately before the file pin ------------------
+
+    def test_identity_ancestor_swap_at_file_pin_blocked(self) -> None:
+        kinds = self.constructible_kinds()
+        if not kinds:
+            self.fail("no directory-reparse construction is supported on this host")
+        for kind in kinds:
+            with self.subTest(kind=kind):
+                base = self.root / f"chain-id-file-{kind}"
+                tree, aside, external = (
+                    base / "tree",
+                    base / "tree-original",
+                    base / "external",
+                )
+                tree.mkdir(parents=True)
+                external.mkdir(parents=True)
+                (tree / "evidence.bin").write_bytes(b"original-plain")
+                loot = external / "evidence.bin"
+                loot.write_bytes(b"external-loot-through-intermediate-reparse")
+                state = {**self.base_state(), "opened_external_file": False}
+                real_factory = quarantine._pinned_plain_file
+                real_pin_open = quarantine._windows_pin_open
+
+                def pin_with_attack(path: Path):
+                    if (
+                        Path(path) == tree / "evidence.bin"
+                        and not state["swap_attempted"]
+                    ):
+                        self.attempt_ancestor_swap(
+                            tree, aside, external, kind, state
+                        )
+                    return real_factory(path)
+
+                def recording_pin_open(path: Path, *, directory: bool):
+                    if (
+                        state["swap_succeeded"]
+                        and Path(path) == tree / "evidence.bin"
+                    ):
+                        state["opened_external_file"] = True
+                    return real_pin_open(path, directory=directory)
+
+                raised = None
+                identity = None
+                try:
+                    with mock.patch.object(
+                        quarantine, "_pinned_plain_file", pin_with_attack
+                    ), mock.patch.object(
+                        quarantine, "_windows_pin_open", recording_pin_open
+                    ):
+                        try:
+                            identity = quarantine._identity(tree)
+                        except BaseException as error:
+                            raised = f"{type(error).__name__}: {error}"
+                finally:
+                    self.restore_tree(tree, aside)
+
+                self.assertTrue(
+                    state["swap_attempted"],
+                    "descendant file pin seam never reached",
+                )
+                self.assertTrue(
+                    state["swap_blocked"]
+                    or (raised is not None and identity is None),
+                    f"file bytes were blessed through the swapped-in "
+                    f"intermediate reparse (identity={identity!r})",
+                )
+                self.assertFalse(
+                    state["opened_external_file"],
+                    "external loot file was opened and hashed through the "
+                    "swapped-in intermediate reparse",
+                )
+                self.assertEqual(
+                    b"external-loot-through-intermediate-reparse",
+                    loot.read_bytes(),
+                    "external target content was disturbed",
+                )
+
+
 if __name__ == "__main__":
     unittest.main()

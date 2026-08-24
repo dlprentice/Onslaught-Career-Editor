@@ -84,8 +84,12 @@ FILE_ATTRIBUTE_DIRECTORY = 0x10
 #
 # Enumeration and hashing then happen while the pin (and every ancestor
 # pin down the walked chain) is held: ``scandir`` on the pinned pathname
-# can only ever answer for the verified object, and file bytes are read
-# straight through the verified handle.
+# can only ever answer for the verified object, file bytes are read
+# straight through the verified handle, and -- because the walk is a
+# sorted recursive descent SUSPENDED INSIDE all ancestor pins -- an
+# already-scanned directory cannot be renamed away and re-linked to an
+# external target before one of its descendants is scanned, pinned, or
+# read: its own live pin denies the replacement outright.
 
 _GENERIC_READ = 0x80000000
 _FILE_LIST_DIRECTORY = 0x00000001
@@ -168,6 +172,12 @@ class _PinnedPlainDirectory:
                 os.close(self._posix_fd)
                 self._posix_fd = None
                 raise
+
+    @property
+    def path(self) -> Path:
+        """The pinned pathname (the name this pin froze against replacement)."""
+
+        return self._path
 
     def __enter__(self) -> "_PinnedPlainDirectory":
         return self
@@ -584,82 +594,125 @@ def _scan_plain_children(directory: Path) -> list[tuple[Path, str]]:
 def _iter_plain_files(root: Path):
     """Yield every plain regular file under ``root``, never crossing a reparse.
 
-    OPERATION-BOUND no-follow walk: each directory is opened through
-    ``_pinned_plain_directory`` -- a verified non-reparse disk-directory
-    handle with replacement-denying sharing -- and only that verified
-    object's pathname reaches ``os.scandir``, so a queued child replaced by
-    a reparse after its parent's scan (or after its own descent-time
-    reproof) refuses inside the pin before any target scandir. Entries are
-    classified from their own link stat BEFORE any descent; external
-    content behind a junction or symlink is neither enumerated nor hashed.
-    Scan failures refuse immediately.
+    OPERATION-BOUND, ANCESTOR-CHAINED no-follow walk: directories are
+    enumerated through ``_pinned_plain_directory`` -- a verified non-reparse
+    disk-directory handle with replacement-denying sharing -- and every
+    ancestor pin of the walked chain stays ALIVE while any descendant is
+    scanned, pinned, or read. A rename/replace of an already-scanned
+    ancestor therefore fails with a sharing violation while its descendants
+    are still being consumed, instead of silently redirecting a later
+    descendant pathname onto an external target behind a fresh junction or
+    symlink (``FILE_FLAG_OPEN_REPARSE_POINT`` protects only the final
+    component, so final-component pins alone cannot see such a swap).
+    Entries are classified from their own link stat BEFORE any descent;
+    external content behind a junction or symlink is neither enumerated nor
+    hashed. Scan failures refuse immediately.
+
+    Determinism: children of each directory are consumed in the same
+    casefolded lexicographic order pathlib's ``sorted()`` uses, which
+    reproduces stage()'s ``sorted(root.rglob("*"))`` digest order exactly
+    (verified against pathlib 3.11 semantics; casefolding matches both
+    3.11 full-string and 3.12+ per-part comparison on these trees).
     """
 
-    pending = [root]
-    while pending:
-        current = pending.pop()
-        with _pinned_plain_directory(current):
-            for child_path, kind in _scan_plain_children(current):
-                if kind == "dir":
-                    pending.append(child_path)
-                else:
-                    yield child_path
+    def _walk(directory: Path):
+        # The caller already holds verified pins for ``directory`` and ALL
+        # of its ancestors; they stay open across this generator's whole
+        # lifetime (suspension points included), so the name->object
+        # bindings for the entire walked chain cannot change hands while
+        # this subtree is enumerated. Children are consumed in pathlib's
+        # own comparison order (casefolded per-part tuples on 3.12+;
+        # casefolded full relative path on 3.11) so the yielded sequence
+        # reproduces ``sorted(root.rglob("*"))`` exactly.
+        for child_path, kind in sorted(
+            _scan_plain_children(directory),
+            key=lambda pair: pair[0].relative_to(root).as_posix().casefold(),
+        ):
+            if kind == "dir":
+                with _pinned_plain_directory(child_path) as pinned_child:
+                    yield from _walk(pinned_child.path)
+            else:
+                yield child_path
+
+    root_pin = _pinned_plain_directory(root)
+    try:
+        yield from _walk(root_pin.path)
+    finally:
+        root_pin.close()
 
 
 def _reparse_census(root: Path) -> list[str]:
     """No-follow inventory of every reparse point at/under ``root``.
 
     Returns relative POSIX paths ("." denotes the root itself). Enumeration
-    is OPERATION-BOUND: every directory scan runs while a verified
-    replacement-denying pin on that exact directory is held, so a pathname
-    swapped to a reparse after any earlier verdict refuses inside the pin
-    -- ``os.scandir`` can never reach a replaced reparse pathname or its
-    target. A reparse root reports itself as "."; a directory that cannot
-    be scanned fails closed.
+    is OPERATION-BOUND and ANCESTOR-CHAINED: every directory scan runs while
+    a verified replacement-denying pin on that exact directory -- and on
+    EVERY already-scanned ancestor down the walked chain -- is held, so a
+    pathname swapped to a reparse after any earlier verdict refuses inside
+    the pin (``os.scandir`` can never reach a replaced reparse pathname or
+    its target), and an already-scanned ancestor cannot be renamed away and
+    re-linked to an external target before a descendant pin: its live pin
+    denies the replacement outright. A reparse root reports itself as ".";
+    a directory that cannot be scanned fails closed.
     """
 
     if _is_reparse_point(root):
         return ["."]
     found: list[str] = []
-    pending = [root]
-    while pending:
-        current = pending.pop()
-        # The pin fresh-proves the pathname (reproof first, then a
-        # non-reparse disk-directory handle with replacement-denying
-        # sharing). A queued child replaced after its parent's
-        # classification refuses HERE -- before its name can reach scandir.
-        try:
-            with _pinned_plain_directory(current):
+
+    def _walk(directory: Path) -> None:
+        # This pin -- and every ancestor pin in the active _walk frames
+        # above it -- stays alive across this directory's scan AND every
+        # recursive descendant walk below: an already-scanned ancestor is
+        # therefore replacement-denied for as long as any of its
+        # descendants may still be scanned or pinned.
+        with _pinned_plain_directory(directory):
+            try:
+                scan = os.scandir(directory)
                 try:
-                    scan = os.scandir(current)
-                    try:
-                        entries = list(scan)
-                    finally:
-                        close = getattr(scan, "close", None)
-                        if callable(close):
-                            close()
-                except OSError as error:
-                    raise RuntimeError(
-                        f"reparse census could not scan directory {current}: {error}"
-                    ) from None
-        except RuntimeError as error:
-            if current == root:
-                raise
-            found.append(current.relative_to(root).as_posix())
-            continue
-        for entry in entries:
-            entry_path = Path(entry.path)
-            # Reported as a reparse hit: either the entry IS one, or it
-            # cannot be proven plain without following it -- in both cases
-            # quarantine refuses to descend, copy through, or hash it.
-            if (
-                _is_reparse_point(entry_path)
-                or _classify_entry(entry) is None
-            ):
-                found.append(entry_path.relative_to(root).as_posix())
-                continue
-            if entry.is_dir(follow_symlinks=False):
-                pending.append(entry_path)
+                    entries = list(scan)
+                finally:
+                    close = getattr(scan, "close", None)
+                    if callable(close):
+                        close()
+            except OSError as error:
+                raise RuntimeError(
+                    f"reparse census could not scan directory "
+                    f"{directory}: {error}"
+                ) from None
+            child_dirs = []
+            for entry in entries:
+                entry_path = Path(entry.path)
+                # Reported as a reparse hit: either the entry IS one,
+                # or it cannot be proven plain without following it --
+                # in both cases quarantine refuses to descend, copy
+                # through, or hash it.
+                if (
+                    _is_reparse_point(entry_path)
+                    or _classify_entry(entry) is None
+                ):
+                    found.append(
+                        entry_path.relative_to(root).as_posix()
+                    )
+                    continue
+                if entry.is_dir(follow_symlinks=False):
+                    child_dirs.append(entry_path)
+            # Recurse INSIDE this directory's pin context: while any child
+            # is being pinned/scanned, this pin and all grandparent pins
+            # are still held, so renaming this already-scanned directory
+            # away (to re-link its name to an external target) fails with
+            # a sharing violation instead of silently redirecting the
+            # child pathname onto external content.
+            for entry_path in child_dirs:
+                try:
+                    _walk(entry_path)
+                except RuntimeError:
+                    # A child that can no longer be proven a plain
+                    # directory at ITS pin seam is reported, not fatal:
+                    # same contract as the previous queue-based walk.
+                    found.append(entry_path.relative_to(root).as_posix())
+
+    _walk(root)
     return sorted(found)
 
 
@@ -810,12 +863,15 @@ def _identity(root: Path) -> tuple[int, int, str]:
     file's bytes are hashed straight THROUGH its own verified
     ``_pinned_plain_file`` handle -- an open primitive that opens the final
     component as itself and refuses any reparse before one byte is read.
-    The root itself, any nested entry that cannot be proven a plain
-    directory or file, and any scan failure all refuse before any hashing;
-    a swap landing after classification, after the descent-time proof, or
-    after the final path verdict refuses inside the pin -- external target
-    bytes are never opened, read, or blessed. Digest order matches
-    stage()'s pathlib-sorted semantics exactly.
+    The walk keeps every already-scanned ancestor pin ALIVE through each
+    descendant scan, pin, and read, so an intermediate ancestor cannot be
+    renamed away and re-linked to external content between operations. The
+    root itself, any nested entry that cannot be proven a plain directory
+    or file, and any scan failure all refuse before any hashing; a swap
+    landing after classification, after the descent-time proof, or after
+    the final path verdict refuses inside the pin -- external target bytes
+    are never opened, read, or blessed. Digest order matches stage()'s
+    pathlib-sorted semantics exactly (per-component sorted consumption).
     """
 
     if _is_reparse_point(root):
@@ -825,7 +881,13 @@ def _identity(root: Path) -> tuple[int, int, str]:
     count = 0
     total_bytes = 0
     digest = hashlib.sha256()
-    for path in sorted(_iter_plain_files(root)):
+    # The ancestor-chained walk yields each file only while EVERY pin of
+    # its directory chain -- root included -- is still alive, and the open
+    # below therefore happens under that live chain: an already-scanned
+    # ancestor cannot have been renamed/re-linked between scan and read
+    # (its pin denies the replacement), so the pinned file pathname can
+    # still answer only for the verified plain object.
+    for path in _iter_plain_files(root):
         # Operation-bound open: the pin re-proves the slot fresh and then
         # opens it AS ITSELF with replacement-denying sharing; a swapped-in
         # symlink/junction refuses here without Path.open ever running on
