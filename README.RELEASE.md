@@ -1,9 +1,7 @@
 # WinUI release candidate
 
 Status: active — the release-candidate shape and its boundary
-Last updated: 2026-07-20 (body). Header fields added 2026-07-28 under
-[`DOCUMENTATION.md`](DOCUMENTATION.md); nothing below was re-reviewed by that
-pass.
+Last updated: 2026-08-24 (body).
 Summary: what a candidate ZIP contains, what it explicitly does not claim, and
 which steps remain separately authorized.
 
@@ -34,9 +32,12 @@ npm run release:winui-zip
 The command self-tests Lore packing, exercises ZIP inspection, publishes to an
 ignored scratch root, creates and extracts the friendly ZIP, checks entry-path
 and content boundaries, launches the extracted app, visits representative Home
-and Lore workflows, optionally exercises Media when local inputs exist, and
-confirms owned processes are cleaned up. Output remains under ignored local
-scratch space.
+and Lore workflows, completes one generated-synthetic Safe Copy Manager
+workflow with stale-input and source/output-alias negative controls, verifies
+the source and copied-target tree hashes, optionally exercises Media when local
+inputs exist, and confirms owned processes are cleaned up. Output remains under
+ignored local scratch space; the synthetic fixture is not a retail executable,
+installation, or save.
 
 For source-only release boundary changes, select the affected commands from
 [`release/readiness/PUBLIC_SIGNOFF_COMMANDS.md`](release/readiness/PUBLIC_SIGNOFF_COMMANDS.md).

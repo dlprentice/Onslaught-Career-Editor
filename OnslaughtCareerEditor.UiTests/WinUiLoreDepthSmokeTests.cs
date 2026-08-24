@@ -60,19 +60,17 @@ public class WinUiLoreDepthSmokeTests
                 value.Contains("across", StringComparison.OrdinalIgnoreCase));
 
             AutomationElement firstHitButton = FindFirstByAutomationIdPrefix(window, "LoreSearchHitButton");
-            // Opening a hit loads that document into the reader (title card updates,
-            // back history appears).
-            string titleBefore = TryGetName(FindByAutomationId(window, "LoreCurrentDocumentTitle")) ?? string.Empty;
+            // The title TextBlock does not project its Text into UIA Name, so title
+            // polling can report no change even when the reader navigated. Back
+            // history is the existing behavior-level signal: the initial document
+            // has no history, while opening a search hit must add one entry.
+            AutomationElement backButton = FindByAutomationId(window, "LoreBackButton");
+            Assert.That(backButton.IsEnabled, Is.False, "The initial Lore document should not already have back history.");
             InvokeElement(firstHitButton);
             bool readerChanged = Retry.WhileFalse(
-                () =>
-                {
-                    string title = TryGetName(FindByAutomationId(window, "LoreCurrentDocumentTitle")) ?? string.Empty;
-                    return title.Length > 0 && !string.Equals(title, titleBefore, StringComparison.Ordinal)
-                        || title.Contains("Battle Engine", StringComparison.OrdinalIgnoreCase);
-                },
+                () => backButton.IsEnabled,
                 TimeSpan.FromSeconds(15)).Success;
-            Assert.That(readerChanged, Is.True, "Opening a search hit should load a document in the reader.");
+            Assert.That(readerChanged, Is.True, "Opening a search hit should load a document and create back history.");
 
             // The What-links-here panel is present for the loaded document and says
             // something honest either way.

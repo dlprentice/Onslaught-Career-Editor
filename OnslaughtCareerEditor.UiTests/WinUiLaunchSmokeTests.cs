@@ -39,30 +39,15 @@ public class WinUiLaunchSmokeTests
             app = Application.Launch(startInfo);
             using var automation = new UIA3Automation();
 
-            bool handleReady = Retry.WhileFalse(
-                () => app.MainWindowHandle != IntPtr.Zero,
-                TimeSpan.FromSeconds(30)).Success;
-
-            if (!handleReady)
-            {
-                Assert.Ignore("Main window handle not available; ensure the app can launch in this desktop session.");
-            }
-
             Window? window = Retry.WhileNull(
-                () =>
-                {
-                    try
-                    {
-                        return automation.FromHandle(app.MainWindowHandle).AsWindow();
-                    }
-                    catch
-                    {
-                        return null;
-                    }
-                },
-                TimeSpan.FromSeconds(30)).Result;
+                () => app.GetMainWindow(automation, TimeSpan.FromSeconds(5)),
+                TimeSpan.FromSeconds(60),
+                TimeSpan.FromMilliseconds(500)).Result;
 
-            Assert.That(window, Is.Not.Null);
+            Assert.That(
+                window,
+                Is.Not.Null,
+                "The extracted WinUI main window did not appear; release launch acceptance cannot skip.");
             Assert.That(window!.Title, Does.Contain("Onslaught Toolkit"));
             Assert.That(app.HasExited, Is.False, "App should still be running after launch.");
             Assert.That(

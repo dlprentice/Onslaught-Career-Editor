@@ -26,8 +26,11 @@ npm run release:winui-zip
 
 This is the candidate-shape gate. It verifies the ignored local publish/ZIP,
 generated canonical Lore pack, content exclusions, extracted launch, Home/Lore
-navigation, and owned-process cleanup. It does not sign, install, upload, tag,
-announce, or publish anything.
+navigation, one live generated-synthetic Safe Copy Manager workflow (including
+stale-input and source/output-alias refusals, unchanged-source and copied-target
+tree hashes), and owned-process cleanup. It does not sign, install, upload, tag,
+announce, or publish anything, and the synthetic fixture makes no retail-game
+runtime claim.
 
 For a documentation-only change, `git diff --check` and `npm run test:docs` are
 sufficient unless a release input, notice, payload boundary, or command above
