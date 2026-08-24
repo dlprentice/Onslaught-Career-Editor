@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 from __future__ import annotations
 
+import builtins
 import hashlib
 import json
 import os
@@ -51,11 +52,17 @@ class LabQuarantineTests(unittest.TestCase):
                 ]
                 self.assertEqual([row], recorded)
 
+                restored = quarantine.restore(row["id"])
+                self.assertEqual(row, restored)
+                self.assertEqual(b"recoverable evidence\n", source.read_bytes())
+                self.assertEqual("", quarantine.MANIFEST.read_text(encoding="utf-8"))
+
     def test_stage_directory_then_restore_round_trips_exact_tree(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             source = root / "source-tree"
             (source / "nested").mkdir(parents=True)
+            (source / "empty-directory").mkdir()
             (source / "a.bin").write_bytes(b"a")
             (source / "nested" / "b.bin").write_bytes(b"bc")
             expected_sha = quarantine.tree_sha256(source)
@@ -69,8 +76,862 @@ class LabQuarantineTests(unittest.TestCase):
                 restored = quarantine.restore(row["id"])
                 self.assertEqual(row, restored)
                 self.assertTrue(source.is_dir())
+                self.assertTrue((source / "empty-directory").is_dir())
                 self.assertEqual(expected_sha, quarantine.tree_sha256(source))
                 self.assertEqual("", quarantine.MANIFEST.read_text(encoding="utf-8"))
+
+
+class StageReparseRefusalTests(unittest.TestCase):
+    """Stage must reject reparses before any target or quarantine mutation."""
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.root = Path(self._tmp.name)
+        self.quarantine_root = self.root / "quarantine"
+        self.quarantine_root.mkdir()
+        patcher = mock.patch.multiple(
+            quarantine,
+            QUARANTINE_ROOT=self.quarantine_root,
+            MANIFEST=self.quarantine_root / "manifest.jsonl",
+            PURGE_LOG=self.quarantine_root / "purge.log",
+        )
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    @staticmethod
+    def _is_at_or_under(path, root: Path) -> bool:  # noqa: ANN001
+        try:
+            Path(path).relative_to(root)
+        except (TypeError, ValueError):
+            return False
+        return True
+
+    def _assert_nested_directory_reparse_refused(self, kind: str) -> None:
+        source = self.root / f"source-{kind}"
+        source.mkdir()
+        (source / "ordinary.bin").write_bytes(b"ordinary")
+        external = self.root / f"external-{kind}"
+        external.mkdir()
+        secret = external / "external-secret.bin"
+        secret.write_bytes(b"must-never-be-scanned-opened-or-copied")
+        link = source / "linked-directory"
+        if kind == "directory-symlink":
+            os.symlink(external, link, target_is_directory=True)
+        else:
+            self.assertEqual("junction", kind)
+            subprocess.run(
+                ["cmd.exe", "/d", "/c", "mklink", "/J", str(link), str(external)],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+        self.assertTrue(os.path.lexists(link))
+
+        real_scandir = quarantine.os.scandir
+        real_open = builtins.open
+        real_copyfile = quarantine.shutil.copyfile
+        touched = {"scanned": [], "opened": [], "copied": []}
+
+        def recording_scandir(path):  # noqa: ANN001
+            if self._is_at_or_under(path, link):
+                touched["scanned"].append(str(path))
+            return real_scandir(path)
+
+        def recording_open(path, *args, **kwargs):  # noqa: ANN001,ANN002,ANN003
+            if self._is_at_or_under(path, link):
+                touched["opened"].append(str(path))
+            return real_open(path, *args, **kwargs)
+
+        def recording_copyfile(src, dst, *args, **kwargs):  # noqa: ANN001,ANN002,ANN003
+            if self._is_at_or_under(src, link):
+                touched["copied"].append(str(src))
+            return real_copyfile(src, dst, *args, **kwargs)
+
+        try:
+            with mock.patch.object(
+                quarantine.os, "scandir", recording_scandir
+            ), mock.patch.object(
+                builtins, "open", recording_open
+            ), mock.patch.object(
+                quarantine.shutil, "copyfile", recording_copyfile
+            ), mock.patch.object(
+                quarantine, "_append_manifest_row", wraps=quarantine._append_manifest_row
+            ) as append_manifest:
+                with self.assertRaises((SystemExit, RuntimeError)):
+                    quarantine.stage(source, reason=f"refuse nested {kind}")
+
+            self.assertEqual(
+                {"scanned": [], "opened": [], "copied": []},
+                touched,
+                "stage touched external target content through a directory reparse",
+            )
+            append_manifest.assert_not_called()
+            self.assertFalse(quarantine.MANIFEST.exists(), "manifest row was appended")
+            self.assertTrue(source.is_dir(), "source was removed despite refusal")
+            self.assertTrue(os.path.lexists(link), "source reparse was removed")
+            self.assertEqual(
+                b"must-never-be-scanned-opened-or-copied", secret.read_bytes()
+            )
+            self.assertEqual(
+                [],
+                list(self.quarantine_root.iterdir()),
+                "stage left an unmanifested quarantine partial on refusal",
+            )
+        finally:
+            if os.path.lexists(link):
+                try:
+                    os.unlink(link)
+                except OSError:
+                    os.rmdir(link)
+
+    @unittest.skipUnless(os.name == "nt", "Windows reparse semantics")
+    def test_stage_refuses_nested_directory_symlink_before_target_touch(self) -> None:
+        self._assert_nested_directory_reparse_refused("directory-symlink")
+
+    @unittest.skipUnless(os.name == "nt", "Windows reparse semantics")
+    def test_stage_refuses_nested_junction_before_target_touch(self) -> None:
+        self._assert_nested_directory_reparse_refused("junction")
+
+    @unittest.skipUnless(os.name == "nt", "Windows reparse semantics")
+    def test_stage_refuses_nested_file_symlink_before_target_touch(self) -> None:
+        source = self.root / "source-file-symlink"
+        source.mkdir()
+        (source / "ordinary.bin").write_bytes(b"ordinary")
+        external = self.root / "external-file.bin"
+        external.write_bytes(b"must-never-be-opened-or-copied")
+        link = source / "linked-file.bin"
+        os.symlink(external, link)
+        self.assertTrue(os.path.lexists(link))
+
+        real_scandir = quarantine.os.scandir
+        real_open = builtins.open
+        real_copyfile = quarantine.shutil.copyfile
+        touched = {"scanned": [], "opened": [], "copied": []}
+
+        def recording_scandir(path):  # noqa: ANN001
+            if self._is_at_or_under(path, link):
+                touched["scanned"].append(str(path))
+            return real_scandir(path)
+
+        def recording_open(path, *args, **kwargs):  # noqa: ANN001,ANN002,ANN003
+            if self._is_at_or_under(path, link):
+                touched["opened"].append(str(path))
+            return real_open(path, *args, **kwargs)
+
+        def recording_copyfile(src, dst, *args, **kwargs):  # noqa: ANN001,ANN002,ANN003
+            if self._is_at_or_under(src, link):
+                touched["copied"].append(str(src))
+            return real_copyfile(src, dst, *args, **kwargs)
+
+        try:
+            with mock.patch.object(
+                quarantine.os, "scandir", recording_scandir
+            ), mock.patch.object(
+                builtins, "open", recording_open
+            ), mock.patch.object(
+                quarantine.shutil, "copyfile", recording_copyfile
+            ), mock.patch.object(
+                quarantine, "_append_manifest_row", wraps=quarantine._append_manifest_row
+            ) as append_manifest:
+                with self.assertRaises((SystemExit, RuntimeError)):
+                    quarantine.stage(source, reason="refuse nested file symlink")
+
+            self.assertEqual(
+                {"scanned": [], "opened": [], "copied": []},
+                touched,
+                "stage touched external target bytes through a file symlink",
+            )
+            append_manifest.assert_not_called()
+            self.assertFalse(quarantine.MANIFEST.exists(), "manifest row was appended")
+            self.assertTrue(source.is_dir(), "source was removed despite refusal")
+            self.assertTrue(os.path.lexists(link), "source file symlink was removed")
+            self.assertEqual(b"must-never-be-opened-or-copied", external.read_bytes())
+            self.assertEqual(
+                [],
+                list(self.quarantine_root.iterdir()),
+                "stage left an unmanifested quarantine partial on refusal",
+            )
+        finally:
+            if os.path.lexists(link):
+                os.unlink(link)
+
+    @unittest.skipUnless(os.name == "nt", "Windows reparse semantics")
+    def test_stage_refuses_directory_and_file_reparse_roots_before_resolve(self) -> None:
+        directory_target = self.root / "root-directory-target"
+        directory_target.mkdir()
+        (directory_target / "external.bin").write_bytes(b"external")
+        file_target = self.root / "root-file-target.bin"
+        file_target.write_bytes(b"external-file")
+        cases = []
+        directory_symlink = self.root / "root-directory-symlink"
+        os.symlink(directory_target, directory_symlink, target_is_directory=True)
+        cases.append(("directory-symlink", directory_symlink))
+        junction = self.root / "root-junction"
+        subprocess.run(
+            ["cmd.exe", "/d", "/c", "mklink", "/J", str(junction), str(directory_target)],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        cases.append(("junction", junction))
+        file_symlink = self.root / "root-file-symlink.bin"
+        os.symlink(file_target, file_symlink)
+        cases.append(("file-symlink", file_symlink))
+
+        try:
+            for kind, link in cases:
+                with self.subTest(kind=kind), mock.patch.object(
+                    quarantine,
+                    "_refuse_tree_reparses",
+                    side_effect=AssertionError("tree target was inspected"),
+                ), mock.patch.object(
+                    quarantine,
+                    "_plain_file_identity",
+                    side_effect=AssertionError("file target was opened"),
+                ), mock.patch.object(
+                    quarantine,
+                    "_stage_copy_tree",
+                    side_effect=AssertionError("target was copied"),
+                ), mock.patch.object(
+                    quarantine,
+                    "_append_manifest_row",
+                    side_effect=AssertionError("manifest append ran"),
+                ):
+                    with self.assertRaises(SystemExit):
+                        quarantine.stage(link, reason=f"refuse root {kind}")
+                    self.assertTrue(os.path.lexists(link), "root reparse was removed")
+                    self.assertFalse(quarantine.MANIFEST.exists())
+                    self.assertEqual([], list(self.quarantine_root.iterdir()))
+            self.assertEqual(b"external", (directory_target / "external.bin").read_bytes())
+            self.assertEqual(b"external-file", file_target.read_bytes())
+        finally:
+            for _, link in cases:
+                if os.path.lexists(link):
+                    try:
+                        os.unlink(link)
+                    except OSError:
+                        os.rmdir(link)
+
+    @unittest.skipUnless(os.name == "nt", "Windows reparse semantics")
+    def test_stage_copy_refuses_directory_swapped_after_source_identity(self) -> None:
+        source = self.root / "source-late-junction"
+        child = source / "child"
+        child.mkdir(parents=True)
+        (source / "ordinary.bin").write_bytes(b"ordinary")
+        external = self.root / "late-external"
+        external.mkdir()
+        secret = external / "external-secret.bin"
+        secret.write_bytes(b"must-never-be-copied-after-identity")
+        aside = self.root / "plain-child-aside"
+        real_identity = quarantine._identity
+        real_scandir = quarantine.os.scandir
+        real_open = builtins.open
+        real_copyfile = quarantine.shutil.copyfile
+        state = {
+            "swapped": False,
+            "blocked": False,
+            "scanned": [],
+            "opened": [],
+            "copied": [],
+        }
+
+        def identity_then_swap(root: Path):
+            identity = real_identity(root)
+            if Path(root) == source and not state["swapped"]:
+                try:
+                    child.rename(aside)
+                except OSError:
+                    state["blocked"] = True
+                    return identity
+                subprocess.run(
+                    ["cmd.exe", "/d", "/c", "mklink", "/J", str(child), str(external)],
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                )
+                state["swapped"] = True
+            return identity
+
+        def recording_scandir(path):  # noqa: ANN001
+            if self._is_at_or_under(path, child) and state["swapped"]:
+                state["scanned"].append(str(path))
+            return real_scandir(path)
+
+        def recording_open(path, *args, **kwargs):  # noqa: ANN001,ANN002,ANN003
+            if self._is_at_or_under(path, child) and state["swapped"]:
+                state["opened"].append(str(path))
+            return real_open(path, *args, **kwargs)
+
+        def recording_copyfile(src, dst, *args, **kwargs):  # noqa: ANN001,ANN002,ANN003
+            if self._is_at_or_under(src, child) and state["swapped"]:
+                state["copied"].append(str(src))
+            return real_copyfile(src, dst, *args, **kwargs)
+
+        try:
+            with mock.patch.object(
+                quarantine, "_identity", identity_then_swap
+            ), mock.patch.object(
+                quarantine.os, "scandir", recording_scandir
+            ), mock.patch.object(
+                builtins, "open", recording_open
+            ), mock.patch.object(
+                quarantine.shutil, "copyfile", recording_copyfile
+            ), mock.patch.object(
+                quarantine, "_append_manifest_row", wraps=quarantine._append_manifest_row
+            ) as append_manifest:
+                try:
+                    quarantine.stage(source, reason="late junction after identity")
+                    refused = False
+                except (SystemExit, RuntimeError):
+                    refused = True
+
+            self.assertTrue(
+                state["blocked"] or state["swapped"],
+                "source identity attack seam never ran",
+            )
+            self.assertEqual([], state["scanned"], "external target was scanned")
+            self.assertEqual([], state["opened"], "external target file was opened")
+            self.assertEqual([], state["copied"], "external target file was copied")
+            if state["blocked"]:
+                self.assertFalse(refused, "blocked replacement should allow safe stage")
+                append_manifest.assert_called_once()
+            else:
+                self.assertTrue(refused, "successful reparse swap was not refused")
+                append_manifest.assert_not_called()
+                self.assertFalse(
+                    quarantine.MANIFEST.exists(), "manifest row was appended"
+                )
+                self.assertTrue(source.is_dir(), "source was removed despite refusal")
+                self.assertTrue(
+                    os.path.lexists(child), "late source junction was removed"
+                )
+                self.assertEqual(
+                    [],
+                    list(self.quarantine_root.iterdir()),
+                    "late source reparse left an unmanifested destination partial",
+                )
+            self.assertEqual(b"must-never-be-copied-after-identity", secret.read_bytes())
+        finally:
+            if os.path.lexists(child) and state["swapped"]:
+                try:
+                    os.unlink(child)
+                except OSError:
+                    os.rmdir(child)
+            if aside.exists() and not child.exists():
+                aside.rename(child)
+
+    @unittest.skipUnless(os.name == "nt", "Windows reparse semantics")
+    def test_stage_copy_refuses_file_swapped_after_source_identity(self) -> None:
+        source = self.root / "source-late-file-symlink.bin"
+        original = b"original-plain-source"
+        source.write_bytes(original)
+        aside = self.root / "plain-source-aside.bin"
+        external = self.root / "late-file-target.bin"
+        external.write_bytes(b"must-never-be-opened-by-stage-copy")
+        real_identity = quarantine._plain_file_identity
+        state = {"swapped": False, "blocked": False}
+
+        def identity_then_swap(path: Path):
+            identity = real_identity(path)
+            if Path(path) == source and not state["swapped"]:
+                try:
+                    source.rename(aside)
+                except OSError:
+                    state["blocked"] = True
+                    return identity
+                os.symlink(external, source)
+                state["swapped"] = True
+            return identity
+
+        try:
+            with mock.patch.object(
+                quarantine, "_plain_file_identity", identity_then_swap
+            ), mock.patch.object(
+                quarantine,
+                "_open_new_plain_file_fd",
+                wraps=quarantine._open_new_plain_file_fd,
+            ) as create_dest, mock.patch.object(
+                quarantine, "_append_manifest_row", wraps=quarantine._append_manifest_row
+            ) as append_manifest:
+                try:
+                    quarantine.stage(source, reason="late file symlink after identity")
+                    refused = False
+                except (SystemExit, RuntimeError):
+                    refused = True
+
+            self.assertTrue(
+                state["blocked"] or state["swapped"],
+                "plain-file identity attack seam never ran",
+            )
+            if state["blocked"]:
+                self.assertFalse(refused, "blocked replacement should allow safe stage")
+                create_dest.assert_called_once()
+                append_manifest.assert_called_once()
+            else:
+                self.assertTrue(refused, "successful file symlink swap was not refused")
+                create_dest.assert_not_called()
+                append_manifest.assert_not_called()
+                self.assertTrue(
+                    os.path.lexists(source), "source file symlink was removed"
+                )
+                self.assertEqual(
+                    original, aside.read_bytes(), "plain source bytes changed"
+                )
+                self.assertFalse(quarantine.MANIFEST.exists())
+                self.assertEqual(
+                    [],
+                    list(self.quarantine_root.iterdir()),
+                    "late file reparse created a destination hierarchy",
+                )
+            self.assertEqual(
+                b"must-never-be-opened-by-stage-copy",
+                external.read_bytes(),
+                "external target bytes changed",
+            )
+        finally:
+            if os.path.lexists(source) and state["swapped"]:
+                os.unlink(source)
+            if aside.exists() and not source.exists():
+                aside.rename(source)
+
+    @unittest.skipUnless(os.name == "nt", "Windows reparse semantics")
+    def test_stage_destination_file_creation_refuses_raced_symlink(self) -> None:
+        source = self.root / "destination-race-source.bin"
+        source.write_bytes(b"source-bytes")
+        external = self.root / "destination-race-target.bin"
+        external.write_bytes(b"external-must-not-change")
+        real_create = quarantine._open_new_plain_file_fd
+        captured = {}
+
+        def inject_then_create(path: Path) -> int:
+            captured["dest"] = Path(path)
+            os.symlink(external, path)
+            return real_create(path)
+
+        try:
+            with mock.patch.object(
+                quarantine, "_open_new_plain_file_fd", inject_then_create
+            ), mock.patch.object(
+                quarantine, "_append_manifest_row", wraps=quarantine._append_manifest_row
+            ) as append_manifest:
+                with self.assertRaises(RuntimeError):
+                    quarantine.stage(source, reason="destination file symlink race")
+
+            dest = captured["dest"]
+            append_manifest.assert_not_called()
+            self.assertEqual(b"source-bytes", source.read_bytes())
+            self.assertTrue(os.path.lexists(dest), "raced destination link vanished")
+            self.assertEqual(b"external-must-not-change", external.read_bytes())
+            self.assertFalse(quarantine.MANIFEST.exists())
+        finally:
+            dest = captured.get("dest")
+            if dest is not None and os.path.lexists(dest):
+                os.unlink(dest)
+
+    @unittest.skipUnless(os.name == "nt", "Windows reparse semantics")
+    def test_stage_blocks_source_parent_replaced_by_junction(self) -> None:
+        source_parent = self.root / "source-parent"
+        source_parent.mkdir()
+        source = source_parent / "evidence.bin"
+        source.write_bytes(b"original-evidence")
+        aside = self.root / "source-parent-aside"
+        external_parent = self.root / "external-parent"
+        external_parent.mkdir()
+        external_source = external_parent / source.name
+        external_source.write_bytes(b"external-evidence")
+        real_refuse = quarantine._refuse_plain_file_reparse
+        state = {"attempted": False, "blocked": False, "replaced": False}
+
+        def refuse_then_replace_parent(side: str, path: Path) -> None:
+            real_refuse(side, path)
+            if side == "stage source before copy" and not state["attempted"]:
+                state["attempted"] = True
+                try:
+                    source_parent.rename(aside)
+                except OSError:
+                    state["blocked"] = True
+                    return
+                subprocess.run(
+                    [
+                        "cmd.exe", "/d", "/c", "mklink", "/J",
+                        str(source_parent), str(external_parent),
+                    ],
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                )
+                state["replaced"] = True
+
+        try:
+            with mock.patch.object(
+                quarantine, "_refuse_plain_file_reparse", refuse_then_replace_parent
+            ):
+                row = quarantine.stage(source, reason="parent junction attack")
+
+            self.assertTrue(state["attempted"], "ancestor attack seam never ran")
+            self.assertTrue(state["blocked"], "source parent replacement succeeded")
+            self.assertFalse(state["replaced"])
+            self.assertEqual(b"external-evidence", external_source.read_bytes())
+            self.assertEqual(b"original-evidence", Path(row["staged"]).read_bytes())
+        finally:
+            if state["replaced"] and os.path.lexists(source_parent):
+                try:
+                    os.unlink(source_parent)
+                except OSError:
+                    os.rmdir(source_parent)
+            if aside.exists() and not source_parent.exists():
+                aside.rename(source_parent)
+
+    def test_manifest_prefix_and_row_readback_remain_inside_append_mutex(self) -> None:
+        manifest_path = self.quarantine_root / "manifest.jsonl"
+        lock_dir = self.quarantine_root / ".manifest-append.lock"
+
+        class LockAwareManifest:
+            def __init__(self) -> None:
+                self.read_calls = 0
+                self.readback_saw_lock = None
+
+            def exists(self) -> bool:
+                return manifest_path.exists()
+
+            def open(self, *args, **kwargs):  # noqa: ANN002,ANN003
+                return manifest_path.open(*args, **kwargs)
+
+            def read_bytes(self):
+                self.read_calls += 1
+                if self.read_calls == 2:
+                    self.readback_saw_lock = lock_dir.is_file()
+                return manifest_path.read_bytes()
+
+        proxy = LockAwareManifest()
+        row = {
+            "id": "serialized-row",
+            "original": "source",
+            "staged": "destination",
+            "stagedAtUtc": "now",
+            "bytes": 1,
+            "sha256": "digest",
+            "reason": "mutex readback probe",
+        }
+        with mock.patch.object(quarantine, "MANIFEST", proxy):
+            quarantine._append_manifest_row(row)
+
+        self.assertEqual(2, proxy.read_calls)
+        self.assertTrue(
+            proxy.readback_saw_lock,
+            "exact prefix+row readback escaped the serialized append scope",
+        )
+        self.assertTrue(lock_dir.is_file(), "permanent append mutex file missing")
+
+    def test_manifest_readback_requires_exact_serialized_row_bytes(self) -> None:
+        row = {
+            "id": "exact-row",
+            "original": "source",
+            "staged": "destination",
+            "stagedAtUtc": "now",
+            "bytes": 1,
+            "sha256": "digest",
+            "reason": "exact byte probe",
+        }
+        original_fsync = quarantine.os.fsync
+        state = {"rewritten": False}
+
+        def reorder_row_after_fsync(fd):  # noqa: ANN001
+            result = original_fsync(fd)
+            parsed = json.loads(quarantine.MANIFEST.read_text(encoding="utf-8"))
+            quarantine.MANIFEST.write_text(
+                json.dumps(parsed, sort_keys=True) + "\n", encoding="utf-8"
+            )
+            state["rewritten"] = True
+            return result
+
+        with mock.patch.object(quarantine.os, "fsync", reorder_row_after_fsync):
+            with self.assertRaises(RuntimeError):
+                quarantine._append_manifest_row(row)
+
+        self.assertTrue(state["rewritten"])
+
+    @unittest.skipUnless(os.name == "nt", "Windows newline translation")
+    def test_manifest_readback_detects_raw_newline_byte_change(self) -> None:
+        row = {
+            "id": "raw-newline-row",
+            "original": "source",
+            "staged": "destination",
+            "stagedAtUtc": "now",
+            "bytes": 1,
+            "sha256": "digest",
+            "reason": "raw byte probe",
+        }
+        original_fsync = quarantine.os.fsync
+        state = {"rewritten": False}
+
+        def normalize_newline_after_fsync(fd):  # noqa: ANN001
+            result = original_fsync(fd)
+            raw = quarantine.MANIFEST.read_bytes()
+            self.assertIn(b"\r\n", raw)
+            quarantine.MANIFEST.write_bytes(raw.replace(b"\r\n", b"\n"))
+            state["rewritten"] = True
+            return result
+
+        with mock.patch.object(
+            quarantine.os, "fsync", normalize_newline_after_fsync
+        ):
+            with self.assertRaises(RuntimeError):
+                quarantine._append_manifest_row(row)
+
+        self.assertTrue(state["rewritten"])
+
+    def test_manifest_mutex_never_reclaims_an_old_unknown_holder(self) -> None:
+        lock_dir = self.quarantine_root / ".manifest-append.lock"
+        lock_dir.mkdir()
+        marker = lock_dir / "holder.txt"
+        marker.write_text("unknown live writer", encoding="utf-8")
+        os.utime(marker, (0, 0))
+
+        with mock.patch.object(
+            quarantine.time, "monotonic", side_effect=[0.0, 11.0]
+        ), mock.patch.object(quarantine.time, "sleep"):
+            with self.assertRaises(RuntimeError):
+                quarantine._acquire_manifest_mutex()
+
+        self.assertTrue(lock_dir.is_dir(), "active/unknown mutex was reclaimed")
+
+    @unittest.skipUnless(os.name == "nt", "Windows share-mode mutex")
+    def test_manifest_mutex_handle_blocks_replacement_and_second_writer(self) -> None:
+        mutex = quarantine._acquire_manifest_mutex()
+        lock_path = self.quarantine_root / ".manifest-append.lock"
+        aside = self.quarantine_root / ".manifest-append.lock-aside"
+        try:
+            with self.assertRaises(OSError):
+                lock_path.rename(aside)
+            with mock.patch.object(
+                quarantine.time, "monotonic", side_effect=[0.0, 11.0]
+            ), mock.patch.object(quarantine.time, "sleep"):
+                with self.assertRaises(RuntimeError):
+                    quarantine._acquire_manifest_mutex()
+        finally:
+            mutex.close()
+
+        self.assertTrue(lock_path.is_file())
+        self.assertFalse(aside.exists())
+
+    def test_identity_unicode_order_matches_pathlib_not_str_casefold(self) -> None:
+        tree = self.root / "unicode-order-tree"
+        tree.mkdir()
+        (tree / "ss.txt").write_bytes(b"double-s")
+        (tree / "ß.txt").write_bytes(b"eszett")
+        expected = quarantine.tree_sha256(tree)
+        real_scan = quarantine._scan_plain_children
+
+        def reverse_casefold_tie(directory: Path):
+            children = real_scan(directory)
+            if Path(directory) == tree:
+                return sorted(
+                    children,
+                    key=lambda pair: 0 if pair[0].name == "ß.txt" else 1,
+                )
+            return children
+
+        with mock.patch.object(
+            quarantine, "_scan_plain_children", reverse_casefold_tie
+        ):
+            _, _, observed = quarantine._identity(tree)
+
+        self.assertEqual(expected, observed)
+
+    def test_stage_manifest_readback_failure_preserves_source_and_staged(self) -> None:
+        source = self.root / "manifest-readback-source.bin"
+        payload = b"preserve-both-after-readback-failure"
+        source.write_bytes(payload)
+        original_fsync = quarantine.os.fsync
+        state = {"poisoned": False}
+
+        def poison_manifest_after_fsync(fd):  # noqa: ANN001
+            result = original_fsync(fd)
+            if (
+                not state["poisoned"]
+                and quarantine.MANIFEST.exists()
+                and quarantine.MANIFEST.stat().st_size
+            ):
+                rows = [
+                    json.loads(line)
+                    for line in quarantine.MANIFEST.read_text(
+                        encoding="utf-8"
+                    ).splitlines()
+                    if line.strip()
+                ]
+                rows[-1]["bytes"] = 0
+                quarantine.MANIFEST.write_text(
+                    "\n".join(json.dumps(row) for row in rows) + "\n",
+                    encoding="utf-8",
+                )
+                state["poisoned"] = True
+            return result
+
+        with mock.patch.object(quarantine.os, "fsync", poison_manifest_after_fsync):
+            with self.assertRaises(RuntimeError):
+                quarantine.stage(source, reason="poison manifest readback")
+
+        self.assertTrue(state["poisoned"], "manifest fsync seam never ran")
+        self.assertEqual(payload, source.read_bytes(), "source bytes were removed")
+        rows = [
+            json.loads(line)
+            for line in quarantine.MANIFEST.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+        self.assertEqual(1, len(rows), "durable failed-readback row disappeared")
+        self.assertEqual(payload, Path(rows[0]["staged"]).read_bytes())
+
+    def test_stage_postappend_rehash_failure_preserves_both_copies(self) -> None:
+        source = self.root / "postappend-source.bin"
+        original = b"original-before-append"
+        changed = b"changed-after-append"
+        source.write_bytes(original)
+        real_append = quarantine._append_manifest_row
+        captured = {}
+
+        def append_then_mutate(row: dict) -> None:
+            real_append(row)
+            captured["row"] = row
+            source.write_bytes(changed)
+
+        with mock.patch.object(
+            quarantine, "_append_manifest_row", append_then_mutate
+        ):
+            with self.assertRaises(RuntimeError):
+                quarantine.stage(source, reason="postappend mutation probe")
+
+        row = captured["row"]
+        self.assertEqual(changed, source.read_bytes(), "source was removed")
+        self.assertEqual(original, Path(row["staged"]).read_bytes())
+        recorded = [
+            json.loads(line)
+            for line in quarantine.MANIFEST.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+        self.assertEqual([row], recorded, "durable row was manually edited away")
+
+    @unittest.skipUnless(os.name == "nt", "Windows reparse semantics")
+    def test_stage_final_census_refuses_reparse_before_removal(self) -> None:
+        source = self.root / "final-census-source"
+        source.mkdir()
+        (source / "ordinary.bin").write_bytes(b"ordinary")
+        external = self.root / "final-census-external"
+        external.mkdir()
+        link = source / "last-second-junction"
+        real_identity = quarantine._identity
+        state = {"identity_calls": 0, "injected": False}
+
+        def identity_then_inject(root: Path):
+            identity = real_identity(root)
+            state["identity_calls"] += 1
+            if state["identity_calls"] == 5:
+                subprocess.run(
+                    ["cmd.exe", "/d", "/c", "mklink", "/J", str(link), str(external)],
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                )
+                state["injected"] = True
+            return identity
+
+        try:
+            with mock.patch.object(
+                quarantine, "_identity", identity_then_inject
+            ), mock.patch.object(
+                quarantine,
+                "_remove_tree_readonly_only",
+                wraps=quarantine._remove_tree_readonly_only,
+            ) as remove_tree:
+                with self.assertRaises((SystemExit, RuntimeError)):
+                    quarantine.stage(source, reason="final census injection")
+
+            self.assertTrue(state["injected"], "postappend dual rehash never completed")
+            remove_tree.assert_not_called()
+            self.assertTrue(source.is_dir(), "source was removed past final census")
+            self.assertTrue(os.path.lexists(link), "injected junction was removed")
+            rows = [
+                json.loads(line)
+                for line in quarantine.MANIFEST.read_text(
+                    encoding="utf-8"
+                ).splitlines()
+                if line.strip()
+            ]
+            self.assertEqual(1, len(rows), "durable row should remain after refusal")
+            self.assertTrue(Path(rows[0]["staged"]).is_dir())
+        finally:
+            if os.path.lexists(link):
+                try:
+                    os.unlink(link)
+                except OSError:
+                    os.rmdir(link)
+
+    def test_stage_low_level_removal_rechecks_staged_identity(self) -> None:
+        source = self.root / "low-level-dest-source"
+        source.mkdir()
+        (source / "evidence.bin").write_bytes(b"original-bytes")
+        real_remove = quarantine._remove_tree_readonly_only
+        state = {}
+
+        def corrupt_then_remove(root: Path, **kwargs):
+            staged = Path(kwargs["staged"])
+            (staged / "evidence.bin").write_bytes(b"corrupted-after-census")
+            state["staged"] = staged
+            return real_remove(root, **kwargs)
+
+        with mock.patch.object(
+            quarantine, "_remove_tree_readonly_only", corrupt_then_remove
+        ):
+            with self.assertRaises(RuntimeError):
+                quarantine.stage(source, reason="low-level staged recheck")
+
+        self.assertTrue(source.is_dir(), "source was removed after staged corruption")
+        self.assertEqual(
+            b"corrupted-after-census",
+            (state["staged"] / "evidence.bin").read_bytes(),
+        )
+
+    def test_stage_low_level_removal_rechecks_source_identity(self) -> None:
+        source = self.root / "low-level-source-source"
+        source.mkdir()
+        (source / "evidence.bin").write_bytes(b"original-bytes")
+        real_remove = quarantine._remove_tree_readonly_only
+        state = {"injected": False}
+
+        def add_then_remove(root: Path, **kwargs):
+            (Path(root) / "late-evidence.bin").write_bytes(b"never-staged")
+            state["injected"] = True
+            return real_remove(root, **kwargs)
+
+        with mock.patch.object(
+            quarantine, "_remove_tree_readonly_only", add_then_remove
+        ):
+            with self.assertRaises(RuntimeError):
+                quarantine.stage(source, reason="low-level source recheck")
+
+        self.assertTrue(state["injected"])
+        self.assertTrue(source.is_dir(), "source was removed after late source bytes")
+        self.assertEqual(
+            b"never-staged", (source / "late-evidence.bin").read_bytes()
+        )
+
+    @unittest.skipUnless(os.name == "nt", "DOS attribute semantics")
+    def test_file_removal_failure_restores_dos_readonly_attribute(self) -> None:
+        source = self.root / "readonly-sharing-failure.bin"
+        source.write_bytes(b"evidence")
+        os.chmod(source, stat.S_IREAD)
+
+        def sharing_failure(self: Path, *args, **kwargs):  # noqa: ANN002,ANN003
+            raise PermissionError(32, "sharing violation")
+
+        with mock.patch.object(Path, "unlink", sharing_failure):
+            with self.assertRaises(PermissionError):
+                quarantine._remove_file_readonly_only(source)
+
+        attrs = quarantine._file_attributes(source)
+        self.assertIsNotNone(attrs)
+        self.assertTrue(attrs & quarantine.FILE_ATTRIBUTE_READONLY)
 
 
 class ResumeStageTests(unittest.TestCase):
@@ -797,9 +1658,12 @@ class InjectingManifest:
     def read_text(self, *args, **kwargs):
         return self.path.read_text(*args, **kwargs)
 
+    def read_bytes(self):
+        return self.path.read_bytes()
+
     def open(self, *args, **kwargs):
         mode = args[0] if args else kwargs.get("mode", "r")
-        if mode == "a" and not self.injected:
+        if "a" in mode and not self.injected:
             self.path.write_text(json.dumps(self.competing) + "\n", encoding="utf-8")
             self.injected = True
         return self.path.open(*args, **kwargs)

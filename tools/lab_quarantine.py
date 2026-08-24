@@ -24,7 +24,8 @@ row is confirmed; purged rows are rewritten to a purge log with the same
 identity so recovery by name remains possible for as long as the drive
 retains the blocks.
 
-Enumeration and hashing are OPERATION-BOUND no-follow (2026-08-24): a
+Enumeration, stage copying, and hashing are OPERATION-BOUND no-follow
+(2026-08-24): a
 verified non-reparse directory/file object is pinned with
 replacement-denying sharing (Windows ``CreateFileW`` +
 ``FILE_FLAG_OPEN_REPARSE_POINT``, read-only share mode; POSIX ``O_NOFOLLOW``
@@ -47,7 +48,9 @@ import shutil
 import sys
 import time
 import uuid
+from contextlib import ExitStack
 from datetime import datetime, timezone
+from functools import wraps
 from pathlib import Path
 
 QUARANTINE_ROOT = Path(r"D:\lab-quarantine")
@@ -92,15 +95,19 @@ FILE_ATTRIBUTE_DIRECTORY = 0x10
 # read: its own live pin denies the replacement outright.
 
 _GENERIC_READ = 0x80000000
+_GENERIC_WRITE = 0x40000000
 _FILE_LIST_DIRECTORY = 0x00000001
 _FILE_READ_ATTRIBUTES = 0x00000080
 _SYNCHRONIZE = 0x00100000
 _FILE_SHARE_READ = 0x1
 _FILE_SHARE_WRITE = 0x2
 _FILE_SHARE_DELETE = 0x4
+_CREATE_NEW = 1
 _OPEN_EXISTING = 3
+_OPEN_ALWAYS = 4
 _FILE_FLAG_BACKUP_SEMANTICS = 0x02000000
 _FILE_FLAG_OPEN_REPARSE_POINT = 0x00200000
+_FILE_ATTRIBUTE_NORMAL = 0x80
 _FILE_TYPE_DISK = 0x1
 
 
@@ -278,6 +285,49 @@ class _PinnedPlainFile:
     def read_all_hashed(self) -> tuple[int, str]:
         """Stream every byte THROUGH the pinned object into sha256; return
         ``(byte_count, hex_digest)`` measured over exactly those bytes."""
+        fd = self._take_read_fd()
+        try:
+            return _stream_fd_hashed(fd)
+        finally:
+            os.close(fd)
+
+    def copy_to_new(self, destination: Path) -> tuple[int, str]:
+        """Copy pinned bytes into one exclusively-created plain file.
+
+        The source is read through this verified handle. The destination is
+        created with CREATE_NEW/O_EXCL+O_NOFOLLOW and held open while bytes are
+        written, so an existing or raced-in symlink is refused rather than
+        followed. Returns the exact byte count and digest copied.
+        """
+
+        source_fd = self._take_read_fd()
+        destination_fd: int | None = None
+        try:
+            source_stat = os.fstat(source_fd)
+            destination_fd = _open_new_plain_file_fd(destination)
+            copied = _stream_fd_copy_hashed(source_fd, destination_fd)
+            os.fsync(destination_fd)
+            # Windows CPython 3.11 does not expose os.fchmod. Content identity
+            # is the binding quarantine contract; preserve mode through the fd
+            # where the host supports it, otherwise leave the exclusively-
+            # created destination at its safe default mode.
+            if hasattr(os, "fchmod"):
+                os.fchmod(destination_fd, source_stat.st_mode)
+            if os.utime in os.supports_fd:
+                os.utime(
+                    destination_fd,
+                    ns=(source_stat.st_atime_ns, source_stat.st_mtime_ns),
+                )
+            os.fsync(destination_fd)
+            return copied
+        finally:
+            if destination_fd is not None:
+                os.close(destination_fd)
+            os.close(source_fd)
+
+    def _take_read_fd(self) -> int:
+        """Transfer this pin's verified readable object into an owned fd."""
+
         if os.name == "nt":
             import msvcrt
 
@@ -292,16 +342,11 @@ class _PinnedPlainFile:
                     f"not be adopted for streaming ({error})"
                 ) from None
             self._handle = None  # the fd now owns the Windows handle
-            try:
-                return _stream_fd_hashed(fd)
-            finally:
-                os.close(fd)  # closes the underlying handle too
+            return fd
         assert self._posix_fd is not None
-        try:
-            return _stream_fd_hashed(self._posix_fd)
-        finally:
-            os.close(self._posix_fd)
-            self._posix_fd = None
+        fd = self._posix_fd
+        self._posix_fd = None
+        return fd
 
     def close(self) -> None:
         if os.name == "nt":
@@ -323,6 +368,72 @@ def _stream_fd_hashed(fd: int) -> tuple[int, str]:
         data_sha.update(chunk)
         total += len(chunk)
     return total, data_sha.hexdigest()
+
+
+def _stream_fd_copy_hashed(source_fd: int, destination_fd: int) -> tuple[int, str]:
+    """Copy every source byte to destination and hash exactly what was read."""
+
+    data_sha = hashlib.sha256()
+    total = 0
+    while True:
+        chunk = os.read(source_fd, 1024 * 1024)
+        if not chunk:
+            break
+        data_sha.update(chunk)
+        total += len(chunk)
+        remaining = memoryview(chunk)
+        while remaining:
+            written = os.write(destination_fd, remaining)
+            if written <= 0:
+                raise RuntimeError(
+                    "fail-closed: destination file write made no progress"
+                )
+            remaining = remaining[written:]
+    return total, data_sha.hexdigest()
+
+
+def _open_new_plain_file_fd(path: Path) -> int:
+    """Exclusively create ``path`` as a plain file and return its owned fd."""
+
+    if os.name != "nt":
+        flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
+        flags |= getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_BINARY", 0)
+        return os.open(path, flags, 0o600)
+
+    import ctypes
+    import msvcrt
+    from ctypes import wintypes
+
+    kernel32 = ctypes.windll.kernel32
+    kernel32.CreateFileW.restype = wintypes.HANDLE
+    kernel32.CreateFileW.argtypes = [
+        wintypes.LPCWSTR, wintypes.DWORD, wintypes.DWORD, wintypes.LPVOID,
+        wintypes.DWORD, wintypes.DWORD, wintypes.HANDLE,
+    ]
+    handle = kernel32.CreateFileW(
+        str(path),
+        _GENERIC_WRITE | _FILE_READ_ATTRIBUTES | _SYNCHRONIZE,
+        _FILE_SHARE_READ,
+        None,
+        _CREATE_NEW,
+        _FILE_ATTRIBUTE_NORMAL,
+        None,
+    )
+    if not handle or handle == wintypes.HANDLE(-1).value:
+        error_code = kernel32.GetLastError()
+        raise RuntimeError(
+            f"fail-closed: quarantine destination could not create {path} "
+            f"exclusively as a new plain file (CreateFileW error {error_code}); "
+            "an existing, raced, shared, or inaccessible slot is never followed"
+        )
+    try:
+        return msvcrt.open_osfhandle(handle, os.O_WRONLY | os.O_BINARY)
+    except OSError as error:
+        kernel32.CloseHandle(wintypes.HANDLE(handle))
+        raise RuntimeError(
+            f"fail-closed: new quarantine file {path} could not be adopted "
+            f"for streaming ({error})"
+        ) from None
 
 
 def _windows_pin_open(
@@ -431,6 +542,18 @@ def _file_attributes(path: Path) -> int | None:
 
     attributes = ctypes.windll.kernel32.GetFileAttributesW(str(path))
     return None if attributes == 0xFFFFFFFF else attributes
+
+
+def _set_file_attributes(path: Path, attributes: int) -> None:
+    """Set Windows attributes with checked failure (authoritative host only)."""
+
+    import ctypes
+
+    if not ctypes.windll.kernel32.SetFileAttributesW(str(path), attributes):
+        raise OSError(
+            ctypes.windll.kernel32.GetLastError(),
+            f"could not set DOS attributes on {path}",
+        )
 
 
 def _lstat_is_reparse_point(path: Path) -> bool:
@@ -608,11 +731,11 @@ def _iter_plain_files(root: Path):
     external content behind a junction or symlink is neither enumerated nor
     hashed. Scan failures refuse immediately.
 
-    Determinism: children of each directory are consumed in the same
-    casefolded lexicographic order pathlib's ``sorted()`` uses, which
-    reproduces stage()'s ``sorted(root.rglob("*"))`` digest order exactly
-    (verified against pathlib 3.11 semantics; casefolding matches both
-    3.11 full-string and 3.12+ per-part comparison on these trees).
+    Determinism: children of each directory are consumed in the same Windows-
+    flavour normalized lexicographic order pathlib's ``sorted()`` uses, which
+    reproduces stage()'s ``sorted(root.rglob("*"))`` digest order exactly.
+    Windows pathlib normalization uses ``str.lower`` rather than Unicode
+    ``str.casefold`` (``ss`` and ``ß`` are a binding distinction).
     """
 
     def _walk(directory: Path):
@@ -621,12 +744,12 @@ def _iter_plain_files(root: Path):
         # lifetime (suspension points included), so the name->object
         # bindings for the entire walked chain cannot change hands while
         # this subtree is enumerated. Children are consumed in pathlib's
-        # own comparison order (casefolded per-part tuples on 3.12+;
-        # casefolded full relative path on 3.11) so the yielded sequence
-        # reproduces ``sorted(root.rglob("*"))`` exactly.
+        # own Windows-flavour comparison order (lower-normalized path parts),
+        # so the yielded sequence reproduces ``sorted(root.rglob("*"))``
+        # exactly without collapsing distinct Unicode names via casefold.
         for child_path, kind in sorted(
             _scan_plain_children(directory),
-            key=lambda pair: pair[0].relative_to(root).as_posix().casefold(),
+            key=lambda pair: pair[0].relative_to(root).as_posix().lower(),
         ):
             if kind == "dir":
                 with _pinned_plain_directory(child_path) as pinned_child:
@@ -726,7 +849,7 @@ def _refuse_tree_reparses(side: str, root: Path) -> None:
     more = "" if len(found) <= 10 else f" (+{len(found) - 10} more)"
     raise SystemExit(
         f"fail-closed: {side} tree contains reparse point(s) [{listing}{more}] "
-        f"under {root}: quarantine resume refuses to descend, copy through, or "
+        f"under {root}: quarantine refuses to descend, copy through, or "
         "remove any reparse; both trees are left untouched"
     )
 
@@ -906,6 +1029,99 @@ def _identity(root: Path) -> tuple[int, int, str]:
     return count, total_bytes, digest.hexdigest()
 
 
+def _plain_file_identity(path: Path) -> tuple[int, str]:
+    """Byte count + sha256 read only through a verified plain-file pin."""
+
+    with _pinned_plain_file(path) as pinned:
+        return pinned.read_all_hashed()
+
+
+def _refuse_plain_file_reparse(side: str, path: Path) -> None:
+    """Fresh operation-bound proof that one file root is still plain."""
+
+    if _is_reparse_point(path) or _lstat_is_reparse_point(path):
+        raise SystemExit(
+            f"fail-closed: {side} file is a reparse point: {path}; refusing "
+            "to open, hash, copy, or remove through its target"
+        )
+    # The handle proof closes the final path-check/open seam. No target bytes
+    # are read; entering the context is the complete plain-file verdict.
+    with _pinned_plain_file(path):
+        pass
+
+
+def _stage_copy_tree(source: Path, dest: Path) -> None:
+    """Create an exact plain-object copy under live source/dest pin chains.
+
+    ``dest`` must not exist. Every source directory/file is classified and
+    opened while all of its already-walked source ancestors remain pinned;
+    every destination directory ancestor is pinned for the matching descent.
+    Files are created exclusively and filled from the verified source handle,
+    so neither side can redirect a path operation through a reparse target.
+    """
+
+    def _walk(source_dir: Path, dest_dir: Path) -> None:
+        for source_child, kind in sorted(
+            _scan_plain_children(source_dir),
+            key=lambda pair: pair[0].relative_to(source).as_posix().lower(),
+        ):
+            dest_child = dest_dir / source_child.name
+            if kind == "dir":
+                # Pin the classified source child BEFORE creating its peer: a
+                # replaced reparse refuses without even extending the partial.
+                with _pinned_plain_directory(source_child) as pinned_source:
+                    if os.path.lexists(dest_child):
+                        raise RuntimeError(
+                            f"fail-closed: new stage destination slot already "
+                            f"exists: {dest_child}; refusing to merge or follow it"
+                        )
+                    dest_child.mkdir()
+                    with _pinned_plain_directory(dest_child) as pinned_dest:
+                        _walk(pinned_source.path, pinned_dest.path)
+            else:
+                with _pinned_plain_file(source_child) as pinned_source:
+                    pinned_source.copy_to_new(dest_child)
+
+    # Pin source first: a raced root reparse refuses before the destination
+    # root is created. The destination is then exclusively created as a plain
+    # directory and held pinned across every descendant write.
+    with _pinned_plain_directory(source) as pinned_source:
+        if os.path.lexists(dest):
+            raise RuntimeError(
+                f"fail-closed: stage destination already exists: {dest}; "
+                "refusing to merge into an unverified partial"
+            )
+        dest.mkdir()
+        with _pinned_plain_directory(dest) as pinned_dest:
+            _walk(pinned_source.path, pinned_dest.path)
+
+
+class _ManifestAppendMutex:
+    """Kernel-held serialization handle for the permanent manifest lock file."""
+
+    def __init__(
+        self,
+        path: Path,
+        *,
+        windows_handle: int | None = None,
+        posix_fd: int | None = None,
+    ) -> None:
+        self.path = path
+        self._windows_handle = windows_handle
+        self._posix_fd = posix_fd
+
+    def close(self) -> None:
+        if self._windows_handle is not None:
+            _close_windows_handle(self._windows_handle)
+            self._windows_handle = None
+        if self._posix_fd is not None:
+            import fcntl
+
+            fcntl.flock(self._posix_fd, fcntl.LOCK_UN)
+            os.close(self._posix_fd)
+            self._posix_fd = None
+
+
 def _append_manifest_row(row: dict) -> None:
     """Append exactly one manifest row, then read it back from disk.
 
@@ -921,15 +1137,25 @@ def _append_manifest_row(row: dict) -> None:
     corrupted: the row and both evidence copies remain).
     """
 
-    lock_dir = _acquire_manifest_mutex()
+    mutex = _acquire_manifest_mutex()
     try:
-        with MANIFEST.open("a", encoding="utf-8") as stream:
+        with MANIFEST.open("ab") as stream:
             # Write-boundary id re-check: under the mutex, after the append
             # handle exists, before the first byte is written.
-            before_lines = (
-                MANIFEST.read_text(encoding="utf-8").splitlines()
-                if MANIFEST.exists() else []
-            )
+            before_bytes = MANIFEST.read_bytes()
+            try:
+                before_text = before_bytes.decode("utf-8")
+            except UnicodeDecodeError as error:
+                raise RuntimeError(
+                    f"manifest append refused: existing manifest is not valid "
+                    f"UTF-8 ({error}); nothing appended"
+                ) from None
+            if before_bytes and not before_bytes.endswith(b"\n"):
+                raise RuntimeError(
+                    "manifest append refused: existing manifest has an "
+                    "unterminated tail; nothing appended"
+                )
+            before_lines = before_text.splitlines()
             if any(
                 json.loads(line).get("id") == row["id"]
                 for line in before_lines
@@ -940,73 +1166,108 @@ def _append_manifest_row(row: dict) -> None:
                     f"{row['id']} already exists; manifest left byte-for-byte "
                     "unchanged, nothing appended"
                 )
-            stream.write(json.dumps(row) + "\n")
+            serialized_row = (json.dumps(row) + os.linesep).encode("utf-8")
+            stream.write(serialized_row)
             stream.flush()
             os.fsync(stream.fileno())
+        # Exact prefix+row readback is part of the SAME serialized append.
+        # Releasing the mutex first would allow another writer to move the
+        # tail before this receipt is adjudicated, producing an ambiguous
+        # false failure after both rows were durable.
+        after_bytes = MANIFEST.read_bytes()
+        if after_bytes != before_bytes + serialized_row:
+            raise RuntimeError(
+                f"manifest append failed readback for id {row['id']}; "
+                "no removal was performed"
+            )
     finally:
-        shutil.rmtree(lock_dir, ignore_errors=True)
-    after = MANIFEST.read_text(encoding="utf-8").splitlines()
-    parsed_after = [json.loads(line) for line in after if line.strip()]
-    row_lines = [line for line in after
-                 if line.strip() and json.loads(line)["id"] == row["id"]]
-    if (
-        len(row_lines) != 1
-        or json.loads(row_lines[0]) != row
-        or [json.loads(line) for line in before_lines if line.strip()] != parsed_after[:-1]
-    ):
-        raise RuntimeError(
-            f"manifest append failed readback for id {row['id']}; "
-            "no removal was performed"
-        )
+        mutex.close()
 
 
-def _acquire_manifest_mutex() -> Path:
+def _acquire_manifest_mutex() -> _ManifestAppendMutex:
     """Exclusive serialization scope for one manifest append.
 
-    Directory creation is atomic on every platform, so mkdir IS the lock.
-    The scope lives beside the manifest under the QUARANTINE_ROOT (never
-    derived from MANIFEST itself, which tests may proxy). The holder leaves
-    a fresh marker; a leftover whose marker is older than the staleness
-    horizon belongs to a crashed writer and is reclaimed. Refuses rather
-    than waiting past the budget when another writer genuinely holds the
-    scope: quarantine appends are rare audited events, not a contention
-    workload, and failing closed beats queueing behind an unknown process.
+    A permanent lock FILE lives beside the manifest under QUARANTINE_ROOT
+    (never derived from MANIFEST itself, which tests may proxy). Windows holds
+    one CreateFileW handle with write access and read-only sharing: a second
+    writer cannot open, rename, delete, or replace that exact object, and a
+    process crash releases the kernel handle without any stale-path cleanup.
+    POSIX uses flock on the same permanent file. No owner ever unlinks the lock
+    pathname, so it cannot delete a successor writer's raced-in lock.
     """
 
-    lock_dir = QUARANTINE_ROOT / ".manifest-append.lock"
+    lock_path = QUARANTINE_ROOT / ".manifest-append.lock"
     deadline = time.monotonic() + 10.0
     while True:
-        try:
-            lock_dir.mkdir()
-        except FileExistsError:
-            marker = lock_dir / "holder.txt"
+        if os.name == "nt":
+            import ctypes
+            from ctypes import wintypes
+
+            kernel32 = ctypes.windll.kernel32
+            kernel32.CreateFileW.restype = wintypes.HANDLE
+            kernel32.CreateFileW.argtypes = [
+                wintypes.LPCWSTR, wintypes.DWORD, wintypes.DWORD,
+                wintypes.LPVOID, wintypes.DWORD, wintypes.DWORD,
+                wintypes.HANDLE,
+            ]
+            kernel32.GetFileType.restype = wintypes.DWORD
+            kernel32.GetFileType.argtypes = [wintypes.HANDLE]
+            handle = kernel32.CreateFileW(
+                str(lock_path),
+                _GENERIC_READ | _GENERIC_WRITE | _FILE_READ_ATTRIBUTES | _SYNCHRONIZE,
+                _FILE_SHARE_READ,
+                None,
+                _OPEN_ALWAYS,
+                _FILE_ATTRIBUTE_NORMAL | _FILE_FLAG_OPEN_REPARSE_POINT,
+                None,
+            )
+            if handle and handle != wintypes.HANDLE(-1).value:
+                attributes = _file_attributes(lock_path)
+                file_type = kernel32.GetFileType(wintypes.HANDLE(handle))
+                if (
+                    attributes is None
+                    or attributes & FILE_ATTRIBUTE_REPARSE_POINT
+                    or attributes & FILE_ATTRIBUTE_DIRECTORY
+                    or file_type != _FILE_TYPE_DISK
+                ):
+                    _close_windows_handle(handle)
+                    raise RuntimeError(
+                        f"manifest append refused: lock path is not a plain "
+                        f"disk file: {lock_path}"
+                    )
+                return _ManifestAppendMutex(
+                    lock_path, windows_handle=handle
+                )
+            error_code = kernel32.GetLastError()
+        else:
+            import fcntl
+
+            flags = os.O_RDWR | os.O_CREAT | getattr(os, "O_NOFOLLOW", 0)
             try:
-                age = time.time() - marker.stat().st_mtime
-            except OSError:
-                age = float("inf")
-            if age > 60.0:
-                try:
-                    shutil.rmtree(lock_dir)
-                    continue
-                except OSError:
-                    pass
-            if time.monotonic() >= deadline:
-                raise RuntimeError(
-                    "manifest append refused: another writer holds the append "
-                    f"scope at {lock_dir} (holder marker age {age:.0f}s); "
-                    "nothing was written"
-                ) from None
-            time.sleep(0.05)
-            continue
-        break
-    try:
-        (lock_dir / "holder.txt").write_text(utc_now(), encoding="utf-8")
-    except OSError:
-        pass  # self-healing: a missing marker makes the next pass reclaim
-    return lock_dir
+                fd = os.open(lock_path, flags, 0o600)
+                fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except (OSError, BlockingIOError) as error:
+                if "fd" in locals():
+                    os.close(fd)
+                    del fd
+                error_code = getattr(error, "errno", "unknown")
+            else:
+                return _ManifestAppendMutex(lock_path, posix_fd=fd)
+        if time.monotonic() >= deadline:
+            raise RuntimeError(
+                "manifest append refused: another writer or invalid object "
+                f"blocks the kernel-held scope at {lock_path} "
+                f"(open error {error_code}); nothing was written"
+            ) from None
+        time.sleep(0.05)
 
 
-def _remove_tree_readonly_only(root: Path) -> None:
+def _remove_tree_readonly_only(
+    root: Path,
+    *,
+    staged: Path | None = None,
+    expected_identity: tuple[int, int, str] | None = None,
+) -> None:
     """rmtree that clears ONLY the DOS read-only bit on failure paths.
 
     Any other failure (reparse point encountered, sharing violation, ACL
@@ -1014,6 +1275,18 @@ def _remove_tree_readonly_only(root: Path) -> None:
     Uses ``onexc`` where available (Python >= 3.12; ``onerror`` was removed
     in 3.14) and falls back to ``onerror`` elsewhere.
     """
+
+    if staged is not None and expected_identity is not None:
+        source_identity = _identity(root)
+        staged_identity = _identity(staged)
+        if source_identity != expected_identity or staged_identity != expected_identity:
+            raise RuntimeError(
+                "final low-level removal gate refused changed bytes: "
+                f"source={source_identity} staged={staged_identity} "
+                f"expected={expected_identity}; both trees preserved"
+            )
+        _refuse_tree_reparses("stage source at removal syscall", root)
+        _refuse_tree_reparses("stage destination at removal syscall", staged)
 
     def _retry(function, path, exc):  # noqa: ANN001 - shutil callback shape
         attrs = _file_attributes(Path(path))
@@ -1024,13 +1297,20 @@ def _remove_tree_readonly_only(root: Path) -> None:
             and not attrs & FILE_ATTRIBUTE_REPARSE_POINT
         ):
             if os.name == "nt":
-                import ctypes
-
-                ctypes.windll.kernel32.SetFileAttributesW(
-                    str(path), attrs & ~FILE_ATTRIBUTE_READONLY)
+                _set_file_attributes(Path(path), attrs & ~FILE_ATTRIBUTE_READONLY)
+                try:
+                    function(path)
+                except BaseException:
+                    _set_file_attributes(Path(path), attrs)
+                    raise
             else:
+                original_mode = Path(path).lstat().st_mode
                 os.chmod(path, 0o644)
-            function(path)
+                try:
+                    function(path)
+                except BaseException:
+                    os.chmod(path, original_mode)
+                    raise
             return
         raise exc
 
@@ -1041,6 +1321,60 @@ def _remove_tree_readonly_only(root: Path) -> None:
             root,
             onerror=lambda function, path, exc_info: _retry(function, path, exc_info[1]),
         )
+
+
+def _remove_file_readonly_only(
+    path: Path,
+    *,
+    staged: Path | None = None,
+    expected_identity: tuple[int, str] | None = None,
+) -> None:
+    """Unlink one plain file, clearing only its DOS read-only bit if needed."""
+
+    if staged is not None and expected_identity is not None:
+        source_identity = _plain_file_identity(path)
+        staged_identity = _plain_file_identity(staged)
+        if source_identity != expected_identity or staged_identity != expected_identity:
+            raise RuntimeError(
+                "final low-level file removal gate refused changed bytes: "
+                f"source={source_identity} staged={staged_identity} "
+                f"expected={expected_identity}; both files preserved"
+            )
+        _refuse_plain_file_reparse("stage source at removal syscall", path)
+        _refuse_plain_file_reparse("stage destination at removal syscall", staged)
+
+    attrs = _file_attributes(path)
+    if attrs is None:
+        raise RuntimeError(f"source file vanished before removal: {path}")
+    if attrs & FILE_ATTRIBUTE_REPARSE_POINT or _lstat_is_reparse_point(path):
+        raise RuntimeError(
+            f"fail-closed: source file became a reparse point before removal: "
+            f"{path}; link and target are preserved"
+        )
+    try:
+        path.unlink()
+        return
+    except OSError:
+        attrs = _file_attributes(path)
+        if (
+            attrs is None
+            or not attrs & FILE_ATTRIBUTE_READONLY
+            or attrs & FILE_ATTRIBUTE_REPARSE_POINT
+        ):
+            raise
+    if os.name == "nt":
+        _set_file_attributes(path, attrs & ~FILE_ATTRIBUTE_READONLY)
+    else:
+        original_mode = path.lstat().st_mode
+        os.chmod(path, 0o644)
+    try:
+        path.unlink()
+    except BaseException:
+        if os.name == "nt":
+            _set_file_attributes(path, attrs)
+        else:
+            os.chmod(path, original_mode)
+        raise
 
 
 def resume(source: Path, dest: Path, *, reason: str) -> dict:
@@ -1179,58 +1513,197 @@ def tree_bytes(root: Path) -> int:
     return sum(path.stat().st_size for path in root.rglob("*") if path.is_file())
 
 
+def _with_pinned_plain_parents(function):  # noqa: ANN001
+    """Hold every lexical parent plain and replacement-denied for one stage."""
+
+    @wraps(function)
+    def wrapped(path: Path, *args, **kwargs):  # noqa: ANN002,ANN003
+        normalized = Path(os.path.abspath(path))
+        # Pin from the filesystem anchor down to the immediate parent. Each
+        # earlier pin remains live while the next component is proven, so an
+        # intermediate ancestor cannot be renamed away and re-linked to an
+        # external target between stage's repeated root operations.
+        with ExitStack() as stack:
+            for ancestor in reversed(normalized.parents):
+                stack.enter_context(_pinned_plain_directory(ancestor))
+            return function(normalized, *args, **kwargs)
+
+    return wrapped
+
+
+@_with_pinned_plain_parents
 def stage(path: Path, *, reason: str) -> dict:
-    path = path.resolve()
-    if not path.exists():
+    """Safely quarantine one ordinary file or directory.
+
+    Every source/destination traversal and read is operation-bound no-follow;
+    exact identity is gated before append, the serialized fsynced row is read
+    back, both copies are rehashed, and reparse freedom is recensused
+    immediately before DOS-read-only-only removal. Any failure preserves every
+    source/staged byte that existed when it failed.
+    """
+
+    import stat as stat_module
+
+    # Lexical root verdict FIRST: resolve()/is_dir() would erase the evidence
+    # that the caller named a symlink/junction and redirect later work onto its
+    # target. abspath normalizes only spelling; it never follows a reparse.
+    path = Path(os.path.abspath(path))
+    if not os.path.lexists(path):
         raise SystemExit(f"path does not exist: {path}")
-    if not QUARANTINE_ROOT.exists():
-        raise SystemExit(f"quarantine root missing: {QUARANTINE_ROOT} (is D: mounted?)")
+    if _is_reparse_point(path) or _lstat_is_reparse_point(path):
+        raise SystemExit(
+            f"fail-closed: stage source root is a reparse point: {path}; "
+            "refusing to resolve, enumerate, copy, hash, or remove through it"
+        )
+    try:
+        source_stat = path.lstat()
+    except OSError as error:
+        raise SystemExit(f"could not classify stage source {path}: {error}") from None
+    is_directory = stat_module.S_ISDIR(source_stat.st_mode)
+    is_file = stat_module.S_ISREG(source_stat.st_mode)
+    if not (is_directory or is_file):
+        raise SystemExit(
+            f"stage source is not a plain regular file or directory: {path}"
+        )
+
+    if not os.path.lexists(QUARANTINE_ROOT):
+        raise SystemExit(
+            f"quarantine root missing: {QUARANTINE_ROOT} (is D: mounted?)"
+        )
+
+    # Deterministic reparses refuse before the dated destination parent exists,
+    # which guarantees no target touch and no unmanifested partial. Identity is
+    # also measured before destination creation through the same live pin chain.
+    if is_directory:
+        _refuse_tree_reparses("stage source", path)
+        source_identity = _identity(path)
+    else:
+        _refuse_plain_file_reparse("stage source", path)
+        source_identity = _plain_file_identity(path)
+
     date = datetime.now(timezone.utc).strftime("%Y%m%d")
     dest = QUARANTINE_ROOT / date / f"{uuid.uuid4().hex[:8]}-{path.name}"
-    dest.parent.mkdir(parents=True, exist_ok=True)
-    if path.is_dir():
-        shutil.copytree(path, dest)
+
+    # Early duplicate refusal avoids copying on a known collision; the append
+    # helper repeats this UNDER its mutex at the actual write boundary.
+    rows = (
+        [
+            json.loads(line)
+            for line in MANIFEST.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+        if MANIFEST.exists()
+        else []
+    )
+    if any(row.get("id") == dest.name for row in rows):
+        raise SystemExit(
+            f"manifest id already exists: {dest.name}; refusing to create a "
+            "second staged object for the same authority id"
+        )
+
+    # The source identity pass may take long enough for a pathname to change.
+    # Re-prove the complete source immediately before ANY destination hierarchy
+    # is created. A deterministic or already-landed late reparse therefore
+    # refuses without leaving even an empty dated partial; a race landing after
+    # this boundary is still stopped by the live per-object copy pins, with any
+    # bytes already copied retained for audited resume rather than deleted.
+    if is_directory:
+        _refuse_tree_reparses("stage source before copy", path)
     else:
-        shutil.copy2(path, dest)
-    source_bytes = (
-        tree_bytes(path)
-        if path.is_dir()
-        else path.stat().st_size
-    )
-    source_sha256 = (
-        tree_sha256(path)
-        if path.is_dir()
-        else hashlib.sha256(path.read_bytes()).hexdigest()
-    )
-    staged_bytes = (
-        tree_bytes(dest)
-        if dest.is_dir()
-        else dest.stat().st_size
-    )
-    staged_sha256 = (
-        tree_sha256(dest)
-        if dest.is_dir()
-        else hashlib.sha256(dest.read_bytes()).hexdigest()
-    )
-    if (staged_bytes, staged_sha256) != (source_bytes, source_sha256):
+        _refuse_plain_file_reparse("stage source before copy", path)
+
+    # Bind the destination hierarchy to verified plain directories. A raced
+    # date component refuses in its pin; a source race refuses in the source
+    # root/descendant pins before copy can follow it.
+    with _pinned_plain_directory(QUARANTINE_ROOT) as pinned_root:
+        date_parent = pinned_root.path / date
+        try:
+            date_parent.mkdir()
+        except FileExistsError:
+            pass
+        with _pinned_plain_directory(date_parent):
+            if is_directory:
+                _stage_copy_tree(path, dest)
+            else:
+                with _pinned_plain_file(path) as pinned_source:
+                    copied_identity = pinned_source.copy_to_new(dest)
+                if copied_identity != source_identity:
+                    raise RuntimeError(
+                        "stage source changed while its pinned bytes were copied: "
+                        f"before={source_identity} copied={copied_identity}; "
+                        "source and staged bytes preserved"
+                    )
+
+    # Exact file-count/byte/tree-hash (directory) or byte/hash (file) gate.
+    if is_directory:
+        gated_source = _identity(path)
+        gated_dest = _identity(dest)
+    else:
+        gated_source = _plain_file_identity(path)
+        gated_dest = _plain_file_identity(dest)
+    if gated_source != source_identity or gated_dest != source_identity:
         raise SystemExit(
             "staged quarantine copy does not reproduce the source identity: "
-            f"source=({source_bytes}, {source_sha256}) "
-            f"staged=({staged_bytes}, {staged_sha256})"
+            f"initial={source_identity} source={gated_source} staged={gated_dest}; "
+            "both sides preserved, nothing removed"
         )
+
+    # Re-census at the manifest boundary even though identity itself is
+    # no-follow: this is the explicit all-object refusal receipt.
+    if is_directory:
+        _refuse_tree_reparses("stage source", path)
+        _refuse_tree_reparses("stage destination", dest)
+        row_bytes, row_sha = gated_dest[1], gated_dest[2]
+    else:
+        _refuse_plain_file_reparse("stage source", path)
+        _refuse_plain_file_reparse("stage destination", dest)
+        row_bytes, row_sha = gated_dest
+
     row = {
         "id": dest.name,
         "original": str(path),
         "staged": str(dest),
         "stagedAtUtc": utc_now(),
-        "bytes": staged_bytes,
-        "sha256": staged_sha256,
+        "bytes": row_bytes,
+        "sha256": row_sha,
         "reason": reason,
     }
-    with MANIFEST.open("a", encoding="utf-8") as stream:
-        stream.write(json.dumps(row) + "\n")
-        stream.flush()
-    shutil.rmtree(path) if path.is_dir() else path.unlink()
+    _append_manifest_row(row)
+
+    # The row is durable, but removal is still forbidden until BOTH copies
+    # freshly reproduce the gated identity after that append.
+    if is_directory:
+        recheck_source = _identity(path)
+        recheck_dest = _identity(dest)
+    else:
+        recheck_source = _plain_file_identity(path)
+        recheck_dest = _plain_file_identity(dest)
+    if recheck_source != gated_source or recheck_dest != gated_dest:
+        raise RuntimeError(
+            "post-append rehash mismatch: "
+            f"source={recheck_source} staged={recheck_dest} "
+            f"(gated={gated_source}); row and BOTH copies preserved"
+        )
+
+    # Final no-follow census immediately before removal. Removal may clear only
+    # DOS READONLY; sharing, ACL, replacement, or reparse failures propagate.
+    if is_directory:
+        _refuse_tree_reparses("stage source", path)
+        _refuse_tree_reparses("stage destination", dest)
+        _remove_tree_readonly_only(
+            path, staged=dest, expected_identity=gated_source
+        )
+    else:
+        _refuse_plain_file_reparse("stage source", path)
+        _refuse_plain_file_reparse("stage destination", dest)
+        _remove_file_readonly_only(
+            path, staged=dest, expected_identity=gated_source
+        )
+    if os.path.lexists(path) or not os.path.lexists(dest):
+        raise RuntimeError(
+            f"removal verification failed: source_exists={os.path.lexists(path)} "
+            f"dest_exists={os.path.lexists(dest)}; manifest row retained"
+        )
     return row
 
 
