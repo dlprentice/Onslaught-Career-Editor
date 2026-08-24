@@ -1,7 +1,7 @@
 # Contract coverage
 
 Status: generated contract-status dashboard; do not hand-edit
-Last updated: 2026-08-23
+Last updated: 2026-08-24
 Summary: mechanical status distribution over the campaign's pinned function
 denominator, generated from the evidence register, notes, manifests, and
 validated factory contracts.
@@ -26,8 +26,8 @@ classification flags are retained in `coverage.json`.
 | STALE | 1 | 0.0% |
 | DISPUTED | 44 | 0.5% |
 | BLOCKED | 58 | 0.7% |
-| VERIFIED | 591 | 7.1% |
-| REVIEW_READY | 7,532 | 90.4% |
+| VERIFIED | 593 | 7.1% |
+| REVIEW_READY | 7,530 | 90.4% |
 | PROVISIONAL | 17 | 0.2% |
 | SKELETON | 86 | 1.0% |
 
@@ -36,9 +36,9 @@ classification flags are retained in `coverage.json`.
 | Input | Count |
 | --- | ---: |
 | Evidence-register rows | 8,329 |
-| Function-note files | 802 |
-| Manifest files with named witnesses | 36 |
-| Manifest witness keys | 144 |
+| Function-note files | 804 |
+| Manifest files with named witnesses | 37 |
+| Manifest witness keys | 152 |
 | Factory contract files | 350 |
 | Factory contract rows joined | 350 |
 

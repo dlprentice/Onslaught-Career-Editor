@@ -1264,7 +1264,30 @@ class TtdCallContextRelationshipTests(unittest.TestCase):
             ],
         }
 
-    def run_relationship_guard(self, fixture: dict) -> subprocess.CompletedProcess:
+    @classmethod
+    def legacy_v2_fixture(cls) -> dict:
+        fixture = cls.fixture()
+        fixture["targets"][0].pop("observed_orphan_return_count")
+        for event in fixture["events"]:
+            event.pop("association_epoch")
+        fixture["invocations"][0].pop("association_epoch")
+        for field in (
+            "raw_return_count",
+            "orphan_return_count",
+            "continuity_break_callbacks",
+            "association_barrier_count",
+            "final_association_epoch",
+        ):
+            fixture["summary"].pop(field)
+        return fixture
+
+    def run_relationship_guard(
+        self,
+        fixture: dict,
+        *,
+        schema: str | None = None,
+        expected_stack_bytes: int = 4,
+    ) -> subprocess.CompletedProcess:
         """Execute the function body extracted from the shipped wrapper AST."""
 
         with tempfile.TemporaryDirectory() as temporary:
@@ -1272,6 +1295,11 @@ class TtdCallContextRelationshipTests(unittest.TestCase):
             fixture_path.write_text(json.dumps(fixture), encoding="utf-8")
             wrapper_literal = str(CALL_CONTEXT_WRAPPER).replace("'", "''")
             fixture_literal = str(fixture_path).replace("'", "''")
+            schema_argument = (
+                " -Schema '" + schema.replace("'", "''") + "'"
+                if schema is not None
+                else ""
+            )
             command = (
                 "$ErrorActionPreference = 'Stop'; $errors = @(); "
                 "$ast = [System.Management.Automation.Language.Parser]::ParseFile("
@@ -1299,7 +1327,9 @@ class TtdCallContextRelationshipTests(unittest.TestCase):
                 "-TargetSpecifications @($fixture.targetSpecifications) "
                 "-Events @($fixture.events) -Invocations @($fixture.invocations) "
                 "-GapSummary $fixture.gapSummary -Summary $fixture.summary "
-                "-ExpectedStackBytes 4; "
+                f"-ExpectedStackBytes {expected_stack_bytes}"
+                + schema_argument
+                + "; "
                 "$result | ConvertTo-Json -Compress } "
                 "catch { Write-Output $_.Exception.Message; exit 3 }; exit 0"
             )
@@ -1421,6 +1451,19 @@ class TtdCallContextRelationshipTests(unittest.TestCase):
                     0 if degraded else 1,
                     result["gapFreeEnvelopeCount"],
                 )
+
+    def test_wrapper_accepts_legacy_v2_relationship_envelope(self) -> None:
+        completed = self.run_relationship_guard(
+            self.legacy_v2_fixture(),
+            schema="bea.ttd.call-context.v2",
+        )
+        self.assertEqual(0, completed.returncode, completed.stdout + completed.stderr)
+        result = json.loads(completed.stdout.strip().splitlines()[-1])
+        self.assertEqual(1, result["validatedReturnCount"])
+        self.assertEqual(1, result["rawReturnCount"])
+        self.assertEqual(0, result["orphanReturnCount"])
+        self.assertIsNone(result["associationBarrierCount"])
+        self.assertIsNone(result["finalAssociationEpoch"])
 
     def test_wrapper_recomputes_replay_window_limits_and_termination(self) -> None:
         accepted = self.run_replay_boundary_guard(self.replay_boundary_fixture())

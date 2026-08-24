@@ -1,6 +1,6 @@
 {
  "schema": "bea.re.contract-coverage.v1",
- "generatedAtUtc": "2026-08-23T17:31:00Z",
+ "generatedAtUtc": "2026-08-24T04:11:09Z",
  "denominator": {
   "functions": 8329,
   "contracts": 14365,
@@ -11,9 +11,9 @@
  "inputs": {
   "register": "reverse-engineering/EVIDENCE-REGISTER.tsv",
   "registerRows": 8329,
-  "noteFiles": 802,
-  "manifestFilesWithNamedWitnesses": 36,
-  "manifestWitnessKeys": 144,
+  "noteFiles": 804,
+  "manifestFilesWithNamedWitnesses": 37,
+  "manifestWitnessKeys": 152,
   "contractFiles": 350,
   "contractRowsJoined": 350
  },
@@ -21,20 +21,20 @@
   "STALE": 1,
   "DISPUTED": 44,
   "BLOCKED": 58,
-  "VERIFIED": 591,
-  "REVIEW_READY": 7532,
+  "VERIFIED": 593,
+  "REVIEW_READY": 7530,
   "PROVISIONAL": 17,
   "SKELETON": 86
  },
  "evidenceClassCounts": {
   "byte-read": 974,
-  "ttd-capture": 5,
+  "ttd-capture": 7,
   "pinned-source-line": 7,
-  "controlled-runtime": 22,
-  "ghidra-readback": 2565,
+  "controlled-runtime": 24,
+  "ghidra-readback": 2568,
   "name-only": 86
  },
- "elapsedSeconds": 1.781,
+ "elapsedSeconds": 1.973,
  "functions": [
   {
    "va": "0x00401000",
@@ -15130,7 +15130,9 @@
    "va": "0x00445900",
    "name": "CDiveBomberAI__VFunc_9_00445900",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "ghidra-readback"
+   ],
    "witnessKinds": [],
    "notes": [],
    "flags": []
@@ -41196,12 +41198,17 @@
   {
    "va": "0x004ff4f0",
    "name": "CUnitAI__UpdateTargetSupportAndFireFlags_004ff4f0",
-   "status": "REVIEW_READY",
+   "status": "VERIFIED",
    "evidenceClasses": [
     "byte-read",
-    "ghidra-readback"
+    "controlled-runtime",
+    "ghidra-readback",
+    "ttd-capture"
    ],
-   "witnessKinds": [],
+   "witnessKinds": [
+    "MANIFEST_WITNESS",
+    "NOTE_MEASURED"
+   ],
    "notes": [],
    "flags": [
     "factory-contract-joined"
@@ -41213,12 +41220,17 @@
   {
    "va": "0x004ff710",
    "name": "CUnitAI__SelectOrRefreshCloseTarget_004ff710",
-   "status": "REVIEW_READY",
+   "status": "VERIFIED",
    "evidenceClasses": [
     "byte-read",
-    "ghidra-readback"
+    "controlled-runtime",
+    "ghidra-readback",
+    "ttd-capture"
    ],
-   "witnessKinds": [],
+   "witnessKinds": [
+    "MANIFEST_WITNESS",
+    "NOTE_MEASURED"
+   ],
    "notes": [],
    "flags": [
     "factory-contract-joined"
@@ -41265,7 +41277,9 @@
    "va": "0x004ffdd0",
    "name": "CWarspite__SetReaderAndRefreshSupportSelection",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "ghidra-readback"
+   ],
    "witnessKinds": [],
    "notes": [],
    "flags": []
@@ -41274,7 +41288,9 @@
    "va": "0x004ffe00",
    "name": "CWaypoint__RandomizeOffsetVectors",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "ghidra-readback"
+   ],
    "witnessKinds": [],
    "notes": [],
    "flags": []

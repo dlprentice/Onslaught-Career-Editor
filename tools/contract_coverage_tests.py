@@ -277,6 +277,39 @@ def test_verified_from_register_replication_suffix() -> None:
         shutil.rmtree(root, ignore_errors=True)
 
 
+def test_manifest_runtime_replication_surfaces_controlled_ttd_classes() -> None:
+    root = Path(tempfile.mkdtemp(prefix="ccov-manifest-runtime-"))
+    try:
+        make_corpus(
+            root,
+            [base_register_row("0x00401000", "CManifestRuntime__Replicated")],
+        )
+        w(
+            root,
+            "reverse-engineering/binary-analysis/functions/"
+            "CManifestRuntime__Replicated.md",
+            "# CManifestRuntime__Replicated\n\n"
+            "> Address: `0x00401000`\n"
+            "Evidence: MEASURED — exact wrapper receipt independently reproduced.\n",
+        )
+        w(
+            root,
+            "reverse-engineering/binary-analysis/runtime-promotion.tsv",
+            "entryVa\tliveName\texactness\truntimeEvidence\n"
+            "0x00401000\tCManifestRuntime__Replicated\tMEASURED\t"
+            "TTD_CALL_CONTEXT_REPLICATED\n",
+        )
+        code, out, payload = run_tool(root)
+        assert code == 0, out
+        row = status_of(payload, "CManifestRuntime__Replicated")
+        assert row["status"] == "VERIFIED", row
+        assert "controlled-runtime" in row["evidenceClasses"], row
+        assert "ttd-capture" in row["evidenceClasses"], row
+        assert row["witnessKinds"] == ["MANIFEST_WITNESS", "NOTE_MEASURED"], row
+    finally:
+        shutil.rmtree(root, ignore_errors=True)
+
+
 def test_review_ready_from_campaign_grade() -> None:
     root = Path(tempfile.mkdtemp(prefix="ccov-rev-"))
     try:

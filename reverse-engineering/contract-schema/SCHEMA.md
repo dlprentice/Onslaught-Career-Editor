@@ -105,7 +105,11 @@ Inputs, in read order:
    column (`exactness`, `confidence` with MEASURED values, `byteProof`,
    `independentReDerivation`). A manifest row witnessing register name/liveName
    contributes one `MANIFEST_WITNESS` kind and a `MEASURED` confidence
-   contributes toward PROVISIONAL.
+   contributes toward PROVISIONAL. A strong row may additionally carry explicit
+   `runtimeEvidence`; values beginning `TTD_` surface `ttd-capture`, and values
+   ending `REPLICATED` or `REFUTER_SURVIVED` surface `controlled-runtime`.
+   Those are evidence classes, not extra witness kinds: one manifest row is
+   still one witness.
 4. **Factory contracts** — every `*.md` under
    `reverse-engineering/contracts/**` is validated with the factory schema gate,
    including canonical filename/address identity, required structure, anonymous
