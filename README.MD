@@ -1,10 +1,11 @@
 # Onslaught Toolkit
 
 Status: active — the product and lane overview
-Last updated: 2026-08-06 (contributor RE tip pointer only). A player-facing
-quick start was added 2026-08-01 at the top, including the SmartScreen warning a
-stranger meets before anything else; most lane sections were not re-reviewed and
-keep their prior product boundaries.
+Last updated: 2026-08-24 (player-facing ZIP extract now names the one
+`Onslaught-Toolkit/` wrapper). A player-facing quick start was added 2026-08-01
+at the top, including the SmartScreen warning a stranger meets before anything
+else; most lane sections were not re-reviewed and keep their prior product
+boundaries.
 Summary: what this project is, how to play, which surfaces are active, and where
 each lane's authoritative document lives.
 
@@ -21,13 +22,13 @@ this section — no .NET, no Node, no Python, no build.
 
 1. Download the portable ZIP from
    [Releases](https://github.com/dlprentice/Onslaught-Career-Editor/releases).
-   **Create an empty folder and extract into that** — the ZIP has no top-level
-   folder of its own, so extracting into Downloads scatters its contents.
+   The ZIP contains one `Onslaught-Toolkit/` folder. Extract it, then open that
+   folder. "Extract Here" no longer scatters `app/` next to your other files.
 2. Right-click the ZIP → Properties → tick **Unblock** before you extract. That
    is the easiest way to avoid the next step.
-3. Run `Launch Onslaught Toolkit.cmd`. The build is unsigned, so if you skipped
-   the Unblock step Windows shows *"Windows protected your PC"* — choose
-   **More info → Run anyway**.
+3. Run `Launch Onslaught Toolkit.cmd` from the `Onslaught-Toolkit/` folder. The
+   build is unsigned, so if you skipped the Unblock step Windows shows
+   *"Windows protected your PC"* — choose **More info → Run anyway**.
 4. The app looks for your Steam install on its own. If it cannot find it, point
    it at your game folder once in Settings.
 5. Open **Windowed & Mods**, choose **Create safe copy**, then **Launch**.
@@ -220,5 +221,8 @@ candidate does not publish, sign, install, or announce it; see
 
 Repository licensing, third-party notices, source attribution, and the rebuild
 GPL boundary remain authoritative in [`LICENSE`](LICENSE),
+[`release/readiness/THIRD_PARTY_NOTICES.winui.md`](release/readiness/THIRD_PARTY_NOTICES.winui.md),
 [`rebuild/LICENSE`](rebuild/LICENSE), [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md),
 and [`reverse-engineering/project-meta/attribution.md`](reverse-engineering/project-meta/attribution.md).
+Maintainer release checks live in [`README.RELEASE.md`](README.RELEASE.md) and
+[`release/readiness/PUBLIC_SIGNOFF_COMMANDS.md`](release/readiness/PUBLIC_SIGNOFF_COMMANDS.md).
