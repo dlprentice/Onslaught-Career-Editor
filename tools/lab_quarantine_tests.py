@@ -1371,5 +1371,319 @@ class LateReparseDescentRefusalTests(unittest.TestCase):
         )
 
 
+class PostReproofOperationBoundTests(unittest.TestCase):
+    """Falsification gates for the independent RED on exact 590adf34.
+
+    Binding defects (review t_95b4b7a0, review_post_reproof_swap_probes.py,
+    0/5 contract_pass): a path-only reproof followed by a separate pathname
+    scan/open is still a TOCTOU. Swaps that land AFTER the final ordinary
+    path proof but BEFORE the pathname operation were followed:
+
+      1. a queued child directory swapped to a REAL directory symlink or
+         junction immediately after ``_reprove_plain_directory`` returned
+         was scandir'd through, and ``_identity`` opened and hashed
+         ``external-secret.bin`` behind it;
+      2. the same swap let ``_reparse_census`` call ``os.scandir`` ON the
+         replaced reparse pathname (its target answered ``[]``);
+      3. a plain file slot swapped to a real file symlink after the final
+         ``_lstat_is_reparse_point`` verdict had its external target opened
+         and hashed by ``Path.open`` before the post-open check noticed.
+
+    The correction demanded by the card is OPERATION-BOUND no-follow: a
+    verified non-reparse object pinned with replacement-denying sharing
+    (Windows: ``CreateFileW`` + ``FILE_FLAG_OPEN_REPARSE_POINT``, no
+    ``FILE_SHARE_WRITE``/``FILE_SHARE_DELETE``; POSIX: ``O_NOFOLLOW``
+    descriptors) whose enumeration and reads bind to the pinned object --
+    not another lstat one line closer to a path-based syscall. These tests
+    fire the exact seams and assert NO target scan/open/hash occurred, not
+    merely eventual refusal. Real directory symlinks AND junctions exercise
+    the true Windows reparse code paths; every host-supported kind runs.
+    """
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.root = Path(self._tmp.name)
+
+    # -- fixture helpers ----------------------------------------------------
+
+    def _symlink_capable(self) -> bool:
+        probe = self.root / "capability-probe"
+        probe.mkdir()
+        try:
+            os.symlink(probe, probe / "link", target_is_directory=True)
+        except OSError:
+            return False
+        finally:
+            self.remove_dir_link(probe / "link")
+        return True
+
+    def constructible_kinds(self) -> list[str]:
+        kinds = []
+        if self._symlink_capable():
+            kinds.append("directory-symlink")
+        if os.name == "nt":
+            kinds.append("junction")
+        return kinds
+
+    @staticmethod
+    def make_dir_link(link: Path, target: Path, kind: str) -> None:
+        if kind == "directory-symlink":
+            os.symlink(target, link, target_is_directory=True)
+        else:
+            assert kind == "junction"
+            subprocess.run(
+                ["cmd.exe", "/d", "/c", "mklink", "/J", str(link), str(target)],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+        assert os.path.lexists(link)
+
+    @staticmethod
+    def remove_dir_link(link: Path) -> None:
+        if os.path.lexists(link):
+            try:
+                os.unlink(link)
+            except OSError:
+                os.rmdir(link)
+
+    # -- (1) identity: swap after reproof, before scandir -------------------
+
+    def test_identity_child_swapped_after_reproof_never_scanned_or_read(self) -> None:
+        kinds = self.constructible_kinds()
+        if not kinds:
+            self.fail("no directory-reparse construction is supported on this host")
+        for kind in kinds:
+            with self.subTest(kind=kind):
+                tree = self.root / f"id-tree-{kind}"
+                child = tree / "child"
+                external = self.root / f"id-external-{kind}"
+                child.mkdir(parents=True)
+                external.mkdir()
+                secret = external / "external-secret.bin"
+                secret.write_bytes(b"must-never-be-opened-through-a-reparse")
+                real_reprove = quarantine._reprove_plain_directory
+                real_scandir = quarantine.os.scandir
+                real_open = Path.open
+                state = {"swapped": False, "scanned_reparse": False,
+                         "opened_target": False}
+
+                def prove_then_swap(path: Path) -> None:
+                    real_reprove(path)
+                    if Path(path) == child and not state["swapped"]:
+                        os.rmdir(child)
+                        self.make_dir_link(child, external, kind)
+                        state["swapped"] = True
+
+                def recording_scandir(path):
+                    if Path(path) == child and state["swapped"]:
+                        state["scanned_reparse"] = True
+                    return real_scandir(path)
+
+                def recording_open(self: Path, *args, **kwargs):
+                    if (Path(self) == child / "external-secret.bin"
+                            and state["swapped"]):
+                        state["opened_target"] = True
+                    return real_open(self, *args, **kwargs)
+
+                identity = None
+                try:
+                    with mock.patch.object(
+                        quarantine, "_reprove_plain_directory", prove_then_swap
+                    ), mock.patch.object(
+                        quarantine.os, "scandir", recording_scandir
+                    ), mock.patch.object(Path, "open", recording_open):
+                        with self.assertRaises(RuntimeError):
+                            identity = quarantine._identity(tree)
+                finally:
+                    self.remove_dir_link(child)
+
+                self.assertIsNone(identity, "identity succeeded past the swap")
+                self.assertTrue(state["swapped"], "swap fixture never fired")
+                self.assertFalse(
+                    state["scanned_reparse"],
+                    "os.scandir reached the replaced reparse pathname",
+                )
+                self.assertFalse(
+                    state["opened_target"],
+                    "a file behind the reparse was opened and hashed",
+                )
+                self.assertEqual(
+                    b"must-never-be-opened-through-a-reparse",
+                    secret.read_bytes(),
+                    "external target content was disturbed",
+                )
+
+    # -- (2) census: swap after reproof, before scandir ----------------------
+
+    def test_census_child_swapped_after_reproof_never_scandired(self) -> None:
+        kinds = self.constructible_kinds()
+        if not kinds:
+            self.fail("no directory-reparse construction is supported on this host")
+        for kind in kinds:
+            with self.subTest(kind=kind):
+                tree = self.root / f"census-tree-{kind}"
+                child = tree / "child"
+                external = self.root / f"census-external-{kind}"
+                child.mkdir(parents=True)
+                external.mkdir()
+                (external / "external-secret.bin").write_bytes(b"external")
+                real_reprove = quarantine._reprove_plain_directory
+                real_scandir = quarantine.os.scandir
+                state = {"swapped": False, "scanned_reparse": False}
+
+                def prove_then_swap(path: Path) -> None:
+                    real_reprove(path)
+                    if Path(path) == child and not state["swapped"]:
+                        os.rmdir(child)
+                        self.make_dir_link(child, external, kind)
+                        state["swapped"] = True
+
+                def recording_scandir(path):
+                    if Path(path) == child and state["swapped"]:
+                        state["scanned_reparse"] = True
+                    return real_scandir(path)
+
+                found = None
+                raised = None
+                try:
+                    with mock.patch.object(
+                        quarantine, "_reprove_plain_directory", prove_then_swap
+                    ), mock.patch.object(
+                        quarantine.os, "scandir", recording_scandir
+                    ):
+                        found = quarantine._reparse_census(tree)
+                except RuntimeError as error:
+                    raised = error
+                finally:
+                    self.remove_dir_link(child)
+
+                self.assertTrue(state["swapped"], "swap fixture never fired")
+                # Contract (unchanged from the prior gate): the replaced
+                # entry is refused OR reported -- either way its pathname
+                # must NEVER reach os.scandir.
+                self.assertTrue(
+                    raised is not None or (found is not None and "child" in found),
+                    f"census neither reported nor refused the replaced entry "
+                    f"(raised={raised!r}, found={found!r})",
+                )
+                self.assertFalse(
+                    state["scanned_reparse"],
+                    "os.scandir was called on the replaced reparse pathname",
+                )
+
+    # -- (3) identity: file swap after the FINAL proof, before open ----------
+
+    def test_identity_file_swapped_after_final_proof_never_opened(self) -> None:
+        if not self._symlink_capable():
+            self.fail("file-symlink construction is unsupported on this host")
+        tree = self.root / "file-tree"
+        tree.mkdir()
+        slot = tree / "evidence.bin"
+        slot.write_bytes(b"plain-payload")
+        loot = self.root / "external-loot.bin"
+        loot.write_bytes(b"external-loot")
+        real_lstat_guard = quarantine._lstat_is_reparse_point
+        real_open = Path.open
+        state = {"swapped": False, "opened_target": False}
+
+        def prove_then_swap(path: Path) -> bool:
+            verdict = real_lstat_guard(path)
+            if Path(path) == slot and not state["swapped"]:
+                os.unlink(slot)
+                os.symlink(loot, slot)
+                state["swapped"] = True
+            return verdict
+
+        def recording_open(self: Path, *args, **kwargs):
+            if Path(self) == slot and state["swapped"]:
+                state["opened_target"] = True
+            return real_open(self, *args, **kwargs)
+
+        identity = None
+        try:
+            with mock.patch.object(
+                quarantine, "_lstat_is_reparse_point", prove_then_swap
+            ), mock.patch.object(Path, "open", recording_open):
+                with self.assertRaises(RuntimeError):
+                    identity = quarantine._identity(tree)
+        finally:
+            self.remove_dir_link(slot)
+
+        self.assertIsNone(identity, "identity blessed bytes read through a target")
+        self.assertTrue(state["swapped"], "swap fixture never fired")
+        self.assertFalse(
+            state["opened_target"],
+            "Path.open reached the swapped-in symlink after the final proof",
+        )
+        self.assertEqual(
+            b"external-loot", loot.read_bytes(), "external target was disturbed"
+        )
+
+    # -- (4) the pin primitive itself refuses real reparses (no mocks) -------
+
+    @unittest.skipUnless(os.name == "nt", "Windows pin primitive")
+    def test_pinned_directory_primitive_refuses_real_reparses(self) -> None:
+        kinds = self.constructible_kinds()
+        if not kinds:
+            self.fail("no directory-reparse construction is supported on this host")
+        for kind in kinds:
+            with self.subTest(kind=kind):
+                link = self.root / f"pin-junction-{kind}"
+                target = self.root / f"pin-target-{kind}"
+                target.mkdir()
+                (target / "secret.txt").write_bytes(b"secret")
+                before = sorted(p.name for p in target.rglob("*"))
+                self.make_dir_link(link, target, kind)
+                real_scandir = os.scandir
+                state = {"scanned_link": False}
+
+                def recording_scandir(path):
+                    if Path(path) == link:
+                        state["scanned_link"] = True
+                    return real_scandir(path)
+
+                entered_body = False
+                try:
+                    with mock.patch.object(os, "scandir", recording_scandir):
+                        with self.assertRaises(RuntimeError):
+                            with quarantine._pinned_plain_directory(link):
+                                entered_body = True
+                    self.assertFalse(
+                        state["scanned_link"],
+                        "os.scandir ran on the reparse pathname",
+                    )
+                    self.assertEqual(
+                        before,
+                        sorted(p.name for p in target.rglob("*")),
+                        "target content changed through the pinned reparse",
+                    )
+                finally:
+                    self.remove_dir_link(link)
+                self.assertFalse(
+                    entered_body, "pin body ran despite a reparse pathname"
+                )
+
+    @unittest.skipUnless(os.name == "nt", "Windows pin primitive")
+    def test_pinned_file_primitive_refuses_real_file_symlink(self) -> None:
+        if not self._symlink_capable():
+            self.fail("file-symlink construction is unsupported on this host")
+        loot = self.root / "pin-loot.bin"
+        loot.write_bytes(b"LOOT-BYTES")
+        slot = self.root / "pin-slot.bin"
+        slot.write_bytes(b"plain")
+        slot.unlink()
+        os.symlink(loot, slot)
+        try:
+            with self.assertRaises(RuntimeError):
+                with quarantine._pinned_plain_file(slot) as pinned:
+                    raise AssertionError("pin entered a reparse pathname")
+            self.assertEqual(b"LOOT-BYTES", loot.read_bytes(),
+                             "target was read through the pinned reparse")
+        finally:
+            self.remove_dir_link(slot)
+
+
 if __name__ == "__main__":
     unittest.main()

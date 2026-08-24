@@ -24,6 +24,14 @@ row is confirmed; purged rows are rewritten to a purge log with the same
 identity so recovery by name remains possible for as long as the drive
 retains the blocks.
 
+Enumeration and hashing are OPERATION-BOUND no-follow (2026-08-24): a
+verified non-reparse directory/file object is pinned with
+replacement-denying sharing (Windows ``CreateFileW`` +
+``FILE_FLAG_OPEN_REPARSE_POINT``, read-only share mode; POSIX ``O_NOFOLLOW``
+fds), and only that pinned object is enumerated or read -- a pathname
+swapped to a junction/symlink after any earlier proof refuses inside the
+pin, so no external target is ever scandir'd, opened, or hashed.
+
 D: must be present and have free space; the rule refuses to run without it.
 Use this instead of Remove-Item for anything that is not regenerable build
 output inside an active tool's own scratch.
@@ -48,6 +56,345 @@ PURGE_LOG = QUARANTINE_ROOT / "purge.log"
 
 FILE_ATTRIBUTE_READONLY = 0x1
 FILE_ATTRIBUTE_REPARSE_POINT = 0x400
+FILE_ATTRIBUTE_DIRECTORY = 0x10
+
+# -- Operation-bound no-follow primitives ------------------------------------
+#
+# A path-only proof followed by a separate pathname syscall is still a
+# TOCTOU: the swap can land after the proof and before the syscall. These
+# primitives bind every enumeration/read to a VERIFIED,
+# REPLACEMENT-DENYING pin on the opened object itself:
+#
+#   * ``CreateFileW`` with ``FILE_FLAG_OPEN_REPARSE_POINT`` opens the FINAL
+#     component as ITSELF -- a reparse opens its link body, never its
+#     target, so the pin cannot silently point at external content;
+#   * sharing grants only ``FILE_SHARE_READ``, excluding WRITE and DELETE:
+#     while held, rename/replace/delete of the pinned name and content
+#     rewrites fail (WinError 32), so the verified name->object binding
+#     cannot change hands under the pin;
+#   * the opened object is then verified through the HANDLE (never through
+#     the path): disk device type, no reparse attribute, and the required
+#     directory/file type. Any swapped-in reparse therefore refuses before
+#     one byte of its target is touched;
+#   * POSIX binds the same way with ``O_NOFOLLOW`` descriptors plus
+#     fstat-vs-lstat identity (documented residual: POSIX permits renaming
+#     an open directory, so there the pin narrows but does not eliminate
+#     replacement; the authoritative host for quarantine holdings is
+#     Windows, where the share mode denies replacement outright).
+#
+# Enumeration and hashing then happen while the pin (and every ancestor
+# pin down the walked chain) is held: ``scandir`` on the pinned pathname
+# can only ever answer for the verified object, and file bytes are read
+# straight through the verified handle.
+
+_GENERIC_READ = 0x80000000
+_FILE_LIST_DIRECTORY = 0x00000001
+_FILE_READ_ATTRIBUTES = 0x00000080
+_SYNCHRONIZE = 0x00100000
+_FILE_SHARE_READ = 0x1
+_FILE_SHARE_WRITE = 0x2
+_FILE_SHARE_DELETE = 0x4
+_OPEN_EXISTING = 3
+_FILE_FLAG_BACKUP_SEMANTICS = 0x02000000
+_FILE_FLAG_OPEN_REPARSE_POINT = 0x00200000
+_FILE_TYPE_DISK = 0x1
+
+
+class _PinnedPlainDirectory:
+    """Replacement-denying pin proving one pathname is STILL a plain
+    directory, held for the duration of the enumeration bound to it."""
+
+    def __init__(self, path: Path) -> None:
+        self._path = path
+        self._handle: int | None = None
+        # Seam proof first: the named fresh-verdict guards stay the visible
+        # refusal layer for deterministic replacements (and fail fast
+        # before any handle exists).
+        _reprove_plain_directory(path)
+        if os.name == "nt":
+            handle, attributes, file_type = _windows_pin_open(
+                path, directory=True
+            )
+            try:
+                if file_type != _FILE_TYPE_DISK:
+                    raise RuntimeError(
+                        f"fail-closed: pinned directory {path} is not on a "
+                        "disk filesystem (file type "
+                        f"{file_type:#x}); refusing to enumerate it"
+                    )
+                if attributes & FILE_ATTRIBUTE_REPARSE_POINT:
+                    raise RuntimeError(
+                        f"fail-closed: pinned directory pathname {path} "
+                        "resolved to a reparse point when opened as itself "
+                        "(junction/symlink/device); quarantine refuses to "
+                        "enumerate through its target"
+                    )
+                if not attributes & FILE_ATTRIBUTE_DIRECTORY:
+                    raise RuntimeError(
+                        f"fail-closed: pinned pathname {path} opened as a "
+                        "non-directory object; quarantine traversal refuses"
+                    )
+            except BaseException:
+                _close_windows_handle(handle)
+                raise
+            self._handle = handle
+        else:
+            import stat as stat_module
+
+            posix_flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0)
+            if hasattr(os, "O_DIRECTORY"):
+                posix_flags |= os.O_DIRECTORY
+            try:
+                self._posix_fd = os.open(path, posix_flags)
+            except OSError as error:
+                raise RuntimeError(
+                    f"fail-closed: directory pathname {path} could not be "
+                    f"pinned no-follow ({error}); quarantine traversal "
+                    "refuses to enumerate it"
+                ) from None
+            try:
+                pinned_stat = os.fstat(self._posix_fd)
+                name_stat = path.lstat()  # fresh final-component identity
+                if not stat_module.S_ISDIR(pinned_stat.st_mode) \
+                        or stat_module.S_ISLNK(name_stat.st_mode) \
+                        or (pinned_stat.st_dev, pinned_stat.st_ino) != (
+                            name_stat.st_dev, name_stat.st_ino):
+                    raise RuntimeError(
+                        f"fail-closed: pinned directory {path} does not "
+                        "match its fresh no-follow identity; quarantine "
+                        "refuses a replaced or linked directory"
+                    )
+            except BaseException:
+                os.close(self._posix_fd)
+                self._posix_fd = None
+                raise
+
+    def __enter__(self) -> "_PinnedPlainDirectory":
+        return self
+
+    def __exit__(self, exc_type, exc, tb) -> None:  # noqa: ANN001
+        self.close()
+
+    def close(self) -> None:
+        if os.name == "nt":
+            if self._handle is not None:
+                _close_windows_handle(self._handle)
+                self._handle = None
+        elif getattr(self, "_posix_fd", None) is not None:
+            os.close(self._posix_fd)
+            self._posix_fd = None
+
+
+class _PinnedPlainFile:
+    """Replacement-denying pin whose reads stream THROUGH the verified
+    handle -- hashed bytes can only come from the proven plain object."""
+
+    def __init__(self, path: Path) -> None:
+        self._path = path
+        self._handle: int | None = None
+        self._posix_fd: int | None = None
+        # Seam proof first (same rationale as the directory pin).
+        if _is_reparse_point(path) or _lstat_is_reparse_point(path):
+            raise RuntimeError(
+                f"fail-closed: file pathname {path} became a reparse point "
+                "after it was classified; quarantine refuses to open, "
+                "stat, or hash through its target"
+            )
+        if os.name == "nt":
+            handle, attributes, file_type = _windows_pin_open(
+                path, directory=False
+            )
+            try:
+                if file_type != _FILE_TYPE_DISK:
+                    raise RuntimeError(
+                        f"fail-closed: pinned file {path} is not on a disk "
+                        f"filesystem (file type {file_type:#x}); refusing "
+                        "to read it"
+                    )
+                if attributes & FILE_ATTRIBUTE_REPARSE_POINT:
+                    raise RuntimeError(
+                        f"fail-closed: pinned file pathname {path} "
+                        "resolved to a reparse point when opened as itself "
+                        "(symlink/junction); quarantine refuses to read "
+                        "any byte through its target"
+                    )
+                if attributes & FILE_ATTRIBUTE_DIRECTORY:
+                    raise RuntimeError(
+                        f"fail-closed: pinned pathname {path} opened as a "
+                        "directory object; quarantine refuses to hash it "
+                        "as a file"
+                    )
+            except BaseException:
+                _close_windows_handle(handle)
+                raise
+            self._handle = handle
+        else:
+            import stat as stat_module
+
+            posix_flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0)
+            if hasattr(os, "O_BINARY"):
+                posix_flags |= os.O_BINARY
+            try:
+                self._posix_fd = os.open(path, posix_flags)
+            except OSError as error:
+                raise RuntimeError(
+                    f"fail-closed: file pathname {path} could not be "
+                    f"pinned no-follow ({error}); quarantine refuses to "
+                    "read it"
+                ) from None
+            try:
+                pinned_stat = os.fstat(self._posix_fd)
+                name_stat = path.lstat()
+                if not stat_module.S_ISREG(pinned_stat.st_mode) \
+                        or stat_module.S_ISLNK(name_stat.st_mode) \
+                        or (pinned_stat.st_dev, pinned_stat.st_ino) != (
+                            name_stat.st_dev, name_stat.st_ino):
+                    raise RuntimeError(
+                        f"fail-closed: pinned file {path} does not match "
+                        "its fresh no-follow identity; quarantine refuses "
+                        "a replaced or linked file"
+                    )
+            except BaseException:
+                os.close(self._posix_fd)
+                self._posix_fd = None
+                raise
+
+    def __enter__(self) -> "_PinnedPlainFile":
+        return self
+
+    def __exit__(self, exc_type, exc, tb) -> None:  # noqa: ANN001
+        self.close()
+
+    def read_all_hashed(self) -> tuple[int, str]:
+        """Stream every byte THROUGH the pinned object into sha256; return
+        ``(byte_count, hex_digest)`` measured over exactly those bytes."""
+        if os.name == "nt":
+            import msvcrt
+
+            assert self._handle is not None
+            try:
+                fd = msvcrt.open_osfhandle(
+                    self._handle, os.O_RDONLY | os.O_BINARY
+                )
+            except OSError as error:
+                raise RuntimeError(
+                    f"fail-closed: pinned file {self._path} handle could "
+                    f"not be adopted for streaming ({error})"
+                ) from None
+            self._handle = None  # the fd now owns the Windows handle
+            try:
+                return _stream_fd_hashed(fd)
+            finally:
+                os.close(fd)  # closes the underlying handle too
+        assert self._posix_fd is not None
+        try:
+            return _stream_fd_hashed(self._posix_fd)
+        finally:
+            os.close(self._posix_fd)
+            self._posix_fd = None
+
+    def close(self) -> None:
+        if os.name == "nt":
+            if self._handle is not None:
+                _close_windows_handle(self._handle)
+                self._handle = None
+        elif self._posix_fd is not None:
+            os.close(self._posix_fd)
+            self._posix_fd = None
+
+
+def _stream_fd_hashed(fd: int) -> tuple[int, str]:
+    data_sha = hashlib.sha256()
+    total = 0
+    while True:
+        chunk = os.read(fd, 1024 * 1024)
+        if not chunk:
+            break
+        data_sha.update(chunk)
+        total += len(chunk)
+    return total, data_sha.hexdigest()
+
+
+def _windows_pin_open(
+    path: Path, *, directory: bool
+) -> tuple[int, int, int]:
+    """Open ``path``'s FINAL component as itself with replacement-denying
+    sharing. Returns ``(handle, file_attributes, file_type)``. Raises
+    ``RuntimeError`` on any refusal (the handle, when opened, is closed)."""
+
+    import ctypes
+    from ctypes import wintypes
+
+    kernel32 = ctypes.windll.kernel32
+    access = (
+        (_FILE_LIST_DIRECTORY if directory else _GENERIC_READ)
+        | _FILE_READ_ATTRIBUTES
+        | _SYNCHRONIZE
+    )
+    # Replacement-denying share mode: read-sharing only. Excluding WRITE
+    # blocks content rewrites; excluding DELETE blocks rename/replace/
+    # unlink of the pinned name while the pin is held.
+    share_mode = _FILE_SHARE_READ
+    flags = _FILE_FLAG_BACKUP_SEMANTICS | _FILE_FLAG_OPEN_REPARSE_POINT
+    kernel32.CreateFileW.restype = wintypes.HANDLE
+    kernel32.CreateFileW.argtypes = [
+        wintypes.LPCWSTR, wintypes.DWORD, wintypes.DWORD, wintypes.LPVOID,
+        wintypes.DWORD, wintypes.DWORD, wintypes.HANDLE,
+    ]
+    handle = kernel32.CreateFileW(
+        str(path), access, share_mode, None, _OPEN_EXISTING, flags, None
+    )
+    if not handle or handle == wintypes.HANDLE(-1).value:
+        error_code = kernel32.GetLastError()
+        raise RuntimeError(
+            f"fail-closed: quarantine pin could not open {path} as itself "
+            f"(CreateFileW error {error_code}); a vanished, shared, or "
+            "inaccessible pathname refuses rather than races"
+        )
+
+    class _BY_HANDLE_FILE_INFORMATION(ctypes.Structure):
+        _fields_ = [
+            ("dwFileAttributes", wintypes.DWORD),
+            ("ftCreationTime", wintypes.FILETIME),
+            ("ftLastAccessTime", wintypes.FILETIME),
+            ("ftLastWriteTime", wintypes.FILETIME),
+            ("dwVolumeSerialNumber", wintypes.DWORD),
+            ("nFileSizeHigh", wintypes.DWORD),
+            ("nFileSizeLow", wintypes.DWORD),
+            ("nNumberOfLinks", wintypes.DWORD),
+            ("nFileIndexHigh", wintypes.DWORD),
+            ("nFileIndexLow", wintypes.DWORD),
+        ]
+
+    info = _BY_HANDLE_FILE_INFORMATION()
+    if not kernel32.GetFileInformationByHandle(
+        wintypes.HANDLE(handle), ctypes.byref(info)
+    ):
+        error_code = kernel32.GetLastError()
+        kernel32.CloseHandle(wintypes.HANDLE(handle))
+        raise RuntimeError(
+            f"fail-closed: quarantine pin could not verify {path} through "
+            f"its own handle (GetFileInformationByHandle error "
+            f"{error_code}); refusing without trusting the pathname"
+        )
+    kernel32.GetFileType.restype = wintypes.DWORD
+    kernel32.GetFileType.argtypes = [wintypes.HANDLE]
+    file_type = kernel32.GetFileType(wintypes.HANDLE(handle))
+    return handle, info.dwFileAttributes, file_type
+
+
+def _close_windows_handle(handle: int) -> None:
+    import ctypes
+
+    ctypes.windll.kernel32.CloseHandle(ctypes.c_void_p(handle))
+
+
+def _pinned_plain_directory(path: Path) -> _PinnedPlainDirectory:
+    return _PinnedPlainDirectory(path)
+
+
+def _pinned_plain_file(path: Path) -> _PinnedPlainFile:
+    return _PinnedPlainFile(path)
 
 
 def utc_now() -> str:
@@ -188,16 +535,27 @@ def _reprove_plain_directory(path: Path) -> None:
 
 
 def _scan_plain_children(directory: Path) -> list[tuple[Path, str]]:
-    """One no-follow scandir of ``directory``, classified and fail-closed.
+    """One no-follow scan of ``directory``, classified and fail-closed.
+
+    MUST be called while the caller holds a verified
+    ``_pinned_plain_directory`` on ``directory``: the pathname handed to
+    ``os.scandir`` here is the pinned object's own name, frozen against
+    rename/replace/delete by the pin's replacement-denying share mode, so a
+    swap landing after the caller's reproof cannot reach this syscall as a
+    different object -- and if the name somehow no longer answers for the
+    pin, the pin-vs-scan identity check below refuses.
 
     Raises RuntimeError when the scan fails (vanished directory, sharing
-    violation, permission denial) or when any entry cannot be classified
-    without following it: a tree that cannot be proven plain is unsafe.
+    violation, permission denial), when any entry cannot be classified
+    without following it, or when the scanned object is not the one the
+    caller pinned.
     """
 
     children: list[tuple[Path, str]] = []
     try:
         with os.scandir(directory) as scan:
+            # The caller's verified pin owns this name->object binding;
+            # every entry below answers for the pinned object only.
             for entry in scan:
                 child_path = Path(entry.path)
                 # An entry counts as plain ONLY when both its own no-follow
@@ -226,33 +584,38 @@ def _scan_plain_children(directory: Path) -> list[tuple[Path, str]]:
 def _iter_plain_files(root: Path):
     """Yield every plain regular file under ``root``, never crossing a reparse.
 
-    Explicit no-follow walk: each entry is classified from its own link
-    stat BEFORE any descent, so external content behind a junction or
-    symlink is neither opened nor hashed. Scan failures refuse immediately.
-    A queued pathname is freshly reproved as still-plain when it is popped
-    for descent -- classification truth from when it was queued is stale by
-    then, so a child replaced by a reparse after its parent's scan refuses
-    before any target scandir.
+    OPERATION-BOUND no-follow walk: each directory is opened through
+    ``_pinned_plain_directory`` -- a verified non-reparse disk-directory
+    handle with replacement-denying sharing -- and only that verified
+    object's pathname reaches ``os.scandir``, so a queued child replaced by
+    a reparse after its parent's scan (or after its own descent-time
+    reproof) refuses inside the pin before any target scandir. Entries are
+    classified from their own link stat BEFORE any descent; external
+    content behind a junction or symlink is neither enumerated nor hashed.
+    Scan failures refuse immediately.
     """
 
-    _reprove_plain_directory(root)
     pending = [root]
     while pending:
         current = pending.pop()
-        _reprove_plain_directory(current)
-        for child_path, kind in _scan_plain_children(current):
-            if kind == "dir":
-                pending.append(child_path)
-            else:
-                yield child_path
+        with _pinned_plain_directory(current):
+            for child_path, kind in _scan_plain_children(current):
+                if kind == "dir":
+                    pending.append(child_path)
+                else:
+                    yield child_path
 
 
 def _reparse_census(root: Path) -> list[str]:
     """No-follow inventory of every reparse point at/under ``root``.
 
     Returns relative POSIX paths ("." denotes the root itself). Enumeration
-    never descends into a reparse entry, so scanning cannot traverse a
-    junction/symlink target. A directory that cannot be scanned fails closed.
+    is OPERATION-BOUND: every directory scan runs while a verified
+    replacement-denying pin on that exact directory is held, so a pathname
+    swapped to a reparse after any earlier verdict refuses inside the pin
+    -- ``os.scandir`` can never reach a replaced reparse pathname or its
+    target. A reparse root reports itself as "."; a directory that cannot
+    be scanned fails closed.
     """
 
     if _is_reparse_point(root):
@@ -261,29 +624,29 @@ def _reparse_census(root: Path) -> list[str]:
     pending = [root]
     while pending:
         current = pending.pop()
-        # Fresh descent-time reproof: a queued pathname may have been
-        # replaced by a reparse (or vanished) after its parent's
-        # classification. Refuse BEFORE any scandir can touch its target;
-        # the census reports the hit rather than enumerating through it.
+        # The pin fresh-proves the pathname (reproof first, then a
+        # non-reparse disk-directory handle with replacement-denying
+        # sharing). A queued child replaced after its parent's
+        # classification refuses HERE -- before its name can reach scandir.
         try:
-            _reprove_plain_directory(current)
-        except RuntimeError:
+            with _pinned_plain_directory(current):
+                try:
+                    scan = os.scandir(current)
+                    try:
+                        entries = list(scan)
+                    finally:
+                        close = getattr(scan, "close", None)
+                        if callable(close):
+                            close()
+                except OSError as error:
+                    raise RuntimeError(
+                        f"reparse census could not scan directory {current}: {error}"
+                    ) from None
+        except RuntimeError as error:
             if current == root:
                 raise
             found.append(current.relative_to(root).as_posix())
             continue
-        try:
-            scan = os.scandir(current)
-            try:
-                entries = list(scan)
-            finally:
-                close = getattr(scan, "close", None)
-                if callable(close):
-                    close()
-        except OSError as error:
-            raise RuntimeError(
-                f"reparse census could not scan directory {current}: {error}"
-            ) from None
         for entry in entries:
             entry_path = Path(entry.path)
             # Reported as a reparse hit: either the entry IS one, or it
@@ -442,18 +805,17 @@ def _resume_copy_tree(source: Path, dest: Path) -> dict:
 def _identity(root: Path) -> tuple[int, int, str]:
     """(files, bytes, tree_sha256) using stage()'s exact identity semantics.
 
-    Walks with explicit no-follow scandir semantics: each entry is
-    classified from its own link stat BEFORE any descent or open, so a
-    reparse is never followed and external content behind one is never
-    blessed as staged evidence. The root itself, any nested entry that
-    cannot be proven a plain directory or file, and any scan failure all
-    refuse before any hashing; tree identity over a reparse-containing
-    tree is undefined for quarantine purposes. Every queued directory
-    pathname is freshly reproved as still-plain when popped for descent,
-    and every yielded file slot again immediately before its open and its
-    size stat -- classification truth is stale by operation time, so a
-    replacement that lands after a parent scan refuses before any target
-    scandir/open/stat/hash.
+    OPERATION-BOUND no-follow walk: directories are enumerated only through
+    verified replacement-denying pins (see ``_iter_plain_files``), and every
+    file's bytes are hashed straight THROUGH its own verified
+    ``_pinned_plain_file`` handle -- an open primitive that opens the final
+    component as itself and refuses any reparse before one byte is read.
+    The root itself, any nested entry that cannot be proven a plain
+    directory or file, and any scan failure all refuse before any hashing;
+    a swap landing after classification, after the descent-time proof, or
+    after the final path verdict refuses inside the pin -- external target
+    bytes are never opened, read, or blessed. Digest order matches
+    stage()'s pathlib-sorted semantics exactly.
     """
 
     if _is_reparse_point(root):
@@ -464,33 +826,21 @@ def _identity(root: Path) -> tuple[int, int, str]:
     total_bytes = 0
     digest = hashlib.sha256()
     for path in sorted(_iter_plain_files(root)):
-        # Operation-boundary reproof of the yielded file slot: its plain
-        # verdict is as stale as any queued directory's -- a swap that
-        # lands after classification must never be opened, statted, or
-        # hashed. Fresh final-component truth LAST at each boundary.
-        if _is_reparse_point(path) or _lstat_is_reparse_point(path):
-            raise RuntimeError(
-                f"fail-closed: yielded path {path} became a reparse point "
-                "after it was classified; quarantine refuses to open, stat, "
-                "or hash through its target"
-            )
+        # Operation-bound open: the pin re-proves the slot fresh and then
+        # opens it AS ITSELF with replacement-denying sharing; a swapped-in
+        # symlink/junction refuses here without Path.open ever running on
+        # the pathname. Bytes stream through that verified object only --
+        # size and digest are measured over the pinned bytes themselves,
+        # so no post-open path check can ever be needed or fooled.
         rel = path.relative_to(root).as_posix()
-        data_sha = hashlib.sha256()
-        with path.open("rb") as stream:
-            for chunk in iter(lambda: stream.read(1024 * 1024), b""):
-                data_sha.update(chunk)
+        with _pinned_plain_file(path) as pinned:
+            file_bytes, data_hex = pinned.read_all_hashed()
         digest.update(rel.encode("utf-8"))
         digest.update(b"\0")
-        digest.update(data_sha.hexdigest().encode("utf-8"))
+        digest.update(data_hex.encode("utf-8"))
         digest.update(b"\0")
         count += 1
-        if _is_reparse_point(path) or _lstat_is_reparse_point(path):
-            raise RuntimeError(
-                f"fail-closed: yielded path {path} became a reparse point "
-                "after it was opened; quarantine refuses to bless bytes read "
-                "through a replacement"
-            )
-        total_bytes += path.stat().st_size
+        total_bytes += file_bytes
     return count, total_bytes, digest.hexdigest()
 
 
