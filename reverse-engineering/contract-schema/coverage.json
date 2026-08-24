@@ -1,6 +1,6 @@
 {
  "schema": "bea.re.contract-coverage.v1",
- "generatedAtUtc": "2026-08-24T04:11:09Z",
+ "generatedAtUtc": "2026-08-24T16:41:13Z",
  "denominator": {
   "functions": 8329,
   "contracts": 14365,
@@ -11,11 +11,11 @@
  "inputs": {
   "register": "reverse-engineering/EVIDENCE-REGISTER.tsv",
   "registerRows": 8329,
-  "noteFiles": 804,
+  "noteFiles": 805,
   "manifestFilesWithNamedWitnesses": 37,
   "manifestWitnessKeys": 152,
-  "contractFiles": 350,
-  "contractRowsJoined": 350
+  "contractFiles": 353,
+  "contractRowsJoined": 353
  },
  "statusCounts": {
   "STALE": 1,
@@ -27,14 +27,14 @@
   "SKELETON": 86
  },
  "evidenceClassCounts": {
-  "byte-read": 974,
+  "byte-read": 977,
   "ttd-capture": 7,
   "pinned-source-line": 7,
   "controlled-runtime": 24,
-  "ghidra-readback": 2568,
+  "ghidra-readback": 2573,
   "name-only": 86
  },
- "elapsedSeconds": 1.973,
+ "elapsedSeconds": 24.771,
  "functions": [
   {
    "va": "0x00401000",
@@ -52,11 +52,17 @@
    "name": "CMonitor__AddDeletionEvent",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/engine-world/CMonitor__AddDeletionEvent__00401040.md"
+   ]
   },
   {
    "va": "0x004010c0",
@@ -95,16 +101,26 @@
    "va": "0x004011e0",
    "name": "CActor__Init",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read",
+    "ghidra-readback"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/engine-world/CActor__Init__004011e0.md"
+   ]
   },
   {
    "va": "0x004013d0",
    "name": "CActor__dtor_base",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "ghidra-readback"
+   ],
    "witnessKinds": [],
    "notes": [],
    "flags": []
@@ -354,7 +370,9 @@
    "va": "0x00401910",
    "name": "CActor__CopyTransformAndNotify_00401910",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "ghidra-readback"
+   ],
    "witnessKinds": [],
    "notes": [],
    "flags": []
@@ -34340,7 +34358,8 @@
    "name": "CRound__Init",
    "status": "REVIEW_READY",
    "evidenceClasses": [
-    "byte-read"
+    "byte-read",
+    "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
@@ -38874,10 +38893,18 @@
    "va": "0x004f34a0",
    "name": "CThing__Init",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "byte-read",
+    "ghidra-readback"
+   ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/engine-world/CThing__Init__004f34a0.md"
+   ]
   },
   {
    "va": "0x004f35d0",
