@@ -34,6 +34,106 @@ public sealed class ReplayTests
     }
 
     [Fact]
+    public void ReplayComparison_SameTapeReportsNoDivergence()
+    {
+        var tape = new CommandTape(
+            CommandTape.CurrentSchemaVersion,
+            "same-tape",
+            1,
+            3,
+            null,
+            null,
+            [new CommandSpan(1, 1, 1, 0)]);
+
+        ReplayComparison comparison = ReplayRunner.Compare(
+            tape,
+            tape,
+            ActorDefinitions);
+
+        Assert.Equal(
+            "onslaught-rebuild-replay-diff.v1",
+            comparison.Diff.SchemaVersion);
+        Assert.Equal(comparison.Before.TraceHash, comparison.After.TraceHash);
+        Assert.Equal(
+            comparison.Before.FinalStateHash,
+            comparison.After.FinalStateHash);
+        Assert.False(comparison.Diff.TraceHashMismatch);
+        Assert.False(comparison.Diff.BehavioralEventMismatch);
+        Assert.False(comparison.Diff.FinalStateMismatch);
+        Assert.Null(comparison.Diff.FirstDivergence);
+    }
+
+    [Fact]
+    public void ReplayComparison_OneTickInputMutationReportsTheExactFirstDivergence()
+    {
+        var before = new CommandTape(
+            CommandTape.CurrentSchemaVersion,
+            "before",
+            1,
+            2,
+            null,
+            null,
+            []);
+        var after = new CommandTape(
+            CommandTape.CurrentSchemaVersion,
+            "after",
+            1,
+            2,
+            null,
+            null,
+            [new CommandSpan(1, 1, 1, 0)]);
+
+        ReplayComparison comparison = ReplayRunner.Compare(
+            before,
+            after,
+            ActorDefinitions);
+
+        Assert.True(comparison.Diff.TraceHashMismatch);
+        Assert.True(comparison.Diff.BehavioralEventMismatch);
+        Assert.False(comparison.Diff.FinalStateMismatch);
+        Assert.NotNull(comparison.Diff.FirstDivergence);
+        ReplayDivergence divergence = comparison.Diff.FirstDivergence!;
+        Assert.Equal(1, divergence.Tick);
+        Assert.Equal("input.moveX", divergence.Category);
+        Assert.Equal("0", divergence.BeforeValue);
+        Assert.Equal("1", divergence.AfterValue);
+    }
+
+    [Fact]
+    public void ReplayComparison_DistinguishesFinalStateMismatch()
+    {
+        var before = new CommandTape(
+            CommandTape.CurrentSchemaVersion,
+            "seed-one",
+            1,
+            1,
+            null,
+            null,
+            []);
+        var after = new CommandTape(
+            CommandTape.CurrentSchemaVersion,
+            "seed-two",
+            2,
+            1,
+            null,
+            null,
+            []);
+
+        ReplayComparison comparison = ReplayRunner.Compare(
+            before,
+            after,
+            ActorDefinitions);
+
+        Assert.True(comparison.Diff.TraceHashMismatch);
+        Assert.True(comparison.Diff.BehavioralEventMismatch);
+        Assert.True(comparison.Diff.FinalStateMismatch);
+        Assert.NotNull(comparison.Diff.FirstDivergence);
+        Assert.Equal("replay.seed", comparison.Diff.FirstDivergence!.Category);
+        Assert.Equal("1", comparison.Diff.FirstDivergence.BeforeValue);
+        Assert.Equal("2", comparison.Diff.FirstDivergence.AfterValue);
+    }
+
+    [Fact]
     public void CommandTape_RoundTripsWithoutChangingReplayState()
     {
         CommandTape tape = LoadFirstFlightTape();

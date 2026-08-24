@@ -363,6 +363,51 @@ public static class CommandTapeCodec
 }
 
 /// <summary>
+/// Expands one validated tape in strict tick order without rescanning its span
+/// list. Replay and behavioral comparison share this cursor so both consume the
+/// exact same input law.
+/// </summary>
+internal sealed class CommandTapeReader
+{
+    private readonly CommandTape _tape;
+    private int _spanIndex;
+    private int _nextTick;
+
+    public CommandTapeReader(CommandTape tape)
+    {
+        _tape = tape ?? throw new ArgumentNullException(nameof(tape));
+    }
+
+    public SimInput ReadNext(int tick)
+    {
+        if (tick != _nextTick || tick < 0 || tick >= _tape.DurationTicks)
+        {
+            throw new InvalidOperationException(
+                $"Command tape reader expected tick {_nextTick}, not {tick}.");
+        }
+
+        while (_spanIndex < _tape.Spans.Count &&
+               _tape.Spans[_spanIndex].EndTickExclusive <= tick)
+        {
+            _spanIndex++;
+        }
+
+        SimInput input = SimInput.Idle;
+        if (_spanIndex < _tape.Spans.Count)
+        {
+            CommandSpan span = _tape.Spans[_spanIndex];
+            if (tick >= span.StartTick && tick < span.EndTickExclusive)
+            {
+                input = span.ToInput();
+            }
+        }
+
+        _nextTick++;
+        return input;
+    }
+}
+
+/// <summary>
 /// Records the exact per-tick inputs a client consumed into a
 /// <see cref="CommandTape"/>. This is the capture half of the replay-tape
 /// seam: a client feeds one <see cref="SimInput"/> per simulation step, in
