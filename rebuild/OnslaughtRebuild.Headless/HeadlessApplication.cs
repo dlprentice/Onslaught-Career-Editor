@@ -17,6 +17,7 @@ public static class HeadlessApplication
 
     private sealed record Options(
         string TapePath,
+        string? CompareTapePath,
         string? ExpectedTraceHash,
         int RepeatCount);
 
@@ -41,19 +42,65 @@ public static class HeadlessApplication
 
             Options options = ParseOptions(args);
             CommandTape tape = CommandTapeCodec.Deserialize(ReadTape(options.TapePath));
-            ValidateWorkBudget(tape, options.RepeatCount);
+            CommandTape? compareTape = options.CompareTapePath is null
+                ? null
+                : CommandTapeCodec.Deserialize(ReadTape(options.CompareTapePath));
+            ValidateWorkBudget(tape, options.RepeatCount, compareTape);
             VerificationExpectation expectation = ResolveExpectation(options, tape);
             Level100ActorDefinitionSet actorDefinitions = LoadActorDefinitions();
 
-            ReplayResult first = ReplayRunner.Run(tape, actorDefinitions);
-            for (int run = 1; run < options.RepeatCount; run++)
+            ReplayComparison? tapeComparison = null;
+            var determinism = new ReplayDiff(
+                TraceHashMismatch: false,
+                BehavioralEventMismatch: false,
+                FinalStateMismatch: false,
+                FirstDivergence: null);
+            ReplayResult first;
+            int nextRepeat;
+            if (compareTape is not null)
+            {
+                tapeComparison = ReplayRunner.Compare(
+                    tape,
+                    compareTape,
+                    actorDefinitions);
+                first = tapeComparison.Before;
+                nextRepeat = 1;
+            }
+            else if (options.RepeatCount >= 2)
+            {
+                ReplayComparison repeatedPair = ReplayRunner.Compare(
+                    tape,
+                    tape,
+                    actorDefinitions);
+                first = repeatedPair.Before;
+                determinism = repeatedPair.Diff;
+                nextRepeat = 2;
+            }
+            else
+            {
+                first = ReplayRunner.Run(tape, actorDefinitions);
+                nextRepeat = 1;
+            }
+
+            for (int run = nextRepeat; run < options.RepeatCount; run++)
             {
                 ReplayResult repeated = ReplayRunner.Run(tape, actorDefinitions);
-                if (!string.Equals(first.TraceHash, repeated.TraceHash, StringComparison.Ordinal) ||
-                    !string.Equals(first.FinalStateHash, repeated.FinalStateHash, StringComparison.Ordinal))
+                bool traceMismatch = !string.Equals(
+                    first.TraceHash,
+                    repeated.TraceHash,
+                    StringComparison.Ordinal);
+                bool finalStateMismatch = !string.Equals(
+                    first.FinalStateHash,
+                    repeated.FinalStateHash,
+                    StringComparison.Ordinal);
+                if (traceMismatch || finalStateMismatch)
                 {
-                    error.WriteLine("Determinism failure: repeated replay produced different hashes.");
-                    return 3;
+                    determinism = new ReplayDiff(
+                        traceMismatch,
+                        BehavioralEventMismatch: false,
+                        finalStateMismatch,
+                        FirstDivergence: null);
+                    break;
                 }
             }
 
@@ -70,7 +117,7 @@ public static class HeadlessApplication
                 : null;
             var summary = new
             {
-                schemaVersion = "onslaught-rebuild-headless-result.v1",
+                schemaVersion = "onslaught-rebuild-headless-result.v2",
                 tape = tape.Name,
                 ticks = first.FinalState.Tick,
                 repeats = options.RepeatCount,
@@ -89,8 +136,22 @@ public static class HeadlessApplication
                 hull = first.FinalState.Hull,
                 targetsDestroyed = first.FinalState.TargetsDestroyed,
                 activeProjectiles = first.FinalState.Projectiles.Count,
+                determinism,
+                comparisonTape = compareTape?.Name,
+                comparisonTraceHash = tapeComparison?.After.TraceHash,
+                comparisonFinalStateHash = tapeComparison?.After.FinalStateHash,
+                comparison = tapeComparison?.Diff,
             };
             output.WriteLine(JsonSerializer.Serialize(summary, new JsonSerializerOptions { WriteIndented = true }));
+
+            if (determinism.TraceHashMismatch ||
+                determinism.BehavioralEventMismatch ||
+                determinism.FinalStateMismatch)
+            {
+                error.WriteLine(
+                    "Determinism failure: repeated replay diverged; inspect the determinism receipt.");
+                return 3;
+            }
 
             if (traceHashVerified == false)
             {
@@ -102,6 +163,16 @@ public static class HeadlessApplication
             {
                 error.WriteLine("Final state hash did not match the expected value.");
                 return 2;
+            }
+
+            if (tapeComparison is not null &&
+                (tapeComparison.Diff.TraceHashMismatch ||
+                    tapeComparison.Diff.BehavioralEventMismatch ||
+                    tapeComparison.Diff.FinalStateMismatch))
+            {
+                error.WriteLine(
+                    "Replay comparison diverged; inspect the comparison receipt.");
+                return 4;
             }
 
             return 0;
@@ -117,6 +188,7 @@ public static class HeadlessApplication
     private static Options ParseOptions(string[] args)
     {
         string tapePath = ResolveDefaultTapePath();
+        string? compareTapePath = null;
         string? expectedTraceHash = null;
         int repeatCount = 2;
 
@@ -126,6 +198,9 @@ public static class HeadlessApplication
             {
                 case "--tape":
                     tapePath = RequireValue(args, ref index, "--tape");
+                    break;
+                case "--compare-tape":
+                    compareTapePath = RequireValue(args, ref index, "--compare-tape");
                     break;
                 case "--expect":
                     expectedTraceHash = RequireValue(args, ref index, "--expect");
@@ -143,7 +218,7 @@ public static class HeadlessApplication
             }
         }
 
-        return new Options(tapePath, expectedTraceHash, repeatCount);
+        return new Options(tapePath, compareTapePath, expectedTraceHash, repeatCount);
     }
 
     private static VerificationExpectation ResolveExpectation(Options options, CommandTape tape)
@@ -164,9 +239,14 @@ public static class HeadlessApplication
         return new VerificationExpectation(null, null, "none");
     }
 
-    private static void ValidateWorkBudget(CommandTape tape, int repeatCount)
+    private static void ValidateWorkBudget(
+        CommandTape tape,
+        int repeatCount,
+        CommandTape? compareTape)
     {
-        long requestedSteps = checked((long)tape.DurationTicks * repeatCount);
+        long requestedSteps = checked(
+            ((long)tape.DurationTicks * repeatCount) +
+            (compareTape?.DurationTicks ?? 0));
         if (requestedSteps > MaximumReplaySteps)
         {
             throw new ArgumentException(
@@ -237,6 +317,7 @@ public static class HeadlessApplication
     {
         output.WriteLine("OnslaughtRebuild.Headless");
         output.WriteLine("  --tape <path>   Command tape (default: packaged first-flight scenario)");
+        output.WriteLine("  --compare-tape <path>  Optional second tape for first-divergence receipt");
         output.WriteLine("  --expect <hex>  Optional expected SHA-256 replay trace hash");
         output.WriteLine("  --repeat <n>    Replay count (default: 2; 100,000 total-step limit)");
     }

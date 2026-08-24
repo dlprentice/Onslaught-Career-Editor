@@ -15,21 +15,40 @@ public sealed class HeadlessApplicationTests
     {
         using var output = new StringWriter();
         using var error = new StringWriter();
+        using var repeatedOutput = new StringWriter();
+        using var repeatedError = new StringWriter();
 
         int exitCode = HeadlessApplication.Run(
             ["--repeat", "2"],
             output,
             error);
+        int repeatedExitCode = HeadlessApplication.Run(
+            ["--repeat", "2"],
+            repeatedOutput,
+            repeatedError);
 
         using JsonDocument result = JsonDocument.Parse(output.ToString());
         Assert.Equal(0, exitCode);
+        Assert.Equal(0, repeatedExitCode);
+        Assert.Equal(output.ToString(), repeatedOutput.ToString());
         Assert.False(result.RootElement.GetProperty("traceHashChecked").GetBoolean());
         Assert.Equal(JsonValueKind.Null, result.RootElement.GetProperty("traceHashVerified").ValueKind);
         Assert.False(result.RootElement.GetProperty("finalStateHashChecked").GetBoolean());
         Assert.Equal(JsonValueKind.Null, result.RootElement.GetProperty("finalStateHashVerified").ValueKind);
         Assert.Equal(JsonValueKind.Null, result.RootElement.GetProperty("expectedTraceHash").ValueKind);
         Assert.Equal("none", result.RootElement.GetProperty("verificationSource").GetString());
+        JsonElement determinism = result.RootElement.GetProperty("determinism");
+        Assert.Equal(
+            "onslaught-rebuild-replay-diff.v1",
+            determinism.GetProperty("schemaVersion").GetString());
+        Assert.False(determinism.GetProperty("traceHashMismatch").GetBoolean());
+        Assert.False(determinism.GetProperty("behavioralEventMismatch").GetBoolean());
+        Assert.False(determinism.GetProperty("finalStateMismatch").GetBoolean());
+        Assert.Equal(
+            JsonValueKind.Null,
+            determinism.GetProperty("firstDivergence").ValueKind);
         Assert.Equal(string.Empty, error.ToString());
+        Assert.Equal(string.Empty, repeatedError.ToString());
     }
 
     [Fact]
@@ -130,6 +149,69 @@ public sealed class HeadlessApplicationTests
         Assert.False(result.RootElement.GetProperty("traceHashVerified").GetBoolean());
         Assert.False(result.RootElement.GetProperty("finalStateHashChecked").GetBoolean());
         Assert.Contains("did not match", error.ToString(), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void CompareTape_ReportsOneExactFirstDivergenceReceipt()
+    {
+        var before = new CommandTape(
+            CommandTape.CurrentSchemaVersion,
+            "before",
+            1,
+            2,
+            null,
+            null,
+            []);
+        var after = new CommandTape(
+            CommandTape.CurrentSchemaVersion,
+            "after",
+            1,
+            2,
+            null,
+            null,
+            [new CommandSpan(1, 1, 1, 0)]);
+        string beforePath = WriteTemporaryTape(CommandTapeCodec.Serialize(before));
+        string afterPath = WriteTemporaryTape(CommandTapeCodec.Serialize(after));
+
+        try
+        {
+            using var output = new StringWriter();
+            using var error = new StringWriter();
+
+            int exitCode = HeadlessApplication.Run(
+                [
+                    "--tape", beforePath,
+                    "--compare-tape", afterPath,
+                    "--repeat", "1",
+                ],
+                output,
+                error);
+
+            using JsonDocument result = JsonDocument.Parse(output.ToString());
+            Assert.Equal(4, exitCode);
+            Assert.Equal(
+                "onslaught-rebuild-headless-result.v2",
+                result.RootElement.GetProperty("schemaVersion").GetString());
+            Assert.Equal("after", result.RootElement.GetProperty("comparisonTape").GetString());
+            JsonElement comparison = result.RootElement.GetProperty("comparison");
+            Assert.Equal(
+                "onslaught-rebuild-replay-diff.v1",
+                comparison.GetProperty("schemaVersion").GetString());
+            Assert.True(comparison.GetProperty("traceHashMismatch").GetBoolean());
+            Assert.True(comparison.GetProperty("behavioralEventMismatch").GetBoolean());
+            Assert.False(comparison.GetProperty("finalStateMismatch").GetBoolean());
+            JsonElement divergence = comparison.GetProperty("firstDivergence");
+            Assert.Equal(1, divergence.GetProperty("tick").GetInt32());
+            Assert.Equal("input.moveX", divergence.GetProperty("category").GetString());
+            Assert.Equal("0", divergence.GetProperty("beforeValue").GetString());
+            Assert.Equal("1", divergence.GetProperty("afterValue").GetString());
+            Assert.Contains("diverged", error.ToString(), StringComparison.Ordinal);
+        }
+        finally
+        {
+            File.Delete(beforePath);
+            File.Delete(afterPath);
+        }
     }
 
     [Fact]
@@ -244,6 +326,99 @@ public sealed class HeadlessApplicationTests
         finally
         {
             File.Delete(tapePath);
+        }
+    }
+
+    [Fact]
+    public void MalformedCompareTape_IsRejectedBeforeSimulation()
+    {
+        var primary = new CommandTape(
+            CommandTape.CurrentSchemaVersion,
+            "primary",
+            1,
+            1,
+            null,
+            null,
+            []);
+        string primaryPath = WriteTemporaryTape(CommandTapeCodec.Serialize(primary));
+        string malformedPath = WriteTemporaryTape("""
+            {
+              "schemaVersion": "onslaught-rebuild-command-tape.v5",
+              "name": "malformed-compare",
+              "seed": 1,
+              "durationTicks": 1
+            }
+            """);
+
+        try
+        {
+            using var output = new StringWriter();
+            using var error = new StringWriter();
+
+            int exitCode = HeadlessApplication.Run(
+                [
+                    "--tape", primaryPath,
+                    "--compare-tape", malformedPath,
+                    "--repeat", "1",
+                ],
+                output,
+                error);
+
+            Assert.Equal(1, exitCode);
+            Assert.Equal(string.Empty, output.ToString());
+            Assert.Contains("spans are required", error.ToString(), StringComparison.Ordinal);
+        }
+        finally
+        {
+            File.Delete(primaryPath);
+            File.Delete(malformedPath);
+        }
+    }
+
+    [Fact]
+    public void CombinedComparisonWorkOverLimit_IsRejectedBeforeSimulation()
+    {
+        var primary = new CommandTape(
+            CommandTape.CurrentSchemaVersion,
+            "primary-budget",
+            1,
+            50_000,
+            null,
+            null,
+            []);
+        var comparison = new CommandTape(
+            CommandTape.CurrentSchemaVersion,
+            "comparison-budget",
+            1,
+            50_001,
+            null,
+            null,
+            []);
+        string primaryPath = WriteTemporaryTape(CommandTapeCodec.Serialize(primary));
+        string comparisonPath = WriteTemporaryTape(CommandTapeCodec.Serialize(comparison));
+
+        try
+        {
+            using var output = new StringWriter();
+            using var error = new StringWriter();
+
+            int exitCode = HeadlessApplication.Run(
+                [
+                    "--tape", primaryPath,
+                    "--compare-tape", comparisonPath,
+                    "--repeat", "1",
+                ],
+                output,
+                error);
+
+            Assert.Equal(1, exitCode);
+            Assert.Equal(string.Empty, output.ToString());
+            Assert.Contains("100,000", error.ToString(), StringComparison.Ordinal);
+        }
+        finally
+        {
+            File.Delete(primaryPath);
+            File.Delete(comparisonPath);
         }
     }
 
