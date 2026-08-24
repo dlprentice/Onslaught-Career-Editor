@@ -190,8 +190,11 @@ Also:
   H promotion path is unproved. `H:\graveyard` access denial is SanDisk Drive
   Lock device behavior, not an ACL defect — never rewrite ACLs or ownership as
   a workaround. H: remains optional cold retirement only, behind a separate,
-  separately reviewed unlock → exact-copy/tree-hash verify → manifest append →
-  post-append readback gate that retains D until every gate succeeds;
+  separately reviewed unlock whose promotion gate runs in exactly this order —
+  unlock confirmed → copy the retained authoritative D stage to H → verify
+  exact-copy/tree-hash identity → append the H manifest → read the appended row
+  back → only then allow D retirement; D stays retained and authoritative until
+  every gate succeeds;
   `lab_quarantine.py purge` stays an explicit, separately logged space-pressure
   operation. Extract what a retired artifact teaches into the durable owners
   before moving it.
