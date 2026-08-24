@@ -1,10 +1,10 @@
 # Rebuild Provenance
 
 Status: active implementation boundary
-Last updated: 2026-08-23. Current Thing/Actor base-state, career read/load,
+Last updated: 2026-08-24. Added the bounded world-110 native-88 session
+instrument. Current Thing/Actor base-state, career read/load,
 startup/frontend, partial-source inventory, frontend-asset, mouse-sensitivity,
-and retained-particle claims were re-reviewed. Other sections retain their
-narrower dated evidence boundaries.
+and retained-particle claims retain their narrower dated evidence boundaries.
 Summary: the licence boundary, permitted evidence, and authority order for the
 `rebuild/` reconstruction lane, plus what the current slice actually covers.
 
@@ -165,6 +165,27 @@ Core/Client can carry any loaded career's `SuggestedWorldNumber`, and
 does not project that general state: it does not read `SelectedWorldNumber` for
 rendering or implement LevelSelect keyboard traversal, its pointer path exposes
 only world 100 and unlocked world 110, and the host constructs only world 100.
+
+Core now has a separate, explicit world-110 session instrument. It accepts only
+a definition set stamped world 110, loads the exact 5,110-byte world-110
+`LevelScript` (SHA-256 `f5c157ba…22aa`), executes its one native-88
+`SecondaryObjectiveFailed` call, and reaches the script's first `Pause` before
+one ordinary deterministic idle step. Stuart's `game.h:22-24,179-187` owns the
+ten-entry, zero-based secondary array and `(num, string_id)` signature; the
+pristine `0x00534470` body writes the text dword and `MOS_FAILED=2` to the
+distinct secondary base at `0x008A9B2C`. Re-decoding the pinned object in this
+pass fixed the call at instruction 22 with slot `1` and text id `114309509`;
+instruction 34 is the first `Pause`. The intervening non-waiting
+`_110_PROTECT` request uses exact retail `110_protect.ogg` (SHA-256
+`03f1fc8e…35d3`, 172,496 samples at 44.1 kHz), which yields 90 ticks under the
+already-retained message-duration law. This is a bounded Core execution probe,
+not authored world-110 actor/static-world ownership: it deliberately stamps the
+proven Level 100 test fixture, still runs the existing Level 100 mechanics, and
+does not give the Godot host a world-110 lifecycle. StateHasher schema 43 binds
+the non-root world stamp and all ten secondary records; an all-default world-100
+mission stays on schema 42 and retains the independently measured 40-step hash
+`b8a1c8bc…11216`. No native human-play, full mission, result, client, or visual
+parity is claimed.
 
 The Level-100 configuration page now owns the one row named by the released
 `WorldHeaders.dat`: page-list index 0 selects `Aquila Prototype`, catalog record

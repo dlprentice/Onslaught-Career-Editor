@@ -17,6 +17,105 @@ public sealed class SimulationTests
             new Simulation(0, Level100TestActorDefinitions.Create()));
     }
 
+    /// <summary>
+    /// The bounded world-110 session uses a world-stamped projection of the
+    /// proven Level 100 fixture only as an execution instrument. Its exact
+    /// LevelScript crosses native 88 during construction, then two identical
+    /// simulations advance one ordinary idle step with the same secondary
+    /// state and canonical hash. This is deterministic Core admission, not a
+    /// claim that the Level 100 actor/static-world fixture is authored world
+    /// 110 content.
+    /// </summary>
+    [Fact]
+    public void World110Session_CrossesNative88AndStepsDeterministically()
+    {
+        Level100ActorDefinitionSet definitions =
+            RetailWorld110AdmissionTests.CreateWorld110Definitions();
+        var first = new Simulation(
+            1,
+            definitions,
+            worldNumber: Level100MissionProgram.WorldNumber110);
+        var repeat = new Simulation(
+            1,
+            definitions,
+            worldNumber: Level100MissionProgram.WorldNumber110);
+
+        Assert.Equal(Level100MissionProgram.WorldNumber110, first.WorldNumber);
+        Assert.Equal(
+            RetailSecondaryObjectiveStatus.Failed,
+            first.Snapshot.Level100Mission.SecondaryObjectives[1].Status);
+
+        WorldSnapshot firstStep = first.Step(SimInput.Idle);
+        WorldSnapshot repeatStep = repeat.Step(SimInput.Idle);
+
+        Assert.Equal(1, firstStep.Tick);
+        Assert.Equal(Level100MissionProgram.WorldNumber110, firstStep.Level100Mission.WorldNumber);
+        Assert.Equal(
+            new RetailSecondaryObjectiveSnapshot(
+                1,
+                114309509,
+                RetailSecondaryObjectiveStatus.Failed),
+            firstStep.Level100Mission.SecondaryObjectives[1]);
+        Assert.Equal(StateHasher.ComputeHex(firstStep), StateHasher.ComputeHex(repeatStep));
+    }
+
+    /// <summary>
+    /// The root-world canonical byte stream must stay on schema 42 so the
+    /// independently measured 40-step control hash remains byte-identical.
+    /// A non-root mission selects schema 43 and binds the world stamp plus all
+    /// ten secondary slots; changing the native-88 text dword must therefore
+    /// change the world hash even when every older field is equal.
+    /// </summary>
+    [Fact]
+    public void CanonicalHash_PreservesWorld100SchemaAndBindsWorld110SecondaryState()
+    {
+        var root = new Simulation(
+            1,
+            Level100TestActorDefinitions.Create(),
+            CompletedTutorialSlots);
+        WorldSnapshot rootState = root.Snapshot;
+        for (int tick = 0; tick < 40; tick++)
+        {
+            rootState = root.Step(new SimInput(0, 1));
+        }
+
+        Assert.Equal(
+            "b8a1c8bc9150dfd02d83c7866f619b9601fcbd34615b1b59d014d49193a11216",
+            StateHasher.ComputeHex(rootState));
+        Assert.Equal(42, CanonicalSchemaVersion(rootState));
+
+        var world110 = new Simulation(
+            1,
+            RetailWorld110AdmissionTests.CreateWorld110Definitions(),
+            worldNumber: Level100MissionProgram.WorldNumber110);
+        WorldSnapshot state = world110.Step(SimInput.Idle);
+        Level100MissionSnapshot mission = state.Level100Mission;
+        RetailSecondaryObjectiveSnapshot[] changedObjectives =
+            mission.SecondaryObjectives
+                .Select((item, index) => index == 1
+                    ? item with { TextId = item.TextId + 1 }
+                    : item)
+                .ToArray();
+        WorldSnapshot changed = state with
+        {
+            Level100Mission = mission with
+            {
+                SecondaryObjectives = changedObjectives,
+            },
+        };
+
+        Assert.Equal(43, CanonicalSchemaVersion(state));
+        Assert.NotEqual(StateHasher.ComputeHex(state), StateHasher.ComputeHex(changed));
+    }
+
+    private static int CanonicalSchemaVersion(WorldSnapshot state)
+    {
+        byte[] canonical = StateHasher.GetCanonicalBytes(state);
+        const int magicLength = 23; // "ONSLAUGHT-REBUILD-STATE"
+        return System.Buffers.Binary.BinaryPrimitives.ReadInt32LittleEndian(
+            canonical.AsSpan(magicLength, sizeof(int)));
+    }
+
     [Fact]
     public void RetailZoom_EasesLookAndProjectionScaleAndMorphForcesZoomOut()
     {

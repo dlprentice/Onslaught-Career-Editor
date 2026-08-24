@@ -347,9 +347,17 @@ public static class Level100MissionTiming
     /// (<see cref="MessageAdvanceDelayTicks"/> 0.2 s plus the 0.3 s completion
     /// hold), and that residual is still unidentified.
     /// </para>
+    /// <para>
+    /// World 110's first non-waiting message is the one bounded extension:
+    /// exact retail <c>110_protect.ogg</c> (SHA-256
+    /// <c>03f1fc8e…35d3</c>) has 172,496 samples at 44.1 kHz. The same retained
+    /// 20 Hz equation gives 90 ticks. This admits only message id 8444036;
+    /// no other world-110 message duration is inferred.
+    /// </para>
     /// </remarks>
     internal static int MessagePlaybackTicks(int messageId) => messageId switch
     {
+        8444036 => 90,       // _110_PROTECT
         292562 => 113,       // HUD_01
         293386 => 140,       // HUD_02
         294210 => 176,       // HUD_03

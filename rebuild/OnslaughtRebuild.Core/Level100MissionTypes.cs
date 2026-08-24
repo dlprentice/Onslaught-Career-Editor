@@ -93,6 +93,66 @@ public enum Level100PrimaryObjectiveStatus
     Complete = 2,
 }
 
+/// <summary>
+/// Released <c>CMissionObjective</c> status values for the secondary-objective
+/// array. These values deliberately do not reuse
+/// <see cref="Level100PrimaryObjectiveStatus"/>, whose reconstruction-facing
+/// enum orders Failed and Complete differently.
+/// </summary>
+public enum RetailSecondaryObjectiveStatus
+{
+    NotDefined = 0,
+    Complete = 1,
+    Failed = 2,
+}
+
+/// <summary>
+/// One exact slot of <c>CGame::mSecondaryObjectives</c>. <paramref name="Index"/>
+/// is the zero-based array index consumed by Stuart's source and the retail
+/// <c>base + index*8</c> native body; <paramref name="TextId"/> is the second
+/// dword of that eight-byte record.
+/// </summary>
+public readonly record struct RetailSecondaryObjectiveSnapshot(
+    int Index,
+    int TextId,
+    RetailSecondaryObjectiveStatus Status);
+
+/// <summary>
+/// Deterministic owner for the released ten-entry secondary-objective array.
+/// The current mission VM wires only the measured native-88 failure store;
+/// complete-state dispatch remains a separate future admission.
+/// </summary>
+internal sealed class RetailSecondaryObjectiveState
+{
+    internal const int Count = 10;
+
+    private readonly RetailSecondaryObjectiveSnapshot[] _objectives =
+        Enumerable.Range(0, Count)
+            .Select(index => new RetailSecondaryObjectiveSnapshot(
+                index,
+                0,
+                RetailSecondaryObjectiveStatus.NotDefined))
+            .ToArray();
+
+    internal IReadOnlyList<RetailSecondaryObjectiveSnapshot> Snapshot =>
+        Array.AsReadOnly(_objectives.ToArray());
+
+    internal void SetFailed(int index, int textId)
+    {
+        if ((uint)index >= Count)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(index),
+                $"Secondary-objective index {index} is outside the released ten-slot array.");
+        }
+
+        _objectives[index] = new RetailSecondaryObjectiveSnapshot(
+            index,
+            textId,
+            RetailSecondaryObjectiveStatus.Failed);
+    }
+}
+
 public enum Level100ActorCommand
 {
     Activate = 1,
@@ -160,6 +220,7 @@ public readonly record struct Level100PrimaryObjectiveSnapshot(
 public sealed record Level100MissionSnapshot(
     int Tick,
     string ProgramSha256,
+    int WorldNumber,
     bool InitializerRan,
     bool IsRunning,
     long NextSequence,
@@ -188,6 +249,7 @@ public sealed record Level100MissionSnapshot(
     int ScoreDelta,
     Level100TutorialProgress TutorialProgress,
     IReadOnlyList<Level100PrimaryObjectiveSnapshot> PrimaryObjectives,
+    IReadOnlyList<RetailSecondaryObjectiveSnapshot> SecondaryObjectives,
     IReadOnlyList<Level100MissionEvent> PendingEvents,
     int MessageClearTick,
     IReadOnlyList<Level100MessageRequested> PendingMessages,

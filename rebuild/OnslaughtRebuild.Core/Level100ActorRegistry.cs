@@ -1008,6 +1008,13 @@ public sealed class Level100ActorRegistry
                 actor.BaseState.Snapshot))
             .ToArray()));
 
+    /// <summary>
+    /// The immutable definition set this registry was built from. Its
+    /// <see cref="Level100ActorDefinitionSet.WorldNumber"/> is the admission
+    /// stamp a mission compares with its requested career world.
+    /// </summary>
+    public Level100ActorDefinitionSet Definitions => _definitions;
+
     public Level100ActorId? GetThingRef(string name)
     {
         ArgumentException.ThrowIfNullOrEmpty(name);
