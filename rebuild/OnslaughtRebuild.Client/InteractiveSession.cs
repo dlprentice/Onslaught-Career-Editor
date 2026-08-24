@@ -890,7 +890,10 @@ public static class TapeFile
         // storage BEFORE any parent directory is created or the destination is
         // opened. A fresh absolute .json that lexical checks alone would admit
         // must still be refused when it lies inside a retail install or career
-        // save layout, or behind an existing reparse-point ancestor.
+        // save layout, or behind an existing reparse-point ancestor. The
+        // boundary itself refuses device-namespace spellings that alias no
+        // ordinary path, so the later create-new open can never use an
+        // identity this boundary did not evaluate.
         string fullPath = Path.GetFullPath(path);
         EnsureSafeDestination(fullPath, knownProtectedRoots);
 
@@ -933,14 +936,40 @@ public static class TapeFile
         string fullPath,
         IReadOnlyList<string> knownProtectedRoots)
     {
-        // OS-appropriate comparison: Windows paths are case-insensitive and
-        // separator-agnostic; elsewhere ordinal exact form rules.
+        // One comparison identity per OS: on Windows every DOS device and
+        // extended-namespace spelling (\\?\C:\..., \\.\C:\..., \\?\UNC\...)
+        // is folded to its plain Win32 form before ANY same/under decision,
+        // so a destination can never carry an identity the boundary did not
+        // evaluate. Elsewhere ordinal exact form rules.
         bool osSensitive = OperatingSystem.IsWindows();
         StringComparer comparer = osSensitive
             ? StringComparer.OrdinalIgnoreCase
             : StringComparer.Ordinal;
+        StringComparison comparison = osSensitive
+            ? StringComparison.OrdinalIgnoreCase
+            : StringComparison.Ordinal;
 
-        string? currentDirectory = Path.GetDirectoryName(fullPath);
+        bool identitySupported = true;
+        string identityPath = osSensitive ? NormalizeWindowsNamespace(fullPath, out identitySupported) : fullPath;
+        if (osSensitive && !identitySupported)
+        {
+            // The destination names a device namespace rather than an
+            // ordinary path; there is no evaluated identity to compare.
+            throw new ArgumentException(
+                $"Command tape persistence refuses destinations in the Windows device namespace ('{fullPath}'); " +
+                "command tapes are written only to ordinary file-system paths.");
+        }
+        if (osSensitive)
+        {
+            // The extended prefix suppresses GetFullPath normalization, so the
+            // folded identity of a destination like \\?\C:\sibling\..\known\x
+            // still carries dot segments the later create-new open WOULD
+            // resolve. Re-canonicalize the folded identity so the boundary
+            // always evaluates exactly what the open would use.
+            identityPath = Path.GetFullPath(identityPath);
+        }
+
+        string? currentDirectory = Path.GetDirectoryName(identityPath);
         while (!string.IsNullOrEmpty(currentDirectory))
         {
             if (osSensitive)
@@ -954,8 +983,9 @@ public static class TapeFile
                 }
             }
 
-            // Caller-known roots: refuse when the destination is inside one,
-            // exactly as canonicalized.
+            // Caller-known roots: refuse when the destination is inside one.
+            // Each root passes through the SAME normalization as the
+            // destination, so alias spellings compare equal on one identity.
             foreach (string knownRoot in knownProtectedRoots)
             {
                 if (string.IsNullOrWhiteSpace(knownRoot))
@@ -963,13 +993,34 @@ public static class TapeFile
                     continue;
                 }
 
-                string canonicalKnownRoot = Path.GetFullPath(knownRoot)
+                bool rootSupported = true;
+                string canonicalKnownRoot = Path.GetFullPath(osSensitive
+                    ? NormalizeWindowsNamespace(knownRoot, out rootSupported)
+                    : knownRoot)
                     .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                if (osSensitive && !rootSupported)
+                {
+                    // A supplied root in the device namespace is not an
+                    // ordinary path identity; it cannot be compared, and a
+                    // destination that might resolve into it must be refused.
+                    throw new ArgumentException(
+                        "Command tape persistence refuses destinations when a supplied game or save root " +
+                        $"'{knownRoot}' is a Windows device-namespace path; " +
+                        "retail installs and career saves are never valid recording targets.");
+                }
+                if (canonicalKnownRoot.Length == 0)
+                {
+                    // An empty canonical form would turn into a
+                    // match-everything prefix; skip instead of misfiring.
+                    continue;
+                }
+
                 bool sameAsRoot = comparer.Equals(currentDirectory, canonicalKnownRoot) ||
-                    comparer.Equals(fullPath, canonicalKnownRoot);
+                    comparer.Equals(identityPath, canonicalKnownRoot);
                 bool underRoot = currentDirectory.StartsWith(
-                    canonicalKnownRoot + Path.DirectorySeparatorChar,
-                    osSensitive ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+                    canonicalKnownRoot + Path.DirectorySeparatorChar, comparison) ||
+                    identityPath.StartsWith(
+                        canonicalKnownRoot + Path.DirectorySeparatorChar, comparison);
                 if (sameAsRoot || underRoot)
                 {
                     throw new ArgumentException(
@@ -1016,5 +1067,54 @@ public static class TapeFile
 
             currentDirectory = Path.GetDirectoryName(currentDirectory);
         }
+    }
+
+    /// <summary>
+    /// Folds the Windows DOS-device / extended-namespace ALIASES of ordinary
+    /// file-system paths onto the one plain Win32 identity the boundary
+    /// compares: <c>\\.\C:\...</c> and <c>\\?\C:\...</c> become
+    /// <c>C:\...</c>, and <c>\\?\UNC\server\share\...</c> becomes
+    /// <c>\\server\share\...</c>. A body that is NOT a proven alias of an
+    /// ordinary path (for example <c>\\?\GLOBALROOT\...</c> or a volume GUID)
+    /// is left untouched and reported in <paramref name="isSupported"/>;
+    /// callers must refuse those rather than compare a fabricated identity.
+    /// </summary>
+    private static string NormalizeWindowsNamespace(string path, out bool isSupported)
+    {
+        const string DevicePrefix = @"\\.\";
+        const string ExtendedPrefix = @"\\?\";
+        isSupported = true;
+
+        if (path.StartsWith(DevicePrefix, StringComparison.Ordinal))
+        {
+            path = ExtendedPrefix + path[DevicePrefix.Length..];
+        }
+
+        if (!path.StartsWith(ExtendedPrefix, StringComparison.Ordinal))
+        {
+            return path;
+        }
+
+        string body = path[ExtendedPrefix.Length..];
+        const string UncPrefix = "UNC\\";
+        if (body.StartsWith(UncPrefix, StringComparison.OrdinalIgnoreCase) && body.Length > UncPrefix.Length)
+        {
+            return @"\\" + body[UncPrefix.Length..];
+        }
+
+        // A drive-letter absolute body is the one other proven alias: the
+        // extended prefix only removes parsing, never relocates the target.
+        if (body.Length >= 3 &&
+            char.IsAsciiLetter(body[0]) &&
+            body[1] == Path.VolumeSeparatorChar &&
+            (body[2] == Path.DirectorySeparatorChar || body[2] == Path.AltDirectorySeparatorChar))
+        {
+            return body;
+        }
+
+        // Anything else names something that is not an alias of an ordinary
+        // path; refuse instead of comparing an unevaluated identity.
+        isSupported = false;
+        return body;
     }
 }

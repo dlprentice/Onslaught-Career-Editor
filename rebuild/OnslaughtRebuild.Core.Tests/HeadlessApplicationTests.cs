@@ -598,6 +598,120 @@ public sealed class HeadlessApplicationTests
         }
     }
 
+    // ------------------------------------------------------------------
+    // P8 correction v2 (task t_aa8698d0): Windows DOS/extended namespace
+    // identity. A destination written as \\?\C:\...\known\extended.json is
+    // THE SAME FILE as C:\...\known\extended.json, so the boundary must
+    // evaluate one canonical identity: refusal fires for the alias exactly
+    // when it fires for the ordinary form, and no write may proceed through
+    // a namespace form the boundary did not evaluate.
+    // ------------------------------------------------------------------
+
+    [Fact]
+    public void TapeFileWriteNew_RejectsExtendedNamespaceAliasInsideSuppliedKnownRoot()
+    {
+        string knownRoot = Path.Combine(
+            Path.GetTempPath(),
+            $"onslaught-rebuild-known-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(knownRoot);
+
+        try
+        {
+            // The destination lives under a MISSING parent inside the known
+            // root, so a refusal that fires late would leave creation debris
+            // behind and the test can see it.
+            string ordinary = Path.Combine(knownRoot, "missing", "ordinary.json");
+            string extended = @"\\?\" + ordinary;
+
+            Assert.Throws<ArgumentException>(
+                () => TapeFile.WriteNew(ordinary, BoundaryProbeTape(), [knownRoot]));
+            Assert.False(File.Exists(ordinary));
+            Assert.False(Directory.Exists(Path.Combine(knownRoot, "missing")));
+
+            ArgumentException refused = Assert.Throws<ArgumentException>(
+                () => TapeFile.WriteNew(extended, BoundaryProbeTape(), [knownRoot]));
+            Assert.Contains("game or save root", refused.Message, StringComparison.Ordinal);
+
+            // The alias must not have created the file at its ordinary
+            // identity either: both spellings name ONE destination, and the
+            // refusal must precede any parent-directory creation.
+            Assert.False(File.Exists(ordinary));
+            Assert.False(Directory.Exists(Path.Combine(knownRoot, "missing")));
+        }
+        finally
+        {
+            Directory.Delete(knownRoot, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void TapeFileWriteNew_RefusesUnsupportedDeviceNamespaceDestinations()
+    {
+        // \\?\GLOBALROOT\... is NOT an alias of an ordinary file-system path:
+        // the boundary must refuse it before any parent directory creation or
+        // open, because no evaluated identity exists to compare against.
+        string deviceDestination = @"\\?\GLOBALROOT\onslaught-probe\extended.json";
+
+        ArgumentException refused = Assert.Throws<ArgumentException>(
+            () => TapeFile.WriteNew(deviceDestination, BoundaryProbeTape()));
+
+        Assert.Contains("device namespace", refused.Message, StringComparison.Ordinal);
+
+        // A volume-GUID body is equally unevaluated: refuse rather than
+        // compare a fabricated identity.
+        ArgumentException volumeRefused = Assert.Throws<ArgumentException>(
+            () => TapeFile.WriteNew(
+                @"\\?\Volume{9c5f8a3e-0000-0000-0000-000000000000}\probe.json",
+                BoundaryProbeTape()));
+        Assert.Contains("device namespace", volumeRefused.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void TapeFileWriteNew_EvaluatesResolvedIdentityOfExtendedAliasWithDotSegments()
+    {
+        // The extended prefix suppresses GetFullPath normalization, so the
+        // folded identity of \\?\C:\...\sibling\..\known\missing\x.json still
+        // carries dot segments the later create-new open WOULD resolve. The
+        // boundary must therefore evaluate the RESOLVED identity, not the
+        // literal dotted spelling: this destination resolves INSIDE the
+        // supplied known root and is refused on that basis, leaving no
+        // creation debris under either lexical spelling.
+        string knownRoot = Path.Combine(
+            Path.GetTempPath(),
+            $"onslaught-rebuild-known-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(knownRoot);
+
+        try
+        {
+            string sibling = Path.Combine(Path.GetDirectoryName(knownRoot)!, Path.GetFileName(knownRoot) + "-sibling");
+            Directory.CreateDirectory(sibling);
+            try
+            {
+                string dotDot = $@"\\?\{sibling}\..\{Path.GetFileName(knownRoot)}\missing\extended.json";
+
+                ArgumentException refused = Assert.Throws<ArgumentException>(
+                    () => TapeFile.WriteNew(dotDot, BoundaryProbeTape(), [knownRoot]));
+
+                Assert.Contains("game or save root", refused.Message, StringComparison.Ordinal);
+
+                // Refusal precedes every parent creation: neither spelling of
+                // the destination exists, and the missing directory segment
+                // was never materialized under any ancestor.
+                Assert.False(File.Exists(Path.Combine(knownRoot, "missing", "extended.json")));
+                Assert.False(Directory.Exists(Path.Combine(knownRoot, "missing")));
+                Assert.False(Directory.Exists(Path.Combine(sibling, "missing")));
+            }
+            finally
+            {
+                Directory.Delete(sibling, recursive: true);
+            }
+        }
+        finally
+        {
+            Directory.Delete(knownRoot, recursive: true);
+        }
+    }
+
     private static bool TryCreateReparseDirectoryLink(string linkPath, string targetPath)
     {
         if (OperatingSystem.IsWindows())
