@@ -1,11 +1,12 @@
 # `CThing` / `CComplexThing` retail object layout
 
-Status: active, bounded static recovery
-Date: 2026-08-13
+Status: active — static layout supported; `CThing__Init` runtime C2 remains RED
+Last updated: 2026-08-24
 Verdict: **SUPPORTED — exact PC retail envelopes and member intervals**
 Evidence: MEASURED — pristine bytes, MSVC RTTI/COLs,
 constructor/destructor dataflow, and five independently decoded PC-demo
-witnesses; SOURCE — pinned GPL member order
+witnesses; SOURCE — pinned GPL member order; MEASURED — retained runtime
+preflight proves execution populations but not `CThing__Init` state transfer
 Specimen: pristine PC retail `BEA.exe`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
@@ -132,6 +133,41 @@ field/function keys merged strict and name-assisted event details before
 assigning a row tier. Strict membership and read/write totals were unaffected,
 but the combined per-row address/offset lists are not tier-pure. A successor
 must key by evidence tier or emit the two tiers separately.
+
+## `CThing__Init` runtime state-transfer gate (2026-08-24)
+
+Verdict: **RED — no C2 promotion.** The exact `0x004f34a0` body and this
+layout identify the candidate receiver fields, but the retained runtime corpus
+does not contain a target-specific call→entry→return envelope. The canonical
+grade remains `C1_CANDIDATE_PARTIAL / OPEN_EXECUTED`; the complete RED contract
+and witness matrix are in
+[`CThing__Init__004f34a0.md`](../contracts/engine-world/CThing__Init__004f34a0.md).
+
+The five-wave reuse preflight was:
+
+| Wave | Disposition | Bounded result |
+| --- | --- | --- |
+| This layout and existing function owners | `REUSED` | The exact `CThing` intervals map the static stores at `this+0x1c`, `+0x2c`, and `+0x34`; no live value is inferred. |
+| Current Generation-32 rows | `REUSED` | Exact range-set SHA-256 `639d6610c0906f371345f06e0bf3442d6bad31da53525b26844f9a48fa9a3ea8`, 301 bytes, `WORLD_SIM`, grade/open state unchanged. |
+| Current and historical campaign reports | `EXTENDED` | Joined counts preserve the three observed caller families but expose no receiver/init or before/after state. |
+| Three promoted G: routing inventories | `REUSED` | They route the retained corpus only; raw G: data was neither opened nor written. |
+| Retained trace/TTD/CDB catalogs and call-context files | `NEW_MEASUREMENT` | 98 current `call-context.jsonl` files contain zero `0x4F34A0` target rows; positive control `0x4F9A90` appears in 11 files/rows. A poisoned expectation of one target file failed with exit 5. |
+
+Retained call-count evidence is real but narrower: play-Level-100 has 1,579
+calls partitioned into 1,481 trees, 68 Euler-branch complex things, zero
+authored-basis complex things, and 30 waypoints; an independent damage-script
+query has 1,578 calls. Those products do not carry per-call `this`, `init`, a
+matching return, or receiver-field snapshots. The historical set-head walk is
+also unusable as registration proof: its direct BSS read reported zero after an
+access scan had already shown non-zero writes.
+
+The missing runtime plate must bind two materially different caller families
+to exact `this`/`init` continuity; record before/after `this+[0x0c,0x38)` while
+separating base-body, callee, and derived writes; include a raw initialized/
+default contrast; and fail wrong-receiver, swapped-init, wrong-field, and
+cross-invocation controls. World insertion additionally needs a touched-memory
+node readback whose element equals that same receiver. Until then, the static
+layout remains supported and the runtime state-transfer claim remains open.
 
 ## Evidence boundary
 
