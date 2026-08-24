@@ -781,5 +781,385 @@ class ReparseAndDuplicateIdRefusalTests(unittest.TestCase):
         self.assertEqual([row], self.manifest_rows())
 
 
+class InjectingManifest:
+    """Inject one competing equal-id row after pre-check but before the
+    append handle opens — the exact write-boundary race from the reviewer
+    harness (review_followup_probes.py)."""
+
+    def __init__(self, path: Path, competing: dict):
+        self.path = path
+        self.competing = competing
+        self.injected = False
+
+    def exists(self) -> bool:
+        return self.path.exists()
+
+    def read_text(self, *args, **kwargs):
+        return self.path.read_text(*args, **kwargs)
+
+    def open(self, *args, **kwargs):
+        mode = args[0] if args else kwargs.get("mode", "r")
+        if mode == "a" and not self.injected:
+            self.path.write_text(json.dumps(self.competing) + "\n", encoding="utf-8")
+            self.injected = True
+        return self.path.open(*args, **kwargs)
+
+
+class FollowupBoundaryClosureTests(unittest.TestCase):
+    """Falsification gates for the independent RED on exact 8ab9d9fb.
+
+    Four binding defects (review t_2e8cb616, review_followup_probes.py),
+    each reproduced here as a failing test BEFORE the fix:
+
+      1. resume() resolved its inputs before any reparse check, so a
+         directory symlink/junction AT a lexical root was followed and its
+         target enumerated, recorded, and removed;
+      2. a destination ancestor swapped to a reparse after the last
+         pathname guard received copied payload bytes;
+      3. an equal-id row injected between _append_manifest_row's pre-check
+         and its append open became a second matching row on disk;
+      4. traversal could follow: _reparse_census classified entries with
+         following is_dir(), and _identity materialized rglob('*') before
+         its per-entry guards.
+
+    Real directory symlinks AND junctions exercise the true Windows reparse
+    code paths. Their targets sit INSIDE the patched quarantine root on
+    purpose: a pass then proves genuine refusal, not containment luck.
+    """
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        root = Path(self._tmp.name)
+        self.root = root
+        self.quarantine_root = root / "quarantine"
+        self.quarantine_root.mkdir()
+        patcher = mock.patch.multiple(
+            quarantine,
+            QUARANTINE_ROOT=self.quarantine_root,
+            MANIFEST=self.quarantine_root / "manifest.jsonl",
+            PURGE_LOG=self.quarantine_root / "purge.log",
+        )
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        self.symlink_capable = self._probe_symlink_capability()
+
+    # -- fixture helpers ---------------------------------------------------
+
+    def _probe_symlink_capability(self) -> bool:
+        probe = self.root / "symlink-capability-probe"
+        probe.mkdir()
+        try:
+            os.symlink(probe, probe / "link", target_is_directory=True)
+        except OSError:
+            return False
+        finally:
+            self.remove_dir_link(probe / "link")
+        return True
+
+    def constructible_kinds(self) -> list[str]:
+        kinds = ["junction"]
+        if self.symlink_capable:
+            kinds.insert(0, "directory-symlink")
+        return kinds
+
+    def make_dir_link(self, link: Path, target: Path, kind: str) -> None:
+        if kind == "directory-symlink":
+            os.symlink(target, link, target_is_directory=True)
+        else:
+            assert kind == "junction"
+            subprocess.run(
+                ["cmd.exe", "/d", "/c", "mklink", "/J", str(link), str(target)],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+        self.assertTrue(os.path.lexists(link))
+
+    @staticmethod
+    def remove_dir_link(link: Path) -> None:
+        if os.path.lexists(link):
+            try:
+                os.unlink(link)
+            except OSError:
+                os.rmdir(link)
+
+    def make_source_and_partial(self):
+        source = self.quarantine_root / "20260823" / "c45-src"
+        dest = self.quarantine_root / "20260824" / "4d82-c45-src"
+        for tree in (source, dest):
+            if tree.exists():
+                shutil.rmtree(tree)
+        (source / "nested").mkdir(parents=True)
+        (source / "a.bin").write_bytes(b"alpha")
+        (source / "nested" / "b.bin").write_bytes(b"beta-gamma")
+        shutil.copytree(source, dest)
+        (dest / "nested" / "b.bin").unlink()  # the timeout kill
+        return source, dest
+
+    def manifest_rows(self) -> list[dict]:
+        if not quarantine.MANIFEST.exists():
+            return []
+        return [
+            json.loads(line)
+            for line in quarantine.MANIFEST.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+
+    # -- (1) lexical roots: reparse at either root refuses pre-resolve -----
+
+    @unittest.skipUnless(os.name == "nt", "reparse-point semantics")
+    def test_source_root_link_to_internal_target_refuses_all_untouched(self) -> None:
+        for kind in self.constructible_kinds():
+            with self.subTest(kind=kind):
+                source, dest = self.make_source_and_partial()
+                del source
+                real_source = self.quarantine_root / "20260823" / f"internal-real-{kind}"
+                real_source.mkdir()
+                (real_source / "evidence.bin").write_bytes(b"internal-evidence")
+                link = self.quarantine_root / "20260823" / f"internal-source-link-{kind}"
+                self.make_dir_link(link, real_source, kind)
+                try:
+                    with self.assertRaises(SystemExit):
+                        quarantine.resume(link, dest, reason=f"src-root {kind}")
+
+                    self.assertTrue(os.path.lexists(link), "root link was consumed")
+                    self.assertTrue(real_source.is_dir(), "internal target removed")
+                    self.assertTrue((real_source / "evidence.bin").exists(),
+                                    "internal target payload lost")
+                    self.assertTrue(dest.is_dir())
+                    self.assertFalse((dest / "evidence.bin").exists(),
+                                     "target content was copied through the link")
+                    self.assertEqual([], self.manifest_rows())
+                finally:
+                    self.remove_dir_link(link)
+
+    @unittest.skipUnless(os.name == "nt", "reparse-point semantics")
+    def test_destination_root_link_to_internal_target_refuses_all_untouched(self) -> None:
+        for kind in self.constructible_kinds():
+            with self.subTest(kind=kind):
+                source, _ = self.make_source_and_partial()
+                real_dest = self.quarantine_root / "20260824" / f"internal-real-partial-{kind}"
+                real_dest.mkdir(parents=True, exist_ok=True)
+                (real_dest / "evidence.bin").write_bytes(b"internal-evidence")
+                link = self.quarantine_root / "20260824" / f"internal-dest-link-{kind}"
+                self.make_dir_link(link, real_dest, kind)
+                try:
+                    with self.assertRaises(SystemExit):
+                        quarantine.resume(source, link, reason=f"dst-root {kind}")
+
+                    self.assertTrue(source.exists(), "source removed despite refusal")
+                    self.assertTrue(os.path.lexists(link), "root link was consumed")
+                    self.assertTrue(real_dest.is_dir(), "internal target removed")
+                    self.assertTrue((real_dest / "evidence.bin").exists())
+                    self.assertFalse((real_dest / "a.bin").exists(),
+                                     "source content was copied through the link")
+                    self.assertEqual([], self.manifest_rows())
+                finally:
+                    self.remove_dir_link(link)
+
+    # -- (2) destination boundary: fresh no-follow truth at the operation --
+
+    @unittest.skipUnless(os.name == "nt", "reparse-point semantics")
+    def test_destination_ancestor_reparse_refused_on_fresh_boundary_truth(self) -> None:
+        # Stronger than the deterministic swap probe: the junction exists
+        # BEFORE resume runs and every _is_reparse_point verdict for it is
+        # blinded, modelling earlier checks that cannot be trusted at all.
+        # Only a fresh lstat-truth boundary check can refuse this.
+        source, dest = self.make_source_and_partial()
+        target = self.root / "external-blind-target"
+        target.mkdir()
+        link = dest / "nested"
+        shutil.rmtree(link)
+        self.make_dir_link(link, target, "junction")
+        try:
+            real_is_reparse = quarantine._is_reparse_point
+
+            def blinded(path) -> bool:
+                return False if Path(path) == link else real_is_reparse(path)
+
+            with mock.patch.object(quarantine, "_is_reparse_point", blinded):
+                with self.assertRaises(SystemExit):
+                    quarantine.resume(source, dest, reason="blind guard probe")
+
+            self.assertEqual([], list(target.rglob("*")),
+                             "external target received copied bytes")
+            self.assertTrue(os.path.lexists(link), "the reparse itself was cleared")
+            self.assertFalse(os.path.lexists(dest / "nested" / "b.bin"),
+                             "missing payload was written through the link")
+            self.assertTrue(source.exists())
+            self.assertEqual([], self.manifest_rows())
+        finally:
+            self.remove_dir_link(link)
+
+    # -- (3) duplicate id at the write boundary ------------------------------
+
+    def test_equal_id_injected_before_append_open_never_becomes_a_row(self) -> None:
+        manifest_path = self.quarantine_root / "manifest.jsonl"
+        proposed = {
+            "id": "same-id",
+            "original": "new-source",
+            "staged": "new-dest",
+            "stagedAtUtc": "now",
+            "bytes": 2,
+            "sha256": "new",
+            "reason": "new",
+        }
+        competing = {
+            "id": "same-id",
+            "original": "other-source",
+            "staged": "other-dest",
+            "stagedAtUtc": "earlier",
+            "bytes": 1,
+            "sha256": "old",
+            "reason": "competing writer",
+        }
+        proxy = InjectingManifest(manifest_path, competing)
+        with mock.patch.object(quarantine, "MANIFEST", proxy):
+            with self.assertRaises(RuntimeError):
+                quarantine._append_manifest_row(proposed)
+
+        on_disk = [
+            json.loads(line)
+            for line in manifest_path.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+        self.assertEqual([competing], on_disk,
+                         "manifest must sit byte-equivalent at the single competing row")
+
+    # -- (4) literal no-follow traversal -------------------------------------
+
+    def test_census_classification_is_literal_no_follow(self) -> None:
+        # An entry that claims to be a directory ONLY when following must
+        # never be descended: the census reports it as a reparse hit (it is
+        # neither provably-plain dir nor provably-plain file) and refuses
+        # descent -- proven by the scan-count sentinel staying silent.
+        plain = self.quarantine_root / "20260823" / "plain-dir"
+        plain.mkdir(parents=True)
+        parent = plain.parent
+
+        class FlippingEntry:
+            # Coherent identity (as any real filesystem provides): the
+            # entry is named "flip" beneath the scanned parent, yet its
+            # only directory answer requires following -- provably-plain
+            # neither way.
+            name = "flip"
+            path = str(parent / "flip")
+
+            def is_dir(self, *, follow_symlinks=True):
+                return follow_symlinks
+
+            def is_file(self, *, follow_symlinks=True):
+                return False
+
+        calls = {"plain": 0}
+
+        def gated_scandir(path):
+            if Path(path) == parent:
+                calls["plain"] += 1
+                if calls["plain"] > 1:
+                    raise RuntimeError("SENTINEL-DESCENT-BENEATH-UNCLASSIFIED")
+                return [FlippingEntry()]
+            raise RuntimeError("SENTINEL-UNEXPECTED-SCANDIR")
+
+        with mock.patch.object(quarantine.os, "scandir", gated_scandir):
+            self.assertEqual(
+                ["flip"],
+                quarantine._reparse_census(parent),
+                "an entry that cannot be proven plain must be reported, never followed",
+            )
+        # Exactly one scan of the parent happened: the unclassifiable entry
+        # was reported as a hit and never descended into.
+        self.assertEqual(1, calls["plain"], "census descended despite refusal")
+
+    def test_census_reports_the_root_itself_as_dot(self) -> None:
+        probe_root = self.quarantine_root / "20260823" / "reparse-root"
+        probe_root.mkdir(parents=True)
+        real = quarantine._is_reparse_point
+
+        def flagged(path) -> bool:
+            return True if Path(path) == probe_root else real(path)
+
+        with mock.patch.object(quarantine, "_is_reparse_point", flagged):
+            self.assertEqual(["."], quarantine._reparse_census(probe_root))
+
+    @unittest.skipUnless(os.name == "nt", "reparse-point semantics")
+    def test_identity_refuses_root_nested_and_file_reparses(self) -> None:
+        base = self.quarantine_root / "20260823"
+        real_tree = base / "id-root-real"
+        (real_tree / "deep").mkdir(parents=True)
+        (real_tree / "deep" / "x.bin").write_bytes(b"x")
+        root_link = base / "id-root-link"
+
+        for kind in self.constructible_kinds():
+            with self.subTest(scope="root", kind=kind):
+                self.make_dir_link(root_link, real_tree, kind)
+                try:
+                    with self.assertRaises(RuntimeError):
+                        quarantine._identity(root_link)
+                finally:
+                    self.remove_dir_link(root_link)
+
+        tree = base / "id-nested"
+        (tree / "keep").mkdir(parents=True)
+        (tree / "keep" / "a.bin").write_bytes(b"a")
+        inner_target = self.root / "id-inner-target"
+        inner_target.mkdir(exist_ok=True)
+        inner = tree / "inner-junction"
+
+        for kind in self.constructible_kinds():
+            with self.subTest(scope="nested", kind=kind):
+                self.make_dir_link(inner, inner_target, kind)
+                try:
+                    with self.assertRaises(RuntimeError):
+                        quarantine._identity(tree)
+                finally:
+                    self.remove_dir_link(inner)
+
+        ftree = base / "id-file"
+        ftree.mkdir(parents=True)
+        payload = ftree / "linked.bin"
+        payload.write_bytes(b"payload")
+        real = quarantine._is_reparse_point
+
+        def flagged(path) -> bool:
+            return True if Path(path) == payload else real(path)
+
+        with mock.patch.object(quarantine, "_is_reparse_point", flagged):
+            with self.assertRaises(RuntimeError):
+                quarantine._identity(ftree)
+
+    # -- preserved behavior pins ----------------------------------------------
+
+    def test_dotdot_destination_escape_still_refused_by_containment(self) -> None:
+        source, _ = self.make_source_and_partial()
+        escape = self.quarantine_root / ".." / "dotdot-escape"
+        escape.mkdir()
+        self.addCleanup(shutil.rmtree, escape, ignore_errors=True)
+
+        with self.assertRaises(SystemExit) as caught:
+            quarantine.resume(source, escape, reason="dotdot escape probe")
+
+        self.assertIn("outside the quarantine root", str(caught.exception))
+        self.assertEqual([], self.manifest_rows())
+        self.assertTrue(source.exists())
+
+    def test_identity_digest_order_matches_stage_semantics_on_case_mixed_tree(self) -> None:
+        # The no-follow scanner must reproduce stage()'s exact digest, which
+        # hashes files in pathlib-sorted order; case-mixed names would catch
+        # any ordering drift.
+        tree = self.quarantine_root / "20260823" / "case-tree"
+        (tree / "Nested").mkdir(parents=True)
+        (tree / "Alpha.bin").write_bytes(b"a")
+        (tree / "Nested" / "zeta.bin").write_bytes(b"zz")
+        (tree / "beta.TXT").write_bytes(b"bbb")
+
+        count, total, sha = quarantine._identity(tree)
+
+        self.assertEqual((3, 6), (count, total))
+        self.assertEqual(quarantine.tree_sha256(tree), sha)
+        self.assertEqual(quarantine.tree_bytes(tree), total)
+
+
 if __name__ == "__main__":
     unittest.main()

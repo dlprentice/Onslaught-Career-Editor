@@ -37,6 +37,7 @@ import json
 import os
 import shutil
 import sys
+import time
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
@@ -75,6 +76,39 @@ def _file_attributes(path: Path) -> int | None:
     return None if attributes == 0xFFFFFFFF else attributes
 
 
+def _lstat_is_reparse_point(path: Path) -> bool:
+    """Reparse verdict from the FINAL component alone, never following it.
+
+    Uses ``os.lstat`` (or an equivalent no-follow probe): attributes of the
+    entry itself, so a symlink/junction answers for its own link even when
+    its target is missing or hostile. This is the primitive that must be
+    used wherever an earlier verdict could be stale or blinded.
+    """
+
+    if os.name != "nt":
+        import stat as stat_module
+
+        try:
+            mode = path.lstat().st_mode
+        except OSError:
+            return True
+        return stat_module.S_ISLNK(mode)
+    import ctypes
+
+    try:
+        attributes = ctypes.windll.kernel32.GetFileAttributesW(str(path))
+    except OSError:
+        return True
+    if attributes == 0xFFFFFFFF:
+        # Absent from the final-component namespace: absent path, or a
+        # dangling device-level reparse. Both refuse.
+        return True
+    # True iff the FINAL component itself carries a reparse point. Plain
+    # files and plain directories answer False; junctions, symlinks, and
+    # dangling device-level reparses answer True regardless of target.
+    return bool(attributes & FILE_ATTRIBUTE_REPARSE_POINT)
+
+
 def _is_reparse_point(path: Path) -> bool:
     """True for junctions/symlinks: never copied, never descended, never cleared."""
 
@@ -83,6 +117,87 @@ def _is_reparse_point(path: Path) -> bool:
     except OSError:
         return True
     return attributes is None or bool(attributes & FILE_ATTRIBUTE_REPARSE_POINT)
+
+
+def _classify_entry(entry: os.DirEntry) -> str | None:
+    """Literal no-follow classification of one scandir entry.
+
+    Returns "dir", "file", or None for anything else. The entry's OWN
+    no-follow stat decides: first its DOS attributes (any reparse point --
+    junction, symlink, or special -- is unclassifiable for quarantine
+    purposes even where the runtime calls it a directory), then its plain
+    dir/file type. A follow-only directory answer can never trigger descent.
+    """
+
+    try:
+        stat_result = entry.stat(follow_symlinks=False)
+        attributes = getattr(stat_result, "st_file_attributes", 0)
+    except (OSError, AttributeError):
+        attributes = 0
+    if attributes & FILE_ATTRIBUTE_REPARSE_POINT:
+        return None
+    try:
+        if entry.is_dir(follow_symlinks=False):
+            return "dir"
+        if entry.is_file(follow_symlinks=False):
+            return "file"
+    except OSError:
+        return None
+    return None
+
+
+def _scan_plain_children(directory: Path) -> list[tuple[Path, str]]:
+    """One no-follow scandir of ``directory``, classified and fail-closed.
+
+    Raises RuntimeError when the scan fails (vanished directory, sharing
+    violation, permission denial) or when any entry cannot be classified
+    without following it: a tree that cannot be proven plain is unsafe.
+    """
+
+    children: list[tuple[Path, str]] = []
+    try:
+        with os.scandir(directory) as scan:
+            for entry in scan:
+                child_path = Path(entry.path)
+                # An entry counts as plain ONLY when both its own no-follow
+                # stat classifies it AND the module-level final-component
+                # guard agrees it carries no reparse flag (covers flagged
+                # and device-level reparses whose directory type lies).
+                kind = (
+                    None
+                    if _is_reparse_point(child_path)
+                    else _classify_entry(entry)
+                )
+                if kind is None:
+                    raise RuntimeError(
+                        f"fail-closed: cannot classify {entry.path} as a plain "
+                        "directory or file without following it; quarantine "
+                        "traversal refuses to descend, copy through, or hash it"
+                    )
+                children.append((child_path, kind))
+    except OSError as error:
+        raise RuntimeError(
+            f"fail-closed: could not scan directory {directory}: {error}"
+        ) from None
+    return children
+
+
+def _iter_plain_files(root: Path):
+    """Yield every plain regular file under ``root``, never crossing a reparse.
+
+    Explicit no-follow walk: each entry is classified from its own link
+    stat BEFORE any descent, so external content behind a junction or
+    symlink is neither opened nor hashed. Scan failures refuse immediately.
+    """
+
+    pending = [root]
+    while pending:
+        current = pending.pop()
+        for child_path, kind in _scan_plain_children(current):
+            if kind == "dir":
+                pending.append(child_path)
+            else:
+                yield child_path
 
 
 def _reparse_census(root: Path) -> list[str]:
@@ -100,16 +215,29 @@ def _reparse_census(root: Path) -> list[str]:
     while pending:
         current = pending.pop()
         try:
-            entries = list(os.scandir(current))
+            scan = os.scandir(current)
+            try:
+                entries = list(scan)
+            finally:
+                close = getattr(scan, "close", None)
+                if callable(close):
+                    close()
         except OSError as error:
             raise RuntimeError(
                 f"reparse census could not scan directory {current}: {error}"
             ) from None
         for entry in entries:
             entry_path = Path(entry.path)
-            if _is_reparse_point(entry_path):
+            # Reported as a reparse hit: either the entry IS one, or it
+            # cannot be proven plain without following it -- in both cases
+            # quarantine refuses to descend, copy through, or hash it.
+            if (
+                _is_reparse_point(entry_path)
+                or _classify_entry(entry) is None
+            ):
                 found.append(entry_path.relative_to(root).as_posix())
-            elif entry.is_dir():
+                continue
+            if entry.is_dir(follow_symlinks=False):
                 pending.append(entry_path)
     return sorted(found)
 
@@ -180,11 +308,15 @@ def _resume_copy_tree(source: Path, dest: Path) -> dict:
         # No-follow mirror of the walk onto the destination side: every
         # existing destination ancestor of the current pair must still be a
         # plain non-reparse directory before anything may be created through
-        # or beneath it (missing ancestors are created fresh just below).
+        # or beneath it. The verdict is FRESH lstat truth on the final
+        # component -- never a cached or earlier check -- so deterministic or
+        # blinded replacement at this boundary is still caught.
         ancestor = dest
         for part in source_dir.relative_to(source).parts:
             ancestor /= part
-            if os.path.lexists(ancestor) and _is_reparse_point(ancestor):
+            if os.path.lexists(ancestor) and (
+                _is_reparse_point(ancestor) or _lstat_is_reparse_point(ancestor)
+            ):
                 refuse("destination ancestor became a", ancestor)
         if os.path.lexists(dest_dir):
             if _is_reparse_point(dest_dir):
@@ -195,7 +327,7 @@ def _resume_copy_tree(source: Path, dest: Path) -> dict:
                     "the interrupted-stage layout cannot be reconciled"
                 )
         dest_dir.mkdir(parents=True, exist_ok=True)
-        if _is_reparse_point(dest_dir):  # post-create re-verification
+        if _lstat_is_reparse_point(dest_dir):  # post-create re-verification
             refuse("destination directory became a", dest_dir)
         # Any reparse in the SOURCE tree refuses outright: silently skipping
         # would let a later removal clear the reparse together with its tree.
@@ -208,8 +340,26 @@ def _resume_copy_tree(source: Path, dest: Path) -> dict:
             dest_file = dest_dir / name
             if _is_reparse_point(source_file):
                 refuse("source file", source_file)
-            if os.path.lexists(dest_file) and _is_reparse_point(dest_file):
-                refuse("destination file", dest_file)
+            # Operation-boundary re-verification immediately before
+            # stat/open/copy: the full destination chain that is about to
+            # receive bytes (every ancestor of dest_dir, dest_dir itself,
+            # and the file slot). Each element is judged seam-verdict FIRST,
+            # then fresh unmockable lstat truth LAST -- a replacement that
+            # lands during any earlier evaluation is still seen by the final
+            # component check, and copy2 can never write through a reparse.
+            chain = [dest]
+            prefix = dest
+            for part in dest_dir.relative_to(dest).parts:
+                prefix /= part
+                chain.append(prefix)
+            for touched in (*chain, dest_file):
+                if os.path.lexists(touched) and (
+                    _is_reparse_point(touched) or _lstat_is_reparse_point(touched)
+                ):
+                    refuse(
+                        "destination path became a",
+                        touched,
+                    )
             try:
                 source_stat = source_file.stat()
                 dest_stat = dest_file.stat()
@@ -234,10 +384,13 @@ def _resume_copy_tree(source: Path, dest: Path) -> dict:
 def _identity(root: Path) -> tuple[int, int, str]:
     """(files, bytes, tree_sha256) using stage()'s exact identity semantics.
 
-    Refuses rather than silently following or ignoring reparse entries:
-    tree identity over a reparse-containing tree is undefined for
-    quarantine purposes, and hashing through one would bless external
-    content as staged evidence.
+    Walks with explicit no-follow scandir semantics: each entry is
+    classified from its own link stat BEFORE any descent or open, so a
+    reparse is never followed and external content behind one is never
+    blessed as staged evidence. The root itself, any nested entry that
+    cannot be proven a plain directory or file, and any scan failure all
+    refuse before any hashing; tree identity over a reparse-containing
+    tree is undefined for quarantine purposes.
     """
 
     if _is_reparse_point(root):
@@ -247,13 +400,7 @@ def _identity(root: Path) -> tuple[int, int, str]:
     count = 0
     total_bytes = 0
     digest = hashlib.sha256()
-    for path in sorted(root.rglob("*")):
-        if _is_reparse_point(path):
-            raise RuntimeError(
-                f"identity computation refused: reparse point present in tree: {path}"
-            )
-        if not path.is_file():
-            continue
+    for path in sorted(_iter_plain_files(root)):
         rel = path.relative_to(root).as_posix()
         data_sha = hashlib.sha256()
         with path.open("rb") as stream:
@@ -271,26 +418,42 @@ def _identity(root: Path) -> tuple[int, int, str]:
 def _append_manifest_row(row: dict) -> None:
     """Append exactly one manifest row, then read it back from disk.
 
-    Refuses BEFORE writing when the manifest already contains ``row["id"]``
-    (ids are the unique authority): the manifest is left byte-for-byte
-    unchanged. Otherwise fails closed unless the on-disk manifest contains
-    this row verbatim and still contains every pre-existing row.
+    Ids are the unique authority. The whole append runs inside one
+    exclusive serialization scope (_acquire_manifest_mutex) and the raw
+    on-disk manifest is re-read for ids AFTER the append handle exists but
+    BEFORE any byte is written: an equal id injected between this
+    routine's earlier reads and the append open still refuses, leaving
+    the manifest byte-for-byte unchanged at the single competing row.
+    After the fsynced write, readback fails closed unless the manifest
+    contains this row verbatim exactly once plus every pre-existing row
+    (intentional semantics for a completed append whose later readback is
+    corrupted: the row and both evidence copies remain).
     """
 
-    before = MANIFEST.read_text(encoding="utf-8").splitlines() if MANIFEST.exists() else []
-    if any(
-        json.loads(line).get("id") == row["id"]
-        for line in before
-        if line.strip()
-    ):
-        raise RuntimeError(
-            f"manifest append refused before writing: id {row['id']} already "
-            "exists; manifest left byte-for-byte unchanged, nothing appended"
-        )
-    with MANIFEST.open("a", encoding="utf-8") as stream:
-        stream.write(json.dumps(row) + "\n")
-        stream.flush()
-        os.fsync(stream.fileno())
+    lock_dir = _acquire_manifest_mutex()
+    try:
+        with MANIFEST.open("a", encoding="utf-8") as stream:
+            # Write-boundary id re-check: under the mutex, after the append
+            # handle exists, before the first byte is written.
+            before_lines = (
+                MANIFEST.read_text(encoding="utf-8").splitlines()
+                if MANIFEST.exists() else []
+            )
+            if any(
+                json.loads(line).get("id") == row["id"]
+                for line in before_lines
+                if line.strip()
+            ):
+                raise RuntimeError(
+                    f"manifest append refused at the write boundary: id "
+                    f"{row['id']} already exists; manifest left byte-for-byte "
+                    "unchanged, nothing appended"
+                )
+            stream.write(json.dumps(row) + "\n")
+            stream.flush()
+            os.fsync(stream.fileno())
+    finally:
+        shutil.rmtree(lock_dir, ignore_errors=True)
     after = MANIFEST.read_text(encoding="utf-8").splitlines()
     parsed_after = [json.loads(line) for line in after if line.strip()]
     row_lines = [line for line in after
@@ -298,12 +461,58 @@ def _append_manifest_row(row: dict) -> None:
     if (
         len(row_lines) != 1
         or json.loads(row_lines[0]) != row
-        or [json.loads(line) for line in before if line.strip()] != parsed_after[:-1]
+        or [json.loads(line) for line in before_lines if line.strip()] != parsed_after[:-1]
     ):
         raise RuntimeError(
             f"manifest append failed readback for id {row['id']}; "
             "no removal was performed"
         )
+
+
+def _acquire_manifest_mutex() -> Path:
+    """Exclusive serialization scope for one manifest append.
+
+    Directory creation is atomic on every platform, so mkdir IS the lock.
+    The scope lives beside the manifest under the QUARANTINE_ROOT (never
+    derived from MANIFEST itself, which tests may proxy). The holder leaves
+    a fresh marker; a leftover whose marker is older than the staleness
+    horizon belongs to a crashed writer and is reclaimed. Refuses rather
+    than waiting past the budget when another writer genuinely holds the
+    scope: quarantine appends are rare audited events, not a contention
+    workload, and failing closed beats queueing behind an unknown process.
+    """
+
+    lock_dir = QUARANTINE_ROOT / ".manifest-append.lock"
+    deadline = time.monotonic() + 10.0
+    while True:
+        try:
+            lock_dir.mkdir()
+        except FileExistsError:
+            marker = lock_dir / "holder.txt"
+            try:
+                age = time.time() - marker.stat().st_mtime
+            except OSError:
+                age = float("inf")
+            if age > 60.0:
+                try:
+                    shutil.rmtree(lock_dir)
+                    continue
+                except OSError:
+                    pass
+            if time.monotonic() >= deadline:
+                raise RuntimeError(
+                    "manifest append refused: another writer holds the append "
+                    f"scope at {lock_dir} (holder marker age {age:.0f}s); "
+                    "nothing was written"
+                ) from None
+            time.sleep(0.05)
+            continue
+        break
+    try:
+        (lock_dir / "holder.txt").write_text(utc_now(), encoding="utf-8")
+    except OSError:
+        pass  # self-healing: a missing marker makes the next pass reclaim
+    return lock_dir
 
 
 def _remove_tree_readonly_only(root: Path) -> None:
@@ -362,6 +571,20 @@ def resume(source: Path, dest: Path, *, reason: str) -> dict:
     unchanged.
     """
 
+    # Lexical identity FIRST: the caller's exact roots are checked for
+    # reparse points before any .resolve() can silently follow them onto
+    # their targets -- even when those targets live inside the quarantine
+    # root. A root that IS a reparse point refuses untouched; resolution,
+    # enumeration, copy, append, and removal never see it.
+    if _is_reparse_point(source):
+        raise SystemExit(
+            f"fail-closed: source root is a reparse point: {source}; refusing "
+            "to follow it to any target, enumerate, copy, or remove")
+    if _lstat_is_reparse_point(dest):
+        raise SystemExit(
+            f"fail-closed: destination root is a reparse point: {dest}; "
+            "refusing to follow it to any target or create or copy through it")
+
     source = source.resolve()
     dest = dest.resolve()
     if not QUARANTINE_ROOT.exists():
@@ -370,16 +593,8 @@ def resume(source: Path, dest: Path, *, reason: str) -> dict:
         raise SystemExit(f"source does not exist: {source}")
     if not source.is_dir():
         raise SystemExit(f"source is not a directory: {source}")
-    if _is_reparse_point(source):
-        raise SystemExit(
-            f"fail-closed: source root is a reparse point: {source}; refusing "
-            "to enumerate, copy, or remove through it")
     if not dest.is_dir():
         raise SystemExit(f"destination partial missing (never restart stage): {dest}")
-    if _is_reparse_point(dest):
-        raise SystemExit(
-            f"fail-closed: destination root is a reparse point: {dest}; refusing "
-            "to create or copy through it")
     for base in (QUARANTINE_ROOT.resolve(),):
         if not (source.is_relative_to(base) and dest.is_relative_to(base)):
             raise SystemExit(
