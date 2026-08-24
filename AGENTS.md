@@ -181,10 +181,23 @@ Also:
   produced lanes that acted as the primary; empty forks have produced lanes
   with no task. Always verify a lane's claimed artifacts on disk before acting
   on them.
-- Retirement is a move to `H:\graveyard\` with a manifest row, never a
-  hard-delete, unless the older `tools/lab_quarantine.py` stage-to-D: flow is
-  explicitly required by the tooling. Extract what a retired artifact teaches
-  into the durable owners before moving it.
+- Retirement is never a hard-delete. Every graveyard candidate — anything under
+  `local-lab/` and any dated lab output elsewhere — is first **staged** with
+  `tools/lab_quarantine.py stage <path> --reason "<why>"`, which copies it to
+  manifested `D:\lab-quarantine\` (tree SHA-256, byte count, manifest row) and
+  removes only after verification; the D stage stays authoritative. There are
+  no direct C:/F:/G:/worktree-to-H moves and no automatic H writes while the
+  H promotion path is unproved. `H:\graveyard` access denial is SanDisk Drive
+  Lock device behavior, not an ACL defect — never rewrite ACLs or ownership as
+  a workaround. H: remains optional cold retirement only, behind a separate,
+  separately reviewed unlock whose promotion gate runs in exactly this order —
+  unlock confirmed → copy the retained authoritative D stage to H → verify
+  exact-copy/tree-hash identity → append the H manifest → read the appended row
+  back → only then allow D retirement; D stays retained and authoritative until
+  every gate succeeds;
+  `lab_quarantine.py purge` stays an explicit, separately logged space-pressure
+  operation. Extract what a retired artifact teaches into the durable owners
+  before moving it.
 - External CLI reviewers follow the same rule. Keep their lanes read-only unless
   a writing lane is explicitly isolated; preserve prompts and reports under
   `local-lab/`, confirm real work and clean exit, reproduce consequential claims,
