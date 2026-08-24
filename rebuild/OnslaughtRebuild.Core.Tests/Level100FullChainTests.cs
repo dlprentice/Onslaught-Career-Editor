@@ -292,7 +292,7 @@ public sealed class Level100FullChainTests
     /// then. <c>LevelWon()</c> is called by the released
     /// <c>event("Reached Target Zone 4")</c> and by nothing else.</para>
     ///
-    /// <para><b>Current measured branch, re-pinned 2026-08-21 with a bisect
+    /// <para><b>Prior measured branch, re-pinned 2026-08-21 with a bisect
     /// receipt.</b> The 2026-08-14 branch (pinned at 383d5b3e "Model player
     /// weapon scatter") reached <c>Won</c> at t8404 with 8,428 milli-life.
     /// Across 4a978c5b..988f2db0 the evidenced InJetMode contract cluster
@@ -313,6 +313,18 @@ public sealed class Level100FullChainTests
     /// with retail-side evidence. The prior abort-path trajectories remain
     /// dated evidence in the local-lab reports, not the active expectation
     /// of this test.</para>
+    ///
+    /// <para><b>Current measured branch, re-pinned 2026-08-23 for the released
+    /// adjustable-emitter law.</b> A fresh isolated candidate run from clean
+    /// <c>71fb4601</c> reached <c>Won</c> at t6992 with 10,900 milli-life. Every
+    /// semantic assertion above these two scalar pins passed: all 22 combat
+    /// actors died, all five trigger events dispatched, wave 2 recorded six
+    /// kills / six damaged spawns / 6,000 damage, the abort stayed false, and
+    /// objective 4 completed. The trajectory moved because all three modeled
+    /// player weapons now use <c>CBattleEngine::GetLaunchPosition</c>'s retained
+    /// camera-ray-to-cockpit-emitter adjustment before their unchanged scatter.
+    /// This is the one terminal measurement authorized by the run's process-loop
+    /// guard; independent repetition is required before integration.</para>
     /// </summary>
     [Fact]
     public void ChainAutopilot_ReachesWonByInputAlone()
@@ -399,8 +411,8 @@ public sealed class Level100FullChainTests
             Level100PrimaryObjectiveStatus.Complete,
             final.Level100Mission.PrimaryObjectives
                 .Single(objective => objective.Objective == 4).Status);
-        Assert.Equal(6_572, final.Tick);
-        Assert.Equal(18_244, final.Hull);
+        Assert.Equal(6_992, final.Tick);
+        Assert.Equal(10_900, final.Hull);
     }
 
     /// <summary>

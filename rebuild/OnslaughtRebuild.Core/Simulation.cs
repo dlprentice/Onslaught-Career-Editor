@@ -44,6 +44,10 @@ public sealed class Simulation
     private readonly uint _seed;
     private readonly List<MutableProjectile> _projectiles = [];
     private readonly List<MutableWalkerFoot> _walkerFeet = [];
+    private Level100ContactActor[] _reticleContactActors = [];
+    private int _reticleLaunchAnglesTick = int.MinValue;
+    private int _reticleLaunchYawMicroRad;
+    private int _reticleLaunchPitchMicroRad;
     private readonly List<Level100MissionEvent> _level100MissionEvents = [];
     private readonly List<Level100ActorScriptCommand> _level100ActorScriptCommands = [];
     private readonly Level100TutorialProgress _level100TutorialProgress;
@@ -3652,27 +3656,11 @@ public sealed class Simulation
         int yawInaccuracyMicroRadians,
         int pitchInaccuracyMicroRadians)
     {
-        int launchYaw = NormalizeMicroRad(
-            _facingYawMicroRad + yawInaccuracyMicroRadians);
-        int launchPitch = NormalizeMicroRad(
-            _facingPitchMicroRad + pitchInaccuracyMicroRadians);
-        (int launchSin, int launchCos) = FixedSinCos(launchYaw);
-        (int launchPitchSin, int launchPitchCos) = FixedSinCos(launchPitch);
-        int horizontalSpeed = DivideRoundNearest(
-            (long)launchPitchCos * speedPerTick,
-            FixedTrigScale);
-        int velocityX = DivideRoundNearest(
-            -(long)launchSin * horizontalSpeed,
-            FixedTrigScale);
-        int velocityZ = DivideRoundNearest(
-            (long)launchCos * horizontalSpeed,
-            FixedTrigScale);
-        int verticalVelocity = DivideRoundNearest(
-            -(long)launchPitchSin * speedPerTick,
-            FixedTrigScale);
-
-        // Inaccuracy rotates the round direction only. The retained cockpit
-        // emitter remains on the unscattered Battle Engine basis.
+        // Retail samples the retained cockpit emitter before correcting its
+        // launch orientation. CBattleEngine::GetLaunchPosition (0x0040c990,
+        // BattleEngine.cpp:3000-3069) traces from the camera view and, for an
+        // adjustable weapon, rotates this emitter toward that first contact.
+        // Inaccuracy rotates the corrected direction, never the emitter.
         (int emitterSin, int emitterCos) = FixedSinCos(_facingYawMicroRad);
         (int emitterPitchSin, int emitterPitchCos) =
             FixedSinCos(_facingPitchMicroRad);
@@ -3700,21 +3688,198 @@ public sealed class Simulation
             FixedTrigScale);
 
         SimVector2 playerPosition = PlayerPosition;
+        var emitter = new SimVector3(
+            playerPosition.X + emitterOffsetX,
+            PlayerElevationMillimeters + emitterVerticalOffset,
+            playerPosition.Z + emitterOffsetZ);
+        (int baseYaw, int basePitch) = ReticleAdjustedLaunchAngles(emitter);
+        int launchYaw = NormalizeMicroRad(baseYaw + yawInaccuracyMicroRadians);
+        int launchPitch = NormalizeMicroRad(basePitch + pitchInaccuracyMicroRadians);
+        (int launchSin, int launchCos) = FixedSinCos(launchYaw);
+        (int launchPitchSin, int launchPitchCos) = FixedSinCos(launchPitch);
+        int horizontalSpeed = DivideRoundNearest(
+            (long)launchPitchCos * speedPerTick,
+            FixedTrigScale);
+        int velocityX = DivideRoundNearest(
+            -(long)launchSin * horizontalSpeed,
+            FixedTrigScale);
+        int velocityZ = DivideRoundNearest(
+            (long)launchCos * horizontalSpeed,
+            FixedTrigScale);
+        int verticalVelocity = DivideRoundNearest(
+            -(long)launchPitchSin * speedPerTick,
+            FixedTrigScale);
+
         _projectiles.Add(new MutableProjectile
         {
             Id = _nextProjectileId++,
             Kind = kind,
-            Position = new SimVector2(
-                playerPosition.X + emitterOffsetX,
-                playerPosition.Z + emitterOffsetZ),
+            Position = new SimVector2(emitter.X, emitter.Z),
             Velocity = new SimVector2(velocityX, velocityZ),
-            ElevationMillimeters =
-                PlayerElevationMillimeters + emitterVerticalOffset,
+            ElevationMillimeters = emitter.Y,
             VerticalVelocityMillimetersPerTick = verticalVelocity,
             RemainingTicks = lifetimeTicks,
             ContactRadiusMillimeters = contactRadiusMillimeters,
             DamageBits = damageBits,
         });
+    }
+
+    private (int YawMicroRad, int PitchMicroRad) ReticleAdjustedLaunchAngles(
+        SimVector3 emitter)
+    {
+        // One released crosshair report feeds every round in a same-tick
+        // volley. Core models all current player muzzle slots with this one
+        // retained emitter, so the derived orientation is identical too.
+        if (_reticleLaunchAnglesTick == _tick)
+        {
+            return (_reticleLaunchYawMicroRad, _reticleLaunchPitchMicroRad);
+        }
+
+        // CalcUnitOverCrossHair traces 1,000 retail units. The launch owner uses
+        // its retained distance to reconstruct the hit point from a 200-unit
+        // camera vector; tracing the complete 1,000-unit line is equivalent.
+        const int ReticleRayLengthMillimeters = 1_000_000;
+        (int yawSin, int yawCos) = FixedSinCos(_facingYawMicroRad);
+        (int pitchSin, int pitchCos) = FixedSinCos(_facingPitchMicroRad);
+        int horizontalLength = DivideRoundNearest(
+            (long)pitchCos * ReticleRayLengthMillimeters,
+            FixedTrigScale);
+        var cameraStart = new SimVector3(
+            PlayerPosition.X,
+            PlayerElevationMillimeters,
+            PlayerPosition.Z);
+        var cameraEnd = new SimVector3(
+            checked(cameraStart.X + DivideRoundNearest(
+                -(long)yawSin * horizontalLength,
+                FixedTrigScale)),
+            checked(cameraStart.Y + DivideRoundNearest(
+                -(long)pitchSin * ReticleRayLengthMillimeters,
+                FixedTrigScale)),
+            checked(cameraStart.Z + DivideRoundNearest(
+                (long)yawCos * horizontalLength,
+                FixedTrigScale)));
+
+        Level100ActorRegistrySnapshot registry = _level100Actors.Snapshot;
+        Level100DestructionRuntimeSnapshot destruction = _level100Destruction.Snapshot;
+        if (_reticleContactActors.Length < registry.Actors.Count)
+        {
+            Array.Resize(ref _reticleContactActors, registry.Actors.Count);
+        }
+
+        int contactActorCount = 0;
+        foreach (Level100ActorSnapshot actor in registry.Actors)
+        {
+            if (!actor.Active ||
+                actor.Lifecycle == Level100ActorLifecycle.Destroyed ||
+                actor.DefinitionName is null ||
+                !Level100ContactCatalog.Instance.TryGetDefinition(
+                    actor.DefinitionName,
+                    out Level100ContactDefinition? definition) ||
+                definition is null)
+            {
+                continue;
+            }
+            if (!StringComparer.OrdinalIgnoreCase.Equals(
+                    actor.MeshBinding,
+                    definition.Mesh))
+            {
+                throw new InvalidDataException(
+                    $"Level 100 actor {actor.ActorId.Value} definition/mesh binding changed.");
+            }
+
+            ReadOnlyMemory<byte> partActivity = destruction.Actors
+                .FirstOrDefault(item => item.ActorId == actor.ActorId.Value)
+                ?.PartActivity ?? default;
+            _reticleContactActors[contactActorCount++] = new Level100ContactActor(
+                actor.ActorId.Value,
+                active: true,
+                ToReticleContactTransform(actor.Pose),
+                Level100Vector3.Zero,
+                definition,
+                partActivity);
+        }
+
+        if (!Level100ContactMechanics.TrySweepRoundWithTerrain(
+                ToReticleContactVector(cameraStart),
+                ToReticleContactVector(cameraEnd),
+                contactRadiusMillimeters: 0,
+                _reticleContactActors.AsSpan(0, contactActorCount),
+                out Level100ContactHit hit))
+        {
+            return CacheReticleLaunchAngles(
+                _facingYawMicroRad,
+                _facingPitchMicroRad);
+        }
+
+        var contact = new SimVector3(
+            hit.ImpactCenter.X,
+            checked(-hit.ImpactCenter.Z),
+            hit.ImpactCenter.Y);
+        int deltaX = checked(contact.X - emitter.X);
+        int deltaY = checked(contact.Y - emitter.Y);
+        int deltaZ = checked(contact.Z - emitter.Z);
+        int horizontal = Magnitude2D(deltaX, deltaZ);
+        if (horizontal == 0 && deltaY == 0)
+        {
+            return CacheReticleLaunchAngles(
+                _facingYawMicroRad,
+                _facingPitchMicroRad);
+        }
+
+        return CacheReticleLaunchAngles(
+            FixedAtan2(-deltaX, deltaZ),
+            FixedAtan2(-deltaY, Math.Max(1, horizontal)));
+    }
+
+    private (int YawMicroRad, int PitchMicroRad) CacheReticleLaunchAngles(
+        int yawMicroRad,
+        int pitchMicroRad)
+    {
+        _reticleLaunchAnglesTick = _tick;
+        _reticleLaunchYawMicroRad = yawMicroRad;
+        _reticleLaunchPitchMicroRad = pitchMicroRad;
+        return (yawMicroRad, pitchMicroRad);
+    }
+
+    private static Level100Transform3 ToReticleContactTransform(
+        Level100ActorPoseSnapshot pose) =>
+        new(
+            ToReticleContactVector(pose.PositionMillimeters),
+            ToReticleContactBasis(pose.BasisFloatBits));
+
+    private static Level100Vector3 ToReticleContactVector(SimVector3 vector) =>
+        new(vector.X, vector.Z, checked(-vector.Y));
+
+    private static Level100Basis3 ToReticleContactBasis(Level100FloatBasis3Bits core)
+    {
+        static int Component(int bits)
+        {
+            float value = BitConverter.Int32BitsToSingle(bits);
+            if (!float.IsFinite(value))
+            {
+                throw new InvalidDataException(
+                    "A Level 100 actor basis contains a non-finite component.");
+            }
+            return checked((int)MathF.Round(
+                value * Level100Basis3.Scale,
+                MidpointRounding.AwayFromZero));
+        }
+
+        // Core is (retail X, up=-retail Z, retail Y); contact is retail XYZ.
+        var result = new Level100Basis3(
+            Component(core.Row0X),
+            Component(core.Row0Z),
+            -Component(core.Row0Y),
+            Component(core.Row2X),
+            Component(core.Row2Z),
+            -Component(core.Row2Y),
+            -Component(core.Row1X),
+            -Component(core.Row1Z),
+            Component(core.Row1Y));
+        return result.IsOrthonormal
+            ? result
+            : throw new InvalidDataException(
+                "A Level 100 actor basis cannot be represented by contact mechanics.");
     }
 
     private void UpdateProjectiles()
@@ -3774,6 +3939,7 @@ public sealed class Simulation
     private void ResetDynamicState()
     {
         _nextProjectileId = 1;
+        _reticleLaunchAnglesTick = int.MinValue;
         _mode = VehicleMode.Walker;
         _transition = VehicleTransition.None;
         SimVector2 initialPosition = SimVector2.Zero;
