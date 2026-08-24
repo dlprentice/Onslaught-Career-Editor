@@ -174,6 +174,11 @@ WITNESS_COLUMN_CANDIDATES = (
     "agreesWithNote",
 )
 RUNTIME_EVIDENCE_COLUMN_CANDIDATES = ("runtimeEvidence",)
+MANIFEST_RUNTIME_EVIDENCE_CLASSES = {
+    "TTD_CALL_CONTEXT_REPLICATED": frozenset(
+        {"controlled-runtime", "ttd-capture"}
+    ),
+}
 WITNESS_STRONG_VALUES = frozenset(
     {"MEASURED", "YES", "PASS", "PROVED", "COMPLETE_ENUMERATION"}
 )
@@ -482,9 +487,13 @@ def load_manifest_witness_keys(
                 if runtime_idx is not None and len(cells) > runtime_idx
                 else ""
             )
-            if REGISTER_CONTROLLED_RUNTIME_RE.search(runtime_evidence):
+            runtime_classes = MANIFEST_RUNTIME_EVIDENCE_CLASSES.get(
+                runtime_evidence,
+                frozenset(),
+            )
+            if "controlled-runtime" in runtime_classes:
                 controlled_runtime_keys |= row_keys
-            if REGISTER_TTD_RE.match(runtime_evidence):
+            if "ttd-capture" in runtime_classes:
                 ttd_keys |= row_keys
     return keys, controlled_runtime_keys, ttd_keys, files_used
 
