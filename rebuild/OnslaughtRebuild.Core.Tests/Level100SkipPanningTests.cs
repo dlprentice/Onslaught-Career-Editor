@@ -396,21 +396,22 @@ public sealed class Level100SkipPanningTests
     }
 
     /// <summary>
-    /// <c>CommandSpan</c> gained the load-bearing <c>ChangeWeapon</c> edge, so
-    /// the schema moved from v3 to v4 and the current reader rejects a v3 tape
-    /// rather than treating two field sets as one wire contract.
+    /// <c>CommandSpan</c> gained the load-bearing <c>ChangeWeapon</c> edge in v4,
+    /// then held <c>ChargeWeapon</c> and the zoom edges in v5. The current reader
+    /// explicitly migrates v4, but still rejects v3 rather than treating its
+    /// older field set as the current wire contract.
     /// </summary>
     /// <remarks>
     /// Unknown-member rejection already makes a v3 reader fail closed on a v4
     /// writer's <c>changeWeapon</c> property. This assertion covers the opposite
-    /// direction: a v4 reader also refuses a valid older field set by its
-    /// explicit schema identity.
+    /// direction after the v5 migration: the v5 reader permits only the explicit
+    /// v4 upgrade and refuses a valid v3 field set by its schema identity.
     /// </remarks>
     [Fact]
     public void ATapeWrittenUnderTheOldSchemaIsRejectedRatherThanMisparsed()
     {
         Assert.Equal(
-            "onslaught-rebuild-command-tape.v4",
+            "onslaught-rebuild-command-tape.v5",
             CommandTape.CurrentSchemaVersion);
 
         const string previousSchema = """
