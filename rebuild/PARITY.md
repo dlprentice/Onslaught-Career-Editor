@@ -1,7 +1,8 @@
 # Rebuild parity contract
 
 Status: active — what "1:1 behavioral and experiential parity" means operationally
-Last updated: 2026-08-24 (bounded world-110 native-88 session; earlier:
+Last updated: 2026-08-24 (native-84 secondary completion instrument and bounded
+world-110 native-88 session; earlier:
 Thing/Actor base-state seam;
 selector/briefing per-world string law;
 merged wt/t_0bace7cd Pulse Cannon ReadyToCharge gate and Charged-2 fire;
@@ -46,7 +47,7 @@ These are exceptions to record precisely, not templates for loose porting.
 Recorded 2026-08-17, with the Pulse Cannon increment, end-level countdown,
 ReCalcLinks, FillOut, and FrontEndHandoffReady career-handoff rows added 2026-08-18, and the
 Pulse Cannon ReadyToCharge / Charged-2 rows merged 2026-08-21, and the bounded
-world-110 native-88/session rows added 2026-08-24. Every retail anchor below was **re-derived from the
+world-110 native-84/native-88/session rows added 2026-08-24. Every retail anchor below was **re-derived from the
 pristine specimen** for this table (PE headers parsed directly; flat mapping
 file offset = VA − 0x400000 for `.text`/`.rdata`/`.data`, whose raw ends are
 0x005D8000 / 0x00622000 / 0x00661000 — `.rsrc` is **not** flat and 0x00672FD0 is
@@ -178,6 +179,7 @@ Owner paths are relative to the repository root; test names are relative to
 | World-110 script-object admission (second career node, version-50 layout) | `data/resources/110_res_PC.aya` measured 2026-08-22, whole-archive SHA-256 `4e041c758b9d41ba18311b1fadeacb95fc31af51320861480b97033bc24e3c2b`; RLWD header `(3, 41, 110)`; 13 hash-pinned objects — LevelScript 5110 B `f5c157ba…22aa` with 181 instructions, 92 symbols, `builtin[0]=11`, five named events (`Enemy Engaged` 100, `Vital Building Destroyed` 134, `Lander Escaped` 145, `Lander Destroyed` 159, `Lander Withdraws` 170) | `rebuild/OnslaughtRebuild.Core/Level100MissionProgram.cs` | `Level100MissionProgram.LoadEmbedded(world, name)` | `RetailWorld110AdmissionTests.AllThirteenScriptObjects_AdmitWithTheirPinnedIdentities` | 1 | re-pin `beacon` to `Lander`'s payload hash (cross-object admission accepted) |
 | World-110 HFLD admission | Same archive; extracted envelope (tag + CHFD + HFDT) is 668660 B, SHA-256 `fd4d076a2926fbc473b7d364703bdbc0c8a0f7a638b0ab71b6f319374da033c2`; same CHFD format law as Level 100 (grid `0x89/0x94/0x1a8/0x168`, same scales) with height data differing from the first sample word — a distinct measured world under the shared envelope law, recorded via `PayloadSha256` | `rebuild/OnslaughtRebuild.Core/Level100Terrain.cs` | `Level100Terrain.World110` (per-world `LoadEmbedded(name, sha)`) | `RetailWorld110AdmissionTests.World110Heightfield_IsItsOwnHashPinnedEnvelope` | 1 | re-pin `World110SourceSha256` to Level 100's envelope hash (also failed `World110AndLevel100Terrains_AreDistinctMeasuredWorlds`) |
 | `IScript::SecondaryObjectiveFailed` native 88 | Stuart `game.h:22-24,179-187` owns ten zero-based secondary slots and `SetSecondaryObjectiveFailed(int num, int string_id)`. Pristine `0x00534470` unboxes two integers, writes text at `[0x008A9B2C + num*8 + 4]`, then stores `MOS_FAILED=2` at `[0x008A9B2C + num*8]`; the exact world-110 LevelScript has one native-88 instruction at index 22, attribute `0x00000258`, fed by slot `1` and `_110_SECONDARY_1=114309509` | `rebuild/OnslaughtRebuild.Core/Level100MissionTypes.cs` and `rebuild/OnslaughtRebuild.Core/Level100Mission.cs` | `RetailSecondaryObjectiveState.SetFailed`; `Level100Mission.InvokeNative` case 88 | `Level100MissionTests.SecondaryObjectiveFailed_WritesTheIndexedRetailSlotAndRejectsSwappedOrOutOfRangeArguments` | 1 | write `Complete=1` instead of `Failed=2` (observed Expected Failed / Actual Complete); swapped text/index and both range edges are also rejected without mutation |
+| `IScript::SecondaryObjectiveComplete` native 84 | Same source owns `SetSecondaryObjectiveComplete(int num, int string_id)`. Pristine `0x00534410..0x0053443b` is 44 bytes, SHA-256 `b39a3c58214a8efc7eff0ca11c1407764983888c3a7d249643376162740cd197`; `0x00534432` stores `MOS_COMPLETE=1` at `[0x008A9B2C + num*8]` after writing the text dword at `+4`. The admitted `f5c157ba…22aa` world-110 LevelScript has one exact native-84 instruction at index 66, attribute `0x00000254`, fed by slot `1` and text id `114309509`; the ordinary opening is still suspended at its earlier instruction-34 Pause | `rebuild/OnslaughtRebuild.Core/Level100MissionTypes.cs` and `rebuild/OnslaughtRebuild.Core/Level100Mission.cs` | `RetailSecondaryObjectiveState.SetComplete`; `Level100Mission.InvokeNative` case 84; exact-instruction `RunWorld110SecondaryObjectiveCompleteInstrument` | `Level100MissionTests.SecondaryObjectiveComplete_WritesOnlyTheIndexedRetailSlotAndRejectsSwappedOrOutOfRangeArguments`; `RetailWorld110AdmissionTests.AuthoredWorld110Native84Branch_CompletesTheFailedSlotAndChangesTheCanonicalHash` | 2 | route native 84 to `SetFailed` (Expected Complete / Actual Failed); the adverse failed neighbor, swapped arguments, range edges, authored argument/void shape, and complete-vs-failed schema-43 hashes also falsify drift |
 | World-110 bounded mission-session step | Exact `f5c157ba…22aa` program: native 88 at instruction 22, first `Pause` at instruction 34. The intervening non-waiting `_110_PROTECT` message id 8444036 maps to exact retail `110_protect.ogg`, SHA-256 `03f1fc8e…35d3`, 172,496 samples at 44.1 kHz; the retained duration law gives 90 ticks. Definition/world mismatches fail in both directions. The stamped Level 100 fixture is an execution instrument, not authored world-110 content | `rebuild/OnslaughtRebuild.Core/Level100Mission.cs`, `rebuild/OnslaughtRebuild.Core/Simulation.cs`, and `rebuild/OnslaughtRebuild.Core/Level100MissionTiming.cs` | explicit world-110 constructors; `Level100MissionTiming.MessagePlaybackTicks` | `RetailWorld110AdmissionTests.MissionConstructor_World110CrossesNative88AndStopsAtItsFirstLegitimateWait` | 1 | change the measured `_110_PROTECT` duration from 90 to 91 ticks (observed Expected 90 / Actual 91) |
 
 Two things this table deliberately does **not** claim. It does not claim these
@@ -216,9 +218,11 @@ SimInput-only chain fixture that never posts a mission event. Of the four
 world-admission rows added 2026-08-22, `IsWorldSelectable`,
 `IsWorldLater`, and `Level100Terrain.World110` remain catalog/admission law;
 the bounded world-110 simulation now consumes per-world `LoadEmbedded` but
-still does not consume world-110 terrain. The native-88 secondary state and
-schema-43 hash projection are reached only by that explicit Core instrument;
-the Godot host remains world-100-only. The Lost-skip
+still does not consume world-110 terrain. The native-88 secondary state reaches
+the first-Pause Core session; native 84 is later in the same exact authored
+program but is reached only by the explicitly named instructions-64..67
+instrument, not by that opening path. Schema 43 binds both states; the Godot
+host remains world-100-only. The Lost-skip
 row names the same `TryApply` owner; it does not add a twenty-third
 implementation. The first-play slot row names
 `FirstPlayTutorialSlotWords` on the already-pinned FillOut owner.

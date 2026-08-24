@@ -1,8 +1,9 @@
 # Rebuild Provenance
 
 Status: active implementation boundary
-Last updated: 2026-08-24. Added the bounded world-110 native-88 session
-instrument. Current Thing/Actor base-state, career read/load,
+Last updated: 2026-08-24. Added the bounded world-110 native-84 completion
+instrument alongside the native-88 first-Pause session. Current Thing/Actor
+base-state, career read/load,
 startup/frontend, partial-source inventory, frontend-asset, mouse-sensitivity,
 and retained-particle claims retain their narrower dated evidence boundaries.
 Summary: the licence boundary, permitted evidence, and authority order for the
@@ -186,6 +187,26 @@ the non-root world stamp and all ten secondary records; an all-default world-100
 mission stays on schema 42 and retains the independently measured 40-step hash
 `b8a1c8bc…11216`. No native human-play, full mission, result, client, or visual
 parity is claimed.
+
+The same admitted world-110 object contains one authored native-84
+`SecondaryObjectiveComplete` at instruction 66, attribute `0x00000254`, fed by
+the exact constants at instructions 64 and 65 (slot `1`, text id `114309509`)
+and followed by the void-result pop at 67. The ordinary opening above does
+**not** reach it: that session remains suspended at the earlier instruction-34
+Pause. `RunWorld110SecondaryObjectiveCompleteInstrument` is therefore an
+explicit bounded Core instrument over only authored instructions 64..67. It
+turns the already-failed slot into `MOS_COMPLETE=1`, leaves the first-Pause
+continuation and adjacent slots unchanged, and produces a deterministic
+schema-43 hash distinct from the failed state. The static retail authority is
+reused rather than remeasured: `game.h:22-24,179-187`, the 44-byte pristine
+`0x00534410..0x0053443b` body (SHA-256
+`b39a3c58214a8efc7eff0ca11c1407764983888c3a7d249643376162740cd197`),
+the literal-1 store at `0x00534432`, and the existing 42-authored / 7-observed
+native-corpus row. Reuse preflight disposition: **REUSED** — those four
+authorities plus the merged native-88 state/schema owners; **EXTENDED** — the
+existing secondary-state owner, mission VM, and exact world-110 admission
+tests; **NEW_MEASUREMENT** — 0. No new inventory, census, output root, pristine
+read, runtime capture, or Ghidra mutation was created.
 
 The Level-100 configuration page now owns the one row named by the released
 `WorldHeaders.dat`: page-list index 0 selects `Aquila Prototype`, catalog record
