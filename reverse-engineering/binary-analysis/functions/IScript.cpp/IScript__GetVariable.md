@@ -3,7 +3,7 @@
 > Address: `0x005362a0`
 
 Status: active static function note
-Last updated: 2026-08-22
+Last updated: 2026-08-24 (HUD getter static-site vs overlay-pass wording)
 Source File: none — `GetVariable` / `GetWorldTextSlotTimerValue` are absent
 from `references/Onslaught/` (checked 2026-08-22) | Binary: BEA.exe pristine
 specimen `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
@@ -193,9 +193,13 @@ Timer-read loop (HIGH on control, not on HUD field names):
    at `0x004839e4`), the same sentinel the getter uses.
 
 The 76–78 note left "who drains the slots for display" open. The
-drain is this panel calling the getter twenty times per overlay pass
-with slot indices 0–3. The Mission-native wrapper is not on that
-path.
+drain is this panel. Twenty static `E8` sites to the getter sit
+inside it; the measured loop is four iterations (`esi = 0..3`)
+with an exclusive state-1..6 switch (`ja` default). That twenty is
+a static site count, not a dynamic per-pass call count: one overlay
+pass cannot execute all twenty sites because the switch is exclusive.
+This note does not invent an exact dynamic count or an occupancy
+law. The Mission-native wrapper is not on that path.
 
 ## Callers
 
@@ -295,3 +299,10 @@ Any one of:
   remaining-time contract is no longer plate-only.
 - Completes the open "who drains the slots" item from the 76–78
   note. Does not reopen that note's wrapper bytes.
+- 2026-08-24 — wording correction (t_e5a87f71 / historical review
+  ordinal 512, t_fa3f4c3e / aa4f3b50): retracts "twenty times per
+  overlay pass" as a dynamic-frequency claim. The twenty `E8` sites
+  remain the static inbound count already proved by
+  `call_xref_scan.py`; the four-iteration `esi = 0..3` loop and
+  exclusive state-1..6 switch are unchanged. No new specimen read,
+  no invented dynamic count, no occupancy law.
