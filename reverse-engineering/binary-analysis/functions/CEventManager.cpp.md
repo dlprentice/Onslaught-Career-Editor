@@ -1,7 +1,7 @@
 # CEventManager / CScheduledEvent function map
 
-Status: active static function map
-Last updated: 2026-08-22 (CMech cleanup-event arm closed)
+Status: active function map — bounded AddEvent runtime insertion candidate added
+Last updated: 2026-08-24 (timed insertion C2 candidate; canonical Generation 32 unchanged pending review)
 Source File: `C:\dev\ONSLAUGHT2\EventManager.cpp` (SEH `__FILE__` pointer `0x005d250c` in `Init`; see the map below) | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 Evidence: MEASURED — every byte below was re-read from the pristine specimen at
 file offset VA − 0x400000. The rebuild already owns one of these laws
@@ -45,6 +45,62 @@ a REBUILD_READY row): the event number is a 16-bit word.
 - The 20,000-entry pool capacity (`MAX_NUM_EVENTS`) is sourced from
   `eventmanager.h:20`, not yet read out of the image — the exhaustion string
   `0x00628d60` is verified, its capacity is not.
+
+## Bounded `AddEvent_AtTime` timed-insertion runtime proof
+
+The retained Level-100 opening trace (6,199,181,312 bytes, SHA-256
+`f3e677f7df5f5563ebb468f46ca6041756271f84dfc28ddf37b59210a4552b50`;
+runtime image `e1436ef7e0ad9ccbddd43aaaca952f6e84d4b1a282835cead745efcfc32fadf4`)
+now supplies a complete target census and two selected gap-free queue envelopes.
+The full replay found 12,973 call/entry pairs and 12,973 raw returns, of which
+11,325 are validated gap-free returns. The terminal-padding control
+`[0x0044b5b5,0x0044b5c0)` stayed `0/0/0`.
+
+Both selected calls use manager `0x00672fc8`, event 3000, priority 0, null
+data, and requested time bits `0xbf800000` (`-1.0f`). The function normalizes
+that negative request against manager time `0x3d4ccccd` (`0.05f`) to stored due
+time `0x3d4d35a9` (`0.0501000024f`) and chooses current ring buffer 1, priority
+lane 0, whose `GenericSPtrSet` header is `0x00673028`.
+
+| selected path | caller / fallthrough | entry / return | payload / reuse event | list before → after | insertion position |
+| --- | --- | --- | --- | --- | --- |
+| A | `CAnimation__VFunc_0_00404750` call `0x0040477a` / `0x0040477f` | `0x17A1B5:0x2477` / `0x17A1B5:0x24CB` | `to_call=0x08090160`, record `0x04094b4c` | first `0x03f160d0` unchanged; last `0x03f184f8→0x03f18510`; size `3→4` | new node `0x03f18510` contains record A |
+| B | `CActor__HandleEvent` call `0x00401b41` / `0x00401b46` | `0x17A1B5:0x256E` / `0x17A1B5:0x25C2` | `to_call=0x08015c60`, record `0x04094b74` | exact A final is B initial; first unchanged; last `0x03f18510→0x03f18518`; size `4→5` | node A's next changes `0→0x03f18518`, so B follows A |
+
+The live-count field at manager `+0x18` advances `1713→1714→1715` across
+the two calls. Each final reused 20-byte event record carries its exact target,
+low-word event 3000, reuse word 1, null data, and the common normalized due
+time. The B record's initial 16-byte endpoint is a split/sequence-invalid TTD
+query and is not consumed; its final record, standalone due-time word, queue
+header, prior-node link, and every consumed queue endpoint are complete,
+single-range, sequence-matched observations. Both call/entry/return envelopes
+and all queue write pairs are gap-free.
+
+A preregistered different-time control at `CUnitAI__VFunc_9_004fec60` call
+`0x004fef33` requests bits `0x400338b3` (`2.0503356457f`) and reaches ring
+buffer 40 / lane header `0x00673778`, rather than buffer 1. The narrow internal
+replay observes ring-join buffers `[40, 1, 1]` and reused event records
+`[0x04094b38, 0x04094b4c, 0x04094b74]`, with three exact entries, calls, and
+returns and zero padding hits.
+
+The deterministic verifier pins full call-context SHA-256
+`21be79e8eb954c805960f73b5bc7856443c589b4bf1ffb56b83718ac280434a7`,
+narrow internal-context `256797a203816a8e82dc418a818e9e286e0a877a638b8f42d1db0af5fe451e43`,
+envelope A writes `8ed5cce0979476955b5ec72993fce1974ce9f8fffe2e07b2b15f252fc9af96f4`,
+and envelope B writes `42139f887fd9722d9047366598d0003a50e6d54c376e39da6af9ee02c104fc40`.
+Verifier SHA-256 is
+`2fa0858488cb3c89bd95ff723709f1a1ad254bae9a237744e6a9260bd0d8e8f9`;
+result SHA-256 is
+`4f396d54169f191930b991cbabb5e3e7393ff17d783895c0882159373af7157b`.
+Injected wrong-payload, wrong-time, wrong-manager-receiver, and wrong-list
+controls all fail as required.
+
+This is a bounded C2 candidate for the two observed reused-event, priority-0
+ring insertions only. It does not establish allocation/free-list behavior,
+null/invalid/exhaustion paths, priorities 1/2, nonnegative current-bucket
+requests, wraparound, overflow insertion, concurrency, callback effects, or a
+generic scheduler parity claim. Generation 32 and shared counts remain
+unchanged until independent review and serialized integration.
 
 ## Cleanup-event queue / dispatch boundary
 
