@@ -36,11 +36,11 @@ classification flags are retained in `coverage.json`.
 | Input | Count |
 | --- | ---: |
 | Evidence-register rows | 8,329 |
-| Function-note files | 804 |
+| Function-note files | 805 |
 | Manifest files with named witnesses | 37 |
 | Manifest witness keys | 152 |
-| Factory contract files | 350 |
-| Factory contract rows joined | 350 |
+| Factory contract files | 353 |
+| Factory contract rows joined | 353 |
 
 ## Reading contract
 
