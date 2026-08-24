@@ -506,8 +506,12 @@ dated measurements below as history; do not resume from this paragraph.
    (`fd5ab355`, `a65826fa`) are history. Historical host deaths stay
    attributed to environmental contention until reproduced.
 10. **Organization and truth routing.** Consolidate the top-level, RE, and
-    local-lab documents toward one current-truth path; implement the H:
-    graveyard archival policy; land the D:/G: audit outcomes; keep
+    local-lab documents toward one current-truth path; retire via D-first
+    staging only — every graveyard candidate stages into manifested
+    `D:\lab-quarantine\` with `tools/lab_quarantine.py stage`, while H:
+    remains optional cold retirement behind a separate verified promotion
+    gate (see the retirement rule in [`AGENTS.md`](AGENTS.md)); land the
+    D:/G: audit outcomes; keep
     `developer_state.json`, `RE-INDEX.md`, and `CURRENT_CAPABILITIES.md`
     aligned as each promotion lands.
 
