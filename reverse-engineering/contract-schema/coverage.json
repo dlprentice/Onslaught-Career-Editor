@@ -1,6 +1,6 @@
 {
  "schema": "bea.re.contract-coverage.v1",
- "generatedAtUtc": "2026-08-24T16:41:13Z",
+ "generatedAtUtc": "2026-08-24T20:10:55Z",
  "denominator": {
   "functions": 8329,
   "contracts": 14365,
@@ -14,8 +14,8 @@
   "noteFiles": 805,
   "manifestFilesWithNamedWitnesses": 37,
   "manifestWitnessKeys": 152,
-  "contractFiles": 353,
-  "contractRowsJoined": 353
+  "contractFiles": 354,
+  "contractRowsJoined": 354
  },
  "statusCounts": {
   "STALE": 1,
@@ -27,14 +27,14 @@
   "SKELETON": 86
  },
  "evidenceClassCounts": {
-  "byte-read": 977,
+  "byte-read": 978,
   "ttd-capture": 7,
   "pinned-source-line": 7,
   "controlled-runtime": 24,
-  "ghidra-readback": 2573,
+  "ghidra-readback": 2574,
   "name-only": 86
  },
- "elapsedSeconds": 24.771,
+ "elapsedSeconds": 308.63,
  "functions": [
   {
    "va": "0x00401000",
@@ -1006,7 +1006,9 @@
    "va": "0x00404750",
    "name": "CAnimation__VFunc_0_00404750",
    "status": "REVIEW_READY",
-   "evidenceClasses": [],
+   "evidenceClasses": [
+    "ghidra-readback"
+   ],
    "witnessKinds": [],
    "notes": [],
    "flags": []
@@ -16184,11 +16186,17 @@
    "name": "CEventManager__AddEvent_AtTime",
    "status": "REVIEW_READY",
    "evidenceClasses": [
+    "byte-read",
     "ghidra-readback"
    ],
    "witnessKinds": [],
    "notes": [],
-   "flags": []
+   "flags": [
+    "factory-contract-joined"
+   ],
+   "contracts": [
+    "reverse-engineering/contracts/engine-world/CEventManager__AddEvent_AtTime__0044b370.md"
+   ]
   },
   {
    "va": "0x0044b5c0",
