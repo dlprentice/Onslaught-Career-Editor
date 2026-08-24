@@ -77,6 +77,10 @@ public sealed partial class FirstFlightGame : Node3D
     private bool _smokeWorldReleasedAtMainMenu;
     private bool _smokeCursorCustomAtMainMenu;
     private string? _smokeReportPath;
+    // P8 stage 1: explicit --record-tape=<path>. No discovery, no default:
+    // recording happens only when the operator names a destination path.
+    private string? _recordTapePath;
+    private CommandTapeRecorder? _tapeRecorder;
     private RetailFrontendCursorMode _requestedCursorMode = RetailFrontendCursorMode.Custom;
     private SmokePhase _smokePhase = SmokePhase.ColdFrontend;
     private SmokeReport? _smokeReport;
@@ -633,6 +637,7 @@ public sealed partial class FirstFlightGame : Node3D
 
     public override void _ExitTree()
     {
+        PersistRecordedTapeIfRequested();
         if (!_smokeMode)
         {
             ApplyFrontendCursorMode(RetailFrontendCursorMode.Visible);
@@ -808,6 +813,7 @@ public sealed partial class FirstFlightGame : Node3D
                 DestroyLevel100World();
             }
             _session = CreateSession();
+            EnableRecordingIfRequested(_session);
             ReapplyOptionsSettings();
             CreateLevel100World();
             _frontend!.MarkLevel100Ready();
@@ -976,6 +982,7 @@ public sealed partial class FirstFlightGame : Node3D
             return;
         }
 
+        PersistRecordedTapeIfRequested();
         _world.Visible = false;
         _hud.Visible = false;
         _pauseView.Visible = false;
@@ -996,6 +1003,62 @@ public sealed partial class FirstFlightGame : Node3D
 
     private static InteractiveSession CreateSession() =>
         new(SimulationSeed, Level100StaticWorldAsset.LoadActorDefinitions());
+
+    /// <summary>
+    /// P8 stage 1 recorder seam. When --record-tape was given, the session
+    /// feeds its exact consumed per-tick input — post-quantise look permille,
+    /// merged pulses, consumed edges — into an in-process recorder from the
+    /// first gameplay tick. No native session runs on this card; this only
+    /// arms the capture path.
+    /// </summary>
+    private void EnableRecordingIfRequested(InteractiveSession session)
+    {
+        if (_recordTapePath is null)
+        {
+            return;
+        }
+
+        _tapeRecorder = new CommandTapeRecorder();
+        session.EnableRecording(_tapeRecorder);
+    }
+
+    /// <summary>
+    /// Session-end persistence: once per finalized session, write the tape to
+    /// the explicitly named path with create-new / no-overwrite semantics. The
+    /// failure mode is loud (an exception aborts teardown with the reason);
+    /// nothing is ever overwritten or silently dropped.
+    /// </summary>
+    private void PersistRecordedTapeIfRequested()
+    {
+        if (_recordTapePath is null || _tapeRecorder is null || _session is null)
+        {
+            return;
+        }
+
+        WorldSnapshot final = _session.CurrentSnapshot;
+        if (final.Tick == 0)
+        {
+            // The wire contract requires at least one tick; exiting before the
+            // first simulation step has no replayable session to finalize.
+            return;
+        }
+
+        CommandTape tape = _tapeRecorder.Build(
+            $"recorded-{final.Tick}",
+            SimulationSeed,
+            final.Tick,
+            StateHasher.ComputeHex(final),
+            ReplayRunner.Run(
+                    _tapeRecorder.Build($"recorded-{final.Tick}", SimulationSeed),
+                    Level100StaticWorldAsset.LoadActorDefinitions())
+                .TraceHash);
+        TapeFile.WriteNew(_recordTapePath, tape);
+        GD.Print($"Recorded command tape written to {_recordTapePath}");
+        // Exactly once per explicit request: retry/return flows must not arm a
+        // second recorder that could only collide with the create-new path.
+        _tapeRecorder = null;
+        _recordTapePath = null;
+    }
 
     private static Level100ActorId RequirePlayerAquilaActorId(
         Level100ActorRegistrySnapshot actors)
@@ -1541,21 +1604,38 @@ public sealed partial class FirstFlightGame : Node3D
             {
                 // Consumed by RetailStartupSequence.ResolveMediaRoot.
             }
+            else if (argument.StartsWith("--record-tape=", StringComparison.Ordinal))
+            {
+                _recordTapePath = argument["--record-tape=".Length..];
+            }
             else
             {
                 throw new ArgumentException($"Unknown First Flight argument '{argument}'.");
             }
         }
 
-        if (!_smokeMode)
+        if (_smokeMode)
         {
-            return;
+            if (string.IsNullOrWhiteSpace(_smokeReportPath) ||
+                !Path.IsPathFullyQualified(_smokeReportPath))
+            {
+                throw new ArgumentException("Smoke mode requires an absolute --report path.");
+            }
         }
 
-        if (string.IsNullOrWhiteSpace(_smokeReportPath) ||
-            !Path.IsPathFullyQualified(_smokeReportPath))
+        if (_recordTapePath is not null &&
+            (!Path.IsPathFullyQualified(_recordTapePath) ||
+                !string.Equals(
+                    Path.GetExtension(_recordTapePath),
+                    ".json",
+                    StringComparison.OrdinalIgnoreCase)))
         {
-            throw new ArgumentException("Smoke mode requires an absolute --report path.");
+            // Recording is an explicitly-named-destination feature only: a
+            // relative path would silently depend on the working directory,
+            // and requiring .json makes career saves / retail binaries invalid
+            // even when the named path does not exist yet.
+            throw new ArgumentException(
+                "--record-tape requires an absolute .json path outside career-save and retail storage.");
         }
     }
 

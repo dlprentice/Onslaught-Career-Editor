@@ -21,7 +21,16 @@ public sealed record CommandSpan(
     // BUTTON_SKIP_PANNING 0x3a, KEY_ONCE in every shipped row, so an edge.
     bool SkipPanning = false,
     // BUTTON_MECH_CHANGE_WEAPON 0x14, BUTTON_ONCE in the released PC mapping.
-    bool ChangeWeapon = false)
+    bool ChangeWeapon = false,
+    // BUTTON_MECH_CHARGE_GUN_POD 0x13 is a held level: Core advances the
+    // Pulse Cannon Pod charge once per tick while it stays set (see
+    // Simulation.TryChargeWeapon). It must never be folded into the edge law
+    // below.
+    bool ChargeWeapon = false,
+    // BUTTON_MECH_CHANGE_ZOOM_IN 0x10 / _OUT 0x11 are one-shot actions in the
+    // released mapping (mouse wheel), so one-tick edges like ChangeWeapon.
+    bool ZoomIn = false,
+    bool ZoomOut = false)
 {
     [JsonIgnore]
     public int EndTickExclusive => checked(StartTick + DurationTicks);
@@ -59,6 +68,21 @@ public sealed record CommandSpan(
             actions |= SimActions.ChangeWeapon;
         }
 
+        if (ChargeWeapon)
+        {
+            actions |= SimActions.ChargeWeapon;
+        }
+
+        if (ZoomIn)
+        {
+            actions |= SimActions.ZoomIn;
+        }
+
+        if (ZoomOut)
+        {
+            actions |= SimActions.ZoomOut;
+        }
+
         return new SimInput(
             MoveX,
             MoveZ,
@@ -80,9 +104,25 @@ public sealed record CommandTape
     /// </summary>
     /// <remarks>
     /// <para>
+    /// <c>v4 -&gt; v5</c>, 2026-08-23: <c>CommandSpan</c> gained
+    /// <c>ChargeWeapon</c> (a held level, like <c>LandingJets</c>) and
+    /// <c>ZoomIn</c>/<c>ZoomOut</c> (one-tick edges) when Core grew the
+    /// recorder seam, so a captured human tape can carry the complete consumed
+    /// action set. Compatibility is the explicit migrate/read policy:
+    /// <see cref="CommandTapeCodec.Deserialize"/> transparently upgrades a v4
+    /// document — whose field set is a strict subset of v5's — and stamps it
+    /// as v5, so the tracked scenario keeps working unchanged. The upgrade is
+    /// never a silent reinterpretation: every v4 field means exactly what it
+    /// meant in v4, and a document that already claims v5 identity is checked
+    /// against v5 exactly. A downgrade (v5 to v4) is impossible by
+    /// construction, because v5-only fields would be dropped.
+    /// </para>
+    /// <para>
     /// <c>v3 -&gt; v4</c>, 2026-08-13: <c>CommandSpan.ChangeWeapon</c> was
     /// added when Core implemented the released weapon-cycle action. It is a
-    /// one-tick <c>BUTTON_ONCE</c> edge.
+    /// one-tick <c>BUTTON_ONCE</c> edge. That bump was fail-closed: the v3
+    /// reader rejected v4 documents and vice versa, which is why this bump
+    /// introduces the one-way upgrade path above instead of extending it.
     /// </para>
     /// <para>
     /// <c>v2 -&gt; v3</c>, 2026-08-09: <c>CommandSpan.Fire</c> changed from a
@@ -103,12 +143,22 @@ public sealed record CommandTape
     /// </para>
     /// <para>
     /// The one tracked tape, <c>rebuild/scenarios/first-flight.v1.json</c>,
-    /// keeps its filename: that <c>v1</c> is the scenario's own name and has
-    /// never tracked this constant (the file has not been renamed since
-    /// <c>3cc382e8</c>). Its <c>schemaVersion</c> field is what moves.
+    /// keeps both its filename and its v4 schema declaration on this bounded
+    /// card: that <c>v1</c> is the scenario's own name (unchanged since
+    /// <c>3cc382e8</c>), while the v4 document is upgraded by the explicit
+    /// migrate/read path above. No fixture or pinned hash is refreshed merely
+    /// to prove the recorder infrastructure.
     /// </para>
     /// </remarks>
-    public const string CurrentSchemaVersion = "onslaught-rebuild-command-tape.v4";
+    public const string CurrentSchemaVersion = "onslaught-rebuild-command-tape.v5";
+
+    /// <summary>
+    /// The one immediately previous schema a v5 reader upgrades in place. A
+    /// v4 document's field set is a strict subset of v5's — every field kept
+    /// its exact meaning — so the upgrade stamps the current identity and
+    /// validates under the current (stricter) rules.
+    /// </summary>
+    public const string PreviousUpgradableSchemaVersion = "onslaught-rebuild-command-tape.v4";
 
     [JsonConstructor]
     public CommandTape(
@@ -212,11 +262,11 @@ public sealed record CommandTape
             }
 
             if ((span.ToggleMode || span.Fire || span.Reset || span.SkipPanning ||
-                    span.ChangeWeapon) &&
+                    span.ChangeWeapon || span.ZoomIn || span.ZoomOut) &&
                 span.DurationTicks != 1)
             {
                 throw new InvalidDataException(
-                    "ToggleMode, Fire, Reset, SkipPanning and ChangeWeapon are edge actions and require a one-tick span.");
+                    "ToggleMode, Fire, Reset, SkipPanning, ChangeWeapon, ZoomIn and ZoomOut are edge actions and require a one-tick span.");
             }
 
             previousEnd = endTickExclusive;
@@ -230,6 +280,22 @@ public sealed record CommandTape
         {
             throw new InvalidDataException($"{label} must be a 64-character SHA-256 hex value.");
         }
+    }
+
+    /// <summary>
+    /// The tape's content identity: the lowercase SHA-256 of its LF-canonical
+    /// serialization. Two tapes with the same identity carry the same canonical
+    /// input sequence and, when replayed against the same actor definitions,
+    /// produce the same hashes; a single tick of difference moves it.
+    /// </summary>
+    public static string IdentityOf(CommandTape tape)
+    {
+        ArgumentNullException.ThrowIfNull(tape);
+        string canonical = CommandTapeCodec.Serialize(tape).ReplaceLineEndings("\n");
+        return Convert.ToHexString(
+            System.Security.Cryptography.SHA256.HashData(
+                System.Text.Encoding.UTF8.GetBytes(canonical)))
+            .ToLowerInvariant();
     }
 }
 
@@ -248,6 +314,20 @@ public static class CommandTapeCodec
         ArgumentException.ThrowIfNullOrWhiteSpace(json);
         CommandTape tape = JsonSerializer.Deserialize<CommandTape>(json, s_options)
             ?? throw new InvalidDataException("Command tape JSON did not contain a document.");
+        if (string.Equals(
+                tape.SchemaVersion,
+                CommandTape.PreviousUpgradableSchemaVersion,
+                StringComparison.Ordinal))
+        {
+            // Explicit migrate/read: a v4 document's field set is a strict
+            // subset of v5's, so stamping the current identity and validating
+            // under the current rules upgrades it exactly, with no field
+            // re-meaning. Reject a document that only CLAIMS v4 while carrying
+            // any v5-only member; its schema identity and field set disagree.
+            ValidatePreviousFieldSet(json);
+            tape = tape with { SchemaVersion = CommandTape.CurrentSchemaVersion };
+        }
+
         tape.Validate();
         return tape;
     }
@@ -257,5 +337,235 @@ public static class CommandTapeCodec
         ArgumentNullException.ThrowIfNull(tape);
         tape.Validate();
         return JsonSerializer.Serialize(tape, s_options).ReplaceLineEndings("\n") + "\n";
+    }
+
+    private static void ValidatePreviousFieldSet(string json)
+    {
+        using JsonDocument document = JsonDocument.Parse(json);
+        if (!document.RootElement.TryGetProperty("spans", out JsonElement spans) ||
+            spans.ValueKind != JsonValueKind.Array)
+        {
+            return;
+        }
+
+        foreach (JsonElement span in spans.EnumerateArray())
+        {
+            if (span.ValueKind == JsonValueKind.Object &&
+                (span.TryGetProperty("chargeWeapon", out _) ||
+                    span.TryGetProperty("zoomIn", out _) ||
+                    span.TryGetProperty("zoomOut", out _)))
+            {
+                throw new InvalidDataException(
+                    "A v4 command tape cannot contain the v5-only chargeWeapon, zoomIn or zoomOut members.");
+            }
+        }
+    }
+}
+
+/// <summary>
+/// Records the exact per-tick inputs a client consumed into a
+/// <see cref="CommandTape"/>. This is the capture half of the replay-tape
+/// seam: a client feeds one <see cref="SimInput"/> per simulation step, in
+/// step order with no gaps and no repeats, and the recorder merges the run
+/// into the canonical sorted, non-overlapping, coalesced span list the tape
+/// schema requires.
+///
+/// <para>The recorder is pure: no clock, no filesystem, no process. The
+/// caller decides which ticks exist (recording starts at gameplay, tick 0,
+/// with a fixed seed) and how the finished tape is persisted.</para>
+/// </summary>
+public sealed class CommandTapeRecorder
+{
+    private readonly List<(int Tick, SimInput Input)> _observations = [];
+    private int _nextTick;
+
+    /// <summary>
+    /// The number of ticks observed so far; the next legal observation is
+    /// exactly this tick.
+    /// </summary>
+    public int NextTick => _nextTick;
+
+    /// <summary>
+    /// Observes the input Core consumed on <paramref name="tick"/>.
+    /// Ticks must be contiguous from zero — a gap would silently record a
+    /// different session than the one that ran, and a repeated tick has no
+    /// single input for the simulation to have consumed.
+    /// </summary>
+    public void Observe(int tick, SimInput input)
+    {
+        input.Validate();
+        if (tick != _nextTick)
+        {
+            if (tick < _nextTick)
+            {
+                throw new ArgumentException(
+                    $"Tick {tick} was already observed; the next tick is {_nextTick}.",
+                    nameof(tick));
+            }
+
+            throw new ArgumentException(
+                $"Observation jumped to tick {tick}; tick {_nextTick} was never observed. A gap would record an input sequence the session never ran.",
+                nameof(tick));
+        }
+
+        _observations.Add((tick, input));
+        _nextTick = tick + 1;
+    }
+
+    /// <summary>
+    /// Builds a validated tape over the observed inputs. The duration covers
+    /// every recorded tick exactly.
+    /// </summary>
+    public CommandTape Build(string name, uint seed) =>
+        Build(name, seed, _nextTick);
+
+    /// <summary>
+    /// Builds a validated tape with explicit expectations. The duration must
+    /// cover every recorded tick; pass the hashes captured at the end of the
+    /// recorded session to make the tape self-verifying under
+    /// <c>--expect</c>.
+    /// </summary>
+    public CommandTape Build(
+        string name,
+        uint seed,
+        int durationTicks,
+        string? expectedFinalStateHash = null,
+        string? expectedTraceHash = null)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        if (durationTicks < _nextTick)
+        {
+            throw new ArgumentException(
+                $"Duration {durationTicks} does not cover the {_nextTick} recorded ticks.");
+        }
+
+        List<CommandSpan> spans = CommandTapeBuilder.Merge(_observations);
+
+        var tape = new CommandTape(
+            CommandTape.CurrentSchemaVersion,
+            name,
+            seed,
+            durationTicks,
+            expectedFinalStateHash,
+            expectedTraceHash,
+            spans);
+        tape.Validate();
+        return tape;
+    }
+}
+
+/// <summary>
+/// Merges per-tick observations into canonical <see cref="CommandSpan"/> runs:
+/// contiguous identical inputs coalesce into one span, a changed input starts
+/// a new span at its own tick, and all-idle runs are dropped so a tape carries
+/// only what actually reached the simulation.
+/// </summary>
+public static class CommandTapeBuilder
+{
+    public static List<CommandSpan> Merge(
+        IReadOnlyList<(int Tick, SimInput Input)> observations)
+    {
+        ArgumentNullException.ThrowIfNull(observations);
+        var spans = new List<CommandSpan>();
+        int? runStart = null;
+        int runLength = 0;
+
+        for (int index = 0; index < observations.Count; index++)
+        {
+            (int tick, SimInput input) = observations[index];
+            bool idle = IsIdle(input);
+            bool edge = HasEdgeAction(input);
+            bool splits = runStart.HasValue &&
+                (idle ||
+                    edge ||
+                    HasEdgeAction(observations[index - runLength].Item2) ||
+                    tick != runStart.Value + runLength ||
+                    !InputEquals(observations[index - runLength].Item2, input));
+            if (splits)
+            {
+                spans.Add(SpanOf(
+                    runStart!.Value,
+                    runLength,
+                    observations[index - runLength].Item2));
+                runStart = null;
+                runLength = 0;
+            }
+
+            if (idle)
+            {
+                continue;
+            }
+
+            if (!runStart.HasValue)
+            {
+                runStart = tick;
+            }
+
+            runLength++;
+        }
+
+        if (runStart.HasValue)
+        {
+            spans.Add(SpanOf(
+                runStart.Value,
+                runLength,
+                observations[observations.Count - runLength].Item2));
+        }
+
+        return spans;
+    }
+
+    private static bool IsIdle(in SimInput input) =>
+        InputEquals(input, SimInput.Idle);
+
+    private static bool HasEdgeAction(in SimInput input) =>
+        input.HasAction(
+            SimActions.ToggleMode |
+            SimActions.Fire |
+            SimActions.Reset |
+            SimActions.SkipPanning |
+            SimActions.ChangeWeapon |
+            SimActions.ZoomIn |
+            SimActions.ZoomOut);
+
+    private static bool InputEquals(in SimInput left, in SimInput right) =>
+        left.MoveX == right.MoveX &&
+        left.MoveZ == right.MoveZ &&
+        left.Actions == right.Actions &&
+        left.LookX == right.LookX &&
+        left.LookY == right.LookY &&
+        left.LookXAnalogPermille == right.LookXAnalogPermille &&
+        left.LookYAnalogPermille == right.LookYAnalogPermille;
+
+    private static CommandSpan SpanOf(int startTick, int durationTicks, in SimInput input)
+    {
+        bool toggleMode = input.HasAction(SimActions.ToggleMode);
+        bool fire = input.HasAction(SimActions.Fire);
+        bool reset = input.HasAction(SimActions.Reset);
+        bool landingJets = input.HasAction(SimActions.LandingJets);
+        bool skipPanning = input.HasAction(SimActions.SkipPanning);
+        bool chargeWeapon = input.HasAction(SimActions.ChargeWeapon);
+        bool changeWeapon = input.HasAction(SimActions.ChangeWeapon);
+        bool zoomIn = input.HasAction(SimActions.ZoomIn);
+        bool zoomOut = input.HasAction(SimActions.ZoomOut);
+
+        return new CommandSpan(
+            startTick,
+            durationTicks,
+            input.MoveX,
+            input.MoveZ,
+            toggleMode,
+            fire,
+            reset,
+            input.LookX,
+            input.LookY,
+            input.LookXAnalogPermille,
+            input.LookYAnalogPermille,
+            landingJets,
+            skipPanning,
+            changeWeapon,
+            chargeWeapon,
+            zoomIn,
+            zoomOut);
     }
 }
