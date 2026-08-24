@@ -28,8 +28,11 @@
 #     existing retail-install-shaped ancestor (BEA.exe beside a data folder),
 #     BEFORE build, media materialization, or launch. Comparisons fold
 #     extended DOS-device prefixes (\\?\C:\..., \\?\UNC\...) onto their plain
-#     Win32 identity first, so namespace aliases cannot bypass the boundary,
-#     and device bodies that alias no ordinary path are refused outright.
+#     Win32 identity first, in every spelling Windows itself folds (the raw
+#     backslash form plus the //?/, \\?/, and //?\ slash-mixed forms that
+#     GetFullPath canonicalizes onto the same device namespace), so namespace
+#     aliases cannot bypass the boundary, and device bodies that alias no
+#     ordinary path are refused outright.
 #     The engine-side TapeFile boundary is a second layer, not a substitute.
 #   - The recorded seed is always the build's fixed SimulationSeed, so a
 #     recorded tape replays deterministically.
@@ -59,26 +62,49 @@ if (Test-Path -LiteralPath $TapePath) {
 # TapeFile.WriteNew policy): refuse a TapePath at or under the game root
 # before anything is built, materialized, or launched. All comparisons run on
 # ONE Windows identity: extended DOS-device prefixes are folded to their
-# plain Win32 form first, so \\?\C:\... can never carry an alias identity the
-# boundary did not evaluate, and device bodies that are not aliases of
-# ordinary paths are refused outright.
+# plain Win32 form first, in every spelling GetFullPath canonicalizes onto
+# the device namespace (raw \\?\ and \\.\ plus the //?/, \\?/, //?\, //./,
+# \\./, and //.\ slash-mixed forms measured on this host), so no alias
+# spelling can carry an identity the boundary did not evaluate, and device
+# bodies that are not aliases of ordinary paths are refused outright.
 function ConvertFrom-WindowsComparisonIdentity([string]$PathValue) {
     # Returns the plain Win32 comparison identity. Device bodies that do NOT
     # alias an ordinary path (\\?\GLOBALROOT\..., volume GUIDs) return $null:
     # callers refuse those instead of comparing a fabricated identity.
     if ([string]::IsNullOrEmpty($PathValue)) { return $null }
 
-    if ($PathValue.StartsWith('\\.\', [StringComparison]::Ordinal)) {
-        $PathValue = '\\?\' + $PathValue.Substring(4)
+    # Windows normalizes forward separators first and then matches the exact
+    # four-character device head, so a spelling folds onto the device
+    # namespace exactly when the path, viewed with '/' equivalent to '\',
+    # BEGINS with \\?\ or \\\. (measured on this host via GetFullPathNameW
+    # and .NET GetFullPath: //?/C:/x, \\?/C:/x, //?\C:/x, /\?/C:/x, \\.\C:/x,
+    # //./C:/x all canonicalize onto the raw device namespace, while \??\C:\,
+    # /??/C:/, and \??/C:/ stay ordinary drive-relative input). Fold every
+    # such spelling BEFORE GetFullPath so the comparison sees the identity
+    # the eventual open will use.
+    if ($PathValue.Length -ge 4) {
+        $c0 = $PathValue[0]; $c1 = $PathValue[1]
+        $c2 = $PathValue[2]; $c3 = $PathValue[3]
+        if (($c0 -eq '\' -or $c0 -eq '/') -and
+            ($c1 -eq '\' -or $c1 -eq '/') -and
+            ($c2 -eq '?' -or $c2 -eq '.') -and
+            ($c3 -eq '\' -or $c3 -eq '/')) {
+            $PathValue = '\\?\' + $PathValue.Substring(4)
+        }
     }
     if (-not $PathValue.StartsWith('\\?\', [StringComparison]::Ordinal)) {
         return $PathValue
     }
 
     $body = $PathValue.Substring(4)
-    if ($body.Length -gt 4 -and $body.StartsWith('UNC\', [StringComparison]::OrdinalIgnoreCase)) {
+    if ($body.Length -gt 4 -and
+        ($body.StartsWith('UNC\', [StringComparison]::OrdinalIgnoreCase) -or
+         $body.StartsWith('UNC/', [StringComparison]::OrdinalIgnoreCase))) {
         return '\\' + $body.Substring(4)
     }
+    # The separator after the drive colon is folded with the prefix itself,
+    # so slash spellings such as \\?\C:/x or //?/C:/x land here too and must
+    # be accepted as the same ordinary identity as their backslash form.
     if ($body.Length -ge 3 -and
         [char]::IsAsciiLetter($body[0]) -and
         $body[1] -eq [IO.Path]::VolumeSeparatorChar -and
