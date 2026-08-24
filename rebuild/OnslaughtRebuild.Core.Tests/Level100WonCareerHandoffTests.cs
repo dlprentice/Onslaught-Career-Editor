@@ -976,7 +976,7 @@ public sealed class Level100WonCareerHandoffTests
     }
 
     /// <summary>
-    /// <c>IScript::UnHighlightHudPart</c> at <c>0x00535e8c</c>
+    /// <c>IScript::UnHighlightHudPart</c> at <c>0x00535e8b</c>
     /// stores 1 after Highlight's 2. First-play init then the
     /// dodge pair leave <c>HUD_COMPASS</c> at 1 before FillOut.
     /// Isolated last <c>Emphasized</c> = false names the rebuild

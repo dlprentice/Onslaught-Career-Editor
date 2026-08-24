@@ -214,9 +214,9 @@ public sealed class Level100MissionTests
     }
 
     /// <summary>
-    /// <c>IScript::UnHighlightHudPart</c> at <c>0x00535e8c</c>
+    /// <c>IScript::UnHighlightHudPart</c> at <c>0x00535e8b</c>
     /// is <c>mov dword [eax*4+0x008aa51c], 1</c>. Twin Highlight
-    /// at <c>0x00535e6c</c> stores 2. First-play <c>init()</c>
+    /// at <c>0x00535e6b</c> stores 2. First-play <c>init()</c>
     /// Highlights then UnHighlights <c>HUD_COMPASS</c> (2) and
     /// <c>HUD_RADAR</c> (4) before Activate. Isolated last
     /// <c>Emphasized</c> = false names the rebuild bool and

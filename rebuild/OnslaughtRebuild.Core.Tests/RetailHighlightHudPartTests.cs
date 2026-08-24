@@ -25,6 +25,8 @@ public sealed class RetailHighlightHudPartTests
     [Fact]
     public void HighlightAndUnhighlight_StoreTwoThenOneNotBoolMask()
     {
+        Assert.Equal(0x00535e6bu, RetailHighlightHudPart.HighlightStoreSite);
+        Assert.Equal(0x00535e8bu, RetailHighlightHudPart.UnhighlightStoreSite);
         Assert.Equal(0x008aa51cu, RetailHighlightHudPart.ArrayBaseAddress);
         Assert.Equal(2, RetailHighlightHudPart.Highlighted);
         Assert.Equal(1, RetailHighlightHudPart.Unhighlighted);
