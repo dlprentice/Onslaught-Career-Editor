@@ -111,7 +111,7 @@ public class WinUiModdingCatalogTsvSmokeTests
             string tsv = File.ReadAllText(tsvPath);
             Assert.That(tsv, Does.Contain("catalog_id"));
             Assert.That(tsv, Does.Contain("texture:textures/texture_one.tga"));
-            Assert.That(tsv, Does.Not.Contain("\x89PNG"));
+            Assert.That(tsv, Does.Not.Contain(string.Concat("\x89", "PNG")));
 
             CaptureScreenshot(window, evidenceDir, "01-modding-catalog-tsv.png");
 

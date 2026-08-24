@@ -203,7 +203,7 @@ namespace OnslaughtCareerEditor.AppCore.Tests
             Assert.StartsWith(ModdingManifestService.CatalogTsvHeader, tsv, StringComparison.Ordinal);
             Assert.Contains("texture:textures/texture_one.tga", tsv, StringComparison.Ordinal);
             Assert.Contains("mesh:ship_body.msh", tsv, StringComparison.Ordinal);
-            Assert.DoesNotContain("\x89PNG", tsv, StringComparison.Ordinal);
+            Assert.DoesNotContain(string.Concat("\x89", "PNG"), tsv, StringComparison.Ordinal);
             Assert.DoesNotContain("schema_version", tsv, StringComparison.Ordinal);
         }
 

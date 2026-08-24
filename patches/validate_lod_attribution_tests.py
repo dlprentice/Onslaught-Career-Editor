@@ -109,8 +109,8 @@ class LodAttributionTests(unittest.TestCase):
         self.root = Path(self.tmp.name)
         self.stock_log = self.root / "stock.log"
         self.staged_log = self.root / "staged.log"
-        self.stock_log.write_bytes((FIXTURES / "stock.log").read_bytes())
-        self.staged_log.write_bytes((FIXTURES / "staged.log").read_bytes())
+        self.stock_log.write_bytes((FIXTURES / "stock.synthetic-fixture.txt").read_bytes())
+        self.staged_log.write_bytes((FIXTURES / "staged.synthetic-fixture.txt").read_bytes())
         self.stock_run = self.root / "stock.json"
         self.staged_run = self.root / "staged.json"
         self.write_sidecars()
