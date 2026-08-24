@@ -1,9 +1,9 @@
 # Rebuild Provenance
 
 Status: active implementation boundary
-Last updated: 2026-08-24. Added the bounded world-110 native-84 completion
-instrument alongside the native-88 first-Pause session. Current Thing/Actor
-base-state, career read/load,
+Last updated: 2026-08-24. Added the bounded world-110 authored-definition
+projection and native-84 completion instrument alongside the native-88
+first-Pause session. Current Thing/Actor base-state, career read/load,
 startup/frontend, partial-source inventory, frontend-asset, mouse-sensitivity,
 and retained-particle claims retain their narrower dated evidence boundaries.
 Summary: the licence boundary, permitted evidence, and authority order for the
@@ -207,6 +207,40 @@ authorities plus the merged native-88 state/schema owners; **EXTENDED** — the
 existing secondary-state owner, mission VM, and exact world-110 admission
 tests; **NEW_MEASUREMENT** — 0. No new inventory, census, output root, pristine
 read, runtime capture, or Ghidra mutation was created.
+
+Core now also owns an identity-only authored-definition admission seam for
+world 110. `RetailWorldActorDefinitionAdmission` accepts the world number, exact
+`data/resources/110_res_PC.aya` identity (SHA-256 `4e041c75…3c2b`), and the
+ordered definition-bearing object projection exposed by
+`RetailWorld110LevelActors`. The projection reuses the established
+`wres:bswd:NNNN` / `wres:rlwd:NNNN` identity law and admits exactly 49 rows:
+33 actor rows from the byte-identical BSWD, then 15 actor rows and one type-19
+spawner row from world 110's own RLWD. Stuart's pinned `InitThing.h:112-357`
+owns the common position/orientation/name/script/active record fields,
+`InitThing.h:410-620` owns `CSpawnerInitThing::mSpawnUnit`, and
+`InitThing.h:623-675` owns the squad amount/mode shape. The retained
+`WORLD-DATA-2026-07-31.md` 115/115 round-trip receipt and its exact
+`110_BSWD.json` / `110_RLWD.json` rows establish the released type/definition
+bindings. Archive hash admission remains owned by
+`materialize_retail_assets.py`; the existing `RetailWorld110LevelActors`
+census owns `(2, 0, 40)` and the shared-BSWD identity. Wrong world, archive,
+object identity, definition identity, row count, or kind/type shape is rejected
+before any mission state can be touched. This is not a complete
+`Level100ActorDefinitionSet`: no pose, mesh, health, runtime class, player
+binding, registry, mission, or Godot lifecycle is inferred. In particular the
+type-15 start carries no Battle Engine definition, so no authored `Player 1`
+is manufactured.
+
+Reuse preflight disposition for that seam: **REUSED 6** authority groups —
+(1) pinned `InitThing.h`, (2) the retained round-trip world-data receipt and
+its two world-110 rows, (3) the existing archive path/hash pin, (4) the existing
+world-110 actor census/shared-BSWD pin, (5) the existing WRES object-identity
+law, and (6) the existing world-100 hash plus world-110 script/heightfield/
+secondary-state controls; **EXTENDED 2** existing owners —
+`RetailWorld110LevelActors` and `RetailWorld110LevelActorsTests`;
+**NEW_MEASUREMENT 0**. The generic deterministic admission class is new code,
+not a new retail measurement, inventory, output root, payload, specimen read,
+runtime capture, or Ghidra mutation.
 
 The Level-100 configuration page now owns the one row named by the released
 `WorldHeaders.dat`: page-list index 0 selects `Aquila Prototype`, catalog record

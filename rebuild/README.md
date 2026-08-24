@@ -1,9 +1,9 @@
 # Onslaught Rebuild
 
 Status: early GPL reconstruction lane
-Last updated: 2026-08-24. The bounded world-110 native-88 Core session,
-career read/load frontend slice, and world-admission claims below are the newly
-re-reviewed surface.
+Last updated: 2026-08-24. The bounded world-110 authored-definition projection,
+native-88 Core session, career read/load frontend slice, and world-admission
+claims below are the newly re-reviewed surface.
 Other sections retain their narrower dated evidence boundaries.
 Summary: what the `rebuild/` lane is, who owns which assembly, and what the
 Level 100 Opening Slice does and does not currently do.
@@ -216,11 +216,12 @@ session carries the released 43-node career graph
 measured ReCalcLinks unlock admits it — the root always, any other world once a
 completed incoming link points at it. The launch edge was renamed
 `LevelLaunchRequested` and carries `ConsumeLaunchWorldNumber`. What a launch
-*constructs* is still Level 100 only: world-110's compiled scripts and
-heightfield are admitted by Core (below), and a bounded Core-only session now
-steps its LevelScript against a world-stamped copy of the Level 100 test
-fixture. The authored world-110 actor-definition projection and Godot lifecycle
-still do not exist, so the host cannot build that world. After a Level 100 Won
+*constructs* is still Level 100 only: world-110's compiled scripts, heightfield,
+and identity-only authored-definition projection are admitted by Core (below),
+and a bounded Core-only session now steps its LevelScript against a
+world-stamped copy of the Level 100 test fixture. A complete world-110 actor
+definition set and Godot lifecycle still do not exist, so the host cannot build
+that world. After a Level 100 Won
 reaches `FrontEndHandoffReady`, the host returns
 the player to SELECT LEVEL with the FillOut update applied (retail's PC
 `CFrontEnd::Init` would land on `FEP_DEBRIEFING` first — that page is not
@@ -280,8 +281,15 @@ simulation consumes world-110 terrain or authored actors, and no world-110
 FillOut or full mission run exists. The level-world actor table is measured
 (40 RLWD initial actors, header `(2, 0, 40)`; types 19 and 28 are trailers
 Level 100 does not use) and the BSWD island is byte-identical to Level 100
-(`04c5a383…10f4`). RLWD ordinal 0 is the LevelScript object, not a Battle
-Engine — there is no authored Player 1 to construct.
+(`04c5a383…10f4`). `RetailWorldActorDefinitionAdmission` now admits the exact
+archive identity plus 49 ordered definition-bearing object identities under the
+existing `wres:bswd:NNNN` / `wres:rlwd:NNNN` law: 33 shared-BSWD actor rows,
+15 world-110 RLWD actor rows, and one type-19 spawner row. Wrong world, archive,
+object, definition, count, or row shape fails closed. This is an identity/shape
+projection only: it carries no authored pose, mesh, health, runtime class,
+player binding, actor registry, or session construction. RLWD ordinal 0 is the
+LevelScript object, and the type-15 start carries no Battle Engine definition;
+there is still no authored `Player 1` definition to construct.
 
 World 200 (2026-08-22) generalizes that pattern and measures three places the
 shared law needed refining: `data/resources/200_res_PC.aya` (SHA-256

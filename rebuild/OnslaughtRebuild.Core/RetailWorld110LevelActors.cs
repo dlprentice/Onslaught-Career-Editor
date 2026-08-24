@@ -34,6 +34,14 @@ namespace OnslaughtRebuild.Core;
 /// </remarks>
 public static class RetailWorld110LevelActors
 {
+    public const int WorldNumber = 110;
+
+    public const string SourceArchiveRelativePath =
+        "data/resources/110_res_PC.aya";
+
+    public const string SourceArchiveSha256 =
+        "4e041c758b9d41ba18311b1fadeacb95fc31af51320861480b97033bc24e3c2b";
+
     public const int InitialActorCount = 40;
 
     public const int ActorHeaderA = 2;
@@ -59,6 +67,76 @@ public static class RetailWorld110LevelActors
     public const int Type28UnitCount = 5;
 
     public const int Type36VolumeCount = 1;
+
+    /// <summary>
+    /// Exact archive identity already used by the world-110 script, heightfield,
+    /// and actor-census admissions.
+    /// </summary>
+    public static RetailWorldArchiveIdentity ArchiveIdentity { get; } =
+        new(SourceArchiveRelativePath, SourceArchiveSha256);
+
+    /// <summary>
+    /// The complete definition-bearing projection from the byte-identical BSWD
+    /// loaded first and world 110's own RLWD loaded second. Identities reuse the
+    /// existing Level 100 <c>wres:bswd:NNNN</c> / <c>wres:rlwd:NNNN</c> law.
+    /// Type 19 is the one authored spawner definition; types 8, 28, and 35 are
+    /// actor definitions. The type-15 start is deliberately absent because its
+    /// row carries no Battle Engine definition identity.
+    /// </summary>
+    public static IReadOnlyList<RetailWorldAuthoredDefinitionIdentity>
+        AuthoredDefinitions { get; } =
+        Array.AsReadOnly<RetailWorldAuthoredDefinitionIdentity>(
+        [
+        new("wres:bswd:0000", 8, "Control Tower", RetailWorldAuthoredDefinitionKind.Actor),
+        new("wres:bswd:0001", 8, "Forseti Pulse Tank Factory", RetailWorldAuthoredDefinitionKind.Actor),
+        new("wres:bswd:0002", 8, "Forseti Repair Pad", RetailWorldAuthoredDefinitionKind.Actor),
+        new("wres:bswd:0003", 8, "SAT Turret", RetailWorldAuthoredDefinitionKind.Actor),
+        new("wres:bswd:0004", 35, "Iceberg 1", RetailWorldAuthoredDefinitionKind.Actor),
+        new("wres:bswd:0005", 35, "Iceberg 2", RetailWorldAuthoredDefinitionKind.Actor),
+        new("wres:bswd:0006", 35, "Iceberg 3", RetailWorldAuthoredDefinitionKind.Actor),
+        new("wres:bswd:0007", 35, "Iceberg 4", RetailWorldAuthoredDefinitionKind.Actor),
+        new("wres:bswd:0008", 35, "Iceberg 2", RetailWorldAuthoredDefinitionKind.Actor),
+        new("wres:bswd:0009", 35, "Iceberg 4", RetailWorldAuthoredDefinitionKind.Actor),
+        new("wres:bswd:0010", 8, "Blaster Turret", RetailWorldAuthoredDefinitionKind.Actor),
+        new("wres:bswd:0011", 8, "Blaster Turret", RetailWorldAuthoredDefinitionKind.Actor),
+        new("wres:bswd:0012", 8, "Pulse Turret", RetailWorldAuthoredDefinitionKind.Actor),
+        new("wres:bswd:0013", 8, "Forseti Research Building", RetailWorldAuthoredDefinitionKind.Actor),
+        new("wres:bswd:0014", 8, "Forseti Building 1", RetailWorldAuthoredDefinitionKind.Actor),
+        new("wres:bswd:0015", 8, "Forseti Building 2", RetailWorldAuthoredDefinitionKind.Actor),
+        new("wres:bswd:0016", 8, "Forseti Building 2", RetailWorldAuthoredDefinitionKind.Actor),
+        new("wres:bswd:0017", 8, "Forseti Solar Pod", RetailWorldAuthoredDefinitionKind.Actor),
+        new("wres:bswd:0018", 8, "Forseti Building 3", RetailWorldAuthoredDefinitionKind.Actor),
+        new("wres:bswd:0019", 8, "Forseti Building 3", RetailWorldAuthoredDefinitionKind.Actor),
+        new("wres:bswd:0020", 8, "Forseti Radar Station", RetailWorldAuthoredDefinitionKind.Actor),
+        new("wres:bswd:0023", 8, "Forseti Light Fighter Airfield", RetailWorldAuthoredDefinitionKind.Actor),
+        new("wres:bswd:0024", 8, "Forseti Docks", RetailWorldAuthoredDefinitionKind.Actor),
+        new("wres:bswd:0025", 8, "Hangar", RetailWorldAuthoredDefinitionKind.Actor),
+        new("wres:bswd:0026", 8, "Forseti Tall Building 1", RetailWorldAuthoredDefinitionKind.Actor),
+        new("wres:bswd:0027", 8, "Forseti Tall Building 3", RetailWorldAuthoredDefinitionKind.Actor),
+        new("wres:bswd:0028", 8, "Forseti Tall Building 1", RetailWorldAuthoredDefinitionKind.Actor),
+        new("wres:bswd:0029", 8, "Forseti Tall Building 3", RetailWorldAuthoredDefinitionKind.Actor),
+        new("wres:bswd:0030", 8, "Forseti City Building 1", RetailWorldAuthoredDefinitionKind.Actor),
+        new("wres:bswd:0031", 8, "Forseti City Building 2", RetailWorldAuthoredDefinitionKind.Actor),
+        new("wres:bswd:0032", 8, "Forseti City Building 3", RetailWorldAuthoredDefinitionKind.Actor),
+        new("wres:bswd:0033", 8, "Forseti City Building 2", RetailWorldAuthoredDefinitionKind.Actor),
+        new("wres:bswd:0034", 8, "Forseti City Building 2", RetailWorldAuthoredDefinitionKind.Actor),
+        new("wres:rlwd:0005", 19, "Muspell Fighter", RetailWorldAuthoredDefinitionKind.Spawner),
+        new("wres:rlwd:0008", 8, "Muspell Light Landing Craft", RetailWorldAuthoredDefinitionKind.Actor),
+        new("wres:rlwd:0012", 8, "Muspell Light Landing Craft", RetailWorldAuthoredDefinitionKind.Actor),
+        new("wres:rlwd:0013", 8, "Muspell Light Landing Empty", RetailWorldAuthoredDefinitionKind.Actor),
+        new("wres:rlwd:0014", 28, "Light Gun Tank", RetailWorldAuthoredDefinitionKind.Actor),
+        new("wres:rlwd:0016", 28, "Light Gun Tank", RetailWorldAuthoredDefinitionKind.Actor),
+        new("wres:rlwd:0017", 28, "AV-14B Sabre Pulse Tank", RetailWorldAuthoredDefinitionKind.Actor),
+        new("wres:rlwd:0018", 28, "Light Gun Tank", RetailWorldAuthoredDefinitionKind.Actor),
+        new("wres:rlwd:0019", 28, "AV-14B Sabre Pulse Tank", RetailWorldAuthoredDefinitionKind.Actor),
+        new("wres:rlwd:0020", 8, "Muspell Light Landing Craft", RetailWorldAuthoredDefinitionKind.Actor),
+        new("wres:rlwd:0025", 8, "Muspell Fighter", RetailWorldAuthoredDefinitionKind.Actor),
+        new("wres:rlwd:0034", 8, "Muspell Light Fighter", RetailWorldAuthoredDefinitionKind.Actor),
+        new("wres:rlwd:0035", 8, "Muspell Light Fighter", RetailWorldAuthoredDefinitionKind.Actor),
+        new("wres:rlwd:0036", 8, "Muspell Light Fighter", RetailWorldAuthoredDefinitionKind.Actor),
+        new("wres:rlwd:0037", 8, "Muspell Light Fighter", RetailWorldAuthoredDefinitionKind.Actor),
+        new("wres:rlwd:0038", 8, "Muspell Light Fighter", RetailWorldAuthoredDefinitionKind.Actor),
+        ]);
 
     public static int SumOfTypedRows =>
         Type8UnitCount + Type15Count + Type18WaypointCount + Type19SpawnerCount +
