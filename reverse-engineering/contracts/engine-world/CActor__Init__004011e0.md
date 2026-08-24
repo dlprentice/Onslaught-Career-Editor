@@ -13,15 +13,13 @@ injected wrong-receiver/init/owner/field controls. SOURCE analog evidence is
 kept separate.
 Specimen: pristine `BEA.exe`, 2,506,752 bytes, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
-Source File: `references/Onslaught/actor.cpp` | Binary: `BEA.exe`
+Source File: `references/Onslaught/actor.cpp` | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
 > Address: `0x004011e0`
 
 ## Identity
 
-- Body `[0x004011e0,0x004013c4]`, 485 bytes, 148 instructions; raw
-  pristine-body SHA-256
-  `434f5fd6f9e3a04274452dbdbf4cc04f21bc514f25cdeab76e03eff3f6875ad4`.
+- Body `[0x004011e0,0x004013c4]`, 485 bytes, 148 instructions; raw pristine-body SHA-256 `434f5fd6f9e3a04274452dbdbf4cc04f21bc514f25cdeab76e03eff3f6875ad4`.
 - Generation-32 range-set SHA-256
   `0b1c5e7dedd1d8b4a059ac056bac6be6d0afe5436b615a80f4b5db7f921a6011`;
   entity key
@@ -33,7 +31,15 @@ Source File: `references/Onslaught/actor.cpp` | Binary: `BEA.exe`
   `CANDIDATE_NEEDS_REFUTER`, execution state `OPEN_EXECUTED`. This card changes
   no campaign TSV, register, count, or current-authority pointer.
 
-## Calling convention and parameters
+## Calling convention
+
+- `__thiscall`; the exact body receives `this` in `ECX` and ends in `RET 0x4`,
+  accounting for one explicit stack dword. The two selected runtime observations
+  reproduce that receiver/argument placement.
+- Additional register or stack parameters are not_determinable from the promoted
+  evidence and are not claimed.
+
+## Prototype and parameter semantics
 
 ```c
 void __thiscall CActor__Init(void *this, void *init)
@@ -43,12 +49,36 @@ void __thiscall CActor__Init(void *this, void *init)
 - `init`: exact entry stack dword one. The runtime writer events preserve its
   value in `EAX` across the watched direct velocity/old-position/orientation
   writes.
-- The signature declares `void`; no scalar `EAX` return contract is claimed.
 - Nullability, aliasing, concrete dynamic types, invalid orientation modes,
   allocator failure, scheduler failure, and zero/negative move multipliers are
   unresolved.
 
-## Static contract
+## Return value meaning
+
+- The signature declares `void`; no scalar `EAX` return contract is claimed.
+- Caller-visible post-return state is not_determinable: the retained trace has
+  raw returns but zero validated gap-free invocation returns and no accepted
+  return-sequence receiver readback.
+
+## Globals read/written
+
+- Exact global storage identities and a complete global read/write set are
+  not_determinable from the promoted evidence.
+- The bounded static body reads the event-clock value and visible shutdown gate
+  used by the sequence below. Global effects inside the random/event callees are
+  not promoted here.
+
+## Callees relied on / callers
+
+- Static direct callees are `CComplexThing__Init @ 0x004f3fd0`,
+  `Random__NextLCGAbs @ 0x004de8d0`, and
+  `CEventManager__AddEvent_AtTime @ 0x0044b370`; the first reaches inherited
+  `CThing__Init @ 0x004f34a0`.
+- The complete target-filtered retained-trace census observes 34 calls from
+  `CUnit__Init @ 0x004f8b38` and six from
+  `CFeature__Init @ 0x0044cb18`. Broader caller populations are unknown.
+
+## Behavior summary
 
 The exact retail body, bounded static predecessor, and source analog agree on
 this visible order without making a whole-source equivalence claim:
@@ -75,7 +105,15 @@ The exact inherited/Actor destination boundary comes from
 [`../../binary-analysis/cthing-ccomplexthing-layout-2026-08-13.md`](../../binary-analysis/cthing-ccomplexthing-layout-2026-08-13.md):
 `CComplexThing` ends and `CActor` begins at `this+0x7c`.
 
-## Runtime envelope (bounded)
+## Error / edge behavior
+
+- The visible shutdown gate suppresses event scheduling on its guarded path.
+- Null/aliased pointers, invalid orientation modes, allocator or scheduler
+  failure, and zero/negative move multipliers have no accepted bounded witness;
+  their behavior is unknown rather than inferred from the source analog.
+- No caller-visible error code is claimed for this `void` contract.
+
+## Runtime corroboration (TTD, bounded)
 
 Trace: retained Level-100 opening, 6,199,181,312 bytes, SHA-256
 `f3e677f7df5f5563ebb468f46ca6041756271f84dfc28ddf37b59210a4552b50`;
@@ -135,6 +173,23 @@ unwatched input fields or complete source semantics.
 The exhaustive per-pair ledger, not repeated here, is summarized in
 [`../../binary-analysis/functions/Actor.cpp.md`](../../binary-analysis/functions/Actor.cpp.md).
 
+## Evidence
+
+- The exact static range, instruction count, and raw pristine-body digest are
+  independently carried by
+  `reverse-engineering/binary-analysis/pc-demo-retail-virtual-target-map-2026-08-11.tsv`.
+- The detailed runtime ledger, caller census, write-pair matrix, controls, and
+  missing-witness boundary are retained in
+  `reverse-engineering/binary-analysis/functions/Actor.cpp.md`; the owner split
+  is supported by
+  `reverse-engineering/binary-analysis/cthing-ccomplexthing-layout-2026-08-13.md`.
+- Source analog inputs are `references/Onslaught/actor.cpp` and
+  `references/Onslaught/actor.h`; their hashes are pinned above and remain
+  separate from retail/runtime proof.
+- The trace, runtime image, verifier result, and four raw-input SHA-256 pins in
+  this contract bind the ignored retained evidence without turning it into a
+  tracked payload or a canonical-grade change.
+
 ## Can-fail verifier
 
 Deterministic verifier SHA-256
@@ -190,3 +245,22 @@ Generation 32, `EVIDENCE-REGISTER.tsv`, Ghidra, pristine/runtime binaries,
 traces, saves, rebuild code, canonical grades, or VERIFIED/C2 counts.
 Independent review is required before any later integration owner changes the
 canonical campaign state.
+
+## Confidence
+
+2 - Exact static identity and the two bounded caller-family write observations
+are measured and independently reviewed, while validated invocation returns,
+return-sequence readback, complete semantics, and C2 promotion remain absent.
+
+## Unresolved questions
+
+- All 40 observed returns remain separated from entry by replay gaps, so the
+  validated gap-free return count is zero.
+- Both receiver plates still fail the return-endpoint sequence match; accepted
+  post-return receiver/init readback is absent.
+- Complete unwatched inputs/writes, invalid-input and failure behavior,
+  allocation/lifetime, scheduler outcome, post-return state, and broader caller
+  populations remain unknown.
+- The cheapest falsifier remains the retained-trace return-callback readback
+  successor described in the RED verdict; no new native trace is warranted
+  unless that instrument fails for a named technical reason.
