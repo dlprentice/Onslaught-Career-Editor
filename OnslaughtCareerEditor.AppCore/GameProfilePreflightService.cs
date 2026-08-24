@@ -1194,7 +1194,7 @@ namespace OnslaughtCareerEditor.AppCore
                 throw new InvalidOperationException("Executable source must be named BEA.exe or BEA.exe.original.backup.");
 
             if (!IsSameOrUnderRoot(candidate, sourceRoot))
-                throw new InvalidOperationException("Executable source must stay inside the source game root.");
+                throw new InvalidOperationException("That source executable must stay inside the game folder.");
 
             RejectReparsePoint(candidate, "executable source");
             RejectMultipleHardLinks(candidate, "Executable source");

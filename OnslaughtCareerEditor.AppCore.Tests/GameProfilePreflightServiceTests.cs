@@ -1592,7 +1592,11 @@ namespace OnslaughtCareerEditor.AppCore.Tests
                             ApplyWindowedCompatibilityPatch: true,
                             AllowByteLayoutOnlyTarget: true)));
 
-                Assert.Contains("source game root", escapeEx.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Equal("That source executable must stay inside the game folder.", escapeEx.Message);
+                Assert.DoesNotContain("root", escapeEx.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.DoesNotContain("path", escapeEx.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.DoesNotContain(outsideExe, escapeEx.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.DoesNotContain(sourceRoot, escapeEx.Message, StringComparison.OrdinalIgnoreCase);
             }
             finally
             {
