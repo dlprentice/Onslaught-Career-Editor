@@ -129,10 +129,25 @@ HOME_NAVIGATION_FILTER = (
     "FullyQualifiedName~WinUiHomeNavigationSmokeTests"
     "&FullyQualifiedName!~Home_NewcomerHierarchy_CapturesFirstRunReadyAndCompactWithoutNavigation"
 )
-LORE_SMOKE_FILTER = "FullyQualifiedName~WinUiLoreInteractionSmokeTests.LoreReader_SearchesSelectsAndShowsCurrentDocumentThroughUiAutomation"
+# The older TreeItem fixture selects its target, then unconditionally falls
+# through to a mouse click even when UI Automation reports no clickable point.
+# The depth fixture uses the realized search-hit Button's Invoke pattern, which
+# is the deterministic accessibility route for an extracted release candidate.
+LORE_SMOKE_FILTER = "FullyQualifiedName~WinUiLoreDepthSmokeTests.LoreSearchHits_OpenTheMatchingDocument"
 HOME_NAVIGATION_TEST_TIMEOUT_SECONDS = 600
+# A fresh current-main publish on the loaded maintainer host exceeded the old
+# hard-coded 360-second step budget before any ZIP or native smoke could run.
+# Keep one bounded publish attempt, but give that attempt a realistic budget.
+PUBLISH_STEP_TIMEOUT_SECONDS = 900
 LORE_SMOKE_TEST_TIMEOUT_SECONDS = 240
 MEDIA_SMOKE_MAX_ATTEMPTS = 2
+SAFE_COPY_EXPERIMENT = "extracted-portable-winui-synthetic-safe-copy-v1"
+SAFE_COPY_WORKFLOW_DIR_NAME = "sc"
+SAFE_COPY_SMOKE_FILTER = (
+    "FullyQualifiedName~WinUiSafeCopyManagerSmokeTests."
+    "ExtractedPortableApp_CreatesSyntheticSafeCopyAndProvesNegativeControls"
+)
+SAFE_COPY_SMOKE_TEST_TIMEOUT_SECONDS = 600
 ZIP_PAYLOAD_DENY_SEGMENTS = {
     ".codex",
     "GameProfiles",
@@ -288,7 +303,7 @@ def run_publish(publish_dir: Path) -> tuple[int, str]:
             str(publish_dir),
             "--nologo",
         ],
-        timeout_seconds=360,
+        timeout_seconds=PUBLISH_STEP_TIMEOUT_SECONDS,
     )
 
 
@@ -936,6 +951,162 @@ def sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
+def sha256_tree(root: Path) -> str:
+    digest = hashlib.sha256()
+    files = sorted(
+        (path for path in root.rglob("*") if path.is_file()),
+        key=lambda path: path.relative_to(root).as_posix(),
+    )
+    for path in files:
+        digest.update((path.relative_to(root).as_posix() + "\n").encode("utf-8"))
+        digest.update((sha256_file(path) + "\n").encode("ascii"))
+    return digest.hexdigest()
+
+
+def inspect_safe_copy_workflow(
+    approved_root: Path,
+    preregistration_path: Path,
+    result_path: Path,
+    extracted_exe: Path,
+    *,
+    expected_timeout_seconds: int,
+) -> list[CheckResult]:
+    keys = (
+        "safe_copy_preregistration",
+        "safe_copy_source_unchanged",
+        "safe_copy_output_boundary",
+        "safe_copy_output_hash",
+        "safe_copy_negative_controls",
+        "safe_copy_app_report",
+        "safe_copy_process_cleanup",
+    )
+    try:
+        preregistration = json.loads(preregistration_path.read_text(encoding="utf-8"))
+        receipt = json.loads(result_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        return [CheckResult(key, "FAIL", f"Safe-copy workflow receipt could not be read: {exc}") for key in keys]
+
+    approved = approved_root.resolve()
+    expected_exe = extracted_exe.resolve()
+    process_ids = preregistration.get("processIds")
+    preregistration_ok = (
+        preregistration.get("schema") == "winui-extracted-safe-copy-preregistration.v1"
+        and preregistration.get("experiment") == SAFE_COPY_EXPERIMENT
+        and isinstance(process_ids, list)
+        and len(process_ids) == 1
+        and isinstance(process_ids[0], int)
+        and process_ids[0] > 0
+        and preregistration.get("timeoutSeconds") == expected_timeout_seconds
+        and Path(str(preregistration.get("executablePath", ""))).resolve() == expected_exe
+        and preregistration.get("executableSha256") == sha256_file(expected_exe)
+    )
+
+    def path_from_receipt(name: str) -> Path:
+        return Path(str(receipt.get(name, ""))).resolve()
+
+    source_root = path_from_receipt("sourceRoot")
+    output_root = path_from_receipt("outputRoot")
+    target_root = path_from_receipt("targetRoot")
+    source_before = receipt.get("sourceTreeSha256Before")
+    source_after = receipt.get("sourceTreeSha256After")
+    target_hash = receipt.get("targetTreeSha256")
+    source_unchanged = (
+        source_root.is_dir()
+        and isinstance(source_before, str)
+        and len(source_before) == 64
+        and source_before == source_after
+        and source_after == sha256_tree(source_root)
+    )
+    boundary_ok = (
+        receipt.get("schema") == "winui-extracted-safe-copy-result.v1"
+        and receipt.get("status") == "pass"
+        and receipt.get("experiment") == SAFE_COPY_EXPERIMENT
+        and path_from_receipt("approvedRoot") == approved
+        and source_root != output_root
+        and not is_relative_to(source_root, output_root)
+        and not is_relative_to(output_root, source_root)
+        and is_relative_to(source_root, approved)
+        and is_relative_to(output_root, approved)
+        and is_relative_to(target_root, output_root)
+        and target_root.is_dir()
+        and (target_root / "onslaught-profile-manifest.json").is_file()
+        and all(is_relative_to(path.resolve(), approved) for path in approved.rglob("*"))
+    )
+    output_hash_ok = (
+        isinstance(target_hash, str)
+        and len(target_hash) == 64
+        and target_root.is_dir()
+        and target_hash == sha256_tree(target_root)
+    )
+    negative_controls = receipt.get("negativeControls")
+    negative_controls_ok = (
+        isinstance(negative_controls, dict)
+        and negative_controls.get("missingInput") == "pass"
+        and negative_controls.get("sourceOutputAlias") == "pass"
+    )
+    app_report = str(receipt.get("appReportedSummary", ""))
+    app_report_ok = (
+        "Safe game copy preparation complete." in app_report
+        and "Only files inside the safe copy were changed; no game process was started." in app_report
+    )
+    process_cleanup_ok = (
+        receipt.get("processIds") == process_ids
+        and receipt.get("processExitClean") is True
+    )
+
+    return [
+        CheckResult(
+            "safe_copy_preregistration",
+            "PASS" if preregistration_ok else "FAIL",
+            "Exactly one extracted WinUI PID, experiment, executable hash, and timeout were preregistered."
+            if preregistration_ok
+            else "The extracted WinUI safe-copy PID/experiment preregistration was incomplete or mismatched.",
+        ),
+        CheckResult(
+            "safe_copy_source_unchanged",
+            "PASS" if source_unchanged else "FAIL",
+            f"Synthetic source tree stayed byte-identical at SHA-256 {source_after}."
+            if source_unchanged
+            else "The synthetic source tree changed or its recorded hashes were invalid.",
+        ),
+        CheckResult(
+            "safe_copy_output_boundary",
+            "PASS" if boundary_ok else "FAIL",
+            "The copied target and every workflow artifact stayed under the approved ignored scratch root."
+            if boundary_ok
+            else "The safe-copy output or a workflow artifact escaped its approved ignored scratch root.",
+        ),
+        CheckResult(
+            "safe_copy_output_hash",
+            "PASS" if output_hash_ok else "FAIL",
+            f"Copied target tree exists at SHA-256 {target_hash}."
+            if output_hash_ok
+            else "The copied target is missing or its tree hash does not match the live receipt.",
+        ),
+        CheckResult(
+            "safe_copy_negative_controls",
+            "PASS" if negative_controls_ok else "FAIL",
+            "The live app refused a stale/missing source and an unsafe source/output alias before the successful copy."
+            if negative_controls_ok
+            else "One or more live safe-copy negative controls did not pass.",
+        ),
+        CheckResult(
+            "safe_copy_app_report",
+            "PASS" if app_report_ok else "FAIL",
+            "The extracted app reported the factual safe-copy result and unchanged-source boundary."
+            if app_report_ok
+            else "The extracted app did not report the factual safe-copy result.",
+        ),
+        CheckResult(
+            "safe_copy_process_cleanup",
+            "PASS" if process_cleanup_ok else "FAIL",
+            "The one preregistered extracted WinUI process exited cleanly."
+            if process_cleanup_ok
+            else "The extracted WinUI PID ledger was inconsistent or the owned process survived.",
+        ),
+    ]
+
+
 def write_checksum(zip_path: Path, checksum_path: Path, sha256: str) -> None:
     checksum_path.write_text(f"{sha256}  {zip_path.name}\n", encoding="utf-8", newline="\n")
 
@@ -1418,6 +1589,7 @@ def run_ui_test(
     *,
     timeout_seconds: int = 240,
     nunit_workers: int | None = None,
+    extra_env: dict[str, str] | None = None,
 ) -> tuple[int, str]:
     command = [
         "dotnet",
@@ -1429,10 +1601,13 @@ def run_ui_test(
     ]
     if nunit_workers is not None:
         command.extend(["--", f"NUnit.NumberOfTestWorkers={nunit_workers}"])
+    environment = {"ONSLAUGHT_WINUI_TEST_EXE_PATH": str(exe_path)}
+    if extra_env:
+        environment.update(extra_env)
     return run(
         command,
         timeout_seconds=timeout_seconds,
-        env={"ONSLAUGHT_WINUI_TEST_EXE_PATH": str(exe_path)},
+        env=environment,
     )
 
 
@@ -1499,6 +1674,10 @@ def build_report(
     home_navigation_output: str,
     lore_exit: int | None,
     lore_output: str,
+    safe_copy_exit: int | None,
+    safe_copy_output: str,
+    safe_copy_preregistration_path: Path,
+    safe_copy_receipt_path: Path,
     media_exit: int | None,
     media_output: str,
     process_after: str,
@@ -1507,7 +1686,7 @@ def build_report(
     return {
         "schema": "winui-zip-package-probe.v1",
         "status": "pass" if publish_exit == 0 and extract_exit == 0 and not failures else "blocked",
-        "releaseClaim": "Disposable friendly portable ZIP package, Explorer-safe entry paths, extraction, extracted app launch smoke, representative extracted-app Home navigation, extracted Lore smoke, and representative Media smoke when requested are proven only if status is pass; signing/MSIX/installer/SmartScreen readiness remain separate gates.",
+        "releaseClaim": "Disposable friendly portable ZIP package, Explorer-safe entry paths, extraction, extracted app launch smoke, representative extracted-app Home navigation, extracted Lore smoke, one live generated-synthetic Safe Copy Manager workflow with negative controls and source/output hashes, and representative Media smoke when requested are proven only if status is pass; signing/MSIX/installer/SmartScreen readiness remain separate gates.",
         "outputRoot": relative(out_root),
         "zipPackage": relative(zip_path),
         "zipByteSize": zip_path.stat().st_size if zip_path.is_file() else 0,
@@ -1522,6 +1701,9 @@ def build_report(
         "homeNavigationSmokeExitCode": home_navigation_exit,
         "homeDeeplinkSmokeExitCode": home_navigation_exit,
         "loreSmokeExitCode": lore_exit,
+        "safeCopySmokeExitCode": safe_copy_exit,
+        "safeCopyPreregistration": relative(safe_copy_preregistration_path),
+        "safeCopyReceipt": relative(safe_copy_receipt_path),
         "mediaSmokeExitCode": media_exit,
         "checks": [item.__dict__ for item in checks],
         "publishOutputTail": "\n".join(publish_output.splitlines()[-20:]),
@@ -1529,6 +1711,7 @@ def build_report(
         "homeNavigationOutputTail": "\n".join(home_navigation_output.splitlines()[-40:]),
         "homeDeeplinkOutputTail": "\n".join(home_navigation_output.splitlines()[-40:]),
         "loreOutputTail": "\n".join(lore_output.splitlines()[-40:]),
+        "safeCopyOutputTail": "\n".join(safe_copy_output.splitlines()[-40:]),
         "mediaOutputTail": "\n".join(media_output.splitlines()[-40:]),
         "processAfter": process_after.strip() or "<none>",
         "notProven": [
@@ -1597,10 +1780,18 @@ def main() -> int:
     home_navigation_output = ""
     lore_exit: int | None = None
     lore_output = ""
+    safe_copy_exit: int | None = None
+    safe_copy_output = ""
     media_exit: int | None = None
     media_output = ""
     process_after = ""
     zip_sha256 = ""
+    # The patch engine stages a GUID-named sibling beside BEA.exe. Keep this
+    # generated subtree short enough for legacy Windows MAX_PATH handling even
+    # when the repository itself lives in a long worktree path.
+    safe_copy_root = out_root / SAFE_COPY_WORKFLOW_DIR_NAME
+    safe_copy_preregistration_path = safe_copy_root / "safe-copy-preregistration.json"
+    safe_copy_receipt_path = safe_copy_root / "safe-copy-result.json"
 
     if publish_exit == 0 and all(item.status != "FAIL" for item in checks):
         zip_exit, zip_output = create_zip(bundle_dir, zip_path)
@@ -1676,7 +1867,35 @@ def main() -> int:
                                 f"Lore reader smoke exit code {lore_exit}; skipped rows are not accepted.",
                             )
                         )
-                    if args.include_media_smoke and ui_test_passed_without_skip(launch_exit, launch_output) and ui_test_passed_without_skip(home_navigation_exit, home_navigation_output) and ui_test_passed_without_skip(lore_exit, lore_output):
+                    if ui_test_passed_without_skip(launch_exit, launch_output) and ui_test_passed_without_skip(home_navigation_exit, home_navigation_output) and ui_test_passed_without_skip(lore_exit, lore_output):
+                        stop_app_process()
+                        safe_copy_exit, safe_copy_output = run_ui_test(
+                            SAFE_COPY_SMOKE_FILTER,
+                            extracted_exe,
+                            timeout_seconds=SAFE_COPY_SMOKE_TEST_TIMEOUT_SECONDS,
+                            nunit_workers=1,
+                            extra_env={
+                                "ONSLAUGHT_WINUI_SAFE_COPY_PROBE_ROOT": str(safe_copy_root),
+                                "ONSLAUGHT_WINUI_SAFE_COPY_PROBE_TIMEOUT_SECONDS": str(SAFE_COPY_SMOKE_TEST_TIMEOUT_SECONDS),
+                            },
+                        )
+                        checks.append(
+                            CheckResult(
+                                "extracted_safe_copy_smoke",
+                                "PASS" if ui_test_passed_without_skip(safe_copy_exit, safe_copy_output) else "FAIL",
+                                f"Live synthetic Safe Copy Manager smoke exit code {safe_copy_exit}; skipped rows are not accepted.",
+                            )
+                        )
+                        checks.extend(
+                            inspect_safe_copy_workflow(
+                                safe_copy_root,
+                                safe_copy_preregistration_path,
+                                safe_copy_receipt_path,
+                                extracted_exe,
+                                expected_timeout_seconds=SAFE_COPY_SMOKE_TEST_TIMEOUT_SECONDS,
+                            )
+                        )
+                    if args.include_media_smoke and ui_test_passed_without_skip(launch_exit, launch_output) and ui_test_passed_without_skip(home_navigation_exit, home_navigation_output) and ui_test_passed_without_skip(lore_exit, lore_output) and ui_test_passed_without_skip(safe_copy_exit, safe_copy_output):
                         stop_app_process()
                         media_exit, media_output, media_attempts = run_ui_test_with_retry(
                             "FullyQualifiedName~WinUiMediaInteractionSmokeTests.MediaPage_PlaysRepresentativeAudioAndVideoRowsThroughUi",
@@ -1718,6 +1937,10 @@ def main() -> int:
         home_navigation_output,
         lore_exit,
         lore_output,
+        safe_copy_exit,
+        safe_copy_output,
+        safe_copy_preregistration_path,
+        safe_copy_receipt_path,
         media_exit,
         media_output,
         process_after,
@@ -1742,6 +1965,8 @@ def main() -> int:
             print(report["homeNavigationOutputTail"])
             print("Lore output:")
             print(report["loreOutputTail"])
+            print("Safe Copy output:")
+            print(report["safeCopyOutputTail"])
             print("Media output:")
             print(report["mediaOutputTail"])
 

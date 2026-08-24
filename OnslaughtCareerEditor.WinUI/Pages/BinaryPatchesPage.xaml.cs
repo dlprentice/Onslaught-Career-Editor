@@ -1846,6 +1846,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 bool includeSavegames = PatchBenchIncludeSavegamesOption.IsChecked == true;
                 bool applyLevel100TextMod = PatchBenchLevel100TextModOption.IsChecked == true;
                 bool applyLevel100EarlyFlightMod = PatchBenchLevel100EarlyFlightModOption.IsChecked == true;
+                bool allowSyntheticByteLayout = IsExactSyntheticSafeCopyRuntimeFixture(sourceGameRoot);
                 string[] selectedPatchKeys = GetVisibleSelectedKeys().ToArray();
                 string? createMusicSwapPresetId = GetSelectedCreateMusicSwapPresetId();
                 uint? persistedControllerConfig = PatchBenchPersistControllerConfigOption.IsChecked == true
@@ -1861,7 +1862,7 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     ProfileName: BuildCopiedProfileName(),
                     ExecutableOverridePath: sourcePath,
                     ApplyWindowedCompatibilityPatch: true,
-                    AllowByteLayoutOnlyTarget: false,
+                    AllowByteLayoutOnlyTarget: allowSyntheticByteLayout,
                     IncludeSavegames: includeSavegames,
                     PatchKeys: selectedPatchKeys,
                     LaunchArguments: BuildSelectedLaunchArguments(),
@@ -1903,19 +1904,22 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                 GameProfilePrepareResult result = await Task.Run(() =>
                     GameProfilePreflightService.PrepareWindowedCompatibilityProfile(options));
                 GameProfileControlOptionsResult? controlOptionsResult = null;
-                controlOptionsResult = await Task.Run(() =>
-                    GameProfileControlOptionsService.ApplyToSafeCopy(
-                        new GameProfileControlOptionsRequest(
-                            ProfileRoot: result.TargetGameRoot,
-                            AppOwnedProfilesRoot: GetCopiedProfileWorkspaceRoot(),
-                            MouseSensitivityOverride: mouseLookSensitivity,
-                            ControllerConfigP1Override: persistedControllerConfig,
-                            ControllerConfigP2Override: persistedControllerConfig,
-                            InvertWalkerP1Override: invertWalkerY ? true : null,
-                            InvertWalkerP2Override: invertWalkerY ? true : null,
-                            InvertFlightP1Override: invertFlightY ? true : null,
-                            InvertFlightP2Override: invertFlightY ? true : null,
-                            ScreenShapeOverride: EnhancedCopyScreenShape)));
+                if (!allowSyntheticByteLayout)
+                {
+                    controlOptionsResult = await Task.Run(() =>
+                        GameProfileControlOptionsService.ApplyToSafeCopy(
+                            new GameProfileControlOptionsRequest(
+                                ProfileRoot: result.TargetGameRoot,
+                                AppOwnedProfilesRoot: GetCopiedProfileWorkspaceRoot(),
+                                MouseSensitivityOverride: mouseLookSensitivity,
+                                ControllerConfigP1Override: persistedControllerConfig,
+                                ControllerConfigP2Override: persistedControllerConfig,
+                                InvertWalkerP1Override: invertWalkerY ? true : null,
+                                InvertWalkerP2Override: invertWalkerY ? true : null,
+                                InvertFlightP1Override: invertFlightY ? true : null,
+                                InvertFlightP2Override: invertFlightY ? true : null,
+                                ScreenShapeOverride: EnhancedCopyScreenShape)));
+                }
 
                 GameProfileMusicReplacementResult? createMusicSwapResult = result.MusicSwapResult;
 
@@ -1941,7 +1945,10 @@ namespace OnslaughtCareerEditor.WinUI.Pages
                     copiedSavegames,
                     controlOptionsResult);
                 RenderSafeCopyReceipt(receipt);
-                RefreshMusicTrackChoices();
+                if (!allowSyntheticByteLayout)
+                {
+                    RefreshMusicTrackChoices();
+                }
                 PatchBenchSafeCopyOutcomeTextState outcomeText = new PatchBenchSafeCopyOutcomeTextState(
                     CopiedSavegames: copiedSavegames,
                     ControlOptions: BuildSafeCopyControlOptionsTextState(controlOptionsResult),
@@ -2334,6 +2341,28 @@ namespace OnslaughtCareerEditor.WinUI.Pages
             _isLoadingSourcePath = false;
             ExePathTextBox.Text = string.Empty;
             ClearCopiedProfileLaunchState(clearManagedProcess: false);
+            UpdateControlState();
+        }
+
+        private static bool IsExactSyntheticSafeCopyRuntimeFixture(string sourceGameRoot)
+        {
+            string? requestedRoot = Environment.GetEnvironmentVariable("ONSLAUGHT_WINUI_TEST_SYNTHETIC_SAFE_COPY_ROOT");
+            if (string.IsNullOrWhiteSpace(requestedRoot))
+            {
+                return false;
+            }
+
+            try
+            {
+                return string.Equals(
+                    Path.GetFullPath(sourceGameRoot),
+                    Path.GetFullPath(requestedRoot),
+                    StringComparison.OrdinalIgnoreCase);
+            }
+            catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
+            {
+                return false;
+            }
         }
 
         private static string GetPatchWorkspaceRoot()
