@@ -51,8 +51,10 @@ namespace OnslaughtRebuild.GodotClient;
 /// <c>test eax, eax</c> / <c>jz</c> skips that arm because
 /// the leftover is 0. Arg 10 is
 /// <c>mov edi, [esp+0x2758]</c> at <c>0x00465902</c>. The
-/// <c>cmp ebx, 0x3E8</c> at <c>0x00465777</c> is a wchar-count
-/// clamp, not this leftover float. GPL
+/// <c>cmp ebx, 0x3E8</c> at <c>0x00465771</c>
+/// (<c>81 fb e8 03 00 00</c>) is a wchar-count clamp, not this
+/// leftover float. <c>0x00465777</c> is the separate following
+/// <c>mov word [eax], 0</c> store (<c>66 c7 00 00 00</c>). GPL
 /// <c>references/Onslaught/FrontEnd.cpp</c> line 1225 shows the
 /// same <c>1000.f</c> as the eighth argument on the title-bar
 /// path; that call's tenth argument is
@@ -194,8 +196,11 @@ public static class RetailMainMenuVersionOverlayTail
     /// <summary>Immediate stored as stack arg 10. Not the title-bar flag.</summary>
     public const int FirstSlot = 0;
 
-    /// <summary><c>cmp ebx, 0x3E8</c> at <c>0x00465777</c>. Wchar clamp.</summary>
-    public const uint LengthClampSite = 0x00465777u;
+    /// <summary><c>cmp ebx, 0x3E8</c> at <c>0x00465771</c>. Wchar clamp.</summary>
+    public const uint LengthClampSite = 0x00465771u;
+
+    /// <summary><c>mov word [eax], 0</c>. Following store, not the clamp compare.</summary>
+    public const uint LengthClampStoreSite = 0x00465777u;
 
     /// <summary>Wchar-count clamp. Not the leftover float.</summary>
     public const int LengthClampImmediate = 0x3E8;
