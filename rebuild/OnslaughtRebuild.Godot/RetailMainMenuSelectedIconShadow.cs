@@ -12,7 +12,7 @@ namespace OnslaughtRebuild.GodotClient;
 /// <c>0x400000</c>.
 ///
 /// <para><b>Fade source.</b> <c>0x0046405F</c> is
-/// <c>fistp word [esp+0x18]</c> of the icon-fade byte.
+/// <c>fistp qword [esp+0x18]</c> of the icon-fade byte.
 /// <c>0x00464067</c> is the signed 0..255 clamp
 /// (<c>test esi / jge / xor esi / cmp 255 / jle / mov esi, 255</c>).
 /// The keep-going leftover labeled <c>0x00464075</c> as the pack
@@ -68,7 +68,7 @@ public static class RetailMainMenuSelectedIconShadow
     /// <summary>The AND immediate. Black RGB, alpha only.</summary>
     public const uint AlphaMask = 0xFF000000u;
 
-    /// <summary><c>fistp word [esp+0x18]</c> at <c>0x0046405F</c>.</summary>
+    /// <summary><c>fistp qword [esp+0x18]</c> at <c>0x0046405F</c>.</summary>
     public const uint FistpSite = 0x0046405Fu;
 
     /// <summary>
