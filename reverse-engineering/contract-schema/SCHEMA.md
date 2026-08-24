@@ -107,10 +107,10 @@ Inputs, in read order:
    contributes one `MANIFEST_WITNESS` kind and a `MEASURED` confidence
    contributes toward PROVISIONAL. A strong row may additionally carry explicit
    `runtimeEvidence`. This column is a closed vocabulary: the currently accepted
-   value is exactly `TTD_CALL_CONTEXT_REPLICATED`, which surfaces both
-   `ttd-capture` and `controlled-runtime`. An absent or unsupported value adds no
-   runtime evidence class. Those classes are not extra witness kinds: one
-   manifest row is still one witness.
+   case-sensitive value is exactly `TTD_CALL_CONTEXT_REPLICATED`, which surfaces
+   both `ttd-capture` and `controlled-runtime`. An absent, case-variant, or other
+   unsupported value adds no runtime evidence class. Those classes are not extra
+   witness kinds: one manifest row is still one witness.
 4. **Factory contracts** — every `*.md` under
    `reverse-engineering/contracts/**` is validated with the factory schema gate,
    including canonical filename/address identity, required structure, anonymous

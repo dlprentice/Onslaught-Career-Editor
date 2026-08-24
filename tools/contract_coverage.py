@@ -483,7 +483,7 @@ def load_manifest_witness_keys(
                 row_keys |= text_va_keys(cell)
             keys |= row_keys
             runtime_evidence = (
-                cells[runtime_idx].strip().upper()
+                cells[runtime_idx].strip()
                 if runtime_idx is not None and len(cells) > runtime_idx
                 else ""
             )

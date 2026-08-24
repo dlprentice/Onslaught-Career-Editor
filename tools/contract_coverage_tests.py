@@ -374,6 +374,8 @@ def test_manifest_runtime_evidence_vocabulary_fails_closed() -> None:
             ("CManifestRuntime__BareBound", "RUNTIME_BOUNDED"),
             ("CManifestRuntime__UnknownTtd", "TTD_UNKNOWN_UNSUPPORTED"),
             ("CManifestRuntime__ArbitraryReplication", "WHATEVER_REPLICATED"),
+            ("CManifestRuntime__LowercaseAlias", "ttd_call_context_replicated"),
+            ("CManifestRuntime__MixedCaseAlias", "Ttd_Call_Context_Replicated"),
         ]
         make_corpus(
             root,
