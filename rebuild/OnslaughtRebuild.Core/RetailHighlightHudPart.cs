@@ -30,10 +30,10 @@ namespace OnslaughtRebuild.Core;
 /// </para>
 /// <para>
 /// <b>Highlight writes literal 2; UnHighlight writes literal 1.</b>
-/// <c>0x00535e6c</c> is
+/// <c>0x00535e6b</c> is
 /// <c>c7 04 85 1c a5 8a 00 02 00 00 00</c> =
 /// <c>mov dword ptr [eax*4+0x008aa51c], 2</c>.
-/// <c>0x00535e8c</c> is the same form with immediate 1, not 0.
+/// <c>0x00535e8b</c> is the same form with immediate 1, not 0.
 /// Isolated <c>Emphasized</c> true/false names the rebuild
 /// bitmask; skip these stores still leaves that bool.
 /// Mutation: UnHighlight writes 0, or Highlight writes 1.
@@ -48,18 +48,28 @@ namespace OnslaughtRebuild.Core;
 public static class RetailHighlightHudPart
 {
     /// <summary>
-    /// Indexed dword base at <c>0x00535e6c</c> /
-    /// <c>0x00535e8c</c>.
+    /// Start of the 11-byte Highlight <c>C7</c> store.
+    /// </summary>
+    public const uint HighlightStoreSite = 0x00535e6bu;
+
+    /// <summary>
+    /// Start of the 11-byte UnHighlight <c>C7</c> store.
+    /// </summary>
+    public const uint UnhighlightStoreSite = 0x00535e8bu;
+
+    /// <summary>
+    /// Indexed dword base at <c>0x00535e6b</c> /
+    /// <c>0x00535e8b</c>.
     /// </summary>
     public const uint ArrayBaseAddress = 0x008aa51cu;
 
     /// <summary>
-    /// The Highlight immediate at <c>0x00535e6c</c>.
+    /// The Highlight immediate at <c>0x00535e6b</c>.
     /// </summary>
     public const int Highlighted = 2;
 
     /// <summary>
-    /// The UnHighlight immediate at <c>0x00535e8c</c>.
+    /// The UnHighlight immediate at <c>0x00535e8b</c>.
     /// Not zero.
     /// </summary>
     public const int Unhighlighted = 1;
