@@ -30,8 +30,11 @@ namespace OnslaughtRebuild.Client.Tests;
 /// loads them at <c>[esp+0x2758]</c> / <c>[esp+0x2754]</c> /
 /// <c>fld [esp+0x2750]</c>. The leftover float is past the
 /// below-zero / below-quarter / below-half compares, and leftover
-/// arg 9 is 0 so that colour arm is skipped. The
-/// <c>cmp ebx, 0x3E8</c> wchar clamp is not this leftover. The
+/// arg 9 is 0 so that colour arm is skipped. The wchar clamp
+/// <c>cmp ebx, 0x3E8</c> starts at <c>0x00465771</c>
+/// (<c>81 fb e8 03 00 00</c>); <c>0x00465777</c> is the separate
+/// following <c>mov word [eax], 0</c> store
+/// (<c>66 c7 00 00 00</c>). Neither site is this leftover. The
 /// 2px MeasureText residual stays open. DrawMainMenu keeps
 /// title-font DrawText. Do not invent dest, wrap, fade, or sheen.
 /// Do not redo version AsciiToWide, version dest/Z, version font
@@ -80,7 +83,8 @@ public sealed class RetailMainMenuVersionOverlayTailTests
         Assert.Equal(0x00465881u, RetailMainMenuVersionOverlayTail.Arg9TestSite);
         Assert.Equal(0, RetailMainMenuVersionOverlayTail.SecondSlot);
         Assert.Equal(0, RetailMainMenuVersionOverlayTail.FirstSlot);
-        Assert.Equal(0x00465777u, RetailMainMenuVersionOverlayTail.LengthClampSite);
+        Assert.Equal(0x00465771u, RetailMainMenuVersionOverlayTail.LengthClampSite);
+        Assert.Equal(0x00465777u, RetailMainMenuVersionOverlayTail.LengthClampStoreSite);
         Assert.Equal(0x3E8, RetailMainMenuVersionOverlayTail.LengthClampImmediate);
         Assert.Equal(0x00464191u, RetailMainMenuVersionOverlayTail.WidenSiblingSite);
         Assert.Equal(
@@ -163,6 +167,9 @@ public sealed class RetailMainMenuVersionOverlayTailTests
         Assert.NotEqual(
             RetailMainMenuVersionOverlayTail.LengthClampImmediate,
             unchecked((int)RetailMainMenuVersionOverlayTail.FloatSlotBits));
+        Assert.NotEqual(
+            RetailMainMenuVersionOverlayTail.LengthClampSite,
+            RetailMainMenuVersionOverlayTail.LengthClampStoreSite);
         Assert.True(
             RetailMainMenuVersionOverlayWiden.FirstLeftoverPushSite <
             RetailMainMenuVersionOverlayWiden.CallSite);
