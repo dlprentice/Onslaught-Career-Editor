@@ -1,7 +1,7 @@
 # Level 100 mission-completion test truthfulness audit
 
 Status: active audit report — read-only/source-first analysis; no code behavior changed.
-Date: 2026-08-24 (rev D, post-reticle fresh-current-main correction)
+Date: 2026-08-24 (rev E, current-main census 16/46)
 Verdict: the completion chain's field-law core (countdowns, FillOut snapshot,
 career handoff, loss paths, negative controls) is TRUTHFUL against pristine
 anchors, while every scripted-Won completion-causality test is PARTIAL
@@ -12,8 +12,9 @@ untested — three material corrections (N1/N2/N3) nominated in §5.
 Evidence: SOURCE — every retail claim in §1 is quoted from retained tracked
 authorities (pinned GPL `game.cpp`/`Career.cpp`/`EndLevelData`, pristine
 function notes and contracts with VAs and body SHAs listed in §1.1); §2's
-inventory counts were recomputed 2026-08-24 by an anchored static census over
-the fetched current-main test sources; no new measurement was taken (§6).
+inventory counts were recomputed 2026-08-24 (rev E) by an anchored static
+census over the fetched current-main (`04cdd9c3`) test sources; no new
+measurement was taken (§6).
 Specimen: pristine `BEA.exe.original.backup`, 2,506,752 bytes,
 SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`;
 all byte-level retail claims in this report are read from that specimen or
@@ -23,7 +24,7 @@ human player would call "finished the level," or only narrower synthetic
 invariants?
 Scope boundary: this report changes no behavior, launches no binary, executes
 no ROM, and writes nothing outside this worktree. Worktree base is fetched
-current main `d4c6c1a84c5378f5628d4fafa8168c784b7f2c60` (`git merge-tree`
+current main `04cdd9c31c03f581c55e67a45fa1f3a283f3f3c6` (`git merge-tree`
 clean against then-current `origin/main` is required again at publication).
 
 Execution boundary: every Won-bearing test inventoried here runs a managed
@@ -33,14 +34,22 @@ checks, not a native Godot human-play completion. This report neither ran nor
 claims a native human playthrough, and it never upgrades a synthetic Won into
 one.
 
-Current-source boundary: main includes reviewed reticle-to-emitter merge
-`608d93bd759620d53ca22fe603d025cd623aa2b2` (candidate
-`10f21fb3a9411a654c0f2a9c21f761ec2cfb5394`), followed
-by unrelated reviewed integrations through the base above. That merge changed
-the managed full-chain self-pins to tick 6992 / hull 10900 and added two
-anchored `SimulationTests` declarations, making that file's current total 44.
-Its GREEN evidence is managed/Core/headless evidence only: neither the merge
-nor this report is a native Godot human playthrough.
+Current-source boundary: fetched origin/main is
+`04cdd9c31c03f581c55e67a45fa1f3a283f3f3c6` (tree
+`f750ce4f15dab659ea16006e95da9eac4f83d603`). Main still includes reviewed
+reticle-to-emitter merge `608d93bd759620d53ca22fe603d025cd623aa2b2` (candidate
+`10f21fb3a9411a654c0f2a9c21f761ec2cfb5394`), which changed the managed
+full-chain self-pins to tick 6992 / hull 10900 and added two anchored
+`SimulationTests` declarations (then-current file total 44). Later reviewed
+current-main additions bring the live census to `Level100MissionTests` **16**
+`[Fact]` methods and `SimulationTests` **46** public methods (42 Facts + 4
+Theories):
+`SecondaryObjectiveComplete_WritesOnlyTheIndexedRetailSlotAndRejectsSwappedOrOutOfRangeArguments`,
+`SecondaryObjectiveFailed_WritesTheIndexedRetailSlotAndRejectsSwappedOrOutOfRangeArguments`,
+`World110Session_CrossesNative88AndStepsDeterministically`, and
+`CanonicalHash_PreservesWorld100SchemaAndBindsWorld110SecondaryState`.
+Managed/Core/headless GREEN is not a native Godot human playthrough, and this
+report does not claim native-88 `SecondaryObjectiveFailed` capability.
 
 ---
 
@@ -66,7 +75,7 @@ nor this report is a native Godot human playthrough.
 | Bridge documents | `…/career-progression-static-bridge-contract.md`, `reverse-engineering/save-file/career-unlock-recipes.md` | graph vocabulary, unlock recipes |
 | Parity contract | `rebuild/PARITY.md` carried-contract rows (2026-08-17/18/21/22 waves; mutation kills measured) | per-row retail anchors behind the seam tests |
 | Goal framing | `GOAL.md` lines 70–96, 1789–1841 | acceptance-test demotion; "proxy, not the goal" |
-| Integration/sibling findings | reviewed merge `608d93bd` / Kanban `t_be6f5191` (reticle/adjust-aim correction, managed full-chain semantic receipts), `t_356b980e` (native-88 `SecondaryObjectiveFailed` boundary on world 110) | current managed full-chain behavior and the world-110 secondary gap; not native-play evidence |
+| Integration/sibling findings | reviewed merge `608d93bd` / Kanban `t_be6f5191` (reticle/adjust-aim correction, managed full-chain semantic receipts), `t_356b980e` (historical native-88 `SecondaryObjectiveFailed` boundary on world 110), later current-main World110 admission `27496779` | current managed full-chain behavior and the world-110 secondary inventory below; not native-play evidence and not a native-88 capability claim |
 
 Known source limits: the pinned drop has **no** `MissionObjective.h`,
 `MissionScript` VM, `FEPDebriefing.cpp`, or `FEPLevelSelect.cpp`
@@ -162,7 +171,9 @@ scope. Counts are anchored C# test-method declarations
 
 | Test owner | Test(s) | Exact terminal condition asserted |
 | --- | --- | --- |
-| `Level100MissionTests.cs` (14) | `ReleasedLevelScript_RunsTheCompleteFirstPlayTutorialToLevelWon` | Outcome **Won**; TerminalState **FrontEndHandoffReady**; all four objectives `Complete`; slots saved [63,64,65,66]; 35 ordered message ids; 7 posted events; ScoreDelta 50; FlightModeEnabled — produced by the real embedded `73eb349b…` payload driven through `QueueExternalEvent` (`Level100MissionTests.cs:822`) |
+| `Level100MissionTests.cs` (16) | `SecondaryObjectiveComplete_WritesOnlyTheIndexedRetailSlotAndRejectsSwappedOrOutOfRangeArguments` | managed `RetailSecondaryObjectiveState.SetComplete` writes `MOS_COMPLETE=1` only at the indexed slot (native-84 `0x00534410` store law); a neighboring failed slot is unchanged; swapped or out-of-range arguments throw and leave prior slots untouched. Not a Level 100 terminal (this level ships zero secondaries) and not a native-88 execution claim |
+| | `SecondaryObjectiveFailed_WritesTheIndexedRetailSlotAndRejectsSwappedOrOutOfRangeArguments` | managed `SetFailed` writes `MOS_FAILED=2` only at the indexed slot, citing the native-88 body at `0x00534470`; swapped or out-of-range arguments throw. This is a Core store-state adverse control, **not** a native-88 `SecondaryObjectiveFailed` capability |
+| | `ReleasedLevelScript_RunsTheCompleteFirstPlayTutorialToLevelWon` | Outcome **Won**; TerminalState **FrontEndHandoffReady**; all four objectives `Complete`; slots saved [63,64,65,66]; 35 ordered message ids; 7 posted events; ScoreDelta 50; FlightModeEnabled — produced by the real embedded `73eb349b…` payload driven through `QueueExternalEvent` (`Level100MissionTests.cs:909`) |
 | | `Init_PrimaryObjectiveFailedWritesRetailMosFailedTwo`, `Init_PrimaryObjectiveFailedWritesRetailObjectiveTextDword` | objective-word mapping: retail MOS failed = 2, complete = 1 (via `RetailGameObjectiveCount`), text dwords `_100_OBJECTIVE_1..4`; ten-word table shape |
 | | `Init_UnHighlightHudPartWritesOneAfterHighlightTwo` | HUD-part highlight/unhighlight word sequence (two then one) at init |
 | | `Init_PlayCharMessageWaitWritesOneAtCvmSingletonPlus220` | PlayCharMessage posts the wait flag: literal 1 stored at CvmSingleton+0x220, not incremented |
@@ -224,7 +235,7 @@ scope. Counts are anchored C# test-method declarations
 | | `SkippingThePan_MovesTheWholeTutorialMessageSchedule`, `SkippingThePan_MovesPlayerActivationEarlierByTheSameAmount` | schedule and activation both shift earlier by the skipped duration |
 | | `SkipStillWorksAfterAReset_BecauseTheGateIsMissionRelative`, `SkipIsAnEdgeAndReplaysDeterministically`, `SkipPanningIsAnEdgeActionInTheTape` | mission-relative reset gate, edge semantics, deterministic replay, tape representation |
 | | `ATapeWrittenUnderTheOldSchemaIsRejectedRatherThanMisparsed`, `DeclaredButUnimplementedActionsAreRejectedRatherThanIgnored`, `ActionSetFitsTheChosenWidthWithRoomToSpare`, `TheUnprovenSkipKeyRoutingStaysRecordedOnTheAction` | tape schema/width/rejection laws and explicit recording of the unproven key-routing boundary |
-| `SimulationTests.cs` (file total **44**; adjacent) | `Level100FirstRun_AppliesReleasedMessagesActivationAndTriggerCommands`; `PulseCannonEmitter_ConvergesOnTheCameraReticleContact`; `PulseCannonEmitter_DoesNotSnapMissesOutsideTheContactVolume` | first-run init applies released messages, activation, and trigger commands; the two reticle additions assert that the source-backed adjustable cockpit emitter converges on a camera-reticle contact and does not snap two misses outside the contact volume. These are beat/aim instruments beneath the progression chain, not terminal or native-play assertions |
+| `SimulationTests.cs` (file total **46** public methods: 42 Facts + 4 Theories; adjacent) | `World110Session_CrossesNative88AndStepsDeterministically`; `CanonicalHash_PreservesWorld100SchemaAndBindsWorld110SecondaryState`; `Level100FirstRun_AppliesReleasedMessagesActivationAndTriggerCommands`; `PulseCannonEmitter_ConvergesOnTheCameraReticleContact`; `PulseCannonEmitter_DoesNotSnapMissesOutsideTheContactVolume` | world-110 Core admission constructs, records secondary[1] Failed, and idle-steps two sims to one hash; the hash test keeps world-100 schema 42 on the 40-step control hash and binds schema-43 world-110 secondary slots so a changed text dword moves the hash. First-run init applies released messages, activation, and trigger commands; the two reticle additions assert that the source-backed adjustable cockpit emitter converges on a camera-reticle contact and does not snap two misses outside the contact volume. These are admission/schema/beat/aim instruments beneath or beside the Level 100 progression chain, not terminal assertions, not authored-110 content, not native-88 capability, and not native-play assertions |
 
 Excluded Core.Tests owners (checked; asserted condition + reason):
 
@@ -319,7 +330,8 @@ completion audit. Each is explicitly accounted rather than silently omitted:
 No test project exists for `OnslaughtRebuild.Godot` (absent from
 `OnslaughtRebuild.slnx`). Owners involved: `FirstFlightGame.cs`
 `TryAcceptWonFrontendHandoff` (lines 829–838 — polls `TerminalState ==
-FrontEndHandoffReady` and calls `AcceptWonHandoff` at line 837),
+FrontEndHandoffReady` and calls `AcceptWonHandoff` at line 837; line 823
+`SetProcess(false);` is the load-failure arm, not the handoff predicate),
 `RetailFrontendFlow.AcceptWonHandoff` (line 689),
 `RetailFrontendScenePath.TryAcceptWonHandoff` (line 236, the documented
 FEP_DEBRIEFING substitution), `FirstFlightHud.DrawTerminalOverlay`
@@ -372,7 +384,9 @@ classes.
 
 | Area / test | Class | Evidence & bounded caveats |
 | --- | --- | --- |
-| `ReleasedLevelScript_RunsTheCompleteFirstPlayTutorialToLevelWon` | **PARTIAL** | real hash-pinned payload and opcodes; the asserted *outcome* (Won, objectives, slots, messages, score, flight) is genuine script law, but all 27 progression facts are injected via `QueueExternalEvent` (`Level100MissionTests.cs:822`), so this test alone does not prove gameplay *produces* them (the full-chain and cold-start tests close that hop) |
+| `ReleasedLevelScript_RunsTheCompleteFirstPlayTutorialToLevelWon` | **PARTIAL** | real hash-pinned payload and opcodes; the asserted *outcome* (Won, objectives, slots, messages, score, flight) is genuine script law, but all 27 progression facts are injected via `QueueExternalEvent` (`Level100MissionTests.cs:909`), so this test alone does not prove gameplay *produces* them (the full-chain and cold-start tests close that hop) |
+| `SecondaryObjectiveComplete_WritesOnlyTheIndexedRetailSlotAndRejectsSwappedOrOutOfRangeArguments` | **TRUTHFUL** | indexed-slot `MOS_COMPLETE=1` store/reject law pinned to native-84 `0x00534410`; Level 100 ships zero secondaries, so this is isolated store-state rather than completion causality, and it is not a native-88 execution claim |
+| `SecondaryObjectiveFailed_WritesTheIndexedRetailSlotAndRejectsSwappedOrOutOfRangeArguments` | **TRUTHFUL** | indexed-slot `MOS_FAILED=2` store/reject law citing native-88 `0x00534470`. Managed Core store-state only: this report does **not** claim native-88 `SecondaryObjectiveFailed` capability |
 | `Init_PrimaryObjectiveFailedWritesRetailMosFailedTwo` / `…ObjectiveTextDword` | **TRUTHFUL** | MOS-vocabulary and text-dword immediates pinned to the measured plate |
 | `Init_UnHighlight…`, `Init_PlayCharMessageWait…` (Level100MissionTests) | **TRUTHFUL** | store laws with pristine immediates (+0x220 law shared with `RetailIScriptWaitStopTests`) |
 | `MissionNativeSetPos_/UnsetObjective_/Damage_*`, `ReleasedPrograms_*`, `ActorRuntimeSnapshot_*`, `TargetTank1_*`, `ReleasedMessageBox_*` | **PARTIAL** | real native-command and route laws of the released payload, but isolated from the completion chain — prerequisite/instrument role |
@@ -399,6 +413,9 @@ classes.
 | `Level100FlightLegTests.ThreeFlightLegs_AreFlownAndLandedByInputAlone` | **PARTIAL** | input-flown path proof through released mechanics; no pinned retail value |
 | `Level100FlightLegTests.InJetMode_IsFalseOnlyForARecentlyGroundedWalker` | **TRUTHFUL** | restates the measured predicate law inside live simulation |
 | `SimulationTests.Level100FirstRun_AppliesReleasedMessagesActivationAndTriggerCommands` | **PARTIAL** | beat-level init law beneath the events; isolated from the terminal chain |
+| `SimulationTests.World110Session_CrossesNative88AndStepsDeterministically` | **PARTIAL** | managed Core admission: a world-110 session constructs, records secondary[1] Failed, and idle-steps deterministically. Not authored-110 content, not a native-88 `SecondaryObjectiveFailed` capability, not Level 100 completion, and not a native human playthrough |
+| `SimulationTests.CanonicalHash_PreservesWorld100SchemaAndBindsWorld110SecondaryState` — schema 42/43 secondary bind | **PARTIAL** | rebuild canonical-schema instrument: world 100 stays schema 42; world 110 binds the ten secondary slots so a changed text dword moves the hash. Isolated from the Level 100 completion chain and not a native-88 capability claim |
+| `SimulationTests.CanonicalHash_PreservesWorld100SchemaAndBindsWorld110SecondaryState` — 40-step control hash `b8a1c8bc…1216` | **SYNTHETIC_ONLY** | self-pin of this tree's own managed run; no retail anchor in the asserted expression |
 | `SimulationTests.PulseCannonEmitter_ConvergesOnTheCameraReticleContact` / `…DoesNotSnapMissesOutsideTheContactVolume` | **PARTIAL** | source-backed adjustable-emitter contact/miss instruments added by reviewed merge `608d93bd`; they explain the current managed trajectory change but do not measure retail, assert completion, or prove native human play |
 | Ferry/water: `WaterRule_IsPinnedAtTheReleasedTwoHundredMillimetres`, `WaterRule_AgreesWithTheCommittedElevationInEveryRealRun` | **TRUTHFUL** | the 200 mm rule is byte-pinned both sides (`BattleEngine.cpp:1249–1266`) |
 | Ferry/water sweeps: `OnePermilleSweep_…`, `FixedSweep_…`, `AdverseControl_…`, `ClearanceTerms_ChangeNothingBeforeTheFerryHome` | **PARTIAL** | perturbation envelopes counting Won as the survival metric — instrument role, they do not measure retail |
@@ -548,7 +565,7 @@ settled law).
   §2 inventory against fetched current main: 22 Client `*Level100*Tests.cs`
   owners, `InteractiveSessionTests` 44/41,
   `Level100HudPresentationTests` 18/17, `Level100AudioCatalogTests` 30/29,
-  `SimulationTests` 44 total, `Level100MissionTests` 14,
+  `SimulationTests` 46 total (42 Facts + 4 Theories), `Level100MissionTests` 16,
   `Level100SkipPanningTests` 14, and
   `MissionScriptGoodieStateSaveCodecTests` 15. The AudioCatalog declaration
   census is anchored and excludes 11 source-string `public void` tokens from
@@ -572,11 +589,16 @@ settled law).
   settled by retained evidence; cheapest falsifier is a controlled
   copied-runtime probe held at `GAME_STATE_PLAYING` past the smallest
   threshold. No rebuild owner exists; not nominated this cycle.
-- **World-110 secondary objectives.** The measured native-88
-  `SecondaryObjectiveFailed` handler (`0x00534470`) throws inside the world-110
-  init on this rebuild (sibling `t_356b980e` RED/NO-GO receipt). Level 100's
-  own law is unaffected (zero secondaries), noted here because §1.2's career
-  section is the natural place readers look for it.
+- **World-110 secondary objectives.** Level 100 ships four primaries and zero
+  secondaries; that law is unchanged. Current-main managed Core now includes
+  `SimulationTests.World110Session_CrossesNative88AndStepsDeterministically`
+  (a world-110 session constructs, records secondary[1] Failed, and idle-steps
+  deterministically) plus the two `Level100MissionTests` indexed-slot store
+  tests. Those are managed/headless Core admission and store-state laws. They
+  do **not** claim a native-88 `SecondaryObjectiveFailed` capability, a native
+  Godot playthrough, or authored world-110 content. Historical sibling
+  `t_356b980e` recorded a then-current world-110 init throw; that receipt is
+  not restated here as live current-main behavior.
 - **Iceberg store-0 / first-play elapsed and score** remain unclaimed exactly
   as recorded on `RetailFillOutEndLevelData`; inherited, unchanged.
 - **Boundaries honored:** read-only analysis; one tracked report; worktree
