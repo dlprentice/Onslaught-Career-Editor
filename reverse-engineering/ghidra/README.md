@@ -193,7 +193,7 @@ the user overrides them:
 | --- | --- |
 | Active Ghidra install | `D:\ghidra_12.1.2_PUBLIC_20260605\ghidra_12.1.2_PUBLIC` |
 | Headless entry | `...\support\analyzeHeadless.bat` |
-| Prior install archive | `D:\GhidraArchives\` (12.0.3 retained there; do not delete) |
+| Prior install archive | `H:\SoftwareArchives\Ghidra\` (verified 12.0.3 archive plus the 12.1.2 distribution ZIP; not an active install) |
 | Working/maintainer project | `C:\Users\david\Ghidra\Projects` (`BEA.gpr` / `BEA.rep`) |
 | Verified off-volume recovery | `D:\BEA-Ghidra-Backups\2026-08-19-name-cohort-round-dual-owner-post-live` (exact current `db.18633` POST snapshot; independently copied, restore-proven byte-identical, and read-only reopened; F: twin at `F:\GhidraBackups\2026-08-19-name-cohort-round-dual-owner-post-live`) |
 | Prior verified recovery | `D:\BEA-Ghidra-Backups\2026-08-17-tentacle-chain-a-post-live` (`db.18623`, ceremony B's PRE) and `...-tentacle-chain-a-pre-live` (`db.18622`, the chain's PRE) |
