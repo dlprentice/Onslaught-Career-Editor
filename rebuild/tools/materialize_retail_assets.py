@@ -1062,22 +1062,19 @@ def _definition_string(
 def _level100_actor_motion_definitions(
     physics: dict[tuple[int, str], tuple[_PhysicsRecord, ...]],
 ) -> list[dict[str, object]]:
-    # UNSOURCED: `arrivalRadiusMillimeters` 2_000 / 5_000 / 8_000, below.
+    # Released PC IScript waypoint completion, `0x00538470`, computes horizontal
+    # distance and arrives only when `distance < radius`. For `mThingType &
+    # THING_TYPE_UNIT` it calls vtable slot 94 (`+0x178`). The exact Level 100
+    # class tables and targets are:
     #
-    # Every other constant in this function cites a `default physics.dat` field
-    # id or a Steam address. These three cite nothing, and the reason is that
-    # there is nothing to cite: MEASURED 2026-07-27, there is no arrival-radius
-    # field anywhere in the 69-id Unit lane of `default physics.dat`, and no
-    # derivation for these values exists under `local-lab/` or
-    # `reverse-engineering/`. They were invented.
+    #   CGroundVehicle 0x005e297c -> 0x00405e60 -> 2.0f
+    #   CPlane         0x005e1930 -> 0x0050e8e0 -> 5.0f
+    #   CDropship      0x005e1dd8 -> 0x0050ead0 -> 8.0f
     #
-    # They are left in place deliberately rather than deleted. They are load
-    # bearing - Core's waypoint arrival test reads them, and removing a working
-    # value with no replacement would be a worse defect than an unsourced one.
-    # The defect being fixed here is that they were *unmarked*. Recover the real
-    # arrival test from the released `CUnit` waypoint follower before relying on
-    # any of them, and above all before relying on 8_000 for the Transporter,
-    # whose motion class is not implemented at all.
+    # These are class behavior, not fields in `default physics.dat`; the prior
+    # field census correctly found no arrival-radius id. Core stores positions
+    # in millimetres, so the exact released values become 2_000 / 5_000 / 8_000.
+    # See reverse-engineering/binary-analysis/functions/IScript.cpp.md.
     rows: list[dict[str, object]] = []
     for definition_name, expected_life_bits in (
         ("Target Tank", 0x40C00000),
@@ -1095,7 +1092,7 @@ def _level100_actor_motion_definitions(
             )
         rows.append(
             {
-                "arrivalRadiusMillimeters": 2_000,  # UNSOURCED - see the note above
+                "arrivalRadiusMillimeters": 2_000,
                 "authoredOrder": len(rows),
                 "behaviorInternalId": _unit_behavior_selector(fields),
                 "behaviorSerializedType": 3,
@@ -1142,7 +1139,7 @@ def _level100_actor_motion_definitions(
             )
         rows.append(
             {
-                "arrivalRadiusMillimeters": 5_000,  # UNSOURCED - see the note above
+                "arrivalRadiusMillimeters": 5_000,
                 "authoredOrder": len(rows),
                 "behaviorInternalId": _unit_behavior_selector(fields),
                 "behaviorSerializedType": 9,
@@ -1162,7 +1159,7 @@ def _level100_actor_motion_definitions(
         raise RuntimeError("Level 100 transporter dropship behavior changed")
     rows.append(
         {
-            "arrivalRadiusMillimeters": 8_000,  # UNSOURCED - see the note above
+            "arrivalRadiusMillimeters": 8_000,
             "authoredOrder": len(rows),
             "behaviorInternalId": _unit_behavior_selector(transporter_fields),
             "behaviorSerializedType": 12,

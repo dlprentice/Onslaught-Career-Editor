@@ -46,7 +46,7 @@ name value into a `CPostEventData` and scheduling event `0x7d0` against the
 | Address | Name | Byte evidence | Contract (confidence) |
 | --- | --- | --- | --- |
 | `0x005385e0` | `IScript__HandleMessage` | `56 57 8bf9 8b4c240c 0fbf4104 2dd0070000 0f84a2000000 48 7448 48 0f859f000000 …` | `ret 4`; one arg = message struct at `[esp+0xc]`. **Signed** word dispatch `movsx eax, word [msg+4]; sub eax,0x7d0`: `0x7d0` (2000) → waypoint arm, `0x7d1` (2001) → **CVM wait-resume**, `0x7d2` (2002) → timer arm, anything else returns. HIGH on the dispatch shape; the arms are byte-mapped below. |
-| `0x00538470` | `CScriptEventNB__UpdateWaypointFollowing` *(owner review)* | `8b4614 8b4e08 83c01c d900 d8611c d94004 d86120 d9c0 d8c9 d9c2 d8cb 8b4134 … d9fa … d905a08b5d00 … a810 … ff9078010000 … a900000020 … d905bc855d00 …` | Distance check: `[[this+0x14]+0x1c]` (waypoint) minus `[[this+8]+0x1c]` (entity) in 2D, `fsqrt`; thresholds default `2.0f` (`0x005d8ba0`), large-unit `4.0f` (`0x005d85bc` behind `test eax,0x20000000`), vtable `+0x178` override behind `test al,0x10`. On arrival advances `[this+0x14] = [waypoint+0x3c]`; self-loop prints `"ERROR: Waypoint points to previous"` (`0x0064fe50`) via `CConsole__Printf` (`0x00441740`). See the owner review below. |
+| `0x00538470` | `CScriptEventNB__UpdateWaypointFollowing` *(owner review)* | `8b4614 8b4e08 83c01c d900 d8611c d94004 d86120 d9c0 d8c9 d9c2 d8cb 8b4134 … d9fa … d905a08b5d00 … a810 … ff9078010000 … a900000020 … d905bc855d00 …` | Strict arrival check: `sqrt((waypoint.x-thing.x)^2+(waypoint.y-thing.y)^2) < radius`; the third coordinate is not read. `[thing+0x34]` is `mThingType`, not `mFlags`: `THING_TYPE_UNIT` bit `0x10` selects vtable slot 94 (`+0x178`), otherwise the `CSquad` membership bit `0x20000000` selects `4.0f` and the default is `2.0f`. On arrival advances `[this+0x14] = [waypoint+0x3c]`; self-loop prints `"ERROR: Waypoint points to previous"` (`0x0064fe50`) via `CConsole__Printf` (`0x00441740`). Exact Level 100 class radii are closed below. |
 
 | `0x00535cd0` | `IScript__Die` | `8b4910 6a00 6a00 8d442408 6a00 50 51 68d2070000 b9c82f6700 c7442418000080bf e87956f1ff c20c00` | `ret 0xc`; zero direct `E8` (native 13). `AddEvent_AtTime(0x7d2, [this+0x10], NEXT_FRAME)` — thing-event `START_DIE_PROCESS` on the attached thing. 48 compiled uses, all argc 0. HIGH. Distinct from IScript `HandleMessage` 2002 (`timer`) and from `CGame` `FINISHED_PANNING`. |
 | `0x00537c70` | `IScript__Pause` | `8b442404 538bd9 568b08 8b11 ff5234 d95c240c 68a8070000 6840fa6400 6a18 6828020000 … c20c00` | `ret 0xc`. `args[0]->vtable[+0x34]()` (float), snapshot a 0x228 `CVM`, `AddEvent_AtTime(2001, this, mTime+delay, data=CVM)`, then `[0x0089c800]=1`. HIGH. |
@@ -159,6 +159,44 @@ entry. The older decompiler gloss in
 rescheduled with `(2000, this, &nextFrame, 0, 0, 0)` is **confirmed** by the
 tail above; the same document's `CScriptEventNB__HandleMessage` label was
 already corrected to `IScript__HandleMessage`.
+
+### Released Unit waypoint-arrival radii
+
+The pristine PC specimen `BEA.exe.original.backup` (SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`)
+closes the Level 100 radius dispatch. The raw body
+`[0x00538470,0x005385de)` is 366 bytes, SHA-256
+`e67254e43a2d6971a871c2634642860025ced7bd0c3a0a177670991a940ff2e0`.
+It reads the followed thing's dword at `+0x34`; the pinned `CThing` layout in
+`references/Onslaught/thing.h` places `mThingType` there and defines `IsA` as a
+bitwise test against that field. The shipped script constants independently
+assign `THING_TYPE_UNIT = 0x10`. The `CSquad` slot-38 writer at `0x004e5df0`
+ORs `0xa0000001` into this same field, independently identifying the fallback
+`0x20000000` test as Squad membership rather than the older "large unit" gloss.
+
+For every Unit, the body discards the provisional `2.0f` and calls
+`[thing->vtable+0x178]`. Direct vtable and getter reads give the three concrete
+Level 100 motion classes:
+
+| Runtime class | Vtable | Slot-94 cell | Target | Getter bytes | Return |
+| --- | --- | --- | --- | --- | --- |
+| `CGroundVehicle` | `0x005e297c` | `0x005e2af4` | `0x00405e60` | `d9 05 a0 8b 5d 00 c3` | `[0x005d8ba0]` = `0x40000000` = `2.0f` |
+| `CPlane` | `0x005e1930` | `0x005e1aa8` | `0x0050e8e0` | `d9 05 d8 85 5d 00 c3` | `[0x005d85d8]` = `0x40a00000` = `5.0f` |
+| `CDropship` | `0x005e1dd8` | `0x005e1f50` | `0x0050ead0` | `d9 05 44 8c 5d 00 c3` | `[0x005d8c44]` = `0x41000000` = `8.0f` |
+
+The x87 `fcomp` / C0 branch at `0x005384c7..0x005384d6` enters the arrival
+arm only when distance is **strictly less** than the selected value; equality
+reschedules event 2000. Neither height, speed, bounds, waypoint data, nor the
+second `FollowWaypoint` argument enters the predicate. At the rebuild's exact
+1 game unit = 1,000 mm conversion, the released radii are therefore 2,000 mm
+for `Target Tank` / `Target Truck`, 5,000 mm for `Air Trainer` / `Target
+Drone`, and 8,000 mm for `U-17 Highside Transporter`.
+
+The same eight Level 100 mission-script files are byte-identical in the
+retained PC and PS2 data, and Xbox retains the same native names, error string,
+and `IScript.cpp` source path. Those facts corroborate the feature family but
+do **not** prove that either console implementation uses the same numeric
+predicate; console body recovery remains separate.
 
 ## Script-system vtable cluster (RTTI COLOC → TypeDescriptor walk)
 
