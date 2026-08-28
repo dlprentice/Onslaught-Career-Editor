@@ -253,7 +253,14 @@ function Test-FirstFlightSmokeEvidence {
     # level100VoiceStartedMessageIds track which tutorial voice line is playing
     # at an arbitrary wall moment. That is presentation timing, not simulation
     # state, and it is why identical-report-sha is no longer an available gate.
-    Assert-SmokeValue 'stateHash' '1ee58e1d881486fe174ed476d993853daf1292e5738c6417a57210ea07735d19' $report.stateHash
+    # MOVED 2026-08-23 by StateHasher v42, which serializes the reusable
+    # Thing/Actor base state. InteractiveSessionTests moved with that structural
+    # change, but this native gate did not. Two consecutive 2026-08-27 native
+    # runs now reproduce 78925d85... and match the independent in-process tape;
+    # their report hashes differ only because the wall-clock voice fields above
+    # sampled different playback positions. The debriefing landing that exposed
+    # the stale pin changes no Core state, smoke tape, or StateHasher owner.
+    Assert-SmokeValue 'stateHash' '78925d85570ed1e0930728292b585042fc3b164ebdf978233efa3f0e5d625123' $report.stateHash
     Assert-SmokeValue 'targetsDestroyed' 0 $report.targetsDestroyed
     Assert-SmokeValue 'mode' 'Walker' $report.mode
     Assert-SmokeValue 'level100OpeningTicksRemaining' 0 $report.level100OpeningTicksRemaining
