@@ -36,6 +36,30 @@ def _archive(*members: bytes) -> bytes:
     return b"".join(_compressed_member(member) for member in members)
 
 
+def _ps2_apf(
+    blocks: tuple[tuple[str, int, bytes, int, int], ...],
+) -> tuple[bytes, bytes]:
+    apf = bytearray(_chunk(b"PAGE"))
+    aya_size = max(fxup for _, _, _, fxup, _ in blocks) + 4
+    aya = bytearray(aya_size)
+    for name, mip, tex8, fxup, existing_word in blocks:
+        encoded_name = name.encode("ascii")
+        if len(encoded_name) >= 128:
+            raise ValueError("synthetic name is too long")
+        ident = bytearray(144)
+        ident[: len(encoded_name)] = encoded_name
+        struct.pack_into("<I", ident, 128, mip)
+        inner = (
+            _chunk(b"IDNT", bytes(ident))
+            + _chunk(b"TEX8", tex8)
+            + _chunk(b"FXUP", struct.pack("<I", fxup))
+        )
+        apf.extend(_chunk(b"TBLK", inner))
+        aya[fxup - 8 : fxup] = b"PAGE" + struct.pack("<I", 4)
+        struct.pack_into("<I", aya, fxup, existing_word)
+    return bytes(apf), bytes(aya)
+
+
 def _mesh_payload(*bodies: bytes) -> bytes:
     payload = bytearray(b"prefix")
     for index, body in enumerate(bodies):
@@ -107,6 +131,7 @@ class AyaArchiveInventoryObservationTests(unittest.TestCase):
         for name in (
             "read_held_archive",
             "inflate_aya_bytes",
+            "merge_ps2_apfs",
             "observe_archives",
             "render_observation_records",
             "resolve_released_resource_route",
@@ -311,6 +336,124 @@ class AyaArchiveInventoryObservationTests(unittest.TestCase):
             with self.subTest(arguments=arguments, message=message):
                 with self.assertRaisesRegex(ValueError, message):
                     resolve(*arguments, **keywords)
+
+    def test_ps2_apf_merger_preserves_explicit_order_and_patches_copies(
+        self,
+    ) -> None:
+        merge_input = self._api("Ps2ApfMergeInput")
+        merge = self._api("merge_ps2_apfs")
+        first_apf, first_aya = _ps2_apf(
+            (("Textures\\First.tga", 0, b"A" * 16, 24, 1),)
+        )
+        second_apf, second_aya = _ps2_apf(
+            (("Textures\\Second.tga", 0, b"B" * 32, 40, 17),)
+        )
+
+        result = merge(
+            (
+                merge_input("base", first_apf, first_aya),
+                merge_input("201", second_apf, second_aya),
+            )
+        )
+
+        self.assertEqual(b"A" * 16 + b"B" * 32, result.master_page_bytes)
+        self.assertEqual((first_aya, second_aya), result.patched_aya_bytes)
+        self.assertEqual(2, result.block_count)
+        self.assertEqual(2, result.texture_name_count)
+        self.assertEqual(2, result.texture_key_count)
+        self.assertEqual(
+            hashlib.sha256(result.master_page_bytes).hexdigest(),
+            result.master_sha256,
+        )
+
+    def test_ps2_apf_merger_can_patch_unmodified_aya_without_mutating_input(
+        self,
+    ) -> None:
+        merge_input = self._api("Ps2ApfMergeInput")
+        merge = self._api("merge_ps2_apfs")
+        apf, released_aya = _ps2_apf(
+            (("Texture.tga", 0, b"X" * 16, 24, 1),)
+        )
+        unpatched_aya = bytearray(released_aya)
+        struct.pack_into("<I", unpatched_aya, 24, 0)
+        original = bytes(unpatched_aya)
+
+        result = merge(
+            (merge_input("base", apf, unpatched_aya),),
+            require_matching_page_words=False,
+        )
+
+        self.assertEqual(original, bytes(unpatched_aya))
+        self.assertEqual(
+            1,
+            struct.unpack_from("<I", result.patched_aya_bytes[0], 24)[0],
+        )
+
+    def test_ps2_apf_merger_does_not_content_deduplicate_distinct_names(
+        self,
+    ) -> None:
+        merge_input = self._api("Ps2ApfMergeInput")
+        merge = self._api("merge_ps2_apfs")
+        apf, aya = _ps2_apf(
+            (
+                ("A8_warspite-PAGE1.tga", 0, b"W" * 16, 24, 1),
+                ("warspite-PAGE1.tga", 0, b"W" * 16, 48, 17),
+            )
+        )
+
+        result = merge((merge_input("level", apf, aya),))
+
+        self.assertEqual(b"W" * 32, result.master_page_bytes)
+        self.assertEqual(2, result.block_count)
+        self.assertEqual(2, result.texture_key_count)
+
+    def test_ps2_apf_merger_rejects_ambiguous_or_malformed_inputs(self) -> None:
+        merge_input = self._api("Ps2ApfMergeInput")
+        merge = self._api("merge_ps2_apfs")
+        valid_apf, valid_aya = _ps2_apf(
+            (("Texture.tga", 0, b"X" * 16, 24, 1),)
+        )
+        duplicate_apf, duplicate_aya = _ps2_apf(
+            (("TEXTURE.TGA", 0, b"X" * 16, 24, 17),)
+        )
+        no_sentinel = valid_apf[8:]
+        wrong_word = bytearray(valid_aya)
+        struct.pack_into("<I", wrong_word, 24, 33)
+        wrong_page_owner = bytearray(valid_aya)
+        wrong_page_owner[16:20] = b"NOPE"
+        bad_length_apf, bad_length_aya = _ps2_apf(
+            (("Odd.tga", 0, b"Y" * 15, 24, 1),)
+        )
+
+        failures = (
+            (
+                (merge_input("base", no_sentinel, valid_aya),),
+                "begin with PAGE",
+            ),
+            (
+                (
+                    merge_input("base", valid_apf, valid_aya),
+                    merge_input("level", duplicate_apf, duplicate_aya),
+                ),
+                "duplicate case-folded texture name and mip",
+            ),
+            (
+                (merge_input("base", valid_apf, wrong_word),),
+                "does not match merge order",
+            ),
+            (
+                (merge_input("base", valid_apf, wrong_page_owner),),
+                "does not name a PAGE",
+            ),
+            (
+                (merge_input("base", bad_length_apf, bad_length_aya),),
+                "positive multiple of 16",
+            ),
+        )
+        for inputs, message in failures:
+            with self.subTest(message=message):
+                with self.assertRaisesRegex(ValueError, message):
+                    merge(inputs)
 
     def test_numeric_resource_schedule_accepts_writer_order_and_rejects_first_drift(
         self,

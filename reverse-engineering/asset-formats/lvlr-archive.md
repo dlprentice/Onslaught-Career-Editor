@@ -307,6 +307,19 @@ fails closed on missing or out-of-bounds local inputs. It is an asset-preparatio
 boundary, not a reason to put PS2 disc handles or page-pool scheduling into the
 PC-based deterministic rebuild.
 
+The same tool now owns the inverse offline build seam as `merge_ps2_apfs`.
+Given an explicit ordered sequence of APF/sibling-AYA byte pairs, it strictly
+requires `PAGE(0), TBLK { IDNT(144), TEX8, FXUP(4) }`, appends `TEX8` without
+padding, and writes `cursor | 1` only into copied AYAs at verified `PAGE(4)`
+payloads. Duplicate case-folded `(texture name, mip)` keys fail closed because
+the historical conflict rule is not recovered; differently named identical
+payloads remain distinct. A direct in-memory replay over the exact demo base
+then `201` members produced 284 blocks / 115 names / 284 keys and reproduced
+all 14,507,264 shipped MPF bytes plus both already-patched AYAs exactly, with
+SHA-256 `e446faa1712b07f2a0a2bcced144bbbb3dfdcabf073d98dde8198437cf36289f`.
+Retail's measured base-then-numeric-ascending first-seen profile remains
+corpus evidence rather than a permissive packer mode.
+
 The complete recognized-tag action table is:
 
 | Tag | Released PS2 action |

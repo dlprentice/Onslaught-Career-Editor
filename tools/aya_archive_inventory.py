@@ -202,6 +202,27 @@ class Ps2TexturePageResolution:
     data: bytes
 
 
+@dataclass(frozen=True)
+class Ps2ApfMergeInput:
+    """One explicitly ordered APF and its sibling AYA."""
+
+    role: str
+    apf_bytes: bytes | bytearray | memoryview
+    aya_bytes: bytes | bytearray | memoryview
+
+
+@dataclass(frozen=True)
+class Ps2ApfMergeResult:
+    """Headerless master bytes, copied patched AYAs, and a compact receipt."""
+
+    master_page_bytes: bytes
+    patched_aya_bytes: tuple[bytes, ...]
+    block_count: int
+    texture_name_count: int
+    texture_key_count: int
+    master_sha256: str
+
+
 def resolve_released_resource_route(
     platform: str,
     resource_id: int,
@@ -340,6 +361,126 @@ def resolve_ps2_texture_page(
         offset=offset,
         length=length,
         data=bytes(source[offset : offset + length]),
+    )
+
+
+def merge_ps2_apfs(
+    ordered_inputs: Iterable[Ps2ApfMergeInput],
+    *,
+    require_matching_page_words: bool = True,
+) -> Ps2ApfMergeResult:
+    """Merge the exact measured PS2 APF grammar without mutating inputs.
+
+    Input order is authoritative. Each APF must be an empty top-level PAGE
+    followed by TBLK records containing exactly IDNT(144), TEX8, and FXUP(4).
+    The demo profile requires every case-folded (texture name, mip) key to be
+    unique; an unresolved duplicate therefore fails closed. TEX8 payloads are
+    concatenated without padding and copied AYAs receive ``cursor | 1`` at the
+    PAGE payload named by FXUP. By default an already-patched AYA must match the
+    computed word before the copy is patched.
+    """
+
+    if not isinstance(require_matching_page_words, bool):
+        raise TypeError("require_matching_page_words must be a boolean")
+    inputs = tuple(ordered_inputs)
+    if not inputs:
+        raise ValueError("at least one ordered APF/AYA input is required")
+
+    master = bytearray()
+    patched_ayas: list[bytes] = []
+    names: set[str] = set()
+    keys: set[tuple[str, int]] = set()
+    block_count = 0
+
+    for input_index, item in enumerate(inputs):
+        if not isinstance(item, Ps2ApfMergeInput):
+            raise TypeError("ordered_inputs must contain Ps2ApfMergeInput values")
+        if not isinstance(item.role, str) or not item.role:
+            raise ValueError(f"input {input_index} must have a nonempty role")
+        if not isinstance(item.apf_bytes, (bytes, bytearray, memoryview)):
+            raise TypeError(f"{item.role}: APF bytes must be bytes-like")
+        if not isinstance(item.aya_bytes, (bytes, bytearray, memoryview)):
+            raise TypeError(f"{item.role}: AYA bytes must be bytes-like")
+
+        apf = bytes(item.apf_bytes)
+        aya = bytearray(item.aya_bytes)
+        outer = parse_chunk_stream(apf)
+        if not outer or outer[0].tag != "PAGE" or outer[0].size != 0:
+            raise ValueError(f"{item.role}: APF must begin with PAGE(0)")
+        if len(outer) == 1:
+            raise ValueError(f"{item.role}: APF contains no TBLK records")
+
+        seen_fixups: set[int] = set()
+        for outer_chunk in outer[1:]:
+            if outer_chunk.tag != "TBLK":
+                raise ValueError(
+                    f"{item.role}: unexpected APF top-level tag {outer_chunk.tag}"
+                )
+            block = _payload_bytes(apf, outer_chunk)
+            inner = parse_chunk_stream(block)
+            if [chunk.tag for chunk in inner] != ["IDNT", "TEX8", "FXUP"]:
+                raise ValueError(
+                    f"{item.role}: TBLK must contain exactly IDNT, TEX8, FXUP"
+                )
+            if inner[0].size != 144 or inner[2].size != 4:
+                raise ValueError(f"{item.role}: IDNT/FXUP size mismatch")
+
+            ident = _payload_bytes(block, inner[0])
+            name_end = ident[:128].find(b"\0")
+            if name_end <= 0:
+                raise ValueError(
+                    f"{item.role}: IDNT name must be nonempty and NUL-terminated"
+                )
+            try:
+                texture_name = ident[:name_end].decode("ascii").casefold()
+            except UnicodeDecodeError as exc:
+                raise ValueError(f"{item.role}: IDNT name is not ASCII") from exc
+            mip_index = _u32(ident, 128)
+            key = (texture_name, mip_index)
+            if key in keys:
+                raise ValueError(
+                    f"{item.role}: duplicate case-folded texture name and mip"
+                )
+
+            tex8 = _payload_bytes(block, inner[1])
+            if not tex8 or len(tex8) % 16 != 0:
+                raise ValueError(
+                    f"{item.role}: TEX8 length must be a positive multiple of 16"
+                )
+            cursor = len(master)
+            if cursor > 0x7FFFFFFE or len(tex8) > 0x7FFFFFFF - cursor:
+                raise ValueError("merged pagefile exceeds the signed 32-bit domain")
+
+            fxup = _u32(_payload_bytes(block, inner[2]), 0)
+            if fxup in seen_fixups:
+                raise ValueError(f"{item.role}: duplicate AYA FXUP offset")
+            seen_fixups.add(fxup)
+            if fxup < 8 or fxup + 4 > len(aya):
+                raise ValueError(f"{item.role}: FXUP is outside the sibling AYA")
+            if aya[fxup - 8 : fxup - 4] != b"PAGE" or _u32(aya, fxup - 4) != 4:
+                raise ValueError(f"{item.role}: FXUP does not name a PAGE(4) payload")
+
+            expected_word = cursor | 1
+            if require_matching_page_words and _u32(aya, fxup) != expected_word:
+                raise ValueError(
+                    f"{item.role}: existing AYA PAGE word does not match merge order"
+                )
+            struct.pack_into("<I", aya, fxup, expected_word)
+            master.extend(tex8)
+            names.add(texture_name)
+            keys.add(key)
+            block_count += 1
+
+        patched_ayas.append(bytes(aya))
+
+    master_bytes = bytes(master)
+    return Ps2ApfMergeResult(
+        master_page_bytes=master_bytes,
+        patched_aya_bytes=tuple(patched_ayas),
+        block_count=block_count,
+        texture_name_count=len(names),
+        texture_key_count=len(keys),
+        master_sha256=_sha256_hex(master_bytes),
     )
 
 
