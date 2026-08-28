@@ -39,6 +39,86 @@ def _png(
     )
 
 
+def _physics_definition_record(
+    record_type: int,
+    name: str,
+    fields: tuple[tuple[int, bytes], ...],
+) -> bytes:
+    result = bytearray(struct.pack("<II", record_type, 0))
+    result.extend(name.encode("ascii") + b"\0")
+    for index, (field_id, value) in enumerate(fields):
+        result.extend(struct.pack("<II", field_id, len(value)))
+        result.extend(value)
+        result.extend(struct.pack("<i", -1 if index + 1 == len(fields) else 0))
+    return bytes(result)
+
+
+class PhysicsDefinitionTests(unittest.TestCase):
+    def test_ordered_stream_preserves_duplicate_records_and_fields(self) -> None:
+        records = [
+            _physics_definition_record(
+                1,
+                f"Synthetic Unit {index}",
+                ((8, struct.pack("<I", 1)),),
+            )
+            for index in range(775)
+        ]
+        records.extend(
+            (
+                _physics_definition_record(
+                    5,
+                    "Duplicate Spawner",
+                    ((1, b"First Unit\0"), (1, b"Second Unit\0")),
+                ),
+                _physics_definition_record(
+                    5,
+                    "Duplicate Spawner",
+                    ((1, b"Third Unit\0"),),
+                ),
+            )
+        )
+        data = struct.pack("<H", 0x12) + b"".join(records) + struct.pack("<i", -1)
+
+        stream = materializer._physics_record_stream(data)
+        index = materializer._physics_records(data)
+
+        self.assertEqual(777, len(stream))
+        self.assertEqual(
+            ((1, b"First Unit\0"), (1, b"Second Unit\0")),
+            stream[-2].fields,
+        )
+        self.assertEqual(2, len(index[(5, "Duplicate Spawner")]))
+        with self.assertRaisesRegex(RuntimeError, "expected one physics record"):
+            materializer._physics_record(index, 5, "Duplicate Spawner")
+        with self.assertRaisesRegex(RuntimeError, "expected one physics field"):
+            materializer._PhysicsFields(stream[-2].fields)[1]
+
+    def test_unit_behavior_serialized_types_map_to_released_selectors(self) -> None:
+        expected = (
+            0, 11, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13,
+            14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
+        )
+
+        self.assertEqual(
+            expected,
+            materializer.UNIT_BEHAVIOR_SELECTOR_BY_SERIALIZED_TYPE,
+        )
+        for serialized_type, selector in enumerate(expected, start=1):
+            self.assertEqual(
+                selector,
+                materializer._unit_behavior_selector(
+                    {8: struct.pack("<I", serialized_type)}
+                ),
+            )
+
+    def test_unit_behavior_selector_rejects_unreleased_values(self) -> None:
+        for value in (0, 26):
+            with self.assertRaisesRegex(RuntimeError, "unsupported Unit behaviour"):
+                materializer._unit_behavior_selector({8: struct.pack("<I", value)})
+        with self.assertRaisesRegex(RuntimeError, "not one dword"):
+            materializer._unit_behavior_selector({8: b"\x01"})
+
+
 class StartupMediaCacheTests(unittest.TestCase):
     def test_complete_rgb_png_is_accepted(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

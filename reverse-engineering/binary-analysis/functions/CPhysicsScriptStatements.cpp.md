@@ -1,7 +1,7 @@
 # CPhysicsScriptStatements.cpp function map
 
 Status: active static function map
-Last updated: 2026-08-23
+Last updated: 2026-08-28
 Summary: the canonical address, registry, serialization, property-apply, copy,
 and teardown map for retail PhysicsScript definition records.
 
@@ -113,10 +113,64 @@ the invented method spelling, nothing else.
 | `0x0043c0b0` | `void * __cdecl CPhysicsScriptStatements__CreateStatementType9(int valueType)` | Type-9/hazard value factory over observed value ids `0x1` through `0x4`; exact value classes/layouts remain unproven. |
 | `0x0043c500` | `void * __cdecl CPhysicsScriptStatements__CreateStatementType10(int valueType)` | Type-10/component value factory over observed ids `0x1..0x19` except `0x5`; exact value classes/layouts remain unproven. |
 | `0x0043dcd0` | `void * __cdecl CPhysicsScriptStatements__CreateStatementType11(int valueType)` | Type-11/seek value factory over observed ids `1..3`; exact value classes/layouts remain unproven. |
-| `0x0043ddc0` | `void * __cdecl CPhysicsScriptStatements__CreateStatementType12(int valueType)` | Type-12/behaviour value factory over observed ids `0x1..0x19`; exact value classes/layouts remain unproven. |
+| `0x0043ddc0` | `void * __cdecl CPhysicsScriptStatements__CreateStatementType12(int valueType)` | Type-12/behaviour factory over ids `0x1..0x19`; exact leaf RTTI, vtables, and returned Unit selectors are closed below. |
 | `0x0043e310` | `void * __cdecl CPhysicsScriptStatements__CreateStatementType13(int valueType)` | Type-13/alligence value factory over observed ids `1..3`; exact value classes/layouts remain unproven. |
 | `0x0043e400` | `void * __cdecl CPhysicsScriptStatements__CreateStatementType14(int valueType)` | Type-14/navmap value factory over observed ids `1..4`; exact value classes/layouts remain unproven. |
 | `0x0043e540` | `void * __cdecl CPhysicsScriptStatements__CreateStatementType15(int valueType)` | Type-15/state value factory over observed ids `1..3`; exact value classes/layouts remain unproven. |
+
+## Unit-behaviour type-to-selector closure
+
+The pristine PC body `[0x0043DDC0,0x0043E24A)` is 1,162 bytes, SHA-256
+`afec34924b461843ecd95215e82449ac7895e0dd10992be754679541d0f5d14f`.
+Each switch arm allocates exactly eight bytes, installs the vtable below, and
+stores the serialized type in the second dword. MSVC complete-object locators
+at `vtable-4` independently close every leaf class through its exact RTTI type
+descriptor. Vtable slot 1 is then the selector getter called by
+`CUnitBehaviour__ApplyToUnitData`.
+
+| Serialized type | RTTI leaf | Vtable | Slot-1 selector | Authored Unit records |
+| ---: | --- | ---: | ---: | ---: |
+| `1` | `CMechUnitBehaviourType` | `0x005DAC4C` | `0` | 6 |
+| `2` | `CJeepBehaviourType` | `0x005DABD4` | `11` | 0 |
+| `3` | `CGroundUnitBehaviourType` | `0x005DAC40` | `2` | 20 |
+| `4` | `CInfantryUnitBehaviourType` | `0x005DAC34` | `3` | 8 |
+| `5` | `CTurretUnitBehaviourType` | `0x005DAC28` | `4` | 11 |
+| `6` | `CBoatUnitBehaviourType` | `0x005DAC1C` | `5` | 9 |
+| `7` | `CCarrierUnitBehaviourType` | `0x005DAC10` | `6` | 3 |
+| `8` | `CBuildingUnitBehaviourType` | `0x005DAC04` | `7` | 58 |
+| `9` | `CFighterBehaviourType` | `0x005DABF8` | `8` | 11 |
+| `10` | `CBomberBehaviourType` | `0x005DABEC` | `9` | 5 |
+| `11` | `CGroundAttackAircraftBehaviourType` | `0x005DABE0` | `10` | 2 |
+| `12` | `CDropshipBehaviourType` | `0x005DABC8` | `12` | 5 |
+| `13` | `CMineBehaviourType` | `0x005DABBC` | `13` | 2 |
+| `14` | `CHiveBossBehaviourType` | `0x005DABB0` | `14` | 1 |
+| `15` | `CSubmarineBehaviourType` | `0x005DABA4` | `15` | 1 |
+| `16` | `CDiveBomberBehaviourType` | `0x005DAB98` | `16` | 3 |
+| `17` | `CThunderHeadBehaviourType` | `0x005DAB8C` | `17` | 1 |
+| `18` | `CCarverBehaviourType` | `0x005DAB80` | `18` | 2 |
+| `19` | `CGillMBehaviourType` | `0x005DAB74` | `19` | 1 |
+| `20` | `CSentinelBehaviourType` | `0x005DAB68` | `20` | 1 |
+| `21` | `CWarspiteBehaviourType` | `0x005DAB5C` | `21` | 1 |
+| `22` | `CFenrirBehaviourType` | `0x005DAB44` | `22` | 3 |
+| `23` | `CWarspiteDomeBehaviourType` | `0x005DAB50` | `23` | 1 |
+| `24` | `CPodBehaviourType` | `0x005DAB38` | `24` | 1 |
+| `25` | `CSimpleBuildingBehaviourType` | `0x005DAB2C` | `25` | 4 |
+
+The serialized number is therefore not the runtime selector. Type `2` is the
+released discontinuity: it creates `CJeepBehaviourType`, whose slot 1 returns
+selector `11`; type `3` resumes at selector `2`. The exact retail data contains
+all other types but no type-2 Unit record.
+
+`CUnitBehaviour__LoadFromMemBuffer` `[0x004330B0,0x004330E0)` is 48 bytes,
+SHA-256 `32d5907b6010edf5b287eff15d76bf89c5894a614d576ebd1877486071dc50bc`:
+it reads the serialized type and calls this factory. The 107-byte apply body
+`[0x00433010,0x0043307B)`, SHA-256
+`28be731aa4d1ed6d29f0bf409303cc4a52e175703d1ed31430c037147fd3f328`,
+calls slot 1 and writes its result to Unit-definition `+0xE0`. Its second switch
+also derives definition `+0xFC` as `0 → 2`, `2 → 1`, `3 → 3`, `5/15 → 0`,
+and `19 → 4`; other selectors leave that field's existing/default value intact.
+The concrete class and spawner-policy consumer of `+0xE0` is closed in
+[`spawner-squad-cycle.md`](../../game-mechanics/spawner-squad-cycle.md).
 
 ## Value-List Helpers
 
@@ -299,7 +353,7 @@ the invented method spelling, nothing else.
 | --- | --- | --- |
 | `0x0043dcd0` | `void * __cdecl CPhysicsScriptStatements__CreateStatementType11(int valueType)` | Hardened the type-11/seek value factory over ids `1..3`; factory vtable evidence spans `0x005daafc` through `0x005dab14`, with exact classes/layouts still unproven. |
 | `0x0043dd60` / `0x0043dd90` / `0x0043ddb0` | `CPhysicsSeekType__scalar_deleting_dtor`, `CPhysicsSeekTypeLeaf__shared_scalar_deleting_dtor`, and `CPhysicsSeekType__dtor_base` | Recovered the base scalar-deleting destructor boundary and corrected stale vfunc/constructor-like labels to seek-value destructor evidence. |
-| `0x0043ddc0` | `void * __cdecl CPhysicsScriptStatements__CreateStatementType12(int valueType)` | Hardened the type-12/behaviour value factory over ids `0x1..0x19`; factory vtable evidence spans `0x005dab2c` through `0x005dac4c`, with exact classes/layouts still unproven. |
+| `0x0043ddc0` | `void * __cdecl CPhysicsScriptStatements__CreateStatementType12(int valueType)` | Exact type-12 factory closure over ids `0x1..0x19`: eight-byte leaf layout, RTTI/vtable identity, and slot-1 selector are closed above. |
 | `0x0043e2b0` / `0x0043e2d0` / `0x0043e300` | `CPhysicsBehaviourTypeLeaf__shared_scalar_deleting_dtor`, `CPhysicsBehaviourType__scalar_deleting_dtor`, and `CPhysicsBehaviourType__dtor_base` | Recovered the base scalar-deleting destructor boundary and corrected stale constructor/vfunc evidence to behaviour-value destructor evidence. |
 | `0x0043e310` | `void * __cdecl CPhysicsScriptStatements__CreateStatementType13(int valueType)` | Hardened the type-13/alligence value factory over ids `1..3`; factory vtable evidence spans `0x005dac64` through `0x005dac7c`, with exact classes/layouts still unproven. |
 | `0x0043e3a0` / `0x0043e3c0` / `0x0043e3d0` | `CPhysicsAlligenceTypeLeaf__shared_scalar_deleting_dtor`, `CPhysicsAlligenceType__dtor_base`, and `CPhysicsAlligenceType__scalar_deleting_dtor` | Recovered the base scalar-deleting destructor boundary and separated shared leaf wrapper, base destructor body, and base scalar-deleting wrapper evidence. |
@@ -389,7 +443,8 @@ It is not part of the `CUnitShatter` site set. The focused verifier is
 
 ## Claim boundary
 
-These rows are static Ghidra findings. They do not prove concrete class layouts,
+Except for the explicit eight-byte Unit-behaviour leaf closure above, these
+rows are static Ghidra findings. They do not prove concrete class layouts,
 local variables, complete serialized formats, runtime PhysicsScript behavior,
 installed-game patch safety, gameplay outcomes, or rebuild parity. Use the
 [PhysicsScript static contract](../physics-script-static-contract.md) for the

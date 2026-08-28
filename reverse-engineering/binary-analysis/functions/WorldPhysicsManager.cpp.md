@@ -1,12 +1,13 @@
 # WorldPhysicsManager.cpp Functions
 
 Status: active static function map
-Last updated: 2026-08-17
+Last updated: 2026-08-28
 Source File: `C:\dev\ONSLAUGHT2\WorldPhysicsManager.cpp` (named by the shipped image; absent from `references/Onslaught/`) | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
-This file holds the game's **central object factory**. Eight `Create*` entry
-points sit at consecutive source lines 145–292, followed by the list
-initialiser at 301–309 — the spawn spine laid out in definition order.
+This file holds the game's **central object factory**. The 26-way unit-shell
+factory occupies source lines 75–99 (with no selector-11 case/source line 84),
+then eight `Create*` entry points sit at source lines 145–292, followed by the
+list initialiser at 301–309 — the spawn spine laid out in definition order.
 
 Rows are **measured** only: entry address, current or independently corrected
 identity, body size,
@@ -30,6 +31,7 @@ rests only on the alloc-site path `C:\dev\ONSLAUGHT2\WorldPhysicsManager.cpp`.
 
 | Address | Current or corrected identity | Bytes | `ret imm` bytes | Source lines | Constructs via |
 | --- | --- | ---: | ---: | --- | --- |
+| `0x0050DF80` | `CWorldPhysicsManager__CreateThingByType` | 2,164 | 0 | 75–99 | definition ordinal → row `+0xE0` selector → one of 25 concrete unit shells; selector 11 returns null |
 | `0x0050F4B0` | `CWorldPhysicsManager__CreateSquad` | 268 | 0 | 145–149 | `CDXMemoryManager__Alloc` ×2 |
 | `0x0050F6D0` | `CWorldPhysicsManager__CreateWeaponByIndex` | 200 | 0 | 196 | `CWeapon__ctor_base` |
 | `0x0050F7A0` | `CWorldPhysicsManager__CreateProjectile` | 230 | 0 | 211–213 | `CRound__ctor` ×2 |
@@ -41,6 +43,14 @@ rests only on the alloc-site path `C:\dev\ONSLAUGHT2\WorldPhysicsManager.cpp`.
 | `0x005102A0` | `CWorldPhysicsManager__InitializeLists` | 626 | 0 | 301–309 | `CDXMemoryManager__Alloc` ×9, `CSPtrSet__Init` ×9 |
 
 ## What the shape shows
+
+`CreateThingByType` consumes a definition **ordinal**, walks the ordered
+registry, reads the selected row's raw class selector at `+0xE0`, and dispatches
+selectors `0..25` with selector `11` absent. Its exact selector,
+RTTI class, and separate squad/size-policy matrix is owned by
+[`spawner-squad-cycle.md`](../../game-mechanics/spawner-squad-cycle.md). The
+factory returns a constructed class shell; its caller owns the later definition
+initializer and world/squad publication.
 
 Three tiers are visible in the constructor column, and they cost nothing to read:
 

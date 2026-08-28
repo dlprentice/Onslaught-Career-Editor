@@ -54,6 +54,48 @@ class _WorldAdmission(NamedTuple):
     level_header: _WorldLevelHeader
 
 
+class _PhysicsRecord(NamedTuple):
+    """One ordered ``default physics.dat`` definition record."""
+
+    record_type: int
+    name: str
+    fields: tuple[tuple[int, bytes], ...]
+
+
+class _PhysicsFields:
+    """Multiplicity-preserving access to one definition's ordered fields."""
+
+    def __init__(self, fields: tuple[tuple[int, bytes], ...]):
+        self._fields = fields
+
+    def __contains__(self, field_id: object) -> bool:
+        return any(candidate == field_id for candidate, _ in self._fields)
+
+    def __getitem__(self, field_id: int) -> bytes:
+        matches = self.values(field_id)
+        if len(matches) != 1:
+            raise RuntimeError(
+                f"expected one physics field {field_id}, found {len(matches)}"
+            )
+        return matches[0]
+
+    def get(self, field_id: int, default: bytes | None = None) -> bytes | None:
+        matches = self.values(field_id)
+        if not matches:
+            return default
+        if len(matches) != 1:
+            raise RuntimeError(
+                f"expected at most one physics field {field_id}, "
+                f"found {len(matches)}"
+            )
+        return matches[0]
+
+    def values(self, field_id: int) -> tuple[bytes, ...]:
+        return tuple(
+            value for candidate, value in self._fields if candidate == field_id
+        )
+
+
 COMMON_WORLD_LEVEL_HEADER = _WorldLevelHeader(
     50,
     (3, 41),
@@ -245,6 +287,15 @@ SOUND_BANK_SHA256 = "658c15e3bab844d65dd3c07c4ac880f16f741c0ea116f48c603449bbd4d
 PHYSICS_DEFINITIONS = "data/default physics.dat"
 PHYSICS_DEFINITIONS_SHA256 = (
     "e1fb3dedbeb29b4b4151da2c8cbbdc940b716b1a2321e1d6a9ba1542c74ada14"
+)
+# ``CPhysicsScriptStatements__CreateStatementType12`` at 0x0043DDC0 creates
+# the serialized behaviour leaf. ``CUnitBehaviour__ApplyToUnitData`` at
+# 0x00433010 then calls leaf vtable slot 1 and stores this released selector at
+# definition +0xE0. Type 2 is the intentional Jeep/selector-11 discontinuity;
+# type 12 resumes the otherwise sequential selector values.
+UNIT_BEHAVIOR_SELECTOR_BY_SERIALIZED_TYPE: tuple[int, ...] = (
+    0, 11, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13,
+    14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
 )
 ENGLISH_LANGUAGE_TABLE = "data/language/english.dat"
 ENGLISH_LANGUAGE_TABLE_SHA256 = (
@@ -927,19 +978,18 @@ def _read_exact(path: Path, expected_hash: str) -> bytes:
     return data
 
 
-def _physics_records(data: bytes) -> dict[tuple[int, str], dict[int, bytes]]:
+def _physics_record_stream(data: bytes) -> tuple[_PhysicsRecord, ...]:
     if len(data) < 6 or struct.unpack_from("<H", data, 0)[0] != 0x12:
         raise RuntimeError("unsupported physics-definition framing")
     offset = 2
-    records: dict[tuple[int, str], dict[int, bytes]] = {}
-    record_count = 0
+    records: list[_PhysicsRecord] = []
     while struct.unpack_from("<i", data, offset)[0] != -1:
         record_type, _declared_size = struct.unpack_from("<II", data, offset)
         offset += 8
         name_end = data.index(0, offset)
         name = data[offset:name_end].decode("ascii")
         offset = name_end + 1
-        fields: dict[int, bytes] = {}
+        fields: list[tuple[int, bytes]] = []
         while True:
             field_id, size = struct.unpack_from("<II", data, offset)
             offset += 8
@@ -947,21 +997,62 @@ def _physics_records(data: bytes) -> dict[tuple[int, str], dict[int, bytes]]:
             offset += size
             marker = struct.unpack_from("<i", data, offset)[0]
             offset += 4
-            fields[field_id] = value
+            fields.append((field_id, value))
             if marker == -1:
                 break
             if marker != 0:
                 raise RuntimeError(
                     f"physics record has an invalid continuation: {name}"
                 )
-        records[(record_type, name)] = fields
-        record_count += 1
-    if offset + 4 != len(data) or record_count != 777:
+        records.append(_PhysicsRecord(record_type, name, tuple(fields)))
+    if offset + 4 != len(data) or len(records) != 777:
         raise RuntimeError("physics-definition record count changed")
-    return records
+    return tuple(records)
 
 
-def _definition_string(fields: dict[int, bytes], field_id: int) -> str:
+def _physics_records(
+    data: bytes,
+) -> dict[tuple[int, str], tuple[_PhysicsRecord, ...]]:
+    """Index the ordered stream without collapsing legitimate duplicate names."""
+
+    records: dict[tuple[int, str], list[_PhysicsRecord]] = {}
+    for record in _physics_record_stream(data):
+        records.setdefault((record.record_type, record.name), []).append(
+            record
+        )
+    return {key: tuple(values) for key, values in records.items()}
+
+
+def _physics_record(
+    records: dict[tuple[int, str], tuple[_PhysicsRecord, ...]],
+    record_type: int,
+    name: str,
+) -> _PhysicsFields:
+    matches = records.get((record_type, name), ())
+    if len(matches) != 1:
+        raise RuntimeError(
+            f"expected one physics record type {record_type} named {name!r}, "
+            f"found {len(matches)}"
+        )
+    return _PhysicsFields(matches[0].fields)
+
+
+def _unit_behavior_selector(fields: _PhysicsFields | dict[int, bytes]) -> int:
+    value = fields.get(8)
+    if value is None or len(value) != 4:
+        raise RuntimeError("Unit behaviour field 8 is not one dword")
+    serialized_type = struct.unpack("<I", value)[0]
+    if not 1 <= serialized_type <= len(UNIT_BEHAVIOR_SELECTOR_BY_SERIALIZED_TYPE):
+        raise RuntimeError(
+            f"unsupported Unit behaviour serialized type {serialized_type}"
+        )
+    return UNIT_BEHAVIOR_SELECTOR_BY_SERIALIZED_TYPE[serialized_type - 1]
+
+
+def _definition_string(
+    fields: _PhysicsFields | dict[int, bytes],
+    field_id: int,
+) -> str:
     value = fields[field_id]
     if not value or value[-1] != 0:
         raise RuntimeError(f"physics string field {field_id} is not terminated")
@@ -969,7 +1060,7 @@ def _definition_string(fields: dict[int, bytes], field_id: int) -> str:
 
 
 def _level100_actor_motion_definitions(
-    physics: dict[tuple[int, str], dict[int, bytes]],
+    physics: dict[tuple[int, str], tuple[_PhysicsRecord, ...]],
 ) -> list[dict[str, object]]:
     # UNSOURCED: `arrivalRadiusMillimeters` 2_000 / 5_000 / 8_000, below.
     #
@@ -992,7 +1083,7 @@ def _level100_actor_motion_definitions(
         ("Target Tank", 0x40C00000),
         ("Target Truck", 0x40400000),
     ):
-        fields = physics[(1, definition_name)]
+        fields = _physics_record(physics, 1, definition_name)
         if (
             fields.get(1) != struct.pack("<I", 0x40600000)
             or fields.get(3) != struct.pack("<I", expected_life_bits)
@@ -1006,7 +1097,7 @@ def _level100_actor_motion_definitions(
             {
                 "arrivalRadiusMillimeters": 2_000,  # UNSOURCED - see the note above
                 "authoredOrder": len(rows),
-                "behaviorInternalId": 2,
+                "behaviorInternalId": _unit_behavior_selector(fields),
                 "behaviorSerializedType": 3,
                 "definitionName": definition_name,
                 "fullGuideBaseTicks": 4,
@@ -1039,7 +1130,7 @@ def _level100_actor_motion_definitions(
         ("Air Trainer", 0x41133333, 0x43960000),   # 9.2 u/s, 300.0
         ("Target Drone", 0x40B00000, 0x43FA0000),  # 5.5 u/s, 500.0
     ):
-        fields = physics[(1, definition_name)]
+        fields = _physics_record(physics, 1, definition_name)
         if (
             fields.get(8) != struct.pack("<i", 9)
             or fields.get(2) != struct.pack("<I", air_velocity_bits)
@@ -1053,7 +1144,7 @@ def _level100_actor_motion_definitions(
             {
                 "arrivalRadiusMillimeters": 5_000,  # UNSOURCED - see the note above
                 "authoredOrder": len(rows),
-                "behaviorInternalId": 8,
+                "behaviorInternalId": _unit_behavior_selector(fields),
                 "behaviorSerializedType": 9,
                 "definitionName": definition_name,
                 "fullGuideBaseTicks": None,
@@ -1066,14 +1157,14 @@ def _level100_actor_motion_definitions(
         )
 
     transporter_name = "U-17 Highside Transporter"
-    transporter_fields = physics[(1, transporter_name)]
+    transporter_fields = _physics_record(physics, 1, transporter_name)
     if transporter_fields.get(8) != struct.pack("<i", 12):
         raise RuntimeError("Level 100 transporter dropship behavior changed")
     rows.append(
         {
             "arrivalRadiusMillimeters": 8_000,  # UNSOURCED - see the note above
             "authoredOrder": len(rows),
-            "behaviorInternalId": 12,
+            "behaviorInternalId": _unit_behavior_selector(transporter_fields),
             "behaviorSerializedType": 12,
             "definitionName": transporter_name,
             "fullGuideBaseTicks": None,
@@ -2950,7 +3041,7 @@ def _level100_contact_asset(
     # variant separately instead of collapsing it, so the guard can stay strict
     # on the three variants that genuinely agree.
     for definition in ("Target Tank", "Target Truck", "Warehouse", "Target Drone"):
-        fields = physics[(1, definition)]
+        fields = _physics_record(physics, 1, definition)
         mesh_name = _definition_string(fields, 9)
         if not mesh_name.casefold().endswith(".msh"):
             mesh_name += ".msh"
@@ -2967,7 +3058,11 @@ def _level100_contact_asset(
             expected_hash,
         )
         parsed = parse_cmsh_stream(inflate_aya(source))
-        destruction_fields = physics[(6, _definition_string(fields, 10))]
+        destruction_fields = _physics_record(
+            physics,
+            6,
+            _definition_string(fields, 10),
+        )
         particle_descriptor = _definition_string(destruction_fields, 2)
         if any(
             _definition_string(destruction_fields, field_id) != particle_descriptor
@@ -2994,8 +3089,12 @@ def _level100_contact_asset(
         )
         target_source_hashes[definition] = expected_hash
 
-    round_fields = physics[(4, "Mech Pulse Bolt Medium")]
-    hit_fields = physics[(6, _definition_string(round_fields, 9))]
+    round_fields = _physics_record(physics, 4, "Mech Pulse Bolt Medium")
+    hit_fields = _physics_record(
+        physics,
+        6,
+        _definition_string(round_fields, 9),
+    )
     hit_particle_descriptor = _definition_string(hit_fields, 2)
     if (
         round_fields[12] != struct.pack("<I", 0x3D8F5C29)
@@ -3008,10 +3107,11 @@ def _level100_contact_asset(
 
     vulcan_round_names = ("Mech Bullet", "Mech Air Bullet")
     vulcan_hit_name = "Mech Bullet Hit"
-    vulcan_hit_fields = physics[(6, vulcan_hit_name)]
+    vulcan_hit_fields = _physics_record(physics, 6, vulcan_hit_name)
     if (
         any(
-            _definition_string(physics[(4, name)], 9) != vulcan_hit_name
+            _definition_string(_physics_record(physics, 4, name), 9) !=
+            vulcan_hit_name
             for name in vulcan_round_names
         )
         or _definition_string(vulcan_hit_fields, 5) !=

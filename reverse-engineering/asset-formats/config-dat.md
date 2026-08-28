@@ -2,7 +2,7 @@
 
 Status: active format contract — three unrelated DAT schemas plus one RAW asset;
 never use a generic `.dat` parser
-Date: 2026-08-23
+Date: 2026-08-28
 Verdict: worldheaders and the hash-pinned Battle Engine configuration baseline
 are byte-exact; the other two root files retain bounded, unrelated contracts.
 Evidence: MEASURED — all nine mirror-index `.dat` rows and the one `.raw` row
@@ -98,6 +98,51 @@ pairs and 73,796 payload bytes. The stream ends with `-1` and no unconsumed
 bytes. This is outer framing, not full field meaning. The static reload owner is
 `CWorldPhysicsManager__ReloadDefaultPhysicsAndBattleEngineData @ 0x00510800`;
 individual value factories and consumers require their own contracts.
+
+Record and field multiplicity are now explicit. The 777 ordered records contain
+775 unique `(family, name)` keys: `Bullet Hit` occurs twice in Explosion and
+`Boat Sabre Spawner` occurs twice in Spawner. Neither pair is byte-identical.
+The two `Bullet Hit` records begin at `0x41ED` and `0x42AA`; their field-2 and
+field-7 effect/timeline strings differ. The two `Boat Sabre Spawner` records
+begin at `0x18C48` and `0x18E1F`; field 1 names `AV-14B Sabre Pulse Tank` in the
+first and `M-1 Broadsword Main Battle Tank` in the second. In addition, 147
+records repeat at least one field id. A parser that indexes either level with a
+plain dictionary therefore loses released data. The rebuild materializer's
+ordered parser now retains both multiplicities: its record accessor refuses an
+ambiguous name, and its field accessor refuses an ambiguous field id instead of
+silently selecting one.
+
+### Unit behaviour and Spawner join
+
+All 160 Unit records carry exactly one four-byte field 8. That value is a
+serialized behaviour-leaf type, not the raw construction selector. The retail
+type-12 factory, exact RTTI leaves, and leaf slot-1 returns close the complete
+type-to-selector conversion in
+[`CPhysicsScriptStatements.cpp.md`](../binary-analysis/functions/CPhysicsScriptStatements.cpp.md#unit-behaviour-type-to-selector-closure).
+The corpus uses 24 of the 25 admitted types: type 2 / `CJeepBehaviourType` /
+selector 11 is the sole absent type. Known released observations reproduce the
+ordered Unit registry exactly: `Air Trainer` is ordinal 31 / selector 8,
+`Target Tank` is 87 / 2, `Control Tower` is 120 / 7, and
+`Forseti City Building 1` is 156 / 25.
+
+Every one of the 38 Spawner records has one NUL-terminated field-1 Unit name,
+and all 38 join exactly to one of the 160 Unit records with zero unresolved
+names. They reference 21 distinct Units. The resulting raw-selector population
+is:
+
+| Selector | Member class | Spawner records |
+| ---: | --- | ---: |
+| `0` | `CMech` | 3 |
+| `2` | `CGroundVehicle` | 16 |
+| `3` | `CInfantryUnit` | 11 |
+| `8` | `CPlane` | 6 |
+| `16` | `CDiveBomber` | 2 |
+|  | **Total** | **38** |
+
+This is definition-corpus reach, not proof that every spawner is placed or
+executes in a released world. The separate squad-size and concrete-factory
+consequences are owned by
+[`spawner-squad-cycle.md`](../game-mechanics/spawner-squad-cycle.md).
 
 ## `Dial.raw`
 

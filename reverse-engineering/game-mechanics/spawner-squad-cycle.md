@@ -1,7 +1,7 @@
 # Released spawner squad-cycle contract
 
 Status: accepted static contract with a deterministic reconstruction boundary;
-authored runtime reach remains open
+authored definition reach closed, per-world/runtime invocation reach open
 Date: 2026-08-28
 Verdict: `CSpawnerThng__DoSpawn` admits one squad-production cycle, not one
 unit. A passing call can publish an empty squad, consumes its finite amount
@@ -35,6 +35,109 @@ initial delay, squad delay, unit name, and spawn script. Lines 623-635 define
 zero. Retail writes those three defaults before squad initialization. Source
 supplies these names and defaults; released field offsets and ordering below
 come from the shipped bodies.
+
+## Definition identity and concrete factories
+
+The authored spawner field is a unit-definition **name**, not a concrete class
+enum. Construction walks the ordered global definition registry, compares the
+name at definition `+0xB0`, and caches the matching zero-based ordinal at PC
+spawner `+0x3DC`. The definition separately stores a raw class selector at
+`+0xE0`.
+
+Those values have different released lifetimes. Each cycle start re-resolves
+the current authored name, reads the current row's selector, and passes that
+selector directly to `CWorldPhysicsManager__CreateSquad`. Each member wave
+instead passes the constructor-cached ordinal to
+`CWorldPhysicsManager__CreateThingByType`; that factory walks to the ordinal
+and only then reads the row's selector. A missing name faults on the cycle-start
+path, while a missing/negative ordinal returns a null member. A registry reorder
+could therefore make squad and member selection diverge, although no released
+registry mutation has yet been demonstrated.
+
+The exact PC factory identities are:
+
+| Routine | Half-open range | Bytes | SHA-256 |
+| --- | ---: | ---: | --- |
+| member factory | `[0x0050DF80,0x0050E7F4)` | 2,164 | `a30e5fb1fce83522dd93710391bbb624e126f983e1a4e527f858a2c2e914e548` |
+| squad factory | `[0x0050F4B0,0x0050F5BC)` | 268 | `9130332099b72bd952b878d0e057bf16f01369b9a55bb2fa9bca642b604bbb3d` |
+| authored-size predicate | `[0x0050F680,0x0050F6A4)` | 36 | `966275f62570df243aa01e4b27f363e8e1ee8fcfd3dab0e42e3db240ed0d535f` |
+
+PC RTTI at each final primary vtable closes the member class labels below.
+`Preserve size?` is the constructor's exact policy decision; it must not be
+renamed to “can create a squad.”
+
+| Selector | Member shell | Preserve size? | Squad shell |
+| ---: | --- | :---: | --- |
+| `0` | `CMech` | yes | `CRelaxedSquad` |
+| `1` | `CPlane` | yes | `CNormalSquad` |
+| `2` | `CGroundVehicle` | yes | `CNormalSquad` |
+| `3` | `CInfantryUnit` | yes | `CRelaxedSquad` |
+| `4` | `CCannon` | no | null |
+| `5` | `CBoat` | no | null |
+| `6` | `CCarrier` | no | null |
+| `7` | `CBuilding` | no | null |
+| `8` | `CPlane` | no | null |
+| `9` | `CBomber` | no | null |
+| `10` | `CGroundAttackAircraft` | no | null |
+| `11` | null | no | null |
+| `12` | `CDropship` | no | null |
+| `13` | `CMine` | no | null |
+| `14` | `CHiveBoss` | no | null |
+| `15` | `CSubmarine` | no | null |
+| `16` | `CDiveBomber` | no | null |
+| `17` | `CThunderHead` | no | null |
+| `18` | `CCarver` | no | null |
+| `19` | `CGillM` | no | null |
+| `20` | `CSentinel` | no | null |
+| `21` | `CWarspite` | yes | `CNormalSquad` |
+| `22` | `CFenrir` | no | null |
+| `23` | `CWarspiteDome` | no | null |
+| `24` | `CPod` | no | null |
+| `25` | `CSimpleBuilding` | yes | null |
+| outside unsigned `0..25` | null | yes | `CNormalSquad` |
+
+Selectors `1` and `8` prove why the raw selector cannot be collapsed to the
+member class: both construct `CPlane`, but only selector `1` preserves authored
+squad size and constructs a normal squad. Selector `25` preserves size and can
+construct multiple `CSimpleBuilding` members without a squad. Selector `11`
+constructs neither class, is clamped to size one, and can leave an admitted
+cycle retrying indefinitely if authored.
+
+The exact 175,603-byte `default physics.dat`, SHA-256
+`e1fb3dedbeb29b4b4151da2c8cbbdc940b716b1a2321e1d6a9ba1542c74ada14`,
+closes authored definition reach. All 160 Unit records carry one serialized
+behaviour type; the type-12 RTTI/slot-1 chain maps them to raw selectors. All 38
+Spawner records then join without ambiguity through their field-1 Unit name:
+
+| Raw selector | Spawner records | Released size/squad consequence |
+| ---: | ---: | --- |
+| `0` | 3 | preserve authored size; `CRelaxedSquad` |
+| `2` | 16 | preserve authored size; `CNormalSquad` |
+| `3` | 11 | preserve authored size; `CRelaxedSquad` |
+| `8` | 6 | clamp size to one; no squad |
+| `16` | 2 | clamp size to one; no squad |
+
+Thus the six authored fighter spawners use selector `8`, not the legacy
+selector-`1` plane route, and the two authored ground-attack spawners use
+selector `16` / `CDiveBomber`; all eight discard their authored squad sizes at
+construction. The serialized behaviour factory cannot produce selector `1` at
+all. It can produce selector `11` only from serialized type `2`, but none of the
+160 Unit records uses that type. Four Unit records do produce selector `25`,
+but none of the 38 Spawner records names them. These three factory branches are
+therefore dormant for the shipped default Spawner-definition corpus unless
+another runtime writer mutates definition `+0xE0`; no such writer is currently
+known. World placement and actual invocation of each of the 38 definitions
+remain separate open questions. The exact serialized-type map and duplicate
+record caveat are owned by
+[`config-dat.md`](../asset-formats/config-dat.md#unit-behaviour-and-spawner-join).
+
+Every valid PC and Xbox member/squad allocation tests the allocator result and
+returns null on failure. The corresponding three PS2 factory families reproduce
+the selector matrix, but pass each valid allocation directly to its constructor
+without a local null test. PS2 allocation-null behavior is therefore a static
+fault prediction, not an executed result. The factories return only constructed
+shells; the member wave still owns definition initialization, cooldown, optional
+squad attachment, and success-count mutation in that order.
 
 ## Admission and synchronous start
 
@@ -172,6 +275,13 @@ definition validity, reader/monitor lifetime, live ordered world-list mutation,
 transform and clearance queries, member attachment, and event delivery. In
 particular, a UnitAI scan must not snapshot the squad set: a squad appended by
 the nested spawn helper can be the next node in that same scan.
+
+That adapter must retain both the definition ordinal and raw class selector,
+and derive member shell, authored-size policy, and squad shell independently.
+It must not collapse selectors `1` and `8` merely because both return
+`CPlane`. No unused parallel factory abstraction belongs in deterministic Core;
+the selector table becomes executable when the adapter begins materializing
+released actor scenes.
 
 An adapter consuming `ScheduleEvent3000` must translate it exactly to a fresh
 `AddEvent(3000, spawnerListener, due, StartOfFrame, data: 0, reuse: -1)` call.
