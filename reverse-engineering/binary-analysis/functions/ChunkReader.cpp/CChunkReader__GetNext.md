@@ -1,9 +1,10 @@
 # CChunkReader__GetNext
 
 Status: active static function note
-Last updated: 2026-08-19
-Source File: ChunkReader.cpp (absent from the pinned GPL
-`references/Onslaught/` drop) | Binary: BEA.exe, SHA-256
+Last updated: 2026-08-27
+Source File: `references/Onslaught/chunker.cpp`, SHA-256
+`3eb76bf2628c4c4aeaa8ce32a33a06ecc5dc3c8cb47d5528acea641f530c6135`
+| Binary: BEA.exe, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 Evidence: MEASURED — independently re-read 2026-08-19 from official
 `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`. Twin
@@ -31,7 +32,27 @@ listed.
 `[this+8] = 0`. Then `ECX = [this+4]`, read 4 bytes into a scratch
 dword. If that call returns `< 4`: `EAX = 0`. Else a second 4-byte
 read onto `this` itself; `EAX` is that dword, forced to 0 when the
-second call returns `< 4`. Authored tag names are **not** claimed.
+second call returns `< 4`. Pinned source independently supplies the authored
+`CChunkReader::GetNext`, `ReadSinceChunk`, and `Size` identities.
+
+## PS2 correspondence
+
+Fresh streaming from the retained PS2 executables reproduces the same complete
+operation in three R5900 bodies:
+
+| Build | Range | Bytes | Raw SHA-256 |
+| --- | --- | ---: | --- |
+| Demo | `[0x00131F50,0x00131FB0)` | 96 | `3c4085907613d93f4bf0fd6fafb2c2f0cfcc5853142b3b188caa0c078793a1fac` |
+| Europe | `[0x00131F50,0x00131FB0)` | 96 | `6ddad968c37a76bbf69630cc31b82f4691eeb55d963ae4c7d8ffd7b84148bdc63` |
+| USA | `[0x001320A0,0x00132100)` | 96 | `9c3db77e9e77f6eae679073434797d4f83a31dfbfc843e530ddd6e151912e6e28` |
+
+Their relocation-normalized MIPS shape SHA-256 is
+`3d2ccbf6815292148559813176549357475c85244bda80f62afe6a0089544e4d`.
+Each resets `ReadSinceChunk`, requests exactly four tag bytes and then exactly
+four size bytes, and returns zero when either request is short. Consequently a
+clean EOF, a one-to-three-byte partial tag, and a complete tag followed by a
+zero-to-three-byte partial size are indistinguishable to the outer released
+resource loader, which takes its normal close/success path.
 
 Cheapest falsifier: file `0x00023910` is not
 `51 56 8b f1 8d 44 24 04 6a 04`, **or** `0x00023950` is not `c3`,

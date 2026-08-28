@@ -186,8 +186,79 @@ only formats local `AYAD` mismatch text, tests `MESH` before that gate, and
 deserializes `VSDS`. Both are encounter-order dispatchers and both skip `LNDS`
 on PC. The mapped PC demo body is a normalized-instruction twin of this retail
 function, and the exact four-member demo archive shelf is now independently
-censused above. Released PS2 loader behavior is documented separately from the
-outer topology: it must not be inferred merely from this corpus profile.
+censused above.
+
+## Released PS2 encounter-order loader contract
+
+The PS2 demo, Europe retail, and USA retail executables each contain one exact
+2,000-byte `CResourceAccumulator::ReadResources` correspondent. All three were
+streamed from their retained ISO owners and independently rehashed:
+
+| Build | Executable SHA-256 | Loader VA | Raw body SHA-256 |
+| --- | --- | --- | --- |
+| Demo | `5700b5d0b39554e49afe65e079ad8109fe6688c2aa5e6f0e0ed5afcefd034584` | `[0x002812D8,0x00281AA8)` | `5d850c58d7a567885cccca3ef334d14381ea98cbcdee66bbe3c9680403840a371` |
+| Europe | `87cb89b020cf107b3ba4612ac6bc86ed3fcbd6dd985e2cd3978bf897be96b655` | `[0x00281398,0x00281B68)` | `b864394f6ab260db3831f5ecbce8880a6f5de393c4d699e200515c81e71638395` |
+| USA | `4cfed76f0b0cdf84377a4d5b1613fd197c27be9a3814743590fecba22ba4e166` | `[0x00281B00,0x002822D0)` | `ee0126daaf2e124b31b5fdfc70bced0746417cbf44be557e11fdcec7d451ee43b` |
+
+Zeroing only MIPS J/JAL target fields and non-SPECIAL/non-SPECIAL2 immediate
+fields produces the same normalized SHA-256 for all three bodies:
+`8086754d135957b43baf6924b4490b5035b62fec6eddda62610077c3aa05ce87`.
+The released ABI is the source-correlated static
+`ReadResources(int32 level, CPS2MemBuffer *optional_buffer)`: `$a0` is the
+signed resource ID, `$a1` is nullable, callers consume no return, and there is
+no PC-style third `skip_optional_chunks` argument.
+
+All three release bodies return immediately for `level == -3` after emitting
+the loading status/trace but before filename allocation or archive/pagefile
+opening. The surviving source has only a commented return there. An exhaustive
+direct-JAL census finds exactly five caller roles in every build: synchronous
+Goodie load, asynchronous Goodie-buffer completion, front end `-2`, game-level
+load, and startup/base `-1`; none passes `-3`.
+
+For every other ID, PS2 builds the target-3 resource filename and manages two
+paging handles before constructing the chunk reader. A nonnegative level closes
+the previous APF handle, changes the AYA suffix to `.apf`, opens that per-level
+pagefile, and records the AYA name. Every non-`-3` call lazily opens
+`data\\resources\\pagefile.mpf` when its master handle is negative. APF/MPF
+open failure is traced and loading continues; this body establishes the handles
+but does not read or normally close the master pagefile.
+
+The complete recognized-tag action table is:
+
+| Tag | Released PS2 action |
+| --- | --- |
+| `LVLR` | Read one u32, ignore it, then skip the remainder. |
+| `TARG` | Read one u32 and ignore it; do not skip trailing payload. |
+| `AYAD` | Read five u32 values, perform the nonfatal checks below, then skip. |
+| `TEXT` / `MESH` | Deserialize one encountered texture / mesh. |
+| `ERES` / `WRES` / `IMPS` | Deserialize engine / world / PS2-imposter data. |
+| `LNDS` | Deserialize through the engine landscape owner; unlike PC, do not skip. |
+| `VSDS` / `PMIB` | Skip the remaining payload. |
+| `PLAT` / `SURF` / `SSHD` | Deserialize PS2 platform / surface / static-shadow data. |
+| `DMKR` / `GDIE` | Deserialize landscape damage / front-end Goodie data. |
+| other | Trace the FourCC, skip its payload, and continue. |
+
+This chain restarts for every chunk. It has no phase, seen-tag set, duplicate
+guard, or singleton counter: recognized tags execute in stream encounter order.
+`TARG` is the one prefix arm that does not skip after its four-byte read, so a
+larger malformed payload would desynchronize the next header even though every
+canonical PS2 archive uses four bytes.
+
+Released PS2 prefix enforcement is weaker than the source assertions. `LVLR`
+and `TARG` are never compared. `AYAD[0]` and `[4]` are ignored; `[1]` is compared
+with 372, aligned `[2]` with 320, and `[3]` with 5084. A mismatch only formats a
+diagnostic into a stack buffer and continues because the source `SASSERT` has
+no release instruction counterpart. The 67 measured retail PS2 numeric members
+use `LVLR=103`, `TARG=3`, and `AYAD=(344,372,316,5084,92,1)`.
+
+The three corresponding `CChunkReader::GetNext`, `Read`, and `Skip` families
+are also normalized twins. `GetNext` returns zero for clean EOF, a one-to-three
+byte tag, or a short four-byte size read, and the loader then takes its ordinary
+success cleanup path. `Read` increments `ReadSinceChunk` before the underlying
+read and returns exact-length equality; the source bounds assertion is absent.
+`Skip` computes unsigned `Size-ReadSinceChunk` without guarding underflow.
+Delegate-level short-read behavior, APF/MPF consumers, malformed-skip response,
+and semantic safety of arbitrary reordered chunks remain open.
 
 ## Complete top-level vocabulary census
 
@@ -292,5 +363,5 @@ canonical PC/Xbox/PS2 numeric writer profile for the exact named retail
 shelves, released-PC outer dispatch contract, top-level geometry, 4,090 numeric
 WRES Unit/Feature joins, and 53 anonymous embedded CMSH bodies are settled.
 General LVLR field semantics, other WRES/object dependencies, anonymous body
-names, runtime subsystem effects, PS2 loader behavior, PS2/prototype shelves,
-and parity are open.
+names, runtime subsystem effects, PS2 pagefile consumers and delegate-level
+short reads, PS2/prototype shelves, and parity are open.

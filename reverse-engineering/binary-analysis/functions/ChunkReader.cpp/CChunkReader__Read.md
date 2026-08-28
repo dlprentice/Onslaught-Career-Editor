@@ -1,9 +1,10 @@
 # CChunkReader__Read
 
 Status: active static function note
-Last updated: 2026-08-19
-Source File: ChunkReader.cpp (absent from the pinned GPL
-`references/Onslaught/` drop) | Binary: BEA.exe, SHA-256
+Last updated: 2026-08-27
+Source File: `references/Onslaught/chunker.cpp`, SHA-256
+`3eb76bf2628c4c4aeaa8ce32a33a06ecc5dc3c8cb47d5528acea641f530c6135`
+| Binary: BEA.exe, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 Evidence: MEASURED — independently re-read 2026-08-19 from official
 `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`. Twin
@@ -30,8 +31,9 @@ One `E8` (`0x00548570`, table label `CDXMemBuffer__Read`), zero
 
 `ESI = A * B`. Then `[this+8] += ESI`, `ECX = [this+4]`,
 `push ESI` / `push dest` / `call 0x00548570`. `EAX` is 1 iff that
-call's `EAX` equals `ESI`, else 0. Authored names are **not**
-claimed.
+call's `EAX` equals `ESI`, else 0. The Stuart source independently
+identifies the class, method, fields (`ReadSinceChunk` and `pFile`),
+and exact-length Boolean return contract.
 
 Cheapest falsifier: file `0x00023960` is not
 `56 8b 74 24 0c 0f af 74 24 10`, **or** `0x0002398a` is not
@@ -39,6 +41,25 @@ Cheapest falsifier: file `0x00023960` is not
 `tools/call_xref_scan.py` on `0x00423960` is not `total: 164` all
 `E8`, **or** `0x00023974` is not `89 51 08`, **or** `0x0002397b`
 is not `e8 f0 4b 12 00`.
+
+## PS2 correspondence
+
+The released PS2 executables retain the same source-level contract. Each body
+was independently streamed from its named pristine image/archive on
+2026-08-27; relocation-normalized instruction streams share SHA-256
+`e888405e22a9847257b5bf3de2e943bd60a6beb34db9118747520684263209e9`.
+
+| Build | Virtual range | Bytes | Raw body SHA-256 |
+| --- | --- | ---: | --- |
+| Official demo | `[0x00131fb0,0x00131ff8)` | 72 | `3b931164dbce68a1d3cfdf41baf74dcf242b858d388c6c5582ff533307c1d0a6f` |
+| Europe retail | `[0x00131fb0,0x00131ff8)` | 72 | `128da49b47bd3b136ce52bfb1720a2b4384bcecec645e80eff066220a64470ae9` |
+| USA retail | `[0x00132100,0x00132148)` | 72 | `39f38eb1fa293bc942dfed2bca0bef20fd457f0f7d61645b72ee99fa425522d2` |
+
+All three multiply `size * count`, add that byte count to
+`ReadSinceChunk` before issuing the read, and return true only when the
+underlying read supplies exactly that many bytes. The released bodies omit the
+source build's diagnostic `ASSERT` without changing the data or return
+contract.
 
 ## Functions
 
