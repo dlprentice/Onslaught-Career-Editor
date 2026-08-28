@@ -762,9 +762,28 @@ Unit field `+0x244`, which is distinct from the source-crosswalked `EAIState`
 cell at `+0x210`. The reducer keeps the third ordered capability result as a
 caller-captured oracle because retail evaluates a candidate virtual, a linked
 child/spawner-like list, an ordered active-weapon list, category masks, terrain
-height, and the selected weapon profile. It returns the winning input index and
-does not claim the retail global draw phase, candidate-list population,
-lifecycle-aware reader transaction, or autonomous actor wiring.
+height, and the selected weapon profile. The new upstream transcript adapter
+closes the immediately preceding world-list transform. Retail's `CWorld+0x00`
+`GetThingNB` set is head-inserted; its `+0x20` allegiance-`0/6` and `+0x30`
+allegiance-`1/6` indexes are independently tail-appended. Owner allegiance `1`
+selects the `0/6` view, owner `0` selects the `1/6` view, and every other value
+falls back to all things. Each raw payload with squad discriminator
+`0x20000000` resolves through virtual slot `+0x128`; otherwise unit bit `0x10`
+keeps the payload itself. Downstream fields come from that resolved unit, but
+the squared range vector and `1000-distance` term come from the raw payload.
+Core accepts all three already ordered views rather than incorrectly deriving
+the side indexes by filtering all things. It returns the winning transcript
+index and does not claim the retail global draw phase, world-index population
+or mutation, lifecycle-aware reader transaction, or autonomous actor wiring.
+
+The transcript's former `SupportMinimum`/`SupportMaximum` names are corrected
+to selected attack-provider range results. Exact PC bodies show that
+`0x004FB840` mutates a `CUnit`'s selected weapon/spawner for one target, then
+`0x004FB780/0x004FB7E0` query the chosen provider's minimum/maximum range with
+weapon-over-spawner priority and positive-zero fallback. PC demo, Xbox, and PS2
+correspondents preserve that transaction. Core still accepts those two results
+as caller-captured cells; reproducing provider selection itself requires actor
+lists, active-reader state, terrain sampling, time, and full weapon ballistics.
 
 The copied Steam options bind Movement Forward/Backward/Left/Right to both
 `WASD` and the matching arrow keys, while Look Left/Right/Up/Down consume the

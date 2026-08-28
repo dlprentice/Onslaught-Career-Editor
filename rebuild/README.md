@@ -267,15 +267,17 @@ continuous deterministic yaw; only jet movement retains the older eight-way
 approximation.
 
 Core also carries the released-family `CUnitAI` close-target scoring kernel as
-`RetailUnitAITargetSelection`. It reduces a caller-supplied, ordered resolved-
-candidate transcript, computing the exact `TF_DYING`/mode and
-allegiance/`CUnitIndiscriminate` gates from raw retail fields before applying
-the measured range gate, `CUnitAttackPriority` ladder, stable
-primary/secondary tie law, and shared-stream random arm. This is not autonomous
-AI wiring: retail list traversal and squad resolution, the ordered
-weapon/capability gate, reader mutation, support selection, and fire-feasibility
-helper population remain outside the reducer until their owning actor paths are
-reconstructed.
+`RetailUnitAITargetSelection`. Its upstream adapter selects one of three
+caller-captured world-list views by owner allegiance, applies the released
+squad-or-unit transform, preserves list order, and deliberately measures
+distance from the raw payload while reading scoring fields from the resolved
+unit. The scorer then computes the exact `TF_DYING`/mode and
+allegiance/`CUnitIndiscriminate` gates before applying the measured range gate,
+`CUnitAttackPriority` ladder, stable primary/secondary tie law, and
+shared-stream random arm. This is not autonomous AI wiring: population and
+lifecycle of the three world indexes, the ordered weapon/capability gate,
+reader mutation, attack-provider selection, and fire-feasibility helper
+population remain outside Core until their owning actor paths are reconstructed.
 
 World admission is no longer Level-100-only in Core (2026-08-22): the released
 43-node career graph lives in `RetailWorldCatalog` with its selectability law,

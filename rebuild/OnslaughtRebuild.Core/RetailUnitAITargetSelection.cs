@@ -38,8 +38,43 @@ public readonly record struct RetailUnitAITargetCandidate(
     float RangeReductionPercent,
     int CandidateCapabilityGate,
     int ScoreGate164,
-    float SupportMinimum,
-    float SupportMaximum);
+    float SelectedProviderMinimumRange,
+    float SelectedProviderMaximumRange);
+
+/// <summary>
+/// One caller-captured position in the released world coordinate space.
+/// </summary>
+public readonly record struct RetailUnitAITargetPosition(
+    float X,
+    float Y,
+    float Z);
+
+/// <summary>
+/// Fields read from the resolved <c>CUnit</c> after retail transforms a raw
+/// world-list payload. Provider ranges are the results of selecting an attack
+/// provider for this unit and querying that selected provider.
+/// </summary>
+public readonly record struct RetailUnitAITargetResolvedUnit(
+    uint ThingFlags2C,
+    uint TypeFlags34,
+    int UnitMode244,
+    int Allegiance138,
+    float RangeReductionPercent,
+    int CandidateCapabilityGate,
+    int ScoreGate164,
+    float SelectedProviderMinimumRange,
+    float SelectedProviderMaximumRange);
+
+/// <summary>
+/// One raw payload from an already ordered retail world-list view. Squad and
+/// direct-unit identities stay separate because retail resolves fields from
+/// one object while retaining the raw payload position for distance.
+/// </summary>
+public readonly record struct RetailUnitAITargetRawPayload(
+    uint ThingTypeFlags34,
+    RetailUnitAITargetPosition Position,
+    RetailUnitAITargetResolvedUnit? DirectUnit,
+    RetailUnitAITargetResolvedUnit? SquadRepresentativeUnit);
 
 /// <summary>
 /// The finite-domain scoring kernel in retail PC
@@ -48,15 +83,18 @@ public readonly record struct RetailUnitAITargetCandidate(
 /// </summary>
 /// <remarks>
 /// This is deliberately a transcript reducer, not autonomous UnitAI. It does
-/// not traverse retail lists, mutate the lifecycle-aware target reader, run
-/// support/escort helpers, populate ballistic-result cells, or replace
-/// script-authored <c>Attack(target)</c>. Its indiscriminate arm consumes the
-/// caller-supplied released gameplay stream; the caller remains responsible
-/// for that shared stream's global draw order.
+/// not populate the three retail world-list views, mutate the lifecycle-aware
+/// target reader, select attack providers, populate ballistic-result cells, or
+/// replace script-authored <c>Attack(target)</c>. Its indiscriminate arm
+/// consumes the caller-supplied released gameplay stream; the caller remains
+/// responsible for that shared stream's global draw order.
 /// </remarks>
 public static class RetailUnitAITargetSelection
 {
     public const uint ThingFlagDying = 0x00000004u;
+
+    public const uint ThingTypeUnit = 0x00000010u;
+    public const uint ThingTypeSquadClass = 0x20000000u;
 
     public const int AllegianceForseti = 0;
     public const int AllegianceMuspell = 1;
@@ -72,6 +110,78 @@ public static class RetailUnitAITargetSelection
     public const uint ThingTypeComponent = 0x00080000u;
 
     private const float IndiscriminateScoreScale = 1.0f / 8192.0f;
+
+    /// <summary>
+    /// Selects retail's owner-side world-list view and transforms its raw
+    /// payloads into the scorer transcript without changing traversal order.
+    /// The supplied views must already preserve their distinct container
+    /// order; the two side views cannot be derived by filtering all things.
+    /// </summary>
+    public static RetailUnitAITargetCandidate[] BuildOrderedCandidateTranscript(
+        int ownerAllegiance138,
+        RetailUnitAITargetPosition ownerPosition,
+        IReadOnlyList<RetailUnitAITargetRawPayload> allThingsTraversalOrder,
+        IReadOnlyList<RetailUnitAITargetRawPayload> allegiance0Or6TraversalOrder,
+        IReadOnlyList<RetailUnitAITargetRawPayload> allegiance1Or6TraversalOrder)
+    {
+        ArgumentNullException.ThrowIfNull(allThingsTraversalOrder);
+        ArgumentNullException.ThrowIfNull(allegiance0Or6TraversalOrder);
+        ArgumentNullException.ThrowIfNull(allegiance1Or6TraversalOrder);
+
+        RequireFinite(ownerPosition.X, nameof(ownerPosition));
+        RequireFinite(ownerPosition.Y, nameof(ownerPosition));
+        RequireFinite(ownerPosition.Z, nameof(ownerPosition));
+
+        IReadOnlyList<RetailUnitAITargetRawPayload> selectedView =
+            ownerAllegiance138 switch
+            {
+                AllegianceMuspell => allegiance0Or6TraversalOrder,
+                AllegianceForseti => allegiance1Or6TraversalOrder,
+                _ => allThingsTraversalOrder,
+            };
+
+        var transcript = new List<RetailUnitAITargetCandidate>(selectedView.Count);
+        foreach (RetailUnitAITargetRawPayload payload in selectedView)
+        {
+            RetailUnitAITargetResolvedUnit? resolved =
+                (payload.ThingTypeFlags34 & ThingTypeSquadClass) != 0
+                    ? payload.SquadRepresentativeUnit
+                    : (payload.ThingTypeFlags34 & ThingTypeUnit) != 0
+                        ? payload.DirectUnit
+                        : null;
+            if (resolved is not { } unit)
+            {
+                continue;
+            }
+
+            RequireFinite(payload.Position.X, nameof(selectedView));
+            RequireFinite(payload.Position.Y, nameof(selectedView));
+            RequireFinite(payload.Position.Z, nameof(selectedView));
+
+            float deltaX = payload.Position.X - ownerPosition.X;
+            float deltaY = payload.Position.Y - ownerPosition.Y;
+            float deltaZ = payload.Position.Z - ownerPosition.Z;
+            float distanceSquared =
+                (deltaX * deltaX) +
+                (deltaY * deltaY) +
+                (deltaZ * deltaZ);
+            RequireFinite(distanceSquared, nameof(selectedView));
+
+            transcript.Add(new RetailUnitAITargetCandidate(
+                ThingFlags2C: unit.ThingFlags2C,
+                TypeFlags34: unit.TypeFlags34,
+                UnitMode244: unit.UnitMode244,
+                Allegiance138: unit.Allegiance138,
+                DistanceSquared: distanceSquared,
+                RangeReductionPercent: unit.RangeReductionPercent,
+                CandidateCapabilityGate: unit.CandidateCapabilityGate,
+                ScoreGate164: unit.ScoreGate164,
+                SelectedProviderMinimumRange: unit.SelectedProviderMinimumRange,
+                SelectedProviderMaximumRange: unit.SelectedProviderMaximumRange));
+        }
+
+        return transcript.ToArray();
+    }
 
     /// <summary>
     /// Reduces candidates in their supplied list order. Returns
@@ -132,8 +242,8 @@ public static class RetailUnitAITargetSelection
 
             RequireFinite(candidate.DistanceSquared, nameof(candidates));
             RequireFinite(candidate.RangeReductionPercent, nameof(candidates));
-            RequireFinite(candidate.SupportMinimum, nameof(candidates));
-            RequireFinite(candidate.SupportMaximum, nameof(candidates));
+            RequireFinite(candidate.SelectedProviderMinimumRange, nameof(candidates));
+            RequireFinite(candidate.SelectedProviderMaximumRange, nameof(candidates));
             if (candidate.DistanceSquared < 0.0f)
             {
                 throw new ArgumentOutOfRangeException(
@@ -169,9 +279,9 @@ public static class RetailUnitAITargetSelection
 
             float distance = MathF.Sqrt(candidate.DistanceSquared);
             float secondary = 1000.0f - distance;
-            if (candidate.SupportMinimum <= distance)
+            if (candidate.SelectedProviderMinimumRange <= distance)
             {
-                secondary += distance <= candidate.SupportMaximum
+                secondary += distance <= candidate.SelectedProviderMaximumRange
                     ? 1000000.0f
                     : 10000.0f;
             }

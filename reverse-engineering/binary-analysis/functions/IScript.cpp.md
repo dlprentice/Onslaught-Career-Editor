@@ -313,6 +313,12 @@ join on a fast path (`vfunc[+0x16c]==0.0f` and `+0x14` live) else
 walks `0x00855090`/`b0`/`c0` by `[owner+0x138]`. The walk takes
 `[node]` / `[node+4]`, redirects `+0x34` bit `0x20000000` through
 `vfunc[+0x128]`, keeps bit `0x10`, then applies three ordered gates.
+The three list objects are `CWorld+0x00/+0x20/+0x30`: source-correlated
+`GetThingNB()` head order, then independent tail-ordered `0/6` and `1/6` side
+indexes. Owner `1` selects `0/6`, owner `0` selects `1/6`, and other values use
+all things. The resolved unit remains in `EDI`, but the squared-distance loads
+at `0x004ff854..0x004ff863` use raw payload `EBX`; squad proxy range therefore
+comes from the squad object rather than its representative unit.
 `0x004fd5b0` requires non-null, no `TF_DYING`, and Unit `+0x244` outside
 `{1,2}`; `+0x244` is not the source-crosswalked `EAIState` cell at `+0x210`.
 `0x004fd3d0` accepts opposing pairs among Forseti `0`, Muspell `1`, and
@@ -323,7 +329,10 @@ payloads before ordered active/mask-matching weapons at `+0x17c`; the first
 weapon mask match is final and uses its selected profile's inclusive target-
 height window. Score is random `* 1/8192` or a
 `[edi+0x34]` → `[owner+0x164]` table; secondary uses `0x004fb780` /
-`0x004fb7e0` (`ret 0x10`) plus `10000`/`1000000`. A winner
+`0x004fb7e0` (`ret 0x10`) plus `10000`/`1000000`. Those wrappers query the
+minimum/maximum range of the attack provider selected on the owner `CUnit` by
+`0x004fb840`; their current `CSquadNormal`/support labels are superseded
+analysis metadata, not source identity. A winner
 `SetReader`s `+0xc` and always clears `+0x10`.
 
 The two fire-result cells now have bounded behavioral meanings. Every one of
