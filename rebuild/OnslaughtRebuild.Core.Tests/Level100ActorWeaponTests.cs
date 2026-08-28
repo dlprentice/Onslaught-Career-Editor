@@ -91,7 +91,7 @@ public sealed class Level100ActorWeaponTests
         _output.WriteLine(
             $"largest |scatter| over 4096 draws: {maximum} urad against the " +
             $"shipped {inaccuracy} urad CWeaponInaccuracy");
-        Assert.True(maximum <= 3 * inaccuracy);
+        Assert.True(maximum <= inaccuracy);
 
         int before = stream.Seed;
         Assert.Equal(0, stream.NextSignedUnitScaled(0));

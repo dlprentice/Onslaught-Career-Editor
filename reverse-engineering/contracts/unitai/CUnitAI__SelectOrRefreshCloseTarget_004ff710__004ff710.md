@@ -1,9 +1,9 @@
 # CUnitAI__SelectOrRefreshCloseTarget_004ff710
 
-Status: active replicated bounded-runtime contract
-Last updated: 2026-08-24
-Summary: specimen-bound static contract plus a replicated, controlled Level-521 call-context envelope for `CUnitAI__SelectOrRefreshCloseTarget_004ff710` at `0x004ff710`.
-Evidence: MEASURED — READY packet/decompile, structured edges, closure identity, independently recomputed pristine body bytes, and a preregistered wrapper-READY replay with exact positive/dark controls; runtime provenance and state-write limits remain explicit.
+Status: active multi-build static contract plus replicated bounded-runtime envelope
+Last updated: 2026-08-27
+Summary: specimen-bound branch/order/scoring contract, corresponding PC-demo/Xbox/PS2 virtual-suite bodies, and a replicated controlled Level-521 call-context envelope for `CUnitAI__SelectOrRefreshCloseTarget_004ff710` at `0x004ff710`.
+Evidence: MEASURED — independently decoded pristine instructions establish the PC transaction; raw and normalized console bodies independently carry the range, deterministic ladder/floor, indiscriminate draw/bypass, and tie shapes; the preregistered wrapper-READY replay establishes only its bounded caller/receiver/return envelope.
 Specimen: pristine `BEA.exe.original.backup`, 2,506,752 bytes, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 Source File: not_applicable (no current source-crosswalk row) | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
@@ -46,11 +46,15 @@ The packet comment's corrected shape is borne out at runtime: all 41 validated r
 
 ## Behavior summary
 - Existing packet analyst comment (quoted as bounded packet evidence, not silently upgraded): “Shared CUnitAI-family close-target selector/refresher (reader distance gates, ballistic fire flags this+0x18/0x1c, side-keyed scan + SetReader, returns *(this+0xc) pointer may be null). ECX receiver; bare `RET` (caller cleanup). Declared `int __thiscall ...(void * this)` / boolean tag is false — returns a target/reader pointer, not a predicate. Shape is `void * __thiscall (void * this)` (do not invent typed unit/reader typedef beyond that plate). Static retail evidence only; exact scoring policy, runtime targeting UX, and rebuild parity remain unproven.”
-- The displayed decompile is non-empty and SHA-256 `60e225ebd37a289c14b627b7c69c3984180efb23b6bf4687ed7941c12295ad99`. Runtime now proves the shared ff4f0→ff710 call envelope and pointer-shaped return domain in the named trace; it does not prove packet-described field writes or exact scoring policy.
+- Independent instruction decoding closes the policy: three ordered eligibility gates; strict squared-range admission; first-match categories Vehicle, Infantry, Air Unit, Emplacement, Building, Naval mapped to `CUnitAttackPriority` indices `1,4,5,0,2,3` at profile offsets `+0x168,+0x174,+0x178,+0x164,+0x16C,+0x170`; the deterministic-only Component `0x80000` floor at index 6 / `+0x17C`; primary best `-999999`; equality-only secondary contest; `1000-distance` plus `1000000` in-band or `10000` above-band; and strict-greater stable replacement. A greater-primary candidate resets secondary but does not clear the old winner pointer.
+- `CUnitIndiscriminate` owns normalized `config+0x128`. When nonzero, every candidate admitted through the three gates and strict range consumes one draw from the shared level-start-seeded gameplay stream and uses `(Random__NextLCGAbs()%65536)/8192`. This arm bypasses both raw deterministic score gates, the category ladder, and the Component floor in all seven measured builds. Their RNG bodies share seed `123456`, multiplier `48271`, unusual modulus `214783647`, wrapped transition, sign-normalized return, and exact score domain `[0,65535/8192]`.
+- Full refresh pre-clears helper cells `+0x18/+0x1C`, commits the lifecycle reader at `+0x0C` before support/helper evaluation, and resets `+0x10`; fast reuse preserves reader/latch and stores helper B before conditional helper A. The displayed decompile SHA-256 remains `60e225ebd37a289c14b627b7c69c3984180efb23b6bf4687ed7941c12295ad99`.
+- PC demo is instruction-shape identical. Two Xbox slot-11 bodies normalize identically, as do three PS2 slot-11 bodies; raw branches reproduce the deterministic and indiscriminate laws. This does not prove scenario stream phase, RNG period/frequency, helper purity, or all-float bit equivalence.
+- `RetailUnitAITargetSelection` now executes that finite-domain deterministic/stateful law over a caller-supplied ordered transcript and shared stream, returning its winner input index. It is not wired to actor state.
 - Structured inventory for this body: 0 caller record(s), 10 callee record(s), and 0 string-ref record(s).
 
 ## Error / edge behavior
-Nullability, invalid-state behavior, allocation failure, indirect-call failure, NaN/overflow behavior, and rollback semantics are not_determinable as a class from the packet metadata. The decompile and quoted comment are the bounded static evidence; any missing branch-level edge contract remains an open question rather than an invented default.
+Nullability and the finite branch/draw law are closed statically. Invalid objects, helper failures/side effects, scenario stream phase, RNG period/frequency, NaN/infinity/overflow/signed-zero and x87-versus-console rounding edges remain not_determinable and are not inferred from packet metadata.
 
 ## Runtime corroboration (TTD, bounded)
 - The older `ttd-deep-mine/values.tsv` corpus still has no row for this VA; that historical absence is not used as evidence.
@@ -66,15 +70,17 @@ Nullability, invalid-state behavior, allocation failure, indirect-call failure, 
 - Closure execution state `PARTIAL` and confidence `MEDIUM_STATIC`; these are inherited bounded grades, not this factory's promotion decision.
 - Packet stringRefs: empty.
 - Source crosswalk: no row for this VA in the current tracked crosswalk.
-- Canonical runtime note `reverse-engineering/binary-analysis/functions/CUnitAI__SelectOrRefreshCloseTarget_004ff710.md`, SHA-256 `f95a156f3127f6d674660c7b4a99bd8dc32b188bc25b8867d5aa91f0031d042d`.
+- Canonical runtime note `reverse-engineering/binary-analysis/functions/CUnitAI__SelectOrRefreshCloseTarget_004ff710.md`, SHA-256 `cdc02acc5bb91b5b9d2f65aa076cff1c6306d293c4d4a5f2e647b655d146bd72`.
 - Runtime promotion manifest `reverse-engineering/binary-analysis/unitai-targeting-runtime-replication-promotion-manifest-2026-08-24.tsv`, SHA-256 `09810bac7b5d39eacadc512cb29a0a223899b6625f95238c3dfc98a4708ea16c`; corrected capture SHA-256 `84DB81290B00CE15FBCEB579FD8BC8B4C793C3F947001544FA44918F4189D171`; wrapper receipt `A3D9E421EB12526405DF718C9142CE5BBE0AB829CAE6C9D614242BCE0138A96D`; independent adjudication `2C4B7987EC08FBBFCC063C793196BD66BBF5093480B7D54899883F36AD6FF6A7`.
 - Provenance limit: take2's recording receipt is RECONSTRUCTED/PARTIAL; capture-time target hash was not independently bound. The trace and copied runtime are hash-bound now, and no claim is widened beyond this scenario.
 
 ## Confidence
-2 — exact identity, contiguous pristine bytes, ABI/return shape, one executed caller edge, receiver law, replicated entry→return envelope, and can-fail controls are reconciled. Field-write ordering, pointed-to RTTI, other scenarios, and rebuild parity remain open. Proposed promotion: true.
+2 — exact identity, ABI/return shape, branch-specific writes, deterministic and indiscriminate scoring policy, property/category identities, cross-build RNG law, console correspondence, one executed caller edge, receiver law, replicated entry→return envelope, and can-fail controls are reconciled. Pointed-to RTTI, helper internals, scenario stream phase, numeric knife-edge parity, autonomous population, and other scenarios remain open. Proposed promotion: true.
 
 ## Unresolved questions
-- Instruction-level read/write direction and concrete layout for every referenced field/global.
-- Complete indirect-call target set and failure/nullability behavior.
-- Exact `this+0xc/+0x18/+0x1c` state-write ordering and caller expectations outside the measured shared envelope.
+- Concrete gameplay names and layout ownership beyond the accessed offsets.
+- Complete indirect-call target set, target RTTI, and helper failure/side-effect behavior.
+- RNG period/frequency, scenario-specific shared-stream phase, and
+  cross-platform numeric knife-edge equivalence.
+- Exact per-invocation receiver values, autonomous list population, and caller expectations outside the measured shared envelope.
 - Cheapest falsifier: replay the corrected exact target table with the pinned v2 collector. Any non-READY result, count other than 86/86/41, non-`0x004ff702` caller, nesting/receiver/control failure, small-int/module-image validated return, or normalized shared-row hash other than `AD623E03…CDB0F` invalidates the bounded promotion.

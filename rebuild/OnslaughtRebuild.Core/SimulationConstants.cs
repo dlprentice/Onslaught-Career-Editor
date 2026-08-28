@@ -819,7 +819,9 @@ public static class SimulationConstants
     // and the round update @0x004d8e40 both compute
     //   ((float)(NextLCGAbs() % 65536) * DAT_005d8de4 - DAT_005d8568) * scale
     // with DAT_005d8de4 = 3.0517578125e-05 = 1/32768 and DAT_005d8568 = 1.0,
-    // i.e. a uniform sample on [-1, +1) in steps of 1/32768.
+    // i.e. a sample on [-1, 32767/32768] in steps of 1/32768. The exact
+    // finite grid is proved; the defective generator's residue frequencies
+    // are not claimed uniform.
     public const int Level100ReleasedRandomUnitDivisor = 32_768;
     public const int Level100ReleasedRandomUnitModulus = 65_536;
 

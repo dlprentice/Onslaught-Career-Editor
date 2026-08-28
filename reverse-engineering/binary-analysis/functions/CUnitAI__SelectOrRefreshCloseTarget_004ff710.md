@@ -2,21 +2,20 @@
 
 > Address: `0x004ff710`
 
-Status: active replicated bounded-runtime function note
-Last updated: 2026-08-24
+Status: active multi-build static contract plus replicated bounded-runtime note
+Last updated: 2026-08-27
 Source File: none — no current source-crosswalk row | Binary: pristine
 `BEA.exe.original.backup`, 2,506,752 bytes, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
-Summary: exact static body/ABI identity plus replicated Level-521 call-context
-behavior for the close-target selector. The function ran 86 times on 50
-receivers; 41 gap-free returns were all heap-shaped pointers, and every call was
-nested in `CUnitAI__UpdateTargetSupportAndFireFlags_004ff4f0` on the same
-receiver.
-Evidence: MEASURED — exact pristine body authority from the canonical contract,
-then independently reproduced call-context event/invocation rows from two
-serialized read-only replays over the retained Level-521 take2 trace. The second
-replay was preregistered with exact positive and dark controls, reached wrapper
-READY, and reproduced all 1,169 shared cohort/control rows byte-for-byte.
+Summary: exact PC transaction/scoring law, corresponding PC-demo/Xbox/PS2
+virtual-suite bodies, and replicated Level-521 call-context behavior. The
+function ran 86 times on 50 receivers; 41 gap-free returns were heap-shaped
+pointers, and every call was nested in
+`CUnitAI__UpdateTargetSupportAndFireFlags_004ff4f0` on the same receiver.
+Evidence: MEASURED — independently decoded pristine instructions and console
+bodies establish static branch/order correspondence; two serialized read-only
+replays over the retained Level-521 take2 trace establish only the bounded
+runtime call/return envelope.
 
 ## Static identity and ABI
 
@@ -29,6 +28,90 @@ READY, and reproduced all 1,169 shared cohort/control rows byte-for-byte.
   pointer is intentionally untyped; no concrete unit/reader class is inferred.
 - Runtime caller site is uniquely `0x004ff702`, eight bytes before the recorded
   end of `CUnitAI__UpdateTargetSupportAndFireFlags_004ff4f0`.
+
+## Exact transaction and scoring law
+
+The receiver's target cell is `this+0x0C`; `this+0x10` is a distinct refresh
+latch, `this+0x14` gates fast reuse, and `this+0x18/+0x1C` receive two raw
+helper results. B at `+0x1C` is behaviorally the ballistic-reach/line-clearance
+prerequisite; A at `+0x18` is the final aim-angle/obstruction fire acceptance.
+Those are bounded descriptions rather than recovered member/method names; their
+stores and B-before-A order are instruction-proven.
+
+Fast reuse requires a non-null current target, target virtual `+0x16C == 0.0`,
+non-zero `this+0x14`, and a non-zero active/state helper. It preserves the
+reader and `this+0x10`, performs support selection, stores helper B to `+0x1C`,
+then either stores helper A to `+0x18` or explicitly zeros `+0x18` when B is
+zero.
+
+Full refresh pre-clears `+0x18` then `+0x1C`, chooses the side-keyed list, and
+walks it in retained order. A candidate must pass the active/state, side, and
+linked-support gates, then this strict range test:
+
+`distanceSquared < (((1 - candidatePercent * 0.01) * config[0x158]) ^ 2)`.
+
+The seven profile cells are the exact array written by serialized
+`CUnitAttackPriority` index `0..6`; defaults initialize all seven to `1.0f`.
+Deterministic primary scoring is first-match in this exact flag order:
+
+| Candidate bit | Exact shipped category | Priority index / cell |
+| ---: | --- | ---: |
+| `0x00020000` | `THING_TYPE_VEHICLE` | `1 / config[0x168]` |
+| `0x00004000` | `THING_TYPE_INFANTRY` | `4 / config[0x174]` |
+| `0x00000400` | `THING_TYPE_AIR_UNIT` | `5 / config[0x178]` |
+| `0x00040000` | `THING_TYPE_EMPLACEMENT` | `0 / config[0x164]` |
+| `0x00000100` | `THING_TYPE_BUILDING` | `2 / config[0x16C]` |
+| `0x00008000` | `THING_TYPE_NAVAL` | `3 / config[0x170]` |
+
+When both candidate virtual `+0x164` and `config[0x138]` are zero, primary is
+zero and the floor is skipped. Otherwise flag `0x00080000` independently raises
+the selected primary to index-6 `config[0x17C]`
+(`THING_TYPE_COMPONENT`) when it is lower.
+
+`CUnitIndiscriminate` owns `config+0x128`; its serialized scalar is normalized
+to zero/one. When nonzero, each candidate that already passed all three helper
+gates and the strict range test consumes one shared gameplay-stream draw and
+uses `(Random__NextLCGAbs() % 65536) / 8192` as primary. This arm bypasses the
+two raw deterministic score gates, the category ladder, **and the component
+floor** before joining the primary comparison. The PC retail/demo, paired Xbox,
+and three PS2 bodies all carry that bypass and conversion. Their RNG bodies
+also share multiplier `48271`, unusual modulus `214783647`, 32-bit wrapped
+arithmetic, level-start seed `123456`, and the sign-normalized return; therefore
+the remainder is always `0..65535`, including the `INT_MIN` corner mapping to
+zero. The exact score domain is `[0, 65535/8192]`. The load-bearing bypass
+edges are PC retail `0x004FF8F9→0x004FF9DD`, PC demo
+`0x004FF9A9→0x004FFA8D`, Xbox USA/Issue 11
+`0x00187AAE→0x00187B93` / `0x00187B1E→0x00187C03`, and PS2
+demo/Europe/USA `0x002BFAA0→0x002BFBA0` /
+`0x002BFB60→0x002BFC60` / `0x002C02C8→0x002C03C8` (with the
+sample multiply in each MIPS delay slot).
+
+Primary best starts at `-999999`; lower skips, greater resets secondary best to
+zero, and equality enters the same secondary contest. Secondary starts at
+`1000 - sqrt(distanceSquared)`, adds `1000000` inside the inclusive support
+minimum/maximum band, or `10000` above the maximum after reaching the minimum.
+Only a strictly greater secondary replaces the winner; equality preserves list
+order. A greater-primary candidate whose secondary is non-positive can leave
+the previous lower-primary pointer intact because retail does not clear that
+local when it resets secondary.
+
+A winner is committed with lifecycle-aware `SetReader` before support and
+helper evaluation, then `this+0x10` is reset. No winner clears the reader and
+resets the latch. Support-helper side effects are not part of the transcript
+reducer now promoted to Core.
+
+## Cross-build correspondence
+
+The PC demo bodies at `0x004FF5A0/0x004FF7C0` normalize exactly to retail PC.
+Xbox USA `0x00188A20/0x001878A0` and Issue 11
+`0x00188A90/0x00187910` normalize identically within each virtual slot. PS2
+demo `0x002BF548/0x002BF818`, Europe `0x002BF608/0x002BF8D8`, and USA
+`0x002BFD70/0x002C0040` normalize identically within each slot; raw MIPS branch
+inspection reproduces the same ladder, strict range, floor, and tie law. This
+inspection reproduces the same ladder, strict range, deterministic floor,
+indiscriminate-floor bypass, draw conversion, and tie law. This closes
+family-level branch correspondence and the per-draw integer law, not scenario
+stream phase, period/frequency, or every floating-point knife edge.
 
 ## Replicated bounded-runtime contract
 
@@ -76,15 +159,21 @@ runtime specimen SHA-256
   hash-bound after lock release, but capture-time target hash was not
   independently bound. All claims here inherit that provenance limit and are
   bounded to this copied-runtime trace.
-- No state-write watchpoint was collected. Exact mutation ordering for
-  `this+0xc`, `+0x18`, and `+0x1c`, pointed-to RTTI, other levels, and rebuild
-  parity remain open.
+- No value watchpoint was collected. Exact per-invocation before/after dwords,
+  pointed-to RTTI, helper side effects, scenario-specific shared-stream phase,
+  RNG period/frequency, x87/console rounding knife edges, and other-level
+  population remain open.
+- `RetailUnitAITargetSelection` carries the finite-domain deterministic and
+  indiscriminate transcript reducer into Core. It is deliberately unwired from
+  actor state; autonomous target-list population and reader/helper transactions
+  remain open.
 
 ## Cheapest falsifier
 
-Replay the same exact corrected table and pinned v2 collector. Any non-READY
-wrapper result; a count other than 86/86/41; an ff710 call outside an open
-same-ECX ff4f0 frame; any caller other than `0x004ff702`; a validated EAX in the
-small-integer/module-image bands; receiver-containment failure; a control
-failure; or a shared-row hash other than `AD623E03…CDB0F` falsifies this bounded
-contract.
+For the runtime envelope, replay the same corrected table and pinned v2
+collector; any count/control/caller/receiver/hash mismatch falsifies that
+bounded claim. For the static law, re-decode the exact bodies: a changed flag
+order, non-strict range or secondary replacement, floor before the raw score
+gate, random arm that reaches the component floor, different draw conversion
+or `1000/10000/1000000` branch, or console body that does not carry the same
+control-flow shape falsifies the promoted static contract.

@@ -2,15 +2,15 @@
 
 > Address: `0x004ff4f0`
 
-Status: active replicated bounded-runtime function note
-Last updated: 2026-08-24
+Status: active multi-build static contract plus replicated bounded-runtime note
+Last updated: 2026-08-27
 Source File: none — no current source-crosswalk row | Binary: pristine
 `BEA.exe.original.backup`, 2,506,752 bytes, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
-Summary: exact static body/ABI identity plus replicated Level-521 call-context
-behavior for the target-support/fire-flag updater. The function ran 169 times on
-76 receivers and supplied the enclosing frame for all 86 observed close-target
-selector calls.
+Summary: exact branch-specific reader transactions, ordered prerequisite/final
+fire-feasibility results, and replicated Level-521 call-context behavior. The
+function ran 169 times on 76 receivers and supplied the enclosing frame for all
+86 observed close-target selector calls.
 Evidence: MEASURED — exact pristine body authority from the canonical contract,
 then independently reproduced call-context event/invocation rows from two
 serialized read-only replays over the retained Level-521 take2 trace. The second
@@ -31,6 +31,41 @@ READY, and reproduced all 1,169 shared cohort/control rows byte-for-byte.
 - The previously missing hottest static edge is measured at runtime:
   ff4f0 calls `CUnitAI__SelectOrRefreshCloseTarget_004ff710` only at
   `0x004ff702`, 86 times.
+
+## Exact branch-specific state transactions
+
+Before either main arm, a current reader with target byte `+0x2C & 4` is cleared
+through lifecycle-aware `CGenericActiveReader::SetReader`.
+
+The direct/current-target arm pre-clears helper result A at `this+0x18`, then B
+at `this+0x1C`. A null or invalid target therefore returns with both zero. A
+valid target runs support selection, stores B first, and calls/stores A only
+when B is non-zero; the earlier pre-clear supplies the B-false A value.
+
+The fallback/candidate-scan arm does not pre-clear either result and preserves
+both through the scan. If its existing reader and `this+0x10` latch are usable,
+it stores B first, then stores A only when B is non-zero; B-false explicitly
+zeros A. Otherwise virtual slot `+0x2C` transfers the transaction to
+`0x004FF710`. The retained take2 trace resolves all 86 observed transfers to
+that body on the same receiver.
+
+These stores/order are closed statically; the absent value watchpoint limits
+only exact per-invocation before/after values and frequencies. The PC demo,
+paired Xbox, and three PS2 slot-4 bodies carry the same branch shape.
+
+The helper wrappers and their large PC delegates now close a stronger
+source-neutral meaning. B, stored at `this+0x1C`, first classifies target range,
+then applies active/fallback weapon state, an inclusive target-height window,
+and ballistic reach or line/clearance feasibility. It is a prerequisite:
+every one of the four slot-4/slot-11 transactions branches away when B is zero.
+A, stored at `this+0x18`, repeats the range/height wrapper around its distinct
+delegate and supplies the final aim-angle/obstruction fire acceptance that
+`CUnitAI__Update` later requires before entering its firing arm. All four UnitAI
+sites pass A context zero. The PC wrapper/delegate outputs are exactly `{0,1}`;
+Xbox and PS2 wrappers reproduce the order but forward console delegates whose
+complete exit domains remain unenumerated. “B prerequisite” and “A final
+acceptance” are behavior descriptions, not recovered original method/member
+names.
 
 ## Replicated bounded-runtime contract
 
@@ -73,9 +108,11 @@ runtime specimen SHA-256
 - The take2 recorder receipt is RECONSTRUCTED/PARTIAL: the trace bytes are
   hash-bound after lock release, but capture-time target hash was not
   independently bound. All claims are bounded to this copied-runtime trace.
-- No state-write watchpoint was collected. The body contract's field/state
-  vocabulary is static; exact `+0xc/+0x18/+0x1c` write ordering and other-level
-  behavior remain open.
+- No value watchpoint was collected. Exact per-invocation receiver dwords,
+  concrete target RTTI, original helper/member names, console delegate result
+  domains, and other-level behavior remain open; branch-specific
+  `+0x0C/+0x18/+0x1C` ordering and the PC helper result domain are closed
+  statically.
 
 ## Cheapest falsifier
 
@@ -83,4 +120,6 @@ Replay the same exact corrected table and pinned v2 collector. Any non-READY
 wrapper result; a count other than 169/169/71; a caller outside the three measured
 sites; an ff710 call outside the unique `0x004ff702` same-ECX nested path;
 receiver-containment failure; a control failure; or a shared-row hash other than
-`AD623E03…CDB0F` falsifies this bounded contract.
+`AD623E03…CDB0F` falsifies this bounded runtime contract. A reachable UnitAI A
+call after zero B, nonzero A context at any of the four sites, or a PC delegate
+exit outside `{0,1}` falsifies the static helper contract.

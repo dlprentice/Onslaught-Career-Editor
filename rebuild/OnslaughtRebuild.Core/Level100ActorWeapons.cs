@@ -129,11 +129,11 @@ public sealed class Level100ReleasedRandom
     public int NextSignedUnitScaled(int scale)
     {
         // `uVar5 & 0x8000ffff` plus the sign fix-up is the MSVC idiom for a
-        // SIGNED `% 65536`: the remainder keeps the dividend's sign, so the
-        // sample range is [-65535, +65535], not [0, 65535]. C# `%` has the
-        // same sign rule, so this is a direct transcription. When the wrapped
-        // stream hands back a negative value the released scatter really does
-        // leave [-1, +1); that is shipped behaviour and is preserved.
+        // SIGNED `% 65536`: the remainder keeps the dividend's sign. Next()
+        // sign-normalizes every return except INT_MIN, whose remainder is
+        // exactly zero, so the actual domain is still [0, 65535]. Internal
+        // _seed values do become negative; confusing those with Next's return
+        // had previously overstated the scatter range.
         int sample = Next() % SimulationConstants.Level100ReleasedRandomUnitModulus;
         long offset =
             (long)sample - SimulationConstants.Level100ReleasedRandomUnitDivisor;

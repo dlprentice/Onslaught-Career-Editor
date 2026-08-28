@@ -266,6 +266,15 @@ look—is part of the trace. Walker acceleration is projected through the body's
 continuous deterministic yaw; only jet movement retains the older eight-way
 approximation.
 
+Core also carries the released-family `CUnitAI` close-target scoring kernel as
+`RetailUnitAITargetSelection`. It reduces a caller-supplied, ordered candidate
+transcript through the measured eligibility/range gates, exact
+`CUnitAttackPriority` category ladder, stable primary/secondary tie law, and
+the `CUnitIndiscriminate` random arm using the shared released gameplay stream.
+This is not autonomous AI wiring: retail list traversal, reader mutation,
+support selection, and fire-feasibility helper population remain outside the
+reducer until their owning actor path is reconstructed.
+
 World admission is no longer Level-100-only in Core (2026-08-22): the released
 43-node career graph lives in `RetailWorldCatalog` with its selectability law,
 world 110 — the second career node — is admitted from its own measured

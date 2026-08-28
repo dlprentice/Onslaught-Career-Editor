@@ -317,6 +317,25 @@ walks `0x00855090`/`b0`/`c0` by `[owner+0x138]`. The walk takes
 `[edi+0x34]` → `[owner+0x164]` table; secondary uses `0x004fb780` /
 `0x004fb7e0` (`ret 0x10`) plus `10000`/`1000000`. A winner
 `SetReader`s `+0xc` and always clears `+0x10`.
+
+The two fire-result cells now have bounded behavioral meanings. Every one of
+the four slot-4/slot-11 transactions calls B (`0x004fb5a0`) first, stores it at
+`AI+0x1c`, and calls A (`0x004fb500`) with context zero only when B is nonzero;
+`CUnitAI__Update` later requires A at `AI+0x18` before its firing arm. B is
+therefore the ballistic-reach/line-clearance **prerequisite result**, while A
+is the final aim-angle/obstruction **fire-acceptance result**. These are
+behavior descriptions, not recovered source names. Both wrappers first reject
+an unusable range, then select active-or-fallback weapon state, enforce the
+inclusive `CWeaponMinTargetHeight`/`CWeaponMaxTargetHeight` window, and finally
+call distinct delegates. PC retail/demo (`A 0x004fb500/0x004fb5c0`,
+`B 0x004fb5a0/0x004fb660`), Xbox USA/Issue 11
+(`A 0x000bb930/0x000bb940`, `B 0x000bb870/0x000bb880`), and PS2
+demo/Europe/USA (`A 0x002b8cd8/0x002b8d98/0x002b9500`,
+`B 0x002b8db0/0x002b8e70/0x002b95d8`) reproduce that wrapper order within
+each platform family. The complete PC delegate exits are `{0,1}`; console
+delegates remain unenumerated, and the original A/B, fallback-pointer, target
+query, and AI-cell names remain open.
+
 That message is JT[1] of
 `0x004ff330`: if `[owner+0x214]` is live it calls slot 8
 `0x004feac0`; it does not rewrite `+0x20`. 3000 calls slot 9

@@ -744,6 +744,19 @@ test pins draw count, order, snapshot seed state, and emitted directions. This
 does not claim that Core has the same absolute stream phase as every retail
 shot: the released stream is global and other shipped consumers remain absent.
 
+The same stream now supports the separately bounded `CUnitAI` close-target
+selector. PC retail/demo, two Xbox builds, and three PS2 builds share the exact
+candidate gate/range shape, deterministic category ladder, and indiscriminate
+score conversion `(Random() % 65536) / 8192`. `CUnitAttackPriority` owns the
+seven profile cells for emplacement, vehicle, building, naval, infantry, air,
+and component; `CUnitIndiscriminate` owns the normalized switch at config
+`+0x128`. The random arm consumes one draw only after a candidate passes the
+earlier gates and strict range test, and all measured builds jump past the
+deterministic component floor on that arm. `RetailUnitAITargetSelection`
+preserves these laws over an ordered transcript and returns the winning input
+index. It deliberately does not claim the retail global draw phase, candidate
+population, lifecycle-aware reader transaction, or autonomous actor wiring.
+
 The copied Steam options bind Movement Forward/Backward/Left/Right to both
 `WASD` and the matching arrow keys, while Look Left/Right/Up/Down consume the
 mouse axes. Steam `CController::DoMappings` at `0x0042DB40` maps each centered

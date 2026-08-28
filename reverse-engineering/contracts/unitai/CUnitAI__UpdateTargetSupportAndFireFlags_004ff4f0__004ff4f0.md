@@ -1,9 +1,9 @@
 # CUnitAI__UpdateTargetSupportAndFireFlags_004ff4f0
 
-Status: active replicated bounded-runtime contract
-Last updated: 2026-08-24
-Summary: specimen-bound static contract plus a replicated, controlled Level-521 call-context envelope for `CUnitAI__UpdateTargetSupportAndFireFlags_004ff4f0` at `0x004ff4f0`.
-Evidence: MEASURED — READY packet/decompile, structured edges, closure identity, independently recomputed pristine body bytes, and a preregistered wrapper-READY replay with exact positive/dark controls; runtime provenance and state-write limits remain explicit.
+Status: active multi-build static contract plus replicated bounded-runtime envelope
+Last updated: 2026-08-27
+Summary: specimen-bound branch-specific reader transactions, ordered prerequisite/final fire-feasibility results, and a replicated controlled Level-521 call-context envelope for `CUnitAI__UpdateTargetSupportAndFireFlags_004ff4f0` at `0x004ff4f0`.
+Evidence: MEASURED — independently decoded pristine and console instructions establish the write/call ordering; the preregistered wrapper-READY replay establishes only the bounded caller/receiver/callee envelope.
 Specimen: pristine `BEA.exe.original.backup`, 2,506,752 bytes, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 Source File: not_applicable (no current source-crosswalk row) | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
@@ -44,7 +44,9 @@ The packet signature declares `void`; no scalar return contract is claimed. Call
 
 ## Behavior summary
 - Existing packet analyst comment (quoted as bounded packet evidence, not silently upgraded): “Shared CUnitAI-family update: may clear this+0xc reader when target flag bit2 set; if owner linked support missing/invalid, scans DAT_008550a0 candidates for side-compatible support, may CUnit__TrySpawnMembersForTarget, then evaluates CanFireAtTarget_BallisticArcB/A into this+0x1c/0x18 or calls this vfunc +0x2c; else clears fire flags and refreshes escort/fire gates on current reader. Static listing/xref/vtable evidence only; exact source virtual name, AI layout, runtime behavior, BEA patching, and rebuild parity remain unproven.”
-- The displayed decompile is non-empty and SHA-256 `0d1500f4ad1433d6278da11d13d8de764daa6a251a23cfc38f16399ce799f7f9`. Runtime now proves the caller set and shared ff4f0→ff710 envelope in the named trace; it does not prove packet-described field writes or exact scoring policy.
+- Independent decoding closes the branch-specific writes. The direct arm pre-clears `+0x18` then `+0x1C`, stores helper B first, and calls/stores A only when B is non-zero. The fallback scan preserves old result cells; its existing-reader arm stores B first and explicitly zeros A when B is zero. Otherwise virtual slot `+0x2C` transfers to `0x004FF710`. The displayed decompile SHA-256 remains `0d1500f4ad1433d6278da11d13d8de764daa6a251a23cfc38f16399ce799f7f9`.
+- PC demo is instruction-shape identical; the paired Xbox and three PS2 slot-4 bodies carry the same transaction ordering. The independently decoded helper wrappers also reproduce classifier-first range admission, active/fallback selection, inclusive target-height gating, and distinct delegate dispatch across those families.
+- B (`0x004fb5a0`) is stored at `AI+0x1C` and is the ballistic-reach/line-clearance feasibility prerequisite: all four UnitAI transactions branch away when it is zero. A (`0x004fb500`) is called with context zero only after B and stored at `AI+0x18`; `CUnitAI__Update` later requires it as the final aim-angle/obstruction fire-acceptance result. Those labels describe proved behavior, not recovered original identifiers. Complete PC wrapper/delegate exits are `{0,1}`; console delegate exits remain unenumerated.
 - Structured inventory for this body: 0 caller record(s), 8 callee record(s), and 0 string-ref record(s).
 
 ## Error / edge behavior
@@ -74,15 +76,16 @@ The historical bounded TTD table contains these breadth rows; they establish exe
 - Closure execution state `PARTIAL` and confidence `MEDIUM_STATIC`; these are inherited bounded grades, not this factory's promotion decision.
 - Packet stringRefs: empty.
 - Source crosswalk: no row for this VA in the current tracked crosswalk.
-- Canonical runtime note `reverse-engineering/binary-analysis/functions/CUnitAI__UpdateTargetSupportAndFireFlags_004ff4f0.md`, SHA-256 `28e0c19caa2cd9b9631974cee5a243c644b02726ea01597934d931ca646f62f8`.
+- Canonical runtime note `reverse-engineering/binary-analysis/functions/CUnitAI__UpdateTargetSupportAndFireFlags_004ff4f0.md`, SHA-256 `5cdb460b4541fd7e8adc90241223d5cc1c439a6c09e272c40f8114b26348a61c`.
 - Runtime promotion manifest `reverse-engineering/binary-analysis/unitai-targeting-runtime-replication-promotion-manifest-2026-08-24.tsv`, SHA-256 `09810bac7b5d39eacadc512cb29a0a223899b6625f95238c3dfc98a4708ea16c`; corrected capture SHA-256 `84DB81290B00CE15FBCEB579FD8BC8B4C793C3F947001544FA44918F4189D171`; wrapper receipt `A3D9E421EB12526405DF718C9142CE5BBE0AB829CAE6C9D614242BCE0138A96D`; independent adjudication `2C4B7987EC08FBBFCC063C793196BD66BBF5093480B7D54899883F36AD6FF6A7`.
 - Provenance limit: take2's recording receipt is RECONSTRUCTED/PARTIAL; capture-time target hash was not independently bound. The trace and copied runtime are hash-bound now, and no claim is widened beyond this scenario.
 
 ## Confidence
-2 — exact identity, contiguous pristine bytes, ABI, executed caller/callee edges, receiver law, replicated entry→return envelope, and can-fail controls are reconciled. Field-write ordering, other scenarios, and rebuild parity remain open. Proposed promotion: true.
+2 — exact identity, ABI, branch-specific state ordering, bounded helper semantics, PC helper result domain, console wrapper correspondence, executed caller/callee edges, receiver law, replicated entry→return envelope, and can-fail controls are reconciled. Per-invocation values, original helper names, console delegate exit domains, other scenarios, and rebuild wiring remain open. Proposed promotion: true.
 
 ## Unresolved questions
-- Instruction-level read/write direction and concrete layout for every referenced field/global.
-- Complete indirect-call target set and failure/nullability behavior.
-- Exact `this+0xc/+0x18/+0x1c` state-write ordering and caller expectations outside the measured shared envelope.
+- Concrete gameplay names and layout ownership beyond the accessed offsets.
+- Complete indirect-call target set, target RTTI, original helper/member names,
+  console delegate exit domains, and helper side effects.
+- Exact per-invocation receiver values and caller expectations outside the measured shared envelope.
 - Cheapest falsifier: replay the corrected exact target table with the pinned v2 collector. Any non-READY result, count other than 169/169/71, caller outside the three measured sites, nested ff710/control/receiver failure, or normalized shared-row hash other than `AD623E03…CDB0F` invalidates the bounded promotion.
