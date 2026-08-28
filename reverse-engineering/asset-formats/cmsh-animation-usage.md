@@ -16,7 +16,7 @@ that every named track is scheduled or rendered.
 Evidence: MEASURED — `tools/cmsh_animation_usage_census.py` parsed and
 hash-verified 213 meshes, 66 numeric LVLR archives, 733 MSL files, and
 `default physics.dat` (1,013 inputs) against
-`G:\bea-asset-mirror\INDEX.jsonl`; the focused 16-test gate reproduces the
+`G:\bea-asset-mirror\INDEX.jsonl`; the focused 17-test gate reproduces the
 counts, names, joins, and can-fail controls. Retail consumer VAs come from the
 cited pristine-binary notes and remain static evidence.
 Specimen: `G:\bea-asset-mirror\INDEX.jsonl`, SHA-256

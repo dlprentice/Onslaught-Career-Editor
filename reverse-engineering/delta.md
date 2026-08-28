@@ -434,7 +434,7 @@ The project becomes tractable when every subsystem is joined on stable keys:
 | Installed files | exact relative path, case, SHA-256 | 5,515 files | Aggregate complete; row ledger still local/recommended |
 | AYA | path, zlib member offset, root tag, nested tag offset | 1,361 files / 1,725 members | Outer framing complete; semantic instance ledger absent |
 | Worlds | numeric world id | 97 headers / 95 script dirs / 66 resource archives | Set differences exact; exceptional roles mostly unknown |
-| Things | definition name, ordinal, selector, RTTI class | 160 ordered Unit definitions / 26 selectors; Level 100 trace 33 creations | Factory exact; all default-physics Unit ordinal/name/selector joins closed; complete WRES/world reach incomplete |
+| Things | definition name, ordinal, selector, RTTI class | 160 ordered Unit definitions / 26 selectors; 3,578 direct placements in 65 worlds; Level 100 trace 33 creations | Factory exact; all default-physics Unit identities and direct type-8 WRES placements closed; alternate population routes incomplete |
 | Mission source | exact path/case, script/object name, event/native token | 733 MSL / 123 callable identifiers / 369 event literals | Selected lexical inventories complete for the named probes; dependency resolution, full grammar/call graph, and packed/loose semantics incomplete |
 | Mission VM | opcode, datatype id, native index, handler address | 27 / 6 / 144 unique handlers | Finite registry exact; all 144 handlers are current Ghidra entries after 34 default-metadata boundaries were promoted; that historical step yielded 8,170 before later text-gap, external-table, JPEG/IJG, CRT P0, and D3DX promotions advanced the overall census to 8,329 |
 | Physics | statement type, definition name, value id | 777 statements / 9 families | Four value families closed; Unit behaviour dispatch and all 38 Spawner-to-Unit joins closed; remaining Unit fields plus four families require equivalent maps |
@@ -615,11 +615,12 @@ The project becomes tractable when every subsystem is joined on stable keys:
 
 **Next decisive work**
 
-1. Join the now-closed 160-row Unit ordinal/name/selector registry to every
-   WRES placement and observed world; retain duplicate Spawner names rather
-   than indexing the file as a unique-name dictionary.
-2. Extend each Unit row with resource references, source class where present,
-   and observed worlds.
+1. Join the 55 Unit definitions with no direct type-8 WRES placement through
+   dynamic spawns, player/startup ownership, components, and other record
+   families; retain each route rather than treating direct-placement zero as
+   unused content.
+2. Extend each Unit row with remaining resource references and source class
+   where present; direct observed worlds are closed for 105 definitions.
 3. Cross-check all 26 selector constructors against RTTI, allocation size,
    vtables, and init behavior.
 4. Replace the false resolver name through the reviewed Ghidra mutation
@@ -1019,8 +1020,8 @@ and destination mappings in the executable master.
 - byte-preserving re-encode;
 - all cross-record string references resolved or explicitly unresolved;
 - complete five remaining family maps;
-- all 160 Unit ordinal/name/selector joins are measured; complete remaining
-  Unit fields and definition-to-WRES/world reach;
+- all 160 Unit ordinal/name/selector joins and 3,578 direct WRES placements are
+  measured; complete remaining Unit fields and alternate population routes;
 - focused Pulse and Twin Vulcan consumer tests.
 
 ### 8. Battle Engine configurations

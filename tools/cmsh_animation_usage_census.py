@@ -33,13 +33,47 @@ from aya_archive_inventory import (  # noqa: E402
 from aya_cross_platform_compare import logical_key  # noqa: E402
 from safe_generated_output import SecuredOutputRoot  # noqa: E402
 
-SCHEMA = "onslaught.cmsh-animation-usage-census.v2"
+SCHEMA = "onslaught.cmsh-animation-usage-census.v3"
 INDEX_SCHEMA = "onslaught.asset-mirror-index.v1"
 PMS2_HEADER_BYTES = 309
 PHYSICS_MESH_FIELDS = {
     1: (9, 8),   # Unit record -> CUnitMesh -> WRES unit/init record.
     8: (2, 35),  # Feature record -> CFeatureMesh -> WRES feature record.
 }
+# Type-12 serialized Unit-behaviour leaf -> value returned by leaf vtable slot
+# 1 and stored at Unit definition +0xE0 by CUnitBehaviour__ApplyToUnitData.
+UNIT_BEHAVIOR_SELECTOR_BY_SERIALIZED_TYPE = (
+    0, 11, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13,
+    14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
+)
+UNIT_MEMBER_SHELL_BY_SELECTOR = (
+    "CMech",
+    "CPlane",
+    "CGroundVehicle",
+    "CInfantryUnit",
+    "CCannon",
+    "CBoat",
+    "CCarrier",
+    "CBuilding",
+    "CPlane",
+    "CBomber",
+    "CGroundAttackAircraft",
+    None,
+    "CDropship",
+    "CMine",
+    "CHiveBoss",
+    "CSubmarine",
+    "CDiveBomber",
+    "CThunderHead",
+    "CCarver",
+    "CGillM",
+    "CSentinel",
+    "CWarspite",
+    "CFenrir",
+    "CWarspiteDome",
+    "CPod",
+    "CSimpleBuilding",
+)
 EMBEDDED_CONTAINERS = {b"MESH", b"PMSH", b"IMPS", b"SURF", b"LNDS", b"OBJS", b"BLDS"}
 ANIMATION_CALL = re.compile(
     r'\b(PlayAnimationWait|PlayAnimation)\s*\(\s*"([^"]+)"\s*,\s*'
@@ -180,12 +214,14 @@ def _take_c_string(data: bytes, offset: int, role: str) -> tuple[str, int]:
 
 
 def _physics_mesh_definitions(data: bytes) -> dict[str, object]:
-    """Read only the Unit/Feature definition fields that own mesh names."""
+    """Read the Unit/Feature fields needed for mesh and behaviour joins."""
 
     if len(data) < 6 or struct.unpack_from("<H", data, 0)[0] != 0x12:
         raise ValueError("unsupported physics-definition framing")
     offset = 2
     record_count = 0
+    unit_count = 0
+    unit_definitions: list[dict[str, object]] = []
     definitions: dict[str, list[dict[str, object]]] = collections.defaultdict(list)
     while True:
         if offset + 4 > len(data):
@@ -200,6 +236,8 @@ def _physics_mesh_definitions(data: bytes) -> dict[str, object]:
         name, offset = _take_c_string(data, offset, "physics definition name")
         relevant = PHYSICS_MESH_FIELDS.get(record_type)
         mesh_value: str | None = None
+        behavior_serialized_type: int | None = None
+        unit_ordinal = unit_count if record_type == 1 else None
         field_count = 0
         while True:
             if field_count >= 1_024 or offset + 8 > len(data):
@@ -220,10 +258,48 @@ def _physics_mesh_definitions(data: bytes) -> dict[str, object]:
                 mesh_value, consumed = _take_c_string(value, 0, f"physics mesh for {name!r}")
                 if consumed != len(value):
                     raise ValueError(f"physics mesh for {name!r} has trailing bytes")
+            if record_type == 1 and field_id == 8:
+                if behavior_serialized_type is not None:
+                    raise ValueError(
+                        f"Unit definition {name!r} repeats behaviour field 8"
+                    )
+                if len(value) != 4:
+                    raise ValueError(
+                        f"Unit definition {name!r} behaviour field is not one dword"
+                    )
+                behavior_serialized_type = struct.unpack("<I", value)[0]
             if marker == -1:
                 break
             if marker != 0:
                 raise ValueError(f"physics definition {name!r} has invalid continuation")
+        unit_metadata: dict[str, object] = {}
+        if record_type == 1:
+            if behavior_serialized_type is None:
+                raise ValueError(f"Unit definition {name!r} has no behaviour field 8")
+            if not 1 <= behavior_serialized_type <= len(
+                UNIT_BEHAVIOR_SELECTOR_BY_SERIALIZED_TYPE
+            ):
+                raise ValueError(
+                    f"Unit definition {name!r} has unsupported behaviour type "
+                    f"{behavior_serialized_type}"
+                )
+            selector = UNIT_BEHAVIOR_SELECTOR_BY_SERIALIZED_TYPE[
+                behavior_serialized_type - 1
+            ]
+            unit_metadata = {
+                "behaviorSerializedType": behavior_serialized_type,
+                "factorySelector": selector,
+                "memberShell": UNIT_MEMBER_SHELL_BY_SELECTOR[selector],
+                "unitDefinitionOrdinal": unit_ordinal,
+            }
+            unit_definitions.append(
+                {
+                    "definition": name,
+                    "mesh": mesh_value,
+                    **unit_metadata,
+                }
+            )
+            unit_count += 1
         if relevant is not None and mesh_value:
             mesh_field_id, wres_thing_type = relevant
             candidate = {
@@ -231,6 +307,7 @@ def _physics_mesh_definitions(data: bytes) -> dict[str, object]:
                 "meshFieldId": mesh_field_id,
                 "physicsRecordType": record_type,
                 "wresThingType": wres_thing_type,
+                **unit_metadata,
             }
             if candidate in definitions[name]:
                 raise ValueError(f"physics definition {name!r} repeats a mesh candidate")
@@ -240,6 +317,7 @@ def _physics_mesh_definitions(data: bytes) -> dict[str, object]:
         raise ValueError("physics-definition table has trailing bytes")
     return {
         "recordCount": record_count,
+        "unitDefinitions": unit_definitions,
         "definitions": {
             name: sorted(rows, key=lambda row: (int(row["wresThingType"]), int(row["meshFieldId"])))
             for name, rows in sorted(definitions.items(), key=lambda item: item[0].casefold())
@@ -563,6 +641,14 @@ def _world_instance_join(
                         "physicsRecordType": candidate["physicsRecordType"],
                     }
                 )
+                for key in (
+                    "behaviorSerializedType",
+                    "factorySelector",
+                    "memberShell",
+                    "unitDefinitionOrdinal",
+                ):
+                    if key in candidate:
+                        instance[key] = candidate[key]
                 instance.update(mesh_metadata[str(loose_mesh)])
                 script_file = None
                 if instance["script"]:
@@ -638,6 +724,68 @@ def _world_instance_join(
         ]
         for file_name in absent_loose
     }
+    unit_definitions = list(physics["unitDefinitions"])
+    if len({str(row["definition"]) for row in unit_definitions}) != len(
+        unit_definitions
+    ):
+        raise ValueError("Unit definition names are not unique")
+    unit_instances = [
+        row for row in instances if int(row["physicsRecordType"]) == 1
+    ]
+    if any(
+        key not in row
+        for row in unit_instances
+        for key in (
+            "behaviorSerializedType",
+            "factorySelector",
+            "memberShell",
+            "unitDefinitionOrdinal",
+        )
+    ):
+        raise ValueError("a joined Unit instance lacks behaviour metadata")
+    placed_unit_names = {str(row["definition"]) for row in unit_instances}
+    known_unit_names = {str(row["definition"]) for row in unit_definitions}
+    if not placed_unit_names <= known_unit_names:
+        raise ValueError("a joined Unit instance lacks an ordered Unit definition")
+    unplaced_unit_definitions = [
+        row for row in unit_definitions if str(row["definition"]) not in placed_unit_names
+    ]
+    selector_rows = []
+    for selector, member_shell in enumerate(UNIT_MEMBER_SHELL_BY_SELECTOR):
+        authored = [
+            row for row in unit_definitions if int(row["factorySelector"]) == selector
+        ]
+        placed = [
+            row for row in unit_instances if int(row["factorySelector"]) == selector
+        ]
+        selector_rows.append(
+            {
+                "authoredDefinitions": len(authored),
+                "levels": len({str(row["level"]) for row in placed}),
+                "memberShell": member_shell,
+                "placedDefinitions": len(
+                    {str(row["definition"]) for row in placed}
+                ),
+                "placements": len(placed),
+                "placementsByKind": {
+                    kind: sum(str(row["worldKind"]) == kind for row in placed)
+                    for kind in ("BSWD", "RLWD")
+                },
+                "selector": selector,
+            }
+        )
+    unit_behavior_summary = {
+        "definitions": len(unit_definitions),
+        "levels": len({str(row["level"]) for row in unit_instances}),
+        "placedDefinitions": len(placed_unit_names),
+        "placements": len(unit_instances),
+        "placementsByKind": {
+            kind: sum(str(row["worldKind"]) == kind for row in unit_instances)
+            for kind in ("BSWD", "RLWD")
+        },
+        "selectorsWithPlacements": sum(bool(row["placements"]) for row in selector_rows),
+        "unplacedDefinitions": len(unplaced_unit_definitions),
+    }
     summary = {
         "activeInstances": sum(bool(row["active"]) for row in instances),
         "archives": len(archives),
@@ -710,6 +858,15 @@ def _world_instance_join(
             "rejectedCandidates": rejected_candidates,
         },
         "summary": summary,
+        "unitBehaviorJoin": {
+            "levelsWithoutUnitPlacements": sorted(
+                {path.name.split("_", 1)[0] for path in archives}
+                - {str(row["level"]) for row in unit_instances}
+            ),
+            "selectorRows": selector_rows,
+            "summary": unit_behavior_summary,
+            "unplacedDefinitions": unplaced_unit_definitions,
+        },
         "unresolvedResourceInstances": unresolved,
     }
 

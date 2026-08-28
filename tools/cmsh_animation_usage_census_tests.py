@@ -124,7 +124,7 @@ def _world_instance(
 class WorldInstanceParsingTests(unittest.TestCase):
     def test_physics_unit_and_feature_mesh_fields_keep_their_owners_distinct(self) -> None:
         data = _physics_fixture(
-            (1, "Building", {9: b"tower.msh\0"}),
+            (1, "Building", {8: struct.pack("<I", 8), 9: b"tower.msh\0"}),
             (8, "Ice", {2: b"iceberg1.msh\0"}),
         )
 
@@ -135,9 +135,13 @@ class WorldInstanceParsingTests(unittest.TestCase):
             {
                 "Building": [
                     {
+                        "behaviorSerializedType": 8,
+                        "factorySelector": 7,
                         "mesh": "tower.msh",
                         "meshFieldId": 9,
+                        "memberShell": "CBuilding",
                         "physicsRecordType": 1,
+                        "unitDefinitionOrdinal": 0,
                         "wresThingType": 8,
                     }
                 ],
@@ -152,11 +156,28 @@ class WorldInstanceParsingTests(unittest.TestCase):
             },
             parsed["definitions"],
         )
+        self.assertEqual(
+            [
+                {
+                    "behaviorSerializedType": 8,
+                    "definition": "Building",
+                    "factorySelector": 7,
+                    "memberShell": "CBuilding",
+                    "mesh": "tower.msh",
+                    "unitDefinitionOrdinal": 0,
+                }
+            ],
+            parsed["unitDefinitions"],
+        )
+        self.assertEqual(
+            (0, 11, *range(2, 11), *range(12, 26)),
+            census.UNIT_BEHAVIOR_SELECTOR_BY_SERIALIZED_TYPE,
+        )
 
     def test_definition_instance_scan_recovers_transform_names_and_script(self) -> None:
         definitions = census._physics_mesh_definitions(
             _physics_fixture(
-                (1, "Building", {9: b"tower.msh\0"}),
+                (1, "Building", {8: struct.pack("<I", 8), 9: b"tower.msh\0"}),
                 (8, "Ice", {2: b"iceberg1.msh\0"}),
             )
         )["definitions"]
@@ -417,6 +438,82 @@ class ShippedAnimationUsageCensusTests(unittest.TestCase):
         level100 = [row for row in joined["instances"] if row["level"] == "100"]
         self.assertEqual(38, len(level100))
         self.assertEqual({"BSWD": 33, "RLWD": 5}, collections.Counter(row["worldKind"] for row in level100))
+
+    def test_unit_wres_instances_retain_ordinal_behavior_and_factory_identity(self) -> None:
+        self.assertEqual("onslaught.cmsh-animation-usage-census.v3", self.report["schema"])
+        joined = self.report["worldInstanceJoin"]["unitBehaviorJoin"]
+        self.assertEqual(
+            {
+                "definitions": 160,
+                "levels": 65,
+                "placedDefinitions": 105,
+                "placements": 3_578,
+                "placementsByKind": {"BSWD": 2_324, "RLWD": 1_254},
+                "selectorsWithPlacements": 19,
+                "unplacedDefinitions": 55,
+            },
+            joined["summary"],
+        )
+        self.assertEqual(["857"], joined["levelsWithoutUnitPlacements"])
+        self.assertEqual(
+            [
+                (0, 6, 0, 0, 0, 0, 0),
+                (1, 0, 0, 0, 0, 0, 0),
+                (2, 20, 2, 17, 11, 0, 17),
+                (3, 8, 0, 0, 0, 0, 0),
+                (4, 11, 10, 751, 51, 527, 224),
+                (5, 9, 8, 127, 36, 0, 127),
+                (6, 3, 3, 8, 8, 0, 8),
+                (7, 58, 46, 987, 50, 918, 69),
+                (8, 11, 9, 346, 46, 0, 346),
+                (9, 5, 5, 59, 21, 0, 59),
+                (10, 2, 1, 1, 1, 0, 1),
+                (11, 0, 0, 0, 0, 0, 0),
+                (12, 5, 5, 88, 19, 0, 88),
+                (13, 2, 2, 214, 7, 0, 214),
+                (14, 1, 1, 2, 2, 0, 2),
+                (15, 1, 1, 4, 4, 0, 4),
+                (16, 3, 3, 34, 12, 0, 34),
+                (17, 1, 1, 2, 2, 0, 2),
+                (18, 2, 1, 2, 2, 0, 2),
+                (19, 1, 0, 0, 0, 0, 0),
+                (20, 1, 1, 1, 1, 0, 1),
+                (21, 1, 0, 0, 0, 0, 0),
+                (22, 3, 1, 2, 2, 0, 2),
+                (23, 1, 1, 5, 5, 5, 0),
+                (24, 1, 0, 0, 0, 0, 0),
+                (25, 4, 4, 928, 32, 874, 54),
+            ],
+            [
+                (
+                    row["selector"],
+                    row["authoredDefinitions"],
+                    row["placedDefinitions"],
+                    row["placements"],
+                    row["levels"],
+                    row["placementsByKind"]["BSWD"],
+                    row["placementsByKind"]["RLWD"],
+                )
+                for row in joined["selectorRows"]
+            ],
+        )
+        unit_rows = [
+            row
+            for row in self.report["worldInstanceJoin"]["instances"]
+            if row["physicsRecordType"] == 1
+        ]
+        self.assertTrue(
+            all(
+                key in row
+                for row in unit_rows
+                for key in (
+                    "behaviorSerializedType",
+                    "factorySelector",
+                    "memberShell",
+                    "unitDefinitionOrdinal",
+                )
+            )
+        )
 
     def test_empty_lvlr_names_are_anonymous_embedded_cmsh_not_loose_aliases(self) -> None:
         anonymous = self.report["worldInstanceJoin"]["anonymousEmbedded"]

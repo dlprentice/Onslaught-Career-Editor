@@ -1,7 +1,7 @@
 # WRES definition instances join world placement to named CMSH resources
 
 Status: active bounded world-instance and resource-linkage contract
-Date: 2026-08-22
+Date: 2026-08-28
 Verdict: across all 66 numeric LVLR archives, 4,090 definition-bearing WRES
 records join without ambiguity through `default physics.dat` to exactly one named
 LVLR `MESH` row and one loose CMSH file in the same level. The join covers 2,731
@@ -12,7 +12,7 @@ component, named animation range, or render schedule understood.
 Evidence: MEASURED — `tools/cmsh_animation_usage_census.py` hash-verified 213
 loose CMSH archives, 66 numeric LVLR archives, 733 loose MSL files, and
 `default physics.dat` (1,013 inputs) against `G:\bea-asset-mirror\INDEX.jsonl`.
-The focused 16-test gate reproduces every count and the synthetic can-fail
+The focused 17-test gate reproduces every count and the synthetic can-fail
 controls. Static consumer identities come from the cited pristine-binary notes.
 Specimen: `G:\bea-asset-mirror\INDEX.jsonl`, SHA-256
 `c45722aeed52e77788c7886cb30b813900d3516b1c387983c442d2b02d4fe4b9`;
@@ -99,6 +99,57 @@ Level 100 independently cross-checks the general scanner: it yields exactly 38
 records, split 33 `BSWD` and five `RLWD`, matching the established specialized
 materializer. That agreement is a control, not permission to generalize
 Level-100-only gameplay or rendering.
+
+### Unit behaviour reach by released selector
+
+The 3,578 type-8 rows now retain the exact zero-based Unit-definition ordinal,
+field-8 serialized behaviour type, Type-12 slot-1 selector, and concrete member
+shell. Ordinal and type come from the ordered physics row; the Type-12 leaf maps
+that type to the selector, and the central factory maps the selector to the
+shell. None is inferred from the mesh name. The join reaches 105 of 160 Unit
+definitions in 65 of the 66 numeric archives. Level 857 is the only archive with no type-8 Unit
+row; its joined definition-bearing rows are Features. Of the 55 Unit
+definitions without this direct WRES edge, 54 still name a mesh and one
+(`Base Air Unit`) is a meshless base definition.
+
+| Selector | Member shell | Authored definitions | Directly placed definitions | WRES placements | Levels | `BSWD` / `RLWD` |
+| ---: | --- | ---: | ---: | ---: | ---: | ---: |
+| `0` | `CMech` | 6 | 0 | 0 | 0 | 0 / 0 |
+| `1` | `CPlane` | 0 | 0 | 0 | 0 | 0 / 0 |
+| `2` | `CGroundVehicle` | 20 | 2 | 17 | 11 | 0 / 17 |
+| `3` | `CInfantryUnit` | 8 | 0 | 0 | 0 | 0 / 0 |
+| `4` | `CCannon` | 11 | 10 | 751 | 51 | 527 / 224 |
+| `5` | `CBoat` | 9 | 8 | 127 | 36 | 0 / 127 |
+| `6` | `CCarrier` | 3 | 3 | 8 | 8 | 0 / 8 |
+| `7` | `CBuilding` | 58 | 46 | 987 | 50 | 918 / 69 |
+| `8` | `CPlane` | 11 | 9 | 346 | 46 | 0 / 346 |
+| `9` | `CBomber` | 5 | 5 | 59 | 21 | 0 / 59 |
+| `10` | `CGroundAttackAircraft` | 2 | 1 | 1 | 1 | 0 / 1 |
+| `11` | null | 0 | 0 | 0 | 0 | 0 / 0 |
+| `12` | `CDropship` | 5 | 5 | 88 | 19 | 0 / 88 |
+| `13` | `CMine` | 2 | 2 | 214 | 7 | 0 / 214 |
+| `14` | `CHiveBoss` | 1 | 1 | 2 | 2 | 0 / 2 |
+| `15` | `CSubmarine` | 1 | 1 | 4 | 4 | 0 / 4 |
+| `16` | `CDiveBomber` | 3 | 3 | 34 | 12 | 0 / 34 |
+| `17` | `CThunderHead` | 1 | 1 | 2 | 2 | 0 / 2 |
+| `18` | `CCarver` | 2 | 1 | 2 | 2 | 0 / 2 |
+| `19` | `CGillM` | 1 | 0 | 0 | 0 | 0 / 0 |
+| `20` | `CSentinel` | 1 | 1 | 1 | 1 | 0 / 1 |
+| `21` | `CWarspite` | 1 | 0 | 0 | 0 | 0 / 0 |
+| `22` | `CFenrir` | 3 | 1 | 2 | 2 | 0 / 2 |
+| `23` | `CWarspiteDome` | 1 | 1 | 5 | 5 | 5 / 0 |
+| `24` | `CPod` | 1 | 0 | 0 | 0 | 0 / 0 |
+| `25` | `CSimpleBuilding` | 4 | 4 | 928 | 32 | 874 / 54 |
+|  | **Total** | **160** | **105** | **3,578** | **65 unique** | **2,324 / 1,254** |
+
+Nineteen selectors have a direct placement. `BSWD` contributes only selectors
+`4`, `7`, `23`, and `25`; all other placed selectors occur only in `RLWD` in
+this record family. Conversely, selector `0` Mechs, selector `3` Infantry,
+`Gill-M`, `Warspite`, and `Sub Pod` have no direct type-8 placement despite
+having authored definitions. This is strong evidence that direct WRES rows are
+not the whole population pipeline: dynamic spawns, player/startup ownership,
+components, and other record families remain distinct routes. Zero here means
+“no direct type-8 definition-bearing WRES row,” not “unused by the game.”
 
 The joined loose CMSH motion classes, counted per placement, are:
 
@@ -232,8 +283,10 @@ specimen-bound tests when the two external inputs are absent.
 
 WRES/WRLD nesting, the type-8/type-35 definition-record shape, physics mesh
 owners, 4,090 exact same-level/loose CMSH joins, transforms/state/name strings,
+the ordinal/type/selector/member identity of all 3,578 direct Unit placements,
 730 direct MSL-coordinate edges, 22 direct animation call sites, and the 53
 anonymous embedded CMSH bodies are bounded. Other WRES record schemas,
+alternate population routes for the 55 directly unplaced Unit definitions,
 anonymous names, component/dynamic-spawn mesh ownership, named clip
 serialization, universal scheduling, execution, rendering, malformed retail
 behavior, and parity remain open.
