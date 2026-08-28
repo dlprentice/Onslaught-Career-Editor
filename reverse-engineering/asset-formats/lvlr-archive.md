@@ -72,6 +72,68 @@ inflated offset. It is intentionally not duplicated in the Godot asset
 materializer: every archive currently admitted there already passes an exact
 whole-file SHA-256 gate before inflation.
 
+## Retail PC encounter-order loader contract
+
+The pristine PC function at `0x004D7200–0x004D7A16` is the released outer
+dispatcher, not an order-validating decoder. Its exact 2,071 bytes have SHA-256
+`4922caa624a79108fbfd90b185e48367e03129b5d3694dbe201d8251807321cf`
+in the named `74154bfa…7750` executable. The current specimen-bound signature is:
+
+```text
+void __cdecl CResourceAccumulator__ReadResourceFile(
+    int resource_id, void *existing_buffer, int skip_optional_chunks)
+```
+
+The function loops over `CChunkReader__GetNext` and compares every encountered
+FourCC independently. It has no expected-next-tag state and no repeated-run or
+singleton counters. `GetNext` reads only the next eight-byte header; it does not
+skip an unfinished payload. Each inline handler or subsystem delegate must
+therefore consume or skip its own payload before the next iteration. The
+canonical sequence above is an emitted/corpus profile, not a stream-order rule
+enforced by this loader.
+
+| Tag | Released PC outer action |
+| --- | --- |
+| `LVLR` | Reads and ignores one `u32`, then skips any remaining payload. |
+| `TARG` | Reads and ignores one `u32`; it does not skip an extension. Canonical payload size is exactly four. |
+| `AYAD` | Reads and compares five `u32` ABI guards. A mismatch only formats a stack-local message in this body; it then skips the sixth word and any extension. |
+| `TEXT` | Calls `CDXTexture__Deserialize` for each occurrence. |
+| `MESH` | Calls `CMesh__Deserialize` for each occurrence. |
+| `IMPS` | Calls `CDXImposter__Deserialize`. |
+| `LNDS` | Skips the payload on PC. |
+| `SURF` | Calls `CDXSurf__CreateSurfaceArray`. |
+| `ERES` | Calls `CEngine__Deserialize`. |
+| `SSHD` | Calls `CStaticShadows__LoadAll`. |
+| `WRES` | Calls `CWorld__DeserializeWorld`. |
+
+The complete comparison-chain vocabulary is
+`LVLR,TARG,AYAD,MESH,TEXT,ERES,WRES,IMPS,LNDS,VSDS,PLAT,SURF,SSHD,PMIB,DMKR,GDIE`.
+That comparison order is implementation structure, not required stream order.
+The five non-numeric delegates are `VSDS -> CVertexShader__DeserializeAll`,
+`PLAT -> PCPlatform__DeserializeFontsAndAssets`,
+`PMIB -> CDXPatch__LoadFromFile`, `DMKR -> CDamage__CreateTextureBuffer`, and
+`GDIE -> CFEPGoodies__Deserialise`; unknown tags are traced and skipped.
+
+When `skip_optional_chunks` is nonzero, the prefix and every `MESH` still run,
+while all other payloads are skipped. All four enumerated direct callers pass
+zero: shell/base at `0x004EFF20`, front end at `0x004687F8`, game level at
+`0x0046CD87`, and Goodies at `0x0045CC86`. `resource_id == -3` returns after its
+status/trace path without opening `Loading_res_PC.aya`, and no direct `-3`
+caller is present. At the loop boundary, zero from `GetNext` can mean clean EOF
+or a short final tag/size read, so this function does not distinguish those two
+conditions.
+
+Pinned `ResourceAccumulator.cpp:732-1055` proves lineage but differs from the
+release body: it has two arguments, continues for `-3`, asserts `LVLR`, `TARG`,
+and `AYAD` guards, tests `TEXT` before `MESH`, and skips `VSDS` in its PC branch.
+Retail PC has the third skip gate, the early `-3` return, ignores `LVLR/TARG`,
+only formats local `AYAD` mismatch text, tests `MESH` before that gate, and
+deserializes `VSDS`. Both are encounter-order dispatchers and both skip `LNDS`
+on PC. The mapped PC demo body is a normalized-instruction twin of this retail
+function, which corroborates the dispatcher implementation but is not a demo
+archive-shelf census. Released PS2 loader behavior and numeric outer topology
+remain open until their exact payloads/body are measured.
+
 ## Complete top-level vocabulary census
 
 The earlier complete pass in
@@ -132,7 +194,7 @@ that consume the same tagged-resource family are:
 | VA | Identity | Demonstrated boundary |
 | --- | --- | --- |
 | `0x004D6F70` | `CResourceAccumulator__GetResourceFilename` | Builds the resource filename selected by the accumulator path. |
-| `0x004D7200` | `CResourceAccumulator__ReadResourceFile` | Reads resource data with seven `CChunkReader__Read` calls. |
+| `0x004D7200` | `CResourceAccumulator__ReadResourceFile` | Encounter-order outer dispatcher for 16 FourCCs; routes each occurrence to its inline/subsystem owner and does not enforce the canonical writer order. |
 | `0x0050B780` | `CWorld__DeserializeWorld` | Reads four tags with `CChunkReader__GetNext` and updates world load state. |
 | `0x0040F980` | `CBattleEngineData__LoadFromMemBuffer` | Forty-two buffered reads for one embedded Battle Engine data owner. |
 | `0x00423910` / `0x00423960` | `CChunkReader__GetNext` / `Read` | Shared inner tag/field primitives. |
@@ -170,7 +232,8 @@ the 53 direct anonymous `PMS2+309` bodies without naming them.
 
 ## Claim boundary
 
-The 301-file population, AYA framing, top-level geometry, 4,090 numeric WRES
+The 301-file population, AYA framing, canonical PC/Xbox numeric writer profile,
+released-PC outer dispatch contract, top-level geometry, 4,090 numeric WRES
 Unit/Feature joins, and 53 anonymous embedded CMSH bodies are settled. General
 LVLR field semantics, other WRES/object dependencies, anonymous body names,
-runtime selection/failure behavior, and parity are open.
+runtime subsystem effects, PS2/demo shelf topology, and parity are open.

@@ -682,7 +682,7 @@ def validate_numeric_resource_schedule(chunks: Iterable[ChunkEntry]) -> None:
         if index < len(entries):
             actual = entries[index]
             return ValueError(
-                "numeric resource schedule mismatch at "
+                "does not match the canonical numeric writer profile at "
                 f"inflated offset 0x{actual.offset:X}: expected {expected}, "
                 f"got {actual.tag} (size {actual.size})"
             )
@@ -690,7 +690,7 @@ def validate_numeric_resource_schedule(chunks: Iterable[ChunkEntry]) -> None:
             entries[-1].offset + 8 + entries[-1].size if entries else 0
         )
         return ValueError(
-            "numeric resource schedule mismatch at "
+            "does not match the canonical numeric writer profile at "
             f"inflated offset 0x{eof_offset:X}: expected {expected}, got EOF"
         )
 
@@ -1458,7 +1458,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     ap.add_argument(
         "--expect-numeric-schedule",
         action="store_true",
-        help="Fail unless every input has the measured numeric resource tag schedule",
+        help="Fail unless every input matches the measured canonical numeric writer profile",
     )
     ap.add_argument(
         "--preview-bytes",
