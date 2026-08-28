@@ -113,11 +113,13 @@ and the structural
 The 19-file tree was measured byte-identical to the live maintainer project on
 2026-08-19 after the `name-cohort-round-dual-owner` refresh — 19 files,
 187,501,445 bytes, inventory `df4527a9…` from both trees, zero per-file
-mismatches — and to the independently restored, read-only-reopened D: POST
-recovery for that promotion
-(`D:\BEA-Ghidra-Backups\2026-08-19-name-cohort-round-dual-owner-post-live`),
+mismatches — and to the independently restored, read-only-reopened POST
+recovery for that promotion, now retained at
+(`H:\BEA-Ghidra-Backups\2026-08-19-name-cohort-round-dual-owner-post-live`),
 which reopened with program `BEA.exe`, md5 `3b456964020070efe696d2cc09464a55`
-and specimen sha256 `74154bfa…7750`. Future live work can make the snapshot lag
+and specimen sha256 `74154bfa…7750`. The verified collection moved from D:
+without content change on 2026-08-26 under `H:\STORAGE.md`; the former D:
+backup root is absent. Future live work can make the snapshot lag
 again; each refresh remains a separately authorized promotion.
 The current ignored live readback and tracked-restore receipts are respectively
 `local-lab/ghidra-hud-route-demotion-20260814-v1/runs/live-readback/targets.ready.json`
@@ -164,7 +166,8 @@ Steps are ordered; each gate must pass before the next begins, and a failed or
 skipped gate aborts the ceremony — there is no in-process rollback in this
 Ghidra build, so reversibility is restore-from-verified-backup only.
 
-1. **Verified PRE backup** to off-volume D: (restore-proven before any write).
+1. **Verified PRE backup** to `H:\BEA-Ghidra-Backups` (restore-proven before
+   any write).
 2. **Exact identity**: measure the live database version and payload by
    inspection — never quote a version recorded elsewhere.
 3. **Isolated rehearsal** on a disposable replica (census/dry/apply/readback),
@@ -175,14 +178,15 @@ Ghidra build, so reversibility is restore-from-verified-backup only.
    (`tools/GhidraApplyCohortManifestLive.java`).
 6. **Separate-process readback** proving only the declared rows moved and all
    frozen columns and program-scope metrics held.
-7. **Verified D POST backup**, independently copied, restore-proven
+7. **Verified H: POST backup**, independently copied, restore-proven
    byte-identical, and reopened read-only.
-8. Optional F: twin of the POST backup, only if current policy permits it.
-9. **Tracked snapshot refresh only on byte equality** between the tracked tree
+8. **Tracked snapshot refresh only on byte equality** between the tracked tree
    and the verified live/POST state.
 
-Volume rules for every step above: G: is read-only; H: receives no Ghidra
-writes; ACLs and volume ownership are never rewritten as a workaround.
+Volume rules for every step above: new backups go directly to the documented
+`H:\BEA-Ghidra-Backups` collection; D:, F:, and G: are not backup or staging
+fallbacks. G: remains read-only evidence, D: retains the active Ghidra install,
+and ACLs or volume ownership are never rewritten as a workaround.
 
 ## Local host layout (maintainer workstation)
 
@@ -195,10 +199,10 @@ the user overrides them:
 | Headless entry | `...\support\analyzeHeadless.bat` |
 | Prior install archive | `H:\SoftwareArchives\Ghidra\` (verified 12.0.3 archive plus the 12.1.2 distribution ZIP; not an active install) |
 | Working/maintainer project | `C:\Users\david\Ghidra\Projects` (`BEA.gpr` / `BEA.rep`) |
-| Verified off-volume recovery | `D:\BEA-Ghidra-Backups\2026-08-19-name-cohort-round-dual-owner-post-live` (exact current `db.18633` POST snapshot; independently copied, restore-proven byte-identical, and read-only reopened; F: twin at `F:\GhidraBackups\2026-08-19-name-cohort-round-dual-owner-post-live`) |
-| Prior verified recovery | `D:\BEA-Ghidra-Backups\2026-08-17-tentacle-chain-a-post-live` (`db.18623`, ceremony B's PRE) and `...-tentacle-chain-a-pre-live` (`db.18622`, the chain's PRE) |
-| Xbox Issue-11 POST recovery | `D:\BEA-Ghidra-Backups\2026-08-12-xbox-sparse-symbol-post-anchors-issue11\` (exact isolated project; restored semantic readback passed) |
-| Xbox US-retail POST recovery | `D:\BEA-Ghidra-Backups\2026-08-12-xbox-sparse-symbol-post-anchors-us-retail\` (exact isolated project; restored semantic readback passed) |
+| Verified off-volume recovery | `H:\BEA-Ghidra-Backups\2026-08-19-name-cohort-round-dual-owner-post-live` (exact current `db.18633` POST snapshot; independently copied, restore-proven byte-identical, and read-only reopened before its verified 2026-08-26 H: migration) |
+| Prior verified recovery | `H:\BEA-Ghidra-Backups\2026-08-17-tentacle-chain-a-post-live` (`db.18623`, ceremony B's PRE) and `...-tentacle-chain-a-pre-live` (`db.18622`, the chain's PRE) |
+| Xbox Issue-11 POST recovery | `H:\BEA-Ghidra-Backups\2026-08-12-xbox-sparse-symbol-post-anchors-issue11\` (exact isolated project; restored semantic readback passed) |
+| Xbox US-retail POST recovery | `H:\BEA-Ghidra-Backups\2026-08-12-xbox-sparse-symbol-post-anchors-us-retail\` (exact isolated project; restored semantic readback passed) |
 | User settings | `%APPDATA%\ghidra\ghidra_12.1.2_PUBLIC` |
 
 Expedition overlays (RO clones, wave exports, ops state, correction ledgers)

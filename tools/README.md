@@ -225,8 +225,8 @@ manifest with per-packet SHA-256s and a `triage-ready.json` receipt published
 last as the commit marker. Every packet header carries the source image
 SHA-256; the specimen identity is `74154bfa…7750`.
 
-Read-only posture: the default target is the verified D: POST backup
-(`D:\BEA-Ghidra-Backups\2026-08-17-vftable65-post-live`, db.18627); pointing at
+Read-only posture: the default target is the verified H: POST backup
+(`H:\BEA-Ghidra-Backups\2026-08-17-vftable65-post-live`, db.18627); pointing at
 the live maintainer project is refused unless `--allow-live-project` is passed,
 and every invocation stays `-readOnly -noanalysis`. Incremental: a re-run over
 the same output directory skips VAs whose packets already exist with the same
@@ -236,7 +236,7 @@ cut from a *different* image refuses rather than being silently overwritten.
 
 ```powershell
 py -3 tools\export_packets.py tools\packet-va-cgame-level-flow.txt `
-  D:\packet-runs\cgame-level-flow
+  local-lab\packet-runs\cgame-level-flow
 py -3 tools\export_packets.py <addresses.txt> <out-dir> --dry-run
 ```
 

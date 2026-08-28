@@ -4,14 +4,14 @@
 
 This is the proof harness for tools/GhidraApplyCohortManifest.java.  For each
 completed cohort it rebuilds a replica byte-for-byte from the off-volume PRE
-backup on D:, runs the framework's ceremony modes against it, and compares the
+backup on H:, runs the framework's ceremony modes against it, and compares the
 receipts to the numbers the original one-shot applier recorded.
 
 CONTAINMENT.  Everything this harness writes lives under the ephemeral rehearsal
 lane in the scratchpad plus the ignored receipt lane under local-lab/.  The live
 maintainer project (C:\\Users\\david\\Ghidra\\Projects), the tracked snapshot
 (reverse-engineering/ghidra) and the pristine specimen are never opened for
-writing, and the D: backups are only ever read.  The framework itself refuses any
+writing, and the H: backups are only ever read.  The framework itself refuses any
 project path that is not inside a "cohort-rehearsal" segment, so a replica is the
 only thing it can open.
 
@@ -46,7 +46,7 @@ SPECS = TOOLS / "cohort-specs"
 GHIDRA = Path(
     r"D:\ghidra_12.1.2_PUBLIC_20260605\ghidra_12.1.2_PUBLIC"
     r"\support\analyzeHeadless.bat")
-BACKUPS = Path(r"D:\BEA-Ghidra-Backups")
+BACKUPS = Path(r"H:\BEA-Ghidra-Backups")
 
 # The ephemeral rehearsal lane.  The path segment "cohort-rehearsal" is what the
 # framework's containment gate requires; renaming it makes every run refuse.
@@ -947,7 +947,7 @@ VARARGS_LIVE_PROJECT = r"C:\Users\david\Ghidra\Projects\BEA.rep"
 # db.18627 PRE used by the 2026-08-18 live ceremony.  `replica-pre-tree.json`
 # selects the authority before any structural value is compared.
 VARARGS_OFFLINE_AUTHORITIES = {
-    r"d:\bea-ghidra-backups\2026-08-17-tentacle-chain-a-post-live": {
+    r"h:\bea-ghidra-backups\2026-08-17-tentacle-chain-a-post-live": {
         "name": "historical-db.18623-rehearsal",
         "files": 19,
         "bytes": 187403141,
@@ -964,7 +964,7 @@ VARARGS_OFFLINE_AUTHORITIES = {
         "applierSha256":
             "38b72195fd87b808b915d63d559d70054b9fd3bb6580c094e165ffb98468100f",
     },
-    r"d:\bea-ghidra-backups\2026-08-18-varargs-cohort2-pre-live": {
+    r"h:\bea-ghidra-backups\2026-08-18-varargs-cohort2-pre-live": {
         "name": "current-db.18627-reproduction",
         "files": 19,
         "bytes": 187485061,
@@ -980,6 +980,21 @@ VARARGS_OFFLINE_AUTHORITIES = {
         "applierSha256": None,
     },
 }
+
+# Historical receipts retain the D: identity recorded when they were made,
+# while fresh rehearsals identify the verified collection after its migration
+# to H:.  Both paths select the same byte-verified authority; neither receipt
+# is rewritten after the fact.
+VARARGS_OFFLINE_AUTHORITIES[
+    r"d:\bea-ghidra-backups\2026-08-17-tentacle-chain-a-post-live"
+] = VARARGS_OFFLINE_AUTHORITIES[
+    r"h:\bea-ghidra-backups\2026-08-17-tentacle-chain-a-post-live"
+]
+VARARGS_OFFLINE_AUTHORITIES[
+    r"d:\bea-ghidra-backups\2026-08-18-varargs-cohort2-pre-live"
+] = VARARGS_OFFLINE_AUTHORITIES[
+    r"h:\bea-ghidra-backups\2026-08-18-varargs-cohort2-pre-live"
+]
 
 VARARGS_LIVE_RECEIPT_IDENTITY = {
     "framework": "bea.ghidra.cohort-framework.live.v1",

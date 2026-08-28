@@ -15,7 +15,7 @@ decision belongs here and only here.
 
 Read-only posture:
   * every invocation carries ``-readOnly -noanalysis``
-  * the default project location is the verified D: POST backup; passing the
+  * the default project location is the verified H: POST backup; passing the
     live maintainer project path is refused unless ``--allow-live-project``
     is explicit (it still runs read-only)
   * outputs go to the caller's directory; the project is never written
@@ -49,7 +49,7 @@ EXPECTED_IMAGE_SHA256 = (
 DEFAULT_GHIDRA = Path(
     r"D:\ghidra_12.1.2_PUBLIC_20260605\ghidra_12.1.2_PUBLIC\support\analyzeHeadless.bat"
 )
-DEFAULT_PROJECT_ROOT = Path(r"D:\BEA-Ghidra-Backups\2026-08-17-vftable65-post-live")
+DEFAULT_PROJECT_ROOT = Path(r"H:\BEA-Ghidra-Backups\2026-08-17-vftable65-post-live")
 DEFAULT_PROJECT_NAME = "BEA"
 DEFAULT_PROGRAM = "BEA.exe"
 LIVE_PROJECT_ROOT = Path(r"C:\Users\david\Ghidra\Projects")
