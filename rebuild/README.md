@@ -280,6 +280,17 @@ lifecycle of the three world indexes, the ordered weapon/capability gate,
 reader mutation, attack-provider selection, and fire-feasibility helper
 population remain outside Core until their owning actor paths are reconstructed.
 
+Core separately carries the ordered all-squads probe from the enclosing UnitAI
+update as `RetailUnitAISquadSupportProbe`. It consumes caller-captured
+`CWorld::GetSquadNB()` order, preserves the current-squad/null/side/capability
+filters and strict squad-position range test, and emits every downstream helper
+call in order. The caller executes that call before reading the live successor,
+because spawning can tail-append a squad that retail visits in the same scan.
+The step deliberately retains duplicate squads and the separately resolved
+second representative, including null; retail neither chooses a winner nor
+stops after one passing squad. Squad lifecycle, virtual calls, spawner
+readiness/masks/ranges, and actual spawning remain actor-runtime work.
+
 World admission is no longer Level-100-only in Core (2026-08-22): the released
 43-node career graph lives in `RetailWorldCatalog` with its selectability law,
 world 110 — the second career node — is admitted from its own measured

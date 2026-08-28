@@ -780,6 +780,21 @@ the side indexes by filtering all things. It returns the winning transcript
 index and does not claim the retail global draw phase, world-index population
 or mutation, lifecycle-aware reader transaction, or autonomous actor wiring.
 
+The enclosing UnitAI slot-4 body independently contributes a second pure Core
+boundary. PC retail `[0x004FF4F0,0x004FF70B)` reads the source-bound
+`CWorld::GetSquadNB()` set, walks its physical `CSquad*` nodes in retained
+order, skips the owner's current squad, and resolves a first representative for
+the side/capability gates. Squad virtual results supply position and percentage
+for the strict squared-range test. Every passing squad is resolved a second
+time and dispatched to `0x004FDAD0`; the loop does not select, deduplicate, or
+stop, and the caller invokes the helper even with a null second result. It reads
+the live node successor only after that helper returns, allowing a newly spawned
+and tail-appended squad to enter the same scan. `RetailUnitAISquadSupportProbe`
+therefore reproduces one finite interaction step rather than freezing the list:
+its caller executes the helper before acquiring the successor. It does not
+claim mutable `CWorld` ownership, virtual-call purity, the helper's ordered
+spawner lifecycle, or actual spawn products.
+
 The transcript's former `SupportMinimum`/`SupportMaximum` names are corrected
 to selected attack-provider range results. Exact PC bodies show that
 `0x004FB840` mutates a `CUnit`'s selected weapon/spawner for one target, then

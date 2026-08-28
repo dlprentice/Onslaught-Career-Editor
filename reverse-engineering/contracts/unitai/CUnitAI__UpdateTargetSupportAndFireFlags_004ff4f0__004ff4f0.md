@@ -1,7 +1,7 @@
 # CUnitAI__UpdateTargetSupportAndFireFlags_004ff4f0
 
 Status: active multi-build static contract plus replicated bounded-runtime envelope
-Last updated: 2026-08-27
+Last updated: 2026-08-28
 Summary: specimen-bound branch-specific reader transactions, ordered prerequisite/final fire-feasibility results, and a replicated controlled Level-521 call-context envelope for `CUnitAI__UpdateTargetSupportAndFireFlags_004ff4f0` at `0x004ff4f0`.
 Evidence: MEASURED — independently decoded pristine and console instructions establish the write/call ordering; the preregistered wrapper-READY replay establishes only the bounded caller/receiver/callee envelope.
 Specimen: pristine `BEA.exe.original.backup`, 2,506,752 bytes, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
@@ -28,7 +28,7 @@ void __thiscall CUnitAI__UpdateTargetSupportAndFireFlags_004ff4f0(void * this)
 The packet signature declares `void`; no scalar return contract is claimed. Callee/side-effect completion and failure reporting remain bounded by the displayed body and its called/indirect targets.
 
 ## Globals read/written
-- Decompile symbol references: `DAT_008550a0`. Read/write direction for each symbol is not independently instruction-verified in this factory draft.
+- The fallback arm reads the first node of `0x008550A0`, source-bound as `CWorld::GetSquadNB()` / `SPtrSet<CSquad>`. This body does not mutate that set; successful squad initialization tail-appends it and squad cleanup removes it through separate owners.
 
 ## Callees relied on / callers
 - Callee `CGenericActiveReader__SetReader` `0x00401000` ×2 site(s) (STATIC_DIRECT).
@@ -46,12 +46,13 @@ The packet signature declares `void`; no scalar return contract is claimed. Call
 ## Behavior summary
 - Existing packet analyst comment (quoted as bounded packet evidence, not silently upgraded): “Shared CUnitAI-family update: may clear this+0xc reader when target flag bit2 set; if owner linked support missing/invalid, scans DAT_008550a0 candidates for side-compatible support, may CUnit__TrySpawnMembersForTarget, then evaluates CanFireAtTarget_BallisticArcB/A into this+0x1c/0x18 or calls this vfunc +0x2c; else clears fire flags and refreshes escort/fire gates on current reader. Static listing/xref/vtable evidence only; exact source virtual name, AI layout, runtime behavior, BEA patching, and rebuild parity remain unproven.”
 - Independent decoding closes the branch-specific writes. The direct arm pre-clears `+0x18` then `+0x1C`, stores helper B first, and calls/stores A only when B is non-zero. The fallback scan preserves old result cells; its existing-reader arm stores B first and explicitly zeros A when B is zero. Otherwise virtual slot `+0x2C` transfers to `0x004FF710`. The displayed decompile SHA-256 remains `0d1500f4ad1433d6278da11d13d8de764daa6a251a23cfc38f16399ce799f7f9`.
+- The fallback support scan walks every physical `GetSquadNB()` node in retained order, skips the owner's current squad, resolves a representative through squad virtual `+0x124`, and applies representative allegiance plus the `0x004FB3D0` capability transaction. It then uses squad virtuals `+0x120/+0x150` for the strict squared-range gate. Every passing squad is resolved again through `+0x124` and sent to `0x004FDAD0`, even when that second result is null; iteration always continues. There is no winner, deduplication, or early exit. Retail reads `node->next` after the helper returns, so a successful helper path that initializes and tail-appends a squad can make that new squad visible later in the same scan. A frozen pre-call list is not equivalent. PC demo, both mapped Xbox releases, and all three PS2 releases preserve this call-before-next and spawn-to-tail-append chain.
 - PC demo is instruction-shape identical; the paired Xbox and three PS2 slot-4 bodies carry the same transaction ordering. The independently decoded helper wrappers also reproduce classifier-first range admission, active/fallback selection, inclusive target-height gating, and distinct delegate dispatch across those families.
 - B (`0x004fb5a0`) is stored at `AI+0x1C` and is the ballistic-reach/line-clearance feasibility prerequisite: all four UnitAI transactions branch away when it is zero. A (`0x004fb500`) is called with context zero only after B and stored at `AI+0x18`; `CUnitAI__Update` later requires it as the final aim-angle/obstruction fire-acceptance result. Those labels describe proved behavior, not recovered original identifiers. Complete PC wrapper/delegate exits are `{0,1}`; console delegate exits remain unenumerated.
 - Structured inventory for this body: 0 caller record(s), 8 callee record(s), and 0 string-ref record(s).
 
 ## Error / edge behavior
-Nullability, invalid-state behavior, allocation failure, indirect-call failure, NaN/overflow behavior, and rollback semantics are not_determinable as a class from the packet metadata. The decompile and quoted comment are the bounded static evidence; any missing branch-level edge contract remains an open question rather than an invented default.
+The second representative may be null; the released caller still invokes the downstream helper, whose first branch rejects it. Invalid-object/vtable behavior, allocation failure, NaN/overflow behavior, and rollback semantics remain not_determinable rather than receiving invented defaults.
 
 ## Runtime corroboration (TTD, bounded)
 The historical bounded TTD table contains these breadth rows; they establish execution/coverage only:

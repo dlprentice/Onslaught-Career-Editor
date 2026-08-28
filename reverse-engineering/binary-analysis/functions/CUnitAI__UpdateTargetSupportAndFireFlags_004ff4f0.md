@@ -3,7 +3,7 @@
 > Address: `0x004ff4f0`
 
 Status: active multi-build static contract plus replicated bounded-runtime note
-Last updated: 2026-08-27
+Last updated: 2026-08-28
 Source File: none — no current source-crosswalk row | Binary: pristine
 `BEA.exe.original.backup`, 2,506,752 bytes, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
@@ -52,6 +52,37 @@ that body on the same receiver.
 These stores/order are closed statically; the absent value watchpoint limits
 only exact per-invocation before/after values and frequencies. The PC demo,
 paired Xbox, and three PS2 slot-4 bodies carry the same branch shape.
+
+## Ordered all-squads helper-call scan
+
+The fallback arm at `0x004FF592..0x004FF6AE` reads `0x008550A0`, now
+source-bound as `CWorld::GetSquadNB()` / `SPtrSet<CSquad>`, rather than a
+UnitAI-private support list. `CSquad::Init` tail-appends successfully initialized
+squads and its virtual cleanup removes them before base shutdown, so the normal
+physical traversal order is squad initialization order.
+
+The scan runs only after the current-squad arm permits fallback and owner
+virtual `+0x188` is nonzero. For each physical squad node, retail skips the
+owner's current squad, calls squad virtual `+0x124` for a first representative,
+rejects null, applies the representative's `+0x138` allegiance and the
+`0x004FB3D0` capability transaction, then obtains squad position through
+virtual `+0x120` and range-reduction percent through `+0x150`. Admission is the
+strict test
+
+`distanceSquared < (((1 - percent * 0.01) * ownerConfig[0x158]) ^ 2)`.
+
+On admission retail calls squad virtual `+0x124` a second time and passes that
+fresh result to `0x004FDAD0` without a caller-side null check. It continues to
+every later node: there is no winner, deduplication, or early exit. Crucially,
+retail reads `node->next` only after this helper returns. The helper itself
+rejects null but can dispatch ordered spawners whose spawn path initializes and
+tail-appends a new squad; that appended node can therefore be visited during
+the same scan. Core's `RetailUnitAISquadSupportProbe` is a per-node interaction
+step rather than a frozen-list reducer. Its caller must execute each returned
+helper call before reading the live successor; world lifecycle, virtual calls,
+spawner iteration, and spawning remain outside Core.
+PC demo, both mapped Xbox releases, and all three PS2 releases preserve the
+same helper-call-before-next-load and spawn-to-squad-tail-append chain.
 
 The helper wrappers and their large PC delegates now close a stronger
 source-neutral meaning. B, stored at `this+0x1C`, first classifies target range,
@@ -110,9 +141,9 @@ runtime specimen SHA-256
   independently bound. All claims are bounded to this copied-runtime trace.
 - No value watchpoint was collected. Exact per-invocation receiver dwords,
   concrete target RTTI, original helper/member names, console delegate result
-  domains, and other-level behavior remain open; branch-specific
-  `+0x0C/+0x18/+0x1C` ordering and the PC helper result domain are closed
-  statically.
+  domains, autonomous squad/spawner population, and other-level behavior remain
+  open; branch-specific `+0x0C/+0x18/+0x1C` ordering and the PC helper result
+  domain are closed statically.
 
 ## Cheapest falsifier
 
