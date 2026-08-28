@@ -1146,8 +1146,15 @@ public sealed class Simulation
         {
             if (!_level100FlightEnabled ||
                 _flightModeFlag != RetailEnableFlightMode.FlagEnabled ||
-                _energy < SimulationConstants.TransformEnergyThreshold ||
                 _walkerDashTicksRemaining > 0)
+            {
+                EmitFlightEvent(AquilaFlightEvents.TransformRejected);
+                return;
+            }
+
+            _level100PlayerWeapons.LoseCurrentWeaponChargesForMorph();
+            _desiredZoomPermille = SimulationConstants.ZoomOutPermille;
+            if (_energy < SimulationConstants.TransformEnergyThreshold)
             {
                 EmitFlightEvent(AquilaFlightEvents.TransformRejected);
                 return;
@@ -1157,7 +1164,6 @@ public sealed class Simulation
                 _playerOnGround ||
                 _ticksSinceGroundContact < SimulationConstants.RecentGroundContactTicks;
             _walkerToJetLiftApplied = false;
-            _desiredZoomPermille = SimulationConstants.ZoomOutPermille;
             _transition = VehicleTransition.WalkerToJet;
             _transformTicksRemaining = _walkerToJetUsesTakeoffLift
                 ? SimulationConstants.WalkerToJetTransitionTicks
@@ -1176,6 +1182,7 @@ public sealed class Simulation
             return;
         }
 
+        _level100PlayerWeapons.LoseCurrentWeaponChargesForMorph();
         _transition = VehicleTransition.JetToWalker;
         _desiredZoomPermille = SimulationConstants.ZoomOutPermille;
         _transformTicksRemaining = SimulationConstants.JetToWalkerTransitionTicks;

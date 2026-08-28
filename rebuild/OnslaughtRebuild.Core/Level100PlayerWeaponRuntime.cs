@@ -67,6 +67,21 @@ internal sealed class Level100PlayerWeaponRuntime
     }
 
     /// <summary>
+    /// The common pre-direction work in retail <c>CBattleEngine::Morph</c>
+    /// calls <c>LoseWeaponCharge</c> on both vehicle parts. Each part clears
+    /// only its currently selected weapon. Level 100's Pulse Cannon Pod is the
+    /// only represented charge accumulator; the modelled jet weapons have no
+    /// charge table to clear.
+    /// </summary>
+    internal void LoseCurrentWeaponChargesForMorph()
+    {
+        if (WalkerSelectedWeapon == Level100MissionWeapon.PulseCannonPod)
+        {
+            RetailWeaponCharge.LoseCharge(_pulseCharge);
+        }
+    }
+
+    /// <summary>
     /// Fire's store of <c>now + CWeaponReloadTime</c> into <c>weapon+0x64</c>.
     /// ReadyToCharge stays false until engine time is strictly greater.
     /// </summary>

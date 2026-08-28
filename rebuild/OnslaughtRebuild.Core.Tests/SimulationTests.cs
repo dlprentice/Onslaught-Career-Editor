@@ -1709,6 +1709,28 @@ public sealed class SimulationTests
         Assert.Equal(0x42C80000u, simulation.Level100PulseCannonChargeBits);
     }
 
+    /// <summary>
+    /// Retail <c>CBattleEngine::Morph</c> calls the walker and jet part
+    /// <c>LoseWeaponCharge</c> methods after its flight/state/special-move
+    /// guards and before it selects a transform direction. An accepted
+    /// walker-to-jet request therefore clears the currently selected Pulse
+    /// Cannon Pod's raw accumulator on the request tick.
+    /// </summary>
+    [Fact]
+    public void AcceptedMorph_LosesCurrentPulseCannonChargeBeforeDirectionSelection()
+    {
+        Simulation simulation = CreateFiringRangeExerciseSimulation();
+        simulation.Step(new SimInput(0, 0, SimActions.ChargeWeapon));
+        Assert.Equal(0x41200000u, simulation.Level100PulseCannonChargeBits);
+
+        simulation.GrantFlightLegForMeasurement(Level100MissionTrigger.TargetZone2);
+        WorldSnapshot morphing = simulation.Step(
+            new SimInput(0, 0, SimActions.ToggleMode));
+
+        Assert.Equal(VehicleTransition.WalkerToJet, morphing.Transition);
+        Assert.Equal(0x00000000u, simulation.Level100PulseCannonChargeBits);
+    }
+
     [Fact]
     public void FireAtFullyCharged_LaunchesMechPulseBoltLarge()
     {
