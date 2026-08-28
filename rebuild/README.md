@@ -311,6 +311,17 @@ the reader identity observed at each call site, so a lifecycle change between
 stages is not flattened into one stale target. The membership virtual's
 authored name and all pointer/monitor/helper execution remain adapter-owned.
 
+`RetailUnitAIUpdateTransaction` now closes the next PC retail/demo cadence
+boundary: shared virtual slot 3 always refreshes target/support state, then
+chooses jittered aim, direct aim, fire support, or one of two idle delays. Core
+preserves its exact zero/one/four random-draw law, strict jitter sign threshold,
+stage-local target rereads, target-clear tail, idle owner writes, and returned
+delay. The enclosing event-3000 handler reuses its incoming event and rounds
+manager time plus that delay to float only once; Core preserves that x87 order,
+including a measured one-bit discriminator against ordinary chained float
+addition. Matrix/aim helpers, virtual execution, monitor lifetime, event
+delivery, and autonomous actor scheduling remain adapter work.
+
 `RetailActiveReaderGraph` now supplies that deletion-aware boundary. It gives
 each non-owning reader a stable cell identity, preserves exact same-target
 no-op and detach-old/publish-new/attach-new rebind order, and tracks each

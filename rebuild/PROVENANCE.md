@@ -821,6 +821,22 @@ PC demo, both measured Xbox images, and PS2 demo/Europe/USA preserve the same
 order. `RetailUnitAIDirectTargetArm` emits those stage-local observations and
 actions without merging them into the later selector/fallback transaction.
 
+The enclosing shared UnitAI slot 3 is now a fifth deterministic boundary. PC
+retail `CUnitAI__Update` `[0x004FEF40,0x004FF322)` is 994 bytes / 300
+instructions (SHA-256 `7aca029c…fffe`); demo `[0x004FEFF0,0x004FF3D2)` has
+the same 300-instruction normalized stream `d0cd8f0e…8b34`. It always invokes
+slot 4, then chooses a four-draw jittered-aim arm returning zero, a one-draw
+direct-aim arm returning `0.5+low16/65536`, a no-draw fire arm returning mounted
+pitch plus exact float32 `0.1`, or one-draw idle arms returning
+`1.5+low16/65536` / `3+low16*(2/65536)`. The tracked contract records the
+ordered target virtuals, fresh reader loads, cleanup, and owner writes without
+inventing field names. Its caller is also PC retail/demo shape-identical and
+reuses the incoming event as event 3000 after one final float32 store of
+manager time plus the x87 delay. `RetailUnitAIUpdateTransaction` carries those
+actions, draws, final jitter fields, delay, caller-zero override, and exact due
+bits. Concrete matrix/aim execution, helper effects, monitors, and actor/event
+wiring remain outside Core; no runtime or console equivalence is claimed.
+
 Deletion-aware reader feedback is now its own deterministic owner. Pristine PC
 `CGenericActiveReader__SetReader` `[0x00401000,0x00401034)` (52 bytes, SHA-256
 `5540848cb8c7cd9fd46fc6a2d068b76527166c61510dd33c36b2c4dc1e41dca2`)

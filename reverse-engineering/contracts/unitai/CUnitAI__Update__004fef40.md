@@ -1,72 +1,119 @@
 # CUnitAI__Update
 
-Status: active static contract (factory draft)
-Last updated: 2026-08-22
-Summary: specimen-bound static contract for `CUnitAI__Update` at `0x004fef40`; packet-described behavior is retained with explicit unknowns and no promotion claim.
-Evidence: MEASURED — READY packet/decompile, structured edges, closure identity, and independently recomputed pristine body bytes; runtime and source limits remain explicit.
+Status: active PC retail/demo static contract with deterministic rebuild boundary
+Last updated: 2026-08-28
+Summary: exact branch, side-effect, random-consumption, return-delay, and event-3000 scheduling contract for shared `CUnitAI` virtual slot 3 at `0x004fef40`.
+Evidence: MEASURED — pristine retail instructions and constants were independently decoded; the complete PC demo body and its event-3000 caller reproduce the same normalized instruction stream; no runtime or console equivalence is claimed.
 Specimen: pristine `BEA.exe.original.backup`, 2,506,752 bytes, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
-Source File: not_applicable (no current source-crosswalk row) | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
+Source File: not_applicable (the pinned source drop has no UnitAI implementation) | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
 > Address: `0x004fef40`
 
-## Identity
-- Body `[0x004fef40,0x004ff321]`, 994 bytes, 300 closure instructions. Raw pristine-body SHA-256 `7aca029cc9b576958d86a01282e847e6b624d29dcbc23b4ae2b89cbf8193fffe`; closure range SHA-256 `e39944ad5f5c17b54941b7ff7204609f72aecb3f98553dd5109773fb2d6ff305`; packet range-plus-bytes SHA-256 `9127a58d3e0444850ca7f4530555efd73c8cb948001dbab8654e4a04829efd11`. All three were independently recomputed over the exact single contiguous inclusive range.
-- Canonical name `CUnitAI__Update` comes from the current closure/register row. Packet label matches canonical tracked name `CUnitAI__Update`.
-- Packet name source `USER_DEFINED` and signature source `USER_DEFINED` are counted provenance, not semantic proof.
-- Campaign grade `C1_CANDIDATE_PARTIAL` / closure class `SEALED_STATIC_RECEIPT` / packet confidence `MEDIUM_STATIC`. Proposed promotion: false.
+## Identity and ownership
 
-## Calling convention
-Packet records `__fastcall` for `float __fastcall CUnitAI__Update(void * this)`. Register/stack placement beyond that packet declaration is not_determinable without a separate instruction-level ABI review.
+- Retail body `[0x004fef40,0x004ff322)`: 994 bytes, 300 instructions, raw SHA-256 `7aca029cc9b576958d86a01282e847e6b624d29dcbc23b4ae2b89cbf8193fffe`.
+- PC demo correspondent `[0x004feff0,0x004ff3d2)`: 994 bytes, 300 instructions, raw SHA-256 `6b676728052401d5acfdabedae081ad48bca95557f080629b59c471afa2a45c6`.
+- Independent Capstone decode found equal mnemonic and instruction-size sequences. Zeroing only encoded immediates/displacements produced the same SHA-256 `d0cd8f0e845a2589b53a61373cc9d08d809a3e7a38086ebed8eb0183bd6b8b34`; the 41 raw-different instructions / 60 bytes are relocated calls, globals, or constants.
+- The nine referenced zero/jitter/step/base/pitch-bias scalar dwords are byte-identical at their relocated demo addresses; normalized instruction identity is therefore not being used to hide a changed cadence constant.
+- This is virtual slot 3 (`+0x0c`) shared by 16 PC retail/demo AI vtables: `CBoatAI`, `CCarrierAI`, `CCarverAI`, `CComponentBomberAI`, `CFenrirMainGunAI`, `CGillMAI`, `CGroundAttackAI`, `CInfantryAI`, `CMechAI`, `CPlaneAI`, `CRepairPadAI`, `CSubmarineAI`, `CTentacleAI`, `CUnitAI`, `CWarspiteAI`, and `CWarspiteDomeAI`. The old decompiler name `CWarspite__Update` was too narrow.
+- The packet closure digest is `e39944ad5f5c17b54941b7ff7204609f72aecb3f98553dd5109773fb2d6ff305`. Packet metadata remains provenance, not the basis of the branch claims below.
 
-## Prototype and parameter semantics
+## Calling convention and return contract
+
 ```c
-float __fastcall CUnitAI__Update(void * this)
+double-x87 __thiscall CUnitAI__Update(CUnitAI *this);
 ```
-- Packet-declared parameter list: `void * this`. Parameter labels are analyst/source intent; concrete object layouts, units, ownership, aliasing, and nullability remain not_determinable unless directly stated by the quoted packet comment below.
 
-## Return value meaning
-The packet signature declares `float`. Exact domain meaning of the returned bits/value is not_determinable from identity and decompile evidence alone; no stronger meaning is invented here.
+- Receiver is in `ECX`; there are no stack arguments and the body uses a bare `ret`.
+- The result remains in x87 `ST0`. It is the delay used by the enclosing event-3000 handler, not an angle and not an opaque “float-like” result.
+- `CUnitAI__VFunc_9_004fec60` calls slot 3 at `0x004feefd`, optionally discards its result in favor of positive zero, adds event-manager time without an intervening float store, then stores the absolute due time once as float32.
+- That caller schedules event `3000` (`0x0bb8`) to the same AI at start-of-frame priority `0`, with null data, and passes its incoming scheduled-event pointer as the reuse object. It does not allocate a fresh event for the ordinary cadence loop.
+- Retail caller `[0x004fec60,0x004fef40)` is 736 bytes / 229 instructions, raw SHA-256 `31974fd1b8d3abc3adc6d2ba0e3007478b5113af8c936caf9221dc5e89927911`. Demo `[0x004fed10,0x004feff0)` is raw SHA-256 `c86710170e63bffce43deedd2b4d66277039e2e05ad557a163b52ec8ca359fab`; both normalize to `7afed8ca31a90a7030131f9bb29429f9599702e949ddf7c576396041649e1216` with identical 229-instruction shape.
 
-## Globals read/written
-- Decompile symbol references: `DAT_008a9d9c`. Read/write direction for each symbol is not independently instruction-verified in this factory draft.
+## Ordered transaction
 
-## Callees relied on / callers
-- Callee `CGenericActiveReader__SetReader` `0x00401000` ×1 site(s) (STATIC_DIRECT).
-- Callee `vector_constructor_iterator_nothrow` `0x004011b0` ×1 site(s) (STATIC_DIRECT).
-- Callee `Vec3__SetXYZ` `0x00401ec0` ×3 site(s) (STATIC_DIRECT).
-- Callee `Mat34__SetFromEulerAngles_004062d0` `0x004062d0` ×1 site(s) (STATIC_DIRECT).
-- Callee `Random__NextLCGAbs` `0x004de8d0` ×7 site(s) (STATIC_DIRECT).
-- Callee `CUnit__ForwardAimTransformAndAttachTargetReader` `0x004fb650` ×3 site(s) (STATIC_DIRECT).
-- Callee `CSquadNormal__SelectBestSupportOrEscort` `0x004fb840` ×2 site(s) (STATIC_DIRECT).
-- Callee `CWarspite__GetMountedUnitPitchOrZero` `0x004fbc90` ×1 site(s) (STATIC_DIRECT).
-- Callee `CWarspite__TransitionToUndeploying` `0x004fde70` ×1 site(s) (STATIC_DIRECT).
-- Callers: none in the packet structured array.
-- Structured packet arrays prove the listed direct/static edge identities and site counts only. Indirect vtable targets, library inlining, and data-driven dispatch remain unresolved unless separately named in the packet.
+Every invocation first calls this AI's virtual slot 4, currently documented as `CUnitAI__UpdateTargetSupportAndFireFlags_004ff4f0`, and then owner virtual `+0x150`. The following arms are mutually exclusive.
 
-## Behavior summary
-- Existing packet analyst comment (quoted as bounded packet evidence, not silently upgraded): “Wave528 Unit/Warspite command-tail signature/comment hardening: ECX-only vtable update returns a float-like delay/angle value through the x87 path. The body advances base state, checks owner unit vfunc +0x150, handles target/reader state, updates aim through CUnit__ForwardAimTransformAndAttachTargetReader, refreshes support selection through CSquadNormal__SelectBestSupportOrEscort, may call CWarspite__TransitionToUndeploying, and returns randomized timing/oscillation values from profile flags. Static retail evidence only; exact return contract, Warspite state layout, runtime AI behavior, and rebuild parity remain unproven.”
-- The displayed decompile is non-empty and SHA-256 `77c66f4c1018ca9940b8e60b676339ec87a2703e2703ae5846b82e2df48a8124`. This factory draft preserves that packet-described control/side-effect intent but does not infer unstated field meanings, units, ordering guarantees, or runtime causality.
-- Structured inventory for this body: 0 caller record(s), 9 callee record(s), and 0 string-ref record(s).
+### Primary/current-target arm
 
-## Error / edge behavior
-Nullability, invalid-state behavior, allocation failure, indirect-call failure, NaN/overflow behavior, and rollback semantics are not_determinable as a class from the packet metadata. The decompile and quoted comment are the bounded static evidence; any missing branch-level edge contract remains an open question rather than an invented default.
+This arm requires owner virtual `+0x150` to return nonzero and deletion-aware reader `this+0x0c` to be nonnull.
 
-## Runtime corroboration (TTD, bounded)
-No TTD execution row exists for this VA in the bounded `ttd-deep-mine/values.tsv` corpus. This absence is not a dormancy claim and supplies no runtime semantic proof.
+If profile `[[owner+0x164]+0x19c]` is nonzero:
 
-## Evidence
-- Writer-task authority: task `t_efc238f0`, cohort 6 immutable manifest SHA-256 `9f24ea299ab115b57de8eda78fd01e374647c888e41ce248a0624ee78fadd13e`, row 20; specimen `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750` and proposed promotion false. The task comment/independent-review receipts are the durable manifest authority; no writer-local scratch path is claimed as tracked evidence.
-- Packet `D:/packet-runs/wave1-contracts-20260822/packet-0x004fef40.json` (`bea.re.triage-packet.v1`, status `READY`, image `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`); packet decompile SHA-256 `77c66f4c1018ca9940b8e60b676339ec87a2703e2703ae5846b82e2df48a8124`.
-- Digest derivation: closure SHA-256 hashes canonical range text `004fef40:004ff321;`; packet SHA-256 hashes that range text followed by exact pristine bytes; raw SHA-256 hashes only those bytes.
-- Closure execution state `PARTIAL` and confidence `MEDIUM_STATIC`; these are inherited bounded grades, not this factory's promotion decision.
-- Packet stringRefs: empty.
-- Source crosswalk: no row for this VA in the current tracked crosswalk.
+1. Call target virtual `+0x168`, writing the four-float target point at `this+0x34`.
+2. Consume four shared `Random__NextLCGAbs` results in order.
+3. Store `this+0x48` and `this+0x54` as `float32(low16 * 0x3523d70a + 0x3d23d70a)`, i.e. approximately `0.04 + low16*(0.04/65536)`.
+4. For draws three and four independently negate `+0x48` / `+0x54` only when `low16/65536` is strictly greater than `0.5`; equality at `32768` does not negate.
+5. Store `+0x4c=+0x48`, `+0x50=-+0x48`, `+0x58=+0x54`, and `+0x5c=-+0x54`; rotate the target-relative vector through the local Euler matrix; then call `CUnit__ForwardAimTransformAndAttachTargetReader` using a fresh read of `this+0x0c`.
+6. Set the returned delay to positive zero.
+
+If profile `+0x19c` is zero, call the forward-aim helper with the entry target and `this+0x34`, consume one random result, and store the delay local as float32 `0.5 + low16/65536`.
+
+Both sub-arms then call owner virtual `+0x128`. If the profile value at `[[owner+0x164]+0x128]` is nonzero after that call, they invoke `SetReader(this+0x0c,null)`, run the support/attack-provider helper with null, and zero `this+0x10`. This cleanup does not roll back the already-issued aim call or returned delay.
+
+### Fire-support arm
+
+When the primary arm is not admitted, nonzero `this+0x18` plus a nonnull fresh `this+0x0c` selects this arm:
+
+1. Run the support/attack-provider helper on that reader.
+2. If the then-current profile `+0x19c` is zero and owner field `+0x168` is not `1`, reload the reader, call its virtual `+0x168` into `this+0x34`, reload the reader again, and invoke forward aim. A null reader at the indirect virtual call would fault; there is no recovery branch.
+3. Call owner virtual `+0x158`.
+4. Return `CWarspite__GetMountedUnitPitchOrZero(owner) + float32(0.1)` in x87 precision. This arm consumes no random result.
+
+### Idle arm
+
+Every other state:
+
+1. Writes owner `+0x1ec=0`, then owner `+0x1e8=0`.
+2. Calls `CWarspite__TransitionToUndeploying` when profile `+0x108` is nonzero.
+3. Re-reads owner `+0x110` after that call and consumes one random result.
+4. Nonzero `+0x110` returns `1.5 + low16/65536`; zero returns `3.0 + low16*(2/65536)`. Neither expression is stored to float before returning in `ST0`.
+
+The authored meanings of profile `+0x108/+0x128/+0x19c`, owner `+0x110/+0x150/+0x158/+0x168`, and the jitter cells remain open. Offset-bearing names are retained rather than guessed.
+
+## Floating-point and random law
+
+- The shipped constants are exact float32 bits: jitter step `0x3523d70a`, jitter base `0x3d23d70a`, unit step `0x37800000`, double step `0x38000000`, half `0x3f000000`, pitch bias `0x3dcccccd`, short base `0x3fc00000`, and long base `0x40400000`.
+- The repeated `and eax,0x8000ffff` plus sign fix-up is MSVC's signed remainder-by-65536 lowering. `Random__NextLCGAbs` sign-normalizes its ordinary output, so observed samples are the low 16 bits; the exact lowering remains relevant at the `INT_MIN` edge.
+- PC retains the fire and idle delay expressions on x87. The Win32 process precision control is 53 bits, so a binary64 intermediate reproduces these sums for float32 operands. Rounding pitch bias before adding manager time is observably wrong: manager time bits `0x4192430b` and pitch bits `0x3f2924b6` produce due bits `0x419858fd`; float-rounding the pitch sum first produces `0x419858fe`.
+- The caller's preceding aim-convergence path sets a local flag that discards the slot-3 delay and schedules at current manager time. Slot 3 still performs its complete branch and consumes its branch-specific random results before that override.
+
+## Direct calls and effects
+
+- `CGenericActiveReader__SetReader` `0x00401000` ×1.
+- `vector_constructor_iterator_nothrow` `0x004011b0` ×1.
+- `Vec3__SetXYZ` `0x00401ec0` ×3.
+- `Mat34__SetFromEulerAngles_004062d0` `0x004062d0` ×1.
+- `Random__NextLCGAbs` `0x004de8d0` ×7 static sites across mutually exclusive arms.
+- `CUnit__ForwardAimTransformAndAttachTargetReader` `0x004fb650` ×3.
+- support/attack-provider helper `0x004fb840` ×2.
+- mounted-unit pitch helper `0x004fbc90` ×1.
+- undeploy transition `0x004fde70` ×1.
+
+Indirect calls are this slot 4, owner slots `+0x150/+0x128/+0x158`, and target slot `+0x168`. Exact instruction order—not callee labels—is the authority.
+
+## Rebuild carry-forward
+
+`RetailUnitAIUpdateTransaction` reproduces the five finite paths, stage-local reader identities, ordered calls/writes, exact random-result consumption, final jitter cells, returned delay, caller zero override, and absolute event-3000 due bits. It accepts already-captured virtual results and random values so the shared RNG is not consumed before an earlier side-effecting virtual call. Concrete monitors, geometry/matrix execution, helper bodies, event dispatch, and actor wiring remain adapter-owned.
+
+Six focused tests cover both primary sub-arms, fire-support with and without aim refresh, both idle cadences, strict sign equality, target rereads, clear-tail order, caller override, and the one-bit x87 rounding discriminator. They are contract tests, not proof of autonomous gameplay parity.
+
+## Evidence and limits
+
+- Canonical disassembly summary: `reverse-engineering/binary-analysis/functions/IScript.cpp.md`, rows for `0x004fec60` and `0x004fef40`.
+- PC retail/demo body map: `reverse-engineering/binary-analysis/pc-demo-retail-virtual-target-map-2026-08-11.tsv`.
+- Packet: `D:/packet-runs/wave1-contracts-20260822/packet-0x004fef40.json`, schema `bea.re.triage-packet.v1`, SHA-256 `ec950bb31e461a9ab0ad94b40f9e794bb2590ecc35e4708121ac5fba1a9375d8`.
+- Displayed decompile SHA-256 `77c66f4c1018ca9940b8e60b676339ec87a2703e2703ae5846b82e2df48a8124`.
+- Pinned `eventmanager.cpp`, `scheduledevent.cpp`, and `activereader.cpp` independently support event reuse/scheduling and reader architecture. The pinned source drop contains no UnitAI implementation and does not prove the branch fields.
+- No controlled-runtime execution row is claimed for this VA. PC demo normalized identity proves duplicated machine-code structure, not scenario frequency or console behavior.
+- No Ghidra project was changed. A symbol/comment promotion would still require the separate Ghidra backup, scratch, apply/readback, and independent-refutation gate.
 
 ## Confidence
-1 — exact identity, contiguous pristine bytes, digest derivations, signature text, and structured edge inventory are reconciled; field-level semantics and runtime causality remain bounded to the packet/decompile and any cited source/TTD rows. A packet/canonical name discrepancy forces confidence 0. Proposed promotion: false.
 
-## Unresolved questions
-- Instruction-level read/write direction and concrete layout for every referenced field/global.
-- Complete indirect-call target set and failure/nullability behavior.
-- Runtime ordering, side effects, return-domain meaning, and caller expectations beyond the bounded packet evidence.
-- Cheapest falsifier: cold-disassemble this exact raw-body digest, compare every branch/load/store/call against the packet decompile and structured arrays, then run a controlled copied-runtime probe for the named input/state transition.
+1 — exact PC retail identity, complete branch/action/random/return law, enclosing event-3000 consumer, constants, and independently reproduced demo instruction shape are closed. Authored field names, virtual/helper side effects, runtime scenario distribution, console correspondence, and autonomous integration remain open.
+
+## Cheapest falsifiers
+
+- A cold decode of either named body that changes one mnemonic, instruction size, branch edge, constant bit pattern, or random-site order invalidates the static contract.
+- A controlled copied-runtime breakpoint at slot 3 that observes a returned delay outside the selected arm's domain, different draw count, or a non-3000/non-reused caller admission invalidates the transaction mapping.
+- Console promotion requires independent MIPS/PPC body and caller reconstruction; vtable placement or a plausible label alone is insufficient.
