@@ -92,6 +92,50 @@ but does not cancel the current wave because the wave never rereads enabled.
 A permanently failing member attempt can therefore retain busy and retry
 without a proved ceiling.
 
+## Event-3000 scheduler lifecycle
+
+The one nonfinal scheduling tail passes the same logical tuple in PC retail and
+demo, Xbox USA and Issue11, and the PS2 demo/EU/USA builds:
+
+```text
+event = 3000, listener = this spawner,
+due = float32(current event-manager time + configured member delay),
+priority = START_OF_FRAME, data = null, reuse record = null
+```
+
+PC retail calls the absolute-time overload at `0x0044B370`; it does not call
+the manager's relative-time wrapper. The caller forms and stores the due
+float32 before the call, so the manager does not add its clock a second time.
+Passing a null reuse record makes every accepted successor a fresh pool object.
+The manager does not search for another event number, listener, due time, or
+matching tuple and therefore does not deduplicate. A rejected filing returns
+no status to the spawner and rolls nothing back, so the busy cycle can remain
+latched without a future callback after invalid-manager, excessive-time, or
+pool-exhaustion rejection.
+
+Outstanding-event counts need three distinct statements. In the ordinary
+self-generated chain, a stable boundary after the immediate wave or after
+callback cleanup contains at most one future event-3000 record. During a
+nonfinal callback, the current due record and its fresh successor coexist until
+the old record is recycled. The manager advances its insertion ring before it
+flushes the due ring, so the successor cannot execute recursively in that same
+flush. This is a producer invariant, not a scheduler guarantee: externally
+filed duplicates are retained FIFO, can each advance a still-busy wave, and can
+each schedule another successor. Once one callback completes the cycle, later
+duplicates and already-filed successors remain queued but return inertly at the
+busy gate.
+
+Spawner destruction also is not event cancellation. Monitor shutdown zeros
+the deletion-aware listener cell of every outstanding scheduled record but
+does not remove the record from its ring or overflow list. The stale record
+continues to occupy one live pool slot until due; `Flush` then observes a null
+listener, skips the callback, still counts the record as processed, and
+recycles it. A distant overflow record can therefore survive until its due
+time or whole-manager shutdown. These ordering and lifetime laws are closed
+statically across all seven examined builds; a spawner-specific causal runtime
+capture of successor coexistence, deliberate duplication, and destruction
+invalidation remains open.
+
 ## Released-family corroboration
 
 The independently reconstructed PC demo has the same 811-byte start and
@@ -129,6 +173,13 @@ transform and clearance queries, member attachment, and event delivery. In
 particular, a UnitAI scan must not snapshot the squad set: a squad appended by
 the nested spawn helper can be the next node in that same scan.
 
+An adapter consuming `ScheduleEvent3000` must translate it exactly to a fresh
+`AddEvent(3000, spawnerListener, due, StartOfFrame, data: 0, reuse: -1)` call.
+Spawner teardown must clear that listener through the active-reader lifetime
+boundary without removing the filed event. `RetailEventScheduler` already owns
+the resulting no-dedup, advance-before-flush, null-listener accounting, and
+recycling behavior; no parallel scheduler abstraction is needed.
+
 ## Cheapest remaining falsifier
 
 On an app-owned copy, instrument one size-1 and one multi-member authored
@@ -136,6 +187,9 @@ spawner at the squad factory/initializer, world tail append, start-field writes,
 member factory/attach, event-3000 scheduling, and completion/release sites.
 Capture the prior tail's next link plus the spawner reader, admitted count,
 member count, ordinal, busy latch, next-cycle time, and squad build flag. This
-would test authored reach and event-manager behavior without weakening the
-already closed static transaction. Forced null/failure arms require a bounded
+would test authored reach without weakening the already closed static
+transaction. In a bounded optional arm, record the in-flight event handle and
+the newly allocated successor during its callback, then destroy a spawner with
+one event pending and observe listener zeroing, callback suppression, and later
+pool return. Forced duplicate, null, and allocator-failure arms require a
 copied-runtime harness; the pristine specimen remains read-only.
