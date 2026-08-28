@@ -810,6 +810,25 @@ Xbox/PS2 require ordered zero. `RetailUnitAITargetTransaction` emits this exact
 ordered adapter plan. Mutable monitor sets, target-death feedback, virtual
 helper execution, and autonomous actor scheduling remain outside Core.
 
+The spawner reached by that helper is now a separately bounded Core
+transaction. Pristine PC retail `CSpawnerThng__DoSpawn`
+`[0x004E3C60,0x004E3F8B)` (811 bytes, SHA-256
+`a21eb3fd7aad249edaca00b3dad1f9b42af222e5cb7b16251118130eb12316cc`),
+its member wave `[0x004E3F90,0x004E43BB)` (1,067 bytes, SHA-256
+`b2783b8993c6fae83fc3989f3e2d581d29568d23013f9485d3e206b46885f4d7`),
+the 39-byte completion predicate, and the 20-byte event callback establish the
+ordered start/retry/completion law. Pinned `InitThing.h` supplies the spawner and
+zero-member squad-init field names/defaults. PC demo, two independently rehashed
+Xbox mapped bodies, and normalized PS2 demo/EU/USA closures corroborate the
+same released transaction. `RetailSpawnerCycleTransaction` preserves strict
+admission, empty tail-publication before count/busy commit, null-squad amount
+consumption, immediate first wave, member retry without rollback, optional
+attachment, and final reader/busy/time order. It does not own factories,
+virtual init, world-list or reader mutation, transforms/clearance, attachment,
+or event delivery; those remain explicit adapter effects. Full evidence and
+open runtime reach are recorded in
+[`spawner-squad-cycle.md`](../reverse-engineering/game-mechanics/spawner-squad-cycle.md).
+
 The transcript's former `SupportMinimum`/`SupportMaximum` names are corrected
 to selected attack-provider range results. Exact PC bodies show that
 `0x004FB840` mutates a `CUnit`'s selected weapon/spawner for one target, then

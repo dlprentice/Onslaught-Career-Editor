@@ -302,6 +302,18 @@ ordered-zero rule. The Godot actor adapter still must execute deletion-aware
 reader mutation and concrete support/weapon helpers; Core does not pretend an
 integer identity is a retail monitor pointer.
 
+`RetailSpawnerCycleTransaction` closes the nested spawner boundary that the
+live UnitAI probe can invoke. It preserves strict admission time, finite amount
+versus infinite mode, empty-squad publication before cycle commit, amount-slot
+consumption even when the squad factory returns null, and the synchronous first
+member wave. Subsequent member success attaches only when a squad exists;
+clearance/allocation failure retains the busy cycle and schedules event 3000,
+while final success clears the squad flag/reader/busy latch and writes the next
+squad time in released order. Disabling does not cancel a busy wave. Core emits
+the deterministic transaction transcript; allocation, virtual initialization,
+live world-list mutation, reader lifetime, clearance, attachment, and event
+delivery remain runtime-adapter work.
+
 World admission is no longer Level-100-only in Core (2026-08-22): the released
 43-node career graph lives in `RetailWorldCatalog` with its selectability law,
 world 110 — the second career node — is admitted from its own measured

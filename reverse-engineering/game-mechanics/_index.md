@@ -6,6 +6,7 @@ support product or deterministic-Core behavior.
 - [God mode](god-mode.md)
 - [Cheat codes](cheat-codes.md)
 - [Campaign scalar status](campaign-scalar-status.md)
+- [Released spawner squad-cycle contract](spawner-squad-cycle.md)
 - [Target acquisition static contract](battleengine-target-acquisition-static-contract-v1.md)
 - [Walker-to-jet timing](walker-transform-morph-timing-v1.md)
 - [Jet forward response](jet-forward-scalar-response-v1.md)
