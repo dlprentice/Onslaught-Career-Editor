@@ -3,7 +3,7 @@
 namespace OnslaughtRebuild.Core;
 
 /// <summary>The released arm selected by <c>CUnitAI</c> virtual slot 3.</summary>
-public enum RetailUnitAIUpdatePath
+public enum RetailUnitAIUpdateRoute
 {
     PrimaryJitteredAim,
     PrimaryDirectAim,
@@ -99,7 +99,7 @@ public readonly record struct RetailUnitAIUpdateRequest(
 
 /// <summary>Exact deterministic result of one released UnitAI slot-3 pass.</summary>
 public sealed record RetailUnitAIUpdatePlan(
-    RetailUnitAIUpdatePath Path,
+    RetailUnitAIUpdateRoute Path,
     double ReturnedDelay,
     uint Event3000DueTimeBits,
     int RandomResultsConsumed,
@@ -173,7 +173,7 @@ public static class RetailUnitAIUpdateTransaction
         if (request.FireGate18 != 0 &&
             request.FireTargetAtSupportIdentity is { } fireTarget)
         {
-            RequireRandomCount(randomResults, 0, RetailUnitAIUpdatePath.FireSupportCadence);
+            RequireRandomCount(randomResults, 0, RetailUnitAIUpdateRoute.FireSupportCadence);
             actions.Add(RetailUnitAIUpdateAction.Target(
                 RetailUnitAIUpdateActionKind.InvokeSupportUpdate,
                 fireTarget));
@@ -205,7 +205,7 @@ public static class RetailUnitAIUpdateTransaction
             double delay =
                 (double)request.MountedUnitPitch + (double)MountedPitchBias;
             return Finish(
-                RetailUnitAIUpdatePath.FireSupportCadence,
+                RetailUnitAIUpdateRoute.FireSupportCadence,
                 delay,
                 request,
                 0,
@@ -214,8 +214,8 @@ public static class RetailUnitAIUpdateTransaction
         }
 
         RequireRandomCount(randomResults, 1, request.IdleCadenceFlag110AfterTransition != 0
-            ? RetailUnitAIUpdatePath.IdleShortCadence
-            : RetailUnitAIUpdatePath.IdleLongCadence);
+            ? RetailUnitAIUpdateRoute.IdleShortCadence
+            : RetailUnitAIUpdateRoute.IdleLongCadence);
         actions.Add(RetailUnitAIUpdateAction.Simple(
             RetailUnitAIUpdateActionKind.WriteOwnerField1ECZero));
         actions.Add(RetailUnitAIUpdateAction.Simple(
@@ -237,8 +237,8 @@ public static class RetailUnitAIUpdateTransaction
             : ((double)sample * (double)DoubleUnitStep) + 3.0;
         return Finish(
             shortCadence
-                ? RetailUnitAIUpdatePath.IdleShortCadence
-                : RetailUnitAIUpdatePath.IdleLongCadence,
+                ? RetailUnitAIUpdateRoute.IdleShortCadence
+                : RetailUnitAIUpdateRoute.IdleLongCadence,
             idleDelay,
             request,
             1,
@@ -268,7 +268,7 @@ public static class RetailUnitAIUpdateTransaction
         RequireRandomCount(
             randomResults,
             4,
-            RetailUnitAIUpdatePath.PrimaryJitteredAim);
+            RetailUnitAIUpdateRoute.PrimaryJitteredAim);
         actions.Add(RetailUnitAIUpdateAction.Target(
             RetailUnitAIUpdateActionKind.InvokeTargetVirtual168,
             primaryTarget));
@@ -330,7 +330,7 @@ public static class RetailUnitAIUpdateTransaction
         AddPrimaryTail(request, actions);
 
         return Finish(
-            RetailUnitAIUpdatePath.PrimaryJitteredAim,
+            RetailUnitAIUpdateRoute.PrimaryJitteredAim,
             0.0,
             request,
             4,
@@ -347,7 +347,7 @@ public static class RetailUnitAIUpdateTransaction
         RequireRandomCount(
             randomResults,
             1,
-            RetailUnitAIUpdatePath.PrimaryDirectAim);
+            RetailUnitAIUpdateRoute.PrimaryDirectAim);
         actions.Add(RetailUnitAIUpdateAction.Target(
             RetailUnitAIUpdateActionKind.InvokeForwardAim,
             primaryTarget));
@@ -361,7 +361,7 @@ public static class RetailUnitAIUpdateTransaction
         float delay = (float)(((double)sample * (double)UnitStep) + 0.5);
         AddPrimaryTail(request, actions);
         return Finish(
-            RetailUnitAIUpdatePath.PrimaryDirectAim,
+            RetailUnitAIUpdateRoute.PrimaryDirectAim,
             delay,
             request,
             1,
@@ -390,7 +390,7 @@ public static class RetailUnitAIUpdateTransaction
     }
 
     private static RetailUnitAIUpdatePlan Finish(
-        RetailUnitAIUpdatePath path,
+        RetailUnitAIUpdateRoute path,
         double returnedDelay,
         RetailUnitAIUpdateRequest request,
         int randomResultsConsumed,
@@ -429,7 +429,7 @@ public static class RetailUnitAIUpdateTransaction
     private static void RequireRandomCount(
         IReadOnlyList<int> randomResults,
         int expected,
-        RetailUnitAIUpdatePath path)
+        RetailUnitAIUpdateRoute path)
     {
         if (randomResults.Count != expected)
         {

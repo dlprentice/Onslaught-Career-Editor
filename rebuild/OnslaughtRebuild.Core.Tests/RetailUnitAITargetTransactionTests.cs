@@ -22,7 +22,7 @@ public sealed class RetailUnitAITargetTransactionTests
                 helperA: 3));
 
         Assert.Equal(
-            RetailUnitAITargetTransactionPath.Slot4RetainedRefresh,
+            RetailUnitAITargetTransactionRoute.Slot4RetainedRefresh,
             plan.Path);
         Assert.Equal(7, plan.ReturnedTargetIdentity);
         Assert.Equal(
@@ -75,7 +75,7 @@ public sealed class RetailUnitAITargetTransactionTests
                 FloatPolicy = RetailUnitAIFastReuseFloatPolicy.ConsoleOrderedEquality,
             });
 
-        Assert.Equal(RetailUnitAITargetTransactionPath.Slot11FastReuse, pc.Path);
+        Assert.Equal(RetailUnitAITargetTransactionRoute.Slot11FastReuse, pc.Path);
         Assert.Equal(7, pc.ReturnedTargetIdentity);
         Assert.Equal(
             [
@@ -86,7 +86,7 @@ public sealed class RetailUnitAITargetTransactionTests
             pc.Actions);
 
         Assert.Equal(
-            RetailUnitAITargetTransactionPath.Slot11FullSelection,
+            RetailUnitAITargetTransactionRoute.Slot11FullSelection,
             console.Path);
         Assert.Equal(9, console.ReturnedTargetIdentity);
     }
@@ -105,7 +105,7 @@ public sealed class RetailUnitAITargetTransactionTests
                 helperA: 55));
 
         Assert.Equal(
-            RetailUnitAITargetTransactionPath.Slot11FullSelection,
+            RetailUnitAITargetTransactionRoute.Slot11FullSelection,
             plan.Path);
         Assert.Equal(9, plan.ReturnedTargetIdentity);
         Assert.Equal(

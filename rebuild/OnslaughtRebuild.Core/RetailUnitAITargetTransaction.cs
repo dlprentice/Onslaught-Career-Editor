@@ -23,7 +23,7 @@ public enum RetailUnitAIFastReuseFloatPolicy
 /// <summary>
 /// High-level released path selected by one UnitAI fallback transaction.
 /// </summary>
-public enum RetailUnitAITargetTransactionPath
+public enum RetailUnitAITargetTransactionRoute
 {
     Slot4RetainedRefresh,
     Slot11FastReuse,
@@ -110,7 +110,7 @@ public readonly record struct RetailUnitAITargetTransactionRequest(
 /// Exact ordered adapter plan and the target returned by the released slot.
 /// </summary>
 public sealed record RetailUnitAITargetTransactionPlan(
-    RetailUnitAITargetTransactionPath Path,
+    RetailUnitAITargetTransactionRoute Path,
     int? ReturnedTargetIdentity,
     RetailUnitAITargetTransactionAction[] Actions);
 
@@ -143,7 +143,7 @@ public static class RetailUnitAITargetTransaction
             request.RetainedTargetGate10 != 0)
         {
             return PlanResultRefresh(
-                RetailUnitAITargetTransactionPath.Slot4RetainedRefresh,
+                RetailUnitAITargetTransactionRoute.Slot4RetainedRefresh,
                 retainedTarget,
                 request.HelperResultB,
                 request.HelperResultA);
@@ -157,7 +157,7 @@ public static class RetailUnitAITargetTransaction
             request.CurrentTargetPassesActiveStateGate)
         {
             return PlanResultRefresh(
-                RetailUnitAITargetTransactionPath.Slot11FastReuse,
+                RetailUnitAITargetTransactionRoute.Slot11FastReuse,
                 currentTarget,
                 request.HelperResultB,
                 request.HelperResultA);
@@ -174,7 +174,7 @@ public static class RetailUnitAITargetTransaction
             actions.Add(RetailUnitAITargetTransactionAction.SetReader(null));
             actions.Add(RetailUnitAITargetTransactionAction.WriteGate10(0));
             return new RetailUnitAITargetTransactionPlan(
-                RetailUnitAITargetTransactionPath.Slot11FullSelection,
+                RetailUnitAITargetTransactionRoute.Slot11FullSelection,
                 null,
                 actions.ToArray());
         }
@@ -202,7 +202,7 @@ public static class RetailUnitAITargetTransaction
         // observable ordering, not a normalization opportunity.
         actions.Add(RetailUnitAITargetTransactionAction.WriteGate10(0));
         return new RetailUnitAITargetTransactionPlan(
-            RetailUnitAITargetTransactionPath.Slot11FullSelection,
+            RetailUnitAITargetTransactionRoute.Slot11FullSelection,
             winner,
             actions.ToArray());
     }
@@ -223,7 +223,7 @@ public static class RetailUnitAITargetTransaction
         };
 
     private static RetailUnitAITargetTransactionPlan PlanResultRefresh(
-        RetailUnitAITargetTransactionPath path,
+        RetailUnitAITargetTransactionRoute path,
         int target,
         int helperResultB,
         int helperResultA)

@@ -18,7 +18,7 @@ public sealed class RetailUnitAIUpdateTransactionTests
                 eventTime: 12.5f),
             [0, 65535, 32768, 32769]);
 
-        Assert.Equal(RetailUnitAIUpdatePath.PrimaryJitteredAim, plan.Path);
+        Assert.Equal(RetailUnitAIUpdateRoute.PrimaryJitteredAim, plan.Path);
         Assert.Equal(0.0, plan.ReturnedDelay);
         Assert.Equal(4, plan.RandomResultsConsumed);
         Assert.Equal(BitConverter.SingleToUInt32Bits(12.5f), plan.Event3000DueTimeBits);
@@ -65,7 +65,7 @@ public sealed class RetailUnitAIUpdateTransactionTests
             [0x12345678]);
 
         float expectedDelay = 0.5f + (0x5678 / 65536.0f);
-        Assert.Equal(RetailUnitAIUpdatePath.PrimaryDirectAim, plan.Path);
+        Assert.Equal(RetailUnitAIUpdateRoute.PrimaryDirectAim, plan.Path);
         Assert.Equal((double)expectedDelay, plan.ReturnedDelay);
         Assert.Equal(
             BitConverter.SingleToUInt32Bits(10.0f + expectedDelay),
@@ -100,7 +100,7 @@ public sealed class RetailUnitAIUpdateTransactionTests
                 eventTime: eventTime),
             []);
 
-        Assert.Equal(RetailUnitAIUpdatePath.FireSupportCadence, plan.Path);
+        Assert.Equal(RetailUnitAIUpdateRoute.FireSupportCadence, plan.Path);
         Assert.Equal(0x419858FDu, plan.Event3000DueTimeBits);
         Assert.NotEqual(
             BitConverter.SingleToUInt32Bits(eventTime + (pitch + 0.1f)),
@@ -146,7 +146,7 @@ public sealed class RetailUnitAIUpdateTransactionTests
                 callerOverridesDelay: true),
             [65535]);
 
-        Assert.Equal(RetailUnitAIUpdatePath.IdleShortCadence, plan.Path);
+        Assert.Equal(RetailUnitAIUpdateRoute.IdleShortCadence, plan.Path);
         Assert.Equal(1.5 + (65535.0 / 65536.0), plan.ReturnedDelay);
         Assert.Equal(BitConverter.SingleToUInt32Bits(4.0f), plan.Event3000DueTimeBits);
         Assert.Equal(
@@ -168,7 +168,7 @@ public sealed class RetailUnitAIUpdateTransactionTests
             Request(eventTime: 2.0f),
             [32768]);
 
-        Assert.Equal(RetailUnitAIUpdatePath.IdleLongCadence, plan.Path);
+        Assert.Equal(RetailUnitAIUpdateRoute.IdleLongCadence, plan.Path);
         Assert.Equal(4.0, plan.ReturnedDelay);
         Assert.Equal(BitConverter.SingleToUInt32Bits(6.0f), plan.Event3000DueTimeBits);
     }
