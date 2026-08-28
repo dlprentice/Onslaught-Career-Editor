@@ -807,8 +807,26 @@ clears results and commits the selector winner before two ordered support
 updates and conditional B/A evaluation. Post-commit failure does not roll back
 the reader. PC's C3-only stealth-zero test also admits unordered/NaN, while
 Xbox/PS2 require ordered zero. `RetailUnitAITargetTransaction` emits this exact
-ordered adapter plan. Mutable monitor sets, target-death feedback, virtual
-helper execution, and autonomous actor scheduling remain outside Core.
+ordered adapter plan. Concrete pointer ownership, virtual helper execution, and
+autonomous actor scheduling remain outside Core.
+
+Deletion-aware reader feedback is now its own deterministic owner. Pristine PC
+`CGenericActiveReader__SetReader` `[0x00401000,0x00401034)` (52 bytes, SHA-256
+`5540848cb8c7cd9fd46fc6a2d068b76527166c61510dd33c36b2c4dc1e41dca2`)
+and `CMonitor__Shutdown` `[0x004BAC40,0x004BACA7)` (103 bytes, SHA-256
+`3f174f5a2ca14159ac4a5141ed32b7f292d79f9d0efe899eaeb9c3f1c4087adf`)
+establish same-target no-op, detach/publish/attach rebind order, newest-first
+reverse membership, direct reader-cell zeroing, and clear-after-walk shutdown.
+The 159-byte PC UnitAI destructor independently orders outbound detachments as
+`+0x28`, `+0x24`, `+0x0C` before invalidating inbound readers. PC demo closes
+the same lifecycle, Xbox closes target-death behavior, and all three PS2
+setters close rebind order under the narrower limits recorded in
+[`CMonitor.cpp.md`](../reverse-engineering/binary-analysis/functions/CMonitor.cpp.md).
+`RetailActiveReaderGraph` carries that ordinary protocol with stable cell
+identities and safe unique membership. Target shutdown nulls the registered
+UnitAI `+0x0C` cell only; `+0x10/+0x18/+0x1C` remain unchanged until a later AI
+path writes them. Runtime storage, allocation, and object deletion remain
+adapter work.
 
 The spawner reached by that helper is now a separately bounded Core
 transaction. Pristine PC retail `CSpawnerThng__DoSpawn`

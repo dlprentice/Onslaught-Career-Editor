@@ -123,9 +123,10 @@ public sealed record RetailUnitAITargetTransactionPlan(
 /// This deterministic owner emits the reference transaction transcript; it
 /// does not schedule the side-effecting calls whose outcomes the request
 /// captures. In particular, SetReader owns same-target no-op / unlink-old /
-/// store-new / register-new behavior, and a target monitor may clear the
-/// reader asynchronously on destruction. This planner owns neither monitor
-/// lifetime nor virtual calls.
+/// store-new / register-new behavior. Target invalidation is out of band
+/// relative to this planner but synchronous inside target shutdown before
+/// deletion; it clears the reader cell without clearing adjacent UnitAI
+/// fields. This planner owns neither monitor lifetime nor virtual calls.
 /// </remarks>
 public static class RetailUnitAITargetTransaction
 {

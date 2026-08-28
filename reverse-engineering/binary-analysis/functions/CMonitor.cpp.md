@@ -1,7 +1,7 @@
 # CMonitor / CSPtrSet function map
 
 Status: active static function map
-Last updated: 2026-08-24 (AddDeletionEvent retained-runtime C2 falsifier)
+Last updated: 2026-08-28 (UnitAI retained-target lifecycle closure)
 Source File: `C:\dev\ONSLAUGHT2\Monitor.h` (SEH `__FILE__` pointer `0x00622b80`
 read out of `AddDeletionEvent`) | Binary: BEA.exe, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
@@ -27,6 +27,59 @@ names.
 | `0x004e5990` | `CSPtrSet__ClearAnyDynamicCreatedNodes` | `56 8b3530d18300 57 33ff 85f6 7444 8b0d34d18300 8bc6 8b7604 3bc1 7211 8b1538d18300 8d14d1 3bc2 7304 8bf8 eb20 85ff 7405 897704 eb06 893530d18300 50 b9f03d9c00 e848380600 … c3` | Zero-arg `ret` (cdecl). Walks free-list `0x0083d130`. Pool is `[0x0083d134, 0x0083d134 + 0x0083d138*8)`. In-range nodes stay; out-of-range nodes are unlinked and `CDXMemoryManager__Free`d. HIGH. Sole `E8` is `CGame__Shutdown` `0x0046c9e9`. These are the overflow wrappers AddToHead allocs after the "creating nodes dynamicaly" warning (`0x00632774`). |
 | `0x004e59f0` | `CSPtrSet__Initialise` | `a134d18300 85c0 7413 6850276300 … 8b742408 6889000000 6830276300 8d04f500000000 6a4c 50 b9f03d9c00 e8b1360600 8bd6 a334d18300 … 891538d18300 … 890d30d18300 … c3` | `cdecl`, one arg = slot count. If `[0x0083d134]` already set, print `Warning: Initilise SptrSet twice` (`0x00632750`) and `ret`. Else `Alloc(count*8)` (`SPtrSet.cpp:0x89`, pool `0x4c`), `[0x0083d134]=base`, `[0x0083d138]=count`, `[0x0083d130]=base`, then chain `[slot_i+4]=slot_{i+1}` and last next=0. HIGH. Sole `E8` is `CLTShell__InitializeRuntimeAndLoadCoreResources` `0x004efb58` with `push 0x9c40` (40000 slots, 320000 bytes). |
 | `0x004e5910` | `CSPtrSet__Shutdown` | `8b0d30d18300 85c9 7441 8b1534d18300 57 8bc1 8b4904 3bc2 890d30d18300 720d 8b3d38d18300 8d3cfa 3bc7 7217 50 … e8d8380600 … 52 … e8b4380600 c70534d1830000000000 c70530d1830000000000 c3` | Zero-arg. Walks the free list: overflow nodes `Free`d, in-pool nodes skipped; then `Free`s the pool block and zeroes `0x0083d134` / `0x0083d130`. HIGH. Sole image ref is `JMP` `0x004f01ec` inside `CLTShell__ShutdownRuntimeAndReleaseResources`. |
+
+## UnitAI retained-target lifecycle closure (2026-08-28)
+
+The generic protocol now closes the deletion behavior of the retained target
+cell at PC `CUnitAI+0x0C`. Exact independently rehashed PC retail bodies are:
+
+| Routine | Half-open range | Bytes | SHA-256 |
+| --- | ---: | ---: | --- |
+| `CGenericActiveReader__SetReader` | `[0x00401000,0x00401034)` | 52 | `5540848cb8c7cd9fd46fc6a2d068b76527166c61510dd33c36b2c4dc1e41dca2` |
+| `CMonitor__AddDeletionEvent` | `[0x00401040,0x004010BE)` | 126 | `b9d3c4afa0c93e5eccdcfbdfabc974da517d24c4172fde6f3a65628127701017` |
+| `CMonitor__Shutdown` | `[0x004BAC40,0x004BACA7)` | 103 | `3f174f5a2ca14159ac4a5141ed32b7f292d79f9d0efe899eaeb9c3f1c4087adf` |
+| `CMonitor__Shutdown_Core` | `[0x004BACB0,0x004BAD11)` | 97 | `7aecffb5d16a1cc59dcf5028c33829c934b9493ae843408e92569d5009ccd3dc` |
+| `CUnitAI` destructor body | `[0x00415080,0x0041511F)` | 159 | `4eeff7ba5b60311f0543c6c3891609aeed34d97db49511e91c9289830d0d054d` |
+
+`SetReader(R,N)` is an exact same-target no-op. Otherwise it removes the
+reader-cell address `R` from the old target's set when present, stores `N`
+through `R`, then adds `R` to the head of `N`'s reverse set when non-null:
+**detach old -> publish new/null -> attach new**. `AddToHead` makes the reverse
+death walk newest-registration-first. Ordinary SetReader use cannot duplicate
+a membership because same-target assignment returns before insertion, although
+the underlying pointer set itself has no duplicate guard.
+
+During target shutdown the monitor walks that reverse set without removing
+nodes and writes zero directly through every stored reader-cell address. Only
+after all cells are zero does it clear/free the set and zero `target+4`. This is
+out of band relative to UnitAI selection but synchronous inside target shutdown
+before deletion; it invokes no UnitAI callback. Therefore target death changes
+`CUnitAI+0x0C` without changing adjacent gate/result cells `+0x10`, `+0x18`, or
+`+0x1C`.
+
+The PC retail `CUnitAI` destructor performs the reciprocal operation. It
+unregisters outbound reader cells `+0x28`, `+0x24`, then `+0x0C`, without
+publishing null into storage that is itself dying. It next calls its own monitor
+shutdown to invalidate inbound readers. PC demo reproduces the whole protocol;
+both mapped Xbox builds close the target-death walk but not the exact UnitAI
+destructor mapping; all three PS2 releases reproduce the rebind order, while
+their monitor death walk and UnitAI destructor remain open.
+
+Pinned `activereader.cpp` (SHA-256
+`b47e66767d767cfa934e95e54a5e0da2a9891c47652d491ce4944d0bc4e2a944`)
+names the architecture and same ordering. Its pre-registration
+`MEM_MANAGER.DoesExist` call is absent from PC retail/demo, the mapped Xbox
+sequence, and the three exact PS2 setters; the release bytes own that
+divergence.
+
+[`RetailActiveReaderGraph`](../../../rebuild/OnslaughtRebuild.Core/RetailActiveReaderGraph.cs)
+preserves the ordinary deterministic protocol with stable reader-cell
+identities, newest-first target invalidation, UnitAI outbound-destruction order,
+and one membership per pair. Concrete pointer/storage lifetime, allocation,
+and calling target shutdown before object removal remain adapter duties. A
+safe copied-runtime watchpoint on `+0x0C/+0x10/+0x18/+0x1C` during one target
+shutdown is the cheapest remaining causal falsifier; no retained trace yet
+captures that exact death write.
 
 ## Family roster (named in live Ghidra, not yet byte-mapped here)
 

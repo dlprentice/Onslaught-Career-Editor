@@ -302,6 +302,17 @@ ordered-zero rule. The Godot actor adapter still must execute deletion-aware
 reader mutation and concrete support/weapon helpers; Core does not pretend an
 integer identity is a retail monitor pointer.
 
+`RetailActiveReaderGraph` now supplies that deletion-aware boundary. It gives
+each non-owning reader a stable cell identity, preserves exact same-target
+no-op and detach-old/publish-new/attach-new rebind order, and tracks each
+target's reverse memberships newest-first. Target shutdown nulls only those
+registered cells before clearing the reverse set; for the UnitAI retained
+target this leaves the adjacent gate and fire-result fields untouched. The PC
+UnitAI owner path also detaches outbound cells `+0x28`, `+0x24`, then `+0x0C`
+before invalidating readers aimed at the dying AI. Runtime objects and pointers
+remain adapter-owned; Core models the deterministic relationship, not retail's
+allocation-failure crash.
+
 `RetailSpawnerCycleTransaction` closes the nested spawner boundary that the
 live UnitAI probe can invoke. It preserves strict admission time, finite amount
 versus infinite mode, empty-squad publication before cycle commit, amount-slot
