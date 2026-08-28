@@ -403,13 +403,12 @@ public static class SimulationConstants
     public const int WalkerLandingJetMinimumDescentPerTick = 10;
     // 0.015 rad per retail update (R3, x2.170337 on the old 6_911 -> 14_997.6).
     public const int WalkerToJetPitchInputMicroRadPerTick = 15_000;
-    // 0.1 s. No cited byte; converted as a duration, unchanged in meaning.
+    // Pristine CBattleEngine::Morph [0x0040A771,0x0040A7C7) schedules
+    // BECOME_JET (6000) at now + [0x005D85C0] = binary32 0.1f.
     public const int WalkerToJetAirborneTransitionTicks = 2;
-    // 0.6 s. UNKNOWN PROVENANCE - converted as a duration only, and NOT
-    // reconciled here with the shipped `_DAT_005d85ec = 0.5f` or the source's
-    // `GetTime() - mLastTimeOnGround < 0.3f`. That is DELTA D05, a pre-existing
-    // open question the tick change merely exposes; settling it is a separate
-    // measurement, not a unit conversion.
+    // The same branch compares now - mLastTimeOnGround strictly below
+    // [0x005D8BB8] = binary32 0.6f; equality takes the stale-ground arm.
+    // Nearby 0.5f at 0x005D85EC and 0.3f at 0x005D8CB4 are separate predicates.
     public const int RecentGroundContactTicks = 12;
     public const int Level100MaximumElevationMillimeters = 140_000;
     public const int Level100MapEdgeSlowdownMillimeters = 20_000;

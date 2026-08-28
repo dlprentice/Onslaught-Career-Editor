@@ -1,7 +1,7 @@
 # CBattleEngine__Morph
 
 Status: active static function note
-Last updated: 2026-08-19
+Last updated: 2026-08-28
 Source File: `references/Onslaught/BattleEngine.cpp` | Binary: BEA.exe,
 SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
@@ -11,8 +11,9 @@ Evidence: MEASURED — independently re-read 2026-08-19 from official
 matches (2506752 equal). The Ghidra database was not opened. This
 wake landed `9a0035f5` Init and `934efc5c` Move — not redone. Cycle
 93 accepted HandleLocks through HandleAutoAim — not redone.
-Envelope, not a 224-instruction walk. Did not mill FUN_*. Did not
-implement lock sets. Historical alias
+Whole-function envelope plus one focused branch closure, not a complete
+224-instruction walk. Did not mill FUN_*. Did not implement lock sets.
+Historical alias
 `CMonitor__UpdateFlightWalkerTransitionState.md` is not rewritten.
 
 > Address: `0x0040a580`
@@ -72,13 +73,14 @@ inside `CBattleEngineJetPart__Move` (`0x00410df9`,
 `CPlayer__ReceiveButtonAction`. Zero encodings of imm
 `80 a5 40 00` in the image (not a vtable slot).
 
-Source architecture (not proof): `CBattleEngine::Morph`
-`BattleEngine.cpp:2038-2365`. Retail bare `ret` matches zero
-stack args. Flight-disabled + walker early-out matches the
+Source architecture outside the focused branch below is not proof:
+`CBattleEngine::Morph` `BattleEngine.cpp:2038-2365`. Retail bare `ret`
+matches zero stack args. Flight-disabled + walker early-out matches the
 `+0x58c`/`+0x260==2` gate.
 
-Rebuild mapping: `PARTIAL_CONTRACT` (named, not implemented). See
-the section below. Do not implement Core from this RE root.
+Rebuild mapping: `PARTIAL_CONTRACT` overall. The exact walker-to-jet
+recent-ground branch is already carried by Core; the rest of this function is
+not. See the sections below.
 
 Cheapest falsifier: file `0x0000a580` is not `51`, **or**
 `0x0000a582` is not `8b f1`, **or** `0x0000a58f` is not
@@ -89,25 +91,55 @@ Cheapest falsifier: file `0x0000a580` is not `51`, **or**
 five sites, **or** a sixth `.text` `E8`/`E9` to this entry
 exists, **or** any encoding of imm `80 a5 40 00` exists.
 
-## Rebuild mapping — 2026-08-19
+### Walker-to-jet recent-ground branch — exact 2026-08-28
 
-Grade: `PARTIAL_CONTRACT`. Not `REBUILD_READY`. Independently
-re-read official+twin `74154bfa` this wake (2506752 equal). Body
-SHA-256 still `c68b3693…1093`. `call_xref_scan` still five
-sites. Did not open Ghidra. Did not edit `rebuild/**`. Did not
-walk all 20 callees. Did not name `+0x260==0`.
+The pristine subrange `[0x0040a771,0x0040a7c7)` is 86 bytes, raw
+SHA-256
+`85ad5341fb34f67e5c9d39e035a7a0a0652e350ba7b2e45b5a4fbdc8940103fe`.
+It loads the global game time at `[0x00672fd0]`, subtracts
+`[this+0xcc]` (`mLastTimeOnGround`), and uses an x87 strict `<`
+comparison against `[0x005d8bb8]`. That constant is binary32
+`0x3f19999a` / approximately `0.6f`; equality therefore takes the stale-ground
+arm.
+
+The recent-ground arm copies `[this+0x24]` (`mPos.Z`) to
+`[this+0x2f0]` (`mTakeOffHeight`). The stale-ground arm instead writes
+binary32 `0x47c34f80` / `99999.0f` there and schedules event `0x1770`
+(`BECOME_JET`, decimal 6000) at game time plus the binary32 `0.1f` constant
+at `[0x005d85c0]`, with start-of-frame ordering. Both arms join before
+writing `[this+0x2f4]` (`mTakeOffTime`). This matches the retained source at
+`BattleEngine.cpp:2099-2107`.
+
+The nearby `[0x005d85ec] = 0.5f` and `[0x005d8cb4] = 0.3f` constants
+belong to other predicates; neither controls this branch. Two independent
+carrier-first reads reproduced the full-body and focused-range bytes, control
+flow, fields, event ID, and all three constants without opening Ghidra. The
+cheapest focused falsifier is a different 86-byte SHA-256, a non-strict
+comparison, or either arm writing a different `+0x2f0` value.
+
+## Rebuild mapping — 2026-08-28
+
+Grade: `PARTIAL_CONTRACT`. Not wholly `REBUILD_READY`. Independently
+re-read official+twin `74154bfa` this wake (2506752 equal). Body SHA-256
+still `c68b3693…1093`; the focused branch is closed above.
+`call_xref_scan` still finds five sites. Did not open Ghidra, walk all 20
+callees, or name `+0x260==0`.
 
 Retail entity: walker/jet morph request from Move, JetPart
 Move, and the player button path. Stuart architecture (not
 proof): `BattleEngine.cpp:2038-2365`.
 
-Nearest reconstruction owner: **none**. Core has no BattleEngine
-morph state machine. Copied-runtime walker-to-jet timing in
-`walker-transform-morph-timing-v1.json` is not re-derived here.
+Nearest reconstruction owner: `Simulation.TryToggleMode`, through
+`RecentGroundContactTicks` and `WalkerToJetAirborneTransitionTicks`. At Core's
+20 Hz fixed step, 12 and 2 ticks carry the released strict 0.6-second gate and
+0.1-second stale-ground delay exactly. Core's transition enum remains a
+deliberate simulation abstraction, not a byte-for-byte model of every retail
+field and event-manager operation.
 
-Focused test: none. L100 card `t_aa5586e5` is on a playable
-training-path diet — do not implement this from this mapping
-until that lane names the arm.
+Focused test: none added. The values and strict comparison were already in
+Core; this closure repairs their provenance and removes a false open question
+without changing behavior. The remaining Morph arms still require their own
+contracts before further parity work.
 
 Siblings: `CBattleEngine__Move` /
 `CBattleEngine__HandleEvent` in this folder. Historical alias:
@@ -119,4 +151,4 @@ callee; no 2026-08-19 PE envelope).
 
 | Address | Name | Byte evidence | Contract (confidence) |
 | --- | --- | --- | --- |
-| `0x0040a580` | `CBattleEngine__Morph` | `51 56 8bf1 … 83be6002000002 … c7866002000001000000 … c3` (769 B) | incoming-ECX thiscall; bare ret ×3; 769 B; 20 E8 / 0 E9 / 14 targets; 5 inbound Move+JMP+JetPart×2+Player. HIGH on ABI, `+0x260` 2/1/3/0 gates, `+0x578`/`+0x57c` part tests. Mapping `PARTIAL_CONTRACT`; no Core owner. **Not** on `+0x58c` name, `+0x260==0` name, or rebuild parity. |
+| `0x0040a580` | `CBattleEngine__Morph` | `51 56 8bf1 … 83be6002000002 … c7866002000001000000 … c3` (769 B) | incoming-ECX thiscall; bare ret ×3; 769 B; 20 E8 / 0 E9 / 14 targets; 5 inbound Move+JMP+JetPart×2+Player. HIGH on ABI, `+0x260` 2/1/3/0 gates, `+0x578`/`+0x57c` part tests, and exact recent-ground/stale-ground walker-to-jet branch. Mapping `PARTIAL_CONTRACT`; focused timing owner is `Simulation.TryToggleMode`, but no complete Morph parity claim. **Not** on `+0x58c` name or `+0x260==0` name. |
