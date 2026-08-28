@@ -109,6 +109,7 @@ class AyaArchiveInventoryObservationTests(unittest.TestCase):
             "inflate_aya_bytes",
             "observe_archives",
             "render_observation_records",
+            "resolve_released_resource_route",
             "validate_numeric_resource_schedule",
         ):
             self.assertTrue(callable(self._api(name)))
@@ -147,6 +148,107 @@ class AyaArchiveInventoryObservationTests(unittest.TestCase):
         self.assertEqual(
             categories | {"raw_tag_stream"}, self._api("ARCHIVE_ERROR_CATEGORIES")
         )
+
+    def test_released_resource_route_plan_preserves_platform_divergences(self) -> None:
+        plan = self._api("ReleasedResourceRoutePlan")
+        resolve = self._api("resolve_released_resource_route")
+        cases = (
+            (
+                ("PC", -3),
+                {},
+                plan(r"data\Resources\Loading_res_PC.aya", False, None, None, None, None),
+            ),
+            (
+                ("PS2", -1),
+                {},
+                plan(
+                    r"data\Resources\base_res_PS2.aya",
+                    True,
+                    None,
+                    None,
+                    None,
+                    r"data\resources\pagefile.mpf",
+                ),
+            ),
+            (
+                ("PS2", 7),
+                {},
+                plan(
+                    r"data\Resources\007_res_PS2.aya",
+                    True,
+                    None,
+                    None,
+                    r"data\Resources\007_res_PS2.apf",
+                    r"data\resources\pagefile.mpf",
+                ),
+            ),
+            (
+                ("PS2", -3),
+                {"playable_demo": True, "pause_for_showing_controls": True},
+                plan(r"data\Resources\Loading_res_PS2_0.aya", False, None, None, None, None),
+            ),
+            (
+                ("Xbox", -1),
+                {},
+                plan(
+                    r"Z:\data\Resources\base_res_XBOX.aya",
+                    True,
+                    r"D:\data\Resources\base_res_XBOX.aya",
+                    r"Z:\data\Resources\base_res_XBOX.aya",
+                    None,
+                    None,
+                ),
+            ),
+            (
+                ("Xbox", -3),
+                {},
+                plan(
+                    r"Z:\data\Resources\Loading_res_XBOX.aya",
+                    True,
+                    r"D:\data\Resources\Loading_res_XBOX.aya",
+                    r"Z:\data\Resources\Loading_res_XBOX.aya",
+                    None,
+                    None,
+                ),
+            ),
+            (
+                ("Xbox", -3),
+                {
+                    "playable_demo": True,
+                    "pause_for_showing_controls": True,
+                    "language_index": 4,
+                },
+                plan(
+                    r"data\Resources\Loading_res_XBOX_4.aya",
+                    True,
+                    None,
+                    None,
+                    None,
+                    None,
+                ),
+            ),
+            (
+                ("Xbox", 1234),
+                {},
+                plan(r"data\Resources\1234_res_XBOX.aya", True, None, None, None, None),
+            ),
+            (
+                ("PC", -1232),
+                {},
+                plan(r"data\Resources\goodie_232_res_PC.aya", True, None, None, None, None),
+            ),
+            (
+                ("PC", -4),
+                {},
+                plan(r"data\Resources\goodie_-996_res_PC.aya", True, None, None, None, None),
+            ),
+        )
+        for arguments, keywords, expected in cases:
+            with self.subTest(arguments=arguments, keywords=keywords):
+                self.assertEqual(expected, resolve(*arguments, **keywords))
+
+        with self.assertRaisesRegex(ValueError, "PC, Xbox, or PS2"):
+            resolve("Dreamcast", 1)
 
     def test_numeric_resource_schedule_accepts_writer_order_and_rejects_first_drift(
         self,

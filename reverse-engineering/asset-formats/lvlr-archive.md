@@ -2,7 +2,7 @@
 
 Status: active format contract — complete outer/tag census; most payload schemas
 remain owner-specific or open
-Date: 2026-08-27
+Date: 2026-08-28
 Verdict: all 301 streams and 23,884 top-level tags are accounted for; the
 numeric WRES Unit/Feature instance join is bounded, while most other payload
 schemas and world dependencies remain partial.
@@ -187,6 +187,53 @@ deserializes `VSDS`. Both are encounter-order dispatchers and both skip `LNDS`
 on PC. The mapped PC demo body is a normalized-instruction twin of this retail
 function, and the exact four-member demo archive shelf is now independently
 censused above.
+
+## Cross-platform filename and materialization routing
+
+Pinned `ResourceAccumulator.cpp:158-205` (SHA-256
+`4f78480aeb6caae9854295ae09a9b322a7a83264da3f3e19a95723505414f1b2`)
+defines one five-way filename grammar, reproduced by PC retail/demo, both mapped
+Xbox retail families, and all three PS2 executables:
+
+| Resource ID | Relative filename |
+| ---: | --- |
+| `-1` | `data\\Resources\\base_res_<TARGET>.aya` |
+| `-2` | `data\\Resources\\Frontend_res_<TARGET>.aya` |
+| `-3` | `data\\Resources\\Loading_res_<TARGET>.aya`, or `_LANGUAGE.aya` only while both playable-demo and pause-for-controls are nonzero |
+| `>=0` | `data\\Resources\\%03d_res_<TARGET>.aya` |
+| every other negative | `data\\Resources\\goodie_%02d_res_<TARGET>.aya`, where the displayed value is `-id-1000` |
+
+The widths are minimums, not truncation. PC retail constructor
+`[0x004D6F70,0x004D71F3)` is 643 bytes with SHA-256
+`951264ec345f5e717635317c0a64c84f8455f156cb619a618fec957df97165b8`;
+its PC demo twin has SHA-256
+`d88028e51b573bf3de17d5f86c95f79e67b54fa08efbc45194db592e23381e10`.
+Three 328-byte PS2 constructors normalize word-for-word, and the Xbox
+constructors retain the same branch and format topology.
+
+Construction does not imply loading. PC retail/demo and PS2 demo/EU/US return
+on `-3` before the constructor and have zero direct `-3` loader callers. Xbox
+EU/KR/US/Issue11 do not return: each has 14 direct loader calls, ten of them
+literal `(-3, null)`. The USA loader `[0x000D6760,0x000D7180)` is 2,592 bytes
+with SHA-256
+`e8ce0b00a8c4e6cdd6df17f459cef9ad7e64ed7eb09e9e7e7c81bfabcdc0f05e`;
+its `-3` arm rejoins the filename constructor at `0x000D67FF`.
+
+For normal Xbox `-1`, `-2`, and non-localized `-3` routes, the loader prepends
+the `CLIPARAMS` base path, substitutes `Z:` for the archive open, temporarily
+substitutes `D:` for `CacheFile`, then restores and opens the `Z:` path. Numeric,
+Goodie, and localized-loading routes remain relative. Retail Xbox fixes the
+playable-demo flag at zero and therefore emits only the normal loading name;
+Issue11 enables the flag and contains normal plus `_0` through `_4` names, but
+still requires the pause-for-controls state to select a localized name.
+
+PS2 keeps the page-file roles distinct: a nonnegative level ID derives and
+opens a sibling `.apf`, while every materialized route lazily opens the shared
+`data\\resources\\pagefile.mpf`. A base `.apf` may exist on disc, but the
+released reader does not open it for `-1`. The pure
+[`resolve_released_resource_route`](../../tools/aya_archive_inventory.py)
+helper preserves these released routing decisions without touching retail
+material.
 
 ## Released PS2 encounter-order loader contract
 

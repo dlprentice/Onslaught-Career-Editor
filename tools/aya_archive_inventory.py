@@ -180,6 +180,98 @@ class AssetResolver:
     mesh_index: dict[str, list[str]]
 
 
+@dataclass(frozen=True)
+class ReleasedResourceRoutePlan:
+    """Released filename plus platform-specific loader side routes."""
+
+    archive_path: str
+    loader_materializes: bool
+    xbox_cache_source: str | None
+    xbox_open_path: str | None
+    ps2_level_apf: str | None
+    ps2_master_mpf: str | None
+
+
+def resolve_released_resource_route(
+    platform: str,
+    resource_id: int,
+    *,
+    playable_demo: bool = False,
+    pause_for_showing_controls: bool = False,
+    language_index: int = 0,
+    xbox_base_path: str = "d:",
+) -> ReleasedResourceRoutePlan:
+    """Reproduce the released PC/Xbox/PS2 resource routing decision.
+
+    The returned path is the filename-constructor result even when the PC/PS2
+    loader returns before invoking that constructor for resource ``-3``.
+    Xbox cache/open paths are present only for the normal ``-1/-2/-3`` helper
+    route; numeric, Goodie, and localized-loading names remain relative.
+    """
+
+    platform_key = platform.casefold()
+    target_names = {"pc": "PC", "xbox": "XBOX", "ps2": "PS2"}
+    try:
+        target_name = target_names[platform_key]
+    except KeyError as exc:
+        raise ValueError("platform must be PC, Xbox, or PS2") from exc
+
+    localized_loading = (
+        resource_id == -3 and playable_demo and pause_for_showing_controls
+    )
+    if resource_id == -1:
+        relative_path = f"data\\Resources\\base_res_{target_name}.aya"
+    elif resource_id == -2:
+        relative_path = f"data\\Resources\\Frontend_res_{target_name}.aya"
+    elif resource_id == -3:
+        suffix = f"_{language_index}" if localized_loading else ""
+        relative_path = f"data\\Resources\\Loading_res_{target_name}{suffix}.aya"
+    elif resource_id >= 0:
+        relative_path = f"data\\Resources\\{resource_id:03d}_res_{target_name}.aya"
+    else:
+        goodie_number = -resource_id - 1000
+        relative_path = (
+            f"data\\Resources\\goodie_{goodie_number:02d}_res_{target_name}.aya"
+        )
+
+    loader_materializes = not (
+        resource_id == -3 and platform_key in {"pc", "ps2"}
+    )
+    archive_path = relative_path
+    xbox_cache_source: str | None = None
+    xbox_open_path: str | None = None
+    normal_xbox_special = (
+        platform_key == "xbox"
+        and resource_id in {-1, -2, -3}
+        and not localized_loading
+    )
+    if normal_xbox_special:
+        if not xbox_base_path:
+            raise ValueError("xbox_base_path must not be empty for a normal special route")
+        rooted = f"{xbox_base_path}\\{relative_path}"
+        xbox_open_path = f"Z{rooted[1:]}"
+        xbox_cache_source = f"D{xbox_open_path[1:]}"
+        archive_path = xbox_open_path
+
+    ps2_level_apf = None
+    if platform_key == "ps2" and resource_id >= 0:
+        ps2_level_apf = f"{relative_path[:-4]}.apf"
+
+    ps2_master_mpf = (
+        r"data\resources\pagefile.mpf"
+        if platform_key == "ps2" and loader_materializes
+        else None
+    )
+    return ReleasedResourceRoutePlan(
+        archive_path=archive_path,
+        loader_materializes=loader_materializes,
+        xbox_cache_source=xbox_cache_source,
+        xbox_open_path=xbox_open_path,
+        ps2_level_apf=ps2_level_apf,
+        ps2_master_mpf=ps2_master_mpf,
+    )
+
+
 def _u32(data: bytes, off: int) -> int:
     return struct.unpack_from("<I", data, off)[0]
 
