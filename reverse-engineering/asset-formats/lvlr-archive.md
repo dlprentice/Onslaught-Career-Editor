@@ -25,6 +25,35 @@ The **301** files are:
 They occupy 86,646,042 stored bytes, use 485 AYA zlib members, and inflate to
 231,846,299 bytes. Every inflated stream begins with tag `LVLR`.
 
+### Exact PC demo shelf
+
+The retained 2003 PC demo ZIP (110,691,112 bytes, SHA-256
+`62e3f54a25af8049491c96123409f7ee6cc02d9326f4252d84606ffc136acd47`)
+contains installer cabinet `BattleEngine/All.gip` (75,388,730 bytes, SHA-256
+`90b16dc8df5669bb1ed2dbd09b450c30864047c9a536ecc31bfc6aa55cb66975`).
+Its complete `resources/*_res_PC.aya` shelf is exactly:
+
+| Resource | Stored bytes | Stored SHA-256 | Top-level schedule |
+| --- | ---: | --- | --- |
+| `201_res_PC.aya` | 1,717,469 | `6fbe95f7b267cca19e67c9db781cb99e47479d77a96fe8e9ddb69d5131b4aad1` | `LVLR1,TARG1,AYAD1,TEXT281,MESH56,IMPS1,LNDS1,SURF1,ERES1,SSHD1,WRES1` |
+| `base_res_PC.aya` | 17,931 | `0ee8530874425cac759834872f5941bc4be086c40ce6b70553b5c6b539802883` | `LVLR1,TARG1,AYAD1,TEXT4,MESH1,VSDS1,PMIB1,DMKR1,PLAT1` |
+| `Frontend_res_PC.aya` | 2,152 | `a94095a5665a269276a44752dc86bf298087e24cb4bc53d43e1aa37ab87c984f` | `LVLR1,TARG1,AYAD1,TEXT105,MESH6` |
+| `Loading_res_PC.aya` | 52 | `39ec57b499324a7d96e57c94801a2c5d946a109ab7bf985d7d2e1b8c770722aa` | `LVLR1,TARG1,AYAD1` |
+
+Fresh target-specific Windows Cabinet FDI passes independently reached and
+closed all four declared lengths, parsed each complete AYA in memory, and
+reproduced byte identity with the same-named pristine retail archives. The demo
+thus has one of 66 retail numeric resources, all three special archives, none
+of the other 65 numeric resources, and none of the 232 Goodie archives. It has
+no language-suffixed `Loading_res_PC_<language>.aya` despite that optional
+`PLAYABLE_DEMO` source path.
+
+The cabinet reports a later `FDIERROR_CORRUPT_CABINET` after every selected
+resource has already closed. `tar.exe` likewise reports `Invalid CFDATA` and
+produces same-length but hash-different output for these targets; its output is
+not admitted as payload evidence. The later defective block remains open and
+does not make these four exact FDI-recovered members corrupt.
+
 ## Container layout
 
 The AYA layer is [aya-container.md](aya-container.md). Its concatenated output is
@@ -156,9 +185,9 @@ Retail PC has the third skip gate, the early `-3` return, ignores `LVLR/TARG`,
 only formats local `AYAD` mismatch text, tests `MESH` before that gate, and
 deserializes `VSDS`. Both are encounter-order dispatchers and both skip `LNDS`
 on PC. The mapped PC demo body is a normalized-instruction twin of this retail
-function, which corroborates the dispatcher implementation but is not a demo
-archive-shelf census. Released PS2 loader behavior remains open; the outer
-topology above is a corpus fact and does not establish PS2 dispatch rules.
+function, and the exact four-member demo archive shelf is now independently
+censused above. Released PS2 loader behavior is documented separately from the
+outer topology: it must not be inferred merely from this corpus profile.
 
 ## Complete top-level vocabulary census
 
@@ -258,10 +287,10 @@ the 53 direct anonymous `PMS2+309` bodies without naming them.
 
 ## Claim boundary
 
-The 301-file PC population, AYA framing, canonical PC/Xbox/PS2 numeric writer
-profile for the exact named retail shelves, released-PC outer dispatch
-contract, top-level geometry, 4,090 numeric WRES Unit/Feature joins, and 53
-anonymous embedded CMSH bodies are settled. General LVLR field semantics,
-other WRES/object dependencies, anonymous body names, runtime subsystem
-effects, PS2 loader behavior, unmeasured demo/prototype shelves, and parity are
-open.
+The 301-file retail PC population, exact four-file PC demo shelf, AYA framing,
+canonical PC/Xbox/PS2 numeric writer profile for the exact named retail
+shelves, released-PC outer dispatch contract, top-level geometry, 4,090 numeric
+WRES Unit/Feature joins, and 53 anonymous embedded CMSH bodies are settled.
+General LVLR field semantics, other WRES/object dependencies, anonymous body
+names, runtime subsystem effects, PS2 loader behavior, PS2/prototype shelves,
+and parity are open.

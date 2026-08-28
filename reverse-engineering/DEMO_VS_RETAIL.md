@@ -1,12 +1,13 @@
 # PC demo versus PC retail
 
 Status: active, measured cross-build evidence over the dated 2026-08-12 census
-Last updated: 2026-08-14
+Last updated: 2026-08-27
 Evidence: MEASURED — exact executable/archive hashes, independently recounted
 MSVC RTTI/vtables, a 2,127-target virtual census, a conservative 8,086-row
 cross-build function-address map, and exact multi-range, opcode-factory, and
-gapless CRT/FPU, caller-propagation, equal-delta body-union, and whole-demo
-exact-fingerprint replay, plus final source/call/metadata frontier closure;
+gapless CRT/FPU, caller-propagation, equal-delta body-union, whole-demo
+exact-fingerprint replay, final source/call/metadata frontier closure, and an
+independently repeated four-member installer-CAB resource-shelf census;
 UNKNOWN — normalized constant values outside the explicitly checked cohorts
 and runtime/source/rebuild equivalence.
 Verdict: the PC demo is a distinct build with a structurally identical virtual
@@ -47,6 +48,40 @@ prove that this is not merely the retail build repackaged with fewer files.
 The demo PE timestamp is 2003-09-11 and the retail timestamp is 2003-05-26.
 Those values are recorded as header facts, not treated as trustworthy release
 chronology without corroboration.
+
+## Exact resource shelf
+
+The retained demo installer contains exactly four paths matching
+`resources/*_res_PC.aya` and no duplicate or alternate matching name:
+
+| Resource | Stored bytes | SHA-256 | Retail relation |
+| --- | ---: | --- | --- |
+| `201_res_PC.aya` | 1,717,469 | `6fbe95f7b267cca19e67c9db781cb99e47479d77a96fe8e9ddb69d5131b4aad1` | byte-identical |
+| `base_res_PC.aya` | 17,931 | `0ee8530874425cac759834872f5941bc4be086c40ce6b70553b5c6b539802883` | byte-identical |
+| `Frontend_res_PC.aya` | 2,152 | `a94095a5665a269276a44752dc86bf298087e24cb4bc53d43e1aa37ab87c984f` | byte-identical |
+| `Loading_res_PC.aya` | 52 | `39ec57b499324a7d96e57c94801a2c5d946a109ab7bf985d7d2e1b8c770722aa` | byte-identical |
+
+Each resource was independently streamed from `BattleEngine/All.gip` through a
+fresh Windows Cabinet FDI transaction, closed at its declared `CFFILE` length,
+hashed in memory, parsed as a complete concatenated-zlib AYA envelope, and
+compared byte-for-byte with the pristine retail file of the same name. No demo
+payload was retained. The demo therefore ships only numeric resource `201`
+plus all three special resources; it omits the other 65 retail numeric archives
+and every one of the 232 retail `goodie_*_res_PC.aya` archives.
+
+The four shared files have no stored-byte, inflated-byte, zlib-partition,
+prefix, FourCC-order, or occurrence-count divergence. Resource 201 retains the
+retail identity `Aquila Prototype`, RLWD version 50, world header `(201,0)`, and
+13 compiled scripts. Archive presence does not by itself prove that released
+demo control flow opens every member.
+
+The cabinet has a separate later defect. After each selected resource has
+closed completely, FDI eventually returns `FDIERROR_CORRUPT_CABINET` while
+continuing across later data. Windows `tar.exe` also reports `Invalid CFDATA`,
+but its four same-length byte streams have different hashes and are not valid
+substitutes for the FDI results. The failed later CFDATA block and affected
+non-resource member remain unlocalized; neither fact weakens the four exact
+declared-length retail twins above.
 
 ## Structural result
 
