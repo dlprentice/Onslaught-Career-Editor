@@ -305,30 +305,24 @@ the integrating audio owner remains singular.
 >    briefing and configuration select on the run path, so the two governance
 >    documents disagreed with each other.
 >
-> 2. **"Twenty-one exact AYA textures" became thirty, and is now thirty-two.**
->    The intermediate count was true when written. The two later additions are
->    the exact system font and mouse cursor. The earlier increment was the
->    five-flag language selector (task #16), the
->    v3 title/bracket/symbol set, the menu icons, the level brackets and rings,
->    the title font and the loading screen. It is stated with its owner named
->    for the same reason the 55-retained-versus-29-composed HUD split below is:
->    two copies of one number drift. **Unchanged:** the three XAP PCM decodes
->    and the ten English strings, both still exact.
+> 2. **The exact frontend-asset count is no longer duplicated here.**
+>    `materialize_retail_assets.py::FRONTEND_ASSETS` is the count owner and the
+>    frontend asset README enumerates the materialized files and hashes. This
+>    removes a repeatedly stale second copy of the number. **Unchanged:** the
+>    three XAP PCM decodes and the bounded English projections remain exact.
 
-Result ownership is deliberately split at the evidence boundary. Stuart's
-`CGame::DeclareLevelWon`, `CGame::DeclareLevelLost`, and end-level render path
-establish an in-game terminal overlay; Steam's later CFEPDebriefing vtable at
-`0x005DB9C0` resolves to initializer `0x00456780`, input `0x004568A0`, process
-`0x00456930`, and render `0x00456DD0`. This frontend implements neither visual
-surface, does not inspect mission terminal state, and does not invent a result
-lifecycle. Shipped Level 100 script provides
-`LevelLostString(LOSE_TUTORIAL_BROKE)`; Stuart's game system also identifies
-generic player-death and water failures. Exact terminal strings remain in the
-separate HUD-event manifest for a future result owner and are not duplicated in
-the frontend localization. The deterministic mission alone owns
-`Level100MissionOutcome` and `Level100MissionFailureReason`. No terminal
-overlay, selected default, summary compositor, rank/kill data, progression,
-save, or later campaign selection is claimed here.
+Result ownership remains split. The in-game terminal overlay is owned by the
+HUD during the countdown. After `FrontEndHandoffReady`, Client applies the
+pinned Career update and owns a presentation-safe projection of Steam
+`CFEPDebriefing::Render`/`TransitionNotification`; Godot composes the settled
+mission-status, objective-summary, and win-only grade page and routes
+acknowledgement to Level Select. It does not read `mThingsKilled` or invent a
+Goodie list. The deterministic mission remains the owner of gameplay outcome
+and failure reason.
+
+This is not a claim of full post-Won parity: the outro, live score/time join,
+transition/effect/message/glint phases, save persistence, broad campaign
+construction, and runtime pixel parity remain open.
 
 The deterministic Core and command-tape/hash format are reconstruction-owned
 infrastructure. The Godot Level 100 Opening Slice consumes the released
@@ -890,12 +884,14 @@ source object and deliberately create no directional flash. It leaves
 selection-panel state, weapon resources, threats, target prediction, and
 active-help lifetime absent until their mechanics owners exist; the current
 node-influence reconstruction remains explicitly provisional. The HUD does not
-draw a parallel frontend result screen, and the frontend does not own mission
-outcome handoff.
+draw a parallel frontend result screen. The bounded Won handoff, Career
+update/world-110 unlock, settled frontend debriefing page, and
+acknowledgement-to-LevelSelect edge now exist.
 During Core's existing terminal countdown only, the in-level HUD now reproduces
 the retail black darkener, Victory/Defeat title, and the three retained Level
-100 loss-reason strings. Objective/status rows, fade-out/menu transfer,
-debriefing, progression, save effects, and runtime pixel parity remain open.
+100 loss-reason strings. The outro, live score/time join, dynamic debriefing
+phases and effects, save persistence, broad campaign construction, and runtime
+pixel parity remain open.
 This is an ownership boundary, not a claim that every released HUD value or
 render pass is complete.
 Steam's exact dynamically written 16-bit ring pixels and exact portrait RNG

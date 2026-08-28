@@ -221,22 +221,24 @@ and identity-only authored-definition projection are admitted by Core (below),
 and a bounded Core-only session now steps its LevelScript against a
 world-stamped copy of the Level 100 test fixture. A complete world-110 actor
 definition set and Godot lifecycle still do not exist, so the host cannot build
-that world. After a Level 100 Won
-reaches `FrontEndHandoffReady`, the host returns
-the player to SELECT LEVEL with the FillOut update applied (retail's PC
-`CFrontEnd::Init` would land on `FEP_DEBRIEFING` first — that page is not
-composed here). World 110 is then selectable and the Episode-1 child node is
-clickable; launching it returns to SELECT LEVEL rather than constructing Level
-100 in its place. `SetCurrentLevelToHighestAvailable` is not in the source drop
-and is not invented — the highlight stays on the root until the player picks
-the child.*
+that world. After a Level 100 Won reaches `FrontEndHandoffReady`, Client applies
+the pinned FillOut/Career update, consumes the two Career Goodie latches in
+retail order, and opens `FEP_DEBRIEFING`. The settled page projects the measured
+mission status, objective-group summaries, and win-only grade and draws the
+exact locally materialized rank/ring surfaces. Confirm or Back then enters
+SELECT LEVEL, where world 110 is already selectable. The Episode-1 child node
+is clickable, but launching it returns to SELECT LEVEL rather than constructing
+Level 100 in its place. `SetCurrentLevelToHighestAvailable` is not in the source
+drop and is not invented — the highlight stays on the root until the player
+picks the child.*
 Each launch request makes the host construct a fresh canonical
 `InteractiveSession` from the materialized Level 100 actor definitions before
 gameplay activation. The frontend does not inspect
-`WorldSnapshot.Level100Mission` or own gameplay, save writes, result, or later
-campaign-selection state. `RestartLevel100` returns through the same Loading
-edge; `LeaveLevel100ForMainMenu` disposes the active world and returns to the
-same frontend shell.
+`WorldSnapshot.Level100Mission` or own gameplay or save writes; it does own the
+explicit debriefing projection and result-page presentation/navigation.
+`RestartLevel100` returns through the same Loading edge;
+`LeaveLevel100ForMainMenu` disposes the active world and returns to the same
+frontend shell.
 The gameplay pause owner freezes that same deterministic session with zero Core
 steps, discards pending gameplay input, pauses the existing Level 100 audio
 owner, and routes its cursor through the frontend's sole mouse-mode writer.
@@ -244,11 +246,15 @@ Continue resumes after a neutral input sample; Retry and Quit call those
 existing lifecycle seams after the audio owner completes its kill-then-Select
 exit boundary once. Message Log, Briefing, and the three settings rows remain
 visible but disabled until canonical integrated owners exist. The current
-opening slice does not synthesize terminal events, rank, kill summary, or
-save writes. Campaign progression after Won is the already-pinned FillOut update
-applied to the selector career, then SELECT LEVEL — not a synthesized
-debrief. `FrontendAudioCueRequested` is an observation
-seam; the existing Level 100 audio owner remains the sole playback owner.
+opening slice does not synthesize terminal events, a kill summary, or save
+writes. Its post-Won debrief is a bounded static-to-rebuild projection, not
+complete post-Won parity: the canned Level-100 ranking remains an unmeasured
+live score/time shortcut; outro FMV, entry/exit interpolation, Goodie effects
+and first-Goodie message, grade glint, persistence, and retail-frame pixel
+validation remain open. The page does not claim a kill summary or visible
+Goodie list because retail Render contains neither. `FrontendAudioCueRequested`
+is an observation seam; the existing Level 100 audio owner remains the sole
+playback owner.
 
 Core currently provides integer positions, opening tutorial/objective state,
 reset behavior, ordered snapshots, and versioned SHA-256 state and trace hashes.

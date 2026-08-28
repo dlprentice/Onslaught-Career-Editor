@@ -54,6 +54,8 @@ public sealed class RetailFrontendCursorTests
         Assert.True(RetailFrontendCursor.ShouldDrawOnFrontend(
             RetailFrontendScreen.DevSelect));
         Assert.True(RetailFrontendCursor.ShouldDrawOnFrontend(
+            RetailFrontendScreen.Debriefing));
+        Assert.True(RetailFrontendCursor.ShouldDrawOnFrontend(
             RetailFrontendScreen.LevelSelect));
         Assert.True(RetailFrontendCursor.ShouldDrawOnFrontend(
             RetailFrontendScreen.MissionBriefing));

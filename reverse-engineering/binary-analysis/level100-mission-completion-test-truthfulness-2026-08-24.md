@@ -1,7 +1,18 @@
 # Level 100 mission-completion test truthfulness audit
 
-Status: active audit report — read-only/source-first analysis; no code behavior changed.
+Status: historical audit of base `04cdd9c3`. Its completion-causality grades
+and test census remain a record of that base; the 2026-08-27 debriefing landing
+supersedes its N1 mechanics and direct-LevelSelect/current-capability claims.
 Date: 2026-08-24 (rev E, current-main census 16/46)
+
+2026-08-27 outcome: Client now applies the Career update, consumes the two
+Goodie latches, projects the measured mission-status/objective/grade fields,
+and lands on a settled Godot `FEP_DEBRIEFING` page before acknowledgement
+returns to Level Select. This closes the direct-LevelSelect substitution only.
+Outro FMV, a live score/time snapshot join, entry/exit interpolation,
+Goodie particle/message effects, grade glint, native host-hop automation, and
+retail-frame pixel validation remain open.
+
 Verdict: the completion chain's field-law core (countdowns, FillOut snapshot,
 career handoff, loss paths, negative controls) is TRUTHFUL against pristine
 anchors, while every scripted-Won completion-causality test is PARTIAL
@@ -121,9 +132,11 @@ For shipped Level 100 (world 100, the training/tutorial level), retail
    `CGame::RunOutroFMV` consults `IsAllSecondaryObjectivesComplete` on some
    routes. The PC frontend then initializes and `CFrontEnd::Init` calls
    `CAREER.Update` (`FrontEnd.cpp:67`); the PC init lands on
-   `FEP_DEBRIEFING` (`FrontEnd.cpp:233–269`), whose `CFEPDebriefing::Initialize`
-   (`0x00456780`) renders rank, kill tables, and new goodies from
-   `END_LEVEL_DATA`.
+   `FEP_DEBRIEFING` (`FrontEnd.cpp:233–269`). `Initialize` only allocates and
+   resets transient effect storage; `TransitionNotification` consumes the two
+   Goodie latches; and `Render` displays the level name, mission status,
+   objective-group summaries, and a win-only grade from `END_LEVEL_DATA`.
+   The Render body reads no kill table and draws no per-Goodie list.
 5. **Career progression.** `CCareer::Update` (`0x0041bd00`) returns after
    `UpdateGoodieStates()` alone unless `mFinalState == GAME_STATE_LEVEL_WON`.
    On Won it: overwrites `mSlots` from the snapshot; adds kill deltas
@@ -458,7 +471,7 @@ script-driven missions rather than on the input-only chain.
 | G1 | Whole suite | Won state + FrontEndHandoffReady + career apply | Outro FMV on Won (`game.cpp:1166–1190` gate/lookup/selection; `game.cpp:1191–1214` playback arm through `FMV.PlayFullscreen` line 1213, `RunOutroFMV 0x0046d9f0`) — nothing plays or is asserted | Extend `RetailCampaignFlowTests` once an outro seam exists; blocked on video-infrastructure decision (recorded future question, no owner this cycle) |
 | G2 | `RetailCampaignFlowTests` (session level) | handoff acceptance + selector unlock | The Godot tick seam that actually delivers it: `FirstFlightGame.TryAcceptWonFrontendHandoff` → `RetailFrontendFlow.AcceptWonHandoff` has **no** test owner (Godot not in slnx) | Card **N2** |
 | G3 | `Level100PlayerInputWonHandoffTests` | SimInput-only Won → handoff → world 110 | The run's own live score/flight stores through `AddScore`/`+0xf4` and `EnableFlightMode`/`+0x58c` are only proven on the script-event-driven mission (`Level100WonCareerHandoffTests.AddScore_FirstPlayWonWritesCGamePlusF4` et al.), never joined to the input-only chain's end-state | One joined assertion set on the shared fixture — card **N3** |
-| G4 | `WonHandoff_…` | return to LevelSelect | Debriefing-page data (rank letter from ranking, kill table, new-goodie highlights) that retail computes from the very snapshot the rebuild already pins — composed nowhere | Card **N1** (projection owner; see the dependency note there) |
+| G4 | `WonHandoff_…` | return to LevelSelect | At the audited base, the settled mission-status, primary/secondary summary, and win-only grade page was composed nowhere; transient Goodie effects/message and transition animation were also open | Card **N1** (projection owner; see the dependency note there) |
 | G5 | Consumer handoff tests | various seam mutations | Nothing (behaviorally) — but the repeated `Assert.All(ForLevel100Won().SecondaryStatuses…)` self-comparison has zero falsification power and inflates apparent coverage | Hygiene only; the load-bearing pins already live in `RetailFillOutEndLevelDataTests.Level100Won_SnapshotIsWorld100StateWonWithNoSecondaries`. Listed, no card (filler rule) |
 | G6 | `ClientLevel100FailureTape_…` | Lost + hashed text id | `TEXT_DB.GetString(message)` resolution — the player-visible loss sentence is never resolved/asserted | Owner would be a text.stf reader; low player impact on L100 (defeat string dominates); recorded, no card |
 | G7 | Terminal overlay (HUD/Godot) | visibility/tick law | "Victory"/"Defeat" render strings: `Level100HudAssetCatalog` pins each string's *identity* (textId + symbol, e.g. `FETX_VICTORY` 8959659) and rejects empty text, but the tracked tree carries no materialized manifest (`res://Assets/Level100/MissionData/level100-hud-events.json` is user-materialized local content), so the displayed pair has no tracked retail-text anchor and no captured end-of-level frame pins it | Recorded standalone future gap: capture one retail end-of-level frame and pin the rendered pair (requires the materialized install + capture policy); no owner this cycle, folded into no card |
@@ -485,13 +498,14 @@ reviewed.
   composition wired through
   `rebuild/OnslaughtRebuild.Client/RetailFrontendSession.cs::TryAcceptWonHandoff`
   (existing method, lines 667–683).
-  Predecessor evidence: `CFEPDebriefing__Initialize.md` (`0x00456780`),
-  `FrontEnd.cpp:67` / `:233–269` citations already carried in
-  `RetailFrontendSession.cs:656–668`, FillOut snapshot + `RetailCareerGrades`
-  law already pinned.
-  Scope: project rank letter (via the `RetailCareerGrades` band law over the
-  snapshot's `Ranking`), kill readout, and new-goodie highlights from a
-  `RetailEndLevelSnapshot` parameter.
+  Predecessor evidence: `CFEPDebriefing__Render.md` (`0x00456DD0`),
+  `CFEPDebriefing__TransitionNotification` (`0x00457CF0`),
+  `FrontEnd.cpp:67` / `:233–269`, and the already-pinned FillOut snapshot plus
+  `RetailCareerGrades` law.
+  Scope: project mission status, primary/secondary objective summaries, and
+  win-only rank letter from a `RetailEndLevelSnapshot`, plus the two consumed
+  Goodie-latch values needed by later transient effects. It explicitly excludes
+  a kill readout and visible Goodie list because retail Render contains neither.
   Dependency (resolves rev A finding 4): the input consumed today is
   `RetailFillOutEndLevelData.ForLevel100Won()` — the canned pre-arm 1.0 f
   rank/goodie snapshot (`RetailFillOutEndLevelData.cs:22-25,267-286` records

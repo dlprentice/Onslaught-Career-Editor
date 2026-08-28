@@ -2774,7 +2774,9 @@ Known consequential gaps:
    Steam byte evidence for a different DirectSound3D path.
 4. Ground-impact behavior remains unadjudicated.
 5. Lock/auto-aim/augment/cloak/rearm/zoom/death breadth is missing.
-6. Career/debrief/save/Goodies ownership is absent.
+6. Bounded in-memory Career progression and a settled debriefing owner are
+   present; save persistence, broad later-campaign construction, and the
+   Goodies page remain absent.
 7. Language selection and complete media/audio behavior are absent.
 8. Matrix-versus-quaternion render interpolation is open.
 9. One Level 100 path and selected frontend captures do not establish broad

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 using OnslaughtRebuild.Client;
+using OnslaughtRebuild.Core;
 using OnslaughtRebuild.GodotClient;
 
 namespace OnslaughtRebuild.Client.Tests;
@@ -319,6 +320,7 @@ public sealed class RetailFrontendScenePathTests
         string pointer = Slice(flow, "private bool HandlePointerConfirm(");
         string key = Slice(flow, "private bool HandleKey(");
         string devArm = CaseArm(pointer, "case RetailFrontendScreen.DevSelect:");
+        string debriefingArm = CaseArm(pointer, "case RetailFrontendScreen.Debriefing:");
         string levelArm = CaseArm(pointer, "case RetailFrontendScreen.LevelSelect:");
         string configArm = CaseArm(pointer, "case RetailFrontendScreen.SelectConfiguration:");
         string quitArm = CaseArm(pointer, "case RetailFrontendScreen.QuitConfirm:");
@@ -326,6 +328,12 @@ public sealed class RetailFrontendScenePathTests
         Assert.Contains("RetailFrontendScenePath.TryConfirmPage", confirm, StringComparison.Ordinal);
         Assert.DoesNotContain("_session.Confirm()", confirm, StringComparison.Ordinal);
         Assert.Contains("Confirm();", devArm, StringComparison.Ordinal);
+        Assert.Contains("Confirm();", debriefingArm, StringComparison.Ordinal);
+        Assert.Contains(
+            "new Rect2(0f, 0f, DesignWidth, DesignHeight).HasPoint(design)",
+            debriefingArm,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain("TryBackPage", debriefingArm, StringComparison.Ordinal);
         Assert.Contains("Confirm();", levelArm, StringComparison.Ordinal);
         Assert.Contains("Confirm();", configArm, StringComparison.Ordinal);
         Assert.Contains("Confirm();", quitArm, StringComparison.Ordinal);
@@ -333,6 +341,62 @@ public sealed class RetailFrontendScenePathTests
         Assert.DoesNotContain("ConfirmForSmoke", confirm, StringComparison.Ordinal);
         Assert.DoesNotContain("RetailFrontendLatchToButton", confirm, StringComparison.Ordinal);
         Assert.DoesNotContain("RetailLevelSelectLater", confirm, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void WonHandoff_DebriefingConfirmAndBackUseTheCentralPagePath()
+    {
+        var path = new RetailFrontendScenePath();
+
+        RetailFrontendSession confirm = AtDebriefing(path);
+        Assert.True(RetailFrontendScenePath.TryConfirmPage(
+            confirm,
+            startupMediaActive: false,
+            out RetailFrontendSignal confirmSignal));
+        Assert.Equal(RetailFrontendSignal.PageChanged, confirmSignal);
+        Assert.Equal(RetailFrontendScreen.LevelSelect, confirm.Screen);
+
+        RetailFrontendSession back = AtDebriefing(path);
+        Assert.True(RetailFrontendScenePath.TryBackPage(
+            back,
+            startupMediaActive: false,
+            out RetailFrontendSignal backSignal));
+        Assert.Equal(RetailFrontendSignal.PageChanged, backSignal);
+        Assert.Equal(RetailFrontendScreen.LevelSelect, back.Screen);
+    }
+
+    [Fact]
+    public void DebriefingDrawUsesWritingChromeAndNoPageChevrons()
+    {
+        string flow = ReadGodotSource("RetailFrontendFlow.cs");
+        string draw = Slice(flow, "private void DrawDebriefing(");
+        string chrome = Slice(flow, "private void DrawDebriefingWritingChrome(");
+        string loads = Slice(flow, "private void LoadTextures(");
+        string debriefingLoads = loads[
+            loads.IndexOf("_debriefingMetalRing", StringComparison.Ordinal)..
+            loads.IndexOf("_loadingScreen", StringComparison.Ordinal)];
+
+        Assert.Contains("DrawDebriefingWritingChrome();", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("DrawBriefingStage", draw, StringComparison.Ordinal);
+        Assert.DoesNotContain("DrawPageChevrons", draw, StringComparison.Ordinal);
+        Assert.Contains("_forsetiWritingLarge", chrome, StringComparison.Ordinal);
+        Assert.Contains("index < 4", chrome, StringComparison.Ordinal);
+        Assert.Contains(
+            "RetailColor(0xfeffffff)",
+            flow,
+            StringComparison.Ordinal);
+        Assert.Equal(
+            2,
+            draw.Split("DebriefingGradeBodyTint", StringSplitOptions.None).Length - 1);
+        Assert.Equal(
+            7,
+            debriefingLoads.Split(
+                "CuratedAyaTextureLoader.Compression.Dxt2",
+                StringSplitOptions.None).Length - 1);
+        Assert.DoesNotContain(
+            "CuratedAyaTextureLoader.Compression.Rgba8",
+            debriefingLoads,
+            StringComparison.Ordinal);
     }
 
     [Fact]
@@ -485,6 +549,24 @@ public sealed class RetailFrontendScenePathTests
         path.Begin(["--skipfmv"]);
         Assert.True(path.TryAcceptClickToStartMouse(session, 320f, 240f));
         Assert.Equal(RetailFrontendScreen.MainMenu, session.Screen);
+        return session;
+    }
+
+    private static RetailFrontendSession AtDebriefing(RetailFrontendScenePath path)
+    {
+        RetailFrontendSession session = AfterClickToStart(path);
+        Assert.True(path.TryAcceptMainMenuRow(session, 0));
+        Assert.True(path.TryAcceptDevSelect(session));
+        Assert.True(path.TryAcceptLevelSelect(session));
+        Assert.True(path.TryAcceptMissionBriefing(session));
+        Assert.True(path.TryAcceptSelectConfiguration(session, out _));
+        Assert.True(session.ConsumeLevel100LaunchRequest());
+        Assert.True(path.TryCompleteLoading(session, launchConsumed: true));
+        Assert.True(RetailFrontendScenePath.TryAcceptWonHandoff(
+            session,
+            Level100MissionOutcome.Won,
+            Level100MissionTerminalState.FrontEndHandoffReady));
+        Assert.Equal(RetailFrontendScreen.Debriefing, session.Screen);
         return session;
     }
 

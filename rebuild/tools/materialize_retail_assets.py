@@ -774,6 +774,16 @@ FRONTEND_ASSETS = (
     (GODOT_ASSETS / "Frontend/level-bracket-02.texture.aya", "data/resources/dxtntextures/FrontEnd%v3%FE_select_level_bracket02.tga(0)A8R8G8B8.aya", "7ad21e2a6e64f61998f7a43e92fe92d69ac013b169fd8107b648b1fa69877b27"),
     (GODOT_ASSETS / "Frontend/level-ring-01.texture.aya", "data/resources/dxtntextures/FrontEnd%v3%FE_select_level_ring_bracket01.tga(0)A8R8G8B8.aya", "687eaf0945b701b622bdebde805e88cac394734a4b4420155379993ef9f74e1c"),
     (GODOT_ASSETS / "Frontend/level-ring-02.texture.aya", "data/resources/dxtntextures/FrontEnd%v3%FE_select_level_ring_bracket02.tga(0)A8R8G8B8.aya", "620900d34c153e722b6d78a9fbecab2d69b8e81abcdbda084b0f90eb96142dff"),
+    # CFEPDebriefing::Render 0x00456DD0. CFrontEnd__LoadSharedResources binds
+    # RankingS/A/B/C/D/E at FRONTEND+0x60..+0x74; the page's entry ring is the
+    # separate v2 FE_metal_ring_trans_from_levsel2 surface at FRONTEND+0xb0.
+    (GODOT_ASSETS / "Frontend/Debriefing/metal-ring-transition.texture.aya", "data/resources/dxtntextures/FrontEnd%v2%FE_metal_ring_trans_from_levsel2.tga(0)A8R8G8B8.aya", "8b9b79189981de706fc72de9552bdc398ada96d892c0e4e33706c77a907da869"),
+    (GODOT_ASSETS / "Frontend/Debriefing/ranking-a.texture.aya", "data/resources/dxtntextures/FrontEnd%RankingA.tga(0)A8R8G8B8.aya", "88765906f295b8002dc254f9805b05d5f5589d87a08f297b37d90953ba57d625"),
+    (GODOT_ASSETS / "Frontend/Debriefing/ranking-b.texture.aya", "data/resources/dxtntextures/FrontEnd%RankingB.tga(0)A8R8G8B8.aya", "5f03cdf1e79e679e706a0b6ab644ad6961447dace35695dc93d7c3928ebf3d50"),
+    (GODOT_ASSETS / "Frontend/Debriefing/ranking-c.texture.aya", "data/resources/dxtntextures/FrontEnd%RankingC.tga(0)A8R8G8B8.aya", "364b5140a18ebec99bdf4e4ce7c99e3619ff743d4cbe888c0fa5d84e96407a06"),
+    (GODOT_ASSETS / "Frontend/Debriefing/ranking-d.texture.aya", "data/resources/dxtntextures/FrontEnd%RankingD.tga(0)A8R8G8B8.aya", "894521839162a5d2d8d73feba39435cf0590b0863d65b67daa5c4a4420485bd0"),
+    (GODOT_ASSETS / "Frontend/Debriefing/ranking-e.texture.aya", "data/resources/dxtntextures/FrontEnd%RankingE.tga(0)A8R8G8B8.aya", "c844f938cfcf56a2f3908bb69313ec86153f97e6993f42172c2c8376897e911a"),
+    (GODOT_ASSETS / "Frontend/Debriefing/ranking-s.texture.aya", "data/resources/dxtntextures/FrontEnd%RankingS.tga(0)A8R8G8B8.aya", "aab0817f798ff8379cf6e9e0f86ae466832ad644170e8c14b6f7a50a6a12de9f"),
     (GODOT_ASSETS / "Frontend/title-font.texture.aya", "data/resources/textures/mustbe_TitleFont.tga(0)A8R8G8B8.aya", "1941e28a5665665fb7f8f733e7a4854c60def33e1d4f1cb9caa979bc204d0707"),
     (GODOT_ASSETS / "Frontend/system-font.texture.aya", "data/resources/textures/mustbe_SystemFont(0)A8R8G8B8.aya", "475edc8c9b95e3d3619e9b78e168dfcda8575042b728d96de1598cb8917967eb"),
     (GODOT_ASSETS / "Frontend/loading-screen.texture.aya", "data/resources/dxtntextures/LoadingScreen.tga(0)X8R8G8B8.aya", "e4ad32fee41a31477e97d4f6f0b280f33c360756e3aba27bf23746038443fc2c"),

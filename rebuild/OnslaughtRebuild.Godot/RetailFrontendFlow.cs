@@ -252,6 +252,7 @@ public sealed partial class RetailFrontendFlow : Control
     // See DrawMissionBriefing / DrawSelectConfiguration for the method per element.
     private const string MissionBriefingTitle = "MISSION BRIEFING";
     private const string SelectConfigurationTitle = "SELECT CONFIGURATION";
+    private const string DebriefingTitle = "DEBRIEFING";
     private const float HeaderBarCenterX = 390f;
     private const float HeaderTitleTop = 65f;
     private const float BriefingLevelNameLeft = 178.5f;
@@ -289,6 +290,19 @@ public sealed partial class RetailFrontendFlow : Control
     private const float BriefingRingSize = 990f;
     private const float BriefingRingCenterX = 267f;
     private const float BriefingRingCenterY = 221f;
+    // CFEPDebriefing::Render settled positions, pristine 0x00456DD0.
+    private const float DebriefingTextLeft = 130f;
+    private const float DebriefingLevelTop = 149f;
+    private const float DebriefingMissionStatusTop = 184f;
+    private const float DebriefingPrimaryTop = 210f;
+    private const float DebriefingSecondaryAfterPrimaryTop = 226f;
+    private const float DebriefingValueGap = 20f;
+    private const float DebriefingGradeLabelTop = 295f;
+    private const float DebriefingGradeCenterX = 320f;
+    private const float DebriefingGradeCenterY = 310f;
+    private const float DebriefingRingCenterX = 285f;
+    private const float DebriefingRingCenterY = 225f;
+    private const float DebriefingRingScale = 1.6f;
     // Loading page. Bar extents and text origin measured from
     // local-lab/retail-reference-pristine/loading/07-loading-640x480.png.
     private const float LoadingTextLeft = 270f;
@@ -332,6 +346,11 @@ public sealed partial class RetailFrontendFlow : Control
     // SELECT CONFIGURATION mode headers measure (249,217,62); this renders
     // (247,215,61). It is a different amber from the briefing body.
     private static readonly Color ConfigurationModeText = RetailColor(0xff7c6c1f);
+    private static readonly Color DebriefingLabelText = RetailColor(0xffffaf3f);
+    private static readonly Color DebriefingSuccessText = RetailColor(0xff3fff2f);
+    private static readonly Color DebriefingFailureText = RetailColor(0xffff3f1f);
+    private static readonly Color DebriefingAbortedText = RetailColor(0xff3f3f3f);
+    private static readonly Color DebriefingGradeBodyTint = RetailColor(0xfeffffff);
     // The header box is the same FET3_HEADER_TEXT_BOX 0x7f000000 overlay the
     // menu pages use, but these two pages sit over a textured background rather
     // than the flat (23,23,48) fill, so the measured composite constant
@@ -584,6 +603,8 @@ public sealed partial class RetailFrontendFlow : Control
     private Texture2D _levelBracket02 = null!;
     private Texture2D _levelRing01 = null!;
     private Texture2D _levelRing02 = null!;
+    private Texture2D _debriefingMetalRing = null!;
+    private Texture2D[] _debriefingGradeTextures = [];
     private Texture2D _loadingScreen = null!;
     private Texture2D _titleFont = null!;
     private Texture2D _font22 = null!;
@@ -682,9 +703,10 @@ public sealed partial class RetailFrontendFlow : Control
     }
 
     /// <summary>
-    /// Post-Won re-entry: apply the FillOut update and return the player to
-    /// SELECT LEVEL. The host tears the Level 100 world down through the
-    /// existing <see cref="ReturnToMainMenuRequested"/> seam.
+    /// Post-Won re-entry: apply the FillOut update and show FEP_DEBRIEFING.
+    /// The host tears the Level 100 world down through the existing
+    /// <see cref="ReturnToMainMenuRequested"/> seam; SELECT LEVEL follows only
+    /// after the player acknowledges the debriefing page.
     /// </summary>
     public void AcceptWonHandoff(
         Level100MissionOutcome outcome,
@@ -1050,6 +1072,9 @@ public sealed partial class RetailFrontendFlow : Control
                 break;
             case RetailFrontendScreen.Options:
                 DrawOptions();
+                break;
+            case RetailFrontendScreen.Debriefing:
+                DrawDebriefing();
                 break;
             case RetailFrontendScreen.LevelSelect:
                 DrawLevelSelect();
@@ -2834,6 +2859,212 @@ public sealed partial class RetailFrontendFlow : Control
     }
 
     /// <summary>
+    /// Settled retail <c>FEP_DEBRIEFING</c> projection. The page body is ported
+    /// from pristine <c>CFEPDebriefing::Render</c>
+    /// (<c>0x00456DD0..0x00457CED</c>), not inferred from the partial source
+    /// drop. Its common pre-pass calls <c>CFrontEnd::RenderPreCommonFade</c>, so
+    /// this uses the existing FEBack common underlay rather than the briefing
+    /// page's separate rock scene.
+    ///
+    /// <para>The exact settled body represented here is: level at (130,149),
+    /// mission status at y=184, primary at y=210 when defined, secondary at
+    /// y=226 after primary or y=210 by itself, grade label at (130,295), and
+    /// grade art centred at (320,310). The value column is 20 pixels after the
+    /// widest of the three untranslated label extents. No kill table exists in
+    /// this Render body.</para>
+    ///
+    /// <para>Still open rather than approximated: entry/exit interpolation,
+    /// overlay and goodie particle/message effects, the delayed grade glint,
+    /// retail Z-function-to-Canvas compositing equivalence for the grade
+    /// foreground, and pixel validation against a pristine debriefing capture.
+    /// The grade texture and submitted settled colors are exact; Level 100's
+    /// current S input remains the reconstruction's unmeasured score/time
+    /// shortcut.</para>
+    /// </summary>
+    private void DrawDebriefing()
+    {
+        RetailDebriefingProjection debriefing = _session.Debriefing
+            ?? throw new InvalidOperationException(
+                "The debriefing screen has no END_LEVEL_DATA projection.");
+
+        DrawMainUnderlay(1f);
+        DrawSurfaceCentered(
+            _debriefingMetalRing,
+            DebriefingRingCenterX,
+            DebriefingRingCenterY,
+            DebriefingRingScale,
+            DebriefingRingScale,
+            Colors.White);
+        DrawDebriefingWritingChrome();
+
+        string levelName = RetailFrontendWorldStrings.LevelName(debriefing.WorldFinished)
+            ?? _session.SelectedLevelName;
+        DrawFont22Text(
+            levelName,
+            new Vector2(DebriefingTextLeft, DebriefingLevelTop),
+            1f,
+            1f,
+            Colors.White);
+
+        const string missionStatusLabel = "Mission Status";
+        const string primaryLabel = "Primary Objectives";
+        const string secondaryLabel = "Secondary Objectives";
+        float valueLeft = DebriefingTextLeft
+            + MathF.Max(
+                MeasureText(missionStatusLabel, 1f),
+                MathF.Max(
+                    MeasureText(primaryLabel, 1f),
+                    MeasureText(secondaryLabel, 1f)))
+            + DebriefingValueGap;
+
+        DrawText(
+            missionStatusLabel + ": ",
+            new Vector2(DebriefingTextLeft, DebriefingMissionStatusTop),
+            1f,
+            DebriefingLabelText);
+        DrawText(
+            DebriefingMissionStatusText(debriefing.MissionStatus),
+            new Vector2(valueLeft, DebriefingMissionStatusTop),
+            1f,
+            DebriefingMissionStatusColor(debriefing.MissionStatus));
+
+        if (debriefing.PrimaryObjectives != RetailDebriefingObjectiveSummary.Hidden)
+        {
+            DrawDebriefingObjectiveRow(
+                primaryLabel,
+                debriefing.PrimaryObjectives,
+                DebriefingPrimaryTop,
+                valueLeft);
+        }
+
+        if (debriefing.SecondaryObjectives != RetailDebriefingObjectiveSummary.Hidden)
+        {
+            float secondaryTop =
+                debriefing.PrimaryObjectives == RetailDebriefingObjectiveSummary.Hidden
+                    ? DebriefingPrimaryTop
+                    : DebriefingSecondaryAfterPrimaryTop;
+            DrawDebriefingObjectiveRow(
+                secondaryLabel,
+                debriefing.SecondaryObjectives,
+                secondaryTop,
+                valueLeft);
+        }
+
+        if (debriefing.GradeByte is byte gradeByte)
+        {
+            DrawFont22Text(
+                "Grade:",
+                new Vector2(DebriefingTextLeft, DebriefingGradeLabelTop),
+                1f,
+                1f,
+                Colors.White);
+
+            DrawSurfaceCentered(
+                _symbolBracket01,
+                DebriefingGradeCenterX + 5f,
+                DebriefingGradeCenterY + 10f,
+                1.3125f,
+                1.3125f,
+                ShadowTint);
+            DrawSurfaceCentered(
+                _symbolBracket01,
+                DebriefingGradeCenterX,
+                DebriefingGradeCenterY,
+                1.25f,
+                1.25f,
+                DebriefingGradeBodyTint);
+
+            Texture2D grade = DebriefingGradeTexture(gradeByte);
+            DrawSurfaceCentered(
+                grade,
+                DebriefingGradeCenterX + 3f,
+                DebriefingGradeCenterY + 3f,
+                1f,
+                1f,
+                ShadowTint);
+            DrawSurfaceCentered(
+                grade,
+                DebriefingGradeCenterX,
+                DebriefingGradeCenterY,
+                1f,
+                1f,
+                DebriefingGradeBodyTint);
+        }
+
+        DrawHeaderBarTitle(DebriefingTitle);
+    }
+
+    private void DrawDebriefingWritingChrome()
+    {
+        // FEPShared::RenderSelectionBrackets 0x00452FD0 is misleadingly named:
+        // it draws four FE_Forseti_Writing_large surfaces at x=86, scale 0.5,
+        // 180 pixels apart. Its first y is
+        // 90 - fmod(frontend_counter * 0.3, 180). The current presenter has no
+        // proven mapping for that counter, so it uses the exact cold-BSS phase
+        // (y=90) rather than inventing a clock rate.
+        for (int index = 0; index < 4; index++)
+        {
+            DrawSurfaceCentered(
+                _forsetiWritingLarge,
+                86f,
+                90f + (index * 180f),
+                0.5f,
+                0.5f,
+                ChromeTint);
+        }
+    }
+
+    private void DrawDebriefingObjectiveRow(
+        string label,
+        RetailDebriefingObjectiveSummary summary,
+        float top,
+        float valueLeft)
+    {
+        DrawText(
+            label + ": ",
+            new Vector2(DebriefingTextLeft, top),
+            1f,
+            DebriefingLabelText);
+        DrawText(
+            summary == RetailDebriefingObjectiveSummary.Complete
+                ? "Complete"
+                : "Incomplete",
+            new Vector2(valueLeft, top),
+            1f,
+            summary == RetailDebriefingObjectiveSummary.Complete
+                ? DebriefingSuccessText
+                : DebriefingFailureText);
+    }
+
+    private static string DebriefingMissionStatusText(
+        RetailDebriefingMissionStatus status) => status switch
+        {
+            RetailDebriefingMissionStatus.Victory => "Victory",
+            RetailDebriefingMissionStatus.Defeat => "Defeat",
+            _ => "Aborted",
+        };
+
+    private static Color DebriefingMissionStatusColor(
+        RetailDebriefingMissionStatus status) => status switch
+        {
+            RetailDebriefingMissionStatus.Victory => DebriefingSuccessText,
+            RetailDebriefingMissionStatus.Defeat => DebriefingFailureText,
+            _ => DebriefingAbortedText,
+        };
+
+    private Texture2D DebriefingGradeTexture(byte grade) => grade switch
+    {
+        (byte)'A' => _debriefingGradeTextures[0],
+        (byte)'B' => _debriefingGradeTextures[1],
+        (byte)'C' => _debriefingGradeTextures[2],
+        (byte)'D' => _debriefingGradeTextures[3],
+        (byte)'E' => _debriefingGradeTextures[4],
+        (byte)'S' => _debriefingGradeTextures[5],
+        _ => throw new InvalidDataException(
+            $"Retail debriefing has no grade surface for byte 0x{grade:X2}."),
+    };
+
+    /// <summary>
     /// Retail MISSION BRIEFING, reached from SELECT LEVEL.
     ///
     /// The released source ships neither FEPBriefing.cpp nor its header (only
@@ -3295,6 +3526,17 @@ public sealed partial class RetailFrontendFlow : Control
 
                 return false;
 
+            case RetailFrontendScreen.Debriefing:
+                // Settled CFEPDebriefing::Render dispatches button 0x2C over
+                // the entire 640x480 rectangle when mouse input is ready.
+                if (!new Rect2(0f, 0f, DesignWidth, DesignHeight).HasPoint(design))
+                {
+                    return false;
+                }
+
+                Confirm();
+                return true;
+
             case RetailFrontendScreen.MissionBriefing:
             case RetailFrontendScreen.SelectConfiguration:
                 // Both pages carry the same two chevrons and nothing else
@@ -3637,6 +3879,20 @@ public sealed partial class RetailFrontendFlow : Control
         _levelBracket02 = LoadTexture("level-bracket-02", 512, 512);
         _levelRing01 = LoadTexture("level-ring-01", 64, 64);
         _levelRing02 = LoadTexture("level-ring-02", 64, 64);
+        _debriefingMetalRing = LoadTexture(
+            "Debriefing/metal-ring-transition",
+            512,
+            512,
+            CuratedAyaTextureLoader.Compression.Dxt2);
+        _debriefingGradeTextures =
+        [
+            LoadTexture("Debriefing/ranking-a", 64, 64, CuratedAyaTextureLoader.Compression.Dxt2),
+            LoadTexture("Debriefing/ranking-b", 64, 64, CuratedAyaTextureLoader.Compression.Dxt2),
+            LoadTexture("Debriefing/ranking-c", 64, 64, CuratedAyaTextureLoader.Compression.Dxt2),
+            LoadTexture("Debriefing/ranking-d", 64, 64, CuratedAyaTextureLoader.Compression.Dxt2),
+            LoadTexture("Debriefing/ranking-e", 64, 64, CuratedAyaTextureLoader.Compression.Dxt2),
+            LoadTexture("Debriefing/ranking-s", 64, 64, CuratedAyaTextureLoader.Compression.Dxt2),
+        ];
         _loadingScreen = LoadTexture(
             "loading-screen",
             512,

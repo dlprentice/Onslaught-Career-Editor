@@ -1414,8 +1414,10 @@ edge. A cold `-skipfmv` capture also suppresses the normal animated background.
 
 The current frontend is a substantial but bounded Level 100 route. Load,
 Multiplayer, and Goodies selections are inert; language lacks a complete
-assignment path; Career/debrief/save ownership is absent; option rows vary
-between real consumers and display-only state.
+assignment path; bounded in-memory Career progression and a settled debriefing
+owner are present; save persistence, broad later-campaign construction, and the
+Goodies page remain absent; option rows vary between real consumers and
+display-only state.
 
 ### 13. Input and controller mapping
 
@@ -2497,7 +2499,9 @@ measure support for 5,515 files, 66 worlds, 232 Goodies, or all media.
    equivalence remains unmeasured.
 4. Ground-impact ownership is stale/partial.
 5. Full lock/auto-aim/augment/cloak/rearm/zoom/death behavior is missing.
-6. Career/debrief/save/Goodies ownership is absent.
+6. Bounded in-memory Career progression and a settled debriefing owner are
+   present; save persistence, broad later-campaign construction, and the
+   Goodies page remain absent.
 7. Language selection and complete media audio are absent.
 8. Source matrix interpolation versus rebuild quaternion interpolation is
    unadjudicated.

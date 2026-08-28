@@ -390,5 +390,52 @@ class FrontendLoadingBarAssetsTests(unittest.TestCase):
         )
 
 
+class FrontendDebriefingAssetsTests(unittest.TestCase):
+    def test_settled_ring_and_grade_surfaces_are_hash_pinned(self) -> None:
+        rows = {
+            destination.as_posix(): (source, expected)
+            for destination, source, expected in materializer.FRONTEND_ASSETS
+        }
+        expected = {
+            "metal-ring-transition": (
+                "FrontEnd%v2%FE_metal_ring_trans_from_levsel2.tga(0)A8R8G8B8.aya",
+                "8b9b79189981de706fc72de9552bdc398ada96d892c0e4e33706c77a907da869",
+            ),
+            "ranking-a": (
+                "FrontEnd%RankingA.tga(0)A8R8G8B8.aya",
+                "88765906f295b8002dc254f9805b05d5f5589d87a08f297b37d90953ba57d625",
+            ),
+            "ranking-b": (
+                "FrontEnd%RankingB.tga(0)A8R8G8B8.aya",
+                "5f03cdf1e79e679e706a0b6ab644ad6961447dace35695dc93d7c3928ebf3d50",
+            ),
+            "ranking-c": (
+                "FrontEnd%RankingC.tga(0)A8R8G8B8.aya",
+                "364b5140a18ebec99bdf4e4ce7c99e3619ff743d4cbe888c0fa5d84e96407a06",
+            ),
+            "ranking-d": (
+                "FrontEnd%RankingD.tga(0)A8R8G8B8.aya",
+                "894521839162a5d2d8d73feba39435cf0590b0863d65b67daa5c4a4420485bd0",
+            ),
+            "ranking-e": (
+                "FrontEnd%RankingE.tga(0)A8R8G8B8.aya",
+                "c844f938cfcf56a2f3908bb69313ec86153f97e6993f42172c2c8376897e911a",
+            ),
+            "ranking-s": (
+                "FrontEnd%RankingS.tga(0)A8R8G8B8.aya",
+                "aab0817f798ff8379cf6e9e0f86ae466832ad644170e8c14b6f7a50a6a12de9f",
+            ),
+        }
+
+        for name, (source, expected_hash) in expected.items():
+            self.assertEqual(
+                rows[
+                    "rebuild/OnslaughtRebuild.Godot/Assets/Frontend/"
+                    f"Debriefing/{name}.texture.aya"
+                ],
+                (f"data/resources/dxtntextures/{source}", expected_hash),
+            )
+
+
 if __name__ == "__main__":
     unittest.main()

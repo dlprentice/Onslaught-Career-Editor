@@ -230,8 +230,8 @@ public sealed class RetailFrontendScenePath
     }
 
     /// <summary>
-    /// The host post-Won re-entry. Lands on SELECT LEVEL with the FillOut
-    /// Won update applied; does not invent <c>FEP_DEBRIEFING</c>.
+    /// The host post-Won re-entry. Lands on the released debriefing page with
+    /// the FillOut Won update already applied.
     /// </summary>
     public static bool TryAcceptWonHandoff(
         RetailFrontendSession session,
@@ -240,7 +240,7 @@ public sealed class RetailFrontendScenePath
     {
         ArgumentNullException.ThrowIfNull(session);
         return session.TryAcceptWonHandoff(outcome, terminalState)
-            && session.Screen == RetailFrontendScreen.LevelSelect;
+            && session.Screen == RetailFrontendScreen.Debriefing;
     }
 
     public bool TryBack(RetailFrontendSession session)
@@ -271,6 +271,7 @@ public sealed class RetailFrontendScenePath
             case RetailFrontendScreen.QuitConfirm:
             case RetailFrontendScreen.DevSelect:
             case RetailFrontendScreen.Options:
+            case RetailFrontendScreen.Debriefing:
             case RetailFrontendScreen.SelectConfiguration:
             case RetailFrontendScreen.MissionBriefing:
             case RetailFrontendScreen.LevelSelect:
@@ -305,6 +306,7 @@ public sealed class RetailFrontendScenePath
             case RetailFrontendScreen.MainMenu:
             case RetailFrontendScreen.QuitConfirm:
             case RetailFrontendScreen.DevSelect:
+            case RetailFrontendScreen.Debriefing:
             case RetailFrontendScreen.LevelSelect:
             case RetailFrontendScreen.MissionBriefing:
             case RetailFrontendScreen.SelectConfiguration:

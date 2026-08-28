@@ -71,17 +71,40 @@ public sealed class RetailCampaignFlowTests
     }
 
     [Fact]
-    public void WonHandoff_ReturnsToLevelSelect_AndUnlocksWorld110()
+    public void WonHandoff_ShowsDebriefing_ThenReturnsToUnlockedLevelSelect()
     {
         var frontend = AtGameplay();
 
         Assert.True(frontend.TryAcceptWonHandoff(
             Level100MissionOutcome.Won,
             Level100MissionTerminalState.FrontEndHandoffReady));
-        Assert.Equal(RetailFrontendScreen.LevelSelect, frontend.Screen);
+        Assert.Equal(RetailFrontendScreen.Debriefing, frontend.Screen);
         Assert.True(RetailWorldCatalog.IsWorldSelectable(frontend.Career, 110));
         Assert.Equal(100, frontend.ConsumeLaunchWorldNumber);
         Assert.True(frontend.SelectedWorldIsConstructible);
+
+        RetailDebriefingProjection debriefing =
+            Assert.IsType<RetailDebriefingProjection>(frontend.Debriefing);
+        Assert.Equal(100, debriefing.WorldFinished);
+        Assert.Equal(RetailDebriefingMissionStatus.Victory, debriefing.MissionStatus);
+        Assert.Equal(
+            RetailDebriefingObjectiveSummary.Complete,
+            debriefing.PrimaryObjectives);
+        Assert.Equal(
+            RetailDebriefingObjectiveSummary.Hidden,
+            debriefing.SecondaryObjectives);
+        Assert.Equal((byte)'S', debriefing.GradeByte);
+        Assert.Equal(5, debriefing.NewGoodieCount);
+        Assert.True(debriefing.FirstGoodie);
+        Assert.Equal(0, frontend.Career.Counters.NewGoodieCount);
+        Assert.Equal(0, frontend.Career.Counters.FirstGoodie);
+
+        // Career.Update has already unlocked the child, but the selector is
+        // not interactive behind the released debriefing page.
+        Assert.False(frontend.SelectWorld(110));
+        Assert.Equal(RetailFrontendSignal.PageChanged, frontend.Confirm());
+        Assert.Equal(RetailFrontendScreen.LevelSelect, frontend.Screen);
+        Assert.Null(frontend.Debriefing);
 
         Assert.True(frontend.SelectWorld(110));
         Assert.Equal(110, frontend.ConsumeLaunchWorldNumber);

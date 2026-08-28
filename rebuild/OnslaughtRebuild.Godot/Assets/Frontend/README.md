@@ -1,7 +1,7 @@
 # Released frontend assets
 
 This directory owns the ignored, locally materialized retail inputs used by the
-bounded startup → main menu → Level 100 → loading path. Run
+bounded startup → main menu → Level 100 → loading → post-Won debriefing path. Run
 `npm run prepare:rebuild-assets` to verify a user-provided Steam installation
 and reproduce these exact files. The payloads remain outside Git and
 release packages and remain copyright of their respective rights holders;
@@ -42,11 +42,12 @@ unlocked world 110, while the host constructs only world 100.
 > handoff; Multiplayer and Goodies still fall through to
 > `RetailFrontendSignal.None`.
 
-This lane ends when Loading hands a fresh canonical Level 100 session to the
-gameplay host. The gameplay pause owner's Retry and Quit actions reuse that
-loading/Main Menu lifecycle. Mission outcomes, terminal overlays, later
-CFEPDebriefing, save writes/autosave, and persistent subsequent-campaign updates
-remain outside this lane.
+Loading hands a fresh canonical Level 100 session to the gameplay host. The
+gameplay pause owner's Retry and Quit actions reuse that loading/Main Menu
+lifecycle. After a Won handoff, this lane now composes the settled
+`CFEPDebriefing` status/objective/grade surface. Gameplay outcome production,
+the in-game terminal overlay, outcome movies, save writes/autosave, and
+persistent subsequent-campaign updates remain outside it.
 
 ## Materialized inputs
 
@@ -81,6 +82,13 @@ remain outside this lane.
 | `level-bracket-02.texture.aya` | Released v3 level-select bracket 2 | `7AD21E2A6E64F61998F7A43E92FE92D69AC013B169FD8107B648B1FA69877B27` |
 | `level-ring-01.texture.aya` | Released v3 level-select ring 1 | `687EAF0945B701B622BDEBDE805E88CAC394734A4B4420155379993EF9F74E1C` |
 | `level-ring-02.texture.aya` | Released v3 level-select ring 2 | `620900D34C153E722B6D78A9FBECAB2D69B8E81ABCDBDA084B0F90EB96142DFF` |
+| `Debriefing/metal-ring-transition.texture.aya` | `FrontEnd%v2%FE_metal_ring_trans_from_levsel2.tga(0)A8R8G8B8.aya` | `8B9B79189981DE706FC72DE9552BDC398ADA96D892C0E4E33706C77A907DA869` |
+| `Debriefing/ranking-a.texture.aya` | `FrontEnd%RankingA.tga(0)A8R8G8B8.aya` | `88765906F295B8002DC254F9805B05D5F5589D87A08F297B37D90953BA57D625` |
+| `Debriefing/ranking-b.texture.aya` | `FrontEnd%RankingB.tga(0)A8R8G8B8.aya` | `5F03CDF1E79E679E706A0B6AB644AD6961447DACE35695DC93D7C3928EBF3D50` |
+| `Debriefing/ranking-c.texture.aya` | `FrontEnd%RankingC.tga(0)A8R8G8B8.aya` | `364B5140A18EBEC99BDF4E4CE7C99E3619FF743D4CBE888C0FA5D84E96407A06` |
+| `Debriefing/ranking-d.texture.aya` | `FrontEnd%RankingD.tga(0)A8R8G8B8.aya` | `894521839162A5D2D8D73FEBA39435CF0590B0863D65B67DAA5C4A4420485BD0` |
+| `Debriefing/ranking-e.texture.aya` | `FrontEnd%RankingE.tga(0)A8R8G8B8.aya` | `C844F938CFCF56A2F3908BB69313EC86153F97E6993F42172C2C8376897E911A` |
+| `Debriefing/ranking-s.texture.aya` | `FrontEnd%RankingS.tga(0)A8R8G8B8.aya` | `AAB0817F798FF8379CF6E9E0F86AE466832AD644170E8C14B6F7A50A6A12DE9F` |
 | `title-font.texture.aya` | `mustbe_TitleFont.tga(0)A8R8G8B8.aya` | `1941E28A5665665FB7F8F733E7A4854C60DEF33E1D4F1CB9CAA979BC204D0707` |
 | `system-font.texture.aya` | `mustbe_SystemFont(0)A8R8G8B8.aya` | `475EDC8C9B95E3D3619E9B78E168DFCDA8575042B728D96DE1598CB8917967EB` |
 | `loading-screen.texture.aya` | `LoadingScreen.tga(0)X8R8G8B8.aya` | `E4AD32FEE41A31477E97D4F6F0B280F33C360756E3ABA27BF23746038443FC2C` |
@@ -137,7 +145,8 @@ them, because every retail reference frame in this repository was captured with
 - Stuart source: `FrontEnd.cpp` establishes first-run intro, title return,
   debrief return, and initial selected world 100; `PCFrontend.cpp` names the
   move/select records; `game.cpp` establishes the distinct in-game result
-  overlay. This lane does not compose that overlay or CFEPDebriefing.
+  overlay. This lane does not compose the in-game terminal overlay; it now
+  composes only the statically recovered settled `CFEPDebriefing` surface.
 - Shipped Level 100 `LevelScript.msl` defines four primary objectives,
   `LevelWon()`, and its only `LevelLostString(LOSE_TUTORIAL_BROKE)` reason.
 - Startup/main/level placement, widescreen composition, and unavailable-item
@@ -145,5 +154,6 @@ them, because every retail reference frame in this repository was captured with
   the released FEBack128 Bink path (not Rock); the rebuild draws a verified
   ffmpeg rgb strip rather than linking Bink. The exact loading image and text
   are retained, but no exact layout, timing, control-hint, full pixel-parity,
-  terminal-overlay, or complete-debriefing claim is made until dual-capture
-  evidence says otherwise.
+  terminal-overlay, or complete-debriefing claim is made. Debrief entry/exit
+  transitions, Goodie effects/message, grade glint, grade compositing
+  equivalence, and retail-frame validation remain open.

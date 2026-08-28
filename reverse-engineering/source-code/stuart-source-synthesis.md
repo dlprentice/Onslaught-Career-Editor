@@ -2435,7 +2435,7 @@ reconstruction behavior only.
 | `BattleEngineJetPart` | Substantial partial | thrust, turn, pitch, ground effect, water skim, friction, auto-land, energy |
 | `BattleEngineWalkerPart` | Substantial partial | walking, yaw/pitch, slope/water/contact, landing jets |
 | `Camera` | Partial | opening pan, controlled/chase/render camera; death/movie/free/broader third-person paths absent |
-| `Career` | Tiny partial | option/tutorial-shaped state; no graph, grades, Goodies, save/load |
+| `Career` | Substantial bounded partial | 43-node graph, grade law, bounded Goodie update/latches, and in-memory progression; save/write persistence remains open |
 | `chunker` | Superseded | managed readers and materializer tooling |
 | `CLIParams` | Partial | bounded startup/skip-FMV behavior |
 | `Controller` | Partial | client input/session mapping, not full source ownership stack |
@@ -2447,14 +2447,14 @@ reconstruction behavior only.
 | `DXMemBuffer` | Superseded | `Stream`/`BinaryReader` and Python tools |
 | `DXMemoryManager` | Superseded | managed allocation/GC |
 | `EditorD3DApp` | Excluded | internal editor framework |
-| `EndLevelData` | Partial shape; bridge absent | mission snapshot/events carry outcome, failure reason, score delta, objectives, and tutorial-slot events; ranking, time, kills, base flags, and canonical Career/debrief handoff are absent |
+| `EndLevelData` | Partial with bounded bridge | snapshot carries world/state, objective tables, ranking, time/score, kills/base flags, and the bounded Career/debrief handoff; live first-play score/time join and a general bridge remain open |
 | `engine` | Partial algorithms; backend superseded | selected timing/render concepts only |
 | `event` | Partial | typed deterministic events, not generic `CMonitor` events |
 | `eventmanager` | Partial | typed 30 Hz queues, not the source 20 Hz generic scheduler |
 | `FEPGoodies` | Absent as a page/system | only shared helper corroboration and menu-facing identity remain; topology, unlocks, viewer, resources, and lifecycle are absent |
 | `FEPLoadGame` | Absent | no load-page/system |
 | `FEPSaveGame` | Absent | no save-page/system |
-| `FrontEnd` | Partial | main/options/dev/level/briefing/config/loading/pause slices |
+| `FrontEnd` | Partial | main/options/dev/level/briefing/config/loading/pause/debriefing slices |
 | `game` | Partial | startup, media, frontend→Level 100, pause/quit; broad lifecycle/result/career absent |
 | `InitThing` | Partial Level 100 substitute | actor manifest subset; no general factory/versioned serializer |
 | `ltshell` | Superseded with partial input semantics | Godot/.NET host |
@@ -2564,8 +2564,8 @@ playability.
 
 ### Frontend, Career, render, and audio boundary
 
-The current frontend supports substantial bounded navigation, but Career
-ownership is still absent:
+The current frontend supports substantial bounded navigation and in-memory
+Career progression, but persistence and broad campaign ownership remain open:
 
 - `RetailFrontendSession` exposes the current main rows and page state;
 - Load, Multiplayer, and Goodies can be selected but are inert;
@@ -2575,8 +2575,10 @@ ownership is still absent:
   outgoing click-page draw there. Other edges require individual crosswalks;
 - options have real sound/music/mouse/VSync consumers, while other rows are
   display/state only and none have a general Career persistence owner;
-- tutorial progress can emit a slot-shaped event, but there is no Career graph,
-  grade, save/load, debrief, or Goodies-unlock persistence.
+- the 43-node Career graph, grade law, bounded Goodie update/latches, world-110
+  unlock, and settled debriefing projection exist; save/load writes, loaded-model
+  Won merge, broad later-campaign construction, dynamic debriefing phases, and
+  Goodies-page persistence remain open.
 
 Rendering correctly lives in the Godot presentation adapter. Source algorithms
 are selectively useful, but the D3D8/D3D9 backend, Win32 shell, render-state
@@ -2675,8 +2677,9 @@ Order may change only when new evidence changes impact or dependency.
    launch direction.
 8. **Trace `0x0040DE40 CBattleEngine__AugmentWeapon`** from Damage's
    `+0x2F8/+0x2FC` writes through consume/reset and runtime effect.
-9. **Add a real result/Career handoff** covering `EndLevelData`, tutorial
-   persistence, result/grade payload, and reload.
+9. **Join and persist the result/Career handoff:** replace the canned first-play
+   score/time input with the live `EndLevelData` stores, then add safe
+   persistence/reload without widening the settled debriefing projection.
 10. **Close bounded frontend holes:** language selection and explicit
     unavailable handling for inert rows. Preserve the runtime-adjudicated
     single-page cold-main transition; crosswalk every other transition edge
@@ -2690,7 +2693,7 @@ a production-code failure independent of the omniscient test autopilot's
 
 11. Landing-jet burn damage and grounded walker map-edge behavior.
 12. Cloak, rearm, remaining selected-weapon and Aquila lifecycle state.
-13. Death camera, result/debrief, and outro handoff.
+13. Death camera, dynamic debrief effects/transitions, and outro handoff.
 14. Plane roll, pitch bias, friction, gravity, and the controlled jet
     ground-effect roll-sign capture.
 15. General actors, collision, debris, and destruction beyond the bounded

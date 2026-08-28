@@ -116,6 +116,13 @@ public sealed class RetailFrontendSession
 
     public RetailFrontendScreen Screen { get; private set; } = RetailFrontendScreen.ClickToStart;
 
+    /// <summary>
+    /// The active post-level page projection. Retail stores the source fields
+    /// in <c>END_LEVEL_DATA</c>; Client keeps only the values its debriefing
+    /// presenter consumes.
+    /// </summary>
+    public RetailDebriefingProjection? Debriefing { get; private set; }
+
     public int SelectedMainIndex { get; private set; }
 
     /// <summary>
@@ -453,6 +460,11 @@ public sealed class RetailFrontendSession
                 Screen = RetailFrontendScreen.MissionBriefing;
                 return RetailFrontendSignal.PageChanged;
 
+            case RetailFrontendScreen.Debriefing:
+                Debriefing = null;
+                Screen = RetailFrontendScreen.LevelSelect;
+                return RetailFrontendSignal.PageChanged;
+
             case RetailFrontendScreen.MissionBriefing:
                 _selectedConfigurationIndex = 0;
                 Screen = RetailFrontendScreen.SelectConfiguration;
@@ -506,6 +518,13 @@ public sealed class RetailFrontendSession
 
         if (Screen == RetailFrontendScreen.MissionBriefing)
         {
+            Screen = RetailFrontendScreen.LevelSelect;
+            return RetailFrontendSignal.PageChanged;
+        }
+
+        if (Screen == RetailFrontendScreen.Debriefing)
+        {
+            Debriefing = null;
             Screen = RetailFrontendScreen.LevelSelect;
             return RetailFrontendSignal.PageChanged;
         }
@@ -653,16 +672,14 @@ public sealed class RetailFrontendSession
     }
 
     /// <summary>
-    /// The post-Won frontend re-entry. Retail's PC
-    /// <c>CFrontEnd::Init</c> lands on <c>FEP_DEBRIEFING</c>
-    /// (<c>FrontEnd.cpp:233-269</c>); this lane does not compose that page
-    /// (no <c>FEPDebriefing.cpp</c> in the source drop, same gap as
-    /// <c>FEPLevelSelect.cpp</c>). The next campaign-choice page this
-    /// reconstruction owns is SELECT LEVEL, so that is where the player
-    /// returns — with the already-pinned FillOut Won update applied to the
-    /// selector's career. <c>SetCurrentLevelToHighestAvailable</c> is not in
-    /// the source drop and is not invented here: the highlight stays on the
-    /// root until the player selects the unlocked child.
+    /// The post-Won frontend re-entry. Retail's PC <c>CFrontEnd::Init</c>
+    /// applies <c>CCareer::Update</c> before page initialization and lands on
+    /// <c>FEP_DEBRIEFING</c> (<c>FrontEnd.cpp:67,233-279</c>). The page's
+    /// TransitionNotification then reads-and-clears the two goodie latches.
+    /// This keeps that ordering: the selector is already unlocked while the
+    /// debriefing page is visible, but it cannot be selected until the player
+    /// leaves the page. <c>SetCurrentLevelToHighestAvailable</c> is not in the
+    /// source drop and is not invented here: the highlight stays on the root.
     /// </summary>
     public bool TryAcceptWonHandoff(
         Level100MissionOutcome outcome,
@@ -675,11 +692,16 @@ public sealed class RetailFrontendSession
             return false;
         }
 
-        Career.ApplyUpdate(RetailFillOutEndLevelData.ForLevel100Won());
+        RetailEndLevelSnapshot snapshot = RetailFillOutEndLevelData.ForLevel100Won();
+        Career.ApplyUpdate(snapshot);
+        Debriefing = RetailDebriefingProjection.From(
+            snapshot,
+            Career.Counters.GetAndResetGoodieNewCount(),
+            Career.Counters.GetAndResetFirstGoodie());
         _level100LaunchPending = false;
         _selectedConfigurationIndex = 0;
         Level100IntroCutscenePending = true;
-        Screen = RetailFrontendScreen.LevelSelect;
+        Screen = RetailFrontendScreen.Debriefing;
         return true;
     }
 
@@ -719,6 +741,7 @@ public sealed class RetailFrontendSession
         _activeLoadedCareer = null;
         _selectedCareerLoadRequest = null;
         _selectedConfigurationIndex = 0;
+        Debriefing = null;
         _gameName = DefaultGameName;
         _level100LaunchPending = false;
         // Leaving the level ends CGame's restart loop. The next entry runs
@@ -786,6 +809,14 @@ public enum RetailFrontendScreen
     /// fep-options-{root,controller,video,sound}-640x480.png.
     /// </summary>
     Options,
+
+    /// <summary>
+    /// Retail FEP_DEBRIEFING, the post-level objective summary and grade page.
+    /// The settled Render contract is recovered from pristine PC
+    /// <c>0x00456DD0..0x00457CED</c>; the partial source drop does not include
+    /// <c>FEPDebriefing.cpp</c>.
+    /// </summary>
+    Debriefing,
     LevelSelect,
 
     /// <summary>
