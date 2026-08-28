@@ -1,98 +1,151 @@
 # CBattleEngine__HandleEvent
 
-Status: active static function note
-Last updated: 2026-08-19
+Status: active static function note; morph-completion arms closed cross-platform
+Last updated: 2026-08-28
 Source File: `references/Onslaught/BattleEngine.cpp` | Binary: BEA.exe,
 SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
-Evidence: MEASURED — independently re-read 2026-08-19 from official
-`local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`. Twin
-`local-lab/pristine-verification-2026-07-26/pristine-target/BEA.exe`
-matches (2506752 equal). The Ghidra database was not opened. Cycle
-92 accepted StartLock/LockHit — not redone. This wake landed
-`3903b735` CalcUnitOverCrossHair — not redone. Did not mill FUN_*.
-Did not implement lock sets.
+Evidence: MEASURED — pristine PC instructions and transfer census,
+independently reconstructed PS2 demo/EU/USA and Xbox USA/EU/Issue 11
+homologs, and exact retained-source correspondence. No Ghidra project was
+opened or mutated.
 
 > Address: `0x0040c180`
 
-## Contract
+## Exact PC identity and dispatch
 
-Incoming-ECX `thiscall`. First insn `sub esp, 0x100`. Several
-`ret 0x4`; last at `0x0040c2db`. Body `0x0040c180`–`0x0040c2dd`
-is 350 bytes, SHA-256
+The incoming-`ECX` `thiscall` body is `[0x0040c180,0x0040c2de)`,
+350 bytes / 93 instructions, raw SHA-256
 `0af705098a485b1f8b1a98ab0cde4b77c664c4b55547e03beb6496cc66b90ade`.
-Capstone: 93 insns, 9 `E8`, zero `E9`. Neighbour table
-`CBattleEngine__CanSpawnBurstForResolvedEntry` starts at
-`0x0040c2e0` and is not rewritten. Preceding table
-`CBattleEngine__StartDieProcess` ends at `0x0040c17b` and is not
-rewritten.
+It takes one `CEvent*` stack argument and returns with `ret 4`. The dispatch
+prefix `[0x0040c189,0x0040c1b7)`, SHA-256
+`c90b9c629319520291769167a987046479813287aa29c8c25e2e60109514d9c2`,
+sign-extends the event number from `event+0x04` and compares numeric events
+6000, 6001, 4002, 6002, and 6003.
 
-The body, with `esi = ecx` and `ecx = [esp+0x108]` after the
-`push esi` (the event pointer):
+No direct `.text` call or jump targets this entry. A unique image dword at
+`0x005d89c4` points to it as the primary `CBattleEngine` vtable event slot;
+event-manager delivery is therefore virtual.
 
-1. `movsx eax, word [ecx+4]`. Compare EAX to `0x1770`, `0x1771`,
-   `0xfa2`, then `sub eax, 0x1772`.
-2. `0x1770`: if `[esi+0x260]==1`, store BSS `[0x00672fd0]` to
-   `[esi+0x520]`, write `[esi+0x260]=3`, `E8` `0x004063b0`
-   (`CBattleEngine__UpdateWeaponEffect`). Table name is not
-   `SetCollisionShape`.
-3. `0x1771`: write `[esi+0x260]=2`, same `E8` `0x004063b0`.
-4. After `sub eax, 0x1772`: zero → `push 1` / `push 1` / `push`
-   event / `E8` `CBattleEngine__CalcUnitOverCrossHair`
-   `0x0040acc0`, then `SetReader` of EAX onto `[esi+0x4c8]`.
-   One → `E8` `CBattleEngine__HandleAutoAim` `0x0040b6d0`.
-5. Default: `E8` `CUnit__HandleEvent` `0x004f9820`.
-6. `0xfa2` arm calls `sprintf` / `CSoundManager__GetEffectByName`
-   / `CSoundManager__PlayEffect`. That id is **not** named here.
+The complete handler also routes event 6002 to
+`CBattleEngine::CalcUnitOverCrossHair`, event 6003 to
+`CBattleEngine::HandleAutoAim`, event 4002 through a sound-effect path, and
+unhandled values to `CUnit::HandleEvent`. Those arms are not expanded here.
 
-`+0x260` values 1/2/3 match the already-closed JET=3 polarity.
-Source architecture (not proof): `EBattleEngineEvent` `BECOME_JET
-= 6000` (`0x1770`) through `HANDLE_AUTO_AIM`, and
-`EBattleEngineState` morphing-into-jet=1 / walker=2 / jet=3
-(`BattleEngine.h:28-33`, `:20-26`). `HandleEvent` body
-`BattleEngine.cpp:2665-2710`.
+## Event 6000 / `BECOME_JET`
 
-Zero inbound `.text` `E8`/`E9`. One image encoding of imm
-`80 c1 40 00`: file `0x001d89c4` / VA `0x005d89c4` (the
-`CBattleEngine` vtable base named by the GetCurrentTarget note).
-Neighbouring dwords are **not** this proof.
+The PC arm is `[0x0040c1b7,0x0040c1ea)`, 51 bytes, SHA-256
+`2cf7550787eab339183c2d5dd33cbb63cc2adbcc19c079b720aef5f7c8514624`.
+Its accepted suffix `[0x0040c1c4,0x0040c1ea)` has SHA-256
+`1d2bfbe51c1dd22594876f8060514d4e97678aa2b7dfd0f90a43826158da756a`.
 
-Rebuild mapping: `PARTIAL_CONTRACT` (named, not implemented). See
-the section below. Do not implement Core from this RE root.
+It performs exactly this transaction:
 
-Cheapest falsifier: file `0x0000c180` is not `81 ec 00 01 00 00`,
-**or** `0x0000c190` is not `0f bf 41 04`, **or** `0x0000c1d1` is
-not `c7 86 60 02 00 00 03 00 00 00`, **or** `0x0000c2c3` is not
-`e8 f8 e9 ff ff`, **or** `0x0000c2db` is not `c2 04 00`, **or**
-body SHA-256 is not `0af70509…0ade`, **or**
-`tools/call_xref_scan.py` on `0x0040c180` is not empty, **or**
-`0x001d89c4` is not `80 c1 40 00`, **or** a second encoding of
-that imm exists.
+1. Require `[this+0x260] == 1` (`MORPHING_INTO_JET`). A mismatch returns
+   without a time write, state write, allocation, or collision submission.
+2. Copy current event-manager time from `0x00672fd0` to `[this+0x520]`
+   (`mTransformStartTime`).
+3. Write `[this+0x260] = 3` (`JET`).
+4. Call `CBattleEngine::SetCollisionShape` at `0x004063b0`.
 
-## Rebuild mapping — 2026-08-19
+The prior name `CBattleEngine__UpdateWeaponEffect` for the callee is false.
+Exact body, allocation metadata, `CCylinder` RTTI/vtable, geometry, receiver,
+and retained source independently identify `SetCollisionShape`.
 
-Grade: `PARTIAL_CONTRACT`. Not `REBUILD_READY`. Independently
-re-read official+twin `74154bfa` this wake (2506752 equal). Body
-SHA-256 still `0af70509…0ade`. `call_xref_scan` still empty.
-File `0x001d89c4` still `80 c1 40 00`. Did not open Ghidra. Did
-not edit `rebuild/**`.
+## Event 6001 / `BECOME_WALKER`
 
-Retail entity: `CBattleEngine` vtable event dispatcher, including
-the scheduled CalcUnitOverCrossHair refresh. Stuart architecture
-(not proof): `BattleEngine.cpp:2665-2710`.
+The PC arm is `[0x0040c273,0x0040c28e)`, 27 bytes, SHA-256
+`c54825eaf8176eb6962693f4dc8ea378643f2d5b97cf6adad31fbd709c602477`.
+It has no predecessor-state guard and no transform-time access:
 
-Nearest reconstruction owner: **none**. Core has no BattleEngine
-event switch and no `+0x260` morph writes.
+1. Write `[this+0x260] = 2` (`WALKER`).
+2. Call `CBattleEngine::SetCollisionShape` at `0x004063b0`.
 
-Focused test: none. L100 card `t_aa5586e5` is on a playable
-training-path diet — do not implement this dispatcher from this
-mapping until that lane names the arm.
+A duplicate or stale 6001 therefore still forces the settled walker state and
+replaces the collision shape. This asymmetry with event 6000 is released
+behavior, not a missing inferred guard.
 
-Siblings: `CBattleEngine__CalcUnitOverCrossHair` in this folder.
-Next named: `CBattleEngine__HandleAutoAim` `0x0040b6d0`.
+## Completion-side boundary
+
+Neither completion arm changes part readers, cockpit state, animation, sound,
+energy, takeoff height/time, grounded timers, or controls. Those effects belong
+to morph initiation or later movement. Completion only settles state, performs
+the event-6000 timestamp write when admitted, and rebuilds/submits the collision
+cylinder.
+
+The collision helper constructs a single-player cylinder with radius `0.4f`
+and axial half-height `0.95f` (full height `1.9f`); multiplayer changes only
+the radius to `1.0f`. The getters do not consult walker/jet state, so the
+released dimensions are mode-invariant. The default
+`CCSPersistentThing::SetShape` target at `0x00426370` deletes the old shape,
+installs the new one, and refreshes its owner-relative center. An allocation
+failure still submits null; the default receiver consequently discards the old
+shape and then dereferences null rather than recovering locally.
+
+## Cross-platform reproduction
+
+All independently recovered release families preserve the same two observable
+completion transactions.
+
+| Family/builds | Handler body | 6000 | 6001 | True difference |
+| --- | --- | --- | --- | --- |
+| PC retail | `[0x0040c180,0x0040c2de)`, 350 B, `0af70509…0ade` | exact-state-1 gate; time `+0x520`; state 3; shape | unguarded; state 2; shape | PC writes time then state |
+| PS2 demo/EU/USA | `[0x0010deb8,0x0010dfb8)`, 256 B; build hashes `375ab11c…ab5c`, `fb60cc28…693c`, `c8aaf5e3…afbc` | exact-state-1 gate; state 3; time `+0x548`; shape | unguarded; state 2 in call delay slot; shape | PS2 writes state before time; final state and helper-entry state match |
+| Xbox USA/EU/Issue 11 | 220 B at `0x0016f1f0`, `0x0016f000`, `0x0016f260`; hashes `c6c681cb…00a3`, `55933a1d…b71`, `078d45e4…8eed` | exact-state-1 gate; time `+0x51c`; state 3; shape | unguarded; state 2; shape | relocation/layout and compiled-source-line differences only |
+
+The PS2 6001 arm is byte-identical across its three canonical builds
+(`[0x0010df44,0x0010df5c)`, SHA-256
+`d81d8b4ded8a6514d441383df6cf98f89c5b064094c032e99332a9b18a9483ad`).
+The Xbox 6001 arm is likewise byte-identical across USA/EU/Issue 11 (21 bytes,
+SHA-256
+`eb63e81ff6f827e125c3e0bcd775e5d40c95bb8c6695f18cdb55e28a370a4a82`).
+PS2 uses object fields `+0x280` for state and `+0x548` for transform time;
+Xbox retains PC state `+0x260` but uses transform time `+0x51c`.
+
+The PS2 state-before-time order is the one genuine scoped sequencing delta.
+Because no intervening call observes the object, it does not change the final
+transaction. On every platform the new settled state is visible before
+`SetCollisionShape` queries virtual geometry and submits the cylinder.
+
+## Source bridge
+
+Retained `BattleEngine.cpp:2665-2710` reproduces the complete handler
+architecture; lines 2669-2684 reproduce these two arms. `BattleEngine.h`
+assigns 6000/6001 to `BECOME_JET`/`BECOME_WALKER` and ordinals 1/2/3 to
+`MORPHING_INTO_JET`/`WALKER`/`JET`. Retained `event.h` stores a signed short
+event number after its four-byte reader, matching the released sign-extending
+load at `event+0x04`.
+
+## Rebuild mapping
+
+Grade: `REBUILD_READY` for normal morph-completion policy and order;
+`PARTIAL_CONTRACT` for the handler as a whole.
+
+`Simulation.AdvanceTransition` is the correct deterministic Core owner. It
+settles `VehicleMode` when the exact scheduled tick expires, emits
+`AquilaFlightEvents.TransformCompleted` only afterward, and then clears the
+transition. Existing transition timing tests exercise both directions. Core's
+mode write therefore already occupies the released state-write boundary.
+
+No numeric retail-event dispatcher, stale-event injection API, heap-shaped
+collision compatibility object, or duplicate completion test is justified.
+Core already owns the released single-player 400 mm contact radius and 1,900 mm
+center-of-gravity height. The remaining parity question is which concrete Core
+collision consumers require the proven 950 mm axial half-height; that is being
+traced separately before changing simulation behavior.
+
+## Falsifiers
+
+Any of the following rejects this closure: the exact PC body or arm hashes
+differ; event 6000 mutates any completion field when state is not exactly 1;
+event 6000 does not perform time/state/shape in PC/Xbox order; event 6001 has a
+state guard or transform-time access; either arm performs a part-reader,
+animation, audio, energy, or takeoff mutation; or any named console homolog
+shows a non-relocation behavioral difference beyond the documented PS2
+state/time order.
 
 ## Functions
 
-| Address | Name | Byte evidence | Contract (confidence) |
-| --- | --- | --- | --- |
-| `0x0040c180` | `CBattleEngine__HandleEvent` | `81ec00010000 56 8bf1 … 0fbf4104 … c7866002000003000000 … e8f8e9ffff … c20400` (350 B) | incoming-ECX thiscall; ret 0x4; 350 B; 9 E8 / 0 E9; 0 inbound; unique vtable dword `0x005d89c4`. HIGH on ABI, event word `[arg+4]`, `0x1770`/`0x1771` `+0x260` writes, CalcUnitOverCrossHair site. Mapping `PARTIAL_CONTRACT`; no Core owner. **Not** on `0xfa2` name or rebuild parity. |
+| Address | Name | Contract (confidence) |
+| --- | --- | --- |
+| `0x0040c180` | `CBattleEngine__HandleEvent` | incoming-ECX thiscall; signed-short event dispatch; 350 B; virtual ingress. HIGH on events 6000/6001, state/time predicates and writes, exact collision-helper identity, negative side-effect inventory, and PC/PS2/Xbox equivalence. Whole handler remains partial outside the named arms. |

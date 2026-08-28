@@ -202,7 +202,7 @@ text, not PE.
 - This does not identify exact retail `CBattleEngine::WeaponFired`, close `weapon_fire_breaks_stealth`, prove runtime cloak/fire behavior, or prove concrete retail structure layouts.
 
 ## Related Functions
-- [CBattleEngine__UpdateWeaponEffect](CBattleEngine__UpdateWeaponEffect.md) - Weapon effect updates
+- [CBattleEngine__UpdateWeaponEffect](CBattleEngine__UpdateWeaponEffect.md) - current saved-name path for the recovered `SetCollisionShape` helper
 - [CBattleEngine__AddProjectile](CBattleEngine__AddProjectile.md) - Projectile spawning
 - CUnit__Init - Parent class initialization
 - CBattleEngineWalkerPart - Walker-specific subsystem
