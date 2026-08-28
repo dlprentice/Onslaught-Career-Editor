@@ -693,14 +693,17 @@ def _read_fixed_c_string(data: bytes, off: int, length: int) -> str:
     return data[off : off + length].split(b"\0", 1)[0].decode("ascii", errors="replace")
 
 
-def _probe_importer_mesh_body(body: bytes) -> dict[str, object]:
+def _probe_importer_mesh_body(body: bytes, *, profile: str = "pc") -> dict[str, object]:
     probe: dict[str, object] = {
         "plausible": False,
+        "profile": profile,
         "cmst_offset": body.find(b"CMST"),
         "mesp_offset": body.find(b"MESP"),
     }
 
     try:
+        if profile not in {"pc", "ps2"}:
+            raise ValueError(f"unsupported mesh profile: {profile!r}")
         if len(body) < 380:
             raise ValueError(f"body too short: {len(body)} bytes")
         if body[:4] != b"CMSH":
@@ -713,18 +716,78 @@ def _probe_importer_mesh_body(body: bytes) -> dict[str, object]:
         if cmst_tag != b"CMST":
             raise ValueError(f"expected CMST at 0x17C, got {cmst_tag!r}")
 
-        index = 388 + num_textures * 36
+        if len(body) < 388:
+            raise ValueError("truncated CMST header")
+        cmst_size = _u32(body, 384)
+        expected_cmst_size = num_textures * 36
+        if profile == "ps2" and cmst_size != expected_cmst_size:
+            raise ValueError(
+                f"CMST payload is {cmst_size} bytes; expected {expected_cmst_size} "
+                f"for {num_textures} PS2 binding records"
+            )
+        cmst_end = 388 + expected_cmst_size
+        if cmst_end > len(body):
+            raise ValueError(
+                f"CMST binding records end at 0x{cmst_end:X}, beyond body length 0x{len(body):X}"
+            )
+
+        index = cmst_end
         texture_names: list[str] = []
+        texture_bindings: list[dict[str, object]] = []
         for texture_index in range(num_textures):
-            if body[index : index + 4] != b"MSHT":
+            if len(body) - index < 8 or body[index : index + 4] != b"MSHT":
                 raise ValueError(f"texture {texture_index}: expected MSHT at 0x{index:X}")
-            index += 8
-            if body[index : index + 4] != b"TEXB":
-                raise ValueError(f"texture {texture_index}: expected TEXB at 0x{index:X}")
-            index += 8
-            index += 20
-            texture_names.append(_read_fixed_c_string(body, index, 128))
-            index += 128
+            msht_size = _u32(body, index + 4)
+            msht_payload = index + 8
+            msht_end = msht_payload + msht_size
+            if msht_end > len(body):
+                raise ValueError(
+                    f"texture {texture_index}: MSHT ends at 0x{msht_end:X}, "
+                    f"beyond body length 0x{len(body):X}"
+                )
+            if len(body) - msht_payload < 8 or body[msht_payload : msht_payload + 4] != b"TEXB":
+                raise ValueError(f"texture {texture_index}: expected TEXB at 0x{msht_payload:X}")
+            texb_size = _u32(body, msht_payload + 4)
+            texb_payload = msht_payload + 8
+            texb_end = texb_payload + texb_size
+
+            if profile == "pc":
+                texture_name_offset = texb_payload + 20
+                if texture_name_offset + 128 > len(body):
+                    raise ValueError(f"texture {texture_index}: truncated PC TEXB name")
+                texture_names.append(_read_fixed_c_string(body, texture_name_offset, 128))
+                index = texture_name_offset + 128
+                continue
+
+            if msht_size != texb_size + 8 or texb_end != msht_end:
+                raise ValueError(
+                    f"texture {texture_index}: PS2 MSHT payload must contain exactly one TEXB"
+                )
+            binding_offset = 388 + texture_index * 36
+            sample_count = _u32(body, binding_offset + 8)
+            expected_texb_size = 20 * sample_count + 4
+            if texb_size != expected_texb_size:
+                raise ValueError(
+                    f"texture {texture_index}: TEXB payload is {texb_size} bytes; "
+                    f"expected 20*{sample_count}+4 = {expected_texb_size}"
+                )
+
+            lane_words: list[list[int]] = []
+            lane_offset = texb_payload
+            for _ in range(5):
+                lane_words.append(
+                    [_u32(body, lane_offset + sample * 4) for sample in range(sample_count)]
+                )
+                lane_offset += sample_count * 4
+            texture_bindings.append(
+                {
+                    "sample_count": sample_count,
+                    "lane_words_u32": lane_words,
+                    "texture_key": _u32(body, lane_offset),
+                    "cached_max_lane0_bits": _u32(body, binding_offset + 32),
+                }
+            )
+            index = msht_end
 
         first_part_tag = body[index : index + 4]
         if num_parts > 0 and first_part_tag != b"MESP":
@@ -737,6 +800,7 @@ def _probe_importer_mesh_body(body: bytes) -> dict[str, object]:
                 "mesh_name": mesh_name,
                 "num_parts": num_parts,
                 "first_texture_names": texture_names[:4],
+                "first_texture_bindings": texture_bindings[:4],
                 "first_part_offset": index,
             }
         )
@@ -746,7 +810,12 @@ def _probe_importer_mesh_body(body: bytes) -> dict[str, object]:
     return probe
 
 
-def _extract_embedded_mesh_bodies(payload: bytes, *, preview_bytes: int) -> list[tuple[bytes, dict[str, object]]]:
+def _extract_embedded_mesh_bodies(
+    payload: bytes,
+    *,
+    preview_bytes: int,
+    mesh_profile: str = "pc",
+) -> list[tuple[bytes, dict[str, object]]]:
     wrapper_offsets = _find_pmsh_wrapper_offsets(payload)
     cmsh_offsets = _all_offsets(payload, b"CMSH")
     bodies: list[tuple[bytes, dict[str, object]]] = []
@@ -768,7 +837,7 @@ def _extract_embedded_mesh_bodies(payload: bytes, *, preview_bytes: int) -> list
             "preview_ascii": _ascii_preview(body, preview_bytes),
             "wrapper_start_offset": wrapper_start,
             "body_boundary_rule": "CMSH_to_next_sibling_PMSH_or_EOF",
-            "importer_probe": _probe_importer_mesh_body(body),
+            "importer_probe": _probe_importer_mesh_body(body, profile=mesh_profile),
         }
         bodies.append((body, record))
 
@@ -1642,6 +1711,7 @@ def dump_selected_chunks(
     dump_with_header: bool,
     carve_tags: set[str],
     extract_embedded_mesh_bodies: bool,
+    embedded_mesh_profile: str,
     resolver: AssetResolver | None,
     preview_bytes: int,
 ) -> list[dict[str, object]]:
@@ -1709,7 +1779,11 @@ def dump_selected_chunks(
             record["carved_streams"] = carved_streams
 
         if extract_embedded_mesh_bodies and chunk.tag == "MESH":
-            embedded_bodies = _extract_embedded_mesh_bodies(payload, preview_bytes=preview_bytes)
+            embedded_bodies = _extract_embedded_mesh_bodies(
+                payload,
+                preview_bytes=preview_bytes,
+                mesh_profile=embedded_mesh_profile,
+            )
             if embedded_bodies:
                 body_records: list[dict[str, object]] = []
                 for body, body_record in embedded_bodies:
@@ -1825,6 +1899,12 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         "--extract-embedded-mesh-bodies",
         action="store_true",
         help="For selected top-level MESH payloads, emit bounded embedded CMSH bodies using the current composite-wrapper rule (CMSH -> next sibling PMSH or EOF)",
+    )
+    ap.add_argument(
+        "--embedded-mesh-profile",
+        choices=("pc", "ps2"),
+        default="pc",
+        help="Interpret embedded CMSH material bindings as PC fixed-name TEXB (default) or PS2 five-lane/numeric-key TEXB",
     )
     ap.add_argument(
         "--json-out",
@@ -2031,6 +2111,7 @@ def main(argv: list[str]) -> int:
                     dump_with_header=args.dump_with_header,
                     carve_tags=carve_tags,
                     extract_embedded_mesh_bodies=args.extract_embedded_mesh_bodies,
+                    embedded_mesh_profile=args.embedded_mesh_profile,
                     resolver=resolver,
                     preview_bytes=args.preview_bytes,
                 )

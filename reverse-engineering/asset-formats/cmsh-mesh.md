@@ -1,12 +1,13 @@
 # CMSH tagged mesh-stream contract
 
-Status: active format contract — complete corpus framing and bounded field
-semantics; position and linked-shader normal skinning laws are closed while
-animation/general scene import remain partial
-Date: 2026-08-23
+Status: active format contract — complete PC corpus framing, bounded PC fields,
+and released PS2 material-binding semantics; position and linked-shader normal
+skinning laws are closed while animation/general scene import remain partial
+Date: 2026-08-28
 Verdict: all 213 mesh streams frame and their complete tag population is
-counted; selected geometry and the seven-file skinning family are bounded while
-PB* and animation scheduling remain partial.
+counted; selected geometry, the seven-file skinning family, and the PS2
+five-lane material profile are bounded while PB* and animation scheduling
+remain partial.
 Evidence: MEASURED — all 213 mirror-index mesh rows were re-aggregated on
 2026-08-22. Field names below are either measured by repository parsers or
 explicitly attributed to Stuart's AYAResourceExtractor lineage.
@@ -101,9 +102,87 @@ with that provenance rather than promoted to released-runtime behavior:
   `3 *` an in-range index in that part's `BONE` array. The released position
   blend is owned by the focused
   [matrix-palette contract](cmsh-matrix-palette-skinning.md).
-- `TEXR` stores six texture IDs. `TEXB` includes a fixed 128-byte texture name.
+- In the PC profile, `TEXR` stores six texture IDs and `TEXB` includes a fixed
+  128-byte texture name. The released PS2 profile below is materially different.
 - Triangle strips and 16-bit indices are supported by the extractor path;
   not every topology is proved supported by the retail runtime or rebuild.
+
+## Released PS2 material-binding profile
+
+The PS2 `CMST` payload contains one 36-byte runtime binding record per texture.
+Each following `MSHT` contains exactly one `TEXB`; unlike PC, the `TEXB` ends in
+a numeric key rather than a fixed texture name:
+
+```text
+TEXB = lane0[n] || lane1[n] || lane2[n] || lane3[n] || lane4[n]
+       || texture_key:u32
+payload_size = 20*n + 4
+```
+
+All lane elements are serialized little-endian dwords and consumed as floats.
+The corresponding binding record is:
+
+| Offset | Released PS2 role |
+| ---: | --- |
+| `+0x00` | resolved texture-object pointer |
+| `+0x04` | cleared runtime state |
+| `+0x08` | sample count `n` |
+| `+0x0C` | pointer to lane 0: opacity multiplier |
+| `+0x10` | pointer to lane 1: axis-0 translation input |
+| `+0x14` | pointer to lane 2: axis-1 translation input |
+| `+0x18` | pointer to lane 3: axis-0 diagonal scale |
+| `+0x1C` | pointer to lane 4: axis-1 diagonal scale |
+| `+0x20` | cached `max(0, lane0[0..n-1])` active-binding gate |
+
+The loader resolves `texture_key` against the current `TEXT` list by comparing
+`CTEXTURE+0x94`, following `+0x98`, storing the winning pointer, and incrementing
+its `+0x9C` reference count. List insertion makes a duplicate key's newest
+texture win. The released load path dereferences the result without a missing-key
+guard; an unresolved key is not a supported null/default binding.
+
+The renderer selects one sample across all five lanes with `j = phase % n`.
+It has an explicit divide-by-zero break rather than an `n == 0` default. Its
+material equations are:
+
+```text
+alpha' = cvt.w.s(float(alpha) * lane0[j])
+
+x  = lane1[j]
+y  = lane2[j]
+sx = lane3[j]
+sy = lane4[j]
+tx = x + (1 - sx) / 2
+ty = y + (sy - 1) / 2
+```
+
+The texture matrix has `M00=sx`, `M11=sy`, `M20=tx`, `M21=ty`, `M22=1`, and
+`M33=1`; all other cells are zero. The non-identity helper writes `tx` and `ty`
+back through the lane-1/lane-2 pointers. Whether an outer owner refreshes those
+arrays before a later render remains open. Axis 0/1 is deliberate conservative
+naming: the instructions do not recover the authoring tool's U/V or S/T terms.
+
+The independently reproduced executable identity is:
+
+| Build | ELF SHA-256 | loader/cache subsection | renderer-lane subsection | transform helper |
+| --- | --- | --- | --- | --- |
+| PS2 demo | `5700b5d0b39554e49afe65e079ad8109fe6688c2aa5e6f0e0ed5afcefd034584` | `[0x21A180,0x21A2C0)` / `0c52d25e9a3a4590d9deb81e417285e1d774f925365332e1c0a17d2a54e527fd` | `[0x30FC20,0x30FE34)` / `ae976ad7dde8689cb7d35ac630600e16d7823b6a0ab5aacbbeba77400880073e` | `[0x3127D0,0x313528)` / `48486a65c625cf567508a24d206b3a1ee7532926876b6b6af681a825a1aac91e` |
+| Europe | `87cb89b020cf107b3ba4612ac6bc86ed3fcbd6dd985e2cd3978bf897be96b655` | `[0x21A240,0x21A380)` / `447eb61022fbb81455bad434ed9dedde943300b41f70647e84d5659f8b4d07e2` | `[0x30FBF0,0x30FE04)` / `b171962ff8f80c4ab41356db57f6a0cf9a2aee72a6591b6bb5fd037b9f37aa6c` | `[0x3127A0,0x3134F8)` / `1624d0604b684543b0b87fb6153bd74833a86e63f35e87d9ec6c7ecef704edb2` |
+| USA | `4cfed76f0b0cdf84377a4d5b1613fd197c27be9a3814743590fecba22ba4e166` | `[0x21A9A8,0x21AAE8)` / `9c32c8ef19493fb11d1ec80be01f74388bc7182aae40c37ecb54d29fa7adbf3b` | `[0x310530,0x310744)` / `c7d36e737654a077989be0363de24a514701e4d73622c54af88750f72e1ba9b3` | `[0x3130E0,0x313E38)` / `88f56b08fb12b43a7a42026fc690ff201ff188f9782d9b94719700ddd1bca780` |
+
+After zeroing relocated MIPS jump targets and non-special immediates, the three
+builds have identical normalized hashes for the loader/cache subsection
+(`67090a14eeeb4ebdadcedbd815bc731308864a8b3375514f4eb3120d598e870f`),
+renderer-lane subsection
+(`7b18548d0e5e3c797ac1fcaa195fe1faea1e1f9596848d0636bbd8b179922fa9`),
+and transform helper
+(`1571b6abd76465f6608a2fdf83895a2867694de3ece168abfb9e720c01c3a363`).
+A streamed demo `base_res_PS2.aya` sample has one binding with `n=1`, lanes
+`[1,0,0,1,1]`, key `0`, cache `1`, and a matching `TEXT` key `0`; it
+demonstrates the identity material, not the full authored population. The
+larger demo `201_res_PS2.aya`
+(`b187cab2b7866cd23a6e443908c357fca93d729fa9fcb9853768464417ad282e`)
+independently exercises the new probe across 56 mesh bodies and 222 binding
+records without a framing failure.
 
 ## Animation and skinning boundary
 
@@ -153,7 +232,10 @@ The address summary is in
   AYA files.
 - [`tools/aya_archive_inventory.py`](../../tools/aya_archive_inventory.py)
   performs fail-closed AYA/tag framing and labels carved embedded CMSH bodies
-  candidate-only.
+  candidate-only. Its explicit `--embedded-mesh-profile ps2` probe validates
+  the 36-byte `CMST` records, exact `MSHT`/`TEXB` framing, `20*n+4` payload law,
+  five raw dword lanes, numeric texture key, and cached-gate bits without
+  silently applying the incompatible PC fixed-name profile.
 - [`rebuild/tools/cmsh_static_preview.py`](../../rebuild/tools/cmsh_static_preview.py)
   and its focused tests parse, emit OBJ for the supported geometry surface, and
   byte-round-trip all 367 measured streams. The byte-accounting gate attributes
@@ -182,6 +264,9 @@ The address summary is in
   until their exact frame-range records are joined.
 - Resolve the apparent repeated `BBOX` writer behavior without assuming it is a
   harmless exporter bug.
+- Exercise a controlled two-sample PS2 binding to observe dormant phase
+  stepping, and determine whether the transform helper's lane-1/lane-2 writeback
+  accumulates across reachable renders.
 - Test a non-Level-100 static mesh and one skeletal mesh in a disposable copied
   profile before claiming general runtime parity.
 
@@ -190,7 +275,9 @@ The address summary is in
 The container walk, corpus population, tag counts, hierarchy/reference shapes,
 selected geometry fields, pose-map dimensions, bone-to-part names, palette-slot
 indices, the seven-file position blend, typed bind/current order, released
-normal dataflow, numeric-LVLR membership, 4,090 WRES definition joins, and 53
-anonymous embedded bodies are bounded. Named clips, other WRES/spawn owners,
-general scheduling/rendering, complete scene dependencies, collision,
-malformed-input behavior, pixels, and parity are open.
+normal dataflow, PS2 `CMST`/`MSHT`/`TEXB` framing and five-lane renderer
+dataflow, numeric-LVLR membership, 4,090 WRES definition joins, and 53 anonymous
+embedded bodies are bounded. PS2 axis authoring names and multi-sample authored
+usage, named clips, other WRES/spawn owners, general scheduling/rendering,
+complete scene dependencies, collision, malformed-input behavior, pixels, and
+parity are open.

@@ -72,6 +72,34 @@ def _mesh_payload(*bodies: bytes) -> bytes:
     return bytes(payload)
 
 
+def _cmsh_body(
+    *,
+    binding_records: tuple[bytes, ...],
+    texb_payloads: tuple[bytes, ...],
+    mesh_name: str = "fixture",
+    num_parts: int = 1,
+) -> bytes:
+    if len(binding_records) != len(texb_payloads):
+        raise ValueError("each CMST binding record needs one TEXB payload")
+    if any(len(record) != 36 for record in binding_records):
+        raise ValueError("CMST binding records are exactly 36 bytes")
+
+    root = bytearray(372)
+    struct.pack_into("<I", root, 0, 0x0000DEAD)
+    struct.pack_into("<I", root, 4, len(binding_records))
+    encoded_name = mesh_name.encode("ascii")
+    root[36 : 36 + len(encoded_name)] = encoded_name
+    struct.pack_into("<I", root, 348, num_parts)
+
+    body = bytearray(_chunk(b"CMSH", bytes(root)))
+    body.extend(_chunk(b"CMST", b"".join(binding_records)))
+    for texb_payload in texb_payloads:
+        body.extend(_chunk(b"MSHT", _chunk(b"TEXB", texb_payload)))
+    if num_parts:
+        body.extend(_chunk(b"MESP"))
+    return bytes(body)
+
+
 def _text_resource_payload(name: str, trailer: bytes = b"") -> bytes:
     body = b"CTEX" + (b"\0" * 12) + name.encode("ascii") + b"\0" + trailer
     return b"DXTX" + struct.pack("<I", len(body)) + body
@@ -816,6 +844,63 @@ class AyaArchiveInventoryObservationTests(unittest.TestCase):
         with mock.patch.object(inventory, "MAX_EMBEDDED_BODIES", 1, create=True):
             self.assertEqual(1, len(self._api("observe_embedded_bodies")(one)))
             self._assert_category("body_count_limit", lambda: self._api("observe_embedded_bodies")(two))
+
+    def test_importer_mesh_probe_keeps_pc_and_ps2_material_profiles_distinct(self) -> None:
+        lane_words = (
+            (0x3F800000, 0x3F000000),
+            (0x00000000, 0x3E800000),
+            (0x00000000, 0x3E000000),
+            (0x3F800000, 0x3F000000),
+            (0x3F800000, 0x40000000),
+        )
+        ps2_record = bytearray(36)
+        struct.pack_into("<I", ps2_record, 8, 2)
+        struct.pack_into("<I", ps2_record, 32, 0x3F800000)
+        ps2_texb = b"".join(
+            struct.pack("<I", word) for lane in lane_words for word in lane
+        ) + struct.pack("<I", 7)
+        ps2_body = _cmsh_body(
+            binding_records=(bytes(ps2_record),),
+            texb_payloads=(ps2_texb,),
+            mesh_name="ps2-fixture",
+        )
+
+        ps2_probe = inventory._probe_importer_mesh_body(ps2_body, profile="ps2")
+        self.assertTrue(ps2_probe["plausible"])
+        self.assertEqual("ps2", ps2_probe["profile"])
+        self.assertEqual([], ps2_probe["first_texture_names"])
+        self.assertEqual(
+            {
+                "sample_count": 2,
+                "lane_words_u32": [list(lane) for lane in lane_words],
+                "texture_key": 7,
+                "cached_max_lane0_bits": 0x3F800000,
+            },
+            ps2_probe["first_texture_bindings"][0],
+        )
+        self.assertEqual(len(ps2_body) - 8, ps2_probe["first_part_offset"])
+        self.assertFalse(inventory._probe_importer_mesh_body(ps2_body)["plausible"])
+
+        pc_record = bytes(36)
+        pc_name = b"meshtex\\panel.tga"
+        pc_texb = bytes(20) + pc_name + bytes(128 - len(pc_name))
+        pc_body = _cmsh_body(
+            binding_records=(pc_record,),
+            texb_payloads=(pc_texb,),
+            mesh_name="pc-fixture",
+        )
+        pc_probe = inventory._probe_importer_mesh_body(pc_body)
+        self.assertTrue(pc_probe["plausible"])
+        self.assertEqual("pc", pc_probe["profile"])
+        self.assertEqual(["meshtex\\panel.tga"], pc_probe["first_texture_names"])
+        self.assertEqual([], pc_probe["first_texture_bindings"])
+        self.assertFalse(inventory._probe_importer_mesh_body(pc_body, profile="ps2")["plausible"])
+
+        malformed = bytearray(ps2_body)
+        struct.pack_into("<I", malformed, 388 + 8, 3)
+        malformed_probe = inventory._probe_importer_mesh_body(bytes(malformed), profile="ps2")
+        self.assertFalse(malformed_probe["plausible"])
+        self.assertIn("20*3+4", malformed_probe["error"])
 
     def test_body_length_cap_accepts_cap_and_rejects_cap_plus_one(self) -> None:
         payload = _mesh_payload(b"12345")
