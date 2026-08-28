@@ -291,6 +291,17 @@ second representative, including null; retail neither chooses a winner nor
 stops after one passing squad. Squad lifecycle, virtual calls, spawner
 readiness/masks/ranges, and actual spawning remain actor-runtime work.
 
+`RetailUnitAITargetTransaction` now joins that probe and the target scorer at
+the next exact boundary. It emits the ordered calls and raw field writes for
+slot 4's caller-retained refresh, slot 11's fast reuse, or slot 11's full
+selection commit. The full path preserves result pre-clear order, the SetReader
+call, two support updates around the first runtime-gate clear, conditional B/A
+evaluation, the second gate clear, and the released no-rollback behavior. It
+also preserves PC's C3-only NaN fast-reuse quirk separately from Xbox/PS2's
+ordered-zero rule. The Godot actor adapter still must execute deletion-aware
+reader mutation and concrete support/weapon helpers; Core does not pretend an
+integer identity is a retail monitor pointer.
+
 World admission is no longer Level-100-only in Core (2026-08-22): the released
 43-node career graph lives in `RetailWorldCatalog` with its selectability law,
 world 110 — the second career node — is admitted from its own measured

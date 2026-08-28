@@ -778,7 +778,7 @@ the squared range vector and `1000-distance` term come from the raw payload.
 Core accepts all three already ordered views rather than incorrectly deriving
 the side indexes by filtering all things. It returns the winning transcript
 index and does not claim the retail global draw phase, world-index population
-or mutation, lifecycle-aware reader transaction, or autonomous actor wiring.
+or mutation, monitor execution, helper side effects, or autonomous actor wiring.
 
 The enclosing UnitAI slot-4 body independently contributes a second pure Core
 boundary. PC retail `[0x004FF4F0,0x004FF70B)` reads the source-bound
@@ -794,6 +794,21 @@ therefore reproduces one finite interaction step rather than freezing the list:
 its caller executes the helper before acquiring the successor. It does not
 claim mutable `CWorld` ownership, virtual-call purity, the helper's ordered
 spawner lifecycle, or actual spawn products.
+
+The following reader/result transaction is now a third bounded Core owner.
+`CUnitAI`'s `+0x0C` cell uses the exact source-matching SetReader order:
+same-target no-op, unlink old, store new, register new. `+0x10` is a runtime
+caller-supplied retained-target gate whose only proved nonzero producer writes
+literal `1` after hierarchy propagation; `+0x14` is construction-fixed fast-
+reuse eligibility, initialized to `1` and disabled by five PC construction
+paths with no accepted later writer. Slot 4 refreshes a retained gated target
+without rebinding. Slot 11 otherwise attempts current-target reuse, or pre-
+clears results and commits the selector winner before two ordered support
+updates and conditional B/A evaluation. Post-commit failure does not roll back
+the reader. PC's C3-only stealth-zero test also admits unordered/NaN, while
+Xbox/PS2 require ordered zero. `RetailUnitAITargetTransaction` emits this exact
+ordered adapter plan. Mutable monitor sets, target-death feedback, virtual
+helper execution, and autonomous actor scheduling remain outside Core.
 
 The transcript's former `SupportMinimum`/`SupportMaximum` names are corrected
 to selected attack-provider range results. Exact PC bodies show that

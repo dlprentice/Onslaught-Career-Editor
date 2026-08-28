@@ -31,18 +31,30 @@ runtime call/return envelope.
 
 ## Exact transaction and scoring law
 
-The receiver's target cell is `this+0x0C`; `this+0x10` is a distinct refresh
-latch, `this+0x14` gates fast reuse, and `this+0x18/+0x1C` receive two raw
-helper results. B at `+0x1C` is behaviorally the ballistic-reach/line-clearance
-prerequisite; A at `+0x18` is the final aim-angle/obstruction fire acceptance.
-Those are bounded descriptions rather than recovered member/method names; their
-stores and B-before-A order are instruction-proven.
+The receiver's `this+0x0C` cell is a deletion-aware active-reader reference.
+The exact 52-byte `CGenericActiveReader::SetReader` body
+`[0x00401000,0x00401034)` (SHA-256
+`5540848cb8c7cd9fd46fc6a2d068b76527166c61510dd33c36b2c4dc1e41dca2`)
+does same-target return, unlink-old, store-new, then register-new, matching
+`references/Onslaught/activereader.cpp:8-21`. `this+0x10` is the distinct
+runtime caller-supplied retained-target gate; its only proved nonzero producer
+is the hierarchy-propagation path, which supplies literal `1`. `this+0x14` is a
+construction-fixed fast-reuse gate: base initialization writes `1`, five PC
+construction paths overwrite it with `0`, and no accepted post-construction
+writer exists. It is not a mutable refresh latch. `this+0x18/+0x1C` receive two
+raw helper results. B at `+0x1C` is behaviorally the ballistic-reach/line-
+clearance prerequisite; A at `+0x18` is the final aim-angle/obstruction fire
+acceptance. Those are bounded descriptions rather than recovered member/method
+names; their stores and B-before-A order are instruction-proven.
 
 Fast reuse requires a non-null current target, target virtual `+0x16C == 0.0`,
 non-zero `this+0x14`, and a non-zero active/state helper. It preserves the
 reader and `this+0x10`, performs support selection, stores helper B to `+0x1C`,
 then either stores helper A to `+0x18` or explicitly zeros `+0x18` when B is
-zero.
+zero. Target slot `+0x16C` is source-backed `GetStealth()`. PC retail/demo test
+only x87 status bit C3, so unordered/NaN passes this one gate alongside positive
+and negative zero; Xbox's parity test and PS2's `c.eq.s` reject NaN and accept
+only ordered zero.
 
 Full refresh pre-clears `+0x18` then `+0x1C`, chooses the side-keyed list, and
 walks it in retained order. A candidate must pass the active/state, side, and
@@ -102,19 +114,22 @@ order. A greater-primary candidate whose secondary is non-positive can leave
 the previous lower-primary pointer intact because retail does not clear that
 local when it resets secondary.
 
-A winner is committed with lifecycle-aware `SetReader` before support and
-helper evaluation, then `this+0x10` is reset. No winner clears the reader and
-resets the latch. Support-helper side effects are not part of the transcript
-reducer now promoted to Core.
+A winner is committed with lifecycle-aware `SetReader`, followed by one support
+update, a `this+0x10=0` write, a second support update on the now-current reader,
+the active/state check, B-to-`+0x1C`, and conditional A-to-`+0x18`. The common
+exit writes `+0x10=0` again. If the post-commit state or B check fails, the new
+reader remains bound and the pre-cleared result cells remain zero; there is no
+rollback. No winner still calls `SetReader(null)` before clearing `+0x10`.
+`RetailUnitAITargetTransaction` carries this ordered plan into Core without
+claiming monitor mutation or support/helper side effects.
 
 ## Cross-build correspondence
 
-The PC demo bodies at `0x004FF5A0/0x004FF7C0` normalize exactly to retail PC.
+The PC demo bodies at `0x004FF5A0/0x004FF7C0` reproduce retail PC's transaction.
 Xbox USA `0x00188A20/0x001878A0` and Issue 11
 `0x00188A90/0x00187910` normalize identically within each virtual slot. PS2
 demo `0x002BF548/0x002BF818`, Europe `0x002BF608/0x002BF8D8`, and USA
 `0x002BFD70/0x002C0040` normalize identically within each slot; raw MIPS branch
-inspection reproduces the same ladder, strict range, floor, and tie law. This
 inspection reproduces the same ladder, strict range, deterministic floor,
 indiscriminate-floor bypass, draw conversion, and tie law. This closes
 family-level branch correspondence and the per-draw integer law, not scenario
@@ -168,12 +183,13 @@ runtime specimen SHA-256
   bounded to this copied-runtime trace.
 - No value watchpoint was collected. Exact per-invocation before/after dwords,
   pointed-to RTTI, helper side effects, scenario-specific shared-stream phase,
-  RNG period/frequency, x87/console rounding knife edges, and other-level
-  population remain open.
+  RNG period/frequency, scoring-rounding knife edges, and other-level population
+  remain open. The fast-reuse zero/NaN platform distinction is closed statically.
 - `RetailUnitAITargetSelection` carries the finite-domain deterministic and
-  indiscriminate transcript reducer into Core. It is deliberately unwired from
-  actor state; autonomous target-list population and reader/helper transactions
-  remain open.
+  indiscriminate transcript reducer into Core. `RetailUnitAITargetTransaction`
+  consumes its optional winner and emits the exact ordered retained-refresh,
+  fast-reuse, or full-selection plan. Both remain unwired from actor state;
+  autonomous population, monitor execution, and helper side effects remain open.
 
 ## Cheapest falsifier
 

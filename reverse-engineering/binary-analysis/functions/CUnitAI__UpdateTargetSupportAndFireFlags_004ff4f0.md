@@ -43,7 +43,8 @@ valid target runs support selection, stores B first, and calls/stores A only
 when B is non-zero; the earlier pre-clear supplies the B-false A value.
 
 The fallback/candidate-scan arm does not pre-clear either result and preserves
-both through the scan. If its existing reader and `this+0x10` latch are usable,
+both through the scan. If its existing reader and runtime `this+0x10` retained-
+target gate are usable,
 it stores B first, then stores A only when B is non-zero; B-false explicitly
 zeros A. Otherwise virtual slot `+0x2C` transfers the transaction to
 `0x004FF710`. The retained take2 trace resolves all 86 observed transfers to
@@ -52,6 +53,13 @@ that body on the same receiver.
 These stores/order are closed statically; the absent value watchpoint limits
 only exact per-invocation before/after values and frequencies. The PC demo,
 paired Xbox, and three PS2 slot-4 bodies carry the same branch shape.
+
+The gate is caller-supplied, not an autonomous latch: the only proved nonzero
+producer passes literal `1` while propagating a target through a unit hierarchy.
+This arm leaves both reader and `+0x10` intact. If it cannot use that retained
+target, slot 11 owns the full selection/reader transaction documented in its
+canonical note. Core's `RetailUnitAITargetTransaction` preserves that exact
+choice and the following ordered calls/writes without owning the monitor.
 
 ## Ordered all-squads helper-call scan
 
