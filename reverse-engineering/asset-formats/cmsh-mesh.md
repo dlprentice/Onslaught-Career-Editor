@@ -1,13 +1,15 @@
 # CMSH tagged mesh-stream contract
 
 Status: active format contract — complete PC corpus framing, bounded PC fields,
-and complete released PS2 material-binding population; position and
-linked-shader normal skinning laws are closed while animation/general scene
-import remain partial
+complete released PS2 material-binding population, and a bounded PC/Xbox/PS2
+material-identity join; position and linked-shader normal skinning laws are
+closed while animation/general scene import remain partial
 Date: 2026-08-28
 Verdict: all 213 PC mesh streams frame and their complete tag population is
 counted; the PS2 shelf closes 3,547 meshes and 14,028 material bindings across
-307 unique AYA identities, while PB* and animation scheduling remain partial.
+307 unique AYA identities; a three-platform join closes the portable material
+key and the need for build-specific row variants, while PB* and animation
+scheduling remain partial.
 Evidence: MEASURED — all 213 mirror-index PC mesh rows were re-aggregated on
 2026-08-22; the complete named PS2 demo/Europe/USA package population was
 streamed and independently replayed on 2026-08-28. Field names below are
@@ -213,6 +215,54 @@ The exact demo split is 271/56/222 for `201`, 8/1/1 for `base`, and 91/0/0
 for `Frontend` (`TEXT`/`MESH`/binding), reproduced by direct framing of the
 exact package members.
 
+## Cross-platform material identity and variants
+
+Two independent carrier-first replays compared the canonical PC retail, Xbox
+USA retail, and byte-identical Europe/USA PS2 retail AYA shelves. The join key
+was resource id, slash-normalized case-folded mesh logical name, mesh occurrence
+within that resource, and ordered binding slot. Occurrence is a safe schema
+coordinate, but is not proved necessary by these specimens: duplicate
+normalized mesh-name surplus within a resource is zero in all four measured
+corpora, including the PS2 demo.
+
+The 300 common retail resource ids contain 3,384 three-way mesh keys and 13,073
+shared positional binding slots:
+
+| Cross-platform measurement | Exact result |
+| --- | ---: |
+| PC/PS2 equal binding counts | 3,384 / 3,384 meshes |
+| Xbox binding-count divergences | 39 meshes |
+| PC/PS2 equal five-u32 lane tuples | 13,073 / 13,073 slots |
+| PC/PS2 equal `CMST+0x20` values | 13,073 / 13,073 slots |
+| Xbox five-u32 lane divergences | 143 slots |
+| Xbox `CMST+0x20` divergences | 76 slots |
+| All-three equal normalized texture names | 12,882 slots |
+| PC/PS2 equal normalized texture names | 13,059 / 13,073 slots |
+| Equal Xbox/PS2 terminal numeric keys | 388 / 13,073 slots |
+
+Every measured Xbox and PS2 terminal `TEXB` key equals the referenced `TEXT`
+record's zero-based encounter ordinal inside that same AYA. The other 12,685
+Xbox/PS2 terminal keys differ despite their structural join. A portable material
+record must therefore retain the resolved normalized texture name, not the
+console integer. Binding identity remains the ordered slot: every measured
+`TEXR` is six optional indexes into that exact list, with `0xFFFFFFFF` as the
+unbound sentinel, and no non-sentinel index is out of range.
+
+One neutral representation can carry resource/build identity, normalized mesh
+name, occurrence, ordered slot, resolved texture name, sample count, five raw
+lane arrays, and raw `CMST+0x20`. It must preserve platform and edition variants
+rather than collapse their row lists. Retail PC and PS2 give
+`fb_solar_pod.msh` five bindings, while Xbox retail and the German PS2 demo give
+it twelve; 14 PC/PS2 retail slots also resolve different normalized texture
+names. Equal structure or raw lane values does not prove equal pixels or equal
+renderer semantics.
+
+The retained independent reports are
+`local-lab/continuous-20260827/lane-cross-platform-material-join.md`
+(`0ea1e124...eeb314b`) and
+`local-lab/continuous-20260827/lane-cross-platform-material-join-refuter.md`
+(`bb45db32...5b9763`).
+
 ## Animation and skinning boundary
 
 There is no standalone `.anim` file family in the 5,464-file mirror. Animation
@@ -305,8 +355,8 @@ The container walk, corpus population, tag counts, hierarchy/reference shapes,
 selected geometry fields, pose-map dimensions, bone-to-part names, palette-slot
 indices, the seven-file position blend, typed bind/current order, released
 normal dataflow, PS2 `CMST`/`MSHT`/`TEXB` framing and five-lane renderer
-dataflow, numeric-LVLR membership, 4,090 WRES definition joins, and 53 anonymous
-embedded bodies are bounded. PS2 axis authoring names and multi-sample authored
-usage, named clips, other WRES/spawn owners, general scheduling/rendering,
-complete scene dependencies, collision, malformed-input behavior, pixels, and
-parity are open.
+dataflow, cross-platform material identity/variant boundary, numeric-LVLR
+membership, 4,090 WRES definition joins, and 53 anonymous embedded bodies are
+bounded. PS2 axis authoring names and multi-sample authored usage, named clips,
+other WRES/spawn owners, general scheduling/rendering, complete scene
+dependencies, collision, malformed-input behavior, pixels, and parity are open.
