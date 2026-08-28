@@ -810,6 +810,17 @@ Xbox/PS2 require ordered zero. `RetailUnitAITargetTransaction` emits this exact
 ordered adapter plan. Concrete pointer ownership, virtual helper execution, and
 autonomous actor scheduling remain outside Core.
 
+The preceding direct/current-target arm is a distinct phased owner. PC retail
+`[0x004FF4F7,0x004FF57E)` first clears a dying `+0x0C` reader, then admits the
+arm only for a nonnull owner `+0x148` receiver whose raw virtual slot-83 result
+is zero. The recognized lifecycle binds that cell to `CNormalSquad`, but the
+virtual's authored name is not recovered. Admission writes `+0x18=0` before
+`+0x1C=0`; null stops, state rejection clears the reader, and success reloads
+the canonical reader separately for support, B, and conditional A(context 0).
+PC demo, both measured Xbox images, and PS2 demo/Europe/USA preserve the same
+order. `RetailUnitAIDirectTargetArm` emits those stage-local observations and
+actions without merging them into the later selector/fallback transaction.
+
 Deletion-aware reader feedback is now its own deterministic owner. Pristine PC
 `CGenericActiveReader__SetReader` `[0x00401000,0x00401034)` (52 bytes, SHA-256
 `5540848cb8c7cd9fd46fc6a2d068b76527166c61510dd33c36b2c4dc1e41dca2`)

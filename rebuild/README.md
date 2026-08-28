@@ -302,6 +302,15 @@ ordered-zero rule. The Godot actor adapter still must execute deletion-aware
 reader mutation and concrete support/weapon helpers; Core does not pretend an
 integer identity is a retail monitor pointer.
 
+The earlier slot-4 direct/current-target arm is carried separately by
+`RetailUnitAIDirectTargetArm`. It clears a dying entry reader before the raw
+membership virtual, falls through without touching results when that gate is
+absent/nonzero, otherwise pre-clears A then B, clears the reader on active-state
+failure, and runs support/B/conditional-A in released order. Its request keeps
+the reader identity observed at each call site, so a lifecycle change between
+stages is not flattened into one stale target. The membership virtual's
+authored name and all pointer/monitor/helper execution remain adapter-owned.
+
 `RetailActiveReaderGraph` now supplies that deletion-aware boundary. It gives
 each non-owning reader a stable cell identity, preserves exact same-target
 no-op and detach-old/publish-new/attach-new rebind order, and tracks each

@@ -37,10 +37,24 @@ READY, and reproduced all 1,169 shared cohort/control rows byte-for-byte.
 Before either main arm, a current reader with target byte `+0x2C & 4` is cleared
 through lifecycle-aware `CGenericActiveReader::SetReader`.
 
-The direct/current-target arm pre-clears helper result A at `this+0x18`, then B
-at `this+0x1C`. A null or invalid target therefore returns with both zero. A
-valid target runs support selection, stores B first, and calls/stores A only
-when B is non-zero; the earlier pre-clear supplies the B-false A value.
+The direct/current-target arm is selected only when owner `+0x148` is nonnull
+and that receiver's virtual slot 83 (`vtable+0x14C`) returns zero. The recognized
+PC lifecycle binds this deletion-aware membership cell to `CNormalSquad`:
+normal-squad add publishes the squad after appending the member, removal clears
+it after removing the member, and its slot 83 returns zero. `CRelaxedSquad`
+returns two from the same slot but uses a distinct member-reader design; the
+slot's authored name remains unknown, so its raw zero/nonzero result is the
+durable contract.
+
+After that gate the arm pre-clears helper result A at `this+0x18`, then B at
+`this+0x1C`. It reloads reader `+0x0C` before the active-state predicate,
+support update, B, and A rather than retaining one eager pointer. A null reader
+returns with both results zero. State rejection clears the reader through
+`SetReader` and returns without support/B/A. A passing reader runs support,
+stores raw B first, and calls/stores A with literal context zero only when B is
+non-zero; the earlier pre-clear supplies the B-false A value. Core's
+`RetailUnitAIDirectTargetArm` preserves that phased order and keeps the later
+fallback transaction separate.
 
 The fallback/candidate-scan arm does not pre-clear either result and preserves
 both through the scan. If its existing reader and runtime `this+0x10` retained-
@@ -54,8 +68,9 @@ These stores/order are closed statically; the absent value watchpoint limits
 only exact per-invocation before/after values and frequencies. The PC demo,
 paired Xbox, and three PS2 slot-4 bodies carry the same branch shape.
 
-The gate is caller-supplied, not an autonomous latch: the only proved nonzero
-producer passes literal `1` while propagating a target through a unit hierarchy.
+The retained-target gate is caller-supplied, not an autonomous latch: the only
+proved nonzero producer passes literal `1` while propagating a target through a
+unit hierarchy.
 This arm leaves both reader and `+0x10` intact. If it cannot use that retained
 target, slot 11 owns the full selection/reader transaction documented in its
 canonical note. Core's `RetailUnitAITargetTransaction` preserves that exact
@@ -161,4 +176,7 @@ sites; an ff710 call outside the unique `0x004ff702` same-ECX nested path;
 receiver-containment failure; a control failure; or a shared-row hash other than
 `AD623E03…CDB0F` falsifies this bounded runtime contract. A reachable UnitAI A
 call after zero B, nonzero A context at any of the four sites, or a PC delegate
-exit outside `{0,1}` falsifies the static helper contract.
+exit outside `{0,1}` falsifies the static helper contract. A direct-arm trace
+that retains one old reader across a monitor-driven rebind, writes B before A's
+pre-clear, leaves an invalid reader bound, or runs support/B/A after state
+rejection falsifies the phased direct transaction.
