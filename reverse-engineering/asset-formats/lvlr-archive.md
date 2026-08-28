@@ -6,8 +6,9 @@ Date: 2026-08-27
 Verdict: all 301 streams and 23,884 top-level tags are accounted for; the
 numeric WRES Unit/Feature instance join is bounded, while most other payload
 schemas and world dependencies remain partial.
-Evidence: MEASURED — all 301 mirror-index archive rows inflate to `LVLR`; the
-complete earlier top-level chunk census is cited below.
+Evidence: MEASURED — all 301 PC mirror-index archive rows inflate to `LVLR`;
+the complete earlier top-level chunk census and the exact PS2 packed-resource
+census are cited below.
 Specimen: `G:\bea-asset-mirror\INDEX.jsonl`, SHA-256
 `c45722aeed52e77788c7886cb30b813900d3516b1c387983c442d2b02d4fe4b9`;
 retail VAs cite `BEA.exe.original.backup`, SHA-256
@@ -48,27 +49,52 @@ measurement and pinned source ownership are in
 ## Canonical numeric writer topology
 
 Every numeric archive in the named 66-file retail PC shelf has this exact
-top-level run order; the retained USA Xbox census independently carries the
-same topology for all 66 corresponding streams:
+top-level run order. The retained USA Xbox census independently carries the
+same topology for all 66 corresponding streams, and direct streaming of all 67
+numeric members in the exact Europe/USA PS2 retail package proves it there too:
 
 ```text
 LVLR, TARG, AYAD, TEXT*, MESH*, IMPS, LNDS, SURF, ERES, SSHD, WRES
 ```
 
 The asterisks describe the writer grammar: each run can be empty after source
-filtering, although both are nonempty in the measured PC shelf (`TEXT` 249–319,
-`MESH` 30–71). The fixed prefix geometry is `LVLR@0:size4`,
-`TARG@12:size4`, `AYAD@24:size24` in all 301 PC resource streams. Pinned
+filtering, although both are nonempty in every measured numeric shelf. PC has
+`TEXT` 249–319 and `MESH` 30–71; PS2 has `TEXT` 240–312 and `MESH` 25–71.
+The fixed prefix geometry is `LVLR@0:size4`, `TARG@12:size4`,
+`AYAD@24:size24`. Pinned
 `references/Onslaught` commit `5352a81cdb838b145a57f7febc5d9fc4b0129ebb`
 corroborates the PC-host builder schedule: `ResourceAccumulator.cpp:324-347`
 writes the prefix, `:504-592` emits stable filtered texture then mesh runs, and
 `:627-697` writes the six numeric tail owners in this order. This does not prove
-that decoders require the order, that the pinned source is the exact historical
-production revision, or that PS2/demo/other regional shelves share it.
+that decoders require the order or that the pinned source is the exact
+historical production revision.
+
+The measured platform prefixes are:
+
+| Named shelf | Numeric streams | Envelope | `TARG` | `AYAD` six-word tuple |
+| --- | ---: | --- | ---: | --- |
+| Retail PC | 66 | PC chunked/zlib; raw stream after inflation | 1 | `(344,372,316,5084,92,1)` |
+| USA Xbox | 66 | raw tag stream in ZIP | 2 | differs at least at `CMeshPart=320` |
+| Europe/USA PS2 | 67 | raw tag stream inside RCDF `DATA0.NYO` | 3 | `(344,372,316,5084,92,1)` |
+
+The two exact PS2 retail ISOs carry byte-identical `DATA0.NYO` packages:
+1,691,951,868 bytes, SHA-256
+`dc02e657cb6e405c7228c54191d2ca37419c63b4d442a22a9a52b8ef0ab34f99`.
+Its RCDF index has 383 rows and SHA-256
+`25b628b06f4386f97e36bd9041a38910c8238fa1523d0c337b5e8fed51c51bb9`.
+All 67 numeric member intervals were streamed and completely accounted for:
+54 distinct run-count strings, 1,443,414,410 payload bytes total, no unknown
+top-level tag, interleaving, missing/repeated/swapped tail, gap, overlap, or
+residual member byte. Sixty-five IDs overlap the reviewed PC/Xbox set; PS2 adds
+`000` and `888` and lacks `201`. This closes emitted topology only for those
+exact Europe/USA retail owners; other revisions, prototypes, and the PS2 demo
+remain separate specimens.
 
 `tools/aya_archive_inventory.py --expect-numeric-schedule` makes this a
 fail-closed, optional SDK/build check and reports the first unexpected tag and
-inflated offset. It is intentionally not duplicated in the Godot asset
+inflated offset. It checks framing/order, not the platform-specific `TARG` or
+`AYAD` payload values, and it does not itself open RCDF members. It is
+intentionally not duplicated in the Godot asset
 materializer: every archive currently admitted there already passes an exact
 whole-file SHA-256 gate before inflation.
 
@@ -131,8 +157,8 @@ only formats local `AYAD` mismatch text, tests `MESH` before that gate, and
 deserializes `VSDS`. Both are encounter-order dispatchers and both skip `LNDS`
 on PC. The mapped PC demo body is a normalized-instruction twin of this retail
 function, which corroborates the dispatcher implementation but is not a demo
-archive-shelf census. Released PS2 loader behavior and numeric outer topology
-remain open until their exact payloads/body are measured.
+archive-shelf census. Released PS2 loader behavior remains open; the outer
+topology above is a corpus fact and does not establish PS2 dispatch rules.
 
 ## Complete top-level vocabulary census
 
@@ -232,8 +258,10 @@ the 53 direct anonymous `PMS2+309` bodies without naming them.
 
 ## Claim boundary
 
-The 301-file population, AYA framing, canonical PC/Xbox numeric writer profile,
-released-PC outer dispatch contract, top-level geometry, 4,090 numeric WRES
-Unit/Feature joins, and 53 anonymous embedded CMSH bodies are settled. General
-LVLR field semantics, other WRES/object dependencies, anonymous body names,
-runtime subsystem effects, PS2/demo shelf topology, and parity are open.
+The 301-file PC population, AYA framing, canonical PC/Xbox/PS2 numeric writer
+profile for the exact named retail shelves, released-PC outer dispatch
+contract, top-level geometry, 4,090 numeric WRES Unit/Feature joins, and 53
+anonymous embedded CMSH bodies are settled. General LVLR field semantics,
+other WRES/object dependencies, anonymous body names, runtime subsystem
+effects, PS2 loader behavior, unmeasured demo/prototype shelves, and parity are
+open.
