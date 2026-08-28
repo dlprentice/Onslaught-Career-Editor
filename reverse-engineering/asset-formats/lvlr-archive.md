@@ -4,8 +4,9 @@ Status: active format contract — complete outer/tag census; most payload schem
 remain owner-specific or open
 Date: 2026-08-28
 Verdict: all 301 streams and 23,884 top-level tags are accounted for; the
-numeric WRES Unit/Feature instance join is bounded, while most other payload
-schemas and world dependencies remain partial.
+numeric WRES Unit/Feature instance join and released PS2 texture-page runtime
+boundary are bounded, while most other payload schemas and world dependencies
+remain partial.
 Evidence: MEASURED — all 301 PC mirror-index archive rows inflate to `LVLR`;
 the complete earlier top-level chunk census and the exact PS2 packed-resource
 census are cited below.
@@ -279,6 +280,66 @@ are the byte offset. Page-in reads exactly
 `16 * ceil(width * height / 16)` bytes. Palettes remain inline in AYA `8PAL`,
 and model geometry/material bindings remain in AYA `MESH`; the complete paging
 static xref census reaches only this texture-mip page-in path.
+
+#### `PS2MipmapData` runtime module
+
+The missing platform source is now bounded from all three released PS2 ELFs.
+Each contains the exact 36-byte NUL-terminated path
+`C:/dev/Onslaught2/PS2MipmapData.cpp` once (path SHA-256
+`430352d799d63fc91b450c2a2c30116a3e4cb8c6391fd78ab8450fa309b757e5`)
+and passes it to texture-category allocation sites at source lines 52, 97,
+144, 204, and 290. The retained source only includes the unavailable header in
+[`engine.cpp`](../../references/Onslaught/engine.cpp); no implementation,
+object, map, or project entry was recovered.
+
+The exact function bodies in the hash-pinned demo, Europe, and USA ELFs are:
+
+| Source line | Bytes | Demo body | Europe body | USA body | Released role |
+| ---: | ---: | --- | --- | --- | --- |
+| 52 | 608 | `[0x314268,0x3144C8)` | `[0x314238,0x314498)` | `[0x314B78,0x314DD8)` | construct the full-resolution four-byte mip payload, optionally palettize, then build its DMA list |
+| 97 | 612 | `[0x3144C8,0x31472C)` | `[0x314498,0x3146FC)` | `[0x314DD8,0x31503C)` | halve the prior dimensions and either palettize or average each four-channel 2x2 neighborhood |
+| 144 | 424 | `[0x314730,0x3148D8)` | `[0x314700,0x3148A8)` | `[0x315040,0x3151E8)` | split resident payload into at-most-`0x7FFF`-qword DMA segments and compute GS storage bytes |
+| 204 | 672 | `[0x3148D8,0x314B78)` | `[0x3148A8,0x314B48)` | `[0x3151E8,0x315488)` | replace the DMA buffer with one packet group per 16x16 macroblock and trap on final-size mismatch |
+| 290 | 4,072 | `[0x314B78,0x315B60)` | `[0x314B48,0x315B30)` | `[0x315488,0x316470)` | build a fixed `0x190`-byte packet for four neighboring texture quadrants |
+
+The ELF identities are demo
+`5700b5d0b39554e49afe65e079ad8109fe6688c2aa5e6f0e0ed5afcefd034584`,
+Europe
+`87cb89b020cf107b3ba4612ac6bc86ed3fcbd6dd985e2cd3978bf897be96b655`,
+and USA
+`4cfed76f0b0cdf84377a4d5b1613fd197c27be9a3814743590fecba22ba4e166`.
+All 15 body ranges were reread from those files and reproduced their recorded
+raw SHA-256 identities.
+
+The constructor establishes a `0x2C`-byte object. Stable fields are resident
+payload/base pointers at `+0x00/+0x04`, payload length in 16-byte quadwords at
+`+0x08`, DMA/GIF storage at `+0x0C`, width/height at `+0x10/+0x14`, encoded
+paging location/state at `+0x1C`, computed GS storage bytes at `+0x20`, and the
+parent texture at `+0x28`. With `q=+0x08`, `w=+0x10`, and `h=+0x14`, the exact
+allocation laws are:
+
+```text
+line 52/97 payload: 16 * ((w * h) >> 2)
+line 144 DMA list:  16 * (3 * ceil(q / 0x7fff) + 1)
+line 204 packet:    16 * (6 * ((w >> 4) * (h >> 4)) + 4)
+line 290 packet:    0x190
+```
+
+Lines 52 and 97 are called in first-mip/remaining-mip order by one PS2 texture
+constructor. Line 144 has seven caller roles, including the page-in path after
+it installs freshly read payload state; this pins it as in-memory DMA-list
+reconstruction. Line 204 alone owns the exact diagnostic
+`Texture macroblock DMA size mismatch - end is %d, should be %d!` and a
+`break 0` failure. Line 290 receives a checked 2x2 texture neighborhood and
+emits the four offsets `(0,0)`, `(halfWidth,0)`, `(0,halfWidth)`, and
+`(halfWidth,halfWidth)`.
+
+This closes mip creation, resident payload layout, DMA/GIF preparation, and GS
+storage accounting in the released runtime. It does **not** establish that
+this module serializes APF `TBLK/IDNT/TEX8/FXUP`, chooses the paging-admission
+predicate, merges resource APFs into `pagefile.mpf`, deduplicates pageable
+textures, or patches AYA offsets: none of the five bodies receives a chunker,
+stream, filename, or resource accumulator, and none contains those disk tags.
 
 All measured released words choose the master: 284/284 in the PS2 demo's base
 and `201` archives, and 18,955/18,955 in retail base plus 67 numeric archives.

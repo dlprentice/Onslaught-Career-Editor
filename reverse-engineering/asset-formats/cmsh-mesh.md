@@ -1,20 +1,26 @@
 # CMSH tagged mesh-stream contract
 
 Status: active format contract — complete PC corpus framing, bounded PC fields,
-and released PS2 material-binding semantics; position and linked-shader normal
-skinning laws are closed while animation/general scene import remain partial
+and complete released PS2 material-binding population; position and
+linked-shader normal skinning laws are closed while animation/general scene
+import remain partial
 Date: 2026-08-28
-Verdict: all 213 mesh streams frame and their complete tag population is
-counted; selected geometry, the seven-file skinning family, and the PS2
-five-lane material profile are bounded while PB* and animation scheduling
-remain partial.
-Evidence: MEASURED — all 213 mirror-index mesh rows were re-aggregated on
-2026-08-22. Field names below are either measured by repository parsers or
-explicitly attributed to Stuart's AYAResourceExtractor lineage.
+Verdict: all 213 PC mesh streams frame and their complete tag population is
+counted; the PS2 shelf closes 3,547 meshes and 14,028 material bindings across
+307 unique AYA identities, while PB* and animation scheduling remain partial.
+Evidence: MEASURED — all 213 mirror-index PC mesh rows were re-aggregated on
+2026-08-22; the complete named PS2 demo/Europe/USA package population was
+streamed and independently replayed on 2026-08-28. Field names below are
+either measured by repository parsers or explicitly attributed to Stuart's
+AYAResourceExtractor lineage.
 Specimen: `G:\bea-asset-mirror\INDEX.jsonl`, SHA-256
 `c45722aeed52e77788c7886cb30b813900d3516b1c387983c442d2b02d4fe4b9`;
 retail VAs cite `BEA.exe.original.backup`, SHA-256
-`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`;
+PS2 package specimens are the demo `DATA0.NYO`, SHA-256
+`6d503ca251a4b00a5ebcfa447036075f6b1d563c9f55ea7ab784e7db4b6f3d3c`,
+and the byte-identical Europe/USA retail `DATA0.NYO`, SHA-256
+`dc02e657cb6e405c7228c54191d2ca37419c63b4d442a22a9a52b8ef0ab34f99`.
 
 ## Population and envelope
 
@@ -183,6 +189,29 @@ larger demo `201_res_PS2.aya`
 (`b187cab2b7866cd23a6e443908c357fca93d729fa9fcb9853768464417ad282e`)
 independently exercises the new probe across 56 mesh bodies and 222 binding
 records without a framing failure.
+
+The complete named package shelf closes the sample boundary:
+
+| Corpus | AYA identities/instances | `TEXT` | `MESH` / `CMST` | Bindings / `MSHT` / `TEXB` |
+| --- | ---: | ---: | ---: | ---: |
+| PS2 demo | 5 | 370 | 57 | 223 |
+| shared Europe/USA retail bytes, counted once | 302 | 18,597 | 3,490 | 13,805 |
+| unique-byte total | 307 | 18,967 | 3,547 | 14,028 |
+| demo + Europe + USA regional instances | 609 | 37,564 | 7,037 | 27,833 |
+
+Every one of the 14,028 unique binding records has `n=1`; no shipped `n=0`
+or `n>1` row occurs. Consequently every `CMST` is exactly `36 * bindings`,
+every `MSHT` is 32 bytes, and every `TEXB` is 24 bytes. The unique-byte
+declared totals are 505,008 `CMST` bytes, 448,896 `MSHT` bytes, and 336,672
+`TEXB` bytes. All 18,967 `TEXT/P2TX/TEXD` records have a 160-byte `TEXD`,
+numeric keys are unique within each AYA, and all 14,028 material keys resolve
+inside their owning AYA. Malformed streams, wrapper residue, size-law failures,
+duplicate keys, and unresolved joins are all zero. The 232 retail Goodie AYAs
+legitimately contain neither `TEXT` nor `MESH`; they are not dropped rows.
+
+The exact demo split is 271/56/222 for `201`, 8/1/1 for `base`, and 91/0/0
+for `Frontend` (`TEXT`/`MESH`/binding), reproduced by direct framing of the
+exact package members.
 
 ## Animation and skinning boundary
 
