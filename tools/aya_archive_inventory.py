@@ -192,6 +192,16 @@ class ReleasedResourceRoutePlan:
     ps2_master_mpf: str | None
 
 
+@dataclass(frozen=True)
+class Ps2TexturePageResolution:
+    """One bounded PS2 PAGE-word resolution result."""
+
+    source_kind: str
+    offset: int
+    length: int
+    data: bytes
+
+
 def resolve_released_resource_route(
     platform: str,
     resource_id: int,
@@ -269,6 +279,67 @@ def resolve_released_resource_route(
         xbox_open_path=xbox_open_path,
         ps2_level_apf=ps2_level_apf,
         ps2_master_mpf=ps2_master_mpf,
+    )
+
+
+def resolve_ps2_texture_page(
+    page_word: int,
+    width: int,
+    height: int,
+    *,
+    master_page_bytes: bytes | bytearray | memoryview | None,
+    per_resource_page_bytes: bytes | bytearray | memoryview | None = None,
+) -> Ps2TexturePageResolution:
+    """Resolve one released PS2 texture-mip PAGE reference.
+
+    Bit zero selects the master MPF when set and the current per-resource APF
+    when clear. The remaining bits are the byte offset; the released read size
+    is ``16 * ceil(width * height / 16)``. This local tool boundary rejects
+    signed-negative words, unsafe arithmetic, a missing selected source, and
+    out-of-bounds reads rather than reproducing the console's soft failures.
+    Palette bytes remain owned by the AYA and are not inputs here.
+    """
+
+    for name, value in (
+        ("page_word", page_word),
+        ("width", width),
+        ("height", height),
+    ):
+        if not isinstance(value, int) or isinstance(value, bool):
+            raise TypeError(f"{name} must be an integer")
+
+    if not 0 <= page_word <= 0x7FFFFFFF:
+        raise ValueError("page_word must be a nonnegative signed 32-bit value")
+    if not 0 < width <= 0x7FFFFFFF or not 0 < height <= 0x7FFFFFFF:
+        raise ValueError("width and height must be positive signed 32-bit values")
+
+    texel_count = width * height
+    if texel_count > 0x7FFFFFFF:
+        raise ValueError("width * height exceeds the safe signed 32-bit domain")
+    length = ((texel_count + 15) // 16) * 16
+    if length > 0x7FFFFFFF:
+        raise ValueError("resolved page length exceeds the safe signed 32-bit domain")
+
+    use_master = (page_word & 1) != 0
+    source_kind = "master_mpf" if use_master else "per_resource_apf"
+    source = master_page_bytes if use_master else per_resource_page_bytes
+    if source is None:
+        raise ValueError(f"{source_kind} bytes are required by this PAGE word")
+    if not isinstance(source, (bytes, bytearray, memoryview)):
+        raise TypeError(f"{source_kind} bytes must be bytes-like")
+
+    offset = page_word & ~1
+    source_length = len(source)
+    if offset > source_length or length > source_length - offset:
+        raise ValueError(
+            f"{source_kind} interval [{offset}, {offset + length}) exceeds "
+            f"the {source_length}-byte source"
+        )
+    return Ps2TexturePageResolution(
+        source_kind=source_kind,
+        offset=offset,
+        length=length,
+        data=bytes(source[offset : offset + length]),
     )
 
 

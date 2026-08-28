@@ -110,6 +110,7 @@ class AyaArchiveInventoryObservationTests(unittest.TestCase):
             "observe_archives",
             "render_observation_records",
             "resolve_released_resource_route",
+            "resolve_ps2_texture_page",
             "validate_numeric_resource_schedule",
         ):
             self.assertTrue(callable(self._api(name)))
@@ -249,6 +250,67 @@ class AyaArchiveInventoryObservationTests(unittest.TestCase):
 
         with self.assertRaisesRegex(ValueError, "PC, Xbox, or PS2"):
             resolve("Dreamcast", 1)
+
+    def test_ps2_texture_page_resolver_preserves_selector_rounding_and_bounds(
+        self,
+    ) -> None:
+        resolution = self._api("Ps2TexturePageResolution")
+        resolve = self._api("resolve_ps2_texture_page")
+        master = bytes(range(96))
+        per_resource = bytes(reversed(range(96)))
+
+        self.assertEqual(
+            resolution("master_mpf", 16, 16, master[16:32]),
+            resolve(
+                0x11,
+                4,
+                4,
+                master_page_bytes=master,
+                per_resource_page_bytes=per_resource,
+            ),
+        )
+        self.assertEqual(
+            resolution("per_resource_apf", 2, 32, per_resource[2:34]),
+            resolve(
+                0x02,
+                5,
+                5,
+                master_page_bytes=master,
+                per_resource_page_bytes=per_resource,
+            ),
+        )
+
+        failures = (
+            (
+                (-1, 4, 4),
+                {"master_page_bytes": master},
+                "nonnegative signed 32-bit",
+            ),
+            (
+                (1, 0, 4),
+                {"master_page_bytes": master},
+                "positive signed 32-bit",
+            ),
+            (
+                (1, 0x7FFFFFFF, 2),
+                {"master_page_bytes": master},
+                "safe signed 32-bit domain",
+            ),
+            (
+                (0, 4, 4),
+                {"master_page_bytes": master},
+                "per_resource_apf bytes are required",
+            ),
+            (
+                (0x59, 4, 4),
+                {"master_page_bytes": master},
+                r"interval \[88, 104\) exceeds the 96-byte source",
+            ),
+        )
+        for arguments, keywords, message in failures:
+            with self.subTest(arguments=arguments, message=message):
+                with self.assertRaisesRegex(ValueError, message):
+                    resolve(*arguments, **keywords)
 
     def test_numeric_resource_schedule_accepts_writer_order_and_rejects_first_drift(
         self,

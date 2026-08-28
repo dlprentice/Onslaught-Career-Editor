@@ -270,6 +270,43 @@ pagefile, and records the AYA name. Every non-`-3` call lazily opens
 open failure is traced and loading continues; this body establishes the handles
 but does not read or normally close the master pagefile.
 
+### PS2 texture page transport
+
+The downstream consumer is now closed. Each `TEXT/P2TX/TEXD/TFRM/TMIP/PAGE`
+mip stores one encoded `u32`: bit zero selects the process-lifetime master MPF
+when set and the current numeric-resource APF when clear; the remaining bits
+are the byte offset. Page-in reads exactly
+`16 * ceil(width * height / 16)` bytes. Palettes remain inline in AYA `8PAL`,
+and model geometry/material bindings remain in AYA `MESH`; the complete paging
+static xref census reaches only this texture-mip page-in path.
+
+All measured released words choose the master: 284/284 in the PS2 demo's base
+and `201` archives, and 18,955/18,955 in retail base plus 67 numeric archives.
+Retail Europe/USA ship no APFs. Their single byte-identical
+`pagefile.mpf` is 39,073,280 bytes, SHA-256
+`38d118daa95f5ee5e7a0ab92795e5a74318f181243a78901fa9606bc78df59b3`;
+872 unique referenced intervals tile its entire byte range with no gap,
+overlap, or unreferenced byte. The remaining 18,083 PAGE occurrences alias one
+of those intervals.
+
+The demo does ship base and `201` APFs, each beginning with an empty top-level
+`PAGE` followed by `TBLK { IDNT, TEX8, FXUP }` blocks. Concatenating all 284
+`TEX8` payloads in base-then-201 block order reproduces its 14,507,264-byte MPF
+byte-for-byte (SHA-256
+`e446faa1712b07f2a0a2bcced144bbbb3dfdcabf073d98dde8198437cf36289f`).
+Each `FXUP` identifies the corresponding AYA PAGE-word offset, and every word
+equals the concatenated MPF offset with bit zero set. This proves the build
+fixup relation while leaving the historical packer executable/name open.
+
+The low-bit-clear APF path remains real released code but is data-dormant in
+the complete measured population. Missing APF/MPF opens are initially soft;
+a later selected page read has no second valid-handle guard. The pure
+[`resolve_ps2_texture_page`](../../tools/aya_archive_inventory.py) helper now
+resolves either branch with released selector/offset/length arithmetic and
+fails closed on missing or out-of-bounds local inputs. It is an asset-preparation
+boundary, not a reason to put PS2 disc handles or page-pool scheduling into the
+PC-based deterministic rebuild.
+
 The complete recognized-tag action table is:
 
 | Tag | Released PS2 action |
@@ -304,8 +341,8 @@ byte tag, or a short four-byte size read, and the loader then takes its ordinary
 success cleanup path. `Read` increments `ReadSinceChunk` before the underlying
 read and returns exact-length equality; the source bounds assertion is absent.
 `Skip` computes unsigned `Size-ReadSinceChunk` without guarding underflow.
-Delegate-level short-read behavior, APF/MPF consumers, malformed-skip response,
-and semantic safety of arbitrary reordered chunks remain open.
+Delegate-level short-read behavior, malformed-skip response, and semantic
+safety of arbitrary reordered chunks remain open.
 
 ## Complete top-level vocabulary census
 
@@ -410,5 +447,5 @@ canonical PC/Xbox/PS2 numeric writer profile for the exact named retail
 shelves, released-PC outer dispatch contract, top-level geometry, 4,090 numeric
 WRES Unit/Feature joins, and 53 anonymous embedded CMSH bodies are settled.
 General LVLR field semantics, other WRES/object dependencies, anonymous body
-names, runtime subsystem effects, PS2 pagefile consumers and delegate-level
-short reads, PS2/prototype shelves, and parity are open.
+names, runtime subsystem effects, delegate-level short reads, unmeasured
+PS2/prototype shelves, and parity are open.
