@@ -16,7 +16,7 @@ public sealed class RetailUnitAITargetSelectionTests
     {
         var profile = new RetailUnitAITargetProfile(
             Indiscriminate128: 0,
-            ScoreGate138: 0,
+            IgnoreThreats138: 0,
             MaximumDistance158: 2000.0f,
             EmplacementPriority164: 40.0f,
             VehiclePriority168: 10.0f,
@@ -72,15 +72,15 @@ public sealed class RetailUnitAITargetSelectionTests
                 selectedProviderMinimumRange: 0.0f,
                 selectedProviderMaximumRange: 2.0f,
                 allegiance138: RetailUnitAITargetSelection.AllegianceForseti),
-            // Both raw score gates are zero: primary stays zero and the floor
-            // is skipped even though its bit is set.
+            // A non-threat with IgnoreThreats disabled receives primary zero;
+            // the floor is skipped even though its bit is set.
             Candidate(
                 RetailUnitAITargetSelection.ThingTypeAirUnit |
                 RetailUnitAITargetSelection.ThingTypeComponent,
                 distance: 1.0f,
                 selectedProviderMinimumRange: 0.0f,
                 selectedProviderMaximumRange: 2.0f,
-                scoreGate164: 0),
+                isAThreat: false),
         ];
 
         Assert.Null(Select(profile, candidates[1..2], 1));
@@ -128,7 +128,7 @@ public sealed class RetailUnitAITargetSelectionTests
                 distance: 3.0f,
                 selectedProviderMinimumRange: 0.0f,
                 selectedProviderMaximumRange: 4.0f,
-                scoreGate164: 0),
+                isAThreat: false),
         ];
         var random = new Level100ReleasedRandom();
 
@@ -215,6 +215,30 @@ public sealed class RetailUnitAITargetSelectionTests
         Assert.Equal(100.0f, transcript[1].DistanceSquared);
     }
 
+    [Fact]
+    public void NonThreatIsZeroScoredNotRejectedAndIgnoreThreatsRestoresLadder()
+    {
+        RetailUnitAITargetCandidate nonThreat = Candidate(
+            RetailUnitAITargetSelection.ThingTypeAirUnit |
+            RetailUnitAITargetSelection.ThingTypeComponent,
+            distance: 1.0f,
+            selectedProviderMinimumRange: 0.0f,
+            selectedProviderMaximumRange: 2.0f,
+            isAThreat: false);
+        RetailUnitAITargetCandidate vehicle = Candidate(
+            RetailUnitAITargetSelection.ThingTypeVehicle,
+            distance: 2.0f,
+            selectedProviderMinimumRange: 0.0f,
+            selectedProviderMaximumRange: 3.0f);
+
+        RetailUnitAITargetProfile profile = DefaultProfile();
+        Assert.Equal(0, Select(profile, [nonThreat], 1));
+        Assert.Equal(1, Select(profile, [nonThreat, vehicle], 2));
+
+        profile = profile with { IgnoreThreats138 = 1 };
+        Assert.Equal(0, Select(profile, [nonThreat, vehicle], 2));
+    }
+
     [Theory]
     [InlineData(RetailUnitAITargetSelection.AllegianceForseti, 9.0f)]
     [InlineData(RetailUnitAITargetSelection.AllegianceMuspell, 4.0f)]
@@ -290,7 +314,7 @@ public sealed class RetailUnitAITargetSelectionTests
 
     private static RetailUnitAITargetProfile DefaultProfile() => new(
         Indiscriminate128: 0,
-        ScoreGate138: 0,
+        IgnoreThreats138: 0,
         MaximumDistance158: 2000.0f,
         EmplacementPriority164: 40.0f,
         VehiclePriority168: 10.0f,
@@ -309,7 +333,7 @@ public sealed class RetailUnitAITargetSelectionTests
         int unitMode244 = 0,
         int allegiance138 = RetailUnitAITargetSelection.AllegianceMuspell,
         int candidateCapabilityGate = 1,
-        int scoreGate164 = 1) => new(
+        bool isAThreat = true) => new(
             ThingFlags2C: thingFlags2C,
             TypeFlags34: flags,
             UnitMode244: unitMode244,
@@ -317,7 +341,7 @@ public sealed class RetailUnitAITargetSelectionTests
             DistanceSquared: distance * distance,
             RangeReductionPercent: 0.0f,
             CandidateCapabilityGate: candidateCapabilityGate,
-            ScoreGate164: scoreGate164,
+            IsAThreat: isAThreat,
             SelectedProviderMinimumRange: selectedProviderMinimumRange,
             SelectedProviderMaximumRange: selectedProviderMaximumRange);
 
@@ -330,7 +354,7 @@ public sealed class RetailUnitAITargetSelectionTests
             Allegiance138: allegiance138,
             RangeReductionPercent: 0.0f,
             CandidateCapabilityGate: 1,
-            ScoreGate164: 1,
+            IsAThreat: true,
             SelectedProviderMinimumRange: 0.0f,
             SelectedProviderMaximumRange: 2000.0f);
 

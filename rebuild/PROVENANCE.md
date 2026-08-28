@@ -750,9 +750,13 @@ candidate gate/range shape, deterministic category ladder, and indiscriminate
 score conversion `(Random() % 65536) / 8192`. `CUnitAttackPriority` owns the
 seven profile cells for emplacement, vehicle, building, naval, infantry, air,
 and component; `CUnitIndiscriminate` owns the normalized switch at config
-`+0x128`. The random arm consumes one draw only after a candidate passes the
-earlier gates and strict range test, and all measured builds jump past the
-deterministic component floor on that arm. `RetailUnitAITargetSelection`
+`+0x128`. Candidate virtual slot 89 is source-backed as `IsAThreat()`, while
+shipped property `CUnitIgnoreThreats` owns normalized config `+0x138`. When both
+are false/zero, retail substitutes primary zero without rejecting the candidate
+and bypasses the deterministic component floor. The random arm consumes one draw
+only after a candidate passes the earlier gates and strict range test; all
+measured builds skip the `IsAThreat()` call, `CUnitIgnoreThreats` read, category
+ladder, and component floor on that arm. `RetailUnitAITargetSelection`
 now computes the first two ordered gates directly: resolved candidates must
 have `TF_DYING` clear and Unit field `+0x244` outside `{1,2}`, then must satisfy
 the exact Forseti/Muspell/Independent opposing-pair table; Neutral is accepted

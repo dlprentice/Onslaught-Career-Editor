@@ -3,7 +3,7 @@
 > Address: `0x004ff710`
 
 Status: active multi-build static contract plus replicated bounded-runtime note
-Last updated: 2026-08-27
+Last updated: 2026-08-28
 Source File: none — no current source-crosswalk row | Binary: pristine
 `BEA.exe.original.backup`, 2,506,752 bytes, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
@@ -63,18 +63,25 @@ Deterministic primary scoring is first-match in this exact flag order:
 | `0x00000100` | `THING_TYPE_BUILDING` | `2 / config[0x16C]` |
 | `0x00008000` | `THING_TYPE_NAVAL` | `3 / config[0x170]` |
 
-When both candidate virtual `+0x164` and `config[0x138]` are zero, primary is
-zero and the floor is skipped. Otherwise flag `0x00080000` independently raises
-the selected primary to index-6 `config[0x17C]`
+Candidate virtual-table displacement `+0x164` is slot 89, source-backed as
+`CUnit::IsAThreat()`: the `CBattleEngine` primary vtable at `0x005D89C4`
+points that slot to literal-true body `0x004014A0`, exactly matching
+`BattleEngine.h:250`, while the `CUnit` primary vtable points it to
+`0x004FD440`. Owner config `+0x138` is the normalized field written by shipped
+property `CUnitIgnoreThreats` at `0x00432E50`; it is not a second candidate
+field. When `IsAThreat()` is false and `CUnitIgnoreThreats` is zero, primary is
+positive zero and the floor is skipped, but the candidate continues into the
+ordinary primary/secondary comparison. Otherwise flag `0x00080000`
+independently raises the selected primary to index-6 `config[0x17C]`
 (`THING_TYPE_COMPONENT`) when it is lower.
 
 `CUnitIndiscriminate` owns `config+0x128`; its serialized scalar is normalized
 to zero/one. When nonzero, each candidate that already passed all three helper
 gates and the strict range test consumes one shared gameplay-stream draw and
 uses `(Random__NextLCGAbs() % 65536) / 8192` as primary. This arm bypasses the
-two raw deterministic score gates, the category ladder, **and the component
-floor** before joining the primary comparison. The PC retail/demo, paired Xbox,
-and three PS2 bodies all carry that bypass and conversion. Their RNG bodies
+`IsAThreat()` call and `CUnitIgnoreThreats` read, the category ladder, **and the
+component floor** before joining the primary comparison. The PC retail/demo,
+paired Xbox, and three PS2 bodies all carry that bypass and conversion. Their RNG bodies
 also share multiplier `48271`, unusual modulus `214783647`, 32-bit wrapped
 arithmetic, level-start seed `123456`, and the sign-normalized return; therefore
 the remainder is always `0..65535`, including the `INT_MIN` corner mapping to

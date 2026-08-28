@@ -273,8 +273,9 @@ squad-or-unit transform, preserves list order, and deliberately measures
 distance from the raw payload while reading scoring fields from the resolved
 unit. The scorer then computes the exact `TF_DYING`/mode and
 allegiance/`CUnitIndiscriminate` gates before applying the measured range gate,
-`CUnitAttackPriority` ladder, stable primary/secondary tie law, and
-shared-stream random arm. This is not autonomous AI wiring: population and
+source-backed `IsAThreat()`/`CUnitIgnoreThreats` zero-score law,
+`CUnitAttackPriority` ladder, stable primary/secondary tie law, and shared-stream
+random arm. This is not autonomous AI wiring: population and
 lifecycle of the three world indexes, the ordered weapon/capability gate,
 reader mutation, attack-provider selection, and fire-feasibility helper
 population remain outside Core until their owning actor paths are reconstructed.

@@ -5,7 +5,8 @@ namespace OnslaughtRebuild.Core;
 /// <summary>
 /// Released <c>CUnitAI</c> close-target profile fields. The seven priority
 /// cells are the exact output array of <c>CUnitAttackPriority</c> indices
-/// 0..6; <c>CUnitIndiscriminate</c> owns <c>config+0x128</c>.
+/// 0..6; <c>CUnitIndiscriminate</c> owns <c>config+0x128</c>, and
+/// <c>CUnitIgnoreThreats</c> owns <c>config+0x138</c>.
 /// </summary>
 /// <remarks>
 /// Offsets remain in the names so the semantic labels cannot drift away from
@@ -13,7 +14,7 @@ namespace OnslaughtRebuild.Core;
 /// </remarks>
 public readonly record struct RetailUnitAITargetProfile(
     int Indiscriminate128,
-    int ScoreGate138,
+    int IgnoreThreats138,
     float MaximumDistance158,
     float EmplacementPriority164,
     float VehiclePriority168,
@@ -37,7 +38,7 @@ public readonly record struct RetailUnitAITargetCandidate(
     float DistanceSquared,
     float RangeReductionPercent,
     int CandidateCapabilityGate,
-    int ScoreGate164,
+    bool IsAThreat,
     float SelectedProviderMinimumRange,
     float SelectedProviderMaximumRange);
 
@@ -61,7 +62,7 @@ public readonly record struct RetailUnitAITargetResolvedUnit(
     int Allegiance138,
     float RangeReductionPercent,
     int CandidateCapabilityGate,
-    int ScoreGate164,
+    bool IsAThreat,
     float SelectedProviderMinimumRange,
     float SelectedProviderMaximumRange);
 
@@ -175,7 +176,7 @@ public static class RetailUnitAITargetSelection
                 DistanceSquared: distanceSquared,
                 RangeReductionPercent: unit.RangeReductionPercent,
                 CandidateCapabilityGate: unit.CandidateCapabilityGate,
-                ScoreGate164: unit.ScoreGate164,
+                IsAThreat: unit.IsAThreat,
                 SelectedProviderMinimumRange: unit.SelectedProviderMinimumRange,
                 SelectedProviderMaximumRange: unit.SelectedProviderMaximumRange));
         }
@@ -341,10 +342,11 @@ public static class RetailUnitAITargetSelection
         Level100ReleasedRandom? random)
     {
         if (profile.Indiscriminate128 == 0 &&
-            candidate.ScoreGate164 == 0 &&
-            profile.ScoreGate138 == 0)
+            !candidate.IsAThreat &&
+            profile.IgnoreThreats138 == 0)
         {
-            // This gate bypasses both the ladder and the independent floor.
+            // This is a zero-score substitution, not candidate rejection. It
+            // bypasses both the ladder and the independent component floor.
             return 0.0f;
         }
 
