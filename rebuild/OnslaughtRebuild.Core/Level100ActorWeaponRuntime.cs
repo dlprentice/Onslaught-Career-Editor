@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+using System.Numerics;
+
 namespace OnslaughtRebuild.Core;
 
 /// <summary>
@@ -656,12 +658,10 @@ public sealed partial class Level100ActorMechanics
     }
 
     /// <summary>
-    /// Point-of-closest-approach test of the round's swept segment against the
-    /// designated target's collision sphere. The shipped round has no
-    /// <c>CRoundRadius</c> node (default 0), so the whole envelope is the
-    /// target's own <c>CThing</c> radius - 0.4 for the single-player battle
-    /// engine, the same 0.4 already carried by
-    /// <see cref="SimulationConstants.Level100ObjectiveTriggerRadius"/>.
+    /// Tests the round's swept line against the designated Battle Engine's
+    /// primary finite cylinder. The shipped round has no <c>CRoundRadius</c>
+    /// node (default 0), so the whole envelope is the target cylinder installed
+    /// by <c>CBattleEngine::SetCollisionShape</c> at <c>0x004063B0</c>.
     /// </summary>
     private bool TryReportActorRoundImpact(
         ActorRoundState round,
@@ -677,45 +677,11 @@ public sealed partial class Level100ActorMechanics
 
         Level100ActorPoseSnapshot targetPose =
             _actors.GetPose(round.TargetActorId);
-        long segmentX = (long)end.X - start.X;
-        long segmentY = (long)end.Y - start.Y;
-        long segmentZ = (long)end.Z - start.Z;
-        long toTargetX = (long)targetPose.PositionMillimeters.X - start.X;
-        long toTargetY = (long)targetPose.PositionMillimeters.Y - start.Y;
-        long toTargetZ = (long)targetPose.PositionMillimeters.Z - start.Z;
-        long segmentLengthSquared =
-            (segmentX * segmentX) + (segmentY * segmentY) + (segmentZ * segmentZ);
-
-        long closestX = toTargetX;
-        long closestY = toTargetY;
-        long closestZ = toTargetZ;
-        if (segmentLengthSquared > 0)
-        {
-            long projection = (toTargetX * segmentX) +
-                (toTargetY * segmentY) +
-                (toTargetZ * segmentZ);
-            if (projection > 0)
-            {
-                if (projection >= segmentLengthSquared)
-                {
-                    closestX = toTargetX - segmentX;
-                    closestY = toTargetY - segmentY;
-                    closestZ = toTargetZ - segmentZ;
-                }
-                else
-                {
-                    closestX = toTargetX - (segmentX * projection / segmentLengthSquared);
-                    closestY = toTargetY - (segmentY * projection / segmentLengthSquared);
-                    closestZ = toTargetZ - (segmentZ * projection / segmentLengthSquared);
-                }
-            }
-        }
-
-        long distanceSquared = (closestX * closestX) +
-            (closestY * closestY) +
-            (closestZ * closestZ);
-        long radius = SimulationConstants.Level100PlayerContactRadiusMillimeters;
-        if (distanceSquared > radius * radius)
+        if (!TryResolveBattleEngineCylinderContact(
+                start,
+                end,
+                targetPose.PositionMillimeters,
+                out SimVector3 selectedPosition))
         {
             return false;
         }
@@ -724,9 +690,369 @@ public sealed partial class Level100ActorMechanics
             round.TargetActorId,
             round.OwnerActorId,
             round.Kind,
-            end,
+            selectedPosition,
             data.IncomingDamageMilliLife));
         return true;
+    }
+
+    /// <summary>
+    /// Released mode-1 <c>CLine</c>-versus-<c>CCylinder</c> response reduced to
+    /// Core's deterministic millimetre boundary. The exact finite-cylinder
+    /// overlap is the prefilter. Retail then constructs two clamped candidates
+    /// from <c>(|start|-radius)/|delta|</c>, rejects candidates beyond the same
+    /// cap, and selects the first. Q32 square roots approximate the released
+    /// binary32/x87 spills; they are not asserted bit-identical.
+    /// </summary>
+    internal static bool TryResolveBattleEngineCylinderContact(
+        SimVector3 start,
+        SimVector3 end,
+        SimVector3 battleEnginePosition,
+        out SimVector3 selectedPosition)
+    {
+        selectedPosition = default;
+        long cylinderCenterY = (long)battleEnginePosition.Y -
+            SimulationConstants.Level100PlayerCollisionCenterBelowOriginMillimeters;
+        long startX = (long)start.X - battleEnginePosition.X;
+        long startY = (long)start.Y - cylinderCenterY;
+        long startZ = (long)start.Z - battleEnginePosition.Z;
+        long deltaX = (long)end.X - start.X;
+        long deltaY = (long)end.Y - start.Y;
+        long deltaZ = (long)end.Z - start.Z;
+        long halfHeight =
+            SimulationConstants.Level100PlayerCollisionHalfHeightMillimeters;
+        long radius =
+            SimulationConstants.Level100PlayerContactRadiusMillimeters;
+
+        bool intersects = FitsFastCylinderArithmetic(
+            startX,
+            startY,
+            startZ,
+            deltaX,
+            deltaY,
+            deltaZ,
+            radius,
+            halfHeight)
+            ? IntersectsFiniteCylinderFast(
+                startX,
+                startY,
+                startZ,
+                deltaX,
+                deltaY,
+                deltaZ,
+                radius,
+                halfHeight)
+            : IntersectsFiniteCylinder(
+                startX,
+                startY,
+                startZ,
+                deltaX,
+                deltaY,
+                deltaZ,
+                radius,
+                halfHeight);
+        if (!intersects)
+        {
+            return false;
+        }
+
+        const int FixedShift = 32;
+        BigInteger one = BigInteger.One << FixedShift;
+        BigInteger startXBig = startX;
+        BigInteger startYBig = startY;
+        BigInteger startZBig = startZ;
+        BigInteger deltaXBig = deltaX;
+        BigInteger deltaYBig = deltaY;
+        BigInteger deltaZBig = deltaZ;
+        BigInteger startLengthQ = IntegerSquareRootBig(
+            ((startXBig * startXBig) +
+                (startYBig * startYBig) +
+                (startZBig * startZBig)) <<
+            (FixedShift * 2));
+        BigInteger deltaLengthQ = IntegerSquareRootBig(
+            ((deltaXBig * deltaXBig) +
+                (deltaYBig * deltaYBig) +
+                (deltaZBig * deltaZBig)) <<
+            (FixedShift * 2));
+        BigInteger firstParameterQ = BigInteger.Zero;
+        BigInteger secondParameterQ = BigInteger.Zero;
+        if (!deltaLengthQ.IsZero)
+        {
+            firstParameterQ = ClampUnit(
+                ((startLengthQ - ((BigInteger)radius * one)) << FixedShift) /
+                deltaLengthQ,
+                one);
+            secondParameterQ = ClampUnit(
+                ((startLengthQ + ((BigInteger)radius * one)) << FixedShift) /
+                deltaLengthQ,
+                one);
+        }
+
+        BigInteger firstAxisQ = (startYBig * one) +
+            (deltaYBig * firstParameterQ);
+        BigInteger secondAxisQ = (startYBig * one) +
+            (deltaYBig * secondParameterQ);
+        BigInteger capQ = (BigInteger)halfHeight * one;
+        if ((firstAxisQ > capQ && secondAxisQ > capQ) ||
+            (firstAxisQ < -capQ && secondAxisQ < -capQ))
+        {
+            return false;
+        }
+
+        selectedPosition = new SimVector3(
+            checked((int)((BigInteger)start.X + DivideRoundNearest(
+                deltaXBig * firstParameterQ,
+                one))),
+            checked((int)((BigInteger)start.Y + DivideRoundNearest(
+                deltaYBig * firstParameterQ,
+                one))),
+            checked((int)((BigInteger)start.Z + DivideRoundNearest(
+                deltaZBig * firstParameterQ,
+                one))));
+        return true;
+
+        static bool FitsFastCylinderArithmetic(
+            long startX,
+            long startY,
+            long startZ,
+            long deltaX,
+            long deltaY,
+            long deltaZ,
+            long radius,
+            long halfHeight)
+        {
+            // This bound keeps the largest squared rational numerator below
+            // signed Int128. Full Int32-domain inputs fall back to BigInteger.
+            const long Limit = 1_000_000;
+            return Math.Abs(startX) <= Limit &&
+                Math.Abs(startY) <= Limit &&
+                Math.Abs(startZ) <= Limit &&
+                Math.Abs(deltaX) <= Limit &&
+                Math.Abs(deltaY) <= Limit &&
+                Math.Abs(deltaZ) <= Limit &&
+                radius <= Limit &&
+                halfHeight <= Limit;
+        }
+
+        static bool IntersectsFiniteCylinderFast(
+            long startX,
+            long startY,
+            long startZ,
+            long deltaX,
+            long deltaY,
+            long deltaZ,
+            long radius,
+            long halfHeight)
+        {
+            (Int128 Numerator, Int128 Denominator) minimum = (0, 1);
+            (Int128 Numerator, Int128 Denominator) maximum = (1, 1);
+
+            if (deltaY == 0)
+            {
+                if (Math.Abs(startY) > halfHeight)
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                (Int128 Numerator, Int128 Denominator) first =
+                    NormalizeFastFraction(-halfHeight - startY, deltaY);
+                (Int128 Numerator, Int128 Denominator) second =
+                    NormalizeFastFraction(halfHeight - startY, deltaY);
+                if (CompareFastFractions(first, second) > 0)
+                {
+                    (first, second) = (second, first);
+                }
+                if (CompareFastFractions(first, minimum) > 0)
+                {
+                    minimum = first;
+                }
+                if (CompareFastFractions(second, maximum) < 0)
+                {
+                    maximum = second;
+                }
+                if (CompareFastFractions(minimum, maximum) > 0)
+                {
+                    return false;
+                }
+            }
+
+            Int128 radialLengthSquared =
+                ((Int128)deltaX * deltaX) + ((Int128)deltaZ * deltaZ);
+            (Int128 Numerator, Int128 Denominator) closest = minimum;
+            if (radialLengthSquared != 0)
+            {
+                closest = NormalizeFastFraction(
+                    -(((Int128)startX * deltaX) +
+                        ((Int128)startZ * deltaZ)),
+                    radialLengthSquared);
+                if (CompareFastFractions(closest, minimum) < 0)
+                {
+                    closest = minimum;
+                }
+                else if (CompareFastFractions(closest, maximum) > 0)
+                {
+                    closest = maximum;
+                }
+            }
+
+            Int128 closestX = ((Int128)startX * closest.Denominator) +
+                ((Int128)deltaX * closest.Numerator);
+            Int128 closestZ = ((Int128)startZ * closest.Denominator) +
+                ((Int128)deltaZ * closest.Numerator);
+            Int128 radialLimit = (Int128)radius * radius *
+                closest.Denominator * closest.Denominator;
+            return (closestX * closestX) + (closestZ * closestZ) <=
+                radialLimit;
+        }
+
+        static bool IntersectsFiniteCylinder(
+            long startX,
+            long startY,
+            long startZ,
+            long deltaX,
+            long deltaY,
+            long deltaZ,
+            long radius,
+            long halfHeight)
+        {
+            BigInteger startXBig = startX;
+            BigInteger startYBig = startY;
+            BigInteger startZBig = startZ;
+            BigInteger deltaXBig = deltaX;
+            BigInteger deltaYBig = deltaY;
+            BigInteger deltaZBig = deltaZ;
+            BigInteger radiusBig = radius;
+            BigInteger halfHeightBig = halfHeight;
+            (BigInteger Numerator, BigInteger Denominator) minimum = (0, 1);
+            (BigInteger Numerator, BigInteger Denominator) maximum = (1, 1);
+
+            if (deltaY == 0)
+            {
+                if (BigInteger.Abs(startYBig) > halfHeightBig)
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                (BigInteger Numerator, BigInteger Denominator) first =
+                    NormalizeFraction(-halfHeightBig - startYBig, deltaYBig);
+                (BigInteger Numerator, BigInteger Denominator) second =
+                    NormalizeFraction(halfHeightBig - startYBig, deltaYBig);
+                if (CompareFractions(first, second) > 0)
+                {
+                    (first, second) = (second, first);
+                }
+                if (CompareFractions(first, minimum) > 0)
+                {
+                    minimum = first;
+                }
+                if (CompareFractions(second, maximum) < 0)
+                {
+                    maximum = second;
+                }
+                if (CompareFractions(minimum, maximum) > 0)
+                {
+                    return false;
+                }
+            }
+
+            BigInteger radialLengthSquared =
+                (deltaXBig * deltaXBig) + (deltaZBig * deltaZBig);
+            (BigInteger Numerator, BigInteger Denominator) closest = minimum;
+            if (!radialLengthSquared.IsZero)
+            {
+                closest = NormalizeFraction(
+                    -((startXBig * deltaXBig) + (startZBig * deltaZBig)),
+                    radialLengthSquared);
+                if (CompareFractions(closest, minimum) < 0)
+                {
+                    closest = minimum;
+                }
+                else if (CompareFractions(closest, maximum) > 0)
+                {
+                    closest = maximum;
+                }
+            }
+
+            BigInteger closestX =
+                (startXBig * closest.Denominator) +
+                (deltaXBig * closest.Numerator);
+            BigInteger closestZ =
+                (startZBig * closest.Denominator) +
+                (deltaZBig * closest.Numerator);
+            return (closestX * closestX) + (closestZ * closestZ) <=
+                radiusBig * radiusBig *
+                closest.Denominator * closest.Denominator;
+        }
+
+        static (Int128 Numerator, Int128 Denominator) NormalizeFastFraction(
+            Int128 numerator,
+            Int128 denominator)
+        {
+            return denominator < 0
+                ? (-numerator, -denominator)
+                : (numerator, denominator);
+        }
+
+        static int CompareFastFractions(
+            (Int128 Numerator, Int128 Denominator) left,
+            (Int128 Numerator, Int128 Denominator) right)
+        {
+            return (left.Numerator * right.Denominator).CompareTo(
+                right.Numerator * left.Denominator);
+        }
+
+        static (BigInteger Numerator, BigInteger Denominator) NormalizeFraction(
+            BigInteger numerator,
+            BigInteger denominator)
+        {
+            return denominator.Sign < 0
+                ? (-numerator, -denominator)
+                : (numerator, denominator);
+        }
+
+        static int CompareFractions(
+            (BigInteger Numerator, BigInteger Denominator) left,
+            (BigInteger Numerator, BigInteger Denominator) right)
+        {
+            return (left.Numerator * right.Denominator).CompareTo(
+                right.Numerator * left.Denominator);
+        }
+
+        static BigInteger ClampUnit(BigInteger value, BigInteger one) =>
+            value.Sign < 0 ? BigInteger.Zero : BigInteger.Min(value, one);
+
+        static BigInteger DivideRoundNearest(
+            BigInteger numerator,
+            BigInteger denominator)
+        {
+            BigInteger half = denominator >> 1;
+            return numerator.Sign >= 0
+                ? (numerator + half) / denominator
+                : (numerator - half) / denominator;
+        }
+
+        static BigInteger IntegerSquareRootBig(BigInteger value)
+        {
+            if (value.Sign <= 0)
+            {
+                return BigInteger.Zero;
+            }
+
+            int initialShift = checked((int)((value.GetBitLength() + 1) / 2));
+            BigInteger root = BigInteger.One << initialShift;
+            while (true)
+            {
+                BigInteger next = (root + (value / root)) >> 1;
+                if (next >= root)
+                {
+                    return root;
+                }
+                root = next;
+            }
+        }
     }
 
     private static (int Yaw, int Pitch) ReadPoseYawPitch(

@@ -1,0 +1,64 @@
+# REHEARSAL ONLY until the exact one-row family receives an independent GO and
+# the live ceremony gates are separately satisfied. This corrects one analyst
+# label; it changes no body, prototype, data, reference, or bookmark.
+#
+# PRE is the verified db.18633 POST snapshot from the 2026-08-19
+# name-cohort-round-dual-owner ceremony. The name is fixed by mutually
+# reinforcing pristine-byte, compiler marker, RTTI/layout, caller, and retained
+# Stuart-source evidence; the manifest records those exact anchors.
+cohortId	name-cohort-battleengine-set-collision-shape
+cohortTitle	1 source-and-byte-closed Battle Engine function name correction (rehearsal)
+
+programName	BEA.exe
+programMd5	3b456964020070efe696d2cc09464a55
+programSha256	74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750
+imageBase	00400000
+language	x86:LE:32:default
+compilerSpec	windows
+
+verb	SET_NAME
+
+preFunctions	8329
+preInstructions	551232
+preReferences	234558
+preDefinedData	48648
+preUndefinedData	3907369
+preBookmarks	2301
+preFunctionNameDigest	ad3d71e06b54ef66ec204ef927ac96a077b3b0c9390fc9af8571428418ea2d1b
+preFunctionBodyDigest	cb96581a599479d8aa57c2319a5e110226969934c2c14797a2575c689537a9be
+preFrozenDigest	59059db30cc9aa7e9aa12d105a0074576179ffaf5947e7591b2e11f2a3e2e94f
+
+# Structural POST repeats PRE. The function-name and frozen digests below were
+# measured by replica apply and a separate read-only census on 2026-08-28.
+postFunctions	8329
+postInstructions	551232
+postReferences	234558
+postDefinedData	48648
+postUndefinedData	3907369
+postBookmarks	2301
+postFunctionNameDigest	7f89ee433bbf19d1ff81af39ff67c4636581d498c2922766a7089d22ab58914d
+postFunctionBodyDigest	cb96581a599479d8aa57c2319a5e110226969934c2c14797a2575c689537a9be
+postFrozenDigest	90d183367470bdfb1e533bc36663eee9cc7782684f830e58723237cfacf4c9bf
+
+manifestSha256	79ecb856bdc754c77139a9cbe6f1076577991a9db49d61df1d14f10ac910e01b
+manifestBytes	996
+manifestRows	1
+manifestColumns	9
+manifestHeaderPipe	addr|provenance|liveKind|currentNameLive|proposedName|tier|anchorKind|anchorEvidence|reason
+
+col.addr	addr
+col.liveKind	liveKind
+col.currentName	currentNameLive
+col.proposedName	proposedName
+
+unique	addr
+unique	proposedName
+unique	currentName
+noCycle	proposedName:currentName
+enum	liveKind=FUNCTION,SYMBOL:Label
+enum	provenance=PROMOTE,DEMOTE,SLOTFIX
+
+expectedTargetsChanged	1
+expectedFunctionsUntouched	8328
+expectedSymbolsAdded	1
+expectedSymbolsRemoved	1

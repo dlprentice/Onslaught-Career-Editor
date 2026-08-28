@@ -1,9 +1,10 @@
 # Rebuild Provenance
 
 Status: active implementation boundary
-Last updated: 2026-08-24. Added the bounded world-110 authored-definition
-projection and native-84 completion instrument alongside the native-88
-first-Pause session. Current Thing/Actor base-state, career read/load,
+Last updated: 2026-08-28. Added the released Battle Engine finite-cylinder
+mode-1 round-contact and selected-position boundary. The bounded world-110 authored-definition projection,
+native-84 completion instrument, native-88 first-Pause session, and current
+Thing/Actor base-state, career read/load,
 startup/frontend, partial-source inventory, frontend-asset, mouse-sensitivity,
 and retained-particle claims retain their narrower dated evidence boundaries.
 Summary: the licence boundary, permitted evidence, and authority order for the
@@ -1110,20 +1111,101 @@ explicit retail event queue or direct event-routing parity test. The focused
 `ActorArmament_IsCanonicalReplayState` nearest-owner test passes, but the
 mapping remains `PARTIAL_CONTRACT`; this admission changes no reconstruction
 behavior.
-Each tank began at life `6` with no shield. Direct mesh hits repeated
-`6 → 4.2 → 2.4 → 0.6 → -1.2`; each target set its destroyed bit and left the
-objective set on shot four. One separate glancing mesh-part hit removed `1.0`.
-Pristine `CRound::Hit` (`0x004D8AE0`) sends the configured `0.8` round damage
-first, then its mode-3 impact path creates an already-live small explosion;
-`CExplosion::Hit` (`0x0044BF10`) synchronously sends the configured `1.0`
-damage through the same receiver. Core therefore retains two whole-body stores
-per normal pulse: the first hit is `6.0 → 5.2 → 4.2`, and the terminal fourth
-hit stores approximately `-0.2` before the explosion leaves exact
-`0xBF99999A` (`-1.2`). `Level100DestructionContactTests` pins both pairs, while
-`InteractiveSessionTests.FrameDestructionEvents_AggregateTheReleaseTickInOrder`
-pins their production client envelope. The exact second-call mesh part remains
-unresolved for segmented targets, so the Warehouse path continues to consume
-only its independently observed aggregate outcome.
+
+The inbound Level 100 actor-round contact now uses the released player shape
+rather than the former target-origin sphere shortcut. Pristine
+`CBattleEngine::SetCollisionShape` `[0x004063B0,0x00406459)` constructs a
+`CCylinder` with single-player radius `0.4` and half-height `0.95`; default
+`SetShape` `[0x00426370,0x004263E6)` translates its centre, and
+`CThing::GetCentrePos` places that centre at owner retail Z `+0.76`. Retail
+Z-down maps it to Core Y `-760` mm. The closed round-line dispatch reaches
+`[0x00440510,0x00440AB2)`, whose world-vertical radial and cap comparisons
+retain equality and apply no owner orientation. Core clips the
+integer-millimetre segment against the inclusive Y slab and evaluates the X/Z
+radial minimum as an exact rational comparison with radius 400 mm and
+half-height 950 mm. An independent review rejected the initial `double` draft
+on a real exact tangent (`160000.00000000003` after rounding); the exact
+prefilter accepts that tangent and rejects its one-millimetre-outside parallel
+line in either endpoint order.
+
+The same pristine mode-1 body proves that overlap is not the complete response.
+It constructs two independently clamped parameters equivalent to
+`(|P0|-radius)/|V|` and `(|P0|+radius)/|V|` from full three-dimensional norms,
+rejects only when both resulting candidates lie strictly beyond the same cap,
+and selects candidate zero before downstream callbacks. This can reject a
+mathematical finite-cylinder hit and can choose a point other than geometric
+first contact. Core reproduces the ordering, same-cap guard, and selected
+integer-millimetre impact position with deterministic Q32 square roots. Q32 is
+an explicit approximation of the released binary32/x87 spills; it is not a
+sub-millimetre identity claim. This mapping remains player-Battle-Engine-
+specific; arbitrary actor shapes, impact normals, simultaneous-candidate
+behavior, and stock occurrence of zero-displacement rounds remain open. All three
+measured Xbox builds preserve the ordinary finite policy and movement-before-
+callback ordering, but diverge on a generated zero-length line: Xbox retains
+NaN roots and writes NaN XYZ, while PC clamps to zero and selects finite `P0`.
+Core follows the pristine PC behavior; natural-gameplay reachability of that
+Xbox degenerate case is now structurally closed but stock-play occurrence and
+ordinary finite rounding-boundary equivalence remain open. The released Round
+producer runs after old-position capture and velocity integration, immediately
+before dispatch: it forms old-to-current, extends by authored `RoundLength`
+only when that value is strictly above `0.001f` and displacement is nonzero,
+and emits a zero-length line when old equals current. Canonical physics data
+contains 61 line-backed Rounds (51 length zero, ten length `0.5f`), and every
+Round has positive authored speed. PS2 German demo, Europe retail, and USA
+retail independently preserve the
+ordinary finite Boolean, minus-root-only rewrite, second-root cap guard, and
+movement/velocity-before-callback ordering; their resolver emits no report
+contact or normal. PS2 binary32/VU threshold equivalence to PC x87 is not
+claimed. Xbox additionally selects a 1,000-mm
+radius for strict level range 850--899 or serialized world type 1/2; Level 100
+has exact type 0, so carrying that currently unused multiplayer state would not
+change this owner and is deferred until a multiplayer world is admitted.
+
+Each tank began at life `6` with no shield. Retained Level 100 observations
+recorded aggregate losses `6 → 4.2 → 2.4 → 0.6 → -1.2`; each target set its
+destroyed bit and left the objective set on shot four. One separate glancing
+mesh-part hit removed `1.0`. Pristine `CRound::Hit` (`0x004D8AE0`) sends the
+configured direct `0.8` first, then creates an already-live small explosion.
+That explosion is not statically bound to the direct receiver: its initializer
+synchronously scans neighboring MapWho candidates, and `CExplosion::Hit`
+(`0x0044BF10`) applies radial falloff whose configured `1.0` is only the
+maximum. Existing generic traces prove six direct-then-explosion same-receiver
+`CUnit` pairs and part `-1`. Static Target Tank construction independently
+closes the same part: its segment-controller field remains null from factory
+through init.
+
+The immediate explosion does not use MapWho's public radius query. Its
+radius-`0.5f` owner is inserted at level 4, then the collision detector walks
+3-by-3 X/Y sector neighborhoods from level 4 down through 0, applying mutual
+component masks, outer bounds, readiness/ignore/invisibility/dying gates,
+level negotiation, and selected-shape contact before calling explosion `Hit`
+first and candidate `Hit` second. It has no generic creator, active, life, or
+dead exclusion, and continues after an accepted receiver. A newly terminal
+Target Tank remains MapWho/collision registered under `TF_DYING` until its
+delayed `+0.5f` shutdown and can take a positive part-`-1` explosion store
+without dispatching death twice.
+
+The retained Level 100 meshes and pristine dispatch close the distinct
+admission/render radii required for spatial projection: Target Tank
+`0x3F88ED6D`/`0x3FC487A7`, Target Truck
+`0x3FA644E3`/`0x3FE83ED3`, Target Drone
+`0x3FC2684F`/`0x3FE9F831`, and Warehouse
+`0x40F2BEF5`/`0x41088DDF`. The left value is the primary collision radius; the
+right is virtual `GetRadius` for radial falloff. Their centres follow exact
+class rules and cannot be reconstructed bit-exactly from the current
+integer-quantized part catalog.
+
+Core currently retains two full whole-body stores per Pulse, preserving the
+observed aggregate and intermediate `0.8` store but approximating the second
+transaction as an unconditional `1.0` on the direct receiver. Tests pin that
+approximation; they are not spatial-explosion parity proof. The supported next
+boundary starts by carrying exact global-BBOX origin, class-selected primary
+radius, and render-radius bits through the existing asset materializer. A
+distinct synchronous explosion at the resolved round position minus
+`normalize(velocity)*0.1` can then apply primary-volume admission and
+per-candidate falloff. Natural Level 100 candidate order and Warehouse's
+controller/report carrier remain unresolved, so the Warehouse path continues
+to consume only its independently observed aggregate outcome.
 Generation 20 adds a narrower retained-trace check on the retail carrier: ten
 internal slot-40 calls across three independent TTD sessions cover both
 `CExplosion::Hit` damage arms and carry source equal to the explosion object,

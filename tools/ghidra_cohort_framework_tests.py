@@ -148,6 +148,14 @@ REQUIRED_LIVE_PROJECT_DIR = r"c:\users\david\ghidra\projects\bea.rep"
 # (6 rows, 8323 untouched, columnsMoved={name=6}). Not unique-owner.
 # Not the t_75e4ccdd cockpit FUN_ family. Not a blank check for other
 # dual-owner leftovers.
+# name-cohort-battleengine-set-collision-shape is granted 2026-08-28 after the
+# independent one-row review in lane-review-battleengine-set-collision-shape-
+# name.md (SHA-256 8f77cd23916c8f905ebf07a56394a093d9daa12f063cb05515cedfb4d6714ada):
+# exact pristine body, RTTI-bound CCylinder construction, retained source
+# coordinates, both released callers, and collision consumers refute the old
+# UpdateWeaponEffect label. Fresh db.18633 replica census/identity/dry/apply/
+# readback PASS (1 row, 8328 untouched, columnsMoved={name=1}). This grant is
+# SET_NAME only and is not authority for a prototype, boundary, or other field.
 LIVE_GRANTED_COHORTS = [
     "boundary-cohort41", "name-cohort160", "abi-cohort294",
     "tentacle-chain-a", "tentacle-chain-b",
@@ -160,6 +168,7 @@ LIVE_GRANTED_COHORTS = [
     "name-cohort-placeholder-unique-owner",
     "name-cohort-cockpit-dual-owner",
     "name-cohort-round-dual-owner",
+    "name-cohort-battleengine-set-collision-shape",
 ]
 PROGRAM_SHA256 = (
     "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
@@ -570,6 +579,7 @@ LIVE_ALLOWLISTED_EDITS: list[tuple[str, str, str]] = [
         '        "name-cohort-placeholder-unique-owner",\n'
         '        "name-cohort-cockpit-dual-owner",\n'
         '        "name-cohort-round-dual-owner",\n'
+        '        "name-cohort-battleengine-set-collision-shape",\n'
         "    };\n",
     ),
     (

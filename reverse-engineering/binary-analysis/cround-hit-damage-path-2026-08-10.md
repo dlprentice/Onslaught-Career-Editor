@@ -1,15 +1,18 @@
 # `CRound::Hit`, configured explosion creation, and `CExplosion::Hit`
 
 Status: active, bounded semantic contract
-Last updated: 2026-08-12
+Last updated: 2026-08-28
 Evidence: MEASURED — pristine retail bytes, strict RTTI/vtables, exact data
 records, dated static exports, replicated runtime carriers, and independent
 PC-demo normalized bodies; SOURCE — pinned `CThing`/init layouts and virtual
 order; UNKNOWN — the narrowed gates listed below.
-Verdict: the conditional direct-round plus synchronous small-explosion damage
-chain is closed through the same receiver, and its whole-body Level 100 path is
-mapped into the reconstruction with focused parity tests; exact segmented
-second-call mesh part, expanding-radius timing, and broader parity remain open.
+Verdict: direct-round damage byte-provably precedes the synchronous small-
+explosion neighbor scan, but the explosion is spatial rather than bound to the
+original receiver. Its configured damage is a radial maximum, not an
+unconditional second call. The PC MapWho traversal/filter chain, four modeled
+Level 100 target geometries, and the terminal Target Tank's continued
+eligibility with part `-1` are now statically closed. Natural receiver order,
+per-shot falloff bits, expanding-radius timing, and broader parity remain open.
 Specimen: pristine Steam `BEA.exe`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
@@ -237,7 +240,7 @@ This proves that the valid non-null collision arm of a configured direct round
 hit creates and initializes its named `CExplosion`; it is no longer merely a
 numeric-fit hypothesis.
 
-## Collision registration and synchronous same-receiver path
+## Collision registration and synchronous spatial-scan path
 
 The formerly missing collision edge is now recovered for the small,
 immediate-radius case used by the tutorial pulse. The mode-3 arm constructs the
@@ -302,6 +305,66 @@ uses the same mutual-filter/pair-dispatch machinery. This closes the static
 immediate-versus-delayed readiness design without claiming an exact observed
 runtime event cadence.
 
+### Exact MapWho traversal and candidate gates
+
+The immediate collision scan is not the public radius-query API. The
+radius-`0.5f` explosion is inserted at MapWho level 4 (8-unit cells), then the
+detector visits the valid 3-by-3 X/Y neighborhood at levels 4 through 0, with X
+outermost and ascending and Y innermost and ascending. At the starting level,
+finer descendants are visited depth-first in child-index order before the
+cell's normal linked list. Normal lists are walked head-to-tail; insertion is
+at the head, and the released sorter can move selected owners toward the tail.
+There is no distance, definition-name, or authored-order result sort.
+
+Each enumerated owner must expose a persistent collision component, differ
+from the explosion component, and pass both components' type masks. The pair
+dispatcher then applies its outer-radius/time path, cell-distance gate, strict
+3-D outer-sphere overlap, readiness, cross-ignore, invisibility, conditional
+dying/type, collision-level negotiation, and selected shape predicate. A shape
+success calls `CExplosion::Hit(candidate, report)` first and
+`candidate->Hit(explosion, report)` second with the same report; scanning then
+continues. No generic active/life/dead, creator, or allegiance test exists in
+the broadphase. Allegiance is a later `CExplosion::Hit` smart filter. The
+`Mech Pulse Hit Medium` record omits field 11 and the record constructor
+initializes its smart field to zero, so that filter is disabled for this exact
+definition.
+
+This distinction preserves two equality rules: the pair dispatcher's immediate
+outer-overlap comparison is strict, while the selected `CSphere` predicate and
+the later radial-damage test admit equality. Enumeration or mutual-mask success
+alone therefore proves neither a collision callback nor damage.
+
+### Exact modeled target radii and terminal Target Tank behavior
+
+For normal live renders, retained Level 100 CMSH streams and pristine dispatch
+close both geometries used by the four modeled destructibles. The primary
+sphere controls collision admission; the distinct render radius is returned by
+virtual `GetRadius` and is subtracted from owner-position distance for damage:
+
+| Definition | Primary centre rule | Primary radius bits/value | Render radius bits/value |
+|---|---|---:|---:|
+| Target Tank | owner-relative Z `0xBEC4D062`, X/Y zero | `0x3F88ED6D` / 1.069745660 | `0x3FC487A7` / 1.535389781 |
+| Target Truck | owner-relative Z `0xBEF307E4`, X/Y zero | `0x3FA644E3` / 1.298977256 | `0x3FE83ED3` / 1.814417243 |
+| Target Drone | owner-relative Z `0xBCD78710`, X/Y zero | `0x3FC2684F` / 1.518808246 | `0x3FE9F831` / 1.827886701 |
+| Warehouse | actor-basis-rotated full BBOX origin | `0x40F2BEF5` / 7.585810184 | `0x41088DDF` / 8.534636498 |
+
+Ground Vehicle multiplies the loaded BBOX radius by exact `0.8f`; Plane and
+Building retain the full BBOX radius. Falloff never substitutes that primary
+radius: it uses target owner position and the rightmost render value. The
+current quantized contact catalog does not carry these definition-level float
+bits and cannot reconstruct them exactly from quantized parts.
+
+A direct Target Tank hit that first crosses life below zero sets `TF_DYING`
+and queues delayed shutdown for manager time plus exact `0.5f`; it does not
+remove MapWho/collision ownership, clear readiness, set invisibility, or bypass
+the subsequent mode-3 helper. The tank lacks the dying/type veto bit and the
+explosion mask bit, retains vulnerability, and normally has no segment
+controller (`unit+0x178 == 0`). If its primary sphere and radial gate accept
+the new explosion, it therefore receives part `-1` damage even while dying.
+The second call can lower stored life again but cannot dispatch death twice.
+The scanner also continues to other eligible receivers; the original target is
+neither guaranteed first nor unique.
+
 ## Remaining `CExplosion` virtual tail
 
 The two short virtuals adjacent to `GetRadius`, `Hit`, and `Move` are now
@@ -330,16 +393,17 @@ claiming an original declaration for the class-specific slot 67 name or a
 runtime observation of the greater-than-three tree-destruction branch.
 
 For `Mech Pulse Hit Medium`, authored `R = 0.5` is already live during that
-scan. Its radius accessor returns the configured maximum radius at
-`this+0x80`; after subtracting the struck target's radius,
-`CExplosion::Hit` clamps the impact-surface effective distance to zero. A
-surviving, registered target that passes the two explicit flag/allegiance gates
-therefore receives the full `CExplosionDamage = 1.0`. The tutorial Target Drone
-has life `1.0`, so the preceding direct `CRoundDamage = 0.8` does not remove it
-before this scan. Joined with the previously measured direct `1.8` loss, the
-retail chain is the conditional same-receiver composition `0.8 + 1.0 = 1.8`,
-not two disconnected arithmetic candidates. The exact mesh-part selected by
-the second call is still a narrower open question.
+scan. The original direct-hit target is used as an impact-orientation input;
+it is not installed as an exclusive explosion receiver. Each surviving
+MapWho candidate is independently dispatched. `CExplosion::Hit` subtracts the
+candidate's virtual `GetRadius`, clamps negative effective distance `d` to
+zero, admits `d <= R`, and for this small blast computes
+`((R-d) * 1.0) / R`. Full `1.0` therefore requires `d=0`; equality at `d=0.5`
+produces zero damage. Existing traces prove six direct-then-explosion
+same-receiver `CUnit` pairs with explosion part `-1`; static Target Tank
+construction now closes that part and continued terminal eligibility, but a
+natural Level 100 trace is still required for actual receiver order and
+per-shot damage bits.
 
 ## Bounded reconstruction mapping
 
@@ -350,42 +414,57 @@ instead of retaining the retail-ordered `6.0 -> 5.2 -> 4.2`. The focused
 falsifier `PulseHitPreservesDirectThenExplosionDamageOrder` failed against that
 collapsed model with one `SegmentDamaged` event where two were required.
 
-`rebuild/OnslaughtRebuild.Core/Level100Destruction.cs` now owns the bounded
-mapping:
+`rebuild/OnslaughtRebuild.Core/Level100Destruction.cs` currently owns a bounded
+aggregate approximation:
 
 - `PulseDirectDamageBits = 0x3F4CCCCD` and
   `PulseExplosionDamageBits = 0x3F800000` remain separate;
-- `ApplyPulseHit` sends those values in retail order for whole-body Target Tank
-  and Target Drone life;
-- the fourth Target Tank hit retains the two exact stored remainders
-  `0xBE4CCCD4` (about `-0.2`) and `0xBF99999A` (`-1.2`), including the terminal
-  transition between them; and
+- `ApplyPulseHit` sends those values in retail order to the same whole-body
+  Target Tank or Target Drone selected by the direct mesh hit;
+- this retains the two-call store shape for known full-damage examples, but it
+  does not perform the released explosion-position backoff, neighbor scan,
+  approximate-volume negotiation, or radial falloff; and
 - `Simulation.UpdateProjectiles` routes `MechPulseBoltMedium` through that
   pulse-specific owner rather than the generic one-damage round path.
 
-`Level100DestructionContactTests` pins the first and terminal damage pairs, and
-`InteractiveSessionTests.FrameDestructionEvents_AggregateTheReleaseTickInOrder`
-pins the production client envelope. The exact explosion mesh-part carrier is
-still not known for segmented facilities. Warehouse therefore deliberately
-keeps the independently observed aggregate `1.8` path instead of asserting
-that both retail calls damage the direct-hit segment. This is a bounded
-whole-body reconstruction mapping, not engine-wide `CRound`/`CExplosion`
-parity or a segmented-damage closure.
+The tests that pin an unconditional first/terminal pair are approximation
+tests, not retail parity proof. The smallest supported correction begins in
+the existing retail-asset materializer: carry the exact global BBOX origin,
+class-selected primary radius, and render-radius bits into each target
+definition instead of deriving them from quantized parts. Runtime then owns a
+distinct synchronous explosion at
+`round.position - normalize(velocity)*0.1`, primary-volume admission, and
+per-candidate falloff after the direct `0.8` call. Target Tank is proven
+nonsegmented on this path. Warehouse keeps the independently observed aggregate
+fallback until its controller/report behavior is closed; that fallback must
+not be generalized to whole-body actors.
 
 ## Remaining evidence boundary
 
 Still unresolved are the source names of instance fields `this+0xE8`, `+0xEC`,
 `+0x11C`, and `+0x124`; which exact gate rejected the contrasting runtime
-invocation; the precise per-part collision-record layout and second-call mesh
-part; targets rejected by the explicit flag/smart/allegiance gates; expanding
-`R > 3` timing; behavior outside the captured runtime window; and segmented or
-general rebuild parity outside the mapped Level 100 whole-body medium-pulse
-path. The retained traces now prove the bounded internal source/shield/part
-carrier at both slot-40 call sites; they do not close the entry/return/write
-envelope or the segmented-receiver path.
-The pinned
+invocation; the natural Level 100 explosion candidate order, live positions,
+and per-shot falloff bits; Warehouse and other controller-bearing segmented
+parts; targets rejected by the explicit flag/smart/allegiance gates; expanding
+`R > 3` timing; behavior outside the captured runtime window; and general
+reconstruction parity. The retained traces prove bounded internal
+source/shield/part carriers at both slot-40 call sites; they do not close the
+entry/return/write envelope or bind a particular Level 100 receiver. The pinned
 Stuart source is architectural/name evidence, not proof that its full body is
 byte-equivalent to the retail PC implementation.
+
+The 2026-08-28 static closure reports are:
+
+- `local-lab/continuous-20260827/lane-pc-level100-explosion-candidate-radii.md`
+  (18,899 bytes, SHA-256
+  `a83a7a7b37d4fa0b198de3d89e8962bf646e66e94765cbcea9ac45698d4bb9bd`);
+- `local-lab/continuous-20260827/lane-pc-small-explosion-mapwho-filters.md`
+  (23,831 bytes, SHA-256
+  `f9e6ca60e584b340e539232ee3cad3df731ee78ce5d22f27d1043ea1daa38691`);
+  and
+- `local-lab/continuous-20260827/lane-pc-pulse-explosion-terminal-order.md`
+  (28,970 bytes, SHA-256
+  `a37a671defea44715eee67ebff95abb5297bbce8114242ef5e75bfe41e461022`).
 
 Reproduction owner:
 `local-lab/cround-hit-semantic-proof-20260810-v1/`. Final `result.json` is

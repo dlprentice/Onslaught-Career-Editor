@@ -959,8 +959,11 @@ public static class SimulationConstants
     // definitional; the ratio is not an independent measurement.
     public const int Level100PlayerReleasedLife = 20;
 
-    // The player's collision radius. CBattleEngine::GetRadius (vtable slot 16,
-    // 0x0040DF80) returns 0.4 in single player - the same 0.4 already carried
-    // by Level100ObjectiveTriggerRadius above.
+    // The player's primary approximate-geometry cylinder. SetCollisionShape
+    // (0x004063B0) stores GetRadius() at +0x14, its square at +0x18, and
+    // COfGHeight()*0.5 at +0x1c. The collision centre is retail mPos.Z + 0.76;
+    // retail Z-down maps to Core Y-up, hence 760 mm below the Core pose origin.
     public const int Level100PlayerContactRadiusMillimeters = 400;
+    public const int Level100PlayerCollisionCenterBelowOriginMillimeters = 760;
+    public const int Level100PlayerCollisionHalfHeightMillimeters = 950;
 }

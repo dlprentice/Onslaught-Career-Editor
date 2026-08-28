@@ -295,6 +295,34 @@ REHEARSAL_COHORTS: dict[str, dict] = {
             "preUndefinedData": 3907369, "postUndefinedData": 3907369,
         },
     },
+    "name-cohort-battleengine-set-collision-shape": {
+        # PRE is the verified off-volume backup taken immediately before the
+        # 2026-08-28 live apply (db.18633). Replay against that PRE.
+        "backup": (
+            BACKUPS /
+            "2026-08-28-name-cohort-battleengine-set-collision-shape-pre-live"),
+        "spec": (
+            SPECS /
+            "name-cohort-battleengine-set-collision-shape.spec.tsv"),
+        "manifest": (
+            SPECS /
+            "name-cohort-battleengine-set-collision-shape-manifest.tsv"),
+        "rehearsalOnly": False,
+        "archived": {
+            "source": (
+                "local-lab/name-cohort-battleengine-set-collision-shape-"
+                "ceremony-2026-08-28/{apply,readback}.json "
+                "(live, 2026-08-28)"),
+            "rows": 1,
+            "applied": 1,
+            "preFunctions": 8329, "postFunctions": 8329,
+            "preInstructions": 551232, "postInstructions": 551232,
+            "preReferences": 234558, "postReferences": 234558,
+            "preBookmarks": 2301, "postBookmarks": 2301,
+            "preDefinedData": 48648, "postDefinedData": 48648,
+            "preUndefinedData": 3907369, "postUndefinedData": 3907369,
+        },
+    },
 }
 COHORTS.update(REHEARSAL_COHORTS)
 

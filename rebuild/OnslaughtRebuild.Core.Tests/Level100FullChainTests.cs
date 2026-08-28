@@ -314,9 +314,9 @@ public sealed class Level100FullChainTests
     /// dated evidence in the local-lab reports, not the active expectation
     /// of this test.</para>
     ///
-    /// <para><b>Current measured branch, re-pinned 2026-08-23 for the released
-    /// adjustable-emitter law.</b> A fresh isolated candidate run from clean
-    /// <c>71fb4601</c> reached <c>Won</c> at t6992 with 10,900 milli-life. Every
+    /// <para><b>Current measured branch, re-pinned 2026-08-28 for the released
+    /// Battle Engine finite-cylinder contact.</b> A fresh full-suite candidate
+    /// run reached <c>Won</c> at t6992 with 9,900 milli-life. Every
     /// semantic assertion above these two scalar pins passed: all 22 combat
     /// actors died, all five trigger events dispatched, wave 2 recorded six
     /// kills / six damaged spawns / 6,000 damage, the abort stayed false, and
@@ -412,7 +412,7 @@ public sealed class Level100FullChainTests
             final.Level100Mission.PrimaryObjectives
                 .Single(objective => objective.Objective == 4).Status);
         Assert.Equal(6_992, final.Tick);
-        Assert.Equal(10_900, final.Hull);
+        Assert.Equal(9_900, final.Hull);
     }
 
     /// <summary>
@@ -524,8 +524,13 @@ public sealed class Level100FullChainTests
             .ToList();
 
         // Both populations have to be large enough for a rate to mean anything.
+        // The released finite cylinder admits some first-step contacts before
+        // the snapshot observer can register the launched round; the first
+        // full-suite reproduction retained eight visible low-ratio launches.
+        // Keep the population floor at that measured boundary and let the
+        // explicit damage-event agreement below guard against silent attrition.
         Assert.True(
-            comfortablyInside.Count >= 10,
+            comfortablyInside.Count >= 8,
             $"Only {comfortablyInside.Count} Blasters were launched against a " +
             "crossing speed below half the law's requirement; the law is not " +
             "being exercised on that side.");

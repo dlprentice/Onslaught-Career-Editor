@@ -258,6 +258,159 @@ public sealed class Level100ActorWeaponTests
     }
 
     /// <summary>
+    /// The old sphere shortcut misses this line: at closest approach it is
+    /// 800 mm from the cylinder centre along the cap axis and 399 mm radially
+    /// away. Retail's finite cylinder accepts it, while a 400 mm sphere around
+    /// the same centre cannot.
+    /// </summary>
+    [Fact]
+    public void ActorRoundCollision_UsesTheFiniteBattleEngineCylinder()
+    {
+        var battleEngine = new SimVector3(0, 0, 0);
+        int cylinderCenterY = -
+            SimulationConstants.Level100PlayerCollisionCenterBelowOriginMillimeters;
+        var start = new SimVector3(-1_000, cylinderCenterY + 800, 399);
+        var end = new SimVector3(1_000, cylinderCenterY + 800, 399);
+
+        long oldSphereDistanceSquared =
+            ((long)(cylinderCenterY + 800) * (cylinderCenterY + 800)) +
+            ((long)399 * 399);
+        long radius = SimulationConstants.Level100PlayerContactRadiusMillimeters;
+        Assert.True(oldSphereDistanceSquared > radius * radius);
+        Assert.True(Level100ActorMechanics
+            .TryResolveBattleEngineCylinderContact(
+                start,
+                end,
+                battleEngine,
+                out _));
+    }
+
+    [Theory]
+    [InlineData(950, 0, true)]
+    [InlineData(951, 0, false)]
+    [InlineData(0, 400, true)]
+    [InlineData(0, 401, false)]
+    public void ActorRoundCollision_PreservesInclusiveCylinderCapsAndSide(
+        int axialOffset,
+        int radialOffset,
+        bool expected)
+    {
+        int cylinderCenterY = -
+            SimulationConstants.Level100PlayerCollisionCenterBelowOriginMillimeters;
+        var start = new SimVector3(
+            -1_000,
+            cylinderCenterY + axialOffset,
+            radialOffset);
+        var end = new SimVector3(
+            1_000,
+            cylinderCenterY + axialOffset,
+            radialOffset);
+
+        bool actual = Level100ActorMechanics.TryResolveBattleEngineCylinderContact(
+            start,
+            end,
+            SimVector3.Zero,
+            out _);
+
+        Assert.Equal(expected, actual);
+    }
+
+    [Theory]
+    [InlineData(-100, 575, 436, 173, true)]
+    [InlineData(436, 173, -100, 575, true)]
+    [InlineData(-99, 575, 437, 173, false)]
+    [InlineData(437, 173, -99, 575, false)]
+    public void ActorRoundCollision_PreservesExactObliqueSideTangency(
+        int startX,
+        int startZ,
+        int endX,
+        int endZ,
+        bool expected)
+    {
+        const int cylinderCenterY = -
+            SimulationConstants.Level100PlayerCollisionCenterBelowOriginMillimeters;
+        var start = new SimVector3(startX, cylinderCenterY, startZ);
+        var end = new SimVector3(endX, cylinderCenterY, endZ);
+
+        bool actual = Level100ActorMechanics.TryResolveBattleEngineCylinderContact(
+            start,
+            end,
+            SimVector3.Zero,
+            out _);
+
+        Assert.Equal(expected, actual);
+    }
+
+    [Theory]
+    [InlineData(-1_000, -760, 0, 1_000, -760, 0, -400, -760, 0)]
+    [InlineData(-2_000_000, -760, 0, 2_000_000, -760, 0, -400, -760, 0)]
+    [InlineData(-399, -760, 0, 1_000, -760, 0, -399, -760, 0)]
+    [InlineData(-1_000, -760, 400, 1_000, -760, 400, -323, -760, 400)]
+    [InlineData(0, 1_240, 0, 0, -2_760, 0, 0, -360, 0)]
+    [InlineData(-1_000, 440, 0, 1_000, 40, 0, 139, 212, 0)]
+    [InlineData(0, -760, 0, 0, -760, 0, 0, -760, 0)]
+    public void ActorRoundCollision_PreservesReleasedModeOneCandidate(
+        int startX,
+        int startY,
+        int startZ,
+        int endX,
+        int endY,
+        int endZ,
+        int expectedX,
+        int expectedY,
+        int expectedZ)
+    {
+        var start = new SimVector3(startX, startY, startZ);
+        var end = new SimVector3(endX, endY, endZ);
+
+        Assert.True(Level100ActorMechanics.TryResolveBattleEngineCylinderContact(
+            start,
+            end,
+            SimVector3.Zero,
+            out SimVector3 selected));
+        Assert.Equal(new SimVector3(expectedX, expectedY, expectedZ), selected);
+    }
+
+    /// <summary>
+    /// The mathematical segment enters the cylinder side at one third, but
+    /// retail mode 1 constructs both root candidates below the lower cap and
+    /// rejects after its preliminary solid-cylinder overlap.
+    /// </summary>
+    [Fact]
+    public void ActorRoundCollision_AppliesReleasedSameCapRejection()
+    {
+        var start = new SimVector3(-600, -1_560, 0);
+        var end = new SimVector3(0, -1_760, 0);
+
+        Assert.False(Level100ActorMechanics.TryResolveBattleEngineCylinderContact(
+            start,
+            end,
+            SimVector3.Zero,
+            out _));
+    }
+
+    [Theory]
+    [InlineData(int.MaxValue, int.MinValue, int.MinValue, int.MinValue + 401)]
+    [InlineData(int.MinValue, int.MaxValue, int.MaxValue, int.MaxValue - 401)]
+    public void ActorRoundCollision_PreservesRepresentableFullRangeContact(
+        int startX,
+        int endX,
+        int battleEngineX,
+        int expectedX)
+    {
+        var start = new SimVector3(startX, -760, 0);
+        var end = new SimVector3(endX, -760, 0);
+        var battleEngine = new SimVector3(battleEngineX, 0, 0);
+
+        Assert.True(Level100ActorMechanics.TryResolveBattleEngineCylinderContact(
+            start,
+            end,
+            battleEngine,
+            out SimVector3 selected));
+        Assert.Equal(new SimVector3(expectedX, -760, 0), selected);
+    }
+
+    /// <summary>
     /// The state hash sees the armament. Advancing an attacking drone changes
     /// the mechanics snapshot, and the snapshot round-trips: a mechanics
     /// instance restored from it continues the identical stream and produces

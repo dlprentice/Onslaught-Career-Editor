@@ -4,29 +4,30 @@
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; local working copies and historical backups remain untracked.
 
-- Snapshot date: 2026-08-19 (sixteenth refresh: the 6-row
-  `name-cohort-round-dual-owner` SET_NAME)
+- Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
+  `name-cohort-battleengine-set-collision-shape` SET_NAME)
 - Ghidra lineage used for the latest review: 12.1.2
 - Imported Steam specimen SHA-256:
   `74154BFAE14DDC8ECB87A0766F5BC381C7B7F1AB334ED7A753040EDA1E1E7750`
 - Imported specimen MD5: `3b456964020070efe696d2cc09464a55`
-- Project payload: 19 files, 187,501,445 bytes
+- Project payload: 19 files, 187,517,829 bytes
 - Canonical project inventory SHA-256:
-  `df4527a95a55b9e2742c418be045174931e2ca144e250501889ba47433309581`
-- Current rolling database `db.18633.gbf`: 68,599,808 bytes, SHA-256
-  `73bf683b0050d3b5c4c6d159de7d997ebb436833733c44abbeb0b6945faba57a`
-  (stable prior `db.18632.gbf`, 68,599,808 bytes, SHA-256
-  `3334bd33b71712734eb854b900a72721febbfa4fea0540a12f7eb481c4f870bf`, retained)
+  `745c00ad15a0fc1c3098533143caded4b1b825583322669df22699b5e99585a5`
+- Current rolling database `db.18634.gbf`: 68,616,192 bytes, SHA-256
+  `40d5100ca9ede5317c2052c9ea0d936ab9f07a0daf39fd96765a839ccf9e4ba2`
+  (stable prior `db.18633.gbf`, 68,599,808 bytes, SHA-256
+  `73bf683b0050d3b5c4c6d159de7d997ebb436833733c44abbeb0b6945faba57a`, retained)
 
 **Reproducing the inventory digest.** The convention was previously stated as
 `sha256<TAB>bytes<TAB>relative-posix-path<LF>`, which reads as line-terminated.
 It is not: the digest is over the rows **joined** by `LF` with **no trailing
 newline**, one row per payload file as
 `sha256<TAB>bytes<TAB>relative-posix-path`, sorted by the rendered line, over the
-19 payload files with this `README.md` excluded. Measured 2026-08-19 after the
-name-cohort-round-dual-owner refresh against both the tracked tree and the live maintainer
-project: both reproduce `df4527a9…` at 19 files and 187,501,445 bytes. Re-measure rather
-than quote — a concurrent ceremony can move this at any time.
+19 payload files with this `README.md` excluded. Measured 2026-08-28 after the
+Battle Engine collision-shape name refresh against the tracked tree, live
+maintainer project, and verified POST backup: all reproduce `745c00ad…` at 19
+files and 187,517,829 bytes. Re-measure rather than quote — a concurrent
+ceremony can move this at any time.
 
 **Promotion note (superseded in place 2026-08-17).** This header previously still
 described the 2026-08-14 HUD route demotion while its `db` and payload pins had
@@ -45,9 +46,10 @@ axis only) → `db.18628` → the 12-row `name-cohort-unique-owner` SET_NAME
 → `db.18630` → the 7-row `name-cohort-placeholder-unique-owner` SET_NAME
 → `db.18631` → the 3-row `name-cohort-cockpit-dual-owner` SET_NAME
 → `db.18632` → the 6-row `name-cohort-round-dual-owner` SET_NAME
-→ `db.18633` on 2026-08-19, each a separately authorized
-promotion. Internal functions remain **8,329** across all fourteen: no function
-was created or destroyed. All fourteen ceremonies are owned
+→ `db.18633` → the one-row
+`name-cohort-battleengine-set-collision-shape` SET_NAME → `db.18634` on
+2026-08-28, each a separately authorized promotion. Internal functions remain
+**8,329** across all fifteen: no function was created or destroyed. All fifteen ceremonies are owned
 by the shared cohort framework's replayable specs under `tools/cohort-specs/`;
 prefer replaying a spec over reading this paragraph. The 34 `.data` rows of the
 original 99-slot pointer cohort were correctly excluded and have a terminal
@@ -111,29 +113,20 @@ and the structural
 [`boundary live-promotion report`](../binary-analysis/mission-script-registry-boundary-live-promotion-2026-08-13.md).
 
 The 19-file tree was measured byte-identical to the live maintainer project on
-2026-08-19 after the `name-cohort-round-dual-owner` refresh — 19 files,
-187,501,445 bytes, inventory `df4527a9…` from both trees, zero per-file
-mismatches — and to the independently restored, read-only-reopened POST
-recovery for that promotion, now retained at
-(`H:\BEA-Ghidra-Backups\2026-08-19-name-cohort-round-dual-owner-post-live`),
-which reopened with program `BEA.exe`, md5 `3b456964020070efe696d2cc09464a55`
-and specimen sha256 `74154bfa…7750`. The verified collection moved from D:
-without content change on 2026-08-26 under `H:\STORAGE.md`; the former D:
-backup root is absent. Future live work can make the snapshot lag
-again; each refresh remains a separately authorized promotion.
-The current ignored live readback and tracked-restore receipts are respectively
-`local-lab/ghidra-hud-route-demotion-20260814-v1/runs/live-readback/targets.ready.json`
-(1,878 bytes, SHA-256 `c5da3f2136c430bb932c1f35b4c1c1e07d01fc12ab928cf6c370b8f2f509f163`)
-and
-`local-lab/ghidra-hud-route-demotion-20260814-v1/tracked-snapshot-restore.ready.json`
-(5,897 bytes, SHA-256
-`72d427018989894fbfca07136c919751481f17c9aecc704f0c690655e918b3a8`).
-The read-only aggregate authority is
-`local-lab/ghidra-hud-route-demotion-live-authority-20260814-v1/live-promotion.ready.json`
-(4,738 bytes, SHA-256
-`42c8383f807bc2d645fe592dc88fd0f4c4b2386653a390ff973986189703b17b`).
-Its portable verifier is
-[`tools/ghidra_hud_route_demotion_live_authority.py`](../../tools/ghidra_hud_route_demotion_live_authority.py).
+2026-08-28 after the `name-cohort-battleengine-set-collision-shape` refresh —
+19 files, 187,517,829 bytes, inventory `745c00ad…` from live, tracked, and POST,
+with zero per-file mismatches. The independently copied and read-only-reopened
+POST recovery is retained at
+`H:\BEA-Ghidra-Backups\2026-08-28-name-cohort-battleengine-set-collision-shape-post-live`;
+it reopened as `BEA.exe`, MD5 `3b456964020070efe696d2cc09464a55`, specimen
+SHA-256 `74154bfa…7750`. Future live work can make the snapshot lag again; each
+refresh remains a separately authorized promotion. The current ignored live
+readback is
+`local-lab/name-cohort-battleengine-set-collision-shape-ceremony-2026-08-28/readback.json`
+(2,264 bytes, SHA-256
+`839a43c189e4dbeb9cec36ff84e8b33fd43ff9d8efc40f4aeab4a9e17beb9572`),
+and the tracked-snapshot reopen receipt beside it is 5,795 bytes, SHA-256
+`300f30085b8ffdae99d8b82850821d0671305002bb1fec97298d14809621e3f5`.
 
 Related (not this folder):
 
@@ -199,7 +192,7 @@ the user overrides them:
 | Headless entry | `...\support\analyzeHeadless.bat` |
 | Prior install archive | `H:\SoftwareArchives\Ghidra\` (verified 12.0.3 archive plus the 12.1.2 distribution ZIP; not an active install) |
 | Working/maintainer project | `C:\Users\david\Ghidra\Projects` (`BEA.gpr` / `BEA.rep`) |
-| Verified off-volume recovery | `H:\BEA-Ghidra-Backups\2026-08-19-name-cohort-round-dual-owner-post-live` (exact current `db.18633` POST snapshot; independently copied, restore-proven byte-identical, and read-only reopened before its verified 2026-08-26 H: migration) |
+| Verified off-volume recovery | `H:\BEA-Ghidra-Backups\2026-08-28-name-cohort-battleengine-set-collision-shape-post-live` (exact current `db.18634` POST snapshot; independently copied, byte-identical to live/tracked, and read-only reopened) |
 | Prior verified recovery | `H:\BEA-Ghidra-Backups\2026-08-17-tentacle-chain-a-post-live` (`db.18623`, ceremony B's PRE) and `...-tentacle-chain-a-pre-live` (`db.18622`, the chain's PRE) |
 | Xbox Issue-11 POST recovery | `H:\BEA-Ghidra-Backups\2026-08-12-xbox-sparse-symbol-post-anchors-issue11\` (exact isolated project; restored semantic readback passed) |
 | Xbox US-retail POST recovery | `H:\BEA-Ghidra-Backups\2026-08-12-xbox-sparse-symbol-post-anchors-us-retail\` (exact isolated project; restored semantic readback passed) |
@@ -235,10 +228,12 @@ collateral. Never repin or reinterpret a completed one-shot owner. The Mission-
 registry boundary owner named above is a boundary-only reference shape; its
 receipt-pinned files remain immutable.
 
-The dated `ghidra-function-name-table-2026-07-27.tsv` also is not a current
-name oracle. Nine later historical edits changed 54 rows after its original
-seal, and Generations 20–23 now pin that exact dated artifact. Do not restore or
-edit it in place and break frozen replay. The 2026-08-12 projection is likewise
-frozen for Generations 20–23 and two receipt-pinned instruments. Use the current
-2026-08-13 projection plus a fresh live readback for current names; preserve any
-correction as a new dated authority.
+The dated `ghidra-function-name-table-2026-07-27.tsv` is not a current name
+oracle. Nine later historical edits changed 54 rows after its original seal,
+and Generations 20–23 now pin that exact dated artifact. Do not restore or edit
+it in place and break frozen replay. The 2026-08-12 and 2026-08-13 projections
+are likewise frozen; the 2026-08-17 projection ends at `db.18626` and
+intentionally predates the later SET_NAME cohorts through current `db.18634`.
+Use the canonical database plus a fresh readback for current names. Preserve a
+correction through its immutable cohort spec and receipts rather than rewriting
+a dated projection in place.
