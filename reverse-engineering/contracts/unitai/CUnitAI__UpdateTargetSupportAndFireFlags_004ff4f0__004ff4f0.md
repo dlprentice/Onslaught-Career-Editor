@@ -39,6 +39,7 @@ The packet signature declares `void`; no scalar return contract is claimed. Call
 - Callee `CUnit__IsCandidateSideCompatibleForTargeting` `0x004fd3d0` ×1 site(s) (STATIC_DIRECT).
 - Callee `CUnit__IsActiveAndNotInState12` `0x004fd5b0` ×1 site(s) (STATIC_DIRECT).
 - Callee `CUnit__TrySpawnMembersForTarget` `0x004fdad0` ×1 site(s) (STATIC_DIRECT).
+- The state helper exactly rejects null, `TF_DYING`, and Unit field `+0x244` values `1/2`; the allegiance helper implements the Forseti/Muspell/Independent opposing-pair table plus Neutral-under-`CUnitIndiscriminate`. The current helper names remain analysis labels. The `0x004fb3d0` body is CUnit-owned and also evaluates a candidate virtual plus ordered linked/weapon capability paths; its current `CSquadNormal` label overstates both ownership and semantics.
 - Packet callers: none in the structured array. Runtime caller census is 167/169 from `CUnitAI__Update` at `0x004fef4a`, plus two from `CDiveBomberAI__VFunc_9_00445900` at `0x004459c9` and `0x004459f5`.
 - Runtime also closes the packet's hottest missing callee edge: 86 calls to `CUnitAI__SelectOrRefreshCloseTarget_004ff710`, all at `0x004ff702`. Structured packet arrays prove only their listed direct/static identities; the runtime receipt owns these measured edges.
 

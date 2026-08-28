@@ -71,7 +71,7 @@ public sealed class RetailUnitAITargetSelectionTests
                 distance: 1.0f,
                 supportMinimum: 0.0f,
                 supportMaximum: 2.0f,
-                sideCompatibilityGate: 0),
+                allegiance138: RetailUnitAITargetSelection.AllegianceForseti),
             // Both raw score gates are zero: primary stays zero and the floor
             // is skipped even though its bit is set.
             Candidate(
@@ -107,7 +107,7 @@ public sealed class RetailUnitAITargetSelectionTests
                 distance: 1.0f,
                 supportMinimum: 0.0f,
                 supportMaximum: 2.0f,
-                activeStateGate: 0),
+                thingFlags2C: RetailUnitAITargetSelection.ThingFlagDying),
             Candidate(
                 0,
                 distance: 1.0f,
@@ -132,15 +132,62 @@ public sealed class RetailUnitAITargetSelectionTests
         ];
         var random = new Level100ReleasedRandom();
 
-        Assert.Equal(2, RetailUnitAITargetSelection.Select(profile, candidates, random));
+        Assert.Equal(
+            2,
+            RetailUnitAITargetSelection.Select(
+                profile,
+                RetailUnitAITargetSelection.AllegianceForseti,
+                candidates,
+                random));
         Assert.Equal(-1_136_790_067, random.Seed);
     }
+
+    [Theory]
+    [InlineData(0u, 0, true)]
+    [InlineData(0u, 3, true)]
+    [InlineData(RetailUnitAITargetSelection.ThingFlagDying, 0, false)]
+    [InlineData(RetailUnitAITargetSelection.ThingFlagDying, 3, false)]
+    [InlineData(0u, 1, false)]
+    [InlineData(0u, 2, false)]
+    public void ResolvedCandidateStateGateMatchesReleasedPredicate(
+        uint thingFlags2C,
+        int unitMode244,
+        bool expected) => Assert.Equal(
+            expected,
+            RetailUnitAITargetSelection.PassesResolvedCandidateStateGate(
+                thingFlags2C,
+                unitMode244));
+
+    [Theory]
+    [InlineData(0, 1, 0, true)]
+    [InlineData(0, 6, 0, true)]
+    [InlineData(1, 0, 0, true)]
+    [InlineData(1, 6, 0, true)]
+    [InlineData(6, 0, 0, true)]
+    [InlineData(6, 1, 0, true)]
+    [InlineData(0, 0, 0, false)]
+    [InlineData(1, 1, 1, false)]
+    [InlineData(6, 6, 1, false)]
+    [InlineData(0, 2, 0, false)]
+    [InlineData(99, 2, 1, true)]
+    [InlineData(0, 3, 1, false)]
+    public void TargetAllegianceGateMatchesReleasedTruthTable(
+        int ownerAllegiance138,
+        int candidateAllegiance138,
+        int indiscriminate128,
+        bool expected) => Assert.Equal(
+            expected,
+            RetailUnitAITargetSelection.PassesTargetAllegianceGate(
+                ownerAllegiance138,
+                candidateAllegiance138,
+                indiscriminate128));
 
     private static int? Select(
         RetailUnitAITargetProfile profile,
         RetailUnitAITargetCandidate[] candidates,
         int count) => RetailUnitAITargetSelection.Select(
             profile,
+            RetailUnitAITargetSelection.AllegianceForseti,
             candidates[..count]);
 
     private static RetailUnitAITargetProfile DefaultProfile() => new(
@@ -160,17 +207,19 @@ public sealed class RetailUnitAITargetSelectionTests
         float distance,
         float supportMinimum,
         float supportMaximum,
-        int activeStateGate = 1,
-        int sideCompatibilityGate = 1,
-        int linkedSupportGate = 1,
+        uint thingFlags2C = 0,
+        int unitMode244 = 0,
+        int allegiance138 = RetailUnitAITargetSelection.AllegianceMuspell,
+        int candidateCapabilityGate = 1,
         int scoreGate164 = 1) => new(
-            flags,
-            distance * distance,
+            ThingFlags2C: thingFlags2C,
+            TypeFlags34: flags,
+            UnitMode244: unitMode244,
+            Allegiance138: allegiance138,
+            DistanceSquared: distance * distance,
             RangeReductionPercent: 0.0f,
-            activeStateGate,
-            sideCompatibilityGate,
-            linkedSupportGate,
-            scoreGate164,
-            supportMinimum,
-            supportMaximum);
+            CandidateCapabilityGate: candidateCapabilityGate,
+            ScoreGate164: scoreGate164,
+            SupportMinimum: supportMinimum,
+            SupportMaximum: supportMaximum);
 }

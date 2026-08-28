@@ -753,9 +753,18 @@ and component; `CUnitIndiscriminate` owns the normalized switch at config
 `+0x128`. The random arm consumes one draw only after a candidate passes the
 earlier gates and strict range test, and all measured builds jump past the
 deterministic component floor on that arm. `RetailUnitAITargetSelection`
-preserves these laws over an ordered transcript and returns the winning input
-index. It deliberately does not claim the retail global draw phase, candidate
-population, lifecycle-aware reader transaction, or autonomous actor wiring.
+now computes the first two ordered gates directly: resolved candidates must
+have `TF_DYING` clear and Unit field `+0x244` outside `{1,2}`, then must satisfy
+the exact Forseti/Muspell/Independent opposing-pair table; Neutral is accepted
+only when `CUnitIndiscriminate` is nonzero. Stuart's source binds the flag and
+allegiance enum and supplies the spelling `IsTargetAlligence`; it does not name
+Unit field `+0x244`, which is distinct from the source-crosswalked `EAIState`
+cell at `+0x210`. The reducer keeps the third ordered capability result as a
+caller-captured oracle because retail evaluates a candidate virtual, a linked
+child/spawner-like list, an ordered active-weapon list, category masks, terrain
+height, and the selected weapon profile. It returns the winning input index and
+does not claim the retail global draw phase, candidate-list population,
+lifecycle-aware reader transaction, or autonomous actor wiring.
 
 The copied Steam options bind Movement Forward/Backward/Left/Right to both
 `WASD` and the matching arrow keys, while Look Left/Right/Up/Down consume the

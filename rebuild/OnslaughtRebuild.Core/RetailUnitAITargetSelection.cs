@@ -24,17 +24,19 @@ public readonly record struct RetailUnitAITargetProfile(
     float ComponentPriority17C);
 
 /// <summary>
-/// One ordered, caller-captured candidate transcript for the scoring kernel.
-/// Candidate resolution, side-list selection, and support-helper invocation
-/// remain outside this type.
+/// One ordered, resolved candidate transcript for the scoring kernel.
+/// Candidate pointer resolution, side-list selection, and the capability
+/// helper remain outside this type. The state and allegiance gates are reduced
+/// here from their exact raw retail fields.
 /// </summary>
 public readonly record struct RetailUnitAITargetCandidate(
-    uint FlagWord,
+    uint ThingFlags2C,
+    uint TypeFlags34,
+    int UnitMode244,
+    int Allegiance138,
     float DistanceSquared,
     float RangeReductionPercent,
-    int ActiveStateGate,
-    int SideCompatibilityGate,
-    int LinkedSupportGate,
+    int CandidateCapabilityGate,
     int ScoreGate164,
     float SupportMinimum,
     float SupportMaximum);
@@ -54,6 +56,13 @@ public readonly record struct RetailUnitAITargetCandidate(
 /// </remarks>
 public static class RetailUnitAITargetSelection
 {
+    public const uint ThingFlagDying = 0x00000004u;
+
+    public const int AllegianceForseti = 0;
+    public const int AllegianceMuspell = 1;
+    public const int AllegianceNeutral = 2;
+    public const int AllegianceIndependent = 6;
+
     public const uint ThingTypeVehicle = 0x00020000u;
     public const uint ThingTypeInfantry = 0x00004000u;
     public const uint ThingTypeAirUnit = 0x00000400u;
@@ -73,6 +82,7 @@ public static class RetailUnitAITargetSelection
     /// </summary>
     public static int? Select(
         RetailUnitAITargetProfile profile,
+        int ownerAllegiance138,
         IReadOnlyList<RetailUnitAITargetCandidate> candidates,
         Level100ReleasedRandom? random = null)
     {
@@ -99,18 +109,23 @@ public static class RetailUnitAITargetSelection
         {
             RetailUnitAITargetCandidate candidate = candidates[index];
 
-            // The three retail helper gates are short-circuited in this order.
-            if (candidate.ActiveStateGate == 0)
+            // Retail short-circuits state, allegiance, then capability.
+            if (!PassesResolvedCandidateStateGate(
+                    candidate.ThingFlags2C,
+                    candidate.UnitMode244))
             {
                 continue;
             }
 
-            if (candidate.SideCompatibilityGate == 0)
+            if (!PassesTargetAllegianceGate(
+                    ownerAllegiance138,
+                    candidate.Allegiance138,
+                    profile.Indiscriminate128))
             {
                 continue;
             }
 
-            if (candidate.LinkedSupportGate == 0)
+            if (candidate.CandidateCapabilityGate == 0)
             {
                 continue;
             }
@@ -173,6 +188,43 @@ public static class RetailUnitAITargetSelection
         return selectedIndex;
     }
 
+    /// <summary>
+    /// Exact field predicate of PC retail <c>0x004FD5B0</c> after the caller
+    /// has resolved and null-checked the candidate pointer.
+    /// </summary>
+    public static bool PassesResolvedCandidateStateGate(
+        uint thingFlags2C,
+        int unitMode244) =>
+        (thingFlags2C & ThingFlagDying) == 0 &&
+        unitMode244 is not 1 and not 2;
+
+    /// <summary>
+    /// Exact allegiance/indiscriminate truth table of PC retail
+    /// <c>0x004FD3D0</c>. The source spelling is
+    /// <c>IsTargetAlligence</c> (sic).
+    /// </summary>
+    public static bool PassesTargetAllegianceGate(
+        int ownerAllegiance138,
+        int candidateAllegiance138,
+        int indiscriminate128)
+    {
+        if (candidateAllegiance138 == AllegianceNeutral)
+        {
+            return indiscriminate128 != 0;
+        }
+
+        return candidateAllegiance138 switch
+        {
+            AllegianceForseti =>
+                ownerAllegiance138 is AllegianceMuspell or AllegianceIndependent,
+            AllegianceMuspell =>
+                ownerAllegiance138 is AllegianceForseti or AllegianceIndependent,
+            AllegianceIndependent =>
+                ownerAllegiance138 is AllegianceForseti or AllegianceMuspell,
+            _ => false,
+        };
+    }
+
     private static float PrimaryScore(
         RetailUnitAITargetProfile profile,
         RetailUnitAITargetCandidate candidate,
@@ -186,7 +238,7 @@ public static class RetailUnitAITargetSelection
             return 0.0f;
         }
 
-        uint flags = candidate.FlagWord;
+        uint flags = candidate.TypeFlags34;
         if (profile.Indiscriminate128 != 0)
         {
             // All measured builds jump from this arm directly to the primary
