@@ -2,7 +2,7 @@
 
 Status: active format contract — complete outer/tag census; most payload schemas
 remain owner-specific or open
-Date: 2026-08-22
+Date: 2026-08-27
 Verdict: all 301 streams and 23,884 top-level tags are accounted for; the
 numeric WRES Unit/Feature instance join is bounded, while most other payload
 schemas and world dependencies remain partial.
@@ -44,6 +44,33 @@ its payload is one four-byte version value, **103**, in all 301 PC files.
 ABI words with measured tuple `(344,372,316,5084,92,1)`. The cross-platform
 measurement and pinned source ownership are in
 [`pc-xbox-aya-census-2026-08-13.md`](../game-assets/pc-xbox-aya-census-2026-08-13.md).
+
+## Canonical numeric writer topology
+
+Every numeric archive in the named 66-file retail PC shelf has this exact
+top-level run order; the retained USA Xbox census independently carries the
+same topology for all 66 corresponding streams:
+
+```text
+LVLR, TARG, AYAD, TEXT*, MESH*, IMPS, LNDS, SURF, ERES, SSHD, WRES
+```
+
+The asterisks describe the writer grammar: each run can be empty after source
+filtering, although both are nonempty in the measured PC shelf (`TEXT` 249–319,
+`MESH` 30–71). The fixed prefix geometry is `LVLR@0:size4`,
+`TARG@12:size4`, `AYAD@24:size24` in all 301 PC resource streams. Pinned
+`references/Onslaught` commit `5352a81cdb838b145a57f7febc5d9fc4b0129ebb`
+corroborates the PC-host builder schedule: `ResourceAccumulator.cpp:324-347`
+writes the prefix, `:504-592` emits stable filtered texture then mesh runs, and
+`:627-697` writes the six numeric tail owners in this order. This does not prove
+that decoders require the order, that the pinned source is the exact historical
+production revision, or that PS2/demo/other regional shelves share it.
+
+`tools/aya_archive_inventory.py --expect-numeric-schedule` makes this a
+fail-closed, optional SDK/build check and reports the first unexpected tag and
+inflated offset. It is intentionally not duplicated in the Godot asset
+materializer: every archive currently admitted there already passes an exact
+whole-file SHA-256 gate before inflation.
 
 ## Complete top-level vocabulary census
 

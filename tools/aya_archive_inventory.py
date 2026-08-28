@@ -20,6 +20,7 @@ mode for a mixed local shelf.
 Examples:
     python tools/aya_archive_inventory.py game/data/resources/852_res_PC.aya
     python tools/aya_archive_inventory.py game/data/resources --glob "*_res_PC.aya"
+    python tools/aya_archive_inventory.py game/data/resources/852_res_PC.aya --expect-numeric-schedule
     python tools/aya_archive_inventory.py game/data/resources/852_res_PC.aya --show-chunks 6
     python tools/aya_archive_inventory.py game/data/resources/852_res_PC.aya --dump-tag TEXT --dump-tag MESH --dump-dir .artifacts/aya-dump
     python tools/aya_archive_inventory.py game/data/resources/852_res_PC.aya --dump-index 255 --carve-from-tag CMSH --dump-dir .artifacts/aya-dump
@@ -661,6 +662,58 @@ def parse_top_level_chunks_bounded(raw: bytes) -> list[ChunkEntry]:
         index = end
 
     return chunks
+
+
+def validate_numeric_resource_schedule(chunks: Iterable[ChunkEntry]) -> None:
+    """Validate the canonical PC-host numeric resource-writer topology.
+
+    The same tag runs are measured in all 66 numeric archives from the named
+    retail PC and USA Xbox shelves. This validates only outer framing/order;
+    it does not identify payload schemas or prove decoder order dependence.
+    """
+    entries = list(chunks)
+    prefix = (
+        ("LVLR", 0, 4),
+        ("TARG", 12, 4),
+        ("AYAD", 24, 24),
+    )
+
+    def mismatch(index: int, expected: str) -> ValueError:
+        if index < len(entries):
+            actual = entries[index]
+            return ValueError(
+                "numeric resource schedule mismatch at "
+                f"inflated offset 0x{actual.offset:X}: expected {expected}, "
+                f"got {actual.tag} (size {actual.size})"
+            )
+        eof_offset = (
+            entries[-1].offset + 8 + entries[-1].size if entries else 0
+        )
+        return ValueError(
+            "numeric resource schedule mismatch at "
+            f"inflated offset 0x{eof_offset:X}: expected {expected}, got EOF"
+        )
+
+    for index, (tag, offset, size) in enumerate(prefix):
+        if index >= len(entries):
+            raise mismatch(index, f"{tag} at 0x{offset:X} with size {size}")
+        actual = entries[index]
+        if actual.tag != tag or actual.offset != offset or actual.size != size:
+            raise mismatch(index, f"{tag} at 0x{offset:X} with size {size}")
+
+    index = len(prefix)
+    while index < len(entries) and entries[index].tag == "TEXT":
+        index += 1
+    while index < len(entries) and entries[index].tag == "MESH":
+        index += 1
+
+    for tag in ("IMPS", "LNDS", "SURF", "ERES", "SSHD", "WRES"):
+        if index >= len(entries) or entries[index].tag != tag:
+            raise mismatch(index, tag)
+        index += 1
+
+    if index != len(entries):
+        raise mismatch(index, "end of stream")
 
 
 def _next_pmsh_wrapper(payload: bytes, start: int) -> int:
@@ -1403,6 +1456,11 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         help="Show the first N top-level chunks for each archive",
     )
     ap.add_argument(
+        "--expect-numeric-schedule",
+        action="store_true",
+        help="Fail unless every input has the measured numeric resource tag schedule",
+    )
+    ap.add_argument(
         "--preview-bytes",
         type=int,
         default=24,
@@ -1635,7 +1693,11 @@ def main(argv: list[str]) -> int:
             summary, raw, chunks, member_count = _summarize_archive_bytes(
                 path, compressed, envelope_kind=args.envelope
             )
+            if args.expect_numeric_schedule:
+                validate_numeric_resource_schedule(chunks)
             print_summary(summary)
+            if args.expect_numeric_schedule:
+                print("  numeric_schedule : PASS")
             if args.show_chunks > 0:
                 print_chunk_table(raw, chunks, args.show_chunks, preview_bytes=args.preview_bytes)
 

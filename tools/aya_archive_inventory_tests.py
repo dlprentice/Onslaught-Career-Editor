@@ -109,6 +109,7 @@ class AyaArchiveInventoryObservationTests(unittest.TestCase):
             "inflate_aya_bytes",
             "observe_archives",
             "render_observation_records",
+            "validate_numeric_resource_schedule",
         ):
             self.assertTrue(callable(self._api(name)))
         categories = self._api("REJECTION_CATEGORIES")
@@ -146,6 +147,42 @@ class AyaArchiveInventoryObservationTests(unittest.TestCase):
         self.assertEqual(
             categories | {"raw_tag_stream"}, self._api("ARCHIVE_ERROR_CATEGORIES")
         )
+
+    def test_numeric_resource_schedule_accepts_writer_order_and_rejects_first_drift(
+        self,
+    ) -> None:
+        prefix = (
+            _chunk(b"LVLR", b"\0" * 4)
+            + _chunk(b"TARG", b"\0" * 4)
+            + _chunk(b"AYAD", b"\0" * 24)
+        )
+        tail = b"".join(
+            _chunk(tag)
+            for tag in (b"IMPS", b"LNDS", b"SURF", b"ERES", b"SSHD", b"WRES")
+        )
+        validate = self._api("validate_numeric_resource_schedule")
+        parse = self._api("parse_top_level_chunks_bounded")
+
+        validate(parse(prefix + _chunk(b"TEXT") * 2 + _chunk(b"MESH") + tail))
+
+        cases = (
+            (
+                prefix + _chunk(b"MESH") + _chunk(b"TEXT") + tail,
+                r"expected IMPS, got TEXT",
+            ),
+            (
+                prefix + _chunk(b"TEXT") + _chunk(b"MESH")
+                + _chunk(b"LNDS") + _chunk(b"IMPS")
+                + b"".join(
+                    _chunk(tag) for tag in (b"SURF", b"ERES", b"SSHD", b"WRES")
+                ),
+                r"expected IMPS, got LNDS",
+            ),
+        )
+        for raw, message in cases:
+            with self.subTest(message=message):
+                with self.assertRaisesRegex(ValueError, message):
+                    validate(parse(raw))
 
     def test_observation_v1_rejects_raw_stream_only_rejection_category(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
