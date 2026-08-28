@@ -4,10 +4,11 @@
 
 Durable rule (maintainer FRAGO 2026-08-06, after the re-campaign fixture
 loss): nothing under local-lab/ is ever hard-deleted in one step. ``stage``
-moves a path to D:\\lab-quarantine\\<date>\\ preserving relative structure
-plus a manifest row (original path, sha256 of the whole tree, bytes, reason,
-staged-at). ``restore`` moves it back. ``resume <source> <dest>`` finishes an
-interrupted ``stage`` whose destination partial already exists on D:
+moves a path to H:\\graveyard\\lab-quarantine\\<date>\\ preserving relative
+structure plus a manifest row (original path, sha256 of the whole tree, bytes,
+reason, staged-at). ``restore`` moves it back. ``resume <source> <dest>``
+finishes an interrupted ``stage`` whose destination partial already exists
+under the H: graveyard quarantine root
 (timeout-killed copy run): it retains byte-verified files, re-copies
 missing or mismatched ones, refuses ANY reparse point found in either tree
 (no-follow census before the copy, re-checked at the manifest boundary and
@@ -33,7 +34,8 @@ fds), and only that pinned object is enumerated or read -- a pathname
 swapped to a junction/symlink after any earlier proof refuses inside the
 pin, so no external target is ever scandir'd, opened, or hashed.
 
-D: must be present and have free space; the rule refuses to run without it.
+H: must be present, writable, and have free space; the rule refuses to run
+without it.
 Use this instead of Remove-Item for anything that is not regenerable build
 output inside an active tool's own scratch.
 """
@@ -53,7 +55,7 @@ from datetime import datetime, timezone
 from functools import wraps
 from pathlib import Path
 
-QUARANTINE_ROOT = Path(r"D:\lab-quarantine")
+QUARANTINE_ROOT = Path(r"H:\graveyard\lab-quarantine")
 MANIFEST = QUARANTINE_ROOT / "manifest.jsonl"
 PURGE_LOG = QUARANTINE_ROOT / "purge.log"
 
@@ -1413,7 +1415,7 @@ def resume(source: Path, dest: Path, *, reason: str) -> dict:
     source = source.resolve()
     dest = dest.resolve()
     if not QUARANTINE_ROOT.exists():
-        raise SystemExit(f"quarantine root missing: {QUARANTINE_ROOT} (is D: mounted?)")
+        raise SystemExit(f"quarantine root missing: {QUARANTINE_ROOT} (is H: mounted and writable?)")
     if not source.exists():
         raise SystemExit(f"source does not exist: {source}")
     if not source.is_dir():

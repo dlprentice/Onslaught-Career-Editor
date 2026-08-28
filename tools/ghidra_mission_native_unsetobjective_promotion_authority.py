@@ -74,13 +74,13 @@ POST_MANIFEST = POST_BACKUP / "backup_manifest.json"
 POST_RESTORE = LANE / "post-live-restore.ready.json"
 SCRATCH_READY = LANE / "promotion" / "scratch-authority.ready.json"
 LIVE_READY = LANE / "promotion" / "promotion.ready.json"
-D_ROOT = Path(r"D:\BEA-Ghidra-Backups\2026-08-09-post-recovery")
-D_PRE_BACKUP = D_ROOT / "unsetobjective-pre-live"
-D_PRE_MANIFEST = D_PRE_BACKUP / "backup_manifest.json"
-D_PRE_RESTORE = D_ROOT / "unsetobjective-pre-live-restore.ready.json"
-D_POST_BACKUP = D_ROOT / "unsetobjective-post-live"
-D_POST_MANIFEST = D_POST_BACKUP / "backup_manifest.json"
-D_POST_RESTORE = D_ROOT / "unsetobjective-post-live-restore.ready.json"
+H_ROOT = Path(r"H:\BEA-Ghidra-Backups\2026-08-09-post-recovery")
+H_PRE_BACKUP = H_ROOT / "unsetobjective-pre-live"
+H_PRE_MANIFEST = H_PRE_BACKUP / "backup_manifest.json"
+H_PRE_RESTORE = H_ROOT / "unsetobjective-pre-live-restore.ready.json"
+H_POST_BACKUP = H_ROOT / "unsetobjective-post-live"
+H_POST_MANIFEST = H_POST_BACKUP / "backup_manifest.json"
+H_POST_RESTORE = H_ROOT / "unsetobjective-post-live-restore.ready.json"
 ANALYZE_HEADLESS = Path(
     r"D:\ghidra_12.1.2_PUBLIC_20260605\ghidra_12.1.2_PUBLIC\support\analyzeHeadless.bat"
 )
@@ -708,25 +708,25 @@ def build_scratch(generated_at: str, *, require_current_live_pre: bool) -> dict[
                 8349, "C PRE restore"),
         },
         "offVolume": {
-            "manifest": validate_backup(D_PRE_MANIFEST, expected, "D PRE live backup"),
+            "manifest": validate_backup(H_PRE_MANIFEST, expected, "H PRE live backup"),
             "restore": validate_restore(
-                expected, D_PRE_RESTORE, D_PRE_BACKUP,
-                D_ROOT / "unsetobjective-pre-live-restore-drill",
-                8349, "D PRE restore"),
+                expected, H_PRE_RESTORE, H_PRE_BACKUP,
+                H_ROOT / "unsetobjective-pre-live-restore-drill",
+                8349, "H PRE restore"),
         },
     }
-    require(PRE_BACKUP.drive.lower() != D_PRE_BACKUP.drive.lower(),
+    require(PRE_BACKUP.drive.lower() != H_PRE_BACKUP.drive.lower(),
             "PRE backups are not on distinct volumes")
-    require(PRE_BACKUP.stat().st_dev != D_PRE_BACKUP.stat().st_dev,
+    require(PRE_BACKUP.stat().st_dev != H_PRE_BACKUP.stat().st_dev,
             "PRE backup device identities are not distinct")
     if require_current_live_pre:
         require(actual_project(LIVE) == expected, "maintainer project drifted from exact PRE")
     names = ["replica-a", "replica-b", "probe-after-create", "probe-post-inner"]
     roots = [LANE / "scratch" / name for name in names]
     pre_probes = [Path(load_json(path)["probeCopy"])
-                  for path in (PRE_RESTORE, D_PRE_RESTORE)]
+                  for path in (PRE_RESTORE, H_PRE_RESTORE)]
     require_distinct_projects(
-        [LIVE, SOURCE_PRE, PRE_BACKUP, D_PRE_BACKUP, *pre_probes, *roots])
+        [LIVE, SOURCE_PRE, PRE_BACKUP, H_PRE_BACKUP, *pre_probes, *roots])
     copies = {name: validate_copy(name, expected) for name in names}
     replicas: dict[str, Any] = {}
     evidence_times: list[datetime] = []
@@ -833,10 +833,10 @@ def build_live(generated_at: str) -> dict[str, Any]:
     pre_restore = validate_restore(
         baseline, PRE_RESTORE, PRE_BACKUP,
         LANE / "backups" / "pre-live-restore-drill", 8349, "C PRE restore")
-    d_pre_manifest = validate_backup(D_PRE_MANIFEST, baseline, "D PRE live backup")
-    d_pre_restore = validate_restore(
-        baseline, D_PRE_RESTORE, D_PRE_BACKUP,
-        D_ROOT / "unsetobjective-pre-live-restore-drill", 8349, "D PRE restore")
+    h_pre_manifest = validate_backup(H_PRE_MANIFEST, baseline, "H PRE live backup")
+    h_pre_restore = validate_restore(
+        baseline, H_PRE_RESTORE, H_PRE_BACKUP,
+        H_ROOT / "unsetobjective-pre-live-restore-drill", 8349, "H PRE restore")
     live_dry = validate_run(
         "live immediate PRE", "live-preapply-dry", "dry", LIVE, require_read_only=True)
     live_pre_inventory = validate_inventory("live-preapply-inventory", LIVE, "PRE")
@@ -861,39 +861,39 @@ def build_live(generated_at: str) -> dict[str, Any]:
     post_restore = validate_restore(
         post_project, POST_RESTORE, POST_BACKUP,
         LANE / "backups" / "post-live-restore-drill", 8350, "C POST restore")
-    d_post_manifest = validate_backup(D_POST_MANIFEST, post_project, "D POST live backup")
-    d_post_restore = validate_restore(
-        post_project, D_POST_RESTORE, D_POST_BACKUP,
-        D_ROOT / "unsetobjective-post-live-restore-drill", 8350, "D POST restore")
+    h_post_manifest = validate_backup(H_POST_MANIFEST, post_project, "H POST live backup")
+    h_post_restore = validate_restore(
+        post_project, H_POST_RESTORE, H_POST_BACKUP,
+        H_ROOT / "unsetobjective-post-live-restore-drill", 8350, "H POST restore")
     all_probes = [Path(load_json(path)["probeCopy"]) for path in
-                  (PRE_RESTORE, D_PRE_RESTORE, POST_RESTORE, D_POST_RESTORE)]
+                  (PRE_RESTORE, H_PRE_RESTORE, POST_RESTORE, H_POST_RESTORE)]
     require_distinct_projects(
-        [LIVE, PRE_BACKUP, D_PRE_BACKUP, POST_BACKUP, D_POST_BACKUP, *all_probes])
+        [LIVE, PRE_BACKUP, H_PRE_BACKUP, POST_BACKUP, H_POST_BACKUP, *all_probes])
     require(PRE_BACKUP.stat().st_dev == POST_BACKUP.stat().st_dev and
-            D_PRE_BACKUP.stat().st_dev == D_POST_BACKUP.stat().st_dev and
-            PRE_BACKUP.stat().st_dev != D_PRE_BACKUP.stat().st_dev,
-            "C/D backup device identities differ")
+            H_PRE_BACKUP.stat().st_dev == H_POST_BACKUP.stat().st_dev and
+            PRE_BACKUP.stat().st_dev != H_PRE_BACKUP.stat().st_dev,
+            "C/H backup device identities differ")
     scratch_time = parse_utc(saved_scratch["generatedAtUtc"], "scratch time")
     pre_backup_time = parse_utc(load_json(PRE_MANIFEST)["createdAtUtc"], "PRE backup time")
     pre_restore_time = parse_utc(load_json(PRE_RESTORE)["verifiedAtUtc"], "PRE restore time")
-    d_pre_backup_time = parse_utc(
-        load_json(D_PRE_MANIFEST)["createdAtUtc"], "D PRE backup time")
-    d_pre_restore_time = parse_utc(
-        load_json(D_PRE_RESTORE)["verifiedAtUtc"], "D PRE restore time")
+    h_pre_backup_time = parse_utc(
+        load_json(H_PRE_MANIFEST)["createdAtUtc"], "H PRE backup time")
+    h_pre_restore_time = parse_utc(
+        load_json(H_PRE_RESTORE)["verifiedAtUtc"], "H PRE restore time")
     dry_time = parse_utc(live_dry["completedAtUtc"], "live PRE dry time")
     apply_time = parse_utc(live_apply["completedAtUtc"], "live apply time")
     readback_time = parse_utc(live_readback["completedAtUtc"], "live readback time")
     post_backup_time = parse_utc(load_json(POST_MANIFEST)["createdAtUtc"], "POST backup time")
     post_restore_time = parse_utc(load_json(POST_RESTORE)["verifiedAtUtc"], "POST restore time")
-    d_post_backup_time = parse_utc(
-        load_json(D_POST_MANIFEST)["createdAtUtc"], "D POST backup time")
-    d_post_restore_time = parse_utc(
-        load_json(D_POST_RESTORE)["verifiedAtUtc"], "D POST restore time")
+    h_post_backup_time = parse_utc(
+        load_json(H_POST_MANIFEST)["createdAtUtc"], "H POST backup time")
+    h_post_restore_time = parse_utc(
+        load_json(H_POST_RESTORE)["verifiedAtUtc"], "H POST restore time")
     require(pre_backup_time < pre_restore_time and
-            d_pre_backup_time < d_pre_restore_time and
-            max(scratch_time, pre_restore_time, d_pre_restore_time) < dry_time <
+            h_pre_backup_time < h_pre_restore_time and
+            max(scratch_time, pre_restore_time, h_pre_restore_time) < dry_time <
             apply_time < readback_time < post_backup_time < post_restore_time <
-            d_post_backup_time < d_post_restore_time < generated_time,
+            h_post_backup_time < h_post_restore_time < generated_time,
             "scratch/backup/live chronology differs")
     require(actual_project(LIVE) == post_project,
             "maintainer project drifted after POST backup validation")
@@ -905,13 +905,13 @@ def build_live(generated_at: str) -> dict[str, Any]:
         "scratchAuthority": stamp(SCRATCH_READY),
         "live": {
             "project": str(LIVE.resolve()), "preBackupManifest": pre_manifest,
-            "preRestoreReceipt": pre_restore, "offVolumePreBackupManifest": d_pre_manifest,
-            "offVolumePreRestoreReceipt": d_pre_restore, "immediatePreDry": live_dry,
+            "preRestoreReceipt": pre_restore, "offVolumePreBackupManifest": h_pre_manifest,
+            "offVolumePreRestoreReceipt": h_pre_restore, "immediatePreDry": live_dry,
             "immediatePreInventory": live_pre_inventory, "apply": live_apply,
             "readback": live_readback, "postInventory": live_inventory,
             "postBackupManifest": post_manifest, "postRestoreReceipt": post_restore,
-            "offVolumePostBackupManifest": d_post_manifest,
-            "offVolumePostRestoreReceipt": d_post_restore,
+            "offVolumePostBackupManifest": h_post_manifest,
+            "offVolumePostRestoreReceipt": h_post_restore,
         },
         "result": {
             "functionEntry": "0x00535ee0", "functionName": "IScript__UnsetObjective",

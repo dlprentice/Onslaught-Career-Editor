@@ -51,11 +51,11 @@ LIVE_PROJECT = Path(os.environ.get(
 ))
 PRE_BACKUP = Path(os.environ.get(
     "BEA_NEW34_PRE_BACKUP",
-    r"D:\BEA-Ghidra-Backups\2026-08-13-mission-registry-new34-pre-live",
+    r"H:\BEA-Ghidra-Backups\2026-08-13-mission-registry-new34-pre-live",
 ))
 POST_BACKUP = Path(os.environ.get(
     "BEA_NEW34_POST_BACKUP",
-    r"D:\BEA-Ghidra-Backups\2026-08-13-mission-registry-new34-post-live",
+    r"H:\BEA-Ghidra-Backups\2026-08-13-mission-registry-new34-post-live",
 ))
 SAVED_RECEIPT = ROOT / (
     "local-lab/ghidra-mission-registry-new34-live-authority-20260813-v1/"

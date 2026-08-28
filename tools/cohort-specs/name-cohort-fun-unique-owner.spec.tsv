@@ -16,7 +16,7 @@
 #
 # PRE pins copied from the measured name-cohort-unique-owner POST (db.18629).
 # Replica census/identity/dry/apply/readback PASS on a copy of
-# D:\BEA-Ghidra-Backups\2026-08-18-name-cohort-unique-owner-post-live.
+# H:\BEA-Ghidra-Backups\2026-08-18-name-cohort-unique-owner-post-live.
 # POST name/frozen digests measured 2026-08-18 by replica apply then a
 # separate-process census on that applied replica
 # (local-lab/name-cohort-fun-unique-owner-rehearsal-2026-08-18/receipts/

@@ -27,11 +27,11 @@ LIVE_PROJECT = Path(os.environ.get(
 ))
 PRE_BACKUP = Path(os.environ.get(
     "BEA_CRT23_PRE_BACKUP",
-    r"D:\BEA-Ghidra-Backups\2026-08-14-crt23-db18615-pre-live-v2",
+    r"H:\BEA-Ghidra-Backups\2026-08-14-crt23-db18615-pre-live-v2",
 ))
 POST_BACKUP = Path(os.environ.get(
     "BEA_CRT23_POST_BACKUP",
-    r"D:\BEA-Ghidra-Backups\2026-08-14-crt23-db18615-post-live-v2",
+    r"H:\BEA-Ghidra-Backups\2026-08-14-crt23-db18615-post-live-v2",
 ))
 
 

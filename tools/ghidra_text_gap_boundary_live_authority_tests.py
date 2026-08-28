@@ -34,11 +34,11 @@ LIVE_PROJECT = Path(os.environ.get(
 ))
 PRE_BACKUP = Path(os.environ.get(
     "BEA_TEXT_GAP_PRE_BACKUP",
-    r"D:\BEA-Ghidra-Backups\2026-08-14-text-gap-boundaries-pre-live",
+    r"H:\BEA-Ghidra-Backups\2026-08-14-text-gap-boundaries-pre-live",
 ))
 POST_BACKUP = Path(os.environ.get(
     "BEA_TEXT_GAP_POST_BACKUP",
-    r"D:\BEA-Ghidra-Backups\2026-08-14-text-gap-boundaries-post-live",
+    r"H:\BEA-Ghidra-Backups\2026-08-14-text-gap-boundaries-post-live",
 ))
 SAVED_RECEIPT = ROOT / (
     "local-lab/ghidra-text-gap-boundary-live-authority-20260814-v2/"

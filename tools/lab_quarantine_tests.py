@@ -1464,8 +1464,8 @@ class ReparseAndDuplicateIdRefusalTests(unittest.TestCase):
         source, dest = self.make_source_and_partial()
         existing = {
             "id": dest.name,
-            "original": r"D:\lab-quarantine\old-source",
-            "staged": r"D:\lab-quarantine\old-different-destination",
+            "original": r"H:\graveyard\lab-quarantine\old-source",
+            "staged": r"H:\graveyard\lab-quarantine\old-different-destination",
             "stagedAtUtc": "earlier",
             "bytes": 1,
             "sha256": "old",
@@ -1499,7 +1499,7 @@ class ReparseAndDuplicateIdRefusalTests(unittest.TestCase):
         existing = {
             "id": dest.name,
             "original": "elsewhere",
-            "staged": r"D:\lab-quarantine\other",
+            "staged": r"H:\graveyard\lab-quarantine\other",
             "stagedAtUtc": "earlier",
             "bytes": 1,
             "sha256": "x",

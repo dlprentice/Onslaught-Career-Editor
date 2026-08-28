@@ -36,13 +36,13 @@ LIVE_LANE = EVIDENCE / authority.LIVE_LANE_REL
 PRE_BACKUP = Path(
     os.environ.get(
         "BEA_D3DX_GAP_TWO_PRE_BACKUP",
-        r"D:\BEA-Ghidra-Backups\2026-08-14-d3dx-gap-two-pre-live",
+        r"H:\BEA-Ghidra-Backups\2026-08-14-d3dx-gap-two-pre-live",
     )
 )
 POST_BACKUP = Path(
     os.environ.get(
         "BEA_D3DX_GAP_TWO_POST_BACKUP",
-        r"D:\BEA-Ghidra-Backups\2026-08-14-d3dx-gap-two-post-live",
+        r"H:\BEA-Ghidra-Backups\2026-08-14-d3dx-gap-two-post-live",
     )
 )
 

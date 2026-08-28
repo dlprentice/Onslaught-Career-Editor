@@ -48,10 +48,10 @@ def current_config() -> authority.Config:
         live_project=LIVE_PROJECT,
         live_lane=(ROOT / authority.LIVE_LANE_REL).resolve(strict=False),
         pre_backup=Path(
-            r"D:\BEA-Ghidra-Backups\2026-08-14-crt23-db18615-pre-live-v2"
+            r"H:\BEA-Ghidra-Backups\2026-08-14-crt23-db18615-pre-live-v2"
         ).resolve(strict=False),
         post_backup=Path(
-            r"D:\BEA-Ghidra-Backups\2026-08-14-crt23-db18615-post-live-v2"
+            r"H:\BEA-Ghidra-Backups\2026-08-14-crt23-db18615-post-live-v2"
         ).resolve(strict=False),
     )
 

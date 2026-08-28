@@ -26,8 +26,8 @@ SCRIPT = Path(__file__).resolve()
 LANE = REPO / "local-lab/ghidra-mission-registry-boundary-live-promotion-20260813-v1"
 LIVE = Path(r"C:\Users\david\Ghidra\Projects")
 TRACKED = REPO / "reverse-engineering/ghidra"
-PRE_BACKUP = Path(r"D:\BEA-Ghidra-Backups\2026-08-13-mission-registry-boundaries-pre-live")
-POST_BACKUP = Path(r"D:\BEA-Ghidra-Backups\2026-08-13-mission-registry-boundaries-post-live")
+PRE_BACKUP = Path(r"H:\BEA-Ghidra-Backups\2026-08-13-mission-registry-boundaries-pre-live")
+POST_BACKUP = Path(r"H:\BEA-Ghidra-Backups\2026-08-13-mission-registry-boundaries-post-live")
 PRE_FUNCTIONS = (
     REPO / "local-lab/ghidra-collision-component-identity-live-promotion-20260812-v1/"
     "runs/live-readback/functions.tsv"

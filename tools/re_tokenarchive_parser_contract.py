@@ -115,7 +115,7 @@ CORPUS_CATEGORY_OCCURRENCES = {
 }
 
 D_BACKUP_ROOT = Path(
-    r"D:\BEA-Ghidra-Backups\2026-08-09-post-recovery\setpos-post-live"
+    r"H:\BEA-Ghidra-Backups\2026-08-09-post-recovery\setpos-post-live"
 )
 
 INPUTS: dict[str, tuple[int, str]] = {

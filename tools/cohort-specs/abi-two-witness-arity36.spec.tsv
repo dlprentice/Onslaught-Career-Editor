@@ -44,7 +44,7 @@
 # on them, 1 dropped because its fix needs a simultaneous parameter rename.
 #
 # PINS.  Every number below was MEASURED by this framework's own `census` mode on
-# a replica restored from D:\BEA-Ghidra-Backups\2026-08-17-tentacle-chain-b-post-live
+# a replica restored from H:\BEA-Ghidra-Backups\2026-08-17-tentacle-chain-b-post-live
 # (db.18624), which is byte-current with live as of this authoring.  RE-PINNED
 # ONCE ALREADY: the first pass measured db.18623 mid-chain, and when ceremony B
 # landed exactly three pins moved - preFunctionNameDigest, postFunctionNameDigest

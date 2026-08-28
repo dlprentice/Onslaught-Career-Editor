@@ -32,11 +32,11 @@ LIVE_PROJECT = Path(os.environ.get(
 LIVE_LANE = EVIDENCE / authority.LIVE_LANE_REL
 PRE_BACKUP = Path(os.environ.get(
     "BEA_FUNCTION_FRAGMENT_PRE_BACKUP",
-    r"D:\BEA-Ghidra-Backups\2026-08-14-function-fragment5-ranges-pre-live",
+    r"H:\BEA-Ghidra-Backups\2026-08-14-function-fragment5-ranges-pre-live",
 ))
 POST_BACKUP = Path(os.environ.get(
     "BEA_FUNCTION_FRAGMENT_POST_BACKUP",
-    r"D:\BEA-Ghidra-Backups\2026-08-14-function-fragment5-ranges-post-live",
+    r"H:\BEA-Ghidra-Backups\2026-08-14-function-fragment5-ranges-post-live",
 ))
 
 

@@ -11,7 +11,7 @@
 # an ordered/staged rename is a reviewed framework extension, not a gate to drop.
 #
 # Every metric below was MEASURED by this framework's own `census` mode on a
-# replica restored from D:\BEA-Ghidra-Backups\2026-08-17-tentacle-chain-a-pre-live
+# replica restored from H:\BEA-Ghidra-Backups\2026-08-17-tentacle-chain-a-pre-live
 # (byte-identical to live db.18622), not carried over from prose.
 # postFrozenDigest is deliberately NOT pinned: `name` is one of the 20 frozen
 # columns, so the target row legitimately moves it, and the value cannot be

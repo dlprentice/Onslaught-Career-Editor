@@ -36,11 +36,11 @@ LIVE_PROJECT = Path(os.environ.get(
 LIVE_LANE = EVIDENCE_REPO / authority.LIVE_LANE_REL
 PRE_BACKUP = Path(os.environ.get(
     "BEA_EXTERNAL_TABLE_GAP_PRE_BACKUP",
-    r"D:\BEA-Ghidra-Backups\2026-08-14-external-table-gap-boundaries-pre-live",
+    r"H:\BEA-Ghidra-Backups\2026-08-14-external-table-gap-boundaries-pre-live",
 ))
 POST_BACKUP = Path(os.environ.get(
     "BEA_EXTERNAL_TABLE_GAP_POST_BACKUP",
-    r"D:\BEA-Ghidra-Backups\2026-08-14-external-table-gap-boundaries-post-live",
+    r"H:\BEA-Ghidra-Backups\2026-08-14-external-table-gap-boundaries-post-live",
 ))
 
 

@@ -21,8 +21,8 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[1]
 LANE = REPO / "local-lab/ghidra-hud-route-demotion-20260814-v1"
 LIVE = Path("C:/Users/david/Ghidra/Projects")
-PRE_BACKUP = Path("D:/BEA-Ghidra-Backups/2026-08-14-hud-route-demotion-pre-live")
-POST_BACKUP = Path("D:/BEA-Ghidra-Backups/2026-08-14-hud-route-demotion-post-live")
+PRE_BACKUP = Path("H:/BEA-Ghidra-Backups/2026-08-14-hud-route-demotion-pre-live")
+POST_BACKUP = Path("H:/BEA-Ghidra-Backups/2026-08-14-hud-route-demotion-post-live")
 TRACKED = REPO / "reverse-engineering/ghidra"
 
 SCHEMA = "bea.ghidra.hud-route-demotion-live-authority.v1"

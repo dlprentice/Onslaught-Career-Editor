@@ -1,5 +1,5 @@
 # Unique-owner SET_NAME cohort. Replica census/identity/dry/apply/readback
-# PASS on a copy of D:\BEA-Ghidra-Backups\2026-08-18-varargs-cohort2-post-live
+# PASS on a copy of H:\BEA-Ghidra-Backups\2026-08-18-varargs-cohort2-post-live
 # (db.18628). Not on the live allowlist until a reviewer GO.
 #
 # Population: every live function whose class prefix is contradicted by a

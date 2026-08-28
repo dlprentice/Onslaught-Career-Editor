@@ -1160,8 +1160,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("command", choices=("seal", "verify"))
     parser.add_argument("--repo", type=Path, default=Path.cwd())
     parser.add_argument("--live-project", type=Path, default=Path(r"C:\Users\david\Ghidra\Projects"))
-    parser.add_argument("--pre-backup", type=Path, default=Path(r"D:\BEA-Ghidra-Backups\2026-08-14-crt23-db18615-pre-live-v2"))
-    parser.add_argument("--post-backup", type=Path, default=Path(r"D:\BEA-Ghidra-Backups\2026-08-14-crt23-db18615-post-live-v2"))
+    parser.add_argument("--pre-backup", type=Path, default=Path(r"H:\BEA-Ghidra-Backups\2026-08-14-crt23-db18615-pre-live-v2"))
+    parser.add_argument("--post-backup", type=Path, default=Path(r"H:\BEA-Ghidra-Backups\2026-08-14-crt23-db18615-post-live-v2"))
     parser.add_argument("--output", type=Path)
     return parser.parse_args()
 

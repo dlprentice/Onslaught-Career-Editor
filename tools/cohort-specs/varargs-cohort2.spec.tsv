@@ -28,7 +28,7 @@
 # and every other frozen column are gated over all 8,329 functions.
 #
 # PRE PINS RE-MEASURED 2026-08-18 by this framework's own `census` mode on a
-# replica restored from D:\BEA-Ghidra-Backups\2026-08-17-vftable65-post-live
+# replica restored from H:\BEA-Ghidra-Backups\2026-08-17-vftable65-post-live
 # (db.18627, then the live twin). vftable65 typed 65 pointer slots and moved
 # the structural counts (refs 234493->234558, definedData 48583->48648,
 # undefinedData 3907629->3907369) without touching function names, bodies, or

@@ -149,10 +149,10 @@ Also:
 ## Working and delegation
 
 - **Lab evidence is never hard-deleted in one step.** Anything under
-  `local-lab/` (and any dated lab output elsewhere) is first **staged** with
+  `local-lab/` (and any dated lab output elsewhere) is first **retired** with
   `tools/lab_quarantine.py stage <path> --reason "<why>"`, which moves it to
-  `D:\lab-quarantine\<date>\` with a tree SHA-256, byte count, and manifest
-  row. True deletion happens later, only under space pressure, via
+  `H:\graveyard\lab-quarantine\<date>\` with a tree SHA-256, byte count, and
+  manifest row. True deletion happens later, only under space pressure, via
   `lab_quarantine.py purge <id> --reason "<why>"`; the manifest and purge log
   preserve identity for recovery. `restore <id>` brings a staged item back.
   This rule exists because a 2026-08-06 cleanup deleted frozen campaign and
@@ -182,22 +182,14 @@ Also:
   with no task. Always verify a lane's claimed artifacts on disk before acting
   on them.
 - Retirement is never a hard-delete. Every graveyard candidate — anything under
-  `local-lab/` and any dated lab output elsewhere — is first **staged** with
-  `tools/lab_quarantine.py stage <path> --reason "<why>"`, which copies it to
-  manifested `D:\lab-quarantine\` (tree SHA-256, byte count, manifest row) and
-  removes only after verification; the D stage stays authoritative. There are
-  no direct C:/F:/G:/worktree-to-H moves and no automatic H writes while the
-  H promotion path is unproved. `H:\graveyard` access denial is SanDisk Drive
-  Lock device behavior, not an ACL defect — never rewrite ACLs or ownership as
-  a workaround. H: remains optional cold retirement only, behind a separate,
-  separately reviewed unlock whose promotion gate runs in exactly this order —
-  unlock confirmed → copy the retained authoritative D stage to H → verify
-  exact-copy/tree-hash identity → append the H manifest → read the appended row
-  back → only then allow D retirement; D stays retained and authoritative until
-  every gate succeeds;
-  `lab_quarantine.py purge` stays an explicit, separately logged space-pressure
-  operation. Extract what a retired artifact teaches into the durable owners
-  before moving it.
+  `local-lab/` and any dated lab output elsewhere — is retired directly with
+  `tools/lab_quarantine.py stage <path> --reason "<why>"` into manifested
+  `H:\graveyard\lab-quarantine\` (tree SHA-256, byte count, manifest row), and
+  the source is removed only after exact-copy verification and manifest
+  readback. D: and G: are not staging or backup destinations. H: must be mounted
+  and writable; the tool fails closed otherwise. `lab_quarantine.py purge`
+  stays an explicit, separately logged space-pressure operation. Extract what a
+  retired artifact teaches into the durable owners before moving it.
 - External CLI reviewers follow the same rule. Keep their lanes read-only unless
   a writing lane is explicitly isolated; preserve prompts and reports under
   `local-lab/`, confirm real work and clean exit, reproduce consequential claims,

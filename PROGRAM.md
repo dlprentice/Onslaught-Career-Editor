@@ -361,4 +361,4 @@ Work the 79 GiB local corpus family-by-family per
 campaign inputs grepped before any "stale" call, staged via
 `tools/lab_quarantine.py`, purged only under space pressure with separate
 reason. No bulk deletion, ever. Gate: per-family disposition rows with
-stage receipts under `D:\lab-quarantine`.
+stage receipts under `H:\graveyard\lab-quarantine`.
