@@ -1,17 +1,19 @@
 # IScript function map
 
 Status: active static function map
-Last updated: 2026-08-18 (loft same-side min/max flip)
+Last updated: 2026-08-28 (released console waypoint closure)
 Source File: `C:\dev\ONSLAUGHT2\MissionScript\IScript.cpp` (SEH `__FILE__`
 pointer `0x0064fa40` read out of `IScript__PostEvent`) | Binary: BEA.exe,
 SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
-Evidence: MEASURED — every byte below was re-read from the pristine specimen at
+Evidence: MEASURED — PC bytes below were re-read from the pristine specimen at
 file offset VA − 0x400000 with `tools/disasm_va.py`; whole-image scans by
 `tools/call_xref_scan.py` / `tools/operand_scan.py`; RTTI identities by a
 COLOC → TypeDescriptor → ClassHierarchyDescriptor walk over the specimen's
-`.rdata`. Function names are the live Ghidra name table (db.18627 lineage);
-the byte contracts below are independent of the names.
+`.rdata`. The released-console section names its own carrier hashes and mapped
+ranges, independently reproduced without Ghidra. Function names are the live
+Ghidra name table (db.18627 lineage); the byte contracts are independent of the
+names.
 
 ## Shape
 
@@ -192,11 +194,48 @@ second `FollowWaypoint` argument enters the predicate. At the rebuild's exact
 for `Target Tank` / `Target Truck`, 5,000 mm for `Air Trainer` / `Target
 Drone`, and 8,000 mm for `U-17 Highside Transporter`.
 
-The same eight Level 100 mission-script files are byte-identical in the
-retained PC and PS2 data, and Xbox retains the same native names, error string,
-and `IScript.cpp` source path. Those facts corroborate the feature family but
-do **not** prove that either console implementation uses the same numeric
-predicate; console body recovery remains separate.
+#### Released console closure — exact 2026-08-28
+
+The former feature-family inference is superseded. Carrier-first reconstruction
+of three canonical PS2 ELFs and three Xbox programs independently reaches the
+same completion predicate. Exact updater identities are:
+
+| PS2 build / ELF SHA-256 | Updater range | Raw SHA-256 |
+| --- | --- | --- |
+| German demo / `5700b5d0b39554e49afe65e079ad8109fe6688c2aa5e6f0e0ed5afcefd034584` | `[0x00348470,0x00348650)` | `a039fc9904334981da9131e3376b27a609021e75e725230434c438ba45d849af` |
+| Europe / `87cb89b020cf107b3ba4612ac6bc86ed3fcbd6dd985e2cd3978bf897be96b655` | `[0x003484f0,0x003486d0)` | `2a1a3a7f35417b1da65f6adf17fb7500ab2766755b227333bda30369f5941807` |
+| USA / `4cfed76f0b0cdf84377a4d5b1613fd197c27be9a3814743590fecba22ba4e166` | `[0x00348e48,0x00349028)` | `c17dda4f6baa1e7fd95eab747fe76b5a3b62ca86f1547cff9185269b73cffd25` |
+
+| Xbox build / XBE SHA-256 | Updater range | Raw SHA-256 |
+| --- | --- | --- |
+| USA retail / `e8adc9d6940ae1a5fa9fac0fe28e398bfffd01758c2740a536b930c37c83985b` | `[0x0009e410,0x0009e570)` | `9fb345287524a8e03383261d8ccc341e74fee86b912f30e1441e077aae3ace16` |
+| Europe retail / `266387500a056752f45301a03772fa57fdc747cf0eda46d39bbb915c5db2f234` | `[0x0009e380,0x0009e4e0)` | `5e379ad6040ab712c252ac6ba99fa66088946207d7e0d6be28ff83359e6e44ae` |
+| Issue 11 demo disc / `ac07835e4b8cf38312e672cb7dc17f28a732abbc05a5e4f1760aaa78a5377ed9` | `[0x0009e420,0x0009e580)` | `4329e9289d7711c3e6ccae55afe7bf4281533603fa8f608091372932d71fd922` |
+
+All six bodies compute only X/Y distance, select a provisional `2.0f`, use
+`mThingType & 0x10` for the Unit virtual radius, otherwise select `4.0f` for
+`mThingType & 0x20000000`, and accept only strict `distance < radius`.
+Equality rearms message 2000; neither command supplies a radius scalar. The
+PS2 VU sequence calculates `x²+y²` even though an unused z-square lane is
+formed. Xbox uses the same 124-instruction x87 shape in all three programs and
+also rearms unordered comparisons.
+
+PS2 resolves the Unit virtual through the signed-this-adjust/target pair at
+primary-vtable `+0x2f8/+0x2fc`; Xbox uses primary-vtable slot `+0x178`. Every
+PS2 adjust is zero, and the three 16-byte return leaves are byte-identical
+between demo, Europe, and USA. Together with the Xbox name-getter/vtable joins,
+the resolved GroundVehicle, Plane, and Dropship returns are exactly `2.0f`,
+`5.0f`, and `8.0f` on every measured build. The human class attachment on the
+stripped PS2 tables is homologous; the leaf bytes and returned numbers are
+exact.
+
+One real platform divergence remains: PC/PS2 call the anchored self-link error
+path, while Xbox converts `next == current` to null without printing. The
+retained Xbox error string has zero encoded pointer references in all three
+mapped images. Core's existing planar strict-threshold behavior and
+`2_000 / 5_000 / 8_000` millimetre Level 100 radii therefore need no behavior
+change; this closure strengthens their provenance and forbids inventing either
+a command-radius scalar or an Xbox self-link diagnostic.
 
 ## Script-system vtable cluster (RTTI COLOC → TypeDescriptor walk)
 
