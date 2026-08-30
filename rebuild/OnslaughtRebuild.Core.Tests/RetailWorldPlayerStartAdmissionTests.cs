@@ -217,12 +217,69 @@ public sealed class RetailWorldPlayerStartAdmissionTests
         Assert.True(resolution.IsAuthored);
         Assert.False(resolution.UsesRetailDefault);
         Assert.Same(Assert.Single(projection.Starts), resolution.AuthoredStart);
+        Assert.Same(
+            Assert.Single(projection.Starts),
+            Assert.Single(resolution.MatchingAuthoredStarts));
         Assert.Equal(1, resolution.PlayerNumber);
         Assert.Equal(15, resolution.ThingType);
         Assert.Equal(0x43846000, resolution.PositionXBits);
         Assert.Equal(0x43816800, resolution.PositionYBits);
         Assert.Equal(unchecked((int)0x80000000), resolution.PositionZBits);
         Assert.Equal(0, resolution.PlaneMode);
+    }
+
+    [Fact]
+    public void ResolveForPlayer_VisitsEveryMatchInOrderAndRetainsTheFinalMatch()
+    {
+        RetailWorldPlayerStartRecord first = ExactStart() with
+        {
+            ObjectIdentity = "synthetic:start:first",
+            ThingType = 14,
+            PositionXBits = 0x3f800000,
+            PositionYBits = 0x40000000,
+            PositionZBits = 0x40400000,
+            PlaneMode = 1,
+        };
+        RetailWorldPlayerStartRecord otherPlayer = ExactStart() with
+        {
+            ObjectIdentity = "synthetic:start:other-player",
+            PlayerNumber = 2,
+        };
+        RetailWorldPlayerStartRecord final = ExactStart() with
+        {
+            ObjectIdentity = "synthetic:start:final",
+        };
+        var projection = new RetailWorldPlayerStartProjection(
+            110,
+            RetailWorld110LevelActors.ArchiveIdentity,
+            [first, otherPlayer, final]);
+
+        RetailWorldPlayerStartResolution resolution = projection.ResolveForPlayer(1);
+        RetailWorldPlayerStartResolution repeat = projection.ResolveForPlayer(1);
+
+        Assert.Collection(
+            resolution.MatchingAuthoredStarts,
+            match => Assert.Same(first, match),
+            match => Assert.Same(final, match));
+        Assert.Same(final, resolution.AuthoredStart);
+        Assert.True(resolution.IsAuthored);
+        Assert.False(resolution.UsesRetailDefault);
+        Assert.Equal(final.ThingType, resolution.ThingType);
+        Assert.Equal(final.PositionXBits, resolution.PositionXBits);
+        Assert.Equal(final.PositionYBits, resolution.PositionYBits);
+        Assert.Equal(final.PositionZBits, resolution.PositionZBits);
+        Assert.Equal(final.PlaneMode, resolution.PlaneMode);
+        Assert.Equal(
+            resolution.MatchingAuthoredStarts.ToArray(),
+            repeat.MatchingAuthoredStarts.ToArray());
+        Assert.Same(final, repeat.AuthoredStart);
+        IList<RetailWorldPlayerStartRecord> retainedMatches =
+            (IList<RetailWorldPlayerStartRecord>)resolution.MatchingAuthoredStarts;
+        Assert.True(retainedMatches.IsReadOnly);
+        Assert.Throws<NotSupportedException>(() =>
+            retainedMatches.Add(first));
+        Assert.Throws<NotSupportedException>(() =>
+            retainedMatches[0] = otherPlayer);
     }
 
     [Fact]
@@ -235,6 +292,10 @@ public sealed class RetailWorldPlayerStartAdmissionTests
         Assert.False(resolution.IsAuthored);
         Assert.True(resolution.UsesRetailDefault);
         Assert.Null(resolution.AuthoredStart);
+        Assert.Empty(resolution.MatchingAuthoredStarts);
+        Assert.Throws<NotSupportedException>(() =>
+            ((IList<RetailWorldPlayerStartRecord>)resolution.MatchingAuthoredStarts)
+                .Add(ExactStart()));
         Assert.Equal(2, resolution.PlayerNumber);
         Assert.Equal(15, resolution.ThingType);
         Assert.Equal(0x43800000, resolution.PositionXBits);

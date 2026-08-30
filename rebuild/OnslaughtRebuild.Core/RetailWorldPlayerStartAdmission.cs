@@ -29,8 +29,8 @@ public sealed record RetailWorldPlayerStartRecord(
 /// authored serialized starts. An absent match carries only the retail
 /// fallback fields proven jointly by <c>CGame::PostLoadProcess</c> and the
 /// <c>CStartInitThing</c> source defaults. This is a pre-init plan: it does not
-/// invent configuration, orientation, Battle Engine construction, the height
-/// clamp performed by <c>CStart::Init</c>, or presentation coordinates.
+/// invent configuration, orientation, Battle Engine construction or assignment,
+/// the height clamp performed by <c>CStart::Init</c>, or presentation coordinates.
 /// </summary>
 public sealed class RetailWorldPlayerStartResolution
 {
@@ -47,7 +47,7 @@ public sealed class RetailWorldPlayerStartResolution
         int positionYBits,
         int positionZBits,
         int planeMode,
-        RetailWorldPlayerStartRecord? authoredStart)
+        IReadOnlyList<RetailWorldPlayerStartRecord> matchingAuthoredStarts)
     {
         PlayerNumber = playerNumber;
         ThingType = thingType;
@@ -55,7 +55,10 @@ public sealed class RetailWorldPlayerStartResolution
         PositionYBits = positionYBits;
         PositionZBits = positionZBits;
         PlaneMode = planeMode;
-        AuthoredStart = authoredStart;
+        MatchingAuthoredStarts = Array.AsReadOnly(matchingAuthoredStarts.ToArray());
+        AuthoredStart = MatchingAuthoredStarts.Count == 0
+            ? null
+            : MatchingAuthoredStarts[^1];
     }
 
     public int PlayerNumber { get; }
@@ -70,22 +73,47 @@ public sealed class RetailWorldPlayerStartResolution
 
     public int PlaneMode { get; }
 
+    /// <summary>
+    /// Every serialized start whose player number matched, in the retail list
+    /// traversal order. This is resolution evidence, not a transcript of
+    /// constructed Battle Engines or player-side assignments.
+    /// </summary>
+    public IReadOnlyList<RetailWorldPlayerStartRecord> MatchingAuthoredStarts { get; }
+
+    /// <summary>
+    /// The final matching serialized start, mirroring retail's retained
+    /// player-side selection after the complete list walk.
+    /// </summary>
     public RetailWorldPlayerStartRecord? AuthoredStart { get; }
 
     public bool IsAuthored => AuthoredStart is not null;
 
     public bool UsesRetailDefault => AuthoredStart is null;
 
+    internal static RetailWorldPlayerStartResolution FromOrderedMatches(
+        IReadOnlyList<RetailWorldPlayerStartRecord> matches)
+    {
+        if (matches.Count == 0)
+        {
+            throw new ArgumentException(
+                "An authored resolution requires at least one matching start.",
+                nameof(matches));
+        }
+
+        RetailWorldPlayerStartRecord final = matches[^1];
+        return new RetailWorldPlayerStartResolution(
+            final.PlayerNumber,
+            final.ThingType,
+            final.PositionXBits,
+            final.PositionYBits,
+            final.PositionZBits,
+            final.PlaneMode,
+            matches);
+    }
+
     internal static RetailWorldPlayerStartResolution FromAuthored(
         RetailWorldPlayerStartRecord start) =>
-        new(
-            start.PlayerNumber,
-            start.ThingType,
-            start.PositionXBits,
-            start.PositionYBits,
-            start.PositionZBits,
-            start.PlaneMode,
-            start);
+        FromOrderedMatches([start]);
 
     internal static RetailWorldPlayerStartResolution RetailDefault(
         int playerNumber) =>
@@ -96,7 +124,7 @@ public sealed class RetailWorldPlayerStartResolution
             RetailDefaultPositionYBits,
             RetailDefaultPositionZBits,
             RetailDefaultPlaneMode,
-            authoredStart: null);
+            matchingAuthoredStarts: []);
 }
 
 /// <summary>
@@ -141,11 +169,18 @@ public sealed class RetailWorldPlayerStartProjection
                 "A retail player number must be one or two.");
         }
 
-        RetailWorldPlayerStartRecord? authored = _starts.SingleOrDefault(
-            start => start.PlayerNumber == playerNumber);
-        return authored is null
+        var matches = new List<RetailWorldPlayerStartRecord>();
+        foreach (RetailWorldPlayerStartRecord start in _starts)
+        {
+            if (start.PlayerNumber == playerNumber)
+            {
+                matches.Add(start);
+            }
+        }
+
+        return matches.Count == 0
             ? RetailWorldPlayerStartResolution.RetailDefault(playerNumber)
-            : RetailWorldPlayerStartResolution.FromAuthored(authored);
+            : RetailWorldPlayerStartResolution.FromOrderedMatches(matches);
     }
 
     private string ComputeIdentity()
