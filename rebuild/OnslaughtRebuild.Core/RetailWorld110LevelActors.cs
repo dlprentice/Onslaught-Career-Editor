@@ -27,9 +27,10 @@ namespace OnslaughtRebuild.Core;
 /// <para>
 /// <b>What this deliberately does not claim.</b> No RLWD row is a Battle
 /// Engine. Ordinal 0 is the LevelScript object (type 27), not the L100
-/// ordinal-0 <c>Player 1</c> mapping. Retail's player for this world is not
-/// authored in the level-world table; inventing a spawn from the L100 start
-/// pad or from the type-15 row at (264.75, 258.81) is not licensed here.
+/// ordinal-0 <c>Player 1</c> mapping. Ordinal 1 is instead the exact authored
+/// type-15 <c>CStartInitThing</c> for player 1. It is retained separately as a
+/// start-placement projection because it carries no Battle Engine definition
+/// identity and does not by itself make world 110 constructible.
 /// </para>
 /// </remarks>
 public static class RetailWorld110LevelActors
@@ -74,6 +75,55 @@ public static class RetailWorld110LevelActors
     /// </summary>
     public static RetailWorldArchiveIdentity ArchiveIdentity { get; } =
         new(SourceArchiveRelativePath, SourceArchiveSha256);
+
+    public const string PlayerStartObjectIdentity = "wres:rlwd:0001";
+
+    public const int PlayerStartThingType = 15;
+
+    public const int PlayerStartSerializedByteLength = 59;
+
+    public const string PlayerStartSerializedSha256 =
+        "850de203b32b967064f3a9bacca24bebd783af68760a8b4c056ea242a2b47dfc";
+
+    public const int PlayerStartPositionXBits = 0x43846000;
+
+    public const int PlayerStartPositionYBits = 0x43816800;
+
+    public const int PlayerStartPositionZBits = unchecked((int)0x80000000);
+
+    public const int PlayerStartOrientationXBits = unchecked((int)0xbf04fd8b);
+
+    public const int PlayerStartOrientationYBits = 0;
+
+    public const int PlayerStartOrientationZBits = 0;
+
+    public const int PlayerStartPlaneMode = 0;
+
+    public const int PlayerStartPlayerNumber = 1;
+
+    /// <summary>
+    /// Exact authored player-start projection from RLWD ordinal 1. The
+    /// serialized record digest also binds the common InitThing fields that
+    /// this bounded projection does not otherwise interpret.
+    /// </summary>
+    public static IReadOnlyList<RetailWorldPlayerStartRecord>
+        AuthoredPlayerStarts { get; } =
+        Array.AsReadOnly<RetailWorldPlayerStartRecord>(
+        [
+        new(
+            PlayerStartObjectIdentity,
+            PlayerStartThingType,
+            PlayerStartSerializedByteLength,
+            PlayerStartSerializedSha256,
+            PlayerStartPositionXBits,
+            PlayerStartPositionYBits,
+            PlayerStartPositionZBits,
+            PlayerStartOrientationXBits,
+            PlayerStartOrientationYBits,
+            PlayerStartOrientationZBits,
+            PlayerStartPlaneMode,
+            PlayerStartPlayerNumber),
+        ]);
 
     /// <summary>
     /// The complete definition-bearing projection from the byte-identical BSWD

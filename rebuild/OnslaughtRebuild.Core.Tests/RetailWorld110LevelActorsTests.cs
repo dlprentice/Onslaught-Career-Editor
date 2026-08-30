@@ -21,6 +21,30 @@ public sealed class RetailWorld110LevelActorsTests
     }
 
     [Fact]
+    public void Type15Start_RemainsSeparateFromDefinitionBearingActors()
+    {
+        RetailWorldPlayerStartRecord start =
+            Assert.Single(RetailWorld110LevelActors.AuthoredPlayerStarts);
+
+        Assert.Equal("wres:rlwd:0001", start.ObjectIdentity);
+        Assert.Equal(15, start.ThingType);
+        Assert.Equal(1, start.PlayerNumber);
+        Assert.DoesNotContain(
+            RetailWorld110LevelActors.AuthoredDefinitions,
+            definition => definition.ThingType == 15);
+        Assert.DoesNotContain(
+            RetailWorld110LevelActors.AuthoredDefinitions,
+            definition => StringComparer.Ordinal.Equals(
+                definition.ObjectIdentity,
+                start.ObjectIdentity));
+        Assert.DoesNotContain(
+            RetailWorld110LevelActors.AuthoredDefinitions,
+            definition => StringComparer.Ordinal.Equals(
+                definition.DefinitionName,
+                "Player 1"));
+    }
+
+    [Fact]
     public void Admit_ExactWorld110ProjectionPreservesAuthoredDefinitionShape()
     {
         RetailWorldActorDefinitionProjection projection = AdmitExactProjection();
