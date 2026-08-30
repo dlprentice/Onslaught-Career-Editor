@@ -52,6 +52,11 @@ unknowns and exact falsifiers are progress; invented semantics are not.
 - No repository-local `local-lab` directory or symlink is currently installed.
   Resolve the external path explicitly; do not copy the corpus into Git merely
   to satisfy a relative tool path.
+- Complete-RE replay on Linux must use `developer_state.json` →
+  `current_re_authority.verify`. The host adapter preserves literal Windows
+  receipt strings while binding only the explicitly selected Git and external
+  lab roots. Do not add a compatibility symlink, invoke the frozen bootstrap
+  directly, or rewrite a frozen receipt to make replay run.
 
 The repository lanes are:
 

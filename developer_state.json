@@ -640,7 +640,22 @@
     "reattachedMultiOwnerContracts": 1,
     "detail": "Per-kind dispositions and id-set digests live in the campaign READY advance.reseed.carried.progressedCarryAccounting."
   },
-  "verify": "$env:BEA_REPO_ROOT=(Get-Location).Path; try { python -I -B tools/re_campaign_frozen_bootstrap.py --campaign local-lab/re-campaign-incident-recovery-20260808-v1/generation-32-current-8329-db18625-v1 --mode full --expected-ready-sha256 08ed89644ed25feb9e85fefb5b31ab2bdecbbd91b8aca720e20c53a7fbc5e73f --expected-reducer-id 4c465010b3240d476eb15c89fcfa51cd155936316e897e6f6a7b450df5944db3; if ($LASTEXITCODE -ne 0) { throw \"Generation 32 frozen replay failed with exit code $LASTEXITCODE\" } } finally { Remove-Item Env:BEA_REPO_ROOT -ErrorAction SilentlyContinue }",
+  "_historicalWindowsFrozenVerify": "$env:BEA_REPO_ROOT=(Get-Location).Path; try { python -I -B tools/re_campaign_frozen_bootstrap.py --campaign local-lab/re-campaign-incident-recovery-20260808-v1/generation-32-current-8329-db18625-v1 --mode full --expected-ready-sha256 08ed89644ed25feb9e85fefb5b31ab2bdecbbd91b8aca720e20c53a7fbc5e73f --expected-reducer-id 4c465010b3240d476eb15c89fcfa51cd155936316e897e6f6a7b450df5944db3; if ($LASTEXITCODE -ne 0) { throw \"Generation 32 frozen replay failed with exit code $LASTEXITCODE\" } } finally { Remove-Item Env:BEA_REPO_ROOT -ErrorAction SilentlyContinue }",
+  "verify": "python -I -B tools/re_campaign_gen32_host_attestation.py --campaign /home/xsniper80/ProjectData/Onslaught/local-lab/re-campaign-incident-recovery-20260808-v1/generation-32-current-8329-db18625-v1 --repo-root /home/xsniper80/Projects/game-dev/Onslaught-Career-Editor --lab-root /home/xsniper80/ProjectData/Onslaught/local-lab --authority /home/xsniper80/ProjectData/Onslaught/local-lab/re-campaign-incident-recovery-20260808-v1/generation-32-current-8329-db18625-authority.ready.json --expected-ready-sha256 08ed89644ed25feb9e85fefb5b31ab2bdecbbd91b8aca720e20c53a7fbc5e73f --expected-reducer-id 4c465010b3240d476eb15c89fcfa51cd155936316e897e6f6a7b450df5944db3 --expected-authority-sha256 6238430dffb5c80517e17411db7e4505250b01f7226bcc982af675b0fe776b37 --mode full",
+  "linuxHostReplay": {
+    "status": "VERIFIED",
+    "schema": "bea.re.generation32-linux-host-replay-attestation.v1",
+    "tool": "tools/re_campaign_gen32_host_attestation.py",
+    "tests": "tools/re_campaign_gen32_host_attestation_tests.py",
+    "successMarker": "CAMPAIGN_HOST_REPLAY_VERIFIED",
+    "attestationPath": "/home/xsniper80/ProjectData/Onslaught/host-attestations/generation-32-linux-host-replay-20260830.json",
+    "attestationBytes": 19078,
+    "attestationSha256": "5a8117c0466a563b448e2c899edc99b7f66b4d603c8cfe057a1be8ce97f6924f",
+    "toolSha256": "b30493ed0a2ec4884c13e0b4ade3d8bb136c6357b6bd7c0e919eab499b43aa64",
+    "testsSha256": "a784408a9483131b8f8ae189fb569ae1e3b98eef6566ce349d6236979e499524",
+    "landedCommit": "da64db43e92a94ec352e6d085f5ee0ddbf34face",
+    "disposition": "Host-binding and full-replay evidence only; no frozen READY, reducer, authority receipt, ledger, or historical logical path was modified."
+  },
   "candidateTipDisposition": "The original candidate Generations 11-73 are superseded projection history, never a parent or authority; their valid claims were re-admitted field-by-field through the exact closure.",
   "nextValidGeneration": 33,
   "_generation30_whatChanged": "Generation 30 re-grounds the campaign onto the exact geometry live Ghidra holds after the three verified 2026-08-17 promotions (41 boundary corrections, 158 function plus 2 label renames, 294 ABI signature corrections). It is STRUCTURAL AND METADATA ONLY. Function population stays 8,329; exact owned body bytes rise 1,811,691 -> 1,814,984, and that +3,293 is reproduced independently as residual bytes released (3,301) minus residual bytes created (8) - which corroborates the boundary cohort's headline number from the pristine specimen and the fresh geometry rather than from its own manifest. Body ranges fall 8,459 -> 8,432. Residual rows 6,109 -> 6,035, contracts 14,438 -> 14,364, questions 15,399 -> 15,325, adjudications 5,957 -> 5,882. Evidence: local-lab/re-campaign-incident-recovery-20260808-v1/generation-30-current-8329-db18622-evidence-v1 (builder, snapshot-a, snapshot-b) and local-lab/ghidra-db18622-geometry-readback-20260817-v1 (read-only geometry export and cut-time inspections).",

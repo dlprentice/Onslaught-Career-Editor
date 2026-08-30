@@ -97,9 +97,18 @@ nothing and must say so.
 
 ## Campaign replay
 
-`re_campaign_historical_source_projection_v2.py` is the supported current
-launcher for immutable campaigns whose rebuild inputs were later strengthened.
-For Generation 24 it first pins and tests the current player-damage and weapon-
+Current complete-RE verification is selected only by `developer_state.json` →
+`current_re_authority.verify`. On this Linux host that command uses
+`re_campaign_gen32_host_attestation.py`; its focused fail-closed and real-data
+replay coverage lives in `re_campaign_gen32_host_attestation_tests.py`. The
+adapter binds the exact historical Windows namespace to explicit Git and
+external-lab roots, prevalidates the reachable frozen reducer graph, verifies
+the canonical/replica authority, and performs a temporary full replay without
+rewriting frozen bytes.
+
+`re_campaign_historical_source_projection_v2.py` is the historical
+Generation-24 launcher for an immutable campaign whose rebuild inputs were
+later strengthened. For Generation 24 it first pins and tests the current player-damage and weapon-
 scatter owners, then exposes exactly three historical source identities to the
 frozen verifier in memory. Both `Path.open` and built-in file reads are covered,
 including recursive parent replays; writes to projected paths are refused. The

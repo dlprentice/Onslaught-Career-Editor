@@ -84,6 +84,11 @@ the rolling Ghidra database. Read the
 and latest backed-up live promotion. Select campaign authority from
 `developer_state.json` → `current_re_authority`. Do not restate its volatile
 generation, paths, hashes, grades, or next-valid value here. The
+Linux command selected there runs the tracked
+[`Generation-32 host adapter`](../tools/re_campaign_gen32_host_attestation.py),
+which prints `CAMPAIGN_HOST_REPLAY_VERIFIED` only after frozen integrity,
+predecessor carry, full rebuild, and exact output comparison pass. It adapts
+host paths; it neither replaces nor modifies campaign authority. The
 per-generation narrative below is the historical record of how earlier grades
 were earned; it is not an authority selector.
 Generation 12 admitted bounded `CBattleEngine::Damage`/`Hit` field
