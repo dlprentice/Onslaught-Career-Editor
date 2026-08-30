@@ -1,7 +1,7 @@
 # Onslaught Toolkit
 
 Status: active — authoritative contributor contract for this repository.
-Last updated: 2026-08-12 (execution shape and reviewer use are situational,
+Last updated: 2026-08-30 (Linux migration routing; execution shape and reviewer use are situational,
 optional, and harness-agnostic; one primary integration owner coordinates).
 Summary: the mission, evidence boundaries, safety rules, and smallest set of
 routes every contributor needs before working on Battle Engine Aquila.
@@ -32,13 +32,32 @@ that matter independently for patching, modding, and the WinUI app. Honest
 unknowns and exact falsifiers are progress; invented semantics are not.
 [`GOAL.md`](GOAL.md) defines the standing acceptance targets.
 
+## Linux workstation routing
+
+- Canonical Git checkout: `~/Projects/game-dev/Onslaught-Career-Editor`.
+- Active private lab corpus: `~/ProjectData/Onslaught/local-lab/`.
+- Live Ghidra material recovered from the Windows profile:
+  `~/ProjectData/Onslaught/windows-profile-2026-08-28/ghidra/`.
+- Retail profiles and media: `~/ProjectData/Onslaught/retail-profiles/` and
+  `~/ProjectData/Onslaught/media/`.
+- Recovered worktree-only files, conflict sides, and authenticated dirty
+  packages: the `_recovered-*` directories under `~/ProjectData/Onslaught/`.
+- Quarantined Electron/profile reconciliation material:
+  `~/Recovery/project-reconciliation/Onslaught/electron-game-profiles/`.
+- The immutable Samsung source snapshot and Archive A remain recovery
+  authorities during consolidation. Do not delete or rewrite either one.
+- No repository-local `local-lab` directory or symlink is currently installed.
+  Resolve the external path explicitly; do not copy the corpus into Git merely
+  to satisfy a relative tool path.
+
 The repository lanes are:
 
 - `reverse-engineering/` — promoted, specimen-bound evidence; start at
   [`reverse-engineering/RE-INDEX.md`](reverse-engineering/RE-INDEX.md).
-- `local-lab/` — ignored working evidence, retail-derived material, scratch
-  binaries, captures, and campaign artifacts; read `local-lab/INDEX.md` when it
-  exists.
+- `~/ProjectData/Onslaught/local-lab/` — ignored working evidence,
+  retail-derived material, scratch binaries, captures, and campaign artifacts;
+  read its `INDEX.md` when it exists. Historical references to repo-relative
+  `local-lab/` name this same logical lane.
 - `tools/` — RE, validation, asset, and controlled-lab instruments.
 - `rebuild/` — the GPL-licensed, RE-informed Godot reconstruction. Read
   [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md) and
@@ -63,7 +82,7 @@ Retired Electron, WPF, and Python app implementations live only in Git history.
 - [`GOAL.md`](GOAL.md) states what is wanted. `developer_state.json` carries
   resumable state and evidence pointers, not unquestionable truth. Current user
   intent, code, runtime behavior, and primary evidence outrank stale prose.
-- When `local-lab/` exists, its index is essential: a fresh clone cannot see the
+- The external local-lab index is essential: a fresh clone cannot see the
   workstation-local evidence corpus. Promote only the smallest reviewed fact a
   source or rebuild path needs; raw and retail-derived material stays local.
 
@@ -148,13 +167,15 @@ Also:
 
 ## Working and delegation
 
-- **Lab evidence is never hard-deleted in one step.** Anything under
-  `local-lab/` (and any dated lab output elsewhere) is first **retired** with
-  `tools/lab_quarantine.py stage <path> --reason "<why>"`, which moves it to
-  `H:\graveyard\lab-quarantine\<date>\` with a tree SHA-256, byte count, and
-  manifest row. True deletion happens later, only under space pressure, via
-  `lab_quarantine.py purge <id> --reason "<why>"`; the manifest and purge log
-  preserve identity for recovery. `restore <id>` brings a staged item back.
+- **Lab evidence is never hard-deleted in one step.** The current corpus is
+  external at `~/ProjectData/Onslaught/local-lab/`. The existing
+  `tools/lab_quarantine.py` retirement destination is a Windows `H:` path and
+  is not an active Linux route. Do not run its stage, restore, or purge actions
+  until that tool is deliberately ported and revalidated. Meanwhile, preserve
+  the source intact. If the user explicitly authorizes a future retirement
+  handoff, place its verified copy and checksummed manifest under
+  `~/Recovery/project-reconciliation/Onslaught/`; no purge is authorized by
+  migration alone.
   This rule exists because a 2026-08-06 cleanup deleted frozen campaign and
   proof inputs whose identities were hard-pinned in tooling and tests. Later
   rollout replay and surviving twins recovered some bytes exactly, but several
@@ -181,18 +202,15 @@ Also:
   produced lanes that acted as the primary; empty forks have produced lanes
   with no task. Always verify a lane's claimed artifacts on disk before acting
   on them.
-- Retirement is never a hard-delete. Every graveyard candidate — anything under
-  `local-lab/` and any dated lab output elsewhere — is retired directly with
-  `tools/lab_quarantine.py stage <path> --reason "<why>"` into manifested
-  `H:\graveyard\lab-quarantine\` (tree SHA-256, byte count, manifest row), and
-  the source is removed only after exact-copy verification and manifest
-  readback. D: and G: are not staging or backup destinations. H: must be mounted
-  and writable; the tool fails closed otherwise. `lab_quarantine.py purge`
-  stays an explicit, separately logged space-pressure operation. Extract what a
-  retired artifact teaches into the durable owners before moving it.
+- Retirement is never a hard-delete. The Windows `H:`/`D:`/`G:` graveyard
+  policy is retained only as history explaining the fail-closed tool. On this
+  Linux host, use the external ProjectData and Recovery locations above; never
+  reinterpret a drive letter as a current path. Extract what a retired artifact
+  teaches into the durable owners before any future move.
 - External CLI reviewers follow the same rule. Keep their lanes read-only unless
   a writing lane is explicitly isolated; preserve prompts and reports under
-  `local-lab/`, confirm real work and clean exit, reproduce consequential claims,
+  `~/ProjectData/Onslaught/local-lab/`, confirm real work and clean exit,
+  reproduce consequential claims,
   and budget concurrent heavy processes. Never send a hosted reviewer secrets or
   private/raw retail material beyond the user's explicit scope. The standing
   optional situational model selection and harness-agnostic reviewer rule,

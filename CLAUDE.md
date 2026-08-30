@@ -1,13 +1,14 @@
 # Onslaught Toolkit
 
 Status: active — Claude Code bootstrap; rules and routing only.
-Last updated: 2026-08-08.
+Last updated: 2026-08-30.
 Summary: load the authoritative contributor contract, current state, and the
 right evidence owner without duplicating them here.
 
-[`AGENTS.md`](AGENTS.md) is the authoritative contributor contract. Claude Code
-does not automatically load it: open and read it in full before changing files
-or making evidence claims. This file does not restate or override it.
+First read the workspace contract at [`../../AGENTS.md`](../../AGENTS.md), then
+read the authoritative repository contract at [`AGENTS.md`](AGENTS.md) in full
+before changing files or making evidence claims. Claude Code does not
+automatically load either file. This file does not restate or override them.
 
 ## Mission
 
@@ -30,8 +31,9 @@ a bounded contract is not completion.
    evidence cannot overturn. For complete-RE replay authority, open
    `current_re_authority`; Generation 73 is a projection oracle, not a parent.
    Ghidra mutation has a separate evidence and authorization gate.
-6. `local-lab/INDEX.md`, when present — ignored working evidence invisible to a
-   fresh clone.
+6. `~/ProjectData/Onslaught/local-lab/INDEX.md`, when present — ignored working
+   evidence external to Git and invisible to a fresh clone. There is currently
+   no repository-local compatibility symlink.
 7. The owning lane: [`reverse-engineering/RE-INDEX.md`](reverse-engineering/RE-INDEX.md)
    (current recovered authority first; Gen10/Gen73 demoted),
    [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md), or [`CLI.md`](CLI.md).
