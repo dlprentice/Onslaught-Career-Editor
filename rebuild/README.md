@@ -1,10 +1,10 @@
 # Onslaught Rebuild
 
 Status: early GPL reconstruction lane
-Last updated: 2026-08-30. The bounded world-110 authored-definition and
-serialized player-start projections, native-88 Core session, career read/load
-frontend slice, and world-admission claims below are the newly re-reviewed
-surface.
+Last updated: 2026-08-30. The bounded world-110 authored-definition,
+serialized player-start, and `CStart::Init` terrain-height projections,
+native-88 Core session, career read/load frontend slice, and world-admission
+claims below are the newly re-reviewed surface.
 Other sections retain their narrower dated evidence boundaries.
 Summary: what the `rebuild/` lane is, who owns which assembly, and what the
 Level 100 Opening Slice does and does not currently do.
@@ -382,8 +382,12 @@ archive identity, while keeping it separate from the 49 definition-bearing
 rows because it carries no Battle Engine definition. The projection can also
 return the released type-15 `(256, 256, 0)` pre-init fallback plan for an
 unmatched player. This closes serialized placement admission, not
-`CStart::Init`, player/Battle Engine construction, assignment, actor-registry,
-`InteractiveSession`, or Godot ownership; see
+the whole of `CStart::Init`. A separate deterministic owner carries only its
+37-byte `[0x004eae27, 0x004eae4c)` terrain-height prefix: exact world-110 XY
+becomes fixed `(67,776, 66,256)`, the pinned HFLD samples `-10,485` units, and
+the strict clamp stores the second sample as Z bits `0xc1199926`. It stops
+before `CComplexThing::Init` and does not add player/Battle Engine construction,
+assignment, actor-registry, `InteractiveSession`, or Godot ownership; see
 [`world-110-player-start-admission.md`](../reverse-engineering/game-mechanics/world-110-player-start-admission.md).
 
 World 200 (2026-08-22) generalizes that pattern and measures three places the

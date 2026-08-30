@@ -350,6 +350,27 @@ constructs only world 100, and the admitted row does not implement
 actor registry, `InteractiveSession`, Godot lifecycle, or campaign 100→110
 play.
 
+**2026-08-30 — PARTIAL RECEIPT; `CStart::Init` HEIGHT PREFIX COMPLETE, P7
+REMAINS OPEN.** Commit `25295be5` composes the admitted authored/fallback start
+with only the pristine 37-byte prefix `[0x004eae27, 0x004eae4c)`. The exact
+world-110 XY becomes fixed `(67,776, 66,256)`; its pinned HFLD samples
+`-10,485` units, and the strict lower-than clamp stores the second sample as Z
+bits `0xc1199926`. The owner stops before the next-call setup and
+`CComplexThing::Init`; it does not construct a `CStart`, Battle Engine, player,
+session, or Godot world.
+
+The public API accepts only the pinned world-110 terrain. A friend-test seam
+proved two sampler calls at identical XY and storage of a distinct second
+result, while equality performs only one call. Inverting only `<` to `>=`
+failed four of seven focused tests; all seven passed after byte-verified
+restoration. The external receipt is
+`local-lab/rebuild-world110-player-start-height-clamp-mutation-kill-20260830/RECEIPT.md`,
+SHA-256
+`9acb79d7a5e092725c1767358eb1d574853531b6caea0aa5ef30a752c6e03c40`.
+This closes one deterministic pre-init prefix, not P7's world-110 actor/player
+construction, registry, interactive session, Godot lifecycle, or campaign
+100→110 play.
+
 ### P8 — Human-input replay tapes
 
 Record a real play session into a replayable `CommandTape`; replay runs

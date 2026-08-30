@@ -114,14 +114,17 @@ world sorting/setup stages" maps to `CMapWho__Sort` +
 
 ## Rebuild mapping
 
-One bounded input owner now exists, but this runtime contract does not.
+Two bounded input/pre-init owners now exist, but this runtime contract does not.
 `rebuild/OnslaughtRebuild.Core/RetailWorldPlayerStartAdmission.cs`
 admits world 110's exact serialized type-15 player-1 row and returns it
 as an immutable pre-init plan. For an unmatched player 2 it returns
 only the proven type-15 `(256, 256, 0)` fallback fields, player number,
-and plane-mode default. It does not construct a `CStart`, run
-`CStart::Init` or its height clamp, call `GetPlayerObject`, allocate a
-Battle Engine, or mutate a session.
+and plane-mode default. The separate
+`RetailWorldPlayerStartHeightClamp.cs` carries only the measured 37-byte
+`CStart::Init` prefix `[0x004eae27, 0x004eae4c)`: one terrain sample for
+the strict comparison and a second sample/store only on the clamp arm.
+It does not construct a `CStart`, run the remainder of `CStart::Init`,
+call `GetPlayerObject`, allocate a Battle Engine, or mutate a session.
 
 The runtime owner still must encode the complete world-owned list walk,
 including every-match reassignment in list order and fallback only after

@@ -1,8 +1,9 @@
 # Rebuild parity contract
 
 Status: active — what "1:1 behavioral and experiential parity" means operationally
-Last updated: 2026-08-30 (world-110 serialized player-start admission and its
-measured mutation kill; earlier surfaces include authored-definition admission,
+Last updated: 2026-08-30 (world-110 serialized player-start admission,
+bounded terrain-height prefix, and their measured mutation kills; earlier
+surfaces include authored-definition admission,
 the native-84 secondary completion instrument, the bounded native-88 session,
 Thing/Actor base-state seam;
 selector/briefing per-world string law;
@@ -83,6 +84,13 @@ Owner paths are relative to the repository root; test names are relative to
 > `900f22187dea14262846d968a229e7a324ec1a292302c3214ddf656ec7e56b3d`.
 > On this workstation that resolves below `~/ProjectData/Onslaught/`; it is
 > machine-local evidence, not portable repository content.
+>
+> The adjacent bounded `CStart::Init` height row has its own receipt at
+> `local-lab/rebuild-world110-player-start-height-clamp-mutation-kill-20260830/RECEIPT.md`,
+> SHA-256
+> `9acb79d7a5e092725c1767358eb1d574853531b6caea0aa5ef30a752c6e03c40`.
+> It records the four discriminating failures produced by inverting the strict
+> comparison and the seven-test green run after byte-verified restoration.
 
 | Retail entity | Anchor, and what the bytes say | Owner | Implementation | Test | Cases | Mutation that was killed |
 |---|---|---|---|---|---|---|
@@ -190,6 +198,7 @@ Owner paths are relative to the repository root; test names are relative to
 | World-110 HFLD admission | Same archive; extracted envelope (tag + CHFD + HFDT) is 668660 B, SHA-256 `fd4d076a2926fbc473b7d364703bdbc0c8a0f7a638b0ab71b6f319374da033c2`; same CHFD format law as Level 100 (grid `0x89/0x94/0x1a8/0x168`, same scales) with height data differing from the first sample word — a distinct measured world under the shared envelope law, recorded via `PayloadSha256` | `rebuild/OnslaughtRebuild.Core/Level100Terrain.cs` | `Level100Terrain.World110` (per-world `LoadEmbedded(name, sha)`) | `RetailWorld110AdmissionTests.World110Heightfield_IsItsOwnHashPinnedEnvelope` | 1 | re-pin `World110SourceSha256` to Level 100's envelope hash (also failed `World110AndLevel100Terrains_AreDistinctMeasuredWorlds`) |
 | World-110 authored actor-definition identity/shape admission | Same archive and the retained 115/115 byte-exact world-data round-trip: shared BSWD is 54,669 B / `04c5a383…10f4`; world-110 RLWD header `(2, 0, 40)`. Pinned `InitThing.h:112-357` owns common record fields, `410-620` owns the type-19 spawner definition, and `623-675` owns squad amount/mode. The existing WRES identity law projects 33 BSWD actor rows, 15 RLWD actor rows, and one RLWD spawner row as exact ordered `(object identity, thing type, definition, kind)` bindings. The type-15 start carries no Battle Engine definition | `rebuild/OnslaughtRebuild.Core/RetailWorld110LevelActors.cs` and `rebuild/OnslaughtRebuild.Core/RetailWorldActorDefinitionAdmission.cs` | `RetailWorldActorDefinitionAdmission.Admit` | `RetailWorld110LevelActorsTests.Admit_ExactWorld110ProjectionPreservesAuthoredDefinitionShape` | 1 | omit the required first BSWD binding, or substitute its object/definition identity; admission rejects before mission mutation |
 | World-110 authored player-start serialized admission | Same archive, RLWD header `(2, 0, 40)`, and exact-parser commit `4e3d472c`: type-15 `wres:rlwd:0001` is 59 B / `850de203…47dfc`, position bits `(0x43846000,0x43816800,0x80000000)`, orientation bits `(0xbf04fd8b,0,0)`, plane mode 0, player number 1. Pinned `InitThing.h:112-130,318-356,791-830` owns the common fields and start tail; pristine `CGame::PostLoadProcess` plus `game.cpp:781-822` own the later all-match assignment and zero-match fallback. This row admits serialized pre-init data only | `rebuild/OnslaughtRebuild.Core/RetailWorld110LevelActors.cs` and `rebuild/OnslaughtRebuild.Core/RetailWorldPlayerStartAdmission.cs` | `RetailWorldPlayerStartAdmission.Admit`; `RetailWorldPlayerStartProjection.ResolveForPlayer` | `RetailWorldPlayerStartAdmissionTests.Admit_ExactWorld110StartPreservesRawBitsAndDeterministicIdentity` | 1 | change `PlayerStartPlayerNumber` from 1 to 2 (measured Expected 1 / Actual 2); restore to 1 and the same exact test passes |
+| `CStart::Init` world-110 terrain-height prefix | Pristine `[0x004eae27,0x004eae4c)` is 37 B / `f4efe763…fe6a` inside the 266-byte `CStart__Init` body `67ada0c7…934d`. The released prefix calls height sampler `0x0047eb80`, compares sampled height strictly below serialized Z, and only on that arm samples again and stores the second result. Exact authored XY becomes fixed `(67,776,66,256)`; pinned HFLD `fd4d076a…33c2` returns `-10,485`, scale bits `0x3a7003c0`, final Z `0xc1199926`. The owner stops before `0x004eae4c` setup and `CComplexThing__Init` at `0x004eae4f` | `rebuild/OnslaughtRebuild.Core/RetailWorldPlayerStartHeightClamp.cs` | `RetailWorldPlayerStartHeightClamp.Apply` | `RetailWorldPlayerStartHeightClampTests.Apply_ExactWorld110StartClampsToTheSecondRetailTerrainSample`; `Apply_ClampArmSamplesTwiceAndStoresTheSecondDistinctResult`; `Apply_EqualHeightDoesNotTakeTheStrictClampArm` | 3 | invert `<` to `>=`: four of seven focused tests fail across authored, fallback, distinct-second-sample, and equality arms; restore byte-for-byte and all seven pass |
 | `IScript::SecondaryObjectiveFailed` native 88 | Stuart `game.h:22-24,179-187` owns ten zero-based secondary slots and `SetSecondaryObjectiveFailed(int num, int string_id)`. Pristine `0x00534470` unboxes two integers, writes text at `[0x008A9B2C + num*8 + 4]`, then stores `MOS_FAILED=2` at `[0x008A9B2C + num*8]`; the exact world-110 LevelScript has one native-88 instruction at index 22, attribute `0x00000258`, fed by slot `1` and `_110_SECONDARY_1=114309509` | `rebuild/OnslaughtRebuild.Core/Level100MissionTypes.cs` and `rebuild/OnslaughtRebuild.Core/Level100Mission.cs` | `RetailSecondaryObjectiveState.SetFailed`; `Level100Mission.InvokeNative` case 88 | `Level100MissionTests.SecondaryObjectiveFailed_WritesTheIndexedRetailSlotAndRejectsSwappedOrOutOfRangeArguments` | 1 | write `Complete=1` instead of `Failed=2` (observed Expected Failed / Actual Complete); swapped text/index and both range edges are also rejected without mutation |
 | `IScript::SecondaryObjectiveComplete` native 84 | Same source owns `SetSecondaryObjectiveComplete(int num, int string_id)`. Pristine `0x00534410..0x0053443b` is 44 bytes, SHA-256 `b39a3c58214a8efc7eff0ca11c1407764983888c3a7d249643376162740cd197`; `0x00534432` stores `MOS_COMPLETE=1` at `[0x008A9B2C + num*8]` after writing the text dword at `+4`. The admitted `f5c157ba…22aa` world-110 LevelScript has one exact native-84 instruction at index 66, attribute `0x00000254`, fed by slot `1` and text id `114309509`; the ordinary opening is still suspended at its earlier instruction-34 Pause | `rebuild/OnslaughtRebuild.Core/Level100MissionTypes.cs` and `rebuild/OnslaughtRebuild.Core/Level100Mission.cs` | `RetailSecondaryObjectiveState.SetComplete`; `Level100Mission.InvokeNative` case 84; exact-instruction `RunWorld110SecondaryObjectiveCompleteInstrument` | `Level100MissionTests.SecondaryObjectiveComplete_WritesOnlyTheIndexedRetailSlotAndRejectsSwappedOrOutOfRangeArguments`; `RetailWorld110AdmissionTests.AuthoredWorld110Native84Branch_CompletesTheFailedSlotAndChangesTheCanonicalHash` | 2 | route native 84 to `SetFailed` (Expected Complete / Actual Failed); the adverse failed neighbor, swapped arguments, range edges, authored argument/void shape, and complete-vs-failed schema-43 hashes also falsify drift |
 | World-110 bounded mission-session step | Exact `f5c157ba…22aa` program: native 88 at instruction 22, first `Pause` at instruction 34. The intervening non-waiting `_110_PROTECT` message id 8444036 maps to exact retail `110_protect.ogg`, SHA-256 `03f1fc8e…35d3`, 172,496 samples at 44.1 kHz; the retained duration law gives 90 ticks. Definition/world mismatches fail in both directions. The stamped Level 100 fixture is an execution instrument, not authored world-110 content | `rebuild/OnslaughtRebuild.Core/Level100Mission.cs`, `rebuild/OnslaughtRebuild.Core/Simulation.cs`, and `rebuild/OnslaughtRebuild.Core/Level100MissionTiming.cs` | explicit world-110 constructors; `Level100MissionTiming.MessagePlaybackTicks` | `RetailWorld110AdmissionTests.MissionConstructor_World110CrossesNative88AndStopsAtItsFirstLegitimateWait` | 1 | change the measured `_110_PROTECT` duration from 90 to 91 ticks (observed Expected 90 / Actual 91) |
@@ -229,14 +238,14 @@ calls the already-pinned `ForLevel100Won` / `ApplyUpdate`) is reached from
 SimInput-only chain fixture that never posts a mission event. Of the four world-admission rows added 2026-08-22 plus the 2026-08-24 authored
 definition row, `IsWorldSelectable`, `IsWorldLater`,
 `Level100Terrain.World110`, and `RetailWorldActorDefinitionAdmission` remain
-catalog/admission law. The newer `RetailWorldPlayerStartAdmission` is also
-admission law only: it retains one immutable serialized pre-init row and a
-no-match fallback plan, but constructs no `CStart`, player, Battle Engine, or
-session. Its table row now has the separate measured one-field production
-mutation receipt named above; that closes the admission-row gate without
-widening it into runtime construction;
-the bounded world-110 simulation now consumes per-world `LoadEmbedded` but
-still does not consume world-110 terrain. The native-88 secondary state reaches
+catalog/admission law. `RetailWorldPlayerStartAdmission` retains one immutable
+serialized pre-init row and a no-match fallback plan. The adjacent height-clamp
+owner carries only the 37-byte `CStart::Init` prefix and its strict two-call
+branch law; neither owner constructs a `CStart`, player, Battle Engine, or
+session. Their separate measured mutation receipts close those two rows without
+widening either into runtime construction. The bounded world-110 simulation
+now consumes per-world `LoadEmbedded`, but no product/Godot simulation consumes
+world-110 terrain. The native-88 secondary state reaches
 the first-Pause Core session; native 84 is later in the same exact authored
 program but is reached only by the explicitly named instructions-64..67
 instrument, not by that opening path. Schema 43 binds both states; the Godot

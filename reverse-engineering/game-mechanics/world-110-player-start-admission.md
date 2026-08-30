@@ -1,15 +1,18 @@
 # World 110 authored player-start admission
 
-Status: accepted authored-data admission; runtime construction remains open
+Status: accepted authored-data admission and bounded height clamp; runtime construction remains open
 Date: 2026-08-30
 Verdict: world 110 contains one exact authored type-15 start for player 1. Core
-admits its serialized pre-initialization fields and the released no-match
-fallback plan, but does not construct a `CStart`, a Battle Engine, a player, or
-a playable world-110 session.
+admits its serialized pre-initialization fields, the released no-match fallback
+plan, and the exact terrain-height prefix of `CStart::Init`, but does not
+construct a `CStart`, a Battle Engine, a player, or a playable world-110
+session.
 Evidence: MEASURED — the exact record was reread from the hash-pinned retail
 archive; the retained 66-level round-trip census independently corroborates the
 type-15 tail grammar; pinned source owns the serialized fields and post-load
-algorithm; pristine PC bytes fix the released list-walk and fallback behavior.
+algorithm; pristine PC bytes fix the released list-walk, fallback behavior, and
+37-byte height-clamp prefix; the hash-pinned HFLD fixes the exact world-110
+sample and final Z.
 Specimen: pristine `BEA.exe.original.backup`, 2,506,752 bytes, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`;
 authored-record source `data/resources/110_res_PC.aya`, 1,294,300 bytes,
@@ -109,6 +112,30 @@ released pre-init fallback fields: type 15, `(256, 256, 0)`, plane mode 0, and
 player number 2. Unsupported player numbers are rejected. Rejected admission
 does not mutate the adjacent bounded world-110 mission instrument.
 
+## Bounded `CStart::Init` terrain clamp
+
+[`CStart__Init`](../binary-analysis/functions/game.cpp/CStart__Init.md) bounds
+the full pristine body but admits only the 37-byte half-open prefix
+`[0x004eae27, 0x004eae4c)`, SHA-256
+`f4efe7633c1f4ea75ca937ec0479eb1c72cd273812c15c31100991cd0844fe6a`.
+Retail samples the heightfield once, compares that result strictly below
+serialized Z, and only on that arm samples again and stores the second result.
+The contract stops before the next-call setup at `0x004eae4c` and
+`CComplexThing__Init` at `0x004eae4f`.
+
+`RetailWorldPlayerStartHeightClamp` composes that prefix with an already
+admitted resolution and only `Level100Terrain.World110`. For the exact authored
+row, XY converts to 24.8 fixed `(67,776, 66,256)`. The pinned world-110 HFLD
+returns `-10,485` units on both calls; scale bits `0x3a7003c0` produce final Z
+bits `0xc1199926` (`-9.599889755249023`). This is strictly below authored
+negative zero, so the second result is retained. The immutable result preserves
+the serialized Z and authored orientation separately from that final value.
+
+The released fallback position is also bounded through the same prefix. This
+does not make either resolution a constructed runtime object: no base
+initializer, Battle Engine, player assignment, session mutation, or Godot
+owner is introduced.
+
 ## Measured mutation receipt
 
 The independent row gate was exercised against canonical commit `4e3d472c` in
@@ -127,11 +154,23 @@ On this workstation it resolves below `~/ProjectData/Onslaught/`. It is external
 lab evidence, not content carried by a fresh clone. This mutation proves the
 exact player-number assertion is live; it does not prove runtime construction.
 
+The bounded clamp has a separate controlled production mutation at
+`local-lab/rebuild-world110-player-start-height-clamp-mutation-kill-20260830/RECEIPT.md`,
+SHA-256
+`9acb79d7a5e092725c1767358eb1d574853531b6caea0aa5ef30a752c6e03c40`.
+Changing only `firstHeight < serializedZ` to `firstHeight >= serializedZ`
+failed four of seven focused tests: the authored and fallback rows retained
+their serialized Z, the distinct second-sample case did not clamp, and equality
+incorrectly did. After byte-verified restoration, all seven tests passed. This
+proves the strict branch is live; the internal distinct-result seam separately
+proves two calls and storage of the second sample.
+
 ## Deliberate limits
 
 This seam does **not** establish or implement:
 
-- `CStart::Init`, including its later terrain-height clamp;
+- the remainder of `CStart::Init` from `0x004eae4c` onward, including
+  `CComplexThing::Init`;
 - `CStart::GetPlayerObject` or any Battle Engine allocation/initialization;
 - `CGame::LoadLevel` player/controller construction;
 - the complete-list duplicate-reassignment runtime rule;
@@ -140,9 +179,9 @@ This seam does **not** establish or implement:
 - a construction-ready world-110 actor definition set, actor registry,
   `InteractiveSession`, Godot lifecycle, or playable world 110.
 
-The authored position is therefore serialized placement evidence, not a claim
-that the released runtime leaves every coordinate or orientation bit unchanged
-after initialization.
+The authored position and bounded final Z are therefore placement evidence,
+not a claim that the rest of initialization leaves every coordinate,
+orientation, object, or ownership field unchanged.
 
 ## Cheapest falsifier
 
@@ -152,8 +191,9 @@ digest, and every raw field above. Any mismatch rejects the admission rather
 than being normalized.
 
 The cheapest runtime successor is a copied-game probe that records world 110's
-start list before and after `CStart::Init`, the value returned by
-`GetPlayerObject`, and every `AssignBattleEngine` call during
+start list after the admitted height prefix and after the rest of
+`CStart::Init`, the value returned by `GetPlayerObject`, and every
+`AssignBattleEngine` call during
 `CGame::PostLoadProcess`. A duplicate matching start in a controlled copied
 profile would separately test the statically closed list-order reassignment
 law. The pristine specimen remains read-only.

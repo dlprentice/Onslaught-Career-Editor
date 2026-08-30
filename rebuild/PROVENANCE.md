@@ -2,8 +2,9 @@
 
 Status: active implementation boundary
 Last updated: 2026-08-30. Added the exact world-110 serialized player-start
-admission. The released Battle Engine finite-cylinder mode-1 round-contact and
-selected-position boundary, bounded world-110 authored-definition projection,
+admission and bounded `CStart::Init` terrain-height prefix. The released Battle
+Engine finite-cylinder mode-1 round-contact and selected-position boundary,
+bounded world-110 authored-definition projection,
 native-84 completion instrument, native-88 first-Pause session, and current
 Thing/Actor base-state, career read/load,
 startup/frontend, partial-source inventory, frontend-asset, mouse-sensitivity,
@@ -261,11 +262,13 @@ Pinned `game.cpp:781-822` and pristine
 `CGame__PostLoadProcess` (`0x0046d040..0x0046d264`) supply the later runtime
 law: walk the whole start list for each player, assign on every match in list
 order, create type 15 at `(256, 256, 0)` only after zero matches, then initialize
-the player. Core currently retains only an immutable serialized pre-init plan:
-player 1 resolves to the exact row; unmatched player 2 resolves to the proven
-type/position/player/plane fallback fields. It does not implement
-`CStart::Init` and its height clamp, `GetPlayerObject`, Battle Engine or player
-construction, duplicate-match reassignment, `AssignBattleEngine`,
+the player. Core first retains an immutable serialized pre-init plan: player 1
+resolves to the exact row; unmatched player 2 resolves to the proven
+type/position/player/plane fallback fields. A separate bounded owner then
+carries only `CStart::Init`'s 37-byte terrain-height prefix at
+`[0x004eae27, 0x004eae4c)`. It does not implement the remainder of
+`CStart::Init`, `GetPlayerObject`, Battle Engine or player construction,
+duplicate-match reassignment, `AssignBattleEngine`,
 `CPlayer::Init`, the post-load state pair, an actor registry, an
 `InteractiveSession`, or a Godot lifecycle. The full evidence and falsifier are
 recorded in
@@ -290,6 +293,37 @@ on this workstation the logical `local-lab/` route resolves below
 `PlayerStartPlayerNumber` from 1 to 2 made the exact admission test fail
 Expected 1 / Actual 2; restoring the owner made that same test pass. This
 closes the serialized-admission mutation gate only.
+
+The bounded height owner reuses the already-admitted start resolution, the
+hash-pinned world-110 HFLD, and the existing released 24.8 sampler. The new
+static measurement is exactly `[0x004eae27, 0x004eae4c)`, 37 pristine bytes,
+SHA-256
+`f4efe7633c1f4ea75ca937ec0479eb1c72cd273812c15c31100991cd0844fe6a`.
+The full `CStart__Init` boundary is `[0x004eae10, 0x004eaf1a)`, 266 bytes,
+raw SHA-256
+`67ada0c7c363cd7f8ee3a059c198f568b687739f020a352b0ba6c2a37357934d`;
+only the smaller prefix has carried semantics. The prefix samples once,
+compares sampled height strictly below serialized Z, and samples/stores again
+only on that arm. For exact world-110 fixed XY `(67,776, 66,256)`, both samples
+are `-10,485` units; scale bits `0x3a7003c0` yield final Z bits `0xc1199926`.
+
+Reuse preflight disposition for the height seam: **REUSED** — the admitted
+serialized row/fallback, `Level100Terrain` envelope/hash/sampler law, and the
+pristine specimen; **EXTENDED** — deterministic Core composition and focused
+player-start tests; **NEW_MEASUREMENT** — the exact 37-byte prefix, strict
+branch/second-call ordering, and world-110 final Z. No runtime capture, mutable
+Ghidra project, session integration, or retail payload in Git was introduced.
+The production API admits no arbitrary sampler or arbitrary world; its internal
+friend-test seam exists only to distinguish a real second call/store from
+copying the first deterministic result.
+
+The clamp mutation receipt is machine-local external evidence at
+`local-lab/rebuild-world110-player-start-height-clamp-mutation-kill-20260830/RECEIPT.md`,
+SHA-256
+`9acb79d7a5e092725c1767358eb1d574853531b6caea0aa5ef30a752c6e03c40`.
+Inverting only the strict comparison failed four of seven focused cases;
+restoring the owner byte-for-byte returned the class to seven of seven green.
+That closes this bounded prefix's mutation gate only.
 
 The Level-100 configuration page now owns the one row named by the released
 `WorldHeaders.dat`: page-list index 0 selects `Aquila Prototype`, catalog record
