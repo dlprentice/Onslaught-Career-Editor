@@ -7,6 +7,7 @@ support product or deterministic-Core behavior.
 - [Cheat codes](cheat-codes.md)
 - [Campaign scalar status](campaign-scalar-status.md)
 - [Released spawner squad-cycle contract](spawner-squad-cycle.md)
+- [World 110 authored player-start admission](world-110-player-start-admission.md)
 - [Target acquisition static contract](battleengine-target-acquisition-static-contract-v1.md)
 - [Walker-to-jet timing](walker-transform-morph-timing-v1.md)
 - [Jet forward response](jet-forward-scalar-response-v1.md)

@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: active — the work-queue ledger for the maintainer's standing program
-Last updated: 2026-08-23
+Last updated: 2026-08-30
 Summary: what the current program has completed, what is next, and the gate
 that completes each item. This file owns **queue state and receipts only** —
 it never restates campaign counts, capability claims, validation choices, or
@@ -324,6 +324,31 @@ the second world: materializer extended to the world-110 archive, VM
 admission widened, definition-set type generalized, campaign-flow tests for
 100→110. Gate: PARITY rows for the new contracts and a green focused suite;
 [`rebuild/README.md`](rebuild/README.md) "Current truth" updated.
+
+**2026-08-30 — PARTIAL RECEIPT; PLAYER-START SUBGATE COMPLETE, P7 REMAINS
+OPEN.** Commit `65f597f0` admitted world 110's exact serialized type-15
+player-1 start separately from the existing 49 definition-bearing identities;
+commit `4e3d472c` made the real materializer fail closed on the exact actor
+header/census/tree boundary, 59-byte row digest, all position/orientation bits,
+plane mode, and player number. The immutable admission and released
+unmatched-player pre-init fallback have a green focused World-110/Core gate.
+The source/static cross-check also corrected an older note:
+`CGame::PostLoadProcess` walks the entire start list and reassigns on every
+match in list order; fallback runs only after zero matches.
+
+The required player-start PARITY row is now measured. A disposable production
+mutation changed `PlayerStartPlayerNumber` from 1 to 2; the exact test failed
+Expected 1 / Actual 2, then passed after byte-verified restoration. The
+machine-local receipt is
+`local-lab/rebuild-world110-player-start-mutation-kill-20260830/RECEIPT.md`,
+SHA-256
+`900f22187dea14262846d968a229e7a324ec1a292302c3214ddf656ec7e56b3d`;
+it resolves under external `~/ProjectData/Onslaught/` and is not portable Git
+content. This completes the player-start row/gate, not P7: the host still
+constructs only world 100, and the admitted row does not implement
+`CStart::Init`, player or Battle Engine construction/assignment, a world-110
+actor registry, `InteractiveSession`, Godot lifecycle, or campaign 100→110
+play.
 
 ### P8 — Human-input replay tapes
 

@@ -569,7 +569,10 @@ public sealed class RetailFrontendSession
     /// Whether this reconstruction can currently build
     /// <see cref="SelectedWorldNumber"/>. World 100 is the only constructed
     /// session owner; world 110 is admitted by Core and selectable after a
-    /// Won update, but it has no actor-definition projection yet.
+    /// Won update. Its script, terrain, definition-bearing identities, and
+    /// serialized player-1 start are admitted, but it still has no complete
+    /// actor/player/Battle Engine, <see cref="InteractiveSession"/>, or Godot
+    /// lifecycle.
     /// </summary>
     public bool SelectedWorldIsConstructible =>
         SelectedWorldNumber == RetailWorldCatalog.RootWorldNumber;

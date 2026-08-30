@@ -1,0 +1,159 @@
+# World 110 authored player-start admission
+
+Status: accepted authored-data admission; runtime construction remains open
+Date: 2026-08-30
+Verdict: world 110 contains one exact authored type-15 start for player 1. Core
+admits its serialized pre-initialization fields and the released no-match
+fallback plan, but does not construct a `CStart`, a Battle Engine, a player, or
+a playable world-110 session.
+Evidence: MEASURED — the exact record was reread from the hash-pinned retail
+archive; the retained 66-level round-trip census independently corroborates the
+type-15 tail grammar; pinned source owns the serialized fields and post-load
+algorithm; pristine PC bytes fix the released list-walk and fallback behavior.
+Specimen: pristine `BEA.exe.original.backup`, 2,506,752 bytes, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`;
+authored-record source `data/resources/110_res_PC.aya`, 1,294,300 bytes,
+SHA-256 `4e041c758b9d41ba18311b1fadeacb95fc31af51320861480b97033bc24e3c2b`.
+
+## Exact serialized record
+
+The admitted archive inflates to 3,666,589 bytes. Its world-110 RLWD is 76,600
+bytes and carries actor header `(2, 0, 40)`. All 40 initial-object records walk
+to the expected tree header with this type census:
+
+| Thing type | Rows |
+| ---: | ---: |
+| 8 | 10 |
+| 15 | 1 |
+| 18 | 19 |
+| 19 | 1 |
+| 27 | 3 |
+| 28 | 5 |
+| 36 | 1 |
+
+RLWD ordinal 1 is the one type-15 row. Its exact admitted projection is:
+
+| Field | Exact value |
+| --- | --- |
+| object identity | `wres:rlwd:0001` |
+| serialized record | 59 bytes, SHA-256 `850de203b32b967064f3a9bacca24bebd783af68760a8b4c056ea242a2b47dfc` |
+| position bits `(x, y, z)` | `(0x43846000, 0x43816800, 0x80000000)` |
+| decoded `x, y` | `(264.75, 258.8125)` |
+| orientation bits `(yaw, pitch, roll)` | `(0xbf04fd8b, 0x00000000, 0x00000000)` |
+| plane mode | `0` |
+| player number | `1` |
+
+The raw IEEE-754 words are the authority. In particular, position Z is
+authored negative zero; converting the row to ordinary decimal values before
+admission would erase evidence. The complete 59-byte digest also binds the
+common fields not projected individually by Core.
+
+## Field ownership and corpus corroboration
+
+Pinned `references/Onslaught/InitThing.h:112-130` names the common
+`CInitThing` position, Euler-orientation, script/name, target, allegiance, and
+active fields. Its version-greater-than-45 loader at lines 318-356 fixes their
+serialized order for this version-50 world. `InitThing.h:791-830` then names
+the derived `CStartInitThing` tail and loads `mPlaneMode` followed by
+`mPlayerNumber`; its constructor defaults are plane mode false and player 1.
+
+The retained external `local-lab/WORLD-DATA-2026-07-31.md` parser receipt
+round-tripped all 115 BSWD/RLWD payloads byte-for-byte (7,664,606 bytes). Its
+independent 66-level cross-check found 83 type-15 rows: one player-1 row in all
+66 levels and exactly one player-2 row in each of worlds 850 through 866. That
+corroborates the two-dword tail grammar without selecting world 110 specially;
+the archive identity and exact 59-byte row above remain the world-110
+measurement.
+
+## Load and post-load ownership are separate
+
+[`CGame__LoadLevel`](../binary-analysis/functions/game.cpp/CGame__LoadLevel.md)
+loads the world and constructs fresh `CPlayer` and `CController` shells for the
+attempt. It does not inspect the start list or assign a Battle Engine.
+
+[`CGame__PostLoadProcess`](../binary-analysis/functions/game.cpp/CGame__PostLoadProcess.md)
+owns that later step. Pinned `references/Onslaught/game.cpp:781-822` and the
+pristine body at `0x0046d040` agree on this order for each player:
+
+1. Walk the complete world-owned start list.
+2. For every row whose player number matches, call `AssignBattleEngine` with
+   that row's `GetPlayerObject()` result.
+3. Continue walking after a match. Multiple matching rows therefore reassign
+   in list order; the final matching row supplies the retained assignment.
+4. Only when no row matched, create type 15 at `(256, 256, 0)`, copy the
+   current player number, initialize it, and assign its player object.
+5. Call `CPlayer::Init` after either path.
+
+The byte discriminator is the unconditional list advance at
+`0x0046d0e7` after the match arm's assignment at `0x0046d0dc`; the loop returns
+to `0x0046d0c6` while another node exists. The found flag is tested only after
+the list is exhausted at `0x0046d102`. The earlier statement that retail
+stopped at the first match was false.
+
+## Reconstruction admission
+
+[`RetailWorldPlayerStartAdmission`](../../rebuild/OnslaughtRebuild.Core/RetailWorldPlayerStartAdmission.cs)
+accepts only world 110, the exact archive identity, and the exact ordered start
+record above. Object identity, type, length, record digest, all six raw float
+words, plane mode, player number, count, and null shape fail closed.
+Commit `4e3d472c` gives the real materializer the matching fail-closed
+actor-header/census/tree-boundary and exact-start parser, so a supported retail
+materialization verifies the same row before writing generated assets.
+`RetailWorld110LevelActors.AuthoredPlayerStarts` keeps this row separate from
+the 49 definition-bearing identities because a start is placement/lifecycle
+input, not a Battle Engine definition.
+
+The accepted projection is immutable and deterministic. Resolving player 1
+returns the exact authored start. Resolving unmatched player 2 returns only the
+released pre-init fallback fields: type 15, `(256, 256, 0)`, plane mode 0, and
+player number 2. Unsupported player numbers are rejected. Rejected admission
+does not mutate the adjacent bounded world-110 mission instrument.
+
+## Measured mutation receipt
+
+The independent row gate was exercised against canonical commit `4e3d472c` in
+a disposable worktree. The controlled production mutation changed only
+`RetailWorld110LevelActors.PlayerStartPlayerNumber` from `1` to `2`.
+`RetailWorldPlayerStartAdmissionTests.Admit_ExactWorld110StartPreservesRawBitsAndDeterministicIdentity`
+then failed with Expected 1 / Actual 2. After restoring the production owner,
+the same exact filtered test passed; the receipt also binds the restored owner
+and test SHA-256 values.
+
+The receipt's logical machine-local path is
+`local-lab/rebuild-world110-player-start-mutation-kill-20260830/RECEIPT.md`,
+SHA-256
+`900f22187dea14262846d968a229e7a324ec1a292302c3214ddf656ec7e56b3d`.
+On this workstation it resolves below `~/ProjectData/Onslaught/`. It is external
+lab evidence, not content carried by a fresh clone. This mutation proves the
+exact player-number assertion is live; it does not prove runtime construction.
+
+## Deliberate limits
+
+This seam does **not** establish or implement:
+
+- `CStart::Init`, including its later terrain-height clamp;
+- `CStart::GetPlayerObject` or any Battle Engine allocation/initialization;
+- `CGame::LoadLevel` player/controller construction;
+- the complete-list duplicate-reassignment runtime rule;
+- `CPlayer::AssignBattleEngine`, `CPlayer::Init`, or the post-load state-pair
+  writes;
+- a construction-ready world-110 actor definition set, actor registry,
+  `InteractiveSession`, Godot lifecycle, or playable world 110.
+
+The authored position is therefore serialized placement evidence, not a claim
+that the released runtime leaves every coordinate or orientation bit unchanged
+after initialization.
+
+## Cheapest falsifier
+
+Rerun the exact world-110 parser against the named archive and require the
+archive size/hash, RLWD header/census/tree boundary, record count, 59-byte row
+digest, and every raw field above. Any mismatch rejects the admission rather
+than being normalized.
+
+The cheapest runtime successor is a copied-game probe that records world 110's
+start list before and after `CStart::Init`, the value returned by
+`GetPlayerObject`, and every `AssignBattleEngine` call during
+`CGame::PostLoadProcess`. A duplicate matching start in a controlled copied
+profile would separately test the statically closed list-order reassignment
+law. The pristine specimen remains read-only.

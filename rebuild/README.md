@@ -1,9 +1,10 @@
 # Onslaught Rebuild
 
 Status: early GPL reconstruction lane
-Last updated: 2026-08-24. The bounded world-110 authored-definition projection,
-native-88 Core session, career read/load frontend slice, and world-admission
-claims below are the newly re-reviewed surface.
+Last updated: 2026-08-30. The bounded world-110 authored-definition and
+serialized player-start projections, native-88 Core session, career read/load
+frontend slice, and world-admission claims below are the newly re-reviewed
+surface.
 Other sections retain their narrower dated evidence boundaries.
 Summary: what the `rebuild/` lane is, who owns which assembly, and what the
 Level 100 Opening Slice does and does not currently do.
@@ -217,11 +218,12 @@ measured ReCalcLinks unlock admits it — the root always, any other world once 
 completed incoming link points at it. The launch edge was renamed
 `LevelLaunchRequested` and carries `ConsumeLaunchWorldNumber`. What a launch
 *constructs* is still Level 100 only: world-110's compiled scripts, heightfield,
-and identity-only authored-definition projection are admitted by Core (below),
-and a bounded Core-only session now steps its LevelScript against a
-world-stamped copy of the Level 100 test fixture. A complete world-110 actor
-definition set and Godot lifecycle still do not exist, so the host cannot build
-that world. After a Level 100 Won reaches `FrontEndHandoffReady`, Client applies
+identity-only authored-definition projection, and exact serialized player-1
+start are admitted by Core (below), and a bounded Core-only session now steps
+its LevelScript against a world-stamped copy of the Level 100 test fixture. A
+construction-ready world-110 actor/player/Battle Engine set and Godot lifecycle
+still do not exist, so the host cannot build that world. After a Level 100 Won
+reaches `FrontEndHandoffReady`, Client applies
 the pinned FillOut/Career update, consumes the two Career Goodie latches in
 retail order, and opens `FEP_DEBRIEFING`. The settled page projects the measured
 mission status, objective-group summaries, and win-only grade and draws the
@@ -373,8 +375,16 @@ existing `wres:bswd:NNNN` / `wres:rlwd:NNNN` law: 33 shared-BSWD actor rows,
 object, definition, count, or row shape fails closed. This is an identity/shape
 projection only: it carries no authored pose, mesh, health, runtime class,
 player binding, actor registry, or session construction. RLWD ordinal 0 is the
-LevelScript object, and the type-15 start carries no Battle Engine definition;
-there is still no authored `Player 1` definition to construct.
+LevelScript object. RLWD ordinal 1 is instead an exact 59-byte type-15
+`CStartInitThing` for player 1. `RetailWorldPlayerStartAdmission` retains its
+authored position/orientation bits, plane mode, and player number under the same
+archive identity, while keeping it separate from the 49 definition-bearing
+rows because it carries no Battle Engine definition. The projection can also
+return the released type-15 `(256, 256, 0)` pre-init fallback plan for an
+unmatched player. This closes serialized placement admission, not
+`CStart::Init`, player/Battle Engine construction, assignment, actor-registry,
+`InteractiveSession`, or Godot ownership; see
+[`world-110-player-start-admission.md`](../reverse-engineering/game-mechanics/world-110-player-start-admission.md).
 
 World 200 (2026-08-22) generalizes that pattern and measures three places the
 shared law needed refining: `data/resources/200_res_PC.aya` (SHA-256

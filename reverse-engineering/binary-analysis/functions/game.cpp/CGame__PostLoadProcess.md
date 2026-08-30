@@ -3,14 +3,15 @@
 > Address: `0x0046d040`
 
 Status: active static function note
-Last updated: 2026-08-22
+Last updated: 2026-08-30
 Source File: `references/Onslaught/game.cpp:764`
 (`CGame::PostLoadProcess`) | Binary: BEA.exe pristine specimen
 `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 Summary: Per-attempt world validation and player start assignment, run
 once after `LoadLevel`. Resets atmospherics, walks the player list and
-either binds an existing start-position thing to each player or logs
+walks the complete start list for each player, assigning on every
+matching player number in list order. Only zero matches cause it to log
 `"No start position for player - creating a default one"` and mints a
 default via `OID__CreateObject(0xf, 0)` + `CInitThing__ctor`, then
 initializes each player, sets `[this+0x290]/[+0x294] = 2`, optionally
@@ -51,8 +52,11 @@ Sequence:
      (next-pointer cell `0x00855108`). For each candidate, when its
      `[eax+0x80]` matches the player's `[ecx+0x2c]`:
      `CPlayer__AssignBattleEngine(player, [eax+0x7c])` (`0x004d3080`)
-     — **start-position binding is the battle-engine assignment** —
-     and stops walking.
+     — **start-position binding is the battle-engine assignment**.
+     The body then advances the list at `0x0046d0e7` and loops from
+     `0x0046d0fa` to `0x0046d0c6`; it does not stop after a match.
+     Every matching row therefore assigns again in list order, and the
+     last matching row supplies the retained assignment.
    - Exhausted with no match: `CConsole__Printf` (buffer `0x0066f580`)
      with `.rdata 0x0062c008` =
      `"No start position for player - creating a default one"`, then
@@ -98,6 +102,9 @@ loading-range update. Zero `E9`.
 world validation and player/start setup … returns non-zero on
 success"). The bytes agree and add: the exact start-position match rule
 (`[thing+0x80] == [player+0x2c]`, engine handle from `[thing+0x7c]`),
+the no-break traversal rule (source lines 788-799 and retail
+`0x0046d0e1` → `0x0046d0e7`), the fact that fallback is gated only by
+zero matches after full-list exhaustion,
 the default-start fallback constants (type 15, position 256.0/256.0/0),
 the `[+0x290]/[+0x294] = 2` state pair, and the demo-hook globals. The
 older note's claim "resolves/assigns player start positions" is
@@ -107,13 +114,22 @@ world sorting/setup stages" maps to `CMapWho__Sort` +
 
 ## Rebuild mapping
 
-Owner candidates exist but none owns this contract:
-`rebuild/OnslaughtRebuild.Core/RetailWorldCatalog.cs` owns admission,
-and the Level100 program owns the mission loop; neither assigns start
-positions. When a spawn-placement owner lands, it must encode: match
-rule against a world-owned start list, default fallback at (256, 256)
-with type 15, per-player `Init` after assignment, and the state pair
-write. Focused test deferred until that owner exists.
+One bounded input owner now exists, but this runtime contract does not.
+`rebuild/OnslaughtRebuild.Core/RetailWorldPlayerStartAdmission.cs`
+admits world 110's exact serialized type-15 player-1 row and returns it
+as an immutable pre-init plan. For an unmatched player 2 it returns
+only the proven type-15 `(256, 256, 0)` fallback fields, player number,
+and plane-mode default. It does not construct a `CStart`, run
+`CStart::Init` or its height clamp, call `GetPlayerObject`, allocate a
+Battle Engine, or mutate a session.
+
+The runtime owner still must encode the complete world-owned list walk,
+including every-match reassignment in list order and fallback only after
+zero matches, then `CPlayer__AssignBattleEngine`, per-player
+`CPlayer__Init`, and the `[+0x290]/[+0x294] = 2` state-pair write. The
+current one-row admission cannot be cited as duplicate-start behavior or
+world-110 construction. Focused runtime test remains deferred until that
+owner exists.
 
 ## Cheapest falsifier
 
@@ -126,6 +142,8 @@ Any one of:
   `0x43800000` twice with zero z.
 - The start-list head is anywhere but `0x00855100`, or the match field
   offsets anything but `+0x80` vs `+0x2c`.
+- A matching assignment branches out of the list walk instead of
+  advancing at `0x0046d0e7`, or fallback runs after one or more matches.
 - A second inbound rel32 to `0x0046d040` appears.
 - The function's saved end moves off `0x0046d264` in the tracked name
   table.
@@ -146,3 +164,8 @@ Any one of:
   bounds the demo twin of this body;
   [`CGame__LoadLevel.md`](CGame__LoadLevel.md) pins the player-count
   and player/controller arrays this loop consumes.
+- 2026-08-30 — reread pinned source `game.cpp:781-822` and the retained
+  whole-body disassembly above. Corrected the earlier first-match-stop
+  statement: source has no `break`, and retail advances at
+  `0x0046d0e7` after both match and non-match arms. No new specimen,
+  Ghidra mutation, or runtime claim was introduced.

@@ -1,8 +1,9 @@
 # Rebuild Provenance
 
 Status: active implementation boundary
-Last updated: 2026-08-28. Added the released Battle Engine finite-cylinder
-mode-1 round-contact and selected-position boundary. The bounded world-110 authored-definition projection,
+Last updated: 2026-08-30. Added the exact world-110 serialized player-start
+admission. The released Battle Engine finite-cylinder mode-1 round-contact and
+selected-position boundary, bounded world-110 authored-definition projection,
 native-84 completion instrument, native-88 first-Pause session, and current
 Thing/Actor base-state, career read/load,
 startup/frontend, partial-source inventory, frontend-asset, mouse-sensitivity,
@@ -228,9 +229,10 @@ census owns `(2, 0, 40)` and the shared-BSWD identity. Wrong world, archive,
 object identity, definition identity, row count, or kind/type shape is rejected
 before any mission state can be touched. This is not a complete
 `Level100ActorDefinitionSet`: no pose, mesh, health, runtime class, player
-binding, registry, mission, or Godot lifecycle is inferred. In particular the
-type-15 start carries no Battle Engine definition, so no authored `Player 1`
-is manufactured.
+binding, registry, mission, or Godot lifecycle is inferred. The type-15 start
+is deliberately absent from those 49 rows because it carries no Battle Engine
+definition. That exclusion is a definition-projection boundary, not evidence
+that world 110 lacks an authored player start.
 
 Reuse preflight disposition for that seam: **REUSED 6** authority groups —
 (1) pinned `InitThing.h`, (2) the retained round-trip world-data receipt and
@@ -242,6 +244,52 @@ secondary-state controls; **EXTENDED 2** existing owners —
 **NEW_MEASUREMENT 0**. The generic deterministic admission class is new code,
 not a new retail measurement, inventory, output root, payload, specimen read,
 runtime capture, or Ghidra mutation.
+
+Core separately owns the exact serialized player-start admission seam for
+world 110. `RetailWorldPlayerStartAdmission` accepts only the archive identity
+above and the one 59-byte type-15 row at `wres:rlwd:0001` (SHA-256
+`850de203b32b967064f3a9bacca24bebd783af68760a8b4c056ea242a2b47dfc`).
+Pinned `InitThing.h:112-130,318-356` owns the common version-50 fields;
+`InitThing.h:791-830` owns the derived `mPlaneMode` / `mPlayerNumber` tail.
+The retained 115/115 world-data round trip independently corroborates that
+type-15 grammar across the 66-level corpus. The exact admitted raw words are
+position `(0x43846000, 0x43816800, 0x80000000)`, orientation
+`(0xbf04fd8b, 0, 0)`, plane mode `0`, player number `1`. Keeping the IEEE-754
+words preserves authored negative zero.
+
+Pinned `game.cpp:781-822` and pristine
+`CGame__PostLoadProcess` (`0x0046d040..0x0046d264`) supply the later runtime
+law: walk the whole start list for each player, assign on every match in list
+order, create type 15 at `(256, 256, 0)` only after zero matches, then initialize
+the player. Core currently retains only an immutable serialized pre-init plan:
+player 1 resolves to the exact row; unmatched player 2 resolves to the proven
+type/position/player/plane fallback fields. It does not implement
+`CStart::Init` and its height clamp, `GetPlayerObject`, Battle Engine or player
+construction, duplicate-match reassignment, `AssignBattleEngine`,
+`CPlayer::Init`, the post-load state pair, an actor registry, an
+`InteractiveSession`, or a Godot lifecycle. The full evidence and falsifier are
+recorded in
+[`world-110-player-start-admission.md`](../reverse-engineering/game-mechanics/world-110-player-start-admission.md).
+
+Reuse preflight disposition for the player-start seam: **REUSED** — the exact
+archive identity, actor census, retained corpus grammar/round trip, pinned
+`InitThing.h`, and pinned source/pristine post-load contract; **EXTENDED** —
+`RetailWorld110LevelActors` and its focused admission tests;
+**NEW_MEASUREMENT** — one exact serialized 59-byte world-110 row and its raw
+field projection. No runtime capture, mutable Ghidra project, retail payload in
+Git, or new output root was created.
+
+The matching fail-closed real-materializer parser landed at `4e3d472c`. The
+admission row's controlled mutation receipt is machine-local external evidence
+at
+`local-lab/rebuild-world110-player-start-mutation-kill-20260830/RECEIPT.md`,
+SHA-256
+`900f22187dea14262846d968a229e7a324ec1a292302c3214ddf656ec7e56b3d`;
+on this workstation the logical `local-lab/` route resolves below
+`~/ProjectData/Onslaught/`, not inside portable Git content. Changing only
+`PlayerStartPlayerNumber` from 1 to 2 made the exact admission test fail
+Expected 1 / Actual 2; restoring the owner made that same test pass. This
+closes the serialized-admission mutation gate only.
 
 The Level-100 configuration page now owns the one row named by the released
 `WorldHeaders.dat`: page-list index 0 selects `Aquila Prototype`, catalog record

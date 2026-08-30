@@ -3,7 +3,7 @@
 > Address: `0x0046cdf0`
 
 Status: active static function note
-Last updated: 2026-08-22
+Last updated: 2026-08-30
 Source File: `references/Onslaught/game.cpp:685` (`CGame::LoadLevel`) |
 Binary: BEA.exe pristine specimen
 `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
@@ -16,7 +16,8 @@ into the global `CWorld` singleton `0x00855090`, allocates one 0x50-byte
 `CDXMemoryManager__Alloc`, then builds tree geometry, renders a loading
 frame, sets the engine track slot, and returns success. This is the
 only place the retail binary constructs players/controllers for an
-attempt.
+attempt. It does not walk the world's start list or assign a Battle
+Engine; `CGame__PostLoadProcess` owns that later phase.
 Evidence: MEASURED — independently read 2026-08-22 from official
 `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup` (SHA-256
 above, verified before reading) with capstone 5.0.7 whole-body
@@ -67,7 +68,9 @@ Sequence:
    player, controller_table_entry)` (`0x005145f0`); result stored at
    `[edi + esi*4 + 0x2b4]`. The port table sits in `.data` at
    `0x00662ad4` (four dwords; this wake did not resolve what its bytes
-   point at — recorded unknown).
+   point at — recorded unknown). These are per-attempt shells only;
+   this body never reads the start list or calls
+   `CPlayer__AssignBattleEngine`.
 5. Tail: first player pointer `[edi+0x2a4]` copied to global
    `0x0066e854`; `CDXTrees__BuildTreeGeometry` with
    `ecx = 0x009cc148` (`0x0055a420`);
@@ -111,14 +114,18 @@ and load-screen state"): confirmed, with the tree build now pinned to
 
 Owner **partially exists**: `rebuild/OnslaughtRebuild.Core/RetailWorldCatalog.cs`
 owns world admission (level → world identity), and Level100 mission
-program owns the attempt loop. What has no Core owner yet is the
-per-attempt spawn law: exactly one `CPlayer` + one `CController` per
-player-count slot, allocated fresh each attempt (the restart loop calls
-`LoadLevel` again), with counts driven by the loaded world's
-multiplayer verdict. When that owner lands, map
-`[+0x29c]/[+0x2a4]/[+0x2b4]` onto it; implementing player creation
-outside a world-load would be false to the shipped game. Focused test
-deferred until that owner exists.
+program owns the bounded attempt loop.
+`rebuild/OnslaughtRebuild.Core/RetailWorldPlayerStartAdmission.cs` now
+owns one separate pre-init input: world 110's exact serialized player-1
+start plus the proven no-match fallback plan. It does not own this
+function's per-attempt spawn law. Still absent is exactly one fresh
+`CPlayer` + one fresh `CController` per player-count slot, with counts
+driven by the loaded world's multiplayer verdict; the restart loop calls
+`LoadLevel` again for each attempt. When that owner lands, map
+`[+0x29c]/[+0x2a4]/[+0x2b4]` onto it, then hand those shells to the
+separate post-load start-assignment phase. Constructing players from the
+authored-start projection, or outside a world-load, would be false to the
+shipped split. Focused test deferred until that owner exists.
 
 ## Cheapest falsifier
 
