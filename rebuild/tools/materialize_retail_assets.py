@@ -57,6 +57,28 @@ class _WorldAdmission(NamedTuple):
     level_header: _WorldLevelHeader
 
 
+class _WorldInitialObject(NamedTuple):
+    """Bounded identity/pose projection of one serialized world object."""
+
+    ordinal: int
+    record_offset: int
+    record_bytes: int
+    record_sha256: str
+    thing_type: int
+    position_bits: tuple[int, int, int]
+    orientation_bits: tuple[int, int, int]
+    mesh_number: int
+    allegiance: int
+    target: int
+    script: str
+    name: str
+    spawn_script: str
+    active: int
+    attach_scripts: int
+    plane_mode: int | None
+    player_number: int | None
+
+
 class _PhysicsRecord(NamedTuple):
     """One ordered ``default physics.dat`` definition record."""
 
@@ -161,6 +183,28 @@ WORLD110_ARCHIVE = "data/resources/110_res_PC.aya"
 WORLD110_ARCHIVE_SHA256 = (
     "4e041c758b9d41ba18311b1fadeacb95fc31af51320861480b97033bc24e3c2b"
 )
+WORLD110_RLWD_SIZE = 76_600
+WORLD110_RLWD_SHA256 = (
+    "fb56249deac8faf0033f4d4b67688ff72e12d922291c880d75b10599fc739837"
+)
+WORLD110_INITIAL_OBJECT_HEADER = (2, 0, 40)
+WORLD110_INITIAL_OBJECT_TYPE_COUNTS = {
+    8: 10,
+    15: 1,
+    18: 19,
+    19: 1,
+    27: 3,
+    28: 5,
+    36: 1,
+}
+WORLD110_PLAYER_START_ORDINAL = 1
+WORLD110_PLAYER_START_RECORD_OFFSET = 15_781
+WORLD110_PLAYER_START_RECORD_BYTES = 59
+WORLD110_PLAYER_START_RECORD_SHA256 = (
+    "850de203b32b967064f3a9bacca24bebd783af68760a8b4c056ea242a2b47dfc"
+)
+WORLD110_PLAYER_START_POSITION_BITS = (0x43846000, 0x43816800, 0x80000000)
+WORLD110_PLAYER_START_ORIENTATION_BITS = (0xBF04FD8B, 0x00000000, 0x00000000)
 LEVEL110_SCRIPT_ROOT = CORE_ASSETS / "Level110/Scripts"
 LEVEL110_SCRIPT_OBJECTS = (
     ("beacon", 200, "8e75c80c01e8def1841c51a9234cc14d33590d4a9a031e087db0325762c35be7"),
@@ -2022,6 +2066,209 @@ def _parse_world_scripts(
             )
         scripts[name] = payload
     return scripts
+
+
+def _world_single_bits(reader: _WorldReader, world_number: int) -> int:
+    raw = reader._take(4)
+    value = struct.unpack("<f", raw)[0]
+    if not math.isfinite(value):
+        raise RuntimeError(
+            f"world {world_number} initial-object data contains a non-finite value"
+        )
+    return struct.unpack("<I", raw)[0]
+
+
+def _parse_world_initial_objects(
+    reader: _WorldReader,
+    world_number: int,
+    expected_header: tuple[int, int, int],
+    expected_type_counts: dict[int, int],
+) -> tuple[_WorldInitialObject, ...]:
+    """Walk one exact later-world object table and land on its tree header.
+
+    This is deliberately separate from the Level 100 actor/waypoint parser:
+    later worlds add tails that Level 100 never uses, and widening that parser
+    would weaken its existing level-specific assertions.
+    """
+
+    header = (reader.int32(), reader.int32(), reader.uint16())
+    if header != expected_header:
+        raise RuntimeError(
+            f"world {world_number} initial-object header changed ({header})"
+        )
+
+    objects: list[_WorldInitialObject] = []
+    for ordinal in range(header[2]):
+        record_offset = reader.position
+        thing_type = reader.int32()
+        position_bits = tuple(
+            _world_single_bits(reader, world_number) for _ in range(3)
+        )
+        orientation_bits = tuple(
+            _world_single_bits(reader, world_number) for _ in range(3)
+        )
+        mesh_number = reader.int32()
+        allegiance = reader.int32()
+        target = reader.int32()
+        script = reader.c_string()
+        name = reader.c_string()
+        spawn_script = reader.c_string()
+        active = reader.int32()
+        attach_scripts = reader.int32()
+        if active not in (0, 1) or attach_scripts not in (0, 1):
+            raise RuntimeError(
+                f"world {world_number} initial object {ordinal} has a non-boolean flag"
+            )
+
+        plane_mode: int | None = None
+        player_number: int | None = None
+        if thing_type == 8:
+            reader.string8()
+            if reader.int32() != -1:
+                raise RuntimeError(
+                    f"world {world_number} type-8 definition trailer changed"
+                )
+        elif thing_type == 15:
+            plane_mode = reader.int32()
+            player_number = reader.int32()
+        elif thing_type in (18, 27):
+            pass
+        elif thing_type == 19:
+            reader.int32()
+            for _ in range(3):
+                _world_single_bits(reader, world_number)
+            reader.int32()
+            reader.c_string()
+            reader.c_string()
+        elif thing_type == 28:
+            reader.int32()
+            reader.int32()
+            reader.string8()
+            if reader.int32() != -1:
+                raise RuntimeError(
+                    f"world {world_number} type-28 definition trailer changed"
+                )
+        elif thing_type == 36:
+            _world_single_bits(reader, world_number)
+        else:
+            raise RuntimeError(
+                f"world {world_number} initial object {ordinal} has unsupported "
+                f"thing type {thing_type}"
+            )
+
+        record = reader.data[record_offset : reader.position]
+        objects.append(
+            _WorldInitialObject(
+                ordinal,
+                record_offset,
+                len(record),
+                _sha256(record),
+                thing_type,
+                position_bits,
+                orientation_bits,
+                mesh_number,
+                allegiance,
+                target,
+                script,
+                name,
+                spawn_script,
+                active,
+                attach_scripts,
+                plane_mode,
+                player_number,
+            )
+        )
+
+    actual_type_counts = {
+        thing_type: sum(item.thing_type == thing_type for item in objects)
+        for thing_type in sorted({item.thing_type for item in objects})
+    }
+    if actual_type_counts != expected_type_counts:
+        raise RuntimeError(
+            f"world {world_number} initial-object type census changed "
+            f"({actual_type_counts})"
+        )
+    if (reader.uint16(), reader.int32()) != (0, 2):
+        raise RuntimeError(
+            f"world {world_number} initial objects did not land on the tree groups"
+        )
+    return tuple(objects)
+
+
+def _admit_world110_player_start(
+    objects: tuple[_WorldInitialObject, ...],
+) -> _WorldInitialObject:
+    starts = tuple(item for item in objects if item.thing_type == 15)
+    if len(starts) != 1:
+        raise RuntimeError(
+            f"world 110 requires exactly one authored start, found {len(starts)}"
+        )
+    start = starts[0]
+    if (
+        start.ordinal != WORLD110_PLAYER_START_ORDINAL
+        or start.record_offset != WORLD110_PLAYER_START_RECORD_OFFSET
+        or start.record_bytes != WORLD110_PLAYER_START_RECORD_BYTES
+        or start.record_sha256 != WORLD110_PLAYER_START_RECORD_SHA256
+        or start.position_bits != WORLD110_PLAYER_START_POSITION_BITS
+        or start.orientation_bits != WORLD110_PLAYER_START_ORIENTATION_BITS
+        or start.mesh_number != 0
+        or start.allegiance != 0
+        or start.target != -1
+        or start.script != ""
+        or start.name != ""
+        or start.spawn_script != ""
+        or start.active != 1
+        or start.attach_scripts != 0
+        or start.plane_mode != 0
+        or start.player_number != 1
+    ):
+        raise RuntimeError("world 110 authored player-start record changed")
+    return start
+
+
+def _parse_world110_player_start(raw_world: bytes) -> _WorldInitialObject:
+    """Re-derive the sole exact world-110 CStart record from admitted bytes."""
+
+    rlwd = _chunk_payload(
+        _chunk_payload(_chunk_payload(raw_world, b"WRES"), b"WRLD"),
+        b"RLWD",
+    )
+    if len(rlwd) != WORLD110_RLWD_SIZE or _sha256(rlwd) != WORLD110_RLWD_SHA256:
+        raise RuntimeError(
+            "world 110 RLWD identity changed "
+            f"(size={len(rlwd)}, SHA-256={_sha256(rlwd)})"
+        )
+
+    # Validate and skip the exact preamble/script table before interpreting any
+    # initial-object bytes. _parse_world_scripts independently binds every
+    # compiled object; the second reader retains the resulting byte offset.
+    _parse_world_scripts(
+        raw_world,
+        110,
+        LEVEL110_SCRIPT_OBJECTS,
+        COMMON_WORLD_LEVEL_HEADER,
+    )
+    reader = _WorldReader(rlwd)
+    reader.uint16()
+    for _ in range(3):
+        reader.int32()
+    for _ in range(reader.int32()):
+        reader.string8()
+    for _ in range(5):
+        reader.int32()
+    script_count = reader.int32()
+    if script_count != len(LEVEL110_SCRIPT_OBJECTS):
+        raise RuntimeError("world 110 script count changed before initial objects")
+    for _ in LEVEL110_SCRIPT_OBJECTS:
+        _skip_level100_script_object(reader)
+
+    objects = _parse_world_initial_objects(
+        reader,
+        110,
+        WORLD110_INITIAL_OBJECT_HEADER,
+        WORLD110_INITIAL_OBJECT_TYPE_COUNTS,
+    )
+    return _admit_world110_player_start(objects)
 
 
 def _parse_level_world_scripts(
@@ -4529,6 +4776,8 @@ def _materialize(game_root: Path, stage: Path) -> tuple[tuple[Path, str], ...]:
             admission.archive_sha256,
         )
         raw_world = inflate_aya_bytes(archive)
+        if admission.world_number == 110:
+            _parse_world110_player_start(raw_world)
         scripts = _parse_world_scripts(
             raw_world,
             admission.world_number,

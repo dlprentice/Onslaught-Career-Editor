@@ -53,6 +53,88 @@ def _physics_definition_record(
     return bytes(result)
 
 
+def _world_initial_object(
+    thing_type: int,
+    *,
+    position_bits: tuple[int, int, int] = (0, 0, 0),
+    orientation_bits: tuple[int, int, int] = (0, 0, 0),
+    mesh_number: int = 0,
+    allegiance: int = 0,
+    target: int = -1,
+    script: str = "",
+    name: str = "",
+    spawn_script: str = "",
+    active: int = 1,
+    attach_scripts: int = 0,
+    plane_mode: int = 0,
+    player_number: int = 1,
+) -> bytes:
+    result = bytearray(struct.pack("<i", thing_type))
+    for bits in (*position_bits, *orientation_bits):
+        result.extend(struct.pack("<I", bits))
+    result.extend(struct.pack("<iii", mesh_number, allegiance, target))
+    for value in (script, name, spawn_script):
+        result.extend(value.encode("ascii") + b"\0")
+    result.extend(struct.pack("<ii", active, attach_scripts))
+    if thing_type == 8:
+        result.extend(b"\x01X" + struct.pack("<i", -1))
+    elif thing_type == 15:
+        result.extend(struct.pack("<ii", plane_mode, player_number))
+    elif thing_type in (18, 27):
+        pass
+    elif thing_type == 19:
+        result.extend(struct.pack("<ifffi", 1, 0.0, 0.0, 0.0, 1))
+        result.extend(b"\0\0")
+    elif thing_type == 28:
+        result.extend(struct.pack("<ii", 1, 0))
+        result.extend(b"\x01X" + struct.pack("<i", -1))
+    elif thing_type == 36:
+        result.extend(struct.pack("<f", 1.0))
+    return bytes(result)
+
+
+def _world110_initial_object_fixture(
+    *,
+    header: tuple[int, int, int] = (2, 0, 40),
+    start_plane_mode: int = 0,
+    start_player_number: int = 1,
+    start_position_bits: tuple[int, int, int] = (0x43846000, 0x43816800, 0x80000000),
+    start_orientation_bits: tuple[int, int, int] = (0xBF04FD8B, 0, 0),
+    extra_start: bool = False,
+    unsupported_type: bool = False,
+    tree_header: tuple[int, int] = (0, 2),
+) -> tuple[materializer._WorldReader, tuple[materializer._WorldInitialObject, ...]]:
+    payload = bytearray(15_709)
+    payload.extend(struct.pack("<iiH", *header))
+    payload.extend(_world_initial_object(27, script="LevelScript"))
+    payload.extend(
+        _world_initial_object(
+            15,
+            position_bits=start_position_bits,
+            orientation_bits=start_orientation_bits,
+            plane_mode=start_plane_mode,
+            player_number=start_player_number,
+        )
+    )
+    remaining_types = [8] * 10 + [18] * 19 + [19] + [27] * 2 + [28] * 5 + [36]
+    if extra_start:
+        remaining_types[0] = 15
+    if unsupported_type:
+        remaining_types[0] = 99
+    for thing_type in remaining_types:
+        payload.extend(_world_initial_object(thing_type))
+    payload.extend(struct.pack("<Hi", *tree_header))
+    reader = materializer._WorldReader(bytes(payload))
+    reader.position = 15_709
+    objects = materializer._parse_world_initial_objects(
+        reader,
+        110,
+        materializer.WORLD110_INITIAL_OBJECT_HEADER,
+        materializer.WORLD110_INITIAL_OBJECT_TYPE_COUNTS,
+    )
+    return reader, objects
+
+
 class PhysicsDefinitionTests(unittest.TestCase):
     def test_ordered_stream_preserves_duplicate_records_and_fields(self) -> None:
         records = [
@@ -203,6 +285,170 @@ class WorkRootRoutingTests(unittest.TestCase):
             linked.symlink_to(plain, target_is_directory=True)
             with self.assertRaisesRegex(RuntimeError, "link or reparse"):
                 materializer._resolve_work_root(linked / "work")
+
+
+class World110PlayerStartTests(unittest.TestCase):
+    def test_wrapper_rewalks_the_exact_container_and_admits_the_start(self) -> None:
+        raw_world = b"world-container"
+        wres = b"wres"
+        wrld = b"wrld"
+        rlwd = b"rlwd"
+        objects = (mock.sentinel.object_row,)
+        start = mock.sentinel.player_start
+        reader = mock.Mock()
+        reader.int32.side_effect = [0, 0, 0, 0, 0, 0, 0, 0, 0, 13]
+
+        def chunk_payload(data: bytes, kind: bytes) -> bytes:
+            expected = {
+                (raw_world, b"WRES"): wres,
+                (wres, b"WRLD"): wrld,
+                (wrld, b"RLWD"): rlwd,
+            }
+            return expected[(data, kind)]
+
+        with (
+            mock.patch.object(
+                materializer,
+                "_chunk_payload",
+                side_effect=chunk_payload,
+            ) as extract,
+            mock.patch.object(
+                materializer,
+                "WORLD110_RLWD_SIZE",
+                len(rlwd),
+            ),
+            mock.patch.object(
+                materializer,
+                "WORLD110_RLWD_SHA256",
+                materializer._sha256(rlwd),
+            ),
+            mock.patch.object(materializer, "_parse_world_scripts") as scripts,
+            mock.patch.object(
+                materializer,
+                "_WorldReader",
+                return_value=reader,
+            ),
+            mock.patch.object(
+                materializer,
+                "_skip_level100_script_object",
+            ) as skip_script,
+            mock.patch.object(
+                materializer,
+                "_parse_world_initial_objects",
+                return_value=objects,
+            ) as parse_objects,
+            mock.patch.object(
+                materializer,
+                "_admit_world110_player_start",
+                return_value=start,
+            ) as admit,
+        ):
+            self.assertIs(
+                start,
+                materializer._parse_world110_player_start(raw_world),
+            )
+
+        self.assertEqual(3, extract.call_count)
+        scripts.assert_called_once_with(
+            raw_world,
+            110,
+            materializer.LEVEL110_SCRIPT_OBJECTS,
+            materializer.COMMON_WORLD_LEVEL_HEADER,
+        )
+        self.assertEqual(len(materializer.LEVEL110_SCRIPT_OBJECTS), skip_script.call_count)
+        parse_objects.assert_called_once_with(
+            reader,
+            110,
+            materializer.WORLD110_INITIAL_OBJECT_HEADER,
+            materializer.WORLD110_INITIAL_OBJECT_TYPE_COUNTS,
+        )
+        admit.assert_called_once_with(objects)
+
+    def test_wrapper_rejects_changed_rlwd_before_interpreting_it(self) -> None:
+        with (
+            mock.patch.object(
+                materializer,
+                "_chunk_payload",
+                side_effect=(b"wres", b"wrld", b"changed-rlwd"),
+            ),
+            mock.patch.object(
+                materializer,
+                "WORLD110_RLWD_SIZE",
+                len(b"changed-rlwd"),
+            ),
+            mock.patch.object(materializer, "_parse_world_scripts") as scripts,
+        ):
+            with self.assertRaisesRegex(RuntimeError, "RLWD identity changed"):
+                materializer._parse_world110_player_start(b"world-container")
+
+        scripts.assert_not_called()
+
+    def test_exact_table_preserves_the_raw_authored_start(self) -> None:
+        reader, objects = _world110_initial_object_fixture()
+        start = materializer._admit_world110_player_start(objects)
+
+        self.assertEqual(40, len(objects))
+        self.assertEqual(len(reader.data), reader.position)
+        self.assertEqual(1, start.ordinal)
+        self.assertEqual(15_781, start.record_offset)
+        self.assertEqual(59, start.record_bytes)
+        self.assertEqual(
+            "850de203b32b967064f3a9bacca24bebd783af68760a8b4c056ea242a2b47dfc",
+            start.record_sha256,
+        )
+        self.assertEqual((0x43846000, 0x43816800, 0x80000000), start.position_bits)
+        self.assertEqual((0xBF04FD8B, 0, 0), start.orientation_bits)
+        self.assertEqual(0, start.plane_mode)
+        self.assertEqual(1, start.player_number)
+
+    def test_changed_header_is_rejected(self) -> None:
+        with self.assertRaisesRegex(RuntimeError, "header changed"):
+            _world110_initial_object_fixture(header=(2, 1, 40))
+
+    def test_changed_start_and_duplicate_type_census_are_rejected(self) -> None:
+        _, objects = _world110_initial_object_fixture(start_player_number=2)
+        with self.assertRaisesRegex(RuntimeError, "record changed"):
+            materializer._admit_world110_player_start(objects)
+        with self.assertRaisesRegex(RuntimeError, "type census changed"):
+            _world110_initial_object_fixture(extra_start=True)
+
+    def test_admission_rejects_zero_or_two_player_starts(self) -> None:
+        _, objects = _world110_initial_object_fixture()
+        start = next(item for item in objects if item.thing_type == 15)
+
+        without_start = tuple(item for item in objects if item.thing_type != 15)
+        with self.assertRaisesRegex(RuntimeError, "exactly one.*found 0"):
+            materializer._admit_world110_player_start(without_start)
+
+        with self.assertRaisesRegex(RuntimeError, "exactly one.*found 2"):
+            materializer._admit_world110_player_start(objects + (start,))
+
+    def test_changed_plane_or_raw_pose_bit_is_rejected(self) -> None:
+        _, objects = _world110_initial_object_fixture(start_plane_mode=1)
+        with self.assertRaisesRegex(RuntimeError, "record changed"):
+            materializer._admit_world110_player_start(objects)
+        _, objects = _world110_initial_object_fixture(
+            start_position_bits=(0x43846001, 0x43816800, 0x80000000)
+        )
+        with self.assertRaisesRegex(RuntimeError, "record changed"):
+            materializer._admit_world110_player_start(objects)
+
+    def test_unsupported_type_and_tree_misalignment_are_rejected(self) -> None:
+        with self.assertRaisesRegex(RuntimeError, "unsupported thing type"):
+            _world110_initial_object_fixture(unsupported_type=True)
+        with self.assertRaisesRegex(RuntimeError, "tree groups"):
+            _world110_initial_object_fixture(tree_header=(1, 2))
+
+    def test_truncated_type_specific_tail_is_rejected(self) -> None:
+        payload = struct.pack("<iiH", 2, 0, 1) + _world_initial_object(28)[:-2]
+        reader = materializer._WorldReader(payload)
+        with self.assertRaises(RuntimeError):
+            materializer._parse_world_initial_objects(
+                reader,
+                110,
+                (2, 0, 1),
+                {28: 1},
+            )
 
 
 class StartupMediaCacheTests(unittest.TestCase):
