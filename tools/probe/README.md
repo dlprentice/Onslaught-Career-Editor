@@ -4,7 +4,7 @@ Status: integrated — the three stages below were built in separate lanes and
 merged here; on 2026-08-02 the original nine-launch integration was followed by
 six replicated Mission-logger launches and seven Mission VM-trace/control
 launches, all unattended.
-Last updated: 2026-08-02.
+Last updated: 2026-08-30.
 Summary: author a probe that makes specific engine behaviour fire, run it
 unattended and record it, then put the result through a stage that tries to kill
 it. Authoring, running and refuting are three separate programs with three
@@ -27,6 +27,11 @@ Mission logger can now gate exact ordered text/value content, and the bounded
 stack size, and flags for one selected script; appending a new script-table
 record remains static-only. What still needs a human is named in
 "[What still needs a human](#what-still-needs-a-human)".
+
+On the current Omarchy workstation, the private lab root is
+`~/ProjectData/Onslaught/local-lab/`. Historical `local-lab/...` references
+below name that logical lane; there is no repository-local directory or
+compatibility symlink.
 
 | stage | program | tests |
 |---|---|---|
@@ -52,17 +57,18 @@ predict their own outcome.
 This is the *authoring* half of the discovery loop. It does not run the engine.
 
 Authority for every field it writes:
-[`local-lab/SCRIPT-FORMAT-SPEC-2026-08-02.md`](../../local-lab/SCRIPT-FORMAT-SPEC-2026-08-02.md),
+`~/ProjectData/Onslaught/local-lab/SCRIPT-FORMAT-SPEC-2026-08-02.md`,
 read from the pristine specimen `BEA.exe.original.backup`
 (`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`). Section
 references in the source read `spec S3.4` and so on.
 
 ### Setup
 
-`local-lab/` is gitignored, so a fresh clone has neither the retail archives nor
-the proven readers. The tool **imports** the container codec and the bytecode
-grammar from there rather than vendoring a copy, so there is exactly one
-definition of each and no chance of a silently divergent second parser:
+The external private lab is not part of Git, so a fresh clone has neither the
+retail archives nor the proven readers. The tool **imports** the container codec
+and the bytecode grammar from there rather than vendoring a copy, so there is
+exactly one definition of each and no chance of a silently divergent second
+parser:
 
 | imported | from | why it is trusted |
 |---|---|---|
@@ -72,7 +78,7 @@ definition of each and no chance of a silently divergent second parser:
 | 144-slot native table | `local-lab/msl/natives.json` | lifted from the registry initializer at `0x0052ff30` |
 
 ```sh
-export BEA_LOCAL_LAB=/path/to/local-lab     # or --lab, or <repo>/local-lab
+export BEA_LOCAL_LAB="$HOME/ProjectData/Onslaught/local-lab"  # or pass --lab
 ```
 
 ### Commands
