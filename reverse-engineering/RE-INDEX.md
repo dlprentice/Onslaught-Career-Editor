@@ -1,14 +1,15 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-08-23
+Last updated: 2026-08-30
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
 Select complete-RE campaign authority only through `developer_state.json` →
 `current_re_authority`; it owns generation, exact geometry, READY/reducer pins,
-grades, verify command, and next-valid generation. Select rolling tracked/live
-Ghidra state through [`ghidra/README.md`](ghidra/README.md) plus fresh PRE
-inspection. Generation 73 is a projection oracle only, and dated generation or
+grades, verify command, and next-valid generation. Select the preserved tracked
+Ghidra checkpoint through [`ghidra/README.md`](ghidra/README.md); there is
+currently no active mutable Linux Ghidra owner. Generation 73 is a projection
+oracle only, and dated generation or
 database narratives below are historical. Never infer live/tracked equality or
 re-ground a campaign from a number copied out of this index.
 
@@ -874,14 +875,15 @@ Current per-function notes live under
 | Layer | Location | Role |
 | --- | --- | --- |
 | Discovery findings | [`binary-analysis/ghidra-fullpass-findings/`](binary-analysis/ghidra-fullpass-findings/) | Tracked wave reviews (W001–W018) |
-| Correction ops | `local-lab/ghidra-fullpass-2026-07-23/` (gitignored) | Queues, dual QC, apply logs; closeout 2026-07-25 |
-| Live applied DB | Maintainer Ghidra Projects (machine-local) | Working database that may receive dual-cleared applies |
-| Tracked snapshot | [`ghidra/`](ghidra/README.md) (snapshot date 2026-08-19) | Distributable reviewed snapshot; exact to the verified live state at promotion time |
+| Correction ops | `/home/xsniper80/ProjectData/Onslaught/local-lab/ghidra-fullpass-2026-07-23/` | Preserved external queues, dual QC, and apply logs; closeout 2026-07-25 |
+| Historical live DB | `/home/xsniper80/ProjectData/Onslaught/windows-profile-2026-08-28/ghidra/current/Projects` | Preserved Windows-profile twin; evidence only, not a mutable Linux owner |
+| Tracked snapshot | [`ghidra/`](ghidra/README.md) (snapshot date 2026-08-28) | Distributable reviewed `db.18634` snapshot; byte-identical to the verified POST recovery and preserved Windows-profile copy when re-audited on Linux 2026-08-30 |
 
-Host install paths, headless entry, and local project layout:
-[`ghidra/README.md`](ghidra/README.md). Expedition overlays stay under ignored
-`local-lab/`; do not treat discovery notes as proof that the tracked snapshot
-or live DB was mutated.
+Current host/runtime status and project routing:
+[`ghidra/README.md`](ghidra/README.md). Expedition overlays live under external
+`/home/xsniper80/ProjectData/Onslaught/local-lab/`; do not recreate a
+repository-local symlink or treat discovery notes as proof that the tracked
+snapshot was mutated.
 
 **Tracked-snapshot lineage 2026-08-18/19 (historical, not a selector).** After
 the eight 2026-08-17 promotions ended at `db.18627`, six further separately
@@ -894,16 +896,19 @@ authorized shared-framework ceremonies rolled the tracked/live database to
 `name-cohort-cockpit-dual-owner` → `db.18632`, and the 6-row CMissile+CRound
 dual-owner sibling-prefix `name-cohort-round-dual-owner` → `db.18633`, each run
 with verified PRE backup, measured identity, isolated rehearsal, family-specific
-reviewer GO, live apply, separate-process readback, and restore-proven D: POST;
+reviewer GO, live apply, separate-process readback, and restore-proven Windows-host POST;
 internal functions stayed **8,329** throughout. The refreshed tracked snapshot
 was measured at 19 files / 187,501,445 bytes, canonical inventory SHA-256
 `df4527a9…`, rolling `db.18633.gbf` (`73bf683b…`) with prior `db.18632.gbf`
 (`3334bd33…`) retained; the offline replay verdict over the canonical copied
 receipts reproduces both the historical db.18623 rehearsal geometry and the
 separate db.18627 live-ceremony geometry fail-closed. This paragraph records
-history only; select rolling tracked/live state through
-[`ghidra/README.md`](ghidra/README.md) plus fresh PRE inspection, never from a
-number quoted here.
+history only; select the preserved checkpoint through
+[`ghidra/README.md`](ghidra/README.md), never from a number quoted here. A final
+separately authorized one-row SET_NAME ceremony on
+2026-08-28 changed `0x004063b0` from `CBattleEngine__UpdateWeaponEffect` to
+`CBattleEngine__SetCollisionShape` and produced the preserved `db.18634`
+checkpoint. There is no active mutable Linux project or Ghidra runtime now.
 
 ## Patch recipes — analysis documents, not write authorization
 
@@ -982,14 +987,14 @@ Machine-readable siblings, for consumers that should not be parsing prose:
   — a **candidate**, as its own filename says; not an accepted contract.
 - [Retail specimen manifest](binary-analysis/retail-specimen-manifest-2026-03-14.json)
 - [2026-08-17 function name table](binary-analysis/ghidra-function-name-table-2026-08-17.tsv)
-  — a dated 8,329-row address-to-name projection from the read-only **db.18624**
-  live POST readback of the CTentacle factory-name
-  chain's ceremony B. It carries the four HUD route demotions, the
-  158 renames of the 2026-08-17 name cohort, and the chain's two rows
-  (`0x004f07e0` `CTentacle__CreateTentacleGuide`, `0x004f0860`
-  `CTentacle__CreateTentacleAI`). Its earlier db.18621 projection differed from
-  live in exactly those two rows, which is a third independent confirmation of
-  the chain's collateral result.
+  — a frozen 8,329-row address-to-name projection from the read-only
+  **db.18626** POST readback after the five-row `name-cohort5`. It carries the
+  four HUD route demotions, the 158 renames of the 2026-08-17 name cohort, the
+  CTentacle chain's two rows (`0x004f07e0`
+  `CTentacle__CreateTentacleGuide`, `0x004f0860`
+  `CTentacle__CreateTentacleAI`), and the five `name-cohort5` rows. It is
+  intentionally 37 later SET_NAME rows behind the preserved `db.18634`
+  checkpoint and is provenance, not a current name oracle.
 - [2026-08-13 function name table](binary-analysis/ghidra-function-name-table-2026-08-13.tsv)
   — frozen 8,329-row provenance from the 2026-08-14 D3DX two-function db.18618
   readback, retained for the checks and receipts pinned to it.

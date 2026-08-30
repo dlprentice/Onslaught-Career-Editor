@@ -128,13 +128,25 @@ readback is
 and the tracked-snapshot reopen receipt beside it is 5,795 bytes, SHA-256
 `300f30085b8ffdae99d8b82850821d0671305002bb1fec97298d14809621e3f5`.
 
+**Linux migration status (2026-08-30).** The tracked tree, the preserved
+Windows-profile project at
+`/home/xsniper80/ProjectData/Onslaught/windows-profile-2026-08-28/ghidra/current/Projects`,
+and the Archive A POST recovery at
+`/srv/archive-a/BEA-Ghidra-Backups/2026-08-28-name-cohort-battleengine-set-collision-shape-post-live`
+were re-inventoried byte-for-byte: all are the same 19-file `db.18634`
+checkpoint above. No Java runtime, Ghidra distribution, headless entry, or
+designated mutable Linux project is currently installed. These copies are
+preservation owners, not a license to mutate one in place. Live mutation is
+suspended until a separate Linux working copy, PRE/POST recovery route, and
+fresh authorized ceremony are deliberately established.
+
 Related (not this folder):
 
 | Role | Path |
 | --- | --- |
-| Expedition ops (ignored lab) | `local-lab/ghidra-fullpass-2026-07-23/` (runbook, state, corrections) |
+| Expedition ops (external lab) | `/home/xsniper80/ProjectData/Onslaught/local-lab/ghidra-fullpass-2026-07-23/` (runbook, state, corrections) |
 | Wave discovery notes (tracked) | `reverse-engineering/binary-analysis/ghidra-fullpass-findings/` |
-| Isolated Xbox oracle projects | `local-lab/xbox-sparse-symbol-ghidra-20260812-v1/ghidra-projects/` (Issue-11 and US-retail; ignored retail-derived evidence, not this tracked PC snapshot) |
+| Isolated Xbox oracle projects | `/home/xsniper80/ProjectData/Onslaught/local-lab/xbox-sparse-symbol-ghidra-20260812-v1/ghidra-projects/` (Issue-11 and US-retail; ignored retail-derived evidence, not this tracked PC snapshot) |
 | Xbox promotion evidence | `reverse-engineering/binary-analysis/xbox-source-line-anchor-ghidra-2026-08-12.md` (1,166 instruction-local source maps per build; no whole-function transfer) |
 
 The database retains program bytes needed by Ghidra together with functions,
@@ -152,12 +164,15 @@ evidence, not a claim that every inferred signature or semantic label is
 correct; controlled copied-runtime observation continues to own behavioral
 claims.
 
-## Live-ceremony contract (normative order)
+## Historical Windows live-ceremony contract (suspended)
 
-Every mutation of the maintainer's live project follows this exact sequence.
-Steps are ordered; each gate must pass before the next begins, and a failed or
-skipped gate aborts the ceremony — there is no in-process rollback in this
-Ghidra build, so reversibility is restore-from-verified-backup only.
+This is the exact ceremony that produced the preserved Windows checkpoint. It
+remains normative history for interpreting its receipts, but its drive letters
+are not actionable on Linux. A future Linux mutation must first define an
+equivalent Linux-native contract and recovery route. Steps were ordered; each
+gate had to pass before the next began, and a failed or skipped gate aborted the
+ceremony — there was no in-process rollback in this Ghidra build, so
+reversibility was restore-from-verified-backup only.
 
 1. **Verified PRE backup** to `H:\BEA-Ghidra-Backups` (restore-proven before
    any write).
@@ -176,31 +191,33 @@ Ghidra build, so reversibility is restore-from-verified-backup only.
 8. **Tracked snapshot refresh only on byte equality** between the tracked tree
    and the verified live/POST state.
 
-Volume rules for every step above: new backups go directly to the documented
-`H:\BEA-Ghidra-Backups` collection; D:, F:, and G: are not backup or staging
-fallbacks. G: remains read-only evidence, D: retains the active Ghidra install,
-and ACLs or volume ownership are never rewritten as a workaround.
+Historical Windows volume rules for every step above: new backups went directly
+to the documented `H:\BEA-Ghidra-Backups` collection; D:, F:, and G: were not
+backup or staging fallbacks. G: remained read-only evidence, D: held the active
+Ghidra install, and ACLs or volume ownership were never rewritten as a
+workaround.
 
-## Local host layout (maintainer workstation)
+## Current Linux host routing
 
-Machine-local paths (not tracked). Agents on this host should use these unless
-the user overrides them:
+The prior Windows drive-letter layout is historical receipt provenance. Agents
+on this host should use the following routing and must not translate drive
+letters speculatively:
 
 | Role | Path |
 | --- | --- |
-| Active Ghidra install | `D:\ghidra_12.1.2_PUBLIC_20260605\ghidra_12.1.2_PUBLIC` |
-| Headless entry | `...\support\analyzeHeadless.bat` |
-| Prior install archive | `H:\SoftwareArchives\Ghidra\` (verified 12.0.3 archive plus the 12.1.2 distribution ZIP; not an active install) |
-| Working/maintainer project | `C:\Users\david\Ghidra\Projects` (`BEA.gpr` / `BEA.rep`) |
-| Verified off-volume recovery | `H:\BEA-Ghidra-Backups\2026-08-28-name-cohort-battleengine-set-collision-shape-post-live` (exact current `db.18634` POST snapshot; independently copied, byte-identical to live/tracked, and read-only reopened) |
-| Prior verified recovery | `H:\BEA-Ghidra-Backups\2026-08-17-tentacle-chain-a-post-live` (`db.18623`, ceremony B's PRE) and `...-tentacle-chain-a-pre-live` (`db.18622`, the chain's PRE) |
-| Xbox Issue-11 POST recovery | `H:\BEA-Ghidra-Backups\2026-08-12-xbox-sparse-symbol-post-anchors-issue11\` (exact isolated project; restored semantic readback passed) |
-| Xbox US-retail POST recovery | `H:\BEA-Ghidra-Backups\2026-08-12-xbox-sparse-symbol-post-anchors-us-retail\` (exact isolated project; restored semantic readback passed) |
-| User settings | `%APPDATA%\ghidra\ghidra_12.1.2_PUBLIC` |
+| Active Ghidra install | None discovered; do not run a ceremony until one is deliberately installed and pinned |
+| Headless entry | Unavailable (`analyzeHeadless` and Java are absent) |
+| Reviewed tracked checkpoint | `reverse-engineering/ghidra/` (this tree; preserve in place) |
+| Preserved Windows-profile twin | `/home/xsniper80/ProjectData/Onslaught/windows-profile-2026-08-28/ghidra/current/Projects` (migration evidence; not the mutable owner) |
+| Verified Archive A recovery | `/srv/archive-a/BEA-Ghidra-Backups/2026-08-28-name-cohort-battleengine-set-collision-shape-post-live` (exact `db.18634` POST snapshot) |
+| Earlier verified recoveries | `/srv/archive-a/BEA-Ghidra-Backups/` (historical PRE/POST owners; preserve) |
+| Mutable Linux project | None designated; create a separate working copy only under a future authorized ceremony |
 
 Expedition overlays (RO clones, wave exports, ops state, correction ledgers)
-live under ignored `local-lab/` — do not commit them. Prefer **headless CLI**
-exports and scripts under `tools/` for automation. Do not assume a Ghidra MCP
+live under external `/home/xsniper80/ProjectData/Onslaught/local-lab/` — do not
+commit them or recreate a repository-local `local-lab` symlink. Once a Linux
+runtime exists, prefer **headless CLI** exports and scripts under `tools/` for
+automation. Do not assume a Ghidra MCP
 extension is installed or required. Mutating the maintainer project is a
 separately authorized action; default posture is read-only on a disposable
 copy. Promoting live maintainer DB bytes into this tracked snapshot is likewise

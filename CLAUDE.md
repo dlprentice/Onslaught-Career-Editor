@@ -30,7 +30,10 @@ a bounded contract is not completion.
    evidence pointers. Treat it as awareness, never as truth that primary
    evidence cannot overturn. For complete-RE replay authority, open
    `current_re_authority`; Generation 73 is a projection oracle, not a parent.
-   Ghidra mutation has a separate evidence and authorization gate.
+   Ghidra mutation has a separate evidence and authorization gate. There is no
+   active mutable Linux project; route the preserved `db.18634` checkpoint and
+   recovery copies through
+   [`reverse-engineering/ghidra/README.md`](reverse-engineering/ghidra/README.md).
 6. `~/ProjectData/Onslaught/local-lab/INDEX.md`, when present — ignored working
    evidence external to Git and invisible to a fresh clone. There is currently
    no repository-local compatibility symlink.

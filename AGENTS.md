@@ -36,8 +36,11 @@ unknowns and exact falsifiers are progress; invented semantics are not.
 
 - Canonical Git checkout: `~/Projects/game-dev/Onslaught-Career-Editor`.
 - Active private lab corpus: `~/ProjectData/Onslaught/local-lab/`.
-- Live Ghidra material recovered from the Windows profile:
+- Preserved Ghidra material recovered from the Windows profile (evidence, not
+  an active mutable Linux project):
   `~/ProjectData/Onslaught/windows-profile-2026-08-28/ghidra/`.
+- Verified `db.18634` POST recovery:
+  `/srv/archive-a/BEA-Ghidra-Backups/2026-08-28-name-cohort-battleengine-set-collision-shape-post-live/`.
 - Retail profiles and media: `~/ProjectData/Onslaught/retail-profiles/` and
   `~/ProjectData/Onslaught/media/`.
 - Recovered worktree-only files, conflict sides, and authenticated dirty
@@ -118,6 +121,10 @@ Also:
 - The canonical distributable Ghidra snapshot lives only under
   `reverse-engineering/ghidra/`; live projects and verified backups stay in
   their machine-local owners.
+- No active Linux Ghidra runtime or mutable project is currently designated.
+  The tracked snapshot, ProjectData copy, and Archive A recovery are preserved
+  byte-identical owners and must not be mutated in place; see the Ghidra README
+  for the measured migration status.
 - The GPL rebuild may adapt the pinned GPL source and consume locally
   materialized retail data. Keep retail executables, decompiler output, and
   separately licensed material out of it; preserve file-level provenance and
