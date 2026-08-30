@@ -371,6 +371,24 @@ This closes one deterministic pre-init prefix, not P7's world-110 actor/player
 construction, registry, interactive session, Godot lifecycle, or campaign
 100→110 play.
 
+**2026-08-30 — PARTIAL RECEIPT; POST-LOAD START-LIST RESOLUTION COMPLETE, P7
+REMAINS OPEN.** Commit `7491346f` replaces the one-match-only
+`SingleOrDefault` seam with an immutable complete list walk. Every matching
+serialized row is retained in order, the final row supplies the effective
+pre-init fields, and fallback remains zero-match-only. Public admission stays
+exact-world-110-only; its naturally admitted list still has one player-1 row.
+
+A controlled `break` after the first match failed the two-match friend-test
+discriminator with Expected 2 / Actual 1. After byte-verified restoration, the
+exact fact passed and the adjacent player-start/World-110 gate passed 44/44.
+The external receipt is
+`local-lab/rebuild-world110-player-start-postload-order-mutation-kill-20260830/RECEIPT.md`,
+SHA-256
+`fce701a0ee95a2d91a351e8082076b70280b3c2abd95e41baad4e38738291c46`.
+This closes serialized list selection only, not `GetPlayerObject`, repeated
+`AssignBattleEngine` side effects, player initialization, runtime construction,
+Godot ownership, or campaign 100→110 play.
+
 ### P8 — Human-input replay tapes
 
 Record a real play session into a replayable `CommandTape`; replay runs

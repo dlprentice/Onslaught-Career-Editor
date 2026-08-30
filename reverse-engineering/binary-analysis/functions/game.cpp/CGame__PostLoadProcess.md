@@ -114,25 +114,29 @@ world sorting/setup stages" maps to `CMapWho__Sort` +
 
 ## Rebuild mapping
 
-Two bounded input/pre-init owners now exist, but this runtime contract does not.
+Three bounded deterministic input/pre-init contracts now exist, but this
+runtime contract does not.
 `rebuild/OnslaughtRebuild.Core/RetailWorldPlayerStartAdmission.cs`
 admits world 110's exact serialized type-15 player-1 row and returns it
-as an immutable pre-init plan. For an unmatched player 2 it returns
-only the proven type-15 `(256, 256, 0)` fallback fields, player number,
-and plane-mode default. The separate
+as an immutable pre-init plan. Its pure resolution seam walks the stored rows
+completely, preserves every matching serialized row in order, exposes the final
+match as effective, and reaches the fallback only after zero matches. For an
+unmatched player 2 it returns only the proven type-15 `(256, 256, 0)` fallback
+fields, player number, and plane-mode default. The separate
 `RetailWorldPlayerStartHeightClamp.cs` carries only the measured 37-byte
 `CStart::Init` prefix `[0x004eae27, 0x004eae4c)`: one terrain sample for
 the strict comparison and a second sample/store only on the clamp arm.
 It does not construct a `CStart`, run the remainder of `CStart::Init`,
 call `GetPlayerObject`, allocate a Battle Engine, or mutate a session.
 
-The runtime owner still must encode the complete world-owned list walk,
-including every-match reassignment in list order and fallback only after
-zero matches, then `CPlayer__AssignBattleEngine`, per-player
-`CPlayer__Init`, and the `[+0x290]/[+0x294] = 2` state-pair write. The
-current one-row admission cannot be cited as duplicate-start behavior or
-world-110 construction. Focused runtime test remains deferred until that
-owner exists.
+The deterministic transcript carries list order, final-match selection, and
+zero-match fallback intent only. A runtime owner still must obtain every
+matching `CStart +0x7c` value, perform each `CPlayer__AssignBattleEngine` call
+and its reciprocal side effects, then run per-player `CPlayer__Init` and write
+the `[+0x290]/[+0x294] = 2` state pair. The current one-row public admission and
+synthetic friend-test list cannot be cited as a naturally duplicated world-110
+profile or as world-110 construction. Focused runtime testing remains deferred
+until that owner exists.
 
 ## Cheapest falsifier
 
@@ -172,3 +176,12 @@ Any one of:
   statement: source has no `break`, and retail advances at
   `0x0046d0e7` after both match and non-match arms. No new specimen,
   Ghidra mutation, or runtime claim was introduced.
+- 2026-08-30 — commit `7491346f` carried the already closed 97-byte
+  `[0x0046d0a9,0x0046d10a)` selection law into an immutable Core transcript.
+  A first-match `break` mutation failed the exact ordered-list discriminator;
+  the restored adjacent gate passed 44/44. External receipt:
+  `local-lab/rebuild-world110-player-start-postload-order-mutation-kill-20260830/RECEIPT.md`,
+  SHA-256
+  `fce701a0ee95a2d91a351e8082076b70280b3c2abd95e41baad4e38738291c46`.
+  No new specimen read, runtime capture, Ghidra mutation, or assignment-side
+  effect was introduced.

@@ -1,12 +1,12 @@
 # World 110 authored player-start admission
 
-Status: accepted authored-data admission and bounded height clamp; runtime construction remains open
+Status: accepted authored-data admission, ordered list resolution, and bounded height clamp; runtime construction remains open
 Date: 2026-08-30
 Verdict: world 110 contains one exact authored type-15 start for player 1. Core
-admits its serialized pre-initialization fields, the released no-match fallback
-plan, and the exact terrain-height prefix of `CStart::Init`, but does not
-construct a `CStart`, a Battle Engine, a player, or a playable world-110
-session.
+admits its serialized pre-initialization fields, the complete ordered-match
+selection law, the released no-match fallback plan, and the exact
+terrain-height prefix of `CStart::Init`, but does not construct a `CStart`, a
+Battle Engine, a player, or a playable world-110 session.
 Evidence: MEASURED — the exact record was reread from the hash-pinned retail
 archive; the retained 66-level round-trip census independently corroborates the
 type-15 tail grammar; pinned source owns the serialized fields and post-load
@@ -106,11 +106,33 @@ materialization verifies the same row before writing generated assets.
 the 49 definition-bearing identities because a start is placement/lifecycle
 input, not a Battle Engine definition.
 
-The accepted projection is immutable and deterministic. Resolving player 1
-returns the exact authored start. Resolving unmatched player 2 returns only the
-released pre-init fallback fields: type 15, `(256, 256, 0)`, plane mode 0, and
-player number 2. Unsupported player numbers are rejected. Rejected admission
-does not mutate the adjacent bounded world-110 mission instrument.
+The accepted projection is immutable and deterministic. Resolution now walks
+the stored start rows completely, retains every match in order through
+`MatchingAuthoredStarts`, and exposes the final matching row through
+`AuthoredStart` and the effective projected fields. World 110's admitted data
+still resolves player 1 to its one exact authored row. Unmatched player 2
+returns an empty match list plus only the released pre-init fallback fields:
+type 15, `(256, 256, 0)`, plane mode 0, and player number 2. Unsupported player
+numbers are rejected. Rejected admission does not mutate the adjacent bounded
+world-110 mission instrument.
+
+## Bounded post-load list resolution
+
+Commit `7491346f` carries only the deterministic selection part of
+`CGame::PostLoadProcess`. The selected pristine byte range is
+`[0x0046d0a9,0x0046d10a)`, 97 bytes, SHA-256
+`6a3af1eb13df39a7fd5eeb2996f8ef26c09ad7b2f23988d8b0f4c93e9e35cb22`.
+It contains the start/player number comparison, every-match assignment call,
+unconditional list advance, and post-exhaustion found test; the surrounding
+accepted function owns the unchanged fallback fields.
+
+An internal synthetic projection distinguishes `[player1-first, player2,
+player1-final]` without weakening public admission. Its result preserves both
+matching rows in order, takes all effective serialized fields from the final
+row, and cannot be changed by append or indexed replacement. This is a
+serialized resolution transcript, not a transcript of runtime pointers or
+completed player assignments. `GetPlayerObject`, `AssignBattleEngine`, and
+their side effects remain outside the owner.
 
 ## Bounded `CStart::Init` terrain clamp
 
@@ -136,7 +158,7 @@ does not make either resolution a constructed runtime object: no base
 initializer, Battle Engine, player assignment, session mutation, or Godot
 owner is introduced.
 
-## Measured mutation receipt
+## Measured mutation receipts
 
 The independent row gate was exercised against canonical commit `4e3d472c` in
 a disposable worktree. The controlled production mutation changed only
@@ -165,6 +187,16 @@ incorrectly did. After byte-verified restoration, all seven tests passed. This
 proves the strict branch is live; the internal distinct-result seam separately
 proves two calls and storage of the second sample.
 
+The ordered resolution has its own controlled first-match mutation at
+`local-lab/rebuild-world110-player-start-postload-order-mutation-kill-20260830/RECEIPT.md`,
+SHA-256
+`fce701a0ee95a2d91a351e8082076b70280b3c2abd95e41baad4e38738291c46`.
+Adding one `break` after the first retained match reduced the ordered result
+from two rows to one and failed the exact discriminator. After byte-verified
+restoration, that fact passed 1/1 and the adjacent World-110/player-start gate
+passed 44/44. Distinct first/final projected fields separately prevent a
+first-row payload from passing through the final-row identity.
+
 ## Deliberate limits
 
 This seam does **not** establish or implement:
@@ -173,9 +205,9 @@ This seam does **not** establish or implement:
   `CComplexThing::Init`;
 - `CStart::GetPlayerObject` or any Battle Engine allocation/initialization;
 - `CGame::LoadLevel` player/controller construction;
-- the complete-list duplicate-reassignment runtime rule;
-- `CPlayer::AssignBattleEngine`, `CPlayer::Init`, or the post-load state-pair
-  writes;
+- the runtime `GetPlayerObject` values, repeated `CPlayer::AssignBattleEngine`
+  side effects, reciprocal reader/player links, or earlier-match lifetimes;
+- `CPlayer::Init` or the post-load state-pair writes;
 - a construction-ready world-110 actor definition set, actor registry,
   `InteractiveSession`, Godot lifecycle, or playable world 110.
 
@@ -190,10 +222,11 @@ archive size/hash, RLWD header/census/tree boundary, record count, 59-byte row
 digest, and every raw field above. Any mismatch rejects the admission rather
 than being normalized.
 
-The cheapest runtime successor is a copied-game probe that records world 110's
-start list after the admitted height prefix and after the rest of
-`CStart::Init`, the value returned by `GetPlayerObject`, and every
-`AssignBattleEngine` call during
+The pure-list gate can be rerun by changing the complete walk to stop at the
+first match; the exact ordered-match test must fail. The cheapest runtime
+successor is a copied-game probe that records world 110's start list after the
+admitted height prefix and after the rest of `CStart::Init`, the value returned
+by `GetPlayerObject`, and every `AssignBattleEngine` call during
 `CGame::PostLoadProcess`. A duplicate matching start in a controlled copied
-profile would separately test the statically closed list-order reassignment
-law. The pristine specimen remains read-only.
+profile would test the runtime pointer/side-effect half that the deterministic
+Core transcript deliberately omits. The pristine specimen remains read-only.

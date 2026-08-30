@@ -2,7 +2,8 @@
 
 Status: active implementation boundary
 Last updated: 2026-08-30. Added the exact world-110 serialized player-start
-admission and bounded `CStart::Init` terrain-height prefix. The released Battle
+admission, complete ordered list resolution, and bounded `CStart::Init`
+terrain-height prefix. The released Battle
 Engine finite-cylinder mode-1 round-contact and selected-position boundary,
 bounded world-110 authored-definition projection,
 native-84 completion instrument, native-88 first-Pause session, and current
@@ -262,13 +263,15 @@ Pinned `game.cpp:781-822` and pristine
 `CGame__PostLoadProcess` (`0x0046d040..0x0046d264`) supply the later runtime
 law: walk the whole start list for each player, assign on every match in list
 order, create type 15 at `(256, 256, 0)` only after zero matches, then initialize
-the player. Core first retains an immutable serialized pre-init plan: player 1
-resolves to the exact row; unmatched player 2 resolves to the proven
-type/position/player/plane fallback fields. A separate bounded owner then
+the player. Core retains an immutable serialized pre-init plan: it walks all
+stored rows, preserves matching rows in order, uses the final match for the
+effective projected fields, and reaches the proven type/position/player/plane
+fallback only after zero matches. World 110's exact player 1 still resolves to
+its one admitted row. A separate bounded owner then
 carries only `CStart::Init`'s 37-byte terrain-height prefix at
 `[0x004eae27, 0x004eae4c)`. It does not implement the remainder of
 `CStart::Init`, `GetPlayerObject`, Battle Engine or player construction,
-duplicate-match reassignment, `AssignBattleEngine`,
+runtime pointer acquisition, repeated `AssignBattleEngine` side effects,
 `CPlayer::Init`, the post-load state pair, an actor registry, an
 `InteractiveSession`, or a Godot lifecycle. The full evidence and falsifier are
 recorded in
@@ -293,6 +296,26 @@ on this workstation the logical `local-lab/` route resolves below
 `PlayerStartPlayerNumber` from 1 to 2 made the exact admission test fail
 Expected 1 / Actual 2; restoring the owner made that same test pass. This
 closes the serialized-admission mutation gate only.
+
+The later list-resolution carry at `7491346f` reuses the already accepted
+`game.cpp:781-822` / pristine `CGame::PostLoadProcess` complete-walk law and
+adds no new retail measurement. Its internal synthetic projection proves
+ordered multiple-match selection without weakening public exact-world-110
+admission. Disposition: **REUSED** — pinned source, pristine function/range,
+and released fallback; **EXTENDED** — the existing immutable resolution and
+focused test owner; **NEW_MEASUREMENT 0**. It introduces no runtime capture,
+Ghidra mutation, specimen mutation, retail payload, or tracked/product output
+root; only the external mutation receipt below was added.
+
+The controlled first-match mutation receipt is machine-local external evidence
+at
+`local-lab/rebuild-world110-player-start-postload-order-mutation-kill-20260830/RECEIPT.md`,
+SHA-256
+`fce701a0ee95a2d91a351e8082076b70280b3c2abd95e41baad4e38738291c46`.
+Adding one `break` reduced two ordered matches to one and failed the exact
+discriminator; restoring the owner returned that fact to 1/1 and the adjacent
+gate to 44/44. This closes pure serialized resolution, not the runtime
+assignment effects named above.
 
 The bounded height owner reuses the already-admitted start resolution, the
 hash-pinned world-110 HFLD, and the existing released 24.8 sampler. The new

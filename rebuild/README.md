@@ -2,7 +2,8 @@
 
 Status: early GPL reconstruction lane
 Last updated: 2026-08-30. The bounded world-110 authored-definition,
-serialized player-start, and `CStart::Init` terrain-height projections,
+serialized player-start, complete ordered start-list resolution, and
+`CStart::Init` terrain-height projections,
 native-88 Core session, career read/load frontend slice, and world-admission
 claims below are the newly re-reviewed surface.
 Other sections retain their narrower dated evidence boundaries.
@@ -381,8 +382,13 @@ authored position/orientation bits, plane mode, and player number under the same
 archive identity, while keeping it separate from the 49 definition-bearing
 rows because it carries no Battle Engine definition. The projection can also
 return the released type-15 `(256, 256, 0)` pre-init fallback plan for an
-unmatched player. This closes serialized placement admission, not
-the whole of `CStart::Init`. A separate deterministic owner carries only its
+unmatched player. Its immutable resolver walks every stored row, retains all
+matching serialized starts in order, and uses the final match for the effective
+pre-init fields; fallback is zero-match-only. A synthetic friend-test proves
+that list law without widening public exact-world-110 admission or claiming
+runtime Battle Engine assignments. This closes serialized placement and list
+resolution, not the whole of `CStart::Init`. A separate deterministic owner
+carries only its
 37-byte `[0x004eae27, 0x004eae4c)` terrain-height prefix: exact world-110 XY
 becomes fixed `(67,776, 66,256)`, the pinned HFLD samples `-10,485` units, and
 the strict clamp stores the second sample as Z bits `0xc1199926`. It stops
