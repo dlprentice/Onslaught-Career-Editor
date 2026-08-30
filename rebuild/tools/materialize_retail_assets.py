@@ -17,6 +17,7 @@ import math
 import os
 import re
 import shutil
+import stat
 import struct
 import subprocess
 import sys
@@ -29,6 +30,8 @@ from typing import NamedTuple
 ROOT = Path(__file__).resolve().parents[2]
 GODOT_ASSETS = Path("rebuild/OnslaughtRebuild.Godot/Assets")
 CORE_ASSETS = Path("rebuild/OnslaughtRebuild.Core/Assets")
+WINDOWS_DEFAULT_WORK_ROOT = ROOT / "local-lab/rebuild-godot"
+REPARSE_ATTRIBUTE = 0x400
 
 
 class _WorldLevelHeader(NamedTuple):
@@ -1652,6 +1655,90 @@ def _resolve_game_root(explicit: Path | None) -> Path:
     if explicit is not None:
         raise RuntimeError(f"not a complete Battle Engine Aquila installation: {explicit}")
     raise RuntimeError("Battle Engine Aquila was not detected; pass --game-root with your retail installation")
+
+
+def _is_link_or_reparse(info: os.stat_result) -> bool:
+    return stat.S_ISLNK(info.st_mode) or bool(
+        getattr(info, "st_file_attributes", 0) & REPARSE_ATTRIBUTE
+    )
+
+
+def _plain_existing_directory(path: Path, label: str) -> Path:
+    """Resolve one existing directory without crossing links/reparse points."""
+
+    current = Path(path.anchor)
+    for component in path.parts[1:]:
+        current /= component
+        try:
+            info = current.lstat()
+        except OSError as error:
+            raise RuntimeError(f"{label} is absent: {current}") from error
+        if _is_link_or_reparse(info):
+            raise RuntimeError(f"{label} traverses a link or reparse point: {current}")
+        if not stat.S_ISDIR(info.st_mode):
+            raise RuntimeError(f"{label} has a non-directory component: {current}")
+    return path.resolve(strict=True)
+
+
+def _paths_overlap(left: Path, right: Path) -> bool:
+    return (
+        left == right
+        or left.is_relative_to(right)
+        or right.is_relative_to(left)
+    )
+
+
+def _resolve_work_root(
+    explicit: Path | None,
+    *,
+    game_root: Path | None = None,
+) -> Path:
+    """Select the temporary asset-build owner without touching source trees.
+
+    The historical Windows launchers stage below ``ROOT/local-lab`` and retain
+    that default. Other hosts have no safe implicit owner now that local-lab is
+    external to the repository, so they must name one explicitly.
+    """
+
+    if explicit is None:
+        if os.name == "nt":
+            return WINDOWS_DEFAULT_WORK_ROOT
+        raise RuntimeError(
+            "non-Windows retail asset materialization requires an explicit "
+            "absolute --work-root outside the repository and retail installation"
+        )
+
+    expanded = explicit.expanduser()
+    if not expanded.is_absolute():
+        raise RuntimeError("--work-root must be an absolute path")
+    if ".." in expanded.parts:
+        raise RuntimeError("--work-root must not contain parent traversal")
+
+    candidate = Path(os.path.abspath(expanded))
+    repository = ROOT.resolve(strict=True)
+    # Reject lexical repository ownership before requiring the external parent
+    # to exist, so a stale `ROOT/local-lab` spelling still fails for the right
+    # reason on Linux.
+    if _paths_overlap(candidate, repository):
+        raise RuntimeError("--work-root must be disjoint from the repository")
+
+    parent = _plain_existing_directory(candidate.parent, "--work-root parent")
+    selected = parent / candidate.name
+    if selected.exists() or selected.is_symlink():
+        info = selected.lstat()
+        if _is_link_or_reparse(info) or not stat.S_ISDIR(info.st_mode):
+            raise RuntimeError("--work-root is not a plain directory")
+        selected = selected.resolve(strict=True)
+
+    if _paths_overlap(selected, repository):
+        raise RuntimeError("--work-root must be disjoint from the repository")
+    if game_root is not None:
+        retail = game_root.resolve(strict=True)
+        if _paths_overlap(selected, retail):
+            raise RuntimeError(
+                "--work-root must be disjoint from the retail installation"
+            )
+    return selected
 
 
 def _extract_chunk(raw: bytes, tag: bytes, expected_size: int, expected_hash: str) -> bytes:
@@ -5182,6 +5269,14 @@ def _publish(stage: Path, outputs: tuple[tuple[Path, str], ...]) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Materialize the exact retail assets used by the rebuild")
     parser.add_argument("--game-root", type=Path, help="Battle Engine Aquila retail installation root")
+    parser.add_argument(
+        "--work-root",
+        type=Path,
+        help=(
+            "external parent for temporary asset staging; required on non-Windows "
+            "hosts and rejected inside the repository or retail installation"
+        ),
+    )
     parser.add_argument("--force", action="store_true", help="reverify source data and regenerate every asset")
     parser.add_argument(
         "--startup-media",
@@ -5200,6 +5295,13 @@ def main() -> int:
     args = parser.parse_args()
 
     if args.startup_media:
+        if args.work_root is not None:
+            print(
+                "startup media materialization failed: --work-root applies only "
+                "to rebuild-asset staging; use --startup-media-root for this mode",
+                file=sys.stderr,
+            )
+            return 2
         try:
             game_root = _resolve_game_root(args.game_root)
             media_root = args.startup_media_root or _default_startup_media_root()
@@ -5214,14 +5316,20 @@ def main() -> int:
         print(f"startup media materialized: {manifest}")
         return 0
 
+    try:
+        work_root = _resolve_work_root(args.work_root)
+    except (OSError, RuntimeError, ValueError) as error:
+        print(f"retail asset materialization failed: {error}", file=sys.stderr)
+        return 2
+
     if not args.force and args.game_root is None and _outputs_ready():
         print(f"retail rebuild assets ready: {len(_all_outputs(ROOT))} exact files")
         return 0
 
     try:
         game_root = _resolve_game_root(args.game_root)
-        work_root = ROOT / "local-lab/rebuild-godot"
-        work_root.mkdir(parents=True, exist_ok=True)
+        work_root = _resolve_work_root(args.work_root, game_root=game_root)
+        work_root.mkdir(parents=args.work_root is None, exist_ok=True)
         with tempfile.TemporaryDirectory(prefix="materialize-retail-", dir=work_root) as temporary:
             stage = Path(temporary)
             outputs = _materialize(game_root, stage)

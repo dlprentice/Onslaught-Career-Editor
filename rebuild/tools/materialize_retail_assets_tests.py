@@ -119,6 +119,92 @@ class PhysicsDefinitionTests(unittest.TestCase):
             materializer._unit_behavior_selector({8: b"\x01"})
 
 
+class WorkRootRoutingTests(unittest.TestCase):
+    def test_explicit_external_root_owns_the_temporary_stage(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            parent = Path(temporary)
+            game_root = parent / "retail"
+            game_root.mkdir()
+            work_root = parent / "work"
+            observed_stage_parents: list[Path] = []
+
+            def materialize(
+                _game_root: Path, stage: Path
+            ) -> tuple[tuple[Path, str], ...]:
+                observed_stage_parents.append(stage.parent)
+                return ()
+
+            with (
+                mock.patch.object(
+                    materializer.sys,
+                    "argv",
+                    [
+                        "materialize_retail_assets.py",
+                        "--force",
+                        "--game-root",
+                        str(game_root),
+                        "--work-root",
+                        str(work_root),
+                    ],
+                ),
+                mock.patch.object(
+                    materializer, "_resolve_game_root", return_value=game_root
+                ),
+                mock.patch.object(
+                    materializer, "_materialize", side_effect=materialize
+                ),
+                mock.patch.object(materializer, "_publish"),
+                mock.patch.object(materializer, "_outputs_ready", return_value=True),
+                mock.patch.object(materializer, "_all_outputs", return_value=()),
+                mock.patch("builtins.print"),
+            ):
+                self.assertEqual(0, materializer.main())
+
+            self.assertEqual([work_root.resolve()], observed_stage_parents)
+            self.assertTrue(work_root.is_dir())
+
+    def test_non_windows_requires_an_explicit_root(self) -> None:
+        with mock.patch.object(materializer.os, "name", "posix"):
+            with self.assertRaisesRegex(RuntimeError, "requires an explicit"):
+                materializer._resolve_work_root(None)
+
+    def test_windows_default_remains_the_historical_path(self) -> None:
+        with mock.patch.object(materializer.os, "name", "nt"):
+            self.assertEqual(
+                materializer.WINDOWS_DEFAULT_WORK_ROOT,
+                materializer._resolve_work_root(None),
+            )
+
+    def test_repository_and_retail_roots_are_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            retail = Path(temporary) / "retail"
+            retail.mkdir()
+            with self.assertRaisesRegex(RuntimeError, "repository"):
+                materializer._resolve_work_root(
+                    materializer.ROOT / "local-lab/rebuild-godot"
+                )
+            with self.assertRaisesRegex(RuntimeError, "retail installation"):
+                materializer._resolve_work_root(
+                    retail / "materializer-work",
+                    game_root=retail,
+                )
+
+    def test_relative_missing_parent_and_linked_parent_are_rejected(self) -> None:
+        with self.assertRaisesRegex(RuntimeError, "absolute"):
+            materializer._resolve_work_root(Path("relative-work"))
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            with self.assertRaisesRegex(RuntimeError, "parent.*absent"):
+                materializer._resolve_work_root(root / "absent" / "work")
+
+            plain = root / "plain"
+            plain.mkdir()
+            linked = root / "linked"
+            linked.symlink_to(plain, target_is_directory=True)
+            with self.assertRaisesRegex(RuntimeError, "link or reparse"):
+                materializer._resolve_work_root(linked / "work")
+
+
 class StartupMediaCacheTests(unittest.TestCase):
     def test_complete_rgb_png_is_accepted(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
