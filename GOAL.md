@@ -17,7 +17,7 @@
 > Godot rebuild, and the WinUI 3 app are coequal outcomes. A current goal chooses
 > focus, not standing rank. See [Revision history](#revision-history).
 >
-> Last updated: 2026-08-23. Current measured status belongs in
+> Last updated: 2026-08-30. Current measured status belongs in
 > [`CURRENT_CAPABILITIES.md`](CURRENT_CAPABILITIES.md) and
 > [`developer_state.json`](developer_state.json) (routing key
 > `current_re_authority`). That object alone owns the campaign generation,
@@ -250,10 +250,11 @@ remaining uncertainty visibly separate.
 
 Read the pristine specimen and never write it. Treat the installed executable as
 deliberately patched and never as byte authority. Keep `G:\BEA ROMS` read-only.
-Never destroy save or career data. Never hard-delete lab evidence; stage it
-through `tools/lab_quarantine.py` instead. Leave the uncommitted Godot toolchain
-work, the two protected UnsetObjective files, the stale lane worktrees, and every
-unrelated dirty change untouched unless explicitly directed.
+Never destroy save or career data. Never hard-delete lab evidence. The retired
+Windows `tools/lab_quarantine.py`/drive-letter flow is historical only and must
+not run on Linux. A future retirement requires an explicit user decision and a
+checksum-backed handoff under `~/Recovery/project-reconciliation/Onslaught/`.
+Leave every unrelated dirty change untouched unless explicitly directed.
 
 ### Delegation
 
@@ -281,8 +282,19 @@ progress, not completion.
 
 ### Current frontier
 
-Updated 2026-08-18 (pin hygiene). Recording what closed is not narrowing
+Updated 2026-08-30 (Linux lab routing and measured Core gate). Recording what closed is not narrowing
 the mandate; the completion test and every clause above are unchanged.
+
+**2026-08-30 — current Linux workstation cut.** The one live machine corpus is
+the real, writable, Git-ignored canonical-checkout directory `local-lab/`. It
+was moved by same-filesystem atomic rename; the old ProjectData path is absent
+and no twin, symlink, bind mount, or read-only substitute exists. Fresh clones
+and child worktrees still lack ignored content, so worktrees use the canonical
+absolute path or `BEA_LOCAL_LAB`. OpenJDK 21.0.12.1 and verified Ghidra 12.1.3
+are installed; mutable-project activation remains incomplete and no preserved
+owner is writable ceremony input. The live campaign selector remains
+`developer_state.json` → `current_re_authority`; the dated paragraphs below are
+receipts, not current routing.
 
 **2026-08-18 — stale pins superseded (do not revive).** At that cut, Generation
 31 **v2** superseded the v1 directories (`generation-31-current-8329-db18624-v2`,
@@ -497,21 +509,23 @@ dated measurements below as history; do not resume from this paragraph.
    byte-cited C1/C2 slices and rebuild owners. Reasoned "this consumes X and
    decides Y" hypotheses with explicit confidence labels are progress; the
    cheapest falsifier travels with every row.
-9. **Core gate — RED as of 2026-08-19 (854/2/856), re-confirmed 2026-08-21.**
-   Both failures are `Level100FullChainTests`: the chain tick pin (expected
-   8404, actual 6572; the run still reaches Won at higher hull) and the
-   Blaster observable count (153 vs the 154-162 range). See
-   [`VALIDATION.md`](VALIDATION.md) and `developer_state.json` →
-   `_CORE_SUITE_20260819`. The retired 729/729 and 730/730 passes
-   (`fd5ab355`, `a65826fa`) are history. Historical host deaths stay
-   attributed to environmental contention until reproduced.
-10. **Organization and truth routing.** Consolidate the top-level, RE, and
-    local-lab documents toward one current-truth path; retire directly into
-    manifested `H:\graveyard\lab-quarantine\` with
-    `tools/lab_quarantine.py stage` after confirming H: is mounted and
-    writable; do not use D: or G: as intermediate staging or backup volumes
-    (see the retirement rule in [`AGENTS.md`](AGENTS.md)); keep
-    `developer_state.json`, `RE-INDEX.md`, and `CURRENT_CAPABILITIES.md`
+9. **Core gate — measured 2026-08-30: 1,110 passed / 4 known failed / 1,114
+   total / 0 skipped in 34 m 14 s.** Exact command:
+   `dotnet test rebuild/OnslaughtRebuild.Core.Tests/OnslaughtRebuild.Core.Tests.csproj --nologo --no-restore --filter 'FullyQualifiedName!~Level100FerryLandingTests' --logger 'console;verbosity=minimal'`.
+   The three `TapeFileWriteNew_*` extended/device-namespace failures are the
+   known Linux-host Windows-message assertion class; the fourth is the
+   pre-existing `BlasterMissLaw_SeparatesTheRunsOwnHitsFromItsMisses` observable
+   mismatch (actual 81 against 109–117). No new assignment/start failure was
+   observed. See [`VALIDATION.md`](VALIDATION.md). The earlier 854/2/856,
+   862/1/863, 729/729, and 730/730 figures remain dated receipts, not live
+   suite counts.
+10. **Organization and truth routing.** The physical repo-local `local-lab/`
+    cutover is complete: one real ignored owner, old ProjectData path absent,
+    no compatibility path. Keep the top-level, RE, Ghidra, probe, rebuild, and
+    validation documents aligned with that reality. The Windows H:/D:/G:
+    quarantine flow is historical only; future retirement requires an explicit
+    checksum-backed Recovery handoff and never follows from relocation alone.
+    Keep `developer_state.json`, `RE-INDEX.md`, and `CURRENT_CAPABILITIES.md`
     aligned as each promotion lands.
 
 Rank from current evidence; a reproduced contradiction outranks this list.

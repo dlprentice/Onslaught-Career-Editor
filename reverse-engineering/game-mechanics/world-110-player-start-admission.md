@@ -64,7 +64,7 @@ serialized order for this version-50 world. `InitThing.h:791-830` then names
 the derived `CStartInitThing` tail and loads `mPlaneMode` followed by
 `mPlayerNumber`; its constructor defaults are plane mode false and player 1.
 
-The retained external `local-lab/WORLD-DATA-2026-07-31.md` parser receipt
+The retained ignored `local-lab/WORLD-DATA-2026-07-31.md` parser receipt
 round-tripped all 115 BSWD/RLWD payloads byte-for-byte (7,664,606 bytes). Its
 independent 66-level cross-check found 83 type-15 rows: one player-1 row in all
 66 levels and exactly one player-2 row in each of worlds 850 through 866. That
@@ -207,8 +207,9 @@ The receipt's logical machine-local path is
 `local-lab/rebuild-world110-player-start-mutation-kill-20260830/RECEIPT.md`,
 SHA-256
 `900f22187dea14262846d968a229e7a324ec1a292302c3214ddf656ec7e56b3d`.
-On this workstation it resolves below `~/ProjectData/Onslaught/`. It is external
-lab evidence, not content carried by a fresh clone. This mutation proves the
+On this workstation it resides in canonical-checkout `local-lab/`. It is
+ignored machine evidence, not content carried by a fresh clone or child
+worktree. This mutation proves the
 exact player-number assertion is live; it does not prove runtime construction.
 
 The bounded clamp has a separate controlled production mutation at

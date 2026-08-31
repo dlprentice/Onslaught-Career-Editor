@@ -35,7 +35,10 @@ unknowns and exact falsifiers are progress; invented semantics are not.
 ## Linux workstation routing
 
 - Canonical Git checkout: `~/Projects/game-dev/Onslaught-Career-Editor`.
-- Active private lab corpus: `~/ProjectData/Onslaught/local-lab/`.
+- Active private lab corpus:
+  `~/Projects/game-dev/Onslaught-Career-Editor/local-lab/`. This is one real,
+  owner-writable, Git-ignored directory inside the canonical checkout, not
+  tracked source and not a second repository.
 - Preserved Ghidra material recovered from the Windows profile (evidence, not
   an active mutable Linux project):
   `~/ProjectData/Onslaught/windows-profile-2026-08-28/ghidra/`.
@@ -49,23 +52,25 @@ unknowns and exact falsifiers are progress; invented semantics are not.
   `~/Recovery/project-reconciliation/Onslaught/electron-game-profiles/`.
 - The immutable Samsung source snapshot and Archive A remain recovery
   authorities during consolidation. Do not delete or rewrite either one.
-- No repository-local `local-lab` directory or symlink is currently installed.
-  Resolve the external path explicitly; do not copy the corpus into Git merely
-  to satisfy a relative tool path.
+- The repo-local `local-lab/` owner was atomically renamed from ProjectData on
+  2026-08-30. The old path is absent; there is no retained twin, compatibility
+  symlink, bind mount, or read-only substitute. Never create one. Git worktrees
+  do not project ignored directories, so a child worktree must use the canonical
+  absolute path or a reviewed `BEA_LOCAL_LAB` value.
 - Complete-RE replay on Linux must use `developer_state.json` →
   `current_re_authority.verify`. The host adapter preserves literal Windows
-  receipt strings while binding only the explicitly selected Git and external
-  lab roots. Do not add a compatibility symlink, invoke the frozen bootstrap
-  directly, or rewrite a frozen receipt to make replay run.
+  receipt strings while binding only the explicitly selected Git root and the
+  canonical repo-local lab root. Do not invoke the frozen bootstrap directly or
+  rewrite a frozen receipt to make replay run.
 
 The repository lanes are:
 
 - `reverse-engineering/` — promoted, specimen-bound evidence; start at
   [`reverse-engineering/RE-INDEX.md`](reverse-engineering/RE-INDEX.md).
-- `~/ProjectData/Onslaught/local-lab/` — ignored working evidence,
+- `local-lab/` in the canonical checkout — ignored working evidence,
   retail-derived material, scratch binaries, captures, and campaign artifacts;
-  read its `INDEX.md` when it exists. Historical references to repo-relative
-  `local-lab/` name this same logical lane.
+  read its `INDEX.md` when it exists. It is machine-local and absent from fresh
+  clones and child worktrees even though its physical owner is repo-local.
 - `tools/` — RE, validation, asset, and controlled-lab instruments.
 - `rebuild/` — the GPL-licensed, RE-informed Godot reconstruction. Read
   [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md) and
@@ -90,9 +95,11 @@ Retired Electron, WPF, and Python app implementations live only in Git history.
 - [`GOAL.md`](GOAL.md) states what is wanted. `developer_state.json` carries
   resumable state and evidence pointers, not unquestionable truth. Current user
   intent, code, runtime behavior, and primary evidence outrank stale prose.
-- The external local-lab index is essential: a fresh clone cannot see the
-  workstation-local evidence corpus. Promote only the smallest reviewed fact a
-  source or rebuild path needs; raw and retail-derived material stays local.
+- The canonical local-lab index is essential: a fresh clone or child worktree
+  cannot see the workstation-local evidence corpus. From a worktree, resolve
+  the canonical absolute path rather than creating another lab. Promote only
+  the smallest reviewed fact a source or rebuild path needs; raw and
+  retail-derived material stays ignored and untracked.
 
 ## Hard boundaries
 
@@ -126,10 +133,12 @@ Also:
 - The canonical distributable Ghidra snapshot lives only under
   `reverse-engineering/ghidra/`; live projects and verified backups stay in
   their machine-local owners.
-- No active Linux Ghidra runtime or mutable project is currently designated.
-  The tracked snapshot, ProjectData copy, and Archive A recovery are preserved
-  byte-identical owners and must not be mutated in place; see the Ghidra README
-  for the measured migration status.
+- OpenJDK 21.0.12.1 and the verified Ghidra 12.1.3 runtime are installed. No
+  mutable Linux project is designated: the prepared working/rehearsal copies
+  have not completed the read-only-open, PRE/POST recovery, and explicit
+  writable-activation ceremony. The tracked snapshot, preserved Windows-profile
+  copy, and Archive A recovery remain byte-identical preservation owners and
+  must not be mutated in place; see the Ghidra README for measured status.
 - The GPL rebuild may adapt the pinned GPL source and consume locally
   materialized retail data. Keep retail executables, decompiler output, and
   separately licensed material out of it; preserve file-level provenance and
@@ -179,8 +188,8 @@ Also:
 
 ## Working and delegation
 
-- **Lab evidence is never hard-deleted in one step.** The current corpus is
-  external at `~/ProjectData/Onslaught/local-lab/`. The existing
+- **Lab evidence is never hard-deleted in one step.** The current corpus is the
+  real ignored directory at canonical repository-root `local-lab/`. The existing
   `tools/lab_quarantine.py` retirement destination is a Windows `H:` path and
   is not an active Linux route. Do not run its stage, restore, or purge actions
   until that tool is deliberately ported and revalidated. Meanwhile, preserve
@@ -195,7 +204,12 @@ Also:
   *docs* for references, not *tooling and tests*, and `Remove-Item -Force`
   bypassed the recycle bin.
   Before classifying anything "stale", grep the **tooling and tests** too,
-  not only the docs.
+  not only the docs. The 2026-08-30 move retained the original inode and created
+  no ProjectData twin or compatibility path; relocation is not retirement.
+- Never run root-level `git clean` with `-x` or `-X`: either form can erase the
+  ignored lab. Any deliberate clean requires a dry run, a narrowly scoped
+  target, and an explicit `-e local-lab/`. Never use broad `git add` to stage
+  ignored/private lab material.
 - Preserve unrelated and pre-existing work, especially in a dirty tree. Make
   the smallest coherent change that closes the observed contract; do not widen
   into adjacent cleanup or new machinery without evidence that it is needed.
@@ -216,12 +230,13 @@ Also:
   on them.
 - Retirement is never a hard-delete. The Windows `H:`/`D:`/`G:` graveyard
   policy is retained only as history explaining the fail-closed tool. On this
-  Linux host, use the external ProjectData and Recovery locations above; never
-  reinterpret a drive letter as a current path. Extract what a retired artifact
-  teaches into the durable owners before any future move.
+  Linux host, a separately authorized retirement uses a checksum-backed handoff
+  under `~/Recovery/project-reconciliation/Onslaught/`; never reinterpret a
+  drive letter as a current path. Extract what a retired artifact teaches into
+  durable owners before any future move.
 - External CLI reviewers follow the same rule. Keep their lanes read-only unless
-  a writing lane is explicitly isolated; preserve prompts and reports under
-  `~/ProjectData/Onslaught/local-lab/`, confirm real work and clean exit,
+  a writing lane is explicitly isolated; preserve prompts and reports under the
+  canonical repo-local `local-lab/`, confirm real work and clean exit,
   reproduce consequential claims,
   and budget concurrent heavy processes. Never send a hosted reviewer secrets or
   private/raw retail material beyond the user's explicit scope. The standing

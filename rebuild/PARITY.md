@@ -79,13 +79,13 @@ Owner paths are relative to the repository root; test names are relative to
 > `--filter` run, so treat a missing receipt as a reason to re-measure rather
 > than to trust the table.
 >
-> The world-110 player-start row has its separate measured receipt at the
-> logical external-lab path
+> The world-110 player-start row has its separate measured receipt in the
+> ignored repo-local lab at
 > `local-lab/rebuild-world110-player-start-mutation-kill-20260830/RECEIPT.md`,
 > SHA-256
 > `900f22187dea14262846d968a229e7a324ec1a292302c3214ddf656ec7e56b3d`.
-> On this workstation that resolves below `~/ProjectData/Onslaught/`; it is
-> machine-local evidence, not portable repository content.
+> It is machine-local evidence inside the canonical checkout but excluded from
+> Git and absent from fresh clones and child worktrees.
 >
 > The adjacent bounded `CStart::Init` height row has its own receipt at
 > `local-lab/rebuild-world110-player-start-height-clamp-mutation-kill-20260830/RECEIPT.md`,

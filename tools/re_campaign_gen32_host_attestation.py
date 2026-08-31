@@ -3,9 +3,10 @@
 
 The Generation-32 READY receipt is immutable and records the Windows checkout
 where it was sealed.  This adapter proves that those exact logical paths bind
-to the recovered ProjectData corpus, validates every reachable reducer before
-the first frozen import, and replays the unchanged Generation-32 builder into a
-temporary directory.  It never rewrites a campaign receipt or reducer.
+to the canonical repository-local working corpus, validates every reachable
+reducer before the first frozen import, and replays the unchanged Generation-32
+builder into a temporary directory.  It never rewrites a campaign receipt or
+reducer.
 
 This is intentionally Generation-32-specific.  An unexpected subprocess,
 foreign drive, path alias, symlink, hardlink in a pinned file, or unrecognized
@@ -33,6 +34,17 @@ from typing import Any, Iterable
 ATTESTATION_SCHEMA = "bea.re.generation32-linux-host-replay-attestation.v1"
 WINDOWS_REPO = r"C:\Users\david\source\Onslaught-Career-Editor"
 WINDOWS_REPO_PREFIX = WINDOWS_REPO + "\\"
+CANONICAL_LAB_LEAF = "local-lab"
+CANONICAL_REPO_ROOT = Path(
+    "/home/xsniper80/Projects/game-dev/Onslaught-Career-Editor"
+)
+CANONICAL_LAB_ROOT = CANONICAL_REPO_ROOT / CANONICAL_LAB_LEAF
+RETIRED_PROJECTDATA_LAB_ROOT = Path(
+    "/home/xsniper80/ProjectData/Onslaught/local-lab"
+)
+HOST_ATTESTATIONS_ROOT = Path(
+    "/home/xsniper80/ProjectData/Onslaught/host-attestations"
+)
 
 GEN32_RELATIVE = Path(
     "re-campaign-incident-recovery-20260808-v1/"
@@ -149,6 +161,16 @@ def _plain_root(raw: Path, label: str) -> Path:
     return path.resolve(strict=True)
 
 
+def _require_absent_path(path: Path, label: str) -> None:
+    try:
+        path.lstat()
+    except FileNotFoundError:
+        return
+    except OSError as exc:
+        raise AttestationError(f"cannot inspect {label}: {exc}") from exc
+    raise AttestationError(f"{label} must remain absent: {path}")
+
+
 def _safe_components(raw: str, separator: str, label: str) -> tuple[str, ...]:
     if not raw or "\x00" in raw:
         raise AttestationError(f"{label} is empty or contains NUL")
@@ -223,13 +245,30 @@ class MappingRecord:
 
 
 class HostPaths:
-    """Bind the one sealed Windows repository namespace to two Linux roots."""
+    """Bind the sealed Windows namespace to one repo and its canonical lab."""
 
     def __init__(self, repo_root: Path, lab_root: Path):
         self.repo = _plain_root(repo_root, "canonical Git repository")
-        self.lab = _plain_root(lab_root, "recovered local-lab root")
-        if self.repo == self.lab:
-            raise AttestationError("repository and recovered local-lab roots must differ")
+        if self.repo != CANONICAL_REPO_ROOT:
+            raise AttestationError(
+                "repository root is not the exact current machine authority: "
+                f"expected {CANONICAL_REPO_ROOT}, got {self.repo}"
+            )
+        self.lab = _plain_root(lab_root, "canonical repository-local local-lab root")
+        expected_lab = _plain_descendant(
+            self.repo,
+            (CANONICAL_LAB_LEAF,),
+            "canonical repository-local local-lab root",
+        ).resolve(strict=True)
+        if self.lab != CANONICAL_LAB_ROOT or self.lab != expected_lab:
+            raise AttestationError(
+                "local-lab root is not the canonical plain repository-local directory: "
+                f"expected {CANONICAL_LAB_ROOT}, got {self.lab}"
+            )
+        _require_absent_path(
+            RETIRED_PROJECTDATA_LAB_ROOT,
+            "retired ProjectData local-lab root",
+        )
         self.bootstrap_records: list[MappingRecord] = []
 
     def _from_parts(
@@ -284,7 +323,7 @@ class HostPaths:
         if candidate.is_absolute():
             if ".." in candidate.parts:
                 raise AttestationError(f"{label} contains traversal")
-            for root in (self.repo, self.lab):
+            for root in (self.lab, self.repo):
                 try:
                     relative = candidate.relative_to(root)
                 except ValueError:
@@ -937,12 +976,39 @@ def _critical_inputs(
     )
 
 
-def _write_new_attestation(path: Path, value: dict[str, Any], lab_root: Path) -> str:
-    allowed_parent = lab_root.parent / "host-attestations"
-    if path.parent != allowed_parent:
+def _authorized_attestation_root(output_root: Path) -> Path:
+    expanded_root = output_root.expanduser()
+    if ".." in expanded_root.parts:
+        raise AttestationError("attestation output routing contains traversal")
+    selected_root = Path(os.path.abspath(expanded_root))
+    if selected_root != HOST_ATTESTATIONS_ROOT:
         raise AttestationError(
-            f"attestation output must be directly below {allowed_parent}"
+            "attestation output owner differs from the explicit ProjectData route: "
+            f"{selected_root}"
         )
+    return selected_root
+
+
+def _authorized_attestation_path(path: Path, output_root: Path) -> Path:
+    selected_root = _authorized_attestation_root(output_root)
+    expanded_path = path.expanduser()
+    if ".." in expanded_path.parts:
+        raise AttestationError("attestation output routing contains traversal")
+    selected_path = Path(os.path.abspath(expanded_path))
+    if selected_path.parent != selected_root or selected_path.name in {"", ".", ".."}:
+        raise AttestationError(
+            f"attestation output must be directly below {selected_root}"
+        )
+    return selected_path
+
+
+def _write_new_attestation(
+    path: Path,
+    value: dict[str, Any],
+    output_root: Path,
+) -> str:
+    allowed_parent = _authorized_attestation_root(output_root)
+    path = _authorized_attestation_path(path, allowed_parent)
     if path.exists() or path.is_symlink():
         raise AttestationError(f"refusing existing attestation output: {path}")
     if not allowed_parent.exists():
@@ -989,6 +1055,7 @@ class Config:
     expected_authority_sha256: str
     mode: str
     attestation_out: Path | None
+    attestation_root: Path = HOST_ATTESTATIONS_ROOT
 
 
 def attest_generation32(config: Config) -> tuple[dict[str, Any], str | None]:
@@ -996,6 +1063,15 @@ def attest_generation32(config: Config) -> tuple[dict[str, Any], str | None]:
         raise AttestationError(f"unsupported attestation mode: {config.mode!r}")
     if config.mode != "full" and config.attestation_out is not None:
         raise AttestationError("a durable attestation requires a full replay")
+    selected_attestation_root = _authorized_attestation_root(
+        config.attestation_root
+    )
+    selected_attestation_out = None
+    if config.attestation_out is not None:
+        selected_attestation_out = _authorized_attestation_path(
+            config.attestation_out,
+            selected_attestation_root,
+        )
     if config.expected_ready_sha256 != GEN32_READY_SHA256:
         raise AttestationError("caller READY pin is not the supported Gen32 identity")
     if config.expected_reducer_id != GEN32_REDUCER_ID:
@@ -1107,6 +1183,7 @@ def attest_generation32(config: Config) -> tuple[dict[str, Any], str | None]:
             "sha256": sha256_path(Path(__file__).resolve()),
             "successMarker": "CAMPAIGN_HOST_REPLAY_VERIFIED",
             "scope": "GENERATION_32_ONLY",
+            "durableOutputRoot": os.fspath(selected_attestation_root),
         },
         "replay": {
             "frozenOwnerSha256": GEN32_OWNER_SHA256,
@@ -1130,11 +1207,11 @@ def attest_generation32(config: Config) -> tuple[dict[str, Any], str | None]:
         },
     }
     attestation_sha: str | None = None
-    if config.attestation_out is not None:
+    if selected_attestation_out is not None:
         attestation_sha = _write_new_attestation(
-            config.attestation_out,
+            selected_attestation_out,
             result,
-            paths.lab,
+            selected_attestation_root,
         )
     return result, attestation_sha
 
@@ -1150,6 +1227,12 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--expected-authority-sha256", required=True)
     parser.add_argument("--mode", choices=("integrity", "full"), default="full")
     parser.add_argument("--attestation-out", type=Path)
+    parser.add_argument(
+        "--attestation-root",
+        type=Path,
+        default=HOST_ATTESTATIONS_ROOT,
+        help="explicit durable output owner; must remain the pinned ProjectData route",
+    )
     return parser
 
 

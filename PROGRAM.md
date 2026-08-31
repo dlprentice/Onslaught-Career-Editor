@@ -343,8 +343,8 @@ machine-local receipt is
 `local-lab/rebuild-world110-player-start-mutation-kill-20260830/RECEIPT.md`,
 SHA-256
 `900f22187dea14262846d968a229e7a324ec1a292302c3214ddf656ec7e56b3d`;
-it resolves under external `~/ProjectData/Onslaught/` and is not portable Git
-content. This completes the player-start row/gate, not P7: the host still
+it is ignored repo-local machine evidence and is not portable Git content. This
+completes the player-start row/gate, not P7: the host still
 constructs only world 100, and the admitted row does not implement
 `CStart::Init`, player or Battle Engine construction/assignment, a world-110
 actor registry, `InteractiveSession`, Godot lifecycle, or campaign 100→110
@@ -363,7 +363,7 @@ The public API accepts only the pinned world-110 terrain. A friend-test seam
 proved two sampler calls at identical XY and storage of a distinct second
 result, while equality performs only one call. Inverting only `<` to `>=`
 failed four of seven focused tests; all seven passed after byte-verified
-restoration. The external receipt is
+restoration. The ignored repo-local receipt is
 `local-lab/rebuild-world110-player-start-height-clamp-mutation-kill-20260830/RECEIPT.md`,
 SHA-256
 `9acb79d7a5e092725c1767358eb1d574853531b6caea0aa5ef30a752c6e03c40`.
@@ -381,7 +381,7 @@ exact-world-110-only; its naturally admitted list still has one player-1 row.
 A controlled `break` after the first match failed the two-match friend-test
 discriminator with Expected 2 / Actual 1. After byte-verified restoration, the
 exact fact passed and the adjacent player-start/World-110 gate passed 44/44.
-The external receipt is
+The ignored repo-local receipt is
 `local-lab/rebuild-world110-player-start-postload-order-mutation-kill-20260830/RECEIPT.md`,
 SHA-256
 `fce701a0ee95a2d91a351e8082076b70280b3c2abd95e41baad4e38738291c46`.
@@ -408,8 +408,8 @@ Battle Engine state owner.
 
 Omitting the reciprocal graph mutation while retaining its transcript label
 failed the exact fresh-bind fact. Byte restoration returned that fact to 1/1
-and the adjacent assignment/reader/start gate to 54/54. The external receipt
-is
+and the adjacent assignment/reader/start gate to 54/54. The ignored repo-local
+receipt is
 `local-lab/rebuild-player-assign-battle-engine-mutation-kill-20260830/RECEIPT.md`,
 SHA-256
 `63b97ad75ddb73a39c2f8a92a48c8471548c5c2fd93c1837e0788780aa9ca401`.
@@ -450,14 +450,18 @@ language (`test:safety` plus a doc grep).
 ### P12 — repo-local `local-lab` canonicalization and disposition audit
 
 Keep one real, writable, Git-ignored corpus at repository-root `local-lab/`.
-Canonicalize the recovered ProjectData lane through a verified same-filesystem
-move, not a second bulk copy; an old-path compatibility link is routing only,
-never a second evidence owner. Work the corpus family-by-family per
+The filesystem cutover completed on 2026-08-30 by guarded same-filesystem atomic
+rename: device/inode `59:351501` remained unchanged, 227,644 files passed the
+full checksum manifest, the old ProjectData path is absent, and no twin or
+compatibility link was created. The move receipt is
+`~/Work/storage-migration-2026-08-29/project-restore/onslaught-local-lab-repo-move-20260830/README.md`.
+
+Work the corpus family-by-family per
 [`AGENTS.md`](AGENTS.md): read manifests and receipts, then search tooling,
 tests, documentation, and campaign inputs before any "stale" decision. Do not
 run `tools/lab_quarantine.py` or reinterpret its retired Windows `D:`/`H:`
 destinations on Linux. Any retirement requires an explicit user decision and a
-checksum-backed handoff under the current Recovery policy. Gate: same-inode
-move proof, updated routing/current-truth checks, and per-family disposition
-rows that distinguish working authority, justified recovery copy, and verified
-retirement candidate. No bulk deletion, ever.
+checksum-backed handoff under the current Recovery policy. Remaining gate:
+finish the tracked/tool/current-selector routing checks and per-family
+disposition rows that distinguish working authority, justified recovery copy,
+and verified retirement candidate. No bulk deletion, ever.

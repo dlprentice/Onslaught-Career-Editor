@@ -87,8 +87,8 @@ The measured comparison-inversion receipt is
 `local-lab/rebuild-world110-player-start-height-clamp-mutation-kill-20260830/RECEIPT.md`,
 SHA-256
 `9acb79d7a5e092725c1767358eb1d574853531b6caea0aa5ef30a752c6e03c40`.
-It is external machine-local evidence under `~/ProjectData/Onslaught/`, not
-portable repository content.
+It is ignored machine-local evidence in canonical-checkout `local-lab/`, not
+portable repository content and not present in a fresh clone or child worktree.
 
 The remainder of `CStart__Init`, `GetPlayerObject`, post-load list walking,
 Battle Engine/player construction, assignment, and playable world-110 session

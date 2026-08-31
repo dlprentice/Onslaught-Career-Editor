@@ -134,19 +134,26 @@ Windows-profile project at
 and the Archive A POST recovery at
 `/srv/archive-a/BEA-Ghidra-Backups/2026-08-28-name-cohort-battleengine-set-collision-shape-post-live`
 were re-inventoried byte-for-byte: all are the same 19-file `db.18634`
-checkpoint above. No Java runtime, Ghidra distribution, headless entry, or
-designated mutable Linux project is currently installed. These copies are
-preservation owners, not a license to mutate one in place. Live mutation is
-suspended until a separate Linux working copy, PRE/POST recovery route, and
-fresh authorized ceremony are deliberately established.
+checkpoint above. OpenJDK 21.0.12.1 is installed at
+`/usr/lib/jvm/java-21-openjdk`, and the verified Ghidra 12.1.3 PUBLIC runtime is
+installed at `/home/xsniper80/.local/opt/ghidra_12.1.3_PUBLIC` (5,218 files,
+905,553,502 bytes, inventory SHA-256
+`636e51e4d487f64fcfcc4f9516181708827aedd25f2b9ca133c53977519c066b`).
+The runtime and `support/analyzeHeadless` being present do not designate a
+mutable project. Prepared working/rehearsal copies under the activation lane
+remain candidates only: activation has not completed the required read-only
+compatibility, off-volume PRE/POST recovery, semantic-comparison, and explicit
+writable-open gates. The three copies above remain preservation owners, not a
+license to mutate one in place.
 
 Related (not this folder):
 
 | Role | Path |
 | --- | --- |
-| Expedition ops (external lab) | `/home/xsniper80/ProjectData/Onslaught/local-lab/ghidra-fullpass-2026-07-23/` (runbook, state, corrections) |
+| Expedition ops (ignored repo-local lab) | `local-lab/ghidra-fullpass-2026-07-23/` in the canonical checkout (runbook, state, corrections) |
 | Wave discovery notes (tracked) | `reverse-engineering/binary-analysis/ghidra-fullpass-findings/` |
-| Isolated Xbox oracle projects | `/home/xsniper80/ProjectData/Onslaught/local-lab/xbox-sparse-symbol-ghidra-20260812-v1/ghidra-projects/` (Issue-11 and US-retail; ignored retail-derived evidence, not this tracked PC snapshot) |
+| Isolated Xbox oracle projects | `local-lab/xbox-sparse-symbol-ghidra-20260812-v1/ghidra-projects/` in the canonical checkout (Issue-11 and US-retail; ignored retail-derived evidence, not this tracked PC snapshot) |
+| Linux activation lane | `local-lab/ghidra-linux-12.1.3-activation-20260830-v1/` in the canonical checkout (prepared working/rehearsal copies and receipts; not yet the mutable authority) |
 | Xbox promotion evidence | `reverse-engineering/binary-analysis/xbox-source-line-anchor-ghidra-2026-08-12.md` (1,166 instruction-local source maps per build; no whole-function transfer) |
 
 The database retains program bytes needed by Ghidra together with functions,
@@ -205,19 +212,22 @@ letters speculatively:
 
 | Role | Path |
 | --- | --- |
-| Active Ghidra install | None discovered; do not run a ceremony until one is deliberately installed and pinned |
-| Headless entry | Unavailable (`analyzeHeadless` and Java are absent) |
+| Installed Java | `/usr/lib/jvm/java-21-openjdk` — OpenJDK 21.0.12.1 |
+| Installed Ghidra runtime | `/home/xsniper80/.local/opt/ghidra_12.1.3_PUBLIC` — verified PUBLIC 12.1.3 inventory `636e51e4…066b` |
+| Headless entry | `/home/xsniper80/.local/opt/ghidra_12.1.3_PUBLIC/support/analyzeHeadless` — present, but project activation remains gated |
 | Reviewed tracked checkpoint | `reverse-engineering/ghidra/` (this tree; preserve in place) |
 | Preserved Windows-profile twin | `/home/xsniper80/ProjectData/Onslaught/windows-profile-2026-08-28/ghidra/current/Projects` (migration evidence; not the mutable owner) |
 | Verified Archive A recovery | `/srv/archive-a/BEA-Ghidra-Backups/2026-08-28-name-cohort-battleengine-set-collision-shape-post-live` (exact `db.18634` POST snapshot) |
 | Earlier verified recoveries | `/srv/archive-a/BEA-Ghidra-Backups/` (historical PRE/POST owners; preserve) |
-| Mutable Linux project | None designated; create a separate working copy only under a future authorized ceremony |
+| Prepared activation copies | `local-lab/ghidra-linux-12.1.3-activation-20260830-v1/` in the canonical checkout; candidates only |
+| Mutable Linux project | None designated; finish the activation owner's complete recovery/open gate before any writable use |
 
 Expedition overlays (RO clones, wave exports, ops state, correction ledgers)
-live under external `/home/xsniper80/ProjectData/Onslaught/local-lab/` — do not
-commit them or recreate a repository-local `local-lab` symlink. Once a Linux
-runtime exists, prefer **headless CLI** exports and scripts under `tools/` for
-automation. Do not assume a Ghidra MCP
+live under real, ignored canonical-checkout `local-lab/` — do not commit them.
+Child worktrees use the canonical absolute path; never create a duplicate lab,
+symlink, bind mount, or read-only substitute. Prefer **headless CLI** exports
+and scripts under `tools/` for automation only after the selected project and
+ceremony gate permit them. Do not assume a Ghidra MCP
 extension is installed or required. Mutating the maintainer project is a
 separately authorized action; default posture is read-only on a disposable
 copy. Promoting live maintainer DB bytes into this tracked snapshot is likewise

@@ -34,12 +34,15 @@ a bounded contract is not completion.
    active mutable Linux project; route the preserved `db.18634` checkpoint and
    recovery copies through
    [`reverse-engineering/ghidra/README.md`](reverse-engineering/ghidra/README.md).
-   On Linux, run complete-RE verification only through
-   `current_re_authority.verify`; do not add a `local-lab` compatibility link,
-   call the frozen bootstrap directly, or rewrite historical receipt paths.
-6. `~/ProjectData/Onslaught/local-lab/INDEX.md`, when present — ignored working
-   evidence external to Git and invisible to a fresh clone. There is currently
-   no repository-local compatibility symlink.
+   OpenJDK 21 and Ghidra 12.1.3 are installed, but no mutable Linux project has
+   completed activation. On Linux, run complete-RE verification only through
+   `current_re_authority.verify`; do not call the frozen bootstrap directly or
+   rewrite historical receipt paths.
+6. `local-lab/INDEX.md`, when present — the real, writable, Git-ignored corpus
+   inside the canonical checkout. It is not tracked and remains invisible to a
+   fresh clone or child worktree. From a worktree, use the canonical absolute
+   path or `BEA_LOCAL_LAB`; never create a twin, symlink, bind mount, or read-only
+   substitute.
 7. The owning lane: [`reverse-engineering/RE-INDEX.md`](reverse-engineering/RE-INDEX.md)
    (current recovered authority first; Gen10/Gen73 demoted),
    [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md), or [`CLI.md`](CLI.md).

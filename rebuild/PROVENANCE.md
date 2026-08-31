@@ -290,13 +290,13 @@ field projection. No runtime capture, mutable Ghidra project, retail payload in
 Git, or new output root was created.
 
 The matching fail-closed real-materializer parser landed at `4e3d472c`. The
-admission row's controlled mutation receipt is machine-local external evidence
-at
+admission row's controlled mutation receipt is ignored repo-local machine
+evidence at
 `local-lab/rebuild-world110-player-start-mutation-kill-20260830/RECEIPT.md`,
 SHA-256
 `900f22187dea14262846d968a229e7a324ec1a292302c3214ddf656ec7e56b3d`;
-on this workstation the logical `local-lab/` route resolves below
-`~/ProjectData/Onslaught/`, not inside portable Git content. Changing only
+on this workstation it resides in canonical-checkout `local-lab/`, outside
+portable Git content. Changing only
 `PlayerStartPlayerNumber` from 1 to 2 made the exact admission test fail
 Expected 1 / Actual 2; restoring the owner made that same test pass. This
 closes the serialized-admission mutation gate only.
@@ -309,10 +309,10 @@ admission. Disposition: **REUSED** — pinned source, pristine function/range,
 and released fallback; **EXTENDED** — the existing immutable resolution and
 focused test owner; **NEW_MEASUREMENT 0**. It introduces no runtime capture,
 Ghidra mutation, specimen mutation, retail payload, or tracked/product output
-root; only the external mutation receipt below was added.
+root; only the ignored machine-local mutation receipt below was added.
 
-The controlled first-match mutation receipt is machine-local external evidence
-at
+The controlled first-match mutation receipt is ignored repo-local machine
+evidence at
 `local-lab/rebuild-world110-player-start-postload-order-mutation-kill-20260830/RECEIPT.md`,
 SHA-256
 `fce701a0ee95a2d91a351e8082076b70280b3c2abd95e41baad4e38738291c46`.
@@ -344,7 +344,7 @@ The production API admits no arbitrary sampler or arbitrary world; its internal
 friend-test seam exists only to distinguish a real second call/store from
 copying the first deterministic result.
 
-The clamp mutation receipt is machine-local external evidence at
+The clamp mutation receipt is ignored repo-local machine evidence at
 `local-lab/rebuild-world110-player-start-height-clamp-mutation-kill-20260830/RECEIPT.md`,
 SHA-256
 `9acb79d7a5e092725c1767358eb1d574853531b6caea0aa5ef30a752c6e03c40`.
@@ -1000,7 +1000,7 @@ Core composition plus focused tests; **NEW_MEASUREMENT** — the complete
 There was no runtime capture, Ghidra mutation, retail payload in Git, engine
 construction, session integration, or campaign-grade promotion.
 
-The controlled reciprocal-call mutation receipt is machine-local external
+The controlled reciprocal-call mutation receipt is ignored repo-local machine
 evidence at
 `local-lab/rebuild-player-assign-battle-engine-mutation-kill-20260830/RECEIPT.md`,
 SHA-256

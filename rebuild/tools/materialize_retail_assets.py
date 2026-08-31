@@ -1732,6 +1732,71 @@ def _paths_overlap(left: Path, right: Path) -> bool:
     )
 
 
+def _canonical_repository_root() -> Path:
+    """Resolve the primary checkout from this checkout's Git common dir."""
+
+    git_environment = {
+        key: value
+        for key, value in os.environ.items()
+        if not key.startswith("GIT_")
+    }
+    try:
+        result = subprocess.run(
+            (
+                "git",
+                "-C",
+                str(ROOT),
+                "rev-parse",
+                "--path-format=absolute",
+                "--git-common-dir",
+            ),
+            check=True,
+            capture_output=True,
+            text=True,
+            env=git_environment,
+        )
+    except (OSError, subprocess.CalledProcessError) as error:
+        raise RuntimeError(
+            "could not resolve the canonical repository checkout"
+        ) from error
+
+    common_text = result.stdout.strip()
+    if not common_text:
+        raise RuntimeError("Git returned an empty common-directory path")
+    common_candidate = Path(common_text)
+    if not common_candidate.is_absolute():
+        common_candidate = ROOT / common_candidate
+    common = _plain_existing_directory(
+        Path(os.path.abspath(common_candidate)),
+        "Git common directory",
+    )
+    if common.name != ".git":
+        raise RuntimeError(
+            f"Git common directory is not a canonical .git owner: {common}"
+        )
+
+    canonical = _plain_existing_directory(
+        common.parent,
+        "canonical repository root",
+    )
+    marker = canonical / ".git"
+    try:
+        marker_info = marker.lstat()
+    except OSError as error:
+        raise RuntimeError(
+            f"canonical repository Git directory is absent: {marker}"
+        ) from error
+    if _is_link_or_reparse(marker_info) or not stat.S_ISDIR(marker_info.st_mode):
+        raise RuntimeError(
+            f"canonical repository Git directory is not plain: {marker}"
+        )
+    if marker.resolve(strict=True) != common:
+        raise RuntimeError(
+            "Git common directory does not belong to the canonical repository root"
+        )
+    return canonical
+
+
 def _resolve_work_root(
     explicit: Path | None,
     *,
@@ -1740,8 +1805,9 @@ def _resolve_work_root(
     """Select the temporary asset-build owner without touching source trees.
 
     The historical Windows launchers stage below ``ROOT/local-lab`` and retain
-    that default. Other hosts have no safe implicit owner now that local-lab is
-    external to the repository, so they must name one explicitly.
+    that default. Linux callers must explicitly select a plain descendant of
+    the primary checkout's ignored ``local-lab`` owner. A linked worktree's
+    similarly spelled path is deliberately not an authority.
     """
 
     if explicit is None:
@@ -1749,7 +1815,7 @@ def _resolve_work_root(
             return WINDOWS_DEFAULT_WORK_ROOT
         raise RuntimeError(
             "non-Windows retail asset materialization requires an explicit "
-            "absolute --work-root outside the repository and retail installation"
+            "absolute --work-root below the canonical repository local-lab"
         )
 
     expanded = explicit.expanduser()
@@ -1760,21 +1826,53 @@ def _resolve_work_root(
 
     candidate = Path(os.path.abspath(expanded))
     repository = ROOT.resolve(strict=True)
-    # Reject lexical repository ownership before requiring the external parent
-    # to exist, so a stale `ROOT/local-lab` spelling still fails for the right
-    # reason on Linux.
-    if _paths_overlap(candidate, repository):
+    canonical_lab: Path | None = None
+    if os.name != "nt":
+        canonical_repository = _canonical_repository_root()
+        canonical_lab = _plain_existing_directory(
+            canonical_repository / "local-lab",
+            "canonical repository local-lab",
+        )
+        if candidate == canonical_lab:
+            raise RuntimeError(
+                "--work-root must be a descendant of the canonical repository "
+                "local-lab, not the local-lab owner itself"
+            )
+        if not candidate.is_relative_to(canonical_lab):
+            if _paths_overlap(candidate, canonical_repository) or _paths_overlap(
+                candidate, repository
+            ):
+                raise RuntimeError(
+                    "--work-root must not use tracked or arbitrary repository paths; "
+                    "Linux staging is allowed only below the canonical repository "
+                    "local-lab"
+                )
+            raise RuntimeError(
+                "Linux --work-root must be a plain descendant of the exact "
+                f"canonical repository local-lab: {canonical_lab}"
+            )
+    elif _paths_overlap(candidate, repository):
+        # Preserve the historical explicit Windows scratch-root policy. Its
+        # implicit launcher default returns above before reaching this branch.
         raise RuntimeError("--work-root must be disjoint from the repository")
 
     parent = _plain_existing_directory(candidate.parent, "--work-root parent")
     selected = parent / candidate.name
     if selected.exists() or selected.is_symlink():
         info = selected.lstat()
-        if _is_link_or_reparse(info) or not stat.S_ISDIR(info.st_mode):
+        if _is_link_or_reparse(info):
+            raise RuntimeError("--work-root is a link or reparse point")
+        if not stat.S_ISDIR(info.st_mode):
             raise RuntimeError("--work-root is not a plain directory")
         selected = selected.resolve(strict=True)
 
-    if _paths_overlap(selected, repository):
+    if canonical_lab is not None and (
+        selected == canonical_lab or not selected.is_relative_to(canonical_lab)
+    ):
+        raise RuntimeError(
+            "--work-root resolved outside the canonical repository local-lab"
+        )
+    if canonical_lab is None and _paths_overlap(selected, repository):
         raise RuntimeError("--work-root must be disjoint from the repository")
     if game_root is not None:
         retail = game_root.resolve(strict=True)
@@ -5522,8 +5620,9 @@ def main() -> int:
         "--work-root",
         type=Path,
         help=(
-            "external parent for temporary asset staging; required on non-Windows "
-            "hosts and rejected inside the repository or retail installation"
+            "temporary asset-staging directory; on Linux this must be a plain "
+            "descendant of the canonical checkout's ignored local-lab; always "
+            "rejected when it overlaps the retail installation"
         ),
     )
     parser.add_argument("--force", action="store_true", help="reverify source data and regenerate every asset")

@@ -101,10 +101,12 @@ Current complete-RE verification is selected only by `developer_state.json` →
 `current_re_authority.verify`. On this Linux host that command uses
 `re_campaign_gen32_host_attestation.py`; its focused fail-closed and real-data
 replay coverage lives in `re_campaign_gen32_host_attestation_tests.py`. The
-adapter binds the exact historical Windows namespace to explicit Git and
-external-lab roots, prevalidates the reachable frozen reducer graph, verifies
-the canonical/replica authority, and performs a temporary full replay without
-rewriting frozen bytes.
+adapter binds the exact historical Windows namespace to the exact canonical Git
+checkout and its real repo-local `local-lab/`, prevalidates the reachable frozen
+reducer graph, verifies the canonical/replica authority, and performs a
+temporary full replay without rewriting frozen bytes. It also requires the
+retired ProjectData lab path to remain absent and keeps durable host-attestation
+output independently pinned under ProjectData.
 
 `re_campaign_historical_source_projection_v2.py` is the historical
 Generation-24 launcher for an immutable campaign whose rebuild inputs were

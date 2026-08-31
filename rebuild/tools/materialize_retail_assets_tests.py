@@ -8,6 +8,7 @@ import tempfile
 import unittest
 import zlib
 import json
+import subprocess
 from pathlib import Path
 from unittest import mock
 
@@ -202,12 +203,85 @@ class PhysicsDefinitionTests(unittest.TestCase):
 
 
 class WorkRootRoutingTests(unittest.TestCase):
-    def test_explicit_external_root_owns_the_temporary_stage(self) -> None:
+    @staticmethod
+    def _canonical_lab(parent: Path) -> tuple[Path, Path]:
+        repository = parent / "canonical"
+        repository.mkdir()
+        lab = repository / "local-lab"
+        lab.mkdir()
+        return repository, lab
+
+    def test_canonical_root_is_derived_from_the_common_git_directory(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            repository = Path(temporary) / "canonical"
+            common = repository / ".git"
+            common.mkdir(parents=True)
+            result = mock.Mock(stdout=f"{common}\n")
+
+            with mock.patch.object(
+                materializer.subprocess,
+                "run",
+                return_value=result,
+            ) as run:
+                self.assertEqual(
+                    repository.resolve(),
+                    materializer._canonical_repository_root(),
+                )
+
+            run.assert_called_once_with(
+                (
+                    "git",
+                    "-C",
+                    str(materializer.ROOT),
+                    "rev-parse",
+                    "--path-format=absolute",
+                    "--git-common-dir",
+                ),
+                check=True,
+                capture_output=True,
+                text=True,
+                env={
+                    key: value
+                    for key, value in materializer.os.environ.items()
+                    if not key.startswith("GIT_")
+                },
+            )
+
+    def test_canonical_root_ignores_ambient_git_routing_variables(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             parent = Path(temporary)
+            canonical = parent / "canonical"
+            foreign = parent / "foreign"
+            for repository in (canonical, foreign):
+                subprocess.run(
+                    ("git", "init", "--quiet", str(repository)),
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                )
+
+            hostile = {
+                "GIT_DIR": str(foreign / ".git"),
+                "GIT_WORK_TREE": str(foreign),
+                "GIT_COMMON_DIR": str(foreign / ".git"),
+                "GIT_INDEX_FILE": str(foreign / ".git" / "index"),
+            }
+            with (
+                mock.patch.object(materializer, "ROOT", canonical),
+                mock.patch.dict(materializer.os.environ, hostile),
+            ):
+                self.assertEqual(
+                    canonical.resolve(),
+                    materializer._canonical_repository_root(),
+                )
+
+    def test_canonical_lab_root_owns_the_temporary_stage(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            parent = Path(temporary)
+            repository, lab = self._canonical_lab(parent)
             game_root = parent / "retail"
             game_root.mkdir()
-            work_root = parent / "work"
+            work_root = lab / "materializer-work"
             observed_stage_parents: list[Path] = []
 
             def materialize(
@@ -231,6 +305,11 @@ class WorkRootRoutingTests(unittest.TestCase):
                 ),
                 mock.patch.object(
                     materializer, "_resolve_game_root", return_value=game_root
+                ),
+                mock.patch.object(
+                    materializer,
+                    "_canonical_repository_root",
+                    return_value=repository,
                 ),
                 mock.patch.object(
                     materializer, "_materialize", side_effect=materialize
@@ -257,34 +336,146 @@ class WorkRootRoutingTests(unittest.TestCase):
                 materializer._resolve_work_root(None),
             )
 
-    def test_repository_and_retail_roots_are_rejected(self) -> None:
+    def test_plain_canonical_lab_descendants_are_admitted(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
-            retail = Path(temporary) / "retail"
-            retail.mkdir()
-            with self.assertRaisesRegex(RuntimeError, "repository"):
-                materializer._resolve_work_root(
-                    materializer.ROOT / "local-lab/rebuild-godot"
+            repository, lab = self._canonical_lab(Path(temporary))
+            existing = lab / "existing"
+            existing.mkdir()
+            nested_parent = lab / "nested"
+            nested_parent.mkdir()
+
+            with mock.patch.object(
+                materializer,
+                "_canonical_repository_root",
+                return_value=repository,
+            ):
+                self.assertEqual(
+                    existing.resolve(),
+                    materializer._resolve_work_root(existing),
                 )
-            with self.assertRaisesRegex(RuntimeError, "retail installation"):
-                materializer._resolve_work_root(
-                    retail / "materializer-work",
-                    game_root=retail,
+                self.assertEqual(
+                    nested_parent / "new-work-root",
+                    materializer._resolve_work_root(
+                        nested_parent / "new-work-root"
+                    ),
                 )
 
-    def test_relative_missing_parent_and_linked_parent_are_rejected(self) -> None:
+    def test_repository_external_and_escape_spellings_are_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            parent = Path(temporary)
+            repository, lab = self._canonical_lab(parent)
+            arbitrary_repository_path = repository / "rebuild"
+            arbitrary_repository_path.mkdir()
+            external = parent / "external"
+            external.mkdir()
+
+            with mock.patch.object(
+                materializer,
+                "_canonical_repository_root",
+                return_value=repository,
+            ):
+                for rejected in (
+                    repository,
+                    arbitrary_repository_path,
+                    repository / "local-lab-sibling" / "work",
+                    materializer.ROOT / "local-lab" / "work",
+                ):
+                    with self.subTest(rejected=rejected):
+                        with self.assertRaisesRegex(RuntimeError, "repository"):
+                            materializer._resolve_work_root(rejected)
+
+                with self.assertRaisesRegex(RuntimeError, "descendant"):
+                    materializer._resolve_work_root(lab)
+                with self.assertRaisesRegex(RuntimeError, "exact.*local-lab"):
+                    materializer._resolve_work_root(external / "work")
+
+    def test_relative_parent_traversal_and_missing_ancestors_are_rejected(self) -> None:
         with self.assertRaisesRegex(RuntimeError, "absolute"):
             materializer._resolve_work_root(Path("relative-work"))
         with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary)
-            with self.assertRaisesRegex(RuntimeError, "parent.*absent"):
-                materializer._resolve_work_root(root / "absent" / "work")
+            repository, lab = self._canonical_lab(Path(temporary))
+            with mock.patch.object(
+                materializer,
+                "_canonical_repository_root",
+                return_value=repository,
+            ):
+                with self.assertRaisesRegex(RuntimeError, "parent traversal"):
+                    materializer._resolve_work_root(lab / ".." / "escape")
+                with self.assertRaisesRegex(RuntimeError, "parent.*absent"):
+                    materializer._resolve_work_root(lab / "absent" / "work")
 
-            plain = root / "plain"
+    def test_link_reparse_and_non_directory_ancestors_are_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            parent = Path(temporary)
+            repository, lab = self._canonical_lab(parent)
+
+            plain = lab / "plain"
             plain.mkdir()
-            linked = root / "linked"
-            linked.symlink_to(plain, target_is_directory=True)
-            with self.assertRaisesRegex(RuntimeError, "link or reparse"):
-                materializer._resolve_work_root(linked / "work")
+            linked_parent = lab / "linked-parent"
+            linked_parent.symlink_to(plain, target_is_directory=True)
+            linked_work = lab / "linked-work"
+            linked_work.symlink_to(plain, target_is_directory=True)
+            non_directory = lab / "file-parent"
+            non_directory.write_text("not a directory", encoding="utf-8")
+            external_alias = parent / "lab-alias"
+            external_alias.symlink_to(lab, target_is_directory=True)
+
+            with mock.patch.object(
+                materializer,
+                "_canonical_repository_root",
+                return_value=repository,
+            ):
+                for rejected in (
+                    linked_parent / "work",
+                    linked_work,
+                ):
+                    with self.subTest(rejected=rejected):
+                        with self.assertRaisesRegex(RuntimeError, "link or reparse"):
+                            materializer._resolve_work_root(rejected)
+                with self.assertRaisesRegex(RuntimeError, "non-directory"):
+                    materializer._resolve_work_root(non_directory / "work")
+                with self.assertRaisesRegex(RuntimeError, "exact.*local-lab"):
+                    materializer._resolve_work_root(external_alias / "work")
+
+    def test_non_plain_or_missing_canonical_lab_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            parent = Path(temporary)
+            repository = parent / "canonical"
+            repository.mkdir()
+            external = parent / "external-lab"
+            external.mkdir()
+
+            with mock.patch.object(
+                materializer,
+                "_canonical_repository_root",
+                return_value=repository,
+            ):
+                with self.assertRaisesRegex(RuntimeError, "local-lab.*absent"):
+                    materializer._resolve_work_root(repository / "local-lab" / "work")
+
+                (repository / "local-lab").symlink_to(
+                    external,
+                    target_is_directory=True,
+                )
+                with self.assertRaisesRegex(RuntimeError, "link or reparse"):
+                    materializer._resolve_work_root(repository / "local-lab" / "work")
+
+    def test_retail_installation_overlap_is_rejected_inside_the_lab(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            repository, lab = self._canonical_lab(Path(temporary))
+            retail = lab / "retail"
+            retail.mkdir()
+
+            with mock.patch.object(
+                materializer,
+                "_canonical_repository_root",
+                return_value=repository,
+            ):
+                with self.assertRaisesRegex(RuntimeError, "retail installation"):
+                    materializer._resolve_work_root(
+                        retail / "materializer-work",
+                        game_root=retail,
+                    )
 
 
 class World110PlayerStartTests(unittest.TestCase):

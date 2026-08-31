@@ -880,15 +880,15 @@ Current per-function notes live under
 | Layer | Location | Role |
 | --- | --- | --- |
 | Discovery findings | [`binary-analysis/ghidra-fullpass-findings/`](binary-analysis/ghidra-fullpass-findings/) | Tracked wave reviews (W001–W018) |
-| Correction ops | `/home/xsniper80/ProjectData/Onslaught/local-lab/ghidra-fullpass-2026-07-23/` | Preserved external queues, dual QC, and apply logs; closeout 2026-07-25 |
+| Correction ops | `local-lab/ghidra-fullpass-2026-07-23/` in the canonical checkout | Preserved ignored queues, dual QC, and apply logs; closeout 2026-07-25 |
 | Historical live DB | `/home/xsniper80/ProjectData/Onslaught/windows-profile-2026-08-28/ghidra/current/Projects` | Preserved Windows-profile twin; evidence only, not a mutable Linux owner |
 | Tracked snapshot | [`ghidra/`](ghidra/README.md) (snapshot date 2026-08-28) | Distributable reviewed `db.18634` snapshot; byte-identical to the verified POST recovery and preserved Windows-profile copy when re-audited on Linux 2026-08-30 |
 
 Current host/runtime status and project routing:
-[`ghidra/README.md`](ghidra/README.md). Expedition overlays live under external
-`/home/xsniper80/ProjectData/Onslaught/local-lab/`; do not recreate a
-repository-local symlink or treat discovery notes as proof that the tracked
-snapshot was mutated.
+[`ghidra/README.md`](ghidra/README.md). Expedition overlays live under the real,
+ignored canonical-checkout `local-lab/`; child worktrees use its absolute path
+instead of creating a copy, symlink, bind mount, or read-only substitute. Do not
+treat discovery notes as proof that the tracked snapshot was mutated.
 
 **Tracked-snapshot lineage 2026-08-18/19 (historical, not a selector).** After
 the eight 2026-08-17 promotions ended at `db.18627`, six further separately
@@ -913,7 +913,9 @@ history only; select the preserved checkpoint through
 separately authorized one-row SET_NAME ceremony on
 2026-08-28 changed `0x004063b0` from `CBattleEngine__UpdateWeaponEffect` to
 `CBattleEngine__SetCollisionShape` and produced the preserved `db.18634`
-checkpoint. There is no active mutable Linux project or Ghidra runtime now.
+checkpoint. OpenJDK 21.0.12.1 and verified Ghidra 12.1.3 are installed, but no
+active mutable Linux project is designated; the activation ceremony remains
+incomplete.
 
 ## Patch recipes — analysis documents, not write authorization
 

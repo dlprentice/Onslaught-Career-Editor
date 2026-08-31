@@ -1,7 +1,7 @@
 # Repository and Application Map
 
 Status: active source-routing index
-Last updated: 2026-08-21
+Last updated: 2026-08-30
 Summary: stable ownership, dependency direction, and code-entry routing for the
 Onslaught Toolkit repository and its WinUI, AppCore, CLI, rebuild, RE, and
 support surfaces.
@@ -96,7 +96,7 @@ safe-copy implementation.
 | Path | Authority |
 | --- | --- |
 | [`reverse-engineering/`](reverse-engineering/RE-INDEX.md) | Promoted specimen-bound evidence. Its index routes the `delta`, `parity-lab`, `ghidra-functions`, `installed-corpus-census`, `binary-strings`, and `stuart-source-synthesis` masters. |
-| `local-lab/` and `local-proofs/` | Ignored working evidence, retail-derived material, captures, scratch binaries/projects, and frozen local proof boundaries. `local-lab/INDEX.md` is the map (2026-08-18 campaign + drive inventories), not a catalog. |
+| `local-lab/` and `local-proofs/` | Ignored machine-local evidence, retail-derived material, captures, scratch binaries/projects, and frozen local proof boundaries. Canonical-checkout `local-lab/` is one real writable directory, not a link or tracked content; fresh clones and child worktrees lack it. [`LOCAL_LAB_OVERLAY.md`](LOCAL_LAB_OVERLAY.md) owns routing, and `local-lab/INDEX.md` maps the retained corpus. |
 | [`rebuild/`](rebuild/README.md) | GPL-licensed reconstruction; provenance, determinism, and parity contracts are subtree-owned. |
 | [`tools/`](tools/README.md) | Focused extraction, validation, Ghidra, asset, release, and controlled-runtime instruments. Root [`package.json`](package.json) owns commands. |
 | [`patches/`](patches/README.md) | The only active executable-patch and safe-copy profile catalogs. AppCore owns planning and guarded application. |
@@ -124,6 +124,7 @@ wrong — fix the rows, not the document.
 | What evidence may enter the rebuild? | [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md) |
 | What makes the rebuild deterministic, and what is parity? | [`rebuild/DETERMINISM.md`](rebuild/DETERMINISM.md), [`rebuild/PARITY.md`](rebuild/PARITY.md) |
 | What is the resumable workstation state? | [`developer_state.json`](developer_state.json), rechecked against its named evidence |
+| Where does ignored machine-local evidence live? | [`LOCAL_LAB_OVERLAY.md`](LOCAL_LAB_OVERLAY.md); on this host the canonical checkout's real `local-lab/` directory |
 | Which validation command applies? | [`VALIDATION.md`](VALIDATION.md) and [`package.json`](package.json) |
 | What shipped, per release? | [`CHANGELOG.md`](CHANGELOG.md) |
 
@@ -132,6 +133,8 @@ wrong — fix the rows, not the document.
 - **RE lane:** [`reverse-engineering/RE-INDEX.md`](reverse-engineering/RE-INDEX.md)
 - **Rebuild lane:** [`rebuild/README.md`](rebuild/README.md) +
   [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md)
+- **Machine-local evidence lane:** [`LOCAL_LAB_OVERLAY.md`](LOCAL_LAB_OVERLAY.md)
+  + canonical-checkout `local-lab/INDEX.md`
 - **App lane:** [`CURRENT_CAPABILITIES.md`](CURRENT_CAPABILITIES.md) /
   [`CLI.md`](CLI.md) / [`README.RELEASE.md`](README.RELEASE.md) /
   [`CHANGELOG.md`](CHANGELOG.md)
@@ -154,5 +157,5 @@ rg -n 'Tag="|_pageByTag' OnslaughtCareerEditor.WinUI/MainWindow.xaml OnslaughtCa
 rg -n '<ProjectReference' -g '*.csproj' -g '!references/**'
 git diff --check
 npm run test:docs
-py -3 tools/md_reachability_check.py
+python tools/md_reachability_check.py
 ```

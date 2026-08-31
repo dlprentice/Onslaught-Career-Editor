@@ -28,10 +28,12 @@ stack size, and flags for one selected script; appending a new script-table
 record remains static-only. What still needs a human is named in
 "[What still needs a human](#what-still-needs-a-human)".
 
-On the current Omarchy workstation, the private lab root is
-`~/ProjectData/Onslaught/local-lab/`. Historical `local-lab/...` references
-below name that logical lane; there is no repository-local directory or
-compatibility symlink.
+On the current Omarchy workstation, the private lab root is the real,
+Git-ignored canonical-checkout directory
+`~/Projects/game-dev/Onslaught-Career-Editor/local-lab/`. The old ProjectData
+path is absent; no twin, symlink, bind mount, or read-only substitute exists.
+A fresh clone or child worktree does not receive ignored content, so worktrees
+must use the canonical absolute path or `BEA_LOCAL_LAB`.
 
 | stage | program | tests |
 |---|---|---|
@@ -57,14 +59,14 @@ predict their own outcome.
 This is the *authoring* half of the discovery loop. It does not run the engine.
 
 Authority for every field it writes:
-`~/ProjectData/Onslaught/local-lab/SCRIPT-FORMAT-SPEC-2026-08-02.md`,
+`~/Projects/game-dev/Onslaught-Career-Editor/local-lab/SCRIPT-FORMAT-SPEC-2026-08-02.md`,
 read from the pristine specimen `BEA.exe.original.backup`
 (`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`). Section
 references in the source read `spec S3.4` and so on.
 
 ### Setup
 
-The external private lab is not part of Git, so a fresh clone has neither the
+The ignored private lab is not part of Git, so a fresh clone has neither the
 retail archives nor the proven readers. The tool **imports** the container codec
 and the bytecode grammar from there rather than vendoring a copy, so there is
 exactly one definition of each and no chance of a silently divergent second
@@ -77,9 +79,14 @@ parser:
 | chunk walker | `local-lab/msl/bea_aya.py` | independent second implementation |
 | 144-slot native table | `local-lab/msl/natives.json` | lifted from the registry initializer at `0x0052ff30` |
 
+From the canonical checkout, the loader discovers `local-lab/` without an
+override. From a child worktree, bind the one physical owner explicitly:
+
 ```sh
-export BEA_LOCAL_LAB="$HOME/ProjectData/Onslaught/local-lab"  # or pass --lab
+export BEA_LOCAL_LAB="$HOME/Projects/game-dev/Onslaught-Career-Editor/local-lab"  # or pass --lab
 ```
+
+Do not create a worktree-local lab copy or link.
 
 ### Commands
 
