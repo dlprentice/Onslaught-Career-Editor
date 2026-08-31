@@ -776,23 +776,23 @@ pwsh -NoProfile -File .\tools\Record-DifferentialCoverage.ps1 `
 
 Build a repeated diff:
 
-```powershell
-py -3 .\tools\parity_lab.py coverage-diff `
-  --baseline '<idle-1.log>' --baseline-receipt '<idle-1-receipt.json>' `
-  --baseline '<idle-2.log>' --baseline-receipt '<idle-2-receipt.json>' `
-  --baseline '<idle-3.log>' --baseline-receipt '<idle-3-receipt.json>' `
-  --action '<action-1.log>' --action-receipt '<action-1-receipt.json>' `
-  --action '<action-2.log>' --action-receipt '<action-2-receipt.json>' `
-  --action '<action-3.log>' --action-receipt '<action-3-receipt.json>' `
-  --ghidra '<current-function-inventory.tsv>' `
-  --body-ranges '<exact-body-ranges.tsv>' `
-  --call-edges '<direct-calls.tsv>' `
-  --graph-receipt '<parity-graph.ready.json>' `
-  --static-exe '.\local-lab\safe-copy-bea-pristine\BEA.exe.original.backup' `
-  --target-exe '.\local-lab\safe-copy-bea-pristine\BEA.exe' `
-  --scenario '<one-bounded-action>' `
-  --question '<one falsifiable question>' `
-  --action-canary '<known action entry>' `
+```bash
+python ./tools/parity_lab.py coverage-diff \
+  --baseline '<idle-1.log>' --baseline-receipt '<idle-1-receipt.json>' \
+  --baseline '<idle-2.log>' --baseline-receipt '<idle-2-receipt.json>' \
+  --baseline '<idle-3.log>' --baseline-receipt '<idle-3-receipt.json>' \
+  --action '<action-1.log>' --action-receipt '<action-1-receipt.json>' \
+  --action '<action-2.log>' --action-receipt '<action-2-receipt.json>' \
+  --action '<action-3.log>' --action-receipt '<action-3-receipt.json>' \
+  --ghidra '<current-function-inventory.tsv>' \
+  --body-ranges '<exact-body-ranges.tsv>' \
+  --call-edges '<direct-calls.tsv>' \
+  --graph-receipt '<parity-graph.ready.json>' \
+  --static-exe './local-lab/safe-copy-bea-pristine/BEA.exe.original.backup' \
+  --target-exe './local-lab/safe-copy-bea-pristine/BEA.exe' \
+  --scenario '<one-bounded-action>' \
+  --question '<one falsifiable question>' \
+  --action-canary '<known action entry>' \
   --out '<fresh ignored output directory>'
 ```
 
@@ -1111,10 +1111,10 @@ bounded result, and records the database hash in its output.
 
 List tables:
 
-```powershell
-py -3 .\tools\parity_lab.py query `
-  --database '<bundle>\capture.sqlite' `
-  --sql "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name" `
+```bash
+python ./tools/parity_lab.py query \
+  --database '<bundle>/capture.sqlite' \
+  --sql "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name" \
   --json
 ```
 
@@ -3011,14 +3011,14 @@ nonzero.
 
 ### Bundle a Replay result
 
-```powershell
-py -3 .\tools\parity_lab.py capture-bundle `
-  --bundle-id '<unique-id>' `
-  --scenario 'frontend-open-options-v1' `
-  --role baseline `
-  --target-exe '<copied-game>\BEA.exe' `
-  --ttd-coverage '<run>\coverage.jsonl' `
-  --ttd-coverage-receipt '<run>\receipt.json' `
+```bash
+python ./tools/parity_lab.py capture-bundle \
+  --bundle-id '<unique-id>' \
+  --scenario 'frontend-open-options-v1' \
+  --role baseline \
+  --target-exe '<copied-game>/BEA.exe' \
+  --ttd-coverage '<run>/coverage.jsonl' \
+  --ttd-coverage-receipt '<run>/receipt.json' \
   --out '<new-bundle-directory>'
 ```
 
@@ -3026,20 +3026,20 @@ Use `--role action` for the matched action arm.
 
 ### Diff Replay bundles
 
-```powershell
-py -3 .\tools\parity_lab.py ttd-coverage-diff `
-  --baseline-bundle '<baseline-bundle>\bundle.json' `
-  --action-bundle '<action-bundle>\bundle.json' `
-  --ghidra '<current-function-inventory.tsv>' `
-  --body-ranges '<current-body-ranges.tsv>' `
-  --call-edges '<current-direct-calls.tsv>' `
-  --graph-receipt '<parity-graph.ready.json>' `
-  --static-exe '<exact-Ghidra-imported-BEA.exe>' `
-  --target-exe '<exact-runtime-copy-BEA.exe>' `
-  --scenario 'frontend-open-options-v1' `
-  --question 'What code is uniquely present while opening Options?' `
-  --action-canary 0x00466AE0 `
-  --action-canary 0x0051F6D0 `
+```bash
+python ./tools/parity_lab.py ttd-coverage-diff \
+  --baseline-bundle '<baseline-bundle>/bundle.json' \
+  --action-bundle '<action-bundle>/bundle.json' \
+  --ghidra '<current-function-inventory.tsv>' \
+  --body-ranges '<current-body-ranges.tsv>' \
+  --call-edges '<current-direct-calls.tsv>' \
+  --graph-receipt '<parity-graph.ready.json>' \
+  --static-exe '<exact-Ghidra-imported-BEA.exe>' \
+  --target-exe '<exact-runtime-copy-BEA.exe>' \
+  --scenario 'frontend-open-options-v1' \
+  --question 'What code is uniquely present while opening Options?' \
+  --action-canary 0x00466AE0 \
+  --action-canary 0x0051F6D0 \
   --out '<new-diff-directory>'
 ```
 
@@ -3081,15 +3081,15 @@ binary. Run BSim only in disposable projects/databases and require
 
 ### Query and verify
 
-```powershell
-py -3 .\tools\parity_lab.py query `
-  --database '<bundle-or-diff>.sqlite' `
-  --sql 'SELECT * FROM ttd_exec_assertion ORDER BY coverage_id, ordinal' `
+```bash
+python ./tools/parity_lab.py query \
+  --database '<bundle-or-diff>.sqlite' \
+  --sql 'SELECT * FROM ttd_exec_assertion ORDER BY coverage_id, ordinal' \
   --json
 ```
 
-```powershell
-py -3 .\tools\parity_lab.py verify --manifest '<bundle-or-diff>\bundle.json'
+```bash
+python ./tools/parity_lab.py verify --manifest '<bundle-or-diff>/bundle.json'
 ```
 
 For differential output, pass its `manifest.json`. Verification proves artifact

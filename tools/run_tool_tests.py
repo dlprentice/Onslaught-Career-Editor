@@ -41,6 +41,7 @@ SUITES: tuple[tuple[str, ...], ...] = (
     ("tools/aya_texture_fidelity_census_tests.py",),
     ("tools/export_game_assets_tests.py",),
     ("rebuild/tools/materialize_retail_assets_tests.py",),
+    ("tools/require_windows_host_tests.py",),
     ("tools/runtime_process_identity_probe.py",),
     ("tools/runtime_proof_lab_hygiene_test.py",),
     ("tools/send_game_window_input_probe.py",),

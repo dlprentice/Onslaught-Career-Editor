@@ -7,7 +7,7 @@
   pages, not from recollection. The `lore` verbs joined on 2026-08-23 and the `media`
   verbs joined the same day; their envelopes and exit codes below were produced the
   same way, against this build.
-- **Last updated:** 2026-08-23
+- **Last updated:** 2026-08-31
 - **Summary:** the envelope, the exit codes, the whole verb surface, and one session
   that works start to finish.
 
@@ -15,8 +15,12 @@
 the WinUI app calls. It is not a second product lane and is not shipped in the release
 ZIP — it exists so that anything the GUI can do can also be done, scripted, and asserted
 on by something that is not a person sitting at the machine.
+The project targets `net10.0-windows` and runs only inside the activated isolated
+Windows VM. Omarchy can inspect its source and shared AppCore contracts, but a
+Linux build or static read is not CLI runtime evidence. The guarded root gate is
+`npm run test:cli`.
 
-```bash
+```powershell
 dotnet run --project ./OnslaughtCareerEditor.Cli/OnslaughtCareerEditor.Cli.csproj -- --help
 ```
 
@@ -175,19 +179,21 @@ succeeding, not a step a caller has to remember.
 
 Copy-paste, in order. Roughly seven seconds for the copy on a 0.65 GB install.
 
-```bash
-CLI="dotnet run --project ./OnslaughtCareerEditor.Cli/OnslaughtCareerEditor.Cli.csproj --"
+```powershell
+function Invoke-OnslaughtCli {
+    dotnet run --project ./OnslaughtCareerEditor.Cli/OnslaughtCareerEditor.Cli.csproj -- @args
+}
 
-$CLI config detect --json                       # find the installation
-$CLI copy create --name agent-demo --json       # a playable copy, patched windowed
-$CLI copy list --json                           # id, size, careers inside, running
-$CLI copy launch agent-demo --json              # start it, register the lease
-$CLI trainer status --json                      # is it attachable yet
-$CLI trainer read --json                        # exit 2 until a mission is running
-$CLI trainer hold --life 100 --for 30 --json    # a single write is overwritten in a blink
-$CLI copy stop agent-demo --json
-$CLI copy saves agent-demo --json               # what a delete would take with it
-$CLI copy delete agent-demo --force --keep-saves-in ./kept --json
+Invoke-OnslaughtCli config detect --json                       # find the installation
+Invoke-OnslaughtCli copy create --name agent-demo --json       # a playable copy, patched windowed
+Invoke-OnslaughtCli copy list --json                           # id, size, careers inside, running
+Invoke-OnslaughtCli copy launch agent-demo --json              # start it, register the lease
+Invoke-OnslaughtCli trainer status --json                      # is it attachable yet
+Invoke-OnslaughtCli trainer read --json                        # exit 2 until a mission is running
+Invoke-OnslaughtCli trainer hold --life 100 --for 30 --json    # one write is quickly overwritten
+Invoke-OnslaughtCli copy stop agent-demo --json
+Invoke-OnslaughtCli copy saves agent-demo --json               # what a delete would take with it
+Invoke-OnslaughtCli copy delete agent-demo --force --keep-saves-in ./kept --json
 ```
 
 The last line is the shape worth copying: `--force` agrees to remove several gigabytes of

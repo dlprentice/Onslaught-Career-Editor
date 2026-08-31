@@ -1,11 +1,8 @@
 # Onslaught Toolkit
 
 Status: active — the product and lane overview
-Last updated: 2026-08-24 (player-facing ZIP extract now names the one
-`Onslaught-Toolkit/` wrapper). A player-facing quick start was added 2026-08-01
-at the top, including the SmartScreen warning a stranger meets before anything
-else; most lane sections were not re-reviewed and keep their prior product
-boundaries.
+Last updated: 2026-08-31 (Omarchy/Windows-VM contributor routing corrected;
+player-facing behavior and older lane claims retain their dated boundaries).
 Summary: what this project is, how to play, which surfaces are active, and where
 each lane's authoritative document lives.
 
@@ -102,62 +99,90 @@ current product does and what remains unproven.
 Everything from here down is for contributors. Players need only the section
 above.
 
-Requirements:
+The current engineering host is Omarchy Linux. It owns Git, documentation,
+Python tools, reverse engineering, and the Core/Client/headless rebuild.
+AppCore source compiles here, but its full suite, WinUI 3, the Windows-targeted
+CLI, and the currently admitted Godot runtime/build/smoke/capture routes remain
+Windows-only. An isolated Windows 11 evaluation VM is prepared outside the
+repository at `~/ProjectData/Onslaught/windows-vm/`, but it is not yet
+defined or running; there is no current native Windows or controlled Godot
+execution route until its separate activation gate completes.
 
-- Windows 10 or 11
-- .NET 10 SDK for WinUI/AppCore/CLI and .NET 8 for the rebuild
+Common requirements:
+
+- .NET 10 SDK with the .NET 8 targeting/runtime support used by the rebuild
 - Node.js 24.x with npm 11.12.x
-- Python 3 through the Windows `py` launcher
-- PowerShell 7 for rebuild tooling
+- Python 3 available as `python`
+- PowerShell 7 for rebuild and Godot tooling
 - A lawfully obtained Battle Engine Aquila installation for retail-aware and
   rebuild workflows
+- Windows 10 or 11 for WinUI, CLI, and the currently admitted controlled Godot
+  execution/capture route
 
 For a fresh checkout:
 
-```powershell
+```bash
 git clone --recurse-submodules https://github.com/dlprentice/Onslaught-Career-Editor.git
 cd Onslaught-Career-Editor
 ```
 
 For an existing checkout, initialize the pinned source references once with
-`git submodule update --init --recursive`. From the repository root:
+`git submodule update --init --recursive`.
 
-```powershell
-npm test
-npm run dev
-```
+On Omarchy, start with the portable gates:
 
-`npm test` builds the active solution once, then checks the consequential
-save/codec/write/copy/patch contracts and the static WinUI accessibility audit.
-It deliberately excludes broad UI, native Godot, release packaging, Ghidra,
-local runtime evidence, and historical accounting.
-Use the smallest focused command for narrower work:
-
-```powershell
-npm run test:appcore
-npm run test:ui
-npm run test:safe-copy
-npm run test:cli
+```bash
 npm run test:docs
 npm run test:safety
-npm run test:rebuild-core
 ```
 
 Root [`package.json`](package.json) is the command authority. See
 [`VALIDATION.md`](VALIDATION.md) for proportional command selection and
 [`CONTRIBUTING.md`](CONTRIBUTING.md) for contribution boundaries.
 
-The Level 100 Opening Slice can be launched independently:
+The retail-backed Core/Client/headless lanes also need ignored local inputs.
+On Linux, `prepare:rebuild-assets` selects the canonical checkout's real
+`local-lab/rebuild-godot` staging owner. A genuinely fresh canonical clone has
+no ignored `local-lab/`; create that private owner once from the canonical
+checkout only—never as a child-worktree twin or link—then name the retail path
+on its first materialization:
+
+```bash
+mkdir -m 700 ./local-lab
+npm run prepare:rebuild-assets -- --game-root "/absolute/path/to/Battle Engine Aquila"
+npm run test:rebuild-core
+npm run test:rebuild-client
+```
+
+Inside the activated Windows VM, use the Windows lanes:
 
 ```powershell
+npm test
+npm run dev
+npm run test:appcore
+npm run test:ui
+npm run test:ui-runtime
+npm run test:cli
 npm run run:rebuild-godot
 ```
 
-Its first run downloads and verifies the pinned Godot .NET archive into a
-per-user cache, detects the user's retail installation, and materializes the
-exact supported rebuild inputs to ignored local paths. If auto-detection does
-not find a custom Steam library, run
-`pwsh rebuild/tools/Run-FirstFlight.ps1 -GameRoot "<game folder>"`.
+`npm test` builds the active solution once, then checks the consequential
+save/codec/write/copy/patch contracts and the static WinUI accessibility audit.
+It deliberately excludes broad UI, native Godot, release packaging, Ghidra,
+local runtime evidence, and historical accounting. It is a Windows-VM command,
+not the Linux default. Use the smallest focused host-appropriate command.
+
+The Level 100 Opening Slice currently launches only inside the activated
+Windows VM. Its first run downloads and verifies the pinned Windows Godot .NET
+archive into a per-user cache, detects the VM's retail installation, and
+materializes the exact supported rebuild inputs to ignored local paths. For a
+custom location, run `pwsh ./rebuild/tools/Run-FirstFlight.ps1 -GameRoot
+"<game folder>"` in the VM. A native Linux Godot 4.7.1 installation exists, but
+it is not yet admitted by the repository's per-file toolchain manifest or smoke
+runner and therefore is not a supported execution route.
+The VM should use its own Git checkout or verified transfer; do not share the
+host checkout, home directory, SSH agent, Docker socket, or archive drives as
+guest-writable state.
 
 ## Data and mutation safety
 

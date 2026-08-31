@@ -31,8 +31,8 @@ Nothing is launched; only the two PNGs and the shipped mesh are read.
 
 Usage
 -----
-    py -3 tools/cockpit_intersection_mask_probe.py RETAIL.png BUILD.png
-    py -3 tools/cockpit_intersection_mask_probe.py RETAIL.png BUILD.png --scale 0.5
+    python ./tools/cockpit_intersection_mask_probe.py RETAIL.png BUILD.png
+    python ./tools/cockpit_intersection_mask_probe.py RETAIL.png BUILD.png --scale 0.5
 """
 from __future__ import annotations
 

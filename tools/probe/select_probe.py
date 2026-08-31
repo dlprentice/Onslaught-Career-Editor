@@ -55,10 +55,10 @@ either idles waiting for a human or reports behavioural results as coverage.
 
 Usage
 -----
-    py -3 tools/probe/select_probe.py --snapshot local-lab/re-ledger/<snap>
-    py -3 tools/probe/select_probe.py --snapshot DIR --top 20 --no-ttd
-    py -3 tools/probe/select_probe.py --snapshot DIR --json-out worklist.json
-    py -3 tools/probe/select_probe.py --self-check
+    python ./tools/probe/select_probe.py --snapshot local-lab/re-ledger/<snap>
+    python ./tools/probe/select_probe.py --snapshot DIR --top 20 --no-ttd
+    python ./tools/probe/select_probe.py --snapshot DIR --json-out worklist.json
+    python ./tools/probe/select_probe.py --self-check
 """
 
 from __future__ import annotations
@@ -504,7 +504,7 @@ def load_dark_regions(snapshot: pathlib.Path) -> list[dict[str, str]]:
     if not path.is_file():
         raise SystemExit(
             f"no ledger-dark.tsv under {snapshot}. Build a snapshot first:\n"
-            f"  py -3 tools/re_coverage_ledger.py build --out {snapshot}"
+            f"  python ./tools/re_coverage_ledger.py build --out {snapshot}"
         )
     with path.open(encoding="utf-8") as handle:
         rows = [line for line in handle if not line.startswith("#")]

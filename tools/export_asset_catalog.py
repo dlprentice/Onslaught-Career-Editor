@@ -11,8 +11,8 @@ This ties together:
 - loose video manifest
 
 Examples:
-    py -3 tools/export_asset_catalog.py --self-test
-    py -3 tools/export_asset_catalog.py --bundle-root <generated-root> --out-dir <generated-root>/asset_catalog ...
+    python ./tools/export_asset_catalog.py --self-test
+    python ./tools/export_asset_catalog.py --bundle-root <generated-root> --out-dir <generated-root>/asset_catalog ...
 """
 
 from __future__ import annotations

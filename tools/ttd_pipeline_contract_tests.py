@@ -245,7 +245,21 @@ class TtdPipelineContractTests(unittest.TestCase):
             recorder,
         )
         self.assertIn("A d3d9 proxy capture appears to be in flight", recorder)
-        self.assertIn("Traces must be written to G:", recorder)
+        self.assertIn(
+            "Recording requires an explicit validated guest -TraceRoot",
+            recorder,
+        )
+        self.assertIn("Refusing retired -TraceRoot", recorder)
+        self.assertIn("Windows-only", recorder)
+        self.assertIn(
+            "isolated Windows VM is staged but not activated",
+            recorder,
+        )
+        self.assertIn("-TraceRoot must be an explicit absolute path", recorder)
+        self.assertIn("TTD traces require a separately provisioned", recorder)
+        self.assertNotIn("[string]$TraceRoot = 'G:\\bea-ttd'", recorder)
+        self.assertNotIn("Traces must be written to G:", recorder)
+        self.assertNotIn("'G:\\bea-ttd\\ttd-x86\\TTD.exe'", recorder)
         self.assertIn("try {", recorder)
         self.assertIn("catch {", recorder)
         self.assertIn("finally {", recorder)

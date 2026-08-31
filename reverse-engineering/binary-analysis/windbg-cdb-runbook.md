@@ -7,7 +7,7 @@ Use this workflow only for a copied `BEA.exe` launched from an app-owned profile
 1. Confirm the retail specimen against [retail-specimen-baseline.md](retail-specimen-baseline.md) and [retail-specimen-manifest-2026-03-14.json](retail-specimen-manifest-2026-03-14.json):
 
    ```powershell
-   py -3 tools\hash_retail_specimens.py
+   python ./tools/hash_retail_specimens.py
    ```
 
 2. Create one ignored, task-scoped command directory under `.artifacts/`:

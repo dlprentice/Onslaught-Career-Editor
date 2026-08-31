@@ -1,18 +1,32 @@
-Status: runbook — follow it without reading code.
-Last updated: 2026-07-31.
+Status: blocked historical runbook — do not execute on the Omarchy host.
+Last updated: 2026-08-31 (Linux migration routing; historical measurements and
+commands retained as provenance, no current capture owner designated).
 Evidence: MEASURED — the reachability table in the appendix is read from the
 shipped `data/MissionScripts/level521` scripts (`ResearchCentre.msl:28`,
 `LevelScript.msl:81`, `hive.msl:351`/`:474`, verified independently in the main
 loop), and the "opening fires none of the 17" claim is measured against the
-level-521 coverage index in `G:\bea-ttd\q-campaign-coverage-v1\`. INFERRED — the
-per-native timings after the cascade and the "13 of 17 in ten minutes" yield,
-which depend on whether `Pause(n)` is wall-clock or frame-driven under TTD; that
-is unmeasured and is why take 2 is sized at 300 s rather than tight.
-Summary: a roughly ten-minute recorded play session on level 521 that reaches
-MissionScript natives no recorded level opening ever executed, and the one
-command that tells you afterwards whether it worked.
+historical level-521 coverage index at
+`G:\bea-ttd\q-campaign-coverage-v1\`. That drive-letter path records where the
+Windows campaign ran; it is not current routing. INFERRED — the per-native
+timings after the cascade and the "13 of 17 in ten minutes" yield, which depend
+on whether `Pause(n)` is wall-clock or frame-driven under TTD; that is
+unmeasured and is why take 2 was sized at 300 s rather than tight.
+Summary: preserved instructions and evidence for a historical level-521 TTD
+session. Copied-game execution and TTD recording are Windows-only. The isolated
+Windows VM is staged but not activated, and no guest-owned trace destination
+has completed qualification.
 
-# Runbook: capture the level-521 script natives
+# Historical runbook: capture the level-521 script natives
+
+> [!WARNING]
+> **CURRENT ROUTE: BLOCKED.** Do not run these commands on Omarchy, reinterpret
+> `G:` as a Linux path, or create a replacement destination by analogy. Live
+> copied-game execution and TTD recording wait for activation of the isolated
+> Windows VM, its own checkout and copied specimen, and an explicitly supplied,
+> validated guest `TraceRoot`. The procedure below remains verbatim enough to
+> preserve what was measured on Windows; it is not an executable current
+> front door. Offline reading and analysis of already-recorded evidence remain
+> valid where their inputs are available.
 
 > **CORRECTION 2026-08-02, MEASURED — READ BEFORE SIZING ANY TAKE.**
 > **TTD slows the game about 62×.** A 301-second recording of this level
@@ -87,7 +101,10 @@ has seen only one to three times each — `CreatePosition`, `SpawnThing`,
 your battle engine into the hive boss** so it touches you. The analysis step
 reports these separately.
 
-## 3. Before you start
+## 3. Historical prerequisites (not currently satisfiable)
+
+The following bullets describe the retired Windows session. They do not
+describe the present Omarchy host or an activated guest:
 
 - **No save and no career unlock is needed.** The game accepts `-level N` on the
   command line and goes straight into that mission; the sixty-six-level campaign
@@ -95,17 +112,22 @@ reports these separately.
   `BEA.exe -skipfmv -level 521` for you. (`-skipfmv` skips the FMV; a
   click-to-start prompt may still appear.) See
   [`reverse-engineering/quick-reference/cli-parameters.md`](../reverse-engineering/quick-reference/cli-parameters.md).
-- **Open one elevated PowerShell 7 window and keep it open for the whole
-  session.** TTD recording needs an elevated token and this machine has no
+- **The historical session used one elevated PowerShell 7 window for the whole
+  session.** TTD recording needs an elevated token and that Windows machine had no
   `TTDService`. From an elevated window there is no prompt at all between takes.
   From a normal window the helper still works, and launches the game
   unelevated — but raises one UAC prompt per take.
-- **Check G: has room.** Budget about 2 GB per recorded minute; a full session is
-  roughly 12 GB.
+- **The historical `G:` capture owner needed room.** Budget was about 2 GB per
+  recorded minute; a full session was roughly 12 GB. `G:` is retired topology,
+  not a destination to reuse.
 - **Nothing else BEA-shaped may be running.** The helper refuses to continue if a
   BEA that is not the copied target is up.
 
-## 4. The session, step by step
+## 4. Historical session procedure (blocked; do not execute now)
+
+These commands document the measured Windows procedure. They remain blocked
+until the VM and an explicit guest `TraceRoot` are activated and this runbook is
+requalified against them.
 
 1. **Start take 1 and launch the game.** From the repository root:
 
@@ -200,9 +222,10 @@ destroyed — and it cannot be combined with `LevelWon` in one run.
 Plan the session for thirteen. Treat the remaining four as a separate,
 play-to-completion capture, which is a different instrument shape anyway.
 
-## 8. Verify it worked
+## 8. Historical verification procedure
 
-One command, after the session, from a normal (unelevated) window:
+The historical session used this command from a normal (unelevated) Windows
+window. It is preserved for provenance, not offered as a current route:
 
 ```powershell
 pwsh -File tools\Test-Level521NativeCoverage.ps1 -TracePattern 'level521-native-20260731-1830-take*'
@@ -228,9 +251,13 @@ that way and every one was valid. This script ignores the runner's log and
 decides from each per-trace receipt instead, so its `OK` / `UNUSABLE` lines are
 the ones to trust.
 
-## 9. Where everything lands
+## 9. Historical destinations (not current routing)
 
-| What | Where |
+All `G:` paths below are literal receipt provenance from the retired Windows
+layout. A future activated guest must receive a separately validated, explicit
+`TraceRoot`; none is designated here.
+
+| What | Historical Windows location |
 |---|---|
 | Traces | `G:\bea-ttd\level521-native-<stamp>-take<N>\` |
 | Recorder receipt (the truth about a take) | `…-take<N>\receipt.json` |

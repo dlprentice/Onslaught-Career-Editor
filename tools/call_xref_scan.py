@@ -6,7 +6,7 @@ reported; a plausibility filter is not applied, so verify each hit by
 disassembling it.
 
 Usage:
-  py -3 tools/call_xref_scan.py <image> <target_va> [<target_va> ...]
+  python ./tools/call_xref_scan.py <image> <target_va> [<target_va> ...]
 """
 
 from __future__ import annotations

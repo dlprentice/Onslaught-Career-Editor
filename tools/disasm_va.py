@@ -2,7 +2,7 @@
 """Read-only linear x86-32 disassembly of a PE image at a virtual address.
 
 Usage:
-  py -3 tools/disasm_va.py <image> <va> [--count N] [--bytes]
+  python ./tools/disasm_va.py <image> <va> [--count N] [--bytes]
 """
 
 from __future__ import annotations

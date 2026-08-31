@@ -20,7 +20,7 @@ Framing rules established empirically against the retail corpus:
   sizes and accepting the first that consumes the payload exactly.
 
 Usage:
-    py -3 tools/aya_corpus_chunk_inventory.py --resources <path> --json out.json
+    python ./tools/aya_corpus_chunk_inventory.py --resources <path> --json out.json
 """
 
 from __future__ import annotations

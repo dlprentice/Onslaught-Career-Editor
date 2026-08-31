@@ -11,7 +11,7 @@ a time, and asserts the validator refuses it — plus pass cases asserting a
 fully honest contract is accepted (including CRLF/BOM/Unicode variants), and
 determinism/exit-code contracts on the runner itself.
 
-Run: py -3 tools/contract_factory_validate_tests.py
+Run: python ./tools/contract_factory_validate_tests.py
 """
 from __future__ import annotations
 

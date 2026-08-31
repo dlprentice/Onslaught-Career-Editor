@@ -1,7 +1,7 @@
 # Contributing
 
 Status: active — the contributor entry point
-Last updated: 2026-08-21.
+Last updated: 2026-08-31.
 Summary: what a focused change looks like here, what must never be added to the
 repository, and which checks a change owes.
 
@@ -22,12 +22,18 @@ generated inventories, handoff files, or replacement process machinery.
    evidence, or contributor problem.
 5. Run the smallest check capable of falsifying that change.
 
-No game installation is required to build or test ordinary source changes.
+No game installation is required to test ordinary documentation changes. On
+Omarchy, start with the host-appropriate portable gates:
 
-```powershell
-npm test
-npm run dev
+```bash
+npm run test:docs
+npm run test:safety
 ```
+
+`npm test`, `npm run dev`, the full AppCore suite, CLI/UI tests, release
+packaging, and the currently admitted controlled Godot runtime run inside the
+isolated Windows VM. Root commands fail fast when a Windows-only lane is
+invoked from Linux.
 
 Root [`package.json`](package.json) is the command authority. Do not duplicate
 its command list in new documents.
@@ -111,18 +117,16 @@ executable/decompiler text and separately licensed third-party material are not.
 Use [`VALIDATION.md`](VALIDATION.md) to choose checks. Typical focused commands
 are:
 
-```powershell
-npm run test:appcore
-npm run test:ui
-npm run test:safe-copy
+```bash
 npm run test:docs
 npm run test:safety
 npm run test:rebuild-core
 ```
 
-Launch the real app after changing a primary WinUI workflow. Use the native
-Godot smoke only when the engine setup, rendering, input, launch, or clean-exit
-path changed. Do not run the root aggregate merely for ceremony.
+Inside the Windows VM, add `npm run test:ui`, `npm run test:safe-copy`, or the
+native Godot smoke when the corresponding primary workflow, rendering, input,
+launch, or clean-exit path changed. Do not run a root aggregate merely for
+ceremony.
 
 Release preparation is separate from publication. Follow
 [`README.RELEASE.md`](README.RELEASE.md) and

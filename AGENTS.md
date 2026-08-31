@@ -1,7 +1,7 @@
 # Onslaught Toolkit
 
 Status: active — authoritative contributor contract for this repository.
-Last updated: 2026-08-30 (Linux migration routing; execution shape and reviewer use are situational,
+Last updated: 2026-08-31 (Linux migration routing; execution shape and reviewer use are situational,
 optional, and harness-agnostic; one primary integration owner coordinates).
 Summary: the mission, evidence boundaries, safety rules, and smallest set of
 routes every contributor needs before working on Battle Engine Aquila.
@@ -62,6 +62,26 @@ unknowns and exact falsifiers are progress; invented semantics are not.
   receipt strings while binding only the explicitly selected Git root and the
   canonical repo-local lab root. Do not invoke the frozen bootstrap directly or
   rewrite a frozen receipt to make replay run.
+- Host execution is deliberately split. Omarchy is the current authority for
+  Git, documentation, portable Python tooling, reverse engineering, and
+  Core/Client/headless rebuild work. AppCore source can compile here, but its
+  full suite retains Windows path/process/media contracts. Root commands use
+  `python` plus forward-slash paths; commands that require Windows carry an
+  explicit fail-fast host guard.
+- Full AppCore validation, WinUI 3 rendering, native UI tests, the
+  Windows-targeted CLI, and the desktop executable require Windows. Godot
+  source may be worked on from Omarchy, but the currently admitted Godot
+  toolchain, controlled build/launch, native smoke, and capture routes are also
+  Windows-only until the separate Linux toolchain port is verified. The
+  isolated Windows 11 evaluation VM is staged under
+  `~/ProjectData/Onslaught/windows-vm/` but is not yet defined or running;
+  until its separate activation gate completes, there is no current full
+  AppCore, native WinUI/CLI, or controlled Godot execution route. Do not install
+  a competing Windows desktop stack on the Omarchy host or report Linux static
+  checks as native Windows/Godot validation.
+- Once activated, the Windows VM receives its own Git checkout or verified
+  transfer. Do not make the host checkout, home directory, SSH agent, Docker
+  socket, or archive drives guest-shared mutable state.
 
 The repository lanes are:
 

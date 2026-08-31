@@ -1,7 +1,7 @@
 # WinUI release candidate
 
 Status: active — the release-candidate shape and its boundary
-Last updated: 2026-08-24 (body).
+Last updated: 2026-08-31 (host routing; candidate shape remains unchanged).
 Summary: what a candidate ZIP contains, what it explicitly does not claim, and
 which steps remain separately authorized.
 
@@ -25,6 +25,10 @@ rebuild binaries. Users provide their own retail installation for game-aware
 workflows, and mutating workflows operate only on copied files or safe copies.
 
 ## Build and verify a local candidate
+
+Run the release gate only inside the activated isolated Windows VM. The WinUI
+publish, launch, and UI-probe stages are Windows-only; Omarchy deliberately
+refuses this root command before any candidate is produced.
 
 ```powershell
 npm run release:winui-zip

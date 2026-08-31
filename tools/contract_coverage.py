@@ -40,7 +40,7 @@ HONESTY CONTRACT (do not weaken)
 
 USAGE
 -----
-    py -3 tools/contract_coverage.py [--repo-root DIR] [--out PATH | --stdout]
+    python ./tools/contract_coverage.py [--repo-root DIR] [--out PATH | --stdout]
 """
 
 from __future__ import annotations
@@ -786,7 +786,7 @@ def render_markdown_report(payload: dict) -> str:
         "Evidence: MEASURED — `tools/contract_coverage.py`; exact row-level inputs and",
         "classification flags are retained in `coverage.json`.",
         "",
-        "> **Generated file.** Re-run `py -3 tools/contract_coverage.py`. Do not copy",
+        "> **Generated file.** Re-run `python ./tools/contract_coverage.py`. Do not copy",
         "> these moving counts into another living document.",
         "",
         "## Denominator",

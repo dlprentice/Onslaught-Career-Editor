@@ -19,7 +19,7 @@ Read-only. Fits nothing; it only divides by measured terms and describes the
 distribution.
 
 Usage:
-    py -3 tools/terrain_gain_dispersion_probe.py \
+    python ./tools/terrain_gain_dispersion_probe.py \
         --retail  <retail frame.png> \
         --rebuild <reconstruction frame.png> \
         --macro-probe <ONSLAUGHT_TERRAIN_PROBE=macro frame.png> \

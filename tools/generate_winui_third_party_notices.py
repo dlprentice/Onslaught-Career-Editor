@@ -250,7 +250,7 @@ def render_markdown(notices: list[PackageNotice]) -> str:
             "## Required Final Packaging Checks",
             "",
             "1. Publish the exact WinUI binary candidate.",
-            "2. Re-run `py -3 tools\\generate_winui_third_party_notices.py --check` after restore/publish so dependency drift is visible.",
+            "2. Re-run `python ./tools/generate_winui_third_party_notices.py --check` after restore/publish so dependency drift is visible.",
             "3. Verify the package contains this notice plus the generated `THIRD_PARTY_LICENSES/` bundle for its actual published dependency graph.",
             "4. Verify `THIRD_PARTY_LICENSES/README.txt` documents the separate LibVLC files, compatible replacement path, LGPL terms, and exact upstream source locations.",
             "5. Keep retail executables, user saves, bulk extraction output, and raw proof artifacts outside the release package.",
@@ -277,7 +277,7 @@ def main() -> int:
     if args.check:
         existing = OUTPUT.read_text(encoding="utf-8") if OUTPUT.exists() else ""
         if existing != rendered:
-            print(f"{OUTPUT} is stale; run py -3 tools\\generate_winui_third_party_notices.py")
+            print(f"{OUTPUT} is stale; run python ./tools/generate_winui_third_party_notices.py")
             return 1
 
         print(f"Third-party notices check: PASS ({len(notices)} packages)")

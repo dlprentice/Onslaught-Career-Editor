@@ -49,11 +49,11 @@ emits.
 
 Usage
 -----
-    py -3 tools/probe/compare.py --runs local-lab/probe-runs
-    py -3 tools/probe/compare.py --runs DIR --json-out compare.json
-    py -3 tools/probe/compare.py --runs DIR --emit-finding draft.json \
+    python ./tools/probe/compare.py --runs local-lab/probe-runs
+    python ./tools/probe/compare.py --runs DIR --json-out compare.json
+    python ./tools/probe/compare.py --runs DIR --emit-finding draft.json \
         --claim "..." --claim-id my-finding-2026-08-02
-    py -3 tools/probe/compare.py --self-check
+    python ./tools/probe/compare.py --self-check
 
 Exit code: 0 when the comparison is sound, 1 when it is not usable as
 evidence (poison control misbehaved, or every arm is unreplicated), 2 on a

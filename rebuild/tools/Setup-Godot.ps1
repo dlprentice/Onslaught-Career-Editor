@@ -9,6 +9,10 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
+if (-not $IsWindows) {
+    throw 'The currently admitted Godot toolchain is Windows-only. Run this command inside the configured isolated Windows VM; the Linux toolchain requires a separate verified manifest and smoke route.'
+}
+
 Import-Module (Join-Path $PSScriptRoot 'GodotToolchain.psm1') -Force
 
 $ManifestPath = Join-Path $PSScriptRoot '..\toolchains\godot-4.7-stable-win-x64.json'

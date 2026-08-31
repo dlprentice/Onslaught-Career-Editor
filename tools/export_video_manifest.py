@@ -3,8 +3,8 @@
 Build a read-only manifest for the loose .vid/Bink corpus.
 
 Examples:
-    py -3 tools/export_video_manifest.py
-    py -3 tools/export_video_manifest.py --video-root game/data/video --out-dir .artifacts/video-manifest
+    python ./tools/export_video_manifest.py
+    python ./tools/export_video_manifest.py --video-root game/data/video --out-dir .artifacts/video-manifest
 """
 
 from __future__ import annotations

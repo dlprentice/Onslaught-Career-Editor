@@ -61,7 +61,7 @@ UNSCORED, which is correct and must not be read as a pass. See the FEP_OPTIONS
 entry in rebuild/tools/frontend-parity-plan.json for what would unblock it.
 
 Usage:
-    py -3 rebuild/tools/compare_options_capture.py <capture-dir> [--min-iou N]
+    python ./rebuild/tools/compare_options_capture.py <capture-dir> [--min-iou N]
 
 `--min-iou` is an explicitly supplied regression threshold, not a retail-parity
 bar. No default floor is inferred from the single retained retail run.

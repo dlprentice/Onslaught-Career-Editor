@@ -10,7 +10,7 @@ supplies a magnitude. Run it to reproduce the numbers quoted in
 `reverse-engineering/binary-analysis/terrain-sun-colour-route-2026-07-26.md`.
 
 Usage:
-    py -3 tools/terrain_sun_colour_candidates.py [heightfield.hfld.bin]
+    python ./tools/terrain_sun_colour_candidates.py [heightfield.hfld.bin]
 """
 
 from __future__ import annotations

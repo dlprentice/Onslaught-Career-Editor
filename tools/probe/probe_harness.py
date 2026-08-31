@@ -46,14 +46,21 @@ authored archive killed it".  This harness pins the CWD to the staged root and
 then, separately, reads ``setuphistory.txt`` so that the two can always be told
 apart -- see ``diagnose``.
 
+LIVE EXECUTION is Windows-only.  On the Omarchy host this file can parse and
+author manifests, exercise ``--dry-run`` interlocks, and run its portable fake-
+launcher self-tests, but it must not stage or launch the copied retail game.
+The isolated Windows VM is staged but not activated, so there is currently no
+admitted live-probe route.  A real launcher fails closed before staging.
+
 RECORDING is optional and delegated.  ``tools/ttd_record.ps1`` already owns TTD
 capture, its interlocks and its elevation refusal; this harness shells out to it
-and never reimplements any of it.  Without recording a probe needs no elevation
-and no human, which is the point: console-only probes run today.
+and never reimplements any of it.  Recording also requires an explicit guest-
+owned trace root.  There is deliberately no inherited ``G:`` default.
 
 Usage
 -----
     python tools/probe/probe_harness.py probes.json --dry-run
+    # Windows guest only, after VM activation and trace-root qualification:
     python tools/probe/probe_harness.py probes.json --out local-lab/probe-runs
     python tools/probe/probe_harness.py probes.json --only console-smoke
 
@@ -163,6 +170,27 @@ _FORBIDDEN_FRAGMENTS = ("program files", "steamapps", "steam\\steamapps")
 
 class ProbeError(Exception):
     """A fail-closed stop.  Every one of these carries the reason verbatim."""
+
+
+_LIVE_WINDOWS_ONLY = (
+    "Live copied-game probes are Windows-only and currently blocked: the "
+    "isolated Windows VM is staged but not activated. Omarchy may parse "
+    "manifests, run --dry-run, and execute the portable self-tests; it must "
+    "not stage or launch BEA.exe."
+)
+
+
+def require_windows_live_execution(host_os_name: Optional[str] = None) -> None:
+    """Refuse a real retail-game launch anywhere except Windows.
+
+    ``host_os_name`` is an explicit self-test seam.  Production callers omit it
+    and are bound to :data:`os.name`; the fake launcher used by this module's
+    portable suite never calls this function.
+    """
+
+    actual = os.name if host_os_name is None else host_os_name
+    if actual != "nt":
+        raise ProbeError(_LIVE_WINDOWS_ONLY)
 
 
 # ---------------------------------------------------------------------------
@@ -428,6 +456,7 @@ class SubprocessLauncher:
     def launch(
         self, executable: pathlib.Path, argv: Sequence[str], cwd: pathlib.Path
     ) -> ProcessHandle:
+        require_windows_live_execution()
         if not cwd.is_dir():
             raise ProbeError(f"working directory does not exist: {cwd}")
         popen = subprocess.Popen(
@@ -1608,7 +1637,10 @@ def _utc_now() -> str:
 
 
 def build_record_command(
-    probe: Probe, scratch_root: pathlib.Path, trace_name: str
+    probe: Probe,
+    scratch_root: pathlib.Path,
+    trace_name: str,
+    trace_root: Optional[str] = None,
 ) -> list[str]:
     """The TTD arm, delegated whole to the script that already owns it.
 
@@ -1621,6 +1653,12 @@ def build_record_command(
     script = ROOT / "tools" / "ttd_record.ps1"
     if not script.is_file():
         raise ProbeError(f"recording requested but {script} is missing")
+    if trace_root is None or not trace_root.strip():
+        raise ProbeError(
+            "recording requested without an explicit validated guest "
+            "TraceRoot; the retired G: capture path is historical evidence, "
+            "not a current default"
+        )
     return [
         "powershell.exe",
         "-NoProfile",
@@ -1632,6 +1670,8 @@ def build_record_command(
         str(scratch_root),
         "-Name",
         trace_name,
+        "-TraceRoot",
+        trace_root,
         "-Seconds",
         str(probe.record_seconds),
         "-GameArguments",
@@ -1652,6 +1692,7 @@ def run_probe(
     strict_autoexec: bool = False,
     poll_seconds: float = 0.25,
     guard_roots: Optional[Sequence[pathlib.Path]] = None,
+    trace_root: Optional[str] = None,
 ) -> dict[str, Any]:
     """Stage, launch, wait, collect, tear down, and return the receipt."""
 
@@ -1690,6 +1731,12 @@ def run_probe(
     handle: Optional[ProcessHandle] = None
     staged = False
     try:
+        if not dry_run and isinstance(launcher, SubprocessLauncher):
+            # This precedes even source inspection: a Linux invocation must not
+            # create a scratch parent or copy a single retail byte before it is
+            # refused.  Fake launchers remain the explicit portable test seam.
+            require_windows_live_execution()
+
         witness = check_source_root(source_root)
         receipt["sourceWitness"] = witness
 
@@ -1713,7 +1760,10 @@ def run_probe(
                     "detail": " ".join(
                         shlex.quote(p)
                         for p in build_record_command(
-                            probe, scratch_root, f"{probe.name}-{stamp}"
+                            probe,
+                            scratch_root,
+                            f"{probe.name}-{stamp}",
+                            trace_root,
                         )
                     ),
                 }
@@ -1732,7 +1782,10 @@ def run_probe(
 
         if probe.record:
             command = build_record_command(
-                probe, scratch_root, f"{probe.name}-{stamp}"
+                probe,
+                scratch_root,
+                f"{probe.name}-{stamp}",
+                trace_root,
             )
             receipt["command"] = " ".join(shlex.quote(p) for p in command)
             receipt["recording"] = {
@@ -1868,6 +1921,14 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument("--only", action="append", default=[], help="probe name")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument(
+        "--trace-root",
+        default=None,
+        help=(
+            "explicit validated trace destination inside the activated "
+            "Windows guest; required by recording probes and never defaulted"
+        ),
+    )
+    parser.add_argument(
         "--keep-scratch",
         action="store_true",
         help="keep the staged tree (autoexec.con is removed regardless)",
@@ -1907,6 +1968,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             dry_run=args.dry_run,
             keep_scratch=args.keep_scratch,
             strict_autoexec=args.strict_autoexec,
+            trace_root=args.trace_root,
         )
         receipts.append(receipt)
         print(

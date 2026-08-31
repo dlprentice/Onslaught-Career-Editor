@@ -49,9 +49,9 @@ HONESTY CONTRACT (do not weaken these)
 
 USAGE
 -----
-  py -3 tools/re_coverage_ledger.py build  --out DIR [options]
-  py -3 tools/re_coverage_ledger.py report --snapshot DIR [--top N]
-  py -3 tools/re_coverage_ledger.py delta  --before DIR --after DIR [--top N]
+  python ./tools/re_coverage_ledger.py build  --out DIR [options]
+  python ./tools/re_coverage_ledger.py report --snapshot DIR [--top N]
+  python ./tools/re_coverage_ledger.py delta  --before DIR --after DIR [--top N]
 
 `build` writes a self-describing snapshot directory:
   ledger-summary.json    headline numbers, denominators, input manifest

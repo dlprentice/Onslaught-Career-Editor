@@ -32,7 +32,11 @@
 #   - never while a d3d9 proxy capture is in flight (the proxy dll is the lock);
 #   - launch mode never starts while any BEA.exe is already running;
 #     attach mode accepts exactly one process whose image is the copied target;
-#   - traces are written to G: only. C: and F: are refused.
+#   - recording has no default trace owner. The caller must explicitly name an
+#     already-provisioned, non-system local TraceRoot inside the activated
+#     Windows guest;
+#   - the retired G: capture topology is refused. Historical G: strings below
+#     remain receipt provenance, not executable current routing.
 # It never writes to the debuggee. TTD records; it does not modify.
 
 [CmdletBinding(DefaultParameterSetName = 'Record')]
@@ -65,15 +69,18 @@ param(
     # cutting the recording short first.
     #
     # SIZE. Measured cost is 26-32 MB/s, so budget roughly 1.8 GB per minute of
-    # play. A fifteen-minute run is about 27 GB. G: is the designated capture
-    # drive and had 923 GB free on 2026-07-27, so this is affordable - but the
-    # free-space floor below is checked DURING recording, not only at the start,
-    # because a long session is exactly where a disk fills up.
+    # play. A fifteen-minute run is about 27 GB. The retired G: capture drive
+    # had 923 GB free on 2026-07-27, which made that historical run affordable;
+    # a future guest owner must be qualified independently. The free-space floor
+    # below is checked DURING recording, not only at the start, because a long
+    # session is exactly where a disk fills up.
     [switch]$UntilExit,
 
-    # Trace destination. MUST be on G: - TTD traces are large and G: is the
-    # designated capture drive on this machine.
-    [string]$TraceRoot = 'G:\bea-ttd',
+    # Trace destination inside the activated isolated Windows guest. There is
+    # deliberately no default: the caller must provide an existing,
+    # non-system local directory after that guest storage owner is qualified.
+    # The retired G:\bea-ttd topology is historical evidence and is refused.
+    [string]$TraceRoot = '',
 
     # Refuse to start unless at least this much is free on the trace drive.
     [int]$RequireFreeGB = 40,
@@ -593,6 +600,9 @@ if ($HashOnly) {
             [IO.Path]::GetFullPath($TraceDirectory)
         }
         elseif (-not [string]::IsNullOrWhiteSpace($Name)) {
+            if ([string]::IsNullOrWhiteSpace($TraceRoot)) {
+                Fail '-HashOnly with -Name also requires an explicit -TraceRoot.'
+            }
             Join-Path ([IO.Path]::GetFullPath($TraceRoot)) $Name
         }
         else {
@@ -619,6 +629,19 @@ if ($HashOnly) {
 }
 
 # ---------------------------------------------------------------- interlock 1-3
+if ([Environment]::OSVersion.Platform -ne [PlatformID]::Win32NT) {
+    Fail ("TTD recording and copied-game execution are Windows-only. The " +
+          "isolated Windows VM is staged but not activated; this Omarchy host " +
+          "may inspect or repair existing receipts but must not record.")
+}
+if ([string]::IsNullOrWhiteSpace($TraceRoot)) {
+    Fail ("Recording requires an explicit validated guest -TraceRoot. No current " +
+          "destination is designated, and the retired G: capture path is not a default.")
+}
+if ($TraceRoot -match '(?i)^G:(?:[\\/]|$)') {
+    Fail ("Refusing retired -TraceRoot '$TraceRoot'. G: records the historical " +
+          "Windows capture topology and has no current guest ownership.")
+}
 if ($Name -notmatch '^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$') {
     Fail "-Name must be 1-64 ASCII letters, digits, dots, underscores, or hyphens, beginning with a letter or digit."
 }
@@ -666,34 +689,70 @@ if (-not $Attach -and $running.Count -gt 0) {
           "). Refusing to launch a second instance.")
 }
 
-# ------------------------------------------------ interlock 6-7: trace drive
-$TraceRoot = [IO.Path]::GetFullPath($TraceRoot)
-$driveLetter = [IO.Path]::GetPathRoot($TraceRoot).TrimEnd('\', ':')
-if ($driveLetter -ine 'G') {
-    Fail ("Traces must be written to G: (this machine's designated capture drive). " +
-          "Refusing -TraceRoot '$TraceRoot'.")
+# ------------------------------------------- interlock 6-7: guest trace owner
+if (-not [IO.Path]::IsPathRooted($TraceRoot)) {
+    Fail "-TraceRoot must be an explicit absolute path; got '$TraceRoot'."
 }
-$drive = Get-PSDrive -Name 'G' -ErrorAction Stop
+if (-not (Test-Path -LiteralPath $TraceRoot -PathType Container)) {
+    Fail ("The explicit guest -TraceRoot does not exist: '$TraceRoot'. Provision " +
+          "and validate the guest storage owner before recording; this script " +
+          "will not create or guess it.")
+}
+$traceRootItem = Get-Item -LiteralPath $TraceRoot -ErrorAction Stop
+if ($traceRootItem.PSProvider.Name -ine 'FileSystem') {
+    Fail "-TraceRoot must use the FileSystem provider; got '$($traceRootItem.PSProvider.Name)'."
+}
+$TraceRoot = $traceRootItem.FullName
+$traceDriveRoot = [IO.Path]::GetPathRoot($TraceRoot)
+if ($traceDriveRoot -notmatch '^[A-Za-z]:\\$') {
+    Fail ("-TraceRoot must be on a local guest volume, not a UNC, mapped, or " +
+          "provider path; got '$TraceRoot'.")
+}
+if ($TraceRoot.TrimEnd('\') -ieq $traceDriveRoot.TrimEnd('\')) {
+    Fail ("-TraceRoot must name a dedicated directory below the guest volume " +
+          "root; refusing '$TraceRoot'.")
+}
+if ($env:SystemDrive) {
+    $systemDriveRoot = [IO.Path]::GetFullPath("$($env:SystemDrive)\")
+    if ($traceDriveRoot -ieq $systemDriveRoot) {
+        Fail ("Refusing -TraceRoot '$TraceRoot' on the guest system volume " +
+              "$systemDriveRoot. TTD traces require a separately provisioned " +
+              "local guest data volume.")
+    }
+}
+$driveLetter = $traceDriveRoot.TrimEnd('\', ':')
+$drive = Get-PSDrive -Name $driveLetter -PSProvider FileSystem -ErrorAction Stop
+if (-not [string]::IsNullOrWhiteSpace([string]$drive.DisplayRoot)) {
+    Fail ("-TraceRoot must not use a mapped or redirected guest drive; " +
+          "'$driveLetter`:' resolves through '$($drive.DisplayRoot)'.")
+}
+$driveInfo = [IO.DriveInfo]::new($traceDriveRoot)
+if (-not $driveInfo.IsReady -or $driveInfo.DriveType -ne [IO.DriveType]::Fixed) {
+    Fail ("-TraceRoot must be on a ready fixed guest data volume; " +
+          "'$traceDriveRoot' is $($driveInfo.DriveType).")
+}
 $freeGB = [math]::Round($drive.Free / 1GB, 1)
 if ($freeGB -lt $RequireFreeGB) {
-    Fail "Only $freeGB GB free on G:; -RequireFreeGB is $RequireFreeGB."
+    Fail "Only $freeGB GB free on $driveLetter`:; -RequireFreeGB is $RequireFreeGB."
 }
 
 # ---------------------------------------------------- locate the TTD recorder
-# Two builds exist on this machine. Prefer an x86 build (matching the 32-bit
-# target) whose full help and -stop control are available. The in-box
-# System32\tttracer.exe is the same engine but suppresses its usage text.
+# The historical Windows lane had two builds. In an activated guest, prefer an
+# x86 build (matching the 32-bit target) whose full help and -stop control are
+# available. The in-box System32\tttracer.exe is the same engine but suppresses
+# its usage text.
 $ttdCandidates = @(
     (Join-Path $TraceRoot 'ttd-x86\TTD.exe'),
-    'G:\bea-ttd\ttd-x86\TTD.exe',
     'C:\Windows\SysWOW64\tttracer.exe',
     'C:\Windows\System32\tttracer.exe'
 )
 $ttd = $null
 foreach ($c in $ttdCandidates) { if (Test-Path -LiteralPath $c) { $ttd = $c; break } }
 if (-not $ttd) {
-    Fail ("No TTD recorder found. Copy the x86 TTD from the WinDbg package: " +
-          "Copy-Item -Recurse 'C:\Program Files\WindowsApps\Microsoft.WinDbg_*_x64__8wekyb3d8bbwe\x86\ttd' 'G:\bea-ttd\ttd-x86'")
+    $guestTtdRoot = Join-Path $TraceRoot 'ttd-x86'
+    Fail ("No TTD recorder found. Qualify the x86 TTD from the WinDbg package " +
+          "inside the activated guest and place it under the explicit trace " +
+          "owner at '$guestTtdRoot'.")
 }
 
 # ------------------------------------------------- interlock 8: elevation
@@ -757,8 +816,8 @@ if (-not $elevated) {
     Write-Host "in order to record program execution'."
     Write-Host ""
     Write-Host "The privilege required is SeDebugPrivilege, which a filtered token does not carry."
-    Write-Host "There is no persistent fix: TTD's -initialize route needs TTDService.exe, which is"
-    Write-Host "not present on this machine, so EVERY recording session needs its own elevation."
+    Write-Host "There is no admitted persistent fix: TTD's -initialize route needs TTDService.exe;"
+    Write-Host "unless the activated guest is separately qualified with it, each session needs elevation."
     Write-Host "Keep one elevated shell open for a whole capture session rather than elevating twice."
     Write-Host ""
     Write-Host "Re-run your original command unchanged from an elevated PowerShell." -ForegroundColor Cyan

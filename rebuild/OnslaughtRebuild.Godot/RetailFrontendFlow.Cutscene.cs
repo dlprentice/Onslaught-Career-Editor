@@ -102,7 +102,7 @@ public sealed partial class RetailFrontendFlow
             GD.PushWarning(
                 "The Level 100 intro cutscene (data/video/cutscenes/01.vid) is not " +
                 "decoded, so it does not play. Run " +
-                "`py -3 rebuild/tools/materialize_retail_assets.py --startup-media`. " +
+                "`python ./rebuild/tools/materialize_retail_assets.py --startup-media`. " +
                 (sequence.MediaUnavailableReason ?? "The cue had no decoded media."));
             sequence.QueueFree();
             return false;

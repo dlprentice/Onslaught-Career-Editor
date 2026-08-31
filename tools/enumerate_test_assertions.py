@@ -18,10 +18,10 @@ Three categories, and only the first is coverage:
                       a harness), so they are worth keeping - under a name that says what
                       they are.
 
-Run:  py -3 tools/enumerate_test_assertions.py
-      py -3 tools/enumerate_test_assertions.py --check     (non-zero if harness lint is
-                                                            outside the declared suite)
-      py -3 tools/enumerate_test_assertions.py --self-test
+Run:  python ./tools/enumerate_test_assertions.py
+      python ./tools/enumerate_test_assertions.py --check     (non-zero if harness lint is
+                                                               outside the declared suite)
+      python ./tools/enumerate_test_assertions.py --self-test
 
 The --check mode is the guard: harness-lint tests must live in a class whose name ends
 with HarnessLintTests, so nobody has to guess which side of the line a test is on.

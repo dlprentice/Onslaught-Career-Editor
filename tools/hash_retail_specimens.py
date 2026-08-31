@@ -6,8 +6,8 @@ This does not mutate any game data. It exists to pin the exact files that
 future runtime probes and validation runs should target.
 
 Example:
-    py -3 tools/hash_retail_specimens.py
-    py -3 tools/hash_retail_specimens.py --out reverse-engineering/binary-analysis/retail-specimen-manifest-2026-03-14.json
+    python ./tools/hash_retail_specimens.py
+    python ./tools/hash_retail_specimens.py --out reverse-engineering/binary-analysis/retail-specimen-manifest-2026-03-14.json
 """
 
 from __future__ import annotations

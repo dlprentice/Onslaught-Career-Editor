@@ -208,6 +208,21 @@ def test_tracked_va_list_parses_to_the_named_cgame_vas(root=None) -> None:
     assert entries == EXPECTED_VAS, entries
 
 
+def test_current_route_requires_explicit_project_and_ghidra(root: Path) -> None:
+    out = make_output(root)
+    va_list = write_va_list(root, EXPECTED_VAS[:1])
+    proc = subprocess.run(
+        [sys.executable, str(TOOL), str(va_list), str(out), "--dry-run"],
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    combined = proc.stdout + proc.stderr
+    assert proc.returncode == 2, combined
+    assert "--project-root" in combined, combined
+    assert "--ghidra" in combined, combined
+
+
 def test_one_run_emits_all_five_packets(root: Path) -> None:
     fake = write_fake_headless(root)
     project = make_project(root)

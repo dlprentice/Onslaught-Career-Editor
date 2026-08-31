@@ -9,15 +9,18 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
+if (-not $IsWindows) {
+    throw 'The currently admitted controlled Godot build is Windows-only. Run it inside the configured isolated Windows VM; use the Linux Core/Client/headless gates on Omarchy.'
+}
+
 $materializeArguments = @(
-    '-3',
     (Join-Path $PSScriptRoot 'materialize_retail_assets.py')
 )
 if (-not [string]::IsNullOrWhiteSpace($GameRoot)) {
     $materializeArguments += @('--game-root', $GameRoot)
 }
 
-& py @materializeArguments | ForEach-Object { Write-Host $_ }
+& python @materializeArguments | ForEach-Object { Write-Host $_ }
 if ($LASTEXITCODE -ne 0) {
     throw "Retail asset materialization failed with exit code $LASTEXITCODE."
 }

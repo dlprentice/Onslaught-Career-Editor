@@ -146,7 +146,7 @@ public sealed class RetailStartupMediaIndex
         {
             return Missing(
                 $"No startup media index at {manifest}. Run " +
-                "`py -3 rebuild/tools/materialize_retail_assets.py --startup-media`.");
+                "`python ./rebuild/tools/materialize_retail_assets.py --startup-media`.");
         }
 
         JsonDocument document;

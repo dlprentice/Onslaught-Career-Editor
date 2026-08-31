@@ -15,15 +15,16 @@ decision belongs here and only here.
 
 Read-only posture:
   * every invocation carries ``-readOnly -noanalysis``
-  * the default project location is the verified H: POST backup; passing the
-    live maintainer project path is refused unless ``--allow-live-project``
-    is explicit (it still runs read-only)
+  * every current run must explicitly name its prepared project copy and
+    headless Ghidra executable; no historical drive letter is a live default
+  * passing the historical live maintainer project path is refused unless
+    ``--allow-live-project`` is explicit (it still runs read-only)
   * outputs go to the caller's directory; the project is never written
 
 Usage:
-  py -3 tools/export_packets.py <addresses.txt> <output-dir>
-      [--project-root DIR] [--project-name BEA] [--program BEA.exe]
-      [--ghidra PATH-to-analyzeHeadless.bat] [--closure-tsv FILE]
+  python ./tools/export_packets.py <addresses.txt> <output-dir>
+      --project-root DIR --ghidra PATH-to-analyzeHeadless.bat
+      [--project-name BEA] [--program BEA.exe] [--closure-tsv FILE]
       [--force] [--timeout SECONDS] [--dry-run]
 
 Exit codes: 0 packets complete and verify; 1 failure; 2 could not run.
@@ -46,12 +47,10 @@ SCHEMA_READY = "bea.re.triage-ready.v1"
 EXPECTED_IMAGE_SHA256 = (
     "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
 )
-DEFAULT_GHIDRA = Path(
-    r"D:\ghidra_12.1.2_PUBLIC_20260605\ghidra_12.1.2_PUBLIC\support\analyzeHeadless.bat"
-)
-DEFAULT_PROJECT_ROOT = Path(r"H:\BEA-Ghidra-Backups\2026-08-17-vftable65-post-live")
 DEFAULT_PROJECT_NAME = "BEA"
 DEFAULT_PROGRAM = "BEA.exe"
+# This literal remains only as a safety fence for the retired Windows topology.
+# It is not a current project default or a route to a Linux mutable authority.
 LIVE_PROJECT_ROOT = Path(r"C:\Users\david\Ghidra\Projects")
 
 VA_LINE = re.compile(r"^0x[0-9a-f]{1,16}$", re.IGNORECASE)
@@ -131,12 +130,20 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("addresses", type=Path, help="VA list file (0x-hex per line)")
     parser.add_argument("output_dir", type=Path, help="packet output directory")
-    parser.add_argument("--project-root", type=Path, default=DEFAULT_PROJECT_ROOT,
-                        help="Ghidra project dir holding BEA.gpr (default: D: POST backup)")
+    parser.add_argument(
+        "--project-root",
+        type=Path,
+        required=True,
+        help="explicit prepared Ghidra project directory holding BEA.gpr",
+    )
     parser.add_argument("--project-name", default=DEFAULT_PROJECT_NAME)
     parser.add_argument("--program", default=DEFAULT_PROGRAM)
-    parser.add_argument("--ghidra", type=Path, default=DEFAULT_GHIDRA,
-                        help="path to analyzeHeadless.bat")
+    parser.add_argument(
+        "--ghidra",
+        type=Path,
+        required=True,
+        help="explicit path to analyzeHeadless.bat",
+    )
     parser.add_argument("--closure-tsv", type=Path, default=None,
                         help="campaign closure TSV for grade joins "
                              "(default: the tracked c1-closure TSV when present)")

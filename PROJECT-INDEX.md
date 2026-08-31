@@ -1,7 +1,7 @@
 # Repository and Application Map
 
 Status: active source-routing index
-Last updated: 2026-08-30
+Last updated: 2026-08-31
 Summary: stable ownership, dependency direction, and code-entry routing for the
 Onslaught Toolkit repository and its WinUI, AppCore, CLI, rebuild, RE, and
 support surfaces.
@@ -39,7 +39,7 @@ outcomes. The current goal determines which one receives attention now.
 | --- | --- |
 | [`OnslaughtCareerEditor.WinUI`](OnslaughtCareerEditor.WinUI/OnslaughtCareerEditor.WinUI.csproj) | .NET 10 WinUI 3 executable. Owns the shell, pages, interaction, and presentation; references AppCore. |
 | [`OnslaughtCareerEditor.AppCore`](OnslaughtCareerEditor.AppCore/OnslaughtCareerEditor.AppCore.csproj) | .NET 10 shared correctness layer. Owns file formats, guarded mutations, safe copies, patches, runtime services, catalogs, media, and lore; has no project reference. |
-| [`OnslaughtCareerEditor.Cli`](OnslaughtCareerEditor.Cli/OnslaughtCareerEditor.Cli.csproj) | Unshipped maintainer/agent adapter over AppCore. [`CLI.md`](CLI.md) owns its external contract. |
+| [`OnslaughtCareerEditor.Cli`](OnslaughtCareerEditor.Cli/OnslaughtCareerEditor.Cli.csproj) | Windows-targeted, unshipped maintainer/agent adapter over AppCore. [`CLI.md`](CLI.md) owns its external contract. |
 | [`OnslaughtCareerEditor.AppCore.Tests`](OnslaughtCareerEditor.AppCore.Tests/OnslaughtCareerEditor.AppCore.Tests.csproj) | Focused AppCore behavior and safety tests. |
 | [`OnslaughtCareerEditor.Cli.Tests`](OnslaughtCareerEditor.Cli.Tests/OnslaughtCareerEditor.Cli.Tests.csproj) | CLI envelope and adapter tests. |
 | [`OnslaughtCareerEditor.UiTests`](OnslaughtCareerEditor.UiTests/OnslaughtCareerEditor.UiTests.csproj) | Static and native WinUI checks plus shared product regressions. It references AppCore and drives built WinUI surfaces without making UI code the business-logic owner. |
@@ -47,6 +47,16 @@ outcomes. The current goal determines which one receives attention now.
 | [`OnslaughtRebuild.Client`](rebuild/OnslaughtRebuild.Client/OnslaughtRebuild.Client.csproj) | Input-to-fixed-step and presentation-lifecycle adapter; references Core. |
 | [`OnslaughtRebuild.Headless`](rebuild/OnslaughtRebuild.Headless/OnslaughtRebuild.Headless.csproj) | Command-tape replay and deterministic verification; references Client and Core. |
 | [`OnslaughtRebuild.Godot`](rebuild/OnslaughtRebuild.Godot/OnslaughtRebuild.Godot.csproj) | Rendering, audio, native integration, and player input; references Client and Core. |
+
+Host boundary: Omarchy owns the repository, reverse engineering, and
+Core/Client/headless rebuild execution. AppCore source compiles here, but its
+full suite retains Windows path/process/media behavior. Godot source can be
+edited here, but the currently admitted controlled Godot build/launch, native
+smoke, and capture routes remain Windows-only alongside full AppCore
+validation, the WinUI executable, native UI tests, and CLI. They run only in
+the isolated Windows VM after activation; that VM is currently staged, not
+defined or running. A Linux static check or Windows-target build failure is not
+native Windows/Godot validation.
 
 [`OnslaughtCareerEditor.WinUI.slnx`](OnslaughtCareerEditor.WinUI.slnx) and
 [`rebuild/OnslaughtRebuild.slnx`](rebuild/OnslaughtRebuild.slnx) are the
@@ -152,7 +162,7 @@ Do not add volatile file counts, campaign counts, coverage percentages, current
 task status, or capability claims here. Those values belong to measured owners.
 For a map-only change, compare navigation and project references, then run:
 
-```powershell
+```bash
 rg -n 'Tag="|_pageByTag' OnslaughtCareerEditor.WinUI/MainWindow.xaml OnslaughtCareerEditor.WinUI/MainWindow.xaml.cs
 rg -n '<ProjectReference' -g '*.csproj' -g '!references/**'
 git diff --check

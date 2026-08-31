@@ -1271,6 +1271,10 @@ class ReceiptTests(HarnessCase):
 
 
 class DryRunTests(HarnessCase):
+    def test_windows_guard_refuses_a_non_windows_host_name(self) -> None:
+        with self.assertRaisesRegex(ph.ProbeError, "Windows-only"):
+            ph.require_windows_live_execution("posix")
+
     def test_dry_run_stages_nothing_and_launches_nothing(self) -> None:
         receipt, launcher = self.run_probe(
             self.probe(), [(1.0, "exit")], dry_run=True
@@ -1287,6 +1291,32 @@ class DryRunTests(HarnessCase):
         (self.source / ph.AUTOEXEC).write_text("Quit\r\n", encoding="ascii")
         receipt, _ = self.run_probe(self.probe(), [], dry_run=True)
         self.assertEqual(receipt["verdict"], "ERROR")
+
+    @unittest.skipIf(ph.os.name == "nt", "non-Windows routing assertion")
+    def test_real_launcher_is_refused_before_staging_on_non_windows(self) -> None:
+        receipt = ph.run_probe(
+            self.probe(),
+            manifest_dir=self.tmp,
+            out_dir=self.out,
+            scratch_parent=self.scratch,
+        )
+        self.assertEqual(receipt["verdict"], "ERROR")
+        self.assertIn("Windows-only", receipt["failure"])
+        self.assertIn("VM is staged but not activated", receipt["failure"])
+        self.assertNotIn("staging", receipt)
+        self.assertFalse(self.scratch.exists())
+
+    @unittest.skipIf(ph.os.name == "nt", "non-Windows routing assertion")
+    def test_real_launcher_dry_run_remains_portable_on_non_windows(self) -> None:
+        receipt = ph.run_probe(
+            self.probe(),
+            manifest_dir=self.tmp,
+            out_dir=self.out,
+            scratch_parent=self.scratch,
+            dry_run=True,
+        )
+        self.assertEqual(receipt["verdict"], "NOT RUN (dry run)")
+        self.assertFalse(self.scratch.exists())
 
 
 class ExitCodeTests(HarnessCase):
@@ -1345,11 +1375,22 @@ class ExitCodeTests(HarnessCase):
 class RecordingTests(HarnessCase):
     def test_recording_is_delegated_to_the_existing_script(self) -> None:
         probe = self.probe(record=True, recordSeconds=30)
-        command = ph.build_record_command(probe, self.scratch / "x", "trace-1")
+        command = ph.build_record_command(
+            probe, self.scratch / "x", "trace-1", r"X:\test-only-trace-root"
+        )
         self.assertEqual(command[0], "powershell.exe")
         self.assertIn("ttd_record.ps1", " ".join(command))
         self.assertIn("-TargetRoot", command)
+        self.assertEqual(
+            command[command.index("-TraceRoot") + 1],
+            r"X:\test-only-trace-root",
+        )
         self.assertIn("-skipfmv,-forcewindowed,-level,100", command)
+
+    def test_recording_has_no_implicit_retired_trace_root(self) -> None:
+        probe = self.probe(record=True, recordSeconds=30)
+        with self.assertRaisesRegex(ph.ProbeError, "explicit validated guest"):
+            ph.build_record_command(probe, self.scratch / "x", "trace-1")
 
     def test_a_console_only_probe_needs_no_recording(self) -> None:
         receipt, _ = self.run_probe(self.probe(), [(1.0, "exit")])
@@ -1386,6 +1427,10 @@ def _no_source_verification(_source_root, _before):  # noqa: ANN001
     return None
 
 
+def _no_host_guard(_host_os_name=None):  # noqa: ANN001
+    return None
+
+
 MUTATIONS: list[tuple[str, Callable[[], Callable[[], None]], list[str]]] = []
 
 
@@ -1407,6 +1452,20 @@ def _break_pristine() -> Callable[[], None]:
 
     def undo() -> None:
         ph.PRISTINE_SHA256 = original
+
+    return undo
+
+
+@_mutation(
+    "live host guard accepts a non-Windows platform",
+    ["DryRunTests.test_windows_guard_refuses_a_non_windows_host_name"],
+)
+def _break_live_host_guard() -> Callable[[], None]:
+    original = ph.require_windows_live_execution
+    ph.require_windows_live_execution = _no_host_guard
+
+    def undo() -> None:
+        ph.require_windows_live_execution = original
 
     return undo
 

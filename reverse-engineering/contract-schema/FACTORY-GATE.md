@@ -18,7 +18,7 @@ From the repository root, after a factory cohort has been written to its
 contract-only tree:
 
 ```text
-py -3 tools/contract_factory_validate.py reverse-engineering/contracts
+python ./tools/contract_factory_validate.py ./reverse-engineering/contracts
 ```
 
 The factory lane should run that command before a cohort is proposed for
@@ -26,7 +26,7 @@ review. The repository tool-test sweep also runs the focused self-tests through
 `tools/run_tool_tests.py`; the standalone command is:
 
 ```text
-py -3 tools/contract_factory_validate_tests.py
+python ./tools/contract_factory_validate_tests.py
 ```
 
 Do not point the validator at a documentation directory. Every `*.md` below the

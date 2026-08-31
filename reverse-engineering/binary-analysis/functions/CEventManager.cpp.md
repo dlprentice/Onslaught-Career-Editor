@@ -178,6 +178,6 @@ clock advance and the dispatch.
 | `IScript__SetTimer` | `0x00535908` | mission-script timers — script delays run on the manager clock |
 
 `AddEvent` has 128 direct call sites (not listed); re-run
-`py -3 tools\call_xref_scan.py <pristine> 0x0044b2d0 0x0044b370` to reproduce
+`python ./tools/call_xref_scan.py <pristine> 0x0044b2d0 0x0044b370` to reproduce
 either census, and the owning-function attribution comes from
 `ghidra-function-name-table-2026-08-17.tsv` body ranges.

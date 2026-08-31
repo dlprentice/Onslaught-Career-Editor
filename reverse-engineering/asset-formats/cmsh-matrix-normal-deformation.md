@@ -208,18 +208,18 @@ opcode, and exact shader identity drift.
 
 ## Reproduce
 
-```powershell
-py -3 tools/cmsh_matrix_normal_contract.py `
-  --data-root "<safe-copy>\data" `
-  --mirror-index "G:\bea-asset-mirror\INDEX.jsonl" `
-  --pristine-exe "<safe-copy>\BEA.exe.original.backup" `
-  --capture-log "G:\bea-d3d9-capture\vsdump-lvl800-20260731-132614\d3d9-draws.log" `
-  --capture-log "G:\bea-d3d9-capture\vskin-lvl800-20260731-133529\d3d9-draws.log" `
-  --capture-log "G:\bea-d3d9-capture\vsdump-lvl611-20260731-134131\d3d9-draws.log" `
-  --json-out ".artifacts\cmsh-matrix-normal\report.json" `
-  --tsv-out ".artifacts\cmsh-matrix-normal\report.tsv"
+```bash
+python ./tools/cmsh_matrix_normal_contract.py \
+  --data-root "<safe-copy>/data" \
+  --mirror-index "<asset-mirror>/INDEX.jsonl" \
+  --pristine-exe "<safe-copy>/BEA.exe.original.backup" \
+  --capture-log "<d3d9-capture>/vsdump-lvl800-20260731-132614/d3d9-draws.log" \
+  --capture-log "<d3d9-capture>/vskin-lvl800-20260731-133529/d3d9-draws.log" \
+  --capture-log "<d3d9-capture>/vsdump-lvl611-20260731-134131/d3d9-draws.log" \
+  --json-out ".artifacts/cmsh-matrix-normal/report.json" \
+  --tsv-out ".artifacts/cmsh-matrix-normal/report.tsv"
 
-py -3 tools/cmsh_matrix_normal_contract_tests.py
+python ./tools/cmsh_matrix_normal_contract_tests.py
 ```
 
 Two independent runs were byte-identical. JSON SHA-256 was

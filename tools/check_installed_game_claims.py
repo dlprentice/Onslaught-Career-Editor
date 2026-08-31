@@ -15,9 +15,9 @@ safe copy really does change nothing outside the copy, and the live trainer real
 never open an installed game. The difference is whether the sentence is about an action
 or about the world.
 
-Run:  py -3 tools/check_installed_game_claims.py            list every hit
-      py -3 tools/check_installed_game_claims.py --check    non-zero if any is unexplained
-      py -3 tools/check_installed_game_claims.py --self-test
+Run:  python ./tools/check_installed_game_claims.py            list every hit
+      python ./tools/check_installed_game_claims.py --check    non-zero if any is unexplained
+      python ./tools/check_installed_game_claims.py --self-test
 """
 
 from __future__ import annotations

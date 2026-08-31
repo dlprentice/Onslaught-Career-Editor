@@ -111,7 +111,7 @@ matrix and draw values. The staged fixture selects consistently larger
 geometry.
 
 ```powershell
-py -3 patches/validate_lod_attribution_tests.py
+python ./patches/validate_lod_attribution_tests.py
 ```
 
 The suite covers the accepted comparison, deterministic/path-free receipts, an
@@ -132,7 +132,7 @@ and no vertex dump. Keep the complete raw logs, sidecars, and receipts under
 ignored `local-lab/patch-surface-phase2/lod-attribution/`.
 
 ```powershell
-py -3 patches/validate_lod_attribution.py `
+python ./patches/validate_lod_attribution.py `
   --stock-log <stock.log> --stock-run <stock.run.json> `
   --staged-log <staged.log> --staged-run <staged.run.json> `
   --row-va 0x00631E8C --min-stable-frames 3 --min-matched-draws 1 `

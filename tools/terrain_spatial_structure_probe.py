@@ -45,7 +45,7 @@ over the same terrain pixels:
 Read-only. Fits nothing.
 
 Usage:
-    py -3 tools/terrain_spatial_structure_probe.py \
+    python ./tools/terrain_spatial_structure_probe.py \
         --retail  <retail frame.png> \
         --rebuild <reconstruction frame.png> \
         --macro-probe <ONSLAUGHT_TERRAIN_PROBE=macro frame.png> \

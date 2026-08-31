@@ -6,7 +6,7 @@ of each supplied virtual address, then disassembles a window ending at each hit
 so the containing instruction can be classified as a load, a store, or a push.
 
 Usage:
-  py -3 tools/operand_scan.py <image> <va> [<va> ...] [--window N]
+  python ./tools/operand_scan.py <image> <va> [<va> ...] [--window N]
 """
 
 from __future__ import annotations

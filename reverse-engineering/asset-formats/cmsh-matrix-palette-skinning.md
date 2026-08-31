@@ -228,18 +228,18 @@ palette rows**.
 
 ## Reproduce
 
-```powershell
-py -3 tools/cmsh_skinning_contract.py `
-  --data-root "<safe-copy>\data" `
-  --mirror-index "G:\bea-asset-mirror\INDEX.jsonl" `
-  --pristine-exe "<safe-copy>\BEA.exe.original.backup" `
-  --capture-log "G:\bea-d3d9-capture\vsdump-lvl800-20260731-132614\d3d9-draws.log" `
-  --capture-log "G:\bea-d3d9-capture\vskin-lvl800-20260731-133529\d3d9-draws.log" `
-  --capture-log "G:\bea-d3d9-capture\vsdump-lvl611-20260731-134131\d3d9-draws.log" `
-  --json-out ".artifacts\cmsh-skinning\report.json" `
-  --tsv-out ".artifacts\cmsh-skinning\report.tsv"
+```bash
+python ./tools/cmsh_skinning_contract.py \
+  --data-root "<safe-copy>/data" \
+  --mirror-index "<asset-mirror>/INDEX.jsonl" \
+  --pristine-exe "<safe-copy>/BEA.exe.original.backup" \
+  --capture-log "<d3d9-capture>/vsdump-lvl800-20260731-132614/d3d9-draws.log" \
+  --capture-log "<d3d9-capture>/vskin-lvl800-20260731-133529/d3d9-draws.log" \
+  --capture-log "<d3d9-capture>/vsdump-lvl611-20260731-134131/d3d9-draws.log" \
+  --json-out ".artifacts/cmsh-skinning/report.json" \
+  --tsv-out ".artifacts/cmsh-skinning/report.tsv"
 
-py -3 tools/cmsh_skinning_contract_tests.py
+python ./tools/cmsh_skinning_contract_tests.py
 ```
 
 Two independent runs produced byte-identical JSON and TSV. JSON was 18,011 bytes,

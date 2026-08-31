@@ -1969,6 +1969,20 @@ def _resolve_work_root(
     return selected
 
 
+def _host_default_work_root_request() -> Path | None:
+    """Return the explicit, platform-appropriate launcher staging request.
+
+    Windows launchers retain their historical implicit ignored path. Linux
+    launchers deliberately name the canonical checkout's real local-lab owner;
+    the request still passes through ``_resolve_work_root`` and all of its
+    link, overlap, and ownership checks before anything is written.
+    """
+
+    if os.name == "nt":
+        return None
+    return _canonical_repository_root() / "local-lab/rebuild-godot"
+
+
 def _extract_chunk(raw: bytes, tag: bytes, expected_size: int, expected_hash: str) -> bytes:
     matches: list[bytes] = []
     cursor = 0
@@ -5363,10 +5377,19 @@ def _default_startup_media_root() -> Path:
     configured = os.environ.get("ONSLAUGHT_STARTUP_MEDIA")
     if configured:
         return Path(configured)
-    local = os.environ.get("LOCALAPPDATA")
-    if local:
-        return Path(local) / "OnslaughtToolkit" / "startup-media"
-    return ROOT / "local-lab/startup-media"
+    if os.name == "nt":
+        local = os.environ.get("LOCALAPPDATA")
+        if local:
+            return Path(local) / "OnslaughtToolkit" / "startup-media"
+        return ROOT / "local-lab/startup-media"
+
+    # A linked worktree does not own a second ignored lab. Route the implicit
+    # Linux cache through the same canonical-owner, plain-directory, and
+    # link/reparse checks as rebuild staging before startup media can be read
+    # or written.
+    return _resolve_work_root(
+        _canonical_repository_root() / "local-lab/startup-media"
+    )
 
 
 def _png_dimensions(path: Path) -> tuple[int, int] | None:
@@ -5895,13 +5918,23 @@ def _publish(stage: Path, outputs: tuple[tuple[Path, str], ...]) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Materialize the exact retail assets used by the rebuild")
     parser.add_argument("--game-root", type=Path, help="Battle Engine Aquila retail installation root")
-    parser.add_argument(
+    work_root_group = parser.add_mutually_exclusive_group()
+    work_root_group.add_argument(
         "--work-root",
         type=Path,
         help=(
             "temporary asset-staging directory; on Linux this must be a plain "
             "descendant of the canonical checkout's ignored local-lab; always "
             "rejected when it overlaps the retail installation"
+        ),
+    )
+    work_root_group.add_argument(
+        "--host-default-work-root",
+        action="store_true",
+        help=(
+            "select the verified launcher staging owner (canonical checkout "
+            "local-lab/rebuild-godot on Linux; the historical ignored default "
+            "on Windows)"
         ),
     )
     parser.add_argument("--force", action="store_true", help="reverify source data and regenerate every asset")
@@ -5917,15 +5950,27 @@ def main() -> int:
     parser.add_argument(
         "--startup-media-root",
         type=Path,
-        help="where to write the cold-start media cache (default: %%LOCALAPPDATA%%/OnslaughtToolkit/startup-media)",
+        help=(
+            "where to write the cold-start media cache (default: "
+            "ONSLAUGHT_STARTUP_MEDIA when set; otherwise %%LOCALAPPDATA%%/"
+            "OnslaughtToolkit/startup-media on Windows or the canonical "
+            "checkout's local-lab/startup-media on Linux)"
+        ),
     )
     args = parser.parse_args()
 
+    requested_work_root = (
+        _host_default_work_root_request()
+        if args.host_default_work_root
+        else args.work_root
+    )
+
     if args.startup_media:
-        if args.work_root is not None:
+        if requested_work_root is not None or args.host_default_work_root:
             print(
-                "startup media materialization failed: --work-root applies only "
-                "to rebuild-asset staging; use --startup-media-root for this mode",
+                "startup media materialization failed: --work-root and "
+                "--host-default-work-root apply only to rebuild-asset staging; "
+                "use --startup-media-root for this mode",
                 file=sys.stderr,
             )
             return 2
@@ -5944,7 +5989,7 @@ def main() -> int:
         return 0
 
     try:
-        work_root = _resolve_work_root(args.work_root)
+        work_root = _resolve_work_root(requested_work_root)
     except (OSError, RuntimeError, ValueError) as error:
         print(f"retail asset materialization failed: {error}", file=sys.stderr)
         return 2
@@ -5955,8 +6000,8 @@ def main() -> int:
 
     try:
         game_root = _resolve_game_root(args.game_root)
-        work_root = _resolve_work_root(args.work_root, game_root=game_root)
-        work_root.mkdir(parents=args.work_root is None, exist_ok=True)
+        work_root = _resolve_work_root(requested_work_root, game_root=game_root)
+        work_root.mkdir(parents=requested_work_root is None, exist_ok=True)
         with tempfile.TemporaryDirectory(prefix="materialize-retail-", dir=work_root) as temporary:
             stage = Path(temporary)
             outputs = _materialize(game_root, stage)

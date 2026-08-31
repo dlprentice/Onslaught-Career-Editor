@@ -6,7 +6,7 @@ bytes there, optionally decoded as little-endian floats/dwords. Opens the image
 read-only and writes nothing.
 
 Usage:
-  py -3 tools/pe_read_va.py <image> <va> [--count N] [--as float|u32|hex]
+  python ./tools/pe_read_va.py <image> <va> [--count N] [--as float|u32|hex]
 """
 
 from __future__ import annotations

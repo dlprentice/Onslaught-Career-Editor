@@ -19,7 +19,7 @@ promotion.  A passing file is well-formed, not correct; see
 ``reverse-engineering/contract-schema/FACTORY-GATE.md``.
 
 USAGE.
-    py -3 tools/contract_factory_validate.py <contracts-root> [--repo-root DIR]
+    python ./tools/contract_factory_validate.py <contracts-root> [--repo-root DIR]
 
 Every ``*.md`` under the root is treated as a candidate contract file, so
 point the tool at a drafts tree, not at a folder of rule documents. All

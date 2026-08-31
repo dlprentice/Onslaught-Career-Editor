@@ -1,7 +1,7 @@
 # Onslaught Toolkit
 
 Status: active — Claude Code bootstrap; rules and routing only.
-Last updated: 2026-08-30.
+Last updated: 2026-08-31.
 Summary: load the authoritative contributor contract, current state, and the
 right evidence owner without duplicating them here.
 
@@ -38,6 +38,12 @@ a bounded contract is not completion.
    completed activation. On Linux, run complete-RE verification only through
    `current_re_authority.verify`; do not call the frozen bootstrap directly or
    rewrite historical receipt paths.
+   Omarchy owns native RE and Core/Client/headless rebuild work. AppCore source
+   compiles here, but its full suite, WinUI 3, the Windows-targeted CLI, and the
+   currently admitted Godot runtime, smoke, and capture routes remain
+   Windows-only; the isolated evaluation VM is prepared but not yet activated.
+   Do not claim a current native route or
+   substitute Linux static checks. The exact host split is in `AGENTS.md`.
 6. `local-lab/INDEX.md`, when present — the real, writable, Git-ignored corpus
    inside the canonical checkout. It is not tracked and remains invisible to a
    fresh clone or child worktree. From a worktree, use the canonical absolute

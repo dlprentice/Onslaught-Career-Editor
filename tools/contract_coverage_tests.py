@@ -18,7 +18,7 @@ row count equals the pinned denominator, statuses inside the vocabulary,
 totals add up -- never specific live classifications, because sibling lanes
 own those notes and legitimately move them under us.
 
-Run: py -3 tools/contract_coverage_tests.py
+Run: python ./tools/contract_coverage_tests.py
 """
 from __future__ import annotations
 

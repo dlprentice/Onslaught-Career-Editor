@@ -253,7 +253,7 @@ try {
     $parityVerdict = 'UNSCORED'
     if (Test-Path -LiteralPath $scorer) {
         Remove-Item -LiteralPath $parityReport -Force -ErrorAction SilentlyContinue
-        & py -3 $scorer --capture-dir $OutputDirectory --json-out $parityReport
+        & python $scorer --capture-dir $OutputDirectory --json-out $parityReport
         if (Test-Path -LiteralPath $parityReport) {
             try {
                 $candidateVerdict =
@@ -288,7 +288,7 @@ try {
         $optionsInkReport = Join-Path $OutputDirectory 'options-ink-regression.json'
         if (Test-Path -LiteralPath $optionsScorer) {
             Remove-Item -LiteralPath $optionsInkReport -Force -ErrorAction SilentlyContinue
-            & py -3 $optionsScorer $OutputDirectory --json-out $optionsInkReport
+            & python $optionsScorer $OutputDirectory --json-out $optionsInkReport
             if (Test-Path -LiteralPath $optionsInkReport) {
                 try {
                     $candidateVerdict =

@@ -265,7 +265,7 @@ is the tracked correction owner.
 Run from the repository root:
 
 ```powershell
-py -3 reverse-engineering/source-crosswalk/expansion/w5-engine-render-platform-shell/validate.py
+python ./reverse-engineering/source-crosswalk/expansion/w5-engine-render-platform-shell/validate.py
 npm run test:docs
 git diff --check
 ```

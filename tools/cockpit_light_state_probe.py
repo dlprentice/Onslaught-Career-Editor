@@ -28,7 +28,7 @@ draw runs with `SRCALPHA`/`INVSRCALPHA` (`0x0044a650`), but the texture is
 uniformly opaque, so the blend is an identity.
 
 Usage:
-    py -3 tools/cockpit_light_state_probe.py [heightfield.hfld.bin] [cockpit.texture.aya]
+    python ./tools/cockpit_light_state_probe.py [heightfield.hfld.bin] [cockpit.texture.aya]
 """
 
 from __future__ import annotations

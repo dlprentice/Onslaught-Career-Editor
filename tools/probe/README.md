@@ -4,7 +4,7 @@ Status: integrated — the three stages below were built in separate lanes and
 merged here; on 2026-08-02 the original nine-launch integration was followed by
 six replicated Mission-logger launches and seven Mission VM-trace/control
 launches, all unattended.
-Last updated: 2026-08-30.
+Last updated: 2026-08-31.
 Summary: author a probe that makes specific engine behaviour fire, run it
 unattended and record it, then put the result through a stage that tries to kill
 it. Authoring, running and refuting are three separate programs with three
@@ -34,6 +34,9 @@ Git-ignored canonical-checkout directory
 path is absent; no twin, symlink, bind mount, or read-only substitute exists.
 A fresh clone or child worktree does not receive ignored content, so worktrees
 must use the canonical absolute path or `BEA_LOCAL_LAB`.
+Portable authoring, static refutation, and offline tests can run on Omarchy.
+Executing the copied game and recording TTD traces remain Windows-only and are
+blocked until the isolated Windows VM is activated and provisioned.
 
 | stage | program | tests |
 |---|---|---|
@@ -43,10 +46,12 @@ must use the canonical absolute path or `BEA_LOCAL_LAB`.
 
 ## What still needs a human
 
-TTD recording still needs one elevated PowerShell window left open; console-only
-and archive-only probes need neither elevation nor a human. Choosing what to
-probe next, and reading a receipt whose oracle was satisfied for the wrong
-reason, are both still judgement.
+Once the Windows VM is active, TTD recording needs one elevated PowerShell
+window left open. Console-only copied-game execution also belongs in that guest;
+archive-only authoring, static refutation, and offline tests need neither
+elevation nor a human on Omarchy. Choosing what to probe next, and reading a
+receipt whose oracle was satisfied for the wrong reason, are both still
+judgement.
 
 ---
 
@@ -292,8 +297,9 @@ asserts they are byte-identical.
 
 # Stage 2 — running
 
-Status: implemented, and run against the real binary. Its tests still use fakes
-only; the original nine live launches of 2026-08-02 are recorded in
+Status: implemented and historically run against the real binary on Windows.
+Its tests still use fakes only; the original nine live launches of 2026-08-02
+are recorded in
 [`probes.integration-proof.json`](probes.integration-proof.json), which is the
 manifest that was actually executed. The six logger replications and aggregate
 READY live under `local-lab/logger-oracle-pilot-2026-08-02/`.
@@ -437,9 +443,10 @@ receipt. `--strict-autoexec` makes inert ones fatal too.
 none of it — not its interlocks, not its drive policy, not its elevation
 refusal, not its receipt deferral. It needs the maintainer's elevated window.
 
-**The harness does not need it.** Without `record`, a console-only probe runs
-today with zero human involvement, which is the whole point of the console
-route.
+**The harness does not need it.** Once the Windows VM is activated, a
+console-only probe without `record` can run there with zero human involvement,
+which is the whole point of the console route. It is not a native Omarchy game
+execution path.
 
 ### Tests
 

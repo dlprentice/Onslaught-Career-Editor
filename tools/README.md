@@ -1,7 +1,7 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-08-14
+Last updated: 2026-08-31
 Summary: what each tool in `tools/` is for, and which of them are gates.
 
 `tools/` contains the small reusable support surface for the WinUI product,
@@ -9,13 +9,19 @@ release packaging, guarded asset extraction, format inspection, Ghidra work,
 and controlled copied-runtime research. It is not a product GUI or a historical
 probe archive.
 
-Root [`package.json`](../package.json) is the command authority. Start with:
+Root [`package.json`](../package.json) is the command authority. On Omarchy,
+start with:
 
-```powershell
-npm test
+```bash
 npm run test:docs
 npm run test:safety
 ```
+
+`npm test` and Windows-bound runtime/release tools run only inside the isolated
+Windows VM. Current root commands and reusable examples use `python` and
+forward-slash paths on both hosts. Dated receipts and historical evidence may
+retain the literal Windows commands and drive letters that produced them; a
+tool can also have an explicitly documented Windows evidence dependency.
 
 ## Product and release
 
@@ -184,7 +190,7 @@ manifest saying nothing leaves a `varargs=true` target untouched. The focused
 gate is:
 
 ```powershell
-py -3 -m unittest tools.ghidra_cohort_framework_tests
+python -m unittest tools.ghidra_cohort_framework_tests
 ```
 
 The three superseded one-shot appliers (`GhidraApplyBoundaryCohort41V4.java`,
@@ -208,7 +214,7 @@ range/call pair only with a final hash-bound READY receipt;
 candidate exporter. The matching focused gate is:
 
 ```powershell
-py -3 tools\parity_lab_tests.py
+python ./tools/parity_lab_tests.py
 ```
 
 The retained Java scripts are generic address, metadata, tag, disassembly,
@@ -236,19 +242,26 @@ manifest with per-packet SHA-256s and a `triage-ready.json` receipt published
 last as the commit marker. Every packet header carries the source image
 SHA-256; the specimen identity is `74154bfa…7750`.
 
-Read-only posture: the default target is the verified H: POST backup
-(`H:\BEA-Ghidra-Backups\2026-08-17-vftable65-post-live`, db.18627); pointing at
-the live maintainer project is refused unless `--allow-live-project` is passed,
-and every invocation stays `-readOnly -noanalysis`. Incremental: a re-run over
+Read-only posture: the historical Windows H: POST backup
+(`H:\BEA-Ghidra-Backups\2026-08-17-vftable65-post-live`, db.18627) is provenance,
+not a current default or Omarchy route. Current runs require both an explicit
+prepared project root and an explicit Ghidra executable; no mutable Linux
+Ghidra project has been activated. Pointing at the historical live maintainer
+project is refused unless `--allow-live-project` is passed, and every invocation
+stays `-readOnly -noanalysis`. Incremental: a re-run over
 the same output directory skips VAs whose packets already exist with the same
 image hash (and a live READY receipt) without launching Ghidra at all;
 `--force` removes matching-image packets first and re-cuts them, while a packet
 cut from a *different* image refuses rather than being silently overwritten.
 
 ```powershell
-py -3 tools\export_packets.py tools\packet-va-cgame-level-flow.txt `
-  local-lab\packet-runs\cgame-level-flow
-py -3 tools\export_packets.py <addresses.txt> <out-dir> --dry-run
+python ./tools/export_packets.py ./tools/packet-va-cgame-level-flow.txt `
+  ./local-lab/packet-runs/cgame-level-flow `
+  --project-root <prepared-read-only-project-directory> `
+  --ghidra <path-to-analyzeHeadless.bat>
+python ./tools/export_packets.py <addresses.txt> <out-dir> `
+  --project-root <prepared-read-only-project-directory> `
+  --ghidra <path-to-analyzeHeadless.bat> --dry-run
 ```
 
 The named 5-VA smoke list `tools/packet-va-cgame-level-flow.txt` carries the
@@ -258,7 +271,7 @@ it is the gate's example list and the smoke suite's fixture. The focused gate
 is:
 
 ```powershell
-py -3 tools\export_packets_tests.py
+python ./tools/export_packets_tests.py
 ```
 
 The smoke suite needs no Ghidra: it drives the real driver against a fake
@@ -286,9 +299,9 @@ explicit `verify` still requires that complete saved evidence. Their focused
 gates are:
 
 ```powershell
-py -3 tools\ghidra_text_gap_boundary_mutator_tests.py
-py -3 tools\ghidra_text_gap_boundary_scratch_authority_tests.py
-py -3 tools\ghidra_text_gap_boundary_scratch_authority.py verify
+python ./tools/ghidra_text_gap_boundary_mutator_tests.py
+python ./tools/ghidra_text_gap_boundary_scratch_authority_tests.py
+python ./tools/ghidra_text_gap_boundary_scratch_authority.py verify
 ```
 
 `GhidraApplyExternalTableGapBoundaries.java` is the fail-closed structural
@@ -311,10 +324,10 @@ registered authority unit test skips when absent, while an explicit saved
 verify refuses to pass without it.
 
 ```powershell
-python -I -B tools\ghidra_external_table_gap_boundary_mutator_tests.py
-python -I -B tools\ghidra_external_table_gap_boundary_scratch_authority_tests.py
-python -I -B tools\ghidra_external_table_gap_boundary_scratch_authority.py verify
-python -I -B tools\ghidra_external_table_gap_boundary_live_authority_tests.py
+python -I -B ./tools/ghidra_external_table_gap_boundary_mutator_tests.py
+python -I -B ./tools/ghidra_external_table_gap_boundary_scratch_authority_tests.py
+python -I -B ./tools/ghidra_external_table_gap_boundary_scratch_authority.py verify
+python -I -B ./tools/ghidra_external_table_gap_boundary_live_authority_tests.py
 ```
 
 The resulting verdict is `SCRATCH_READY_LIVE_FORBIDDEN`; see the
@@ -336,10 +349,10 @@ proof. Aggregate receipt paths are portable; an explicit verify requires the
 complete ignored lane and authorizes neither live nor tracked mutation.
 
 ```powershell
-python -I -B tools\ghidra_jpeg_callback_boundary_mutator_tests.py
-python -I -B tools\ghidra_jpeg_callback_boundary_scratch_authority_tests.py
-python -I -B tools\ghidra_jpeg_callback_boundary_scratch_authority.py verify
-python -I -B tools\ghidra_jpeg_callback_boundary_live_authority_tests.py
+python -I -B ./tools/ghidra_jpeg_callback_boundary_mutator_tests.py
+python -I -B ./tools/ghidra_jpeg_callback_boundary_scratch_authority_tests.py
+python -I -B ./tools/ghidra_jpeg_callback_boundary_scratch_authority.py verify
+python -I -B ./tools/ghidra_jpeg_callback_boundary_live_authority_tests.py
 ```
 
 See the
@@ -393,10 +406,10 @@ projection, and 1,811,691-byte body union. Its create-new aggregate receipt is
 portable; repeated `verify` runs are read-only.
 
 ```powershell
-python -I -B tools\ghidra_d3dx_gap_boundary_mutator_tests.py
-python -I -B tools\ghidra_d3dx_gap_boundary_scratch_authority_tests.py
-python -I -B tools\ghidra_d3dx_gap_boundary_current_preparation_authority_tests.py
-python -I -B tools\ghidra_d3dx_gap_boundary_live_authority_tests.py
+python -I -B ./tools/ghidra_d3dx_gap_boundary_mutator_tests.py
+python -I -B ./tools/ghidra_d3dx_gap_boundary_scratch_authority_tests.py
+python -I -B ./tools/ghidra_d3dx_gap_boundary_current_preparation_authority_tests.py
+python -I -B ./tools/ghidra_d3dx_gap_boundary_live_authority_tests.py
 ```
 
 See the
@@ -423,9 +436,9 @@ only a portable ignored aggregate receipt and authorizes neither live nor
 tracked mutation.
 
 ```powershell
-python -I -B tools\ghidra_crt_p0_boundary_mutator_tests.py
-python -I -B tools\ghidra_crt_p0_boundary_scratch_authority_tests.py
-python -I -B tools\ghidra_crt_p0_boundary_scratch_authority.py verify
+python -I -B ./tools/ghidra_crt_p0_boundary_mutator_tests.py
+python -I -B ./tools/ghidra_crt_p0_boundary_scratch_authority_tests.py
+python -I -B ./tools/ghidra_crt_p0_boundary_scratch_authority.py verify
 ```
 
 See the
@@ -440,9 +453,9 @@ every retained TSV/READY field, revalidates the exact run-c demo owner, reruns
 both replicas and all adverse controls, and preserves v1 evidence unchanged.
 
 ```powershell
-python -I -B tools\ghidra_crt_p0_boundary_v2_mutator_tests.py
-python -I -B tools\ghidra_crt_p0_boundary_scratch_authority_v2_tests.py
-python -I -B tools\ghidra_crt_p0_boundary_scratch_authority_v2.py verify
+python -I -B ./tools/ghidra_crt_p0_boundary_v2_mutator_tests.py
+python -I -B ./tools/ghidra_crt_p0_boundary_scratch_authority_v2_tests.py
+python -I -B ./tools/ghidra_crt_p0_boundary_scratch_authority_v2.py verify
 ```
 
 Use the
@@ -460,8 +473,8 @@ the later v2 preparation re-grounded it against then-current db.18615. It grante
 no mutation authority.
 
 ```powershell
-python -I -B tools\ghidra_crt_p0_boundary_live_preparation_tests.py
-python -I -B tools\ghidra_crt_p0_boundary_live_preparation.py preflight `
+python -I -B ./tools/ghidra_crt_p0_boundary_live_preparation_tests.py
+python -I -B ./tools/ghidra_crt_p0_boundary_live_preparation.py preflight `
   --repo <repository-root> --scratch-repo <repository-root> `
   --live-project <maintainer-project-root> --live-lane <future-live-lane> `
   --pre-backup <future-pre-backup> --post-backup <future-post-backup>
@@ -485,8 +498,8 @@ than claiming false database-byte determinism. Its policy remains
 were created and is now retained as consumed preparation evidence.
 
 ```powershell
-python -I -B tools\ghidra_crt_p0_boundary_live_preparation_v2_tests.py
-python -I -B tools\ghidra_crt_p0_boundary_live_preparation_v2.py preflight `
+python -I -B ./tools/ghidra_crt_p0_boundary_live_preparation_v2_tests.py
+python -I -B ./tools/ghidra_crt_p0_boundary_live_preparation_v2.py preflight `
   --repo <repository-root> --scratch-repo <repository-root> `
   --live-project <maintainer-project-root> --live-lane <future-live-lane> `
   --pre-backup <future-pre-backup> --post-backup <future-post-backup>
@@ -505,11 +518,11 @@ create-writes only the ignored aggregate receipt; `verify` is entirely
 read-only.
 
 ```powershell
-python -I -B tools\ghidra_crt_p0_boundary_live_authority_v2_tests.py
-python -I -B tools\ghidra_crt_p0_boundary_live_authority_v2.py verify `
+python -I -B ./tools/ghidra_crt_p0_boundary_live_authority_v2_tests.py
+python -I -B ./tools/ghidra_crt_p0_boundary_live_authority_v2.py verify `
   --repo <repository-root> --live-project <maintainer-project-root> `
   --pre-backup <retained-pre-backup> --post-backup <retained-post-backup> `
-  --output <repository-root>\local-lab\ghidra-crt23-p0-boundary-live-promotion-db18615-20260814-v2\live-promotion.ready.json
+  --output <repository-root>/local-lab/ghidra-crt23-p0-boundary-live-promotion-db18615-20260814-v2/live-promotion.ready.json
 ```
 
 See the
@@ -525,9 +538,9 @@ relocation evidence without opening Ghidra. Its reusable mode is read-only and
 the campaign remains `LIVE_FORBIDDEN`.
 
 ```powershell
-python -I -B tools\ghidra_crt_eh_parent_range_mutator_tests.py
-python -I -B tools\ghidra_crt_eh_parent_range_scratch_authority_tests.py
-python -I -B tools\ghidra_crt_eh_parent_range_scratch_authority.py verify
+python -I -B ./tools/ghidra_crt_eh_parent_range_mutator_tests.py
+python -I -B ./tools/ghidra_crt_eh_parent_range_scratch_authority_tests.py
+python -I -B ./tools/ghidra_crt_eh_parent_range_scratch_authority.py verify
 ```
 
 See the
@@ -548,8 +561,8 @@ remains fully read-only and is the reusable current gate. None of those modes
 grants action-specific authority to mutate live or tracked Ghidra.
 
 ```powershell
-python -I -B tools\ghidra_crt_eh_parent_range_live_authority_tests.py
-python -I -B tools\ghidra_crt_eh_parent_range_live_authority.py preflight `
+python -I -B ./tools/ghidra_crt_eh_parent_range_live_authority_tests.py
+python -I -B ./tools/ghidra_crt_eh_parent_range_live_authority.py preflight `
   --repo <repository-root> --evidence-repo <evidence-repository-root> `
   --live-project <maintainer-project-root> --live-lane <future-live-lane> `
   --pre-backup <future-pre-backup> --post-backup <future-post-backup>
@@ -571,10 +584,10 @@ two-replica package without opening Ghidra; its only write is a new contained
 receipt, and its policy remains `LIVE_FORBIDDEN`.
 
 ```powershell
-python -I -B tools\re_pc_function_body_fragments_tests.py
-python -I -B tools\ghidra_function_fragment_range_mutator_tests.py
-python -I -B tools\ghidra_function_fragment_range_scratch_authority_tests.py
-python -I -B tools\ghidra_function_fragment_range_live_authority_tests.py
+python -I -B ./tools/re_pc_function_body_fragments_tests.py
+python -I -B ./tools/ghidra_function_fragment_range_mutator_tests.py
+python -I -B ./tools/ghidra_function_fragment_range_scratch_authority_tests.py
+python -I -B ./tools/ghidra_function_fragment_range_live_authority_tests.py
 ```
 
 See the
@@ -630,8 +643,8 @@ owns the population distinctions, exact hashes, falsifiers, and current
 1,863-coordinate result. Its focused gates are:
 
 ```powershell
-py -3 tools\re_pc_native_source_coordinates_v3_tests.py
-py -3 tools\re_pc_native_source_coordinates_v3_tests.py --prove-can-fail
+python ./tools/re_pc_native_source_coordinates_v3_tests.py
+python ./tools/re_pc_native_source_coordinates_v3_tests.py --prove-can-fail
 ```
 
 ### External-tool pilots
@@ -714,12 +727,17 @@ tool's own documentation, not here.
   discovers the 66 shipped IDs that have a world header, mission scripts, and a
   world archive, then records one resumable opening trace per level from a
   single elevated shell.
-  **Standing caveat: TTD recording requires an elevated token**, and this
-  machine has no `TTDService`. Start an unattended campaign from one elevated
-  shell; the manual attach helper raises UAC for an individual capture.
+  **Standing caveat: TTD recording is Windows-only and requires an elevated
+  token.** The current Omarchy host cannot record, and the prepared Windows VM
+  is not yet activated. Once activated and provisioned with TTD, start an
+  unattended campaign from one elevated guest shell; the manual attach helper
+  raises UAC for an individual capture.
 - `ttd_coverage_index.py` (P5) — the offline cross-trace query root over the
-  retained exec-coverage receipts. `build` walks a receipts root (the canonical
-  corpus is `G:\bea-ttd`, read-only), validates every `coverage.jsonl`
+  retained exec-coverage receipts. `build` walks an explicitly supplied
+  receipts root. `G:\bea-ttd` is the historical Windows corpus path, not a
+  current Linux route; recovered evidence subsets live under the canonical
+  repo-local `local-lab/`, and no claim is made here that the full historical
+  corpus is present. The tool validates every `coverage.jsonl`
   fail-closed (per-row byte/VA/RVA arithmetic, module-span domain bounds,
   exact gap accounting and required controls, full module identity, summary
   agreement, assertion re-derivation, trace-name and module-base uniqueness,
@@ -735,7 +753,7 @@ tool's own documentation, not here.
   no debugger and never records. The preregistered first question (which
   retained traces contain any of the nine FireLock PCs, with ApplyDamage as
   must-hit and current-time BSS as must-miss) is answered in PROGRAM.md P5.
-  Focused gate: `py -3 tools\ttd_coverage_index_tests.py` (registered in
+  Focused gate: `python ./tools/ttd_coverage_index_tests.py` (registered in
   `npm run test:tools`).
 - `Record-Level521Session.ps1` / `Test-Level521NativeCoverage.ps1` —
   a played, attach-recorded session on level 521 and its verification.

@@ -10,7 +10,7 @@ This orchestrates the existing private extraction lanes:
 - cross-surface asset catalog
 
 Example:
-    py -3 tools/export_game_assets.py --game-root game
+    python ./tools/export_game_assets.py --game-root game
 """
 
 from __future__ import annotations

@@ -1,7 +1,7 @@
 # Documentation standard — five fields, derived from what this repository already does, and mechanically enforced
 
 Status: active — the header contract for tracked documentation
-Date: 2026-07-28
+Date: 2026-08-31
 Summary: every tracked document declares whether it is live, how old its claim
 is, and what it settles; a finding additionally declares whether its evidence is
 MEASURED, SOURCE, INFERRED or UNKNOWN, and names its specimen when it quotes
@@ -270,10 +270,10 @@ their own source notes rather than the RE-finding header schema), `references/`
 
 ## The checker
 
-```powershell
-py -3 tools\doc_header_check.py              # gate
-py -3 tools\doc_header_check.py --self-test  # self-tests, no repository needed
-py -3 tools\doc_header_check.py --show-backlog
+```bash
+python ./tools/doc_header_check.py              # gate
+python ./tools/doc_header_check.py --self-test  # self-tests, no repository needed
+python ./tools/doc_header_check.py --show-backlog
 npm run test:doc-headers                     # both of the above, wired
 npm run test:docs                            # links, headers, names, authority drift
 ```
@@ -287,7 +287,7 @@ body-accounting counts, or stale live/readback selectors instead of pointing to
 numbers; living front doors must not turn those snapshots back into live claims.
 
 Reachability is a separate diagnostic:
-`py -3 tools\md_reachability_check.py`. It is not part of `npm run test:docs`.
+`python ./tools/md_reachability_check.py`. It is not part of `npm run test:docs`.
 
 | Exit | Meaning |
 | --- | --- |
@@ -361,8 +361,8 @@ quote a retail address and declare no `Specimen:`. Those are the only entries in
 the backlog whose defect is category 1 — a claim that may be false — rather than
 category 4. List them with:
 
-```powershell
-py -3 tools\doc_header_check.py --show-backlog
+```bash
+python ./tools/doc_header_check.py --show-backlog
 ```
 
 The next-cheapest batch is the 11 `GOVERNANCE` files: three lines each, and they

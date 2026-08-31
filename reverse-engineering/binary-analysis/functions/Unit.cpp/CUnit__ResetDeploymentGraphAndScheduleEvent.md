@@ -174,10 +174,10 @@ Any one of:
 
 Run read-only from the repository root after verifying the official specimen:
 
-```text
-sha256sum C:/Users/david/source/Onslaught-Career-Editor/local-lab/safe-copy-bea-pristine/BEA.exe.original.backup
-py -3 tools/disasm_va.py C:/Users/david/source/Onslaught-Career-Editor/local-lab/safe-copy-bea-pristine/BEA.exe.original.backup 0x004fd040 --count 89 --bytes
-py -3 tools/call_xref_scan.py C:/Users/david/source/Onslaught-Career-Editor/local-lab/safe-copy-bea-pristine/BEA.exe.original.backup 0x004fd040 0x0044b370
-py -3 tools/operand_scan.py C:/Users/david/source/Onslaught-Career-Editor/local-lab/safe-copy-bea-pristine/BEA.exe.original.backup 0x004fd040 0x000007d0 --window 8
-py -3 tools/pe_read_va.py C:/Users/david/source/Onslaught-Career-Editor/local-lab/safe-copy-bea-pristine/BEA.exe.original.backup 0x005d8578 --count 4 --as float
+```bash
+sha256sum ./local-lab/safe-copy-bea-pristine/BEA.exe.original.backup
+python ./tools/disasm_va.py ./local-lab/safe-copy-bea-pristine/BEA.exe.original.backup 0x004fd040 --count 89 --bytes
+python ./tools/call_xref_scan.py ./local-lab/safe-copy-bea-pristine/BEA.exe.original.backup 0x004fd040 0x0044b370
+python ./tools/operand_scan.py ./local-lab/safe-copy-bea-pristine/BEA.exe.original.backup 0x004fd040 0x000007d0 --window 8
+python ./tools/pe_read_va.py ./local-lab/safe-copy-bea-pristine/BEA.exe.original.backup 0x005d8578 --count 4 --as float
 ```

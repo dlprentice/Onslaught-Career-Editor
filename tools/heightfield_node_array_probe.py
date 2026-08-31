@@ -13,7 +13,7 @@ packed RGB dword at node ``+8``. This probe answers whether that array's base
 pointer ships as anything other than zero.
 
 Usage:
-    py -3 tools/heightfield_node_array_probe.py --resources <path/to/data/resources>
+    python ./tools/heightfield_node_array_probe.py --resources <path/to/data/resources>
 """
 
 from __future__ import annotations

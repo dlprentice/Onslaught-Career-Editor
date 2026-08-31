@@ -33,7 +33,7 @@ shipped texture stages:
 = `0x3b800000` = 1/256.
 
 Usage:
-    py -3 tools/terrain_ambient_light_factor_probe.py [heightfield.hfld.bin]
+    python ./tools/terrain_ambient_light_factor_probe.py [heightfield.hfld.bin]
 """
 
 from __future__ import annotations

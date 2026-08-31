@@ -12,7 +12,7 @@ different here.
 Analysis only; writes nothing.
 
 Usage:
-  py -3 tools/cockpit_edge_profile.py <retail.png> <candidate.png> [more.png ...]
+  python ./tools/cockpit_edge_profile.py <retail.png> <candidate.png> [more.png ...]
 """
 
 from __future__ import annotations

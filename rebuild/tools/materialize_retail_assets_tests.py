@@ -351,6 +351,54 @@ class WorkRootRoutingTests(unittest.TestCase):
                 materializer._resolve_work_root(None),
             )
 
+    def test_host_default_request_routes_linux_to_the_canonical_lab(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            repository, lab = self._canonical_lab(Path(temporary))
+            with (
+                mock.patch.object(materializer.os, "name", "posix"),
+                mock.patch.object(
+                    materializer,
+                    "_canonical_repository_root",
+                    return_value=repository,
+                ),
+            ):
+                self.assertEqual(
+                    lab / "rebuild-godot",
+                    materializer._host_default_work_root_request(),
+                )
+
+    def test_host_default_request_preserves_the_windows_implicit_route(self) -> None:
+        with mock.patch.object(materializer.os, "name", "nt"):
+            self.assertIsNone(materializer._host_default_work_root_request())
+
+    def test_host_default_flag_uses_canonical_lab_for_a_ready_linux_noop(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            repository, lab = self._canonical_lab(Path(temporary))
+            work_root = lab / "rebuild-godot"
+            with (
+                mock.patch.object(
+                    materializer.sys,
+                    "argv",
+                    [
+                        "materialize_retail_assets.py",
+                        "--host-default-work-root",
+                    ],
+                ),
+                mock.patch.object(materializer.os, "name", "posix"),
+                mock.patch.object(
+                    materializer,
+                    "_canonical_repository_root",
+                    return_value=repository,
+                ),
+                mock.patch.object(materializer, "_outputs_ready", return_value=True),
+                mock.patch.object(materializer, "_all_outputs", return_value=()),
+                mock.patch("builtins.print") as output,
+            ):
+                self.assertEqual(0, materializer.main())
+
+            self.assertFalse(work_root.exists())
+            output.assert_called_once_with("retail rebuild assets ready: 0 exact files")
+
     def test_plain_canonical_lab_descendants_are_admitted(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             repository, lab = self._canonical_lab(Path(temporary))
@@ -821,6 +869,109 @@ class World110InitialObjectSeedTests(unittest.TestCase):
 
 
 class StartupMediaCacheTests(unittest.TestCase):
+    @staticmethod
+    def _canonical_lab(parent: Path) -> tuple[Path, Path]:
+        repository = parent / "canonical"
+        repository.mkdir()
+        lab = repository / "local-lab"
+        lab.mkdir()
+        return repository, lab
+
+    def test_linux_default_uses_the_canonical_checkout_lab(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            repository, lab = self._canonical_lab(Path(temporary))
+            with (
+                mock.patch.object(materializer.os, "name", "posix"),
+                mock.patch.object(
+                    materializer,
+                    "_canonical_repository_root",
+                    return_value=repository,
+                ),
+                mock.patch.dict(
+                    materializer.os.environ,
+                    {
+                        "ONSLAUGHT_STARTUP_MEDIA": "",
+                        "LOCALAPPDATA": "/ignored-on-linux",
+                    },
+                ),
+            ):
+                self.assertEqual(
+                    lab / "startup-media",
+                    materializer._default_startup_media_root(),
+                )
+
+    def test_child_worktree_default_never_uses_its_local_lab_twin(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            parent = Path(temporary)
+            repository, lab = self._canonical_lab(parent)
+            child = parent / "child-worktree"
+            child_lab = child / "local-lab"
+            child_lab.mkdir(parents=True)
+            with (
+                mock.patch.object(materializer, "ROOT", child),
+                mock.patch.object(materializer.os, "name", "posix"),
+                mock.patch.object(
+                    materializer,
+                    "_canonical_repository_root",
+                    return_value=repository,
+                ),
+                mock.patch.dict(
+                    materializer.os.environ,
+                    {"ONSLAUGHT_STARTUP_MEDIA": ""},
+                ),
+            ):
+                selected = materializer._default_startup_media_root()
+
+            self.assertEqual(lab / "startup-media", selected)
+            self.assertNotEqual(child_lab / "startup-media", selected)
+            self.assertFalse((child_lab / "startup-media").exists())
+
+    def test_linux_default_rejects_a_linked_canonical_cache(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            parent = Path(temporary)
+            repository, lab = self._canonical_lab(parent)
+            external = parent / "external-cache"
+            external.mkdir()
+            (lab / "startup-media").symlink_to(
+                external,
+                target_is_directory=True,
+            )
+            with (
+                mock.patch.object(materializer.os, "name", "posix"),
+                mock.patch.object(
+                    materializer,
+                    "_canonical_repository_root",
+                    return_value=repository,
+                ),
+                mock.patch.dict(
+                    materializer.os.environ,
+                    {"ONSLAUGHT_STARTUP_MEDIA": ""},
+                ),
+            ):
+                with self.assertRaisesRegex(RuntimeError, "link or reparse"):
+                    materializer._default_startup_media_root()
+
+    def test_explicit_startup_media_environment_remains_authoritative(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            configured = Path(temporary) / "explicit-cache"
+            with (
+                mock.patch.object(materializer.os, "name", "posix"),
+                mock.patch.object(
+                    materializer,
+                    "_canonical_repository_root",
+                ) as canonical,
+                mock.patch.dict(
+                    materializer.os.environ,
+                    {"ONSLAUGHT_STARTUP_MEDIA": str(configured)},
+                ),
+            ):
+                self.assertEqual(
+                    configured,
+                    materializer._default_startup_media_root(),
+                )
+
+            canonical.assert_not_called()
+
     def test_complete_rgb_png_is_accepted(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             path = Path(temporary) / "frame.png"

@@ -243,15 +243,15 @@ Any one of:
 
 Run read-only from the repository root after verifying the official specimen:
 
-```text
-sha256sum C:/Users/david/source/Onslaught-Career-Editor/local-lab/safe-copy-bea-pristine/BEA.exe.original.backup
-py -3 tools/re_cmech_profile_field.py C:/Users/david/source/Onslaught-Career-Editor/local-lab/safe-copy-bea-pristine/BEA.exe.original.backup --out-json .artifacts/cmech-profile-field.json
-py -3 tools/re_cmech_profile_field_tests.py
-py -3 tools/disasm_va.py C:/Users/david/source/Onslaught-Career-Editor/local-lab/safe-copy-bea-pristine/BEA.exe.original.backup 0x004a00a0 --count 46 --bytes
-py -3 tools/call_xref_scan.py C:/Users/david/source/Onslaught-Career-Editor/local-lab/safe-copy-bea-pristine/BEA.exe.original.backup 0x004a00a0 0x0047ce80 0x004fcfe0 0x0044b370
-py -3 tools/operand_scan.py C:/Users/david/source/Onslaught-Career-Editor/local-lab/safe-copy-bea-pristine/BEA.exe.original.backup 0x00000fa4 0x004a00a0 0x004f9820 0x004f43d0 --window 8
-py -3 tools/pe_read_va.py C:/Users/david/source/Onslaught-Career-Editor/local-lab/safe-copy-bea-pristine/BEA.exe.original.backup 0x005dc4b8 --count 4 --as float
-py -3 tools/re_rtti_vtables.py --binary C:/Users/david/source/Onslaught-Career-Editor/local-lab/safe-copy-bea-pristine/BEA.exe.original.backup --out-tsv C:/Users/david/AppData/Local/Temp/mech-vtables.tsv
+```bash
+sha256sum ./local-lab/safe-copy-bea-pristine/BEA.exe.original.backup
+python ./tools/re_cmech_profile_field.py ./local-lab/safe-copy-bea-pristine/BEA.exe.original.backup --out-json .artifacts/cmech-profile-field.json
+python ./tools/re_cmech_profile_field_tests.py
+python ./tools/disasm_va.py ./local-lab/safe-copy-bea-pristine/BEA.exe.original.backup 0x004a00a0 --count 46 --bytes
+python ./tools/call_xref_scan.py ./local-lab/safe-copy-bea-pristine/BEA.exe.original.backup 0x004a00a0 0x0047ce80 0x004fcfe0 0x0044b370
+python ./tools/operand_scan.py ./local-lab/safe-copy-bea-pristine/BEA.exe.original.backup 0x00000fa4 0x004a00a0 0x004f9820 0x004f43d0 --window 8
+python ./tools/pe_read_va.py ./local-lab/safe-copy-bea-pristine/BEA.exe.original.backup 0x005dc4b8 --count 4 --as float
+python ./tools/re_rtti_vtables.py --binary ./local-lab/safe-copy-bea-pristine/BEA.exe.original.backup --out-tsv .artifacts/mech-vtables.tsv
 ```
 
 ## Receipts

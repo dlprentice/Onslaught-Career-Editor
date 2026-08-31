@@ -6,7 +6,7 @@ This is intended for the server/client-style workflow documented in
 `reverse-engineering/binary-analysis/windbg-cdb-runbook.md`.
 
 Example:
-    py -3 tools/windbg_tail.py --log C:\\temp\\bea-windbg.log
+    python ./tools/windbg_tail.py --log C:\\temp\\bea-windbg.log
 """
 
 from __future__ import annotations

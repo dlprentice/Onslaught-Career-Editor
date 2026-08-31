@@ -355,10 +355,10 @@ extractor's pointer/bug guesses.
 
 Tracked deterministic audit:
 
-```powershell
-py -3 tools/aya_extractor_source_audit.py `
+```bash
+python ./tools/aya_extractor_source_audit.py \
   --out local-lab/hermes-kanban-campaign-2026-08-22/aya-extractor-audit/source-audit.json
-py -3 tools/aya_extractor_source_audit_tests.py
+python ./tools/aya_extractor_source_audit_tests.py
 ```
 
 The canonical-blob source report was generated twice and compared

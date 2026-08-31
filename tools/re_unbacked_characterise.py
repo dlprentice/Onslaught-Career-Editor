@@ -15,7 +15,7 @@ per function with:
                   (-1 = not reached by direct calls)
 
 Usage:
-  py -3 tools/re_unbacked_characterise.py \
+  python ./tools/re_unbacked_characterise.py \
       --binary <pristine BEA.exe> --grades <name-grades.tsv> \
       [--verify <re-verify.tsv>] [--roots-name-regex RE] --out-tsv <out.tsv>
 """

@@ -9,7 +9,7 @@ walker/jet transformation, so the wing reads as "flight mode" while the bar
 beneath it reads as ground. Both are plain geometry drawn from the app's own
 accent palette.
 
-Run:  py -3 tools/generate_app_icon.py
+Run:  python ./tools/generate_app_icon.py
 Writes: OnslaughtCareerEditor.WinUI/Assets/AppIcon.ico (+ a PNG preview)
 
 Deterministic: the same source produces byte-identical output, so regenerating

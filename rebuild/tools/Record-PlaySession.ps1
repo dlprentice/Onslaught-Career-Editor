@@ -283,7 +283,6 @@ Write-Host "the tape is persisted once at session end."
 
 try {
     $mediaArguments = @(
-        '-3',
         (Join-Path $PSScriptRoot 'materialize_retail_assets.py'),
         '--startup-media'
     )
@@ -291,7 +290,7 @@ try {
         $mediaArguments += @('--game-root', $GameRoot)
     }
 
-    & py @mediaArguments | ForEach-Object { Write-Host $_ }
+    & python @mediaArguments | ForEach-Object { Write-Host $_ }
     if ($LASTEXITCODE -ne 0) {
         throw "Retail startup-media preparation failed with exit code $LASTEXITCODE."
     }

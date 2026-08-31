@@ -1,7 +1,7 @@
 # Onslaught Rebuild
 
 Status: early GPL reconstruction lane
-Last updated: 2026-08-30. The bounded world-110 all-40 serialized
+Last updated: 2026-08-31. The bounded world-110 all-40 serialized
 initial-object seed, authored-definition, serialized player-start, complete
 ordered start-list resolution, and
 `CStart::Init` terrain-height projections, plus the standalone ordered
@@ -142,9 +142,10 @@ live with the [`Frontend`](OnslaughtRebuild.Godot/Assets/Frontend/README.md),
 [`Aquila`](OnslaughtRebuild.Godot/Assets/Aquila/README.md), and
 [`Level 100`](OnslaughtRebuild.Godot/Assets/Level100/README.md) recipes.
 
-## Run
+## Run (Windows VM)
 
-Install .NET 8, then from the repository root run:
+Inside the activated isolated Windows VM, install .NET 8, then from the
+repository root run:
 
 ```powershell
 npm run run:rebuild-godot
@@ -162,8 +163,19 @@ per-user cache and verified before every execution.
 Use `pwsh rebuild/tools/Run-FirstFlight.ps1 -Offline` to forbid downloads.
 
 `npm run prepare:rebuild-assets` performs the same exact local materialization
-without building or launching. Core, client, headless, and native smoke commands
-use that same owner; no separate manual extraction path is required.
+without building or launching. Core, Client, and headless commands consume the
+materialized owner on their own host; no separate manual extraction path is
+required.
+On Linux, the root command selects the canonical checkout's real
+`local-lab/rebuild-godot` staging owner. A fresh canonical clone must first
+create its private owner with `mkdir -m 700 ./local-lab`, and a fresh run
+requires `-- --game-root "/absolute/game/root"`. Never create a child-worktree
+twin or link. Core, Client, and headless execution are native Linux lanes after
+that materialization. The Windows VM uses its own checkout and its own ignored
+work root; it never shares the host's `local-lab` as guest-writable state. The
+currently admitted pinned Godot build/launch, native smoke, and capture routes
+remain Windows-only until the separate Linux toolchain manifest and smoke
+runner are verified.
 
 Controls:
 
@@ -632,12 +644,18 @@ the shipped objective marker without adding world-space beacons.
 
 ## Verify
 
-Choose the smallest relevant command:
+On Omarchy, choose the smallest Linux-native command:
 
-```powershell
+```bash
 npm run test:rebuild-core
 npm run test:rebuild-client
 npm run run:rebuild-headless
+```
+
+Inside the activated Windows VM, add the controlled native Godot smoke when
+the rendering/runtime path changed:
+
+```powershell
 npm run test:rebuild-godot-smoke
 ```
 

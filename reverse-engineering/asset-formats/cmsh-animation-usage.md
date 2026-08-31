@@ -228,19 +228,19 @@ The tracked scanner accepts an explicit user-supplied data root, verifies every
 selected file against the optional mirror index, and refuses to publish outside
 an ignored `local-lab` or `.artifacts` path:
 
-```powershell
-py -3 tools/cmsh_animation_usage_census.py `
-  --data-root "<safe-copy>\data" `
-  --mirror-index "G:\bea-asset-mirror\INDEX.jsonl" `
-  --json-out "local-lab\cmsh-animation-usage\census.json"
+```bash
+python ./tools/cmsh_animation_usage_census.py \
+  --data-root "<safe-copy>/data" \
+  --mirror-index "<asset-mirror>/INDEX.jsonl" \
+  --json-out "local-lab/cmsh-animation-usage/census.json"
 ```
 
 Focused gate with the local corpus enabled:
 
-```powershell
-$env:ONSLAUGHT_GAME_DATA = "<safe-copy>\data"
-$env:ONSLAUGHT_ASSET_INDEX = "G:\bea-asset-mirror\INDEX.jsonl"
-py -3 tools/cmsh_animation_usage_census_tests.py
+```bash
+export ONSLAUGHT_GAME_DATA="<safe-copy>/data"
+export ONSLAUGHT_ASSET_INDEX="<asset-mirror>/INDEX.jsonl"
+python ./tools/cmsh_animation_usage_census_tests.py
 ```
 
 A clean clone runs seven synthetic can-fail tests and skips the nine

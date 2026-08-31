@@ -18,9 +18,9 @@ and it is written down in AGENTS.md. What this can do is make sure the judgement
 made deliberately, by somebody who had to write a row explaining why, rather than by a
 file appearing in a commit nobody read closely.
 
-Run:  py -3 tools/check_registered_screenshots.py            list what is tracked
-      py -3 tools/check_registered_screenshots.py --check    non-zero if unregistered
-      py -3 tools/check_registered_screenshots.py --self-test
+Run:  python ./tools/check_registered_screenshots.py            list what is tracked
+      python ./tools/check_registered_screenshots.py --check    non-zero if unregistered
+      python ./tools/check_registered_screenshots.py --self-test
 """
 
 from __future__ import annotations
