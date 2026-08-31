@@ -3,7 +3,8 @@
 Status: active implementation boundary
 Last updated: 2026-08-30. Added the exact world-110 serialized player-start
 admission, complete ordered list resolution, and bounded `CStart::Init`
-terrain-height prefix. The released Battle
+terrain-height prefix, plus the standalone ordered
+`CPlayer::AssignBattleEngine` mapping. The released Battle
 Engine finite-cylinder mode-1 round-contact and selected-position boundary,
 bounded world-110 authored-definition projection,
 native-84 completion instrument, native-88 first-Pause session, and current
@@ -269,12 +270,15 @@ effective projected fields, and reaches the proven type/position/player/plane
 fallback only after zero matches. World 110's exact player 1 still resolves to
 its one admitted row. A separate bounded owner then
 carries only `CStart::Init`'s 37-byte terrain-height prefix at
-`[0x004eae27, 0x004eae4c)`. It does not implement the remainder of
-`CStart::Init`, `GetPlayerObject`, Battle Engine or player construction,
-runtime pointer acquisition, repeated `AssignBattleEngine` side effects,
-`CPlayer::Init`, the post-load state pair, an actor registry, an
-`InteractiveSession`, or a Godot lifecycle. The full evidence and falsifier are
-recorded in
+`[0x004eae27, 0x004eae4c)`. The standalone
+`RetailPlayerBattleEngineAssignment` owner now carries the valid-object order
+of both reader calls and the God-only policy-call intents. It does not supply a
+`CStart`, engine, player, or reader-cell identity to this path. The World-110
+seam therefore still does not implement the remainder of `CStart::Init`,
+`GetPlayerObject`, Battle Engine or player construction, composition of
+repeated assignment calls, policy-method execution, `CPlayer::Init`, the
+post-load state pair, an actor registry, an `InteractiveSession`, or a Godot
+lifecycle. The full evidence and falsifier are recorded in
 [`world-110-player-start-admission.md`](../reverse-engineering/game-mechanics/world-110-player-start-admission.md).
 
 Reuse preflight disposition for the player-start seam: **REUSED** — the exact
@@ -960,6 +964,51 @@ identities and safe unique membership. Target shutdown nulls the registered
 UnitAI `+0x0C` cell only; `+0x10/+0x18/+0x1C` remain unchanged until a later AI
 path writes them. Runtime storage, allocation, and object deletion remain
 adapter work.
+
+The same graph now supports one separately bounded player contract. Pristine
+PC `CPlayer::AssignBattleEngine` `[0x004d3080,0x004d30c5)` is 69 bytes / 26
+instructions, SHA-256
+`17f1f2e24aa271c93f1a223b7ad871f34487e91d4e1e640c37056cb112593a10`.
+It calls `SetReader` first on player `+0x1c` with the engine, then on engine
+`+0x574` with the player. It tests the complete dword at player `+0x20`; any
+nonzero value dispatches primary-vtable `+0xe0` with raw zero, then `+0x154`
+with raw one. Pinned `Player.cpp:254-266` and `BattleEngine.h:229,234` supply
+the source-compatible `SetPlayer`, `SetVulnerable(FALSE)`, and
+`SetInfinateEnergy(TRUE)` names. The concrete vtable resolves the latter two
+calls to static writes at engine `+0x15c`, `+0x160`, and `+0xfc`, but the new
+Core owner deliberately emits only policy-call intents until a cohesive Battle
+Engine state/configuration owner exists.
+
+`RetailPlayerBattleEngineAssignment` performs both graph operations in that
+order and snapshots each function-level call with an immutable nested action
+list. Same-target calls remain visible. Rebinding P from A to B leaves A's
+player reader aimed at P; displacing P2 from B leaves P2's engine reader aimed
+at B. Both are retained rather than repaired. Both distinct cells are
+preflighted before graph mutation. Null graph, duplicate reader-cell roles,
+and missing required cells are rejected before the first graph write under
+deterministic single-threaded Core use. The graph cannot validate that the
+engine-side cell belongs to the supplied engine; that remains an adapter
+invariant. This is not a retail atomicity claim: null pointers, configuration
+faults, allocator failure, rollback, lifetime, and concurrent mutation remain
+excluded.
+
+Reuse disposition for this seam: **REUSED** — the exact
+`CGenericActiveReader::SetReader` law, its accepted deterministic graph owner,
+pinned GPL source, and the pristine specimen; **EXTENDED** — one standalone
+Core composition plus focused tests; **NEW_MEASUREMENT** — the complete
+69-byte body identity/order and concrete God-policy vtable targets/effects.
+There was no runtime capture, Ghidra mutation, retail payload in Git, engine
+construction, session integration, or campaign-grade promotion.
+
+The controlled reciprocal-call mutation receipt is machine-local external
+evidence at
+`local-lab/rebuild-player-assign-battle-engine-mutation-kill-20260830/RECEIPT.md`,
+SHA-256
+`63b97ad75ddb73a39c2f8a92a48c8471548c5c2fd93c1837e0788780aa9ca401`.
+Omitting the second graph call while retaining its transcript label failed the
+exact fresh-bind fact. Byte restoration returned the production owner to
+`f8df01f2ad11d72061359487f625f0aeb68a6e34e291c0c59fb78c7e300cebce`,
+the same fact to 1/1, and the adjacent assignment/reader/start gate to 54/54.
 
 The spawner reached by that helper is now a separately bounded Core
 transaction. Pristine PC retail `CSpawnerThng__DoSpawn`

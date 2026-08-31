@@ -114,8 +114,9 @@ world sorting/setup stages" maps to `CMapWho__Sort` +
 
 ## Rebuild mapping
 
-Three bounded deterministic input/pre-init contracts now exist, but this
-runtime contract does not.
+Three bounded World-110 input/pre-init contracts and one standalone player/
+engine assignment contract now exist, but their runtime composition in this
+function does not.
 `rebuild/OnslaughtRebuild.Core/RetailWorldPlayerStartAdmission.cs`
 admits world 110's exact serialized type-15 player-1 row and returns it
 as an immutable pre-init plan. Its pure resolution seam walks the stored rows
@@ -129,14 +130,21 @@ the strict comparison and a second sample/store only on the clamp arm.
 It does not construct a `CStart`, run the remainder of `CStart::Init`,
 call `GetPlayerObject`, allocate a Battle Engine, or mutate a session.
 
-The deterministic transcript carries list order, final-match selection, and
-zero-match fallback intent only. A runtime owner still must obtain every
-matching `CStart +0x7c` value, perform each `CPlayer__AssignBattleEngine` call
-and its reciprocal side effects, then run per-player `CPlayer__Init` and write
-the `[+0x290]/[+0x294] = 2` state pair. The current one-row public admission and
-synthetic friend-test list cannot be cited as a naturally duplicated world-110
-profile or as world-110 construction. Focused runtime testing remains deferred
-until that owner exists.
+`RetailPlayerBattleEngineAssignment.cs` now carries the separate 69-byte
+`CPlayer::AssignBattleEngine` valid-object contract. It performs the two
+active-reader operations in released order, preserves stale reciprocal-link
+behavior, and emits the two God-only policy-call intents. It accepts only
+adapter-supplied stable identities and pre-existing reader cells; no current
+World-110 path supplies those identities.
+
+The list-resolution transcript therefore still carries serialized list order,
+final-match selection, and zero-match fallback intent only. A runtime owner
+must obtain every matching `CStart +0x7c` value, invoke the standalone
+assignment operation for each concrete engine, execute its policy calls, then
+run per-player `CPlayer__Init` and write the `[+0x290]/[+0x294] = 2` state pair.
+The current one-row public admission and synthetic friend-test list cannot be
+cited as a naturally duplicated World-110 profile or as World-110
+construction. Focused runtime testing remains deferred until that owner exists.
 
 ## Cheapest falsifier
 

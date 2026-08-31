@@ -1,18 +1,22 @@
 # World 110 authored player-start admission
 
-Status: accepted authored-data admission, ordered list resolution, and bounded height clamp; runtime construction remains open
+Status: accepted authored-data admission, ordered list resolution, bounded
+height clamp, and standalone player/engine assignment; runtime construction
+remains open
 Date: 2026-08-30
 Verdict: world 110 contains one exact authored type-15 start for player 1. Core
 admits its serialized pre-initialization fields, the complete ordered-match
 selection law, the released no-match fallback plan, and the exact
-terrain-height prefix of `CStart::Init`, but does not construct a `CStart`, a
-Battle Engine, a player, or a playable world-110 session.
+terrain-height prefix of `CStart::Init`. A separate deterministic owner now
+carries valid-object `CPlayer::AssignBattleEngine` order, but no path composes
+the serialized start with a constructed `CStart`, Battle Engine, player, or
+playable World-110 session.
 Evidence: MEASURED — the exact record was reread from the hash-pinned retail
 archive; the retained 66-level round-trip census independently corroborates the
 type-15 tail grammar; pinned source owns the serialized fields and post-load
 algorithm; pristine PC bytes fix the released list-walk, fallback behavior, and
-37-byte height-clamp prefix; the hash-pinned HFLD fixes the exact world-110
-sample and final Z.
+37-byte height-clamp prefix, plus the exact 69-byte assignment order; the hash-
+pinned HFLD fixes the exact World-110 sample and final Z.
 Specimen: pristine `BEA.exe.original.backup`, 2,506,752 bytes, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`;
 authored-record source `data/resources/110_res_PC.aya`, 1,294,300 bytes,
@@ -131,8 +135,39 @@ player1-final]` without weakening public admission. Its result preserves both
 matching rows in order, takes all effective serialized fields from the final
 row, and cannot be changed by append or indexed replacement. This is a
 serialized resolution transcript, not a transcript of runtime pointers or
-completed player assignments. `GetPlayerObject`, `AssignBattleEngine`, and
-their side effects remain outside the owner.
+completed player assignments. `GetPlayerObject` and composition with the
+separate assignment owner remain outside this owner.
+
+## Standalone `CPlayer::AssignBattleEngine` boundary
+
+The pristine function is `[0x004d3080, 0x004d30c5)`, 69 bytes, SHA-256
+`17f1f2e24aa271c93f1a223b7ad871f34487e91d4e1e640c37056cb112593a10`.
+For valid objects it first rebinds the player's Battle Engine reader, then the
+engine's player reader. If the complete player God dword is nonzero, it calls
+the source-correlated vulnerability policy with raw `0`, then infinite energy
+with raw `1`. There is no non-God reset arm.
+
+[`RetailPlayerBattleEngineAssignment`](../../rebuild/OnslaughtRebuild.Core/RetailPlayerBattleEngineAssignment.cs)
+composes those two calls over `RetailActiveReaderGraph` and returns a deeply
+immutable outer call transcript. Empty generic-reader action lists do not erase
+same-target function-call boundaries. Rebinding player P from engine A to B
+does not clear A's reader back to P; displacing player P2 from B likewise does
+not clear P2's reader forward to B. Those stale sides are released behavior,
+not cleanup omissions in the deterministic owner.
+
+The adapter supplies stable object/cell tokens and must pre-create both
+distinct reader cells. Null graph, duplicate reader-cell roles, and missing
+required cells are rejected before mutation; the adapter still guarantees that
+the engine-side cell belongs to the supplied engine. This does not claim retail
+rollback: the retail null-engine path can clear the player's old reader before
+faulting, and configuration/allocator failures remain outside Core. The two
+policy transcript entries are call intents, not executed Battle Engine scalar
+state.
+
+No World-110 owner currently supplies a constructed engine identity, its
+player-reader cell, or the player's engine-reader cell. The assignment contract
+therefore closes one reusable function boundary without closing
+`CStart::SpawnBattleEngine`, `GetPlayerObject`, post-load integration, or P7.
 
 ## Bounded `CStart::Init` terrain clamp
 
@@ -197,6 +232,16 @@ restoration, that fact passed 1/1 and the adjacent World-110/player-start gate
 passed 44/44. Distinct first/final projected fields separately prevent a
 first-row payload from passing through the final-row identity.
 
+The standalone assignment owner has a separate reciprocal-call mutation at
+`local-lab/rebuild-player-assign-battle-engine-mutation-kill-20260830/RECEIPT.md`,
+SHA-256
+`63b97ad75ddb73a39c2f8a92a48c8471548c5c2fd93c1837e0788780aa9ca401`.
+Omitting the second graph mutation while retaining its outer transcript label
+failed the exact fresh-bind fact. After byte-for-byte production restoration,
+the same fact passed 1/1 and the adjacent assignment/active-reader/start gate
+passed 54/54. This makes the focused Core reciprocal mutation test-observable;
+it does not prove runtime object construction or policy execution.
+
 ## Deliberate limits
 
 This seam does **not** establish or implement:
@@ -205,8 +250,9 @@ This seam does **not** establish or implement:
   `CComplexThing::Init`;
 - `CStart::GetPlayerObject` or any Battle Engine allocation/initialization;
 - `CGame::LoadLevel` player/controller construction;
-- the runtime `GetPlayerObject` values, repeated `CPlayer::AssignBattleEngine`
-  side effects, reciprocal reader/player links, or earlier-match lifetimes;
+- the runtime `GetPlayerObject` values, composition of repeated
+  `CPlayer::AssignBattleEngine` calls with constructed engines, policy-method
+  execution, or earlier-match lifetimes beyond the standalone stale-link law;
 - `CPlayer::Init` or the post-load state-pair writes;
 - a construction-ready world-110 actor definition set, actor registry,
   `InteractiveSession`, Godot lifecycle, or playable world 110.
@@ -223,8 +269,10 @@ digest, and every raw field above. Any mismatch rejects the admission rather
 than being normalized.
 
 The pure-list gate can be rerun by changing the complete walk to stop at the
-first match; the exact ordered-match test must fail. The cheapest runtime
-successor is a copied-game probe that records world 110's start list after the
+first match; the exact ordered-match test must fail. The assignment gate can
+be rerun by omitting its second `SetReader` operation; the exact fresh-bind fact
+must fail. The cheapest runtime successor is a copied-game probe that records
+World 110's start list after the
 admitted height prefix and after the rest of `CStart::Init`, the value returned
 by `GetPlayerObject`, and every `AssignBattleEngine` call during
 `CGame::PostLoadProcess`. A duplicate matching start in a controlled copied

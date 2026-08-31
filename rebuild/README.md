@@ -3,7 +3,8 @@
 Status: early GPL reconstruction lane
 Last updated: 2026-08-30. The bounded world-110 authored-definition,
 serialized player-start, complete ordered start-list resolution, and
-`CStart::Init` terrain-height projections,
+`CStart::Init` terrain-height projections, plus the standalone ordered
+player/Battle Engine assignment,
 native-88 Core session, career read/load frontend slice, and world-admission
 claims below are the newly re-reviewed surface.
 Other sections retain their narrower dated evidence boundaries.
@@ -336,6 +337,23 @@ before invalidating readers aimed at the dying AI. Runtime objects and pointers
 remain adapter-owned; Core models the deterministic relationship, not retail's
 allocation-failure crash.
 
+`RetailPlayerBattleEngineAssignment` now composes two of those graph writes at
+the next exact player boundary. Pristine `CPlayer::AssignBattleEngine`
+`[0x004d3080,0x004d30c5)` first binds the player's engine reader, then the
+engine's player reader. A same-target first call does not skip the second call;
+reassignment also leaves the old engine's backlink and the displaced player's
+forward link intact. Any nonzero raw player God word emits the exact later
+policy-call order: vulnerability raw `0`, then infinite energy raw `1`.
+The immutable transcript records those calls but does not execute the virtual
+policies or own Battle Engine scalar/configuration state. Adapter-supplied
+identities are not pointers; both distinct reader cells must already exist.
+Preflight rejects only null graph, duplicate cell roles, or missing required
+cells; cell-to-engine ownership remains an adapter invariant. This is not
+retail rollback or atomicity. Source-named `SetInfinateEnergy(TRUE)` also
+refills energy from configuration on the selected concrete virtual path; this
+owner emits only the raw call intent and reports no final vulnerability,
+infinite-energy, or energy state.
+
 `RetailSpawnerCycleTransaction` closes the nested spawner boundary that the
 live UnitAI probe can invoke. It preserves strict admission time, finite amount
 versus infinite mode, empty-squad publication before cycle commit, amount-slot
@@ -393,7 +411,9 @@ carries only its
 becomes fixed `(67,776, 66,256)`, the pinned HFLD samples `-10,485` units, and
 the strict clamp stores the second sample as Z bits `0xc1199926`. It stops
 before `CComplexThing::Init` and does not add player/Battle Engine construction,
-assignment, actor-registry, `InteractiveSession`, or Godot ownership; see
+actor-registry, `InteractiveSession`, or Godot ownership. The standalone
+assignment owner above still has no constructed World-110 player/engine/cell
+identities and is not composed into this path; see
 [`world-110-player-start-admission.md`](../reverse-engineering/game-mechanics/world-110-player-start-admission.md).
 
 World 200 (2026-08-22) generalizes that pattern and measures three places the

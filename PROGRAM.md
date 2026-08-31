@@ -385,9 +385,38 @@ The external receipt is
 `local-lab/rebuild-world110-player-start-postload-order-mutation-kill-20260830/RECEIPT.md`,
 SHA-256
 `fce701a0ee95a2d91a351e8082076b70280b3c2abd95e41baad4e38738291c46`.
-This closes serialized list selection only, not `GetPlayerObject`, repeated
-`AssignBattleEngine` side effects, player initialization, runtime construction,
-Godot ownership, or campaign 100→110 play.
+This closes serialized list selection only, not `GetPlayerObject`, composition
+with concrete-engine assignment operations, player initialization, runtime
+construction, Godot ownership, or campaign 100→110 play.
+
+**2026-08-30 — PARTIAL RECEIPT; STANDALONE
+`CPlayer::AssignBattleEngine` ORDER COMPLETE, P7 REMAINS OPEN.** The pristine
+69-byte body `[0x004d3080,0x004d30c5)` (SHA-256
+`17f1f2e24aa271c93f1a223b7ad871f34487e91d4e1e640c37056cb112593a10`)
+first binds the player's engine reader, then the engine's player reader. It
+tests the complete player God dword and, for any nonzero value, dispatches
+vulnerability raw `0` before infinite energy raw `1`. Reassignment does not
+clear the old engine's backlink or the displaced player's forward link.
+
+`RetailPlayerBattleEngineAssignment` composes the two calls over the accepted
+active-reader graph and returns a deeply immutable function-call transcript.
+Both same-target reader-call boundaries remain present. The two distinct
+reader cells are preflighted for deterministic host-model safety; this is not
+a claim that retail pointer/configuration faults are atomic or rolled back.
+The policy entries are call intents, not executed virtual methods or a new
+Battle Engine state owner.
+
+Omitting the reciprocal graph mutation while retaining its transcript label
+failed the exact fresh-bind fact. Byte restoration returned that fact to 1/1
+and the adjacent assignment/reader/start gate to 54/54. The external receipt
+is
+`local-lab/rebuild-player-assign-battle-engine-mutation-kill-20260830/RECEIPT.md`,
+SHA-256
+`63b97ad75ddb73a39c2f8a92a48c8471548c5c2fd93c1837e0788780aa9ca401`.
+No current World-110 path supplies constructed player/engine/cell identities,
+so `CStart::Init` remainder, `SpawnBattleEngine`, `GetPlayerObject`, repeated
+post-load composition, player initialization, actor registry, headless real
+session, Godot lifecycle, and campaign 100→110 play remain open.
 
 ### P8 — Human-input replay tapes
 
@@ -418,11 +447,17 @@ editing, trainer control beyond `music`). Gate: per-verb CLI tests, CLI.md
 updated, and the shipped/public copy stays free of internal process
 language (`test:safety` plus a doc grep).
 
-### P12 — `local-lab` disposition audit
+### P12 — repo-local `local-lab` canonicalization and disposition audit
 
-Work the 79 GiB local corpus family-by-family per
-[`AGENTS.md`](AGENTS.md): manifest + receipts read, tooling/tests/docs/
-campaign inputs grepped before any "stale" call, staged via
-`tools/lab_quarantine.py`, purged only under space pressure with separate
-reason. No bulk deletion, ever. Gate: per-family disposition rows with
-stage receipts under `H:\graveyard\lab-quarantine`.
+Keep one real, writable, Git-ignored corpus at repository-root `local-lab/`.
+Canonicalize the recovered ProjectData lane through a verified same-filesystem
+move, not a second bulk copy; an old-path compatibility link is routing only,
+never a second evidence owner. Work the corpus family-by-family per
+[`AGENTS.md`](AGENTS.md): read manifests and receipts, then search tooling,
+tests, documentation, and campaign inputs before any "stale" decision. Do not
+run `tools/lab_quarantine.py` or reinterpret its retired Windows `D:`/`H:`
+destinations on Linux. Any retirement requires an explicit user decision and a
+checksum-backed handoff under the current Recovery policy. Gate: same-inode
+move proof, updated routing/current-truth checks, and per-family disposition
+rows that distinguish working authority, justified recovery copy, and verified
+retirement candidate. No bulk deletion, ever.
