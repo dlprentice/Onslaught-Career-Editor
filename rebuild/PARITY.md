@@ -1,8 +1,8 @@
 # Rebuild parity contract
 
 Status: active — what "1:1 behavioral and experiential parity" means operationally
-Last updated: 2026-08-30 (world-110 serialized player-start admission,
-complete ordered start-list resolution, bounded terrain-height prefix, and
+Last updated: 2026-08-30 (world-110 all-40 serialized initial-object seed and
+player-start admissions, complete ordered start-list resolution, bounded terrain-height prefix, and
 the standalone ordered player/Battle Engine assignment, with their measured
 mutation kills; earlier
 surfaces include authored-definition admission,
@@ -100,6 +100,14 @@ Owner paths are relative to the repository root; test names are relative to
 > `63b97ad75ddb73a39c2f8a92a48c8471548c5c2fd93c1837e0788780aa9ca401`.
 > Omitting the reciprocal graph mutation made the exact fresh-bind fact fail;
 > byte restoration returned that fact to 1/1 and the adjacent gate to 54/54.
+>
+> The complete World-110 serialized initial-object seed row has its controlled
+> amount/mode-swap receipt at
+> `local-lab/rebuild-world110-all40-initial-object-seed-mutation-kill-20260830/RECEIPT.md`,
+> SHA-256
+> `fe300ff9fdfc13522922bdd81e860ecece1e54b521f719aeafec535d1b82e382`.
+> The exact squad fact went RED, byte restoration returned it to 1/1, and the
+> adjacent World-110/start/height/session/hash gate passed 66/66.
 
 | Retail entity | Anchor, and what the bytes say | Owner | Implementation | Test | Cases | Mutation that was killed |
 |---|---|---|---|---|---|---|
@@ -206,6 +214,7 @@ Owner paths are relative to the repository root; test names are relative to
 | World-110 script-object admission (second career node, version-50 layout) | `data/resources/110_res_PC.aya` measured 2026-08-22, whole-archive SHA-256 `4e041c758b9d41ba18311b1fadeacb95fc31af51320861480b97033bc24e3c2b`; RLWD header `(3, 41, 110)`; 13 hash-pinned objects — LevelScript 5110 B `f5c157ba…22aa` with 181 instructions, 92 symbols, `builtin[0]=11`, five named events (`Enemy Engaged` 100, `Vital Building Destroyed` 134, `Lander Escaped` 145, `Lander Destroyed` 159, `Lander Withdraws` 170) | `rebuild/OnslaughtRebuild.Core/Level100MissionProgram.cs` | `Level100MissionProgram.LoadEmbedded(world, name)` | `RetailWorld110AdmissionTests.AllThirteenScriptObjects_AdmitWithTheirPinnedIdentities` | 1 | re-pin `beacon` to `Lander`'s payload hash (cross-object admission accepted) |
 | World-110 HFLD admission | Same archive; extracted envelope (tag + CHFD + HFDT) is 668660 B, SHA-256 `fd4d076a2926fbc473b7d364703bdbc0c8a0f7a638b0ab71b6f319374da033c2`; same CHFD format law as Level 100 (grid `0x89/0x94/0x1a8/0x168`, same scales) with height data differing from the first sample word — a distinct measured world under the shared envelope law, recorded via `PayloadSha256` | `rebuild/OnslaughtRebuild.Core/Level100Terrain.cs` | `Level100Terrain.World110` (per-world `LoadEmbedded(name, sha)`) | `RetailWorld110AdmissionTests.World110Heightfield_IsItsOwnHashPinnedEnvelope` | 1 | re-pin `World110SourceSha256` to Level 100's envelope hash (also failed `World110AndLevel100Terrains_AreDistinctMeasuredWorlds`) |
 | World-110 authored actor-definition identity/shape admission | Same archive and the retained 115/115 byte-exact world-data round-trip: shared BSWD is 54,669 B / `04c5a383…10f4`; world-110 RLWD header `(2, 0, 40)`. Pinned `InitThing.h:112-357` owns common record fields, `410-620` owns the type-19 spawner definition, and `623-675` owns squad amount/mode. The existing WRES identity law projects 33 BSWD actor rows, 15 RLWD actor rows, and one RLWD spawner row as exact ordered `(object identity, thing type, definition, kind)` bindings. The type-15 start carries no Battle Engine definition | `rebuild/OnslaughtRebuild.Core/RetailWorld110LevelActors.cs` and `rebuild/OnslaughtRebuild.Core/RetailWorldActorDefinitionAdmission.cs` | `RetailWorldActorDefinitionAdmission.Admit` | `RetailWorld110LevelActorsTests.Admit_ExactWorld110ProjectionPreservesAuthoredDefinitionShape` | 1 | omit the required first BSWD binding, or substitute its object/definition identity; admission rejects before mission mutation |
+| World-110 complete serialized initial-object seed admission | Same archive; RLWD is 76,600 B / `fb56249d…9837`. After the exact preamble and 13 scripts, header `(2, 0, 40)` is at 15,709, the 40 records occupy `[15,719,18,327)`, and tree header `(0,2)` follows. Schema `onslaught.world110-initial-object-seeds.v1` is 21,651 B / `51e51f5e…04e5a`. Every common raw word and closed type-8/15/18/19/27/28/36 tail remains in serialized order. Five type-28 rows retain amounts `(5,5,3,5,4)` as squad seeds; the inactive type-19 row remains one configuration seed. This is immutable constructor input, not actor construction, expansion, registry, or session state | `rebuild/OnslaughtRebuild.Core/RetailWorldInitialObjectSeedAdmission.cs` | `RetailWorldInitialObjectSeedAdmission.World110` | `RetailWorld110InitialObjectSeedAdmissionTests.World110_AdmitsTheExactEnvelopeAndCompleteFortyRowOracle`; `TypedViewsPreserveSourceOrderIdentityAndSquadSpawnerSemantics` | 2 | swap decoded type-28 amount and mode: expected amounts `(5,5,3,5,4)`, actual `(0,0,0,0,0)`; restore byte-for-byte and the same fact plus adjacent 66-test gate pass |
 | World-110 authored player-start serialized admission | Same archive, RLWD header `(2, 0, 40)`, and exact-parser commit `4e3d472c`: type-15 `wres:rlwd:0001` is 59 B / `850de203…47dfc`, position bits `(0x43846000,0x43816800,0x80000000)`, orientation bits `(0xbf04fd8b,0,0)`, plane mode 0, player number 1. Pinned `InitThing.h:112-130,318-356,791-830` owns the common fields and start tail; pristine `CGame::PostLoadProcess` plus `game.cpp:781-822` own the later all-match assignment and zero-match fallback. This row admits serialized pre-init data only | `rebuild/OnslaughtRebuild.Core/RetailWorld110LevelActors.cs` and `rebuild/OnslaughtRebuild.Core/RetailWorldPlayerStartAdmission.cs` | `RetailWorldPlayerStartAdmission.Admit`; `RetailWorldPlayerStartProjection.ResolveForPlayer` | `RetailWorldPlayerStartAdmissionTests.Admit_ExactWorld110StartPreservesRawBitsAndDeterministicIdentity` | 1 | change `PlayerStartPlayerNumber` from 1 to 2 (measured Expected 1 / Actual 2); restore to 1 and the same exact test passes |
 | `CGame::PostLoadProcess` complete player-start list resolution | Pinned `game.cpp:781-822` and pristine `[0x0046d0a9,0x0046d10a)` (97 B / `6a3af1eb…5cb22`) walk the entire world-owned start list, continue after every matching player number, and test the found flag only after exhaustion. The deterministic owner preserves every matching serialized row in order, takes effective pre-init fields from the final match, and reaches the existing fallback only after zero matches. The public World-110 profile remains one exact player-1 row; an internal synthetic `[player1-first, player2, player1-final]` list is an algorithmic discriminator, not a naturally duplicated-world claim. Runtime `GetPlayerObject` values and composition of the standalone assignment owner with constructed engines remain open | `rebuild/OnslaughtRebuild.Core/RetailWorldPlayerStartAdmission.cs` | `RetailWorldPlayerStartProjection.ResolveForPlayer`; `RetailWorldPlayerStartResolution.MatchingAuthoredStarts` | `RetailWorldPlayerStartAdmissionTests.ResolveForPlayer_VisitsEveryMatchInOrderAndRetainsTheFinalMatch` | 1 | add `break` after the first retained match: ordered count becomes 1 instead of 2; restore byte-for-byte and the exact fact passes 1/1, adjacent gate 44/44 |
 | `CPlayer::AssignBattleEngine` ordered two-reader assignment | Pristine `[0x004d3080,0x004d30c5)` is 69 B / `17f1f2e2…593a10`. It calls `SetReader(player+0x1c, engine)` then `SetReader(engine+0x574, player)`, tests the full player `+0x20` dword, and on any nonzero value dispatches vtable `+0xe0` with raw 0 then `+0x154` with raw 1. Pinned `Player.cpp:254-266` names the two reader binds and God-only policies. Same-target calls retain their outer boundaries; reassignment does not clear either stale reciprocal side. Preflight rejects missing or duplicate required reader-cell roles before mutation; it is not retail rollback, and the policy entries are call intents rather than virtual execution | `rebuild/OnslaughtRebuild.Core/RetailPlayerBattleEngineAssignment.cs` | `RetailPlayerBattleEngineAssignment.Assign` over `RetailActiveReaderGraph` | `RetailPlayerBattleEngineAssignmentTests.FreshNonGodBindPreservesCallOrderAndTargets` | 1 | omit the reciprocal engine-player `SetReader` while retaining its transcript label: the exact fact fails on the empty nested actions; restore byte-for-byte and it passes 1/1, adjacent gate 54/54 |
@@ -246,10 +255,12 @@ names the rebuild bool),
 `LevelLostString` path, and `Level100WonCareerHandoff.TryApply` (which
 calls the already-pinned `ForLevel100Won` / `ApplyUpdate`) is reached from
 `Level100Mission` when `FrontEndHandoffReady` follows Won, including the
-SimInput-only chain fixture that never posts a mission event. Of the four world-admission rows added 2026-08-22 plus the 2026-08-24 authored
-definition row, `IsWorldSelectable`, `IsWorldLater`,
-`Level100Terrain.World110`, and `RetailWorldActorDefinitionAdmission` remain
-catalog/admission law. `RetailWorldPlayerStartAdmission` retains one immutable
+SimInput-only chain fixture that never posts a mission event. The world-admission
+rows, `IsWorldSelectable`, `IsWorldLater`, `Level100Terrain.World110`,
+`RetailWorldActorDefinitionAdmission`, and
+`RetailWorldInitialObjectSeedAdmission` remain catalog/admission law. The seed
+owner retains 40 serialized rows and seven closed tail shapes without expanding
+them or publishing runtime identities. `RetailWorldPlayerStartAdmission` retains one immutable
 serialized pre-init row, no-match fallback plan, and complete ordered list
 resolution. The adjacent height-clamp owner carries only the 37-byte
 `CStart::Init` prefix and its strict two-call branch law.

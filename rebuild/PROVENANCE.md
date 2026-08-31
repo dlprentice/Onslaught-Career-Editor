@@ -1,8 +1,9 @@
 # Rebuild Provenance
 
 Status: active implementation boundary
-Last updated: 2026-08-30. Added the exact world-110 serialized player-start
-admission, complete ordered list resolution, and bounded `CStart::Init`
+Last updated: 2026-08-30. Added the exact world-110 all-40 serialized
+initial-object seed and player-start admissions, complete ordered list
+resolution, and bounded `CStart::Init`
 terrain-height prefix, plus the standalone ordered
 `CPlayer::AssignBattleEngine` mapping. The released Battle
 Engine finite-cylinder mode-1 round-contact and selected-position boundary,
@@ -247,6 +248,57 @@ secondary-state controls; **EXTENDED 2** existing owners —
 **NEW_MEASUREMENT 0**. The generic deterministic admission class is new code,
 not a new retail measurement, inventory, output root, payload, specimen read,
 runtime capture, or Ghidra mutation.
+
+Core now also owns the complete inert RLWD initial-object seed admission that
+the earlier definition projection deliberately did not. The same exact archive
+inflates to a 76,600-byte RLWD, SHA-256
+`fb56249deac8faf0033f4d4b67688ff72e12d922291c880d75b10599fc739837`.
+After the version-50 preamble and 13 pinned scripts, the `(2, 0, 40)` table
+header is at offset 15,709; records occupy `[15,719, 18,327)`; and the next
+header is `(uint16 0, int32 2)`. Pinned `InitThing.h:112-130,318-356` owns the
+common field order. Its type-specific owners are `InitThing.h:410-620` for the
+spawner, `623-675` for the squad, `791-830` for the start, and `833-865` for
+the volume. Numeric type dispatch and the type-8/type-28 definition suffix are
+the already measured serialized grammar, not a new source-only claim.
+
+The materializer retains all seven closed tails and writes canonical compact
+JSON only to the ignored local asset
+`Assets/Level110/level110-initial-object-seeds.json`. Schema
+`onslaught.world110-initial-object-seeds.v1` is 21,651 bytes, SHA-256
+`51e51f5e1d3f7bce52ce99297711b1f299494271af3129828959e726aed04e5a`.
+`RetailWorldInitialObjectSeedAdmission.World110` verifies that hash before
+interpretation, rejects unknown or incomplete schema shapes, validates the
+exact envelope/census/order/extents and finite raw float words, then publishes
+immutable typed views over one snapshot of all 40 rows. The sole start converts
+losslessly to the existing player-start owner, and the 16 definition-bearing
+RLWD rows join the existing definition projection without importing its 33
+shared-BSWD rows.
+
+This is serialized constructor-input evidence, not construction. Five
+type-28 rows remain squad seeds with amounts `(5, 5, 3, 5, 4)`; no 22 member
+poses or publication order is inferred. The inactive type-19 row remains one
+configuration seed rather than three cold-spawned fighters. Raw transforms,
+delays, and radius are not converted poses, timing policy, or collision. No
+physics/runtime-class enrichment, actor IDs, nested allocation, start/player/
+Battle Engine construction, registry, state hash, session, Godot lifecycle, or
+campaign handoff is added. The bounded evidence and exact ceiling are recorded
+in
+[`world-110-initial-constructor-seeds.md`](../reverse-engineering/game-mechanics/world-110-initial-constructor-seeds.md).
+
+The controlled decoder mutation swapped type-28 amount and mode while leaving
+the embedded bytes and hash valid. The exact squad fact failed with expected
+amounts `(5, 5, 3, 5, 4)` and actual `(0, 0, 0, 0, 0)`; byte-for-byte source
+restoration returned that fact and the adjacent 66-test World-110/start/height/
+session/hash gate to green. The ignored repo-local receipt is
+`local-lab/rebuild-world110-all40-initial-object-seed-mutation-kill-20260830/RECEIPT.md`,
+SHA-256
+`fe300ff9fdfc13522922bdd81e860ecece1e54b521f719aeafec535d1b82e382`.
+Reuse disposition: **REUSED** — the exact archive,
+RLWD, preamble/scripts, object-table grammar, source field owners, definition
+and start admissions, and World-100 hash control; **EXTENDED** — the existing
+materializer and Level-110 local asset owner; **NEW_MEASUREMENT 0**. The new
+schema and immutable admission are deterministic implementation outputs, not
+new retail runtime evidence.
 
 Core separately owns the exact serialized player-start admission seam for
 world 110. `RetailWorldPlayerStartAdmission` accepts only the archive identity

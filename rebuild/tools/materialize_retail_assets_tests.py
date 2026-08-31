@@ -67,8 +67,19 @@ def _world_initial_object(
     spawn_script: str = "",
     active: int = 1,
     attach_scripts: int = 0,
+    definition_name: str = "X",
+    trailer: int = -1,
     plane_mode: int = 0,
     player_number: int = 1,
+    amount: int = 1,
+    mode: int = 0,
+    delay_bits: int = 0,
+    squad_delay_bits: int = 0,
+    initial_delay_bits: int = 0,
+    squad_size: int = 1,
+    spawn_unit: str = "",
+    spawner_spawn_script: str = "",
+    radius_bits: int = 0x3F800000,
 ) -> bytes:
     result = bytearray(struct.pack("<i", thing_type))
     for bits in (*position_bits, *orientation_bits):
@@ -78,19 +89,23 @@ def _world_initial_object(
         result.extend(value.encode("ascii") + b"\0")
     result.extend(struct.pack("<ii", active, attach_scripts))
     if thing_type == 8:
-        result.extend(b"\x01X" + struct.pack("<i", -1))
+        encoded = definition_name.encode("ascii")
+        result.extend(bytes((len(encoded),)) + encoded + struct.pack("<i", trailer))
     elif thing_type == 15:
         result.extend(struct.pack("<ii", plane_mode, player_number))
     elif thing_type in (18, 27):
         pass
     elif thing_type == 19:
-        result.extend(struct.pack("<ifffi", 1, 0.0, 0.0, 0.0, 1))
-        result.extend(b"\0\0")
+        result.extend(struct.pack("<iIIIi", amount, delay_bits, squad_delay_bits,
+                                  initial_delay_bits, squad_size))
+        result.extend(spawn_unit.encode("ascii") + b"\0")
+        result.extend(spawner_spawn_script.encode("ascii") + b"\0")
     elif thing_type == 28:
-        result.extend(struct.pack("<ii", 1, 0))
-        result.extend(b"\x01X" + struct.pack("<i", -1))
+        result.extend(struct.pack("<ii", amount, mode))
+        encoded = definition_name.encode("ascii")
+        result.extend(bytes((len(encoded),)) + encoded + struct.pack("<i", trailer))
     elif thing_type == 36:
-        result.extend(struct.pack("<f", 1.0))
+        result.extend(struct.pack("<I", radius_bits))
     return bytes(result)
 
 
@@ -479,15 +494,19 @@ class WorkRootRoutingTests(unittest.TestCase):
 
 
 class World110PlayerStartTests(unittest.TestCase):
-    def test_wrapper_rewalks_the_exact_container_and_admits_the_start(self) -> None:
+    def test_seed_wrapper_rewalks_the_exact_container_and_admits_all_rows(self) -> None:
         raw_world = b"world-container"
         wres = b"wres"
         wrld = b"wrld"
         rlwd = b"rlwd"
         objects = (mock.sentinel.object_row,)
-        start = mock.sentinel.player_start
         reader = mock.Mock()
+        reader.position = materializer.WORLD110_INITIAL_OBJECT_HEADER_OFFSET
         reader.int32.side_effect = [0, 0, 0, 0, 0, 0, 0, 0, 0, 13]
+
+        def parse_objects(*_args: object) -> tuple[object, ...]:
+            reader.position = materializer.WORLD110_TREE_GROUP_HEADER_OFFSET + 6
+            return objects
 
         def chunk_payload(data: bytes, kind: bytes) -> bytes:
             expected = {
@@ -526,17 +545,16 @@ class World110PlayerStartTests(unittest.TestCase):
             mock.patch.object(
                 materializer,
                 "_parse_world_initial_objects",
-                return_value=objects,
+                side_effect=parse_objects,
             ) as parse_objects,
             mock.patch.object(
                 materializer,
                 "_admit_world110_player_start",
-                return_value=start,
             ) as admit,
         ):
-            self.assertIs(
-                start,
-                materializer._parse_world110_player_start(raw_world),
+            self.assertEqual(
+                objects,
+                materializer._parse_world110_initial_object_seeds(raw_world),
             )
 
         self.assertEqual(3, extract.call_count)
@@ -553,6 +571,26 @@ class World110PlayerStartTests(unittest.TestCase):
             materializer.WORLD110_INITIAL_OBJECT_HEADER,
             materializer.WORLD110_INITIAL_OBJECT_TYPE_COUNTS,
         )
+        admit.assert_called_once_with(objects)
+
+    def test_player_start_wrapper_filters_the_admitted_seed_table(self) -> None:
+        objects = (mock.sentinel.object_row,)
+        start = mock.sentinel.player_start
+        with (
+            mock.patch.object(
+                materializer,
+                "_parse_world110_initial_object_seeds",
+                return_value=objects,
+            ) as parse_seeds,
+            mock.patch.object(
+                materializer,
+                "_admit_world110_player_start",
+                return_value=start,
+            ) as admit,
+        ):
+            self.assertIs(start, materializer._parse_world110_player_start(b"world"))
+
+        parse_seeds.assert_called_once_with(b"world")
         admit.assert_called_once_with(objects)
 
     def test_wrapper_rejects_changed_rlwd_before_interpreting_it(self) -> None:
@@ -640,6 +678,146 @@ class World110PlayerStartTests(unittest.TestCase):
                 (2, 0, 1),
                 {28: 1},
             )
+
+
+class World110InitialObjectSeedTests(unittest.TestCase):
+    @staticmethod
+    def _parse_rows(rows: list[bytes]) -> tuple[materializer._WorldInitialObject, ...]:
+        payload = bytearray(struct.pack("<iiH", 2, 0, len(rows)))
+        payload.extend(b"".join(rows))
+        payload.extend(struct.pack("<Hi", 0, 2))
+        return materializer._parse_world_initial_objects(
+            materializer._WorldReader(bytes(payload)),
+            110,
+            (2, 0, len(rows)),
+            {
+                thing_type: sum(
+                    struct.unpack_from("<i", row)[0] == thing_type for row in rows
+                )
+                for thing_type in sorted(
+                    {struct.unpack_from("<i", row)[0] for row in rows}
+                )
+            },
+        )
+
+    def test_all_seven_closed_tails_retain_distinct_non_default_values(self) -> None:
+        rows = self._parse_rows(
+            [
+                _world_initial_object(
+                    8,
+                    definition_name="Exact Unit",
+                ),
+                _world_initial_object(15, plane_mode=1, player_number=2),
+                _world_initial_object(18),
+                _world_initial_object(
+                    19,
+                    amount=7,
+                    delay_bits=0x3F800001,
+                    squad_delay_bits=0x40000002,
+                    initial_delay_bits=0x40400003,
+                    squad_size=4,
+                    spawn_unit="Exact Spawn Unit",
+                    spawner_spawn_script="SpawnerTailScript",
+                    spawn_script="CommonSpawnScript",
+                ),
+                _world_initial_object(27, script="Carrier"),
+                _world_initial_object(
+                    28,
+                    amount=9,
+                    mode=2,
+                    definition_name="Exact Squad",
+                ),
+                _world_initial_object(36, radius_bits=0x42480001),
+            ]
+        )
+
+        self.assertEqual(
+            materializer._WorldUnitSeedTail("Exact Unit", -1),
+            rows[0].tail,
+        )
+        self.assertEqual(materializer._WorldStartSeedTail(1, 2), rows[1].tail)
+        self.assertIsInstance(rows[2].tail, materializer._WorldWaypointSeedTail)
+        self.assertEqual(
+            materializer._WorldSpawnerSeedTail(
+                7,
+                0x3F800001,
+                0x40000002,
+                0x40400003,
+                4,
+                "Exact Spawn Unit",
+                "SpawnerTailScript",
+            ),
+            rows[3].tail,
+        )
+        self.assertEqual("CommonSpawnScript", rows[3].spawn_script)
+        self.assertIsInstance(rows[4].tail, materializer._WorldScriptSeedTail)
+        self.assertEqual(
+            materializer._WorldSquadSeedTail(9, 2, "Exact Squad", -1),
+            rows[5].tail,
+        )
+        self.assertEqual(
+            materializer._WorldVolumeSeedTail(0x42480001),
+            rows[6].tail,
+        )
+
+    def test_non_finite_common_and_tail_words_fail_closed(self) -> None:
+        cases = (
+            _world_initial_object(18, position_bits=(0x7F800000, 0, 0)),
+            _world_initial_object(19, delay_bits=0x7FC00000),
+            _world_initial_object(36, radius_bits=0xFF800000),
+        )
+        for row in cases:
+            with self.subTest(thing_type=struct.unpack_from("<i", row)[0]):
+                with self.assertRaisesRegex(RuntimeError, "non-finite"):
+                    self._parse_rows([row])
+
+    def test_invalid_flags_sentinels_and_cardinalities_fail_closed(self) -> None:
+        cases = (
+            (_world_initial_object(18, active=2), "non-boolean"),
+            (_world_initial_object(18, attach_scripts=-1), "non-boolean"),
+            (_world_initial_object(8, trailer=0), "type-8.*trailer"),
+            (_world_initial_object(28, trailer=0), "type-28.*trailer"),
+            (_world_initial_object(19, amount=0), "cardinality"),
+            (_world_initial_object(19, squad_size=-1), "cardinality"),
+            (_world_initial_object(28, amount=-1), "configuration"),
+            (_world_initial_object(28, mode=4), "configuration"),
+        )
+        for row, message in cases:
+            with self.subTest(message=message):
+                with self.assertRaisesRegex(RuntimeError, message):
+                    self._parse_rows([row])
+
+    def test_canonical_seed_serialization_is_byte_deterministic(self) -> None:
+        _, parsed = _world110_initial_object_fixture()
+        exact_lengths = (
+            62, 59, 56, 51, 51, 122, 51, 51, 89, 55,
+            51, 51, 90, 90, 78, 51, 78, 87, 78, 92,
+            89, 51, 51, 51, 51, 71, 51, 51, 51, 51,
+            51, 51, 51, 51, 77, 77, 77, 77, 77, 58,
+        )
+        offset = materializer.WORLD110_INITIAL_OBJECT_FIRST_RECORD_OFFSET
+        normalized: list[materializer._WorldInitialObject] = []
+        for item, length in zip(parsed, exact_lengths, strict=True):
+            normalized.append(
+                item._replace(record_offset=offset, record_bytes=length)
+            )
+            offset += length
+        rows = tuple(normalized)
+
+        first = materializer._world110_initial_object_seed_bytes(rows)
+        second = materializer._world110_initial_object_seed_bytes(rows)
+
+        self.assertEqual(first, second)
+        self.assertTrue(first.endswith(b"\n"))
+        self.assertNotIn(b" ", first)
+        self.assertEqual(
+            materializer.WORLD110_INITIAL_OBJECT_SEEDS_SCHEMA,
+            json.loads(first)["schema"],
+        )
+        self.assertRegex(
+            materializer.WORLD110_INITIAL_OBJECT_SEEDS_SHA256,
+            r"^[0-9a-f]{64}$",
+        )
 
 
 class StartupMediaCacheTests(unittest.TestCase):

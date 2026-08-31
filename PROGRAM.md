@@ -418,6 +418,43 @@ so `CStart::Init` remainder, `SpawnBattleEngine`, `GetPlayerObject`, repeated
 post-load composition, player initialization, actor registry, headless real
 session, Godot lifecycle, and campaign 100→110 play remain open.
 
+**2026-08-30 — PARTIAL RECEIPT; ALL-40 SERIALIZED INITIAL-OBJECT SEED
+ADMISSION COMPLETE, P7 REMAINS OPEN.** At base `85a073a1`, the exact
+World-110 materializer walk now retains all seven closed type tails and emits
+the ignored local schema `onslaught.world110-initial-object-seeds.v1`. The
+21,651 canonical bytes have SHA-256
+`51e51f5e1d3f7bce52ce99297711b1f299494271af3129828959e726aed04e5a`.
+Core verifies that hash before interpretation, rejects incomplete or reordered
+schema shapes, snapshots all 40 rows, and exposes immutable typed views without
+coordinate conversion, squad/spawner expansion, actor IDs, or runtime state.
+The exact start and 16 RLWD definition-bearing seeds cross-check the accepted
+owners; the 33 shared-BSWD definitions remain separate.
+
+The restored production owner is SHA-256
+`13d76ebef4fc5723325c5285c9df5a1d7944edb43dd37e9a0d38bbc2963d031a`;
+its focused test owner is
+`9ba381b89558e15e8f022a8a78fcb8a53bcd3ad1b17f687c9a92a5d1f49398c1`.
+A controlled amount/mode swap changed the production hash to
+`c7b3a0c34ad1ec69cd3683a68650b32c7309e86a3ff6599b820e3b7eda7ee7a2`
+and failed the exact squad fact with expected amounts `(5, 5, 3, 5, 4)` and
+actual `(0, 0, 0, 0, 0)`. Byte-for-byte restoration reproduced the original
+source hash; the materializer gate passed 42/42, the new Core family passed
+8/8, and the adjacent World-110/start/height/session/hash gate passed 66/66.
+The ignored repo-local receipt is
+`local-lab/rebuild-world110-all40-initial-object-seed-mutation-kill-20260830/RECEIPT.md`,
+SHA-256
+`fe300ff9fdfc13522922bdd81e860ecece1e54b521f719aeafec535d1b82e382`.
+The broad non-ferry Core gate then measured 1,118 passed / 4 unchanged known
+failures / 1,122 total / 0 skipped in 35 m 43 s.
+
+This closes standalone serialized seed admission only. Five squad seeds do not
+prove 22 member poses or publication order, and the inactive spawner does not
+cold-construct three fighters. Physics/coordinate enrichment, nested
+construction, `CStart`/player/Battle Engine composition, registry, state hash,
+real session, Godot lifecycle, and campaign 100→110 play remain open. The
+bounded mechanism and ceiling are recorded in
+[`world-110-initial-constructor-seeds.md`](reverse-engineering/game-mechanics/world-110-initial-constructor-seeds.md).
+
 ### P8 — Human-input replay tapes
 
 Record a real play session into a replayable `CommandTape`; replay runs

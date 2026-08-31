@@ -1,8 +1,9 @@
 # Onslaught Rebuild
 
 Status: early GPL reconstruction lane
-Last updated: 2026-08-30. The bounded world-110 authored-definition,
-serialized player-start, complete ordered start-list resolution, and
+Last updated: 2026-08-30. The bounded world-110 all-40 serialized
+initial-object seed, authored-definition, serialized player-start, complete
+ordered start-list resolution, and
 `CStart::Init` terrain-height projections, plus the standalone ordered
 player/Battle Engine assignment,
 native-88 Core session, career read/load frontend slice, and world-admission
@@ -373,8 +374,9 @@ payloads, world 200 — the third node — joins it, and the separately measured
 world-300 main-episode payload is admitted without pretending its enclosing
 level-world header shares the earlier shape.
 `materialize_retail_assets.py` pins `data/resources/110_res_PC.aya`
-(SHA-256 `4e041c75…3c2b`) and walks out its 13 version-50 script objects plus
-the HFLD envelope into `Assets/Level110/`; `Level100MissionProgram.LoadEmbedded`
+(SHA-256 `4e041c75…3c2b`) and walks out its 13 version-50 script objects, HFLD
+envelope, and complete 40-row serialized initial-object seed table into
+`Assets/Level110/`; `Level100MissionProgram.LoadEmbedded`
 admits them per-world under the same hash law as Level 100 (world 110's
 LevelScript: 181 instructions, 92 symbols, five named events), and
 `Level100Terrain.World110` carries the heightfield under the same envelope law.
@@ -384,8 +386,8 @@ slot, and StateHasher schema 43 binds the non-root world and all ten secondary
 records while default world 100 stays byte-identical on schema 42. This session
 deliberately stamps the existing Level 100 test definitions: no product/Godot
 simulation consumes world-110 terrain or authored actors, and no world-110
-FillOut or full mission run exists. The level-world actor table is measured
-(40 RLWD initial actors, header `(2, 0, 40)`; types 19 and 28 are trailers
+FillOut or full mission run exists. The level-world initial-object table is
+measured (40 RLWD serialized rows, header `(2, 0, 40)`; types 19 and 28 have tails
 Level 100 does not use) and the BSWD island is byte-identical to Level 100
 (`04c5a383…10f4`). `RetailWorldActorDefinitionAdmission` now admits the exact
 archive identity plus 49 ordered definition-bearing object identities under the
@@ -394,7 +396,19 @@ existing `wres:bswd:NNNN` / `wres:rlwd:NNNN` law: 33 shared-BSWD actor rows,
 object, definition, count, or row shape fails closed. This is an identity/shape
 projection only: it carries no authored pose, mesh, health, runtime class,
 player binding, actor registry, or session construction. RLWD ordinal 0 is the
-LevelScript object. RLWD ordinal 1 is instead an exact 59-byte type-15
+LevelScript object. Separately,
+`RetailWorldInitialObjectSeedAdmission.World110` hash-pins the ignored
+`onslaught.world110-initial-object-seeds.v1` asset (21,651 bytes, SHA-256
+`51e51f5e…04e5a`) and admits all 40 rows in exact serialized order with raw
+pose words, common fields, record identities, and closed unit/start/waypoint/
+spawner/script/squad/volume tails. The five squad rows retain amounts
+`(5, 5, 3, 5, 4)` rather than becoming five ordinary units, and the inactive
+spawner remains configuration rather than three cold-spawned fighters. This is
+immutable constructor-input evidence only: it supplies no coordinate
+conversion, actor IDs, nested construction, registry, state hash, session, or
+Godot integration. See
+[`world-110-initial-constructor-seeds.md`](../reverse-engineering/game-mechanics/world-110-initial-constructor-seeds.md).
+RLWD ordinal 1 is an exact 59-byte type-15
 `CStartInitThing` for player 1. `RetailWorldPlayerStartAdmission` retains its
 authored position/orientation bits, plane mode, and player number under the same
 archive identity, while keeping it separate from the 49 definition-bearing

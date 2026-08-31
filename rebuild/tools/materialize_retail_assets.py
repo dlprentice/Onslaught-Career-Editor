@@ -58,7 +58,7 @@ class _WorldAdmission(NamedTuple):
 
 
 class _WorldInitialObject(NamedTuple):
-    """Bounded identity/pose projection of one serialized world object."""
+    """Exact inert projection of one serialized world initial-object seed."""
 
     ordinal: int
     record_offset: int
@@ -75,8 +75,77 @@ class _WorldInitialObject(NamedTuple):
     spawn_script: str
     active: int
     attach_scripts: int
-    plane_mode: int | None
-    player_number: int | None
+    tail: _WorldInitialObjectTail
+
+    @property
+    def plane_mode(self) -> int | None:
+        """Compatibility view used by the already-admitted start check."""
+
+        return (
+            self.tail.plane_mode
+            if isinstance(self.tail, _WorldStartSeedTail)
+            else None
+        )
+
+    @property
+    def player_number(self) -> int | None:
+        """Compatibility view used by the already-admitted start check."""
+
+        return (
+            self.tail.player_number
+            if isinstance(self.tail, _WorldStartSeedTail)
+            else None
+        )
+
+
+class _WorldUnitSeedTail(NamedTuple):
+    definition_name: str
+    trailer: int
+
+
+class _WorldStartSeedTail(NamedTuple):
+    plane_mode: int
+    player_number: int
+
+
+class _WorldWaypointSeedTail(NamedTuple):
+    pass
+
+
+class _WorldSpawnerSeedTail(NamedTuple):
+    amount: int
+    delay_bits: int
+    squad_delay_bits: int
+    initial_delay_bits: int
+    squad_size: int
+    spawn_unit: str
+    spawner_spawn_script: str
+
+
+class _WorldScriptSeedTail(NamedTuple):
+    pass
+
+
+class _WorldSquadSeedTail(NamedTuple):
+    amount: int
+    mode: int
+    definition_name: str
+    trailer: int
+
+
+class _WorldVolumeSeedTail(NamedTuple):
+    radius_bits: int
+
+
+_WorldInitialObjectTail = (
+    _WorldUnitSeedTail
+    | _WorldStartSeedTail
+    | _WorldWaypointSeedTail
+    | _WorldSpawnerSeedTail
+    | _WorldScriptSeedTail
+    | _WorldSquadSeedTail
+    | _WorldVolumeSeedTail
+)
 
 
 class _PhysicsRecord(NamedTuple):
@@ -188,6 +257,10 @@ WORLD110_RLWD_SHA256 = (
     "fb56249deac8faf0033f4d4b67688ff72e12d922291c880d75b10599fc739837"
 )
 WORLD110_INITIAL_OBJECT_HEADER = (2, 0, 40)
+WORLD110_INITIAL_OBJECT_HEADER_OFFSET = 15_709
+WORLD110_INITIAL_OBJECT_FIRST_RECORD_OFFSET = 15_719
+WORLD110_TREE_GROUP_HEADER_OFFSET = 18_327
+WORLD110_TREE_GROUP_HEADER = (0, 2)
 WORLD110_INITIAL_OBJECT_TYPE_COUNTS = {
     8: 10,
     15: 1,
@@ -205,6 +278,18 @@ WORLD110_PLAYER_START_RECORD_SHA256 = (
 )
 WORLD110_PLAYER_START_POSITION_BITS = (0x43846000, 0x43816800, 0x80000000)
 WORLD110_PLAYER_START_ORIENTATION_BITS = (0xBF04FD8B, 0x00000000, 0x00000000)
+WORLD110_INITIAL_OBJECT_SEEDS_SCHEMA = (
+    "onslaught.world110-initial-object-seeds.v1"
+)
+LEVEL110_INITIAL_OBJECT_SEEDS = (
+    CORE_ASSETS / "Level110/level110-initial-object-seeds.json"
+)
+# Canonical compact JSON produced from the exact archive/RLWD/table identities
+# above. This pin is populated by the reviewed all-40 admission and is checked
+# before either staging or publication.
+WORLD110_INITIAL_OBJECT_SEEDS_SHA256 = (
+    "51e51f5e1d3f7bce52ce99297711b1f299494271af3129828959e726aed04e5a"
+)
 LEVEL110_SCRIPT_ROOT = CORE_ASSETS / "Level110/Scripts"
 LEVEL110_SCRIPT_OBJECTS = (
     ("beacon", 200, "8e75c80c01e8def1841c51a9234cc14d33590d4a9a031e087db0325762c35be7"),
@@ -1475,6 +1560,7 @@ def _fixed_outputs() -> tuple[tuple[Path, str], ...]:
             for name, _, expected in LEVEL100_SCRIPT_OBJECTS
         ),
         *later_worlds,
+        (LEVEL110_INITIAL_OBJECT_SEEDS, WORLD110_INITIAL_OBJECT_SEEDS_SHA256),
         (FRONTEND_LOCALIZATION, FRONTEND_LOCALIZATION_SHA256),
         (FRONTEND_WORLD_STRINGS, FRONTEND_WORLD_STRINGS_SHA256),
         (FEBACK_STRIP, FEBACK_STRIP_SHA256),
@@ -2176,6 +2262,12 @@ def _world_single_bits(reader: _WorldReader, world_number: int) -> int:
     return struct.unpack("<I", raw)[0]
 
 
+def _signed_int32_bits(bits: int) -> int:
+    """Preserve one IEEE-754 word in JSON's signed Core ``int`` shape."""
+
+    return struct.unpack("<i", struct.pack("<I", bits))[0]
+
+
 def _parse_world_initial_objects(
     reader: _WorldReader,
     world_number: int,
@@ -2218,36 +2310,73 @@ def _parse_world_initial_objects(
                 f"world {world_number} initial object {ordinal} has a non-boolean flag"
             )
 
-        plane_mode: int | None = None
-        player_number: int | None = None
         if thing_type == 8:
-            reader.string8()
-            if reader.int32() != -1:
+            definition_name = reader.string8()
+            trailer = reader.int32()
+            if trailer != -1:
                 raise RuntimeError(
                     f"world {world_number} type-8 definition trailer changed"
                 )
+            tail: _WorldInitialObjectTail = _WorldUnitSeedTail(
+                definition_name,
+                trailer,
+            )
         elif thing_type == 15:
             plane_mode = reader.int32()
             player_number = reader.int32()
-        elif thing_type in (18, 27):
-            pass
+            if plane_mode not in (0, 1) or player_number not in (1, 2):
+                raise RuntimeError(
+                    f"world {world_number} type-15 start tail is invalid"
+                )
+            tail = _WorldStartSeedTail(plane_mode, player_number)
+        elif thing_type == 18:
+            tail = _WorldWaypointSeedTail()
         elif thing_type == 19:
-            reader.int32()
-            for _ in range(3):
-                _world_single_bits(reader, world_number)
-            reader.int32()
-            reader.c_string()
-            reader.c_string()
+            amount = reader.int32()
+            delay_bits = _world_single_bits(reader, world_number)
+            squad_delay_bits = _world_single_bits(reader, world_number)
+            initial_delay_bits = _world_single_bits(reader, world_number)
+            squad_size = reader.int32()
+            spawn_unit = reader.c_string()
+            spawner_spawn_script = reader.c_string()
+            if amount <= 0 or amount > 10_000 or squad_size <= 0 or squad_size > 10_000:
+                raise RuntimeError(
+                    f"world {world_number} type-19 spawner cardinality is invalid"
+                )
+            tail = _WorldSpawnerSeedTail(
+                amount,
+                delay_bits,
+                squad_delay_bits,
+                initial_delay_bits,
+                squad_size,
+                spawn_unit,
+                spawner_spawn_script,
+            )
+        elif thing_type == 27:
+            tail = _WorldScriptSeedTail()
         elif thing_type == 28:
-            reader.int32()
-            reader.int32()
-            reader.string8()
-            if reader.int32() != -1:
+            amount = reader.int32()
+            mode = reader.int32()
+            definition_name = reader.string8()
+            trailer = reader.int32()
+            if trailer != -1:
                 raise RuntimeError(
                     f"world {world_number} type-28 definition trailer changed"
                 )
+            if amount <= 0 or amount > 10_000 or mode < 0 or mode > 3:
+                raise RuntimeError(
+                    f"world {world_number} type-28 squad configuration is invalid"
+                )
+            tail = _WorldSquadSeedTail(
+                amount,
+                mode,
+                definition_name,
+                trailer,
+            )
         elif thing_type == 36:
-            _world_single_bits(reader, world_number)
+            tail = _WorldVolumeSeedTail(
+                _world_single_bits(reader, world_number)
+            )
         else:
             raise RuntimeError(
                 f"world {world_number} initial object {ordinal} has unsupported "
@@ -2272,8 +2401,7 @@ def _parse_world_initial_objects(
                 spawn_script,
                 active,
                 attach_scripts,
-                plane_mode,
-                player_number,
+                tail,
             )
         )
 
@@ -2286,7 +2414,7 @@ def _parse_world_initial_objects(
             f"world {world_number} initial-object type census changed "
             f"({actual_type_counts})"
         )
-    if (reader.uint16(), reader.int32()) != (0, 2):
+    if (reader.uint16(), reader.int32()) != WORLD110_TREE_GROUP_HEADER:
         raise RuntimeError(
             f"world {world_number} initial objects did not land on the tree groups"
         )
@@ -2324,8 +2452,10 @@ def _admit_world110_player_start(
     return start
 
 
-def _parse_world110_player_start(raw_world: bytes) -> _WorldInitialObject:
-    """Re-derive the sole exact world-110 CStart record from admitted bytes."""
+def _parse_world110_initial_object_seeds(
+    raw_world: bytes,
+) -> tuple[_WorldInitialObject, ...]:
+    """Re-derive all 40 exact world-110 serialized constructor inputs."""
 
     rlwd = _chunk_payload(
         _chunk_payload(_chunk_payload(raw_world, b"WRES"), b"WRLD"),
@@ -2360,13 +2490,152 @@ def _parse_world110_player_start(raw_world: bytes) -> _WorldInitialObject:
     for _ in LEVEL110_SCRIPT_OBJECTS:
         _skip_level100_script_object(reader)
 
+    if reader.position != WORLD110_INITIAL_OBJECT_HEADER_OFFSET:
+        raise RuntimeError(
+            "world 110 initial-object table offset changed "
+            f"({reader.position})"
+        )
+
     objects = _parse_world_initial_objects(
         reader,
         110,
         WORLD110_INITIAL_OBJECT_HEADER,
         WORLD110_INITIAL_OBJECT_TYPE_COUNTS,
     )
-    return _admit_world110_player_start(objects)
+    if reader.position - 6 != WORLD110_TREE_GROUP_HEADER_OFFSET:
+        raise RuntimeError(
+            "world 110 tree-group boundary changed "
+            f"({reader.position - 6})"
+        )
+    _admit_world110_player_start(objects)
+    return objects
+
+
+def _parse_world110_player_start(raw_world: bytes) -> _WorldInitialObject:
+    """Filter the already-admitted all-40 table to its sole CStart row."""
+
+    return _admit_world110_player_start(
+        _parse_world110_initial_object_seeds(raw_world)
+    )
+
+
+def _world110_initial_object_tail_document(
+    tail: _WorldInitialObjectTail,
+) -> dict[str, object]:
+    if isinstance(tail, _WorldUnitSeedTail):
+        return {
+            "definitionName": tail.definition_name,
+            "kind": "unit",
+            "trailer": tail.trailer,
+        }
+    if isinstance(tail, _WorldStartSeedTail):
+        return {
+            "kind": "start",
+            "planeModeWord": tail.plane_mode,
+            "playerNumber": tail.player_number,
+        }
+    if isinstance(tail, _WorldWaypointSeedTail):
+        return {"kind": "waypoint"}
+    if isinstance(tail, _WorldSpawnerSeedTail):
+        return {
+            "amount": tail.amount,
+            "delayBits": _signed_int32_bits(tail.delay_bits),
+            "initialDelayBits": _signed_int32_bits(tail.initial_delay_bits),
+            "kind": "spawner",
+            "spawnUnit": tail.spawn_unit,
+            "spawnerSpawnScript": tail.spawner_spawn_script,
+            "squadDelayBits": _signed_int32_bits(tail.squad_delay_bits),
+            "squadSize": tail.squad_size,
+        }
+    if isinstance(tail, _WorldScriptSeedTail):
+        return {"kind": "script"}
+    if isinstance(tail, _WorldSquadSeedTail):
+        return {
+            "amount": tail.amount,
+            "definitionName": tail.definition_name,
+            "kind": "squad",
+            "mode": tail.mode,
+            "trailer": tail.trailer,
+        }
+    if isinstance(tail, _WorldVolumeSeedTail):
+        return {
+            "kind": "volume",
+            "radiusBits": _signed_int32_bits(tail.radius_bits),
+        }
+    raise RuntimeError("world 110 initial object has an unsupported retained tail")
+
+
+def _world110_initial_object_seed_bytes(
+    objects: tuple[_WorldInitialObject, ...],
+) -> bytes:
+    """Render the exact deterministic local evidence consumed by Core."""
+
+    if len(objects) != WORLD110_INITIAL_OBJECT_HEADER[2]:
+        raise RuntimeError("world 110 initial-object seed count changed")
+    expected_offset = WORLD110_INITIAL_OBJECT_FIRST_RECORD_OFFSET
+    for ordinal, item in enumerate(objects):
+        if item.ordinal != ordinal or item.record_offset != expected_offset:
+            raise RuntimeError(
+                f"world 110 initial-object serialized order changed at {ordinal}"
+            )
+        expected_offset += item.record_bytes
+    if expected_offset != WORLD110_TREE_GROUP_HEADER_OFFSET:
+        raise RuntimeError("world 110 initial-object table extent changed")
+    _admit_world110_player_start(objects)
+
+    rows: list[dict[str, object]] = []
+    for item in objects:
+        rows.append(
+            {
+                "activeWord": item.active,
+                "allegiance": item.allegiance,
+                "attachScriptsToUnitsWord": item.attach_scripts,
+                "meshNumber": item.mesh_number,
+                "name": item.name,
+                "objectIdentity": f"wres:rlwd:{item.ordinal:04d}",
+                "ordinal": item.ordinal,
+                "orientationXBits": _signed_int32_bits(item.orientation_bits[0]),
+                "orientationYBits": _signed_int32_bits(item.orientation_bits[1]),
+                "orientationZBits": _signed_int32_bits(item.orientation_bits[2]),
+                "positionXBits": _signed_int32_bits(item.position_bits[0]),
+                "positionYBits": _signed_int32_bits(item.position_bits[1]),
+                "positionZBits": _signed_int32_bits(item.position_bits[2]),
+                "recordOffset": item.record_offset,
+                "script": item.script,
+                "serializedByteLength": item.record_bytes,
+                "serializedSha256": item.record_sha256,
+                "spawnScript": item.spawn_script,
+                "tail": _world110_initial_object_tail_document(item.tail),
+                "target": item.target,
+                "thingType": item.thing_type,
+            }
+        )
+
+    document = {
+        "archive": {
+            "relativePath": WORLD110_ARCHIVE,
+            "sha256": WORLD110_ARCHIVE_SHA256,
+        },
+        "census": [
+            {"count": count, "thingType": thing_type}
+            for thing_type, count in WORLD110_INITIAL_OBJECT_TYPE_COUNTS.items()
+        ],
+        "headerA": WORLD110_INITIAL_OBJECT_HEADER[0],
+        "headerB": WORLD110_INITIAL_OBJECT_HEADER[1],
+        "initialObjectCount": WORLD110_INITIAL_OBJECT_HEADER[2],
+        "rlwdByteLength": WORLD110_RLWD_SIZE,
+        "rlwdInitialObjectHeaderOffset": WORLD110_INITIAL_OBJECT_HEADER_OFFSET,
+        "rlwdSha256": WORLD110_RLWD_SHA256,
+        "rows": rows,
+        "schema": WORLD110_INITIAL_OBJECT_SEEDS_SCHEMA,
+        "treeGroupHeaderA": WORLD110_TREE_GROUP_HEADER[0],
+        "treeGroupHeaderB": WORLD110_TREE_GROUP_HEADER[1],
+        "treeGroupHeaderOffset": WORLD110_TREE_GROUP_HEADER_OFFSET,
+        "worldNumber": 110,
+    }
+    return (
+        json.dumps(document, sort_keys=True, separators=(",", ":")) + "\n"
+    ).encode("utf-8")
 
 
 def _parse_level_world_scripts(
@@ -4875,7 +5144,17 @@ def _materialize(game_root: Path, stage: Path) -> tuple[tuple[Path, str], ...]:
         )
         raw_world = inflate_aya_bytes(archive)
         if admission.world_number == 110:
-            _parse_world110_player_start(raw_world)
+            objects = _parse_world110_initial_object_seeds(raw_world)
+            seed_data = _world110_initial_object_seed_bytes(objects)
+            seed_hash = _sha256(seed_data)
+            if seed_hash != WORLD110_INITIAL_OBJECT_SEEDS_SHA256:
+                raise RuntimeError(
+                    "world 110 initial-object seed artifact did not reproduce "
+                    f"exactly (SHA-256 {seed_hash})"
+                )
+            seed_target = stage / LEVEL110_INITIAL_OBJECT_SEEDS
+            seed_target.parent.mkdir(parents=True, exist_ok=True)
+            seed_target.write_bytes(seed_data)
         scripts = _parse_world_scripts(
             raw_world,
             admission.world_number,
