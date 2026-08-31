@@ -505,20 +505,22 @@ dated measurements below as history; do not resume from this paragraph.
    (`local-lab\falsifier-closeout-2026-08-17\CLOSEOUT.md`). The remaining name
    corrections join the name-cohort item.
 8. **Continuous function-level RE.** Mine the retained 66-trace corpus and the
-   relocated DeepSeek index to raise the 8,088 OPAQUE rows through bounded,
-   byte-cited C1/C2 slices and rebuild owners. Reasoned "this consumes X and
-   decides Y" hypotheses with explicit confidence labels are progress; the
-   cheapest falsifier travels with every row.
-9. **Core gate — measured 2026-08-30: 1,110 passed / 4 known failed / 1,114
-   total / 0 skipped in 34 m 14 s.** Exact command:
+   relocated DeepSeek index to raise the remaining OPAQUE rows through bounded,
+   byte-cited C1/C2 slices and rebuild owners. Volatile campaign counts come
+   only from `developer_state.json` → `current_re_authority`; do not pin a
+   dated count in this directive. Reasoned "this consumes X and decides Y"
+   hypotheses with explicit confidence labels are progress; the cheapest
+   falsifier travels with every row.
+9. **Core gate — measured 2026-08-31: 1,130 passed / 3 known failed / 1,133
+   total / 0 skipped in 34 m 23 s.** Exact command:
    `dotnet test rebuild/OnslaughtRebuild.Core.Tests/OnslaughtRebuild.Core.Tests.csproj --nologo --no-restore --filter 'FullyQualifiedName!~Level100FerryLandingTests' --logger 'console;verbosity=minimal'`.
    The three `TapeFileWriteNew_*` extended/device-namespace failures are the
-   known Linux-host Windows-message assertion class; the fourth is the
-   pre-existing `BlasterMissLaw_SeparatesTheRunsOwnHitsFromItsMisses` observable
-   mismatch (actual 81 against 109–117). No new assignment/start failure was
-   observed. See [`VALIDATION.md`](VALIDATION.md). The earlier 854/2/856,
-   862/1/863, 729/729, and 730/730 figures remain dated receipts, not live
-   suite counts.
+   known Linux-host Windows-message assertion class. The former
+   `BlasterMissLaw_SeparatesTheRunsOwnHitsFromItsMisses` failure is resolved by
+   causal round identity at `b8fca9ea`; no new assignment/start failure was
+   observed at combined tip `c0e994ef`. See [`VALIDATION.md`](VALIDATION.md).
+   The earlier 1,118/4/1,122, 1,110/4/1,114, 862/1/863, 729/729, and 730/730
+   figures remain dated receipts, not live suite counts.
 10. **Organization and truth routing.** The physical repo-local `local-lab/`
     cutover is complete: one real ignored owner, old ProjectData path absent,
     no compatibility path. Keep the top-level, RE, Ghidra, probe, rebuild, and

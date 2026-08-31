@@ -49,9 +49,9 @@ the seven-minute owning fixture and collision gate passed 20/20, and the
 weapon/damage classes passed 48/48. Reconstructed cylinder/closest-approach data
 is now diagnostic only.
 
-## Next
+## Program ledger
 
-### P1 — Campaign Generation 32: bulk reseat of the sealed static receipts
+### P1 — Campaign Generation 32: bulk reseat of the sealed static receipts — COMPLETE
 
 Admit the 7,945 `SEALED_STATIC_RECEIPT` rows of
 `reverse-engineering/binary-analysis/function-c1-closure-2026-08-11.tsv`
@@ -167,9 +167,9 @@ order:
    C1 ~8,176, adjudications ~13,843, `nextValidGeneration` 33 — measure at
    cut); scoreboard repinned; authority receipt emitted.
 
-## Queued
+## Remaining and completed lanes
 
-### P2 — `wt/bea-ghidra` promotion (db.18632/33) through the full gate
+### P2 — `wt/bea-ghidra` promotion (db.18632/33) through the full gate — INTEGRATED; CEREMONY CLOSED
 
 **Live-ceremony portion COMPLETED 2026-08-18/19 (historical).** The six-row
 CMissile+CRound `name-cohort-round-dual-owner` SET_NAME family carried its own
@@ -184,12 +184,13 @@ placeholder-unique-owner, cockpit-dual-owner) this rolled tracked/live
 canonical owner [`reverse-engineering/ghidra/README.md`](reverse-engineering/ghidra/README.md)
 holds the current pins; this ledger records completion only.
 
-**Remaining P2 work is offline integration/repair only (no further live
-ceremony):** carry the corrected candidate (`wt/t_a5329ed3` @ `f17e5716`,
-which separates the historical db.18623 reproduction geometry from the
+**Historical final P2 work was offline integration/repair only (no further live
+ceremony):** the corrected candidate (`wt/t_a5329ed3` @ `f17e5716`, which
+separates the historical db.18623 reproduction geometry from the
 db.18627 live-ceremony authority and fails closed on swapped/stale identities)
-onto fresh main, reconcile the two conflicted documentation owners, and repin
-the stale state selector. Receipt:
+was carried onto fresh main, the two conflicted documentation owners were
+reconciled, and the stale state selector was repinned. That integration merged
+as `71fb4601`. Receipt:
 
 **2026-08-23 — P2 integration receipt (wt/t_57e0ae2f over fresh main
 `67d9d610`).** Transplanted the corrected candidate's 18 clean paths blob-exact:
@@ -213,7 +214,7 @@ seven manifest pins match, and
 receipts only — no live or headless Ghidra process, no volume write, no main
 merge.
 
-### P3 — `developer_state.json` split
+### P3 — `developer_state.json` split — IN PROGRESS
 
 Extract the `_HERMES_SLICE_*` block and superseded mega-blocks into the
 existing per-function note lane or dated local-lab reports (move, never
@@ -259,7 +260,7 @@ sub-gates green (doc headers
 2,009 files / 0 violations; re-function-doc-names 2,040 assertions DRIFTED=0;
 evidence-register header current; current-authority PASS).
 
-### P4 — Batch function-triage packet exporter
+### P4 — Batch function-triage packet exporter — COMPLETE
 
 One headless Ghidra run emits per-function packets (decompile, xrefs,
 strings, RTTI/vtable links, tags, campaign grade, coverage) for an input VA
@@ -269,7 +270,7 @@ named VA list produces complete packets; documented in
 
 **2026-08-22 — P4 gate receipt (wt/bea-p4-packets, `0c4e0e2d` + `27e2e916`, pushed).** One headless Ghidra invocation (`-readOnly -noanalysis`) over `tools/packet-va-cgame-level-flow.txt` (the five tracked CGame level-flow VAs from `ghidra-functions.md`) against the verified D: POST backup `D:\BEA-Ghidra-Backups\2026-08-17-vftable65-post-live` produced 5 complete `bea.re.triage-packet.v1` packets in 13s at `D:\packet-runs\cgame-level-flow-gate` — decompile slices, callers/callees STATIC_DIRECT edges, defined strings with referrers, observed vtable evidence, and campaign grade joined from the closure TSV (manifest records its pinned hash `cfe90af3…`). Body bytes match the published table (1504/208/587/1531/1382); CGame__Update shows exactly its two known callers. A second run reported `SKIP all 5` without launching Ghidra (image-hash incremental). Consumed by an RE work item: a packet run re-verified commit 31138fff's published SetWindVector claims from the same image — `callers: []` (zero direct calls) and the note's exact 94-byte body digest `3cf457a3…40c0d` recomputed from the pristine specimen (the packet's own bodyDigest covers Ghidra's 96-byte body incl. the `c2 0c 00` ret tail; both instruments agree on one specimen). Documented in `tools/README.md` § "Function-triage packets (P4)". Focused gate: `py -3 tools\export_packets_tests.py` (9/9, fake headless, registered in `npm run test:tools` sweep). Live-project refusal by default; every invocation read-only.
 
-### P5 — TTD trace index / query root
+### P5 — TTD trace index / query root — COMPLETE
 
 A per-trace index over the retained 66-trace corpus so offline questions
 stop spawning fresh cdb sessions. Gate: index build completes over the
@@ -318,7 +319,7 @@ answer about retained traces, not a contract-grade change. Focused gate:
 correction), registered in `npm run test:tools`; documented in
 [`tools/README.md`](tools/README.md) § wholesale instruments.
 
-### P6 — Campaign bookkeeping relief
+### P6 — Campaign bookkeeping relief — OPEN
 
 Batch-close the ~2,600 already-triaged-out questions as terminal with their
 existing verdicts; decouple campaign generations from structural Ghidra
@@ -327,7 +328,7 @@ policies in the campaign owner docs so the graded frontier — not artifact
 counts — is the visible progress metric. Gate: a generation cut closing the
 triaged-out rows with zero semantic movement, plus the policy recorded.
 
-### P7 — Rebuild world-110 generalization
+### P7 — Rebuild world-110 generalization — IN PROGRESS
 
 Convert the Level-100-shaped reconstruction into a level-data-driven one at
 the second world: materializer extended to the world-110 archive, VM
@@ -460,6 +461,15 @@ proves real object ownership; Core does not construct `CStart`, Battle Engine,
 player, or reader storage, execute policy virtuals, call `CPlayer::Init`, or
 publish a playable World-110 session.
 
+**2026-08-31 — BROAD CORE REPIN.** At combined main tip `c0e994ef` over the
+causal Blaster observer commit `b8fca9ea`, the non-ferry Core command in
+[`VALIDATION.md`](VALIDATION.md) measured **1,130 passed / 3 known failed /
+1,133 total / 0 skipped in 34 m 23 s**. The only failures were the three known
+Linux-host Windows-message assertions in `TapeFileWriteNew_*`; the former
+Blaster population mismatch passed, and no assignment/start failure appeared.
+The older broad receipts below remain historical measurements, not current
+suite truth.
+
 **2026-08-30 — PARTIAL RECEIPT; ALL-40 SERIALIZED INITIAL-OBJECT SEED
 ADMISSION COMPLETE, P7 REMAINS OPEN.** At base `85a073a1`, the exact
 World-110 materializer walk now retains all seven closed type tails and emits
@@ -499,28 +509,28 @@ sequence above does not widen this serialized-seed owner. The
 bounded mechanism and ceiling are recorded in
 [`world-110-initial-constructor-seeds.md`](reverse-engineering/game-mechanics/world-110-initial-constructor-seeds.md).
 
-### P8 — Human-input replay tapes
+### P8 — Human-input replay tapes — OPEN; WINDOWS INPUT CAPTURE REQUIRED
 
 Record a real play session into a replayable `CommandTape`; replay runs
 deterministically twice under `--expect`. Gate: one recorded session's tape
 double-run green; the recording procedure documented under `rebuild/tools/`.
 
-### P9 — Ferry sweep fixture split
+### P9 — Ferry sweep fixture split — COMPLETE
 
 Move the 40-run `Level100FerrySweepFixture` out of the default suite path
 (retained as an explicit sweep command). Gate: default Core suite time
 measured before/after; full sweep still available; suite re-measured and
 [`VALIDATION.md`](VALIDATION.md) row updated.
 
-### P10 — WinUI release pass
+### P10 — WinUI release pass — SOURCE CUT COMPLETE; WINDOWS ACCEPTANCE OPEN
 
-Cut the accumulated `## Unreleased` changelog into a versioned entry,
+The v1.0.12 source cut is merged at `04cdd9c3`. In the isolated Windows VM,
 regenerate/verify third-party notices, run the
 [`release/readiness/PUBLIC_SIGNOFF_COMMANDS.md`](release/readiness/PUBLIC_SIGNOFF_COMMANDS.md)
-set and the ZIP probe clean. Publication steps remain maintainer-owned per
+set and the portable ZIP probe clean. Publication steps remain maintainer-owned per
 [`README.RELEASE.md`](README.RELEASE.md).
 
-### P11 — CLI parity for UI-only capabilities
+### P11 — CLI parity for UI-only capabilities — OPEN; WINDOWS ACCEPTANCE REQUIRED
 
 Quiet, community-neutral CLI verbs for the six capabilities reachable only
 through the GUI today (cheats, media, lore, asset library, advanced save
@@ -528,7 +538,7 @@ editing, trainer control beyond `music`). Gate: per-verb CLI tests, CLI.md
 updated, and the shipped/public copy stays free of internal process
 language (`test:safety` plus a doc grep).
 
-### P12 — repo-local `local-lab` canonicalization and disposition audit
+### P12 — repo-local `local-lab` canonicalization and disposition audit — CUTOVER COMPLETE; AUDIT OPEN
 
 Keep one real, writable, Git-ignored corpus at repository-root `local-lab/`.
 The filesystem cutover completed on 2026-08-30 by guarded same-filesystem atomic

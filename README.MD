@@ -50,13 +50,17 @@ GPL-licensed [`rebuild/`](rebuild/README.md) lane is a separate RE-informed
 implementation with deterministic Core behavior and a Godot handling lab. It
 now enters through the locally materialized released Lost Toys logo, opening
 montage, and splash, then click-to-start, main menu, a career-name entry page
-(visual only — it saves nothing), Level 100 selector, mission briefing, select
-configuration, and loading. Loading constructs the Level 100 world; the
-first-time intro then plays before gameplay activation. An Options page and a
-quit confirmation are reachable from
-the main menu. The video sequences are currently silent because their Bink
-audio streams have not been decoded or assigned to a language. The
-frontend owns no gameplay, save, result, or later campaign-selection state. It
+(new-name or injected read-only career selection; it creates no save), the
+career-law world selector, mission briefing, select configuration, and loading.
+Loading still constructs only the Level 100 world; the first-time intro then
+plays before gameplay activation. After a completed Level 100 mission, the
+frontend projects the bounded debrief result and applies the in-memory
+career-law update; Confirm or Back then returns to the selector where unlocked
+World 110 may be selected, but the host cannot yet construct that world. An
+Options page and a quit confirmation are reachable
+from the main menu. The video sequences are currently silent because their
+Bink audio streams have not been decoded or assigned to a language. The
+frontend owns no gameplay or save-write path. It
 currently renders the released Aquila walker/jet, first-person walker cockpit,
 bounded original HUD composition, all 33 visible static objects serialized by
 Level 100, 1,481 released pine placements, water, the complete height lattice,
@@ -65,7 +69,8 @@ does not claim retail parity. The exact retail inputs used by that slice are
 materialized locally from the user's own installation and are not distributed
 as files in the current source tree or its release packages.
 
-> **Extended 2026-07-28.** The entry-path sentence previously read "It now
+> **Historical correction 2026-07-28; superseded by the current truth above.**
+> The entry-path sentence previously read "It now
 > enters through a bounded released-style click-to-start, main menu, Level 100
 > selector, and loading handoff into the canonical Level 100 simulation." That
 > understated shipped work by five screens. Nothing was withdrawn, and the
