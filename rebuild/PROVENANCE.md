@@ -1,11 +1,12 @@
 # Rebuild Provenance
 
 Status: active implementation boundary
-Last updated: 2026-08-30. Added the exact world-110 all-40 serialized
+Last updated: 2026-08-31. Added the exact world-110 all-40 serialized
 initial-object seed and player-start admissions, complete ordered list
 resolution, and bounded `CStart::Init`
 terrain-height prefix, plus the standalone ordered
-`CPlayer::AssignBattleEngine` mapping. The released Battle
+`CPlayer::AssignBattleEngine` mapping and every-match adapter-supplied
+composition. The released Battle
 Engine finite-cylinder mode-1 round-contact and selected-position boundary,
 bounded world-110 authored-definition projection,
 native-84 completion instrument, native-88 first-Pause session, and current
@@ -325,12 +326,16 @@ carries only `CStart::Init`'s 37-byte terrain-height prefix at
 `[0x004eae27, 0x004eae4c)`. The standalone
 `RetailPlayerBattleEngineAssignment` owner now carries the valid-object order
 of both reader calls and the God-only policy-call intents. It does not supply a
-`CStart`, engine, player, or reader-cell identity to this path. The World-110
-seam therefore still does not implement the remainder of `CStart::Init`,
-`GetPlayerObject`, Battle Engine or player construction, composition of
-repeated assignment calls, policy-method execution, `CPlayer::Init`, the
-post-load state pair, an actor registry, an `InteractiveSession`, or a Godot
-lifecycle. The full evidence and falsifier are recorded in
+`CStart`, engine, player, or reader-cell identity to this path. The separate
+`RetailWorldPlayerAuthoredStartAssignmentSequence` now consumes one complete
+adapter-supplied binding snapshot and invokes that function owner for every
+ordered match. It retains the final player→engine target and earlier
+engine→player backlinks, including repeated exact tuples, but constructs none
+of those identities. The World-110 seam therefore still does not implement the
+remainder of `CStart::Init`, real `GetPlayerObject` values, Battle Engine or
+player construction, policy-method execution, `CPlayer::Init`, the post-load
+state pair, an actor registry, an `InteractiveSession`, or a Godot lifecycle.
+The full evidence and falsifier are recorded in
 [`world-110-player-start-admission.md`](../reverse-engineering/game-mechanics/world-110-player-start-admission.md).
 
 Reuse preflight disposition for the player-start seam: **REUSED** — the exact
@@ -372,6 +377,26 @@ Adding one `break` reduced two ordered matches to one and failed the exact
 discriminator; restoring the owner returned that fact to 1/1 and the adjacent
 gate to 44/44. This closes pure serialized resolution, not the runtime
 assignment effects named above.
+
+The ordered assignment-sequence carry reuses the same accepted complete-walk
+law and the standalone assignment owner; it adds no retail measurement. Its
+adapter contract requires one already-constructed engine/cell binding per
+match, snapshots and preflights the complete set, and returns a deeply
+immutable per-start transcript. Disposition: **REUSED** — the complete ordered
+resolution, standalone assignment owner, active-reader graph, pinned source,
+and pristine post-load range; **EXTENDED** — deterministic Core composition and
+focused tests; **NEW_MEASUREMENT 0**. The exact World-110 one-row path uses test
+tokens only; no runtime object, payload, Ghidra project, session, or external
+state was created or mutated.
+
+Controlled first-only and final-only sequence mutations each failed three
+ordered/per-match tests (8 passed / 3 failed). Exact restoration returned the
+production owner to SHA-256
+`39aa59f8c87d62b23b5b4a86fcc3ade26af7ffcad5165b1d3c1a9b3ffde29118`
+and the focused class to 11/11. The ignored repo-local receipt is
+`local-lab/rebuild-world110-assignment-sequence-mutation-kill-20260831/RECEIPT.md`,
+SHA-256
+`bb600b6c439e24fc503a648c0203f8f6bf026a22d0d942d5cdadd922e1496c79`.
 
 The bounded height owner reuses the already-admitted start resolution, the
 hash-pinned world-110 HFLD, and the existing released 24.8 sampler. The new
@@ -1044,10 +1069,21 @@ invariant. This is not a retail atomicity claim: null pointers, configuration
 faults, allocator failure, rollback, lifetime, and concurrent mutation remain
 excluded.
 
+`RetailWorldPlayerAuthoredStartAssignmentSequence` composes that same bounded
+function once per ordered authored match. It preflights resolution shape,
+binding count/order, reader-role separation, engine/cell alias consistency,
+every required cell, and existing reverse membership before mutation. Exact
+repeated engine/cell tuples remain legal and still produce repeated outer call
+steps. The adapter proves that the player identity/cell correspond to the
+resolution's player and that each engine/cell is the matching start's
+already-constructed `GetPlayerObject` result. Core does not discover or create
+those objects.
+
 Reuse disposition for this seam: **REUSED** — the exact
 `CGenericActiveReader::SetReader` law, its accepted deterministic graph owner,
 pinned GPL source, and the pristine specimen; **EXTENDED** — one standalone
-Core composition plus focused tests; **NEW_MEASUREMENT** — the complete
+Core function owner plus ordered adapter-supplied composition and focused
+tests; **NEW_MEASUREMENT** — the complete
 69-byte body identity/order and concrete God-policy vtable targets/effects.
 There was no runtime capture, Ghidra mutation, retail payload in Git, engine
 construction, session integration, or campaign-grade promotion.
@@ -1061,6 +1097,15 @@ Omitting the second graph call while retaining its transcript label failed the
 exact fresh-bind fact. Byte restoration returned the production owner to
 `f8df01f2ad11d72061359487f625f0aeb68a6e34e291c0c59fb78c7e300cebce`,
 the same fact to 1/1, and the adjacent assignment/reader/start gate to 54/54.
+
+The sequence owner's separate first-only/final-only receipt is
+`local-lab/rebuild-world110-assignment-sequence-mutation-kill-20260831/RECEIPT.md`,
+SHA-256
+`bb600b6c439e24fc503a648c0203f8f6bf026a22d0d942d5cdadd922e1496c79`.
+Both wrong loop shapes failed the ordered/per-match controls; restored source
+passed 11/11. That receipt closes deterministic composition only, not runtime
+identity discovery, virtual policy execution, player initialization, or a
+World-110 lifecycle.
 
 The spawner reached by that helper is now a separately bounded Core
 transaction. Pristine PC retail `CSpawnerThng__DoSpawn`

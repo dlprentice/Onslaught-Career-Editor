@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: active — the work-queue ledger for the maintainer's standing program
-Last updated: 2026-08-30
+Last updated: 2026-08-31
 Summary: what the current program has completed, what is next, and the gate
 that completes each item. This file owns **queue state and receipts only** —
 it never restates campaign counts, capability claims, validation choices, or
@@ -38,6 +38,16 @@ tick pin via tick-pin-only bisect, boundary `e633b511` (commit `916a67d3`,
 receipts `local-lab/chain-tick-bisect-20260821/`). Core measured 862/1/863
 then 5/5 on the owning class filter. Receipt range:
 `a8de28f3..916a67d3` (pushed).
+
+**SUPERSEDED 2026-08-31 — Blaster observer only.** The ±2 mm reconstructed
+geometry allowance later drifted to 81 counted contacts against 109 production
+damage events because the observer still reduced the released finite cylinder
+to a sphere. Commit `b8fca9ea` replaced geometric hit labels with internal
+round-ID causal receipts that cannot enter snapshots, replay, canonical
+equality, or state hashes. The public five-field impact API remains unchanged;
+the seven-minute owning fixture and collision gate passed 20/20, and the
+weapon/damage classes passed 48/48. Reconstructed cylinder/closest-approach data
+is now diagnostic only.
 
 ## Next
 
@@ -413,10 +423,42 @@ receipt is
 `local-lab/rebuild-player-assign-battle-engine-mutation-kill-20260830/RECEIPT.md`,
 SHA-256
 `63b97ad75ddb73a39c2f8a92a48c8471548c5c2fd93c1837e0788780aa9ca401`.
-No current World-110 path supplies constructed player/engine/cell identities,
-so `CStart::Init` remainder, `SpawnBattleEngine`, `GetPlayerObject`, repeated
-post-load composition, player initialization, actor registry, headless real
-session, Godot lifecycle, and campaign 100→110 play remain open.
+No current World-110 path supplies constructed player/engine/cell identities.
+The successor deterministic composition owner below now carries repeated
+post-load assignment over adapter-supplied identities; `CStart::Init` remainder,
+`SpawnBattleEngine`, real `GetPlayerObject` values, player initialization, actor
+registry, headless real session, Godot lifecycle, and campaign 100→110 play
+remain open.
+
+**2026-08-31 — PARTIAL RECEIPT; ORDERED AUTHORED-START ASSIGNMENT COMPOSITION
+COMPLETE, P7 REMAINS OPEN.**
+`RetailWorldPlayerAuthoredStartAssignmentSequence` joins the complete ordered
+`MatchingAuthoredStarts` result to one adapter-supplied, already-constructed
+Battle Engine/cell binding per match. It preflights the complete binding list,
+identity order, distinct reader roles, engine/cell aliases, required cells, and
+current reverse memberships before the first graph write, then invokes the
+existing exact `RetailPlayerBattleEngineAssignment` owner for every match in
+list order. The final engine remains the player's forward target while every
+earlier engine backlink remains intact. An exact repeated engine/cell tuple is
+allowed and still emits one assignment transcript per matching start.
+
+The exact admitted World-110 player-1 row is covered at
+`wres:rlwd:0001`; synthetic two-match controls prove the general retail loop
+without claiming the shipped World-110 list contains duplicates. Nonzero God
+state emits both policy intents for every assigned match. Late wrong-identity,
+missing-cell, and player-cell-alias failures reject before the valid first
+binding can mutate the graph.
+
+Controlled first-only and final-only loop mutations each failed the same three
+ordered-sequence discriminators (8 passed / 3 failed); exact restoration
+returned the focused class to 11/11. The ignored repo-local receipt is
+`local-lab/rebuild-world110-assignment-sequence-mutation-kill-20260831/RECEIPT.md`,
+SHA-256
+`bb600b6c439e24fc503a648c0203f8f6bf026a22d0d942d5cdadd922e1496c79`.
+This closes deterministic composition only. The adapter still supplies and
+proves real object ownership; Core does not construct `CStart`, Battle Engine,
+player, or reader storage, execute policy virtuals, call `CPlayer::Init`, or
+publish a playable World-110 session.
 
 **2026-08-30 — PARTIAL RECEIPT; ALL-40 SERIALIZED INITIAL-OBJECT SEED
 ADMISSION COMPLETE, P7 REMAINS OPEN.** At base `85a073a1`, the exact
@@ -450,8 +492,10 @@ failures / 1,122 total / 0 skipped in 35 m 43 s.
 This closes standalone serialized seed admission only. Five squad seeds do not
 prove 22 member poses or publication order, and the inactive spawner does not
 cold-construct three fighters. Physics/coordinate enrichment, nested
-construction, `CStart`/player/Battle Engine composition, registry, state hash,
-real session, Godot lifecycle, and campaign 100→110 play remain open. The
+construction, real player/Battle Engine identity discovery, live post-load
+integration, registry, state hash, real session, Godot lifecycle, and campaign
+100→110 play remain open. The deterministic adapter-supplied assignment
+sequence above does not widen this serialized-seed owner. The
 bounded mechanism and ceiling are recorded in
 [`world-110-initial-constructor-seeds.md`](reverse-engineering/game-mechanics/world-110-initial-constructor-seeds.md).
 

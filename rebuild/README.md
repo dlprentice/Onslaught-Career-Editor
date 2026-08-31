@@ -3,7 +3,8 @@
 Status: early GPL reconstruction lane
 Last updated: 2026-08-31. The bounded world-110 all-40 serialized
 initial-object seed, authored-definition, serialized player-start, complete
-ordered start-list resolution, and
+ordered start-list resolution, adapter-supplied every-match assignment
+composition, and
 `CStart::Init` terrain-height projections, plus the standalone ordered
 player/Battle Engine assignment,
 native-88 Core session, career read/load frontend slice, and world-admission
@@ -367,6 +368,16 @@ refills energy from configuration on the selected concrete virtual path; this
 owner emits only the raw call intent and reports no final vulnerability,
 infinite-energy, or energy state.
 
+`RetailWorldPlayerAuthoredStartAssignmentSequence` now composes that bounded
+function owner once per admitted `MatchingAuthoredStarts` row, in order, over a
+complete caller-supplied binding snapshot. It validates count/order, reader
+roles, engine↔cell aliases, required cells, and current reverse memberships
+before the first graph write. The player's forward reader retains the final
+engine and earlier engine backlinks remain; exact repeated engine/cell tuples
+still produce one outer step per start. This is deterministic post-load call
+composition only. The adapter still owns object construction and proves that
+the player/cell and each start/engine/cell identity belong together.
+
 `RetailSpawnerCycleTransaction` closes the nested spawner boundary that the
 live UnitAI probe can invoke. It preserves strict admission time, finite amount
 versus infinite mode, empty-squad publication before cycle commit, amount-slot
@@ -438,8 +449,11 @@ becomes fixed `(67,776, 66,256)`, the pinned HFLD samples `-10,485` units, and
 the strict clamp stores the second sample as Z bits `0xc1199926`. It stops
 before `CComplexThing::Init` and does not add player/Battle Engine construction,
 actor-registry, `InteractiveSession`, or Godot ownership. The standalone
-assignment owner above still has no constructed World-110 player/engine/cell
-identities and is not composed into this path; see
+assignment owner is now composed across the resolution by the ordered sequence
+owner when an adapter supplies already-constructed identities. The exact
+`wres:rlwd:0001` resolution exercises that seam with deterministic test tokens,
+but no World-110 construction owner supplies the real player/engine/cell values
+or invokes it from a live post-load path; see
 [`world-110-player-start-admission.md`](../reverse-engineering/game-mechanics/world-110-player-start-admission.md).
 
 World 200 (2026-08-22) generalizes that pattern and measures three places the
