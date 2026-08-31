@@ -135,14 +135,18 @@ public sealed class Level100ActorWeaponTests
         int missileImpacts = 0;
         int incomingDamage = 0;
         int firstImpactTick = -1;
+        var impactRoundIds = new HashSet<int>();
         for (int tick = 0; tick < 30 * 180; tick++)
         {
             mechanics.AdvanceTick();
-            foreach (Level100ActorRoundImpact impact in
-                     mechanics.DrainActorRoundImpacts())
+            foreach (Level100ActorRoundImpactReceipt receipt in
+                     mechanics.DrainActorRoundImpactReceipts())
             {
+                Level100ActorRoundImpact impact = receipt.Impact;
                 Assert.Equal(playerId, impact.TargetActorId);
                 Assert.Equal(droneId, impact.OwnerActorId);
+                Assert.True(receipt.RoundId.HasValue);
+                Assert.True(impactRoundIds.Add(receipt.RoundId.Value));
                 incomingDamage += impact.IncomingDamageMilliLife;
                 if (impact.Kind == Level100ActorRoundKind.Blaster)
                 {
@@ -240,11 +244,14 @@ public sealed class Level100ActorWeaponTests
             highWater = Math.Max(
                 highWater,
                 snapshot.ActorRounds.Count(r => r.Kind == kind));
-            foreach (Level100ActorRoundImpact impact in
-                     mechanics.DrainActorRoundImpacts())
+            foreach (Level100ActorRoundImpactReceipt receipt in
+                     mechanics.DrainActorRoundImpactReceipts())
             {
+                Level100ActorRoundImpact impact = receipt.Impact;
                 if (impact.Kind == kind)
                 {
+                    Assert.True(receipt.RoundId.HasValue);
+                    Assert.InRange(receipt.RoundId.Value, 1, launched);
                     observed = impact.IncomingDamageMilliLife;
                 }
             }

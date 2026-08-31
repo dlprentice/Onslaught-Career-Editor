@@ -341,6 +341,7 @@ public sealed class Simulation
         _flightEvents.Clear();
         _weaponFireEvents.Clear();
         _playerDamageEvents.Clear();
+        _actorRoundDamageIdsForMeasurement.Clear();
 
         if (input.HasAction(SimActions.Reset))
         {
@@ -960,10 +961,11 @@ public sealed class Simulation
     /// </summary>
     private void ApplyLevel100ActorRoundImpacts()
     {
-        IReadOnlyList<Level100ActorRoundImpact> impacts =
-            _level100ActorMechanics.DrainActorRoundImpacts();
-        foreach (Level100ActorRoundImpact impact in impacts)
+        IReadOnlyList<Level100ActorRoundImpactReceipt> receipts =
+            _level100ActorMechanics.DrainActorRoundImpactReceipts();
+        foreach (Level100ActorRoundImpactReceipt receipt in receipts)
         {
+            Level100ActorRoundImpact impact = receipt.Impact;
             if (impact.TargetActorId != _level100PlayerActorId ||
                 impact.IncomingDamageMilliLife <= 0)
             {
@@ -991,6 +993,10 @@ public sealed class Simulation
                 Level100PlayerDamageSource.ActorRound,
                 out bool impactRequestsDeath))
             {
+                if (receipt.RoundId is { } roundId)
+                {
+                    _actorRoundDamageIdsForMeasurement.Add(roundId);
+                }
                 AddLevel100DamageFlash(impact.SourcePositionMillimeters);
                 _level100Mission.ReportPlayerHitDuringEvasion();
                 CompleteLevel100PlayerDamageDeath(impactRequestsDeath);
@@ -999,6 +1005,16 @@ public sealed class Simulation
             PumpLevel100EventBus();
         }
     }
+
+    private readonly List<int> _actorRoundDamageIdsForMeasurement = [];
+
+    /// <summary>
+    /// Exact actor-round identities whose impacts produced player-damage
+    /// events on the current tick. This is an internal causal receipt for
+    /// tests; it is not snapshot, replay, or state-hash material.
+    /// </summary>
+    internal IReadOnlyList<int> ActorRoundDamageIdsForMeasurement =>
+        Array.AsReadOnly(_actorRoundDamageIdsForMeasurement.ToArray());
 
     private void AddLevel100DamageFlash(SimVector3 sourcePositionMillimeters)
     {

@@ -150,7 +150,20 @@ internal sealed class Level100ChainAutopilot
     private bool _flightLegLaunched;
     private Level100MissionTrigger? _flightLegTrigger;
 
-    private Level100ChainAutopilot(ILevel100ChainHost host) => _host = host;
+    private Level100ChainAutopilot(ILevel100ChainHost host)
+    {
+        ArgumentNullException.ThrowIfNull(host);
+        _host = host;
+        if (host.Snapshot.Level100ActorMechanics.ActorRounds.Count != 0)
+        {
+            throw new ArgumentException(
+                "The chain driver requires a fresh host with no live actor rounds.",
+                nameof(host));
+        }
+
+        _nextActorRoundIdAtPreviousObservation =
+            host.Snapshot.Level100ActorMechanics.NextActorRoundId;
+    }
 
     internal IReadOnlyList<string> Report => _log;
 
@@ -187,6 +200,7 @@ internal sealed class Level100ChainAutopilot
 
     private readonly List<ObservedRoundLaunch> _roundLaunches = [];
     private readonly HashSet<int> _seenRoundIds = [];
+    private HashSet<int> _liveRoundIdsAtPreviousObservation = [];
     private int? _abortTick;
     private IReadOnlyList<Level100ActorCommandIntentSnapshot> _mechanicsAtAbort =
         Array.Empty<Level100ActorCommandIntentSnapshot>();
@@ -323,14 +337,60 @@ internal sealed class Level100ChainAutopilot
             _mechanicsAtAbort = state.Level100ActorMechanics.Actors;
         }
 
+        int previousNextActorRoundId = _nextActorRoundIdAtPreviousObservation;
+        int nextActorRoundId = state.Level100ActorMechanics.NextActorRoundId;
+        if (nextActorRoundId < previousNextActorRoundId)
+        {
+            throw new InvalidOperationException(
+                "The actor-round identity allocator moved backwards.");
+        }
+
+        Dictionary<int, Level100ActorRoundSnapshot> liveRoundsById =
+            state.Level100ActorMechanics.ActorRounds.ToDictionary(round => round.Id);
+        foreach (Level100ActorRoundSnapshot round in liveRoundsById.Values)
+        {
+            if (round.Id >= nextActorRoundId)
+            {
+                throw new InvalidOperationException(
+                    $"Live actor round {round.Id} is not below NextActorRoundId {nextActorRoundId}.");
+            }
+        }
+
+        for (int roundId = previousNextActorRoundId;
+             roundId < nextActorRoundId;
+             roundId++)
+        {
+            if (!liveRoundsById.TryGetValue(roundId, out Level100ActorRoundSnapshot? round) ||
+                round.ElapsedBaseTicks != 0)
+            {
+                throw new InvalidOperationException(
+                    $"New actor round {roundId} was not published exactly once at elapsed tick zero.");
+            }
+        }
+
+        _nextActorRoundIdAtPreviousObservation = nextActorRoundId;
+
         Dictionary<int, int> aiStateByActor = state.Level100ActorMechanics.Actors
             .ToDictionary(actor => actor.ActorId.Value, actor => actor.AiState);
         foreach (Level100ActorRoundSnapshot round in
                  state.Level100ActorMechanics.ActorRounds)
         {
-            if (!_seenRoundIds.Add(round.Id))
+            if (_liveRoundIdsAtPreviousObservation.Contains(round.Id))
             {
                 continue;
+            }
+
+            if (round.Id < previousNextActorRoundId || round.Id >= nextActorRoundId)
+            {
+                throw new InvalidOperationException(
+                    $"Newly appearing actor round {round.Id} falls outside the allocator's " +
+                    $"new interval [{previousNextActorRoundId}, {nextActorRoundId}).");
+            }
+
+            if (!_seenRoundIds.Add(round.Id))
+            {
+                throw new InvalidOperationException(
+                    $"Actor-round identity {round.Id} was reused after disappearance.");
             }
 
             _roundLaunches.Add(new ObservedRoundLaunch(
@@ -341,6 +401,8 @@ internal sealed class Level100ChainAutopilot
                     ? ai
                     : SimulationConstants.ReleasedAiStateOn));
         }
+
+        _liveRoundIdsAtPreviousObservation = liveRoundsById.Keys.ToHashSet();
     }
 
     /// <summary>
@@ -533,12 +595,20 @@ internal sealed class Level100ChainAutopilot
     // `18 / slant` crossing-speed law against the run's own hits and misses.
     // ------------------------------------------------------------------
 
-    /// <summary>One <c>Blaster</c> aimed at the player, from launch to expiry.</summary>
+    /// <summary>
+    /// One <c>Blaster</c> aimed at the player, from launch to terminal
+    /// disappearance by impact or expiry. A null hit outcome means the host
+    /// cannot expose Core's internal causal receipt.
+    /// </summary>
     internal readonly record struct ObservedBlaster(
+        int RoundId,
         int LaunchTick,
         double LaunchSlantMeters,
         double PerpendicularSpeedMetersPerSecond,
         double ClosestApproachMillimeters,
+        bool? Hit,
+        bool ReconstructedCylinderContact,
+        int ReconstructedCylinderContactTick,
         int LifeTicks,
         int FinalRemainingBaseTicks,
         int ClosestTick);
@@ -550,6 +620,8 @@ internal sealed class Level100ChainAutopilot
         public double PerpendicularSpeed;
         public double Closest = double.MaxValue;
         public int ClosestTick = -1;
+        public bool ReconstructedCylinderContact;
+        public int ReconstructedCylinderContactTick = -1;
         public SimVector3 Previous;
         public bool HasPrevious;
         public int LastSeenTick;
@@ -558,20 +630,13 @@ internal sealed class Level100ChainAutopilot
 
     private readonly Dictionary<int, TrackedBlaster> _liveBlasters = [];
     private readonly List<ObservedBlaster> _blasters = [];
-    private readonly List<string> _boundaryBandNotes = [];
     private SimVector3 _previousPlayerPoint;
     private bool _hasPreviousPlayerPoint;
 
     internal IReadOnlyList<ObservedBlaster> Blasters => _blasters;
 
-    /// <summary>
-    /// Diagnostic notes for rounds whose observable closest approach lands in
-    /// the 2 mm band just outside the contact envelope — where the swept
-    /// reconstruction and the runtime's integer boundary can disagree.
-    /// </summary>
-    internal IReadOnlyList<string> BoundaryBandNotes => _boundaryBandNotes;
-
     private readonly List<Level100PlayerDamageEvent> _playerDamageEvents = [];
+    private int _nextActorRoundIdAtPreviousObservation;
 
     /// <summary>Every explicit player-damage boundary this run observed.</summary>
     internal IReadOnlyList<Level100PlayerDamageEvent> PlayerDamageEvents =>
@@ -624,8 +689,9 @@ internal sealed class Level100ChainAutopilot
 
             if (!_liveBlasters.TryGetValue(round.Id, out TrackedBlaster? tracked))
             {
-                // The muzzle is the owning drone: the round has already taken
-                // one base-tick step by the time this snapshot is published.
+                // The muzzle is the owning drone. Move-then-weapon ordering
+                // publishes a new round at elapsed tick zero before it has
+                // taken its first base-tick step.
                 Level100ActorSnapshot owner = state.Level100Actors.Actors
                     .First(actor => actor.ActorId == round.OwnerActorId);
                 SimVector3 muzzle = owner.Pose.PositionMillimeters;
@@ -656,12 +722,13 @@ internal sealed class Level100ChainAutopilot
             tracked.LastSeenTick = state.Tick;
             tracked.FinalRemainingBaseTicks = round.RemainingBaseTicks;
 
-            // The engine's own test, forward-looking. `AdvanceLevel100ActorMechanics`
-            // runs BEFORE `UpdateMovement`, so the segment it sweeps next is
-            // [this snapshot's round position, +one base-tick step] against THIS
+            // Forward-looking diagnostic reconstruction.
+            // `AdvanceLevel100ActorMechanics` runs BEFORE `UpdateMovement`, so
+            // the segment production sweeps next starts at this snapshot's
+            // round position and advances one base-tick step against this
             // snapshot's player pose. Reconstructing it backwards from
-            // consecutive snapshots misses the fatal segment entirely, because a
-            // round that impacts is removed inside the step that killed it.
+            // consecutive snapshots misses the fatal segment entirely, because
+            // a round that impacts is removed inside the step that killed it.
             const double BlasterStepMillimeters =
                 (double)SimulationConstants.Level100BlasterSpeedMillimetersPerSecond /
                 Level100ActorMechanics.RetailBaseTicksPerSecond;
@@ -669,6 +736,17 @@ internal sealed class Level100ChainAutopilot
                 (int)(round.PositionMillimeters.X + (directionX * BlasterStepMillimeters)),
                 (int)(round.PositionMillimeters.Y + (directionY * BlasterStepMillimeters)),
                 (int)(round.PositionMillimeters.Z + (directionZ * BlasterStepMillimeters)));
+            if (!tracked.ReconstructedCylinderContact &&
+                Level100ActorMechanics.TryResolveBattleEngineCylinderContact(
+                    round.PositionMillimeters,
+                    swept,
+                    player.Pose.PositionMillimeters,
+                    out _))
+            {
+                tracked.ReconstructedCylinderContact = true;
+                tracked.ReconstructedCylinderContactTick = state.Tick;
+            }
+
             double candidate = PointToSegmentMillimeters(
                 playerPoint, round.PositionMillimeters, swept);
             if (candidate < tracked.Closest)
@@ -677,40 +755,64 @@ internal sealed class Level100ChainAutopilot
                 tracked.ClosestTick = state.Tick;
             }
 
-            const double EnvelopeMM =
-                (double)SimulationConstants.Level100PlayerContactRadiusMillimeters;
-            if (candidate >= EnvelopeMM &&
-                candidate < EnvelopeMM + 2d &&
-                _boundaryBandNotes.Count < 16)
-            {
-                SimVector3 pose = player.Pose.PositionMillimeters;
-                _boundaryBandNotes.Add(
-                    $"tick {state.Tick} round {round.Id} closest {candidate:F2}mm " +
-                    $"simPoint=({playerPoint.X},{playerPoint.Y},{playerPoint.Z}) " +
-                    $"actorPose=({pose.X},{pose.Y},{pose.Z}) " +
-                    $"poseDelta={Distance(playerPoint, pose):F2} " +
-                    $"roundPos=({round.PositionMillimeters.X},{round.PositionMillimeters.Y},{round.PositionMillimeters.Z}) " +
-                    $"sweptEnd=({swept.X},{swept.Y},{swept.Z})");
-            }
-
             tracked.Previous = round.PositionMillimeters;
             tracked.HasPrevious = true;
         }
 
-        foreach (int id in _liveBlasters.Keys.ToArray())
+        int[] disappearedRoundIds = _liveBlasters.Keys
+            .Where(id => !seen.Contains(id))
+            .OrderBy(id => id)
+            .ToArray();
+        int blasterDamageEventCount = state.Level100PlayerDamageEvents.Count(damage =>
+            damage.Source == Level100PlayerDamageSource.ActorRound &&
+            damage.IncomingDamageMilliLife == 200);
+        IReadOnlyList<int>? impactRoundIds =
+            _host.ActorRoundDamageIdsForMeasurement;
+        if (impactRoundIds is not null &&
+            impactRoundIds.Distinct().Count() != impactRoundIds.Count)
         {
-            if (seen.Contains(id))
-            {
-                continue;
-            }
+            throw new InvalidOperationException(
+                $"Tick {state.Tick} reused an actor-round identity across damage receipts.");
+        }
 
+        HashSet<int> causalHitRoundIds = impactRoundIds is null
+            ? []
+            : impactRoundIds
+                .Where(id => _liveBlasters.ContainsKey(id))
+                .ToHashSet();
+        if (impactRoundIds is not null &&
+            causalHitRoundIds.Count != blasterDamageEventCount)
+        {
+            throw new InvalidOperationException(
+                $"Tick {state.Tick} has {blasterDamageEventCount} Blaster damage " +
+                $"event(s) but exact impact receipts name {causalHitRoundIds.Count} " +
+                $"tracked Blaster round(s): [{string.Join(", ", causalHitRoundIds.Order())}].");
+        }
+
+        int[] nonDisappearingHitIds = causalHitRoundIds
+            .Where(id => !disappearedRoundIds.Contains(id))
+            .OrderBy(id => id)
+            .ToArray();
+        if (nonDisappearingHitIds.Length > 0)
+        {
+            throw new InvalidOperationException(
+                $"Tick {state.Tick} names hit Blaster round(s) that remained live: " +
+                $"[{string.Join(", ", nonDisappearingHitIds)}].");
+        }
+
+        foreach (int id in disappearedRoundIds)
+        {
             TrackedBlaster finished = _liveBlasters[id];
             _liveBlasters.Remove(id);
             _blasters.Add(new ObservedBlaster(
+                id,
                 finished.LaunchTick,
                 finished.LaunchSlantMeters,
                 finished.PerpendicularSpeed,
                 finished.Closest,
+                impactRoundIds is null ? null : causalHitRoundIds.Contains(id),
+                finished.ReconstructedCylinderContact,
+                finished.ReconstructedCylinderContactTick,
                 finished.LastSeenTick - finished.LaunchTick,
                 finished.FinalRemainingBaseTicks,
                 finished.ClosestTick));

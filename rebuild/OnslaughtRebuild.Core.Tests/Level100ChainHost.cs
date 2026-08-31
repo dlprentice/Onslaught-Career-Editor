@@ -24,6 +24,13 @@ internal interface ILevel100ChainHost
 {
     WorldSnapshot Snapshot { get; }
 
+    /// <summary>
+    /// Exact successful actor-round damage identities for the just-completed
+    /// step, when this host can expose Core's internal causal receipt. A null
+    /// value means hit outcome is unknown rather than a miss.
+    /// </summary>
+    IReadOnlyList<int>? ActorRoundDamageIdsForMeasurement { get; }
+
     WorldSnapshot Step(SimInput input);
 }
 
@@ -141,6 +148,9 @@ internal sealed class Level100DirectChainHost : ILevel100ChainHost
     }
 
     public WorldSnapshot Snapshot => _simulation.Snapshot;
+
+    public IReadOnlyList<int>? ActorRoundDamageIdsForMeasurement =>
+        _simulation.ActorRoundDamageIdsForMeasurement;
 
     public WorldSnapshot Step(SimInput input)
     {
@@ -296,6 +306,8 @@ internal sealed class Level100InteractiveChainHost : ILevel100ChainHost
     }
 
     public WorldSnapshot Snapshot => _session.CurrentSnapshot;
+
+    public IReadOnlyList<int>? ActorRoundDamageIdsForMeasurement => null;
 
     /// <summary>
     /// How many analogue look commands this run asked for and could not get,

@@ -5,6 +5,16 @@ using System.Numerics;
 namespace OnslaughtRebuild.Core;
 
 /// <summary>
+/// Internal dispatch envelope that preserves the public five-field impact
+/// contract while allowing the owning simulation to retain exact causal round
+/// identity. The identity is observation-only: it is never snapshot, replay,
+/// serialization, canonical/public equality, or state-hash material.
+/// </summary>
+internal readonly record struct Level100ActorRoundImpactReceipt(
+    Level100ActorRoundImpact Impact,
+    int? RoundId);
+
+/// <summary>
 /// Actor-owned weapons and rounds, on the released 20 Hz base tick.
 ///
 /// <para><b>Provenance.</b> Every law here is read out of the pristine
@@ -33,10 +43,11 @@ namespace OnslaughtRebuild.Core;
 /// <c>CWorld__FindFirstThingToHitLine</c> runs only when the caller supplies a
 /// trace context, and which callers do is unread; it is omitted. Muzzle
 /// offsets are omitted because neither drone weapon mode carries a
-/// <c>CWeaponLaunchSequence</c> node. <c>CWeaponTrack</c> is absent from both
-/// modes (shipped default 0), so rounds launch along the actor's own facing
-/// and not along the line to the target - which is precisely what makes
-/// <c>CWeaponYawTolerance</c> load-bearing.</para>
+/// <c>CWeaponLaunchSequence</c> node. The weapon's attached-target aim transform
+/// supplies launch direction, while the unit's own facing independently passes
+/// through <c>CWeaponYawTolerance</c>. <c>CWeaponTrack</c> is absent from both
+/// modes (shipped default 0); the reconstruction therefore does not invent its
+/// separate in-spawn transform rebuild.</para>
 /// </summary>
 public sealed partial class Level100ActorMechanics
 {
@@ -65,7 +76,7 @@ public sealed partial class Level100ActorMechanics
 
     private readonly List<ActorWeaponState> _actorWeapons = [];
     private readonly List<ActorRoundState> _actorRounds = [];
-    private readonly List<Level100ActorRoundImpact> _actorRoundImpacts = [];
+    private readonly List<Level100ActorRoundImpactReceipt> _actorRoundImpacts = [];
     private Level100ReleasedRandom _releasedRandom = new();
     private int _nextActorRoundId = 1;
 
@@ -76,12 +87,33 @@ public sealed partial class Level100ActorMechanics
     /// </summary>
     public IReadOnlyList<Level100ActorRoundImpact> DrainActorRoundImpacts()
     {
-        if (_actorRoundImpacts.Count == 0)
+        IReadOnlyList<Level100ActorRoundImpactReceipt> receipts =
+            DrainActorRoundImpactReceipts();
+        if (receipts.Count == 0)
         {
             return Array.Empty<Level100ActorRoundImpact>();
         }
 
-        Level100ActorRoundImpact[] drained = _actorRoundImpacts.ToArray();
+        Level100ActorRoundImpact[] drained = receipts
+            .Select(receipt => receipt.Impact)
+            .ToArray();
+        return Array.AsReadOnly(drained);
+    }
+
+    /// <summary>
+    /// Internal production drain retaining the exact actor-round identity for
+    /// causal dispatch receipts. Public consumers continue to receive the
+    /// stable five-field <see cref="Level100ActorRoundImpact"/> contract.
+    /// </summary>
+    internal IReadOnlyList<Level100ActorRoundImpactReceipt>
+        DrainActorRoundImpactReceipts()
+    {
+        if (_actorRoundImpacts.Count == 0)
+        {
+            return Array.Empty<Level100ActorRoundImpactReceipt>();
+        }
+
+        Level100ActorRoundImpactReceipt[] drained = _actorRoundImpacts.ToArray();
         _actorRoundImpacts.Clear();
         return Array.AsReadOnly(drained);
     }
@@ -110,7 +142,7 @@ public sealed partial class Level100ActorMechanics
         Level100ActorRoundImpact impact)
     {
         ArgumentNullException.ThrowIfNull(impact);
-        _actorRoundImpacts.Add(impact);
+        _actorRoundImpacts.Add(new Level100ActorRoundImpactReceipt(impact, null));
     }
 
     private IReadOnlyList<Level100ActorWeaponSnapshot> SnapshotActorWeapons() =>
@@ -686,12 +718,14 @@ public sealed partial class Level100ActorMechanics
             return false;
         }
 
-        _actorRoundImpacts.Add(new Level100ActorRoundImpact(
-            round.TargetActorId,
-            round.OwnerActorId,
-            round.Kind,
-            selectedPosition,
-            data.IncomingDamageMilliLife));
+        _actorRoundImpacts.Add(new Level100ActorRoundImpactReceipt(
+            new Level100ActorRoundImpact(
+                round.TargetActorId,
+                round.OwnerActorId,
+                round.Kind,
+                selectedPosition,
+                data.IncomingDamageMilliLife),
+            round.Id));
         return true;
     }
 

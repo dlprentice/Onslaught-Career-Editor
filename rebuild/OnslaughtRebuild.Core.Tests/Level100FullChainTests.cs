@@ -423,27 +423,24 @@ public sealed class Level100FullChainTests
     /// <c>CWeaponTrack</c> and no lead law, so <c>LaunchActorRound</c> points
     /// every <c>Blaster</c> at the player's pose on the tick it is fired and
     /// the round then flies a fixed heading at <c>CRoundVelocity</c> 45.0.
-    /// <c>TryReportActorRoundImpact</c> sweeps that segment against the target's
-    /// <c>CBattleEngine::GetRadius</c> 0.4 m sphere. A round launched from
-    /// <c>R</c> metres therefore arrives after <c>R / 45</c> seconds and needs
-    /// the player to have crossed 0.4 m by then, which is a perpendicular speed
-    /// of <c>0.4 * 45 / R = 18 / R</c> m/s.
+    /// <c>TryReportActorRoundImpact</c> sweeps that segment against the released
+    /// Battle Engine finite cylinder: 0.4 m radius, 0.95 m half-height, centred
+    /// 0.76 m below the actor pose. The horizontal side-crossing term for a
+    /// round launched from <c>R</c> metres is still
+    /// <c>0.4 * 45 / R = 18 / R</c> m/s; cap contacts and vertical motion are
+    /// measured outcomes rather than silently reduced to a sphere.
     /// </para>
     ///
     /// <para><b>The measurement.</b> <see cref="Level100ChainAutopilot"/>
     /// records every player-directed Blaster: its launch slant range, the
     /// player's perpendicular speed on the launch tick, and the closest
     /// approach of the round's swept segment across its whole life. The
-    /// dimensionless ratio <c>v_perp * R / 18</c> then separates hits from
-    /// misses sharply. Measured over the run's 262 player-directed Blasters:
+    /// dimensionless ratio <c>v_perp * R / 18</c> then separates causal hits
+    /// from misses sharply. Hit identity comes from Core's internal round-ID
+    /// receipt for the same tick's successful 200-damage event and is checked
+    /// against that round's disappearance; reconstructed geometry is
+    /// diagnostic only.
     /// </para>
-    ///
-    /// <list type="table">
-    ///   <item><description>ratio &lt; 0.50: <b>20 of 20</b> hit</description></item>
-    ///   <item><description>ratio 0.50-1.00: 20 of 28 hit</description></item>
-    ///   <item><description>ratio 1.00-2.50: 4 of 41 hit</description></item>
-    ///   <item><description>ratio &gt; 2.50: <b>0 of 173</b> hit</description></item>
-    /// </list>
     ///
     /// <para>The soft shoulder either side of 1.0 is the shipped
     /// <c>CWeaponInaccuracy</c> 0.01745329 rad - one degree, which is 0.09 m of
@@ -452,12 +449,12 @@ public sealed class Level100FullChainTests
     /// this test asserts it as one.</para>
     ///
     /// <para><b>What follows from it, and it is the reason the measurement was
-    /// taken.</b> The required crossing speed falls as range grows, so the
-    /// Blaster is a knife-range weapon: the measured hit rate by launch band is
-    /// 70 % inside 5 m, 65 % from 5-10 m, and 5 % or less at every band beyond
-    /// 10 m. This run's Blaster impacts all occur inside 10 m; their 200-unit
-    /// inputs are routed through the player Damage contract rather than treated
-    /// as direct hull subtraction.
+    /// taken.</b> The required crossing speed falls as range grows. Inside the
+    /// inaccuracy-limited range used here, launches below half that crossing
+    /// requirement must hit at least 90 % of the time, while launches above
+    /// 2.5 times it must hit no more than 2 %. Their 200-unit inputs are routed
+    /// through the player Damage contract rather than treated as direct hull
+    /// subtraction.
     /// <b>Standing off does not follow from that, and was measured.</b> See the
     /// class remarks on <c>Level100ChainAutopilot.EngageWaveTwo</c>: the
     /// <c>Forseti Drone Missile Launcher</c>'s <c>CWeaponMinRange</c> 20.0 means
@@ -469,22 +466,23 @@ public sealed class Level100FullChainTests
     [Fact]
     public void BlasterMissLaw_SeparatesTheRunsOwnHitsFromItsMisses()
     {
-        // TWO CONTROLS, AND THE SECOND ONE IS NEW BECAUSE THE DRIVER GOT BETTER.
-        // The 20 Hz migration's re-derivation of the beat-9 control poles
-        // (`Level100ChainAutopilot.ErrorPole`) made the crabbing control
-        // un-hittable: 243 Blasters, ZERO impacts, lowest ratio 1.21. It is
-        // still the whole miss side of the separatrix and is kept. The hit side
-        // now comes from the same sortie flown with `MoveX` held at zero, which
-        // is the variable this law is about. Measured over the union, 551
-        // rounds: ratio < 0.5 -> 15 of 17 hit; 0.5-1.0 -> 26 of 44; 1.0-2.5 ->
-        // 4 of 76; > 2.5 -> 0 of 388.
+        // TWO CONTROLS exercise opposite sides of the separatrix. The regular
+        // crabbing control supplies the high-crossing miss population; the same
+        // sortie with MoveX held at zero supplies the low-crossing hit
+        // population. Exact causal receipts below, rather than reconstructed
+        // contact geometry, decide which completed rounds hit.
         IReadOnlyList<Level100ChainAutopilot.ObservedBlaster> blasters =
         [
             .. _abortControl.Driver.Blasters,
             .. _abortNoCrab.Driver.Blasters,
         ];
+        Assert.All(
+            blasters,
+            shot => Assert.True(
+                shot.Hit.HasValue,
+                $"Direct-host Blaster {shot.RoundId} has no causal outcome receipt."));
 
-        // The impact envelope is the same 0.4 m the runtime tests against.
+        // The radial envelope is the same 0.4 m the runtime tests against.
         const double EnvelopeMillimeters =
             SimulationConstants.Level100PlayerContactRadiusMillimeters;
 
@@ -499,12 +497,9 @@ public sealed class Level100FullChainTests
         // sides of the separatrix, so this is a statement of the law's domain
         // and not a filter applied to one arm.
         //
-        // Stated plainly because it is exactly the kind of bound that gets
-        // abused: it removes ONE shot from the inside population - a 30.88 m
-        // launch that missed by 613 mm - taking it from 15 of 17 to 15 of 16.
-        // The other inside miss, at 15.81 m, is inside the band and is counted
-        // against the law. On the outside population it removes 284 of 388 and
-        // changes the rate not at all, because that rate is zero.
+        // This bound is applied symmetrically to both arms. It prevents
+        // inaccuracy alone from deciding a long-range miss and being
+        // misreported as evidence for the crossing-speed law.
         const double InaccuracyRadians = 0.017_453_29;
         const double ConeLimitedRangeMeters =
             EnvelopeMillimeters / 1_000d / InaccuracyRadians;
@@ -524,11 +519,10 @@ public sealed class Level100FullChainTests
             .ToList();
 
         // Both populations have to be large enough for a rate to mean anything.
-        // The released finite cylinder admits some first-step contacts before
-        // the snapshot observer can register the launched round; the first
-        // full-suite reproduction retained eight visible low-ratio launches.
-        // Keep the population floor at that measured boundary and let the
-        // explicit damage-event agreement below guard against silent attrition.
+        // Every launched round is visible at elapsed tick zero before retail's
+        // move-then-weapon order can advance it. The causal ledger fails if the
+        // allocator or publication order drifts. Rates below use only completed
+        // rounds; any still live when the bounded control stops are censored.
         Assert.True(
             comfortablyInside.Count >= 8,
             $"Only {comfortablyInside.Count} Blasters were launched against a " +
@@ -540,23 +534,25 @@ public sealed class Level100FullChainTests
             "crossing speed above 2.5x the law's requirement.");
 
         double insideHitRate = comfortablyInside
-            .Count(shot => shot.ClosestApproachMillimeters < EnvelopeMillimeters) /
+            .Count(shot => shot.Hit == true) /
             (double)comfortablyInside.Count;
         double outsideHitRate = comfortablyOutside
-            .Count(shot => shot.ClosestApproachMillimeters < EnvelopeMillimeters) /
+            .Count(shot => shot.Hit == true) /
             (double)comfortablyOutside.Count;
 
         _output.WriteLine(
             $"inside n={comfortablyInside.Count} rate={insideHitRate:F3}; " +
             $"outside n={comfortablyOutside.Count} rate={outsideHitRate:F3}");
         foreach (Level100ChainAutopilot.ObservedBlaster shot in comfortablyOutside
-                     .Where(shot => shot.ClosestApproachMillimeters < EnvelopeMillimeters))
+                     .Where(shot => shot.Hit == true))
         {
             _output.WriteLine(
                 $"  outside HIT ratio={Ratio(shot):F2} " +
                 $"slant={shot.LaunchSlantMeters:F2} " +
                 $"crossing={shot.PerpendicularSpeedMetersPerSecond:F2} " +
-                $"closest={shot.ClosestApproachMillimeters}");
+                $"closest={shot.ClosestApproachMillimeters} " +
+                $"reconstructedCylinder={shot.ReconstructedCylinderContact} " +
+                $"round={shot.RoundId}");
         }
 
         // A player moving at less than half the required crossing speed is hit.
@@ -571,161 +567,49 @@ public sealed class Level100FullChainTests
             $"Blasters fired at a player crossing well above the law's " +
             $"requirement still hit {outsideHitRate:P0} of the time.");
 
-        // And the closest-approach observable has to agree with the explicit
-        // damage boundary, which is what makes it evidence rather than a second
-        // geometry engine. Each Blaster carries 200 incoming milli-life; its
-        // actual hull share depends on the released shield law. The observable
-        // over-counts slightly because it evaluates a swept segment on every
-        // Core tick while the runtime advances rounds only on the 20 Hz retail
-        // base tick. It can also under-count at the envelope: the observable
-        // re-derives the base-tick segment end from yaw/pitch doubles and
-        // truncates it, where the runtime integrates the same step in
-        // integers, so the two disagree by sub-millimetre amounts at the
-        // 400 mm boundary. Measured across this suite's 302 Blasters, exactly
-        // two rounds land in the 2 mm band outside the envelope (400.30 mm
-        // and 400.81 mm), and the 400.81 mm round IS a runtime hit — the
-        // single event behind the old 153-vs-154 under-count. Rounds inside
-        // the band are indeterminate for the observable, so the agreement
-        // clause credits them and separately pins that the band stays small;
-        // the per-event identity diff above names any future disagreement
-        // instead of leaving a bare count to be re-fitted.
-        const double ReconstructionBandMillimeters = 2d;
-        int strictHits = blasters
-            .Count(shot => shot.ClosestApproachMillimeters < EnvelopeMillimeters);
-        int bandRounds = blasters.Count(shot =>
-            shot.ClosestApproachMillimeters >= EnvelopeMillimeters &&
-            shot.ClosestApproachMillimeters < EnvelopeMillimeters + ReconstructionBandMillimeters);
-        Assert.True(
-            bandRounds <= 4,
-            $"{bandRounds} Blasters landed in the +-2 mm reconstruction band; the " +
-            "observable's geometry has degraded beyond its measured precision.");
-        int damageBlasterHits =
-            _abortControl.Driver.PlayerDamageEvents.Count(damage =>
-                damage.Source == Level100PlayerDamageSource.ActorRound &&
-                damage.IncomingDamageMilliLife == 200) +
-            _abortNoCrab.Driver.PlayerDamageEvents.Count(damage =>
-                damage.Source == Level100PlayerDamageSource.ActorRound &&
-                damage.IncomingDamageMilliLife == 200);
-
-        // PER-EVENT IDENTITY DIFF (instrument). The InRange assertion below
-        // can only say "153 vs 154"; this diff names the exact damage event
-        // with no counted observable (or the reverse) so the wrong contract
-        // can be identified instead of fitted. Damage events carry Tick; each
-        // counted observable carries ClosestTick; a ±1 window absorbs the
-        // removal step, because a round that impacts is deleted inside the
-        // killing step so its closest segment is observed at most one tick
-        // before the damage event lands.
-        static void ReportIdentityDiff(
+        // The hit label is causal rather than geometric: a 200-damage event on
+        // tick T carries the exact internal identity of its actor round, and
+        // that named round must disappear on T. Other rounds may independently
+        // expire on the same tick. Reconstructed closest approach and cylinder
+        // contact remain diagnostics only; neither is allowed to define the
+        // production outcome it audits.
+        static int ReportEventAccounting(
             string tag,
             Level100ChainAutopilot driver,
-            double envelope,
             ITestOutputHelper output)
         {
-            List<int> damageTicks =
-            [
-                .. driver.PlayerDamageEvents
-                    .Where(damage =>
-                        damage.Source == Level100PlayerDamageSource.ActorRound &&
-                        damage.IncomingDamageMilliLife == 200)
-                    .Select(damage => damage.Tick)
-                    .OrderBy(tick => tick),
-            ];
-            var counted = driver.Blasters
-                .Where(shot => shot.ClosestApproachMillimeters < envelope)
-                .Select(shot => (
-                    shot.LaunchTick,
-                    shot.ClosestTick,
-                    shot.ClosestApproachMillimeters,
-                    shot.LifeTicks,
-                    shot.FinalRemainingBaseTicks))
-                .OrderBy(shot => shot.ClosestTick)
-                .ToList();
-            bool[] used = new bool[counted.Count];
-            var unmatchedDamage = new List<int>();
-            foreach (int tick in damageTicks)
-            {
-                int match = -1;
-                for (int i = 0; i < counted.Count; i++)
-                {
-                    if (!used[i] && Math.Abs(counted[i].ClosestTick - tick) <= 1)
-                    {
-                        match = i;
-                        break;
-                    }
-                }
-
-                if (match < 0)
-                {
-                    unmatchedDamage.Add(tick);
-                }
-                else
-                {
-                    used[match] = true;
-                }
-            }
-
+            int damageEvents = driver.PlayerDamageEvents.Count(damage =>
+                damage.Source == Level100PlayerDamageSource.ActorRound &&
+                damage.IncomingDamageMilliLife == 200);
+            Level100ChainAutopilot.ObservedBlaster[] hits = driver.Blasters
+                .Where(shot => shot.Hit == true)
+                .ToArray();
+            int reconstructedContacts = driver.Blasters.Count(shot =>
+                shot.ReconstructedCylinderContact);
+            int hitWithoutReconstructedContact = hits.Count(shot =>
+                !shot.ReconstructedCylinderContact);
+            int reconstructedContactWithoutHit = driver.Blasters.Count(shot =>
+                shot.ReconstructedCylinderContact && shot.Hit == false);
             output.WriteLine(
-                $"{tag}: damage events={damageTicks.Count} " +
-                $"counted observables={counted.Count} " +
-                $"unmatched damage={unmatchedDamage.Count} " +
-                $"unmatched observables={used.Count(flag => !flag)}");
-            foreach (int tick in unmatchedDamage)
-            {
-                IEnumerable<string> near = counted
-                    .Where(shot => Math.Abs(shot.ClosestTick - tick) <= 5)
-                    .Select(shot =>
-                        $"closest@{shot.ClosestTick}({shot.ClosestApproachMillimeters:F0}mm," +
-                        $"launch {shot.LaunchTick},life {shot.LifeTicks}," +
-                        $"rem {shot.FinalRemainingBaseTicks})");
-                // All observables near the orphan, counted or not, plus any
-                // whose terminal tick (launch + life + the removal step) is
-                // near it — this separates "tracked but measured >= 400mm"
-                // from "never present in any snapshot".
-                IEnumerable<string> nearAny = driver.Blasters
-                    .Where(shot =>
-                        Math.Abs(shot.ClosestTick - tick) <= 3 ||
-                        Math.Abs((shot.LaunchTick + shot.LifeTicks + 1) - tick) <= 2)
-                    .Select(shot =>
-                        $"launch {shot.LaunchTick} life {shot.LifeTicks} " +
-                        $"closest {shot.ClosestApproachMillimeters:F1}mm@{shot.ClosestTick} " +
-                        $"rem {shot.FinalRemainingBaseTicks}");
-                output.WriteLine(
-                    $"  {tag} damage@{tick} has NO counted observable within +-{1}; " +
-                    $"counted context: {string.Join("; ", near.DefaultIfEmpty("none within +-5"))}");
-                output.WriteLine(
-                    $"    all nearby observables: " +
-                    $"{string.Join(" | ", nearAny.DefaultIfEmpty("NONE - no blaster was near this tick at all"))}");
-            }
-
-            for (int i = 0; i < counted.Count; i++)
-            {
-                if (!used[i])
-                {
-                    output.WriteLine(
-                        $"  {tag} counted observable " +
-                        $"closest@{counted[i].ClosestTick}" +
-                        $"({counted[i].ClosestApproachMillimeters:F0}mm," +
-                        $"launch {counted[i].LaunchTick}) matches NO damage event");
-                }
-            }
+                $"{tag}: damage={damageEvents} causalHits={hits.Length} " +
+                $"reconstructedCylinderContacts={reconstructedContacts} " +
+                $"hitWithoutReconstruction={hitWithoutReconstructedContact} " +
+                $"reconstructionWithoutHit={reconstructedContactWithoutHit}");
+            Assert.Equal(hits.Select(hit => hit.RoundId).Distinct().Count(), hits.Length);
+            return damageEvents;
         }
 
-        ReportIdentityDiff("abortControl", _abortControl.Driver, EnvelopeMillimeters, _output);
-        ReportIdentityDiff("abortNoCrab", _abortNoCrab.Driver, EnvelopeMillimeters, _output);
-        foreach (string note in _abortControl.Driver.BoundaryBandNotes)
-        {
-            _output.WriteLine($"  boundary-band control: {note}");
-        }
-
-        foreach (string note in _abortNoCrab.Driver.BoundaryBandNotes)
-        {
-            _output.WriteLine($"  boundary-band noCrab: {note}");
-        }
-
-        Assert.InRange(
-            strictHits + bandRounds,
-            damageBlasterHits,
-            damageBlasterHits + 8);
+        int controlDamageEvents = ReportEventAccounting(
+            "abortControl",
+            _abortControl.Driver,
+            _output);
+        int noCrabDamageEvents = ReportEventAccounting(
+            "abortNoCrab",
+            _abortNoCrab.Driver,
+            _output);
+        Assert.True(
+            controlDamageEvents + noCrabDamageEvents > 0,
+            "The two controls produced no Blaster damage boundary.");
     }
 
     /// <summary>
