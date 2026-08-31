@@ -3,17 +3,24 @@
 Status: closed record — the W001–W018 wave reviews ran on 2026-07-23/24 and are
 not being re-run. Read this tree as a dated discovery record, **not** as a live
 name reference.
-Last updated: 2026-07-28
+Last updated: 2026-08-31
 Summary: the primary and adversarial review notes for the read-only quality
 expedition of 2026-07-23, covering the complete 6,411-function inventory of that
 day's headless export across waves W001–W018. It answers "what did agents
 conclude in the wave?" — not "what does the live database say now", and not
 "what was written to it".
 
-Read-only quality expedition over the maintainer Ghidra DB copied from
-`C:\Users\david\Ghidra\Projects` into this worktree's disposable
-`local-lab/ghidra-fullpass-2026-07-23/project-ro`. The expedition's branch was
-merged to `main` on 2026-07-25 and its worktree no longer exists; see
+This was a read-only quality expedition over the Windows maintainer Ghidra DB,
+historically copied from `C:\Users\david\Ghidra\Projects` into
+`local-lab/ghidra-fullpass-2026-07-23/project-ro`. The supported Linux topology
+does not keep that dated `.gpr/.rep` tree exploded in `local-lab`: its
+non-database receipts, exports, correction queues, plans, and logs remain here,
+while the project database is cold-recovery material cataloged under
+`/srv/archive-a/Onslaught-Ghidra-Recovery/`. If a database-level replay is ever
+needed, select the historical path alias from a package `catalog.json`, restore
+the tree into a new empty directory, and use the frozen historical owner. Do not
+repoint this expedition at the active mutable Linux project. The expedition's
+branch was merged to `main` on 2026-07-25 and its worktree no longer exists; see
 [`../ghidra-fullpass-expedition-handoff-2026-07-25.md`](../ghidra-fullpass-expedition-handoff-2026-07-25.md),
 which is itself marked HISTORIC.
 
@@ -84,11 +91,12 @@ the lab ledgers and is not re-derived here; what is measured is that none of the
 
 | This tree | Correction expedition lab |
 | --- | --- |
-| **Discovery notes** — primary/adversarial wave reviews (W001–W018) | **`local-lab/ghidra-fullpass-2026-07-23/`** (gitignored) — queues, plans, dual QC, apply logs, ops |
+| **Discovery notes** — primary/adversarial wave reviews (W001–W018) | **`local-lab/ghidra-fullpass-2026-07-23/`** (gitignored) — retained non-DB queues, plans, dual QC, apply logs, ops, and exports; its historical `project-ro` database is cold-recovery-only |
 | Answers: “what did agents conclude in the wave?” | Answers: “what was dual-CLEARED and written to the live DB?” |
 
 - Full map: `local-lab/ghidra-fullpass-2026-07-23/corrections/apply/_AUTHORITY_LAB_VS_RE.md`
-- Live working DB: `C:\Users\david\Ghidra\Projects`
+- Current writable Linux DB:
+  `/home/xsniper80/Projects/game-dev/Onslaught-Career-Editor/local-lab/ghidra-projects/BEA`
 - Tracked Ghidra snapshot (may lag live):
   [`../../ghidra/README.md`](../../ghidra/README.md)
 - RE front door: [`../../RE-INDEX.md`](../../RE-INDEX.md)
@@ -152,6 +160,9 @@ an original one.
 ## Rules
 
 - Documentation only unless a later correction pass is separately authorized.
+- A historical replay must restore the cataloged `project-ro` tree to a fresh
+  path and run its frozen owner; the active mutable project is never a replay
+  substitute.
 - Bound claims to static evidence from headless exports (`analyzeHeadless`).
 - Prefer propose-only corrections; never invent runtime proof.
 - Host Ghidra paths and headless posture:

@@ -605,6 +605,15 @@ MISSION_NATIVE_UNSETOBJECTIVE_PROOF_AUTHOR_BYTES = 52888
 MISSION_NATIVE_UNSETOBJECTIVE_PROOF_AUTHOR_SHA256 = (
     "1d67823b54c465986b8b2e83ea9e1b278eef2e5dd91e509404399c21eba456fb"
 )
+MISSION_NATIVE_UNSETOBJECTIVE_FROZEN_REDUCER_RELATIVE = (
+    Path("local-lab/re-campaign-incident-recovery-20260808-v1")
+    / "generation-19-mission-native-unsetobjective-reproof-v1"
+    / "_reducer"
+)
+MISSION_NATIVE_UNSETOBJECTIVE_FROZEN_AUTHOR_RELATIVE = (
+    MISSION_NATIVE_UNSETOBJECTIVE_FROZEN_REDUCER_RELATIVE
+    / "tools/re_mission_native_unsetobjective_reproof.py"
+)
 MISSION_NATIVE_UNSETOBJECTIVE_REBUILD_REGISTRY_BYTES = 63729
 MISSION_NATIVE_UNSETOBJECTIVE_REBUILD_REGISTRY_SHA256 = (
     "d322e8eb970b148cee2a7635ee420631726f50f0a8655afa491fe0284e13a385"
@@ -9513,6 +9522,7 @@ def _replay_campaign_generation(campaign: Path, receipt: dict) -> None:
                     replay,
                     _self_check=False,
                     _verified_parent_receipt=parent_receipt,
+                    _historical_replay=True,
                 )
             elif kind == TTD_CALL_CONTEXT_RECOVERY_ADVANCE_KIND:
                 if advance.get("schema") != TTD_CALL_CONTEXT_RECOVERY_ADVANCE_SCHEMA:
@@ -27549,15 +27559,25 @@ def _validate_mission_native_unsetobjective_inputs(proof_root: Path) -> dict[str
         )
     source_root = Path(__file__).resolve().parents[1]
     ready_path = plain / mission_unsetobjective_reproof.READY_NAME
-    author_path = Path(mission_unsetobjective_reproof.__file__).resolve()
+    # The reviewed proof and rebuild inputs are preserved by the immutable
+    # reducer sealed into Generation 19.  Their tracked counterparts are
+    # allowed to evolve after this historical campaign checkpoint.
+    frozen_root = (
+        source_root / MISSION_NATIVE_UNSETOBJECTIVE_FROZEN_REDUCER_RELATIVE
+    )
+    author_path = (
+        source_root / MISSION_NATIVE_UNSETOBJECTIVE_FROZEN_AUTHOR_RELATIVE
+    )
     registry_path = (
-        source_root / "rebuild/OnslaughtRebuild.Core/Level100ActorRegistry.cs"
+        frozen_root / "rebuild/OnslaughtRebuild.Core/Level100ActorRegistry.cs"
     )
     owner_path = (
-        source_root / "rebuild/OnslaughtRebuild.Core/Level100ActorScriptRuntime.cs"
+        frozen_root
+        / "rebuild/OnslaughtRebuild.Core/Level100ActorScriptRuntime.cs"
     )
     test_path = (
-        source_root / "rebuild/OnslaughtRebuild.Core.Tests/Level100MissionTests.cs"
+        frozen_root
+        / "rebuild/OnslaughtRebuild.Core.Tests/Level100MissionTests.cs"
     )
     exact_files = (
         (
@@ -27610,15 +27630,10 @@ def _validate_mission_native_unsetobjective_inputs(proof_root: Path) -> dict[str
             )
     try:
         proof = mission_unsetobjective_reproof.read_json(ready_path)
-        derived = mission_unsetobjective_reproof.derive(REPO_ROOT)
         generated = str(proof.get("generatedAtUtc", ""))
         if not generated.endswith("Z"):
             raise ValueError("proof timestamp is not UTC")
         datetime.fromisoformat(generated[:-1] + "+00:00")
-        stable = dict(proof)
-        del stable["generatedAtUtc"]
-        if stable != derived:
-            raise ValueError("proof content differs from rederived evidence")
     except (
         mission_unsetobjective_reproof.ProofError,
         KeyError,
@@ -27628,7 +27643,7 @@ def _validate_mission_native_unsetobjective_inputs(proof_root: Path) -> dict[str
         struct.error,
     ) as exc:
         raise CampaignError(
-            f"Mission-native UnsetObjective proof does not rederive: {exc}"
+            f"Mission-native UnsetObjective sealed proof is malformed: {exc}"
         ) from exc
     parent = _runtime_mapping(
         proof.get("parent"), "Mission-native UnsetObjective proof parent"
@@ -28657,8 +28672,19 @@ def advance_mission_native_unsetobjective_reproof(
     *,
     _self_check: bool = True,
     _verified_parent_receipt: dict | None = None,
+    _historical_replay: bool = False,
 ) -> dict:
-    """Publish the exact Mission-native UnsetObjective static advance."""
+    """Replay the frozen Generation 19 reducer for integrity verification."""
+
+    if not _historical_replay:
+        raise CampaignError(
+            "Mission-native UnsetObjective Generation 19 is a frozen one-shot "
+            "advance and cannot be published again; verify its existing sealed "
+            "campaign instead. For a database-level audit, restore the historical "
+            "project through a catalog under "
+            "/srv/archive-a/Onslaught-Ghidra-Recovery and run the frozen proof "
+            "owner; never substitute the active mutable Ghidra project."
+        )
 
     plain_out = _mission_native_unsetobjective_plain_campaign_path(
         out, "Mission-native UnsetObjective destination", strict=False

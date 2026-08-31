@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
-"""Freeze and verify the CRT 0x00542710 body-envelope refutation.
+"""Historical owner for the CRT 0x00542710 body-envelope refutation.
+
+The tracked CLI is retired and refusal-only. Database-level replay requires a
+catalog-guided restore plus the exact frozen owner sealed with the old READY.
 
 The original CRT boundary proposal preregistered one ten-byte function body.
 An address-only disposable-Ghidra run instead created one discontiguous,
 32-byte function.  This owner turns that counterexample into a durable result;
 it does not authorize the learned two-range body or any live-project mutation.
 
-The finalizer deliberately reuses the frozen v9 promotion runner only as a
+The historical finalizer reused the frozen v9 promotion runner only as a
 library of hardened process, inventory, and preflight helpers.  It never edits
 that runner or the address-only Java instrument whose behavior is under test.
 """
@@ -77,6 +80,15 @@ DEFAULT_PROPOSAL = ROOT / "local-lab/crt-recursive-cohort-2026-08-02/clean521-bo
 DEFAULT_MANUAL = ROOT / "local-lab/crt-recursive-cohort-2026-08-02/thunk-canary-scratch-v1"
 DEFAULT_SPECIMEN = ROOT / "local-lab/safe-copy-bea-pristine/BEA.exe.original.backup"
 DEFAULT_HEADLESS = Path("D:/ghidra_12.1.2_PUBLIC_20260605/ghidra_12.1.2_PUBLIC/support/analyzeHeadless.bat")
+COLD_PACKAGE_PARENT = Path("/srv/archive-a/Onslaught-Ghidra-Recovery")
+HISTORICAL_RETIREMENT_MESSAGE = (
+    "this tracked CRT canary owner is a frozen Windows-era one-shot and its "
+    "bound frozen-v9 main project plus retained canary project are no longer "
+    "live inputs. Locate their aliases in a package catalog under "
+    f"{COLD_PACKAGE_PARENT}, restore every required tree to fresh empty paths, "
+    "and execute the exact frozen owner recorded beside the historical READY; "
+    "never substitute the active mutable Linux Ghidra project"
+)
 
 MANUAL_INPUTS = {
     "manual-copy-manifest.json": ("project/backup_manifest.json", "516f126289ad0ecfd7e73cc4f9c62d0d8340ad6d556c104fae8b8cfcf7c97f11"),
@@ -434,6 +446,8 @@ def run_current_inventory(
 
 
 def finalize(args: argparse.Namespace) -> Path:
+    raise RefutationError(HISTORICAL_RETIREMENT_MESSAGE)
+
     proof_root = args.out.resolve()
     local_lab = (ROOT / "local-lab").resolve()
     require(not proof_root.exists(), f"refusing existing output: {proof_root}")
@@ -639,6 +653,8 @@ def parse_run_receipts(proof_root: Path, receipt: dict[str, Any]) -> None:
 
 
 def verify_ready(ready_path: Path, *, live_readback: bool = True) -> dict[str, Any]:
+    raise RefutationError(HISTORICAL_RETIREMENT_MESSAGE)
+
     ready_path = ready_path.resolve()
     proof_root = ready_path.parent
     receipt = read_json(ready_path, "canary refutation READY")
@@ -798,8 +814,8 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def main() -> int:
-    args = build_parser().parse_args()
+def main(argv: list[str] | None = None) -> int:
+    args = build_parser().parse_args(argv)
     try:
         if args.verify_ready is not None:
             result = verify_ready(args.verify_ready, live_readback=not args.no_live_readback)

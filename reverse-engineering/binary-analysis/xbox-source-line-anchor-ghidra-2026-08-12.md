@@ -1,18 +1,19 @@
 # Xbox source-line anchors promoted into isolated Ghidra projects
 
-Status: complete, bounded cross-build Ghidra checkpoint
-Last updated: 2026-08-12
+Status: complete, bounded historical cross-build Ghidra checkpoint
+Last updated: 2026-08-31
 Evidence: MEASURED — exact XBE and virtual-image identities, 1,166 unique
 Issue-11/US-retail source-coordinate pairs, independent Capstone decoding of
 all 2,332 build-specific allocation plates, scratch apply/readback, canonical
 apply/readback, stable function censuses, and independently reopened PRE/POST
 recovery copies; UNKNOWN — whole-function equivalence, XDK/game-code partition,
 runtime behavior, original symbols, and reconstruction parity.
-Verdict: the January Issue-11 and US-retail Xbox builds now have isolated,
-recoverable Ghidra 12.1.2 databases containing 1,166 exact instruction-local
-source mappings each. Ninety-five incomplete or misaligned Ghidra instruction
-sites were repaired before the mappings were applied. No function was added,
-removed, resized, renamed, or semantically promoted by this operation.
+Verdict: the January Issue-11 and US-retail Xbox builds produced isolated,
+cold-recoverable Ghidra 12.1.2 databases containing 1,166 exact
+instruction-local source mappings each. Ninety-five incomplete or misaligned
+Ghidra instruction sites were repaired before the mappings were applied. No
+function was added, removed, resized, renamed, or semantically promoted by this
+operation.
 
 Specimens:
 
@@ -88,27 +89,42 @@ was reopened read-only. The restored POST copies independently reproduced all
 | Issue 11 | `D:\BEA-Ghidra-Backups\2026-08-12-xbox-sparse-symbol-pre-anchors-issue11` | `D:\BEA-Ghidra-Backups\2026-08-12-xbox-sparse-symbol-post-anchors-issue11` | 100,598,877 |
 | US retail | `D:\BEA-Ghidra-Backups\2026-08-12-xbox-sparse-symbol-pre-anchors-us-retail` | `D:\BEA-Ghidra-Backups\2026-08-12-xbox-sparse-symbol-post-anchors-us-retail` | 100,303,971 |
 
+Those are historical Windows source paths, not current writable locations. The
+five project roots under the former `ghidra-projects/` lane, the recovery trees,
+and the scratch/probe database roots are being retired from the exploded
+`local-lab` topology after checksum-backed packaging. Their supported recovery
+route is a package catalog under
+`/srv/archive-a/Onslaught-Ghidra-Recovery/`: restore every required tree to new
+empty paths before replay, and never substitute the active mutable PC-retail
+project. The non-DB READY receipts, anchor/repair tables, inventories, and logs
+remain local evidence and do not require a Ghidra database merely to be read.
+
 The machine-local fail-closed owner is
 `local-lab/xbox-sparse-symbol-ghidra-20260812-v1/xbox-sparse-symbol-ghidra.ready.json`,
 11,510 bytes, SHA-256
 `12aecbba4de0f90bd1c1b8731257a74114d7c1e4683de412724c34e2f65051c6`.
-It re-hashes the current canonical projects, all six PRE/POST recovery trees,
-the mutation/readback receipts, the exact repair tables, and the anchor tables.
-Its source is retained beside it so the checkpoint can fail if any named tree
-or claim drifts. Two consecutive full replays produced those exact same receipt
-bytes and SHA-256. The same seal also re-hashes the PC live and tracked Ghidra
-trees and requires their 19 files / 186,485,637 bytes / inventory SHA-256
+At sealing time it re-hashed the canonical projects, all six PRE/POST recovery
+trees, the mutation/readback receipts, the exact repair tables, and the anchor
+tables. Its frozen source is retained beside it, and two consecutive full
+replays produced those exact same receipt bytes and SHA-256. A new full replay
+is topology-bound: it requires catalog-guided restoration of the historical
+database trees and the exact frozen owner, rather than the evolving tracked
+tool. The same seal also re-hashed the then-current PC live and tracked Ghidra
+trees and required their 19 files / 186,485,637 bytes / inventory SHA-256
 `b7767b108256c0ff71c033094b25e3f2308ef7d00f007854e0068b9307f3adb4`
 to remain exact.
 
 ## Repository boundary and successor
 
-The two Xbox projects remain ignored under
-`local-lab/xbox-sparse-symbol-ghidra-20260812-v1/ghidra-projects/`. They are not
-copied into `reverse-engineering/ghidra/`, whose sole tracked database remains
-the synchronized PC-retail project. The Xbox project bytes, their backups, and
-raw anchor tables remain machine-local retail-derived evidence; this document
-promotes only the reviewed measurements and their exact receipt identity.
+The supported repository topology no longer treats the five `.gpr/.rep` roots
+formerly under
+`local-lab/xbox-sparse-symbol-ghidra-20260812-v1/ghidra-projects/` as live
+projects. They are not copied into `reverse-engineering/ghidra/`, whose sole
+tracked database remains the synchronized PC-retail project. Xbox database
+bytes and their recovery copies are cold retail-derived evidence routed through
+the external package catalogs; the raw anchor tables and other non-DB evidence
+remain in the lab. This document promotes only the reviewed measurements and
+their exact receipt identity.
 
 The read-only containing-function join and complete XBE-section census are now
 closed by the

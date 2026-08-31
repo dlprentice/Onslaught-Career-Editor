@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import csv
 import copy
+import io
 import json
 import os
 import sys
@@ -12,6 +13,7 @@ import tempfile
 import threading
 import time
 import unittest
+from contextlib import redirect_stderr
 from pathlib import Path
 
 try:
@@ -49,6 +51,14 @@ class EnvelopeProofTests(unittest.TestCase):
 
     def tearDown(self) -> None:
         self.temporary.cleanup()
+
+    def test_tracked_cli_refuses_retired_historical_topology(self) -> None:
+        output = io.StringIO()
+        with redirect_stderr(output):
+            result = proof.main(["--proof-root", str(self.root / "proof")])
+        self.assertEqual(2, result)
+        self.assertIn("frozen Windows-era one-shot", output.getvalue())
+        self.assertIn("never substitute the active mutable", output.getvalue())
 
     def write_inputs(self) -> tuple[Path, Path]:
         canary = self.root / "canary.tsv"

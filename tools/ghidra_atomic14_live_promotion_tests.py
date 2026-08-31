@@ -5,14 +5,13 @@
 from __future__ import annotations
 
 import importlib.util
+import io
 import json
 import shutil
 import tempfile
 import unittest
-from contextlib import contextmanager
+from contextlib import redirect_stdout
 from pathlib import Path
-from types import SimpleNamespace
-from unittest.mock import patch
 
 
 TOOLS = Path(__file__).resolve().parent
@@ -24,11 +23,25 @@ SPEC.loader.exec_module(owner)
 
 
 class Atomic14LivePromotionTests(unittest.TestCase):
-    def test_formal_author_is_hashed_before_its_module_is_executed(self) -> None:
+    def test_tracked_cli_refuses_retired_historical_topology(self) -> None:
+        output = io.StringIO()
+        with redirect_stdout(output):
+            result = owner.main(["verify"])
+        self.assertEqual(1, result)
+        payload = json.loads(output.getvalue())
+        self.assertEqual("REFUSED", payload["status"])
+        self.assertIn("completed Windows-era one-shot", payload["error"])
+        self.assertIn("never substitute the active mutable", payload["error"])
+
+    def test_direct_preflight_is_also_fail_closed(self) -> None:
+        with self.assertRaisesRegex(owner.PromotionError, "package catalog"):
+            owner.preflight()
+
+    def test_retired_owner_does_not_load_historical_executable_dependencies(self) -> None:
         source = OWNER_PATH.read_text(encoding="utf-8")
-        check = source.index('exact_file(FORMAL_AUTHOR, FORMAL_AUTHOR_SHA256, "formal verifier")')
-        execute = source.index('importlib.util.spec_from_file_location("atomic14_formal"')
-        self.assertLess(check, execute)
+        self.assertNotIn("import ghidra_global_init515_live_promotion", source)
+        self.assertNotIn('spec_from_file_location("atomic14_formal"', source)
+        self.assertIn("Exact runnable dependency copies remain sealed", source)
 
     def test_full_result_gate_precedes_ready_publication(self) -> None:
         source = OWNER_PATH.read_text(encoding="utf-8")
@@ -41,6 +54,7 @@ class Atomic14LivePromotionTests(unittest.TestCase):
         self.assertLess(frozen_gate, ready_publish)
 
     def test_inventory_classifier_accepts_only_exact_pre_or_post_pairs(self) -> None:
+        self.skipTest("historical executable dependencies are intentionally not loaded")
         receipt = owner.formal_receipt()
         post = receipt["replicas"][0]["post"]
         with tempfile.TemporaryDirectory() as temporary:
@@ -151,6 +165,7 @@ class Atomic14LivePromotionTests(unittest.TestCase):
                 owner.validate_mutation_census(root)
 
     def test_apply_validator_accepts_formal_artifacts_and_rejects_tamper(self) -> None:
+        self.skipTest("historical executable dependencies are intentionally not loaded")
         replica = owner.formal_receipt()["replicas"][0]
         source_output = owner.REPO / replica["apply"]["output"]["path"]
         source_ready = owner.REPO / replica["apply"]["ready"]["path"]
@@ -172,63 +187,19 @@ class Atomic14LivePromotionTests(unittest.TestCase):
             )
             self.assertTrue(reasons)
 
-    def test_promote_publishes_intent_before_spawn_and_then_forbids_retry(self) -> None:
-        snapshot = {
-            "root": "fixture",
-            "fileCount": 1,
-            "totalBytes": 1,
-            "fileSetSha256": "a" * 64,
-            "files": [{"path": "BEA.gpr", "bytes": 1, "sha256": "b" * 64}],
-        }
-
-        @contextmanager
-        def lease():
-            yield SimpleNamespace(name=owner.MUTEX_NAME, abandoned=False)
-
+    def test_promote_refuses_before_creating_an_attempt(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary) / "owner"
-            root.mkdir()
-            (root / "prepared.ready.json").write_text("{}", encoding="utf-8")
-            prepared = {
-                "livePreimage": snapshot,
-                "preBackup": {"backupRoot": "backup", "restoreRoot": "restore"},
-            }
-            pre_observation = {"rawAfter": snapshot}
-
-            def fail_after_intent(*args, **kwargs):
-                self.assertTrue((root / "promotion/attempt.started.json").is_file())
-                raise owner.PromotionError("injected spawn failure")
-
-            with (
-                patch.object(owner.guard, "acquire_mutex", side_effect=lambda: lease()),
-                patch.object(owner.guard, "assert_quiescent", return_value={}),
-                patch.object(owner.guard, "project_snapshot", return_value=snapshot),
-                patch.object(owner, "load_prepared", return_value=prepared),
-                patch.object(owner, "environment_for", return_value=({}, root)),
-                patch.object(owner, "run_formal_verifier", return_value={}),
-                patch.object(owner, "observe_pre", return_value=pre_observation),
-                patch.object(owner, "atomic_argv", return_value=["fixed-mutator"]),
-                patch.object(owner, "run_process", side_effect=fail_after_intent),
-            ):
-                with self.assertRaisesRegex(owner.PromotionError, "injected spawn failure"):
-                    owner.promote(root)
-
-            self.assertTrue((root / "promotion/attempt.started.json").is_file())
-            self.assertFalse((root / "promotion/promotion.ready.json").exists())
-            with self.assertRaisesRegex(owner.PromotionError, "attempt already exists"):
+            with self.assertRaisesRegex(owner.PromotionError, "package catalog"):
                 owner.promote(root)
+            self.assertFalse(root.exists())
 
-    def test_verify_refuses_attempted_state_without_ready(self) -> None:
+    def test_verify_is_retired_before_reading_owner_state(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary) / "owner"
-            attempt = root / "promotion/attempt.started.json"
-            attempt.parent.mkdir(parents=True)
-            attempt.write_text("{}", encoding="utf-8")
-            with patch.object(
-                owner, "load_prepared", return_value={"preparedAtUtc": "fixture"}
-            ):
-                with self.assertRaisesRegex(owner.PromotionError, "use recover-status"):
-                    owner.verify_artifacts(root)
+            with self.assertRaisesRegex(owner.PromotionError, "package catalog"):
+                owner.verify_artifacts(root)
+            self.assertFalse(root.exists())
 
 
 if __name__ == "__main__":

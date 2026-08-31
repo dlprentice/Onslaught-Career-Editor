@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Prove exact Ghidra function-body envelopes on disposable project clones.
+"""Historical owner for exact Ghidra function-body-envelope proofs.
+
+The tracked CLI is retired and refusal-only. Database-level replay requires a
+catalog-guided restore plus the exact frozen owner sealed with the old READY.
 
 This owner is intentionally narrower than live promotion.  It freezes every
 input, creates independent scratch clones of the observed40 project, exercises
@@ -141,6 +144,15 @@ CLAIM_BOUNDARY = (
     "No semantic name, signature, behavior contract, batch520 authority, live maintainer-project mutation, or rebuild parity claim follows from this canary alone.",
     "The full inventory is a strong exported semantic boundary, not a digest of every possible Ghidra database record.",
     "This is unsigned machine-local evidence for a trusted quiescent host; it is not portable, hostile-actor-resistant, or proof that the run preceded a historical mutation.",
+)
+COLD_PACKAGE_PARENT = Path("/srv/archive-a/Onslaught-Ghidra-Recovery")
+HISTORICAL_RETIREMENT_MESSAGE = (
+    "this tracked function-envelope owner is a frozen Windows-era one-shot and "
+    "its bound main-project, poison-project, and retained replica databases are "
+    "no longer live inputs. Locate their aliases in a package catalog under "
+    f"{COLD_PACKAGE_PARENT}, restore every required tree to fresh empty paths, "
+    "and execute the exact frozen owner recorded beside the historical READY; "
+    "never substitute the active mutable Linux Ghidra project"
 )
 
 
@@ -1827,6 +1839,8 @@ def require_derived_selection(value: Path | None, expected: Path, label: str) ->
 
 
 def run_proof(args: argparse.Namespace) -> dict:
+    raise ProofError(HISTORICAL_RETIREMENT_MESSAGE)
+
     repo_root = require_plain_directory(args.repo_root, "repository root")
     if not (repo_root / "README.MD").is_file() or not (repo_root / "tools").is_dir():
         raise ProofError("repository root is not Onslaught Toolkit")
@@ -2388,6 +2402,8 @@ def live_reverify_projects(
 
 
 def verify_ready(ready_path: Path) -> dict:
+    raise ProofError(HISTORICAL_RETIREMENT_MESSAGE)
+
     ready_path = require_plain_file(ready_path, "proof READY")
     if ready_path.name != "proof.ready.json":
         raise ProofError("proof READY filename must be exactly proof.ready.json")
@@ -2581,15 +2597,13 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def main() -> int:
-    if len(sys.argv) == 3 and sys.argv[1] == "--_job-child":
-        try:
-            return _job_child(sys.argv[2])
-        except (OSError, ProofError, subprocess.SubprocessError) as exc:
-            print(f"JOB_CHILD_ERROR: {exc}", file=sys.stderr)
-            return 125
+def main(argv: list[str] | None = None) -> int:
+    arguments = list(sys.argv[1:] if argv is None else argv)
+    if len(arguments) == 2 and arguments[0] == "--_job-child":
+        print(f"ERROR: {HISTORICAL_RETIREMENT_MESSAGE}", file=sys.stderr)
+        return 2
     parser = build_parser()
-    args = parser.parse_args()
+    args = parser.parse_args(arguments)
     try:
         if args.verify_ready is not None:
             if args.proof_root is not None:

@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Prove the exact Mission-native UnsetObjective body and NOP partition.
+"""Verify the frozen Mission-native UnsetObjective body/NOP proof.
 
 This proof is static and read-only. It binds the pristine retail executable,
 canonical Generation 18, the shipped Mission-native registry, the preserved
-police-reopen disposition, current recoverable Ghidra state, a fresh read-only
-Ghidra listing/xref export, and the pinned GPL source. It proves the exact
-function boundary and a bounded static contract; it does not claim a retail
-runtime observation or complete objective/HUD behavior.
+police-reopen disposition, a frozen Ghidra POST manifest, a read-only Ghidra
+listing/xref export, and the pinned GPL source. The historical project database
+is cold recovery material now: verification requires an explicitly restored
+copy and never falls through to the active mutable Linux project.
 """
 
 from __future__ import annotations
@@ -21,7 +21,7 @@ import os
 import stat
 import struct
 import tempfile
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable
 
@@ -31,6 +31,24 @@ CLAIM = "MISSION_NATIVE_UNSETOBJECTIVE_EXACT_FUNCTION_NOP_PARTITION_AND_STATIC_C
 SPECIMEN_SHA256 = "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
 EVIDENCE_RELATIVE = Path("local-lab/mission-native-unsetobjective-boundary-reproof-20260809-v1")
 READY_NAME = "proof.ready.json"
+HISTORICAL_PROJECT_RELATIVE = Path(
+    "local-lab/ghidra-mission-native-setpos-live-promotion-20260809-v1/"
+    "backups/post-live"
+)
+ACTIVE_MUTABLE_PROJECT_RELATIVE = Path("local-lab/ghidra-projects/BEA")
+TRACKED_CHECKPOINT_RELATIVE = Path("reverse-engineering/ghidra")
+COLD_PACKAGE_PARENT = Path("/srv/archive-a/Onslaught-Ghidra-Recovery")
+COLD_RESTORE_GUIDANCE = (
+    f"locate {HISTORICAL_PROJECT_RELATIVE.as_posix()} in a package catalog "
+    "under /srv/archive-a/Onslaught-Ghidra-Recovery, restore its tree to a new "
+    "empty writable directory, then pass --ghidra-project-root; never use the "
+    "active mutable project or tracked checkpoint"
+)
+HISTORICAL_AUTHOR_STAMP = {
+    "path": "tools/re_mission_native_unsetobjective_reproof.py",
+    "bytes": 52_888,
+    "sha256": "1d67823b54c465986b8b2e83ea9e1b278eef2e5dd91e509404399c21eba456fb",
+}
 
 PARENT_RELATIVE = Path(
     "local-lab/re-campaign-incident-recovery-20260808-v1/"
@@ -260,6 +278,35 @@ def logical_stamp(path: Path, logical_path: str) -> dict[str, Any]:
         "bytes": plain.stat().st_size,
         "sha256": sha256_file(plain),
     }
+
+
+def restored_project_root(root: Path, candidate: Path | None) -> Path:
+    require(
+        candidate is not None,
+        f"historical Ghidra project is not selected; {COLD_RESTORE_GUIDANCE}",
+    )
+    selected = candidate if candidate.is_absolute() else root / candidate
+    project = require_plain_path(
+        selected, "restored historical Ghidra project", file=False
+    )
+    forbidden = {
+        (root / ACTIVE_MUTABLE_PROJECT_RELATIVE).resolve(),
+        (root / TRACKED_CHECKPOINT_RELATIVE).resolve(),
+    }
+    require(
+        project not in forbidden,
+        "historical proof must not consume the active mutable project or tracked checkpoint",
+    )
+    try:
+        project.relative_to(COLD_PACKAGE_PARENT.resolve())
+    except ValueError:
+        pass
+    else:
+        raise ProofError(
+            "do not open or validate a project in place inside the sealed recovery package; "
+            "restore it to a separate directory first"
+        )
+    return project
 
 
 def read_json(path: Path) -> dict[str, Any]:
@@ -819,7 +866,7 @@ def validate_project_tree(root: Path, manifest: dict[str, Any]) -> dict[str, Any
     }
 
 
-def validate_ghidra(root: Path) -> dict[str, Any]:
+def validate_ghidra(root: Path, ghidra_project_root: Path | None) -> dict[str, Any]:
     base = root / "local-lab/ghidra-mission-native-setpos-live-promotion-20260809-v1"
     promotion = read_json(base / "promotion/promotion.ready.json")
     require(
@@ -839,7 +886,9 @@ def validate_ghidra(root: Path) -> dict[str, Any]:
         and backup.get("source", {}).get("fileCount") == 19,
         "latest Ghidra POST backup is not exact and recoverable",
     )
-    project = validate_project_tree(base / "backups/post-live", backup)
+    project = validate_project_tree(
+        restored_project_root(root, ghidra_project_root), backup
+    )
     restore = read_json(base / "post-live-restore.ready.json")
     require(
         restore.get("sourceStable") is True
@@ -879,7 +928,7 @@ def validate_ghidra(root: Path) -> dict[str, Any]:
     }
 
 
-def derive(root: Path) -> dict[str, Any]:
+def derive(root: Path, ghidra_project_root: Path | None = None) -> dict[str, Any]:
     require((root / EVIDENCE_RELATIVE).is_dir(), "UnsetObjective evidence root is missing")
     inputs = exact_inputs(root)
     image = (root / "local-lab/safe-copy-bea-pristine/BEA.exe.original.backup").read_bytes()
@@ -893,7 +942,7 @@ def derive(root: Path) -> dict[str, Any]:
         "registry": validate_registry(root),
         "staticProof": validate_pristine(image),
         "sourceCorroboration": validate_source(root),
-        "ghidra": validate_ghidra(root),
+        "ghidra": validate_ghidra(root, ghidra_project_root),
         "adjudication": {
             "oldEntityKey": OLD_ENTITY,
             "oldContractId": OLD_CONTRACT,
@@ -935,12 +984,16 @@ def derive(root: Path) -> dict[str, Any]:
             "generatedAtUtc is informational publication metadata, not a behavioral or evidence-authority input.",
         ],
         "inputs": inputs,
-        "author": logical_stamp(Path(__file__).resolve(), "tools/re_mission_native_unsetobjective_reproof.py"),
+        # This is the author of the sealed 2026-08-09 proof, not the evolving
+        # compatibility verifier that is executing today.
+        "author": dict(HISTORICAL_AUTHOR_STAMP),
     }
 
 
-def validate_saved(saved: dict[str, Any], root: Path) -> None:
-    fresh = derive(root)
+def validate_saved(
+    saved: dict[str, Any], root: Path, ghidra_project_root: Path | None = None
+) -> None:
+    fresh = derive(root, ghidra_project_root)
     require(set(saved) == set(fresh) | {"generatedAtUtc"}, "proof top-level shape differs")
     generated = saved.get("generatedAtUtc")
     require(isinstance(generated, str) and generated.endswith("Z"), "proof timestamp is not UTC")
@@ -967,8 +1020,8 @@ def mutated_image(image: bytes, va: int) -> bytes:
     return bytes(value)
 
 
-def selftest(root: Path) -> None:
-    derive(root)
+def selftest(root: Path, ghidra_project_root: Path | None = None) -> None:
+    derive(root, ghidra_project_root)
     image = (root / "local-lab/safe-copy-bea-pristine/BEA.exe.original.backup").read_bytes()
     attacks = (
         ("prefix byte", "prefixPadding bytes differ", lambda: validate_pristine(mutated_image(image, RESIDUAL_START), require_specimen=False)),
@@ -1062,37 +1115,25 @@ def selftest(root: Path) -> None:
 
 
 def build(root: Path) -> Path:
-    evidence = root / EVIDENCE_RELATIVE
-    ready = evidence / READY_NAME
-    require(not ready.exists(), "proof READY already exists; verify it instead")
-    author_before = Path(__file__).resolve().read_bytes()
-    value = derive(root)
-    selftest(root)
-    require(Path(__file__).resolve().read_bytes() == author_before, "proof author changed during derivation")
-    value["generatedAtUtc"] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
-    validate_saved(value, root)
-    payload = (json.dumps(value, indent=2, sort_keys=True) + "\n").encode("utf-8")
-    fd, temporary = tempfile.mkstemp(prefix=READY_NAME + ".", suffix=".partial", dir=evidence)
-    try:
-        with os.fdopen(fd, "wb") as stream:
-            stream.write(payload)
-            stream.flush()
-            os.fsync(stream.fileno())
-        require(Path(__file__).resolve().read_bytes() == author_before, "proof author changed before publication")
-        validate_saved(read_json(Path(temporary)), root)
-        selftest(root)
-        os.replace(temporary, ready)
-    finally:
-        if os.path.exists(temporary):
-            os.unlink(temporary)
-    validate_saved(read_json(ready), root)
-    return ready
+    del root
+    raise ProofError(
+        "this one-shot proof is frozen and cannot be rebuilt; verify the sealed "
+        "READY with an explicitly restored historical project"
+    )
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("command", choices=("build", "verify", "selftest"))
-    args = parser.parse_args()
+    parser.add_argument(
+        "--ghidra-project-root",
+        type=Path,
+        help=(
+            "new writable restore of the historical SetPos POST project; the "
+            "active mutable project and tracked checkpoint are forbidden"
+        ),
+    )
+    args = parser.parse_args(argv)
     root = repo_root()
     ready = root / EVIDENCE_RELATIVE / READY_NAME
     try:
@@ -1100,10 +1141,10 @@ def main() -> int:
             path = build(root)
             print(f"MISSION_NATIVE_UNSETOBJECTIVE_REPROOF_READY {logical_stamp(path, (EVIDENCE_RELATIVE / READY_NAME).as_posix())}")
         elif args.command == "verify":
-            validate_saved(read_json(ready), root)
+            validate_saved(read_json(ready), root, args.ghidra_project_root)
             print(f"MISSION_NATIVE_UNSETOBJECTIVE_REPROOF_VERIFIED {logical_stamp(ready, (EVIDENCE_RELATIVE / READY_NAME).as_posix())}")
         else:
-            selftest(root)
+            selftest(root, args.ghidra_project_root)
             print("MISSION_NATIVE_UNSETOBJECTIVE_REPROOF_SELFTEST_OK 16 targeted counterexamples rejected")
     except (ProofError, KeyError, IndexError, ValueError, OSError, struct.error) as exc:
         print(f"MISSION_NATIVE_UNSETOBJECTIVE_REPROOF_REFUSED {exc}", file=os.sys.stderr)

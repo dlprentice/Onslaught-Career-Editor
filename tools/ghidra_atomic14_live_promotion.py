@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Own the one-shot maintainer-Ghidra promotion of the proven Atomic14 island.
+"""Historical one-shot owner for the proven Atomic14 island.
+
+The tracked CLI is retired and refusal-only. Database-level replay requires a
+catalog-guided restore plus the exact frozen owner sealed with the old READY.
 
 This owner is deliberately project-, specimen-, proof-, tool-, and cohort-
 specific.  ``prepare`` is read-only: it reproduces the formal proof verifier,
@@ -9,7 +12,7 @@ observes the exact live PRE state, and creates two disjoint verified copies.
 the fixed mutator exactly once, then separately reopens and reads back the
 result.  ``recover-status`` is observation-only and never restores or retries.
 
-The proof establishes function/listing boundaries only.  This owner cannot
+The proof established function/listing boundaries only.  This owner cannot
 assign semantic names, signatures, types, comments, or rebuild readiness.
 """
 
@@ -18,7 +21,6 @@ from __future__ import annotations
 import argparse
 import ctypes
 import hashlib
-import importlib.util
 import json
 import os
 import re
@@ -64,6 +66,14 @@ BASELINE_PROJECT = (
 BASELINE_MANIFEST = BASELINE_PROJECT / "backup_manifest.json"
 BASELINE_MANIFEST_SHA256 = "ccb47580355075548b213064a8b0e2e6f255b932da58b3f65c89bfc1f4a3e249"
 BASELINE_FILESET_SHA256 = "3f3cdc53bcd1e38d11bad822500a776f8885f42d8f7093fbba0bc403133936dd"
+COLD_PACKAGE_PARENT = Path("/srv/archive-a/Onslaught-Ghidra-Recovery")
+HISTORICAL_RETIREMENT_MESSAGE = (
+    "this Atomic14 owner is a completed Windows-era one-shot whose bound "
+    "global-init515 POST project is no longer a live input. Locate that path "
+    f"in a package catalog under {COLD_PACKAGE_PARENT}, restore it to a fresh "
+    "empty directory, and execute the exact frozen owner recorded beside the "
+    "historical READY; never substitute the active mutable Linux Ghidra project"
+)
 
 HEADLESS = Path(
     r"D:\ghidra_12.1.2_PUBLIC_20260605\ghidra_12.1.2_PUBLIC\support\analyzeHeadless.bat"
@@ -93,12 +103,9 @@ GUARD_DEPENDENCIES = {
     TOOLS / "ghidra_function_batch_proof.py":
         "f76a3e74bd618ef824b0185ce7bebf7476387381e8ace991af72c38560741afa",
     TOOLS / "ghidra_function_envelope_proof.py":
-        # Repinned 2026-08-07: canary/poison TSV sources re-pointed from the
-        # deleted function-envelope-pilot-2026-08-03 to the byte-verified
-        # formal-function-envelope-canary-20260803-v3/inputs (CANARY
-        # 1ed6b4a3... / POISON 5490532b... match the tool's pins). The
-        # re-point was adjudicated by the eight-way review
-        # (local-lab/external-review-repair-2026-08-07/). Not tampering.
+        # Historical dependency identity. The current tracked envelope owner
+        # intentionally differs and is refusal-only; exact replay uses the
+        # frozen dependency copy sealed beside the Atomic14 READY.
         "fdf80237d642db1a2d92213048424f06a4fb0ae614f8e7db6c3bd39210e707a5",
     TOOLS / "ghidra_global_init_full520_proof.py":
         "2fea029379aaf81df072907a87e142f03e4c1d261d19325933b18823b4fef972",
@@ -142,25 +149,20 @@ def plain_single_file(path: Path, label: str) -> Path:
     return path.resolve()
 
 
-# Pin every local module before importing code from it.
-exact_file(GUARD_TOOL, GUARD_TOOL_SHA256, "live guard")
-for _dependency, _digest in GUARD_DEPENDENCIES.items():
-    exact_file(_dependency, _digest, f"live guard dependency {_dependency.name}")
-exact_file(BACKUP_TOOL, BACKUP_TOOL_SHA256, "backup dependency")
-if str(TOOLS) not in sys.path:
-    sys.path.insert(0, str(TOOLS))
-import ghidra_global_init515_live_promotion as guard  # noqa: E402
+class _RetiredDependency:
+    """Keep forensic helpers importable without loading retired executables."""
 
-# The formal module is executable Python: pin it before import, not merely in
-# the later preflight that calls it.
-exact_file(FORMAL_AUTHOR, FORMAL_AUTHOR_SHA256, "formal verifier")
-_formal_spec = importlib.util.spec_from_file_location("atomic14_formal", FORMAL_AUTHOR)
-require(_formal_spec is not None and _formal_spec.loader is not None, "formal verifier cannot load")
-formal = importlib.util.module_from_spec(_formal_spec)
-_formal_spec.loader.exec_module(formal)
+    def __getattr__(self, name: str) -> object:
+        del name
+        raise PromotionError(HISTORICAL_RETIREMENT_MESSAGE)
 
-# Use one repository-wide live-Ghidra mutex, not the historical 515-only name.
-guard.MUTEX_NAME = MUTEX_NAME
+
+# The current tracked owner is refusal-only. Loading its historical executable
+# dependencies here would make even that refusal depend on optional packages
+# and retired local-lab files. Exact runnable dependency copies remain sealed
+# beside the historical READY instead.
+guard = _RetiredDependency()
+formal = _RetiredDependency()
 
 
 def utc_now() -> str:
@@ -194,6 +196,8 @@ def write_json_new(path: Path, value: object) -> None:
 
 
 def preflight() -> dict[str, object]:
+    raise PromotionError(HISTORICAL_RETIREMENT_MESSAGE)
+
     require(os.name == "nt", "Atomic14 live promotion is Windows-only")
     require(not ctypes.windll.shell32.IsUserAnAdmin(), "Atomic14 live promotion must run non-elevated")
     fixed = (
@@ -759,6 +763,8 @@ def validate_post_observation(value: Mapping[str, object], root: Path, label: st
 
 
 def prepare(owner_root: Path = OWNER_ROOT) -> dict[str, object]:
+    raise PromotionError(HISTORICAL_RETIREMENT_MESSAGE)
+
     require(not owner_root.exists(), f"Atomic14 owner root already exists: {owner_root}")
     with guard.acquire_mutex() as lease:
         authority = preflight()
@@ -919,6 +925,8 @@ def classify_live_after_apply(
 
 
 def promote(owner_root: Path = OWNER_ROOT) -> dict[str, object]:
+    raise PromotionError(HISTORICAL_RETIREMENT_MESSAGE)
+
     promotion_root = owner_root / "promotion"
     require(not promotion_root.exists(), "promotion attempt already exists; use recover-status")
     with guard.acquire_mutex() as lease:
@@ -1069,6 +1077,8 @@ def promote(owner_root: Path = OWNER_ROOT) -> dict[str, object]:
 
 
 def recover_status(owner_root: Path = OWNER_ROOT) -> dict[str, object]:
+    raise PromotionError(HISTORICAL_RETIREMENT_MESSAGE)
+
     recovery_root = owner_root / "recoveries" / (
         datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S") + "-" + uuid.uuid4().hex[:8]
     )
@@ -1262,6 +1272,8 @@ def validate_promotion_payload(
 
 
 def verify_artifacts(owner_root: Path = OWNER_ROOT) -> dict[str, object]:
+    raise PromotionError(HISTORICAL_RETIREMENT_MESSAGE)
+
     prepared = load_prepared(owner_root)
     promotion_root = owner_root / "promotion"
     promotion_ready = promotion_root / "promotion.ready.json"
@@ -1293,23 +1305,14 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    args = build_parser().parse_args(argv)
-    try:
-        if args.command == "preflight":
-            result = preflight()
-        elif args.command == "prepare":
-            result = prepare()
-        elif args.command == "promote":
-            result = promote()
-        elif args.command == "recover-status":
-            result = recover_status()
-        else:
-            result = verify_artifacts()
-        print(json.dumps(result, indent=2, sort_keys=True, default=str))
-        return 0
-    except (PromotionError, ValueError, OSError) as exc:
-        print(json.dumps({"status": "REFUSED", "error": str(exc)}, sort_keys=True))
-        return 1
+    build_parser().parse_args(argv)
+    print(
+        json.dumps(
+            {"status": "REFUSED", "error": HISTORICAL_RETIREMENT_MESSAGE},
+            sort_keys=True,
+        )
+    )
+    return 1
 
 
 if __name__ == "__main__":
