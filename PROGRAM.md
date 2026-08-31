@@ -248,7 +248,7 @@ exact-key references to any of the 25 keys outside `developer_state.json`
 itself, except one deliberate residual — that same mandated moved-history
 heading names `_HERMES_SLICE_20260819_533810` inside its own destination
 note.
-Remaining `_HERMES_SLICE_*`: 492 keys across later batches;
+Remaining `_HERMES_SLICE_*` at the batch-1 cut: 492 keys across later batches;
 `current_re_authority`, `_RECURSIVE_RE_CAMPAIGN_2026_08_02`, `goal_status`,
 and every other key untouched. Gates: JSON valid at 574 keys;
 `git grep -F` finds zero tracked hits for 24 of the 25 keys; for
@@ -259,6 +259,21 @@ inside `IScript__VFunc_2_00533810.md`; docs
 sub-gates green (doc headers
 2,009 files / 0 violations; re-function-doc-names 2,040 assertions DRIFTED=0;
 evidence-register header current; current-authority PASS).
+
+**2026-08-31 — P3 batch 2 gate receipt.** Moved the contiguous nine-key
+weapon-display cohort at former lines 26–34 into its already-existing tracked
+function-note owners: Walker/parent weapon-name; Jet/Walker/parent physics-name
+and icon-name; and Jet current-name-field functions at VAs
+`0x0040c550`–`0x00414610`. No note needed a semantic rewrite: each already
+preserves the original binary identity,
+body digest/size, ABI, edge counts, envelope, and claim limits. The tracked JSON
+diff is exactly nine deletions / zero insertions; valid JSON moved from 939,523
+bytes / 4,579 lines / 578 top-level keys to 933,680 bytes / 4,570 lines / 569
+keys. `_HERMES_SLICE_*` moved 492 → 483. After deleting the selected keys from
+the committed parent in-memory, sorted JSON equality proves every surviving
+value unchanged; all nine exact-key searches return zero tracked hits and all
+nine destination notes exist. Gates passed: `npm run test:docs` and
+`git diff --check`.
 
 ### P4 — Batch function-triage packet exporter — COMPLETE
 
