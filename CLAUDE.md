@@ -30,12 +30,13 @@ a bounded contract is not completion.
    evidence pointers. Treat it as awareness, never as truth that primary
    evidence cannot overturn. For complete-RE replay authority, open
    `current_re_authority`; Generation 73 is a projection oracle, not a parent.
-   Ghidra mutation has a separate evidence and authorization gate. There is no
-   active mutable Linux project; route the preserved `db.18634` checkpoint and
-   recovery copies through
+   Ghidra mutation has a separate evidence and authorization gate. The sole
+   mutable PC project is `local-lab/ghidra-projects/BEA/` (Ghidra 12.1.3,
+   `db.18635`, owner `xsniper80`); route the preserved `db.18634` checkpoint and
+   sealed external recovery package through
    [`reverse-engineering/ghidra/README.md`](reverse-engineering/ghidra/README.md).
-   OpenJDK 21 and Ghidra 12.1.3 are installed, but no mutable Linux project has
-   completed activation. On Linux, run complete-RE verification only through
+   Its activation ceremony is complete; that does not waive the separate gate
+   for a future semantic mutation. On Linux, run complete-RE verification only through
    `current_re_authority.verify`; do not call the frozen bootstrap directly or
    rewrite historical receipt paths.
    Omarchy owns native RE and Core/Client/headless rebuild work. AppCore source

@@ -2,26 +2,26 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Reproduce a completed Ghidra cohort ceremony through the shared framework.
 
-This is the proof harness for tools/GhidraApplyCohortManifest.java.  For each
-completed cohort it rebuilds a replica byte-for-byte from the off-volume PRE
-backup on H:, runs the framework's ceremony modes against it, and compares the
-receipts to the numbers the original one-shot applier recorded.
+This is the proof harness for tools/GhidraApplyCohortManifest.java. For each
+completed cohort it rebuilds a replica byte-for-byte from an explicitly selected
+catalog-restored PRE tree, runs the framework's ceremony modes against it, and
+compares the receipts to the numbers the original one-shot applier recorded.
 
-CONTAINMENT.  Everything this harness writes lives under the ephemeral rehearsal
-lane in the scratchpad plus the ignored receipt lane under local-lab/.  The live
-maintainer project (C:\\Users\\david\\Ghidra\\Projects), the tracked snapshot
-(reverse-engineering/ghidra) and the pristine specimen are never opened for
-writing, and the H: backups are only ever read.  The framework itself refuses any
-project path that is not inside a "cohort-rehearsal" segment, so a replica is the
-only thing it can open.
+CONTAINMENT. Every database-consuming command requires explicit ``--ghidra``,
+``--restored-backups``, and ``--lane`` arguments. The backup root must already be
+restored outside the sealed package; the lane must contain a
+``cohort-rehearsal`` path segment, and every rehearsal write stays below it. A
+noncanonical sandbox additionally requires an explicit root with no such path
+segment. The active mutable Linux project, tracked checkpoint, sealed package,
+pristine specimen, and historical Windows maintainer path are forbidden.
 
 Usage:
-  python tools/ghidra_cohort_replay.py --cohort boundary-cohort41
-  python tools/ghidra_cohort_replay.py --cohort all --steps identity,dry,apply,readback
-  python tools/ghidra_cohort_replay.py --cohort abi-cohort294 --steps census
-  python tools/ghidra_cohort_replay.py --sandbox        # build the standing sandbox
-  python tools/ghidra_cohort_replay.py --verdict        # grade what has been run
-  python tools/ghidra_cohort_replay.py --probes varargs # the varargs controls
+  python tools/ghidra_cohort_replay.py --cohort boundary-cohort41 \\
+    --ghidra /path/to/analyzeHeadless \\
+    --restored-backups /path/to/restored-backup-set \\
+    --lane /absolute/local-lab/cohort-rehearsal/run-id
+  python tools/ghidra_cohort_replay.py --verdict \\
+    --receipts /absolute/local-lab/cohort-rehearsal/run-id/receipts
 
 REHEARSAL vs REPRODUCTION.  `COHORTS` holds both: a completed ceremony is graded
 against its archived receipts, while a `rehearsalOnly` cohort has no archive and
@@ -33,6 +33,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -43,28 +44,42 @@ REPO = Path(__file__).resolve().parent.parent
 TOOLS = REPO / "tools"
 SPECS = TOOLS / "cohort-specs"
 
-GHIDRA = Path(
+# Frozen Windows identities below are receipt provenance only. They are never
+# current defaults: configure_runtime() replaces them before any database read
+# or write can occur.
+HISTORICAL_GHIDRA = Path(
     r"D:\ghidra_12.1.2_PUBLIC_20260605\ghidra_12.1.2_PUBLIC"
     r"\support\analyzeHeadless.bat")
-BACKUPS = Path(r"H:\BEA-Ghidra-Backups")
+HISTORICAL_BACKUPS = Path(r"H:\BEA-Ghidra-Backups")
 
 # The ephemeral rehearsal lane.  The path segment "cohort-rehearsal" is what the
 # framework's containment gate requires; renaming it makes every run refuse.
-LANE = Path(
+HISTORICAL_LANE = Path(
     r"C:\Users\david\AppData\Local\Temp\claude"
     r"\C--Users-david-source-Onslaught-Career-Editor"
     r"\6174219b-0c29-4056-883b-580c862ff182\scratchpad\cohort-rehearsal")
-RECEIPTS = REPO / "local-lab" / "ghidra-cohort-framework" / "receipts"
+HISTORICAL_RECEIPTS = REPO / "local-lab" / "ghidra-cohort-framework" / "receipts"
 MANIFESTS = REPO / "local-lab" / "ghidra-cohort-framework" / "manifests"
 
-SANDBOX = REPO / "local-lab" / "ghidra-noncanonical-sandbox"
+GHIDRA = HISTORICAL_GHIDRA
+BACKUPS = HISTORICAL_BACKUPS
+LANE = HISTORICAL_LANE
+RECEIPTS = HISTORICAL_RECEIPTS
+SANDBOX: Path | None = None
+RUNTIME_CONFIGURED = False
+
+ACTIVE_MUTABLE_PROJECT = REPO / "local-lab" / "ghidra-projects" / "BEA"
+TRACKED_CHECKPOINT = REPO / "reverse-engineering" / "ghidra"
+RECOVERY_PACKAGE_PARENT = Path("/srv/archive-a/Onslaught-Ghidra-Recovery")
 
 SCRIPT = "GhidraApplyCohortManifest.java"
 
 # Paths that must never be written by this harness.
 FORBIDDEN_WRITE_ROOTS = [
     Path(r"C:\Users\david\Ghidra\Projects"),
-    REPO / "reverse-engineering" / "ghidra",
+    ACTIVE_MUTABLE_PROJECT,
+    TRACKED_CHECKPOINT,
+    RECOVERY_PACKAGE_PARENT,
     REPO / "local-lab" / "safe-copy-bea-pristine",
     REPO / "local-lab" / "pristine-verification-2026-07-26",
 ]
@@ -329,6 +344,132 @@ COHORTS.update(REHEARSAL_COHORTS)
 
 # --------------------------------------------------------------------- utils
 
+
+class RoutingError(ValueError):
+    """Raised before any historical database can be read or copied unsafely."""
+
+
+def _inside(path: Path, root: Path) -> bool:
+    try:
+        path.relative_to(root)
+        return True
+    except ValueError:
+        return False
+
+
+def _plain_absolute(path: Path, label: str, *, directory: bool) -> Path:
+    if not path.is_absolute():
+        raise RoutingError(f"{label} must be an explicit absolute path: {path}")
+    lexical = Path(os.path.abspath(path))
+    for component in (lexical, *lexical.parents):
+        if os.path.lexists(component) and component.is_symlink():
+            raise RoutingError(f"{label} contains a symlink component: {component}")
+    if directory:
+        if not lexical.is_dir():
+            raise RoutingError(f"{label} is not a directory: {lexical}")
+    elif not lexical.is_file():
+        raise RoutingError(f"{label} is not a file: {lexical}")
+    return lexical.resolve()
+
+
+def _plain_output_root(path: Path, label: str) -> Path:
+    """Validate an absolute directory route that may not exist yet."""
+
+    if not path.is_absolute():
+        raise RoutingError(f"{label} must be an explicit absolute path: {path}")
+    lexical = Path(os.path.abspath(path))
+    for component in (lexical, *lexical.parents):
+        if os.path.lexists(component) and component.is_symlink():
+            raise RoutingError(f"{label} contains a symlink component: {component}")
+    if lexical.exists() and not lexical.is_dir():
+        raise RoutingError(f"{label} is not a directory: {lexical}")
+    return lexical.resolve()
+
+
+def _outside_protected(path: Path, label: str) -> None:
+    for protected in (
+        ACTIVE_MUTABLE_PROJECT.resolve(),
+        TRACKED_CHECKPOINT.resolve(),
+        RECOVERY_PACKAGE_PARENT.resolve(),
+    ):
+        if _inside(path, protected) or _inside(protected, path):
+            raise RoutingError(f"{label} overlaps a protected owner: {protected}")
+
+
+def configure_runtime(
+    ghidra: Path,
+    restored_backups: Path,
+    lane: Path,
+    sandbox_root: Path | None = None,
+) -> None:
+    """Bind one explicit restored backup set and one contained scratch lane."""
+
+    global GHIDRA, BACKUPS, LANE, RECEIPTS, SANDBOX, SANDBOX_BACKUP
+    global RUNTIME_CONFIGURED
+
+    # A failed reconfiguration must not leave an earlier route usable.
+    RUNTIME_CONFIGURED = False
+    selected_ghidra = _plain_absolute(ghidra, "analyzeHeadless", directory=False)
+    selected_backups = _plain_absolute(
+        restored_backups, "restored backup root", directory=True
+    )
+    selected_lane = _plain_output_root(lane, "rehearsal lane")
+    if "cohort-rehearsal" not in selected_lane.parts:
+        raise RoutingError(
+            "rehearsal lane must contain an exact cohort-rehearsal path segment"
+        )
+    if _inside(selected_backups, RECOVERY_PACKAGE_PARENT.resolve()):
+        raise RoutingError(
+            "restore historical projects outside the sealed recovery package before use"
+        )
+    _outside_protected(selected_ghidra, "analyzeHeadless")
+    _outside_protected(selected_backups, "restored backup root")
+    _outside_protected(selected_lane, "rehearsal lane")
+    selected_sandbox = None
+    if sandbox_root is not None:
+        selected_sandbox = _plain_output_root(
+            sandbox_root, "noncanonical sandbox root"
+        )
+        if "cohort-rehearsal" in selected_sandbox.parts:
+            raise RoutingError(
+                "noncanonical sandbox root must not contain a cohort-rehearsal "
+                "path segment"
+            )
+        if "ghidra-noncanonical-sandbox" not in selected_sandbox.parts:
+            raise RoutingError(
+                "noncanonical sandbox root must contain an exact "
+                "ghidra-noncanonical-sandbox path segment"
+            )
+        _outside_protected(selected_sandbox, "noncanonical sandbox root")
+
+    GHIDRA = selected_ghidra
+    BACKUPS = selected_backups
+    LANE = selected_lane
+    RECEIPTS = selected_lane / "receipts"
+    SANDBOX = selected_sandbox
+    for config in COHORTS.values():
+        config["backup"] = selected_backups / Path(config["backup"]).name
+    SANDBOX_BACKUP = selected_backups / Path(SANDBOX_BACKUP).name
+    RUNTIME_CONFIGURED = True
+
+
+def configure_verdict_receipts(receipts: Path) -> None:
+    """Select one explicit receipt lane for a verdict-only invocation."""
+
+    global RECEIPTS
+    selected = _plain_absolute(receipts, "receipt root", directory=True)
+    _outside_protected(selected, "receipt root")
+    RECEIPTS = selected
+
+
+def require_runtime_configuration() -> None:
+    if not RUNTIME_CONFIGURED:
+        raise RoutingError(
+            "historical Ghidra replay is unconfigured; pass explicit --ghidra, "
+            "--restored-backups, and --lane paths. Never use Windows drive-letter "
+            "provenance or the active mutable Linux project as a default"
+        )
+
 def sha256_file(path: Path) -> str:
     h = hashlib.sha256()
     with path.open("rb") as fh:
@@ -360,7 +501,10 @@ def tree_digest(root: Path) -> tuple[str, int, int]:
 
 
 def assert_write_allowed(dest: Path) -> None:
+    require_runtime_configuration()
     resolved = dest.resolve()
+    if not _inside(resolved, LANE.resolve()):
+        raise RoutingError(f"REFUSING to write outside the configured lane: {resolved}")
     for root in FORBIDDEN_WRITE_ROOTS:
         try:
             resolved.relative_to(root.resolve())
@@ -369,23 +513,86 @@ def assert_write_allowed(dest: Path) -> None:
         raise SystemExit(f"REFUSING to write inside a protected owner: {root}")
 
 
-def restore(dest: Path, backup: Path) -> tuple[str, int, int]:
-    assert_write_allowed(dest)
-    if not backup.exists():
-        raise SystemExit(f"backup missing: {backup}")
+def assert_sandbox_write_allowed(dest: Path) -> None:
+    require_runtime_configuration()
+    if SANDBOX is None:
+        raise RoutingError("no explicit noncanonical sandbox root is configured")
+    resolved = dest.resolve()
+    sandbox = SANDBOX.resolve()
+    if "cohort-rehearsal" in sandbox.parts:
+        raise RoutingError("configured sandbox unexpectedly enters the rehearsal lane")
+    if not _inside(resolved, sandbox):
+        raise RoutingError(f"REFUSING to write outside the configured sandbox: {resolved}")
+    _outside_protected(resolved, "sandbox destination")
+
+
+def _copy_restored_tree(dest: Path, backup: Path) -> tuple[str, int, int]:
+    require_runtime_configuration()
+    try:
+        backup = _plain_absolute(backup, "restored historical backup", directory=True)
+    except RoutingError as exc:
+        raise SystemExit(str(exc)) from exc
+    if not _inside(backup, BACKUPS.resolve()):
+        raise SystemExit(f"backup is outside the configured restored root: {backup}")
+    copy_files: list[Path] = []
+    for path in sorted(backup.rglob("*")):
+        if path.is_symlink():
+            raise RoutingError(
+                f"restored historical backup contains a symlink: {path}"
+            )
+        if path.is_dir():
+            continue
+        if not path.is_file():
+            raise RoutingError(
+                f"restored historical backup contains a special node: {path}"
+            )
+        if path.name != "backup_manifest.json":
+            copy_files.append(path)
     if dest.exists():
         shutil.rmtree(dest)
     dest.mkdir(parents=True)
-    for p in sorted(backup.rglob("*")):
-        if p.is_file() and p.name != "backup_manifest.json":
-            out = dest / p.relative_to(backup)
-            out.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(p, out)
+    for path in copy_files:
+        out = dest / path.relative_to(backup)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(path, out)
     return tree_digest(dest)
 
 
+def restore(dest: Path, backup: Path) -> tuple[str, int, int]:
+    require_runtime_configuration()
+    assert_write_allowed(dest)
+    return _copy_restored_tree(dest, backup)
+
+
+def restore_sandbox(dest: Path, backup: Path) -> tuple[str, int, int]:
+    require_runtime_configuration()
+    assert_sandbox_write_allowed(dest)
+    return _copy_restored_tree(dest, backup)
+
+
 def headless(tag: str, project: Path, args: list[str], readonly: bool,
-             logdir: Path, timeout: int = 7200) -> tuple[int, list[str], str]:
+             logdir: Path, timeout: int = 7200,
+             *, allow_containment_probe: bool = False) -> tuple[int, list[str], str]:
+    require_runtime_configuration()
+    # Even read-only headless sessions may upgrade/open project state in ways the
+    # harness must never direct at a preserved or active owner.
+    if allow_containment_probe:
+        if not readonly or SANDBOX is None:
+            raise RoutingError(
+                "the outside-lane containment probe requires a configured "
+                "noncanonical sandbox and a read-only session"
+            )
+        expected = (SANDBOX / "project").resolve()
+        actual = project.resolve()
+        if actual != expected or "cohort-rehearsal" in actual.parts:
+            raise RoutingError(
+                "containment probe project differs from the explicit "
+                "noncanonical sandbox"
+            )
+        _outside_protected(actual, "containment probe project")
+    else:
+        assert_write_allowed(project)
+    assert_write_allowed(logdir)
     logdir.mkdir(parents=True, exist_ok=True)
     cmd = [str(GHIDRA), str(project), "BEA", "-process", "BEA.exe", "-noanalysis"]
     if readonly:
@@ -421,6 +628,7 @@ STEP_MODES = {
 
 
 def run_cohort(name: str, steps: list[str]) -> int:
+    require_runtime_configuration()
     cfg = COHORTS[name]
     spec: Path = cfg["spec"]
     manifest: Path = cfg["manifest"]
@@ -629,6 +837,7 @@ def run_varargs_controls() -> int:
     must not commit; the positive must PASS and leave varargs=true untouched,
     proven by a separate-process readback.
     """
+    require_runtime_configuration()
     cfg = COHORTS["varargs-cohort2"]
     spec, manifest = cfg["spec"], cfg["manifest"]
     if not manifest.exists():
@@ -802,6 +1011,11 @@ def run_probes(which: str) -> int:
     tested.  These runs break one input at a time and require the framework to
     refuse for that specific reason.
     """
+    require_runtime_configuration()
+    if which in ("core", "all") and SANDBOX is None:
+        raise RoutingError(
+            "core containment probes require an explicit --sandbox-root"
+        )
     work = LANE / "probes"
     work.mkdir(parents=True, exist_ok=True)
     out = RECEIPTS / "probes"
@@ -823,21 +1037,25 @@ def run_probes(which: str) -> int:
     cases: list[dict] = []
 
     def case(tag: str, project: Path, spec: Path, sha: str, manifest: Path,
-             mode: str, expect: str, nargs: int = 6) -> None:
+             mode: str, expect: str, nargs: int = 6,
+             allow_containment_probe: bool = False) -> None:
         cases.append(dict(tag=tag, project=project, spec=spec, sha=sha,
                           manifest=manifest, mode=mode, expect=expect,
-                          nargs=nargs))
+                          nargs=nargs,
+                          allowContainmentProbe=allow_containment_probe))
 
     ns = sha256_file(name_spec)
     if which in ("core", "all"):
         # containment: the standing sandbox has no cohort-rehearsal segment, so
         # the gated applier must refuse to open it.  This is the sandbox README's
         # claim, executed.
+        assert SANDBOX is not None
         sandbox_project = SANDBOX / "project"
         if sandbox_project.exists():
             case("p01-containment-sandbox", sandbox_project, name_spec, ns,
                  name_manifest, "identity",
-                 "reason=project_not_in_rehearsal_scratch")
+                 "reason=project_not_in_rehearsal_scratch",
+                 allow_containment_probe=True)
         case("p02-spec-sha-pin", clean, name_spec, "00" * 32, name_manifest,
              "identity", "SPEC SHA PIN")
         case("p03-bad-mode", clean, name_spec, ns, name_manifest, "frobnicate",
@@ -886,7 +1104,9 @@ def run_probes(which: str) -> int:
         args = [str(c["spec"]), c["sha"], str(c["manifest"]), c["mode"],
                 str(out / f"{c['tag']}.json"), str(out / f"{c['tag']}.tsv")]
         args = args[:c["nargs"]]
-        rc, hits, log = headless(c["tag"], c["project"], args, True, logs)
+        rc, hits, log = headless(
+            c["tag"], c["project"], args, True, logs,
+            allow_containment_probe=c["allowContainmentProbe"])
         refused = c["expect"] in log
         receipt = out / f"{c['tag']}.json"
         applied_anyway = False
@@ -1513,9 +1733,12 @@ state that no longer exists. Check the db version before trusting anything.
 
 
 def build_sandbox() -> int:
+    require_runtime_configuration()
+    if SANDBOX is None:
+        raise RoutingError("--sandbox requires an explicit --sandbox-root")
     dest = SANDBOX / "project"
-    assert_write_allowed(dest)
-    digest, files, total = restore(dest, SANDBOX_BACKUP)
+    assert_sandbox_write_allowed(dest)
+    digest, files, total = restore_sandbox(dest, SANDBOX_BACKUP)
     SANDBOX.mkdir(parents=True, exist_ok=True)
     (SANDBOX / "README.md").write_text(SANDBOX_README, encoding="utf-8")
     (SANDBOX / "NONCANONICAL_SANDBOX_NEVER_SYNC_TO_LIVE").write_text(
@@ -1552,30 +1775,111 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--probes", default=None,
                     choices=["core", "fault", "all", "varargs"],
                     help="provoke gates with real headless runs")
+    ap.add_argument(
+        "--ghidra",
+        type=Path,
+        help="explicit analyzeHeadless executable; no drive-letter default exists",
+    )
+    ap.add_argument(
+        "--restored-backups",
+        type=Path,
+        help=(
+            "absolute root containing catalog-restored historical backup trees; "
+            "the sealed package itself is forbidden"
+        ),
+    )
+    ap.add_argument(
+        "--lane",
+        type=Path,
+        help="absolute scratch root with an exact cohort-rehearsal path segment",
+    )
+    ap.add_argument(
+        "--receipts",
+        type=Path,
+        help="explicit existing receipt root for --verdict",
+    )
+    ap.add_argument(
+        "--sandbox-root",
+        type=Path,
+        help=(
+            "explicit noncanonical sandbox root with no cohort-rehearsal segment; "
+            "must contain a ghidra-noncanonical-sandbox segment and is required "
+            "by --sandbox and core/all probes"
+        ),
+    )
     ns = ap.parse_args(argv)
 
-    if ns.sandbox:
-        return build_sandbox()
-    if ns.probes == "varargs":
-        return run_varargs_controls()
-    if ns.probes:
-        return run_probes(ns.probes)
-    if ns.verdict:
-        return verdict()
-    if not ns.cohort:
-        ap.error("need --cohort, --sandbox or --verdict")
-    steps = [s.strip() for s in ns.steps.split(",") if s.strip()]
-    for s in steps:
-        if s not in STEP_MODES:
-            ap.error(f"unknown step {s}; known: {', '.join(STEP_MODES)}")
-    names = list(COHORTS) if ns.cohort == "all" else [ns.cohort]
-    for n in names:
-        if n not in COHORTS:
-            ap.error(f"unknown cohort {n}")
-    rc = 0
-    for n in names:
-        rc |= run_cohort(n, steps)
-    return rc
+    actions = sum(
+        value is not None and value is not False
+        for value in (ns.cohort, ns.sandbox, ns.verdict, ns.probes)
+    )
+    if actions != 1:
+        ap.error("select exactly one of --cohort, --sandbox, --verdict, or --probes")
+
+    try:
+        if ns.verdict:
+            if ns.receipts is None:
+                raise RoutingError("--verdict requires an explicit --receipts root")
+            if any(
+                value is not None
+                for value in (
+                    ns.ghidra,
+                    ns.restored_backups,
+                    ns.lane,
+                    ns.sandbox_root,
+                )
+            ):
+                raise RoutingError(
+                    "--verdict accepts only --receipts, not database routing options"
+                )
+            configure_verdict_receipts(ns.receipts)
+            return verdict()
+
+        if ns.receipts is not None:
+            raise RoutingError("--receipts is only valid with --verdict")
+        if ns.ghidra is None or ns.restored_backups is None or ns.lane is None:
+            raise RoutingError(
+                "database-consuming replay requires explicit --ghidra, "
+                "--restored-backups, and --lane paths"
+            )
+        sandbox_needed = ns.sandbox or ns.probes in ("core", "all")
+        if sandbox_needed and ns.sandbox_root is None:
+            raise RoutingError(
+                "--sandbox and core/all probes require an explicit --sandbox-root"
+            )
+        if not sandbox_needed and ns.sandbox_root is not None:
+            raise RoutingError(
+                "--sandbox-root is only valid with --sandbox or --probes core|all"
+            )
+        configure_runtime(
+            ns.ghidra,
+            ns.restored_backups,
+            ns.lane,
+            ns.sandbox_root,
+        )
+
+        if ns.sandbox:
+            return build_sandbox()
+        if ns.probes == "varargs":
+            return run_varargs_controls()
+        if ns.probes:
+            return run_probes(ns.probes)
+
+        steps = [s.strip() for s in ns.steps.split(",") if s.strip()]
+        for step in steps:
+            if step not in STEP_MODES:
+                ap.error(f"unknown step {step}; known: {', '.join(STEP_MODES)}")
+        names = list(COHORTS) if ns.cohort == "all" else [ns.cohort]
+        for name in names:
+            if name not in COHORTS:
+                ap.error(f"unknown cohort {name}")
+        rc = 0
+        for name in names:
+            rc |= run_cohort(name, steps)
+        return rc
+    except RoutingError as exc:
+        print(f"REFUSED: {exc}", file=sys.stderr)
+        return 2
 
 
 if __name__ == "__main__":

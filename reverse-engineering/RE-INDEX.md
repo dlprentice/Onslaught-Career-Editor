@@ -1,26 +1,27 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-08-30
+Last updated: 2026-08-31
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
 Select complete-RE campaign authority only through `developer_state.json` →
 `current_re_authority`; it owns generation, exact geometry, READY/reducer pins,
 grades, verify command, and next-valid generation. Select the preserved tracked
-Ghidra checkpoint through [`ghidra/README.md`](ghidra/README.md); there is
-currently no active mutable Linux Ghidra owner. Generation 73 is a projection
+Ghidra checkpoint and sole mutable Linux owner through
+[`ghidra/README.md`](ghidra/README.md). The mutable PC project is
+`local-lab/ghidra-projects/BEA/` at `db.18635`; Generation 73 is a projection
 oracle only, and dated generation or
 database narratives below are historical. Never infer live/tracked equality or
 re-ground a campaign from a number copied out of this index.
 
-**Measure that version; do not quote it.** Ceremonies run concurrently here and
-each one rolls the database file version — and opening a project *without*
-`-readOnly` rolls it on close even when the script refused and wrote nothing. So
-any `db.NNNNN` written in this file is a record of the past, not a reading of the
-present: establish it by inspection as an identity step, and argue
-tracked-versus-live equality **semantically**, via a full readback bit-identical
-at program scope and across the freshly inspected function population, never by
-file digest.
+**Measure that version; do not quote it.** The sole mutable project was measured
+at `db.18635` during Linux activation. Re-inspect it before any separately
+authorized mutation, and never run overlapping ceremonies. Opening a project
+without `-readOnly` can roll its database version even when a script refused and
+wrote nothing. The reviewed tracked checkpoint remains fixed at `db.18634`
+until an authorized semantic promotion; argue checkpoint-versus-working-copy
+equality semantically through a full readback, never from a copied version
+number or physical database digest.
 
 This directory preserves evidence that materially supports the toolkit,
 rebuild, modding work, or contributor understanding. Git history holds completed
@@ -45,7 +46,7 @@ re-running the grader that produced it.
   gameplay, visual, or rebuild parity.
 - Retail executables, saves, debugger logs, and runtime frames remain untracked
   local inputs. Retail assets and conversions are locally materialized and
-  ignored. The reviewed canonical Ghidra project and narrow save fixture are
+  ignored. The reviewed tracked Ghidra checkpoint and narrow save fixture are
   the explicit tracked payload exceptions.
 
 ## Start here
@@ -881,8 +882,9 @@ Current per-function notes live under
 | --- | --- | --- |
 | Discovery findings | [`binary-analysis/ghidra-fullpass-findings/`](binary-analysis/ghidra-fullpass-findings/) | Tracked wave reviews (W001–W018) |
 | Correction ops | `local-lab/ghidra-fullpass-2026-07-23/` in the canonical checkout | Preserved ignored queues, dual QC, and apply logs; closeout 2026-07-25 |
-| Historical live DB | `/home/xsniper80/ProjectData/Onslaught/windows-profile-2026-08-28/ghidra/current/Projects` | Preserved Windows-profile twin; evidence only, not a mutable Linux owner |
-| Tracked snapshot | [`ghidra/`](ghidra/README.md) (snapshot date 2026-08-28) | Distributable reviewed `db.18634` snapshot; byte-identical to the verified POST recovery and preserved Windows-profile copy when re-audited on Linux 2026-08-30 |
+| Mutable Linux PC project | `local-lab/ghidra-projects/BEA/` in the canonical checkout | Sole writable project; Ghidra 12.1.3 `db.18635`, activated 2026-08-31 |
+| Tracked snapshot | [`ghidra/`](ghidra/README.md) (snapshot date 2026-08-28) | Distributable reviewed `db.18634` snapshot; byte-identical to the verified POST recovery and then-preserved Windows-profile copy when re-audited on Linux 2026-08-30 |
+| External recovery | `/srv/archive-a/Onslaught-Ghidra-Recovery/2026-08-31-consolidated-v1/` | Sealed content-addressed package; restore elsewhere before opening |
 
 Current host/runtime status and project routing:
 [`ghidra/README.md`](ghidra/README.md). Expedition overlays live under the real,
@@ -913,9 +915,11 @@ history only; select the preserved checkpoint through
 separately authorized one-row SET_NAME ceremony on
 2026-08-28 changed `0x004063b0` from `CBattleEngine__UpdateWeaponEffect` to
 `CBattleEngine__SetCollisionShape` and produced the preserved `db.18634`
-checkpoint. OpenJDK 21.0.12.1 and verified Ghidra 12.1.3 are installed, but no
-active mutable Linux project is designated; the activation ceremony remains
-incomplete.
+checkpoint. OpenJDK 21.0.12.1 and verified Ghidra 12.1.3 are installed. The
+separate Linux storage-migration activation advanced only the mutable project
+to `db.18635`; full semantic PRE/POST inventories were identical, so the
+reviewed tracked checkpoint remains `db.18634` until a future authorized
+semantic promotion.
 
 ## Patch recipes — analysis documents, not write authorization
 
@@ -993,6 +997,11 @@ Machine-readable siblings, for consumers that should not be parsing prose:
 - [First-flight camera/movement/morph contract](binary-analysis/first-flight-camera-movement-morph-contract-candidate.v1.json)
   — a **candidate**, as its own filename says; not an accepted contract.
 - [Retail specimen manifest](binary-analysis/retail-specimen-manifest-2026-03-14.json)
+- [2026-08-31 current function name table](binary-analysis/ghidra-function-name-table-2026-08-31.tsv)
+  — the address-to-saved-name resolution authority for this dated projection,
+  produced from the verified mutable `db.18635` activation POST export. That export is
+  byte-identical to the reviewed tracked `db.18634` PRE export; the table has the
+  same addresses and body bounds as 2026-08-17 and exactly 37 later name changes.
 - [2026-08-17 function name table](binary-analysis/ghidra-function-name-table-2026-08-17.tsv)
   — a frozen 8,329-row address-to-name projection from the read-only
   **db.18626** POST readback after the five-row `name-cohort5`. It carries the

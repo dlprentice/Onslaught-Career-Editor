@@ -1,8 +1,9 @@
 # Canonical Ghidra project
 
-`BEA.gpr` and `BEA.rep/` are the reviewed distributable snapshot of the current
+`BEA.gpr` and `BEA.rep/` are the reviewed distributable checkpoint of the
 Battle Engine Aquila analysis database. This is the single tracked database
-owner; local working copies and historical backups remain untracked.
+owner; the mutable Linux project and historical recovery packages remain
+untracked.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
   `name-cohort-battleengine-set-collision-shape` SET_NAME)
@@ -13,7 +14,7 @@ owner; local working copies and historical backups remain untracked.
 - Project payload: 19 files, 187,517,829 bytes
 - Canonical project inventory SHA-256:
   `745c00ad15a0fc1c3098533143caded4b1b825583322669df22699b5e99585a5`
-- Current rolling database `db.18634.gbf`: 68,616,192 bytes, SHA-256
+- Reviewed tracked checkpoint database `db.18634.gbf`: 68,616,192 bytes, SHA-256
   `40d5100ca9ede5317c2052c9ea0d936ab9f07a0daf39fd96765a839ccf9e4ba2`
   (stable prior `db.18633.gbf`, 68,599,808 bytes, SHA-256
   `73bf683b0050d3b5c4c6d159de7d997ebb436833733c44abbeb0b6945faba57a`, retained)
@@ -26,13 +27,16 @@ newline**, one row per payload file as
 19 payload files with this `README.md` excluded. Measured 2026-08-28 after the
 Battle Engine collision-shape name refresh against the tracked tree, live
 maintainer project, and verified POST backup: all reproduce `745c00ad…` at 19
-files and 187,517,829 bytes. Re-measure rather than quote — a concurrent
-ceremony can move this at any time.
+files and 187,517,829 bytes. The tracked checkpoint is fixed at `db.18634`
+until an authorized semantic promotion. The sole mutable Linux owner was
+measured at `db.18635` during activation; re-inspect it before a separately
+authorized mutation and never overlap ceremonies.
 
 **Promotion note (superseded in place 2026-08-17).** This header previously still
 described the 2026-08-14 HUD route demotion while its `db` and payload pins had
 already been advanced by three later promotions — the stale-prose-with-current-
-pins failure mode. The pins above are current; the promotion history is:
+pins failure mode. The pins above are current for the reviewed tracked
+checkpoint; the promotion history is:
 `db.18618` → 41 boundary corrections → `db.18619`/`db.18620` → 160 name
 corrections (158 functions, 2 labels) → `db.18621` → 294 ABI signature
 corrections → `db.18622` → **CTentacle factory-name ceremony A** → `db.18623` →
@@ -112,15 +116,16 @@ the preceding
 and the structural
 [`boundary live-promotion report`](../binary-analysis/mission-script-registry-boundary-live-promotion-2026-08-13.md).
 
-The 19-file tree was measured byte-identical to the live maintainer project on
+The 19-file tree was measured byte-identical to the then-live Windows project on
 2026-08-28 after the `name-cohort-battleengine-set-collision-shape` refresh —
 19 files, 187,517,829 bytes, inventory `745c00ad…` from live, tracked, and POST,
 with zero per-file mismatches. The independently copied and read-only-reopened
-POST recovery is retained at
-`H:\BEA-Ghidra-Backups\2026-08-28-name-cohort-battleengine-set-collision-shape-post-live`;
+POST recovery was created at
+`H:\BEA-Ghidra-Backups\2026-08-28-name-cohort-battleengine-set-collision-shape-post-live`
+and is now represented by the sealed Archive A recovery package;
 it reopened as `BEA.exe`, MD5 `3b456964020070efe696d2cc09464a55`, specimen
 SHA-256 `74154bfa…7750`. Future live work can make the snapshot lag again; each
-refresh remains a separately authorized promotion. The current ignored live
+refresh remains a separately authorized promotion. That ceremony's ignored live
 readback is
 `local-lab/name-cohort-battleengine-set-collision-shape-ceremony-2026-08-28/readback.json`
 (2,264 bytes, SHA-256
@@ -128,23 +133,24 @@ readback is
 and the tracked-snapshot reopen receipt beside it is 5,795 bytes, SHA-256
 `300f30085b8ffdae99d8b82850821d0671305002bb1fec97298d14809621e3f5`.
 
-**Linux migration status (2026-08-30).** The tracked tree, the preserved
-Windows-profile project at
-`/home/xsniper80/ProjectData/Onslaught/windows-profile-2026-08-28/ghidra/current/Projects`,
-and the Archive A POST recovery at
-`/srv/archive-a/BEA-Ghidra-Backups/2026-08-28-name-cohort-battleengine-set-collision-shape-post-live`
-were re-inventoried byte-for-byte: all are the same 19-file `db.18634`
-checkpoint above. OpenJDK 21.0.12.1 is installed at
+**Linux activation status (2026-08-31).** OpenJDK 21.0.12.1 is installed at
 `/usr/lib/jvm/java-21-openjdk`, and the verified Ghidra 12.1.3 PUBLIC runtime is
 installed at `/home/xsniper80/.local/opt/ghidra_12.1.3_PUBLIC` (5,218 files,
 905,553,502 bytes, inventory SHA-256
 `636e51e4d487f64fcfcc4f9516181708827aedd25f2b9ca133c53977519c066b`).
-The runtime and `support/analyzeHeadless` being present do not designate a
-mutable project. Prepared working/rehearsal copies under the activation lane
-remain candidates only: activation has not completed the required read-only
-compatibility, off-volume PRE/POST recovery, semantic-comparison, and explicit
-writable-open gates. The three copies above remain preservation owners, not a
-license to mutate one in place.
+The sole mutable PC project is now
+`local-lab/ghidra-projects/BEA/`: Ghidra 12.1.3 `db.18635`, owner `xsniper80`,
+18 files / 118,934,388 bytes, inventory
+`4320a3500a559da663562046fe3f87a519c9482c3ce8c36d36d80b8e87ee225e`.
+It was activated only after a restore-open-verified Archive A PRE, explicit
+writable open, separate-process readback, exact full semantic comparison, and a
+restore-open-verified POST. PRE and POST agree byte-for-byte across all 8,329
+internal function rows and all program metrics; the storage migration changed
+no reviewed semantics. Therefore this tracked tree remains the reviewed
+`db.18634` checkpoint until a future semantic promotion. External recovery is
+the sealed content-addressed package at
+`/srv/archive-a/Onslaught-Ghidra-Recovery/2026-08-31-consolidated-v1/`; restore
+from it to a new path before opening anything.
 
 Related (not this folder):
 
@@ -152,8 +158,9 @@ Related (not this folder):
 | --- | --- |
 | Expedition ops (ignored repo-local lab) | `local-lab/ghidra-fullpass-2026-07-23/` in the canonical checkout (runbook, state, corrections) |
 | Wave discovery notes (tracked) | `reverse-engineering/binary-analysis/ghidra-fullpass-findings/` |
-| Isolated Xbox oracle projects | `local-lab/xbox-sparse-symbol-ghidra-20260812-v1/ghidra-projects/` in the canonical checkout (Issue-11 and US-retail; ignored retail-derived evidence, not this tracked PC snapshot) |
-| Linux activation lane | `local-lab/ghidra-linux-12.1.3-activation-20260830-v1/` in the canonical checkout (prepared working/rehearsal copies and receipts; not yet the mutable authority) |
+| Isolated Xbox oracle evidence | `local-lab/xbox-sparse-symbol-ghidra-20260812-v1/` in the canonical checkout (exports/receipts remain; project databases are restored only through the sealed external catalog, not used as PC live owners) |
+| Mutable Linux PC project | `local-lab/ghidra-projects/BEA/` in the canonical checkout (`db.18635`, Ghidra 12.1.3, owner `xsniper80`) |
+| Linux activation evidence | `local-lab/ghidra-linux-12.1.3-activation-20260830-v1/` in the canonical checkout (completion receipt, PRE/POST semantic exports, logs) |
 | Xbox promotion evidence | `reverse-engineering/binary-analysis/xbox-source-line-anchor-ghidra-2026-08-12.md` (1,166 instruction-local source maps per build; no whole-function transfer) |
 
 The database retains program bytes needed by Ghidra together with functions,
@@ -165,8 +172,9 @@ or broader permission for retail game assets. Original game-derived material
 remains copyright of its respective rights holders, and the repository's source
 licenses do not independently relicense that material.
 
-Open `BEA.gpr` from a disposable clone or local working copy. Ghidra may update
-project metadata when opening or upgrading it. Static database contents remain
+For writable work, open only `local-lab/ghidra-projects/BEA/BEA.gpr`; use a
+disposable restored copy for experiments and default to read-only inspection.
+Ghidra may update project metadata when opening or upgrading it. Static database contents remain
 evidence, not a claim that every inferred signature or semantic label is
 correct; controlled copied-runtime observation continues to own behavioral
 claims.
@@ -175,8 +183,9 @@ claims.
 
 This is the exact ceremony that produced the preserved Windows checkpoint. It
 remains normative history for interpreting its receipts, but its drive letters
-are not actionable on Linux. A future Linux mutation must first define an
-equivalent Linux-native contract and recovery route. Steps were ordered; each
+are not actionable on Linux. The Linux-native contract is defined by the
+activation status and routing table above; this Windows contract remains
+provenance only. Steps were ordered; each
 gate had to pass before the next began, and a failed or skipped gate aborted the
 ceremony — there was no in-process rollback in this Ghidra build, so
 reversibility was restore-from-verified-backup only.
@@ -214,13 +223,11 @@ letters speculatively:
 | --- | --- |
 | Installed Java | `/usr/lib/jvm/java-21-openjdk` — OpenJDK 21.0.12.1 |
 | Installed Ghidra runtime | `/home/xsniper80/.local/opt/ghidra_12.1.3_PUBLIC` — verified PUBLIC 12.1.3 inventory `636e51e4…066b` |
-| Headless entry | `/home/xsniper80/.local/opt/ghidra_12.1.3_PUBLIC/support/analyzeHeadless` — present, but project activation remains gated |
-| Reviewed tracked checkpoint | `reverse-engineering/ghidra/` (this tree; preserve in place) |
-| Preserved Windows-profile twin | `/home/xsniper80/ProjectData/Onslaught/windows-profile-2026-08-28/ghidra/current/Projects` (migration evidence; not the mutable owner) |
-| Verified Archive A recovery | `/srv/archive-a/BEA-Ghidra-Backups/2026-08-28-name-cohort-battleengine-set-collision-shape-post-live` (exact `db.18634` POST snapshot) |
-| Earlier verified recoveries | `/srv/archive-a/BEA-Ghidra-Backups/` (historical PRE/POST owners; preserve) |
-| Prepared activation copies | `local-lab/ghidra-linux-12.1.3-activation-20260830-v1/` in the canonical checkout; candidates only |
-| Mutable Linux project | None designated; finish the activation owner's complete recovery/open gate before any writable use |
+| Headless entry | `/home/xsniper80/.local/opt/ghidra_12.1.3_PUBLIC/support/analyzeHeadless` |
+| Reviewed tracked checkpoint | `reverse-engineering/ghidra/` (this tree; `db.18634`; preserve in place) |
+| Mutable Linux PC project | `local-lab/ghidra-projects/BEA/` (`db.18635`; sole writable owner) |
+| Activation evidence | `local-lab/ghidra-linux-12.1.3-activation-20260830-v1/` (ignored completion receipt and semantic PRE/POST) |
+| External recovery | `/srv/archive-a/Onslaught-Ghidra-Recovery/2026-08-31-consolidated-v1/` (sealed package; restore elsewhere before opening) |
 
 Expedition overlays (RO clones, wave exports, ops state, correction ledgers)
 live under real, ignored canonical-checkout `local-lab/` — do not commit them.
@@ -260,7 +267,8 @@ oracle. Nine later historical edits changed 54 rows after its original seal,
 and Generations 20–23 now pin that exact dated artifact. Do not restore or edit
 it in place and break frozen replay. The 2026-08-12 and 2026-08-13 projections
 are likewise frozen; the 2026-08-17 projection ends at `db.18626` and
-intentionally predates the later SET_NAME cohorts through current `db.18634`.
-Use the canonical database plus a fresh readback for current names. Preserve a
+intentionally predates the later SET_NAME cohorts through the reviewed tracked
+`db.18634` checkpoint. Use the mutable database plus a fresh readback for
+current names, and compare it with the tracked checkpoint before promotion. Preserve a
 correction through its immutable cohort spec and receipts rather than rewriting
 a dated projection in place.

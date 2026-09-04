@@ -201,8 +201,9 @@ guest-writable state.
   not a convention you could accidentally work around.
 - Keep game binaries, real saves, Ghidra backups/alternate projects, debugger
   transcripts, private captures, secrets, bulk extraction output, and build
-  output out of Git. The reviewed canonical Ghidra project is the sole database
-  exception under `reverse-engineering/ghidra/`.
+  output out of Git. The reviewed checkpoint under `reverse-engineering/ghidra/`
+  is the sole Git-tracked database exception; the only writable project is the
+  ignored `local-lab/ghidra-projects/BEA/` owner.
 - Do not commit retail assets or their converted copies. Keep them in ignored
   local owners and retain credits/provenance when a deterministic recipe uses
   them. Parser success establishes format support, not visual fidelity. A

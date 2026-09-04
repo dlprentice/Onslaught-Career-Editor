@@ -1,8 +1,9 @@
 # Battle Engine Aquila's data, executable, and Stuart source converge on a reconstructable system—but expose finite, consequential deltas
 
-Status: active canonical three-source synthesis; the three input masters and
-their line-level evidence remain the owning detail
-Last updated: 2026-08-28
+Status: frozen three-source synthesis; use `developer_state.json` →
+`current_re_authority` and [`ghidra/README.md`](ghidra/README.md) for current
+routing, counts, and database ownership
+Last updated: 2026-08-31 (current-routing supersession; synthesis retained)
 Verdict: **The installed corpus, the project's repo-designated unpatched executable
 baseline, and pinned Stuart source describe one recognizable engine lineage
 from three different sides,
@@ -30,12 +31,13 @@ different hashes and are identified separately below.
 
 ---
 
-## Current complete-RE replay authority (2026-08-14) — read this first
+## Historical complete-RE replay snapshot (2026-08-14)
 
-**Do not treat historical Gen10 or candidate Gen73 as current authority.** The
-exact selector is `developer_state.json` → `current_re_authority`; its external
-receipt forbids choosing by generation number, matching ledgers, or self-derived
-pins.
+**Do not treat this Generation 29 table, historical Gen10, or candidate Gen73
+as current authority.** The exact selector is `developer_state.json` →
+`current_re_authority`; its external receipt forbids choosing by generation
+number, matching ledgers, or self-derived pins. The table below is retained as
+a dated synthesis input, not live routing.
 
 | Surface | Canonical recovered state |
 | --- | --- |
@@ -220,10 +222,10 @@ evidence.
 
 ### Three incomparable denominators
 
-| Plane | Exact current denominator | What “one” means |
+| Plane | Frozen synthesis denominator | What “one” means |
 | --- | ---: | --- |
 | Measured installation | 5,515 files / 133 directories / 702,659,189 bytes | One filesystem object in a locally changed live install |
-| Current live Ghidra database | 8,329 functions | One current internal Ghidra function entry, including 1,179 EH funclets and 101 thunks |
+| 2026-08-14 live Ghidra database | 8,329 functions | One internal Ghidra function entry at that cut, including 1,179 EH funclets and 101 thunks |
 | Pinned Stuart source | 106 C/C++ files / 1,855 physical body blocks / 1,857 conditional definition heads | One supplied text file or parser-counted source body, not one baseline-linked function |
 | Materializer snapshot reported by the frozen Stuart master | 324 expected outputs from non-additive input tables | One bounded reported rebuild output, often transformed or shared |
 
@@ -245,8 +247,8 @@ No percentage between these rows is meaningful. In particular:
 | Force-windowed trace image | SHA-256 `E1436EF7E0AD9CCBDDD43AAACA952F6E84D4B1A282835CEAD745EFCFC32FADF4` | Baseline plus one four-byte startup patch; all other bytes match baseline and remain usable as static evidence, while every runtime observation stays derivative/path-scoped |
 | Installed-tree aggregate | manifest digest `3D8AA45FB6792B605B5A29915E4256C5D2AFECEDE92AEF6CE8780FEA6A10212D` | Complete row census from a stable but non-atomic live traversal, not a filesystem snapshot or Steam depot manifest |
 | Stuart source | commit `5352A81CDB838B145A57F7FEBC5D9FC4B0129EBB` | Exact source pin, incomplete and not independently buildable |
-| Tracked Ghidra snapshot | 8,329 currently discovered internal functions; 19 files / 187,009,925 bytes; inventory `c6cb2a22…df7a` | Reviewed distributable database snapshot, exact to live after the verified 2026-08-14 D3DX two-function promotion; 8,329 is a current census, not a final ceiling |
-| Live Ghidra database | 8,329 currently discovered internal functions plus 224 external/import functions in Ghidra's aggregate count | Current maintainer state; separately read back and restore-tested from the 2026-08-14 D3DX POST backup before snapshot promotion |
+| 2026-08-14 tracked Ghidra snapshot | 8,329 then-discovered internal functions; 19 files / 187,009,925 bytes; inventory `c6cb2a22…df7a` | Dated reviewed snapshot, exact to the live project after that cut's D3DX promotion; use `ghidra/README.md` for the later reviewed checkpoint |
+| 2026-08-14 live Ghidra database | 8,329 then-discovered internal functions plus 224 external/import functions in Ghidra's aggregate count | Dated maintainer state, separately read back and restore-tested before that snapshot promotion; not current Linux routing |
 | Reconstruction state | Assertions frozen inside `source-code/stuart-source-synthesis.md` SHA-256 `57C2C02E...B7B45` | Reported snapshot only; no root-repository commit plus dirty-content fingerprint was frozen, so remeasure code before making a present-tense implementation claim |
 
 This identity split is the first atom-level rule. Any claim without its specimen

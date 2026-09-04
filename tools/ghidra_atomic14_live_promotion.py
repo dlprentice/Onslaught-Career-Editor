@@ -2,8 +2,10 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Historical one-shot owner for the proven Atomic14 island.
 
-The tracked CLI is retired and refusal-only. Database-level replay requires a
-catalog-guided restore plus the exact frozen owner sealed with the old READY.
+The mutation CLI is retired and refusal-only. The exact historical Python owner
+and its tracked dependency closure remain verifiable as Git blobs; that source
+recovery does not imply that every non-Git database, READY, or toolchain input
+needed for a replay is currently available.
 
 This owner is deliberately project-, specimen-, proof-, tool-, and cohort-
 specific.  ``prepare`` is read-only: it reproduces the formal proof verifier,
@@ -24,6 +26,7 @@ import hashlib
 import json
 import os
 import re
+import subprocess
 import sys
 import uuid
 from datetime import datetime, timezone
@@ -67,12 +70,60 @@ BASELINE_MANIFEST = BASELINE_PROJECT / "backup_manifest.json"
 BASELINE_MANIFEST_SHA256 = "ccb47580355075548b213064a8b0e2e6f255b932da58b3f65c89bfc1f4a3e249"
 BASELINE_FILESET_SHA256 = "3f3cdc53bcd1e38d11bad822500a776f8885f42d8f7093fbba0bc403133936dd"
 COLD_PACKAGE_PARENT = Path("/srv/archive-a/Onslaught-Ghidra-Recovery")
+FROZEN_GIT_COMMIT = "075df1dbbffe23302f8317917741355657756a51"
+FROZEN_OWNER_RELATIVE = "tools/ghidra_atomic14_live_promotion.py"
+FROZEN_OWNER_RECEIPT = OWNER_ROOT / "promotion/promotion.ready.json"
+FROZEN_GIT_BLOBS = {
+    FROZEN_OWNER_RELATIVE: (
+        60_616,
+        "9ff48300763b78db7a99f3f2afea5cfcd2b9e6f064291a7f92f09e54dd025451",
+    ),
+    "tools/ExportFullFunctionInventory.java": (
+        23_963,
+        "04519cd813f2fc25ddea8a6660f87c010f8aa4e053560993e4b35cafcc0b5197",
+    ),
+    "tools/ExportTargetSymbolInventory.java": (
+        15_668,
+        "6ea0e6ce2669dd9cb325a052df70cd2f84cd5ebc1319cf5ba8c089691d660327",
+    ),
+    "tools/ExportDefinedStrings.java": (
+        8_488,
+        "1370b6107a3421b3ebf7c2cf06c8643c8e4ce780304fda0511c98a2dd01f92f9",
+    ),
+    "tools/ghidra_project_backup.py": (
+        26_806,
+        "36969a237eef29fea0daa52fe4a657127bdbbb5091523c9ca7cd92c69566b452",
+    ),
+    "tools/ghidra_global_init515_live_promotion.py": (
+        69_018,
+        "a1adf103f4c18487553970c62a21f01ea5cfa49c8039b3f299042ff6fc9e8747",
+    ),
+    "tools/ghidra_function_batch_proof.py": (
+        101_499,
+        "f76a3e74bd618ef824b0185ce7bebf7476387381e8ace991af72c38560741afa",
+    ),
+    "tools/ghidra_function_envelope_proof.py": (
+        120_066,
+        "e20d619c39dd0f2037523b4577860b6640ed76b0be058472834a587192b305e8",
+    ),
+    "tools/ghidra_global_init_full520_proof.py": (
+        100_182,
+        "2fea029379aaf81df072907a87e142f03e4c1d261d19325933b18823b4fef972",
+    ),
+    "tools/ghidra_promotion_scratch_proof.py": (
+        136_978,
+        "895405aea9da78f72901250c7edb4e042ec28fadf6fbf9409d83097f8dd228be",
+    ),
+}
 HISTORICAL_RETIREMENT_MESSAGE = (
     "this Atomic14 owner is a completed Windows-era one-shot whose bound "
-    "global-init515 POST project is no longer a live input. Locate that path "
-    f"in a package catalog under {COLD_PACKAGE_PARENT}, restore it to a fresh "
-    "empty directory, and execute the exact frozen owner recorded beside the "
-    "historical READY; never substitute the active mutable Linux Ghidra project"
+    "global-init515 POST project is no longer a live input. The exact historical "
+    f"owner and tracked dependency closure are Git blobs at {FROZEN_GIT_COMMIT}; "
+    "verify them with this CLI's verify-git-recovery command. Database trees "
+    f"must be selected through a package catalog under {COLD_PACKAGE_PARENT} and restored "
+    "to fresh paths. Git source recovery alone does not recover missing non-Git "
+    "READY/toolchain inputs or authorize replay; never substitute the active "
+    "mutable Linux Ghidra project"
 )
 
 HEADLESS = Path(
@@ -103,9 +154,9 @@ GUARD_DEPENDENCIES = {
     TOOLS / "ghidra_function_batch_proof.py":
         "f76a3e74bd618ef824b0185ce7bebf7476387381e8ace991af72c38560741afa",
     TOOLS / "ghidra_function_envelope_proof.py":
-        # Historical dependency identity. The current tracked envelope owner
-        # intentionally differs and is refusal-only; exact replay uses the
-        # frozen dependency copy sealed beside the Atomic14 READY.
+        # Identity used by the last evolving tracked owner before retirement.
+        # The exact Atomic14 receipt owner and its older e20d... dependency are
+        # recovered together from FROZEN_GIT_COMMIT, never mixed with this file.
         "fdf80237d642db1a2d92213048424f06a4fb0ae614f8e7db6c3bd39210e707a5",
     TOOLS / "ghidra_global_init_full520_proof.py":
         "2fea029379aaf81df072907a87e142f03e4c1d261d19325933b18823b4fef972",
@@ -130,6 +181,104 @@ def sha256_file(path: Path) -> str:
         for chunk in iter(lambda: stream.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def frozen_git_blob(relative: str) -> bytes:
+    """Read one fixed historical blob without checking it out or writing it."""
+
+    completed = subprocess.run(
+        ["git", "cat-file", "blob", f"{FROZEN_GIT_COMMIT}:{relative}"],
+        cwd=REPO,
+        capture_output=True,
+        check=False,
+    )
+    require(
+        completed.returncode == 0,
+        f"frozen Git blob is unavailable: {FROZEN_GIT_COMMIT}:{relative}",
+    )
+    return completed.stdout
+
+
+def verify_frozen_owner_dependency_closure(owner_source: str) -> None:
+    """Require the frozen owner's complete set of direct tracked tool pins."""
+
+    expected = {
+        relative: digest
+        for relative, (_size, digest) in FROZEN_GIT_BLOBS.items()
+        if relative != FROZEN_OWNER_RELATIVE
+    }
+    declared = {
+        f"tools/{name}"
+        for name in re.findall(r'TOOLS / "([^"]+)"', owner_source)
+    }
+    require(
+        declared == set(expected),
+        "frozen owner tracked dependency paths differ: "
+        f"missing={sorted(set(expected) - declared)} "
+        f"extra={sorted(declared - set(expected))}",
+    )
+
+    pinned: dict[str, str] = {}
+    direct_pattern = re.compile(
+        r'(?m)^([A-Z][A-Z0-9_]*_TOOL) = TOOLS / "([^"]+)"\n'
+        r'\1_SHA256 = "([0-9a-f]{64})"$'
+    )
+    for _constant, name, digest in direct_pattern.findall(owner_source):
+        pinned[f"tools/{name}"] = digest
+    dependency_pattern = re.compile(
+        r'TOOLS / "([^"]+)":\s*\n?\s*"([0-9a-f]{64})"'
+    )
+    for name, digest in dependency_pattern.findall(owner_source):
+        pinned[f"tools/{name}"] = digest
+    require(
+        pinned == expected,
+        "frozen owner tracked dependency hashes differ: "
+        f"missing={sorted(set(expected) - set(pinned))} "
+        f"extra={sorted(set(pinned) - set(expected))} "
+        f"changed={sorted(path for path in set(expected) & set(pinned) if expected[path] != pinned[path])}",
+    )
+
+
+def verify_frozen_git_recovery() -> dict[str, object]:
+    """Prove the receipt-bound owner and complete tracked source closure exist."""
+
+    owner_bytes, owner_sha256 = FROZEN_GIT_BLOBS[FROZEN_OWNER_RELATIVE]
+
+    verified: list[dict[str, object]] = []
+    payloads: dict[str, bytes] = {}
+    for relative, (expected_bytes, expected_sha256) in FROZEN_GIT_BLOBS.items():
+        payload = frozen_git_blob(relative)
+        actual_sha256 = hashlib.sha256(payload).hexdigest()
+        require(
+            len(payload) == expected_bytes and actual_sha256 == expected_sha256,
+            f"frozen Git blob identity differs: {relative}",
+        )
+        payloads[relative] = payload
+        verified.append(
+            {"path": relative, "bytes": len(payload), "sha256": actual_sha256}
+        )
+
+    owner_source = payloads[FROZEN_OWNER_RELATIVE].decode("utf-8")
+    verify_frozen_owner_dependency_closure(owner_source)
+    return {
+        "status": "VERIFIED_GIT_SOURCE_RECOVERY",
+        "commit": FROZEN_GIT_COMMIT,
+        "historicalReadyIdentity": str(FROZEN_OWNER_RECEIPT),
+        "receiptOwnerStamp": {
+            "bytes": owner_bytes,
+            "sha256": owner_sha256,
+            "pathSuffix": r"\tools\ghidra_atomic14_live_promotion.py",
+        },
+        "ownerSha256": owner_sha256,
+        "trackedBlobCount": len(verified),
+        "trackedBlobs": verified,
+        "claimBoundary": (
+            "Git recovers the exact historical Python owner and its tracked source "
+            "dependencies only without consulting local-lab or an archive catalog; "
+            "database, READY, external executable, and other machine-local replay "
+            "inputs remain separately required."
+        ),
+    }
 
 
 def require(condition: bool, message: str) -> None:
@@ -1300,12 +1449,29 @@ def verify_artifacts(owner_root: Path = OWNER_ROOT) -> dict[str, object]:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=("preflight", "prepare", "promote", "recover-status", "verify"))
+    parser.add_argument(
+        "command",
+        choices=(
+            "preflight",
+            "prepare",
+            "promote",
+            "recover-status",
+            "verify",
+            "verify-git-recovery",
+        ),
+    )
     return parser
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    build_parser().parse_args(argv)
+    args = build_parser().parse_args(argv)
+    if args.command == "verify-git-recovery":
+        try:
+            print(json.dumps(verify_frozen_git_recovery(), indent=2, sort_keys=True))
+            return 0
+        except (OSError, PromotionError, UnicodeError, ValueError) as exc:
+            print(json.dumps({"status": "REFUSED", "error": str(exc)}, sort_keys=True))
+            return 1
     print(
         json.dumps(
             {"status": "REFUSED", "error": HISTORICAL_RETIREMENT_MESSAGE},

@@ -41,7 +41,50 @@ class Atomic14LivePromotionTests(unittest.TestCase):
         source = OWNER_PATH.read_text(encoding="utf-8")
         self.assertNotIn("import ghidra_global_init515_live_promotion", source)
         self.assertNotIn('spec_from_file_location("atomic14_formal"', source)
-        self.assertIn("Exact runnable dependency copies remain sealed", source)
+        self.assertNotIn("copies remain sealed beside", source)
+        self.assertIn(owner.FROZEN_GIT_COMMIT, source)
+
+    def test_git_recovery_matches_ready_owner_and_full_tracked_closure(self) -> None:
+        result = owner.verify_frozen_git_recovery()
+        self.assertEqual("VERIFIED_GIT_SOURCE_RECOVERY", result["status"])
+        self.assertEqual(owner.FROZEN_GIT_COMMIT, result["commit"])
+        self.assertEqual(len(owner.FROZEN_GIT_BLOBS), result["trackedBlobCount"])
+        self.assertEqual(
+            owner.FROZEN_GIT_BLOBS[owner.FROZEN_OWNER_RELATIVE][1],
+            result["ownerSha256"],
+        )
+        self.assertEqual(
+            owner.FROZEN_GIT_BLOBS[owner.FROZEN_OWNER_RELATIVE][0],
+            result["receiptOwnerStamp"]["bytes"],
+        )
+        self.assertIn("machine-local replay inputs", result["claimBoundary"])
+
+    def test_git_recovery_dependency_closure_rejects_missing_or_extra_pins(self) -> None:
+        source = owner.frozen_git_blob(owner.FROZEN_OWNER_RELATIVE).decode("utf-8")
+        missing = source.replace(
+            owner.FROZEN_GIT_BLOBS["tools/ghidra_function_batch_proof.py"][1],
+            "0" * 64,
+            1,
+        )
+        with self.assertRaisesRegex(owner.PromotionError, "hashes differ"):
+            owner.verify_frozen_owner_dependency_closure(missing)
+
+        extra = (
+            source
+            + '\nEXTRA_TOOL = TOOLS / "unexpected_dependency.py"\n'
+            + f'EXTRA_TOOL_SHA256 = "{"0" * 64}"\n'
+        )
+        with self.assertRaisesRegex(owner.PromotionError, "paths differ"):
+            owner.verify_frozen_owner_dependency_closure(extra)
+
+    def test_git_recovery_cli_is_read_only_and_reports_claim_boundary(self) -> None:
+        output = io.StringIO()
+        with redirect_stdout(output):
+            result = owner.main(["verify-git-recovery"])
+        self.assertEqual(0, result)
+        payload = json.loads(output.getvalue())
+        self.assertEqual("VERIFIED_GIT_SOURCE_RECOVERY", payload["status"])
+        self.assertIn("Git recovers", payload["claimBoundary"])
 
     def test_full_result_gate_precedes_ready_publication(self) -> None:
         source = OWNER_PATH.read_text(encoding="utf-8")

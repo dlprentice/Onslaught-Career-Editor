@@ -17,7 +17,7 @@
 > Godot rebuild, and the WinUI 3 app are coequal outcomes. A current goal chooses
 > focus, not standing rank. See [Revision history](#revision-history).
 >
-> Last updated: 2026-08-30. Current measured status belongs in
+> Last updated: 2026-08-31. Current measured status belongs in
 > [`CURRENT_CAPABILITIES.md`](CURRENT_CAPABILITIES.md) and
 > [`developer_state.json`](developer_state.json) (routing key
 > `current_re_authority`). That object alone owns the campaign generation,
@@ -282,7 +282,7 @@ progress, not completion.
 
 ### Current frontier
 
-Updated 2026-08-30 (Linux lab routing and measured Core gate). Recording what closed is not narrowing
+Updated 2026-08-31 (Linux lab/Ghidra routing and measured Core gate). Recording what closed is not narrowing
 the mandate; the completion test and every clause above are unchanged.
 
 **2026-08-30 — current Linux workstation cut.** The one live machine corpus is
@@ -291,8 +291,10 @@ was moved by same-filesystem atomic rename; the old ProjectData path is absent
 and no twin, symlink, bind mount, or read-only substitute exists. Fresh clones
 and child worktrees still lack ignored content, so worktrees use the canonical
 absolute path or `BEA_LOCAL_LAB`. OpenJDK 21.0.12.1 and verified Ghidra 12.1.3
-are installed; mutable-project activation remains incomplete and no preserved
-owner is writable ceremony input. The live campaign selector remains
+are installed. The sole mutable PC project is
+`local-lab/ghidra-projects/BEA/` at `db.18635`; its PRE/open/semantic-readback/
+POST activation gate is complete. The tracked `db.18634` checkpoint and sealed
+external package remain read-only preservation owners. The live campaign selector remains
 `developer_state.json` → `current_re_authority`; the dated paragraphs below are
 receipts, not current routing.
 

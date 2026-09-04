@@ -7,6 +7,14 @@ that completes each item. This file owns **queue state and receipts only** —
 it never restates campaign counts, capability claims, validation choices, or
 authority pins; each item names the owner that holds its truth.
 
+> **STORAGE-CONSOLIDATION HOLD — 2026-08-31.** The maintainer paused feature
+> development, new RE campaigns, rebuild work, WinUI/CLI work, and semantic
+> Ghidra mutation while Linux storage and Ghidra authorities are consolidated.
+> Existing feature rows below remain the durable backlog, not an active queue.
+> Only routing repair, read-only audit, manifest/checksum validation,
+> repository organization, and separately authorized consolidation or
+> retirement may proceed until the maintainer explicitly resumes feature work.
+
 ## How to work this file
 
 - One primary owner works it **serially** in gate order; items P3+ may be

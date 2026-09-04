@@ -1,7 +1,7 @@
 # Binary Analysis
 
 Status: living index for `reverse-engineering/binary-analysis/`
-Last updated: 2026-08-17
+Last updated: 2026-08-31
 Summary: front door to the static and byte-level evidence for the Steam
 `BEA.exe`. Names the current naming authority, the specimen baseline, and the
 per-system contracts. Makes no claim of its own — every claim below belongs to
@@ -327,9 +327,18 @@ the document it links.
 > closeout, are the current record of which names are demoted.
 >
 > The tracked
-> [`ghidra-function-name-table-2026-08-17.tsv`](ghidra-function-name-table-2026-08-17.tsv)
+> [`ghidra-function-name-table-2026-08-31.tsv`](ghidra-function-name-table-2026-08-31.tsv)
 > is the current 8,329-row address-to-name projection and the mechanical
-> checker's authority. It supersedes
+> checker's authority. It is a deterministic four-column projection of the
+> verified Ghidra 12.1.3 activation POST export from mutable `db.18635`; the
+> activation receipt proves that export byte-for-byte identical to the reviewed
+> tracked `db.18634` PRE export (SHA-256 `8bff8a24…14603`). It supersedes
+> [`ghidra-function-name-table-2026-08-17.tsv`](ghidra-function-name-table-2026-08-17.tsv)
+> for current-name resolution. The two tables have the same 8,329 addresses and
+> body ranges; 37 saved names differ. The 2026-08-17 table remains frozen
+> compatibility history for its pinned consumers.
+>
+> The 2026-08-17 table had itself superseded
 > [`ghidra-function-name-table-2026-08-13.tsv`](ghidra-function-name-table-2026-08-13.tsv),
 > which was the authority after the verified
 > [34-boundary promotion](mission-script-registry-boundary-live-promotion-2026-08-13.md)
@@ -345,7 +354,7 @@ the document it links.
 > the CRT EH parent repair, and the
 > [two-boundary D3DX promotion](d3dx-gap-two-function-ghidra-live-promotion-2026-08-14.md),
 > but which then sat unrefreshed through three further live promotions. The
-> 2026-08-17 table closes that gap: it adds the four
+> 2026-08-17 table closed that gap: it added the four
 > [HUD route demotions](hud-route-name-demotion-live-promotion-2026-08-14.md)
 > and the 158 function renames of the
 > [2026-08-17 name cohort](name-cohort-promotion-manifest-2026-08-17.tsv),
@@ -354,8 +363,8 @@ the document it links.
 > The row count is unchanged at 8,329: no function was created or destroyed by
 > any of the three.
 >
-> The 2026-08-13, 2026-08-12 and July tables remain dated artifacts for their
-> original checks and pinned receipts. The current count is a discovered
+> The 2026-08-17, 2026-08-13, 2026-08-12 and July tables remain dated artifacts
+> for their original checks and pinned receipts. The current count is a discovered
 > census, not a permanent ceiling.
 
 > **The CTentacle factory-name chain, promoted 2026-08-17.**
@@ -364,7 +373,7 @@ the document it links.
 > belonging to each other, and the two one-row cohort specs that staged the swap
 > as two sequential ceremonies. Both landed on live: `db.18622` → `db.18623`
 > (`0x004f07e0` → `CTentacle__CreateTentacleGuide`) → `db.18624`
-> (`0x004f0860` → `CTentacle__CreateTentacleAI`). The 2026-08-17 name table above
+> (`0x004f0860` → `CTentacle__CreateTentacleAI`). The frozen 2026-08-17 name table
 > is re-projected from the name-cohort5 live POST readback at `db.18626` and
 > carries both rows; the dated 2026-08-13, 2026-08-12 and July tables correctly
 > still show the pre-swap names.
@@ -374,8 +383,9 @@ the document it links.
 > (signature-only), the five-row runtime-witnessed `name-cohort5` landed at
 > `db.18626` (name-only), and the 65-slot RTTI vftable `vftable-cohort65`
 > SET_DATA_POINTER cohort landed at `db.18627` (data typing only). None created
-> or destroyed a function; the name table is the `db.18626` projection because
-> the vftable cohort moved no function row. Current routing is
+> or destroyed a function; the frozen 2026-08-17 table is the `db.18626`
+> projection because the vftable cohort moved no function row. Current naming
+> resolution is the 2026-08-31 projection above. Current routing is
 > [`RE-INDEX.md`](../RE-INDEX.md); ceremony receipts live under `local-lab/`.
 
 > **Runtime-witness corpus merge, 2026-08-17.**

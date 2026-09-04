@@ -29,6 +29,9 @@ table    a markdown table row whose first cell is exactly a backticked address
          and whose second cell is an identifier.
 pair     a ``` `0xADDRESS Symbol` ``` code span appearing inside a markdown
          table row.
+current  an explicit ``ghidra-current-name`` marker in an active synthesis
+         document. These focused markers gate current prose without treating
+         every deliberately quoted historical name as current.
 
 Prose ``0xADDRESS Symbol`` spans outside tables are scanned only under
 ``--include-prose`` and never gate. That is deliberate, not laziness: these
@@ -58,6 +61,7 @@ from __future__ import annotations
 
 import argparse
 import bisect
+import hashlib
 import os
 import re
 import sys
@@ -72,7 +76,37 @@ DEFAULT_TABLE = (
     REPO_ROOT
     / "reverse-engineering"
     / "binary-analysis"
+    / "ghidra-function-name-table-2026-08-31.tsv"
+)
+BASELINE_TABLE = (
+    REPO_ROOT
+    / "reverse-engineering"
+    / "binary-analysis"
     / "ghidra-function-name-table-2026-08-17.tsv"
+)
+CURRENT_CLAIM_DOCS = (REPO_ROOT / "reverse-engineering" / "ghidra-functions.md",)
+
+EXPECTED_COLUMNS = ("address", "name", "bodyMin", "bodyMax")
+EXPECTED_CURRENT_ROWS = 8_329
+EXPECTED_CURRENT_NAME_DELTA = 37
+EXPECTED_CURRENT_TABLE_SHA256 = (
+    "73c913ac542133d60b08c7a6dd7d7f4722a679643f2f9e4a958451e8f210cb02"
+)
+EXPECTED_BASELINE_TABLE_SHA256 = (
+    "4590dff93f4ee85c5a5c3450139b2e696118646af3401f6eb9719dc4237d3213"
+)
+REQUIRED_CURRENT_PROVENANCE = (
+    "# Projection date: 2026-08-31",
+    "# Specimen SHA-256: 74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750",
+    "# Source  : local-lab/ghidra-linux-12.1.3-activation-20260830-v1/semantic-post/",
+    "#           db18635-ghidra12.1.3.functions.tsv",
+    "# Source bytes: 7193456",
+    "# Source SHA-256: 8bff8a24f27161c6c654c51a639bfdc8c8ba0b32caff2b2a3847be08be414603",
+    "# Receipt : local-lab/ghidra-linux-12.1.3-activation-20260830-v1/receipts/",
+    "#           linux-ghidra12.1.3-activation-db18635-complete.json",
+    "# Receipt SHA-256: e463284c6c409dc971099db31140e8a7a644a4d563c3a6cdb1d6b02c3ed33817",
+    "# Rows    : 8329 internal functions; this is a discovered census, not a final ceiling.",
+    "# text_range: 0x00401000-0x005d7fff",
 )
 
 # These two files intentionally do not assert a current address/name identity:
@@ -85,6 +119,11 @@ ZERO_ASSERTION_ALLOWLIST = {
 }
 
 SYMBOL = r"[A-Za-z_][A-Za-z0-9_@.]*"
+# Ghidra retains a small number of compiler helper spellings such as
+# `` `vector_constructor_iterator' ``. Documentation assertions deliberately
+# use the narrower SYMBOL grammar, while the complete oracle must admit those
+# exact saved names.
+TABLE_SYMBOL = r"[A-Za-z_`][A-Za-z0-9_@.`']*"
 RE_HEADING = re.compile(r"^#\s+(" + SYMBOL + r")\s*$")
 RE_HEADER_ADDRESS = re.compile(r"\bAddress\s*:[^\n]*?`?(0x[0-9A-Fa-f]{6,8})")
 RE_EXPLICIT_HEADER_PAIR = re.compile(
@@ -111,6 +150,10 @@ RE_SEPARATOR_CELL = re.compile(r"^:?-{3,}:?$")
 RE_ACCEPTED = re.compile(
     r"<!--\s*ghidra-name-drift-accepted:\s*(0x[0-9A-Fa-f]{6,8})\s+(" + SYMBOL + r")"
 )
+RE_CURRENT_CLAIM = re.compile(
+    r"<!--\s*ghidra-current-name:\s*(0x[0-9A-Fa-f]{8})\s+(" + SYMBOL + r")\s*-->"
+)
+RE_CANONICAL_ADDRESS = re.compile(r"0x[0-9a-f]{8}")
 
 # A column whose heading matches this holds a name the document is deliberately
 # recording as no longer current. DXMemBuffer.cpp.md carries a whole
@@ -144,12 +187,14 @@ class NameTable:
     """Address -> current Ghidra symbol, plus body extents for containment."""
 
     entry: dict[str, str]
+    geometry: dict[str, tuple[int, int]]
     starts: list[int]
     ends: list[int]
     labels: list[str]
     text_lo: int
     text_hi: int
     source: str
+    comments: tuple[str, ...]
 
     def lookup_entry(self, address: str) -> str | None:
         return self.entry.get(address)
@@ -167,50 +212,173 @@ class NameTable:
         return self.text_lo <= value <= self.text_hi
 
 
+def sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for block in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
 def load_table(path: Path) -> NameTable:
     entry: dict[str, str] = {}
+    geometry: dict[str, tuple[int, int]] = {}
     spans: list[tuple[int, int, str]] = []
     text_lo, text_hi = 0x00401000, 0x005D7FFF
+    text_range_seen = False
+    comments: list[str] = []
     with path.open(encoding="utf-8") as handle:
         header: list[str] | None = None
-        for raw in handle:
+        for line_number, raw in enumerate(handle, start=1):
             line = raw.rstrip("\n")
             if not line:
                 continue
             if line.startswith("#"):
+                comments.append(line)
                 match = re.match(r"#\s*text_range:\s*(0x[0-9a-fA-F]+)-(0x[0-9a-fA-F]+)", line)
                 if match:
+                    if text_range_seen:
+                        raise ValueError(f"duplicate text_range declaration at {path}:{line_number}")
                     text_lo = int(match.group(1), 16)
                     text_hi = int(match.group(2), 16)
+                    if text_lo > text_hi:
+                        raise ValueError(f"reversed text_range at {path}:{line_number}")
+                    text_range_seen = True
                 continue
             cells = line.split("\t")
             if header is None:
                 header = [c.strip() for c in cells]
+                if tuple(header) != EXPECTED_COLUMNS:
+                    raise ValueError(
+                        f"name table columns differ at {path}:{line_number}: "
+                        f"expected {EXPECTED_COLUMNS}, got {tuple(header)}"
+                    )
                 continue
-            row = dict(zip(header, cells))
-            address = row.get("address", "").strip().lower()
-            name = row.get("name", "").strip()
-            if not address or not name:
-                continue
-            entry[address] = name
+            if len(cells) != len(EXPECTED_COLUMNS):
+                raise ValueError(
+                    f"name table row has {len(cells)} columns at {path}:{line_number}; "
+                    f"expected {len(EXPECTED_COLUMNS)}"
+                )
+            row = dict(zip(header, (cell.strip() for cell in cells), strict=True))
+            address = row["address"]
+            name = row["name"]
+            body_min = row["bodyMin"]
+            body_max = row["bodyMax"]
+            if RE_CANONICAL_ADDRESS.fullmatch(address) is None:
+                raise ValueError(f"non-canonical address at {path}:{line_number}: {address!r}")
+            if re.fullmatch(TABLE_SYMBOL, name) is None:
+                raise ValueError(f"invalid symbol at {path}:{line_number}: {name!r}")
+            if address in entry:
+                raise ValueError(f"duplicate function address at {path}:{line_number}: {address}")
+            if (
+                RE_CANONICAL_ADDRESS.fullmatch(body_min) is None
+                or RE_CANONICAL_ADDRESS.fullmatch(body_max) is None
+            ):
+                raise ValueError(
+                    f"non-canonical body range at {path}:{line_number}: "
+                    f"{body_min!r}-{body_max!r}"
+                )
             try:
-                lo = int(row.get("bodyMin", address), 16)
-                hi = int(row.get("bodyMax", address), 16)
+                value = int(address, 16)
+                lo = int(body_min, 16)
+                hi = int(body_max, 16)
             except ValueError:
-                continue
+                raise ValueError(f"invalid hexadecimal row at {path}:{line_number}") from None
+            if not lo <= value <= hi:
+                raise ValueError(
+                    f"entry lies outside body range at {path}:{line_number}: "
+                    f"{address} not in {body_min}-{body_max}"
+                )
+            entry[address] = name
+            geometry[address] = (lo, hi)
             spans.append((lo, hi, name))
+    if header is None:
+        raise ValueError(f"name table has no header: {path}")
     if not entry:
         raise ValueError(f"name table has no rows: {path}")
     spans.sort()
     return NameTable(
         entry=entry,
+        geometry=geometry,
         starts=[s[0] for s in spans],
         ends=[s[1] for s in spans],
         labels=[s[2] for s in spans],
         text_lo=text_lo,
         text_hi=text_hi,
         source=str(path),
+        comments=tuple(comments),
     )
+
+
+def validate_current_table_contract(
+    path: Path,
+    baseline_path: Path = BASELINE_TABLE,
+    *,
+    expected_table_sha256: str = EXPECTED_CURRENT_TABLE_SHA256,
+    expected_baseline_sha256: str = EXPECTED_BASELINE_TABLE_SHA256,
+    expected_rows: int = EXPECTED_CURRENT_ROWS,
+    expected_name_delta: int = EXPECTED_CURRENT_NAME_DELTA,
+    required_provenance: tuple[str, ...] = REQUIRED_CURRENT_PROVENANCE,
+) -> NameTable:
+    """Validate the complete current projection, not merely referenced rows."""
+
+    actual_table_sha256 = sha256_file(path)
+    if actual_table_sha256 != expected_table_sha256:
+        raise ValueError(
+            f"current name table SHA-256 differs: expected {expected_table_sha256}, "
+            f"got {actual_table_sha256}"
+        )
+    actual_baseline_sha256 = sha256_file(baseline_path)
+    if actual_baseline_sha256 != expected_baseline_sha256:
+        raise ValueError(
+            f"2026-08-17 baseline table SHA-256 differs: expected "
+            f"{expected_baseline_sha256}, got {actual_baseline_sha256}"
+        )
+
+    current = load_table(path)
+    baseline = load_table(baseline_path)
+    missing_provenance = [
+        line for line in required_provenance if line not in current.comments
+    ]
+    if missing_provenance:
+        raise ValueError(
+            "current name table provenance is incomplete; missing: "
+            + "; ".join(missing_provenance)
+        )
+    if len(current.entry) != expected_rows:
+        raise ValueError(
+            f"current name table row count differs: expected {expected_rows}, "
+            f"got {len(current.entry)}"
+        )
+    if len(baseline.entry) != expected_rows:
+        raise ValueError(
+            f"2026-08-17 baseline row count differs: expected {expected_rows}, "
+            f"got {len(baseline.entry)}"
+        )
+    if current.geometry != baseline.geometry:
+        current_keys = set(current.geometry)
+        baseline_keys = set(baseline.geometry)
+        missing = sorted(baseline_keys - current_keys)
+        added = sorted(current_keys - baseline_keys)
+        moved = sorted(
+            address
+            for address in current_keys & baseline_keys
+            if current.geometry[address] != baseline.geometry[address]
+        )
+        raise ValueError(
+            "current/baseline address-body geometry differs: "
+            f"missing={missing[:3]} added={added[:3]} moved={moved[:3]}"
+        )
+    name_delta = sum(
+        current.entry[address] != baseline.entry[address]
+        for address in current.entry
+    )
+    if name_delta != expected_name_delta:
+        raise ValueError(
+            f"current/baseline name delta differs: expected {expected_name_delta}, "
+            f"got {name_delta}"
+        )
+    return current
 
 
 def _cells(line: str) -> list[str]:
@@ -385,6 +553,28 @@ def accepted_markers(text: str) -> dict[str, str]:
     return {m.group(1).lower(): m.group(2) for m in RE_ACCEPTED.finditer(text)}
 
 
+def current_claims(path: Path, text: str) -> list[Assertion]:
+    """Extract explicitly marked current-name claims from active synthesis docs."""
+
+    claims: list[Assertion] = []
+    seen: set[str] = set()
+    for line_number, line in enumerate(text.splitlines(), start=1):
+        for match in RE_CURRENT_CLAIM.finditer(line):
+            address = match.group(1).lower()
+            if address in seen:
+                raise ValueError(
+                    f"duplicate ghidra-current-name marker at {path}:{line_number}: "
+                    f"{address}"
+                )
+            seen.add(address)
+            claims.append(
+                Assertion(
+                    path.as_posix(), line_number, "current-claim", address, match.group(2)
+                )
+            )
+    return claims
+
+
 def judge(
     assertion: Assertion, table: NameTable, accepted: dict[str, str]
 ) -> tuple[str, str, str]:
@@ -417,8 +607,14 @@ def judge(
     return (DRIFT, current, kind)
 
 
-def run(doc_root: Path, table_path: Path, include_prose: bool, strict: bool,
-        report_path: Path | None) -> int:
+def run(
+    doc_root: Path,
+    table_path: Path,
+    include_prose: bool,
+    strict: bool,
+    report_path: Path | None,
+    current_claim_docs: tuple[Path, ...] = (),
+) -> int:
     if not doc_root.is_dir():
         print(f"UNAVAILABLE: document root not found: {doc_root}", file=sys.stderr)
         return 2
@@ -431,7 +627,10 @@ def run(doc_root: Path, table_path: Path, include_prose: bool, strict: bool,
         )
         return 2
     try:
-        table = load_table(table_path)
+        if table_path.resolve() == DEFAULT_TABLE.resolve():
+            table = validate_current_table_contract(table_path)
+        else:
+            table = load_table(table_path)
     except (OSError, ValueError) as exc:
         print(f"UNAVAILABLE: could not read name table: {exc}", file=sys.stderr)
         return 2
@@ -445,6 +644,7 @@ def run(doc_root: Path, table_path: Path, include_prose: bool, strict: bool,
     drifts: list[tuple[Assertion, str, str]] = []
     unresolved: list[Assertion] = []
     zero_assertion_docs: list[str] = []
+    current_claim_count = 0
     by_form: dict[str, dict[str, int]] = {}
 
     for doc in docs:
@@ -471,10 +671,43 @@ def run(doc_root: Path, table_path: Path, include_prose: bool, strict: bool,
             elif verdict == UNRESOLVED:
                 unresolved.append(assertion)
 
+    for claim_doc in current_claim_docs:
+        if not claim_doc.is_file():
+            print(
+                f"UNAVAILABLE: current-claim document not found: {claim_doc}",
+                file=sys.stderr,
+            )
+            return 2
+        try:
+            rel = claim_doc.relative_to(REPO_ROOT)
+        except ValueError:
+            rel = claim_doc
+        try:
+            claims = current_claims(rel, claim_doc.read_text(encoding="utf-8"))
+        except (OSError, ValueError) as exc:
+            print(f"UNAVAILABLE: could not read current-name claims: {exc}", file=sys.stderr)
+            return 2
+        if not claims:
+            print(
+                f"UNAVAILABLE: no ghidra-current-name claims in {rel}", file=sys.stderr
+            )
+            return 2
+        current_claim_count += len(claims)
+        for assertion in claims:
+            verdict, current, note = judge(assertion, table, {})
+            counts[verdict] += 1
+            bucket = by_form.setdefault(assertion.form, dict.fromkeys(counts, 0))
+            bucket[verdict] += 1
+            if verdict == DRIFT:
+                drifts.append((assertion, current, note))
+            elif verdict == UNRESOLVED:
+                unresolved.append(assertion)
+
     lines: list[str] = []
     lines.append(f"documents scanned      : {len(docs)}")
     lines.append(f"name table             : {table.source}")
     lines.append(f"table rows             : {len(table.entry)}")
+    lines.append(f"focused current claims : {current_claim_count}")
     gated = counts[OK] + counts[DRIFT] + counts[ACCEPTED] + counts[UNRESOLVED]
     lines.append(f"assertions resolved    : {gated}")
     lines.append(f"  current              : {counts[OK]}")
@@ -761,6 +994,144 @@ def _self_test() -> int:
             failures += 1
         print(f"  [{status}] missing table abstains: expected exit 2, got {missing}")
 
+        def expect_error(label: str, expected: str, action: object) -> None:
+            nonlocal failures
+            try:
+                action()  # type: ignore[operator]
+            except ValueError as exc:
+                ok = expected in str(exc)
+                status = "ok " if ok else "FAIL"
+                if not ok:
+                    failures += 1
+                print(f"  [{status}] {label}: {exc}")
+                return
+            failures += 1
+            print(f"  [FAIL] {label}: malformed input was accepted")
+
+        bad_schema = base / "bad-schema.tsv"
+        bad_schema.write_text(
+            "address\tname\tbodyMin\textra\n"
+            "0x00401000\tCThing__Alpha\t0x00401000\t0x0040100f\n",
+            encoding="utf-8",
+        )
+        expect_error(
+            "exact four-column schema is required",
+            "columns differ",
+            lambda: load_table(bad_schema),
+        )
+
+        duplicate = base / "duplicate.tsv"
+        duplicate.write_text(
+            "address\tname\tbodyMin\tbodyMax\n"
+            "0x00401000\tCThing__Alpha\t0x00401000\t0x0040100f\n"
+            "0x00401000\tCThing__Beta\t0x00401000\t0x0040100f\n",
+            encoding="utf-8",
+        )
+        expect_error(
+            "duplicate addresses are rejected",
+            "duplicate function address",
+            lambda: load_table(duplicate),
+        )
+
+        baseline = base / "baseline.tsv"
+        current = base / "current.tsv"
+        baseline.write_text(
+            "# fixture-provenance\n"
+            "# text_range: 0x00401000-0x005d7fff\n"
+            "address\tname\tbodyMin\tbodyMax\n"
+            "0x00401000\tCThing__Alpha\t0x00401000\t0x0040100f\n"
+            "0x00402000\tCThing__Beta\t0x00402000\t0x004020ff\n",
+            encoding="utf-8",
+        )
+        current.write_text(
+            "# fixture-provenance\n"
+            "# text_range: 0x00401000-0x005d7fff\n"
+            "address\tname\tbodyMin\tbodyMax\n"
+            "0x00401000\tCThing__Alpha\t0x00401000\t0x0040100f\n"
+            "0x00402000\tCThing__Gamma\t0x00402000\t0x004020ff\n",
+            encoding="utf-8",
+        )
+        try:
+            validated = validate_current_table_contract(
+                current,
+                baseline,
+                expected_table_sha256=sha256_file(current),
+                expected_baseline_sha256=sha256_file(baseline),
+                expected_rows=2,
+                expected_name_delta=1,
+                required_provenance=("# fixture-provenance",),
+            )
+            ok = validated.entry["0x00402000"] == "CThing__Gamma"
+        except ValueError:
+            ok = False
+        status = "ok " if ok else "FAIL"
+        failures += 0 if ok else 1
+        print(f"  [{status}] complete table contract accepts exact geometry + one rename")
+
+        moved = base / "moved.tsv"
+        moved.write_text(
+            current.read_text(encoding="utf-8").replace("0x004020ff", "0x004020fe"),
+            encoding="utf-8",
+        )
+        expect_error(
+            "address/body geometry drift is rejected",
+            "geometry differs",
+            lambda: validate_current_table_contract(
+                moved,
+                baseline,
+                expected_table_sha256=sha256_file(moved),
+                expected_baseline_sha256=sha256_file(baseline),
+                expected_rows=2,
+                expected_name_delta=1,
+                required_provenance=("# fixture-provenance",),
+            ),
+        )
+        expect_error(
+            "exact name delta is required",
+            "name delta differs",
+            lambda: validate_current_table_contract(
+                current,
+                baseline,
+                expected_table_sha256=sha256_file(current),
+                expected_baseline_sha256=sha256_file(baseline),
+                expected_rows=2,
+                expected_name_delta=2,
+                required_provenance=("# fixture-provenance",),
+            ),
+        )
+        expect_error(
+            "required provenance is enforced",
+            "provenance is incomplete",
+            lambda: validate_current_table_contract(
+                current,
+                baseline,
+                expected_table_sha256=sha256_file(current),
+                expected_baseline_sha256=sha256_file(baseline),
+                expected_rows=2,
+                expected_name_delta=1,
+                required_provenance=("# missing-provenance",),
+            ),
+        )
+
+        claim_doc = base / "claims.md"
+        claim_doc.write_text(
+            "<!-- ghidra-current-name: 0x00402000 CThing__Gamma -->\n",
+            encoding="utf-8",
+        )
+        claims = current_claims(claim_doc, claim_doc.read_text(encoding="utf-8"))
+        claim_table = load_table(current)
+        claim_ok = len(claims) == 1 and judge(claims[0], claim_table, {})[0] == OK
+        status = "ok " if claim_ok else "FAIL"
+        failures += 0 if claim_ok else 1
+        print(f"  [{status}] focused current-name claim resolves through the oracle")
+        stale_claim = Assertion(
+            claim_doc.as_posix(), 1, "current-claim", "0x00402000", "CThing__Wrong"
+        )
+        stale_ok = judge(stale_claim, claim_table, {})[0] == DRIFT
+        status = "ok " if stale_ok else "FAIL"
+        failures += 0 if stale_ok else 1
+        print(f"  [{status}] stale focused current-name claim fails")
+
     if failures:
         print(f"\nSELF-TEST FAILED: {failures} case(s)", file=sys.stderr)
         return 1
@@ -789,7 +1160,14 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.self_test:
         return _self_test()
-    return run(args.docs, args.table, args.include_prose, args.strict, args.report)
+    return run(
+        args.docs,
+        args.table,
+        args.include_prose,
+        args.strict,
+        args.report,
+        CURRENT_CLAIM_DOCS,
+    )
 
 
 if __name__ == "__main__":

@@ -3,7 +3,8 @@
 Status: active canonical synthesis of executable-analysis evidence; raw
 machine exports remain the address-level evidence behind this human-readable
 master
-Last updated: 2026-08-23. Campaign authority is selected only
+Last updated: 2026-08-31 (current saved-name reconciliation; synthesis retained).
+Campaign authority is selected only
 through `developer_state.json` → `current_re_authority`; rolling Ghidra state is
 selected through [`ghidra/README.md`](ghidra/README.md) and fresh inspection.
 Verdict: **The 8,329-function corpus has broad architectural recovery and deep
@@ -441,15 +442,19 @@ own the durable specimen warning.
 | Store | Exact state | Correct use |
 | --- | --- | --- |
 | Rolling state authority | [`reverse-engineering/ghidra/README.md`](ghidra/README.md) plus a fresh read-only inspection | Use this route before quoting live/tracked identity, database, population, or body totals |
-| Dated tracked project | `reverse-engineering/ghidra/BEA.gpr` + `BEA.rep/`; snapshot 2026-08-14; 19 payload files, 187,009,925 bytes; reviewed with Ghidra 12.1.2 | Distributable snapshot exact at that promotion cut |
+| Reviewed tracked checkpoint | `reverse-engineering/ghidra/BEA.gpr` + `BEA.rep/`; snapshot 2026-08-28; `db.18634`; 19 payload files, 187,517,829 bytes; reviewed with Ghidra 12.1.2 | Distributable checkpoint; never the writable project |
 | Tracked Program objects | `BEA.exe` and `BEA_Widescreen.exe` | Do not silently assume an export came from the unpatched baseline Program |
-| Live maintainer project location | `C:\Users\david\Ghidra\Projects`, Ghidra 12.1.2 at the 2026-08-14 cut | Working database location; mutation requires separate authority and rolling state requires a fresh inspection |
+| Mutable Linux PC project | `local-lab/ghidra-projects/BEA/`, Ghidra 12.1.3 `db.18635`, owner `xsniper80` | Sole writable project; mutation still requires a separate ceremony and fresh inspection |
+| Historical Windows maintainer project | `C:\Users\david\Ghidra\Projects`, Ghidra 12.1.2 at the 2026-08-14 cut | Frozen provenance only; no longer current routing |
 | Dated D3DX live readback | `local-lab/ghidra-d3dx-gap-two-boundary-live-promotion-db18617-20260814-v1/runs/live-readback/functions.tsv`, SHA-256 `7b343b35…ef0` | Historical 8,329-row internal-function metadata from that cut; not a final ceiling or live selector |
 | Dated tracked name table | `reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-13.tsv`, 8,329 rows, SHA-256 `6b54dc94…d2b8` | Deterministic projection of the separately read-back database at that cut |
 | Frozen 2026-08-12 name table | `reverse-engineering/binary-analysis/ghidra-function-name-table-2026-08-12.tsv`, 8,136 rows, SHA-256 `a6f10251…193f` | Retained byte-exact for Generations 20–23 and receipt-pinned instruments |
 | Mutated dated name table | `reverse-engineering/binary-analysis/ghidra-function-name-table-2026-07-27.tsv`, 7,555 rows, current SHA-256 `44f49ca1…e68b11`; original sealed content was `2dfe0b97…f0b84` | Historical artifact later rewritten in 54 name rows. Retained byte-exact only because Generations 20–23 pin the mutated bytes; neither hash is a current name oracle |
 | Fullpass discovery corpus | `reverse-engineering/binary-analysis/ghidra-fullpass-findings/` | Dated 6,411-function reviews; never a live name oracle |
 | Function-note corpus | `reverse-engineering/binary-analysis/functions/` | Deep sparse semantic notes; not complete population coverage |
+
+The `local-lab/ghidra-projects/BEA/` row above is the only current writable
+project.
 
 The 2026-08-14 read-only exports in this research pass removed an important
 ambiguity. The counts below are frozen measurements, not rolling authority:
@@ -910,20 +915,20 @@ These are review targets, not automatic renames. A vtable can legitimately
 point to an inherited/shared implementation whose current conceptual owner is
 different from the table owner.
 
-### Six byte- or RTTI-refuted names still live
+### Six byte- or RTTI-refuted names identified at the dated cut
 
-These are not merely weak names; the current evidence contradicts them.
-They remain unchanged because renaming graded rows is a separately reviewed
-ledger mutation.
+These were not merely weak names; the evidence contradicted them. Five have
+since received bounded saved-name corrections. The sixth remains a current
+saved-name problem; none of the name changes alone proves runtime behavior.
 
-| Address | Current live name | Refutation / safer interpretation |
+| Address | 2026-08-31 current saved name | Status / safer interpretation |
 | --- | --- | --- |
-| `0x004e9600` | `CSquadNormal__VFunc_20_004e9600` | `CSquadNormal` has no image RTTI; vtable owner is `CNormalSquad` |
-| `0x004e96f0` | `CSquadNormal__VFunc_21_004e96f0` | Same transposed/invented owner |
-| `0x004e9f00` | `CSquadNormal__VFunc_52_004e9f00` | Same transposed/invented owner |
-| `0x00527d00` | `CReconnectInterface__VFunc_07_00527d00` | Only owning vtable is `CRenderMethod` |
-| `0x004eaae0` | `CRelaxedSquad__VFunc_07_004eaae0` | Owner is real, but the primary-vtable slot is 52, not 7; the grader validates prefixes, not slot suffixes |
-| `0x004e36c0` | `CSpawnerThng__FindSpawnerByName` | One-argument `__cdecl`; walks the thing-definition registry at `DAT_008553fc`, compares record `+0xb0`, and returns ordinal/`-1`. It has no `CSpawnerThng` receiver. Proposed semantic name: `ResolveThingDefinitionOrdinalByName`. |
+| `0x004e9600` | `CNormalSquad__VFunc_20_004e9600` | Corrected owner; `CSquadNormal` has no image RTTI. <!-- ghidra-current-name: 0x004e9600 CNormalSquad__VFunc_20_004e9600 --> |
+| `0x004e96f0` | `CNormalSquad__VFunc_21_004e96f0` | Corrected transposed/invented owner. <!-- ghidra-current-name: 0x004e96f0 CNormalSquad__VFunc_21_004e96f0 --> |
+| `0x004e9f00` | `CNormalSquad__VFunc_52_004e9f00` | Corrected transposed/invented owner. <!-- ghidra-current-name: 0x004e9f00 CNormalSquad__VFunc_52_004e9f00 --> |
+| `0x00527d00` | `CRenderMethod__VFunc_0_00527d00` | Corrected to the only owning vtable. <!-- ghidra-current-name: 0x00527d00 CRenderMethod__VFunc_0_00527d00 --> |
+| `0x004eaae0` | `CRelaxedSquad__VFunc_52_004eaae0` | Corrected to primary-vtable slot 52. <!-- ghidra-current-name: 0x004eaae0 CRelaxedSquad__VFunc_52_004eaae0 --> |
+| `0x004e36c0` | `CSpawnerThng__FindSpawnerByName` | Still refuted: one-argument `__cdecl`; walks the thing-definition registry at `DAT_008553fc`, compares record `+0xb0`, and returns ordinal/`-1`. It has no `CSpawnerThng` receiver. Proposed semantic name: `ResolveThingDefinitionOrdinalByName`. <!-- ghidra-current-name: 0x004e36c0 CSpawnerThng__FindSpawnerByName --> |
 
 This is direct proof that “graded,” `RTTI_CONFIRMED`, and even a plausible
 semantic name do not mean “correct.”
@@ -1132,7 +1137,7 @@ Every allocation uses the shipped source literal
 | Address | Identity | Evidence boundary |
 | --- | --- | --- |
 | `0x004081c0` | `CBattleEngine__Move` | 5,522 bytes / 1,487 instructions; static high confidence |
-| `0x0040a890` | Current identity `CBattleEngine__VFunc_40_0040a890`; reviewed target `CBattleEngine__Damage` | Vtable/body/prototype measured; live rename and runtime outcomes remain open |
+| `0x0040a890` | Current saved name `CBattleEngine__Damage` | Vtable/body/prototype measured; runtime outcomes remain open. <!-- ghidra-current-name: 0x0040a890 CBattleEngine__Damage --> |
 | `0x00410c50` | `CBattleEngineJetPart__Move` | 2,171 bytes / 635 instructions |
 | `0x00411630` | `CBattleEngineJetPart__HandleGroundEffect` | 1,057 bytes / 275 instructions |
 | `0x00411aa0` | `CBattleEngineJetPart__GetFriction` | Returns a float tuning term |
@@ -1140,10 +1145,9 @@ Every allocation uses the shipped source literal
 | `0x00412900` | `CBattleEngineJetPart__AutoLevel` | Auto-level path |
 | `0x00412ad0` | `CBattleEngineWalkerPart__UpdateWalkCycle` | Walker-cycle update |
 
-The missing damage entry is now explicit without pretending the live analyst
-database has already changed. `CBattleEngine` vtable `0x005D89C4`, slot 40,
-points to `0x0040A890`; the reviewed body runs through `0x0040AC24` and contains
-`RET 0x10` at `0x0040AC22`. The reviewed prototype target is:
+The saved-name correction is now explicit. `CBattleEngine` vtable `0x005D89C4`,
+slot 40, points to `0x0040A890`; the reviewed body runs through `0x0040AC24`
+and contains `RET 0x10` at `0x0040AC22`. The reviewed prototype target is:
 
 ```cpp
 void __thiscall CBattleEngine__Damage(
@@ -1154,10 +1158,9 @@ void __thiscall CBattleEngine__Damage(
     int meshPartNo);
 ```
 
-The current Ghidra identity remains
-`CBattleEngine__VFunc_40_0040a890`; applying the semantic rename/prototype to
-the live maintainer database requires a separately reviewed mutation. Runtime
-damage outcomes are not established by this static entry.
+The current saved name is `CBattleEngine__Damage`. That saved-name state does
+not by itself prove the reviewed prototype or any runtime damage outcome; those
+claims retain their separate evidence and mutation gates.
 
 The movement crosswalk is strong static/source correspondence. Exact Steam
 handling parity, morph progression, and player-input causality are not closed:
@@ -1597,7 +1600,7 @@ Several current names are contradicted by byte/API-slot evidence:
 | `0x005138b0`, `0x00513930` | Generic state labels | Cached/raw `SetSamplerState`, device slot `+0x114` |
 | `0x004eb9a0` | `CUnit__InitDefaultTuningBlock` | Writes exactly 0x88 bytes: two 0x44-byte `D3DMATERIAL9` records at `0x0083d248` and `0x0083d28c`; runtime `SetMaterial` consumes them |
 | `0x004eba30` | `CEngine__SetVertexShaderPathEnabled` | Uses device `+0xdc = SetClipPlane` and `D3DRS_CLIPPLANEENABLE (0x98)` under mirror flag `0x0089d680` |
-| `0x005513d0` | `SetVertexFormatDeferred` | Stores `this+0x2f0`, marks dirty `+0xe2d`, and flushes as `D3DRS_FOGDENSITY`; exact class owner remains to be adjudicated |
+| `0x005513d0` | `CDXEngine__SetVertexFormatDeferred` | Stores `this+0x2f0`, marks dirty `+0xe2d`, and flushes as `D3DRS_FOGDENSITY`; the saved class prefix is current, but the semantic action remains contradicted. <!-- ghidra-current-name: 0x005513d0 CDXEngine__SetVertexFormatDeferred --> |
 | `0x00514030` | `RenderState_Set_23_8C_Compat` | Fog-mode selector: RasterCaps `0x100` chooses table EXP / vertex NONE; fallback table NONE / vertex EXP; disable clears both |
 
 The material initializer correction is exact:
@@ -2407,7 +2410,10 @@ current address-ledger completeness, not more prose volume:
 1. checker recognizes every supported address/name form;
 2. entry, interior, data, string, and callsite addresses are distinct;
 3. non-contiguous-body membership is exact;
-4. current live export, not the one-name-stale table, is the comparison target;
+4. the tracked current-name projection selected by
+   `latestLiveGhidraState.currentNameProjection` is the ordinary comparison
+   target; a fresh mutable-owner inspection belongs to a separately authorized
+   mutation gate;
 5. the 13 known contradiction families are clean;
 6. each system's finite tables and core functions have an explicit current
    row;

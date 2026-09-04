@@ -32,6 +32,16 @@ that matter independently for patching, modding, and the WinUI app. Honest
 unknowns and exact falsifiers are progress; invented semantics are not.
 [`GOAL.md`](GOAL.md) defines the standing acceptance targets.
 
+## Temporary storage-consolidation hold
+
+The maintainer paused feature development on 2026-08-31 while the Linux
+storage and Ghidra authority layout is consolidated. Do not begin a new RE
+campaign, rebuild feature, WinUI/CLI feature, or semantic Ghidra mutation until
+the maintainer explicitly resumes that work. During the hold, work is limited
+to routing repair, read-only audit, manifest/checksum validation, repository
+organization, and separately authorized consolidation or retirement. This is a
+temporary execution hold, not a change to the three coequal project outcomes.
+
 ## Linux workstation routing
 
 - Canonical Git checkout: `~/Projects/game-dev/Onslaught-Career-Editor`.
@@ -39,11 +49,15 @@ unknowns and exact falsifiers are progress; invented semantics are not.
   `~/Projects/game-dev/Onslaught-Career-Editor/local-lab/`. This is one real,
   owner-writable, Git-ignored directory inside the canonical checkout, not
   tracked source and not a second repository.
-- Preserved Ghidra material recovered from the Windows profile (evidence, not
-  an active mutable Linux project):
-  `~/ProjectData/Onslaught/windows-profile-2026-08-28/ghidra/`.
-- Verified `db.18634` POST recovery:
-  `/srv/archive-a/BEA-Ghidra-Backups/2026-08-28-name-cohort-battleengine-set-collision-shape-post-live/`.
+- Sole mutable PC Ghidra project:
+  `~/Projects/game-dev/Onslaught-Career-Editor/local-lab/ghidra-projects/BEA/`
+  (Ghidra 12.1.3, `db.18635`, owner `xsniper80`). Open only its `BEA.gpr` for
+  writable work.
+- Reviewed tracked Ghidra checkpoint: `reverse-engineering/ghidra/`
+  (`db.18634`; distributable checkpoint, never the writable project).
+- Sealed external Ghidra recovery media:
+  `/srv/archive-a/Onslaught-Ghidra-Recovery/2026-08-31-consolidated-v1/`.
+  Restore a new copy before opening it; never open the package in place.
 - Retail profiles and media: `~/ProjectData/Onslaught/retail-profiles/` and
   `~/ProjectData/Onslaught/media/`.
 - Recovered worktree-only files, conflict sides, and authenticated dirty
@@ -153,12 +167,12 @@ Also:
 - The canonical distributable Ghidra snapshot lives only under
   `reverse-engineering/ghidra/`; live projects and verified backups stay in
   their machine-local owners.
-- OpenJDK 21.0.12.1 and the verified Ghidra 12.1.3 runtime are installed. No
-  mutable Linux project is designated: the prepared working/rehearsal copies
-  have not completed the read-only-open, PRE/POST recovery, and explicit
-  writable-activation ceremony. The tracked snapshot, preserved Windows-profile
-  copy, and Archive A recovery remain byte-identical preservation owners and
-  must not be mutated in place; see the Ghidra README for measured status.
+- OpenJDK 21.0.12.1 and the verified Ghidra 12.1.3 runtime are installed. The
+  sole mutable PC project is `local-lab/ghidra-projects/BEA/`, activated as
+  `db.18635` after verified external PRE/POST recovery, explicit writable open,
+  separate-process readback, and exact semantic comparison. The tracked
+  `db.18634` checkpoint and sealed Archive A package are preservation owners and
+  must never be mutated in place; see the Ghidra README for measured status.
 - The GPL rebuild may adapt the pinned GPL source and consume locally
   materialized retail data. Keep retail executables, decompiler output, and
   separately licensed material out of it; preserve file-level provenance and

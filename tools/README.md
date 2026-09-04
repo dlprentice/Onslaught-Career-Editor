@@ -179,18 +179,44 @@ of custody. A spec may also pin `applierSha256`, repeated to admit both the
 instrument and its live twin (their digests necessarily differ); a pin that
 matches nothing refuses with `APPLIER SHA PIN` before any write.
 
-`ghidra_cohort_replay.py` rebuilds a replica from an off-volume PRE backup, runs
-the ceremony modes, and grades the receipts against the completed ceremonies
-(`--verdict`). A `rehearsalOnly` cohort has no archived ceremony to reproduce, so
-a clean run is reported as `REHEARSED_NOT_PROMOTED` and authorizes nothing. It
-also builds the standing noncanonical sandbox (`--sandbox`), runs the framework's
-provoked gate matrix (`--probes core|fault|all`), and runs the varargs controls
-(`--probes varargs`): five executed refusals plus the positive control that a
-manifest saying nothing leaves a `varargs=true` target untouched. The focused
-gate is:
+`ghidra_cohort_replay.py` has no current drive-letter or database default. Every
+database-consuming mode requires an explicit Linux `analyzeHeadless`, a root of
+catalog-restored historical backup trees, and a contained scratch lane whose
+path has an exact `cohort-rehearsal` segment. Restore the selected aliases from
+`/srv/archive-a/Onslaught-Ghidra-Recovery/` into that separate root first; the
+tool refuses the sealed package in place, the mutable `local-lab/ghidra-projects/BEA`
+owner, and the tracked checkpoint. It rebuilds only scratch replicas, runs the
+ceremony modes, and writes receipts below the selected lane. A `rehearsalOnly`
+cohort has no archived ceremony to reproduce, so a clean run is reported as
+`REHEARSED_NOT_PROMOTED` and authorizes nothing. It can also build a noncanonical
+sandbox (`--sandbox`), run the framework's provoked gate matrix
+(`--probes core|fault|all`), and run the varargs controls (`--probes varargs`).
+Sandbox builds and core/all containment probes additionally require an explicit
+`--sandbox-root` whose path contains an exact `ghidra-noncanonical-sandbox`
+segment and no `cohort-rehearsal` segment; this preserves the negative
+containment test instead of accidentally turning the sandbox into a permitted
+rehearsal project.
+
+```bash
+python tools/ghidra_cohort_replay.py \
+  --cohort boundary-cohort41 \
+  --ghidra /home/xsniper80/.local/opt/ghidra_12.1.3_PUBLIC/support/analyzeHeadless \
+  --restored-backups /absolute/path/to/restored-cohort-backups \
+  --lane /absolute/path/to/local-lab/cohort-rehearsal/run-id
+
+python tools/ghidra_cohort_replay.py \
+  --verdict \
+  --receipts /absolute/path/to/local-lab/cohort-rehearsal/run-id/receipts
+```
+
+Historical `C:`, `D:`, and `H:` strings retained inside the harness are frozen
+receipt identities only. They are never translated or selected as Linux paths.
+The focused framework gate is:
 
 ```powershell
-python -m unittest tools.ghidra_cohort_framework_tests
+python -m unittest \
+  tools.ghidra_cohort_replay_routing_tests \
+  tools.ghidra_cohort_framework_tests
 ```
 
 The three superseded one-shot appliers (`GhidraApplyBoundaryCohort41V4.java`,
@@ -245,8 +271,9 @@ SHA-256; the specimen identity is `74154bfa…7750`.
 Read-only posture: the historical Windows H: POST backup
 (`H:\BEA-Ghidra-Backups\2026-08-17-vftable65-post-live`, db.18627) is provenance,
 not a current default or Omarchy route. Current runs require both an explicit
-prepared project root and an explicit Ghidra executable; no mutable Linux
-Ghidra project has been activated. Pointing at the historical live maintainer
+prepared project root and an explicit Ghidra executable. The sole mutable Linux
+PC project is `local-lab/ghidra-projects/BEA/` at `db.18635`; ordinary exporter
+runs still use it read-only. Pointing at the historical live maintainer
 project is refused unless `--allow-live-project` is passed, and every invocation
 stays `-readOnly -noanalysis`. Incremental: a re-run over
 the same output directory skips VAs whose packets already exist with the same
@@ -285,6 +312,16 @@ than a silent skip; missing evidence inside a packet (failed decompile, absent
 closure row) is recorded as null/false fields, never omitted. Consumers reject
 a whole output directory until its `triage-ready.json` exists and all manifest
 hashes verify.
+
+> **Historical Ghidra ceremony boundary.** The one-shot boundary, preparation,
+> and live-authority tools documented below are Windows-era provenance for
+> completed, receipt-bound ceremonies. Their command lines are reproduction
+> records, not current launch recipes. Never point them at
+> `local-lab/ghidra-projects/BEA/`, translate their drive-letter paths, or repin
+> their frozen identities to make them run. A deliberate historical replay must
+> restore the exact catalog-selected disposable tree and use the procedure's
+> frozen inputs. Current mutation remains paused and is governed by
+> `reverse-engineering/ghidra/README.md`.
 
 `GhidraApplyTextGapBoundaries.java` is the narrow disposable-project owner for
 the reviewed 31-row PC `.text` gap manifest. It restricts disassembly and

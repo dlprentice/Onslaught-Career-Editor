@@ -54,6 +54,7 @@ SUITES: tuple[tuple[str, ...], ...] = (
     ("tools/ghidra_promotion_scratch_proof_tests.py",),
     ("tools/ghidra_function_envelope_proof_tests.py",),
     ("tools/ghidra_crt_canary_refutation_tests.py",),
+    ("tools/ghidra_cohort_replay_routing_tests.py",),
     ("tools/ghidra_function_batch_proof_tests.py",),
     ("tools/ghidra_global_init_full520_proof_tests.py",),
     ("tools/ghidra_global_init515_live_promotion_tests.py",),

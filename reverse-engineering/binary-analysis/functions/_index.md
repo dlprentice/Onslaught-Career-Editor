@@ -1,7 +1,7 @@
 # Function Notes
 
 Status: active — front door for the per-function RE note corpus
-Last updated: 2026-08-18
+Last updated: 2026-08-31
 Summary: what these notes are, which naming authority is current, how the
 2026-07-28 name corrections were made and what they rest on, and which of this
 corpus's known defects are still open.
@@ -67,10 +67,12 @@ Naming authority, as a dated chain, newest last:
 | 2026-08-13 | [Mission-registry boundary promotion](../mission-script-registry-boundary-live-promotion-2026-08-13.md) | proves and promotes exactly 34 callable boundaries with default metadata |
 | 2026-08-14 | `ghidra-function-name-table-2026-08-13.tsv` | frozen 8,329-row projection from the D3DX two-function db.18618 readback, retained for its pinned consumers |
 | 2026-08-17 | [name-cohort promotion manifest](../name-cohort-promotion-manifest-2026-08-17.tsv) | the 160-row cohort — 33 promotions, 114 demotions to `_T3_` placeholders, 15 slot-ordinal fixes, 2 labels — that this table's newest 158 function rows come from |
-| 2026-08-17 | `ghidra-function-name-table-2026-08-17.tsv` | **the current 8,329-row address → symbol resolution authority**, re-projected from the name-cohort5 live POST readback at `db.18626` (SHA-256 `4590dff9…`); it carries the 158 name-cohort rows, the tentacle-chain swaps, and the five name-cohort5 rows that the dated 2026-08-13 table predated |
+| 2026-08-17 | `ghidra-function-name-table-2026-08-17.tsv` | frozen 8,329-row compatibility projection from the name-cohort5 live POST readback at `db.18626` (SHA-256 `4590dff9…`); retained for pinned consumers and dated history |
+| 2026-08-31 | [`ghidra-function-name-table-2026-08-31.tsv`](../ghidra-function-name-table-2026-08-31.tsv) | **the current 8,329-row address → symbol resolution authority** (SHA-256 `73c913ac…cb02`), deterministically projected from the verified Ghidra 12.1.3 activation POST export at mutable `db.18635`; that export is byte-identical to the reviewed tracked `db.18634` PRE export (source SHA-256 `8bff8a24…14603`). It retains the same addresses and body ranges as the 2026-08-17 table while reflecting 37 later saved-name differences. |
 
 The mechanical check against the current last row is
-`tools/re_function_doc_names_check.py`. The table is tracked; the checker
+`tools/re_function_doc_names_check.py`, whose default is the tracked 2026-08-31
+table. The checker
 abstains with exit 2 only when its required repository inputs cannot be read.
 "I could not look" is not "I found no problem".
 

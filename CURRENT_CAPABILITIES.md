@@ -1,12 +1,13 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-08-23. Read `developer_state.json` →
+Last updated: 2026-08-31. Read `developer_state.json` →
 `current_re_authority` for the campaign generation, exact geometry,
 READY/reducer pins, grades, verify command, and next-valid generation. Read
-`reverse-engineering/ghidra/README.md` plus a fresh database inspection for
-rolling tracked/live Ghidra state; this capability narrative deliberately does
-not duplicate those volatile values. Candidate Gen73 is projection-oracle only.
+`reverse-engineering/ghidra/README.md` for the reviewed tracked checkpoint and
+sole mutable Linux owner, and use `latestLiveGhidraState.currentNameProjection`
+for the selected current-name projection. This capability narrative does not
+duplicate those identities. Candidate Gen73 is projection-oracle only.
 Primary WinUI
 navigation was rechecked 2026-08-03 against the live shell (includes Cheats).
 The 2026-08-01 shell, appearance, Lore, Media, and four-run Level 100 reviews

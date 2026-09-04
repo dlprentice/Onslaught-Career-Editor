@@ -1,7 +1,7 @@
 # Local lab overlay
 
 Status: active — the ignored-directory boundary
-Last updated: 2026-08-30.
+Last updated: 2026-08-31.
 Summary: which local paths own retail inputs and bulky generated work, and what
 may be promoted out of them into tracked evidence.
 
@@ -23,8 +23,9 @@ Current owners:
 - `~/ProjectData/Onslaught/` — recovered worktree/conflict packages, preserved
   Windows-profile inputs, retail profiles, media, and VM media that are not part
   of `local-lab/`;
-- a separately selected local Ghidra working copy and off-volume verified
-  backups — never the tracked checkpoint or either preservation owner.
+- `local-lab/ghidra-projects/BEA/` — the sole mutable PC Ghidra project
+  (12.1.3, `db.18635`, owner `xsniper80`); the tracked checkpoint and sealed
+  off-volume package are preservation owners, never writable inputs.
 
 The canonical lab was moved by same-filesystem atomic rename on 2026-08-30; the
 old ProjectData path is absent, and no twin, symlink, bind mount, or read-only
@@ -59,8 +60,8 @@ history, not a liveness oracle. The DeepSeek drop remains at
 3,211-line historical catalog is `local-lab/INDEX-CATALOG-2026-08-17.md`.
 
 OpenJDK 21.0.12.1 and the verified Ghidra 12.1.3 distribution are installed.
-Prepared activation copies live below
-`local-lab/ghidra-linux-12.1.3-activation-20260830-v1/`, but no mutable Linux
-project is designated until the read-only-open, PRE/POST recovery, semantic
-comparison, and explicitly authorized writable-open gates complete. Ghidra
-mutation therefore remains separately authorized (default: not authorized).
+The activation ceremony completed on 2026-08-31: `local-lab/ghidra-projects/BEA/`
+is the sole mutable PC project at `db.18635`, and its ignored completion receipt
+is under `local-lab/ghidra-linux-12.1.3-activation-20260830-v1/receipts/`.
+Activation does not authorize arbitrary database changes; each semantic mutation
+still requires its own PRE/rehearsal/authorization/readback/POST gate.
