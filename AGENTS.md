@@ -58,10 +58,10 @@ temporary execution hold, not a change to the three coequal project outcomes.
 - Sealed external Ghidra recovery media:
   `/srv/archive-a/onslaught-ghidra-cold/codex-consolidated-2026-08-31/`.
   Restore a new copy before opening it; never open the package in place.
-- Retail profiles and media: `~/ProjectData/Onslaught/retail-profiles/` and
-  `~/ProjectData/Onslaught/media/`.
+- Retail profiles and media: `local-data/retail-profiles/` and
+  `local-data/media/`.
 - Recovered worktree-only files, conflict sides, and authenticated dirty
-  packages: the `_recovered-*` directories under `~/ProjectData/Onslaught/`.
+  packages: the `_recovered-*` directories under `local-data/`.
 - Quarantined Electron/profile reconciliation material:
   `~/Recovery/project-reconciliation/Onslaught/electron-game-profiles/`.
 - The immutable Samsung source snapshot and Archive A remain recovery
@@ -88,7 +88,7 @@ temporary execution hold, not a change to the three coequal project outcomes.
   toolchain, controlled build/launch, native smoke, and capture routes are also
   Windows-only until the separate Linux toolchain port is verified. The
   isolated Windows 11 evaluation VM is staged under
-  `~/ProjectData/Onslaught/windows-vm/` but is not yet defined or running;
+  `local-data/windows-vm/` but is not yet defined or running;
   until its separate activation gate completes, there is no current full
   AppCore, native WinUI/CLI, or controlled Godot execution route. Do not install
   a competing Windows desktop stack on the Omarchy host or report Linux static

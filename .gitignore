@@ -117,3 +117,6 @@ cardid.txt
 .claude/worktrees/
 .worktrees/
 .claude/settings.local.json
+
+# machine-local project data (retail profiles, media, VM media, host attestations); was ~/ProjectData/Onslaught
+/local-data/

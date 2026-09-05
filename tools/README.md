@@ -112,7 +112,7 @@ checkout and its real repo-local `local-lab/`, prevalidates the reachable frozen
 reducer graph, verifies the canonical/replica authority, and performs a
 temporary full replay without rewriting frozen bytes. It also requires the
 retired ProjectData lab path to remain absent and keeps durable host-attestation
-output independently pinned under ProjectData.
+output independently pinned under the ignored repo-local `local-data/host-attestations`.
 
 `re_campaign_historical_source_projection_v2.py` is the historical
 Generation-24 launcher for an immutable campaign whose rebuild inputs were

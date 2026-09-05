@@ -43,7 +43,7 @@ RETIRED_PROJECTDATA_LAB_ROOT = Path(
     "/home/xsniper80/ProjectData/Onslaught/local-lab"
 )
 HOST_ATTESTATIONS_ROOT = Path(
-    "/home/xsniper80/ProjectData/Onslaught/host-attestations"
+    "/home/xsniper80/Projects/game-dev/Onslaught-Career-Editor/local-data/host-attestations"
 )
 
 GEN32_RELATIVE = Path(

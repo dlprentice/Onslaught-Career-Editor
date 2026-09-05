@@ -109,7 +109,7 @@ Python tools, reverse engineering, and the Core/Client/headless rebuild.
 AppCore source compiles here, but its full suite, WinUI 3, the Windows-targeted
 CLI, and the currently admitted Godot runtime/build/smoke/capture routes remain
 Windows-only. An isolated Windows 11 evaluation VM is prepared outside the
-repository at `~/ProjectData/Onslaught/windows-vm/`, but it is not yet
+repository at `local-data/windows-vm/`, but it is not yet
 defined or running; there is no current native Windows or controlled Godot
 execution route until its separate activation gate completes.
 
