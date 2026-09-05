@@ -28,7 +28,7 @@ REPO = Path("/home/xsniper80/Projects/game-dev/Onslaught-Career-Editor")
 LAB = REPO / "local-lab"
 CAMPAIGN = LAB / host.GEN32_RELATIVE
 AUTHORITY = LAB / host.GEN32_AUTHORITY_RELATIVE
-ATTESTATION_ROOT = Path("/home/xsniper80/ProjectData/Onslaught/host-attestations")
+ATTESTATION_ROOT = Path("/home/xsniper80/Projects/game-dev/Onslaught-Career-Editor/local-data/host-attestations")
 
 
 def directory_fingerprint(root: Path) -> tuple[tuple[str, int, int, int], ...]:
