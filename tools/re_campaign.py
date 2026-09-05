@@ -28682,7 +28682,7 @@ def advance_mission_native_unsetobjective_reproof(
             "advance and cannot be published again; verify its existing sealed "
             "campaign instead. For a database-level audit, restore the historical "
             "project through a catalog under "
-            "/srv/archive-a/Onslaught-Ghidra-Recovery and run the frozen proof "
+            "/srv/archive-a/onslaught-ghidra-cold/codex-consolidated-2026-08-31 and run the frozen proof "
             "owner; never substitute the active mutable Ghidra project."
         )
 

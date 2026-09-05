@@ -80,7 +80,7 @@ DEFAULT_PROPOSAL = ROOT / "local-lab/crt-recursive-cohort-2026-08-02/clean521-bo
 DEFAULT_MANUAL = ROOT / "local-lab/crt-recursive-cohort-2026-08-02/thunk-canary-scratch-v1"
 DEFAULT_SPECIMEN = ROOT / "local-lab/safe-copy-bea-pristine/BEA.exe.original.backup"
 DEFAULT_HEADLESS = Path("D:/ghidra_12.1.2_PUBLIC_20260605/ghidra_12.1.2_PUBLIC/support/analyzeHeadless.bat")
-COLD_PACKAGE_PARENT = Path("/srv/archive-a/Onslaught-Ghidra-Recovery")
+COLD_PACKAGE_PARENT = Path("/srv/archive-a/onslaught-ghidra-cold/codex-consolidated-2026-08-31")
 HISTORICAL_RETIREMENT_MESSAGE = (
     "this tracked CRT canary owner is a frozen Windows-era one-shot and its "
     "bound frozen-v9 main project plus retained canary project are no longer "

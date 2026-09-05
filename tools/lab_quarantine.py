@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Quarantine local-lab / lab evidence before any destructive delete.
 
+Windows-era tool: its quarantine root is the H: drive letter, so it does not apply on this Linux machine.
+
 Durable rule (maintainer FRAGO 2026-08-06, after the re-campaign fixture
 loss): nothing under local-lab/ is ever hard-deleted in one step. ``stage``
 moves a path to H:\\graveyard\\lab-quarantine\\<date>\\ preserving relative

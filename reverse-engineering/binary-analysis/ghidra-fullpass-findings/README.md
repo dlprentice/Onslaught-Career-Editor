@@ -16,7 +16,7 @@ historically copied from `C:\Users\david\Ghidra\Projects` into
 does not keep that dated `.gpr/.rep` tree exploded in `local-lab`: its
 non-database receipts, exports, correction queues, plans, and logs remain here,
 while the project database is cold-recovery material cataloged under
-`/srv/archive-a/Onslaught-Ghidra-Recovery/`. If a database-level replay is ever
+`/srv/archive-a/onslaught-ghidra-cold/codex-consolidated-2026-08-31/`. If a database-level replay is ever
 needed, select the historical path alias from a package `catalog.json`, restore
 the tree into a new empty directory, and use the frozen historical owner. Do not
 repoint this expedition at the active mutable Linux project. The expedition's

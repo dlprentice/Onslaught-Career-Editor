@@ -1,7 +1,7 @@
 # Onslaught Toolkit: agent guide
 
 Status: active — the single instruction file for this repository; `CLAUDE.md` only points here
-Last updated: 2026-09-04
+Last updated: 2026-09-05
 Summary: what the project is, the rules that protect the evidence and the user's files, where things live on this
 Linux laptop, which commands work here, and the gotchas that have already cost data.
 
@@ -131,9 +131,6 @@ the smallest gate. Node 26.7 and npm 11.19 come from mise, `python` is 3.14, `do
   in tooling and tests.
 - The gen32 attestor requires the retired `~/ProjectData/Onslaught/local-lab` path to stay absent and pins its
   output owner to `local-data/host-attestations`; do not "fix" either path.
-- `tools/ghidra_atomic14_live_promotion.py`, `ghidra_crt_canary_refutation.py`, `ghidra_cohort_replay.py` and
-  `ghidra_function_envelope_proof.py` still pin `/srv/archive-a/Onslaught-Ghidra-Recovery`, which was folded into
-  `/srv/archive-a/onslaught-ghidra-cold/` on 2026-09-04; their recovery paths fail until repointed.
 - Opening a Ghidra project without `-readOnly` can roll its `db.NNNNN` version even when a script refused.
   Measure the version, never quote it.
 - The retail copy for `--game-root` is `local-lab/safe-copy-bea-pristine/` (complete: `BEA.exe` and the three

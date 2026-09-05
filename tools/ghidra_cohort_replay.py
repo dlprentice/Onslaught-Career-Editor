@@ -70,7 +70,7 @@ RUNTIME_CONFIGURED = False
 
 ACTIVE_MUTABLE_PROJECT = REPO / "local-lab" / "ghidra-projects" / "BEA"
 TRACKED_CHECKPOINT = REPO / "reverse-engineering" / "ghidra"
-RECOVERY_PACKAGE_PARENT = Path("/srv/archive-a/Onslaught-Ghidra-Recovery")
+RECOVERY_PACKAGE_PARENT = Path("/srv/archive-a/onslaught-ghidra-cold/codex-consolidated-2026-08-31")
 
 SCRIPT = "GhidraApplyCohortManifest.java"
 

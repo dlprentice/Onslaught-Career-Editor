@@ -767,7 +767,7 @@
   },
   "activeHypothesisOverlay": {
     "status": "NONCANONICAL_SCRATCH_ONLY_NEVER_SYNC_TO_LIVE",
-    "historicalProjectPathRetiredToRecovery": "local-lab/ghidra-unclassified-addr-suffixed-tier4-404-scratch-20260810-v1/project; non-actionable historical identity, restored only through the catalog under /srv/archive-a/Onslaught-Ghidra-Recovery/",
+    "historicalProjectPathRetiredToRecovery": "local-lab/ghidra-unclassified-addr-suffixed-tier4-404-scratch-20260810-v1/project; non-actionable historical identity, restored only through the catalog under /srv/archive-a/onslaught-ghidra-cold/codex-consolidated-2026-08-31/",
     "sourceCampaign": "Generation 19 campaign-functions.tsv joined by exact entry/body identity, then advanced only through disposable HYP__ batches with separate-process full-inventory readback",
     "hypothesisLedger": "local-lab/ghidra-bulk-hypothesis-overlay-20260809-v1/function-hypotheses.tsv; 350150 bytes; SHA-256 39208135c5d7a0a5378b7dfc9f7a7557f736f8f852ab2c4882c5af13d69a2441",
     "readback": "local-lab/ghidra-unclassified-addr-suffixed-tier4-404-scratch-20260810-v1/functions.tsv; 7279318 bytes; SHA-256 aae0eed6f395bb65b0d9d0603d36f0972475d74ee51c28117e5f8dde3b2fae49",
@@ -2251,7 +2251,7 @@
     ],
     "backups": {
       "repo_git_recovery": "/home/xsniper80/Recovery/project-restore-2026-08-30/onslaught-post-world110-all40-and-linux-routing-preservation-20260831 \u2014 same-device all-ref Git recovery package; excludes ignored local-lab and is not off-device protection",
-      "ghidra": "/srv/archive-a/Onslaught-Ghidra-Recovery/ \u2014 sealed content-addressed external packages; restore a selected catalog tree to a new path before opening",
+      "ghidra": "/srv/archive-a/onslaught-ghidra-cold/codex-consolidated-2026-08-31/ \u2014 sealed content-addressed external packages; restore a selected catalog tree to a new path before opening",
       "retired_branches": "/home/xsniper80/Recovery/project-restore-2026-08-30/onslaught-post-world110-all40-and-linux-routing-preservation-20260831/onslaught-all-refs.bundle plus the separately retained specialized preservation records"
     }
   },

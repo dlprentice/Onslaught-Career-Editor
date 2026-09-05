@@ -145,7 +145,7 @@ CLAIM_BOUNDARY = (
     "The full inventory is a strong exported semantic boundary, not a digest of every possible Ghidra database record.",
     "This is unsigned machine-local evidence for a trusted quiescent host; it is not portable, hostile-actor-resistant, or proof that the run preceded a historical mutation.",
 )
-COLD_PACKAGE_PARENT = Path("/srv/archive-a/Onslaught-Ghidra-Recovery")
+COLD_PACKAGE_PARENT = Path("/srv/archive-a/onslaught-ghidra-cold/codex-consolidated-2026-08-31")
 HISTORICAL_RETIREMENT_MESSAGE = (
     "this tracked function-envelope owner is a frozen Windows-era one-shot and "
     "its bound main-project, poison-project, and retained replica databases are "

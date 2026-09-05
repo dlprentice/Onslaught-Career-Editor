@@ -1,7 +1,7 @@
 # Onslaught Toolkit
 
 Status: active — the product and lane overview
-Last updated: 2026-08-31 (Omarchy/Windows-VM contributor routing corrected;
+Last updated: 2026-09-05 (toolchain pins updated to Godot 4.7.2 and Node 26;
 player-facing behavior and older lane claims retain their dated boundaries).
 Summary: what this project is, how to play, which surfaces are active, and where
 each lane's authoritative document lives.
@@ -116,7 +116,7 @@ execution route until its separate activation gate completes.
 Common requirements:
 
 - .NET 10 SDK with the .NET 8 targeting/runtime support used by the rebuild
-- Node.js 24.x with npm 11.12.x
+- Node.js 26.x with npm 11.19.x (the mise-managed versions pinned by `game_pipeline_shared`)
 - Python 3 available as `python`
 - PowerShell 7 for rebuild and Godot tooling
 - A lawfully obtained Battle Engine Aquila installation for retail-aware and
@@ -182,7 +182,7 @@ Windows VM. Its first run downloads and verifies the pinned Windows Godot .NET
 archive into a per-user cache, detects the VM's retail installation, and
 materializes the exact supported rebuild inputs to ignored local paths. For a
 custom location, run `pwsh ./rebuild/tools/Run-FirstFlight.ps1 -GameRoot
-"<game folder>"` in the VM. A native Linux Godot 4.7.1 installation exists, but
+"<game folder>"` in the VM. A native Linux Godot 4.7.2 installation exists, but
 it is not yet admitted by the repository's per-file toolchain manifest or smoke
 runner and therefore is not a supported execution route.
 The VM should use its own Git checkout or verified transfer; do not share the

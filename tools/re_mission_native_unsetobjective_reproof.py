@@ -37,10 +37,10 @@ HISTORICAL_PROJECT_RELATIVE = Path(
 )
 ACTIVE_MUTABLE_PROJECT_RELATIVE = Path("local-lab/ghidra-projects/BEA")
 TRACKED_CHECKPOINT_RELATIVE = Path("reverse-engineering/ghidra")
-COLD_PACKAGE_PARENT = Path("/srv/archive-a/Onslaught-Ghidra-Recovery")
+COLD_PACKAGE_PARENT = Path("/srv/archive-a/onslaught-ghidra-cold/codex-consolidated-2026-08-31")
 COLD_RESTORE_GUIDANCE = (
     f"locate {HISTORICAL_PROJECT_RELATIVE.as_posix()} in a package catalog "
-    "under /srv/archive-a/Onslaught-Ghidra-Recovery, restore its tree to a new "
+    "under /srv/archive-a/onslaught-ghidra-cold/codex-consolidated-2026-08-31, restore its tree to a new "
     "empty writable directory, then pass --ghidra-project-root; never use the "
     "active mutable project or tracked checkpoint"
 )

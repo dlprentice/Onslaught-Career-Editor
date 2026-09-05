@@ -1,7 +1,7 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-08-31
+Last updated: 2026-09-05
 Summary: what each tool in `tools/` is for, and which of them are gates.
 
 `tools/` contains the small reusable support surface for the WinUI product,
@@ -183,7 +183,7 @@ matches nothing refuses with `APPLIER SHA PIN` before any write.
 database-consuming mode requires an explicit Linux `analyzeHeadless`, a root of
 catalog-restored historical backup trees, and a contained scratch lane whose
 path has an exact `cohort-rehearsal` segment. Restore the selected aliases from
-`/srv/archive-a/Onslaught-Ghidra-Recovery/` into that separate root first; the
+`/srv/archive-a/onslaught-ghidra-cold/codex-consolidated-2026-08-31/` into that separate root first; the
 tool refuses the sealed package in place, the mutable `local-lab/ghidra-projects/BEA`
 owner, and the tracked checkpoint. It rebuilds only scratch replicas, runs the
 ceremony modes, and writes receipts below the selected lane. A `rehearsalOnly`
