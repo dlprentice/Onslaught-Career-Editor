@@ -1,5 +1,9 @@
 # Canonical Ghidra project
 
+Status: active — reviewed checkpoint, never a writable project
+Last updated: 2026-09-05
+Summary: checkpoint identity, writable-project routing and external recovery.
+
 `BEA.gpr` and `BEA.rep/` are the reviewed distributable checkpoint of the
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
@@ -228,6 +232,15 @@ letters speculatively:
 | Mutable Linux PC project | `local-lab/ghidra-projects/BEA/` (`db.18635`; sole writable owner) |
 | Activation evidence | `local-lab/ghidra-linux-12.1.3-activation-20260830-v1/` (ignored completion receipt and semantic PRE/POST) |
 | External recovery | `/srv/archive-a/onslaught-ghidra-cold/codex-consolidated-2026-08-31/` (sealed package; restore elsewhere before opening) |
+| Dated copies of both homes | `/srv/archive-a/onslaught-ghidra-cold/2026-09-04/` (checkpoint and mutable project stored separately) |
+| Second-disk cold mirror | `/srv/archive-b/onslaught-ghidra-cold-mirror/` (recovery only; never open in place) |
+
+The former Samsung raw snapshot, Archive A Windows `source/` tree, and
+Recovery reconciliation folder have been deleted. Their old receipts are
+history, not additional surviving database copies. Keep the current cold
+copies and the historical rehearsal projects until David approves a specific
+numbered deletion batch. A larger database generation counter in a rehearsal
+copy does not make it the reviewed or writable authority.
 
 Expedition overlays (RO clones, wave exports, ops state, correction ledgers)
 live under real, ignored canonical-checkout `local-lab/` — do not commit them.

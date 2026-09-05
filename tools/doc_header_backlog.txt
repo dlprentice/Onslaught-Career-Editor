@@ -418,7 +418,6 @@ reverse-engineering/game-mechanics/projectile-speed-retail-to-core-translation-p
 reverse-engineering/game-mechanics/shield-retail-to-core-translation-policy.md
 reverse-engineering/game-mechanics/walker-transform-morph-retail-to-core-translation-policy.md
 reverse-engineering/game-mechanics/walker-transform-morph-timing-v1.md
-reverse-engineering/ghidra/README.md
 reverse-engineering/project-meta/README.md
 reverse-engineering/project-meta/_index.md
 reverse-engineering/project-meta/attribution.md
