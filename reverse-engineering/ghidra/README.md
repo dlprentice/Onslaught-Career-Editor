@@ -149,7 +149,7 @@ internal function rows and all program metrics; the storage migration changed
 no reviewed semantics. Therefore this tracked tree remains the reviewed
 `db.18634` checkpoint until a future semantic promotion. External recovery is
 the sealed content-addressed package at
-`/srv/archive-a/Onslaught-Ghidra-Recovery/2026-08-31-consolidated-v1/`; restore
+`/srv/archive-a/onslaught-ghidra-cold/codex-consolidated-2026-08-31/`; restore
 from it to a new path before opening anything.
 
 Related (not this folder):
@@ -227,7 +227,7 @@ letters speculatively:
 | Reviewed tracked checkpoint | `reverse-engineering/ghidra/` (this tree; `db.18634`; preserve in place) |
 | Mutable Linux PC project | `local-lab/ghidra-projects/BEA/` (`db.18635`; sole writable owner) |
 | Activation evidence | `local-lab/ghidra-linux-12.1.3-activation-20260830-v1/` (ignored completion receipt and semantic PRE/POST) |
-| External recovery | `/srv/archive-a/Onslaught-Ghidra-Recovery/2026-08-31-consolidated-v1/` (sealed package; restore elsewhere before opening) |
+| External recovery | `/srv/archive-a/onslaught-ghidra-cold/codex-consolidated-2026-08-31/` (sealed package; restore elsewhere before opening) |
 
 Expedition overlays (RO clones, wave exports, ops state, correction ledgers)
 live under real, ignored canonical-checkout `local-lab/` — do not commit them.

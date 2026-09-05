@@ -56,7 +56,7 @@ temporary execution hold, not a change to the three coequal project outcomes.
 - Reviewed tracked Ghidra checkpoint: `reverse-engineering/ghidra/`
   (`db.18634`; distributable checkpoint, never the writable project).
 - Sealed external Ghidra recovery media:
-  `/srv/archive-a/Onslaught-Ghidra-Recovery/2026-08-31-consolidated-v1/`.
+  `/srv/archive-a/onslaught-ghidra-cold/codex-consolidated-2026-08-31/`.
   Restore a new copy before opening it; never open the package in place.
 - Retail profiles and media: `~/ProjectData/Onslaught/retail-profiles/` and
   `~/ProjectData/Onslaught/media/`.

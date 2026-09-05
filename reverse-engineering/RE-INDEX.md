@@ -884,7 +884,7 @@ Current per-function notes live under
 | Correction ops | `local-lab/ghidra-fullpass-2026-07-23/` in the canonical checkout | Preserved ignored queues, dual QC, and apply logs; closeout 2026-07-25 |
 | Mutable Linux PC project | `local-lab/ghidra-projects/BEA/` in the canonical checkout | Sole writable project; Ghidra 12.1.3 `db.18635`, activated 2026-08-31 |
 | Tracked snapshot | [`ghidra/`](ghidra/README.md) (snapshot date 2026-08-28) | Distributable reviewed `db.18634` snapshot; byte-identical to the verified POST recovery and then-preserved Windows-profile copy when re-audited on Linux 2026-08-30 |
-| External recovery | `/srv/archive-a/Onslaught-Ghidra-Recovery/2026-08-31-consolidated-v1/` | Sealed content-addressed package; restore elsewhere before opening |
+| External recovery | `/srv/archive-a/onslaught-ghidra-cold/codex-consolidated-2026-08-31/` | Sealed content-addressed package; restore elsewhere before opening |
 
 Current host/runtime status and project routing:
 [`ghidra/README.md`](ghidra/README.md). Expedition overlays live under the real,
