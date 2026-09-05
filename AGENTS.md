@@ -5,8 +5,9 @@ Last updated: 2026-09-05
 Summary: what the project is, the rules that protect the evidence and the user's files, where things live on this
 Linux laptop, which commands work here, and the gotchas that have already cost data.
 
-Read this before changing anything. Machine-wide rules are in `~/AGENTS.md` and `~/Projects/AGENTS.md`; this file
-is more specific and wins here.
+Read this before changing anything. Read `~/AGENTS.md`, `~/Projects/AGENTS.md` and
+`~/Projects/game-dev/AGENTS.md` explicitly when automatic discovery stops at this Git root;
+this repository guide is more specific and wins here.
 
 ## What this is
 
@@ -91,7 +92,7 @@ organization are fine.
 | Root `*.md` | `README.MD` (product and lanes), `PROJECT-INDEX.md` (code ownership), `VALIDATION.md` (which gate for which change), `DOCUMENTATION.md` (the header standard), `CONTRIBUTING.md`, `SECURITY.md`, `LOCAL_LAB_OVERLAY.md`, `README.RELEASE.md`. A new tracked `.md` needs `Status:`, `Last updated:` (or `Date:`) and `Summary:` (or `Verdict:`) in its header block. |
 | `local-lab/` (ignored, 81 GB) | The evidence corpus: retail safe copies, campaign generations, captures, reviewer reports, the working Ghidra project, `rebuild-godot/` staging. Open `local-lab/INDEX.md` first. Absent from fresh clones and worktrees; a worktree uses the canonical absolute path or `BEA_LOCAL_LAB`. |
 | `local-data/` (ignored, 9.7 GB) | Machine-local data that is not lab evidence: `host-attestations/` (the gen32 attestor's pinned output), `retail-profiles/`, `media/`, `vm-media/`, `windows-vm/`, `windows-profile-2026-08-28/`, and the `_recovered-*` reconciliation packages described by its own `AGENTS.md`. |
-| `.artifacts/` (ignored) | Disposable validation output, screenshots and publish output; tools create it when they need it. |
+| `.artifacts/` (ignored) | Legacy validation, screenshot and publish output. It can contain unique evidence, so ignored does not mean disposable. Keep existing coupled tool paths; use `local-data/` for new general-purpose outputs and the numbered queue for retirement. |
 
 ## Commands
 
@@ -106,7 +107,7 @@ the smallest gate. Node 26.7 and npm 11.19 come from mise, `python` is 3.14, `do
 | One tools suite | `python tools/<name>_tests.py`; the function-name check alone is `python tools/re_function_doc_names_check.py --strict` |
 | Rebuild Core tests | `npm run test:rebuild-core` (materializes first; measured 2026-08-31 at 34 min with three known Linux-host failures in `TapeFileWriteNew_*`); `npm run test:rebuild-ferry-sweep` for the excluded ferry oracle |
 | Rebuild Client tests | `npm run test:rebuild-client` |
-| Materialize retail inputs | `npm run prepare:rebuild-assets -- --game-root "<retail copy>"` writes into `local-lab/rebuild-godot/`; Linux has no Steam discovery, so a fresh stage needs `--game-root` |
+| Materialize retail inputs | From this repo: `npm run prepare:rebuild-assets -- --game-root "$PWD/local-lab/safe-copy-bea-pristine"` writes into `local-lab/rebuild-godot/`; Linux has no Steam discovery, so a fresh stage needs explicit `--game-root` |
 | Headless replay | `npm run run:rebuild-headless -- <args>` |
 | Complete-RE verification | the command in `developer_state.json` → `current_re_authority.verify` (`tools/re_campaign_gen32_host_attestation.py` on this host; receipts go to `local-data/host-attestations/`) |
 | Ghidra | `ghidraRun` (12.1.3, OpenJDK 21) on `local-lab/ghidra-projects/BEA/BEA.gpr` only; headless scripts are `tools/*.java` |
@@ -136,7 +137,9 @@ the smallest gate. Node 26.7 and npm 11.19 come from mise, `python` is 3.14, `do
 - The retail copy for `--game-root` is `local-lab/safe-copy-bea-pristine/` (complete: `BEA.exe` and the three
   archives). Its `BEA.exe` (`e1436ef7…`) is a safe copy, not the `74154bfa…` specimen. The same copy also lives in
   Archive A at `graveyard/D-backups/Onslaught-Career-Editor-full-copy-20260814-20260814T122949Z/local-lab/`,
-  which earlier stages pointed at; keep it until the pipeline is repointed at the repo copy (David's call).
+  which earlier stages used. The September 5 code/config check found no current hard-wired graveyard
+  selection; use the explicit repo-local command above. Archive A's copy is retained history, not permission
+  to remove it or the rest of `graveyard` without a numbered batch.
 - `BEA.exe` writes `setuphistory.txt` and `cardid.txt` into its working directory, so launch a copy from its own
   folder; both names are ignored in case a launcher forgets.
 - `tools/doc_header_backlog.txt` may only shrink. Never add a file to it to silence a header failure.
